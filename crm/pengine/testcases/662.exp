@@ -4,7 +4,6 @@
        <rsc_op id="23" rsc_id="DcIPaddr" operation="status" operation_key="DcIPaddr_status_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -19,7 +18,6 @@
        <rsc_op id="31" rsc_id="DcIPaddr" operation="status" operation_key="DcIPaddr_status_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -34,7 +32,6 @@
        <rsc_op id="39" rsc_id="DcIPaddr" operation="status" operation_key="DcIPaddr_status_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -49,7 +46,6 @@
        <rsc_op id="24" rsc_id="rsc_c001n09" operation="status" operation_key="rsc_c001n09_status_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="rsc_c001n09" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -64,7 +60,6 @@
        <rsc_op id="32" rsc_id="rsc_c001n09" operation="status" operation_key="rsc_c001n09_status_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="rsc_c001n09" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -79,7 +74,6 @@
        <rsc_op id="40" rsc_id="rsc_c001n09" operation="status" operation_key="rsc_c001n09_status_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="rsc_c001n09" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -95,9 +89,8 @@
          <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
            <nvpair id="timeout" name="timeout" value="20000"/>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
-           <nvpair id="interval" name="interval" value="5000"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="interval" name="interval" value="5000"/>
            <nvpair id="ip" name="ip" value="127.0.0.12"/>
          </attributes>
        </rsc_op>
@@ -113,7 +106,6 @@
        <rsc_op id="16" rsc_id="rsc_c001n02" operation="status" operation_key="rsc_c001n02_status_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -128,7 +120,6 @@
        <rsc_op id="33" rsc_id="rsc_c001n02" operation="status" operation_key="rsc_c001n02_status_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -143,7 +134,6 @@
        <rsc_op id="41" rsc_id="rsc_c001n02" operation="status" operation_key="rsc_c001n02_status_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -158,7 +148,6 @@
        <rsc_op id="50" rsc_id="rsc_c001n02" operation="stop" operation_key="rsc_c001n02_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="ip" name="ip" value="127.0.0.12"/>
          </attributes>
@@ -171,7 +160,6 @@
        <rsc_op id="51" rsc_id="rsc_c001n02" operation="start" operation_key="rsc_c001n02_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="ip" name="ip" value="127.0.0.12"/>
          </attributes>
@@ -179,7 +167,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="14" operation="probe_complete" operation_key="probe_complete"/>
+         <pseudo_event id="14" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
          <rsc_op id="50" rsc_id="rsc_c001n02" operation="stop" operation_key="rsc_c001n02_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
@@ -191,7 +179,6 @@
        <rsc_op id="52" rsc_id="rsc_c001n02" operation="delete" operation_key="rsc_c001n02_delete_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="ip" name="ip" value="127.0.0.12"/>
          </attributes>
@@ -208,7 +195,6 @@
        <rsc_op id="17" rsc_id="rsc_c001n03" operation="status" operation_key="rsc_c001n03_status_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -223,7 +209,6 @@
        <rsc_op id="25" rsc_id="rsc_c001n03" operation="status" operation_key="rsc_c001n03_status_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -238,7 +223,6 @@
        <rsc_op id="42" rsc_id="rsc_c001n03" operation="status" operation_key="rsc_c001n03_status_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -253,7 +237,6 @@
        <rsc_op id="10" rsc_id="rsc_c001n04" operation="delete" operation_key="rsc_c001n04_delete_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="rsc_c001n04" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="ip" name="ip" value="127.0.0.14"/>
          </attributes>
@@ -266,7 +249,6 @@
        <rsc_op id="18" rsc_id="rsc_c001n04" operation="status" operation_key="rsc_c001n04_status_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="rsc_c001n04" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -281,7 +263,6 @@
        <rsc_op id="26" rsc_id="rsc_c001n04" operation="status" operation_key="rsc_c001n04_status_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="rsc_c001n04" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -296,7 +277,6 @@
        <rsc_op id="34" rsc_id="rsc_c001n04" operation="status" operation_key="rsc_c001n04_status_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="rsc_c001n04" class="ocf" type="IPaddr" provider="heartbeat"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -312,9 +292,8 @@
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
            <nvpair id="timeout" name="timeout" value="20000"/>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
-           <nvpair id="interval" name="interval" value="5000"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="interval" name="interval" value="5000"/>
            <nvpair id="clone" name="clone" value="0"/>
            <nvpair id="clone_max" name="clone_max" value="4"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 "/>
@@ -332,7 +311,6 @@
        <rsc_op id="12" rsc_id="DoFencing:child_DoFencing:0" operation="delete" operation_key="DoFencing:child_DoFencing:0_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="clone" name="clone" value="0"/>
            <nvpair id="clone_max" name="clone_max" value="4"/>
@@ -347,7 +325,6 @@
        <rsc_op id="19" rsc_id="DoFencing:child_DoFencing:0" operation="status" operation_key="DoFencing:child_DoFencing:0_status_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -364,7 +341,6 @@
        <rsc_op id="35" rsc_id="DoFencing:child_DoFencing:0" operation="status" operation_key="DoFencing:child_DoFencing:0_status_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -381,7 +357,6 @@
        <rsc_op id="43" rsc_id="DoFencing:child_DoFencing:0" operation="status" operation_key="DoFencing:child_DoFencing:0_status_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -398,7 +373,6 @@
        <rsc_op id="57" rsc_id="DoFencing:child_DoFencing:0" operation="stop" operation_key="DoFencing:child_DoFencing:0_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="clone" name="clone" value="0"/>
            <nvpair id="clone_max" name="clone_max" value="4"/>
@@ -417,7 +391,6 @@
        <rsc_op id="58" rsc_id="DoFencing:child_DoFencing:0" operation="start" operation_key="DoFencing:child_DoFencing:0_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="clone" name="clone" value="0"/>
            <nvpair id="clone_max" name="clone_max" value="4"/>
@@ -442,7 +415,6 @@
        <rsc_op id="59" rsc_id="DoFencing:child_DoFencing:0" operation="delete" operation_key="DoFencing:child_DoFencing:0_delete_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="clone" name="clone" value="0"/>
            <nvpair id="clone_max" name="clone_max" value="4"/>
@@ -462,9 +434,8 @@
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
            <nvpair id="timeout" name="timeout" value="20000"/>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
-           <nvpair id="interval" name="interval" value="5000"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="interval" name="interval" value="5000"/>
            <nvpair id="clone" name="clone" value="1"/>
            <nvpair id="clone_max" name="clone_max" value="4"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 "/>
@@ -482,7 +453,6 @@
        <rsc_op id="3" rsc_id="DoFencing:child_DoFencing:1" operation="delete" operation_key="DoFencing:child_DoFencing:1_delete_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="clone" name="clone" value="1"/>
            <nvpair id="clone_max" name="clone_max" value="4"/>
@@ -497,7 +467,6 @@
        <rsc_op id="20" rsc_id="DoFencing:child_DoFencing:1" operation="status" operation_key="DoFencing:child_DoFencing:1_status_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -514,7 +483,6 @@
        <rsc_op id="27" rsc_id="DoFencing:child_DoFencing:1" operation="status" operation_key="DoFencing:child_DoFencing:1_status_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -531,7 +499,6 @@
        <rsc_op id="44" rsc_id="DoFencing:child_DoFencing:1" operation="status" operation_key="DoFencing:child_DoFencing:1_status_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -548,7 +515,6 @@
        <rsc_op id="60" rsc_id="DoFencing:child_DoFencing:1" operation="stop" operation_key="DoFencing:child_DoFencing:1_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="clone" name="clone" value="1"/>
            <nvpair id="clone_max" name="clone_max" value="4"/>
@@ -567,7 +533,6 @@
        <rsc_op id="61" rsc_id="DoFencing:child_DoFencing:1" operation="start" operation_key="DoFencing:child_DoFencing:1_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="clone" name="clone" value="1"/>
            <nvpair id="clone_max" name="clone_max" value="4"/>
@@ -592,7 +557,6 @@
        <rsc_op id="62" rsc_id="DoFencing:child_DoFencing:1" operation="delete" operation_key="DoFencing:child_DoFencing:1_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="clone" name="clone" value="1"/>
            <nvpair id="clone_max" name="clone_max" value="4"/>
@@ -612,9 +576,8 @@
          <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
            <nvpair id="timeout" name="timeout" value="20000"/>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
-           <nvpair id="interval" name="interval" value="5000"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="interval" name="interval" value="5000"/>
            <nvpair id="clone" name="clone" value="2"/>
            <nvpair id="clone_max" name="clone_max" value="4"/>
            <nvpair id="hostlist" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 "/>
@@ -632,7 +595,6 @@
        <rsc_op id="8" rsc_id="DoFencing:child_DoFencing:2" operation="delete" operation_key="DoFencing:child_DoFencing:2_delete_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="clone" name="clone" value="2"/>
            <nvpair id="clone_max" name="clone_max" value="4"/>
@@ -647,7 +609,6 @@
        <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:2" operation="status" operation_key="DoFencing:child_DoFencing:2_status_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -664,7 +625,6 @@
        <rsc_op id="28" rsc_id="DoFencing:child_DoFencing:2" operation="status" operation_key="DoFencing:child_DoFencing:2_status_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -681,7 +641,6 @@
        <rsc_op id="36" rsc_id="DoFencing:child_DoFencing:2" operation="status" operation_key="DoFencing:child_DoFencing:2_status_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -698,7 +657,6 @@
        <rsc_op id="63" rsc_id="DoFencing:child_DoFencing:2" operation="stop" operation_key="DoFencing:child_DoFencing:2_stop_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="clone" name="clone" value="2"/>
            <nvpair id="clone_max" name="clone_max" value="4"/>
@@ -717,7 +675,6 @@
        <rsc_op id="64" rsc_id="DoFencing:child_DoFencing:2" operation="start" operation_key="DoFencing:child_DoFencing:2_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="clone" name="clone" value="2"/>
            <nvpair id="clone_max" name="clone_max" value="4"/>
@@ -742,7 +699,6 @@
        <rsc_op id="65" rsc_id="DoFencing:child_DoFencing:2" operation="delete" operation_key="DoFencing:child_DoFencing:2_delete_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="clone" name="clone" value="2"/>
            <nvpair id="clone_max" name="clone_max" value="4"/>
@@ -761,7 +717,6 @@
        <rsc_op id="29" rsc_id="DoFencing:child_DoFencing:3" operation="status" operation_key="DoFencing:child_DoFencing:3_status_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -778,7 +733,6 @@
        <rsc_op id="37" rsc_id="DoFencing:child_DoFencing:3" operation="status" operation_key="DoFencing:child_DoFencing:3_status_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -795,7 +749,6 @@
        <rsc_op id="45" rsc_id="DoFencing:child_DoFencing:3" operation="status" operation_key="DoFencing:child_DoFencing:3_status_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -812,7 +765,6 @@
        <rsc_op id="66" rsc_id="DoFencing:child_DoFencing:3" operation="stop" operation_key="DoFencing:child_DoFencing:3_stop_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="clone" name="clone" value="3"/>
            <nvpair id="clone_max" name="clone_max" value="4"/>
@@ -831,7 +783,6 @@
        <rsc_op id="67" rsc_id="DoFencing:child_DoFencing:3" operation="delete" operation_key="DoFencing:child_DoFencing:3_delete_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="clone" name="clone" value="3"/>
            <nvpair id="clone_max" name="clone_max" value="4"/>
@@ -849,14 +800,13 @@
      <action_set>
        <pseudo_event id="68" rsc_id="DoFencing" operation="start" operation_key="DoFencing_start_0">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
          </attributes>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="14" operation="probe_complete" operation_key="probe_complete"/>
+         <pseudo_event id="14" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
          <pseudo_event id="71" rsc_id="DoFencing" operation="stopped" operation_key="DoFencing_stopped_0"/>
@@ -867,7 +817,6 @@
      <action_set>
        <pseudo_event id="69" rsc_id="DoFencing" operation="running" operation_key="DoFencing_running_0">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
          </attributes>
        </pseudo_event>
@@ -891,7 +840,6 @@
      <action_set>
        <pseudo_event id="70" rsc_id="DoFencing" operation="stop" operation_key="DoFencing_stop_0">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
          </attributes>
        </pseudo_event>
@@ -902,7 +850,6 @@
      <action_set>
        <pseudo_event id="71" rsc_id="DoFencing" operation="stopped" operation_key="DoFencing_stopped_0">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
          </attributes>
        </pseudo_event>
@@ -927,37 +874,35 @@
    </synapse>
    <synapse id="53">
      <action_set>
-       <crm_event id="14" operation="probe_complete" operation_key="probe_complete">
+       <pseudo_event id="14" operation="probe_complete" operation_key="probe_complete">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
          </attributes>
-       </crm_event>
+       </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="15" operation="probe_complete" operation_key="probe_complete" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+         <rsc_op id="15" operation="probe_complete" operation_key="probe_complete" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
        </trigger>
        <trigger>
-         <crm_event id="22" operation="probe_complete" operation_key="probe_complete" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+         <rsc_op id="22" operation="probe_complete" operation_key="probe_complete" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
        <trigger>
-         <crm_event id="30" operation="probe_complete" operation_key="probe_complete" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+         <rsc_op id="30" operation="probe_complete" operation_key="probe_complete" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
        </trigger>
        <trigger>
-         <crm_event id="38" operation="probe_complete" operation_key="probe_complete" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+         <rsc_op id="38" operation="probe_complete" operation_key="probe_complete" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="54">
      <action_set>
-       <crm_event id="15" operation="probe_complete" operation_key="probe_complete" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
+       <rsc_op id="15" operation="probe_complete" operation_key="probe_complete" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
          </attributes>
-       </crm_event>
+       </rsc_op>
      </action_set>
      <inputs>
        <trigger>
@@ -982,13 +927,12 @@
    </synapse>
    <synapse id="55">
      <action_set>
-       <crm_event id="22" operation="probe_complete" operation_key="probe_complete" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+       <rsc_op id="22" operation="probe_complete" operation_key="probe_complete" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
          </attributes>
-       </crm_event>
+       </rsc_op>
      </action_set>
      <inputs>
        <trigger>
@@ -1016,13 +960,12 @@
    </synapse>
    <synapse id="56">
      <action_set>
-       <crm_event id="30" operation="probe_complete" operation_key="probe_complete" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
+       <rsc_op id="30" operation="probe_complete" operation_key="probe_complete" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
          </attributes>
-       </crm_event>
+       </rsc_op>
      </action_set>
      <inputs>
        <trigger>
@@ -1050,13 +993,12 @@
    </synapse>
    <synapse id="57">
      <action_set>
-       <crm_event id="38" operation="probe_complete" operation_key="probe_complete" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
+       <rsc_op id="38" operation="probe_complete" operation_key="probe_complete" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
          </attributes>
-       </crm_event>
+       </rsc_op>
      </action_set>
      <inputs>
        <trigger>
@@ -1086,7 +1028,6 @@
      <action_set>
        <crm_event id="72" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
          </attributes>
        </crm_event>

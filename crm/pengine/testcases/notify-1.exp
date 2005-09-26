@@ -8,10 +8,9 @@
            <nvpair id="notify_active_resource" name="notify_active_resource" value="rsc1:child_rsc1:0 "/>
            <nvpair id="notify_active_uuid" name="notify_active_uuid" value="uuid1 "/>
            <nvpair id="notify_confirm" name="notify_confirm" value="yes"/>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="notify_type" name="notify_type" value="pre"/>
-           <nvpair id="notify_operation" name="notify_operation" value="start"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="notify_operation" name="notify_operation" value="start"/>
            <nvpair id="notify_start_uname" name="notify_start_uname" value="node1 "/>
            <nvpair id="notify_start_resource" name="notify_start_resource" value="rsc1:child_rsc1:1 "/>
            <nvpair id="notify_active_uname" name="notify_active_uname" value="node1 "/>
@@ -36,10 +35,9 @@
            <nvpair id="notify_active_resource" name="notify_active_resource" value="rsc1:child_rsc1:0 "/>
            <nvpair id="notify_active_uuid" name="notify_active_uuid" value="uuid1 "/>
            <nvpair id="notify_confirm" name="notify_confirm" value="yes"/>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="notify_type" name="notify_type" value="post"/>
-           <nvpair id="notify_operation" name="notify_operation" value="start"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="notify_operation" name="notify_operation" value="start"/>
            <nvpair id="notify_start_uname" name="notify_start_uname" value="node1 "/>
            <nvpair id="notify_start_resource" name="notify_start_resource" value="rsc1:child_rsc1:1 "/>
            <nvpair id="notify_active_uname" name="notify_active_uname" value="node1 "/>
@@ -60,7 +58,6 @@
        <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="status" operation_key="rsc1:child_rsc1:1_status_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -77,7 +74,6 @@
        <rsc_op id="7" rsc_id="rsc1:child_rsc1:1" operation="start" operation_key="rsc1:child_rsc1:1_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="clone" name="clone" value="1"/>
            <nvpair id="clone_max" name="clone_max" value="2"/>
@@ -100,10 +96,9 @@
            <nvpair id="notify_active_resource" name="notify_active_resource" value="rsc1:child_rsc1:0 "/>
            <nvpair id="notify_active_uuid" name="notify_active_uuid" value="uuid1 "/>
            <nvpair id="notify_confirm" name="notify_confirm" value="yes"/>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="notify_type" name="notify_type" value="post"/>
-           <nvpair id="notify_operation" name="notify_operation" value="start"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="notify_operation" name="notify_operation" value="start"/>
            <nvpair id="notify_start_uname" name="notify_start_uname" value="node1 "/>
            <nvpair id="notify_start_resource" name="notify_start_resource" value="rsc1:child_rsc1:1 "/>
            <nvpair id="notify_active_uname" name="notify_active_uname" value="node1 "/>
@@ -123,14 +118,13 @@
      <action_set>
        <pseudo_event id="8" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
          </attributes>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="1" operation="probe_complete" operation_key="probe_complete"/>
+         <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
          <pseudo_event id="11" rsc_id="rsc1" operation="notified" operation_key="rsc1_confirmed-pre_notify_start_0"/>
@@ -141,7 +135,6 @@
      <action_set>
        <pseudo_event id="9" rsc_id="rsc1" operation="running" operation_key="rsc1_running_0">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
          </attributes>
        </pseudo_event>
@@ -160,10 +153,9 @@
        <pseudo_event id="10" rsc_id="rsc1" operation="notify" operation_key="rsc1_pre_notify_start_0">
          <attributes>
            <nvpair id="notify_confirm" name="notify_confirm" value="yes"/>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="notify_type" name="notify_type" value="pre"/>
-           <nvpair id="notify_operation" name="notify_operation" value="start"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="notify_operation" name="notify_operation" value="start"/>
          </attributes>
        </pseudo_event>
      </action_set>
@@ -173,10 +165,9 @@
      <action_set>
        <pseudo_event id="11" rsc_id="rsc1" operation="notified" operation_key="rsc1_confirmed-pre_notify_start_0">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="notify_type" name="notify_type" value="pre"/>
-           <nvpair id="notify_operation" name="notify_operation" value="start"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="notify_operation" name="notify_operation" value="start"/>
          </attributes>
        </pseudo_event>
      </action_set>
@@ -194,10 +185,9 @@
        <pseudo_event id="12" rsc_id="rsc1" operation="notify" operation_key="rsc1_post_notify_start_0">
          <attributes>
            <nvpair id="notify_confirm" name="notify_confirm" value="yes"/>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="notify_type" name="notify_type" value="post"/>
-           <nvpair id="notify_operation" name="notify_operation" value="start"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="notify_operation" name="notify_operation" value="start"/>
          </attributes>
        </pseudo_event>
      </action_set>
@@ -211,10 +201,9 @@
      <action_set>
        <pseudo_event id="13" rsc_id="rsc1" operation="notified" operation_key="rsc1_confirmed-post_notify_start_0">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="notify_type" name="notify_type" value="pre"/>
-           <nvpair id="notify_operation" name="notify_operation" value="start"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="notify_operation" name="notify_operation" value="start"/>
          </attributes>
        </pseudo_event>
      </action_set>
@@ -235,7 +224,6 @@
        <rsc_op id="20" rsc_id="rsc2:child_rsc2:0" operation="stop" operation_key="rsc2:child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="clone" name="clone" value="0"/>
            <nvpair id="clone_max" name="clone_max" value="2"/>
@@ -254,7 +242,6 @@
        <rsc_op id="21" rsc_id="rsc2:child_rsc2:0" operation="delete" operation_key="rsc2:child_rsc2:0_delete_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="clone" name="clone" value="0"/>
            <nvpair id="clone_max" name="clone_max" value="2"/>
@@ -276,11 +263,10 @@
            <nvpair id="notify_stop_uuid" name="notify_stop_uuid" value="uuid1 "/>
            <nvpair id="notify_stop_uname" name="notify_stop_uname" value="node1 "/>
            <nvpair id="notify_confirm" name="notify_confirm" value="yes"/>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="notify_type" name="notify_type" value="pre"/>
            <nvpair id="notify_stop_resource" name="notify_stop_resource" value="rsc2:child_rsc2:0 "/>
-           <nvpair id="notify_operation" name="notify_operation" value="stop"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="notify_operation" name="notify_operation" value="stop"/>
            <nvpair id="clone" name="clone" value="0"/>
            <nvpair id="clone_max" name="clone_max" value="2"/>
            <nvpair id="notify" name="notify" value="1"/>
@@ -298,7 +284,6 @@
        <rsc_op id="4" rsc_id="rsc2:child_rsc2:1" operation="status" operation_key="rsc2:child_rsc2:1_status_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc2:1" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -314,7 +299,6 @@
      <action_set>
        <pseudo_event id="28" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
          </attributes>
        </pseudo_event>
@@ -329,7 +313,6 @@
      <action_set>
        <pseudo_event id="29" rsc_id="rsc2" operation="stopped" operation_key="rsc2_stopped_0">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
          </attributes>
        </pseudo_event>
@@ -348,10 +331,9 @@
        <pseudo_event id="30" rsc_id="rsc2" operation="notify" operation_key="rsc2_pre_notify_stop_0">
          <attributes>
            <nvpair id="notify_confirm" name="notify_confirm" value="yes"/>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="notify_type" name="notify_type" value="pre"/>
-           <nvpair id="notify_operation" name="notify_operation" value="stop"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="notify_operation" name="notify_operation" value="stop"/>
          </attributes>
        </pseudo_event>
      </action_set>
@@ -361,10 +343,9 @@
      <action_set>
        <pseudo_event id="31" rsc_id="rsc2" operation="notified" operation_key="rsc2_confirmed-pre_notify_stop_0">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="notify_type" name="notify_type" value="pre"/>
-           <nvpair id="notify_operation" name="notify_operation" value="stop"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="notify_operation" name="notify_operation" value="stop"/>
          </attributes>
        </pseudo_event>
      </action_set>
@@ -382,10 +363,9 @@
        <pseudo_event id="32" rsc_id="rsc2" operation="notify" operation_key="rsc2_post_notify_stop_0">
          <attributes>
            <nvpair id="notify_confirm" name="notify_confirm" value="yes"/>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="notify_type" name="notify_type" value="post"/>
-           <nvpair id="notify_operation" name="notify_operation" value="stop"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="notify_operation" name="notify_operation" value="stop"/>
          </attributes>
        </pseudo_event>
      </action_set>
@@ -399,10 +379,9 @@
      <action_set>
        <pseudo_event id="33" rsc_id="rsc2" operation="notified" operation_key="rsc2_confirmed-post_notify_stop_0">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="notify_type" name="notify_type" value="pre"/>
-           <nvpair id="notify_operation" name="notify_operation" value="stop"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="notify_operation" name="notify_operation" value="stop"/>
          </attributes>
        </pseudo_event>
      </action_set>
@@ -414,28 +393,26 @@
    </synapse>
    <synapse id="21">
      <action_set>
-       <crm_event id="1" operation="probe_complete" operation_key="probe_complete">
+       <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
          </attributes>
-       </crm_event>
+       </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="22">
      <action_set>
-       <crm_event id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
+       <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
          </attributes>
-       </crm_event>
+       </rsc_op>
      </action_set>
      <inputs>
        <trigger>

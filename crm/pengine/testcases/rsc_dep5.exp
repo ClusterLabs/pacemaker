@@ -4,7 +4,6 @@
        <rsc_op id="3" rsc_id="rsc3" operation="status" operation_key="rsc3_status_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc3" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -19,7 +18,6 @@
        <rsc_op id="7" rsc_id="rsc3" operation="status" operation_key="rsc3_status_0" on_node="node2" on_node_uuid="node2">
          <primitive id="rsc3" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -34,7 +32,6 @@
        <rsc_op id="10" rsc_id="rsc3" operation="start" operation_key="rsc3_start_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc3" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="priority" name="priority" value="3.0"/>
          </attributes>
@@ -42,7 +39,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="1" operation="probe_complete" operation_key="probe_complete"/>
+         <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
      </inputs>
    </synapse>
@@ -51,7 +48,6 @@
        <rsc_op id="4" rsc_id="rsc2" operation="status" operation_key="rsc2_status_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc2" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -66,7 +62,6 @@
        <rsc_op id="8" rsc_id="rsc2" operation="status" operation_key="rsc2_status_0" on_node="node2" on_node_uuid="node2">
          <primitive id="rsc2" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -81,7 +76,6 @@
        <rsc_op id="11" rsc_id="rsc2" operation="start" operation_key="rsc2_start_0" on_node="node2" on_node_uuid="node2">
          <primitive id="rsc2" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
            <nvpair id="priority" name="priority" value="2.0"/>
          </attributes>
@@ -89,7 +83,7 @@
     </action_set>
      <inputs>
        <trigger>
-         <crm_event id="1" operation="probe_complete" operation_key="probe_complete"/>
+         <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
      </inputs>
    </synapse>
@@ -98,7 +92,6 @@
        <rsc_op id="5" rsc_id="rsc1" operation="status" operation_key="rsc1_status_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -113,7 +106,6 @@
        <rsc_op id="9" rsc_id="rsc1" operation="status" operation_key="rsc1_status_0" on_node="node2" on_node_uuid="node2">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
@@ -125,31 +117,29 @@
   </synapse>
    <synapse id="8">
      <action_set>
-       <crm_event id="1" operation="probe_complete" operation_key="probe_complete">
+       <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
          </attributes>
-       </crm_event>
+       </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="node1"/>
+         <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="node1"/>
        </trigger>
        <trigger>
-         <crm_event id="6" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="node2"/>
+         <rsc_op id="6" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="node2"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="9">
      <action_set>
-       <crm_event id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="node1">
+       <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="node1">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
          </attributes>
-       </crm_event>
+       </rsc_op>
      </action_set>
      <inputs>
        <trigger>
@@ -165,13 +155,12 @@
    </synapse>
    <synapse id="10">
      <action_set>
-       <crm_event id="6" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="node2">
+       <rsc_op id="6" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="node2">
          <attributes>
-           <nvpair id="te-allow-fail" name="te-allow-fail" value="true"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
            <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
+           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
          </attributes>
-       </crm_event>
+       </rsc_op>
      </action_set>
      <inputs>
        <trigger>

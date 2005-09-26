@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.63 2005/09/26 07:44:44 andrew Exp $ */
+/* $Id: graph.c,v 1.64 2005/09/26 07:58:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -384,7 +384,7 @@ action2xml(action_t *action, gboolean as_input)
 
 	}
 
-	if(action->failure_is_fatal) {
+	if(action->failure_is_fatal == FALSE) {
 		g_hash_table_insert(
 			action->extra, crm_strdup(XML_ATTR_TE_ALLOWFAIL),
 			crm_strdup(XML_BOOLEAN_TRUE));
