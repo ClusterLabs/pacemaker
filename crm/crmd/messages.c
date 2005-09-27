@@ -466,6 +466,7 @@ relay_message(HA_Message *relay_message, gboolean originated_locally)
 {
 	int is_for_dc	= 0;
 	int is_for_dcib	= 0;
+	int is_for_te	= 0;
 	int is_for_crm	= 0;
 	int is_for_cib	= 0;
 	int is_local    = 0;
@@ -509,12 +510,13 @@ relay_message(HA_Message *relay_message, gboolean originated_locally)
 	
 	is_for_dc   = (strcmp(CRM_SYSTEM_DC,   sys_to) == 0);
 	is_for_dcib = (strcmp(CRM_SYSTEM_DCIB, sys_to) == 0);
+	is_for_te   = (strcmp(CRM_SYSTEM_TENGINE, sys_to) == 0);
 	is_for_cib  = (strcmp(CRM_SYSTEM_CIB,  sys_to) == 0);
 	is_for_crm  = (strcmp(CRM_SYSTEM_CRMD, sys_to) == 0);
 		
 	is_local = 0;
 	if(host_to == NULL || strlen(host_to) == 0) {
-		if(is_for_dc) {
+		if(is_for_dc || is_for_te) {
 			is_local = 0;
 				
 		} else if(is_for_crm && originated_locally) {
@@ -528,11 +530,14 @@ relay_message(HA_Message *relay_message, gboolean originated_locally)
 		is_local=1;
 	}
 
-	if(is_for_dc || is_for_dcib) {
-		if(AM_I_DC) {
+	if(is_for_dc || is_for_dcib || is_for_te) {
+		if(AM_I_DC && is_for_te) {
+			ROUTER_RESULT("Message result: Local relay");
+			send_msg_via_ipc(relay_message, sys_to);
+				
+		} else if(AM_I_DC) {
 			ROUTER_RESULT("Message result: DC/CRMd process");
 			processing_complete = FALSE; /* more to be done by caller */
-				
 		} else if(originated_locally
 			  && safe_str_neq(sys_from, CRM_SYSTEM_PENGINE)
 			  && safe_str_neq(sys_from, CRM_SYSTEM_TENGINE)) {
@@ -1053,7 +1058,7 @@ handle_shutdown_request(HA_Message *stored_msg)
 	crm_xml_add(node_state, XML_CIB_ATTR_SHUTDOWN,  now_s);
 	crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE, CRMD_STATE_INACTIVE);
 	
-	frag = create_cib_fragment(node_state, NULL);
+	frag = create_cib_fragment(node_state, XML_CIB_TAG_STATUS);
 	
 	/* cleanup intermediate steps */
 	free_xml(node_state);
