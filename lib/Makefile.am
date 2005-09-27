@@ -48,18 +48,3 @@ SUBDIRS			=  	\
 	$(MGMT_DIR)
 
 #	bindings
-
-DIST_SUBDIRS		=  	\
-	pils			\
-	stonith 		\
-	clplumbing		\
-	hbclient		\
-	apphb			\
-	recoverymgr		\
-	plugins 		\
-	fencing			\
-	crm			\
-	lrm			\
-	$(MGMT_DIR)
-
-#	bindings
