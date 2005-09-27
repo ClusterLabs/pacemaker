@@ -434,7 +434,7 @@ class CIBAudit(ClusterAudit):
 		if first_host == None:
 			first_host = a_host
 			first_host_xml = self.store_remote_cib(a_host)
-			self.CM.debug("Retrieved CIB: %s" % first_host_xml) 
+			#self.CM.debug("Retrieved CIB: %s" % first_host_xml) 
 		else:
 			a_host_xml = self.store_remote_cib(a_host)
 			diff_cmd="@libdir@/heartbeat/crm_diff -VV -f -N \'%s\' -O '%s'" % (a_host_xml, first_host_xml)
@@ -456,15 +456,20 @@ class CIBAudit(ClusterAudit):
 		
     def store_remote_cib(self, node):
 	combined = ""
+	first_line = 1
 	extra_debug = 0
-        self.CM.debug("\tRetrieving CIB from: %s" % node)
+        #self.CM.debug("\tRetrieving CIB from: %s" % node)
         lines = self.CM.rsh.readlines(node, self.CM["CibQuery"])
 	if extra_debug:
 	    self.CM.debug("Start Cib[%s]" % node) 
         for line in lines:
 	    combined = combined + line[:-1]
-	    if extra_debug:
+	    if first_line:
+                self.CM.debug("[Cib]" + line)
+		first_line = 0
+	    elif extra_debug:
                 self.CM.debug("[Cib]" + line) 
+
 	if extra_debug:
 	    self.CM.debug("End Cib[%s]" % node) 
 
