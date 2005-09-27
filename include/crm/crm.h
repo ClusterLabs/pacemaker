@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.81 2005/09/26 07:48:53 andrew Exp $ */
+/* $Id: crm.h,v 1.82 2005/09/27 13:23:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -168,7 +168,7 @@ extern gboolean crm_assert_failed;
 #define CRMD_ACTION_NOTIFY		"notify"
 #define CRMD_ACTION_NOTIFIED		"notified"
 
-#define CRMD_ACTION_STATUS		"status"
+#define CRMD_ACTION_STATUS		"monitor"
 #define CRMD_ACTION_MON			"monitor"
 #define CRMD_ACTION_MON_PENDING		CRMD_ACTION_STARTED
 #define CRMD_ACTION_MON_OK		CRMD_ACTION_STARTED
