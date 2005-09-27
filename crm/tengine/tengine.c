@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.101 2005/09/27 13:22:02 andrew Exp $ */
+/* $Id: tengine.c,v 1.102 2005/09/27 14:21:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -249,13 +249,15 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 		if(target_rc == op_rc_i) {
 			crm_info("Target rc: == %d", op_rc_i);
 			if(op_status_i != LRM_OP_DONE) {
-				crm_debug("Re-mapping op status to LRM_OP_DONE: %s", update_event);
+				crm_debug("Re-mapping op status to"
+					  " LRM_OP_DONE for %s", update_event);
 				op_status_i = LRM_OP_DONE;
 			}
 		} else {
 			crm_info("Target rc: != %d", op_rc_i);
 			if(op_status_i != LRM_OP_ERROR) {
-				crm_info("Re-mapping op status to LRM_OP_ERROR: %s", update_event);
+				crm_info("Re-mapping op status to"
+					 " LRM_OP_ERROR for %s", update_event);
 				op_status_i = LRM_OP_ERROR;
 			}
 		}
