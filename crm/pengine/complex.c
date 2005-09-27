@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.63 2005/09/26 07:44:44 andrew Exp $ */
+/* $Id: complex.c,v 1.64 2005/09/27 13:22:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -301,7 +301,6 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	} else {		
 		(*rsc)->recovery_type = recovery_stop_start;
 		crm_debug_2("\tMultiple running resource recovery: stop/start");
-		
 	}
 
 	value = g_hash_table_lookup((*rsc)->parameters, "resource_stickiness");

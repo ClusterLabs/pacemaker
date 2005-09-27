@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.128 2005/09/26 07:44:44 andrew Exp $ */
+/* $Id: unpack.c,v 1.129 2005/09/27 13:22:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -698,6 +698,8 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		saved_role = rsc->role;
 		slist_iter(
 			rsc_op, crm_data_t, sorted_op_list, lpc,
+
+			rsc->role = RSC_ROLE_STOPPED;
 			unpack_rsc_op(rsc, node, rsc_op,
 				      &max_call_id, data_set);
 			);
@@ -851,7 +853,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	const char *task        = NULL;
  	const char *task_id     = NULL;
 	const char *task_status = NULL;
+	const char *target_rc = NULL;	
 
+	int interval = 0;
 	int task_id_i = -1;
 	int task_status_i = -2;
 
@@ -894,14 +898,24 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	crm_debug_2("Unpacking task %s/%s (call_id=%s, status=%s) on %s",
 		    rsc->id, task, task_id, task_status, node->details->uname);
 	
-	if(params != NULL
-	   && (rsc->orphan == FALSE || data_set->stop_rsc_orphans == FALSE)) {
+
+	if(params != NULL) {
+		const char *interval_s = crm_element_value(params, "interval");
+		if(interval_s != NULL) {
+			atoi(interval_s);
+		}
+	}
+	
+	if(params == NULL) {
+
+	} else if(safe_str_eq(task, CRMD_ACTION_STATUS) && interval == 0) {
+		/* ignore probes */
+		
+	} else if(rsc->orphan == FALSE || data_set->stop_rsc_orphans == FALSE){
 		crm_data_t *op_match = NULL;
 		crm_data_t *pdiff = NULL;
 		GHashTable *local_rsc_params = NULL;
 		crm_data_t *pnow = NULL;
-		const char *interval_s = crm_element_value(params, "interval");
-		int interval = crm_atoi(interval_s, "0");
 		
 		crm_debug_2("Checking parameters to %s action", task);
 		
@@ -1013,6 +1027,26 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			  node->details->uname, rsc->id, XML_RSC_ATTR_STOPFAIL);
 	}
 
+	if(params != NULL) {
+		target_rc = crm_element_value(params, XML_ATTR_TE_TARGET_RC);
+	}
+
+	if(target_rc != NULL && safe_str_neq(target_rc, "0")) {
+		const char *actual_rc = NULL;	
+		crm_debug_2("Checking for probes that we want to fail: %s",
+			    rsc->id);
+		actual_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
+		crm_debug_2("Exit code from %s: %s vs. %s",
+			    task, target_rc, actual_rc);
+		/* mask out probes */
+		if(safe_str_eq(target_rc, actual_rc)
+		   && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+			rsc->role = RSC_ROLE_STOPPED;
+			crm_debug_2("Probe ignored");
+			return TRUE;
+		}
+	}
+
 	if(task_status_i == LRM_OP_ERROR
 	   || task_status_i == LRM_OP_TIMEOUT
 	   || task_status_i == LRM_OP_NOTSUPPORTED) {
@@ -1076,12 +1110,12 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 
 			if(is_stop_action) {
 				rsc->role = RSC_ROLE_STOPPED;
-
+#if 0
 			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
 				crm_debug_3("%s active on %s",
 					    rsc->id, node->details->uname);
 				rsc->role = RSC_ROLE_STARTED;
-
+#endif
 			} else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
 				rsc->role = RSC_ROLE_MASTER;
 
@@ -1096,7 +1130,14 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				 */
 				custom_action(rsc, crm_strdup(id), task,
 					      NULL, TRUE, TRUE, data_set);
+			} else {
+				crm_info("%s active on %s",
+					    rsc->id, node->details->uname);
+				if(rsc->role < RSC_ROLE_STARTED) {
+					rsc->role = RSC_ROLE_STARTED;
+				}
 			}
+			
 			break;
 
 		case LRM_OP_ERROR:

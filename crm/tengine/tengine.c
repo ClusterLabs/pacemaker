@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.100 2005/09/26 07:44:49 andrew Exp $ */
+/* $Id: tengine.c,v 1.101 2005/09/27 13:22:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -214,8 +214,11 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	CRM_DEV_ASSERT(decode_transition_magic(
 			       magic, &update_te_uuid,
 			       &transition_i, &op_status_i, &op_rc_i));
-	
-	if(transition_i == -1) {
+
+	if(event == NULL) {
+		crm_err("No event");
+
+	} else if(transition_i == -1) {
 		/* we never expect these - recompute */
 		crm_err("Detected an action initiated outside of a transition");
 		crm_log_message(LOG_ERR, event);
@@ -224,11 +227,13 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	} else if(safe_str_neq(update_te_uuid, te_uuid)) {
 		crm_err("Detected an action from a different transitioner:"
 			" %s vs. %s", update_te_uuid, te_uuid);
+		crm_log_message(LOG_ERR, event);
 		return -6;
 		
 	} else if(transition_counter != transition_i) {
 		crm_warn("Detected an action from a different transition:"
 			 " %d vs. %d", transition_i, transition_counter);
+		crm_log_message(LOG_WARNING, event);
 		return -3;
 	}
 	
@@ -244,13 +249,13 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 		if(target_rc == op_rc_i) {
 			crm_info("Target rc: == %d", op_rc_i);
 			if(op_status_i != LRM_OP_DONE) {
-				crm_info("Re-mapping op status to LRM_OP_DONE");
+				crm_debug("Re-mapping op status to LRM_OP_DONE: %s", update_event);
 				op_status_i = LRM_OP_DONE;
 			}
 		} else {
 			crm_info("Target rc: != %d", op_rc_i);
 			if(op_status_i != LRM_OP_ERROR) {
-				crm_info("Re-mapping op status to LRM_OP_ERROR");
+				crm_info("Re-mapping op status to LRM_OP_ERROR: %s", update_event);
 				op_status_i = LRM_OP_ERROR;
 			}
 		}
@@ -408,6 +413,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 	int rc                = -1;
 	int action_id         = -1;
 	int op_status_i       = 0;
+	const char *magic     = NULL;
 	const char *rsc_id    = NULL;
 	const char *op_status = NULL;
 
@@ -419,9 +425,9 @@ process_graph_event(crm_data_t *event, const char *event_node)
 		
 		return TRUE;
 	}
-
 	rsc_id    = crm_element_value(event, XML_ATTR_ID);
 	op_status = crm_element_value(event, XML_LRM_ATTR_OPSTATUS);
+	magic     = crm_element_value(event, XML_ATTR_TRANSITION_MAGIC);
 
 	if(op_status != NULL) {
 		op_status_i = atoi(op_status);
@@ -432,12 +438,12 @@ process_graph_event(crm_data_t *event, const char *event_node)
 		}
 	}
 	
-	crm_debug("Processing CIB update: %s on %s: %s",
-		  rsc_id, event_node, op_status2text(op_status_i));
-
-	if(crm_element_value(event, XML_ATTR_TRANSITION_MAGIC) == NULL) {
+	if(magic == NULL) {
 		crm_log_xml_debug(event, "Skipping \"non-change\"");
 		action_id = -3;
+	} else {
+		crm_debug("Processing CIB update: %s on %s: %s",
+			  rsc_id, event_node, magic);
 	}
 	
 	slist_iter(
@@ -743,7 +749,7 @@ cib_action_update(action_t *action, int status)
 	
 	set_node_tstamp(xml_op);
 
-	fragment = create_cib_fragment(state, NULL);
+	fragment = create_cib_fragment(state, XML_CIB_TAG_STATUS);
 	
 	crm_debug_3("Updating CIB with \"%s\" (%s): %s %s on %s",
 		  status<0?"new action":XML_ATTR_TIMEOUT,

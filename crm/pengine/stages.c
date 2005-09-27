@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.77 2005/09/26 07:44:44 andrew Exp $ */
+/* $Id: stages.c,v 1.78 2005/09/27 13:22:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -203,7 +203,6 @@ stage3(pe_working_set_t *data_set)
 		probe_node_complete = custom_action(
 			NULL, crm_strdup(CRMD_ACTION_PROBED),
 			CRMD_ACTION_PROBED, node, FALSE, TRUE, data_set);
-/* 		probe_node_complete->pseudo = TRUE; */
 		add_hash_param(probe_node_complete->extra,
 			       XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
 	

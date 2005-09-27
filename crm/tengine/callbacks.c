@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.48 2005/09/26 07:44:49 andrew Exp $ */
+/* $Id: callbacks.c,v 1.49 2005/09/27 13:22:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -440,7 +440,7 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 		crm_xml_add(node_state, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM);
 		create_xml_node(node_state, XML_CIB_TAG_LRM);
 		
-		update = create_cib_fragment(node_state, NULL);
+		update = create_cib_fragment(node_state, XML_CIB_TAG_STATUS);
 		free_xml(node_state);
 	
 		rc = te_cib_conn->cmds->modify(
