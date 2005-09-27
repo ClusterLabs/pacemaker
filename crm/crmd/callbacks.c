@@ -296,7 +296,7 @@ crmd_ha_status_callback(
 	crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_TAG_TRANSIENT_NODEATTRS);
 
 	/* this change should not be broadcast */
-	update_local_cib(create_cib_fragment(update, NULL));
+	update_local_cib(create_cib_fragment(update, XML_CIB_TAG_STATUS));
 	G_main_set_trigger(fsa_source);
 	free_xml(update);
 }
@@ -356,7 +356,7 @@ crmd_client_status_callback(const char * node, const char * client,
 			crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_TAG_TRANSIENT_NODEATTRS);
 		}
 		
-		fragment = create_cib_fragment(update, NULL);
+		fragment = create_cib_fragment(update, XML_CIB_TAG_STATUS);
 
 		/* it is safe to keep these updates on the local node
 		 * each node updates their own CIB

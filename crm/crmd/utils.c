@@ -1114,7 +1114,7 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	crm_xml_add(tmp1, XML_ATTR_UNAME, uname);
 	crm_xml_add(tmp1, XML_ATTR_TYPE, type);
 	
-	update_local_cib(create_cib_fragment(tmp1, NULL));
+	update_local_cib(create_cib_fragment(tmp1, XML_CIB_TAG_NODES));
 	free_xml(tmp1);
 	
 }

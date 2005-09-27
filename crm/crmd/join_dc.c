@@ -317,7 +317,7 @@ finalize_join(const char *caller)
 	crm_debug_3("Update %s in the CIB to our uuid: %s",
 		    XML_ATTR_DC_UUID, crm_element_value(cib, XML_ATTR_DC_UUID));
 	
-	cib_update = create_cib_fragment(cib, NULL);
+	cib_update = create_cib_fragment(cib, XML_TAG_CIB);
 	fsa_cib_conn->cmds->modify(
 		fsa_cib_conn, NULL, cib_update, NULL, cib_quorum_override);
 

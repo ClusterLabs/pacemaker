@@ -304,7 +304,7 @@ do_dc_takeover(long long action,
 	cib = createEmptyCib();
 	crm_xml_add(cib, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 	crm_xml_add(cib, XML_ATTR_CIB_REVISION, CIB_FEATURE_SET);
-	fragment = create_cib_fragment(cib, NULL);
+	fragment = create_cib_fragment(cib, XML_TAG_CIB);
 	fsa_cib_conn->cmds->modify(
 		fsa_cib_conn, NULL, fragment, NULL, cib_quorum_override);
 	add_cib_op_callback(rc, FALSE, NULL, feature_update_callback);

@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.55 2005/09/16 17:28:58 andrew Exp $ */
+/* $Id: messages.c,v 1.56 2005/09/27 13:18:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -902,7 +902,7 @@ sync_our_cib(HA_Message *request, gboolean all)
 	const char *host            = cl_get_string(request, F_ORIG);
 	const char *op              = cl_get_string(request, F_CIB_OPERATION);
 
-	crm_data_t *sync_data       = create_cib_fragment(the_cib, NULL);
+	crm_data_t *sync_data       = create_cib_fragment(the_cib,XML_TAG_CIB);
 	HA_Message *replace_request = cib_msg_copy(request, FALSE);
 	
 	CRM_DEV_ASSERT(sync_data != NULL);
