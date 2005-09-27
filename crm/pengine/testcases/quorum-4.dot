@@ -2,11 +2,11 @@ digraph "g" {
 	size = "30,30"
 "probe_complete" [ style=bold color="green" fontcolor="orange" ]
 "probe_complete hadev2" [ style=bold color="green" fontcolor="black" ]
-"child_DoFencing_status_0 hadev2" [ style=bold color="green" fontcolor="black" ]
+"child_DoFencing_monitor_0 hadev2" [ style=bold color="green" fontcolor="black" ]
 "child_DoFencing_start_0 hadev2" [ style=bold color="green" fontcolor="black" ]
 "child_DoFencing_monitor_5000 hadev2" [ style=bold color="green" fontcolor="black" ]
 "probe_complete hadev2" -> "probe_complete" [ style = bold]
-"child_DoFencing_status_0 hadev2" -> "probe_complete hadev2" [ style = bold]
+"child_DoFencing_monitor_0 hadev2" -> "probe_complete hadev2" [ style = bold]
 "probe_complete" -> "child_DoFencing_start_0 hadev2" [ style = bold]
 "child_DoFencing_start_0 hadev2" -> "child_DoFencing_monitor_5000 hadev2" [ style = bold]
 }

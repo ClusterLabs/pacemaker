@@ -1,7 +1,7 @@
  <transition_graph global_timeout="60s" transition_id="0">
    <synapse id="0">
      <action_set>
-       <rsc_op id="3" rsc_id="rsc1" operation="status" operation_key="rsc1_status_0" on_node="node1" on_node_uuid="uuid1">
+       <rsc_op id="3" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
@@ -60,7 +60,7 @@
    </synapse>
    <synapse id="4">
      <action_set>
-       <rsc_op id="4" rsc_id="rsc2:child_rsc1" operation="status" operation_key="rsc2:child_rsc1_status_0" on_node="node1" on_node_uuid="uuid1">
+       <rsc_op id="4" rsc_id="rsc2:child_rsc1" operation="monitor" operation_key="rsc2:child_rsc1_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc1" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
@@ -88,7 +88,7 @@
    </synapse>
    <synapse id="6">
      <action_set>
-       <rsc_op id="5" rsc_id="rsc2:child_rsc2" operation="status" operation_key="rsc2:child_rsc2_status_0" on_node="node1" on_node_uuid="uuid1">
+       <rsc_op id="5" rsc_id="rsc2:child_rsc2" operation="monitor" operation_key="rsc2:child_rsc2_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc2" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
@@ -116,7 +116,7 @@
    </synapse>
    <synapse id="8">
      <action_set>
-       <rsc_op id="6" rsc_id="rsc2:child_rsc3" operation="status" operation_key="rsc2:child_rsc3_status_0" on_node="node1" on_node_uuid="uuid1">
+       <rsc_op id="6" rsc_id="rsc2:child_rsc3" operation="monitor" operation_key="rsc2:child_rsc3_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc3" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
@@ -144,8 +144,8 @@
    </synapse>
    <synapse id="10">
      <action_set>
-       <rsc_op id="7" rsc_id="rsc3:9774362d-ecf8-4184-9b61-32b980c55bee" operation="status" operation_key="rsc3:9774362d-ecf8-4184-9b61-32b980c55bee_status_0" on_node="node1" on_node_uuid="uuid1">
-         <primitive id="rsc3:9774362d-ecf8-4184-9b61-32b980c55bee" class="heartbeat" type="apache"/>
+       <rsc_op id="7" rsc_id="rsc3:adf246c2-d39b-4447-bc26-d3010b09d00a" operation="monitor" operation_key="rsc3:adf246c2-d39b-4447-bc26-d3010b09d00a_monitor_0" on_node="node1" on_node_uuid="uuid1">
+         <primitive id="rsc3:adf246c2-d39b-4447-bc26-d3010b09d00a" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
@@ -157,8 +157,8 @@
    </synapse>
    <synapse id="11">
      <action_set>
-       <rsc_op id="8" rsc_id="rsc3:300f089c-cfe1-4041-b95f-b00105fc7180" operation="status" operation_key="rsc3:300f089c-cfe1-4041-b95f-b00105fc7180_status_0" on_node="node1" on_node_uuid="uuid1">
-         <primitive id="rsc3:300f089c-cfe1-4041-b95f-b00105fc7180" class="heartbeat" type="apache"/>
+       <rsc_op id="8" rsc_id="rsc3:29d6a4a2-7aae-4b59-a8af-5700d04d328b" operation="monitor" operation_key="rsc3:29d6a4a2-7aae-4b59-a8af-5700d04d328b_monitor_0" on_node="node1" on_node_uuid="uuid1">
+         <primitive id="rsc3:29d6a4a2-7aae-4b59-a8af-5700d04d328b" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
@@ -170,8 +170,8 @@
    </synapse>
    <synapse id="12">
      <action_set>
-       <rsc_op id="9" rsc_id="rsc3:bb95697b-0305-4ff2-895b-04a148428704" operation="status" operation_key="rsc3:bb95697b-0305-4ff2-895b-04a148428704_status_0" on_node="node1" on_node_uuid="uuid1">
-         <primitive id="rsc3:bb95697b-0305-4ff2-895b-04a148428704" class="heartbeat" type="apache"/>
+       <rsc_op id="9" rsc_id="rsc3:ba473823-94b3-47de-ab46-b49a7da7f22c" operation="monitor" operation_key="rsc3:ba473823-94b3-47de-ab46-b49a7da7f22c_monitor_0" on_node="node1" on_node_uuid="uuid1">
+         <primitive id="rsc3:ba473823-94b3-47de-ab46-b49a7da7f22c" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
            <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
@@ -206,25 +206,25 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="3" rsc_id="rsc1" operation="status" operation_key="rsc1_status_0" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="3" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
-         <rsc_op id="4" rsc_id="rsc2:child_rsc1" operation="status" operation_key="rsc2:child_rsc1_status_0" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="4" rsc_id="rsc2:child_rsc1" operation="monitor" operation_key="rsc2:child_rsc1_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
-         <rsc_op id="5" rsc_id="rsc2:child_rsc2" operation="status" operation_key="rsc2:child_rsc2_status_0" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="5" rsc_id="rsc2:child_rsc2" operation="monitor" operation_key="rsc2:child_rsc2_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
-         <rsc_op id="6" rsc_id="rsc2:child_rsc3" operation="status" operation_key="rsc2:child_rsc3_status_0" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="6" rsc_id="rsc2:child_rsc3" operation="monitor" operation_key="rsc2:child_rsc3_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
-         <rsc_op id="7" rsc_id="rsc3:9774362d-ecf8-4184-9b61-32b980c55bee" operation="status" operation_key="rsc3:9774362d-ecf8-4184-9b61-32b980c55bee_status_0" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="7" rsc_id="rsc3:adf246c2-d39b-4447-bc26-d3010b09d00a" operation="monitor" operation_key="rsc3:adf246c2-d39b-4447-bc26-d3010b09d00a_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
-         <rsc_op id="8" rsc_id="rsc3:300f089c-cfe1-4041-b95f-b00105fc7180" operation="status" operation_key="rsc3:300f089c-cfe1-4041-b95f-b00105fc7180_status_0" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="8" rsc_id="rsc3:29d6a4a2-7aae-4b59-a8af-5700d04d328b" operation="monitor" operation_key="rsc3:29d6a4a2-7aae-4b59-a8af-5700d04d328b_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
-         <rsc_op id="9" rsc_id="rsc3:bb95697b-0305-4ff2-895b-04a148428704" operation="status" operation_key="rsc3:bb95697b-0305-4ff2-895b-04a148428704_status_0" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="9" rsc_id="rsc3:ba473823-94b3-47de-ab46-b49a7da7f22c" operation="monitor" operation_key="rsc3:ba473823-94b3-47de-ab46-b49a7da7f22c_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>

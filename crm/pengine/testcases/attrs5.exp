@@ -1,7 +1,7 @@
  <transition_graph global_timeout="60s" transition_id="0">
    <synapse id="0">
      <action_set>
-       <rsc_op id="3" rsc_id="rsc1" operation="status" operation_key="rsc1_status_0" on_node="node1" on_node_uuid="uuid1">
+       <rsc_op id="3" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
@@ -14,7 +14,7 @@
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="5" rsc_id="rsc1" operation="status" operation_key="rsc1_status_0" on_node="node2" on_node_uuid="uuid2">
+       <rsc_op id="5" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
          <attributes>
            <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
@@ -53,7 +53,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="3" rsc_id="rsc1" operation="status" operation_key="rsc1_status_0" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="3" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>
@@ -68,7 +68,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="5" rsc_id="rsc1" operation="status" operation_key="rsc1_status_0" on_node="node2" on_node_uuid="uuid2"/>
+         <rsc_op id="5" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
      </inputs>
    </synapse>
