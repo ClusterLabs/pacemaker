@@ -1223,36 +1223,22 @@ create_cib_fragment_adv(
 	gboolean whole_cib = FALSE;
 	crm_data_t *fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
 	crm_data_t *object_root  = NULL;
-	char *auto_section = NULL;
 	const char *update_name = NULL;
-	if(update != NULL) {
-		update_name = crm_element_name(update);
-	}
-	auto_section = cib_pluralSection(update_name);
 	
 	if(update == NULL && section == NULL) {
 		crm_debug_3("Creating a blank fragment");
 		update = createEmptyCib();
-		section = auto_section;
+		whole_cib = TRUE;
 
 	} else if(update == NULL) {
 		crm_err("No update to create a fragment for");
-		cib = createEmptyCib();
 		return NULL;
 		
 	} else if(section == NULL) {
-		section = auto_section;
-
-	} else if(strcmp(auto_section, section) != 0) {
-		crm_err("Values for update (tag=%s) and section (%s)"
-			" were not consistent", crm_element_name(update), section);
-		crm_free(auto_section);
-		return NULL;
-		
+		section = cib_pluralSection(update_name);
 	}
 
-	if(safe_str_eq(section, "all")
-	   && safe_str_eq(crm_element_name(update), XML_TAG_CIB)) {
+	if(safe_str_eq(crm_element_name(update), XML_TAG_CIB)) {
 		whole_cib = TRUE;
 	}
 	
@@ -1273,8 +1259,6 @@ create_cib_fragment_adv(
 		crm_xml_add(cib, "debug_source", source);
 	}
 	
-	crm_free(auto_section);
-
 	crm_debug_3("Verifying created fragment");
 	if(verifyCibXml(cib) == FALSE) {
 		crm_err("Fragment creation failed");

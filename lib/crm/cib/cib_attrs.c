@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.3 2005/09/26 07:48:53 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.4 2005/09/27 13:15:39 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -105,7 +105,7 @@ update_attr(cib_t *the_cib,
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 	
-	fragment = create_cib_fragment(xml_top, NULL);
+	fragment = create_cib_fragment(xml_top, section);
 	crm_log_xml_debug_2(xml_top, "Update");
 	crm_log_xml_debug(fragment, "Update Fragment");
 	

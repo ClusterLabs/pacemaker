@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.41 2005/09/12 10:12:19 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.42 2005/09/27 13:15:39 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -359,7 +359,7 @@ handleCibMod(const char *xml)
 	crm_debug_4("Object creation complete");
 
 	/* create the cib request */
-	fragment = create_cib_fragment(cib_object, NULL);
+	fragment = create_cib_fragment(cib_object, obj_type);
 
 	return fragment;
 }
@@ -370,16 +370,12 @@ do_work(const char *admin_input_xml, int call_options, crm_data_t **output)
 {
 	/* construct the request */
 	crm_data_t *msg_data = NULL;
-	char *obj_type_parent = NULL;
-
-	obj_type_parent = cib_pluralSection(obj_type);
-
 	if(strcmp(CIB_OP_QUERY, cib_action) == 0) {
 		crm_debug_2("Querying the CIB for section: %s",
-			    obj_type_parent);
+			    obj_type);
 
 		return the_cib->cmds->query_from(
-			the_cib, host, obj_type_parent, output, call_options);
+			the_cib, host, obj_type, output, call_options);
 		
 	} else if (strcmp(CIB_OP_ERASE, cib_action) == 0) {
 		crm_debug_4("CIB Erase op in progress");
@@ -390,7 +386,7 @@ do_work(const char *admin_input_xml, int call_options, crm_data_t **output)
 		crm_debug_4("Performing %s op...", cib_action);
 		msg_data = handleCibMod(admin_input_xml);
 		rc = the_cib->cmds->create(
-			the_cib, obj_type_parent, msg_data, output, call_options);
+			the_cib, obj_type, msg_data, output, call_options);
 		free_xml(msg_data);
 		return rc;
 
@@ -399,7 +395,7 @@ do_work(const char *admin_input_xml, int call_options, crm_data_t **output)
 		crm_debug_4("Performing %s op...", cib_action);
 		msg_data = handleCibMod(admin_input_xml);
 		rc = the_cib->cmds->modify(
-			the_cib, obj_type_parent, msg_data, output, call_options);
+			the_cib, obj_type, msg_data, output, call_options);
 		free_xml(msg_data);
 		return rc;
 
@@ -408,7 +404,7 @@ do_work(const char *admin_input_xml, int call_options, crm_data_t **output)
 		crm_debug_4("Performing %s op...", cib_action);
 		msg_data = handleCibMod(admin_input_xml);
 		rc = the_cib->cmds->delete_absolute(
-			the_cib, obj_type_parent, msg_data, output, call_options);
+			the_cib, obj_type, msg_data, output, call_options);
 		free_xml(msg_data);
 		return rc;
 
@@ -422,14 +418,14 @@ do_work(const char *admin_input_xml, int call_options, crm_data_t **output)
 			msg_data = string2xml(admin_input_xml);
 		}
 		rc = the_cib->cmds->delete(
-			the_cib, obj_type_parent, msg_data, output, call_options);
+			the_cib, obj_type, msg_data, output, call_options);
 		free_xml(msg_data);
 		return rc;
 
 	} else if (strcmp(CIB_OP_SYNC, cib_action) == 0) {
 		crm_debug_4("Performing %s op...", cib_action);
 		return the_cib->cmds->sync_from(
-			the_cib, host, obj_type_parent, call_options);
+			the_cib, host, obj_type, call_options);
 
 	} else if (strcmp(CIB_OP_SLAVE, cib_action) == 0
 		   && (call_options ^ cib_scope_local) ) {
@@ -443,7 +439,7 @@ do_work(const char *admin_input_xml, int call_options, crm_data_t **output)
 	} else if(cib_action != NULL) {
 		crm_debug_4("Passing \"%s\" to variant_op...", cib_action);
 		return the_cib->cmds->variant_op(
-			the_cib, cib_action, host, obj_type_parent,
+			the_cib, cib_action, host, obj_type,
 			NULL, output, call_options);
 		
 	} else {

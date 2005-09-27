@@ -304,7 +304,7 @@ function make_node()
     
     node_xml="'<node id=\"${uuid}\" uname=\"${uname}\" description=\"test node: ${uname}\" type=\"${type}\"/>'";
     
-    remote_cmd $ADMIN_USER $host "$HALIB_DIR/cibadmin -C -o node -X $node_xml"
+    remote_cmd $ADMIN_USER $host "$HALIB_DIR/cibadmin -C -o nodes -X $node_xml"
 
 }
 
@@ -321,7 +321,7 @@ function make_node_local()
     
     node_xml="'<node id=\"${uuid}\" uname=\"${uname}\" description=\"test node: ${uname}\" type=\"${type}\"/>'";
     
-    remote_cmd $ADMIN_USER $host "$HALIB_DIR/cibadmin -l -C -o node -X $node_xml"
+    remote_cmd $ADMIN_USER $host "$HALIB_DIR/cibadmin -l -C -o nodes -X $node_xml"
 }
 
 function make_incarnation()
@@ -360,7 +360,7 @@ function make_incarnation()
     node_xml="$node_xml </primitive>'";
     node_xml="$node_xml </clone>";
     
-    do_cmd remote_cmd ${ADMIN_USER} ${host} "$HALIB_DIR/cibadmin -VVVV -C -o resource -X $node_xml"
+    do_cmd remote_cmd ${ADMIN_USER} ${host} "$HALIB_DIR/cibadmin -VVVV -C -o resources -X $node_xml"
 # 2>&1 > /dev/null
 }
 
@@ -397,7 +397,7 @@ function make_resource()
     fi
     node_xml="$node_xml </primitive>";
     
-    do_cmd remote_cmd ${ADMIN_USER} ${host} "$HALIB_DIR/cibadmin -VVVV -C -o primitive -X \"$node_xml\""
+    do_cmd remote_cmd ${ADMIN_USER} ${host} "$HALIB_DIR/cibadmin -VVVV -C -o resources -X \"$node_xml\""
 # 2>&1 > /dev/null
 }
 
@@ -409,7 +409,7 @@ function make_constraint_adv()
 
     node_xml=`echo $node_xml | tr '\n' ' '`
 
-    do_cmd remote_cmd ${ADMIN_USER} ${host} "$HALIB_DIR/cibadmin -C -o constraint -VVVV -X \"$node_xml\""
+    do_cmd remote_cmd ${ADMIN_USER} ${host} "$HALIB_DIR/cibadmin -C -o constraints -VVVV -X \"$node_xml\""
 }
 
 function make_constraint()
