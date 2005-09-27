@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.32 2005/09/27 12:13:35 lars Exp $ */
+/* $Id: cib.h,v 1.33 2005/09/27 14:20:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -325,7 +325,7 @@ extern crm_data_t *createEmptyCib(void);
 extern gboolean verifyCibXml(crm_data_t *cib);
 extern int cib_section2enum(const char *a_section);
 
-#define create_cib_fragment(update,section) create_cib_fragment_adv(update, section, __FUNCTION__)
+#define create_cib_fragment(update,cib_section) create_cib_fragment_adv(update, cib_section, __FUNCTION__)
 
 extern crm_data_t *diff_cib_object(
 	crm_data_t *old, crm_data_t *new,gboolean suppress);

@@ -1217,15 +1217,17 @@ get_crm_option(crm_data_t *cib, const char *name, gboolean do_warn)
 
 crm_data_t*
 create_cib_fragment_adv(
-	crm_data_t *update, const char *section, const char *source)
+	crm_data_t *update, const char *update_section, const char *source)
 {
 	crm_data_t *cib = NULL;
 	gboolean whole_cib = FALSE;
 	crm_data_t *fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
 	crm_data_t *object_root  = NULL;
 	const char *update_name = NULL;
+
+/* 	crm_debug("Creating a blank fragment: %s", update_section); */
 	
-	if(update == NULL && section == NULL) {
+	if(update == NULL && update_section == NULL) {
 		crm_debug_3("Creating a blank fragment");
 		update = createEmptyCib();
 		whole_cib = TRUE;
@@ -1234,20 +1236,20 @@ create_cib_fragment_adv(
 		crm_err("No update to create a fragment for");
 		return NULL;
 		
-	} else if(section == NULL) {
-		section = cib_pluralSection(update_name);
+	} else if(update_section == NULL) {
+		update_section = cib_pluralSection(update_name);
 	}
 
 	if(safe_str_eq(crm_element_name(update), XML_TAG_CIB)) {
 		whole_cib = TRUE;
 	}
 	
-	crm_xml_add(fragment, XML_ATTR_SECTION, section);
+	crm_xml_add(fragment, XML_ATTR_SECTION, update_section);
 
 	if(whole_cib == FALSE) {
 		cib = createEmptyCib();
 		crm_xml_add(cib, "debug_source", source);
-		object_root = get_object_root(section, cib);
+		object_root = get_object_root(update_section, cib);
 		add_node_copy(object_root, update);
 		add_node_copy(fragment, cib);
 		free_xml(cib);
