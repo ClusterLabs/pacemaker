@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.85 2005/09/26 07:44:44 andrew Exp $ */
+/* $Id: native.c,v 1.86 2005/09/27 15:12:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -81,7 +81,7 @@ gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,pe
 /*    Next State: Unknown	Stopped		Started		Slave		Master */
 /* Unknown */	{ RoleError,	StopRsc,	RoleError,	RoleError,	RoleError,  },
 /* Stopped */	{ RoleError,	NullOp,		StartRsc,	StartRsc,	RoleError,  },
-/* Started */	{ RoleError,	StopRsc,	NullOp,		RoleError,	RoleError,  },
+/* Started */	{ RoleError,	StopRsc,	NullOp,		NullOp,	        RoleError,  },
 /* Slave */	{ RoleError,	StopRsc,	RoleError,	NullOp,		PromoteRsc, },
 /* Master */	{ RoleError,	RoleError,	RoleError,	DemoteRsc,	NullOp,     },
 };
