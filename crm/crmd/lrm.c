@@ -287,11 +287,12 @@ stop_all_resources(void)
 		gboolean last_op_was_stop = FALSE;
 		const char *last_op = g_hash_table_lookup(resources, rsc_id);
 		char *stop_id = generate_op_key(rsc_id, CRMD_ACTION_STOP, 0);
+		crm_debug("Last op for resource %s: %s", rsc_id, last_op);
 		if(safe_str_eq(last_op, stop_id)) {
 			last_op_was_stop = TRUE;
 		}
 		crm_free(stop_id);
-		if(last_op_was_stop) {
+		if(last_op_was_stop == FALSE) {
 			crm_warn("Resource %s was active at shutdown", rsc_id);
 			do_lrm_rsc_op(NULL, rsc_id, CRMD_ACTION_STOP, NULL, NULL);
 		}
