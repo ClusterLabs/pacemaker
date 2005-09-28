@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.64 2005/09/26 07:58:11 andrew Exp $ */
+/* $Id: graph.c,v 1.65 2005/09/28 07:47:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -405,19 +405,80 @@ action2xml(action_t *action, gboolean as_input)
 		copy_in_properties(rsc_xml, action->rsc->xml);
 
 		args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
-		g_hash_table_foreach(action->extra, hash2nvpair, args_xml);
+		g_hash_table_foreach(action->extra, hash2field, args_xml);
 		
 		g_hash_table_foreach(
-			action->rsc->parameters, hash2nvpair, args_xml);
+			action->rsc->parameters, hash2field, args_xml);
 
 	} else {
 		args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
-		g_hash_table_foreach(action->extra, hash2nvpair, args_xml);
+		g_hash_table_foreach(action->extra, hash2field, args_xml);
 	}
 	crm_log_xml_debug_2(action_xml, "dumped action");
 	
 	return action_xml;
 }
+
+static gboolean
+should_dump_action(action_t *action) 
+{
+	const char * interval = g_hash_table_lookup(action->extra, "interval");
+	
+	if(action == NULL) {
+		pe_err("Cannot dump NULL action");
+		return FALSE;
+
+	} else if(action->optional) {
+		crm_debug_5("action %d was optional", action->id);
+		return FALSE;
+
+	} else if(action->pseudo == FALSE && action->runnable == FALSE) {
+		crm_debug_5("action %d was not runnable", action->id);
+		return FALSE;
+
+	} else if(action->dumped) {
+		crm_debug_5("action %d was already dumped", action->id);
+		return FALSE;
+
+	} else if(action->rsc != NULL
+		  && action->rsc->is_managed == FALSE) {
+
+		/* make sure probes go through */
+		if(safe_str_neq(action->task, CRMD_ACTION_STATUS)) {
+			pe_warn("action %d (%s) was for an unmanaged resource (%s)",
+				action->id, action->uuid, action->rsc->id);
+			return FALSE;
+		}
+		
+		if(safe_str_neq(interval, "0")) {
+			pe_warn("action %d (%s) was for an unmanaged resource (%s)",
+				action->id, action->uuid, action->rsc->id);
+			return FALSE;
+		}
+	}
+	
+	if(action->pseudo
+	   || safe_str_eq(action->task,  CRM_OP_FENCE)
+	   || safe_str_eq(action->task,  CRM_OP_SHUTDOWN)) {
+		/* skip the next two checks */
+		return TRUE;
+	}
+
+	if(action->node == NULL) {
+		pe_err("action %d (%s) was not allocated",
+		       action->id, action->uuid);
+		log_action(LOG_DEBUG, "Unallocated action", action, FALSE);
+		return FALSE;
+		
+	} else if(action->node->details->online == FALSE) {
+		pe_err("action %d was (%s) scheduled for offline node",
+		       action->id, action->uuid);
+		log_action(LOG_DEBUG, "Action for offline node", action, FALSE);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 
 void
 graph_element_from_action(action_t *action, pe_working_set_t *data_set)
@@ -429,45 +490,9 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 	crm_data_t * in  = NULL;
 	crm_data_t * input = NULL;
 	crm_data_t * xml_action = NULL;
-	if(action == NULL) {
-		pe_err("Cannot dump NULL action");
-		return;
 
-	} else if(action->optional) {
-		crm_debug_5("action %d was optional", action->id);
+	if(should_dump_action(action) == FALSE) {
 		return;
-
-	} else if(action->pseudo == FALSE && action->runnable == FALSE) {
-		crm_debug_5("action %d was not runnable", action->id);
-		return;
-
-	} else if(action->dumped) {
-		crm_debug_5("action %d was already dumped", action->id);
-		return;
-
-	} else if(action->rsc != NULL && action->rsc->is_managed == FALSE) {
-		pe_warn("action %d (%s) was for an unmanaged resource (%s)",
-			action->id, action->uuid, action->rsc->id);
-		return;
-		
-	} else if(action->pseudo
-		  || safe_str_eq(action->task,  CRM_OP_FENCE)
-		  || safe_str_eq(action->task,  CRM_OP_SHUTDOWN)) {
-		/* skip the next two checks */
-		
-	} else {
-		if(action->node == NULL) {
-			pe_err("action %d (%s) was not allocated",
-			       action->id, action->uuid);
-			log_action(LOG_DEBUG, "Unallocated action", action, FALSE);
-			return;
-			
-		} else if(action->node->details->online == FALSE) {
-			pe_err("action %d was (%s) scheduled for offline node",
-			       action->id, action->uuid);
-			log_action(LOG_DEBUG, "Action for offline node", action, FALSE);
-			return;
-		}
 	}
 	
 	action->dumped = TRUE;

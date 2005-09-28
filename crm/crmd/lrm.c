@@ -76,7 +76,7 @@ void send_direct_ack(lrm_op_t* op, const char *rsc_id);
 
 void free_recurring_op(gpointer value);
 
-GHashTable *xml2list(crm_data_t *parent);
+
 GHashTable *monitors = NULL;
 GHashTable *resources = NULL;
 GHashTable *resources_confirmed = NULL;
@@ -826,6 +826,13 @@ construct_op(crm_data_t *rsc_op, const char *rsc_id, const char *operation)
 	op->user_data_len = 1+strlen(op->user_data);
 
 	op->params = xml2list(rsc_op);
+#if CRM_DEPRECATED_SINCE_2_0_3
+	if(g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION) == NULL) {
+		g_hash_table_destroy(op->params);
+		op->params = xml2list_202(rsc_op);
+	}
+#endif
+		
 	if(op->params == NULL) {
 		CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
 	}
@@ -962,6 +969,13 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation,
 		crm_debug_2("adding rsc %s before operation", rid);
 		if(msg != NULL) {
 			params = xml2list(msg);
+#if CRM_DEPRECATED_SINCE_2_0_3
+			if(g_hash_table_lookup(
+				   params, XML_ATTR_CRM_VERSION) == NULL) {
+				g_hash_table_destroy(params);
+				params = xml2list_202(msg);
+			}
+#endif
 
 		} else {
 			CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
@@ -1316,7 +1330,7 @@ do_lrm_event(long long action,
 			return I_NULL;
 
 		} else {
-			crm_warn("Detected active resource: %s", op->rsc_id);
+			crm_err("Detected active resource: %s", op->rsc_id);
 		}
 	}
 	

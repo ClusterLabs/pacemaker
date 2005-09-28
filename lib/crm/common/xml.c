@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.36 2005/09/26 07:48:53 andrew Exp $ */
+/* $Id: xml.c,v 1.37 2005/09/28 07:47:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2003,8 +2003,9 @@ hash2field(gpointer key, gpointer value, gpointer user_data)
 }
 
 
+#if CRM_DEPRECATED_SINCE_2_0_3
 GHashTable *
-xml2list(crm_data_t *parent)
+xml2list_202(crm_data_t *parent)
 {
 	crm_data_t *nvpair_list = NULL;
 	GHashTable *nvpair_hash = g_hash_table_new_full(
@@ -2028,6 +2029,39 @@ xml2list(crm_data_t *parent)
 			node_iter, XML_NVPAIR_ATTR_NAME);
 		const char *value = crm_element_value(
 			node_iter, XML_NVPAIR_ATTR_VALUE);
+		
+		crm_debug_2("Added %s=%s", key, value);
+		
+		g_hash_table_insert(
+			nvpair_hash, crm_strdup(key), crm_strdup(value));
+		);
+	
+	return nvpair_hash;
+}
+#endif
+
+GHashTable *
+xml2list(crm_data_t *parent)
+{
+	crm_data_t *nvpair_list = NULL;
+	GHashTable *nvpair_hash = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+	
+	CRM_DEV_ASSERT(parent != NULL);
+	if(parent != NULL) {
+		nvpair_list = find_xml_node(parent, XML_TAG_ATTRS, FALSE);
+		if(nvpair_list == NULL) {
+			crm_debug("No attributes in %s",
+				  crm_element_name(parent));
+			crm_log_xml_debug_2(parent,"No attributes for resource op");
+		}
+	}
+	
+	crm_log_xml_debug_3(nvpair_list, "Unpacking");
+
+	xml_prop_iter(
+		nvpair_list, key, value, 
 		
 		crm_debug_2("Added %s=%s", key, value);
 		
