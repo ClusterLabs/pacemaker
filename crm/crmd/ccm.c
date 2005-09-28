@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.88 2005/09/16 16:45:58 andrew Exp $ */
+/* $Id: ccm.c,v 1.89 2005/09/28 07:42:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -457,7 +457,7 @@ do_ccm_update_cache(long long action,
 
 	set_bit_inplace(fsa_input_register, R_CCM_DATA);
 
-	if(cur_state != S_STARTING && cur_state != S_STOPPING) {
+	if(cur_state != S_STOPPING) {
 		crm_debug_3("Updating the CIB from CCM cache");
 		do_update_cib_nodes(NULL, FALSE);
 	}
@@ -634,7 +634,7 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	struct update_data_s* data = (struct update_data_s*)user_data;
 
 	crm_debug_2("%s processing %s (%s)",
-		  __FUNCTION__, node_uname, data->state);
+		    __FUNCTION__, node_uname, data->state);
 
 	tmp1 = create_node_state(node_uname, node_uname,
 				 NULL, data->state, NULL, data->join,
