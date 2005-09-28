@@ -353,7 +353,8 @@ crmd_client_status_callback(const char * node, const char * client,
 		
 		crm_xml_add(update, extra, XML_BOOLEAN_TRUE);
 		if(safe_str_eq(extra, XML_CIB_ATTR_CLEAR_SHUTDOWN)) {
-			crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_TAG_TRANSIENT_NODEATTRS);
+			crm_xml_add(update, XML_CIB_ATTR_REPLACE,
+				    XML_TAG_TRANSIENT_NODEATTRS);
 		}
 		
 		fragment = create_cib_fragment(update, XML_CIB_TAG_STATUS);
