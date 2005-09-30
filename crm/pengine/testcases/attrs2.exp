@@ -3,11 +3,7 @@
     <action_set>
        <rsc_op id="3" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -16,11 +12,7 @@
      <action_set>
        <rsc_op id="5" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -29,9 +21,7 @@
      <action_set>
        <rsc_op id="6" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -43,9 +33,7 @@
    <synapse id="3">
      <action_set>
        <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -60,10 +48,7 @@
    <synapse id="4">
      <action_set>
        <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -75,10 +60,7 @@
    <synapse id="5">
      <action_set>
        <rsc_op id="4" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="uuid2">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
        </rsc_op>
      </action_set>
      <inputs>

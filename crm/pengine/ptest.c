@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.65 2005/09/26 07:44:44 andrew Exp $ */
+/* $Id: ptest.c,v 1.66 2005/09/30 13:01:16 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -113,14 +113,14 @@ main(int argc, char **argv)
 	const char *fake_now = NULL;
 	ha_time_t *a_date = NULL;
 	
-	gboolean optional = FALSE;
-	pe_working_set_t data_set;
 	crm_data_t * cib_object = NULL;
 	int argerr = 0;
 	int flag;
 		
 	char *msg_buffer = NULL;
-
+	gboolean optional = FALSE;
+	pe_working_set_t data_set;
+	
 	const char *xml_file = NULL;
 	const char *dot_file = NULL;
 
@@ -228,6 +228,7 @@ main(int argc, char **argv)
 			 a_date, ha_log_date|ha_log_time|ha_log_local);
 		crm_free(fake_now_copy);
 	}
+
 	do_calculations(&data_set, cib_object, a_date);
 
 	msg_buffer = dump_xml_formatted(data_set.graph);
@@ -236,7 +237,6 @@ main(int argc, char **argv)
 	crm_free(msg_buffer);
 
 	dot_strm = fopen(dot_file, "w");
-	
 	init_dotfile();
 	slist_iter(
 		action, action_t, data_set.actions, lpc,
@@ -295,7 +295,6 @@ main(int argc, char **argv)
 			);
 		);
 	dot_write("}");
-
 	cleanup_calculations(&data_set);
 
 	free_xml(cib_object);

@@ -3,13 +3,7 @@
     <action_set>
        <rsc_op id="9" rsc_id="rsc1:child_rsc1:0" operation="monitor" operation_key="rsc1:child_rsc1:0_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="0"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="0" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -18,13 +12,7 @@
      <action_set>
        <rsc_op id="10" rsc_id="rsc1:child_rsc1:1" operation="monitor" operation_key="rsc1:child_rsc1:1_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="1"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="1" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -33,11 +21,7 @@
      <action_set>
        <rsc_op id="16" rsc_id="rsc1:child_rsc1:1" operation="stop" operation_key="rsc1:child_rsc1:1_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="1"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="1" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -50,11 +34,7 @@
      <action_set>
        <rsc_op id="17" rsc_id="rsc1:child_rsc1:1" operation="start" operation_key="rsc1:child_rsc1:1_start_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="1"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="1" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -70,11 +50,7 @@
      <action_set>
        <rsc_op id="18" rsc_id="rsc1:child_rsc1:1" operation="delete" operation_key="rsc1:child_rsc1:1_delete_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="1"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="1" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -87,13 +63,7 @@
      <action_set>
        <rsc_op id="11" rsc_id="rsc1:child_rsc1:2" operation="monitor" operation_key="rsc1:child_rsc1:2_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1:child_rsc1:2" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="2"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="2" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -102,13 +72,7 @@
      <action_set>
        <rsc_op id="12" rsc_id="rsc1:child_rsc1:3" operation="monitor" operation_key="rsc1:child_rsc1:3_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1:child_rsc1:3" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="3"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="3" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -117,11 +81,7 @@
      <action_set>
        <rsc_op id="21" rsc_id="rsc1:child_rsc1:3" operation="stop" operation_key="rsc1:child_rsc1:3_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1:child_rsc1:3" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="3"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="3" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -134,11 +94,7 @@
      <action_set>
        <rsc_op id="22" rsc_id="rsc1:child_rsc1:3" operation="start" operation_key="rsc1:child_rsc1:3_start_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1:child_rsc1:3" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="3"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="3" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -154,11 +110,7 @@
      <action_set>
        <rsc_op id="23" rsc_id="rsc1:child_rsc1:3" operation="delete" operation_key="rsc1:child_rsc1:3_delete_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1:child_rsc1:3" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="3"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="3" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -171,13 +123,7 @@
      <action_set>
        <rsc_op id="13" rsc_id="rsc1:child_rsc1:4" operation="monitor" operation_key="rsc1:child_rsc1:4_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1:child_rsc1:4" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="4"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="4" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -186,11 +132,7 @@
      <action_set>
        <rsc_op id="24" rsc_id="rsc1:child_rsc1:4" operation="stop" operation_key="rsc1:child_rsc1:4_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1:child_rsc1:4" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="4"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="4" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -203,11 +145,7 @@
      <action_set>
        <rsc_op id="25" rsc_id="rsc1:child_rsc1:4" operation="delete" operation_key="rsc1:child_rsc1:4_delete_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1:child_rsc1:4" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="4"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="4" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -219,9 +157,7 @@
    <synapse id="13">
      <action_set>
        <pseudo_event id="26" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -236,9 +172,7 @@
    <synapse id="14">
     <action_set>
        <pseudo_event id="27" rsc_id="rsc1" operation="running" operation_key="rsc1_running_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -256,9 +190,7 @@
    <synapse id="15">
     <action_set>
        <pseudo_event id="28" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -270,9 +202,7 @@
    <synapse id="16">
      <action_set>
        <pseudo_event id="29" rsc_id="rsc1" operation="stopped" operation_key="rsc1_stopped_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -294,13 +224,7 @@
      <action_set>
        <rsc_op id="3" rsc_id="rsc2:child_rsc2:0" operation="monitor" operation_key="rsc2:child_rsc2:0_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="0"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="0" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -309,11 +233,7 @@
      <action_set>
        <rsc_op id="30" rsc_id="rsc2:child_rsc2:0" operation="stop" operation_key="rsc2:child_rsc2:0_stop_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="0"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="0" clone_max="5"/>
       </rsc_op>
     </action_set>
      <inputs>
@@ -326,11 +246,7 @@
     <action_set>
        <rsc_op id="31" rsc_id="rsc2:child_rsc2:0" operation="start" operation_key="rsc2:child_rsc2:0_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="0"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="0" clone_max="5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -346,11 +262,7 @@
      <action_set>
        <rsc_op id="32" rsc_id="rsc2:child_rsc2:0" operation="delete" operation_key="rsc2:child_rsc2:0_delete_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="0"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="0" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -363,13 +275,7 @@
      <action_set>
        <rsc_op id="4" rsc_id="rsc2:child_rsc2:1" operation="monitor" operation_key="rsc2:child_rsc2:1_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc2:1" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="1"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="1" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -378,13 +284,7 @@
      <action_set>
        <rsc_op id="5" rsc_id="rsc2:child_rsc2:2" operation="monitor" operation_key="rsc2:child_rsc2:2_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc2:2" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="2"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="2" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -393,11 +293,7 @@
      <action_set>
        <rsc_op id="35" rsc_id="rsc2:child_rsc2:2" operation="stop" operation_key="rsc2:child_rsc2:2_stop_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc2:child_rsc2:2" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="2"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="2" clone_max="5"/>
       </rsc_op>
     </action_set>
      <inputs>
@@ -410,11 +306,7 @@
     <action_set>
        <rsc_op id="36" rsc_id="rsc2:child_rsc2:2" operation="start" operation_key="rsc2:child_rsc2:2_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc2:2" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="2"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="2" clone_max="5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -430,11 +322,7 @@
     <action_set>
        <rsc_op id="37" rsc_id="rsc2:child_rsc2:2" operation="delete" operation_key="rsc2:child_rsc2:2_delete_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc2:child_rsc2:2" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="2"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="2" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -447,13 +335,7 @@
      <action_set>
        <rsc_op id="6" rsc_id="rsc2:child_rsc2:3" operation="monitor" operation_key="rsc2:child_rsc2:3_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc2:3" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="3"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="3" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -462,13 +344,7 @@
      <action_set>
        <rsc_op id="7" rsc_id="rsc2:child_rsc2:4" operation="monitor" operation_key="rsc2:child_rsc2:4_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc2:4" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="4"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="4" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -477,11 +353,7 @@
      <action_set>
        <rsc_op id="40" rsc_id="rsc2:child_rsc2:4" operation="stop" operation_key="rsc2:child_rsc2:4_stop_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc2:child_rsc2:4" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="4"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="4" clone_max="5"/>
       </rsc_op>
     </action_set>
      <inputs>
@@ -494,11 +366,7 @@
      <action_set>
        <rsc_op id="41" rsc_id="rsc2:child_rsc2:4" operation="start" operation_key="rsc2:child_rsc2:4_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc2:4" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="4"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="4" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -514,11 +382,7 @@
     <action_set>
        <rsc_op id="42" rsc_id="rsc2:child_rsc2:4" operation="delete" operation_key="rsc2:child_rsc2:4_delete_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc2:child_rsc2:4" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="4"/>
-           <nvpair id="clone_max" name="clone_max" value="5"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="4" clone_max="5"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -530,9 +394,7 @@
    <synapse id="31">
      <action_set>
        <pseudo_event id="43" rsc_id="rsc2" operation="start" operation_key="rsc2_start_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -550,9 +412,7 @@
    <synapse id="32">
      <action_set>
        <pseudo_event id="44" rsc_id="rsc2" operation="running" operation_key="rsc2_running_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -573,9 +433,7 @@
    <synapse id="33">
      <action_set>
        <pseudo_event id="45" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -583,9 +441,7 @@
    <synapse id="34">
      <action_set>
        <pseudo_event id="46" rsc_id="rsc2" operation="stopped" operation_key="rsc2_stopped_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -606,9 +462,7 @@
    <synapse id="35">
      <action_set>
        <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -623,10 +477,7 @@
    <synapse id="36">
      <action_set>
        <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -650,10 +501,7 @@
    <synapse id="37">
     <action_set>
        <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="uuid2">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
        </rsc_op>
     </action_set>
     <inputs>

@@ -1,226 +1,156 @@
  <transition_graph global_timeout="3m" transition_id="0">
    <synapse id="0">
      <action_set>
-       <rsc_op id="11" rsc_id="DcIPaddr" operation="status" operation_key="DcIPaddr_status_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+       <rsc_op id="13" rsc_id="DcIPaddr" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="is_managed" name="is_managed" value="1"/>
-           <nvpair id="ip" name="ip" value="127.0.0.10"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.10"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="23" rsc_id="DcIPaddr" operation="stop" operation_key="DcIPaddr_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+       <rsc_op id="25" rsc_id="DcIPaddr" operation="stop" operation_key="DcIPaddr_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="is_managed" name="is_managed" value="1"/>
-           <nvpair id="ip" name="ip" value="127.0.0.10"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.10"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="2">
      <action_set>
-       <rsc_op id="25" rsc_id="DcIPaddr" operation="delete" operation_key="DcIPaddr_delete_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+       <rsc_op id="27" rsc_id="DcIPaddr" operation="delete" operation_key="DcIPaddr_delete_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="is_managed" name="is_managed" value="1"/>
-           <nvpair id="ip" name="ip" value="127.0.0.10"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.10"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="23" rsc_id="DcIPaddr" operation="stop" operation_key="DcIPaddr_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
+         <rsc_op id="25" rsc_id="DcIPaddr" operation="stop" operation_key="DcIPaddr_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="3">
      <action_set>
-       <rsc_op id="17" rsc_id="rsc_posic041" operation="status" operation_key="rsc_posic041_status_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+       <rsc_op id="19" rsc_id="rsc_posic041" operation="monitor" operation_key="rsc_posic041_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="rsc_posic041" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="is_managed" name="is_managed" value="1"/>
-           <nvpair id="ip" name="ip" value="127.0.0.11"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.11"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="4">
      <action_set>
-       <rsc_op id="26" rsc_id="rsc_posic041" operation="stop" operation_key="rsc_posic041_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+       <rsc_op id="28" rsc_id="rsc_posic041" operation="stop" operation_key="rsc_posic041_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="rsc_posic041" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="is_managed" name="is_managed" value="1"/>
-           <nvpair id="ip" name="ip" value="127.0.0.11"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.11"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="5">
      <action_set>
-       <rsc_op id="28" rsc_id="rsc_posic041" operation="delete" operation_key="rsc_posic041_delete_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+       <rsc_op id="30" rsc_id="rsc_posic041" operation="delete" operation_key="rsc_posic041_delete_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="rsc_posic041" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="is_managed" name="is_managed" value="1"/>
-           <nvpair id="ip" name="ip" value="127.0.0.11"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.11"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="26" rsc_id="rsc_posic041" operation="stop" operation_key="rsc_posic041_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
+         <rsc_op id="28" rsc_id="rsc_posic041" operation="stop" operation_key="rsc_posic041_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="6">
      <action_set>
-       <rsc_op id="18" rsc_id="rsc_posic042" operation="status" operation_key="rsc_posic042_status_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+       <rsc_op id="20" rsc_id="rsc_posic042" operation="monitor" operation_key="rsc_posic042_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="rsc_posic042" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="is_managed" name="is_managed" value="1"/>
-           <nvpair id="ip" name="ip" value="127.0.0.12"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="7">
      <action_set>
-       <rsc_op id="29" rsc_id="rsc_posic042" operation="stop" operation_key="rsc_posic042_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+       <rsc_op id="31" rsc_id="rsc_posic042" operation="stop" operation_key="rsc_posic042_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="rsc_posic042" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="is_managed" name="is_managed" value="1"/>
-           <nvpair id="ip" name="ip" value="127.0.0.12"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="8">
      <action_set>
-       <rsc_op id="31" rsc_id="rsc_posic042" operation="delete" operation_key="rsc_posic042_delete_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+       <rsc_op id="33" rsc_id="rsc_posic042" operation="delete" operation_key="rsc_posic042_delete_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="rsc_posic042" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="is_managed" name="is_managed" value="1"/>
-           <nvpair id="ip" name="ip" value="127.0.0.12"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="29" rsc_id="rsc_posic042" operation="stop" operation_key="rsc_posic042_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
+         <rsc_op id="31" rsc_id="rsc_posic042" operation="stop" operation_key="rsc_posic042_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="9">
      <action_set>
-       <rsc_op id="12" rsc_id="rsc_posic043" operation="status" operation_key="rsc_posic043_status_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+       <rsc_op id="14" rsc_id="rsc_posic043" operation="monitor" operation_key="rsc_posic043_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="rsc_posic043" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="is_managed" name="is_managed" value="1"/>
-           <nvpair id="ip" name="ip" value="127.0.0.13"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.13"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="10">
      <action_set>
-       <rsc_op id="32" rsc_id="rsc_posic043" operation="stop" operation_key="rsc_posic043_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+       <rsc_op id="34" rsc_id="rsc_posic043" operation="stop" operation_key="rsc_posic043_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="rsc_posic043" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="is_managed" name="is_managed" value="1"/>
-           <nvpair id="ip" name="ip" value="127.0.0.13"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.13"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="11">
      <action_set>
-       <rsc_op id="34" rsc_id="rsc_posic043" operation="delete" operation_key="rsc_posic043_delete_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+       <rsc_op id="36" rsc_id="rsc_posic043" operation="delete" operation_key="rsc_posic043_delete_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="rsc_posic043" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="is_managed" name="is_managed" value="1"/>
-           <nvpair id="ip" name="ip" value="127.0.0.13"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.13"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="32" rsc_id="rsc_posic043" operation="stop" operation_key="rsc_posic043_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
+         <rsc_op id="34" rsc_id="rsc_posic043" operation="stop" operation_key="rsc_posic043_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="12">
      <action_set>
-       <rsc_op id="19" rsc_id="rsc_posic044" operation="status" operation_key="rsc_posic044_status_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+       <rsc_op id="21" rsc_id="rsc_posic044" operation="monitor" operation_key="rsc_posic044_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="rsc_posic044" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="is_managed" name="is_managed" value="1"/>
-           <nvpair id="ip" name="ip" value="127.0.0.14"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.14"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="13">
      <action_set>
-       <rsc_op id="36" rsc_id="rsc_posic044" operation="stop" operation_key="rsc_posic044_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+       <rsc_op id="38" rsc_id="rsc_posic044" operation="stop" operation_key="rsc_posic044_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="rsc_posic044" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="is_managed" name="is_managed" value="1"/>
-           <nvpair id="ip" name="ip" value="127.0.0.14"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.14"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="14">
      <action_set>
-       <rsc_op id="37" rsc_id="rsc_posic044" operation="delete" operation_key="rsc_posic044_delete_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+       <rsc_op id="39" rsc_id="rsc_posic044" operation="delete" operation_key="rsc_posic044_delete_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="rsc_posic044" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="is_managed" name="is_managed" value="1"/>
-           <nvpair id="ip" name="ip" value="127.0.0.14"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.14"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="36" rsc_id="rsc_posic044" operation="stop" operation_key="rsc_posic044_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
+         <rsc_op id="38" rsc_id="rsc_posic044" operation="stop" operation_key="rsc_posic044_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
        </trigger>
      </inputs>
    </synapse>
@@ -228,243 +158,155 @@
      <action_set>
        <rsc_op id="2" rsc_id="DoFencing:child_DoFencing:0" operation="delete" operation_key="DoFencing:child_DoFencing:0_delete_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="0"/>
-           <nvpair id="clone_max" name="clone_max" value="4"/>
-           <nvpair id="hostlist" name="hostlist" value="posic041 posic042 posic043 posic044 "/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" clone="0" clone_max="4" hostlist="posic041 posic042 posic043 posic044 "/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="16">
      <action_set>
-       <rsc_op id="13" rsc_id="DoFencing:child_DoFencing:0" operation="status" operation_key="DoFencing:child_DoFencing:0_status_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+       <rsc_op id="15" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" operation_key="DoFencing:child_DoFencing:0_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="0"/>
-           <nvpair id="clone_max" name="clone_max" value="4"/>
-           <nvpair id="hostlist" name="hostlist" value="posic041 posic042 posic043 posic044 "/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="0" clone_max="4" hostlist="posic041 posic042 posic043 posic044 "/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="17">
      <action_set>
-       <rsc_op id="40" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" operation_key="DoFencing:child_DoFencing:0_monitor_5000" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+       <rsc_op id="42" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" operation_key="DoFencing:child_DoFencing:0_monitor_5000" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="timeout" name="timeout" value="20000"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="interval" name="interval" value="5000"/>
-           <nvpair id="clone" name="clone" value="0"/>
-           <nvpair id="clone_max" name="clone_max" value="4"/>
-           <nvpair id="hostlist" name="hostlist" value="posic041 posic042 posic043 posic044 "/>
-         </attributes>
+         <attributes timeout="20000" crm_feature_set="1.0.3" interval="5000" clone="0" clone_max="4" hostlist="posic041 posic042 posic043 posic044 "/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="18">
      <action_set>
-       <rsc_op id="20" rsc_id="DoFencing:child_DoFencing:1" operation="status" operation_key="DoFencing:child_DoFencing:1_status_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+       <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:1" operation="monitor" operation_key="DoFencing:child_DoFencing:1_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="1"/>
-           <nvpair id="clone_max" name="clone_max" value="4"/>
-           <nvpair id="hostlist" name="hostlist" value="posic041 posic042 posic043 posic044 "/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="1" clone_max="4" hostlist="posic041 posic042 posic043 posic044 "/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="19">
      <action_set>
-       <rsc_op id="43" rsc_id="DoFencing:child_DoFencing:1" operation="monitor" operation_key="DoFencing:child_DoFencing:1_monitor_5000" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
-         <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="timeout" name="timeout" value="20000"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="interval" name="interval" value="5000"/>
-           <nvpair id="clone" name="clone" value="1"/>
-           <nvpair id="clone_max" name="clone_max" value="4"/>
-           <nvpair id="hostlist" name="hostlist" value="posic041 posic042 posic043 posic044 "/>
-         </attributes>
+       <rsc_op id="7" rsc_id="DoFencing:child_DoFencing:2" operation="delete" operation_key="DoFencing:child_DoFencing:2_delete_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+         <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
+         <attributes crm_feature_set="1.0.3" clone="2" clone_max="4" hostlist="posic041 posic042 posic043 posic044 "/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="20">
      <action_set>
-       <rsc_op id="5" rsc_id="DoFencing:child_DoFencing:2" operation="delete" operation_key="DoFencing:child_DoFencing:2_delete_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+       <rsc_op id="16" rsc_id="DoFencing:child_DoFencing:2" operation="monitor" operation_key="DoFencing:child_DoFencing:2_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="2"/>
-           <nvpair id="clone_max" name="clone_max" value="4"/>
-           <nvpair id="hostlist" name="hostlist" value="posic041 posic042 posic043 posic044 "/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="2" clone_max="4" hostlist="posic041 posic042 posic043 posic044 "/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="21">
      <action_set>
-       <rsc_op id="14" rsc_id="DoFencing:child_DoFencing:2" operation="status" operation_key="DoFencing:child_DoFencing:2_status_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+       <rsc_op id="23" rsc_id="DoFencing:child_DoFencing:2" operation="monitor" operation_key="DoFencing:child_DoFencing:2_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="2"/>
-           <nvpair id="clone_max" name="clone_max" value="4"/>
-           <nvpair id="hostlist" name="hostlist" value="posic041 posic042 posic043 posic044 "/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="2" clone_max="4" hostlist="posic041 posic042 posic043 posic044 "/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="22">
      <action_set>
-       <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:2" operation="status" operation_key="DoFencing:child_DoFencing:2_status_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
-         <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="2"/>
-           <nvpair id="clone_max" name="clone_max" value="4"/>
-           <nvpair id="hostlist" name="hostlist" value="posic041 posic042 posic043 posic044 "/>
-         </attributes>
+       <rsc_op id="10" rsc_id="DoFencing:child_DoFencing:3" operation="delete" operation_key="DoFencing:child_DoFencing:3_delete_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+         <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
+         <attributes crm_feature_set="1.0.3" clone="3" clone_max="4" hostlist="posic041 posic042 posic043 posic044 "/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="23">
      <action_set>
-       <rsc_op id="8" rsc_id="DoFencing:child_DoFencing:3" operation="delete" operation_key="DoFencing:child_DoFencing:3_delete_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+       <rsc_op id="17" rsc_id="DoFencing:child_DoFencing:3" operation="monitor" operation_key="DoFencing:child_DoFencing:3_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="3"/>
-           <nvpair id="clone_max" name="clone_max" value="4"/>
-           <nvpair id="hostlist" name="hostlist" value="posic041 posic042 posic043 posic044 "/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="3" clone_max="4" hostlist="posic041 posic042 posic043 posic044 "/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="24">
      <action_set>
-       <rsc_op id="15" rsc_id="DoFencing:child_DoFencing:3" operation="status" operation_key="DoFencing:child_DoFencing:3_status_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+       <rsc_op id="24" rsc_id="DoFencing:child_DoFencing:3" operation="monitor" operation_key="DoFencing:child_DoFencing:3_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="3"/>
-           <nvpair id="clone_max" name="clone_max" value="4"/>
-           <nvpair id="hostlist" name="hostlist" value="posic041 posic042 posic043 posic044 "/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="3" clone_max="4" hostlist="posic041 posic042 posic043 posic044 "/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="25">
      <action_set>
-       <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:3" operation="status" operation_key="DoFencing:child_DoFencing:3_status_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
-         <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="3"/>
-           <nvpair id="clone_max" name="clone_max" value="4"/>
-           <nvpair id="hostlist" name="hostlist" value="posic041 posic042 posic043 posic044 "/>
-         </attributes>
-       </rsc_op>
-     </action_set>
-     <inputs/>
-   </synapse>
-   <synapse id="26">
-     <action_set>
-       <pseudo_event id="9" operation="probe_complete" operation_key="probe_complete">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+       <pseudo_event id="11" operation="probe_complete" operation_key="probe_complete">
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="10" operation="probe_complete" operation_key="probe_complete" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
+         <rsc_op id="12" operation="probe_complete" operation_key="probe_complete" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
        </trigger>
        <trigger>
-         <rsc_op id="16" operation="probe_complete" operation_key="probe_complete" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
+         <rsc_op id="18" operation="probe_complete" operation_key="probe_complete" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="26">
+     <action_set>
+       <rsc_op id="12" operation="probe_complete" operation_key="probe_complete" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="13" rsc_id="DcIPaddr" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="14" rsc_id="rsc_posic043" operation="monitor" operation_key="rsc_posic043_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="15" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" operation_key="DoFencing:child_DoFencing:0_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="16" rsc_id="DoFencing:child_DoFencing:2" operation="monitor" operation_key="DoFencing:child_DoFencing:2_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="17" rsc_id="DoFencing:child_DoFencing:3" operation="monitor" operation_key="DoFencing:child_DoFencing:3_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="27">
      <action_set>
-       <rsc_op id="10" operation="probe_complete" operation_key="probe_complete" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
-         </attributes>
+       <rsc_op id="18" operation="probe_complete" operation_key="probe_complete" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="11" rsc_id="DcIPaddr" operation="status" operation_key="DcIPaddr_status_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
+         <rsc_op id="19" rsc_id="rsc_posic041" operation="monitor" operation_key="rsc_posic041_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
        </trigger>
        <trigger>
-         <rsc_op id="12" rsc_id="rsc_posic043" operation="status" operation_key="rsc_posic043_status_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
+         <rsc_op id="20" rsc_id="rsc_posic042" operation="monitor" operation_key="rsc_posic042_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
        </trigger>
        <trigger>
-         <rsc_op id="13" rsc_id="DoFencing:child_DoFencing:0" operation="status" operation_key="DoFencing:child_DoFencing:0_status_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
+         <rsc_op id="21" rsc_id="rsc_posic044" operation="monitor" operation_key="rsc_posic044_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
        </trigger>
        <trigger>
-         <rsc_op id="14" rsc_id="DoFencing:child_DoFencing:2" operation="status" operation_key="DoFencing:child_DoFencing:2_status_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
+         <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:1" operation="monitor" operation_key="DoFencing:child_DoFencing:1_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
        </trigger>
        <trigger>
-         <rsc_op id="15" rsc_id="DoFencing:child_DoFencing:3" operation="status" operation_key="DoFencing:child_DoFencing:3_status_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="28">
-     <action_set>
-       <rsc_op id="16" operation="probe_complete" operation_key="probe_complete" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
-         </attributes>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="17" rsc_id="rsc_posic041" operation="status" operation_key="rsc_posic041_status_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
+         <rsc_op id="23" rsc_id="DoFencing:child_DoFencing:2" operation="monitor" operation_key="DoFencing:child_DoFencing:2_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
        </trigger>
        <trigger>
-         <rsc_op id="18" rsc_id="rsc_posic042" operation="status" operation_key="rsc_posic042_status_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="19" rsc_id="rsc_posic044" operation="status" operation_key="rsc_posic044_status_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="20" rsc_id="DoFencing:child_DoFencing:1" operation="status" operation_key="DoFencing:child_DoFencing:1_status_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:2" operation="status" operation_key="DoFencing:child_DoFencing:2_status_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="22" rsc_id="DoFencing:child_DoFencing:3" operation="status" operation_key="DoFencing:child_DoFencing:3_status_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
+         <rsc_op id="24" rsc_id="DoFencing:child_DoFencing:3" operation="monitor" operation_key="DoFencing:child_DoFencing:3_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
        </trigger>
      </inputs>
    </synapse>

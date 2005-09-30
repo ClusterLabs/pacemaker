@@ -41,7 +41,7 @@
           </lrm_resource>
           <lrm_resource id="foo:rsc4" last_op="start" rsc_state="started" op_status="0" rc_code="0">
             <lrm_rsc_op id="foo:rsc4_start_0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
-            <lrm_rsc_op id="foo:rsc4_monitor_1" operation="monitor" rsc_state="monitor_failed" op_status="2" rc_code="2" call_id="2"/>
+            <lrm_rsc_op id="foo:rsc4_monitor_0" operation="monitor" rsc_state="monitor_failed" op_status="2" rc_code="2" call_id="2"/>
           </lrm_resource>
           <lrm_resource id="foo:rsc5" last_op="start" rsc_state="started" op_status="0" rc_code="0">
             <lrm_rsc_op id="foo:rsc5_start_0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>

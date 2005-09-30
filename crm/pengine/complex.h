@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.28 2005/09/26 07:44:44 andrew Exp $ */
+/* $Id: complex.h,v 1.29 2005/09/30 13:01:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,7 +55,11 @@ typedef struct notify_data_s {
 	GListPtr inactive; /* notify_entry_t*  */
 	GListPtr start;    /* notify_entry_t*  */
 	GListPtr stop;     /* notify_entry_t*  */
-	
+	GListPtr demote;   /* notify_entry_t*  */
+	GListPtr promote;  /* notify_entry_t*  */
+	GListPtr master;   /* notify_entry_t*  */
+	GListPtr slave;    /* notify_entry_t*  */
+		
 } notify_data_t;
 
 

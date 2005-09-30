@@ -25,48 +25,48 @@
         </primitive>
         <primitive id="rsc_hadev1" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
           <operations>
-            <op id="1" name="monitor" interval="5s" timeout="20s"/>
+            <op id="2" name="monitor" interval="5s" timeout="20s"/>
           </operations>
           <instance_attributes>
             <attributes>
-              <nvpair id="1" name="ip" value="10.0.0.11"/>
+              <nvpair id="2" name="ip" value="10.0.0.11"/>
             </attributes>
           </instance_attributes>
         </primitive>
         <primitive id="rsc_hadev2" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
           <operations>
-            <op id="1" name="monitor" interval="5s" timeout="20s"/>
+            <op id="3" name="monitor" interval="5s" timeout="20s"/>
           </operations>
           <instance_attributes>
             <attributes>
-              <nvpair id="1" name="ip" value="10.0.0.12"/>
+              <nvpair id="3" name="ip" value="10.0.0.12"/>
             </attributes>
           </instance_attributes>
         </primitive>
         <primitive id="rsc_hadev3" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
           <operations>
-            <op id="1" name="monitor" interval="5s" timeout="20s"/>
+            <op id="4" name="monitor" interval="5s" timeout="20s"/>
           </operations>
           <instance_attributes>
             <attributes>
-              <nvpair id="1" name="ip" value="10.0.0.13"/>
+              <nvpair id="4" name="ip" value="10.0.0.13"/>
             </attributes>
           </instance_attributes>
         </primitive>
         <clone id="DoFencing">
           <instance_attributes>
             <attributes>
-              <nvpair id="1" name="clone_max" value="3"/>
-              <nvpair id="2" name="clone_node_max" value="1"/>
+              <nvpair id="5" name="clone_max" value="3"/>
+              <nvpair id="6" name="clone_node_max" value="1"/>
             </attributes>
           </instance_attributes>
           <primitive id="child_DoFencing" class="stonith" type="ssh">
             <operations>
-              <op id="1" name="monitor" interval="5s" timeout="20s"/>
+              <op id="5" name="monitor" interval="5s" timeout="20s"/>
             </operations>
             <instance_attributes>
               <attributes>
-                <nvpair id="1" name="hostlist" value="hadev1 hadev2 hadev3 "/>
+                <nvpair id="7" name="hostlist" value="hadev1 hadev2 hadev3 "/>
               </attributes>
             </instance_attributes>
           </primitive>
@@ -75,22 +75,22 @@
       <constraints>
         <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
           <rule id="cant_run_DcIPaddr" score="-INFINITY" boolean_op="and">
-            <expression attribute="#is_dc" operation="eq" value="false"/>
+            <expression id="1" attribute="#is_dc" operation="eq" value="false"/>
           </rule>
         </rsc_location>
         <rsc_location id="run_rsc_hadev1" rsc="rsc_hadev1">
           <rule id="pref_run_rsc_hadev1" score="100" boolean_op="and">
-            <expression attribute="#uname" operation="eq" value="hadev1"/>
+            <expression id="2" attribute="#uname" operation="eq" value="hadev1"/>
           </rule>
         </rsc_location>
         <rsc_location id="run_rsc_hadev2" rsc="rsc_hadev2">
           <rule id="pref_run_rsc_hadev2" score="100" boolean_op="and">
-            <expression attribute="#uname" operation="eq" value="hadev2"/>
+            <expression id="3" attribute="#uname" operation="eq" value="hadev2"/>
           </rule>
         </rsc_location>
         <rsc_location id="run_rsc_hadev3" rsc="rsc_hadev3">
           <rule id="pref_run_rsc_hadev3" score="100" boolean_op="and">
-            <expression attribute="#uname" operation="eq" value="hadev3"/>
+            <expression id="4" attribute="#uname" operation="eq" value="hadev3"/>
           </rule>
         </rsc_location>
       </constraints>
@@ -100,14 +100,14 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" last_op="monitor" rsc_state="running" rc_code="-1" op_status="-1">
-            <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" origin="build_active_RAs" transition_key="0:1" transition_magic="0:1:some_key" rsc_state="running" call_id="4" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:1:some_key" call_id="-1"/>
+            <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" origin="build_active_RAs" transition_key="0:1" transition_magic="0:0;1:some_key" rsc_state="running" call_id="4" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1"/>
           </lrm_resource>
           <lrm_resource id="rsc_hadev2" last_op="start" rc_code="14" op_status="-1">
-            <lrm_rsc_op id="rsc_hadev2_start_0" operation="start" origin="build_active_RAs" transition_key="-1:1" transition_magic="-1:1:some_key" call_id="3" rc_code="14" op_status="-1"/>
+            <lrm_rsc_op id="rsc_hadev2_start_0" operation="start" origin="build_active_RAs" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="3" rc_code="14" op_status="-1"/>
           </lrm_resource>
           <lrm_resource id="DcIPaddr" last_op="start" rc_code="14" op_status="-1">
-            <lrm_rsc_op id="DcIPaddr_start_0" operation="start" origin="build_active_RAs" transition_key="-1:1" transition_magic="-1:1:some_key" call_id="2" rc_code="14" op_status="-1"/>
+            <lrm_rsc_op id="DcIPaddr_start_0" operation="start" origin="build_active_RAs" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="2" rc_code="14" op_status="-1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -116,16 +116,16 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc_hadev1" last_op="monitor" rsc_state="running" rc_code="-1" op_status="-1">
-            <lrm_rsc_op id="rsc_hadev1_start_0" operation="start" origin="build_active_RAs" transition_key="0:1" transition_magic="0:1:some_key" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_hadev1_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:1:some_key" call_id="-1"/>
+            <lrm_rsc_op id="rsc_hadev1_start_0" operation="start" origin="build_active_RAs" transition_key="0:1" transition_magic="0:0;1:some_key" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_hadev1_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1"/>
           </lrm_resource>
           <lrm_resource id="DoFencing:child_DoFencing:1" last_op="monitor" rsc_state="running" rc_code="-1" op_status="-1">
-            <lrm_rsc_op id="DoFencing:child_DoFencing:1_start_0" operation="start" origin="build_active_RAs" transition_key="0:1" transition_magic="0:1:some_key" rsc_state="running" call_id="4" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="DoFencing:child_DoFencing:1_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:1:some_key" call_id="-1"/>
+            <lrm_rsc_op id="DoFencing:child_DoFencing:1_start_0" operation="start" origin="build_active_RAs" transition_key="0:1" transition_magic="0:0;1:some_key" rsc_state="running" call_id="4" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="DoFencing:child_DoFencing:1_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1"/>
           </lrm_resource>
           <lrm_resource id="rsc_hadev3" last_op="monitor" rsc_state="running" rc_code="-1" op_status="-1">
-            <lrm_rsc_op id="rsc_hadev3_start_0" operation="start" origin="build_active_RAs" transition_key="0:1" transition_magic="0:1:some_key" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_hadev3_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:1:some_key" call_id="-1"/>
+            <lrm_rsc_op id="rsc_hadev3_start_0" operation="start" origin="build_active_RAs" transition_key="0:1" transition_magic="0:0;1:some_key" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_hadev3_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

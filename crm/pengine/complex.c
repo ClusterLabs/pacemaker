@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.64 2005/09/27 13:22:02 andrew Exp $ */
+/* $Id: complex.c,v 1.65 2005/09/30 13:01:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,10 +33,6 @@ void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
 
 extern gboolean rsc_colocation_new(const char *id, enum con_strength strength,
 				   resource_t *rsc_lh, resource_t *rsc_rh);
-extern rsc_to_node_t *rsc2node_new(
-	const char *id, resource_t *rsc, double weight, node_t *node,
-	pe_working_set_t *data_set);
-
 rsc_to_node_t *generate_location_rule(
 	resource_t *rsc, crm_data_t *location_rule, pe_working_set_t *data_set);
 

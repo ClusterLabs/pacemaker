@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.112 2005/09/26 07:44:45 andrew Exp $ */
+/* $Id: utils.c,v 1.113 2005/09/30 13:01:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -621,36 +621,36 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	}
 
 	if(node1_weight > node2_weight) {
-		crm_debug("%s (%d) > %s (%d) : weight",
-			  node1->details->uname, node1_weight,
-			  node2->details->uname, node2_weight);
+		crm_debug_2("%s (%d) > %s (%d) : weight",
+			    node1->details->uname, node1_weight,
+			    node2->details->uname, node2_weight);
 		return -1;
 	}
 	
 	if(node1_weight < node2_weight) {
-		crm_debug("%s (%d) < %s (%d) : weight",
-			  node1->details->uname, node1_weight,
-			  node2->details->uname, node2_weight);
+		crm_debug_2("%s (%d) < %s (%d) : weight",
+			    node1->details->uname, node1_weight,
+			    node2->details->uname, node2_weight);
 		return 1;
 	}
 
-	crm_debug("%s (%d) == %s (%d) : weight",
-		  node1->details->uname, node1_weight,
-		  node2->details->uname, node2_weight);
+	crm_debug_3("%s (%d) == %s (%d) : weight",
+		    node1->details->uname, node1_weight,
+		    node2->details->uname, node2_weight);
 	
 	/* now try to balance resources across the cluster */
 	if(node1->details->num_resources
 	   < node2->details->num_resources) {
-		crm_debug("%s (%d) < %s (%d) : resources",
-			  node1->details->uname, node1->details->num_resources,
-			  node2->details->uname, node2->details->num_resources);
+		crm_debug_2("%s (%d) < %s (%d) : resources",
+			    node1->details->uname, node1->details->num_resources,
+			    node2->details->uname, node2->details->num_resources);
 		return -1;
 		
 	} else if(node1->details->num_resources
 		  > node2->details->num_resources) {
-		crm_debug("%s (%d) > %s (%d) : resources",
-			  node1->details->uname, node1->details->num_resources,
-			  node2->details->uname, node2->details->num_resources);
+		crm_debug_2("%s (%d) > %s (%d) : resources",
+			    node1->details->uname, node1->details->num_resources,
+			    node2->details->uname, node2->details->num_resources);
 		return 1;
 	}
 	
@@ -750,8 +750,9 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 		}
 	}
 
-	if(optional == FALSE) {
-		crm_debug_2("Action %d marked manditory", action->id);
+	if(optional == FALSE && action->optional) {
+		crm_debug_2("Action %d (%s) marked manditory",
+			    action->id, action->uuid);
 		action->optional = FALSE;
 	}
 	
@@ -1397,7 +1398,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 				      pre_text==NULL?"":pre_text,
 				      pre_text==NULL?"":": ",
 				      action->pseudo?"Pseduo ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
-				      action->id, action->task,
+				      action->id, action->uuid,
 				      node_uname?"\ton ":"",
 				      node_uname?node_uname:"",
 				      node_uuid?"\t\t(":"",
@@ -1410,7 +1411,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 				      pre_text==NULL?"":pre_text,
 				      pre_text==NULL?"":": ",
 				      action->optional?"Optional ":action->pseudo?"Pseduo ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
-				      action->id, action->task,
+				      action->id, action->uuid,
 				      safe_val3("<none>", action, rsc, id),
 				      node_uname?"\ton ":"",
 				      node_uname?node_uname:"",
@@ -1734,4 +1735,39 @@ char2score(const char *score)
 	}
 	
 	return score_f;
+}
+
+rsc_to_node_t *
+rsc2node_new(const char *id, resource_t *rsc,
+	     int node_weight, node_t *foo_node, pe_working_set_t *data_set)
+{
+	rsc_to_node_t *new_con = NULL;
+
+	if(rsc == NULL || id == NULL) {
+		pe_err("Invalid constraint %s for rsc=%p", crm_str(id), rsc);
+		return NULL;
+	}
+
+	crm_malloc0(new_con, sizeof(rsc_to_node_t));
+	if(new_con != NULL) {
+		new_con->id           = id;
+		new_con->rsc_lh       = rsc;
+		new_con->node_list_rh = NULL;
+		new_con->role_filter = RSC_ROLE_UNKNOWN;
+		
+		if(foo_node != NULL) {
+			node_t *copy = node_copy(foo_node);
+			copy->weight = node_weight;
+			new_con->node_list_rh = g_list_append(NULL, copy);
+		} else {
+			CRM_DEV_ASSERT(node_weight == 0);
+		}
+		
+		data_set->placement_constraints = g_list_append(
+			data_set->placement_constraints, new_con);
+		rsc->rsc_location = g_list_append(
+			rsc->rsc_location, new_con);
+	}
+	
+	return new_con;
 }

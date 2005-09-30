@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.35 2005/09/16 17:32:16 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.36 2005/09/30 13:01:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -112,6 +112,10 @@ extern crm_data_t *find_rsc_op_entry(resource_t *rsc, const char *key);
 extern action_t *custom_action(
 	resource_t *rsc, char *key, const char *task, node_t *on_node,
 	gboolean optional, gboolean foo, pe_working_set_t *data_set);
+
+extern rsc_to_node_t *rsc2node_new(
+	const char *id, resource_t *rsc, int weight, node_t *node,
+	pe_working_set_t *data_set);
 
 #define delete_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_DELETE, 0)
 #define delete_action(rsc, node) custom_action(				\

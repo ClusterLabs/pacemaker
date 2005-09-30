@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.55 2005/09/26 07:44:44 andrew Exp $ */
+/* $Id: incarnation.c,v 1.56 2005/09/30 13:01:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -962,6 +962,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 	
 	crm_debug_2("Processing actions from %s", rsc->id);
 
+	
 	if(rsc->notify) {
 		slist_iter(
 			child_rsc, resource_t, clone_data->child_list, lpc,
@@ -976,23 +977,6 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 	}
 	
 	/* expand the notify data */		
-	if(rsc->notify && n_data->start) {
-		n_data->start = g_list_sort(
-			n_data->start, sort_notify_entries);
-		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
-		expand_list(n_data->start, clone_data->clone_max,
-			    &rsc_list, &node_list, &uuid_list);
-		g_hash_table_insert(
-			n_data->keys,
-			crm_strdup("notify_start_resource"), rsc_list);
-		g_hash_table_insert(
-			n_data->keys,
-			crm_strdup("notify_start_uname"), node_list);
-		g_hash_table_insert(
-			n_data->keys,
-			crm_strdup("notify_start_uuid"), uuid_list);
-	}
-	
 	if(rsc->notify && n_data->stop) {
 		n_data->stop = g_list_sort(
 			n_data->stop, sort_notify_entries);
@@ -1010,6 +994,57 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 			crm_strdup("notify_stop_uuid"), uuid_list);
 	}
 
+	if(rsc->notify && n_data->start) {
+		n_data->start = g_list_sort(
+			n_data->start, sort_notify_entries);
+		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
+		expand_list(n_data->start, clone_data->clone_max,
+			    &rsc_list, &node_list, &uuid_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_start_resource"), rsc_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_start_uname"), node_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_start_uuid"), uuid_list);
+	}
+	
+	if(rsc->notify && n_data->demote) {
+		n_data->demote = g_list_sort(
+			n_data->demote, sort_notify_entries);
+		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
+		expand_list(n_data->demote, clone_data->clone_max,
+			    &rsc_list, &node_list, &uuid_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_demote_resource"), rsc_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_demote_uname"), node_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_demote_uuid"), uuid_list);
+	}
+	
+	if(rsc->notify && n_data->promote) {
+		n_data->promote = g_list_sort(
+			n_data->promote, sort_notify_entries);
+		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
+		expand_list(n_data->promote, clone_data->clone_max,
+			    &rsc_list, &node_list, &uuid_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_promote_resource"), rsc_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_promote_uname"), node_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_promote_uuid"), uuid_list);
+	}
+	
 	if(rsc->notify && n_data->active) {
 		n_data->active = g_list_sort(
 			n_data->active, sort_notify_entries);
@@ -1025,6 +1060,40 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_table_insert(
 			n_data->keys,
 			crm_strdup("notify_active_uuid"), uuid_list);
+	}
+
+	if(rsc->notify && n_data->slave) {
+		n_data->slave = g_list_sort(
+			n_data->slave, sort_notify_entries);
+		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
+		expand_list(n_data->slave, clone_data->clone_max,
+			    &rsc_list, &node_list, &uuid_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_slave_resource"), rsc_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_slave_uname"), node_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_slave_uuid"), uuid_list);	
+	}
+
+	if(rsc->notify && n_data->master) {
+		n_data->master = g_list_sort(
+			n_data->master, sort_notify_entries);
+		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
+		expand_list(n_data->master, clone_data->clone_max,
+			    &rsc_list, &node_list, &uuid_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_master_resource"), rsc_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_master_uname"), node_list);
+		g_hash_table_insert(
+			n_data->keys,
+			crm_strdup("notify_master_uuid"), uuid_list);	
 	}
 
 	if(rsc->notify && n_data->inactive) {
@@ -1065,6 +1134,10 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 	/* destroy the notify_data */
 	pe_free_shallow(n_data->stop);
 	pe_free_shallow(n_data->start);
+	pe_free_shallow(n_data->demote);
+	pe_free_shallow(n_data->promote);
+	pe_free_shallow(n_data->master);
+	pe_free_shallow(n_data->slave);
 	pe_free_shallow(n_data->active);
 	pe_free_shallow(n_data->inactive);
 	g_hash_table_destroy(n_data->keys);

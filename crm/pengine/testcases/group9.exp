@@ -1,36 +1,26 @@
  <transition_graph global_timeout="60s" transition_id="0">
    <synapse id="0">
      <action_set>
-       <rsc_op id="10" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node2" on_node_uuid="node2">
+       <rsc_op id="9" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node2" on_node_uuid="node2">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="11" rsc_id="rsc2" operation="monitor" operation_key="rsc2_monitor_0" on_node="node2" on_node_uuid="node2">
+       <rsc_op id="10" rsc_id="rsc2" operation="monitor" operation_key="rsc2_monitor_0" on_node="node2" on_node_uuid="node2">
          <primitive id="rsc2" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="2">
      <action_set>
-       <pseudo_event id="27" rsc_id="foo" operation="start" operation_key="foo_start_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+       <pseudo_event id="25" rsc_id="foo" operation="start" operation_key="foo_start_0">
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -38,112 +28,81 @@
          <pseudo_event id="5" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <pseudo_event id="30" rsc_id="foo" operation="stopped" operation_key="foo_stopped_0"/>
+         <pseudo_event id="28" rsc_id="foo" operation="stopped" operation_key="foo_stopped_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="3">
      <action_set>
-       <pseudo_event id="28" rsc_id="foo" operation="running" operation_key="foo_running_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+       <pseudo_event id="26" rsc_id="foo" operation="running" operation_key="foo_running_0">
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="26" rsc_id="foo:rsc5" operation="start" operation_key="foo:rsc5_start_0" on_node="node1" on_node_uuid="node1"/>
+         <rsc_op id="24" rsc_id="foo:rsc5" operation="start" operation_key="foo:rsc5_start_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
        <trigger>
-         <pseudo_event id="27" rsc_id="foo" operation="start" operation_key="foo_start_0"/>
+         <pseudo_event id="25" rsc_id="foo" operation="start" operation_key="foo_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="4">
      <action_set>
-       <pseudo_event id="29" rsc_id="foo" operation="stop" operation_key="foo_stop_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+       <pseudo_event id="27" rsc_id="foo" operation="stop" operation_key="foo_stop_0">
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="5">
      <action_set>
-       <pseudo_event id="30" rsc_id="foo" operation="stopped" operation_key="foo_stopped_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+       <pseudo_event id="28" rsc_id="foo" operation="stopped" operation_key="foo_stopped_0">
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="29" rsc_id="foo" operation="stop" operation_key="foo_stop_0"/>
+         <pseudo_event id="27" rsc_id="foo" operation="stop" operation_key="foo_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="6">
      <action_set>
-       <rsc_op id="12" rsc_id="foo:rsc3" operation="monitor" operation_key="foo:rsc3_monitor_0" on_node="node2" on_node_uuid="node2">
+       <rsc_op id="11" rsc_id="foo:rsc3" operation="monitor" operation_key="foo:rsc3_monitor_0" on_node="node2" on_node_uuid="node2">
          <primitive id="foo:rsc3" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="7">
      <action_set>
+       <rsc_op id="1" rsc_id="foo:rsc4" operation="monitor" operation_key="foo:rsc4_monitor_0" on_node="node2" on_node_uuid="node2">
+         <primitive id="foo:rsc4" class="heartbeat" type="apache"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="8">
+     <action_set>
        <rsc_op id="2" rsc_id="foo:rsc4" operation="stop" operation_key="foo:rsc4_stop_0" on_node="node1" on_node_uuid="node1">
          <primitive id="foo:rsc4" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="25" rsc_id="foo:rsc5" operation="stop" operation_key="foo:rsc5_stop_0" on_node="node1" on_node_uuid="node1"/>
+         <rsc_op id="23" rsc_id="foo:rsc5" operation="stop" operation_key="foo:rsc5_stop_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="8">
-     <action_set>
-       <rsc_op id="7" rsc_id="foo:rsc4" operation="monitor" operation_key="foo:rsc4_monitor_0" on_node="node1" on_node_uuid="node1">
-         <primitive id="foo:rsc4" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
-       </rsc_op>
-     </action_set>
-     <inputs/>
-   </synapse>
    <synapse id="9">
      <action_set>
-       <rsc_op id="13" rsc_id="foo:rsc4" operation="monitor" operation_key="foo:rsc4_monitor_0" on_node="node2" on_node_uuid="node2">
+       <rsc_op id="22" rsc_id="foo:rsc4" operation="start" operation_key="foo:rsc4_start_0" on_node="node1" on_node_uuid="node1">
          <primitive id="foo:rsc4" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
-       </rsc_op>
-     </action_set>
-     <inputs/>
-   </synapse>
-   <synapse id="10">
-     <action_set>
-       <rsc_op id="24" rsc_id="foo:rsc4" operation="start" operation_key="foo:rsc4_start_0" on_node="node1" on_node_uuid="node1">
-         <primitive id="foo:rsc4" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -152,58 +111,48 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="11">
+   <synapse id="10">
      <action_set>
-       <rsc_op id="14" rsc_id="foo:rsc5" operation="monitor" operation_key="foo:rsc5_monitor_0" on_node="node2" on_node_uuid="node2">
+       <rsc_op id="12" rsc_id="foo:rsc5" operation="monitor" operation_key="foo:rsc5_monitor_0" on_node="node2" on_node_uuid="node2">
          <primitive id="foo:rsc5" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="12">
+   <synapse id="11">
      <action_set>
-       <rsc_op id="25" rsc_id="foo:rsc5" operation="stop" operation_key="foo:rsc5_stop_0" on_node="node1" on_node_uuid="node1">
+       <rsc_op id="23" rsc_id="foo:rsc5" operation="stop" operation_key="foo:rsc5_stop_0" on_node="node1" on_node_uuid="node1">
          <primitive id="foo:rsc5" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="29" rsc_id="foo" operation="stop" operation_key="foo_stop_0"/>
+         <pseudo_event id="27" rsc_id="foo" operation="stop" operation_key="foo_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="12">
+     <action_set>
+       <rsc_op id="24" rsc_id="foo:rsc5" operation="start" operation_key="foo:rsc5_start_0" on_node="node1" on_node_uuid="node1">
+         <primitive id="foo:rsc5" class="heartbeat" type="apache"/>
+         <attributes crm_feature_set="1.0.3"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="22" rsc_id="foo:rsc4" operation="start" operation_key="foo:rsc4_start_0" on_node="node1" on_node_uuid="node1"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="23" rsc_id="foo:rsc5" operation="stop" operation_key="foo:rsc5_stop_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="13">
      <action_set>
-       <rsc_op id="26" rsc_id="foo:rsc5" operation="start" operation_key="foo:rsc5_start_0" on_node="node1" on_node_uuid="node1">
-         <primitive id="foo:rsc5" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="24" rsc_id="foo:rsc4" operation="start" operation_key="foo:rsc4_start_0" on_node="node1" on_node_uuid="node1"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="25" rsc_id="foo:rsc5" operation="stop" operation_key="foo:rsc5_stop_0" on_node="node1" on_node_uuid="node1"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="14">
-     <action_set>
-       <pseudo_event id="37" rsc_id="bar" operation="start" operation_key="bar_start_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+       <pseudo_event id="35" rsc_id="bar" operation="start" operation_key="bar_start_0">
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -211,122 +160,104 @@
          <pseudo_event id="5" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <pseudo_event id="40" rsc_id="bar" operation="stopped" operation_key="bar_stopped_0"/>
+         <pseudo_event id="38" rsc_id="bar" operation="stopped" operation_key="bar_stopped_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="14">
+     <action_set>
+       <pseudo_event id="36" rsc_id="bar" operation="running" operation_key="bar_running_0">
+         <attributes crm_feature_set="1.0.3"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="33" rsc_id="bar:rsc8" operation="start" operation_key="bar:rsc8_start_0" on_node="node2" on_node_uuid="node2"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="35" rsc_id="bar" operation="start" operation_key="bar_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="15">
      <action_set>
-       <pseudo_event id="38" rsc_id="bar" operation="running" operation_key="bar_running_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
-       </pseudo_event>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="35" rsc_id="bar:rsc8" operation="start" operation_key="bar:rsc8_start_0" on_node="node2" on_node_uuid="node2"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="37" rsc_id="bar" operation="start" operation_key="bar_start_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="16">
-     <action_set>
-       <pseudo_event id="39" rsc_id="bar" operation="stop" operation_key="bar_stop_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+       <pseudo_event id="37" rsc_id="bar" operation="stop" operation_key="bar_stop_0">
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="17">
+   <synapse id="16">
      <action_set>
-       <pseudo_event id="40" rsc_id="bar" operation="stopped" operation_key="bar_stopped_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+       <pseudo_event id="38" rsc_id="bar" operation="stopped" operation_key="bar_stopped_0">
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="31" rsc_id="bar:rsc6" operation="stop" operation_key="bar:rsc6_stop_0" on_node="node1" on_node_uuid="node1"/>
+         <rsc_op id="29" rsc_id="bar:rsc6" operation="stop" operation_key="bar:rsc6_stop_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
        <trigger>
-         <pseudo_event id="39" rsc_id="bar" operation="stop" operation_key="bar_stop_0"/>
+         <pseudo_event id="37" rsc_id="bar" operation="stop" operation_key="bar_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="18">
+   <synapse id="17">
      <action_set>
-       <rsc_op id="15" rsc_id="bar:rsc6" operation="monitor" operation_key="bar:rsc6_monitor_0" on_node="node2" on_node_uuid="node2">
+       <rsc_op id="13" rsc_id="bar:rsc6" operation="monitor" operation_key="bar:rsc6_monitor_0" on_node="node2" on_node_uuid="node2">
          <primitive id="bar:rsc6" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="19">
+   <synapse id="18">
      <action_set>
-       <rsc_op id="31" rsc_id="bar:rsc6" operation="stop" operation_key="bar:rsc6_stop_0" on_node="node1" on_node_uuid="node1">
+       <rsc_op id="29" rsc_id="bar:rsc6" operation="stop" operation_key="bar:rsc6_stop_0" on_node="node1" on_node_uuid="node1">
          <primitive id="bar:rsc6" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
          <rsc_op id="4" rsc_id="bar:rsc7" operation="stop" operation_key="bar:rsc7_stop_0" on_node="node1" on_node_uuid="node1"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="19">
+     <action_set>
+       <rsc_op id="30" rsc_id="bar:rsc6" operation="start" operation_key="bar:rsc6_start_0" on_node="node2" on_node_uuid="node2">
+         <primitive id="bar:rsc6" class="heartbeat" type="apache"/>
+         <attributes crm_feature_set="1.0.3"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="29" rsc_id="bar:rsc6" operation="stop" operation_key="bar:rsc6_stop_0" on_node="node1" on_node_uuid="node1"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="35" rsc_id="bar" operation="start" operation_key="bar_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="20">
      <action_set>
-       <rsc_op id="32" rsc_id="bar:rsc6" operation="start" operation_key="bar:rsc6_start_0" on_node="node2" on_node_uuid="node2">
+       <rsc_op id="31" rsc_id="bar:rsc6" operation="delete" operation_key="bar:rsc6_delete_0" on_node="node1" on_node_uuid="node1">
          <primitive id="bar:rsc6" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="31" rsc_id="bar:rsc6" operation="stop" operation_key="bar:rsc6_stop_0" on_node="node1" on_node_uuid="node1"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="37" rsc_id="bar" operation="start" operation_key="bar_start_0"/>
+         <rsc_op id="29" rsc_id="bar:rsc6" operation="stop" operation_key="bar:rsc6_stop_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="21">
      <action_set>
-       <rsc_op id="33" rsc_id="bar:rsc6" operation="delete" operation_key="bar:rsc6_delete_0" on_node="node1" on_node_uuid="node1">
-         <primitive id="bar:rsc6" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="31" rsc_id="bar:rsc6" operation="stop" operation_key="bar:rsc6_stop_0" on_node="node1" on_node_uuid="node1"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="22">
-     <action_set>
        <rsc_op id="3" rsc_id="bar:rsc7" operation="start" operation_key="bar:rsc7_start_0" on_node="node2" on_node_uuid="node2">
          <primitive id="bar:rsc7" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -334,86 +265,68 @@
          <rsc_op id="4" rsc_id="bar:rsc7" operation="stop" operation_key="bar:rsc7_stop_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
        <trigger>
-         <rsc_op id="32" rsc_id="bar:rsc6" operation="start" operation_key="bar:rsc6_start_0" on_node="node2" on_node_uuid="node2"/>
+         <rsc_op id="30" rsc_id="bar:rsc6" operation="start" operation_key="bar:rsc6_start_0" on_node="node2" on_node_uuid="node2"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="22">
+     <action_set>
+       <rsc_op id="4" rsc_id="bar:rsc7" operation="stop" operation_key="bar:rsc7_stop_0" on_node="node1" on_node_uuid="node1">
+         <primitive id="bar:rsc7" class="heartbeat" type="apache"/>
+         <attributes crm_feature_set="1.0.3"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="32" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="23">
      <action_set>
-       <rsc_op id="4" rsc_id="bar:rsc7" operation="stop" operation_key="bar:rsc7_stop_0" on_node="node1" on_node_uuid="node1">
+       <rsc_op id="7" rsc_id="bar:rsc7" operation="monitor" operation_key="bar:rsc7_monitor_0" on_node="node1" on_node_uuid="node1">
          <primitive id="bar:rsc7" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="34" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="24">
      <action_set>
-       <rsc_op id="8" rsc_id="bar:rsc7" operation="monitor" operation_key="bar:rsc7_monitor_0" on_node="node1" on_node_uuid="node1">
+       <rsc_op id="14" rsc_id="bar:rsc7" operation="monitor" operation_key="bar:rsc7_monitor_0" on_node="node2" on_node_uuid="node2">
          <primitive id="bar:rsc7" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="25">
      <action_set>
-       <rsc_op id="16" rsc_id="bar:rsc7" operation="monitor" operation_key="bar:rsc7_monitor_0" on_node="node2" on_node_uuid="node2">
-         <primitive id="bar:rsc7" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+       <rsc_op id="15" rsc_id="bar:rsc8" operation="monitor" operation_key="bar:rsc8_monitor_0" on_node="node2" on_node_uuid="node2">
+         <primitive id="bar:rsc8" class="heartbeat" type="apache"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="26">
      <action_set>
-       <rsc_op id="17" rsc_id="bar:rsc8" operation="monitor" operation_key="bar:rsc8_monitor_0" on_node="node2" on_node_uuid="node2">
+       <rsc_op id="32" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1">
          <primitive id="bar:rsc8" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
-       </rsc_op>
-     </action_set>
-     <inputs/>
-   </synapse>
-   <synapse id="27">
-     <action_set>
-       <rsc_op id="34" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1">
-         <primitive id="bar:rsc8" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="39" rsc_id="bar" operation="stop" operation_key="bar_stop_0"/>
+         <pseudo_event id="37" rsc_id="bar" operation="stop" operation_key="bar_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="28">
+   <synapse id="27">
      <action_set>
-       <rsc_op id="35" rsc_id="bar:rsc8" operation="start" operation_key="bar:rsc8_start_0" on_node="node2" on_node_uuid="node2">
+       <rsc_op id="33" rsc_id="bar:rsc8" operation="start" operation_key="bar:rsc8_start_0" on_node="node2" on_node_uuid="node2">
          <primitive id="bar:rsc8" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -421,31 +334,27 @@
          <rsc_op id="3" rsc_id="bar:rsc7" operation="start" operation_key="bar:rsc7_start_0" on_node="node2" on_node_uuid="node2"/>
        </trigger>
        <trigger>
-         <rsc_op id="34" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1"/>
+         <rsc_op id="32" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="28">
+     <action_set>
+       <rsc_op id="34" rsc_id="bar:rsc8" operation="delete" operation_key="bar:rsc8_delete_0" on_node="node1" on_node_uuid="node1">
+         <primitive id="bar:rsc8" class="heartbeat" type="apache"/>
+         <attributes crm_feature_set="1.0.3"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="32" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="29">
      <action_set>
-       <rsc_op id="36" rsc_id="bar:rsc8" operation="delete" operation_key="bar:rsc8_delete_0" on_node="node1" on_node_uuid="node1">
-         <primitive id="bar:rsc8" class="heartbeat" type="apache"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="34" rsc_id="bar:rsc8" operation="stop" operation_key="bar:rsc8_stop_0" on_node="node1" on_node_uuid="node1"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="30">
-     <action_set>
        <pseudo_event id="5" operation="probe_complete" operation_key="probe_complete">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -453,61 +362,52 @@
          <rsc_op id="6" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="node1"/>
        </trigger>
        <trigger>
-         <rsc_op id="9" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="node2"/>
+         <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="node2"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="30">
+     <action_set>
+       <rsc_op id="6" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="node1">
+         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="7" rsc_id="bar:rsc7" operation="monitor" operation_key="bar:rsc7_monitor_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="31">
      <action_set>
-       <rsc_op id="6" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="node1">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
-         </attributes>
+       <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="node2">
+         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="7" rsc_id="foo:rsc4" operation="monitor" operation_key="foo:rsc4_monitor_0" on_node="node1" on_node_uuid="node1"/>
+         <rsc_op id="1" rsc_id="foo:rsc4" operation="monitor" operation_key="foo:rsc4_monitor_0" on_node="node2" on_node_uuid="node2"/>
        </trigger>
        <trigger>
-         <rsc_op id="8" rsc_id="bar:rsc7" operation="monitor" operation_key="bar:rsc7_monitor_0" on_node="node1" on_node_uuid="node1"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="32">
-     <action_set>
-       <rsc_op id="9" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="node2">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
-         </attributes>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="10" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node2" on_node_uuid="node2"/>
+         <rsc_op id="9" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node2" on_node_uuid="node2"/>
        </trigger>
        <trigger>
-         <rsc_op id="11" rsc_id="rsc2" operation="monitor" operation_key="rsc2_monitor_0" on_node="node2" on_node_uuid="node2"/>
+         <rsc_op id="10" rsc_id="rsc2" operation="monitor" operation_key="rsc2_monitor_0" on_node="node2" on_node_uuid="node2"/>
        </trigger>
        <trigger>
-         <rsc_op id="12" rsc_id="foo:rsc3" operation="monitor" operation_key="foo:rsc3_monitor_0" on_node="node2" on_node_uuid="node2"/>
+         <rsc_op id="11" rsc_id="foo:rsc3" operation="monitor" operation_key="foo:rsc3_monitor_0" on_node="node2" on_node_uuid="node2"/>
        </trigger>
        <trigger>
-         <rsc_op id="13" rsc_id="foo:rsc4" operation="monitor" operation_key="foo:rsc4_monitor_0" on_node="node2" on_node_uuid="node2"/>
+         <rsc_op id="12" rsc_id="foo:rsc5" operation="monitor" operation_key="foo:rsc5_monitor_0" on_node="node2" on_node_uuid="node2"/>
        </trigger>
        <trigger>
-         <rsc_op id="14" rsc_id="foo:rsc5" operation="monitor" operation_key="foo:rsc5_monitor_0" on_node="node2" on_node_uuid="node2"/>
+         <rsc_op id="13" rsc_id="bar:rsc6" operation="monitor" operation_key="bar:rsc6_monitor_0" on_node="node2" on_node_uuid="node2"/>
        </trigger>
        <trigger>
-         <rsc_op id="15" rsc_id="bar:rsc6" operation="monitor" operation_key="bar:rsc6_monitor_0" on_node="node2" on_node_uuid="node2"/>
+         <rsc_op id="14" rsc_id="bar:rsc7" operation="monitor" operation_key="bar:rsc7_monitor_0" on_node="node2" on_node_uuid="node2"/>
        </trigger>
        <trigger>
-         <rsc_op id="16" rsc_id="bar:rsc7" operation="monitor" operation_key="bar:rsc7_monitor_0" on_node="node2" on_node_uuid="node2"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="17" rsc_id="bar:rsc8" operation="monitor" operation_key="bar:rsc8_monitor_0" on_node="node2" on_node_uuid="node2"/>
+         <rsc_op id="15" rsc_id="bar:rsc8" operation="monitor" operation_key="bar:rsc8_monitor_0" on_node="node2" on_node_uuid="node2"/>
        </trigger>
      </inputs>
    </synapse>

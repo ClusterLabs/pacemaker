@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.87 2005/09/28 08:35:54 andrew Exp $ */
+/* $Id: native.c,v 1.88 2005/09/30 13:01:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,20 +43,12 @@ int num_allowed_nodes4color(color_t *color);
 void create_notifications(resource_t *rsc, pe_working_set_t *data_set);
 void create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 			      pe_working_set_t *data_set);
-void register_state(resource_t *rsc, action_t *op, notify_data_t *n_data);
-void register_activity(resource_t *rsc, action_t *op, notify_data_t *n_data);
 void pe_pre_notify(
 	resource_t *rsc, node_t *node, action_t *op, 
 	notify_data_t *n_data, pe_working_set_t *data_set);
 void pe_post_notify(
 	resource_t *rsc, node_t *node, action_t *op, 
 	notify_data_t *n_data, pe_working_set_t *data_set);
-
-
-extern rsc_to_node_t *
-rsc2node_new(const char *id, resource_t *rsc,
-	     double weight, node_t *node, pe_working_set_t *data_set);
-
 
 void NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *data_set);
 gboolean StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set);
@@ -141,7 +133,11 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		} else if(rsc->recovery_type == recovery_block) {
 			rsc->is_managed = FALSE;
 		}
+	} else {
+		crm_info("Resource %s is active on: %s",
+			 rsc->id, node->details->uname);
 	}
+	
 }
 
 
@@ -1471,115 +1467,127 @@ create_notifications(resource_t *rsc, pe_working_set_t *data_set)
 
 }
 
+static void
+register_activity(resource_t *rsc, enum action_tasks task, node_t *node, notify_data_t *n_data)
+{
+	notify_entry_t *entry = NULL;
+	crm_malloc0(entry, sizeof(notify_entry_t));
+	entry->rsc = rsc;
+	entry->node = node;
+	switch(task) {
+		case start_rsc:
+			n_data->start = g_list_append(n_data->start, entry);
+			break;
+		case stop_rsc:
+			n_data->stop = g_list_append(n_data->stop, entry);
+			break;
+		case action_promote:
+			n_data->promote = g_list_append(n_data->promote, entry);
+			break;
+		case action_demote:
+			n_data->demote = g_list_append(n_data->demote, entry);
+			break;
+		default:
+			crm_err("Unsupported notify action: %s", task2text(task));
+			break;
+	}
+	
+}
 
+
+static void
+register_state(resource_t *rsc, node_t *on_node, notify_data_t *n_data)
+{
+	notify_entry_t *entry = NULL;
+	crm_malloc0(entry, sizeof(notify_entry_t));
+	entry->rsc = rsc;
+	entry->node = on_node;
+
+	crm_err("%s state: %s", rsc->id, role2text(rsc->next_role));
+
+	switch(rsc->next_role) {
+		case RSC_ROLE_STOPPED:
+/* 			n_data->inactive = g_list_append(n_data->inactive, entry); */
+			crm_free(entry);
+			break;
+		case RSC_ROLE_STARTED:
+			n_data->active = g_list_append(n_data->active, entry);
+			break;
+		case RSC_ROLE_SLAVE:
+ 			n_data->slave = g_list_append(n_data->slave, entry); 
+			break;
+		case RSC_ROLE_MASTER:
+			n_data->master = g_list_append(n_data->master, entry);
+			break;
+		default:
+			crm_err("Unsupported notify role");
+			break;
+	}
+}
 
 void
 native_create_notify_element(resource_t *rsc, action_t *op,
 			     notify_data_t *n_data, pe_working_set_t *data_set)
 {
-	node_t *next = NULL;
-	node_t *current = NULL;
-
-	enum action_tasks task;
-
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
-
-	if(rsc->color != NULL) {
-		next = rsc->color->details->chosen_node;
-	}
-	if(rsc->running_on != NULL) {
-		current = rsc->running_on->data;
-	}
-
+	node_t *next_node = NULL;
+	gboolean registered = FALSE;
+	char *op_key = NULL;
+	GListPtr possible_matches = NULL;
+	enum action_tasks task = text2task(op->task);
+	
 	if(op->pre_notify == NULL || op->post_notify == NULL) {
 		/* no notifications required */
 		crm_debug_4("No notificaitons required for %s", op->task);
 		return;
 	}
 
-	crm_debug_2("Notificaitons required for %s", op->task);
+	next_node = rsc->color->details->chosen_node;
+	op_key = generate_op_key(rsc->id, op->task, 0);
+	possible_matches = find_actions(rsc->actions, op_key, NULL);
 	
-	task = text2task(op->task);
+	crm_err("Creating notificaitons for: %s (%s->%s)",
+		op->uuid, role2text(rsc->role), role2text(rsc->next_role));
 
-	if(task == stop_rsc
-	   && rsc->role == RSC_ROLE_STARTED
-	   && rsc->next_role == RSC_ROLE_STOPPED) {
-		register_activity(rsc, op, n_data);
-		pe_pre_notify(rsc, current, op,n_data,data_set);
+	if(rsc->role == rsc->next_role) {
+		register_state(rsc, next_node, n_data);
+	}
+	
+	slist_iter(
+		local_op, action_t, possible_matches, lpc,
 
-	} else if(task != stop_rsc
-		  && rsc->role == RSC_ROLE_STOPPED
-		  && rsc->next_role == RSC_ROLE_STARTED ){
-		register_activity(rsc, op, n_data);
-		pe_post_notify(rsc, next, op, n_data, data_set);
+		if(local_op->optional == FALSE) {
+			registered = TRUE;
+			register_activity(rsc, task, local_op->node, n_data);
+		}		
+		);
 
-	} else if(rsc->role == RSC_ROLE_STARTED
-		  && rsc->next_role == RSC_ROLE_STARTED) {
-		action_t *start = start_action(rsc, next, TRUE);
-		if(start->optional) {
-			/* nothing happening to this resource */
-			pe_pre_notify(rsc, current, op, n_data, data_set);
-			pe_post_notify(rsc, current, op, n_data, data_set);
-			register_state(rsc, op, n_data);
-
-			/* restarting or moving */
-		} else if(task == stop_rsc) {
-			pe_pre_notify(rsc, current, op,n_data,data_set);
-			register_activity(rsc, op, n_data);
-		} else {
-			pe_post_notify(rsc, next, op, n_data, data_set);
-			register_activity(rsc, op, n_data);
+	/* stop / demote */
+	if(rsc->role != RSC_ROLE_STOPPED) {
+		if(task == stop_rsc || task == action_demote) {
+			slist_iter(
+				current_node, node_t, rsc->running_on, lpc,
+				pe_pre_notify(rsc, current_node, op, n_data, data_set);
+				if(task == action_demote || registered == FALSE) {
+					pe_post_notify(rsc, current_node, op, n_data, data_set);
+				}
+				);
 		}
 	}
-}
-
-
-void
-register_activity(resource_t *rsc, action_t *op, notify_data_t *n_data)
-{
-	notify_entry_t *entry = NULL;
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
 	
-	if(safe_str_eq(op->task, CRMD_ACTION_START)) {
-		crm_malloc0(entry, sizeof(notify_entry_t));
-		entry->rsc = rsc;
-		if(rsc->color != NULL) {
-			entry->node = rsc->color->details->chosen_node;
+	/* start / promote */
+	if(rsc->next_role != RSC_ROLE_STOPPED) {	
+		CRM_DEV_ASSERT(next_node != NULL);
+		if(task == start_rsc || task == action_promote) {
+			if(task != start_rsc || registered == FALSE) {
+				pe_pre_notify(rsc, next_node, op, n_data, data_set);
+			}
+			pe_post_notify(rsc, next_node, op, n_data, data_set);
 		}
-		n_data->start = g_list_append(n_data->start, entry);
-		
-	} else {
-		slist_iter(
-			node, node_t, rsc->running_on, lpc,
-
-			crm_malloc0(entry, sizeof(notify_entry_t));
-			entry->rsc = rsc;
-			entry->node = node;
-			n_data->stop=g_list_append(n_data->stop, entry);
-			);
 	}
-}
+	
+	crm_free(op_key);
+	pe_free_shallow_adv(possible_matches, FALSE);
 
-void
-register_state(resource_t *rsc, action_t *op, notify_data_t *n_data)
-{
-	notify_entry_t *entry = NULL;
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
-
-	crm_malloc0(entry, sizeof(notify_entry_t));
-	entry->rsc = rsc;
-	if(rsc->color != NULL) {
-		entry->node = rsc->color->details->chosen_node;
-	}
-
-	if(entry->node != NULL) {
-		n_data->active = g_list_append(n_data->active, entry);
-	} else {
-		n_data->inactive = g_list_append(n_data->inactive, entry);
-	}
 }
 
 
@@ -1599,6 +1607,7 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	const char *task = NULL;
 	
 	if(op == NULL || confirm == NULL) {
+		crm_debug_2("Op=%p confirm=%p", op, confirm);
 		return;
 	}
 
@@ -1631,7 +1640,6 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	wrapper->type = pe_ordering_manditory;
 	op->actions_after = g_list_append(op->actions_after, wrapper);
 
-
 	
 	value = g_hash_table_lookup(op->extra, "notify_confirm");
 	if(crm_is_true(value)) {
@@ -1660,6 +1668,7 @@ void
 pe_pre_notify(resource_t *rsc, node_t *node, action_t *op,
 	      notify_data_t *n_data, pe_working_set_t *data_set)
 {
+	crm_debug_2("%s: %s", rsc->id, op->uuid);
 	pe_notify(rsc, node, op->pre_notify, op->pre_notified,
 		  n_data, data_set);
 }
@@ -1668,6 +1677,7 @@ void
 pe_post_notify(resource_t *rsc, node_t *node, action_t *op, 
 	notify_data_t *n_data, pe_working_set_t *data_set)
 {
+	crm_debug_2("%s: %s", rsc->id, op->uuid);
 	pe_notify(rsc, node, op->post_notify, op->post_notified,
 		  n_data, data_set);
 }
@@ -1687,6 +1697,8 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *d
 		return;
 	}
 
+	/* use StartRsc/StopRsc */
+	
 	if(safe_str_neq(current->details->id, next->details->id)) {
 		crm_info("Move  resource %s\t(%s -> %s)", rsc->id,
 			 current->details->uname,
@@ -1721,15 +1733,21 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *d
 			}
 			
 		} else {
-			crm_info("Leave resource %s\t(%s)",
-				 rsc->id, next->details->uname);
 			stop = stop_action(rsc, current, TRUE);
 			start = start_action(rsc, next, TRUE);
 			stop->optional = start->optional;
+			
 			if(start->runnable == FALSE) {
 				rsc->next_role = RSC_ROLE_STOPPED;
+
+			} else if(start->optional) {
+				crm_info("Leave resource %s\t(%s)",
+					 rsc->id, next->details->uname);
+
+			} else {
+				crm_info("Restart resource %s\t(%s)",
+					 rsc->id, next->details->uname);
 			}
-			
 		}
 	}
 }
@@ -1744,7 +1762,7 @@ StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
 
-	crm_debug("Executing: %s", rsc->id);
+	crm_debug_2("Executing: %s", rsc->id);
 	
 	slist_iter(
 		current, node_t, rsc->running_on, lpc,
@@ -1768,7 +1786,7 @@ StartRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 {
 	action_t *start = NULL;
 	
-	crm_debug("Executing: %s", rsc->id);
+	crm_debug_2("Executing: %s", rsc->id);
 	start = start_action(rsc, next, TRUE);
 	if(start->runnable) {
 		crm_info("Start resource %s\t(%s)",
@@ -1783,7 +1801,7 @@ PromoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 {
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
-	crm_debug("Executing: %s", rsc->id);
+	crm_debug_2("Executing: %s", rsc->id);
 
 	CRM_DEV_ASSERT(rsc->next_role == RSC_ROLE_MASTER);
 	crm_info("Promote resource %s\t(%s)", rsc->id, next->details->uname);
@@ -1796,7 +1814,7 @@ DemoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 {
 	native_variant_data_t *native_data = NULL;
 	get_native_variant_data(native_data, rsc);
-	crm_debug("Executing: %s", rsc->id);
+	crm_debug_2("Executing: %s", rsc->id);
 
 	CRM_DEV_ASSERT(rsc->next_role == RSC_ROLE_SLAVE);
 	slist_iter(

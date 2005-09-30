@@ -3,10 +3,7 @@
      <action_set>
        <rsc_op id="4" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" class="heartbeat" type="apache" multiple_active="stop_start"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="multiple_active" name="multiple_active" value="stop_start"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" multiple_active="stop_start"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -15,10 +12,7 @@
      <action_set>
        <rsc_op id="5" rsc_id="rsc1" operation="delete" operation_key="rsc1_delete_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" class="heartbeat" type="apache" multiple_active="stop_start"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="multiple_active" name="multiple_active" value="stop_start"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" multiple_active="stop_start"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -31,10 +25,7 @@
      <action_set>
        <rsc_op id="6" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1" class="heartbeat" type="apache" multiple_active="stop_start"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="multiple_active" name="multiple_active" value="stop_start"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" multiple_active="stop_start"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -43,10 +34,7 @@
      <action_set>
        <rsc_op id="7" rsc_id="rsc1" operation="delete" operation_key="rsc1_delete_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1" class="heartbeat" type="apache" multiple_active="stop_start"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="multiple_active" name="multiple_active" value="stop_start"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" multiple_active="stop_start"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -59,10 +47,7 @@
      <action_set>
        <rsc_op id="8" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" class="heartbeat" type="apache" multiple_active="stop_start"/>
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="multiple_active" name="multiple_active" value="stop_start"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" multiple_active="stop_start"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -77,9 +62,7 @@
    <synapse id="5">
      <action_set>
        <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -94,10 +77,7 @@
    <synapse id="6">
      <action_set>
        <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -105,10 +85,7 @@
    <synapse id="7">
      <action_set>
        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="uuid2">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
        </rsc_op>
      </action_set>
      <inputs/>

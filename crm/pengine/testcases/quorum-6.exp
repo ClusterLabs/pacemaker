@@ -3,14 +3,7 @@
      <action_set>
        <rsc_op id="3" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" operation_key="DoFencing:child_DoFencing:0_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="0"/>
-           <nvpair id="clone_max" name="clone_max" value="8"/>
-           <nvpair id="hostlist" name="hostlist" value="hadev1 hadev2 hadev3 "/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="0" clone_max="8" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -19,13 +12,7 @@
      <action_set>
        <rsc_op id="11" rsc_id="DoFencing:child_DoFencing:0" operation="start" operation_key="DoFencing:child_DoFencing:0_start_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="timeout" name="timeout" value="20000"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="0"/>
-           <nvpair id="clone_max" name="clone_max" value="8"/>
-           <nvpair id="hostlist" name="hostlist" value="hadev1 hadev2 hadev3 "/>
-         </attributes>
+         <attributes timeout="20000" crm_feature_set="1.0.3" clone="0" clone_max="8" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -38,14 +25,7 @@
      <action_set>
        <rsc_op id="12" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" operation_key="DoFencing:child_DoFencing:0_monitor_5000" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="timeout" name="timeout" value="20000"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="interval" name="interval" value="5000"/>
-           <nvpair id="clone" name="clone" value="0"/>
-           <nvpair id="clone_max" name="clone_max" value="8"/>
-           <nvpair id="hostlist" name="hostlist" value="hadev1 hadev2 hadev3 "/>
-         </attributes>
+         <attributes timeout="20000" crm_feature_set="1.0.3" interval="5000" clone="0" clone_max="8" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -58,14 +38,7 @@
      <action_set>
        <rsc_op id="4" rsc_id="DoFencing:child_DoFencing:1" operation="monitor" operation_key="DoFencing:child_DoFencing:1_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="1"/>
-           <nvpair id="clone_max" name="clone_max" value="8"/>
-           <nvpair id="hostlist" name="hostlist" value="hadev1 hadev2 hadev3 "/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="1" clone_max="8" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -74,14 +47,7 @@
      <action_set>
        <rsc_op id="5" rsc_id="DoFencing:child_DoFencing:2" operation="monitor" operation_key="DoFencing:child_DoFencing:2_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <primitive id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="2"/>
-           <nvpair id="clone_max" name="clone_max" value="8"/>
-           <nvpair id="hostlist" name="hostlist" value="hadev1 hadev2 hadev3 "/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="2" clone_max="8" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -90,14 +56,7 @@
      <action_set>
        <rsc_op id="6" rsc_id="DoFencing:child_DoFencing:3" operation="monitor" operation_key="DoFencing:child_DoFencing:3_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <primitive id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="3"/>
-           <nvpair id="clone_max" name="clone_max" value="8"/>
-           <nvpair id="hostlist" name="hostlist" value="hadev1 hadev2 hadev3 "/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="3" clone_max="8" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -106,14 +65,7 @@
      <action_set>
        <rsc_op id="7" rsc_id="DoFencing:child_DoFencing:4" operation="monitor" operation_key="DoFencing:child_DoFencing:4_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <primitive id="DoFencing:child_DoFencing:4" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="4"/>
-           <nvpair id="clone_max" name="clone_max" value="8"/>
-           <nvpair id="hostlist" name="hostlist" value="hadev1 hadev2 hadev3 "/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="4" clone_max="8" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -122,14 +74,7 @@
      <action_set>
        <rsc_op id="8" rsc_id="DoFencing:child_DoFencing:5" operation="monitor" operation_key="DoFencing:child_DoFencing:5_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <primitive id="DoFencing:child_DoFencing:5" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="5"/>
-           <nvpair id="clone_max" name="clone_max" value="8"/>
-           <nvpair id="hostlist" name="hostlist" value="hadev1 hadev2 hadev3 "/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="5" clone_max="8" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -138,14 +83,7 @@
      <action_set>
        <rsc_op id="9" rsc_id="DoFencing:child_DoFencing:6" operation="monitor" operation_key="DoFencing:child_DoFencing:6_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <primitive id="DoFencing:child_DoFencing:6" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="6"/>
-           <nvpair id="clone_max" name="clone_max" value="8"/>
-           <nvpair id="hostlist" name="hostlist" value="hadev1 hadev2 hadev3 "/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="6" clone_max="8" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -154,14 +92,7 @@
      <action_set>
        <rsc_op id="10" rsc_id="DoFencing:child_DoFencing:7" operation="monitor" operation_key="DoFencing:child_DoFencing:7_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <primitive id="DoFencing:child_DoFencing:7" class="stonith" type="ssh"/>
-         <attributes>
-           <nvpair id="te-target-rc" name="te-target-rc" value="7"/>
-           <nvpair id="lrm-is-probe" name="lrm-is-probe" value="true"/>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="clone" name="clone" value="7"/>
-           <nvpair id="clone_max" name="clone_max" value="8"/>
-           <nvpair id="hostlist" name="hostlist" value="hadev1 hadev2 hadev3 "/>
-         </attributes>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" clone="7" clone_max="8" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -169,9 +100,7 @@
    <synapse id="10">
      <action_set>
        <pseudo_event id="13" rsc_id="DoFencing" operation="start" operation_key="DoFencing_start_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -183,9 +112,7 @@
    <synapse id="11">
      <action_set>
        <pseudo_event id="14" rsc_id="DoFencing" operation="running" operation_key="DoFencing_running_0">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -200,9 +127,7 @@
    <synapse id="12">
      <action_set>
        <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -214,10 +139,7 @@
    <synapse id="13">
      <action_set>
        <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
-         <attributes>
-           <nvpair id="crm_feature_set" name="crm_feature_set" value="1.0.3"/>
-           <nvpair id="te-no-wait" name="te-no-wait" value="true"/>
-         </attributes>
+         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
        </rsc_op>
      </action_set>
      <inputs>

@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.94 2005/09/26 07:44:44 andrew Exp $ */
+/* $Id: pengine.h,v 1.95 2005/09/30 13:01:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -307,7 +307,7 @@ struct resource_s {
 
 		enum rsc_role_e role;
 		enum rsc_role_e next_role;
-		
+
 		GHashTable *parameters;
 };
 
@@ -461,11 +461,6 @@ extern gboolean custom_action_order(
 
 #define pe_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
 #define pe_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
-
-#define check_and_exit(stage) 	cleanup_calculations(data_set);	\
-	crm_mem_stats(NULL);						\
-	crm_err("Exiting: stage %d", stage);				\
-	exit(1);
 
 extern gboolean process_colored_constraints(resource_t *rsc);
 extern void graph_element_from_action(

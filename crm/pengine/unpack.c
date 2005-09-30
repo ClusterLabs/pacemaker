@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.129 2005/09/27 13:22:02 andrew Exp $ */
+/* $Id: unpack.c,v 1.130 2005/09/30 13:01:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -67,10 +67,6 @@ gboolean rsc_colocation_new(
 gboolean create_ordering(
 	const char *id, enum con_strength strength,
 	resource_t *rsc_lh, resource_t *rsc_rh, pe_working_set_t *data_set);
-
-rsc_to_node_t *rsc2node_new(
-	const char *id, resource_t *rsc,
-	double weight, node_t *node, pe_working_set_t *data_set);
 
 const char *param_value(
 	GHashTable *hash, crm_data_t * parent, const char *name);
@@ -390,40 +386,6 @@ unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
 	return TRUE;
 }
 
-rsc_to_node_t *
-rsc2node_new(const char *id, resource_t *rsc,
-	     double weight, node_t *node, pe_working_set_t *data_set)
-{
-	rsc_to_node_t *new_con = NULL;
-
-	if(rsc == NULL || id == NULL) {
-		pe_err("Invalid constraint %s for rsc=%p", crm_str(id), rsc);
-		return NULL;
-	}
-
-	crm_malloc0(new_con, sizeof(rsc_to_node_t));
-	if(new_con != NULL) {
-		new_con->id           = id;
-		new_con->rsc_lh       = rsc;
-		new_con->node_list_rh = NULL;
-		new_con->role_filter = RSC_ROLE_UNKNOWN;
-		
-		if(node != NULL) {
-			node_t *copy = node_copy(node);
-			copy->weight = weight;
-			new_con->node_list_rh = g_list_append(NULL, copy);
-		} else {
-			CRM_DEV_ASSERT(weight == 0);
-		}
-		
-		data_set->placement_constraints = g_list_append(
-			data_set->placement_constraints, new_con);
-		rsc->rsc_location = g_list_append(
-			rsc->rsc_location, new_con);
-	}
-	
-	return new_con;
-}
 
 
 
@@ -696,10 +658,10 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		
 		sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
 		saved_role = rsc->role;
+		rsc->role = RSC_ROLE_STOPPED;
 		slist_iter(
 			rsc_op, crm_data_t, sorted_op_list, lpc,
 
-			rsc->role = RSC_ROLE_STOPPED;
 			unpack_rsc_op(rsc, node, rsc_op,
 				      &max_call_id, data_set);
 			);
@@ -707,11 +669,16 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		/* no need to free the contents */
 		g_list_free(sorted_op_list);
 
+		crm_info("Resource %s is %s on %s",
+			 rsc->id, role2text(rsc->role), node->details->uname);
+
  		if(rsc->role != RSC_ROLE_STOPPED) { 
 			native_add_running(rsc, node, data_set);
 
 		} else if(rsc->failed == FALSE && node->details->online) {
 			action_t *delete = delete_action(rsc, node);
+			crm_info("Removing %s from %s",
+				 rsc->id, node->details->uname);
 			/* just in case we try and start it back on this node */
 			custom_action_order(
 				rsc, NULL, delete, rsc, start_key(rsc), NULL,
@@ -895,14 +862,14 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		return TRUE;
 	}
 	
-	crm_debug_2("Unpacking task %s/%s (call_id=%s, status=%s) on %s",
-		    rsc->id, task, task_id, task_status, node->details->uname);
-	
+	crm_debug_2("Unpacking task %s/%s (call_id=%s, status=%s) on %s (role=%s)",
+		    rsc->id, task, task_id, task_status, node->details->uname,
+		    role2text(rsc->role));
 
 	if(params != NULL) {
 		const char *interval_s = crm_element_value(params, "interval");
 		if(interval_s != NULL) {
-			atoi(interval_s);
+			interval = atoi(interval_s);
 		}
 	}
 	
@@ -944,13 +911,11 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				return TRUE;
 			}
 
-			crm_warn("Orphan action detected: %s", id);
+			crm_info("Orphan action will be stopped: %s", id);
+
 			action = custom_action(
 				rsc, crm_strdup(id), CRMD_ACTION_CANCEL, node,
 				FALSE, TRUE, data_set);
-
-			crm_info("Orphan action will be stopped: %d",
-				 action->id);
 			
 			custom_action_order(
 				rsc, NULL, action,
@@ -975,10 +940,12 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		g_hash_table_foreach(action->extra, hash2field, pnow);
 		g_hash_table_foreach(rsc->parameters, hash2field, pnow);
 		g_hash_table_foreach(local_rsc_params, hash2field, pnow);
-
+ 		xml_remove_prop(pnow, XML_ATTR_CRM_VERSION); 
+ 		xml_remove_prop(params, XML_ATTR_CRM_VERSION); 
+		
  		pdiff = diff_xml_object(params, pnow, TRUE);
 		if(pdiff != NULL) {
-			crm_err("Parameters to %s action changed", task);
+			crm_err("Parameters to %s action changed", id);
 			log_xml_diff(LOG_INFO, pdiff, __FUNCTION__);
 
 			custom_action(rsc, crm_strdup(id), task, NULL,
@@ -1136,6 +1103,10 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				if(rsc->role < RSC_ROLE_STARTED) {
 					rsc->role = RSC_ROLE_STARTED;
 				}
+				if(safe_str_neq(task, CRMD_ACTION_START)) {
+					custom_action(rsc, crm_strdup(id), task,
+						      NULL, TRUE, TRUE, data_set);
+				}
 			}
 			
 			break;
@@ -1172,7 +1143,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				rsc->role = RSC_ROLE_STARTED;
 			}
 
-			crm_info("Resource %s: set role=%s",
+			crm_debug_2("Resource %s: set role=%s",
 				 rsc->id, role2text(rsc->role));
 
 			if(node->details->unclean) {
@@ -1218,8 +1189,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			break;
 	}
 
-	crm_info("Resource %s after %s: role=%s",
-		 rsc->id, task, role2text(rsc->role));
+	crm_debug_2("Resource %s after %s: role=%s",
+		    rsc->id, task, role2text(rsc->role));
 	
 	return TRUE;
 }

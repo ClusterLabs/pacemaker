@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.92 2005/09/26 07:44:44 andrew Exp $ */
+/* $Id: pengine.c,v 1.93 2005/09/30 13:01:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -144,6 +144,11 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 #define MEMCHECK_STAGE_0 0
 
+#define check_and_exit(stage) 	cleanup_calculations(data_set);		\
+	free_xml(xml_input);						\
+	crm_mem_stats(NULL);						\
+	crm_err("Exiting: stage %d", stage);				\
+	exit(1);
 
 crm_data_t *
 do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now)
@@ -156,6 +161,10 @@ do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *no
 	if(data_set->now == NULL) {
 		data_set->now = new_ha_date(TRUE);
 	}
+
+#if MEMCHECK_STAGE_SETUP
+	check_and_exit(-1);
+#endif
 	
 	crm_debug_5("unpack");		  
 	stage0(data_set);
@@ -249,8 +258,10 @@ cleanup_calculations(pe_working_set_t *data_set)
 		return;
 	}
 
-	g_hash_table_destroy(data_set->config_hash);
-
+	if(data_set->config_hash != NULL) {
+		g_hash_table_destroy(data_set->config_hash);
+	}
+	
 	crm_free(data_set->dc_uuid);
 	crm_free(data_set->transition_idle_timeout);
 	
@@ -300,7 +311,7 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->no_quorum_policy  = no_quorum_freeze;
 	data_set->is_managed_default = TRUE;
 	
-	data_set->stop_action_orphans = FALSE;
+	data_set->stop_action_orphans = TRUE;
 	data_set->stop_rsc_orphans = FALSE;
 	
 	data_set->config_hash = NULL;
