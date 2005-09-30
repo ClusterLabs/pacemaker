@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.37 2005/09/28 07:47:06 andrew Exp $ */
+/* $Id: xml.c,v 1.38 2005/09/30 12:56:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2078,21 +2078,14 @@ assign_uuid(crm_data_t *xml_obj)
 {
 	cl_uuid_t new_uuid;
 	char *new_uuid_s = NULL;
-	const char *new_uuid_s2 = NULL;
 
 	crm_malloc0(new_uuid_s, sizeof(char)*38);
 	cl_uuid_generate(&new_uuid);
 	cl_uuid_unparse(&new_uuid, new_uuid_s);
 	
-	new_uuid_s2 = crm_xml_add(xml_obj, XML_ATTR_ID, new_uuid_s);
-	crm_log_xml_warn(xml_obj, "Updated object");
-	
-	CRM_DEV_ASSERT(cl_is_allocated(new_uuid_s));
-	CRM_DEV_ASSERT(cl_is_allocated(new_uuid_s2));
-	
+	crm_xml_add(xml_obj, XML_ATTR_ID, new_uuid_s);
+	crm_log_xml_warn(xml_obj, "Updated object");	
 	crm_free(new_uuid_s);
-	
-	CRM_DEV_ASSERT(cl_is_allocated(new_uuid_s2));
 }
 
 void
