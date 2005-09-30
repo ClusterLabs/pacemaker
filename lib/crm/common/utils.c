@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.25 2005/09/26 07:48:53 andrew Exp $ */
+/* $Id: utils.c,v 1.26 2005/09/30 12:53:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -96,12 +96,15 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 	int len = 0;
 	const char *temp = NULL;
 
+	CRM_ASSERT(name != NULL && value != NULL);
+	*name = NULL;
+	*value = NULL;
+
 	crm_debug_4("Attempting to decode: [%s]", srcstring);
 	if (srcstring != NULL) {
 		len = strlen(srcstring);
 		while(lpc <= len) {
-			if (srcstring[lpc] == separator
-			    || srcstring[lpc] == '\0') {
+			if (srcstring[lpc] == separator) {
 				crm_malloc0(*name, sizeof(char)*lpc+1);
 				if(*name == NULL) {
 					break; /* and return FALSE */
@@ -126,13 +129,15 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 					strncpy(*value, temp, len);
 					(*value)[len] = '\0';
 				}
-
 				return TRUE;
 			}
 			lpc++;
 		}
 	}
 
+	if(*name != NULL) {
+		crm_free(*name);
+	}
 	*name = NULL;
 	*value = NULL;
     
@@ -421,15 +426,15 @@ compare_version(const char *version1, const char *version2)
 		crm_free(step2);
 		
 		if(cmp < 0) {
-			crm_debug_2("%s < %s", version1, version2);
+			crm_debug_3("%s < %s", version1, version2);
 			return -1;
 			
 		} else if(cmp > 0) {
-			crm_debug_2("%s > %s", version1, version2);
+			crm_debug_3("%s > %s", version1, version2);
 			return 1;
 		}
 	}
-	crm_debug_2("%s == %s", version1, version2);
+	crm_debug_3("%s == %s", version1, version2);
 	return 0;
 }
 
@@ -943,7 +948,7 @@ generate_transition_magic(const char *transition_key, int op_status, int op_rc)
 	
 	crm_malloc0(fail_state, sizeof(char)*len);
 	if(fail_state != NULL) {
-		snprintf(fail_state, len, "%d:%d:%s",
+		snprintf(fail_state, len, "%d:%d;%s",
 			 op_status, op_rc, transition_key);
 	}
 	return fail_state;
@@ -960,21 +965,27 @@ decode_transition_magic(
 	char *status = NULL;
 
 	if(decodeNVpair(magic, ':', &status, &magic2) == FALSE) {
+		crm_err("Couldn't find ':' in: %s", magic);
 		return FALSE;
 	}
 
-	if(decodeNVpair(magic2, ':', &rc, &key) == FALSE) {
+	if(decodeNVpair(magic2, ';', &rc, &key) == FALSE) {
+		crm_err("Couldn't find ';' in: %s", magic2);
 		return FALSE;
 	}
 
-	if(decode_transition_key(key, uuid, transition_id) == FALSE) {
+	
+	CRM_DEV_ASSERT(decode_transition_key(key, uuid, transition_id));
+	if(crm_assert_failed) {
 		return FALSE;
 	}
 	
 	*op_rc = atoi(rc);
 	*op_status = atoi(status);
 
+	crm_free(rc);
 	crm_free(key);
+	crm_free(magic2);
 	crm_free(status);
 	
 	return TRUE;
@@ -1004,6 +1015,7 @@ decode_transition_key(const char *key, char **uuid, int *transition_id)
 	char *transition = NULL;
 	
 	if(decodeNVpair(key, ':', &transition, uuid) == FALSE) {
+		crm_err("Couldn't find ':' in: %s", key);
 		return FALSE;
 	}
 	
