@@ -65,9 +65,9 @@ if CIM_PROVIDER_BUILD
 CIM_PROVIDER_DIR = cim
 endif
 
-SUBDIRS	= $(LIBLTDL_DIR) debian pkg port replace include lib ldirectord         \
-          heartbeat membership telecom linux-ha contrib resources lrm crm       \
-          fencing logd $(SNMP_SUBAGENT_DIR) tools doc cts $(MGMT_DIR)           \
+SUBDIRS	= $(LIBLTDL_DIR) debian pkg port replace include lib ldirectord      \
+          heartbeat membership telecom linux-ha contrib resources lrm crm    \
+          fencing logd $(SNMP_SUBAGENT_DIR) tools doc cts $(MGMT_DIR)        \
           $(CIM_PROVIDER_DIR)
 
 HANDY_DOCS = doc/ChangeLog doc/GettingStarted.html doc/DirectoryMap.txt
