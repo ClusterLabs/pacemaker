@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.65 2005/09/28 07:47:06 andrew Exp $ */
+/* $Id: graph.c,v 1.66 2005/10/04 10:43:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -262,7 +262,10 @@ stonith_constraints(node_t *node,
 	slist_iter(
 		rsc, resource_t, node->details->running_rsc, lpc,
 
-		if(stonith_op != NULL) {
+		if(rsc->is_managed == FALSE) {
+			crm_debug_2("Skipping fencing constraints for unmanaged resource: %s", rsc->id);
+			
+		} else if(stonith_op != NULL) {
 			char *key = stop_key(rsc);
 			stop_actions = find_actions(rsc->actions, key, node);
 			crm_free(key);
