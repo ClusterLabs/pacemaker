@@ -368,7 +368,9 @@ cib_native_perform_op(
 		crm_data_t *cib = data;
 		if(safe_str_neq(tag, XML_TAG_CIB)) {
 			cib = find_xml_node(data, XML_TAG_CIB, FALSE);
-			tag = crm_element_name(cib);
+			if(cib != NULL) {
+				tag = XML_TAG_CIB;
+			}
 		}
 		
 		if(safe_str_eq(tag, XML_TAG_CIB)) {
