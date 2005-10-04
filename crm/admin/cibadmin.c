@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.42 2005/09/27 13:15:39 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.43 2005/10/04 12:03:56 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -343,7 +343,8 @@ handleCibMod(const char *xml)
 	} else {
 		cib_object = string2xml(xml);
 	}
-	
+
+	CRM_DEV_ASSERT(cib_object != NULL);
 	if(cib_object == NULL) {
 		return NULL;
 	}
@@ -482,7 +483,7 @@ usage(const char *cmd, int exit_status)
 		XML_ATTR_ID, 'i');
 	fprintf(stream, "\t--%s (-%c) <type>\tobject type being operated on\n",
 		"obj_type", 'o');
-	fprintf(stream, "\t\tValid values are: node, resource, node_state, constraint, nvpair\n");
+	fprintf(stream, "\t\tValid values are: nodes, resources, status, constraints\n");
 	fprintf(stream, "\t--%s (-%c)\tturn on debug info."
 		"  additional instance increase verbosity\n", "verbose", 'V');
 	fprintf(stream, "\t--%s (-%c)\tthis help message\n", "help", '?');
@@ -540,8 +541,6 @@ admin_message_timeout(gpointer data)
 		crm_err("No messages received in %d seconds",
 			(int)message_timeout_ms/1000);
 	}
-	
-	
 	
 	g_main_quit(mainloop);
 	return FALSE;
