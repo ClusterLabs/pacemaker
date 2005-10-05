@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.65 2005/09/30 13:01:15 andrew Exp $ */
+/* $Id: complex.c,v 1.66 2005/10/05 16:33:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -241,14 +241,15 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	(*rsc)->starting	   = FALSE; 
 	(*rsc)->stopping	   = FALSE; 
 
+	(*rsc)->parent		   = NULL;
 	(*rsc)->candidate_colors   = NULL;
 	(*rsc)->rsc_cons	   = NULL; 
 	(*rsc)->actions            = NULL;
-	(*rsc)->is_managed	   = data_set->is_managed_default;
 	(*rsc)->failed		   = FALSE;
 	(*rsc)->start_pending	   = FALSE;	
 	(*rsc)->role		   = RSC_ROLE_STOPPED;
 	(*rsc)->next_role	   = RSC_ROLE_UNKNOWN;
+	(*rsc)->is_managed	   = data_set->is_managed_default;
 
 	(*rsc)->recovery_type      = recovery_stop_start;
 	(*rsc)->stickiness         = data_set->default_resource_stickiness;
@@ -383,6 +384,7 @@ void common_free(resource_t *rsc)
 	}
 	pe_free_shallow_adv(rsc->candidate_colors, TRUE);
 	pe_free_shallow_adv(rsc->rsc_location, FALSE);
+	pe_free_shallow_adv(rsc->allowed_nodes, TRUE);
 	crm_free(rsc->variant_opaque);
 	crm_free(rsc);
 	crm_debug_5("Resource freed");

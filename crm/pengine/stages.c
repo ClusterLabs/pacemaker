@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.78 2005/09/27 13:22:02 andrew Exp $ */
+/* $Id: stages.c,v 1.79 2005/10/05 16:33:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -509,6 +509,7 @@ choose_node_from_list(color_t *color)
 	crm_debug_2("assigned %s to color %d",chosen->details->uname,color->id);
 	chosen->details->num_resources += color->details->num_resources;
 	color->details->chosen_node = node_copy(chosen);
+	
 	return TRUE;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.88 2005/09/30 13:01:15 andrew Exp $ */
+/* $Id: native.c,v 1.89 2005/10/05 16:33:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -81,7 +81,7 @@ gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,pe
 
 typedef struct native_variant_data_s
 {
-		GListPtr allowed_nodes;    /* node_t*   */
+/* 		GListPtr allowed_nodes;    /\* node_t*   *\/ */
 
 } native_variant_data_t;
 
@@ -149,7 +149,7 @@ void native_unpack(resource_t *rsc, pe_working_set_t *data_set)
 
 	crm_malloc0(native_data, sizeof(native_variant_data_t));
 
-	native_data->allowed_nodes	= NULL;
+	rsc->allowed_nodes	= NULL;
 	rsc->running_on		= NULL;
 
 	rsc->variant_opaque = native_data;
@@ -181,7 +181,7 @@ int native_num_allowed_nodes(resource_t *rsc)
 	} else {
 		crm_debug_4("Default case");
 		slist_iter(
-			this_node, node_t, native_data->allowed_nodes, lpc,
+			this_node, node_t, rsc->allowed_nodes, lpc,
 			crm_debug_3("Rsc %s Checking %s: %d",
 				    rsc->id, this_node->details->uname,
 				    this_node->weight);
@@ -250,11 +250,11 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		new_color = rsc->color;
 		
 	} else {
-		if(native_data->allowed_nodes != NULL) {
+		if(rsc->allowed_nodes != NULL) {
 			/* filter out nodes with a negative weight */
 			filter_nodes(rsc);
 			new_color = create_color(data_set, rsc,
-						 native_data->allowed_nodes);
+						 rsc->allowed_nodes);
 			native_assign_color(rsc, new_color);
 		}
 		
@@ -362,6 +362,9 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	unpack_instance_attributes(
 		rsc->xml, XML_TAG_ATTR_SETS, chosen, rsc->parameters,
 		NULL, 0, data_set);
+
+	crm_info("%s: %s->%s", rsc->id,
+		  role2text(rsc->role), role2text(rsc->next_role));
 	
 	if(g_list_length(rsc->running_on) > 1) {
  		if(rsc->recovery_type == recovery_stop_start) {
@@ -388,8 +391,6 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	} 
 
 	role = rsc->role;
-	crm_info("%s: %s->%s", rsc->id,
-		  role2text(rsc->role), role2text(rsc->next_role));
 
 	while(role != rsc->next_role) {
 		next_role = rsc_state_matrix[role][rsc->next_role];
@@ -755,14 +756,14 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 	crm_action_debug_3(print_resource("before update", rsc,TRUE));
 
 	or_list = node_list_or(
-		native_data->allowed_nodes, constraint->node_list_rh, FALSE);
+		rsc->allowed_nodes, constraint->node_list_rh, FALSE);
 		
-	pe_free_shallow(native_data->allowed_nodes);
-	native_data->allowed_nodes = or_list;
+	pe_free_shallow(rsc->allowed_nodes);
+	rsc->allowed_nodes = or_list;
 
 	slist_iter(node_rh, node_t, constraint->node_list_rh, lpc,
 		   native_update_node_weight(rsc, constraint, node_rh,
-					     native_data->allowed_nodes));
+					     rsc->allowed_nodes));
 
 	crm_action_debug_3(print_resource("after update", rsc, TRUE));
 
@@ -913,7 +914,7 @@ native_print(
 		status_print("%s\t%d candidate colors, %d allowed nodes,"
 			     " %d rsc_cons",
 			     pre_text, g_list_length(rsc->candidate_colors),
-			     g_list_length(native_data->allowed_nodes),
+			     g_list_length(rsc->allowed_nodes),
 			     g_list_length(rsc->rsc_cons));
 	}
 
@@ -932,7 +933,7 @@ native_print(
 
 		status_print("%s\t=== Allowed Nodes\n", pre_text);
 		slist_iter(
-			node, node_t, native_data->allowed_nodes, lpc,
+			node, node_t, rsc->allowed_nodes, lpc,
 			print_node("\t", node, FALSE);
 			);
 	}
@@ -940,12 +941,8 @@ native_print(
 
 void native_free(resource_t *rsc)
 {
-	native_variant_data_t *native_data =
-		(native_variant_data_t *)rsc->variant_opaque;
-	
 	crm_debug_4("Freeing Allowed Nodes");
 	crm_free(rsc->color);
-	pe_free_shallow(native_data->allowed_nodes);
 	common_free(rsc);
 }
 
@@ -985,12 +982,12 @@ void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 		do_merge = TRUE;
 		merged_node_list = node_list_and(
 			rsc_lh->color->details->candidate_nodes,
-			native_data_rh->allowed_nodes, TRUE);
+			rsc_rh->allowed_nodes, TRUE);
 
 	} else if(rsc_rh->color) {
 		do_merge = TRUE;
 		merged_node_list = node_list_and(
-			native_data_lh->allowed_nodes,
+			rsc_lh->allowed_nodes,
 			rsc_rh->color->details->candidate_nodes, TRUE);
 	}
 		
@@ -1177,7 +1174,7 @@ native_choose_color(resource_t *rsc, color_t *no_color)
 
 			minus = node_list_minus(
 				this_color->details->candidate_nodes, 
-				native_data->allowed_nodes, TRUE);
+				rsc->allowed_nodes, TRUE);
 
 			len = g_list_length(minus);
 			pe_free_shallow(minus);
@@ -1185,7 +1182,7 @@ native_choose_color(resource_t *rsc, color_t *no_color)
 		} else {
 			intersection = node_list_and(
 				this_color->details->candidate_nodes, 
-				native_data->allowed_nodes, TRUE);
+				rsc->allowed_nodes, TRUE);
 
 			len = g_list_length(intersection);
 			pe_free_shallow(intersection);
@@ -1229,7 +1226,7 @@ native_assign_color(resource_t *rsc, color_t *color)
 			    local_color->id);
 		intersection = node_list_and(
 			local_color->details->candidate_nodes, 
-			native_data->allowed_nodes, FALSE);
+			rsc->allowed_nodes, FALSE);
 		old_list = local_color->details->candidate_nodes;
 		
 		pe_free_shallow(old_list);
@@ -1257,17 +1254,17 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 	CRM_DEV_ASSERT(cons_node != NULL);
 	
 	node_rh = pe_find_node_id(
-		native_data->allowed_nodes, cons_node->details->id);
+		rsc->allowed_nodes, cons_node->details->id);
 
 	if(node_rh == NULL) {
 		pe_err("Node not found - adding %s to %s",
 		       cons_node->details->id, rsc->id);
 		node_rh = node_copy(cons_node);
-		native_data->allowed_nodes = g_list_append(
-			native_data->allowed_nodes, node_rh);
+		rsc->allowed_nodes = g_list_append(
+			rsc->allowed_nodes, node_rh);
 
 		node_rh = pe_find_node_id(
-			native_data->allowed_nodes, cons_node->details->id);
+			rsc->allowed_nodes, cons_node->details->id);
 
 		CRM_DEV_ASSERT(node_rh != NULL);
 		return;
@@ -1419,7 +1416,7 @@ filter_nodes(resource_t *rsc)
 
 	crm_action_debug_3(print_resource("Filtering nodes for", rsc, FALSE));
 	slist_iter(
-		node, node_t, native_data->allowed_nodes, lpc,
+		node, node_t, rsc->allowed_nodes, lpc,
 		if(node == NULL) {
 			pe_err("Invalid NULL node");
 			
@@ -1428,8 +1425,8 @@ filter_nodes(resource_t *rsc)
 			  || node->details->online == FALSE
 			  || node->details->type == node_ping) {
 			crm_action_debug_3(print_node("Removing", node, FALSE));
-			native_data->allowed_nodes =
-				g_list_remove(native_data->allowed_nodes, node);
+			rsc->allowed_nodes =
+				g_list_remove(rsc->allowed_nodes, node);
 			crm_free(node);
 			lpc = -1; /* restart the loop */
 		}
@@ -1690,8 +1687,7 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *d
 	action_t *stop = NULL;
 	action_t *delete = NULL;
 
-	crm_info("Executing: %s (role=%s)",
-		  rsc->id, role2text(rsc->next_role));
+	crm_debug("Executing: %s (role=%s)",rsc->id, role2text(rsc->next_role));
 
 	if(current == NULL || next == NULL) {
 		return;

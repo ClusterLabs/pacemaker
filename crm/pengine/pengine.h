@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.95 2005/09/30 13:01:15 andrew Exp $ */
+/* $Id: pengine.h,v 1.96 2005/10/05 16:33:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -272,6 +272,7 @@ struct resource_s {
 		crm_data_t *xml; 
 		crm_data_t *ops_xml; 
 
+		resource_t *parent;
 		void *variant_opaque;
 		enum pe_obj_types variant;
 		resource_object_functions_t *fns;

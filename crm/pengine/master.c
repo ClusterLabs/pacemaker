@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.4 2005/09/21 10:32:09 andrew Exp $ */
+/* $Id: master.c,v 1.5 2005/10/05 16:33:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,7 +32,7 @@ typedef struct clone_variant_data_s
 		resource_t *self;
 
 		int clone_max;
-		int clone_max_node;
+		int clone_node_max;
 
 		int active_clones;
 		int max_nodes;
@@ -249,8 +249,8 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	get_clone_variant_data(clone_data, rsc);
 
 	/* how many can we have? */
-	if(master_max >  clone_data->max_nodes * clone_data->clone_max_node) {
-		master_max = clone_data->max_nodes * clone_data->clone_max_node;
+	if(master_max >  clone_data->max_nodes * clone_data->clone_node_max) {
+		master_max = clone_data->max_nodes * clone_data->clone_node_max;
 		crm_info("Limited to %d masters (potential slaves)",master_max);
 	}
 	if(master_max >  max_nodes * master_node_max) {
