@@ -5,11 +5,7 @@
          <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
-     <inputs>
-       <trigger>
-         <crm_event id="9" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="1">
      <action_set>
@@ -34,6 +30,9 @@
        <trigger>
          <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
+       <trigger>
+         <crm_event id="9" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="3">
@@ -51,11 +50,7 @@
          <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
      </action_set>
-     <inputs>
-       <trigger>
-         <crm_event id="9" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="5">
      <action_set>
@@ -70,6 +65,9 @@
        </trigger>
        <trigger>
          <pseudo_event id="7" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0"/>
+       </trigger>
+       <trigger>
+         <crm_event id="9" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.130 2005/09/30 13:01:16 andrew Exp $ */
+/* $Id: unpack.c,v 1.131 2005/10/05 19:04:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -598,8 +598,11 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		rsc_id    = crm_element_value(rsc_entry, XML_ATTR_ID);
 		rsc_state = crm_element_value(rsc_entry, XML_LRM_ATTR_RSCSTATE);
 		
-		rsc    = pe_find_resource(data_set->resources, rsc_id);
-
+		rsc = pe_find_resource(data_set->resources, rsc_id);
+/*
+		if(rsc->parent != NULL && rsc-parent-> && rsc->running_on != NULL) {
+			
+*/
 		crm_debug_3("[%s] Processing %s on %s (%s)",
 			    crm_element_name(rsc_entry),
 			    rsc_id, node_id, rsc_state);
@@ -673,6 +676,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 			 rsc->id, role2text(rsc->role), node->details->uname);
 
  		if(rsc->role != RSC_ROLE_STOPPED) { 
+			crm_err("Adding %s to %s", rsc->id, node->details->uname);
 			native_add_running(rsc, node, data_set);
 
 		} else if(rsc->failed == FALSE && node->details->online) {
@@ -1076,7 +1080,13 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				    rsc->id, task, node->details->uname);
 
 			if(is_stop_action) {
+				char *key = stop_key(rsc);
+				GListPtr possible_matches = find_actions(rsc->actions, key, node);
 				rsc->role = RSC_ROLE_STOPPED;
+				slist_iter(stop, action_t, possible_matches, lpc,
+					   stop->optional = TRUE;
+					);
+				crm_free(key);
 #if 0
 			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
 				crm_debug_3("%s active on %s",
@@ -1138,14 +1148,21 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			} else if(safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
 				rsc->role = RSC_ROLE_MASTER;
 				
+			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
+				rsc->role = RSC_ROLE_STARTED;
+				
 			} else if(is_stop_action
 				  && rsc->role < RSC_ROLE_STARTED) {
 				rsc->role = RSC_ROLE_STARTED;
 			}
 
-			crm_debug_2("Resource %s: set role=%s",
-				 rsc->id, role2text(rsc->role));
+			crm_debug_2("Resource %s: role=%s, unclean=%s, on_fail=%s, fail_role=%s",
+				    rsc->id, role2text(rsc->role),
+				    node->details->unclean?"true":"false",
+				    fail2text(action->on_fail),
+				    role2text(action->fail_role));
 
+			crm_debug_2("Force stop");
 			if(node->details->unclean) {
 				stop_action(rsc, node, FALSE);
 

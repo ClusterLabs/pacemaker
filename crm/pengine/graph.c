@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.66 2005/10/04 10:43:40 andrew Exp $ */
+/* $Id: graph.c,v 1.67 2005/10/05 19:04:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -284,7 +284,7 @@ stonith_constraints(node_t *node,
 					action->runnable = TRUE;
 					custom_action_order(
 						NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
-						rsc, stop_key(rsc), NULL,
+						rsc, start_key(rsc), NULL,
 						pe_ordering_manditory, data_set);
 				} else {
 					crm_info("Moving healthy resource %s"

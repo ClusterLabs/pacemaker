@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.113 2005/09/30 13:01:16 andrew Exp $ */
+/* $Id: utils.c,v 1.114 2005/10/05 19:04:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -466,8 +466,6 @@ gint gslist_color_compare(gconstpointer a, gconstpointer b)
 	}
 	return 1;
 }
-
-
 
 gint sort_rsc_priority(gconstpointer a, gconstpointer b)
 {
@@ -1019,6 +1017,31 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 	return op;
 }
 
+
+const char *
+fail2text(enum action_fail_response fail)
+{
+	const char *result = "<unknown>";
+	switch(fail)
+	{
+		case action_fail_ignore:
+			result = "ignore";
+			break;
+		case action_fail_block:
+			result = "block";
+			break;
+		case action_fail_recover:
+			result = "recover";
+			break;
+		case action_fail_migrate:
+			result = "migrate";
+			break;
+		case action_fail_fence:
+			result = "fence";
+			break;
+	}
+	return result;
+}
 
 
 const char *

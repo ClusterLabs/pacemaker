@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.36 2005/09/30 13:01:15 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.37 2005/10/05 19:04:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -167,6 +167,7 @@ extern GListPtr find_actions(GListPtr input, const char *key, node_t *on_node);
 extern void set_id(crm_data_t *xml_obj, const char *prefix, int child);
 
 extern const char *ordering_type2text(enum pe_ordering type);
+extern const char *fail2text(enum action_fail_response fail);
 
 extern int char2score(const char *score);
 
