@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.132 2005/10/07 15:57:33 andrew Exp $ */
+/* $Id: unpack.c,v 1.133 2005/10/07 16:02:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -651,7 +651,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 	const char *attr_list[] = {
 		XML_ATTR_TYPE, 
 		XML_AGENT_ATTR_CLASS,
-/* 		XML_AGENT_ATTR_PROVIDER */
+ 		XML_AGENT_ATTR_PROVIDER
 	};
 	
 	CRM_DEV_ASSERT(node != NULL);

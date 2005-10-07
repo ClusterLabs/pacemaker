@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.58 2005/10/07 15:57:33 andrew Exp $ */
+/* $Id: incarnation.c,v 1.59 2005/10/07 16:02:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -287,7 +287,7 @@ color_t *
 clone_color(resource_t *rsc, pe_working_set_t *data_set)
 {
 	GListPtr color_ptr = NULL;
-	GListPtr child_colorsun = NULL;
+	GListPtr child_colors = NULL;
 	int local_node_max = 0;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
