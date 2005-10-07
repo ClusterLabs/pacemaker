@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.67 2005/10/07 15:57:33 andrew Exp $ */
+/* $Id: complex.c,v 1.68 2005/10/07 16:15:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -183,6 +183,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		"multiple_active",
 		"start_prereq",
 		"is_managed",
+		"globally_unique",
 		"notify"
 	};	
 	
@@ -277,6 +278,10 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	}
 	
 	crm_debug_2("Options for %s", id);
+	value = g_hash_table_lookup((*rsc)->parameters, "globally_unique");
+	if(value != NULL) {
+		cl_str_to_boolean(value, &((*rsc)->globally_unique));
+	}
 	
 	value = g_hash_table_lookup((*rsc)->parameters, XML_RSC_ATTR_RESTART);
 	if(safe_str_eq(value, "restart")) {

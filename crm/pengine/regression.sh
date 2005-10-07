@@ -43,6 +43,7 @@ do_test simple7 "Shutdown    "
 do_test simple11 "Priority (ne)"
 do_test simple12 "Priority (eq)"
 do_test simple8 "Stickiness"
+do_test simple8 "Stickiness"
 
 echo ""
 do_test date-1 "Dates"
@@ -154,6 +155,7 @@ do_test inc5 "Inter-incarnation ordering, silent restart, stop, move (restart 1)
 do_test inc6 "Inter-incarnation ordering, silent restart, stop, move (restart 2)"
 do_test inc7 "Clone colocation"
 do_test inc8 "Clone anti-colocation"
+do_test inc9 "Non-unique clone"
 
 echo ""
 

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.133 2005/10/07 16:02:02 andrew Exp $ */
+/* $Id: unpack.c,v 1.134 2005/10/07 16:15:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -698,7 +698,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		}
 		crm_free(alt_rsc_id);
 		if(is_duped_clone && rsc != NULL) {
-			crm_info("Renamed %s on %s to %s",
+			crm_info("Internally renamed %s on %s to %s",
 				 rsc_id, node->details->uname, rsc->id);
 			rsc->name = rsc_id;
 		}
