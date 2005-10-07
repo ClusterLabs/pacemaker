@@ -1,0 +1,124 @@
+ <transition_graph global_timeout="60s" transition_id="0">
+   <synapse id="0">
+     <action_set>
+       <rsc_op id="1" rsc_id="rsc1:child_rsc1:3" operation="start" operation_key="rsc1:child_rsc1:3_start_0" on_node="node2" on_node_uuid="uuid2">
+         <primitive id="rsc1:child_rsc1:3" class="heartbeat" type="apache"/>
+         <attributes crm_feature_set="1.0.3" clone="3" clone_max="5"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="6" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="1">
+     <action_set>
+       <rsc_op id="2" rsc_id="rsc1:child_rsc1:3" operation="promote" operation_key="rsc1:child_rsc1:3_promote_0" on_node="node2" on_node_uuid="uuid2">
+         <primitive id="rsc1:child_rsc1:3" class="heartbeat" type="apache"/>
+         <attributes crm_feature_set="1.0.3" clone="3" clone_max="5"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="10" rsc_id="rsc1" operation="promote" operation_key="rsc1_promote_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="2">
+     <action_set>
+       <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="start" operation_key="rsc1:child_rsc1:1_start_0" on_node="node2" on_node_uuid="uuid2">
+         <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
+         <attributes crm_feature_set="1.0.3" clone="1" clone_max="5"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="6" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="3">
+     <action_set>
+       <rsc_op id="4" rsc_id="rsc1:child_rsc1:0" operation="start" operation_key="rsc1:child_rsc1:0_start_0" on_node="node1" on_node_uuid="uuid1">
+         <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
+         <attributes crm_feature_set="1.0.3" clone="0" clone_max="5"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="6" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="4">
+     <action_set>
+       <rsc_op id="5" rsc_id="rsc1:child_rsc1:2" operation="start" operation_key="rsc1:child_rsc1:2_start_0" on_node="node1" on_node_uuid="uuid1">
+         <primitive id="rsc1:child_rsc1:2" class="heartbeat" type="apache"/>
+         <attributes crm_feature_set="1.0.3" clone="2" clone_max="5"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="6" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="5">
+     <action_set>
+       <pseudo_event id="6" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0">
+         <attributes crm_feature_set="1.0.3"/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="6">
+     <action_set>
+       <pseudo_event id="7" rsc_id="rsc1" operation="running" operation_key="rsc1_running_0">
+         <attributes crm_feature_set="1.0.3"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="1" rsc_id="rsc1:child_rsc1:3" operation="start" operation_key="rsc1:child_rsc1:3_start_0" on_node="node2" on_node_uuid="uuid2"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="start" operation_key="rsc1:child_rsc1:1_start_0" on_node="node2" on_node_uuid="uuid2"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="4" rsc_id="rsc1:child_rsc1:0" operation="start" operation_key="rsc1:child_rsc1:0_start_0" on_node="node1" on_node_uuid="uuid1"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="5" rsc_id="rsc1:child_rsc1:2" operation="start" operation_key="rsc1:child_rsc1:2_start_0" on_node="node1" on_node_uuid="uuid1"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="6" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="7">
+     <action_set>
+       <pseudo_event id="10" rsc_id="rsc1" operation="promote" operation_key="rsc1_promote_0">
+         <attributes crm_feature_set="1.0.3"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="7" rsc_id="rsc1" operation="running" operation_key="rsc1_running_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="8">
+     <action_set>
+       <pseudo_event id="11" rsc_id="rsc1" operation="promoted" operation_key="rsc1_promoted_0">
+         <attributes crm_feature_set="1.0.3"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="2" rsc_id="rsc1:child_rsc1:3" operation="promote" operation_key="rsc1:child_rsc1:3_promote_0" on_node="node2" on_node_uuid="uuid2"/>
+       </trigger>
+     </inputs>
+   </synapse>
+ </transition_graph>
+

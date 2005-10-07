@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.5 2005/10/05 16:33:57 andrew Exp $ */
+/* $Id: master.c,v 1.6 2005/10/07 15:57:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,10 +36,12 @@ typedef struct clone_variant_data_s
 
 		int active_clones;
 		int max_nodes;
-
+		
 		gboolean interleave;
 		gboolean ordered;
 
+		crm_data_t *xml_obj_child;
+		
 		gboolean notify_confirm;
 		
 		GListPtr child_list; /* resource_t* */
@@ -264,6 +266,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
+		crm_debug_2("Assigning priority for %s", child_rsc->id);
 		CRM_DEV_ASSERT(child_rsc->color != NULL);
 		chosen = child_rsc->color->details->chosen_node;
 		

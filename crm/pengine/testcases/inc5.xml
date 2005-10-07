@@ -92,66 +92,80 @@
   </configuration>
   <status>
     <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+      <transient_attributes>
+        <instance_attributes>
+	  <attributes>
+	    <nvpair id="probed" name="probe_complete" value="true"/>
+	  </attributes>
+        </instance_attributes>
+      </transient_attributes>
       <lrm>
 	<lrm_agents>
 	  <lrm_agent class="heartbeat" type="apache"/>
 	</lrm_agents>
         <lrm_resources>
-          <lrm_resource id="rsc1:child_rsc1:0" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+          <lrm_resource id="rsc1:child_rsc1:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1:child_rsc1:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
-          <lrm_resource id="rsc2:child_rsc2:0" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+          <lrm_resource id="rsc2:child_rsc2:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc2:child_rsc2:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
-          <lrm_resource id="rsc2:child_rsc2:1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+          <lrm_resource id="rsc2:child_rsc2:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc2:child_rsc2:1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
-          <lrm_resource id="rsc3:child_rsc3:0" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+          <lrm_resource id="rsc3:child_rsc3:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc3:child_rsc3:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
-          <lrm_resource id="rsc4:child_rsc4:0" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+          <lrm_resource id="rsc4:child_rsc4:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc4:child_rsc4:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
-          <lrm_resource id="rsc4:child_rsc4:1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+          <lrm_resource id="rsc4:child_rsc4:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc4:child_rsc4:1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
-          <lrm_resource id="rsc6:child_rsc6:0" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+          <lrm_resource id="rsc6:child_rsc6:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc6:child_rsc6:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
-          <lrm_resource id="rsc8:child_rsc8:0" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+          <lrm_resource id="rsc8:child_rsc8:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc8:child_rsc8:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
         </lrm_resources>
       </lrm>
     </node_state>
     <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+      <transient_attributes>
+        <instance_attributes>
+	  <attributes>
+	    <nvpair id="probed" name="probe_complete" value="true"/>
+	  </attributes>
+        </instance_attributes>
+      </transient_attributes>
       <lrm>
 	<lrm_agents>
 	  <lrm_agent class="heartbeat" type="apache"/>
 	</lrm_agents>
         <lrm_resources>
-          <lrm_resource id="rsc1:child_rsc1:1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+          <lrm_resource id="rsc1:child_rsc1:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1:child_rsc1:1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
-          <lrm_resource id="rsc3:child_rsc3:1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+          <lrm_resource id="rsc3:child_rsc3:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc3:child_rsc3:1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
-          <lrm_resource id="rsc5:child_rsc5:0" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+          <lrm_resource id="rsc5:child_rsc5:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc5:child_rsc5:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
-          <lrm_resource id="rsc5:child_rsc5:1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+          <lrm_resource id="rsc5:child_rsc5:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc5:child_rsc5:1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
-          <lrm_resource id="rsc6:child_rsc6:1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+          <lrm_resource id="rsc6:child_rsc6:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc6:child_rsc6:1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
-          <lrm_resource id="rsc7:child_rsc7:0" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+          <lrm_resource id="rsc7:child_rsc7:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc7:child_rsc7:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
-          <lrm_resource id="rsc7:child_rsc7:1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+          <lrm_resource id="rsc7:child_rsc7:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc7:child_rsc7:1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
-          <lrm_resource id="rsc8:child_rsc8:1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
+          <lrm_resource id="rsc8:child_rsc8:1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc8:child_rsc8:1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
 	  </lrm_resource>
         </lrm_resources>

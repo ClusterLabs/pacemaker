@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.89 2005/10/05 16:33:57 andrew Exp $ */
+/* $Id: native.c,v 1.90 2005/10/07 15:57:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -93,9 +93,6 @@ typedef struct native_variant_data_s
 void
 native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 {
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
-
 	CRM_DEV_ASSERT(node != NULL); if(crm_assert_failed) { return; }
 
 	slist_iter(
@@ -111,6 +108,7 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		node->details->running_rsc, rsc);
 
 	if(rsc->is_managed == FALSE) {
+		crm_err("resource %s isnt managed", rsc->id);
 		rsc2node_new(
 			"not_managed_default", rsc, INFINITY, node, data_set);
 		return;
@@ -134,8 +132,8 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 			rsc->is_managed = FALSE;
 		}
 	} else {
-		crm_info("Resource %s is active on: %s",
-			 rsc->id, node->details->uname);
+		crm_debug_2("Resource %s is active on: %s",
+			    rsc->id, node->details->uname);
 	}
 	
 }
@@ -165,8 +163,6 @@ native_find_child(resource_t *rsc, const char *id)
 int native_num_allowed_nodes(resource_t *rsc)
 {
 	int num_nodes = 0;
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
 
 	if(rsc->color) {
 		crm_debug_4("Colored case");
@@ -237,9 +233,6 @@ color_t *
 native_color(resource_t *rsc, pe_working_set_t *data_set)
 {
 	color_t *new_color = NULL;
-	native_variant_data_t *native_data = NULL;
-
-	get_native_variant_data(native_data, rsc);
 
 	if(rsc->provisional == FALSE) {
 		return rsc->color;
@@ -352,8 +345,6 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	node_t *chosen = NULL;
 	enum rsc_role_e role = RSC_ROLE_UNKNOWN;
 	enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
 
 	if(rsc->color != NULL) {
 		chosen = rsc->color->details->chosen_node;
@@ -411,9 +402,6 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
-
 	order_restart(rsc);
 }
 
@@ -467,12 +455,6 @@ void native_rsc_colocation_rh(
 	gboolean do_check = FALSE;
 	gboolean update_lh = FALSE;
 	gboolean update_rh = FALSE;
-	
-	native_variant_data_t *native_data_lh = NULL;
-	native_variant_data_t *native_data_rh = NULL;
-
-	get_native_variant_data(native_data_lh, rsc_lh);
-	get_native_variant_data(native_data_rh, rsc_rh);
 	
 	crm_debug_2("%sColocating %s with %s (%s)",
 		    constraint->strength == pecs_must?"":"Anti-",
@@ -722,7 +704,6 @@ void native_rsc_order_rh(
 void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 {
 	GListPtr or_list;
-	native_variant_data_t *native_data = NULL;
 
 	crm_debug("Applying %s (%s) to %s", constraint->id,
 		  role2text(constraint->role_filter), rsc->id);
@@ -747,8 +728,6 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		return;
 	}
     
-	get_native_variant_data(native_data, rsc);
-
 	if(constraint->node_list_rh == NULL) {
 		crm_debug_2("RHS of constraint %s is NULL", constraint->id);
 		return;
@@ -781,9 +760,6 @@ void native_expand(resource_t *rsc, pe_working_set_t *data_set)
 
 gboolean native_active(resource_t *rsc, gboolean all)
 {	
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
-
 	slist_iter(
 		a_node, node_t, rsc->running_on, lpc,
 
@@ -809,8 +785,6 @@ native_print(
 {
 	node_t *node = NULL;	
 	const char *prov = crm_element_value(rsc->xml,XML_AGENT_ATTR_PROVIDER);
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
 
 	if(rsc->running_on != NULL) {
 		node = rsc->running_on->data;
@@ -950,9 +924,6 @@ void native_free(resource_t *rsc)
 void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 				   resource_t *rsc_rh, gboolean update_rh)
 {
-	native_variant_data_t *native_data_lh = NULL;
-	native_variant_data_t *native_data_rh = NULL;
-
 	gboolean do_merge = FALSE;
 	GListPtr old_list = NULL;
 	GListPtr merged_node_list = NULL;
@@ -963,9 +934,6 @@ void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 	rsc_lh->effective_priority = max_pri;
 	rsc_rh->effective_priority = max_pri;
 	
-	get_native_variant_data(native_data_lh, rsc_lh);
-	get_native_variant_data(native_data_rh, rsc_rh);
-
 	crm_debug_2("Colocating %s with %s."
 		    " Update LHS: %s, Update RHS: %s",
 		    rsc_lh->id, rsc_rh->id,
@@ -1026,12 +994,6 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 	color_t *color_lh = NULL;
 	color_t *color_rh = NULL;
 
-	native_variant_data_t *native_data_lh = NULL;
-	native_variant_data_t *native_data_rh = NULL;
-
-	get_native_variant_data(native_data_lh, rsc_lh);
-	get_native_variant_data(native_data_rh, rsc_rh);
-	
 	crm_debug_4("Processing pecs_must_not constraint");
 	/* pecs_must_not */
 	if(update_lh) {
@@ -1135,9 +1097,6 @@ gboolean
 native_choose_color(resource_t *rsc, color_t *no_color)
 {
 	GListPtr sorted_colors = NULL;
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
-	
 	if(rsc->runnable == FALSE) {
 		native_assign_color(rsc, no_color);
 	}
@@ -1202,7 +1161,6 @@ native_choose_color(resource_t *rsc, color_t *no_color)
 void
 native_assign_color(resource_t *rsc, color_t *color) 
 {
-	native_variant_data_t *native_data = NULL;
 	color_t *local_color = add_color(rsc, color);
 	GListPtr intersection = NULL;
 	GListPtr old_list = NULL;
@@ -1220,7 +1178,6 @@ native_assign_color(resource_t *rsc, color_t *color)
 
 	if(rsc->variant == pe_native) {
 		(local_color->details->num_resources)++;
-		get_native_variant_data(native_data, rsc);
 		rsc->color = copy_color(local_color);
 		crm_debug_3("Created intersection for color %d",
 			    local_color->id);
@@ -1248,9 +1205,6 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 			  node_t *cons_node, GListPtr nodes)
 {
 	node_t *node_rh = NULL;
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
-
 	CRM_DEV_ASSERT(cons_node != NULL);
 	
 	node_rh = pe_find_node_id(
@@ -1329,9 +1283,6 @@ gboolean
 native_constraint_violated(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
-	native_variant_data_t *native_data_lh = NULL;
-	native_variant_data_t *native_data_rh = NULL;
-
 	GListPtr result = NULL;
 	color_t *color_lh = NULL;
 	color_t *color_rh = NULL;
@@ -1340,9 +1291,6 @@ native_constraint_violated(
 	GListPtr candidate_nodes_rh = NULL;
 
 	gboolean matched = FALSE;
-
-	get_native_variant_data(native_data_lh, rsc_lh);
-	get_native_variant_data(native_data_rh, rsc_rh);
 
 	color_lh = rsc_lh->color;
 	color_rh = rsc_rh->color;
@@ -1411,9 +1359,6 @@ native_constraint_violated(
 void
 filter_nodes(resource_t *rsc)
 {
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
-
 	crm_action_debug_3(print_resource("Filtering nodes for", rsc, FALSE));
 	slist_iter(
 		node, node_t, rsc->allowed_nodes, lpc,
@@ -1450,9 +1395,6 @@ native_resource_state(resource_t *rsc)
 void
 create_notifications(resource_t *rsc, pe_working_set_t *data_set)
 {
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
-
 	if(rsc->notify == FALSE) {
 		return;
 	}
@@ -1755,9 +1697,6 @@ StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 	action_t *stop = NULL;
 	action_t *delete = NULL;
 	
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
-
 	crm_debug_2("Executing: %s", rsc->id);
 	
 	slist_iter(
@@ -1795,8 +1734,6 @@ StartRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 gboolean
 PromoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 {
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
 	crm_debug_2("Executing: %s", rsc->id);
 
 	CRM_DEV_ASSERT(rsc->next_role == RSC_ROLE_MASTER);
@@ -1808,8 +1745,6 @@ PromoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 gboolean
 DemoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 {
-	native_variant_data_t *native_data = NULL;
-	get_native_variant_data(native_data, rsc);
 	crm_debug_2("Executing: %s", rsc->id);
 
 	CRM_DEV_ASSERT(rsc->next_role == RSC_ROLE_SLAVE);

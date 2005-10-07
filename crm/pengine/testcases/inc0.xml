@@ -25,8 +25,22 @@
   </configuration>
   <status>
     <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+      <transient_attributes>
+        <instance_attributes>
+	  <attributes>
+	    <nvpair id="probed" name="probe_complete" value="true"/>
+	  </attributes>
+        </instance_attributes>
+      </transient_attributes>
     </node_state>
     <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+      <transient_attributes>
+        <instance_attributes>
+	  <attributes>
+	    <nvpair id="probed" name="probe_complete" value="true"/>
+	  </attributes>
+        </instance_attributes>
+      </transient_attributes>
     </node_state>
   </status>
 </cib>

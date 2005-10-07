@@ -113,22 +113,29 @@
     </configuration>
     <status>
       <node_state id="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" uname="c001n09" in_ccm="true" join="member" origin="do_lrm_query" crmd="online" ha="active" expected="member">
+      <transient_attributes>
+        <instance_attributes>
+	  <attributes>
+	    <nvpair id="probed" name="probe_complete" value="true"/>
+	  </attributes>
+        </instance_attributes>
+      </transient_attributes>
         <lrm>
           <lrm_resources>
-            <lrm_resource id="rsc_c001n09" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
+            <lrm_resource id="rsc_c001n09" class="ocf" provider="heartbeat" type="IPaddr">
               <lrm_rsc_op id="rsc_c001n09_start_0" operation="start" origin="build_active_RAs" transition_key="0:2" transition_magic="0:2:some_key" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
               <lrm_rsc_op id="rsc_c001n09_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:2" transition_magic="0:2:some_key" rsc_state="running" call_id="6" rc_code="0" op_status="0"/>
             </lrm_resource>
-            <lrm_resource id="DoFencing:child_DoFencing:1" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
+            <lrm_resource id="DoFencing:child_DoFencing:1" class="stonith" type="ssh">
               <lrm_rsc_op id="DoFencing:child_DoFencing:1_start_0" operation="start" origin="build_active_RAs" transition_key="0:2" transition_magic="0:2:some_key" rsc_state="running" call_id="4" rc_code="0" op_status="0"/>
               <lrm_rsc_op id="DoFencing:child_DoFencing:1_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:2" transition_magic="0:2:some_key" rsc_state="running" call_id="5" rc_code="0" op_status="0"/>
               <lrm_rsc_op id="DoFencing:child_DoFencing:1_stop_0" operation="stop" origin="do_update_resource" transition_key="0:5" transition_magic="0:5:some_key" rsc_state="stopped" call_id="9" rc_code="0" op_status="0"/>
             </lrm_resource>
-            <lrm_resource id="DcIPaddr" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
+            <lrm_resource id="DcIPaddr" provider="heartbeat" class="ocf" type="IPaddr">
               <lrm_rsc_op id="DcIPaddr_start_0" operation="start" origin="build_active_RAs" transition_key="0:2" transition_magic="0:2:some_key" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
               <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:2" transition_magic="0:2:some_key" rsc_state="running" call_id="7" rc_code="0" op_status="0"/>
             </lrm_resource>
-            <lrm_resource id="DoFencing:child_DoFencing:3" rsc_state="running" op_status="0" rc_code="0" last_op="monitor">
+            <lrm_resource id="DoFencing:child_DoFencing:3" rsc_state="running" op_status="0" rc_code="0" class="stonith" type="ssh">
               <lrm_rsc_op id="DoFencing:child_DoFencing:3_start_0" operation="start" op_status="0" rc_code="0" origin="do_update_resource" transition_id="5" transition_key="0:5" transition_magic="0:5:some_key" rsc_state="running" call_id="10"/>
               <lrm_rsc_op id="DoFencing:child_DoFencing:3_monitor_5000" operation="monitor" op_status="0" rc_code="0" origin="do_update_resource" transition_id="5" transition_key="0:5" transition_magic="0:5:some_key" rsc_state="running" call_id="11"/>
             </lrm_resource>
@@ -136,23 +143,30 @@
         </lrm>
       </node_state>
       <node_state id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" crmd="online" origin="do_lrm_query" in_ccm="true" join="member" ha="active" expected="down" shutdown="1119992748">
+      <transient_attributes>
+        <instance_attributes>
+	  <attributes>
+	    <nvpair id="probed" name="probe_complete" value="true"/>
+	  </attributes>
+        </instance_attributes>
+      </transient_attributes>
         <lrm>
           <lrm_resources>
-            <lrm_resource id="rsc_c001n02" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
+            <lrm_resource id="rsc_c001n02" class="ocf" provider="heartbeat" type="IPaddr">
               <lrm_rsc_op id="rsc_c001n02_start_0" operation="start" origin="build_active_RAs" transition_key="0:2" transition_magic="0:2:some_key" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
               <lrm_rsc_op id="rsc_c001n02_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:2" transition_magic="0:2:some_key" rsc_state="running" call_id="6" rc_code="0" op_status="0"/>
             </lrm_resource>
-            <lrm_resource id="DoFencing:child_DoFencing:2" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
+            <lrm_resource id="DoFencing:child_DoFencing:2" class="stonith" type="ssh">
               <lrm_rsc_op id="DoFencing:child_DoFencing:2_start_0" operation="start" origin="build_active_RAs" transition_key="0:2" transition_magic="0:2:some_key" rsc_state="running" call_id="4" rc_code="0" op_status="0"/>
               <lrm_rsc_op id="DoFencing:child_DoFencing:2_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:2" transition_magic="0:2:some_key" rsc_state="running" call_id="7" rc_code="0" op_status="0"/>
               <lrm_rsc_op id="DoFencing:child_DoFencing:2_stop_0" operation="stop" origin="do_update_resource" transition_key="0:5" transition_magic="0:5:some_key" rsc_state="stopped" call_id="11" rc_code="0" op_status="0"/>
             </lrm_resource>
-            <lrm_resource id="rsc_c001n04" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
+            <lrm_resource id="rsc_c001n04" class="ocf" provider="heartbeat" type="IPaddr">
               <lrm_rsc_op id="rsc_c001n04_start_0" operation="start" origin="build_active_RAs" transition_key="0:2" transition_magic="0:2:some_key" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
               <lrm_rsc_op id="rsc_c001n04_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:2" transition_magic="0:2:some_key" rsc_state="running" call_id="5" rc_code="0" op_status="0"/>
               <lrm_rsc_op id="rsc_c001n04_stop_0" operation="stop" origin="do_update_resource" transition_key="0:5" transition_magic="0:5:some_key" rsc_state="stopped" call_id="9" rc_code="0" op_status="0"/>
             </lrm_resource>
-            <lrm_resource id="DoFencing:child_DoFencing:0" rsc_state="running" op_status="0" rc_code="0" last_op="monitor">
+            <lrm_resource id="DoFencing:child_DoFencing:0" rsc_state="running" op_status="0" rc_code="0" class="stonith" type="ssh">
               <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" op_status="0" rc_code="0" origin="do_update_resource" transition_id="5" transition_key="0:5" transition_magic="0:5:some_key" rsc_state="running" call_id="12"/>
               <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_5000" operation="monitor" op_status="0" rc_code="0" origin="do_update_resource" transition_id="5" transition_key="0:5" transition_magic="0:5:some_key" rsc_state="running" call_id="13"/>
             </lrm_resource>
@@ -160,18 +174,25 @@
         </lrm>
       </node_state>
       <node_state id="5d9a8c11-8684-43ea-9180-5e221530c193" uname="c001n03" crmd="online" origin="do_lrm_query" in_ccm="true" join="member" ha="active" expected="member">
+      <transient_attributes>
+        <instance_attributes>
+	  <attributes>
+	    <nvpair id="probed" name="probe_complete" value="true"/>
+	  </attributes>
+        </instance_attributes>
+      </transient_attributes>
         <lrm>
           <lrm_resources>
-            <lrm_resource id="DoFencing:child_DoFencing:0" last_op="stop" rsc_state="stopped" rc_code="0" op_status="0">
+            <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
               <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" origin="build_active_RAs" transition_key="0:2" transition_magic="0:2:some_key" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
               <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:2" transition_magic="0:2:some_key" rsc_state="running" call_id="4" rc_code="0" op_status="0"/>
               <lrm_rsc_op id="DoFencing:child_DoFencing:0_stop_0" operation="stop" origin="do_update_resource" transition_key="0:5" transition_magic="0:5:some_key" rsc_state="stopped" call_id="7" rc_code="0" op_status="0"/>
             </lrm_resource>
-            <lrm_resource id="rsc_c001n03" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
+            <lrm_resource id="rsc_c001n03" class="ocf" provider="heartbeat" type="IPaddr">
               <lrm_rsc_op id="rsc_c001n03_start_0" operation="start" origin="build_active_RAs" transition_key="0:2" transition_magic="0:2:some_key" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
               <lrm_rsc_op id="rsc_c001n03_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:2" transition_magic="0:2:some_key" rsc_state="running" call_id="5" rc_code="0" op_status="0"/>
             </lrm_resource>
-            <lrm_resource id="DoFencing:child_DoFencing:1" rsc_state="running" op_status="0" rc_code="0" last_op="monitor">
+            <lrm_resource id="DoFencing:child_DoFencing:1" rsc_state="running" op_status="0" rc_code="0" class="stonith" type="ssh">
               <lrm_rsc_op id="DoFencing:child_DoFencing:1_start_0" operation="start" op_status="0" rc_code="0" origin="do_update_resource" transition_id="5" transition_key="0:5" transition_magic="0:5:some_key" rsc_state="running" call_id="8"/>
               <lrm_rsc_op id="DoFencing:child_DoFencing:1_monitor_5000" operation="monitor" op_status="0" rc_code="0" origin="do_update_resource" transition_id="5" transition_key="0:5" transition_magic="0:5:some_key" rsc_state="running" call_id="9"/>
             </lrm_resource>
@@ -179,13 +200,20 @@
         </lrm>
       </node_state>
       <node_state id="c2896699-96b8-4dbc-a94e-6c3b9252b559" uname="c001n04" crmd="online" origin="do_lrm_query" in_ccm="true" join="member" ha="active" expected="member">
+      <transient_attributes>
+        <instance_attributes>
+	  <attributes>
+	    <nvpair id="probed" name="probe_complete" value="true"/>
+	  </attributes>
+        </instance_attributes>
+      </transient_attributes>
         <lrm>
           <lrm_resources>
-            <lrm_resource id="DoFencing:child_DoFencing:2" rsc_state="running" op_status="0" rc_code="0" last_op="monitor">
+            <lrm_resource id="DoFencing:child_DoFencing:2" rsc_state="running" op_status="0" rc_code="0" class="stonith" type="ssh">
               <lrm_rsc_op id="DoFencing:child_DoFencing:2_start_0" operation="start" op_status="0" rc_code="0" origin="do_update_resource" transition_id="5" transition_key="0:5" transition_magic="0:5:some_key" rsc_state="running" call_id="2"/>
               <lrm_rsc_op id="DoFencing:child_DoFencing:2_monitor_5000" operation="monitor" op_status="0" rc_code="0" origin="do_update_resource" transition_id="5" transition_key="0:5" transition_magic="0:5:some_key" rsc_state="running" call_id="4"/>
             </lrm_resource>
-            <lrm_resource id="rsc_c001n04" rsc_state="running" op_status="0" rc_code="0" last_op="monitor">
+            <lrm_resource id="rsc_c001n04" rsc_state="running" op_status="0" rc_code="0" class="ocf" provider="heartbeat" type="IPaddr">
               <lrm_rsc_op id="rsc_c001n04_start_0" operation="start" op_status="0" rc_code="0" origin="do_update_resource" transition_id="5" transition_key="0:5" transition_magic="0:5:some_key" rsc_state="running" call_id="3"/>
               <lrm_rsc_op id="rsc_c001n04_monitor_5000" operation="monitor" op_status="0" rc_code="0" origin="do_update_resource" transition_id="5" transition_key="0:5" transition_magic="0:5:some_key" rsc_state="running" call_id="5"/>
             </lrm_resource>

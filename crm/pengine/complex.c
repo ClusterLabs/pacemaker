@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.66 2005/10/05 16:33:57 andrew Exp $ */
+/* $Id: complex.c,v 1.67 2005/10/07 15:57:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -203,8 +203,9 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		return FALSE;
 	}
 	
-	(*rsc)->id  = id;
-	(*rsc)->xml = xml_obj;
+	(*rsc)->id   = id;
+	(*rsc)->name = id;
+	(*rsc)->xml  = xml_obj;
 	(*rsc)->ops_xml = find_xml_node(xml_obj, "operations", FALSE);
 	(*rsc)->variant = get_resource_type(crm_element_name(xml_obj));
 	
@@ -247,6 +248,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	(*rsc)->actions            = NULL;
 	(*rsc)->failed		   = FALSE;
 	(*rsc)->start_pending	   = FALSE;	
+	(*rsc)->globally_unique    = TRUE;
 	(*rsc)->role		   = RSC_ROLE_STOPPED;
 	(*rsc)->next_role	   = RSC_ROLE_UNKNOWN;
 	(*rsc)->is_managed	   = data_set->is_managed_default;

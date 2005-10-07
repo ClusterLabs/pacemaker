@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.57 2005/10/05 16:33:57 andrew Exp $ */
+/* $Id: incarnation.c,v 1.58 2005/10/07 15:57:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -44,7 +44,6 @@ typedef struct clone_variant_data_s
 		
 		gboolean interleave;
 		gboolean ordered;
-		gboolean gloabally_unique;
 
 		crm_data_t *xml_obj_child;
 		
@@ -90,6 +89,7 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 			clone_data->child_list, child_rsc);
 
 		child_rsc->parent = rsc;
+
 		add_rsc_param(
 			child_rsc, XML_RSC_ATTR_INCARNATION, inc_num);
 		add_rsc_param(
@@ -135,7 +135,6 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	clone_data->child_list  = NULL;
 	clone_data->interleave  = FALSE;
 	clone_data->ordered     = FALSE;
-	clone_data->gloabally_unique = FALSE;
 	
 	clone_data->active_clones  = 0;
 	clone_data->xml_obj_child  = NULL;
@@ -288,7 +287,7 @@ color_t *
 clone_color(resource_t *rsc, pe_working_set_t *data_set)
 {
 	GListPtr color_ptr = NULL;
-	GListPtr child_colors = NULL;
+	GListPtr child_colorsun = NULL;
 	int local_node_max = 0;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
@@ -297,7 +296,8 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		return NULL;
 	}
 	local_node_max = clone_data->clone_node_max; 
-
+	clone_data->max_nodes = rsc->fns->num_allowed_nodes(rsc);
+	
 	/* give already allocated resources every chance to run on the node
 	 *   specified.  other resources can be moved/started where we want
 	 *   as required
@@ -1398,19 +1398,52 @@ clone_create_notify_element(resource_t *rsc, action_t *op,
 		);
 }
 
+static gint sort_rsc_id(gconstpointer a, gconstpointer b)
+{
+	const resource_t *resource1 = (const resource_t*)a;
+	const resource_t *resource2 = (const resource_t*)b;
+
+	CRM_ASSERT(resource1 != NULL);
+	CRM_ASSERT(resource2 != NULL);
+
+	return strcmp(resource1->id, resource2->id);
+}
+
 gboolean
 clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		    pe_working_set_t *data_set) 
 {
+	int num_probes = 0;
 	gboolean any_created = FALSE;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
+	/* we may already be running but under different names */
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
-		
-		any_created = child_rsc->fns->create_probe(
-			child_rsc, node, complete, data_set) || any_created;
+
+		if(num_probes >= clone_data->clone_node_max) {
+			return FALSE;
+		}
+		if(pe_find_node_id(child_rsc->running_on, node->details->id)) {
+			num_probes++;
+		}
+		);
+	
+	clone_data->child_list = g_list_sort(
+		clone_data->child_list, sort_rsc_id);
+
+	slist_iter(
+		child_rsc, resource_t, clone_data->child_list, lpc,
+
+		if(num_probes >= clone_data->clone_node_max) {
+			break;
+		}
+		if(child_rsc->fns->create_probe(
+			   child_rsc, node, complete, data_set)) {
+			any_created = TRUE;
+			num_probes++;
+		}
 		);
 
 	return any_created;

@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.96 2005/10/05 16:33:57 andrew Exp $ */
+/* $Id: pengine.h,v 1.97 2005/10/07 15:57:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -269,6 +269,7 @@ struct rsc_to_node_s {
 
 struct resource_s { 
 		const char *id; 
+		const char *name; 
 		crm_data_t *xml; 
 		crm_data_t *ops_xml; 
 
@@ -290,6 +291,7 @@ struct resource_s {
 		gboolean stopping;
 		gboolean runnable;
 		gboolean provisional;
+		gboolean globally_unique;
 
 		gboolean failed;
 		gboolean start_pending;

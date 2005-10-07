@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.67 2005/10/05 19:04:02 andrew Exp $ */
+/* $Id: graph.c,v 1.68 2005/10/07 15:57:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -367,7 +367,7 @@ action2xml(action_t *action, gboolean as_input)
 	
 	if(action->rsc != NULL) {
 		crm_xml_add(
-			action_xml, XML_LRM_ATTR_RSCID, action->rsc->id);
+			action_xml, XML_LRM_ATTR_RSCID, action->rsc->name);
 	}
 	crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
 	crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, action->uuid);

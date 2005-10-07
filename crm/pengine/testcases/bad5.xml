@@ -22,7 +22,7 @@
 	  <lrm_agent class="heartbeat" type="apache"/>
 	</lrm_agents>
         <lrm_resources>
-          <lrm_resource id="rsc2" last_op="stop" rsc_state="stopped" op_status="0" rc_code="0" on_node="hadev"/>
+          <lrm_resource id="rsc2" class="heartbeat" type="apache"/>
         </lrm_resources>
       </lrm>
     </node_state>

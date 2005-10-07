@@ -1,0 +1,161 @@
+   <cib cib_feature_revision="1" have_quorum="true" generated="true" admin_epoch="0" num_peers="2" origin="c001n01" ccm_transition="6" dc_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" debug_source="finalize_join" epoch="6" num_updates="73">
+     <configuration>
+       <crm_config>
+         <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="3m"/>
+         <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
+         <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="1"/>
+         <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>
+       </crm_config>
+       <nodes>
+         <node id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" uname="c001n08" type="member"/>
+         <node id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" type="member"/>
+         <node id="5d9a8c11-8684-43ea-9180-5e221530c193" uname="c001n03" type="member"/>
+         <node id="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" uname="c001n01" type="member"/>
+       </nodes>
+       <resources>
+         <primitive id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr" provider="heartbeat" is_managed="1">
+           <operations>
+             <op id="DcIPaddr-1" name="monitor" interval="5s" timeout="20s"/>
+           </operations>
+           <instance_attributes>
+             <attributes>
+               <nvpair id="DcIPaddr-1" name="ip" value="127.0.0.20"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+         <primitive id="rsc_c001n08" class="ocf" provider="heartbeat" type="IPaddr" provider="heartbeat" is_managed="1">
+           <operations>
+             <op id="rsc_c001n08-1" name="monitor" interval="5s" timeout="21s"/>
+           </operations>
+           <instance_attributes>
+             <attributes>
+               <nvpair id="rsc_c001n08-1" name="ip" value="127.0.0.11"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+         <primitive id="rsc_c001n02" class="ocf" provider="heartbeat" type="IPaddr" provider="heartbeat" is_managed="1">
+           <operations>
+             <op id="rsc_c001n02-1" name="monitor" interval="6s" timeout="20s"/>
+           </operations>
+           <instance_attributes>
+             <attributes>
+               <nvpair id="rsc_c001n02-1" name="ip" value="127.0.0.12"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+         <primitive id="rsc_c001n03" class="ocf" provider="heartbeat" type="IPaddr" provider="heartbeat" is_managed="1">
+           <operations>
+             <op id="rsc_c001n03-1" name="monitor" interval="5s" timeout="20s"/>
+           </operations>
+           <instance_attributes>
+             <attributes>
+               <nvpair id="rsc_c001n03-1" name="ip" value="127.0.0.13"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+         <primitive id="rsc_c001n01" class="ocf" provider="heartbeat" type="IPaddr" provider="heartbeat" is_managed="1">
+           <operations>
+             <op id="rsc_c001n01-1" name="monitor" interval="5s" timeout="20s"/>
+           </operations>
+           <instance_attributes>
+             <attributes>
+               <nvpair id="rsc_c001n01-1" name="ip" value="127.0.0.14"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+       </resources>
+       <constraints>
+         <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
+           <rule id="cant_run_DcIPaddr" score="-INFINITY" boolean_op="and">
+             <expression id="dc_ip_expr" attribute="#is_dc" operation="eq" value="false"/>
+           </rule>
+         </rsc_location>
+         <rsc_location id="run_rsc_c001n08" rsc="rsc_c001n08">
+           <rule id="pref_run_rsc_c001n08" score="100" boolean_op="and">
+             <expression id="rsc_c001n08_loc_expr" attribute="#uname" operation="eq" value="c001n08"/>
+           </rule>
+         </rsc_location>
+         <rsc_location id="run_rsc_c001n02" rsc="rsc_c001n02">
+           <rule id="pref_run_rsc_c001n02" score="100" boolean_op="and">
+             <expression id="rsc_c001n02_loc_expr" attribute="#uname" operation="eq" value="c001n02"/>
+           </rule>
+         </rsc_location>
+         <rsc_location id="run_rsc_c001n03" rsc="rsc_c001n03">
+           <rule id="pref_run_rsc_c001n03" score="100" boolean_op="and">
+             <expression id="rsc_c001n03_loc_expr" attribute="#uname" operation="eq" value="c001n03"/>
+           </rule>
+         </rsc_location>
+         <rsc_location id="run_rsc_c001n01" rsc="rsc_c001n01">
+           <rule id="pref_run_rsc_c001n01" score="100" boolean_op="and">
+             <expression id="rsc_c001n01_loc_expr" attribute="#uname" operation="eq" value="c001n01"/>
+           </rule>
+         </rsc_location>
+       </constraints>
+     </configuration>
+     <status>
+       <node_state uname="c001n08" in_ccm="true" crmd="online" ha="active" expected="member" id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" join="member" origin="do_lrm_query">
+	 <lrm>
+	   <lrm_resources>
+             <lrm_resource id="rsc_c001n08" type="IPaddr" class="ocf" provider="heartbeat" provider="heartbeat">
+               <lrm_rsc_op operation="start" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="2" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n08_start_0" origin="build_active_RAs">
+                 <parameters is_managed="1" ip="127.0.0.11"/>
+               </lrm_rsc_op>
+               <lrm_rsc_op operation="monitor" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="3" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n08_monitor_5000" origin="build_active_RAs">
+                 <parameters is_managed="1" ip="127.0.0.11" timeout="20000" interval="5000"/>
+               </lrm_rsc_op>
+             </lrm_resource>
+	   </lrm_resources>
+	 </lrm>
+       </node_state>
+       <node_state uname="c001n02" crmd="online" in_ccm="true" ha="active" expected="member" id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" origin="do_lrm_query" join="member">
+         <lrm>
+           <lrm_resources>
+             <lrm_resource id="DcIPaddr" type="IPaddr" class="ocf" provider="heartbeat" provider="heartbeat">
+               <lrm_rsc_op operation="start" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="4" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="DcIPaddr_start_0" origin="build_active_RAs">
+                 <parameters is_managed="1" ip="127.0.0.10"/>
+               </lrm_rsc_op>
+               <lrm_rsc_op operation="monitor" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="5" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="DcIPaddr_monitor_5000" origin="build_active_RAs">
+                 <parameters is_managed="1" ip="127.0.0.10" timeout="20000" interval="5000"/>
+               </lrm_rsc_op>
+             </lrm_resource>
+             <lrm_resource id="rsc_c001n02" type="IPaddr" class="ocf" provider="heartbeat" provider="heartbeat">
+               <lrm_rsc_op operation="start" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="5" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n02_start_0" origin="build_active_RAs">
+                 <parameters is_managed="1" ip="127.0.0.12"/>
+               </lrm_rsc_op>
+               <lrm_rsc_op operation="monitor" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="6" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n02_monitor_5000" origin="build_active_RAs">
+                 <parameters is_managed="1" ip="127.0.0.12" timeout="20000" interval="5000"/>
+               </lrm_rsc_op>
+             </lrm_resource>
+           </lrm_resources>
+         </lrm>
+       </node_state>
+       <node_state uname="c001n03" crmd="online" in_ccm="true" ha="active" expected="member" id="5d9a8c11-8684-43ea-9180-5e221530c193" origin="do_lrm_query" join="member">
+         <lrm>
+           <lrm_resources>
+             <lrm_resource id="rsc_c001n03" type="IPaddr" class="ocf" provider="heartbeat" provider="heartbeat">
+               <lrm_rsc_op operation="start" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="3" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n03_start_0" origin="build_active_RAs">
+                 <parameters is_managed="1" ip="127.0.0.13"/>
+               </lrm_rsc_op>
+               <lrm_rsc_op operation="monitor" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="4" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n03_monitor_5000" origin="build_active_RAs">
+                 <parameters is_managed="1" ip="127.0.0.13" timeout="20000" interval="5000"/>
+               </lrm_rsc_op>
+             </lrm_resource>
+           </lrm_resources>
+         </lrm>
+       </node_state>
+       <node_state uname="c001n01" crmd="online" in_ccm="true" ha="active" expected="member" id="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" origin="do_lrm_query" join="member">
+         <lrm>
+           <lrm_resources>
+             <lrm_resource id="rsc_c001n01" type="IPaddr" class="ocf" provider="heartbeat" provider="heartbeat">
+               <lrm_rsc_op operation="start" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="2" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n01_start_0" origin="build_active_RAs">
+                 <parameters is_managed="1" ip="127.0.0.14"/>
+               </lrm_rsc_op>
+               <lrm_rsc_op operation="monitor" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="3" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n01_monitor_5000" origin="build_active_RAs">
+                 <parameters is_managed="1" ip="127.0.0.14" timeout="20000" interval="5000"/>
+               </lrm_rsc_op>
+             </lrm_resource>
+           </lrm_resources>
+         </lrm>
+       </node_state>
+     </status>
+   </cib>

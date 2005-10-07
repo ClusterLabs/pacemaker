@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.131 2005/10/05 19:04:02 andrew Exp $ */
+/* $Id: unpack.c,v 1.132 2005/10/07 15:57:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -571,6 +571,63 @@ determine_online_status(
 	return online;
 }
 
+#define set_char(x) last_rsc_id[len] = x; complete = TRUE;
+
+static void
+increment_clone(char *last_rsc_id)
+{
+	gboolean complete = FALSE;
+	int len = 0;
+
+	CRM_DEV_ASSERT(last_rsc_id != NULL);
+	if(last_rsc_id != NULL) {
+		len = strlen(last_rsc_id);
+	}
+	len--;
+	while(complete == FALSE && len > 0) {
+		switch (last_rsc_id[len]) {
+			case 0:
+				len--;
+				break;
+			case '0':
+				set_char('1');
+				break;
+			case '1':
+				set_char('2');
+				break;
+			case '2':
+				set_char('3');
+				break;
+			case '3':
+				set_char('4');
+				break;
+			case '4':
+				set_char('5');
+				break;
+			case '5':
+				set_char('6');
+				break;
+			case '6':
+				set_char('7');
+				break;
+			case '7':
+				set_char('8');
+				break;
+			case '8':
+				set_char('9');
+				break;
+			case '9':
+				last_rsc_id[len] = '0';
+				len--;
+				break;
+			default:
+				crm_err("Unexpected char: %c (%d)",
+					last_rsc_id[len], len);
+				break;
+		}
+	}
+}
+
 
 gboolean
 unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
@@ -583,9 +640,19 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 
 	int max_call_id = -1;
 
+	gboolean is_duped_clone = FALSE;
 	resource_t *rsc   = NULL;
 	GListPtr op_list = NULL;
 	GListPtr sorted_op_list = NULL;
+	char *alt_rsc_id = NULL;
+
+	const char *value = NULL;
+	const char *old_value = NULL;
+	const char *attr_list[] = {
+		XML_ATTR_TYPE, 
+		XML_AGENT_ATTR_CLASS,
+/* 		XML_AGENT_ATTR_PROVIDER */
+	};
 	
 	CRM_DEV_ASSERT(node != NULL);
 	if(crm_assert_failed) {
@@ -598,11 +665,44 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		rsc_id    = crm_element_value(rsc_entry, XML_ATTR_ID);
 		rsc_state = crm_element_value(rsc_entry, XML_LRM_ATTR_RSCSTATE);
 		
-		rsc = pe_find_resource(data_set->resources, rsc_id);
-/*
-		if(rsc->parent != NULL && rsc-parent-> && rsc->running_on != NULL) {
-			
-*/
+		alt_rsc_id = crm_strdup(rsc_id);
+		is_duped_clone = FALSE;
+		rsc = NULL;
+		while(rsc == NULL) {
+			crm_debug_3("looking for: %s", alt_rsc_id);
+			rsc = pe_find_resource(data_set->resources, alt_rsc_id);
+			/* no match */
+			if(rsc == NULL) {
+				crm_debug_3("not found");
+				break;
+				
+				/* not running anywhere else */
+			} else if(rsc->running_on == NULL) {
+				crm_debug_3("not active yet");
+				break;
+
+				/* always unique */
+			} else if(rsc->globally_unique) {
+				crm_debug_3("unique");
+				break;
+
+				/* running somewhere already but we dont care
+				 *   find another clone instead
+				 */
+			} else {
+				crm_debug_2("find another one");
+				rsc = NULL;
+				is_duped_clone = TRUE;
+				increment_clone(alt_rsc_id);
+			}
+		}
+		crm_free(alt_rsc_id);
+		if(is_duped_clone && rsc != NULL) {
+			crm_info("Renamed %s on %s to %s",
+				 rsc_id, node->details->uname, rsc->id);
+			rsc->name = rsc_id;
+		}
+		
 		crm_debug_3("[%s] Processing %s on %s (%s)",
 			    crm_element_name(rsc_entry),
 			    rsc_id, node_id, rsc_state);
@@ -613,7 +713,8 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 			pe_warn("Nothing known about resource"
 				" %s running on %s", rsc_id, node_id);
 			
-			if(data_set->stop_rsc_orphans == FALSE) {
+			if(data_set->stop_rsc_orphans == FALSE
+			   && is_duped_clone == FALSE) {
 				continue;
 
 			} else {
@@ -621,7 +722,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 					NULL, XML_CIB_TAG_RESOURCE);
 
 				crm_info("Making sure orphan %s is stopped",
-					rsc_id);
+					 rsc_id);
 				
 				copy_in_properties(xml_rsc, rsc_entry);
 				
@@ -643,7 +744,44 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 						-INFINITY, any_node, data_set);
 					);
 			}
-		}
+		} else {
+			int attr_lpc = 0;
+			gboolean force_restart = FALSE;
+			for(; attr_lpc < DIMOF(attr_list); attr_lpc++) {
+				value = crm_element_value(
+					rsc->xml, attr_list[attr_lpc]);
+				old_value = crm_element_value(
+					rsc_entry, attr_list[attr_lpc]);
+				if(safe_str_eq(value, old_value)) {
+					continue;
+				}
+				
+				force_restart = TRUE;
+				crm_notice("Forcing restart of %s on %s,"
+					   " %s changed: %s -> %s",
+					   rsc->id, node->details->uname,
+					   attr_list[attr_lpc],
+					   crm_str(old_value), crm_str(value));
+			}
+			if(force_restart) {
+				action_t *stop = stop_action(rsc, node, FALSE);
+				action_t *delete = delete_action(rsc, node);
+				action_t *start = start_action(rsc, NULL, TRUE);
+
+				/* make sure the restart happens */
+				rsc->start_pending = TRUE;
+
+				custom_action_order(
+					rsc, NULL, delete,
+					rsc, NULL, start,
+					pe_ordering_manditory, data_set);
+
+				custom_action_order(
+					rsc, NULL, stop,
+					rsc, NULL, delete,
+					pe_ordering_optional, data_set);
+			}
+		}		
 		
 		max_call_id = -1;
 
@@ -676,7 +814,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 			 rsc->id, role2text(rsc->role), node->details->uname);
 
  		if(rsc->role != RSC_ROLE_STOPPED) { 
-			crm_err("Adding %s to %s", rsc->id, node->details->uname);
+			crm_debug_2("Adding %s to %s", rsc->id, node->details->uname);
 			native_add_running(rsc, node, data_set);
 
 		} else if(rsc->failed == FALSE && node->details->online) {
