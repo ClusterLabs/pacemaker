@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.134 2005/10/07 16:15:15 andrew Exp $ */
+/* $Id: unpack.c,v 1.135 2005/10/10 09:27:35 davidlee Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -764,9 +764,13 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 					   crm_str(old_value), crm_str(value));
 			}
 			if(force_restart) {
-				action_t *stop = stop_action(rsc, node, FALSE);
-				action_t *delete = delete_action(rsc, node);
-				action_t *start = start_action(rsc, NULL, TRUE);
+				action_t *stop;
+				action_t *delete;
+				action_t *start;
+
+				stop = stop_action(rsc, node, FALSE);
+				delete = delete_action(rsc, node);
+				start = start_action(rsc, NULL, TRUE);
 
 				/* make sure the restart happens */
 				rsc->start_pending = TRUE;
