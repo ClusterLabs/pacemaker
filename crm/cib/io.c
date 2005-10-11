@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.32 2005/09/26 07:44:44 andrew Exp $ */
+/* $Id: io.c,v 1.33 2005/10/11 10:03:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -433,8 +433,10 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 			/* oh we are so dead  */
 			crm_crit("Could not write out new CIB and no saved"
 				 " version to revert to");
-				error_code = -3;			
-
+			if(error_code == cib_ok) {
+				error_code = -3;
+			}
+			
 		} else if(error_code != cib_ok) {
 			crm_crit("Update of Cib failed (%d)... reverting"
 				 " to last known valid version",
@@ -469,7 +471,11 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 	}
 	free_xml(diff);
 #else
-	if (error_code != cib_ok) {
+	if (error_code == -4) {
+		crm_err("Changes activated but couldnt be written to disk");
+		free_xml(saved_cib);
+
+	} else if (error_code != cib_ok) {
 		crm_err("Changes could not be activated: %s",
 			cib_error2string(error_code));
 		free_xml(new_cib);
