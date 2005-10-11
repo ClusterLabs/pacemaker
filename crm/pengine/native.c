@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.90 2005/10/07 15:57:33 andrew Exp $ */
+/* $Id: native.c,v 1.91 2005/10/11 10:01:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -826,6 +826,11 @@ native_print(
 			     crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
 			     crm_element_value(rsc->xml, XML_ATTR_TYPE),
 			     (rsc->variant!=pe_native)?"":node==NULL?"NOT ACTIVE":node->details->uname);
+#if CURSES_ENABLED
+		if(options & pe_print_ncurses) {
+			move(-1, 0);
+		}
+#endif
 	}
 	
 	if(options & pe_print_html) {
