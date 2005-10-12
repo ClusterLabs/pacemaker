@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.135 2005/10/10 09:27:35 davidlee Exp $ */
+/* $Id: unpack.c,v 1.136 2005/10/12 19:08:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -633,6 +633,7 @@ gboolean
 unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		     pe_working_set_t *data_set)
 {
+	gboolean delete_resource = FALSE;
 	enum rsc_role_e saved_role = RSC_ROLE_UNKNOWN;
 	const char *rsc_id    = NULL;
 	const char *node_id   = node->details->uname;
@@ -662,12 +663,14 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 	xml_child_iter(
 		lrm_rsc_list, rsc_entry, XML_LRM_TAG_RESOURCE,
 		
+		delete_resource = FALSE;
 		rsc_id    = crm_element_value(rsc_entry, XML_ATTR_ID);
 		rsc_state = crm_element_value(rsc_entry, XML_LRM_ATTR_RSCSTATE);
 		
-		alt_rsc_id = crm_strdup(rsc_id);
-		is_duped_clone = FALSE;
 		rsc = NULL;
+		is_duped_clone = FALSE;
+		alt_rsc_id = crm_strdup(rsc_id);
+
 		while(rsc == NULL) {
 			crm_debug_3("looking for: %s", alt_rsc_id);
 			rsc = pe_find_resource(data_set->resources, alt_rsc_id);
@@ -708,29 +711,31 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 			    rsc_id, node_id, rsc_state);
 
 		if(rsc == NULL) {
-			crm_log_xml_debug(rsc_entry, "Invalid status entry");
+			crm_data_t *xml_rsc = create_xml_node(
+				NULL, XML_CIB_TAG_RESOURCE);
+
+			crm_log_xml_info(rsc_entry, "Orphan resource");
 
 			pe_warn("Nothing known about resource"
 				" %s running on %s", rsc_id, node_id);
 			
+			copy_in_properties(xml_rsc, rsc_entry);
+			
+			common_unpack(xml_rsc, &rsc, NULL, data_set);
+			rsc->orphan = TRUE;
+			
+			data_set->resources = g_list_append(
+				data_set->resources, rsc);
+
 			if(data_set->stop_rsc_orphans == FALSE
 			   && is_duped_clone == FALSE) {
-				continue;
+				rsc->is_managed = FALSE;
 
 			} else {
-				crm_data_t *xml_rsc = create_xml_node(
-					NULL, XML_CIB_TAG_RESOURCE);
 
 				crm_info("Making sure orphan %s is stopped",
 					 rsc_id);
 				
-				copy_in_properties(xml_rsc, rsc_entry);
-				
-				common_unpack(xml_rsc, &rsc, NULL, data_set);
-				rsc->orphan = TRUE;
-
-				data_set->resources = g_list_append(
-					data_set->resources, rsc);
 			
 				crm_action_debug_3(
 					print_resource(
@@ -740,10 +745,11 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 				slist_iter(
 					any_node, node_t, data_set->nodes, lpc,
 					rsc2node_new(
-						"dont_run__orphan", rsc,
+						"__orphan_dont_run__", rsc,
 						-INFINITY, any_node, data_set);
 					);
 			}
+			
 		} else {
 			int attr_lpc = 0;
 			gboolean force_restart = FALSE;
@@ -764,26 +770,10 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 					   crm_str(old_value), crm_str(value));
 			}
 			if(force_restart) {
-				action_t *stop;
-				action_t *delete;
-				action_t *start;
-
-				stop = stop_action(rsc, node, FALSE);
-				delete = delete_action(rsc, node);
-				start = start_action(rsc, NULL, TRUE);
-
 				/* make sure the restart happens */
+				stop_action(rsc, node, FALSE);
 				rsc->start_pending = TRUE;
-
-				custom_action_order(
-					rsc, NULL, delete,
-					rsc, NULL, start,
-					pe_ordering_manditory, data_set);
-
-				custom_action_order(
-					rsc, NULL, stop,
-					rsc, NULL, delete,
-					pe_ordering_optional, data_set);
+				delete_resource = TRUE;
 			}
 		}		
 		
@@ -821,16 +811,44 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 			crm_debug_2("Adding %s to %s", rsc->id, node->details->uname);
 			native_add_running(rsc, node, data_set);
 
-		} else if(rsc->failed == FALSE && node->details->online) {
-			action_t *delete = delete_action(rsc, node);
+		} else {
+			char *key = stop_key(rsc);
+			GListPtr possible_matches = find_actions(rsc->actions, key, node);
+			slist_iter(stop, action_t, possible_matches, lpc,
+				   stop->optional = TRUE;
+				);
+			crm_free(key);
+			
+			if(rsc->failed == FALSE && node->details->online) {
+				delete_resource = TRUE;
+			}			
+		}
+
+		if(delete_resource) {
+			action_t *delete = NULL;
+			char *stop = stop_key(rsc);
+			char *start = start_key(rsc);
+			char *probe = generate_op_key(
+				rsc->id, CRMD_ACTION_STATUS, 0);
+
+			delete = delete_action(rsc, node);
+			
 			crm_info("Removing %s from %s",
 				 rsc->id, node->details->uname);
-			/* just in case we try and start it back on this node */
-			custom_action_order(
-				rsc, NULL, delete, rsc, start_key(rsc), NULL,
-				pe_ordering_optional, data_set);
 
+			custom_action_order(
+				rsc, NULL, delete, rsc, start, NULL, 
+				pe_ordering_manditory, data_set);
+			
+			custom_action_order(
+				rsc, stop, NULL, rsc, NULL, delete,
+				pe_ordering_optional, data_set);
+			
+			custom_action_order(
+				rsc, probe, NULL, rsc, NULL, delete,
+				pe_ordering_optional, data_set);
 		}
+		
 		
 		if(saved_role > rsc->role) {
 			rsc->role = saved_role;
@@ -965,13 +983,15 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	const char *id          = NULL;
 	const char *task        = NULL;
  	const char *task_id     = NULL;
+	const char *actual_rc   = NULL;	
+	const char *target_rc   = NULL;	
 	const char *task_status = NULL;
-	const char *target_rc = NULL;	
 
 	int interval = 0;
 	int task_id_i = -1;
 	int task_status_i = -2;
-
+	int actual_rc_i = 0;
+	
 	action_t *action = NULL;
 	gboolean is_stop_action = FALSE;
 
@@ -1088,6 +1108,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		g_hash_table_foreach(local_rsc_params, hash2field, pnow);
  		xml_remove_prop(pnow, XML_ATTR_CRM_VERSION); 
  		xml_remove_prop(params, XML_ATTR_CRM_VERSION); 
+ 		xml_remove_prop(pnow, "is_managed"); 
+ 		xml_remove_prop(params, "is_managed"); 
 		
  		pdiff = diff_xml_object(params, pnow, TRUE);
 		if(pdiff != NULL) {
@@ -1144,20 +1166,35 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		target_rc = crm_element_value(params, XML_ATTR_TE_TARGET_RC);
 	}
 
-	if(target_rc != NULL && safe_str_neq(target_rc, "0")) {
-		const char *actual_rc = NULL;	
+	actual_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
+	CRM_DEV_ASSERT(actual_rc != NULL);
+	if(actual_rc != NULL) {
+		actual_rc_i = atoi(actual_rc);
+	}
+	
+	if(target_rc != NULL) {
 		crm_debug_2("Checking for probes that we want to fail: %s",
 			    rsc->id);
-		actual_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
 		crm_debug_2("Exit code from %s: %s vs. %s",
 			    task, target_rc, actual_rc);
+		if(safe_str_eq(target_rc, actual_rc)) {
+			task_status_i = LRM_OP_DONE;
+		}
+	}
+	
+	if(EXECRA_NOT_RUNNING == actual_rc_i) {
+		rsc->role = RSC_ROLE_STOPPED;
+
 		/* mask out probes */
-		if(safe_str_eq(target_rc, actual_rc)
+		if(task_status_i == LRM_OP_DONE
 		   && safe_str_eq(task, CRMD_ACTION_STATUS)) {
-			rsc->role = RSC_ROLE_STOPPED;
 			crm_debug_2("Probe ignored");
 			return TRUE;
 		}
+#if 0
+	} else if(EXECRA_RUNNING_MASTER == actual_rc_i) {
+		rsc->role = RSC_ROLE_MASTER;
+#endif
 	}
 
 	if(task_status_i == LRM_OP_ERROR
@@ -1222,19 +1259,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				    rsc->id, task, node->details->uname);
 
 			if(is_stop_action) {
-				char *key = stop_key(rsc);
-				GListPtr possible_matches = find_actions(rsc->actions, key, node);
 				rsc->role = RSC_ROLE_STOPPED;
-				slist_iter(stop, action_t, possible_matches, lpc,
-					   stop->optional = TRUE;
-					);
-				crm_free(key);
-#if 0
-			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
-				crm_debug_3("%s active on %s",
-					    rsc->id, node->details->uname);
-				rsc->role = RSC_ROLE_STARTED;
-#endif
+
 			} else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
 				rsc->role = RSC_ROLE_MASTER;
 
@@ -1267,7 +1293,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
 			crm_warn("Processing failed op (%s) for %s on %s",
-				 task, rsc->id, node->details->uname);
+				 id, rsc->id, node->details->uname);
 
 			action = custom_action(
 				rsc, crm_strdup(id), task, NULL,
