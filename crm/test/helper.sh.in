@@ -224,10 +224,10 @@ function is_running() {
     host=$3
 
     if [ -z $host ]; then
-	output=`remote_cmd $ADMIN_USER $askhost $HALIB_DIR/crmadmin -W $rsc | grep -v $HALIB_DIR/crmadmin`
+	output=`remote_cmd $ADMIN_USER $askhost $HALIB_DIR/crm_resource -W $rsc | grep -v $HALIB_DIR/crm_resource`
 	output=`echo $output | grep -v NOT`
     else
-	output=`remote_cmd $ADMIN_USER $askhost $HALIB_DIR/crmadmin -W $rsc | grep -v $HALIB_DIR/crmadmin`
+	output=`remote_cmd $ADMIN_USER $askhost $HALIB_DIR/crm_resource -W $rsc | grep -v $HALIB_DIR/crm_resource`
 	output=`echo $output | grep $host`
     fi
 
