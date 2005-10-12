@@ -849,6 +849,13 @@ handle_request(ha_msg_input_t *stored_msg)
 	} else if(strcmp(op, CRM_OP_JOIN_ACKNAK) == 0) {
 		next_input = I_JOIN_RESULT;
 
+	} else if(strcmp(op, CRM_OP_LRM_DELETE) == 0
+		|| strcmp(op, CRM_OP_LRM_REFRESH) == 0
+		|| strcmp(op, CRM_OP_REPROBE) == 0) {
+		
+		cl_msg_modstring(stored_msg->msg, F_CRM_SYS_TO, CRM_SYSTEM_LRMD);
+		next_input = I_ROUTER;
+		
 		/* this functionality should only be enabled
 		 *   if this is a development build
 		 */
@@ -1064,7 +1071,7 @@ handle_shutdown_request(HA_Message *stored_msg)
 	free_xml(node_state);
 	crm_free(now_s);
 
-	fsa_cib_conn->cmds->modify(
+	fsa_cib_conn->cmds->update(
 		fsa_cib_conn, XML_CIB_TAG_STATUS, frag, NULL,
 		cib_quorum_override);
 
