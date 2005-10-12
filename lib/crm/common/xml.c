@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.38 2005/09/30 12:56:24 andrew Exp $ */
+/* $Id: xml.c,v 1.39 2005/10/12 18:15:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1479,8 +1479,10 @@ parse_xml(const char *input, int *offset)
 	if(offset != NULL) {
 		(*offset) += lpc;
 	}
-	
-	CRM_DEV_ASSERT(crm_is_allocated(new_obj) == 1);
+
+	if(new_obj != NULL) {
+		CRM_DEV_ASSERT(crm_is_allocated(new_obj) == 1);
+	}
 	return new_obj;
 }
 
@@ -1922,6 +1924,39 @@ add_xml_object(crm_data_t *parent, crm_data_t *target, const crm_data_t *update)
 	return result;
 }
 
+gboolean
+update_xml_child(crm_data_t *child, crm_data_t *to_update)
+{
+	gboolean can_update = TRUE;
+	
+	CRM_DEV_ASSERT(child != NULL);
+	if(crm_assert_failed) { return FALSE; }
+	
+	CRM_DEV_ASSERT(to_update != NULL);
+	if(crm_assert_failed) { return FALSE; }
+	
+	if(safe_str_neq(crm_element_name(to_update), crm_element_name(child))) {
+		can_update = FALSE;
+
+	} else if(safe_str_neq(ID(to_update), ID(child))) {
+		can_update = FALSE;
+
+	} else if(can_update) {
+		crm_log_xml_debug(child, "Update match found...");
+		copy_in_properties(child, to_update);
+	}
+	
+	xml_child_iter(
+		child, child_of_child, NULL,
+		/* only update the first one */
+		if(can_update) {
+			break;
+		}
+		can_update = update_xml_child(child_of_child, to_update);
+		);
+	
+	return can_update;
+}
 
 gboolean
 delete_xml_child(crm_data_t *parent, crm_data_t *child, crm_data_t *to_delete)
@@ -2102,6 +2137,7 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 
 	const char *allowed_list[] = {
 		XML_TAG_CIB,
+		XML_TAG_FRAGMENT,
 		XML_CIB_TAG_NODES,
 		XML_CIB_TAG_RESOURCES,
 		XML_CIB_TAG_CONSTRAINTS,
