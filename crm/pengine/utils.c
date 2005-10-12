@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.114 2005/10/05 19:04:02 andrew Exp $ */
+/* $Id: utils.c,v 1.115 2005/10/12 18:59:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -765,13 +765,13 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 			action->runnable = FALSE;
 
 		} else if(rsc->is_managed == FALSE) {
-			pe_warn("Action %d %s is for %s (unmanaged)",
+			crm_warn("Action %d %s is for %s (unmanaged)",
 				 action->id, task, rsc->id);
 			action->optional = TRUE;
 /*   			action->runnable = FALSE; */
 
 		} else if(action->node->details->online == FALSE) {
-			pe_warn("Action %d %s for %s on %s is unrunnable",
+			crm_warn("Action %d %s for %s on %s is unrunnable",
 				 action->id, task, rsc->id,
 				 action->node?action->node->details->uname:"<none>");
 			action->runnable = FALSE;
@@ -1126,7 +1126,7 @@ text2task(const char *task)
 		return no_action;
 	} else if(safe_str_eq(task, CRMD_ACTION_STATUS)) {
 		return no_action;
-	} else if(safe_str_eq(task, CRMD_ACTION_PROBED)) {
+	} else if(safe_str_eq(task, CRM_OP_PROBED)) {
 		return no_action;
 	} 
 	pe_err("Unsupported action: %s", task);

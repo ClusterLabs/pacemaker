@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.97 2005/10/07 15:57:33 andrew Exp $ */
+/* $Id: pengine.h,v 1.98 2005/10/12 18:59:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -75,9 +75,10 @@ enum pe_print_options {
 	pe_print_html    = 0x0002,
 	pe_print_ncurses = 0x0004,
 	pe_print_printf  = 0x0008,
-	pe_print_details = 0x0010,
-	pe_print_max_details = 0x0020,
-	pe_print_rsconly = 0x0040,
+	pe_print_dev     = 0x0010,
+	pe_print_details = 0x0020,
+	pe_print_max_details = 0x0040,
+	pe_print_rsconly = 0x0080,
 };
 
 typedef struct pe_working_set_s 

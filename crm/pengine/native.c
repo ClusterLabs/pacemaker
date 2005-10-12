@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.91 2005/10/11 10:01:53 andrew Exp $ */
+/* $Id: native.c,v 1.92 2005/10/12 18:59:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -108,7 +108,7 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		node->details->running_rsc, rsc);
 
 	if(rsc->is_managed == FALSE) {
-		crm_err("resource %s isnt managed", rsc->id);
+		crm_info("resource %s isnt managed", rsc->id);
 		rsc2node_new(
 			"not_managed_default", rsc, INFINITY, node, data_set);
 		return;
@@ -779,6 +779,19 @@ gboolean native_active(resource_t *rsc, gboolean all)
 	return FALSE;
 }
 
+struct print_data_s 
+{
+		long options;
+		void *print_data;
+};
+
+static void native_print_attr(gpointer key, gpointer value, gpointer user_data)
+{
+	long options = ((struct print_data_s*)user_data)->options;
+	void *print_data = ((struct print_data_s*)user_data)->print_data;
+	status_print("Option: %s = %s\n", (char*)key, (char*)value);
+}
+
 void
 native_print(
 	resource_t *rsc, const char *pre_text, long options, void *print_data)
@@ -884,6 +897,13 @@ native_print(
 	}
 
 	if(options & pe_print_details) {
+		struct print_data_s pdata;
+		pdata.options = options;
+		pdata.print_data = print_data;
+		g_hash_table_foreach(rsc->parameters, native_print_attr, &pdata);
+	}
+
+	if(options & pe_print_dev) {
 		status_print("%s\t(%s%svariant=%s, priority=%f)",
 			     pre_text, rsc->provisional?"provisional, ":"",
 			     rsc->runnable?"":"non-startable, ",
@@ -1711,9 +1731,17 @@ StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 		stop = stop_action(rsc, current, FALSE);
 
 		if(rsc->failed == FALSE && stop->runnable) {
+			char *probe = generate_op_key(
+				rsc->id, CRMD_ACTION_STATUS, 0);
+
 			delete = delete_action(rsc, current);
+
 			custom_action_order(
 				rsc, NULL, stop, rsc, NULL, delete,
+				pe_ordering_manditory, data_set);
+
+			custom_action_order(
+				rsc, probe, NULL, rsc, NULL, delete,
 				pe_ordering_manditory, data_set);
 		}
 		);
