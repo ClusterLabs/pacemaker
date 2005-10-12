@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.68 2005/10/07 15:57:33 andrew Exp $ */
+/* $Id: graph.c,v 1.69 2005/10/12 18:47:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -453,7 +453,7 @@ should_dump_action(action_t *action)
 			return FALSE;
 		}
 		
-		if(safe_str_neq(interval, "0")) {
+		if(interval != NULL && safe_str_neq(interval, "0")) {
 			pe_warn("action %d (%s) was for an unmanaged resource (%s)",
 				action->id, action->uuid, action->rsc->id);
 			return FALSE;
