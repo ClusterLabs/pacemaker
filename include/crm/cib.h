@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.33 2005/09/27 14:20:19 andrew Exp $ */
+/* $Id: cib.h,v 1.34 2005/10/12 18:28:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -138,6 +138,7 @@ enum cib_section {
 #define CIB_OP_QUERY	"cib_query"
 #define CIB_OP_CREATE	"cib_create"
 #define CIB_OP_UPDATE	"cib_update"
+#define CIB_OP_MODIFY	"cib_modify"
 #define CIB_OP_DELETE	"cib_delete"
 #define CIB_OP_DELETE_ALT	"cib_delete_alt"
 #define CIB_OP_ERASE	"cib_erase"
@@ -239,6 +240,8 @@ typedef struct cib_api_operations_s
 		int (*create)(cib_t *cib, const char *section, crm_data_t *data,
 			   crm_data_t **output_data, int call_options);
 		int (*modify)(cib_t *cib, const char *section, crm_data_t *data,
+			   crm_data_t **output_data, int call_options);
+		int (*update)(cib_t *cib, const char *section, crm_data_t *data,
 			   crm_data_t **output_data, int call_options);
 		int (*replace)(cib_t *cib, const char *section, crm_data_t *data,
 			   crm_data_t **output_data, int call_options);

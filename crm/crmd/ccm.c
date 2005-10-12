@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.89 2005/09/28 07:42:58 andrew Exp $ */
+/* $Id: ccm.c,v 1.90 2005/10/12 18:28:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -618,7 +618,7 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 	}
 	
 	if(update_data.updates != NULL) {
-		fsa_cib_conn->cmds->modify(fsa_cib_conn, XML_CIB_TAG_STATUS,
+		fsa_cib_conn->cmds->update(fsa_cib_conn, XML_CIB_TAG_STATUS,
 					   fragment, NULL, call_options);
 		free_xml(fragment);
 	}

@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.56 2005/09/27 13:18:45 andrew Exp $ */
+/* $Id: messages.c,v 1.57 2005/10/12 18:28:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -576,6 +576,31 @@ cib_process_delete(
 
 enum cib_errors 
 cib_process_modify(
+	const char *op, int options, const char *section, crm_data_t *input,
+	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
+{
+	crm_debug_2("Processing \"%s\" event", op);
+
+	if(input == NULL) {
+		crm_err("Cannot perform modification with no data");
+		return cib_NOOBJECT;
+	}
+	
+	*result_cib = copy_xml(existing_cib);
+	
+	crm_validate_data(input);
+	crm_validate_data(*result_cib);
+
+	if(update_xml_child(*result_cib, input) == FALSE) {
+		return cib_NOTEXISTS;		
+	}
+	
+	cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, FALSE);
+	return cib_ok;
+}
+
+enum cib_errors 
+cib_process_change(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {

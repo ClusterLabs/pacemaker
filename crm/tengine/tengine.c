@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.102 2005/09/27 14:21:06 andrew Exp $ */
+/* $Id: tengine.c,v 1.103 2005/10/12 18:28:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -244,8 +244,6 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	target_rc_s = g_hash_table_lookup(match->params,XML_ATTR_TE_TARGET_RC);
 	if(target_rc_s != NULL) {
 		int target_rc = atoi(target_rc_s);
-		
-		crm_info("Target rc = %d (%s)", target_rc, target_rc_s);
 		if(target_rc == op_rc_i) {
 			crm_info("Target rc: == %d", op_rc_i);
 			if(op_status_i != LRM_OP_DONE) {
@@ -758,7 +756,7 @@ cib_action_update(action_t *action, int status)
 		  crm_element_name(action->xml), crm_str(task), rsc_id, target);
 	
 #ifndef TESTING
-	rc = te_cib_conn->cmds->modify(
+	rc = te_cib_conn->cmds->update(
 		te_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL, call_options);
 
 	crm_debug("Updating CIB with %s action %d: %s %s on %s (call_id=%d)",

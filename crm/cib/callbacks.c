@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.81 2005/09/21 13:57:16 andrew Exp $ */
+/* $Id: callbacks.c,v 1.82 2005/10/12 18:28:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -100,10 +100,11 @@ cib_operation_t cib_server_ops[] = {
 	{CIB_OP_ISMASTER,  FALSE,TRUE, FALSE,FALSE,FALSE,cib_process_readwrite},
 	{CIB_OP_BUMP,      TRUE, TRUE, TRUE, TRUE, FALSE,cib_process_bump},
 	{CIB_OP_REPLACE,   TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_replace},
-	{CIB_OP_CREATE,    TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
-	{CIB_OP_UPDATE,    TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
+	{CIB_OP_CREATE,    TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_change},
+	{CIB_OP_MODIFY,    TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
+	{CIB_OP_UPDATE,    TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_change},
 	{CIB_OP_DELETE,    TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_delete},
-	{CIB_OP_DELETE_ALT,TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_modify},
+	{CIB_OP_DELETE_ALT,TRUE, TRUE, TRUE, TRUE, TRUE, cib_process_change},
 	{CIB_OP_QUERY,     FALSE,FALSE,FALSE,TRUE, FALSE,cib_process_query},
 	{CIB_OP_SYNC,      FALSE,TRUE, FALSE,TRUE, FALSE,cib_process_sync},
 	{CRM_OP_QUIT,	   FALSE,TRUE, FALSE,FALSE,FALSE,cib_process_quit},

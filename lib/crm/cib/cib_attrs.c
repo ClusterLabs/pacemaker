@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.4 2005/09/27 13:15:39 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.5 2005/10/12 18:28:21 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -111,7 +111,7 @@ update_attr(cib_t *the_cib,
 	
 	free_xml(xml_top);
 	
-	rc = the_cib->cmds->modify(the_cib, section, fragment, NULL,
+	rc = the_cib->cmds->update(the_cib, section, fragment, NULL,
 				   cib_sync_call|cib_quorum_override);
 	if(rc != cib_ok) {
 		crm_err("Error setting %s=%s (section=%s, set=%s): %s",

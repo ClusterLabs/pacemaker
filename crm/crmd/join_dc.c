@@ -318,7 +318,7 @@ finalize_join(const char *caller)
 		    XML_ATTR_DC_UUID, crm_element_value(cib, XML_ATTR_DC_UUID));
 	
 	cib_update = create_cib_fragment(cib, XML_TAG_CIB);
-	fsa_cib_conn->cmds->modify(
+	fsa_cib_conn->cmds->update(
 		fsa_cib_conn, NULL, cib_update, NULL, cib_quorum_override);
 
 	free_xml(cib_update);
@@ -420,7 +420,7 @@ process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
 	 * We dont need to notify the TE of these updates, a transition will
 	 *   be started in due time
 	 */
-	call_id = fsa_cib_conn->cmds->modify(
+	call_id = fsa_cib_conn->cmds->update(
 		fsa_cib_conn, XML_CIB_TAG_STATUS, lrm_update, NULL,
 		cib_scope_local|cib_quorum_override);
 
