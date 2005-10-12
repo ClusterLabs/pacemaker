@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.3 2005/09/19 20:37:25 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.4 2005/10/12 19:10:09 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -52,8 +52,6 @@
 #endif
 #include <crm/dmalloc_wrapper.h>
 void usage(const char *cmd, int exit_status);
-int do_find_resource(const char *rsc, crm_data_t *xml_node);
-int do_find_resource_list(int level, crm_data_t *cib);
 
 gboolean BE_QUIET = FALSE;
 char *host_id = NULL;
@@ -62,14 +60,276 @@ const char *host_uname = NULL;
 const char *crm_system_name = NULL;
 const char *prop_name = NULL;
 const char *prop_value = NULL;
+const char *rsc_type = NULL;
 char rsc_cmd = 0;
+char *our_pid = NULL;
+IPC_Channel *crmd_channel = NULL;
 
-#define OPTARGS	"V?SLRQDCP:WMr:h:v:"
+#define OPTARGS	"V?SLRQDCPp:WMr:H:v:t:"
+
+static int
+do_find_resource(const char *rsc, pe_working_set_t *data_set)
+{
+	int found = 0;
+	resource_t *the_rsc = pe_find_resource(data_set->resources, rsc);
+
+	if(the_rsc == NULL) {
+		return cib_NOTEXISTS;
+	}
+
+	slist_iter(node, node_t, the_rsc->running_on, lpc,
+		   crm_debug_3("resource %s is running on: %s",
+			       rsc, node->details->uname);
+		   if(BE_QUIET) {
+			   fprintf(stdout, "%s\n ", node->details->uname);
+		   } else {
+			   fprintf(stdout, "resource %s is running on: %s\n",
+				   rsc, node->details->uname);
+		   }
+		   
+		   found++;
+		);
+	
+	if(BE_QUIET) {
+		fprintf(stderr, "\n");
+	}
+	
+	if(found == 0) {
+		printf("resource %s is NOT running\n", rsc);
+	}
+					
+	return found;
+}
+
+static int
+do_find_resource_list(pe_working_set_t *data_set)
+{
+	int found = 0;
+	
+	slist_iter(
+		rsc, resource_t, data_set->resources, lpc,
+		rsc->fns->print(
+			rsc, NULL, pe_print_printf|pe_print_rsconly, stdout);
+			found++;
+		);
+
+	if(found == 0) {
+		printf("NO resources configured\n");
+		return cib_NOTEXISTS;
+	}
+
+	return found;
+}
+
+static int
+dump_resource(const char *rsc, pe_working_set_t *data_set)
+{
+	char *rsc_xml = NULL;
+	resource_t *the_rsc = pe_find_resource(data_set->resources, rsc);
+
+	if(the_rsc == NULL) {
+		return cib_NOTEXISTS;
+	}
+	the_rsc->fns->print(the_rsc, NULL, pe_print_printf, stdout);
+
+	rsc_xml = dump_xml_formatted(the_rsc->xml);
+
+	fprintf(stdout, "raw xml:\n%s", rsc_xml);
+	
+	crm_free(rsc_xml);
+	
+	return 1;
+}
+
+static void
+resource_ipc_connection_destroy(gpointer user_data)
+{
+	crm_info("Connection to CRMd was terminated");
+	exit(1);
+}
+
+static gboolean
+crmd_msg_callback(IPC_Channel * server, void *private_data)
+{
+	int lpc = 0;
+	IPC_Message *msg = NULL;
+	ha_msg_input_t *new_input = NULL;
+	gboolean hack_return_good = TRUE;
+
+	while (server->ch_status != IPC_DISCONNECT
+	       && server->ops->is_message_pending(server) == TRUE) {
+		if(new_input != NULL) {
+			delete_ha_msg_input(new_input);
+		}
+		
+		if (server->ops->recv(server, &msg) != IPC_OK) {
+			perror("Receive failure:");
+			return !hack_return_good;
+		}
+
+		if (msg == NULL) {
+			crm_debug_4("No message this time");
+			continue;
+		}
+
+		lpc++;
+		new_input = new_ipc_msg_input(msg);
+		crm_log_message(LOG_MSG, new_input->msg);
+		msg->msg_done(msg);
+		
+		if (validate_crm_message(
+			    new_input->msg, crm_system_name, our_pid,
+			    XML_ATTR_RESPONSE) == FALSE) {
+			crm_info("Message was not a CRM response. Discarding.");
+			continue;
+		}
+
+/* 		result = cl_get_string(new_input->msg, XML_ATTR_RESULT); */
+/* 		if(result == NULL || strcmp(result, "ok") == 0) { */
+/* 			result = "pass"; */
+/* 		} else { */
+/* 			result = "fail"; */
+/* 		} */
+		
+	}
+
+	if (server->ch_status == IPC_DISCONNECT) {
+		crm_debug_2("admin_msg_callback: received HUP");
+		return !hack_return_good;
+	}
+
+	return hack_return_good;
+}
+
+static int
+delete_lrm_rsc(
+	IPC_Channel *crmd_channel, const char *host_uname, const char *rsc_id)
+{
+	HA_Message *cmd = NULL;
+	crm_data_t *msg_data = NULL;
+	crm_data_t *rsc = NULL;
+	char *key = crm_concat(crm_system_name, our_pid, '-');
+	
+	CRM_DEV_ASSERT(rsc_id != NULL);
+	
+	msg_data = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
+	crm_xml_add(msg_data, XML_ATTR_TRANSITION_KEY, key);
+	
+	rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);
+	crm_xml_add(rsc, XML_ATTR_ID, rsc_id);
+	
+	cmd = create_request(CRM_OP_LRM_DELETE, msg_data, host_uname,
+			     CRM_SYSTEM_CRMD, crm_system_name, our_pid);
+
+	free_xml(msg_data);
+	crm_free(key);
+
+	if(send_ipc_message(crmd_channel, cmd)) {
+		return 0;
+	}
+	return -1;
+}
+
+static int
+refresh_lrm(IPC_Channel *crmd_channel, const char *host_uname)  
+{
+	HA_Message *cmd = NULL;
+	
+	cmd = create_request(CRM_OP_LRM_REFRESH, NULL, host_uname,
+			     CRM_SYSTEM_CRMD, crm_system_name, our_pid);
+	
+	if(send_ipc_message(crmd_channel, cmd)) {
+		return 0;
+	}
+	return -1;
+}
+
+static int
+migrate_resource(
+	const char *rsc_id,
+	const char *existing_node, const char *preferred_node,
+	cib_t *	cib_conn) 
+{
+	enum cib_errors rc = cib_ok;
+	char *id = NULL;
+	crm_data_t *cib = NULL;
+	crm_data_t *rule = NULL;
+	crm_data_t *expr = NULL;
+	crm_data_t *constraints = NULL;
+	crm_data_t *fragment = NULL;
+
+	crm_data_t *can_run = NULL;
+	crm_data_t *dont_run = NULL;
+	
+	constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
+	
+	id = crm_concat("cli-prefer", rsc_id, '-');
+	can_run = create_xml_node(constraints, XML_CIB_TAG_CONSTRAINT);
+	crm_xml_add(can_run, XML_ATTR_ID, id);
+	crm_free(id);
+
+	id = crm_concat("cli-standby", rsc_id, '-');
+	dont_run = create_xml_node(constraints, XML_CIB_TAG_CONSTRAINT);
+	crm_xml_add(dont_run, XML_ATTR_ID, id);
+	crm_free(id);
+
+	if(existing_node == NULL) {
+		rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_CONSTRAINTS,
+					    dont_run, NULL, cib_sync_call);
+
+	} else {
+		rule = create_xml_node(dont_run, XML_TAG_RULE);
+		expr = create_xml_node(rule, XML_TAG_EXPRESSION);
+		id = crm_concat("cli-standby-rule", rsc_id, '-');
+		crm_xml_add(rule, XML_ATTR_ID, id);
+		crm_free(id);
+		
+		crm_xml_add(rule, XML_RULE_ATTR_SCORE, MINUS_INFINITY_S);
+		
+		id = crm_concat("cli-standby-expr", rsc_id, '-');
+		crm_xml_add(expr, XML_ATTR_ID, id);
+		crm_free(id);
+		
+		crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, "#uname");
+		crm_xml_add(expr, XML_EXPR_ATTR_OPERATION, "eq");
+		crm_xml_add(expr, XML_EXPR_ATTR_VALUE, existing_node);
+		crm_xml_add(expr, XML_EXPR_ATTR_TYPE, "string");
+	}
+	
+	if(preferred_node == NULL) {
+		rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_CONSTRAINTS,
+					    can_run, NULL, cib_sync_call);
+
+	} else {
+		rule = create_xml_node(can_run, XML_TAG_RULE);
+		expr = create_xml_node(rule, XML_TAG_EXPRESSION);
+		id = crm_concat("cli-prefer-rule", rsc_id, '-');
+		crm_xml_add(rule, XML_ATTR_ID, id);
+		crm_free(id);
+
+		crm_xml_add(rule, XML_RULE_ATTR_SCORE, INFINITY_S);
+	
+		id = crm_concat("cli-prefer-expr", rsc_id, '-');
+		crm_xml_add(expr, XML_ATTR_ID, id);
+		crm_free(id);
+
+		crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, "#uname");
+		crm_xml_add(expr, XML_EXPR_ATTR_OPERATION, "eq");
+		crm_xml_add(expr, XML_EXPR_ATTR_VALUE, preferred_node);
+		crm_xml_add(expr, XML_EXPR_ATTR_TYPE, "string");
+	}
+	rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_CONSTRAINTS,
+				    fragment, NULL, cib_sync_call);
+	return rc;
+}
 
 int
 main(int argc, char **argv)
 {
-	cib_t *	the_cib = NULL;
+	pe_working_set_t data_set;
+	crm_data_t *cib_xml_copy = NULL;
+
+	cib_t *	cib_conn = NULL;
 	enum cib_errors rc = cib_ok;
 	
 	int argerr = 0;
@@ -84,6 +344,7 @@ main(int argc, char **argv)
 		{"silent",  0, 0, 'S'},
 		{"list",    0, 0, 'L'},
 		{"refresh", 0, 0, 'R'},
+		{"reprobe", 0, 0, 'P'},
 		{"query",   0, 0, 'Q'},
 		{"delete",  0, 0, 'D'},
 		{"cleanup", 0, 0, 'C'},
@@ -92,8 +353,9 @@ main(int argc, char **argv)
 		{"resource",1, 0, 'r'},
 		{"host_uname", 1, 0, 'H'},
 		{"host_uuid",  1, 0, 'h'},
-		{"set-property",    1, 0, 'P'},
+		{"set-property",    1, 0, 'p'},
 		{"property-value",  1, 0, 'v'},
+		{"resource-type",  1, 0, 't'},
 
 		{0, 0, 0, 0}
 	};
@@ -151,6 +413,10 @@ main(int argc, char **argv)
 				break;
 				
 			case 'P':
+				rsc_cmd = flag;
+				break;
+				
+			case 'p':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				prop_name = optarg;
 				rsc_cmd = flag;
@@ -171,6 +437,11 @@ main(int argc, char **argv)
 			case 'v':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				prop_value = optarg;
+				break;
+
+			case 't':
+				crm_debug_2("Option %c => %s", flag, optarg);
+				rsc_type = optarg;
 				break;
 
 			case 'H':
@@ -205,8 +476,11 @@ main(int argc, char **argv)
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
 
-	the_cib = cib_new();
-	rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
+	crm_malloc0(our_pid, sizeof(char) * 11);
+	if(our_pid != NULL) {
+		snprintf(our_pid, 10, "%d", getpid());
+		our_pid[10] = '\0';
+	}
 
 	if(rc != cib_ok) {
 		crm_err("Error signing on to the CIB service: %s",
@@ -214,28 +488,96 @@ main(int argc, char **argv)
 		return rc;
 	}
 
+	if(rsc_cmd == 'L' || rsc_cmd == 'W' || rsc_cmd == 'D'
+	   || rsc_cmd == 'Q' || rsc_cmd == 'p') {
+		cib_conn = cib_new();
+		rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
+		if(rsc_cmd == 'D') {
+			set_working_set_defaults(&data_set);
+		} else {
+			cib_xml_copy = get_cib_copy(cib_conn);
+			set_working_set_defaults(&data_set);
+			data_set.input = cib_xml_copy;
+			stage0(&data_set);
+		}
+		
+	} else if(rsc_cmd == 'R' || rsc_cmd == 'D' || rsc_cmd == 'C' || rsc_cmd == 'P') {
+		GCHSource *src = NULL;
+		src = init_client_ipc_comms(CRM_SYSTEM_CRMD, crmd_msg_callback,
+				      NULL, &crmd_channel);
+
+		send_hello_message(
+			crmd_channel, our_pid, crm_system_name, "0", "1");
+
+		set_IPC_Channel_dnotify(src, resource_ipc_connection_destroy);
+	}
+	
+
 	if(rsc_cmd == 'L') {
-		crm_data_t *cib_xml_copy = get_cib_copy(the_cib);
-		crm_data_t *resource_list = get_object_root(
-			XML_CIB_TAG_RESOURCES, cib_xml_copy);
-		do_find_resource_list(LOG_INFO, resource_list);
-		free_xml(cib_xml_copy);
+		do_find_resource_list(&data_set);
 		
 	} else if(rsc_cmd == 'W') {
-		crm_data_t *cib_xml_copy = get_cib_copy(the_cib);
-		rc = do_find_resource(rsc_id, cib_xml_copy);
-		free_xml(cib_xml_copy);
+		CRM_DEV_ASSERT(rsc_id != NULL);
+		rc = do_find_resource(rsc_id, &data_set);
 		
-	} else if(rsc_cmd == 'R') {
 	} else if(rsc_cmd == 'Q') {
-	} else if(rsc_cmd == 'D') {
-	} else if(rsc_cmd == 'C') {
+		CRM_DEV_ASSERT(rsc_id != NULL);
+		rc = dump_resource(rsc_id, &data_set);
+
 	} else if(rsc_cmd == 'M') {
-	} else if(rsc_cmd == 'r') {
+		rc = migrate_resource(rsc_id, NULL, host_uname, cib_conn);
+
+	} else if(rsc_cmd == 'p') {
+		crm_data_t *msg_data = NULL;
+
+		CRM_DEV_ASSERT(rsc_id != NULL);
+		CRM_DEV_ASSERT(rsc_type != NULL);
+		CRM_DEV_ASSERT(prop_name != NULL);
+		CRM_DEV_ASSERT(prop_value != NULL);
+
+		msg_data = create_xml_node(NULL, rsc_type);
+		crm_xml_add(msg_data, XML_ATTR_ID, rsc_id);
+		crm_xml_add(msg_data, prop_name, prop_value);
+		
+		rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_RESOURCES,
+					    msg_data, NULL, cib_sync_call);
+		free_xml(msg_data);
+
 	} else if(rsc_cmd == 'P') {
+		HA_Message *cmd = NULL;
+		
+		cmd = create_request(CRM_OP_REPROBE, NULL, host_uname,
+				     CRM_SYSTEM_CRMD, crm_system_name, our_pid);
+		send_ipc_message(crmd_channel, cmd);
+
+	} else if(rsc_cmd == 'R') {
+		refresh_lrm(crmd_channel, host_uname);
+
+	} else if(rsc_cmd == 'D') {
+		crm_data_t *msg_data = NULL;
+
+		CRM_DEV_ASSERT(rsc_type != NULL);
+		CRM_DEV_ASSERT(rsc_id != NULL);
+
+		msg_data = create_xml_node(NULL, rsc_type);
+		crm_xml_add(msg_data, XML_ATTR_ID, rsc_id);
+		
+		rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_RESOURCES,
+					    msg_data, NULL, cib_sync_call);
+		free_xml(msg_data);
+
+	} else if(rsc_cmd == 'C') {
+		delete_lrm_rsc(crmd_channel, host_uname, rsc_id);
+		refresh_lrm(crmd_channel, host_uname);
+
+	} else {
+		crm_err("Unknown command: %c", rsc_cmd);
 	}
 
-	the_cib->cmds->signoff(the_cib);
+	if(cib_conn != NULL) {
+		cleanup_calculations(&data_set);
+		cib_conn->cmds->signoff(cib_conn);
+	}
 	if(rc == cib_NOTEXISTS) {
 		crm_warn("Error performing operation: %s",
 			 cib_error2string(rc));
@@ -244,90 +586,11 @@ main(int argc, char **argv)
 		crm_warn("Error performing operation: %s",
 			 cib_error2string(rc));
 	}
+	
 	return rc;
 }
 
-int
-do_find_resource(const char *rsc, crm_data_t *xml_node)
-{
-	int found = 0;
-	pe_working_set_t data_set;
-	resource_t *the_rsc = NULL;
-	
-	set_working_set_defaults(&data_set);
-	data_set.input = xml_node;
-	stage0(&data_set);
 
-	the_rsc = pe_find_resource(data_set.resources, rsc);
-	if(the_rsc == NULL) {
-		return cib_NOTEXISTS;
-	}
-
-	slist_iter(node, node_t, the_rsc->running_on, lpc,
-		   crm_debug_3("resource %s is running on: %s",
-			       rsc, node->details->uname);
-		   printf("resource %s is running on: %s\n",
-			       rsc, node->details->uname);
-		   if(BE_QUIET) {
-			   fprintf(stderr, "%s ", node->details->uname);
-		   }
-		   found++;
-		);
-	
-	if(BE_QUIET) {
-		fprintf(stderr, "\n");
-	}
-	
-	if(found == 0) {
-		printf("resource %s is NOT running\n", rsc);
-	}
-					
-	data_set.input = NULL;
-	cleanup_calculations(&data_set);
-
-	return found;
-}
-
-int
-do_find_resource_list(int level, crm_data_t *resource_list)
-{
-	int lpc = 0;
-	int found = 0;
-	const char *name = NULL;
-	const char *type = NULL;
-	const char *class = NULL;
-	
-	xml_child_iter(
-		resource_list, rsc, NULL,
-		name = crm_element_name(rsc);
-		if(safe_str_eq(name, XML_CIB_TAG_RESOURCE)) {
-			class = crm_element_value(rsc, "class");
-			type = crm_element_value(rsc, XML_ATTR_TYPE);
-			for(lpc = 0; lpc < level; lpc++) {
-				printf("\t");
-			}
-			found++;
-			printf("%s: %s (%s::%s)\n",
-			       name, ID(rsc), crm_str(class), crm_str(type));
-		} else if(safe_str_eq(name, XML_CIB_TAG_GROUP)
-			  || safe_str_eq(name, XML_CIB_TAG_INCARNATION)) {
-			for(lpc = 0; lpc < level; lpc++) {
-				printf("\t");
-			}
-			printf("%s: %s (complex)\n", name, ID(rsc));
-			do_find_resource_list(level+1, rsc);
-			found++;
-		}
-		);
-	if(found == 0) {
-		for(lpc = 0; lpc < level; lpc++) {
-			printf("\t");
-		}
-		printf("NO resources configured\n");
-	}
-					
-	return found;
-}
 
 void
 usage(const char *cmd, int exit_status)
@@ -335,63 +598,42 @@ usage(const char *cmd, int exit_status)
 	FILE *stream;
 
 	stream = exit_status ? stderr : stdout;
-	if(safe_str_eq(cmd, "crm_master")) {
-		fprintf(stream, "usage: %s [-?VQ] -(D|G|v) [-l]\n", cmd);
+	fprintf(stream, "usage: %s [-?VS] -(L|Q|W|D|C|P|p) [options]\n", cmd);
 
-	} else if(safe_str_eq(cmd, "crm_standby")) {
-		fprintf(stream, "usage: %s [-?V] -(u|U) -(D|G|v) [-l]\n", cmd);
-
-	} else {
-		fprintf(stream, "usage: %s [-?V] -(D|G|v) [options]\n", cmd);
-	}
-	
-	fprintf(stream, "Options\n");
 	fprintf(stream, "\t--%s (-%c)\t: this help message\n", "help", '?');
 	fprintf(stream, "\t--%s (-%c)\t: "
 		"turn on debug info. additional instances increase verbosity\n",
 		"verbose", 'V');
-	fprintf(stream, "\t--%s (-%c)\t: Print only the value on stdout"
-		" (use with -G)\n", "quiet", 'Q');
-	fprintf(stream, "\t--%s (-%c)\t: "
-		"Retrieve rather than set the attribute\n", "get-value", 'G');
-	fprintf(stream, "\t--%s (-%c)\t: "
-		"Delete rather than set the attribute\n", "delete-attr", 'D');
-	fprintf(stream, "\t--%s (-%c) <string>\t: "
-		"Value to use (ignored with -G)\n", "attr-value", 'v');
+	fprintf(stream, "\t--%s (-%c)\t: Print only the value on stdout (for use with -W)\n",
+		"silent", 'S');
 
-	if(safe_str_eq(cmd, "crm_master")) {
-		fprintf(stream, "\t--%s (-%c) <string>\t: "
-			"How long the preference lasts (reboot|forever)\n",
-			"lifetime", 'l');
-		exit(exit_status);
-	} else if(safe_str_eq(cmd, "crm_standby")) {
-		fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
-			"UUID of the node to change\n", "node-uuid", 'u');
-		fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
-			"uname of the node to change\n", "node-uname", 'U');
-		fprintf(stream, "\t--%s (-%c) <string>\t: "
-			"How long the preference lasts (reboot|forever)\n"
-			"\t    If a forever value exists, it is ALWAYS used by the CRM\n"
-			"\t    instead of any reboot value\n", "lifetime", 'l');
-		exit(exit_status);
-	}
-	
-	fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
-		"UUID of the node to change\n", "node-uuid", 'u');
-	fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
-		"uname of the node to change\n", "node-uname", 'U');
+	fprintf(stream, "\nCommands\n");
+	fprintf(stream, "\t--%s (-%c)\t: List all resources\n", "list", 'L');
+	fprintf(stream, "\t--%s (-%c)\t: Query a resource\n"
+		"\t\t\t  Requires: -r\n", "query", 'Q');
+	fprintf(stream, "\t--%s (-%c)\t: Locate a resource\n"
+		"\t\t\t  Requires: -r\n", "locate", 'W');
+	fprintf(stream, "\t--%s (-%c)\t: Delete a resource from the CIB\n"
+		"\t\t\t  Requires: -r, -t\n", "delete", 'D');
+	fprintf(stream, "\t--%s (-%c)\t: Delete a resource from the LRM\n"
+		"\t\t\t  Requires: -r, -t.  Optional: -H\n", "cleanup", 'C');
+	fprintf(stream, "\t--%s (-%c)\t: Recheck for resources started outside of the CRM\n"
+		"\t\t\t  Optional: -H\n", "reprobe", 'P');
+	fprintf(stream, "\t--%s (-%c)\t: Refresh the CIB from the LRM\n"
+		"\t\t\t  Optional: -H\n", "refresh", 'R');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
-		"Set of attributes in which to read/write the attribute\n",
-		"set-name", 's');
+		"Set the named property for a resource\n"
+		"\t\t\t  Requires: -r, -t, -v", "set-property", 'p');
+	fprintf(stream, "\nOptions\n");
+	fprintf(stream, "\t--%s (-%c) <string>\t: Resource ID\n", "resource", 'r');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
-		"Attribute to set\n", "attr-name", 'n');
+		"Resource type (primitive, clone, group, ...)\n",
+		"resource-type", 't');
+
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
-		"Which section of the CIB to set the attribute: (%s|%s|%s)\n",
-		"type", 't',
-		XML_CIB_TAG_NODES, XML_CIB_TAG_STATUS, XML_CIB_TAG_CRMCONFIG);
-	fprintf(stream, "\t    -t=%s options: -(U|u) -n [-s]\n", XML_CIB_TAG_NODES);
-	fprintf(stream, "\t    -t=%s options: -(U|u) -n [-s]\n", XML_CIB_TAG_STATUS);
-	fprintf(stream, "\t    -t=%s options: -n [-s]\n", XML_CIB_TAG_CRMCONFIG);
+		"Property value\n", "property-value", 'v');
+	fprintf(stream, "\t--%s (-%c) <string>\t: "
+		"Host name\n", "host-uname", 'H');
 	fflush(stream);
 
 	exit(exit_status);

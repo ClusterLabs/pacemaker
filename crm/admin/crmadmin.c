@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.58 2005/09/15 08:27:40 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.59 2005/10/12 19:10:09 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -67,8 +67,6 @@ void crmd_ipc_connection_destroy(gpointer user_data);
 gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
 char *pluralSection(const char *a_section);
 crm_data_t *handleCibMod(void);
-int do_find_resource(const char *rsc, crm_data_t *xml_node);
-int do_find_resource_list(int level, crm_data_t *xml_node);
 int do_find_node_list(crm_data_t *xml_node);
 gboolean admin_message_timeout(gpointer data);
 gboolean is_node_online(crm_data_t *node_state);
@@ -140,9 +138,7 @@ main(int argc, char **argv)
 		{"health", 0, 0, 'H'},
 		{"election", 0, 0, 'E'},
 		{"dc_lookup", 0, 0, 'D'},
-		{"resources", 0, 0, 'R'},
 		{"nodes", 0, 0, 'N'},
-		{"whereis", 1, 0, 'W'},
 		{"option", 1, 0, 'o'},
 
 		{0, 0, 0, 0}
@@ -221,11 +217,6 @@ main(int argc, char **argv)
 			case 'B':
 				BASH_EXPORT = TRUE;
 				break;
-			case 'W':
-				DO_RESOURCE = TRUE;
-				crm_debug_2("Option %c => %s", flag, optarg);
-				rsc_name = crm_strdup(optarg);
-				break;
 			case 'K':
 				DO_RESET = TRUE;
 				crm_debug_2("Option %c => %s", flag, optarg);
@@ -255,9 +246,6 @@ main(int argc, char **argv)
 				break;
 			case 'N':
 				DO_NODE_LIST = TRUE;
-				break;
-			case 'R':
-				DO_RESOURCE_LIST = TRUE;
 				break;
 			case 'H':
 				DO_HEALTH = TRUE;
@@ -374,7 +362,7 @@ do_work(ll_cluster_t * hb_cluster)
 
 		dest_node = NULL;
 
-	} else if(DO_RESOURCE || DO_RESOURCE_LIST || DO_NODE_LIST) {
+	} else if(DO_NODE_LIST) {
 
 		cib_t *	the_cib = cib_new();
 		crm_data_t *output = NULL;
@@ -384,22 +372,11 @@ do_work(ll_cluster_t * hb_cluster)
 
 		if(rc != cib_ok) {
 			return -1;
-			
-		} else if(DO_RESOURCE) {
-			output = get_cib_copy(the_cib);
-			do_find_resource(rsc_name, output);
-
-		} else if(DO_RESOURCE_LIST) {
-			crm_data_t *rscs = NULL;
-			output = get_cib_copy(the_cib);
-			rscs = get_object_root(XML_CIB_TAG_RESOURCES, output);
-			do_find_resource_list(0, rscs);
-			
-		} else if(DO_NODE_LIST) {
-			output = get_cib_copy(the_cib);
-			do_find_node_list(output);
 		}
-
+			
+		output = get_cib_copy(the_cib);
+		do_find_node_list(output);
+		
 		free_xml(output);
 		the_cib->cmds->signoff(the_cib);
 		exit(rc);
@@ -654,47 +631,6 @@ admin_message_timeout(gpointer data)
 }
 
 
-int
-do_find_resource(const char *rsc, crm_data_t *xml_node)
-{
-	int found = 0;
-	pe_working_set_t data_set;
-	resource_t *the_rsc = NULL;
-	
-	set_working_set_defaults(&data_set);
-	data_set.input = xml_node;
-	stage0(&data_set);
-
-	the_rsc = pe_find_resource(data_set.resources, rsc);
-	if(the_rsc == NULL) {
-		return 0;
-	}
-
-	slist_iter(node, node_t, the_rsc->running_on, lpc,
-		   crm_debug_3("resource %s is running on: %s",
-			       rsc, node->details->uname);
-		   printf("resource %s is running on: %s\n",
-			       rsc, node->details->uname);
-		   if(BE_SILENT) {
-			   fprintf(stderr, "%s ", node->details->uname);
-		   }
-		   found++;
-		);
-	
-	if(BE_SILENT) {
-		fprintf(stderr, "\n");
-	}
-	
-	if(found == 0) {
-		printf("resource %s is NOT running\n", rsc);
-	}
-					
-	data_set.input = NULL;
-	cleanup_calculations(&data_set);
-
-	return found;
-}
-
 gboolean
 is_node_online(crm_data_t *node_state) 
 {
@@ -718,48 +654,6 @@ is_node_online(crm_data_t *node_state)
                   crm_str(crm_state));
 	crm_debug_3("Node %s is offline", uname);
 	return FALSE;
-}
-
-
-int
-do_find_resource_list(int level, crm_data_t *resource_list)
-{
-	int lpc = 0;
-	int found = 0;
-	const char *name = NULL;
-	const char *type = NULL;
-	const char *class = NULL;
-
-	xml_child_iter(
-		resource_list, rsc, NULL,
-		name = crm_element_name(rsc);
-		if(safe_str_eq(name, XML_CIB_TAG_RESOURCE)) {
-			class = crm_element_value(rsc, "class");
-			type = crm_element_value(rsc, XML_ATTR_TYPE);
-			for(lpc = 0; lpc < level; lpc++) {
-				printf("\t");
-			}
-			found++;
-			printf("%s: %s (%s::%s)\n",
-			       name, ID(rsc), crm_str(class), crm_str(type));
-		} else if(safe_str_eq(name, XML_CIB_TAG_GROUP)
-			  || safe_str_eq(name, XML_CIB_TAG_INCARNATION)) {
-			for(lpc = 0; lpc < level; lpc++) {
-				printf("\t");
-			}
-			printf("%s: %s (complex)\n", name, ID(rsc));
-			do_find_resource_list(level+1, rsc);
-			found++;
-		}
-		);
-	if(found == 0) {
-		for(lpc = 0; lpc < level; lpc++) {
-			printf("\t");
-		}
-		printf("NO resources configured\n");
-	}
-					
-	return found;
 }
 
 int
