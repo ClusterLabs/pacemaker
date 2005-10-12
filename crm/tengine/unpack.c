@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.47 2005/09/26 07:44:49 andrew Exp $ */
+/* $Id: unpack.c,v 1.48 2005/10/12 19:01:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -264,6 +264,7 @@ extract_event(crm_data_t *msg)
 	xml_child_iter(
 		msg, node_state, XML_CIB_TAG_STATE,
 
+		crm_data_t *attrs = NULL;
 		crm_data_t *resources = NULL;
 
 		const char *ccm_state  = crm_element_value(
@@ -271,26 +272,44 @@ extract_event(crm_data_t *msg)
 		const char *crmd_state  = crm_element_value(
 			node_state, XML_CIB_ATTR_CRMDSTATE);
 
-		blob.update = node_state;
-		
+		/* Transient node attribute changes... */
 		event_node = crm_element_value(node_state, XML_ATTR_ID);
-
+		crm_info("Processing state update from %s", event_node);
 		crm_log_xml_debug_3(node_state,"Processing");
 
-		if(crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN) != NULL) {
-			blob.text = "Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute";
-			break;
-			
+		if(blob.text == NULL) {
+			blob.update = node_state;
 		}
+		
+		attrs = find_xml_node(
+			node_state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
 
+		if(attrs != NULL) {
+			crm_info("Aborting on "XML_TAG_TRANSIENT_NODEATTRS" changes");
+			if(blob.text == NULL) {
+				blob.text = "Aborting on "XML_TAG_TRANSIENT_NODEATTRS" changes";
+			}
+		}
+		
 		resources = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
 		resources = find_xml_node(
 			resources, XML_LRM_TAG_RESOURCES, FALSE);
 
+		/* LRM resource update... */
+		xml_child_iter(
+			resources, rsc, NULL, 
+			xml_child_iter(
+				rsc, rsc_op, NULL, 
+				
+				crm_log_xml_debug_3(
+					rsc_op, "Processing resource update");
+				process_graph_event(rsc_op, event_node);
+				);
+			);
+
 		/*
 		 * node state update... possibly from a shutdown we requested
 		 */
-		crm_debug_3("Processing state update");
 		if(safe_str_eq(ccm_state, XML_BOOLEAN_FALSE)
 		   || safe_str_eq(crmd_state, CRMD_JOINSTATE_DOWN)) {
 			int action_id = -1;
@@ -301,28 +320,22 @@ extract_event(crm_data_t *msg)
 			if(action_id >= 0) {
 				process_trigger(action_id);
 				check_for_completion();
+
 			} else {
-				blob.text="Stonith/shutdown event not matched";
-				break;
+				crm_info("Stonith/shutdown event not matched");
+				if(blob.text == NULL) {
+					blob.text="Stonith/shutdown event not matched";
+				}
 			}
 		}
 
-		/* LRM resource update... */
-		xml_child_iter(
-			resources, rsc, NULL, 
-			xml_child_iter(
-				rsc, rsc_op, NULL, 
-				
-				crm_log_xml_debug_3(
-					rsc_op, "Processing resource update");
-				if(!process_graph_event(rsc_op, event_node)) {
-					/* the transition has already been
-					 * aborted and with better details
-					 */
-					return TRUE;
-				}
-				);
-			);
+		if(crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN) != NULL) {
+			crm_info("Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute");
+			if(blob.text == NULL) {
+				blob.text = "Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute";
+			}
+			
+		}
 		);
 
 	if(blob.text != NULL) {
