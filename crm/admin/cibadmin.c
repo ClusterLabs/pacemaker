@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.43 2005/10/04 12:03:56 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.44 2005/10/12 18:34:21 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -92,7 +92,7 @@ int request_id = 0;
 int operation_status = 0;
 cib_t *the_cib = NULL;
 
-#define OPTARGS	"V?i:o:QDUCEX:t:Srwlsh:MBfbdR"
+#define OPTARGS	"V?i:o:QDUCEX:t:Srwlsh:MmBfbdR"
 
 int
 main(int argc, char **argv)
@@ -111,13 +111,14 @@ main(int argc, char **argv)
 		{CIB_OP_CREATE,  0, 0, 'C'},
 		{CIB_OP_REPLACE, 0, 0, 'R'},
 		{CIB_OP_UPDATE,  0, 0, 'U'},
+		{CIB_OP_MODIFY,  0, 0, 'M'},
 		{CIB_OP_DELETE,  0, 0, 'D'},
 		{CIB_OP_DELETE_ALT,  0, 0, 'd'},
 		{CIB_OP_BUMP,    0, 0, 'B'},
 		{CIB_OP_SYNC,    0, 0, 'S'},
 		{CIB_OP_SLAVE,   0, 0, 'r'},
 		{CIB_OP_MASTER,  0, 0, 'w'},
-		{CIB_OP_ISMASTER,0, 0, 'M'},
+		{CIB_OP_ISMASTER,0, 0, 'm'},
 		
 		{"force-quorum",0, 0, 'f'},
 		{"local",	0, 0, 'l'},
@@ -192,6 +193,9 @@ main(int argc, char **argv)
 			case 'U':
 				cib_action = CIB_OP_UPDATE;
 				break;
+			case 'M':
+				cib_action = CIB_OP_MODIFY;
+				break;
 			case 'R':
 				cib_action = CIB_OP_REPLACE;
 				break;
@@ -204,7 +208,7 @@ main(int argc, char **argv)
 			case 'd':
 				cib_action = CIB_OP_DELETE_ALT;
 				break;
-			case 'M':
+			case 'm':
 				cib_action = CIB_OP_ISMASTER;
 				command_options |= cib_scope_local;
 				break;
@@ -395,6 +399,20 @@ do_work(const char *admin_input_xml, int call_options, crm_data_t **output)
 		enum cib_errors rc = cib_ok;
 		crm_debug_4("Performing %s op...", cib_action);
 		msg_data = handleCibMod(admin_input_xml);
+		rc = the_cib->cmds->update(
+			the_cib, obj_type, msg_data, output, call_options);
+		free_xml(msg_data);
+		return rc;
+
+	} else if (strcmp(CIB_OP_MODIFY, cib_action) == 0) {
+		enum cib_errors rc = cib_ok;
+		crm_debug_4("Performing %s op...", cib_action);
+
+		if(admin_input_xml == NULL) {
+			msg_data = stdin2xml();
+		} else {
+			msg_data = string2xml(admin_input_xml);
+		}
 		rc = the_cib->cmds->modify(
 			the_cib, obj_type, msg_data, output, call_options);
 		free_xml(msg_data);
