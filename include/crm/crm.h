@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.82 2005/09/27 13:23:12 andrew Exp $ */
+/* $Id: crm.h,v 1.83 2005/10/12 18:22:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -138,6 +138,11 @@ extern gboolean crm_assert_failed;
 #define CRM_OP_DEBUG_UP		"debug_inc"
 #define CRM_OP_DEBUG_DOWN	"debug_dec"
 #define CRM_OP_INVOKE_LRM	"lrm_invoke"
+#define CRM_OP_LRM_REFRESH	"lrm_refresh"
+#define CRM_OP_LRM_QUERY	"lrm_query"
+#define CRM_OP_LRM_DELETE	"lrm_delete"
+#define CRM_OP_PROBED		"probe_complete"
+#define CRM_OP_REPROBE		"probe_again"
 
 #define CRMD_STATE_ACTIVE	"member"
 #define CRMD_STATE_INACTIVE	"down"
@@ -146,7 +151,6 @@ extern gboolean crm_assert_failed;
 #define CRMD_JOINSTATE_PENDING	"pending"
 #define CRMD_JOINSTATE_MEMBER	CRMD_STATE_ACTIVE
 
-#define CRMD_ACTION_PROBED		"probe_complete"
 #define CRMD_ACTION_DELETE		"delete"
 #define CRMD_ACTION_CANCEL		"cancel"
 
