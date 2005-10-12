@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.14 2005/10/11 10:01:53 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.15 2005/10/12 18:10:33 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -229,7 +229,7 @@ gboolean
 mon_timer_popped(gpointer data)
 {
 	int rc = cib_ok;
-	int options = cib_none;
+	int options = cib_scope_local;
 
 	if(timer_id > 0) {
 		Gmain_timeout_remove(timer_id);
@@ -254,6 +254,13 @@ mon_timer_popped(gpointer data)
 	}
 	if(cib_conn != NULL && cib_conn->state != cib_connected_query){
 		crm_debug_4("Connecting to the CIB");
+#if CURSES_ENABLED
+		if(as_console) {
+			printw("Signing on...\n");
+			clrtoeol();
+			refresh();
+		}
+#endif
 		if(cib_ok == cib_conn->cmds->signon(
 			   cib_conn, crm_system_name, cib_query)) {
 			failed_connections = 0;
@@ -264,6 +271,13 @@ mon_timer_popped(gpointer data)
 			wait_for_refresh(0, "Not connected: ", 2*interval);
 			return FALSE;
 		}
+#if CURSES_ENABLED
+		if(as_console) {
+			printw("Querying...\n");
+			clrtoeol();
+			refresh();
+		}
+#endif
 	}
 	if(as_console) { blank_screen(); }
 	rc = cib_conn->cmds->query(cib_conn, NULL, NULL, options);
