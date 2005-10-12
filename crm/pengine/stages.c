@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.79 2005/10/05 16:33:57 andrew Exp $ */
+/* $Id: stages.c,v 1.80 2005/10/12 18:46:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -177,7 +177,7 @@ stage3(pe_working_set_t *data_set)
 	slist_iter(
 		node, node_t, data_set->nodes, lpc,
 		const char *probed = g_hash_table_lookup(
-			node->details->attrs, CRMD_ACTION_PROBED);
+			node->details->attrs, CRM_OP_PROBED);
 
 		crm_info("%s probed: %s", node->details->uname, probed);
 		
@@ -192,8 +192,8 @@ stage3(pe_working_set_t *data_set)
 
 		} else if(probe_complete == NULL) {
 			probe_complete = custom_action(
-				NULL, crm_strdup(CRMD_ACTION_PROBED),
-				CRMD_ACTION_PROBED, NULL, FALSE, TRUE,
+				NULL, crm_strdup(CRM_OP_PROBED),
+				CRM_OP_PROBED, NULL, FALSE, TRUE,
 				data_set);
 
 			probe_complete->pseudo = TRUE;
@@ -201,8 +201,8 @@ stage3(pe_working_set_t *data_set)
 		
 
 		probe_node_complete = custom_action(
-			NULL, crm_strdup(CRMD_ACTION_PROBED),
-			CRMD_ACTION_PROBED, node, FALSE, TRUE, data_set);
+			NULL, crm_strdup(CRM_OP_PROBED),
+			CRM_OP_PROBED, node, FALSE, TRUE, data_set);
 		add_hash_param(probe_node_complete->extra,
 			       XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
 	

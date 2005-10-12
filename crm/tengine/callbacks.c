@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.49 2005/09/27 13:22:02 andrew Exp $ */
+/* $Id: callbacks.c,v 1.50 2005/10/12 18:46:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -443,7 +443,7 @@ tengine_stonith_callback(stonith_ops_t * op, void * private_data)
 		update = create_cib_fragment(node_state, XML_CIB_TAG_STATUS);
 		free_xml(node_state);
 	
-		rc = te_cib_conn->cmds->modify(
+		rc = te_cib_conn->cmds->update(
 			te_cib_conn, XML_CIB_TAG_STATUS, update, NULL,
 			cib_quorum_override);	
 
