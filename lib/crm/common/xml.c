@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.39 2005/10/12 18:15:03 andrew Exp $ */
+/* $Id: xml.c,v 1.40 2005/10/13 12:20:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -523,6 +523,11 @@ file2xml(FILE *input)
 	char *buffer = NULL;
 	crm_data_t *new_obj = NULL;
 	int start = 0, length = 0, read_len = 0;
+
+	if(input == NULL) {
+		crm_err("No file to read");
+		return NULL;
+	}
 	
 	/* see how big the file is */
 	start  = ftell(input);
