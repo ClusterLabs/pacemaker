@@ -10,7 +10,7 @@
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="14" rsc_id="DcIPaddr" operation="delete" operation_key="DcIPaddr_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
+       <rsc_op id="15" rsc_id="DcIPaddr" operation="delete" operation_key="DcIPaddr_delete_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.10"/>
        </rsc_op>
@@ -94,7 +94,11 @@
          <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.14"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="26" rsc_id="rsc_c001n01" operation="stop" operation_key="rsc_c001n01_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="9">
      <action_set>
@@ -138,7 +142,14 @@
          <attributes crm_feature_set="1.0.3" clone="0" clone_max="4" hostlist="c001n08 c001n02 c001n03 c001n01 "/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="29" rsc_id="DoFencing:child_DoFencing:0" operation="stop" operation_key="DoFencing:child_DoFencing:0_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="31" rsc_id="DoFencing:child_DoFencing:0" operation="stop" operation_key="DoFencing:child_DoFencing:0_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="13">
      <action_set>
@@ -221,7 +232,11 @@
          <attributes crm_feature_set="1.0.3" clone="1" clone_max="4" hostlist="c001n08 c001n02 c001n03 c001n01 "/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="34" rsc_id="DoFencing:child_DoFencing:1" operation="stop" operation_key="DoFencing:child_DoFencing:1_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="19">
      <action_set>
@@ -230,7 +245,11 @@
          <attributes crm_feature_set="1.0.3" clone="1" clone_max="4" hostlist="c001n08 c001n02 c001n03 c001n01 "/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="34" rsc_id="DoFencing:child_DoFencing:1" operation="stop" operation_key="DoFencing:child_DoFencing:1_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="20">
      <action_set>

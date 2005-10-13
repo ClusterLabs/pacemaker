@@ -34,6 +34,7 @@ digraph "g" {
 "DoFencing_running_0" [ style="dashed" color="blue" fontcolor="orange" ]
 "DoFencing_stop_0" [ style="dashed" color="blue" fontcolor="orange" ]
 "DoFencing_stopped_0" [ style="dashed" color="blue" fontcolor="orange" ]
+"DoFencing:child_DoFencing:0_stop_0 posic043" -> "DoFencing:child_DoFencing:0_delete_0 posic041" [ style = dashed]
 "DoFencing:child_DoFencing:1_start_0 posic041" -> "DoFencing:child_DoFencing:1_monitor_5000 posic041" [ style = dashed]
 "DcIPaddr_stop_0 posic043" -> "DcIPaddr_start_0 posic043" [ style = dashed]
 "DcIPaddr_stop_0 posic043" -> "DcIPaddr_delete_0 posic043" [ style = bold]

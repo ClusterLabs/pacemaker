@@ -6,7 +6,11 @@
          <attributes crm_feature_set="1.0.3"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="4" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node1" on_node_uuid="node1"/>
+       </trigger>
+     </inputs>
   </synapse>
    <synapse id="1">
      <action_set>

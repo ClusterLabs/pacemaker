@@ -6,7 +6,11 @@
          <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.11"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="24" rsc_id="rsc_c001n09" operation="stop" operation_key="rsc_c001n09_stop_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="1">
      <action_set>
@@ -37,7 +41,11 @@
          <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="26" rsc_id="rsc_c001n02" operation="stop" operation_key="rsc_c001n02_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="4">
      <action_set>
@@ -46,7 +54,11 @@
          <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="26" rsc_id="rsc_c001n02" operation="stop" operation_key="rsc_c001n02_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="5">
      <action_set>
@@ -77,7 +89,11 @@
          <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.13"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="28" rsc_id="rsc_c001n03" operation="stop" operation_key="rsc_c001n03_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="8">
      <action_set>
@@ -108,7 +124,11 @@
          <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.14"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="30" rsc_id="rsc_c001n04" operation="stop" operation_key="rsc_c001n04_stop_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="11">
      <action_set>
@@ -161,7 +181,11 @@
          <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.16"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="34" rsc_id="rsc_c001n06" operation="stop" operation_key="rsc_c001n06_stop_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="16">
      <action_set>
@@ -192,7 +216,11 @@
          <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.17"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="36" rsc_id="rsc_c001n07" operation="stop" operation_key="rsc_c001n07_stop_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="19">
      <action_set>
@@ -201,7 +229,11 @@
          <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.17"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="36" rsc_id="rsc_c001n07" operation="stop" operation_key="rsc_c001n07_stop_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="20">
      <action_set>
@@ -232,7 +264,11 @@
          <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.18"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="38" rsc_id="rsc_c001n08" operation="stop" operation_key="rsc_c001n08_stop_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="23">
      <action_set>
@@ -241,7 +277,11 @@
          <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.18"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="38" rsc_id="rsc_c001n08" operation="stop" operation_key="rsc_c001n08_stop_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="24">
      <action_set>
@@ -250,7 +290,11 @@
          <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.18"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="38" rsc_id="rsc_c001n08" operation="stop" operation_key="rsc_c001n08_stop_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="25">
      <action_set>
@@ -259,7 +303,11 @@
          <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.18"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <rsc_op id="38" rsc_id="rsc_c001n08" operation="stop" operation_key="rsc_c001n08_stop_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="26">
      <action_set>
