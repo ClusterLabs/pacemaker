@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.4 2005/10/12 19:10:09 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.5 2005/10/13 07:34:21 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -65,7 +65,7 @@ char rsc_cmd = 0;
 char *our_pid = NULL;
 IPC_Channel *crmd_channel = NULL;
 
-#define OPTARGS	"V?SLRQDCPp:WMr:H:v:t:"
+#define OPTARGS	"V?SLRQDCPp:WMUr:H:v:t:"
 
 static int
 do_find_resource(const char *rsc, pe_working_set_t *data_set)
@@ -260,24 +260,34 @@ migrate_resource(
 
 	crm_data_t *can_run = NULL;
 	crm_data_t *dont_run = NULL;
-	
+
+	fragment = create_cib_fragment(NULL, NULL);
+	cib = find_xml_node(fragment, XML_TAG_CIB, TRUE);
 	constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
 	
 	id = crm_concat("cli-prefer", rsc_id, '-');
-	can_run = create_xml_node(constraints, XML_CIB_TAG_CONSTRAINT);
+	can_run = create_xml_node(constraints, XML_CONS_TAG_RSC_LOCATION);
 	crm_xml_add(can_run, XML_ATTR_ID, id);
 	crm_free(id);
 
 	id = crm_concat("cli-standby", rsc_id, '-');
-	dont_run = create_xml_node(constraints, XML_CIB_TAG_CONSTRAINT);
+	dont_run = create_xml_node(constraints, XML_CONS_TAG_RSC_LOCATION);
 	crm_xml_add(dont_run, XML_ATTR_ID, id);
 	crm_free(id);
 
 	if(existing_node == NULL) {
+		crm_log_xml_notice(can_run, "Deleting");
 		rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_CONSTRAINTS,
 					    dont_run, NULL, cib_sync_call);
+		if(rc == cib_NOTEXISTS) {
+			rc = cib_ok;
+
+		} else if(rc != cib_ok) {
+			return rc;
+		}
 
 	} else {
+		crm_xml_add(dont_run, "rsc", rsc_id);
 		rule = create_xml_node(dont_run, XML_TAG_RULE);
 		expr = create_xml_node(rule, XML_TAG_EXPRESSION);
 		id = crm_concat("cli-standby-rule", rsc_id, '-');
@@ -297,10 +307,18 @@ migrate_resource(
 	}
 	
 	if(preferred_node == NULL) {
+		crm_log_xml_notice(can_run, "Deleting");
 		rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_CONSTRAINTS,
 					    can_run, NULL, cib_sync_call);
+		if(rc == cib_NOTEXISTS) {
+			rc = cib_ok;
+
+		} else if(rc != cib_ok) {
+			return rc;
+		}
 
 	} else {
+		crm_xml_add(can_run, "rsc", rsc_id);
 		rule = create_xml_node(can_run, XML_TAG_RULE);
 		expr = create_xml_node(rule, XML_TAG_EXPRESSION);
 		id = crm_concat("cli-prefer-rule", rsc_id, '-');
@@ -318,8 +336,14 @@ migrate_resource(
 		crm_xml_add(expr, XML_EXPR_ATTR_VALUE, preferred_node);
 		crm_xml_add(expr, XML_EXPR_ATTR_TYPE, "string");
 	}
-	rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_CONSTRAINTS,
-				    fragment, NULL, cib_sync_call);
+
+	if(preferred_node != NULL || existing_node != NULL) {
+		crm_log_xml_notice(fragment, "CLI Update");
+		rc = cib_conn->cmds->update(cib_conn, XML_CIB_TAG_CONSTRAINTS,
+					    fragment, NULL, cib_sync_call);
+	}
+	
+	free_xml(fragment);
 	return rc;
 }
 
@@ -350,6 +374,7 @@ main(int argc, char **argv)
 		{"cleanup", 0, 0, 'C'},
 		{"locate",  0, 0, 'W'},
 		{"migrate", 0, 0, 'M'},
+		{"un-migrate", 0, 0, 'U'},
 		{"resource",1, 0, 'r'},
 		{"host_uname", 1, 0, 'H'},
 		{"host_uuid",  1, 0, 'h'},
@@ -429,6 +454,9 @@ main(int argc, char **argv)
 			case 'M':
 				rsc_cmd = flag;
 				break;				
+			case 'U':
+				rsc_cmd = flag;
+				break;				
 			case 'r':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				rsc_id = optarg;
@@ -488,20 +516,20 @@ main(int argc, char **argv)
 		return rc;
 	}
 
-	if(rsc_cmd == 'L' || rsc_cmd == 'W' || rsc_cmd == 'D'
-	   || rsc_cmd == 'Q' || rsc_cmd == 'p') {
+	if(rsc_cmd == 'L' || rsc_cmd == 'W' || rsc_cmd == 'D' || rsc_cmd == 'Q'
+	   || rsc_cmd == 'p' || rsc_cmd == 'M' || rsc_cmd == 'U') {
 		cib_conn = cib_new();
 		rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
-		if(rsc_cmd == 'D') {
-			set_working_set_defaults(&data_set);
-		} else {
+		set_working_set_defaults(&data_set);
+
+		if(rsc_cmd != 'D' && rsc_cmd != 'U') {
 			cib_xml_copy = get_cib_copy(cib_conn);
-			set_working_set_defaults(&data_set);
 			data_set.input = cib_xml_copy;
 			stage0(&data_set);
 		}
 		
-	} else if(rsc_cmd == 'R' || rsc_cmd == 'D' || rsc_cmd == 'C' || rsc_cmd == 'P') {
+	} else if(rsc_cmd == 'R' || rsc_cmd == 'D'
+		  || rsc_cmd == 'C' || rsc_cmd == 'P') {
 		GCHSource *src = NULL;
 		src = init_client_ipc_comms(CRM_SYSTEM_CRMD, crmd_msg_callback,
 				      NULL, &crmd_channel);
@@ -524,9 +552,34 @@ main(int argc, char **argv)
 		CRM_DEV_ASSERT(rsc_id != NULL);
 		rc = dump_resource(rsc_id, &data_set);
 
-	} else if(rsc_cmd == 'M') {
-		rc = migrate_resource(rsc_id, NULL, host_uname, cib_conn);
+	} else if(rsc_cmd == 'U') {
+		rc = migrate_resource(rsc_id, NULL, NULL, cib_conn);
 
+	} else if(rsc_cmd == 'M') {
+		resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+		
+		if(rsc == NULL) {
+			crm_err("Resource %s not migrated:"
+				" not found", rsc_id);
+
+		} else if(g_list_length(rsc->running_on) > 1) {
+			crm_err("Resource %s not migrated:"
+				" active on multiple nodes", rsc_id);
+			
+		} else if(rsc->stickiness == 0 && host_uname != NULL) {
+			rc = migrate_resource(
+				rsc_id, NULL, host_uname, cib_conn);
+
+		} else if(g_list_length(rsc->running_on) == 1) {
+			node_t *current = rsc->running_on->data;
+			rc = migrate_resource(rsc_id, current->details->uname,
+					      host_uname, cib_conn);
+
+		} else {
+			crm_err("Resource %s not migrated: not-active and"
+				" no prefered location specified.", rsc_id);
+		}
+		
 	} else if(rsc_cmd == 'p') {
 		crm_data_t *msg_data = NULL;
 
@@ -613,6 +666,11 @@ usage(const char *cmd, int exit_status)
 		"\t\t\t  Requires: -r\n", "query", 'Q');
 	fprintf(stream, "\t--%s (-%c)\t: Locate a resource\n"
 		"\t\t\t  Requires: -r\n", "locate", 'W');
+	fprintf(stream, "\t--%s (-%c)\t: Migrate a resource from it current"
+		" locaiton.  Use -H to specify a destination\n"
+		"\t\t\t  Requires: -r, Optional: -H\n", "migrate", 'M');
+	fprintf(stream, "\t--%s (-%c)\t: Remove all constraints created by -M\n"
+		"\t\t\t  Requires: -r\n", "un-migrate", 'U');
 	fprintf(stream, "\t--%s (-%c)\t: Delete a resource from the CIB\n"
 		"\t\t\t  Requires: -r, -t\n", "delete", 'D');
 	fprintf(stream, "\t--%s (-%c)\t: Delete a resource from the LRM\n"
