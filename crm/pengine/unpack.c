@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.136 2005/10/12 19:08:48 andrew Exp $ */
+/* $Id: unpack.c,v 1.137 2005/10/13 12:19:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1317,6 +1317,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				rsc->role = RSC_ROLE_MASTER;
 				
 			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
+				rsc->role = RSC_ROLE_STARTED;
+				
+			} else if(safe_str_eq(task, CRMD_ACTION_MON)) {
 				rsc->role = RSC_ROLE_STARTED;
 				
 			} else if(is_stop_action
