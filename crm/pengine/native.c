@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.92 2005/10/12 18:59:28 andrew Exp $ */
+/* $Id: native.c,v 1.93 2005/10/13 12:18:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1509,8 +1509,8 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 	op_key = generate_op_key(rsc->id, op->task, 0);
 	possible_matches = find_actions(rsc->actions, op_key, NULL);
 	
-	crm_err("Creating notificaitons for: %s (%s->%s)",
-		op->uuid, role2text(rsc->role), role2text(rsc->next_role));
+	crm_debug_2("Creating notificaitons for: %s (%s->%s)",
+		    op->uuid, role2text(rsc->role), role2text(rsc->next_role));
 
 	if(rsc->role == rsc->next_role) {
 		register_state(rsc, next_node, n_data);
