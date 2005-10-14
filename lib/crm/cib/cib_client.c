@@ -95,6 +95,7 @@ int cib_client_del_notify_callback(
 gint ciblib_GCompareFunc(gconstpointer a, gconstpointer b);
 
 extern cib_t *cib_native_new(cib_t *cib);
+extern void cib_native_delete(cib_t *cib);
 
 static enum cib_variant configured_variant = cib_native;
 
@@ -132,7 +133,6 @@ cib_new(void)
 
 	/* the rest will get filled in by the variant constructor */
 	crm_malloc0(new_cib->cmds, sizeof(cib_api_operations_t));
-	memset(new_cib->cmds, 0, sizeof(cib_api_operations_t));
 
 	new_cib->cmds->set_op_callback     = cib_client_set_op_callback;
 	new_cib->cmds->add_notify_callback = cib_client_add_notify_callback;
@@ -170,6 +170,16 @@ cib_new(void)
 	
 	return new_cib;
 }
+
+void
+cib_delete(cib_t *cib)
+{
+	cib_native_delete(cib);
+	g_hash_table_destroy(cib_op_callback_table);
+	crm_free(cib->cmds);
+	crm_free(cib);
+}
+
 
 int
 cib_client_set_op_callback(

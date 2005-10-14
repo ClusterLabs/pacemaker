@@ -57,6 +57,7 @@ gboolean cib_native_msgready(cib_t* cib);
 int cib_native_rcvmsg(cib_t* cib, int blocking);
 gboolean cib_native_dispatch(IPC_Channel *channel, gpointer user_data);
 cib_t *cib_native_new (cib_t *cib);
+void cib_native_delete(cib_t *cib);
 int cib_native_set_connection_dnotify(
 	cib_t *cib, void (*dnotify)(gpointer user_data));
 
@@ -91,6 +92,12 @@ cib_native_new (cib_t *cib)
 	cib->cmds->set_connection_dnotify = cib_native_set_connection_dnotify;
 	
 	return cib;
+}
+
+void
+cib_native_delete(cib_t *cib)
+{
+	crm_free(cib->variant_opaque);
 }
 
 int
@@ -376,7 +383,7 @@ cib_native_perform_op(
 		if(safe_str_eq(tag, XML_TAG_CIB)) {
 			const char *version = feature_set(cib);
 #if 1
-			/* only needed for 2.0.2 */
+			/* only needed for 2.0.3 */
 			int cmp = compare_version(version, "1.1");
 			if(cmp != 0) {
 				crm_err("Set XML_ATTR_CIB_REVISION=%s",
@@ -387,7 +394,7 @@ cib_native_perform_op(
 			crm_xml_add(cib, XML_ATTR_CIB_REVISION, version);
 #endif
 		} else {
-			crm_err("Skipping feature check for %s tag", tag);
+			crm_info("Skipping feature check for %s tag", tag);
 		}
 
 		add_message_xml(op_msg, F_CIB_CALLDATA, data);
