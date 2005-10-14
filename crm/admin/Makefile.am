@@ -49,11 +49,8 @@ LIBRT 			= @LIBRT@
 AM_CFLAGS		= @CFLAGS@					\
 			$(CRM_DEBUG_FLAGS)
 
-## libraries
-lib_LTLIBRARIES		= 
-
 ## binary progs
-halib_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 \
+habin_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 \
 			crm_master crm_standby crm_attribute crm_resource \
 			crm_verify
 
