@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.67 2005/10/14 09:47:00 andrew Exp $ */
+/* $Id: ptest.c,v 1.68 2005/10/14 11:18:16 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -197,10 +197,7 @@ main(int argc, char **argv)
 		crm_err("%d errors in option parsing", argerr);
 	}
   
-	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
-  
-	
-	crm_zero_mem_stats(NULL);
+	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");	
 
 	if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
@@ -216,6 +213,8 @@ main(int argc, char **argv)
 
 	crm_notice("Required feature set: %s", feature_set(cib_object));
  	do_id_check(cib_object, NULL);
+
+	crm_zero_mem_stats(NULL);
 	
 	fake_now = crm_element_value(cib_object, "fake_now");
 	if(fake_now != NULL) {
@@ -295,11 +294,13 @@ main(int argc, char **argv)
 			);
 		);
 	dot_write("}");
+	data_set.input = NULL;
 	cleanup_calculations(&data_set);
 
 	crm_mem_stats(NULL);
  	CRM_DEV_ASSERT(crm_mem_stats(NULL) == FALSE);
-	
+
+	crm_free(cib_object);	
 
 #ifdef MCHECK
 	muntrace();
