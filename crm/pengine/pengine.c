@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.94 2005/10/14 08:29:26 andrew Exp $ */
+/* $Id: pengine.c,v 1.95 2005/10/14 09:47:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -113,6 +113,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 			crm_err("Answer could not be sent");
 		}
 
+		data_set.input = NULL;
 		cleanup_calculations(&data_set);
 		
 		if(is_ipc_empty(sender) && crm_mem_stats(NULL)) {
@@ -156,7 +157,6 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 #define MEMCHECK_STAGE_0 0
 
 #define check_and_exit(stage) 	cleanup_calculations(data_set);		\
-	free_xml(xml_input);						\
 	crm_mem_stats(NULL);						\
 	crm_err("Exiting: stage %d", stage);				\
 	exit(1);
@@ -167,7 +167,7 @@ do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *no
 	
 /*	pe_debug_on(); */
 	set_working_set_defaults(data_set);
-	data_set->input = copy_xml(xml_input);
+	data_set->input = xml_input;
 	data_set->now = now;
 	if(data_set->now == NULL) {
 		data_set->now = new_ha_date(TRUE);

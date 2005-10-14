@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.66 2005/09/30 13:01:16 andrew Exp $ */
+/* $Id: ptest.c,v 1.67 2005/10/14 09:47:00 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -296,8 +296,6 @@ main(int argc, char **argv)
 		);
 	dot_write("}");
 	cleanup_calculations(&data_set);
-
-	free_xml(cib_object);
 
 	crm_mem_stats(NULL);
  	CRM_DEV_ASSERT(crm_mem_stats(NULL) == FALSE);
