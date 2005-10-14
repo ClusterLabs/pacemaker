@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.15 2005/10/12 18:10:33 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.16 2005/10/14 09:43:54 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -386,7 +386,7 @@ print_status(crm_data_t *cib)
 		  g_list_length(data_set.nodes));
 	print_as("%d Resources configured.\n",
 		  g_list_length(data_set.resources));
-	print_as("============\n");
+	print_as("============\n\n");
 
 	slist_iter(node, node_t, data_set.nodes, lpc2,
 		   const char *node_mode = "OFFLINE";
@@ -412,6 +412,7 @@ print_status(crm_data_t *cib)
 		print_as("\nFull list of resources:\n");
 	}
 	if(group_by_node == FALSE || inactive_resources) {
+		print_as("\n");
 		slist_iter(rsc, resource_t, data_set.resources, lpc2,
 			   rsc->fns->print(rsc, NULL, print_opts, stdout);
 			);
