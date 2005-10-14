@@ -1,4 +1,4 @@
-/* $Id: crm_verify.c,v 1.1 2005/10/14 06:24:03 andrew Exp $ */
+/* $Id: crm_verify.c,v 1.2 2005/10/14 09:48:26 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -36,8 +36,9 @@
 #include <clplumbing/cl_signal.h>
 
 #include <crm/cib.h>
+#include <clplumbing/lsb_exitcodes.h>
 
-#define OPTARGS	"V?X:wD:"
+#define OPTARGS	"V?X:L"
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -46,8 +47,9 @@
 #include <crm/pengine/pengine.h>
 #include <crm/pengine/pe_utils.h>
 
-extern crm_data_t * do_calculations(
-	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
+gboolean USE_LIVE_CIB = FALSE;
+const char *crm_system_name = NULL;
+void usage(const char *cmd, int exit_status);
 extern void cleanup_calculations(pe_working_set_t *data_set);
 
 int
@@ -58,8 +60,11 @@ main(int argc, char **argv)
 	int flag;
 		
 	pe_working_set_t data_set;
+	cib_t *	cib_conn = NULL;
+	enum cib_errors rc = cib_ok;
 	
 	const char *xml_file = NULL;
+	crm_system_name = basename(argv[0]);
 	
 	g_log_set_handler(NULL,
 			  G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
@@ -71,7 +76,7 @@ main(int argc, char **argv)
 	/* and for good measure... - this enum is a bit field (!) */
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
 	
-	cl_log_set_entity(basename(argv[0]));
+	cl_log_set_entity(crm_system_name);
 	cl_log_set_facility(LOG_LOCAL7);
 	cl_log_enable_stderr(TRUE);
 	set_crm_log_level(LOG_ERR);
@@ -84,8 +89,9 @@ main(int argc, char **argv)
 		int option_index = 0;
 		static struct option long_options[] = {
 			/* Top-level Options */
-			{F_CRM_DATA,  1, 0, 'X'},
-			{"help", 0, 0, 0},
+			{"xml-file",    1, 0, 'X'},
+			{"live-check",  0, 0, 'L'},
+			{"help", 0, 0, '?'},
       
 			{0, 0, 0, 0}
 		};
@@ -117,6 +123,12 @@ main(int argc, char **argv)
 			case 'V':
 				alter_debug(DEBUG_INC);
 				break;
+			case 'L':
+				USE_LIVE_CIB = TRUE;
+				break;
+			case '?':
+				usage(crm_system_name, LSB_EXIT_GENERIC);
+				break;
 			default:
 				printf("?? getopt returned character code 0%o ??\n", flag);
 				++argerr;
@@ -138,22 +150,47 @@ main(int argc, char **argv)
   
 	if (argerr) {
 		crm_err("%d errors in option parsing", argerr);
+		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
   
 	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
-  
+
+	if(USE_LIVE_CIB) {
+		cib_conn = cib_new();
+		rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
+	}
 	
 	crm_zero_mem_stats(NULL);
 
-	if(xml_file != NULL) {
+	if(USE_LIVE_CIB) {
+		if(rc == cib_ok) {
+			crm_info("Reading XML from: live cluster");
+			cib_object = get_cib_copy(cib_conn);
+			
+		} else {
+			fprintf(stderr, "Live CIB query failed: %s\n",
+				cib_error2string(rc));
+			return 3;
+		}
+		if(cib_object == NULL) {
+			fprintf(stderr, "Live CIB query failed: empty result\n");
+			return 3;
+		}
+		
+	} else if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
-		crm_info("Reading %s", xml_file);
+		crm_info("Reading XML from: %s", xml_file);
 		cib_object = file2xml(xml_strm);
 	} else {
+		fprintf(stderr, "Reading XML from: stdin");
 		cib_object = stdin2xml();
 	}
 
  	CRM_DEV_ASSERT(cib_object != NULL);
+	if(cib_object == NULL) {
+		fprintf(stderr, "No config supplied\n");
+		return 3;
+	}
 #if 0
 	status = get_object_root(XML_CIB_TAG_STATUS, cib_object);
 	xml_child_iter(status, node_state, XML_CIB_TAG_STATE,
@@ -161,24 +198,61 @@ main(int argc, char **argv)
 		);
 #endif	
 	crm_notice("Required feature set: %s", feature_set(cib_object));
- 	do_id_check(cib_object, NULL);
-	
-	do_calculations(&data_set, cib_object, NULL);
-	cleanup_calculations(&data_set);
+ 	if(do_id_check(cib_object, NULL)) {
+		pe_config_err("ID Check failed");
+	}
 
-	free_xml(cib_object);
+	set_working_set_defaults(&data_set);
+	data_set.input = cib_object;
+	data_set.now = new_ha_date(TRUE);
+	stage0(&data_set);
+	
+	cleanup_calculations(&data_set);
 
 	crm_mem_stats(NULL);
  	CRM_DEV_ASSERT(crm_mem_stats(NULL) == FALSE);
 
-	if(was_processing_error) {
-		fprintf(stderr, "Errors found during procesing: config not valid");
-		
+	if(USE_LIVE_CIB) {
+		cib_conn->cmds->signoff(cib_conn);
+		cib_delete(cib_conn);
+	}
+	
+	if(was_config_error) {
+		fprintf(stderr, "Errors found during check: config not valid\n");
+		if(crm_log_level < LOG_WARNING) {
+			fprintf(stderr, "  -V may provide more details\n");
+		}
 		return 2;
-	} else if(was_processing_warning) {
-		fprintf(stderr, "Wanrings found during procesing: config may not be valid");
+		
+	} else if(was_config_warning) {
+		fprintf(stderr, "Warnings found during check: config may not be valid\n");
+		if(crm_log_level < LOG_WARNING) {
+			fprintf(stderr, "  Use -V for more details\n");
+		}
 		return 1;
 	}
 
 	return 0;
+}
+
+
+void
+usage(const char *cmd, int exit_status)
+{
+	FILE *stream;
+
+	stream = exit_status ? stderr : stdout;
+	fprintf(stream, "usage: %s [-V] -(?|L|X)\n", cmd);
+
+	fprintf(stream, "\t--%s (-%c)\t: this help message\n", "help", '?');
+	fprintf(stream, "\t--%s (-%c)\t: "
+		"turn on debug info. additional instances increase verbosity\n",
+		"verbose", 'V');
+	fprintf(stream, "\t--%s (-%c)\t: Connect to the running cluster\n",
+		"live-check", 'L');
+	fprintf(stream, "\t--%s (-%c) <string>\t: Use the configuration in the named file\n",
+		"xml-file", 'X');
+	fflush(stream);
+
+	exit(exit_status);
 }
