@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.5 2005/10/13 07:34:21 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.6 2005/10/14 08:25:32 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -483,17 +483,18 @@ main(int argc, char **argv)
 				break;
 				
 			default:
-				printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
+				fprintf(stderr, "Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
 				++argerr;
 				break;
 		}
 	}
 
 	if (optind < argc) {
-		printf("non-option ARGV-elements: ");
-		while (optind < argc)
-			printf("%s ", argv[optind++]);
-		printf("\n");
+		fprintf(stderr, "non-option ARGV-elements: ");
+		while (optind < argc) {
+			fprintf(stderr, "%s ", argv[optind++]);
+		}
+		fprintf(stderr, "\n");
 	}
 
 	if (optind > argc) {
@@ -511,7 +512,7 @@ main(int argc, char **argv)
 	}
 
 	if(rc != cib_ok) {
-		crm_err("Error signing on to the CIB service: %s",
+		fprintf(stderr, "Error signing on to the CIB service: %s\n",
 			cib_error2string(rc));
 		return rc;
 	}
@@ -525,6 +526,7 @@ main(int argc, char **argv)
 		if(rsc_cmd != 'D' && rsc_cmd != 'U') {
 			cib_xml_copy = get_cib_copy(cib_conn);
 			data_set.input = cib_xml_copy;
+			data_set.now = new_ha_date(TRUE);
 			stage0(&data_set);
 		}
 		
@@ -559,12 +561,12 @@ main(int argc, char **argv)
 		resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 		
 		if(rsc == NULL) {
-			crm_err("Resource %s not migrated:"
-				" not found", rsc_id);
+			fprintf(stderr, "Resource %s not migrated:"
+				" not found\n", rsc_id);
 
 		} else if(g_list_length(rsc->running_on) > 1) {
-			crm_err("Resource %s not migrated:"
-				" active on multiple nodes", rsc_id);
+			fprintf(stderr, "Resource %s not migrated:"
+				" active on multiple nodes\n", rsc_id);
 			
 		} else if(rsc->stickiness == 0 && host_uname != NULL) {
 			rc = migrate_resource(
@@ -576,8 +578,9 @@ main(int argc, char **argv)
 					      host_uname, cib_conn);
 
 		} else {
-			crm_err("Resource %s not migrated: not-active and"
-				" no prefered location specified.", rsc_id);
+			fprintf(stderr, "Resource %s not migrated: "
+				"not-active and no prefered location"
+				" specified.\n", rsc_id);
 		}
 		
 	} else if(rsc_cmd == 'p') {
@@ -624,7 +627,7 @@ main(int argc, char **argv)
 		refresh_lrm(crmd_channel, host_uname);
 
 	} else {
-		crm_err("Unknown command: %c", rsc_cmd);
+		fprintf(stderr, "Unknown command: %c\n", rsc_cmd);
 	}
 
 	if(cib_conn != NULL) {
@@ -632,12 +635,12 @@ main(int argc, char **argv)
 		cib_conn->cmds->signoff(cib_conn);
 	}
 	if(rc == cib_NOTEXISTS) {
-		crm_warn("Error performing operation: %s",
-			 cib_error2string(rc));
+		fprintf(stderr, "Error performing operation: %s\n",
+			cib_error2string(rc));
 
 	} else if(rc < cib_ok) {
-		crm_warn("Error performing operation: %s",
-			 cib_error2string(rc));
+		fprintf(stderr, "Error performing operation: %s\n",
+			cib_error2string(rc));
 	}
 	
 	return rc;

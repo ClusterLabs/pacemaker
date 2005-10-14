@@ -1,4 +1,4 @@
-/* $Id: crm_attribute.c,v 1.3 2005/09/21 10:26:22 andrew Exp $ */
+/* $Id: crm_attribute.c,v 1.4 2005/10/14 08:25:32 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -194,7 +194,7 @@ main(int argc, char **argv)
 	rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 
 	if(rc != cib_ok) {
-		crm_err("Error signing on to the CIB service: %s",
+		fprintf(stderr, "Error signing on to the CIB service: %s\n",
 			cib_error2string(rc));
 		return rc;
 	}
@@ -218,7 +218,7 @@ main(int argc, char **argv)
 	if(dest_node == NULL && dest_uname != NULL) {
 		rc = query_node_uuid(the_cib, dest_uname, &dest_node);
 		if(rc != cib_ok) {
-			crm_err("Could not map uname=%s to a UUID: %s",
+			fprintf(stderr, "Could not map uname=%s to a UUID: %s\n",
 				dest_uname, cib_error2string(rc));
 			return rc;
 		} else {
@@ -231,7 +231,7 @@ main(int argc, char **argv)
 		char *rsc = NULL;
 		
 		if(dest_node == NULL) {
-			crm_err("Could not determin node UUID.");
+			fprintf(stderr, "Could not determin node UUID.\n");
 			return 1;
 		}
 		if(safe_str_eq(type, "reboot")) {
@@ -258,7 +258,6 @@ main(int argc, char **argv)
 		
 	} else if(safe_str_eq(crm_system_name, "crm_standby")) {
 		if(dest_node == NULL) {
-			crm_err("Please specify a value for -U or -u");
 			fprintf(stderr,"Please specify a value for -U or -u\n");
 			return 1;
 
@@ -290,8 +289,7 @@ main(int argc, char **argv)
 		type = XML_CIB_TAG_CRMCONFIG;
 
 	} else if (type == NULL) {
-		crm_err("Please specify a value for -t");
-		fprintf(stderr,"Please specify a value for -t\n");
+		fprintf(stderr, "Please specify a value for -t\n");
 		return 1;
 	}
 
@@ -329,12 +327,12 @@ main(int argc, char **argv)
 	}
 	the_cib->cmds->signoff(the_cib);
 	if(DO_WRITE == FALSE && rc == cib_NOTEXISTS) {
-		crm_warn("Error performing operation: %s",
-			 cib_error2string(rc));
+		fprintf(stderr, "Error performing operation: %s\n",
+			cib_error2string(rc));
 
 	} else if(rc != cib_ok) {
-		crm_warn("Error performing operation: %s",
-			 cib_error2string(rc));
+		fprintf(stderr, "Error performing operation: %s\n",
+			cib_error2string(rc));
 	}
 	return rc;
 }
