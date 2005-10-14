@@ -24,6 +24,8 @@ failed=.regression.failed
 # zero out the error log
 > $failed
 
+num_failed=0
+
 function do_test {
 
     base=$1;
@@ -47,6 +49,7 @@ function do_test {
 #	return;
     fi
 
+#    ../admin/crm_verify -X $input
     ./ptest -V -X $input -D $dot_output > $output
 
     if [ -s core ]; then
@@ -87,6 +90,7 @@ function do_test {
 	if [ $rc != 0 ]; then
 	    echo "Test $name	($base)...	* Failed (PE : dot)";
 	    diff $diff_opts $dot_expected $dot_output 2>/dev/null >> $failed
+	    num_failed=`expr $num_failed + 1`
 	else 
 	    rm $dot_output
 	fi
@@ -104,6 +108,7 @@ function do_test {
 	if [ $rc2 != 0 ]; then
 	    echo "Test $name	($base)...	* Failed (PE : raw)";
 	    diff $diff_opts $expected $output 2>/dev/null >> $failed
+	    num_failed=`expr $num_failed + 1`
 	else 
 	    rm $output
 	fi
@@ -166,10 +171,10 @@ function test_results {
 
     if [ -s $failed ]; then
 	if [ "$verbose" = "-v" ]; then
-	    echo "Results of failed tests...."
+	    echo "Results of $num_failed failed tests...."
 	    less $failed
 	else
-	    echo "Results of failed tests are in $failed...."
+	    echo "Results of $num_failed failed tests are in $failed...."
 	    echo "Use $0 -v to display them automatically."
 	fi
     else
