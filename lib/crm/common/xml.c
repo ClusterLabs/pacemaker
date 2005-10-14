@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.40 2005/10/13 12:20:15 andrew Exp $ */
+/* $Id: xml.c,v 1.41 2005/10/14 08:27:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2118,21 +2118,27 @@ assign_uuid(crm_data_t *xml_obj)
 {
 	cl_uuid_t new_uuid;
 	char *new_uuid_s = NULL;
-
+	const char *tag_name = crm_element_name(xml_obj);
+	const char *tag_id = ID(xml_obj);
+	
 	crm_malloc0(new_uuid_s, sizeof(char)*38);
 	cl_uuid_generate(&new_uuid);
 	cl_uuid_unparse(&new_uuid, new_uuid_s);
 	
+	crm_warn("Updating object from <%s id=%s/> to <%s id=%s/>",
+		 tag_name, tag_id?tag_id:"__empty__", tag_name, new_uuid_s);
+	
 	crm_xml_add(xml_obj, XML_ATTR_ID, new_uuid_s);
-	crm_log_xml_warn(xml_obj, "Updated object");	
+	crm_log_xml_debug(xml_obj, "Updated object");	
 	crm_free(new_uuid_s);
 }
 
-void
+gboolean
 do_id_check(crm_data_t *xml_obj, GHashTable *id_hash) 
 {
 	int lpc = 0;
 	char *lookup_id = NULL;
+	gboolean modified = FALSE;
 
 	const char *tag_id = NULL;
 	const char *tag_name = NULL;
@@ -2159,7 +2165,7 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 	};
 	
 	if(xml_obj == NULL) {
-		return;
+		return FALSE;
 
 	} else if(id_hash == NULL) {
 		created_hash = TRUE;
@@ -2170,7 +2176,9 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 
 	xml_child_iter(
 		xml_obj, xml_child, NULL,
-		do_id_check(xml_child, id_hash);
+		if(do_id_check(xml_child, id_hash)) {
+			modified = TRUE;
+		}
 		);
 
 	tag_id = ID(xml_obj);
@@ -2193,12 +2201,13 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 			lookup_id = crm_concat(tag_name, tag_id, '-');
 			lookup_value = g_hash_table_lookup(id_hash, lookup_id);
 			if(lookup_value != NULL) {
-				assign_uuid(xml_obj);
-				tag_id = ID(xml_obj);
+				modified = TRUE;
 				crm_err("\"id\" collision detected.");
 				crm_err(" Multiple %s entries with id=\"%s\","
 					" assigned id=\"%s\"",
 					tag_name, lookup_value, tag_id);
+				assign_uuid(xml_obj);
+				tag_id = ID(xml_obj);
 			} 
 			g_hash_table_insert(
 				id_hash, lookup_id, crm_strdup(tag_id));
@@ -2214,12 +2223,10 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 		if(lpc < DIMOF(allowed_list)) {
 			break;
 		} 
+		modified = TRUE;
+		crm_err("%s object with attributes but no ID field detected.",
+			tag_name);
 		assign_uuid(xml_obj);
-		tag_id = ID(xml_obj);
-		crm_err("Object with attributes but no ID field detected."
-			"  Assigned: %s", tag_id);
-/* 		lookup_id = crm_concat(tag_name, tag_id, '-'); */
-/* 		g_hash_table_insert(id_hash, lookup_id, crm_strdup(tag_id)); */
 		break;
 		
 		);
@@ -2228,5 +2235,6 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 		g_hash_table_destroy(id_hash);
 	}
 
+	return modified;
 }
 

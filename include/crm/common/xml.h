@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.32 2005/10/12 18:15:03 andrew Exp $ */
+/* $Id: xml.h,v 1.33 2005/10/14 08:27:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -50,7 +50,7 @@ extern GHashTable *xml2list_202(crm_data_t *parent);
 #endif
 extern void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
 extern void hash2field(gpointer key, gpointer value, gpointer user_data);
-extern void do_id_check(crm_data_t *xml_obj, GHashTable *id_hash);
+extern gboolean do_id_check(crm_data_t *xml_obj, GHashTable *id_hash);
 
 /*
  * Replacement function for xmlCopyPropList which at the very least,
