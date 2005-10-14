@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.34 2005/10/12 18:28:21 andrew Exp $ */
+/* $Id: cib.h,v 1.35 2005/10/14 09:46:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -301,6 +301,7 @@ typedef struct cib_callback_client_s
 
 /* Core functions */
 extern cib_t *cib_new(void);
+extern void cib_delete(cib_t *cib);
 
 extern gboolean   startCib(const char *filename);
 extern crm_data_t *get_cib_copy(cib_t *cib);
