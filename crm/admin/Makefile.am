@@ -54,7 +54,8 @@ lib_LTLIBRARIES		=
 
 ## binary progs
 halib_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 \
-			crm_master crm_standby crm_attribute crm_resource
+			crm_master crm_standby crm_attribute crm_resource \
+			crm_verify
 
 ## SOURCES
 
@@ -82,6 +83,11 @@ crm_diff_LDADD		= $(COMMONLIBS)
 crm_mon_SOURCES		= crm_mon.c
 crm_mon_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 crm_mon_LDADD		= $(COMMONLIBS) \
+			$(top_builddir)/crm/pengine/libpengine.la
+
+crm_verify_SOURCES	= crm_verify.c
+crm_verify_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+crm_verify_LDADD	= $(COMMONLIBS) \
 			$(top_builddir)/crm/pengine/libpengine.la
 
 crm_master_SOURCES	= crm_attribute.c
