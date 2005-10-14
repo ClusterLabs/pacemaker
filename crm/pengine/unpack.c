@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.137 2005/10/13 12:19:27 andrew Exp $ */
+/* $Id: unpack.c,v 1.138 2005/10/14 08:29:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -74,6 +74,11 @@ const char *param_value(
 rsc_to_node_t *generate_location_rule(
 	resource_t *rsc, crm_data_t *location_rule, pe_working_set_t *data_set);
 
+#define get_cluster_pref(pref) value = g_hash_table_lookup(config_hash, pref); \
+	if(value == NULL) {						\
+		pe_config_warn("No value specified for cluster preference: %s", pref); \
+	}
+
 gboolean
 unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 {
@@ -105,33 +110,32 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 	param_value(config_hash, config, "remove_after_stop");
 	param_value(config_hash, config, "is_managed_default");
 #endif
-	value = g_hash_table_lookup(config_hash, "transition_idle_timeout");
+	get_cluster_pref("transition_idle_timeout");
 	if(value != NULL) {
 		long tmp = crm_get_msec(value);
 		if(tmp > 0) {
 			crm_free(data_set->transition_idle_timeout);
 			data_set->transition_idle_timeout = crm_strdup(value);
 		} else {
-			crm_err("Invalid value for %s: %s",
-				"transition_idle_timeout",
-				data_set->transition_idle_timeout);
+			crm_err("Invalid value for transition_idle_timeout: %s",
+				value);
 		}
 	}
 	
 	crm_debug_4("%s set to: %s",
 		 "transition_idle_timeout", data_set->transition_idle_timeout);
 
-	value = g_hash_table_lookup(config_hash, "default_resource_stickiness");
+	get_cluster_pref("default_resource_stickiness");
 	data_set->default_resource_stickiness = char2score(value);
 	
-	value = g_hash_table_lookup(config_hash, "stonith_enabled");
+	get_cluster_pref("stonith_enabled");
 	if(value != NULL) {
 		cl_str_to_boolean(value, &data_set->stonith_enabled);
 	}
 	crm_info("STONITH of failed nodes is %s",
 		 data_set->stonith_enabled?"enabled":"disabled");	
 	
-	value = g_hash_table_lookup(config_hash, "symmetric_cluster");
+	get_cluster_pref("symmetric_cluster");
 	if(value != NULL) {
 		cl_str_to_boolean(value, &data_set->symmetric_cluster);
 	}
@@ -140,7 +144,7 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 			 " - resources can run anywhere by default");
 	}
 
-	value = g_hash_table_lookup(config_hash, "no_quorum_policy");
+	get_cluster_pref("no_quorum_policy");
 	if(safe_str_eq(value, "ignore")) {
 		data_set->no_quorum_policy = no_quorum_ignore;
 		
@@ -159,25 +163,25 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 			crm_info("On loss of CCM Quorum: Stop ALL resources");
 			break;
 		case no_quorum_ignore:
-			crm_warn("On loss of CCM Quorum: Ignore");
+			crm_notice("On loss of CCM Quorum: Ignore");
 			break;
 	}
 
-	value = g_hash_table_lookup(config_hash, "stop_orphan_resources");
+	get_cluster_pref("stop_orphan_resources");
 	if(value != NULL) {
 		cl_str_to_boolean(value, &data_set->stop_rsc_orphans);
 	}
 	crm_info("Orphan resources are %s",
 		 data_set->stop_rsc_orphans?"stopped":"ignored");	
 	
-	value = g_hash_table_lookup(config_hash, "stop_orphan_actions");
+	get_cluster_pref("stop_orphan_actions");
 	if(value != NULL) {
 		cl_str_to_boolean(value, &data_set->stop_action_orphans);
 	}
 	crm_info("Orphan resource actions are %s",
 		 data_set->stop_action_orphans?"stopped":"ignored");	
 
-	value = g_hash_table_lookup(config_hash, "is_managed_default");
+	get_cluster_pref("is_managed_default");
 	if(value != NULL) {
 		cl_str_to_boolean(value, &data_set->is_managed_default);
 	}
@@ -198,7 +202,6 @@ param_value(GHashTable *hash, crm_data_t * parent, const char *name)
 	}
 	
 	if(a_default == NULL) {
-		crm_debug("Option %s not set", name);
 		return NULL;
 	}
 	
@@ -233,11 +236,11 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 		crm_debug_3("Processing node %s/%s", uname, id);
 
 		if(id == NULL) {
-			pe_err("Must specify id tag in <node>");
+			pe_config_err("Must specify id tag in <node>");
 			continue;
 		}
 		if(type == NULL) {
-			pe_err("Must specify type tag in <node>");
+			pe_config_err("Must specify type tag in <node>");
 			continue;
 		}
 		crm_malloc0(new_node, sizeof(node_t));
@@ -328,9 +331,9 @@ unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
 				print_resource("Added", new_rsc, FALSE));
 
 		} else {
-			pe_err("Failed unpacking %s %s",
-			       crm_element_name(xml_obj),
-			       crm_element_value(xml_obj, XML_ATTR_ID));
+			pe_config_err("Failed unpacking %s %s",
+				      crm_element_name(xml_obj),
+				      crm_element_value(xml_obj, XML_ATTR_ID));
 		}
 		);
 	
@@ -351,7 +354,7 @@ unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
 
 		const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
 		if(id == NULL) {
-			pe_err("Constraint <%s...> must have an id",
+			pe_config_err("Constraint <%s...> must have an id",
 				crm_element_name(xml_obj));
 			continue;
 		}
@@ -423,8 +426,8 @@ unpack_status(crm_data_t * status, pe_working_set_t *data_set)
 			continue;
 
 		} else if(this_node == NULL) {
-			crm_warn("Node %s in status section no longer exists",
-				uname);
+			pe_config_warn("Node %s in status section no longer exists",
+				       uname);
 			continue;
 		}
 
@@ -474,7 +477,7 @@ determine_online_status(
 		crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
 
 	if(this_node == NULL) {
-		crm_err("No node to check");
+		pe_config_err("No node to check");
 		return online;
 	}
 
@@ -558,7 +561,7 @@ determine_online_status(
 	}
 
 	if(this_node->details->unclean) {
-		pe_warn("Node %s is unclean", uname);
+		pe_proc_warn("Node %s is unclean", uname);
 	}
 
 	if(this_node->details->shutdown) {
@@ -716,8 +719,8 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 
 			crm_log_xml_info(rsc_entry, "Orphan resource");
 
-			pe_warn("Nothing known about resource"
-				" %s running on %s", rsc_id, node_id);
+			pe_config_warn("Nothing known about resource"
+				       " %s running on %s", rsc_id, node_id);
 			
 			copy_in_properties(xml_rsc, rsc_entry);
 			
@@ -732,10 +735,8 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 				rsc->is_managed = FALSE;
 
 			} else {
-
 				crm_info("Making sure orphan %s is stopped",
 					 rsc_id);
-				
 			
 				crm_action_debug_3(
 					print_resource(
@@ -1073,11 +1074,11 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		if(interval > 0 && op_match == NULL) {
 			if(data_set->stop_action_orphans == FALSE) {
 				/* create a cancel action */
-				crm_info("Ignoring orphan action: %s", id);
+				pe_config_warn("Ignoring orphan action: %s", id);
 				return TRUE;
 			}
 
-			crm_info("Orphan action will be stopped: %s", id);
+			pe_config_warn("Orphan action will be stopped: %s", id);
 
 			action = custom_action(
 				rsc, crm_strdup(id), CRMD_ACTION_CANCEL, node,
@@ -1113,7 +1114,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		
  		pdiff = diff_xml_object(params, pnow, TRUE);
 		if(pdiff != NULL) {
-			crm_err("Parameters to %s action changed", id);
+			crm_info("Parameters to %s action changed", id);
 			log_xml_diff(LOG_INFO, pdiff, __FUNCTION__);
 
 			custom_action(rsc, crm_strdup(id), task, NULL,
@@ -1391,8 +1392,12 @@ rsc_colocation_new(const char *id, enum con_strength strength,
 	rsc_colocation_t *new_con      = NULL;
  	rsc_colocation_t *inverted_con = NULL; 
 
-	if(rsc_lh == NULL || rsc_rh == NULL){
-		/* error */
+	if(rsc_lh == NULL){
+		pe_config_err("No resource found for LHS %s", id);
+		return FALSE;
+
+	} else if(rsc_rh == NULL){
+		pe_config_err("No resource found for RHS of %s", id);
 		return FALSE;
 	}
 
@@ -1442,9 +1447,9 @@ custom_action_order(
 
 	if((lh_action == NULL && lh_rsc == NULL)
 	   || (rh_action == NULL && rh_rsc == NULL)){
-		pe_err("Invalid inputs lh_rsc=%p, lh_a=%p,"
-			" rh_rsc=%p, rh_a=%p",
-			lh_rsc, lh_action, rh_rsc, rh_action);
+		pe_config_err("Invalid inputs lh_rsc=%p, lh_a=%p,"
+			      " rh_rsc=%p, rh_a=%p",
+			      lh_rsc, lh_action, rh_rsc, rh_action);
 		crm_free(lh_action_task);
 		crm_free(rh_action_task);
 		return FALSE;
@@ -1513,11 +1518,11 @@ unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	resource_t *rsc_rh = pe_find_resource(data_set->resources, id_rh);
  
 	if(rsc_lh == NULL) {
-		pe_err("No resource (con=%s, rsc=%s)", id, id_lh);
+		pe_config_err("No resource (con=%s, rsc=%s)", id, id_lh);
 		return FALSE;
 		
 	} else if(rsc_rh == NULL) {
-		pe_err("No resource (con=%s, rsc=%s)", id, id_rh);
+		pe_config_err("No resource (con=%s, rsc=%s)", id, id_rh);
 		return FALSE;
 	}
 
@@ -1580,17 +1585,17 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	resource_t *rsc_rh   = NULL;
 
 	if(xml_obj == NULL) {
-		pe_err("No constraint object to process.");
+		pe_config_err("No constraint object to process.");
 		return FALSE;
 
 	} else if(id == NULL) {
-		pe_err("%s constraint must have an id",
+		pe_config_err("%s constraint must have an id",
 			crm_element_name(xml_obj));
 		return FALSE;
 		
 	} else if(id_lh == NULL || id_rh == NULL) {
-		pe_err("Constraint %s needs two sides lh: %s rh: %s",
-		       id, crm_str(id_lh), crm_str(id_rh));
+		pe_config_err("Constraint %s needs two sides lh: %s rh: %s",
+			      id, crm_str(id_lh), crm_str(id_rh));
 		return FALSE;
 	}
 
@@ -1623,11 +1628,11 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	rsc_rh   = pe_find_resource(data_set->resources, id_lh);
 
 	if(rsc_lh == NULL) {
-		pe_err("Constraint %s: no resource found for %s", id, id_lh);
+		pe_config_err("Constraint %s: no resource found for LHS of %s", id, id_lh);
 		return FALSE;
 	
 	} else if(rsc_rh == NULL) {
-		pe_err("Constraint %s: no resource found for %s", id, id_rh);
+		pe_config_err("Constraint %s: no resource found for RHS of %s", id, id_rh);
 		return FALSE;
 	}
 
@@ -1706,7 +1711,7 @@ unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	resource_t *rsc_lh  = pe_find_resource(data_set->resources, id_lh);
 	
 	if(rsc_lh == NULL) {
-		pe_warn("No resource (con=%s, rsc=%s)", id, id_lh);
+		pe_config_err("No resource (con=%s, rsc=%s)", id, id_lh);
 		return FALSE;
 
 	} else if(rsc_lh->is_managed == FALSE) {

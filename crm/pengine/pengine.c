@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.93 2005/09/30 13:01:15 andrew Exp $ */
+/* $Id: pengine.c,v 1.94 2005/10/14 08:29:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,6 +37,8 @@ crm_data_t * do_calculations(
 
 gboolean was_processing_error = FALSE;
 gboolean was_processing_warning = FALSE;
+gboolean was_config_error = FALSE;
+gboolean was_config_warning = FALSE;
 
 gboolean
 process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
@@ -131,6 +133,15 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 			crm_log_xml_debug_2(log_input, "[input]");
 		}
 
+		if(was_config_error) {
+			crm_info("Configuration ERRORs found during PE processing."
+			       "  Please run \"crm_verify -L\" to identify issues.");
+
+		} else if(was_processing_warning) {
+			crm_info("Configuration WARNINGs found during PE processing."
+				 "  Please run \"crm_verify -L\" to identify issues.");
+		}
+		
 		free_xml(generation);
 
 		

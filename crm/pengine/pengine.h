@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.98 2005/10/12 18:59:28 andrew Exp $ */
+/* $Id: pengine.h,v 1.99 2005/10/14 08:29:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -463,8 +463,12 @@ extern gboolean custom_action_order(
 			    rsc2, stop_key(rsc2) ,NULL,		\
 			    type, data_set)
 
-#define pe_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
-#define pe_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
+#define pe_err(fmt...) { was_processing_error = TRUE; was_config_error = TRUE; crm_err(fmt); }
+#define pe_warn(fmt...) { was_processing_warning = TRUE; was_config_warning = TRUE; crm_warn(fmt); }
+#define pe_proc_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
+#define pe_proc_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
+#define pe_config_err(fmt...) { was_config_error = TRUE; crm_err(fmt); }
+#define pe_config_warn(fmt...) { was_config_warning = TRUE; crm_warn(fmt); }
 
 extern gboolean process_colored_constraints(resource_t *rsc);
 extern void graph_element_from_action(
@@ -475,6 +479,8 @@ extern void cleanup_calculations(pe_working_set_t *data_set);
 extern const char* transition_idle_timeout;
 extern gboolean was_processing_error;
 extern gboolean was_processing_warning;
+extern gboolean was_config_error;
+extern gboolean was_config_warning;
 
 #endif
 
