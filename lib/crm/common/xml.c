@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.41 2005/10/14 08:27:34 andrew Exp $ */
+/* $Id: xml.c,v 1.42 2005/10/17 19:13:48 gshi Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -643,7 +643,7 @@ print_xml_formatted(int log_level, const char *function,
 }
 
 crm_data_t *
-get_message_xml(const HA_Message *msg, const char *field) 
+get_message_xml(HA_Message *msg, const char *field) 
 {
 	crm_data_t *xml_node = NULL;
 	crm_data_t *tmp_node = NULL;

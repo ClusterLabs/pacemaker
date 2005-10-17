@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.82 2005/10/12 18:28:22 andrew Exp $ */
+/* $Id: callbacks.c,v 1.83 2005/10/17 19:13:47 gshi Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -52,11 +52,11 @@ gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
 gboolean cib_msg_timeout(gpointer data);
 void cib_GHFunc(gpointer key, gpointer value, gpointer user_data);
 gboolean can_write(int flags);
-HA_Message *cib_msg_copy(const HA_Message *msg, gboolean with_data);
+HA_Message *cib_msg_copy(HA_Message *msg, gboolean with_data);
 gboolean ccm_manual_check(gpointer data);
 extern enum cib_errors revision_check(crm_data_t *cib_update, crm_data_t *cib_copy, int flags);
 void send_cib_replace(const HA_Message *sync_request, const char *host);
-void cib_process_request(const HA_Message *request, gboolean privileged,
+void cib_process_request(HA_Message *request, gboolean privileged,
 			 gboolean from_peer, cib_client_t *cib_client);
 
 gboolean syncd_once = FALSE;
@@ -115,7 +115,7 @@ cib_operation_t cib_server_ops[] = {
 int send_via_callback_channel(HA_Message *msg, const char *token);
 
 enum cib_errors cib_process_command(
-	const HA_Message *request, HA_Message **reply,
+	HA_Message *request, HA_Message **reply,
 	crm_data_t **cib_diff, gboolean privileged);
 
 gboolean cib_common_callback(
@@ -432,7 +432,7 @@ cib_common_callback(
 }
 
 void
-cib_process_request(const HA_Message *request, gboolean privileged,
+cib_process_request(HA_Message *request, gboolean privileged,
 		    gboolean from_peer, cib_client_t *cib_client) 
 {
 	int call_type    = 0;
@@ -751,7 +751,7 @@ cib_process_request(const HA_Message *request, gboolean privileged,
 }
 
 enum cib_errors
-cib_process_command(const HA_Message *request, HA_Message **reply,
+cib_process_command(HA_Message *request, HA_Message **reply,
 		    crm_data_t **cib_diff, gboolean privileged)
 {
 	crm_data_t *output   = NULL;
@@ -1148,7 +1148,7 @@ cib_ha_dispatch(IPC_Channel *channel, gpointer user_data)
 }
 
 void
-cib_peer_callback(const HA_Message * msg, void* private_data)
+cib_peer_callback(HA_Message * msg, void* private_data)
 {
 	int call_type = 0;
 	const char *originator = cl_get_string(msg, F_ORIG);
@@ -1185,7 +1185,7 @@ cib_peer_callback(const HA_Message * msg, void* private_data)
 }
 
 HA_Message *
-cib_msg_copy(const HA_Message *msg, gboolean with_data) 
+cib_msg_copy(HA_Message *msg, gboolean with_data) 
 {
 	int lpc = 0;
 	const char *field = NULL;

@@ -79,7 +79,7 @@ crmd_ha_msg_dispatch(IPC_Channel *channel, gpointer user_data)
 
 
 void
-crmd_ha_msg_callback(const HA_Message * msg, void* private_data)
+crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 {
 	ha_msg_input_t *new_input = NULL;
 	oc_node_t *from_node = NULL;

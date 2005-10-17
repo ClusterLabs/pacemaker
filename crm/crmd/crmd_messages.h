@@ -78,7 +78,7 @@ gboolean have_wait_message(void);
 extern gboolean relay_message(
 	HA_Message *relay_message, gboolean originated_locally);
 
-extern void crmd_ha_msg_callback(const HA_Message * msg, void* private_data);
+extern void crmd_ha_msg_callback(HA_Message * msg, void* private_data);
 
 extern gboolean crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data);
 

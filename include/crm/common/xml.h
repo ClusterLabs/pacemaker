@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.33 2005/10/14 08:27:34 andrew Exp $ */
+/* $Id: xml.h,v 1.34 2005/10/17 19:13:48 gshi Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,7 +43,7 @@
 
 extern gboolean add_message_xml(
 	HA_Message *msg, const char *field, const crm_data_t *xml);
-extern crm_data_t *get_message_xml(const HA_Message *msg, const char *field);
+extern crm_data_t *get_message_xml(HA_Message *msg, const char *field);
 extern GHashTable *xml2list(crm_data_t *parent);
 #if CRM_DEPRECATED_SINCE_2_0_3
 extern GHashTable *xml2list_202(crm_data_t *parent);
