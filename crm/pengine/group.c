@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.43 2005/09/26 07:44:44 andrew Exp $ */
+/* $Id: group.c,v 1.44 2005/10/17 10:57:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -84,6 +84,7 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		set_id(xml_native_rsc, group_data->self->id, -1);
 		if(common_unpack(xml_native_rsc, &new_rsc,
 				 group_data->self->parameters, data_set)) {
+			new_rsc->parent = rsc;
 			group_data->num_children++;
 			group_data->child_list = g_list_append(
 				group_data->child_list, new_rsc);

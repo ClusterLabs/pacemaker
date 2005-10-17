@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.93 2005/10/13 12:18:48 andrew Exp $ */
+/* $Id: native.c,v 1.94 2005/10/17 10:57:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -104,10 +104,13 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		);
 	
 	rsc->running_on = g_list_append(rsc->running_on, node);
-	node->details->running_rsc = g_list_append(
-		node->details->running_rsc, rsc);
-
-	if(rsc->is_managed == FALSE) {
+	if(rsc->variant == pe_native) {
+		node->details->running_rsc = g_list_append(
+			node->details->running_rsc, rsc);
+	}
+	
+	if(rsc->variant != pe_native) {
+	} else if(rsc->is_managed == FALSE) {
 		crm_info("resource %s isnt managed", rsc->id);
 		rsc2node_new(
 			"not_managed_default", rsc, INFINITY, node, data_set);
@@ -119,7 +122,7 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 			 rsc->id, node->details->uname, node->details->id);
 	}
 	
-	if(g_list_length(rsc->running_on) > 1) {
+	if(rsc->variant == pe_native && g_list_length(rsc->running_on) > 1) {
 		pe_warn("Resource %s is (potentially) active on %d nodes."
 			 "  Latest: %s/%s", rsc->id,
 			 g_list_length(rsc->running_on),
@@ -134,6 +137,10 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 	} else {
 		crm_debug_2("Resource %s is active on: %s",
 			    rsc->id, node->details->uname);
+	}
+	
+	if(rsc->parent != NULL) {
+		native_add_running(rsc->parent, node, data_set);
 	}
 	
 }
