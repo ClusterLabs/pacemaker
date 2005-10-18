@@ -1,4 +1,4 @@
-/* $Id: notify.h,v 1.4 2005/05/31 11:32:39 andrew Exp $ */
+/* $Id: notify.h,v 1.5 2005/10/18 11:41:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -27,12 +27,14 @@
 
 extern FILE *msg_cib_strm;
 
-void cib_pre_notify(
+extern void cib_pre_notify(
 	int options, const char *op, crm_data_t *existing, crm_data_t *update);
 
-void cib_post_notify(int options, const char *op, crm_data_t *update,
-		     enum cib_errors result, crm_data_t *new_obj);
+extern void cib_post_notify(int options, const char *op, crm_data_t *update,
+			    enum cib_errors result, crm_data_t *new_obj);
 
 
-void cib_diff_notify(int options, const char *op, crm_data_t *update,
-		     enum cib_errors result, crm_data_t *old_cib);
+extern void cib_diff_notify(int options, const char *op, crm_data_t *update,
+			    enum cib_errors result, crm_data_t *old_cib);
+
+extern void cib_replace_notify(crm_data_t *update, enum cib_errors result, crm_data_t *diff);

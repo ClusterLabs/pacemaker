@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.30 2005/07/19 19:11:28 andrew Exp $ */
+/* $Id: notify.c,v 1.31 2005/10/18 11:41:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -65,6 +65,7 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	gboolean is_pre = FALSE;
 	gboolean is_post = FALSE;	
 	gboolean is_confirm = FALSE;
+	gboolean is_replace = FALSE;
 	gboolean is_diff = FALSE;
 	gboolean do_send = FALSE;
 
@@ -101,6 +102,9 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 
 	} else if(safe_str_eq(type, T_CIB_DIFF_NOTIFY)) {
 		is_diff = TRUE;
+
+	} else if(safe_str_eq(type, T_CIB_REPLACE_NOTIFY)) {
+		is_replace = TRUE;
 	}
 
 	ipc_client = client->channel;
@@ -134,6 +138,9 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 		do_send = TRUE;
 
 	} else if(client->confirmations && is_confirm) {
+		do_send = TRUE;
+
+	} else if(client->replace && is_replace) {
 		do_send = TRUE;
 	}
 
@@ -359,4 +366,46 @@ attach_cib_generation(HA_Message *msg, const char *field, crm_data_t *a_cib)
 	}
 	add_message_xml(msg, field, generation);
 	free_xml(generation);
+}
+
+void
+cib_replace_notify(crm_data_t *update, enum cib_errors result, crm_data_t *diff) 
+{
+	HA_Message *replace_msg = NULL;
+	int add_updates = 0;
+	int add_epoch  = 0;
+	int add_admin_epoch = 0;
+
+	int del_updates = 0;
+	int del_epoch  = 0;
+	int del_admin_epoch = 0;
+
+	if(diff == NULL) {
+		return;
+	}
+	
+	cib_diff_version_details(
+		diff, &add_admin_epoch, &add_epoch, &add_updates, 
+		&del_admin_epoch, &del_epoch, &del_updates);
+
+	if(add_updates != del_updates) {
+		crm_debug("Replaced: %d.%d.%d -> %d.%d.%d",
+			  del_admin_epoch, del_epoch, del_updates,
+			  add_admin_epoch, add_epoch, add_updates);
+	} else if(diff != NULL) {
+		crm_debug("Local-only Replace: %d.%d.%d",
+			  add_admin_epoch, add_epoch, add_updates);
+	}
+	
+	replace_msg = ha_msg_new(8);
+	ha_msg_add(replace_msg, F_TYPE, T_CIB_NOTIFY);
+	ha_msg_add(replace_msg, F_SUBTYPE, T_CIB_REPLACE_NOTIFY);
+	ha_msg_add(replace_msg, F_CIB_OPERATION, CIB_OP_REPLACE);
+	ha_msg_add_int(replace_msg, F_CIB_RC, result);
+	attach_cib_generation(replace_msg, "cib-replace-generation", update);
+
+	crm_log_message_adv(LOG_DEBUG,"CIB Replaced", replace_msg);
+	
+	g_hash_table_foreach(client_list, cib_notify_client, replace_msg);
+	crm_msg_del(replace_msg);
 }

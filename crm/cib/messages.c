@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.57 2005/10/12 18:28:22 andrew Exp $ */
+/* $Id: messages.c,v 1.58 2005/10/18 11:41:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,6 +43,7 @@
 #include <cibmessages.h>
 #include <cibprimatives.h>
 #include <callbacks.h>
+#include <notify.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -475,6 +476,7 @@ cib_process_replace(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
+	gboolean send_notify   = FALSE;
 	gboolean verbose       = FALSE;
 	enum cib_errors result = cib_ok;
 	
@@ -531,11 +533,23 @@ cib_process_replace(
 		}
 		sync_in_progress = 0;
 		*result_cib = copy_xml(input);
+		send_notify = TRUE;
 		
 	} else {
 		*result_cib = copy_xml(existing_cib);
 		result = replace_section(section, *result_cib, input);
+
+		if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+			send_notify = TRUE;
+		}
 	}
+
+	if(send_notify) {
+		crm_data_t *local_diff = NULL;
+		local_diff = diff_cib_object(existing_cib, *result_cib, FALSE);
+		cib_replace_notify(*result_cib, result, local_diff);
+		free_xml(local_diff);
+	}	
 
 	if(result == cib_ok && section != NULL) {
 		cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, FALSE);

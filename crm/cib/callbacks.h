@@ -1,4 +1,4 @@
-/* $Id: callbacks.h,v 1.11 2005/10/17 19:13:47 gshi Exp $ */
+/* $Id: callbacks.h,v 1.12 2005/10/18 11:41:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,6 +51,7 @@ typedef struct cib_client_s
 		int pre_notify;
 		int post_notify;
 		int confirmations;
+		int replace;
 		int diffs;
 		
 		GList *delegated_calls;
