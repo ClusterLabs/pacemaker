@@ -146,6 +146,7 @@ class LinuxHAv2(HeartbeatCM):
        <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
          <operations>
            <op id="DcIPaddr-1" name="monitor" interval="5s" timeout="20s"/>
+           <op id="DcIPaddr-2" name="start" timeout="40s"/>
          </operations>
          <instance_attributes>
            <attributes>
@@ -176,6 +177,52 @@ class LinuxHAv2(HeartbeatCM):
           <expression id="dc_ip_expr" attribute="#is_dc" operation="eq" value="false"/>
         </rule>
       </rsc_location>'''
+
+	    fields = string.split(self.Env["IPBase"], '.')
+	    fields[3] = str(int(fields[3])+1)
+	    ip1 = string.join(fields, '.')
+	    fields[3] = str(int(fields[3])+1)
+	    ip2 = string.join(fields, '.')
+	    fields[3] = str(int(fields[3])+1)
+	    ip3 = string.join(fields, '.')
+	    self.Env["IPBase"] = ip3
+	    group_resource=("""
+       <group id="group-1">
+         <primitive id="%s" class="ocf" type="IPaddr" provider="heartbeat">
+           <operations>
+             <op id="%s-1" name="monitor" interval="5s" timeout="20s"/>
+           </operations>
+           <instance_attributes>
+             <attributes>
+               <nvpair id="%s-1" name="ip" value="%s"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+         <primitive id="%s" class="ocf" type="IPaddr" provider="heartbeat">
+           <operations>
+             <op id="%s-1" name="monitor" interval="5s" timeout="20s"/>
+           </operations>
+           <instance_attributes>
+             <attributes>
+               <nvpair id="%s-1" name="ip" value="%s"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+         <primitive id="%s" class="ocf" type="IPaddr" provider="heartbeat">
+           <operations>
+             <op id="%s-1" name="monitor" interval="5s" timeout="20s"/>
+           </operations>
+           <instance_attributes>
+             <attributes>
+               <nvpair id="%s-1" name="ip" value="%s"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+	</group>""" %  ("child_"+ip1, "child_"+ip1, "child_"+ip1, ip1,
+			"child_"+ip2, "child_"+ip2, "child_"+ip2, ip2,
+			"child_"+ip3, "child_"+ip3, "child_"+ip3, ip3))
+	    resources = resources + group_resource
+
             if self.cluster_monitor == 1:
                 constraints=constraints+'''
       <rsc_location id="run_cluster_mon" rsc="cluster_mon">
@@ -193,13 +240,14 @@ class LinuxHAv2(HeartbeatCM):
        <primitive id="%s" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
          <operations>
            <op id="%s-1" name="monitor" interval="5s" timeout="20s"/>
+           <op id="%s-2" name="start" timeout="40s"/>
          </operations>
          <instance_attributes>
            <attributes>
              <nvpair id="%s-1" name="ip" value="%s"/>
            </attributes>
          </instance_attributes>
-       </primitive>""" %("rsc_"+node, "rsc_"+node, "rsc_"+node, ip))
+       </primitive>""" %("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, ip))
                 resources = resources + node_resource
                 node_constraint=("""
       <rsc_location id="run_%s" rsc="%s">
