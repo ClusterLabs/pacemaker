@@ -13,6 +13,20 @@
     <resources>
       <primitive id="rsc1" class="heartbeat" type="apache" on_stopfail="block" start_prereq="quorum"/>
       <primitive id="rsc2" class="heartbeat" type="apache" on_stopfail="block" start_prereq="fencing"/>
+      <group id="group1">
+	<operations>
+	  <op id="1" name="start" prereq="quorum"/>
+	</operations>
+	<primitive id="rsc3" class="heartbeat" type="apache"/>
+	<primitive id="rsc4" class="heartbeat" type="apache"/>
+      </group>
+      <group id="group2">
+	<operations>
+	  <op id="2" name="start" prereq="fencing"/>
+	</operations>
+	<primitive id="rsc5" class="heartbeat" type="apache"/>
+	<primitive id="rsc6" class="heartbeat" type="apache"/>
+      </group>
     </resources>
     <constraints/>
   </configuration>

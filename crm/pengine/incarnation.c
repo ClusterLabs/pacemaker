@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.59 2005/10/07 16:02:02 andrew Exp $ */
+/* $Id: incarnation.c,v 1.60 2005/10/18 14:51:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -115,7 +115,7 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	int lpc = 0;
 	crm_data_t * xml_tmp = NULL;
 	crm_data_t * xml_obj = rsc->xml;
-	crm_data_t * xml_self = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
+	crm_data_t *xml_self = copy_xml(rsc->xml);
 	clone_variant_data_t *clone_data = NULL;
 	resource_t *self = NULL;
 
@@ -142,7 +142,7 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	clone_data->clone_node_max = crm_atoi(max_clones_node,"1");
 	
 	/* this is a bit of a hack - but simplifies everything else */
-	copy_in_properties(xml_self, xml_obj);
+	ha_msg_mod(xml_self, F_XML_TAGNAME, XML_CIB_TAG_RESOURCE);
 /* 	set_id(xml_self, "self", -1); */
 	xml_tmp = find_xml_node(xml_obj, "operations", FALSE);
 	if(xml_tmp != NULL) {
@@ -488,6 +488,8 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				   NULL, last_stop_rsc, data_set);
 
 	clone_create_notifications(rsc, action, action_complete, data_set);	
+
+	rsc->actions = clone_data->self->actions;	
 }
 
 void

@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.45 2005/10/18 13:04:01 andrew Exp $ */
+/* $Id: group.c,v 1.46 2005/10/18 14:51:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,7 +51,7 @@ typedef struct group_variant_data_s
 void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
 	crm_data_t *xml_obj = rsc->xml;
-	crm_data_t *xml_self = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
+	crm_data_t *xml_self = copy_xml(rsc->xml);
 	group_variant_data_t *group_data = NULL;
 	resource_t *self = NULL;
 
@@ -66,8 +66,9 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	group_data->last_child   = NULL;
 
 	/* this is a bit of a hack - but simplifies everything else */
-	copy_in_properties(xml_self, xml_obj);
+	ha_msg_mod(xml_self, F_XML_TAGNAME, XML_CIB_TAG_RESOURCE);
 /* 	set_id(xml_self, "self", -1); */
+
 	if(common_unpack(xml_self, &self, NULL,  data_set)) {
 		group_data->self = self;
 		self->restart_type = pe_restart_restart;
@@ -173,6 +174,8 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 			   CRMD_ACTION_STOPPED, NULL,
 			   !group_data->child_stopping, TRUE, data_set);
 	op->pseudo   = TRUE;
+
+	rsc->actions = group_data->self->actions;
 }
 
 void
