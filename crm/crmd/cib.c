@@ -102,6 +102,16 @@ revision_check_callback(const HA_Message *msg, int call_id, int rc,
 	}
 }
 
+static void
+do_cib_replaced(const char *event, HA_Message *msg)
+{
+	crm_info("Updating the CIB after a replace");
+	do_update_cib_nodes(NULL, FALSE);
+	fsa_cluster_conn->llc_ops->client_status(
+		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
+}
+
+
 /*	 A_CIB_STOP, A_CIB_START, A_CIB_RESTART,	*/
 enum crmd_fsa_input
 do_cib_control(long long action,
@@ -138,10 +148,14 @@ do_cib_control(long long action,
 					  fsa_cib_conn, crmd_cib_op_callback)) {
 				crm_err("Could not set op callback");
 #endif
-			} else if(fsa_cib_conn->cmds->set_connection_dnotify(
-					  fsa_cib_conn,
-					  crmd_cib_connection_destroy)!=cib_ok){
+			} else if(cib_ok != fsa_cib_conn->cmds->set_connection_dnotify(
+					  fsa_cib_conn, crmd_cib_connection_destroy)) {
 				crm_err("Could not set dnotify callback");
+
+			} else if(cib_ok != fsa_cib_conn->cmds->add_notify_callback(
+					  fsa_cib_conn, T_CIB_REPLACE_NOTIFY,
+					  do_cib_replaced)) {
+				crm_err("Could not set CIB notification callback");
 
 			} else {
 				set_bit_inplace(
