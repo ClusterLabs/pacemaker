@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.44 2005/10/17 10:57:11 andrew Exp $ */
+/* $Id: group.c,v 1.45 2005/10/18 13:04:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -190,9 +190,9 @@ group_update_pseudo_status(resource_t *parent, resource_t *child)
 		if(action->optional) {
 			continue;
 		}
-		if(safe_str_eq(CRMD_ACTION_STOP, action->task)) {
+		if(safe_str_eq(CRMD_ACTION_STOP, action->task) && action->runnable) {
 			group_data->child_stopping = TRUE;
-		} else if(safe_str_eq(CRMD_ACTION_START, action->task)) {
+		} else if(safe_str_eq(CRMD_ACTION_START, action->task) && action->runnable) {
 			group_data->child_starting = TRUE;
 		}
 		
