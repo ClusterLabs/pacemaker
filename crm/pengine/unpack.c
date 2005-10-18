@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.138 2005/10/14 08:29:26 andrew Exp $ */
+/* $Id: unpack.c,v 1.139 2005/10/18 11:48:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -181,6 +181,13 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 	crm_info("Orphan resource actions are %s",
 		 data_set->stop_action_orphans?"stopped":"ignored");	
 
+	get_cluster_pref("remove_after_stop");
+	if(value != NULL) {
+		cl_str_to_boolean(value, &data_set->remove_after_stop);
+	}
+	crm_info("Orphan resource actions are %s",
+		 data_set->remove_after_stop?"true":"false");	
+	
 	get_cluster_pref("is_managed_default");
 	if(value != NULL) {
 		cl_str_to_boolean(value, &data_set->is_managed_default);
@@ -631,6 +638,7 @@ increment_clone(char *last_rsc_id)
 	}
 }
 
+extern gboolean DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set);
 
 gboolean
 unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
@@ -808,6 +816,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 		crm_info("Resource %s is %s on %s",
 			 rsc->id, role2text(rsc->role), node->details->uname);
 
+		rsc->known_on = g_list_append(rsc->known_on, node);
  		if(rsc->role != RSC_ROLE_STOPPED) { 
 			crm_debug_2("Adding %s to %s", rsc->id, node->details->uname);
 			native_add_running(rsc, node, data_set);
@@ -820,36 +829,14 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 				);
 			crm_free(key);
 			
-			if(rsc->failed == FALSE && node->details->online) {
-				delete_resource = TRUE;
-			}			
+/* 			if(rsc->failed == FALSE && node->details->online) { */
+/* 				delete_resource = TRUE; */
+/* 			}			 */
 		}
 
 		if(delete_resource) {
-			action_t *delete = NULL;
-			char *stop = stop_key(rsc);
-			char *start = start_key(rsc);
-			char *probe = generate_op_key(
-				rsc->id, CRMD_ACTION_STATUS, 0);
-
-			delete = delete_action(rsc, node);
-			
-			crm_info("Removing %s from %s",
-				 rsc->id, node->details->uname);
-
-			custom_action_order(
-				rsc, NULL, delete, rsc, start, NULL, 
-				pe_ordering_manditory, data_set);
-			
-			custom_action_order(
-				rsc, stop, NULL, rsc, NULL, delete,
-				pe_ordering_optional, data_set);
-			
-			custom_action_order(
-				rsc, probe, NULL, rsc, NULL, delete,
-				pe_ordering_optional, data_set);
+			DeleteRsc(rsc, node, data_set);
 		}
-		
 		
 		if(saved_role > rsc->role) {
 			rsc->role = saved_role;
@@ -1711,7 +1698,8 @@ unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	resource_t *rsc_lh  = pe_find_resource(data_set->resources, id_lh);
 	
 	if(rsc_lh == NULL) {
-		pe_config_err("No resource (con=%s, rsc=%s)", id, id_lh);
+		/* only a warn as BSC adds the constraint then the resource */
+		pe_config_warn("No resource (con=%s, rsc=%s)", id, id_lh);
 		return FALSE;
 
 	} else if(rsc_lh->is_managed == FALSE) {

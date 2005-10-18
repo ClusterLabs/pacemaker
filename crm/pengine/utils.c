@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.115 2005/10/12 18:59:28 andrew Exp $ */
+/* $Id: utils.c,v 1.116 2005/10/18 11:48:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1128,6 +1128,8 @@ text2task(const char *task)
 		return no_action;
 	} else if(safe_str_eq(task, CRM_OP_PROBED)) {
 		return no_action;
+	} else if(safe_str_eq(task, CRM_OP_LRM_REFRESH)) {
+		return no_action;	
 	} 
 	pe_err("Unsupported action: %s", task);
 	return no_action;

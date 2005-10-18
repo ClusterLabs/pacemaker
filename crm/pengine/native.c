@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.94 2005/10/17 10:57:11 andrew Exp $ */
+/* $Id: native.c,v 1.95 2005/10/18 11:48:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -22,6 +22,9 @@
 #include <pengine.h>
 #include <pe_utils.h>
 #include <crm/msg_xml.h>
+
+#define DELETE_ON_STOP 1
+#define DELETE_THEN_REFRESH 1
 
 extern color_t *add_color(resource_t *rh_resource, color_t *color);
 
@@ -50,6 +53,7 @@ void pe_post_notify(
 	resource_t *rsc, node_t *node, action_t *op, 
 	notify_data_t *n_data, pe_working_set_t *data_set);
 
+gboolean DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set);
 void NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *data_set);
 gboolean StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set);
 gboolean StartRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set);
@@ -1659,7 +1663,6 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *d
 {
 	action_t *start = NULL;
 	action_t *stop = NULL;
-	action_t *delete = NULL;
 
 	crm_debug("Executing: %s (role=%s)",rsc->id, role2text(rsc->next_role));
 
@@ -1676,11 +1679,8 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *d
 		stop = stop_action(rsc, current, FALSE);
 		start = start_action(rsc, next, FALSE);
 
-		if(rsc->failed == FALSE && stop->runnable) {
-			delete = delete_action(rsc, current);
-			custom_action_order(
-				rsc, NULL, stop, rsc, NULL, delete,
-				pe_ordering_manditory, data_set);
+		if(data_set->remove_after_stop) {
+			DeleteRsc(rsc, current, data_set);
 		}
 		
 	} else {
@@ -1727,7 +1727,6 @@ gboolean
 StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 {
 	action_t *stop = NULL;
-	action_t *delete = NULL;
 	
 	crm_debug_2("Executing: %s", rsc->id);
 	
@@ -1737,24 +1736,80 @@ StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 			 rsc->id, current->details->uname);
 		stop = stop_action(rsc, current, FALSE);
 
-		if(rsc->failed == FALSE && stop->runnable) {
-			char *probe = generate_op_key(
-				rsc->id, CRMD_ACTION_STATUS, 0);
-
-			delete = delete_action(rsc, current);
-
-			custom_action_order(
-				rsc, NULL, stop, rsc, NULL, delete,
-				pe_ordering_manditory, data_set);
-
-			custom_action_order(
-				rsc, probe, NULL, rsc, NULL, delete,
-				pe_ordering_manditory, data_set);
+		if(data_set->remove_after_stop) {
+			DeleteRsc(rsc, current, data_set);
 		}
 		);
 	
 	return TRUE;
 }
+
+gboolean
+DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
+{
+	action_t *delete = NULL;
+	action_t *refresh = NULL;
+
+	char *stop = stop_key(rsc);
+	char *start = start_key(rsc);
+	char *probe = NULL;
+
+	if(rsc->failed) {
+		crm_debug_2("Resource %s not deleted from %s: failed",
+			    rsc->name, node->details->uname);
+		return FALSE;
+		
+	} else if(node == NULL
+		  || node->details->unclean
+		  || node->details->online == FALSE) {
+		crm_debug_2("Resource %s not deleted from %s: unrunnable",
+			    rsc->name, node->details->uname);
+		return FALSE;
+	}
+
+	crm_info("Removing %s from %s",
+		 rsc->name, node->details->uname);
+	
+	delete = delete_action(rsc, node);
+	
+	custom_action_order(
+		rsc, stop, NULL, rsc, NULL, delete,
+		pe_ordering_optional, data_set);
+
+#if 0
+	probe = generate_op_key(rsc->id, CRMD_ACTION_STATUS, 0);
+	custom_action_order(
+		rsc, probe, NULL, rsc, NULL, delete,
+		pe_ordering_optional, data_set);
+#else
+	probe = NULL;	
+#endif
+
+#if DELETE_THEN_REFRESH
+	refresh = custom_action(
+		NULL, crm_strdup(CRM_OP_LRM_REFRESH), CRM_OP_LRM_REFRESH,
+		node, FALSE, TRUE, data_set);
+	add_hash_param(refresh->extra, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+
+	custom_action_order(
+		rsc, NULL, delete, NULL, NULL, refresh, 
+		pe_ordering_optional, data_set);
+
+	custom_action_order(
+		rsc, NULL, refresh, rsc, start, NULL, 
+		pe_ordering_manditory, data_set);
+
+#else
+	refresh = NULL;
+	custom_action_order(
+		rsc, NULL, delete, rsc, start, NULL, 
+		pe_ordering_manditory, data_set);
+	
+#endif
+	
+	return TRUE;
+}
+
 
 gboolean
 StartRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
@@ -1820,7 +1875,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	char *key = NULL;
 	char *target_rc = NULL;
 	action_t *probe = NULL;
-	node_t *running = pe_find_node_id(rsc->running_on, node->details->id);
+	node_t *running = pe_find_node_id(rsc->known_on, node->details->id);
 
 	if(running != NULL) {
 		/* we already know the status of the resource on this node */

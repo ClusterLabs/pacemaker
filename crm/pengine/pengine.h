@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.99 2005/10/14 08:29:26 andrew Exp $ */
+/* $Id: pengine.h,v 1.100 2005/10/18 11:48:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -95,6 +95,7 @@ typedef struct pe_working_set_s
 		gboolean symmetric_cluster;
 		gboolean is_managed_default;
 
+		gboolean remove_after_stop;
 		gboolean stop_rsc_orphans;
 		gboolean stop_action_orphans;
 
@@ -307,6 +308,7 @@ struct resource_s {
 		color_t *color;
 		GListPtr colors;	   /* color_t*  */
 		GListPtr running_on;       /* node_t*   */
+		GListPtr known_on;	   /* node_t* */
 		GListPtr allowed_nodes;    /* node_t*   */
 
 		enum rsc_role_e role;

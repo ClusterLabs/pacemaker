@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.69 2005/10/12 18:47:10 andrew Exp $ */
+/* $Id: graph.c,v 1.70 2005/10/18 11:48:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -348,6 +348,9 @@ action2xml(action_t *action, gboolean as_input)
 /* 		needs_node_info = FALSE; */
 		
 	} else if(safe_str_eq(action->task, CRM_OP_SHUTDOWN)) {
+		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
+
+	} else if(safe_str_eq(action->task, CRM_OP_LRM_REFRESH)) {
 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 
 /* 	} else if(safe_str_eq(action->task, CRMD_ACTION_PROBED)) { */

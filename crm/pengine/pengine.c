@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.95 2005/10/14 09:47:00 andrew Exp $ */
+/* $Id: pengine.c,v 1.96 2005/10/18 11:48:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -322,6 +322,7 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->no_quorum_policy  = no_quorum_freeze;
 	data_set->is_managed_default = TRUE;
 	
+	data_set->remove_after_stop = FALSE;
 	data_set->stop_action_orphans = TRUE;
 	data_set->stop_rsc_orphans = FALSE;
 	

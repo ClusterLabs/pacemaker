@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.68 2005/10/07 16:15:15 andrew Exp $ */
+/* $Id: complex.c,v 1.69 2005/10/18 11:48:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -389,6 +389,8 @@ void common_free(resource_t *rsc)
 	if(rsc->orphan) {
 		free_xml(rsc->xml);
 	}
+	pe_free_shallow_adv(rsc->running_on, FALSE);
+	pe_free_shallow_adv(rsc->known_on, FALSE);
 	pe_free_shallow_adv(rsc->candidate_colors, TRUE);
 	pe_free_shallow_adv(rsc->rsc_location, FALSE);
 	pe_free_shallow_adv(rsc->allowed_nodes, TRUE);
