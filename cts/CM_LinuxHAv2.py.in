@@ -55,8 +55,8 @@ class LinuxHAv2(HeartbeatCM):
             "DeadTime"       : 300,
             "StartTime"      : 300,        # Max time to start up
             "StableTime"     : 30,
-            "StartCmd"       : "/etc/init.d/heartbeat start > /dev/null 2>&1",
-            "StopCmd"        : "/etc/init.d/heartbeat stop  > /dev/null 2>&1",
+            "StartCmd"       : "@INITDIR@/heartbeat@INIT_EXT@ start > /dev/null 2>&1",
+            "StopCmd"        : "@INITDIR@/heartbeat@INIT_EXT@ stop  > /dev/null 2>&1",
             "ElectionCmd"    : "@sbindir@/crmadmin -E %s",
             "StatusCmd"      : "@sbindir@/crmadmin -S %s 2>/dev/null",
             "EpocheCmd"      : "@sbindir@/ccm_tool -e",
