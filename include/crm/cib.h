@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.35 2005/10/14 09:46:28 andrew Exp $ */
+/* $Id: cib.h,v 1.36 2005/10/18 11:35:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -177,6 +177,7 @@ enum cib_section {
 #define T_CIB_POST_NOTIFY	"cib_post_notify"
 #define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
 #define T_CIB_DIFF_NOTIFY	"cib_diff_notify"
+#define T_CIB_REPLACE_NOTIFY	"cib_refresh_notify"
 
 #define cib_channel_ro		"cib_ro"
 #define cib_channel_rw		"cib_rw"
@@ -347,7 +348,7 @@ extern gboolean cib_version_details(
 	crm_data_t *cib, int *admin_epoch, int *epoch, int *updates);
 
 extern enum cib_errors update_attr(
-	cib_t *the_cib,
+	cib_t *the_cib, int call_options,
 	const char *section, const char *node_uuid, const char *set_name,
 	const char *attr_id, const char *attr_name, const char *attr_value);
 

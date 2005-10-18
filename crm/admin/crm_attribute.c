@@ -1,4 +1,4 @@
-/* $Id: crm_attribute.c,v 1.4 2005/10/14 08:25:32 andrew Exp $ */
+/* $Id: crm_attribute.c,v 1.5 2005/10/18 11:35:12 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -304,7 +304,7 @@ main(int argc, char **argv)
 		CRM_DEV_ASSERT(attr_name != NULL);
 		CRM_DEV_ASSERT(attr_value != NULL);
 		
-		rc = update_attr(the_cib, type, dest_node, set_name,
+		rc = update_attr(the_cib, cib_sync_call, type, dest_node, set_name,
 				 attr_id, attr_name, attr_value);
 
 	} else {

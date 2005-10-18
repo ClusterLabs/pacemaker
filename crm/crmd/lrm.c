@@ -684,6 +684,9 @@ do_lrm_invoke(long long action,
 	if(safe_str_eq(crm_op, CRM_OP_LRM_DELETE)) {
 		operation = CRMD_ACTION_DELETE;
 
+	} else if(safe_str_eq(operation, CRM_OP_LRM_REFRESH)) {
+		crm_op = CRM_OP_LRM_REFRESH;
+
 	} else if(input->xml != NULL) {
 		operation = crm_element_value(input->xml, XML_LRM_ATTR_TASK);
 	}
@@ -720,7 +723,7 @@ do_lrm_invoke(long long action,
 			probed = XML_BOOLEAN_FALSE;
 		}
 		
-		update_attr(fsa_cib_conn, XML_CIB_TAG_STATUS, our_uuid,
+		update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_STATUS, our_uuid,
 			    attr_set, attr_id, CRM_OP_PROBED, probed);
 
 		crm_free(attr_id);
@@ -929,6 +932,8 @@ send_direct_ack(lrm_op_t* op, const char *rsc_id)
 
 	reply = create_request(CRM_OP_INVOKE_LRM, fragment, NULL,
 			       CRM_SYSTEM_TENGINE, CRM_SYSTEM_LRMD, NULL);
+
+	crm_debug("Sending ACK: %s", cl_get_string(reply, XML_ATTR_REFERENCE));
 
 	crm_log_xml_debug_2(update, "ACK Update");
 	crm_log_message_adv(LOG_DEBUG_3, "ACK Reply", reply);

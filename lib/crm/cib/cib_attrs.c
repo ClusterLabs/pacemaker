@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.5 2005/10/12 18:28:21 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.6 2005/10/18 11:35:12 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -41,7 +41,7 @@
 
 
 enum cib_errors 
-update_attr(cib_t *the_cib,
+update_attr(cib_t *the_cib, int call_options,
 	    const char *section, const char *node_uuid, const char *set_name,
 	    const char *attr_id, const char *attr_name, const char *attr_value)
 {
@@ -111,9 +111,15 @@ update_attr(cib_t *the_cib,
 	
 	free_xml(xml_top);
 	
-	rc = the_cib->cmds->update(the_cib, section, fragment, NULL,
-				   cib_sync_call|cib_quorum_override);
-	if(rc != cib_ok) {
+	rc = the_cib->cmds->update(
+		the_cib, section, fragment, NULL, call_options|cib_quorum_override);
+
+	if(rc == cib_diff_resync) {
+		/* this is an internal matter - the update succeeded */ 
+		rc = cib_ok;
+	}
+
+	if(rc < cib_ok) {
 		crm_err("Error setting %s=%s (section=%s, set=%s): %s",
 			attr_name, attr_value, section, crm_str(set_name),
 			cib_error2string(rc));
@@ -410,7 +416,7 @@ set_standby(cib_t *the_cib, const char *uuid, const char *scope,
 	enum cib_errors rc = cib_ok;
 	standby_common;
 
-	rc = update_attr(the_cib, type, uuid, set_name,
+	rc = update_attr(the_cib, cib_sync_call, type, uuid, set_name,
 			 attr_id, attr_name, standby_value);
 
 	crm_free(attr_id);
