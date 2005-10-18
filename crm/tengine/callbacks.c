@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.50 2005/10/12 18:46:25 andrew Exp $ */
+/* $Id: callbacks.c,v 1.51 2005/10/18 11:49:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -330,7 +330,6 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		  && safe_str_eq(sys_from, CRM_SYSTEM_LRMD)
 /* 		  && safe_str_eq(type, XML_ATTR_RESPONSE) */
 		){
-		crm_debug("Processing %s reply...", op);
 		xml_obj = find_xml_node(xml_data, XML_TAG_CIB, TRUE);
 		CRM_DEV_ASSERT(xml_obj != NULL);
 		if(xml_obj != NULL) {

@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.103 2005/10/12 18:28:22 andrew Exp $ */
+/* $Id: tengine.c,v 1.104 2005/10/18 11:49:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -329,23 +329,16 @@ match_down_event(const char *target, const char *filter, int rc)
 			if(action->type != action_type_crm) {
 				continue;
 
+			} else if(safe_str_eq(this_action, CRM_OP_LRM_REFRESH)){
+				continue;
+				
 			} else if(filter != NULL
 				  && safe_str_neq(this_action, filter)) {
 				continue;
 			}
 			
-			if(safe_str_eq(this_action, CRM_OP_FENCE)) {
-				this_node = crm_element_value(
-					action->xml, XML_LRM_ATTR_TARGET_UUID);
-
-			} else if(safe_str_eq(this_action, CRM_OP_SHUTDOWN)) {
-				this_node = crm_element_value(
-					action->xml, XML_LRM_ATTR_TARGET_UUID);
-			} else {
-				crm_err("Action %d : Bad action %s",
-					action->id, this_action);
-				continue;
-			}
+			this_node = crm_element_value(
+				action->xml, XML_LRM_ATTR_TARGET_UUID);
 
 			if(this_node == NULL) {
 				crm_log_xml_err(action->xml, "No node uuid");
@@ -358,6 +351,7 @@ match_down_event(const char *target, const char *filter, int rc)
 			}
 
 			match = action;
+			break;
 			);
 		if(match != NULL) {
 			break;
@@ -636,6 +630,7 @@ initiate_action(action_t *action)
 		if(safe_str_eq(task, CRMD_ACTION_START)
 		   || safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
 			cib_action_update(action, LRM_OP_PENDING);
+
 		} else {
 			cib_action_updated(NULL, 0, cib_ok, NULL, action);
 		}
@@ -649,7 +644,8 @@ initiate_action(action_t *action)
 	}
 
 	if(send_command) {
-		HA_Message *cmd = NULL;
+		char *value = NULL;
+		HA_Message *cmd = NULL;		
 		char *counter = crm_itoa(transition_counter);
 
 		cmd = create_request(msg_task, NULL, on_node, CRM_SYSTEM_CRMD,
@@ -660,11 +656,21 @@ initiate_action(action_t *action)
 		ret = send_ipc_message(crm_ch, cmd);
 		crm_free(counter);
 
-		if(ret && action->timeout > 0) {
+		value = g_hash_table_lookup(action->params, XML_ATTR_TE_NOWAIT);
+		if(ret == FALSE) {
+			crm_err("Action %d failed: send", action->id);
+
+		} else if(crm_is_true(value)) {
+			crm_info("Skipping wait for %d", action->id);
+			action->complete = TRUE;
+			process_trigger(action->id);
+			
+		} else if(ret && action->timeout > 0) {
 			crm_debug_3("Setting timer for action %d",action->id);
 			action->timer->reason = timeout_action_warn;
 			start_te_timer(action->timer);
 		}
+		
 	}
 	return ret;
 }
