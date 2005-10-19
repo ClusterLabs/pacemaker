@@ -31,7 +31,7 @@
          <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <crm_event id="10" operation="stonith" operation_key="stonith" on_node="node2" on_node_uuid="uuid2"/>
+         <crm_event id="9" operation="stonith" operation_key="stonith" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
      </inputs>
    </synapse>
@@ -71,19 +71,6 @@
    </synapse>
    <synapse id="6">
      <action_set>
-       <rsc_op id="9" rsc_id="rsc2" operation="delete" operation_key="rsc2_delete_0" on_node="node2" on_node_uuid="uuid2">
-         <primitive id="rsc2" class="heartbeat" type="apache" on_stopfail="fence"/>
-         <attributes crm_feature_set="1.0.3" on_stopfail="fence"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="7" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0" on_node="node2" on_node_uuid="uuid2"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="7">
-     <action_set>
        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
          <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
@@ -94,7 +81,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="8">
+   <synapse id="7">
      <action_set>
        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
          <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
@@ -109,9 +96,9 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="9">
+   <synapse id="8">
      <action_set>
-       <crm_event id="10" operation="stonith" operation_key="stonith" on_node="node2" on_node_uuid="uuid2">
+       <crm_event id="9" operation="stonith" operation_key="stonith" on_node="node2" on_node_uuid="uuid2">
          <attributes on_node="node2" on_node_uuid="uuid2" crm_feature_set="1.0.3"/>
        </crm_event>
      </action_set>

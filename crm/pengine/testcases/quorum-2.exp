@@ -44,19 +44,6 @@
    </synapse>
    <synapse id="4">
      <action_set>
-       <rsc_op id="12" rsc_id="rsc2" operation="delete" operation_key="rsc2_delete_0" on_node="node1" on_node_uuid="uuid1">
-         <primitive id="rsc2" class="heartbeat" type="apache" on_stopfail="block"/>
-         <attributes crm_feature_set="1.0.3" on_stopfail="block"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="10" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="5">
-     <action_set>
        <rsc_op id="3" rsc_id="rsc3" operation="monitor" operation_key="rsc3_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc3" class="heartbeat" type="apache" on_stopfail="block"/>
          <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" on_stopfail="block"/>
@@ -64,7 +51,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="6">
+   <synapse id="5">
      <action_set>
        <rsc_op id="7" rsc_id="rsc3" operation="monitor" operation_key="rsc3_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc3" class="heartbeat" type="apache" on_stopfail="block"/>
@@ -73,7 +60,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="7">
+   <synapse id="6">
      <action_set>
        <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete">
          <attributes crm_feature_set="1.0.3"/>
@@ -88,7 +75,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="8">
+   <synapse id="7">
      <action_set>
        <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
          <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
@@ -100,7 +87,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="9">
+   <synapse id="8">
      <action_set>
        <rsc_op id="4" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="uuid2">
          <attributes crm_feature_set="1.0.3" te-no-wait="true"/>

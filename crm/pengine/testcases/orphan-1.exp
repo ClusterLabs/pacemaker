@@ -172,28 +172,6 @@
    </synapse>
    <synapse id="19">
      <action_set>
-       <rsc_op id="36" rsc_id="rsc_c001n08" operation="delete" operation_key="rsc_c001n08_delete_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
-         <primitive id="rsc_c001n08" type="IPaddr" class="ocf" provider="heartbeat"/>
-         <attributes crm_feature_set="1.0.3"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="15" rsc_id="rsc_c001n08" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="20" rsc_id="rsc_c001n08" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="25" rsc_id="rsc_c001n08" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="35" rsc_id="rsc_c001n08" operation="stop" operation_key="rsc_c001n08_stop_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="20">
-     <action_set>
        <pseudo_event id="6" operation="probe_complete" operation_key="probe_complete">
          <attributes crm_feature_set="1.0.3"/>
        </pseudo_event>
@@ -213,7 +191,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="21">
+   <synapse id="20">
      <action_set>
        <rsc_op id="7" operation="probe_complete" operation_key="probe_complete" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
@@ -234,7 +212,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="22">
+   <synapse id="21">
      <action_set>
        <rsc_op id="12" operation="probe_complete" operation_key="probe_complete" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
@@ -252,7 +230,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="23">
+   <synapse id="22">
      <action_set>
        <rsc_op id="16" operation="probe_complete" operation_key="probe_complete" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
@@ -273,7 +251,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="24">
+   <synapse id="23">
      <action_set>
        <rsc_op id="21" operation="probe_complete" operation_key="probe_complete" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
          <attributes crm_feature_set="1.0.3" te-no-wait="true"/>

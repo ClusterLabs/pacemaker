@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="1" rsc_id="rsc1:child_rsc1:3" operation="start" operation_key="rsc1:child_rsc1:3_start_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1:child_rsc1:3" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.3" clone="3" clone_max="5"/>
+         <attributes crm_feature_set="1.0.3" clone="3" clone_max="5" master_max="2" master_node_max="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -16,7 +16,7 @@
      <action_set>
        <rsc_op id="2" rsc_id="rsc1:child_rsc1:3" operation="promote" operation_key="rsc1:child_rsc1:3_promote_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1:child_rsc1:3" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.3" clone="3" clone_max="5"/>
+         <attributes crm_feature_set="1.0.3" clone="3" clone_max="5" master_max="2" master_node_max="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -29,7 +29,7 @@
      <action_set>
        <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="start" operation_key="rsc1:child_rsc1:1_start_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.3" clone="1" clone_max="5"/>
+         <attributes crm_feature_set="1.0.3" clone="1" clone_max="5" master_max="2" master_node_max="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -42,7 +42,7 @@
      <action_set>
        <rsc_op id="4" rsc_id="rsc1:child_rsc1:0" operation="start" operation_key="rsc1:child_rsc1:0_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.3" clone="0" clone_max="5"/>
+         <attributes crm_feature_set="1.0.3" clone="0" clone_max="5" master_max="2" master_node_max="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -55,7 +55,7 @@
      <action_set>
        <rsc_op id="5" rsc_id="rsc1:child_rsc1:2" operation="start" operation_key="rsc1:child_rsc1:2_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1:child_rsc1:2" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.3" clone="2" clone_max="5"/>
+         <attributes crm_feature_set="1.0.3" clone="2" clone_max="5" master_max="2" master_node_max="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
