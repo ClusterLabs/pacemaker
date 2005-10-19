@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.70 2005/10/18 11:48:32 andrew Exp $ */
+/* $Id: graph.c,v 1.71 2005/10/19 08:24:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,13 +54,13 @@ update_action(action_t *action)
 	gboolean change = FALSE;
 	enum action_tasks task = no_action;
 	
-	crm_debug_3("Processing action %d: %s",
-		    action->id, action->optional?"optional":"required");
+	crm_debug_3("Processing action %s: %s",
+		    action->uuid, action->optional?"optional":"required");
 
 	slist_iter(
 		other, action_wrapper_t, action->actions_before, lpc,
-		crm_debug_3("\tChecking action %d: %s/%s",
-			    other->action->id, ordering_type2text(other->type),
+		crm_debug_3("\tChecking action %s: %s/%s",
+			    other->action->uuid, ordering_type2text(other->type),
 			    other->action->optional?"optional":"required");
 
 		if(other->type == pe_ordering_restart
@@ -96,8 +96,8 @@ update_action(action_t *action)
 		}
 
 		other->action->optional = FALSE;
-		crm_debug_2("* Marking action %d manditory because of %d",
-			    other->action->id, action->id);
+		crm_debug_2("* Marking action %s manditory because of %s",
+			    other->action->uuid, action->uuid);
 		update_action(other->action);
 		);
 
@@ -106,19 +106,19 @@ update_action(action_t *action)
 		
 		if(action->pseudo == FALSE && action->runnable == FALSE) {
 			if(other->action->runnable == FALSE) {
-				crm_debug_2("Action %d already un-runnable",
-					  other->action->id);
+				crm_debug_2("Action %s already un-runnable",
+					  other->action->uuid);
 			} else if(action->optional == FALSE) {
 				other->action->runnable = FALSE;
-				crm_debug_2("Marking action %d un-runnable"
-					  " because of %d",
-					  other->action->id, action->id);
+				crm_debug_2("Marking action %s un-runnable"
+					  " because of %s",
+					  other->action->uuid, action->uuid);
 				update_action(other->action);
 			}
 		}
 
-		crm_debug_3("\t(Recover) Checking action %d: %s/%s",
-			    other->action->id, ordering_type2text(other->type),
+		crm_debug_3("\t(Recover) Checking action %s: %s/%s",
+			    other->action->uuid, ordering_type2text(other->type),
 			    other->action->optional?"optional":"required");
 
 		if(other->action->rsc == NULL) {
@@ -156,19 +156,19 @@ update_action(action_t *action)
 			case stop_rsc:
 			case stopped_rsc:
 				crm_debug_3("\t  Ignoring: action %s",
-					    action->task);
+					    action->uuid);
 				break;
 			case start_rsc:
 			case started_rsc:
-				crm_debug_2("* (Recover) Marking action %d"
-					    " manditory because of %d",
-					    other->action->id, action->id);
+				crm_debug_2("* (Recover) Marking action %s"
+					    " manditory because of %s",
+					    other->action->uuid, action->uuid);
 				other->action->optional = FALSE; 
 				update_action(other->action);
 				break;
 			default:
 				crm_debug_3("\t  Ignoring: action %s",
-					    action->task);
+					    action->uuid);
 				break;
 		}
 		);
@@ -177,7 +177,7 @@ update_action(action_t *action)
 		update_action(action);
 	}
 
-	crm_debug_3("Action %d: %s", action->id, change?"update":"untouched");
+	crm_debug_3("Action %s: %s", action->uuid, change?"update":"untouched");
 	return change;
 }
 
