@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.95 2005/10/18 11:48:32 andrew Exp $ */
+/* $Id: native.c,v 1.96 2005/10/19 08:36:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,7 +23,6 @@
 #include <pe_utils.h>
 #include <crm/msg_xml.h>
 
-#define DELETE_ON_STOP 1
 #define DELETE_THEN_REFRESH 1
 
 extern color_t *add_color(resource_t *rh_resource, color_t *color);
@@ -1750,9 +1749,8 @@ DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 	action_t *delete = NULL;
 	action_t *refresh = NULL;
 
-	char *stop = stop_key(rsc);
-	char *start = start_key(rsc);
-	char *probe = NULL;
+	char *stop = NULL;
+	char *start = NULL;
 
 	if(rsc->failed) {
 		crm_debug_2("Resource %s not deleted from %s: failed",
@@ -1766,6 +1764,9 @@ DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 			    rsc->name, node->details->uname);
 		return FALSE;
 	}
+	
+	stop = stop_key(rsc);
+	start = start_key(rsc);
 
 	crm_info("Removing %s from %s",
 		 rsc->name, node->details->uname);
@@ -1776,15 +1777,10 @@ DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		rsc, stop, NULL, rsc, NULL, delete,
 		pe_ordering_optional, data_set);
 
-#if 0
-	probe = generate_op_key(rsc->id, CRMD_ACTION_STATUS, 0);
 	custom_action_order(
-		rsc, probe, NULL, rsc, NULL, delete,
-		pe_ordering_optional, data_set);
-#else
-	probe = NULL;	
-#endif
-
+		rsc, NULL, delete, rsc, start, NULL, 
+		pe_ordering_manditory, data_set);
+	
 #if DELETE_THEN_REFRESH
 	refresh = custom_action(
 		NULL, crm_strdup(CRM_OP_LRM_REFRESH), CRM_OP_LRM_REFRESH,
@@ -1794,18 +1790,8 @@ DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 	custom_action_order(
 		rsc, NULL, delete, NULL, NULL, refresh, 
 		pe_ordering_optional, data_set);
-
-	custom_action_order(
-		rsc, NULL, refresh, rsc, start, NULL, 
-		pe_ordering_manditory, data_set);
-
-#else
-	refresh = NULL;
-	custom_action_order(
-		rsc, NULL, delete, rsc, start, NULL, 
-		pe_ordering_manditory, data_set);
-	
 #endif
+	
 	
 	return TRUE;
 }
