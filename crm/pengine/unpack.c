@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.139 2005/10/18 11:48:32 andrew Exp $ */
+/* $Id: unpack.c,v 1.140 2005/10/19 08:27:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1631,8 +1631,12 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	if(rsc_rh->restart_type == pe_restart_restart
 	   && safe_str_eq(action, action_rh)) {
 		if(safe_str_eq(action, CRMD_ACTION_START)) {
+			crm_debug_2("Recover start-start: %s-%s",
+				rsc_lh->id, rsc_rh->id);
   			order_start_start(rsc_lh, rsc_rh, pe_ordering_recover);
  		} else if(safe_str_eq(action, CRMD_ACTION_STOP)) {
+			crm_debug_2("Recover stop-stop: %s-%s",
+				rsc_rh->id, rsc_lh->id);
   			order_stop_stop(rsc_rh, rsc_lh, pe_ordering_recover); 
 		}
 	}
@@ -1653,8 +1657,12 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	if(rsc_lh->restart_type == pe_restart_restart
 	   && safe_str_eq(action, action_rh)) {
 		if(safe_str_eq(action, CRMD_ACTION_START)) {
-  			order_start_start(rsc_rh, rsc_lh, pe_ordering_recover);
+			crm_debug_2("Recover start-start (2): %s-%s",
+				rsc_lh->id, rsc_rh->id);
+  			order_start_start(rsc_lh, rsc_rh, pe_ordering_recover);
 		} else if(safe_str_eq(action, CRMD_ACTION_STOP)) { 
+			crm_debug_2("Recover stop-stop (2): %s-%s",
+				rsc_rh->id, rsc_lh->id);
   			order_stop_stop(rsc_rh, rsc_lh, pe_ordering_recover); 
 		}
 	}
