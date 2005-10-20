@@ -285,6 +285,9 @@ do_dc_takeover(long long action,
 	crm_free(fsa_our_dc);
 	fsa_our_dc = crm_strdup(fsa_our_uname);
 
+	crm_free(fsa_our_dc_version);
+	fsa_our_dc_version = crm_strdup(CRM_FEATURE_SET);
+	
 	set_bit_inplace(fsa_input_register, R_JOIN_OK);
 	set_bit_inplace(fsa_input_register, R_INVOKE_PE);
 	

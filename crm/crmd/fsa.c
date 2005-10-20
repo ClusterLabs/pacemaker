@@ -163,8 +163,9 @@ ll_cluster_t   *fsa_cluster_conn;
 ll_lrm_t       *fsa_lrm_conn;
 volatile long long       fsa_input_register;
 volatile long long       fsa_actions = A_NOTHING;
-const char     *fsa_our_uname;
-char	       *fsa_our_dc;
+const char     *fsa_our_uname = NULL;
+char	       *fsa_our_dc = NULL;
+char	       *fsa_our_dc_version = NULL;
 cib_t	*fsa_cib_conn = NULL;
 
 fsa_timer_t *election_trigger = NULL;		/*  */
@@ -554,8 +555,7 @@ do_state_transition(long long actions,
 		case S_ELECTION:
 			crm_debug_2("Resetting our DC to NULL on transition to %s",
 				    fsa_state2string(next_state));
-			crm_free(fsa_our_dc);
-			fsa_our_dc = NULL;
+			update_dc(NULL);
 			break;
 		case S_NOT_DC:
 			if(is_set(fsa_input_register, R_SHUTDOWN)){

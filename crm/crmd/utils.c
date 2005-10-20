@@ -1325,3 +1325,32 @@ process_client_disconnect(crmd_client_t *curr_client)
 	crm_free(curr_client->uuid);
 	crm_free(curr_client);
 }
+
+void update_dc(HA_Message *msg)
+{
+	const char *dc_version = NULL;
+	const char *welcome_from = NULL;
+
+	if(msg != NULL) {
+		dc_version = cl_get_string(msg, F_CRM_VERSION);
+		welcome_from = cl_get_string(msg, F_CRM_HOST_FROM);
+		
+		CRM_ASSERT(welcome_from != NULL);
+		CRM_DEV_ASSERT(dc_version != NULL);
+	}
+	
+	crm_free(fsa_our_dc);
+	crm_free(fsa_our_dc_version);
+	fsa_our_dc = NULL;
+	fsa_our_dc_version = NULL;
+
+	if(welcome_from != NULL) {
+		fsa_our_dc = crm_strdup(welcome_from);
+	}
+	if(dc_version != NULL) {
+		fsa_our_dc_version = crm_strdup(dc_version);
+	}
+
+	crm_info("Set DC to %s (%s)",
+		 crm_str(fsa_our_dc), crm_str(fsa_our_dc_version));
+}
