@@ -54,6 +54,7 @@ gboolean build_operation_update(
 	crm_data_t *rsc_list, lrm_op_t *op, const char *src, int lpc);
 
 gboolean build_active_RAs(crm_data_t *rsc_list);
+gboolean is_rsc_active(const char *rsc_id);
 
 void do_update_resource(lrm_op_t *op);
 
@@ -270,7 +271,7 @@ stop_all_resources(void)
 {
 	GListPtr lrm_list = NULL;
 
-	crm_info("Makeing sure all active resources are stopped before exit");
+	crm_info("Making sure all active resources are stopped before exit");
 	
 	if(fsa_lrm_conn == NULL) {
 		return TRUE;
@@ -284,15 +285,7 @@ stop_all_resources(void)
 	slist_iter(
 		rsc_id, char, lrm_list, lpc,
 
-		gboolean last_op_was_stop = FALSE;
-		const char *last_op = g_hash_table_lookup(resources, rsc_id);
-		char *stop_id = generate_op_key(rsc_id, CRMD_ACTION_STOP, 0);
-		crm_debug("Last op for resource %s: %s", rsc_id, last_op);
-		if(safe_str_eq(last_op, stop_id)) {
-			last_op_was_stop = TRUE;
-		}
-		crm_free(stop_id);
-		if(last_op_was_stop == FALSE) {
+		if(is_rsc_active(rsc_id)) {
 			crm_warn("Resource %s was active at shutdown", rsc_id);
 			do_lrm_rsc_op(NULL, rsc_id, CRMD_ACTION_STOP, NULL, NULL);
 		}
@@ -411,6 +404,7 @@ build_operation_update(
 #if CRM_DEPRECATED_SINCE_2_0_3
 	caller_version = g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION);
 	if(compare_version("1.0.3", caller_version) > 0) {
+		CRM_DEV_ASSERT(CRM_DEV_BUILD == 0/*constant condition*/);
 		fail_state = generate_transition_magic_v202(op->user_data, op->op_status);
 	} else {
 		fail_state = generate_transition_magic(op->user_data, op->op_status, op->rc);
@@ -494,6 +488,60 @@ build_operation_update(
 	
 	return TRUE;
 }
+
+gboolean
+is_rsc_active(const char *rsc_id) 
+{
+	GList *op_list  = NULL;
+	gboolean active = FALSE;
+	lrm_rsc_t *the_rsc = NULL;
+	state_flag_t cur_state = 0;
+	int max_call_id = -1;
+	
+	if(fsa_lrm_conn == NULL) {
+		return FALSE;
+	}
+
+	the_rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rsc_id);
+
+	crm_debug("Processing lrm_rsc_t entry %s", rsc_id);
+	
+	if(the_rsc == NULL) {
+		crm_err("NULL resource returned from the LRM");
+		return FALSE;
+	}
+	
+	op_list = the_rsc->ops->get_cur_state(the_rsc, &cur_state);
+	
+	crm_debug_2("\tcurrent state:%s",cur_state==LRM_RSC_IDLE?"Idle":"Busy");
+	
+	slist_iter(
+		op, lrm_op_t, op_list, llpc,
+		
+		crm_debug("Processing op %s for %s (status=%d, rc=%d)", 
+			  op->op_type, the_rsc->id, op->op_status, op->rc);
+		
+		CRM_ASSERT(max_call_id <= op->call_id);			
+		if(safe_str_eq(op->op_type, CRMD_ACTION_STOP)) {
+			active = FALSE;
+			
+		} else if(op->rc == EXECRA_NOT_RUNNING) {
+			active = FALSE;
+
+		} else {
+			active = TRUE;
+		}
+		
+		max_call_id = op->call_id;
+		lrm_free_op(op);
+		);
+
+	g_list_free(op_list);
+	lrm_free_rsc(the_rsc);
+
+	return active;
+}
+
 
 gboolean
 build_active_RAs(crm_data_t *rsc_list)
@@ -840,7 +888,18 @@ construct_op(crm_data_t *rsc_op, const char *rsc_id, const char *operation)
 		CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
 		op->user_data = NULL;
 		op->user_data_len = 0;
-		op->params = NULL;
+		/* the stop_all_resources() case
+		 * by definition there is no DC (or they'd be shutting
+		 *   us down).
+		 * So we should put our version here.
+		 */
+		op->params = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, g_hash_destroy_str);
+		
+		g_hash_table_insert(op->params,
+				    crm_strdup(XML_ATTR_CRM_VERSION),
+				    crm_strdup(CRM_FEATURE_SET));
 
 		crm_debug("Constructed %s op for %s", operation, rsc_id);
 		return op;
@@ -1008,14 +1067,12 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation,
 				params = xml2list_202(msg);
 			}
 #endif
-
-		} else {
-			CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
 		}
 		fsa_lrm_conn->lrm_ops->add_rsc(
 			fsa_lrm_conn, rid, class, type, provider, params);
 		
 		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
+		g_hash_table_destroy(params);
 	}
 	
 	if(rsc == NULL) {
