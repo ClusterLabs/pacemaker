@@ -37,6 +37,7 @@ extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t *orig);
 extern gboolean process_join_ack_msg(
 	const char *join_from, crm_data_t *lrm_update);
 
+
 /*	A_CL_JOIN_QUERY		*/
 /* is there a DC out there? */
 enum crmd_fsa_input
@@ -95,15 +96,13 @@ do_cl_join_announce(long long action,
 		}
 
 		if(fsa_our_dc == NULL) {
-			crm_info("Set DC to %s", hb_from);
-			fsa_our_dc = crm_strdup(hb_from);
+			update_dc(input->msg);
 
 		} else if(safe_str_neq(fsa_our_dc, hb_from)) {
 			/* reset the fsa_our_dc to NULL */
 			crm_warn("Resetting our DC to NULL after DC_HB"
 				 " from unrecognised node.");
-			crm_free(fsa_our_dc);
-			fsa_our_dc = NULL;
+			update_dc(NULL);
 			return I_NULL; /* for now, wait for the DC's
 					* to settle down
 					*/
@@ -160,9 +159,8 @@ do_cl_join_request(long long action,
 	}
 
 	if(fsa_our_dc == NULL) {
-		crm_info("Set DC to %s", welcome_from);
-		fsa_our_dc = crm_strdup(welcome_from);
-
+		update_dc(input->msg);
+		
 	} else if(safe_str_neq(welcome_from, fsa_our_dc)) {
 		/* dont do anything until DC's sort themselves out */
 		crm_err("Expected a welcome from %s, but %s replied",
@@ -264,8 +262,7 @@ do_cl_join_result(long long action,
 		return I_NULL;
 		
 	} else if(fsa_our_dc == NULL) {
-		crm_info("Set DC to %s", welcome_from);
-		fsa_our_dc = crm_strdup(welcome_from);
+		update_dc(input->msg);
 	} 	
 
 	/* send our status section to the DC */
