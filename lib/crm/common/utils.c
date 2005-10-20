@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.26 2005/09/30 12:53:44 andrew Exp $ */
+/* $Id: utils.c,v 1.27 2005/10/20 14:13:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -512,6 +512,7 @@ crm_strdup(const char *a)
 } 
 
 static GHashTable *crm_uuid_cache = NULL;
+static GHashTable *crm_uname_cache = NULL;
 
 const char *
 get_uuid(ll_cluster_t *hb, const char *uname) 
@@ -554,6 +555,47 @@ get_uuid(ll_cluster_t *hb, const char *uname)
 	}
 	
 	crm_free(uuid_calc);
+	return NULL;
+}
+
+const char *
+get_uname(ll_cluster_t *hb, const char *uuid) 
+{
+	char *uname = NULL;
+
+	if(crm_uuid_cache == NULL) {
+		crm_uname_cache = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, g_hash_destroy_str);
+	}
+	
+	CRM_DEV_ASSERT(uuid != NULL);
+
+	/* avoid blocking calls where possible */
+	uname = g_hash_table_lookup(crm_uname_cache, uuid);
+	if(uname != NULL) {
+		return uname;
+	}
+	
+	if(uname != NULL) {
+		cl_uuid_t uuid_raw;
+		char *uuid_copy = crm_strdup(uuid);
+		cl_uuid_parse(uuid_copy, &uuid_raw);
+		
+		if(hb->llc_ops->get_name_by_uuid(
+			   hb, &uuid_raw, uname, 256) == HA_FAIL) {
+			crm_err("Could not calculate UUID for %s", uname);
+			uname = NULL;
+			crm_free(uuid_copy);
+			
+		} else {
+			g_hash_table_insert(
+				crm_uuid_cache,
+				uuid_copy, crm_strdup(uname));
+			uname = g_hash_table_lookup(crm_uname_cache, uuid);
+		}
+		return uname;
+	}
 	return NULL;
 }
 

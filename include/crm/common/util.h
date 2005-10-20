@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.24 2005/09/26 07:48:53 andrew Exp $ */
+/* $Id: util.h,v 1.25 2005/10/20 14:13:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -69,6 +69,7 @@ extern void alter_debug(int nsig);
 extern void g_hash_destroy_str(gpointer data);
 
 extern const char *get_uuid(ll_cluster_t *hb, const char *uname);
+extern const char *get_uname(ll_cluster_t *hb, const char *uuid);
 
 extern void set_uuid(
 	ll_cluster_t* hb, crm_data_t *node, const char *attr, const char *uname);
