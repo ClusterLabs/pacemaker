@@ -170,6 +170,8 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 
 	/* execute the RA */
 	execl(ra_pathname, ra_pathname, op_type, NULL);
+	cl_perror("(%s:%s:%d) execl failed for %s" 
+		  , __FILE__, __FUNCTION__, __LINE__, ra_pathname);
 
 	switch (errno) {
 		case ENOENT:   /* No such file or directory */
@@ -181,7 +183,6 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 			exit_value = EXECRA_EXEC_UNKNOWN_ERROR;
 	}
 
-	cl_log(LOG_ERR, "execl error when to execute RA %s.", rsc_type);
 	exit(exit_value);
 }
 

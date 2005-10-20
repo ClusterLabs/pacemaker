@@ -200,17 +200,16 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 	} 
 	
 	execv(ra_pathname, params_argv);
-	cl_log(LOG_ERR, "execv error when to execute a heartbeat RA %s.", rsc_type);
+	cl_perror("(%s:%s:%d) execv failed for %s"
+		  , __FILE__, __FUNCTION__, __LINE__, ra_pathname);
 
 	switch (errno) {
 		case ENOENT:   /* No such file or directory */
 		case EISDIR:   /* Is a directory */
 			exit_value = EXECRA_NO_RA;
-			cl_log(LOG_ERR, "Cause: No such file or directory.");
 			break;
 		default:
 			exit_value = EXECRA_EXEC_UNKNOWN_ERROR;
-			cl_log(LOG_ERR, "Cause: execv unknow error.");
         }
         exit(exit_value);
 }
