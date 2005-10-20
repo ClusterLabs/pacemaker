@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.6 2005/10/18 11:35:12 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.7 2005/10/20 13:53:22 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -361,51 +361,55 @@ query_node_uname(cib_t *the_cib, const char *uuid, char **uname)
 	return rc;
 }
 
-/* 	if(safe_str_eq(scope, "reboot")				\ */
-/* 	   || safe_str_eq(scope, XML_CIB_TAG_STATUS)) {		\ */
-/* 		type = XML_CIB_TAG_STATUS;			\ */
-/* 	}							\ */
-/* 								\ */
-#define standby_common 	char *attr_id  = NULL;	\
-	char *set_name = NULL;			\
-	const char *attr_name  = "standby";	\
-	const char *type = XML_CIB_TAG_NODES;	\
-						\
+#define standby_common 	char *attr_id  = NULL;				\
+	int str_length = 3;						\
+	char *set_name = NULL;						\
+	const char *attr_name  = "standby";				\
+	const char *type = XML_CIB_TAG_NODES;				\
+									\
 	CRM_DEV_ASSERT(uuid != NULL);					\
 	CRM_DEV_ASSERT(standby_value != NULL);				\
+	str_length += strlen(attr_name);				\
+	str_length += strlen(uuid);					\
+	if(safe_str_eq(scope, "reboot")					\
+	   || safe_str_eq(scope, XML_CIB_TAG_STATUS)) {			\
+		const char *extra = "transient";			\
+ 		type = XML_CIB_TAG_STATUS;				\
+		str_length += strlen(extra);				\
+		crm_malloc0(attr_id, str_length);			\
+		sprintf(attr_id, "%s-%s-%s", extra, attr_name, uuid);	\
 									\
-	crm_malloc0(attr_id, 2 + strlen(attr_name) + strlen(uuid));	\
-	sprintf(attr_id, "%s-%s", attr_name, uuid);			\
-									\
-	crm_malloc0(set_name, 2 + strlen(attr_name) + strlen(uuid));	\
-	sprintf(set_name, "%s-%s", attr_name, uuid);			\
-	
+	} else {							\
+		crm_malloc0(attr_id, str_length);			\
+		sprintf(attr_id, "%s-%s", attr_name, uuid);		\
+	}								\
+	set_name = crm_strdup(attr_id);
 
 enum cib_errors 
 query_standby(cib_t *the_cib, const char *uuid, const char *scope,
-	char **standby_value)
+	      char **standby_value)
 {
 	enum cib_errors rc = cib_ok;
-	standby_common;
 
 	if(scope != NULL) {
+		standby_common;
 		rc = read_attr(the_cib, type, uuid, set_name,
 			       attr_id, attr_name, standby_value);
+		crm_free(attr_id);
+		crm_free(set_name);
+
 	} else {
-		rc = read_attr(the_cib, XML_CIB_TAG_NODES, uuid, set_name,
-			       attr_id, attr_name, standby_value);
-#if 0
+		rc = query_standby(
+			the_cib, uuid, XML_CIB_TAG_NODES, standby_value);
+
 		if(rc == cib_NOTEXISTS) {
-			crm_info("No standby value found with lifetime=forever,"
-				 " checking lifetime=reboot.");
-			rc = read_attr(the_cib, XML_CIB_TAG_STATUS, uuid, set_name,
-				       attr_id, attr_name, standby_value);
+			crm_debug("No standby value found with "
+				  "lifetime=forever, checking lifetime=reboot");
+			rc = query_standby(the_cib, uuid,
+					   XML_CIB_TAG_STATUS, standby_value);
 		}
-#endif
 	}
 	
-	crm_free(attr_id);
-	crm_free(set_name);
 	return rc;
 }
 
@@ -430,7 +434,6 @@ delete_standby(cib_t *the_cib, const char *uuid, const char *scope,
 	       const char *standby_value)
 {
 	enum cib_errors rc = cib_ok;
-	
 	standby_common;	
 	
 	rc = delete_attr(the_cib, type, uuid, set_name,
