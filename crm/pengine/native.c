@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.96 2005/10/19 08:36:24 andrew Exp $ */
+/* $Id: native.c,v 1.97 2005/10/20 13:51:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -313,16 +313,20 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 		
 		
 		key = generate_op_key(rsc->id, name, interval_ms);
-		possible_matches = find_actions(rsc->actions, key, node);
 		if(start != NULL) {
+			crm_debug_3("Marking %s %s due to %s",
+				    key, start->optional?"optional":"manditory",
+				    start->uuid);
 			is_optional = start->optional;
 		} else {
 			is_optional = TRUE;
 		}
 
 		/* start a monitor for an already active resource */
+		possible_matches = find_actions_exact(rsc->actions, key, node);
 		if(possible_matches == NULL) {
 			is_optional = FALSE;
+			crm_debug_3("Marking %s manditory: not active", key);
 		}
 		
 		mon = custom_action(rsc, key, name, node,

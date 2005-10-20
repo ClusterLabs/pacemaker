@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.116 2005/10/18 11:48:32 andrew Exp $ */
+/* $Id: utils.c,v 1.117 2005/10/20 13:51:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1636,13 +1636,38 @@ find_actions(GListPtr input, const char *key, node_t *on_node)
 		} else if(action->node == NULL) {
 			/* skip */
 			crm_debug_2("While looking for %s action on %s, "
-				  "found an unallocated one.  Assigning"
-				  " it to the requested node...",
-				  key, on_node->details->uname);
+				    "found an unallocated one.  Assigning"
+				    " it to the requested node...",
+				    key, on_node->details->uname);
 
 			action->node = on_node;
 			result = g_list_append(result, action);
 			
+		} else if(safe_str_eq(on_node->details->id,
+				      action->node->details->id)) {
+			result = g_list_append(result, action);
+		}
+		);
+
+	return result;
+}
+
+
+GListPtr
+find_actions_exact(GListPtr input, const char *key, node_t *on_node)
+{
+	GListPtr result = NULL;
+	CRM_DEV_ASSERT(key != NULL);
+	
+	slist_iter(
+		action, action_t, input, lpc,
+		crm_debug_5("Matching %s against %s", key, action->uuid);
+		if(safe_str_neq(key, action->uuid)) {
+			continue;
+			
+		} else if(on_node == NULL  || action->node == NULL) {
+			continue;
+
 		} else if(safe_str_eq(on_node->details->id,
 				      action->node->details->id)) {
 			result = g_list_append(result, action);
