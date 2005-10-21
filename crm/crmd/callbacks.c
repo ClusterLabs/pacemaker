@@ -507,6 +507,8 @@ crmd_ccm_msg_callback(
 		case OC_EV_MS_EVICTED:
 			update_quorum = TRUE;
 			register_fsa_input(C_FSA_INTERNAL, I_STOP, NULL);
+			crm_err("Shutting down after CCM event: %s",
+				ccm_event_name(event));
 			break;
 		default:
 			crm_err("Unknown CCM event: %d", event);
