@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.31 2005/10/18 11:41:53 andrew Exp $ */
+/* $Id: notify.c,v 1.32 2005/10/24 07:36:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -281,7 +281,7 @@ do_cib_notify(
 	const char *id = NULL;
 
 	if(options & cib_inhibit_notify) {
-		crm_err("Inhibiting notify.");
+		crm_warn("Inhibiting notify.");
 		return;
 	}
 
@@ -383,7 +383,7 @@ cib_replace_notify(crm_data_t *update, enum cib_errors result, crm_data_t *diff)
 	if(diff == NULL) {
 		return;
 	}
-	
+
 	cib_diff_version_details(
 		diff, &add_admin_epoch, &add_epoch, &add_updates, 
 		&del_admin_epoch, &del_epoch, &del_updates);
