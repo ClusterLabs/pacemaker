@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.6 2005/10/14 08:25:32 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.7 2005/10/24 07:36:42 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -576,6 +576,10 @@ main(int argc, char **argv)
 			node_t *current = rsc->running_on->data;
 			rc = migrate_resource(rsc_id, current->details->uname,
 					      host_uname, cib_conn);
+
+		} else if(host_uname != NULL) {
+			rc = migrate_resource(
+				rsc_id, NULL, host_uname, cib_conn);
 
 		} else {
 			fprintf(stderr, "Resource %s not migrated: "
