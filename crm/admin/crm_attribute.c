@@ -1,4 +1,4 @@
-/* $Id: crm_attribute.c,v 1.5 2005/10/18 11:35:12 andrew Exp $ */
+/* $Id: crm_attribute.c,v 1.6 2005/10/24 07:54:19 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -55,6 +55,8 @@ void usage(const char *cmd, int exit_status);
 gboolean BE_QUIET = FALSE;
 gboolean DO_WRITE = TRUE;
 gboolean DO_DELETE = FALSE;
+gboolean inhibit_pe = FALSE;
+
 char *dest_node   = NULL;
 const char *type        = NULL;
 const char *dest_uname       = NULL;
@@ -64,7 +66,7 @@ char *attr_name   = NULL;
 const char *attr_value  = NULL;
 const char *crm_system_name = "crm_master";
 
-#define OPTARGS	"V?GDQU:u:s:n:v:l:t:i:"
+#define OPTARGS	"V?GDQU:u:s:n:v:l:t:i:!"
 
 int
 main(int argc, char **argv)
@@ -91,6 +93,7 @@ main(int argc, char **argv)
 		{"attr-name", 1, 0,  'n'},
 		{"attr-value", 1, 0, 'v'},
 		{"lifetime", 1, 0, 'l'},
+		{"inhibit-policy-engine", 0, 0, '!'},
 		{"type", 1, 0, 't'},
 
 		{0, 0, 0, 0}
@@ -167,6 +170,9 @@ main(int argc, char **argv)
 			case 'v':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				attr_value = optarg;
+				break;
+			case '!':
+				inhibit_pe = TRUE;
 				break;
 			default:
 				printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
@@ -300,11 +306,15 @@ main(int argc, char **argv)
 				 attr_id, attr_name, attr_value);
 			
 	} else if(DO_WRITE) {
+		int cib_opts = cib_sync_call;
 		CRM_DEV_ASSERT(type != NULL);
 		CRM_DEV_ASSERT(attr_name != NULL);
 		CRM_DEV_ASSERT(attr_value != NULL);
-		
-		rc = update_attr(the_cib, cib_sync_call, type, dest_node, set_name,
+
+		if(inhibit_pe) {
+			cib_opts |= cib_inhibit_notify;
+		}
+		rc = update_attr(the_cib, cib_opts, type, dest_node, set_name,
 				 attr_id, attr_name, attr_value);
 
 	} else {
