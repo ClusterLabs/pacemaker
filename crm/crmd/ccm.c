@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.90 2005/10/12 18:28:22 andrew Exp $ */
+/* $Id: ccm.c,v 1.91 2005/10/24 07:37:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -578,6 +578,15 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 	struct update_data_s update_data;
 	crm_data_t *fragment = updates;
 	crm_data_t *tmp = NULL;
+
+	if(fsa_membership_copy == NULL) {
+		/* We got a replace notification before being connected to
+		 *   the CCM.
+		 * So there is no need to update the local CIB with our values
+		 *   - since we have none.
+		 */
+		return NULL;
+	}
 	
 	if(updates == NULL) {
 		fragment = create_cib_fragment(NULL, NULL);
@@ -589,33 +598,32 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 	CRM_DEV_ASSERT(tmp != NULL);
 	
 	update_data.updates = tmp;
-
 	update_data.state = XML_BOOLEAN_YES;
 	update_data.join  = NULL;
+
 	if(overwrite) {
 		crm_debug_2("Performing a join update based on CCM data");
 		update_data.join = CRMD_JOINSTATE_PENDING;
-		if(fsa_membership_copy->members != NULL) {
-			g_hash_table_foreach(fsa_membership_copy->members,
-					     ghash_update_cib_node, &update_data);
-		}
 		
 	} else {
 		call_options = call_options|cib_inhibit_bcast;
-		crm_debug_2("Inhibiting bcast for CCM updates");
+		crm_debug_2("Inhibiting bcast for membership updates");
 
-		if(fsa_membership_copy->members != NULL) {
-			g_hash_table_foreach(fsa_membership_copy->new_members,
-					     ghash_update_cib_node, &update_data);
-		}
-
-		update_data.state = XML_BOOLEAN_NO;
-		update_data.join  = CRMD_STATE_INACTIVE;
-		if(fsa_membership_copy->dead_members != NULL) {
-			g_hash_table_foreach(fsa_membership_copy->dead_members,
-					     ghash_update_cib_node, &update_data);
-		}		
 	}
+
+	/* live nodes */
+	if(fsa_membership_copy->members != NULL) {
+		g_hash_table_foreach(fsa_membership_copy->members,
+				     ghash_update_cib_node, &update_data);
+	}
+
+	/* dead nodes */
+	update_data.state = XML_BOOLEAN_NO;
+	update_data.join  = CRMD_STATE_INACTIVE;
+	if(fsa_membership_copy->dead_members != NULL) {
+		g_hash_table_foreach(fsa_membership_copy->dead_members,
+				     ghash_update_cib_node, &update_data);
+	}		
 	
 	if(update_data.updates != NULL) {
 		fsa_cib_conn->cmds->update(fsa_cib_conn, XML_CIB_TAG_STATUS,
@@ -633,8 +641,8 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	const char *node_uname = (const char*)key;
 	struct update_data_s* data = (struct update_data_s*)user_data;
 
-	crm_debug_2("%s processing %s (%s)",
-		    __FUNCTION__, node_uname, data->state);
+	crm_debug("Updating %s: %s/%s",
+		  node_uname, data->state, data->join);
 
 	tmp1 = create_node_state(node_uname, node_uname,
 				 NULL, data->state, NULL, data->join,
