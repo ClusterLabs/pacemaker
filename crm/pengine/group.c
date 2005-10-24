@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.46 2005/10/18 14:51:21 andrew Exp $ */
+/* $Id: group.c,v 1.47 2005/10/24 07:48:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -22,6 +22,7 @@
 #include <pengine.h>
 #include <pe_utils.h>
 #include <crm/msg_xml.h>
+#include <clplumbing/cl_misc.h>
 
 extern gboolean rsc_colocation_new(
 	const char *id, enum con_strength strength,
@@ -37,6 +38,9 @@ typedef struct group_variant_data_s
 		resource_t *first_child;
 		resource_t *last_child;
 
+		gboolean colocated;
+		gboolean ordered;
+		
 		gboolean child_starting;
 		gboolean child_stopping;
 		
@@ -50,10 +54,12 @@ typedef struct group_variant_data_s
 
 void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
+	resource_t *self = NULL;
 	crm_data_t *xml_obj = rsc->xml;
 	crm_data_t *xml_self = copy_xml(rsc->xml);
 	group_variant_data_t *group_data = NULL;
-	resource_t *self = NULL;
+	const char *group_ordered = get_rsc_param(rsc, "ordered");
+	const char *group_colocated = get_rsc_param(rsc, "colocated");
 
 	crm_debug_3("Processing resource %s...", rsc->id);
 /* 	rsc->id = "dummy_group_rsc_id"; */
@@ -64,7 +70,18 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	group_data->child_list   = NULL;
 	group_data->first_child  = NULL;
 	group_data->last_child   = NULL;
+	rsc->variant_opaque = group_data;
 
+	group_data->ordered   = TRUE;
+	group_data->colocated = TRUE;
+
+	if(group_ordered != NULL) {
+		cl_str_to_boolean(group_ordered, &(group_data->ordered));
+	}
+	if(group_colocated != NULL) {
+		cl_str_to_boolean(group_colocated, &(group_data->colocated));
+	}
+	
 	/* this is a bit of a hack - but simplifies everything else */
 	ha_msg_mod(xml_self, F_XML_TAGNAME, XML_CIB_TAG_RESOURCE);
 /* 	set_id(xml_self, "self", -1); */
@@ -93,15 +110,14 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 			if(group_data->first_child == NULL) {
 				group_data->first_child = new_rsc;
 
-			} else {
+			} else if(group_data->colocated) {
 				rsc_colocation_new(
 					"pe_group_internal_colo", pecs_must,
 					group_data->first_child, new_rsc,
 					NULL, NULL);
 			}
 			group_data->last_child = new_rsc;
-			crm_action_debug_3(
-				print_resource("Added", new_rsc, FALSE));
+			print_resource(LOG_DEBUG_3, "Added", new_rsc, FALSE);
 			
 		} else {
 			pe_err("Failed unpacking resource %s",
@@ -111,7 +127,6 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	crm_debug_3("Added %d children to resource %s...",
 		    group_data->num_children, group_data->self->id);
 	
-	rsc->variant_opaque = group_data;
 }
 
 
@@ -127,6 +142,10 @@ int group_num_allowed_nodes(resource_t *rsc)
 {
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
+	if(group_data->colocated == FALSE) {
+		pe_config_err("Cannot clone non-colocated group: %s", rsc->id);
+		return 0;
+	}
  	return group_data->self->fns->num_allowed_nodes(group_data->self);
 }
 
@@ -137,11 +156,13 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	CRM_ASSERT(data_set != NULL);
-	CRM_ASSERT(group_data->self != NULL);
- 	group_color = color_resource(group_data->first_child, data_set);
-	CRM_DEV_ASSERT(group_color != NULL);
-	native_assign_color(rsc, group_color);
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
+		group_color = child_rsc->fns->color(child_rsc, data_set);
+		CRM_DEV_ASSERT(group_color != NULL);
+		native_assign_color(rsc, group_color);
+		);
+	
 	return group_color;
 }
 
@@ -200,7 +221,6 @@ group_update_pseudo_status(resource_t *parent, resource_t *child)
 		}
 		
 		);
-
 }
 
 void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
@@ -229,6 +249,26 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 		order_restart(child_rsc);
 
+		if(group_data->ordered == FALSE) {
+			order_start_start(
+				group_data->self, child_rsc, pe_ordering_optional);
+
+			custom_action_order(
+				child_rsc, start_key(child_rsc), NULL,
+				group_data->self, started_key(group_data->self), NULL,
+				pe_ordering_optional, data_set);
+
+			order_stop_stop(
+				group_data->self, child_rsc, pe_ordering_optional);
+
+			custom_action_order(
+				child_rsc, stop_key(child_rsc), NULL,
+				group_data->self, stopped_key(group_data->self), NULL,
+				pe_ordering_optional, data_set);
+
+			continue;
+		}
+		
 		if(last_rsc != NULL) {
 			order_start_start(
 				last_rsc, child_rsc, pe_ordering_optional);
@@ -255,7 +295,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		last_rsc = child_rsc;
 		);
 
-	if(last_rsc != NULL) {
+	if(group_data->ordered && last_rsc != NULL) {
 		custom_action_order(
 			last_rsc, start_key(last_rsc), NULL,
 			group_data->self, started_key(group_data->self), NULL,
@@ -290,8 +330,23 @@ void group_rsc_colocation_lh(
 		return;
 	}
 
- 	group_data->first_child->fns->rsc_colocation_lh(group_data->first_child, rsc_rh, constraint); 
+	if(group_data->colocated) {
+		group_data->first_child->fns->rsc_colocation_lh(
+			group_data->first_child, rsc_rh, constraint); 
+		return;
+	}
 	
+	if(constraint->strength != pecs_must_not) {
+		pe_config_err("Cannot colocate resources with"
+			      " non-colocated group: %s", rsc_lh->id);
+		return;
+	} 
+
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc->fns->rsc_colocation_lh(
+			child_rsc, rsc_rh, constraint); 
+		);
 }
 
 void group_rsc_colocation_rh(
@@ -306,9 +361,25 @@ void group_rsc_colocation_rh(
 	CRM_DEV_ASSERT(rsc_lh->variant == pe_native);
 
 	crm_debug_3("Processing RH of constraint %s", constraint->id);
-	crm_action_debug_3(print_resource("LHS", rsc_lh, TRUE));
+	print_resource(LOG_DEBUG_3, "LHS", rsc_lh, TRUE);
 	
- 	group_data->first_child->fns->rsc_colocation_rh(rsc_lh, group_data->first_child, constraint); 
+	if(group_data->colocated) {
+		group_data->first_child->fns->rsc_colocation_rh(
+			rsc_lh, group_data->first_child, constraint); 
+		return;
+	}
+	
+	if(constraint->strength != pecs_must_not) {
+		pe_config_err("Cannot colocate resources with"
+			      " non-colocated group: %s", rsc_rh->id);
+		return;
+	} 
+
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc->fns->rsc_colocation_rh(
+			rsc_lh, child_rsc, constraint); 
+		);
 }
 
 
@@ -428,7 +499,7 @@ void group_print(
 	}
 	
 	status_print("%sResource Group: %s\n",
-		     pre_text?pre_text:"", group_data->self->id);
+		     pre_text?pre_text:"", rsc->id);
 
 	if(options & pe_print_html) {
 		status_print("<ul>\n");
@@ -457,7 +528,7 @@ void group_free(resource_t *rsc)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	crm_debug_3("Freeing %s", group_data->self->id);
+	crm_debug_3("Freeing %s", rsc->id);
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,

@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.60 2005/10/18 14:51:21 andrew Exp $ */
+/* $Id: incarnation.c,v 1.61 2005/10/24 07:48:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -95,8 +95,7 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 		add_rsc_param(
 			child_rsc, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
 		
-		crm_action_debug_3(
-			print_resource("Added", child_rsc, FALSE));
+		print_resource(LOG_DEBUG_3, "Added", child_rsc, FALSE);
 		
 		crm_free(inc_num);
 		crm_free(inc_max);
@@ -849,7 +848,7 @@ void clone_rsc_colocation_lh(
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 		
-		crm_action_debug_3(print_resource("LHS", child_rsc, TRUE));
+		print_resource(LOG_DEBUG_3, "LHS", child_rsc, TRUE);
 		child_rsc->fns->rsc_colocation_lh(child_rsc, constraint->rsc_rh, constraint);
 		);
 }
@@ -876,7 +875,7 @@ void clone_rsc_colocation_rh(
 		return;
 		
 	} else {
-		crm_action_debug_3(print_resource("LHS", rsc_lh, FALSE));
+		print_resource(LOG_DEBUG_3, "LHS", rsc_lh, FALSE);
 	}
 	
 	get_clone_variant_data(clone_data, rsc_rh);
@@ -884,7 +883,7 @@ void clone_rsc_colocation_rh(
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 		
-		crm_action_debug_3(print_resource("RHS", child_rsc, FALSE));
+		print_resource(LOG_DEBUG_3, "RHS", child_rsc, FALSE);
 		child_rsc->fns->rsc_colocation_rh(rsc_lh, child_rsc, constraint);
 		);
 }

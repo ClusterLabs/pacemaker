@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.97 2005/10/20 13:51:45 andrew Exp $ */
+/* $Id: native.c,v 1.98 2005/10/24 07:48:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -244,10 +244,28 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 {
 	color_t *new_color = NULL;
 
+	print_resource(LOG_DEBUG_2, "Coloring: ", rsc, FALSE);
+	
 	if(rsc->provisional == FALSE) {
-		return rsc->color;
+		return rsc->color;		
+	}
+
+	rsc->rsc_cons = g_list_sort(
+		rsc->rsc_cons, sort_cons_strength);
+
+	/*------ Pre-processing */
+	slist_iter(
+		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
+
+		crm_action_debug_3(
+			print_rsc_colocation(
+				"Pre-Processing constraint", constraint,FALSE));
 		
-	} else if( native_choose_color(rsc, data_set->no_color) ) {
+		rsc->fns->rsc_colocation_lh(
+			rsc, constraint->rsc_rh, constraint);
+		);
+	
+	if( native_choose_color(rsc, data_set->no_color) ) {
 		crm_debug_3("Colored resource %s with color %d",
 			    rsc->id, rsc->color->id);
 		new_color = rsc->color;
@@ -263,12 +281,26 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		
 		if(new_color == NULL) {
 			pe_warn("Resource %s cannot run anywhere", rsc->id);
-			print_resource("ERROR: No color", rsc, FALSE);
+			print_resource(LOG_ERR, "ERROR: No color", rsc, FALSE);
 			native_assign_color(rsc, data_set->no_color);
 			new_color = data_set->no_color;
 		}
 	}
 	rsc->provisional = FALSE;
+
+	/*------ Post-processing */
+#if 1
+	slist_iter(
+		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
+		crm_action_debug_3(
+			print_rsc_colocation(
+				"Post-Processing constraint",constraint,FALSE));
+		rsc->fns->rsc_colocation_lh(
+			rsc, constraint->rsc_rh, constraint);
+		);
+#endif
+	print_resource(LOG_DEBUG_3, "Colored", rsc, TRUE);
+
 	return new_color;
 }
 
@@ -746,7 +778,7 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		crm_debug_2("RHS of constraint %s is NULL", constraint->id);
 		return;
 	}
-	crm_action_debug_3(print_resource("before update", rsc,TRUE));
+	print_resource(LOG_DEBUG_3, "before update", rsc,TRUE);
 
 	or_list = node_list_or(
 		rsc->allowed_nodes, constraint->node_list_rh, FALSE);
@@ -758,7 +790,7 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		   native_update_node_weight(rsc, constraint, node_rh,
 					     rsc->allowed_nodes));
 
-	crm_action_debug_3(print_resource("after update", rsc, TRUE));
+	print_resource(LOG_DEBUG_3, "after update", rsc, TRUE);
 
 }
 
@@ -1047,8 +1079,7 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 			crm_action_debug_3(
 				print_color("Removed LH", color_lh, FALSE));
 			
-			crm_action_debug_3(
-				print_resource("Modified LH", rsc_lh, TRUE));
+			print_resource(LOG_DEBUG_3, "Modified LH", rsc_lh,TRUE);
 
 		} else if(rsc_lh->provisional) {
 			
@@ -1092,8 +1123,7 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 			crm_action_debug_3(
 				print_color("Removed RH", color_rh, FALSE));
 
-			crm_action_debug_3(
-				print_resource("Modified RH", rsc_rh, TRUE));
+			print_resource(LOG_DEBUG_3, "Modified RH", rsc_rh, TRUE);
 
 		} else if(rsc_rh->provisional) {
 			
@@ -1233,8 +1263,7 @@ native_assign_color(resource_t *rsc, color_t *color)
 	crm_debug("Colored resource %s with color %d",
 		    rsc->id, local_color->id);
 	
-	crm_action_debug_3(
-		print_resource("Colored Resource", rsc, TRUE));
+	print_resource(LOG_DEBUG_3, "Colored Resource", rsc, TRUE);
 	
 	return;
 }
@@ -1398,7 +1427,7 @@ native_constraint_violated(
 void
 filter_nodes(resource_t *rsc)
 {
-	crm_action_debug_3(print_resource("Filtering nodes for", rsc, FALSE));
+	print_resource(LOG_DEBUG_3, "Filtering nodes for", rsc, FALSE);
 	slist_iter(
 		node, node_t, rsc->allowed_nodes, lpc,
 		if(node == NULL) {

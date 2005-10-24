@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.38 2005/10/20 13:51:45 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.39 2005/10/24 07:48:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -69,7 +69,7 @@ extern void print_node(
 	const char *pre_text, node_t *node, gboolean details);
 
 extern void print_resource(
-	const char *pre_text, resource_t *rsc, gboolean details);
+	int log_level, const char *pre_text, resource_t *rsc, gboolean details);
 
 extern void print_rsc_to_node(
 	const char *pre_text, rsc_to_node_t *cons, gboolean details);

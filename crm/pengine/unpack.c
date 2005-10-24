@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.140 2005/10/19 08:27:19 andrew Exp $ */
+/* $Id: unpack.c,v 1.141 2005/10/24 07:48:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -334,8 +334,7 @@ unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
 			data_set->resources = g_list_append(
 				data_set->resources, new_rsc);
 			
-			crm_action_debug_3(
-				print_resource("Added", new_rsc, FALSE));
+			print_resource(LOG_DEBUG_3, "Added", new_rsc, FALSE);
 
 		} else {
 			pe_config_err("Failed unpacking %s %s",
@@ -746,9 +745,8 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 				crm_info("Making sure orphan %s is stopped",
 					 rsc_id);
 			
-				crm_action_debug_3(
-					print_resource(
-						"Added orphan", rsc, FALSE));
+				print_resource(LOG_DEBUG_3, "Added orphan",
+					       rsc, FALSE);
 				
 				CRM_DEV_ASSERT(rsc != NULL);
 				slist_iter(
@@ -1255,23 +1253,27 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			} else if(safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
 				rsc->role = RSC_ROLE_SLAVE;
 				
-			} else if(rsc->role > RSC_ROLE_STOPPED) {
+			} else {
 				/* make sure its already created and is optional
 				 *
 				 * creating it now tells create_recurring_actions() 
 				 *  that it can safely leave it optional
 				 */
-				custom_action(rsc, crm_strdup(id), task,
-					      NULL, TRUE, TRUE, data_set);
-			} else {
-				crm_info("%s active on %s",
-					    rsc->id, node->details->uname);
 				if(rsc->role < RSC_ROLE_STARTED) {
+					crm_info("%s active on %s",
+						 rsc->id, node->details->uname);
 					rsc->role = RSC_ROLE_STARTED;
 				}
-				if(safe_str_neq(task, CRMD_ACTION_START)) {
+
+				/* the != start check is so i dont have to
+				 * update all the old testcases
+				 */
+				if(interval > 0
+				   || safe_str_neq(task, CRMD_ACTION_START)) {
+					crm_debug_2("%s: %s active on %s",
+						    rsc->id, id, node->details->uname);
 					custom_action(rsc, crm_strdup(id), task,
-						      NULL, TRUE, TRUE, data_set);
+						      node, TRUE, TRUE, data_set);
 				}
 			}
 			

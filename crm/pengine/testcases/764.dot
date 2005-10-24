@@ -1,12 +1,12 @@
 digraph "g" {
 	size = "30,30"
-"rsc_posic041_monitor_5000 <none>" [ style="dashed" color="blue" fontcolor="black" ]
+"rsc_posic041_monitor_5000 posic041" [ style="dashed" color="blue" fontcolor="black" ]
 "DoFencing:child_DoFencing:1_monitor_5000 posic041" [ style="dashed" color="blue" fontcolor="black" ]
-"rsc_posic044_monitor_5000 <none>" [ style="dashed" color="blue" fontcolor="black" ]
-"rsc_posic043_monitor_5000 <none>" [ style="dashed" color="blue" fontcolor="black" ]
-"DoFencing:child_DoFencing:2_monitor_5000 <none>" [ style="dashed" color="blue" fontcolor="black" ]
-"DcIPaddr_monitor_5000 <none>" [ style="dashed" color="blue" fontcolor="black" ]
-"DoFencing:child_DoFencing:3_monitor_5000 <none>" [ style="dashed" color="blue" fontcolor="black" ]
+"rsc_posic044_monitor_5000 posic041" [ style="dashed" color="blue" fontcolor="black" ]
+"rsc_posic043_monitor_5000 posic043" [ style="dashed" color="blue" fontcolor="black" ]
+"DoFencing:child_DoFencing:2_monitor_5000 posic043" [ style="dashed" color="blue" fontcolor="black" ]
+"DcIPaddr_monitor_5000 posic043" [ style="dashed" color="blue" fontcolor="black" ]
+"DoFencing:child_DoFencing:3_monitor_5000 posic043" [ style="dashed" color="blue" fontcolor="black" ]
 "DcIPaddr_stop_0 posic043" [ style=bold color="green" fontcolor="black" ]
 "DcIPaddr_start_0 posic043" [ style="dashed" color="blue" fontcolor="black" ]
 "rsc_posic041_stop_0 posic041" [ style=bold color="green" fontcolor="black" ]

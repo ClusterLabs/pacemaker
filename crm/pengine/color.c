@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.34 2005/09/15 08:05:24 andrew Exp $ */
+/* $Id: color.c,v 1.35 2005/10/24 07:48:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -73,60 +73,6 @@ add_color(resource_t *resource, color_t *color)
 	return local_color;
 }
 
-color_t *
-color_resource(resource_t *rsc, pe_working_set_t *data_set)
-{
-	color_t *color = NULL;
-	
-	crm_debug_2("Coloring %s", rsc->id);
-	crm_action_debug_3(print_resource("Coloring", rsc, FALSE));
-	
-	if(rsc->provisional == FALSE) {
-		/* already processed this resource */
-		return rsc->fns->color(rsc, data_set);
-	}
-	
-	rsc->rsc_cons = g_list_sort(
-		rsc->rsc_cons, sort_cons_strength);
-
-	crm_action_debug_3(
-		print_resource("Pre-processing", rsc, FALSE));
-
-	/*------ Pre-processing */
-	slist_iter(
-		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
-
-		crm_action_debug_3(
-			print_rsc_colocation(
-				"Pre-Processing constraint", constraint,FALSE));
-		
-		rsc->fns->rsc_colocation_lh(
-			rsc, constraint->rsc_rh, constraint);
-		);
-	
-	/* avoid looping through lists when we know this resource
-	 * cant be started
-	 */
-
-	color = rsc->fns->color(rsc, data_set);
-
-	crm_action_debug_3(
-		print_resource("Post-processing", rsc, TRUE));
-
-	/*------ Post-processing */
-#if 1
-	slist_iter(
-		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
-		crm_action_debug_3(
-			print_rsc_colocation(
-				"Post-Processing constraint",constraint,FALSE));
-		rsc->fns->rsc_colocation_lh(
-			rsc, constraint->rsc_rh, constraint);
-		);
-#endif
-	crm_action_debug_3(print_resource("Colored", rsc, TRUE));
-	return color;
-}
 
 
 

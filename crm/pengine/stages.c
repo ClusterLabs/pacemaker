@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.80 2005/10/12 18:46:25 andrew Exp $ */
+/* $Id: stages.c,v 1.81 2005/10/24 07:48:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -151,15 +151,7 @@ stage2(pe_working_set_t *data_set)
 	/* Take (next) highest resource */
 	slist_iter(
 		lh_resource, resource_t, data_set->resources, lpc,
-		/* if resource.provisional == FALSE, repeat  */
-		if(lh_resource->provisional == FALSE) {
-			/* already processed this resource */
-			continue;
-		}
-		crm_debug_2("Coloring %s::%d",
-			lh_resource->id,  lh_resource->variant);
-		color_resource(lh_resource, data_set);
-		/* next resource */
+		lh_resource->fns->color(lh_resource, data_set);
 		);
 	
 	return TRUE;
