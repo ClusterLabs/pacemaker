@@ -437,7 +437,7 @@ class CIBAudit(ClusterAudit):
 			#self.CM.debug("Retrieved CIB: %s" % first_host_xml) 
 		else:
 			a_host_xml = self.store_remote_cib(a_host)
-			diff_cmd="@libdir@/heartbeat/crm_diff -VV -f -N \'%s\' -O '%s'" % (a_host_xml, first_host_xml)
+			diff_cmd="@sbindir@/crm_diff -VV -f -N \'%s\' -O '%s'" % (a_host_xml, first_host_xml)
 
 		        infile, outfile, errfile = os.popen3(diff_cmd)
 			diff_lines = outfile.readlines()
