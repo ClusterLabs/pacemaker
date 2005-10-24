@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.7 2005/10/20 13:53:22 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.8 2005/10/24 07:52:27 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -418,13 +418,16 @@ set_standby(cib_t *the_cib, const char *uuid, const char *scope,
 	    const char *standby_value)
 {
 	enum cib_errors rc = cib_ok;
-	standby_common;
+	if(scope != NULL) {
+		standby_common;
+		rc = update_attr(the_cib, cib_sync_call, type, uuid, set_name,
+				 attr_id, attr_name, standby_value);
+		crm_free(attr_id);
+		crm_free(set_name);
 
-	rc = update_attr(the_cib, cib_sync_call, type, uuid, set_name,
-			 attr_id, attr_name, standby_value);
-
-	crm_free(attr_id);
-	crm_free(set_name);
+	} else {
+		rc = set_standby(the_cib, uuid, XML_CIB_TAG_NODES, standby_value);
+	}
 
 	return rc;
 }
@@ -434,13 +437,20 @@ delete_standby(cib_t *the_cib, const char *uuid, const char *scope,
 	       const char *standby_value)
 {
 	enum cib_errors rc = cib_ok;
-	standby_common;	
-	
-	rc = delete_attr(the_cib, type, uuid, set_name,
-			 attr_id, attr_name, standby_value);
-	
-	crm_free(attr_id);
-	crm_free(set_name);
+	if(scope != NULL) {
+		standby_common;
+		rc = delete_attr(the_cib, type, uuid, set_name,
+				 attr_id, attr_name, standby_value);
+		crm_free(attr_id);
+		crm_free(set_name);
+
+	} else {
+		rc = delete_standby(
+			the_cib, uuid, XML_CIB_TAG_STATUS, standby_value);
+
+		rc = delete_standby(
+			the_cib, uuid, XML_CIB_TAG_NODES, standby_value);
+	}
 
 	return rc;
 }
