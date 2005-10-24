@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.42 2005/10/17 19:13:48 gshi Exp $ */
+/* $Id: xml.c,v 1.43 2005/10/24 07:53:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -660,7 +660,7 @@ add_message_xml(HA_Message *msg, const char *field, const crm_data_t *xml)
 {
 	crm_validate_data(xml);
 	crm_validate_data(msg);
-	ha_msg_addstruct(msg, field, xml);
+	ha_msg_addstruct_compress(msg, field, xml);
 	crm_update_parents(msg);
 	return TRUE;
 }
