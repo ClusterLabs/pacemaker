@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.28 2005/07/19 19:12:30 andrew Exp $ */
+/* $Id: main.c,v 1.29 2005/10/24 15:19:28 sunjd Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -153,7 +153,7 @@ init_start(void)
 	}
 
 	if(init_ok && ST_OK != stonithd_set_stonith_ops_callback(
-		   tengine_stonith_callback, NULL)) {
+		   tengine_stonith_callback)) {
 		crm_err("Could not set stonith callback");
 		stonithd_signoff();
 /*  		init_ok = FALSE; */

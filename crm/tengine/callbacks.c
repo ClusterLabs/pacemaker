@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.51 2005/10/18 11:49:29 andrew Exp $ */
+/* $Id: callbacks.c,v 1.52 2005/10/24 15:19:28 sunjd Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -389,7 +389,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 }
 
 void
-tengine_stonith_callback(stonith_ops_t * op, void * private_data)
+tengine_stonith_callback(stonith_ops_t * op)
 {
 	int *action_id = NULL;
 	const char *fail_text = "Fencing op failed";

@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.28 2005/09/26 07:44:49 andrew Exp $ */
+/* $Id: tengine.h,v 1.29 2005/10/24 15:19:28 sunjd Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -151,7 +151,7 @@ extern cib_t *te_cib_conn;
 
 extern const char *actiontype2text(action_type_e type);
 
-extern void tengine_stonith_callback(stonith_ops_t * op, void * private_data);
+extern void tengine_stonith_callback(stonith_ops_t * op);
 extern void tengine_stonith_connection_destroy(gpointer user_data);
 extern gboolean tengine_stonith_dispatch(IPC_Channel *sender, void *user_data);
 extern void check_for_completion(void);
