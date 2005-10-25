@@ -41,7 +41,7 @@ COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 ## binary progs
 hasbin_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 \
 			crm_master crm_standby crm_attribute crm_resource \
-			crm_verify
+			crm_verify crm_uuid
 
 ## SOURCES
 
@@ -52,6 +52,10 @@ crmadmin_SOURCES	= crmadmin.c
 crmadmin_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 crmadmin_LDADD		= $(COMMONLIBS) \
 			$(top_builddir)/crm/pengine/libpengine.la
+
+crm_uuid_SOURCES	= crm_uuid.c
+crm_uuid_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+crm_uuid_LDADD		= $(GLIBLIB) $(top_builddir)/lib/clplumbing/libplumb.la
 
 cibadmin_SOURCES	= cibadmin.c
 cibadmin_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'

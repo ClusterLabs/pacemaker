@@ -725,8 +725,15 @@ if __name__ == '__main__':
     if Environment.has_key("SuppressMonitoring") \
     and Environment["SuppressMonitoring"]:
         cm.log("Resource Monitoring is disabled")
-    cm.log("Cluster nodes: " + repr(config.Parameters["node"]))
-
+    cm.log("Cluster nodes: ")
+    for node in config.Parameters["node"]:
+        out=cm.rsh.readaline(node, "@sbindir@/crm_uuid")
+        if not out:
+            cm.log("    * %s: __undefined_uuid__" % node)
+	else:
+	    out = out[:-1]
+	    cm.log("    * %s: %s" % (node, out))
+	
     Audits = AuditList(cm)
     Tests = []
     
