@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.58 2005/10/18 11:41:53 andrew Exp $ */
+/* $Id: messages.c,v 1.59 2005/10/25 13:56:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -952,7 +952,7 @@ sync_our_cib(HA_Message *request, gboolean all)
 		crm_log_message(LOG_ERR, request);
 	}
 	
-	/* remove the all == FALSE condition
+	/* remove the "all == FALSE" condition
 	 *
 	 * sync_from was failing, the local client wasnt being notified
 	 *    because it didnt know it was a reply
@@ -965,7 +965,7 @@ sync_our_cib(HA_Message *request, gboolean all)
 	ha_msg_mod(replace_request, F_CIB_OPERATION, CIB_OP_REPLACE);
 	ha_msg_add(replace_request, "original_"F_CIB_OPERATION, op);
 	ha_msg_add(replace_request, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
-	ha_msg_addstruct(replace_request, F_CIB_CALLDATA, sync_data);
+	add_message_xml(replace_request, F_CIB_CALLDATA, sync_data);
 	
 	if(send_ha_message(hb_conn, replace_request, all?NULL:host, FALSE) == FALSE) {
 		result = cib_not_connected;
