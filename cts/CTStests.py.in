@@ -315,6 +315,10 @@ class StopTest(CTSTest):
         # Technically we should always be able to notice ourselves stopping
 	patterns.append(self.CM["Pat:We_stopped"] % node)
 
+	local_BadNews = []
+	if self.CM.upcount() > 1:
+	    local_BadNews.append("crmd:.*Resource .* was active at shutdown");
+
 	if self.CM.Env["use_logd"]:
 	    patterns.append(self.CM["Pat:Logd_stopped"] % node)
 
@@ -328,6 +332,9 @@ class StopTest(CTSTest):
         watch = CTS.LogWatcher(
             self.CM["LogFileName"], patterns, self.CM["DeadTime"])
         watch.setwatch()
+
+        local_BadNewsWatch = CTS.LogWatcher(self.CM["LogFileName"], local_BadNews)
+        local_BadNewsWatch.setwatch()
 
         if node == self.CM.OurNode:
             self.incr("us")
@@ -348,6 +355,19 @@ class StopTest(CTSTest):
 
         self.CM.cluster_stable(self.CM["DeadTime"])
 
+	was_BadNews = 0
+	match=local_BadNewsWatch.look(0)
+	while match:
+	    was_BadNews = 1
+	    self.CM.log("LocalBadNews: %s" % (match))
+	    match=local_BadNewsWatch.look(0)
+            if match:
+	        if re.search("LocalBadNews:", match):
+		    match = None
+	    
+	if was_BadNews:
+            return self.failure("Local BadNews detected")
+	    
         # because syslog looses so many messages we can only really fail 
         #  the stop if _none_ of the CCM peers notice the node leave
         if not watch.unmatched or self.CM.upcount() == 0:
@@ -1622,7 +1642,7 @@ class ResourceRecover(CTSTest):
 #	
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-        return [ """ERROR: .* LRM operation.*monitor on %s ERROR: not running""" % self.rid
+        return [ """ERROR: .* LRM operation.*monitor.* on %s Error: not running""" % self.rid
 		 ]
 
 AllTestClasses.append(ResourceRecover)
