@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.48 2005/10/12 19:01:35 andrew Exp $ */
+/* $Id: unpack.c,v 1.49 2005/10/25 14:02:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -77,7 +77,7 @@ unpack_graph(crm_data_t *xml_graph)
 	transition_timer->timeout = crm_get_msec(time);
 	transition_idle_timeout = transition_timer->timeout;		
 
-	transition_counter = crm_atoi(t_id, "-1");
+	transition_counter = crm_parse_int(t_id, "-1");
 
 	crm_info("Beginning transition %d : timeout set to %dms",
 		 transition_counter, transition_timer->timeout);
@@ -185,7 +185,7 @@ unpack_action(crm_data_t *xml_action)
 		return NULL;
 	}
 	
-	action->id       = atoi(value);
+	action->id       = crm_parse_int(value, NULL);
 	action->timeout  = 0;
 	action->interval = 0;
 	action->timer    = NULL;
@@ -212,12 +212,12 @@ unpack_action(crm_data_t *xml_action)
 
 	value = g_hash_table_lookup(action->params, "timeout");
 	if(value != NULL) {
-		action->timeout = atoi(value);
+		action->timeout = crm_parse_int(value, NULL);
 	}
 
 	value = g_hash_table_lookup(action->params, "interval");
 	if(value != NULL) {
-		action->interval = atoi(value);
+		action->interval = crm_parse_int(value, NULL);
 	}
 
 	value = g_hash_table_lookup(action->params, "can_fail");

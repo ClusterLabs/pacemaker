@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.33 2005/10/11 10:03:24 andrew Exp $ */
+/* $Id: io.c,v 1.34 2005/10/25 14:02:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -512,7 +512,7 @@ set_connected_peers(crm_data_t *xml_obj)
 		xml_obj, XML_ATTR_NUMPEERS);
 
 	g_hash_table_foreach(peer_hash, GHFunc_count_peers, &active);
-	current = crm_atoi(current_s, "0");
+	current = crm_parse_int(current_s, "0");
 	if(current != active) {
 		peers_s = crm_itoa(active);
 		crm_xml_add(xml_obj, XML_ATTR_NUMPEERS, peers_s);

@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.61 2005/10/24 07:48:00 andrew Exp $ */
+/* $Id: incarnation.c,v 1.62 2005/10/25 14:02:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -137,8 +137,8 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	
 	clone_data->active_clones  = 0;
 	clone_data->xml_obj_child  = NULL;
-	clone_data->clone_max      = crm_atoi(max_clones,     "1");
-	clone_data->clone_node_max = crm_atoi(max_clones_node,"1");
+	clone_data->clone_max      = crm_parse_int(max_clones,     "1");
+	clone_data->clone_node_max = crm_parse_int(max_clones_node,"1");
 	
 	/* this is a bit of a hack - but simplifies everything else */
 	ha_msg_mod(xml_self, F_XML_TAGNAME, XML_CIB_TAG_RESOURCE);

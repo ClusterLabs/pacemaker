@@ -892,8 +892,8 @@ cib_compare_generation(crm_data_t *left, crm_data_t *right)
 			elem_r = crm_element_value(right, attributes[lpc]);
 		}
 	
-		if(elem_l != NULL) { int_elem_l = atoi(elem_l); }
-		if(elem_r != NULL) { int_elem_r = atoi(elem_r); }
+		if(elem_l != NULL) { int_elem_l = crm_parse_int(elem_l, NULL); }
+		if(elem_r != NULL) { int_elem_r = crm_parse_int(elem_r, NULL); }
 
 		if(int_elem_l < int_elem_r) {
 			crm_debug_2("%s (%s < %s)", attributes[lpc],
@@ -969,16 +969,16 @@ apply_cib_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 	CRM_DEV_ASSERT(old != NULL);
 	
 	value = crm_element_value(old, XML_ATTR_GENERATION_ADMIN);
-	this_admin_epoch = atoi(value?value:"0");
+	this_admin_epoch = crm_parse_int(value, "0");
 	crm_debug_3("%s=%d (%s)", XML_ATTR_GENERATION_ADMIN,
 		  this_admin_epoch, value);
 	
 	value = crm_element_value(old, XML_ATTR_GENERATION);
-	this_epoch = atoi(value?value:"0");
+	this_epoch = crm_parse_int(value, "0");
 	crm_debug_3("%s=%d (%s)", XML_ATTR_GENERATION, this_epoch, value);
 	
 	value = crm_element_value(old, XML_ATTR_NUMUPDATES);
-	this_updates = atoi(value?value:"0");
+	this_updates = crm_parse_int(value, "0");
 	crm_debug_3("%s=%d (%s)", XML_ATTR_NUMUPDATES, this_updates, value);
 	
 	cib_diff_version_details(
@@ -1146,13 +1146,13 @@ cib_version_details(
 		
 	} else {
 		value = crm_element_value(cib, XML_ATTR_GENERATION_ADMIN);
-		*admin_epoch = atoi(value?value:"-1");
+		*admin_epoch = crm_parse_int(value, "-1");
 
 		value  = crm_element_value(cib, XML_ATTR_GENERATION);
-		*epoch = atoi(value?value:"-1");
+		*epoch = crm_parse_int(value, "-1");
 
 		value = crm_element_value(cib, XML_ATTR_NUMUPDATES);
-		*updates = atoi(value?value:"-1");
+		*updates = crm_parse_int(value, "-1");
 	}
 	return TRUE;	
 }

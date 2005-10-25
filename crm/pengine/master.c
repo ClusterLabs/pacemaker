@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.6 2005/10/07 15:57:33 andrew Exp $ */
+/* $Id: master.c,v 1.7 2005/10/25 14:02:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -238,8 +238,8 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 	int promoted = 0;
 	int max_nodes = 0;
-	int master_max = crm_atoi(master_max_s, "1");
-	int master_node_max = crm_atoi(master_node_max_s, "1");
+	int master_max = crm_parse_int(master_max_s, "1");
+	int master_node_max = crm_parse_int(master_node_max_s, "1");
 
 	struct masters_s *master_hash_obj = NULL;
 	GHashTable *master_hash = g_hash_table_new_full(

@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.19 2005/09/21 10:35:03 andrew Exp $ */
+/* $Id: rules.c,v 1.20 2005/10/25 14:02:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -234,8 +234,8 @@ test_attr_expression(crm_data_t *expr, GHashTable *hash, pe_working_set_t *data_
 			cmp = strcmp(h_val, value);
 			
 		} else if(safe_str_eq(type, "number")) {
-			int h_val_f = atoi(h_val);
-			int value_f = atoi(value);
+			int h_val_f = crm_parse_int(h_val, NULL);
+			int value_f = crm_parse_int(value, NULL);
 			
 			if(h_val_f < value_f) {
 				cmp = -1;
@@ -332,8 +332,8 @@ phase_of_the_moon(ha_time_t *now)
 	if(value != NULL) {						\
 		decodeNVpair(value, '-', &value_low, &value_high);	\
 		CRM_DEV_ASSERT(value_low != NULL);			\
-		value_low_i = crm_atoi(value_low, "0");			\
-		value_high_i = crm_atoi(value_high, "-1");		\
+		value_low_i = crm_parse_int(value_low, "0");			\
+		value_high_i = crm_parse_int(value_high, "-1");		\
 		if(value_low_i > time_field) {				\
 			return FALSE;					\
 		} else if(value_high_i < 0) {				\
@@ -370,7 +370,7 @@ cron_range_satisfied(ha_time_t *now, crm_data_t *cron_spec)
 #define update_field(xml_field, time_fn)				\
 	value = crm_element_value(duration_spec, xml_field);		\
 	if(value != NULL) {						\
-		int value_i = crm_atoi(value, "0");			\
+		int value_i = crm_parse_int(value, "0");			\
 		time_fn(end, value_i);					\
 	}
 

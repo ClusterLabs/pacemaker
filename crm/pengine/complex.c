@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.69 2005/10/18 11:48:32 andrew Exp $ */
+/* $Id: complex.c,v 1.70 2005/10/25 14:02:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -258,7 +258,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	(*rsc)->stickiness         = data_set->default_resource_stickiness;
 
 	value = g_hash_table_lookup((*rsc)->parameters, XML_CIB_ATTR_PRIORITY);
-	(*rsc)->priority	   = atoi(value?value:"0"); 
+	(*rsc)->priority	   = crm_parse_int(value, "0"); 
 	(*rsc)->effective_priority = (*rsc)->priority;
 
 	value = g_hash_table_lookup((*rsc)->parameters, "notify");

@@ -363,7 +363,7 @@ build_operation_update(
 	if(xml_op != NULL) {
 		const char *old_status_s = crm_element_value(
 			xml_op, XML_LRM_ATTR_OPSTATUS);
-		int old_status = crm_atoi(old_status_s, "-2");
+		int old_status = crm_parse_int(old_status_s, "-2");
 		int log_level = LOG_ERR;
 
 		if(old_status_s == NULL) {
@@ -923,9 +923,9 @@ construct_op(crm_data_t *rsc_op, const char *rsc_id, const char *operation)
 		CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
 	}
 	
-	op->interval = crm_atoi(g_hash_table_lookup(op->params,"interval"),"0");
-	op->timeout  = crm_atoi(g_hash_table_lookup(op->params, "timeout"),"0");
-	op->start_delay = crm_atoi(g_hash_table_lookup(
+	op->interval = crm_parse_int(g_hash_table_lookup(op->params,"interval"),"0");
+	op->timeout  = crm_parse_int(g_hash_table_lookup(op->params, "timeout"),"0");
+	op->start_delay = crm_parse_int(g_hash_table_lookup(
 					   op->params,"start_delay"),"0");
 
 	/* sanity */

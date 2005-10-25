@@ -189,7 +189,7 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 	cib_has_quorum = crm_is_true(
 		crm_element_value(local_cib, XML_ATTR_HAVE_QUORUM));
 
-	ccm_transition_id = crm_atoi(
+	ccm_transition_id = crm_parse_int(
 		crm_element_value(local_cib, XML_ATTR_CCM_TRANSITION), "-1");
 
 	if(ccm_transition_id < (int)fsa_membership_copy->id) {

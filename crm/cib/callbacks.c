@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.84 2005/10/18 11:41:53 andrew Exp $ */
+/* $Id: callbacks.c,v 1.85 2005/10/25 14:02:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1241,7 +1241,7 @@ cib_msg_copy(HA_Message *msg, gboolean with_data)
 		field = data_list[lpc];
 		value_struct = cl_get_struct(msg, field);
 		if(value_struct != NULL) {
-			ha_msg_addstruct(copy, field, value_struct);
+			add_message_xml(copy, field, value_struct);
 		}
 	}
 	return copy;

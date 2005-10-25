@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.71 2005/10/19 08:24:05 andrew Exp $ */
+/* $Id: graph.c,v 1.72 2005/10/25 14:02:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -87,7 +87,7 @@ update_action(action_t *action)
 				action->extra, "interval");
 			int interval_i = 0;
 			if(interval != NULL) {
-				interval_i = atoi(interval);
+				interval_i = crm_parse_int(interval, NULL);
 				if(interval_i > 0) {
 					crm_debug_3("Ignoring: start + recurring");
 					continue;

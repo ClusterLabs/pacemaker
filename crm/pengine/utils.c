@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.118 2005/10/24 07:48:00 andrew Exp $ */
+/* $Id: utils.c,v 1.119 2005/10/25 14:02:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1781,7 +1781,7 @@ char2score(const char *score)
 		score_f = INFINITY;
 		
 	} else {
-		score_f = atoi(score);
+		score_f = crm_parse_int(score, NULL);
 		if(score_f > 0 && score_f > INFINITY) {
 			score_f = INFINITY;
 			

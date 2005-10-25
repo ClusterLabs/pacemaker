@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.141 2005/10/24 07:48:00 andrew Exp $ */
+/* $Id: unpack.c,v 1.142 2005/10/25 14:02:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -883,8 +883,8 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 	}
 	
 	CRM_DEV_ASSERT(a_task_id != NULL && b_task_id != NULL);	
-	a_call_id = atoi(a_task_id);
-	b_call_id = atoi(b_task_id);
+	a_call_id = crm_parse_int(a_task_id, NULL);
+	b_call_id = crm_parse_int(b_task_id, NULL);
 	
 	if(a_call_id == -1 && b_call_id == -1) {
 		/* both are pending ops so it doesnt matter since
@@ -1001,7 +1001,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	CRM_DEV_ASSERT(task_status != NULL);
 	if(crm_assert_failed) { return FALSE; }
 
-	task_status_i = atoi(task_status);
+	task_status_i = crm_parse_int(task_status, NULL);
 
 	CRM_DEV_ASSERT(task_status_i <= LRM_OP_ERROR);
 	if(crm_assert_failed) {return FALSE;}
@@ -1021,7 +1021,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	if(params != NULL) {
 		const char *interval_s = crm_element_value(params, "interval");
 		if(interval_s != NULL) {
-			interval = atoi(interval_s);
+			interval = crm_parse_int(interval_s, NULL);
 		}
 	}
 	
@@ -1121,7 +1121,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	
 	if(task_status_i != LRM_OP_PENDING) {
 
-		task_id_i = crm_atoi(task_id, "-1");
+		task_id_i = crm_parse_int(task_id, "-1");
 
 		CRM_DEV_ASSERT(task_id != NULL);
 		if(crm_assert_failed) { return FALSE; }
@@ -1155,7 +1155,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	actual_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
 	CRM_DEV_ASSERT(actual_rc != NULL);
 	if(actual_rc != NULL) {
-		actual_rc_i = atoi(actual_rc);
+		actual_rc_i = crm_parse_int(actual_rc, NULL);
 	}
 	
 	if(target_rc != NULL) {
