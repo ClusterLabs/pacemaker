@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.27 2005/10/20 14:13:00 andrew Exp $ */
+/* $Id: utils.c,v 1.28 2005/10/25 13:52:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -395,10 +395,10 @@ compare_version(const char *version1, const char *version2)
 		decodeNVpair(rest2, '.', &step2, &tmp2);
 
 		if(step1 != NULL) {
-			step1_i = atoi(step1);
+			step1_i = crm_parse_int(step1, NULL);
 		}
 		if(step2 != NULL) {
-			step2_i = atoi(step2);
+			step2_i = crm_parse_int(step2, NULL);
 		}
 
 		if(step1_i < step2_i){
@@ -468,6 +468,64 @@ alter_debug(int nsig)
 void g_hash_destroy_str(gpointer data)
 {
 	crm_free(data);
+}
+
+int
+crm_int_helper(const char *text, char **end_text)
+{
+	int atoi_result = -1;
+	char *local_end_text = NULL;
+
+	errno = 0;
+	
+	if(text != NULL) {
+		if(end_text != NULL) {
+			atoi_result = (int)strtol(text, end_text, 10);
+		} else {
+			atoi_result = (int)strtol(text, &local_end_text, 10);
+		}
+		
+		CRM_DEV_ASSERT(errno != EINVAL);
+		if(errno == EINVAL) {
+			crm_err("Conversion of %s failed", text);
+			atoi_result = -1;
+			
+		} else {
+			if(errno == ERANGE) {
+				crm_err("Conversion of %s was clipped", text);
+			}
+			if(end_text == NULL && local_end_text[0] != '\0') {
+				crm_err("Characters left over after parsing "
+					"\"%s\": \"%s\"", text, local_end_text);
+			}
+				
+		}
+	}
+	return atoi_result;
+}
+
+int
+crm_parse_int(const char *text, const char *default_text)
+{
+	int atoi_result = -1;
+	if(text != NULL) {
+		atoi_result = crm_int_helper(text, NULL);
+		if(errno == 0) {
+			return atoi_result;
+		}
+	}
+	
+	if(default_text != NULL) {
+		atoi_result = crm_int_helper(default_text, NULL);
+		if(errno == 0) {
+			return atoi_result;
+		}
+
+	} else {
+		crm_err("No default conversion value supplied");
+	}
+
+	return -1;
 }
 
 gboolean
@@ -651,7 +709,7 @@ crm_set_ha_options(ll_cluster_t *hb_cluster)
 	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
 	crm_debug_3("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
-		int debug_level = atoi(param_val);
+		int debug_level = crm_parse_int(param_val, NULL);
 		if(debug_level > 0 && (debug_level+LOG_INFO) > (int)crm_log_level) {
 			set_crm_log_level(LOG_INFO + debug_level);
 		}
@@ -700,7 +758,7 @@ crm_set_env_options(void)
 	param_val = getenv(param_name);
 	crm_debug("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
-		int debug_level = atoi(param_val);
+		int debug_level = crm_parse_int(param_val, NULL);
 		if(debug_level > 0 && (debug_level+LOG_INFO) > (int)crm_log_level) {
 			set_crm_log_level(LOG_INFO + debug_level);
 		}
@@ -1022,8 +1080,8 @@ decode_transition_magic(
 		return FALSE;
 	}
 	
-	*op_rc = atoi(rc);
-	*op_status = atoi(status);
+	*op_rc = crm_parse_int(rc, NULL);
+	*op_status = crm_parse_int(status, NULL);
 
 	crm_free(rc);
 	crm_free(key);
@@ -1061,7 +1119,7 @@ decode_transition_key(const char *key, char **uuid, int *transition_id)
 		return FALSE;
 	}
 	
-	*transition_id = atoi(transition);
+	*transition_id = crm_parse_int(transition, NULL);
 
 	crm_free(transition);
 	
@@ -1079,7 +1137,7 @@ crm_mem_stats(volatile cl_mem_stats_t *mem_stats)
 	CRM_DEV_ASSERT(active_stats != NULL);
 #ifndef CRM_USE_MALLOC
 	if(active_stats->numalloc > active_stats->numfree) {
-		crm_err("Potential memory leak detected:"
+		crm_warn("Potential memory leak detected:"
 			" %lu alloc's vs. %lu free's (%lu)"
 			" (%lu bytes not freed: req=%lu, alloc'd=%lu)",
 			active_stats->numalloc, active_stats->numfree,
@@ -1113,3 +1171,4 @@ crm_zero_mem_stats(volatile cl_mem_stats_t *stats)
 	active_stats->mallocbytes = 0;
 	active_stats->arena = 0;
 }
+

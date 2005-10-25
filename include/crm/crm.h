@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.83 2005/10/12 18:22:33 andrew Exp $ */
+/* $Id: crm.h,v 1.84 2005/10/25 13:52:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -183,11 +183,6 @@ extern gboolean crm_assert_failed;
 #define CRMD_ACTION_GENERIC_FAIL	"pending_failed"
 
 typedef GList* GListPtr;
-
-#define crm_atoi(text, default) atoi(text?text:default)
-
-extern gboolean safe_str_eq(const char *a, const char *b);
-extern gboolean safe_str_neq(const char *a, const char *b);
 
 #define slist_iter(child, child_type, parent, counter, a)		\
 	{								\
