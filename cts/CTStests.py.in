@@ -318,6 +318,9 @@ class StopTest(CTSTest):
 	local_BadNews = []
 	if self.CM.upcount() > 1:
 	    local_BadNews.append("crmd:.*Resource .* was active at shutdown");
+	    # Currently the CRM relies on local nodes shutting themselves down
+	    #   when there is no DC (during SimulStopLite and often NearQuorum)
+	    # This prevents this from being a regular BadNews item
 
 	if self.CM.Env["use_logd"]:
 	    patterns.append(self.CM["Pat:Logd_stopped"] % node)
@@ -358,12 +361,10 @@ class StopTest(CTSTest):
 	was_BadNews = 0
 	match=local_BadNewsWatch.look(0)
 	while match:
-	    was_BadNews = 1
-	    self.CM.log("LocalBadNews: %s" % (match))
+	    if not re.search("LocalBadNews:", match):
+		self.CM.log("LocalBadNews: %s" % (match))
+		was_BadNews = 1
 	    match=local_BadNewsWatch.look(0)
-            if match:
-	        if re.search("LocalBadNews:", match):
-		    match = None
 	    
 	if was_BadNews:
             return self.failure("Local BadNews detected")
