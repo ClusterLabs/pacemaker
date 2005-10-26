@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.142 2005/10/25 14:02:15 andrew Exp $ */
+/* $Id: unpack.c,v 1.143 2005/10/26 11:34:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1158,29 +1158,34 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		actual_rc_i = crm_parse_int(actual_rc, NULL);
 	}
 	
-	if(target_rc != NULL) {
-		crm_debug_2("Checking for probes that we want to fail: %s",
-			    rsc->id);
+	if(target_rc != NULL && task_status_i != LRM_OP_PENDING) {
 		crm_debug_2("Exit code from %s: %s vs. %s",
 			    task, target_rc, actual_rc);
 		if(safe_str_eq(target_rc, actual_rc)) {
 			task_status_i = LRM_OP_DONE;
+		} else {
+			task_status_i = LRM_OP_ERROR;
 		}
 	}
 	
 	if(EXECRA_NOT_RUNNING == actual_rc_i) {
 		rsc->role = RSC_ROLE_STOPPED;
-
-		/* mask out probes */
-		if(task_status_i == LRM_OP_DONE
-		   && safe_str_eq(task, CRMD_ACTION_STATUS)) {
-			crm_debug_2("Probe ignored");
+		if(safe_str_eq(task, CRMD_ACTION_STATUS)) {
+			/* probe or stop action*/
+			crm_info("%s: resource %s is stopped", id, rsc->id);
 			return TRUE;
 		}
-#if 0
+
 	} else if(EXECRA_RUNNING_MASTER == actual_rc_i) {
 		rsc->role = RSC_ROLE_MASTER;
-#endif
+		if(safe_str_eq(task, CRMD_ACTION_STATUS)) {
+			crm_info("%s: resource %s is a master", id, rsc->id);
+			return TRUE;
+		}
+
+	} else if(EXECRA_FAILED_MASTER == actual_rc_i) {
+		rsc->role = RSC_ROLE_MASTER;
+		task_status_i = LRM_OP_ERROR;
 	}
 
 	if(task_status_i == LRM_OP_ERROR
@@ -1306,14 +1311,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			} else if(safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
 				rsc->role = RSC_ROLE_MASTER;
 				
-			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
-				rsc->role = RSC_ROLE_STARTED;
-				
-			} else if(safe_str_eq(task, CRMD_ACTION_MON)) {
-				rsc->role = RSC_ROLE_STARTED;
-				
-			} else if(is_stop_action
-				  && rsc->role < RSC_ROLE_STARTED) {
+			} else if(rsc->role < RSC_ROLE_STARTED) {
 				rsc->role = RSC_ROLE_STARTED;
 			}
 
