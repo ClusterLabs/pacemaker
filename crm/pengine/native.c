@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.98 2005/10/24 07:48:00 andrew Exp $ */
+/* $Id: native.c,v 1.99 2005/10/26 14:17:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -281,7 +281,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		
 		if(new_color == NULL) {
 			pe_warn("Resource %s cannot run anywhere", rsc->id);
-			print_resource(LOG_ERR, "ERROR: No color", rsc, FALSE);
+			print_resource(LOG_ERR, "No color: ", rsc, FALSE);
 			native_assign_color(rsc, data_set->no_color);
 			new_color = data_set->no_color;
 		}

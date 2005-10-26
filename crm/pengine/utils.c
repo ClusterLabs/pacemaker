@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.119 2005/10/25 14:02:15 andrew Exp $ */
+/* $Id: utils.c,v 1.120 2005/10/26 14:17:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1663,21 +1663,21 @@ find_actions_exact(GListPtr input, const char *key, node_t *on_node)
 		action, action_t, input, lpc,
 		crm_debug_5("Matching %s against %s", key, action->uuid);
 		if(safe_str_neq(key, action->uuid)) {
-			crm_warn("Key mismatch: %s vs. %s",
-				 key, action->uuid);
+			crm_debug_3("Key mismatch: %s vs. %s",
+				    key, action->uuid);
 			continue;
 			
 		} else if(on_node == NULL  || action->node == NULL) {
-			crm_warn("on_node=%p, action->node=%p",
-				 on_node, action->node);
+			crm_debug_3("on_node=%p, action->node=%p",
+				    on_node, action->node);
 			continue;
 
 		} else if(safe_str_eq(on_node->details->id,
 				      action->node->details->id)) {
 			result = g_list_append(result, action);
 		}
-		crm_warn("Node mismatch: %s vs. %s",
-			 on_node->details->id, action->node->details->id);
+		crm_debug_2("Node mismatch: %s vs. %s",
+			    on_node->details->id, action->node->details->id);
 		);
 
 	return result;

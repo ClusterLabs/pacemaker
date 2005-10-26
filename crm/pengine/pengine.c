@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.96 2005/10/18 11:48:32 andrew Exp $ */
+/* $Id: pengine.c,v 1.97 2005/10/26 14:17:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -74,7 +74,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 		copy_in_properties(generation, xml_data);
 		crm_log_xml_info(generation, "[generation]");
-		crm_log_xml_debug(status, "[status]");
+		crm_log_xml_info(status, "[status]");
 
 #if 0
 		char *xml_buffer = NULL;
