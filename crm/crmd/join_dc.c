@@ -271,7 +271,12 @@ do_dc_join_finalize(long long action,
 		add_cib_op_callback(rc, FALSE, crm_strdup(max_generation_from),
 				    finalize_sync_callback);
 		return I_NULL;
+	} else {
+		/* Send _our_ CIB out to everyone */
+		fsa_cib_conn->cmds->sync_from(
+			fsa_cib_conn, fsa_our_uname, NULL,cib_quorum_override);
 	}
+	
 
 	finalize_join(__FUNCTION__);
 
