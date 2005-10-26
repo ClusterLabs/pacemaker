@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.43 2005/10/24 07:53:23 andrew Exp $ */
+/* $Id: xml.c,v 1.44 2005/10/26 11:38:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -244,7 +244,7 @@ add_node_copy(crm_data_t *new_parent, const crm_data_t *xml_node)
 	if(xml_node != NULL && new_parent != NULL) {
 		const char *name = crm_element_name(xml_node);
 		CRM_DEV_ASSERT(
-			HA_OK == ha_msg_addstruct(new_parent, name, xml_node));
+			HA_OK == ha_msg_addstruct_compress(new_parent, name, xml_node));
 		
 		node_copy = find_entity(
 			new_parent, crm_element_name(xml_node), ID(xml_node));
