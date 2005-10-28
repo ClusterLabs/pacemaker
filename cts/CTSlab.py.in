@@ -503,7 +503,7 @@ if __name__ == '__main__':
     LogFile = "/var/log/ha-log-local7"
     DoStonith = 1
     DoStandby = 1
-    DoFencing = 0
+    DoFencing = 1
     NumIter = 500
     SuppressMonitoring = None
     Version = 1
