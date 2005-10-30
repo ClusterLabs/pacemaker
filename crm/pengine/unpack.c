@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.143 2005/10/26 11:34:49 andrew Exp $ */
+/* $Id: unpack.c,v 1.144 2005/10/30 10:00:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -520,8 +520,8 @@ determine_online_status(
 			/* mark it unclean */
 			this_node->details->unclean = TRUE;
 			
-			pe_err("Node %s is partially & un-expectedly down",
-				uname);
+			crm_warn("Node %s is partially & un-expectedly down",
+				 uname);
 			crm_info("\tha_state=%s, ccm_state=%s,"
 				 " crm_state=%s, join_state=%s, expected=%s",
 				 crm_str(ha_state), crm_str(ccm_state),
@@ -546,7 +546,7 @@ determine_online_status(
 			/* mark it unclean */
 			this_node->details->unclean = TRUE;
 			
-			pe_err("Node %s is un-expectedly down", uname);
+			crm_warn("Node %s is un-expectedly down", uname);
 			crm_info("\tha_state=%s, ccm_state=%s,"
 				 " crm_state=%s, join_state=%s, expected=%s",
 				 crm_str(ha_state), crm_str(ccm_state),
