@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.30 2005/10/31 08:53:04 andrew Exp $ */
+/* $Id: tengine.h,v 1.31 2005/10/31 09:37:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -113,14 +113,11 @@ struct te_timer_s
 	int timeout;
 	enum timer_reason reason;
 	action_t *action;
-
 };
 
 /* tengine */
 extern gboolean initialize_graph(void);
 extern gboolean process_graph_event(crm_data_t *event, const char *event_node);
-/*	const char *event_node,   const char *event_rsc, const char *rsc_state,
- *	const char *event_action, const char *event_rc, const char *op_status); */
 extern int match_graph_event(
 	action_t *action, crm_data_t *event, const char *event_node);
 extern action_t *match_down_event(
@@ -144,6 +141,8 @@ extern gboolean extract_event(crm_data_t *msg);
 extern gboolean process_te_message(
 	HA_Message * msg, crm_data_t *xml_data, IPC_Channel *sender);
 
+extern char *te_uuid;
+extern int transition_counter;
 extern uint transition_idle_timeout;
 extern uint default_transition_idle_timeout;
 
