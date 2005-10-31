@@ -378,23 +378,14 @@ cib_native_perform_op(
 				tag = XML_TAG_CIB;
 			}
 		}
-		
+#if 0		
 		if(safe_str_eq(tag, XML_TAG_CIB)) {
 			const char *version = feature_set(cib);
-#if 1
-			/* only needed for 2.0.3 */
-			int cmp = compare_version(version, "1.1");
-			if(cmp != 0) {
-				crm_err("Set XML_ATTR_CIB_REVISION=%s",
-					version);
-				crm_xml_add(cib, XML_ATTR_CIB_REVISION,version);
-			}
-#else
 			crm_xml_add(cib, XML_ATTR_CIB_REVISION, version);
-#endif
 		} else {
 			crm_info("Skipping feature check for %s tag", tag);
 		}
+#endif
 
 		add_message_xml(op_msg, F_CIB_CALLDATA, data);
 	}
