@@ -95,9 +95,9 @@ while test "$done" = "0"; do
 	--admin   | -a)	ADMIN_USER=${2?no admin??}    || return 1; shift 2;;
 	--crmd    | -c)	CRMD_USER=${2?no crmd user??} || return 1; shift 2;;
 
-	--node1   | -1)	test_node_1=${2?no node1??}   || return 1; shift 2;;
-	--node2   | -2)	test_node_2=${2?no node2??}   || return 1; shift 2;;
-	--node3   | -3)	test_node_3=${2?no node2??}   || return 1; shift 2;;
+	--node1   | -1)	test_node_1=`echo ${2?no node1??} | tr 'A-Z' 'a-z'`   || return 1; shift 2;;
+	--node2   | -2)	test_node_2=`echo ${2?no node2??} | tr 'A-Z' 'a-z'`   || return 1; shift 2;;
+	--node3   | -3)	test_node_3=`echo ${2?no node3??} | tr 'A-Z' 'a-z'`   || return 1; shift 2;;
 
 	--ip1)	ip_rsc_1=${2?no ip1??}                || return 1; shift 2;;
 	--ip2)	ip_rsc_2=${2?no ip2??}                || return 1; shift 2;;
