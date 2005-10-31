@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.52 2005/10/24 15:19:28 sunjd Exp $ */
+/* $Id: callbacks.c,v 1.53 2005/10/31 08:53:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,6 +36,9 @@ void te_update_diff(const char *event, HA_Message *msg);
 crm_data_t *need_abort(crm_data_t *update);
 void cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
 			 crm_data_t *output, void *user_data);
+
+extern char *te_uuid;
+extern int transition_counter;
 
 void
 te_update_diff(const char *event, HA_Message *msg)
@@ -391,107 +394,81 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 void
 tengine_stonith_callback(stonith_ops_t * op)
 {
-	int *action_id = NULL;
-	const char *fail_text = "Fencing op failed";
-	int fail_code = te_failed;
-	void *fail_data = NULL;
-	crm_data_t *update = NULL;
+	const char *allow_fail  = NULL;
+	int action_id = -1;
+	action_t *stonith_action = NULL;
+	char *op_key = NULL;
+	char *call_id = NULL;
 
 	if(op == NULL) {
 		crm_err("Called with a NULL op!");
 		return;
 	}
 	
-	crm_info("optype=%d, node_name=%s, result=%d, node_list=%s",
+	crm_info("optype=%d, node_name=%s, result=%d, node_list=%s, action=%s",
 		 op->optype, op->node_name, op->op_result,
-		 (char *)op->node_list);
+		 (char *)op->node_list, op->private_data);
 
-	
 	/* this will mark the event complete if a match is found */
-	crm_malloc0(action_id, sizeof(int));
-	*action_id = match_down_event(
-		op->node_uuid, CRM_OP_FENCE, op->op_result);
-	if(*action_id == -1) {
-		crm_err("Stonith action not matched");
-	}
-	
-	if(op->op_result == STONITH_SUCCEEDED) {
-		enum cib_errors rc = cib_ok;
-		const char *target = op->node_name;
-		const char *uuid   = op->node_uuid;
-		
-		/* zero out the node-status & remove all LRM status info */
-		crm_data_t *node_state = create_xml_node(
-			NULL, XML_CIB_TAG_STATE);
+	CRM_DEV_ASSERT(op->private_data != NULL);
 
-		CRM_DEV_ASSERT(op->node_name != NULL);
-		CRM_DEV_ASSERT(op->node_uuid != NULL);
-
-		crm_xml_add(node_state, XML_ATTR_UUID, uuid);
-		crm_xml_add(node_state, XML_ATTR_UNAME, target);
-		crm_xml_add(node_state, XML_CIB_ATTR_HASTATE, DEADSTATUS);
-		crm_xml_add(node_state, XML_CIB_ATTR_INCCM, XML_BOOLEAN_NO);
-		crm_xml_add(node_state, XML_CIB_ATTR_CRMDSTATE, OFFLINESTATUS);
-		crm_xml_add(
-			node_state, XML_CIB_ATTR_JOINSTATE,CRMD_JOINSTATE_DOWN);
-		crm_xml_add(
-			node_state, XML_CIB_ATTR_EXPSTATE, CRMD_JOINSTATE_DOWN);
-		crm_xml_add(node_state, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM);
-		create_xml_node(node_state, XML_CIB_TAG_LRM);
-		
-		update = create_cib_fragment(node_state, XML_CIB_TAG_STATUS);
-		free_xml(node_state);
-	
-		rc = te_cib_conn->cmds->update(
-			te_cib_conn, XML_CIB_TAG_STATUS, update, NULL,
-			cib_quorum_override);	
-
-		if(*action_id < 0) {
-			fail_text = "Stonith not matched";
-			fail_data = update;
-			fail_code = te_update;
-
-		} else if(rc < cib_ok) {
-			crm_err("CIB update failed: %s", cib_error2string(rc));
-			fail_text = "Couldnt update CIB after stonith";
-			fail_data = update;
-			fail_code = te_failed;
-			
-		} else {
-			add_cib_op_callback(
-				rc, FALSE, action_id, cib_fencing_updated);
-			free_xml(update);
+	/* filter out old STONITH actions */
+	decodeNVpair(op->private_data, ';', &call_id, &op_key);
+	if(op_key != NULL) {
+		char *key = generate_transition_key(transition_counter,te_uuid);
+		gboolean key_matched = safe_str_eq(key, op_key);
+		crm_free(key);
+		if(key_matched == FALSE) {
+			crm_info("Ignoring old STONITH op: %s",
+				 op->private_data);
 			return;
-		}		
+		}
 	}
 
-	send_complete(fail_text, fail_data, fail_code, i_cancel);
-	process_trigger(*action_id);
-	free_xml(update);
-
-	return;
-}
-
-void
-cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
-		    crm_data_t *output, void *user_data)
-{
-	int *action_id = user_data;
-	CRM_ASSERT(action_id != NULL);
+#if 1
+	action_id = crm_parse_int(call_id, "-1");
+	if(action_id < 0) {
+		crm_err("Stonith action not matched: %s (%s)",
+			call_id, op->private_data);
+		return;
+	}
+#endif
 	
-	if(rc < cib_ok) {
-		HA_Message *msg_copy = ha_msg_copy(msg);
-		const char *fail_text = "Couldnt update CIB after stonith";
-		crm_err("CIB update failed: %s", cib_error2string(rc));
-		send_complete(fail_text, msg_copy, te_failed, i_cancel);
-		ha_msg_del(msg_copy);
-
-	} else {
-		process_trigger(*action_id);
-		check_for_completion();
+ 	stonith_action = match_down_event(action_id,op->node_uuid,CRM_OP_FENCE);
+	if(stonith_action == NULL) {
+		crm_err("Stonith action not matched");
+		return;
 	}
 
-	crm_free(action_id);
+	switch(op->op_result) {
+		case STONITH_SUCCEEDED:
+			send_stonith_update(op);
+			break;
+		case STONITH_CANNOT:
+		case STONITH_TIMEOUT:
+		case STONITH_GENERIC:
+			stonith_action->failed = TRUE;
+			allow_fail = g_hash_table_lookup(
+				stonith_action->params, XML_ATTR_TE_ALLOWFAIL);
+
+			if(FALSE == crm_is_true(allow_fail)) {
+				crm_err("Stonith of %s failed (%d)..."
+					" aborting transition.",
+					op->node_name, op->op_result);
+				send_complete("Stonith failed",
+					      stonith_action->xml,
+					      te_failed, i_cancel);
+			}
+			break;
+		default:
+			crm_err("Unsupported action result: %d", op->op_result);
+			send_complete("Unsupport Stonith result",
+				      stonith_action->xml, te_failed, i_cancel);
+	}
+	
+	process_trigger(action_id);
+	check_for_completion();
+	return;
 }
 
 void

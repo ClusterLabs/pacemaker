@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.29 2005/10/24 15:19:28 sunjd Exp $ */
+/* $Id: tengine.h,v 1.30 2005/10/31 08:53:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -123,7 +123,9 @@ extern gboolean process_graph_event(crm_data_t *event, const char *event_node);
  *	const char *event_action, const char *event_rc, const char *op_status); */
 extern int match_graph_event(
 	action_t *action, crm_data_t *event, const char *event_node);
-extern int match_down_event(const char *target, const char *filter, int rc);
+extern action_t *match_down_event(
+	int rc, const char *target, const char *filter);
+extern void send_stonith_update(stonith_ops_t * op);
 
 extern gboolean initiate_transition(void);
 extern gboolean cib_action_update(action_t *action, int status);

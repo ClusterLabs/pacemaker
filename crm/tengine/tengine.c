@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.104 2005/10/18 11:49:29 andrew Exp $ */
+/* $Id: tengine.c,v 1.105 2005/10/31 08:53:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -225,15 +225,15 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 		return -5;
 		
 	} else if(safe_str_neq(update_te_uuid, te_uuid)) {
-		crm_err("Detected an action from a different transitioner:"
-			" %s vs. %s", update_te_uuid, te_uuid);
-		crm_log_message(LOG_ERR, event);
+		crm_info("Detected an action from a different transitioner:"
+			 " %s vs. %s", update_te_uuid, te_uuid);
+		crm_log_message(LOG_INFO, event);
 		return -6;
 		
 	} else if(transition_counter != transition_i) {
 		crm_warn("Detected an action from a different transition:"
 			 " %d vs. %d", transition_i, transition_counter);
-		crm_log_message(LOG_WARNING, event);
+		crm_log_message(LOG_INFO, event);
 		return -3;
 	}
 	
@@ -243,7 +243,7 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 
 	target_rc_s = g_hash_table_lookup(match->params,XML_ATTR_TE_TARGET_RC);
 	if(target_rc_s != NULL) {
-		int target_rc = atoi(target_rc_s);
+		int target_rc = crm_parse_int(target_rc_s, NULL);
 		if(target_rc == op_rc_i) {
 			crm_info("Target rc: == %d", op_rc_i);
 			if(op_status_i != LRM_OP_DONE) {
@@ -308,10 +308,9 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 	return match->id;
 }
 
-int
-match_down_event(const char *target, const char *filter, int rc)
+action_t *
+match_down_event(int id, const char *target, const char *filter)
 {
-	const char *allow_fail  = NULL;
 	const char *this_action = NULL;
 	const char *this_node   = NULL;
 	action_t *match = NULL;
@@ -323,6 +322,11 @@ match_down_event(const char *target, const char *filter, int rc)
 		slist_iter(
 			action, action_t, synapse->actions, lpc2,
 
+			if(id > 0 && action->id == id) {
+				match = action;
+				break;
+			}
+			
 			this_action = crm_element_value(
 				action->xml, XML_LRM_ATTR_TASK);
 
@@ -354,52 +358,83 @@ match_down_event(const char *target, const char *filter, int rc)
 			break;
 			);
 		if(match != NULL) {
+			/* stop this event's timer if it had one */
 			break;
 		}
 		);
 	
-	if(match == NULL) {
-		crm_debug_3("didnt match current action");
-		return -1;
+	if(match != NULL) {
+		/* stop this event's timer if it had one */
+		crm_debug("Match found for action %d: %s on %s", id,
+			  crm_element_value(match->xml, XML_LRM_ATTR_TASK_KEY),
+			  target);
+		stop_te_timer(match->timer);
+		match->complete = TRUE;
+
+	} else if(id > 0) {
+		crm_err("No match for action %d", id);
+	} else {
+		crm_warn("No match for shutdown action on %s", target);
 	}
-
-	crm_debug_3("matched");
-
-	/* stop this event's timer if it had one */
-	stop_te_timer(match->timer);
-	match->complete = TRUE;
-	
-	/* Process OP status */
-	switch(rc) {
-		case STONITH_SUCCEEDED:
-			break;
-		case STONITH_CANNOT:
-		case STONITH_TIMEOUT:
-		case STONITH_GENERIC:
-			match->failed = TRUE;
-			allow_fail = g_hash_table_lookup(
-				match->params, XML_ATTR_TE_ALLOWFAIL);
-
-			if(FALSE == crm_is_true(allow_fail)) {
-				crm_err("Stonith of %s failed (%d)..."
-					" aborting transition.", target, rc);
-				send_complete("Stonith failed",
-					      match->xml, te_failed, i_cancel);
-				return -2;
-			}
-			break;
-		default:
-			crm_err("Unsupported action result: %d", rc);
-			send_complete("Unsupport Stonith result",
-				      match->xml, te_failed, i_cancel);
-			return -3;
-	}
-	
-	crm_debug_3("Action %d was successful, looking for next action",
-		match->id);
-
-	return match->id;
+	return match;
 }
+
+static void
+cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
+		    crm_data_t *output, void *user_data)
+{
+	if(rc < cib_ok) {
+		crm_err("CIB update failed: %s", cib_error2string(rc));
+		crm_log_xml_warn(msg, "[Failed Update]");
+	}
+	check_for_completion();
+}
+
+void
+send_stonith_update(stonith_ops_t * op)
+{
+	enum cib_errors rc = cib_ok;
+	const char *target = op->node_name;
+	const char *uuid   = op->node_uuid;
+	
+	/* zero out the node-status & remove all LRM status info */
+	crm_data_t *update = NULL;
+	crm_data_t *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+	
+	CRM_DEV_ASSERT(op->node_name != NULL);
+	CRM_DEV_ASSERT(op->node_uuid != NULL);
+	
+	crm_xml_add(node_state, XML_ATTR_UUID,  uuid);
+	crm_xml_add(node_state, XML_ATTR_UNAME, target);
+	crm_xml_add(node_state, XML_CIB_ATTR_HASTATE,   DEADSTATUS);
+	crm_xml_add(node_state, XML_CIB_ATTR_INCCM,     XML_BOOLEAN_NO);
+	crm_xml_add(node_state, XML_CIB_ATTR_CRMDSTATE, OFFLINESTATUS);
+	crm_xml_add(node_state, XML_CIB_ATTR_JOINSTATE, CRMD_JOINSTATE_DOWN);
+	crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE,  CRMD_JOINSTATE_DOWN);
+	crm_xml_add(node_state, XML_CIB_ATTR_REPLACE,   XML_CIB_TAG_LRM);
+	create_xml_node(node_state, XML_CIB_TAG_LRM);
+	
+	update = create_cib_fragment(node_state, XML_CIB_TAG_STATUS);
+	
+	rc = te_cib_conn->cmds->update(
+		te_cib_conn, XML_CIB_TAG_STATUS, update, NULL,
+		cib_quorum_override);	
+	
+	if(rc < cib_ok) {
+		const char *fail_text = "Couldnt update CIB after stonith";
+		crm_err("CIB update failed: %s", cib_error2string(rc));
+		send_complete(fail_text, update, te_failed, i_cancel);
+		
+	} else {
+		/* delay processing the trigger until the update completes */
+		add_cib_op_callback(rc, FALSE, NULL, cib_fencing_updated);
+	}
+	
+	free_xml(node_state);
+	free_xml(update);
+	return;
+}
+
 
 gboolean
 process_graph_event(crm_data_t *event, const char *event_node)
@@ -424,7 +459,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 	magic     = crm_element_value(event, XML_ATTR_TRANSITION_MAGIC);
 
 	if(op_status != NULL) {
-		op_status_i = atoi(op_status);
+		op_status_i = crm_parse_int(op_status, NULL);
 		if(op_status_i == -1) {
 			/* just information that the action was sent */
 			crm_debug("Ignoring TE initiated updates");
@@ -491,8 +526,10 @@ process_graph_event(crm_data_t *event, const char *event_node)
 	} else if(action_id == -2) {
 		crm_log_xml_info(event, "Event failed");
 		
+#if 0
 	} else if(action_id == -3) {
 		crm_log_xml_info(event, "Old event found");
+#endif
 		
 	} else if(action_id == -4) {
 		crm_log_xml_debug(event, "Pending event found");
@@ -562,15 +599,20 @@ initiate_action(action_t *action)
 
 	} else if(action->type == action_type_crm
 		  && safe_str_eq(task, CRM_OP_FENCE)){
-		
+
+		char *key = NULL;
+		const char *id = NULL;
 		const char *uuid = NULL;
 		const char *target = NULL;
 		stonith_ops_t * st_op = NULL;
 
+		id = ID(action->xml);
 		target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 		uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
-		CRM_DEV_ASSERT(target != NULL);
+
+		CRM_DEV_ASSERT(id != NULL);
 		CRM_DEV_ASSERT(uuid != NULL);
+		CRM_DEV_ASSERT(target != NULL);
 
 		te_log_action(LOG_INFO,"Executing fencing operation (%s) on %s",
 			      id, target);
@@ -585,7 +627,12 @@ initiate_action(action_t *action)
 		st_op->timeout = transition_idle_timeout / 2;
 		st_op->node_name = crm_strdup(target);
 		st_op->node_uuid = crm_strdup(uuid);
+		st_op->private_data = crm_strdup(id);
 
+		key = generate_transition_key(transition_counter, te_uuid);
+		st_op->private_data = crm_concat(id, key, ';');
+		crm_free(key);
+		
 		if(stonithd_input_IPC_channel() == NULL) {
 			crm_err("Cannot fence %s - stonith not available",
 				target);

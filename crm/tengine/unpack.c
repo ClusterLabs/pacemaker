@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.49 2005/10/25 14:02:14 andrew Exp $ */
+/* $Id: unpack.c,v 1.50 2005/10/31 08:53:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -312,13 +312,12 @@ extract_event(crm_data_t *msg)
 		 */
 		if(safe_str_eq(ccm_state, XML_BOOLEAN_FALSE)
 		   || safe_str_eq(crmd_state, CRMD_JOINSTATE_DOWN)) {
-			int action_id = -1;
+			action_t *shutdown = NULL;
 			crm_debug_3("A shutdown we requested?");
-			action_id = match_down_event(
-				event_node, NULL, LRM_OP_DONE);
+			shutdown = match_down_event(0, event_node, NULL);
 			
-			if(action_id >= 0) {
-				process_trigger(action_id);
+			if(shutdown != NULL) {
+				process_trigger(shutdown->id);
 				check_for_completion();
 
 			} else {
