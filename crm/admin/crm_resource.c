@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.7 2005/10/24 07:36:42 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.8 2005/10/31 09:06:51 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -558,7 +558,14 @@ main(int argc, char **argv)
 		rc = migrate_resource(rsc_id, NULL, NULL, cib_conn);
 
 	} else if(rsc_cmd == 'M') {
+		const char *current_uname = NULL;
 		resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+		if(rsc != NULL && rsc->running_on != NULL) {
+			node_t *current = rsc->running_on->data;
+			if(current != NULL) {
+				current_uname = current->details->uname;
+			}
+		}
 		
 		if(rsc == NULL) {
 			fprintf(stderr, "Resource %s not migrated:"
@@ -568,18 +575,20 @@ main(int argc, char **argv)
 			fprintf(stderr, "Resource %s not migrated:"
 				" active on multiple nodes\n", rsc_id);
 			
+		} else if(host_uname != NULL
+			  && safe_str_eq(current_uname, host_uname)) {
+			fprintf(stderr, "Error performing operation: "
+				"%s is already active on %s",
+				rsc_id, host_uname);
+
 		} else if(rsc->stickiness == 0 && host_uname != NULL) {
 			rc = migrate_resource(
 				rsc_id, NULL, host_uname, cib_conn);
 
-		} else if(g_list_length(rsc->running_on) == 1) {
-			node_t *current = rsc->running_on->data;
-			rc = migrate_resource(rsc_id, current->details->uname,
+		} else if(g_list_length(rsc->running_on) == 1
+			  || host_uname != NULL) {
+			rc = migrate_resource(rsc_id, current_uname,
 					      host_uname, cib_conn);
-
-		} else if(host_uname != NULL) {
-			rc = migrate_resource(
-				rsc_id, NULL, host_uname, cib_conn);
 
 		} else {
 			fprintf(stderr, "Resource %s not migrated: "
