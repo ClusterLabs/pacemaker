@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.47 2005/10/24 07:48:00 andrew Exp $ */
+/* $Id: group.c,v 1.48 2005/11/01 14:52:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -498,11 +498,14 @@ void group_print(
 		child_text = "    ";
 	}
 	
-	status_print("%sResource Group: %s\n",
+	status_print("%sResource Group: %s",
 		     pre_text?pre_text:"", rsc->id);
 
 	if(options & pe_print_html) {
-		status_print("<ul>\n");
+		status_print("\n<ul>\n");
+
+	} else if((options & pe_print_log) == 0) {
+		status_print("\n");
 	}
 	
 	slist_iter(

@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.97 2005/10/26 14:17:49 andrew Exp $ */
+/* $Id: pengine.c,v 1.98 2005/11/01 14:52:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -164,7 +164,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 crm_data_t *
 do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now)
 {
-	
+	int rsc_log_level = LOG_INFO;
 /*	pe_debug_on(); */
 	set_working_set_defaults(data_set);
 	data_set->input = xml_input;
@@ -183,6 +183,10 @@ do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *no
 #if MEMCHECK_STAGE_0
 	check_and_exit(0);
 #endif
+
+	slist_iter(rsc, resource_t, data_set->resources, lpc,
+		   rsc->fns->print(rsc, NULL, pe_print_log, &rsc_log_level);
+		);
 
 	crm_debug_5("apply placement constraints");
 	stage1(data_set);

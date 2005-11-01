@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.81 2005/10/24 07:48:00 andrew Exp $ */
+/* $Id: stages.c,v 1.82 2005/11/01 14:52:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -171,7 +171,7 @@ stage3(pe_working_set_t *data_set)
 		const char *probed = g_hash_table_lookup(
 			node->details->attrs, CRM_OP_PROBED);
 
-		crm_info("%s probed: %s", node->details->uname, probed);
+		crm_debug("%s probed: %s", node->details->uname, probed);
 		
 		if(crm_is_true(probed)) {
 			continue;

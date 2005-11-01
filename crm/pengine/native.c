@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.99 2005/10/26 14:17:49 andrew Exp $ */
+/* $Id: native.c,v 1.100 2005/11/01 14:52:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -377,7 +377,7 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 			mon->runnable = FALSE;
 		
 		} else if(mon->optional == FALSE) {
-			crm_info("   %s:\t(%s)", mon->uuid, crm_str(node_uname));
+			crm_notice("   %s:\t(%s)", mon->uuid, crm_str(node_uname));
 		}
 		custom_action_order(rsc, start_key(rsc), NULL,
 				    NULL, crm_strdup(key), mon,
@@ -400,7 +400,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		rsc->xml, XML_TAG_ATTR_SETS, chosen, rsc->parameters,
 		NULL, 0, data_set);
 
-	crm_info("%s: %s->%s", rsc->id,
+	crm_debug("%s: %s->%s", rsc->id,
 		  role2text(rsc->role), role2text(rsc->next_role));
 	
 	if(g_list_length(rsc->running_on) > 1) {
@@ -1705,9 +1705,9 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *d
 	/* use StartRsc/StopRsc */
 	
 	if(safe_str_neq(current->details->id, next->details->id)) {
-		crm_info("Move  resource %s\t(%s -> %s)", rsc->id,
-			 current->details->uname,
-			 next->details->uname);
+		crm_notice("Move  resource %s\t(%s -> %s)", rsc->id,
+			   current->details->uname, next->details->uname);
+
 		stop = stop_action(rsc, current, FALSE);
 		start = start_action(rsc, next, FALSE);
 
@@ -1717,8 +1717,8 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *d
 		
 	} else {
 		if(rsc->failed) {
-			crm_info("Recover resource %s\t(%s)",
-				 rsc->id, next->details->uname);
+			crm_notice("Recover resource %s\t(%s)",
+				   rsc->id, next->details->uname);
 			stop = stop_action(rsc, current, FALSE);
 			start = start_action(rsc, next, FALSE);
 /* 			/\* make the restart required *\/ */
@@ -1743,12 +1743,12 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *d
 				rsc->next_role = RSC_ROLE_STOPPED;
 
 			} else if(start->optional) {
-				crm_info("Leave resource %s\t(%s)",
-					 rsc->id, next->details->uname);
+				crm_notice("Leave resource %s\t(%s)",
+					   rsc->id, next->details->uname);
 
 			} else {
-				crm_info("Restart resource %s\t(%s)",
-					 rsc->id, next->details->uname);
+				crm_notice("Restart resource %s\t(%s)",
+					   rsc->id, next->details->uname);
 			}
 		}
 	}
@@ -1764,8 +1764,8 @@ StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 	
 	slist_iter(
 		current, node_t, rsc->running_on, lpc,
-		crm_info("Stop  resource %s\t(%s)",
-			 rsc->id, current->details->uname);
+		crm_notice("Stop  resource %s\t(%s)",
+			   rsc->id, current->details->uname);
 		stop = stop_action(rsc, current, FALSE);
 
 		if(data_set->remove_after_stop) {
@@ -1801,7 +1801,7 @@ DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 	stop = stop_key(rsc);
 	start = start_key(rsc);
 
-	crm_info("Removing %s from %s",
+	crm_notice("Removing %s from %s",
 		 rsc->name, node->details->uname);
 	
 	delete = delete_action(rsc, node);
@@ -1838,8 +1838,8 @@ StartRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 	crm_debug_2("Executing: %s", rsc->id);
 	start = start_action(rsc, next, TRUE);
 	if(start->runnable) {
-		crm_info("Start resource %s\t(%s)",
-			 rsc->id, next->details->uname);
+		crm_notice("Start resource %s\t(%s)",
+			   rsc->id, next->details->uname);
 		start->optional = FALSE;
 	}		
 	return TRUE;
@@ -1851,7 +1851,7 @@ PromoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 	crm_debug_2("Executing: %s", rsc->id);
 
 	CRM_DEV_ASSERT(rsc->next_role == RSC_ROLE_MASTER);
-	crm_info("Promote resource %s\t(%s)", rsc->id, next->details->uname);
+	crm_notice("Promote resource %s\t(%s)", rsc->id, next->details->uname);
 	promote_action(rsc, next, FALSE);
 	return TRUE;
 }
@@ -1864,8 +1864,8 @@ DemoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 	CRM_DEV_ASSERT(rsc->next_role == RSC_ROLE_SLAVE);
 	slist_iter(
 		current, node_t, rsc->running_on, lpc,
-		crm_info("Demote resource %s\t(%s)",
-			 rsc->id, current->details->uname);
+		crm_notice("Demote resource %s\t(%s)",
+			   rsc->id, current->details->uname);
 		demote_action(rsc, current, FALSE);
 		);
 	return TRUE;
