@@ -60,7 +60,7 @@ libpengine_la_SOURCES	= color.c unpack.c graph.c rules.c pengine.c \
 			utils.c complex.c native.c stages.c \
 			group.c incarnation.c master.c
 
-libpengine_la_LDFLAGS	= -version-info 0:0:0
+libpengine_la_LDFLAGS	= -version-info 1:0:0
 
 noinst_HEADERS	= pe_utils.h pengine.h complex.h pe_rules.h
 

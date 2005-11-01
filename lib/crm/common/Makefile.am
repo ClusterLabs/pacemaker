@@ -36,11 +36,11 @@ halib_PROGRAMS	=
 
 ## SOURCES
 
-noinst_HEADERS	        = 
+noinst_HEADERS  = 
 
 libcrmcommon_la_SOURCES	= ipc.c msg.c utils.c xml.c ctrl.c \
 			iso8601.c iso8601_fields.c
-libcrmcommon_la_LDFLAGS	= -version-info 0:0:0
+libcrmcommon_la_LDFLAGS	= -version-info 1:0:0
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
