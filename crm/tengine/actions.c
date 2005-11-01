@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.1 2005/10/31 09:37:17 andrew Exp $ */
+/* $Id: actions.c,v 1.2 2005/11/01 14:53:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -93,162 +93,203 @@ send_stonith_update(stonith_ops_t * op)
 	return;
 }
 
+static gboolean
+te_fence_node(action_t *action)
+{
+	char *key = NULL;
+	const char *id = NULL;
+	const char *uuid = NULL;
+	const char *target = NULL;
+	stonith_ops_t * st_op = NULL;
+	
+	id = ID(action->xml);
+	target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+	uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+	
+	CRM_DEV_ASSERT(id != NULL);
+	CRM_DEV_ASSERT(uuid != NULL);
+	CRM_DEV_ASSERT(target != NULL);
+	if(crm_assert_failed) {
+		/* error */
+		te_log_action(LOG_ERR, "Corrupted command (id=%s): no node",
+			      crm_str(id));
+		return FALSE;
+	}
+	
+	te_log_action(LOG_INFO,
+		      "Executing fencing operation (%s) on %s (timeout=%d)",
+		      id, target, transition_idle_timeout / 2);
+#ifdef TESTING
+	action->complete = TRUE;
+	process_trigger(action->id);
+	return TRUE;
+#endif
+
+	crm_malloc0(st_op, sizeof(stonith_ops_t));
+	st_op->optype = RESET;
+	st_op->timeout = transition_idle_timeout / 2;
+	st_op->node_name = crm_strdup(target);
+	st_op->node_uuid = crm_strdup(uuid);
+	
+	key = generate_transition_key(transition_counter, te_uuid);
+	st_op->private_data = crm_concat(id, key, ';');
+	crm_free(key);
+	
+	if(stonithd_input_IPC_channel() == NULL) {
+		crm_err("Cannot fence %s: stonith not available", target);
+		return FALSE;
+		
+	} else if (ST_OK != stonithd_node_fence( st_op )) {
+		crm_err("Cannot fence %s: stonithd_node_fence() call failed ",
+			target);
+		return FALSE;
+	}
+	stop_te_timer(transition_timer);
+	start_te_timer(transition_timer);
+	return TRUE;
+}
+
+static gboolean
+te_crm_command(action_t *action)
+{
+	char *value = NULL;
+	char *counter = NULL;
+	HA_Message *cmd = NULL;		
+
+	const char *id = NULL;
+	const char *task = NULL;
+	const char *on_node = NULL;
+
+	gboolean ret = TRUE;
+
+	id      = ID(action->xml);
+	task    = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+	on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+
+	CRM_DEV_ASSERT(on_node != NULL && strlen(on_node) != 0);
+	if(crm_assert_failed) {
+		/* error */
+		te_log_action(LOG_ERR, "Corrupted command (id=%s) %s: no node",
+			      crm_str(id), crm_str(task));
+		return FALSE;
+	}
+	
+	te_log_action(LOG_INFO, "Executing crm-event (%s): %s on %s",
+		      crm_str(id), crm_str(task), on_node);
+	
+#ifdef TESTING
+	action->complete = TRUE;
+	process_trigger(action->id);
+	return TRUE;
+#endif
+	
+	cmd = create_request(task, NULL, on_node, CRM_SYSTEM_CRMD,
+			     CRM_SYSTEM_TENGINE, NULL);
+	
+	counter = generate_transition_key(transition_counter, te_uuid);
+	crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
+	ret = send_ipc_message(crm_ch, cmd);
+	crm_free(counter);
+	
+	value = g_hash_table_lookup(action->params, XML_ATTR_TE_NOWAIT);
+	if(ret == FALSE) {
+		crm_err("Action %d failed: send", action->id);
+		return FALSE;
+		
+	} else if(crm_is_true(value)) {
+		crm_info("Skipping wait for %d", action->id);
+		action->complete = TRUE;
+		process_trigger(action->id);
+		
+	} else if(ret && action->timeout > 0) {
+		crm_debug_3("Setting timer for action %d",action->id);
+		action->timer->reason = timeout_action_warn;
+		start_te_timer(action->timer);
+	}
+	return TRUE;
+}
+
+static gboolean
+te_rsc_command(action_t *action) 
+{
+	/* never overwrite stop actions in the CIB with
+	 *   anything other than completed results
+	 *
+	 * Writing pending stops makes it look like the
+	 *   resource is running again
+	 */
+	const char *task = NULL;
+	const char *on_node = NULL;
+	action->invoked = FALSE;
+
+	on_node  = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+	CRM_DEV_ASSERT(on_node != NULL && strlen(on_node) != 0);
+	if(crm_assert_failed) {
+		/* error */
+		te_log_action(LOG_ERR, "Corrupted command(id=%s) %s: no node",
+			      ID(action->xml), crm_str(task));
+		return FALSE;
+	}	
+	
+#ifdef TESTING
+	cib_action_update(action, LRM_OP_DONE);
+	return TRUE;
+#endif
+	
+	task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+	if(safe_str_eq(task, CRMD_ACTION_START)
+	   || safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
+		cib_action_update(action, LRM_OP_PENDING);
+		
+	} else {
+		cib_action_updated(NULL, 0, cib_ok, NULL, action);
+	}
+	return TRUE;
+}
 
 gboolean
 initiate_action(action_t *action) 
 {
-	gboolean ret = FALSE;
-	gboolean send_command = FALSE;
+	const char *id = NULL;
 
-	const char *on_node   = NULL;
-	const char *id        = NULL;
-	const char *task      = NULL;
-	const char *timeout   = NULL;
-	const char *msg_task    = XML_GRAPH_TAG_RSC_OP;
+	id = crm_element_value(action->xml, XML_ATTR_ID);
 
-	on_node  = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-	id       = crm_element_value(action->xml, XML_ATTR_ID);
-	task     = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-	timeout  = crm_element_value(action->xml, XML_ATTR_TIMEOUT);
-
-	if(id == NULL || strlen(id) == 0
-	   || task == NULL || strlen(task) == 0) {
+	if(id == NULL) {
 		/* error */
-		te_log_action(LOG_ERR, "Failed on corrupted command: %s (id=%s) %s",
-			crm_element_name(action->xml),
-			crm_str(id), crm_str(task));
-
+		te_log_action(LOG_ERR, "Corrupted command %s: no ID",
+			      crm_element_name(action->xml));
+		crm_log_xml_err(action->xml, "[corrupt cmd]");
+		
 	} else if(action->type == action_type_pseudo){
-		te_log_action(LOG_INFO, "Executing pseudo-event (%d): "
-			 "%s on %s", action->id, task, on_node);
+		te_log_action(LOG_INFO, "Executing pseudo-event: %d",
+			      action->id);
 		
 		action->complete = TRUE;
 		process_trigger(action->id);
-		ret = TRUE;
-
-	} else if(action->type == action_type_crm
-		  && safe_str_eq(task, CRM_OP_FENCE)){
-
-		char *key = NULL;
-		const char *id = NULL;
-		const char *uuid = NULL;
-		const char *target = NULL;
-		stonith_ops_t * st_op = NULL;
-
-		id = ID(action->xml);
-		target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-		uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
-
-		CRM_DEV_ASSERT(id != NULL);
-		CRM_DEV_ASSERT(uuid != NULL);
-		CRM_DEV_ASSERT(target != NULL);
-
-		te_log_action(LOG_INFO,"Executing fencing operation (%s) on %s",
-			      id, target);
-#ifdef TESTING
-		ret = TRUE;
-		action->complete = TRUE;
-		process_trigger(action->id);
 		return TRUE;
-#endif
-		crm_malloc0(st_op, sizeof(stonith_ops_t));
-		st_op->optype = RESET;
-		st_op->timeout = transition_idle_timeout / 2;
-		st_op->node_name = crm_strdup(target);
-		st_op->node_uuid = crm_strdup(uuid);
-		st_op->private_data = crm_strdup(id);
 
-		key = generate_transition_key(transition_counter, te_uuid);
-		st_op->private_data = crm_concat(id, key, ';');
-		crm_free(key);
-		
-		if(stonithd_input_IPC_channel() == NULL) {
-			crm_err("Cannot fence %s - stonith not available",
-				target);
-			
-		} else if (ST_OK == stonithd_node_fence( st_op )) {
-			ret = TRUE;
-		}
-		
-	} else if(on_node == NULL || strlen(on_node) == 0) {
-		/* error */
-		te_log_action(LOG_ERR,
-			      "Failed on corrupted command: %s (id=%s) %s on %s",
-			      crm_element_name(action->xml), crm_str(id),
-			      crm_str(task), crm_str(on_node));
-			
-	} else if(action->type == action_type_crm){
-		te_log_action(LOG_INFO, "Executing crm-event (%s): %s on %s",
-			      id, task, on_node);
+	} else if(action->type == action_type_rsc) {
+		return te_rsc_command(action);
 
-#ifdef TESTING
-		action->complete = TRUE;
-		process_trigger(action->id);
-		return TRUE;
-#endif
-/* 		action->complete = TRUE; */
-		msg_task = task;
-		send_command = TRUE;
+	} else if(action->type == action_type_crm) {
+		const char *task = NULL;
+		task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+		CRM_DEV_ASSERT(task != NULL);
 
-	} else if(action->type == action_type_rsc){
-		/* never overwrite stop actions in the CIB with
-		 *   anything other than completed results
-		 *
-		 * Writing pending stops makes it look like the
-		 *   resource is running again
-		 */
-#ifdef TESTING
-		action->invoked = FALSE;
-		cib_action_update(action, LRM_OP_DONE);
-		return TRUE;
-#endif
-		action->invoked = FALSE;
-		if(safe_str_eq(task, CRMD_ACTION_START)
-		   || safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
-			cib_action_update(action, LRM_OP_PENDING);
+		if(safe_str_eq(task, CRM_OP_FENCE)) {
+			return te_fence_node(action);
 
 		} else {
-			cib_action_updated(NULL, 0, cib_ok, NULL, action);
-		}
-		ret = TRUE;
-
-	} else {
-		te_log_action(LOG_ERR,
-			      "Failed on unsupported command type: "
-			      "%s, %s (id=%s) on %s",
-			      crm_element_name(action->xml), task, id, on_node);
-	}
-
-	if(send_command) {
-		char *value = NULL;
-		HA_Message *cmd = NULL;		
-		char *counter = crm_itoa(transition_counter);
-
-		cmd = create_request(msg_task, NULL, on_node, CRM_SYSTEM_CRMD,
-				     CRM_SYSTEM_TENGINE, NULL);
-
-		counter = generate_transition_key(transition_counter, te_uuid);
-		crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
-		ret = send_ipc_message(crm_ch, cmd);
-		crm_free(counter);
-
-		value = g_hash_table_lookup(action->params, XML_ATTR_TE_NOWAIT);
-		if(ret == FALSE) {
-			crm_err("Action %d failed: send", action->id);
-
-		} else if(crm_is_true(value)) {
-			crm_info("Skipping wait for %d", action->id);
-			action->complete = TRUE;
-			process_trigger(action->id);
-			
-		} else if(ret && action->timeout > 0) {
-			crm_debug_3("Setting timer for action %d",action->id);
-			action->timer->reason = timeout_action_warn;
-			start_te_timer(action->timer);
+			return te_crm_command(action);
 		}
 		
+	} else {
+		te_log_action(LOG_ERR,
+			      "Failed on unsupported command type: %s (id=%s)",
+			      crm_element_name(action->xml), id);
 	}
-	return ret;
+
+	return FALSE;
 }
 
 gboolean
