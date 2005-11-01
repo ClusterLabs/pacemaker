@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.53 2005/10/31 08:53:04 andrew Exp $ */
+/* $Id: callbacks.c,v 1.54 2005/11/01 14:53:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -405,8 +405,8 @@ tengine_stonith_callback(stonith_ops_t * op)
 		return;
 	}
 	
-	crm_info("optype=%d, node_name=%s, result=%d, node_list=%s, action=%s",
-		 op->optype, op->node_name, op->op_result,
+	crm_info("call=%d, optype=%d, node_name=%s, result=%d, node_list=%s, action=%s",
+		 op->call_id, op->optype, op->node_name, op->op_result,
 		 (char *)op->node_list, op->private_data);
 
 	/* this will mark the event complete if a match is found */
