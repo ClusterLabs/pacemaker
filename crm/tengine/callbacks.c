@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.54 2005/11/01 14:53:58 andrew Exp $ */
+/* $Id: callbacks.c,v 1.55 2005/11/02 13:27:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -352,14 +352,19 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		return TRUE;
 
 	} else if(strcmp(op, CRM_OP_TRANSITION) == 0) {
-		if(te_fsa_state != s_idle) {
-			crm_debug("Attempt to start another transition");
+		if(te_fsa_state == s_in_transition) {
+			crm_info("Another transition started: state=%d",
+				 te_fsa_state);
 			send_complete("Attempt to start another transition",
 				      NULL, te_abort, i_cancel);
 
 		} else {
+			te_fsa_state_t last_state = te_fsa_state;
 			te_fsa_state = te_state_matrix[i_transition][te_fsa_state];
 			CRM_DEV_ASSERT(te_fsa_state == s_in_transition);
+			if(te_fsa_state != last_state) {
+				crm_debug("State change %d->%d", last_state, te_fsa_state);
+			}
 			initialize_graph();
 			unpack_graph(xml_data);
 			

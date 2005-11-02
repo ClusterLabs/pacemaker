@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.2 2005/11/01 14:53:38 andrew Exp $ */
+/* $Id: actions.c,v 1.3 2005/11/02 13:27:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -306,6 +306,9 @@ cib_action_update(action_t *action, int status)
 	const char *task   = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 	const char *rsc_id = crm_element_value(action->xml, XML_LRM_ATTR_RSCID);
 	const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+	const char *task_uuid = crm_element_value(
+		action->xml, XML_LRM_ATTR_TASK_KEY);
+	
 	const char *target_uuid =
 		crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 
@@ -314,10 +317,10 @@ cib_action_update(action_t *action, int status)
 	if(status == LRM_OP_TIMEOUT) {
 		if(crm_element_value(action->xml, XML_LRM_ATTR_RSCID) != NULL) {
 			crm_warn("%s: %s %s on %s timed out",
-				 crm_element_name(action->xml), task, rsc_id, target);
+				 crm_element_name(action->xml), task_uuid, rsc_id, target);
 		} else {
 			crm_warn("%s: %s on %s timed out",
-				 crm_element_name(action->xml), task, target);
+				 crm_element_name(action->xml), task_uuid, target);
 		}
 	}
 	code = crm_itoa(status);
@@ -383,7 +386,7 @@ cib_action_update(action_t *action, int status)
 		te_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL, call_options);
 
 	crm_debug("Updating CIB with %s action %d: %s %s on %s (call_id=%d)",
-		  op_status2text(status), action->id, task, rsc_id, target, rc);
+		  op_status2text(status), action->id, task_uuid, rsc_id, target, rc);
 
 	if(status == LRM_OP_PENDING) {
 		crm_debug_2("Waiting for callback id: %d", rc);
@@ -391,7 +394,7 @@ cib_action_update(action_t *action, int status)
 	}
 #else
 	te_log_action(LOG_INFO, "Initiating action %d: %s %s on %s",
-		      action->id, task, rsc_id, target);
+		      action->id, task_uuid, rsc_id, target);
 	call_options = 0;
 	{
 		HA_Message *cmd = ha_msg_new(11);
@@ -424,19 +427,21 @@ cib_action_updated(
 {
 	HA_Message *cmd = NULL;
 	crm_data_t *rsc_op  = NULL;
-	const char *task    = NULL;
-	const char *rsc_id  = NULL;
-	const char *on_node = NULL;
-	const char *value = NULL;
-
 	action_t *action = user_data;
 	char *counter = crm_itoa(transition_counter);
+
+	const char *task    = NULL;
+	const char *value   = NULL;
+	const char *rsc_id  = NULL;
+	const char *on_node = NULL;
+	const char *task_uuid = NULL;
 
 	CRM_DEV_ASSERT(action != NULL);      if(crm_assert_failed) { return; }
 	CRM_DEV_ASSERT(action->xml != NULL); if(crm_assert_failed) { return; }
 
 	rsc_op  = action->xml;
 	task    = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+	task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
 	rsc_id  = crm_element_value(rsc_op, XML_LRM_ATTR_RSCID);
 	on_node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
 	counter = generate_transition_key(transition_counter, te_uuid);
@@ -445,7 +450,7 @@ cib_action_updated(
 	
 	if(rc < cib_ok) {
 		crm_err("Update for action %d: %s %s on %s FAILED",
-			action->id, task, rsc_id, on_node);
+			action->id, task_uuid, rsc_id, on_node);
 		send_complete(cib_error2string(rc), output, te_failed, i_cancel);
 		return;
 	}
@@ -465,7 +470,7 @@ cib_action_updated(
 	}
 	
 	crm_info("Initiating action %d: %s %s on %s",
-		 action->id, task, rsc_id, on_node);
+		 action->id, task_uuid, rsc_id, on_node);
 	
 	if(rsc_op != NULL) {
 		crm_log_xml_debug_2(rsc_op, "Performing");
