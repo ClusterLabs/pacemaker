@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.101 2005/10/24 07:48:00 andrew Exp $ */
+/* $Id: pengine.h,v 1.102 2005/11/02 17:37:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -324,11 +324,15 @@ struct action_wrapper_s
 		action_t *action;
 };
 
+/* order is significant here
+ * items listed in order of accending severeness
+ * more severe actions take precedent over lower ones
+ */
 enum action_fail_response {
 	action_fail_ignore,
-	action_fail_block,
 	action_fail_recover,
 	action_fail_migrate,
+	action_fail_block,
 /* 	action_fail_stop, */
 	action_fail_fence
 };

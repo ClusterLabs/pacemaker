@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.146 2005/11/02 17:23:38 andrew Exp $ */
+/* $Id: unpack.c,v 1.147 2005/11/02 17:37:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1364,14 +1364,15 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				    fail2text(action->on_fail),
 				    role2text(action->fail_role));
 
+			if(action->fail_role != RSC_ROLE_STARTED
+			   && rsc->next_role < action->fail_role) {
+				rsc->next_role = action->fail_role;
+			}
+
 			if(action->fail_role == RSC_ROLE_STOPPED) {
 				/* make sure it doesnt come up again */
 				native_assign_color(rsc, data_set->no_color);
-
-			} else if(action->fail_role != RSC_ROLE_STARTED) {
-				rsc->next_role = action->fail_role;
 			}
-			
 			
 			break;
 		case LRM_OP_CANCELLED:
