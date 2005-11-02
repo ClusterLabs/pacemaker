@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.44 2005/10/26 11:38:39 andrew Exp $ */
+/* $Id: xml.c,v 1.45 2005/11/02 13:30:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1389,7 +1389,7 @@ parse_xml(const char *input, int *offset)
 							error = "error parsing child";
 						} else {
 							CRM_DEV_ASSERT(crm_is_allocated(child) == 1);
-							ha_msg_addstruct(
+							ha_msg_addstruct_compress(
 								new_obj, crm_element_name(child), child);
 							
 							crm_debug_4("Finished parsing child: %s",
