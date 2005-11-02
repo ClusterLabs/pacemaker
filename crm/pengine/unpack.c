@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.144 2005/10/30 10:00:39 andrew Exp $ */
+/* $Id: unpack.c,v 1.145 2005/11/02 13:22:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,7 +54,7 @@ gboolean add_node_attrs(
 
 gboolean unpack_rsc_op(
 	resource_t *rsc, node_t *node, crm_data_t *xml_op,
-	int *max_call_id, pe_working_set_t *data_set);
+	int *max_call_id, gboolean *failed, pe_working_set_t *data_set);
 
 gboolean determine_online_status(
 	crm_data_t * node_state, node_t *this_node, pe_working_set_t *data_set);
@@ -640,8 +640,7 @@ increment_clone(char *last_rsc_id)
 extern gboolean DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set);
 
 gboolean
-unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
-		     pe_working_set_t *data_set)
+unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list, pe_working_set_t *data_set)
 {
 	gboolean delete_resource = FALSE;
 	enum rsc_role_e saved_role = RSC_ROLE_UNKNOWN;
@@ -656,7 +655,8 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 	GListPtr op_list = NULL;
 	GListPtr sorted_op_list = NULL;
 	char *alt_rsc_id = NULL;
-
+	gboolean failed = FALSE;
+	
 	const char *value = NULL;
 	const char *old_value = NULL;
 	const char *attr_list[] = {
@@ -798,27 +798,30 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list,
 			continue;
 		}
 		
-		sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
+		failed = FALSE;
 		saved_role = rsc->role;
 		rsc->role = RSC_ROLE_STOPPED;
+		sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
+
 		slist_iter(
 			rsc_op, crm_data_t, sorted_op_list, lpc,
 
 			unpack_rsc_op(rsc, node, rsc_op,
-				      &max_call_id, data_set);
+				      &max_call_id, &failed, data_set);
 			);
 
 		/* no need to free the contents */
 		g_list_free(sorted_op_list);
 
-		crm_info("Resource %s is %s on %s",
-			 rsc->id, role2text(rsc->role), node->details->uname);
+		crm_debug("Resource %s is %s on %s",
+			  rsc->id, role2text(rsc->role), node->details->uname);
 
 		rsc->known_on = g_list_append(rsc->known_on, node);
  		if(rsc->role != RSC_ROLE_STOPPED) { 
 			crm_debug_2("Adding %s to %s", rsc->id, node->details->uname);
 			native_add_running(rsc, node, data_set);
-
+			rsc->failed = failed;
+			
 		} else {
 			char *key = stop_key(rsc);
 			GListPtr possible_matches = find_actions(rsc->actions, key, node);
@@ -964,7 +967,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
 gboolean
 unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
-	      int *max_call_id, pe_working_set_t *data_set) 
+	      int *max_call_id, gboolean *failed, pe_working_set_t *data_set) 
 {
 	const char *id          = NULL;
 	const char *task        = NULL;
@@ -1172,7 +1175,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		rsc->role = RSC_ROLE_STOPPED;
 		if(safe_str_eq(task, CRMD_ACTION_STATUS)) {
 			/* probe or stop action*/
-			crm_info("%s: resource %s is stopped", id, rsc->id);
+			crm_debug("%s: resource %s is stopped", id, rsc->id);
 			return TRUE;
 		}
 
@@ -1265,7 +1268,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				 *  that it can safely leave it optional
 				 */
 				if(rsc->role < RSC_ROLE_STARTED) {
-					crm_info("%s active on %s",
+					crm_debug("%s active on %s",
 						 rsc->id, node->details->uname);
 					rsc->role = RSC_ROLE_STARTED;
 				}
@@ -1303,7 +1306,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 					     rsc, -INFINITY, node, data_set);
 			}
 			
-			rsc->failed = TRUE;
+			*failed = TRUE;
 
 			if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
 				rsc->role = RSC_ROLE_MASTER;
