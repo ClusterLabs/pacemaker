@@ -1407,19 +1407,8 @@ do_lrm_event(long long action,
 
 		target_rc = atoi(target_rc_s);
 		if(target_rc == op->rc) {
-			char *op_id = make_stop_id(op->rsc_id, op->call_id);
+			op->op_status = LRM_OP_DONE;
 			crm_info("Confirmed stopped: %s", op->rsc_id);
-			send_direct_ack(op, NULL);
-			if(g_hash_table_remove(shutdown_ops, op_id)) {
-				crm_debug("Op %d (%s %s) confirmed",
-					  op->call_id, op->op_type, op->rsc_id);
-			} else if(op->interval == 0) {
-				crm_err("Op %d (%s %s) not matched: %s",
-					op->call_id, op->op_type, op->rsc_id, op_id);
-			}
-			crm_free(op_id);
-
-			return I_NULL;
 
 		} else {
 			crm_err("Detected active resource: %s", op->rsc_id);
