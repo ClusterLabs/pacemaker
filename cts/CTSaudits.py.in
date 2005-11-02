@@ -545,7 +545,7 @@ class PartitionAudit(ClusterAudit):
             
 
     def audit_partition(self, partition):
-        passed = 0
+        passed = 1
         dc_found = []
         dc_allowed_list = []
         lowest_epoche = None
@@ -570,31 +570,58 @@ class PartitionAudit(ClusterAudit):
 	    self.NodeEpoche[node] = self.trim2int(self.NodeEpoche[node])
 	    self.NodeQuorum[node] = self.trim_string(self.NodeQuorum[node])
 
-            if lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
+	    if not self.NodeEpoche[node]:
+		self.CM.log("Warn: Node %s dissappeared: cant determin epoche" %(node))
+                self.CM.ShouldBeStatus[node] = self.CM["down"]
+		# not in itself a reason to fail the audit (not what we're
+		#  checking for in this audit)
+            elif lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
                 lowest_epoche = self.NodeEpoche[node]
                 
+	if not lowest_epoche:
+	    self.CM.log("Lowest epoche not determined in %s" % (partition))
+	    passed = 0
+
         for node in node_list:
             if self.CM.ShouldBeStatus[node] == self.CM["up"]:
                 if self.CM.is_node_dc(node, self.NodeState[node]):
                     dc_found.append(node)
                     if self.NodeEpoche[node] == lowest_epoche:
-                        passed = 1
-                    elif not self.NodeEpoche[node]:
-                        self.CM.log("Cant determin epoche for DC %s" %(node))
-                        passed = 0
-
-                    else:
+                        self.CM.debug("%s: OK" % node)
+		    elif not self.NodeEpoche[node]:
+                        self.CM.debug("Check on %s ignored: no node epoche" % node)
+                    elif not lowest_epoche:
+                        self.CM.debug("Check on %s ignored: no lowest epoche" % node)
+		    else:
                         self.CM.log("DC %s is not the oldest node (%d vs. %d)"
                             %(node, self.NodeEpoche[node], lowest_epoche))
                         passed = 0
 
         if len(dc_found) == 0:
-                self.CM.log("DC not found on any of the %d allowed nodes: %s (of %s)"
-                            %(len(dc_allowed_list), str(dc_allowed_list), str(node_list)))
+	    self.CM.log("DC not found on any of the %d allowed nodes: %s (of %s)"
+			%(len(dc_allowed_list), str(dc_allowed_list), str(node_list)))
+
         elif len(dc_found) > 1:
-                self.CM.log("%d DCs (%s) found in cluster partition: %s"
-                            %(len(dc_found), str(dc_found), str(node_list)))
+	    self.CM.log("%d DCs (%s) found in cluster partition: %s"
+			%(len(dc_found), str(dc_found), str(node_list)))
+	    passed = 0
+
+        elif self.CM.Env["CIBResource"] == 1 and self.NodeQuorum[dc_found[0]]:
+            if self.audit_dc_resources(node_list, dc_found) == 0:
                 passed = 0
+
+            Resources = self.CM.Resources()
+            for node in node_list:
+		if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+		    for resource in Resources:
+			if resource.rid == "rsc_"+node:
+			    if resource.IsRunningOn(node) == 0:
+				self.CM.log("Node %s is not running its own resource" %(node))
+				passed = 0
+
+        elif self.CM.Env["CIBResource"] == 1:
+            # no quorum means no resource management
+            self.CM.debug("Not auditing resources - no quorum")
 
         if passed == 0:
             for node in node_list:
@@ -602,20 +629,6 @@ class PartitionAudit(ClusterAudit):
                     self.CM.log("epoche %s : %s"  
                                 %(self.NodeEpoche[node], self.NodeState[node]))
 
-        if self.CM.Env["CIBResource"] == 1 and len(dc_found) > 0 and self.NodeQuorum[dc_found[0]]:
-            if self.audit_dc_resources(node_list, dc_found) == 0:
-                passed = 0
-
-            Resources = self.CM.Resources()
-            for node in node_list:
-                for resource in Resources:
-                    if resource.rid == "rsc_"+node:
-                        if resource.IsRunningOn(node) == 0:
-                            self.CM.log("Node %s is not running its own resource" %(node))
-                            passed = 0
-        elif self.CM.Env["CIBResource"] == 1:
-            # no quorum means no resource management
-            self.CM.debug("Not auditing resources - no quorum")
 
         return passed
 
