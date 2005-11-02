@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.145 2005/11/02 13:22:31 andrew Exp $ */
+/* $Id: unpack.c,v 1.146 2005/11/02 17:23:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,7 +54,7 @@ gboolean add_node_attrs(
 
 gboolean unpack_rsc_op(
 	resource_t *rsc, node_t *node, crm_data_t *xml_op,
-	int *max_call_id, gboolean *failed, pe_working_set_t *data_set);
+	int *max_call_id, enum action_fail_response *failed, pe_working_set_t *data_set);
 
 gboolean determine_online_status(
 	crm_data_t * node_state, node_t *this_node, pe_working_set_t *data_set);
@@ -655,7 +655,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list, pe_working_set_t *
 	GListPtr op_list = NULL;
 	GListPtr sorted_op_list = NULL;
 	char *alt_rsc_id = NULL;
-	gboolean failed = FALSE;
+	enum action_fail_response on_fail = FALSE;
 	
 	const char *value = NULL;
 	const char *old_value = NULL;
@@ -798,8 +798,8 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list, pe_working_set_t *
 			continue;
 		}
 		
-		failed = FALSE;
 		saved_role = rsc->role;
+		on_fail = action_fail_ignore;
 		rsc->role = RSC_ROLE_STOPPED;
 		sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
 
@@ -807,7 +807,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list, pe_working_set_t *
 			rsc_op, crm_data_t, sorted_op_list, lpc,
 
 			unpack_rsc_op(rsc, node, rsc_op,
-				      &max_call_id, &failed, data_set);
+				      &max_call_id, &on_fail, data_set);
 			);
 
 		/* no need to free the contents */
@@ -820,7 +820,42 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list, pe_working_set_t *
  		if(rsc->role != RSC_ROLE_STOPPED) { 
 			crm_debug_2("Adding %s to %s", rsc->id, node->details->uname);
 			native_add_running(rsc, node, data_set);
-			rsc->failed = failed;
+
+			if(on_fail != action_fail_ignore) {
+				rsc->failed = TRUE;
+				crm_debug_2("Force stop");
+			}
+			
+			if(on_fail == action_fail_ignore) {
+				/* nothing to do */
+			} else if(node->details->unclean) {
+				stop_action(rsc, node, FALSE);
+
+			} else if(on_fail == action_fail_fence) {
+				/* treat it as if it is still running
+				 * but also mark the node as unclean
+				 */
+				node->details->unclean = TRUE;
+				stop_action(rsc, node, FALSE);
+				
+			} else if(on_fail == action_fail_block) {
+				/* is_managed == FALSE will prevent any
+				 * actions being sent for the resource
+				 */
+				rsc->is_managed = FALSE;
+				
+			} else if(on_fail == action_fail_migrate) {
+ 				stop_action(rsc, node, FALSE);
+
+				/* make sure it comes up somewhere else
+				 * or not at all
+				 */
+				rsc2node_new("__action_migration_auto__",
+					     rsc, -INFINITY, node, data_set);
+				
+			} else {
+ 				stop_action(rsc, node, FALSE);
+			}
 			
 		} else {
 			char *key = stop_key(rsc);
@@ -967,7 +1002,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
 gboolean
 unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
-	      int *max_call_id, gboolean *failed, pe_working_set_t *data_set) 
+	      int *max_call_id, enum action_fail_response *on_fail, pe_working_set_t *data_set) 
 {
 	const char *id          = NULL;
 	const char *task        = NULL;
@@ -1297,6 +1332,13 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				rsc, crm_strdup(id), task, NULL,
 				TRUE, TRUE, data_set);
 
+			if(*on_fail < action->on_fail) {
+				*on_fail = action->on_fail;
+			}
+			
+/* 			if(action->on_fail == action_fail_ignore) { */
+
+/* 			} else */
 			if(task_status_i == LRM_OP_NOTSUPPORTED
 			   || is_stop_action
 			   || safe_str_eq(task, CRMD_ACTION_START) ) {
@@ -1306,8 +1348,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 					     rsc, -INFINITY, node, data_set);
 			}
 			
-			*failed = TRUE;
-
 			if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
 				rsc->role = RSC_ROLE_MASTER;
 
@@ -1324,42 +1364,14 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				    fail2text(action->on_fail),
 				    role2text(action->fail_role));
 
-			crm_debug_2("Force stop");
-			if(node->details->unclean) {
-				stop_action(rsc, node, FALSE);
-
-			} else if(action->on_fail == action_fail_fence) {
-				/* treat it as if it is still running
-				 * but also mark the node as unclean
-				 */
-				node->details->unclean = TRUE;
-				stop_action(rsc, node, FALSE);
-				
-			} else if(action->on_fail == action_fail_block) {
-				/* is_managed == FALSE will prevent any
-				 * actions being sent for the resource
-				 */
-				rsc->is_managed = FALSE;
-				
-			} else if(action->on_fail == action_fail_migrate) {
- 				stop_action(rsc, node, FALSE);
-
-				/* make sure it comes up somewhere else
-				 * or not at all
-				 */
-				rsc2node_new("__action_migration_auto__",
-					     rsc, -INFINITY, node, data_set);
-				
-			} else if(action->fail_role == RSC_ROLE_STOPPED) {
+			if(action->fail_role == RSC_ROLE_STOPPED) {
 				/* make sure it doesnt come up again */
 				native_assign_color(rsc, data_set->no_color);
 
 			} else if(action->fail_role != RSC_ROLE_STARTED) {
 				rsc->next_role = action->fail_role;
-
-			} else {
- 				stop_action(rsc, node, FALSE);
 			}
+			
 			
 			break;
 		case LRM_OP_CANCELLED:
