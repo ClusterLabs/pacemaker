@@ -1,4 +1,4 @@
-/* $Id: scandir.c,v 1.11 2005/09/21 13:21:50 alan Exp $ */
+/* $Id: scandir.c,v 1.12 2005/11/02 12:12:35 davidlee Exp $ */
 /* scandir: Scan a directory, collecting all (selected) items into a an array.
  *
  * This code borrowed from 'libit', which can be found here:
@@ -109,6 +109,7 @@
 #include <dirent.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <string.h>
 
 #ifndef NULL
 # define NULL ((void *) 0)
