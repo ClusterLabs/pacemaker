@@ -1,4 +1,4 @@
-/* $Id: scandir.c,v 1.12 2005/11/02 12:12:35 davidlee Exp $ */
+/* $Id: scandir.c,v 1.13 2005/11/02 12:31:47 davidlee Exp $ */
 /* scandir: Scan a directory, collecting all (selected) items into a an array.
  *
  * This code borrowed from 'libit', which can be found here:
@@ -168,7 +168,31 @@ scandir (const char *directory_name,
       {
 	/* User wants them all, or he wants this one.  Copy the entry.  */
 
-	if (copy = (struct dirent *) malloc (sizeof (struct dirent)),
+	/*
+	 * On some OSes the declaration of "entry->d_name" is a minimal-length
+	 * placeholder.  Example: Solaris:
+	 * 	/usr/include/sys/dirent.h:
+	 *		"char d_name[1];"
+	 *	man page "dirent(3)":
+	 *		The field d_name is the beginning of the character array
+	 *		giving the name of the directory entry. This name is
+	 *		null terminated and may have at most MAXNAMLEN chars.
+	 * So our malloc length may need to be increased accordingly.
+	 *	sizeof(entry->d_name): space (possibly minimal) in struct.
+	 * 	strlen(entry->d_name): actual length of the entry. 
+	 *
+	 *			John Kavadias <john_kavadias@hotmail.com>
+	 *			David Lee <t.d.lee@durham.ac.uk>
+	 */
+	int namelength = strlen(entry->d_name) + 1;	/* length with NULL */
+	int extra = 0;
+
+	if (sizeof(entry->d_name) <= namelength) {
+		/* allocated space <= required space */
+		extra += namelength - sizeof(entry->d_name);
+	}
+
+	if (copy = (struct dirent *) malloc (sizeof (struct dirent) + extra),
 	    copy == NULL)
 	  {
 	    closedir (directory);
@@ -206,7 +230,7 @@ scandir (const char *directory_name,
   /* Sort?  */
 
   if (counter > 1 && compare_function)
-    qsort ((char *) array, counter, sizeof (struct dirent)
+    qsort ((char *) array, counter, sizeof (struct dirent *)
   	,	(int (*)(const void *, const void *))(compare_function));
 
   return counter;
