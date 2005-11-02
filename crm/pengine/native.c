@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.100 2005/11/01 14:52:38 andrew Exp $ */
+/* $Id: native.c,v 1.101 2005/11/02 13:19:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -121,8 +121,8 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 
 	} else if(rsc->stickiness > 0 || rsc->stickiness < 0) {
 		rsc2node_new("stickiness", rsc, rsc->stickiness, node,data_set);
-		crm_info("Resource %s: preferring current location (%s/%s)",
-			 rsc->id, node->details->uname, node->details->id);
+		crm_debug("Resource %s: preferring current location (%s/%s)",
+			  rsc->id, node->details->uname, node->details->id);
 	}
 	
 	if(rsc->variant == pe_native && g_list_length(rsc->running_on) > 1) {
@@ -431,7 +431,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 	while(role != rsc->next_role) {
 		next_role = rsc_state_matrix[role][rsc->next_role];
-		crm_debug("Executing: %s->%s (%s)",
+		crm_debug_2("Executing: %s->%s (%s)",
 			  role2text(role), role2text(next_role), rsc->id);
 		if(rsc_action_matrix[role][next_role](
 			   rsc, chosen, data_set) == FALSE) {
@@ -751,8 +751,8 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 {
 	GListPtr or_list;
 
-	crm_debug("Applying %s (%s) to %s", constraint->id,
-		  role2text(constraint->role_filter), rsc->id);
+	crm_debug_2("Applying %s (%s) to %s", constraint->id,
+		    role2text(constraint->role_filter), rsc->id);
 
 	/* take "lifetime" into account */
 	if(constraint == NULL) {
@@ -1179,7 +1179,7 @@ native_choose_color(resource_t *rsc, color_t *no_color)
 	
 	rsc->candidate_colors = sorted_colors;
 	
-	crm_debug("Choose a color from %d possibilities",
+	crm_debug_2("Choose a color from %d possibilities",
 		    g_list_length(sorted_colors));
 	
 	slist_iter(
@@ -1894,8 +1894,14 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	char *key = NULL;
 	char *target_rc = NULL;
 	action_t *probe = NULL;
-	node_t *running = pe_find_node_id(rsc->known_on, node->details->id);
+	node_t *running = NULL;
 
+	CRM_DEV_ASSERT(node != NULL);
+	if(crm_assert_failed) {
+		return FALSE;
+	}
+
+	running = pe_find_node_id(rsc->known_on, node->details->id);
 	if(running != NULL) {
 		/* we already know the status of the resource on this node */
 		return FALSE;
@@ -1905,7 +1911,9 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	key = generate_op_key(rsc->id, CRMD_ACTION_STATUS, 0);
 	probe = custom_action(rsc, key, CRMD_ACTION_STATUS, node,
 			      FALSE, TRUE, data_set);
-
+	
+	crm_notice("Created probe for %s on %s", rsc->id, node->details->uname);
+	
 	g_hash_table_insert(probe->extra,
 			    crm_strdup(XML_ATTR_TE_TARGET_RC), target_rc);
 

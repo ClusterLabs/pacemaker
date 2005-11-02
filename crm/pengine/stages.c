@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.82 2005/11/01 14:52:38 andrew Exp $ */
+/* $Id: stages.c,v 1.83 2005/11/02 13:19:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -468,7 +468,7 @@ choose_node_from_list(color_t *color)
 	GListPtr nodes = color->details->candidate_nodes;
 	node_t *chosen = NULL;
 
-	crm_debug("Choosing node for color %d", color->id);
+	crm_debug_2("Choosing node for color %d", color->id);
 	color->details->candidate_nodes = g_list_sort(nodes, sort_node_weight);
 
 	chosen = g_list_nth_data(color->details->candidate_nodes, 0);
@@ -477,13 +477,12 @@ choose_node_from_list(color_t *color)
 	color->details->pending = FALSE;
 
 	if(chosen == NULL) {
-		crm_debug_2("Could not allocate a node for color %d", color->id);
+		crm_debug("Could not allocate a node for color %d", color->id);
 		return FALSE;
 
 	} else if(chosen->details->unclean || chosen->details->shutdown) {
-		crm_debug_2("Even highest ranked node for color %d"
-			  " is unclean or shutting down",
-			  color->id);
+		crm_debug("All nodes for color %d are unavailable"
+			  ", unclean or shutting down", color->id);
 		color->details->chosen_node = NULL;
 		return FALSE;
 		
@@ -498,7 +497,7 @@ choose_node_from_list(color_t *color)
 	 * new resource count
 	 */
 
-	crm_debug_2("assigned %s to color %d",chosen->details->uname,color->id);
+	crm_debug("assigned %s to color %d", chosen->details->uname, color->id);
 	chosen->details->num_resources += color->details->num_resources;
 	color->details->chosen_node = node_copy(chosen);
 	

@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.63 2005/11/01 14:52:38 andrew Exp $ */
+/* $Id: incarnation.c,v 1.64 2005/11/02 13:19:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -304,7 +304,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	clone_data->child_list = g_list_sort(
  		clone_data->child_list, sort_rsc_provisional);
 
-	crm_debug("Coloring children of: %s", rsc->id);
+	crm_debug_2("Coloring children of: %s", rsc->id);
 	
 	if(rsc->stickiness <= 0) {
 		while(local_node_max > 1
@@ -323,8 +323,8 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(a_node, node_t, clone_data->self->allowed_nodes, lpc,
 		   color_t *new_color = NULL;
 		   if(can_run_resources(a_node) == FALSE) {
-			   crm_debug("Node cant run resources: %s",
-				     a_node->details->uname);
+			   crm_debug_2("Node cant run resources: %s",
+				       a_node->details->uname);
 			   continue;
 		   }
 		   crm_debug_3("Processing node %s for: %s",
@@ -344,7 +344,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 			      }
 			      
 			      if(current == NULL) {
-				      crm_debug("Not active: %s", child->id);
+				      crm_debug_2("Not active: %s", child->id);
 				      continue;
 
 			      } else if(current->details != a_node->details) {
