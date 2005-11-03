@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.55 2005/11/02 13:27:06 andrew Exp $ */
+/* $Id: callbacks.c,v 1.56 2005/11/03 17:31:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -358,7 +358,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 			send_complete("Attempt to start another transition",
 				      NULL, te_abort, i_cancel);
 
-		} else {
+		} else if(te_fsa_state == s_idle) {
 			te_fsa_state_t last_state = te_fsa_state;
 			te_fsa_state = te_state_matrix[i_transition][te_fsa_state];
 			CRM_DEV_ASSERT(te_fsa_state == s_in_transition);
@@ -374,6 +374,8 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 				crm_info("No actions to be taken..."
 					 " transition compelte.");
 			}
+		} else {
+			crm_info("Ignoring transition: abort in progress");
 		}
 
 	} else if(strcmp(op, CRM_OP_TE_HALT) == 0) {
