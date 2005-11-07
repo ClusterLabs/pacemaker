@@ -58,7 +58,7 @@ class Stonith(ResetMechanism):
     def reset(self, node):
         if self.configstring == None :
             config=node
-        else
+        else:
             config=self.configstring
         cmdstring = "%s -t '%s' -p '%s' '%s' 2>/dev/null" % (self.pathname
         ,        self.stonithtype, config, node)
