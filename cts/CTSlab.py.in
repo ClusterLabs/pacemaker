@@ -49,19 +49,23 @@ class ResetMechanism:
         raise ValueError("Abstract class member (reset)")
 
 class Stonith(ResetMechanism):
-    def __init__(self, sttype="ssh", parm="foobar"
+    def __init__(self, sttype="external/ssh", parm=None
         ,        path="@sbindir@/stonith"):
         self.pathname=path
         self.configstring=parm
         self.stonithtype=sttype
 
     def reset(self, node):
+        if self.configstring == None :
+            config=node
+        else
+            config=self.configstring
         cmdstring = "%s -t '%s' -p '%s' '%s' 2>/dev/null" % (self.pathname
-        ,        self.stonithtype, self.configstring, node)
+        ,        self.stonithtype, config, node)
         return (os.system(cmdstring) == 0)
     
 class Stonithd(ResetMechanism):
-    def __init__(self, nodes, sttype = 'ssh'):
+    def __init__(self, nodes, sttype = 'external/ssh'):
         self.sttype = sttype
         self.nodes = nodes
 
