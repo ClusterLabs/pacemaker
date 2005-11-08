@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.45 2005/11/02 13:30:00 andrew Exp $ */
+/* $Id: xml.c,v 1.46 2005/11/08 06:27:38 gshi Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -941,7 +941,8 @@ crm_validate_data(const crm_data_t *xml_root)
 
 		if(child == NULL) {
 			
-		} else if(xml_root->types[lpc] == FT_STRUCT) {
+		} else if(xml_root->types[lpc] == FT_STRUCT
+			  || xml_root->types[lpc] == FT_UNCOMPRESS) {
 			crm_validate_data(child);
 			
 		} else if(xml_root->types[lpc] == FT_STRING) {

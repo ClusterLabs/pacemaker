@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.34 2005/10/25 14:02:15 andrew Exp $ */
+/* $Id: io.c,v 1.35 2005/11/08 06:27:38 gshi Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -135,11 +135,12 @@ readCibXmlFile(const char *filename)
 		const char *name = NULL;
 		crm_data_t *status = get_object_root(XML_CIB_TAG_STATUS, root);
 		for (; status != NULL && lpc < status->nfields; ) {
-			if(status->types[lpc] != FT_STRUCT) {
+			if(status->types[lpc] != FT_STRUCT
+			   && status->types[lpc] != FT_UNCOMPRESS) {
 				lpc++;
 				continue;
 			}
-
+			
 			CRM_DEV_ASSERT(cl_msg_remove_offset(status, lpc) == HA_OK);
 			/* dont get stuck in an infinite loop */
 			if(crm_assert_failed) {

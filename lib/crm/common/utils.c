@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.28 2005/10/25 13:52:40 andrew Exp $ */
+/* $Id: utils.c,v 1.29 2005/11/08 06:27:38 gshi Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -821,6 +821,9 @@ crm_set_env_options(void)
 		cl_log_set_logdtime(logdtime);
 		param_val = NULL;
 	}
+	
+	inherit_compress();
+	
 	
 }
 

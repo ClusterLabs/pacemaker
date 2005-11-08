@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.34 2005/10/17 19:13:48 gshi Exp $ */
+/* $Id: xml.h,v 1.35 2005/11/08 06:27:38 gshi Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -244,7 +244,8 @@ extern gboolean xml_has_children(crm_data_t *root);
 		crm_data_t *child = NULL;				\
 		crm_validate_data(parent);				\
 		for (__counter = 0; __counter < parent->nfields; __counter++) { \
-			if(parent->types[__counter] != FT_STRUCT) {		\
+			if(parent->types[__counter] != FT_STRUCT	\
+			   && parent->types[__counter] != FT_UNCOMPRESS) { \
 				continue;				\
 			}						\
 			child = parent->values[__counter];		\
