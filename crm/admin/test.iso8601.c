@@ -1,4 +1,4 @@
-/* $Id: test.iso8601.c,v 1.2 2005/08/17 08:59:06 andrew Exp $ */
+/* $Id: test.iso8601.c,v 1.3 2005/11/08 17:02:43 davidlee Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -17,6 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <portability.h>
 #include <crm/common/iso8601.h>
 
 #define OPTARGS	"V?d:p:D:WOL"
