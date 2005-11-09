@@ -1,4 +1,4 @@
-/* $Id: iso8601.c,v 1.11 2005/08/27 17:13:17 andrew Exp $ */
+/* $Id: iso8601.c,v 1.12 2005/11/09 16:00:16 davidlee Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -154,7 +154,7 @@ parse_time_offset(char **offset_str)
 		
 	} else if((*offset_str)[0] == '+'
 		  || (*offset_str)[0] == '-'
-		  || isdigit((*offset_str)[0])) {
+		  || isdigit((int) (*offset_str)[0])) {
 		gboolean negate = FALSE;
 		if((*offset_str)[0] == '-') {
 			negate = TRUE;
@@ -214,7 +214,7 @@ parse_time(char **time_str, ha_time_t *a_time, gboolean with_offset)
 	   
 	if(with_offset) {
 		crm_debug_4("Get offset...");
-		while(isspace((*time_str)[0])) {
+		while(isspace((int) (*time_str)[0])) {
 			(*time_str)++;
 		}
 
@@ -331,7 +331,7 @@ parse_date(char **date_str)
 			parse_time(date_str, new_time, TRUE);
 			is_done = TRUE;
 
-		} else if(isdigit(ch)) {
+		} else if(isdigit((int) ch)) {
 			if(new_time->has->years == FALSE
 			   && parse_int(date_str, 4, 9999, &new_time->years)) {
 				new_time->has->years = TRUE;
@@ -396,7 +396,7 @@ parse_time_duration(char **interval_str)
 	CRM_DEV_ASSERT((*interval_str)[0] == 'P');
 	(*interval_str)++;
 	
-	while(isspace((*interval_str)[0]) == FALSE) {
+	while(isspace((int) (*interval_str)[0]) == FALSE) {
 		int an_int = 0;
 		char ch = 0;
 
@@ -1001,7 +1001,7 @@ parse_int(char **str, int field_width, int uppper_bound, int *result)
 		(*str)++;
 	}
 
-	for(; (fraction || lpc < field_width) && isdigit((*str)[0]); lpc++) {
+	for(; (fraction || lpc < field_width) && isdigit((int) (*str)[0]); lpc++) {
 		if(fraction) {
 			intermediate = ((*str)[0] - '0')/(10^lpc);
 		} else {
@@ -1030,11 +1030,11 @@ parse_int(char **str, int field_width, int uppper_bound, int *result)
 gboolean
 check_for_ordinal(const char *str)
 {
-	if(isdigit(str[2]) == FALSE) {
+	if(isdigit((int) str[2]) == FALSE) {
 		crm_debug_6("char 3 == %c", str[2]);
 		return FALSE;		
 	}
-	if(isspace(str[3])) {
+	if(isspace((int) str[3])) {
 		return TRUE;
 	} else if(str[3] == 0) {
 		return TRUE;
