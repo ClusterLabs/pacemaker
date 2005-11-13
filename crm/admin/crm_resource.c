@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.8 2005/10/31 09:06:51 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.9 2005/11/13 21:46:58 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -376,8 +376,8 @@ main(int argc, char **argv)
 		{"migrate", 0, 0, 'M'},
 		{"un-migrate", 0, 0, 'U'},
 		{"resource",1, 0, 'r'},
-		{"host_uname", 1, 0, 'H'},
-		{"host_uuid",  1, 0, 'h'},
+		{"host-uname", 1, 0, 'H'},
+		{"host-uuid",  1, 0, 'h'},
 		{"set-property",    1, 0, 'p'},
 		{"property-value",  1, 0, 'v'},
 		{"resource-type",  1, 0, 't'},
