@@ -1,4 +1,4 @@
-/* $Id: setenv.c,v 1.5 2004/02/17 22:12:01 lars Exp $ */
+/* $Id: setenv.c,v 1.6 2005/11/18 09:43:19 davidlee Exp $ */
 /*
  * Copyright (C) 2001 Alan Robertson <alanr@unix.sh>
  * This software licensed under the GNU LGPL.
@@ -19,10 +19,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+#include <portability.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-int setenv(const char *name, const char * value, int why);
 
 /*
  *	Small replacement function for setenv()
@@ -30,6 +29,8 @@ int setenv(const char *name, const char * value, int why);
 int
 setenv(const char *name, const char * value, int why)
 {
+	int rc = -1;
+
 	if ( name && value ) {
 		char * envp = NULL;
 		envp = malloc(strlen(name)+strlen(value)+2);
@@ -42,11 +43,9 @@ setenv(const char *name, const char * value, int why)
 			sprintf(envp, "%s=%s", name, value);
 
 			/* Cannot free envp (!) */
-			putenv(envp);
-
-			return(0);
+			rc = putenv(envp);
 		}
 	
 	}
-	return(-1);
+	return(rc);
 }

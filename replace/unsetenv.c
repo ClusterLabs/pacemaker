@@ -1,4 +1,4 @@
-/* $Id: unsetenv.c,v 1.3 2004/02/17 22:12:01 lars Exp $ */
+/* $Id: unsetenv.c,v 1.4 2005/11/18 09:43:19 davidlee Exp $ */
 /*
  * Copyright (C) 2001 Alan Robertson <alanr@unix.sh>
  * This software licensed under the GNU LGPL.
@@ -20,6 +20,7 @@
  *
  */
 
+#include <portability.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,9 +30,6 @@
 #ifndef HAVE_ENVIRON_DECL
 extern char **environ;
 #endif
-
-
-void unsetenv(const char *name);
 
 void
 unsetenv (const char *name)
