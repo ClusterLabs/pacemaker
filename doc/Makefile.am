@@ -41,7 +41,7 @@ OTHER_DOCS              = AUTHORS COPYING COPYING.LGPL ChangeLog \
 doc_DATA		= $(OTHER_DOCS) $(txtfiles) $(htmlfiles) 
 
 man_MANS		= heartbeat.8 apphbd.8 cl_status.1 ha_logd.8 ha_logger.1 \
-			 hb_standby.1 hb_takeover.1
+			 hb_standby.1 hb_takeover.1 hb_addnode.1 hb_delnode.1
 
 EXTRA_DIST = $(txtfiles) $(htmlfiles) $(man_MANS) $(OTHER_DOCS)
 
