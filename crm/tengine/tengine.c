@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.106 2005/10/31 09:37:17 andrew Exp $ */
+/* $Id: tengine.c,v 1.107 2005/11/22 02:46:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -226,7 +226,6 @@ fire_synapse(synapse_t *synapse)
 		/* allow some leeway */
 		int tmp_time = 2 * action->timeout;
 		gboolean passed = FALSE;
-		action->invoked = TRUE;
 
 		/* Invoke the action and start the timer */
 		passed = initiate_action(action);

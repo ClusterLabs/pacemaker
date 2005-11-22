@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.3 2005/11/02 13:27:06 andrew Exp $ */
+/* $Id: actions.c,v 1.4 2005/11/22 02:46:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -253,7 +253,12 @@ initiate_action(action_t *action)
 	const char *id = NULL;
 
 	id = crm_element_value(action->xml, XML_ATTR_ID);
-
+	CRM_DEV_ASSERT(action->invoked == FALSE);
+	if(crm_assert_failed) {
+		return FALSE;
+	}
+	
+	action->invoked = TRUE;
 	if(id == NULL) {
 		/* error */
 		te_log_action(LOG_ERR, "Corrupted command %s: no ID",
