@@ -291,8 +291,7 @@ do_dc_takeover(long long action,
 	set_bit_inplace(fsa_input_register, R_JOIN_OK);
 	set_bit_inplace(fsa_input_register, R_INVOKE_PE);
 	
-	if(dc_heartbeat->source_id == (guint)-1
-	   || dc_heartbeat->source_id == (guint)-2) {
+	if(dc_heartbeat->source_id != 0) {
 		crm_debug_3("Starting DC Heartbeat timer");
 		dc_heartbeat->source_id = Gmain_timeout_add_full(
 			G_PRIORITY_HIGH, dc_heartbeat->period_ms,

@@ -264,7 +264,7 @@ do_startup(long long action,
 	interval = interval * 1000;
 
 	if(election_trigger != NULL) {
-		election_trigger->source_id = -1;
+		election_trigger->source_id = 0;
 		election_trigger->period_ms = -1;
 		election_trigger->fsa_input = I_DC_TIMEOUT;
 		election_trigger->callback = crm_timer_popped;
@@ -274,7 +274,7 @@ do_startup(long long action,
 	}
 	
 	if(dc_heartbeat != NULL) {
-		dc_heartbeat->source_id = -1;
+		dc_heartbeat->source_id = 0;
 		dc_heartbeat->period_ms = -1;
 		dc_heartbeat->fsa_input = I_NULL;
 		dc_heartbeat->callback = do_dc_heartbeat;
@@ -284,7 +284,7 @@ do_startup(long long action,
 	}
 	
 	if(election_timeout != NULL) {
-		election_timeout->source_id = -1;
+		election_timeout->source_id = 0;
 		election_timeout->period_ms = -1;
 		election_timeout->fsa_input = I_ELECTION_DC;
 		election_timeout->callback = crm_timer_popped;
@@ -294,7 +294,7 @@ do_startup(long long action,
 	}
 	
 	if(integration_timer != NULL) {
-		integration_timer->source_id = -1;
+		integration_timer->source_id = 0;
 		integration_timer->period_ms = -1;
 		integration_timer->fsa_input = I_INTEGRATED;
 		integration_timer->callback = crm_timer_popped;
@@ -304,7 +304,7 @@ do_startup(long long action,
 	}
 	
 	if(finalization_timer != NULL) {
-		finalization_timer->source_id = -1;
+		finalization_timer->source_id = 0;
 		finalization_timer->period_ms = -1;
 		finalization_timer->fsa_input = I_FINALIZED;
 		finalization_timer->callback = crm_timer_popped;
@@ -314,7 +314,7 @@ do_startup(long long action,
 	}
 	
 	if(shutdown_escalation_timer != NULL) {
-		shutdown_escalation_timer->source_id = -1;
+		shutdown_escalation_timer->source_id = 0;
 		shutdown_escalation_timer->period_ms = -1;
 		shutdown_escalation_timer->fsa_input = I_STOP;
 		shutdown_escalation_timer->callback = crm_timer_popped;
@@ -324,7 +324,7 @@ do_startup(long long action,
 	}
 	
 	if(wait_timer != NULL) {
-		wait_timer->source_id = -1;
+		wait_timer->source_id = 0;
 		wait_timer->period_ms = 500;
 		wait_timer->fsa_input = I_NULL;
 		wait_timer->callback = crm_timer_popped;
@@ -334,7 +334,7 @@ do_startup(long long action,
 	}
 
 	if(shutdown_timer != NULL) {
-		shutdown_timer->source_id = -1;
+		shutdown_timer->source_id = 0;
 		shutdown_timer->period_ms = -1;
 		shutdown_timer->fsa_input = I_SHUTDOWN;
 		shutdown_timer->callback = crm_timer_popped;
@@ -344,7 +344,7 @@ do_startup(long long action,
 	}
 
 	if(recheck_timer != NULL) {
-		recheck_timer->source_id = -1;
+		recheck_timer->source_id = 0;
 		recheck_timer->period_ms = -1;
 		recheck_timer->fsa_input = I_PE_CALC;
 		recheck_timer->callback = crm_timer_popped;

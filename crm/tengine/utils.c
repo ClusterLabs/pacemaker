@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.45 2005/09/14 15:24:48 andrew Exp $ */
+/* $Id: utils.c,v 1.46 2005/11/22 02:40:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -379,7 +379,7 @@ timer_callback(gpointer data)
 	if(timer->source_id > 0) {
 		Gmain_timeout_remove(timer->source_id);
 	}
-	timer->source_id = -1;
+	timer->source_id = 0;
 
 	crm_warn("Timer popped in state=%d", te_fsa_state);
 	if(timer->reason == timeout_abort) {
@@ -430,9 +430,10 @@ timer_callback(gpointer data)
 gboolean
 start_te_timer(te_timer_t *timer)
 {
-	if(((int)timer->source_id) < 0 && timer->timeout > 0) {
+	if(timer->source_id != 0) {
 		timer->source_id = Gmain_timeout_add(
 			timer->timeout, timer_callback, (void*)timer);
+		CRM_ASSERT(timer->source_id != 0);
 		return TRUE;
 
 	} else if(timer->timeout < 0) {
@@ -453,9 +454,9 @@ stop_te_timer(te_timer_t *timer)
 		return FALSE;
 	}
 	
-	if(((int)timer->source_id) > 0) {
+	if(timer->source_id != 0) {
 		Gmain_timeout_remove(timer->source_id);
-		timer->source_id = -2;
+		timer->source_id = 0;
 
 	} else {
 		return FALSE;

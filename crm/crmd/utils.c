@@ -88,25 +88,53 @@ do_timer_control(long long action,
 	return I_NULL;
 }
 
+static const char *
+get_timer_desc(fsa_timer_t *timer) 
+{
+	if(timer == election_trigger) {
+		return "Election Trigger";
+
+ 	} else if(timer == election_timeout) {
+		return "Election Timeout";
+		
+ 	} else if(timer == shutdown_escalation_timer) {
+		return "Shutdown Escalation";
+
+ 	} else if(timer == shutdown_timer) {
+		return "Shutdown Timer";
+
+ 	} else if(timer == integration_timer) {
+		return "Integration Timer";
+
+ 	} else if(timer == finalization_timer) {
+		return "Finalization Timer";
+
+ 	} else if(timer == dc_heartbeat) {
+		return "Heartbeat Timer";
+
+ 	} else if(timer == wait_timer) {
+		return "Wait Timer";
+
+ 	} else if(timer == recheck_timer) {
+		return "Recheck Timer";
+		
+	}	
+	return "Unknown Timer";
+}
+
 gboolean
 crm_timer_popped(gpointer data)
 {
 	fsa_timer_t *timer = (fsa_timer_t *)data;
 
-	if(timer == election_trigger) {
-		crm_info("Election Trigger (%s) just popped!",
-			 fsa_input2string(timer->fsa_input));
-
- 	} else if(timer == election_timeout) {
-		crm_info("Election Timeout (%s) just popped!",
-			 fsa_input2string(timer->fsa_input));
-
- 	} else if(timer == shutdown_escalation_timer) {
-		crm_err("Shutdown Escalation Timer (%s) just popped!",
+	if(timer == shutdown_escalation_timer) {
+		crm_err("%s (%s) just popped!",
+			get_timer_desc(timer),
 			fsa_input2string(timer->fsa_input));
 		
 	} else {
-		crm_info("Timer %s just popped!",
+		crm_info("%s (%s) just popped!",
+			 get_timer_desc(timer),
 			 fsa_input2string(timer->fsa_input));
 	}
 
@@ -141,22 +169,12 @@ crm_timer_popped(gpointer data)
 gboolean
 crm_timer_start(fsa_timer_t *timer)
 {
-	const char *timer_desc = NULL;
-	if(timer == election_trigger) {
-		timer_desc = "Election Trigger";
+	const char *timer_desc = get_timer_desc(timer);
 
- 	} else if(timer == election_timeout) {
-		timer_desc = "Election Timeout";
-		
-	} else {
-		timer_desc = "Timer";
-	}
-
-	if((timer->source_id == (guint)-1 || timer->source_id == (guint)-2)
-	   && timer->period_ms > 0) {
+	if(timer->source_id == 0 && timer->period_ms > 0) {
 		timer->source_id = Gmain_timeout_add(
 			timer->period_ms, timer->callback, (void*)timer);
-
+		CRM_ASSERT(timer->source_id != 0);
 		crm_debug("Started %s (%s:%dms), src=%d",
 			  timer_desc, fsa_input2string(timer->fsa_input),
 			  timer->period_ms, timer->source_id);
@@ -179,37 +197,23 @@ crm_timer_start(fsa_timer_t *timer)
 gboolean
 crm_timer_stop(fsa_timer_t *timer)
 {
-	const char *timer_desc = NULL;
-	if(timer == election_trigger) {
-		timer_desc = "Election Trigger";
-
- 	} else if(timer == election_timeout) {
-		timer_desc = "Election Timeout";
-		
- 	} else if(timer == wait_timer) {
-		timer_desc = "Stall Timeout";
-		
-	} else {
-		timer_desc = "Timer";
-	}
+	const char *timer_desc = get_timer_desc(timer);
 
 	if(timer == NULL) {
 		crm_err("Attempted to stop NULL timer");
 		return FALSE;
 		
-	} else if(timer->source_id != (guint)-1
-		  && timer->source_id != (guint)-2) {
+	} else if(timer->source_id != 0) {
 		crm_debug("Stopping %s (%s:%dms), src=%d",
 			  timer_desc, fsa_input2string(timer->fsa_input),
 			  timer->period_ms, timer->source_id);
 		Gmain_timeout_remove(timer->source_id);
-		timer->source_id = -2;
+		timer->source_id = 0;
 		
 	} else {
 		crm_debug_2("%s (%s:%dms) already stopped",
 			  timer_desc, fsa_input2string(timer->fsa_input),
 			  timer->period_ms);
-		timer->source_id = -2;
 		return FALSE;
 	}
 	return TRUE;
