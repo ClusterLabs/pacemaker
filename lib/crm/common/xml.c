@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.46 2005/11/08 06:27:38 gshi Exp $ */
+/* $Id: xml.c,v 1.47 2005/11/22 02:53:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <ctype.h>
 
 #include <clplumbing/ipc.h>
 #include <clplumbing/cl_log.h> 
@@ -1099,10 +1100,11 @@ get_attr_name(const char *input)
 			default:
 				if('a' <= ch && ch <= 'z') {
 				} else if('A' <= ch && ch <= 'Z') {
+				} else if(isdigit(ch)) {
 				} else if(ch == '_') {
 				} else if(ch == '-') {
 				} else {
-					error = "bad character, not in [a-zA-Z_-]";
+					error = "bad character, not in [a-zA-Z0-9_-]";
 				}
  				break;
 		}
