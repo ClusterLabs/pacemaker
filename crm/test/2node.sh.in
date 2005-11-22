@@ -65,7 +65,7 @@ node_xml="<rsc_location id=\\\"${uuid1}\\\" rsc=\\\"${rsc}\\\">
 	  <expression attribute=\\\"uname\\\" operation=\\\"eq\\\" value=\\\"${test_node_1}\\\"/>
 	</rule>
       </rsc_location>"
-crm_log_pos=$(stat -L -c %s $logfile)
+crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
 do_cmd make_constraint_adv $test_node_1 $node_xml
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 100 \
     -s "crmd(.*) State transition (.*) \-> S_IDLE"
@@ -84,7 +84,7 @@ node_xml="<rsc_location id=\\\"${uuid1}\\\" rsc=\\\"${rsc}\\\">
 		   <expression attribute=\\\"uname\\\" operation=\\\"eq\\\" value=\\\"${test_node_2}\\\"/>
 		</rule>
 	   </rsc_location>"
-crm_log_pos=$(stat -L -c %s $logfile)
+crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
 do_cmd make_constraint_adv $test_node_1 $node_xml
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 100 \
     -s "crmd(.*) State transition (.*) \-> S_IDLE"
@@ -94,7 +94,7 @@ do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 100 
 
 do_cmd echo Create the first resource and wait for S_IDLE after start
 args="<nvpair name=\\\"1\\\" value=\\\"${ip_rsc_1}\\\"/>"
-crm_log_pos=$(stat -L -c %s $logfile)
+crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
 do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - - $args
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 200 \
     -s "crmd(.*) State transition (.*) \-> S_IDLE" \
@@ -105,7 +105,7 @@ cts_assert Adding rsc1 did not pass
 
 do_cmd echo Create the second resource and wait for S_IDLE after start
 args="<nvpair name=\\\"1\\\" value=\\\"${ip_rsc_2}\\\"/>"
-crm_log_pos=$(stat -L -c %s $logfile)
+crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
 do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - - $args
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 200 \
     -s "crmd(.*) State transition (.*) \-> S_IDLE" \

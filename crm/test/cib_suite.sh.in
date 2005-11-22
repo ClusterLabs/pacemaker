@@ -434,7 +434,7 @@ function compare_cibs()
 #----
 
 do_cmd echo "wait for HA to start"
-crm_log_pos=$(stat -L -c %s $logfile)
+crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
 do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
 do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
 do_cmd remote_cmd $INIT_USER $test_node_3 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &

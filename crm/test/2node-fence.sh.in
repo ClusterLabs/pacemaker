@@ -51,7 +51,7 @@ function 2node_fail_test() {
 #----
 
     do_cmd echo "wait for HA to start on ${test_node_1}"
-    crm_log_pos=$(stat -L -c %s $logfile)
+    crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
     do_cmd remote_cmd $INIT_USER $test_node_1 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000 \
 	-s "${test_node_1} ccm(.*) info: Hostname: ${test_node_1}" \
@@ -62,7 +62,7 @@ function 2node_fail_test() {
 #----
 
     do_cmd echo "wait for CRMd to start on ${test_node_1}"
-    crm_log_pos=$(stat -L -c %s $logfile)
+    crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
     do_cmd remote_cmd $CRMD_USER $test_node_1 $HALIB_DIR/crmd "$CRM_OPTS" "2>&1 >/dev/null" &
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search  -a -m 5000 \
 	-s "${test_node_1} crmd(.*) info:(.*)FSA Hostname: ${test_node_1}" \
@@ -85,7 +85,7 @@ function 2node_fail_test() {
 	  <expression attribute=\"uname\" operation=\"eq\" value=\"${test_node_1}\"/>
 	</rule>
       </rsc_location>'"
-    crm_log_pos=$(stat -L -c %s $logfile)
+    crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
     do_cmd make_constraint_adv $test_node_1 $node_xml
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 1500 \
 	-s "crmd(.*) State transition (.*) \-> S_IDLE"
@@ -104,7 +104,7 @@ function 2node_fail_test() {
 		   <expression attribute=\"uname\" operation=\"eq\" value=\"${test_node_2}\"/>
 		</rule>
 	   </rsc_location>'"
-    crm_log_pos=$(stat -L -c %s $logfile)
+    crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
     do_cmd make_constraint_adv $test_node_1 $node_xml
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
 	-s "crmd(.*) State transition (.*) \-> S_IDLE"
@@ -114,7 +114,7 @@ function 2node_fail_test() {
 
     do_cmd echo Create the first resource and wait for S_IDLE after start
     args="<nvpair name=\"1\" value=\"${ip_rsc_1}\"/>"
-    crm_log_pos=$(stat -L -c %s $logfile)
+    crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
     do_cmd make_resource $test_node_1 rsc1 heartbeat IPaddr - - stonith $args
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
 	-s "crmd(.*) State transition (.*) \-> S_IDLE" \
@@ -125,7 +125,7 @@ function 2node_fail_test() {
 
     do_cmd echo Create the second resource and wait for S_IDLE after start
     args="<nvpair name=\"1\" value=\"${ip_rsc_2}\"/>"
-    crm_log_pos=$(stat -L -c %s $logfile)
+    crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
     do_cmd make_resource $test_node_1 rsc2 heartbeat IPaddr - - stonith $args
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
 	-s "crmd(.*) State transition (.*) \-> S_IDLE" \
@@ -135,7 +135,7 @@ function 2node_fail_test() {
 #----
 
     do_cmd echo Create the fencing resource and wait for S_IDLE after start
-    crm_log_pos=$(stat -L -c %s $logfile)
+    crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
     do_cmd make_incarnation $test_node_1 fence1 stonith null 2 - - ignore
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 2500 \
 	-s "crmd(.*) State transition (.*) \-> S_IDLE" \
@@ -169,7 +169,7 @@ function 2node_fail_test() {
 #----
 
     do_cmd echo "wait for HA to start on $test_node_2"
-    crm_log_pos=$(stat -L -c %s $logfile)
+    crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
     do_cmd remote_cmd $INIT_USER $test_node_2 $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000 \
 	-s "${test_node_2} ccm(.*) Hostname: ${test_node_2}" \
@@ -180,7 +180,7 @@ function 2node_fail_test() {
 #----
 
     do_cmd echo "wait for CRMd to start on $test_node_2"
-    crm_log_pos=$(stat -L -c %s $logfile)
+    crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
     do_cmd remote_cmd $CRMD_USER $test_node_2 $HALIB_DIR/crmd "$CRM_OPTS" "2>&1 >/dev/null" &
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000 \
 	-s "${test_node_2} crmd(.*)FSA Hostname: ${test_node_2}" \
@@ -219,7 +219,7 @@ function 2node_fail_test() {
     test_for_election=$?
 
     do_cmd echo Killing $fail_pieces on $fail_node
-    crm_log_pos=$(stat -L -c %s $logfile)
+    crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
     do_cmd remote_cmd $ADMIN_USER $fail_node "killall -9 $fail_pieces" &
 
     if [ $test_for_election = 0 ]; then
@@ -269,7 +269,7 @@ function 2node_fail_test() {
 	    do_cmd echo "HA still running, skipping restart"
 	else
 	    do_cmd echo "wait for HA to start on $fail_node"
-	    crm_log_pos=$(stat -L -c %s $logfile)
+	    crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
 	    do_cmd remote_cmd $INIT_USER $fail_node $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
 	    do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 5000 \
 		-s "${fail_node} ccm(.*) Hostname: ${fail_node}" \
@@ -281,7 +281,7 @@ function 2node_fail_test() {
 #----
 
 	do_cmd echo "wait for CRMd to start on $fail_node"
-	crm_log_pos=$(stat -L -c %s $logfile)
+	crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
 	do_cmd remote_cmd $CRMD_USER $fail_node $HALIB_DIR/crmd "$CRM_OPTS" "2>&1 >/dev/null" &
 	do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 20000 \
 	    -s "${fail_node} crmd(.*)FSA Hostname: ${fail_node}" \

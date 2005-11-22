@@ -63,6 +63,16 @@ local_version=0
 bsc_mode=0
 crm_only=0
 
+STAT_OPTS="-c %s"
+KILL_OPTS="-q9"
+PS_OPTS="axf"
+arch=`uname -s`
+if [ "z$arch" = "zDarwin" ]; then
+    STAT_OPTS="-f %z"
+    KILL_OPTS="-9"
+    PS_OPTS="-ax"
+fi
+
 if [ ! -z "$CRM_LOCAL_OPTS" ]; then
     echo "Checking $CRM_LOCAL_OPTS for local options"
     if [ -f "$CRM_LOCAL_OPTS" ]; then
@@ -112,7 +122,7 @@ function test_init() {
     export test_dump_dir="$dump_dir/$test_type/$date_str"
     mkdir -p "$test_dump_dir"
     echo Test dir: $test_dump_dir
-    crm_test_log_start=$(stat -L -c %s $logfile)
+    crm_test_log_start=$(stat -L ${STAT_OPTS} $logfile)
 }
 
 function remote_cmd() {
@@ -137,7 +147,7 @@ function start_node() {
 	srch_node=""
     fi
     do_cmd echo "wait for HA to start on $ha_node"
-    crm_log_pos=$(stat -L -c %s $logfile)
+    crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
     do_cmd remote_cmd $INIT_USER $ha_node $HALIB_DIR/heartbeat -M "2>&1 >/dev/null" &
     if [ $local_version = "1" ]; then
 	do_cmd ${testdir}/testutils.pl -l ${logfile} -p $crm_log_pos --search -a -m 100 \
@@ -156,7 +166,7 @@ function start_node() {
     do_cmd echo "Check if CRMd was started too"
     do_cmd remote_cmd $INIT_USER $ha_node "killall -INT crmd"
     if [ $? = 1 ]; then 
-	crm_log_pos=$(stat -L -c %s $logfile)
+	crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
 	do_cmd echo "wait for CRMd to start on $ha_node"
 	do_cmd remote_cmd $CRMD_USER $ha_node $HALIB_DIR/crmd "$CRM_OPTS" "2>&1 >/dev/null" &
     fi
@@ -172,7 +182,7 @@ function stop_node()
     a_node=$1; shift;
     down_cmd=$1; shift;
     do_cmd echo Shutdown $a_node
-    crm_log_pos=$(stat -L -c %s $logfile)
+    crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
 
     srch_node="$a_node "
     if [ $local_version = "1" ]; then
@@ -471,7 +481,7 @@ function err() {
 	node_num=`expr $node_num + 1`
     done
 
-    crm_test_log_end=$(stat -L -c %s $logfile)
+    crm_test_log_end=$(stat -L ${STAT_OPTS} $logfile)
     do_cmd echo "ERROR: $*"
     do_cmd echo "test $test_type: FAILED"
     if [ $bsc_mode = 0 ]; then
@@ -490,8 +500,8 @@ function dump_node() {
     dump_file="/tmp/${a_node_index}-${a_node}.tgz"
 
     remote_cmd $ADMIN_USER ${a_node} "mkdir /tmp/crm"
-    remote_cmd $ADMIN_USER ${a_node} "stat -L -c %s $logfile > /tmp/crm/.logend"
-    remote_cmd ${ADMIN_USER} ${a_node} "ps axf > /tmp/crm/processes"
+    remote_cmd $ADMIN_USER ${a_node} "stat -L ${STAT_OPTS} $logfile > /tmp/crm/.logend"
+    remote_cmd ${ADMIN_USER} ${a_node} "ps ${PS_OPTS} > /tmp/crm/processes"
     remote_cmd ${ADMIN_USER} ${a_node} "$HALIB_DIR/crmtest/testutils.pl --dump -pf /tmp/crm/.logstart  -l $logfile > /tmp/crm/cluster-test.log"
 #    `which ssh` ${ADMIN_USER}@${a_node} "$HALIB_DIR/crmtest/testutils.pl --dump -pf /tmp/crm/.logstart -epf /tmp/crm/.logend -l $logfile > /tmp/crm/cluster-test.log"
 
@@ -626,7 +636,7 @@ function crm-cleanup-node() {
     do_cmd echo Cleaning up on $ha_host
 
     # be *very* sure everything has stopped
-    do_cmd remote_cmd $INIT_USER $ha_host "killall -q9 heartbeat ccm lrmd crmd crmadmin cibadmin ha_logd stonithd cib pengine tengine"
+    do_cmd remote_cmd $INIT_USER $ha_host "killall ${KILL_OPTS} heartbeat ccm lrmd crmd crmadmin cibadmin ha_logd stonithd cib pengine tengine"
 
     # resources too
     do_cmd remote_cmd $INIT_USER $ha_host "/etc/ha.d/resource.d/IPaddr $ip_rsc_1 stop" 2>&1 > /dev/null
@@ -646,7 +656,7 @@ function crm-cleanup-node() {
 	if [ `dirname $logfile` = "/tmp/crm" ]; then
 	    do_cmd remote_cmd $INIT_USER $ha_host "/etc/init.d/syslog restart"
 	fi
-	remote_cmd $ADMIN_USER $ha_host "stat -L -c %s $logfile > /tmp/crm/.logstart"
+	remote_cmd $ADMIN_USER $ha_host "stat -L ${STAT_OPTS} $logfile > /tmp/crm/.logstart"
 	do_cmd remote_cmd $ADMIN_USER $ha_host "logger -i -p local7.info __crmtest_${test_type}_log_mark__"
 	do_cmd sleep 2
 	do_cmd remote_cmd $ADMIN_USER $ha_host "echo 1 > /proc/sys/kernel/core_uses_pid"
@@ -657,7 +667,7 @@ function crm-cleanup-node() {
 
 function mark_log() 
 {
-    export crm_log_pos=$(stat -L -c %s $logfile)
+    export crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
 }
 
 function gres() 
@@ -695,7 +705,7 @@ function gres()
 
 # successfully sourced
 if [ $local_version = 1 ]; then
-    test_node_1=`uname -n`
+    test_node_1=`uname -n | tr 'A-Z' 'a-z'`
     test_node_2=""
     test_node_3=""
     echo "Set test_node_1=\"$test_node_1\""
