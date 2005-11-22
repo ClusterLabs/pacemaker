@@ -1,4 +1,4 @@
-/* $Id: match.c,v 1.1 2005/10/31 09:37:17 andrew Exp $ */
+/* $Id: match.c,v 1.2 2005/11/22 02:45:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -191,7 +191,8 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 			return -2;
 	}
 	
-	te_log_action(LOG_INFO, "Action %d confirmed", match->id);
+	te_log_action(LOG_INFO, "Action %s (%d) confirmed",
+		      this_event, match->id);
 	process_trigger(match->id);
 
 	if(te_fsa_state != s_in_transition) {
