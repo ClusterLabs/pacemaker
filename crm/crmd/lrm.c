@@ -811,6 +811,7 @@ do_lrm_invoke(long long action,
 			const char *op_key = crm_element_value(
 				xml_rsc, "operation_key");
 
+			CRM_ASSERT(op != NULL);
 			if(op_key == NULL) {
 				crm_err("No operation to cancel");
 				crm_log_message(LOG_ERR, input->msg);
@@ -818,7 +819,7 @@ do_lrm_invoke(long long action,
 			} else if(rsc != NULL) {
 				cancel_monitor(rsc, op_key);
 			}
-
+			
 			op->op_status = LRM_OP_DONE;
 			op->rc = EXECRA_OK;
 			send_direct_ack(op, rsc->id);
@@ -829,6 +830,7 @@ do_lrm_invoke(long long action,
 			lrm_op_t* op = NULL;
 
 			op = construct_op(input->xml, id_from_cib, operation);
+			CRM_ASSERT(op != NULL);
 			op->op_status = LRM_OP_DONE;
 			op->rc = EXECRA_OK;
 

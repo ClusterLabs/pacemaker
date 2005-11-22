@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.35 2005/11/08 06:27:38 gshi Exp $ */
+/* $Id: xml.h,v 1.36 2005/11/22 02:44:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -252,9 +252,9 @@ extern gboolean xml_has_children(crm_data_t *root);
 			if(child == NULL) {				\
 				crm_debug_4("Skipping %s == NULL",	\
 					  parent->names[__counter]);	\
-			} else if(filter == NULL			\
+			} else if(filter == NULL/*constant condition*/	\
 				  || safe_str_eq(filter, parent->names[__counter])) { \
-				loop_code;					\
+				loop_code;				\
 			} else {					\
 				crm_debug_4("Skipping <%s../>",		\
 					  parent->names[__counter]);	\

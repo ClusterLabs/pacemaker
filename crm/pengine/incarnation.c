@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.64 2005/11/02 13:19:30 andrew Exp $ */
+/* $Id: incarnation.c,v 1.65 2005/11/22 02:44:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1049,9 +1049,10 @@ expand_list(GListPtr list, int clones,
 			   goto clone_expand_reallocate;
 		   }
 		   sprintf(rsc_list_s, "%s ", rsc_id);
-		   rsc_list_s += 1 + strlen(rsc_id);
-		   rsc_len += 1 + strlen(rsc_id);
-
+		   rsc_list_s += strlen(rsc_id);
+		   rsc_len += strlen(rsc_id);
+		   rsc_list_s++;
+		   rsc_len++;
 
 		   if(node_len + 1 + strlen(uname) >= list_len) {
 			   crm_free(*rsc_list);
@@ -1061,9 +1062,10 @@ expand_list(GListPtr list, int clones,
 			   goto clone_expand_reallocate;
 		   }
 		   sprintf(node_list_s, "%s ", uname);
-		   node_list_s += 1 + strlen(uname);
-		   node_len += 1 + strlen(uname);
-		   
+		   node_list_s += strlen(uname);
+		   node_len += strlen(uname);
+		   node_list_s++;
+		   node_len++;
 
 		   if(uuid_len + 1 + strlen(uuid) >= list_len) {
 			   crm_free(*rsc_list);
@@ -1073,8 +1075,10 @@ expand_list(GListPtr list, int clones,
 			   goto clone_expand_reallocate;
 		   }
 		   sprintf(uuid_list_s, "%s ", uuid);
-		   uuid_list_s += 1 + strlen(uuid);
-		   uuid_len += 1 + strlen(uuid);
+		   uuid_list_s += strlen(uuid);
+		   uuid_len += strlen(uuid);
+		   uuid_list_s++;
+		   uuid_len++;
 		);
 }
 

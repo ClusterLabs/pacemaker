@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.101 2005/11/02 13:19:30 andrew Exp $ */
+/* $Id: native.c,v 1.102 2005/11/22 02:44:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1009,7 +1009,6 @@ void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 		    " Update LHS: %s, Update RHS: %s",
 		    rsc_lh->id, rsc_rh->id,
 		    update_lh?"true":"false", update_rh?"true":"false");
-
 	
 	if(rsc_lh->color && rsc_rh->color) {
 		do_merge = TRUE;
@@ -1790,9 +1789,11 @@ DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 			    rsc->name, node->details->uname);
 		return FALSE;
 		
-	} else if(node == NULL
-		  || node->details->unclean
-		  || node->details->online == FALSE) {
+	} else if(node == NULL) {
+		crm_debug_2("Resource %s not deleted: NULL node", rsc->name);
+		return FALSE;
+		
+	} else if(node->details->unclean || node->details->online == FALSE) {
 		crm_debug_2("Resource %s not deleted from %s: unrunnable",
 			    rsc->name, node->details->uname);
 		return FALSE;

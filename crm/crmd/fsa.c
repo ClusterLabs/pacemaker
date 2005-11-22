@@ -89,7 +89,7 @@ unsigned int action_diff_ms = 0;
 		   action_stop = time_longclock();			\
 		   action_diff = sub_longclock(action_stop, action_start); \
 		   action_diff_ms = longclockto_ms(action_diff);	\
-		   if(an_action != A_CIB_START				\
+		   if(an_action != A_CIB_START/*constant condition*/	\
 		      && action_diff_ms > action_diff_max_ms) {		\
 			   crm_err("Action %s took %dms to complete",	\
 				   fsa_action2string(an_action),	\
