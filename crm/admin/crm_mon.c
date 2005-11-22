@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.16 2005/10/14 09:43:54 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.17 2005/11/22 02:37:08 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -250,9 +250,13 @@ mon_timer_popped(gpointer data)
 	if(cib_conn == NULL) {
 		crm_debug_4("Creating CIB connection");
 		cib_conn = cib_new();
-		CRM_DEV_ASSERT(cib_conn != NULL);
 	}
-	if(cib_conn != NULL && cib_conn->state != cib_connected_query){
+
+	CRM_DEV_ASSERT(cib_conn != NULL);
+	if(crm_assert_failed) {
+		return FALSE;
+		
+	} else if(cib_conn->state != cib_connected_query){
 		crm_debug_4("Connecting to the CIB");
 #if CURSES_ENABLED
 		if(as_console) {

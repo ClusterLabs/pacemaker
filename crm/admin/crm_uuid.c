@@ -1,4 +1,4 @@
-/* $Id: crm_uuid.c,v 1.1 2005/10/25 13:55:51 andrew Exp $ */
+/* $Id: crm_uuid.c,v 1.2 2005/11/22 02:37:08 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -77,9 +77,12 @@ main(int argc, char **argv)
 			UUID_LEN, read_len);
 		return 3;
 		
-	} else {
+	} else if(buffer != NULL) {
 		cl_uuid_unparse(&uuid, buffer);
 		fprintf(stdout, "%s\n", buffer);
+
+	} else {
+		fprintf(stderr, "No buffer to unparse\n");
 	}
 	
 	cl_free(buffer);
