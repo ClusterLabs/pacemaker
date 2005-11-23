@@ -164,6 +164,8 @@ crmd_rscstate2string(enum crmd_rscstate state)
 	return "<unknown>";
 }
 
+static GCHSource *lrm_source = NULL;
+
 /*	 A_LRM_CONNECT	*/
 enum crmd_fsa_input
 do_lrm_control(long long action,
@@ -176,6 +178,15 @@ do_lrm_control(long long action,
 
 	if(action & A_LRM_DISCONNECT) {
 		if(fsa_lrm_conn) {
+			gboolean removed = FALSE;
+			crm_info("Removing LRM connection from MainLoop");
+			removed = G_main_del_IPC_Channel(lrm_source);
+			if(removed == FALSE) {
+				crm_err("Could not remove LRM connection"
+					" from MainLoop");
+			}
+			lrm_source = NULL;			
+			crm_info("Disconnecting from the LRM");
 			fsa_lrm_conn->lrm_ops->signoff(fsa_lrm_conn);
 		}
 		/* TODO: Clean up the hashtable */
@@ -183,7 +194,6 @@ do_lrm_control(long long action,
 
 	if(action & A_LRM_CONNECT) {
 	
-		crm_debug_4("LRM: connect...");
 		ret = HA_OK;
 		
 		monitors = g_hash_table_new_full(
@@ -209,7 +219,7 @@ do_lrm_control(long long action,
 		}
 
 		if(ret == HA_OK) {
-			crm_debug_4("LRM: sigon...");
+			crm_info("Connecting to the LRM");
 			ret = fsa_lrm_conn->lrm_ops->signon(
 				fsa_lrm_conn, CRM_SYSTEM_CRMD);
 		}
@@ -246,12 +256,11 @@ do_lrm_control(long long action,
 		/* TODO: create a destroy handler that causes
 		 * some recovery to happen
 		 */
-		G_main_add_IPC_Channel(G_PRIORITY_LOW,
-			      fsa_lrm_conn->lrm_ops->ipcchan(fsa_lrm_conn),
-			      FALSE,
-			      lrm_dispatch,
-			      fsa_lrm_conn,
-			      default_ipc_connection_destroy);
+		lrm_source = G_main_add_IPC_Channel(
+			G_PRIORITY_LOW,
+			fsa_lrm_conn->lrm_ops->ipcchan(fsa_lrm_conn),
+			FALSE, lrm_dispatch, fsa_lrm_conn,
+			default_ipc_connection_destroy);
 
 		set_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
 		
