@@ -191,8 +191,11 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	 * variables. This is a important thing to think about and do.
 	 */
 	/* send the RA operation to stonithd to simulate a RA's actions */
-	cl_log(LOG_DEBUG, "Will send the stonith RA operation to stonithd: "
-		"%s %s", rsc_type, op_type);
+	if ( 0==STRNCMP_CONST(op_type, "start") 
+		|| 0==STRNCMP_CONST(op_type, "stop") ) {
+		cl_log(LOG_INFO, "STONITH device %s %s <rsc_id=%s>"
+			, rsc_type, op_type, rsc_id);
+	}
 
 	op = g_new(stonithRA_ops_t, 1);
 	op->ra_name = g_strdup(rsc_type);
@@ -206,14 +209,13 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 		exit(EXECRA_EXEC_UNKNOWN_ERROR);
 	}
 
-	cl_log(LOG_DEBUG, "Waiting until the final result returned.");
 	/* May be redundant */
 	/*
 	while (stonithd_op_result_ready() != TRUE) {
 		;
 	}
 	*/
-	cl_log(LOG_DEBUG, "Will call stonithd_receive_ops_result.");
+	/* cl_log(LOG_DEBUG, "Will call stonithd_receive_ops_result."); */
 	if (ST_OK != stonithd_receive_ops_result(TRUE)) {
 		cl_log(LOG_ERR, "stonithd_receive_ops_result failed.");
 		/* Need to improve the granularity for error return code */
@@ -228,14 +230,14 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	g_free(op);
 
 	stonithd_signoff();
-	cl_log(LOG_DEBUG, "stonithRA orignal exit code=%d", exit_value);
+	/* cl_log(LOG_DEBUG, "stonithRA orignal exit code=%d", exit_value); */
 	exit(map_ra_retvalue(exit_value, op_type, NULL));
 }
 
 static void
 stonithRA_ops_callback(stonithRA_ops_t * op, void * private_data)
 {
-	cl_log(LOG_DEBUG, "setting exit code=%d", exit_value);
+	/* cl_log(LOG_DEBUG, "setting exit code=%d", exit_value); */
 	exit_value = op->op_result;
 }
 
