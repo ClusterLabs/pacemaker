@@ -295,8 +295,8 @@ class HAResourceAudit(ClusterAudit):
                     passed = 0 
                     self.CM.log("Not all resources in group %s running on same node"%
                                 str(group))
-                    self.CM.log("%s running on %s"%(group[0].rid,NodeofRsc(group[0].rid)))
-                    self.CM.log("%s running on %s"%(rsc.rid,NodeofRsc(rsc.rid)))
+                    self.CM.log("%s running on %s"%(group[0].rid, NodeofRsc[group[0].rid]))
+                    self.CM.log("%s running on %s"%(rsc.rid, NodeofRsc[rsc.rid]))
                                 
         #Make sure the resouces with "must","placement" constraint are running on the same node
         Dependancies = self.CM.Dependencies()
