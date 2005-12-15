@@ -24,7 +24,7 @@ Copyright (C) 2005 International Business Machines
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import sys,string
+import sys,string,os
 import xml.dom.minidom
 
 using_ocf = 1
@@ -76,7 +76,16 @@ def create_cib() :
 	cib.appendChild(status)
 
 	return doc, resources, constraints
-
+	
+def get_ra_class(type) :
+	if os.path.exists("@HB_RA_DIR@"+"/"+type) :
+		return "heartbeat"
+	if os.path.exists("@LSB_RA_DIR@"+"/"+type) :
+		return "lsb"
+	sys.stderr.write(type+" is an unknown Resource Agent. " \
+			"Please refer to http://www.linux-ha.org/ResourceAgent\n")
+	return "UNKNOWN"
+		
 def cib_resource(doc,index, rsc):
 
 	id, type, params = None, None, None
@@ -109,7 +118,8 @@ def cib_resource(doc,index, rsc):
 	if using_ocf and type in ocf_ra_setting:
 		resource.setAttribute("class","ocf")
 	else :
-		resource.setAttribute("class","heartbeat")
+		ra_class = get_ra_class(type)
+		resource.setAttribute("class",ra_class)
 	resource.setAttribute("provider","heartbeat")
 
 	if using_mon :
@@ -215,7 +225,6 @@ if __name__=="__main__" :
 	cib = create_cib()
 	resource_file = None
 	resource_file = "/etc/ha.d/haresources"
-
 	# Process arguments...
 	
 	for arg in sys.argv[1:]:
