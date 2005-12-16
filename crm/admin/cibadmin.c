@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.45 2005/11/02 16:33:24 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.46 2005/12/16 14:55:12 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -525,12 +525,12 @@ usage(const char *cmd, int exit_status)
 		"  additional instance increase verbosity\n", "verbose", 'V');
 	fprintf(stream, "\t--%s (-%c)\tthis help message\n", "help", '?');
 	fprintf(stream, "\nCommands\n");
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ERASE,  'E');
+	fprintf(stream, "\t--%s (-%c)\tErase the contents of the whole CIB\n", CIB_OP_ERASE,  'E');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_QUERY,  'Q');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_CREATE, 'C');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_REPLACE,'R');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_UPDATE, 'U');
-
+	fprintf(stream, "\t--%s (-%c)\tRecursivly replace an object in the CIB\n", CIB_OP_REPLACE,'R');
+	fprintf(stream, "\t--%s (-%c)\tRecursivly update an object in the CIB\n", CIB_OP_UPDATE, 'U');
+	fprintf(stream, "\t--%s (-%c)\tUpdate the attributes of an object in the CIB\n", CIB_OP_MODIFY, 'M');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_DELETE, 'D');
 	fprintf(stream, "\t\t\tDelete the first object matching the supplied criteria\n");
 	fprintf(stream, "\t\t\tEg. <op id=\"rsc1_op1\" name=\"monitor\"/>\n");
@@ -542,7 +542,7 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t\t\tRequires -o\n");
 
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_BUMP,   'B');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ISMASTER,'M');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ISMASTER,'m');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_SYNC,   'S');
 	fprintf(stream, "\nXML data\n");
 	fprintf(stream, "\t--%s (-%c) <string>\t\tRetrieve XML from the supplied string\n", F_CRM_DATA, 'X');
