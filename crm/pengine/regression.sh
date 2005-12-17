@@ -188,6 +188,7 @@ do_test 735 "Bugzilla 735"
 do_test 764 "Bugzilla 764"
 do_test 797 "Bugzilla 797"
 do_test 829 "Bugzilla 829"
+do_test 994 "Bugzilla 994"
 
 
 echo ""
