@@ -411,7 +411,7 @@ prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 	 * Add the teminating NULL pointer. 
 	 */
 	params_argv[2] = NULL;
-	if (ht_size != 0) {
+	if ( (ht_size != 0) && (0 != STRNCMP_CONST(op_type, "status")) ) {
 		cl_log(LOG_WARNING, "For LSB init script, no additional "
 			"parameters are needed.");
 	}
