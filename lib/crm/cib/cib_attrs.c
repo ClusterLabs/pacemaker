@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.9 2005/12/19 16:54:43 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.10 2005/12/19 16:56:05 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -74,6 +74,9 @@ update_attr(cib_t *the_cib, int call_options,
 		if(xml_top == NULL) {
 			xml_top = xml_obj;
 		}
+		tag = XML_TAG_TRANSIENT_NODEATTRS;
+
+	} else if(section != NULL) {
 		tag = XML_TAG_TRANSIENT_NODEATTRS;
 
 	} else {
@@ -169,8 +172,11 @@ read_attr(cib_t *the_cib,
 	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
 		tag = XML_CIB_TAG_NODE;
 		
-	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+	} else if(section != NULL && node_uuid != NULL) {
 		xml_next = find_entity(xml_obj, XML_CIB_TAG_STATE, node_uuid);
+		tag = XML_TAG_TRANSIENT_NODEATTRS;
+
+	} else if(section != NULL) {
 		tag = XML_TAG_TRANSIENT_NODEATTRS;
 
 	} else {
