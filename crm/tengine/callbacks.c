@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.56 2005/11/03 17:31:56 andrew Exp $ */
+/* $Id: callbacks.c,v 1.57 2005/12/19 16:54:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -134,25 +134,25 @@ need_abort(crm_data_t *update)
 	
 	section = XML_CIB_TAG_NODES;
 	section_xml = get_object_root(section, update);
-	xml_child_iter(section_xml, child, NULL,
+	xml_child_iter(section_xml, child, 
 		       return section_xml;
 		);
 
 	section = XML_CIB_TAG_RESOURCES;
 	section_xml = get_object_root(section, update);
-	xml_child_iter(section_xml, child, NULL,
+	xml_child_iter(section_xml, child, 
 		       return section_xml;
 		);
 
 	section = XML_CIB_TAG_CONSTRAINTS;
 	section_xml = get_object_root(section, update);
-	xml_child_iter(section_xml, child, NULL,
+	xml_child_iter(section_xml, child, 
 		       return section_xml;
 		);
 
 	section = XML_CIB_TAG_CRMCONFIG;
 	section_xml = get_object_root(section, update);
-	xml_child_iter(section_xml, child, NULL,
+	xml_child_iter(section_xml, child, 
 		       return section_xml;
 		);
 	return NULL;
@@ -238,7 +238,7 @@ te_update_confirm(const char *event, HA_Message *msg)
 		section = XML_CIB_TAG_NODES;
 		if(abort == FALSE) {
 			section_xml = get_object_root(section, update);
-			xml_child_iter(section_xml, child, NULL,
+			xml_child_iter(section_xml, child, 
 				       abort = TRUE;
 				       break;
 				);
@@ -246,7 +246,7 @@ te_update_confirm(const char *event, HA_Message *msg)
 		section = XML_CIB_TAG_RESOURCES;
 		if(abort == FALSE) {
 			section_xml = get_object_root(section, update);
-			xml_child_iter(section_xml, child, NULL,
+			xml_child_iter(section_xml, child, 
 				       abort = TRUE;
 				       break;
 				);
@@ -254,7 +254,7 @@ te_update_confirm(const char *event, HA_Message *msg)
 		section = XML_CIB_TAG_CONSTRAINTS;
 		if(abort == FALSE) {
 			section_xml = get_object_root(section, update);
-			xml_child_iter(section_xml, child, NULL,
+			xml_child_iter(section_xml, child, 
 				       abort = TRUE;
 				       break;
 				);
@@ -262,7 +262,7 @@ te_update_confirm(const char *event, HA_Message *msg)
 		section = XML_CIB_TAG_CRMCONFIG;
 		if(abort == FALSE) {
 			section_xml = get_object_root(section, update);
-			xml_child_iter(section_xml, child, NULL,
+			xml_child_iter(section_xml, child, 
 				       abort = TRUE;
 				       break;
 				);

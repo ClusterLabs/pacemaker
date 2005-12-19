@@ -73,8 +73,24 @@ longclock_t action_stop = 0;
 longclock_t action_diff = 0;
 unsigned int action_diff_ms = 0;
 
-#define IF_FSA_ACTION(an_action,function)				\
-	if(is_set(fsa_actions,an_action)) {				\
+#define FSA_ACTION_TIMECHECK(an_action)					\
+	   if(action_diff_max_ms > 0) {					\
+		   action_stop = time_longclock();			\
+		   action_diff = sub_longclock(action_stop, action_start); \
+		   action_diff_ms = longclockto_ms(action_diff);	\
+		   if(action_diff_ms > action_diff_max_ms) {		\
+			   crm_err("Action %s took %dms to complete",	\
+				   fsa_action2string(an_action),	\
+				   action_diff_ms);			\
+		   } else if(action_diff_ms > action_diff_warn_ms) {	\
+			   crm_warn("Action %s took %dms to complete",	\
+				    fsa_action2string(an_action),	\
+				    action_diff_ms);			\
+		   }							\
+	   }
+
+
+#define FSA_ACTION_RUN(an_action,function) {				\
 	   enum crmd_fsa_input result = I_NULL;				\
 	   last_action = an_action;					\
 	   fsa_actions = clear_bit(fsa_actions, an_action);		\
@@ -85,26 +101,23 @@ unsigned int action_diff_ms = 0;
 	   }								\
 	   result = function(an_action, fsa_data->fsa_cause, fsa_state,	\
 			  fsa_data->fsa_input, fsa_data);		\
-	   if(action_diff_max_ms > 0) {					\
-		   action_stop = time_longclock();			\
-		   action_diff = sub_longclock(action_stop, action_start); \
-		   action_diff_ms = longclockto_ms(action_diff);	\
-		   if(an_action != A_CIB_START/*constant condition*/	\
-		      && action_diff_ms > action_diff_max_ms) {		\
-			   crm_err("Action %s took %dms to complete",	\
-				   fsa_action2string(an_action),	\
-				   action_diff_ms);			\
-		   } else if(action_diff_ms > action_diff_warn_ms) {	\
-			   crm_warn("Action %s took %dms to complete",	\
-				    fsa_action2string(an_action),	\
-				    action_diff_ms);			\
-		   }							\
-	   }								\
 	   crm_debug_3("Action complete: %s (%.16llx)",			\
 		       fsa_action2string(an_action), an_action);	\
 	   CRM_DEV_ASSERT(result == I_NULL);				\
 	   do_dot_action(DOT_PREFIX"\t// %s", fsa_action2string(an_action)); \
-   }
+	}
+
+#define IF_FSA_ACTION_NOTIME(an_action,function)			\
+	if(is_set(fsa_actions,an_action)) {				\
+		FSA_ACTION_RUN(an_action,function);			\
+	}
+
+#define IF_FSA_ACTION(an_action,function)				\
+	if(is_set(fsa_actions,an_action)) {				\
+		FSA_ACTION_RUN(an_action,function);			\
+		FSA_ACTION_TIMECHECK(an_action);			\
+	}
+
 
 /* #define ELSEIF_FSA_ACTION(x,y) else IF_FSA_ACTION(x,y) */
 void init_dotfile(void);
@@ -359,7 +372,7 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 
 		/* essential start tasks */
 		else IF_FSA_ACTION(A_STARTUP,	  do_startup)
-		else IF_FSA_ACTION(A_CIB_START,	  do_cib_control)
+		else IF_FSA_ACTION_NOTIME(A_CIB_START,	  do_cib_control)
 		else IF_FSA_ACTION(A_HA_CONNECT,  do_ha_control)
 		else IF_FSA_ACTION(A_READCONFIG,  do_read_config)
 

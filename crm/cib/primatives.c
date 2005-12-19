@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.27 2005/09/12 11:00:19 andrew Exp $ */
+/* $Id: primatives.c,v 1.28 2005/12/19 16:54:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -350,12 +350,12 @@ delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec)
 	} else {
 
 		xml_child_iter(
-			delete_spec, child, NULL,
+			delete_spec, child, 
 
 			int tmp_result = delete_cib_object(equiv_node, child);
 			
 			/*  only the first error is likely to be interesting */
-			if(result == cib_ok) {
+			if(tmp_result != cib_ok && result == cib_ok) {
 				result = tmp_result;
 			}
 			);
@@ -479,7 +479,7 @@ update_cib_object(crm_data_t *parent, crm_data_t *update)
 		    crm_str(object_name), crm_str(object_id));
 	
 	xml_child_iter(
-		update, a_child, NULL, 
+		update, a_child,  
 		int tmp_result = 0;
 		crm_debug_3("Updating child <%s id=%s>",
 			    crm_element_name(a_child), ID(a_child));

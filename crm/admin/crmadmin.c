@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.60 2005/10/14 06:24:03 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.61 2005/12/19 16:54:43 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -662,7 +662,7 @@ do_find_node_list(crm_data_t *xml_node)
 	int found = 0;
 	crm_data_t *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
 
-	xml_child_iter(
+	xml_child_iter_filter(
 		nodes, node, XML_CIB_TAG_NODE,	
 		if(BASH_EXPORT) {
 			printf("export %s=%s\n",

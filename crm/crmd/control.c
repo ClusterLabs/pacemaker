@@ -526,7 +526,7 @@ do_read_config(long long action,
 
 	dc_heartbeat->period_ms = 0;
 	
-	xml_child_iter(
+	xml_child_iter_filter(
 		config, iter, XML_CIB_TAG_NVPAIR,
 
 		const char *name  = crm_element_value(iter, XML_NVPAIR_ATTR_NAME);

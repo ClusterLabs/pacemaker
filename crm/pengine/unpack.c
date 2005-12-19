@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.148 2005/12/17 08:56:36 andrew Exp $ */
+/* $Id: unpack.c,v 1.149 2005/12/19 16:54:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -232,7 +232,7 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 
 	crm_debug("Begining unpack... %s",
 		    xml_nodes?crm_element_name(xml_nodes):"<none>");
-	xml_child_iter(
+	xml_child_iter_filter(
 		xml_nodes, xml_obj, XML_CIB_TAG_NODE,
 
 		new_node = NULL;
@@ -325,7 +325,7 @@ unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
 	crm_debug("Begining unpack... %s",
 		    xml_resources?crm_element_name(xml_resources):"<none>");
 	xml_child_iter(
-		xml_resources, xml_obj, NULL,
+		xml_resources, xml_obj, 
 
 		resource_t *new_rsc = NULL;
 		crm_debug_2("Begining unpack... %s",
@@ -356,7 +356,7 @@ unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
 	crm_debug("Begining unpack... %s",
 		    xml_constraints?crm_element_name(xml_constraints):"<none>");
 	xml_child_iter(
-		xml_constraints, xml_obj, NULL,
+		xml_constraints, xml_obj, 
 
 		const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
 		if(id == NULL) {
@@ -413,7 +413,7 @@ unpack_status(crm_data_t * status, pe_working_set_t *data_set)
 	node_t    *this_node  = NULL;
 	
 	crm_debug_3("Begining unpack");
-	xml_child_iter(
+	xml_child_iter_filter(
 		status, node_state, XML_CIB_TAG_STATE,
 
 		id         = crm_element_value(node_state, XML_ATTR_ID);
@@ -670,7 +670,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list, pe_working_set_t *
 		return FALSE;
 	}
 	
-	xml_child_iter(
+	xml_child_iter_filter(
 		lrm_rsc_list, rsc_entry, XML_LRM_TAG_RESOURCE,
 		
 		delete_resource = FALSE;
@@ -789,7 +789,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list, pe_working_set_t *
 		op_list = NULL;
 		sorted_op_list = NULL;
 		
-		xml_child_iter(
+		xml_child_iter_filter(
 			rsc_entry, rsc_op, XML_LRM_TAG_RSC_OP,
 			op_list = g_list_append(op_list, rsc_op);
 			);
@@ -1076,7 +1076,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		
 		crm_debug_2("Checking parameters to %s action", task);
 		
-		xml_child_iter(
+		xml_child_iter_filter(
 			rsc->ops_xml, operation, "op",
 			
 			const char *name = crm_element_value(operation, "name");
@@ -1734,7 +1734,7 @@ unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		return FALSE;
 	}
 
-	xml_child_iter(
+	xml_child_iter_filter(
 		xml_obj, rule_xml, XML_TAG_RULE,
 		crm_debug_2("Unpacking %s/%s", id, ID(rule_xml));
 		generate_location_rule(rsc_lh, rule_xml, data_set);
@@ -1810,7 +1810,7 @@ generate_location_rule(
 	}
 
 	xml_child_iter(
-		rule_xml, expr, NULL,		
+		rule_xml, expr, 		
 
 		enum expression_type type = find_expression_type(expr);
 		if(type == not_expr) {

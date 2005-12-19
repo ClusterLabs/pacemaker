@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.70 2005/10/25 14:02:15 andrew Exp $ */
+/* $Id: complex.c,v 1.71 2005/12/19 16:54:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -419,7 +419,7 @@ unpack_instance_attributes(
 	}
 	
 	crm_debug_2("Checking for attributes");
-	xml_child_iter(
+	xml_child_iter_filter(
 		xml_obj, attr_set, set_name,
 
 		/* check any rules */
@@ -446,7 +446,7 @@ populate_hash(crm_data_t *nvpair_list, GHashTable *hash,
 	gboolean set_attr = FALSE;
 	const char *name = NULL;
 	const char *value = NULL;
-	xml_child_iter(
+	xml_child_iter_filter(
 		nvpair_list, an_attr, XML_CIB_TAG_NVPAIR,
 		
 		name  = crm_element_value(an_attr, XML_NVPAIR_ATTR_NAME);

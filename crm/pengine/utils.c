@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.120 2005/10/26 14:17:49 andrew Exp $ */
+/* $Id: utils.c,v 1.121 2005/12/19 16:54:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -997,7 +997,7 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 	char *match_key = NULL;
 	crm_data_t *op = NULL;
 	
-	xml_child_iter(
+	xml_child_iter_filter(
 		rsc->ops_xml, operation, "op",
 
 		name = crm_element_value(operation, "name");

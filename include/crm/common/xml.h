@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.36 2005/11/22 02:44:41 andrew Exp $ */
+/* $Id: xml.h,v 1.37 2005/12/19 16:54:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -238,7 +238,29 @@ extern void crm_update_parents(crm_data_t *root);
 extern gboolean xml_has_children(crm_data_t *root);	 		
 
 #   define xmlGetNodePath(data) crm_element_value(data, XML_ATTR_TAGNAME)
-#   define xml_child_iter(parent, child, filter, loop_code)		\
+#   define xml_child_iter(parent, child, loop_code)			\
+	if(parent != NULL) {						\
+		int __counter = 0;					\
+		crm_data_t *child = NULL;				\
+		crm_validate_data(parent);				\
+		for (__counter = 0; __counter < parent->nfields; __counter++) { \
+			if(parent->types[__counter] != FT_STRUCT	\
+			   && parent->types[__counter] != FT_UNCOMPRESS) { \
+				continue;				\
+			}						\
+			child = parent->values[__counter];		\
+			if(child == NULL) {				\
+				crm_debug_4("Skipping %s == NULL",	\
+					  parent->names[__counter]);	\
+			} else {					\
+				loop_code;				\
+			}						\
+		}							\
+	} else {							\
+		crm_debug_4("Parent of loop was NULL");			\
+	}
+
+#define xml_child_iter_filter(parent, child, filter, loop_code)		\
 	if(parent != NULL) {						\
 		int __counter = 0;					\
 		crm_data_t *child = NULL;				\

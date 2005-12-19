@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.8 2005/10/24 07:52:27 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.9 2005/12/19 16:54:43 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -68,7 +68,7 @@ update_attr(cib_t *the_cib, int call_options,
 	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
 		tag = XML_CIB_TAG_NODE;
 		
-	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+	} else if(section != NULL && node_uuid != NULL) {
 		xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_STATE);
 		crm_xml_add(xml_obj, XML_ATTR_ID, node_uuid);
 		if(xml_top == NULL) {
@@ -207,7 +207,7 @@ read_attr(cib_t *the_cib,
 	}
 
 	xml_next = NULL;
-	xml_child_iter(
+	xml_child_iter_filter(
 		xml_obj, a_child, XML_CIB_TAG_NVPAIR,
 		const char *name = crm_element_value(
 			a_child, XML_NVPAIR_ATTR_NAME);
@@ -302,7 +302,7 @@ query_node_uuid(cib_t *the_cib, const char *uname, char **uuid)
 	rc = cib_NOTEXISTS;
 	*uuid = NULL;
 	
-	xml_child_iter(
+	xml_child_iter_filter(
 		xml_obj, a_child, XML_CIB_TAG_NODE,
 		child_name = crm_element_value(a_child, XML_ATTR_UNAME);
 
@@ -344,7 +344,7 @@ query_node_uname(cib_t *the_cib, const char *uuid, char **uname)
 	rc = cib_NOTEXISTS;
 	*uname = NULL;
 	
-	xml_child_iter(
+	xml_child_iter_filter(
 		xml_obj, a_child, XML_CIB_TAG_NODE,
 		child_name = ID(a_child);
 

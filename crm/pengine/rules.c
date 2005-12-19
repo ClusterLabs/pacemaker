@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.20 2005/10/25 14:02:15 andrew Exp $ */
+/* $Id: rules.c,v 1.21 2005/12/19 16:54:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,7 +43,7 @@ gboolean
 test_ruleset(crm_data_t *ruleset, node_t *node, pe_working_set_t *data_set) 
 {
 	gboolean ruleset_default = TRUE;
-	xml_child_iter(
+	xml_child_iter_filter(
 		ruleset, rule, XML_TAG_RULE,
 
 		ruleset_default = FALSE;
@@ -71,7 +71,7 @@ test_rule(crm_data_t *rule, node_t *node, resource_t *rsc,
 
 	crm_debug_2("Testing rule %s", ID(rule));
 	xml_child_iter(
-		rule, expr, NULL,
+		rule, expr, 
 		test = test_expression(expr, node, rsc, data_set);
 		
 		if(test && do_and == FALSE) {

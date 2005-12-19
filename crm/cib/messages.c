@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.59 2005/10/25 13:56:54 andrew Exp $ */
+/* $Id: messages.c,v 1.60 2005/12/19 16:54:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -196,7 +196,7 @@ cib_process_query(
 		crm_xml_add(cib, "origin", cib_our_uname);
 
 		xml_child_iter(
-			obj_root, an_obj, NULL,
+			obj_root, an_obj, 
 			add_node_copy(query_obj_root, an_obj);
 			);
 
@@ -739,14 +739,14 @@ replace_section(
 	}
 
 	xml_child_iter(
-		old_section, a_child, NULL,
+		old_section, a_child, 
 		free_xml_from_parent(old_section, a_child);
 		);
 
 	copy_in_properties(old_section, new_section);
 
 	xml_child_iter(
-		new_section, a_child, NULL,
+		new_section, a_child, 
 		add_node_copy(old_section, a_child);
 		);
 
@@ -777,7 +777,7 @@ updateList(crm_data_t *local_cib, crm_data_t *xml_section, crm_data_t *failed,
 	set_node_tstamp(this_section);
 
 	xml_child_iter(
-		xml_section, a_child, NULL,
+		xml_section, a_child, 
 
 		rc = cib_ok;
 		if(operation == CIB_UPDATE_OP_DELETE) {

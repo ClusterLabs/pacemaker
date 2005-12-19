@@ -1,4 +1,4 @@
-/* $Id: cib_version.c,v 1.2 2005/09/27 13:15:39 andrew Exp $ */
+/* $Id: cib_version.c,v 1.3 2005/12/19 16:54:43 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -116,7 +116,7 @@ internal_update_feature_set(crm_data_t *xml_obj, int current)
 		return current;
 	}
 	
-	xml_child_iter(xml_obj, xml_child, NULL,
+	xml_child_iter(xml_obj, xml_child, 
 		       current = internal_update_feature_set(xml_child,current);
 		       if(current == (num_sets -1)) {
 			       return current;

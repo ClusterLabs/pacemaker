@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.47 2005/11/22 02:53:24 andrew Exp $ */
+/* $Id: xml.c,v 1.48 2005/12/19 16:54:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -75,7 +75,7 @@ find_xml_node(crm_data_t *root, const char * search_path, gboolean must_find)
 		return NULL;
 	}
 	
-	xml_child_iter(
+	xml_child_iter_filter(
 		root, a_child, search_path,
 /* 		crm_debug_5("returning node (%s).", xmlGetNodePath(a_child)); */
 		crm_log_xml_debug_5(a_child, "contents\t%s");
@@ -201,7 +201,7 @@ crm_data_t*
 find_entity(crm_data_t *parent, const char *node_name, const char *id)
 {
 	crm_validate_data(parent);
-	xml_child_iter(
+	xml_child_iter_filter(
 		parent, a_child, node_name,
 		if(id == NULL || safe_str_eq(id, ID(a_child))) {
 			crm_debug_4("returning node (%s).", 
@@ -661,6 +661,7 @@ add_message_xml(HA_Message *msg, const char *field, const crm_data_t *xml)
 {
 	crm_validate_data(xml);
 	crm_validate_data(msg);
+	CRM_DEV_ASSERT(field != NULL);
 	ha_msg_addstruct_compress(msg, field, xml);
 	crm_update_parents(msg);
 	return TRUE;
@@ -746,7 +747,7 @@ log_data_element(
 
 	} else if(name == NULL && depth == 0) {
 		xml_child_iter(
-			data, a_child, NULL,
+			data, a_child, 
 			child_result = log_data_element(
 				function, prefix, log_level, depth, a_child, formatted);
 			if(child_result < 0) {
@@ -784,7 +785,7 @@ log_data_element(
 		);
 
 	xml_child_iter(
-		data, child, NULL,
+		data, child, 
 		if(child != NULL) {
 			has_children++;
 			break;
@@ -802,7 +803,7 @@ log_data_element(
 	}
 	
 	xml_child_iter(
-		data, a_child, NULL,
+		data, a_child, 
 		child_result = log_data_element(
 			function, prefix, log_level, depth+1, a_child, formatted);
 
@@ -843,7 +844,7 @@ dump_data_element(
 
 	} else if(name == NULL && depth == 0) {
 		xml_child_iter(
-			data, a_child, NULL,
+			data, a_child, 
 			child_result = dump_data_element(
 				depth, buffer, a_child, formatted);
 			if(child_result < 0) {
@@ -878,7 +879,7 @@ dump_data_element(
 		);
 	
 	xml_child_iter(
-		data, child, NULL,
+		data, child, 
 		if(child != NULL) {
 			has_children++;
 			break;
@@ -894,7 +895,7 @@ dump_data_element(
 	}
 	
 	xml_child_iter(
-		data, child, NULL,
+		data, child, 
 		child_result = dump_data_element(
 			depth+1, buffer, child, formatted);
 
@@ -918,7 +919,7 @@ xml_has_children(crm_data_t *xml_root)
 	crm_validate_data(xml_root);
 
 	xml_child_iter(
-		xml_root, a_child, NULL,
+		xml_root, a_child, 
 		return TRUE;
 		);
 	return FALSE;
@@ -1017,7 +1018,7 @@ crm_update_parents(crm_data_t *xml_root)
 {
 	crm_validate_data(xml_root);
 	xml_child_iter(
-		xml_root, a_child, NULL,
+		xml_root, a_child, 
 		crm_set_element_parent(a_child, xml_root);
 		crm_update_parents(a_child);
 		);
@@ -1502,7 +1503,7 @@ log_xml_diff(unsigned int log_level, crm_data_t *diff, const char *function)
 	gboolean is_first = TRUE;
 	
 	xml_child_iter(
-		removed, child, NULL,
+		removed, child, 
 		log_data_element(function, "-", log_level, 0, child, TRUE);
 		if(is_first) {
 			is_first = FALSE;
@@ -1515,7 +1516,7 @@ log_xml_diff(unsigned int log_level, crm_data_t *diff, const char *function)
 
 	is_first = TRUE;
 	xml_child_iter(
-		added, child, NULL,
+		added, child, 
 		log_data_element(function, "+", log_level, 0, child, TRUE);
 		if(is_first) {
 			is_first = FALSE;
@@ -1541,7 +1542,7 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 	if(crm_assert_failed) { return FALSE; }
 
 	crm_debug_2("Substraction Phase");
-	xml_child_iter(removed, child_diff, NULL,
+	xml_child_iter(removed, child_diff, 
 		       CRM_DEV_ASSERT(root_nodes_seen == 0);
 		       if(root_nodes_seen == 0) {
 			       *new = subtract_xml_object(old, child_diff, FALSE);
@@ -1560,7 +1561,7 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 	root_nodes_seen = 0;
 	crm_debug_2("Addition Phase");
 	if(result) {
-		xml_child_iter(added, child_diff, NULL,
+		xml_child_iter(added, child_diff, 
 			       CRM_DEV_ASSERT(root_nodes_seen == 0);
 			       if(root_nodes_seen == 0) {
 				       add_xml_object(NULL, *new, child_diff);
@@ -1663,7 +1664,7 @@ can_prune_leaf(crm_data_t *xml_node)
 		      }		      
 		      can_prune = FALSE;
 		);
-	xml_child_iter(xml_node, child, NULL,
+	xml_child_iter(xml_node, child, 
 		       if(can_prune_leaf(child)) {
 			       cl_msg_remove_value(xml_node, child);
 			       __counter--;
@@ -1706,7 +1707,7 @@ diff_filter_context(int context, int upper_bound, int lower_bound,
 		}
 	}
 
-	xml_child_iter(us, child, NULL,
+	xml_child_iter(us, child, 
 		       diff_filter_context(
 			       context, upper_bound-1, lower_bound-1,
 			       child, new_parent);
@@ -1730,7 +1731,7 @@ in_upper_context(int depth, int context, crm_data_t *xml_node)
 		return depth;
 
 	} else if(depth < context) {
-		xml_child_iter(xml_node, child, NULL,
+		xml_child_iter(xml_node, child, 
 			       if(in_upper_context(depth+1, context, child)) {
 				       return depth;
 			       }
@@ -1824,7 +1825,7 @@ subtract_xml_object(crm_data_t *left, crm_data_t *right, gboolean suppress)
 
 	/* changes to child objects */
 	xml_child_iter(
-		left, left_child, NULL, 
+		left, left_child,  
 		right_child = find_entity(
 			right, crm_element_name(left_child), ID(left_child));
 		child_diff = subtract_xml_object(
@@ -1909,7 +1910,7 @@ add_xml_object(crm_data_t *parent, crm_data_t *target, const crm_data_t *update)
 		    crm_str(object_name), crm_str(object_id));
 	
 	xml_child_iter(
-		update, a_child, NULL, 
+		update, a_child,  
 		int tmp_result = 0;
 		crm_debug_3("Updating child <%s id=%s>",
 			    crm_element_name(a_child), ID(a_child));
@@ -1955,7 +1956,7 @@ update_xml_child(crm_data_t *child, crm_data_t *to_update)
 	}
 	
 	xml_child_iter(
-		child, child_of_child, NULL,
+		child, child_of_child, 
 		/* only update the first one */
 		if(can_update) {
 			break;
@@ -2002,7 +2003,7 @@ delete_xml_child(crm_data_t *parent, crm_data_t *child, crm_data_t *to_delete)
 	
 	
 	xml_child_iter(
-		child, child_of_child, NULL,
+		child, child_of_child, 
 		/* only delete the first one */
 		if(can_delete) {
 			break;
@@ -2065,7 +2066,7 @@ xml2list_202(crm_data_t *parent)
 		}
 	}
 	
-	xml_child_iter(
+	xml_child_iter_filter(
 		nvpair_list, node_iter, XML_CIB_TAG_NVPAIR,
 		
 		const char *key   = crm_element_value(
@@ -2178,7 +2179,7 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 	}
 
 	xml_child_iter(
-		xml_obj, xml_child, NULL,
+		xml_obj, xml_child, 
 		if(do_id_check(xml_child, id_hash)) {
 			modified = TRUE;
 		}

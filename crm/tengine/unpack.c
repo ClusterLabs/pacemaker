@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.50 2005/10/31 08:53:04 andrew Exp $ */
+/* $Id: unpack.c,v 1.51 2005/12/19 16:54:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -82,7 +82,7 @@ unpack_graph(crm_data_t *xml_graph)
 	crm_info("Beginning transition %d : timeout set to %dms",
 		 transition_counter, transition_timer->timeout);
 
-	xml_child_iter(
+	xml_child_iter_filter(
 		xml_graph, synapse, "synapse",
 
 		synapse_t *new_synapse = NULL;
@@ -102,11 +102,11 @@ unpack_graph(crm_data_t *xml_graph)
 		crm_debug_3("look for actions in synapse %s",
 			  crm_element_value(synapse, XML_ATTR_ID));
 
-		xml_child_iter(
+		xml_child_iter_filter(
 			synapse, actions, "action_set",
 
 			xml_child_iter(
-				actions, action, NULL,
+				actions, action, 
 				
 				action_t *new_action = unpack_action(action);
 				num_actions++;
@@ -127,14 +127,14 @@ unpack_graph(crm_data_t *xml_graph)
 		crm_debug_3("look for inputs in synapse %s",
 			  crm_element_value(synapse, XML_ATTR_ID));
 
-		xml_child_iter(
+		xml_child_iter_filter(
 			synapse, inputs, "inputs",
 
 			xml_child_iter(
-				inputs, trigger, NULL,
+				inputs, trigger, 
 
 				xml_child_iter(
-					trigger, input, NULL,
+					trigger, input, 
 
 					action_t *new_input =
 						unpack_action(input);
@@ -261,7 +261,7 @@ extract_event(crm_data_t *msg)
 	 <rsc_state id="" rsc_id="rsc4" node_id="node1" rsc_state="stopped"/>
 */
 	crm_debug_4("Extracting event from %s", crm_element_name(msg));
-	xml_child_iter(
+	xml_child_iter_filter(
 		msg, node_state, XML_CIB_TAG_STATE,
 
 		crm_data_t *attrs = NULL;
@@ -297,9 +297,9 @@ extract_event(crm_data_t *msg)
 
 		/* LRM resource update... */
 		xml_child_iter(
-			resources, rsc, NULL, 
+			resources, rsc,  
 			xml_child_iter(
-				rsc, rsc_op, NULL, 
+				rsc, rsc_op,  
 				
 				crm_log_xml_debug_3(
 					rsc_op, "Processing resource update");

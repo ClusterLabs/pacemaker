@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.102 2005/11/22 02:44:41 andrew Exp $ */
+/* $Id: native.c,v 1.103 2005/12/19 16:54:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -323,7 +323,7 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 		node_uname = node->details->uname;
 	}
 	
-	xml_child_iter(
+	xml_child_iter_filter(
 		rsc->ops_xml, operation, "op",
 
 		name = crm_element_value(operation, "name");
