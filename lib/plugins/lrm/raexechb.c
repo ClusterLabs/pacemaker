@@ -282,7 +282,7 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 		if (std_output == NULL ) {
 			cl_log(LOG_WARNING, "The heartbeat RA did output"
 			" anything for status output to stdout.");
-			return EXECRA_UNKNOWN_ERROR; /* EXECRA_NOT_RUNNING ? */
+			return EXECRA_NOT_RUNNING;
 		}
 	 	lower_std_output = g_ascii_strdown(std_output, -1);
 
