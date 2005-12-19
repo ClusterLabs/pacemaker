@@ -280,8 +280,8 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 	
 	if ( 0 == STRNCMP_CONST(op_type, "status") ) {
 		if (std_output == NULL ) {
-			cl_log(LOG_WARNING, "The heartbeat RA may not to output "
-				"status string, such as 'running', to stdout.");
+			cl_log(LOG_WARNING, "The heartbeat RA did output"
+			" anything for status output to stdout.");
 			return EXECRA_UNKNOWN_ERROR; /* EXECRA_NOT_RUNNING ? */
 		}
 	 	lower_std_output = g_ascii_strdown(std_output, -1);
