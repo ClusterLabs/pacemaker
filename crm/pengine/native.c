@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.103 2005/12/19 16:54:44 andrew Exp $ */
+/* $Id: native.c,v 1.104 2005/12/21 06:46:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1066,9 +1066,10 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 
 	crm_debug_4("Processing pecs_must_not constraint");
 	/* pecs_must_not */
-	if(update_lh) {
-		color_rh = rsc_rh->color;
+	color_rh = rsc_rh->color;
+	color_lh = rsc_lh->color;
 
+	if(update_lh) {
 		if(rsc_lh->provisional && color_rh != NULL) {
 			color_lh = add_color(rsc_lh, color_rh);
 			color_lh->local_weight = -INFINITY;
@@ -1082,11 +1083,9 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 
 		} else if(rsc_lh->provisional) {
 			
-		} else if(rsc_lh->color
-			  && rsc_lh->color->details->pending) {
+		} else if(color_lh && color_lh->details->pending) {
 			node_t *node_lh = NULL;
 			
-			color_lh = rsc_lh->color;
 			node_lh = pe_find_node_id(
 				color_lh->details->candidate_nodes,
 				safe_val5(NULL, color_rh, details,
@@ -1110,9 +1109,11 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 			pe_warn("lh else");
 		}
 	}
-	
+
+	/* in case anything was modified */
+	color_rh = rsc_rh->color;
+	color_lh = rsc_lh->color;
 	if(update_rh) {
-		color_lh = rsc_lh->color;
 		if(rsc_rh->provisional && color_lh != NULL) {
 			color_rh = add_color(rsc_lh, color_lh);
 			color_rh->local_weight = -INFINITY;
@@ -1126,10 +1127,8 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 
 		} else if(rsc_rh->provisional) {
 			
-		} else if(rsc_rh->color
-			  && rsc_rh->color->details->pending) {
+		} else if(color_rh && color_rh->details->pending) {
 			node_t *node_rh = NULL;
-			color_rh = rsc_rh->color;
 			node_rh = pe_find_node_id(
 				color_rh->details->candidate_nodes,
 				safe_val5(NULL, color_lh, details,
