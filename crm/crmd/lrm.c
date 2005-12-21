@@ -188,6 +188,7 @@ do_lrm_control(long long action,
 			lrm_source = NULL;			
 			crm_info("Disconnecting from the LRM");
 			fsa_lrm_conn->lrm_ops->signoff(fsa_lrm_conn);
+			clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
 		}
 		/* TODO: Clean up the hashtable */
 	}
@@ -831,7 +832,7 @@ do_lrm_invoke(long long action,
 			
 			op->op_status = LRM_OP_DONE;
 			op->rc = EXECRA_OK;
-			send_direct_ack(op, rsc->id);
+			send_direct_ack(op, id_from_cib);
 			free_lrm_op(op);			
 			
 		} else if(safe_str_eq(operation, CRMD_ACTION_DELETE)) {
