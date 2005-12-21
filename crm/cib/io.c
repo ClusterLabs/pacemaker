@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.35 2005/11/08 06:27:38 gshi Exp $ */
+/* $Id: io.c,v 1.36 2005/12/21 07:26:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -123,6 +123,14 @@ readCibXmlFile(const char *filename)
 		root = file2xml(cib_file);
 		crm_xml_add(root, "generated", XML_BOOLEAN_FALSE);
 		fclose(cib_file);
+
+		if(root == NULL) {
+			crm_crit("Parse ERROR reading %s.", filename);
+			crm_crit("Inhibiting respawn by Heartbeat to avoid loss"
+				 " of configuration data.");
+			sleep(3);
+			exit(100);
+		}
 		
 	} else {
 		crm_warn("Stat of (%s) failed, file does not exist.",
