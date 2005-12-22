@@ -298,8 +298,10 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 			, std_output) ) {
 			return EXECRA_OK; /* running */
 		}
+		/* It didn't say it was running - must be stopped */
+		return EXECRA_NOT_RUNNING; /* stopped */
 	}
-	/* For none-status operation return code */
+	/* For non-status operation return code */
 	if ( ret_execra < 0 || ret_execra > 7 ) {
 		ret_execra = EXECRA_UNKNOWN_ERROR;
 	}
