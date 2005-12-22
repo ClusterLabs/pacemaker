@@ -145,6 +145,7 @@ do_test group6 "Group + Group (move)    "
 do_test group7 "Group colocation"
 do_test group8 "Group anti-colocation"
 do_test group9 "Group recovery"
+do_test group10 "Group partial recovery"
 
 echo ""
 do_test inc0 "Incarnation start					" 

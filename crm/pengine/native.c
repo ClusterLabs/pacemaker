@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.104 2005/12/21 06:46:40 andrew Exp $ */
+/* $Id: native.c,v 1.105 2005/12/22 21:05:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -381,7 +381,7 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 		}
 		custom_action_order(rsc, start_key(rsc), NULL,
 				    NULL, crm_strdup(key), mon,
-				    pe_ordering_manditory, data_set);
+				    pe_ordering_restart, data_set);
 		);	
 }
 
