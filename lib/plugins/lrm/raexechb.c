@@ -113,6 +113,7 @@ static PILPlugin*               OurPlugin;
 static PILInterface*		OurInterface;
 static void*			OurImports;
 static void*			interfprivate;
+static int			idebuglevel = 0;
 
 /*
  * Our plugin initialization and registration function
@@ -133,6 +134,10 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
 	/* Register ourself as a plugin */
 	imports->register_plugin(us, &OurPIExports);  
 
+	if (getenv(HADEBUGVAL) != NULL && atoi(getenv(HADEBUGVAL)) > 0 ) {
+		idebuglevel = atoi(getenv(HADEBUGVAL));
+	}
+
 	/*  Register our interfaces */
  	return imports->register_interface(us, PIL_PLUGINTYPE_S,  PIL_PLUGIN_S,	
 		&raops, NULL, &OurInterface, &OurImports,
@@ -151,7 +156,6 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 	char ra_pathname[RA_MAX_NAME_LENGTH];
 	uniform_ret_execra_t exit_value;
 	GString * debug_info;
-	char * inherit_debuglevel = NULL;
 	char * optype_tmp = NULL;
 	int index_tmp = 0;
 
@@ -184,8 +188,7 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 	get_ra_pathname(RA_PATH, rsc_type, NULL, ra_pathname);
 
 	/* let this log show only high loglevel. */
-	inherit_debuglevel = getenv(HADEBUGVAL);
-	if ((inherit_debuglevel != NULL) && (atoi(inherit_debuglevel) > 1)) {
+	if (idebuglevel  > 1) {
 		debug_info = g_string_new("");
 		do {
 			g_string_append(debug_info, params_argv[index_tmp]);
@@ -283,26 +286,46 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 			cl_log(LOG_WARNING, "The heartbeat RA did output"
 			" anything for status output to stdout.");
 			return EXECRA_NOT_RUNNING;
+		}else if (idebuglevel) {
+			cl_log(LOG_DEBUG, "RA output was: [%s]", std_output);
 		}
+			
 	 	lower_std_output = g_ascii_strdown(std_output, -1);
 
 		if ( TRUE == g_pattern_match_simple(stop_pattern1
 			, lower_std_output) || TRUE ==
 			g_pattern_match_simple(stop_pattern2
 			, lower_std_output) ) {
+			if (idebuglevel) {
+				cl_log(LOG_DEBUG
+			,	"RA output [%s] matched stopped pattern"
+			" [%s] or [%s]"
+			,	std_output
+			,	stop_pattern1
+			,	stop_pattern2);
+			}
 			return EXECRA_NOT_RUNNING; /* stopped */
 		}
 		if ( TRUE == g_pattern_match_simple(running_pattern1
 			, lower_std_output) || TRUE ==
 			g_pattern_match_simple(running_pattern2
 			, std_output) ) {
+			if (idebuglevel) {
+				cl_log(LOG_DEBUG
+				,	"RA output [%s] matched running"
+				" pattern [%s] or [%s]"
+				,	std_output, running_pattern1
+				,	running_pattern2);
+			}
 			return EXECRA_OK; /* running */
 		}
 		/* It didn't say it was running - must be stopped */
+		cl_log(LOG_DEBUG, "RA output [%s] didn't match any pattern"
+		,	std_output);
 		return EXECRA_NOT_RUNNING; /* stopped */
 	}
 	/* For non-status operation return code */
-	if ( ret_execra < 0 || ret_execra > 7 ) {
+	if (ret_execra < 0) {
 		ret_execra = EXECRA_UNKNOWN_ERROR;
 	}
 	return ret_execra;
