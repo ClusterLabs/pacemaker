@@ -136,6 +136,7 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
 
 	if (getenv(HADEBUGVAL) != NULL && atoi(getenv(HADEBUGVAL)) > 0 ) {
 		idebuglevel = atoi(getenv(HADEBUGVAL));
+		cl_log(LOG_DEBUG, "LRM debug level set to %d", idebuglevel);
 	}
 
 	/*  Register our interfaces */
