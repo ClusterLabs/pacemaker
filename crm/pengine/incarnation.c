@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.68 2005/12/22 21:04:22 andrew Exp $ */
+/* $Id: incarnation.c,v 1.69 2005/12/25 12:38:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -993,10 +993,10 @@ expand_list(GListPtr list, int clones,
   clone_expand_reallocate:
 	if(rsc_list != NULL) {
 		crm_free(*rsc_list);
-		crm_malloc0(*uuid_list, sizeof(char)*list_len);
-		CRM_ASSERT(*uuid_list != NULL);
-		uuid_list_s = *uuid_list;
-		uuid_len = 0;
+		crm_malloc0(*rsc_list, sizeof(char)*list_len);
+		CRM_ASSERT(*rsc_list != NULL);
+		rsc_list_s = *rsc_list;
+		rsc_len = 0;
 	}
 	if(node_list != NULL) {
 		crm_free(*node_list);
@@ -1007,10 +1007,10 @@ expand_list(GListPtr list, int clones,
 	}
 	if(uuid_list != NULL) {
 		crm_free(*uuid_list);
-		crm_malloc0(*rsc_list, sizeof(char)*list_len);
-		CRM_ASSERT(*rsc_list != NULL);
-		rsc_list_s = *rsc_list;
-		rsc_len = 0;
+		crm_malloc0(*uuid_list, sizeof(char)*list_len);
+		CRM_ASSERT(*uuid_list != NULL);
+		uuid_list_s = *uuid_list;
+		uuid_len = 0;
 	}	
 
 	/* keep BEAM extra happy */
