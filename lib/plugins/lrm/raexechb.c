@@ -285,8 +285,7 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 	if (	0 == STRNCMP_CONST(op_type, "status")
 	||	0 == STRNCMP_CONST(op_type, "monitor")) {
 		if (std_output == NULL ) {
-			cl_log(LOG_WARNING, "This heartbeat RA didn't output"
-			" anything for status output.");
+			cl_log(LOG_WARNING, "No status output from the (hb) resource agent.");
 			return EXECRA_NOT_RUNNING;
 		}else if (idebuglevel) {
 			cl_log(LOG_DEBUG, "RA output was: [%s]", std_output);
@@ -300,11 +299,11 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 			, lower_std_output) ) {
 			if (idebuglevel) {
 				cl_log(LOG_DEBUG
-			,	"RA output [%s] matched stopped pattern"
-			" [%s] or [%s]"
-			,	std_output
-			,	stop_pattern1
-			,	stop_pattern2);
+				,	"RA output [%s] matched stopped pattern"
+				" [%s] or [%s]"
+				,	std_output
+				,	stop_pattern1
+				,	stop_pattern2);
 			}
 			return EXECRA_NOT_RUNNING; /* stopped */
 		}

@@ -286,16 +286,14 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 	/* Except op_type equals 'status', the UNIFORM_RET_EXECRA is compatible
 	 * with the LSB standard.
 	 */
+	if (ret_execra < 0) {
+		return EXECRA_UNKNOWN_ERROR;
+	}
 	if (	0 == STRNCMP_CONST(op_type, "status")
 	|| 	0 == STRNCMP_CONST(op_type, "monitor")) {
-		if (ret_execra < 0) {
-			ret_execra = EXECRA_UNKNOWN_ERROR;
-		}else if (ret_execra < DIMOF(status_op_exitcode_map)) {
+		if (ret_execra < DIMOF(status_op_exitcode_map)) {
 			ret_execra =  status_op_exitcode_map[ret_execra];
 		}
-	}
-	if (ret_execra < 0) {
-		ret_execra = EXECRA_UNKNOWN_ERROR;
 	}
 	return ret_execra;
 }
