@@ -22,7 +22,7 @@
  */
 
 #include <portability.h>
-#include <stdio.h>		
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -140,7 +140,7 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
 	}
 
 	/*  Register our interfaces */
- 	return imports->register_interface(us, PIL_PLUGINTYPE_S,  PIL_PLUGIN_S,	
+ 	return imports->register_interface(us, PIL_PLUGINTYPE_S,  PIL_PLUGIN_S,
 		&raops, NULL, &OurInterface, &OurImports,
 		interfprivate); 
 }
@@ -202,7 +202,7 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 
 		g_string_free(debug_info, TRUE);
 	} 
-	
+
 	execv(ra_pathname, params_argv);
 	cl_perror("(%s:%s:%d) execv failed for %s"
 		  , __FILE__, __FUNCTION__, __LINE__, ra_pathname);
@@ -269,7 +269,7 @@ prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 static uniform_ret_execra_t 
 map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 {
-	
+
 	/* Now there is no formal related specification for Heartbeat RA 
 	 * scripts. Temporarily deal as LSB init script.
 	 */
@@ -281,16 +281,17 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 		   * running_pattern1 = "*running*",
 		   * running_pattern2 = "*OK*";
 	const char * lower_std_output = NULL;
-	
-	if ( 0 == STRNCMP_CONST(op_type, "status") ) {
+
+	if (	0 == STRNCMP_CONST(op_type, "status")
+	||	0 == STRNCMP_CONST(op_type, "monitor")) {
 		if (std_output == NULL ) {
-			cl_log(LOG_WARNING, "The heartbeat RA did output"
-			" anything for status output to stdout.");
+			cl_log(LOG_WARNING, "This heartbeat RA didn't output"
+			" anything for status output.");
 			return EXECRA_NOT_RUNNING;
 		}else if (idebuglevel) {
 			cl_log(LOG_DEBUG, "RA output was: [%s]", std_output);
 		}
-			
+
 	 	lower_std_output = g_ascii_strdown(std_output, -1);
 
 		if ( TRUE == g_pattern_match_simple(stop_pattern1
@@ -335,7 +336,7 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 static int 
 get_resource_list(GList ** rsc_info)
 {
-	return get_runnable_list(RA_PATH, rsc_info);			
+	return get_runnable_list(RA_PATH, rsc_info);
 }
 
 static char*
@@ -347,7 +348,7 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 	g_string_sprintf( meta_data, meta_data_template, rsc_type
 			, rsc_type, rsc_type);
 	return meta_data->str;
-}	
+}
 static int
 get_provider_list(const char* ra_type, GList ** providers)
 {

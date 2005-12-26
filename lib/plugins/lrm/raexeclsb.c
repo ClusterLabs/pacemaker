@@ -125,11 +125,11 @@ static const char * RA_PATH = LSB_RA_DIR;
  * specification.
  */
 static const int status_op_exitcode_map[] = { 
-	EXECRA_OK,
-	EXECRA_UNKNOWN_ERROR,
-	EXECRA_UNKNOWN_ERROR,
-	EXECRA_NOT_RUNNING,
-	EXECRA_UNKNOWN_ERROR
+	EXECRA_OK,		/* LSB_STATUS_OK */
+	EXECRA_NOT_RUNNING,	/* LSB_STATUS_VAR_PID */
+	EXECRA_NOT_RUNNING,	/* LSB_STATUS_VAR_LOCK */
+	EXECRA_NOT_RUNNING,	/* LSB_STATUS_STOPPED */
+	EXECRA_UNKNOWN_ERROR	/* LSB_STATUS_UNKNOWN */
 };
 
 /* The begin of exported function list */
@@ -284,18 +284,19 @@ static uniform_ret_execra_t
 map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 {
 	/* Except op_type equals 'status', the UNIFORM_RET_EXECRA is compatible
-	   with LSB standard.
-	*/
-	if ( 0 == STRNCMP_CONST(op_type, "status")) {
-		if (ret_execra < 0 || ret_execra > 4 ) {
+	 * with the LSB standard.
+	 */
+	if (	0 == STRNCMP_CONST(op_type, "status")
+	|| 	0 == STRNCMP_CONST(op_type, "monitor")) {
+		if (ret_execra < 0) {
 			ret_execra = EXECRA_UNKNOWN_ERROR;
+		}else if (ret_execra < DIMOF(status_op_exitcode_map)) {
+			ret_execra =  status_op_exitcode_map[ret_execra];
 		}
-		return status_op_exitcode_map[ret_execra];
 	}
-	/* For none-status operation return code */
-	if ( ret_execra < 0 || ret_execra > 7 ) {
+	if (ret_execra < 0) {
 		ret_execra = EXECRA_UNKNOWN_ERROR;
-	} 
+	}
 	return ret_execra;
 }
 
