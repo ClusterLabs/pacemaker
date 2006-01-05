@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.36 2005/12/21 07:26:39 andrew Exp $ */
+/* $Id: io.c,v 1.37 2006/01/05 17:58:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -417,10 +417,38 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 		}
 		
 		if(error_code == cib_ok) {
+			crm_data_t *cib_copy_status = NULL;
+			crm_data_t *cib_copy_no_status = NULL;
+
 			crm_debug_3("Writing CIB out to %s", CIB_FILENAME);
 			CRM_DEV_ASSERT(new_cib != NULL);
-			CRM_DEV_ASSERT(write_xml_file(
-					       new_cib, CIB_FILENAME) >= 0);
+
+			/* Given that we discard the status section on startup
+			 *   there is no point writing it out in the first place
+			 *   since users just get confused by it
+			 *
+			 * Although, it does help me once in a while
+			 *
+			 * So make a copy of the CIB and delete the status
+			 *   section before we write it out
+			 * Perhaps not the most efficient thing to do but
+			 *   it will work reliably
+			 */
+			cib_copy_no_status = copy_xml(new_cib);
+			cib_copy_status = find_xml_node(
+				cib_copy_no_status, XML_CIB_TAG_STATUS, TRUE);
+			CRM_DEV_ASSERT(cib_copy_status != NULL);
+
+			free_xml_from_parent(
+				cib_copy_no_status, cib_copy_status);
+			create_xml_node(cib_copy_no_status, XML_CIB_TAG_STATUS);
+			
+			CRM_DEV_ASSERT(
+				write_xml_file(
+					cib_copy_no_status, CIB_FILENAME) >= 0);
+
+			free_xml(cib_copy_no_status);
+			
 			if (crm_assert_failed) {
 				error_code = -4;
 			}
