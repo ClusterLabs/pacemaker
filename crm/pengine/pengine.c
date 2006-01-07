@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.98 2005/11/01 14:52:38 andrew Exp $ */
+/* $Id: pengine.c,v 1.99 2006/01/07 20:56:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -66,11 +66,9 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
 		pe_working_set_t data_set;
 		crm_data_t *generation = create_xml_node(NULL, XML_TAG_CIB);
+		crm_data_t *log_input  = copy_xml(xml_data);
 		crm_data_t *status     = get_object_root(
-			XML_CIB_TAG_STATUS, xml_data);
-		crm_data_t *log_input  = status;
-		log_input  = xml_data;
-
+			XML_CIB_TAG_STATUS, log_input);
 
 		copy_in_properties(generation, xml_data);
 		crm_log_xml_info(generation, "[generation]");
@@ -144,7 +142,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		}
 		
 		free_xml(generation);
-
+		free_xml(log_input);
 		
 	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
 		crm_warn("Received quit message, terminating");
