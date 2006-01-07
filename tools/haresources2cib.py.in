@@ -37,6 +37,19 @@ ocf_ra_setting = {
 	"db2"    :{"params":["instance"],"time":["120s","60s"]}
 	}
 
+config_defaults = [
+	"symmetric_cluster=true",
+	"no_quorum_policy=stop",
+	"default_resource_stickiness=0",
+	"stonith_enabled=false",
+	"stop_orphan_resources=false",
+	"stop_orphan_actions=true",
+	"remove_after_stop=false",
+	"short_resource_names=true",
+	"transition_idle_timeout=5min",
+	"is_managed_default=true",
+]
+
 def create_cib() :
 	doc = xml.dom.minidom.Document()
 	cib = doc.createElement("cib")
@@ -48,23 +61,20 @@ def create_cib() :
 	crm_config = doc.createElement("crm_config")
 	configuration.appendChild(crm_config)
 
-	nvpair = doc.createElement("nvpair")
-	crm_config.appendChild(nvpair)
-	nvpair.setAttribute("id","transition_idle_timeout")
-	nvpair.setAttribute("name","transition_idle_timeout")
-	nvpair.setAttribute("value","120s")
+	option_set = doc.createElement("cluster_property_set")
+	option_set.setAttribute("id","deafult")
+	crm_config.appendChild(option_set)
 
-	nvpair = doc.createElement("nvpair")
-	crm_config.appendChild(nvpair)
-	nvpair.setAttribute("id","symmetric_cluster")
-	nvpair.setAttribute("name","symmetric_cluster")
-	nvpair.setAttribute("value","true")
+	attr_list = doc.createElement("attributes")
+	option_set.appendChild(attr_list)
 
-	nvpair = doc.createElement("nvpair")
-	crm_config.appendChild(nvpair)
-	nvpair.setAttribute("id","no_quorum_policy")
-	nvpair.setAttribute("name","no_quorum_policy")
-	nvpair.setAttribute("value","stop")
+	for option in config_defaults:
+		option_details = string.split(option, '=')
+		nvpair = doc.createElement("nvpair")
+		attr_list.appendChild(nvpair)
+		nvpair.setAttribute("id",    option_details[0])
+		nvpair.setAttribute("name",  option_details[0])
+		nvpair.setAttribute("value", option_details[1])
 
 	configuration.appendChild(doc.createElement("nodes"))
 	resources = doc.createElement("resources")
