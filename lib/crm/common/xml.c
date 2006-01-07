@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.48 2005/12/19 16:54:44 andrew Exp $ */
+/* $Id: xml.c,v 1.49 2006/01/07 21:23:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1967,6 +1967,38 @@ update_xml_child(crm_data_t *child, crm_data_t *to_update)
 	return can_update;
 }
 
+
+gboolean
+find_xml_child(crm_data_t *child, const char *tag, const char *id)
+{
+	gboolean match_found = TRUE;
+	
+	CRM_DEV_ASSERT(child != NULL);
+	if(crm_assert_failed) { return FALSE; }
+	
+	if(safe_str_neq(tag, crm_element_name(child))) {
+		match_found = FALSE;
+
+	} else if(safe_str_neq(id, ID(child))) {
+		match_found = FALSE;
+
+	} else if(match_found) {
+		crm_err("Update match found for <%s id=%s.../>", tag, id);
+		crm_log_xml_debug(child, __FUNCTION__);
+	}
+	
+	xml_child_iter(
+		child, child_of_child, 
+		/* only find the first one */
+		if(match_found) {
+			break;
+		}
+		match_found = find_xml_child(child_of_child, tag, id);
+		);
+	
+	return match_found;
+}
+
 gboolean
 delete_xml_child(crm_data_t *parent, crm_data_t *child, crm_data_t *to_delete)
 {
@@ -2062,7 +2094,8 @@ xml2list_202(crm_data_t *parent)
 		if(nvpair_list == NULL) {
 			crm_debug("No attributes in %s",
 				  crm_element_name(parent));
-			crm_log_xml_debug_2(parent,"No attributes for resource op");
+			crm_log_xml_debug_2(
+				parent,"No attributes for resource op");
 		}
 	}
 	
@@ -2098,7 +2131,8 @@ xml2list(crm_data_t *parent)
 		if(nvpair_list == NULL) {
 			crm_debug("No attributes in %s",
 				  crm_element_name(parent));
-			crm_log_xml_debug_2(parent,"No attributes for resource op");
+			crm_log_xml_debug_2(
+				parent,"No attributes for resource op");
 		}
 	}
 	
