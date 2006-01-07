@@ -70,7 +70,9 @@ crmd_ha_msg_dispatch(IPC_Channel *channel, gpointer user_data)
 	G_main_set_trigger(fsa_source);
 	
 	if (channel && (channel->ch_status != IPC_CONNECT)) {
-		crm_crit("Lost connection to heartbeat service.");
+		if(is_set(fsa_input_register, R_HA_DISCONNECTED) == FALSE) {
+			crm_crit("Lost connection to heartbeat service.");
+		}
 		return FALSE;
 	}
     
@@ -244,16 +246,22 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 
 
 gboolean
-lrm_dispatch(IPC_Channel*src_not_used, gpointer user_data)
+lrm_dispatch(IPC_Channel *src_not_used, gpointer user_data)
 {
 	int num_msgs = 0;
 	ll_lrm_t *lrm = (ll_lrm_t*)user_data;
 	crm_debug_3("received callback");
 	num_msgs = lrm->lrm_ops->rcvmsg(lrm, FALSE);
 	if(num_msgs < 1) {
-		crm_err("lrm->lrm_ops->rcvmsg() failed, connection lost?");
-		clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
-		register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
+		if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
+			crm_err("LRM Connection failed");
+			register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
+			clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
+
+		} else {
+			crm_info("LRM Connection disconnected");
+		}
+
 		return FALSE;
 	}
 	return TRUE;
@@ -579,8 +587,7 @@ crmd_ccm_msg_callback(
 void
 crmd_cib_connection_destroy(gpointer user_data)
 {
-	if(is_set(fsa_input_register, R_SHUTDOWN)
-	   || is_set(fsa_input_register, R_CIB_CONNECTED)) {
+	if(is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
 		crm_info("Connection to the CIB terminated...");
 		return;
 	}

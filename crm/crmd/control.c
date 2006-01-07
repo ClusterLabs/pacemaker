@@ -62,7 +62,7 @@ do_ha_control(long long action,
 			fsa_cluster_conn->llc_ops->signoff(
 				fsa_cluster_conn, FALSE);
 		}
-		
+		crm_info("Disconnected from Heartbeat");
 	}
 	
 	if(action & A_HA_CONNECT) {
@@ -81,6 +81,7 @@ do_ha_control(long long action,
 			return I_NULL;
 		}
 		clear_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
+		crm_info("Connected to Heartbeat");
 	} 
 	
 	if(action & ~(A_HA_CONNECT|A_HA_DISCONNECT)) {
