@@ -23,7 +23,7 @@ Licensed under the GNU GPL.
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import time, os, popen2, string
+import time, os, popen2, string, re
 import CTS
 import os
 import popen2
@@ -293,10 +293,14 @@ class HAResourceAudit(ClusterAudit):
             for rsc in group :
                 if RunningNodes != NodeofRsc[rsc.rid] :
                     passed = 0 
-                    self.CM.log("Not all resources in group %s running on same node"%
-                                str(group))
-                    self.CM.log("%s running on %s"%(group[0].rid, NodeofRsc[group[0].rid]))
-                    self.CM.log("%s running on %s"%(rsc.rid, NodeofRsc[rsc.rid]))
+		    if not RunningNodes:
+			self.CM.log("Not all resources in group %s running on same node" % repr(group))
+			self.CM.log("  %s not running" % rsc.rid)
+		    else:
+			self.CM.log("Not all resources in group %s running on same node"%
+				    repr(group))
+			self.CM.log("  %s running on %s"%(group[0].rid, NodeofRsc[group[0].rid]))
+			self.CM.log("  %s running on %s"%(rsc.rid, NodeofRsc[rsc.rid]))
                                 
         #Make sure the resouces with "must","placement" constraint are running on the same node
         Dependancies = self.CM.Dependencies()
@@ -442,9 +446,13 @@ class CIBAudit(ClusterAudit):
 		        infile, outfile, errfile = os.popen3(diff_cmd)
 			diff_lines = outfile.readlines()
         		for line in diff_lines:
-			    passed = 0
-			    self.CM.log("CibDiff[%s-%s]: %s" 
-					% (first_host, a_host, line)) 
+			    if not re.search("<diff/>", line):
+				passed = 0
+				self.CM.log("CibDiff[%s-%s]: %s" 
+					    % (first_host, a_host, line)) 
+			    else:
+				self.CM.debug("CibDiff[%s-%s] Ignoring: %s" 
+					      % (first_host, a_host, line)) 
 
 			diff_lines = errfile.readlines()
         		for line in diff_lines:
