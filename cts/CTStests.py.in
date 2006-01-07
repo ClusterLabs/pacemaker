@@ -1609,7 +1609,7 @@ class ResourceRecover(CTSTest):
 
         # wait for the resource to be started
         if not watch.look():
-            self.CM.log("WARN: No match for pattern: %s" %pat)
+            self.CM.log("WARN: No match for pattern: %s" %repr(pat))
 
         # should be ample time for the LRM + RA to complete
         time.sleep(10)
