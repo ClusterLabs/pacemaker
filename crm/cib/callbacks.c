@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.85 2005/10/25 14:02:14 andrew Exp $ */
+/* $Id: callbacks.c,v 1.86 2006/01/07 21:29:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -862,28 +862,35 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 	}
 	
 	if(cib_server_ops[call_type].modifies_cib) {
-		if(safe_str_eq(op, CIB_OP_APPLY_DIFF)) {
-			local_diff = copy_xml(input);
-
-		} else if(result_cib != NULL && current_cib != result_cib) {
+		if(result_cib != NULL && current_cib != result_cib) {
 			local_diff = diff_cib_object(
 				current_cib, result_cib, FALSE);
 		}
 		if(rc != cib_ok) {
 			free_xml(result_cib);
 
-		} else if(activateCibXml(result_cib,CIB_FILENAME) < 0){
-			crm_warn("Activation failed");
-			rc = cib_ACTIVATION;
+		} else {
+#if 0
+			crm_debug("Activating changes for: %s from %s on %s (id=%s)",
+				  op, cl_get_string(request, F_ORIG),
+				  cl_get_string(request, F_CIB_CLIENTID), call_id);
+
+			crm_log_message_adv(LOG_DEBUG, __FUNCTION__, local_diff);
+#endif
+			if(activateCibXml(result_cib, CIB_FILENAME) < 0){
+				crm_warn("Activation failed");
+				rc = cib_ACTIVATION;
+				
+			}
 		}
+		
 		cib_post_notify(call_options, op, input, rc, the_cib);
 		cib_diff_notify(call_options, op, input, rc, local_diff);
 
 	} else if(result_cib != NULL) {
 		crm_err("%s call modified the CIB", op);
 		free_xml(result_cib);
-	}
-	
+	}	
 	
 	crm_debug_4("Processing reply cases");
 	if((call_options & cib_discard_reply)
