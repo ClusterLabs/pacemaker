@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.37 2006/01/05 17:58:41 andrew Exp $ */
+/* $Id: io.c,v 1.38 2006/01/07 21:18:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -112,7 +112,12 @@ readCibXmlFile(const char *filename)
 {
 	int s_res = -1;
 	struct stat buf;
+
+	const char *name = NULL;
+	const char *value = NULL;
+
 	crm_data_t *root = NULL;
+	crm_data_t *status = NULL;
 	
 	if(filename != NULL) {
 		s_res = stat(filename, &buf);
@@ -120,60 +125,55 @@ readCibXmlFile(const char *filename)
 	
 	if (s_res == 0) {
 		FILE *cib_file = fopen(filename, "r");
+		crm_info("Reading cluster configuration from: %s", filename);
 		root = file2xml(cib_file);
 		crm_xml_add(root, "generated", XML_BOOLEAN_FALSE);
 		fclose(cib_file);
-
-		if(root == NULL) {
-			crm_crit("Parse ERROR reading %s.", filename);
-			crm_crit("Inhibiting respawn by Heartbeat to avoid loss"
-				 " of configuration data.");
-			sleep(3);
-			exit(100);
-		}
-		
-	} else {
-		crm_warn("Stat of (%s) failed, file does not exist.",
-			 CIB_FILENAME);
 	}
 
-	if(root != NULL) {
-		int lpc = 0;
-		const char *value = NULL;
-		const char *name = NULL;
-		crm_data_t *status = get_object_root(XML_CIB_TAG_STATUS, root);
-		for (; status != NULL && lpc < status->nfields; ) {
-			if(status->types[lpc] != FT_STRUCT
-			   && status->types[lpc] != FT_UNCOMPRESS) {
-				lpc++;
-				continue;
-			}
-			
-			CRM_DEV_ASSERT(cl_msg_remove_offset(status, lpc) == HA_OK);
-			/* dont get stuck in an infinite loop */
-			if(crm_assert_failed) {
-				lpc++;
-			}
-		}
+	if(root == NULL && s_res == 0) {
+		crm_crit("Parse ERROR reading %s.", filename);
+		crm_crit("Inhibiting respawn by Heartbeat to avoid loss"
+			 " of configuration data.");
+		sleep(3); /* give the messages a little time to be logged */
+		exit(100);
 
-		name = XML_ATTR_GENERATION_ADMIN;
-		value = crm_element_value(root, name);
-		if(value == NULL) {
-			crm_xml_add(root, name, "0");
-		}
-		name = XML_ATTR_GENERATION;
-		value = crm_element_value(root, name);
-		if(value == NULL) {
-			crm_xml_add(root, name, "0");
-		}
-		name = XML_ATTR_NUMUPDATES;
-		value = crm_element_value(root, name);
-		if(value == NULL) {
-			crm_xml_add(root, name, "0");
-		}
-
-		do_id_check(root, NULL);
+	} else if(root == NULL) {
+		crm_warn("Cluster configuration not found: %s."
+			 "  Creating an empty one.", filename);
+		return NULL;
 	}
+
+	crm_log_xml_info(root, "[on-disk]");
+	
+	/* strip out the status section if there is one */
+	status = find_xml_node(root, XML_CIB_TAG_STATUS, TRUE);
+	if(status != NULL) {
+		free_xml_from_parent(root, status);
+	}
+	create_xml_node(root, XML_CIB_TAG_STATUS);
+
+	/* fill in some defaults */
+	name = XML_ATTR_GENERATION_ADMIN;
+	value = crm_element_value(root, name);
+	if(value == NULL) {
+		crm_xml_add(root, name, "0");
+	}
+	
+	name = XML_ATTR_GENERATION;
+	value = crm_element_value(root, name);
+	if(value == NULL) {
+		crm_xml_add(root, name, "0");
+	}
+	
+	name = XML_ATTR_NUMUPDATES;
+	value = crm_element_value(root, name);
+	if(value == NULL) {
+		crm_xml_add(root, name, "0");
+	}
+	
+	do_id_check(root, NULL);
+
 	if (verifyCibXml(root) == FALSE) {
 		free_xml(root);
 		root = NULL;
