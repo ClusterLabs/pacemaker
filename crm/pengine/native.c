@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.105 2005/12/22 21:05:28 andrew Exp $ */
+/* $Id: native.c,v 1.106 2006/01/07 20:57:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -879,12 +879,13 @@ native_print(
 			     desc?": ":"", desc?desc:"");
 
 	} else {
-		status_print("%s%s (%s%s%s:%s):\t%s",
+		status_print("%s%s (%s%s%s:%s):\t%s%s",
 			     pre_text?pre_text:"", rsc->id,
 			     prov?prov:"", prov?"::":"",
 			     crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
 			     crm_element_value(rsc->xml, XML_ATTR_TYPE),
-			     (rsc->variant!=pe_native)?"":node==NULL?"NOT ACTIVE":node->details->uname);
+			     (rsc->variant!=pe_native)?"":node==NULL?"NOT ACTIVE":node->details->uname,
+			     rsc->is_managed?"":" (unmanaged) ");
 #if CURSES_ENABLED
 		if(options & pe_print_ncurses) {
 			move(-1, 0);
@@ -894,10 +895,6 @@ native_print(
 	
 	if(options & pe_print_html) {
 		status_print(" </font> ");
-	}
-
-	if(rsc->is_managed == FALSE) {
-		status_print(" (unmanaged) ");
 	}
 	
 	if((options & pe_print_rsconly) == 0) {
@@ -1258,7 +1255,7 @@ native_assign_color(resource_t *rsc, color_t *color)
 		local_color->details->candidate_nodes = intersection;
 	}
 	
-	crm_debug("Colored resource %s with color %d",
+	crm_debug_2("Colored resource %s with color %d",
 		    rsc->id, local_color->id);
 	
 	print_resource(LOG_DEBUG_3, "Colored Resource", rsc, TRUE);
