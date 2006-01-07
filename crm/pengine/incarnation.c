@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.69 2005/12/25 12:38:57 andrew Exp $ */
+/* $Id: incarnation.c,v 1.70 2006/01/07 21:00:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -77,14 +77,18 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 
 	CRM_DEV_ASSERT(clone_data->xml_obj_child != NULL);
 	child_copy = copy_xml(clone_data->xml_obj_child);
-	set_id(child_copy, rsc->id, sub_id);
+	if(data_set->short_rsc_names) {
+		set_id(child_copy, NULL, sub_id);
+	} else {
+		set_id(child_copy, rsc->id, sub_id);
+	}
 	
 	if(common_unpack(child_copy, &child_rsc,
 			 clone_data->self->parameters, data_set)) {
 		char *inc_num = crm_itoa(sub_id);
 		char *inc_max = crm_itoa(clone_data->clone_max);
 		
-		crm_debug("Setting clone attributes for: %s", child_rsc->id);
+		crm_debug_3("Setting clone attributes for: %s", child_rsc->id);
 		clone_data->child_list = g_list_append(
 			clone_data->child_list, child_rsc);
 

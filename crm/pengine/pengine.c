@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.99 2006/01/07 20:56:41 andrew Exp $ */
+/* $Id: pengine.c,v 1.100 2006/01/07 21:00:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -327,6 +327,7 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->remove_after_stop = FALSE;
 	data_set->stop_action_orphans = TRUE;
 	data_set->stop_rsc_orphans = FALSE;
+	data_set->short_rsc_names = FALSE;
 	
 	data_set->config_hash = NULL;
 	data_set->nodes     = NULL;

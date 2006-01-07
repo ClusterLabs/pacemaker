@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.149 2005/12/19 16:54:44 andrew Exp $ */
+/* $Id: unpack.c,v 1.150 2006/01/07 21:00:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -109,6 +109,7 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 	param_value(config_hash, config, "stop_orphan_actions");
 	param_value(config_hash, config, "remove_after_stop");
 	param_value(config_hash, config, "is_managed_default");
+	param_value(config_hash, config, "short_resource_names");
 #endif
 	get_cluster_pref("transition_idle_timeout");
 	if(value != NULL) {
@@ -144,6 +145,13 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 			 " - resources can run anywhere by default");
 	}
 
+	get_cluster_pref("short_resource_names");
+	if(value != NULL) {
+		cl_str_to_boolean(value, &data_set->short_rsc_names);
+	}
+	crm_info("Using short resource names: %s",
+		 data_set->short_rsc_names?"true":"false");
+	
 	get_cluster_pref("no_quorum_policy");
 	if(safe_str_eq(value, "ignore")) {
 		data_set->no_quorum_policy = no_quorum_ignore;
@@ -185,7 +193,7 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 	if(value != NULL) {
 		cl_str_to_boolean(value, &data_set->remove_after_stop);
 	}
-	crm_info("Orphan resource actions are %s",
+	crm_info("Stopped resources are removed from the status section: %s",
 		 data_set->remove_after_stop?"true":"false");	
 	
 	get_cluster_pref("is_managed_default");
@@ -230,7 +238,7 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 	const char *uname  = NULL;
 	const char *type   = NULL;
 
-	crm_debug("Begining unpack... %s",
+	crm_debug_2("Begining unpack... %s",
 		    xml_nodes?crm_element_name(xml_nodes):"<none>");
 	xml_child_iter_filter(
 		xml_nodes, xml_obj, XML_CIB_TAG_NODE,
@@ -322,7 +330,7 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 gboolean 
 unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
 {
-	crm_debug("Begining unpack... %s",
+	crm_debug_2("Begining unpack... %s",
 		    xml_resources?crm_element_name(xml_resources):"<none>");
 	xml_child_iter(
 		xml_resources, xml_obj, 
@@ -353,7 +361,7 @@ gboolean
 unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
 {
 	crm_data_t *lifetime = NULL;
-	crm_debug("Begining unpack... %s",
+	crm_debug_2("Begining unpack... %s",
 		    xml_constraints?crm_element_name(xml_constraints):"<none>");
 	xml_child_iter(
 		xml_constraints, xml_obj, 
@@ -1210,7 +1218,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		rsc->role = RSC_ROLE_STOPPED;
 		if(safe_str_eq(task, CRMD_ACTION_STATUS)) {
 			/* probe or stop action*/
-			crm_debug("%s: resource %s is stopped", id, rsc->id);
+			crm_debug_2("%s: resource %s is stopped", id, rsc->id);
 			return TRUE;
 		}
 
@@ -1305,8 +1313,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				 *  that it can safely leave it optional
 				 */
 				if(rsc->role < RSC_ROLE_STARTED) {
-					crm_debug("%s active on %s",
-						 rsc->id, node->details->uname);
+					crm_debug_2("%s active on %s",
+						    rsc->id,
+						    node->details->uname);
 					rsc->role = RSC_ROLE_STARTED;
 				}
 
