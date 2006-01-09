@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.150 2006/01/07 21:00:24 andrew Exp $ */
+/* $Id: unpack.c,v 1.151 2006/01/09 18:45:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -123,11 +123,13 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 		}
 	}
 	
-	crm_debug_4("%s set to: %s",
+	crm_debug("%s set to: %s",
 		 "transition_idle_timeout", data_set->transition_idle_timeout);
 
 	get_cluster_pref("default_resource_stickiness");
 	data_set->default_resource_stickiness = char2score(value);
+	crm_info("Default stickiness: %d",
+		 data_set->default_resource_stickiness);
 	
 	get_cluster_pref("stonith_enabled");
 	if(value != NULL) {
