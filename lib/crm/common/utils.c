@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.29 2005/11/08 06:27:38 gshi Exp $ */
+/* $Id: utils.c,v 1.30 2006/01/09 21:18:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -449,12 +449,10 @@ alter_debug(int nsig)
 	switch(nsig) {
 		case DEBUG_INC:
 			crm_log_level++;
-			crm_debug("Upped log level to %d", crm_log_level);
 			break;
 
 		case DEBUG_DEC:
 			crm_log_level--;
-			crm_debug("Reduced log level to %d", crm_log_level);
 			break;	
 
 		default:
@@ -576,6 +574,7 @@ const char *
 get_uuid(ll_cluster_t *hb, const char *uname) 
 {
 	char *uuid_calc = NULL;
+	cl_uuid_t uuid_raw;
 
 	if(crm_uuid_cache == NULL) {
 		crm_uuid_cache = g_hash_table_new_full(
@@ -593,27 +592,22 @@ get_uuid(ll_cluster_t *hb, const char *uname)
 	
 	crm_malloc0(uuid_calc, sizeof(char)*50);
 	
-	if(uuid_calc != NULL) {
-		cl_uuid_t uuid_raw;
-		
-		if(hb->llc_ops->get_uuid_by_name(
-			   hb, uname, &uuid_raw) == HA_FAIL) {
-			crm_err("Could not calculate UUID for %s", uname);
-			crm_free(uuid_calc);
-			uuid_calc = crm_strdup(uname);
-			
-		} else {
-			cl_uuid_unparse(&uuid_raw, uuid_calc);
-			g_hash_table_insert(
-				crm_uuid_cache,
-				crm_strdup(uname), uuid_calc);
-			uuid_calc = g_hash_table_lookup(crm_uuid_cache, uname);
-		}
-		return uuid_calc;
+	if(uuid_calc == NULL) {
+		return NULL;
 	}
 	
-	crm_free(uuid_calc);
-	return NULL;
+	if(hb->llc_ops->get_uuid_by_name(hb, uname, &uuid_raw) == HA_FAIL) {
+		crm_err("Could not calculate UUID for %s", uname);
+		crm_free(uuid_calc);
+		uuid_calc = crm_strdup(uname);
+		
+	} else {
+		cl_uuid_unparse(&uuid_raw, uuid_calc);
+		g_hash_table_insert(
+			crm_uuid_cache, crm_strdup(uname), uuid_calc);
+		uuid_calc = g_hash_table_lookup(crm_uuid_cache, uname);
+	}
+	return uuid_calc;
 }
 
 const char *
@@ -635,7 +629,7 @@ get_uname(ll_cluster_t *hb, const char *uuid)
 		return uname;
 	}
 	
-	if(uname != NULL) {
+	if(uuid != NULL) {
 		cl_uuid_t uuid_raw;
 		char *uuid_copy = crm_strdup(uuid);
 		cl_uuid_parse(uuid_copy, &uuid_raw);
