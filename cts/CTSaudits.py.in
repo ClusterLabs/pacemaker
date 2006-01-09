@@ -295,12 +295,11 @@ class HAResourceAudit(ClusterAudit):
                     passed = 0 
 		    if not RunningNodes:
 			self.CM.log("Not all resources in group %s running on same node" % repr(group))
-			self.CM.log("  %s not running" % rsc.rid)
+			self.CM.log("* %s not running" % rsc.rid)
 		    else:
-			self.CM.log("Not all resources in group %s running on same node"%
-				    repr(group))
-			self.CM.log("  %s running on %s"%(group[0].rid, NodeofRsc[group[0].rid]))
-			self.CM.log("  %s running on %s"%(rsc.rid, NodeofRsc[rsc.rid]))
+			self.CM.log("Not all resources in group %s running on same node"% repr(group))
+			self.CM.log("* %s running on %s"%(group[0].rid, repr(NodeofRsc[group[0].rid])))
+			self.CM.log("* %s running on %s"%(rsc.rid, repr(NodeofRsc[rsc.rid])))
                                 
         #Make sure the resouces with "must","placement" constraint are running on the same node
         Dependancies = self.CM.Dependencies()
