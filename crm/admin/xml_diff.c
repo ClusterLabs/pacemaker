@@ -1,4 +1,4 @@
-/* $Id: xml_diff.c,v 1.5 2005/09/22 10:27:13 andrew Exp $ */
+/* $Id: xml_diff.c,v 1.6 2006/01/09 19:24:51 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -237,40 +237,17 @@ usage(const char *cmd, int exit_status)
 
 	stream = exit_status != 0 ? stderr : stdout;
 
-	fprintf(stream, "usage: %s [-?Vio] command\n"
-		"\twhere necessary, XML data will be expected using -X"
-		" or on STDIN if -X isnt specified\n", cmd);
+	fprintf(stream, "usage: %s [-?V] [oO] [pnN]\n", cmd);
 
 	fprintf(stream, "Options\n");
-	fprintf(stream, "\t--%s (-%c) <id>\tid of the object being operated on\n",
-		XML_ATTR_ID, 'i');
-	fprintf(stream, "\t--%s (-%c) <type>\tobject type being operated on\n",
-		"obj_type", 'o');
-	fprintf(stream, "\t--%s (-%c)\tturn on debug info."
-		"  additional instance increase verbosity\n", "verbose", 'V');
 	fprintf(stream, "\t--%s (-%c)\tthis help message\n", "help", '?');
-	fprintf(stream, "\nCommands\n");
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ERASE,  'E');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_QUERY,  'Q');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_CREATE, 'C');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_REPLACE,'R');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_UPDATE, 'U');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_DELETE, 'D');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_BUMP,   'B');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ISMASTER,'M');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_SYNC,   'S');
-	fprintf(stream, "\nXML data\n");
-	fprintf(stream, "\t--%s (-%c) <string>\t\n", F_CRM_DATA, 'X');
-	fprintf(stream, "\nAdvanced Options\n");
-	fprintf(stream, "\t--%s (-%c)\tsend command to specified host."
-		" Applies to %s and %s commands only\n", "host", 'h',
-		CIB_OP_QUERY, CIB_OP_SYNC);
-	fprintf(stream, "\t--%s (-%c)\tcommand takes effect locally"
-		" on the specified host\n", "local", 'l');
-	fprintf(stream, "\t--%s (-%c)\tcommand will not be broadcast even if"
-		" it altered the CIB\n", "no-bcast", 'b');
-	fprintf(stream, "\t--%s (-%c)\twait for call to complete before"
-		" returning\n", "sync-call", 's');
+	fprintf(stream, "\t--%s (-%c) <filename>\t\n", "original", 'o');
+	fprintf(stream, "\t--%s (-%c) <filename>\t\n", "new",   'n');
+	fprintf(stream, "\t--%s (-%c) <string>\t\n", "original-string",   'O');
+	fprintf(stream, "\t--%s (-%c) <string>\t\n", "new-string",       'N');
+	fprintf(stream, "\t--%s (-%c) <filename>\tApply a patch to the original XML\n", "patch", 'p');
+	fprintf(stream, "\t--%s (-%c)\tCompare/patch the inputs as a CIB\n", "cib",   'c');
+	fprintf(stream, "\t--%s (-%c)\tRead the inputs from stdin\n", "stdin", 's');
 
 	fflush(stream);
 
