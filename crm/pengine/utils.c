@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.121 2005/12/19 16:54:44 andrew Exp $ */
+/* $Id: utils.c,v 1.122 2006/01/09 21:20:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -765,19 +765,26 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 			action->runnable = FALSE;
 
 		} else if(rsc->is_managed == FALSE) {
-			crm_warn("Action %d %s is for %s (unmanaged)",
-				 action->id, task, rsc->id);
+			crm_warn("Action %s %s is for %s (unmanaged)",
+				 action->uuid, task, rsc->id);
 			action->optional = TRUE;
 /*   			action->runnable = FALSE; */
 
+#if 0
+		} else if(action->node->details->unclean) {
+			crm_warn("Action %s on %s is unrunnable (unclean)",
+				 action->uuid, action->node?action->node->details->uname:"<none>");
+
+			action->runnable = FALSE;
+#endif	
 		} else if(action->node->details->online == FALSE) {
-			crm_warn("Action %d %s for %s on %s is unrunnable",
-				 action->id, task, rsc->id,
-				 action->node?action->node->details->uname:"<none>");
+			crm_warn("Action %s on %s is unrunnable (offline)",
+				 action->uuid, action->node?action->node->details->uname:"<none>");
 			action->runnable = FALSE;
 
 		} else if(action->needs == rsc_req_nothing) {
-			crm_debug_2("Action doesnt require anything");
+			crm_debug_2("Action %s doesnt require anything",
+				  action->uuid);
 			action->runnable = TRUE;
 #if 0
 			/*
@@ -785,7 +792,7 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 			 * - if we dont have quorum we cant stonith anyway
 			 */
 		} else if(action->needs == rsc_req_stonith) {
-			crm_debug_2("Action requires only stonith");
+			crm_debug_2("Action %s requires only stonith", action->uuid);
 			action->runnable = TRUE;
 #endif
 		} else if(data_set->have_quorum == FALSE
@@ -803,8 +810,9 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 					 action->task, rsc->id,
 					 action->node->details->uname);
 			}
+
 		} else {
-			crm_debug_2("Action is runnable");
+			crm_debug_2("Action %s is runnable", action->uuid);
 			action->runnable = TRUE;
 		}
 		
