@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.70 2006/01/07 21:00:24 andrew Exp $ */
+/* $Id: incarnation.c,v 1.71 2006/01/10 14:13:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -425,12 +425,19 @@ clone_update_pseudo_status(
 			return;
 
 		} else if(action->optional) {
+			crm_debug_3("Skipping optional: %s", action->uuid);
+			continue;
+
+		} else if(action->pseudo == FALSE && action->runnable == FALSE){
+			crm_debug_3("Skipping unrunnable: %s", action->uuid);
 			continue;
 
 		} else if(safe_str_eq(CRMD_ACTION_STOP, action->task)) {
+			crm_debug_2("Stopping due to: %s", action->uuid);
 			*stopping = TRUE;
 
 		} else if(safe_str_eq(CRMD_ACTION_START, action->task)) {
+			crm_debug_2("Starting due to: %s", action->uuid);
 			*starting = TRUE;
 		}
 		);

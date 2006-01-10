@@ -190,7 +190,7 @@ do_test 764 "Bugzilla 764"
 do_test 797 "Bugzilla 797"
 do_test 829 "Bugzilla 829"
 do_test 994 "Bugzilla 994"
-
+do_test unrunnable-1 "Unrunnable"
 
 echo ""
 do_test bad1 "Bad node		"
