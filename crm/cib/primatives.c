@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.28 2005/12/19 16:54:43 andrew Exp $ */
+/* $Id: primatives.c,v 1.29 2006/01/10 13:49:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -463,12 +463,7 @@ update_cib_object(crm_data_t *parent, crm_data_t *update)
 		xml_remove_prop(target, XML_CIB_ATTR_REPLACE);
 	}
 	
-	if(safe_str_eq(XML_CIB_TAG_STATE, object_name)){
-		update_node_state(target, update);
-		
-	} else {
-		copy_in_properties(target, update);
-	}
+	copy_in_properties(target, update);
 
 	CRM_DEV_ASSERT(cl_is_allocated(object_name));
 	if(object_id != NULL) {
@@ -501,66 +496,5 @@ update_cib_object(crm_data_t *parent, crm_data_t *update)
 		  crm_str(object_name), crm_str(object_id));
 
 	return result;
-}
-
-void
-update_node_state(crm_data_t *target, crm_data_t *update)
-{
-	const char *source	= NULL;
-	gboolean any_updates    = FALSE;
-	gboolean clear_stonith  = FALSE;
-	gboolean clear_shutdown = FALSE;
-
-	xml_prop_iter(
-		update, local_prop_name, local_prop_value,
-		
-		if(local_prop_name == NULL) {
-			/*  error */
-			
-		} else if(strcmp(local_prop_name, XML_ATTR_ID) == 0) {
-			
-		} else if(strcmp(local_prop_name, XML_ATTR_TSTAMP) == 0) {
-
-		} else if(strcmp(local_prop_name, XML_CIB_ATTR_CLEAR_SHUTDOWN) == 0) {
-			clear_shutdown = TRUE;
-			
-		} else if(strcmp(local_prop_name, XML_CIB_ATTR_CLEAR_STONITH) == 0) {
-			clear_stonith = TRUE;
-			clear_shutdown = TRUE;			
-			
-		} else if(strcmp(local_prop_name, XML_CIB_ATTR_SOURCE) == 0) {
-			source = local_prop_value;
-			
-		} else {
-			any_updates = TRUE;
-			crm_xml_add(target, local_prop_name, local_prop_value);
-		}
-		);
-	
-	xml_remove_prop(target, XML_CIB_ATTR_CLEAR_SHUTDOWN);
-	if(clear_shutdown) {
-		/*  unset XML_CIB_ATTR_SHUTDOWN  */
-		if(crm_element_value(target, XML_CIB_ATTR_SHUTDOWN) != NULL) {
-			crm_debug_2("Clearing %s", XML_CIB_ATTR_SHUTDOWN);
-			xml_remove_prop(target, XML_CIB_ATTR_SHUTDOWN);
-			any_updates = TRUE;
-		}
-	}
-
-	xml_remove_prop(target, XML_CIB_ATTR_CLEAR_STONITH);
-	if(clear_stonith) {
-		/*  unset XML_CIB_ATTR_STONITH */
-		if(crm_element_value(target, XML_CIB_ATTR_STONITH) != NULL) {
-			crm_debug_2("Clearing %s", XML_CIB_ATTR_STONITH);
-			xml_remove_prop(target, XML_CIB_ATTR_STONITH);
-			any_updates = TRUE;
-		}
-	}
-	
-	if(any_updates) {
-		set_node_tstamp(target);
-		crm_xml_add(target, XML_CIB_ATTR_SOURCE, source);
-	}
-	
 }
 
