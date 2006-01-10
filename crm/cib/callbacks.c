@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.86 2006/01/07 21:29:51 andrew Exp $ */
+/* $Id: callbacks.c,v 1.87 2006/01/10 13:50:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,6 +47,9 @@
 #include <notify.h>
 
 #include <crm/dmalloc_wrapper.h>
+
+extern GMainLoop*  mainloop;
+extern gboolean cib_shutdown_flag;
 
 gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
 gboolean cib_msg_timeout(gpointer data);
@@ -269,7 +272,7 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 	}
 	
 	while(channel->ops->is_message_pending(channel)) {
-		if (channel->ch_status != IPC_CONNECT) {
+		if (channel->ch_status == IPC_DISCONNECT) {
 			/* The message which was pending for us is that
 			 * the channel is no longer fully connected.
 			 *
@@ -393,9 +396,9 @@ cib_common_callback(
 		    cib_client->id, cib_client->channel_name);
 
 	while(channel->ops->is_message_pending(channel)) {
-		if (channel->ch_status != IPC_CONNECT) {
+		if (channel->ch_status == IPC_DISCONNECT) {
 			/* The message which was pending for us is that
-			 * the channel is no longer fully connected.
+			 * the channel is no longer connected.
 			 *
 			 * Dont read requests from disconnected clients
 			 */
@@ -964,7 +967,7 @@ send_via_callback_channel(HA_Message *msg, const char *token)
 			rc = cib_client_corrupt;
 
 		} else if(hash_client->channel->ops->get_chan_status(
-				  hash_client->channel) != IPC_CONNECT) {
+				  hash_client->channel) == IPC_DISCONNECT) {
 			crm_warn("Client %s has disconnected", token);
 			rc = cib_client_gone;
 		}
@@ -1100,21 +1103,31 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 gboolean
 cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 {
-	if (channel->ch_status != IPC_CONNECT && cib_client != NULL) {
-		crm_info("Cleaning up after %s channel disconnect from client (%p) %s/%s",
+	gboolean keep_connection = TRUE;
+	
+	if (channel == NULL) {
+		keep_connection = FALSE;
+		
+	} else if(channel->ch_status == IPC_DISCONNECT && cib_client != NULL) {
+		crm_debug("Cleaning up after %s channel disconnect from client (%p) %s/%s",
 			 cib_client->channel_name, cib_client,
 			 crm_str(cib_client->id), crm_str(cib_client->name));
 
 		if(cib_client->id != NULL) {
 			g_hash_table_remove(client_list, cib_client->id);
+
+		} else {
+			crm_err("Client with no id");
 		}
+		
 		if(cib_client->source != NULL) {
 			crm_debug_3("deleting the IPC Channel");
  			G_main_del_IPC_Channel(cib_client->source);
 			cib_client->source = NULL;
 		}
 		
-		crm_debug_3("Freeing the cib client %s", crm_str(cib_client->id));
+		crm_debug_3("Freeing the cib client %s",
+			    crm_str(cib_client->id));
 #if 0
 		/* todo - put this back in once i recheck its safe */
  		crm_free(cib_client->callback_id);
@@ -1124,14 +1137,27 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
   		crm_free(cib_client);
 		crm_debug_3("Freed the cib client");
 
-		return FALSE;
+		keep_connection = FALSE;
 
-	} else if (channel->ch_status != IPC_CONNECT) {
+	} else if (channel->ch_status == IPC_DISCONNECT) {
 		crm_warn("Unknown client disconnected");
-		return FALSE;
+		keep_connection = FALSE;
 	}
 
-	return TRUE;
+	if(keep_connection == FALSE
+	   && cib_shutdown_flag
+	   && g_hash_table_size(client_list) == 0) {
+		crm_info("All clients disconnected");
+
+		if (mainloop != NULL && g_main_is_running(mainloop)) {
+			g_main_quit(mainloop);
+
+		} else {
+			exit(LSB_EXIT_OK);
+		}
+	}
+	
+	return keep_connection;
 }
 
 

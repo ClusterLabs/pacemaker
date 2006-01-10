@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.28 2005/09/21 15:16:50 andrew Exp $ */
+/* $Id: main.c,v 1.29 2006/01/10 13:50:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,6 +51,7 @@
 
 #include <crm/dmalloc_wrapper.h>
 
+gboolean cib_shutdown_flag = FALSE;
 
 extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
@@ -308,19 +309,54 @@ cib_ha_connection_destroy(gpointer user_data)
 {
 }
 
+
+static void
+disconnect_cib_client(gpointer key, gpointer value, gpointer user_data) 
+{
+	cib_client_t *a_client = value;
+	crm_debug("Processing client %s/%s... send=%d, recv=%d",
+		  a_client->name, a_client->id,
+		  (int)a_client->channel->send_queue->current_qlen,
+		  (int)a_client->channel->recv_queue->current_qlen);
+
+	if(a_client->channel->ch_status == IPC_CONNECT) {
+		a_client->channel->ops->resume_io(a_client->channel);
+		if(a_client->channel->send_queue->current_qlen != 0
+		   || a_client->channel->recv_queue->current_qlen != 0) {
+			crm_info("Flushed messages to/from %s/%s... send=%d, recv=%d",
+				a_client->name, a_client->id,
+				(int)a_client->channel->send_queue->current_qlen,
+				(int)a_client->channel->recv_queue->current_qlen);
+		}
+	}
+
+	if(a_client->channel->ch_status == IPC_CONNECT) {
+		crm_warn("Disconnecting %s/%s...", a_client->name,a_client->id);
+		a_client->channel->ops->disconnect(a_client->channel);
+	}
+}
+
+extern gboolean cib_process_disconnect(
+	IPC_Channel *channel, cib_client_t *cib_client);
+
 gboolean
 cib_shutdown(int nsig, gpointer unused)
 {
-	static int shuttingdown = 0;
-  
-	if (!shuttingdown) {
-		shuttingdown = 1;
-	}
-	if (mainloop != NULL && g_main_is_running(mainloop)) {
-		g_main_quit(mainloop);
+	if(cib_shutdown_flag == FALSE) {
+		cib_shutdown_flag = TRUE;
+		crm_debug("Disconnecting %d clients",
+			 g_hash_table_size(client_list));
+		g_hash_table_foreach(client_list, disconnect_cib_client, NULL);
+		crm_info("Disconnected %d clients",
+			 g_hash_table_size(client_list));
+		cib_process_disconnect(NULL, NULL);
+
 	} else {
-		exit(LSB_EXIT_OK);
+		crm_info("Waiting for %d clients to disconnect...",
+			 g_hash_table_size(client_list));
 	}
+	
+	
 	return TRUE;
 }
 
