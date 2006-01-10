@@ -132,6 +132,11 @@ crm_timer_popped(gpointer data)
 			get_timer_desc(timer),
 			fsa_input2string(timer->fsa_input));
 		
+	} else if(timer == election_timeout) {
+		crm_err("%s (%s) just popped!",
+			get_timer_desc(timer),
+			fsa_input2string(timer->fsa_input));
+		
 	} else {
 		crm_info("%s (%s) just popped!",
 			 get_timer_desc(timer),
@@ -581,6 +586,9 @@ fsa_action2string(long long action)
 		case A_ELECTION_VOTE:
 			actionAsText = "A_ELECTION_VOTE";
 			break;
+		case A_ELECTION_CHECK:
+			actionAsText = "A_ELECTION_CHECK";
+			break;
 		case A_CL_JOIN_ANNOUNCE:
 			actionAsText = "A_CL_JOIN_ANNOUNCE";
 			break;
@@ -912,6 +920,11 @@ fsa_dump_actions(long long action, const char *text)
 		do_crm_log(log_level, __FILE__, __FUNCTION__, 
 			   "Action %.16llx (A_ELECTION_VOTE) %s",
 			  A_ELECTION_VOTE, text);
+	}
+	if(is_set(action, A_ELECTION_CHECK)) {
+		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+			   "Action %.16llx (A_ELECTION_CHECK) %s",
+			  A_ELECTION_CHECK, text);
 	}
 	if(is_set(action, A_CL_JOIN_ANNOUNCE)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__, 
@@ -1250,10 +1263,9 @@ copy_ccm_node(oc_node_t a_node, oc_node_t *a_node_copy)
 
 crm_data_t*
 create_node_state(
-	const char *uuid, const char *uname,
-	const char *ha_state, const char *ccm_state,
+	const char *uname, const char *ha_state, const char *ccm_state,
 	const char *crmd_state, const char *join_state, const char *exp_state,
-	const char *src)
+	gboolean clear_shutdown, const char *src)
 {
 	crm_data_t *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
@@ -1268,6 +1280,14 @@ create_node_state(
 	crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE,  exp_state);
 	crm_xml_add(node_state, "origin", src);
 
+	if(clear_shutdown) {
+		crm_xml_add(node_state, XML_CIB_ATTR_SHUTDOWN,  "0");
+/* 		crm_xml_add(node_state, */
+/* 			    XML_CIB_ATTR_REPLACE, XML_TAG_TRANSIENT_NODEATTRS); */
+	}
+	
+		
+	
 	crm_log_xml_debug_3(node_state, "created");
 
 	return node_state;

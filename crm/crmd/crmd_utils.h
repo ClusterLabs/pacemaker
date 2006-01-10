@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.20 2005/10/20 13:48:31 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.21 2006/01/10 13:46:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,10 +47,9 @@ extern gboolean crm_timer_start(fsa_timer_t *timer);
 extern gboolean crm_timer_popped(gpointer data);
 
 extern crm_data_t *create_node_state(
-	const char *uuid, const char *uname,
-	const char *ha_state, const char *ccm_state,
+	const char *uname, const char *ha_state, const char *ccm_state,
 	const char *crmd_state, const char *join_state, const char *exp_state,
-	const char *src);
+	gboolean clear_shutdown, const char *src);
 
 extern void create_node_entry(
 	const char *uuid, const char *uname, const char *type);

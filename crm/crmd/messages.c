@@ -81,7 +81,7 @@ register_fsa_error_adv(
 
 static gboolean last_was_vote = FALSE;
 
-void
+int
 register_fsa_input_adv(
 	enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 	void *data, long long with_actions,
@@ -107,7 +107,7 @@ register_fsa_input_adv(
 		if(data == NULL) {
 			set_bit_inplace(fsa_actions, with_actions);
 			with_actions = A_NOTHING;
-			return;
+			return 0;
 		}
 		crm_err("%s stalled the FSA with data - this may be broken",
 			raised_from);
@@ -120,11 +120,12 @@ register_fsa_input_adv(
 	if(input == I_NULL && with_actions == A_NOTHING /* && data == NULL */){
 		/* no point doing anything */
 		crm_err("Cannot add entry to queue: no input and no action");
-		return;
+		return 0;
 		
 	} else if(data == NULL) {
 		last_was_vote = FALSE;
 
+#if 0
 	} else if(last_was_vote && cause == C_HA_MESSAGE && input == I_ROUTER) {
 		const char *op = cl_get_string(
 			((ha_msg_input_t*)data)->msg, F_CRM_TASK);
@@ -143,9 +144,9 @@ register_fsa_input_adv(
 			 *    had not disarded the vote).
 			 */
 			crm_debug_2("Vote compression: %d", old_len);
-			return;
+			return 0;
 		}
-
+#endif
 	} else if (cause == C_HA_MESSAGE && input == I_ROUTER) {
 		const char *op = cl_get_string(
 			((ha_msg_input_t*)data)->msg, F_CRM_TASK);
@@ -238,6 +239,7 @@ register_fsa_input_adv(
 	if(fsa_source) {
 		G_main_set_trigger(fsa_source);
 	}
+	return last_data_id;
 }
 
 void
@@ -780,7 +782,8 @@ handle_request(ha_msg_input_t *stored_msg)
 	const char *sys_to    = cl_get_string(stored_msg->msg, F_CRM_SYS_TO);
 	const char *host_from = cl_get_string(stored_msg->msg, F_CRM_HOST_FROM);
 
-	crm_debug_2("Received %s in state %s", op, fsa_state2string(fsa_state));
+	crm_debug_2("Received %s "XML_ATTR_REQUEST" from %s in state %s",
+		    op, host_from, fsa_state2string(fsa_state));
 	
 	if(op == NULL) {
 		crm_err("Bad message");
@@ -790,10 +793,14 @@ handle_request(ha_msg_input_t *stored_msg)
 	} else if(strcmp(op, CRM_OP_NOOP) == 0) {
 		crm_debug("no-op from %s", crm_str(host_from));
 
+	} else if(strcmp(op, CRM_OP_NOVOTE) == 0) {
+		register_fsa_input_adv(C_HA_MESSAGE, I_NULL, stored_msg,
+				       A_ELECTION_COUNT|A_ELECTION_CHECK, FALSE, __FUNCTION__);
+
 	} else if(strcmp(op, CRM_OP_VOTE) == 0) {
 		/* count the vote and decide what to do after that */
 		register_fsa_input_adv(C_HA_MESSAGE, I_NULL, stored_msg,
-				       A_ELECTION_COUNT, FALSE, __FUNCTION__);
+				       A_ELECTION_COUNT|A_ELECTION_CHECK, FALSE, __FUNCTION__);
 
 		/* Sometimes we _must_ go into S_ELECTION */
 		if(fsa_state == S_HALT) {
@@ -968,9 +975,7 @@ handle_request(ha_msg_input_t *stored_msg)
 				next_input = I_TERMINATE;
 
 			} else if(is_set(fsa_input_register, R_SHUTDOWN)) {
-				crm_err("We asked to be shut down, "
-					" are still the DC, yet another node"
-					" (DC) is askin us to shutdown!");
+				crm_info("Shutting ourselves down (DC)");
 				next_input = I_STOP;			
 
 			} else if(fsa_state != S_STOPPING) {
@@ -999,10 +1004,11 @@ handle_response(ha_msg_input_t *stored_msg)
 
 	const char *op        = cl_get_string(stored_msg->msg, F_CRM_TASK);
 	const char *sys_from  = cl_get_string(stored_msg->msg, F_CRM_SYS_FROM);
+	const char *host_from = cl_get_string(stored_msg->msg, F_CRM_HOST_FROM);
 	const char *msg_ref   = cl_get_string(stored_msg->msg, XML_ATTR_REFERENCE);
 
-	crm_debug_2("Received %s %s in state %s",
-		    op, XML_ATTR_RESPONSE, fsa_state2string(fsa_state));
+	crm_debug_2("Received %s "XML_ATTR_RESPONSE" from %s in state %s",
+		    op, host_from, fsa_state2string(fsa_state));
 	
 	if(op == NULL) {
 		crm_err("Bad message");
@@ -1028,6 +1034,8 @@ handle_response(ha_msg_input_t *stored_msg)
 		  || strcmp(op, CRM_OP_HBEAT) == 0
 		  || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0
 		  || strcmp(op, CRM_OP_SHUTDOWN) == 0) {
+		crm_debug_2("Ignoring %s from %s in %s",
+			    op, host_from, fsa_state2string(fsa_state));
 		next_input = I_NULL;
 		
 	} else {
@@ -1055,6 +1063,11 @@ handle_shutdown_request(HA_Message *stored_msg)
 	char *now_s = crm_itoa((int)now);
 	crm_data_t *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	const char *host_from= cl_get_string(stored_msg, F_CRM_HOST_FROM);
+
+	if(host_from == NULL) {
+		/* we're shutting down and the DC */
+		host_from = fsa_our_uname;
+	}
 	
 	crm_info("Creating shutdown request for %s",host_from);
 

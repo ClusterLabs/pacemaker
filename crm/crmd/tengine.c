@@ -114,10 +114,6 @@ do_te_invoke(long long action,
 			  fsa_state2string(fsa_state));
 		return I_NULL;
 		
-	} else if(is_set(fsa_input_register, R_SHUTDOWN)) {
-		crm_err("No point invoking the TE, we're shutting down");
-		return I_NULL;
-
 	} else if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE) {
 		if(te_subsystem->pid > 0) {
 			int pid_status = -1;

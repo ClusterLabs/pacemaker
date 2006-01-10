@@ -177,6 +177,7 @@ ll_lrm_t       *fsa_lrm_conn;
 volatile long long       fsa_input_register;
 volatile long long       fsa_actions = A_NOTHING;
 const char     *fsa_our_uname = NULL;
+const char     *fsa_our_uuid = NULL;
 char	       *fsa_our_dc = NULL;
 char	       *fsa_our_dc_version = NULL;
 cib_t	*fsa_cib_conn = NULL;
@@ -424,6 +425,7 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 		 */
 		else IF_FSA_ACTION(A_DC_TAKEOVER,	 do_dc_takeover)
 		else IF_FSA_ACTION(A_DC_RELEASE,	 do_dc_release)
+		else IF_FSA_ACTION(A_ELECTION_CHECK,	 do_election_check)
 		else IF_FSA_ACTION(A_ELECTION_START,	 do_election_vote)
 		else IF_FSA_ACTION(A_DC_JOIN_OFFER_ALL,	 do_dc_join_offer_all)
 		else IF_FSA_ACTION(A_DC_JOIN_OFFER_ONE,	 do_dc_join_offer_all)
@@ -653,6 +655,11 @@ do_state_transition(long long actions,
 			
 		case S_IDLE:
 			dump_rsc_info();
+			if(is_set(fsa_input_register, R_SHUTDOWN)){
+				crm_info("(Re)Issuing shutdown request now"
+					 " that we are the DC");
+				set_bit_inplace(tmp, A_SHUTDOWN_REQ);
+			}
 			if(recheck_timer->period_ms > 0) {
 				crm_timer_start(recheck_timer);
 			}

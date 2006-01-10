@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.40 2005/09/16 16:45:58 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.41 2006/01/10 13:46:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -331,6 +331,7 @@ enum crmd_fsa_input {
 #define	A_EXIT_1		0x0000000080000000ULL
 
 #define	A_SHUTDOWN_REQ		0x0000000100000000ULL
+#define	A_ELECTION_CHECK	0x0000000200000000ULL
 
 /* -- CCM actions -- */
 #define	A_CCM_CONNECT		0x0000001000000000ULL

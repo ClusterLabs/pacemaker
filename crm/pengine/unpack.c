@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.151 2006/01/09 18:45:00 andrew Exp $ */
+/* $Id: unpack.c,v 1.152 2006/01/10 13:46:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -489,18 +489,19 @@ determine_online_status(
 		crm_element_value(node_state, XML_CIB_ATTR_INCCM);
 	const char *ha_state   =
 		crm_element_value(node_state, XML_CIB_ATTR_HASTATE);
-	const char *shutdown   =
-		crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
-
+	int shutdown = 0;
+	
 	if(this_node == NULL) {
 		pe_config_err("No node to check");
 		return online;
 	}
 
+	ha_msg_value_int(node_state, XML_CIB_ATTR_SHUTDOWN, &shutdown);
+	
 	if(safe_str_eq(exp_state, CRMD_JOINSTATE_MEMBER)) {
 		this_node->details->expected_up = TRUE;
 	}
-	if(shutdown != NULL) {
+	if(shutdown != 0) {
 		this_node->details->shutdown = TRUE;
 #if 0
 		this_node->details->expected_up = FALSE;

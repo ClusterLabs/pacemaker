@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.91 2005/10/24 07:37:46 andrew Exp $ */
+/* $Id: ccm.c,v 1.92 2006/01/10 13:46:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -644,9 +644,8 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	crm_debug("Updating %s: %s/%s",
 		  node_uname, data->state, data->join);
 
-	tmp1 = create_node_state(node_uname, node_uname,
-				 NULL, data->state, NULL, data->join,
-				 NULL, __FUNCTION__);
+	tmp1 = create_node_state(node_uname, NULL, data->state, NULL,
+				 data->join, NULL, FALSE, __FUNCTION__);
 
 	add_node_copy(data->updates, tmp1);
 	free_xml(tmp1);

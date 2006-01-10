@@ -27,10 +27,13 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 #include <clplumbing/Gmain_timeout.h>
+#include <clplumbing/cl_uuid.h>
 
 #include <crm/dmalloc_wrapper.h>
 
+GHashTable *voted = NULL;
 uint highest_born_on = -1;
+static int current_election_id = 1;
 
 /*	A_ELECTION_VOTE	*/
 enum crmd_fsa_input
@@ -76,10 +79,9 @@ do_election_vote(long long action,
 		CRM_OP_VOTE, NULL, NULL,
 		CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-	if(is_set(fsa_input_register, R_SHUTDOWN)) {
-		crm_warn("Not voting in election, we're shutting down");
-		cl_msg_remove(vote, F_CRM_VERSION);
-	}
+	current_election_id++;
+	ha_msg_add(vote, F_CRM_ELECTION_OWNER, fsa_our_uuid);
+	ha_msg_add_int(vote, F_CRM_ELECTION_ID, current_election_id);
 
 	send_request(vote, NULL);
 	if(cur_state == S_ELECTION || cur_state == S_RELEASE_DC) {
@@ -89,7 +91,6 @@ do_election_vote(long long action,
 		crm_err("Broken? Voting in state %s",
 			fsa_state2string(cur_state));
 	}
-	
 	
 	return I_NULL;
 }
@@ -130,6 +131,40 @@ struct election_data_s
 		unsigned int winning_bornon;
 };
 
+enum crmd_fsa_input
+do_election_check(long long action,
+		       enum crmd_fsa_cause cause,
+		       enum crmd_fsa_state cur_state,
+		       enum crmd_fsa_input current_input,
+		  fsa_data_t *msg_data)
+{
+	int voted_size = g_hash_table_size(voted);
+	int num_members = g_hash_table_size(fsa_membership_copy->members);
+	
+	/* in the case of #voted > #members, it is better to
+	 *   wait for the timeout and give the cluster time to
+	 *   stabilize
+	 */
+	if(fsa_state != S_ELECTION) {
+		crm_debug("Ignore election check: we not in an election");
+
+	} else if(voted_size == num_members) {
+		/* we won and everyone has voted */
+		crm_timer_stop(election_timeout);
+		register_fsa_input(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
+		crm_debug("Destroying voted hash");
+		g_hash_table_destroy(voted);
+		voted = NULL;
+		
+	} else {
+		crm_info("Still waiting on %d non-votes (%d total)",
+			 num_members - voted_size, num_members);
+	}
+
+	return I_NULL;
+}
+
+
 /*	A_ELECTION_COUNT	*/
 enum crmd_fsa_input
 do_election_count_vote(long long action,
@@ -138,17 +173,17 @@ do_election_count_vote(long long action,
 		       enum crmd_fsa_input current_input,
 		       fsa_data_t *msg_data)
 {
+	int election_id = -1;
 	gboolean we_loose = FALSE;
-	ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
 	enum crmd_fsa_input election_result = I_NULL;
-	const char *vote_from    = cl_get_string(vote->msg, F_CRM_HOST_FROM);
-	const char *your_version = cl_get_string(vote->msg, F_CRM_VERSION);
-	oc_node_t *our_node = NULL, * your_node = NULL;
-
-	if(vote_from == NULL || strcmp(vote_from, fsa_our_uname) == 0) {
-		/* dont count our own vote */
-		return election_result;
-	}
+	oc_node_t *our_node = NULL, *your_node = NULL;
+	ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
+	const char *op            = cl_get_string(vote->msg, F_CRM_TASK);
+	const char *vote_from     = cl_get_string(vote->msg, F_CRM_HOST_FROM);
+	const char *your_version  = cl_get_string(vote->msg, F_CRM_VERSION);
+	const char *election_owner= cl_get_string(vote->msg, F_CRM_ELECTION_OWNER);
+	
+	ha_msg_value_int(vote->msg, F_CRM_ELECTION_ID, &election_id);
 
 	if(fsa_membership_copy == NULL) {
 		/* if the membership copy is NULL we REALLY shouldnt be voting
@@ -164,37 +199,63 @@ do_election_count_vote(long long action,
 		your_node = (oc_node_t*)
 			g_hash_table_lookup(fsa_membership_copy->members,vote_from);
 	}
-	
-	if(your_node == NULL) {
-		crm_debug("Election ignore: The other side doesnt exist in CCM.");
-		return I_NULL;
-		
-		/* if your_version == 0, then they're shutting down too */
-	} else if(is_set(fsa_input_register, R_SHUTDOWN)) {
-		if(your_version != NULL) {
-			crm_info("Election fail: we are shutting down");
-			we_loose = TRUE;
-			
-		} else {
-			/* pretend nothing happened, they want to shutdown too*/
-			crm_info("Election ignore: they are shutting down too");
-			return I_NULL;
+
+ 	if(voted == NULL) {
+		crm_debug("Created voted hash");
+ 		voted = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, g_hash_destroy_str);
+ 	}
+
+	/* update the list of nodes that have voted */
+	if(your_node != NULL) {
+		char *op_copy = NULL;
+		char *uname_copy = NULL;
+		if(safe_str_eq(op, CRM_OP_NOVOTE)) {
+			if(safe_str_neq(fsa_our_uuid,election_owner)) {
+				crm_err("Recieved %s for %s (we are %s)",
+					op, election_owner, fsa_our_uuid);
+			}	
+		}
+		if(safe_str_eq(fsa_our_uuid, election_owner)) {
+			if(election_id != current_election_id) {
+				crm_debug("Ignore old novote from %s: %d vs. %d",
+					  your_node->node_uname,
+					  election_id, current_election_id);
+			}
+			uname_copy = crm_strdup(your_node->node_uname);
+			op_copy = crm_strdup(op);
+			g_hash_table_replace(voted, uname_copy, op_copy);
+			crm_info("Updated voted hash for %s to %s", uname_copy,op_copy);
 		}
 		
-	} else if(our_node == NULL
+	} else {
+		crm_debug("Election ignore: The other side doesnt exist in CCM.");
+		return I_NULL;
+	}
+	
+	if(vote_from == NULL || safe_str_eq(vote_from, fsa_our_uname)) {
+		/* dont count our own vote */
+		crm_info("Election ignore: our %s", op);
+		return I_NULL;
+
+	} else if(safe_str_eq(op, CRM_OP_NOVOTE)) {
+		crm_info("Election ignore: no-vote from %s", vote_from);
+		return I_NULL;
+	}
+
+	crm_info("Election check: %s from %s", op, vote_from);
+	if(our_node == NULL
 		|| fsa_membership_copy->last_event == OC_EV_MS_EVICTED) {
 		crm_info("Election fail: we dont exist in CCM");
 		we_loose = TRUE;
-		
-	} else if(your_version == NULL) {
-		crm_info("Election pass: they are shutting down");
 
 	} else if(compare_version(your_version, CRM_FEATURE_SET) < 0) {
-		crm_debug("Election fail: version");
+		crm_info("Election fail: version");
 		we_loose = TRUE;
 		
 	} else if(compare_version(your_version, CRM_FEATURE_SET) > 0) {
-		crm_debug("Election pass: version");
+		crm_info("Election pass: version");
 		
 	} else if(your_node->node_born_on < our_node->node_born_on) {
 		crm_debug("Election fail: born_on");
@@ -216,8 +277,24 @@ do_election_count_vote(long long action,
 	}
 
 	if(we_loose) {
+		gboolean vote_sent = FALSE;
+		HA_Message *novote = create_request(
+			CRM_OP_NOVOTE, NULL, vote_from,
+			CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+		cl_uuid_t vote_uuid_s;
+		char *vote_uuid = NULL;
+		if(cl_get_uuid(vote->msg, F_ORIGUUID, &vote_uuid_s) == HA_OK) {
+			crm_malloc0(vote_uuid, sizeof(char)*100);
+			cl_uuid_unparse(&vote_uuid_s, vote_uuid);
+		}
+
+		if(vote_uuid == NULL) {
+			cl_log_message(LOG_ERR, vote->msg);
+		}
+		
 		crm_timer_stop(election_timeout);
-		crm_debug("Election lost to %s", vote_from);
+		crm_debug("Election lost to %s (%s/%d)",
+			  vote_from, vote_uuid, election_id);
 		if(fsa_input_register & R_THE_DC) {
 			crm_debug_3("Give up the DC to %s", vote_from);
 			election_result = I_RELEASE_DC;
@@ -228,6 +305,13 @@ do_election_count_vote(long long action,
 			
 		}
 
+		ha_msg_add(novote, F_CRM_ELECTION_OWNER, vote_uuid);
+		ha_msg_add_int(novote, F_CRM_ELECTION_ID, election_id);
+		
+		vote_sent = send_request(novote, NULL);
+		CRM_DEV_ASSERT(vote_sent);
+		crm_free(vote_uuid);
+		
 	} else {
 		if(cur_state == S_PENDING) {
 			crm_debug("Election ignore: We already lost the election");
@@ -237,9 +321,11 @@ do_election_count_vote(long long action,
 			crm_info("Election won over %s", vote_from);
 			election_result = I_ELECTION;
 		}
+		crm_debug("Destroying voted hash");
+ 		g_hash_table_destroy(voted);
+		voted = NULL;
 	}
 	
-
 	register_fsa_input(C_FSA_INTERNAL, election_result, NULL);
 	return I_NULL;
 }
@@ -287,6 +373,12 @@ do_dc_takeover(long long action,
 
 	crm_free(fsa_our_dc_version);
 	fsa_our_dc_version = crm_strdup(CRM_FEATURE_SET);
+
+	if(voted != NULL) {
+		crm_debug_2("Destroying voted hash");
+		g_hash_table_destroy(voted);
+		voted = NULL;
+	}
 	
 	set_bit_inplace(fsa_input_register, R_JOIN_OK);
 	set_bit_inplace(fsa_input_register, R_INVOKE_PE);

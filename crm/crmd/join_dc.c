@@ -419,7 +419,13 @@ process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
 #if 0
 	???dig into the fragment and clear shutdown??
 	/* the slave will re-ask if it wants to be shutdown */
-	crm_xml_add(lrm_update, XML_CIB_ATTR_CLEAR_SHUTDOWN, XML_BOOLEAN_TRUE);
+
+	crm_data_t *tmp1 = NULL;
+	crm_info("Updating node_status entry");
+	tmp1 = create_node_state(node_uname, NULL, NULL, NULL,
+				 NULL, NULL, TRUE, __FUNCTION__);
+	update_local_cib(create_cib_fragment(tmp1, XML_CIB_TAG_STATUS));
+	free_xml(tmp1);
 #endif
 	/* update CIB with the current LRM status from the node
 	 * We dont need to notify the TE of these updates, a transition will

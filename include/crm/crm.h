@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.84 2005/10/25 13:52:40 andrew Exp $ */
+/* $Id: crm.h,v 1.85 2006/01/10 13:46:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -118,6 +118,7 @@ extern gboolean crm_assert_failed;
 #define CRM_OP_RETRIVE_CIB	"retrieve_cib"
 #define CRM_OP_PING		"ping"
 #define CRM_OP_VOTE		"vote"
+#define CRM_OP_NOVOTE		"no-vote"
 #define CRM_OP_HELLO		"hello"
 #define CRM_OP_HBEAT		"dc_beat"
 #define CRM_OP_PECALC		"pe_calc"

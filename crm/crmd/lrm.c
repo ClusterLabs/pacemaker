@@ -645,9 +645,9 @@ do_lrm_query(gboolean is_replace)
 	}
 	
 	xml_state = create_node_state(
-		fsa_our_uname, fsa_our_uname,
-		ACTIVESTATUS, XML_BOOLEAN_TRUE, ONLINESTATUS,
-		CRMD_JOINSTATE_MEMBER, exp_state, __FUNCTION__);
+		fsa_our_uname, ACTIVESTATUS, XML_BOOLEAN_TRUE,
+		ONLINESTATUS, CRMD_JOINSTATE_MEMBER, exp_state,
+		is_set(fsa_input_register, R_SHUTDOWN), __FUNCTION__);
 
 	xml_data  = create_xml_node(xml_state, XML_CIB_TAG_LRM);
 	rsc_list  = create_xml_node(xml_data, XML_LRM_TAG_RESOURCES);
@@ -773,15 +773,14 @@ do_lrm_invoke(long long action,
 
 	} else if(safe_str_eq(operation, CRM_OP_PROBED)
 		  || safe_str_eq(crm_op, CRM_OP_REPROBE)) {
-		const char *our_uuid = get_uuid(fsa_cluster_conn,fsa_our_uname);
-		char *attr_id = crm_concat("lrm-probe", our_uuid, '-');
-		char *attr_set = crm_concat("crmd-transient-", our_uuid, '-');
+		char *attr_id = crm_concat("lrm-probe", fsa_our_uuid, '-');
+		char *attr_set = crm_concat("crmd-transient-", fsa_our_uuid, '-');
 		const char *probed = XML_BOOLEAN_TRUE;
 		if(safe_str_eq(crm_op, CRM_OP_REPROBE)) {
 			probed = XML_BOOLEAN_FALSE;
 		}
 		
-		update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_STATUS, our_uuid,
+		update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_STATUS, fsa_our_uuid,
 			    attr_set, attr_id, CRM_OP_PROBED, probed);
 
 		crm_free(attr_id);

@@ -1,4 +1,4 @@
-/* $Id: fsa_proto.h,v 1.18 2005/02/15 09:45:43 andrew Exp $ */
+/* $Id: fsa_proto.h,v 1.19 2006/01/10 13:46:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -149,6 +149,14 @@ do_election_count_vote(long long action,
 		       enum crmd_fsa_state cur_state,
 		       enum crmd_fsa_input cur_input,
 		       fsa_data_t *msg_data);
+
+/*	A_ELECTION_CHECK	*/
+enum crmd_fsa_input
+do_election_check(long long action,
+		  enum crmd_fsa_cause cause,
+		  enum crmd_fsa_state cur_state,
+		  enum crmd_fsa_input cur_input,
+		  fsa_data_t *msg_data);
 
 /*	A_ELECT_TIMER_START, A_ELECTION_TIMEOUT	*/
 enum crmd_fsa_input

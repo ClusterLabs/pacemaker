@@ -35,7 +35,7 @@ extern void register_fsa_error_adv(
 
 #define register_fsa_error(cause, input, new_data) register_fsa_error_adv(cause, input, msg_data, new_data, __FUNCTION__)
 
-extern void register_fsa_input_adv(
+extern int register_fsa_input_adv(
 	enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 	void *data, long long with_actions,
 	gboolean prepend, const char *raised_from);

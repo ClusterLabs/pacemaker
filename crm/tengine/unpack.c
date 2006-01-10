@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.51 2005/12/19 16:54:44 andrew Exp $ */
+/* $Id: unpack.c,v 1.52 2006/01/10 13:46:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -240,6 +240,7 @@ unpack_action(crm_data_t *xml_action)
 gboolean
 extract_event(crm_data_t *msg)
 {
+	int shutdown = 0;
 	const char *event_node = NULL;
 	struct abort_blob_s 
 	{
@@ -328,7 +329,9 @@ extract_event(crm_data_t *msg)
 			}
 		}
 
-		if(crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN) != NULL) {
+		shutdown = 0;
+		ha_msg_value_int(node_state, XML_CIB_ATTR_SHUTDOWN, &shutdown);
+		if(shutdown != 0) {
 			crm_info("Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute");
 			if(blob.text == NULL) {
 				blob.text = "Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute";

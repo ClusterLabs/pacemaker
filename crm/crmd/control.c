@@ -148,7 +148,6 @@ do_shutdown_req(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
-	enum crmd_fsa_input next_input = I_NULL;
 	HA_Message *msg = NULL;
 	
 	crm_info("Sending shutdown request to DC: %s", crm_str(fsa_our_dc));
@@ -159,7 +158,12 @@ do_shutdown_req(long long action,
 /* 	set_bit_inplace(fsa_input_register, R_STAYDOWN); */
 	
 	if(send_request(msg, NULL) == FALSE) {
-		next_input = I_ERROR;
+		if(AM_I_DC) {
+			crm_info("Processing shutdown locally");
+		} else {
+			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+		}
+		
 #if 0
 		/* this shouldnt be required */
 	} else {
@@ -167,7 +171,7 @@ do_shutdown_req(long long action,
 #endif
 	}
 
-	return next_input;
+	return I_NULL;
 }
 
 /*	 A_EXIT_0, A_EXIT_1	*/
@@ -433,10 +437,21 @@ do_stop(long long action,
 	enum crmd_fsa_input current_input,
 	fsa_data_t *msg_data)
 {
+
 	if(g_hash_table_size(shutdown_ops) > 0) {
 		crm_err("%d stop operations outstanding at exit",
 			g_hash_table_size(shutdown_ops));
 	}
+
+	if(is_set(fsa_input_register, R_CIB_CONNECTED)) {
+		crm_data_t *tmp1 = NULL;
+		crm_info("Updating node_status entry");
+		tmp1 = create_node_state(fsa_our_uname, NULL, NULL, NULL,
+					 NULL, NULL, TRUE, __FUNCTION__);
+		update_local_cib(create_cib_fragment(tmp1, XML_CIB_TAG_STATUS));
+		free_xml(tmp1);
+	}
+	
 	
 	return I_NULL;
 }
@@ -556,16 +571,17 @@ do_read_config(long long action,
 			getenv("HA_"KEY_KEEPALIVE));
 	}
 	
-	election_timeout->period_ms   = dc_heartbeat->period_ms * 6;
+	election_timeout->period_ms   = crm_get_msec("1min");
+	/*dc_heartbeat->period_ms * 6;*/
 	integration_timer->period_ms  = dc_heartbeat->period_ms * 6;
 	finalization_timer->period_ms = dc_heartbeat->period_ms * 6;
 	integration_timer->period_ms  = crm_get_msec("5min");
 	finalization_timer->period_ms = crm_get_msec("5min");
 	
 	if(election_trigger->period_ms < 1
-	   || election_trigger->period_ms > election_timeout->period_ms) {
+	   || election_trigger->period_ms > dc_heartbeat->period_ms * 12) {
 		/* sensible default */
-		election_trigger->period_ms = election_timeout->period_ms * 2;
+		election_trigger->period_ms = dc_heartbeat->period_ms * 12;
 	}
 	
 	if(shutdown_escalation_timer->period_ms < 1
@@ -590,21 +606,12 @@ crm_shutdown(int nsig, gpointer unused)
 			register_fsa_input_before(C_SHUTDOWN, I_ERROR, NULL);
 
 		} else {
+			crm_info("Requesting shutdown");
 			set_bit_inplace(fsa_input_register, R_SHUTDOWN);
-/* 			set_bit_inplace(fsa_input_register, R_STAYDOWN); */
+			register_fsa_input(C_SHUTDOWN,I_SHUTDOWN,NULL);
 
-			/* if we ever win an election we're the last man standing */
-			election_timeout->fsa_input = I_STOP;
-
-			if(is_set(fsa_input_register, R_SHUTDOWN)) {
-				/* cant rely on this... */
-				crm_timer_start(shutdown_escalation_timer);
-				register_fsa_input(C_SHUTDOWN,I_SHUTDOWN,NULL);
-
-			} else {
-				crm_err("Could not set R_SHUTDOWN");
-				exit(LSB_EXIT_ENOTSUPPORTED);
-			}
+			/* cant rely on this... */
+			crm_timer_start(shutdown_escalation_timer);
 		}
 		
 	} else {
@@ -672,6 +679,14 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	}
 	crm_info("FSA Hostname: %s", fsa_our_uname);
 
+	crm_debug_3("Finding our node uuid");
+	fsa_our_uuid = get_uuid(fsa_cluster_conn, fsa_our_uname);
+	if(safe_str_eq(fsa_our_uname, fsa_our_uuid)) {
+		crm_err("get_uuid_by_name() failed");
+		return FALSE;
+	}
+	crm_info("FSA UUID: %s", fsa_our_uuid);
+		
 	/* Async get client status information in the cluster */
 	crm_debug_3("Requesting an initial dump of CRMD client_status");
 	fsa_cluster_conn->llc_ops->client_status(
