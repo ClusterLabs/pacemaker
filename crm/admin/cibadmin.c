@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.46 2005/12/16 14:55:12 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.47 2006/01/10 13:24:04 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -611,13 +611,13 @@ cibadmin_op_callback(const HA_Message *msg, int call_id, int rc,
 	if(safe_str_eq(cib_action, CIB_OP_ISMASTER) && rc != cib_ok) {
 		crm_info("CIB on %s is _not_ the master instance",
 			 host?host:"localhost");
-		fprintf(stderr, "CIB on %s is _not_ the master instance",
+		fprintf(stderr, "CIB on %s is _not_ the master instance\n",
 			 host?host:"localhost");
 		
 	} else if(safe_str_eq(cib_action, CIB_OP_ISMASTER)) {
 		crm_info("CIB on %s _is_ the master instance",
 			 host?host:"localhost");
-		fprintf(stderr, "CIB on %s _is_ the master instance",
+		fprintf(stderr, "CIB on %s _is_ the master instance\n",
 			 host?host:"localhost");
 		
 	} else if(rc != 0) {
