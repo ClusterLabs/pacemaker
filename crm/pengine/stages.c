@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.83 2005/11/02 13:19:30 andrew Exp $ */
+/* $Id: stages.c,v 1.84 2006/01/10 13:52:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -300,8 +300,10 @@ stage6(pe_working_set_t *data_set)
 {
 	action_t *down_op = NULL;
 	action_t *stonith_op = NULL;
+	action_t *dc_down = NULL;
+	
 	crm_debug_3("Processing fencing and shutdown cases");
-
+	
 	slist_iter(
 		node, node_t, data_set->nodes, lpc,
 		if(node->details->online && node->details->shutdown) {
@@ -315,6 +317,10 @@ stage6(pe_working_set_t *data_set)
 			
 			shutdown_constraints(
 				node, down_op, data_set);
+
+			if(node->details->is_dc) {
+				dc_down = down_op;
+			}
 		}
 
 		if(node->details->unclean
@@ -345,6 +351,10 @@ stage6(pe_working_set_t *data_set)
 			if(down_op != NULL) {
 				down_op->failure_is_fatal = FALSE;
 			}
+
+			if(node->details->is_dc) {
+				dc_down = stonith_op;
+			}
 		}
 
 		if(node->details->unclean) {
@@ -354,6 +364,28 @@ stage6(pe_working_set_t *data_set)
 		
 		);
 
+	if(dc_down != NULL) {
+		GListPtr shutdown_matches = find_actions(
+			data_set->actions, CRM_OP_SHUTDOWN, NULL);
+
+		crm_debug_2("Ordering shutdowns before %s on %s (DC)",
+			down_op->task, down_op->node->details->uname);
+		
+		slist_iter(
+			action, action_t, shutdown_matches, lpc,
+			if(action->node->details->is_dc) {
+				continue;
+			}
+			crm_debug("Ordering shutdown on %s before %s on %s",
+				action->node->details->uname,
+				dc_down->task, dc_down->node->details->uname);
+
+			custom_action_order(
+				NULL, crm_strdup(action->task), action,
+				NULL, crm_strdup(dc_down->task), dc_down,
+				pe_ordering_manditory, data_set);
+			);
+	}
 
 	return TRUE;
 }
@@ -497,7 +529,7 @@ choose_node_from_list(color_t *color)
 	 * new resource count
 	 */
 
-	crm_debug("assigned %s to color %d", chosen->details->uname, color->id);
+	crm_debug_2("assigned %s to color %d", chosen->details->uname, color->id);
 	chosen->details->num_resources += color->details->num_resources;
 	color->details->chosen_node = node_copy(chosen);
 	
