@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.87 2006/01/10 13:50:34 andrew Exp $ */
+/* $Id: callbacks.c,v 1.88 2006/01/11 13:18:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -391,6 +391,10 @@ cib_common_callback(
 		crm_err("Receieved call from unknown source. Discarding.");
 		return FALSE;
 	}
+
+	if(cib_client->name == NULL) {
+		cib_client->name = crm_itoa(channel->farside_pid);
+	}
 	
 	crm_debug_2("Callback for %s on %s channel",
 		    cib_client->id, cib_client->channel_name);
@@ -412,8 +416,8 @@ cib_common_callback(
 
 
 		op = cl_get_string(op_request, F_CIB_OPERATION);
-		crm_info("Operation %s from client %s/%s",
-			 op, cib_client->id, cib_client->channel_name);
+		crm_info("Processing %s operation from %s/%s",
+			 op, cib_client->name, cib_client->channel_name);
 		crm_log_message_adv(LOG_MSG, "Client[inbound]", op_request);
 		
 		lpc++;
@@ -568,11 +572,11 @@ cib_process_request(HA_Message *request, gboolean privileged,
 		ha_msg_add(forward_msg, F_CIB_DELEGATED, cib_our_uname);
 		
 		if(host != NULL) {
-			crm_debug("Forwarding %s op to %s", op, host);
+			crm_debug_2("Forwarding %s op to %s", op, host);
 			send_ha_message(hb_conn, forward_msg, host, FALSE);
 			
 		} else {
-			crm_debug("Forwarding %s op to master instance", op);
+			crm_debug_2("Forwarding %s op to master instance", op);
 			send_ha_message(hb_conn, forward_msg, NULL, FALSE);
 		}
 		
@@ -584,8 +588,8 @@ cib_process_request(HA_Message *request, gboolean privileged,
 			/* keep track of the request so we can time it
 			 * out if required
 			 */
-			crm_debug("Registering delegated call from %s",
-				  cib_client->id);
+			crm_debug_2("Registering delegated call from %s",
+				    cib_client->id);
 			cib_client->delegated_calls = g_list_append(
 				cib_client->delegated_calls, forward_msg);
 		} else {
@@ -717,9 +721,9 @@ cib_process_request(HA_Message *request, gboolean privileged,
 			&diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates, 
 			&diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
 
-		crm_debug("Sending update diff %d.%d.%d -> %d.%d.%d",
-			diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
-			diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
+		crm_debug_2("Sending update diff %d.%d.%d -> %d.%d.%d",
+			    diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
+			    diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
 
 		ha_msg_add(op_bcast, F_CIB_ISREPLY, originator);
 		ha_msg_add(op_bcast, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
@@ -734,7 +738,7 @@ cib_process_request(HA_Message *request, gboolean privileged,
 		crm_debug_2("Sending replies");
 		if(from_peer && originator != NULL) {
 			/* send reply via HA to originating node */
-			crm_debug("Sending request result to originator only");
+			crm_debug_2("Sending request result to originator only");
 			ha_msg_add(op_reply, F_CIB_ISREPLY, originator);
 			send_ha_message(hb_conn, op_reply, originator, FALSE);
 		}
@@ -1109,10 +1113,9 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 		keep_connection = FALSE;
 		
 	} else if(channel->ch_status == IPC_DISCONNECT && cib_client != NULL) {
-		crm_debug("Cleaning up after %s channel disconnect from client (%p) %s/%s",
-			 cib_client->channel_name, cib_client,
-			 crm_str(cib_client->id), crm_str(cib_client->name));
-
+		crm_debug("Cleaning up after client disconnect: %s/%s",
+			  crm_str(cib_client->name), cib_client->channel_name);
+		
 		if(cib_client->id != NULL) {
 			g_hash_table_remove(client_list, cib_client->id);
 
@@ -1335,7 +1338,7 @@ gboolean cib_ccm_dispatch(int fd, gpointer user_data)
 {
 	int rc = 0;
 	oc_ev_t *ccm_token = (oc_ev_t*)user_data;
-	crm_debug("received callback");	
+	crm_debug_2("received callback");	
 	rc = oc_ev_handle_event(ccm_token);
 	if(0 == rc) {
 		return TRUE;
@@ -1365,7 +1368,7 @@ cib_ccm_msg_callback(
 		instance = membership->m_instance;
 	}
 
-	crm_info("Process CCM event=%s (id=%d)", 
+	crm_debug("Process CCM event=%s (id=%d)", 
 		 ccm_event_name(event), instance);
 
 	switch(event) {
@@ -1378,7 +1381,7 @@ cib_ccm_msg_callback(
 			update_id = TRUE;
 			break;
 		case OC_EV_MS_NOT_PRIMARY:
-			crm_debug("Ignoring transitional CCM event: %s",
+			crm_debug_2("Ignoring transitional CCM event: %s",
 				  ccm_event_name(event));
 			break;
 		case OC_EV_MS_EVICTED:
@@ -1416,9 +1419,9 @@ cib_ccm_msg_callback(
 				the_cib,XML_ATTR_HAVE_QUORUM,XML_BOOLEAN_FALSE);
 		}
 		
-		crm_info("Quorum %s after event=%s (id=%d)", 
-			 cib_have_quorum?"(re)attained":"lost",
-			 ccm_event_name(event), instance);
+		crm_debug("Quorum %s after event=%s (id=%d)", 
+			  cib_have_quorum?"(re)attained":"lost",
+			  ccm_event_name(event), instance);
 		
 		if(ccm_membership == NULL) {
 			ccm_membership = g_hash_table_new_full(
@@ -1432,7 +1435,7 @@ cib_ccm_msg_callback(
 			for(lpc = 0; lpc < members; lpc++) {
 				oc_node_t a_node = membership->m_array[lpc+offset];
 				char *uname = crm_strdup(a_node.node_uname);
-				crm_info("Added: %s", uname);
+				crm_info("New peer: %s", uname);
 				g_hash_table_replace(
 					ccm_membership, uname, uname);	
 			}
