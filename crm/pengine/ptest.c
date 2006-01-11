@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.68 2005/10/14 11:18:16 andrew Exp $ */
+/* $Id: ptest.c,v 1.69 2006/01/11 12:47:55 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -35,7 +35,7 @@
 
 #include <crm/cib.h>
 
-#define OPTARGS	"V?X:wD:"
+#define OPTARGS	"V?X:wD:L"
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -107,11 +107,14 @@ create_action_name(action_t *action)
 	return action_name;
 }
 
+gboolean USE_LIVE_CIB = FALSE;
+
 int
 main(int argc, char **argv)
 {
 	const char *fake_now = NULL;
 	ha_time_t *a_date = NULL;
+	cib_t *	cib_conn = NULL;
 	
 	crm_data_t * cib_object = NULL;
 	int argerr = 0;
@@ -135,6 +138,7 @@ main(int argc, char **argv)
 		static struct option long_options[] = {
 			/* Top-level Options */
 			{F_CRM_DATA,  1, 0, 'X'},
+			{"live-check",  0, 0, 'L'},
 			{"help", 0, 0, 0},
       
 			{0, 0, 0, 0}
@@ -174,6 +178,9 @@ main(int argc, char **argv)
 				cl_log_enable_stderr(TRUE);
 				alter_debug(DEBUG_INC);
 				break;
+			case 'L':
+				USE_LIVE_CIB = TRUE;
+				break;
 			default:
 				printf("?? getopt returned character code 0%o ??\n", flag);
 				++argerr;
@@ -199,7 +206,27 @@ main(int argc, char **argv)
   
 	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");	
 
-	if(xml_file != NULL) {
+	if(USE_LIVE_CIB) {
+		int rc = cib_ok;
+		cib_conn = cib_new();
+		rc = cib_conn->cmds->signon(
+			cib_conn, "ptest", cib_command);
+
+		if(rc == cib_ok) {
+			crm_info("Reading XML from: live cluster");
+			cib_object = get_cib_copy(cib_conn);
+			
+		} else {
+			fprintf(stderr, "Live CIB query failed: %s\n",
+				cib_error2string(rc));
+			return 3;
+		}
+		if(cib_object == NULL) {
+			fprintf(stderr, "Live CIB query failed: empty result\n");
+			return 3;
+		}
+		
+	} else if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
 		cib_object = file2xml(xml_strm);
 	} else {
