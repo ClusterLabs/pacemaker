@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.29 2006/01/10 13:50:34 andrew Exp $ */
+/* $Id: main.c,v 1.30 2006/01/11 13:06:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -314,8 +314,8 @@ static void
 disconnect_cib_client(gpointer key, gpointer value, gpointer user_data) 
 {
 	cib_client_t *a_client = value;
-	crm_debug("Processing client %s/%s... send=%d, recv=%d",
-		  a_client->name, a_client->id,
+	crm_debug_2("Processing client %s/%s... send=%d, recv=%d",
+		  a_client->name, a_client->channel_name,
 		  (int)a_client->channel->send_queue->current_qlen,
 		  (int)a_client->channel->recv_queue->current_qlen);
 
@@ -324,14 +324,15 @@ disconnect_cib_client(gpointer key, gpointer value, gpointer user_data)
 		if(a_client->channel->send_queue->current_qlen != 0
 		   || a_client->channel->recv_queue->current_qlen != 0) {
 			crm_info("Flushed messages to/from %s/%s... send=%d, recv=%d",
-				a_client->name, a_client->id,
+				a_client->name, a_client->channel_name,
 				(int)a_client->channel->send_queue->current_qlen,
 				(int)a_client->channel->recv_queue->current_qlen);
 		}
 	}
 
 	if(a_client->channel->ch_status == IPC_CONNECT) {
-		crm_warn("Disconnecting %s/%s...", a_client->name,a_client->id);
+		crm_warn("Disconnecting %s/%s...",
+			 a_client->name, a_client->channel_name);
 		a_client->channel->ops->disconnect(a_client->channel);
 	}
 }

@@ -330,7 +330,7 @@ class LinuxHAv2(HeartbeatCM):
         '''Report the status of the cluster manager on a given node'''
 
         watchpats = [ ]
-        watchpats.append("Current state: (S_IDLE|S_NOT_DC)")
+        watchpats.append("Current ping state: (S_IDLE|S_NOT_DC)")
         watchpats.append(self["Pat:They_started"]%node)
         idle_watch = CTS.LogWatcher(self["LogFileName"], watchpats)
         idle_watch.setwatch()
@@ -390,7 +390,7 @@ class LinuxHAv2(HeartbeatCM):
 
     def cluster_stable(self, timeout=None):
         watchpats = [ ]
-        watchpats.append("Current state: S_IDLE")
+        watchpats.append("Current ping state: S_IDLE")
         watchpats.append(self["Pat:DC_IDLE"])
 
         if timeout == None:

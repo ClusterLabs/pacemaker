@@ -237,10 +237,11 @@ do_cl_join_result(long long action,
 	gboolean   was_nack   = TRUE;
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 
+	int join_id = -1;
 	const char *op           = cl_get_string(input->msg,F_CRM_TASK);
 	const char *ack_nack     = cl_get_string(input->msg,CRM_OP_JOIN_ACKNAK);
 	const char *welcome_from = cl_get_string(input->msg,F_CRM_HOST_FROM);
-
+	
 	if(safe_str_neq(op, CRM_OP_JOIN_ACKNAK)) {
 		crm_debug_2("Ignoring op=%s message", op);
 		return I_NULL;
@@ -250,9 +251,11 @@ do_cl_join_result(long long action,
 	if(crm_is_true(ack_nack)) {
 		was_nack = FALSE;
 	}
+
+	ha_msg_value_int(input->msg, F_CRM_JOIN_ID, &join_id);
 	
 	if(was_nack) {
-		crm_err("Join with %s failed.  NACK'd", welcome_from);
+		crm_err("Join %d with %s failed.  NACK'd", join_id, welcome_from);
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 		return I_NULL;
 	}
@@ -266,8 +269,8 @@ do_cl_join_result(long long action,
 	} 	
 
 	/* send our status section to the DC */
-	crm_debug("c3) confirming join: %s",
-		  cl_get_string(input->msg, F_CRM_TASK));
+	crm_debug("c3) confirming join %d: %s",
+		  join_id, cl_get_string(input->msg, F_CRM_TASK));
 	crm_debug_2("Discovering local LRM status");
 	tmp1 = do_lrm_query(TRUE);
 	if(tmp1 != NULL) {

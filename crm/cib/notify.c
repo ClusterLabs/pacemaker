@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.32 2005/10/24 07:36:58 andrew Exp $ */
+/* $Id: notify.c,v 1.33 2006/01/11 13:06:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -112,9 +112,9 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	max_qlen = ipc_client->send_queue->max_qlen;
 	
 	if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
-		crm_debug("Skipping notification to disconnected"
-			  " client %s/%s", client->name, client->id);
-
+		crm_debug_2("Skipping notification to disconnected"
+			    " client %s/%s", client->name, client->id);
+		
 	} else if(client->pre_notify && is_pre) {
 		if(qlen < (int)(0.4 * max_qlen)) {
 			do_send = TRUE;
@@ -251,8 +251,14 @@ cib_diff_notify(int options, const char *op, crm_data_t *update,
 	int del_epoch  = 0;
 	int del_admin_epoch = 0;
 
+	int log_level = LOG_INFO;
+	
 	if(diff == NULL) {
 		return;
+	}
+
+	if(result != cib_ok) {
+		log_level = LOG_WARNING;
 	}
 	
 	cib_diff_version_details(
@@ -260,14 +266,17 @@ cib_diff_notify(int options, const char *op, crm_data_t *update,
 		&del_admin_epoch, &del_epoch, &del_updates);
 
 	if(add_updates != del_updates) {
-		crm_debug("Notify: %d.%d.%d -> %d.%d.%d",
-			  del_admin_epoch, del_epoch, del_updates,
-			  add_admin_epoch, add_epoch, add_updates);
+		crm_log_maybe(log_level, "Update (%s): %d.%d.%d -> %d.%d.%d",
+			      cib_error2string(result),
+			      del_admin_epoch, del_epoch, del_updates,
+			      add_admin_epoch, add_epoch, add_updates);
 	} else if(diff != NULL) {
-		crm_debug("Local-only Change: %d.%d.%d",
-			  add_admin_epoch, add_epoch, add_updates);
+		crm_log_maybe(log_level, "Local-only Change (%s): %d.%d.%d",
+			      cib_error2string(result),
+			      add_admin_epoch, add_epoch, add_updates);
 	}
 	
+	crm_log_message_adv(log_level+1, __FUNCTION__, diff);
 	do_cib_notify(options, op, update, result, diff, T_CIB_DIFF_NOTIFY);
 }
 
@@ -371,7 +380,9 @@ attach_cib_generation(HA_Message *msg, const char *field, crm_data_t *a_cib)
 void
 cib_replace_notify(crm_data_t *update, enum cib_errors result, crm_data_t *diff) 
 {
+	const char *origin = NULL;
 	HA_Message *replace_msg = NULL;
+	
 	int add_updates = 0;
 	int add_epoch  = 0;
 	int add_admin_epoch = 0;
@@ -388,13 +399,15 @@ cib_replace_notify(crm_data_t *update, enum cib_errors result, crm_data_t *diff)
 		diff, &add_admin_epoch, &add_epoch, &add_updates, 
 		&del_admin_epoch, &del_epoch, &del_updates);
 
+	origin = crm_element_value(update, F_CRM_ORIGIN);
+	
 	if(add_updates != del_updates) {
-		crm_debug("Replaced: %d.%d.%d -> %d.%d.%d",
+		crm_info("Replaced: %d.%d.%d -> %d.%d.%d from %s",
 			  del_admin_epoch, del_epoch, del_updates,
-			  add_admin_epoch, add_epoch, add_updates);
+			 add_admin_epoch, add_epoch, add_updates, origin);
 	} else if(diff != NULL) {
-		crm_debug("Local-only Replace: %d.%d.%d",
-			  add_admin_epoch, add_epoch, add_updates);
+		crm_info("Local-only Replace: %d.%d.%d from %s",
+			  add_admin_epoch, add_epoch, add_updates, origin);
 	}
 	
 	replace_msg = ha_msg_new(8);
@@ -404,7 +417,7 @@ cib_replace_notify(crm_data_t *update, enum cib_errors result, crm_data_t *diff)
 	ha_msg_add_int(replace_msg, F_CIB_RC, result);
 	attach_cib_generation(replace_msg, "cib-replace-generation", update);
 
-	crm_log_message_adv(LOG_DEBUG,"CIB Replaced", replace_msg);
+	crm_log_message_adv(LOG_DEBUG_2,"CIB Replaced", replace_msg);
 	
 	g_hash_table_foreach(client_list, cib_notify_client, replace_msg);
 	crm_msg_del(replace_msg);

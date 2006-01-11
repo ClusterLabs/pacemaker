@@ -704,7 +704,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 		if(table_key == NULL) {
 			table_key = (gpointer)crm_strdup(client_name);
 		}
-		crm_debug("Accepted client %s", crm_str(table_key));
+		crm_debug_2("Accepted client %s", crm_str(table_key));
 
 		curr_client->table_key = table_key;
 		curr_client->sub_sys = crm_strdup(client_name);
@@ -791,7 +791,7 @@ handle_request(ha_msg_input_t *stored_msg)
 
 		/*========== common actions ==========*/
 	} else if(strcmp(op, CRM_OP_NOOP) == 0) {
-		crm_debug("no-op from %s", crm_str(host_from));
+		crm_debug_2("no-op from %s", crm_str(host_from));
 
 	} else if(strcmp(op, CRM_OP_NOVOTE) == 0) {
 		register_fsa_input_adv(C_HA_MESSAGE, I_NULL, stored_msg,
@@ -827,7 +827,7 @@ handle_request(ha_msg_input_t *stored_msg)
 
 		crm_xml_add(ping, "crmd_state", fsa_state2string(fsa_state));
 
-		crm_info("Current state: %s", fsa_state2string(fsa_state));
+		crm_info("Current ping state: %s", fsa_state2string(fsa_state));
 		
 		msg = create_reply(stored_msg->msg, ping);
 		
@@ -1016,17 +1016,17 @@ handle_response(ha_msg_input_t *stored_msg)
 
  	} else if(AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
 
-		crm_debug("Processing %s reply %s (fsa=%s)",
+		crm_debug_2("Processing %s reply %s (fsa=%s)",
 			  sys_from, msg_ref, crm_str(fsa_pe_ref));
 
 		if(msg_ref != NULL && safe_str_eq(msg_ref, fsa_pe_ref)) {
 			next_input = I_PE_SUCCESS;
-			crm_debug("Completed: %s...", fsa_pe_ref);
+			crm_debug_2("Completed: %s...", fsa_pe_ref);
 			crm_free(fsa_pe_ref);
 			fsa_pe_ref = NULL;
 			
 		} else {
-			crm_debug("Skipping superceeded reply from %s",
+			crm_debug_2("Skipping superceeded reply from %s",
 				  sys_from);
 		}
 		

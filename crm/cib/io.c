@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.38 2006/01/07 21:18:42 andrew Exp $ */
+/* $Id: io.c,v 1.39 2006/01/11 13:06:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -534,7 +534,7 @@ set_transition(crm_data_t *xml_obj)
 	const char *current = crm_element_value(
 		xml_obj, XML_ATTR_CCM_TRANSITION);
 	if(safe_str_neq(current, ccm_transition_id)) {
-		crm_debug("Set transition to %s", ccm_transition_id);
+		crm_debug("Current CCM transition is: %s", ccm_transition_id);
 		crm_xml_add(the_cib, XML_ATTR_CCM_TRANSITION,ccm_transition_id);
 	}
 }
@@ -553,7 +553,7 @@ set_connected_peers(crm_data_t *xml_obj)
 	if(current != active) {
 		peers_s = crm_itoa(active);
 		crm_xml_add(xml_obj, XML_ATTR_NUMPEERS, peers_s);
-		crm_debug("Set peers to %s", peers_s);
+		crm_debug("We now have %s active peers", peers_s);
 		crm_free(peers_s);
 	}
 	return active;

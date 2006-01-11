@@ -105,7 +105,7 @@ revision_check_callback(const HA_Message *msg, int call_id, int rc,
 static void
 do_cib_replaced(const char *event, HA_Message *msg)
 {
-	crm_info("Updating the CIB after a replace");
+	crm_debug("Updating the CIB after a replace");
 	do_update_cib_nodes(NULL, FALSE);
 	fsa_cluster_conn->llc_ops->client_status(
 		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
@@ -136,63 +136,68 @@ do_cib_control(long long action,
 	}
 
 	if(action & start_actions) {
-		if(cur_state != S_STOPPING) {
-			if(fsa_cib_conn == NULL) {
-				fsa_cib_conn = cib_new();
-			}
-			if(cib_ok != fsa_cib_conn->cmds->signon(
-				   fsa_cib_conn, CRM_SYSTEM_CRMD, cib_command)){
-				crm_debug("Could not connect to the CIB service");
+		if(fsa_cib_conn == NULL) {
+			fsa_cib_conn = cib_new();
+		}
+		
+		if(cur_state == S_STOPPING) {
+			crm_err("Ignoring request to start %s after shutdown",
+				this_subsys->name);
+			return I_NULL;
+		}
+		
+		if(cib_ok != fsa_cib_conn->cmds->signon(
+			   fsa_cib_conn, CRM_SYSTEM_CRMD, cib_command)){
+			crm_debug("Could not connect to the CIB service");
 #if 0
-			} else if(cib_ok != fsa_cib_conn->cmds->set_op_callback(
-					  fsa_cib_conn, crmd_cib_op_callback)) {
-				crm_err("Could not set op callback");
+		} else if(cib_ok != fsa_cib_conn->cmds->set_op_callback(
+				  fsa_cib_conn, crmd_cib_op_callback)) {
+			crm_err("Could not set op callback");
 #endif
-			} else if(cib_ok != fsa_cib_conn->cmds->set_connection_dnotify(
-					  fsa_cib_conn, crmd_cib_connection_destroy)) {
-				crm_err("Could not set dnotify callback");
-
-			} else if(cib_ok != fsa_cib_conn->cmds->add_notify_callback(
-					  fsa_cib_conn, T_CIB_REPLACE_NOTIFY,
-					  do_cib_replaced)) {
-				crm_err("Could not set CIB notification callback");
-
-			} else {
-				set_bit_inplace(
-					fsa_input_register, R_CIB_CONNECTED);
-			}
-
-			if(is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
-
-				cib_retries++;
-				crm_warn("Couldn't complete CIB registration %d"
-					 " times... pause and retry",
-					 cib_retries);
-
-				if(cib_retries < 30) {
-					crm_timer_start(wait_timer);
-					crmd_fsa_stall(NULL);
-
-				} else {
-					crm_err("Could not complete CIB"
-						" registration  %d times..."
-						" hard error", cib_retries);
-					register_fsa_error(
-						C_FSA_INTERNAL, I_ERROR, NULL);
-				}
-			} else {
-				int rc = fsa_cib_conn->cmds->query(
-					fsa_cib_conn, NULL, NULL,
-					cib_scope_local);
-
-				add_cib_op_callback(rc, FALSE, NULL,
-						    revision_check_callback);
-				cib_retries = 0;
-			}
+		} else if(cib_ok != fsa_cib_conn->cmds->set_connection_dnotify(
+				  fsa_cib_conn, crmd_cib_connection_destroy)) {
+			crm_err("Could not set dnotify callback");
+			
+		} else if(cib_ok != fsa_cib_conn->cmds->add_notify_callback(
+				  fsa_cib_conn, T_CIB_REPLACE_NOTIFY,
+				  do_cib_replaced)) {
+			crm_err("Could not set CIB notification callback");
 			
 		} else {
-			crm_info("Ignoring request to start %s after shutdown",
-				 this_subsys->name);
+			set_bit_inplace(
+				fsa_input_register, R_CIB_CONNECTED);
+		}
+		
+		if(is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
+			
+			cib_retries++;
+			crm_warn("Couldn't complete CIB registration %d"
+				 " times... pause and retry",
+				 cib_retries);
+			
+			if(cib_retries < 30) {
+				crm_timer_start(wait_timer);
+				crmd_fsa_stall(NULL);
+				
+			} else {
+				crm_err("Could not complete CIB"
+					" registration  %d times..."
+					" hard error", cib_retries);
+				register_fsa_error(
+					C_FSA_INTERNAL, I_ERROR, NULL);
+			}
+		} else {
+			int call_id = 0;
+			
+			crm_info("CIB connection established");
+			
+			call_id = fsa_cib_conn->cmds->query(
+				fsa_cib_conn, NULL, NULL,
+				cib_scope_local);
+			
+			add_cib_op_callback(call_id, FALSE, NULL,
+					    revision_check_callback);
+			cib_retries = 0;
 		}
 	}
 	

@@ -1,4 +1,4 @@
-/* $Id: match.c,v 1.2 2005/11/22 02:45:47 andrew Exp $ */
+/* $Id: match.c,v 1.3 2006/01/11 13:06:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -40,6 +40,7 @@
 int
 match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 {
+	int target_rc = 0;
 	const char *target_rc_s = NULL;
 	const char *allow_fail  = NULL;
 	const char *this_action = NULL;
@@ -135,16 +136,16 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 
 	target_rc_s = g_hash_table_lookup(match->params,XML_ATTR_TE_TARGET_RC);
 	if(target_rc_s != NULL) {
-		int target_rc = crm_parse_int(target_rc_s, NULL);
+		target_rc = crm_parse_int(target_rc_s, NULL);
 		if(target_rc == op_rc_i) {
-			crm_info("Target rc: == %d", op_rc_i);
+			crm_debug_2("Target rc: == %d", op_rc_i);
 			if(op_status_i != LRM_OP_DONE) {
 				crm_debug("Re-mapping op status to"
 					  " LRM_OP_DONE for %s", update_event);
 				op_status_i = LRM_OP_DONE;
 			}
 		} else {
-			crm_info("Target rc: != %d", op_rc_i);
+			crm_debug_2("Target rc: != %d", op_rc_i);
 			if(op_status_i != LRM_OP_ERROR) {
 				crm_info("Re-mapping op status to"
 					 " LRM_OP_ERROR for %s", update_event);
@@ -171,8 +172,8 @@ match_graph_event(action_t *action, crm_data_t *event, const char *event_node)
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
 			match->failed = TRUE;
-			crm_warn("Action %s on %s failed: %s",
-				 update_event, event_node,
+			crm_warn("Action %s on %s failed (rc: %d vs. %d): %s",
+				 update_event, event_node, target_rc, op_rc_i,
 				 op_status2text(op_status_i));
 			if(FALSE == crm_is_true(allow_fail)) {
 				send_complete("Action failed", event,
@@ -284,7 +285,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 	const char *op_status = NULL;
 
 	if(event == NULL) {
-		crm_debug("a transition is starting");
+		crm_debug_2("a transition is starting");
 
 		process_trigger(action_id);
 		check_for_completion();
@@ -299,16 +300,16 @@ process_graph_event(crm_data_t *event, const char *event_node)
 		op_status_i = crm_parse_int(op_status, NULL);
 		if(op_status_i == -1) {
 			/* just information that the action was sent */
-			crm_debug("Ignoring TE initiated updates");
+			crm_debug_2("Ignoring TE initiated updates");
 			return TRUE;
 		}
 	}
 	
 	if(magic == NULL) {
-		crm_log_xml_debug(event, "Skipping \"non-change\"");
+		crm_log_xml_debug_2(event, "Skipping \"non-change\"");
 		action_id = -3;
 	} else {
-		crm_debug("Processing CIB update: %s on %s: %s",
+		crm_debug_2("Processing CIB update: %s on %s: %s",
 			  rsc_id, event_node, magic);
 	}
 	
@@ -328,7 +329,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 			}
 			);
 		if(action_id != -1) {
-			crm_debug("Terminating search: %d", action_id);
+			crm_debug_2("Terminating search: %d", action_id);
 			break;
 		}
 		);
@@ -358,10 +359,10 @@ process_graph_event(crm_data_t *event, const char *event_node)
 	}
 
 	if(action_id > -1) {
-		crm_log_xml_debug_3(event, "Event found");
+		crm_log_xml_debug_2(event, "Event found");
 		
 	} else if(action_id == -2) {
-		crm_log_xml_info(event, "Event failed");
+		crm_log_xml_debug(event, "Event failed");
 		
 #if 0
 	} else if(action_id == -3) {
@@ -374,7 +375,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 	} else {
 		/* unexpected event, trigger a pe-recompute */
 		/* possibly do this only for certain types of actions */
-		crm_debug("Search terminated: %d", action_id);
+		crm_debug_2("Search terminated: %d", action_id);
 		send_complete("Event not matched", event, te_update, i_cancel);
 		return FALSE;
 	}

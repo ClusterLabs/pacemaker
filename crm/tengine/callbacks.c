@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.57 2005/12/19 16:54:44 andrew Exp $ */
+/* $Id: callbacks.c,v 1.58 2006/01/11 13:06:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -78,7 +78,7 @@ te_update_diff(const char *event, HA_Message *msg)
 		&diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates, 
 		&diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
 	
-	crm_debug("Processing diff (%s): %d.%d.%d -> %d.%d.%d", op,
+	crm_info("Processing diff (%s): %d.%d.%d -> %d.%d.%d", op,
 		  diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
 		  diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
 	log_cib_diff(LOG_DEBUG_2, diff, op);
@@ -300,8 +300,8 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 	const char *op       = cl_get_string(msg, F_CRM_TASK);
 	const char *type     = cl_get_string(msg, F_CRM_MSG_TYPE);
 
+	crm_debug_2("Processing %s (%s) message", op, ref);
 	crm_log_message(LOG_DEBUG_3, msg);
-	crm_debug("Processing %s (%s) message", op, ref);
 	
 	if(op == NULL){
 		/* error */
@@ -340,7 +340,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 			CRM_DEV_ASSERT(xml_obj != NULL);
 		}
 		if(xml_obj != NULL) {
-			crm_log_message_adv(LOG_DEBUG, "Processing NACK Reply", msg);
+			crm_log_message_adv(LOG_DEBUG_2, "Processing NACK Reply", msg);
 			extract_event(xml_obj);
 		} else {
 			crm_log_message_adv(LOG_ERR, "Invalid NACK Reply", msg);
@@ -363,19 +363,19 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 			te_fsa_state = te_state_matrix[i_transition][te_fsa_state];
 			CRM_DEV_ASSERT(te_fsa_state == s_in_transition);
 			if(te_fsa_state != last_state) {
-				crm_debug("State change %d->%d", last_state, te_fsa_state);
+				crm_debug_2("State change %d->%d",
+					    last_state, te_fsa_state);
 			}
 			initialize_graph();
 			unpack_graph(xml_data);
 			
-			crm_debug("Initiating transition...");
 			if(initiate_transition() == FALSE) {
 				/* nothing to be done.. means we're done. */
 				crm_info("No actions to be taken..."
 					 " transition compelte.");
 			}
 		} else {
-			crm_info("Ignoring transition: abort in progress");
+			crm_info("Ignoring new transition: abort in progress");
 		}
 
 	} else if(strcmp(op, CRM_OP_TE_HALT) == 0) {
@@ -387,6 +387,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
 		crm_info("Received quit message, terminating");
 		/* wait for pending actions to complete? */
+		print_state(LOG_INFO);
 		exit(0);
 		
 	} else {

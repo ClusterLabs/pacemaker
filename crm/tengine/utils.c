@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.46 2005/11/22 02:40:24 andrew Exp $ */
+/* $Id: utils.c,v 1.47 2006/01/11 13:06:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,7 +55,9 @@ int unconfirmed_actions(void)
 			}
 			);
 		);
-	
+	if(unconfirmed > 0) {
+		crm_info("Waiting on %d unconfirmed actions", unconfirmed);
+	}
 	return unconfirmed;
 }
 
@@ -75,15 +77,15 @@ send_complete(const char *text, crm_data_t *msg,
 	te_fsa_state_t last_state = te_fsa_state;
 	te_fsa_state = te_state_matrix[input][te_fsa_state];
 	if(te_fsa_state != last_state) {
-		crm_debug("State change %d->%d", last_state, te_fsa_state);
+		crm_debug_2("State change %d->%d", last_state, te_fsa_state);
 	}
 	
 	if(te_fsa_state == s_abort_pending
 	   && (unconfirmed == 0 || reason == te_timeout || reason == te_abort_timeout)) {
-		crm_debug("Faking i_cmd_complete: %d/%d", last_state, input);
+		crm_debug_2("Faking i_cmd_complete: %d/%d", last_state, input);
 		te_fsa_state = te_state_matrix[i_cmd_complete][te_fsa_state];
-		crm_debug("State change %d->%d", last_state, te_fsa_state);
-		crm_debug("Stopping abort timer");
+		crm_debug_2("State change %d->%d", last_state, te_fsa_state);
+		crm_debug_2("Stopping abort timer");
 		stop_te_timer(abort_timer);
 
 	} else if(te_fsa_state ==s_abort_pending && te_fsa_state !=last_state) {
@@ -93,9 +95,9 @@ send_complete(const char *text, crm_data_t *msg,
 	}
 
 	if(te_fsa_state == s_updates_pending && pending_callbacks == 0) {
-		crm_debug("Faking i_cib_complete: %d/%d", last_state, input);
+		crm_debug_2("Faking i_cib_complete: %d/%d", last_state, input);
 		te_fsa_state = te_state_matrix[i_cib_complete][te_fsa_state];		
-		crm_debug("State change %d->%d", last_state, te_fsa_state);
+		crm_debug_2("State change %d->%d", last_state, te_fsa_state);
 	}
 
 	if(te_fsa_state == last_state
@@ -301,7 +303,8 @@ print_state(unsigned int log_level)
 void
 print_input(const char *prefix, action_t *input, int log_level) 
 {
-	do_crm_log(log_level, __FILE__, __FUNCTION__, "%s[Input %d] %s (%s)",
+	do_crm_log(log_level, __FILE__, __FUNCTION__,
+		   "%s[Input %d] %s (action-type: %s)",
 		   prefix, input->id,
 		   input->complete?"Satisfied":"Pending",
 		   actiontype2text(input->type));

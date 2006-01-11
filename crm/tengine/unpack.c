@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.52 2006/01/10 13:46:41 andrew Exp $ */
+/* $Id: unpack.c,v 1.53 2006/01/11 13:06:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -157,6 +157,8 @@ unpack_graph(crm_data_t *xml_graph)
 	crm_info("Unpacked %d actions in %d synapses",
 		 num_actions, num_synapses);
 
+	print_state(LOG_DEBUG);
+
 	if(num_actions > 0) {
 		return TRUE;
 	} else {
@@ -275,7 +277,7 @@ extract_event(crm_data_t *msg)
 
 		/* Transient node attribute changes... */
 		event_node = crm_element_value(node_state, XML_ATTR_ID);
-		crm_info("Processing state update from %s", event_node);
+		crm_debug("Processing state update from %s", event_node);
 		crm_log_xml_debug_3(node_state,"Processing");
 
 		if(blob.text == NULL) {

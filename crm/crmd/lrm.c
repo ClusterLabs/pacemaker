@@ -179,15 +179,15 @@ do_lrm_control(long long action,
 	if(action & A_LRM_DISCONNECT) {
 		if(fsa_lrm_conn) {
 			gboolean removed = FALSE;
-			crm_info("Removing LRM connection from MainLoop");
+			crm_debug("Removing LRM connection from MainLoop");
 			removed = G_main_del_IPC_Channel(lrm_source);
 			if(removed == FALSE) {
 				crm_err("Could not remove LRM connection"
 					" from MainLoop");
 			}
 			lrm_source = NULL;			
-			crm_info("Disconnecting from the LRM");
 			fsa_lrm_conn->lrm_ops->signoff(fsa_lrm_conn);
+			crm_info("Disconnected from the LRM");
 			clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
 		}
 		/* TODO: Clean up the hashtable */
@@ -220,7 +220,7 @@ do_lrm_control(long long action,
 		}
 
 		if(ret == HA_OK) {
-			crm_info("Connecting to the LRM");
+			crm_debug("Connecting to the LRM");
 			ret = fsa_lrm_conn->lrm_ops->signon(
 				fsa_lrm_conn, CRM_SYSTEM_CRMD);
 		}
@@ -264,6 +264,7 @@ do_lrm_control(long long action,
 			default_ipc_connection_destroy);
 
 		set_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
+		crm_debug("LRM connection established");
 		
 	}	
 
@@ -333,11 +334,11 @@ build_operation_update(
 		return FALSE;
 	}
 
-	crm_debug("%s: Updating resouce %s after %s %s op",
+	crm_debug_2("%s: Updating resouce %s after %s %s op",
 		 src, op->rsc_id, op_status2text(op->op_status), op->op_type);
 
 	if(op->op_status == LRM_OP_CANCELLED) {
-		crm_debug("Ignoring cancelled op");
+		crm_debug_3("Ignoring cancelled op");
 		return TRUE;
 	}
 	
@@ -514,7 +515,7 @@ is_rsc_active(const char *rsc_id)
 
 	the_rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rsc_id);
 
-	crm_debug("Processing lrm_rsc_t entry %s", rsc_id);
+	crm_debug_2("Processing lrm_rsc_t entry %s", rsc_id);
 	
 	if(the_rsc == NULL) {
 		crm_err("NULL resource returned from the LRM");
@@ -523,13 +524,13 @@ is_rsc_active(const char *rsc_id)
 	
 	op_list = the_rsc->ops->get_cur_state(the_rsc, &cur_state);
 	
-	crm_debug_2("\tcurrent state:%s",cur_state==LRM_RSC_IDLE?"Idle":"Busy");
+	crm_debug_3("\tcurrent state:%s",cur_state==LRM_RSC_IDLE?"Idle":"Busy");
 	
 	slist_iter(
 		op, lrm_op_t, op_list, llpc,
 		
-		crm_debug("Processing op %s for %s (status=%d, rc=%d)", 
-			  op->op_type, the_rsc->id, op->op_status, op->rc);
+		crm_debug_2("Processing op %s for %s (status=%d, rc=%d)", 
+			    op->op_type, the_rsc->id, op->op_status, op->rc);
 		
 		CRM_ASSERT(max_call_id <= op->call_id);			
 		if(safe_str_eq(op->op_type, CRMD_ACTION_STOP)) {
@@ -1100,8 +1101,9 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation,
 	}
 	
 	/* now do the op */
-	crm_info("Performing op %s on %s", operation, rid);
 	op = construct_op(msg, rsc->id, operation);
+	crm_info("Performing op %s on %s (interval=%dms)",
+		 operation, rid, op->interval);
 
 	if((AM_I_DC == FALSE && fsa_state != S_NOT_DC)
 	   || (AM_I_DC && fsa_state != S_TRANSITION_ENGINE)) {
@@ -1139,8 +1141,8 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation,
 	} else if(op->interval > 0) {
 		struct recurring_op_s *op = NULL;
 		crm_malloc0(op, sizeof(struct recurring_op_s));
-		crm_debug("Adding recurring %s op for %s (%d)",
-			  op_id, rsc->id, call_id);
+		crm_debug_2("Adding recurring %s op for %s (%d)",
+			    op_id, rsc->id, call_id);
 		
 		op->call_id = call_id;
 		op->rsc_id  = crm_strdup(rsc->id);
@@ -1154,8 +1156,8 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation,
 		char *call_id_s = make_stop_id(rsc->id, call_id);
 		g_hash_table_replace(
 			shutdown_ops, call_id_s, crm_strdup(rsc->id));
-		crm_debug("Recording pending op: %s/%s %s",
-			  rsc->id, operation, call_id_s);
+		crm_debug_2("Recording pending op: %s/%s %s",
+			    rsc->id, operation, call_id_s);
 	}
 
 	crm_free(op_id);
@@ -1329,8 +1331,8 @@ do_update_resource(lrm_op_t* op)
 	crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 	if(op->interval == 0) {
 		lrm_rsc_t *rsc = NULL;
-		crm_info("Updating %s resource definitions after %s op",
-			 op->rsc_id, op->op_type);
+		crm_debug_2("Updating %s resource definitions after %s op",
+			    op->rsc_id, op->op_type);
 		
 		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, op->rsc_id);
 
@@ -1479,11 +1481,11 @@ do_lrm_event(long long action,
 				op_status2text(op->op_status));
 			break;
 		case LRM_OP_DONE:
-			crm_debug("LRM operation (%d) %s_%d on %s %s",
-				  op->call_id, op->op_type,
-				  op->interval,
-				  crm_str(op->rsc_id),
-				  op_status2text(op->op_status));
+			crm_info("LRM operation (%d) %s_%d on %s %s",
+				 op->call_id, op->op_type,
+				 op->interval,
+				 crm_str(op->rsc_id),
+				 op_status2text(op->op_status));
 			break;
 	}
 	g_hash_table_replace(resources_confirmed,
@@ -1494,7 +1496,7 @@ do_lrm_event(long long action,
 	if(g_hash_table_size(shutdown_ops) > 0) {
 		char *op_id = make_stop_id(op->rsc_id, op->call_id);
 		if(g_hash_table_remove(shutdown_ops, op_id)) {
-			crm_debug("Op %d (%s %s) confirmed",
+			crm_debug_2("Op %d (%s %s) confirmed",
 				  op->call_id, op->op_type, op->rsc_id);
 
 		} else if(op->interval == 0) {
@@ -1509,9 +1511,9 @@ do_lrm_event(long long action,
 			register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 			
 		} else {
-			crm_debug("Still waiting for %d pending stop operations"
-				  " to complete before exiting",
-				  g_hash_table_size(shutdown_ops));
+			crm_info("Still waiting for %d pending stop operations"
+				 " to complete before exiting",
+				 g_hash_table_size(shutdown_ops));
 			g_hash_table_foreach(
 				shutdown_ops, ghash_print_pending, NULL);
 		}

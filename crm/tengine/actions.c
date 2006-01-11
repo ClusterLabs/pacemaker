@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.4 2005/11/22 02:46:30 andrew Exp $ */
+/* $Id: actions.c,v 1.5 2006/01/11 13:06:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -474,8 +474,8 @@ cib_action_updated(
 		return;
 	}
 	
-	crm_info("Initiating action %d: %s %s on %s",
-		 action->id, task_uuid, rsc_id, on_node);
+	crm_info("Initiating action %d: %s on %s",
+		 action->id, task_uuid, on_node);
 	
 	if(rsc_op != NULL) {
 		crm_log_xml_debug_2(rsc_op, "Performing");
@@ -493,12 +493,12 @@ cib_action_updated(
 	action->invoked = TRUE;
 	value = g_hash_table_lookup(action->params, XML_ATTR_TE_NOWAIT);
 	if(crm_is_true(value)) {
-		crm_info("Skipping wait for %d", action->id);
+		crm_debug("Skipping wait for %d", action->id);
 		action->complete = TRUE;
 		process_trigger(action->id);
 
 	} else if(action->timeout > 0) {
-		crm_debug_3("Setting timer for action %d",action->id);
+		crm_debug_3("Setting timer for action %s", task_uuid);
 		action->timer->reason = timeout_action_warn;
 		start_te_timer(action->timer);
 	}

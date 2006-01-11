@@ -273,8 +273,8 @@ lrm_op_callback(lrm_op_t* op)
 		return;
 	}
 	
-	crm_debug("received callback: %s/%s (%s)",
-		  op->op_type, op->rsc_id, op_status2text(op->op_status));
+	crm_debug_2("received callback: %s/%s (%s)",
+		    op->op_type, op->rsc_id, op_status2text(op->op_status));
 
 	/* Make sure the LRM events are received in order */
 	register_fsa_input_later(C_LRM_OP_CALLBACK, I_LRM_EVENT, op);

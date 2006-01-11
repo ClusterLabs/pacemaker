@@ -468,15 +468,15 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	
 	/* set the ack/nack */
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
-		crm_debug("3) ACK'ing join request from %s, state %s",
-			  join_to, join_state);
+		crm_debug("3) ACK'ing join request %d from %s, state %s",
+			  current_join_id, join_to, join_state);
 		ha_msg_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_TRUE);
 		g_hash_table_insert(
 			finalized_nodes,
 			crm_strdup(join_to), crm_strdup(CRMD_JOINSTATE_MEMBER));
 	} else {
-		crm_warn("3) NACK'ing join request from %s, state %s",
-			 join_to, join_state);
+		crm_warn("3) NACK'ing join request %d from %s, state %s",
+			 current_join_id, join_to, join_state);
 		
 		ha_msg_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_FALSE);
 	}
@@ -563,7 +563,7 @@ join_send_offer(gpointer key, gpointer value, gpointer user_data)
 		g_hash_table_insert(welcomed_nodes, crm_strdup(join_to),
 				    crm_strdup(CRMD_JOINSTATE_PENDING));
 	} else {
-		crm_debug("Peer process on %s is not active", join_to);
+		crm_err("Peer process on %s is not active", join_to);
 	}
 	
 }

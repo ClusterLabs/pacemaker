@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.107 2005/11/22 02:46:30 andrew Exp $ */
+/* $Id: tengine.c,v 1.108 2006/01/11 13:06:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -247,7 +247,7 @@ fire_synapse(synapse_t *synapse)
 			
 		);
 	
-	crm_debug("Synapse %d complete", synapse->id);
+	crm_debug_2("Synapse %d fired", synapse->id);
 }
 
 gboolean
