@@ -64,8 +64,7 @@ void dump_rsc_info_callback(const HA_Message *msg, int call_id, int rc,
 void ghash_print_node(gpointer key, gpointer value, gpointer user_data);
 
 #define DOT_PREFIX "live.dot: "
-#define DOT_LOG    LOG_DEBUG_2
-#define do_dot_log(fmt...)     do_crm_log(DOT_LOG, NULL, NULL, fmt)
+#define do_dot_log(fmt...)     do_crm_log(LOG_DEBUG_2, NULL, NULL, fmt)
 #define do_dot_action(fmt...)  do_crm_log(LOG_DEBUG, NULL, NULL, fmt)
 
 longclock_t action_start = 0;
@@ -99,12 +98,12 @@ unsigned int action_diff_ms = 0;
 	   if(action_diff_max_ms > 0) {					\
 		   action_start = time_longclock();			\
 	   }								\
+	   do_dot_action(DOT_PREFIX"\t// %s", fsa_action2string(an_action)); \
 	   result = function(an_action, fsa_data->fsa_cause, fsa_state,	\
 			  fsa_data->fsa_input, fsa_data);		\
 	   crm_debug_3("Action complete: %s (%.16llx)",			\
 		       fsa_action2string(an_action), an_action);	\
 	   CRM_DEV_ASSERT(result == I_NULL);				\
-	   do_dot_action(DOT_PREFIX"\t// %s", fsa_action2string(an_action)); \
 	}
 
 #define IF_FSA_ACTION_NOTIME(an_action,function)			\
