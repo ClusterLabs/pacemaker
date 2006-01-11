@@ -635,6 +635,7 @@ build_active_RAs(crm_data_t *rsc_list)
 crm_data_t*
 do_lrm_query(gboolean is_replace)
 {
+	gboolean shut_down = FALSE;
 	crm_data_t *xml_result= NULL;
 	crm_data_t *xml_state = NULL;
 	crm_data_t *xml_data  = NULL;
@@ -643,12 +644,13 @@ do_lrm_query(gboolean is_replace)
 
 	if(is_set(fsa_input_register, R_SHUTDOWN)) {
 		exp_state = CRMD_STATE_INACTIVE;
+		shut_down = TRUE;
 	}
 	
 	xml_state = create_node_state(
 		fsa_our_uname, ACTIVESTATUS, XML_BOOLEAN_TRUE,
 		ONLINESTATUS, CRMD_JOINSTATE_MEMBER, exp_state,
-		is_set(fsa_input_register, R_SHUTDOWN), __FUNCTION__);
+		!shut_down, __FUNCTION__);
 
 	xml_data  = create_xml_node(xml_state, XML_CIB_TAG_LRM);
 	rsc_list  = create_xml_node(xml_data, XML_LRM_TAG_RESOURCES);
