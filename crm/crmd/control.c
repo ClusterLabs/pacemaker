@@ -234,7 +234,7 @@ do_startup(long long action,
 	int was_error = 0;
 	int interval = 1; /* seconds between DC heartbeats */
 
-	crm_info("Register Signal Handler");
+	crm_debug("Registering Signal Handlers");
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, crm_shutdown, NULL, NULL);
 
@@ -244,14 +244,14 @@ do_startup(long long action,
 	ipc_clients = g_hash_table_new(g_str_hash, g_str_equal);
 	
 	if(was_error == 0) {
-		crm_info("Init server comms");
+		crm_debug("Init server comms");
 		was_error = init_server_ipc_comms(
 			crm_strdup(CRM_SYSTEM_CRMD), crmd_client_connect,
 			default_ipc_connection_destroy);
 	}	
 
 	if(was_error == 0) {
-		crm_info("Creating CIB object");
+		crm_debug("Creating CIB object");
 		fsa_cib_conn = cib_new();
 	}
 	
@@ -442,7 +442,7 @@ do_stop(long long action,
 		crm_err("%d stop operations outstanding at exit",
 			g_hash_table_size(shutdown_ops));
 	}
-
+#if 0
 	if(is_set(fsa_input_register, R_CIB_CONNECTED)) {
 		crm_data_t *tmp1 = NULL;
 		crm_info("Updating node_status entry");
@@ -451,7 +451,7 @@ do_stop(long long action,
 		update_local_cib(create_cib_fragment(tmp1, XML_CIB_TAG_STATUS));
 		free_xml(tmp1);
 	}
-	
+#endif
 	
 	return I_NULL;
 }
@@ -677,7 +677,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 		crm_err("get_mynodeid() failed");
 		return FALSE;
 	}
-	crm_info("FSA Hostname: %s", fsa_our_uname);
+	crm_info("Hostname: %s", fsa_our_uname);
 
 	crm_debug_3("Finding our node uuid");
 	fsa_our_uuid = get_uuid(fsa_cluster_conn, fsa_our_uname);
@@ -685,7 +685,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 		crm_err("get_uuid_by_name() failed");
 		return FALSE;
 	}
-	crm_info("FSA UUID: %s", fsa_our_uuid);
+	crm_info("UUID: %s", fsa_our_uuid);
 		
 	/* Async get client status information in the cluster */
 	crm_debug_3("Requesting an initial dump of CRMD client_status");
