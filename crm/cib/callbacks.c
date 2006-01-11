@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.88 2006/01/11 13:18:03 andrew Exp $ */
+/* $Id: callbacks.c,v 1.89 2006/01/11 19:50:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -893,6 +893,8 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 		
 		cib_post_notify(call_options, op, input, rc, the_cib);
 		cib_diff_notify(call_options, op, input, rc, local_diff);
+		log_xml_diff(rc==cib_ok?LOG_DEBUG:LOG_INFO,
+			     local_diff, "cib:diff");
 
 	} else if(result_cib != NULL) {
 		crm_err("%s call modified the CIB", op);

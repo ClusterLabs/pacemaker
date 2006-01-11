@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.33 2006/01/11 13:06:11 andrew Exp $ */
+/* $Id: notify.c,v 1.34 2006/01/11 19:50:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -276,7 +276,6 @@ cib_diff_notify(int options, const char *op, crm_data_t *update,
 			      add_admin_epoch, add_epoch, add_updates);
 	}
 	
-	crm_log_message_adv(log_level+1, __FUNCTION__, diff);
 	do_cib_notify(options, op, update, result, diff, T_CIB_DIFF_NOTIFY);
 }
 
