@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.89 2006/01/11 19:50:34 andrew Exp $ */
+/* $Id: callbacks.c,v 1.90 2006/01/11 20:11:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -367,6 +367,10 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 		ha_msg_add(op_request, F_CIB_CLIENTID,  cib_client->id);
 		
 		send_ipc_message(channel, op_request);
+
+		if(channel->ch_status != IPC_DISC_PENDING) {
+			break;
+		}
 	}
 	did_disconnect = cib_process_disconnect(channel, cib_client);	
 	if(did_disconnect) {
@@ -434,6 +438,10 @@ cib_common_callback(
 		crm_debug_3("Cleaning up request");
 		crm_msg_del(op_request);
 		op_request = NULL;
+
+		if(channel->ch_status != IPC_DISC_PENDING) {
+			break;
+		}
 	}
 
 	crm_debug_2("Processed %d messages", lpc);
