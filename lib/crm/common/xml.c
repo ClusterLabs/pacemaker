@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.49 2006/01/07 21:23:11 andrew Exp $ */
+/* $Id: xml.c,v 1.50 2006/01/11 13:10:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1574,7 +1574,6 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 			" saw %d", root_nodes_seen);
 		result = FALSE;
 
-#if CRM_DEV_BUILD
 	} else if(result) {
 		crm_debug_2("Verification Phase");
 		intermediate = diff_xml_object(old, *new, FALSE);
@@ -1582,18 +1581,17 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 		if(diff_of_diff != NULL) {
 			crm_warn("Diff application failed!");
 /* 			log_xml_diff(LOG_DEBUG, diff_of_diff, "diff:diff_of_diff"); */
-			log_xml_diff(LOG_DEBUG, intermediate, "diff:actual_diff");
+			log_xml_diff(LOG_INFO, intermediate, "diff:actual_diff");
 			result = FALSE;
 		}
 		crm_free(diff_of_diff);
 		crm_free(intermediate);
-#endif
 		diff_of_diff = NULL;
 		intermediate = NULL;
 	}
 
 	if(result == FALSE) {
-		log_xml_diff(LOG_DEBUG, diff, "diff:input_diff");
+		log_xml_diff(LOG_INFO, diff, "diff:input_diff");
 
 		log_data_element("diff:input", NULL, LOG_DEBUG_2, 0, old, TRUE);
 /* 		CRM_DEV_ASSERT(diff_of_diff != NULL); */
@@ -2129,7 +2127,7 @@ xml2list(crm_data_t *parent)
 	if(parent != NULL) {
 		nvpair_list = find_xml_node(parent, XML_TAG_ATTRS, FALSE);
 		if(nvpair_list == NULL) {
-			crm_debug("No attributes in %s",
+			crm_debug_2("No attributes in %s",
 				  crm_element_name(parent));
 			crm_log_xml_debug_2(
 				parent,"No attributes for resource op");
