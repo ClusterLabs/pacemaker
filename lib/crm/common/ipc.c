@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.13 2005/09/11 20:56:56 andrew Exp $ */
+/* $Id: ipc.c,v 1.14 2006/01/11 19:54:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -120,20 +120,24 @@ crm_send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg, gboolean server)
 		all_is_good = FALSE;
 
 	} else if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
-		ipc_log("IPC Channel is not connected");
+		ipc_log("IPC Channel to %d is not connected",
+			(int)ipc_client->farside_pid);
 		all_is_good = FALSE;
 
 	} else if(get_stringlen(msg) >= MAXMSG) {
-		crm_err("Message is too large to send");
+		crm_err("Message is to %d too large to send",
+			(int)ipc_client->farside_pid);
 		all_is_good = FALSE;
 	}
 
 	if(all_is_good && msg2ipcchan(msg, ipc_client) != HA_OK) {
-		ipc_log("Could not send IPC, message");
+		ipc_log("Could not send IPC message to %d",
+			(int)ipc_client->farside_pid);
 		all_is_good = FALSE;
 
 		if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
-			ipc_log("IPC Channel is no longer connected");
+			ipc_log("IPC Channel to %d is no longer connected",
+				(int)ipc_client->farside_pid);
 
 		} else if(server == FALSE) {
 			CRM_DEV_ASSERT(ipc_client->send_queue->current_qlen < ipc_client->send_queue->max_qlen);
