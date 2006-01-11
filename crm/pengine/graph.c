@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.72 2005/10/25 14:02:15 andrew Exp $ */
+/* $Id: graph.c,v 1.73 2006/01/11 12:46:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -210,7 +210,7 @@ stonith_constraints(node_t *node,
 	GListPtr stop_actions = NULL;
 	gboolean run_unprotected = TRUE;
 	
-	if(shutdown_op != NULL) {
+	if(shutdown_op != NULL && stonith_op != NULL) {
 		/* stop everything we can via shutdown_constraints() and then
 		 *   shoot the node... the shutdown has been superceeded
 		 */
