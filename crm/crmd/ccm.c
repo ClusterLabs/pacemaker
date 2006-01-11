@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.92 2006/01/10 13:46:41 andrew Exp $ */
+/* $Id: ccm.c,v 1.93 2006/01/11 12:55:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -126,7 +126,8 @@ do_ccm_control(long long action,
 		}
 		
 
-		crm_info("CCM Activation passed... all set to go!");
+		crm_info("CCM connection established..."
+			 " waiting for first callback");
 
 		G_main_add_fd(G_PRIORITY_HIGH, fsa_ev_fd, FALSE, ccm_dispatch,
 			      fsa_ev_token, default_ipc_connection_destroy);
@@ -141,6 +142,7 @@ do_ccm_control(long long action,
 	return I_NULL;
 }
 
+extern GHashTable *voted;
 
 /*	 A_CCM_EVENT	*/
 enum crmd_fsa_input
@@ -204,10 +206,16 @@ do_ccm_event(long long action,
 				crm_err("CCM node had no name");
 				continue;
 				
-			} else if(safe_str_eq(uname, fsa_our_dc)) {
-				crm_warn("Our DC node (%s) left the cluster",
-					 uname);
-				register_fsa_input(cause, I_ELECTION, NULL);
+			} else {
+				/* remove any no-votes they had cast */
+				if(voted != NULL) {
+					g_hash_table_remove(voted, uname);
+				}
+				if(safe_str_eq(uname, fsa_our_dc)) {
+					crm_warn("Our DC node (%s) left the cluster",
+						 uname);
+					register_fsa_input(cause, I_ELECTION, NULL);
+				}
 			}
 		}
 	}
@@ -641,8 +649,8 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	const char *node_uname = (const char*)key;
 	struct update_data_s* data = (struct update_data_s*)user_data;
 
-	crm_debug("Updating %s: %s/%s",
-		  node_uname, data->state, data->join);
+	crm_debug_2("Updating %s: %s/%s",
+		    node_uname, data->state, data->join);
 
 	tmp1 = create_node_state(node_uname, NULL, data->state, NULL,
 				 data->join, NULL, FALSE, __FUNCTION__);
