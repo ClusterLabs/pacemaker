@@ -45,8 +45,6 @@ void finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 gboolean process_join_ack_msg(
 	const char *join_from, crm_data_t *lrm_update, int join_id);
 gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
-void join_update_complete_callback(const HA_Message *msg, int call_id, int rc,
-				   crm_data_t *output, void *user_data);
 
 void finalize_join(const char *caller);
 
@@ -373,13 +371,27 @@ do_dc_join_ack(long long action,
 	return I_NULL;
 }
 
+static void
+join_update_complete_callback(const HA_Message *msg, int call_id, int rc,
+			      crm_data_t *output, void *user_data)
+{
+	fsa_data_t *msg_data = NULL;
+	
+	if(rc == cib_ok) {
+		check_join_state(fsa_state, __FUNCTION__);
+
+	} else {
+		crm_err("Join update failed");
+		crm_log_message(LOG_DEBUG, msg);
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+	}
+}
+
 gboolean
 process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
 {
 	/* now update them to "member" */
 	int call_id = 0;
-	crm_data_t *update = NULL;
-	crm_data_t *fragment = NULL;
 	const char *join_state = NULL;
 	
 	crm_debug_2("Processing ack from %s", join_from);
@@ -416,17 +428,6 @@ process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
  	crm_info("4) Updating node state to %s for %s",
  		 CRMD_JOINSTATE_MEMBER, join_from);
 
-#if 0
-	???dig into the fragment and clear shutdown??
-	/* the slave will re-ask if it wants to be shutdown */
-
-	crm_data_t *tmp1 = NULL;
-	crm_info("Updating node_status entry");
-	tmp1 = create_node_state(node_uname, NULL, NULL, NULL,
-				 NULL, NULL, TRUE, __FUNCTION__);
-	update_local_cib(create_cib_fragment(tmp1, XML_CIB_TAG_STATUS));
-	free_xml(tmp1);
-#endif
 	/* update CIB with the current LRM status from the node
 	 * We dont need to notify the TE of these updates, a transition will
 	 *   be started in due time
@@ -437,9 +438,6 @@ process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
 
 	add_cib_op_callback(call_id, TRUE,NULL, join_update_complete_callback);
 
-	free_xml(fragment);
-	free_xml(update);
-	
 	return TRUE;
 }
 
@@ -615,18 +613,3 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 	return FALSE;
 }
 
-void
-join_update_complete_callback(const HA_Message *msg, int call_id, int rc,
-			      crm_data_t *output, void *user_data)
-{
-	fsa_data_t *msg_data = NULL;
-	
-	if(rc == cib_ok) {
-		check_join_state(fsa_state, __FUNCTION__);
-
-	} else {
-		crm_err("Join update failed");
-		crm_log_message(LOG_DEBUG, msg);
-		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-	}
-}

@@ -327,7 +327,7 @@ crmd_client_status_callback(const char * node, const char * client,
 	} else if(safe_str_eq(status, LEAVESTATUS)){
 		status = OFFLINESTATUS;
 		join   = CRMD_STATE_INACTIVE;
-		clear_shutdown = TRUE;
+/* 		clear_shutdown = TRUE; */
 	}
 	
 	set_bit_inplace(fsa_input_register, R_PEER_DATA);

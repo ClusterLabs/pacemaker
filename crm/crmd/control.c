@@ -442,16 +442,6 @@ do_stop(long long action,
 		crm_err("%d stop operations outstanding at exit",
 			g_hash_table_size(shutdown_ops));
 	}
-#if 0
-	if(is_set(fsa_input_register, R_CIB_CONNECTED)) {
-		crm_data_t *tmp1 = NULL;
-		crm_info("Updating node_status entry");
-		tmp1 = create_node_state(fsa_our_uname, NULL, NULL, NULL,
-					 NULL, NULL, TRUE, __FUNCTION__);
-		update_local_cib(create_cib_fragment(tmp1, XML_CIB_TAG_STATUS));
-		free_xml(tmp1);
-	}
-#endif
 	
 	return I_NULL;
 }
