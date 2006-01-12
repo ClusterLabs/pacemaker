@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.106 2006/01/07 20:57:59 andrew Exp $ */
+/* $Id: native.c,v 1.107 2006/01/12 15:11:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -126,11 +126,20 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 	}
 	
 	if(rsc->variant == pe_native && g_list_length(rsc->running_on) > 1) {
-		pe_warn("Resource %s is (potentially) active on %d nodes."
-			 "  Latest: %s/%s", rsc->id,
-			 g_list_length(rsc->running_on),
-			 node->details->uname, node->details->id);
+		const char *type = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+		const char *class = crm_element_value(
+			rsc->xml, XML_AGENT_ATTR_CLASS);
 
+		/* these are errors because hardly any gets it right
+		 *   at the moment and this way the might notice
+		 */
+		pe_err("Resource %s is (potentially) active on %d nodes."
+		       "  Latest: %s/%s", rsc->id,
+		       g_list_length(rsc->running_on),
+		       node->details->uname, node->details->id);
+		pe_err("Please confirm your %s Resource Agent (on all nodes)"
+		       " conforms to the %s spec.", type, class);
+		
 		if(rsc->recovery_type == recovery_stop_only) {
 			native_assign_color(rsc, data_set->no_color);
 			
