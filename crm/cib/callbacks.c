@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.91 2006/01/12 15:01:48 andrew Exp $ */
+/* $Id: callbacks.c,v 1.92 2006/01/12 16:14:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1187,9 +1187,6 @@ cib_ha_dispatch(IPC_Channel *channel, gpointer user_data)
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
 	}
 
-	if(hb_cluster->llc_ops->msgready(hb_cluster)) {
-		crm_debug("Returning to mainloop");
-	}
 	crm_debug_4("%d HA messages dispatched", lpc);
 
 	if (channel && (channel->ch_status != IPC_CONNECT)) {
