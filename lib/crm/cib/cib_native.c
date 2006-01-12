@@ -134,7 +134,8 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 	if(rc == cib_ok) {
 		crm_debug_4("Connecting callback channel");
 		native->callback_source = init_client_ipc_comms(
-			cib_channel_callback, cib_native_dispatch, cib, &(native->callback_channel));
+			cib_channel_callback, cib_native_dispatch,
+			cib, &(native->callback_channel));
 		
 		if(native->callback_channel == NULL) {
 			crm_debug("Connection to callback channel failed");

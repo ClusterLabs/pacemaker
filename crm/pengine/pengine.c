@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.100 2006/01/07 21:00:24 andrew Exp $ */
+/* $Id: pengine.c,v 1.101 2006/01/12 15:11:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -107,7 +107,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		do_calculations(&data_set, xml_data, NULL);
 		crm_log_xml_debug_3(data_set.graph, "[out]");
 
-		if (send_ipc_reply(sender, msg, data_set.graph) ==FALSE) {
+		if(send_ipc_reply(sender, msg, data_set.graph) == FALSE) {
 			crm_err("Answer could not be sent");
 		}
 
