@@ -122,7 +122,7 @@ stop_subsystem(struct crm_subsystem_s*	the_subsystem)
 			AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
 	
 		crm_info("Sending quit message to %s.", the_subsystem->name);
-		send_ipc_message(client_channel, quit);
+		crm_send_ipc_message(client_channel, quit, TRUE);
 	}
 	
 	return TRUE;
