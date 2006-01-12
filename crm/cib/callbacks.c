@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.90 2006/01/11 20:11:26 andrew Exp $ */
+/* $Id: callbacks.c,v 1.91 2006/01/12 15:01:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -901,8 +901,9 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 		
 		cib_post_notify(call_options, op, input, rc, the_cib);
 		cib_diff_notify(call_options, op, input, rc, local_diff);
-		log_xml_diff(rc==cib_ok?LOG_DEBUG:LOG_INFO,
-			     local_diff, "cib:diff");
+/* 		log_xml_diff(rc==cib_ok?LOG_DEBUG:LOG_INFO, local_diff, "cib:diff"); */
+		/* because too much depends on what is in here... */
+		log_xml_diff(LOG_INFO, local_diff, "cib:diff");
 
 	} else if(result_cib != NULL) {
 		crm_err("%s call modified the CIB", op);
@@ -1186,6 +1187,9 @@ cib_ha_dispatch(IPC_Channel *channel, gpointer user_data)
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
 	}
 
+	if(hb_cluster->llc_ops->msgready(hb_cluster)) {
+		crm_debug("Returning to mainloop");
+	}
 	crm_debug_4("%d HA messages dispatched", lpc);
 
 	if (channel && (channel->ch_status != IPC_CONNECT)) {
