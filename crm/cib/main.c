@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.30 2006/01/11 13:06:11 andrew Exp $ */
+/* $Id: main.c,v 1.31 2006/01/12 15:02:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -296,7 +296,7 @@ cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name)
 
 	crm_debug_3("Adding channel to mainloop");
 	G_main_add_IPC_Channel(
-		G_PRIORITY_HIGH, hb_cluster->llc_ops->ipcchan(hb_cluster),
+		G_PRIORITY_DEFAULT, hb_cluster->llc_ops->ipcchan(hb_cluster),
 		FALSE, cib_ha_dispatch, hb_cluster /* userdata  */,  
 		cib_ha_connection_destroy);
 
