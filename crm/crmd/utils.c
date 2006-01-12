@@ -1282,6 +1282,9 @@ create_node_state(
 
 	if(clear_shutdown) {
 		crm_xml_add(node_state, XML_CIB_ATTR_SHUTDOWN,  "0");
+#if CRM_DEPRECATED_SINCE_2_0_3
+		crm_xml_add(node_state, "clear_shutdown",  "true");
+#endif
 /* 		crm_xml_add(node_state, */
 /* 			    XML_CIB_ATTR_REPLACE, XML_TAG_TRANSIENT_NODEATTRS); */
 	}
