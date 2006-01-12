@@ -34,9 +34,6 @@ void join_query_callback(const HA_Message *msg, int call_id, int rc,
 			 crm_data_t *output, void *user_data);
 
 extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t *orig);
-extern gboolean process_join_ack_msg(
-	const char *join_from, crm_data_t *lrm_update);
-
 
 /*	A_CL_JOIN_QUERY		*/
 /* is there a DC out there? */
@@ -50,7 +47,7 @@ do_cl_join_query(long long action,
 	HA_Message *req = create_request(CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
 					 CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
-	crm_debug("c0) query");
+	crm_debug("Querying for a DC");
 	send_msg_via_ha(fsa_cluster_conn, req);
 	
 	return I_NULL;
@@ -84,11 +81,13 @@ do_cl_join_announce(long long action,
 		return I_NULL;
 	}
 
+	crm_err("Called?  Operational=%d", AM_I_OPERATIONAL);
+
 	if(AM_I_OPERATIONAL) {
 		const char *hb_from = cl_get_string(
 			input->msg, F_CRM_HOST_FROM);
 
-		crm_debug("c0) announce");
+		crm_debug("Announcing availability");
 		if(hb_from == NULL) {
 			crm_err("Failed to determin origin of hb message");
 			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
@@ -111,8 +110,8 @@ do_cl_join_announce(long long action,
 		/* send as a broadcast */
 		{
 			HA_Message *req = create_request(
-			CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
-			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+				CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
+				CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
 			send_msg_via_ha(fsa_cluster_conn, req);
 		}
@@ -132,7 +131,7 @@ static int query_call_id = 0;
 /*	 A_CL_JOIN_REQUEST	*/
 /* aka. accept the welcome offer */
 enum crmd_fsa_input
-do_cl_join_request(long long action,
+do_cl_join_offer_respond(long long action,
 	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
 	    enum crmd_fsa_input current_input,
@@ -149,12 +148,12 @@ do_cl_join_request(long long action,
 		return I_NULL;
 	} 
 #endif
-	crm_debug("c1) processing join offer: %s",
+	crm_debug("Processing join offer: join-%s",
 		  cl_get_string(input->msg, F_CRM_TASK));
 
 	/* we only ever want the last one */
 	if(query_call_id > 0) {
-		crm_debug("Cancelling previous join query");
+		crm_debug("Cancelling previous join query: %d", query_call_id);
 		remove_cib_op_callback(query_call_id, FALSE);
 	}
 
@@ -175,6 +174,7 @@ do_cl_join_request(long long action,
 	add_cib_op_callback(
 		query_call_id, TRUE,
 		copy_ha_msg_input(input), join_query_callback);
+	crm_debug("Registered join query callback: %d", query_call_id);
 
 	register_fsa_action(A_DC_TIMER_STOP);
 	return I_NULL;
@@ -200,7 +200,7 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 	if(local_cib != NULL) {
 		HA_Message *reply = NULL;
 		const char *join_id = ha_msg_value(input->msg, F_CRM_JOIN_ID);
-		crm_debug("c2) respond to join offer");
+		crm_debug("Respond to join offer join-%s", join_id);
 		crm_debug("Acknowledging %s as our DC",
 			  cl_get_string(input->msg, F_CRM_HOST_FROM));
 		copy_in_properties(generation, local_cib);
@@ -227,7 +227,7 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 /*	A_CL_JOIN_RESULT	*/
 /* aka. this is notification that we have (or have not) been accepted */
 enum crmd_fsa_input
-do_cl_join_result(long long action,
+do_cl_join_finalize_respond(long long action,
 	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
 	    enum crmd_fsa_input current_input,
@@ -255,7 +255,7 @@ do_cl_join_result(long long action,
 	ha_msg_value_int(input->msg, F_CRM_JOIN_ID, &join_id);
 	
 	if(was_nack) {
-		crm_err("Join %d with %s failed.  NACK'd", join_id, welcome_from);
+		crm_err("Join join-%d with %s failed.  NACK'd", join_id, welcome_from);
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 		return I_NULL;
 	}
@@ -269,7 +269,7 @@ do_cl_join_result(long long action,
 	} 	
 
 	/* send our status section to the DC */
-	crm_debug("c3) confirming join %d: %s",
+	crm_debug("Confirming join join-%d: %s",
 		  join_id, cl_get_string(input->msg, F_CRM_TASK));
 	crm_debug_2("Discovering local LRM status");
 	tmp1 = do_lrm_query(TRUE);

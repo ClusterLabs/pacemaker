@@ -39,16 +39,96 @@ crm_data_t *max_generation_xml = NULL;
 
 void initialize_join(gboolean before);
 gboolean finalize_join_for(gpointer key, gpointer value, gpointer user_data);
-void join_send_offer(gpointer key, gpointer value, gpointer user_data);
 void finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 			    crm_data_t *output, void *user_data);
-gboolean process_join_ack_msg(
-	const char *join_from, crm_data_t *lrm_update, int join_id);
 gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
 void finalize_join(const char *caller);
 
 static int current_join_id = 0;
+
+void
+initialize_join(gboolean before)
+{
+	/* clear out/reset a bunch of stuff */
+	crm_debug("join-%d: Initializing join data (flag=%s)",
+		  current_join_id, before?"true":"false");
+	
+	g_hash_table_destroy(welcomed_nodes);
+	g_hash_table_destroy(integrated_nodes);
+	g_hash_table_destroy(finalized_nodes);
+	g_hash_table_destroy(confirmed_nodes);
+
+	if(before) {
+		if(max_generation_from != NULL) {
+			crm_free(max_generation_from);
+			max_generation_from = NULL;
+		}
+		if(max_generation_xml != NULL) {
+			free_xml(max_generation_xml);
+			max_generation_xml = NULL;
+		}
+		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
+		clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
+	}
+	
+	welcomed_nodes = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+	integrated_nodes = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+	finalized_nodes = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+	confirmed_nodes = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+}
+
+static void
+join_make_offer(gpointer key, gpointer value, gpointer user_data)
+{
+	const char *join_to = NULL;
+	const char *crm_online = NULL;
+	const oc_node_t *member = (const oc_node_t*)value;
+
+	if(member != NULL) {
+		join_to = member->node_uname;
+	}
+
+	if(join_to == NULL) {
+		crm_err("No recipient for welcome message");
+		return;
+	}
+
+	g_hash_table_remove(confirmed_nodes,  join_to);
+	g_hash_table_remove(finalized_nodes,  join_to);
+	g_hash_table_remove(integrated_nodes, join_to);
+	g_hash_table_remove(welcomed_nodes,   join_to);
+
+	crm_online = g_hash_table_lookup(crmd_peer_state, join_to);
+	
+	if(safe_str_eq(crm_online, ONLINESTATUS)) {
+		HA_Message *offer = create_request(
+			CRM_OP_JOIN_OFFER, NULL, join_to,
+			CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);
+		char *join_offered = crm_itoa(current_join_id);
+		
+		ha_msg_add_int(offer, F_CRM_JOIN_ID, current_join_id);
+		/* send the welcome */
+		crm_debug("join-%d: Sending offer to %s",
+			  current_join_id, join_to);
+
+		send_msg_via_ha(fsa_cluster_conn, offer);
+
+		g_hash_table_insert(
+			welcomed_nodes, crm_strdup(join_to), join_offered);
+	} else {
+		crm_warn("Peer process on %s is not active", join_to);
+	}
+	
+}
 
 /*	 A_DC_JOIN_OFFER_ALL	*/
 enum crmd_fsa_input
@@ -65,18 +145,15 @@ do_dc_join_offer_all(long long action,
 	 */
 	do_update_cib_nodes(NULL, TRUE);
 	
-	crm_info("0) Offering membership to %d clients",
-		  fsa_membership_copy->members_size);
-	
-	initialize_join(TRUE);
 	current_join_id++;
+	initialize_join(TRUE);
 	
 	g_hash_table_foreach(
-		fsa_membership_copy->members, join_send_offer, NULL);
+		fsa_membership_copy->members, join_make_offer, NULL);
 	
 	/* dont waste time by invoking the PE yet; */
-	crm_debug("1) Waiting on %d outstanding join acks",
-		  g_hash_table_size(welcomed_nodes));
+	crm_info("join-%d: Waiting on %d outstanding join acks",
+		 current_join_id, g_hash_table_size(welcomed_nodes));
 
 	return I_NULL;
 }
@@ -111,18 +188,18 @@ do_dc_join_offer_one(long long action,
 		crm_debug("Re-offering membership to %s...", join_to);
 	}
 
-	crm_info("Processing annouce request from %s in state %s",
-		 join_to, fsa_state2string(cur_state));
+	crm_info("join-%d: Processing annouce request from %s in state %s",
+		 current_join_id, join_to, fsa_state2string(cur_state));
 
 	/* always offer to the DC (ourselves)
 	 * this ensures the correct value for max_generation_from
 	 */
 	member.node_uname = crm_strdup(fsa_our_uname);
-	join_send_offer(NULL, &member, NULL);
+	join_make_offer(NULL, &member, NULL);
 	crm_free(member.node_uname);
 	
 	member.node_uname = crm_strdup(join_to);
-	join_send_offer(NULL, &member, NULL);
+	join_make_offer(NULL, &member, NULL);
 	crm_free(member.node_uname);
 	
 	/* this was a genuine join request, cancel any existing
@@ -133,15 +210,15 @@ do_dc_join_offer_one(long long action,
 	}
 	
 	/* dont waste time by invoking the pe yet; */
-	crm_debug("1) Waiting on %d outstanding join acks",
-		  g_hash_table_size(welcomed_nodes));
+	crm_debug("Waiting on %d outstanding join acks for join-%d",
+		  g_hash_table_size(welcomed_nodes), current_join_id);
 	
 	return I_NULL;
 }
 
 /*	 A_DC_JOIN_PROCESS_REQ	*/
 enum crmd_fsa_input
-do_dc_join_req(long long action,
+do_dc_join_filter_offer(long long action,
 	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
 	       enum crmd_fsa_input current_input,
@@ -160,7 +237,7 @@ do_dc_join_req(long long action,
 	gpointer join_node =
 		g_hash_table_lookup(fsa_membership_copy->members, join_from);
 
-	crm_debug_3("2) Processing req from %s", join_from);
+	crm_debug("Processing req from %s", join_from);
 	
 	generation = join_ack->xml;
 	ha_msg_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id);
@@ -176,7 +253,7 @@ do_dc_join_req(long long action,
 		ack_nack_bool = FALSE;
 
 	} else if(join_id != current_join_id) {
-		crm_debug("Response from %s was for invalid join: %d vs. %d",
+		crm_debug("Invalid response from %s: join-%d vs. join-%d",
 			  join_from, join_id, current_join_id);
 		check_join_state(cur_state, __FUNCTION__);
 		return I_NULL;
@@ -199,25 +276,26 @@ do_dc_join_req(long long action,
 	if(ack_nack_bool == FALSE) {
 		/* NACK this client */
 		ack_nack = CRMD_STATE_INACTIVE;
-		crm_err("2) NACK'ing node %s (ref %s)", join_from, ref);
+		crm_err("join-%d: NACK'ing node %s (ref %s)",
+			join_id, join_from, ref);
 	} else {
-		crm_debug("2) Welcoming node %s after ACK (ref %s)",
-			  join_from, ref);
+		crm_debug("join-%d: Welcoming node %s (ref %s)",
+			  join_id, join_from, ref);
 	}
 	
 	/* add them to our list of CRMD_STATE_ACTIVE nodes */
 	g_hash_table_insert(
 		integrated_nodes, crm_strdup(join_from), crm_strdup(ack_nack));
 
-	crm_debug_2("%u nodes have been integrated",
-		    g_hash_table_size(integrated_nodes));
+	crm_debug("%u nodes have been integrated into join-%d",
+		    g_hash_table_size(integrated_nodes), join_id);
 	
 	g_hash_table_remove(welcomed_nodes, join_from);
 
 	if(check_join_state(cur_state, __FUNCTION__) == FALSE) {
 		/* dont waste time by invoking the PE yet; */
-		crm_debug_2("Still waiting on %d outstanding join acks",
-			    g_hash_table_size(welcomed_nodes));
+		crm_debug("join-%d: Still waiting on %d outstanding offers",
+			  join_id, g_hash_table_size(welcomed_nodes));
 	}
 	return I_NULL;
 }
@@ -239,11 +317,11 @@ do_dc_join_finalize(long long action,
 	 *  while we compute the latest CIB
 	 */
 #if JOIN_AFTER_SYNC
-	crm_debug("Finializing join for %d clients",
-		  g_hash_table_size(integrated_nodes));
+	crm_debug("Finializing join-%d for %d clients",
+		  current_join_id, g_hash_table_size(integrated_nodes));
 #else
-	crm_debug("Notifying %d clients of join results",
-		  g_hash_table_size(integrated_nodes));
+	crm_debug("Notifying %d clients of join-%d results",
+		  g_hash_table_size(integrated_nodes), current_join_id);
 	g_hash_table_foreach_remove(
 		integrated_nodes, finalize_join_for, NULL);
 #endif
@@ -255,8 +333,8 @@ do_dc_join_finalize(long long action,
 	
 	if(is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
 		/* ask for the agreed best CIB */
-		crm_info("Asking %s for its copy of the CIB",
-			 crm_str(max_generation_from));
+		crm_info("join-%d: Asking %s for its copy of the CIB",
+			 current_join_id, crm_str(max_generation_from));
 		crm_log_xml_debug(max_generation_xml, "Requesting version");
 		
 		set_bit_inplace(fsa_input_register, R_CIB_ASKED);
@@ -336,8 +414,8 @@ finalize_join(const char *caller)
 	/* make sure dc_uuid is re-set to us */
 	
 	if(check_join_state(fsa_state, caller) == FALSE) {
-		crm_debug("Notifying %d clients of join results",
-			  g_hash_table_size(integrated_nodes));
+		crm_debug("Notifying %d clients of join-%d results",
+			  g_hash_table_size(integrated_nodes), current_join_id);
 		g_hash_table_foreach_remove(
 			integrated_nodes, finalize_join_for, NULL);
 	}
@@ -345,30 +423,6 @@ finalize_join(const char *caller)
 	check_join_state(cur_state, caller);
 	rc = fsa_cib_conn->cmds->sync(fsa_cib_conn, NULL, cib_quorum_override);
 #endif
-}
-
-
-/*	A_DC_JOIN_PROCESS_ACK	*/
-enum crmd_fsa_input
-do_dc_join_ack(long long action,
-	       enum crmd_fsa_cause cause,
-	       enum crmd_fsa_state cur_state,
-	       enum crmd_fsa_input current_input,
-	       fsa_data_t *msg_data)
-{
-	ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
-	const char *join_from  = cl_get_string(join_ack->msg, F_CRM_HOST_FROM);
-	const char *op         = cl_get_string(join_ack->msg, F_CRM_TASK);
-
-	if(safe_str_neq(op, CRM_OP_JOIN_CONFIRM)) {
-		crm_debug("Ignoring op=%s message", op);
-
-	} else {
-		int join_id = -1;
-		ha_msg_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id);
-		process_join_ack_msg(join_from, join_ack->xml, join_id);
-	}
-	return I_NULL;
 }
 
 static void
@@ -381,18 +435,38 @@ join_update_complete_callback(const HA_Message *msg, int call_id, int rc,
 		check_join_state(fsa_state, __FUNCTION__);
 
 	} else {
-		crm_err("Join update failed");
+		crm_err("Join update %d failed", call_id);
 		crm_log_message(LOG_DEBUG, msg);
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
 }
 
-gboolean
-process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
+/*	A_DC_JOIN_PROCESS_ACK	*/
+enum crmd_fsa_input
+do_dc_join_ack(long long action,
+	       enum crmd_fsa_cause cause,
+	       enum crmd_fsa_state cur_state,
+	       enum crmd_fsa_input current_input,
+	       fsa_data_t *msg_data)
 {
-	/* now update them to "member" */
+	int join_id = -1;
 	int call_id = 0;
+	ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
+
+	const char *join_id_s  = NULL;
 	const char *join_state = NULL;
+	const char *op         = cl_get_string(join_ack->msg, F_CRM_TASK);
+	const char *join_from  = cl_get_string(join_ack->msg, F_CRM_HOST_FROM);
+
+	if(safe_str_neq(op, CRM_OP_JOIN_CONFIRM)) {
+		crm_debug("Ignoring op=%s message", op);
+		return I_NULL;
+	} 
+
+	ha_msg_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id);
+	join_id_s = ha_msg_value(join_ack->msg, F_CRM_JOIN_ID);
+
+	/* now update them to "member" */
 	
 	crm_debug_2("Processing ack from %s", join_from);
 
@@ -400,45 +474,48 @@ process_join_ack_msg(const char *join_from, crm_data_t *lrm_update, int join_id)
 		g_hash_table_lookup(finalized_nodes, join_from);
 	
 	if(join_state == NULL) {
-		crm_err("Join not in progress: ignoring join from %s",
-			join_from);
-		return FALSE;
+		crm_err("Join not in progress: ignoring join-%d from %s",
+			join_id, join_from);
+		return I_NULL;
 		
 	} else if(safe_str_neq(join_state, CRMD_JOINSTATE_MEMBER)) {
 		crm_err("Node %s wasnt invited to join the cluster",join_from);
 		g_hash_table_remove(finalized_nodes, join_from);
-		return FALSE;
+		return I_NULL;
 		
 	} else if(join_id != current_join_id) {
-		crm_err("Node %s responded to an invalid join: %d vs. %d",
+		crm_err("Invalid response from %s: join-%d vs. join-%d",
 			join_from, join_id, current_join_id);
 		g_hash_table_remove(finalized_nodes, join_from);
-		return FALSE;
+		return I_NULL;
 	}
 
 	g_hash_table_remove(finalized_nodes, join_from);
 	
 	if(g_hash_table_lookup(confirmed_nodes, join_from) != NULL) {
-		crm_err("hash already contains confirmation from %s",join_from);
+		crm_err("join-%d: hash already contains confirmation from %s",
+			join_id, join_from);
 	}
 	
-	g_hash_table_insert(confirmed_nodes, crm_strdup(join_from),
-			    crm_strdup(CRMD_JOINSTATE_MEMBER));
+	g_hash_table_insert(
+		confirmed_nodes, crm_strdup(join_from), crm_strdup(join_id_s));
 
- 	crm_info("4) Updating node state to %s for %s",
- 		 CRMD_JOINSTATE_MEMBER, join_from);
+ 	crm_info("join-%d: Updating node state to %s for %s)",
+ 		 join_id, CRMD_JOINSTATE_MEMBER, join_from);
 
 	/* update CIB with the current LRM status from the node
 	 * We dont need to notify the TE of these updates, a transition will
 	 *   be started in due time
 	 */
 	call_id = fsa_cib_conn->cmds->update(
-		fsa_cib_conn, XML_CIB_TAG_STATUS, lrm_update, NULL,
+		fsa_cib_conn, XML_CIB_TAG_STATUS, join_ack->xml, NULL,
 		cib_scope_local|cib_quorum_override);
 
 	add_cib_op_callback(call_id, TRUE,NULL, join_update_complete_callback);
+ 	crm_debug("join-%d: Registered callback for LRM update %d",
+		  join_id, call_id);
 
-	return TRUE;
+	return I_NULL;	
 }
 
 gboolean
@@ -466,14 +543,14 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	
 	/* set the ack/nack */
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
-		crm_debug("3) ACK'ing join request %d from %s, state %s",
+		crm_debug("join-%d: ACK'ing join request from %s, state %s",
 			  current_join_id, join_to, join_state);
 		ha_msg_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_TRUE);
 		g_hash_table_insert(
 			finalized_nodes,
 			crm_strdup(join_to), crm_strdup(CRMD_JOINSTATE_MEMBER));
 	} else {
-		crm_warn("3) NACK'ing join request %d from %s, state %s",
+		crm_warn("join-%d: NACK'ing join request from %s, state %s",
 			 current_join_id, join_to, join_state);
 		
 		ha_msg_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_FALSE);
@@ -483,99 +560,17 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	return TRUE;
 }
 
-void
-initialize_join(gboolean before)
-{
-	/* clear out/reset a bunch of stuff */
-	crm_debug("Initializing join data");
-	
-	g_hash_table_destroy(welcomed_nodes);
-	g_hash_table_destroy(integrated_nodes);
-	g_hash_table_destroy(finalized_nodes);
-	g_hash_table_destroy(confirmed_nodes);
-
-	if(before) {
-		if(max_generation_from != NULL) {
-			crm_free(max_generation_from);
-			max_generation_from = NULL;
-		}
-		if(max_generation_xml != NULL) {
-			free_xml(max_generation_xml);
-			max_generation_xml = NULL;
-		}
-		clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
-		clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
-	}
-	
-	welcomed_nodes = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
-		g_hash_destroy_str, g_hash_destroy_str);
-	integrated_nodes = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
-		g_hash_destroy_str, g_hash_destroy_str);
-	finalized_nodes = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
-		g_hash_destroy_str, g_hash_destroy_str);
-	confirmed_nodes = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
-		g_hash_destroy_str, g_hash_destroy_str);
-}
-
-
-void
-join_send_offer(gpointer key, gpointer value, gpointer user_data)
-{
-	const char *join_to = NULL;
-	const char *crm_online = NULL;
-	const oc_node_t *member = (const oc_node_t*)value;
-
-	if(member != NULL) {
-		join_to = member->node_uname;
-	}
-
-	if(join_to == NULL) {
-		crm_err("No recipient for welcome message");
-		return;
-		
-	}
-
-	g_hash_table_remove(confirmed_nodes,  join_to);
-	g_hash_table_remove(finalized_nodes,  join_to);
-	g_hash_table_remove(integrated_nodes, join_to);
-	g_hash_table_remove(welcomed_nodes,   join_to);
-
-	crm_online = g_hash_table_lookup(crmd_peer_state, join_to);
-	
-	if(safe_str_eq(crm_online, ONLINESTATUS)) {
-		HA_Message *offer = create_request(
-			CRM_OP_JOIN_OFFER, NULL, join_to,
-			CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);
-
-		ha_msg_add_int(offer, F_CRM_JOIN_ID, current_join_id);
-		/* send the welcome */
-		crm_debug("Sending %s(%d) to %s",
-			  CRM_OP_JOIN_OFFER, current_join_id, join_to);
-
-		send_msg_via_ha(fsa_cluster_conn, offer);
-
-		g_hash_table_insert(welcomed_nodes, crm_strdup(join_to),
-				    crm_strdup(CRMD_JOINSTATE_PENDING));
-	} else {
-		crm_err("Peer process on %s is not active", join_to);
-	}
-	
-}
-
 gboolean
 check_join_state(enum crmd_fsa_state cur_state, const char *source)
 {
-	crm_debug_2("Invoked by %s in state: %s",
+	crm_debug("Invoked by %s in state: %s",
 		  source, fsa_state2string(cur_state));
 
 	if(cur_state == S_INTEGRATION) {
 		if(g_hash_table_size(welcomed_nodes) == 0) {
-			crm_debug("Integration of %d peers complete: %s",
-				 g_hash_table_size(integrated_nodes), source);
+			crm_debug("join-%d: Integration of %d peers complete: %s",
+				  current_join_id,
+				  g_hash_table_size(integrated_nodes), source);
 			register_fsa_input_before(
 				C_FSA_INTERNAL, I_INTEGRATED, NULL);
 			return TRUE;
@@ -583,31 +578,35 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 
 	} else if(cur_state == S_FINALIZE_JOIN) {
 		if(is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
-			crm_debug("Delaying I_FINALIZED until we have the CIB");
+			crm_debug("join-%d: Delaying I_FINALIZED until we have the CIB",
+				  current_join_id);
 			return TRUE;
 			
 		} else if(g_hash_table_size(integrated_nodes) == 0
-		   && g_hash_table_size(finalized_nodes) == 0) {
-			crm_debug("Join process complete: %s", source);
+			  && g_hash_table_size(finalized_nodes) == 0) {
+			crm_debug("join-%d complete: %s",
+				  current_join_id, source);
 			register_fsa_input_later(
 				C_FSA_INTERNAL, I_FINALIZED, NULL);
 			
 		} else if(g_hash_table_size(integrated_nodes) != 0
 			  && g_hash_table_size(finalized_nodes) != 0) {
-			crm_err("Waiting on %d integrated nodes"
+			crm_err("join-%d: Waiting on %d integrated nodes"
 				" AND %d confirmations",
+				current_join_id,
 				g_hash_table_size(integrated_nodes),
 				g_hash_table_size(finalized_nodes));
 
 		} else if(g_hash_table_size(integrated_nodes) != 0) {
-			crm_debug("Still waiting on %d integrated nodes",
+			crm_debug("join-%d: Still waiting on %d integrated nodes",
+				  current_join_id,
 				  g_hash_table_size(integrated_nodes));
 			
 		} else if(g_hash_table_size(finalized_nodes) != 0) {
-			crm_debug_2("Still waiting on %d confirmations",
+			crm_debug("join-%d: Still waiting on %d confirmations",
+				  current_join_id,
 				  g_hash_table_size(finalized_nodes));
 		}
-		
 	}
 	
 	return FALSE;
