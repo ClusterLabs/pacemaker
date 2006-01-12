@@ -172,7 +172,7 @@ function start_node() {
     fi
 
     do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 20 \
-	-s "${srch_node}crmd(.*) info:(.*)FSA Hostname: ${ha_node}" \
+	-s "${srch_node}crmd(.*) info:(.*)Hostname: ${ha_node}" \
 	-s "${srch_node}crmd(.*)State transition S_STARTING \-> S_PENDING"
     cts_assert "CRMd startup on ${ha_node} failed."
 }
