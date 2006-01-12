@@ -814,7 +814,8 @@ do_lrm_invoke(long long action,
 		/* only the first 16 chars are used by the LRM */
 		strncpy(rid, id_from_cib, 64);
 		rid[63] = 0;
-		
+
+		crm_debug_2("Retrieving %s from the LRM.", rid);
 		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
 
 		if(safe_str_eq(operation, CRMD_ACTION_CANCEL)) {
@@ -990,9 +991,8 @@ send_direct_ack(lrm_op_t* op, const char *rsc_id)
 	
 	crm_info("ACK'ing resource op: %s for %s", op->op_type, op->rsc_id);
 	
-	update = create_xml_node(NULL, XML_CIB_TAG_STATE);
-	set_uuid(fsa_cluster_conn, update, XML_ATTR_UUID, fsa_our_uname);
-	crm_xml_add(update,  XML_ATTR_UNAME, fsa_our_uname);
+	update = create_node_state(
+		fsa_our_uname, NULL, NULL, NULL, NULL, NULL, FALSE, __FUNCTION__);
 
 	iter = create_xml_node(update, XML_CIB_TAG_LRM);
 	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCES);
@@ -1322,9 +1322,8 @@ do_update_resource(lrm_op_t* op)
 		return;
 	}
 
-	update = create_xml_node(NULL, XML_CIB_TAG_STATE);
-	set_uuid(fsa_cluster_conn, update, XML_ATTR_UUID, fsa_our_uname);
-	crm_xml_add(update,  XML_ATTR_UNAME, fsa_our_uname);
+	update = create_node_state(
+		fsa_our_uname, NULL, NULL, NULL, NULL, NULL, FALSE, __FUNCTION__);
 
 	iter = create_xml_node(update, XML_CIB_TAG_LRM);
 	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCES);
