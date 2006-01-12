@@ -246,11 +246,14 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 gboolean
 lrm_dispatch(IPC_Channel *src_not_used, gpointer user_data)
 {
-	int num_msgs = 0;
+	/* ?? src == lrm_channel ?? */
 	ll_lrm_t *lrm = (ll_lrm_t*)user_data;
+	IPC_Channel *lrm_channel = lrm->lrm_ops->ipcchan(lrm);
+
 	crm_debug_3("received callback");
-	num_msgs = lrm->lrm_ops->rcvmsg(lrm, FALSE);
-	if(num_msgs < 1) {
+	lrm->lrm_ops->rcvmsg(lrm, FALSE);
+
+	if(lrm_channel->ops->get_chan_status(lrm_channel) != IPC_CONNECT) {
 		if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
 			crm_err("LRM Connection failed");
 			register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
