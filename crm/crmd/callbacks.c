@@ -253,7 +253,7 @@ lrm_dispatch(IPC_Channel *src_not_used, gpointer user_data)
 	crm_debug_3("received callback");
 	lrm->lrm_ops->rcvmsg(lrm, FALSE);
 
-	if(lrm_channel->ops->get_chan_status(lrm_channel) != IPC_CONNECT) {
+	if(lrm_channel->ch_status != IPC_CONNECT) {
 		if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
 			crm_err("LRM Connection failed");
 			register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
