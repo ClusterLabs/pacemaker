@@ -81,8 +81,6 @@ do_cl_join_announce(long long action,
 		return I_NULL;
 	}
 
-	crm_err("Called?  Operational=%d", AM_I_OPERATIONAL);
-
 	if(AM_I_OPERATIONAL) {
 		const char *hb_from = cl_get_string(
 			input->msg, F_CRM_HOST_FROM);
@@ -148,13 +146,15 @@ do_cl_join_offer_respond(long long action,
 		return I_NULL;
 	} 
 #endif
-	crm_debug("Processing join offer: join-%s",
-		  cl_get_string(input->msg, F_CRM_TASK));
 
+	crm_debug("Accepting join offer: join-%s",
+		  cl_get_string(input->msg, F_CRM_JOIN_ID));
+	
 	/* we only ever want the last one */
 	if(query_call_id > 0) {
 		crm_debug("Cancelling previous join query: %d", query_call_id);
 		remove_cib_op_callback(query_call_id, FALSE);
+		query_call_id = 0;
 	}
 
 	if(fsa_our_dc == NULL) {
@@ -274,16 +274,18 @@ do_cl_join_finalize_respond(long long action,
 	crm_debug_2("Discovering local LRM status");
 	tmp1 = do_lrm_query(TRUE);
 	if(tmp1 != NULL) {
-		const char *join_id = ha_msg_value(input->msg, F_CRM_JOIN_ID);
 		HA_Message *reply = create_request(
 			CRM_OP_JOIN_CONFIRM, tmp1, fsa_our_dc,
 			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
-		ha_msg_add(reply, F_CRM_JOIN_ID, join_id);
+		ha_msg_add_int(reply, F_CRM_JOIN_ID, join_id);
 		
-		crm_debug_2("Sending local LRM status");
+		crm_debug("join-%d: Join complete.  Sending local LRM status.",
+			join_id);
 		send_msg_via_ha(fsa_cluster_conn, reply);
 		if(AM_I_DC == FALSE) {
-			register_fsa_input(cause, I_NOT_DC, NULL);
+/* 			register_fsa_input_adv(cause, I_NOT_DC, NULL, */
+/* 					       A_NOTHING, FALSE, __FUNCTION__); */
+ 			register_fsa_input(cause, I_NOT_DC, NULL);
 		}
 		free_xml(tmp1);
 		
