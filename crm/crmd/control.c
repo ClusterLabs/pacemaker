@@ -128,7 +128,7 @@ do_shutdown(long long action,
 		}
 	}
 
-	crm_info("Stopping all remaining local resources");
+	crm_debug_2("Stopping all remaining local resources");
 	if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
 		stop_all_resources();
 	} else {
@@ -314,6 +314,22 @@ do_startup(long long action,
 		finalization_timer->fsa_input = I_FINALIZED;
 		finalization_timer->callback = crm_timer_popped;
 		finalization_timer->repeat = FALSE;
+#if 0
+		/* for possible enabling... a bug in the join protocol left
+		 *    a slave in S_PENDING while we think its in S_NOT_DC
+		 *
+		 * raising I_FINALIZED put us into a transition loop which is
+		 *    never resolved.
+		 * in this loop we continually send probes which the node NACK's because
+		 *    its in S_PENDING
+		 *
+		 * the flip-side is if we have nodes where heartbeat is active but the
+		 *    CRM is not... then we'll be stuck in an election/join loop
+		 *
+		 * we just cant win
+		 */
+		finalization_timer->fsa_input = I_ELECTION;
+#endif		
 	} else {
 		was_error = TRUE;
 	}

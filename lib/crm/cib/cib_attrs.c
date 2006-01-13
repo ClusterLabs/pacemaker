@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.10 2005/12/19 16:56:05 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.11 2006/01/13 10:31:14 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -83,7 +83,7 @@ update_attr(cib_t *the_cib, int call_options,
 		return cib_NOSECTION;
 	}
 	
-	crm_debug("Creating %s/%s", section, tag);
+	crm_debug_2("Creating %s/%s", section, tag);
 	if(tag != NULL) {
 		xml_obj = create_xml_node(xml_obj, tag);
 		crm_xml_add(xml_obj, XML_ATTR_ID, node_uuid);
@@ -110,7 +110,7 @@ update_attr(cib_t *the_cib, int call_options,
 	
 	fragment = create_cib_fragment(xml_top, section);
 	crm_log_xml_debug_2(xml_top, "Update");
-	crm_log_xml_debug(fragment, "Update Fragment");
+	crm_log_xml_debug_3(fragment, "Update Fragment");
 	
 	free_xml(xml_top);
 	

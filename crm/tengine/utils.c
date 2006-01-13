@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.47 2006/01/11 13:06:11 andrew Exp $ */
+/* $Id: utils.c,v 1.48 2006/01/13 10:31:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -334,15 +334,16 @@ print_action(const char *prefix, action_t *action, int log_level)
 			break;
 		case action_type_rsc:
 			do_crm_log(log_level, __FILE__, __FUNCTION__,
-				   "%s\tResource Op: %s/%s on %s (%s)", prefix,
+				   "%s\tResource Op: %s/%s on %s", prefix,
 				   crm_element_value(
 					   action->xml, XML_LRM_ATTR_RSCID),
 				   crm_element_value(
 					   action->xml, XML_LRM_ATTR_TASK),
 				   crm_element_value(
 					   action->xml, XML_LRM_ATTR_TARGET),
-				   crm_element_value(
-					   action->xml, XML_LRM_ATTR_TARGET_UUID));
+/* 				   crm_element_value( */
+/* 					   action->xml, XML_LRM_ATTR_TARGET_UUID) */
+				);
 			break;
 		case action_type_crm:	
 			do_crm_log(log_level, __FILE__, __FUNCTION__,

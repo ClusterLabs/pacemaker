@@ -916,7 +916,7 @@ construct_op(crm_data_t *rsc_op, const char *rsc_id, const char *operation)
 				    crm_strdup(XML_ATTR_CRM_VERSION),
 				    crm_strdup(CRM_FEATURE_SET));
 
-		crm_debug("Constructed %s op for %s", operation, rsc_id);
+		crm_debug_2("Constructed %s op for %s", operation, rsc_id);
 		return op;
 	}
 
@@ -967,8 +967,8 @@ construct_op(crm_data_t *rsc_op, const char *rsc_id, const char *operation)
  		CRM_DEV_ASSERT(interval_s == NULL);
 	}
 
-	crm_debug("Constructed %s op for %s: interval=%d",
-		  operation, rsc_id, op->interval);	
+	crm_debug_2("Constructed %s op for %s: interval=%d",
+		    operation, rsc_id, op->interval);	
 	
 	return op;
 }

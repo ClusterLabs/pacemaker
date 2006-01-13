@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.60 2005/12/19 16:54:43 andrew Exp $ */
+/* $Id: messages.c,v 1.61 2006/01/13 10:31:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -441,9 +441,9 @@ cib_process_diff(
 		result = cib_diff_failed;
 
 	} else if(apply_diff) {
-		crm_debug("Diff %d.%d.%d -> %d.%d.%d was applied",
-			diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
-			diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
+		crm_debug_2("Diff %d.%d.%d -> %d.%d.%d was applied",
+			    diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
+			    diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
 	}
 
 	if(do_resync && cib_is_master == FALSE) {

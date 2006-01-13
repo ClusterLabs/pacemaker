@@ -38,19 +38,51 @@
 
 #include <crm/dmalloc_wrapper.h>
 
+longclock_t action_start = 0;
+longclock_t action_stop = 0;
+longclock_t action_diff = 0;
+unsigned int action_diff_ms = 0;
+
+char	*fsa_our_dc = NULL;
+cib_t	*fsa_cib_conn = NULL;
+char	*fsa_our_dc_version = NULL;
+
+ll_lrm_t	*fsa_lrm_conn;
+ll_cluster_t	*fsa_cluster_conn;
+oc_node_list_t	*fsa_membership_copy;
+const char	*fsa_our_uuid = NULL;
+const char	*fsa_our_uname = NULL;
+
+fsa_timer_t *wait_timer = NULL;
+fsa_timer_t *dc_heartbeat = NULL;
+fsa_timer_t *recheck_timer = NULL;
+fsa_timer_t *shutdown_timer = NULL;
+fsa_timer_t *election_trigger = NULL;
+fsa_timer_t *election_timeout = NULL;
+fsa_timer_t *integration_timer = NULL;
+fsa_timer_t *finalization_timer = NULL;
+fsa_timer_t *shutdown_escalation_timer = NULL;
+
+volatile gboolean do_fsa_stall = FALSE;
+volatile long long fsa_input_register = 0;
+volatile long long fsa_actions = A_NOTHING;
+volatile enum crmd_fsa_state fsa_state = S_STARTING;
+
 extern uint highest_born_on;
-extern int num_join_invites;
+extern uint num_join_invites;
 extern GHashTable *welcomed_nodes;
-extern GHashTable *integrated_nodes;
 extern GHashTable *finalized_nodes;
 extern GHashTable *confirmed_nodes;
+extern GHashTable *integrated_nodes;
 extern void initialize_join(gboolean before);
 
-long long
-do_state_transition(long long actions,
-		    enum crmd_fsa_state cur_state,
-		    enum crmd_fsa_state next_state,
-		    fsa_data_t *msg_data);
+#define DOT_PREFIX "actions:trace: "
+#define do_dot_log(fmt...)     do_crm_log(LOG_DEBUG_2, NULL, NULL, fmt)
+
+long long do_state_transition(long long actions,
+			      enum crmd_fsa_state cur_state,
+			      enum crmd_fsa_state next_state,
+			      fsa_data_t *msg_data);
 
 long long clear_flags(long long actions,
 			     enum crmd_fsa_cause cause,
@@ -63,23 +95,10 @@ void dump_rsc_info_callback(const HA_Message *msg, int call_id, int rc,
 
 void ghash_print_node(gpointer key, gpointer value, gpointer user_data);
 
-#define DOT_PREFIX "live.dot: "
-#define do_dot_log(fmt...)     do_crm_log(LOG_DEBUG_2, NULL, NULL, fmt)
-
-
-longclock_t action_start = 0;
-longclock_t action_stop = 0;
-longclock_t action_diff = 0;
-unsigned int action_diff_ms = 0;
-
-
-
-/* #define ELSEIF_FSA_ACTION(x,y) else IF_FSA_ACTION(x,y) */
-void init_dotfile(void);
 void s_crmd_fsa_actions(fsa_data_t *fsa_data);
 void log_fsa_input(fsa_data_t *stored_msg);
 
-void
+static void
 init_dotfile(void)
 {
 	do_dot_log(DOT_PREFIX"digraph \"g\" {");
@@ -122,32 +141,6 @@ init_dotfile(void)
 	do_dot_log(DOT_PREFIX"	\"S_RELEASE_DC\" [ fontcolor = \"green\" ]");
 	do_dot_log(DOT_PREFIX"	\"S_IDLE\" [ fontcolor = \"green\" ]");
 }
-
-
-
-volatile enum crmd_fsa_state fsa_state = S_STARTING;
-oc_node_list_t *fsa_membership_copy;
-ll_cluster_t   *fsa_cluster_conn;
-ll_lrm_t       *fsa_lrm_conn;
-volatile long long       fsa_input_register;
-volatile long long       fsa_actions = A_NOTHING;
-const char     *fsa_our_uname = NULL;
-const char     *fsa_our_uuid = NULL;
-char	       *fsa_our_dc = NULL;
-char	       *fsa_our_dc_version = NULL;
-cib_t	*fsa_cib_conn = NULL;
-
-fsa_timer_t *election_trigger = NULL;		/*  */
-fsa_timer_t *election_timeout = NULL;		/*  */
-fsa_timer_t *shutdown_escalation_timer = NULL; /*  */
-fsa_timer_t *shutdown_timer = NULL;		/*  */
-fsa_timer_t *integration_timer = NULL;
-fsa_timer_t *finalization_timer = NULL;
-fsa_timer_t *dc_heartbeat = NULL;
-fsa_timer_t *wait_timer = NULL;
-fsa_timer_t *recheck_timer = NULL;
-
-volatile gboolean do_fsa_stall = FALSE;
 
 static void
 do_fsa_action(fsa_data_t *fsa_data, long long an_action,
@@ -247,6 +240,15 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		/* get the next batch of actions */
 		new_actions = crmd_fsa_actions[fsa_data->fsa_input][fsa_state];
 		fsa_actions |= new_actions;
+
+		if(fsa_data->fsa_input != I_NULL
+			&& fsa_data->fsa_input != I_ROUTER) {
+			crm_debug("Processing %s: [ state=%s cause=%s origin=%s ]",
+				  fsa_input2string(fsa_data->fsa_input),
+				  fsa_state2string(fsa_state),
+				  fsa_cause2string(fsa_data->fsa_cause),
+				  fsa_data->origin);
+		}
 #ifdef FSA_TRACE
 		if(new_actions != A_NOTHING) {
 			crm_debug_2("Adding FSA actions %.16llx for %s/%s",

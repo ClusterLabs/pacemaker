@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.84 2006/01/10 13:52:11 andrew Exp $ */
+/* $Id: stages.c,v 1.85 2006/01/13 10:31:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -451,7 +451,7 @@ stage8(pe_working_set_t *data_set)
 
 	transition_id++;
 	transition_id_s = crm_itoa(transition_id);
-	crm_info("Creating transition graph %d.", transition_id);
+	crm_debug("Creating transition graph %d.", transition_id);
 	
 	data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
 	crm_xml_add(data_set->graph, "global_timeout", data_set->transition_idle_timeout);
@@ -483,6 +483,7 @@ stage8(pe_working_set_t *data_set)
 		);
 
 	crm_log_xml_debug_3(data_set->graph, "created generic action list");
+	crm_info("Created transition graph %d.", transition_id);
 	
 	return TRUE;
 }

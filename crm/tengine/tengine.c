@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.108 2006/01/11 13:06:11 andrew Exp $ */
+/* $Id: tengine.c,v 1.109 2006/01/13 10:31:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -268,8 +268,7 @@ confirm_synapse(synapse_t *synapse, int action_id)
 		);
 
 	if(complete) {
-		crm_debug("Synapse %d complete (action=%d)",
-			  synapse->id, action_id);
+		crm_debug("Synapse %d complete", synapse->id);
 	}
 
 	return complete;
