@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.48 2006/01/13 10:31:14 andrew Exp $ */
+/* $Id: utils.c,v 1.49 2006/01/13 18:34:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -340,7 +340,7 @@ print_action(const char *prefix, action_t *action, int log_level)
 				   crm_element_value(
 					   action->xml, XML_LRM_ATTR_TASK),
 				   crm_element_value(
-					   action->xml, XML_LRM_ATTR_TARGET),
+					   action->xml, XML_LRM_ATTR_TARGET)
 /* 				   crm_element_value( */
 /* 					   action->xml, XML_LRM_ATTR_TARGET_UUID) */
 				);

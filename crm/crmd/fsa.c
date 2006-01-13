@@ -97,8 +97,9 @@ void ghash_print_node(gpointer key, gpointer value, gpointer user_data);
 
 void s_crmd_fsa_actions(fsa_data_t *fsa_data);
 void log_fsa_input(fsa_data_t *stored_msg);
+void init_dotfile(void);
 
-static void
+void
 init_dotfile(void)
 {
 	do_dot_log(DOT_PREFIX"digraph \"g\" {");
