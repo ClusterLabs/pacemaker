@@ -119,10 +119,15 @@ class LinuxHAv2(HeartbeatCM):
    <configuration>
      <crm_config>'''
         cib_options="""
-        <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="3m"/>
-        <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
-        <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="%d"/>
-        <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>""" % self.Env["SuppressCib"]
+        <nvpair id="c-pref-1" name="transition_idle_timeout" value="3m"/>
+        <nvpair id="c-pref-2" name="symetric_cluster" value="true"/>
+        <nvpair id="c-pref-3" name="suppress_cib_writes" value="%d"/>
+        <nvpair id="c-pref-4" name="short_resource_names" value="true"/>
+        <nvpair id="c-pref-5" name="stop_orphan_resources" value="false"/>
+        <nvpair id="c-pref-6" name="stop_orphan_actions" value="false"/>
+        <nvpair id="c-pref-7" name="remove_after_stop" value="false"/>
+        <nvpair id="c-pref-7" name="is_managed_default" value="true"/>
+        <nvpair id="c-pref-8" name="no_quorum_policy" value="stop"/>""" % self.Env["SuppressCib"]
             
         cib_glue_1='''
      </crm_config>
