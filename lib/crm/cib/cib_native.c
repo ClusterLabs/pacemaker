@@ -238,7 +238,7 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 	}
 	
 	if(rc == cib_ok) {
-		crm_info("Connection to CIB successful");
+		crm_debug("Connection to CIB successful");
 		return cib_ok;
 	}
 	crm_warn("Connection to CIB failed: %s", cib_error2string(rc));
@@ -251,7 +251,7 @@ cib_native_signoff(cib_t* cib)
 {
 	cib_native_opaque_t *native = cib->variant_opaque;
 
-	crm_info("Signing out of the CIB Service");
+	crm_debug("Signing out of the CIB Service");
 	
 	/* close channels */
 	if (native->command_channel != NULL) {
