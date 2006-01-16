@@ -109,7 +109,6 @@ do_shutdown(long long action,
 	
 	/* last attempt to shut these down */
 	if(is_set(fsa_input_register, R_PE_CONNECTED)) {
-		crm_warn("Last attempt to shutdown the PolicyEngine");
 		tmp = do_pe_control(A_PE_STOP, cause, cur_state,
 				    current_input, msg_data);
 		if(tmp != I_NULL) {
@@ -119,7 +118,6 @@ do_shutdown(long long action,
 	}
 
 	if(is_set(fsa_input_register, R_TE_CONNECTED)) {
-		crm_warn("Last attempt to shutdown the Transitioner");
 		tmp = do_pe_control(A_TE_STOP, cause, cur_state,
 				    current_input, msg_data);
 		if(tmp != I_NULL) {
@@ -131,6 +129,7 @@ do_shutdown(long long action,
 	crm_debug_2("Stopping all remaining local resources");
 	if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
 		stop_all_resources();
+
 	} else {
 		crm_err("Exiting with no LRM connection..."
 			" resources may be active!");

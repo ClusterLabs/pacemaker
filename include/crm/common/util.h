@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.26 2005/10/25 13:52:40 andrew Exp $ */
+/* $Id: util.h,v 1.27 2006/01/16 09:19:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -44,20 +44,14 @@ extern char *crm_itoa(int an_int);
 
 extern char *crm_strdup(const char *a);
 
-extern char *generate_hash_key(const char *crm_msg_reference,
-			       const char *sys);
+extern char *generate_hash_key(const char *crm_msg_reference, const char *sys);
 
-extern char *generate_hash_value(const char *src_node,
-				 const char *src_subsys);
+extern char *generate_hash_value(const char *src_node, const char *src_subsys);
 
-extern gboolean decode_hash_value(gpointer value,
-				  char **node,
-				  char **subsys);
+extern gboolean decode_hash_value(gpointer value, char **node, char **subsys);
 
 extern gboolean decodeNVpair(const char *srcstring,
-		      char separator,
-		      char **name,
-		      char **value);
+			     char separator, char **name, char **value);
 
 extern int compare_version(const char *version1, const char *version2);
 

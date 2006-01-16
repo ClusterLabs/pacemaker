@@ -98,7 +98,8 @@ register_fsa_input_adv(
 	
 	if(input == I_WAIT_FOR_EVENT) {
 		do_fsa_stall = TRUE;
-		crm_debug("Stalling the FSA pending further input");
+		crm_debug("Stalling the FSA pending further input: cause=%s",
+			  fsa_cause2string(cause));
 		if(old_len > 0) {
 			crm_warn("%s stalled the FSA with pending inputs",
 				raised_from);
@@ -410,7 +411,10 @@ do_msg_route(long long action,
 				break;
 			case I_CIB_OP:
 				break;
-				
+/* 			case I_JOIN_OFFER: */
+/* 				break; */
+/* 			case I_JOIN_RESULT: */
+/* 				break; */
 				/* what else should go here? */
 			default:
 				crm_debug_4("Defering local processing of message");
@@ -852,9 +856,13 @@ handle_request(ha_msg_input_t *stored_msg)
 
 	} else if(strcmp(op, CRM_OP_JOIN_OFFER) == 0) {
 		next_input = I_JOIN_OFFER;
+		crm_debug("Raising I_JOIN_OFFER: join-%s",
+			  cl_get_string(stored_msg->msg, F_CRM_JOIN_ID));
 				
 	} else if(strcmp(op, CRM_OP_JOIN_ACKNAK) == 0) {
 		next_input = I_JOIN_RESULT;
+		crm_debug("Raising I_JOIN_RESULT: join-%s",
+			  cl_get_string(stored_msg->msg, F_CRM_JOIN_ID));
 
 	} else if(strcmp(op, CRM_OP_LRM_DELETE) == 0
 		|| strcmp(op, CRM_OP_LRM_REFRESH) == 0

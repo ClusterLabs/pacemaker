@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.30 2006/01/09 21:18:32 andrew Exp $ */
+/* $Id: utils.c,v 1.31 2006/01/16 09:19:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -750,12 +750,12 @@ crm_set_env_options(void)
 	
 	param_name = ENV_PREFIX "" KEY_DEBUGLEVEL;
 	param_val = getenv(param_name);
-	crm_debug("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		int debug_level = crm_parse_int(param_val, NULL);
 		if(debug_level > 0 && (debug_level+LOG_INFO) > (int)crm_log_level) {
 			set_crm_log_level(LOG_INFO + debug_level);
 		}
+		crm_debug("%s = %s", param_name, param_val);
 		param_val = NULL;
 	}
 
@@ -817,8 +817,6 @@ crm_set_env_options(void)
 	}
 	
 	inherit_compress();
-	
-	
 }
 
 gboolean

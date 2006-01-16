@@ -249,7 +249,16 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 				  fsa_state2string(fsa_state),
 				  fsa_cause2string(fsa_data->fsa_cause),
 				  fsa_data->origin);
+
+		} else if(fsa_actions == A_EXIT_0) {
+			/* temporary error */
+			crm_err("Processing %s: [ state=%s cause=%s origin=%s ]",
+				  fsa_input2string(fsa_data->fsa_input),
+				  fsa_state2string(fsa_state),
+				  fsa_cause2string(fsa_data->fsa_cause),
+				  fsa_data->origin);
 		}
+		
 #ifdef FSA_TRACE
 		if(new_actions != A_NOTHING) {
 			crm_debug_2("Adding FSA actions %.16llx for %s/%s",
@@ -442,10 +451,10 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 			do_fsa_action(fsa_data, A_MSG_ROUTE,		do_msg_route);
 		} else if(is_set(fsa_actions, A_RECOVER)) {
 			do_fsa_action(fsa_data, A_RECOVER,		do_recover);
-		} else if(is_set(fsa_actions, A_CL_JOIN_REQUEST)) {
-			do_fsa_action(fsa_data, A_CL_JOIN_REQUEST,	do_cl_join_offer_respond);
 		} else if(is_set(fsa_actions, A_CL_JOIN_RESULT)) {
 			do_fsa_action(fsa_data, A_CL_JOIN_RESULT,	do_cl_join_finalize_respond);
+		} else if(is_set(fsa_actions, A_CL_JOIN_REQUEST)) {
+			do_fsa_action(fsa_data, A_CL_JOIN_REQUEST,	do_cl_join_offer_respond);
 		} else if(is_set(fsa_actions, A_SHUTDOWN_REQ)) {
 			do_fsa_action(fsa_data, A_SHUTDOWN_REQ,		do_shutdown_req);
 		} else if(is_set(fsa_actions, A_ELECTION_VOTE)) {
