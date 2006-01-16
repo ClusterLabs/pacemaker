@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.92 2006/01/12 16:14:50 andrew Exp $ */
+/* $Id: callbacks.c,v 1.93 2006/01/16 09:18:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -901,9 +901,8 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 		
 		cib_post_notify(call_options, op, input, rc, the_cib);
 		cib_diff_notify(call_options, op, input, rc, local_diff);
-/* 		log_xml_diff(rc==cib_ok?LOG_DEBUG:LOG_INFO, local_diff, "cib:diff"); */
-		/* because too much depends on what is in here... */
-		log_xml_diff(LOG_INFO, local_diff, "cib:diff");
+ 		log_xml_diff(rc==cib_ok?cib_diff_loglevel:cib_diff_loglevel-1,
+			     local_diff, "cib:diff");
 
 	} else if(result_cib != NULL) {
 		crm_err("%s call modified the CIB", op);
@@ -1124,8 +1123,8 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 		keep_connection = FALSE;
 		
 	} else if(channel->ch_status == IPC_DISCONNECT && cib_client != NULL) {
-		crm_debug("Cleaning up after client disconnect: %s/%s",
-			  crm_str(cib_client->name), cib_client->channel_name);
+		crm_debug_2("Cleaning up after client disconnect: %s/%s",
+			    crm_str(cib_client->name),cib_client->channel_name);
 		
 		if(cib_client->id != NULL) {
 			g_hash_table_remove(client_list, cib_client->id);
