@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.14 2006/01/11 19:54:04 andrew Exp $ */
+/* $Id: ipc.c,v 1.15 2006/01/16 09:21:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -313,20 +313,18 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 	const char *sys_to;
 	const char *task;
 
-	while(sender->ops->is_message_pending(sender)) {
+	while(sender->ch_status == IPC_CONNECT
+	      && sender->ops->is_message_pending(sender)) {
+
 		gboolean process = FALSE;
-		if (sender->ch_status == IPC_DISCONNECT) {
-			/* The message which was pending for us is that
-			 * the IPC status is now IPC_DISCONNECT */
-			crm_debug("Channel is disconnected");
-			break;
-		}
 		if (sender->ops->recv(sender, &msg) != IPC_OK) {
-			perror("Receive failure:");
+			cl_perror("Receive failure from %d:",
+				  sender->farside_pid);
 			return !all_is_well;
 		}
 		if (msg == NULL) {
-			crm_err("No message this time");
+			crm_err("No message from %d this time",
+				sender->farside_pid);
 			continue;
 		}
 
@@ -397,7 +395,8 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 	
 	crm_debug_2("Processed %d messages", lpc);
 	if (sender->ch_status != IPC_CONNECT) {
-		crm_err("The server has left us: Shutting down...NOW");
+		crm_err("The server %d has left us: Shutting down...NOW",
+			sender->farside_pid);
 
 		exit(1); /* shutdown properly later */
 		

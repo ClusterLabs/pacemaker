@@ -526,7 +526,6 @@ cib_native_perform_op(
 gboolean
 cib_native_msgready(cib_t* cib)
 {
-	IPC_Channel *ch = NULL;
 	cib_native_opaque_t *native = NULL;
 	
 	if (cib == NULL) {
@@ -536,21 +535,42 @@ cib_native_msgready(cib_t* cib)
 
 	native = cib->variant_opaque;
 
-	ch = cib_native_channel(cib);
-	if (ch == NULL) {
-		crm_err("No channel");
+	if(native->command_channel != NULL) {
+		/* drain the channel */
+		IPC_Channel *cmd_ch = native->command_channel;
+		HA_Message *cmd_msg = NULL;
+		while(cmd_ch->ch_status != IPC_DISCONNECT
+		      && cmd_ch->ops->is_message_pending(cmd_ch)) {
+			/* we're not supposed to receive anything on
+			 *   this channel
+			 */
+			crm_err("Message pending on command channel [%d]",
+				cmd_ch->farside_pid);
+			cmd_msg = msgfromIPC_noauth(cmd_ch);
+			crm_log_message_adv(LOG_ERR, "cib:cmd", cmd_msg);
+			crm_msg_del(cmd_msg);
+		}
+
+	} else {
+		crm_err("No command channel");
+	}	
+
+	if(native->callback_channel == NULL) {
+		crm_err("No callback channel");
 		return FALSE;
+
+	} else if(native->callback_channel->ch_status == IPC_DISCONNECT) {
+		crm_info("Lost connection to the CIB service [%d].",
+			 native->callback_channel->farside_pid);
+		return FALSE;
+
+	} else if(native->callback_channel->ops->is_message_pending(
+			  native->callback_channel)) {
+		crm_debug_4("Message pending on command channel [%d]",
+			    native->callback_channel->farside_pid);
+		return TRUE;
 	}
 
-	if(native->command_channel->ops->is_message_pending(
-		   native->command_channel)) {
-		crm_debug_3("Message pending on command channel");
-	}
-	if(native->callback_channel->ops->is_message_pending(
-		   native->callback_channel)) {
-		crm_debug_4("Message pending on callback channel");
-		return TRUE;
-	} 
 	crm_debug_3("No message pending");
 	return FALSE;
 }
@@ -560,20 +580,35 @@ cib_native_rcvmsg(cib_t* cib, int blocking)
 {
 	const char *type = NULL;
 	struct ha_msg* msg = NULL;
-	IPC_Channel *ch = cib_native_channel(cib);
+	cib_native_opaque_t *native = NULL;
+	
+	if (cib == NULL) {
+		crm_err("No CIB!");
+		return FALSE;
+	}
 
+	native = cib->variant_opaque;
+	
 	/* if it is not blocking mode and no message in the channel, return */
 	if (blocking == 0 && cib_native_msgready(cib) == FALSE) {
 		crm_debug_3("No message ready and non-blocking...");
 		return 0;
 
 	} else if (cib_native_msgready(cib) == FALSE) {
-		crm_debug_3("Waiting for message from CIB service...");
-		ch->ops->waitin(ch);
+		crm_debug("Waiting for message from CIB service...");
+		if(native->callback_channel
+		   && native->callback_channel->ch_status != IPC_CONNECT) {
+			return 0;
+			
+		} else if(native->command_channel
+			  && native->command_channel->ch_status != IPC_CONNECT){
+			return 0;
+		}
+		native->callback_channel->ops->waitin(native->callback_channel);
 	}
 
 	/* IPC_INTR is not a factor here */
-	msg = msgfromIPC_noauth(ch);
+	msg = msgfromIPC_noauth(native->callback_channel);
 	if (msg == NULL) {
 		crm_warn("Received a NULL msg from CIB service.");
 		return 0;
@@ -698,6 +733,7 @@ cib_native_dispatch(IPC_Channel *channel, gpointer user_data)
 {
 	int lpc = 0;
 	cib_t *cib = user_data;
+	cib_native_opaque_t *native = NULL;
 
 	crm_debug_3("Received callback");
 
@@ -705,6 +741,8 @@ cib_native_dispatch(IPC_Channel *channel, gpointer user_data)
 		crm_err("user_data field must contain the CIB struct");
 		return FALSE;
 	}
+
+	native = cib->variant_opaque;
 	
 	while(cib_native_msgready(cib)) {
  		lpc++; 
@@ -716,8 +754,18 @@ cib_native_dispatch(IPC_Channel *channel, gpointer user_data)
 
 	crm_debug_3("%d CIB messages dispatched", lpc);
 
-	if (channel && (channel->ch_status != IPC_CONNECT)) {
-		crm_crit("Lost connection to the CIB service.");
+	if(native->callback_channel
+	   && native->callback_channel->ch_status != IPC_CONNECT) {
+		crm_crit("Lost connection to the CIB service [%d/callback].",
+			channel->farside_pid);
+		G_main_del_IPC_Channel(native->callback_source);
+		return FALSE;
+
+	} else if(native->command_channel
+		  && native->command_channel->ch_status != IPC_CONNECT) {
+		crm_crit("Lost connection to the CIB service [%d/command].",
+			channel->farside_pid);
+
 		return FALSE;
 	}
 
