@@ -31,10 +31,24 @@ using_ocf = 1
 using_mon = 1
 
 ocf_ra_setting = {
-	"apache" :{"params":["configfile"],"time":["120s","60s"]},
-	"IPaddr" :{"params":["ip","netmask","nic","broadcast"],"time":["5s","5s"]},
-	"IPaddr2":{"params":["ip","netmask","nic","broadcast"],"time":["5s","5s"]},
-	"db2"    :{"params":["instance"],"time":["120s","60s"]}
+	"apache"    :{"params":["configfile"],"time":["120s","60s"]},
+	"IPaddr"    :{"params":["ip","netmask","nic","broadcast"],"time":["5s","5s"]},
+	"IPaddr2"   :{"params":["ip","netmask","nic","broadcast"],"time":["5s","5s"]},
+	"db2"       :{"params":["instance"],"time":["120s","60s"]},
+	"AudibleAlarm":{"params":["nodelist"],"time":["120s","60s"]},
+	"Delay"     :{"params":["delay","stopdelay"],"time":["120s","60s"]},
+	"Filesystem":{"params":["device","directory","fstype","options"],"time":["120s","60s"]},
+	"ICP"       :{"params":["driveid","device"],"time":["120s","60s"]},
+	"IPsrcaddr" :{"params":["ipaddress"],"time":["5s","5s"]},
+	"IPv6addr"  :{"params":["ipv6addr"],"time":["5s","5s"]},
+	"LinuxSCSI" :{"params":["scsi"],"time":["120s","60s"]},
+	"LVM"       :{"params":["volgrpname"],"time":["120s","60s"]},
+	"MailTo"    :{"params":["email","subject"],"time":["120s","60s"]},
+	"portblock" :{"params":["protocol","portno","action"],"time":["120s","60s"]},
+	"Raid1"     :{"params":["raidconf","raiddev"],"time":["120s","60s"]},
+	"ServeRAID" :{"params":["serveraid","mergegroup"],"time":["120s","60s"]},
+	"WinPopup"  :{"params":["hostfile"],"time":["120s","60s"]},
+	"Xinetd"    :{"params":["service"],"time":["120s","60s"]}
 	}
 
 config_defaults = [
@@ -170,18 +184,20 @@ def cib_resource(doc,index, rsc):
 					except ValueError:
 						#nic
 						params[2] = param
-			index = 0
-			for param in params:
-				if param == None :
-					index += 1
+			for i in range(0,len(params)) :
+				if params[i] == None :
 					continue
 				nvpair = doc.createElement("nvpair")
-				name = ocf_ra_setting[type]["params"][index]
-				nvpair.setAttribute("id",id + "_attr_" + str(index))
+				name = ocf_ra_setting[type]["params"][i]
+				nvpair.setAttribute("id",id + "_attr_" + str(i))
 				nvpair.setAttribute("name",name)
-				nvpair.setAttribute("value",str(param))
-				attributes.appendChild(nvpair)
-				index += 1
+				if i == len(ocf_ra_setting[type]["params"]) - 1 :
+					nvpair.setAttribute("value",string.join(params[i:]))
+					attributes.appendChild(nvpair)
+					break
+				else :						
+					nvpair.setAttribute("value",str(params[i]))
+					attributes.appendChild(nvpair)
 		else :
 			index = 1
 			for param in params :
