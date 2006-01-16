@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.103 2006/01/07 21:00:24 andrew Exp $ */
+/* $Id: pengine.h,v 1.104 2006/01/16 09:16:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -485,6 +485,7 @@ extern gboolean was_processing_error;
 extern gboolean was_processing_warning;
 extern gboolean was_config_error;
 extern gboolean was_config_warning;
+extern unsigned int pengine_input_loglevel;
 
 #endif
 

@@ -121,11 +121,10 @@ class LinuxHAv2(HeartbeatCM):
         cib_options="""
         <nvpair id="c-pref-1" name="transition_idle_timeout" value="3m"/>
         <nvpair id="c-pref-2" name="symetric_cluster" value="true"/>
-        <nvpair id="c-pref-3" name="suppress_cib_writes" value="%d"/>
-        <nvpair id="c-pref-4" name="short_resource_names" value="true"/>
-        <nvpair id="c-pref-5" name="stop_orphan_resources" value="false"/>
-        <nvpair id="c-pref-6" name="stop_orphan_actions" value="false"/>
-        <nvpair id="c-pref-7" name="remove_after_stop" value="false"/>
+        <nvpair id="c-pref-3" name="short_resource_names" value="true"/>
+        <nvpair id="c-pref-4" name="stop_orphan_resources" value="false"/>
+        <nvpair id="c-pref-5" name="stop_orphan_actions" value="false"/>
+        <nvpair id="c-pref-6" name="remove_after_stop" value="false"/>
         <nvpair id="c-pref-7" name="is_managed_default" value="true"/>
         <nvpair id="c-pref-8" name="no_quorum_policy" value="stop"/>""" % self.Env["SuppressCib"]
             

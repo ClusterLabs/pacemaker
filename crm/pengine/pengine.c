@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.101 2006/01/12 15:11:42 andrew Exp $ */
+/* $Id: pengine.c,v 1.102 2006/01/16 09:16:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,6 +39,7 @@ gboolean was_processing_error = FALSE;
 gboolean was_processing_warning = FALSE;
 gboolean was_config_error = FALSE;
 gboolean was_config_warning = FALSE;
+unsigned int pengine_input_loglevel = LOG_INFO;
 
 gboolean
 process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
@@ -72,8 +73,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 		copy_in_properties(generation, xml_data);
 		crm_log_xml_info(generation, "[generation]");
-		crm_log_xml_info(status, "[status]");
-
+		
 #if 0
 		char *xml_buffer = NULL;
 		char *xml_buffer_ptr = NULL;
@@ -124,12 +124,20 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 			crm_log_xml_info(log_input, "[input]");
 
 		} else if(was_processing_warning) {
-			crm_debug("WARNINGs found during PE processing."
-				"  Input follows:");
-			crm_log_xml_debug(log_input, "[input]");
+			crm_log_maybe(pengine_input_loglevel-1,
+				      "WARNINGs found during PE processing."
+				      "  Input follows:");
+			crm_log_xml(pengine_input_loglevel-1,
+				    "[input]", status);
 
-		} else if(crm_log_level > LOG_DEBUG) {
-			crm_log_xml_debug_2(log_input, "[input]");
+		} else {
+			if(crm_log_level > LOG_DEBUG) {
+				crm_log_xml_debug_2(log_input, "[input]");
+
+			} else {
+				crm_log_xml(pengine_input_loglevel,
+					    "[status]", status);
+			}
 		}
 
 		if(was_config_error) {

@@ -1,4 +1,4 @@
-/* $Id: cibio.h,v 1.13 2005/05/31 14:50:46 andrew Exp $ */
+/* $Id: cibio.h,v 1.14 2006/01/16 09:16:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,6 +39,7 @@ extern crm_data_t *node_search;
 extern crm_data_t *resource_search;
 extern crm_data_t *constraint_search;
 extern crm_data_t *status_search;
+extern unsigned int cib_diff_loglevel;
 
 extern crm_data_t *get_the_CIB(void);
 

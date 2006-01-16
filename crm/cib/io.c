@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.39 2006/01/11 13:06:11 andrew Exp $ */
+/* $Id: io.c,v 1.40 2006/01/16 09:16:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -72,7 +72,7 @@ crm_data_t *resource_search = NULL;
 crm_data_t *constraint_search = NULL;
 crm_data_t *status_search = NULL;
 
-gboolean cib_writes_enabled = TRUE;
+extern gboolean cib_writes_enabled;
 extern char *ccm_transition_id;
 extern gboolean cib_have_quorum;
 extern GHashTable *peer_hash;
@@ -258,45 +258,6 @@ initializeCib(crm_data_t *new_cib)
 		the_cib = NULL;
 
 	} else {
-		const char *option = "suppress_cib_writes";
-		const char *value = NULL;
-		crm_data_t *config = get_object_root(
-			XML_CIB_TAG_CRMCONFIG, new_cib);
-		
-		crm_data_t * a_default = find_entity(
-			config, XML_CIB_TAG_NVPAIR, option);
-
-		if(a_default != NULL) {
-			value = crm_element_value(
-				a_default, XML_NVPAIR_ATTR_VALUE);
-		}
-
-		if(value == NULL) {
-			crm_warn("Option %s not set", option);
-			if(cib_writes_enabled == FALSE) {
-				crm_debug("Disk writes to %s enabled",
-					  CIB_FILENAME);
-			}
-			cib_writes_enabled = TRUE;
-			
-		} else {
-			gboolean suppress = FALSE;
-			cl_str_to_boolean(value, &suppress);
-			if(cib_writes_enabled == suppress) {
-				cib_writes_enabled = !suppress;
-				if(cib_writes_enabled) {
-					crm_debug("Disk writes to %s enabled",
-						  CIB_FILENAME);
-				} else {
-					crm_notice("Disabling CIB disk writes");
-				}
-			}
-		}		
-		
-		crm_debug_2("Disk writes to %s %s", CIB_FILENAME,
-			    cib_writes_enabled?"enabled":"DISABLED");
-
-
 		set_connected_peers(the_cib);
 		set_transition(the_cib);
 		if(cib_have_quorum) {

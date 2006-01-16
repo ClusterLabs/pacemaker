@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.31 2006/01/12 15:02:53 andrew Exp $ */
+/* $Id: main.c,v 1.32 2006/01/16 09:16:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,6 +30,8 @@
 #include <fcntl.h>
 
 #include <hb_api.h>
+#include <heartbeat.h>
+#include <clplumbing/cl_misc.h>
 #include <clplumbing/uids.h>
 #include <clplumbing/coredumps.h>
 #include <clplumbing/Gmain_timeout.h>
@@ -52,6 +54,7 @@
 #include <crm/dmalloc_wrapper.h>
 
 gboolean cib_shutdown_flag = FALSE;
+unsigned int cib_diff_loglevel = LOG_INFO;
 
 extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
@@ -59,6 +62,7 @@ GMainLoop*  mainloop = NULL;
 const char* crm_system_name = CRM_SYSTEM_CIB;
 char *cib_our_uname = NULL;
 oc_ev_t *cib_ev_token;
+gboolean cib_writes_enabled = TRUE;
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
@@ -75,8 +79,10 @@ ll_cluster_t *hb_conn = NULL;
 int
 main(int argc, char ** argv)
 {
-	int argerr = 0;
 	int flag;
+	int argerr = 0;
+	char *param_val = NULL;
+	const char *param_name = NULL;
 
 	crm_log_init(crm_system_name);
 	G_main_add_SignalHandler(
@@ -108,10 +114,35 @@ main(int argc, char ** argv)
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
     
+	/* apparently we're not allowed to free the result of getenv */
+	param_name = ENV_PREFIX "" KEY_CONFIG_WRITES_ENABLED;
+	param_val = getenv(param_name);
+	crm_debug("%s = %s", param_name, param_val);
+	if(param_val != NULL) {
+		cl_str_to_boolean(param_val, &cib_writes_enabled);
+		param_val = NULL;
+	}
+	crm_info("Disk writes to %s: %s", CIB_FILENAME,
+		 cib_writes_enabled?"enabled":"DISABLED");
+
+	param_name = ENV_PREFIX "" KEY_LOG_CONFIG_CHANGES;
+	param_val = getenv(param_name);
+	crm_debug("%s = %s", param_name, param_val);
+	cib_diff_loglevel = crm_log_level;
+	if(param_val != NULL) {
+		int do_log = 0;
+		cl_str_to_boolean(param_val, &do_log);
+		if(do_log == FALSE) {
+			cib_diff_loglevel = crm_log_level + 1;
+		}
+		param_val = NULL;
+	}
+	crm_info("Configuration changes logged at: debug %d",
+		 cib_diff_loglevel - LOG_INFO);
+
 	/* read local config file */
 	return init_start();
 }
-
 
 int
 init_start(void)
