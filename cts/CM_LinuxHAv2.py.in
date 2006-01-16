@@ -126,8 +126,7 @@ class LinuxHAv2(HeartbeatCM):
         <nvpair id="c-pref-5" name="stop_orphan_actions" value="false"/>
         <nvpair id="c-pref-6" name="remove_after_stop" value="false"/>
         <nvpair id="c-pref-7" name="is_managed_default" value="true"/>
-        <nvpair id="c-pref-8" name="no_quorum_policy" value="stop"/>""" % self.Env["SuppressCib"]
-            
+        <nvpair id="c-pref-8" name="no_quorum_policy" value="stop"/>"""
         cib_glue_1='''
      </crm_config>
      <nodes/>
