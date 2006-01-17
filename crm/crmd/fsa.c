@@ -249,14 +249,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 				  fsa_state2string(fsa_state),
 				  fsa_cause2string(fsa_data->fsa_cause),
 				  fsa_data->origin);
-
-		} else if(fsa_actions == A_EXIT_0) {
-			/* temporary error */
-			crm_debug_2("Processing %s: [ state=%s cause=%s origin=%s ]",
-				  fsa_input2string(fsa_data->fsa_input),
-				  fsa_state2string(fsa_state),
-				  fsa_cause2string(fsa_data->fsa_cause),
-				  fsa_data->origin);
 		}
 		
 #ifdef FSA_TRACE
