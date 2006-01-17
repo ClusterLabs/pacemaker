@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.93 2006/01/16 09:18:14 andrew Exp $ */
+/* $Id: callbacks.c,v 1.94 2006/01/17 21:47:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -271,17 +271,16 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 		return FALSE;
 	}
 	
-	while(channel->ops->is_message_pending(channel)) {
-		if (channel->ch_status == IPC_DISCONNECT) {
-			/* The message which was pending for us is that
-			 * the channel is no longer fully connected.
-			 *
-			 * Dont read requests from disconnected clients
-			 */
+	while(IPC_ISRCONN(channel)) {
+		if(channel->ops->is_message_pending(channel) == 0) {
 			break;
 		}
-		op_request = msgfromIPC_noauth(channel);
 
+		op_request = msgfromIPC_noauth(channel);
+		if(op_request == NULL) {
+			break;
+		}
+		
 		type = cl_get_string(op_request, F_CIB_OPERATION);
 		if(safe_str_eq(type, T_CIB_NOTIFY) ) {
 			/* Update the notify filters for this client */
@@ -368,10 +367,11 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 		
 		send_ipc_message(channel, op_request);
 
-		if(channel->ch_status != IPC_DISC_PENDING) {
+		if(channel->ch_status == IPC_CONNECT) {
 			break;
 		}
 	}
+
 	did_disconnect = cib_process_disconnect(channel, cib_client);	
 	if(did_disconnect) {
 		crm_debug_2("Client disconnected");
@@ -403,13 +403,8 @@ cib_common_callback(
 	crm_debug_2("Callback for %s on %s channel",
 		    cib_client->id, cib_client->channel_name);
 
-	while(channel->ops->is_message_pending(channel)) {
-		if (channel->ch_status == IPC_DISCONNECT) {
-			/* The message which was pending for us is that
-			 * the channel is no longer connected.
-			 *
-			 * Dont read requests from disconnected clients
-			 */
+	while(IPC_ISRCONN(channel)) {
+		if(channel->ops->is_message_pending(channel) == 0) {
 			break;
 		}
 		op_request = msgfromIPC(channel, 0);
@@ -417,7 +412,6 @@ cib_common_callback(
 			perror("Receive failure:");
 			break;
 		}
-
 
 		op = cl_get_string(op_request, F_CIB_OPERATION);
 		crm_info("Processing %s operation from %s/%s",
@@ -439,7 +433,7 @@ cib_common_callback(
 		crm_msg_del(op_request);
 		op_request = NULL;
 
-		if(channel->ch_status != IPC_DISC_PENDING) {
+		if(channel->ch_status == IPC_CONNECT) {
 			break;
 		}
 	}
@@ -1122,7 +1116,7 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 	if (channel == NULL) {
 		keep_connection = FALSE;
 		
-	} else if(channel->ch_status == IPC_DISCONNECT && cib_client != NULL) {
+	} else if(channel->ch_status != IPC_CONNECT && cib_client != NULL) {
 		crm_debug_2("Cleaning up after client disconnect: %s/%s",
 			    crm_str(cib_client->name),cib_client->channel_name);
 		
@@ -1152,7 +1146,7 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 
 		keep_connection = FALSE;
 
-	} else if (channel->ch_status == IPC_DISCONNECT) {
+	} else if (channel->ch_status != IPC_CONNECT) {
 		crm_warn("Unknown client disconnected");
 		keep_connection = FALSE;
 	}
@@ -1177,22 +1171,23 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 gboolean
 cib_ha_dispatch(IPC_Channel *channel, gpointer user_data)
 {
-	int lpc = 0;
 	ll_cluster_t *hb_cluster = (ll_cluster_t*)user_data;
 
-	while(lpc < 2 && hb_cluster->llc_ops->msgready(hb_cluster)) {
- 		lpc++; 
+	crm_debug_3("Invoked");
+	if(IPC_ISRCONN(channel)) {
+		if(hb_cluster->llc_ops->msgready(hb_cluster) == 0) {
+			crm_debug_2("no message ready yet");
+		}
 		/* invoke the callbacks but dont block */
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
 	}
-
-	crm_debug_4("%d HA messages dispatched", lpc);
-
-	if (channel && (channel->ch_status != IPC_CONNECT)) {
+	
+	if (channel->ch_status != IPC_CONNECT) {
 		crm_crit("Lost connection to heartbeat service... exiting");
 		exit(100);
 		return FALSE;
 	}
+	
 	return TRUE;
 }
 

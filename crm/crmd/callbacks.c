@@ -50,35 +50,51 @@ extern gboolean check_join_state(
 /* #define MAX_EMPTY_CALLBACKS 20 */
 /* int empty_callbacks = 0; */
 
+#define trigger_fsa(source) crm_debug_3("Triggering FSA: %s", __FUNCTION__); \
+	G_main_set_trigger(source);
+
 gboolean
 crmd_ha_msg_dispatch(IPC_Channel *channel, gpointer user_data)
 {
-	int lpc = 0;
+	gboolean stay_connected = TRUE;
 	ll_cluster_t *hb_cluster = (ll_cluster_t*)user_data;
 
-	while(lpc < 2 && hb_cluster->llc_ops->msgready(hb_cluster)) {
-		if(channel->ch_status != IPC_CONNECT) {
-			/* there really is no point continuing */
-			break;
+	crm_debug_3("Invoked");
+	if(IPC_ISRCONN(channel)) {
+		if(hb_cluster->llc_ops->msgready(hb_cluster) == 0) {
+			crm_debug_2("no message ready yet");
 		}
- 		lpc++; 
 		/* invoke the callbacks but dont block */
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
 	}
-
-	crm_debug_3("%d HA messages dispatched", lpc);
-	G_main_set_trigger(fsa_source);
 	
-	if (channel && (channel->ch_status != IPC_CONNECT)) {
+	if (channel->ch_status != IPC_CONNECT) {
 		if(is_set(fsa_input_register, R_HA_DISCONNECTED) == FALSE) {
 			crm_crit("Lost connection to heartbeat service.");
+		} else {
+			crm_info("Lost connection to heartbeat service.");
 		}
-		return FALSE;
+		trigger_fsa(fsa_source);
+		stay_connected = FALSE;
 	}
     
-	return TRUE;
+	return stay_connected;
 }
 
+void
+crmd_ha_connection_destroy(gpointer user_data)
+{
+	crm_debug_3("Invoked");
+	if(is_set(fsa_input_register, R_HA_DISCONNECTED)) {
+		/* we signed out, so this is expected */
+		crm_info("Connection to heartbeat service disconnected.");
+		return;
+	}
+
+	crm_crit("Lost connection to heartbeat service.");
+	register_fsa_input(C_HA_DISCONNECT, I_ERROR, NULL);	
+	trigger_fsa(fsa_source);
+}
 
 void
 crmd_ha_msg_callback(HA_Message * msg, void* private_data)
@@ -176,9 +192,12 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 #endif
 
 	delete_ha_msg_input(new_input);
+	trigger_fsa(fsa_source);
 
 	return;
 }
+
+
 
 /*
  * Apparently returning TRUE means "stay connected, keep doing stuff".
@@ -193,16 +212,14 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 	crmd_client_t *curr_client = (crmd_client_t*)user_data;
 	gboolean stay_connected = TRUE;
 	
-	crm_debug_2("Processing IPC message from %s",
+	crm_debug_2("Invoked: %s",
 		   curr_client->table_key);
 
-	while(lpc == 0 && client->ops->is_message_pending(client)) {
-		if (client->ch_status == IPC_DISCONNECT) {
-			/* The message which was pending for us is that
-			 * the IPC status is now IPC_DISCONNECT */
+	while(IPC_ISRCONN(client)) {
+		if(client->ops->is_message_pending(client) == 0) {
 			break;
-		}
-		if (client->ops->recv(client, &msg) != IPC_OK) {
+
+		} else if (client->ops->recv(client, &msg) != IPC_OK) {
 			perror("Receive failure:");
 			crm_err("[%s] [receive failure]",
 				curr_client->table_key);
@@ -228,18 +245,23 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		
 		msg = NULL;
 		new_input = NULL;
+
+		if(client->ch_status != IPC_CONNECT) {
+			break;
+		}
 	}
 	
 	crm_debug_2("Processed %d messages", lpc);
     
-	if (client->ch_status == IPC_DISCONNECT) {
+	if (client->ch_status != IPC_CONNECT) {
 		stay_connected = FALSE;
 		process_client_disconnect(curr_client);
 	}
 
-	G_main_set_trigger(fsa_source);
+	trigger_fsa(fsa_source);
 	return stay_connected;
 }
+
 
 
 
@@ -250,12 +272,12 @@ lrm_dispatch(IPC_Channel *src_not_used, gpointer user_data)
 	ll_lrm_t *lrm = (ll_lrm_t*)user_data;
 	IPC_Channel *lrm_channel = lrm->lrm_ops->ipcchan(lrm);
 
-	crm_debug_3("received callback");
+	crm_debug_3("Invoked");
 	lrm->lrm_ops->rcvmsg(lrm, FALSE);
 
 	if(lrm_channel->ch_status != IPC_CONNECT) {
 		if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
-			crm_err("LRM Connection failed");
+			crm_crit("LRM Connection failed");
 			register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
 			clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
 
@@ -276,7 +298,7 @@ lrm_op_callback(lrm_op_t* op)
 		return;
 	}
 	
-	crm_debug_2("received callback: %s/%s (%s)",
+	crm_debug_3("Invoked: %s/%s (%s)",
 		    op->op_type, op->rsc_id, op_status2text(op->op_status));
 
 	/* Make sure the LRM events are received in order */
@@ -289,7 +311,6 @@ crmd_ha_status_callback(
 {
 	crm_data_t *update = NULL;
 
-	crm_debug_3("received callback");
 	crm_notice("Status update: Node %s now has status [%s]",node,status);
 
 	if(safe_str_neq(status, DEADSTATUS)) {
@@ -305,7 +326,7 @@ crmd_ha_status_callback(
 
 	/* this change should not be broadcast */
 	update_local_cib(create_cib_fragment(update, XML_CIB_TAG_STATUS));
-	G_main_set_trigger(fsa_source);
+	trigger_fsa(fsa_source);
 	free_xml(update);
 }
 
@@ -318,7 +339,7 @@ crmd_client_status_callback(const char * node, const char * client,
 	crm_data_t *update = NULL;
 	gboolean clear_shutdown = FALSE;
 	
-	crm_debug_3("received callback");
+	crm_debug_3("Invoked");
 	if(safe_str_neq(client, CRM_SYSTEM_CRMD)) {
 		return;
 	}
@@ -387,27 +408,14 @@ crmd_client_status_callback(const char * node, const char * client,
 		}
 	}
 	
-	G_main_set_trigger(fsa_source);
-}
-
-void
-crmd_ha_connection_destroy(gpointer user_data)
-{
-	if(is_set(fsa_input_register, R_HA_DISCONNECTED)) {
-		/* we signed out, so this is expected */
-		return;
-	}
-
-	crm_crit("Heartbeat has left us");
-	/* this is always an error */
-	/* feed this back into the FSA */
-	register_fsa_input(C_HA_DISCONNECT, I_ERROR, NULL);
+	trigger_fsa(fsa_source);
 }
 
 
 gboolean
 crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 {
+	crm_debug_3("Invoked");
 	if (client_channel == NULL) {
 		crm_err("Channel was NULL");
 
@@ -448,7 +456,7 @@ gboolean ccm_dispatch(int fd, gpointer user_data)
 	oc_ev_t *ccm_token = (oc_ev_t*)user_data;
 	gboolean was_error = FALSE;
 	
-	crm_debug_3("received callback");	
+	crm_debug_3("Invoked");
 	rc = oc_ev_handle_event(ccm_token);
 
 	if(rc != 0) {
@@ -461,7 +469,7 @@ gboolean ccm_dispatch(int fd, gpointer user_data)
 		was_error = TRUE;
 	}
 
-	G_main_set_trigger(fsa_source);
+	trigger_fsa(fsa_source);
 	return !was_error;
 }
 
@@ -479,7 +487,7 @@ crmd_ccm_msg_callback(
 	gboolean update_quorum = FALSE;
 	gboolean trigger_transition = FALSE;
 
-	crm_debug_3("received callback");
+	crm_debug_3("Invoked");
 
 	if(data != NULL) {
 		instance = membership->m_instance;
@@ -586,6 +594,9 @@ crmd_ccm_msg_callback(
 void
 crmd_cib_connection_destroy(gpointer user_data)
 {
+	crm_debug_3("Invoked");
+	trigger_fsa(fsa_source);
+
 	if(is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
 		crm_info("Connection to the CIB terminated...");
 		return;
@@ -610,6 +621,7 @@ crm_fsa_trigger(gpointer user_data)
 	if(fsa_diff_max_ms > 0) {
 		fsa_start = time_longclock();
 	}
+	crm_debug_3("Invoked");
 	s_crmd_fsa(C_FSA_INTERNAL);
 	if(fsa_diff_max_ms > 0) {
 		fsa_stop = time_longclock();

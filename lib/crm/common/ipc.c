@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.15 2006/01/16 09:21:44 andrew Exp $ */
+/* $Id: ipc.c,v 1.16 2006/01/17 21:47:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -313,10 +313,12 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 	const char *sys_to;
 	const char *task;
 
-	while(sender->ch_status == IPC_CONNECT
-	      && sender->ops->is_message_pending(sender)) {
-
+	while(IPC_ISRCONN(sender)) {
 		gboolean process = FALSE;
+		if(sender->ops->is_message_pending(sender) == 0) {
+			break;
+		}
+
 		if (sender->ops->recv(sender, &msg) != IPC_OK) {
 			cl_perror("Receive failure from %d:",
 				  sender->farside_pid);
@@ -386,6 +388,10 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 		
 		delete_ha_msg_input(new_input);
 		msg = NULL;
+
+		if(sender->ch_status == IPC_CONNECT) {
+			break;
+		}
 	}
 
 	/* clean up after a break */
