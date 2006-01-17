@@ -29,6 +29,7 @@ import xml.dom.minidom
 
 using_ocf = 1
 using_mon = 1
+enable_stonith = False
 
 ocf_ra_setting = {
 	"apache"    :{"params":["configfile"],"time":["120s","60s"]},
@@ -89,6 +90,9 @@ def create_cib() :
 		nvpair.setAttribute("id",    option_details[0])
 		nvpair.setAttribute("name",  option_details[0])
 		nvpair.setAttribute("value", option_details[1])
+		if option_details[0] == "stonith_enabled" and enable_stonith:
+			nvpair.setAttribute("value", "true")
+			
 
 	configuration.appendChild(doc.createElement("nodes"))
 	resources = doc.createElement("resources")
@@ -199,14 +203,14 @@ def cib_resource(doc,index, rsc):
 					nvpair.setAttribute("value",str(params[i]))
 					attributes.appendChild(nvpair)
 		else :
-			index = 1
+			i = 1
 			for param in params :
 				nvpair = doc.createElement("nvpair")
-				nvpair.setAttribute("id",id + "_attr_" + str(index))
-				nvpair.setAttribute("name",str(index))
+				nvpair.setAttribute("id",id + "_attr_" + str(i))
+				nvpair.setAttribute("name",str(i))
 				nvpair.setAttribute("value",str(param))
 				attributes.appendChild(nvpair)
-				index += 1
+				i += 1
 	return id, resource
 
 def cib_rsc_location(doc, id, node):
@@ -230,6 +234,25 @@ def cib_resource_group(doc, id):
 	resource_group.setAttribute("id",id)
 	return resource_group
 
+def cib_resource_clone(doc, id, clone_max, clone_node_max):
+	resource_clone = doc.createElement("clone")
+	resource_clone.setAttribute("id",id)
+	instance_attributes = doc.createElement("instance_attributes")
+	resource_clone.appendChild(instance_attributes)
+	attributes = doc.createElement("attributes")
+	instance_attributes.appendChild(attributes)
+	nvpair = doc.createElement("nvpair")
+	nvpair.setAttribute("id",id + "_attr_1")
+	nvpair.setAttribute("name", "clone_max")
+	nvpair.setAttribute("value", str(clone_max))
+	attributes.appendChild(nvpair)
+	nvpair = doc.createElement("nvpair")
+	nvpair.setAttribute("id",id + "_attr_2")
+	nvpair.setAttribute("name", "clone_node_max")
+	nvpair.setAttribute("value", str(clone_node_max))
+	attributes.appendChild(nvpair)
+	return resource_clone
+
 def add_resource(cib,index,node,rsc):
 	id,resource = cib_resource(cib[0],index,rsc)
 	cib[1].appendChild(resource)
@@ -246,29 +269,111 @@ def add_resource_group(cib,index,node,rscs):
 		index += 1
 	rsc_location = cib_rsc_location(cib[0],groupid,node)
 	cib[2].appendChild(rsc_location)
-
-if __name__=="__main__" :
-	cib = create_cib()
-	resource_file = None
-	resource_file = "/etc/ha.d/haresources"
-	# Process arguments...
 	
-	for arg in sys.argv[1:]:
-		if arg == "--nu-ocf" :
+def add_stonith_clone(cib, index, params, node_num) :
+	clone = cib_resource_clone(cib[0], "clone_"+str(index), node_num, 1)
+	cib[1].appendChild(clone)
+	id, stonith = cib_stonith(cib[0], index, params)
+	clone.appendChild(stonith)
+	
+def cib_stonith(doc, index, params):
+	id = "stonith_"+str(index)
+	resource = doc.createElement("primitive")
+	resource.setAttribute("id",id)
+	resource.setAttribute("type",params[1])
+	resource.setAttribute("class","stonith")
+	resource.setAttribute("provider","heartbeat")
+	if using_mon :
+		operations = doc.createElement("operations")
+		resource.appendChild(operations)
+		mon_op = doc.createElement("op")
+		operations.appendChild(mon_op)
+		mon_op.setAttribute("id", id + "_mon")
+		mon_op.setAttribute("name","monitor")
+		mon_op.setAttribute("interval", "5s")
+		mon_op.setAttribute("timeout", "20s")
+		mon_op.setAttribute("prereq", "nothing")
+		start_op = doc.createElement("op")
+		operations.appendChild(start_op)
+		start_op.setAttribute("id", id + "_start")
+		start_op.setAttribute("name","start")
+		start_op.setAttribute("timeout", "20s")
+		start_op.setAttribute("prereq", "nothing")
+	if len(params) > 2 :
+		instance_attributes = doc.createElement("instance_attributes")
+		resource.appendChild(instance_attributes)
+		attributes = doc.createElement("attributes")
+		instance_attributes.appendChild(attributes)
+		names = string.split(os.popen("stonith -n -t "+params[1]).readline())
+		for i in range(2, len(params)) :
+			nvpair = doc.createElement("nvpair")
+			nvpair.setAttribute("id", id + "_attr_" + str(i))
+			nvpair.setAttribute("name", names[i-2])
+			nvpair.setAttribute("value", params[i])
+			attributes.appendChild(nvpair)
+		
+	return id, resource
+
+def add_stonith_host(cib, stonith_host, index, node_num) :
+	params = string.split(stonith_host)[1:]
+	if params[0] == "*" :
+		add_stonith_clone(cib, index, params, node_num)
+	else :
+		id, resource = cib_stonith(cib[0], index, params)
+		cib[1].appendChild(resource)
+		stonith_location = cib_rsc_location(cib[0],id,params[0])
+		cib[2].appendChild(stonith_location)
+		
+	
+def get_directive_list(config, directive) :
+	directive_list = []
+	for line in config :
+		line = line.lstrip()
+		if line[0] == "#" :
+			continue
+		if string.split(line)[0] == directive :
+			directive_list.append(line)
+	return directive_list
+		
+if __name__=="__main__" :
+	resource_file = "/etc/ha.d/haresources"
+	config_file = "/etc/ha.d/ha.cf"
+	
+	# Process arguments...
+	skipthis = None
+	args = sys.argv[1:]
+	for i in range(0, len(args)) :
+		if skipthis :
+			skipthis = None
+			continue
+		elif args[i] == "--nu-ocf" :
 			using_ocf = 0
-		elif arg == "--nu-monitor" :
+		elif args[i] == "--nu-monitor" :
 			using_mon = 0
-		elif arg[0] == "-" :
+		elif args[i] == "--config" or args[i] == "-c" :
+			skipthis = True
+			config_file = args[i+1]
+		elif args[i] == "--help" or args[i] == "-h" :
 			print "usage: " + sys.argv[0]  \
-			+  " [--nu-ocf]"\
-			+  " [--nu-monitor]"\
-			+  " [--help|-h]"\
-			+  " [resourcefile]"
+				+  " [--nu-ocf]"\
+				+  " [--nu-monitor]"\
+				+  " [--config|-c configfile]"\
+				+  " [--help|-h]"\
+				+  " [resourcefile]"
 			sys.exit(1)
 		else:
-			resource_file = arg
+			resource_file = args[i]
+	
+	config = open(config_file, "r").readlines()
+	
+	node_list = get_directive_list(config, "node")
+	stonith_host_list = get_directive_list(config, "stonith_host")
+	
+	if len(stonith_host_list) != 0 :
+		enable_stonith = True
 	
 	file = open(resource_file, "r")
+	cib = create_cib()
 	pre_line = ""
 	id_index = 1
 	for line in file.readlines() :
@@ -290,5 +395,12 @@ if __name__=="__main__" :
 			id_index += len(fields)
 		else :
 			print "can not parse this line:"+line
-
+	if enable_stonith :
+		node_num = 0
+		for nodes in node_list :
+			node_num += len(string.split(nodes)) -1
+		for stonith_host in stonith_host_list :
+			add_stonith_host(cib, stonith_host, id_index, node_num)
+			id_index += 1
+			
 	print cib[0].toprettyxml()
