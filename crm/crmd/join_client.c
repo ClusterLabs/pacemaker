@@ -283,9 +283,8 @@ do_cl_join_finalize_respond(long long action,
 			join_id);
 		send_msg_via_ha(fsa_cluster_conn, reply);
 		if(AM_I_DC == FALSE) {
-/* 			register_fsa_input_adv(cause, I_NOT_DC, NULL, */
-/* 					       A_NOTHING, FALSE, __FUNCTION__); */
- 			register_fsa_input(cause, I_NOT_DC, NULL);
+ 			register_fsa_input_adv(cause, I_NOT_DC, NULL,
+ 					       A_NOTHING, TRUE, __FUNCTION__);
 		}
 		free_xml(tmp1);
 		
