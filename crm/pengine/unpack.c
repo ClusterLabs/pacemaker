@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.152 2006/01/10 13:46:41 andrew Exp $ */
+/* $Id: unpack.c,v 1.153 2006/01/18 20:08:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -212,10 +212,19 @@ const char *
 param_value(GHashTable *hash, crm_data_t * parent, const char *name) 
 {
 	const char *value = NULL;
+	const char *pref_name = NULL;
 	crm_data_t * a_default = NULL;
 
 	if(parent != NULL) {
-		a_default = find_entity(parent, XML_CIB_TAG_NVPAIR, name);
+		crm_validate_data(parent);
+		xml_child_iter_filter(
+			parent, a_child, XML_CIB_TAG_NVPAIR,
+			pref_name = crm_element_value(a_child, XML_NVPAIR_ATTR_NAME);
+			if(safe_str_eq(name, pref_name)) {
+				a_default = a_child;
+				break;
+			}
+		);
 	}
 	
 	if(a_default == NULL) {
