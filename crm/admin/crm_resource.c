@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.9 2005/11/13 21:46:58 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.10 2006/01/19 15:37:50 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -65,7 +65,7 @@ char rsc_cmd = 0;
 char *our_pid = NULL;
 IPC_Channel *crmd_channel = NULL;
 
-#define OPTARGS	"V?SLRQDCPp:WMUr:H:v:t:"
+#define OPTARGS	"V?SLRQDCPp:WMUr:H:v:t:g:G:g:"
 
 static int
 do_find_resource(const char *rsc, pe_working_set_t *data_set)
@@ -139,6 +139,68 @@ dump_resource(const char *rsc, pe_working_set_t *data_set)
 	crm_free(rsc_xml);
 	
 	return 1;
+}
+
+static int
+dump_resource_attr(
+	const char *rsc, const char *attr, pe_working_set_t *data_set)
+{
+	crm_data_t *attrs = create_xml_node(NULL, "fake");
+	node_t *current = NULL;
+	resource_t *the_rsc = pe_find_resource(data_set->resources, rsc);
+	const char *value = NULL;
+
+	if(the_rsc == NULL) {
+		return cib_NOTEXISTS;
+	}
+
+	if(g_list_length(the_rsc->running_on) == 1) {
+		current = the_rsc->running_on->data;
+
+	} else if(g_list_length(the_rsc->running_on) > 1) {
+		fprintf(stderr, "%s is active on more than one node,"
+			" returning the default value for %s\n",
+			the_rsc->id, value);
+	} 
+	
+	unpack_instance_attributes(
+		the_rsc->xml, XML_TAG_ATTR_SETS, current, the_rsc->parameters,
+		NULL, 0, data_set);
+
+	if(the_rsc->parameters != NULL) {
+		crm_debug("Looking up %s in %s", attr, the_rsc->id);
+		value = g_hash_table_lookup(the_rsc->parameters, attr);
+	}
+	if(value != NULL) {
+		fprintf(stdout, "%s\n", value);
+		return 1;
+
+	} else {
+		/* debug */
+		g_hash_table_foreach(the_rsc->parameters, hash2field, attrs);
+	}
+	return cib_NOTEXISTS;
+}
+
+
+static int
+dump_resource_prop(
+	const char *rsc, const char *attr, pe_working_set_t *data_set)
+{
+	const char *value = NULL;
+	resource_t *the_rsc = pe_find_resource(data_set->resources, rsc);
+
+	if(the_rsc == NULL) {
+		return cib_NOTEXISTS;
+	}
+
+	value = crm_element_value(the_rsc->xml, attr);
+
+	if(value != NULL) {
+		fprintf(stdout, "%s\n", value);
+		return 1;
+	}
+	return cib_NOTEXISTS;
 }
 
 static void
@@ -375,6 +437,8 @@ main(int argc, char **argv)
 		{"locate",  0, 0, 'W'},
 		{"migrate", 0, 0, 'M'},
 		{"un-migrate", 0, 0, 'U'},
+		{"get-parameter",1, 0, 'G'},
+		{"get-property",1, 0, 'g'},
 		{"resource",1, 0, 'r'},
 		{"host-uname", 1, 0, 'H'},
 		{"host-uuid",  1, 0, 'h'},
@@ -442,6 +506,18 @@ main(int argc, char **argv)
 				break;
 				
 			case 'p':
+				crm_debug_2("Option %c => %s", flag, optarg);
+				prop_name = optarg;
+				rsc_cmd = flag;
+				break;
+
+			case 'g':
+				crm_debug_2("Option %c => %s", flag, optarg);
+				prop_name = optarg;
+				rsc_cmd = flag;
+				break;
+
+			case 'G':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				prop_name = optarg;
 				rsc_cmd = flag;
@@ -518,9 +594,11 @@ main(int argc, char **argv)
 	}
 
 	if(rsc_cmd == 'L' || rsc_cmd == 'W' || rsc_cmd == 'D' || rsc_cmd == 'Q'
-	   || rsc_cmd == 'p' || rsc_cmd == 'M' || rsc_cmd == 'U') {
+	   || rsc_cmd == 'p' || rsc_cmd == 'M' || rsc_cmd == 'U'
+	   || rsc_cmd == 'G' || rsc_cmd == 'g') {
 		cib_conn = cib_new();
-		rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
+		rc = cib_conn->cmds->signon(
+			cib_conn, crm_system_name, cib_command);
 		set_working_set_defaults(&data_set);
 
 		if(rsc_cmd != 'D' && rsc_cmd != 'U') {
@@ -553,6 +631,14 @@ main(int argc, char **argv)
 	} else if(rsc_cmd == 'Q') {
 		CRM_DEV_ASSERT(rsc_id != NULL);
 		rc = dump_resource(rsc_id, &data_set);
+
+	} else if(rsc_cmd == 'G') {
+		CRM_DEV_ASSERT(rsc_id != NULL);
+		rc = dump_resource_attr(rsc_id, prop_name, &data_set);
+
+	} else if(rsc_cmd == 'g') {
+		CRM_DEV_ASSERT(rsc_id != NULL);
+		rc = dump_resource_prop(rsc_id, prop_name, &data_set);
 
 	} else if(rsc_cmd == 'U') {
 		rc = migrate_resource(rsc_id, NULL, NULL, cib_conn);
@@ -696,7 +782,13 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\t: Refresh the CIB from the LRM\n"
 		"\t\t\t  Optional: -H\n", "refresh", 'R');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
-		"Set the named property for a resource\n"
+		"Get the named parameter for a resource\n"
+		"\t\t\t  Requires: -r\n", "get-parameter", 'G');
+	fprintf(stream, "\t--%s (-%c) <string>\t: "
+		"Get the named property (eg. class, type, is_managed) a resource\n"
+		"\t\t\t  Requires: -r\n", "get-property", 'g');
+	fprintf(stream, "\t--%s (-%c) <string>\t: "
+		"Set the named property (not parameter) for a resource\n"
 		"\t\t\t  Requires: -r, -t, -v", "set-property", 'p');
 	fprintf(stream, "\nOptions\n");
 	fprintf(stream, "\t--%s (-%c) <string>\t: Resource ID\n", "resource", 'r');
