@@ -50,6 +50,7 @@ class LinuxHAv2(HeartbeatCM):
         HeartbeatCM.__init__(self, Environment, randseed=randseed)
         
         self.cluster_monitor = 0
+	self.use_short_names = 0
         self.update({
             "Name"           : "linux-ha-v2",
             "DeadTime"       : 300,
@@ -120,13 +121,14 @@ class LinuxHAv2(HeartbeatCM):
      <crm_config>'''
         cib_options="""
         <nvpair id="c-pref-1" name="transition_idle_timeout" value="3m"/>
-        <nvpair id="c-pref-2" name="symetric_cluster" value="true"/>
-        <nvpair id="c-pref-3" name="short_resource_names" value="true"/>
+        <nvpair id="c-pref-2" name="symmetric_cluster" value="true"/>
+        <nvpair id="c-pref-3" name="short_resource_names" value="%d"/>
         <nvpair id="c-pref-4" name="stop_orphan_resources" value="false"/>
         <nvpair id="c-pref-5" name="stop_orphan_actions" value="false"/>
         <nvpair id="c-pref-6" name="remove_after_stop" value="false"/>
         <nvpair id="c-pref-7" name="is_managed_default" value="true"/>
-        <nvpair id="c-pref-8" name="no_quorum_policy" value="stop"/>"""
+        <nvpair id="c-pref-8" name="no_quorum_policy" value="stop"/>
+        <nvpair id="c-pref-9" name="default_resource_stickiness" value="0"/>""" % self.use_short_names
         cib_glue_1='''
      </crm_config>
      <nodes/>
@@ -481,7 +483,10 @@ class LinuxHAv2(HeartbeatCM):
         for grp in groups:
             for rsc in rscs:
                 if rsc in grp.childNodes:
-                    resource = HAResource(self,rsc,grp.getAttribute('id'))
+		    if self.use_short_names:
+			resource = HAResource(self,rsc,None)
+		    else:
+			resource = HAResource(self,rsc,grp.getAttribute('id'))
                     ResourceList.append(resource)
         
         for inc in incs:
@@ -499,7 +504,10 @@ class LinuxHAv2(HeartbeatCM):
                 rsc.inc_no = i
                 rsc.inc_name = inc_name
                 rsc.inc_max = max
-                rsc.rid = inc_name+":"+rsc.rid + ":%d"%i
+		if self.use_short_names:
+		    rsc.rid = rsc.rid + ":%d"%i
+		else:
+		    rsc.rid = inc_name+":"+rsc.rid + ":%d"%i
                 rsc.Instance = rsc.rid
                 ResourceList.append(rsc)
         return ResourceList
