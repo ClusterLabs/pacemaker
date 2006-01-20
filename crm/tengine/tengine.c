@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.109 2006/01/13 10:31:14 andrew Exp $ */
+/* $Id: tengine.c,v 1.110 2006/01/20 13:26:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -94,9 +94,11 @@ initialize_graph(void)
 	
 	if(te_uuid == NULL) {
 		cl_uuid_t new_uuid;
-		crm_malloc0(te_uuid, sizeof(char)*38);
+		char uuid_str[UU_UNPARSE_SIZEOF];
+		
 		cl_uuid_generate(&new_uuid);
-		cl_uuid_unparse(&new_uuid, te_uuid);
+		cl_uuid_unparse(&new_uuid, uuid_str);
+		te_uuid = crm_strdup(uuid_str);
 		crm_info("Registering TE UUID: %s", te_uuid);
 	}
 	

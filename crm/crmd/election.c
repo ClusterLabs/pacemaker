@@ -277,18 +277,17 @@ do_election_count_vote(long long action,
 	}
 
 	if(we_loose) {
+		cl_uuid_t vote_uuid_s;
 		gboolean vote_sent = FALSE;
+		char vote_uuid[UU_UNPARSE_SIZEOF];
 		HA_Message *novote = create_request(
 			CRM_OP_NOVOTE, NULL, vote_from,
 			CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
-		cl_uuid_t vote_uuid_s;
-		char *vote_uuid = NULL;
+		
 		if(cl_get_uuid(vote->msg, F_ORIGUUID, &vote_uuid_s) == HA_OK) {
-			crm_malloc0(vote_uuid, sizeof(char)*100);
 			cl_uuid_unparse(&vote_uuid_s, vote_uuid);
-		}
 
-		if(vote_uuid == NULL) {
+		} else {
 			cl_log_message(LOG_ERR, vote->msg);
 		}
 		
@@ -310,7 +309,6 @@ do_election_count_vote(long long action,
 		
 		vote_sent = send_request(novote, NULL);
 		CRM_DEV_ASSERT(vote_sent);
-		crm_free(vote_uuid);
 		
 	} else {
 		if(cur_state == S_PENDING) {
