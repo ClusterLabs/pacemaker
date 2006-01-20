@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.95 2006/01/20 09:30:37 andrew Exp $ */
+/* $Id: callbacks.c,v 1.96 2006/01/20 13:24:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -170,16 +170,15 @@ cib_client_connect(IPC_Channel *channel, gpointer user_data)
 
 		} else {
 			cl_uuid_t client_id;
-
-			cl_uuid_generate(&client_id);
-			crm_malloc0(new_client->id, sizeof(char)*36);
-			cl_uuid_unparse(&client_id, new_client->id);
-			new_client->id[35] = EOS;
+			char uuid_str[UU_UNPARSE_SIZEOF];
 			
 			cl_uuid_generate(&client_id);
-			crm_malloc0(new_client->callback_id, sizeof(char)*36);
-			cl_uuid_unparse(&client_id, new_client->callback_id);
-			new_client->callback_id[35] = EOS;
+			cl_uuid_unparse(&client_id, uuid_str);
+			new_client->id = crm_strdup(uuid_str);
+			
+			cl_uuid_generate(&client_id);
+			cl_uuid_unparse(&client_id, uuid_str);
+			new_client->callback_id = crm_strdup(uuid_str);
 			
 			client_callback = cib_ro_callback;
 			if(safe_str_eq(new_client->channel_name, cib_channel_rw)) {
@@ -1144,14 +1143,15 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 			cib_client->source = NULL;
 		}
 		
-		crm_debug_3("Freeing the cib client %s",
-			    crm_str(cib_client->id));
-#if 0
-		/* todo - put this back in once i recheck its safe */
- 		crm_free(cib_client->callback_id);
-  		crm_free(cib_client->name);
-  		crm_free(cib_client->id);
-#endif
+		crm_debug("Freeing the cib client %s : %s : %s : %p",
+			  crm_str(cib_client->id),
+			  crm_str(cib_client->name),
+			  crm_str(cib_client->callback_id),
+			  cib_client);
+		
+   		crm_free(cib_client->name);
+  		crm_free(cib_client->callback_id);
+   		crm_free(cib_client->id);
   		crm_free(cib_client);
 		crm_debug_3("Freed the cib client");
 
