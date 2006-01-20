@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.96 2006/01/20 13:24:42 andrew Exp $ */
+/* $Id: callbacks.c,v 1.97 2006/01/20 15:22:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1195,7 +1195,8 @@ cib_ha_dispatch(IPC_Channel *channel, gpointer user_data)
 	
 	if (channel->ch_status != IPC_CONNECT) {
 		crm_crit("Lost connection to heartbeat service... exiting");
-		exit(100);
+		CRM_DEV_ASSERT(FALSE);
+		exit(LSB_EXIT_GENERIC);
 		return FALSE;
 	}
 	
@@ -1227,13 +1228,18 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 		return;
 
 	} else if(cib_get_operation_id(msg, &call_type) != cib_ok) {
- 		crm_err("Discarding %s message (%s) from %s:"
-			" Invalid operation", op, seq, originator);
+ 		crm_debug("Discarding %s message (%s) from %s:"
+			  " Invalid operation", op, seq, originator);
 		return;
 	}
 
-	crm_info("Processing %s msg (%s) from %s", op, seq, originator);
+	if(cib_server_ops[call_type].modifies_cib) {
+		crm_info("Processing %s msg (%s) from %s", op, seq, originator);
 
+	} else {
+		crm_debug("Processing %s msg (%s) from %s",op, seq, originator);
+	}
+	
 	cib_process_request(msg, TRUE, TRUE, NULL);
 
 	return;
