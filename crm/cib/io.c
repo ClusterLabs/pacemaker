@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.40 2006/01/16 09:16:32 andrew Exp $ */
+/* $Id: io.c,v 1.41 2006/01/20 09:30:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -284,7 +284,6 @@ moveFile(const char *oldname,
 	int res = 0;
 	struct stat tmp;
 	int s_res = stat(newname, &tmp);
-	
 	
 	if (s_res >= 0)
 	{

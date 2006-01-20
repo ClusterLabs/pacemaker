@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.94 2006/01/17 21:47:28 andrew Exp $ */
+/* $Id: callbacks.c,v 1.95 2006/01/20 09:30:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -384,8 +384,9 @@ gboolean
 cib_common_callback(
 	IPC_Channel *channel, gpointer user_data, gboolean privileged)
 {
-	int rc = cib_ok;
 	int lpc = 0;
+	int rc = cib_ok;
+	int call_type = 0;
 
 	const char *op = NULL;
 	HA_Message *op_request = NULL;
@@ -414,17 +415,27 @@ cib_common_callback(
 		}
 
 		op = cl_get_string(op_request, F_CIB_OPERATION);
-		crm_info("Processing %s operation from %s/%s",
-			 op, cib_client->name, cib_client->channel_name);
+		rc = cib_get_operation_id(op_request, &call_type);
+		if(rc != cib_ok) {
+			crm_debug("Invalid operation %s from %s/%s",
+				  op, cib_client->name, cib_client->channel_name);
+			
+		} else if(cib_server_ops[call_type].modifies_cib) {
+			crm_info("Processing %s operation from %s/%s",
+				 op, cib_client->name, cib_client->channel_name);
+		} else {
+			crm_debug("Processing %s operation from %s/%s",
+				 op, cib_client->name, cib_client->channel_name);
+		}
+		
 		crm_log_message_adv(LOG_MSG, "Client[inbound]", op_request);
 		
 		lpc++;
-		rc = cib_ok;
 		
 		CRM_DEV_ASSERT(
 			ha_msg_add(op_request, F_CIB_CLIENTID, cib_client->id) == HA_OK);
 
-		if(crm_assert_failed == FALSE) {
+		if(rc == cib_ok && crm_assert_failed == FALSE) {
 			cib_process_request(
 				op_request, privileged, FALSE, cib_client);
 		}
