@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.11 2006/01/13 10:31:14 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.12 2006/01/20 15:57:27 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -108,8 +108,8 @@ update_attr(cib_t *the_cib, int call_options,
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 	
-	fragment = create_cib_fragment(xml_top, section);
 	crm_log_xml_debug_2(xml_top, "Update");
+	fragment = create_cib_fragment(xml_top, section);
 	crm_log_xml_debug_3(fragment, "Update Fragment");
 	
 	free_xml(xml_top);
@@ -175,6 +175,12 @@ read_attr(cib_t *the_cib,
 	} else if(section != NULL && node_uuid != NULL) {
 		xml_next = find_entity(xml_obj, XML_CIB_TAG_STATE, node_uuid);
 		tag = XML_TAG_TRANSIENT_NODEATTRS;
+		if(xml_next == NULL) {
+			crm_debug("%s=%s not found in %s", XML_CIB_TAG_STATE, node_uuid,
+				  crm_element_name(xml_obj));
+			return cib_NOTEXISTS;
+		}
+		xml_obj = xml_next;
 
 	} else if(section != NULL) {
 		tag = XML_TAG_TRANSIENT_NODEATTRS;
