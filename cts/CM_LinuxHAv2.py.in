@@ -50,7 +50,7 @@ class LinuxHAv2(HeartbeatCM):
         HeartbeatCM.__init__(self, Environment, randseed=randseed)
         
         self.cluster_monitor = 0
-	self.use_short_names = 0
+	self.use_short_names = 1
         self.update({
             "Name"           : "linux-ha-v2",
             "DeadTime"       : 300,
@@ -484,7 +484,7 @@ class LinuxHAv2(HeartbeatCM):
             for rsc in rscs:
                 if rsc in grp.childNodes:
 		    if self.use_short_names:
-			resource = HAResource(self,rsc,None)
+			resource = HAResource(self,rsc)
 		    else:
 			resource = HAResource(self,rsc,grp.getAttribute('id'))
                     ResourceList.append(resource)
@@ -523,7 +523,10 @@ class LinuxHAv2(HeartbeatCM):
             GroupList.append(group)
             for rsc in rscs:
                 if rsc in grp.childNodes:
-                    resource = HAResource(self,rsc,grp.getAttribute('id'))
+		    if self.use_short_names:
+			resource = HAResource(self,rsc)
+		    else:
+			resource = HAResource(self,rsc,grp.getAttribute('id'))
                     group.append(resource)
         return GroupList
         
