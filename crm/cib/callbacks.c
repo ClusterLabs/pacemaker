@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.97 2006/01/20 15:22:50 andrew Exp $ */
+/* $Id: callbacks.c,v 1.98 2006/01/23 14:59:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -667,25 +667,27 @@ cib_process_request(HA_Message *request, gboolean privileged,
 		
 		crm_debug_3("Sending callback to request originator");
 		if(client_obj != NULL) {
+			int local_rc = cib_ok;
+			const char *client_id = client_obj->callback_id;
 			crm_debug_2("Sending %ssync response to %s %s",
 				  (call_options & cib_sync_call)?"":"an a-",
 				  client_obj->id,
 				  from_peer?"(originator of delegated request)":"");
 
 			if(call_options & cib_sync_call) {
-				send_via_callback_channel(
-					client_reply, client_obj->id);
+				client_id = client_obj->id;
+			}
+			local_rc = send_via_callback_channel(
+				client_reply, client_id);
 
-			} else {
-				send_via_callback_channel(
-					client_reply, client_obj->callback_id);
+			if(rc == cib_ok) {
+				client_reply = NULL;
 			}
 			
-		} else {
-			crm_warn("Client %s may have left us",
-				 crm_str(client_id));
-			crm_msg_del(client_reply);
-		}
+		} 
+
+		crm_msg_del(client_reply);
+
 		if(local_rc != cib_ok) {
 			crm_warn("%sSync reply failed: %s",
 				 (call_options & cib_sync_call)?"":"A-",
@@ -917,10 +919,15 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 	if((call_options & cib_discard_reply)
 	   && cib_server_ops[call_type].modifies_cib == FALSE) {
 		crm_debug_3("No reply needed for call %s", call_id);
+
+		free_xml(input_fragment);
+		free_xml(output);
 		return rc;
 		
 	} else if(reply == NULL) {
 		crm_debug("No reply possible for call %s", call_id);
+		free_xml(input_fragment);
+		free_xml(output);
 		return rc;
 	}
 
