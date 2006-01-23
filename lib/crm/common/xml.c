@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.51 2006/01/23 14:40:48 andrew Exp $ */
+/* $Id: xml.c,v 1.52 2006/01/23 14:43:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1572,6 +1572,7 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 			" saw %d", root_nodes_seen);
 		result = FALSE;
 
+#if CRM_DEV_BUILD
 	} else if(result) {
 		crm_data_t *intermediate = NULL;
 		crm_data_t *diff_of_diff = NULL;
@@ -1589,6 +1590,7 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 		free_xml(intermediate);
 		diff_of_diff = NULL;
 		intermediate = NULL;
+#endif
 	}
 	
 	if(result == FALSE) {
