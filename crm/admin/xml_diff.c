@@ -1,4 +1,4 @@
-/* $Id: xml_diff.c,v 1.6 2006/01/09 19:24:51 andrew Exp $ */
+/* $Id: xml_diff.c,v 1.7 2006/01/23 16:07:02 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -163,6 +163,8 @@ main(int argc, char **argv)
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
 
+	crm_zero_mem_stats(NULL);
+	
 	if(raw_1) {
 		object_1 = string2xml(xml_file_1);
 
@@ -221,6 +223,12 @@ main(int argc, char **argv)
 		crm_free(buffer);
 	}
 
+	free_xml(object_1);
+	free_xml(object_2);
+	free_xml(output);
+
+	crm_mem_stats(NULL);
+	
 	if(apply == FALSE && output != NULL) {
 		return 1;
 	}
