@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.98 2006/01/23 14:59:41 andrew Exp $ */
+/* $Id: callbacks.c,v 1.99 2006/01/23 16:19:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -869,8 +869,12 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 			do_id_check(input, NULL);
 		}
 	}
-	
-	if(cib_server_ops[call_type].modifies_cib) {
+
+	if(cib_server_ops[call_type].modifies_cib == FALSE) {
+	} else if(call_options & cib_inhibit_notify) {
+		crm_debug_3("Inhibiting notify.");
+
+	} else {
 		cib_pre_notify(
 			call_options, op,
 			get_object_root(section, current_cib), input);
@@ -904,12 +908,17 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 				
 			}
 		}
-		
-		cib_post_notify(call_options, op, input, rc, the_cib);
-		cib_diff_notify(call_options, op, input, rc, local_diff);
- 		log_xml_diff(rc==cib_ok?cib_diff_loglevel:cib_diff_loglevel-1,
-			     local_diff, "cib:diff");
 
+		if(call_options & cib_inhibit_notify) {
+			crm_debug_2("Inhibiting notify.");
+
+		} else {
+			cib_post_notify(call_options, op, input, rc, the_cib);
+			cib_diff_notify(call_options, op, input, rc, local_diff);
+		}
+		log_xml_diff(rc==cib_ok?cib_diff_loglevel:cib_diff_loglevel-1,
+			     local_diff, "cib:diff");
+		
 	} else if(result_cib != NULL) {
 		crm_err("%s call modified the CIB", op);
 		free_xml(result_cib);

@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.34 2006/01/11 19:50:34 andrew Exp $ */
+/* $Id: notify.c,v 1.35 2006/01/23 16:19:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -178,10 +178,6 @@ cib_pre_notify(
 	HA_Message *update_msg = NULL;
 	const char *type = NULL;
 	const char *id = NULL;
-	if(options & cib_inhibit_notify) {
-		crm_debug_2("Inhibiting notify.");
-		return;
-	}	
 
 	update_msg = ha_msg_new(6);
 
@@ -231,10 +227,6 @@ void
 cib_post_notify(int options, const char *op, crm_data_t *update,
 		enum cib_errors result, crm_data_t *new_obj) 
 {
-	if(options & cib_inhibit_notify) {
-		crm_debug_2("Inhibiting notify.");
-		return;
-	}
 	do_cib_notify(
 		options, op, update, result, new_obj, T_CIB_UPDATE_CONFIRM);
 }
@@ -287,11 +279,6 @@ do_cib_notify(
 	HA_Message *update_msg = NULL;
 	const char *type = NULL;
 	const char *id = NULL;
-
-	if(options & cib_inhibit_notify) {
-		crm_warn("Inhibiting notify.");
-		return;
-	}
 
 	update_msg = ha_msg_new(8);
 
