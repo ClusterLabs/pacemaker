@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.10 2006/01/19 15:37:50 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.11 2006/01/26 11:36:58 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -598,7 +598,7 @@ main(int argc, char **argv)
 	   || rsc_cmd == 'G' || rsc_cmd == 'g') {
 		cib_conn = cib_new();
 		rc = cib_conn->cmds->signon(
-			cib_conn, crm_system_name, cib_command);
+			cib_conn, crm_system_name, cib_command_synchronous);
 		set_working_set_defaults(&data_set);
 
 		if(rsc_cmd != 'D' && rsc_cmd != 'U') {

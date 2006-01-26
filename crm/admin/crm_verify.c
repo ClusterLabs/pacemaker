@@ -1,4 +1,4 @@
-/* $Id: crm_verify.c,v 1.2 2005/10/14 09:48:26 andrew Exp $ */
+/* $Id: crm_verify.c,v 1.3 2006/01/26 11:36:58 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -157,7 +157,8 @@ main(int argc, char **argv)
 
 	if(USE_LIVE_CIB) {
 		cib_conn = cib_new();
-		rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
+		rc = cib_conn->cmds->signon(
+			cib_conn, crm_system_name, cib_command_synchronous);
 	}
 	
 	crm_zero_mem_stats(NULL);

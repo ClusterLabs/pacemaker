@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.69 2006/01/11 12:47:55 andrew Exp $ */
+/* $Id: ptest.c,v 1.70 2006/01/26 11:36:58 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -210,7 +210,7 @@ main(int argc, char **argv)
 		int rc = cib_ok;
 		cib_conn = cib_new();
 		rc = cib_conn->cmds->signon(
-			cib_conn, "ptest", cib_command);
+			cib_conn, "ptest", cib_command_synchronous);
 
 		if(rc == cib_ok) {
 			crm_info("Reading XML from: live cluster");

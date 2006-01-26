@@ -1,4 +1,4 @@
-/* $Id: crm_attribute.c,v 1.6 2005/10/24 07:54:19 andrew Exp $ */
+/* $Id: crm_attribute.c,v 1.7 2006/01/26 11:36:58 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -197,7 +197,8 @@ main(int argc, char **argv)
 	}
 
 	the_cib = cib_new();
-	rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
+	rc = the_cib->cmds->signon(
+		the_cib, crm_system_name, cib_command_synchronous);
 
 	if(rc != cib_ok) {
 		fprintf(stderr, "Error signing on to the CIB service: %s\n",
@@ -312,6 +313,7 @@ main(int argc, char **argv)
 		CRM_DEV_ASSERT(attr_value != NULL);
 
 		if(inhibit_pe) {
+			crm_warn("Inhibiting notifications for this update");
 			cib_opts |= cib_inhibit_notify;
 		}
 		rc = update_attr(the_cib, cib_opts, type, dest_node, set_name,

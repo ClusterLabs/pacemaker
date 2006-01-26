@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.61 2005/12/19 16:54:43 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.62 2006/01/26 11:36:58 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -368,7 +368,7 @@ do_work(ll_cluster_t * hb_cluster)
 		crm_data_t *output = NULL;
 		
 		enum cib_errors rc = the_cib->cmds->signon(
-			the_cib, crm_system_name, cib_command);
+			the_cib, crm_system_name, cib_command_synchronous);
 
 		if(rc != cib_ok) {
 			return -1;
