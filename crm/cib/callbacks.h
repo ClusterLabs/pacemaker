@@ -1,4 +1,4 @@
-/* $Id: callbacks.h,v 1.12 2005/10/18 11:41:53 andrew Exp $ */
+/* $Id: callbacks.h,v 1.13 2006/01/26 10:24:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -72,11 +72,22 @@ typedef struct cib_operation_s
 
 extern cib_operation_t cib_server_ops[];
 
-extern gboolean cib_client_connect(IPC_Channel *channel, gpointer user_data);
+extern gboolean cib_client_connect_null(
+	IPC_Channel *channel, gpointer user_data);
+extern gboolean cib_client_connect_rw_ro(
+	IPC_Channel *channel, gpointer user_data);
+extern gboolean cib_client_connect_rw_synch(
+	IPC_Channel *channel, gpointer user_data);
+extern gboolean cib_client_connect_ro_synch(
+	IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_null_callback (IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_rw_callback   (IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_ro_callback   (IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_ha_dispatch   (IPC_Channel *channel, gpointer user_data);
+extern gboolean cib_rw_synchronous_callback(
+	IPC_Channel *channel, gpointer user_data);
+extern gboolean cib_ro_synchronous_callback(
+	IPC_Channel *channel, gpointer user_data);
 
 extern void cib_peer_callback(HA_Message * msg, void* private_data);
 extern void cib_client_status_callback(const char * node, const char * client,

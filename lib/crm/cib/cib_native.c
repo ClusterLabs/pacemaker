@@ -114,10 +114,23 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 		native->command_channel = init_client_ipc_comms_nodispatch(
 			cib_channel_rw);
 		
-	} else {
+	} else if(type == cib_query) {
 		cib->state = cib_connected_query;
 		native->command_channel = init_client_ipc_comms_nodispatch(
 			cib_channel_ro);
+		
+	} else if(type == cib_query_synchronous) {
+		cib->state = cib_connected_query;
+		native->command_channel = init_client_ipc_comms_nodispatch(
+			cib_channel_ro_synchronous);
+		
+	} else if(type == cib_command_synchronous) {
+		cib->state = cib_connected_query;
+		native->command_channel = init_client_ipc_comms_nodispatch(
+			cib_channel_rw_synchronous);
+		
+	} else {
+		return cib_not_connected;		
 	}
 	
 	if(native->command_channel == NULL) {
@@ -130,6 +143,9 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 		rc = cib_authentication;
 	}
 	
+	if(type == cib_query_synchronous || type == cib_command_synchronous) {
+		return rc;
+	}
 
 	if(rc == cib_ok) {
 		crm_debug_4("Connecting callback channel");
@@ -315,39 +331,21 @@ cib_native_inputfd(cib_t* cib)
 	return ch->ops->get_recv_select_fd(ch);
 }
 
-int
-cib_native_perform_op(
-	cib_t *cib, const char *op, const char *host, const char *section,
-	crm_data_t *data, crm_data_t **output_data, int call_options) 
+static HA_Message *
+cib_create_op(
+	int call_id, const char *op, const char *host, const char *section,
+	crm_data_t *data, int call_options) 
 {
 	int  rc = HA_OK;
-	
-	struct ha_msg *op_msg   = NULL;
-	struct ha_msg *op_reply = NULL;
-
- 	cib_native_opaque_t *native = cib->variant_opaque;
-
-	if(cib->state ==  cib_disconnected) {
-		return cib_not_connected;
-	}
-
-	if(output_data != NULL) {
-		*output_data = NULL;
-	}
-	
-	if(op == NULL) {
-		crm_err("No operation specified");
-		rc = cib_operation;
-	}
-
+	HA_Message *op_msg = NULL;
 	op_msg = ha_msg_new(8);
 	if (op_msg == NULL) {
 		crm_err("No memory to create HA_Message");
-		return cib_create_msg;
+		return NULL;
 	}
 	
 	if(rc == HA_OK) {
-		rc = ha_msg_add(op_msg, F_TYPE, "cib");
+		rc = ha_msg_add(op_msg, F_TYPE, T_CIB);
 	}
 	if(rc == HA_OK) {
 		rc = ha_msg_add(op_msg, F_CIB_OPERATION, op);
@@ -359,17 +357,18 @@ cib_native_perform_op(
 		rc = ha_msg_add(op_msg, F_CIB_SECTION, section);
 	}
 	if(rc == HA_OK) {
-		rc = ha_msg_add_int(op_msg, F_CIB_CALLID, cib->call_id);
+		rc = ha_msg_add_int(op_msg, F_CIB_CALLID, call_id);
 	}
 	if(rc == HA_OK) {
 		crm_debug_4("Sending call options: %.8lx, %d",
 			  (long)call_options, call_options);
 		rc = ha_msg_add_int(op_msg, F_CIB_CALLOPTS, call_options);
 	}
+#if 0
 	if(rc == HA_OK && cib->call_timeout > 0) {
 		rc = ha_msg_add_int(op_msg, F_CIB_TIMEOUT, cib->call_timeout);
 	}
-
+#endif
 	if(rc == HA_OK && data != NULL) {
 		const char *tag = crm_element_name(data);
 		crm_data_t *cib = data;
@@ -395,13 +394,48 @@ cib_native_perform_op(
 		crm_err("Failed to create CIB operation message");
 		crm_log_message(LOG_ERR, op_msg);
 		crm_msg_del(op_msg);
-		return cib_create_msg;
+		return NULL;
 	}
 
 	if(call_options & cib_inhibit_bcast) {
 		CRM_DEV_ASSERT((call_options & cib_scope_local));
 	}
+	return op_msg;
+}
 
+int
+cib_native_perform_op(
+	cib_t *cib, const char *op, const char *host, const char *section,
+	crm_data_t *data, crm_data_t **output_data, int call_options) 
+{
+	int  rc = HA_OK;
+	
+	struct ha_msg *op_msg   = NULL;
+	struct ha_msg *op_reply = NULL;
+
+ 	cib_native_opaque_t *native = cib->variant_opaque;
+
+	if(cib->state ==  cib_disconnected) {
+		return cib_not_connected;
+	}
+
+	if(output_data != NULL) {
+		*output_data = NULL;
+	}
+	
+	if(op == NULL) {
+		crm_err("No operation specified");
+		rc = cib_operation;
+	}
+
+	if(rc == HA_OK) {
+		op_msg = cib_create_op(
+			cib->call_id, op, host, section, data, call_options);
+		if(op_msg == NULL) {
+			rc = cib_create_msg;
+		}
+	}
+	
 	cib->call_id++;
 	/* prevent call_id from being negative (or zero) and conflicting
 	 *    with the cib_errors enum

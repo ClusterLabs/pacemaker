@@ -662,6 +662,9 @@ cib_error2string(enum cib_errors return_code)
 		case cib_msg_field_add:
 			error_msg = "failed adding field to cib message";
 			break;			
+		case cib_id_check:
+			error_msg = "id-collision detected";
+			break;			
 		case cib_operation:
 			error_msg = "invalid operation";
 			break;
@@ -909,7 +912,6 @@ cib_compare_generation(crm_data_t *left, crm_data_t *right)
 	
 	return 0;
 }
-
 
 crm_data_t*
 get_cib_copy(cib_t *cib)

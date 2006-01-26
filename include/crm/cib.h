@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.36 2005/10/18 11:35:12 andrew Exp $ */
+/* $Id: cib.h,v 1.37 2006/01/26 10:24:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -44,6 +44,8 @@ enum cib_state {
 enum cib_conn_type {
 	cib_command,
 	cib_query,
+	cib_query_synchronous,
+	cib_command_synchronous,
 	cib_no_connection
 };
 
@@ -107,7 +109,8 @@ enum cib_errors {
 	cib_no_quorum		= -42,
 	cib_diff_failed		= -43,
 	cib_diff_resync		= -44,
-	cib_old_data		= -45
+	cib_old_data		= -45,
+	cib_id_check		= -46
 };
 
 enum cib_update_op {
@@ -182,6 +185,8 @@ enum cib_section {
 #define cib_channel_ro		"cib_ro"
 #define cib_channel_rw		"cib_rw"
 #define cib_channel_callback	"cib_callback"
+#define cib_channel_ro_synchronous	"cib_ro_syncronous"
+#define cib_channel_rw_synchronous	"cib_rw_syncronous"
 
 typedef struct cib_s cib_t;
 

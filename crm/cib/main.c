@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.32 2006/01/16 09:16:32 andrew Exp $ */
+/* $Id: main.c,v 1.33 2006/01/26 10:24:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -144,6 +144,17 @@ main(int argc, char ** argv)
 	return init_start();
 }
 
+gboolean cib_stats(gpointer data);
+unsigned long cib_num_ops = 0, cib_num_local = 0, cib_num_updates = 0, cib_num_fail = 0;
+
+gboolean
+cib_stats(gpointer data)
+{
+	crm_info("Processed %lu operations (%lu local, %lu updates, %lu failures)",
+		 cib_num_ops, cib_num_local, cib_num_updates, cib_num_fail);
+	return TRUE;
+}
+
 int
 init_start(void)
 {
@@ -162,18 +173,25 @@ init_start(void)
 	}
 	
 	was_error = init_server_ipc_comms(
-		crm_strdup(cib_channel_callback), cib_client_connect,
+		crm_strdup(cib_channel_callback), cib_client_connect_null,
 		default_ipc_connection_destroy);
 
 	was_error = was_error || init_server_ipc_comms(
-		crm_strdup(cib_channel_ro), cib_client_connect,
+		crm_strdup(cib_channel_ro), cib_client_connect_rw_ro,
 		default_ipc_connection_destroy);
 
 	was_error = was_error || init_server_ipc_comms(
-		crm_strdup(cib_channel_rw), cib_client_connect,
+		crm_strdup(cib_channel_rw), cib_client_connect_rw_ro,
 		default_ipc_connection_destroy);
 
+	was_error = was_error || init_server_ipc_comms(
+		crm_strdup(cib_channel_rw_synchronous), cib_client_connect_rw_synch,
+		default_ipc_connection_destroy);
 
+	was_error = was_error || init_server_ipc_comms(
+		crm_strdup(cib_channel_ro_synchronous), cib_client_connect_ro_synch,
+		default_ipc_connection_destroy);
+	
 	if(was_error == FALSE) {
 		crm_debug_3("Be informed of CRM Client Status changes");
 		if (HA_OK != hb_conn->llc_ops->set_cstatus_callback(
@@ -259,8 +277,9 @@ init_start(void)
 		/* Create the mainloop and run it... */
 		mainloop = g_main_new(FALSE);
 		crm_info("Starting %s mainloop", crm_system_name);
-		
-		Gmain_timeout_add(1000, cib_msg_timeout, NULL);
+
+		Gmain_timeout_add(crm_get_msec("1s"), cib_msg_timeout, NULL);
+		Gmain_timeout_add(crm_get_msec("5min"), cib_stats, NULL); 
 		
 		g_main_run(mainloop);
 		return_to_orig_privs();
