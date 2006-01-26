@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.47 2006/01/10 13:24:04 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.48 2006/01/26 10:16:09 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -144,7 +144,7 @@ main(int argc, char **argv)
 	};
 #endif
 
-	cl_log_set_entity("ptest");
+	cl_log_set_entity("cibadmin");
 	cl_log_set_facility(LOG_USER);
 	set_crm_log_level(LOG_CRIT-1);
 	
@@ -377,17 +377,16 @@ main(int argc, char **argv)
 crm_data_t*
 handleCibMod(crm_data_t *cib_object)
 {
-	const char *attr_value = NULL;
 	crm_data_t *fragment = NULL;
 
 	CRM_DEV_ASSERT(cib_object != NULL);
 	if(cib_object == NULL) {
 		return NULL;
 	}
+
 	
-	attr_value = ID(cib_object);
-	if(attr_value == NULL || strlen(attr_value) == 0) {
-		crm_err("No value for \"id\" specified.");
+	if(do_id_check(cib_object, NULL)) {
+		crm_err("ID Check failed.");
 		return NULL;
 	}
 	
