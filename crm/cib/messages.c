@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.62 2006/01/26 10:05:15 andrew Exp $ */
+/* $Id: messages.c,v 1.63 2006/01/26 11:29:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -663,37 +663,30 @@ cib_process_change(
 	
 	/* make changes to a temp copy then activate */
 	if(section == NULL) {
-		crm_data_t *sub_input = NULL;
+		int lpc = 0;
 		const char *type = NULL;
-		copy_in_properties(*result_cib, input);
+		crm_data_t *sub_input = NULL;
+
 		/* order is no longer important here */
-		if(result == cib_ok) {
-			type = XML_CIB_TAG_NODES;
-			sub_input = get_object_root(type, input);
-			result = updateList(
-				*result_cib, sub_input, failed, cib_update_op,
-				type);
-		}
-		if(result == cib_ok) {
-			type = XML_CIB_TAG_RESOURCES;
-			sub_input = get_object_root(type, input);
-			result = updateList(
-				*result_cib, sub_input, failed, cib_update_op,
-				type);
-		}
-		if(result == cib_ok) {
-			type = XML_CIB_TAG_CONSTRAINTS;
-			sub_input = get_object_root(type, input);
-			result = updateList(
-				*result_cib, sub_input, failed, cib_update_op,
-				type);
-		}
-		if(result == cib_ok) {
-			type = XML_CIB_TAG_STATUS;
-			sub_input = get_object_root(type, input);
-			result = updateList(
-				*result_cib, sub_input, failed, cib_update_op,
-				type);
+		const char *type_list[] = {
+			XML_CIB_TAG_NODES,
+			XML_CIB_TAG_CONSTRAINTS,
+			XML_CIB_TAG_RESOURCES,
+			XML_CIB_TAG_STATUS,
+			XML_CIB_TAG_CRMCONFIG
+		};
+
+		copy_in_properties(*result_cib, input);
+		for(lpc = 0; lpc < DIMOF(type_list); lpc++) {
+			type = type_list[lpc];
+	
+			if(result == cib_ok) {
+				crm_debug_2("Processing section=%s", type);
+				sub_input = get_object_root(type, input);
+				result = updateList(
+					*result_cib, sub_input, failed,
+					cib_update_op, type);
+			}
 		}
 
 	} else {
