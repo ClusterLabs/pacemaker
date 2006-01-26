@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.52 2006/01/23 14:43:07 andrew Exp $ */
+/* $Id: xml.c,v 1.53 2006/01/26 12:05:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1765,7 +1765,7 @@ subtract_xml_object(crm_data_t *left, crm_data_t *right, gboolean suppress)
 	if(left == NULL) {
 		return NULL;
 	} else if(right == NULL) {
-		crm_debug_4("Processing <%s id=%s> (complete copy)",
+		crm_debug_5("Processing <%s id=%s> (complete copy)",
 			    crm_element_name(left), ID(left));
 		return copy_xml(left);
 	}
@@ -1786,7 +1786,7 @@ subtract_xml_object(crm_data_t *left, crm_data_t *right, gboolean suppress)
 	diff = create_xml_node(NULL, name);
 
 	/* changes to name/value pairs */
-	crm_debug_4("Processing <%s id=%s>", crm_str(name), ID(left));
+	crm_debug_5("Processing <%s id=%s>", crm_str(name), ID(left));
 
 	xml_prop_iter(left, prop_name, left_value,
 		      skip = FALSE;
@@ -1807,17 +1807,17 @@ subtract_xml_object(crm_data_t *left, crm_data_t *right, gboolean suppress)
 		      if(right_val == NULL) {
 			      differences = TRUE;
 			      crm_xml_add(diff, prop_name, left_value);
-			      crm_debug_5("\t%s: %s", crm_str(prop_name),
+			      crm_debug_6("\t%s: %s", crm_str(prop_name),
 					  crm_str(left_value));
 				      
 		      } else if(safe_str_eq(left_value, right_val)) {
-			      crm_debug_4("\t%s: %s (removed)",
+			      crm_debug_5("\t%s: %s (removed)",
 					  crm_str(prop_name),
 					  crm_str(left_value));
 		      } else {
 			      differences = TRUE;
 			      crm_xml_add(diff, prop_name, left_value);
-			      crm_debug_4("\t%s: %s->%s",
+			      crm_debug_5("\t%s: %s->%s",
 					  crm_str(prop_name),
 					  crm_str(left_value),
 					  right_val);
@@ -1840,7 +1840,7 @@ subtract_xml_object(crm_data_t *left, crm_data_t *right, gboolean suppress)
 	
 	if(differences == FALSE) {
 		free_xml(diff);
-		crm_debug_4("\tNo changes");
+		crm_debug_5("\tNo changes");
 		return NULL;
 	}
 	crm_xml_add(diff, XML_ATTR_ID, ID(left));

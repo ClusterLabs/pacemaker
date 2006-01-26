@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.29 2006/01/10 13:49:04 andrew Exp $ */
+/* $Id: primatives.c,v 1.30 2006/01/26 12:05:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -318,7 +318,7 @@ delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec)
 	}
 	object_id = crm_element_value(delete_spec, XML_ATTR_ID);
 
-	crm_debug_2("Processing: <%s id=%s>",
+	crm_debug_3("Processing: <%s id=%s>",
 		    crm_str(object_name), crm_str(object_id));
 	
 	if(delete_spec == NULL) {
@@ -377,6 +377,9 @@ add_cib_object(crm_data_t *parent, crm_data_t *new_obj)
 	}
 	object_id = crm_element_value(new_obj, XML_ATTR_ID);
 
+	crm_debug_3("Processing: <%s id=%s>",
+		    crm_str(object_name), crm_str(object_id));
+	
 	if(new_obj == NULL) {
 		result = cib_NOOBJECT;
 
@@ -427,6 +430,9 @@ update_cib_object(crm_data_t *parent, crm_data_t *update)
 	CRM_DEV_ASSERT(object_name != NULL);
 	if(crm_assert_failed) { return cib_NOOBJECT; }
 
+	crm_debug_3("Processing: <%s id=%s>",
+		    crm_str(object_name), crm_str(object_id));
+	
 	if(object_id == NULL) {
 		/*  placeholder object */
 		target = find_xml_node(parent, object_name, FALSE);
