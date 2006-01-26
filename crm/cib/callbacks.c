@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.100 2006/01/26 10:24:06 andrew Exp $ */
+/* $Id: callbacks.c,v 1.101 2006/01/26 17:09:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -728,7 +728,7 @@ cib_process_request(
 			const char *client_id = client_obj->callback_id;
 			crm_debug_2("Sending %ssync response to %s %s",
 				  (call_options & cib_sync_call)?"":"an a-",
-				  client_obj->id,
+				  client_obj->name,
 				  from_peer?"(originator of delegated request)":"");
 
 			if(call_options & cib_sync_call) {
@@ -1313,7 +1313,7 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 	ha_msg_value_int(msg, F_CIB_CALLOPTS, &call_options);
 	crm_debug_4("Retrieved call options: %d", call_options);
 	
-	cib_process_request(msg, call_options, TRUE, TRUE, NULL);
+	cib_process_request(msg, FALSE, TRUE, TRUE, NULL);
 
 	return;
 }
