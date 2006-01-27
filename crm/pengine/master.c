@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.7 2005/10/25 14:02:15 andrew Exp $ */
+/* $Id: master.c,v 1.8 2006/01/27 11:15:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -231,10 +231,10 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	gboolean any_demoting = FALSE;
 	resource_t *last_promote_rsc = NULL;
 	resource_t *last_demote_rsc = NULL;
-	const char *master_max_s =
-		get_rsc_param(rsc, XML_RSC_ATTR_MASTER_MAX);
-	const char *master_node_max_s =
-		get_rsc_param(rsc, XML_RSC_ATTR_MASTER_NODEMAX);
+	const char *master_max_s = g_hash_table_lookup(
+		rsc->parameters, XML_RSC_ATTR_MASTER_MAX);
+	const char *master_node_max_s = g_hash_table_lookup(
+		rsc->parameters, XML_RSC_ATTR_MASTER_NODEMAX);
 
 	int promoted = 0;
 	int max_nodes = 0;

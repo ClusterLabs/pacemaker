@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.50 2006/01/07 21:00:24 andrew Exp $ */
+/* $Id: group.c,v 1.51 2006/01/27 11:15:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,8 +58,11 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	crm_data_t *xml_obj = rsc->xml;
 	crm_data_t *xml_self = copy_xml(rsc->xml);
 	group_variant_data_t *group_data = NULL;
-	const char *group_ordered = get_rsc_param(rsc, "ordered");
-	const char *group_colocated = get_rsc_param(rsc, "colocated");
+	const char *group_ordered = g_hash_table_lookup(
+		rsc->parameters, "ordered");
+	const char *group_colocated = g_hash_table_lookup(
+		rsc->parameters, "colocated");
+	
 
 	crm_debug_3("Processing resource %s...", rsc->id);
 /* 	rsc->id = "dummy_group_rsc_id"; */
@@ -138,6 +141,13 @@ group_find_child(resource_t *rsc, const char *id)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 	return pe_find_resource(group_data->child_list, id);
+}
+
+GListPtr group_children(resource_t *rsc)
+{
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
+	return group_data->child_list;
 }
 
 int group_num_allowed_nodes(resource_t *rsc)

@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.29 2005/09/30 13:01:15 andrew Exp $ */
+/* $Id: complex.h,v 1.30 2006/01/27 11:15:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -85,6 +85,13 @@ typedef struct resource_object_functions_s
 		void (*rsc_location)(resource_t *, rsc_to_node_t *);
 
 		void (*expand)(resource_t *, pe_working_set_t *);
+		GListPtr (*children)(resource_t *);
+
+		/* parameter result must be free'd */
+		char *(*parameter)(
+			resource_t *, node_t *, gboolean, const char *,
+			pe_working_set_t *);
+
 		void (*print)(resource_t *, const char *, long, void *);
 		gboolean (*active)(resource_t *,gboolean);
 		enum rsc_role_e (*state)(resource_t *);
@@ -94,7 +101,11 @@ typedef struct resource_object_functions_s
 		
 } resource_object_functions_t;
 
+extern char *native_parameter(
+	resource_t *rsc, node_t *node, gboolean create, const char *name,
+	pe_working_set_t *data_set);
 extern void native_unpack(resource_t *rsc, pe_working_set_t *data_set);
+extern GListPtr native_children(resource_t *rsc);
 extern resource_t *native_find_child(resource_t *rsc, const char *id);
 extern int  native_num_allowed_nodes(resource_t *rsc);
 extern color_t * native_color(resource_t *rsc, pe_working_set_t *data_set);
@@ -129,6 +140,7 @@ extern gboolean native_create_probe(
 	pe_working_set_t *data_set);
 
 extern void group_unpack(resource_t *rsc, pe_working_set_t *data_set);
+extern GListPtr group_children(resource_t *rsc);
 extern resource_t *group_find_child(resource_t *rsc, const char *id);
 extern int  group_num_allowed_nodes(resource_t *rsc);
 extern color_t *group_color(resource_t *rsc, pe_working_set_t *data_set);
@@ -158,6 +170,7 @@ extern gboolean group_create_probe(
 	pe_working_set_t *data_set);
 
 extern void clone_unpack(resource_t *rsc, pe_working_set_t *data_set);
+extern GListPtr clone_children(resource_t *rsc);
 extern resource_t *clone_find_child(resource_t *rsc, const char *id);
 extern int  clone_num_allowed_nodes(resource_t *rsc);
 extern color_t *clone_color(resource_t *rsc, pe_working_set_t *data_set);
@@ -212,7 +225,6 @@ extern void common_agent_constraints(
 extern void unpack_instance_attributes(
 	crm_data_t *xml_obj, const char *set_name, node_t *node, GHashTable *hash,
 	const char **attr_filter, int attrs_length, pe_working_set_t *data_set);
-extern const char *get_rsc_param(resource_t *rsc, const char *prop);
 extern void add_rsc_param(resource_t *rsc, const char *name, const char *value);
 extern void add_hash_param(GHashTable *hash, const char *name, const char *value);
 

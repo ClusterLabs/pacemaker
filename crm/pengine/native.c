@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.107 2006/01/12 15:11:08 andrew Exp $ */
+/* $Id: native.c,v 1.108 2006/01/27 11:15:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -177,6 +177,71 @@ resource_t *
 native_find_child(resource_t *rsc, const char *id)
 {
 	return NULL;
+}
+
+GListPtr native_children(resource_t *rsc)
+{
+	return NULL;
+}
+
+static void
+hash_copy_field(gpointer key, gpointer value, gpointer user_data) 
+{
+	const char *name    = key;
+	const char *s_value = value;
+
+	GHashTable *hash_copy = user_data;
+	g_hash_table_insert(hash_copy, crm_strdup(name), crm_strdup(s_value));
+}
+
+char *
+native_parameter(
+	resource_t *rsc, node_t *node, gboolean create, const char *name,
+	pe_working_set_t *data_set)
+{
+	char *value_copy = NULL;
+	const char *value = NULL;
+
+	CRM_DEV_ASSERT(rsc != NULL);
+	if(crm_assert_failed) {
+		return NULL;
+	}
+
+	crm_debug_2("Looking up %s in %s", name, rsc->id);
+	
+	if(create) {
+		GHashTable *local_hash = NULL;
+
+		if(node != NULL) {
+			crm_debug_2("Creating hash with node %s",
+				  node->details->uname);
+		} else {
+			crm_debug_2("Creating default hash");
+		}
+		
+		local_hash = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, g_hash_destroy_str);
+
+		g_hash_table_foreach(
+			rsc->parameters, hash_copy_field, local_hash);
+		unpack_instance_attributes(
+			rsc->xml, XML_TAG_ATTR_SETS, node, local_hash,
+			NULL, 0, data_set);
+
+		value = g_hash_table_lookup(local_hash, name);
+		if(value != NULL) {
+			value_copy = crm_strdup(value);
+		}
+		g_hash_table_destroy(local_hash);
+
+	} else {
+		value = g_hash_table_lookup(rsc->parameters, name);
+		if(value != NULL) {
+			value_copy = crm_strdup(value);
+		}
+	}
+	return value_copy;
 }
 
 int native_num_allowed_nodes(resource_t *rsc)

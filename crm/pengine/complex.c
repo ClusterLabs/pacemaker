@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.71 2005/12/19 16:54:44 andrew Exp $ */
+/* $Id: complex.c,v 1.72 2006/01/27 11:15:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,6 +55,8 @@ resource_object_functions_t resource_class_functions[] = {
 		native_rsc_order_rh,
 		native_rsc_location,
 		native_expand,
+		native_children,
+		native_parameter,
 		native_print,
 		native_active,
 		native_resource_state,
@@ -76,6 +78,8 @@ resource_object_functions_t resource_class_functions[] = {
 		group_rsc_order_rh,
 		group_rsc_location,
 		group_expand,
+		group_children,
+		native_parameter,
 		group_print,
 		group_active,
 		group_resource_state,
@@ -97,6 +101,8 @@ resource_object_functions_t resource_class_functions[] = {
 		clone_rsc_order_rh,
 		clone_rsc_location,
 		clone_expand,
+		clone_children,
+		native_parameter,
 		clone_print,
 		clone_active,
 		clone_resource_state,
@@ -118,6 +124,8 @@ resource_object_functions_t resource_class_functions[] = {
 		clone_rsc_order_rh,
 		clone_rsc_location,
 		clone_expand,
+		clone_children,
+		native_parameter,
 		clone_print,
 		clone_active,
 		clone_resource_state,
@@ -125,9 +133,6 @@ resource_object_functions_t resource_class_functions[] = {
 		clone_free
 	}
 };
-
-/* resource_object_functions_t resource_variants[] = resource_class_functions; */
-
 
 int get_resource_type(const char *name)
 {
@@ -505,15 +510,5 @@ add_hash_param(GHashTable *hash, const char *name, const char *value)
 	} else if(g_hash_table_lookup(hash, name) == NULL) {
 		g_hash_table_insert(hash, crm_strdup(name), crm_strdup(value));
 	}
-}
-	
-const char *
-get_rsc_param(resource_t *rsc, const char *name)
-{
-	CRM_DEV_ASSERT(rsc != NULL);
-	if(crm_assert_failed) {
-		return NULL;
-	}
-	return g_hash_table_lookup(rsc->parameters, name);
 }
 

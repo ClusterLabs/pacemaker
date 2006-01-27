@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.71 2006/01/10 14:13:22 andrew Exp $ */
+/* $Id: incarnation.c,v 1.72 2006/01/27 11:15:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -127,10 +127,10 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	const char *interleave =
 		crm_element_value(xml_obj, XML_RSC_ATTR_INTERLEAVE);
 
-	const char *max_clones =
-		get_rsc_param(rsc, XML_RSC_ATTR_INCARNATION_MAX);
-	const char *max_clones_node =
-		get_rsc_param(rsc, XML_RSC_ATTR_INCARNATION_NODEMAX);
+	const char *max_clones = g_hash_table_lookup(
+		rsc->parameters, XML_RSC_ATTR_INCARNATION_MAX);
+	const char *max_clones_node = g_hash_table_lookup(
+		rsc->parameters, XML_RSC_ATTR_INCARNATION_NODEMAX);
 
 	crm_debug_3("Processing resource %s...", rsc->id);
 
@@ -191,15 +191,19 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		    clone_data->clone_max, rsc->id);
 }
 
-
-
-
 resource_t *
 clone_find_child(resource_t *rsc, const char *id)
 {
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 	return pe_find_resource(clone_data->child_list, id);
+}
+
+GListPtr clone_children(resource_t *rsc)
+{
+	clone_variant_data_t *clone_data = NULL;
+	get_clone_variant_data(clone_data, rsc);
+	return clone_data->child_list;
 }
 
 int clone_num_allowed_nodes(resource_t *rsc)
