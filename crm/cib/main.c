@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.33 2006/01/26 10:24:06 andrew Exp $ */
+/* $Id: main.c,v 1.34 2006/01/30 16:40:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -144,14 +144,31 @@ main(int argc, char ** argv)
 	return init_start();
 }
 
+unsigned long cib_num_ops = 0;
+const char *cib_stat_interval = "5min";
+unsigned long cib_num_local = 0, cib_num_updates = 0, cib_num_fail = 0;
+
 gboolean cib_stats(gpointer data);
-unsigned long cib_num_ops = 0, cib_num_local = 0, cib_num_updates = 0, cib_num_fail = 0;
 
 gboolean
 cib_stats(gpointer data)
 {
-	crm_info("Processed %lu operations (%lu local, %lu updates, %lu failures)",
-		 cib_num_ops, cib_num_local, cib_num_updates, cib_num_fail);
+	int local_log_level = LOG_DEBUG;
+	static unsigned long last_stat = 0;
+
+	if(cib_num_ops - last_stat > 0) {
+		local_log_level = LOG_INFO;
+	}
+	
+	crm_log_maybe(local_log_level,
+		      "Processed %lu operations in the last %s",
+		      cib_num_ops - last_stat, cib_stat_interval);
+	
+	crm_log_maybe(local_log_level+1, "Processed %lu operations"
+		      " (%lu local, %lu updates, %lu failures)",
+		      cib_num_ops, cib_num_local, cib_num_updates,cib_num_fail);
+
+	last_stat = cib_num_ops;
 	return TRUE;
 }
 
@@ -279,7 +296,8 @@ init_start(void)
 		crm_info("Starting %s mainloop", crm_system_name);
 
 		Gmain_timeout_add(crm_get_msec("1s"), cib_msg_timeout, NULL);
-		Gmain_timeout_add(crm_get_msec("5min"), cib_stats, NULL); 
+		Gmain_timeout_add(
+			crm_get_msec(cib_stat_interval), cib_stats, NULL); 
 		
 		g_main_run(mainloop);
 		return_to_orig_privs();
