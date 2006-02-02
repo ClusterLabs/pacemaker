@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.38 2006/01/07 21:23:11 andrew Exp $ */
+/* $Id: xml.h,v 1.39 2006/02/02 08:33:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,7 +32,9 @@
 #include <clplumbing/cl_log.h> 
 
 /* #define USE_LIBXML 1 */
-#define XML_PARANOIA_CHECKS 1
+#if CRM_DEV_BUILD
+#  define XML_PARANOIA_CHECKS 1
+#endif
 
 #ifdef USE_LIBXML
 #  include <libxml/tree.h> 

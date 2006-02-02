@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.85 2006/01/10 13:46:41 andrew Exp $ */
+/* $Id: crm.h,v 1.86 2006/02/02 08:33:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -276,7 +276,6 @@ extern void crm_log_message_adv(
 		}							\
 	}
 #  define crm_free(x) if(x) { free(x); x=NULL; }
-#  define crm_is_allocated(obj) obj?TRUE:FALSE
 #else
 #  if CRM_DEV_BUILD
 #    define crm_malloc0(new_obj,length)					\
@@ -294,7 +293,12 @@ extern void crm_log_message_adv(
 		}							\
 		memset(new_obj, 0, length);				\
 	}
-#else
+#    define crm_free(x) if(x) {				\
+		CRM_ASSERT(cl_is_allocated(x) == 1);	\
+		cl_free(x);				\
+		x=NULL;				\
+	}
+#  else
 #    define crm_malloc0(new_obj,length)					\
 	{								\
 		new_obj = cl_malloc(length);				\
@@ -304,13 +308,11 @@ extern void crm_log_message_adv(
 		}							\
 		memset(new_obj, 0, length);				\
 	}
-#  endif
-#  define crm_free(x) if(x) {				\
-		CRM_ASSERT(cl_is_allocated(x) == 1);	\
+#    define crm_free(x) if(x) {				\
 		cl_free(x);				\
 		x=NULL;				\
 	}
-#  define crm_is_allocated(obj) cl_is_allocated(obj)
+#  endif
 #endif
 
 #define crm_msg_del(msg) if(msg != NULL) { ha_msg_del(msg); msg = NULL; }

@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.30 2006/01/26 12:05:14 andrew Exp $ */
+/* $Id: primatives.c,v 1.31 2006/02/02 08:33:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -471,11 +471,6 @@ update_cib_object(crm_data_t *parent, crm_data_t *update)
 	
 	copy_in_properties(target, update);
 
-	CRM_DEV_ASSERT(cl_is_allocated(object_name));
-	if(object_id != NULL) {
-		CRM_DEV_ASSERT(cl_is_allocated(object_id));
-	}
-	
 	crm_debug_3("Processing children of <%s id=%s>",
 		    crm_str(object_name), crm_str(object_id));
 	

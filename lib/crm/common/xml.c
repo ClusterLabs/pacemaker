@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.53 2006/01/26 12:05:14 andrew Exp $ */
+/* $Id: xml.c,v 1.54 2006/02/02 08:33:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -290,7 +290,6 @@ crm_xml_add(crm_data_t* node, const char *name, const char *value)
 		crm_validate_data(node);
 		ha_msg_mod(node, name, value);
 		new_value = crm_element_value(node, name);
-		CRM_DEV_ASSERT(cl_is_allocated(new_value));
 		return new_value;
 	}
 	
@@ -934,12 +933,12 @@ crm_validate_data(const crm_data_t *xml_root)
 #else
 	int lpc = 0;
 	CRM_ASSERT(xml_root != NULL);
-	CRM_ASSERT(crm_is_allocated(xml_root) == 1);
+	CRM_ASSERT(cl_is_allocated(xml_root) == 1);
 	CRM_ASSERT(xml_root->nfields < 500);
 	
 	for (lpc = 0; lpc < xml_root->nfields; lpc++) {
 		void *child = xml_root->values[lpc];
-		CRM_ASSERT(crm_is_allocated(xml_root->names[lpc]) == 1);
+		CRM_ASSERT(cl_is_allocated(xml_root->names[lpc]) == 1);
 
 		if(child == NULL) {
 			
@@ -948,7 +947,7 @@ crm_validate_data(const crm_data_t *xml_root)
 			crm_validate_data(child);
 			
 		} else if(xml_root->types[lpc] == FT_STRING) {
-			CRM_ASSERT(crm_is_allocated(child) == 1);
+			CRM_ASSERT(cl_is_allocated(child) == 1);
 /* 		} else { */
 /* 			CRM_DEV_ASSERT(FALSE); */
 		}
@@ -975,9 +974,9 @@ crm_element_value(const crm_data_t *data, const char *name)
 	const char *value = NULL;
 	crm_validate_data(data);
 	value = cl_get_string(data, name);
-	if(value != NULL) {
-		CRM_DEV_ASSERT(crm_is_allocated(value) == 1);
-	}
+#if XML_PARANOIA_CHECKS
+	CRM_DEV_ASSERT(value == NULL || cl_is_allocated(value) == 1);
+#endif
 	return value;
 }
 
@@ -988,10 +987,9 @@ crm_element_value_copy(const crm_data_t *data, const char *name)
 	char *value_copy = NULL;
 	crm_validate_data(data);
 	value = cl_get_string(data, name);
-	if(value != NULL) {
-		CRM_DEV_ASSERT(crm_is_allocated(value) == 1);
-	}
- 	CRM_DEV_ASSERT(value != NULL);
+#if XML_PARANOIA_CHECKS
+	CRM_DEV_ASSERT(cl_is_allocated(value) == 1);
+#endif
 	if(value != NULL) {
 		value_copy = crm_strdup(value);
 	}
@@ -1358,7 +1356,6 @@ parse_xml(const char *input, int *offset)
 	crm_debug_4("Processing tag %s", tag_name);
 	
 	new_obj = ha_msg_new(1);
-	CRM_DEV_ASSERT(crm_is_allocated(new_obj) == 1);
 	
 	ha_msg_add(new_obj, F_XML_TAGNAME, tag_name);
 	lpc += len;
@@ -1392,7 +1389,6 @@ parse_xml(const char *input, int *offset)
 						if(child == NULL) {
 							error = "error parsing child";
 						} else {
-							CRM_DEV_ASSERT(crm_is_allocated(child) == 1);
 							ha_msg_addstruct_compress(
 								new_obj, crm_element_name(child), child);
 							
@@ -1489,9 +1485,6 @@ parse_xml(const char *input, int *offset)
 		(*offset) += lpc;
 	}
 
-	if(new_obj != NULL) {
-		CRM_DEV_ASSERT(crm_is_allocated(new_obj) == 1);
-	}
 	return new_obj;
 }
 
@@ -1901,11 +1894,6 @@ add_xml_object(crm_data_t *parent, crm_data_t *target, const crm_data_t *update)
 					  right_val);
 		      }
 		);
-
-	CRM_DEV_ASSERT(cl_is_allocated(object_name));
-	if(object_id != NULL) {
-		CRM_DEV_ASSERT(cl_is_allocated(object_id));
-	}	
 
 	crm_debug_3("Processing children of <%s id=%s>",
 		    crm_str(object_name), crm_str(object_id));
