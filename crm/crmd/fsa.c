@@ -166,6 +166,9 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 		
 	} else if(an_action & A_CIB_START) {
 		do_time_check = FALSE;
+
+	} else if(an_action & A_READCONFIG) {
+		do_time_check = FALSE;
 	}
 	
 	fsa_actions = clear_bit(fsa_actions, an_action);
@@ -249,6 +252,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 				  fsa_state2string(fsa_state),
 				  fsa_cause2string(fsa_data->fsa_cause),
 				  fsa_data->origin);
+/* 		} else if(fsa_actions == A_EXIT_0) { */
+/* 			crm_log_level = LOG_DEBUG_2; */
 		}
 		
 #ifdef FSA_TRACE
