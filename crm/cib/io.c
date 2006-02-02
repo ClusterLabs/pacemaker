@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.41 2006/01/20 09:30:37 andrew Exp $ */
+/* $Id: io.c,v 1.42 2006/02/02 13:40:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -124,7 +124,26 @@ readCibXmlFile(const char *filename)
 	}
 	
 	if (s_res == 0) {
-		FILE *cib_file = fopen(filename, "r");
+		FILE *cib_file = NULL;
+		gboolean user_readwritable = (buf.st_gid == atoi(HA_CCMUID)) && (buf.st_mode & (S_IRGRP|S_IWGRP));
+
+		if( S_ISREG(buf.st_mode) == FALSE ) {
+			crm_err("%s must be a regular file", filename);
+			exit(100);
+			
+		} else if( user_readwritable == FALSE ) {
+			gboolean group_readwritable = (buf.st_uid == atoi(HA_APIGID)) && (buf.st_mode & (S_IRUSR|S_IWUSR));
+			if( group_readwritable == FALSE ) {
+				crm_err("%s must be owned and read/writeable by user %s,"
+					" or owned and read/writable by group %s",
+					filename, HA_CCMUID, HA_APIGID);
+				exit(100);
+			}
+			crm_warn("%s should be owned and read/writeable by user %s",
+				 filename, HA_CCMUID);
+		}
+
+		cib_file = fopen(filename, "r");
 		crm_info("Reading cluster configuration from: %s", filename);
 		root = file2xml(cib_file);
 		crm_xml_add(root, "generated", XML_BOOLEAN_FALSE);

@@ -323,6 +323,8 @@ class LinuxHAv2(HeartbeatCM):
                 if 0!=self.rsh.cp(self.Env["CIBfilename"], 
                     "root@" + (self["CIBfile"]%node)):
                     raise ValueError("Can not scp file to %s "%node)
+	
+	    self.rsh.remote_python_call(node, "os", "system", "chown @HA_CCMUID@ @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
 
     def prepare(self):
         '''Finish the Initialization process. Prepare to test...'''
