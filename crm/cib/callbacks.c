@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.102 2006/02/02 11:10:32 andrew Exp $ */
+/* $Id: callbacks.c,v 1.103 2006/02/02 11:57:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -194,7 +194,7 @@ cib_operation_t cib_server_ops[] = {
 	{CIB_OP_QUERY,     FALSE, FALSE, FALSE, cib_prepare_none, cib_cleanup_query,  cib_process_query},
 	{CIB_OP_MODIFY,    TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_output, cib_process_modify},
 	{CIB_OP_UPDATE,    TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_output, cib_process_change},
-	{CIB_OP_APPLY_DIFF,TRUE,  TRUE,  TRUE,  cib_prepare_diff, cib_cleanup_none,   cib_process_diff},
+	{CIB_OP_APPLY_DIFF,TRUE,  TRUE,  TRUE,  cib_prepare_diff, cib_cleanup_sync,   cib_process_diff},
 	{CIB_OP_SLAVE,     FALSE, TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
 	{CIB_OP_SLAVEALL,  TRUE,  TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
 	{CIB_OP_SYNC_ONE,  FALSE, TRUE,  FALSE, cib_prepare_sync, cib_cleanup_sync,   cib_process_sync_one},
@@ -714,7 +714,9 @@ cib_process_request(
 		crm_debug("Processing global/peer update from %s"
 			  " that originated from us", originator);
 		needs_reply = FALSE;
-		local_notify = TRUE;
+		if(cl_get_string(request, F_CIB_CLIENTID) != NULL) {
+			local_notify = TRUE;
+		}
 		
 	} else if(crm_is_true(update)) {
 		crm_debug("Processing global/peer update from %s", originator);
@@ -871,7 +873,7 @@ cib_process_request(
 		if(local_rc != cib_ok) {
 			crm_warn("%sSync reply to %s failed: %s",
 				 (call_options & cib_sync_call)?"":"A-",
-				 client_obj->name, cib_error2string(local_rc));
+				 client_obj?client_obj->name:"<unknown>", cib_error2string(local_rc));
 			crm_log_message(LOG_DEBUG, op_reply);
 		}
 	}
