@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.34 2006/01/30 16:40:11 andrew Exp $ */
+/* $Id: main.c,v 1.35 2006/02/02 11:10:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -145,8 +145,10 @@ main(int argc, char ** argv)
 }
 
 unsigned long cib_num_ops = 0;
-const char *cib_stat_interval = "5min";
+const char *cib_stat_interval = "10min";
 unsigned long cib_num_local = 0, cib_num_updates = 0, cib_num_fail = 0;
+unsigned long cib_bad_connects = 0, cib_num_timeouts = 0;
+longclock_t cib_call_time = 0;
 
 gboolean cib_stats(gpointer data);
 
@@ -155,20 +157,37 @@ cib_stats(gpointer data)
 {
 	int local_log_level = LOG_DEBUG;
 	static unsigned long last_stat = 0;
+	unsigned int cib_calls_ms = 0;
+	static unsigned long cib_stat_interval_ms = 0;
 
-	if(cib_num_ops - last_stat > 0) {
-		local_log_level = LOG_INFO;
+	if(cib_stat_interval_ms == 0) {
+		cib_stat_interval_ms = crm_get_msec(cib_stat_interval);
 	}
 	
-	crm_log_maybe(local_log_level,
-		      "Processed %lu operations in the last %s",
-		      cib_num_ops - last_stat, cib_stat_interval);
+	cib_calls_ms = longclockto_ms(cib_call_time);
+
+	if((cib_num_ops - last_stat) > 0) {
+		unsigned long calls_diff = cib_num_ops - last_stat;
+		double stat_1 = (1000*cib_calls_ms)/calls_diff;
+		
+		local_log_level = LOG_INFO;
+		crm_log_maybe(local_log_level,
+			      "Processed %lu operations"
+			      " (%.2fms average, %lu%% utilization) in the last %s",
+			      calls_diff, stat_1, 
+			      (100*cib_calls_ms)/cib_stat_interval_ms,
+			      cib_stat_interval);
+	}
 	
-	crm_log_maybe(local_log_level+1, "Processed %lu operations"
-		      " (%lu local, %lu updates, %lu failures)",
-		      cib_num_ops, cib_num_local, cib_num_updates,cib_num_fail);
+	crm_log_maybe(local_log_level+1,
+		      "\tDetail: %lu operations (%ums average)"
+		      " (%lu local, %lu updates, %lu failures,"
+		      " %lu timeouts, %lu bad connects)",
+		      cib_num_ops, cib_calls_ms, cib_num_local, cib_num_updates,
+		      cib_num_fail, cib_bad_connects, cib_num_timeouts);
 
 	last_stat = cib_num_ops;
+	cib_call_time = 0;
 	return TRUE;
 }
 

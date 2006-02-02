@@ -1,4 +1,4 @@
-/* $Id: callbacks.h,v 1.13 2006/01/26 10:24:06 andrew Exp $ */
+/* $Id: callbacks.h,v 1.14 2006/02/02 11:10:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,6 +47,7 @@ typedef struct cib_client_s
 
 		IPC_Channel *channel;
 		GCHSource   *source;
+		unsigned long num_calls;
 
 		int pre_notify;
 		int post_notify;
@@ -63,8 +64,8 @@ typedef struct cib_operation_s
 		gboolean	modifies_cib;
 		gboolean	needs_privileges;
 		gboolean	needs_quorum;
-		gboolean	needs_section;
-		gboolean	needs_data;
+		enum cib_errors (*prepare)(HA_Message *, crm_data_t**, const char **);
+		enum cib_errors (*cleanup)(const char *, crm_data_t**, crm_data_t**);
 		enum cib_errors (*fn)(
 			const char *, int, const char *,
 			crm_data_t*, crm_data_t*, crm_data_t**, crm_data_t**);
