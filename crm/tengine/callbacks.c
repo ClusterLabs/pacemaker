@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.58 2006/01/11 13:06:11 andrew Exp $ */
+/* $Id: callbacks.c,v 1.59 2006/02/02 15:56:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -233,47 +233,47 @@ te_update_confirm(const char *event, HA_Message *msg)
 	} else if(safe_str_eq(type, XML_TAG_CIB)) {
 		crm_data_t *section_xml = NULL;
 		const char *section = NULL;
-		gboolean abort = FALSE;
+		gboolean stop_now = FALSE;
 
 		section = XML_CIB_TAG_NODES;
-		if(abort == FALSE) {
+		if(stop_now == FALSE) {
 			section_xml = get_object_root(section, update);
 			xml_child_iter(section_xml, child, 
-				       abort = TRUE;
+				       stop_now = TRUE;
 				       break;
 				);
 		}
 		section = XML_CIB_TAG_RESOURCES;
-		if(abort == FALSE) {
+		if(stop_now == FALSE) {
 			section_xml = get_object_root(section, update);
 			xml_child_iter(section_xml, child, 
-				       abort = TRUE;
+				       stop_now = TRUE;
 				       break;
 				);
 		}
 		section = XML_CIB_TAG_CONSTRAINTS;
-		if(abort == FALSE) {
+		if(stop_now == FALSE) {
 			section_xml = get_object_root(section, update);
 			xml_child_iter(section_xml, child, 
-				       abort = TRUE;
+				       stop_now = TRUE;
 				       break;
 				);
 		}
 		section = XML_CIB_TAG_CRMCONFIG;
-		if(abort == FALSE) {
+		if(stop_now == FALSE) {
 			section_xml = get_object_root(section, update);
 			xml_child_iter(section_xml, child, 
-				       abort = TRUE;
+				       stop_now = TRUE;
 				       break;
 				);
 		}
-		if(abort) {
+		if(stop_now) {
 			send_complete("Non-status update", update,
 				      te_update, i_cancel);
 		} 
 
 		section = XML_CIB_TAG_STATUS;
-		if(abort == FALSE) {
+		if(stop_now == FALSE) {
 			section_xml = get_object_root(section, update);
 			if(extract_event(section_xml) == FALSE) {
 				send_complete("Unexpected global status update",
