@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.16 2006/01/17 21:47:28 andrew Exp $ */
+/* $Id: ipc.c,v 1.17 2006/02/02 16:04:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -103,13 +103,15 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboole
 	return all_is_good;
 }
 
-#define ipc_log(fmt...) do_crm_log(server?LOG_WARNING:LOG_ERR, __FILE__, __FUNCTION__, fmt)
-
 /* frees msg */
 gboolean 
 crm_send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg, gboolean server)
 {
 	gboolean all_is_good = TRUE;
+	int fail_level = LOG_WARNING;
+	if(ipc_client->conntype == IPC_CLIENT) {
+		fail_level = LOG_ERR;
+	}
 
 	if (msg == NULL) {
 		crm_err("cant send NULL message");
@@ -120,8 +122,8 @@ crm_send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg, gboolean server)
 		all_is_good = FALSE;
 
 	} else if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
-		ipc_log("IPC Channel to %d is not connected",
-			(int)ipc_client->farside_pid);
+		crm_log_maybe(fail_level, "IPC Channel to %d is not connected",
+			      (int)ipc_client->farside_pid);
 		all_is_good = FALSE;
 
 	} else if(get_stringlen(msg) >= MAXMSG) {
@@ -131,13 +133,14 @@ crm_send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg, gboolean server)
 	}
 
 	if(all_is_good && msg2ipcchan(msg, ipc_client) != HA_OK) {
-		ipc_log("Could not send IPC message to %d",
+		crm_log_maybe(fail_level, "Could not send IPC message to %d",
 			(int)ipc_client->farside_pid);
 		all_is_good = FALSE;
 
 		if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
-			ipc_log("IPC Channel to %d is no longer connected",
-				(int)ipc_client->farside_pid);
+			crm_log_maybe(fail_level,
+				      "IPC Channel to %d is no longer connected",
+				      (int)ipc_client->farside_pid);
 
 		} else if(server == FALSE) {
 			CRM_DEV_ASSERT(ipc_client->send_queue->current_qlen < ipc_client->send_queue->max_qlen);
