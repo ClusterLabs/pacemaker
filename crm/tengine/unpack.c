@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.53 2006/01/11 13:06:11 andrew Exp $ */
+/* $Id: unpack.c,v 1.54 2006/02/02 16:48:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -232,7 +232,7 @@ unpack_action(crm_data_t *xml_action)
 	
 	crm_malloc0(action->timer, sizeof(te_timer_t));
 	action->timer->timeout   = 2 * action->timeout;
-	action->timer->source_id = -1;
+	action->timer->source_id = 0;
 	action->timer->reason    = timeout_action;
 	action->timer->action    = action;
 

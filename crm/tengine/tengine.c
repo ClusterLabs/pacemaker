@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.110 2006/01/20 13:26:45 andrew Exp $ */
+/* $Id: tengine.c,v 1.111 2006/02/02 16:48:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -74,7 +74,7 @@ initialize_graph(void)
 		crm_malloc0(transition_timer, sizeof(te_timer_t));
 	    
 		transition_timer->timeout   = 10;
-		transition_timer->source_id = -1;
+		transition_timer->source_id = 0;
 		transition_timer->reason    = timeout_timeout;
 		transition_timer->action    = NULL;
 	} else {
@@ -85,7 +85,7 @@ initialize_graph(void)
 		crm_malloc0(abort_timer, sizeof(te_timer_t));
 	    
 		abort_timer->timeout   = 10;
-		abort_timer->source_id = -1;
+		abort_timer->source_id = 0;
 		abort_timer->reason    = timeout_abort;
 		abort_timer->action    = NULL;
 	} else {
