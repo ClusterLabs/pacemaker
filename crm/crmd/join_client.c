@@ -47,6 +47,7 @@ do_cl_join_query(long long action,
 	HA_Message *req = create_request(CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
 					 CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
+	sleep(1);  /* give the CCM time to propogate to the DC */
 	crm_debug("Querying for a DC");
 	send_msg_via_ha(fsa_cluster_conn, req);
 	
@@ -194,7 +195,8 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 	query_call_id = 0;
 	
 	if(rc == cib_ok) {
-		local_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
+		local_cib = output;
+		CRM_DEV_ASSERT(safe_str_eq(crm_element_name(output), XML_TAG_CIB));
 	}
 	
 	if(local_cib != NULL) {
