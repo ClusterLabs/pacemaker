@@ -370,6 +370,7 @@ cib_create_op(
 	}
 #endif
 	if(rc == HA_OK && data != NULL) {
+#if 0		
 		const char *tag = crm_element_name(data);
 		crm_data_t *cib = data;
 		if(safe_str_neq(tag, XML_TAG_CIB)) {
@@ -378,7 +379,6 @@ cib_create_op(
 				tag = XML_TAG_CIB;
 			}
 		}
-#if 0		
 		if(safe_str_eq(tag, XML_TAG_CIB)) {
 			const char *version = feature_set(cib);
 			crm_xml_add(cib, XML_ATTR_CIB_REVISION, version);
