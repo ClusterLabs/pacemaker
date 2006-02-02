@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.39 2006/02/02 08:33:14 andrew Exp $ */
+/* $Id: xml.h,v 1.40 2006/02/02 08:58:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,6 +34,8 @@
 /* #define USE_LIBXML 1 */
 #if CRM_DEV_BUILD
 #  define XML_PARANOIA_CHECKS 1
+#else
+#  define XML_PARANOIA_CHECKS 0
 #endif
 
 #ifdef USE_LIBXML
@@ -235,14 +237,20 @@ extern char *crm_element_value_copy(const crm_data_t *data, const char *name);
 
 extern const char *crm_element_name(const crm_data_t *data);
 
-extern void crm_validate_data(const crm_data_t *root);
+extern void xml_validate(const crm_data_t *root);
 
 extern void crm_update_parents(crm_data_t *root);
 
 extern gboolean xml_has_children(crm_data_t *root);	 		
 
-#   define xmlGetNodePath(data) crm_element_value(data, XML_ATTR_TAGNAME)
-#   define xml_child_iter(parent, child, loop_code)			\
+#if XML_PARANOIA_CHECKS
+#  define crm_validate_data(obj) xml_validate(obj)
+#else
+#  define crm_validate_data(obj) CRM_DEV_ASSERT(obj != NULL)
+#endif
+
+#define xmlGetNodePath(data) crm_element_value(data, XML_ATTR_TAGNAME)
+#define xml_child_iter(parent, child, loop_code)			\
 	if(parent != NULL) {						\
 		int __counter = 0;					\
 		crm_data_t *child = NULL;				\

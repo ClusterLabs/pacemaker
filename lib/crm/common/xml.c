@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.54 2006/02/02 08:33:14 andrew Exp $ */
+/* $Id: xml.c,v 1.55 2006/02/02 08:58:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -924,13 +924,9 @@ xml_has_children(crm_data_t *xml_root)
 	return FALSE;
 }
 
-
 void
-crm_validate_data(const crm_data_t *xml_root)
+xml_validate(const crm_data_t *xml_root)
 {
-#ifndef XML_PARANOIA_CHECKS
-	CRM_DEV_ASSERT(xml_root != NULL);
-#else
 	int lpc = 0;
 	CRM_ASSERT(xml_root != NULL);
 	CRM_ASSERT(cl_is_allocated(xml_root) == 1);
@@ -952,7 +948,6 @@ crm_validate_data(const crm_data_t *xml_root)
 /* 			CRM_DEV_ASSERT(FALSE); */
 		}
 	}
-#endif
 }
 
 
