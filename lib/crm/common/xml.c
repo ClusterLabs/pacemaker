@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.55 2006/02/02 08:58:58 andrew Exp $ */
+/* $Id: xml.c,v 1.56 2006/02/03 09:00:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -994,7 +994,9 @@ crm_element_value_copy(const crm_data_t *data, const char *name)
 const char *
 crm_element_name(const crm_data_t *data)
 {
+#if CRM_DEV_BUILD
 	crm_validate_data(data);
+#endif
 	return cl_get_string(data, F_XML_TAGNAME);
 }
 
