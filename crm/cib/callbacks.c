@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.103 2006/02/02 11:57:57 andrew Exp $ */
+/* $Id: callbacks.c,v 1.104 2006/02/03 08:33:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -145,7 +145,9 @@ static enum cib_errors
 cib_cleanup_query(const char *op, HA_Message **data, HA_Message **output) 
 {
 	CRM_DEV_ASSERT(*data == NULL);
+#if USE_PESKY_FRAGMENTS
 	free_xml(*output);
+#endif
 	return cib_ok;
 }
 
@@ -801,7 +803,9 @@ cib_process_request(
 			    cl_get_string(request, F_CIB_CLIENTID),
 			    cl_get_string(request, F_CIB_CALLID), update);
 		
-		rc = cib_process_command(request, &op_reply, &result_diff, TRUE);
+		rc = cib_process_command(
+			request, &op_reply, &result_diff, privileged);
+
 		crm_debug_2("Processing complete");
 
 		if(rc == cib_diff_resync || rc == cib_diff_failed
