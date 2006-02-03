@@ -690,7 +690,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 					  fsa_input_register);
 				crm_warn("Client %s joined but we dont need it",
 					 client_name);
-				stop_subsystem(the_subsystem);
+				stop_subsystem(the_subsystem, TRUE);
 				
 			} else {
 				the_subsystem->ipc =
