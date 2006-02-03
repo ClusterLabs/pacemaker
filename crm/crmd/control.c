@@ -182,24 +182,40 @@ do_exit(long long action,
 	fsa_data_t *msg_data)
 {
 	int exit_code = 0;
-	gboolean do_exit = FALSE;
+	gboolean do_exit = TRUE;
 	
 	if(action & A_EXIT_0) {
 		if(is_set(fsa_input_register, R_PE_CONNECTED)) {
+			crm_info("Terminating the PEngine");
+			if(stop_subsystem(pe_subsystem, TRUE) == FALSE) {
+				/* its gone... */
+				crm_warn("Faking PEngine exit");
+				clear_bit_inplace(
+					fsa_input_register, R_PE_CONNECTED);
+			} 
 			crm_info("Waiting for the PE to disconnect");
-			crmd_fsa_stall(NULL);
+			do_exit = FALSE;
 			
-		} else if(is_set(fsa_input_register, R_TE_CONNECTED)) {
+		}
+
+		if(is_set(fsa_input_register, R_TE_CONNECTED)) {
+			crm_info("Terminating the TEngine");
+			if(stop_subsystem(te_subsystem, TRUE) == FALSE) {
+				/* its gone... */
+				crm_warn("Faking TEngine exit");
+				clear_bit_inplace(
+					fsa_input_register, R_TE_CONNECTED);
+			}	
 			crm_info("Waiting for the TE to disconnect");
-			crmd_fsa_stall(NULL);
-		} else {
-			do_exit = TRUE;
+			do_exit = FALSE;
+		}
+
+		if(do_exit) {
 			crm_info("Performing %s - gracefully exiting the CRMd",
 				 fsa_action2string(action));
 		}
 		
 	} else {
-		do_exit = TRUE;
 		exit_code = 1;
 		crm_warn("Performing %s - forcefully exiting the CRMd... now!",
 			 fsa_action2string(action));
@@ -216,7 +232,11 @@ do_exit(long long action,
 		}
 		crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
 		exit(exit_code);
+
+	} else {
+		crmd_fsa_stall(NULL);
 	}
+	
 	
 	return I_NULL;
 }

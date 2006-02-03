@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.21 2006/01/10 13:46:42 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.22 2006/02/03 15:01:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,7 +54,8 @@ extern crm_data_t *create_node_state(
 extern void create_node_entry(
 	const char *uuid, const char *uname, const char *type);
 
-extern gboolean stop_subsystem (struct crm_subsystem_s *centry);
+extern gboolean stop_subsystem (
+	struct crm_subsystem_s *centry, gboolean force_quit);
 extern gboolean start_subsystem(struct crm_subsystem_s *centry);
 
 extern lrm_op_t *copy_lrm_op(const lrm_op_t *op);

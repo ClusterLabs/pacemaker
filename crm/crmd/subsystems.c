@@ -93,7 +93,7 @@ static ProcTrack_ops crmd_managed_child_ops = {
 };
 
 gboolean
-stop_subsystem(struct crm_subsystem_s*	the_subsystem)
+stop_subsystem(struct crm_subsystem_s*	the_subsystem, gboolean force_quit)
 {
 	IPC_Channel *client_channel = the_subsystem->ipc;
 	crm_debug_2("Stopping sub-system \"%s\"", the_subsystem->name);
@@ -101,7 +101,8 @@ stop_subsystem(struct crm_subsystem_s*	the_subsystem)
 	
 	if (the_subsystem->pid <= 0) {
 		crm_debug_2("Client %s not running", the_subsystem->name);
-
+		return FALSE;
+		
 	} else if(FALSE == is_set(
 			  fsa_input_register, the_subsystem->flag_connected)) {
 		/* running but not yet connected */
@@ -115,6 +116,10 @@ stop_subsystem(struct crm_subsystem_s*	the_subsystem)
 		  || client_channel->ops->get_chan_status(
 			  client_channel) != IPC_CONNECT) {
 		crm_debug("Client %s has already quit", the_subsystem->name);
+
+	} else if(force_quit) {
+		CL_KILL(the_subsystem->pid, -SIGKILL);
+		the_subsystem->pid = -1;
 		
 	} else {
 		HA_Message *quit = create_request(
@@ -176,6 +181,8 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 		default:	/* Parent */
 			NewTrackedProc(pid, 0, PT_LOGNORMAL,
 				       the_subsystem, &crmd_managed_child_ops);
+			crm_debug_2("Client %s is has pid: %d",
+				    the_subsystem->name, pid);
 			the_subsystem->pid = pid;
 			return TRUE;
 

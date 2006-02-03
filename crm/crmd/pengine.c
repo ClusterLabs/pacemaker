@@ -71,9 +71,7 @@ do_pe_control(long long action,
 	long long start_actions = A_PE_START;
 	
 	if(action & stop_actions) {
-		if(stop_subsystem(this_subsys) == FALSE) {
-			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		}
+		stop_subsystem(this_subsys, FALSE);
 	}
 
 	if(action & start_actions) {
