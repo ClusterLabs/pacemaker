@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.17 2006/02/02 16:04:02 andrew Exp $ */
+/* $Id: ipc.c,v 1.18 2006/02/03 08:33:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -109,7 +109,8 @@ crm_send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg, gboolean server)
 {
 	gboolean all_is_good = TRUE;
 	int fail_level = LOG_WARNING;
-	if(ipc_client->conntype == IPC_CLIENT) {
+
+	if(ipc_client != NULL && ipc_client->conntype == IPC_CLIENT) {
 		fail_level = LOG_ERR;
 	}
 
