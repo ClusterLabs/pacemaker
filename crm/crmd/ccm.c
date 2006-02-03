@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.93 2006/01/11 12:55:20 andrew Exp $ */
+/* $Id: ccm.c,v 1.94 2006/02/03 08:29:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -601,7 +601,17 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 		crm_xml_add(fragment, XML_ATTR_SECTION, XML_CIB_TAG_STATUS);
 	}
 
-	tmp = find_xml_node(fragment, XML_TAG_CIB, TRUE);
+#if CRM_DEPRECATED_SINCE_2_0_4
+	if(safe_str_eq(crm_element_name(fragment), XML_TAG_CIB)) {
+		tmp = fragment;
+	} else {
+		tmp = find_xml_node(fragment, XML_TAG_CIB, TRUE);
+	}
+#else
+	tmp = fragment;
+	CRM_DEV_ASSERT(safe_str_eq(crm_element_name(tmp), XML_TAG_CIB));
+#endif
+	
 	tmp = get_object_root(XML_CIB_TAG_STATUS, tmp);
 	CRM_DEV_ASSERT(tmp != NULL);
 	

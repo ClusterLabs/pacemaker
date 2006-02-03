@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.11 2006/01/26 11:36:58 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.12 2006/02/03 08:29:21 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -324,7 +324,16 @@ migrate_resource(
 	crm_data_t *dont_run = NULL;
 
 	fragment = create_cib_fragment(NULL, NULL);
-	cib = find_xml_node(fragment, XML_TAG_CIB, TRUE);
+#if CRM_DEPRECATED_SINCE_2_0_4
+	if(safe_str_eq(crm_element_name(fragment), XML_TAG_CIB)) {
+		cib = fragment;
+	} else {
+		cib = find_xml_node(fragment, XML_TAG_CIB, TRUE);
+	}
+#else
+	cib = fragment;
+	CRM_DEV_ASSERT(safe_str_eq(crm_element_name(cib), XML_TAG_CIB));
+#endif
 	constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
 	
 	id = crm_concat("cli-prefer", rsc_id, '-');

@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.12 2006/01/20 15:57:27 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.13 2006/02/03 08:29:22 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -159,9 +159,18 @@ read_attr(cib_t *the_cib,
 			cib_error2string(rc));
 		return rc;
 	}
-	
-	a_node = find_xml_node(fragment, XML_TAG_CIB, TRUE);
-	xml_obj = get_object_root(section, a_node);
+
+#if CRM_DEPRECATED_SINCE_2_0_4
+	if(safe_str_eq(crm_element_name(fragment), section)) {
+		xml_obj = fragment;
+	} else {
+		a_node = find_xml_node(fragment, XML_TAG_CIB, TRUE);
+		xml_obj = get_object_root(section, a_node);
+	}
+#else
+	xml_obj = fragment;
+	CRM_DEV_ASSERT(safe_str_eq(crm_element_name(xml_obj), XML_TAG_CIB));
+#endif
 	CRM_ASSERT(xml_obj != NULL);
 	crm_log_xml_debug_2(xml_obj, "Result section");
 
@@ -306,8 +315,17 @@ query_node_uuid(cib_t *the_cib, const char *uname, char **uuid)
 		return rc;
 	}
 
-	xml_obj = find_xml_node(fragment, XML_TAG_CIB, TRUE);
-	xml_obj = get_object_root(XML_CIB_TAG_NODES, xml_obj);
+#if CRM_DEPRECATED_SINCE_2_0_4
+	if(safe_str_eq(crm_element_name(fragment), XML_CIB_TAG_NODES)) {
+		xml_obj = fragment;
+	} else {
+		xml_obj = find_xml_node(fragment, XML_TAG_CIB, TRUE);
+		xml_obj = get_object_root(XML_CIB_TAG_NODES, xml_obj);
+	}
+#else
+	xml_obj = fragment;
+	CRM_DEV_ASSERT(safe_str_eq(crm_element_name(xml_obj), XML_TAG_CIB));
+#endif
 	CRM_ASSERT(xml_obj != NULL);
 	crm_log_xml_debug(xml_obj, "Result section");
 
@@ -348,8 +366,17 @@ query_node_uname(cib_t *the_cib, const char *uuid, char **uname)
 		return rc;
 	}
 
-	xml_obj = find_xml_node(fragment, XML_TAG_CIB, TRUE);
-	xml_obj = get_object_root(XML_CIB_TAG_NODES, xml_obj);
+#if CRM_DEPRECATED_SINCE_2_0_4
+	if(safe_str_eq(crm_element_name(fragment), XML_CIB_TAG_NODES)) {
+		xml_obj = fragment;
+	} else {
+		xml_obj = find_xml_node(fragment, XML_TAG_CIB, TRUE);
+		xml_obj = get_object_root(XML_CIB_TAG_NODES, xml_obj);
+	}
+#else
+	xml_obj = fragment;
+	CRM_DEV_ASSERT(safe_str_eq(crm_element_name(xml_obj), XML_TAG_CIB));
+#endif
 	CRM_ASSERT(xml_obj != NULL);
 	crm_log_xml_debug_2(xml_obj, "Result section");
 

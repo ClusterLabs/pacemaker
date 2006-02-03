@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.17 2005/11/22 02:37:08 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.18 2006/02/03 08:29:21 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -297,7 +297,16 @@ mon_update(const HA_Message *msg, int call_id, int rc,
 	const char *prefix = NULL;
 	if(rc == cib_ok) {
 		crm_data_t *cib = NULL;
-		cib = find_xml_node(output,XML_TAG_CIB,TRUE);
+#if CRM_DEPRECATED_SINCE_2_0_4
+		if( safe_str_eq(crm_element_name(output), XML_TAG_CIB) ) {
+			cib = output;
+		} else {
+			cib = find_xml_node(output,XML_TAG_CIB,TRUE);
+		}
+#else
+		cib = output;
+		CRM_DEV_ASSERT(safe_str_eq(crm_element_name(cib), XML_TAG_CIB));
+#endif		
 		if(as_html_file) {
 			print_html_status(cib, as_html_file);
 		} else {

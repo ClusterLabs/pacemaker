@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.63 2006/01/26 11:29:22 andrew Exp $ */
+/* $Id: messages.c,v 1.64 2006/02/03 08:29:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,7 +58,9 @@ enum cib_errors updateList(
 	crm_data_t *local_cib, crm_data_t *update_command, crm_data_t *failed,
 	int operation, const char *section);
 
+#if CRM_DEPRECATED_SINCE_2_0_4
 crm_data_t *createCibFragmentAnswer(const char *section, crm_data_t *failed);
+#endif
 
 enum cib_errors replace_section(
 	const char *section, crm_data_t *tmpCib, crm_data_t *command);
@@ -80,7 +82,7 @@ cib_process_default(
 {
 	enum cib_errors result = cib_ok;
 	crm_debug_2("Processing \"%s\" event", op);
-	if(answer != NULL) { *answer = NULL; }	
+	*answer = NULL;
 
 	if(op == NULL) {
 		result = cib_operation;
@@ -152,9 +154,7 @@ cib_process_ping(
 {
 	enum cib_errors result = cib_ok;
 	crm_debug_2("Processing \"%s\" event", op);
-	if(answer != NULL) {
-		*answer = createPingAnswerFragment(CRM_SYSTEM_CIB, "ok");
-	}
+	*answer = createPingAnswerFragment(CRM_SYSTEM_CIB, "ok");
 	return result;
 }
 
@@ -170,23 +170,21 @@ cib_process_query(
 	crm_debug_2("Processing \"%s\" event for section=%s",
 		  op, crm_str(section));
 
-	if(answer != NULL) { *answer = NULL; }	
-	else { return cib_output_ptr; }
+	*answer = NULL;
 	
 	if (safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
 		section = NULL;
 	}
-
-	*answer = create_xml_node(NULL, XML_TAG_FRAGMENT);
-/*  	crm_xml_add(*answer, XML_ATTR_SECTION, section); */
 
 	obj_root = get_object_root(section, existing_cib);
 	
 	if(obj_root == NULL) {
 		result = cib_NOTEXISTS;
 
+#if USE_PESKY_FRAGMENTS
 	} else if(obj_root == existing_cib) {
 		crm_xml_add(obj_root, "origin", cib_our_uname);
+		*answer = create_xml_node(NULL, XML_TAG_FRAGMENT);
 		add_node_copy(*answer, obj_root);
 
 	} else {
@@ -200,8 +198,13 @@ cib_process_query(
 			add_node_copy(query_obj_root, an_obj);
 			);
 
+		*answer = create_xml_node(NULL, XML_TAG_FRAGMENT);
 		add_node_copy(*answer, cib);
 		free_xml(cib);
+#else
+	} else {
+		*answer = obj_root;
+#endif		
 	}
 
 	if(result == cib_ok && *answer == NULL) {
@@ -220,8 +223,7 @@ cib_process_erase(
 	enum cib_errors result = cib_ok;
 
 	crm_debug_2("Processing \"%s\" event", op);
-	if(answer != NULL) { *answer = NULL; }	
-
+	*answer = NULL;
 	*result_cib = createEmptyCib();
 
 	result = revision_check(existing_cib, *result_cib, options);
@@ -231,10 +233,9 @@ cib_process_erase(
 		cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, TRUE);
 	}
 	
-	if(answer != NULL) {
-		*answer = createCibFragmentAnswer(NULL, NULL);
-	}
-	
+#if CRM_DEPRECATED_SINCE_2_0_4
+	*answer = createCibFragmentAnswer(NULL, NULL);
+#endif
 	return result;
 }
 
@@ -248,17 +249,15 @@ cib_process_bump(
 	crm_debug_2("Processing \"%s\" event for epoch=%s",
 		  op, crm_str(crm_element_value(the_cib, XML_ATTR_GENERATION)));
 	
-	if(answer != NULL) { *answer = NULL; }	
-
+	*answer = NULL;
 	*result_cib = copy_xml(the_cib);
 
 	cib_update_counter(*result_cib, XML_ATTR_GENERATION, FALSE);
 	cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, FALSE);
 	
-	if(answer != NULL) {
-		*answer = createCibFragmentAnswer(NULL, NULL);
-	}
-	
+#if CRM_DEPRECATED_SINCE_2_0_4
+	*answer = createCibFragmentAnswer(NULL, NULL);
+#endif	
 	return result;
 }
 
@@ -481,7 +480,7 @@ cib_process_replace(
 	enum cib_errors result = cib_ok;
 	
 	crm_debug_2("Processing \"%s\" event for section=%s", op, crm_str(section));
-	if(answer != NULL) { *answer = NULL; }	
+	*answer = NULL;
 
 	if (options & cib_verbose) {
 		verbose = TRUE;
@@ -555,10 +554,11 @@ cib_process_replace(
 		cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, FALSE);
 	}
 	
-	if (answer != NULL && (verbose || result != cib_ok)) {
+#if CRM_DEPRECATED_SINCE_2_0_4
+	if (verbose || result != cib_ok) {
 		*answer = createCibFragmentAnswer(section, NULL);
 	}
-
+#endif
 	return result;
 }
 
@@ -705,11 +705,14 @@ cib_process_change(
 		crm_log_xml_err(failed, "CIB Update failures");
 	}
 
+#if USE_PESKY_FRAGMENTS
 	if (verbose || xml_has_children(failed) || result != cib_ok) {
 		*answer = createCibFragmentAnswer(section, failed);
 	}
-
 	free_xml(failed);
+#else
+	*answer = failed;
+#endif	
 
 	return result;
 }
@@ -797,6 +800,7 @@ updateList(crm_data_t *local_cib, crm_data_t *xml_section, crm_data_t *failed,
 	return rc;
 }
 
+#if CRM_DEPRECATED_SINCE_2_0_4
 crm_data_t*
 createCibFragmentAnswer(const char *section, crm_data_t *failed)
 {
@@ -833,6 +837,7 @@ createCibFragmentAnswer(const char *section, crm_data_t *failed)
 	crm_xml_add(fragment, "generated_on", cib_our_uname);
 	return fragment;
 }
+#endif
 
 gboolean
 check_generation(crm_data_t *newCib, crm_data_t *oldCib)
@@ -854,9 +859,9 @@ update_results(
 	const char *operation_msg = NULL;
 	crm_data_t *xml_node       = NULL;
 	
-	operation_msg = cib_op2string(operation);
     
 	if (return_code != cib_ok) {
+		operation_msg = cib_op2string(operation);
 		error_msg = cib_error2string(return_code);
 
 		xml_node = create_xml_node(failed, XML_FAIL_TAG_CIB);
@@ -872,9 +877,6 @@ update_results(
 
 		crm_warn("Action %s failed: %s (cde=%d)",
 			  operation_msg, error_msg, return_code);
-	
-	} else {
-		crm_debug_3("CIB %s passed", operation_msg);
 	}
 
 	return was_error;

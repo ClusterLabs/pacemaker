@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.37 2006/01/26 10:24:06 andrew Exp $ */
+/* $Id: cib.h,v 1.38 2006/02/03 08:29:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -27,6 +27,7 @@
 #include <ha_msg.h>
 
 #define CIB_FEATURE_SET "1.2"
+#define USE_PESKY_FRAGMENTS 1
 /* use compare_version() for doing comparisons */
 
 enum cib_variant {

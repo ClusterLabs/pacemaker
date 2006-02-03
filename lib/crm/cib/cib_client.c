@@ -927,11 +927,19 @@ get_cib_copy(cib_t *cib)
 		return NULL;
 	}
 
-	xml_cib_copy = copy_xml(
-		find_xml_node(xml_cib, XML_TAG_CIB, TRUE));
+	if(safe_str_eq(crm_element_name(xml_cib), XML_TAG_CIB)) {
+		return xml_cib;
+		
+#if CRM_DEPRECATED_SINCE_2_0_4
+	} else {
+		xml_cib_copy = copy_xml(
+			find_xml_node(xml_cib, XML_TAG_CIB, TRUE));
+		free_xml(xml_cib);
+		return xml_cib_copy;
+#endif
+	}
 	free_xml(xml_cib);
-	
-	return xml_cib_copy;
+	return NULL;
 }
 
 crm_data_t*
@@ -1193,7 +1201,7 @@ get_object_root(const char *object_type, crm_data_t *the_root)
 
 	if(object_type == NULL
 	   || strlen(object_type) == 0
-	   || safe_str_eq("all", object_type)
+	   || safe_str_eq(XML_CIB_TAG_SECTION_ALL, object_type)
 	   || safe_str_eq(XML_TAG_CIB, object_type)) {
 		/* get the whole cib */
 		return the_root;
@@ -1240,10 +1248,11 @@ get_crm_option(crm_data_t *cib, const char *name, gboolean do_warn)
 	if(safe_str_eq(value, "")) {
 		value = NULL;
 	}
-	return value;
 	
+	return value;
 }
 
+#define USE_PESKY_FRAGMENTS 1
 
 crm_data_t*
 create_cib_fragment_adv(
@@ -1251,7 +1260,9 @@ create_cib_fragment_adv(
 {
 	crm_data_t *cib = NULL;
 	gboolean whole_cib = FALSE;
+#if USE_PESKY_FRAGMENTS
 	crm_data_t *fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
+#endif
 	crm_data_t *object_root  = NULL;
 	const char *update_name = NULL;
 
@@ -1260,7 +1271,8 @@ create_cib_fragment_adv(
 	if(update == NULL && update_section == NULL) {
 		crm_debug_3("Creating a blank fragment");
 		update = createEmptyCib();
-		whole_cib = TRUE;
+		crm_xml_add(cib, "debug_source", source);
+		return update;
 
 	} else if(update == NULL) {
 		crm_err("No update to create a fragment for");
@@ -1274,33 +1286,49 @@ create_cib_fragment_adv(
 		whole_cib = TRUE;
 	}
 	
+#if USE_PESKY_FRAGMENTS
 	crm_xml_add(fragment, XML_ATTR_SECTION, update_section);
-
+#endif
+	
 	if(whole_cib == FALSE) {
 		cib = createEmptyCib();
 		crm_xml_add(cib, "debug_source", source);
 		object_root = get_object_root(update_section, cib);
 		add_node_copy(object_root, update);
+#if USE_PESKY_FRAGMENTS
 		add_node_copy(fragment, cib);
 		free_xml(cib);
 		cib = find_xml_node(fragment, XML_TAG_CIB, TRUE);
-
+#endif
 	} else {
+#if USE_PESKY_FRAGMENTS
 		add_node_copy(fragment, update);
 		cib = find_xml_node(fragment, XML_TAG_CIB, TRUE);
+#else
 		crm_xml_add(cib, "debug_source", source);
+#endif
 	}
 	
 	crm_debug_3("Verifying created fragment");
 	if(verifyCibXml(cib) == FALSE) {
 		crm_err("Fragment creation failed");
+#if USE_PESKY_FRAGMENTS
 		crm_log_xml_err(update, "[src]");
 		crm_log_xml_err(fragment, "[created]");
 		free_xml(fragment);
 		fragment = NULL;
+#else
+		crm_log_xml_err(cib, "[src]");		
+		free_xml(cib);
+		cib = NULL;
+#endif
 	}
 	
+#if USE_PESKY_FRAGMENTS
 	return fragment;
+#else
+	return cib;
+#endif
 }
 
 /*

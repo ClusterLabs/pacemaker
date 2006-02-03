@@ -195,7 +195,16 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 	query_call_id = 0;
 	
 	if(rc == cib_ok) {
-		local_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
+#if CRM_DEPRECATED_SINCE_2_0_4
+		if(safe_str_eq(crm_element_name(output), XML_TAG_CIB)) {
+			local_cib = output;
+		} else {
+			local_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
+		}
+#else
+		local_cib = output;
+		CRM_DEV_ASSERT(safe_str_eq(crm_element_name(local_cib), XML_TAG_CIB));
+#endif
 	}
 	
 	if(local_cib != NULL) {

@@ -60,8 +60,18 @@ revision_check_callback(const HA_Message *msg, int call_id, int rc,
 {
 	int cmp = -1;
 	const char *revision = NULL;
-	crm_data_t *generation = find_xml_node(output, XML_TAG_CIB, TRUE);
-
+	crm_data_t *generation = NULL;
+#if CRM_DEPRECATED_SINCE_2_0_4
+	if(safe_str_eq(crm_element_name(output), XML_TAG_CIB)) {
+		generation = output;
+	} else {
+		generation = find_xml_node(output, XML_TAG_CIB, TRUE);
+	}
+#else
+	generation = output;
+	CRM_DEV_ASSERT(safe_str_eq(crm_element_name(generation), XML_TAG_CIB));
+#endif
+	
 	if(rc != cib_ok) {
 		fsa_data_t *msg_data = NULL;
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);

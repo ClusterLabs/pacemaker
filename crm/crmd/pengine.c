@@ -159,8 +159,17 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 	HA_Message *cmd = NULL;
 	int ccm_transition_id = -1;
 	gboolean cib_has_quorum = FALSE;
-	crm_data_t *local_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
-
+	crm_data_t *local_cib = NULL;
+	
+#if CRM_DEPRECATED_SINCE_2_0_4
+	if(safe_str_eq(crm_element_name(output), XML_TAG_CIB)) {
+		local_cib = output;
+	} else {
+		local_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
+	}
+#else
+	local_cib = output;
+#endif
 	if(call_id != fsa_pe_query) {
 		crm_debug_2("Skipping superceeded CIB query: %d (current=%d)",
 			    call_id, fsa_pe_query);

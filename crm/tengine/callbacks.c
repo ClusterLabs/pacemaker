@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.59 2006/02/02 15:56:44 andrew Exp $ */
+/* $Id: callbacks.c,v 1.60 2006/02/03 08:29:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -315,7 +315,16 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 #ifdef TESTING
 	} else if(strcmp(op, CRM_OP_EVENTCC) == 0) {
 		crm_debug_4("Processing %s...", op);
-		xml_obj = find_xml_node(xml_data, XML_TAG_CIB, TRUE);
+#if CRM_DEPRECATED_SINCE_2_0_4
+		if(safe_str_eq(crm_element_name(xml_data), XML_TAG_CIB)) {
+			xml_obj = xml_data;
+		} else {
+			xml_obj = find_xml_node(xml_data, XML_TAG_CIB, TRUE);
+		}
+#else
+		xml_obj = xml_data;
+		CRM_DEV_ASSERT(safe_str_eq(crm_element_name(xml_obj), XML_TAG_CIB));
+#endif
 		CRM_DEV_ASSERT(xml_obj != NULL);
 		if(xml_obj != NULL) {
 			xml_obj = get_object_root(XML_CIB_TAG_STATUS, xml_obj);
@@ -333,7 +342,16 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		  && safe_str_eq(sys_from, CRM_SYSTEM_LRMD)
 /* 		  && safe_str_eq(type, XML_ATTR_RESPONSE) */
 		){
-		xml_obj = find_xml_node(xml_data, XML_TAG_CIB, TRUE);
+#if CRM_DEPRECATED_SINCE_2_0_4
+		if(safe_str_eq(crm_element_name(xml_data), XML_TAG_CIB)) {
+			xml_obj = xml_data;
+		} else {
+			xml_obj = find_xml_node(xml_data, XML_TAG_CIB, TRUE);
+		}
+#else
+		xml_obj = xml_data;
+		CRM_DEV_ASSERT(safe_str_eq(crm_element_name(xml_obj), XML_TAG_CIB));
+#endif
 		CRM_DEV_ASSERT(xml_obj != NULL);
 		if(xml_obj != NULL) {
 			xml_obj = get_object_root(XML_CIB_TAG_STATUS, xml_obj);
