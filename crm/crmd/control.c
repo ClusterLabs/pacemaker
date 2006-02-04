@@ -196,9 +196,7 @@ do_exit(long long action,
 			crm_info("Waiting for the PE to disconnect");
 			do_exit = FALSE;
 			
-		}
-
-		if(is_set(fsa_input_register, R_TE_CONNECTED)) {
+		} else if(is_set(fsa_input_register, R_TE_CONNECTED)) {
 			crm_info("Terminating the TEngine");
 			if(stop_subsystem(te_subsystem, TRUE) == FALSE) {
 				/* its gone... */
