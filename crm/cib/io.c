@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.43 2006/02/05 09:14:14 andrew Exp $ */
+/* $Id: io.c,v 1.44 2006/02/05 11:52:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -133,7 +133,7 @@ readCibXmlFile(const char *filename)
 		gboolean user_readwritable = (
 			cib_user != NULL
 			&& buf.st_uid == cib_user->pw_uid
-			&& (buf.st_mode & (S_IRGRP|S_IWGRP)));
+			&& (buf.st_mode & (S_IRUSR|S_IWUSR)));
 
 		if( S_ISREG(buf.st_mode) == FALSE ) {
 			crm_err("%s must be a regular file", filename);
@@ -144,7 +144,7 @@ readCibXmlFile(const char *filename)
 			gboolean group_readwritable = (
 				cib_grp != NULL
 				&& buf.st_gid == cib_grp->gr_gid
-				&& (buf.st_mode & (S_IRUSR|S_IWUSR)));
+				&& (buf.st_mode & (S_IRGRP|S_IWGRP)));
 
 			if( group_readwritable == FALSE ) {
 				crm_err("%s must be owned and read/writeable by user %s,"
