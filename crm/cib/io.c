@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.42 2006/02/02 13:40:28 andrew Exp $ */
+/* $Id: io.c,v 1.43 2006/02/05 09:14:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -104,6 +104,10 @@ readCibXml(char *buffer)
 	return root;
 }
 
+#include <sys/types.h>
+#include <pwd.h>
+#include <grp.h>
+
 /*
  * It is the callers responsibility to free the output of this function
  */
@@ -125,22 +129,31 @@ readCibXmlFile(const char *filename)
 	
 	if (s_res == 0) {
 		FILE *cib_file = NULL;
-		gboolean user_readwritable = (buf.st_gid == atoi(HA_CCMUID)) && (buf.st_mode & (S_IRGRP|S_IWGRP));
+		struct passwd *cib_user = getpwnam(HA_CCMUSER);
+		gboolean user_readwritable = (
+			cib_user != NULL
+			&& buf.st_uid == cib_user->pw_uid
+			&& (buf.st_mode & (S_IRGRP|S_IWGRP)));
 
 		if( S_ISREG(buf.st_mode) == FALSE ) {
 			crm_err("%s must be a regular file", filename);
 			exit(100);
 			
 		} else if( user_readwritable == FALSE ) {
-			gboolean group_readwritable = (buf.st_uid == atoi(HA_APIGID)) && (buf.st_mode & (S_IRUSR|S_IWUSR));
+			struct group *cib_grp = getgrnam(HA_APIGROUP);
+			gboolean group_readwritable = (
+				cib_grp != NULL
+				&& buf.st_gid == cib_grp->gr_gid
+				&& (buf.st_mode & (S_IRUSR|S_IWUSR)));
+
 			if( group_readwritable == FALSE ) {
 				crm_err("%s must be owned and read/writeable by user %s,"
 					" or owned and read/writable by group %s",
-					filename, HA_CCMUID, HA_APIGID);
+					filename, HA_CCMUSER, HA_APIGROUP);
 				exit(100);
 			}
 			crm_warn("%s should be owned and read/writeable by user %s",
-				 filename, HA_CCMUID);
+				 filename, HA_CCMUSER);
 		}
 
 		cib_file = fopen(filename, "r");
