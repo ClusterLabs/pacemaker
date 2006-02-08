@@ -91,6 +91,8 @@ class LinuxHAv2(HeartbeatCM):
             
             # Bad news Regexes.  Should never occur.
             "BadRegexes"   : (
+                r"ERROR:",
+                r"CRIT:",
                 r"Shutting down\.",
                 r"Forcing shutdown\.",
                 r"Timer I_TERMINATE just popped",
@@ -107,8 +109,7 @@ class LinuxHAv2(HeartbeatCM):
                 r"Confirm not received from",
                 r"Welcome reply not received from",
                 r"Attempting to schedule .* after a stop",
-                r"ERROR:",
-                r"CRIT:",
+		r"Resource .* was active at shutdown",
             ),
         })
         del self["Standby"]
