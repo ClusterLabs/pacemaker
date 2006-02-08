@@ -1,4 +1,4 @@
-/* $Id: crm_verify.c,v 1.3 2006/01/26 11:36:58 andrew Exp $ */
+/* $Id: crm_verify.c,v 1.4 2006/02/08 12:34:25 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -155,14 +155,14 @@ main(int argc, char **argv)
   
 	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
 
+	crm_zero_mem_stats(NULL);
+
 	if(USE_LIVE_CIB) {
 		cib_conn = cib_new();
 		rc = cib_conn->cmds->signon(
 			cib_conn, crm_system_name, cib_command_synchronous);
 	}
 	
-	crm_zero_mem_stats(NULL);
-
 	if(USE_LIVE_CIB) {
 		if(rc == cib_ok) {
 			crm_info("Reading XML from: live cluster");
@@ -210,14 +210,6 @@ main(int argc, char **argv)
 	
 	cleanup_calculations(&data_set);
 
-	crm_mem_stats(NULL);
- 	CRM_DEV_ASSERT(crm_mem_stats(NULL) == FALSE);
-
-	if(USE_LIVE_CIB) {
-		cib_conn->cmds->signoff(cib_conn);
-		cib_delete(cib_conn);
-	}
-	
 	if(was_config_error) {
 		fprintf(stderr, "Errors found during check: config not valid\n");
 		if(crm_log_level < LOG_WARNING) {
@@ -232,6 +224,14 @@ main(int argc, char **argv)
 		}
 		return 1;
 	}
+	
+	if(USE_LIVE_CIB) {
+		cib_conn->cmds->signoff(cib_conn);
+		cib_delete(cib_conn);
+	}	
+
+	crm_mem_stats(NULL);
+ 	CRM_DEV_ASSERT(crm_mem_stats(NULL) == FALSE);
 
 	return 0;
 }
