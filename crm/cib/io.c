@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.44 2006/02/05 11:52:01 andrew Exp $ */
+/* $Id: io.c,v 1.45 2006/02/08 22:12:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -261,47 +261,48 @@ uninitializeCib(void)
 gboolean
 initializeCib(crm_data_t *new_cib)
 {
-#if 0
-	if(new_cib != NULL) {
-		crm_set_element_parent(new_cib, NULL);
+	gboolean is_valid = TRUE;
+	crm_data_t *tmp_node = NULL;
+
+	if(new_cib == NULL) {
+		return FALSE;
 	}
-#endif
-	if (verifyCibXml(new_cib)) {
+	
+	xml_validate(new_cib);
 
-		initialized = FALSE;
-		the_cib = new_cib;
+	tmp_node = get_object_root(XML_CIB_TAG_NODES, new_cib);
+	if (tmp_node == NULL) { is_valid = FALSE; }
 
-		/* update search paths */
-		/* not used yet...
-		node_search =
-			get_object_root(XML_CIB_TAG_NODES, new_cib);
-		resource_search =
-			get_object_root(XML_CIB_TAG_RESOURCES, new_cib);
-		constraint_search =
-			get_object_root(XML_CIB_TAG_CONSTRAINTS, new_cib);
-		status_search =
-			get_object_root(XML_CIB_TAG_STATUS, new_cib);
-		*/
-		initialized = TRUE;
+	tmp_node = get_object_root(XML_CIB_TAG_RESOURCES, new_cib);
+	if (tmp_node == NULL) { is_valid = FALSE; }
+
+	tmp_node = get_object_root(XML_CIB_TAG_CONSTRAINTS, new_cib);
+	if (tmp_node == NULL) { is_valid = FALSE; }
+
+	tmp_node = get_object_root(XML_CIB_TAG_CRMCONFIG, new_cib);
+	if (tmp_node == NULL) { is_valid = FALSE; }
+
+	tmp_node = get_object_root(XML_CIB_TAG_STATUS, new_cib);
+	if (is_valid && tmp_node == NULL) {
+		create_xml_node(new_cib, XML_CIB_TAG_STATUS);
 	}
 
-	if(initialized == FALSE) {
+	if(is_valid == FALSE) {
 		crm_warn("CIB Verification failed");
-		the_cib = NULL;
-
-	} else {
-		set_connected_peers(the_cib);
-		set_transition(the_cib);
-		if(cib_have_quorum) {
-			crm_xml_add(
-				the_cib,XML_ATTR_HAVE_QUORUM,XML_BOOLEAN_TRUE);
-		} else {
-			crm_xml_add(
-				the_cib,XML_ATTR_HAVE_QUORUM,XML_BOOLEAN_FALSE);
-		}		
+		return FALSE;
 	}
-
-	return initialized;
+	
+	set_transition(new_cib);
+	set_connected_peers(new_cib);
+	if(cib_have_quorum) {
+		crm_xml_add(new_cib, XML_ATTR_HAVE_QUORUM, XML_BOOLEAN_TRUE);
+	} else {
+		crm_xml_add(new_cib, XML_ATTR_HAVE_QUORUM, XML_BOOLEAN_FALSE);
+	}
+	
+	the_cib = new_cib;
+	initialized = TRUE;
+	return TRUE;
 }
 
 int
@@ -355,60 +356,37 @@ moveFile(const char *oldname,
     
 }
 
-
-int
-activateCibBuffer(char *buffer, const char *filename)
-{
-	int result = -1;
-	crm_data_t *local_cib = NULL;
-	
-	
-	local_cib = readCibXml(buffer);
-	result = activateCibXml(local_cib, filename);
-	
-	return result;
-}
-
 /*
  * This method will free the old CIB pointer on success and the new one
  * on failure.
  */
-#define ACTIVATION_DIFFS 0
 int
 activateCibXml(crm_data_t *new_cib, const char *filename)
 {
 	int error_code = cib_ok;
-	crm_data_t *diff = NULL;
 	crm_data_t *saved_cib = get_the_CIB();
 	const char *filename_bak = CIB_BACKUP; /* calculate */
 
 	crm_log_xml_debug_4(new_cib, "Attempting to activate CIB");
 
 	CRM_ASSERT(new_cib != saved_cib);
-	crm_validate_data(new_cib);
 	if(saved_cib != NULL) {
 		crm_validate_data(saved_cib);
 	}
 	
 	if (initializeCib(new_cib) == FALSE) {
-		crm_warn("Ignoring invalid or NULL Cib");
-		error_code = -5;
+		crm_warn("Ignoring invalid or NULL CIB");
+		error_code = -1;
 
 	} else if(cib_writes_enabled) {
-		if(saved_cib != NULL) {
-
-			CRM_DEV_ASSERT(0 >= moveFile(filename,
-						     filename_bak,
-						     FALSE, NULL));
-			
-			if (crm_assert_failed) {
-				crm_warn("Could not make backup of the current"
-					 " Cib... aborting update.");
-				error_code = -1;
-			}
+		int local_rc = moveFile(filename, filename_bak, FALSE, NULL);
+		if(local_rc != 0) {
+			crm_err("Could not make backup of the current CIB..."
+				 " disabling writes.");
+			cib_writes_enabled = FALSE;
 		}
 		
-		if(error_code == cib_ok) {
+		if(cib_writes_enabled) {
 			crm_data_t *cib_copy_status = NULL;
 			crm_data_t *cib_copy_no_status = NULL;
 
@@ -433,89 +411,63 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 
 			free_xml_from_parent(
 				cib_copy_no_status, cib_copy_status);
-			create_xml_node(cib_copy_no_status, XML_CIB_TAG_STATUS);
 			
-			CRM_DEV_ASSERT(
-				write_xml_file(
-					cib_copy_no_status, CIB_FILENAME) >= 0);
+			local_rc = write_xml_file(
+				cib_copy_no_status, filename);
 
-			free_xml(cib_copy_no_status);
-			
-			if (crm_assert_failed) {
-				error_code = -4;
-			}
-		}
+			CRM_DEV_ASSERT(local_rc != -1 && local_rc != 0);
 
-		if(error_code == -4 && saved_cib != NULL) {
-			CRM_DEV_ASSERT(moveFile(filename_bak,
-						filename, FALSE, NULL) >= 0);
-			if (crm_assert_failed){
-				crm_crit("Could not restore the backup of the "
-					 " current Cib... panic!");
+			if(crm_assert_failed) {
+				crm_err("Changes activated but couldn't"
+					" be written to disk");
 				error_code = -2;
-				/* should probably exit here  */
-			}
-		}
-
-		CRM_DEV_ASSERT(saved_cib != NULL || error_code == cib_ok);
-		if(crm_assert_failed) {
-			/* oh we are so dead  */
-			crm_crit("Could not write out new CIB and no saved"
-				 " version to revert to");
-			if(error_code == cib_ok) {
-				error_code = -3;
 			}
 			
-		} else if(error_code != cib_ok) {
-			crm_crit("Update of Cib failed (%d)... reverting"
-				 " to last known valid version",
-				 error_code);
-
-			CRM_DEV_ASSERT(initializeCib(saved_cib));
-			if (crm_assert_failed) {
-				/* oh we are so dead  */
-				crm_crit("Could not re-initialize with the old"
-					 " CIB.  Can anyone say corruption?");
-				error_code = -3;
-			}
+			free_xml(cib_copy_no_status);			
 		}
 	}
 
-#if ACTIVATION_DIFFS
-	/* Make sure memory is cleaned up appropriately */
-	if(saved_cib != NULL && new_cib != NULL) {
-		diff = diff_cib_object(saved_cib, new_cib, -1);
-	}
-	if (error_code != cib_ok) {
-		crm_err("Changes could not be activated: %s",
-			cib_error2string(error_code));
-		log_cib_diff(LOG_WARNING, diff, __FUNCTION__);
-		free_xml(new_cib);
-		
-	} else if(saved_cib != NULL) {
-		crm_debug_2("Changes activated");
-		log_cib_diff(LOG_DEBUG, diff, __FUNCTION__);
-		crm_validate_data(saved_cib);
-		free_xml(saved_cib);
-	}
-	free_xml(diff);
-#else
-	if (error_code == -4) {
-		crm_err("Changes activated but couldnt be written to disk");
-		free_xml(saved_cib);
+	if(error_code != cib_ok && saved_cib != NULL) {
+		int local_rc = 0;
+		crm_crit("Reverting to last known CIB (%d)...", error_code);
+		CRM_DEV_ASSERT(initializeCib(saved_cib));
+		if (crm_assert_failed) {
+			/* oh we are so dead  */
+			crm_crit("Could not re-initialize with the old CIB.");
+			local_rc = -3;
+		}
 
-	} else if (error_code != cib_ok) {
-		crm_err("Changes could not be activated: %s",
-			cib_error2string(error_code));
-		free_xml(new_cib);
+		if(local_rc == 0 && cib_writes_enabled) {
+			local_rc = moveFile(filename_bak, filename,FALSE,NULL);
+			CRM_DEV_ASSERT(local_rc >= 0);
+			if (crm_assert_failed){
+				/* At least if we stay up the config isnt lost
+				 */
+				crm_crit("Could not restore the backup of the "
+					 " current Cib... disabling writes");
+				cib_writes_enabled = FALSE;
+			}
+		}
 		
-	} else if(saved_cib != NULL) {
-		crm_debug_2("Changes activated");
-		crm_validate_data(saved_cib);
+	} else if(error_code != cib_ok) {
+		crm_crit("Could not write out new CIB and no saved"
+			 " version to revert to");
+	}
+	
+	if(the_cib != saved_cib && the_cib != new_cib) {
+		CRM_DEV_ASSERT(error_code != cib_ok);
+		CRM_DEV_ASSERT(the_cib == NULL);
+	}
+
+	if(the_cib != new_cib) {
+		free_xml(new_cib);
+		CRM_DEV_ASSERT(error_code != cib_ok);
+	}
+
+	if(the_cib != saved_cib) {
 		free_xml(saved_cib);
-	}	
-#endif
-	diff = NULL;
+	}
+	
 	return error_code;
     
 }

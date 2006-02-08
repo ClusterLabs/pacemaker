@@ -429,6 +429,15 @@ cib_native_perform_op(
 	}
 
 	if(rc == HA_OK) {
+		cib->call_id++;
+		/* prevent call_id from being negative (or zero) and conflicting
+		 *    with the cib_errors enum
+		 * use 2 because we use it as (cib->call_id - 1) below
+		 */
+		if(cib->call_id < 1) {
+			cib->call_id = 1;
+		}
+	
 		op_msg = cib_create_op(
 			cib->call_id, op, host, section, data, call_options);
 		if(op_msg == NULL) {
@@ -436,17 +445,10 @@ cib_native_perform_op(
 		}
 	}
 	
-	cib->call_id++;
-	/* prevent call_id from being negative (or zero) and conflicting
-	 *    with the cib_errors enum
-	 * use 2 because we use it as (cib->call_id - 1) below
-	 */
-	if(cib->call_id < 2) {
-		cib->call_id = 2;
-	}
-	
 	crm_debug_3("Sending %s message to CIB service", op);
-	if(send_ipc_message(native->command_channel, op_msg) == FALSE) {
+	if(rc != HA_OK) {
+
+	} else if(send_ipc_message(native->command_channel, op_msg) == FALSE) {
 		crm_err("Sending message to CIB service FAILED");
 		return cib_send_failed;
 
@@ -462,66 +464,62 @@ cib_native_perform_op(
 
 	} else if(!(call_options & cib_sync_call)) {
 		crm_debug_3("Async call, returning");
-		return cib->call_id - 1;
+		return cib->call_id;
 	}
 
 	rc = IPC_OK;
 	crm_debug_3("Waiting for a syncronous reply");
-	while(native->command_channel->ops->get_chan_status(
-		      native->command_channel) == IPC_CONNECT) {
+	while(IPC_ISRCONN(native->command_channel)) {
+		int reply_id = -1;
+		int msg_id = cib->call_id;
 
-		rc = native->command_channel->ops->waitin(
-			native->command_channel);
-
-		if(rc == IPC_OK) {
-			int msg_id = cib->call_id - 1;
-			int reply_id = -1;
-			op_reply = msgfromIPC_noauth(native->command_channel);
-			if(op_reply == NULL) {
-				break;
-			}
-			CRM_DEV_ASSERT(HA_OK == ha_msg_value_int(
-					       op_reply, F_CIB_CALLID, &reply_id));
-
-			CRM_DEV_ASSERT(reply_id <= msg_id);
-			
-			if(reply_id == msg_id) {
-				break;
-
-			} else if(reply_id < msg_id) {
-				crm_debug("Recieved old reply: %d (wanted %d)",
-					reply_id, msg_id);
-				crm_log_message_adv(
-					LOG_MSG, "Old reply", op_reply);
-			} else {
-				crm_err("Received a __future__ reply:"
-					" %d (wanted %d)", reply_id, msg_id);
-			}
-			crm_msg_del(op_reply);
-
-		} else if(rc == IPC_INTR) {
-			crm_debug_3("a signal arrived, retry the read");
-
-		} else {
+		op_reply = msgfromIPC(native->command_channel, MSG_ALLOWINTR);
+		if(op_reply == NULL) {
 			break;
 		}
+		CRM_DEV_ASSERT(HA_OK == ha_msg_value_int(
+				       op_reply, F_CIB_CALLID, &reply_id));
+
+		CRM_DEV_ASSERT(reply_id <= msg_id);
+			
+		if(reply_id == msg_id) {
+			break;
+			
+		} else if(reply_id < msg_id) {
+			crm_debug("Recieved old reply: %d (wanted %d)",
+				  reply_id, msg_id);
+			crm_log_message_adv(
+				LOG_MSG, "Old reply", op_reply);
+
+		} else if((reply_id - 10000) > msg_id) {
+			/* wrap-around case */
+			crm_debug("Recieved old reply: %d (wanted %d)",
+				  reply_id, msg_id);
+			crm_log_message_adv(
+				LOG_MSG, "Old reply", op_reply);
+		} else {
+			crm_err("Received a __future__ reply:"
+				" %d (wanted %d)", reply_id, msg_id);
+		}
+		crm_msg_del(op_reply);
+		op_reply = NULL;
 	}
 
-	if(native->command_channel->ops->get_chan_status(
-		   native->command_channel) != IPC_CONNECT) {
-		crm_err("No reply message - disconnected - %d", rc);
-		cib->state = cib_disconnected;
-		crm_msg_del(op_reply);
-		return cib_not_connected;
-		
-	} else if(rc != IPC_OK) {
-		crm_err("No reply message - failed - %d", rc);
-		crm_msg_del(op_reply);
-		return cib_reply_failed;
-
-	} else if(op_reply == NULL) {
+	if(op_reply == NULL) {
+		if(IPC_ISRCONN(native->command_channel) == FALSE) {
+			crm_err("No reply message - disconnected - %d",
+				native->command_channel->ch_status);
+			cib->state = cib_disconnected;
+			return cib_not_connected;
+		}
 		crm_err("No reply message - empty - %d", rc);
 		return cib_reply_failed;
+	}
+	
+	if(IPC_ISRCONN(native->command_channel) == FALSE) {
+		crm_err("CIB disconnected: %d", 
+			native->command_channel->ch_status);
+		cib->state = cib_disconnected;
 	}
 	
 	crm_debug_3("Syncronous reply recieved");

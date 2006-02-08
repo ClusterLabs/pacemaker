@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.104 2006/02/03 08:33:04 andrew Exp $ */
+/* $Id: callbacks.c,v 1.105 2006/02/08 22:12:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1081,7 +1081,7 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 		if(rc != cib_ok) {
 			free_xml(result_cib);
 
-		} else if(activateCibXml(result_cib, CIB_FILENAME) < 0){
+		} else if(activateCibXml(result_cib, CIB_FILENAME) != 0){
 			crm_warn("Activation failed");
 			rc = cib_ACTIVATION;
 		}

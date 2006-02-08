@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.35 2006/02/02 11:10:32 andrew Exp $ */
+/* $Id: main.c,v 1.36 2006/02/08 22:12:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -173,14 +173,14 @@ cib_stats(gpointer data)
 		local_log_level = LOG_INFO;
 		crm_log_maybe(local_log_level,
 			      "Processed %lu operations"
-			      " (%.2fms average, %lu%% utilization) in the last %s",
+			      " (%.2fus average, %lu%% utilization) in the last %s",
 			      calls_diff, stat_1, 
 			      (100*cib_calls_ms)/cib_stat_interval_ms,
 			      cib_stat_interval);
 	}
 	
 	crm_log_maybe(local_log_level+1,
-		      "\tDetail: %lu operations (%ums average)"
+		      "\tDetail: %lu operations (%ums total)"
 		      " (%lu local, %lu updates, %lu failures,"
 		      " %lu timeouts, %lu bad connects)",
 		      cib_num_ops, cib_calls_ms, cib_num_local, cib_num_updates,
@@ -452,14 +452,21 @@ gboolean
 startCib(const char *filename)
 {
 	crm_data_t *cib = readCibXmlFile(filename);
-	if (initializeCib(cib)) {
-		crm_info("CIB Initialization completed successfully");
-	} else { 
-		/* free_xml(cib); */
+
+	if(cib == NULL) {
 		crm_warn("CIB Initialization failed, "
 			 "starting with an empty default.");
-		cib = readCibXml(NULL);
-		activateCibXml(cib, filename);
+
+		cib = createEmptyCib();
+		crm_xml_add(cib, XML_ATTR_GENERATION_ADMIN, "0");
+		crm_xml_add(cib, XML_ATTR_GENERATION, "0");
+		crm_xml_add(cib, XML_ATTR_NUMUPDATES, "0");
 	}
+	
+	if(activateCibXml(cib, filename) != 0) {
+		return FALSE;
+	}
+
+	crm_info("CIB Initialization completed successfully");
 	return TRUE;
 }
