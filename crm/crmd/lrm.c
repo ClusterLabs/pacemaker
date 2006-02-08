@@ -391,11 +391,11 @@ build_operation_update(
  		crm_log_maybe(log_level,
 			      "Duplicate %s operations in get_cur_state()",
 			      op_id);
- 		crm_log_maybe(log_level-2,
+ 		crm_log_maybe(log_level+2,
 			      "New entry: %s %s (call=%d, status=%s)",
 			      op_id, op->user_data, op->call_id,
 			      op_status2text(op->op_status));
-		crm_log_xml(log_level-2, "Existing entry", xml_op);
+		crm_log_xml(log_level+2, "Existing entry", xml_op);
 		crm_free(op_id);
 		return FALSE;
 		
