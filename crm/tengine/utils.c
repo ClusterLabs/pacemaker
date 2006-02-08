@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.49 2006/01/13 18:34:25 andrew Exp $ */
+/* $Id: utils.c,v 1.50 2006/02/08 22:17:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -318,12 +318,12 @@ print_input(const char *prefix, action_t *input, int log_level)
 void
 print_action(const char *prefix, action_t *action, int log_level) 
 {
-	do_crm_log(log_level, __FILE__, __FUNCTION__, "%s[Action %d] %s (%s fail)",
+	do_crm_log(log_level, __FILE__, __FUNCTION__, "%s[Action %d] %s%s",
 		   prefix, action->id,
 		   action->complete?"Completed":
 		    action->invoked?"In-flight":
 		    action->sent_update?"Update sent":"Pending",
-		   action->can_fail?"can":"cannot");
+		   action->can_fail?" (can fail)":"");
 		
 	switch(action->type) {
 		case action_type_pseudo:
