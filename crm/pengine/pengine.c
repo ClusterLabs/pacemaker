@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.102 2006/01/16 09:16:32 andrew Exp $ */
+/* $Id: pengine.c,v 1.103 2006/02/08 09:21:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -121,23 +121,21 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		if(was_processing_error) {
 			crm_info("ERRORs found during PE processing."
 			       "  Input follows:");
-			crm_log_xml_info(log_input, "[input]");
+			crm_log_xml(
+				pengine_input_loglevel-2, "[input]", log_input);
 
 		} else if(was_processing_warning) {
 			crm_log_maybe(pengine_input_loglevel-1,
 				      "WARNINGs found during PE processing."
 				      "  Input follows:");
-			crm_log_xml(pengine_input_loglevel-1,
-				    "[input]", status);
+			crm_log_xml(
+				pengine_input_loglevel-1,"[input]", log_input);
 
+		} else if (crm_log_level > pengine_input_loglevel) {
+			crm_log_xml(
+				pengine_input_loglevel+1, "[input]", log_input);
 		} else {
-			if(crm_log_level > LOG_DEBUG) {
-				crm_log_xml_debug_2(log_input, "[input]");
-
-			} else {
-				crm_log_xml(pengine_input_loglevel,
-					    "[status]", status);
-			}
+			crm_log_xml(pengine_input_loglevel, "[status]", status);
 		}
 
 		if(was_config_error) {
