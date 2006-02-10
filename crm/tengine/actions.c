@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.5 2006/01/11 13:06:11 andrew Exp $ */
+/* $Id: actions.c,v 1.6 2006/02/10 06:04:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -76,7 +76,7 @@ send_stonith_update(stonith_ops_t * op)
 	
 	rc = te_cib_conn->cmds->update(
 		te_cib_conn, XML_CIB_TAG_STATUS, update, NULL,
-		cib_quorum_override);	
+		cib_quorum_override|cib_scope_local);	
 	
 	if(rc < cib_ok) {
 		const char *fail_text = "Couldnt update CIB after stonith";
@@ -317,7 +317,7 @@ cib_action_update(action_t *action, int status)
 	const char *target_uuid =
 		crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 
-	int call_options = cib_quorum_override;
+	int call_options = cib_quorum_override|cib_scope_local;
 
 	if(status == LRM_OP_TIMEOUT) {
 		if(crm_element_value(action->xml, XML_LRM_ATTR_RSCID) != NULL) {
