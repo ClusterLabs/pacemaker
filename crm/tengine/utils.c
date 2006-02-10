@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.51 2006/02/10 05:18:22 andrew Exp $ */
+/* $Id: utils.c,v 1.52 2006/02/10 05:37:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -28,6 +28,7 @@
 #include <tengine.h>
 #include <heartbeat.h>
 #include <clplumbing/Gmain_timeout.h>
+#include <clplumbing/lsb_exitcodes.h>
 #include <lrm/lrm_api.h>
 
 extern cib_t *te_cib_conn;

@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.61 2006/02/10 05:18:22 andrew Exp $ */
+/* $Id: callbacks.c,v 1.62 2006/02/10 05:37:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,6 +23,7 @@
 
 #include <hb_api.h>
 
+#include <clplumbing/lsb_exitcodes.h>
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/msg_xml.h>
