@@ -2309,9 +2309,10 @@ class SimulStartLite(CTSTest):
             if self.CM.ShouldBeStatus[node] == self.CM["down"]:
                 self.CM.StartaCMnoBlock(node)
         if watch.lookforall():
-            if self.CM.cluster_stable():
-                return self.success()
-            return self.failure("Cluster did not stablize") 
+            for attempt in (1, 2, 3, 4, 5):
+                if self.CM.cluster_stable():
+                    return self.success()
+            return self.failure("Cluster did not stabilize") 
                 
         did_fail=0
         unstable = []

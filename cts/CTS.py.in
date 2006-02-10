@@ -886,32 +886,17 @@ A partially set up scenario is torn down if it fails during setup.
             j=j-1
 
 
-class InitClusterManager(ScenarioComponent):
-    (
-'''InitClusterManager is the most basic of ScenarioComponents.
-This ScenarioComponent simply starts the cluster manager on all the nodes.
-It is fairly robust as it waits for all nodes to come up before starting
-as they might have been rebooted or crashed for some reason beforehand.
-''')
-
-    def IsApplicable(self):
-        '''InitClusterManager is so generic it is always Applicable'''
-        return 1
-
-
-    def _IsNodeBooted(self, node):
+class NodeStatus:
+    def IsNodeBooted(self, node):
         '''Return TRUE if the given node is booted (responds to pings'''
         return os.system("@PING@ -nq -c1 @PING_TIMEOUT_OPT@ %s >/dev/null 2>&1" % node) == 0
 
-
-    def _WaitForNodeToComeUp(self, node, Timeout=300):
-
-        '''Return TRUE when given node comes up, or FALSE if timeout'''
-
+    def WaitForNodeToComeUp(self, node, Timeout=300):
+        '''Return TRUE when given node comes up, or None/FALSE if timeout'''
         timeout=Timeout
         anytimeouts=0
         while timeout > 0:
-            if self._IsNodeBooted(node):
+            if self.IsNodeBooted(node):
                 if anytimeouts:
                      # Fudge to wait for the system to finish coming up
                      time.sleep(30)
@@ -926,22 +911,35 @@ as they might have been rebooted or crashed for some reason beforehand.
             timeout = timeout - 1
 
         self.Env.log("%s did not come up within %d tries" % (node, Timeout))
-        return None
 
-    def _WaitForAllNodesToComeUp(self, nodes, timeout=300):
+    def WaitForAllNodesToComeUp(self, nodes, timeout=300):
         '''Return TRUE when all nodes come up, or FALSE if timeout'''
 
         for node in nodes:
-            if not self._WaitForNodeToComeUp(node, timeout):
+            if not self.WaitForNodeToComeUp(node, timeout):
                 return None
         return 1
 
 
 
+class InitClusterManager(ScenarioComponent):
+    (
+'''InitClusterManager is the most basic of ScenarioComponents.
+This ScenarioComponent simply starts the cluster manager on all the nodes.
+It is fairly robust as it waits for all nodes to come up before starting
+as they might have been rebooted or crashed for some reason beforehand.
+''')
+    def __init__(self, Env):
+	self.ns=NodeStatus()
+
+    def IsApplicable(self):
+        '''InitClusterManager is so generic it is always Applicable'''
+        return 1
+
     def SetUp(self, CM):
         '''Basic Cluster Manager startup.  Start everything'''
 
-        if not self._WaitForAllNodesToComeUp(CM.Env["nodes"]):
+        if not self.ns.WaitForAllNodesToComeUp(CM.Env["nodes"]):
             return None
         CM.prepare()
 
@@ -963,7 +961,7 @@ as they might have been rebooted or crashed for some reason beforehand.
     def TearDown(self, CM):
         '''Set up the given ScenarioComponent'''
 
-        self._WaitForAllNodesToComeUp(CM.Env["nodes"])
+        self.ns.WaitForAllNodesToComeUp(CM.Env["nodes"])
 
         # Stop the cluster manager everywhere
 
