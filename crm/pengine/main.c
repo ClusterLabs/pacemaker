@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.19 2006/01/16 09:16:32 andrew Exp $ */
+/* $Id: main.c,v 1.20 2006/02/10 06:12:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -62,8 +62,8 @@ main(int argc, char ** argv)
 	const char *param_name = NULL;
     
 	crm_log_init(crm_system_name);
-	G_main_add_SignalHandler(
-		G_PRIORITY_HIGH, SIGTERM, pengine_shutdown, NULL, NULL);
+/* 	G_main_add_SignalHandler( */
+/* 		G_PRIORITY_HIGH, SIGTERM, pengine_shutdown, NULL, NULL); */
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
