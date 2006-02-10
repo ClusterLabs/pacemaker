@@ -207,6 +207,11 @@ do_exit(long long action,
 			}	
 			crm_info("Waiting for the TE to disconnect");
 			do_exit = FALSE;
+
+		} else if(is_set(fsa_input_register, R_HA_DISCONNECTED) == FALSE) {
+			do_ha_control(A_HA_DISCONNECT,
+				      cause, cur_state, current_input, msg_data);
+			do_exit = FALSE;
 		}
 
 		if(do_exit) {
