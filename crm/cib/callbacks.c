@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.106 2006/02/10 05:18:21 andrew Exp $ */
+/* $Id: callbacks.c,v 1.107 2006/02/10 15:01:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -198,7 +198,7 @@ cib_operation_t cib_server_ops[] = {
 	{CIB_OP_UPDATE,    TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_output, cib_process_change},
 	{CIB_OP_APPLY_DIFF,TRUE,  TRUE,  TRUE,  cib_prepare_diff, cib_cleanup_sync,   cib_process_diff},
 	{CIB_OP_SLAVE,     FALSE, TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
-	{CIB_OP_SLAVEALL,  TRUE,  TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
+	{CIB_OP_SLAVEALL,  FALSE, TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
 	{CIB_OP_SYNC_ONE,  FALSE, TRUE,  FALSE, cib_prepare_sync, cib_cleanup_sync,   cib_process_sync_one},
 	{CIB_OP_MASTER,    FALSE, TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
 	{CIB_OP_ISMASTER,  FALSE, TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
