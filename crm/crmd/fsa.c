@@ -729,7 +729,6 @@ do_state_transition(long long actions,
 			/* possibly redundant */
 			crm_timer_stop(shutdown_timer);
 			set_bit_inplace(fsa_input_register, R_SHUTDOWN);
-			fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 			break;
 			
 		case S_IDLE:

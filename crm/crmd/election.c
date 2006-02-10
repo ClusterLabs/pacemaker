@@ -309,6 +309,8 @@ do_election_count_vote(long long action,
 		
 		vote_sent = send_request(novote, NULL);
 		CRM_DEV_ASSERT(vote_sent);
+
+		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 		
 	} else {
 		if(cur_state == S_PENDING) {
@@ -389,8 +391,8 @@ do_dc_takeover(long long action,
 	} else {
 		crm_debug_3("DC Heartbeat timer already active");
 	}
-	
-/* 	fsa_cib_conn->cmds->set_slave_all(fsa_cib_conn, cib_none); */
+
+ 	fsa_cib_conn->cmds->set_slave_all(fsa_cib_conn, cib_none);
 	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_none);
 	
 	cib = createEmptyCib();
@@ -426,7 +428,6 @@ do_dc_release(long long action,
 	if(action & A_DC_RELEASE) {
 		crm_debug("Releasing the role of DC");
 		clear_bit_inplace(fsa_input_register, R_THE_DC);
-		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 		
 	} else if (action & A_DC_RELEASED) {
 		crm_info("DC role released");
