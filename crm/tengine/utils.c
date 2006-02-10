@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.50 2006/02/08 22:17:47 andrew Exp $ */
+/* $Id: utils.c,v 1.51 2006/02/10 05:18:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,6 +33,7 @@
 extern cib_t *te_cib_conn;
 extern int global_transition_timer;
 extern int transition_counter;
+extern gboolean shuttingdown;
 
 void print_input(const char *prefix, action_t *input, gboolean to_file);
 void print_action(const char *prefix, action_t *action, gboolean to_file);
@@ -241,6 +242,10 @@ send_complete(const char *text, crm_data_t *msg,
 	g_main_quit(mainloop);
 	return;
 #else
+	if(shuttingdown) {
+		crm_info("Exiting after transition");
+		exit(LSB_EXIT_OK);
+	}
 	send_ipc_message(crm_ch, cmd);
 #endif	
 #if 0

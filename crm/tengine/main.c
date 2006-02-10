@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.29 2005/10/24 15:19:28 sunjd Exp $ */
+/* $Id: main.c,v 1.30 2006/02/10 05:18:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -214,22 +214,14 @@ usage(const char* cmd, int exit_status)
 	exit(exit_status);
 }
 
+extern gboolean shuttingdown;
 gboolean
 tengine_shutdown(int nsig, gpointer unused)
-{
-#if 0
-	static int shuttingdown = 0;
-  
-	if (!shuttingdown) {
-		shuttingdown = 1;
-	}
-	if (mainloop != NULL && g_main_is_running(mainloop)) {
-		g_main_quit(mainloop);
-	}else{
+{  
+	shuttingdown = TRUE;
+	if(te_fsa_state == s_idle) {
+		crm_info("Exiting an idle TEngine");
 		exit(LSB_EXIT_OK);
 	}
 	return TRUE;
-#else
-	return FALSE;
-#endif
 }

@@ -109,7 +109,7 @@ stop_subsystem(struct crm_subsystem_s*	the_subsystem, gboolean force_quit)
 		crm_warn("Stopping %s before it had connected",
 			 the_subsystem->name);
 		
-		CL_KILL(the_subsystem->pid, SIGKILL);
+		CL_KILL(the_subsystem->pid, SIGTERM);
 		the_subsystem->pid = -1;
 		
 	} else if(client_channel == NULL
@@ -118,8 +118,7 @@ stop_subsystem(struct crm_subsystem_s*	the_subsystem, gboolean force_quit)
 		crm_debug("Client %s has already quit", the_subsystem->name);
 
 	} else if(force_quit) {
-		CL_KILL(the_subsystem->pid, SIGKILL);
-		the_subsystem->pid = -1;
+		CL_KILL(the_subsystem->pid, SIGTERM);
 		
 	} else {
 		HA_Message *quit = create_request(
@@ -187,6 +186,10 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 			return TRUE;
 
 		case 0:		/* Child */
+			/* create a new process group to avoid
+			 * being interupted by heartbeat
+			 */
+			setpgid(0, 0);
 			break;
 	}
 

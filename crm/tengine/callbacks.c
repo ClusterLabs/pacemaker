@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.60 2006/02/03 08:29:22 andrew Exp $ */
+/* $Id: callbacks.c,v 1.61 2006/02/10 05:18:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,6 +39,7 @@ void cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
 
 extern char *te_uuid;
 extern int transition_counter;
+gboolean shuttingdown = FALSE;
 
 void
 te_update_diff(const char *event, HA_Message *msg)
@@ -406,7 +407,11 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		crm_info("Received quit message, terminating");
 		/* wait for pending actions to complete? */
 		print_state(LOG_INFO);
-		exit(0);
+		shuttingdown = TRUE;
+		if(te_fsa_state == s_idle) {
+			crm_info("Exiting an idle TEngine");
+			exit(LSB_EXIT_OK);
+		}
 		
 	} else {
 		crm_err("Unknown command: %s::%s from %s", type, op, sys_from);

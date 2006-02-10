@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.105 2006/02/08 22:12:06 andrew Exp $ */
+/* $Id: callbacks.c,v 1.106 2006/02/10 05:18:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1324,8 +1324,20 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 	if(keep_connection == FALSE
 	   && cib_shutdown_flag
 	   && g_hash_table_size(client_list) == 0) {
-		crm_info("All clients disconnected");
+		IPC_Channel *ipc = NULL;
+		crm_info("All clients disconnected... flushing updates");
 
+		/* wait for HA messages to be sent */
+		if(hb_conn != NULL) {
+			ipc = hb_conn->llc_ops->ipcchan(hb_conn);
+		}
+		if(ipc != NULL) {
+			ipc->ops->waitout(ipc);
+			/* BUG: give heartbeat time to send our messages out */ 
+			sleep(2);
+		}
+	       
+		crm_info("Updates flushed... exiting");
 		if (mainloop != NULL && g_main_is_running(mainloop)) {
 			g_main_quit(mainloop);
 

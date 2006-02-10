@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.85 2006/01/13 10:31:14 andrew Exp $ */
+/* $Id: stages.c,v 1.86 2006/02/10 05:18:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -370,6 +370,9 @@ stage6(pe_working_set_t *data_set)
 
 		crm_debug_2("Ordering shutdowns before %s on %s (DC)",
 			down_op->task, down_op->node->details->uname);
+
+		add_hash_param(dc_down->extra, XML_ATTR_TE_NOWAIT,
+			       XML_BOOLEAN_TRUE);
 		
 		slist_iter(
 			action, action_t, shutdown_matches, lpc,
