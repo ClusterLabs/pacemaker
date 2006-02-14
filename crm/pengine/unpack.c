@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.153 2006/01/18 20:08:31 andrew Exp $ */
+/* $Id: unpack.c,v 1.154 2006/02/14 12:08:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1153,7 +1153,25 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
  		xml_remove_prop(pnow, XML_ATTR_CRM_VERSION); 
  		xml_remove_prop(params, XML_ATTR_CRM_VERSION); 
  		xml_remove_prop(pnow, "is_managed"); 
- 		xml_remove_prop(params, "is_managed"); 
+ 		xml_remove_prop(params, "is_managed");
+
+		/* ignore notify fields */
+ 		xml_remove_prop(params, "notify_stop_resource"); 
+ 		xml_remove_prop(params, "notify_stop_uname"); 
+ 		xml_remove_prop(params, "notify_start_resource"); 
+ 		xml_remove_prop(params, "notify_start_uname"); 
+ 		xml_remove_prop(params, "notify_active_resource"); 
+ 		xml_remove_prop(params, "notify_active_uname"); 
+ 		xml_remove_prop(params, "notify_inactive_resource"); 
+ 		xml_remove_prop(params, "notify_inactive_uname"); 
+ 		xml_remove_prop(params, "notify_promote_resource"); 
+ 		xml_remove_prop(params, "notify_promote_uname"); 
+ 		xml_remove_prop(params, "notify_demote_resource"); 
+ 		xml_remove_prop(params, "notify_demote_uname"); 
+ 		xml_remove_prop(params, "notify_master_resource"); 
+ 		xml_remove_prop(params, "notify_master_uname"); 
+ 		xml_remove_prop(params, "notify_slave_resource"); 
+ 		xml_remove_prop(params, "notify_slave_uname"); 
 		
  		pdiff = diff_xml_object(params, pnow, TRUE);
 		if(pdiff != NULL) {
