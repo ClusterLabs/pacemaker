@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.18 2006/02/03 08:33:35 andrew Exp $ */
+/* $Id: ipc.c,v 1.19 2006/02/14 12:12:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -61,7 +61,7 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboole
 		crm_err("No heartbeat connection specified");
 		all_is_good = FALSE;
 
-	} else if(hb_conn->llc_ops->chan_is_connected(hb_conn) != HA_OK) {
+	} else if(hb_conn->llc_ops->chan_is_connected(hb_conn) == FALSE) {
 		crm_err("Not connected to Heartbeat");
 		all_is_good = FALSE;
 		
@@ -72,30 +72,42 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboole
 	} else if(node != NULL) {
 		if(hb_conn->llc_ops->send_ordered_nodemsg(
 			   hb_conn, msg, node) != HA_OK) {
-			IPC_Channel *ipc = hb_conn->llc_ops->ipcchan(hb_conn);
 			all_is_good = FALSE;
 			crm_err("Send failed");
-			CRM_DEV_ASSERT(ipc->send_queue->current_qlen < ipc->send_queue->max_qlen);
+			
 		} else {
 			crm_debug_2("Message sent...");
 		}
+
 	} else if(force_ordered) {
 		if(hb_conn->llc_ops->send_ordered_clustermsg(hb_conn, msg) != HA_OK) {
-			IPC_Channel *ipc = hb_conn->llc_ops->ipcchan(hb_conn);
 			all_is_good = FALSE;
 			crm_err("Broadcast Send failed");
-			CRM_DEV_ASSERT(ipc->send_queue->current_qlen < ipc->send_queue->max_qlen);
 		} else {
 			crm_debug_2("Broadcast message sent...");
 		}
 	} else {
 		if(hb_conn->llc_ops->sendclustermsg(hb_conn, msg) != HA_OK) {
-			IPC_Channel *ipc = hb_conn->llc_ops->ipcchan(hb_conn);
 			all_is_good = FALSE;
 			crm_err("Broadcast Send failed");
-			CRM_DEV_ASSERT(ipc->send_queue->current_qlen < ipc->send_queue->max_qlen);
+
 		} else {
 			crm_debug_2("Broadcast message sent...");
+		}
+	}
+
+	if(all_is_good == FALSE && hb_conn != NULL) {
+		IPC_Channel *ipc = NULL;
+		IPC_Queue *send_q = NULL;
+		
+		if(hb_conn->llc_ops->chan_is_connected(hb_conn) != HA_OK) {
+			ipc = hb_conn->llc_ops->ipcchan(hb_conn);
+		}
+		if(ipc != NULL) {
+			send_q = ipc->send_queue;
+		}
+		if(send_q != NULL) {
+			CRM_DEV_ASSERT(send_q->current_qlen < send_q->max_qlen);
 		}
 	}
 	
