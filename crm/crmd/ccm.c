@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.94 2006/02/03 08:29:22 andrew Exp $ */
+/* $Id: ccm.c,v 1.95 2006/02/14 11:52:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -24,6 +24,8 @@
 
 #include <clplumbing/GSource.h>
 #include <string.h>
+
+#include <heartbeat.h>
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -576,7 +578,7 @@ struct update_data_s
 {
 		crm_data_t *updates;
 		const char *state;
-		const char *join;
+		gboolean    overwrite_join;
 };
 
 crm_data_t*
@@ -617,11 +619,11 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 	
 	update_data.updates = tmp;
 	update_data.state = XML_BOOLEAN_YES;
-	update_data.join  = NULL;
+	update_data.overwrite_join = FALSE;
 
 	if(overwrite) {
 		crm_debug_2("Performing a join update based on CCM data");
-		update_data.join = CRMD_JOINSTATE_PENDING;
+		update_data.overwrite_join = TRUE;
 		
 	} else {
 		call_options = call_options|cib_inhibit_bcast;
@@ -637,7 +639,6 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 
 	/* dead nodes */
 	update_data.state = XML_BOOLEAN_NO;
-	update_data.join  = CRMD_STATE_INACTIVE;
 	if(fsa_membership_copy->dead_members != NULL) {
 		g_hash_table_foreach(fsa_membership_copy->dead_members,
 				     ghash_update_cib_node, &update_data);
@@ -656,14 +657,27 @@ void
 ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 {
 	crm_data_t *tmp1 = NULL;
+	const char *join = NULL;
+	const char *peer_online = NULL;
 	const char *node_uname = (const char*)key;
 	struct update_data_s* data = (struct update_data_s*)user_data;
 
-	crm_debug_2("Updating %s: %s/%s",
-		    node_uname, data->state, data->join);
+	crm_debug_2("Updating %s: %s (overwrite=%s)",
+		    node_uname, data->state,
+		    data->overwrite_join?"true":"false");
 
+	peer_online = g_hash_table_lookup(crmd_peer_state, node_uname);
+	
+	if(data->overwrite_join) {
+		if(safe_str_eq(peer_online, ONLINESTATUS)) {
+			join = CRMD_JOINSTATE_PENDING;
+		} else {
+			join  = CRMD_STATE_INACTIVE;
+		}
+	}
+	
 	tmp1 = create_node_state(node_uname, NULL, data->state, NULL,
-				 data->join, NULL, FALSE, __FUNCTION__);
+				 join, NULL, FALSE, __FUNCTION__);
 
 	add_node_copy(data->updates, tmp1);
 	free_xml(tmp1);
