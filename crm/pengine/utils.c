@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.122 2006/01/09 21:20:21 andrew Exp $ */
+/* $Id: utils.c,v 1.123 2006/02/14 12:06:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -657,8 +657,9 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 }
 
 action_t *
-custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
-	      gboolean optional, gboolean foo, pe_working_set_t *data_set)
+custom_action(resource_t *rsc, char *key, const char *task,
+	      node_t *on_node, gboolean optional, gboolean save_action,
+	      pe_working_set_t *data_set)
 {
 	action_t *action = NULL;
 	GListPtr possible_matches = NULL;
@@ -668,7 +669,7 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 	CRM_DEV_ASSERT(task != NULL);
 	if(crm_assert_failed) { return NULL; }
 
-	if(foo && rsc != NULL) {
+	if(save_action && rsc != NULL) {
 		possible_matches = find_actions(rsc->actions, key, on_node);
 	}
 	
@@ -695,7 +696,7 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 
 		crm_malloc0(action, sizeof(action_t));
 		if(action != NULL) {
-			if(foo) {
+			if(save_action) {
 				action->id   = data_set->action_id++;
 			} else {
 				action->id = 0;
@@ -726,7 +727,7 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 			add_hash_param(action->extra,
 				       XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 			
-			if(foo) {
+			if(save_action) {
 				data_set->actions = g_list_append(
 					data_set->actions, action);
 			}
@@ -739,7 +740,7 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 				unpack_operation(
 					action, action->op_entry, data_set);
 
-				if(foo) {
+				if(save_action) {
 					rsc->actions = g_list_append(
 						rsc->actions, action);
 				}
@@ -755,6 +756,8 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 	}
 	
 	if(rsc != NULL) {
+		enum action_tasks a_task = text2task(action->task);
+		
 		if(action->node != NULL) {
 			unpack_instance_attributes(
 				action->op_entry, XML_TAG_ATTR_SETS,
@@ -778,10 +781,15 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 			action->runnable = FALSE;
 #endif	
 		} else if(action->node->details->online == FALSE) {
-			crm_warn("Action %s on %s is unrunnable (offline)",
-				 action->uuid, action->node?action->node->details->uname:"<none>");
 			action->runnable = FALSE;
-
+			crm_warn("Action %s on %s is unrunnable (offline)",
+				 action->uuid, action->node->details->uname);
+			if(save_action && a_task == stop_rsc) {
+				pe_proc_warn("Marking node %s unclean",
+					     action->node->details->uname);
+				action->node->details->unclean = TRUE;
+			}
+			
 		} else if(action->needs == rsc_req_nothing) {
 			crm_debug_2("Action %s doesnt require anything",
 				  action->uuid);
@@ -815,19 +823,21 @@ custom_action(resource_t *rsc, char *key, const char *task, node_t *on_node,
 			crm_debug_2("Action %s is runnable", action->uuid);
 			action->runnable = TRUE;
 		}
-		
-		switch(text2task(action->task)) {
-			case stop_rsc:
-				rsc->stopping = TRUE;
-				break;
-			case start_rsc:
-				rsc->starting = FALSE;
-				if(action->runnable) {
+
+		if(save_action) {
+			switch(a_task) {
+				case stop_rsc:
+					rsc->stopping = TRUE;
+					break;
+				case start_rsc:
+					rsc->starting = FALSE;
+					if(action->runnable) {
 					rsc->starting = TRUE;
-				}
-				break;
-			default:
-				break;
+					}
+					break;
+				default:
+					break;
+			}
 		}
 	}
 	return action;
