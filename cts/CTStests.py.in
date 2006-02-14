@@ -315,13 +315,6 @@ class StopTest(CTSTest):
         # Technically we should always be able to notice ourselves stopping
 	patterns.append(self.CM["Pat:We_stopped"] % node)
 
-	local_BadNews = []
-	if self.CM.upcount() > 1:
-	    local_BadNews.append("crmd:.*Resource .* was active at shutdown");
-	    # Currently the CRM relies on local nodes shutting themselves down
-	    #   when there is no DC (during SimulStopLite and often NearQuorum)
-	    # This prevents this from being a regular BadNews item
-
 	if self.CM.Env["use_logd"]:
 	    patterns.append(self.CM["Pat:Logd_stopped"] % node)
 
@@ -335,9 +328,6 @@ class StopTest(CTSTest):
         watch = CTS.LogWatcher(
             self.CM["LogFileName"], patterns, self.CM["DeadTime"])
         watch.setwatch()
-
-        local_BadNewsWatch = CTS.LogWatcher(self.CM["LogFileName"], local_BadNews)
-        local_BadNewsWatch.setwatch()
 
         if node == self.CM.OurNode:
             self.incr("us")
@@ -358,17 +348,6 @@ class StopTest(CTSTest):
 
         self.CM.cluster_stable(self.CM["DeadTime"])
 
-	was_BadNews = 0
-	match=local_BadNewsWatch.look(0)
-	while match:
-	    if not re.search("LocalBadNews:", match):
-		self.CM.log("LocalBadNews: %s" % (match))
-		was_BadNews = 1
-	    match=local_BadNewsWatch.look(0)
-	    
-	if was_BadNews:
-            return self.failure("Local BadNews detected")
-	    
         # because syslog looses so many messages we can only really fail 
         #  the stop if _none_ of the CCM peers notice the node leave
         if not watch.unmatched or self.CM.upcount() == 0:
