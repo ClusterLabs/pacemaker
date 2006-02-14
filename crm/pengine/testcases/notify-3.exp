@@ -12,7 +12,7 @@
      <action_set>
        <rsc_op id="38" rsc_id="rsc1:child_rsc1:0" operation="notify" operation_key="rsc1:child_rsc1:0_pre_notify_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
-         <attributes notify_start_uuid="uuid1 " notify_active_resource="rsc1:child_rsc1:0 rsc1:child_rsc1:1 " notify_active_uuid="uuid1 uuid1 " notify_stop_uuid="uuid2 " notify_stop_uname="node2 " notify_confirm="yes" notify_type="pre" notify_stop_resource="rsc1:child_rsc1:1 " crm_feature_set="1.0.3" notify_operation="start" notify_start_uname="node1 " notify_start_resource="rsc1:child_rsc1:1 " notify_active_uname="node1 node1 " clone="0" clone_max="2" notify="1" clone_node_max="2"/>
+         <attributes notify_active_resource="rsc1:child_rsc1:0 rsc1:child_rsc1:1 " notify_stop_uname="node2 " notify_confirm="yes" notify_type="pre" notify_stop_resource="rsc1:child_rsc1:1 " crm_feature_set="1.0.3" notify_operation="start" notify_start_uname="node1 " notify_start_resource="rsc1:child_rsc1:1 " notify_active_uname="node1 node1 " clone="0" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -25,7 +25,7 @@
      <action_set>
        <rsc_op id="39" rsc_id="rsc1:child_rsc1:0" operation="notify" operation_key="rsc1:child_rsc1:0_post_notify_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
-         <attributes notify_start_uuid="uuid1 " notify_active_resource="rsc1:child_rsc1:0 rsc1:child_rsc1:1 " notify_active_uuid="uuid1 uuid1 " notify_stop_uuid="uuid2 " notify_stop_uname="node2 " notify_confirm="yes" notify_type="post" notify_stop_resource="rsc1:child_rsc1:1 " crm_feature_set="1.0.3" notify_operation="start" notify_start_uname="node1 " notify_start_resource="rsc1:child_rsc1:1 " notify_active_uname="node1 node1 " clone="0" clone_max="2" notify="1" clone_node_max="2"/>
+         <attributes notify_active_resource="rsc1:child_rsc1:0 rsc1:child_rsc1:1 " notify_stop_uname="node2 " notify_confirm="yes" notify_type="post" notify_stop_resource="rsc1:child_rsc1:1 " crm_feature_set="1.0.3" notify_operation="start" notify_start_uname="node1 " notify_start_resource="rsc1:child_rsc1:1 " notify_active_uname="node1 node1 " clone="0" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -38,7 +38,7 @@
      <action_set>
        <rsc_op id="40" rsc_id="rsc1:child_rsc1:0" operation="notify" operation_key="rsc1:child_rsc1:0_pre_notify_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
-         <attributes notify_start_uuid="uuid1 " notify_active_resource="rsc1:child_rsc1:0 rsc1:child_rsc1:1 " notify_active_uuid="uuid1 uuid1 " notify_stop_uuid="uuid2 " notify_stop_uname="node2 " notify_confirm="yes" notify_type="pre" notify_stop_resource="rsc1:child_rsc1:1 " crm_feature_set="1.0.3" notify_operation="stop" notify_start_uname="node1 " notify_start_resource="rsc1:child_rsc1:1 " notify_active_uname="node1 node1 " clone="0" clone_max="2" notify="1" clone_node_max="2"/>
+         <attributes notify_active_resource="rsc1:child_rsc1:0 rsc1:child_rsc1:1 " notify_stop_uname="node2 " notify_confirm="yes" notify_type="pre" notify_stop_resource="rsc1:child_rsc1:1 " crm_feature_set="1.0.3" notify_operation="stop" notify_start_uname="node1 " notify_start_resource="rsc1:child_rsc1:1 " notify_active_uname="node1 node1 " clone="0" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -51,7 +51,7 @@
      <action_set>
        <rsc_op id="41" rsc_id="rsc1:child_rsc1:0" operation="notify" operation_key="rsc1:child_rsc1:0_post_notify_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
-         <attributes notify_start_uuid="uuid1 " notify_active_resource="rsc1:child_rsc1:0 rsc1:child_rsc1:1 " notify_active_uuid="uuid1 uuid1 " notify_stop_uuid="uuid2 " notify_stop_uname="node2 " notify_confirm="yes" notify_type="post" notify_stop_resource="rsc1:child_rsc1:1 " crm_feature_set="1.0.3" notify_operation="stop" notify_start_uname="node1 " notify_start_resource="rsc1:child_rsc1:1 " notify_active_uname="node1 node1 " clone="0" clone_max="2" notify="1" clone_node_max="2"/>
+         <attributes notify_active_resource="rsc1:child_rsc1:0 rsc1:child_rsc1:1 " notify_stop_uname="node2 " notify_confirm="yes" notify_type="post" notify_stop_resource="rsc1:child_rsc1:1 " crm_feature_set="1.0.3" notify_operation="stop" notify_start_uname="node1 " notify_start_resource="rsc1:child_rsc1:1 " notify_active_uname="node1 node1 " clone="0" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -73,7 +73,7 @@
      <action_set>
        <rsc_op id="11" rsc_id="rsc1:child_rsc1:1" operation="stop" operation_key="rsc1:child_rsc1:1_stop_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.3" clone="1" clone_max="2" notify="1" clone_node_max="2"/>
+         <attributes notify_active_resource="rsc1:child_rsc1:0 rsc1:child_rsc1:1 " notify_stop_uname="node2 " notify_stop_resource="rsc1:child_rsc1:1 " crm_feature_set="1.0.3" notify_start_uname="node1 " notify_start_resource="rsc1:child_rsc1:1 " notify_active_uname="node1 node1 " clone="1" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -86,7 +86,7 @@
      <action_set>
        <rsc_op id="12" rsc_id="rsc1:child_rsc1:1" operation="start" operation_key="rsc1:child_rsc1:1_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.3" clone="1" clone_max="2" notify="1" clone_node_max="2"/>
+         <attributes notify_active_resource="rsc1:child_rsc1:0 rsc1:child_rsc1:1 " notify_stop_uname="node2 " notify_stop_resource="rsc1:child_rsc1:1 " crm_feature_set="1.0.3" notify_start_uname="node1 " notify_start_resource="rsc1:child_rsc1:1 " notify_active_uname="node1 node1 " clone="1" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -102,7 +102,7 @@
      <action_set>
        <rsc_op id="42" rsc_id="rsc1:child_rsc1:1" operation="notify" operation_key="rsc1:child_rsc1:1_post_notify_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
-         <attributes notify_start_uuid="uuid1 " notify_active_resource="rsc1:child_rsc1:0 rsc1:child_rsc1:1 " notify_active_uuid="uuid1 uuid1 " notify_stop_uuid="uuid2 " notify_stop_uname="node2 " notify_confirm="yes" notify_type="post" notify_stop_resource="rsc1:child_rsc1:1 " crm_feature_set="1.0.3" notify_operation="start" notify_start_uname="node1 " notify_start_resource="rsc1:child_rsc1:1 " notify_active_uname="node1 node1 " clone="1" clone_max="2" notify="1" clone_node_max="2"/>
+         <attributes notify_active_resource="rsc1:child_rsc1:0 rsc1:child_rsc1:1 " notify_stop_uname="node2 " notify_confirm="yes" notify_type="post" notify_stop_resource="rsc1:child_rsc1:1 " crm_feature_set="1.0.3" notify_operation="start" notify_start_uname="node1 " notify_start_resource="rsc1:child_rsc1:1 " notify_active_uname="node1 node1 " clone="1" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -115,7 +115,7 @@
      <action_set>
        <rsc_op id="43" rsc_id="rsc1:child_rsc1:1" operation="notify" operation_key="rsc1:child_rsc1:1_pre_notify_stop_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
-         <attributes notify_start_uuid="uuid1 " notify_active_resource="rsc1:child_rsc1:0 rsc1:child_rsc1:1 " notify_active_uuid="uuid1 uuid1 " notify_stop_uuid="uuid2 " notify_stop_uname="node2 " notify_confirm="yes" notify_type="pre" notify_stop_resource="rsc1:child_rsc1:1 " crm_feature_set="1.0.3" notify_operation="stop" notify_start_uname="node1 " notify_start_resource="rsc1:child_rsc1:1 " notify_active_uname="node1 node1 " clone="1" clone_max="2" notify="1" clone_node_max="2"/>
+         <attributes notify_active_resource="rsc1:child_rsc1:0 rsc1:child_rsc1:1 " notify_stop_uname="node2 " notify_confirm="yes" notify_type="pre" notify_stop_resource="rsc1:child_rsc1:1 " crm_feature_set="1.0.3" notify_operation="stop" notify_start_uname="node1 " notify_start_resource="rsc1:child_rsc1:1 " notify_active_uname="node1 node1 " clone="1" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -306,7 +306,7 @@
      <action_set>
        <rsc_op id="25" rsc_id="rsc2:child_rsc2:0" operation="stop" operation_key="rsc2:child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.3" clone="0" clone_max="2" notify="1" clone_node_max="2"/>
+         <attributes notify_stop_uname="node1 " notify_stop_resource="rsc2:child_rsc2:0 " crm_feature_set="1.0.3" clone="0" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -319,7 +319,7 @@
      <action_set>
        <rsc_op id="44" rsc_id="rsc2:child_rsc2:0" operation="notify" operation_key="rsc2:child_rsc2:0_pre_notify_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
-         <attributes notify_stop_uuid="uuid1 " notify_stop_uname="node1 " notify_confirm="yes" notify_type="pre" notify_stop_resource="rsc2:child_rsc2:0 " crm_feature_set="1.0.3" notify_operation="stop" clone="0" clone_max="2" notify="1" clone_node_max="2"/>
+         <attributes notify_stop_uname="node1 " notify_confirm="yes" notify_type="pre" notify_stop_resource="rsc2:child_rsc2:0 " crm_feature_set="1.0.3" notify_operation="stop" clone="0" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
