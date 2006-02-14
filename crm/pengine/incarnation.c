@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.72 2006/01/27 11:15:49 andrew Exp $ */
+/* $Id: incarnation.c,v 1.73 2006/02/14 12:01:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -441,8 +441,15 @@ clone_update_pseudo_status(
 			*stopping = TRUE;
 
 		} else if(safe_str_eq(CRMD_ACTION_START, action->task)) {
-			crm_debug_2("Starting due to: %s", action->uuid);
-			*starting = TRUE;
+			if(action->runnable == FALSE) {
+				crm_debug_3("Skipping pseduo-op: %s run=%d, pseudo=%d",
+					    action->uuid, action->runnable, action->pseudo);
+			} else {
+				crm_debug_2("Starting due to: %s", action->uuid);
+				crm_debug_3("%s run=%d, pseudo=%d",
+					    action->uuid, action->runnable, action->pseudo);
+				*starting = TRUE;
+			}
 		}
 		);
 
@@ -991,18 +998,14 @@ expand_list(GListPtr list, int clones,
 {
 	int rsc_len = 0;
 	int node_len = 0;
-	int uuid_len = 0;
 	int list_len = 100 * clones;
 
 	char *rsc_list_s = NULL;
 	char *node_list_s = NULL;
-	char *uuid_list_s = NULL;
 
-	const char *uuid = NULL;
 	const char *uname = NULL;
 	const char *rsc_id = NULL;
 
-	const char *last_uuid = NULL;
 	const char *last_rsc_id = NULL;
 	
   clone_expand_reallocate:
@@ -1020,16 +1023,8 @@ expand_list(GListPtr list, int clones,
 		node_list_s = *node_list;
 		node_len = 0;
 	}
-	if(uuid_list != NULL) {
-		crm_free(*uuid_list);
-		crm_malloc0(*uuid_list, sizeof(char)*list_len);
-		CRM_ASSERT(*uuid_list != NULL);
-		uuid_list_s = *uuid_list;
-		uuid_len = 0;
-	}	
-
 	/* keep BEAM extra happy */
-	if(rsc_list_s == NULL || node_list_s == NULL || uuid_list_s == NULL) {
+	if(rsc_list_s == NULL || node_list_s == NULL) {
 		return;
 	}
 	
@@ -1040,16 +1035,6 @@ expand_list(GListPtr list, int clones,
 		   if(crm_assert_failed) {
 			   rsc_id = "__none__";
 		   }
-
-		   uuid = NULL;
-		   if(entry->node) {
-			   uuid = entry->node->details->id;
-		   }
-		   CRM_DEV_ASSERT(uuid != NULL);
-		   if(crm_assert_failed) {
-			   uuid = "__none__";
-		   }
-
 		   uname = NULL;
 		   if(entry->node) {
 			   uname = entry->node->details->uname;
@@ -1060,13 +1045,11 @@ expand_list(GListPtr list, int clones,
 		   }
 
 		   /* filter dups */
-		   if(safe_str_eq(rsc_id, last_rsc_id)
-		      && safe_str_eq(uuid, last_uuid)) {
+		   if(safe_str_eq(rsc_id, last_rsc_id)) {
 			   continue;
 		   }
 		   last_rsc_id = rsc_id;
-		   last_uuid = uuid;
-		   
+
 		   if(rsc_list != NULL) {
 			   if(rsc_len + 1 + strlen(rsc_id) >= list_len) {
 				   list_len *= 2;
@@ -1090,26 +1073,15 @@ expand_list(GListPtr list, int clones,
 			   node_list_s++;
 			   node_len++;
 		   }
-		   
-		   if(uuid_list != NULL) {
-			   if(uuid_len + 1 + strlen(uuid) >= list_len) {
-				   list_len *= 2;
-				   goto clone_expand_reallocate;
-			   }
-			   sprintf(uuid_list_s, "%s ", uuid);
-			   uuid_list_s += strlen(uuid);
-			   uuid_len += strlen(uuid);
-			   uuid_list_s++;
-			   uuid_len++;
-		   }
-		);
+		   );
 }
 
 void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 {
 	char *rsc_list = NULL;
 	char *node_list = NULL;
-	char *uuid_list = NULL;
+	char *uuid_list = NULL;	
+
 	notify_data_t *n_data = NULL;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
@@ -1139,7 +1111,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 	if(rsc->notify && n_data->stop) {
 		n_data->stop = g_list_sort(
 			n_data->stop, sort_notify_entries);
-		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
+		rsc_list = NULL; node_list = NULL;
 		expand_list(n_data->stop, clone_data->clone_max,
 			    &rsc_list, &node_list, &uuid_list);
 		g_hash_table_insert(
@@ -1148,15 +1120,12 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_table_insert(
 			n_data->keys,
 			crm_strdup("notify_stop_uname"), node_list);
-		g_hash_table_insert(
-			n_data->keys,
-			crm_strdup("notify_stop_uuid"), uuid_list);
 	}
 
 	if(rsc->notify && n_data->start) {
 		n_data->start = g_list_sort(
 			n_data->start, sort_notify_entries);
-		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
+		rsc_list = NULL; node_list = NULL; 
 		expand_list(n_data->start, clone_data->clone_max,
 			    &rsc_list, &node_list, &uuid_list);
 		g_hash_table_insert(
@@ -1165,15 +1134,12 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_table_insert(
 			n_data->keys,
 			crm_strdup("notify_start_uname"), node_list);
-		g_hash_table_insert(
-			n_data->keys,
-			crm_strdup("notify_start_uuid"), uuid_list);
 	}
 	
 	if(rsc->notify && n_data->demote) {
 		n_data->demote = g_list_sort(
 			n_data->demote, sort_notify_entries);
-		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
+		rsc_list = NULL; node_list = NULL;
 		expand_list(n_data->demote, clone_data->clone_max,
 			    &rsc_list, &node_list, &uuid_list);
 		g_hash_table_insert(
@@ -1182,9 +1148,6 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_table_insert(
 			n_data->keys,
 			crm_strdup("notify_demote_uname"), node_list);
-		g_hash_table_insert(
-			n_data->keys,
-			crm_strdup("notify_demote_uuid"), uuid_list);
 	}
 	
 	if(rsc->notify && n_data->promote) {
@@ -1199,9 +1162,6 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_table_insert(
 			n_data->keys,
 			crm_strdup("notify_promote_uname"), node_list);
-		g_hash_table_insert(
-			n_data->keys,
-			crm_strdup("notify_promote_uuid"), uuid_list);
 	}
 	
 	if(rsc->notify && n_data->active) {
@@ -1216,9 +1176,6 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_table_insert(
 			n_data->keys,
 			crm_strdup("notify_active_uname"), node_list);
-		g_hash_table_insert(
-			n_data->keys,
-			crm_strdup("notify_active_uuid"), uuid_list);
 	}
 
 	if(rsc->notify && n_data->slave) {
@@ -1233,9 +1190,6 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_table_insert(
 			n_data->keys,
 			crm_strdup("notify_slave_uname"), node_list);
-		g_hash_table_insert(
-			n_data->keys,
-			crm_strdup("notify_slave_uuid"), uuid_list);	
 	}
 
 	if(rsc->notify && n_data->master) {
@@ -1250,9 +1204,6 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_table_insert(
 			n_data->keys,
 			crm_strdup("notify_master_uname"), node_list);
-		g_hash_table_insert(
-			n_data->keys,
-			crm_strdup("notify_master_uuid"), uuid_list);	
 	}
 
 	if(rsc->notify && n_data->inactive) {
@@ -1267,9 +1218,6 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_table_insert(
 			n_data->keys,
 			crm_strdup("notify_inactive_uname"), node_list);
-		g_hash_table_insert(
-			n_data->keys,
-			crm_strdup("notify_inactive_uuid"), uuid_list);	
 	}
 	
 	/* yes, we DO need this second loop */
