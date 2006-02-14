@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.51 2006/01/27 11:15:49 andrew Exp $ */
+/* $Id: group.c,v 1.52 2006/02/14 11:59:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -59,7 +59,7 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	crm_data_t *xml_self = copy_xml(rsc->xml);
 	group_variant_data_t *group_data = NULL;
 	const char *group_ordered = g_hash_table_lookup(
-		rsc->parameters, "ordered");
+		rsc->parameters, XML_RSC_ATTR_ORDERED);
 	const char *group_colocated = g_hash_table_lookup(
 		rsc->parameters, "colocated");
 	
