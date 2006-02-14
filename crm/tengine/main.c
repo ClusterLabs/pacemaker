@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.30 2006/02/10 05:18:22 andrew Exp $ */
+/* $Id: main.c,v 1.31 2006/02/14 11:40:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,14 +47,15 @@
 
 GMainLoop*  mainloop = NULL;
 const char* crm_system_name = SYS_NAME;
-extern cib_t *te_cib_conn;
+cib_t *te_cib_conn = NULL;
+extern GTRIGSource *transition_trigger;
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
 gboolean tengine_shutdown(int nsig, gpointer unused);
 extern void te_update_confirm(const char *event, HA_Message *msg);
 extern void te_update_diff(const char *event, HA_Message *msg);
-
+extern crm_graph_functions_t te_graph_fns;
 
 int
 main(int argc, char ** argv)
@@ -62,10 +63,13 @@ main(int argc, char ** argv)
 	gboolean allow_cores = TRUE;
 	int argerr = 0;
 	int flag;
-
+	
 	crm_log_init(crm_system_name);
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, tengine_shutdown, NULL, NULL);
+
+	transition_trigger = G_main_add_TriggerHandler(
+		G_PRIORITY_LOW, te_graph_trigger, NULL, NULL);
 
 	crm_debug_3("Begining option processing");
 
@@ -173,11 +177,26 @@ init_start(void)
 	}
 
 	if(init_ok) {
+                cl_uuid_t new_uuid;
+                char uuid_str[UU_UNPARSE_SIZEOF];
+                
+                cl_uuid_generate(&new_uuid);
+                cl_uuid_unparse(&new_uuid, uuid_str);
+                te_uuid = crm_strdup(uuid_str);
+                crm_info("Registering TE UUID: %s", te_uuid);
+		set_graph_functions(&te_graph_fns);
+
+		/* create a blank one */
+		transition_graph = unpack_graph(NULL);
+		transition_graph->complete = TRUE;
+		transition_graph->completion_action = tg_restart;
+	}
+	
+	if(init_ok) {
 		/* Create the mainloop and run it... */
 		crm_info("Starting %s", crm_system_name);
 
 		mainloop = g_main_new(FALSE);
-		initialize_graph();
 
 		g_main_run(mainloop);
 		return_to_orig_privs();
@@ -189,6 +208,7 @@ init_start(void)
 			 crm_system_name);
 	}
 
+	
 	if(init_ok) {
 		return 0;
 	}
@@ -214,14 +234,11 @@ usage(const char* cmd, int exit_status)
 	exit(exit_status);
 }
 
-extern gboolean shuttingdown;
+gboolean shuttingdown;
 gboolean
 tengine_shutdown(int nsig, gpointer unused)
 {  
 	shuttingdown = TRUE;
-	if(te_fsa_state == s_idle) {
-		crm_info("Exiting an idle TEngine");
-		exit(LSB_EXIT_OK);
-	}
+	abort_transition(INFINITY, tg_shutdown, "Shutdown", NULL);
 	return TRUE;
 }

@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.6 2006/02/10 06:04:21 andrew Exp $ */
+/* $Id: actions.c,v 1.7 2006/02/14 11:40:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,23 +29,20 @@
 #include <heartbeat.h>
 #include <clplumbing/Gmain_timeout.h>
 #include <lrm/lrm_api.h>
+#include <clplumbing/lsb_exitcodes.h>
 
-gboolean initiate_action(action_t *action);
-void cib_action_updated(
-	const HA_Message *msg, int call_id, int rc,
-	crm_data_t *output, void *user_data);
+void send_rsc_command(crm_action_t *action);
+extern void cib_action_updated(const HA_Message *msg, int call_id, int rc,
+			       crm_data_t *output, void *user_data);
 
-
-
-static void
-cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
-		    crm_data_t *output, void *user_data)
+static gboolean
+te_pseudo_action(crm_graph_t *graph, crm_action_t *pseudo) 
 {
-	if(rc < cib_ok) {
-		crm_err("CIB update failed: %s", cib_error2string(rc));
-		crm_log_xml_warn(msg, "[Failed Update]");
-	}
-	check_for_completion();
+	crm_debug("Event handler: action %d executed", pseudo->id);
+	pseudo->confirmed = TRUE;
+	update_graph(graph, pseudo->id);
+	trigger_graph();
+	return TRUE;
 }
 
 void
@@ -79,9 +76,9 @@ send_stonith_update(stonith_ops_t * op)
 		cib_quorum_override|cib_scope_local);	
 	
 	if(rc < cib_ok) {
-		const char *fail_text = "Couldnt update CIB after stonith";
 		crm_err("CIB update failed: %s", cib_error2string(rc));
-		send_complete(fail_text, update, te_failed, i_cancel);
+		abort_transition(
+			INFINITY, tg_shutdown, "CIB update failed", update);
 		
 	} else {
 		/* delay processing the trigger until the update completes */
@@ -94,7 +91,7 @@ send_stonith_update(stonith_ops_t * op)
 }
 
 static gboolean
-te_fence_node(action_t *action)
+te_fence_node(crm_graph_t *graph, crm_action_t *action)
 {
 	char *key = NULL;
 	const char *id = NULL;
@@ -118,20 +115,15 @@ te_fence_node(action_t *action)
 	
 	te_log_action(LOG_INFO,
 		      "Executing fencing operation (%s) on %s (timeout=%d)",
-		      id, target, transition_idle_timeout / 2);
-#ifdef TESTING
-	action->complete = TRUE;
-	process_trigger(action->id);
-	return TRUE;
-#endif
+		      id, target, transition_graph->transition_timeout / 2);
 
 	crm_malloc0(st_op, sizeof(stonith_ops_t));
 	st_op->optype = RESET;
-	st_op->timeout = transition_idle_timeout / 2;
+	st_op->timeout = transition_graph->transition_timeout / 2;
 	st_op->node_name = crm_strdup(target);
 	st_op->node_uuid = crm_strdup(uuid);
 	
-	key = generate_transition_key(transition_counter, te_uuid);
+	key = generate_transition_key(transition_graph->id, te_uuid);
 	st_op->private_data = crm_concat(id, key, ';');
 	crm_free(key);
 	
@@ -150,7 +142,7 @@ te_fence_node(action_t *action)
 }
 
 static gboolean
-te_crm_command(action_t *action)
+te_crm_command(crm_graph_t *graph, crm_action_t *action)
 {
 	char *value = NULL;
 	char *counter = NULL;
@@ -177,16 +169,10 @@ te_crm_command(action_t *action)
 	te_log_action(LOG_INFO, "Executing crm-event (%s): %s on %s",
 		      crm_str(id), crm_str(task), on_node);
 	
-#ifdef TESTING
-	action->complete = TRUE;
-	process_trigger(action->id);
-	return TRUE;
-#endif
-	
 	cmd = create_request(task, NULL, on_node, CRM_SYSTEM_CRMD,
 			     CRM_SYSTEM_TENGINE, NULL);
 	
-	counter = generate_transition_key(transition_counter, te_uuid);
+	counter = generate_transition_key(transition_graph->id, te_uuid);
 	crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
 	ret = send_ipc_message(crm_ch, cmd);
 	crm_free(counter);
@@ -198,11 +184,12 @@ te_crm_command(action_t *action)
 		
 	} else if(crm_is_true(value)) {
 		crm_info("Skipping wait for %d", action->id);
-		action->complete = TRUE;
-		process_trigger(action->id);
+		action->confirmed = TRUE;
+		update_graph(graph, action->id);
+		trigger_graph();
 		
 	} else if(ret && action->timeout > 0) {
-		crm_debug_3("Setting timer for action %d",action->id);
+		crm_debug("Setting timer for action %d",action->id);
 		action->timer->reason = timeout_action_warn;
 		start_te_timer(action->timer);
 	}
@@ -210,7 +197,7 @@ te_crm_command(action_t *action)
 }
 
 static gboolean
-te_rsc_command(action_t *action) 
+te_rsc_command(crm_graph_t *graph, crm_action_t *action) 
 {
 	/* never overwrite stop actions in the CIB with
 	 *   anything other than completed results
@@ -220,85 +207,23 @@ te_rsc_command(action_t *action)
 	 */
 	const char *task = NULL;
 	const char *on_node = NULL;
-	action->invoked = FALSE;
+	action->executed = FALSE;
 
-	on_node  = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+	on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 	CRM_DEV_ASSERT(on_node != NULL && strlen(on_node) != 0);
 	if(crm_assert_failed) {
 		/* error */
 		te_log_action(LOG_ERR, "Corrupted command(id=%s) %s: no node",
 			      ID(action->xml), crm_str(task));
 		return FALSE;
-	}	
-	
-#ifdef TESTING
-	cib_action_update(action, LRM_OP_DONE);
-	return TRUE;
-#endif
-	
-	task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-	if(safe_str_eq(task, CRMD_ACTION_START)
-	   || safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
-		cib_action_update(action, LRM_OP_PENDING);
-		
-	} else {
-		cib_action_updated(NULL, 0, cib_ok, NULL, action);
 	}
+	
+	send_rsc_command(action);
 	return TRUE;
 }
 
 gboolean
-initiate_action(action_t *action) 
-{
-	const char *id = NULL;
-
-	id = crm_element_value(action->xml, XML_ATTR_ID);
-	CRM_DEV_ASSERT(action->invoked == FALSE);
-	if(crm_assert_failed) {
-		return FALSE;
-	}
-	
-	action->invoked = TRUE;
-	if(id == NULL) {
-		/* error */
-		te_log_action(LOG_ERR, "Corrupted command %s: no ID",
-			      crm_element_name(action->xml));
-		crm_log_xml_err(action->xml, "[corrupt cmd]");
-		
-	} else if(action->type == action_type_pseudo){
-		te_log_action(LOG_INFO, "Executing pseudo-event: %d",
-			      action->id);
-		
-		action->complete = TRUE;
-		process_trigger(action->id);
-		return TRUE;
-
-	} else if(action->type == action_type_rsc) {
-		return te_rsc_command(action);
-
-	} else if(action->type == action_type_crm) {
-		const char *task = NULL;
-		task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-		CRM_DEV_ASSERT(task != NULL);
-
-		if(safe_str_eq(task, CRM_OP_FENCE)) {
-			return te_fence_node(action);
-
-		} else {
-			return te_crm_command(action);
-		}
-		
-	} else {
-		te_log_action(LOG_ERR,
-			      "Failed on unsupported command type: %s (id=%s)",
-			      crm_element_name(action->xml), id);
-	}
-
-	return FALSE;
-}
-
-gboolean
-cib_action_update(action_t *action, int status)
+cib_action_update(crm_action_t *action, int status)
 {
 	char *code = NULL;
 	crm_data_t *fragment = NULL;
@@ -369,7 +294,7 @@ cib_action_update(action_t *action, int status)
 
 	crm_free(code);
 
-	code = generate_transition_key(transition_counter, te_uuid);
+	code = generate_transition_key(transition_graph->id, te_uuid);
 	crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, code);
 	crm_free(code);
 
@@ -386,7 +311,6 @@ cib_action_update(action_t *action, int status)
 		  status<0?"new action":XML_ATTR_TIMEOUT,
 		  crm_element_name(action->xml), crm_str(task), rsc_id, target);
 	
-#ifndef TESTING
 	rc = te_cib_conn->cmds->update(
 		te_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL, call_options);
 
@@ -397,22 +321,6 @@ cib_action_update(action_t *action, int status)
 		crm_debug_2("Waiting for callback id: %d", rc);
 		add_cib_op_callback(rc, FALSE, action, cib_action_updated);
 	}
-#else
-	te_log_action(LOG_INFO, "Initiating action %d: %s %s on %s",
-		      action->id, task_uuid, rsc_id, target);
-	call_options = 0;
-	{
-		HA_Message *cmd = ha_msg_new(11);
-		ha_msg_add(cmd, F_TYPE,		T_CRM);
-		ha_msg_add(cmd, F_CRM_VERSION,	CRM_FEATURE_SET);
-		ha_msg_add(cmd, F_CRM_MSG_TYPE, XML_ATTR_REQUEST);
-		ha_msg_add(cmd, F_CRM_TASK,	CRM_OP_EVENTCC);
-		ha_msg_add(cmd, F_CRM_SYS_TO,   CRM_SYSTEM_TENGINE);
-		ha_msg_add(cmd, F_CRM_SYS_FROM, CRM_SYSTEM_TENGINE);
-		ha_msg_addstruct(cmd, crm_element_name(state), state);
-		send_ipc_message(crm_ch, cmd);
-	}
-#endif
 	free_xml(fragment);
 	free_xml(state);
 
@@ -425,15 +333,12 @@ cib_action_update(action_t *action, int status)
 	return TRUE;
 }
 
-
 void
-cib_action_updated(
-	const HA_Message *msg, int call_id, int rc, crm_data_t *output, void *user_data)
+send_rsc_command(crm_action_t *action) 
 {
 	HA_Message *cmd = NULL;
 	crm_data_t *rsc_op  = NULL;
-	action_t *action = user_data;
-	char *counter = crm_itoa(transition_counter);
+	char *counter = crm_itoa(transition_graph->id);
 
 	const char *task    = NULL;
 	const char *value   = NULL;
@@ -441,39 +346,18 @@ cib_action_updated(
 	const char *on_node = NULL;
 	const char *task_uuid = NULL;
 
-	CRM_DEV_ASSERT(action != NULL);      if(crm_assert_failed) { return; }
-	CRM_DEV_ASSERT(action->xml != NULL); if(crm_assert_failed) { return; }
+	CRM_ASSERT(action != NULL);
+	CRM_ASSERT(action->xml != NULL);
 
 	rsc_op  = action->xml;
 	task    = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 	task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
 	rsc_id  = crm_element_value(rsc_op, XML_LRM_ATTR_RSCID);
 	on_node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
-	counter = generate_transition_key(transition_counter, te_uuid);
+	counter = generate_transition_key(transition_graph->id, te_uuid);
 	crm_xml_add(rsc_op, XML_ATTR_TRANSITION_KEY, counter);
 	crm_free(counter);
-	
-	if(rc < cib_ok) {
-		crm_err("Update for action %d: %s %s on %s FAILED",
-			action->id, task_uuid, rsc_id, on_node);
-		send_complete(cib_error2string(rc), output, te_failed, i_cancel);
-		return;
-	}
 
-	if(te_fsa_state != s_in_transition) {
-		int pending_updates = num_cib_op_callbacks();
-		if(pending_updates == 0) {
-			send_complete("CIB update queue empty", output,
-				      te_done, i_cib_complete);
-		} else {
-			crm_debug("Still waiting on %d callbacks",
-				pending_updates);
-		}
-		crm_debug("Not executing action: Not in a transition: %d",
-			  te_fsa_state);
-		return;
-	}
-	
 	crm_info("Initiating action %d: %s on %s",
 		 action->id, task_uuid, on_node);
 	
@@ -484,18 +368,15 @@ cib_action_updated(
 			     CRM_SYSTEM_LRMD, CRM_SYSTEM_TENGINE, NULL);
 	
 
-#ifndef TESTING
 	send_ipc_message(crm_ch, cmd);
-#else
-	crm_log_message(LOG_INFO, cmd);
-#endif
 	
-	action->invoked = TRUE;
+	action->executed = TRUE;
 	value = g_hash_table_lookup(action->params, XML_ATTR_TE_NOWAIT);
 	if(crm_is_true(value)) {
 		crm_debug("Skipping wait for %d", action->id);
-		action->complete = TRUE;
-		process_trigger(action->id);
+		action->confirmed = TRUE;
+		update_graph(transition_graph, action->id);
+		trigger_graph();
 
 	} else if(action->timeout > 0) {
 		crm_debug_3("Setting timer for action %s", task_uuid);
@@ -503,4 +384,76 @@ cib_action_updated(
 		start_te_timer(action->timer);
 	}
 }
+
+crm_graph_functions_t te_graph_fns = {
+	te_pseudo_action,
+	te_rsc_command,
+	te_crm_command,
+	te_fence_node
+};
+
+void
+notify_crmd(crm_graph_t *graph)
+{	
+	int log_level = LOG_DEBUG;
+	const char *abort_reason = "Poke";
+	enum transition_action completion_action = tg_restart;
+	int id = -1;
 	
+	int unconfirmed = unconfirmed_actions();
+	int pending_callbacks = num_cib_op_callbacks();
+	HA_Message *cmd = NULL;
+	const char *op = CRM_OP_TEABORT;
+
+	if(unconfirmed != 0) {
+		crm_err("Writing unconfirmed actions to the CIB");
+		/* TODO: actually write them */
+/* 		return; */
+	}
+	
+	if(pending_callbacks != 0) {
+		crm_debug("Delaying completion until TE updates to the CIB complete");
+		return;
+	}
+
+	completion_action = graph->completion_action;
+	id = graph->id;
+	if(graph->abort_reason == NULL) {
+		abort_reason = "Complete";
+		
+	} else {
+		abort_reason = graph->abort_reason;
+	}
+	
+	graph->complete = TRUE;
+	graph->abort_reason = NULL;
+	graph->completion_action = tg_restart;
+	
+	switch(completion_action) {
+		case tg_stop:
+			op = CRM_OP_TECOMPLETE;
+			log_level = LOG_INFO;
+			break;
+		case tg_restart:
+			op = CRM_OP_TEABORT;
+			break;
+		case tg_shutdown:
+			crm_info("Exiting after transition");
+			exit(LSB_EXIT_OK);
+	}
+
+	te_log_action(
+		log_level, "%d - Transition status: %s",
+		id, abort_reason);
+
+	print_graph(log_level, graph);
+	
+	cmd = create_request(
+		op, NULL, NULL, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, NULL);
+
+	if(abort_reason != NULL) {
+		ha_msg_add(cmd, "message", abort_reason);
+	}
+
+	send_ipc_message(crm_ch, cmd);
+}
