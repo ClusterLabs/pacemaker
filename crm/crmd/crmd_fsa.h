@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.46 2006/01/10 13:46:42 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.47 2006/02/14 11:55:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -62,6 +62,7 @@ struct crm_subsystem_s {
  		const char*	command;  /* Command with path */
 		const char*	args;     /* Command arguments */
 
+		gboolean	sent_kill;
 		IPC_Channel	*ipc;	  /* How can we communicate with it */
 		long long	flag_connected;	  /*  */
 		long long	flag_required;	  /*  */

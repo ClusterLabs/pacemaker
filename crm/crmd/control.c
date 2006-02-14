@@ -61,6 +61,7 @@ do_ha_control(long long action,
 			set_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
 			fsa_cluster_conn->llc_ops->signoff(
 				fsa_cluster_conn, FALSE);
+			fsa_cluster_conn->llc_ops->delete(fsa_cluster_conn);
 			fsa_cluster_conn = NULL;
 		}
 		crm_info("Disconnected from Heartbeat");
@@ -102,42 +103,39 @@ do_shutdown(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
-	enum crmd_fsa_input next_input = I_NULL;
-	enum crmd_fsa_input tmp = I_NULL;
+	int lpc = 0;
+	gboolean continue_shutdown = TRUE;
+	struct crm_subsystem_s *subsystems[] = {
+		pe_subsystem,
+		te_subsystem
+	};
 
 	/* just in case */
 	set_bit_inplace(fsa_input_register, R_SHUTDOWN);
-	
-	/* last attempt to shut these down */
-	if(is_set(fsa_input_register, R_PE_CONNECTED)) {
-		tmp = do_pe_control(A_PE_STOP, cause, cur_state,
-				    current_input, msg_data);
-		if(tmp != I_NULL) {
-			next_input = I_ERROR;
-			crm_err("Failed to shutdown the PolicyEngine");
+
+	for(lpc = 0; lpc < DIMOF(subsystems); lpc++) {
+		struct crm_subsystem_s *a_subsystem = subsystems[lpc];
+		if(is_set(fsa_input_register, a_subsystem->flag_connected)) {
+			crm_info("Terminating the %s", a_subsystem->name);
+			if(stop_subsystem(a_subsystem, TRUE) == FALSE) {
+				/* its gone... */
+				crm_err("Faking %s exit", a_subsystem->name);
+				clear_bit_inplace(fsa_input_register,
+						  a_subsystem->flag_connected);
+			}
+			continue_shutdown = FALSE;
 		}
 	}
 
-	if(is_set(fsa_input_register, R_TE_CONNECTED)) {
-		tmp = do_pe_control(A_TE_STOP, cause, cur_state,
-				    current_input, msg_data);
-		if(tmp != I_NULL) {
-			next_input = I_ERROR;
-			crm_err("Failed to shutdown the Transitioner");
-		}
-	}
-
-	crm_debug_2("Stopping all remaining local resources");
-	if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
-		stop_all_resources();
+	if(continue_shutdown == FALSE) {
+		crm_info("Waiting for subsystems to exit");
+		crmd_fsa_stall(NULL);
 
 	} else {
-		crm_err("Exiting with no LRM connection..."
-			" resources may be active!");
 		register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 	}
 	
-	return next_input;
+	return I_NULL;
 }
 
 /*	 A_SHUTDOWN_REQ	*/
@@ -183,65 +181,30 @@ do_exit(long long action,
 	fsa_data_t *msg_data)
 {
 	int exit_code = 0;
-	gboolean do_exit = TRUE;
+	int log_level = LOG_INFO;
+	const char *exit_type = "gracefully";
 	
-	if(action & A_EXIT_0) {
-		if(is_set(fsa_input_register, R_PE_CONNECTED)) {
-			crm_info("Terminating the PEngine");
-			if(stop_subsystem(pe_subsystem, TRUE) == FALSE) {
-				/* its gone... */
-				crm_warn("Faking PEngine exit");
-				clear_bit_inplace(
-					fsa_input_register, R_PE_CONNECTED);
-			} 
-			crm_info("Waiting for the PE to disconnect");
-			do_exit = FALSE;
-			
-		} else if(is_set(fsa_input_register, R_TE_CONNECTED)) {
-			crm_info("Terminating the TEngine");
-			if(stop_subsystem(te_subsystem, TRUE) == FALSE) {
-				/* its gone... */
-				crm_warn("Faking TEngine exit");
-				clear_bit_inplace(
-					fsa_input_register, R_TE_CONNECTED);
-			}	
-			crm_info("Waiting for the TE to disconnect");
-			do_exit = FALSE;
-
-		} else if(is_set(fsa_input_register, R_HA_DISCONNECTED) == FALSE) {
-			do_ha_control(A_HA_DISCONNECT,
-				      cause, cur_state, current_input, msg_data);
-			do_exit = FALSE;
-		}
-
-		if(do_exit) {
-			crm_info("Performing %s - gracefully exiting the CRMd",
-				 fsa_action2string(action));
-		}
-		
-	} else {
+	if(action & A_EXIT_1) {
 		exit_code = 1;
-		crm_warn("Performing %s - forcefully exiting the CRMd... now!",
-			 fsa_action2string(action));
-	}
-
-	if(do_exit) {
-		if(is_set(fsa_input_register, R_IN_RECOVERY)) {
-			crm_info("Could not recover from internal error");
-			exit_code = 2;			
-			
-		} else if(is_set(fsa_input_register, R_STAYDOWN)) {
-			crm_info("Inhibiting respawn by Heartbeat");
-			exit_code = 100;
-		}
-		crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
-		exit(exit_code);
-
-	} else {
-		crmd_fsa_stall(NULL);
+		log_level = LOG_ERR;
+		exit_type = "forcefully";
 	}
 	
+	crm_log_maybe(log_level, "Performing %s - %s exiting the CRMd",
+		      fsa_action2string(action), exit_type);
 	
+	if(is_set(fsa_input_register, R_IN_RECOVERY)) {
+		crm_err("Could not recover from internal error");
+		exit_code = 2;			
+		
+	} else if(is_set(fsa_input_register, R_STAYDOWN)) {
+		crm_warn("Inhibiting respawn by Heartbeat");
+		exit_code = 100;
+	}
+	
+	crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
+	exit(exit_code);
+
 	return I_NULL;
 }
 
@@ -337,22 +300,20 @@ do_startup(long long action,
 		finalization_timer->fsa_input = I_FINALIZED;
 		finalization_timer->callback = crm_timer_popped;
 		finalization_timer->repeat = FALSE;
-#if 0
 		/* for possible enabling... a bug in the join protocol left
 		 *    a slave in S_PENDING while we think its in S_NOT_DC
 		 *
 		 * raising I_FINALIZED put us into a transition loop which is
 		 *    never resolved.
-		 * in this loop we continually send probes which the node NACK's because
-		 *    its in S_PENDING
+		 * in this loop we continually send probes which the node
+		 *    NACK's because its in S_PENDING
 		 *
-		 * the flip-side is if we have nodes where heartbeat is active but the
-		 *    CRM is not... then we'll be stuck in an election/join loop
-		 *
-		 * we just cant win
+		 * if we have nodes where heartbeat is active but the
+		 *    CRM is not... then this will be handled in the
+		 *    integration phase
 		 */
 		finalization_timer->fsa_input = I_ELECTION;
-#endif		
+
 	} else {
 		was_error = TRUE;
 	}
@@ -476,10 +437,20 @@ do_stop(long long action,
 	enum crmd_fsa_input current_input,
 	fsa_data_t *msg_data)
 {
+	crm_debug_2("Stopping all remaining local resources");
+	if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
+		stop_all_resources();
+
+	} else {
+		crm_err("Exiting with no LRM connection..."
+			" resources may be active!");
+	}
 
 	if(g_hash_table_size(shutdown_ops) > 0) {
-		crm_err("%d stop operations outstanding at exit",
+		crm_info("Waiting on %d stop operations to complete",
 			g_hash_table_size(shutdown_ops));
+		crmd_fsa_stall(NULL);
+		return I_NULL;
 	}
 	
 	return I_NULL;

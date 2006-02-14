@@ -297,8 +297,10 @@ stop_all_resources(void)
 		rsc_id, char, lrm_list, lpc,
 
 		if(is_rsc_active(rsc_id)) {
-			crm_warn("Resource %s was active at shutdown", rsc_id);
-			do_lrm_rsc_op(NULL, rsc_id, CRMD_ACTION_STOP, NULL, NULL);
+			crm_err("Resource %s was active at shutdown."
+				"  You may ignore this error if it is unmanaged.",
+				rsc_id);
+/* 			do_lrm_rsc_op(NULL, rsc_id, CRMD_ACTION_STOP, NULL, NULL); */
 		}
 		);
 

@@ -1152,10 +1152,10 @@ send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 	}
 	
 	if(all_is_good == FALSE) {
-		log_level = LOG_ERR;
-	}
-
-	if(log_level == LOG_ERR
+		log_level = LOG_WARNING;
+	}	
+	
+	if(log_level == LOG_WARNING
 	   || (safe_str_neq(op, CRM_OP_HBEAT))) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
 			   "Sending %sHA message (ref=%s) to %s@%s %s.",

@@ -57,18 +57,18 @@ gboolean
 crmd_ha_msg_dispatch(IPC_Channel *channel, gpointer user_data)
 {
 	gboolean stay_connected = TRUE;
-	ll_cluster_t *hb_cluster = (ll_cluster_t*)user_data;
 
 	crm_debug_3("Invoked");
-	if(IPC_ISRCONN(channel)) {
-		if(hb_cluster->llc_ops->msgready(hb_cluster) == 0) {
+
+	if(fsa_cluster_conn != NULL && IPC_ISRCONN(channel)) {
+		if(fsa_cluster_conn->llc_ops->msgready(fsa_cluster_conn) == 0) {
 			crm_debug_2("no message ready yet");
 		}
 		/* invoke the callbacks but dont block */
-		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
+		fsa_cluster_conn->llc_ops->rcvmsg(fsa_cluster_conn, 0);
 	}
 	
-	if (channel->ch_status != IPC_CONNECT) {
+	if (fsa_cluster_conn == NULL || channel->ch_status != IPC_CONNECT) {
 		if(is_set(fsa_input_register, R_HA_DISCONNECTED) == FALSE) {
 			crm_crit("Lost connection to heartbeat service.");
 		} else {
@@ -207,6 +207,7 @@ gboolean
 crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 {
 	int lpc = 0;
+	int rc = IPC_OK;
 	IPC_Message *msg = NULL;
 	ha_msg_input_t *new_input = NULL;
 	crmd_client_t *curr_client = (crmd_client_t*)user_data;
@@ -219,15 +220,16 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		if(client->ops->is_message_pending(client) == 0) {
 			break;
 
-		} else if (client->ops->recv(client, &msg) != IPC_OK) {
-			perror("Receive failure:");
-			crm_err("[%s] [receive failure]",
-				curr_client->table_key);
+		}
+		rc = client->ops->recv(client, &msg);
+		if (rc != IPC_OK) {
+			cl_perror("Receive failure from %s: %d",
+				  curr_client->table_key, rc);
 			stay_connected = FALSE;
 			break;
 			
 		} else if (msg == NULL) {
-			crm_err("[%s] [no message this time]",
+			crm_err("%s: no message this time",
 				curr_client->table_key);
 			continue;
 		}
@@ -237,7 +239,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		msg->msg_done(msg);
 		
 		crm_debug_2("Processing msg from %s", curr_client->table_key);
-		crm_log_message_adv(LOG_MSG, "CRMd[inbound]", new_input->msg);
+		crm_log_message_adv(LOG_DEBUG_2, "CRMd[inbound]", new_input->msg);
 		if(crmd_authorize_message(new_input, curr_client)) {
 			register_fsa_input(C_IPC_MESSAGE, I_ROUTER, new_input);
 		}

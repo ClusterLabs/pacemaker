@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.43 2006/02/10 05:41:20 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.44 2006/02/14 11:55:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -396,7 +396,7 @@ enum crmd_fsa_input {
 #define	A_ERROR			0x2000000000000000ULL
 #define	A_WARN			0x4000000000000000ULL
 
-#define O_EXIT (A_STOP|A_CCM_DISCONNECT|A_LRM_DISCONNECT|A_EXIT_0|A_CIB_STOP)
+#define O_EXIT (A_STOP|A_CCM_DISCONNECT|A_LRM_DISCONNECT|A_HA_DISCONNECT|A_EXIT_0|A_CIB_STOP)
 #define O_RELEASE  (A_DC_TIMER_STOP|A_DC_RELEASE|A_PE_STOP|A_TE_STOP|A_DC_RELEASED)
 #define O_DC_TIMER_RESTART	(A_NOTHING)
 #define	O_PE_RESTART		(A_PE_START|A_PE_STOP)

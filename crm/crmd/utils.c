@@ -1336,8 +1336,13 @@ process_client_disconnect(crmd_client_t *curr_client)
 		
 	if(the_subsystem != NULL) {
 		the_subsystem->ipc = NULL;
+		crm_info("Received HUP from %s:[%d]",
+			 the_subsystem->name, the_subsystem->pid);
 		
-	} /* else that was a transient client */
+	} else {
+		/* else that was a transient client */
+		crm_debug("Received HUP from transient client");
+	}
 	
 	if (curr_client->table_key != NULL) {
 		/*

@@ -252,8 +252,10 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 				  fsa_state2string(fsa_state),
 				  fsa_cause2string(fsa_data->fsa_cause),
 				  fsa_data->origin);
-/* 		} else if(fsa_actions == A_EXIT_0) { */
-/* 			crm_log_level = LOG_DEBUG_2; */
+		}
+
+		if(fsa_actions & A_SHUTDOWN) {
+			crm_log_level = LOG_DEBUG_2;
 		}
 		
 #ifdef FSA_TRACE
@@ -714,6 +716,10 @@ do_state_transition(long long actions,
 				crm_info("All %u cluster nodes are"
 					 " eligable to run resources.",
 					 fsa_membership_copy->members_size);
+				
+			} else if(g_hash_table_size(confirmed_nodes) > fsa_membership_copy->members_size) {
+				crm_err("We have more confirmed nodes than our membership does");
+				register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 				
 			} else {
 				crm_warn("Only %u of %u cluster "
