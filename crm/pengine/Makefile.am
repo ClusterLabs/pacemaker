@@ -34,6 +34,7 @@ crmdir		= $(havarlibdir)/crm
 apigid		= @HA_APIGID@
 crmuid		= @HA_CCMUID@
 
+
 COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 		$(top_builddir)/lib/clplumbing/libplumb.la		\
 		$(top_builddir)/lib/pils/libpils.la			\
@@ -68,13 +69,15 @@ ptest_SOURCES	= ptest.c
 
 ptest_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 ptest_LDFLAGS	= 
-ptest_LDADD	= $(COMMONLIBS) 
+ptest_LDADD	= $(COMMONLIBS) \
+		$(top_builddir)/lib/crm/transition/libtransitioner.la
 
 pengine_SOURCES	= main.c
 
 pengine_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 pengine_LDFLAGS	= 
 pengine_LDADD	= $(COMMONLIBS) \
+		$(top_builddir)/lib/crm/transition/libtransitioner.la	\
 		$(top_builddir)/lib/hbclient/libhbclient.la
 
 #

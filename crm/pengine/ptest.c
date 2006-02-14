@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.70 2006/01/26 11:36:58 andrew Exp $ */
+/* $Id: ptest.c,v 1.71 2006/02/14 12:07:48 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include <crm/transition.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
 #include <crm/msg_xml.h>
@@ -112,6 +113,8 @@ gboolean USE_LIVE_CIB = FALSE;
 int
 main(int argc, char **argv)
 {
+	enum transition_status graph_rc = -1;
+	crm_graph_t *transition = NULL;
 	const char *fake_now = NULL;
 	ha_time_t *a_date = NULL;
 	cib_t *	cib_conn = NULL;
@@ -321,11 +324,25 @@ main(int argc, char **argv)
 			);
 		);
 	dot_write("}");
+
+	transition = unpack_graph(data_set.graph);
+	do {
+		graph_rc = run_graph(transition);
+		
+	} while(graph_rc == transition_active);
+
+	if(graph_rc != transition_complete) {
+		crm_crit("Transition failed: %s", transition_status(graph_rc));
+		print_graph(LOG_ERR, transition);
+	}
+
 	data_set.input = NULL;
 	cleanup_calculations(&data_set);
-
+	destroy_graph(transition);
+	
 	crm_mem_stats(NULL);
  	CRM_DEV_ASSERT(crm_mem_stats(NULL) == FALSE);
+	CRM_DEV_ASSERT(graph_rc == transition_complete);
 
 	crm_free(cib_object);	
 
