@@ -141,6 +141,8 @@ do_cib_control(long long action,
 		clear_bit_inplace(fsa_input_register, R_CIB_CONNECTED);
 		if(fsa_cib_conn != NULL
 		   && fsa_cib_conn->state != cib_disconnected) {
+			fsa_cib_conn->cmds->set_slave(
+				fsa_cib_conn, cib_scope_local);
 			fsa_cib_conn->cmds->signoff(fsa_cib_conn);
 		}
 	}
