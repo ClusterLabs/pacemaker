@@ -49,7 +49,7 @@ AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
 halib_PROGRAMS	= tengine ttest
 
 ## SOURCES
-noinst_HEADERS	= tengine.h
+noinst_HEADERS	= tengine.h te_callbacks.c
 
 tengine_SOURCES	= actions.c tengine.c events.c utils.c callbacks.c main.c
 tengine_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
