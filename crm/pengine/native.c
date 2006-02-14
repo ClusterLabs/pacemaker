@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.109 2006/02/14 12:03:41 andrew Exp $ */
+/* $Id: native.c,v 1.110 2006/02/14 12:59:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -134,8 +134,8 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		/* these are errors because hardly any gets it right
 		 *   at the moment and this way the might notice
 		 */
-		pe_err("Resource %s is (potentially) active on %d nodes."
-		       "  Latest: %s/%s", rsc->id,
+		pe_err("Resource %s::%s:%s is (potentially) active on %d nodes."
+		       "  Latest: %s/%s", class, type, rsc->id,
 		       g_list_length(rsc->running_on),
 		       node->details->uname, node->details->id);
 		cl_log(LOG_ERR, "See %s for more information.",
