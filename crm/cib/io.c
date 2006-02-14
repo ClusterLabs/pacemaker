@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.45 2006/02/08 22:12:06 andrew Exp $ */
+/* $Id: io.c,v 1.46 2006/02/14 11:57:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -40,6 +40,7 @@
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
 #include <clplumbing/cl_misc.h>
+#include <clplumbing/lsb_exitcodes.h>
 
 #include <cibprimatives.h>
 
@@ -77,9 +78,11 @@ extern char *ccm_transition_id;
 extern gboolean cib_have_quorum;
 extern GHashTable *peer_hash;
 extern GHashTable *ccm_membership;
+extern GTRIGSource *cib_writer;
 
 int set_connected_peers(crm_data_t *xml_obj);
 void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data);
+int write_cib_contents(gpointer p);
 
 /*
  * It is the callers responsibility to free the output of this function
@@ -387,43 +390,8 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 		}
 		
 		if(cib_writes_enabled) {
-			crm_data_t *cib_copy_status = NULL;
-			crm_data_t *cib_copy_no_status = NULL;
-
-			crm_debug_3("Writing CIB out to %s", CIB_FILENAME);
-			CRM_DEV_ASSERT(new_cib != NULL);
-
-			/* Given that we discard the status section on startup
-			 *   there is no point writing it out in the first place
-			 *   since users just get confused by it
-			 *
-			 * Although, it does help me once in a while
-			 *
-			 * So make a copy of the CIB and delete the status
-			 *   section before we write it out
-			 * Perhaps not the most efficient thing to do but
-			 *   it will work reliably
-			 */
-			cib_copy_no_status = copy_xml(new_cib);
-			cib_copy_status = find_xml_node(
-				cib_copy_no_status, XML_CIB_TAG_STATUS, TRUE);
-			CRM_DEV_ASSERT(cib_copy_status != NULL);
-
-			free_xml_from_parent(
-				cib_copy_no_status, cib_copy_status);
-			
-			local_rc = write_xml_file(
-				cib_copy_no_status, filename);
-
-			CRM_DEV_ASSERT(local_rc != -1 && local_rc != 0);
-
-			if(crm_assert_failed) {
-				crm_err("Changes activated but couldn't"
-					" be written to disk");
-				error_code = -2;
-			}
-			
-			free_xml(cib_copy_no_status);			
+			crm_debug_2("Triggering CIB write");
+			G_main_set_trigger(cib_writer);
 		}
 	}
 
@@ -470,6 +438,47 @@ activateCibXml(crm_data_t *new_cib, const char *filename)
 	
 	return error_code;
     
+}
+
+int write_cib_contents(gpointer p) 
+{
+	int rc = 0;
+	crm_data_t *cib_status_root = NULL;
+
+	/* we can scribble on "the_cib" here and not affect the parent */
+	const char *epoch = crm_element_value(the_cib, XML_ATTR_GENERATION);
+	const char *updates = crm_element_value(the_cib, XML_ATTR_NUMUPDATES);
+	const char *admin_epoch = crm_element_value(
+		the_cib, XML_ATTR_GENERATION_ADMIN);
+	
+	crm_info("Writing version %s.%s.%s of the CIB to disk",
+		 admin_epoch?admin_epoch:"0",
+		 epoch?epoch:"0", updates?updates:"0");
+	
+	/* Given that we discard the status section on startup
+	 *   there is no point writing it out in the first place
+	 *   since users just get confused by it
+	 *
+	 * Although, it does help me once in a while
+	 *
+	 * So delete the status section before we write it out
+	 */
+	cib_status_root = find_xml_node(the_cib, XML_CIB_TAG_STATUS, TRUE);
+	CRM_DEV_ASSERT(cib_status_root != NULL);
+	
+	if(cib_status_root != NULL) {
+		free_xml_from_parent(the_cib, cib_status_root);
+	}
+	
+	rc = write_xml_file(the_cib, CIB_FILENAME);
+
+	CRM_DEV_ASSERT(rc != -1 && rc != 0);
+	if(crm_assert_failed) {
+		crm_err("Changes activated but couldn't be written to disk");
+		exit(LSB_EXIT_GENERIC);
+	}
+	exit(LSB_EXIT_OK);
+	return HA_OK;
 }
 
 void

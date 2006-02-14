@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.36 2006/02/08 22:12:06 andrew Exp $ */
+/* $Id: main.c,v 1.37 2006/02/14 11:57:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -71,8 +71,10 @@ gboolean cib_shutdown(int nsig, gpointer unused);
 void cib_ha_connection_destroy(gpointer user_data);
 gboolean startCib(const char *filename);
 extern gboolean cib_msg_timeout(gpointer data);
+extern int write_cib_contents(gpointer p);
 
 ll_cluster_t *hb_conn = NULL;
+GTRIGSource *cib_writer = NULL;
 
 #define OPTARGS	"hV"
 
@@ -87,6 +89,13 @@ main(int argc, char ** argv)
 	crm_log_init(crm_system_name);
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, cib_shutdown, NULL, NULL);
+	
+	cib_writer = G_main_add_tempproc_trigger(			
+		G_PRIORITY_LOW, write_cib_contents, "write_cib_contents",
+		NULL, NULL, NULL);
+
+	EnableProcLogging();
+	set_sigchld_proctrack(G_PRIORITY_HIGH);
 
 	client_list = g_hash_table_new(g_str_hash, g_str_equal);
 	peer_hash = g_hash_table_new(g_str_hash, g_str_equal);
@@ -314,7 +323,7 @@ init_start(void)
 		mainloop = g_main_new(FALSE);
 		crm_info("Starting %s mainloop", crm_system_name);
 
-		Gmain_timeout_add(crm_get_msec("1s"), cib_msg_timeout, NULL);
+		Gmain_timeout_add(crm_get_msec("10s"), cib_msg_timeout, NULL);
 		Gmain_timeout_add(
 			crm_get_msec(cib_stat_interval), cib_stats, NULL); 
 		

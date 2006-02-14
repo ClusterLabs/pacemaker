@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.107 2006/02/10 15:01:31 andrew Exp $ */
+/* $Id: callbacks.c,v 1.108 2006/02/14 11:57:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1244,7 +1244,7 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 			if(seen < timeout) {
 				crm_debug_4("Updating seen count for msg from client %s",
 					    client->id);
-				seen += 1;
+				seen += 10;
 				ha_msg_mod_int(msg, F_CIB_SEENCOUNT, seen);
 				list = list->next;
 				continue;
@@ -1325,18 +1325,29 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 	   && cib_shutdown_flag
 	   && g_hash_table_size(client_list) == 0) {
 		IPC_Channel *ipc = NULL;
+		IPC_Queue *send_q = NULL;
 		crm_info("All clients disconnected... flushing updates");
 
 		/* wait for HA messages to be sent */
-		if(hb_conn != NULL) {
+		while(hb_conn != NULL) {
 			ipc = hb_conn->llc_ops->ipcchan(hb_conn);
-		}
-		if(ipc != NULL) {
+			if(ipc == NULL || ipc->ch_status != IPC_CONNECT) {
+				break;
+			}
+			
+			send_q = ipc->send_queue;
+			if(send_q == NULL || send_q->current_qlen == 0) {
+				break;
+			}
+
+			crm_err("Waiting on %d queued messages to be sent",
+				(int)send_q->current_qlen);
+			
 			ipc->ops->waitout(ipc);
 			/* BUG: give heartbeat time to send our messages out */ 
 			sleep(2);
 		}
-	       
+		
 		crm_info("Updates flushed... exiting");
 		if (mainloop != NULL && g_main_is_running(mainloop)) {
 			g_main_quit(mainloop);
