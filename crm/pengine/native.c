@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.108 2006/01/27 11:15:49 andrew Exp $ */
+/* $Id: native.c,v 1.109 2006/02/14 12:03:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -130,6 +130,7 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		const char *class = crm_element_value(
 			rsc->xml, XML_AGENT_ATTR_CLASS);
 
+		
 		/* these are errors because hardly any gets it right
 		 *   at the moment and this way the might notice
 		 */
@@ -137,8 +138,8 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		       "  Latest: %s/%s", rsc->id,
 		       g_list_length(rsc->running_on),
 		       node->details->uname, node->details->id);
-		pe_err("Please confirm your %s Resource Agent (on all nodes)"
-		       " conforms to the %s spec.", type, class);
+		cl_log(LOG_ERR, "See %s for more information.",
+		       HAURL("v2/faq/resource_too_active"));
 		
 		if(rsc->recovery_type == recovery_stop_only) {
 			native_assign_color(rsc, data_set->no_color);
@@ -942,7 +943,7 @@ native_print(
 		}
 	}
 
-	if(options & pe_print_rsconly) {
+	if((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {
 		const char *desc = NULL;
 		desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
 		status_print("%s%s (%s%s%s:%s)%s%s",
@@ -971,7 +972,7 @@ native_print(
 		status_print(" </font> ");
 	}
 	
-	if((options & pe_print_rsconly) == 0) {
+	if((options & pe_print_rsconly)) {
 		
 	} else if(g_list_length(rsc->running_on) > 1) {
 		if(options & pe_print_html) {
@@ -983,16 +984,20 @@ native_print(
 		
 		slist_iter(node, node_t, rsc->running_on, lpc,
 			   if(options & pe_print_html) {
-				   status_print("<li>\n");
+				   status_print("<li>\n%s",
+						node->details->uname);
 
 			   } else if((options & pe_print_printf)
 				     || (options & pe_print_ncurses)) {
-				   status_print(" ");
+				   status_print("\t%s", node->details->uname);
 
 			   } else if((options & pe_print_log)) {
-				   status_print("\t-");
+				   status_print("\t%d : %s",
+						lpc, node->details->uname);
+
+			   } else {
+				   status_print("%s", node->details->uname);
 			   }
-			   status_print("%s", node->details->uname);
 			   if(options & pe_print_html) {
 				   status_print("</li>\n");
 
@@ -1631,6 +1636,7 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 	slist_iter(
 		local_op, action_t, possible_matches, lpc,
 
+		local_op->notify_keys = n_data->keys;
 		if(local_op->optional == FALSE) {
 			registered = TRUE;
 			register_activity(rsc, task, local_op->node, n_data);
