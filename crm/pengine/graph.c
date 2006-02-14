@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.73 2006/01/11 12:46:53 andrew Exp $ */
+/* $Id: graph.c,v 1.74 2006/02/14 11:59:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -192,6 +192,10 @@ shutdown_constraints(
 	slist_iter(
 		rsc, resource_t, node->details->running_rsc, lpc,
 
+		if(rsc->is_managed == FALSE) {
+			continue;
+		}
+		
 		custom_action_order(
 			rsc, stop_key(rsc), NULL,
 			NULL, crm_strdup(CRM_OP_SHUTDOWN), shutdown_op,
