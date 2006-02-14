@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.20 2006/02/10 06:12:03 andrew Exp $ */
+/* $Id: main.c,v 1.21 2006/02/14 12:02:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -62,8 +62,8 @@ main(int argc, char ** argv)
 	const char *param_name = NULL;
     
 	crm_log_init(crm_system_name);
-/* 	G_main_add_SignalHandler( */
-/* 		G_PRIORITY_HIGH, SIGTERM, pengine_shutdown, NULL, NULL); */
+ 	G_main_add_SignalHandler(
+ 		G_PRIORITY_HIGH, SIGTERM, pengine_shutdown, NULL, NULL);
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -162,20 +162,7 @@ usage(const char* cmd, int exit_status)
 gboolean
 pengine_shutdown(int nsig, gpointer unused)
 {
-#if 0
-	static int shuttingdown = 0;
-  
-	if (!shuttingdown) {
-		shuttingdown = 1;
-	}
-	if (mainloop != NULL && g_main_is_running(mainloop)) {
-		g_main_quit(mainloop);
-	}else{
-		exit(LSB_EXIT_OK);
-	}
-	return TRUE;
-#else
-	return FALSE;
-#endif
+	crm_info("Exiting PEngine (SIGTERM)");
+	exit(LSB_EXIT_OK);
 }
 
