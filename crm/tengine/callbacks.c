@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.63 2006/02/14 11:40:25 andrew Exp $ */
+/* $Id: callbacks.c,v 1.64 2006/02/15 13:13:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -422,6 +422,12 @@ te_graph_trigger(gpointer user_data)
 {
 	int pending_updates = 0;
 	enum transition_status graph_rc = -1;
+
+	if(transition_graph->complete) {
+		notify_crmd(transition_graph);
+		return TRUE;	
+	}
+	
 	graph_rc = run_graph(transition_graph);
 	stop_te_timer(transition_timer);
 	print_graph(LOG_DEBUG_2, transition_graph);
