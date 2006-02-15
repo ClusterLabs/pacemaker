@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.95 2006/02/14 11:52:26 andrew Exp $ */
+/* $Id: ccm.c,v 1.96 2006/02/15 13:18:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -188,17 +188,7 @@ do_ccm_event(long long action,
 	
 	CRM_DEV_ASSERT(oc->m_n_in != 0 || oc->m_n_out != 0);
 	
-	if(AM_I_DC) {
-		/* Membership changed, remind everyone we're here.
-		 * This will aid detection of duplicate DCs
-		 */
-		HA_Message *no_op = create_request(
-			CRM_OP_NOOP, NULL, NULL,
-			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
-	
-		send_msg_via_ha(fsa_cluster_conn, no_op);
-
-	} else if(oc->m_n_out != 0) {
+	if(AM_I_DC == FALSE && oc->m_n_out != 0) {
 		/* Possibly move this logic to ghash_update_cib_node() */
 		unsigned lpc = 0;
 		int offset = oc->m_out_idx;
@@ -245,10 +235,14 @@ do_ccm_update_cache(long long action,
 	const oc_ev_membership_t *oc = NULL;
 	oc_node_list_t *tmp = NULL, *membership_copy = NULL;
 	struct crmd_ccm_data_s *ccm_data = fsa_typed_data(fsa_dt_ccm);
-
+	HA_Message *no_op = create_request(
+		CRM_OP_NOOP, NULL, NULL,
+		AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+	
 	if(ccm_data == NULL) {
 		crm_err("No data provided to FSA function");
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+		send_msg_via_ha(fsa_cluster_conn, no_op);
 		return I_NULL;
 	}
 
@@ -472,7 +466,11 @@ do_ccm_update_cache(long long action,
 		do_update_cib_nodes(NULL, FALSE);
 	}
 
-	
+	/* Membership changed, remind everyone we're here.
+	 * This will aid detection of duplicate DCs
+	 */
+	send_msg_via_ha(fsa_cluster_conn, no_op);
+
 	return next_input;
 }
 

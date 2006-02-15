@@ -670,6 +670,7 @@ do_state_transition(long long actions,
 			break;
 
 		case S_FINALIZE_JOIN:
+			CRM_DEV_ASSERT(AM_I_DC);
 			if(cause == C_TIMER_POPPED) {
 				crm_warn("Progressed to state %s after %s",
 					 fsa_state2string(next_state),
@@ -694,6 +695,7 @@ do_state_transition(long long actions,
 			break;
 			
 		case S_POLICY_ENGINE:
+			CRM_DEV_ASSERT(AM_I_DC);
 			if(cause == C_TIMER_POPPED) {
 				crm_warn("Progressed to state %s after %s",
 					 fsa_state2string(next_state),
@@ -738,6 +740,7 @@ do_state_transition(long long actions,
 			break;
 			
 		case S_IDLE:
+			CRM_DEV_ASSERT(AM_I_DC);
 			dump_rsc_info();
 			if(is_set(fsa_input_register, R_SHUTDOWN)){
 				crm_info("(Re)Issuing shutdown request now"

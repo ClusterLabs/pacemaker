@@ -99,6 +99,7 @@ crmd_ha_connection_destroy(gpointer user_data)
 void
 crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 {
+	int level = LOG_DEBUG;
 	ha_msg_input_t *new_input = NULL;
 	oc_node_t *from_node = NULL;
 	
@@ -124,7 +125,6 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 	from_node = g_hash_table_lookup(fsa_membership_copy->members, from);
 
 	if(from_node == NULL) {
-		int level = LOG_DEBUG;
 		if(safe_str_eq(op, CRM_OP_VOTE)) {
 			level = LOG_WARNING;
 
@@ -141,41 +141,34 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 		
 		crm_log_message_adv(LOG_MSG, "HA[inbound]: CCM Discard", msg);
 
-	} else if(AM_I_DC
-	   && safe_str_eq(sys_from, CRM_SYSTEM_DC)
-	   && safe_str_neq(from, fsa_our_uname)) {
-		crm_err("Another DC detected: %s (op=%s)", from, op);
-		crm_log_message_adv(
-			LOG_WARNING, "HA[inbound]: Duplicate DC", msg);
-		new_input = new_ha_msg_input(msg);
+	} else if(safe_str_eq(sys_from, CRM_SYSTEM_DC)) {
+		if(AM_I_DC && safe_str_neq(from, fsa_our_uname)) {
+			crm_err("Another DC detected: %s (op=%s)", from, op);
+			/* make sure the election happens NOW */
+			level = LOG_WARNING;
+			new_input = new_ha_msg_input(msg);
+			register_fsa_error_adv(
+				C_FSA_INTERNAL, I_ELECTION, NULL,
+				new_input, __FUNCTION__);
 
-		/* make sure the election happens NOW */
-		register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION, NULL,
-				       new_input, __FUNCTION__);
-		
 #if 0
 		/* still thinking about this one...
 		 * could create a timing issue if we dont notice the
 		 * election before a new DC is elected.
 		 */
-	} else if(fsa_our_dc != NULL
-		  && safe_str_eq(sys_from, CRM_SYSTEM_DC)
-		  && safe_str_neq(from, fsa_our_dc)) {
-		crm_warn("Ignoring message from wrong DC: %s vs. %s ",
-			 from, fsa_our_dc);
-		crm_log_message_adv(LOG_WARNING, "HA[inbound]: wrong DC", msg);
+		} else if(fsa_our_dc != NULL && safe_str_neq(from,fsa_our_dc)){
+			crm_warn("Ignoring message from wrong DC: %s vs. %s ",
+				 from, fsa_our_dc);
+			return;
 #endif
-	} else if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
-		crm_debug_2("Ignoring message for the DC [F_SEQ=%s]", seq);
-		crm_log_message_adv(LOG_DEBUG_4, "HA[inbound]: ignore", msg);
-		return;
+		} else if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
+			crm_debug_2("Ignoring message for the DC [F_SEQ=%s]",
+				    seq);
+			return;
+		} 
+	}
 
-	} else if(AM_I_DC && safe_str_eq(op, CRM_OP_HBEAT)) {
-		crm_debug_2("Ignoring our own heartbeat [F_SEQ=%s]", seq);
-		crm_log_message_adv(LOG_DEBUG_4, "HA[inbound]: own heartbeat", msg);
-		return;
-
-	} else {
+	if(new_input == NULL) {
 		int msg_id = -1;
 		crm_log_message_adv(LOG_MSG, "HA[inbound]", msg);
 		new_input = new_ha_msg_input(msg);
