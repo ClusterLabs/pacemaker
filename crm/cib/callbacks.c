@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.108 2006/02/14 11:57:47 andrew Exp $ */
+/* $Id: callbacks.c,v 1.109 2006/02/15 13:18:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -75,7 +75,6 @@ GHashTable *client_list    = NULL;
 GHashTable *ccm_membership = NULL;
 extern const char *cib_our_uname;
 extern ll_cluster_t *hb_conn;
-extern int set_connected_peers(crm_data_t *xml_obj);
 extern unsigned long cib_num_ops, cib_num_local, cib_num_updates, cib_num_fail;
 extern unsigned long cib_bad_connects, cib_num_timeouts;
 extern longclock_t cib_call_time;
@@ -920,7 +919,7 @@ cib_process_request(
 			&diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates, 
 			&diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
 
-		crm_debug_2("Sending update diff %d.%d.%d -> %d.%d.%d",
+		crm_debug("Sending update diff %d.%d.%d -> %d.%d.%d",
 			    diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
 			    diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
 
@@ -1066,6 +1065,8 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 			CRM_DEV_ASSERT(result_cib != NULL);
 			CRM_DEV_ASSERT(current_cib != result_cib);
 
+			update_counters(__FILE__, __FUNCTION__, result_cib);
+			
 			if(do_id_check(result_cib, NULL)) {
 				rc = cib_id_check;
 				if(call_options & cib_force_diff) {
@@ -1395,6 +1396,7 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 	const char *op         = cl_get_string(msg, F_CIB_OPERATION);
 
 	crm_log_message_adv(LOG_MSG, "Peer[inbound]", msg);
+	crm_debug("Peer %s message (%s) from %s", op, seq, originator);
 	
 	if(originator == NULL || safe_str_eq(originator, cib_our_uname)) {
  		crm_debug_3("Discarding %s message from ourselves", op);
