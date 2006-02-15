@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.123 2006/02/14 12:06:31 andrew Exp $ */
+/* $Id: utils.c,v 1.124 2006/02/15 13:17:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -784,9 +784,11 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			action->runnable = FALSE;
 			crm_warn("Action %s on %s is unrunnable (offline)",
 				 action->uuid, action->node->details->uname);
-			if(save_action && a_task == stop_rsc) {
-				pe_proc_warn("Marking node %s unclean",
-					     action->node->details->uname);
+			if(action->rsc->is_managed
+			   && save_action
+			   && a_task == stop_rsc) {
+				pe_proc_err("Marking node %s unclean",
+					    action->node->details->uname);
 				action->node->details->unclean = TRUE;
 			}
 			
@@ -806,17 +808,18 @@ custom_action(resource_t *rsc, char *key, const char *task,
 		} else if(data_set->have_quorum == FALSE
 			&& data_set->no_quorum_policy == no_quorum_stop) {
 			action->runnable = FALSE;
-			crm_warn("%s resource %s\t(%s) (cancelled : quorum)",
-				 action->task, rsc->id, action->node->details->uname);
-		
+			crm_debug("%s\t%s %s (cancelled : quorum)",
+				  action->node->details->uname,
+				  action->task, rsc->id);
+			
 		} else if(data_set->have_quorum == FALSE
 			&& data_set->no_quorum_policy == no_quorum_freeze) {
 			crm_debug_2("Check resource is already active");
 			if(rsc->fns->active(rsc, TRUE) == FALSE) {
 				action->runnable = FALSE;
-				crm_warn("%s resource %s\t(%s) (cancelled : quorum freeze)",
-					 action->task, rsc->id,
-					 action->node->details->uname);
+				crm_debug("%s\t%s %s (cancelled : quorum freeze)",
+					  action->node->details->uname,
+					  action->task, rsc->id);
 			}
 
 		} else {

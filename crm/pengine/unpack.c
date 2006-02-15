@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.154 2006/02/14 12:08:54 andrew Exp $ */
+/* $Id: unpack.c,v 1.155 2006/02/15 13:17:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -833,12 +833,14 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * lrm_rsc_list, pe_working_set_t *
 		/* no need to free the contents */
 		g_list_free(sorted_op_list);
 
-		crm_debug("Resource %s is %s on %s",
-			  rsc->id, role2text(rsc->role), node->details->uname);
+		crm_debug_2("Resource %s is %s on %s",
+			    rsc->id, role2text(rsc->role),
+			    node->details->uname);
 
 		rsc->known_on = g_list_append(rsc->known_on, node);
  		if(rsc->role != RSC_ROLE_STOPPED) { 
-			crm_debug_2("Adding %s to %s", rsc->id, node->details->uname);
+			crm_debug_2("Adding %s to %s",
+				    rsc->id, node->details->uname);
 			native_add_running(rsc, node, data_set);
 
 			if(on_fail != action_fail_ignore) {
@@ -1339,7 +1341,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			} else {
 				/* make sure its already created and is optional
 				 *
-				 * creating it now tells create_recurring_actions() 
+				 * creating it now tells Recurring() 
 				 *  that it can safely leave it optional
 				 */
 				if(rsc->role < RSC_ROLE_STARTED) {

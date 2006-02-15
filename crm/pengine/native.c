@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.110 2006/02/14 12:59:05 andrew Exp $ */
+/* $Id: native.c,v 1.111 2006/02/15 13:17:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,7 +43,7 @@ void filter_nodes(resource_t *rsc);
 int num_allowed_nodes4color(color_t *color);
 
 void create_notifications(resource_t *rsc, pe_working_set_t *data_set);
-void create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
+void Recurring(resource_t *rsc, action_t *start, node_t *node,
 			      pe_working_set_t *data_set);
 void pe_pre_notify(
 	resource_t *rsc, node_t *node, action_t *op, 
@@ -134,10 +134,8 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		/* these are errors because hardly any gets it right
 		 *   at the moment and this way the might notice
 		 */
-		pe_err("Resource %s::%s:%s is (potentially) active on %d nodes."
-		       "  Latest: %s/%s", class, type, rsc->id,
-		       g_list_length(rsc->running_on),
-		       node->details->uname, node->details->id);
+		pe_err("Resource %s::%s:%s appears to be active on %d nodes.",
+		       class, type, rsc->id, g_list_length(rsc->running_on));
 		cl_log(LOG_ERR, "See %s for more information.",
 		       HAURL("v2/faq/resource_too_active"));
 		
@@ -380,7 +378,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 }
 
 void
-create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
+Recurring(resource_t *rsc, action_t *start, node_t *node,
 			 pe_working_set_t *data_set) 
 {
 	char *key = NULL;
@@ -440,19 +438,19 @@ create_recurring_actions(resource_t *rsc, action_t *start, node_t *node,
 				    is_optional, TRUE, data_set);
 		
 		if(start == NULL || start->runnable == FALSE) {
-			crm_warn("   %s:\t(%s) (cancelled : start un-runnable)",
-				 mon->uuid, crm_str(node_uname));
+			crm_debug("%s:\t   %s (cancelled : start un-runnable)",
+				  crm_str(node_uname), mon->uuid);
 			mon->runnable = FALSE;
 
 		} else if(node == NULL
 			  || node->details->online == FALSE
 			  || node->details->unclean) {
-			crm_warn("   %s:\t(%s) (cancelled : no node available)",
-				 mon->uuid, crm_str(node_uname));
+			crm_debug("%s:\t   %s (cancelled : no node available)",
+				  crm_str(node_uname), mon->uuid);
 			mon->runnable = FALSE;
 		
 		} else if(mon->optional == FALSE) {
-			crm_notice("   %s:\t(%s)", mon->uuid, crm_str(node_uname));
+			crm_notice("%s:\t   %s", crm_str(node_uname),mon->uuid);
 		}
 		custom_action_order(rsc, start_key(rsc), NULL,
 				    NULL, crm_strdup(key), mon,
@@ -517,7 +515,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 	if(rsc->next_role != RSC_ROLE_STOPPED && rsc->is_managed) {
 		start = start_action(rsc, chosen, TRUE);
-		create_recurring_actions(rsc, start, chosen, data_set);
+		Recurring(rsc, start, chosen, data_set);
 	}
 }
 
@@ -1839,8 +1837,7 @@ StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 	
 	slist_iter(
 		current, node_t, rsc->running_on, lpc,
-		crm_notice("Stop  resource %s\t(%s)",
-			   rsc->id, current->details->uname);
+		crm_notice("  %s\tStop %s", current->details->uname, rsc->id);
 		stop = stop_action(rsc, current, FALSE);
 
 		if(data_set->remove_after_stop) {
@@ -1915,8 +1912,7 @@ StartRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 	crm_debug_2("Executing: %s", rsc->id);
 	start = start_action(rsc, next, TRUE);
 	if(start->runnable) {
-		crm_notice("Start resource %s\t(%s)",
-			   rsc->id, next->details->uname);
+		crm_notice(" %s\tStart %s", next->details->uname, rsc->id);
 		start->optional = FALSE;
 	}		
 	return TRUE;
@@ -1928,7 +1924,7 @@ PromoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 	crm_debug_2("Executing: %s", rsc->id);
 
 	CRM_DEV_ASSERT(rsc->next_role == RSC_ROLE_MASTER);
-	crm_notice("Promote resource %s\t(%s)", rsc->id, next->details->uname);
+	crm_notice("%s\tPromote %s", next->details->uname, rsc->id);
 	promote_action(rsc, next, FALSE);
 	return TRUE;
 }
@@ -1941,8 +1937,7 @@ DemoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 	CRM_DEV_ASSERT(rsc->next_role == RSC_ROLE_SLAVE);
 	slist_iter(
 		current, node_t, rsc->running_on, lpc,
-		crm_notice("Demote resource %s\t(%s)",
-			   rsc->id, current->details->uname);
+		crm_notice("%s\tDeomote %s", next->details->uname, rsc->id);
 		demote_action(rsc, current, FALSE);
 		);
 	return TRUE;
@@ -1989,7 +1984,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	probe = custom_action(rsc, key, CRMD_ACTION_STATUS, node,
 			      FALSE, TRUE, data_set);
 	
-	crm_notice("Created probe for %s on %s", rsc->id, node->details->uname);
+	crm_notice("%s: Created probe for %s", node->details->uname, rsc->id);
 	
 	g_hash_table_insert(probe->extra,
 			    crm_strdup(XML_ATTR_TE_TARGET_RC), target_rc);
