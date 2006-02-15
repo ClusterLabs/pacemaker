@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.46 2006/02/14 11:57:47 andrew Exp $ */
+/* $Id: io.c,v 1.47 2006/02/15 13:19:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -294,14 +294,8 @@ initializeCib(crm_data_t *new_cib)
 		crm_warn("CIB Verification failed");
 		return FALSE;
 	}
-	
-	set_transition(new_cib);
-	set_connected_peers(new_cib);
-	if(cib_have_quorum) {
-		crm_xml_add(new_cib, XML_ATTR_HAVE_QUORUM, XML_BOOLEAN_TRUE);
-	} else {
-		crm_xml_add(new_cib, XML_ATTR_HAVE_QUORUM, XML_BOOLEAN_FALSE);
-	}
+
+	update_counters(__FILE__, __FUNCTION__, new_cib);
 	
 	the_cib = new_cib;
 	initialized = TRUE;
@@ -481,25 +475,27 @@ int write_cib_contents(gpointer p)
 	return HA_OK;
 }
 
-void
+gboolean
 set_transition(crm_data_t *xml_obj)
 {
 	const char *current = crm_element_value(
 		xml_obj, XML_ATTR_CCM_TRANSITION);
 	if(safe_str_neq(current, ccm_transition_id)) {
-		crm_debug("Current CCM transition is: %s", ccm_transition_id);
-		crm_xml_add(the_cib, XML_ATTR_CCM_TRANSITION,ccm_transition_id);
+		crm_debug("CCM transition: old=%s, new=%s",
+			  current, ccm_transition_id);
+		crm_xml_add(xml_obj, XML_ATTR_CCM_TRANSITION,ccm_transition_id);
+		return TRUE;
 	}
+	return FALSE;
 }
 
-int
+gboolean
 set_connected_peers(crm_data_t *xml_obj)
 {
 	int active = 0;
 	int current = 0;
 	char *peers_s = NULL;
-	const char *current_s = crm_element_value(
-		xml_obj, XML_ATTR_NUMPEERS);
+	const char *current_s = crm_element_value(xml_obj, XML_ATTR_NUMPEERS);
 
 	g_hash_table_foreach(peer_hash, GHFunc_count_peers, &active);
 	current = crm_parse_int(current_s, "0");
@@ -508,9 +504,45 @@ set_connected_peers(crm_data_t *xml_obj)
 		crm_xml_add(xml_obj, XML_ATTR_NUMPEERS, peers_s);
 		crm_debug("We now have %s active peers", peers_s);
 		crm_free(peers_s);
+		return TRUE;
 	}
-	return active;
+	return FALSE;
 }
+
+gboolean
+update_quorum(crm_data_t *xml_obj) 
+{
+	const char *quorum_value = XML_BOOLEAN_FALSE;
+	const char *current = crm_element_value(xml_obj, XML_ATTR_HAVE_QUORUM);
+	if(cib_have_quorum) {
+		quorum_value = XML_BOOLEAN_TRUE;
+	}
+	if(safe_str_neq(current, quorum_value)) {
+		crm_debug("CCM quorum: old=%s, new=%s",
+			  current, quorum_value);
+		crm_xml_add(xml_obj, XML_ATTR_HAVE_QUORUM, quorum_value);
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+gboolean
+update_counters(const char *file, const char *fn, crm_data_t *xml_obj) 
+{
+	gboolean did_update = FALSE;
+
+	did_update = did_update || update_quorum(xml_obj);
+	did_update = did_update || set_transition(xml_obj);
+	did_update = did_update || set_connected_peers(xml_obj);
+	
+	if(did_update) {
+		do_crm_log(LOG_DEBUG, file, fn, "Counters updated");
+	}
+	return did_update;
+}
+
+
 
 void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data)
 {

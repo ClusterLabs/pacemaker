@@ -1,4 +1,4 @@
-/* $Id: cibio.h,v 1.14 2006/01/16 09:16:32 andrew Exp $ */
+/* $Id: cibio.h,v 1.15 2006/02/15 13:19:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,7 +55,11 @@ extern int activateCibXml(crm_data_t *doc, const char *filename);
 extern int moveFile(const char *oldname, const char *newname,
 		    gboolean backup, char *ext);
 
-extern void set_transition(crm_data_t *xml_obj);
+extern gboolean update_quorum(crm_data_t *xml_obj);
+extern gboolean set_transition(crm_data_t *xml_obj);
+extern gboolean set_connected_peers(crm_data_t *xml_obj);
+extern gboolean update_counters(
+	const char *file, const char *fn, crm_data_t *xml_obj);
 
 /* extern crm_data_t *server_get_cib_copy(void); */
 
