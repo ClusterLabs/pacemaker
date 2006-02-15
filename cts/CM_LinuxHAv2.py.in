@@ -48,7 +48,8 @@ class LinuxHAv2(HeartbeatCM):
     '''
     def __init__(self, Environment, randseed=None):
         HeartbeatCM.__init__(self, Environment, randseed=randseed)
-        
+
+        self.config = None
         self.cluster_monitor = 0
 	self.use_short_names = 1
         self.update({
@@ -313,12 +314,14 @@ class LinuxHAv2(HeartbeatCM):
             if self.Env["CIBfilename"] == None:
                 self.debug("Installing Generated CIB on node %s" %(node))
                 os.system("rm -f /tmp/cts.default.cib")
-                os.system("echo \'" + self.default_cts_cib + "\' > /tmp/cts.default.cib")
-                if 0!=self.rsh.cp("/tmp/cts.default.cib",
-                    "root@" + (self["CIBfile"]%node)):
+		cib_file=os.tmpnam()
+                os.system("rm -f "+cib_file)
+		self.debug("Creating new CIB for " + node + " in: " + cib_file)
+                os.system("echo \'" + self.default_cts_cib + "\' > " + cib_file)
+                if 0!=self.rsh.cp(cib_file,"root@" + (self["CIBfile"]%node)):
                     raise ValueError("Can not scp file to %s "%node)
 
-                os.system("rm -f /tmp/cts.default.cib")
+                os.system("rm -f "+cib_file)
             else:
                 self.debug("Installing CIB (%s) on node %s" %(self.Env["CIBfilename"], node))
                 if 0!=self.rsh.cp(self.Env["CIBfilename"], 
@@ -453,22 +456,26 @@ class LinuxHAv2(HeartbeatCM):
         return None
         
     def Configuration(self):
+	if self.config:
+	    return self.config.getElementsByTagName('configuration')[0]
+
+	cib_file=os.tmpnam()
+	os.system("rm -f "+cib_file)
+
         if self.Env["ClobberCIB"] == 1:
             if self.Env["CIBfilename"] == None:
-                os.system("rm -f /tmp/cts.default.cib")
-                os.system("echo \'" + self.default_cts_cib + "\' > /tmp/cts.default.cib")
-                cib=parse("/tmp/cts.default.cib")
-#                os.system("rm -f /tmp/cts.default.cib")
+		self.debug("Creating new CIB in: " + cib_file)
+                os.system("echo \'"+ self.default_cts_cib +"\' > "+ cib_file)
             else:
-                cib=parse(self.Env["CIBfilename"])
+                os.system("cp "+self.Env["CIBfilename"]+" "+cib_file)
         else:
-            local_cib = "%s/cts_cib_%s.xml"%(self["TmpDir"],str(os.getpid()))
-            if 0!=self.rsh.cp("root@"+self["CIBfile"]%self.Env["nodes"][0],local_cib):
+            if 0!=self.rsh.cp("root@"+self["CIBfile"]%self.Env["nodes"][0],cib_file):
                 raise ValueError("Can not copy file to %s, maybe permission denied"%self["TmpDir"])
-            cib=parse(local_cib)
-            os.remove(local_cib)
 
-        return cib.getElementsByTagName('configuration')[0]
+	self.config = parse(cib_file)
+	os.remove(cib_file)
+
+        return self.config.getElementsByTagName('configuration')[0]
     
     def Resources(self):
         ResourceList = []
