@@ -141,6 +141,10 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 		
 		crm_log_message_adv(LOG_MSG, "HA[inbound]: CCM Discard", msg);
 
+	} else if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
+		crm_debug_2("Ignoring message for the DC [F_SEQ=%s]", seq);
+		return;
+
 	} else if(safe_str_eq(sys_from, CRM_SYSTEM_DC)) {
 		if(AM_I_DC && safe_str_neq(from, fsa_our_uname)) {
 			crm_err("Another DC detected: %s (op=%s)", from, op);
@@ -161,9 +165,6 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 				 from, fsa_our_dc);
 			return;
 #endif
-		} else if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
-			crm_debug("Ignoring message for the DC [F_SEQ=%s]",seq);
-			return;
 		} else {
 			crm_debug("Processing DC message from %s [F_SEQ=%s]",
 				  from, seq);

@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.96 2006/02/15 13:18:11 andrew Exp $ */
+/* $Id: ccm.c,v 1.97 2006/02/16 07:56:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -236,8 +236,8 @@ do_ccm_update_cache(long long action,
 	oc_node_list_t *tmp = NULL, *membership_copy = NULL;
 	struct crmd_ccm_data_s *ccm_data = fsa_typed_data(fsa_dt_ccm);
 	HA_Message *no_op = create_request(
-		CRM_OP_NOOP, NULL, NULL,
-		AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+		CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
+		AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
 	
 	if(ccm_data == NULL) {
 		crm_err("No data provided to FSA function");
