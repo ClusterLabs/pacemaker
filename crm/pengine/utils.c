@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.124 2006/02/15 13:17:16 andrew Exp $ */
+/* $Id: utils.c,v 1.125 2006/02/16 16:01:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -787,8 +787,8 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			if(action->rsc->is_managed
 			   && save_action
 			   && a_task == stop_rsc) {
-				pe_proc_err("Marking node %s unclean",
-					    action->node->details->uname);
+				crm_warn("Marking node %s unclean",
+					 action->node->details->uname);
 				action->node->details->unclean = TRUE;
 			}
 			
