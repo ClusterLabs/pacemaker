@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.74 2006/02/14 11:59:36 andrew Exp $ */
+/* $Id: graph.c,v 1.75 2006/02/16 22:18:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -494,7 +494,7 @@ void
 graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 {
 	int last_action = -1;
-	char *syn_id = NULL;
+	int synapse_priority = 0;
 	crm_data_t * syn = NULL;
 	crm_data_t * set = NULL;
 	crm_data_t * in  = NULL;
@@ -511,10 +511,16 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 	set = create_xml_node(syn, "action_set");
 	in  = create_xml_node(syn, "inputs");
 
-	syn_id = crm_itoa(data_set->num_synapse);
-	crm_xml_add(syn, XML_ATTR_ID, syn_id);
-	crm_free(syn_id);
+	crm_xml_add_int(syn, XML_ATTR_ID, data_set->num_synapse);
 	data_set->num_synapse++;
+
+	if(action->rsc != NULL) {
+		synapse_priority = action->rsc->priority;
+	}
+
+	if(synapse_priority > 0) {
+		crm_xml_add_int(syn, XML_CIB_ATTR_PRIORITY, synapse_priority);
+	}
 	
 	xml_action = action2xml(action, FALSE);
 	add_node_copy(set, xml_action);
