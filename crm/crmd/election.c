@@ -267,6 +267,12 @@ do_election_count_vote(long long action,
 	} else if(strcmp(fsa_our_uname, vote_from) > 0) {
 		crm_debug("Election fail: uname");
 		we_loose = TRUE;
+
+	} else {
+/* 		CRM_DEV_ASSERT(strcmp(fsa_our_uname, vote_from) < 0); */
+		crm_debug("Them: %s (born=%d)  Us: %s (born=%d)",
+			  vote_from, your_node->node_born_on,
+			  fsa_our_uname, our_node->node_born_on);
 /* cant happen...
  *	} else if(strcmp(fsa_our_uname, vote_from) == 0) {
  *

@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.97 2006/02/16 07:56:58 andrew Exp $ */
+/* $Id: ccm.c,v 1.98 2006/02/16 09:33:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -53,7 +53,7 @@ gboolean ghash_node_clfree(gpointer key, gpointer value, gpointer user_data);
 void ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data);
 
 #define CCM_EVENT_DETAIL 0
-#define CCM_EVENT_DETAIL_PARTIAL 1
+#define CCM_EVENT_DETAIL_PARTIAL 0
 
 oc_ev_t *fsa_ev_token;
 int num_ccm_register_fails = 0;
