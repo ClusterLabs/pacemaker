@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.53 2006/02/14 11:40:25 andrew Exp $ */
+/* $Id: utils.c,v 1.54 2006/02/16 17:52:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -157,14 +157,20 @@ abort_transition_graph(
 		log_level = LOG_INFO;
 	}
 
-	G_main_set_trigger(transition_trigger);
-	update_abort_priority(transition_graph,
-			      abort_priority, abort_action, abort_text);
+	update_abort_priority(
+		transition_graph, abort_priority, abort_action, abort_text);
 
 	crm_log_maybe(log_level, "%s:%d - Triggered graph processing : %s",
 		      fn, line, abort_text);
 
 	if(reason != NULL) {
 		crm_log_xml(log_level, "Cause", reason);
+	}
+	
+	if(transition_graph->complete) {
+		notify_crmd(transition_graph);
+		
+	} else {
+		G_main_set_trigger(transition_trigger);
 	}
 }
