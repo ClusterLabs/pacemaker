@@ -1395,7 +1395,8 @@ do_lrm_event(long long action,
 	const char *last_op = NULL;
 	const char *probe_s = NULL;
 	gboolean is_probe = FALSE;
-	
+	int log_rsc_err = LOG_ERR;
+
 	if(msg_data->fsa_cause != C_LRM_OP_CALLBACK) {
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 		return I_NULL;
@@ -1411,26 +1412,6 @@ do_lrm_event(long long action,
 	probe_s = g_hash_table_lookup(op->params, XML_ATTR_LRM_PROBE);
 	is_probe = crm_is_true(probe_s);
 
-	if(is_probe) {
-		int target_rc = EXECRA_OK;
-		const char *target_rc_s = NULL;
-
-		target_rc_s = g_hash_table_lookup(
-			op->params, XML_ATTR_TE_TARGET_RC);
-
-		CRM_DEV_ASSERT(target_rc_s != NULL);
-		if(crm_assert_failed) { return I_NULL; }
-
-		target_rc = atoi(target_rc_s);
-		if(target_rc == op->rc) {
-			op->op_status = LRM_OP_DONE;
-			crm_info("Confirmed stopped: %s", op->rsc_id);
-
-		} else {
-			crm_err("Detected active resource: %s", op->rsc_id);
-		}
-	}
-	
 	switch(op->op_status) {
 		case LRM_OP_PENDING:
 			/* this really shouldnt happen */
@@ -1442,18 +1423,22 @@ do_lrm_event(long long action,
 				execra_code2string(op->rc));
 			break;
 		case LRM_OP_ERROR:
-			crm_err("LRM operation (%d) %s_%d on %s %s: %s",
-				op->call_id, op->op_type,
-				op->interval,
-				crm_str(op->rsc_id),
-				op_status2text(op->op_status),
-				execra_code2string(op->rc));
+			if(is_probe) {
+				log_rsc_err = LOG_INFO;
+			}
+			crm_log_maybe(log_rsc_err,
+				      "LRM operation (%d) %s_%d on %s %s: %s",
+				      op->call_id, op->op_type,
+				      op->interval,
+				      crm_str(op->rsc_id),
+				      op_status2text(op->op_status),
+				      execra_code2string(op->rc));
 			crm_debug("Result: %s", op->output);
 			break;
 		case LRM_OP_CANCELLED:
 			crm_warn("LRM operation (%d) %s_%d on %s %s",
 				 op->call_id, op->op_type,
-				op->interval,
+				 op->interval,
 				 crm_str(op->rsc_id),
 				 op_status2text(op->op_status));
 			return I_NULL;
