@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.64 2006/02/15 13:13:58 andrew Exp $ */
+/* $Id: callbacks.c,v 1.65 2006/02/16 15:20:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -131,6 +131,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 {
 	crm_data_t *xml_obj = NULL;
 	
+	const char *from     = cl_get_string(msg, F_ORIG);
 	const char *sys_to   = cl_get_string(msg, F_CRM_SYS_TO);
 	const char *sys_from = cl_get_string(msg, F_CRM_SYS_FROM);
 	const char *ref      = cl_get_string(msg, XML_ATTR_REFERENCE);
@@ -170,6 +171,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		}
 		if(xml_obj != NULL) {
 			crm_log_message_adv(LOG_DEBUG_2, "Processing NACK Reply", msg);
+			crm_debug("Processing NACK from %s", from);
 			extract_event(xml_obj);
 		} else {
 			crm_log_message_adv(LOG_ERR, "Invalid NACK Reply", msg);
@@ -285,7 +287,7 @@ tengine_stonith_callback(stonith_ops_t * op)
 					 "Unsupport Stonith result", NULL);
 	}
 	
-	update_graph(transition_graph, stonith_id);
+	update_graph(transition_graph, stonith_action);
 	trigger_graph();
 	return;
 }
@@ -372,7 +374,8 @@ timer_callback(gpointer data)
 	}
 	timer->source_id = 0;
 
-	crm_warn("Timer popped in state=%d", te_fsa_state);
+	crm_warn("Timer popped in abort_level=%d",
+		 transition_graph->abort_priority);
 	if(timer->reason == timeout_abort) {
 		crm_err("Transition abort timeout reached..."
 			 " marking transition complete.");
@@ -380,7 +383,7 @@ timer_callback(gpointer data)
 		abort_transition(INFINITY, -1, "Global Timeout", NULL);
 		return TRUE;
 		
-	} else if(te_fsa_state != s_in_transition) {
+	} else if(transition_graph->complete) {
 		crm_debug("Ignoring timeout while not in transition");
 		return TRUE;
 		

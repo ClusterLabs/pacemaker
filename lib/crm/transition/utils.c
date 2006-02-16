@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.1 2006/02/14 11:32:12 andrew Exp $ */
+/* $Id: utils.c,v 1.2 2006/02/16 15:20:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,7 +34,7 @@ pseudo_action_dummy(crm_graph_t *graph, crm_action_t *action)
 {
 	crm_debug("Dummy event handler: action %d executed", action->id);
 	action->confirmed = TRUE;
-	update_graph(graph, action->id);
+	update_graph(graph, action);
 	return TRUE;
 }
 

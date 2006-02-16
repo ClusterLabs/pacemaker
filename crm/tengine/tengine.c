@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.112 2006/02/14 11:40:25 andrew Exp $ */
+/* $Id: tengine.c,v 1.113 2006/02/16 15:20:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -44,22 +44,6 @@ te_timer_t *transition_timer = NULL;
 te_timer_t *abort_timer = NULL;
 char *te_uuid = NULL;
 extern gboolean shuttingdown;
-
-const te_fsa_state_t te_state_matrix[i_invalid][s_invalid] = 
-{
-			/*  s_idle,          s_in_transition, s_abort_pending,   s_updates_pending */
-/* Got an i_transition  */{ s_in_transition, s_abort_pending, s_abort_pending,   s_updates_pending },
-/* Got an i_cancel      */{ s_idle,          s_abort_pending, s_abort_pending,   s_updates_pending },
-/* Got an i_complete    */{ s_idle,          s_idle,          s_abort_pending,   s_updates_pending },
-/* Got an i_cmd_complete*/{ s_idle,          s_in_transition, s_updates_pending, s_updates_pending },
-/* Got an i_cib_complete*/{ s_idle,          s_in_transition, s_abort_pending,   s_idle },
-/* Got an i_cib_confirm */{ s_idle,          s_in_transition, s_abort_pending,   s_updates_pending },
-/* Got an i_cib_notify  */{ s_idle,          s_in_transition, s_abort_pending,   s_updates_pending }
-};
-
-
-
-te_fsa_state_t te_fsa_state = s_idle;
 
 int
 unconfirmed_actions(void)

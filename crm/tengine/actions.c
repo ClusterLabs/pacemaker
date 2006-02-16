@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.8 2006/02/15 13:13:23 andrew Exp $ */
+/* $Id: actions.c,v 1.9 2006/02/16 15:20:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -40,7 +40,7 @@ te_pseudo_action(crm_graph_t *graph, crm_action_t *pseudo)
 {
 	crm_debug("Event handler: action %d executed", pseudo->id);
 	pseudo->confirmed = TRUE;
-	update_graph(graph, pseudo->id);
+	update_graph(graph, pseudo);
 	trigger_graph();
 	return TRUE;
 }
@@ -185,7 +185,7 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	} else if(crm_is_true(value)) {
 		crm_info("Skipping wait for %d", action->id);
 		action->confirmed = TRUE;
-		update_graph(graph, action->id);
+		update_graph(graph, action);
 		trigger_graph();
 		
 	} else if(ret && action->timeout > 0) {
@@ -356,10 +356,11 @@ send_rsc_command(crm_action_t *action)
 	on_node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
 	counter = generate_transition_key(transition_graph->id, te_uuid);
 	crm_xml_add(rsc_op, XML_ATTR_TRANSITION_KEY, counter);
-	crm_free(counter);
 
 	crm_info("Initiating action %d: %s on %s",
 		 action->id, task_uuid, on_node);
+
+	crm_free(counter);
 	
 	if(rsc_op != NULL) {
 		crm_log_xml_debug_2(rsc_op, "Performing");
@@ -375,7 +376,7 @@ send_rsc_command(crm_action_t *action)
 	if(crm_is_true(value)) {
 		crm_debug("Skipping wait for %d", action->id);
 		action->confirmed = TRUE;
-		update_graph(transition_graph, action->id);
+		update_graph(transition_graph, action);
 		trigger_graph();
 
 	} else if(action->timeout > 0) {

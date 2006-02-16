@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.1 2006/02/14 11:32:12 andrew Exp $ */
+/* $Id: graph.c,v 1.2 2006/02/16 15:20:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -64,27 +64,36 @@ static gboolean
 update_synapse_confirmed(synapse_t *synapse, int action_id) 
 {
 	gboolean updates = FALSE;
+	gboolean is_confirmed = TRUE;
+	
 	CRM_DEV_ASSERT(synapse->executed);
 	CRM_DEV_ASSERT(synapse->confirmed == FALSE);
 
-	synapse->confirmed = TRUE;
+	is_confirmed = TRUE;
 	slist_iter(
 		action, crm_action_t, synapse->actions, lpc,
 		
 		crm_debug_3("Processing action %d", action->id);
 		
 		if(action->id == action_id) {
-			crm_debug_2("Marking action %d of synapse %d confirmed",
-				    action_id, synapse->id);
+			crm_debug("Marking action %d of synapse %d confirmed",
+				  action_id, synapse->id);
 			action->confirmed = TRUE;
 			updates = TRUE;
 
 		} else if(action->confirmed == FALSE) {
-			synapse->confirmed = FALSE;
+			is_confirmed = FALSE;
+			crm_debug("Synapse %d still not confirmed after action %d",
+				  synapse->id, action_id);
 		}
 		
 		);
 
+	if(is_confirmed) {
+		synapse->confirmed = TRUE;
+		updates = TRUE;
+	}
+	
 	if(updates) {
 		crm_debug("Updated synapse %d", synapse->id);
 	}
@@ -92,7 +101,7 @@ update_synapse_confirmed(synapse_t *synapse, int action_id)
 }
 
 gboolean
-update_graph(crm_graph_t *graph, int action_id) 
+update_graph(crm_graph_t *graph, crm_action_t *action) 
 {
 	gboolean rc = FALSE;
 	gboolean updates = FALSE;
@@ -103,16 +112,16 @@ update_graph(crm_graph_t *graph, int action_id)
 			
 		} else if (synapse->executed) {
 			crm_debug_2("Synapse executed");
-			rc = update_synapse_confirmed(synapse, action_id);
+			rc = update_synapse_confirmed(synapse, action->id);
 
-		} else {
-			rc = update_synapse_ready(synapse, action_id);
+		} else if(action->failed == FALSE) {
+			rc = update_synapse_ready(synapse, action->id);
 		}
 		updates = updates || rc;
 		);
 	
 	if(updates) {
-		crm_debug("Updated graph with completed action %d", action_id);
+		crm_debug("Updated graph with completed action %d", action->id);
 	}
 	return updates;
 }
@@ -238,13 +247,14 @@ run_graph(crm_graph_t *graph)
 	int stat_log_level = LOG_DEBUG;
 	int pass_result = transition_active;
 
-	crm_debug("Entering graph callback");
 	if(graph_fns == NULL) {
 		set_default_graph_functions();
 	}
 	if(graph == NULL) {
 		return transition_complete;
 	}
+
+	crm_debug("Entering graph %d callback", graph->id);
 	
 	slist_iter(
 		synapse, synapse_t, graph->synapses, lpc,
@@ -284,14 +294,16 @@ run_graph(crm_graph_t *graph)
 		} else if(num_skipped != 0) {
 			stat_log_level = LOG_NOTICE;
 		}
-		crm_log_maybe(stat_log_level,
-			      "Transition %d complete", graph->id);
-
+		print_graph(stat_log_level+2, graph);
+		crm_log_maybe(stat_log_level+2,
+			      "==============================================");
 	}
-	crm_log_maybe(stat_log_level, "Complete: %d, Pending: %d,"
+	
+	crm_log_maybe(stat_log_level, "Transition %d Complete: %d, Pending: %d,"
 		      " Fired: %d, Skipped: %d, Incomplete: %d",
-		      num_complete, num_pending, num_fired,
+		      graph->id, num_complete, num_pending, num_fired,
 		      num_skipped, num_incomplete);
+
 	
 	return pass_result;
 }

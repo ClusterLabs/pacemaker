@@ -1,4 +1,4 @@
-/* $Id: transition.h,v 1.1 2006/02/14 11:32:12 andrew Exp $ */
+/* $Id: transition.h,v 1.2 2006/02/16 15:20:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -129,7 +129,7 @@ extern void set_default_graph_functions(void);
 extern void set_graph_functions(crm_graph_functions_t *fns);
 extern crm_graph_t *unpack_graph(crm_data_t *xml_graph);
 extern int run_graph(crm_graph_t *graph);
-extern gboolean update_graph(crm_graph_t *graph, int action_id);
+extern gboolean update_graph(crm_graph_t *graph, crm_action_t *action);
 extern void destroy_graph(crm_graph_t *graph);
 extern const char *transition_status(enum transition_status state);
 extern void print_graph(unsigned int log_level, crm_graph_t *graph);

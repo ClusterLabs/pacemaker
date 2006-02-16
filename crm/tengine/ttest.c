@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.22 2006/02/14 11:40:25 andrew Exp $ */
+/* $Id: ttest.c,v 1.23 2006/02/16 15:20:32 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -52,7 +52,7 @@ ttest_pseudo_command(crm_graph_t *graph, crm_action_t *pseudo)
 {
 	crm_debug("Event handler: action %d executed", pseudo->id);
 	pseudo->confirmed = TRUE;
-	update_graph(graph, pseudo->id);
+	update_graph(graph, pseudo);
 	trigger_graph();
 	return TRUE;
 }
