@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.109 2006/02/15 13:18:46 andrew Exp $ */
+/* $Id: callbacks.c,v 1.110 2006/02/16 15:27:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -144,9 +144,6 @@ static enum cib_errors
 cib_cleanup_query(const char *op, HA_Message **data, HA_Message **output) 
 {
 	CRM_DEV_ASSERT(*data == NULL);
-#if USE_PESKY_FRAGMENTS
-	free_xml(*output);
-#endif
 	return cib_ok;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.64 2006/02/03 08:29:22 andrew Exp $ */
+/* $Id: messages.c,v 1.65 2006/02/16 15:27:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -181,30 +181,8 @@ cib_process_query(
 	if(obj_root == NULL) {
 		result = cib_NOTEXISTS;
 
-#if USE_PESKY_FRAGMENTS
-	} else if(obj_root == existing_cib) {
-		crm_xml_add(obj_root, "origin", cib_our_uname);
-		*answer = create_xml_node(NULL, XML_TAG_FRAGMENT);
-		add_node_copy(*answer, obj_root);
-
-	} else {
-		crm_data_t *cib = createEmptyCib();
-		crm_data_t *query_obj_root = get_object_root(section, cib);
-		copy_in_properties(cib, existing_cib);
-		crm_xml_add(cib, "origin", cib_our_uname);
-
-		xml_child_iter(
-			obj_root, an_obj, 
-			add_node_copy(query_obj_root, an_obj);
-			);
-
-		*answer = create_xml_node(NULL, XML_TAG_FRAGMENT);
-		add_node_copy(*answer, cib);
-		free_xml(cib);
-#else
 	} else {
 		*answer = obj_root;
-#endif		
 	}
 
 	if(result == cib_ok && *answer == NULL) {
@@ -705,15 +683,7 @@ cib_process_change(
 		crm_log_xml_err(failed, "CIB Update failures");
 	}
 
-#if USE_PESKY_FRAGMENTS
-	if (verbose || xml_has_children(failed) || result != cib_ok) {
-		*answer = createCibFragmentAnswer(section, failed);
-	}
-	free_xml(failed);
-#else
 	*answer = failed;
-#endif	
-
 	return result;
 }
 
