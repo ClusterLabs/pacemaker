@@ -162,10 +162,12 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 			return;
 #endif
 		} else if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
-			crm_debug_2("Ignoring message for the DC [F_SEQ=%s]",
-				    seq);
+			crm_debug("Ignoring message for the DC [F_SEQ=%s]",seq);
 			return;
-		} 
+		} else {
+			crm_debug("Processing DC message from %s [F_SEQ=%s]",
+				  from, seq);
+		}
 	}
 
 	if(new_input == NULL) {
