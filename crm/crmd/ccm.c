@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.98 2006/02/16 09:33:27 andrew Exp $ */
+/* $Id: ccm.c,v 1.99 2006/02/16 15:15:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -431,8 +431,19 @@ do_ccm_update_cache(long long action,
 				members, member->node_uname, member);	
 
 			g_hash_table_insert(members, member->node_uname, member);
+			if(confirmed_nodes != NULL) {
+				g_hash_table_remove(
+					confirmed_nodes, member->node_uname);
+			}
+			if(finalized_nodes != NULL) {
+				g_hash_table_remove(
+					finalized_nodes, member->node_uname);
+			}
+			if(integrated_nodes != NULL) {
+				g_hash_table_remove(
+					integrated_nodes, member->node_uname);
+			}
 		}
-
 	} else {
 		membership_copy->dead_members = NULL;
 	}
