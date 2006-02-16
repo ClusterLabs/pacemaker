@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.56 2006/02/03 09:00:31 andrew Exp $ */
+/* $Id: xml.c,v 1.57 2006/02/16 15:24:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1606,35 +1606,32 @@ diff_xml_object(crm_data_t *old, crm_data_t *new, gboolean suppress)
 	tmp1 = subtract_xml_object(old, new, suppress);
 	if(tmp1 != NULL) {
 		diff = create_xml_node(NULL, "diff");
+/*
 		if(can_prune_leaf(tmp1)) {
 			ha_msg_del(tmp1);
 			tmp1 = NULL;
 		} else {
-			removed = create_xml_node(diff, "diff-removed");
-			added = create_xml_node(diff, "diff-added");
-			add_node_copy(removed, tmp1);
-		}
+*/
+		removed = create_xml_node(diff, "diff-removed");
+		added = create_xml_node(diff, "diff-added");
+		add_node_copy(removed, tmp1);
+
 		free_xml(tmp1);
 	}
 	
 	tmp1 = subtract_xml_object(new, old, suppress);
 	if(tmp1 != NULL) {
+		/* never filter added nodes */
 		if(diff == NULL) {
 			diff = create_xml_node(NULL, "diff");
 		}
-		if(can_prune_leaf(tmp1)) {
-			ha_msg_del(tmp1);
-			tmp1 = NULL;
-
-		} else {
-			if(removed == NULL) {
-				removed = create_xml_node(diff, "diff-removed");
-			}
-			if(added == NULL) {
-				added = create_xml_node(diff, "diff-added");
-			}
-			add_node_copy(added, tmp1);
+		if(removed == NULL) {
+			removed = create_xml_node(diff, "diff-removed");
 		}
+		if(added == NULL) {
+			added = create_xml_node(diff, "diff-added");
+		}
+		add_node_copy(added, tmp1);
 		free_xml(tmp1);
 	}
 
@@ -2225,14 +2222,15 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 			lookup_id = crm_concat(tag_name, tag_id, '-');
 			lookup_value = g_hash_table_lookup(id_hash, lookup_id);
 			if(lookup_value != NULL) {
+				char *old_id = crm_strdup(tag_id);
 				modified = TRUE;
-				crm_err("\"id\" collision detected.");
-				crm_err(" Multiple %s entries with id=\"%s\","
-					" assigned id=\"%s\"",
-					tag_name, lookup_value, tag_id);
 				assign_uuid(xml_obj);
 				tag_id = ID(xml_obj);
-			} 
+				crm_err("\"id\" collision detected..."
+					" Multiple '%s' entries with id=\"%s\","
+					" assigned id=\"%s\"",
+					tag_name, old_id, tag_id);
+			}
 			g_hash_table_insert(
 				id_hash, lookup_id, crm_strdup(tag_id));
 			break;
