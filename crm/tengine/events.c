@@ -1,4 +1,4 @@
-/* $Id: events.c,v 1.3 2006/02/16 16:01:33 andrew Exp $ */
+/* $Id: events.c,v 1.4 2006/02/16 18:20:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -451,7 +451,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 
 	/* unexpected event, trigger a pe-recompute */
 	/* possibly do this only for certain types of actions */
-	crm_err("Event not found.");
+	crm_warn("Event not found.");
 	abort_transition(INFINITY, tg_restart, "Unexpected event", event);
 	return;
 }
