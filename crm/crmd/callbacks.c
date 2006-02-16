@@ -150,11 +150,13 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 			crm_err("Another DC detected: %s (op=%s)", from, op);
 			/* make sure the election happens NOW */
 			level = LOG_WARNING;
-			new_input = new_ha_msg_input(msg);
-			register_fsa_error_adv(
-				C_FSA_INTERNAL, I_ELECTION, NULL,
-				new_input, __FUNCTION__);
-
+			if(fsa_state != S_ELECTION) {
+				new_input = new_ha_msg_input(msg);
+				register_fsa_error_adv(
+					C_FSA_INTERNAL, I_ELECTION, NULL,
+					new_input, __FUNCTION__);
+			}
+			
 #if 0
 		/* still thinking about this one...
 		 * could create a timing issue if we dont notice the
@@ -166,8 +168,8 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 			return;
 #endif
 		} else {
-			crm_debug("Processing DC message from %s [F_SEQ=%s]",
-				  from, seq);
+			crm_debug_2("Processing DC message from %s [F_SEQ=%s]",
+				    from, seq);
 		}
 	}
 
