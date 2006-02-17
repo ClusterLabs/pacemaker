@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.2 2006/02/16 15:20:33 andrew Exp $ */
+/* $Id: graph.c,v 1.3 2006/02/17 13:30:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -76,20 +76,21 @@ update_synapse_confirmed(synapse_t *synapse, int action_id)
 		crm_debug_3("Processing action %d", action->id);
 		
 		if(action->id == action_id) {
-			crm_debug("Marking action %d of synapse %d confirmed",
-				  action_id, synapse->id);
+			crm_info("Confirmed: Action %d of Synapse %d",
+				 action_id, synapse->id);
 			action->confirmed = TRUE;
 			updates = TRUE;
 
 		} else if(action->confirmed == FALSE) {
 			is_confirmed = FALSE;
-			crm_debug("Synapse %d still not confirmed after action %d",
-				  synapse->id, action_id);
+			crm_debug_2("Synapse %d still not confirmed after action %d",
+				    synapse->id, action_id);
 		}
 		
 		);
 
-	if(is_confirmed) {
+	if(is_confirmed && synapse->confirmed == FALSE) {
+		crm_debug("Confirmed: Synapse %d", synapse->id);
 		synapse->confirmed = TRUE;
 		updates = TRUE;
 	}
@@ -263,11 +264,18 @@ run_graph(crm_graph_t *graph)
 			num_complete++;
 			
 		} else if (synapse->executed) {
-			crm_debug_3("Synapse %d executed", synapse->id);
+			int pending_log = LOG_DEBUG_2;
+			if(synapse->priority <= graph->abort_priority) {
+				pending_log = LOG_INFO;
+			} 
+			crm_log_maybe(pending_log,
+				      "Synapse %d: confirmation pending",
+				      synapse->id);
 			num_pending++;
 			
 		} else if(synapse->priority <= graph->abort_priority) {
-			crm_debug("Skipping synapse %d: aborting", synapse->id);
+			crm_debug_2("Skipping synapse %d: aborting",
+				    synapse->id);
 			num_skipped++;
 			
 		} else {
@@ -285,24 +293,26 @@ run_graph(crm_graph_t *graph)
 		);
 
 	if(num_pending == 0 && num_fired == 0) {
+		graph->complete = TRUE;
 		stat_log_level = LOG_INFO;
 		pass_result = transition_complete;
+
 		if(num_incomplete != 0) {
-			stat_log_level = LOG_ERR;
+			stat_log_level = LOG_WARNING;
 			pass_result = transition_terminated;
 
 		} else if(num_skipped != 0) {
 			stat_log_level = LOG_NOTICE;
 		}
-		print_graph(stat_log_level+2, graph);
-		crm_log_maybe(stat_log_level+2,
-			      "==============================================");
 	}
 	
-	crm_log_maybe(stat_log_level, "Transition %d Complete: %d, Pending: %d,"
+	crm_log_maybe(stat_log_level,
+		      "Transition %d Complete: %d, Pending: %d,"
 		      " Fired: %d, Skipped: %d, Incomplete: %d",
 		      graph->id, num_complete, num_pending, num_fired,
 		      num_skipped, num_incomplete);
+	crm_log_maybe(stat_log_level+1,
+		      "====================================================");
 
 	
 	return pass_result;

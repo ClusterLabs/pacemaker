@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.65 2006/02/16 15:20:32 andrew Exp $ */
+/* $Id: callbacks.c,v 1.66 2006/02/17 13:30:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -448,8 +448,9 @@ te_graph_trigger(gpointer user_data)
 
 	if(graph_rc != transition_complete) {
 		crm_crit("Transition failed: %s", transition_status(graph_rc));
+		print_graph(LOG_WARNING, transition_graph);
 	}
-
+	
 	notify_crmd(transition_graph);
 
 	return TRUE;	

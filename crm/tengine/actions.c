@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.9 2006/02/16 15:20:32 andrew Exp $ */
+/* $Id: actions.c,v 1.10 2006/02/17 13:30:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -397,7 +397,7 @@ void
 notify_crmd(crm_graph_t *graph)
 {	
 	int log_level = LOG_DEBUG;
-	const char *abort_reason = "Poke";
+	const char *abort_reason = "Complete";
 	enum transition_action completion_action = tg_restart;
 	int id = -1;
 	
@@ -417,35 +417,31 @@ notify_crmd(crm_graph_t *graph)
 		return;
 	}
 
+	CRM_DEV_ASSERT(graph->complete);
+	
 	completion_action = graph->completion_action;
 	id = graph->id;
-	if(graph->abort_reason == NULL) {
-		abort_reason = "Complete";
-		
-	} else {
+	if(graph->abort_reason != NULL) {
 		abort_reason = graph->abort_reason;
 	}
-	
-	graph->complete = TRUE;
-	graph->abort_reason = NULL;
-	graph->completion_action = tg_restart;
-	
+
 	switch(completion_action) {
 		case tg_stop:
 			op = CRM_OP_TECOMPLETE;
 			log_level = LOG_INFO;
 			break;
+
 		case tg_restart:
 			op = CRM_OP_TEABORT;
 			break;
+
 		case tg_shutdown:
 			crm_info("Exiting after transition");
 			exit(LSB_EXIT_OK);
 	}
 
-	te_log_action(
-		log_level, "Transition %d status: %s - %s",
-		id, op, abort_reason);
+	te_log_action(log_level, "Transition %d status: %s - %s",
+		      id, op, abort_reason);
 
 	print_graph(log_level, graph);
 	
@@ -457,4 +453,8 @@ notify_crmd(crm_graph_t *graph)
 	}
 
 	send_ipc_message(crm_ch, cmd);
+
+	graph->abort_reason = NULL;
+	graph->completion_action = tg_restart;	
+
 }
