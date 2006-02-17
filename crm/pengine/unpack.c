@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.155 2006/02/15 13:17:16 andrew Exp $ */
+/* $Id: unpack.c,v 1.156 2006/02/17 14:44:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -482,22 +482,129 @@ unpack_status(crm_data_t * status, pe_working_set_t *data_set)
 	
 }
 
+static gboolean
+determine_online_status_no_fencing(crm_data_t * node_state, node_t *this_node)
+{
+	gboolean online = FALSE;
+	const char *join_state = crm_element_value(node_state,
+						   XML_CIB_ATTR_JOINSTATE);
+	const char *crm_state  = crm_element_value(node_state,
+						   XML_CIB_ATTR_CRMDSTATE);
+	const char *ccm_state  = crm_element_value(node_state,
+						   XML_CIB_ATTR_INCCM);
+	const char *ha_state   = crm_element_value(node_state,
+						   XML_CIB_ATTR_HASTATE);
+	const char *exp_state  = crm_element_value(node_state,
+						   XML_CIB_ATTR_EXPSTATE);
+
+	if(!crm_is_true(ccm_state) || safe_str_eq(ha_state,DEADSTATUS)){
+		crm_debug_2("Node is down: ha_state=%s, ccm_state=%s",
+			    crm_str(ha_state), crm_str(ccm_state));
+		
+	} else if(!crm_is_true(ccm_state)
+		  || safe_str_eq(ha_state, DEADSTATUS)) {
+		
+	} else if(safe_str_neq(join_state, CRMD_JOINSTATE_DOWN)
+		  && safe_str_eq(crm_state, ONLINESTATUS)) {
+		online = TRUE;
+		
+	} else if(this_node->details->expected_up == FALSE) {
+		crm_debug_2("CRMd is down: ha_state=%s, ccm_state=%s",
+			    crm_str(ha_state), crm_str(ccm_state));
+		crm_debug_2("\tcrm_state=%s, join_state=%s, expected=%s",
+			    crm_str(crm_state), crm_str(join_state),
+			    crm_str(exp_state));
+		
+	} else {
+		/* mark it unclean */
+		this_node->details->unclean = TRUE;
+		
+		crm_warn("Node %s is partially & un-expectedly down",
+			 this_node->details->uname);
+		crm_info("\tha_state=%s, ccm_state=%s,"
+			 " crm_state=%s, join_state=%s, expected=%s",
+			 crm_str(ha_state), crm_str(ccm_state),
+			 crm_str(crm_state), crm_str(join_state),
+			 crm_str(exp_state));
+	}
+	return online;
+}
+
+static gboolean
+determine_online_status_fencing(crm_data_t * node_state, node_t *this_node)
+{
+	gboolean online = FALSE;
+	const char *join_state = crm_element_value(node_state,
+						   XML_CIB_ATTR_JOINSTATE);
+	const char *crm_state  = crm_element_value(node_state,
+						   XML_CIB_ATTR_CRMDSTATE);
+	const char *ccm_state  = crm_element_value(node_state,
+						   XML_CIB_ATTR_INCCM);
+	const char *ha_state   = crm_element_value(node_state,
+						   XML_CIB_ATTR_HASTATE);
+	const char *exp_state  = crm_element_value(node_state,
+						   XML_CIB_ATTR_EXPSTATE);
+
+	if(crm_is_true(ccm_state)
+	   && (ha_state == NULL || safe_str_eq(ha_state, ACTIVESTATUS))
+	   && safe_str_eq(crm_state, ONLINESTATUS)) {
+		int log_down = LOG_DEBUG;
+		if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
+			online = TRUE;
+			
+		} else if(this_node->details->shutdown) {
+			online = TRUE;
+			
+			/* we could be "up" but not joined yet */
+		} else if(this_node->details->expected_up == FALSE) {
+			log_down = LOG_DEBUG_2;
+		}
+		
+		if(online == FALSE) {
+			crm_log_maybe(log_down, "Node %s is down:"
+				      " join_state=%s, expected=%s",
+				      this_node->details->uname,
+				      crm_str(join_state), crm_str(exp_state));
+		}
+		
+	} else if(crm_is_true(ccm_state) == FALSE
+/* 		  && safe_str_eq(ha_state, DEADSTATUS) */
+		  && safe_str_eq(crm_state, OFFLINESTATUS)
+		  && this_node->details->expected_up == FALSE) {
+		crm_debug("Node %s is down: join_state=%s, expected=%s",
+			  this_node->details->uname,
+			  crm_str(join_state), crm_str(exp_state));
+		
+	} else {
+		/* mark it unclean */
+		this_node->details->unclean = TRUE;
+		
+		crm_warn("Node %s is un-expectedly down",
+			 this_node->details->uname);
+		crm_info("\tha_state=%s, ccm_state=%s,"
+			 " crm_state=%s, join_state=%s, expected=%s",
+			 crm_str(ha_state), crm_str(ccm_state),
+			 crm_str(crm_state), crm_str(join_state),
+			 crm_str(exp_state));
+	}
+	return online;
+}
+
 gboolean
 determine_online_status(
 	crm_data_t * node_state, node_t *this_node, pe_working_set_t *data_set)
 {
 	gboolean online = FALSE;
-	const char *uname      = crm_element_value(node_state,XML_ATTR_UNAME);
 	const char *exp_state  =
 		crm_element_value(node_state, XML_CIB_ATTR_EXPSTATE);
-	const char *join_state =
-		crm_element_value(node_state, XML_CIB_ATTR_JOINSTATE);
-	const char *crm_state  =
-		crm_element_value(node_state, XML_CIB_ATTR_CRMDSTATE);
-	const char *ccm_state  =
-		crm_element_value(node_state, XML_CIB_ATTR_INCCM);
-	const char *ha_state   =
-		crm_element_value(node_state, XML_CIB_ATTR_HASTATE);
+/* 	const char *join_state = */
+/* 		crm_element_value(node_state, XML_CIB_ATTR_JOINSTATE); */
+/* 	const char *crm_state  = */
+/* 		crm_element_value(node_state, XML_CIB_ATTR_CRMDSTATE); */
+/* 	const char *ccm_state  = */
+/* 		crm_element_value(node_state, XML_CIB_ATTR_INCCM); */
+/* 	const char *ha_state   = */
+/* 		crm_element_value(node_state, XML_CIB_ATTR_HASTATE); */
 	int shutdown = 0;
 	
 	if(this_node == NULL) {
@@ -518,85 +625,37 @@ determine_online_status(
 	}
 
 	if(data_set->stonith_enabled == FALSE) {
-		if(!crm_is_true(ccm_state) || safe_str_eq(ha_state,DEADSTATUS)){
-			crm_debug_2("Node is down: ha_state=%s, ccm_state=%s",
-				  crm_str(ha_state), crm_str(ccm_state));
-			
-		} else if(!crm_is_true(ccm_state)
-			  || safe_str_eq(ha_state, DEADSTATUS)) {
-			
-		} else if(safe_str_neq(join_state, CRMD_JOINSTATE_DOWN)
-			  && safe_str_eq(crm_state, ONLINESTATUS)) {
-			online = TRUE;
-			
-		} else if(this_node->details->expected_up == FALSE) {
-			crm_debug_2("CRMd is down: ha_state=%s, ccm_state=%s",
-				  crm_str(ha_state), crm_str(ccm_state));
-			crm_debug_2("\tcrm_state=%s, join_state=%s, expected=%s",
-				  crm_str(crm_state), crm_str(join_state),
-				  crm_str(exp_state));
-			
-		} else {
-			/* mark it unclean */
-			this_node->details->unclean = TRUE;
-			
-			crm_warn("Node %s is partially & un-expectedly down",
-				 uname);
-			crm_info("\tha_state=%s, ccm_state=%s,"
-				 " crm_state=%s, join_state=%s, expected=%s",
-				 crm_str(ha_state), crm_str(ccm_state),
-				 crm_str(crm_state), crm_str(join_state),
-				 crm_str(exp_state));
-		}
+		online = determine_online_status_no_fencing(
+			node_state, this_node);
+		
 	} else {
-		if(crm_is_true(ccm_state)
-		   && (ha_state == NULL || safe_str_eq(ha_state, ACTIVESTATUS))
-		   && safe_str_eq(crm_state, ONLINESTATUS)
-		   && safe_str_neq(join_state, CRMD_JOINSTATE_DOWN)) {
-			online = TRUE;
-
-		} else if(this_node->details->expected_up == FALSE) {
-			crm_debug_2("CRMd on %s is down: ha_state=%s, ccm_state=%s",
-				  uname, crm_str(ha_state), crm_str(ccm_state));
-			crm_debug_2("\tcrm_state=%s, join_state=%s, expected=%s",
-				  crm_str(crm_state), crm_str(join_state),
-				  crm_str(exp_state));
-			
-		} else {
-			/* mark it unclean */
-			this_node->details->unclean = TRUE;
-			
-			crm_warn("Node %s is un-expectedly down", uname);
-			crm_info("\tha_state=%s, ccm_state=%s,"
-				 " crm_state=%s, join_state=%s, expected=%s",
-				 crm_str(ha_state), crm_str(ccm_state),
-				 crm_str(crm_state), crm_str(join_state),
-				 crm_str(exp_state));
-		}
+		online = determine_online_status_fencing(
+			node_state, this_node);
 	}
 	
 	if(online) {
-		crm_debug_2("Node %s is online", uname);
+		crm_debug_2("Node %s is online", this_node->details->uname);
 		this_node->details->online = TRUE;
 
 	} else {
 		/* remove node from contention */
-		crm_debug_2("Node %s is down", uname);
-		this_node->weight = -INFINITY;
 		this_node->fixed = TRUE;
+		this_node->weight = -INFINITY;
+		crm_debug_2("Node %s is down", this_node->details->uname);
 	}
 
-	if(this_node->details->unclean) {
-		pe_proc_warn("Node %s is unclean", uname);
-	}
-
-	if(this_node->details->shutdown) {
+	if(online && this_node->details->shutdown) {
 		/* dont run resources here */
-		this_node->weight = -INFINITY;
 		this_node->fixed = TRUE;
-		crm_debug_2("Node %s is due for shutdown", uname);
-	}
+		this_node->weight = -INFINITY;
+		crm_debug_2("Node %s is due for shutdown",
+			    this_node->details->uname);
+	}	
 	
+	if(this_node->details->unclean) {
+		pe_proc_warn("Node %s is unclean", this_node->details->uname);
+	}
+
 	return online;
 }
 

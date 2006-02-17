@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.47 2006/02/14 11:55:07 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.48 2006/02/17 14:44:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -144,7 +144,7 @@ extern GHashTable *confirmed_nodes;
 extern GHashTable *crmd_peer_state;
 
 /* these two should be moved elsewhere... */
-extern crm_data_t *do_update_cib_nodes(crm_data_t *updates, gboolean overwrite);
+extern void do_update_cib_nodes(gboolean overwrite);
 extern gboolean do_dc_heartbeat(gpointer data);
 
 gboolean add_cib_op_callback(

@@ -143,10 +143,9 @@ do_dc_join_offer_all(long long action,
 	 * any nodes that are active in the CIB but not in the CCM list
 	 *   will be seen as offline by the PE anyway
 	 */
-	do_update_cib_nodes(NULL, TRUE);
-	
 	current_join_id++;
 	initialize_join(TRUE);
+	do_update_cib_nodes(TRUE);
 	
 	g_hash_table_foreach(
 		fsa_membership_copy->members, join_make_offer, NULL);
@@ -389,7 +388,6 @@ void
 finalize_join(const char *caller)
 {
 	crm_data_t *cib = createEmptyCib();
-	crm_data_t *cib_update = NULL;
 	
 	set_bit_inplace(fsa_input_register, R_HAVE_CIB);
 	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
@@ -398,11 +396,9 @@ finalize_join(const char *caller)
 	crm_debug_3("Update %s in the CIB to our uuid: %s",
 		    XML_ATTR_DC_UUID, crm_element_value(cib, XML_ATTR_DC_UUID));
 	
-	cib_update = create_cib_fragment(cib, XML_TAG_CIB);
 	fsa_cib_conn->cmds->update(
-		fsa_cib_conn, NULL, cib_update, NULL, cib_quorum_override);
+		fsa_cib_conn, NULL, cib, NULL, cib_quorum_override);
 
-	free_xml(cib_update);
 	free_xml(cib);
 	
 	crm_debug_3("Bumping the epoch and syncing to %d clients",
@@ -432,6 +428,7 @@ join_update_complete_callback(const HA_Message *msg, int call_id, int rc,
 	fsa_data_t *msg_data = NULL;
 	
 	if(rc == cib_ok) {
+		crm_debug("Join update %d complete", call_id);
 		check_join_state(fsa_state, __FUNCTION__);
 
 	} else {
@@ -511,7 +508,8 @@ do_dc_join_ack(long long action,
 		fsa_cib_conn, XML_CIB_TAG_STATUS, join_ack->xml, NULL,
 		cib_scope_local|cib_quorum_override);
 
-	add_cib_op_callback(call_id, TRUE,NULL, join_update_complete_callback);
+	add_cib_op_callback(
+		call_id, FALSE, NULL, join_update_complete_callback);
  	crm_debug("join-%d: Registered callback for LRM update %d",
 		  join_id, call_id);
 

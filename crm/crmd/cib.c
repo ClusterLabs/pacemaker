@@ -116,7 +116,7 @@ static void
 do_cib_replaced(const char *event, HA_Message *msg)
 {
 	crm_debug("Updating the CIB after a replace");
-	do_update_cib_nodes(NULL, FALSE);
+	do_update_cib_nodes(AM_I_DC);
 	fsa_cluster_conn->llc_ops->client_status(
 		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
 }

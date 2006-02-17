@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.99 2006/02/16 15:15:13 andrew Exp $ */
+/* $Id: ccm.c,v 1.100 2006/02/17 14:44:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -474,7 +474,7 @@ do_ccm_update_cache(long long action,
 
 	if(cur_state != S_STOPPING) {
 		crm_debug_3("Updating the CIB from CCM cache");
-		do_update_cib_nodes(NULL, FALSE);
+		do_update_cib_nodes(FALSE);
 	}
 
 	/* Membership changed, remind everyone we're here.
@@ -590,13 +590,30 @@ struct update_data_s
 		gboolean    overwrite_join;
 };
 
-crm_data_t*
-do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
+static void
+ccm_node_update_complete(const HA_Message *msg, int call_id, int rc,
+			 crm_data_t *output, void *user_data)
 {
+	fsa_data_t *msg_data = NULL;
+	
+	if(rc == cib_ok) {
+		crm_debug("Node update %d complete", call_id);
+
+	} else {
+		crm_err("Node update %d failed", call_id);
+		crm_log_message(LOG_DEBUG, msg);
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+	}
+}
+
+
+void
+do_update_cib_nodes(gboolean overwrite)
+{
+	int call_id = 0;
 	int call_options = cib_scope_local|cib_quorum_override;
 	struct update_data_s update_data;
-	crm_data_t *fragment = updates;
-	crm_data_t *tmp = NULL;
+	crm_data_t *fragment = NULL;
 
 	if(fsa_membership_copy == NULL) {
 		/* We got a replace notification before being connected to
@@ -604,40 +621,18 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 		 * So there is no need to update the local CIB with our values
 		 *   - since we have none.
 		 */
-		return NULL;
+		return;
 	}
 	
-	if(updates == NULL) {
-		fragment = create_cib_fragment(NULL, NULL);
-		crm_xml_add(fragment, XML_ATTR_SECTION, XML_CIB_TAG_STATUS);
-	}
-
-#if CRM_DEPRECATED_SINCE_2_0_4
-	if(safe_str_eq(crm_element_name(fragment), XML_TAG_CIB)) {
-		tmp = fragment;
-	} else {
-		tmp = find_xml_node(fragment, XML_TAG_CIB, TRUE);
-	}
-#else
-	tmp = fragment;
-	CRM_DEV_ASSERT(safe_str_eq(crm_element_name(tmp), XML_TAG_CIB));
-#endif
+	fragment = create_xml_node(NULL, XML_CIB_TAG_STATUS);
 	
-	tmp = get_object_root(XML_CIB_TAG_STATUS, tmp);
-	CRM_DEV_ASSERT(tmp != NULL);
-	
-	update_data.updates = tmp;
+	update_data.updates = fragment;
 	update_data.state = XML_BOOLEAN_YES;
-	update_data.overwrite_join = FALSE;
+	update_data.overwrite_join = overwrite;
 
-	if(overwrite) {
-		crm_debug_2("Performing a join update based on CCM data");
-		update_data.overwrite_join = TRUE;
-		
-	} else {
+	if(overwrite == FALSE) {
 		call_options = call_options|cib_inhibit_bcast;
 		crm_debug_2("Inhibiting bcast for membership updates");
-
 	}
 
 	/* live nodes */
@@ -653,13 +648,11 @@ do_update_cib_nodes(crm_data_t *updates, gboolean overwrite)
 				     ghash_update_cib_node, &update_data);
 	}		
 	
-	if(update_data.updates != NULL) {
-		fsa_cib_conn->cmds->update(fsa_cib_conn, XML_CIB_TAG_STATUS,
-					   fragment, NULL, call_options);
-		free_xml(fragment);
-	}
-
-	return NULL;
+	call_id = fsa_cib_conn->cmds->update(
+		fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,call_options);
+	
+	add_cib_op_callback(call_id, FALSE, NULL, ccm_node_update_complete);
+	free_xml(fragment);
 }
 
 void
@@ -678,14 +671,21 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	peer_online = g_hash_table_lookup(crmd_peer_state, node_uname);
 	
 	if(data->overwrite_join) {
-		if(safe_str_eq(peer_online, ONLINESTATUS)) {
-			join = CRMD_JOINSTATE_PENDING;
-		} else {
+		if(safe_str_neq(peer_online, ONLINESTATUS)) {
 			join  = CRMD_STATE_INACTIVE;
+			
+		} else {
+			const char *peer_member = g_hash_table_lookup(
+				confirmed_nodes, node_uname);
+			if(peer_member != NULL) {
+				join = CRMD_JOINSTATE_MEMBER;
+			} else {
+				join = CRMD_JOINSTATE_PENDING;
+			}
 		}
 	}
 	
-	tmp1 = create_node_state(node_uname, NULL, data->state, NULL,
+	tmp1 = create_node_state(node_uname, NULL, data->state, peer_online,
 				 join, NULL, FALSE, __FUNCTION__);
 
 	add_node_copy(data->updates, tmp1);
