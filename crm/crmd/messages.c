@@ -931,32 +931,6 @@ handle_request(ha_msg_input_t *stored_msg)
 					 op, fsa_state2string(fsa_state));
 			}
 				
-		} else if(safe_str_eq(op, CRM_OP_TETIMEOUT)) {
-			crm_debug("Transition cancelled: %s/%s", op, message);
-			clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
-			if(fsa_state == S_IDLE) {
-				crm_err("Transition timed out in S_IDLE");
-				schedule_pe();
-				
-			} else if(need_transition(fsa_state)) {
-				schedule_pe();
-				
-			} else {	
-				crm_err("Filtering %s op in state %s",
-					 op, fsa_state2string(fsa_state));
-			}
-
-		} else if(safe_str_eq(op, CRM_OP_TEABORTED)) {
-			crm_debug("Transition cancelled: %s/%s", op, message);
-			clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
-			if(need_transition(fsa_state)) {
-				schedule_pe();
-
-			} else {	
-				crm_debug("Filtering %s op in state %s",
-					  op, fsa_state2string(fsa_state));
-			}
-
 		} else if(strcmp(op, CRM_OP_TECOMPLETE) == 0) {
 			crm_debug("Transition complete: %s/%s", op, message);
 			clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
