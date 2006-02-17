@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.111 2006/02/15 13:17:16 andrew Exp $ */
+/* $Id: native.c,v 1.112 2006/02/17 13:22:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -424,9 +424,10 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 				    start->uuid);
 			is_optional = start->optional;
 		} else {
+			crm_debug_2("Marking %s optional", key);
 			is_optional = TRUE;
 		}
-
+		
 		/* start a monitor for an already active resource */
 		possible_matches = find_actions_exact(rsc->actions, key, node);
 		if(possible_matches == NULL) {
@@ -436,21 +437,26 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 		
 		mon = custom_action(rsc, key, name, node,
 				    is_optional, TRUE, data_set);
+
+		if(is_optional) {
+			crm_debug("%s\t   %s (optional)",
+				  crm_str(node_uname), mon->uuid);
+		}
 		
 		if(start == NULL || start->runnable == FALSE) {
-			crm_debug("%s:\t   %s (cancelled : start un-runnable)",
+			crm_debug("%s\t   %s (cancelled : start un-runnable)",
 				  crm_str(node_uname), mon->uuid);
 			mon->runnable = FALSE;
 
 		} else if(node == NULL
 			  || node->details->online == FALSE
 			  || node->details->unclean) {
-			crm_debug("%s:\t   %s (cancelled : no node available)",
+			crm_debug("%s\t   %s (cancelled : no node available)",
 				  crm_str(node_uname), mon->uuid);
 			mon->runnable = FALSE;
 		
 		} else if(mon->optional == FALSE) {
-			crm_notice("%s:\t   %s", crm_str(node_uname),mon->uuid);
+			crm_notice("%s\t   %s", crm_str(node_uname),mon->uuid);
 		}
 		custom_action_order(rsc, start_key(rsc), NULL,
 				    NULL, crm_strdup(key), mon,

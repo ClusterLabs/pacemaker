@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.71 2006/02/14 12:07:48 andrew Exp $ */
+/* $Id: ptest.c,v 1.72 2006/02/17 13:22:19 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -326,6 +326,7 @@ main(int argc, char **argv)
 	dot_write("}");
 
 	transition = unpack_graph(data_set.graph);
+	print_graph(LOG_NOTICE, transition);
 	do {
 		graph_rc = run_graph(transition);
 		
