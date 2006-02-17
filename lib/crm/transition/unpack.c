@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.1 2006/02/14 11:32:12 andrew Exp $ */
+/* $Id: unpack.c,v 1.2 2006/02/17 13:32:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -107,7 +107,7 @@ unpack_synapse(crm_graph_t *new_graph, crm_data_t *xml_synapse)
 	crm_malloc0(new_synapse, sizeof(synapse_t));
 	new_synapse->id = crm_parse_int(ID(xml_synapse), NULL);
 
-	value = crm_element_value(xml_synapse, "priority");
+	value = crm_element_value(xml_synapse, XML_CIB_ATTR_PRIORITY);
 	if(value != NULL) {
 		new_synapse->priority = crm_parse_int(value, NULL);
 	}
