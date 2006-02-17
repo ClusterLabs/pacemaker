@@ -1,4 +1,4 @@
-/* $Id: notify.h,v 1.5 2005/10/18 11:41:53 andrew Exp $ */
+/* $Id: notify.h,v 1.6 2006/02/17 13:20:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,7 +34,8 @@ extern void cib_post_notify(int options, const char *op, crm_data_t *update,
 			    enum cib_errors result, crm_data_t *new_obj);
 
 
-extern void cib_diff_notify(int options, const char *op, crm_data_t *update,
-			    enum cib_errors result, crm_data_t *old_cib);
+extern void cib_diff_notify(
+	int options, const char *client, const char *call_id, const char *op,
+	crm_data_t *update, enum cib_errors result, crm_data_t *old_cib);
 
 extern void cib_replace_notify(crm_data_t *update, enum cib_errors result, crm_data_t *diff);

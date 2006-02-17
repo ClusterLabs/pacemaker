@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.110 2006/02/16 15:27:43 andrew Exp $ */
+/* $Id: callbacks.c,v 1.111 2006/02/17 13:20:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -524,6 +524,7 @@ cib_common_callback_worker(HA_Message *op_request, cib_client_t *cib_client,
 	call_start = time_longclock();
 	cib_client->num_calls++;
 	op = cl_get_string(op_request, F_CIB_OPERATION);
+
 	rc = cib_get_operation_id(op_request, &call_type);
 	if(rc != cib_ok) {
 		crm_debug("Invalid operation %s from %s/%s",
@@ -538,9 +539,8 @@ cib_common_callback_worker(HA_Message *op_request, cib_client_t *cib_client,
 	}
 	
 	crm_log_message_adv(LOG_MSG, "Client[inbound]", op_request);
-	CRM_DEV_ASSERT(
-		ha_msg_add(
-			op_request, F_CIB_CLIENTID, cib_client->id) == HA_OK);
+	ha_msg_add(op_request, F_CIB_CLIENTID, cib_client->id);
+	ha_msg_add(op_request, F_CIB_CLIENTNAME, cib_client->name);
 
 	if(rc == cib_ok && crm_assert_failed == FALSE) {
 		cib_process_request(
@@ -1085,8 +1085,13 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 		}
 
 		if((call_options & cib_inhibit_notify) == 0) {
+			const char *call_id = cl_get_string(
+				request, F_CIB_CALLID);
+			const char *client = cl_get_string(
+				request, F_CIB_CLIENTNAME);
 			cib_post_notify(call_options, op, input, rc, the_cib);
-			cib_diff_notify(call_options, op, input, rc, *cib_diff);
+			cib_diff_notify(call_options, client, call_id, op,
+					input, rc, *cib_diff);
 		}
 		
 		log_xml_diff(rc==cib_ok?cib_diff_loglevel:cib_diff_loglevel+1,
@@ -1424,6 +1429,10 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 
 	ha_msg_value_int(msg, F_CIB_CALLOPTS, &call_options);
 	crm_debug_4("Retrieved call options: %d", call_options);
+
+	if(cl_get_string(msg, F_CIB_CLIENTNAME) == NULL) {
+ 		ha_msg_add(msg, F_CIB_CLIENTNAME, originator);
+	}
 	
 	cib_process_request(msg, FALSE, TRUE, TRUE, NULL);
 

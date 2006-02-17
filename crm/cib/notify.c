@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.35 2006/01/23 16:19:07 andrew Exp $ */
+/* $Id: notify.c,v 1.36 2006/02/17 13:20:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -232,8 +232,9 @@ cib_post_notify(int options, const char *op, crm_data_t *update,
 }
 
 void
-cib_diff_notify(int options, const char *op, crm_data_t *update,
-		enum cib_errors result, crm_data_t *diff) 
+cib_diff_notify(
+	int options, const char *client, const char *call_id, const char *op,
+	crm_data_t *update, enum cib_errors result, crm_data_t *diff) 
 {
 	int add_updates = 0;
 	int add_epoch  = 0;
@@ -258,14 +259,19 @@ cib_diff_notify(int options, const char *op, crm_data_t *update,
 		&del_admin_epoch, &del_epoch, &del_updates);
 
 	if(add_updates != del_updates) {
-		crm_log_maybe(log_level, "Update (%s): %d.%d.%d -> %d.%d.%d",
-			      cib_error2string(result),
+		crm_log_maybe(log_level,
+			      "Update (client: %s%s%s): %d.%d.%d -> %d.%d.%d (%s)",
+			      client, call_id?", call:":"", call_id?call_id:"",
 			      del_admin_epoch, del_epoch, del_updates,
-			      add_admin_epoch, add_epoch, add_updates);
+			      add_admin_epoch, add_epoch, add_updates,
+			      cib_error2string(result));
+
 	} else if(diff != NULL) {
-		crm_log_maybe(log_level, "Local-only Change (%s): %d.%d.%d",
-			      cib_error2string(result),
-			      add_admin_epoch, add_epoch, add_updates);
+		crm_log_maybe(log_level,
+			      "Local-only Change (client:%s%s%s): %d.%d.%d (%s)",
+			      client, call_id?", call: ":"", call_id?call_id:"",
+			      add_admin_epoch, add_epoch, add_updates,
+			      cib_error2string(result));
 	}
 	
 	do_cib_notify(options, op, update, result, diff, T_CIB_DIFF_NOTIFY);
