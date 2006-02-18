@@ -351,7 +351,6 @@ do_dc_join_finalize(long long action,
 		fsa_cib_conn->cmds->sync_from(
 			fsa_cib_conn, fsa_our_uname, NULL,cib_quorum_override);
 	}
-	
 
 	finalize_join(__FUNCTION__);
 
@@ -370,8 +369,8 @@ finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 			      (char*)user_data, cib_error2string(rc));
 
 		/* restart the whole join process */
-		register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION_DC,
-				       NULL, NULL, __FUNCTION__);
+		register_fsa_error_adv(
+			C_FSA_INTERNAL, I_ELECTION_DC,NULL,NULL,__FUNCTION__);
 
 	} else if(AM_I_DC && fsa_state == S_FINALIZE_JOIN) {
 		finalize_join(__FUNCTION__);
