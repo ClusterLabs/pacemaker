@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.10 2006/02/17 13:30:39 andrew Exp $ */
+/* $Id: actions.c,v 1.11 2006/02/18 12:43:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -380,8 +380,16 @@ send_rsc_command(crm_action_t *action)
 		trigger_graph();
 
 	} else if(action->timeout > 0) {
+		int action_timeout = 2 * action->timeout;
 		crm_debug_3("Setting timer for action %s", task_uuid);
 		action->timer->reason = timeout_action_warn;
+		if(transition_graph->transition_timeout < action_timeout) {
+			crm_debug("Action %d:"
+				  " Increasing transition %d timeout to %d",
+				  action->id, transition_graph->id,
+				  transition_graph->transition_timeout);
+			transition_graph->transition_timeout = action_timeout;
+		}
 		start_te_timer(action->timer);
 	}
 }
@@ -407,13 +415,13 @@ notify_crmd(crm_graph_t *graph)
 	const char *op = CRM_OP_TEABORT;
 
 	if(unconfirmed != 0) {
-		crm_err("Writing unconfirmed actions to the CIB");
+		crm_err("Write %d unconfirmed actions to the CIB", unconfirmed);
 		/* TODO: actually write them */
 /* 		return; */
 	}
 	
 	if(pending_callbacks != 0) {
-		crm_debug("Delaying completion until TE updates to the CIB complete");
+		crm_err("Delaying completion until all CIB updates complete");
 		return;
 	}
 
@@ -431,6 +439,7 @@ notify_crmd(crm_graph_t *graph)
 			log_level = LOG_INFO;
 			break;
 
+		case tg_abort:
 		case tg_restart:
 			op = CRM_OP_TEABORT;
 			break;

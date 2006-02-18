@@ -1,4 +1,4 @@
-/* $Id: transition.h,v 1.2 2006/02/16 15:20:32 andrew Exp $ */
+/* $Id: transition.h,v 1.3 2006/02/18 12:43:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -70,7 +70,6 @@ typedef struct crm_action_s {
 enum timer_reason {
 	timeout_action,
 	timeout_action_warn,
-	timeout_timeout,
 	timeout_abort,
 };
 
@@ -83,8 +82,10 @@ struct te_timer_s
 };
 
 
+/* order matters here */
 enum transition_action {
 	tg_stop,
+	tg_abort,
 	tg_restart,
 	tg_shutdown,
 };

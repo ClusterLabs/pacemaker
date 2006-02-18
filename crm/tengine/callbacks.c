@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.66 2006/02/17 13:30:39 andrew Exp $ */
+/* $Id: callbacks.c,v 1.67 2006/02/18 12:43:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -369,34 +369,23 @@ timer_callback(gpointer data)
 	}
 	
 	timer = (te_timer_t*)data;
-	if(timer->source_id > 0) {
-		Gmain_timeout_remove(timer->source_id);
-	}
-	timer->source_id = 0;
+	stop_te_timer(timer);
 
-	crm_warn("Timer popped in abort_level=%d",
-		 transition_graph->abort_priority);
-	if(timer->reason == timeout_abort) {
+	crm_warn("Timer popped (abort_level=%d, complete=%s)",
+		 transition_graph->abort_priority,
+		 transition_graph->complete?"true":"false");
+
+	if(transition_graph->complete) {
+		crm_err("Ignoring timeout while not in transition");
+		return TRUE;
+		
+	} else if(timer->reason == timeout_abort) {
 		crm_err("Transition abort timeout reached..."
 			 " marking transition complete.");
+		print_graph(LOG_WARNING, transition_graph);
 
+		transition_graph->complete = TRUE;
 		abort_transition(INFINITY, -1, "Global Timeout", NULL);
-		return TRUE;
-		
-	} else if(transition_graph->complete) {
-		crm_debug("Ignoring timeout while not in transition");
-		return TRUE;
-		
-	} else if(timer->reason == timeout_timeout) {
-		
-		/* global timeout - abort the transition */
-		crm_warn("Transition timeout reached..."
-			 " marking transition complete.");
-		
-		crm_warn("Some actions may not have been executed.");
-			
-		abort_transition(INFINITY, -1, "Global Timeout", NULL);
-		
 		return TRUE;
 		
 	} else if(timer->action == NULL) {
@@ -430,11 +419,21 @@ te_graph_trigger(gpointer user_data)
 		notify_crmd(transition_graph);
 		return TRUE;	
 	}
-	
+
+	if(transition_timer == NULL) {
+		crm_malloc0(transition_timer, sizeof(te_timer_t));
+		transition_timer->source_id = 0;
+		transition_timer->reason    = timeout_abort;
+		transition_timer->action    = NULL;
+
+	} else {
+		stop_te_timer(transition_timer);
+	}
+
 	graph_rc = run_graph(transition_graph);
-	stop_te_timer(transition_timer);
 	print_graph(LOG_DEBUG_2, transition_graph);
-	
+
+	transition_timer->timeout = transition_graph->transition_timeout;
 	if(graph_rc == transition_active) {
 		crm_debug_3("Transition not yet complete");
 		/* restart the transition timer again */
