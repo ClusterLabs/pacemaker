@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.2 2006/02/17 13:32:07 andrew Exp $ */
+/* $Id: unpack.c,v 1.3 2006/02/18 12:44:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -90,7 +90,7 @@ unpack_action(synapse_t *parent, crm_data_t *xml_action)
 	crm_malloc0(action->timer, sizeof(te_timer_t));
 	action->timer->timeout   = 2 * action->timeout;
 	action->timer->source_id = 0;
-	action->timer->reason    = timeout_action;
+	action->timer->reason    = timeout_action_warn;
 	action->timer->action    = action;
 
 	return action;
