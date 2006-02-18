@@ -642,7 +642,7 @@ do_lrm_query(gboolean is_replace)
 	crm_data_t *xml_state = NULL;
 	crm_data_t *xml_data  = NULL;
 	crm_data_t *rsc_list  = NULL;
-	const char *exp_state = CRMD_STATE_ACTIVE;
+	const char *exp_state = CRMD_JOINSTATE_MEMBER;
 
 	if(is_set(fsa_input_register, R_SHUTDOWN)) {
 		exp_state = CRMD_STATE_INACTIVE;
