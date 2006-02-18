@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.156 2006/02/17 14:44:03 andrew Exp $ */
+/* $Id: unpack.c,v 1.157 2006/02/18 12:48:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -594,18 +594,10 @@ gboolean
 determine_online_status(
 	crm_data_t * node_state, node_t *this_node, pe_working_set_t *data_set)
 {
+	int shutdown = 0;
 	gboolean online = FALSE;
 	const char *exp_state  =
 		crm_element_value(node_state, XML_CIB_ATTR_EXPSTATE);
-/* 	const char *join_state = */
-/* 		crm_element_value(node_state, XML_CIB_ATTR_JOINSTATE); */
-/* 	const char *crm_state  = */
-/* 		crm_element_value(node_state, XML_CIB_ATTR_CRMDSTATE); */
-/* 	const char *ccm_state  = */
-/* 		crm_element_value(node_state, XML_CIB_ATTR_INCCM); */
-/* 	const char *ha_state   = */
-/* 		crm_element_value(node_state, XML_CIB_ATTR_HASTATE); */
-	int shutdown = 0;
 	
 	if(this_node == NULL) {
 		pe_config_err("No node to check");
@@ -614,14 +606,15 @@ determine_online_status(
 
 	ha_msg_value_int(node_state, XML_CIB_ATTR_SHUTDOWN, &shutdown);
 	
+	this_node->details->expected_up = FALSE;
 	if(safe_str_eq(exp_state, CRMD_JOINSTATE_MEMBER)) {
 		this_node->details->expected_up = TRUE;
 	}
+
+	this_node->details->shutdown = FALSE;
 	if(shutdown != 0) {
 		this_node->details->shutdown = TRUE;
-#if 0
 		this_node->details->expected_up = FALSE;
-#endif
 	}
 
 	if(data_set->stonith_enabled == FALSE) {
