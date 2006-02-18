@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.2 2006/02/16 15:20:33 andrew Exp $ */
+/* $Id: utils.c,v 1.3 2006/02/18 12:43:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -225,13 +225,12 @@ update_abort_priority(
 				 graph->abort_reason);
 		}
 		graph->abort_reason = abort_reason;
-		if(action > 0) {
-			if(graph->completion_action != action) {
-				crm_info("Abort action %d superceeded by %d",
-					 graph->completion_action, action);
-			}
-			graph->completion_action = action;
-		}
+	}
+
+	if(graph->completion_action < action) {
+		crm_info("Abort action %d superceeded by %d",
+			 graph->completion_action, action);
+		graph->completion_action = action;
 	}
 }
 
