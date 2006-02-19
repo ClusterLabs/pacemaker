@@ -217,12 +217,12 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 	while(IPC_ISRCONN(client)) {
 		if(client->ops->is_message_pending(client) == 0) {
 			break;
-
 		}
+		
 		rc = client->ops->recv(client, &msg);
 		if (rc != IPC_OK) {
-			cl_perror("Receive failure from %s: %d",
-				  curr_client->table_key, rc);
+			crm_warn("Receive failure from %s: %d",
+				 curr_client->table_key, rc);
 			stay_connected = FALSE;
 			break;
 			

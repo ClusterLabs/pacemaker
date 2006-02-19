@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.19 2006/02/14 12:12:51 andrew Exp $ */
+/* $Id: ipc.c,v 1.20 2006/02/19 20:02:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -323,6 +323,7 @@ gboolean
 subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 {
 	int lpc = 0;
+	int rc = IPC_OK;
 	IPC_Message *msg = NULL;
 	ha_msg_input_t *new_input = NULL;
 	gboolean all_is_well = TRUE;
@@ -335,12 +336,13 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 			break;
 		}
 
-		if (sender->ops->recv(sender, &msg) != IPC_OK) {
-			cl_perror("Receive failure from %d:",
-				  sender->farside_pid);
+		rc = sender->ops->recv(sender, &msg);
+		if (rc != IPC_OK) {
+			crm_err("Receive failure from %d: %d",
+				sender->farside_pid, rc);
 			return !all_is_well;
-		}
-		if (msg == NULL) {
+
+		} else if (msg == NULL) {
 			crm_err("No message from %d this time",
 				sender->farside_pid);
 			continue;
