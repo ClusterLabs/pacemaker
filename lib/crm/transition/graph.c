@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.3 2006/02/17 13:30:39 andrew Exp $ */
+/* $Id: graph.c,v 1.4 2006/02/19 09:07:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -304,7 +304,11 @@ run_graph(crm_graph_t *graph)
 		} else if(num_skipped != 0) {
 			stat_log_level = LOG_NOTICE;
 		}
+
+	} else if(num_fired == 0) {
+		pass_result = transition_pending;
 	}
+	
 	
 	crm_log_maybe(stat_log_level,
 		      "Transition %d Complete: %d, Pending: %d,"

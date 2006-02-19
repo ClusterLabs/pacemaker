@@ -1,4 +1,4 @@
-/* $Id: transition.h,v 1.3 2006/02/18 12:43:02 andrew Exp $ */
+/* $Id: transition.h,v 1.4 2006/02/19 09:07:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -118,6 +118,7 @@ typedef struct crm_graph_functions_s
 
 enum transition_status {
 	transition_active,
+	transition_pending, /* active but no actions performed this time */
 	transition_complete,
 	transition_stopped,
 	transition_terminated,

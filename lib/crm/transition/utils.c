@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.3 2006/02/18 12:43:58 andrew Exp $ */
+/* $Id: utils.c,v 1.4 2006/02/19 09:07:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -71,6 +71,8 @@ transition_status(enum transition_status state)
 	switch(state) {
 		case transition_active:
 			return "active";
+		case transition_pending:
+			return "pending";
 		case transition_complete:
 			return "complete";
 		case transition_stopped:
