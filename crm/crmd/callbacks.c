@@ -346,7 +346,7 @@ crmd_client_status_callback(const char * node, const char * client,
 
 	if(safe_str_eq(status, JOINSTATUS)){
 		status = ONLINESTATUS;
-/* 		clear_shutdown = TRUE; */
+ 		clear_shutdown = TRUE;
 
 	} else if(safe_str_eq(status, LEAVESTATUS)){
 		status = OFFLINESTATUS;
