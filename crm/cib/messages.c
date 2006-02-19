@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.65 2006/02/16 15:27:43 andrew Exp $ */
+/* $Id: messages.c,v 1.66 2006/02/19 19:59:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -723,7 +723,19 @@ replace_section(
 	return cib_ok;
 }
 
-
+#define cib_update_xml_macro(parent, xml_update)				\
+	if(operation == CIB_UPDATE_OP_DELETE) {				\
+		rc = delete_cib_object(parent, xml_update);		\
+		update_results(failed, xml_update, operation, rc);		\
+									\
+	} else if(operation == CIB_UPDATE_OP_MODIFY) {			\
+		rc = update_cib_object(parent, xml_update);		\
+		update_results(failed, xml_update, operation, rc);		\
+									\
+	} else {							\
+		rc = add_cib_object(parent, xml_update);		\
+		update_results(failed, xml_update, operation, rc);		\
+	} 
 
 enum cib_errors
 updateList(crm_data_t *local_cib, crm_data_t *xml_section, crm_data_t *failed,
@@ -739,31 +751,24 @@ updateList(crm_data_t *local_cib, crm_data_t *xml_section, crm_data_t *failed,
 		return cib_NOSECTION;
 	}
 
-	if((CIB_UPDATE_OP_NONE > operation) || (operation > CIB_UPDATE_OP_MAX)){
+	if((CIB_UPDATE_OP_NONE > operation)
+	   || (operation > CIB_UPDATE_OP_MAX)){
 		crm_err("Invalid operation on section %s", crm_str(section));
 		return cib_operation;
 	}
 
 	set_node_tstamp(this_section);
 
-	xml_child_iter(
-		xml_section, a_child, 
+	if(safe_str_eq(crm_element_name(xml_section), section)) {
+		xml_child_iter(xml_section, a_child, 
+			       rc = cib_ok;
+			       cib_update_xml_macro(this_section, a_child);
+			);
 
-		rc = cib_ok;
-		if(operation == CIB_UPDATE_OP_DELETE) {
-			rc = delete_cib_object(this_section, a_child);
-			update_results(failed, a_child, operation, rc);
-
-		} else if(operation == CIB_UPDATE_OP_MODIFY) {
-			rc = update_cib_object(this_section, a_child);
-			update_results(failed, a_child, operation, rc);
-				       
-		} else {
-			rc = add_cib_object(this_section, a_child);
-			update_results(failed, a_child, operation, rc);
-		} 
-		);
-
+	} else {
+		cib_update_xml_macro(this_section, xml_section);
+	}
+	
 	if(rc == cib_ok && xml_has_children(failed)) {
 		rc = cib_unknown;
 	}
