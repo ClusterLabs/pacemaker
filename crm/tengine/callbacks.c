@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.67 2006/02/18 12:43:02 andrew Exp $ */
+/* $Id: callbacks.c,v 1.68 2006/02/19 09:08:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -408,6 +408,7 @@ timer_callback(gpointer data)
 	}
 }
 
+te_timer_t *transition_timer = NULL;
 
 gboolean
 te_graph_trigger(gpointer user_data) 
@@ -425,9 +426,6 @@ te_graph_trigger(gpointer user_data)
 		transition_timer->source_id = 0;
 		transition_timer->reason    = timeout_abort;
 		transition_timer->action    = NULL;
-
-	} else {
-		stop_te_timer(transition_timer);
 	}
 
 	graph_rc = run_graph(transition_graph);
@@ -436,17 +434,23 @@ te_graph_trigger(gpointer user_data)
 	transition_timer->timeout = transition_graph->transition_timeout;
 	if(graph_rc == transition_active) {
 		crm_debug_3("Transition not yet complete");
+
 		/* restart the transition timer again */
+		stop_te_timer(transition_timer);
 		start_te_timer(transition_timer);
-		return TRUE;	
-		
+		return TRUE;		
+
+	} else if(graph_rc == transition_pending) {
+		crm_debug_3("Transition not yet complete - no actions fired");
+		return TRUE;		
 	}
+	
 
 	pending_updates = num_cib_op_callbacks();
 	CRM_DEV_ASSERT(pending_updates == 0);
 
 	if(graph_rc != transition_complete) {
-		crm_crit("Transition failed: %s", transition_status(graph_rc));
+		crm_err("Transition failed: %s", transition_status(graph_rc));
 		print_graph(LOG_WARNING, transition_graph);
 	}
 	

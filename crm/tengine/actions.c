@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.11 2006/02/18 12:43:02 andrew Exp $ */
+/* $Id: actions.c,v 1.12 2006/02/19 09:08:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -136,8 +136,6 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 			target);
 		return FALSE;
 	}
-	stop_te_timer(transition_timer);
-	start_te_timer(transition_timer);
 	return TRUE;
 }
 
@@ -193,6 +191,7 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 		action->timer->reason = timeout_action_warn;
 		start_te_timer(action->timer);
 	}
+	
 	return TRUE;
 }
 

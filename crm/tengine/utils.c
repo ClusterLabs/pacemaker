@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.54 2006/02/16 17:52:58 andrew Exp $ */
+/* $Id: utils.c,v 1.55 2006/02/19 09:08:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,7 +31,6 @@
 #include <lrm/lrm_api.h>
 
 extern cib_t *te_cib_conn;
-extern int global_transition_timer;
 
 gboolean timer_callback(gpointer data);
 void set_timer_value(te_timer_t *timer, const char *time, int time_default);

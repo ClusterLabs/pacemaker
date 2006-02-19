@@ -1,4 +1,4 @@
-/* $Id: tengine.c,v 1.113 2006/02/16 15:20:32 andrew Exp $ */
+/* $Id: tengine.c,v 1.114 2006/02/19 09:08:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -40,8 +40,6 @@ void cib_action_updated(
 	const HA_Message *msg, int call_id, int rc,
 	crm_data_t *output, void *user_data);
 
-te_timer_t *transition_timer = NULL;
-te_timer_t *abort_timer = NULL;
 char *te_uuid = NULL;
 extern gboolean shuttingdown;
 
