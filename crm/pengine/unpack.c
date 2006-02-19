@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.157 2006/02/18 12:48:16 andrew Exp $ */
+/* $Id: unpack.c,v 1.158 2006/02/19 20:05:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -547,25 +547,9 @@ determine_online_status_fencing(crm_data_t * node_state, node_t *this_node)
 
 	if(crm_is_true(ccm_state)
 	   && (ha_state == NULL || safe_str_eq(ha_state, ACTIVESTATUS))
-	   && safe_str_eq(crm_state, ONLINESTATUS)) {
-		int log_down = LOG_DEBUG;
-		if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
-			online = TRUE;
-			
-		} else if(this_node->details->shutdown) {
-			online = TRUE;
-			
-			/* we could be "up" but not joined yet */
-		} else if(this_node->details->expected_up == FALSE) {
-			log_down = LOG_DEBUG_2;
-		}
-		
-		if(online == FALSE) {
-			crm_log_maybe(log_down, "Node %s is down:"
-				      " join_state=%s, expected=%s",
-				      this_node->details->uname,
-				      crm_str(join_state), crm_str(exp_state));
-		}
+	   && safe_str_eq(crm_state, ONLINESTATUS)
+	   && safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
+		online = TRUE;
 		
 	} else if(crm_is_true(ccm_state) == FALSE
 /* 		  && safe_str_eq(ha_state, DEADSTATUS) */
@@ -575,12 +559,20 @@ determine_online_status_fencing(crm_data_t * node_state, node_t *this_node)
 			  this_node->details->uname,
 			  crm_str(join_state), crm_str(exp_state));
 		
+	} else if(this_node->details->expected_up == FALSE) {
+		crm_info("Node %s is comming up", this_node->details->uname);
+		crm_debug("\tha_state=%s, ccm_state=%s,"
+			  " crm_state=%s, join_state=%s, expected=%s",
+			  crm_str(ha_state), crm_str(ccm_state),
+			  crm_str(crm_state), crm_str(join_state),
+			  crm_str(exp_state));
+
 	} else {
 		/* mark it unclean */
 		this_node->details->unclean = TRUE;
 		
-		crm_warn("Node %s is un-expectedly down",
-			 this_node->details->uname);
+		crm_warn("Node %s (%s)is un-expectedly down",
+			 this_node->details->uname, this_node->details->id);
 		crm_info("\tha_state=%s, ccm_state=%s,"
 			 " crm_state=%s, join_state=%s, expected=%s",
 			 crm_str(ha_state), crm_str(ccm_state),
