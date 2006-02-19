@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.37 2006/02/14 11:57:47 andrew Exp $ */
+/* $Id: main.c,v 1.38 2006/02/19 20:00:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -364,7 +364,6 @@ cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	
 	crm_info("Signing in with Heartbeat");
 	if (hb_cluster->llc_ops->signon(hb_cluster, client_name)!= HA_OK) {
-
 		crm_err("Cannot sign on with heartbeat: %s",
 			hb_cluster->llc_ops->errmsg(hb_cluster));
 		return FALSE;
@@ -403,6 +402,18 @@ cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name)
 void
 cib_ha_connection_destroy(gpointer user_data)
 {
+	if(cib_shutdown_flag) {
+		crm_info("Heartbeat disconnected... exiting");
+	} else {
+		crm_err("Heartbeat connection lost!  Exiting.");
+	}
+		
+	if (mainloop != NULL && g_main_is_running(mainloop)) {
+		g_main_quit(mainloop);
+		
+	} else {
+		exit(LSB_EXIT_OK);
+	}
 }
 
 

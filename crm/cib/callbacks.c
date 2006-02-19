@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.111 2006/02/17 13:20:03 andrew Exp $ */
+/* $Id: callbacks.c,v 1.112 2006/02/19 20:00:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -237,7 +237,7 @@ cib_client_connect_common(
 		crm_err("Channel was NULL");
 		can_connect = FALSE;
 		cib_bad_connects++;
-		
+
 	} else if (channel->ch_status != IPC_CONNECT) {
 		crm_err("Channel was disconnected");
 		can_connect = FALSE;
@@ -247,6 +247,11 @@ cib_client_connect_common(
 		crm_err("user_data must contain channel name");
 		can_connect = FALSE;
 		cib_bad_connects++;
+		
+	} else if(cib_shutdown_flag) {
+		crm_info("Ignoring new client [%d] during shutdown",
+			channel->farside_pid);
+		return NULL;
 		
 	} else {
 		crm_malloc0(new_client, sizeof(cib_client_t));
@@ -1347,15 +1352,16 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 				(int)send_q->current_qlen);
 			
 			ipc->ops->waitout(ipc);
+
 			/* BUG: give heartbeat time to send our messages out */ 
 			sleep(2);
 		}
-		
-		crm_info("Updates flushed... exiting");
-		if (mainloop != NULL && g_main_is_running(mainloop)) {
-			g_main_quit(mainloop);
 
+		crm_info("Updates flushed... exiting");
+		if(hb_conn != NULL) {
+			hb_conn->llc_ops->signoff(hb_conn, FALSE);
 		} else {
+			crm_err("No heartbeat connection");
 			exit(LSB_EXIT_OK);
 		}
 	}
@@ -1379,9 +1385,6 @@ cib_ha_dispatch(IPC_Channel *channel, gpointer user_data)
 	}
 	
 	if (channel->ch_status != IPC_CONNECT) {
-		crm_crit("Lost connection to heartbeat service... exiting");
-		CRM_DEV_ASSERT(FALSE);
-		exit(LSB_EXIT_GENERIC);
 		return FALSE;
 	}
 	
