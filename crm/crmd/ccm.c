@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.100 2006/02/17 14:44:03 andrew Exp $ */
+/* $Id: ccm.c,v 1.101 2006/02/19 09:03:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -474,7 +474,7 @@ do_ccm_update_cache(long long action,
 
 	if(cur_state != S_STOPPING) {
 		crm_debug_3("Updating the CIB from CCM cache");
-		do_update_cib_nodes(FALSE);
+		do_update_cib_nodes(FALSE, __FUNCTION__);
 	}
 
 	/* Membership changed, remind everyone we're here.
@@ -585,8 +585,9 @@ msg_ccm_join(const HA_Message *msg, void *foo)
 
 struct update_data_s
 {
-		crm_data_t *updates;
 		const char *state;
+		const char *caller;
+		crm_data_t *updates;
 		gboolean    overwrite_join;
 };
 
@@ -608,7 +609,7 @@ ccm_node_update_complete(const HA_Message *msg, int call_id, int rc,
 
 
 void
-do_update_cib_nodes(gboolean overwrite)
+do_update_cib_nodes(gboolean overwrite, const char *caller)
 {
 	int call_id = 0;
 	int call_options = cib_scope_local|cib_quorum_override;
@@ -625,7 +626,8 @@ do_update_cib_nodes(gboolean overwrite)
 	}
 	
 	fragment = create_xml_node(NULL, XML_CIB_TAG_STATUS);
-	
+
+	update_data.caller = caller;
 	update_data.updates = fragment;
 	update_data.state = XML_BOOLEAN_YES;
 	update_data.overwrite_join = overwrite;
@@ -686,7 +688,7 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	}
 	
 	tmp1 = create_node_state(node_uname, NULL, data->state, peer_online,
-				 join, NULL, FALSE, __FUNCTION__);
+				 join, NULL, FALSE, data->caller);
 
 	add_node_copy(data->updates, tmp1);
 	free_xml(tmp1);
