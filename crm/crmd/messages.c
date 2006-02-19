@@ -930,7 +930,7 @@ handle_request(ha_msg_input_t *stored_msg)
 				crm_debug("Filtering %s op in state %s",
 					 op, fsa_state2string(fsa_state));
 			}
-				
+			
 		} else if(strcmp(op, CRM_OP_TECOMPLETE) == 0) {
 			crm_debug("Transition complete: %s/%s", op, message);
 			clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
@@ -1042,11 +1042,9 @@ handle_shutdown_request(HA_Message *stored_msg)
 	 * This way the DC is always in control of the shutdown
 	 */
 	
-	crm_data_t *frag = NULL;
 	time_t now = time(NULL);
-	char *now_s = crm_itoa((int)now);
-	crm_data_t *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
-	const char *host_from= cl_get_string(stored_msg, F_CRM_HOST_FROM);
+	crm_data_t *node_state = NULL;
+	const char *host_from = cl_get_string(stored_msg, F_CRM_HOST_FROM);
 
 	if(host_from == NULL) {
 		/* we're shutting down and the DC */
@@ -1056,23 +1054,18 @@ handle_shutdown_request(HA_Message *stored_msg)
 	crm_info("Creating shutdown request for %s",host_from);
 
 	crm_log_message(LOG_MSG, stored_msg);
-	
-	set_uuid(fsa_cluster_conn, node_state, XML_ATTR_UUID, host_from);
-	crm_xml_add(node_state, XML_ATTR_UNAME, host_from);
-	crm_xml_add(node_state, XML_CIB_ATTR_SHUTDOWN,  now_s);
-	crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE, CRMD_STATE_INACTIVE);
-	
-	frag = create_cib_fragment(node_state, XML_CIB_TAG_STATUS);
-	
-	/* cleanup intermediate steps */
-	free_xml(node_state);
-	crm_free(now_s);
 
+	node_state = create_node_state(
+		host_from, NULL, NULL, NULL, NULL,
+		CRMD_STATE_INACTIVE, FALSE, __FUNCTION__);
+	crm_xml_add_int(node_state, XML_CIB_ATTR_SHUTDOWN,  (int)now);
+	
 	fsa_cib_conn->cmds->update(
-		fsa_cib_conn, XML_CIB_TAG_STATUS, frag, NULL,
+		fsa_cib_conn, XML_CIB_TAG_STATUS, node_state, NULL,
 		cib_quorum_override);
 
-	free_xml(frag);
+	crm_log_xml_debug(node_state, "Shutdown update");
+	free_xml(node_state);
 
 	/* will be picked up by the TE as long as its running */
 	if(need_transition(fsa_state)
