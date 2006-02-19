@@ -411,11 +411,6 @@ do_dc_takeover(long long action,
 
 	free_xml(cib);
 	free_xml(fragment);
-	
-	crm_debug_3("Requesting an initial dump of CRMD client_status");
-	fsa_cluster_conn->llc_ops->client_status(
-		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
-	
 	return I_NULL;
 }
 
