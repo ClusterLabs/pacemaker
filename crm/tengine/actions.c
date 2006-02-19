@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.12 2006/02/19 09:08:32 andrew Exp $ */
+/* $Id: actions.c,v 1.13 2006/02/19 20:05:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -53,7 +53,6 @@ send_stonith_update(stonith_ops_t * op)
 	const char *uuid   = op->node_uuid;
 	
 	/* zero out the node-status & remove all LRM status info */
-	crm_data_t *update = NULL;
 	crm_data_t *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	
 	CRM_DEV_ASSERT(op->node_name != NULL);
@@ -67,18 +66,16 @@ send_stonith_update(stonith_ops_t * op)
 	crm_xml_add(node_state, XML_CIB_ATTR_JOINSTATE, CRMD_JOINSTATE_DOWN);
 	crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE,  CRMD_JOINSTATE_DOWN);
 	crm_xml_add(node_state, XML_CIB_ATTR_REPLACE,   XML_CIB_TAG_LRM);
-	create_xml_node(node_state, XML_CIB_TAG_LRM);
-	
-	update = create_cib_fragment(node_state, XML_CIB_TAG_STATUS);
+	crm_xml_add(node_state, "origin",   __FUNCTION__);
 	
 	rc = te_cib_conn->cmds->update(
-		te_cib_conn, XML_CIB_TAG_STATUS, update, NULL,
+		te_cib_conn, XML_CIB_TAG_STATUS, node_state, NULL,
 		cib_quorum_override|cib_scope_local);	
 	
 	if(rc < cib_ok) {
 		crm_err("CIB update failed: %s", cib_error2string(rc));
 		abort_transition(
-			INFINITY, tg_shutdown, "CIB update failed", update);
+			INFINITY, tg_shutdown, "CIB update failed", node_state);
 		
 	} else {
 		/* delay processing the trigger until the update completes */
@@ -86,7 +83,6 @@ send_stonith_update(stonith_ops_t * op)
 	}
 	
 	free_xml(node_state);
-	free_xml(update);
 	return;
 }
 
