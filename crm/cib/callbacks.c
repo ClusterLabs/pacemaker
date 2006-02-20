@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.112 2006/02/19 20:00:36 andrew Exp $ */
+/* $Id: callbacks.c,v 1.113 2006/02/20 13:03:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1332,33 +1332,10 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 	if(keep_connection == FALSE
 	   && cib_shutdown_flag
 	   && g_hash_table_size(client_list) == 0) {
-		IPC_Channel *ipc = NULL;
-		IPC_Queue *send_q = NULL;
-		crm_info("All clients disconnected... flushing updates");
+		crm_info("All clients disconnected...");
 
-		/* wait for HA messages to be sent */
-		while(hb_conn != NULL) {
-			ipc = hb_conn->llc_ops->ipcchan(hb_conn);
-			if(ipc == NULL || ipc->ch_status != IPC_CONNECT) {
-				break;
-			}
-			
-			send_q = ipc->send_queue;
-			if(send_q == NULL || send_q->current_qlen == 0) {
-				break;
-			}
-
-			crm_err("Waiting on %d queued messages to be sent",
-				(int)send_q->current_qlen);
-			
-			ipc->ops->waitout(ipc);
-
-			/* BUG: give heartbeat time to send our messages out */ 
-			sleep(2);
-		}
-
-		crm_info("Updates flushed... exiting");
 		if(hb_conn != NULL) {
+			crm_info("Disconnecting heartbeat");
 			hb_conn->llc_ops->signoff(hb_conn, FALSE);
 		} else {
 			crm_err("No heartbeat connection");
