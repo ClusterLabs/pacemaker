@@ -1,4 +1,4 @@
-/* $Id: fsa_defines.h,v 1.44 2006/02/14 11:55:07 andrew Exp $ */
+/* $Id: fsa_defines.h,v 1.45 2006/02/20 12:10:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -418,8 +418,7 @@ enum crmd_fsa_input {
 #define	R_STAYDOWN	0x00000008ULL /* Should we restart? */
 
 #define R_JOIN_OK	0x00000010ULL /* Have we completed the join process */
-#define	R_HAVE_RES	0x00000040ULL /* Do we have any resources running
-					 locally */
+#define	R_READ_CONFIG	0x00000040ULL
 #define	R_INVOKE_PE	0x00000080ULL /* Does the PE needed to be invoked at
 					 the next appropriate point? */
 

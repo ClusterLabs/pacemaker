@@ -100,23 +100,17 @@ get_timer_desc(fsa_timer_t *timer)
  	} else if(timer == shutdown_escalation_timer) {
 		return "Shutdown Escalation";
 
- 	} else if(timer == shutdown_timer) {
-		return "Shutdown Timer";
-
  	} else if(timer == integration_timer) {
 		return "Integration Timer";
 
  	} else if(timer == finalization_timer) {
 		return "Finalization Timer";
 
- 	} else if(timer == dc_heartbeat) {
-		return "Heartbeat Timer";
-
  	} else if(timer == wait_timer) {
 		return "Wait Timer";
 
  	} else if(timer == recheck_timer) {
-		return "Recheck Timer";
+		return "PEngine Recheck Timer";
 		
 	}	
 	return "Unknown Timer";
@@ -127,20 +121,17 @@ crm_timer_popped(gpointer data)
 {
 	fsa_timer_t *timer = (fsa_timer_t *)data;
 
-	if(timer == shutdown_escalation_timer) {
-		crm_err("%s (%s) just popped!",
-			get_timer_desc(timer),
-			fsa_input2string(timer->fsa_input));
-		
-	} else if(timer == election_timeout) {
-		crm_err("%s (%s) just popped!",
+	if(timer == wait_timer
+	   || timer == recheck_timer
+	   || timer == election_trigger) {
+		crm_info("%s (%s) just popped!",
 			get_timer_desc(timer),
 			fsa_input2string(timer->fsa_input));
 		
 	} else {
-		crm_info("%s (%s) just popped!",
-			 get_timer_desc(timer),
-			 fsa_input2string(timer->fsa_input));
+		crm_err("%s (%s) just popped!",
+			get_timer_desc(timer),
+			fsa_input2string(timer->fsa_input));
 	}
 
 	if(timer->repeat == FALSE) {
@@ -759,9 +750,9 @@ fsa_dump_inputs(int log_level, const char *text, long long input_register)
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
 			   "%s %.16llx (R_JOIN_OK)", text, R_JOIN_OK);
 	}
-	if(is_set(input_register, R_HAVE_RES)) {
+	if(is_set(input_register, R_READ_CONFIG)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_HAVE_RES)", text, R_HAVE_RES);
+			   "%s %.16llx (R_READ_CONFIG)", text, R_READ_CONFIG);
 	}
 	if(is_set(input_register, R_INVOKE_PE)) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,

@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.49 2006/02/19 09:03:16 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.50 2006/02/20 12:10:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -124,8 +124,6 @@ extern GListPtr   fsa_message_queue;
 extern fsa_timer_t *election_trigger;		/*  */
 extern fsa_timer_t *election_timeout;		/*  */
 extern fsa_timer_t *shutdown_escalation_timer;	/*  */
-extern fsa_timer_t *shutdown_timer;		/*  */
-extern fsa_timer_t *dc_heartbeat;
 extern fsa_timer_t *integration_timer;
 extern fsa_timer_t *finalization_timer;
 extern fsa_timer_t *wait_timer;

@@ -54,9 +54,7 @@ const char	*fsa_our_uuid = NULL;
 const char	*fsa_our_uname = NULL;
 
 fsa_timer_t *wait_timer = NULL;
-fsa_timer_t *dc_heartbeat = NULL;
 fsa_timer_t *recheck_timer = NULL;
-fsa_timer_t *shutdown_timer = NULL;
 fsa_timer_t *election_trigger = NULL;
 fsa_timer_t *election_timeout = NULL;
 fsa_timer_t *integration_timer = NULL;
@@ -165,9 +163,6 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 		action_log_level = LOG_DEBUG_2;
 		
 	} else if(an_action & A_CIB_START) {
-		do_time_check = FALSE;
-
-	} else if(an_action & A_READCONFIG) {
 		do_time_check = FALSE;
 	}
 	
@@ -735,7 +730,6 @@ do_state_transition(long long actions,
 		case S_STOPPING:
 		case S_TERMINATE:
 			/* possibly redundant */
-			crm_timer_stop(shutdown_timer);
 			set_bit_inplace(fsa_input_register, R_SHUTDOWN);
 			break;
 			

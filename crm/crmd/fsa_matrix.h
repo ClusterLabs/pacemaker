@@ -769,7 +769,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_RELEASE_DC		==> */	A_NOTHING,
 		/* S_STARTING		==> */	A_ERROR,
 		/* S_PENDING		==> */	A_ERROR,
-		/* S_STOPPING		==> */	A_ERROR,
+		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_ERROR,
 		/* S_TRANSITION_ENGINE	==> */	A_PE_INVOKE,
 		/* S_HALT		==> */	A_ERROR,

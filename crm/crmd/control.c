@@ -20,6 +20,7 @@
 
 #include <sys/param.h>
 
+#include <heartbeat.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
@@ -161,12 +162,6 @@ do_shutdown_req(long long action,
 		} else {
 			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 		}
-		
-#if 0
-		/* this shouldnt be required */
-	} else {
-		crm_timer_start(shutdown_timer);
-#endif
 	}
 
 	return I_NULL;
@@ -242,14 +237,12 @@ do_startup(long long action,
 	}
 	
 	/* set up the timers */
-	crm_malloc0(dc_heartbeat, sizeof(fsa_timer_t));
 	crm_malloc0(integration_timer, sizeof(fsa_timer_t));
 	crm_malloc0(finalization_timer, sizeof(fsa_timer_t));
 	crm_malloc0(election_trigger, sizeof(fsa_timer_t));
 	crm_malloc0(election_timeout, sizeof(fsa_timer_t));
 	crm_malloc0(shutdown_escalation_timer, sizeof(fsa_timer_t));
 	crm_malloc0(wait_timer, sizeof(fsa_timer_t));
-	crm_malloc0(shutdown_timer, sizeof(fsa_timer_t));
 	crm_malloc0(recheck_timer, sizeof(fsa_timer_t));
 
 	interval = interval * 1000;
@@ -260,16 +253,6 @@ do_startup(long long action,
 		election_trigger->fsa_input = I_DC_TIMEOUT;
 		election_trigger->callback = crm_timer_popped;
 		election_trigger->repeat = FALSE;
-	} else {
-		was_error = TRUE;
-	}
-	
-	if(dc_heartbeat != NULL) {
-		dc_heartbeat->source_id = 0;
-		dc_heartbeat->period_ms = -1;
-		dc_heartbeat->fsa_input = I_NULL;
-		dc_heartbeat->callback = do_dc_heartbeat;
-		dc_heartbeat->repeat = FALSE;
 	} else {
 		was_error = TRUE;
 	}
@@ -334,16 +317,6 @@ do_startup(long long action,
 		wait_timer->fsa_input = I_NULL;
 		wait_timer->callback = crm_timer_popped;
 		wait_timer->repeat = FALSE;
-	} else {
-		was_error = TRUE;
-	}
-
-	if(shutdown_timer != NULL) {
-		shutdown_timer->source_id = 0;
-		shutdown_timer->period_ms = -1;
-		shutdown_timer->fsa_input = I_SHUTDOWN;
-		shutdown_timer->callback = crm_timer_popped;
-		shutdown_timer->repeat = TRUE;
 	} else {
 		was_error = TRUE;
 	}
@@ -485,6 +458,13 @@ do_started(long long action,
 		crmd_fsa_stall(NULL);
 		return I_NULL;
 
+	} else if(is_set(fsa_input_register, R_READ_CONFIG) == FALSE) {
+		crm_info("Delaying start, Config not read (%.16llx)",
+			 R_READ_CONFIG);
+
+		crmd_fsa_stall(NULL);
+		return I_NULL;
+
 	} else if(is_set(fsa_input_register, R_PEER_DATA) == FALSE) {
 		HA_Message *	msg = NULL;
 
@@ -528,20 +508,25 @@ do_recover(long long action,
 	return I_NULL;
 }
 
-/*	 A_READCONFIG	*/
-enum crmd_fsa_input
-do_read_config(long long action,
-	       enum crmd_fsa_cause cause,
-	       enum crmd_fsa_state cur_state,
-	       enum crmd_fsa_input current_input,
-	       fsa_data_t *msg_data)
-{
-	/* this one probably is worthwhile blocking on */
-	crm_data_t *cib_copy = get_cib_copy(fsa_cib_conn);
-	crm_data_t *config   = get_object_root(XML_CIB_TAG_CRMCONFIG, cib_copy);
 
-	dc_heartbeat->period_ms = 0;
-	
+static void
+config_query_callback(const HA_Message *msg, int call_id, int rc,
+		      crm_data_t *output, void *user_data) 
+{
+	crm_debug("Call %d : Parsing CIB options", call_id);
+	if(rc != cib_ok) {
+		fsa_data_t *msg_data = NULL;
+		crm_err("Local CIB query resulted in an error: %s",
+			cib_error2string(rc));
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+		return;
+	}
+
+#if 0
+	/* disable until we can do it properly
+	 *   - most people use the defaults anyway
+	 */
+	crm_data_t *config   = output;
 	xml_child_iter_filter(
 		config, iter, XML_CIB_TAG_NVPAIR,
 
@@ -550,9 +535,6 @@ do_read_config(long long action,
 
 		if(name == NULL || value == NULL) {
 			continue;
-			
-		} else if(safe_str_eq(name, XML_CONFIG_ATTR_DC_BEAT)) {
-			dc_heartbeat->period_ms = crm_get_msec(value);
 			
 		} else if(safe_str_eq(name, XML_CONFIG_ATTR_DC_DEADTIME)) {
 			election_trigger->period_ms = crm_get_msec(value);
@@ -564,35 +546,32 @@ do_read_config(long long action,
 			recheck_timer->period_ms = crm_get_msec(value);
 		}
 		);
-		
-	if(dc_heartbeat->period_ms < 1) {
-		/* sensible default */
-		dc_heartbeat->period_ms = crm_get_msec(
-			getenv("HA_"KEY_KEEPALIVE));
-	}
-	
-	election_timeout->period_ms   = crm_get_msec("1min");
-	/*dc_heartbeat->period_ms * 6;*/
-	integration_timer->period_ms  = dc_heartbeat->period_ms * 6;
-	finalization_timer->period_ms = dc_heartbeat->period_ms * 6;
-	integration_timer->period_ms  = crm_get_msec("5min");
-	finalization_timer->period_ms = crm_get_msec("5min");
-	
-	if(election_trigger->period_ms < 1
-	   || election_trigger->period_ms > dc_heartbeat->period_ms * 12) {
-		/* sensible default */
-		election_trigger->period_ms = dc_heartbeat->period_ms * 12;
-	}
-	
-	if(shutdown_escalation_timer->period_ms < 1
-	   || election_timeout->period_ms > shutdown_escalation_timer->period_ms) {
-		/* sensible default - 32 election cycles */
-		shutdown_escalation_timer->period_ms
-			= (election_timeout->period_ms + election_trigger->period_ms) * 32;
-	}
-	shutdown_timer->period_ms = election_trigger->period_ms;
-	
+#endif		
 
+	set_bit_inplace(fsa_input_register, R_READ_CONFIG);
+}
+
+/*	 A_READCONFIG	*/
+enum crmd_fsa_input
+do_read_config(long long action,
+	       enum crmd_fsa_cause cause,
+	       enum crmd_fsa_state cur_state,
+	       enum crmd_fsa_input current_input,
+	       fsa_data_t *msg_data)
+{
+	int call_id = fsa_cib_conn->cmds->query(
+ 		fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
+
+	add_cib_op_callback(call_id, FALSE, NULL, config_query_callback);
+	crm_debug_2("Querying the CIB... call %d", call_id);
+
+	/* defaults */
+	election_trigger->period_ms   = crm_get_msec("1min");
+	election_timeout->period_ms   = crm_get_msec("2min");
+	integration_timer->period_ms  = crm_get_msec("5min");
+	finalization_timer->period_ms = crm_get_msec("10min");
+	shutdown_escalation_timer->period_ms = crm_get_msec("15min");
+	
 	return I_NULL;
 }
 
@@ -622,10 +601,26 @@ crm_shutdown(int nsig, gpointer unused)
 	return TRUE;
 }
 
+static void
+default_cib_update_callback(const HA_Message *msg, int call_id, int rc,
+		     crm_data_t *output, void *user_data) 
+{
+	if(rc != cib_ok) {
+		fsa_data_t *msg_data = NULL;
+		crm_err("CIB Update failed: %s", cib_error2string(rc));
+		crm_log_xml_warn(output, "update:failed");
+		
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+	}
+}
 
 gboolean
 register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 {
+	int call_id = 0;
+	const char *ha_node = NULL;
+	crm_data_t *cib_node_list = NULL;
+	
 	crm_debug("Signing in with Heartbeat");
 	if (hb_cluster->llc_ops->signon(hb_cluster, client_name)!= HA_OK) {
 
@@ -681,7 +676,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 
 	crm_debug_3("Finding our node uuid");
 	fsa_our_uuid = get_uuid(fsa_cluster_conn, fsa_our_uname);
-	if(safe_str_eq(fsa_our_uname, fsa_our_uuid)) {
+	if(fsa_our_uuid == NULL) {
 		crm_err("get_uuid_by_name() failed");
 		return FALSE;
 	}
@@ -692,6 +687,52 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	fsa_cluster_conn->llc_ops->client_status(
 		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
 
+	crm_info("Requesting the list of configured nodes");
+	fsa_cluster_conn->llc_ops->init_nodewalk(fsa_cluster_conn);
+
+	cib_node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
+	do {
+		const char *ha_node_type = NULL;
+		const char *ha_node_uuid = NULL;
+		crm_data_t *cib_new_node = NULL;
+
+		ha_node = fsa_cluster_conn->llc_ops->nextnode(fsa_cluster_conn);
+		if(ha_node == NULL) {
+			continue;
+		}
+		
+		ha_node_type = fsa_cluster_conn->llc_ops->node_type(
+			fsa_cluster_conn, ha_node);
+		if(safe_str_neq(NORMALNODE, ha_node_type)) {
+			crm_debug("Node %s: skipping '%s'",
+				  ha_node, ha_node_type);
+			continue;
+		}
+
+		ha_node_uuid = get_uuid(fsa_cluster_conn, ha_node);
+		if(ha_node_uuid == NULL) {
+			continue;	
+		}
+		
+		crm_notice("Node: %s (uuid: %s)", ha_node, ha_node_uuid);
+		cib_new_node = create_xml_node(cib_node_list, XML_CIB_TAG_NODE);
+		crm_xml_add(cib_new_node, XML_ATTR_ID,    ha_node_uuid);
+		crm_xml_add(cib_new_node, XML_ATTR_UNAME, ha_node);
+		crm_xml_add(cib_new_node, XML_ATTR_TYPE,  ha_node_type);
+
+	} while(ha_node != NULL);
+
+	fsa_cluster_conn->llc_ops->end_nodewalk(fsa_cluster_conn);
+	
+	/* Now update the CIB with the list of nodes */
+	call_id = fsa_cib_conn->cmds->update(
+		fsa_cib_conn, XML_CIB_TAG_NODES,
+		cib_node_list, NULL, cib_scope_local|cib_quorum_override);
+	
+	add_cib_op_callback(call_id, FALSE, NULL, default_cib_update_callback);
+
+	crm_log_xml_err(cib_node_list, "NodeList");
+	free_xml(cib_node_list);
 	
 	return TRUE;
     

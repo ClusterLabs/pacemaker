@@ -389,15 +389,6 @@ do_dc_takeover(long long action,
 	set_bit_inplace(fsa_input_register, R_JOIN_OK);
 	set_bit_inplace(fsa_input_register, R_INVOKE_PE);
 	
-	if(dc_heartbeat->source_id != 0) {
-		crm_debug_3("Starting DC Heartbeat timer");
-		dc_heartbeat->source_id = Gmain_timeout_add_full(
-			G_PRIORITY_HIGH, dc_heartbeat->period_ms,
-			dc_heartbeat->callback, dc_heartbeat, NULL);
-	} else {
-		crm_debug_3("DC Heartbeat timer already active");
-	}
-
  	fsa_cib_conn->cmds->set_slave_all(fsa_cib_conn, cib_none);
 	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_none);
 	
@@ -425,7 +416,6 @@ do_dc_release(long long action,
 {
 	enum crmd_fsa_input result = I_NULL;
 	
-	crm_timer_stop(dc_heartbeat);
 	if(action & A_DC_RELEASE) {
 		crm_debug("Releasing the role of DC");
 		clear_bit_inplace(fsa_input_register, R_THE_DC);
