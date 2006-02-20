@@ -425,30 +425,26 @@ cib_native_perform_op(
 	
 	if(op == NULL) {
 		crm_err("No operation specified");
-		rc = cib_operation;
+		return cib_operation;
 	}
 
-	if(rc == HA_OK) {
-		cib->call_id++;
-		/* prevent call_id from being negative (or zero) and conflicting
-		 *    with the cib_errors enum
-		 * use 2 because we use it as (cib->call_id - 1) below
-		 */
-		if(cib->call_id < 1) {
-			cib->call_id = 1;
-		}
+	cib->call_id++;
+	/* prevent call_id from being negative (or zero) and conflicting
+	 *    with the cib_errors enum
+	 * use 2 because we use it as (cib->call_id - 1) below
+	 */
+	if(cib->call_id < 1) {
+		cib->call_id = 1;
+	}
 	
-		op_msg = cib_create_op(
-			cib->call_id, op, host, section, data, call_options);
-		if(op_msg == NULL) {
-			rc = cib_create_msg;
-		}
+	op_msg = cib_create_op(
+		cib->call_id, op, host, section, data, call_options);
+	if(op_msg == NULL) {
+		return cib_create_msg;
 	}
 	
 	crm_debug_3("Sending %s message to CIB service", op);
-	if(rc != HA_OK) {
-
-	} else if(send_ipc_message(native->command_channel, op_msg) == FALSE) {
+	if(send_ipc_message(native->command_channel, op_msg) == FALSE) {
 		crm_err("Sending message to CIB service FAILED");
 		return cib_send_failed;
 
@@ -464,6 +460,7 @@ cib_native_perform_op(
 
 	} else if(!(call_options & cib_sync_call)) {
 		crm_debug_3("Async call, returning");
+		CRM_DEV_ASSERT(cib->call_id != 0);
 		return cib->call_id;
 	}
 
