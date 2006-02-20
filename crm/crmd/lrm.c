@@ -164,7 +164,7 @@ crmd_rscstate2string(enum crmd_rscstate state)
 	return "<unknown>";
 }
 
-static GCHSource *lrm_source = NULL;
+GCHSource *lrm_source = NULL;
 
 /*	 A_LRM_CONNECT	*/
 enum crmd_fsa_input
@@ -177,18 +177,19 @@ do_lrm_control(long long action,
 	int ret = HA_OK;
 
 	if(action & A_LRM_DISCONNECT) {
-		if(fsa_lrm_conn) {
-			gboolean removed = FALSE;
+		if(lrm_source) {
 			crm_debug("Removing LRM connection from MainLoop");
-			removed = G_main_del_IPC_Channel(lrm_source);
-			if(removed == FALSE) {
+			if(G_main_del_IPC_Channel(lrm_source) == FALSE) {
 				crm_err("Could not remove LRM connection"
 					" from MainLoop");
 			}
 			lrm_source = NULL;			
+		}
+		if(fsa_lrm_conn) {
 			fsa_lrm_conn->lrm_ops->signoff(fsa_lrm_conn);
 			crm_info("Disconnected from the LRM");
 			clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
+			fsa_lrm_conn = NULL;
 		}
 		/* TODO: Clean up the hashtable */
 	}

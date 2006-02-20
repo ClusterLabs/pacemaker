@@ -264,6 +264,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 
 
 
+extern GCHSource *lrm_source;
 
 gboolean
 lrm_dispatch(IPC_Channel *src_not_used, gpointer user_data)
@@ -280,11 +281,12 @@ lrm_dispatch(IPC_Channel *src_not_used, gpointer user_data)
 			crm_crit("LRM Connection failed");
 			register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
 			clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
-
+			
 		} else {
 			crm_info("LRM Connection disconnected");
 		}
 
+		lrm_source = NULL;
 		return FALSE;
 	}
 	return TRUE;
