@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.68 2006/02/19 09:08:32 andrew Exp $ */
+/* $Id: callbacks.c,v 1.69 2006/02/20 16:21:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -359,25 +359,60 @@ cib_action_updated(const HA_Message *msg, int call_id, int rc,
 
 
 gboolean
-timer_callback(gpointer data)
+action_timer_callback(gpointer data)
 {
-	te_timer_t *timer = NULL;
+	crm_action_timer_t *timer = NULL;
 	
 	if(data == NULL) {
 		crm_err("Timer popped with no data");
 		return FALSE;
 	}
 	
-	timer = (te_timer_t*)data;
+	timer = (crm_action_timer_t*)data;
 	stop_te_timer(timer);
 
 	crm_warn("Timer popped (abort_level=%d, complete=%s)",
 		 transition_graph->abort_priority,
 		 transition_graph->complete?"true":"false");
 
+	CRM_DEV_ASSERT(timer->action != NULL);
+
 	if(transition_graph->complete) {
 		crm_err("Ignoring timeout while not in transition");
-		return TRUE;
+		
+	} else if(timer->reason == timeout_action_warn) {
+		print_graph_action(
+			LOG_WARNING,"Action missed its timeout", timer->action);
+		
+	} else {
+		/* fail the action */
+		cib_action_update(timer->action, LRM_OP_TIMEOUT);
+	}
+
+	return FALSE;
+}
+
+gboolean
+global_timer_callback(gpointer data)
+{
+	crm_action_timer_t *timer = NULL;
+	
+	if(data == NULL) {
+		crm_err("Timer popped with no data");
+		return FALSE;
+	}
+	
+	timer = (crm_action_timer_t*)data;
+	stop_te_timer(timer);
+
+	crm_warn("Timer popped (abort_level=%d, complete=%s)",
+		 transition_graph->abort_priority,
+		 transition_graph->complete?"true":"false");
+
+	CRM_DEV_ASSERT(timer->action == NULL);
+	
+	if(transition_graph->complete) {
+		crm_err("Ignoring timeout while not in transition");
 		
 	} else if(timer->reason == timeout_abort) {
 		crm_err("Transition abort timeout reached..."
@@ -386,29 +421,11 @@ timer_callback(gpointer data)
 
 		transition_graph->complete = TRUE;
 		abort_transition(INFINITY, -1, "Global Timeout", NULL);
-		return TRUE;
-		
-	} else if(timer->action == NULL) {
-		crm_err("Action not present!");
-		return FALSE;
-		
-	} else if(timer->reason == timeout_action_warn) {
-		print_graph_action(LOG_WARNING, "Action missed its timeout",
-			     timer->action);
-		return TRUE;
-		
-	} else {
-		/* fail the action
-		 * - which may or may not abort the transition
-		 */
-
-		/* TODO: send a cancel notice to the LRM */
-		/* TODO: use the ack from above to update the CIB */
-		return cib_action_update(timer->action, LRM_OP_TIMEOUT);
 	}
+	return FALSE;		
 }
 
-te_timer_t *transition_timer = NULL;
+crm_action_timer_t *transition_timer = NULL;
 
 gboolean
 te_graph_trigger(gpointer user_data) 
@@ -422,7 +439,7 @@ te_graph_trigger(gpointer user_data)
 	}
 
 	if(transition_timer == NULL) {
-		crm_malloc0(transition_timer, sizeof(te_timer_t));
+		crm_malloc0(transition_timer, sizeof(crm_action_timer_t));
 		transition_timer->source_id = 0;
 		transition_timer->reason    = timeout_abort;
 		transition_timer->action    = NULL;
@@ -434,8 +451,6 @@ te_graph_trigger(gpointer user_data)
 	transition_timer->timeout = transition_graph->transition_timeout;
 	if(graph_rc == transition_active) {
 		crm_debug_3("Transition not yet complete");
-
-		/* restart the transition timer again */
 		stop_te_timer(transition_timer);
 		start_te_timer(transition_timer);
 		return TRUE;		

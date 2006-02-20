@@ -51,13 +51,13 @@ halib_PROGRAMS	= tengine ttest
 ## SOURCES
 noinst_HEADERS	= tengine.h te_callbacks.h
 
-tengine_SOURCES	= actions.c tengine.c events.c utils.c callbacks.c main.c
+tengine_SOURCES	= actions.c events.c utils.c callbacks.c main.c
 tengine_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 tengine_LDADD	= $(COMMONLIBS) \
                     $(top_builddir)/lib/fencing/libstonithd.la \
                     $(top_builddir)/lib/crm/transition/libtransitioner.la
 
-ttest_SOURCES	= actions.c tengine.c events.c utils.c callbacks.c ttest.c
+ttest_SOURCES	= actions.c events.c utils.c callbacks.c ttest.c
 ttest_CFLAGS	= -DTESTING=1 -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 ttest_LDADD	= $(COMMONLIBS) \
                     $(top_builddir)/lib/fencing/libstonithd.la \

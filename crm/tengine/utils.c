@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.55 2006/02/19 09:08:32 andrew Exp $ */
+/* $Id: utils.c,v 1.56 2006/02/20 16:21:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,8 +32,6 @@
 
 extern cib_t *te_cib_conn;
 
-gboolean timer_callback(gpointer data);
-void set_timer_value(te_timer_t *timer, const char *time, int time_default);
 
 const char *
 get_rsc_state(const char *task, op_status_t status) 
@@ -82,31 +80,15 @@ get_rsc_state(const char *task, op_status_t status)
 	}
 }
 
-void
-set_timer_value(te_timer_t *timer, const char *time, int time_default)
-{
-	int tmp_time;
-
-	if(timer == NULL) {
-		return;
-	}
-	
-	timer->timeout = time_default;
-	tmp_time = crm_get_msec(time);
-	if(tmp_time > 0) {
-		timer->timeout = tmp_time;
-	}
-}
-
 gboolean
-start_te_timer(te_timer_t *timer)
+start_te_timer(crm_action_timer_t *timer)
 {
 	if(timer == NULL) {
 		return FALSE;
 
 	} else if(timer->source_id != 0) {
 		timer->source_id = Gmain_timeout_add(
-			timer->timeout, timer_callback, (void*)timer);
+			timer->timeout, global_timer_callback, (void*)timer);
 		CRM_ASSERT(timer->source_id != 0);
 		return TRUE;
 
@@ -122,7 +104,7 @@ start_te_timer(te_timer_t *timer)
 
 
 gboolean
-stop_te_timer(te_timer_t *timer)
+stop_te_timer(crm_action_timer_t *timer)
 {
 	if(timer == NULL) {
 		return FALSE;

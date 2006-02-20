@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.13 2006/02/19 20:05:09 andrew Exp $ */
+/* $Id: actions.c,v 1.14 2006/02/20 16:21:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,9 +31,27 @@
 #include <lrm/lrm_api.h>
 #include <clplumbing/lsb_exitcodes.h>
 
+char *te_uuid = NULL;
+IPC_Channel *crm_ch = NULL;
+
 void send_rsc_command(crm_action_t *action);
 extern void cib_action_updated(const HA_Message *msg, int call_id, int rc,
 			       crm_data_t *output, void *user_data);
+
+static void
+te_start_action_timer(crm_action_t *action) 
+{
+	crm_malloc0(action->timer, sizeof(crm_action_timer_t));
+	action->timer->timeout   = action->timeout;
+	action->timer->reason    = timeout_action_warn;
+	action->timer->action    = action;
+	action->timer->source_id = Gmain_timeout_add(
+		action->timer->timeout,
+		action_timer_callback, (void*)action->timer);
+
+	CRM_ASSERT(action->timer->source_id != 0);
+}
+
 
 static gboolean
 te_pseudo_action(crm_graph_t *graph, crm_action_t *pseudo) 
@@ -185,7 +203,7 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	} else if(ret && action->timeout > 0) {
 		crm_debug("Setting timer for action %d",action->id);
 		action->timer->reason = timeout_action_warn;
-		start_te_timer(action->timer);
+		te_start_action_timer(action);
 	}
 	
 	return TRUE;
@@ -385,7 +403,7 @@ send_rsc_command(crm_action_t *action)
 				  transition_graph->transition_timeout);
 			transition_graph->transition_timeout = action_timeout;
 		}
-		start_te_timer(action->timer);
+		te_start_action_timer(action);
 	}
 }
 
@@ -396,6 +414,37 @@ crm_graph_functions_t te_graph_fns = {
 	te_fence_node
 };
 
+static int
+unconfirmed_actions(gboolean send_updates)
+{
+	int unconfirmed = 0;
+	crm_debug_2("Unconfirmed actions...");
+	slist_iter(
+		synapse, synapse_t, transition_graph->synapses, lpc,
+
+		/* lookup event */
+		slist_iter(
+			action, crm_action_t, synapse->actions, lpc2,
+			if(action->executed == FALSE) {
+				continue;
+				
+			} else if(action->confirmed) {
+				continue;
+			}
+			
+			unconfirmed++;
+			crm_debug("Action %d: unconfirmed",action->id);
+			if(send_updates) {
+				cib_action_update(action, LRM_OP_TIMEOUT);
+			}
+			);
+		);
+	if(unconfirmed > 0) {
+		crm_info("Waiting on %d unconfirmed actions", unconfirmed);
+	}
+	return unconfirmed;
+}
+
 void
 notify_crmd(crm_graph_t *graph)
 {	
@@ -404,7 +453,7 @@ notify_crmd(crm_graph_t *graph)
 	enum transition_action completion_action = tg_restart;
 	int id = -1;
 	
-	int unconfirmed = unconfirmed_actions();
+	int unconfirmed = unconfirmed_actions(FALSE);
 	int pending_callbacks = num_cib_op_callbacks();
 	HA_Message *cmd = NULL;
 	const char *op = CRM_OP_TEABORT;
@@ -412,6 +461,8 @@ notify_crmd(crm_graph_t *graph)
 	if(unconfirmed != 0) {
 		crm_err("Write %d unconfirmed actions to the CIB", unconfirmed);
 		/* TODO: actually write them */
+		unconfirmed_actions(TRUE);
+
 /* 		return; */
 	}
 	

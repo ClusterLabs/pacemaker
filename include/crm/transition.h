@@ -1,4 +1,4 @@
-/* $Id: transition.h,v 1.4 2006/02/19 09:07:39 andrew Exp $ */
+/* $Id: transition.h,v 1.5 2006/02/20 16:21:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,7 +31,7 @@ typedef enum {
 	action_type_crm
 } action_type_e;
 
-typedef struct te_timer_s te_timer_t;
+typedef struct te_timer_s crm_action_timer_t;
 
 
 typedef struct synapse_s {
@@ -53,7 +53,7 @@ typedef struct crm_action_s {
 		GHashTable *params;
 		action_type_e type;
 
-		te_timer_t *timer;
+		crm_action_timer_t *timer;
 		synapse_t *synapse;
 
 		gboolean sent_update;	/* sent to the CIB */

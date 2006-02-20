@@ -1,4 +1,4 @@
-/* $Id: te_callbacks.h,v 1.1 2006/02/14 11:43:00 andrew Exp $ */
+/* $Id: te_callbacks.h,v 1.2 2006/02/20 16:21:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -25,7 +25,8 @@ extern void cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
 extern void cib_action_updated(const HA_Message *msg, int call_id, int rc,
 			       crm_data_t *output, void *user_data);
 
-extern gboolean timer_callback(gpointer data);
+extern gboolean global_timer_callback(gpointer data);
+extern gboolean action_timer_callback(gpointer data);
 
 extern gboolean te_graph_trigger(gpointer user_data);
 

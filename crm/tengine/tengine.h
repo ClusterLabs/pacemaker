@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.34 2006/02/19 09:08:32 andrew Exp $ */
+/* $Id: tengine.h,v 1.35 2006/02/20 16:21:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,8 +34,8 @@ extern void send_stonith_update(stonith_ops_t * op);
 extern gboolean cib_action_update(crm_action_t *action, int status);
 
 /* utils */
-extern gboolean stop_te_timer(te_timer_t *timer);
-extern gboolean start_te_timer(te_timer_t *timer);
+extern gboolean stop_te_timer(crm_action_timer_t *timer);
+extern gboolean start_te_timer(crm_action_timer_t *timer);
 extern const char *get_rsc_state(const char *task, op_status_t status);
 
 /* unpack */
@@ -49,7 +49,6 @@ extern GTRIGSource *transition_trigger;
 extern char *te_uuid;
 extern cib_t *te_cib_conn;
 
-extern int unconfirmed_actions(void);
 extern void notify_crmd(crm_graph_t *graph);
 
 #include <te_callbacks.h>
