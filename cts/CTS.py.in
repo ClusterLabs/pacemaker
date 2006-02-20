@@ -428,6 +428,12 @@ class ClusterManager(UserDict):
         watch.setwatch()
 
 	self.install_config(node)
+
+#       Clear out the host cache to prevent the PE from shooting nodes
+#          during StartOnebyOne
+#	self.rsh.remote_python_call(
+#	    node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/hostcache")
+
         if self.rsh(node, self["StartCmd"]) != 0:
             self.log ("Warn: Start command failed on node %s" %(node))
             return None
