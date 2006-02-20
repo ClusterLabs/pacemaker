@@ -711,6 +711,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 
 		ha_node_uuid = get_uuid(fsa_cluster_conn, ha_node);
 		if(ha_node_uuid == NULL) {
+			crm_warn("Node %s: no uuid found", ha_node);
 			continue;	
 		}
 		
@@ -726,12 +727,11 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	
 	/* Now update the CIB with the list of nodes */
 	call_id = fsa_cib_conn->cmds->update(
-		fsa_cib_conn, XML_CIB_TAG_NODES,
-		cib_node_list, NULL, cib_scope_local|cib_quorum_override);
+		fsa_cib_conn, XML_CIB_TAG_NODES, cib_node_list, NULL,
+		cib_scope_local|cib_quorum_override|cib_inhibit_bcast);
 	
 	add_cib_op_callback(call_id, FALSE, NULL, default_cib_update_callback);
 
-	crm_log_xml_err(cib_node_list, "NodeList");
 	free_xml(cib_node_list);
 	
 	return TRUE;
