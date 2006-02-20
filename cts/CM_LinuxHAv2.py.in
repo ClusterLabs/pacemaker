@@ -27,7 +27,7 @@ Additional Audits, Revised Start action, Default Configuration:
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import os,sys,CTS,CTSaudits,CTStests
+import os,sys,CTS,CTSaudits,CTStests, warnings
 from CTS import *
 from CM_hb import HeartbeatCM
 from xml.dom.minidom import *
@@ -314,7 +314,9 @@ class LinuxHAv2(HeartbeatCM):
             if self.Env["CIBfilename"] == None:
                 self.debug("Installing Generated CIB on node %s" %(node))
                 os.system("rm -f /tmp/cts.default.cib")
+		warnings.filterwarnings("ignore")
 		cib_file=os.tmpnam()
+		warnings.resetwarnings()
                 os.system("rm -f "+cib_file)
 		self.debug("Creating new CIB for " + node + " in: " + cib_file)
                 os.system("echo \'" + self.default_cts_cib + "\' > " + cib_file)
@@ -459,7 +461,10 @@ class LinuxHAv2(HeartbeatCM):
 	if self.config:
 	    return self.config.getElementsByTagName('configuration')[0]
 
+	warnings.filterwarnings("ignore")
 	cib_file=os.tmpnam()
+	warnings.resetwarnings()
+	
 	os.system("rm -f "+cib_file)
 
         if self.Env["ClobberCIB"] == 1:

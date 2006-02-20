@@ -26,7 +26,7 @@ Licensed under the GNU GPL.
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 from UserDict import UserDict
-import sys, time, types, syslog, whrandom, os, struct, string, signal, traceback
+import sys, time, types, syslog, random, os, struct, string, signal, traceback
 from CTS  import ClusterManager
 from CM_hb import HeartbeatCM
 from CTStests import BSC_AddResource
@@ -354,7 +354,7 @@ class CtsLab(UserDict):
         #
         #  Now set up our random number generator...
         #
-        self.RandomGen = whrandom.whrandom()
+        self.RandomGen = random.Random()
 
         #  Get a random seed for the random number generator.
 
@@ -369,7 +369,7 @@ class CtsLab(UserDict):
         self.log("Random seed is: " + str(randseed))
         self.randseed=randseed
 
-        self.RandomGen.seed(randseed[0], randseed[1], randseed[2]) 
+        self.RandomGen.seed(randseed[0]) 
 
     def log(self, args):
         "Log using each of the supplied logging methods"

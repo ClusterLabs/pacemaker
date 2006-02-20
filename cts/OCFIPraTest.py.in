@@ -23,7 +23,7 @@ Licensed under the GNU GPL.
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import string,sys,struct,os,whrandom,time,syslog
+import string,sys,struct,os,random,time,syslog
 
 def usage():
     print "usage: " + sys.argv[0]  \
@@ -133,8 +133,8 @@ if __name__ == '__main__':
     seed=struct.unpack("BBB", f.read(3))
     f.close()
     #seed=(123,321,231)
-    rand = whrandom.whrandom()
-    rand.seed(seed[0], seed[1], seed[2]) 
+    rand = random.Random()
+    rand.seed(seed[0]) 
     log("Test Random Seed:" + str(seed))
     
     #
