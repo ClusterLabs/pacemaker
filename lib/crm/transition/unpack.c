@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.3 2006/02/18 12:44:17 andrew Exp $ */
+/* $Id: unpack.c,v 1.4 2006/02/20 16:25:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -86,12 +86,6 @@ unpack_action(synapse_t *parent, crm_data_t *xml_action)
 	
 	crm_debug_3("Action %d has timer set to %dms",
 		  action->id, action->timeout);
-	
-	crm_malloc0(action->timer, sizeof(te_timer_t));
-	action->timer->timeout   = 2 * action->timeout;
-	action->timer->source_id = 0;
-	action->timer->reason    = timeout_action_warn;
-	action->timer->action    = action;
 
 	return action;
 }
@@ -220,9 +214,9 @@ unpack_graph(crm_data_t *xml_graph)
 static void
 destroy_action(crm_action_t *action)
 {
-	if(action->timer->source_id > 0) {
-		crm_debug_3("Removing timer for action: %d",action->id);
-/* 		Gmain_timeout_remove(action->timer->source_id); */
+	if(action->timer) {
+		CRM_DEV_ASSERT(action->timer->source_id == 0);
+/*  		Gmain_timeout_remove(action->timer->source_id); */
 	}
 	g_hash_table_destroy(action->params);
 	free_xml(action->xml);

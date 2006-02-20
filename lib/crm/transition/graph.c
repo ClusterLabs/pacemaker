@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.4 2006/02/19 09:07:39 andrew Exp $ */
+/* $Id: graph.c,v 1.5 2006/02/20 16:25:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -56,7 +56,7 @@ update_synapse_ready(synapse_t *synapse, int action_id)
 		);
 
 	if(updates) {
-		crm_debug("Updated synapse %d", synapse->id);
+		crm_debug_2("Updated synapse %d", synapse->id);
 	}
 	return updates;
 }
@@ -96,7 +96,7 @@ update_synapse_confirmed(synapse_t *synapse, int action_id)
 	}
 	
 	if(updates) {
-		crm_debug("Updated synapse %d", synapse->id);
+		crm_debug_2("Updated synapse %d", synapse->id);
 	}
 	return updates;
 }
@@ -122,7 +122,8 @@ update_graph(crm_graph_t *graph, crm_action_t *action)
 		);
 	
 	if(updates) {
-		crm_debug("Updated graph with completed action %d", action->id);
+		crm_debug_2("Updated graph with completed action %d",
+			    action->id);
 	}
 	return updates;
 }
@@ -255,7 +256,7 @@ run_graph(crm_graph_t *graph)
 		return transition_complete;
 	}
 
-	crm_debug("Entering graph %d callback", graph->id);
+	crm_debug_2("Entering graph %d callback", graph->id);
 	
 	slist_iter(
 		synapse, synapse_t, graph->synapses, lpc,
@@ -264,9 +265,9 @@ run_graph(crm_graph_t *graph)
 			num_complete++;
 			
 		} else if (synapse->executed) {
-			int pending_log = LOG_DEBUG_2;
-			if(synapse->priority <= graph->abort_priority) {
-				pending_log = LOG_INFO;
+			int pending_log = LOG_DEBUG;
+			if(synapse->priority > graph->abort_priority) {
+				pending_log = LOG_DEBUG_2;
 			} 
 			crm_log_maybe(pending_log,
 				      "Synapse %d: confirmation pending",
@@ -310,13 +311,13 @@ run_graph(crm_graph_t *graph)
 	}
 	
 	
+	crm_log_maybe(stat_log_level+1,
+		      "====================================================");
 	crm_log_maybe(stat_log_level,
 		      "Transition %d Complete: %d, Pending: %d,"
 		      " Fired: %d, Skipped: %d, Incomplete: %d",
 		      graph->id, num_complete, num_pending, num_fired,
 		      num_skipped, num_incomplete);
-	crm_log_maybe(stat_log_level+1,
-		      "====================================================");
 
 	
 	return pass_result;

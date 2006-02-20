@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.4 2006/02/19 09:07:39 andrew Exp $ */
+/* $Id: utils.c,v 1.5 2006/02/20 16:25:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -163,10 +163,11 @@ print_graph_action(int log_level, const char *prefix, crm_action_t *action)
 			break;
 	}
 
-	if(action->timeout > 0 || action->timer->source_id > 0) {
+	if(action->timeout > 0) {
 		do_crm_log(log_level, __FILE__, __FUNCTION__,
 			   "%s\ttimeout=%d, timer=%d", prefix,
-			   action->timeout, action->timer->source_id);
+			   action->timeout,
+			   action->timer?action->timer->source_id:0);
 	}
 	
 	if(action->confirmed == FALSE) {
