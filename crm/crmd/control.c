@@ -568,9 +568,9 @@ do_read_config(long long action,
 	/* defaults */
 	election_trigger->period_ms   = crm_get_msec("1min");
 	election_timeout->period_ms   = crm_get_msec("2min");
-	integration_timer->period_ms  = crm_get_msec("5min");
-	finalization_timer->period_ms = crm_get_msec("10min");
-	shutdown_escalation_timer->period_ms = crm_get_msec("15min");
+	integration_timer->period_ms  = crm_get_msec("3min");
+	finalization_timer->period_ms = crm_get_msec("3min");
+	shutdown_escalation_timer->period_ms = crm_get_msec("5min");
 	
 	return I_NULL;
 }
