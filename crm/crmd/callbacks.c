@@ -87,11 +87,11 @@ crmd_ha_connection_destroy(gpointer user_data)
 	crm_debug_3("Invoked");
 	if(is_set(fsa_input_register, R_HA_DISCONNECTED)) {
 		/* we signed out, so this is expected */
-		crm_info("Connection to heartbeat service disconnected.");
+		crm_info("Heartbeat disconnection complete");
 		return;
 	}
 
-	crm_crit("Lost connection to heartbeat service.");
+	crm_crit("Lost connection to heartbeat service!");
 	register_fsa_input(C_HA_DISCONNECT, I_ERROR, NULL);	
 	trigger_fsa(fsa_source);
 }
@@ -628,7 +628,7 @@ crm_fsa_trigger(gpointer user_data)
 		fsa_diff = sub_longclock(fsa_stop, fsa_start);
 		fsa_diff_ms = longclockto_ms(fsa_diff);
 		if(fsa_diff_ms > fsa_diff_max_ms) {
-			crm_warn("FSA took %dms to complete", fsa_diff_ms);
+			crm_err("FSA took %dms to complete", fsa_diff_ms);
 
 		} else if(fsa_diff_ms > fsa_diff_warn_ms) {
 			crm_warn("FSA took %dms to complete", fsa_diff_ms);

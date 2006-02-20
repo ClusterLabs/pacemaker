@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.38 2006/02/19 20:00:36 andrew Exp $ */
+/* $Id: main.c,v 1.39 2006/02/20 11:39:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -403,7 +403,7 @@ void
 cib_ha_connection_destroy(gpointer user_data)
 {
 	if(cib_shutdown_flag) {
-		crm_info("Heartbeat disconnected... exiting");
+		crm_info("Heartbeat disconnection complete... exiting");
 	} else {
 		crm_err("Heartbeat connection lost!  Exiting.");
 	}
