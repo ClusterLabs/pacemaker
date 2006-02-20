@@ -549,6 +549,8 @@ config_query_callback(const HA_Message *msg, int call_id, int rc,
 #endif		
 
 	set_bit_inplace(fsa_input_register, R_READ_CONFIG);
+	crm_debug_3("Triggering FSA: %s", __FUNCTION__);
+	G_main_set_trigger(fsa_source);
 }
 
 /*	 A_READCONFIG	*/
