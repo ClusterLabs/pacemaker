@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.158 2006/02/19 20:05:49 andrew Exp $ */
+/* $Id: unpack.c,v 1.159 2006/02/20 12:11:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -312,7 +312,9 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 		}
 		
 		
-		if(safe_str_eq(type, "member")) {
+		if(type == NULL
+		   || safe_str_eq(type, "member")
+		   || safe_str_eq(type, NORMALNODE)) {
 			new_node->details->type = node_member;
 		}
 
