@@ -711,7 +711,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 
 		ha_node_uuid = get_uuid(fsa_cluster_conn, ha_node);
 		if(ha_node_uuid == NULL) {
-			crm_warn("Node %s: no uuid found", ha_node);
+			crm_err("Node %s: no uuid found", ha_node);
 			continue;	
 		}
 		
