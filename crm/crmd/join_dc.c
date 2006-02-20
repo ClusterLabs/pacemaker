@@ -530,7 +530,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	join_state = (const char *)value;
 
 	/* make sure the node exists in the config section */
-	create_node_entry(join_to, join_to, CRMD_JOINSTATE_MEMBER);
+	create_node_entry(join_to, join_to, NORMALNODE);
 
 	/* send the ack/nack to the node */
 	acknak = create_request(
