@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.14 2006/02/20 16:21:51 andrew Exp $ */
+/* $Id: actions.c,v 1.15 2006/02/20 17:05:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -395,7 +395,6 @@ send_rsc_command(crm_action_t *action)
 	} else if(action->timeout > 0) {
 		int action_timeout = 2 * action->timeout;
 		crm_debug_3("Setting timer for action %s", task_uuid);
-		action->timer->reason = timeout_action_warn;
 		if(transition_graph->transition_timeout < action_timeout) {
 			crm_debug("Action %d:"
 				  " Increasing transition %d timeout to %d",
