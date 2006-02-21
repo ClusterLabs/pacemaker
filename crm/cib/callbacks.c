@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.113 2006/02/20 13:03:54 andrew Exp $ */
+/* $Id: callbacks.c,v 1.114 2006/02/21 17:28:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,6 +31,7 @@
 #include <hb_api.h>
 #include <clplumbing/uids.h>
 #include <clplumbing/cl_uuid.h>
+#include <clplumbing/Gmain_timeout.h>
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -51,14 +52,19 @@
 extern GMainLoop*  mainloop;
 extern gboolean cib_shutdown_flag;
 
+extern void GHFunc_count_peers(
+	gpointer key, gpointer value, gpointer user_data);
+extern enum cib_errors revision_check(
+	crm_data_t *cib_update, crm_data_t *cib_copy, int flags);
+
+void initiate_exit(void);
+void terminate_ha_connection(const char *caller);
 gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
 gboolean cib_msg_timeout(gpointer data);
 void cib_GHFunc(gpointer key, gpointer value, gpointer user_data);
 gboolean can_write(int flags);
 HA_Message *cib_msg_copy(HA_Message *msg, gboolean with_data);
 gboolean ccm_manual_check(gpointer data);
-extern enum cib_errors revision_check(
-	crm_data_t *cib_update, crm_data_t *cib_copy, int flags);
 void send_cib_replace(const HA_Message *sync_request, const char *host);
 void cib_process_request(
 	HA_Message *request, gboolean privileged, gboolean force_synchronous,
@@ -208,6 +214,7 @@ cib_operation_t cib_server_ops[] = {
 	{CRM_OP_PING,	   FALSE, FALSE, FALSE, cib_prepare_none, cib_cleanup_output, cib_process_ping},
 	{CIB_OP_ERASE,     TRUE,  TRUE,  TRUE,  cib_prepare_none, cib_cleanup_output, cib_process_erase},
 	{CRM_OP_NOOP,	   FALSE, FALSE, FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_default},
+	{"cib_shutdown_req",FALSE, TRUE, FALSE, cib_prepare_sync, cib_cleanup_sync,   cib_process_shutdown_req},
 };
 
 int send_via_callback_channel(HA_Message *msg, const char *token);
@@ -713,6 +720,15 @@ cib_process_request(
 			process = FALSE;
 		}
 		
+	} else if(safe_str_eq(op, "cib_shutdown_req")) {
+		if(reply_to != NULL) {
+			crm_debug("Processing %s from %s", op, host);
+			needs_reply = FALSE;
+			
+		} else {
+			crm_debug("Processing %s reply from %s", op, host);
+		}
+		
 	} else if(crm_is_true(update) && safe_str_eq(reply_to, cib_our_uname)) {
 		crm_debug("Processing global/peer update from %s"
 			  " that originated from us", originator);
@@ -750,7 +766,7 @@ cib_process_request(
 		
 	} else if(reply_to == NULL && cib_is_master == FALSE) {
 		/* this is for the master instance and we're not it */
-		crm_debug("Ignoring reply to %s", crm_str(reply_to));
+		crm_debug("Ignoring %s reply to %s", op, crm_str(reply_to));
 		return;
 		
 	} else {
@@ -1286,7 +1302,6 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 	}
 }
 
-
 gboolean
 cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 {
@@ -1329,23 +1344,14 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 		keep_connection = FALSE;
 	}
 
-	if(keep_connection == FALSE
-	   && cib_shutdown_flag
-	   && g_hash_table_size(client_list) == 0) {
+	if(cib_shutdown_flag && g_hash_table_size(client_list) == 0) {
 		crm_info("All clients disconnected...");
-
-		if(hb_conn != NULL) {
-			crm_info("Disconnecting heartbeat");
-			hb_conn->llc_ops->signoff(hb_conn, FALSE);
-		} else {
-			crm_err("No heartbeat connection");
-			exit(LSB_EXIT_OK);
-		}
+		CRM_DEV_ASSERT(keep_connection == FALSE);
+		initiate_exit();
 	}
 	
 	return keep_connection;
 }
-
 
 gboolean
 cib_ha_dispatch(IPC_Channel *channel, gpointer user_data)
@@ -1661,22 +1667,57 @@ cib_ccm_msg_callback(
 gboolean
 can_write(int flags)
 {
-
 	if(cib_have_quorum) {
 		return TRUE;
 
 	} else if((flags & cib_quorum_override) != 0) {
 		return TRUE;
 	}
-#if 0
-	const char *value = NULL;
-	/* this only affects admin changes which can be forced with -f */
-	value = get_crm_option(the_cib, "no_quorum_policy", TRUE);
-	if(safe_str_eq(value, "ignore")) {
-		return TRUE;		
-	}
-#endif
+
 	return FALSE;
 }
 
+static gboolean
+cib_force_exit(gpointer data)
+{
+	crm_err("Forcing exit!");
+	terminate_ha_connection(__FUNCTION__);
+	return FALSE;
+}
 
+void
+initiate_exit(void)
+{
+	int active = 0;
+	HA_Message *leaving = NULL;
+
+	g_hash_table_foreach(peer_hash, GHFunc_count_peers, &active);
+	if(active < 2) {
+		terminate_ha_connection(__FUNCTION__);
+		return;
+	} 
+
+	crm_info("Sending disconnect notification to %d peers...", active);
+
+	leaving = ha_msg_new(3);	
+	ha_msg_add(leaving, F_TYPE, "cib");
+	ha_msg_add(leaving, F_CIB_OPERATION, "cib_shutdown_req");
+	
+	send_ha_message(hb_conn, leaving, NULL, TRUE);
+	crm_msg_del(leaving);
+	
+	Gmain_timeout_add(crm_get_msec("5s"), cib_force_exit, NULL);
+}
+
+void
+terminate_ha_connection(const char *caller) 
+{
+	if(hb_conn != NULL) {
+		crm_info("%s: Disconnecting heartbeat", caller);
+		hb_conn->llc_ops->signoff(hb_conn, FALSE);
+		
+	} else {
+		crm_err("%s: No heartbeat connection", caller);
+		exit(LSB_EXIT_OK);
+	}
+}
