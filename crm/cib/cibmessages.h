@@ -1,4 +1,4 @@
-/* $Id: cibmessages.h,v 1.9 2005/10/12 18:28:22 andrew Exp $ */
+/* $Id: cibmessages.h,v 1.10 2006/02/21 14:39:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,6 +23,11 @@
 extern crm_data_t *createCibRequest(
 	gboolean isLocal, const char *operation, const char *section,
 	const char *verbose, crm_data_t *data);
+
+extern enum cib_errors 
+cib_process_shutdown_req(
+	const char *op, int options, const char *section, crm_data_t *input,
+	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer);
 
 extern enum cib_errors cib_process_default(
 	const char *op, int options, const char *section, crm_data_t *input,

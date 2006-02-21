@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.66 2006/02/19 19:59:06 andrew Exp $ */
+/* $Id: messages.c,v 1.67 2006/02/21 14:39:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,10 +58,6 @@ enum cib_errors updateList(
 	crm_data_t *local_cib, crm_data_t *update_command, crm_data_t *failed,
 	int operation, const char *section);
 
-#if CRM_DEPRECATED_SINCE_2_0_4
-crm_data_t *createCibFragmentAnswer(const char *section, crm_data_t *failed);
-#endif
-
 enum cib_errors replace_section(
 	const char *section, crm_data_t *tmpCib, crm_data_t *command);
 
@@ -74,6 +70,38 @@ enum cib_errors cib_update_counter(
 	crm_data_t *xml_obj, const char *field, gboolean reset);
 
 enum cib_errors sync_our_cib(HA_Message *request, gboolean all);
+
+extern ll_cluster_t *hb_conn;
+extern HA_Message *cib_msg_copy(const HA_Message *msg, gboolean with_data);
+extern gboolean cib_shutdown_flag;
+extern void terminate_ha_connection(const char *caller);
+
+enum cib_errors 
+cib_process_shutdown_req(
+	const char *op, int options, const char *section, crm_data_t *input,
+	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
+{
+	enum cib_errors result = cib_ok;
+	const char *host = cl_get_string(input, F_ORIG);
+	
+	*answer = NULL;
+
+	if(cl_get_string(input, F_CIB_ISREPLY) == NULL) {
+		crm_info("Shutdown REQ from %s", host);
+		return cib_ok;
+
+	} else if(cib_shutdown_flag) {
+		crm_info("Shutdown ACK from %s", host);
+		terminate_ha_connection(__FUNCTION__);
+		return cib_ok;
+
+	} else {
+		crm_err("Shutdown ACK from %s - not shutting down",host);
+		result = cib_unknown;
+	}
+	
+	return result;
+}
 
 enum cib_errors 
 cib_process_default(
@@ -211,9 +239,6 @@ cib_process_erase(
 		cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, TRUE);
 	}
 	
-#if CRM_DEPRECATED_SINCE_2_0_4
-	*answer = createCibFragmentAnswer(NULL, NULL);
-#endif
 	return result;
 }
 
@@ -233,14 +258,8 @@ cib_process_bump(
 	cib_update_counter(*result_cib, XML_ATTR_GENERATION, FALSE);
 	cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, FALSE);
 	
-#if CRM_DEPRECATED_SINCE_2_0_4
-	*answer = createCibFragmentAnswer(NULL, NULL);
-#endif	
 	return result;
 }
-
-extern ll_cluster_t *hb_conn;
-extern HA_Message *cib_msg_copy(const HA_Message *msg, gboolean with_data);
 
 enum cib_errors 
 cib_process_sync(
@@ -457,7 +476,8 @@ cib_process_replace(
 	gboolean verbose       = FALSE;
 	enum cib_errors result = cib_ok;
 	
-	crm_debug_2("Processing \"%s\" event for section=%s", op, crm_str(section));
+	crm_debug_2("Processing \"%s\" event for section=%s",
+		    op, crm_str(section));
 	*answer = NULL;
 
 	if (options & cib_verbose) {
@@ -532,11 +552,6 @@ cib_process_replace(
 		cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, FALSE);
 	}
 	
-#if CRM_DEPRECATED_SINCE_2_0_4
-	if (verbose || result != cib_ok) {
-		*answer = createCibFragmentAnswer(section, NULL);
-	}
-#endif
 	return result;
 }
 
@@ -774,45 +789,6 @@ updateList(crm_data_t *local_cib, crm_data_t *xml_section, crm_data_t *failed,
 	}
 	return rc;
 }
-
-#if CRM_DEPRECATED_SINCE_2_0_4
-crm_data_t*
-createCibFragmentAnswer(const char *section, crm_data_t *failed)
-{
-	crm_data_t *cib = NULL;
-	crm_data_t *fragment = NULL;
-	
-	fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
-
-	if (section == NULL
-	    || strlen(section) == 0
-	    || strcmp(XML_CIB_TAG_SECTION_ALL, section) == 0) {
-		
-		cib = get_the_CIB();
-		if(cib != NULL) {
-			add_node_copy(fragment, get_the_CIB());
-		}
-		
-	} else {
-		crm_data_t *obj_root = get_object_root(section, get_the_CIB());
-
-		if(obj_root != NULL) {
-			cib = create_xml_node(fragment, XML_TAG_CIB);
-
-			add_node_copy(cib, obj_root);
-			copy_in_properties(cib, get_the_CIB());
-		} 
-	}
-
-	if (failed != NULL && xml_has_children(failed)) {
-		add_node_copy(fragment, failed);
-	}
-		
-	crm_xml_add(fragment, XML_ATTR_SECTION, section);
-	crm_xml_add(fragment, "generated_on", cib_our_uname);
-	return fragment;
-}
-#endif
 
 gboolean
 check_generation(crm_data_t *newCib, crm_data_t *oldCib)
