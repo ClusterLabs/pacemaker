@@ -598,7 +598,13 @@ class LinuxHAv2(HeartbeatCM):
         for node in node_list:
             if self.ShouldBeStatus[node] == self["up"]:
                 quorum = self.rsh.readaline(node, self["QuorumCmd"])
-                return  string.find(quorum,"1") != -1
+                if string.find(quorum, "1") != -1:
+		    return 1
+                elif string.find(quorum, "0") != -1:
+		    return 0
+		else:
+		    self.log("WARN: Unexpected quorum test result from "+ node +":"+ quorum)
+
         return 0
     def Components(self):    
         complist = [Process("lrmd",self),Process("crmd",self)]
