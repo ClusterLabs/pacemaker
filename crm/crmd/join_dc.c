@@ -300,8 +300,6 @@ do_dc_join_filter_offer(long long action,
 }
 
 
-#define JOIN_AFTER_SYNC 1
-
 /*	A_DC_JOIN_FINALIZE	*/
 enum crmd_fsa_input
 do_dc_join_finalize(long long action,
@@ -315,15 +313,8 @@ do_dc_join_finalize(long long action,
 	/* This we can do straight away and avoid clients timing us out
 	 *  while we compute the latest CIB
 	 */
-#if JOIN_AFTER_SYNC
 	crm_debug("Finializing join-%d for %d clients",
 		  current_join_id, g_hash_table_size(integrated_nodes));
-#else
-	crm_debug("Notifying %d clients of join-%d results",
-		  g_hash_table_size(integrated_nodes), current_join_id);
-	g_hash_table_foreach_remove(
-		integrated_nodes, finalize_join_for, NULL);
-#endif
 	clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
 	if(max_generation_from == NULL
 	   || safe_str_eq(max_generation_from, fsa_our_uname)){
@@ -405,19 +396,13 @@ finalize_join(const char *caller)
 	fsa_cib_conn->cmds->bump_epoch(
 		fsa_cib_conn, cib_scope_local|cib_quorum_override);
 	
-#if JOIN_AFTER_SYNC
 	/* make sure dc_uuid is re-set to us */
-	
 	if(check_join_state(fsa_state, caller) == FALSE) {
 		crm_debug("Notifying %d clients of join-%d results",
 			  g_hash_table_size(integrated_nodes), current_join_id);
 		g_hash_table_foreach_remove(
 			integrated_nodes, finalize_join_for, NULL);
 	}
-#else
-	check_join_state(cur_state, caller);
-	rc = fsa_cib_conn->cmds->sync(fsa_cib_conn, NULL, cib_quorum_override);
-#endif
 }
 
 static void
