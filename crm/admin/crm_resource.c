@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.12 2006/02/03 08:29:21 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.13 2006/02/22 13:46:23 lars Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -778,7 +778,7 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\t: Locate a resource\n"
 		"\t\t\t  Requires: -r\n", "locate", 'W');
 	fprintf(stream, "\t--%s (-%c)\t: Migrate a resource from it current"
-		" locaiton.  Use -H to specify a destination\n"
+		" location.  Use -H to specify a destination\n"
 		"\t\t\t  Requires: -r, Optional: -H\n", "migrate", 'M');
 	fprintf(stream, "\t--%s (-%c)\t: Remove all constraints created by -M\n"
 		"\t\t\t  Requires: -r\n", "un-migrate", 'U');
