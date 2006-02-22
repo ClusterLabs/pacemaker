@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.14 2006/02/22 14:44:25 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.15 2006/02/22 19:20:25 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -359,6 +359,20 @@ migrate_resource(
 		}
 
 	} else {
+		if(do_force == FALSE) {
+			fprintf(stderr,
+				"WARNING: Creating rsc_location constraint '%s'"
+				" with a score of -INFINITY for resource %s"
+				" on %s.\n",
+				ID(dont_run), rsc_id, existing_node);
+			fprintf(stderr, "\tThis will prevent %s from running"
+				" on %s until the constraint is removed using"
+				" the 'crm_resource -U' command or manually"
+				" with cibadmin\n", rsc_id, existing_node);
+			fprintf(stderr, "\tThis will be the case even if %s is"
+				" the last node in the cluster", existing_node);
+		}
+		
 		crm_xml_add(dont_run, "rsc", rsc_id);
 		rule = create_xml_node(dont_run, XML_TAG_RULE);
 		expr = create_xml_node(rule, XML_TAG_EXPRESSION);
