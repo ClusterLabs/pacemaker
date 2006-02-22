@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.47 2006/02/15 13:19:14 andrew Exp $ */
+/* $Id: io.c,v 1.48 2006/02/22 13:54:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -140,6 +140,7 @@ readCibXmlFile(const char *filename)
 
 		if( S_ISREG(buf.st_mode) == FALSE ) {
 			crm_err("%s must be a regular file", filename);
+			sleep(5);
 			exit(100);
 			
 		} else if( user_readwritable == FALSE ) {
@@ -153,6 +154,7 @@ readCibXmlFile(const char *filename)
 				crm_err("%s must be owned and read/writeable by user %s,"
 					" or owned and read/writable by group %s",
 					filename, HA_CCMUSER, HA_APIGROUP);
+				sleep(5);
 				exit(100);
 			}
 			crm_warn("%s should be owned and read/writeable by user %s",
