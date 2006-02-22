@@ -376,6 +376,7 @@ if __name__=="__main__" :
 	cib = create_cib()
 	pre_line = ""
 	id_index = 1
+	group_index = 1
 	for line in file.readlines() :
 		line = string.strip(line)
 		if len (line) == 0 or line[0] == '#' :
@@ -391,7 +392,8 @@ if __name__=="__main__" :
 			add_resource(cib, id_index, fields[0], fields[1])
 			id_index += 1
 		elif len(fields) > 2 :
-			add_resource_group(cib, id_index, fields[0], fields[1:])
+			add_resource_group(cib, group_index, fields[0], fields[1:])
+			group_index += 1
 			id_index += len(fields)
 		else :
 			print "can not parse this line:"+line
