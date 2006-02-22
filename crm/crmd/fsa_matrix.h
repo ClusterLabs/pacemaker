@@ -885,7 +885,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 
 /* Got an I_NODE_JOIN */
 	{
-		/* S_IDLE		==> */	A_TE_CANCEL|A_DC_JOIN_OFFER_ONE,
+		/* S_IDLE		==> */	A_TE_HALT|A_DC_JOIN_OFFER_ONE,
 		/* S_ELECTION		==> */	A_WARN,
 		/* S_INTEGRATION	==> */	A_DC_JOIN_OFFER_ONE,
 		/* S_FINALIZE_JOIN	==> */	A_DC_JOIN_OFFER_ONE,
@@ -897,7 +897,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_PENDING		==> */	A_WARN,
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
-		/* S_TRANSITION_ENGINE	==> */	A_DC_JOIN_OFFER_ONE,
+		/* S_TRANSITION_ENGINE	==> */	A_TE_HALT|A_DC_JOIN_OFFER_ONE,
 		/* S_HALT		==> */	A_WARN,
 	},
 
@@ -1155,19 +1155,19 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 
 /* Got an I_JOIN_RESULT */
 	{
-		/* S_IDLE		==> */	A_ERROR|A_TE_CANCEL|A_DC_JOIN_OFFER_ALL,
+		/* S_IDLE		==> */	A_ERROR|A_TE_HALT|A_DC_JOIN_OFFER_ALL,
 		/* S_ELECTION		==> */	A_LOG,
 		/* S_INTEGRATION	==> */	A_LOG,
 		/* S_FINALIZE_JOIN	==> */	A_CL_JOIN_RESULT|A_DC_JOIN_PROCESS_ACK,
 		/* S_NOT_DC		==> */	A_ERROR|A_CL_JOIN_ANNOUNCE,
-		/* S_POLICY_ENGINE	==> */	A_ERROR|A_TE_CANCEL|A_DC_JOIN_OFFER_ALL,
+		/* S_POLICY_ENGINE	==> */	A_ERROR|A_TE_HALT|A_DC_JOIN_OFFER_ALL,
 		/* S_RECOVERY		==> */	A_LOG,
 		/* S_RELEASE_DC		==> */	A_LOG,
 		/* S_STARTING		==> */	A_ERROR,
 		/* S_PENDING		==> */	A_CL_JOIN_RESULT,
 		/* S_STOPPING		==> */	A_ERROR,
 		/* S_TERMINATE		==> */	A_ERROR,
-		/* S_TRANSITION_ENGINE	==> */	A_ERROR|A_TE_CANCEL|A_DC_JOIN_OFFER_ALL,
+		/* S_TRANSITION_ENGINE	==> */	A_ERROR|A_TE_HALT|A_DC_JOIN_OFFER_ALL,
 		/* S_HALT		==> */	A_WARN,
 	},
 	

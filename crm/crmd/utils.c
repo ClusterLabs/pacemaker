@@ -678,6 +678,9 @@ fsa_action2string(long long action)
 		case A_TE_STOP:
 			actionAsText = "A_TE_STOP";
 			break;
+		case A_TE_HALT:
+			actionAsText = "A_TE_HALT";
+			break;
 		case A_TE_CANCEL:
 			actionAsText = "A_TE_CANCEL";
 			break;

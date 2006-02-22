@@ -482,6 +482,10 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 			do_fsa_action(fsa_data, A_ELECTION_CHECK,	do_election_check);
 		} else if(is_set(fsa_actions, A_ELECTION_START)) {
 			do_fsa_action(fsa_data, A_ELECTION_START,	do_election_vote);
+		} else if(is_set(fsa_actions, A_TE_HALT)) {
+			do_fsa_action(fsa_data, A_TE_HALT,		do_te_invoke);
+		} else if(is_set(fsa_actions, A_TE_CANCEL)) {
+			do_fsa_action(fsa_data, A_TE_CANCEL,		do_te_invoke);
 		} else if(is_set(fsa_actions, A_DC_JOIN_OFFER_ALL)) {
 			do_fsa_action(fsa_data, A_DC_JOIN_OFFER_ALL,	do_dc_join_offer_all);
 		} else if(is_set(fsa_actions, A_DC_JOIN_OFFER_ONE)) {
@@ -506,10 +510,6 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 			do_fsa_action(fsa_data, A_LRM_INVOKE,		do_lrm_invoke);
 		} else if(is_set(fsa_actions, A_LRM_EVENT)) {
 			do_fsa_action(fsa_data, A_LRM_EVENT,		do_lrm_event);
-		} else if(is_set(fsa_actions, A_TE_HALT)) {
-			do_fsa_action(fsa_data, A_TE_HALT,		do_te_invoke);
-		} else if(is_set(fsa_actions, A_TE_CANCEL)) {
-			do_fsa_action(fsa_data, A_TE_CANCEL,		do_te_invoke);
 		} else if(is_set(fsa_actions, A_PE_INVOKE)) {
 			do_fsa_action(fsa_data, A_PE_INVOKE,		do_pe_invoke);
 		} else if(is_set(fsa_actions, A_TE_INVOKE)) {
