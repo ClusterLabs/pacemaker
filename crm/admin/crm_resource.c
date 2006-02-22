@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.13 2006/02/22 13:46:23 lars Exp $ */
+/* $Id: crm_resource.c,v 1.14 2006/02/22 14:44:25 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -53,6 +53,7 @@
 #include <crm/dmalloc_wrapper.h>
 void usage(const char *cmd, int exit_status);
 
+gboolean do_force = FALSE;
 gboolean BE_QUIET = FALSE;
 char *host_id = NULL;
 const char *rsc_id = NULL;
@@ -65,7 +66,7 @@ char rsc_cmd = 0;
 char *our_pid = NULL;
 IPC_Channel *crmd_channel = NULL;
 
-#define OPTARGS	"V?SLRQDCPp:WMUr:H:v:t:g:G:g:"
+#define OPTARGS	"V?SLRQDCPp:WMUr:H:v:t:g:G:g:f"
 
 static int
 do_find_resource(const char *rsc, pe_working_set_t *data_set)
@@ -454,6 +455,7 @@ main(int argc, char **argv)
 		{"set-property",    1, 0, 'p'},
 		{"property-value",  1, 0, 'v'},
 		{"resource-type",  1, 0, 't'},
+		{"force-relocation",  0, 0, 'f'},
 
 		{0, 0, 0, 0}
 	};
@@ -542,6 +544,9 @@ main(int argc, char **argv)
 			case 'U':
 				rsc_cmd = flag;
 				break;				
+			case 'f':
+				do_force = TRUE;
+				break;
 			case 'r':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				rsc_id = optarg;
@@ -676,14 +681,15 @@ main(int argc, char **argv)
 				"%s is already active on %s",
 				rsc_id, host_uname);
 
-		} else if(rsc->stickiness == 0 && host_uname != NULL) {
-			rc = migrate_resource(
-				rsc_id, NULL, host_uname, cib_conn);
-
-		} else if(g_list_length(rsc->running_on) == 1
-			  || host_uname != NULL) {
+		} else if(current_uname != NULL
+			  && (do_force || host_uname == NULL)) {
 			rc = migrate_resource(rsc_id, current_uname,
 					      host_uname, cib_conn);
+
+			
+		} else if(host_uname != NULL) {
+			rc = migrate_resource(
+				rsc_id, NULL, host_uname, cib_conn);
 
 		} else {
 			fprintf(stderr, "Resource %s not migrated: "
@@ -779,7 +785,11 @@ usage(const char *cmd, int exit_status)
 		"\t\t\t  Requires: -r\n", "locate", 'W');
 	fprintf(stream, "\t--%s (-%c)\t: Migrate a resource from it current"
 		" location.  Use -H to specify a destination\n"
-		"\t\t\t  Requires: -r, Optional: -H\n", "migrate", 'M');
+		"\t\tIf -H is not specified, we will force the resource to move by"
+		" creating a rule for the current location and a score of -INFINITY\n"
+		"\t\tNOTE: This will prevent the resource from running on this"
+		" node until the constraint is removed with -U\n"
+		"\t\t\t  Requires: -r, Optional: -H, -f\n", "migrate", 'M');
 	fprintf(stream, "\t--%s (-%c)\t: Remove all constraints created by -M\n"
 		"\t\t\t  Requires: -r\n", "un-migrate", 'U');
 	fprintf(stream, "\t--%s (-%c)\t: Delete a resource from the CIB\n"
@@ -809,6 +819,14 @@ usage(const char *cmd, int exit_status)
 		"Property value\n", "property-value", 'v');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
 		"Host name\n", "host-uname", 'H');
+	fprintf(stream, "\t--%s (-%c)\t: "
+		"Force the resource to move by creating a rule for the"
+		" current location and a score of -INFINITY\n"
+		"\t\tThis should be used if the resource's stickiness and"
+		" constraint scores total more than INFINITY (Currently 10,000)\n"
+		"\t\tNOTE: This will prevent the resource from running on this"
+		" node until the constraint is removed with -U\n",
+		"force-relocation", 'f');
 	fflush(stream);
 
 	exit(exit_status);
