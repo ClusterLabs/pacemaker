@@ -893,6 +893,8 @@ A partially set up scenario is torn down if it fails during setup.
 
 
 class NodeStatus:
+    def __init__(self, Env):
+        self.Env = Env
     def IsNodeBooted(self, node):
         '''Return TRUE if the given node is booted (responds to pings'''
         return os.system("@PING@ -nq -c1 @PING_TIMEOUT_OPT@ %s >/dev/null 2>&1" % node) == 0
@@ -936,7 +938,7 @@ It is fairly robust as it waits for all nodes to come up before starting
 as they might have been rebooted or crashed for some reason beforehand.
 ''')
     def __init__(self, Env):
-	self.ns=NodeStatus()
+	self.ns=NodeStatus(Env)
 
     def IsApplicable(self):
         '''InitClusterManager is so generic it is always Applicable'''

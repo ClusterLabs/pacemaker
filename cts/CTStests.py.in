@@ -62,6 +62,7 @@ class RandomTests:
         self.Scenario = scenario
         self.Tests = []
         self.Audits = []
+	self.ns=CTS.NodeStatus(self.Env)
 
         for test in tests:
             if not issubclass(test.__class__, CTSTest):
@@ -160,6 +161,7 @@ random for the selected number of iterations.
         if not self.Scenario.SetUp(self.CM):
             return None
 
+    	self.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
         testcount=1
         time.sleep(30)
 
@@ -188,6 +190,7 @@ random for the selected number of iterations.
             else:
                 self.incr("failure")
                 self.CM.log("Test %s (%s) \t[FAILED]" %(test.name,nodechoice))
+    	        self.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
                 # Better get the current info from the cluster...
                 self.CM.statall()
 		# Make sure logging is working and we have enough disk space...
@@ -715,6 +718,7 @@ class StartOnebyOne(CTSTest):
         self.name="StartOnebyOne"
         self.stopall = SimulStopLite(cm)
         self.start = StartTest(cm)
+        self.ns=CTS.NodeStatus(cm.Env)
 
     def __call__(self, dummy):
         '''Perform the 'StartOnebyOne' test. '''
@@ -730,6 +734,7 @@ class StartOnebyOne(CTSTest):
         failed=[]
         self.starttime=time.time()
         for node in self.CM.Env["nodes"]:
+    	    self.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
             if not self.start(node):
                 failed.append(node)
 
