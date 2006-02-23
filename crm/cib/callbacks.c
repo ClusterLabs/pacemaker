@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.114 2006/02/21 17:28:49 andrew Exp $ */
+/* $Id: callbacks.c,v 1.115 2006/02/23 17:51:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1680,7 +1680,7 @@ can_write(int flags)
 static gboolean
 cib_force_exit(gpointer data)
 {
-	crm_err("Forcing exit!");
+	crm_notice("Forcing exit!");
 	terminate_ha_connection(__FUNCTION__);
 	return FALSE;
 }
