@@ -320,6 +320,12 @@ do_dc_join_finalize(long long action,
 	   || safe_str_eq(max_generation_from, fsa_our_uname)){
 		set_bit_inplace(fsa_input_register, R_HAVE_CIB);
 	}
+
+	if(is_set(fsa_input_register, R_IN_TRANSITION)) {
+		crm_warn("join-%d: We are still in a transition."
+			 "Delaying until the TE completes.", current_join_id);
+		crmd_fsa_stall(NULL);
+	}
 	
 	if(is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
 		/* ask for the agreed best CIB */
@@ -382,11 +388,6 @@ finalize_join(const char *caller)
 	set_bit_inplace(fsa_input_register, R_HAVE_CIB);
 	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
 
-	if(is_set(fsa_input_register, R_IN_TRANSITION)) {
-		crm_err("join-%d: We are still in a transition!", current_join_id);
-		crm_err("join-%d: Resource actions may be overwritten with join data", current_join_id);
-	}
-	
 	set_uuid(fsa_cluster_conn, cib, XML_ATTR_DC_UUID, fsa_our_uname);
 	crm_debug_3("Update %s in the CIB to our uuid: %s",
 		    XML_ATTR_DC_UUID, crm_element_value(cib, XML_ATTR_DC_UUID));
