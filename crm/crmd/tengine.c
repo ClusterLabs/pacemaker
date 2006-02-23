@@ -106,7 +106,7 @@ do_te_invoke(long long action,
 			  fsa_action2string(action));
 		return I_NULL;
 		
-	} else if(fsa_state != S_TRANSITION_ENGINE && action ^ A_TE_CANCEL) {
+	} else if(fsa_state != S_TRANSITION_ENGINE && (action & A_TE_INVOKE)) {
 		crm_debug("No need to invoke the TE (%s) in state %s",
 			  fsa_action2string(action),
 			  fsa_state2string(fsa_state));
