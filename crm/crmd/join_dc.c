@@ -323,8 +323,9 @@ do_dc_join_finalize(long long action,
 
 	if(is_set(fsa_input_register, R_IN_TRANSITION)) {
 		crm_warn("join-%d: We are still in a transition."
-			 "Delaying until the TE completes.", current_join_id);
+			 "  Delaying until the TE completes.", current_join_id);
 		crmd_fsa_stall(NULL);
+		return I_NULL;
 	}
 	
 	if(is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
