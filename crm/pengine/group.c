@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.52 2006/02/14 11:59:57 andrew Exp $ */
+/* $Id: group.c,v 1.53 2006/02/24 11:31:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -61,7 +61,7 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	const char *group_ordered = g_hash_table_lookup(
 		rsc->parameters, XML_RSC_ATTR_ORDERED);
 	const char *group_colocated = g_hash_table_lookup(
-		rsc->parameters, "colocated");
+		rsc->parameters, "collocated");
 	
 
 	crm_debug_3("Processing resource %s...", rsc->id);
