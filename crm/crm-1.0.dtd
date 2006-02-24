@@ -32,19 +32,22 @@
           cib_feature_revision  CDATA   #REQUIRED>
 <!ELEMENT configuration (nodes, resources, constraints, crm_config)>
 <!-- Annotated version -->
-<!ELEMENT crm_config (nvpair*)>
+
+<!ELEMENT crm_config (cluster_property_set,nvpair)*>
+<!ELEMENT cluster_property_set (rule*, attributes)>
 <!ELEMENT nodes       (node*)>
 <!-- Annotated version -->
+
 <!ELEMENT node (instance_attributes*)>
 <!ATTLIST node
           id            CDATA         #REQUIRED
           uname         CDATA         #REQUIRED
           description   CDATA         #IMPLIED
-          dc_weight     CDATA         #IMPLIED
-          type          (member|ping) #REQUIRED>
+          type          (normal|member|ping) #REQUIRED>
 <!ELEMENT resources   (primitive*, group*, clone*)>
 <!-- Annotated version -->
-<!ELEMENT primitive (operations, instance_attributes*)>
+
+<!ELEMENT primitive (operations?, instance_attributes*)>
 <!ATTLIST primitive
           id                CDATA        #REQUIRED
           description       CDATA        #IMPLIED
@@ -59,6 +62,7 @@
           resource_stickiness   (0|INFINITY|-INFINITY)           '0'
           start_prereq          (nothing|quorum|fencing)         #IMPLIED>
 <!-- Annotated version -->
+
 <!ELEMENT operations (op*)>
 <!ELEMENT op (instance_attributes*)>
 <!ATTLIST op
@@ -70,7 +74,8 @@
           prereq     (nothing|quorum|fencing)   #IMPLIED
           on_fail    (nothing|block|stop|fence) #IMPLIED>
 <!-- Annotated version -->
-<!ELEMENT group (primitive+)>
+
+<!ELEMENT group (primitive+,instance_attributes*)>
 <!ATTLIST group
           id                    CDATA               #REQUIRED
           description   CDATA               #IMPLIED
@@ -81,7 +86,7 @@
           multiple_active       (stop_start|stop_only|block)     'stop_start'
           resource_stickiness   (0|INFINITY|-INFINITY)           '0'
           start_prereq          (nothing|quorum|fencing)         #IMPLIED>
-<!ELEMENT clone (primitive|group)>
+<!ELEMENT clone (primitive|group),instance_attributes*>
 <!ATTLIST clone
           id            CDATA               #REQUIRED
           description   CDATA               #IMPLIED
@@ -96,7 +101,7 @@
 
           ordered       (true|false)     'true'
           interleave    (true|false)     'false'>
-<!ELEMENT master_slave (clone)>
+<!ELEMENT master_slave (clone, instance_attributes*)>
 <!ATTLIST master_slave
           id            CDATA       #REQUIRED
           description   CDATA       #IMPLIED
@@ -114,6 +119,7 @@
           max_masters      CDATA         #REQUIRED
           max_node_masters CDATA         #REQUIRED>
 <!-- Annotated version -->
+
 <!ELEMENT instance_attributes (rule*, attributes)>
 <!-- Annotated version -->
 
@@ -146,8 +152,10 @@
 
 <!ELEMENT rule (expression|time_expression|rule)+>
 <!ATTLIST rule
-          id         CDATA        #REQUIRED
-          score      CDATA        #IMPLIED
+          id                    CDATA     #REQUIRED
+          role                  CDATA     #IMPLIED
+          score                 CDATA     #IMPLIED
+          score_attribute       CDATA     #IMPLIED
           boolean_op (or|and)     'and'>
 <!-- Annotated version -->
 
@@ -189,7 +197,7 @@
 <!-- Annotated version -->
 
 <!ELEMENT status (node_state*)>
-<!ELEMENT node_state (lrm, attributes)>
+<!ELEMENT node_state (lrm, transient_attributes)>
 <!ATTLIST node_state
         id              CDATA                   #REQUIRED
         uname           CDATA                   #REQUIRED
@@ -209,13 +217,11 @@
 <!ELEMENT lrm_resource (lrm_rsc_op)>
 <!ATTLIST lrm_resource
           id            CDATA #REQUIRED
-          rsc_state     (stopped|starting|started|fail|restarting|stopping|stop_fail)
-                                #REQUIRED
-          last_op       CDATA #REQUIRED
-          op_status     CDATA #REQUIRED
-          rc_code       CDATA #REQUIRED>
+          class             (ocf|init|heartbeat|stonith) #REQUIRED
+          type              CDATA        #REQUIRED
+          provider          CDATA        #IMPLIED>
 
-<!ELEMENT lrm_rsc_op)>
+<!ELEMENT lrm_rsc_op (parameters)>
 <!ATTLIST lrm_rsc_op
           id            CDATA #REQUIRED
           operation     CDATA #REQUIRED
@@ -230,7 +236,9 @@
           id            CDATA #REQUIRED
           name          CDATA #REQUIRED
           value         CDATA #IMPLIED>
+<!ELEMENT parameters>
 <!ELEMENT attributes (nvpair*)>
+<!ELEMENT transient_attributes (instance_attributes*)>
 
 <!-- ============================================================== -->
 <!-- ============================================================== -->
@@ -258,7 +266,8 @@
 <!ELEMENT synapse (inputs,action_set)>
 <!ATTLIST synapse
 	  id	CDATA		#REQUIRED
-	  reset	(no|yes|greedy) 'greedy'>
+	  reset	(no|yes|greedy) 'greedy'
+	  priority CDATA	#IMPLIED>
 
 <!ELEMENT inputs (trigger+)>
 
