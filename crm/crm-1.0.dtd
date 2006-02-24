@@ -85,7 +85,10 @@
           restart_type          (ignore|restart)                 'ignore'
           multiple_active       (stop_start|stop_only|block)     'stop_start'
           resource_stickiness   (0|INFINITY|-INFINITY)           '0'
-          start_prereq          (nothing|quorum|fencing)         #IMPLIED>
+          start_prereq          (nothing|quorum|fencing)         #IMPLIED
+
+          ordered               (true|false)                     'true'
+          collocated            (true|false)                     'true'>
 <!ELEMENT clone (primitive|group),instance_attributes*>
 <!ATTLIST clone
           id            CDATA               #REQUIRED
@@ -98,6 +101,8 @@
           resource_stickiness   (0|INFINITY|-INFINITY)           '0'
           start_prereq          (nothing|quorum|fencing)         #IMPLIED
           notify                (true|false)                     'false'
+
+          globally_unique       (true|false)                     'true'
 
           ordered       (true|false)     'true'
           interleave    (true|false)     'false'>
@@ -113,6 +118,8 @@
           resource_stickiness   (0|INFINITY|-INFINITY)           '0'
           start_prereq          (nothing|quorum|fencing)         #IMPLIED
           notify                (true|false)                     'false'
+
+          globally_unique       (true|false)                     'true'
 
           ordered          (true|false)  'true'
           interleave       (true|false)  'false'
