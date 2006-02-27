@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.69 2006/02/20 16:21:51 andrew Exp $ */
+/* $Id: callbacks.c,v 1.70 2006/02/27 09:55:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -44,6 +44,32 @@ extern char *te_uuid;
 gboolean shuttingdown = FALSE;
 crm_graph_t *transition_graph;
 GTRIGSource *transition_trigger = NULL;
+crm_action_timer_t *transition_timer = NULL;
+
+static gboolean
+start_global_timer(crm_action_timer_t *timer, int timeout)
+{
+	CRM_ASSERT(timer != NULL);
+	CRM_DEV_ASSERT(timer > 0);
+	CRM_DEV_ASSERT(timer->source_id == 0);
+
+	if(timeout <= 0) {
+		crm_err("Tried to start timer with period: %d", timeout);
+
+	} else if(timer->source_id == 0) {
+		crm_debug("Starting abort timer: %d", timeout);
+		timer->timeout = timeout;
+		timer->source_id = Gmain_timeout_add(
+			timeout, global_timer_callback, (void*)timer);
+		CRM_ASSERT(timer->source_id != 0);
+		return TRUE;
+
+	} else {
+		crm_err("Timer is already active with period: %d", timer->timeout);
+	}
+	
+	return FALSE;		
+}
 
 void
 te_update_diff(const char *event, HA_Message *msg)
@@ -191,6 +217,8 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		}  else {
 			destroy_graph(transition_graph);
 			transition_graph = unpack_graph(xml_data);
+			start_global_timer(transition_timer,
+					   transition_graph->transition_timeout);
 			trigger_graph();
 			print_graph(LOG_DEBUG, transition_graph);
 		}
@@ -335,6 +363,8 @@ void
 cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
 		    crm_data_t *output, void *user_data)
 {
+	trigger_graph();
+
 	if(rc < cib_ok) {
 		crm_err("CIB update failed: %s", cib_error2string(rc));
 		crm_log_xml_warn(msg, "[Failed Update]");
@@ -349,11 +379,12 @@ cib_action_updated(const HA_Message *msg, int call_id, int rc,
 	const char *task_uuid = crm_element_value(
 		action->xml, XML_LRM_ATTR_TASK_KEY);
 	
+	trigger_graph();
+
 	CRM_DEV_ASSERT(rc == cib_ok);
 	if(rc < cib_ok) {
 		crm_err("Update for action %d (%s) FAILED: %s",
 			action->id, task_uuid, cib_error2string(rc));
-		return;
 	}
 }
 
@@ -392,6 +423,39 @@ action_timer_callback(gpointer data)
 	return FALSE;
 }
 
+
+static int
+unconfirmed_actions(gboolean send_updates)
+{
+	int unconfirmed = 0;
+	crm_debug_2("Unconfirmed actions...");
+	slist_iter(
+		synapse, synapse_t, transition_graph->synapses, lpc,
+
+		/* lookup event */
+		slist_iter(
+			action, crm_action_t, synapse->actions, lpc2,
+			if(action->executed == FALSE) {
+				continue;
+				
+			} else if(action->confirmed) {
+				continue;
+			}
+			
+			unconfirmed++;
+			crm_debug("Action %d: unconfirmed",action->id);
+
+			if(action->type == action_type_rsc && send_updates) {
+				cib_action_update(action, LRM_OP_PENDING);
+			}
+			);
+		);
+	if(unconfirmed > 0) {
+		crm_info("Waiting on %d unconfirmed actions", unconfirmed);
+	}
+	return unconfirmed;
+}
+
 gboolean
 global_timer_callback(gpointer data)
 {
@@ -415,21 +479,26 @@ global_timer_callback(gpointer data)
 		crm_err("Ignoring timeout while not in transition");
 		
 	} else if(timer->reason == timeout_abort) {
-		crm_err("Transition abort timeout reached..."
+		int unconfirmed = unconfirmed_actions(FALSE);
+		crm_warn("Transition abort timeout reached..."
 			 " marking transition complete.");
-		print_graph(LOG_WARNING, transition_graph);
 
 		transition_graph->complete = TRUE;
-		abort_transition(INFINITY, -1, "Global Timeout", NULL);
+		abort_transition(INFINITY, tg_restart, "Global Timeout", NULL);
+
+		if(unconfirmed != 0) {
+			crm_warn("Writing %d unconfirmed actions to the CIB",
+				 unconfirmed);
+			unconfirmed_actions(TRUE);
+		}
 	}
 	return FALSE;		
 }
 
-crm_action_timer_t *transition_timer = NULL;
-
 gboolean
 te_graph_trigger(gpointer user_data) 
 {
+	int timeout = 0;
 	int pending_updates = 0;
 	enum transition_status graph_rc = -1;
 
@@ -438,24 +507,18 @@ te_graph_trigger(gpointer user_data)
 		return TRUE;	
 	}
 
-	if(transition_timer == NULL) {
-		crm_malloc0(transition_timer, sizeof(crm_action_timer_t));
-		transition_timer->source_id = 0;
-		transition_timer->reason    = timeout_abort;
-		transition_timer->action    = NULL;
-	}
-
 	graph_rc = run_graph(transition_graph);
+	timeout = transition_graph->transition_timeout;
 	print_graph(LOG_DEBUG_2, transition_graph);
 
-	transition_timer->timeout = transition_graph->transition_timeout;
 	if(graph_rc == transition_active) {
 		crm_debug_3("Transition not yet complete");
 		stop_te_timer(transition_timer);
-		start_te_timer(transition_timer);
+		start_global_timer(transition_timer, timeout);
 		return TRUE;		
 
 	} else if(graph_rc == transition_pending) {
+		timeout = transition_timer->timeout;
 		crm_debug_3("Transition not yet complete - no actions fired");
 		return TRUE;		
 	}

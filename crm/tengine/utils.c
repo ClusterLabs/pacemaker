@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.56 2006/02/20 16:21:51 andrew Exp $ */
+/* $Id: utils.c,v 1.57 2006/02/27 09:55:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -79,29 +79,6 @@ get_rsc_state(const char *task, op_status_t status)
 		}
 	}
 }
-
-gboolean
-start_te_timer(crm_action_timer_t *timer)
-{
-	if(timer == NULL) {
-		return FALSE;
-
-	} else if(timer->source_id != 0) {
-		timer->source_id = Gmain_timeout_add(
-			timer->timeout, global_timer_callback, (void*)timer);
-		CRM_ASSERT(timer->source_id != 0);
-		return TRUE;
-
-	} else if(timer->timeout < 0) {
-		crm_err("Tried to start timer with -ve period");
-		
-	} else {
-		crm_debug_3("#!!#!!# Timer already running (%d)",
-			  timer->source_id);
-	}
-	return FALSE;		
-}
-
 
 gboolean
 stop_te_timer(crm_action_timer_t *timer)

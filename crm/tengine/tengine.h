@@ -1,4 +1,4 @@
-/* $Id: tengine.h,v 1.35 2006/02/20 16:21:51 andrew Exp $ */
+/* $Id: tengine.h,v 1.36 2006/02/27 09:55:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -35,7 +35,6 @@ extern gboolean cib_action_update(crm_action_t *action, int status);
 
 /* utils */
 extern gboolean stop_te_timer(crm_action_timer_t *timer);
-extern gboolean start_te_timer(crm_action_timer_t *timer);
 extern const char *get_rsc_state(const char *task, op_status_t status);
 
 /* unpack */

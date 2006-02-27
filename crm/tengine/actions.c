@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.15 2006/02/20 17:05:27 andrew Exp $ */
+/* $Id: actions.c,v 1.16 2006/02/27 09:55:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -35,8 +35,7 @@ char *te_uuid = NULL;
 IPC_Channel *crm_ch = NULL;
 
 void send_rsc_command(crm_action_t *action);
-extern void cib_action_updated(const HA_Message *msg, int call_id, int rc,
-			       crm_data_t *output, void *user_data);
+extern crm_action_timer_t *transition_timer;
 
 static void
 te_start_action_timer(crm_action_t *action) 
@@ -330,10 +329,9 @@ cib_action_update(crm_action_t *action, int status)
 	crm_debug("Updating CIB with %s action %d: %s %s on %s (call_id=%d)",
 		  op_status2text(status), action->id, task_uuid, rsc_id, target, rc);
 
-	if(status == LRM_OP_PENDING) {
-		crm_debug_2("Waiting for callback id: %d", rc);
-		add_cib_op_callback(rc, FALSE, action, cib_action_updated);
-	}
+	crm_debug_2("Waiting for callback id: %d", rc);
+	add_cib_op_callback(rc, FALSE, action, cib_action_updated);
+
 	free_xml(fragment);
 	free_xml(state);
 
@@ -381,8 +379,16 @@ send_rsc_command(crm_action_t *action)
 	cmd = create_request(CRM_OP_INVOKE_LRM, rsc_op, on_node,
 			     CRM_SYSTEM_LRMD, CRM_SYSTEM_TENGINE, NULL);
 	
-
+#if 1
 	send_ipc_message(crm_ch, cmd);
+#else
+	/* test the TE timer/recovery code */
+	if((action->id % 11) == 0) {
+		crm_err("Faking lost action %d: %s", action->id, task_uuid);
+	} else {
+		send_ipc_message(crm_ch, cmd);
+	}
+#endif
 	
 	action->executed = TRUE;
 	value = g_hash_table_lookup(action->params, XML_ATTR_TE_NOWAIT);
@@ -413,72 +419,25 @@ crm_graph_functions_t te_graph_fns = {
 	te_fence_node
 };
 
-static int
-unconfirmed_actions(gboolean send_updates)
-{
-	int unconfirmed = 0;
-	crm_debug_2("Unconfirmed actions...");
-	slist_iter(
-		synapse, synapse_t, transition_graph->synapses, lpc,
-
-		/* lookup event */
-		slist_iter(
-			action, crm_action_t, synapse->actions, lpc2,
-			if(action->executed == FALSE) {
-				continue;
-				
-			} else if(action->confirmed) {
-				continue;
-			}
-			
-			unconfirmed++;
-			crm_debug("Action %d: unconfirmed",action->id);
-			if(send_updates) {
-				cib_action_update(action, LRM_OP_TIMEOUT);
-			}
-			);
-		);
-	if(unconfirmed > 0) {
-		crm_info("Waiting on %d unconfirmed actions", unconfirmed);
-	}
-	return unconfirmed;
-}
-
 void
 notify_crmd(crm_graph_t *graph)
 {	
-	int log_level = LOG_DEBUG;
-	const char *abort_reason = "Complete";
-	enum transition_action completion_action = tg_restart;
-	int id = -1;
-	
-	int unconfirmed = unconfirmed_actions(FALSE);
-	int pending_callbacks = num_cib_op_callbacks();
 	HA_Message *cmd = NULL;
+	int log_level = LOG_DEBUG;
 	const char *op = CRM_OP_TEABORT;
+	int pending_callbacks = num_cib_op_callbacks();
+	
 
-	if(unconfirmed != 0) {
-		crm_err("Write %d unconfirmed actions to the CIB", unconfirmed);
-		/* TODO: actually write them */
-		unconfirmed_actions(TRUE);
-
-/* 		return; */
-	}
+	stop_te_timer(transition_timer);
 	
 	if(pending_callbacks != 0) {
-		crm_err("Delaying completion until all CIB updates complete");
+		crm_warn("Delaying completion until all CIB updates complete");
 		return;
 	}
 
 	CRM_DEV_ASSERT(graph->complete);
-	
-	completion_action = graph->completion_action;
-	id = graph->id;
-	if(graph->abort_reason != NULL) {
-		abort_reason = graph->abort_reason;
-	}
 
-	switch(completion_action) {
+	switch(graph->completion_action) {
 		case tg_stop:
 			op = CRM_OP_TECOMPLETE;
 			log_level = LOG_INFO;
@@ -495,15 +454,15 @@ notify_crmd(crm_graph_t *graph)
 	}
 
 	te_log_action(log_level, "Transition %d status: %s - %s",
-		      id, op, abort_reason);
+		      graph->id, op, graph->abort_reason);
 
 	print_graph(log_level, graph);
 	
 	cmd = create_request(
 		op, NULL, NULL, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, NULL);
 
-	if(abort_reason != NULL) {
-		ha_msg_add(cmd, "message", abort_reason);
+	if(graph->abort_reason != NULL) {
+		ha_msg_add(cmd, "message", graph->abort_reason);
 	}
 
 	send_ipc_message(crm_ch, cmd);

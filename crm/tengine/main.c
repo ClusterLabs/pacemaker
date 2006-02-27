@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.31 2006/02/14 11:40:25 andrew Exp $ */
+/* $Id: main.c,v 1.32 2006/02/27 09:55:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -49,6 +49,7 @@ GMainLoop*  mainloop = NULL;
 const char* crm_system_name = SYS_NAME;
 cib_t *te_cib_conn = NULL;
 extern GTRIGSource *transition_trigger;
+extern crm_action_timer_t *transition_timer;
 
 void usage(const char* cmd, int exit_status);
 int init_start(void);
@@ -190,6 +191,11 @@ init_start(void)
 		transition_graph = unpack_graph(NULL);
 		transition_graph->complete = TRUE;
 		transition_graph->completion_action = tg_restart;
+
+		crm_malloc0(transition_timer, sizeof(crm_action_timer_t));
+		transition_timer->source_id = 0;
+		transition_timer->reason    = timeout_abort;
+		transition_timer->action    = NULL;
 	}
 	
 	if(init_ok) {
