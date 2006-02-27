@@ -26,7 +26,7 @@ Licensed under the GNU GPL.
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 from UserDict import UserDict
-import sys, time, types, syslog, random, os, struct, string, signal, traceback
+import sys, time, types, syslog, random, os, string, signal, traceback
 from CTS  import ClusterManager
 from CM_hb import HeartbeatCM
 from CTStests import BSC_AddResource
@@ -360,16 +360,10 @@ class CtsLab(UserDict):
 
         if self.has_key("RandSeed"):
             randseed = self["RandSeed"]
+            self.log("Random seed is: " + str(randseed))
+            self.RandomGen.seed(randseed) 
         else:
-            f=open("/dev/urandom", "r")
-            string=f.read(3)
-            f.close()
-            randseed=struct.unpack("BBB", string)
-
-        self.log("Random seed is: " + str(randseed))
-        self.randseed=randseed
-
-        self.RandomGen.seed(randseed[0]) 
+            self.RandomGen.seed()
 
     def log(self, args):
         "Log using each of the supplied logging methods"
@@ -525,6 +519,8 @@ if __name__ == '__main__':
     SuppressCib = 1
     DoBSC = 0
     ListTests = 0
+    ResourceClass = "ocf"
+
     #
     # The values of the rest of the parameters are now properly derived from
     # the configuration files.
@@ -644,6 +640,9 @@ if __name__ == '__main__':
        elif args[i] == "--syslog-facility" or args[i] == "--facility":
            skipthis=1
            LogFacility = args[i+1]
+       elif args[i] == "--resource-class":
+           skipthis=1
+           ResourceClass = args[i+1]
        else:
            NumIter=int(args[i])
           
@@ -688,6 +687,8 @@ if __name__ == '__main__':
     Environment["DoBSC"] = DoBSC
     Environment["use_logd"] = 0
     Environment["logfacility"] = LogFacility
+    Environment["ResourceClass" ] = ResourceClass
+
     if config.Parameters.has_key("use_logd"):
 	Environment["use_logd"] = 1
     

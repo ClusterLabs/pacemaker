@@ -1,0 +1,238 @@
+#!@PYTHON@
+
+'''CTS: Cluster Testing System: CIB generator
+'''
+__copyright__='''
+Author: Jia Ming Pan <jmltc@cn.ibm.com>
+Copyright (C) 2006 International Business Machines
+'''
+
+from UserDict import UserDict
+import sys, time, types, syslog, whrandom, os, struct, string, signal, traceback
+from CTS  import ClusterManager
+from CM_hb import HeartbeatCM
+
+class CIB:
+	cib_option_template = '''
+	<nvpair id="c-pref-1" name="transition_idle_timeout" value="3m"/>
+	<nvpair id="c-pref-2" name="symmetric_cluster" value="true"/>
+	<nvpair id="c-pref-3" name="short_resource_names" value="%d"/>
+	<nvpair id="c-pref-4" name="stop_orphan_resources" value="false"/>
+	<nvpair id="c-pref-5" name="stop_orphan_actions" value="false"/>
+	<nvpair id="c-pref-6" name="remove_after_stop" value="false"/>
+	<nvpair id="c-pref-7" name="is_managed_default" value="true"/>
+	<nvpair id="c-pref-8" name="no_quorum_policy" value="stop"/>
+	<nvpair id="c-pref-9" name="default_resource_stickiness" value="0"/> ''' 
+
+
+	ipaddr_resource_template = '''
+	<primitive id="DcIPaddr" class="%s" type="IPaddr" provider="heartbeat" is_managed="1">
+	  <operations>
+	    <op id="DcIPaddr-1" name="monitor" interval="5s" timeout="20s"/>
+	    <op id="DcIPaddr-2" name="start" timeout="40s"/>
+	  </operations>
+	  <instance_attributes>
+	    <attributes>
+	       <nvpair id="DcIPaddr-1" name="%s" value="%s"/>
+	    </attributes>
+	  </instance_attributes>
+	</primitive> '''
+	
+	clustermon_resource_template = '''
+	<primitive id="cluster_mon" class="ocf" type="ClusterMon" provider="heartbeat" is_managed="1">
+	  <operations>
+	    <op id="cluster_mon-1" name="monitor" interval="5s" timeout="20s" prereq="nothing"/>
+	    <op id="cluster_mon-2" name="start" timeout="20s" prereq="nothing"/>
+	  </operations>
+	  <instance_attributes>
+	    <attributes>
+	      <nvpair id="cluster_mon-1" name="htmlfile" value="/suse/abeekhof/Export/cluster.html"/>
+	      <nvpair id="cluster_mon-2" name="update" value="10"/>
+	      <nvpair id="cluster_mon-3" name="extra_options" value="-n -r"/>
+	      <nvpair id="cluster_mon-4" name="user" value="abeekhof"/>
+	    </attributes>
+	  </instance_attributes>
+	</primitive> ''' 
+
+	ipaddr_location_constraint = '''
+	<rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
+	  <rule id="cant_run_DcIPaddr" score="-INFINITY" boolean_op="and">
+	    <expression id="dc_ip_expr" attribute="#is_dc" operation="eq" value="false"/>
+	  </rule>
+	</rsc_location> '''
+
+	clustermon_location_constraint = '''
+	<rsc_location id="run_cluster_mon" rsc="cluster_mon">
+	  <rule id="cant_run_cluster_mon" score="-INFINITY" boolean_op="and">
+	    <expression id="mon_expr" attribute="#is_dc" operation="eq" value="false"/>
+	  </rule>
+	</rsc_location> '''
+
+	resource_group_template = '''
+	<group id="group-1">
+	  <primitive id="%s" class="%s" type="IPaddr" provider="heartbeat">
+	    <operations>
+	      <op id="%s-1" name="monitor" interval="5s" timeout="20s"/>
+	    </operations>
+	    <instance_attributes>
+	      <attributes>
+	        <nvpair id="%s-1" name="%s" value="%s"/>
+	      </attributes>
+	    </instance_attributes>
+	  </primitive>
+	  <primitive id="%s" class="%s" type="IPaddr" provider="heartbeat">
+	    <operations>
+	      <op id="%s-1" name="monitor" interval="5s" timeout="20s"/>
+	    </operations>
+	    <instance_attributes>
+	      <attributes>
+	        <nvpair id="%s-1" name="%s" value="%s"/>
+              </attributes>
+	    </instance_attributes>
+	  </primitive>
+	  <primitive id="%s" class="%s" type="IPaddr" provider="heartbeat">
+	    <operations>
+	      <op id="%s-1" name="monitor" interval="5s" timeout="20s"/>
+	    </operations>
+	    <instance_attributes>
+	      <attributes>
+	        <nvpair id="%s-1" name="%s" value="%s"/>
+	      </attributes>
+	    </instance_attributes>
+	  </primitive>
+	</group> '''  
+
+
+	per_node_resource_template = '''
+	<primitive id="%s" class="%s" type="IPaddr" provider="heartbeat" is_managed="1">
+	  <operations>
+	    <op id="%s-1" name="monitor" interval="5s" timeout="20s"/>
+	    <op id="%s-2" name="start" timeout="40s"/>
+	  </operations>
+	  <instance_attributes>
+	    <attributes>
+	      <nvpair id="%s-1" name="%s" value="%s"/>
+	    </attributes>
+	  </instance_attributes>
+	</primitive> '''
+
+	per_node_constraint_template = ''' 
+	<rsc_location id="run_%s" rsc="%s">
+	  <rule id="pref_run_%s" score="100" boolean_op="and">
+	    <expression id="%s_loc_expr" attribute="#uname" operation="eq" value="%s"/>
+	  </rule>
+	</rsc_location>
+	''' 
+
+
+	stonith_resource_template = """
+	<clone id="DoFencing">
+	  <instance_attributes>
+	    <attributes>
+	      <nvpair id="DoFencing-1" name="clone_max" value="%d"/>
+	      <nvpair id="DoFencing-2" name="clone_node_max" value="1"/>
+	    </attributes>
+	  </instance_attributes>
+	  <primitive id="child_DoFencing" class="stonith" type="ssh">
+	    <operations>
+	      <op id="DoFencing-1" name="monitor" interval="20s" timeout="40s" prereq="nothing"/>
+	      <op id="DoFencing-2" name="start" timeout="20s" prereq="nothing"/>
+	    </operations>
+	    <instance_attributes>
+	      <attributes>
+	        <nvpair id="child_DoFencing-1" name="hostlist" value="%s"/>
+	      </attributes>
+	    </instance_attributes>
+	  </primitive>
+	</clone>"""
+
+	cib_fencing = """
+	<nvpair id="stonith_enabled" name="stonith_enabled" value="true"/> """
+
+	cib_template ='''
+	<cib cib_feature_revision="1" have_quorum="false">
+	  <configuration>
+	    <crm_config>  %s </crm_config>
+	    <nodes/>
+	    <resources> %s </resources>
+	    <constraints> %s </constraints>
+	  </configuration>
+	  <status/>
+	</cib> '''
+
+	def __init__(self, CM):
+		self.CM = CM
+
+		#make up crm config
+		cib_options = self.cib_option_template % self.CM.use_short_names
+		if CM.Env["DoFencing"] == 1:
+			cib_options += self.cib_fencing
+
+		#create resources and their constraints
+		resources = ""
+		constraints = ""
+
+		rsc_class = self.CM.Env["ResourceClass"]
+		keyname = ""
+		if rsc_class =="ocf":
+			keyname = "ip"
+		elif rsc_class=="heartbeat":
+			keyname = "1"
+		else:
+			raise "Unknown resource class, aborted."
+
+		if self.CM.Env["CIBResource"] == 1:
+			self.CM.log("Enabling DC resource")
+			resources += self.ipaddr_resource_template % \
+				(rsc_class, keyname, self.CM.Env["IPBase"])
+			constraints += self.ipaddr_location_constraint
+			if self.CM.cluster_monitor == 1:
+				resources += self.clustermon_resource_template
+				constraints += self.clustermon_location_constraint
+
+		fields = string.split(self.CM.Env["IPBase"], '.')
+		fields[3] = str(int(fields[3])+1)
+		ip1 = string.join(fields, '.')
+		fields[3] = str(int(fields[3])+1)
+		ip2 = string.join(fields, '.')
+		fields[3] = str(int(fields[3])+1)
+		ip3 = string.join(fields, '.')
+		self.CM.Env["IPBase"] = ip3
+
+		resources += self.resource_group_template % \
+				("child_"+ip1, rsc_class, "child_"+ip1, 
+				"child_"+ip1, keyname, ip1, 	# primitive 1
+				"child_"+ip2, rsc_class, "child_"+ip2, 
+				"child_"+ip2, keyname, ip2,	# primitive 2
+				"child_"+ip3, rsc_class, "child_"+ip3, 
+				"child_"+ip3, keyname, ip3)	# primitive 3
+
+		# per node resource
+		fields = string.split(self.CM.Env["IPBase"], '.')
+		for node in self.CM.Env["nodes"]:
+			fields[3] = str(int(fields[3])+1)
+			ip = string.join(fields, '.')
+			self.CM.Env["IPBase"] = ip
+			per_node_resources = self.per_node_resource_template % \
+				("rsc_"+node, rsc_class,
+				"rsc_"+node, "rsc_"+node, "rsc_"+node, keyname, ip)	
+			
+			per_node_constraint = self.per_node_constraint_template % \
+				("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, node)
+
+			resources += per_node_resources
+			constraints += per_node_constraint
+	
+		# fencing resource
+		nodelist = ""
+		len = 0
+		for node in self.CM.Env["nodes"]:
+			nodelist += node + " "
+			len = len + 1
+		stonith_resource = self.stonith_resource_template % (len, nodelist)
+		resources += stonith_resource
+
+		self.cts_cib = self.cib_template %  (cib_options, resources, constraints)
+
+	def cib(self):
+		return self.cts_cib
