@@ -77,7 +77,7 @@ def create_cib() :
 	configuration.appendChild(crm_config)
 
 	option_set = doc.createElement("cluster_property_set")
-	option_set.setAttribute("id","deafult")
+	option_set.setAttribute("id","default")
 	crm_config.appendChild(option_set)
 
 	attr_list = doc.createElement("attributes")
@@ -329,7 +329,7 @@ def get_directive_list(config, directive) :
 	directive_list = []
 	for line in config :
 		line = line.lstrip()
-		if line[0] == "#" :
+		if len (line) == 0 or line[0] == "#" :
 			continue
 		if string.split(line)[0] == directive :
 			directive_list.append(line)
