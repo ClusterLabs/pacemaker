@@ -193,8 +193,9 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	/* send the RA operation to stonithd to simulate a RA's actions */
 	if ( 0==STRNCMP_CONST(op_type, "start") 
 		|| 0==STRNCMP_CONST(op_type, "stop") ) {
-		cl_log(LOG_INFO, "STONITH device %s %s <rsc_id=%s>"
-			, rsc_type, op_type, rsc_id);
+		cl_log(LOG_DEBUG
+			, "Will %s STONITH resource <rsc_id=%s> : Device=%s"
+			, op_type, rsc_id, rsc_type);
 	}
 
 	op = g_new(stonithRA_ops_t, 1);
