@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
        <pseudo_event id="18" rsc_id="rsc_c001n02" operation="stop" operation_key="rsc_c001n02_stop_0">
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -11,7 +11,7 @@
      <action_set>
        <rsc_op id="19" rsc_id="rsc_c001n02" operation="start" operation_key="rsc_c001n02_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
-         <attributes crm_feature_set="1.0.3" is_managed="1" ip="127.0.0.12"/>
+         <attributes crm_feature_set="1.0.4" is_managed="1" ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -27,7 +27,7 @@
      <action_set>
        <rsc_op id="20" rsc_id="rsc_c001n02" operation="monitor" operation_key="rsc_c001n02_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
-         <attributes timeout="20000" crm_feature_set="1.0.3" interval="5000" is_managed="1" ip="127.0.0.12"/>
+         <attributes timeout="20000" crm_feature_set="1.0.4" interval="5000" is_managed="1" ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -39,7 +39,7 @@
    <synapse id="3">
      <action_set>
        <pseudo_event id="25" rsc_id="DoFencing:child_DoFencing:0" operation="stop" operation_key="DoFencing:child_DoFencing:0_stop_0">
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -47,7 +47,7 @@
    <synapse id="4">
      <action_set>
        <crm_event id="36" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
-         <attributes on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" crm_feature_set="1.0.3"/>
+         <attributes on_node="c001n02" stonith_action="reboot" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" crm_feature_set="1.0.4"/>
        </crm_event>
      </action_set>
      <inputs/>

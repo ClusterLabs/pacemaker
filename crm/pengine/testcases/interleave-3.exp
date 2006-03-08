@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="70" rsc_id="CloneSet:child_CloneSet:0" operation="start" operation_key="CloneSet:child_CloneSet:0_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="CloneSet:child_CloneSet:0" class="stonith" type="ssh"/>
-         <attributes crm_feature_set="1.0.3" clone="0" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+         <attributes crm_feature_set="1.0.4" clone="0" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -16,7 +16,7 @@
      <action_set>
        <rsc_op id="71" rsc_id="CloneSet:child_CloneSet:0" operation="monitor" operation_key="CloneSet:child_CloneSet:0_monitor_5000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="CloneSet:child_CloneSet:0" class="stonith" type="ssh"/>
-         <attributes timeout="20000" crm_feature_set="1.0.3" interval="5000" clone="0" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+         <attributes timeout="20000" crm_feature_set="1.0.4" interval="5000" clone="0" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -29,7 +29,7 @@
      <action_set>
        <rsc_op id="72" rsc_id="CloneSet:child_CloneSet:1" operation="start" operation_key="CloneSet:child_CloneSet:1_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="CloneSet:child_CloneSet:1" class="stonith" type="ssh"/>
-         <attributes crm_feature_set="1.0.3" clone="1" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+         <attributes crm_feature_set="1.0.4" clone="1" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -42,7 +42,7 @@
      <action_set>
        <rsc_op id="73" rsc_id="CloneSet:child_CloneSet:1" operation="monitor" operation_key="CloneSet:child_CloneSet:1_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="CloneSet:child_CloneSet:1" class="stonith" type="ssh"/>
-         <attributes timeout="20000" crm_feature_set="1.0.3" interval="5000" clone="1" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+         <attributes timeout="20000" crm_feature_set="1.0.4" interval="5000" clone="1" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -55,7 +55,7 @@
      <action_set>
        <rsc_op id="74" rsc_id="CloneSet:child_CloneSet:2" operation="start" operation_key="CloneSet:child_CloneSet:2_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="CloneSet:child_CloneSet:2" class="stonith" type="ssh"/>
-         <attributes crm_feature_set="1.0.3" clone="2" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+         <attributes crm_feature_set="1.0.4" clone="2" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -68,7 +68,7 @@
      <action_set>
        <rsc_op id="75" rsc_id="CloneSet:child_CloneSet:2" operation="monitor" operation_key="CloneSet:child_CloneSet:2_monitor_5000" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="CloneSet:child_CloneSet:2" class="stonith" type="ssh"/>
-         <attributes timeout="20000" crm_feature_set="1.0.3" interval="5000" clone="2" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+         <attributes timeout="20000" crm_feature_set="1.0.4" interval="5000" clone="2" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -81,7 +81,7 @@
      <action_set>
        <rsc_op id="76" rsc_id="CloneSet:child_CloneSet:3" operation="start" operation_key="CloneSet:child_CloneSet:3_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
          <primitive id="CloneSet:child_CloneSet:3" class="stonith" type="ssh"/>
-         <attributes crm_feature_set="1.0.3" clone="3" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+         <attributes crm_feature_set="1.0.4" clone="3" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -94,7 +94,7 @@
      <action_set>
        <rsc_op id="77" rsc_id="CloneSet:child_CloneSet:3" operation="monitor" operation_key="CloneSet:child_CloneSet:3_monitor_5000" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
          <primitive id="CloneSet:child_CloneSet:3" class="stonith" type="ssh"/>
-         <attributes timeout="20000" crm_feature_set="1.0.3" interval="5000" clone="3" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+         <attributes timeout="20000" crm_feature_set="1.0.4" interval="5000" clone="3" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -107,7 +107,7 @@
      <action_set>
        <rsc_op id="78" rsc_id="CloneSet:child_CloneSet:4" operation="start" operation_key="CloneSet:child_CloneSet:4_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
          <primitive id="CloneSet:child_CloneSet:4" class="stonith" type="ssh"/>
-         <attributes crm_feature_set="1.0.3" clone="4" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+         <attributes crm_feature_set="1.0.4" clone="4" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -120,7 +120,7 @@
      <action_set>
        <rsc_op id="79" rsc_id="CloneSet:child_CloneSet:4" operation="monitor" operation_key="CloneSet:child_CloneSet:4_monitor_5000" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
          <primitive id="CloneSet:child_CloneSet:4" class="stonith" type="ssh"/>
-         <attributes timeout="20000" crm_feature_set="1.0.3" interval="5000" clone="4" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+         <attributes timeout="20000" crm_feature_set="1.0.4" interval="5000" clone="4" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -133,7 +133,7 @@
      <action_set>
        <rsc_op id="80" rsc_id="CloneSet:child_CloneSet:5" operation="start" operation_key="CloneSet:child_CloneSet:5_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
          <primitive id="CloneSet:child_CloneSet:5" class="stonith" type="ssh"/>
-         <attributes crm_feature_set="1.0.3" clone="5" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+         <attributes crm_feature_set="1.0.4" clone="5" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -146,7 +146,7 @@
      <action_set>
        <rsc_op id="81" rsc_id="CloneSet:child_CloneSet:5" operation="monitor" operation_key="CloneSet:child_CloneSet:5_monitor_5000" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
          <primitive id="CloneSet:child_CloneSet:5" class="stonith" type="ssh"/>
-         <attributes timeout="20000" crm_feature_set="1.0.3" interval="5000" clone="5" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+         <attributes timeout="20000" crm_feature_set="1.0.4" interval="5000" clone="5" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -159,7 +159,7 @@
      <action_set>
        <rsc_op id="82" rsc_id="CloneSet:child_CloneSet:6" operation="start" operation_key="CloneSet:child_CloneSet:6_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="CloneSet:child_CloneSet:6" class="stonith" type="ssh"/>
-         <attributes crm_feature_set="1.0.3" clone="6" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+         <attributes crm_feature_set="1.0.4" clone="6" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -172,7 +172,7 @@
      <action_set>
        <rsc_op id="83" rsc_id="CloneSet:child_CloneSet:6" operation="monitor" operation_key="CloneSet:child_CloneSet:6_monitor_5000" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="CloneSet:child_CloneSet:6" class="stonith" type="ssh"/>
-         <attributes timeout="20000" crm_feature_set="1.0.3" interval="5000" clone="6" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+         <attributes timeout="20000" crm_feature_set="1.0.4" interval="5000" clone="6" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -185,7 +185,7 @@
      <action_set>
        <rsc_op id="84" rsc_id="CloneSet:child_CloneSet:7" operation="start" operation_key="CloneSet:child_CloneSet:7_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="CloneSet:child_CloneSet:7" class="stonith" type="ssh"/>
-         <attributes crm_feature_set="1.0.3" clone="7" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+         <attributes crm_feature_set="1.0.4" clone="7" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -198,7 +198,7 @@
      <action_set>
        <rsc_op id="85" rsc_id="CloneSet:child_CloneSet:7" operation="monitor" operation_key="CloneSet:child_CloneSet:7_monitor_5000" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="CloneSet:child_CloneSet:7" class="stonith" type="ssh"/>
-         <attributes timeout="20000" crm_feature_set="1.0.3" interval="5000" clone="7" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+         <attributes timeout="20000" crm_feature_set="1.0.4" interval="5000" clone="7" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -210,7 +210,7 @@
    <synapse id="16">
      <action_set>
        <pseudo_event id="86" rsc_id="CloneSet" operation="start" operation_key="CloneSet_start_0">
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -218,7 +218,7 @@
    <synapse id="17">
      <action_set>
        <pseudo_event id="87" rsc_id="CloneSet" operation="running" operation_key="CloneSet_running_0">
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </pseudo_event>
      </action_set>
      <inputs>

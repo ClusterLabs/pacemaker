@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="3" rsc_id="child_DoFencing" operation="monitor" operation_key="child_DoFencing_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <primitive id="child_DoFencing" class="stonith" type="ssh"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3" hostlist="hadev1 hadev2 hadev3 "/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -12,7 +12,7 @@
      <action_set>
        <rsc_op id="4" rsc_id="child_DoFencing" operation="start" operation_key="child_DoFencing_start_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <primitive id="child_DoFencing" class="stonith" type="ssh"/>
-         <attributes timeout="20000" crm_feature_set="1.0.3" hostlist="hadev1 hadev2 hadev3 "/>
+         <attributes timeout="20000" crm_feature_set="1.0.4" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -25,7 +25,7 @@
      <action_set>
        <rsc_op id="5" rsc_id="child_DoFencing" operation="monitor" operation_key="child_DoFencing_monitor_5000" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <primitive id="child_DoFencing" class="stonith" type="ssh"/>
-         <attributes timeout="20000" crm_feature_set="1.0.3" interval="5000" hostlist="hadev1 hadev2 hadev3 "/>
+         <attributes timeout="20000" crm_feature_set="1.0.4" interval="5000" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -37,7 +37,7 @@
    <synapse id="3">
      <action_set>
        <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete">
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -49,7 +49,7 @@
    <synapse id="4">
      <action_set>
        <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
-         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
+         <attributes crm_feature_set="1.0.4" te-no-wait="true"/>
        </rsc_op>
      </action_set>
      <inputs>

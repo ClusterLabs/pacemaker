@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="1" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -12,7 +12,7 @@
      <action_set>
        <rsc_op id="2" rsc_id="rsc1" operation="delete" operation_key="rsc1_delete_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -25,7 +25,7 @@
      <action_set>
        <rsc_op id="15" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node2" on_node_uuid="node2">
          <primitive id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -34,7 +34,7 @@
      <action_set>
        <rsc_op id="18" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node3" on_node_uuid="node3">
          <primitive id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -43,7 +43,7 @@
      <action_set>
        <rsc_op id="4" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0" on_node="node2" on_node_uuid="node2">
          <primitive id="rsc2" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -52,7 +52,7 @@
      <action_set>
        <rsc_op id="5" rsc_id="rsc2" operation="delete" operation_key="rsc2_delete_0" on_node="node2" on_node_uuid="node2">
          <primitive id="rsc2" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -65,7 +65,7 @@
      <action_set>
        <rsc_op id="12" rsc_id="rsc2" operation="monitor" operation_key="rsc2_monitor_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc2" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -74,7 +74,7 @@
      <action_set>
        <rsc_op id="19" rsc_id="rsc2" operation="monitor" operation_key="rsc2_monitor_0" on_node="node3" on_node_uuid="node3">
          <primitive id="rsc2" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -83,7 +83,7 @@
      <action_set>
        <rsc_op id="20" rsc_id="rsc2" operation="start" operation_key="rsc2_start_0" on_node="node2" on_node_uuid="node2">
          <primitive id="rsc2" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -102,7 +102,7 @@
      <action_set>
        <rsc_op id="8" rsc_id="rsc3" operation="delete" operation_key="rsc3_delete_0" on_node="node3" on_node_uuid="node3">
          <primitive id="rsc3" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -111,7 +111,7 @@
      <action_set>
        <rsc_op id="13" rsc_id="rsc3" operation="monitor" operation_key="rsc3_monitor_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc3" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -120,7 +120,7 @@
      <action_set>
        <rsc_op id="16" rsc_id="rsc3" operation="monitor" operation_key="rsc3_monitor_0" on_node="node2" on_node_uuid="node2">
          <primitive id="rsc3" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -129,7 +129,7 @@
      <action_set>
        <rsc_op id="21" rsc_id="rsc3" operation="start" operation_key="rsc3_start_0" on_node="node3" on_node_uuid="node3">
          <primitive id="rsc3" class="heartbeat" type="apache" priority="1.0"/>
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -144,7 +144,7 @@
    <synapse id="13">
      <action_set>
        <crm_event id="3" operation="lrm_refresh" operation_key="lrm_refresh" on_node="node1" on_node_uuid="node1">
-         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
+         <attributes crm_feature_set="1.0.4" te-no-wait="true"/>
        </crm_event>
      </action_set>
      <inputs>
@@ -156,7 +156,7 @@
    <synapse id="14">
      <action_set>
        <crm_event id="6" operation="lrm_refresh" operation_key="lrm_refresh" on_node="node2" on_node_uuid="node2">
-         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
+         <attributes crm_feature_set="1.0.4" te-no-wait="true"/>
        </crm_event>
      </action_set>
      <inputs>
@@ -168,7 +168,7 @@
    <synapse id="15">
      <action_set>
        <crm_event id="9" operation="lrm_refresh" operation_key="lrm_refresh" on_node="node3" on_node_uuid="node3">
-         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
+         <attributes crm_feature_set="1.0.4" te-no-wait="true"/>
        </crm_event>
      </action_set>
      <inputs>
@@ -180,7 +180,7 @@
    <synapse id="16">
      <action_set>
        <pseudo_event id="10" operation="probe_complete" operation_key="probe_complete">
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -198,7 +198,7 @@
    <synapse id="17">
      <action_set>
        <rsc_op id="11" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="node1">
-         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
+         <attributes crm_feature_set="1.0.4" te-no-wait="true"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -213,7 +213,7 @@
    <synapse id="18">
      <action_set>
        <rsc_op id="14" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="node2">
-         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
+         <attributes crm_feature_set="1.0.4" te-no-wait="true"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -228,7 +228,7 @@
    <synapse id="19">
      <action_set>
        <rsc_op id="17" operation="probe_complete" operation_key="probe_complete" on_node="node3" on_node_uuid="node3">
-         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
+         <attributes crm_feature_set="1.0.4" te-no-wait="true"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -243,7 +243,7 @@
    <synapse id="20">
      <action_set>
        <crm_event id="22" operation="do_shutdown" operation_key="do_shutdown" on_node="node1" on_node_uuid="node1">
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </crm_event>
      </action_set>
      <inputs>

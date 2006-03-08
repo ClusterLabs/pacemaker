@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="18" rsc_id="rsc_c001n02" operation="stop" operation_key="rsc_c001n02_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat"/>
-         <attributes crm_feature_set="1.0.3" ip="127.0.0.12"/>
+         <attributes crm_feature_set="1.0.4" ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -12,7 +12,7 @@
      <action_set>
        <rsc_op id="19" rsc_id="rsc_c001n02" operation="start" operation_key="rsc_c001n02_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat"/>
-         <attributes crm_feature_set="1.0.3" ip="127.0.0.12"/>
+         <attributes crm_feature_set="1.0.4" ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -25,7 +25,7 @@
      <action_set>
        <rsc_op id="20" rsc_id="rsc_c001n02" operation="monitor" operation_key="rsc_c001n02_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat"/>
-         <attributes timeout="20000" crm_feature_set="1.0.3" interval="5000" ip="127.0.0.12"/>
+         <attributes timeout="20000" crm_feature_set="1.0.4" interval="5000" ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -38,7 +38,7 @@
      <action_set>
        <rsc_op id="25" rsc_id="DoFencing:child_DoFencing:0" operation="stop" operation_key="DoFencing:child_DoFencing:0_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
-         <attributes crm_feature_set="1.0.3" clone="0" clone_max="4" hostlist="c001n09 c001n02 c001n03 c001n04 " clone_node_max="1"/>
+         <attributes crm_feature_set="1.0.4" clone="0" clone_max="4" hostlist="c001n09 c001n02 c001n03 c001n04 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -50,7 +50,7 @@
    <synapse id="4">
      <action_set>
        <pseudo_event id="34" rsc_id="DoFencing" operation="stop" operation_key="DoFencing_stop_0">
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -58,7 +58,7 @@
    <synapse id="5">
      <action_set>
        <pseudo_event id="35" rsc_id="DoFencing" operation="stopped" operation_key="DoFencing_stopped_0">
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -73,7 +73,7 @@
    <synapse id="6">
      <action_set>
        <crm_event id="36" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </crm_event>
      </action_set>
      <inputs>

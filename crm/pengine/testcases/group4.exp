@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="3" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -12,7 +12,7 @@
      <action_set>
        <rsc_op id="4" rsc_id="rsc2:child_rsc1" operation="monitor" operation_key="rsc2:child_rsc1_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc1" class="heartbeat" type="apache"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -21,7 +21,7 @@
      <action_set>
        <rsc_op id="5" rsc_id="rsc2:child_rsc2" operation="monitor" operation_key="rsc2:child_rsc2_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc2" class="heartbeat" type="apache"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -30,7 +30,7 @@
      <action_set>
        <rsc_op id="6" rsc_id="rsc2:child_rsc3" operation="monitor" operation_key="rsc2:child_rsc3_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2:child_rsc3" class="heartbeat" type="apache"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -39,7 +39,7 @@
      <action_set>
        <rsc_op id="7" rsc_id="rsc3" operation="monitor" operation_key="rsc3_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc3" class="heartbeat" type="apache"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -47,7 +47,7 @@
    <synapse id="5">
      <action_set>
        <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete">
-         <attributes crm_feature_set="1.0.3"/>
+         <attributes crm_feature_set="1.0.4"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -62,7 +62,7 @@
    <synapse id="6">
      <action_set>
        <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
-         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
+         <attributes crm_feature_set="1.0.4" te-no-wait="true"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -86,7 +86,7 @@
    <synapse id="7">
      <action_set>
        <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="uuid2">
-         <attributes crm_feature_set="1.0.3" te-no-wait="true"/>
+         <attributes crm_feature_set="1.0.4" te-no-wait="true"/>
        </rsc_op>
      </action_set>
      <inputs/>
