@@ -43,7 +43,6 @@ do_test simple7 "Shutdown    "
 do_test simple11 "Priority (ne)"
 do_test simple12 "Priority (eq)"
 do_test simple8 "Stickiness"
-do_test simple8 "Stickiness"
 
 echo ""
 do_test date-1 "Dates"
