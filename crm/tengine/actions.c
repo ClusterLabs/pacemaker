@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.16 2006/02/27 09:55:57 andrew Exp $ */
+/* $Id: actions.c,v 1.17 2006/03/08 15:49:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -110,16 +110,20 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 	const char *id = NULL;
 	const char *uuid = NULL;
 	const char *target = NULL;
+	const char *type = NULL;
 	stonith_ops_t * st_op = NULL;
 	
 	id = ID(action->xml);
 	target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 	uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+	type = g_hash_table_lookup(action->params, "stonith_action");
 	
 	CRM_DEV_ASSERT(id != NULL);
 	CRM_DEV_ASSERT(uuid != NULL);
+	CRM_DEV_ASSERT(type != NULL);
 	CRM_DEV_ASSERT(target != NULL);
-	if(crm_assert_failed) {
+
+	if(id == NULL || uuid == NULL || target == NULL) {
 		/* error */
 		te_log_action(LOG_ERR, "Corrupted command (id=%s): no node",
 			      crm_str(id));
@@ -127,11 +131,17 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 	}
 	
 	te_log_action(LOG_INFO,
-		      "Executing fencing operation (%s) on %s (timeout=%d)",
-		      id, target, transition_graph->transition_timeout / 2);
+		      "Executing %s fencing operation (%s) on %s (timeout=%d)",
+		      type, id, target,
+		      transition_graph->transition_timeout / 2);
 
 	crm_malloc0(st_op, sizeof(stonith_ops_t));
-	st_op->optype = RESET;
+	if(safe_str_eq(type, "poweroff")) {
+		st_op->optype = POWEROFF;
+	} else {
+		st_op->optype = RESET;
+	}
+	
 	st_op->timeout = transition_graph->transition_timeout / 2;
 	st_op->node_name = crm_strdup(target);
 	st_op->node_uuid = crm_strdup(uuid);

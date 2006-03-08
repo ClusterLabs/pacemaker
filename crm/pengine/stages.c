@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.86 2006/02/10 05:18:22 andrew Exp $ */
+/* $Id: stages.c,v 1.87 2006/03/08 15:49:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -347,6 +347,10 @@ stage6(pe_working_set_t *data_set)
 			add_hash_param(
 				stonith_op->extra, XML_LRM_ATTR_TARGET_UUID,
 				node->details->id);
+
+			add_hash_param(
+				stonith_op->extra, "stonith_action",
+				data_set->stonith_action);
 			
 			if(down_op != NULL) {
 				down_op->failure_is_fatal = FALSE;

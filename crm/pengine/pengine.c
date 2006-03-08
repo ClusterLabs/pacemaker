@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.103 2006/02/08 09:21:31 andrew Exp $ */
+/* $Id: pengine.c,v 1.104 2006/03/08 15:49:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -311,6 +311,7 @@ cleanup_calculations(pe_working_set_t *data_set)
 	free_xml(data_set->graph);
 	free_ha_date(data_set->now);
 	free_xml(data_set->input);
+	data_set->stonith_action = NULL;
 }
 
 
@@ -322,22 +323,23 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->graph = NULL;
 	
 	data_set->transition_idle_timeout = crm_strdup("60s");
-	data_set->dc_uuid           = NULL;
-	data_set->dc_node           = NULL;
-	data_set->have_quorum       = FALSE;
-	data_set->stonith_enabled   = FALSE;
-	data_set->symmetric_cluster = TRUE;
-	data_set->no_quorum_policy  = no_quorum_freeze;
+	data_set->dc_uuid            = NULL;
+	data_set->dc_node            = NULL;
+	data_set->have_quorum        = FALSE;
+	data_set->stonith_enabled    = FALSE;
+	data_set->stonith_action     = NULL;
+	data_set->symmetric_cluster  = TRUE;
 	data_set->is_managed_default = TRUE;
+	data_set->no_quorum_policy   = no_quorum_freeze;
 	
-	data_set->remove_after_stop = FALSE;
+	data_set->remove_after_stop   = FALSE;
 	data_set->stop_action_orphans = TRUE;
-	data_set->stop_rsc_orphans = FALSE;
-	data_set->short_rsc_names = FALSE;
+	data_set->stop_rsc_orphans    = FALSE;
+	data_set->short_rsc_names     = FALSE;
 	
 	data_set->config_hash = NULL;
-	data_set->nodes     = NULL;
-	data_set->resources = NULL;
+	data_set->nodes       = NULL;
+	data_set->resources   = NULL;
 	data_set->ordering_constraints  = NULL;
 	data_set->placement_constraints = NULL;
 
@@ -345,10 +347,10 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->colors   = NULL;
 	data_set->actions  = NULL;	
 
-	data_set->num_synapse = 0;
+	data_set->num_synapse     = 0;
 	data_set->max_valid_nodes = 0;
-	data_set->order_id = 1;
-	data_set->action_id = 1;
-	data_set->color_id = 0;
+	data_set->order_id        = 1;
+	data_set->action_id       = 1;
+	data_set->color_id        = 0;
 
 }

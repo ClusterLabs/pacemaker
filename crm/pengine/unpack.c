@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.159 2006/02/20 12:11:28 andrew Exp $ */
+/* $Id: unpack.c,v 1.160 2006/03/08 15:49:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -110,6 +110,7 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 	param_value(config_hash, config, "remove_after_stop");
 	param_value(config_hash, config, "is_managed_default");
 	param_value(config_hash, config, "short_resource_names");
+	param_value(config_hash, config, "stonith_action");
 #endif
 	get_cluster_pref("transition_idle_timeout");
 	if(value != NULL) {
@@ -137,6 +138,13 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 	}
 	crm_info("STONITH of failed nodes is %s",
 		 data_set->stonith_enabled?"enabled":"disabled");	
+
+	get_cluster_pref("stonith_action");
+	if(value == NULL || safe_str_neq(value, "poweroff")) {
+		value = "reboot";
+	}
+	data_set->stonith_action = value;
+	crm_info("STONITH will %s nodes", data_set->stonith_action);	
 	
 	get_cluster_pref("symmetric_cluster");
 	if(value != NULL) {
@@ -1251,7 +1259,10 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		if(crm_assert_failed) { return FALSE; }
 
 		CRM_DEV_ASSERT(task_id_i >= 0);
-		if(crm_assert_failed) { return FALSE; }
+		if(crm_assert_failed) {
+			crm_err("%s: status=%d, task=%s", id, task_status_i, task_id);
+			return FALSE;
+		}
 
 		if(task_id_i == *max_call_id) {
 			crm_debug_2("Already processed this call");

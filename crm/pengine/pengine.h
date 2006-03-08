@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.105 2006/01/27 11:15:49 andrew Exp $ */
+/* $Id: pengine.h,v 1.106 2006/03/08 15:49:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -92,6 +92,7 @@ typedef struct pe_working_set_s
 		node_t *dc_node;
 		gboolean have_quorum;
 		gboolean stonith_enabled;
+		const char *stonith_action;
 		gboolean symmetric_cluster;
 		gboolean is_managed_default;
 
