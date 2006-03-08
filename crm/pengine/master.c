@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.8 2006/01/27 11:15:49 andrew Exp $ */
+/* $Id: master.c,v 1.9 2006/03/08 15:47:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -237,7 +237,6 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		rsc->parameters, XML_RSC_ATTR_MASTER_NODEMAX);
 
 	int promoted = 0;
-	int max_nodes = 0;
 	int master_max = crm_parse_int(master_max_s, "1");
 	int master_node_max = crm_parse_int(master_node_max_s, "1");
 
@@ -255,7 +254,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		master_max = clone_data->max_nodes * clone_data->clone_node_max;
 		crm_info("Limited to %d masters (potential slaves)",master_max);
 	}
-	if(master_max >  max_nodes * master_node_max) {
+	if(master_max >  clone_data->max_nodes * master_node_max) {
 		master_max = clone_data->max_nodes * master_node_max;
 		crm_info("Limited to %d masters (available nodes)", master_max);
 	}
