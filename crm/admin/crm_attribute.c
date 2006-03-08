@@ -1,4 +1,4 @@
-/* $Id: crm_attribute.c,v 1.7 2006/01/26 11:36:58 andrew Exp $ */
+/* $Id: crm_attribute.c,v 1.8 2006/03/08 15:46:52 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -225,11 +225,12 @@ main(int argc, char **argv)
 	if(dest_node == NULL && dest_uname != NULL) {
 		rc = query_node_uuid(the_cib, dest_uname, &dest_node);
 		if(rc != cib_ok) {
-			fprintf(stderr, "Could not map uname=%s to a UUID: %s\n",
+			fprintf(stderr,"Could not map uname=%s to a UUID: %s\n",
 				dest_uname, cib_error2string(rc));
 			return rc;
 		} else {
-			crm_info("Mapped %s to %s", dest_uname, crm_str(dest_node));
+			crm_info("Mapped %s to %s",
+				 dest_uname, crm_str(dest_node));
 		}
 	}
 
@@ -237,10 +238,6 @@ main(int argc, char **argv)
 		int len = 0;
 		char *rsc = NULL;
 		
-		if(dest_node == NULL) {
-			fprintf(stderr, "Could not determin node UUID.\n");
-			return 1;
-		}
 		if(safe_str_eq(type, "reboot")) {
 			type = XML_CIB_TAG_STATUS;
 		} else {
@@ -251,6 +248,17 @@ main(int argc, char **argv)
 		CRM_DEV_ASSERT(rsc != NULL);
 		CRM_DEV_ASSERT(dest_node != NULL);
 
+		if(rsc == NULL && dest_node == NULL) {
+			fprintf(stderr, "This program should only ever be "
+				"invoked from inside an OCF resource agent.\n");
+			fprintf(stderr, "DO NOT INVOKE MANUALLY FROM THE COMMAND LINE.\n");
+			return 1;
+
+		} else if(dest_node == NULL) {
+			fprintf(stderr, "Could not determin node UUID.\n");
+			return 1;
+		}
+		
 		len = 8 + strlen(rsc);
 		crm_malloc0(attr_name, len);
 		sprintf(attr_name, "master-%s", rsc);
@@ -374,7 +382,8 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\t: Print only the value on stdout"
 		" (use with -G)\n", "quiet", 'Q');
 	fprintf(stream, "\t--%s (-%c)\t: "
-		"Retrieve rather than set the attribute\n", "get-value", 'G');
+		"Retrieve rather than set the %s\n", "get-value", 'G',
+		safe_str_eq(cmd, "crm_master")?"named attribute":"preference to be promoted");
 	fprintf(stream, "\t--%s (-%c)\t: "
 		"Delete rather than set the attribute\n", "delete-attr", 'D');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
