@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.57 2006/02/16 15:24:31 andrew Exp $ */
+/* $Id: xml.c,v 1.58 2006/03/08 22:30:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -535,10 +535,7 @@ file2xml(FILE *input)
 	length = ftell(input);
 	fseek(input, 0L, start);
 	
-	if(start != ftell(input)) {
-		crm_err("fseek not behaving");
-		return NULL;
-	}
+	CRM_ASSERT(start == ftell(input));
 
 	crm_debug_3("Reading %d bytes from file", length);
 	crm_malloc0(buffer, sizeof(char) * (length+1));
@@ -672,6 +669,9 @@ dump_xml_formatted(const crm_data_t *an_xml_node)
 {
 	char *buffer     = NULL;
 	char *mutable_ptr = NULL;
+	if(an_xml_node == NULL) {
+		return NULL;
+	}
   	crm_malloc0(buffer, 3*get_stringlen(an_xml_node));
 	mutable_ptr = buffer;
 	
