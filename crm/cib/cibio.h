@@ -1,4 +1,4 @@
-/* $Id: cibio.h,v 1.15 2006/02/15 13:19:14 andrew Exp $ */
+/* $Id: cibio.h,v 1.16 2006/03/08 22:24:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,9 +51,6 @@ extern crm_data_t *readCibXml(char *buffer);
 extern crm_data_t *readCibXmlFile(const char *filename);
 extern int activateCibBuffer(char *buffer, const char *filename);
 extern int activateCibXml(crm_data_t *doc, const char *filename);
-
-extern int moveFile(const char *oldname, const char *newname,
-		    gboolean backup, char *ext);
 
 extern gboolean update_quorum(crm_data_t *xml_obj);
 extern gboolean set_transition(crm_data_t *xml_obj);

@@ -59,7 +59,7 @@ noinst_HEADERS		= cibio.h cibmessages.h cibprimatives.h notify.h \
 cib_SOURCES		= io.c primatives.c messages.c cib.c notify.c \
 			callbacks.c main.c
 cib_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-cib_LDADD		= $(COMMONLIBS) \
+cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB) \
 			$(top_builddir)/membership/ccm/libccmclient.la  
 
 

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.39 2006/02/20 11:39:46 andrew Exp $ */
+/* $Id: main.c,v 1.40 2006/03/08 22:24:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -78,6 +78,23 @@ GTRIGSource *cib_writer = NULL;
 
 #define OPTARGS	"hV"
 
+static void
+cib_diskwrite_complete(gpointer userdata, int status, int signo, int exitcode)
+{
+	if(exitcode != LSB_EXIT_OK || signo != 0 || status != 0) {
+		crm_err("Disk write failed: status=%d, signo=%d, exitcode=%d",
+			status, signo, exitcode);
+
+		if(cib_writes_enabled) {
+			crm_err("Disabling disk writes after write failure");
+			cib_writes_enabled = FALSE;
+		}
+		
+	} else {
+		crm_debug_2("Disk write passed");
+	}
+}
+
 int
 main(int argc, char ** argv)
 {
@@ -92,7 +109,7 @@ main(int argc, char ** argv)
 	
 	cib_writer = G_main_add_tempproc_trigger(			
 		G_PRIORITY_LOW, write_cib_contents, "write_cib_contents",
-		NULL, NULL, NULL);
+		NULL, NULL, NULL, cib_diskwrite_complete);
 
 	EnableProcLogging();
 	set_sigchld_proctrack(G_PRIORITY_HIGH);
@@ -396,7 +413,6 @@ cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name)
 		cib_ha_connection_destroy);
 
 	return TRUE;
-    
 }
 
 void
@@ -474,8 +490,8 @@ startCib(const char *filename)
 	crm_data_t *cib = readCibXmlFile(filename);
 
 	if(cib == NULL) {
-		crm_warn("CIB Initialization failed, "
-			 "starting with an empty default.");
+		crm_warn("Cluster configuration not found: %s."
+			 "  Creating an empty one.", filename);
 
 		cib = createEmptyCib();
 		crm_xml_add(cib, XML_ATTR_GENERATION_ADMIN, "0");
