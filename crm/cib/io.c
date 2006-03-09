@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.49 2006/03/08 22:24:29 andrew Exp $ */
+/* $Id: io.c,v 1.50 2006/03/09 10:04:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -88,51 +88,30 @@ int write_cib_contents(gpointer p);
 #include <pwd.h>
 #include <grp.h>
 
-#if HAVE_OPENSSL_EVP_H
-#include <openssl/evp.h>
-#endif
+#include <clplumbing/md5.h>
 
+/* "c048eae664dba840e1d2060f00299e9d" */
 static char *
 calculate_cib_digest(crm_data_t *local_cib)
 {
-#if HAVE_OPENSSL_EVP_H
-        EVP_MD_CTX mdctx;
-        static const EVP_MD *md = NULL;
-        unsigned char md_value[EVP_MAX_MD_SIZE];
-        unsigned int md_len = 0;
-	int digest_len = 0;
-        int i;
-
+	int i = 0;
+	int digest_len = 16;
 	char *digest = NULL;
+	unsigned char *raw_digest = NULL;
 	char *buffer = dump_xml_formatted(local_cib);
 
 	CRM_DEV_ASSERT(buffer != NULL && strlen(buffer) > 0);
-	
-	if(md == NULL) {
-		OpenSSL_add_all_digests();
-		
-		md = EVP_get_digestbyname("md5");
-		CRM_ASSERT(md != NULL);
-        }
 
-        EVP_MD_CTX_init(&mdctx);
-        EVP_DigestInit_ex(&mdctx, md, NULL);
-        EVP_DigestUpdate(&mdctx, buffer, strlen(buffer));
-        EVP_DigestFinal_ex(&mdctx, md_value, &md_len);
-        EVP_MD_CTX_cleanup(&mdctx);
-
-	digest_len = 2 * md_len + 1;
-	crm_malloc0(digest, sizeof(char) * digest_len);
-        for(i = 0; i < md_len; i++) {
-		sprintf(digest+(2*i), "%02x", md_value[i]);
-	}
+	crm_malloc0(digest, sizeof(char) * (2 * digest_len + 1));
+	crm_malloc0(raw_digest, sizeof(char) * (digest_len + 1));
+	MD5((unsigned char *)buffer, strlen(buffer), raw_digest);
+         for(i = 0; i < digest_len; i++) {
+ 		sprintf(digest+(2*i), "%02x", raw_digest[i]);
+ 	}
         crm_debug_2("Digest is: %s\n", digest);
 	crm_free(buffer);
+	crm_free(raw_digest);
 	return digest;
-#else
-	crm_err("Could not create a digest of the on-disk CIB");
-	return crm_strdup("Unknown");
-#endif
 }
 
 static gboolean
@@ -278,7 +257,7 @@ readCibXmlFile(const char *filename)
 	
 	if( S_ISREG(buf.st_mode) == FALSE ) {
 		crm_err("%s must be a regular file", filename);
-		sleep(5);
+		cl_flush_logs();
 		exit(100);
 		
 	} else if( user_readwritable == FALSE ) {
@@ -630,11 +609,12 @@ write_cib_contents(gpointer p)
 		exit(LSB_EXIT_GENERIC);
 	}
 
+#if 0
 	if(validate_on_disk_cib(CIB_FILENAME, NULL) == FALSE) {
 		crm_err("wrote incorrect digest");
 		exit(LSB_EXIT_GENERIC);
 	}
-
+#endif
 	exit(LSB_EXIT_OK);
 	return HA_OK;
 }
