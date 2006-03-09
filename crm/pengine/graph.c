@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.75 2006/02/16 22:18:55 andrew Exp $ */
+/* $Id: graph.c,v 1.76 2006/03/09 10:07:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -470,7 +470,7 @@ should_dump_action(action_t *action)
 	if(action->pseudo
 	   || safe_str_eq(action->task,  CRM_OP_FENCE)
 	   || safe_str_eq(action->task,  CRM_OP_SHUTDOWN)) {
-		/* skip the next two checks */
+		/* skip the next checks */
 		return TRUE;
 	}
 
@@ -485,6 +485,16 @@ should_dump_action(action_t *action)
 		       action->id, action->uuid);
 		log_action(LOG_DEBUG, "Action for offline node", action, FALSE);
 		return FALSE;
+#if 0
+		/* but this would also affect resources that can be safely
+		 *  migrated before a fencing op
+		 */
+	} else if(action->node->details->unclean == FALSE) {
+		pe_err("action %d was (%s) scheduled for unclean node",
+		       action->id, action->uuid);
+		log_action(LOG_DEBUG, "Action for unclean node", action, FALSE);
+		return FALSE;
+#endif
 	}
 	return TRUE;
 }
