@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.106 2006/03/08 15:49:39 andrew Exp $ */
+/* $Id: pengine.h,v 1.107 2006/03/09 21:36:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -102,6 +102,7 @@ typedef struct pe_working_set_s
 		gboolean short_rsc_names;
 
 		int default_resource_stickiness;
+		int default_resource_fail_stickiness;
 		no_quorum_policy_t no_quorum_policy;
 
 		GHashTable *config_hash;
@@ -287,6 +288,7 @@ struct resource_s {
 
 		int	 priority; 
 		int	 stickiness; 
+		int	 fail_stickiness;
 		int	 effective_priority; 
 
 		gboolean notify;
@@ -296,7 +298,7 @@ struct resource_s {
 		gboolean runnable;
 		gboolean provisional;
 		gboolean globally_unique;
-
+		
 		gboolean failed;
 		gboolean start_pending;
 		

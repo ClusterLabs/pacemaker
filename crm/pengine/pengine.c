@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.104 2006/03/08 15:49:39 andrew Exp $ */
+/* $Id: pengine.c,v 1.105 2006/03/09 21:36:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -353,4 +353,6 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->action_id       = 1;
 	data_set->color_id        = 0;
 
+	data_set->default_resource_stickiness = 0;
+	data_set->default_resource_fail_stickiness = 0;	
 }

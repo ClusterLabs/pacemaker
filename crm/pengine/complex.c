@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.72 2006/01/27 11:15:49 andrew Exp $ */
+/* $Id: complex.c,v 1.73 2006/03/09 21:36:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -185,13 +185,14 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		XML_RSC_ATTR_STOPFAIL,
 		XML_RSC_ATTR_RESTART,
 		"resource_stickiness",
+		"resource_failure_stickiness",
 		"multiple_active",
 		"start_prereq",
 		"is_managed",
 		"globally_unique",
 		"notify"
-	};	
-	
+	};
+
 	crm_log_xml_debug_3(xml_obj, "Processing resource input...");
 	
 	if(id == NULL) {
@@ -261,6 +262,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 
 	(*rsc)->recovery_type      = recovery_stop_start;
 	(*rsc)->stickiness         = data_set->default_resource_stickiness;
+	(*rsc)->fail_stickiness    = data_set->default_resource_fail_stickiness;
 
 	value = g_hash_table_lookup((*rsc)->parameters, XML_CIB_ATTR_PRIORITY);
 	(*rsc)->priority	   = crm_parse_int(value, "0"); 
@@ -326,7 +328,16 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		crm_debug_2("\tPlacement: optimal%s",
 			    value == NULL?" (default)":"");
 	}
-	
+
+	value = g_hash_table_lookup(
+		(*rsc)->parameters, "resource_failure_stickiness");
+	if(value != NULL) {
+		(*rsc)->fail_stickiness = char2score(value);
+	}
+	crm_debug_2("\tNode score per failure: %d%s",
+		    (*rsc)->fail_stickiness, value == NULL?" (default)":"");
+
+
 	crm_debug_2("\tNotification of start/stop actions: %s",
 		    (*rsc)->notify?"required":"not required");
 	
