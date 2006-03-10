@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.50 2006/03/09 10:04:50 andrew Exp $ */
+/* $Id: io.c,v 1.51 2006/03/10 10:08:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -450,10 +450,17 @@ archive_file(const char *oldname, const char *newname, const char *ext)
 			 "%s.%s", oldname, ext);
 	}
 
+	if(backup_file == NULL || strlen(backup_file) == 0) {
+		crm_err("%s backup filename was %s",
+			newname == NULL?"calculated":"supplied",
+			backup_file == NULL?"null":"empty");
+		rc = -4;		
+	}
+	
 	s_res = stat(backup_file, &tmp);
 	
 	/* unlink the old backup */
-	if (s_res >= 0) {
+	if (rc == 0 && s_res >= 0) {
 		res = unlink(backup_file);
 		if (res < 0) {
 			cl_perror("Could not unlink %s", backup_file);
