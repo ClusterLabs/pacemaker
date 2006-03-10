@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.51 2006/03/10 10:08:35 andrew Exp $ */
+/* $Id: io.c,v 1.52 2006/03/10 10:15:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -442,12 +442,12 @@ archive_file(const char *oldname, const char *newname, const char *ext)
 		backup_file = crm_strdup(newname);
 
 	} else {
-		crm_malloc0(backup_file, 1024);
+		int max_name_len = 1024;
+		crm_malloc0(backup_file, sizeof(char) * max_name_len);
 		if (ext == NULL) {
 			ext = back_ext;
 		}
-		snprintf(backup_file, strlen(backup_file)-1,
-			 "%s.%s", oldname, ext);
+		snprintf(backup_file, max_name_len - 1, "%s.%s", oldname, ext);
 	}
 
 	if(backup_file == NULL || strlen(backup_file) == 0) {
