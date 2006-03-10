@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.67 2006/02/21 14:39:44 andrew Exp $ */
+/* $Id: messages.c,v 1.68 2006/03/10 10:09:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -696,9 +696,9 @@ cib_process_change(
 			result = cib_unknown;
 		}
 		crm_log_xml_err(failed, "CIB Update failures");
+		*answer = failed;
 	}
 
-	*answer = failed;
 	return result;
 }
 
