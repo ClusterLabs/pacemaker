@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.161 2006/03/09 21:36:38 andrew Exp $ */
+/* $Id: unpack.c,v 1.162 2006/03/11 19:03:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -938,7 +938,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * rsc_entry, pe_working_set_t *dat
 
 	/* process failure stickiness */
 	fail_count = 0;
-	fail_attr = crm_concat(rsc->id, "fail-count", '-');
+	fail_attr = crm_concat("fail-count", rsc->id, '-');
 	fail_val = g_hash_table_lookup(node->details->attrs, fail_attr);
 	if(fail_val != NULL) {
 		crm_debug("%s: %s", fail_attr, fail_val);
