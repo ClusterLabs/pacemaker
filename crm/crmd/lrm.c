@@ -1543,11 +1543,11 @@ do_lrm_event(long long action,
 			     crm_strdup(op->rsc_id), crm_strdup(op->op_type));
 
 	do_update_resource(op);
-/*
+
 	if(set_failcount) {
 		update_failcount(op);
 	}
-*/
+
 	if(g_hash_table_size(shutdown_ops) > 0) {
 		char *op_id = make_stop_id(op->rsc_id, op->call_id);
 		if(g_hash_table_remove(shutdown_ops, op_id)) {
