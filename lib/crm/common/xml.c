@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.58 2006/03/08 22:30:00 andrew Exp $ */
+/* $Id: xml.c,v 1.59 2006/03/11 18:59:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -217,16 +217,53 @@ find_entity(crm_data_t *parent, const char *node_name, const char *id)
 void
 copy_in_properties(crm_data_t* target, const crm_data_t *src)
 {
+	int value_len = 0;
+	char *incr_value = NULL;
+	char *new_value = NULL;
+	
 	crm_validate_data(src);
 	crm_validate_data(target);
+
 	if(src == NULL) {
 		crm_warn("No node to copy properties from");
+
 	} else if (target == NULL) {
 		crm_err("No node to copy properties into");
+
 	} else {
 		xml_prop_iter(
 			src, local_prop_name, local_prop_value,
+
+			/* if the value is name followed by "++" we need
+			 *   to increment the existing value
+			 */
+			new_value = NULL;
+			incr_value = NULL;
+			/* do a quick check to decide if its worth
+			 *   constructing the various strings and
+			 *   performing string comparisions
+			 */
+			value_len = strlen(local_prop_value);
+			if(value_len > 2
+			   && local_prop_value[0] == local_prop_value[0]
+			   && local_prop_value[value_len-1] == '+'
+			   && local_prop_value[value_len-2] == '+') {
+				int old_int = 0;
+				const char *old_value = NULL;
+				incr_value=crm_concat(local_prop_name,"+",'+');
+
+				if(safe_str_eq(local_prop_value, incr_value)) {
+					old_value = crm_element_value(
+						target, local_prop_name);
+					old_int = crm_parse_int(old_value, "0");
+					new_value = crm_itoa(old_int + 1);
+					local_prop_value = new_value;
+				}
+			}
+				
 			crm_xml_add(target, local_prop_name, local_prop_value);
+			crm_free(incr_value);
+			crm_free(new_value);
 			);
 		crm_validate_data(target);
 	}
