@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.15 2006/02/22 19:20:25 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.16 2006/03/11 19:20:01 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -111,7 +111,7 @@ do_find_resource_list(pe_working_set_t *data_set)
 		rsc, resource_t, data_set->resources, lpc,
 		rsc->fns->print(
 			rsc, NULL, pe_print_printf|pe_print_rsconly, stdout);
-			found++;
+		found++;
 		);
 
 	if(found == 0) {
