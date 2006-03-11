@@ -780,7 +780,7 @@ do_lrm_invoke(long long action,
 	} else if(safe_str_eq(operation, CRM_OP_PROBED)
 		  || safe_str_eq(crm_op, CRM_OP_REPROBE)) {
 		char *attr_id = crm_concat("lrm-probe", fsa_our_uuid, '-');
-		char *attr_set = crm_concat("crmd-transient-", fsa_our_uuid, '-');
+		char *attr_set = crm_concat("crmd-transient", fsa_our_uuid,'-');
 		const char *probed = XML_BOOLEAN_TRUE;
 		if(safe_str_eq(crm_op, CRM_OP_REPROBE)) {
 			probed = XML_BOOLEAN_FALSE;
@@ -1305,21 +1305,78 @@ copy_lrm_rsc(const lrm_rsc_t *rsc)
 	return rsc_copy;
 }
 
+static void
+update_failcount(lrm_op_t *op) 
+{
+	const char *probe_s = NULL;
+	int op_status = LRM_OP_DONE;
+	const char *target_rc_s = NULL;
+
+	CRM_DEV_ASSERT(op != NULL);
+	if(crm_is_true(probe_s)) {
+		return;
+	}	
+	
+	probe_s = g_hash_table_lookup(op->params, XML_ATTR_LRM_PROBE);
+	if(crm_is_true(probe_s)) {
+		return;
+	}
+
+	CRM_DEV_ASSERT(op->op_status != LRM_OP_PENDING);
+	if(crm_assert_failed) {
+		return;
+	}
+
+	CRM_DEV_ASSERT(op->op_status != LRM_OP_DONE);
+	if(crm_assert_failed) {
+		return;
+	}
+	
+	op_status = op->op_status;
+	target_rc_s = g_hash_table_lookup(op->params, XML_ATTR_TE_TARGET_RC);
+	
+	if(target_rc_s != NULL) {
+		int target_rc = crm_parse_int(target_rc_s, NULL);
+		if(target_rc == op->rc) {
+			if(op_status != LRM_OP_DONE) {
+				op_status = LRM_OP_DONE;
+			}
+			
+		} else if(op_status != LRM_OP_ERROR) {
+			op_status = LRM_OP_ERROR;
+		}
+	}
+	
+	if(op_status != LRM_OP_DONE) {
+		char *attr_set = crm_concat("crmd-transient",fsa_our_uuid, '-');
+		char *attr_name = crm_concat("fail-count", op->rsc_id, '-');
+		char *attr_id = crm_concat(fsa_our_uuid, attr_name,'-');
+		
+		update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_STATUS,
+			    fsa_our_uuid, attr_set, attr_id, attr_name,
+			    XML_NVPAIR_ATTR_VALUE"++");
+		
+		crm_free(attr_id);
+		crm_free(attr_set);
+		crm_free(attr_name);
+	}	
+}
+
 void
 do_update_resource(lrm_op_t* op)
 {
 /*
   <status>
-  <nodes_status id=uname>
-  <lrm>
-  <lrm_resources>
-  <lrm_resource id=>
-  </...>
+    <nodes_status id=uname>
+      <lrm>
+        <lrm_resources>
+          <lrm_resource id=...>
+          </...>
 */
-	crm_data_t *update, *iter;
-	crm_data_t *fragment;
 	int rc = cib_ok;
-
+	crm_data_t *fragment;
+	crm_data_t *update, *iter;
+	
 	CRM_DEV_ASSERT(op != NULL);
 	if(crm_assert_failed) {
 		return;
@@ -1397,7 +1454,8 @@ do_lrm_event(long long action,
 	const char *probe_s = NULL;
 	gboolean is_probe = FALSE;
 	int log_rsc_err = LOG_ERR;
-
+	gboolean set_failcount = FALSE;
+	
 	if(msg_data->fsa_cause != C_LRM_OP_CALLBACK) {
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 		return I_NULL;
@@ -1426,6 +1484,8 @@ do_lrm_event(long long action,
 		case LRM_OP_ERROR:
 			if(is_probe) {
 				log_rsc_err = LOG_INFO;
+			} else {
+				set_failcount = TRUE;
 			}
 			crm_log_maybe(log_rsc_err,
 				      "LRM operation (%d) %s_%d on %s %s: %s",
@@ -1445,6 +1505,7 @@ do_lrm_event(long long action,
 			return I_NULL;
 			break;
 		case LRM_OP_TIMEOUT:
+			set_failcount = TRUE;
 			last_op = g_hash_table_lookup(
 				resources_confirmed, crm_strdup(op->rsc_id));
 
@@ -1463,6 +1524,7 @@ do_lrm_event(long long action,
 				op_status2text(op->op_status));
 			break;
 		case LRM_OP_NOTSUPPORTED:
+			set_failcount = TRUE;
 			crm_err("LRM operation (%d) %s_%d on %s %s",
 				op->call_id, op->op_type,
 				op->interval,
@@ -1481,7 +1543,11 @@ do_lrm_event(long long action,
 			     crm_strdup(op->rsc_id), crm_strdup(op->op_type));
 
 	do_update_resource(op);
-
+/*
+	if(set_failcount) {
+		update_failcount(op);
+	}
+*/
 	if(g_hash_table_size(shutdown_ops) > 0) {
 		char *op_id = make_stop_id(op->rsc_id, op->call_id);
 		if(g_hash_table_remove(shutdown_ops, op_id)) {
