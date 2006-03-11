@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.31 2006/02/02 08:33:14 andrew Exp $ */
+/* $Id: primatives.c,v 1.32 2006/03/11 21:18:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -380,7 +380,7 @@ add_cib_object(crm_data_t *parent, crm_data_t *new_obj)
 	crm_debug_3("Processing: <%s id=%s>",
 		    crm_str(object_name), crm_str(object_id));
 	
-	if(new_obj == NULL) {
+	if(new_obj == NULL || object_name == NULL) {
 		result = cib_NOOBJECT;
 
 	} else if(parent == NULL) {
@@ -400,9 +400,8 @@ add_cib_object(crm_data_t *parent, crm_data_t *new_obj)
 	} else if(equiv_node != NULL) {
 		result = cib_EXISTS;
 
-	} else if(add_node_copy(parent, new_obj) == NULL) {
-		result = cib_NODECOPY;
-		
+	} else {
+		result = update_cib_object(parent, new_obj);
 	}
 
 	return result;
@@ -442,15 +441,7 @@ update_cib_object(crm_data_t *parent, crm_data_t *update)
 	}
 
 	if(target == NULL) {
-		target = add_node_copy(parent, update);
-		crm_debug_2("Added  <%s id=%s>",
-			    crm_str(object_name), crm_str(object_id));
-
-		CRM_DEV_ASSERT(target != NULL);
-		if(crm_assert_failed) { return cib_NODECOPY; }
-
-		return cib_ok;
-		
+		target = create_xml_node(parent, object_name);
 	} 
 
 	crm_debug_2("Found node <%s id=%s> to update",
