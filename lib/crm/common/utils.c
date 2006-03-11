@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.32 2006/02/20 12:13:00 andrew Exp $ */
+/* $Id: utils.c,v 1.33 2006/03/11 21:15:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -483,7 +483,7 @@ crm_int_helper(const char *text, char **end_text)
 			atoi_result = (int)strtol(text, &local_end_text, 10);
 		}
 		
-		CRM_DEV_ASSERT(errno != EINVAL);
+/* 		CRM_DEV_ASSERT(errno != EINVAL); */
 		if(errno == EINVAL) {
 			crm_err("Conversion of %s failed", text);
 			atoi_result = -1;
