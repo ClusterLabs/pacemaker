@@ -339,7 +339,7 @@ class CtsLab(UserDict):
 
     def SupplyDefaults(self): 
         if not self.has_key("logger"):
-            self["logger"] = (SysLog(self), StdErrLog(self))
+            self["logger"] = (FileLog(self), StdErrLog(self))
         if not self.has_key("reset"):
             self["reset"] = Stonith()
         if not self.has_key("CMclass"):
