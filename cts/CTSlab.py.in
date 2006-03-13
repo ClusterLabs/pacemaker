@@ -339,7 +339,7 @@ class CtsLab(UserDict):
 
     def SupplyDefaults(self): 
         if not self.has_key("logger"):
-            self["logger"] = (SysLog(self), StdErrLog(self))
+            self["logger"] = (FileLog(self), StdErrLog(self))
         if not self.has_key("reset"):
             self["reset"] = Stonith()
         if not self.has_key("CMclass"):
@@ -361,9 +361,11 @@ class CtsLab(UserDict):
         if self.has_key("RandSeed"):
             randseed = self["RandSeed"]
             self.log("Random seed is: " + str(randseed))
-            self.RandomGen.seed(randseed) 
+            self.RandomGen.seed(str(randseed)) 
         else:
-            self.RandomGen.seed()
+            randseed = int(time.time())
+            self.log("Random seed is: " + str(randseed))
+            self.RandomGen.seed(str(randseed))
 
     def log(self, args):
         "Log using each of the supplied logging methods"
@@ -421,12 +423,12 @@ class CtsLab(UserDict):
         #
         #        Initial Random seed...
         #
-        elif key == "RandSeed":
-            if len(value) != 3:
-                raise ValueError("'Randseed' must be a 3-element list/tuple")
-            for elem in value:
-                if not isinstance(elem, types.IntType):
-                    raise ValueError("'Randseed' list must all be ints")
+        #elif key == "RandSeed":
+        #    if len(value) != 3:
+        #        raise ValueError("'Randseed' must be a 3-element list/tuple")
+        #    for elem in value:
+        #        if not isinstance(elem, types.IntType):
+        #            raise ValueError("'Randseed' list must all be ints")
               
         self.data[key] = value
 
@@ -483,6 +485,8 @@ def usage(arg):
     +  " --fencing (1 | 0 | yes | no)" \
     +  " --suppress_cib_writes (1 | 0 | yes | no)" \
     +  " -lstests" \
+    +  " --resource-class (ocf | heartbeat)" \
+    +  " --seed" \
     +  "  [number-of-iterations]"
     sys.exit(1)
 
@@ -520,7 +524,7 @@ if __name__ == '__main__':
     DoBSC = 0
     ListTests = 0
     ResourceClass = "ocf"
-
+    HaveSeed = 0
     #
     # The values of the rest of the parameters are now properly derived from
     # the configuration files.
@@ -643,6 +647,10 @@ if __name__ == '__main__':
        elif args[i] == "--resource-class":
            skipthis=1
            ResourceClass = args[i+1]
+       elif args[i] == "--seed":
+           skipthis=1
+           Seed=args[i+1]
+           HaveSeed = 1
        else:
            NumIter=int(args[i])
           
@@ -695,7 +703,9 @@ if __name__ == '__main__':
     if Version == 2:
         from CM_LinuxHAv2 import LinuxHAv2
         Environment['CMclass']=LinuxHAv2
-    #Environment["RandSeed"] = (156, 104, 218)
+
+    if HaveSeed:
+        Environment["RandSeed"] = Seed 
 
     Environment["reset"] = Stonith(sttype="external/ssh", parm=string.join(node_list, " "))
     Environment.SupplyDefaults()
