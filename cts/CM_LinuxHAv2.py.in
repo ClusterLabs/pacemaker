@@ -167,6 +167,11 @@ class LinuxHAv2(HeartbeatCM):
     def test_node_CM(self, node):
         '''Report the status of the cluster manager on a given node'''
 
+        if not self.ns.WaitForNodeToComeUp(node):
+             self.log("WaitForNodeToComeUp failed, node %s set to down" % node)
+             self.ShouldBeStatus[node] == self["down"]
+             return 3
+
         watchpats = [ ]
         watchpats.append("Current ping state: (S_IDLE|S_NOT_DC)")
         watchpats.append(self["Pat:They_started"]%node)
@@ -237,6 +242,10 @@ class LinuxHAv2(HeartbeatCM):
         idle_watch = CTS.LogWatcher(self["LogFileName"], watchpats, timeout)
         idle_watch.setwatch()
 
+        if not self.ns.WaitForAllNodesToComeUp(self.Env["nodes"]):
+            self.log("WaitForAllNodesToComeUp failed.")
+            return None
+
         any_up = 0
         for node in self.Env["nodes"]:
             # have each node dump its current state
@@ -252,6 +261,11 @@ class LinuxHAv2(HeartbeatCM):
 
     def is_node_dc(self, node, status_line=None):
         rc = 0
+
+        if not self.ns.WaitForNodeToComeUp(node):
+           self.log("WaitForNodeToComeUp %s failed." % node) 
+           return rc
+
         if not status_line: 
             status_line = self.rsh.readaline(node, self["StatusCmd"]%node)
 
@@ -275,6 +289,10 @@ class LinuxHAv2(HeartbeatCM):
 
     def isolate_node(self, node, allowlist):
         '''isolate the communication between the nodes'''
+        if not self.ns.WaitForNodeToComeUp(node):
+           self.log("WaitForNodeToComeUp %s failed." % node)
+           return None
+ 
         rc = self.rsh(node, self["BreakCommCmd2"]%allowlist)
         if rc == 0:
             return 1
@@ -389,6 +407,10 @@ class LinuxHAv2(HeartbeatCM):
     def find_partitions(self):
         ccm_partitions = []
 
+        if not self.ns.WaitForAllNodesToComeUp(self.Env["nodes"]):
+            self.log("WaitForAllNodesToComeUp failed.")
+            return None
+
         for node in self.Env["nodes"]:
             self.debug("Retrieving partition details for %s" %node)
             if self.ShouldBeStatus[node] == self["up"]:
@@ -419,6 +441,10 @@ class LinuxHAv2(HeartbeatCM):
         if not node_list:
             node_list = self.Env["nodes"]
 
+        if not self.ns.WaitForAllNodesToComeUp(node_list):
+            self.log("WaitForAllNodesToComeUp failed in HasQuorum.")
+            return 0
+
         for node in node_list:
             if self.ShouldBeStatus[node] == self["up"]:
                 quorum = self.rsh.readaline(node, self["QuorumCmd"])
@@ -438,6 +464,10 @@ class LinuxHAv2(HeartbeatCM):
         return complist
     
     def NodeUUID(self, node):
+        if not self.ns.WaitForNodeToComeUp(node):
+            self.log("WaitForNodeToComeUp %s failed in NodeUUID." % node)
+            return ""
+
         lines = self.rsh.readlines(node, self["UUIDQueryCmd"])
         for line in lines:
             self.debug("UUIDLine:"+ line) 
@@ -447,6 +477,10 @@ class LinuxHAv2(HeartbeatCM):
         return ""       
                             
     def StandbyStatus(self, node):
+        if not self.ns.WaitForNodeToComeUp(node):
+            self.log("WaitForNodeToComeUp %s failed in StandbyStatus." % node)
+            return ""
+
         out=self.rsh.readaline(node, self["StandbyQueryCmd"]%node)
         if not out:
             return "off"
@@ -457,6 +491,10 @@ class LinuxHAv2(HeartbeatCM):
     # status == "on" : Enter Standby mode
     # status == "off": Enter Active mode
     def SetStandbyMode(self, node, status):
+        if not self.ns.WaitForNodeToComeUp(node):
+            self.log("WaitForNodeToComeUp %s failed in SetStandbyMode." % node)
+            return True
+
         current_status = self.StandbyStatus(node)
 	cmd = self["StandbyCmd"] % (node, status)
         ret = self.rsh(node, cmd)
@@ -512,7 +550,10 @@ class HAResource(Resource):
         on the given node in the cluster.
         We call the status operation for the resource script.
         '''
-        
+        if not self.CM.ns.WaitForNodeToComeUp(nodename):
+            self.CM.log("WaitForNodeToComeUp %s failed in IsRunningOn." % node)
+            return 0
+ 
         out=self.CM.rsh.readaline(nodename, self.CM["IsRscRunning"]%self.rid)
         return re.search("0",out)
         
@@ -528,6 +569,10 @@ class HAResource(Resource):
         '''
         Execute an operation on the resource
         '''
+        if not self.CM.ns.WaitForNodeToComeUp(nodename):
+            self.CM.log("WaitForNodeToComeUp %s failed in _ResourceOperation." % node)
+            return 0
+
         self.CM.rsh.readaline(nodename, self.CM["ExecuteRscOp"]%(self.rid,operation))
         return self.CM.rsh.lastrc == 0
 

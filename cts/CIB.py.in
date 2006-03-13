@@ -8,7 +8,7 @@ Copyright (C) 2006 International Business Machines
 '''
 
 from UserDict import UserDict
-import sys, time, types, syslog, os, struct, string, signal, traceback
+import sys, time, types, syslog, whrandom, os, struct, string, signal, traceback
 from CTS  import ClusterManager
 from CM_hb import HeartbeatCM
 

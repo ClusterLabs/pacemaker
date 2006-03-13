@@ -161,7 +161,7 @@ random for the selected number of iterations.
         if not self.Scenario.SetUp(self.CM):
             return None
 
-    	self.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
+    	self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
         testcount=1
         time.sleep(30)
 
@@ -190,7 +190,6 @@ random for the selected number of iterations.
             else:
                 self.incr("failure")
                 self.CM.log("Test %s (%s) \t[FAILED]" %(test.name,nodechoice))
-    	        self.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
                 # Better get the current info from the cluster...
                 self.CM.statall()
 		# Make sure logging is working and we have enough disk space...
@@ -734,7 +733,6 @@ class StartOnebyOne(CTSTest):
         failed=[]
         self.starttime=time.time()
         for node in self.CM.Env["nodes"]:
-    	    self.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
             if not self.start(node):
                 failed.append(node)
 
@@ -2025,7 +2023,7 @@ class NearQuorumPointTest(CTSTest):
         self.incr("calls")
         startset = []
         stopset = []
-        
+       
         #decide what to do with each node
         for node in self.CM.Env["nodes"]:
             action = self.CM.Env.RandomGen.choice(["start","stop"])
@@ -2038,6 +2036,10 @@ class NearQuorumPointTest(CTSTest):
         self.CM.debug("start nodes:" + repr(startset))
         self.CM.debug("stop nodes:" + repr(stopset))
 
+        if not self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"]):
+            self.log("WaitForAllNodesToComeUp filed")
+            return self.skipped()
+ 
         #add search patterns
         watchpats = [ ]
         for node in stopset:
@@ -2214,6 +2216,11 @@ class SimulStopLite(CTSTest):
     def __call__(self, dummy):
         '''Perform the 'SimulStopLite' setup work. '''
         self.incr("calls")
+
+        if not self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"]):
+            self.log("WaitForAllNodesToComeUp filed")
+            return self.skipped()
+
         self.CM.debug("Setup: " + self.name)
 
         #     We ignore the "node" parameter...
@@ -2271,6 +2278,11 @@ class SimulStartLite(CTSTest):
         '''Perform the 'SimulStartList' setup work. '''
         self.incr("calls")
         self.CM.debug("Setup: " + self.name)
+
+        if not self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"]):
+            self.log("WaitForAllNodesToComeUp filed")
+            return self.skipped()
+
         #        We ignore the "node" parameter...
         watchpats = [ ]
 

@@ -301,7 +301,42 @@ class LogWatcher:
 #+                if not matchobj:
 #+                    self.regexes.append(regex)
 
-            
+class NodeStatus:
+    def __init__(self, Env):
+        self.Env = Env
+    def IsNodeBooted(self, node):
+        '''Return TRUE if the given node is booted (responds to pings'''
+        return os.system("@PING@ -nq -c1 @PING_TIMEOUT_OPT@ %s >/dev/null 2>&1" % node) == 0
+
+    def WaitForNodeToComeUp(self, node, Timeout=300):
+        '''Return TRUE when given node comes up, or None/FALSE if timeout'''
+        timeout=Timeout
+        anytimeouts=0
+        while timeout > 0:
+            if self.IsNodeBooted(node):
+                if anytimeouts:
+                     # Fudge to wait for the system to finish coming up
+                     time.sleep(30)
+                     self.Env.log("Node %s now up" % node)
+                return 1
+
+            time.sleep(1)
+            if (not anytimeouts):
+                self.Env.log("Waiting for node %s to come up" % node)
+                
+            anytimeouts=1
+            timeout = timeout - 1
+
+        self.Env.log("%s did not come up within %d tries" % (node, Timeout))
+
+    def WaitForAllNodesToComeUp(self, nodes, timeout=300):
+        '''Return TRUE when all nodes come up, or FALSE if timeout'''
+
+        for node in nodes:
+            if not self.WaitForNodeToComeUp(node, timeout):
+                return None
+        return 1
+
 class ClusterManager(UserDict):
     '''The Cluster Manager class.
     This is an subclass of the Python dictionary class.
@@ -368,6 +403,7 @@ class ClusterManager(UserDict):
         self.ShouldBeStatus={}
         self.OurNode=string.lower(os.uname()[1])
         self.ShouldBeStatus={}
+        self.ns = NodeStatus(self.Env)
 
     def errorstoignore(self):
         '''Return list of errors which are 'normal' and should be ignored'''
@@ -415,6 +451,10 @@ class ClusterManager(UserDict):
         if self.ShouldBeStatus[node] != self["down"]:
 	    return 1
 
+        if not self.ns.WaitForNodeToComeUp(node):
+            self.log("WaitForNodeToComeUp %s filed" % node)
+            return 0
+
         patterns = []
         # Technically we should always be able to notice ourselves starting
 	if self.upcount() == 0:
@@ -461,6 +501,11 @@ class ClusterManager(UserDict):
         '''Start up the cluster manager on a given node with none-block mode'''
 
         self.debug("Starting %s on node %s" %(self["Name"], node))
+
+        if not self.ns.IsNodeBooted(node):
+            self.log("node %s not booted, StartaCMnoBlock failed." % node)
+            return 0
+
         self.rsh.noBlock(node, self["StartCmd"])
         self.ShouldBeStatus[node]=self["up"]
         return 1
@@ -473,6 +518,10 @@ class ClusterManager(UserDict):
 
         if self.ShouldBeStatus[node] != self["up"]:
 	    return 1
+
+        if not self.ns.WaitForNodeToComeUp(node):
+            self.log("WaitForNodeToComeUp %s filed" % node)
+            return 0
 
         if self.rsh(node, self["StopCmd"]) == 0:
             self.ShouldBeStatus[node]=self["down"]
@@ -488,6 +537,11 @@ class ClusterManager(UserDict):
         '''Stop the cluster manager on a given node with none-block mode'''
 
         self.debug("Stopping %s on node %s" %(self["Name"], node))
+
+        if not self.ns.IsNodeBooted(node):
+            self.log("node %s not booted, StopaCNnoBlock failed." % node)
+            return 0
+
         self.rsh.noBlock(node, self["StopCmd"])
         self.ShouldBeStatus[node]=self["down"]
         return 1
@@ -504,6 +558,9 @@ class ClusterManager(UserDict):
         '''Force the cluster manager on a given node to reread its config
            This may be a no-op on certain cluster managers.
         '''
+        if not self.ns.WaitForNodeToComeUp(node):
+            self.log("WaitForNodeToComeUp %s filed" % node)
+            return 0
 
         rc=self.rsh(node, self["RereadCmd"])
         if rc == 0:
@@ -599,7 +656,10 @@ class ClusterManager(UserDict):
     def isolate_node(self, node):
 
         '''isolate the communication between the nodes'''
-    
+        if not self.ns.WaitForNodeToComeUp(node):
+            self.log("WaitForNodeToComeUp %s filed in isolate_node" % node) 
+            return None
+
         rc = self.rsh(node, self["BreakCommCmd"])
         if rc == 0:
             return 1
@@ -610,6 +670,10 @@ class ClusterManager(UserDict):
     def unisolate_node(self, node):
 
         '''fix the communication between the nodes'''
+        if not self.ns.WaitForNodeToComeUp(node):
+            self.log("WaitForNodeToComeUp %s filed in unisolate_node" % node)
+            return None
+
         rc = self.rsh(node, self["FixCommCmd"])
         if rc == 0:
             return 1
@@ -619,6 +683,10 @@ class ClusterManager(UserDict):
         
     def reducecomm_node(self,node):
         '''reduce the communication between the nodes'''
+        if not self.ns.WaitForNodeToComeUp(node):
+            self.log("WaitForNodeToComeUp %s filed in reducecomm_node" % node)
+            return None
+
         rc = self.rsh(node, self["ReduceCommCmd"]%(self.Env["XmitLoss"],self.Env["RecvLoss"]))
         if rc == 0:
             return 1
@@ -629,6 +697,11 @@ class ClusterManager(UserDict):
     def savecomm_node(self,node):
         '''save current the communication between the nodes'''
         rc = 0
+
+        if not self.ns.WaitForNodeToComeUp(node):
+            self.log("WaitForNodeToComeUp %s filed in savecomm_node" % node)
+            return None
+
         if float(self.Env["XmitLoss"])!=0 or float(self.Env["RecvLoss"])!=0 :
             rc = self.rsh(node, self["SaveFileCmd"]);
         if rc == 0:
@@ -640,6 +713,10 @@ class ClusterManager(UserDict):
     def restorecomm_node(self,node):
         '''restore the saved communication between the nodes'''
         rc = 0
+        if not self.ns.WaitForNodeToComeUp(node):
+            self.log("WaitForNodeToComeUp %s filed in restoreomm_node" % node)
+            return None
+
         if float(self.Env["XmitLoss"])!=0 or float(self.Env["RecvLoss"])!=0 :
             rc = self.rsh(node, self["RestoreCommCmd"]);
         if rc == 0:
@@ -804,6 +881,10 @@ class Process(Component):
         self.KillCmd = "killall -9 " + self.name
         
     def kill(self, node):
+        if not self.CM.ns.WaitForNodeToComeUp(node):
+            self.CM.log("WaitForNodeToComeUp %s filed in kill" % node)
+            return None
+
         if self.CM.rsh(node, self.KillCmd) != 0:
             self.log ("Warn: Kill %s failed on node %s" %(name,node))
             return None
@@ -892,44 +973,6 @@ A partially set up scenario is torn down if it fails during setup.
             j=j-1
 
 
-class NodeStatus:
-    def __init__(self, Env):
-        self.Env = Env
-    def IsNodeBooted(self, node):
-        '''Return TRUE if the given node is booted (responds to pings'''
-        return os.system("@PING@ -nq -c1 @PING_TIMEOUT_OPT@ %s >/dev/null 2>&1" % node) == 0
-
-    def WaitForNodeToComeUp(self, node, Timeout=300):
-        '''Return TRUE when given node comes up, or None/FALSE if timeout'''
-        timeout=Timeout
-        anytimeouts=0
-        while timeout > 0:
-            if self.IsNodeBooted(node):
-                if anytimeouts:
-                     # Fudge to wait for the system to finish coming up
-                     time.sleep(30)
-                     self.Env.log("Node %s now up" % node)
-                return 1
-
-            time.sleep(1)
-            if (not anytimeouts):
-                self.Env.log("Waiting for node %s to come up" % node)
-                
-            anytimeouts=1
-            timeout = timeout - 1
-
-        self.Env.log("%s did not come up within %d tries" % (node, Timeout))
-
-    def WaitForAllNodesToComeUp(self, nodes, timeout=300):
-        '''Return TRUE when all nodes come up, or FALSE if timeout'''
-
-        for node in nodes:
-            if not self.WaitForNodeToComeUp(node, timeout):
-                return None
-        return 1
-
-
-
 class InitClusterManager(ScenarioComponent):
     (
 '''InitClusterManager is the most basic of ScenarioComponents.
@@ -938,7 +981,7 @@ It is fairly robust as it waits for all nodes to come up before starting
 as they might have been rebooted or crashed for some reason beforehand.
 ''')
     def __init__(self, Env):
-	self.ns=NodeStatus(Env)
+        pass
 
     def IsApplicable(self):
         '''InitClusterManager is so generic it is always Applicable'''
@@ -947,8 +990,6 @@ as they might have been rebooted or crashed for some reason beforehand.
     def SetUp(self, CM):
         '''Basic Cluster Manager startup.  Start everything'''
 
-        if not self.ns.WaitForAllNodesToComeUp(CM.Env["nodes"]):
-            return None
         CM.prepare()
 
         #        Clear out the cobwebs ;-)
@@ -968,8 +1009,6 @@ as they might have been rebooted or crashed for some reason beforehand.
 
     def TearDown(self, CM):
         '''Set up the given ScenarioComponent'''
-
-        self.ns.WaitForAllNodesToComeUp(CM.Env["nodes"])
 
         # Stop the cluster manager everywhere
 
