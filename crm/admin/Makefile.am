@@ -40,8 +40,8 @@ COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 
 ## binary progs
 hasbin_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 \
-			crm_master crm_standby crm_attribute crm_resource \
-			crm_verify crm_uuid
+			crm_master crm_standby crm_failcount crm_attribute \
+			crm_resource crm_verify crm_uuid
 
 ## SOURCES
 
@@ -91,6 +91,10 @@ crm_standby_LDADD	= $(COMMONLIBS)
 crm_attribute_SOURCES	= crm_attribute.c
 crm_attribute_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 crm_attribute_LDADD	= $(COMMONLIBS)
+
+crm_failcount_SOURCES	= crm_attribute.c
+crm_failcount_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+crm_failcount_LDADD	= $(COMMONLIBS)
 
 crm_resource_SOURCES	= crm_resource.c
 crm_resource_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
