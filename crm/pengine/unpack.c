@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.162 2006/03/11 19:03:51 andrew Exp $ */
+/* $Id: unpack.c,v 1.163 2006/03/14 16:20:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -906,7 +906,8 @@ process_rsc_state(resource_t *rsc, node_t *node,
 }
 
 static void
-unpack_lrm_rsc_state(node_t *node, crm_data_t * rsc_entry, pe_working_set_t *data_set)
+unpack_lrm_rsc_state(
+	node_t *node, crm_data_t * rsc_entry, pe_working_set_t *data_set)
 {
 	int fail_count = 0;
 	char *fail_attr = NULL;
@@ -945,7 +946,7 @@ unpack_lrm_rsc_state(node_t *node, crm_data_t * rsc_entry, pe_working_set_t *dat
 		fail_count = crm_parse_int(fail_val, "0");
 	}
 	crm_free(fail_attr);
-	if(fail_count > 0) {
+	if(fail_count > 0 && rsc->fail_stickiness != 0) {
 		rsc2node_new("fail_stickiness", rsc,
 			     fail_count * rsc->fail_stickiness,
 			     node, data_set);
