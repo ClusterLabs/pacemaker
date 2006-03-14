@@ -1350,7 +1350,7 @@ update_failcount(lrm_op_t *op)
 	if(op_status != LRM_OP_DONE) {
 		char *attr_set = crm_concat("crmd-transient",fsa_our_uuid, '-');
 		char *attr_name = crm_concat("fail-count", op->rsc_id, '-');
-		char *attr_id = crm_concat(fsa_our_uuid, attr_name,'-');
+		char *attr_id = crm_concat(attr_name, fsa_our_uuid, '-');
 		
 		update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_STATUS,
 			    fsa_our_uuid, attr_set, attr_id, attr_name,
