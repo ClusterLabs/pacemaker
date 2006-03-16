@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.70 2006/02/27 09:55:57 andrew Exp $ */
+/* $Id: callbacks.c,v 1.71 2006/03/16 23:33:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -57,7 +57,7 @@ start_global_timer(crm_action_timer_t *timer, int timeout)
 		crm_err("Tried to start timer with period: %d", timeout);
 
 	} else if(timer->source_id == 0) {
-		crm_debug("Starting abort timer: %d", timeout);
+		crm_debug("Starting abort timer: %dms", timeout);
 		timer->timeout = timeout;
 		timer->source_id = Gmain_timeout_add(
 			timeout, global_timer_callback, (void*)timer);
