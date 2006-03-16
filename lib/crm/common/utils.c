@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.33 2006/03/11 21:15:15 andrew Exp $ */
+/* $Id: utils.c,v 1.34 2006/03/16 23:35:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -570,6 +570,14 @@ crm_strdup(const char *a)
 static GHashTable *crm_uuid_cache = NULL;
 static GHashTable *crm_uname_cache = NULL;
 
+void
+unget_uuid(const char *uname)
+{
+	if(crm_uuid_cache == NULL) {
+		return;
+	}
+	g_hash_table_remove(crm_uuid_cache, uname);
+}
 const char *
 get_uuid(ll_cluster_t *hb, const char *uname) 
 {
