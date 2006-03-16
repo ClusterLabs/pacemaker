@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.32 2006/03/11 21:18:38 andrew Exp $ */
+/* $Id: primatives.c,v 1.33 2006/03/16 23:29:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -339,7 +339,7 @@ delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec)
 		; /* nothing */
 		
 	} else if(equiv_node == NULL) {
-		result = cib_NOTEXISTS;
+		result = cib_ok;
 
 	} else if(xml_has_children(delete_spec) == FALSE) {
 		/*  only leaves are deleted */
