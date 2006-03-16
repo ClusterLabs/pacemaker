@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.87 2006/03/08 15:49:39 andrew Exp $ */
+/* $Id: stages.c,v 1.88 2006/03/16 23:32:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -490,7 +490,7 @@ stage8(pe_working_set_t *data_set)
 		);
 
 	crm_log_xml_debug_3(data_set->graph, "created generic action list");
-	crm_info("Created transition graph %d.", transition_id);
+	crm_notice("Created transition graph %d.", transition_id);
 	
 	return TRUE;
 }
