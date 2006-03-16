@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.163 2006/03/14 16:20:13 andrew Exp $ */
+/* $Id: unpack.c,v 1.164 2006/03/16 23:45:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1140,6 +1140,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	const char *actual_rc   = NULL;	
 	const char *target_rc   = NULL;	
 	const char *task_status = NULL;
+	const char *interval_s  = NULL;
 
 	int interval = 0;
 	int task_id_i = -1;
@@ -1187,7 +1188,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		    role2text(rsc->role));
 
 	if(params != NULL) {
-		const char *interval_s = crm_element_value(params, "interval");
+		interval_s = crm_element_value(params, "interval");
 		if(interval_s != NULL) {
 			interval = crm_parse_int(interval_s, NULL);
 		}
@@ -1236,6 +1237,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			action = custom_action(
 				rsc, crm_strdup(id), CRMD_ACTION_CANCEL, node,
 				FALSE, TRUE, data_set);
+
+			add_hash_param(action->extra, "interval", interval_s);
 			
 			custom_action_order(
 				rsc, NULL, action,

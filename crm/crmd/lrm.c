@@ -822,11 +822,13 @@ do_lrm_invoke(long long action,
 		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
 
 		if(safe_str_eq(operation, CRMD_ACTION_CANCEL)) {
-			lrm_op_t* op = construct_op(
-				input->xml, id_from_cib, operation);
-			const char *op_key = crm_element_value(
-				xml_rsc, "operation_key");
+			lrm_op_t* op = NULL;
+			const char *op_key = NULL;
 
+			op_key = crm_element_value(xml_rsc, "operation_key");
+			op = construct_op(
+				input->xml, id_from_cib, CRMD_ACTION_STATUS);
+			
 			CRM_ASSERT(op != NULL);
 			if(op_key == NULL) {
 				crm_err("No operation to cancel");
