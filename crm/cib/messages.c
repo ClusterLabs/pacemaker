@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.68 2006/03/10 10:09:07 andrew Exp $ */
+/* $Id: messages.c,v 1.69 2006/03/17 01:09:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -573,7 +573,7 @@ cib_process_delete(
 	crm_validate_data(*result_cib);
 
 	if(delete_xml_child(NULL, *result_cib, input) == FALSE) {
-		return cib_NOTEXISTS;		
+		crm_debug_2("No matching object to delete");
 	}
 	
 	cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, FALSE);
