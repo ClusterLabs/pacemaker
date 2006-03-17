@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.16 2006/03/11 19:20:01 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.17 2006/03/17 17:57:13 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -615,18 +615,17 @@ main(int argc, char **argv)
 		our_pid[10] = '\0';
 	}
 
-	if(rc != cib_ok) {
-		fprintf(stderr, "Error signing on to the CIB service: %s\n",
-			cib_error2string(rc));
-		return rc;
-	}
-
 	if(rsc_cmd == 'L' || rsc_cmd == 'W' || rsc_cmd == 'D' || rsc_cmd == 'Q'
 	   || rsc_cmd == 'p' || rsc_cmd == 'M' || rsc_cmd == 'U'
 	   || rsc_cmd == 'G' || rsc_cmd == 'g') {
 		cib_conn = cib_new();
 		rc = cib_conn->cmds->signon(
 			cib_conn, crm_system_name, cib_command_synchronous);
+		if(rc != cib_ok) {
+			fprintf(stderr, "Error signing on to the CIB service: %s\n",
+				cib_error2string(rc));
+			return rc;
+		}
 		set_working_set_defaults(&data_set);
 
 		if(rsc_cmd != 'D' && rsc_cmd != 'U') {
@@ -642,6 +641,12 @@ main(int argc, char **argv)
 		src = init_client_ipc_comms(CRM_SYSTEM_CRMD, crmd_msg_callback,
 				      NULL, &crmd_channel);
 
+		if(src == NULL) {
+			fprintf(stderr,
+				"Error signing on to the CRMd service\n");
+			return 1;
+		}
+		
 		send_hello_message(
 			crmd_channel, our_pid, crm_system_name, "0", "1");
 
@@ -752,6 +757,7 @@ main(int argc, char **argv)
 
 	} else if(rsc_cmd == 'C') {
 		delete_lrm_rsc(crmd_channel, host_uname, rsc_id);
+		sleep(10);
 		refresh_lrm(crmd_channel, host_uname);
 
 	} else {
