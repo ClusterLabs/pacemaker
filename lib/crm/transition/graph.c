@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.6 2006/03/16 23:34:30 andrew Exp $ */
+/* $Id: graph.c,v 1.7 2006/03/17 00:42:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -315,7 +315,7 @@ run_graph(crm_graph_t *graph)
 		      "====================================================");
 	crm_log_maybe(stat_log_level,
 		      "Transition %d: (Complete=%d, Pending=%d,"
-		      " Fired=%d, Skipped=%d, Incomplete=%d",
+		      " Fired=%d, Skipped=%d, Incomplete=%d)",
 		      graph->id, num_complete, num_pending, num_fired,
 		      num_skipped, num_incomplete);
 
