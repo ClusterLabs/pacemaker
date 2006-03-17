@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.17 2006/03/17 17:57:13 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.18 2006/03/17 18:14:34 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -815,7 +815,7 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\t: Delete a resource from the CIB\n"
 		"\t\t\t  Requires: -r, -t\n", "delete", 'D');
 	fprintf(stream, "\t--%s (-%c)\t: Delete a resource from the LRM\n"
-		"\t\t\t  Requires: -r, -t.  Optional: -H\n", "cleanup", 'C');
+		"\t\t\t  Requires: -r.  Optional: -H\n", "cleanup", 'C');
 	fprintf(stream, "\t--%s (-%c)\t: Recheck for resources started outside of the CRM\n"
 		"\t\t\t  Optional: -H\n", "reprobe", 'P');
 	fprintf(stream, "\t--%s (-%c)\t: Refresh the CIB from the LRM\n"
