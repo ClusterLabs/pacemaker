@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.115 2006/02/23 17:51:01 andrew Exp $ */
+/* $Id: callbacks.c,v 1.116 2006/03/17 01:05:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -554,7 +554,7 @@ cib_common_callback_worker(HA_Message *op_request, cib_client_t *cib_client,
 	ha_msg_add(op_request, F_CIB_CLIENTID, cib_client->id);
 	ha_msg_add(op_request, F_CIB_CLIENTNAME, cib_client->name);
 
-	if(rc == cib_ok && crm_assert_failed == FALSE) {
+	if(rc == cib_ok) {
 		cib_process_request(
 			op_request, force_synchronous, privileged, FALSE,
 			cib_client);
@@ -605,6 +605,7 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 		}
 
 		lpc++;
+		crm_assert_failed = FALSE;
 		cib_common_callback_worker(
 			op_request, cib_client, force_synchronous, privileged);
 		
