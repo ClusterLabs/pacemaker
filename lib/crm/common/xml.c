@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.59 2006/03/11 18:59:47 andrew Exp $ */
+/* $Id: xml.c,v 1.60 2006/03/17 15:08:52 davidlee Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1133,7 +1133,7 @@ get_attr_name(const char *input)
 			default:
 				if('a' <= ch && ch <= 'z') {
 				} else if('A' <= ch && ch <= 'Z') {
-				} else if(isdigit(ch)) {
+				} else if(isdigit((int) ch)) {
 				} else if(ch == '_') {
 				} else if(ch == '-') {
 				} else {
