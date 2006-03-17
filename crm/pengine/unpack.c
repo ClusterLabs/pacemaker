@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.164 2006/03/16 23:45:41 andrew Exp $ */
+/* $Id: unpack.c,v 1.165 2006/03/17 00:43:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1239,6 +1239,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				FALSE, TRUE, data_set);
 
 			add_hash_param(action->extra, "interval", interval_s);
+			add_hash_param(action->extra, "task", task);
 			
 			custom_action_order(
 				rsc, NULL, action,

@@ -823,11 +823,18 @@ do_lrm_invoke(long long action,
 
 		if(safe_str_eq(operation, CRMD_ACTION_CANCEL)) {
 			lrm_op_t* op = NULL;
+			crm_data_t *params = NULL;
 			const char *op_key = NULL;
+			const char *op_task = NULL;
 
-			op_key = crm_element_value(xml_rsc, "operation_key");
-			op = construct_op(
-				input->xml, id_from_cib, CRMD_ACTION_STATUS);
+			crm_log_xml_debug(input->xml, "CancelOp");
+
+			op_key  = crm_element_value(xml_rsc, "operation_key");
+			params  = find_xml_node(input->xml, XML_TAG_ATTRS,TRUE);
+			if(params != NULL) {
+				op_task = crm_element_value(params, "task");
+			}
+			op = construct_op(input->xml, id_from_cib, op_task);
 			
 			CRM_ASSERT(op != NULL);
 			if(op_key == NULL) {
