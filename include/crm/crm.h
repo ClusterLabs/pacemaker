@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.87 2006/02/21 14:41:31 andrew Exp $ */
+/* $Id: crm.h,v 1.88 2006/03/17 17:59:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,24 +54,21 @@
 #include <crm/common/util.h>
 
 #define CRM_ASSERT(expr) if((expr) == FALSE) {				\
-		do_crm_log(LOG_CRIT, __FILE__, __PRETTY_FUNCTION__,	\
-			   "Triggered dev assert at %s:%d : %s",	\
-			   __FILE__, __LINE__, #expr);			\
-		abort();						\
-	}
+	crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, FALSE); \
+}
 
 extern gboolean crm_assert_failed;
 
-#define CRM_DEV_ASSERT(expr) crm_assert_failed = FALSE;			\
+#define CRM_DEV_ASSERT(expr)						\
+	crm_assert_failed = FALSE;					\
 	if((expr) == FALSE) {						\
 		crm_assert_failed = TRUE;				\
-		do_crm_log(CRM_DEV_BUILD?LOG_CRIT:LOG_ERR,		\
-			   __FILE__, __PRETTY_FUNCTION__,		\
-			   "Triggered dev assert at %s:%d : %s",	\
-			   __FILE__, __LINE__, #expr);			\
-		if(CRM_DEV_BUILD) {					\
-			abort();					\
-		}							\
+		crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, TRUE); \
+	}
+
+#define CRM_CHECK(expr, failure_action) if((expr) == FALSE) {		\
+		crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, TRUE); \
+		failure_action;						\
 	}
 
 /* Clean these up at some point, some probably should be runtime options */

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.34 2006/03/16 23:35:25 andrew Exp $ */
+/* $Id: utils.c,v 1.35 2006/03/17 17:59:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1184,3 +1184,37 @@ crm_zero_mem_stats(volatile cl_mem_stats_t *stats)
 	active_stats->arena = 0;
 }
 
+
+void
+crm_abort(const char *file, const char *function, int line,
+	  const char *assert_condition, gboolean do_fork)
+{
+	int pid = 0;
+
+	if(do_fork) {
+		pid=fork();
+	}
+	
+	switch(pid) {
+		case -1:
+			crm_err("Cannot fork!");
+			return;
+
+		default:	/* Parent */
+			crm_debug("Child %d forked to record assert failure", pid);
+			return;
+
+		case 0:		/* Child */
+			break;
+	}
+
+	/* create a new process group to avoid
+	 * being interupted by heartbeat
+	 */
+	setpgid(0, 0);
+	do_crm_log(LOG_ERR, file, function,
+ 		   "Triggered %sfatal assert at %s:%d : %s",
+ 		   do_fork?"non-":"", file, line, assert_condition);
+
+	abort();
+}

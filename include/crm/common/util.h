@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.28 2006/03/16 23:35:25 andrew Exp $ */
+/* $Id: util.h,v 1.29 2006/03/17 17:59:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -119,5 +119,8 @@ extern gboolean safe_str_neq(const char *a, const char *b);
 extern int crm_parse_int(const char *text, const char *default_text);
 extern int crm_int_helper(const char *text, char **end_text);
 #define crm_atoi(text, default_text) crm_parse_int(text, default_text)
-	
+
+extern void crm_abort(const char *file, const char *function, int line,
+		      const char *condition, gboolean do_fork);
+
 #endif
