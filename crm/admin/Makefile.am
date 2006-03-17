@@ -38,6 +38,7 @@ COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 		$(LIBRT)
 
 
+hasbin_SCRIPTS		= crm_primitive.py
 ## binary progs
 hasbin_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 \
 			crm_master crm_standby crm_failcount crm_attribute \
