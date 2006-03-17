@@ -346,17 +346,17 @@ if __name__=="__main__" :
 		if skipthis :
 			skipthis = None
 			continue
-		elif args[i] == "--nu-ocf" :
+		elif args[i] == "--no-ocf" :
 			using_ocf = 0
-		elif args[i] == "--nu-monitor" :
+		elif args[i] == "--no-monitor" :
 			using_mon = 0
 		elif args[i] == "--config" or args[i] == "-c" :
 			skipthis = True
 			config_file = args[i+1]
 		elif args[i] == "--help" or args[i] == "-h" :
 			print "usage: " + sys.argv[0]  \
-				+  " [--nu-ocf]"\
-				+  " [--nu-monitor]"\
+				+  " [--no-ocf]"\
+				+  " [--no-monitor]"\
 				+  " [--config|-c configfile]"\
 				+  " [--help|-h]"\
 				+  " [resourcefile]"
