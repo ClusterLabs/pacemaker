@@ -369,6 +369,11 @@ crmd_client_status_callback(const char * node, const char * client,
 	crm_notice("Status update: Client %s/%s now has status [%s]",
 		   node, client, status);
 
+	if(safe_str_eq(status, ONLINESTATUS)) {
+		/* remove the cached value in case it changed */
+		unget_uuid(node);
+	}
+	
 	if(safe_str_eq(node, fsa_our_dc)
 	   && safe_str_eq(status, OFFLINESTATUS)) {
 		/* did our DC leave us */
