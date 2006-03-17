@@ -1,0 +1,265 @@
+#!@PYTHON@
+
+'''Create an XML fragment describing a new resource
+'''
+
+__copyright__='''
+Author: Andrew Beekhof <andrew@beekhof.net>
+Copyright (C) 2005 Andrew Beekhof
+'''
+
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+import sys,string,os
+import xml.dom.minidom
+
+print_rsc_only = 0
+rsc_name = None
+rsc_class = None
+rsc_type = None
+rsc_provider = None
+start_timeout = None
+stop_timeout = None
+monitor_interval = None
+monitor_timeout = None
+rsc_options = []
+rsc_location = []
+rsc_colocation = []
+
+def create_cib() :
+	doc = xml.dom.minidom.Document()
+	cib = doc.createElement("cib")
+	doc.appendChild(cib)
+
+	configuration = doc.createElement("configuration")
+	cib.appendChild(configuration)
+
+	#crm_config = doc.createElement("crm_config")
+	#configuration.appendChild(crm_config)
+
+	resources = doc.createElement("resources")
+	configuration.appendChild(resources)
+	constraints = doc.createElement("constraints")
+	configuration.appendChild(constraints)
+
+	return doc, resources, constraints
+	
+def cib_resource(doc, id, ra_class, type, provider):
+
+	params = None
+	
+	resource = doc.createElement("primitive")
+	
+	resource.setAttribute("id",    id)
+	resource.setAttribute("type",  type)
+	resource.setAttribute("class", ra_class)
+	
+	if ra_class == "ocf":
+		resource.setAttribute("provider", provider)
+
+	elif ra_class != "lsb" and ra_class != "heartbeat": 
+		print "Unknown resource class: "+ ra_class
+		exit(1)
+
+	operations = doc.createElement("operations")
+	resource.appendChild(operations)
+
+	if monitor_interval != None:
+	    op = doc.createElement("op")
+	    operations.appendChild(op)
+	    op.setAttribute("id",       id + "_mon_" + monitor_interval)
+	    op.setAttribute("name",     "monitor")
+	    op.setAttribute("interval", monitor_interval)
+	    if monitor_timeout != None:
+		op.setAttribute("timeout", monitor_timeout)
+
+	if start_timeout != None:
+	    op = doc.createElement("op")
+	    operations.appendChild(op)
+	    op.setAttribute("id",      id + "_start")
+	    op.setAttribute("name",    "start")
+	    op.setAttribute("timeout", start_timeout)
+
+	if stop_timeout != None:
+	    op = doc.createElement("op")
+	    operations.appendChild(op)
+	    op.setAttribute("id",      id + "_stop")
+	    op.setAttribute("name",    "stop")
+	    op.setAttribute("timeout", stop_timeout)
+
+	instance_attributes = doc.createElement("instance_attributes")
+	instance_attributes.setAttribute("id", id + "_defaults")
+	resource.appendChild(instance_attributes)
+	attributes = doc.createElement("attributes")
+	instance_attributes.appendChild(attributes)
+	for i in range(0,len(rsc_options)) :
+		if rsc_options[i] == None :
+			continue
+	
+		param = string.split(rsc_options[i], "=")
+		nvpair = doc.createElement("nvpair")
+		nvpair.setAttribute("id",    id + "_" + param[0])
+		nvpair.setAttribute("name",  param[0])
+		nvpair.setAttribute("value", param[1])
+		attributes.appendChild(nvpair)
+
+	return resource
+
+def cib_rsc_location(doc, id, node, score):
+	rsc_location = doc.createElement("rsc_location")
+	rsc_location.setAttribute("id",  id+"_prefer_"+node)
+	rsc_location.setAttribute("rsc", id)
+	rule = doc.createElement("rule")
+	rule.setAttribute("id", id+"_prefer_"+node+"_rule")
+	rule.setAttribute("score", score)
+	rsc_location.appendChild(rule)
+	expression = doc.createElement("expression")
+	expression.setAttribute("id",id+"_prefer_"+node+"_expr")
+	expression.setAttribute("attribute","#uname")
+	expression.setAttribute("operation","eq")
+	expression.setAttribute("value", node)
+	rule.appendChild(expression)
+	return rsc_location
+
+def cib_rsc_colocation(doc, id, other_resource, score):
+	rsc_colocation = doc.createElement("rsc_colocation")
+	rsc_colocation.setAttribute("id",  id+"_colocate_with_"+other_resource)
+	rsc_colocation.setAttribute("from", id)
+	rsc_colocation.setAttribute("to", other_resource)
+	rsc_colocation.setAttribute("score", score)
+	return rsc_colocation
+
+def print_usage():
+	print "usage: " \
+	    + sys.argv[0] \
+	    + " --name <string>"\
+	    + " --class <string>"\
+	    + " --type <string>"\
+	    + " [--provider <string>]"\
+	    + "\n\t"\
+	    + " [--start-timeout <interval>]"\
+	    + " [--stop-timeout <interval>]"\
+	    + " [--monitor <interval>]"\
+	    + " [--monitor-timeout <interval>]"\
+	    + "\n\t"\
+	    + " [--rsc-option name=value]*"\
+	    + " [--rsc-location uname=score]*"\
+	    + " [--rsc-colocation resource=score]*"
+	print "Example:\n\t" + sys.argv[0] \
+	    + "--name cluster_ip_1 --type ocf --provider heartbeat --class IPaddr "\
+	    + "--rsc_option ip=192.168.1.101 --rsc-location node1=500 | cibadmin -U -p"
+	sys.exit(1)
+    
+if __name__=="__main__" :
+	
+	# Process arguments...
+	skipthis = None
+	args = sys.argv[1:]
+	if len(args) == 0:
+		print_usage()
+
+	for i in range(0, len(args)) :
+		if skipthis :
+			skipthis = None
+			continue
+		
+		elif args[i] == "--name" :
+			skipthis = True
+			rsc_name = args[i+1]
+
+		elif args[i] == "--class" :
+			skipthis = True
+			rsc_class = args[i+1]
+
+		elif args[i] == "--type" :
+			skipthis = True
+			rsc_type = args[i+1]
+
+		elif args[i] == "--provider" :
+			skipthis = True
+			rsc_provider = args[i+1]
+
+		elif args[i] == "--start-timeout" :
+			skipthis = True
+			start_timeout = args[i+1]
+
+		elif args[i] == "--stop-timeout" :
+			skipthis = True
+			stop_timeout = args[i+1]
+
+		elif args[i] == "--monitor" :
+			skipthis = True
+			monitor_interval = args[i+1]
+
+		elif args[i] == "--monitor-timeout" :
+			skipthis = True
+			monitor_timeout = args[i+1]
+
+		elif args[i] == "--rsc-option" :
+			skipthis = True
+			params = string.split(args[i+1], "=")
+			if params[1] != None:
+				rsc_options.append(args[i+1])
+			else:
+				print "option '"+args[i+1]+"'  must be of the form name=value"
+				       
+		elif args[i] == "--rsc-location" :
+			skipthis = True
+			params = string.split(args[i+1], "=")
+			if params[1] != None:
+			    rsc_location.append(args[i+1])
+			else:
+			    print "option '"+args[i+1]+"'  must be of the form host=score"
+
+		elif args[i] == "--rsc-colocation" :
+			skipthis = True
+			params = string.split(args[i+1], "=")
+			if params[1] != None:
+				rsc_colocation.append(args[i+1])
+			else:
+				print "option '"+args[i+1]+"' must be of the form resource=score" 
+
+		elif args[i] == "--rsc-only" :
+			print_rsc_only = 1
+		else:
+			print_usage()
+	cib = create_cib()
+	pre_line = ""
+	id_index = 1
+	resource = cib_resource(cib[0], rsc_name, rsc_class, rsc_type, rsc_provider)
+	if print_rsc_only:
+		print resource.toprettyxml()
+		sys.exit(0)
+
+	cib[1].appendChild(resource)
+
+	for i in range(0, len(rsc_location)) :
+		if rsc_location[i] == None :
+			continue
+		
+		param = string.split(rsc_location[i], "=")
+		location_rule = cib_rsc_location(cib[0], rsc_name, param[0], param[1])
+		cib[2].appendChild(location_rule)
+
+	for i in range(0, len(rsc_colocation)) :
+		if rsc_location[i] == None :
+			continue
+		
+		param = string.split(rsc_colocation[i], "=")
+		colocation_rule = cib_rsc_colocation(cib[0], rsc_name, param[0], param[1])
+		cib[2].appendChild(colocation_rule)
+
+	print cib[0].toprettyxml()
