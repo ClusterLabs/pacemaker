@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.18 2006/03/17 18:14:34 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.19 2006/03/18 17:19:40 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -271,6 +271,7 @@ delete_lrm_rsc(
 	HA_Message *cmd = NULL;
 	crm_data_t *msg_data = NULL;
 	crm_data_t *rsc = NULL;
+	HA_Message *params = NULL;
 	char *key = crm_concat(crm_system_name, our_pid, '-');
 	
 	CRM_DEV_ASSERT(rsc_id != NULL);
@@ -280,6 +281,9 @@ delete_lrm_rsc(
 	
 	rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);
 	crm_xml_add(rsc, XML_ATTR_ID, rsc_id);
+
+	params = create_xml_node(msg_data, XML_TAG_ATTRS);
+	crm_xml_add(params, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 	
 	cmd = create_request(CRM_OP_LRM_DELETE, msg_data, host_uname,
 			     CRM_SYSTEM_CRMD, crm_system_name, our_pid);
