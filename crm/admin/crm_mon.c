@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.18 2006/02/03 08:29:21 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.19 2006/03/18 17:17:19 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -427,6 +427,9 @@ print_status(crm_data_t *cib)
 	if(group_by_node == FALSE || inactive_resources) {
 		print_as("\n");
 		slist_iter(rsc, resource_t, data_set.resources, lpc2,
+			   if(rsc->orphan) {
+				   continue;
+			   }
 			   rsc->fns->print(rsc, NULL, print_opts, stdout);
 			);
 	}
