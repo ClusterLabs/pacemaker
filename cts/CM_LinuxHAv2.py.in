@@ -113,7 +113,7 @@ class LinuxHAv2(HeartbeatCM):
                 r"Welcome reply not received from",
                 r"Attempting to schedule .* after a stop",
 		r"Resource .* was active at shutdown",
-		r"Node .*: no uuid found",
+		r"duplicate entries for call_id",
             ),
         })
         del self["Standby"]
