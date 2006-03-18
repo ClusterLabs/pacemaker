@@ -1,4 +1,4 @@
-/* $Id: fsa.c,v 1.2 2005/06/14 11:38:26 davidlee Exp $ */
+/* $Id: fsa.c,v 1.3 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -57,7 +57,7 @@ void
 do_dc_command(enum te_fsa_state_t fsa_state, te_input_t *fsa_input)
 {
 	struct te_data_command_s *data = fsa_data->data;
-	CRM_DEV_ASSERT(fsa_input->ops->type() == te_data_command);
+	CRM_CHECK(fsa_input->ops->type() == te_data_command);
 	process_te_message(data->msg, data->xml);
 }
 
@@ -66,7 +66,7 @@ void
 do_cib_callback(enum te_fsa_state_t fsa_state, te_input_t *fsa_input)
 {
 	struct te_data_cib_s *data = fsa_data->data;
-	CRM_DEV_ASSERT(fsa_input->ops->type() == te_data_cib);
+	CRM_CHECK(fsa_input->ops->type() == te_data_cib);
 	cib_action_updated(data->msg, data->call_id, data->rc,
 			   data->output, data->user_data);
 }
@@ -76,7 +76,7 @@ void
 do_cib_notify(enum te_fsa_state_t fsa_state, te_input_t *fsa_input)
 {
 	struct te_data_command_s *data = fsa_data->data;
-	CRM_DEV_ASSERT(fsa_input->ops->type() == te_data_command);
+	CRM_CHECK(fsa_input->ops->type() == te_data_command);
 	te_update_confirm(NULL, data->msg);
 }
 
@@ -84,6 +84,6 @@ void
 do_notify_dc(enum te_fsa_state_t fsa_state, te_input_t *fsa_input)
 {
 	struct te_data_complete_s *data = fsa_data->data;
-	CRM_DEV_ASSERT(fsa_input->ops->type() == te_data_complete);
+	CRM_CHECK(fsa_input->ops->type() == te_data_complete);
 	send_complete(data->text, data->msg, data->reason, data->input);
 }

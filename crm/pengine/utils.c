@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.125 2006/02/16 16:01:33 andrew Exp $ */
+/* $Id: utils.c,v 1.126 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -292,17 +292,10 @@ node_copy(node_t *this_node)
 {
 	node_t *new_node  = NULL;
 
-	CRM_DEV_ASSERT(this_node != NULL);
-	if(this_node == NULL) {
-		pe_err("Failed copy of <null> node.");
-		return NULL;
-	}
+	CRM_CHECK(this_node != NULL, return NULL);
 	crm_malloc0(new_node, sizeof(node_t));
 
-	CRM_DEV_ASSERT(new_node != NULL);
-	if(new_node == NULL) {
-		return NULL;
-	}
+	CRM_CHECK(new_node != NULL, return NULL);
 	
 	crm_debug_5("Copying %p (%s) to %p",
 		  this_node, this_node->details->uname, new_node);
@@ -363,10 +356,8 @@ create_color(
 	
 	crm_action_debug_3(print_color("Created color", new_color, TRUE));
 
-	CRM_DEV_ASSERT(data_set != NULL);
-	if(crm_assert_failed == FALSE) {
-		data_set->colors = g_list_append(data_set->colors, new_color);
-	}
+	CRM_CHECK(data_set != NULL, return NULL);
+	data_set->colors = g_list_append(data_set->colors, new_color);
 	return new_color;
 }
 
@@ -504,8 +495,8 @@ gint sort_rsc_node_weight(gconstpointer a, gconstpointer b)
 	color1 = resource1->color;
 	color2 = resource2->color;
 	
-	CRM_DEV_ASSERT(color1 != NULL);
-	CRM_DEV_ASSERT(color2 != NULL);
+	CRM_CHECK(color1 != NULL, return 0);
+	CRM_CHECK(color2 != NULL, return 0);
 	node1 = color1->details->chosen_node;
 	node2 = color2->details->chosen_node;
 
@@ -663,11 +654,8 @@ custom_action(resource_t *rsc, char *key, const char *task,
 {
 	action_t *action = NULL;
 	GListPtr possible_matches = NULL;
-	CRM_DEV_ASSERT(key != NULL);
-	if(crm_assert_failed) { return NULL; }
-	
-	CRM_DEV_ASSERT(task != NULL);
-	if(crm_assert_failed) { return NULL; }
+	CRM_CHECK(key != NULL, return NULL);
+	CRM_CHECK(task != NULL, return NULL);
 
 	if(save_action && rsc != NULL) {
 		possible_matches = find_actions(rsc->actions, key, on_node);
@@ -858,7 +846,7 @@ unpack_operation(
 		"start_delay",
 	};
 
-	CRM_DEV_ASSERT(action->rsc != NULL);
+	CRM_CHECK(action->rsc != NULL, return);
 	
 	if(xml_obj != NULL) {
 		value = crm_element_value(xml_obj, "prereq");
@@ -1213,8 +1201,8 @@ task2text(enum action_tasks task)
 const char *
 role2text(enum rsc_role_e role) 
 {
-	CRM_DEV_ASSERT(role >= RSC_ROLE_UNKNOWN);
-	CRM_DEV_ASSERT(role < RSC_ROLE_MAX);
+	CRM_CHECK(role >= RSC_ROLE_UNKNOWN, return RSC_ROLE_UNKNOWN_S);
+	CRM_CHECK(role < RSC_ROLE_MAX, return RSC_ROLE_UNKNOWN_S);
 	switch(role) {
 		case RSC_ROLE_UNKNOWN:
 			return RSC_ROLE_UNKNOWN_S;
@@ -1395,9 +1383,9 @@ print_resource(
 	long options = pe_print_log;
 	
 	if(rsc == NULL) {
-		crm_debug_4("%s%s: <NULL>",
-		       pre_text==NULL?"":pre_text,
-		       pre_text==NULL?"":": ");
+		crm_log_maybe(log_level-1, "%s%s: <NULL>",
+			      pre_text==NULL?"":pre_text,
+			      pre_text==NULL?"":": ");
 		return;
 	}
 	if(details) {
@@ -1643,7 +1631,7 @@ GListPtr
 find_actions(GListPtr input, const char *key, node_t *on_node)
 {
 	GListPtr result = NULL;
-	CRM_DEV_ASSERT(key != NULL);
+	CRM_CHECK(key != NULL, return NULL);
 	
 	slist_iter(
 		action, action_t, input, lpc,
@@ -1678,7 +1666,7 @@ GListPtr
 find_actions_exact(GListPtr input, const char *key, node_t *on_node)
 {
 	GListPtr result = NULL;
-	CRM_DEV_ASSERT(key != NULL);
+	CRM_CHECK(key != NULL, return NULL);
 	
 	slist_iter(
 		action, action_t, input, lpc,
@@ -1837,7 +1825,7 @@ rsc2node_new(const char *id, resource_t *rsc,
 			copy->weight = node_weight;
 			new_con->node_list_rh = g_list_append(NULL, copy);
 		} else {
-			CRM_DEV_ASSERT(node_weight == 0);
+			CRM_CHECK(node_weight == 0, return NULL);
 		}
 		
 		data_set->placement_constraints = g_list_append(

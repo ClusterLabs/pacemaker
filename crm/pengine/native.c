@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.113 2006/03/09 21:36:38 andrew Exp $ */
+/* $Id: native.c,v 1.114 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -96,11 +96,11 @@ typedef struct native_variant_data_s
 void
 native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 {
-	CRM_DEV_ASSERT(node != NULL); if(crm_assert_failed) { return; }
+	CRM_CHECK(node != NULL, return);
 
 	slist_iter(
 		a_node, node_t, rsc->running_on, lpc,
-		CRM_DEV_ASSERT(a_node != NULL);
+		CRM_CHECK(a_node != NULL, return);
 		if(safe_str_eq(a_node->details->id, node->details->id)) {
 			return;
 		}
@@ -206,10 +206,7 @@ native_parameter(
 	char *value_copy = NULL;
 	const char *value = NULL;
 
-	CRM_DEV_ASSERT(rsc != NULL);
-	if(crm_assert_failed) {
-		return NULL;
-	}
+	CRM_CHECK(rsc != NULL, return NULL);
 
 	crm_debug_2("Looking up %s in %s", name, rsc->id);
 	
@@ -862,8 +859,7 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		crm_debug_2("RHS of constraint %s is NULL", constraint->id);
 		return;
 	}
-	print_resource(LOG_DEBUG_3, "before update", rsc,TRUE);
-
+	print_resource(LOG_DEBUG_3, "before update: ", rsc, TRUE);
 	or_list = node_list_or(
 		rsc->allowed_nodes, constraint->node_list_rh, FALSE);
 		
@@ -872,9 +868,10 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 
 	slist_iter(node_rh, node_t, constraint->node_list_rh, lpc,
 		   native_update_node_weight(rsc, constraint, node_rh,
-					     rsc->allowed_nodes));
+					     rsc->allowed_nodes)
+		);
 
-	print_resource(LOG_DEBUG_3, "after update", rsc, TRUE);
+	print_resource(LOG_DEBUG_3, "after update: ", rsc, TRUE);
 
 }
 
@@ -1115,21 +1112,21 @@ void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 	}
 		
 	if(update_lh && rsc_rh != rsc_lh) {
-		CRM_DEV_ASSERT(rsc_lh->color != rsc_rh->color);
+		CRM_CHECK(rsc_lh->color != rsc_rh->color, return);
 		crm_free(rsc_lh->color);
 		rsc_lh->runnable      = rsc_rh->runnable;
 		rsc_lh->provisional   = rsc_rh->provisional;
 
-		CRM_DEV_ASSERT(rsc_rh->color != NULL);
+		CRM_CHECK(rsc_rh->color != NULL, return);
 		native_assign_color(rsc_lh, rsc_rh->color);
 	}
 	if(update_rh && rsc_rh != rsc_lh) {
-		CRM_DEV_ASSERT(rsc_lh->color != rsc_rh->color);
+		CRM_CHECK(rsc_lh->color != rsc_rh->color, return);
 		crm_free(rsc_rh->color);
 		rsc_rh->runnable      = rsc_lh->runnable;
 		rsc_rh->provisional   = rsc_lh->provisional;
 
-		CRM_DEV_ASSERT(rsc_lh->color != NULL);
+		CRM_CHECK(rsc_lh->color != NULL, return);
 		native_assign_color(rsc_rh, rsc_lh->color);
 	}
 
@@ -1319,11 +1316,7 @@ native_assign_color(resource_t *rsc, color_t *color)
 
 	rsc->provisional = FALSE;
 	
-	CRM_DEV_ASSERT(local_color != NULL);
-	if (crm_assert_failed) {
-		pe_err("local color was NULL");
-		return;
-	}
+	CRM_CHECK(local_color != NULL, return);
 
 	local_color->details->allocated_resources =
 		g_list_append(local_color->details->allocated_resources,rsc);
@@ -1356,7 +1349,7 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 			  node_t *cons_node, GListPtr nodes)
 {
 	node_t *node_rh = NULL;
-	CRM_DEV_ASSERT(cons_node != NULL);
+	CRM_CHECK(cons_node != NULL, return);
 	
 	node_rh = pe_find_node_id(
 		rsc->allowed_nodes, cons_node->details->id);
@@ -1371,11 +1364,11 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 		node_rh = pe_find_node_id(
 			rsc->allowed_nodes, cons_node->details->id);
 
-		CRM_DEV_ASSERT(node_rh != NULL);
+		CRM_CHECK(node_rh != NULL, return);
 		return;
 	}
 
-	CRM_DEV_ASSERT(node_rh != NULL);
+	CRM_CHECK(node_rh != NULL, return);
 	
 	if(node_rh == NULL) {
 		pe_err("Node not found - cant update");
@@ -1510,7 +1503,7 @@ native_constraint_violated(
 void
 filter_nodes(resource_t *rsc)
 {
-	print_resource(LOG_DEBUG_3, "Filtering nodes for", rsc, FALSE);
+	print_resource(LOG_DEBUG_3, "Filtering nodes for: ", rsc, FALSE);
 	slist_iter(
 		node, node_t, rsc->allowed_nodes, lpc,
 		if(node == NULL) {
@@ -1667,7 +1660,7 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 	
 	/* start / promote */
 	if(rsc->next_role != RSC_ROLE_STOPPED) {	
-		CRM_DEV_ASSERT(next_node != NULL);
+		CRM_CHECK(next_node != NULL, return);
 		if(task == start_rsc || task == action_promote) {
 			if(task != start_rsc || registered == FALSE) {
 				pe_pre_notify(rsc, next_node, op, n_data, data_set);
@@ -1702,7 +1695,7 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 		return;
 	}
 
-	CRM_DEV_ASSERT(node != NULL);
+	CRM_CHECK(node != NULL, return);
 
 	value = g_hash_table_lookup(op->extra, "notify_type");
 	task = g_hash_table_lookup(op->extra, "notify_operation");
@@ -1934,7 +1927,7 @@ PromoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 {
 	crm_debug_2("Executing: %s", rsc->id);
 
-	CRM_DEV_ASSERT(rsc->next_role == RSC_ROLE_MASTER);
+	CRM_CHECK(rsc->next_role == RSC_ROLE_MASTER, return FALSE);
 	crm_notice("%s\tPromote %s", next->details->uname, rsc->id);
 	promote_action(rsc, next, FALSE);
 	return TRUE;
@@ -1945,7 +1938,7 @@ DemoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 {
 	crm_debug_2("Executing: %s", rsc->id);
 
-	CRM_DEV_ASSERT(rsc->next_role == RSC_ROLE_SLAVE);
+	CRM_CHECK(rsc->next_role == RSC_ROLE_SLAVE, return FALSE);
 	slist_iter(
 		current, node_t, rsc->running_on, lpc,
 		crm_notice("%s\tDeomote %s", next->details->uname, rsc->id);
@@ -1958,7 +1951,7 @@ gboolean
 RoleError(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 {
 	crm_debug("Executing: %s", rsc->id);
-	CRM_DEV_ASSERT(FALSE);
+	CRM_CHECK(FALSE, return FALSE);
 	return FALSE;
 }
 
@@ -1979,10 +1972,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	action_t *probe = NULL;
 	node_t *running = NULL;
 
-	CRM_DEV_ASSERT(node != NULL);
-	if(crm_assert_failed) {
-		return FALSE;
-	}
+	CRM_CHECK(node != NULL, return FALSE);
 
 	running = pe_find_node_id(rsc->known_on, node->details->id);
 	if(running != NULL) {

@@ -1,4 +1,4 @@
-/* $Id: events.c,v 1.4 2006/02/16 18:20:33 andrew Exp $ */
+/* $Id: events.c,v 1.5 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -188,20 +188,20 @@ match_graph_event(
 	int op_rc_i = -3;
 	int transition_i = -1;
 
-	CRM_DEV_ASSERT(event != NULL);
+	CRM_CHECK(event != NULL, return -1);
 	
 	crm_debug_3("Processing \"%s\" change", crm_element_name(event));
 	update_event = crm_element_value(event, XML_ATTR_ID);
 	magic        = crm_element_value(event, XML_ATTR_TRANSITION_MAGIC);
 
-	CRM_DEV_ASSERT(magic != NULL);
+	CRM_CHECK(magic != NULL, return -2);
 	
 	this_action = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 	this_uname  = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 	this_event  = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
 	this_node   = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 
-	CRM_DEV_ASSERT(this_event != NULL);
+	CRM_CHECK(this_event != NULL, return -2);
 	
 	if(safe_str_neq(this_event, update_event)) {
 		crm_debug_2("Action %d : Event mismatch %s vs. %s",
@@ -217,9 +217,9 @@ match_graph_event(
 
 	crm_debug("Matched action (%d) %s", action->id, this_event);
 
-	CRM_DEV_ASSERT(decode_transition_magic(
+	CRM_CHECK(decode_transition_magic(
 			       magic, &update_te_uuid,
-			       &transition_i, &op_status_i, &op_rc_i));
+			       &transition_i, &op_status_i, &op_rc_i), return -2);
 
 	if(transition_i == -1) {
 		/* we never expect these - recompute */

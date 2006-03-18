@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.9 2006/03/08 15:47:50 andrew Exp $ */
+/* $Id: master.c,v 1.10 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -266,7 +266,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
 		crm_debug_2("Assigning priority for %s", child_rsc->id);
-		CRM_DEV_ASSERT(child_rsc->color != NULL);
+		CRM_CHECK(child_rsc->color != NULL, continue);
 		chosen = child_rsc->color->details->chosen_node;
 		
 		switch(child_rsc->next_role) {
@@ -279,7 +279,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				
 				child_rsc->priority = -1;
 
-				CRM_DEV_ASSERT(chosen != NULL);
+				CRM_CHECK(chosen != NULL, break);
 
 				len = 8 + strlen(child_rsc->id);
 				crm_malloc0(attr_name, len);
@@ -306,7 +306,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				child_rsc->priority = -INFINITY;
 				break;
 			default:
-				CRM_DEV_ASSERT(FALSE/* unhandled */);
+				CRM_CHECK(FALSE/* unhandled */, ;);
 		}
 		);
 	
@@ -318,7 +318,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
-		CRM_DEV_ASSERT(child_rsc->color != NULL);
+		CRM_CHECK(child_rsc->color != NULL, continue);
 		chosen = child_rsc->color->details->chosen_node;
 
 		switch(child_rsc->next_role) {
@@ -375,7 +375,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				}
 				break;
 			default:
-				CRM_DEV_ASSERT(FALSE/* unhandled */);
+				CRM_CHECK(FALSE/* unhandled */, ;);
 		}
 		);
 	crm_info("Promoted %d (of %d) slaves to master", promoted, master_max);

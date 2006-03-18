@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.4 2006/02/20 16:25:50 andrew Exp $ */
+/* $Id: unpack.c,v 1.5 2006/03/18 17:23:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -95,7 +95,7 @@ unpack_synapse(crm_graph_t *new_graph, crm_data_t *xml_synapse)
 {
 	const char *value = NULL;
 	synapse_t *new_synapse = NULL;
-	CRM_DEV_ASSERT(xml_synapse != NULL);
+	CRM_CHECK(xml_synapse != NULL, return NULL);
 	crm_debug_3("looking in synapse %s", ID(xml_synapse));
 	
 	crm_malloc0(new_synapse, sizeof(synapse_t));
@@ -107,7 +107,7 @@ unpack_synapse(crm_graph_t *new_graph, crm_data_t *xml_synapse)
 	}
 	
 	new_graph->num_synapses++;
-	CRM_DEV_ASSERT(new_synapse->id >= 0);
+	CRM_CHECK(new_synapse->id >= 0, return NULL);
 	
 	crm_debug_3("look for actions in synapse %s",
 		    crm_element_value(xml_synapse, XML_ATTR_ID));
@@ -189,8 +189,8 @@ unpack_graph(crm_data_t *xml_graph)
 	if(xml_graph != NULL) {
 		t_id = crm_element_value(xml_graph, "transition_id");
 		time = crm_element_value(xml_graph, "global_timeout");
-		CRM_DEV_ASSERT(t_id != NULL);
-		CRM_DEV_ASSERT(time != NULL);
+		CRM_CHECK(t_id != NULL, return NULL);
+		CRM_CHECK(time != NULL, return NULL);
 		new_graph->transition_timeout = crm_get_msec(time);
 		new_graph->id = crm_parse_int(t_id, "-1");
 	}
@@ -215,7 +215,7 @@ static void
 destroy_action(crm_action_t *action)
 {
 	if(action->timer) {
-		CRM_DEV_ASSERT(action->timer->source_id == 0);
+		CRM_CHECK(action->timer->source_id == 0, ;);
 /*  		Gmain_timeout_remove(action->timer->source_id); */
 	}
 	g_hash_table_destroy(action->params);

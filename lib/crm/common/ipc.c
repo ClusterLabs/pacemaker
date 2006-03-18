@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.20 2006/02/19 20:02:19 andrew Exp $ */
+/* $Id: ipc.c,v 1.21 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -107,7 +107,7 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboole
 			send_q = ipc->send_queue;
 		}
 		if(send_q != NULL) {
-			CRM_DEV_ASSERT(send_q->current_qlen < send_q->max_qlen);
+			CRM_CHECK(send_q->current_qlen < send_q->max_qlen, ;);
 		}
 	}
 	
@@ -156,7 +156,7 @@ crm_send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg, gboolean server)
 				      (int)ipc_client->farside_pid);
 
 		} else if(server == FALSE) {
-			CRM_DEV_ASSERT(ipc_client->send_queue->current_qlen < ipc_client->send_queue->max_qlen);
+			CRM_CHECK(ipc_client->send_queue->current_qlen < ipc_client->send_queue->max_qlen, ;);
 		}
 	}	
 

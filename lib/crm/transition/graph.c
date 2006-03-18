@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.7 2006/03/17 00:42:16 andrew Exp $ */
+/* $Id: graph.c,v 1.8 2006/03/18 17:23:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,8 +34,8 @@ static gboolean
 update_synapse_ready(synapse_t *synapse, int action_id) 
 {
 	gboolean updates = FALSE;
-	CRM_DEV_ASSERT(synapse->executed == FALSE);
-	CRM_DEV_ASSERT(synapse->confirmed == FALSE);
+	CRM_CHECK(synapse->executed == FALSE, return FALSE);
+	CRM_CHECK(synapse->confirmed == FALSE, return FALSE);
 
 	synapse->ready = TRUE;
 	slist_iter(
@@ -66,8 +66,8 @@ update_synapse_confirmed(synapse_t *synapse, int action_id)
 	gboolean updates = FALSE;
 	gboolean is_confirmed = TRUE;
 	
-	CRM_DEV_ASSERT(synapse->executed);
-	CRM_DEV_ASSERT(synapse->confirmed == FALSE);
+	CRM_CHECK(synapse->executed, return FALSE);
+	CRM_CHECK(synapse->confirmed == FALSE, return TRUE);
 
 	is_confirmed = TRUE;
 	slist_iter(
@@ -132,8 +132,8 @@ update_graph(crm_graph_t *graph, crm_action_t *action)
 static gboolean
 should_fire_synapse(synapse_t *synapse)
 {
-	CRM_DEV_ASSERT(synapse->executed == FALSE);
-	CRM_DEV_ASSERT(synapse->confirmed == FALSE);
+	CRM_CHECK(synapse->executed == FALSE, return FALSE);
+	CRM_CHECK(synapse->confirmed == FALSE, return FALSE);
 	
 	crm_debug_3("Checking pre-reqs for %d", synapse->id);
 	/* lookup prereqs */
@@ -160,16 +160,10 @@ initiate_action(crm_graph_t *graph, crm_action_t *action)
 	const char *id = NULL;
 	int tmp_time = 2 * action->timeout;
 
-	CRM_DEV_ASSERT(action->executed == FALSE);
-	if(crm_assert_failed) {
-		return FALSE;
-	}
+	CRM_CHECK(action->executed == FALSE, return FALSE);
 
 	id = ID(action->xml);
-	CRM_DEV_ASSERT(id != NULL);
-	if(crm_assert_failed) {
-		return FALSE;
-	}
+	CRM_CHECK(id != NULL, return FALSE);
 
 	if(tmp_time > graph->transition_timeout) {
 		crm_debug("Action %d: Increasing IDLE timer to %d",
@@ -190,7 +184,7 @@ initiate_action(crm_graph_t *graph, crm_action_t *action)
 	} else if(action->type == action_type_crm) {
 		const char *task = NULL;
 		task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-		CRM_DEV_ASSERT(task != NULL);
+		CRM_CHECK(task != NULL, return FALSE);
 		
 		if(safe_str_eq(task, CRM_OP_FENCE)) {
 			te_log_action(LOG_INFO, "Executing STONITH-event: %d",
@@ -211,9 +205,9 @@ initiate_action(crm_graph_t *graph, crm_action_t *action)
 static gboolean
 fire_synapse(crm_graph_t *graph, synapse_t *synapse) 
 {
-	CRM_DEV_ASSERT(synapse != NULL);
-	CRM_DEV_ASSERT(synapse->ready);
-	CRM_DEV_ASSERT(synapse->confirmed == FALSE);
+	CRM_CHECK(synapse != NULL, return FALSE);
+	CRM_CHECK(synapse->ready, return FALSE);
+	CRM_CHECK(synapse->confirmed == FALSE, return TRUE);
 	
 	crm_debug("Synapse %d fired", synapse->id);
 	synapse->executed = TRUE;
@@ -225,7 +219,6 @@ fire_synapse(crm_graph_t *graph, synapse_t *synapse)
 
 		/* Invoke the action and start the timer */
 		passed = initiate_action(graph, action);
-		CRM_DEV_ASSERT(passed == TRUE);
 		if(passed == FALSE) {
 			crm_err("Failed initiating <%s id=%d> in synapse %d",
 				crm_element_name(action->xml),

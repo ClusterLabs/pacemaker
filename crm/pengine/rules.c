@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.21 2005/12/19 16:54:44 andrew Exp $ */
+/* $Id: rules.c,v 1.22 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -122,7 +122,7 @@ test_expression(crm_data_t *expr, node_t *node, resource_t *rsc,
 			break;
 
 		default:
-			CRM_DEV_ASSERT(FALSE /* bad type */);
+			CRM_CHECK(FALSE /* bad type */, return FALSE);
 			accept = FALSE;
 	}
 		
@@ -331,8 +331,8 @@ phase_of_the_moon(ha_time_t *now)
 	value = crm_element_value(cron_spec, xml_field);		\
 	if(value != NULL) {						\
 		decodeNVpair(value, '-', &value_low, &value_high);	\
-		CRM_DEV_ASSERT(value_low != NULL);			\
-		value_low_i = crm_parse_int(value_low, "0");			\
+		CRM_CHECK(value_low != NULL, return FALSE);		\
+		value_low_i = crm_parse_int(value_low, "0");		\
 		value_high_i = crm_parse_int(value_high, "-1");		\
 		if(value_low_i > time_field) {				\
 			return FALSE;					\

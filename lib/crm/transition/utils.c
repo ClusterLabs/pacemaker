@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.5 2006/02/20 16:25:50 andrew Exp $ */
+/* $Id: utils.c,v 1.6 2006/03/18 17:23:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,11 +58,11 @@ set_graph_functions(crm_graph_functions_t *fns)
 	crm_info("Setting custom graph functions");
 	graph_fns = fns;
 
-	CRM_DEV_ASSERT(graph_fns != NULL);
-	CRM_DEV_ASSERT(graph_fns->rsc != NULL);
-	CRM_DEV_ASSERT(graph_fns->crmd != NULL);
-	CRM_DEV_ASSERT(graph_fns->pseudo != NULL);
-	CRM_DEV_ASSERT(graph_fns->stonith != NULL);
+	CRM_ASSERT(graph_fns != NULL);
+	CRM_ASSERT(graph_fns->rsc != NULL);
+	CRM_ASSERT(graph_fns->crmd != NULL);
+	CRM_ASSERT(graph_fns->pseudo != NULL);
+	CRM_ASSERT(graph_fns->stonith != NULL);
 }
 
 const char *

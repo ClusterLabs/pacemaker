@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.53 2006/02/24 11:31:13 andrew Exp $ */
+/* $Id: group.c,v 1.54 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -171,7 +171,7 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 		group_color = child_rsc->fns->color(child_rsc, data_set);
-		CRM_DEV_ASSERT(group_color != NULL);
+		CRM_CHECK(group_color != NULL, continue);
 		native_assign_color(rsc, group_color);
 		);
 	
@@ -337,10 +337,7 @@ void group_rsc_colocation_lh(
 	crm_debug_4("Processing constraints from %s", rsc_lh->id);
 
 	get_group_variant_data(group_data, rsc_lh);
-	CRM_DEV_ASSERT(group_data->self != NULL);
-	if(crm_assert_failed) {
-		return;
-	}
+	CRM_CHECK(group_data->self != NULL, return);
 
 	if(group_data->colocated) {
 		group_data->first_child->fns->rsc_colocation_lh(
@@ -366,11 +363,8 @@ void group_rsc_colocation_rh(
 {
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc_rh);
-	CRM_DEV_ASSERT(group_data->self != NULL);
-	if(crm_assert_failed) {
-		return;
-	}
-	CRM_DEV_ASSERT(rsc_lh->variant == pe_native);
+	CRM_CHECK(group_data->self != NULL, return);
+	CRM_CHECK(rsc_lh->variant == pe_native, return);
 
 	crm_debug_3("Processing RH of constraint %s", constraint->id);
 	print_resource(LOG_DEBUG_3, "LHS", rsc_lh, TRUE);

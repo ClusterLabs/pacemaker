@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.35 2006/03/17 17:59:32 andrew Exp $ */
+/* $Id: utils.c,v 1.36 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -483,7 +483,7 @@ crm_int_helper(const char *text, char **end_text)
 			atoi_result = (int)strtol(text, &local_end_text, 10);
 		}
 		
-/* 		CRM_DEV_ASSERT(errno != EINVAL); */
+/* 		CRM_CHECK(errno != EINVAL); */
 		if(errno == EINVAL) {
 			crm_err("Conversion of %s failed", text);
 			atoi_result = -1;
@@ -558,7 +558,7 @@ char *
 crm_strdup(const char *a)
 {
 	char *ret = NULL;
-	CRM_DEV_ASSERT(a != NULL);
+	CRM_CHECK(a != NULL, return NULL);
 	if(a != NULL) {
 		ret = cl_strdup(a);
 	} else {
@@ -591,7 +591,7 @@ get_uuid(ll_cluster_t *hb, const char *uname)
 			g_hash_destroy_str, g_hash_destroy_str);
 	}
 	
-	CRM_DEV_ASSERT(uname != NULL);
+	CRM_CHECK(uname != NULL, return NULL);
 
 	/* avoid blocking calls where possible */
 	uuid_calc = g_hash_table_lookup(crm_uuid_cache, uname);
@@ -638,7 +638,7 @@ get_uname(ll_cluster_t *hb, const char *uuid)
 			g_hash_destroy_str, g_hash_destroy_str);
 	}
 	
-	CRM_DEV_ASSERT(uuid != NULL);
+	CRM_CHECK(uuid != NULL, return NULL);
 
 	/* avoid blocking calls where possible */
 	uname = g_hash_table_lookup(crm_uname_cache, uuid);
@@ -986,8 +986,8 @@ op_status2text(op_status_t status)
 			return "Cancelled";
 			break;
 	}
-	CRM_DEV_ASSERT(status >= LRM_OP_PENDING && status <= LRM_OP_CANCELLED);
-	crm_err("Unknown status: %d", status);
+	CRM_CHECK(status >= LRM_OP_PENDING && status <= LRM_OP_CANCELLED,
+		  crm_err("Unknown status: %d", status));
 	return "UNKNOWN!";
 }
 
@@ -997,8 +997,8 @@ generate_op_key(const char *rsc_id, const char *op_type, int interval)
 	int len = 35;
 	char *op_id = NULL;
 
-	CRM_DEV_ASSERT(rsc_id  != NULL); if(crm_assert_failed) { return NULL; }
-	CRM_DEV_ASSERT(op_type != NULL); if(crm_assert_failed) { return NULL; }
+	CRM_CHECK(rsc_id  != NULL, return NULL);
+	CRM_CHECK(op_type != NULL, return NULL);
 	
 	len += strlen(op_type);
 	len += strlen(rsc_id);
@@ -1015,9 +1015,9 @@ generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_
 	int len = 12;
 	char *op_id = NULL;
 
-	CRM_DEV_ASSERT(rsc_id  != NULL); if(crm_assert_failed) { return NULL; }
-	CRM_DEV_ASSERT(op_type != NULL); if(crm_assert_failed) { return NULL; }
-	CRM_DEV_ASSERT(notify_type != NULL); if(crm_assert_failed) { return NULL; }
+	CRM_CHECK(rsc_id  != NULL, return NULL);
+	CRM_CHECK(op_type != NULL, return NULL);
+	CRM_CHECK(notify_type != NULL, return NULL);
 	
 	len += strlen(op_type);
 	len += strlen(rsc_id);
@@ -1035,8 +1035,7 @@ generate_transition_magic_v202(const char *transition_key, int op_status)
 	int len = 80;
 	char *fail_state = NULL;
 
-	CRM_DEV_ASSERT(transition_key != NULL);
-	if(crm_assert_failed) { return NULL; }
+	CRM_CHECK(transition_key != NULL, return NULL);
 	
 	len += strlen(transition_key);
 	
@@ -1053,8 +1052,7 @@ generate_transition_magic(const char *transition_key, int op_status, int op_rc)
 	int len = 80;
 	char *fail_state = NULL;
 
-	CRM_DEV_ASSERT(transition_key != NULL);
-	if(crm_assert_failed) { return NULL; }
+	CRM_CHECK(transition_key != NULL, return NULL);
 	
 	len += strlen(transition_key);
 	
@@ -1087,10 +1085,7 @@ decode_transition_magic(
 	}
 
 	
-	CRM_DEV_ASSERT(decode_transition_key(key, uuid, transition_id));
-	if(crm_assert_failed) {
-		return FALSE;
-	}
+	CRM_CHECK(decode_transition_key(key, uuid, transition_id), return FALSE);
 	
 	*op_rc = crm_parse_int(rc, NULL);
 	*op_status = crm_parse_int(status, NULL);
@@ -1109,7 +1104,7 @@ generate_transition_key(int transition_id, const char *node)
 	int len = 40;
 	char *fail_state = NULL;
 
-	CRM_DEV_ASSERT(node != NULL); if(crm_assert_failed) { return NULL; }
+	CRM_CHECK(node != NULL, return NULL);
 	
 	len += strlen(node);
 	
@@ -1146,7 +1141,7 @@ crm_mem_stats(volatile cl_mem_stats_t *mem_stats)
 	if(active_stats == NULL) {
 		active_stats = cl_malloc_getstats();
 	}
-	CRM_DEV_ASSERT(active_stats != NULL);
+	CRM_CHECK(active_stats != NULL, ;);
 #ifndef CRM_USE_MALLOC
 	if(active_stats->numalloc > active_stats->numfree) {
 		crm_warn("Potential memory leak detected:"

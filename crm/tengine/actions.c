@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.17 2006/03/08 15:49:40 andrew Exp $ */
+/* $Id: actions.c,v 1.18 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -72,8 +72,8 @@ send_stonith_update(stonith_ops_t * op)
 	/* zero out the node-status & remove all LRM status info */
 	crm_data_t *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	
-	CRM_DEV_ASSERT(op->node_name != NULL);
-	CRM_DEV_ASSERT(op->node_uuid != NULL);
+	CRM_CHECK(op->node_name != NULL, return);
+	CRM_CHECK(op->node_uuid != NULL, return);
 	
 	crm_xml_add(node_state, XML_ATTR_UUID,  uuid);
 	crm_xml_add(node_state, XML_ATTR_UNAME, target);
@@ -118,10 +118,10 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 	uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 	type = g_hash_table_lookup(action->params, "stonith_action");
 	
-	CRM_DEV_ASSERT(id != NULL);
-	CRM_DEV_ASSERT(uuid != NULL);
-	CRM_DEV_ASSERT(type != NULL);
-	CRM_DEV_ASSERT(target != NULL);
+	CRM_CHECK(id != NULL, return FALSE);
+	CRM_CHECK(uuid != NULL, return FALSE);
+	CRM_CHECK(type != NULL, return FALSE);
+	CRM_CHECK(target != NULL, return FALSE);
 
 	if(id == NULL || uuid == NULL || target == NULL) {
 		/* error */
@@ -179,13 +179,10 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	task    = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 	on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 
-	CRM_DEV_ASSERT(on_node != NULL && strlen(on_node) != 0);
-	if(crm_assert_failed) {
-		/* error */
-		te_log_action(LOG_ERR, "Corrupted command (id=%s) %s: no node",
-			      crm_str(id), crm_str(task));
-		return FALSE;
-	}
+	CRM_CHECK(on_node != NULL && strlen(on_node) != 0,
+		  te_log_action(LOG_ERR, "Corrupted command (id=%s) %s: no node",
+				crm_str(id), crm_str(task));
+		  return FALSE);
 	
 	te_log_action(LOG_INFO, "Executing crm-event (%s): %s on %s",
 		      crm_str(id), crm_str(task), on_node);
@@ -232,13 +229,10 @@ te_rsc_command(crm_graph_t *graph, crm_action_t *action)
 	action->executed = FALSE;
 
 	on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-	CRM_DEV_ASSERT(on_node != NULL && strlen(on_node) != 0);
-	if(crm_assert_failed) {
-		/* error */
-		te_log_action(LOG_ERR, "Corrupted command(id=%s) %s: no node",
-			      ID(action->xml), crm_str(task));
-		return FALSE;
-	}
+	CRM_CHECK(on_node != NULL && strlen(on_node) != 0,
+		  te_log_action(LOG_ERR, "Corrupted command(id=%s) %s: no node",
+				ID(action->xml), crm_str(task));
+		  return FALSE);
 	
 	send_rsc_command(action);
 	return TRUE;
@@ -445,7 +439,7 @@ notify_crmd(crm_graph_t *graph)
 		return;
 	}
 
-	CRM_DEV_ASSERT(graph->complete);
+	CRM_CHECK(graph->complete, return);
 
 	switch(graph->completion_action) {
 		case tg_stop:

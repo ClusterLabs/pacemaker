@@ -978,8 +978,8 @@ apply_cib_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 	int diff_del_epoch  = 0;
 	int diff_del_admin_epoch = 0;
 
-	CRM_DEV_ASSERT(diff != NULL);
-	CRM_DEV_ASSERT(old != NULL);
+	CRM_CHECK(diff != NULL, return FALSE);
+	CRM_CHECK(old != NULL, return FALSE);
 	
 	value = crm_element_value(old, XML_ATTR_GENERATION_ADMIN);
 	this_admin_epoch = crm_parse_int(value, "0");
@@ -1027,7 +1027,6 @@ apply_cib_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 			cl_msg_remove(tmp, XML_ATTR_GENERATION_ADMIN);
 			cl_msg_remove(tmp, XML_ATTR_GENERATION);
 			cl_msg_remove(tmp, XML_ATTR_NUMUPDATES);
-			CRM_DEV_ASSERT(tmp->nfields == len - 3);
 		}
 		
 		tmp = find_xml_node(diff_copy, "diff-added", TRUE);
@@ -1036,7 +1035,6 @@ apply_cib_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 			cl_msg_remove(tmp, XML_ATTR_GENERATION_ADMIN);
 			cl_msg_remove(tmp, XML_ATTR_GENERATION);
 			cl_msg_remove(tmp, XML_ATTR_NUMUPDATES);
-			CRM_DEV_ASSERT(tmp->nfields == len - 3);
 		}
 		
 		result = apply_xml_diff(old, diff_copy, new);

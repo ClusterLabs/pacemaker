@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.13 2006/02/03 08:29:22 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.14 2006/03/18 17:23:48 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -169,7 +169,8 @@ read_attr(cib_t *the_cib,
 	}
 #else
 	xml_obj = fragment;
-	CRM_DEV_ASSERT(safe_str_eq(crm_element_name(xml_obj), XML_TAG_CIB));
+	CRM_CHECK(safe_str_eq(crm_element_name(xml_obj), XML_TAG_CIB),
+		  return cib_output_data);
 #endif
 	CRM_ASSERT(xml_obj != NULL);
 	crm_log_xml_debug_2(xml_obj, "Result section");
@@ -324,7 +325,8 @@ query_node_uuid(cib_t *the_cib, const char *uname, char **uuid)
 	}
 #else
 	xml_obj = fragment;
-	CRM_DEV_ASSERT(safe_str_eq(crm_element_name(xml_obj), XML_TAG_CIB));
+	CRM_CHECK(safe_str_eq(crm_element_name(xml_obj), XML_TAG_CIB),
+		  return cib_output_data);
 #endif
 	CRM_ASSERT(xml_obj != NULL);
 	crm_log_xml_debug(xml_obj, "Result section");
@@ -375,7 +377,8 @@ query_node_uname(cib_t *the_cib, const char *uuid, char **uname)
 	}
 #else
 	xml_obj = fragment;
-	CRM_DEV_ASSERT(safe_str_eq(crm_element_name(xml_obj), XML_TAG_CIB));
+	CRM_CHECK(safe_str_eq(crm_element_name(xml_obj), XML_TAG_CIB),
+		  return cib_output_data);
 #endif
 	CRM_ASSERT(xml_obj != NULL);
 	crm_log_xml_debug_2(xml_obj, "Result section");
@@ -406,8 +409,8 @@ query_node_uname(cib_t *the_cib, const char *uuid, char **uname)
 	const char *attr_name  = "standby";				\
 	const char *type = XML_CIB_TAG_NODES;				\
 									\
-	CRM_DEV_ASSERT(uuid != NULL);					\
-	CRM_DEV_ASSERT(standby_value != NULL);				\
+	CRM_CHECK(uuid != NULL, return cib_missing_data);		\
+	CRM_CHECK(standby_value != NULL, return cib_missing_data);	\
 	str_length += strlen(attr_name);				\
 	str_length += strlen(uuid);					\
 	if(safe_str_eq(scope, "reboot")					\

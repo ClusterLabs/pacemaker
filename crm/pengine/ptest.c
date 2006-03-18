@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.72 2006/02/17 13:22:19 andrew Exp $ */
+/* $Id: ptest.c,v 1.73 2006/03/18 17:23:48 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -239,7 +239,7 @@ main(int argc, char **argv)
 #ifdef MCHECK
 	mtrace();
 #endif
- 	CRM_DEV_ASSERT(cib_object != NULL);
+ 	CRM_CHECK(cib_object != NULL, return 4);
 
 	crm_notice("Required feature set: %s", feature_set(cib_object));
  	do_id_check(cib_object, NULL);
@@ -286,7 +286,7 @@ main(int argc, char **argv)
 			} else {
 				dot_write("\"%s\" [ font_color=purple style=filled fillcolor=%s ]",
 					  action_name, "red");
- 				CRM_DEV_ASSERT(action->runnable == FALSE);
+ 				CRM_CHECK(action->runnable == FALSE, ;);
 			}
 			
 		} else {
@@ -342,8 +342,8 @@ main(int argc, char **argv)
 	destroy_graph(transition);
 	
 	crm_mem_stats(NULL);
- 	CRM_DEV_ASSERT(crm_mem_stats(NULL) == FALSE);
-	CRM_DEV_ASSERT(graph_rc == transition_complete);
+ 	CRM_CHECK(crm_mem_stats(NULL) == FALSE, crm_err("Memory leak detected"));
+	CRM_CHECK(graph_rc == transition_complete, crm_err("An invalid transition was produced"));
 
 	crm_free(cib_object);	
 

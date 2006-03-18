@@ -398,7 +398,7 @@ cib_create_op(
 	}
 
 	if(call_options & cib_inhibit_bcast) {
-		CRM_DEV_ASSERT((call_options & cib_scope_local));
+		CRM_CHECK((call_options & cib_scope_local), return NULL);
 	}
 	return op_msg;
 }
@@ -460,7 +460,7 @@ cib_native_perform_op(
 
 	} else if(!(call_options & cib_sync_call)) {
 		crm_debug_3("Async call, returning");
-		CRM_DEV_ASSERT(cib->call_id != 0);
+		CRM_CHECK(cib->call_id != 0, return cib_reply_failed);
 		return cib->call_id;
 	}
 
@@ -474,10 +474,11 @@ cib_native_perform_op(
 		if(op_reply == NULL) {
 			break;
 		}
-		CRM_DEV_ASSERT(HA_OK == ha_msg_value_int(
-				       op_reply, F_CIB_CALLID, &reply_id));
+		CRM_CHECK(ha_msg_value_int(
+				  op_reply, F_CIB_CALLID, &reply_id) == HA_OK,
+			  return cib_reply_failed);
 
-		CRM_DEV_ASSERT(reply_id <= msg_id);
+		CRM_CHECK(reply_id <= msg_id, return cib_reply_failed);
 			
 		if(reply_id == msg_id) {
 			break;

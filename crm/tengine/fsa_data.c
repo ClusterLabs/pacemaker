@@ -1,4 +1,4 @@
-/* $Id: fsa_data.c,v 1.3 2005/06/14 11:38:26 davidlee Exp $ */
+/* $Id: fsa_data.c,v 1.4 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -96,7 +96,7 @@ void te_input_free(te_input_t *fsa_data)
 te_input_t* te_input_copy(te_input_t *fsa_data)
 {
 	te_input_t *a_copy = NULL;
-	CRM_DEV_ASSERT(fsa_data != NULL); if(crm_assert_failed) {return NULL;}
+	CRM_CHECK(fsa_data != NULL); if(crm_assert_failed) {return NULL;}
 	crm_malloc0(a_copy, sizeof(te_input_t));
 	*a_copy = *fsa_data;
 	a_copy->data = NULL;
@@ -161,7 +161,7 @@ const char* te_data_command_name(void)
 void te_data_command_free(te_input_t *fsa_data)
 {
 	struct te_data_command_s *data = fsa_data->data;
-	CRM_DEV_ASSERT(fsa_data->ops->type() == te_data_command);
+	CRM_CHECK(fsa_data->ops->type() == te_data_command);
 	ha_msg_del(data->msg);
 	free_xml(data->xml);
 	crm_free(data);
@@ -171,7 +171,7 @@ void te_data_command_copy(te_input_t *a_copy, te_input_t *fsa_data)
 {
 	struct te_data_command_s *data = fsa_data->data;
 	struct te_data_command_s *copy_data = NULL;
-	CRM_DEV_ASSERT(fsa_data->ops->type() == te_data_command);
+	CRM_CHECK(fsa_data->ops->type() == te_data_command);
 	crm_malloc0(a_copy->data, sizeof(struct te_data_command_s));
 	copy_data = a_copy->data;
 
@@ -192,7 +192,7 @@ const char* te_data_cib_name(void)
 void te_data_cib_free(te_input_t *fsa_data)
 {
 	struct te_data_cib_s *data = fsa_data->data;
-	CRM_DEV_ASSERT(fsa_data->ops->type() == te_data_cib);
+	CRM_CHECK(fsa_data->ops->type() == te_data_cib);
 	ha_msg_del(data->msg);
 	free_xml(data->xml);
 	crm_free(data);
@@ -202,7 +202,7 @@ void te_data_cib_copy(te_input_t *a_copy, te_input_t *fsa_data)
 {
 	struct te_data_cib_s *data = fsa_data->data;
 	struct te_data_cib_s *copy_data = NULL;
-	CRM_DEV_ASSERT(fsa_data->ops->type() == te_data_cib);
+	CRM_CHECK(fsa_data->ops->type() == te_data_cib);
 	crm_malloc0(a_copy->data, sizeof(struct te_data_cib_s));
 	copy_data = a_copy->data;
 
@@ -224,7 +224,7 @@ const char* te_data_complete_name(void)
 void te_data_complete_free(te_input_t *fsa_data)
 {
 	struct te_data_complete_s *data = fsa_data->data;
-	CRM_DEV_ASSERT(fsa_data->ops->type() == te_data_complete);
+	CRM_CHECK(fsa_data->ops->type() == te_data_complete);
 	ha_msg_del(data->msg);
 	free_xml(data->xml);
 	crm_free(data);
@@ -234,7 +234,7 @@ void te_data_complete_copy(te_input_t *a_copy, te_input_t *fsa_data)
 {
 	struct te_data_complete_s *data = fsa_data->data;
 	struct te_data_complete_s *copy_data = NULL;
-	CRM_DEV_ASSERT(fsa_data->ops->type() == te_data_complete);
+	CRM_CHECK(fsa_data->ops->type() == te_data_complete);
 	crm_malloc0(a_copy->data, sizeof(struct te_data_complete_s));
 	copy_data = a_copy->data;
 

@@ -1,4 +1,4 @@
-/* $Id: cib_version.c,v 1.3 2005/12/19 16:54:43 andrew Exp $ */
+/* $Id: cib_version.c,v 1.4 2006/03/18 17:23:48 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -74,8 +74,9 @@ internal_update_feature_set(crm_data_t *xml_obj, int current)
 	const char *value = NULL;
 	int num_sets = DIMOF(feature_sets);
 
-	CRM_DEV_ASSERT(compare_version(CIB_FEATURE_SET,
-				       feature_sets[num_sets-1]) == 0);
+	CRM_CHECK(compare_version(
+			  CIB_FEATURE_SET, feature_sets[num_sets-1]) == 0,
+		  return num_sets-1);
 
 	for(;lpc < num_sets; lpc++) {
 			

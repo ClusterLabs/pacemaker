@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.73 2006/02/14 12:01:45 andrew Exp $ */
+/* $Id: incarnation.c,v 1.74 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -75,7 +75,7 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	CRM_DEV_ASSERT(clone_data->xml_obj_child != NULL);
+	CRM_CHECK(clone_data->xml_obj_child != NULL, return FALSE);
 	child_copy = copy_xml(clone_data->xml_obj_child);
 	if(data_set->short_rsc_names) {
 		set_id(child_copy, NULL, sub_id);
@@ -160,8 +160,7 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 			xml_obj, XML_CIB_TAG_RESOURCE, TRUE);
 	}
 
-	CRM_DEV_ASSERT(clone_data->xml_obj_child != NULL);
-	if(crm_assert_failed) { return; }
+	CRM_CHECK(clone_data->xml_obj_child != NULL, return);
 
 	if(common_unpack(xml_self, &self, NULL, data_set)) {
 		clone_data->self = self;
@@ -241,7 +240,7 @@ static gint sort_rsc_provisional(gconstpointer a, gconstpointer b)
 	} else if(resource2->provisional) {
 		return -1;
 	}
-	CRM_DEV_ASSERT(FALSE);
+	CRM_CHECK(FALSE, return 0);
 	return 0;
 }
 
@@ -345,7 +344,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		   slist_iter(child, resource_t, clone_data->child_list, lpc2,
 			      node_t *current = NULL;
 			      if(child->provisional == FALSE) {
-				      CRM_DEV_ASSERT(child->color != NULL);
+				      CRM_CHECK(child->color != NULL, continue);
 				      current = child->color->details->chosen_node;
 			      } else if(child->running_on != NULL) {
 				      current = child->running_on->data;
@@ -879,7 +878,7 @@ void clone_rsc_colocation_rh(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
 	clone_variant_data_t *clone_data = NULL;
-	CRM_DEV_ASSERT(rsc_lh->variant == pe_native);
+	CRM_CHECK(rsc_lh->variant == pe_native, return);
 	
 	crm_debug_3("Processing RH of constraint %s", constraint->id);
 
@@ -1031,18 +1030,12 @@ expand_list(GListPtr list, int clones,
 	slist_iter(entry, notify_entry_t, list, lpc,
 
 		   rsc_id = entry->rsc->id;
-		   CRM_DEV_ASSERT(rsc_id != NULL);
-		   if(crm_assert_failed) {
-			   rsc_id = "__none__";
-		   }
+		   CRM_CHECK(rsc_id != NULL, rsc_id = "__none__");
 		   uname = NULL;
 		   if(entry->node) {
 			   uname = entry->node->details->uname;
 		   }
-		   CRM_DEV_ASSERT(uname != NULL);
-		   if(crm_assert_failed) {
-			   uname = "__none__";
-		   }
+		   CRM_CHECK(uname != NULL, uname = "__none__");
 
 		   /* filter dups */
 		   if(safe_str_eq(rsc_id, last_rsc_id)) {

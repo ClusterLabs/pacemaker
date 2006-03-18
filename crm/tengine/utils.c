@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.57 2006/02/27 09:55:57 andrew Exp $ */
+/* $Id: utils.c,v 1.58 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -83,11 +83,17 @@ get_rsc_state(const char *task, op_status_t status)
 gboolean
 stop_te_timer(crm_action_timer_t *timer)
 {
+	const char *timer_desc = "action timer";
+	
 	if(timer == NULL) {
 		return FALSE;
 	}
+	if(timer->reason == timeout_abort) {
+		timer_desc = "global timer";
+	}
 	
 	if(timer->source_id != 0) {
+		crm_debug("Stopping %s", timer_desc);
 		Gmain_timeout_remove(timer->source_id);
 		timer->source_id = 0;
 

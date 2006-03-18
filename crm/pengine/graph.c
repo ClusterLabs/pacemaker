@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.76 2006/03/09 10:07:53 andrew Exp $ */
+/* $Id: graph.c,v 1.77 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -133,10 +133,7 @@ update_action(action_t *action)
 			
 		} else if(other->type == pe_ordering_restart) {
 		} else if(other->type == pe_ordering_postnotify) {
-			CRM_DEV_ASSERT(action->rsc == other->action->rsc);
-			if(crm_assert_failed) {
-				continue;
-			}
+			CRM_CHECK(action->rsc == other->action->rsc, continue);
 
 		} else {
 			crm_debug_3("\t  Ignoring: ordering %s",
@@ -384,14 +381,7 @@ action2xml(action_t *action, gboolean as_input)
 			    action->node->details->uname);
 
 		crm_xml_add(action_xml, XML_LRM_ATTR_TARGET_UUID,
-			    action->node->details->id);
-		
-		CRM_DEV_ASSERT(NULL != crm_element_value(
-				       action_xml, XML_LRM_ATTR_TARGET));
-		
-		CRM_DEV_ASSERT(NULL != crm_element_value(
-				       action_xml, XML_LRM_ATTR_TARGET_UUID));
-
+			    action->node->details->id);		
 	}
 
 	if(action->failure_is_fatal == FALSE) {
@@ -554,7 +544,7 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 			   continue;
 		   }
 
-		   CRM_DEV_ASSERT(last_action < wrapper->action->id);
+		   CRM_CHECK(last_action < wrapper->action->id, ;);
 		   last_action = wrapper->action->id;
 		   input = create_xml_node(in, "trigger");
 		   

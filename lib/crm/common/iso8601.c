@@ -1,4 +1,4 @@
-/* $Id: iso8601.c,v 1.12 2005/11/09 16:00:16 davidlee Exp $ */
+/* $Id: iso8601.c,v 1.13 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -78,7 +78,7 @@ log_date(int log_level, const char *prefix, ha_time_t *date_time, int flags)
 		dt = date_time->normalized;
 	}
 
-	CRM_DEV_ASSERT(dt != NULL); if(crm_assert_failed) { return; }
+	CRM_CHECK(dt != NULL, return);
 	
 	if(flags & ha_log_date) {
 		crm_malloc0(date_s, sizeof(char)*(32));
@@ -194,8 +194,8 @@ parse_time(char **time_str, ha_time_t *a_time, gboolean with_offset)
 		new_time = new_ha_date(FALSE);
 	}
 
-	CRM_DEV_ASSERT(new_time != NULL);
-	CRM_DEV_ASSERT(new_time->has != NULL);
+	CRM_CHECK(new_time != NULL, return NULL);
+	CRM_CHECK(new_time->has != NULL, return NULL);
 
 	crm_debug_4("Get hours...");
 	if(parse_int(time_str, 2, 24, &new_time->hours)) {
@@ -227,8 +227,8 @@ parse_time(char **time_str, ha_time_t *a_time, gboolean with_offset)
 void
 normalize_time(ha_time_t *a_time)
 {
-	CRM_DEV_ASSERT(a_time != NULL);
-	CRM_DEV_ASSERT(a_time->has != NULL);
+	CRM_CHECK(a_time != NULL, return);
+	CRM_CHECK(a_time->has != NULL, return);
 
 	if(a_time->normalized == NULL) {
 		crm_malloc0(a_time->normalized, sizeof(ha_time_t));
@@ -249,7 +249,7 @@ normalize_time(ha_time_t *a_time)
 			sub_seconds(a_time->normalized,a_time->offset->seconds);
 		}
 	}
-	CRM_DEV_ASSERT(is_date_sane(a_time));
+	CRM_CHECK(is_date_sane(a_time), return);
 }
 
 
@@ -263,8 +263,8 @@ parse_date(char **date_str)
 	crm_malloc0(new_time, sizeof(ha_time_t));
 	crm_malloc0(new_time->has, sizeof(ha_has_time_t));
 
-	CRM_DEV_ASSERT(date_str != NULL);
-	CRM_DEV_ASSERT(strlen(*date_str) > 0);
+	CRM_CHECK(date_str != NULL, return NULL);
+	CRM_CHECK(strlen(*date_str) > 0, return NULL);
 	
 	while(is_done == FALSE) {
 		char ch = (*date_str)[0];
@@ -282,7 +282,7 @@ parse_date(char **date_str)
 			break;
 			
 		} else if(ch == 'W') {
-			CRM_DEV_ASSERT(new_time->has->weeks == FALSE);
+			CRM_CHECK(new_time->has->weeks == FALSE, ;);
 			(*date_str)++;
 			if(parse_int(date_str, 2, 53, &new_time->weeks)){
 				new_time->has->weeks = TRUE;
@@ -377,7 +377,7 @@ parse_date(char **date_str)
 	
 	log_date(LOG_DEBUG_3, "Unpacked", new_time, ha_log_date|ha_log_time);
 
-	CRM_DEV_ASSERT(is_date_sane(new_time));
+	CRM_CHECK(is_date_sane(new_time), return NULL);
 	
 	return new_time;
 }
@@ -390,10 +390,10 @@ parse_time_duration(char **interval_str)
 	crm_malloc0(diff, sizeof(ha_time_t));
 	crm_malloc0(diff->has, sizeof(ha_has_time_t));
 
-	CRM_DEV_ASSERT(interval_str != NULL);
-	CRM_DEV_ASSERT(strlen(*interval_str) > 0);
+	CRM_CHECK(interval_str != NULL, return NULL);
+	CRM_CHECK(strlen(*interval_str) > 0, return NULL);
 	
-	CRM_DEV_ASSERT((*interval_str)[0] == 'P');
+	CRM_CHECK((*interval_str)[0] == 'P', return NULL);
 	(*interval_str)++;
 	
 	while(isspace((int) (*interval_str)[0]) == FALSE) {
@@ -461,8 +461,8 @@ parse_time_period(char **period_str)
 	ha_time_period_t *period = NULL;
 	crm_malloc0(period, sizeof(ha_time_period_t));
 
-	CRM_DEV_ASSERT(period_str != NULL);
-	CRM_DEV_ASSERT(strlen(*period_str) > 0);
+	CRM_CHECK(period_str != NULL, return NULL);
+	CRM_CHECK(strlen(*period_str) > 0, return NULL);
 
 	tzset();
 	
@@ -473,7 +473,7 @@ parse_time_period(char **period_str)
 	}
 
 	if((*period_str)[0] != 0) {
-		CRM_DEV_ASSERT((*period_str)[0] == '/');
+		CRM_CHECK((*period_str)[0] == '/', return NULL);
 		(*period_str)++;
 		
 		if((*period_str)[0] == 'P') {
@@ -493,7 +493,7 @@ parse_time_period(char **period_str)
 		ha_set_timet_time(period->start, &now);
 		normalize_time(period->start);
 	} else {
-		CRM_DEV_ASSERT((*period_str)[0] == '/');
+		CRM_CHECK((*period_str)[0] == '/', return NULL);
 		return NULL;
 	}
 	
@@ -574,20 +574,20 @@ weeks_in_year(int year)
 gboolean
 convert_from_gregorian(ha_time_t *a_date)
 {
-	CRM_DEV_ASSERT(gregorian_to_ordinal(a_date));
-	CRM_DEV_ASSERT(ordinal_to_weekdays(a_date));
+	CRM_CHECK(gregorian_to_ordinal(a_date), return FALSE);
+	CRM_CHECK(ordinal_to_weekdays(a_date), return FALSE);
 	return TRUE;
 }
 
 gboolean
 gregorian_to_ordinal(ha_time_t *a_date)
 {
-	CRM_DEV_ASSERT(a_date->has->years);
-	CRM_DEV_ASSERT(a_date->has->months);
-	CRM_DEV_ASSERT(a_date->has->days);
+	CRM_CHECK(a_date->has->years, return FALSE);
+	CRM_CHECK(a_date->has->months, return FALSE);
+	CRM_CHECK(a_date->has->days, return FALSE);
 
-	CRM_DEV_ASSERT(a_date->months > 0);
-	CRM_DEV_ASSERT(a_date->days > 0);
+	CRM_CHECK(a_date->months > 0, return FALSE);
+	CRM_CHECK(a_date->days > 0, return FALSE);
 
 	a_date->yeardays = month2days[a_date->months-1];
 	a_date->yeardays += a_date->days;
@@ -606,18 +606,18 @@ gregorian_to_ordinal(ha_time_t *a_date)
 gboolean
 convert_from_ordinal(ha_time_t *a_date)
 {
-	CRM_DEV_ASSERT(ordinal_to_gregorian(a_date));
-	CRM_DEV_ASSERT(ordinal_to_weekdays(a_date));
+	CRM_CHECK(ordinal_to_gregorian(a_date), return FALSE);
+	CRM_CHECK(ordinal_to_weekdays(a_date), return FALSE);
 	return TRUE;
 }
 
 
 gboolean ordinal_to_gregorian(ha_time_t *a_date) 
 {
-	CRM_DEV_ASSERT(a_date->has->years);
-	CRM_DEV_ASSERT(a_date->has->yeardays);
+	CRM_CHECK(a_date->has->years, return FALSE);
+	CRM_CHECK(a_date->has->yeardays, return FALSE);
 
-	CRM_DEV_ASSERT(a_date->yeardays > 0);
+	CRM_CHECK(a_date->yeardays > 0, return FALSE);
 	
 	a_date->days = a_date->yeardays;
 	a_date->months = 11;
@@ -643,7 +643,7 @@ gboolean ordinal_to_gregorian(ha_time_t *a_date)
 	a_date->days -= month2days[a_date->months];
 	(a_date->months)++;
 	
-	CRM_DEV_ASSERT(a_date->months > 0);
+	CRM_CHECK(a_date->months > 0, return FALSE);
 
 	if(is_leap_year(a_date->years) && a_date->months > 2) {
 		(a_date->days)--;
@@ -673,9 +673,9 @@ ordinal_to_weekdays(ha_time_t *a_date)
 	int jan1 = january1(a_date->years);
 	int h = -1;
 
-	CRM_DEV_ASSERT(a_date->has->years);
-	CRM_DEV_ASSERT(a_date->has->yeardays);
-	CRM_DEV_ASSERT(a_date->yeardays > 0);
+	CRM_CHECK(a_date->has->years, return FALSE);
+	CRM_CHECK(a_date->has->yeardays, return FALSE);
+	CRM_CHECK(a_date->yeardays > 0, return FALSE);
 	
 	h = a_date->yeardays + jan1 - 1;
  	a_date->weekdays = 1 + ((h-1) % 7);
@@ -725,13 +725,13 @@ convert_from_weekdays(ha_time_t *a_date)
 	gboolean conversion = FALSE;
 	int jan1 = january1(a_date->weekyears);
 
-	CRM_DEV_ASSERT(a_date->has->weekyears);
-	CRM_DEV_ASSERT(a_date->has->weeks);
-	CRM_DEV_ASSERT(a_date->has->weekdays);
+	CRM_CHECK(a_date->has->weekyears, return FALSE);
+	CRM_CHECK(a_date->has->weeks, return FALSE);
+	CRM_CHECK(a_date->has->weekdays, return FALSE);
 
-	CRM_DEV_ASSERT(a_date->weeks > 0);
-	CRM_DEV_ASSERT(a_date->weekdays > 0);
-	CRM_DEV_ASSERT(a_date->weekdays < 8);
+	CRM_CHECK(a_date->weeks > 0, return FALSE);
+	CRM_CHECK(a_date->weekdays > 0, return FALSE);
+	CRM_CHECK(a_date->weekdays < 8, return FALSE);
 	
 	a_date->has->years = TRUE;
 	a_date->years = a_date->weekyears;
@@ -767,8 +767,8 @@ ha_set_time(ha_time_t *lhs, ha_time_t *rhs, gboolean offset)
 {
 	crm_debug_6("lhs=%p, rhs=%p, offset=%d", lhs, rhs, offset);
 
-	CRM_DEV_ASSERT(lhs != NULL && rhs != NULL);
-	CRM_DEV_ASSERT(lhs->has != NULL && rhs->has != NULL);
+	CRM_CHECK(lhs != NULL && rhs != NULL, return);
+	CRM_CHECK(lhs->has != NULL && rhs->has != NULL, return);
 	
 	lhs->years = rhs->years;
 	lhs->has->years = rhs->has->years;
@@ -846,19 +846,19 @@ ha_set_tm_time(ha_time_t *lhs, struct tm *rhs)
 	convert_from_ordinal(lhs);
 
 	/* months since January [0-11] */
-	CRM_DEV_ASSERT(rhs->tm_mon < 0  || lhs->months == (1 + rhs->tm_mon));
+	CRM_CHECK(rhs->tm_mon < 0  || lhs->months == (1 + rhs->tm_mon), return);
 
 	/* day of the month [1-31] */
-	CRM_DEV_ASSERT(rhs->tm_mday < 0 || lhs->days == rhs->tm_mday);
+	CRM_CHECK(rhs->tm_mday < 0 || lhs->days == rhs->tm_mday, return);
 
 	/* days since Sunday [0-6] */
 	if(wday == 0) {
 		wday= 7;
 	}
-	CRM_DEV_ASSERT(rhs->tm_wday < 0 || lhs->weekdays == wday);
 	
-	CRM_DEV_ASSERT(lhs->offset != NULL);
-	CRM_DEV_ASSERT(lhs->offset->has != NULL);
+	CRM_CHECK(rhs->tm_wday < 0 || lhs->weekdays == wday, return);
+	CRM_CHECK(lhs->offset != NULL, return);
+	CRM_CHECK(lhs->offset->has != NULL, return);
 
 	/* tm_gmtoff == offset from UTC in seconds */
 	h_offset = GMTOFF(rhs) / (3600); 
@@ -886,7 +886,7 @@ ha_time_t *
 add_time(ha_time_t *lhs, ha_time_t *rhs)
 {
 	ha_time_t *answer = NULL;
-	CRM_DEV_ASSERT(lhs != NULL && rhs != NULL);
+	CRM_CHECK(lhs != NULL && rhs != NULL, return NULL);
 	
 	answer = new_ha_date(FALSE);
 	ha_set_time(answer, lhs, TRUE);	
@@ -919,7 +919,7 @@ ha_time_t *
 subtract_time(ha_time_t *lhs, ha_time_t *rhs)
 {
 	ha_time_t *answer = NULL;
-	CRM_DEV_ASSERT(lhs != NULL && rhs != NULL);
+	CRM_CHECK(lhs != NULL && rhs != NULL, return NULL);
 
 	answer = new_ha_date(FALSE);
 	ha_set_time(answer, lhs, TRUE);	
@@ -977,9 +977,9 @@ parse_int(char **str, int field_width, int uppper_bound, int *result)
 	gboolean fraction = FALSE;
 	gboolean negate = FALSE;
 
-	CRM_DEV_ASSERT(str != NULL);
-	CRM_DEV_ASSERT(*str != NULL);
-	CRM_DEV_ASSERT(result != NULL);
+	CRM_CHECK(str != NULL, return FALSE);
+	CRM_CHECK(*str != NULL, return FALSE);
+	CRM_CHECK(result != NULL, return FALSE);
 
 	*result = 0;
 
@@ -1114,7 +1114,7 @@ is_date_sane(ha_time_t *a_date)
 	int mdays = 0;
 	int weeks = 0;
 
-	CRM_DEV_ASSERT(a_date != NULL);
+	CRM_CHECK(a_date != NULL, return FALSE);
 	
 	ydays = is_leap_year(a_date->years)?366:365;
 	mdays = days_per_month(a_date->months, a_date->years);
@@ -1122,37 +1122,37 @@ is_date_sane(ha_time_t *a_date)
 	crm_debug_5("max ydays: %d, max mdays: %d, max weeks: %d",
 		    ydays, mdays, weeks);
 	
-	CRM_DEV_ASSERT(a_date->has->years);
-	CRM_DEV_ASSERT(a_date->has->weekyears);
+	CRM_CHECK(a_date->has->years, return FALSE);
+	CRM_CHECK(a_date->has->weekyears, return FALSE);
 
-	CRM_DEV_ASSERT(a_date->has->months);
-	CRM_DEV_ASSERT(a_date->months > 0);
-	CRM_DEV_ASSERT(a_date->months <= 12);
+	CRM_CHECK(a_date->has->months, return FALSE);
+	CRM_CHECK(a_date->months > 0, return FALSE);
+	CRM_CHECK(a_date->months <= 12, return FALSE);
 
-	CRM_DEV_ASSERT(a_date->has->weeks);
-	CRM_DEV_ASSERT(a_date->weeks > 0);
-	CRM_DEV_ASSERT(a_date->weeks <= weeks);
+	CRM_CHECK(a_date->has->weeks, return FALSE);
+	CRM_CHECK(a_date->weeks > 0, return FALSE);
+	CRM_CHECK(a_date->weeks <= weeks, return FALSE);
 
-	CRM_DEV_ASSERT(a_date->has->days);
-	CRM_DEV_ASSERT(a_date->days > 0);
-	CRM_DEV_ASSERT(a_date->days <= mdays);
+	CRM_CHECK(a_date->has->days, return FALSE);
+	CRM_CHECK(a_date->days > 0, return FALSE);
+	CRM_CHECK(a_date->days <= mdays, return FALSE);
 
-	CRM_DEV_ASSERT(a_date->has->weekdays);
-	CRM_DEV_ASSERT(a_date->weekdays > 0);
-	CRM_DEV_ASSERT(a_date->weekdays <= 7);
+	CRM_CHECK(a_date->has->weekdays, return FALSE);
+	CRM_CHECK(a_date->weekdays > 0, return FALSE);
+	CRM_CHECK(a_date->weekdays <= 7, return FALSE);
 
-	CRM_DEV_ASSERT(a_date->has->yeardays);
-	CRM_DEV_ASSERT(a_date->yeardays > 0);
-	CRM_DEV_ASSERT(a_date->yeardays <= ydays);
+	CRM_CHECK(a_date->has->yeardays, return FALSE);
+	CRM_CHECK(a_date->yeardays > 0, return FALSE);
+	CRM_CHECK(a_date->yeardays <= ydays, return FALSE);
 
-	CRM_DEV_ASSERT(a_date->hours >= 0);
-	CRM_DEV_ASSERT(a_date->hours < 24);
+	CRM_CHECK(a_date->hours >= 0, return FALSE);
+	CRM_CHECK(a_date->hours < 24, return FALSE);
 
-	CRM_DEV_ASSERT(a_date->minutes >= 0);
-	CRM_DEV_ASSERT(a_date->minutes < 60);
+	CRM_CHECK(a_date->minutes >= 0, return FALSE);
+	CRM_CHECK(a_date->minutes < 60, return FALSE);
 	
-	CRM_DEV_ASSERT(a_date->seconds >= 0);
-	CRM_DEV_ASSERT(a_date->seconds <= 60);
+	CRM_CHECK(a_date->seconds >= 0, return FALSE);
+	CRM_CHECK(a_date->seconds <= 60, return FALSE);
 	
 	return TRUE;
 }

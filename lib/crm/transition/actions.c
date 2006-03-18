@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.1 2006/02/14 11:32:12 andrew Exp $ */
+/* $Id: actions.c,v 1.2 2006/03/18 17:23:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -59,8 +59,8 @@ send_stonith_update(stonith_ops_t * op)
 	crm_data_t *update = NULL;
 	crm_data_t *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	
-	CRM_DEV_ASSERT(op->node_name != NULL);
-	CRM_DEV_ASSERT(op->node_uuid != NULL);
+	CRM_CHECK(op->node_name != NULL);
+	CRM_CHECK(op->node_uuid != NULL);
 	
 	crm_xml_add(node_state, XML_ATTR_UUID,  uuid);
 	crm_xml_add(node_state, XML_ATTR_UNAME, target);
@@ -106,9 +106,9 @@ te_fence_node(action_t *action)
 	target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 	uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 	
-	CRM_DEV_ASSERT(id != NULL);
-	CRM_DEV_ASSERT(uuid != NULL);
-	CRM_DEV_ASSERT(target != NULL);
+	CRM_CHECK(id != NULL);
+	CRM_CHECK(uuid != NULL);
+	CRM_CHECK(target != NULL);
 	if(crm_assert_failed) {
 		/* error */
 		te_log_action(LOG_ERR, "Corrupted command (id=%s): no node",
@@ -166,7 +166,7 @@ te_crm_command(action_t *action)
 	task    = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 	on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 
-	CRM_DEV_ASSERT(on_node != NULL && strlen(on_node) != 0);
+	CRM_CHECK(on_node != NULL && strlen(on_node) != 0);
 	if(crm_assert_failed) {
 		/* error */
 		te_log_action(LOG_ERR, "Corrupted command (id=%s) %s: no node",
@@ -223,7 +223,7 @@ te_rsc_command(action_t *action)
 	action->invoked = FALSE;
 
 	on_node  = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-	CRM_DEV_ASSERT(on_node != NULL && strlen(on_node) != 0);
+	CRM_CHECK(on_node != NULL && strlen(on_node) != 0);
 	if(crm_assert_failed) {
 		/* error */
 		te_log_action(LOG_ERR, "Corrupted command(id=%s) %s: no node",
@@ -384,8 +384,8 @@ cib_action_updated(
 	const char *on_node = NULL;
 	const char *task_uuid = NULL;
 
-	CRM_DEV_ASSERT(action != NULL);      if(crm_assert_failed) { return; }
-	CRM_DEV_ASSERT(action->xml != NULL); if(crm_assert_failed) { return; }
+	CRM_CHECK(action != NULL);      if(crm_assert_failed) { return; }
+	CRM_CHECK(action->xml != NULL); if(crm_assert_failed) { return; }
 
 	rsc_op  = action->xml;
 	task    = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);

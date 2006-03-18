@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.165 2006/03/17 00:43:29 andrew Exp $ */
+/* $Id: unpack.c,v 1.166 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -663,7 +663,7 @@ increment_clone(char *last_rsc_id)
 	gboolean complete = FALSE;
 	int len = 0;
 
-	CRM_DEV_ASSERT(last_rsc_id != NULL);
+	CRM_CHECK(last_rsc_id != NULL, return);
 	if(last_rsc_id != NULL) {
 		len = strlen(last_rsc_id);
 	}
@@ -791,7 +791,7 @@ process_orphan_resource(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *d
 		
 		print_resource(LOG_DEBUG_3, "Added orphan", rsc, FALSE);
 			
-		CRM_DEV_ASSERT(rsc != NULL);
+		CRM_CHECK(rsc != NULL, return NULL);
 		slist_iter(
 			any_node, node_t, data_set->nodes, lpc,
 			rsc2node_new(
@@ -997,10 +997,7 @@ unpack_lrm_rsc_state(
 gboolean
 unpack_lrm_resources(node_t *node, crm_data_t * lrm_rsc_list, pe_working_set_t *data_set)
 {
-	CRM_DEV_ASSERT(node != NULL);
-	if(crm_assert_failed) {
-		return FALSE;
-	}
+	CRM_CHECK(node != NULL, return FALSE);
 
 	crm_debug_3("Unpacking resources on %s", node->details->uname);
 	
@@ -1050,7 +1047,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 		sort_return(0);
 	}
 	
-	CRM_DEV_ASSERT(a_task_id != NULL && b_task_id != NULL);	
+	CRM_CHECK(a_task_id != NULL && b_task_id != NULL, sort_return(0));	
 	a_call_id = crm_parse_int(a_task_id, NULL);
 	b_call_id = crm_parse_int(b_task_id, NULL);
 	
@@ -1075,11 +1072,11 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 		    ID(a), a_call_id, ID(b), b_call_id);
 	
 	/* now process pending ops */
-	CRM_DEV_ASSERT(a_key != NULL && b_key != NULL);
-	CRM_DEV_ASSERT(decode_transition_magic(
-			       a_key,&a_uuid,&a_id,&a_status, &a_rc));
-	CRM_DEV_ASSERT(decode_transition_magic(
-			       b_key,&b_uuid,&b_id,&b_status, &b_rc));
+	CRM_CHECK(a_key != NULL && b_key != NULL, sort_return(0));
+	CRM_CHECK(decode_transition_magic(
+			       a_key,&a_uuid,&a_id,&a_status, &a_rc), sort_return(0));
+	CRM_CHECK(decode_transition_magic(
+			       b_key,&b_uuid,&b_id,&b_status, &b_rc), sort_return(0));
 
 	/* try and determin the relative age of the operation...
 	 * some pending operations (ie. a start) may have been supuerceeded
@@ -1097,8 +1094,8 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 		 *   because we query the LRM directly
 		 */
 		
-		CRM_DEV_ASSERT(a_call_id == -1 || b_call_id == -1);
-		CRM_DEV_ASSERT(a_call_id >= 0  || b_call_id >= 0);
+		CRM_CHECK(a_call_id == -1 || b_call_id == -1, sort_return(0));
+		CRM_CHECK(a_call_id >= 0  || b_call_id >= 0, sort_return(0));
 
 		if(b_call_id == -1) {
 			crm_debug_2("%s (%d) < %s (%d) : transition + call id",
@@ -1126,8 +1123,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 	/* we should never end up here */
 	crm_err("%s (%d:%d:%s) ?? %s (%d:%d:%s) : default",
 		ID(a), a_call_id, a_id, a_uuid, ID(b), b_call_id, b_id, b_uuid);
-	CRM_DEV_ASSERT(FALSE); 
-	sort_return(0);
+	CRM_CHECK(FALSE, sort_return(0)); 
 }
 
 gboolean
@@ -1152,31 +1148,23 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 
 	crm_data_t *params = find_xml_node(xml_op, XML_TAG_PARAMS, FALSE);
 	
-	CRM_DEV_ASSERT(rsc    != NULL); if(crm_assert_failed) { return FALSE; }
-	CRM_DEV_ASSERT(node   != NULL); if(crm_assert_failed) { return FALSE; }
-	CRM_DEV_ASSERT(xml_op != NULL); if(crm_assert_failed) { return FALSE; }
+	CRM_CHECK(rsc    != NULL, return FALSE);
+	CRM_CHECK(node   != NULL, return FALSE);
+	CRM_CHECK(xml_op != NULL, return FALSE);
 	
 	id = ID(xml_op);
 	task        = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
  	task_id     = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
 	task_status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
 
-	CRM_DEV_ASSERT(id != NULL);
-        if(crm_assert_failed) { return FALSE; }	
-
-	CRM_DEV_ASSERT(task != NULL);
-        if(crm_assert_failed) { return FALSE; }
-
-	CRM_DEV_ASSERT(task_status != NULL);
-	if(crm_assert_failed) { return FALSE; }
+	CRM_CHECK(id != NULL, return FALSE);
+	CRM_CHECK(task != NULL, return FALSE);
+	CRM_CHECK(task_status != NULL, return FALSE);
 
 	task_status_i = crm_parse_int(task_status, NULL);
 
-	CRM_DEV_ASSERT(task_status_i <= LRM_OP_ERROR);
-	if(crm_assert_failed) {return FALSE;}
-
-	CRM_DEV_ASSERT(task_status_i >= LRM_OP_PENDING);
-	if(crm_assert_failed) { return FALSE; }
+	CRM_CHECK(task_status_i <= LRM_OP_ERROR, return FALSE);
+	CRM_CHECK(task_status_i >= LRM_OP_PENDING, return FALSE);
 
 	if(safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
 		/* safe to ignore these */
@@ -1313,22 +1301,15 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 
 		task_id_i = crm_parse_int(task_id, "-1");
 
-		CRM_DEV_ASSERT(task_id != NULL);
-		if(crm_assert_failed) { return FALSE; }
-
-		CRM_DEV_ASSERT(task_id_i >= 0);
-		if(crm_assert_failed) {
-			crm_err("%s: status=%d, task=%s", id, task_status_i, task_id);
-			return FALSE;
-		}
+		CRM_CHECK(task_id != NULL, return FALSE);
+		CRM_CHECK(task_id_i >= 0, return FALSE);
 
 		if(task_id_i == *max_call_id) {
 			crm_debug_2("Already processed this call");
 			return TRUE;
 		}
 
-		CRM_DEV_ASSERT(task_id_i > *max_call_id);
-		if(crm_assert_failed) { return FALSE; }
+		CRM_CHECK(task_id_i > *max_call_id, return FALSE);
 	}
 
 	if(*max_call_id < task_id_i) {
@@ -1346,11 +1327,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	}
 
 	actual_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
-	CRM_DEV_ASSERT(actual_rc != NULL);
-	if(actual_rc != NULL) {
-		actual_rc_i = crm_parse_int(actual_rc, NULL);
-	}
-	
+	CRM_CHECK(actual_rc != NULL, return FALSE);
+
+	actual_rc_i = crm_parse_int(actual_rc, NULL);
 	if(target_rc != NULL && task_status_i != LRM_OP_PENDING) {
 		crm_debug_2("Exit code from %s: %s vs. %s",
 			    task, target_rc, actual_rc);
@@ -1766,8 +1745,8 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	if(action_rh == NULL) {
 		action_rh = action;
 	}
-	CRM_DEV_ASSERT(action != NULL);
-	CRM_DEV_ASSERT(action_rh != NULL);
+	CRM_CHECK(action != NULL, return FALSE);
+	CRM_CHECK(action_rh != NULL, return FALSE);
 	
 	if(safe_str_eq(type, "before")) {
 		id_lh  = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
@@ -1782,8 +1761,8 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		}
 	}
 
-	CRM_DEV_ASSERT(action != NULL);
-	CRM_DEV_ASSERT(action_rh != NULL);
+	CRM_CHECK(action != NULL, return FALSE);
+	CRM_CHECK(action_rh != NULL, return FALSE);
 	
 	rsc_lh   = pe_find_resource(data_set->resources, id_rh);
 	rsc_rh   = pe_find_resource(data_set->resources, id_lh);

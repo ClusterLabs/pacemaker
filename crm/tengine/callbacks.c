@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.71 2006/03/16 23:33:21 andrew Exp $ */
+/* $Id: callbacks.c,v 1.72 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -50,8 +50,8 @@ static gboolean
 start_global_timer(crm_action_timer_t *timer, int timeout)
 {
 	CRM_ASSERT(timer != NULL);
-	CRM_DEV_ASSERT(timer > 0);
-	CRM_DEV_ASSERT(timer->source_id == 0);
+	CRM_CHECK(timer > 0, return FALSE);
+	CRM_CHECK(timer->source_id == 0, return FALSE);
 
 	if(timeout <= 0) {
 		crm_err("Tried to start timer with period: %d", timeout);
@@ -188,21 +188,22 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		}
 #else
 		xml_obj = xml_data;
-		CRM_DEV_ASSERT(safe_str_eq(crm_element_name(xml_obj), XML_TAG_CIB));
+		CRM_CHECK(xml_obj != NULL,
+			  crm_log_message_adv(LOG_ERR, "Invalid (N)ACK", msg);
+			  return FALSE);
 #endif
-		CRM_DEV_ASSERT(xml_obj != NULL);
-		if(xml_obj != NULL) {
-			xml_obj = get_object_root(XML_CIB_TAG_STATUS, xml_obj);
-			CRM_DEV_ASSERT(xml_obj != NULL);
-		}
-		if(xml_obj != NULL) {
-			crm_log_message_adv(LOG_DEBUG_2, "Processing NACK Reply", msg);
-			crm_debug("Processing NACK from %s", from);
-			extract_event(xml_obj);
-		} else {
-			crm_log_message_adv(LOG_ERR, "Invalid NACK Reply", msg);
-		}
-		
+		CRM_CHECK(xml_obj != NULL,
+			  crm_log_message_adv(LOG_ERR, "Invalid (N)ACK", msg);
+			  return FALSE);
+		xml_obj = get_object_root(XML_CIB_TAG_STATUS, xml_obj);
+
+		CRM_CHECK(xml_obj != NULL,
+			  crm_log_message_adv(LOG_ERR, "Invalid (N)ACK", msg);
+			  return FALSE);
+
+		crm_log_message_adv(LOG_DEBUG_2, "Processing (N)ACK", msg);
+		crm_debug("Processing (N)ACK from %s", from);
+		extract_event(xml_obj);
 		
 	} else if(safe_str_eq(type, XML_ATTR_RESPONSE)) {
 		crm_err("Message was a response not a request.  Discarding");
@@ -257,7 +258,7 @@ tengine_stonith_callback(stonith_ops_t * op)
 		 (char *)op->node_list, op->private_data);
 
 	/* this will mark the event complete if a match is found */
-	CRM_DEV_ASSERT(op->private_data != NULL);
+	CRM_CHECK(op->private_data != NULL, return);
 
 	/* filter out old STONITH actions */
 	decodeNVpair(op->private_data, ';', &call_id, &op_key);
@@ -326,7 +327,7 @@ tengine_stonith_connection_destroy(gpointer user_data)
 #if 0
 	crm_err("Fencing daemon has left us: Shutting down...NOW");
 	/* shutdown properly later */
-	CRM_DEV_ASSERT(FALSE/* fencing daemon died */);
+	CRM_CHECK(FALSE/* fencing daemon died */);
 #else
 	crm_err("Fencing daemon has left us");
 #endif
@@ -381,7 +382,6 @@ cib_action_updated(const HA_Message *msg, int call_id, int rc,
 	
 	trigger_graph();
 
-	CRM_DEV_ASSERT(rc == cib_ok);
 	if(rc < cib_ok) {
 		crm_err("Update for action %d (%s) FAILED: %s",
 			action->id, task_uuid, cib_error2string(rc));
@@ -406,7 +406,7 @@ action_timer_callback(gpointer data)
 		 transition_graph->abort_priority,
 		 transition_graph->complete?"true":"false");
 
-	CRM_DEV_ASSERT(timer->action != NULL);
+	CRM_CHECK(timer->action != NULL, return FALSE);
 
 	if(transition_graph->complete) {
 		crm_err("Ignoring timeout while not in transition");
@@ -473,7 +473,7 @@ global_timer_callback(gpointer data)
 		 transition_graph->abort_priority,
 		 transition_graph->complete?"true":"false");
 
-	CRM_DEV_ASSERT(timer->action == NULL);
+	CRM_CHECK(timer->action == NULL, return FALSE);
 	
 	if(transition_graph->complete) {
 		crm_err("Ignoring timeout while not in transition");
@@ -499,7 +499,6 @@ gboolean
 te_graph_trigger(gpointer user_data) 
 {
 	int timeout = 0;
-	int pending_updates = 0;
 	enum transition_status graph_rc = -1;
 
 	if(transition_graph->complete) {
@@ -523,10 +522,6 @@ te_graph_trigger(gpointer user_data)
 		return TRUE;		
 	}
 	
-
-	pending_updates = num_cib_op_callbacks();
-	CRM_DEV_ASSERT(pending_updates == 0);
-
 	if(graph_rc != transition_complete) {
 		crm_err("Transition failed: %s", transition_status(graph_rc));
 		print_graph(LOG_WARNING, transition_graph);

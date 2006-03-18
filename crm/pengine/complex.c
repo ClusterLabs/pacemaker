@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.73 2006/03/09 21:36:38 andrew Exp $ */
+/* $Id: complex.c,v 1.74 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -499,20 +499,14 @@ populate_hash(crm_data_t *nvpair_list, GHashTable *hash,
 void
 add_rsc_param(resource_t *rsc, const char *name, const char *value)
 {
-	CRM_DEV_ASSERT(rsc != NULL);
-	if(crm_assert_failed) {
-		return;
-	}
+	CRM_CHECK(rsc != NULL, return);
 	add_hash_param(rsc->parameters, name, value);
 }
 
 void
 add_hash_param(GHashTable *hash, const char *name, const char *value)
 {
-	CRM_DEV_ASSERT(hash != NULL);
-	if(crm_assert_failed) {
-		return;
-	}
+	CRM_CHECK(hash != NULL, return);
 
 	crm_debug_3("adding: name=%s value=%s", crm_str(name), crm_str(value));
 	if(name == NULL || value == NULL) {
