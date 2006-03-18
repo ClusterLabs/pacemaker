@@ -73,7 +73,8 @@ gboolean remove_recurring_action(
 lrm_op_t *construct_op(
 	crm_data_t *rsc_op, const char *rsc_id, const char *operation);
 
-void send_direct_ack(lrm_op_t* op, const char *rsc_id);
+void send_direct_ack(const char *to_host, const char *to_sys,
+		     lrm_op_t* op, const char *rsc_id);
 
 void free_recurring_op(gpointer value);
 
@@ -418,13 +419,16 @@ build_operation_update(
 #if CRM_DEPRECATED_SINCE_2_0_3
 	caller_version = g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION);
 	if(compare_version("1.0.3", caller_version) > 0) {
-		CRM_DEV_ASSERT(CRM_DEV_BUILD == 0/*constant condition*/);
-		fail_state = generate_transition_magic_v202(op->user_data, op->op_status);
+		CRM_CHECK(FALSE, ; );
+		fail_state = generate_transition_magic_v202(
+			op->user_data, op->op_status);
 	} else {
-		fail_state = generate_transition_magic(op->user_data, op->op_status, op->rc);
+		fail_state = generate_transition_magic(
+			op->user_data, op->op_status, op->rc);
 	}
 #else
-	fail_state = generate_transition_magic(op->user_data, op->op_status, op->rc);
+	fail_state = generate_transition_magic(
+		op->user_data, op->op_status, op->rc);
 #endif
 	
 	crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, op->user_data);
@@ -606,15 +610,17 @@ build_active_RAs(crm_data_t *rsc_list)
 				    op->op_type, the_rsc->id, op->op_status, op->rc);
 
 			if(max_call_id < op->call_id) {
-				build_operation_update(xml_rsc, op, __FUNCTION__, llpc);
+				build_operation_update(
+					xml_rsc, op, __FUNCTION__, llpc);
 
 			} else if(max_call_id > op->call_id) {
 				crm_err("Bad call_id in list=%d. Previous call_id=%d",
 					op->call_id, max_call_id);
 
 			} else {
-				crm_debug("Skipping duplicate entry for call_id=%d",
-					op->call_id);
+				crm_warn("lrm->get_cur_state() returned"
+					 " duplicate entries for call_id=%d",
+					 op->call_id);
 			}
 			max_call_id = op->call_id;
 			found_op = TRUE;
@@ -739,12 +745,20 @@ do_lrm_invoke(long long action,
 	      fsa_data_t *msg_data)
 {
 	const char *crm_op = NULL;
+	const char *from_sys = NULL;
+	const char *from_host = NULL;
 	const char *operation = NULL;
 	enum crmd_fsa_input next_input = I_NULL;
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 
-	crm_op = cl_get_string(input->msg, F_CRM_TASK);
-
+	crm_op    = cl_get_string(input->msg, F_CRM_TASK);
+	from_sys  = cl_get_string(input->msg, F_CRM_SYS_FROM);
+	if(safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
+		from_host = cl_get_string(input->msg, F_CRM_HOST_FROM);
+	}
+	
+	crm_debug_2("LRM command from: %s", from_sys);
+	
 	if(safe_str_eq(crm_op, CRM_OP_LRM_DELETE)) {
 		operation = CRMD_ACTION_DELETE;
 
@@ -847,7 +861,7 @@ do_lrm_invoke(long long action,
 			
 			op->op_status = LRM_OP_DONE;
 			op->rc = EXECRA_OK;
-			send_direct_ack(op, id_from_cib);
+			send_direct_ack(from_host, from_sys, op, id_from_cib);
 			free_lrm_op(op);			
 			
 		} else if(safe_str_eq(operation, CRMD_ACTION_DELETE)) {
@@ -876,7 +890,7 @@ do_lrm_invoke(long long action,
 				}
 			}
 
-			send_direct_ack(op, id_from_cib);
+			send_direct_ack(from_host, from_sys, op, id_from_cib);
 			free_lrm_op(op);			
 			
 		} else {
@@ -932,12 +946,6 @@ construct_op(crm_data_t *rsc_op, const char *rsc_id, const char *operation)
 		return op;
 	}
 
-	transition = crm_element_value(rsc_op, XML_ATTR_TRANSITION_KEY);
-	CRM_ASSERT(transition != NULL);
-	
-	op->user_data = crm_strdup(transition);
-	op->user_data_len = 1+strlen(op->user_data);
-
 	op->params = xml2list(rsc_op);
 #if CRM_DEPRECATED_SINCE_2_0_3
 	if(g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION) == NULL) {
@@ -950,10 +958,12 @@ construct_op(crm_data_t *rsc_op, const char *rsc_id, const char *operation)
 		CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
 	}
 	
-	op->interval = crm_parse_int(g_hash_table_lookup(op->params,"interval"),"0");
-	op->timeout  = crm_parse_int(g_hash_table_lookup(op->params, "timeout"),"0");
-	op->start_delay = crm_parse_int(g_hash_table_lookup(
-					   op->params,"start_delay"),"0");
+	op->interval = crm_parse_int(
+		g_hash_table_lookup(op->params, "interval"),    "0");
+	op->timeout  = crm_parse_int(
+		g_hash_table_lookup(op->params, "timeout"),     "0");
+	op->start_delay = crm_parse_int(
+		g_hash_table_lookup(op->params, "start_delay"), "0");
 
 	/* sanity */
 	if(op->interval < 0) {
@@ -972,11 +982,17 @@ construct_op(crm_data_t *rsc_op, const char *rsc_id, const char *operation)
 			op->params, crm_strdup("start_delay"), crm_strdup("0"));
 	}
 
+	transition = crm_element_value(rsc_op, XML_ATTR_TRANSITION_KEY);
+	CRM_CHECK(transition != NULL, return op);
+	
+	op->user_data = crm_strdup(transition);
+	op->user_data_len = 1+strlen(op->user_data);
+
 	if(safe_str_eq(operation, CRMD_ACTION_START)
 	   || safe_str_eq(operation, CRMD_ACTION_STOP)) {
 		char *interval_s = g_hash_table_lookup(op->params, "interval");
- 		CRM_DEV_ASSERT(op->interval == 0);
- 		CRM_DEV_ASSERT(interval_s == NULL);
+ 		CRM_CHECK(op->interval == 0, return NULL);
+ 		CRM_CHECK(interval_s == NULL, return NULL);
 	}
 
 	crm_debug_2("Constructed %s op for %s: interval=%d",
@@ -986,12 +1002,13 @@ construct_op(crm_data_t *rsc_op, const char *rsc_id, const char *operation)
 }
 
 void
-send_direct_ack(lrm_op_t* op, const char *rsc_id)
+send_direct_ack(const char *to_host, const char *to_sys,
+		lrm_op_t* op, const char *rsc_id)
 {
 	HA_Message *reply = NULL;
 	crm_data_t *update, *iter;
 	crm_data_t *fragment;
-
+	
 	CRM_DEV_ASSERT(op != NULL);
 	if(crm_assert_failed) {
 		return;
@@ -1000,7 +1017,9 @@ send_direct_ack(lrm_op_t* op, const char *rsc_id)
 		CRM_DEV_ASSERT(rsc_id != NULL);
 		op->rsc_id = crm_strdup(rsc_id);
 	}
-	
+	if(to_sys == NULL) {
+		to_sys = CRM_SYSTEM_TENGINE;
+	}
 	crm_info("ACK'ing resource op: %s for %s", op->op_type, op->rsc_id);
 	
 	update = create_node_state(
@@ -1015,8 +1034,8 @@ send_direct_ack(lrm_op_t* op, const char *rsc_id)
 	build_operation_update(iter, op, __FUNCTION__, 0);	
 	fragment = create_cib_fragment(update, XML_CIB_TAG_STATUS);
 
-	reply = create_request(CRM_OP_INVOKE_LRM, fragment, NULL,
-			       CRM_SYSTEM_TENGINE, CRM_SYSTEM_LRMD, NULL);
+	reply = create_request(CRM_OP_INVOKE_LRM, fragment, to_host,
+			       to_sys, CRM_SYSTEM_LRMD, NULL);
 
 	crm_debug("Sending ACK: %s", cl_get_string(reply, XML_ATTR_REFERENCE));
 
@@ -1127,7 +1146,7 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation,
 				 fsa_state2string(fsa_state));
 			op->rc = 99;
 			op->op_status = LRM_OP_ERROR;
-			send_direct_ack(op, rsc->id);
+			send_direct_ack(NULL, NULL, op, rsc->id);
 			free_lrm_op(op);
 			crm_free(op_id);
 			return I_NULL;
