@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.166 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: unpack.c,v 1.167 2006/03/21 20:40:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1358,6 +1358,14 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	} else if(EXECRA_FAILED_MASTER == actual_rc_i) {
 		rsc->role = RSC_ROLE_MASTER;
 		task_status_i = LRM_OP_ERROR;
+
+	} else if(EXECRA_OK == actual_rc_i
+		  && interval == 0
+		  && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+		rsc->role = RSC_ROLE_STARTED;
+		crm_info("%s: resource %s is active on %s",
+			 id, rsc->id, node->details->uname);
+		return TRUE;
 	}
 
 	if(task_status_i == LRM_OP_ERROR
