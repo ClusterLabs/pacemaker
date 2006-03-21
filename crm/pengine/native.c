@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.115 2006/03/19 18:27:14 andrew Exp $ */
+/* $Id: native.c,v 1.116 2006/03/21 17:56:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1965,7 +1965,7 @@ NullOp(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 
 gboolean
 native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
-		    pe_working_set_t *data_set) 
+		    gboolean force, pe_working_set_t *data_set) 
 {
 	char *key = NULL;
 	char *target_rc = NULL;
@@ -1979,7 +1979,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	}
 	
 	running = pe_find_node_id(rsc->known_on, node->details->id);
-	if(running != NULL) {
+	if(force == FALSE && running != NULL) {
 		/* we already know the status of the resource on this node */
 		return FALSE;
 	}

@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.88 2006/03/16 23:32:14 andrew Exp $ */
+/* $Id: stages.c,v 1.89 2006/03/21 17:56:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -168,6 +168,7 @@ stage3(pe_working_set_t *data_set)
 
 	slist_iter(
 		node, node_t, data_set->nodes, lpc,
+		gboolean force_probe = FALSE;
 		const char *probed = g_hash_table_lookup(
 			node->details->attrs, CRM_OP_PROBED);
 
@@ -190,7 +191,10 @@ stage3(pe_working_set_t *data_set)
 
 			probe_complete->pseudo = TRUE;
 		}
-		
+
+		if(probed != NULL) {
+			force_probe = TRUE;
+		}
 
 		probe_node_complete = custom_action(
 			NULL, crm_strdup(CRM_OP_PROBED),
@@ -204,10 +208,10 @@ stage3(pe_working_set_t *data_set)
 		
 		slist_iter(
 			rsc, resource_t, data_set->resources, lpc2,
-
 			
 			if(rsc->fns->create_probe(
-				   rsc, node, probe_node_complete, data_set)) {
+				   rsc, node, probe_node_complete,
+				   force_probe, data_set)) {
 				custom_action_order(
 					NULL, NULL, probe_complete,
 					rsc, start_key(rsc), NULL,

@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.54 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: group.c,v 1.55 2006/03/21 17:56:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -608,7 +608,7 @@ group_create_notify_element(resource_t *rsc, action_t *op,
 
 gboolean
 group_create_probe(resource_t *rsc, node_t *node, action_t *complete,
-		    pe_working_set_t *data_set) 
+		    gboolean force, pe_working_set_t *data_set) 
 {
 	gboolean any_created = FALSE;
 	group_variant_data_t *group_data = NULL;
@@ -618,7 +618,7 @@ group_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		child_rsc, resource_t, group_data->child_list, lpc,
 		
 		any_created = child_rsc->fns->create_probe(
-			child_rsc, node, complete, data_set) || any_created;
+			child_rsc, node, complete, force, data_set) || any_created;
 		);
 	return any_created;
 }

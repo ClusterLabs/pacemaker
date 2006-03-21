@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.30 2006/01/27 11:15:49 andrew Exp $ */
+/* $Id: complex.h,v 1.31 2006/03/21 17:56:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -71,7 +71,7 @@ typedef struct resource_object_functions_s
 		color_t *(*color)(resource_t *, pe_working_set_t *);
 		void (*create_actions)(resource_t *, pe_working_set_t *);
 		gboolean (*create_probe)(
-			resource_t *, node_t *, action_t *, pe_working_set_t *);
+			resource_t *, node_t *, action_t *, gboolean, pe_working_set_t *);
 		void (*internal_constraints)(resource_t *, pe_working_set_t *);
 		void (*agent_constraints)(resource_t *);
 
@@ -136,7 +136,7 @@ extern void native_create_notify_element(
 	notify_data_t *n_data,pe_working_set_t *data_set);
 extern void native_assign_color(resource_t *rsc, color_t *color);
 extern gboolean native_create_probe(
-	resource_t *rsc, node_t *node, action_t *complete,
+	resource_t *rsc, node_t *node, action_t *complete, gboolean force, 
 	pe_working_set_t *data_set);
 
 extern void group_unpack(resource_t *rsc, pe_working_set_t *data_set);
@@ -166,7 +166,7 @@ extern void group_create_notify_element(
 	resource_t *rsc, action_t *op,
 	notify_data_t *n_data,pe_working_set_t *data_set);
 extern gboolean group_create_probe(
-	resource_t *rsc, node_t *node, action_t *complete,
+	resource_t *rsc, node_t *node, action_t *complete, gboolean force,
 	pe_working_set_t *data_set);
 
 extern void clone_unpack(resource_t *rsc, pe_working_set_t *data_set);
@@ -195,7 +195,7 @@ extern void clone_create_notify_element(
 	resource_t *rsc, action_t *op,
 	notify_data_t *n_data,pe_working_set_t *data_set);
 extern gboolean clone_create_probe(
-	resource_t *rsc, node_t *node, action_t *complete,
+	resource_t *rsc, node_t *node, action_t *complete, gboolean force,
 	pe_working_set_t *data_set);
 
 extern void master_unpack(resource_t *rsc, pe_working_set_t *data_set);

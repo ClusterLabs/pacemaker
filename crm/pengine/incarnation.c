@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.74 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: incarnation.c,v 1.75 2006/03/21 17:56:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1383,7 +1383,7 @@ static gint sort_rsc_id(gconstpointer a, gconstpointer b)
 
 gboolean
 clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
-		    pe_working_set_t *data_set) 
+		    gboolean force, pe_working_set_t *data_set) 
 {
 	int num_probes = 0;
 	gboolean any_created = FALSE;
@@ -1412,7 +1412,7 @@ clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 			break;
 		}
 		if(child_rsc->fns->create_probe(
-			   child_rsc, node, complete, data_set)) {
+			   child_rsc, node, complete, force, data_set)) {
 			any_created = TRUE;
 			num_probes++;
 		}
