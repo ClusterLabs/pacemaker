@@ -35,3 +35,10 @@ hard_SCRIPTS	=				\
 			CIB.py
 
 hard_DATA =		README
+
+ocfdir			=	$(OCF_RA_DIR)/heartbeat/
+ocf_SCRIPTS		=	OCFDummy2
+
+lsbdir			=	/etc/init.d/
+lsb_SCRIPTS		=	LSBDummy
+			
