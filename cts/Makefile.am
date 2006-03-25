@@ -36,9 +36,9 @@ hard_SCRIPTS	=				\
 
 hard_DATA =		README
 
-ocfdir			=	$(OCF_RA_DIR)/heartbeat/
-ocf_SCRIPTS		=	OCFDummy2
+ocfdir			=	$(libdir)/heartbeat/cts
+ocf_SCRIPTS		=	OCFMSDummy
 
-lsbdir			=	/etc/init.d/
+lsbdir			=	$(libdir)/heartbeat/cts
 lsb_SCRIPTS		=	LSBDummy
 			
