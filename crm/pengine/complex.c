@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.74 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: complex.c,v 1.75 2006/03/26 16:04:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -178,19 +178,21 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		XML_RSC_ATTR_INCARNATION_NODEMAX,
 		XML_RSC_ATTR_MASTER_MAX,
 		XML_RSC_ATTR_MASTER_NODEMAX,
-		"resource_stickiness"
+		XML_RSC_ATTR_STICKINESS,
+		XML_RSC_ATTR_FAIL_STICKINESS,
 	};
 
 	const char *rsc_attrs[] = {
 		XML_RSC_ATTR_STOPFAIL,
 		XML_RSC_ATTR_RESTART,
-		"resource_stickiness",
-		"resource_failure_stickiness",
-		"multiple_active",
-		"start_prereq",
-		"is_managed",
-		"globally_unique",
-		"notify"
+		XML_RSC_ATTR_MANAGED,
+		XML_RSC_ATTR_UNIQUE,
+		XML_RSC_ATTR_NOTIFY,
+		XML_RSC_ATTR_MULTIPLE,
+		XML_RSC_ATTR_START,
+#if CRM_DEPRECATED_SINCE_2_0_4
+		XML_RSC_ATTR_STICKINESS,
+#endif
 	};
 
 	crm_log_xml_debug_3(xml_obj, "Processing resource input...");
