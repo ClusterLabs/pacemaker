@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.88 2006/03/17 17:59:32 andrew Exp $ */
+/* $Id: crm.h,v 1.89 2006/03/26 16:02:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -202,13 +202,13 @@ typedef GList* GListPtr;
 
 #define LOG_MSG  LOG_DEBUG_3
 
-#define crm_crit(w...)    do_crm_log(LOG_CRIT,    __FILE__, __FUNCTION__, w)
-#define crm_err(w...)     do_crm_log(LOG_ERR,     __FILE__, __FUNCTION__, w)
-#define crm_warn(w...)    do_crm_log(LOG_WARNING, __FILE__, __FUNCTION__, w)
-#define crm_notice(w...)  do_crm_log(LOG_NOTICE,  __FILE__, __FUNCTION__, w)
-#define crm_info(w...)    do_crm_log(LOG_INFO,    __FILE__, __FUNCTION__, w)
+#define crm_crit(w...)    do_crm_log(LOG_CRIT,    __FILE__, __PRETTY_FUNCTION__, w)
+#define crm_err(w...)     do_crm_log(LOG_ERR,     __FILE__, __PRETTY_FUNCTION__, w)
+#define crm_warn(w...)    do_crm_log(LOG_WARNING, __FILE__, __PRETTY_FUNCTION__, w)
+#define crm_notice(w...)  do_crm_log(LOG_NOTICE,  __FILE__, __PRETTY_FUNCTION__, w)
+#define crm_info(w...)    do_crm_log(LOG_INFO,    __FILE__, __PRETTY_FUNCTION__, w)
 #define crm_log_maybe(level, fmt...) if(crm_log_level >= (level)) {	\
-		do_crm_log((level), __FILE__, __FUNCTION__, fmt);		\
+		do_crm_log((level), __FILE__, __PRETTY_FUNCTION__, fmt);		\
 	}
 
 #define crm_debug(fmt...)   crm_log_maybe(LOG_DEBUG, fmt)
@@ -246,7 +246,7 @@ extern void crm_log_message_adv(
 #define crm_action_debug_4(x) crm_do_action(LOG_DEBUG_4, x)
 
 #define crm_log_xml(level, text, xml)   if(crm_log_level >= level) {  \
-		print_xml_formatted(level,  __FUNCTION__, xml, text); \
+		print_xml_formatted(level,  __PRETTY_FUNCTION__, xml, text); \
 	}
 #define crm_log_xml_crit(xml, text)    crm_log_xml(LOG_CRIT,    text, xml)
 #define crm_log_xml_err(xml, text)     crm_log_xml(LOG_ERR,     text, xml)
