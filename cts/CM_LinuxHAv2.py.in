@@ -515,7 +515,8 @@ class HAResource(Resource):
         self.inc_no = -1
         self.inc_max = -1
         self.rparameters = {}
-        
+        nvpairs = [] 
+ 
         list = node.getElementsByTagName('instance_attributes')
         if len(list) > 0:
             attributes = list[0]
