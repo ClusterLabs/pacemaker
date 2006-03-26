@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.116 2006/03/21 17:56:36 andrew Exp $ */
+/* $Id: native.c,v 1.117 2006/03/26 16:00:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -119,10 +119,11 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 			"not_managed_default", rsc, INFINITY, node, data_set);
 		return;
 
+#if 0
 	} else if(rsc->failed) {
 		crm_info("Skipping resource stickiness for failed resource %s",
 			 rsc->id);
-
+#endif
 	} else if(rsc->stickiness > 0 || rsc->stickiness < 0) {
 		rsc2node_new("stickiness", rsc, rsc->stickiness, node,data_set);
 		crm_debug("Resource %s: preferring current location (%s/%s)",
