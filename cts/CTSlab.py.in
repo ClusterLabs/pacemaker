@@ -485,7 +485,6 @@ def usage(arg):
     +  " --fencing (1 | 0 | yes | no)" \
     +  " --suppress_cib_writes (1 | 0 | yes | no)" \
     +  " -lstests" \
-    +  " --resource-class (ocf | heartbeat)" \
     +  " --seed" \
     +  "  [number-of-iterations]"
     sys.exit(1)
@@ -523,7 +522,6 @@ if __name__ == '__main__':
     SuppressCib = 1
     DoBSC = 0
     ListTests = 0
-    ResourceClass = "ocf"
     HaveSeed = 0
     #
     # The values of the rest of the parameters are now properly derived from
@@ -644,9 +642,6 @@ if __name__ == '__main__':
        elif args[i] == "--syslog-facility" or args[i] == "--facility":
            skipthis=1
            LogFacility = args[i+1]
-       elif args[i] == "--resource-class":
-           skipthis=1
-           ResourceClass = args[i+1]
        elif args[i] == "--seed":
            skipthis=1
            Seed=args[i+1]
@@ -695,7 +690,6 @@ if __name__ == '__main__':
     Environment["DoBSC"] = DoBSC
     Environment["use_logd"] = 0
     Environment["logfacility"] = LogFacility
-    Environment["ResourceClass" ] = ResourceClass
 
     if config.Parameters.has_key("use_logd"):
 	Environment["use_logd"] = 1
