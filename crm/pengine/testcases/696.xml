@@ -108,7 +108,9 @@
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" origin="build_active_RAs" transition_key="0:1" transition_magic="0:0;1:some_key" rsc_state="running" call_id="4" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1"/>
+            <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" hostlist="c001n09 c001n02 c001n03 c001n04 "/>
+            </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_hadev2" class="ocf" provider="heartbeat" type="IPaddr">
             <lrm_rsc_op id="rsc_hadev2_start_0" operation="start" origin="build_active_RAs" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="3" rc_code="14" op_status="-1"/>
@@ -131,15 +133,21 @@
         <lrm_resources>
           <lrm_resource id="rsc_hadev1" class="ocf" provider="heartbeat" type="IPaddr">
             <lrm_rsc_op id="rsc_hadev1_start_0" operation="start" origin="build_active_RAs" transition_key="0:1" transition_magic="0:0;1:some_key" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_hadev1_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1"/>
+            <lrm_rsc_op id="rsc_hadev1_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.11"/>
+            </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="DoFencing:child_DoFencing:1" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing:child_DoFencing:1_start_0" operation="start" origin="build_active_RAs" transition_key="0:1" transition_magic="0:0;1:some_key" rsc_state="running" call_id="4" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="DoFencing:child_DoFencing:1_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1"/>
+            <lrm_rsc_op id="DoFencing:child_DoFencing:1_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" hostlist="c001n09 c001n02 c001n03 c001n04 "/>
+            </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_hadev3" class="ocf" provider="heartbeat" type="IPaddr">
             <lrm_rsc_op id="rsc_hadev3_start_0" operation="start" origin="build_active_RAs" transition_key="0:1" transition_magic="0:0;1:some_key" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_hadev3_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1"/>
+            <lrm_rsc_op id="rsc_hadev3_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.13"/>
+            </lrm_rsc_op>
           </lrm_resource>
         </lrm_resources>
       </lrm>

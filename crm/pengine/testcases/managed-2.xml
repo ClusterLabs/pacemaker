@@ -202,11 +202,15 @@
         <lrm_resources>
           <lrm_resource id="rsc_c001n09" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n09_start_0" operation="start" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n09_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="7" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n09_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="7" rc_code="0" op_status="0">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.11"/>
+            </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="DcIPaddr_start_0" operation="start" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="6" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="6" rc_code="0" op_status="0">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.10"/>
+            </lrm_rsc_op>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -223,12 +227,16 @@
         <lrm_resources>
           <lrm_resource id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n08_start_0" operation="start" origin="build_active_RAs" transition_key="0:11" transition_magic="0:11:some_key" rsc_state="running" call_id="21" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n08_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:11" transition_magic="0:11:some_key" rsc_state="running" call_id="23" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n08_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:11" transition_magic="0:11:some_key" rsc_state="running" call_id="23" rc_code="0" op_status="0">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.18"/>
+            </lrm_rsc_op>
             <lrm_rsc_op id="rsc_c001n08_stop_0" operation="stop" origin="do_update_resource" transition_key="0:12" transition_magic="0:12:some_key" rsc_state="stopped" call_id="25" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n02_start_0" operation="start" origin="do_update_resource" transition_key="0:14" transition_magic="0:14:some_key" rsc_state="running" call_id="58" rc_code="0" op_status="0" transition_id="14"/>
-            <lrm_rsc_op id="rsc_c001n02_monitor_5000" operation="monitor" origin="do_update_resource" transition_key="0:14" transition_magic="0:14:some_key" rsc_state="running" call_id="60" rc_code="0" op_status="0" transition_id="14"/>
+            <lrm_rsc_op id="rsc_c001n02_monitor_5000" operation="monitor" origin="do_update_resource" transition_key="0:14" transition_magic="0:14:some_key" rsc_state="running" call_id="60" rc_code="0" op_status="0" transition_id="14">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.12"/>
+            </lrm_rsc_op>
             <lrm_rsc_op id="rsc_c001n02_stop_0" operation="stop" origin="do_update_resource" transition_key="0:13" transition_magic="0:13:some_key" rsc_state="stopped" call_id="47" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="rsc_c001n06" class="ocf" type="IPaddr" provider="heartbeat">
@@ -258,7 +266,9 @@
           </lrm_resource>
           <lrm_resource id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n03_start_0" operation="start" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n03_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="5" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n03_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="5" rc_code="0" op_status="0">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.13"/>
+            </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_c001n07" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n07_start_0" operation="start" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
@@ -266,7 +276,9 @@
           </lrm_resource>
           <lrm_resource id="rsc_c001n02" rsc_state="stopped" op_status="0" rc_code="0" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n02_start_0" operation="start" op_status="0" rc_code="0" origin="do_update_resource" transition_id="13" transition_key="0:13" transition_magic="0:13:some_key" rsc_state="running" call_id="43"/>
-            <lrm_rsc_op id="rsc_c001n02_monitor_5000" operation="monitor" op_status="0" rc_code="0" origin="do_update_resource" transition_id="13" transition_key="0:13" transition_magic="0:13:some_key" rsc_state="running" call_id="45"/>
+            <lrm_rsc_op id="rsc_c001n02_monitor_5000" operation="monitor" op_status="0" rc_code="0" origin="do_update_resource" transition_id="13" transition_key="0:13" transition_magic="0:13:some_key" rsc_state="running" call_id="45">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.12"/>
+            </lrm_rsc_op>
             <lrm_rsc_op id="rsc_c001n02_stop_0" operation="stop" origin="do_update_resource" transition_key="0:14" transition_magic="0:14:some_key" rsc_state="stopped" call_id="56" rc_code="0" op_status="0"/>
           </lrm_resource>
         </lrm_resources>
@@ -288,7 +300,9 @@
           </lrm_resource>
           <lrm_resource id="rsc_c001n04" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n04_start_0" operation="start" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n04_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="5" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n04_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="5" rc_code="0" op_status="0">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.14"/>
+            </lrm_rsc_op>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -305,7 +319,9 @@
         <lrm_resources>
           <lrm_resource id="rsc_c001n05" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n05_start_0" operation="start" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n05_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="5" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n05_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:4" transition_magic="0:4:some_key" rsc_state="running" call_id="5" rc_code="0" op_status="0">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.15"/>
+            </lrm_rsc_op>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -338,12 +354,16 @@
           </lrm_resource>
           <lrm_resource id="rsc_c001n04" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n04_start_0" operation="start" origin="build_active_RAs" transition_key="0:0" transition_magic="0:0:some_key" rsc_state="running" call_id="148" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n04_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:0" transition_magic="0:0:some_key" rsc_state="running" call_id="150" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n04_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:0" transition_magic="0:0:some_key" rsc_state="running" call_id="150" rc_code="0" op_status="0">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.14"/>
+            </lrm_rsc_op>
             <lrm_rsc_op id="rsc_c001n04_stop_0" operation="stop" origin="build_active_RAs" transition_key="0:3" transition_magic="0:3:some_key" rsc_state="stopped" call_id="151" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="rsc_c001n06" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n06_start_0" operation="start" origin="build_active_RAs" transition_key="0:10" transition_magic="0:10:some_key" rsc_state="running" call_id="206" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n06_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:10" transition_magic="0:10:some_key" rsc_state="running" call_id="209" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n06_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:10" transition_magic="0:10:some_key" rsc_state="running" call_id="209" rc_code="0" op_status="0">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.16"/>
+            </lrm_rsc_op>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -360,7 +380,9 @@
         <lrm_resources>
           <lrm_resource id="rsc_c001n07" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n07_start_0" operation="start" origin="build_active_RAs" transition_key="0:11" transition_magic="0:11:some_key" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_c001n07_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:11" transition_magic="0:11:some_key" rsc_state="running" call_id="5" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_c001n07_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:11" transition_magic="0:11:some_key" rsc_state="running" call_id="5" rc_code="0" op_status="0">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.17"/>
+            </lrm_rsc_op>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -377,7 +399,9 @@
         <lrm_resources>
           <lrm_resource id="rsc_c001n08" rsc_state="running" op_status="0" rc_code="0" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n08_start_0" operation="start" op_status="0" rc_code="0" origin="do_update_resource" transition_id="12" transition_key="0:12" transition_magic="0:12:some_key" rsc_state="running" call_id="3"/>
-            <lrm_rsc_op id="rsc_c001n08_monitor_5000" operation="monitor" op_status="0" rc_code="0" origin="do_update_resource" transition_id="12" transition_key="0:12" transition_magic="0:12:some_key" rsc_state="running" call_id="5"/>
+            <lrm_rsc_op id="rsc_c001n08_monitor_5000" operation="monitor" op_status="0" rc_code="0" origin="do_update_resource" transition_id="12" transition_key="0:12" transition_magic="0:12:some_key" rsc_state="running" call_id="5">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.18"/>
+            </lrm_rsc_op>
           </lrm_resource>
         </lrm_resources>
       </lrm>

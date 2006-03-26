@@ -113,17 +113,23 @@
             </lrm_resource>
             <lrm_resource id="rsc_hadev3" class="ocf" provider="heartbeat" type="IPaddr">
               <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="3" rc_code="0" op_status="0" timestamp="1118302956"/>
-              <lrm_rsc_op id="rsc_hadev3_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="6" rc_code="0" op_status="0" timestamp="1118302956"/>
+              <lrm_rsc_op id="rsc_hadev3_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="6" rc_code="0" op_status="0" timestamp="1118302956">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.21"/>
+            </lrm_rsc_op>
               <lrm_rsc_op id="stop" operation="stop" origin="do_update_resource" rsc_state="stopped" call_id="19" rc_code="0" op_status="0" timestamp="1118302957"/>
             </lrm_resource>
             <lrm_resource id="DoFencing:child_DoFencing:2" class="stonith" type="ssh">
               <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="10" rc_code="0" op_status="0" timestamp="1118302956"/>
-              <lrm_rsc_op id="DoFencing:child_DoFencing:2_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="11" rc_code="0" op_status="0" timestamp="1118302956"/>
+              <lrm_rsc_op id="DoFencing:child_DoFencing:2_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="11" rc_code="0" op_status="0" timestamp="1118302956">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" hostlist="hadev3 hadev2 hadev1 "/>
+            </lrm_rsc_op>
               <lrm_rsc_op id="stop" operation="stop" origin="do_update_resource" rsc_state="stopped" call_id="21" rc_code="0" op_status="0" timestamp="1118302957"/>
             </lrm_resource>
             <lrm_resource id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
               <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="2" rc_code="0" op_status="0" timestamp="1118302956"/>
-              <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="7" rc_code="0" op_status="0" timestamp="1118302956"/>
+              <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="7" rc_code="0" op_status="0" timestamp="1118302956">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.10"/>
+            </lrm_rsc_op>
               <lrm_rsc_op id="stop" operation="stop" origin="do_update_resource" rsc_state="stopped" call_id="17" rc_code="0" op_status="0" timestamp="1118302957"/>
             </lrm_resource>
           </lrm_resources>
@@ -145,11 +151,15 @@
             </lrm_resource>
             <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
               <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="12" rc_code="0" op_status="0" timestamp="1118302974"/>
-              <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="13" rc_code="0" op_status="0" timestamp="1118302974"/>
+              <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="13" rc_code="0" op_status="0" timestamp="1118302974">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" hostlist="hadev3 hadev2 hadev1 "/>
+            </lrm_rsc_op>
             </lrm_resource>
             <lrm_resource id="rsc_hadev2" class="ocf" provider="heartbeat" type="IPaddr">
               <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="2" rc_code="0" op_status="0" timestamp="1118302974"/>
-              <lrm_rsc_op id="rsc_hadev2_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="7" rc_code="0" op_status="0" timestamp="1118302974"/>
+              <lrm_rsc_op id="rsc_hadev2_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="7" rc_code="0" op_status="0" timestamp="1118302974">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.22"/>
+            </lrm_rsc_op>
             </lrm_resource>
             <lrm_resource id="DoFencing:child_DoFencing:1" class="stonith" type="ssh">
               <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="4" rc_code="0" op_status="0" timestamp="1118302974"/>
@@ -157,7 +167,9 @@
             </lrm_resource>
             <lrm_resource id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
               <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="18" rc_code="0" op_status="0" timestamp="1118302974"/>
-              <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="19" rc_code="0" op_status="0" timestamp="1118302974"/>
+              <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="19" rc_code="0" op_status="0" timestamp="1118302974">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.10"/>
+            </lrm_rsc_op>
             </lrm_resource>
           </lrm_resources>
         </lrm>
@@ -174,19 +186,27 @@
           <lrm_resources>
             <lrm_resource id="rsc_hadev1" class="ocf" provider="heartbeat" type="IPaddr">
               <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="3" rc_code="0" op_status="0" timestamp="1118302974"/>
-              <lrm_rsc_op id="rsc_hadev1_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="5" rc_code="0" op_status="0" timestamp="1118302974"/>
+              <lrm_rsc_op id="rsc_hadev1_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="5" rc_code="0" op_status="0" timestamp="1118302974">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.23"/>
+            </lrm_rsc_op>
             </lrm_resource>
             <lrm_resource id="DoFencing:child_DoFencing:1" class="stonith" type="ssh">
               <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="2" rc_code="0" op_status="0" timestamp="1118302974"/>
-              <lrm_rsc_op id="DoFencing:child_DoFencing:1_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="4" rc_code="0" op_status="0" timestamp="1118302974"/>
+              <lrm_rsc_op id="DoFencing:child_DoFencing:1_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="4" rc_code="0" op_status="0" timestamp="1118302974">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" hostlist="hadev3 hadev2 hadev1 "/>
+            </lrm_rsc_op>
             </lrm_resource>
             <lrm_resource id="DoFencing:child_DoFencing:2" class="stonith" type="ssh">
               <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="8" rc_code="0" op_status="0" timestamp="1118302974"/>
-              <lrm_rsc_op id="DoFencing:child_DoFencing:2_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="10" rc_code="0" op_status="0" timestamp="1118302974"/>
+              <lrm_rsc_op id="DoFencing:child_DoFencing:2_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="10" rc_code="0" op_status="0" timestamp="1118302974">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" hostlist="hadev3 hadev2 hadev1 "/>
+            </lrm_rsc_op>
             </lrm_resource>
             <lrm_resource id="rsc_hadev3" class="ocf" provider="heartbeat" type="IPaddr">
               <lrm_rsc_op id="start" operation="start" origin="build_active_RAs" rsc_state="running" call_id="9" rc_code="0" op_status="0" timestamp="1118302974"/>
-              <lrm_rsc_op id="rsc_hadev3_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="11" rc_code="0" op_status="0" timestamp="1118302974"/>
+              <lrm_rsc_op id="rsc_hadev3_monitor_5000" operation="monitor" origin="build_active_RAs" rsc_state="running" call_id="11" rc_code="0" op_status="0" timestamp="1118302974">
+	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.21"/>
+            </lrm_rsc_op>
             </lrm_resource>
           </lrm_resources>
         </lrm>

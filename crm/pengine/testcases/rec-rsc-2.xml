@@ -20,7 +20,7 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc1_monitor_1" operation="monitor" rsc_state="monitor_failed" op_status="4" rc_code="4" call_id="1"/>
+            <lrm_rsc_op id="rsc1_monitor_1" operation="monitor" rsc_state="monitor_failed" op_status="4" rc_code="4" call_id="2"/>
 	  </lrm_resource>
         </lrm_resources>
       </lrm>

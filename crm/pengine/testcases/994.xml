@@ -92,13 +92,13 @@
          </lrm_resource>
          <lrm_resource id="group_1:IPaddr_5" type="IPaddr" class="ocf" provider="heartbeat" rsc_state="starting">
            <lrm_rsc_op id="group_1:IPaddr_5_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" transition_magic="0:7;0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" rsc_state="running" call_id="4" rc_code="7" op_status="0">
-             <parameters ip="10.10.10.222" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
+             <parameters ip="10.10.10.222" timeout="20000" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
            </lrm_rsc_op>
            <lrm_rsc_op id="group_1:IPaddr_5_start_0" operation="start" op_status="0" call_id="12" rc_code="0" origin="do_update_resource" transition_key="2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" transition_magic="0:0;2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" rsc_state="running">
              <parameters ip="10.10.10.222" crm_feature_set="1.0.3"/>
            </lrm_rsc_op>
            <lrm_rsc_op id="group_1:IPaddr_5_monitor_5000" operation="monitor" origin="do_update_resource" transition_key="2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" transition_magic="0:0;2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" rsc_state="running" call_id="13" rc_code="0" op_status="0">
-             <parameters ip="10.10.10.222" timeout="5000" crm_feature_set="1.0.3" interval="5000"/>
+             <parameters ip="10.10.10.222" crm_feature_set="1.0.3" interval="5000" timeout="5000"/>
            </lrm_rsc_op>
          </lrm_resource>
        </lrm_resources>
