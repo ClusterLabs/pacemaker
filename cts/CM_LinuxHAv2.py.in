@@ -154,7 +154,7 @@ class LinuxHAv2(HeartbeatCM):
                     "root@" + (self["CIBfile"]%node)):
                     raise ValueError("Can not scp file to %s "%node)
 	
-	    self.rsh.remote_python_call(node, "os", "system", "chown @HA_CCMUID@ @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
+	    self.rsh.remote_python_call(node, "os", "system", "chown @HA_CCMUSER@ @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
 	    self.rsh.remote_python_call(node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig")
 
     def prepare(self):
