@@ -25,7 +25,7 @@ Copyright (C) 2005 International Business Machines
 #
 
 
-import sys, pickle, base64
+import sys, pickle, base64, binascii
 
 # check the number of arguments
 if len(sys.argv) != 4 :
@@ -48,7 +48,7 @@ except	AttributeError:
 
 # unpack the arguments of functions
 try :
-	args = pickle.loads(base64.decodestring(sys.argv[3]))
+	args = pickle.loads(binascii.a2b_base64(sys.argv[3]))
 except	IndexError:
 	print "can not unpickle args %s"%sys.argv[3]
 	sys.exit(1)
@@ -56,7 +56,7 @@ except	IndexError:
 # call the function and return packed result
 try :
 	result = apply(func,args)
-	print base64.encodestring(pickle.dumps(result))
+	print binascii.b2a_base64(pickle.dumps(result))
 	sys.exit(0)
 except TypeError:
 	print "parameter error"

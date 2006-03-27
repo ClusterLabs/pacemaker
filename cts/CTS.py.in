@@ -32,7 +32,7 @@ Licensed under the GNU GPL.
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import types, string, select, sys, time, re, os, struct, os, signal
-import base64, pickle
+import base64, pickle, binascii
 from UserDict import UserDict
 from syslog import *
 from popen2 import Popen3
@@ -153,11 +153,11 @@ class RemoteExec:
            If the call success, lastrc == 0 and return result.
            If the call fail, lastrc == 1 and return the reason (string)
         '''
-        encode_args = base64.encodestring(pickle.dumps(args))
+        encode_args = binascii.b2a_base64(pickle.dumps(args))
         result = self.readaline(node, \
             string.join(["@libdir@/heartbeat/cts/CTSproxy.py",module,func,encode_args]))
         if self.lastrc == 0 :
-            return pickle.loads(base64.decodestring(result))
+            return pickle.loads(binascii.a2b_base64(result))
         
         return result
 
