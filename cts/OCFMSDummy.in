@@ -71,7 +71,7 @@ dummy_get_status() {
     running=$?
 
     if [ ! $running -eq 0 ]; then
-         dummy_log "instance #$instance not running"
+         dummy_log "status: instance #$instance not running"
          return $OCF_NOT_RUNNING
     fi
     $GREP -e "master #$instance" $tmp > /dev/null
@@ -80,10 +80,10 @@ dummy_get_status() {
     rm -rf $tmp
 
     if [ $state -eq 0 ]; then    # master
-        dummy_log "instance #$instance is running as master"
+        dummy_log "status: instance #$instance is running as master"
         return $OCF_RUNNING_MASTER
     else        # slave
-        dummy_log "instance #$instance is running as slave"
+        dummy_log "status: instance #$instance is running as slave"
         return $OCF_SUCCESS
     fi 
 }
@@ -127,6 +127,10 @@ do_change_state() {
     fi
     do_stop_resource $instance
     do_start_resource $instance $request_state
+    rc=$?
+    dummy_log "after state changed: "
+    dummy_get_status $instance
+    return $rc
 }
 
 
@@ -134,7 +138,6 @@ dummy_start() {
     dummy_log "start instance #$OCF_RESKEY_clone slave"
     do_start_resource $OCF_RESKEY_clone "slave"
     if [ $OCF_RESKEY_clone -eq 0 ]; then
-        do_cmd $CRM_MASTER -D
         do_cmd $CRM_MASTER -v 1000
     fi
     sleep $start_delay
