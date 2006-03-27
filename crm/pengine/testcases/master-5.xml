@@ -192,7 +192,7 @@
                <parameters is_managed="1" ip="192.168.100.183" timeout="40000" crm_feature_set="1.0.4"/>
              </lrm_rsc_op>
              <lrm_rsc_op id="rsc_c001n08_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="20" rc_code="0" op_status="0">
-               <parameters is_managed="1" ip="192.168.100.183" timeout="20000" crm_feature_set="1.0.4" interval="5000"/>
+               <parameters is_managed="1" ip="192.168.100.183" timeout="20000" crm_feature_set="1.0.4" interval="6000"/>
              </lrm_rsc_op>
            </lrm_resource>
            <lrm_resource id="lsb_dummy" type="/usr/lib/heartbeat/cts/LSBDummy" class="lsb" provider="heartbeat">
@@ -245,8 +245,11 @@
              <lrm_rsc_op id="ocf_msdummy:0_start_0" operation="start" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="17" rc_code="0" op_status="0">
                <parameters clone="0" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
-             <lrm_rsc_op id="ocf_msdummy:0_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="21" rc_code="0" op_status="0">
-               <parameters clone="0" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
+             <lrm_rsc_op id="ocf_msdummy:0_promote_0" operation="promote" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="19" rc_code="0" op_status="0">
+               <parameters clone="0" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="ocf_msdummy:0_monitor_6000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="22" rc_code="8" op_status="0">
+               <parameters te-target-rc="8" clone="0" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="6000" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
            </lrm_resource>
            <lrm_resource id="DcIPaddr" type="IPaddr" class="ocf" provider="heartbeat">

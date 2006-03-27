@@ -1379,6 +1379,9 @@ update_failcount(lrm_op_t *op)
 		char *attr_set = crm_concat("crmd-transient",fsa_our_uuid, '-');
 		char *attr_name = crm_concat("fail-count", op->rsc_id, '-');
 		char *attr_id = crm_concat(attr_name, fsa_our_uuid, '-');
+
+		crm_warn("Updating failcount for %s after failed %s: rc=%d",
+			 op->rsc_id, op->op_type, op->rc);
 		
 		update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_STATUS,
 			    fsa_our_uuid, attr_set, attr_id, attr_name,
@@ -1481,7 +1484,7 @@ do_lrm_event(long long action,
 	const char *last_op = NULL;
 	const char *probe_s = NULL;
 	gboolean is_probe = FALSE;
-	int log_rsc_err = LOG_ERR;
+	int log_rsc_err = LOG_WARNING;
 	gboolean set_failcount = FALSE;
 	
 	if(msg_data->fsa_cause != C_LRM_OP_CALLBACK) {
@@ -1516,12 +1519,12 @@ do_lrm_event(long long action,
 				set_failcount = TRUE;
 			}
 			crm_log_maybe(log_rsc_err,
-				      "LRM operation (%d) %s_%d on %s %s: %s",
+				      "LRM operation (%d) %s_%d on %s %s: (%d) %s",
 				      op->call_id, op->op_type,
 				      op->interval,
 				      crm_str(op->rsc_id),
 				      op_status2text(op->op_status),
-				      execra_code2string(op->rc));
+				      op->rc, execra_code2string(op->rc));
 			crm_debug("Result: %s", op->output);
 			break;
 		case LRM_OP_CANCELLED:

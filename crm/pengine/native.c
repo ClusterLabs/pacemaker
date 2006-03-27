@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.119 2006/03/27 10:03:55 andrew Exp $ */
+/* $Id: native.c,v 1.120 2006/03/27 15:53:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -387,6 +387,7 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 	char *key = NULL;
 	const char *name = NULL;
 	const char *value = NULL;
+	const char *interval = NULL;
 	const char *node_uname = NULL;
 
 	int interval_ms = 0;
@@ -401,25 +402,15 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 	
 	xml_child_iter_filter(
 		rsc->ops_xml, operation, "op",
-
+		
 		name = crm_element_value(operation, "name");
-		value = crm_element_value(operation, "interval");
-		interval_ms = crm_get_msec(value);
+		interval = crm_element_value(operation, "interval");
+		interval_ms = crm_get_msec(interval);
 
 		if(interval_ms <= 0) {
 			continue;
 		}
 
-		value = crm_element_value(operation, "role");
-		if(start != NULL && value != NULL
-		   && text2role(value) != start->rsc->next_role) {
-			crm_debug_2("Skipping action %s::%s(%s) : %s",
-				    start->rsc->id, name, value,
-				    role2text(start->rsc->next_role));
-			continue;
-		}
-		
-		
 		key = generate_op_key(rsc->graph_name, name, interval_ms);
 		if(start != NULL) {
 			crm_debug_3("Marking %s %s due to %s",
@@ -437,6 +428,40 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 			is_optional = FALSE;
 			crm_debug_3("Marking %s manditory: not active", key);
 		}
+
+		value = crm_element_value(operation, "role");
+		if((rsc->next_role == RSC_ROLE_MASTER && value == NULL)
+		   || (value != NULL && text2role(value) != rsc->next_role)) {
+			int log_level = LOG_DEBUG_2;
+			const char *foo = "Ignoring";
+			if(is_optional) {
+				log_level = LOG_INFO;
+				foo = "Cancelling";
+				/* its running : cancel it */
+
+				mon = custom_action(
+					rsc, crm_strdup(key), CRMD_ACTION_CANCEL, node,
+					FALSE, TRUE, data_set);
+
+				mon->task = CRMD_ACTION_CANCEL;
+				add_hash_param(mon->extra, "interval", interval);
+				add_hash_param(mon->extra, "task", name);
+				
+				custom_action_order(
+					rsc, NULL, mon,
+					rsc, promote_key(rsc), NULL,
+					pe_ordering_optional, data_set);
+
+				mon = NULL;
+			}
+			
+			crm_log_maybe(log_level, "%s action %s (%s vs. %s)",
+				      foo , key, value?value:role2text(RSC_ROLE_SLAVE),
+				      role2text(rsc->next_role));
+			crm_free(key);
+			key = NULL;
+			continue;
+		}		
 		
 		mon = custom_action(rsc, key, name, node,
 				    is_optional, TRUE, data_set);
@@ -461,9 +486,20 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 		} else if(mon->optional == FALSE) {
 			crm_notice("%s\t   %s", crm_str(node_uname),mon->uuid);
 		}
+
 		custom_action_order(rsc, start_key(rsc), NULL,
 				    NULL, crm_strdup(key), mon,
 				    pe_ordering_restart, data_set);
+
+		if(rsc->next_role == RSC_ROLE_MASTER) {
+			char *running_master = crm_itoa(EXECRA_RUNNING_MASTER);
+			add_hash_param(mon->extra, XML_ATTR_TE_TARGET_RC, running_master);
+			custom_action_order(
+				rsc, promote_key(rsc), NULL,
+				rsc, NULL, mon,
+				pe_ordering_optional, data_set);
+			crm_free(running_master);
+		}		
 		);	
 }
 
@@ -961,13 +997,15 @@ native_print(
 			     desc?": ":"", desc?desc:"");
 
 	} else {
-		status_print("%s%s (%s%s%s:%s):\t%s%s",
+		status_print("%s%s (%s%s%s:%s):\t%s %s%s",
 			     pre_text?pre_text:"", rsc->id,
 			     prov?prov:"", prov?"::":"",
 			     crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
 			     crm_element_value(rsc->xml, XML_ATTR_TYPE),
-			     (rsc->variant!=pe_native)?"":node==NULL?"NOT ACTIVE":node->details->uname,
+			     (rsc->variant!=pe_native)?"":role2text(rsc->role),
+			     (rsc->variant!=pe_native)?"":node!=NULL?node->details->uname:"",
 			     rsc->is_managed?"":" (unmanaged) ");
+		
 #if CURSES_ENABLED
 		if(options & pe_print_ncurses) {
 			move(-1, 0);
