@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.56 2006/03/27 05:44:24 andrew Exp $ */
+/* $Id: group.c,v 1.57 2006/03/27 09:56:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -111,7 +111,6 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		
 		crm_free(new_rsc->graph_name);
 		if(data_set->short_rsc_names) {
-			crm_err("Using %s for resource name", new_rsc->id);
 			new_rsc->graph_name = crm_strdup(new_rsc->id);
 		} else {
 			new_rsc->graph_name = crm_concat(
