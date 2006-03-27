@@ -17,8 +17,8 @@ class CIB:
         <nvpair id="c-pref-1" name="transition_idle_timeout" value="3m"/>
         <nvpair id="c-pref-2" name="symmetric_cluster" value="true"/>
         <nvpair id="c-pref-3" name="short_resource_names" value="%d"/>
-        <nvpair id="c-pref-4" name="stop_orphan_resources" value="false"/>
-        <nvpair id="c-pref-5" name="stop_orphan_actions" value="false"/>
+        <nvpair id="c-pref-4" name="stop_orphan_resources" value="true"/>
+        <nvpair id="c-pref-5" name="stop_orphan_actions" value="true"/>
         <nvpair id="c-pref-6" name="remove_after_stop" value="false"/>
         <nvpair id="c-pref-7" name="is_managed_default" value="true"/>
         <nvpair id="c-pref-8" name="no_quorum_policy" value="stop"/>
@@ -88,6 +88,7 @@ class CIB:
           <primitive id="ocf_msdummy" class="ocf" type="@libdir@/heartbeat/cts/OCFMSDummy" provider="heartbeat">
             <operations>
               <op id="ocf_msdummy_monitor" name="monitor" interval="5s" timeout="10s"/>
+              <op id="ocf_msdummy_monitor_master" name="monitor" interval="6s" timeout="10s" role="Master"/>
             </operations>
             <instance_attributes>
               <attributes>
@@ -99,23 +100,33 @@ class CIB:
 
     resource_group_template = ''' 
         <group id="group-1">
-          <primitive id="ocf_child" class="ocf" type="IPaddr" provider="heartbeat">
+          <primitive id="ocf_%s" class="ocf" type="IPaddr" provider="heartbeat">
             <operations>
-              <op id="ocf_child_monitor" name="monitor" interval="5s" timeout="20s"/>
+              <op id="ocf_chil%s_monitor" name="monitor" interval="5s" timeout="20s"/>
             </operations>
             <instance_attributes>
               <attributes>
-                <nvpair id="ocf_child_ip_1" name="ip" value="%s"/>
+                <nvpair id="ocf_%s_ip_1" name="ip" value="%s"/>
               </attributes>
             </instance_attributes>
           </primitive>
-          <primitive id="heartbeat_child" class="heartbeat" type="IPaddr" provider="heartbeat">
+          <primitive id="heartbeat_%s" class="heartbeat" type="IPaddr" provider="heartbeat">
             <operations>
-              <op id="heartbeat_child_monitor" name="monitor" interval="5s" timeout="20s"/>
+              <op id="heartbeat_%s_monitor" name="monitor" interval="5s" timeout="20s"/>
             </operations>
             <instance_attributes>
               <attributes>
-                <nvpair id="heartbeat_child_ip_1" name="1" value="%s"/>
+                <nvpair id="heartbeat_%s_ip_1" name="1" value="%s"/>
+              </attributes>
+            </instance_attributes>
+          </primitive>
+          <primitive id="ocf_%s" class="ocf" type="IPaddr" provider="heartbeat">
+            <operations>
+              <op id="ocf_%s_monitor" name="monitor" interval="5s" timeout="20s"/>
+            </operations>
+            <instance_attributes>
+              <attributes>
+                <nvpair id="ocf_%s_ip_1" name="ip" value="%s"/>
               </attributes>
             </instance_attributes>
           </primitive>
@@ -209,7 +220,8 @@ class CIB:
 
 	ip1=self.NextIP()
 	ip2=self.NextIP()
-        resources += self.resource_group_template % (ip1, ip2)
+	ip3=self.NextIP()
+        resources += self.resource_group_template % (ip1, ip1, ip1, ip1, ip2, ip2, ip2, ip2, ip3, ip3, ip3, ip3)
 
 	# lsb resource
 	resources += self.lsb_resource
