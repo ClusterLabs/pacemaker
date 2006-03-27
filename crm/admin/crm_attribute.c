@@ -1,4 +1,4 @@
-/* $Id: crm_attribute.c,v 1.9 2006/03/14 16:18:03 andrew Exp $ */
+/* $Id: crm_attribute.c,v 1.10 2006/03/27 14:53:16 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -213,19 +213,13 @@ main(int argc, char **argv)
 	}
 	
 	if(safe_str_eq(crm_system_name, "crm_master")) {
-		dest_node = getenv("OCF_RESKEY_on_node_uuid");
-		if(dest_node == NULL) {
-			struct utsname name;
-			crm_err("Could not determin node UUID."
-				"  Using local uname.");
-
-			if(uname(&name) != 0) {
-				cl_perror("uname(3) call failed");
-				return 1;
-			}
-			dest_uname = name.nodename;
-			crm_info("Detected: %s", dest_uname);
+		struct utsname name;
+		if(uname(&name) != 0) {
+			cl_perror("uname(3) call failed");
+			return 1;
 		}
+		dest_uname = name.nodename;
+		crm_info("Detected: %s", dest_uname);
 	}
 
 	if(dest_node == NULL && dest_uname != NULL) {
