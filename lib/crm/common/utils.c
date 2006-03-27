@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.36 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: utils.c,v 1.37 2006/03/27 14:54:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1003,9 +1003,8 @@ generate_op_key(const char *rsc_id, const char *op_type, int interval)
 	len += strlen(op_type);
 	len += strlen(rsc_id);
 	crm_malloc0(op_id, sizeof(char)*len);
-	if(op_id != NULL) {
-		sprintf(op_id, "%s_%s_%d", rsc_id, op_type, interval);
-	}
+	CRM_CHECK(op_id != NULL, return NULL);
+	sprintf(op_id, "%s_%s_%d", rsc_id, op_type, interval);
 	return op_id;
 }
 
