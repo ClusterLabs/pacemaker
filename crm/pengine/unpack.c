@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.169 2006/03/27 05:44:24 andrew Exp $ */
+/* $Id: unpack.c,v 1.170 2006/03/27 15:51:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1128,7 +1128,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
 static gboolean
 check_action_definition(resource_t *rsc, node_t *node, crm_data_t *xml_op,
-			  pe_working_set_t *data_set)
+			pe_working_set_t *data_set)
 {
 	int lpc = 0;
 	gboolean did_change = FALSE;
@@ -1143,7 +1143,7 @@ check_action_definition(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 					 TRUE, FALSE, data_set);
 
 	crm_data_t *params = find_xml_node(xml_op, XML_TAG_PARAMS, TRUE);
-	
+	crm_data_t *local_params = copy_xml(params);
 	
 	const char *attr_filter[] = {
 		XML_ATTR_TE_TARGET_RC,
@@ -1199,10 +1199,10 @@ check_action_definition(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	
 	for(lpc = 0; lpc < DIMOF(attr_filter); lpc++) {
 		xml_remove_prop(pnow, attr_filter[lpc]); 
-		xml_remove_prop(params, attr_filter[lpc]); 
+		xml_remove_prop(local_params, attr_filter[lpc]); 
 	}
 	
-	pdiff = diff_xml_object(params, pnow, TRUE);
+	pdiff = diff_xml_object(local_params, pnow, TRUE);
 	if(pdiff != NULL) {
 		did_change = TRUE;
 		crm_info("Parameters to %s action changed", id);
@@ -1216,6 +1216,7 @@ check_action_definition(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	crm_free(action);
 	free_xml(pnow);
 	free_xml(pdiff);
+	free_xml(local_params);
 	
 	g_hash_table_destroy(local_rsc_params);
 
@@ -1267,9 +1268,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		/* safe to ignore these */
 		return TRUE;
 	}
-	
+
 	crm_debug_2("Unpacking task %s/%s (call_id=%s, status=%s) on %s (role=%s)",
-		    rsc->id, task, task_id, task_status, node->details->uname,
+		    id, task, task_id, task_status, node->details->uname,
 		    role2text(rsc->role));
 
 	if(params != NULL) {
@@ -1379,7 +1380,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	if(params != NULL) {
 		target_rc = crm_element_value(params, XML_ATTR_TE_TARGET_RC);
 	}
-
+	
 	actual_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
 	CRM_CHECK(actual_rc != NULL, return FALSE);
 
@@ -1406,7 +1407,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		rsc->role = RSC_ROLE_MASTER;
 		if(safe_str_eq(task, CRMD_ACTION_STATUS)) {
 			crm_info("%s: resource %s is a master", id, rsc->id);
-			return TRUE;
 		}
 
 	} else if(EXECRA_FAILED_MASTER == actual_rc_i) {
