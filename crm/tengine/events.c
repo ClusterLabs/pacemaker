@@ -1,4 +1,4 @@
-/* $Id: events.c,v 1.5 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: events.c,v 1.6 2006/03/27 15:54:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -281,9 +281,9 @@ match_graph_event(
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
 			action->failed = TRUE;
-			crm_warn("Action %s on %s failed (rc: %d vs. %d): %s",
-				 update_event, event_node, target_rc, op_rc_i,
-				 op_status2text(op_status_i));
+			crm_err("Action %s on %s failed (rc: %d vs. %d): %s",
+				update_event, event_node, target_rc, op_rc_i,
+				op_status2text(op_status_i));
 			break;
 		case LRM_OP_CANCELLED:
 			/* do nothing?? */
