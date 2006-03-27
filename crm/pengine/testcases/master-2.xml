@@ -9,16 +9,16 @@
       <node id="uuid1" uname="node1" type="member">
         <instance_attributes>
           <attributes>
-            <nvpair name="master-rsc1:child_rsc1:0" value="10"/>
-            <nvpair name="master-rsc1:child_rsc1:2" value="20"/>
+            <nvpair name="master-child_rsc1:0" value="10"/>
+            <nvpair name="master-child_rsc1:2" value="20"/>
           </attributes>
         </instance_attributes>
       </node>
       <node id="uuid2" uname="node2" type="member">
         <instance_attributes>
           <attributes>
-            <nvpair name="master-rsc1:child_rsc1:1" value="10"/>
-            <nvpair name="master-rsc1:child_rsc1:3" value="20"/>
+            <nvpair name="master-child_rsc1:1" value="10"/>
+            <nvpair name="master-child_rsc1:3" value="20"/>
           </attributes>
         </instance_attributes>
       </node>

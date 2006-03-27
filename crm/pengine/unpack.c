@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.168 2006/03/26 16:54:09 andrew Exp $ */
+/* $Id: unpack.c,v 1.169 2006/03/27 05:44:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -754,7 +754,7 @@ unpack_find_resource(
 	if(is_duped_clone && rsc != NULL) {
 		crm_info("Internally renamed %s on %s to %s",
 			 rsc_id, node->details->uname, rsc->id);
-		rsc->name = rsc_id;
+/* 		rsc->name = rsc_id; */
 	}
 	return rsc;
 }
@@ -1840,8 +1840,8 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	}
 
 	custom_action_order(
-		rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
-		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
+		rsc_lh, generate_op_key(rsc_lh->graph_name, action, 0), NULL,
+		rsc_rh, generate_op_key(rsc_rh->graph_name, action_rh, 0), NULL,
 		pe_ordering_optional, data_set);
 
 	if(rsc_rh->restart_type == pe_restart_restart
@@ -1866,8 +1866,8 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	action_rh = invert_action(action_rh);
 	
 	custom_action_order(
-		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
-		rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
+		rsc_rh, generate_op_key(rsc_rh->graph_name, action_rh, 0), NULL,
+		rsc_lh, generate_op_key(rsc_lh->graph_name, action, 0), NULL,
 		pe_ordering_optional, data_set);
 
 	if(rsc_lh->restart_type == pe_restart_restart

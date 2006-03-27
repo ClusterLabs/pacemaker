@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.55 2006/03/21 17:56:35 andrew Exp $ */
+/* $Id: group.c,v 1.56 2006/03/27 05:44:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -102,32 +102,38 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		xml_obj, xml_native_rsc, XML_CIB_TAG_RESOURCE,
 
 		resource_t *new_rsc = NULL;
-		if(data_set->short_rsc_names == FALSE) {
-			set_id(xml_native_rsc, group_data->self->id, -1);
-		}
 		if(common_unpack(xml_native_rsc, &new_rsc,
-				 group_data->self->parameters, data_set)) {
-			new_rsc->parent = rsc;
-			group_data->num_children++;
-			group_data->child_list = g_list_append(
-				group_data->child_list, new_rsc);
-			
-			if(group_data->first_child == NULL) {
-				group_data->first_child = new_rsc;
-
-			} else if(group_data->colocated) {
-				rsc_colocation_new(
-					"pe_group_internal_colo", pecs_must,
-					group_data->first_child, new_rsc,
-					NULL, NULL);
-			}
-			group_data->last_child = new_rsc;
-			print_resource(LOG_DEBUG_3, "Added", new_rsc, FALSE);
-			
-		} else {
+				 group_data->self->parameters, data_set) == FALSE) {
 			pe_err("Failed unpacking resource %s",
 				crm_element_value(xml_obj, XML_ATTR_ID));
+			continue;
 		}
+		
+		crm_free(new_rsc->graph_name);
+		if(data_set->short_rsc_names) {
+			crm_err("Using %s for resource name", new_rsc->id);
+			new_rsc->graph_name = crm_strdup(new_rsc->id);
+		} else {
+			new_rsc->graph_name = crm_concat(
+				group_data->self->id, new_rsc->id, ':');
+		}
+
+		new_rsc->parent = rsc;
+		group_data->num_children++;
+		group_data->child_list = g_list_append(
+			group_data->child_list, new_rsc);
+		
+		if(group_data->first_child == NULL) {
+			group_data->first_child = new_rsc;
+			
+		} else if(group_data->colocated) {
+			rsc_colocation_new(
+				"pe_group_internal_colo", pecs_must,
+				group_data->first_child, new_rsc,
+				NULL, NULL);
+		}
+		group_data->last_child = new_rsc;
+		print_resource(LOG_DEBUG_3, "Added", new_rsc, FALSE);
 		);
 	crm_debug_3("Added %d children to resource %s...",
 		    group_data->num_children, group_data->self->id);

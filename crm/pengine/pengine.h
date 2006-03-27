@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.107 2006/03/09 21:36:38 andrew Exp $ */
+/* $Id: pengine.h,v 1.108 2006/03/27 05:44:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -274,7 +274,7 @@ struct rsc_to_node_s {
 
 struct resource_s { 
 		const char *id; 
-		const char *name; 
+		char *graph_name; 
 		crm_data_t *xml; 
 		crm_data_t *ops_xml; 
 

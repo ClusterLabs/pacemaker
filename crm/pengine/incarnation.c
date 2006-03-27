@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.75 2006/03/21 17:56:35 andrew Exp $ */
+/* $Id: incarnation.c,v 1.76 2006/03/27 05:44:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -70,6 +70,8 @@ void child_starting_constraints(
 static gboolean
 create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set) 
 {
+	char *inc_num = NULL;
+	char *inc_max = NULL;
 	resource_t *child_rsc = NULL;
 	crm_data_t * child_copy = NULL;
 	clone_variant_data_t *clone_data = NULL;
@@ -77,38 +79,39 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 
 	CRM_CHECK(clone_data->xml_obj_child != NULL, return FALSE);
 	child_copy = copy_xml(clone_data->xml_obj_child);
-	if(data_set->short_rsc_names) {
-		set_id(child_copy, NULL, sub_id);
-	} else {
-		set_id(child_copy, rsc->id, sub_id);
-	}
+	set_id(child_copy, NULL, sub_id);
 	
 	if(common_unpack(child_copy, &child_rsc,
-			 clone_data->self->parameters, data_set)) {
-		char *inc_num = crm_itoa(sub_id);
-		char *inc_max = crm_itoa(clone_data->clone_max);
-		
-		crm_debug_3("Setting clone attributes for: %s", child_rsc->id);
-		clone_data->child_list = g_list_append(
-			clone_data->child_list, child_rsc);
-
-		child_rsc->parent = rsc;
-
-		add_rsc_param(
-			child_rsc, XML_RSC_ATTR_INCARNATION, inc_num);
-		add_rsc_param(
-			child_rsc, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
-		
-		print_resource(LOG_DEBUG_3, "Added", child_rsc, FALSE);
-		
-		crm_free(inc_num);
-		crm_free(inc_max);
-		
-	} else {
+			 clone_data->self->parameters, data_set) == FALSE) {
 		pe_err("Failed unpacking resource %s",
 		       crm_element_value(child_copy, XML_ATTR_ID));
 		return FALSE;
 	}
+
+	crm_free(child_rsc->graph_name);
+	if(data_set->short_rsc_names == FALSE) {
+		child_rsc->graph_name = crm_concat(
+			clone_data->self->id, child_rsc->id, ':');
+	} else {
+		child_rsc->graph_name = crm_strdup(child_rsc->id);
+	}
+	
+	inc_num = crm_itoa(sub_id);
+	inc_max = crm_itoa(clone_data->clone_max);
+	
+	crm_debug_3("Setting clone attributes for: %s", child_rsc->id);
+	clone_data->child_list = g_list_append(
+		clone_data->child_list, child_rsc);
+	
+	child_rsc->parent = rsc;
+	
+	add_rsc_param(child_rsc, XML_RSC_ATTR_INCARNATION, inc_num);
+	add_rsc_param(child_rsc, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
+	
+	print_resource(LOG_DEBUG_3, "Added", child_rsc, FALSE);
+	
+	crm_free(inc_num);
+	crm_free(inc_max);
 	
 	return TRUE;
 }
@@ -541,7 +544,7 @@ clone_create_notifications(
 
 	/* create pre_notify */
 	notify_key = generate_notify_key(
-		clone_data->self->id, "pre", action->task);
+		clone_data->self->graph_name, "pre", action->task);
 	notify = custom_action(clone_data->self, notify_key,
 			       CRMD_ACTION_NOTIFY, NULL,
 			       action->optional, TRUE, data_set);
@@ -556,7 +559,7 @@ clone_create_notifications(
 
 	/* create pre_notify_complete */
 	notify_key = generate_notify_key(
-		clone_data->self->id, "confirmed-pre", action->task);
+		clone_data->self->graph_name, "confirmed-pre", action->task);
 	notify_complete = custom_action(clone_data->self, notify_key,
 			       CRMD_ACTION_NOTIFIED, NULL,
 			       action->optional, TRUE, data_set);
@@ -587,7 +590,7 @@ clone_create_notifications(
 	
 	/* create post_notify */
 	notify_key = generate_notify_key
-		(clone_data->self->id, "post", action->task);
+		(clone_data->self->graph_name, "post", action->task);
 	notify = custom_action(clone_data->self, notify_key,
 			       CRMD_ACTION_NOTIFY, NULL,
 			       action_complete->optional, TRUE, data_set);
@@ -608,7 +611,7 @@ clone_create_notifications(
 	
 	/* create post_notify_complete */
 	notify_key = generate_notify_key(
-		clone_data->self->id, "confirmed-post", action->task);
+		clone_data->self->graph_name, "confirmed-post", action->task);
 	notify_complete = custom_action(clone_data->self, notify_key,
 			       CRMD_ACTION_NOTIFIED, NULL,
 			       action->optional, TRUE, data_set);

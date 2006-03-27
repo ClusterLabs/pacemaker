@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.77 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: graph.c,v 1.78 2006/03/27 05:44:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -370,8 +370,8 @@ action2xml(action_t *action, gboolean as_input)
 	crm_free(action_id_s);
 	
 	if(action->rsc != NULL) {
-		crm_xml_add(
-			action_xml, XML_LRM_ATTR_RSCID, action->rsc->name);
+		crm_xml_add(action_xml, XML_LRM_ATTR_RSCID,
+			    action->rsc->graph_name);
 	}
 	crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
 	crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, action->uuid);
@@ -403,7 +403,8 @@ action2xml(action_t *action, gboolean as_input)
 			action_xml, crm_element_name(action->rsc->xml));
 
 		copy_in_properties(rsc_xml, action->rsc->xml);
-
+		crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->graph_name);
+		
 		args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
 		g_hash_table_foreach(action->extra, hash2field, args_xml);
 		

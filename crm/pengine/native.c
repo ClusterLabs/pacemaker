@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.117 2006/03/26 16:00:48 andrew Exp $ */
+/* $Id: native.c,v 1.118 2006/03/27 05:44:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -420,7 +420,7 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 		}
 		
 		
-		key = generate_op_key(rsc->id, name, interval_ms);
+		key = generate_op_key(rsc->graph_name, name, interval_ms);
 		if(start != NULL) {
 			crm_debug_3("Marking %s %s due to %s",
 				    key, start->optional?"optional":"manditory",
@@ -1626,7 +1626,7 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 	}
 
 	next_node = rsc->color->details->chosen_node;
-	op_key = generate_op_key(rsc->id, op->task, 0);
+	op_key = generate_op_key(rsc->graph_name, op->task, 0);
 	possible_matches = find_actions(rsc->actions, op_key, NULL);
 	
 	crm_debug_2("Creating notificaitons for: %s (%s->%s)",
@@ -1704,7 +1704,7 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	crm_debug_2("Creating actions for %s: %s (%s-%s)",
 		    op->uuid, rsc->id, value, task);
 	
-	key = generate_notify_key(rsc->id, value, task);
+	key = generate_notify_key(rsc->graph_name, value, task);
 	trigger = custom_action(rsc, key, op->task, node,
 				op->optional, TRUE, data_set);
 	g_hash_table_foreach(op->extra, dup_attr, trigger->extra);
@@ -1864,16 +1864,16 @@ DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 
 	if(rsc->failed) {
 		crm_debug_2("Resource %s not deleted from %s: failed",
-			    rsc->name, node->details->uname);
+			    rsc->id, node->details->uname);
 		return FALSE;
 		
 	} else if(node == NULL) {
-		crm_debug_2("Resource %s not deleted: NULL node", rsc->name);
+		crm_debug_2("Resource %s not deleted: NULL node", rsc->id);
 		return FALSE;
 		
 	} else if(node->details->unclean || node->details->online == FALSE) {
 		crm_debug_2("Resource %s not deleted from %s: unrunnable",
-			    rsc->name, node->details->uname);
+			    rsc->id, node->details->uname);
 		return FALSE;
 	}
 	
@@ -1881,7 +1881,7 @@ DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 	start = start_key(rsc);
 
 	crm_notice("Removing %s from %s",
-		 rsc->name, node->details->uname);
+		 rsc->id, node->details->uname);
 	
 	delete = delete_action(rsc, node);
 	
@@ -1986,7 +1986,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	}
 	
 	target_rc = crm_itoa(EXECRA_NOT_RUNNING);
-	key = generate_op_key(rsc->id, CRMD_ACTION_STATUS, 0);
+	key = generate_op_key(rsc->graph_name, CRMD_ACTION_STATUS, 0);
 	probe = custom_action(rsc, key, CRMD_ACTION_STATUS, node,
 			      FALSE, TRUE, data_set);
 	

@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.75 2006/03/26 16:04:50 andrew Exp $ */
+/* $Id: complex.c,v 1.76 2006/03/27 05:44:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -213,7 +213,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	}
 	
 	(*rsc)->id   = id;
-	(*rsc)->name = id;
+	(*rsc)->graph_name = crm_strdup(id);
 	(*rsc)->xml  = xml_obj;
 	(*rsc)->ops_xml = find_xml_node(xml_obj, "operations", FALSE);
 	(*rsc)->variant = get_resource_type(crm_element_name(xml_obj));
@@ -412,6 +412,7 @@ void common_free(resource_t *rsc)
 	pe_free_shallow_adv(rsc->candidate_colors, TRUE);
 	pe_free_shallow_adv(rsc->rsc_location, FALSE);
 	pe_free_shallow_adv(rsc->allowed_nodes, TRUE);
+	crm_free(rsc->graph_name);
 	crm_free(rsc->variant_opaque);
 	crm_free(rsc);
 	crm_debug_5("Resource freed");
