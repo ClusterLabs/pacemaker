@@ -1,0 +1,36 @@
+ <transition_graph global_timeout="3m" transition_id="0">
+   <synapse id="0" priority="1000">
+     <action_set>
+       <rsc_op id="56" rsc_id="ocf_msdummy:0" operation="promote" operation_key="ocf_msdummy:0_promote_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+         <primitive id="ocf_msdummy:0" class="ocf" type="/usr/lib/heartbeat/cts/OCFMSDummy" provider="heartbeat"/>
+         <attributes crm_feature_set="1.0.4" clone="0" clone_max="8" logfile="/var/log/cts_ocfdummy.log" master_max="4" master_node_max="1" clone_node_max="2"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="75" rsc_id="master_rsc_1" operation="promote" operation_key="master_rsc_1_promote_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="1">
+     <action_set>
+       <pseudo_event id="75" rsc_id="master_rsc_1" operation="promote" operation_key="master_rsc_1_promote_0">
+         <attributes crm_feature_set="1.0.4"/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="2">
+     <action_set>
+       <pseudo_event id="76" rsc_id="master_rsc_1" operation="promoted" operation_key="master_rsc_1_promoted_0">
+         <attributes crm_feature_set="1.0.4"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="56" rsc_id="ocf_msdummy:0" operation="promote" operation_key="ocf_msdummy:0_promote_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+       </trigger>
+     </inputs>
+   </synapse>
+ </transition_graph>
+

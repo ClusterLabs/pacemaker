@@ -1,0 +1,565 @@
+ <cib cib_feature_revision="1" have_quorum="true" generated="true" admin_epoch="0" epoch="4" num_updates="125" ccm_transition="4" num_peers="4" crm_feature_set="1.0.4" debug_source="create_node_entry" dc_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+   <configuration>
+     <crm_config>
+       <nvpair id="c-pref-1" name="transition_idle_timeout" value="3m"/>
+       <nvpair id="c-pref-2" name="symmetric_cluster" value="true"/>
+       <nvpair id="c-pref-3" name="short_resource_names" value="1"/>
+       <nvpair id="c-pref-4" name="stop_orphan_resources" value="false"/>
+       <nvpair id="c-pref-5" name="stop_orphan_actions" value="false"/>
+       <nvpair id="c-pref-6" name="remove_after_stop" value="false"/>
+       <nvpair id="c-pref-7" name="is_managed_default" value="true"/>
+       <nvpair id="c-pref-8" name="no_quorum_policy" value="stop"/>
+       <nvpair id="c-pref-9" name="default_resource_stickiness" value="0"/>
+       <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>
+     </crm_config>
+     <nodes>
+       <node id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" uname="c001n08" type="normal">
+         <instance_attributes id="master-6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+           <attributes>
+             <nvpair id="master-ocf_msdummy:0-6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" name="master-ocf_msdummy:0" value="1000"/>
+           </attributes>
+         </instance_attributes>
+       </node>
+       <node id="5d9a8c11-8684-43ea-9180-5e221530c193" uname="c001n03" type="normal"/>
+       <node id="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" uname="c001n01" type="normal"/>
+       <node id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" type="normal"/>
+     </nodes>
+     <resources>
+       <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
+         <operations>
+           <op id="DcIPaddr-1" name="monitor" interval="5s" timeout="20s"/>
+           <op id="DcIPaddr-2" name="start" timeout="40s"/>
+         </operations>
+         <instance_attributes>
+           <attributes>
+             <nvpair id="DcIPaddr-1" name="ip" value="192.168.100.180"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <group id="group-1">
+         <primitive id="ocf_child" class="ocf" type="IPaddr" provider="heartbeat">
+           <operations>
+             <op id="ocf_child_monitor" name="monitor" interval="5s" timeout="20s"/>
+           </operations>
+           <instance_attributes>
+             <attributes>
+               <nvpair id="ocf_child_ip_1" name="ip" value="192.168.100.181"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+         <primitive id="heartbeat_child" class="heartbeat" type="IPaddr" provider="heartbeat">
+           <operations>
+             <op id="heartbeat_child_monitor" name="monitor" interval="5s" timeout="20s"/>
+           </operations>
+           <instance_attributes>
+             <attributes>
+               <nvpair id="heartbeat_child_ip_1" name="1" value="192.168.100.182"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+       </group>
+       <primitive id="lsb_dummy" class="lsb" type="/usr/lib/heartbeat/cts/LSBDummy" provider="heartbeat">
+         <operations>
+           <op id="ocf_lsb_monitor" name="monitor" interval="5s" timeout="20s"/>
+         </operations>
+       </primitive>
+       <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
+         <operations>
+           <op id="rsc_c001n08-1" name="monitor" interval="5s" timeout="20s"/>
+           <op id="rsc_c001n08-2" name="start" timeout="40s"/>
+         </operations>
+         <instance_attributes>
+           <attributes>
+             <nvpair id="rsc_c001n08-1" name="ip" value="192.168.100.183"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
+         <operations>
+           <op id="rsc_c001n02-1" name="monitor" interval="5s" timeout="20s"/>
+           <op id="rsc_c001n02-2" name="start" timeout="40s"/>
+         </operations>
+         <instance_attributes>
+           <attributes>
+             <nvpair id="rsc_c001n02-1" name="ip" value="192.168.100.184"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
+         <operations>
+           <op id="rsc_c001n03-1" name="monitor" interval="5s" timeout="20s"/>
+           <op id="rsc_c001n03-2" name="start" timeout="40s"/>
+         </operations>
+         <instance_attributes>
+           <attributes>
+             <nvpair id="rsc_c001n03-1" name="ip" value="192.168.100.185"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive id="rsc_c001n01" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
+         <operations>
+           <op id="rsc_c001n01-1" name="monitor" interval="5s" timeout="20s"/>
+           <op id="rsc_c001n01-2" name="start" timeout="40s"/>
+         </operations>
+         <instance_attributes>
+           <attributes>
+             <nvpair id="rsc_c001n01-1" name="ip" value="192.168.100.186"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <clone id="DoFencing">
+         <instance_attributes>
+           <attributes>
+             <nvpair id="DoFencing-1" name="clone_max" value="4"/>
+             <nvpair id="DoFencing-2" name="clone_node_max" value="1"/>
+           </attributes>
+         </instance_attributes>
+         <primitive id="child_DoFencing" class="stonith" type="ssh">
+           <operations>
+             <op id="DoFencing-1" name="monitor" interval="20s" timeout="40s" prereq="nothing"/>
+             <op id="DoFencing-2" name="start" timeout="20s" prereq="nothing"/>
+           </operations>
+           <instance_attributes>
+             <attributes>
+               <nvpair id="child_DoFencing-1" name="hostlist" value="c001n08 c001n02 c001n03 c001n01 "/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+       </clone>
+       <master_slave id="master_rsc_1">
+         <instance_attributes>
+           <attributes>
+             <nvpair id="clone_max_1" name="clone_max" value="8"/>
+             <nvpair id="clone_node_max_2" name="clone_node_max" value="2"/>
+             <nvpair id="master_max_3" name="master_max" value="4"/>
+             <nvpair id="master_node_max_4" name="master_node_max" value="1"/>
+           </attributes>
+         </instance_attributes>
+         <primitive id="ocf_msdummy" class="ocf" type="/usr/lib/heartbeat/cts/OCFMSDummy" provider="heartbeat">
+           <operations>
+             <op id="ocf_msdummy_monitor" name="monitor" interval="5s" timeout="10s"/>
+           </operations>
+           <instance_attributes>
+             <attributes>
+               <nvpair id="logfile_id_1" name="logfile" value="/var/log/cts_ocfdummy.log"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+       </master_slave>
+     </resources>
+     <constraints>
+       <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
+         <rule id="cant_run_DcIPaddr" score="-INFINITY" boolean_op="and">
+           <expression id="dc_ip_expr" attribute="#is_dc" operation="eq" value="false"/>
+         </rule>
+       </rsc_location>
+       <rsc_location id="run_rsc_c001n08" rsc="rsc_c001n08">
+         <rule id="pref_run_rsc_c001n08" score="100" boolean_op="and">
+           <expression id="rsc_c001n08_loc_expr" attribute="#uname" operation="eq" value="c001n08"/>
+         </rule>
+       </rsc_location>
+       <rsc_location id="run_rsc_c001n02" rsc="rsc_c001n02">
+         <rule id="pref_run_rsc_c001n02" score="100" boolean_op="and">
+           <expression id="rsc_c001n02_loc_expr" attribute="#uname" operation="eq" value="c001n02"/>
+         </rule>
+       </rsc_location>
+       <rsc_location id="run_rsc_c001n03" rsc="rsc_c001n03">
+         <rule id="pref_run_rsc_c001n03" score="100" boolean_op="and">
+           <expression id="rsc_c001n03_loc_expr" attribute="#uname" operation="eq" value="c001n03"/>
+         </rule>
+       </rsc_location>
+       <rsc_location id="run_rsc_c001n01" rsc="rsc_c001n01">
+         <rule id="pref_run_rsc_c001n01" score="100" boolean_op="and">
+           <expression id="rsc_c001n01_loc_expr" attribute="#uname" operation="eq" value="c001n01"/>
+         </rule>
+       </rsc_location>
+     </constraints>
+   </configuration>
+   <status>
+     <node_state id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" uname="c001n08" in_ccm="true" origin="do_lrm_query" crmd="online" shutdown="0" clear_shutdown="true" join="member" ha="active" expected="member">
+       <transient_attributes id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+         <instance_attributes id="crmd-transient-6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+           <attributes>
+             <nvpair id="lrm-probe-6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" name="probe_complete" value="true"/>
+           </attributes>
+         </instance_attributes>
+       </transient_attributes>
+       <lrm>
+         <lrm_resources>
+           <lrm_resource id="rsc_c001n08" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="rsc_c001n08_start_0" operation="start" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="16" rc_code="0" op_status="0">
+               <parameters is_managed="1" ip="192.168.100.183" timeout="40000" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="rsc_c001n08_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="20" rc_code="0" op_status="0">
+               <parameters is_managed="1" ip="192.168.100.183" timeout="20000" crm_feature_set="1.0.4" interval="5000"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="lsb_dummy" type="/usr/lib/heartbeat/cts/LSBDummy" class="lsb" provider="heartbeat">
+             <lrm_rsc_op id="lsb_dummy_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="0:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;0:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="5" rc_code="7" op_status="4">
+               <parameters te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_msdummy:3" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_msdummy:3_start_0" operation="start" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="18" rc_code="0" op_status="0">
+               <parameters clone="3" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="ocf_msdummy:3_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="22" rc_code="0" op_status="0">
+               <parameters clone="3" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="rsc_c001n01" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="rsc_c001n01_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="0:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;0:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="9" rc_code="7" op_status="4">
+               <parameters is_managed="1" ip="192.168.100.186" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="heartbeat_child" type="IPaddr" class="heartbeat" provider="heartbeat">
+             <lrm_rsc_op id="heartbeat_child_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="0:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;0:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="4" rc_code="7" op_status="4">
+               <parameters 1="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="rsc_c001n02" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="rsc_c001n02_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="0:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;0:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="7" rc_code="7" op_status="4">
+               <parameters is_managed="1" ip="192.168.100.184" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="child_DoFencing:0" type="ssh" class="stonith">
+             <lrm_rsc_op id="child_DoFencing:0_start_0" operation="start" origin="build_active_RAs" transition_key="0:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;0:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="13" rc_code="0" op_status="0">
+               <parameters clone="0" clone_max="4" timeout="20000" hostlist="c001n08 c001n02 c001n03 c001n01 " crm_feature_set="1.0.4" clone_node_max="1"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="child_DoFencing:0_monitor_20000" operation="monitor" origin="build_active_RAs" transition_key="1:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;1:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="14" rc_code="0" op_status="0">
+               <parameters clone="0" clone_max="4" timeout="40000" hostlist="c001n08 c001n02 c001n03 c001n01 " crm_feature_set="1.0.4" interval="20000" clone_node_max="1"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_child" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_child_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="0:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;0:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="3" rc_code="7" op_status="4">
+               <parameters ip="192.168.100.181" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="rsc_c001n03" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="rsc_c001n03_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="0:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;0:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="8" rc_code="7" op_status="4">
+               <parameters is_managed="1" ip="192.168.100.185" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_msdummy:0_start_0" operation="start" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="17" rc_code="0" op_status="0">
+               <parameters clone="0" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="ocf_msdummy:0_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="21" rc_code="0" op_status="0">
+               <parameters clone="0" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="DcIPaddr" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="DcIPaddr_start_0" operation="start" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="15" rc_code="0" op_status="0">
+               <parameters is_managed="1" ip="192.168.100.180" timeout="40000" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="19" rc_code="0" op_status="0">
+               <parameters is_managed="1" ip="192.168.100.180" timeout="20000" crm_feature_set="1.0.4" interval="5000"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_msdummy:1" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_msdummy:1_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="0:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;0:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="12" rc_code="7" op_status="4">
+               <parameters clone="1" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+         </lrm_resources>
+       </lrm>
+     </node_state>
+     <node_state id="5d9a8c11-8684-43ea-9180-5e221530c193" uname="c001n03" crmd="online" origin="do_lrm_query" shutdown="0" clear_shutdown="true" in_ccm="true" join="member" ha="active" expected="member">
+       <transient_attributes id="5d9a8c11-8684-43ea-9180-5e221530c193">
+         <instance_attributes id="crmd-transient-5d9a8c11-8684-43ea-9180-5e221530c193">
+           <attributes>
+             <nvpair id="lrm-probe-5d9a8c11-8684-43ea-9180-5e221530c193" name="probe_complete" value="true"/>
+           </attributes>
+         </instance_attributes>
+       </transient_attributes>
+       <lrm>
+         <lrm_resources>
+           <lrm_resource id="rsc_c001n08" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="rsc_c001n08_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="2:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;2:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="6" rc_code="7" op_status="4">
+               <parameters is_managed="1" ip="192.168.100.183" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="lsb_dummy" type="/usr/lib/heartbeat/cts/LSBDummy" class="lsb" provider="heartbeat">
+             <lrm_rsc_op id="lsb_dummy_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="2:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;2:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="5" rc_code="7" op_status="4">
+               <parameters te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_msdummy:4" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_msdummy:4_start_0" operation="start" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="18" rc_code="0" op_status="0">
+               <parameters clone="4" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="ocf_msdummy:4_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="23" rc_code="0" op_status="0">
+               <parameters clone="4" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="rsc_c001n01" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="rsc_c001n01_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="2:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;2:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="9" rc_code="7" op_status="4">
+               <parameters is_managed="1" ip="192.168.100.186" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="heartbeat_child" type="IPaddr" class="heartbeat" provider="heartbeat">
+             <lrm_rsc_op id="heartbeat_child_start_0" operation="start" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="20" rc_code="0" op_status="0">
+               <parameters 1="192.168.100.182" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="heartbeat_child_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="24" rc_code="0" op_status="0">
+               <parameters timeout="20000" 1="192.168.100.182" crm_feature_set="1.0.4" interval="5000"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="rsc_c001n02" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="rsc_c001n02_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="2:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;2:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="7" rc_code="7" op_status="4">
+               <parameters is_managed="1" ip="192.168.100.184" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="child_DoFencing:0" type="ssh" class="stonith">
+             <lrm_rsc_op id="child_DoFencing:0_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="2:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;2:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="10" rc_code="7" op_status="4">
+               <parameters clone="0" clone_max="4" te-target-rc="7" hostlist="c001n08 c001n02 c001n03 c001n01 " lrm-is-probe="true" crm_feature_set="1.0.4" clone_node_max="1"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_child" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_child_start_0" operation="start" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="15" rc_code="0" op_status="0">
+               <parameters ip="192.168.100.181" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="ocf_child_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="19" rc_code="0" op_status="0">
+               <parameters ip="192.168.100.181" timeout="20000" crm_feature_set="1.0.4" interval="5000"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="rsc_c001n03" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="rsc_c001n03_start_0" operation="start" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="16" rc_code="0" op_status="0">
+               <parameters is_managed="1" ip="192.168.100.185" timeout="40000" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="rsc_c001n03_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="21" rc_code="0" op_status="0">
+               <parameters is_managed="1" ip="192.168.100.185" timeout="20000" crm_feature_set="1.0.4" interval="5000"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="child_DoFencing:1" type="ssh" class="stonith">
+             <lrm_rsc_op id="child_DoFencing:1_start_0" operation="start" origin="build_active_RAs" transition_key="2:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;2:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="13" rc_code="0" op_status="0">
+               <parameters clone="1" clone_max="4" timeout="20000" hostlist="c001n08 c001n02 c001n03 c001n01 " crm_feature_set="1.0.4" clone_node_max="1"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="child_DoFencing:1_monitor_20000" operation="monitor" origin="build_active_RAs" transition_key="3:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;3:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="14" rc_code="0" op_status="0">
+               <parameters clone="1" clone_max="4" timeout="40000" hostlist="c001n08 c001n02 c001n03 c001n01 " crm_feature_set="1.0.4" interval="20000" clone_node_max="1"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_msdummy:0_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="2:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;2:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="11" rc_code="7" op_status="4">
+               <parameters clone="0" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="DcIPaddr" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="DcIPaddr_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="2:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;2:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="2" rc_code="7" op_status="4">
+               <parameters is_managed="1" ip="192.168.100.180" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_msdummy:1" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_msdummy:1_start_0" operation="start" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="17" rc_code="0" op_status="0">
+               <parameters clone="1" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="ocf_msdummy:1_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="22" rc_code="0" op_status="0">
+               <parameters clone="1" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+         </lrm_resources>
+       </lrm>
+     </node_state>
+     <node_state id="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" uname="c001n01" crmd="online" origin="do_update_resource" shutdown="0" clear_shutdown="true" in_ccm="true" join="member" ha="active" expected="member">
+       <transient_attributes id="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
+         <instance_attributes id="crmd-transient-de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
+           <attributes>
+             <nvpair id="lrm-probe-de937e3d-0309-4b5d-b85c-f96edc1ed8e3" name="probe_complete" value="true"/>
+           </attributes>
+         </instance_attributes>
+       </transient_attributes>
+       <lrm>
+         <lrm_resources>
+           <lrm_resource id="rsc_c001n08" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="rsc_c001n08_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="6" rc_code="7" op_status="4">
+               <parameters is_managed="1" ip="192.168.100.183" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_msdummy:2" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_msdummy:2_start_0" operation="start" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="17" rc_code="0" op_status="0">
+               <parameters clone="2" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="ocf_msdummy:2_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="23" rc_code="0" op_status="0">
+               <parameters clone="2" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="lsb_dummy" type="/usr/lib/heartbeat/cts/LSBDummy" class="lsb" provider="heartbeat">
+             <lrm_rsc_op id="lsb_dummy_start_0" operation="start" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="13" rc_code="0" op_status="0">
+               <parameters crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="lsb_dummy_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="19" rc_code="0" op_status="0">
+               <parameters timeout="20000" crm_feature_set="1.0.4" interval="5000"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_msdummy:5" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_msdummy:5_start_0" operation="start" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="18" rc_code="0" op_status="0">
+               <parameters clone="5" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="ocf_msdummy:5_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="24" rc_code="0" op_status="0">
+               <parameters clone="5" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="rsc_c001n01" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="rsc_c001n01_start_0" operation="start" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="15" rc_code="0" op_status="0">
+               <parameters is_managed="1" ip="192.168.100.186" timeout="40000" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="rsc_c001n01_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="21" rc_code="0" op_status="0">
+               <parameters is_managed="1" ip="192.168.100.186" timeout="20000" crm_feature_set="1.0.4" interval="5000"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="heartbeat_child" type="IPaddr" class="heartbeat" provider="heartbeat">
+             <lrm_rsc_op id="heartbeat_child_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="4" rc_code="7" op_status="4">
+               <parameters 1="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="rsc_c001n02" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="rsc_c001n02_start_0" operation="start" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="14" rc_code="0" op_status="0">
+               <parameters is_managed="1" ip="192.168.100.184" timeout="40000" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="rsc_c001n02_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="20" rc_code="0" op_status="0">
+               <parameters is_managed="1" ip="192.168.100.184" timeout="20000" crm_feature_set="1.0.4" interval="5000"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="rsc_c001n02_stop_0" operation="stop" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="stopped" call_id="26" rc_code="0" op_status="0"/>
+           </lrm_resource>
+           <lrm_resource id="child_DoFencing:0" type="ssh" class="stonith">
+             <lrm_rsc_op id="child_DoFencing:0_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="10" rc_code="7" op_status="4">
+               <parameters clone="0" clone_max="4" te-target-rc="7" hostlist="c001n08 c001n02 c001n03 c001n01 " lrm-is-probe="true" crm_feature_set="1.0.4" clone_node_max="1"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_child" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_child_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="3" rc_code="7" op_status="4">
+               <parameters ip="192.168.100.181" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="rsc_c001n03" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="rsc_c001n03_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="8" rc_code="7" op_status="4">
+               <parameters is_managed="1" ip="192.168.100.185" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="child_DoFencing:2" type="ssh" class="stonith">
+             <lrm_rsc_op id="child_DoFencing:2_start_0" operation="start" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="16" rc_code="0" op_status="0">
+               <parameters clone="2" clone_max="4" timeout="20000" hostlist="c001n08 c001n02 c001n03 c001n01 " crm_feature_set="1.0.4" clone_node_max="1"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="child_DoFencing:2_monitor_20000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="22" rc_code="0" op_status="0">
+               <parameters clone="2" clone_max="4" timeout="40000" hostlist="c001n08 c001n02 c001n03 c001n01 " crm_feature_set="1.0.4" interval="20000" clone_node_max="1"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_msdummy:0_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="11" rc_code="7" op_status="4">
+               <parameters clone="0" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="DcIPaddr" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="DcIPaddr_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="2" rc_code="7" op_status="4">
+               <parameters is_managed="1" ip="192.168.100.180" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_msdummy:1" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_msdummy:1_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="12" rc_code="7" op_status="4">
+               <parameters clone="1" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+         </lrm_resources>
+       </lrm>
+     </node_state>
+     <node_state id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" crmd="online" origin="do_update_resource" shutdown="0" clear_shutdown="true" in_ccm="true" join="member" ha="active" expected="member">
+       <lrm>
+         <lrm_resources>
+           <lrm_resource id="child_DoFencing:0" type="ssh" class="stonith">
+             <lrm_rsc_op id="child_DoFencing:0_monitor_0" operation="monitor" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="10" rc_code="7" op_status="4">
+               <parameters clone="0" clone_max="4" te-target-rc="7" hostlist="c001n08 c001n02 c001n03 c001n01 " lrm-is-probe="true" crm_feature_set="1.0.4" clone_node_max="1"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="DcIPaddr" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="DcIPaddr_monitor_0" operation="monitor" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="2" rc_code="7" op_status="4">
+               <parameters is_managed="1" ip="192.168.100.180" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="rsc_c001n03" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="rsc_c001n03_monitor_0" operation="monitor" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="8" rc_code="7" op_status="4">
+               <parameters is_managed="1" ip="192.168.100.185" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="rsc_c001n08" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="rsc_c001n08_monitor_0" operation="monitor" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="6" rc_code="7" op_status="4">
+               <parameters is_managed="1" ip="192.168.100.183" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="lsb_dummy" type="/usr/lib/heartbeat/cts/LSBDummy" class="lsb" provider="heartbeat">
+             <lrm_rsc_op id="lsb_dummy_monitor_0" operation="monitor" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="5" rc_code="7" op_status="4">
+               <parameters te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="rsc_c001n02" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="rsc_c001n02_monitor_0" operation="monitor" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="7" rc_code="7" op_status="4">
+               <parameters is_managed="1" ip="192.168.100.184" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="rsc_c001n02_start_0" operation="start" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="13" rc_code="0" op_status="0">
+               <parameters is_managed="1" ip="192.168.100.184" timeout="40000" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="rsc_c001n02_monitor_5000" operation="monitor" origin="do_update_resource" transition_key="7:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;7:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="17" rc_code="0" op_status="0">
+               <parameters is_managed="1" ip="192.168.100.184" timeout="20000" crm_feature_set="1.0.4" interval="5000"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="rsc_c001n01" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="rsc_c001n01_monitor_0" operation="monitor" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="9" rc_code="7" op_status="4">
+               <parameters is_managed="1" ip="192.168.100.186" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_child" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_child_monitor_0" operation="monitor" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="3" rc_code="7" op_status="4">
+               <parameters ip="192.168.100.181" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="heartbeat_child" type="IPaddr" class="heartbeat" provider="heartbeat">
+             <lrm_rsc_op id="heartbeat_child_monitor_0" operation="monitor" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="4" rc_code="7" op_status="4">
+               <parameters 1="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_msdummy:1" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_msdummy:1_monitor_0" operation="monitor" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="12" rc_code="7" op_status="4">
+               <parameters clone="1" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_msdummy:0_monitor_0" operation="monitor" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="11" rc_code="7" op_status="4">
+               <parameters clone="0" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="child_DoFencing:3" type="ssh" class="stonith">
+             <lrm_rsc_op id="child_DoFencing:3_start_0" operation="start" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="14" rc_code="0" op_status="0">
+               <parameters clone="3" clone_max="4" timeout="20000" hostlist="c001n08 c001n02 c001n03 c001n01 " crm_feature_set="1.0.4" clone_node_max="1"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="child_DoFencing:3_monitor_20000" operation="monitor" origin="do_update_resource" transition_key="7:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;7:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="18" rc_code="0" op_status="0">
+               <parameters clone="3" clone_max="4" timeout="40000" hostlist="c001n08 c001n02 c001n03 c001n01 " crm_feature_set="1.0.4" interval="20000" clone_node_max="1"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_msdummy:6" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_msdummy:6_start_0" operation="start" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="15" rc_code="0" op_status="0">
+               <parameters clone="6" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="ocf_msdummy:6_monitor_5000" operation="monitor" origin="do_update_resource" transition_key="7:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;7:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="19" rc_code="0" op_status="0">
+               <parameters clone="6" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+           <lrm_resource id="ocf_msdummy:7" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="ocf_msdummy:7_start_0" operation="start" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="16" rc_code="0" op_status="0">
+               <parameters clone="7" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+             <lrm_rsc_op id="ocf_msdummy:7_monitor_5000" operation="monitor" origin="do_update_resource" transition_key="7:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;7:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="20" rc_code="0" op_status="0">
+               <parameters clone="7" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
+             </lrm_rsc_op>
+           </lrm_resource>
+         </lrm_resources>
+       </lrm>
+       <transient_attributes id="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+         <instance_attributes id="crmd-transient-e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+           <attributes>
+             <nvpair id="lrm-probe-e9bdfde9-01b0-421f-acd8-8a65a53e775f" name="probe_complete" value="true"/>
+           </attributes>
+         </instance_attributes>
+       </transient_attributes>
+     </node_state>
+   </status>
+ </cib>
+
