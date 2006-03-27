@@ -69,15 +69,15 @@ class Stonithd(ResetMechanism):
         self.sttype = sttype
         self.nodes = nodes
 
-        self.query_cmd_pat   = '/usr/lib/heartbeat/stonithdtest/apitest 0 %s 4000 0'
-        self.reset_cmd_pat   = '/usr/lib/heartbeat/stonithdtest/apitest 1 %s 4000 0'
-        self.poweron_cmd_pat = '/usr/lib/heartbeat/stonithdtest/apitest 2 %s 4000 0'
-        self.poweroff_cmd_pat= '/usr/lib/heartbeat/stonithdtest/apitest 3 %s 4000 0'
+        self.query_cmd_pat   = '@libdir@/heartbeat/stonithdtest/apitest 0 %s 4000 0'
+        self.reset_cmd_pat   = '@libdir@/heartbeat/stonithdtest/apitest 1 %s 4000 0'
+        self.poweron_cmd_pat = '@libdir@/heartbeat/stonithdtest/apitest 2 %s 4000 0'
+        self.poweroff_cmd_pat= '@libdir@/heartbeat/stonithdtest/apitest 3 %s 4000 0'
 
-        self.lrmd_add_pat    = '/usr/lib/heartbeat/lrmadmin -A %s stonith ' + sttype + ' NULL hostlist=%s'
-        self.lrmd_start_pat  = '/usr/lib/heartbeat/lrmadmin -E %s start 0 0 EVERYTIME'
-        self.lrmd_stop_pat   = '/usr/lib/heartbeat/lrmadmin -E %s stop 0 0 EVERYTIME'
-        self.lrmd_del_pat    = '/usr/lib/heartbeat/lrmadmin -D %s'
+        self.lrmd_add_pat    = '@libdir@/heartbeat/lrmadmin -A %s stonith ' + sttype + ' NULL hostlist=%s'
+        self.lrmd_start_pat  = '@libdir@/heartbeat/lrmadmin -E %s start 0 0 EVERYTIME'
+        self.lrmd_stop_pat   = '@libdir@/heartbeat/lrmadmin -E %s stop 0 0 EVERYTIME'
+        self.lrmd_del_pat    = '@libdir@/heartbeat/lrmadmin -D %s'
 
         self.rsc_id          = 'my_stonithd_id'
 
