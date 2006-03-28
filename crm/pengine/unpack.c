@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.170 2006/03/27 15:51:58 andrew Exp $ */
+/* $Id: unpack.c,v 1.171 2006/03/28 13:05:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1164,6 +1164,9 @@ check_action_definition(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		XML_RSC_ATTR_INCARNATION_NODEMAX,
 		XML_RSC_ATTR_MASTER_MAX,
 		XML_RSC_ATTR_MASTER_NODEMAX,
+
+/* ignore master fields */
+		"crm_role",
 		
 /* ignore notify fields */
  		"notify_stop_resource",
