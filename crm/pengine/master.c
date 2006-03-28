@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.10 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: master.c,v 1.11 2006/03/28 12:03:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -377,6 +377,8 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 			default:
 				CRM_CHECK(FALSE/* unhandled */, ;);
 		}
+		add_hash_param(child_rsc->parameters,
+			       "crm_role", role2text(child_rsc->next_role));
 		);
 	crm_info("Promoted %d (of %d) slaves to master", promoted, master_max);
 	g_hash_table_destroy(master_hash);
