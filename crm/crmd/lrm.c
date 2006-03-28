@@ -1336,20 +1336,21 @@ copy_lrm_rsc(const lrm_rsc_t *rsc)
 static void
 update_failcount(lrm_op_t *op) 
 {
-	const char *probe_s = NULL;
 	int op_status = LRM_OP_DONE;
 	const char *target_rc_s = NULL;
 
 	CRM_DEV_ASSERT(op != NULL);
-	if(crm_is_true(probe_s)) {
+
+	if(op->interval <= 0) {
 		return;
 	}	
-	
+/*	
+	const char *probe_s = NULL;
 	probe_s = g_hash_table_lookup(op->params, XML_ATTR_LRM_PROBE);
 	if(crm_is_true(probe_s)) {
 		return;
 	}
-
+*/
 	CRM_DEV_ASSERT(op->op_status != LRM_OP_PENDING);
 	if(crm_assert_failed) {
 		return;
@@ -1525,7 +1526,9 @@ do_lrm_event(long long action,
 				      crm_str(op->rsc_id),
 				      op_status2text(op->op_status),
 				      op->rc, execra_code2string(op->rc));
-			crm_debug("Result: %s", op->output);
+			if(op->output != NULL) {
+				crm_debug("Result: %s", op->output);
+			}
 			break;
 		case LRM_OP_CANCELLED:
 			crm_warn("LRM operation (%d) %s_%d on %s %s",
