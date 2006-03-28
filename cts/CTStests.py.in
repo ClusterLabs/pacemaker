@@ -1625,7 +1625,8 @@ class ResourceRecover(CTSTest):
 #	
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-        return [ """ERROR: .* LRM operation.*monitor.* on %s Error: not running""" % self.rid
+        return [ """ERROR: .* Action %s_monitor_.* on .* failed .*rc: 0 vs. 7.*: Error""" % self.rid,
+		 """Updating failcount for """
 		 ]
 
 AllTestClasses.append(ResourceRecover)
