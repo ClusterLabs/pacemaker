@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.120 2006/03/27 15:53:10 andrew Exp $ */
+/* $Id: native.c,v 1.121 2006/03/28 06:12:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1977,10 +1977,10 @@ DemoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 {
 	crm_debug_2("Executing: %s", rsc->id);
 
-	CRM_CHECK(rsc->next_role == RSC_ROLE_SLAVE, return FALSE);
+/* 	CRM_CHECK(rsc->next_role == RSC_ROLE_SLAVE, return FALSE); */
 	slist_iter(
 		current, node_t, rsc->running_on, lpc,
-		crm_notice("%s\tDeomote %s", next->details->uname, rsc->id);
+		crm_notice("%s\tDeomote %s", current->details->uname, rsc->id);
 		demote_action(rsc, current, FALSE);
 		);
 	return TRUE;
