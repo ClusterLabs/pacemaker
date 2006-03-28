@@ -371,6 +371,7 @@ crmd_client_status_callback(const char * node, const char * client,
 
 	if(safe_str_eq(status, ONLINESTATUS)) {
 		/* remove the cached value in case it changed */
+		crm_info("Uncaching UUID for %s", node);
 		unget_uuid(node);
 	}
 	

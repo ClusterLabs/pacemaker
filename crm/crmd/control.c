@@ -682,6 +682,8 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 		crm_err("get_uuid_by_name() failed");
 		return FALSE;
 	}
+	/* copy it so that unget_uuid() doesn't trash the value on us */
+	fsa_our_uuid = crm_strdup(fsa_our_uuid);
 	crm_info("UUID: %s", fsa_our_uuid);
 		
 	/* Async get client status information in the cluster */
