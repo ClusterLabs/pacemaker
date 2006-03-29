@@ -1344,28 +1344,32 @@ createEmptyCib(void)
 gboolean
 verifyCibXml(crm_data_t *cib)
 {
+	int lpc = 0;
 	gboolean is_valid = TRUE;
 	crm_data_t *tmp_node = NULL;
+
+	const char *sections[] = {
+		XML_CIB_TAG_NODES,
+		XML_CIB_TAG_RESOURCES,
+		XML_CIB_TAG_CONSTRAINTS,
+		XML_CIB_TAG_STATUS,
+		XML_CIB_TAG_CRMCONFIG
+	};
 	
 	if (cib == NULL) {
 		crm_warn("CIB was empty.");
 		return FALSE;
 	}
-	
-	tmp_node = get_object_root(XML_CIB_TAG_NODES, cib);
-	if (tmp_node == NULL) { is_valid = FALSE; }
 
-	tmp_node = get_object_root(XML_CIB_TAG_RESOURCES, cib);
-	if (tmp_node == NULL) { is_valid = FALSE; }
-
-	tmp_node = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
-	if (tmp_node == NULL) { is_valid = FALSE; }
-
-	tmp_node = get_object_root(XML_CIB_TAG_STATUS, cib);
-	if (tmp_node == NULL) { is_valid = FALSE; }
-
-	tmp_node = get_object_root(XML_CIB_TAG_CRMCONFIG, cib);
-	if (tmp_node == NULL) { is_valid = FALSE; }
+	/* basic tests... are the standard section all there */
+	for(lpc = 0; lpc < DIMOF(sections); lpc++) {
+		tmp_node = get_object_root(sections[lpc], cib);
+		if (tmp_node == NULL) {
+			crm_warn("Section %s is not present in the CIB",
+				 sections[lpc]);
+			is_valid = FALSE;
+		}
+	}
 
 	/* more integrity tests */
 
