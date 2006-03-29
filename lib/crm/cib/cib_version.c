@@ -1,4 +1,4 @@
-/* $Id: cib_version.c,v 1.4 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: cib_version.c,v 1.5 2006/03/29 06:14:57 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -89,8 +89,8 @@ internal_update_feature_set(crm_data_t *xml_obj, int current)
 			const char *name = feature_tags[lpc].tags[lpc_nested];
 			crm_debug_4("Checking %s vs. %s", tag, name);
 			if(safe_str_eq(tag, name)) {
-				crm_err("Found feature %s from set %s",
-					tag, feature_sets[lpc]);
+				crm_debug_2("Found feature %s from set %s",
+					    tag, feature_sets[lpc]);
 				current = lpc;
 				break;
 			}
