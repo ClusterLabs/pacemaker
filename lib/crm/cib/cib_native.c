@@ -339,10 +339,7 @@ cib_create_op(
 	int  rc = HA_OK;
 	HA_Message *op_msg = NULL;
 	op_msg = ha_msg_new(8);
-	if (op_msg == NULL) {
-		crm_err("No memory to create HA_Message");
-		return NULL;
-	}
+	CRM_CHECK(op_msg != NULL, return NULL);
 	
 	if(rc == HA_OK) {
 		rc = ha_msg_add(op_msg, F_TYPE, T_CIB);
@@ -415,7 +412,7 @@ cib_native_perform_op(
 
  	cib_native_opaque_t *native = cib->variant_opaque;
 
-	if(cib->state ==  cib_disconnected) {
+	if(cib->state == cib_disconnected) {
 		return cib_not_connected;
 	}
 
@@ -478,8 +475,6 @@ cib_native_perform_op(
 				  op_reply, F_CIB_CALLID, &reply_id) == HA_OK,
 			  return cib_reply_failed);
 
-		CRM_CHECK(reply_id <= msg_id, return cib_reply_failed);
-			
 		if(reply_id == msg_id) {
 			break;
 			
