@@ -183,23 +183,19 @@ do_election_count_vote(long long action,
 	const char *your_version  = cl_get_string(vote->msg, F_CRM_VERSION);
 	const char *election_owner= cl_get_string(vote->msg, F_CRM_ELECTION_OWNER);
 	
-	ha_msg_value_int(vote->msg, F_CRM_ELECTION_ID, &election_id);
-
 	/* if the membership copy is NULL we REALLY shouldnt be voting
 	 * the question is how we managed to get here.
 	 */
 	CRM_CHECK(fsa_membership_copy != NULL, return I_NULL);
 	CRM_CHECK(fsa_membership_copy->members != NULL, return I_NULL);
+
+	CRM_CHECK(vote_from != NULL, vote_from = fsa_our_uname);
 	
 	our_node = (oc_node_t*)g_hash_table_lookup(
 		fsa_membership_copy->members, fsa_our_uname);
 
-	if(vote_from != NULL) {
-		your_node = (oc_node_t*)g_hash_table_lookup(
-			fsa_membership_copy->members, vote_from);
-	} else {
-		your_node = our_node;
-	}
+	your_node = (oc_node_t*)g_hash_table_lookup(
+		fsa_membership_copy->members, vote_from);
 	
  	if(voted == NULL) {
 		crm_debug("Created voted hash");
@@ -208,6 +204,8 @@ do_election_count_vote(long long action,
 			g_hash_destroy_str, g_hash_destroy_str);
  	}
 
+	ha_msg_value_int(vote->msg, F_CRM_ELECTION_ID, &election_id);
+	
 	/* update the list of nodes that have voted */
 	if(your_node != NULL) {
 		char *op_copy = NULL;
