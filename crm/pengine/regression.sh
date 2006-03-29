@@ -53,6 +53,7 @@ do_test params-2 "Params: Resource definition"
 do_test orphan-0 "Orphan ignore"
 do_test orphan-1 "Orphan stop"
 
+echo ""
 do_test master-0 "Stopped -> Slave"
 do_test master-1 "Stopped -> Promote"
 do_test master-2 "Stopped -> Promote : notify"
