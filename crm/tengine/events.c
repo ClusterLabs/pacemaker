@@ -1,4 +1,4 @@
-/* $Id: events.c,v 1.7 2006/03/28 08:35:18 andrew Exp $ */
+/* $Id: events.c,v 1.8 2006/03/29 06:12:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -172,6 +172,7 @@ int
 match_graph_event(
 	crm_action_t *action, crm_data_t *event, const char *event_node)
 {
+	int log_level_fail = LOG_ERR;
 	int target_rc = 0;
 	const char *target_rc_s = NULL;
 	const char *allow_fail  = NULL;
@@ -278,12 +279,18 @@ match_graph_event(
 		case LRM_OP_DONE:
 			break;
 		case LRM_OP_ERROR:
+			/* This is the code we use for direct nack's */
+			if(op_rc_i == 99) {
+				log_level_fail = LOG_WARNING;
+			}
+			/* fall through */
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
 			action->failed = TRUE;
-			crm_err("Action %s on %s failed (rc: %d vs. %d): %s",
-				update_event, this_uname, target_rc, op_rc_i,
-				op_status2text(op_status_i));
+			crm_log_maybe(log_level_fail,
+				"Action %s on %s failed (rc: %d vs. %d): %s",
+				update_event, this_uname, target_rc,
+				op_rc_i, op_status2text(op_status_i));
 			break;
 		case LRM_OP_CANCELLED:
 			/* do nothing?? */
