@@ -300,9 +300,8 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	Stonith * stonith_obj = NULL;	
 
 	if ( provider != NULL ) {
-		cl_log(LOG_ERR, "stonithRA plugin: now donnot take the provider"
-			" into account.");
-		return NULL;
+		cl_log(LOG_NOTICE, "stonithRA plugin: provider attribution "
+			"isnot needed and will be ignored.");
 	}
 
 	stonith_obj = stonith_new(rsc_type);
@@ -323,20 +322,22 @@ get_resource_meta(const char* rsc_type, const char* provider)
 }
 
 /* 
- * Currently should return *providers = NULL, but rmain the old code for
+ * Currently should return *providers = NULL, but remain the old code for
  * possible unsing in the future
  */
 static int
 get_providers(const char* class_path, const char* op_type, GList ** providers)
 {
 	if ( providers == NULL ) {
-		cl_log(LOG_ERR, "Parameter error: get_providers");
+		cl_log(LOG_ERR, "%s:%d: Parameter error: providers==NULL"
+			, __FUNCTION__, __LINE__);
 		return -2;
 	}
 
 	if ( *providers != NULL ) {
-		cl_log(LOG_ERR, "Parameter error: get_providers."\
-			"will cause memory leak.");
+		cl_log(LOG_ERR, "%s:%d: Parameter error: *providers==NULL."
+			"This will cause memory leak."
+			, __FUNCTION__, __LINE__);
 		*providers = NULL;
 	}
 
