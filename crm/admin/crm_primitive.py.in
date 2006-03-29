@@ -72,7 +72,7 @@ def cib_resource(doc, id, ra_class, type, provider):
 
 	elif ra_class != "lsb" and ra_class != "heartbeat": 
 		print "Unknown resource class: "+ ra_class
-		exit(1)
+		return None
 
 	operations = doc.createElement("operations")
 	resource.appendChild(operations)
@@ -159,8 +159,8 @@ def print_usage():
 	    + " [--rsc-location uname=score]*"\
 	    + " [--rsc-colocation resource=score]*"
 	print "Example:\n\t" + sys.argv[0] \
-	    + "--name cluster_ip_1 --type ocf --provider heartbeat --class IPaddr "\
-	    + "--rsc_option ip=192.168.1.101 --rsc-location node1=500 | cibadmin -U -p"
+	    + " --name cluster_ip_1 --type IPaddr --provider heartbeat --class ocf "\
+	    + "--rsc-option ip=192.168.1.101 --rsc-location node1=500 | cibadmin -U -p"
 	sys.exit(1)
     
 if __name__=="__main__" :
@@ -235,6 +235,7 @@ if __name__=="__main__" :
 		elif args[i] == "--rsc-only" :
 			print_rsc_only = 1
 		else:
+			print "Unknown argument: "+ args[i]
 			print_usage()
 	cib = create_cib()
 	pre_line = ""
