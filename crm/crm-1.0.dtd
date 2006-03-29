@@ -89,7 +89,7 @@
 
           ordered               (true|false)                     'true'
           collocated            (true|false)                     'true'>
-<!ELEMENT clone (primitive|group),instance_attributes*>
+<!ELEMENT clone (primitive?,group?,instance_attributes*)>
 <!ATTLIST clone
           id            CDATA               #REQUIRED
           description   CDATA               #IMPLIED
@@ -170,7 +170,7 @@
 <!ATTLIST expression
           id         CDATA                    #REQUIRED
           attribute  CDATA                    #REQUIRED
-          operation  (lt|gt|lte|gte|eq|ne|defined|not_defined)
+          operation  (lt|gt|lte|gte|eq|ne|defined|not_defined) #REQUIRED
           value      CDATA                    #IMPLIED
           type       (integer|string|version) 'string'>
 <!-- Annotated version -->
@@ -182,7 +182,7 @@
         end        CDATA  #IMPLIED>
 <!-- Annotated version -->
 
-<!ELEMENT date_spec>
+<!ELEMENT date_spec EMPTY>
 <!ATTLIST date_spec
         monthdays  CDATA  #IMPLIED
         weekdays   CDATA  #IMPLIED
@@ -193,7 +193,7 @@
         years      CDATA  #IMPLIED
         moon       CDATA  #IMPLIED>
 
-<!ELEMENT duration>
+<!ELEMENT duration EMPTY>
 <!ATTLIST duration
         monthdays  CDATA  #IMPLIED
         weekdays   CDATA  #IMPLIED
@@ -238,13 +238,7 @@
           rsc_state             CDATA #IMPLIED
           transition_key                CDATA #IMPLIED
           transition_magic      CDATA #REQUIRED>
-<!ELEMENT nvpair EMPTY>
-<!ATTLIST nvpair
-          id            CDATA #REQUIRED
-          name          CDATA #REQUIRED
-          value         CDATA #IMPLIED>
-<!ELEMENT parameters>
-<!ELEMENT attributes (nvpair*)>
+<!ELEMENT parameters (nvpair*)>
 <!ELEMENT transient_attributes (instance_attributes*)>
 
 <!-- ============================================================== -->
