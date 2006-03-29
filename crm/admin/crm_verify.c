@@ -1,4 +1,4 @@
-/* $Id: crm_verify.c,v 1.4 2006/02/08 12:34:25 andrew Exp $ */
+/* $Id: crm_verify.c,v 1.5 2006/03/29 06:11:52 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -38,7 +38,7 @@
 #include <crm/cib.h>
 #include <clplumbing/lsb_exitcodes.h>
 
-#define OPTARGS	"V?X:L"
+#define OPTARGS	"V?X:LS:"
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -48,6 +48,7 @@
 #include <crm/pengine/pe_utils.h>
 
 gboolean USE_LIVE_CIB = FALSE;
+char *cib_save = NULL;
 const char *crm_system_name = NULL;
 void usage(const char *cmd, int exit_status);
 extern void cleanup_calculations(pe_working_set_t *data_set);
@@ -90,6 +91,7 @@ main(int argc, char **argv)
 		static struct option long_options[] = {
 			/* Top-level Options */
 			{"xml-file",    1, 0, 'X'},
+			{"save-xml",    1, 0, 'S'},
 			{"live-check",  0, 0, 'L'},
 			{"help", 0, 0, '?'},
       
@@ -119,6 +121,9 @@ main(int argc, char **argv)
       
 			case 'X':
 				xml_file = crm_strdup(optarg);
+				break;
+			case 'S':
+				cib_save = crm_strdup(optarg);
 				break;
 			case 'V':
 				alter_debug(DEBUG_INC);
@@ -155,20 +160,24 @@ main(int argc, char **argv)
   
 	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
 
-	crm_zero_mem_stats(NULL);
-
 	if(USE_LIVE_CIB) {
 		cib_conn = cib_new();
 		rc = cib_conn->cmds->signon(
 			cib_conn, crm_system_name, cib_command_synchronous);
 	}
 	
+	crm_zero_mem_stats(NULL);
+	
 	if(USE_LIVE_CIB) {
 		if(rc == cib_ok) {
+			int options = cib_scope_local|cib_sync_call;
 			crm_info("Reading XML from: live cluster");
-			cib_object = get_cib_copy(cib_conn);
-			
-		} else {
+			rc = cib_conn->cmds->query(
+ 				cib_conn, NULL, &cib_object, options);
+		}
+
+		
+		if(rc != cib_ok) {
 			fprintf(stderr, "Live CIB query failed: %s\n",
 				cib_error2string(rc));
 			return 3;
@@ -177,7 +186,7 @@ main(int argc, char **argv)
 			fprintf(stderr, "Live CIB query failed: empty result\n");
 			return 3;
 		}
-		
+	
 	} else if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
 		crm_info("Reading XML from: %s", xml_file);
@@ -187,11 +196,15 @@ main(int argc, char **argv)
 		cib_object = stdin2xml();
 	}
 
- 	CRM_DEV_ASSERT(cib_object != NULL);
-	if(cib_object == NULL) {
-		fprintf(stderr, "No config supplied\n");
-		return 3;
+ 	CRM_CHECK(cib_object != NULL,
+		  fprintf(stderr, "No config supplied\n");
+		  return 3;
+		);
+
+	if(cib_save != NULL) {
+		write_xml_file(cib_object, cib_save);
 	}
+	
 #if 0
 	status = get_object_root(XML_CIB_TAG_STATUS, cib_object);
 	xml_child_iter(status, node_state, XML_CIB_TAG_STATE,
@@ -210,6 +223,18 @@ main(int argc, char **argv)
 	
 	cleanup_calculations(&data_set);
 
+	if(USE_LIVE_CIB) {
+		/* Calling msg2ipcchan() seems to initialize something
+		 *   which isn't free'd when we disconnect and free the
+		 *   CIB connection.
+		 * Fake this extra free and move along.
+		 */
+		volatile cl_mem_stats_t *active_stats = cl_malloc_getstats();
+		active_stats->numfree++;
+	}
+	
+ 	CRM_CHECK(crm_mem_stats(NULL) == FALSE, ; );
+	
 	if(was_config_error) {
 		fprintf(stderr, "Errors found during check: config not valid\n");
 		if(crm_log_level < LOG_WARNING) {
@@ -229,9 +254,6 @@ main(int argc, char **argv)
 		cib_conn->cmds->signoff(cib_conn);
 		cib_delete(cib_conn);
 	}	
-
-	crm_mem_stats(NULL);
- 	CRM_DEV_ASSERT(crm_mem_stats(NULL) == FALSE);
 
 	return 0;
 }
