@@ -29,11 +29,16 @@
           dc_uuid      CDATA    #IMPLIED
           ccm_transition CDATA  #REQUIRED
           have_quorum    (true|false)   'false'
-          cib_feature_revision  CDATA   #REQUIRED>
-<!ELEMENT configuration (nodes, resources, constraints, crm_config)>
+          cib_feature_revision  CDATA   #REQUIRED
+          crm_feature_set       CDATA   #REQUIRED
+
+          generated    CDATA    #IMPLIED        
+          debug_source CDATA    #IMPLIED>
+
+<!ELEMENT configuration (crm_config, nodes, resources, constraints)>
 <!-- Annotated version -->
 
-<!ELEMENT crm_config (cluster_property_set,nvpair)*>
+<!ELEMENT crm_config (cluster_property_set|nvpair)*>
 <!ELEMENT cluster_property_set (rule*, attributes)>
 <!ELEMENT nodes       (node*)>
 <!-- Annotated version -->
@@ -44,18 +49,18 @@
           uname         CDATA         #REQUIRED
           description   CDATA         #IMPLIED
           type          (normal|member|ping) #REQUIRED>
-<!ELEMENT resources   (primitive*, group*, clone*)>
+<!ELEMENT resources   (primitive|group|clone|master_slave)*>
 <!-- Annotated version -->
 
 <!ELEMENT primitive (operations?, instance_attributes*)>
 <!ATTLIST primitive
           id                CDATA        #REQUIRED
           description       CDATA        #IMPLIED
-          class             (ocf|init|heartbeat|stonith) #REQUIRED
+          class             (ocf|lsb|heartbeat|stonith) #REQUIRED
           type              CDATA        #REQUIRED
           provider          CDATA        #IMPLIED
 
-          is_managed            (true|false)                     'true'
+          is_managed            (true|1|false|0)                     'true'
           on_stopfail           (ignore|stonith|block)           #IMPLIED
           restart_type          (ignore|restart)                 'ignore'
           multiple_active       (stop_start|stop_only|block)     'stop_start'
@@ -71,6 +76,7 @@
           description   CDATA         #IMPLIED
           interval      CDATA         #IMPLIED
           timeout       CDATA         #IMPLIED
+          role       (Master|Slave|Started|Stopped) 'Started'
           prereq     (nothing|quorum|fencing)   #IMPLIED
           on_fail    (nothing|block|stop|fence) #IMPLIED>
 <!-- Annotated version -->
@@ -89,7 +95,7 @@
 
           ordered               (true|false)                     'true'
           collocated            (true|false)                     'true'>
-<!ELEMENT clone (primitive?,group?,instance_attributes*)>
+<!ELEMENT clone (instance_attributes*, (primitive|group))>
 <!ATTLIST clone
           id            CDATA               #REQUIRED
           description   CDATA               #IMPLIED
@@ -106,7 +112,7 @@
 
           ordered       (true|false)     'true'
           interleave    (true|false)     'false'>
-<!ELEMENT master_slave (clone, instance_attributes*)>
+<!ELEMENT master_slave (instance_attributes*, (primitive|group))>
 <!ATTLIST master_slave
           id            CDATA       #REQUIRED
           description   CDATA       #IMPLIED
@@ -122,12 +128,11 @@
           globally_unique       (true|false)                     'true'
 
           ordered          (true|false)  'true'
-          interleave       (true|false)  'false'
-          max_masters      CDATA         #REQUIRED
-          max_node_masters CDATA         #REQUIRED>
+          interleave       (true|false)  'false'>
 <!-- Annotated version -->
 
 <!ELEMENT instance_attributes (rule*, attributes)>
+<!ATTLIST instance_attributes id CDATA #IMPLIED>
 <!-- Annotated version -->
 
 <!ELEMENT constraints (rsc_order*, rsc_colocation*, rsc_location*)>
@@ -204,7 +209,7 @@
 <!-- Annotated version -->
 
 <!ELEMENT status (node_state*)>
-<!ELEMENT node_state (lrm, transient_attributes)>
+<!ELEMENT node_state ((transient_attributes|lrm), (transient_attributes|lrm)) >
 <!ATTLIST node_state
         id              CDATA                   #REQUIRED
         uname           CDATA                   #REQUIRED
@@ -215,20 +220,17 @@
         shutdown        CDATA                   #IMPLIED
         timestamp       CDATA                   #IMPLIED>
 <!ELEMENT lrm (lrm_resources)>
-<!ATTLIST lrm
-        id      CDATA #REQUIRED
-        version CDATA #REQUIRED>
 <!-- Annotated version -->
 
 <!ELEMENT lrm_resources (lrm_resource*)>
-<!ELEMENT lrm_resource (lrm_rsc_op)>
+<!ELEMENT lrm_resource (lrm_rsc_op*)>
 <!ATTLIST lrm_resource
           id            CDATA #REQUIRED
-          class             (ocf|init|heartbeat|stonith) #REQUIRED
+          class             (lsb|ocf|heartbeat|stonith) #REQUIRED
           type              CDATA        #REQUIRED
           provider          CDATA        #IMPLIED>
 
-<!ELEMENT lrm_rsc_op (parameters)>
+<!ELEMENT lrm_rsc_op (parameters?)>
 <!ATTLIST lrm_rsc_op
           id            CDATA #REQUIRED
           operation     CDATA #REQUIRED
@@ -238,10 +240,15 @@
           rsc_state             CDATA #IMPLIED
           transition_key                CDATA #IMPLIED
           transition_magic      CDATA #REQUIRED>
-<!ELEMENT parameters (nvpair*)>
+<!ELEMENT nvpair EMPTY>
+<!ATTLIST nvpair
+          id            CDATA #REQUIRED
+          name          CDATA #REQUIRED
+          value         CDATA #IMPLIED>
+<!ELEMENT parameters EMPTY>
+<!ELEMENT attributes (nvpair*)>
 <!ELEMENT transient_attributes (instance_attributes*)>
-<!ATTLIST transient_attributes
-          id            CDATA #REQUIRED>
+<!ATTLIST transient_attributes id CDATA #IMPLIED>
 
 <!-- ============================================================== -->
 <!-- ============================================================== -->
@@ -355,18 +362,3 @@
 	part		(src|dst)	#REQUIRED
 	subsystem	(dc|crmd|dcib|cib|pe|te|lrm|admin) #REQUIRED
 	host		CDATA		#IMPLIED>
-
-<!-- ============================================================== -->
-<!-- ============================================================== -->
-<!-- Common elements -->
-
-<!ELEMENT nvpair EMPTY>
-<!-- No, you don't /have/ to give a value. There's a difference between
-     a key not being present and a key not having a value. -->
-<!ATTLIST nvpair
-	  id		CDATA #REQUIRED
-	  name		CDATA #REQUIRED
-	  value		CDATA #IMPLIED>
-
-<!ELEMENT attributes (nvpair*)>
-
