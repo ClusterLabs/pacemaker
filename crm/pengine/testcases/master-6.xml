@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
 <cib cib_feature_revision="1" have_quorum="true" generated="true" admin_epoch="0" ccm_transition="4" num_peers="4" crm_feature_set="1.0.4" debug_source="create_node_entry" dc_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" epoch="4" num_updates="167">
    <configuration>
      <crm_config>
@@ -257,7 +259,7 @@
           </lrm_resource>
           <lrm_resource id="heartbeat_192.168.100.182" type="IPaddr" class="heartbeat" provider="heartbeat">
             <lrm_rsc_op id="heartbeat_192.168.100.182_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="0:b76c3e2e-f4d3-4800-af76-89ec8931503c" transition_magic="4:7;0:b76c3e2e-f4d3-4800-af76-89ec8931503c" rsc_state="monitor_failed" call_id="4" rc_code="7" op_status="4">
-              <parameters 1="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+              <parameters c_1="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
@@ -378,10 +380,10 @@
           </lrm_resource>
           <lrm_resource id="heartbeat_192.168.100.182" type="IPaddr" class="heartbeat" provider="heartbeat">
             <lrm_rsc_op id="heartbeat_192.168.100.182_start_0" operation="start" origin="build_active_RAs" transition_key="7:b76c3e2e-f4d3-4800-af76-89ec8931503c" transition_magic="0:0;7:b76c3e2e-f4d3-4800-af76-89ec8931503c" rsc_state="running" call_id="31" rc_code="0" op_status="0">
-              <parameters 1="192.168.100.182" crm_feature_set="1.0.4"/>
+              <parameters c_1="192.168.100.182" crm_feature_set="1.0.4"/>
             </lrm_rsc_op>
             <lrm_rsc_op id="heartbeat_192.168.100.182_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="7:b76c3e2e-f4d3-4800-af76-89ec8931503c" transition_magic="0:0;7:b76c3e2e-f4d3-4800-af76-89ec8931503c" rsc_state="running" call_id="35" rc_code="0" op_status="0">
-              <parameters timeout="20000" 1="192.168.100.182" crm_feature_set="1.0.4" interval="5000"/>
+              <parameters timeout="20000" c_1="192.168.100.182" crm_feature_set="1.0.4" interval="5000"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
@@ -487,7 +489,7 @@
           </lrm_resource>
           <lrm_resource id="heartbeat_192.168.100.182" type="IPaddr" class="heartbeat" provider="heartbeat">
             <lrm_rsc_op id="heartbeat_192.168.100.182_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="6:b76c3e2e-f4d3-4800-af76-89ec8931503c" transition_magic="4:7;6:b76c3e2e-f4d3-4800-af76-89ec8931503c" rsc_state="monitor_failed" call_id="4" rc_code="7" op_status="4">
-              <parameters 1="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+              <parameters c_1="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
@@ -569,7 +571,7 @@
           </lrm_resource>
           <lrm_resource id="heartbeat_192.168.100.182" type="IPaddr" class="heartbeat" provider="heartbeat">
             <lrm_rsc_op id="heartbeat_192.168.100.182_monitor_0" operation="monitor" origin="do_update_resource" transition_key="8:b76c3e2e-f4d3-4800-af76-89ec8931503c" transition_magic="4:7;8:b76c3e2e-f4d3-4800-af76-89ec8931503c" rsc_state="monitor_failed" call_id="4" rc_code="7" op_status="4">
-              <parameters 1="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+              <parameters c_1="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="ocf_msdummy:1" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">

@@ -240,6 +240,8 @@
           transition_magic      CDATA #REQUIRED>
 <!ELEMENT parameters (nvpair*)>
 <!ELEMENT transient_attributes (instance_attributes*)>
+<!ATTLIST transient_attributes
+          id            CDATA #REQUIRED>
 
 <!-- ============================================================== -->
 <!-- ============================================================== -->
