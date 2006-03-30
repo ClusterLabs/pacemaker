@@ -143,7 +143,7 @@
           action    (start|stop)        'start'
           type      (before|after)      'after'
           to        CDATA #REQUIRED
-          symetrical    (true|1|false|0)    'TRUE'>
+          symetrical    (true|1|false|0)    'true'>
 <!-- Annotated version -->
 
 <!ELEMENT rsc_colocation (lifetime?)>
