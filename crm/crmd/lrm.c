@@ -410,7 +410,7 @@ build_operation_update(
 	crm_free(op_id);
 
 	crm_xml_add(xml_op,  XML_LRM_ATTR_TASK,   op->op_type);
-	crm_xml_add(xml_op,  "origin", src);
+	crm_xml_add(xml_op,  XML_ATTR_ORIGIN, src);
 	
 	if(op->user_data == NULL) {
 		op->user_data = generate_transition_key(-1, fsa_our_uname);
@@ -444,8 +444,9 @@ build_operation_update(
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
-			crm_debug("Resource action %s/%s failed: %d",
-				  op->rsc_id, op->op_type, op->op_status);
+			crm_debug("Resource action %s/%s %s: %d",
+				  op->rsc_id, op->op_type,
+				  op_status2text(op->op_status), op->rc);
 			len = strlen(op->op_type);
 			len += strlen("_failed_");
 			crm_malloc0(fail_state, sizeof(char)*len);
@@ -489,8 +490,6 @@ build_operation_update(
 	crm_xml_add(xml_op, XML_LRM_ATTR_OPSTATUS, tmp);
 	crm_free(tmp);
 
-	set_node_tstamp(xml_op);
-#if 1
 	if(safe_str_neq(op->op_type, CRMD_ACTION_STOP)) {
 		/* this will enable us to later determin that the
 		 *   resource's parameters have changed and we should force
@@ -499,10 +498,21 @@ build_operation_update(
 		 *   larger CIB
 		 */
 		crm_data_t *args_xml = NULL;
+		char *digest = NULL;
+#if CRM_DEPRECATED_SINCE_2_0_4
 		args_xml = create_xml_node(xml_op, XML_TAG_PARAMS);
-		g_hash_table_foreach(op->params, hash2field, args_xml);
-	}
+#else
+		args_xml = create_xml_node(NULL, XML_TAG_PARAMS);
 #endif
+		g_hash_table_foreach(op->params, hash2field, args_xml);
+		filter_action_parameters(args_xml);
+		digest = calculate_xml_digest(args_xml);
+		crm_xml_add(xml_op, XML_LRM_ATTR_OP_DIGEST, digest);
+#if CRM_DEPRECATED_SINCE_2_0_4
+#else
+		free_xml(args_xml);
+#endif
+	}
 	
 	return TRUE;
 }
@@ -1333,67 +1343,6 @@ copy_lrm_rsc(const lrm_rsc_t *rsc)
 	return rsc_copy;
 }
 
-static void
-update_failcount(lrm_op_t *op) 
-{
-	int op_status = LRM_OP_DONE;
-	const char *target_rc_s = NULL;
-
-	CRM_DEV_ASSERT(op != NULL);
-
-	if(op->interval <= 0) {
-		return;
-	}	
-/*	
-	const char *probe_s = NULL;
-	probe_s = g_hash_table_lookup(op->params, XML_ATTR_LRM_PROBE);
-	if(crm_is_true(probe_s)) {
-		return;
-	}
-*/
-	CRM_DEV_ASSERT(op->op_status != LRM_OP_PENDING);
-	if(crm_assert_failed) {
-		return;
-	}
-
-	CRM_DEV_ASSERT(op->op_status != LRM_OP_DONE);
-	if(crm_assert_failed) {
-		return;
-	}
-	
-	op_status = op->op_status;
-	target_rc_s = g_hash_table_lookup(op->params, XML_ATTR_TE_TARGET_RC);
-	
-	if(target_rc_s != NULL) {
-		int target_rc = crm_parse_int(target_rc_s, NULL);
-		if(target_rc == op->rc) {
-			if(op_status != LRM_OP_DONE) {
-				op_status = LRM_OP_DONE;
-			}
-			
-		} else if(op_status != LRM_OP_ERROR) {
-			op_status = LRM_OP_ERROR;
-		}
-	}
-	
-	if(op_status != LRM_OP_DONE) {
-		char *attr_set = crm_concat("crmd-transient",fsa_our_uuid, '-');
-		char *attr_name = crm_concat("fail-count", op->rsc_id, '-');
-		char *attr_id = crm_concat(attr_name, fsa_our_uuid, '-');
-
-		crm_warn("Updating failcount for %s after failed %s: rc=%d",
-			 op->rsc_id, op->op_type, op->rc);
-		
-		update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_STATUS,
-			    fsa_our_uuid, attr_set, attr_id, attr_name,
-			    XML_NVPAIR_ATTR_VALUE"++");
-		
-		crm_free(attr_id);
-		crm_free(attr_set);
-		crm_free(attr_name);
-	}	
-}
-
 void
 do_update_resource(lrm_op_t* op)
 {
@@ -1486,7 +1435,6 @@ do_lrm_event(long long action,
 	const char *probe_s = NULL;
 	gboolean is_probe = FALSE;
 	int log_rsc_err = LOG_WARNING;
-	gboolean set_failcount = FALSE;
 	
 	if(msg_data->fsa_cause != C_LRM_OP_CALLBACK) {
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
@@ -1516,8 +1464,6 @@ do_lrm_event(long long action,
 		case LRM_OP_ERROR:
 			if(is_probe) {
 				log_rsc_err = LOG_INFO;
-			} else {
-				set_failcount = TRUE;
 			}
 			crm_log_maybe(log_rsc_err,
 				      "LRM operation (%d) %s_%d on %s %s: (%d) %s",
@@ -1539,7 +1485,6 @@ do_lrm_event(long long action,
 			return I_NULL;
 			break;
 		case LRM_OP_TIMEOUT:
-			set_failcount = TRUE;
 			last_op = g_hash_table_lookup(
 				resources_confirmed, crm_strdup(op->rsc_id));
 
@@ -1558,7 +1503,6 @@ do_lrm_event(long long action,
 				op_status2text(op->op_status));
 			break;
 		case LRM_OP_NOTSUPPORTED:
-			set_failcount = TRUE;
 			crm_err("LRM operation (%d) %s_%d on %s %s",
 				op->call_id, op->op_type,
 				op->interval,
@@ -1577,10 +1521,6 @@ do_lrm_event(long long action,
 			     crm_strdup(op->rsc_id), crm_strdup(op->op_type));
 
 	do_update_resource(op);
-
-	if(set_failcount) {
-		update_failcount(op);
-	}
 
 	if(g_hash_table_size(shutdown_ops) > 0) {
 		char *op_id = make_stop_id(op->rsc_id, op->call_id);

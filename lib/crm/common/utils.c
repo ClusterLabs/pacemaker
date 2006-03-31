@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.37 2006/03/27 14:54:59 andrew Exp $ */
+/* $Id: utils.c,v 1.38 2006/03/31 11:58:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1132,6 +1132,58 @@ decode_transition_key(const char *key, char **uuid, int *transition_id)
 	return TRUE;
 }
 
+void
+filter_action_parameters(crm_data_t *param_set) 
+{
+	const char *attr_filter[] = {
+		XML_LRM_ATTR_OP_DIGEST,
+		XML_ATTR_TE_TARGET_RC,
+		XML_ATTR_LRM_PROBE,
+		XML_RSC_ATTR_START,
+		XML_RSC_ATTR_NOTIFY,
+		XML_RSC_ATTR_UNIQUE,
+		XML_RSC_ATTR_MANAGED,
+		XML_ATTR_CRM_VERSION,
+		XML_RSC_ATTR_PRIORITY,
+		XML_RSC_ATTR_MULTIPLE,
+		XML_RSC_ATTR_STICKINESS,
+		XML_RSC_ATTR_FAIL_STICKINESS,
+
+/* ignore clone fields */
+		XML_RSC_ATTR_INCARNATION, 
+		XML_RSC_ATTR_INCARNATION_MAX, 
+		XML_RSC_ATTR_INCARNATION_NODEMAX,
+		XML_RSC_ATTR_MASTER_MAX,
+		XML_RSC_ATTR_MASTER_NODEMAX,
+
+/* ignore master fields */
+		"crm_role",
+		
+/* ignore notify fields */
+ 		"notify_stop_resource",
+ 		"notify_stop_uname",
+ 		"notify_start_resource",
+ 		"notify_start_uname",
+ 		"notify_active_resource",
+ 		"notify_active_uname",
+ 		"notify_inactive_resource",
+ 		"notify_inactive_uname",
+ 		"notify_promote_resource",
+ 		"notify_promote_uname",
+ 		"notify_demote_resource",
+ 		"notify_demote_uname",
+ 		"notify_master_resource",
+ 		"notify_master_uname",
+ 		"notify_slave_resource",
+ 		"notify_slave_uname",
+	};
+
+	int lpc = 0;
+	
+	for(lpc = 0; lpc < DIMOF(attr_filter); lpc++) {
+		xml_remove_prop(param_set, attr_filter[lpc]); 
+	}	
+}
 
 gboolean
 crm_mem_stats(volatile cl_mem_stats_t *mem_stats)

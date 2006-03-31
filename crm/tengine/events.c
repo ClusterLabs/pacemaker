@@ -1,4 +1,4 @@
-/* $Id: events.c,v 1.8 2006/03/29 06:12:28 andrew Exp $ */
+/* $Id: events.c,v 1.9 2006/03/31 11:58:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -161,6 +161,55 @@ extract_event(crm_data_t *msg)
 	return TRUE;
 }
 
+static void
+update_failcount(crm_action_t *action, int rc) 
+{
+	char *attr_set  = NULL;
+	char *attr_name = NULL;
+	char *attr_id   = NULL;
+	
+	const char *task     = NULL;
+	const char *rsc_id   = NULL;
+	const char *on_node  = NULL;
+	const char *on_uuid  = NULL;
+	const char *interval = NULL;
+
+	if(rc == 99) {
+		/* this is an internal code for "we're busy, try again" */
+		return;
+	}
+
+	interval = g_hash_table_lookup(action->params, "interval");
+	if(interval == NULL) {
+		return;
+	}
+
+	CRM_CHECK(action->xml != NULL, return);
+	
+	task   = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+	rsc_id = crm_element_value(action->xml, XML_LRM_ATTR_RSCID);
+	on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+	on_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+
+	CRM_CHECK(task != NULL, return);
+	CRM_CHECK(rsc_id != NULL, return);
+	CRM_CHECK(on_uuid != NULL, return);
+	CRM_CHECK(on_node != NULL, return);
+	
+	attr_set = crm_concat("crmd-transient", on_uuid, '-');
+	attr_name = crm_concat("fail-count", rsc_id, '-');
+	attr_id = crm_concat(attr_name, on_uuid, '-');
+	crm_warn("Updating failcount for %s on %s after failed %s: rc=%d",
+		 rsc_id, on_node, task, rc);
+	
+	update_attr(te_cib_conn, cib_none, XML_CIB_TAG_STATUS,
+		    on_uuid, attr_set, attr_id, attr_name,
+		    XML_NVPAIR_ATTR_VALUE"++");
+	
+	crm_free(attr_id);
+	crm_free(attr_set);
+	crm_free(attr_name);	
+}
 
 /*
  * returns the ID of the action if a match is found
@@ -247,6 +296,7 @@ match_graph_event(
 
 	target_rc_s = g_hash_table_lookup(action->params,XML_ATTR_TE_TARGET_RC);
 	if(target_rc_s != NULL) {
+		crm_debug("Target rc: %s vs. %d", target_rc_s, op_rc_i);
 		target_rc = crm_parse_int(target_rc_s, NULL);
 		if(target_rc == op_rc_i) {
 			crm_debug_2("Target rc: == %d", op_rc_i);
@@ -313,6 +363,7 @@ match_graph_event(
 	}
 
 	if(action->failed) {
+		update_failcount(action, op_rc_i);
 		abort_transition(action->synapse->priority,
 				 tg_restart, "Event failed", event);
 

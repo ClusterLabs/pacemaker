@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.171 2006/03/28 13:05:23 andrew Exp $ */
+/* $Id: unpack.c,v 1.172 2006/03/31 11:58:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1127,89 +1127,67 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 }
 
 static gboolean
-check_action_definition(resource_t *rsc, node_t *node, crm_data_t *xml_op,
+check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op,
 			pe_working_set_t *data_set)
 {
-	int lpc = 0;
 	gboolean did_change = FALSE;
 
 	crm_data_t *pnow = NULL;
-	crm_data_t *pdiff = NULL;
 	GHashTable *local_rsc_params = NULL;
 	
+	char *pnow_digest = NULL;
+	const char *param_digest = NULL;
+	char *local_param_digest = NULL;
+
 	const char *id   = ID(xml_op);
 	const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-	action_t *action = custom_action(rsc, crm_strdup(id), task, node,
+	action_t *action = custom_action(rsc, crm_strdup(id), task, active_node,
 					 TRUE, FALSE, data_set);
-
-	crm_data_t *params = find_xml_node(xml_op, XML_TAG_PARAMS, TRUE);
-	crm_data_t *local_params = copy_xml(params);
-	
-	const char *attr_filter[] = {
-		XML_ATTR_TE_TARGET_RC,
-		XML_ATTR_LRM_PROBE,
-		XML_RSC_ATTR_START,
-		XML_RSC_ATTR_NOTIFY,
-		XML_RSC_ATTR_UNIQUE,
-		XML_RSC_ATTR_MANAGED,
-		XML_ATTR_CRM_VERSION,
-		XML_RSC_ATTR_PRIORITY,
-		XML_RSC_ATTR_MULTIPLE,
-		XML_RSC_ATTR_STICKINESS,
-		XML_RSC_ATTR_FAIL_STICKINESS,
-
-/* ignore clone fields */
-		XML_RSC_ATTR_INCARNATION, 
-		XML_RSC_ATTR_INCARNATION_MAX, 
-		XML_RSC_ATTR_INCARNATION_NODEMAX,
-		XML_RSC_ATTR_MASTER_MAX,
-		XML_RSC_ATTR_MASTER_NODEMAX,
-
-/* ignore master fields */
-		"crm_role",
-		
-/* ignore notify fields */
- 		"notify_stop_resource",
- 		"notify_stop_uname",
- 		"notify_start_resource",
- 		"notify_start_uname",
- 		"notify_active_resource",
- 		"notify_active_uname",
- 		"notify_inactive_resource",
- 		"notify_inactive_uname",
- 		"notify_promote_resource",
- 		"notify_promote_uname",
- 		"notify_demote_resource",
- 		"notify_demote_uname",
- 		"notify_master_resource",
- 		"notify_master_uname",
- 		"notify_slave_resource",
- 		"notify_slave_uname",
-	};
 
 	local_rsc_params = g_hash_table_new_full(
 		g_str_hash, g_str_equal,
 		g_hash_destroy_str, g_hash_destroy_str);
 	
 	unpack_instance_attributes(
-		rsc->xml, XML_TAG_ATTR_SETS, node, local_rsc_params,
+		rsc->xml, XML_TAG_ATTR_SETS, active_node, local_rsc_params,
 		NULL, 0, data_set);
 	
 	pnow = create_xml_node(NULL, XML_TAG_PARAMS);
 	g_hash_table_foreach(action->extra, hash2field, pnow);
 	g_hash_table_foreach(rsc->parameters, hash2field, pnow);
 	g_hash_table_foreach(local_rsc_params, hash2field, pnow);
-	
-	for(lpc = 0; lpc < DIMOF(attr_filter); lpc++) {
-		xml_remove_prop(pnow, attr_filter[lpc]); 
-		xml_remove_prop(local_params, attr_filter[lpc]); 
+
+	filter_action_parameters(pnow);
+	pnow_digest = calculate_xml_digest(pnow);
+	param_digest = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
+
+	if(param_digest == NULL) {
+		crm_data_t *params = find_xml_node(xml_op, XML_TAG_PARAMS, TRUE);
+		crm_data_t *local_params = copy_xml(params);
+
+		crm_info("Faking parameter digest creation for %s", ID(xml_op));
+
+		filter_action_parameters(local_params);
+		local_param_digest = calculate_xml_digest(local_params);
+		param_digest = local_param_digest;
+		
+		free_xml(local_params);
 	}
-	
-	pdiff = diff_xml_object(local_params, pnow, TRUE);
-	if(pdiff != NULL) {
+
+	if(safe_str_neq(pnow_digest, param_digest)) {
+		crm_data_t *params = find_xml_node(xml_op,XML_TAG_PARAMS,FALSE);
+		crm_data_t *local_params = copy_xml(params);
+		filter_action_parameters(local_params);
+
+		crm_log_xml_err(pnow, "params:calc");
+		crm_log_xml_err(local_params, "params:used");
+		free_xml(local_params);
+		
 		did_change = TRUE;
-		crm_info("Parameters to %s action changed", id);
-		log_xml_diff(LOG_INFO, pdiff, __FUNCTION__);
+		crm_info("Parameters to %s action changed: %s vs. %s",
+			 id, pnow_digest, param_digest);
+
+		
 		custom_action(rsc, crm_strdup(id), task, NULL,
 			      FALSE, TRUE, data_set);
 	}
@@ -1218,8 +1196,8 @@ check_action_definition(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	crm_free(action->uuid);
 	crm_free(action);
 	free_xml(pnow);
-	free_xml(pdiff);
-	free_xml(local_params);
+	crm_free(pnow_digest);
+	crm_free(local_param_digest);
 	
 	g_hash_table_destroy(local_rsc_params);
 
@@ -1234,8 +1212,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	const char *id          = NULL;
 	const char *task        = NULL;
  	const char *task_id     = NULL;
-	const char *actual_rc   = NULL;	
-	const char *target_rc   = NULL;	
+ 	const char *actual_rc   = NULL;
+/* 	const char *target_rc   = NULL;	 */
 	const char *task_status = NULL;
 	const char *interval_s  = NULL;
 
@@ -1245,6 +1223,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	int actual_rc_i = 0;
 	
 	action_t *action = NULL;
+	gboolean is_probe = FALSE;
 	gboolean is_stop_action = FALSE;
 
 	crm_data_t *params = find_xml_node(xml_op, XML_TAG_PARAMS, FALSE);
@@ -1282,6 +1261,10 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			interval = crm_parse_int(interval_s, NULL);
 		}
 	}
+
+	if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+		is_probe = TRUE;
+	}
 	
 	if(rsc->orphan) {
 		crm_debug_2("Skipping param check for orphan: %s %s", rsc->id, task);
@@ -1293,8 +1276,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		/* for older test cases */
 		crm_err("Skipping param check: %s %s", id, task);
 
-	} else if((interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS))
-		  || safe_str_eq(task, CRMD_ACTION_START)) {
+	} else if(is_probe || safe_str_eq(task, CRMD_ACTION_START)) {
 		crm_debug_2("Checking resource definition: %s", rsc->id);
 		check_action_definition(rsc, node, xml_op, data_set);
 		
@@ -1380,14 +1362,18 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			  node->details->uname, rsc->id, XML_RSC_ATTR_STOPFAIL);
 	}
 
+	actual_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
+	CRM_CHECK(actual_rc != NULL, return FALSE);	
+	actual_rc_i = crm_parse_int(actual_rc, NULL);
+	
+#if 0
+	/* this wont work anymore now that we dont get the set of params,
+	 *   we only get the hash of them
+	 */
 	if(params != NULL) {
 		target_rc = crm_element_value(params, XML_ATTR_TE_TARGET_RC);
 	}
 	
-	actual_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
-	CRM_CHECK(actual_rc != NULL, return FALSE);
-
-	actual_rc_i = crm_parse_int(actual_rc, NULL);
 	if(target_rc != NULL && task_status_i != LRM_OP_PENDING) {
 		crm_debug_2("Exit code from %s: %s vs. %s",
 			    task, target_rc, actual_rc);
@@ -1397,33 +1383,49 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			task_status_i = LRM_OP_ERROR;
 		}
 	}
+#endif
 	
 	if(EXECRA_NOT_RUNNING == actual_rc_i) {
-		rsc->role = RSC_ROLE_STOPPED;
-		if(safe_str_eq(task, CRMD_ACTION_STATUS)) {
-			/* probe or stop action*/
-			crm_debug_2("%s: resource %s is stopped", id, rsc->id);
-			return TRUE;
+		if(is_probe) {
+			/* treat these like stops */
+			is_stop_action = TRUE;
 		}
-
+		if(is_stop_action) {
+			task_status_i = LRM_OP_DONE;
+ 		} else {
+			CRM_CHECK(task_status_i == LRM_OP_ERROR,
+				task_status_i = LRM_OP_ERROR);
+		}
+		
 	} else if(EXECRA_RUNNING_MASTER == actual_rc_i) {
-		rsc->role = RSC_ROLE_MASTER;
-		if(safe_str_eq(task, CRMD_ACTION_STATUS)) {
-			crm_info("%s: resource %s is a master", id, rsc->id);
+		if(is_probe
+		   || (rsc->role == RSC_ROLE_MASTER
+		       && safe_str_eq(task, CRMD_ACTION_STATUS))) {
+			task_status_i = LRM_OP_DONE;
+		} else {
+			if(rsc->role != RSC_ROLE_MASTER) {
+				crm_err("%s reported %s in master mode on %s",
+					task, rsc->graph_name,
+					node->details->uname);
+			}
+			
+			CRM_CHECK(task_status_i == LRM_OP_ERROR,
+				task_status_i = LRM_OP_ERROR);
 		}
+		rsc->role = RSC_ROLE_MASTER;
 
 	} else if(EXECRA_FAILED_MASTER == actual_rc_i) {
 		rsc->role = RSC_ROLE_MASTER;
 		task_status_i = LRM_OP_ERROR;
 
 	} else if(EXECRA_OK == actual_rc_i
-		  && interval == 0
-		  && safe_str_eq(task, CRMD_ACTION_STATUS)) {
-		rsc->role = RSC_ROLE_STARTED;
-		crm_info("%s: resource %s is active on %s",
-			 id, rsc->id, node->details->uname);
-		crm_log_xml_debug_2(xml_op, "op");
-		return TRUE;
+		  && is_probe == FALSE
+		  && is_stop_action == FALSE
+		  && rsc->role == RSC_ROLE_MASTER) {
+		/* catch status ops that return 0 instead of 8 while they
+		 *   are supposed to be in master mode
+		 */
+		task_status_i = LRM_OP_ERROR;
 	}
 
 	if(task_status_i == LRM_OP_ERROR
@@ -1489,6 +1491,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 
 			if(is_stop_action) {
 				rsc->role = RSC_ROLE_STOPPED;
+				/* clear any previous failure actions */
 				*on_fail = action_fail_ignore;
 				rsc->next_role = RSC_ROLE_UNKNOWN;
 				
@@ -1518,6 +1521,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				   || safe_str_neq(task, CRMD_ACTION_START)) {
 					crm_debug_2("%s: %s active on %s",
 						    rsc->id, id, node->details->uname);
+					/* we have to specify the node so that we know the
+					 * monitor is active later on
+					 */
 					custom_action(rsc, crm_strdup(id), task,
 						      node, TRUE, TRUE, data_set);
 				}
