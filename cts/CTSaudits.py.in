@@ -279,29 +279,42 @@ class HAResourceAudit(ClusterAudit):
                 
                 if running:
                     NumofInc[resource.inc_name] += 1
+
         if self.CM.HasQuorum(None):
             for inc_name in NumofInc.keys():
-                if NumofInc[inc_name] != min(up_count,MaxofInc[inc_name]):
+                if NumofInc[inc_name] != min(up_count, MaxofInc[inc_name]):
                     passed = 0
-                    self.CM.log("Incarnation %s has %d instances(max %d instances).\
-                        Now %d nodes are up"%(str(inc_name),NumofInc[inc_name], \
-                        MaxofInc[inc_name],up_count))
-                        
+                    self.CM.log("Cloned resource "+ inc_name
+				+" has "+ NumofInc[inc_name]
+				+" active instances (max: "+ MaxofInc[inc_name]
+				+", active nodes: "+ up_count + ")")
+		    
         Groups = self.CM.ResourceGroups()
         for group in Groups :
-            RunningNodes = NodeofRsc[group[0].rid]
+	    group_printed = 0
+	    first_rsc = group[0].rid
+            RunningNodes = NodeofRsc[first_rsc]
             for rsc in group :
-                if RunningNodes != NodeofRsc[rsc.rid] :
+                if RunningNodes != NodeofRsc[rsc.rid]:
                     passed = 0 
+
+		    if group_printed == 0:
+			group_printed = 1
+			self.CM.log("Group audit failed for: %s" % repr(group))
+			if not NodeofRsc[first_rsc] or len(NodeofRsc[first_rsc]) == 0:
+			    self.CM.log("* %s not running" % first_rsc)
+			else:
+			    self.CM.log("* %s running on %s"
+					%(first_rsc, repr(NodeofRsc[first_rsc])))
+
 		    if not NodeofRsc[rsc.rid] or len(NodeofRsc[rsc.rid]) == 0:
-			self.CM.log("Not all resources in group %s running on same node" % repr(group))
 			self.CM.log("* %s not running" % rsc.rid)
 		    else:
-			self.CM.log("Not all resources in group %s running on same node"% repr(group))
-			self.CM.log("* %s running on %s"%(group[0].rid, repr(NodeofRsc[group[0].rid])))
-			self.CM.log("* %s running on %s"%(rsc.rid, repr(NodeofRsc[rsc.rid])))
+			self.CM.log("* %s running on %s"
+				    %(rsc.rid, repr(NodeofRsc[rsc.rid])))
                                 
-        #Make sure the resouces with "must","placement" constraint are running on the same node
+        # Make sure the resouces with "must","placement" constraint
+        #   are running on the same node
         Dependancies = self.CM.Dependencies()
         for dependency in Dependancies:
             if dependency["type"] == "placement" and dependency["strength"] == "must":
