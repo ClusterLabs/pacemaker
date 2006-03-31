@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.40 2006/02/02 08:58:58 andrew Exp $ */
+/* $Id: xml.h,v 1.41 2006/03/31 11:50:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -155,7 +155,12 @@ extern void unlink_xml_node(crm_data_t *node);
 /*
  * Set a timestamp attribute on a_node
  */
-extern void set_node_tstamp(crm_data_t *a_node);
+extern void add_xml_tstamp(crm_data_t *a_node);
+
+/*
+ * 
+ */
+extern void purge_diff_markers(crm_data_t *a_node);
 
 /*
  * Returns a deep copy of src_node
@@ -213,7 +218,7 @@ extern crm_data_t *find_entity(
 	crm_data_t *parent, const char *node_name, const char *id);
 
 extern crm_data_t *subtract_xml_object(
-	crm_data_t *left, crm_data_t *right, gboolean suppress);
+	crm_data_t *left, crm_data_t *right, const char *marker);
 
 extern int add_xml_object(
 	crm_data_t *parent, crm_data_t *target, const crm_data_t *update);
@@ -242,6 +247,8 @@ extern void xml_validate(const crm_data_t *root);
 extern void crm_update_parents(crm_data_t *root);
 
 extern gboolean xml_has_children(crm_data_t *root);	 		
+
+extern char *calculate_xml_digest(crm_data_t *local_cib);
 
 #if XML_PARANOIA_CHECKS
 #  define crm_validate_data(obj) xml_validate(obj)

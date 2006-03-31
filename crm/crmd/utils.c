@@ -1274,7 +1274,7 @@ create_node_state(
 	crm_xml_add(node_state, XML_CIB_ATTR_CRMDSTATE, crmd_state);
 	crm_xml_add(node_state, XML_CIB_ATTR_JOINSTATE, join_state);
 	crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE,  exp_state);
-	crm_xml_add(node_state, "origin", src);
+	crm_xml_add(node_state, XML_ATTR_ORIGIN, src);
 
 	if(clear_shutdown) {
 		crm_xml_add(node_state, XML_CIB_ATTR_SHUTDOWN,  "0");

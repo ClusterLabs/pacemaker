@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.2 2006/03/18 17:23:49 andrew Exp $ */
+/* $Id: actions.c,v 1.3 2006/03/31 11:50:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -308,7 +308,7 @@ cib_action_update(action_t *action, int status)
 	crm_xml_add(xml_op, XML_LRM_ATTR_OPSTATUS, code);
 	crm_xml_add(xml_op, XML_LRM_ATTR_CALLID, "-1");
 	crm_xml_add(xml_op, XML_LRM_ATTR_RC, code);
-	crm_xml_add(xml_op, "origin", __FUNCTION__);
+	crm_xml_add(xml_op, XML_ATTR_ORIGIN, __FUNCTION__);
 
 	crm_free(code);
 

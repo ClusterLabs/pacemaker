@@ -1267,7 +1267,7 @@ create_cib_fragment_adv(
 	if(update == NULL && update_section == NULL) {
 		crm_debug_3("Creating a blank fragment");
 		update = createEmptyCib();
-		crm_xml_add(cib, "debug_source", source);
+		crm_xml_add(cib, XML_ATTR_ORIGIN, source);
 		return update;
 
 	} else if(update == NULL) {
@@ -1284,13 +1284,13 @@ create_cib_fragment_adv(
 	
 	if(whole_cib == FALSE) {
 		cib = createEmptyCib();
-		crm_xml_add(cib, "debug_source", source);
+		crm_xml_add(cib, XML_ATTR_ORIGIN, source);
 		object_root = get_object_root(update_section, cib);
 		add_node_copy(object_root, update);
 
 	} else {
 		cib = copy_xml(update);
-		crm_xml_add(cib, "debug_source", source);
+		crm_xml_add(cib, XML_ATTR_ORIGIN, source);
 	}
 	
 	crm_debug_3("Verifying created fragment");
@@ -1318,10 +1318,6 @@ createEmptyCib(void)
 	config = create_xml_node(cib_root, XML_CIB_TAG_CONFIGURATION);
 	status = create_xml_node(cib_root, XML_CIB_TAG_STATUS);
 
-	set_node_tstamp(cib_root);
-	set_node_tstamp(config);
-	set_node_tstamp(status);
-	
 /* 	crm_xml_add(cib_root, "version", "1"); */
 	crm_xml_add(cib_root, "generated", XML_BOOLEAN_TRUE);
 

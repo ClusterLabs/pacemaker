@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.47 2006/03/26 16:03:05 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.48 2006/03/31 11:50:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,6 +33,7 @@
 #define F_CRM_ELECTION_OWNER		"election-owner"
 
 /*---- Common tags/attrs */
+#define XML_DIFF_MARKER			"__crm_diff_marker__"
 #define XML_ATTR_TAGNAME		F_XML_TAGNAME
 #define XML_ATTR_PARENT			F_XML_PARENT
 #define XML_TAG_CIB			"cib"
@@ -47,7 +48,9 @@
 #define XML_ATTR_GENERATION_ADMIN	"admin_epoch"
 #define XML_ATTR_NUMUPDATES		"num_updates"
 #define XML_ATTR_TIMEOUT		"timeout"
-#define XML_ATTR_TSTAMP			"timestamp"
+#define XML_ATTR_ORIGIN			"crm-debug-origin"
+#define XML_ATTR_TSTAMP			"crm-timestamp"
+#define XML_CIB_ATTR_WRITTEN		"cib-last-written"
 #define XML_ATTR_VERSION		"version"
 #define XML_ATTR_DESC			"description"
 #define XML_ATTR_ID			"id"
@@ -181,6 +184,7 @@
 #define XML_LRM_ATTR_OPSTATUS		"op_status"
 #define XML_LRM_ATTR_RC			"rc_code"
 #define XML_LRM_ATTR_CALLID		"call_id"
+#define XML_LRM_ATTR_OP_DIGEST		"op_digest"
 
 #define XML_TAG_GRAPH			"transition_graph"
 #define XML_GRAPH_TAG_RSC_OP		"rsc_op"

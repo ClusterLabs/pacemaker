@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.52 2006/03/10 10:15:45 andrew Exp $ */
+/* $Id: io.c,v 1.53 2006/03/31 11:50:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -88,31 +88,6 @@ int write_cib_contents(gpointer p);
 #include <pwd.h>
 #include <grp.h>
 
-#include <clplumbing/md5.h>
-
-/* "c048eae664dba840e1d2060f00299e9d" */
-static char *
-calculate_cib_digest(crm_data_t *local_cib)
-{
-	int i = 0;
-	int digest_len = 16;
-	char *digest = NULL;
-	unsigned char *raw_digest = NULL;
-	char *buffer = dump_xml_formatted(local_cib);
-
-	CRM_DEV_ASSERT(buffer != NULL && strlen(buffer) > 0);
-
-	crm_malloc0(digest, sizeof(char) * (2 * digest_len + 1));
-	crm_malloc0(raw_digest, sizeof(char) * (digest_len + 1));
-	MD5((unsigned char *)buffer, strlen(buffer), raw_digest);
-         for(i = 0; i < digest_len; i++) {
- 		sprintf(digest+(2*i), "%02x", raw_digest[i]);
- 	}
-        crm_debug_2("Digest is: %s\n", digest);
-	crm_free(buffer);
-	crm_free(raw_digest);
-	return digest;
-}
 
 static gboolean
 validate_cib_digest(crm_data_t *local_cib)
@@ -126,7 +101,7 @@ validate_cib_digest(crm_data_t *local_cib)
 	int start = 0, length = 0, read_len = 0;
 
 	if(local_cib != NULL) {
-		digest = calculate_cib_digest(local_cib);
+		digest = calculate_xml_digest(local_cib);
 	}
 	
 	s_res = stat(CIB_FILENAME ".sig", &buf);
@@ -175,7 +150,7 @@ write_cib_digest(crm_data_t *local_cib, char *digest)
 	CRM_ASSERT(digest_strm != NULL);
 
 	if(digest == NULL) {
-		digest = calculate_cib_digest(local_cib);
+		digest = calculate_xml_digest(local_cib);
 		CRM_ASSERT(digest != NULL);
 		local_digest = digest;
 	}
@@ -605,7 +580,7 @@ write_cib_contents(gpointer p)
 		exit(LSB_EXIT_GENERIC);
 	}
 
-	digest = calculate_cib_digest(the_cib);
+	digest = calculate_xml_digest(the_cib);
 	crm_info("Wrote version %s.%s.%s of the CIB to disk (digest: %s)",
 		 admin_epoch?admin_epoch:"0",
 		 epoch?epoch:"0", updates?updates:"0", digest);	

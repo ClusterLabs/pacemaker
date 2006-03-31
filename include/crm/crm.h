@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.89 2006/03/26 16:02:29 andrew Exp $ */
+/* $Id: crm.h,v 1.90 2006/03/31 11:50:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -43,6 +43,7 @@
 #define CRM_DEPRECATED_SINCE_2_0_2 1
 #define CRM_DEPRECATED_SINCE_2_0_3 1
 #define CRM_DEPRECATED_SINCE_2_0_4 1
+#define CRM_DEPRECATED_SINCE_2_0_5 1
 #define CRM_DEPRECATED_SINCE_2_1_0 1
 
 #define ipc_call_diff_max_ms 5000
@@ -213,17 +214,16 @@ typedef GList* GListPtr;
 
 #define crm_debug(fmt...)   crm_log_maybe(LOG_DEBUG, fmt)
 #define crm_debug_2(fmt...) crm_log_maybe(LOG_DEBUG_2, fmt)
+#define crm_debug_3(fmt...) crm_log_maybe(LOG_DEBUG_3, fmt)
 
 /* If this is not a developmental build, give the compiler every chance to
  * optimize these away
  */
 #if CRM_DEV_BUILD
-#  define crm_debug_3(fmt...) crm_log_maybe(LOG_DEBUG_3, fmt)
 #  define crm_debug_4(fmt...) crm_log_maybe(LOG_DEBUG_4, fmt)
 #  define crm_debug_5(fmt...) crm_log_maybe(LOG_DEBUG_5, fmt)
 #  define crm_debug_6(fmt...) crm_log_maybe(LOG_DEBUG_6, fmt)
 #else
-#  define crm_debug_3(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }
 #  define crm_debug_4(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }
 #  define crm_debug_5(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }
 #  define crm_debug_6(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }

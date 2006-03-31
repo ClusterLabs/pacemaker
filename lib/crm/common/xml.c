@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.61 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: xml.c,v 1.62 2006/03/31 11:50:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,6 +36,9 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+
+#include <clplumbing/md5.h>
+
 #include <crm/dmalloc_wrapper.h>
 
 int is_comment_start(const char *input);
@@ -78,8 +81,8 @@ find_xml_node(crm_data_t *root, const char * search_path, gboolean must_find)
 	xml_child_iter_filter(
 		root, a_child, search_path,
 /* 		crm_debug_5("returning node (%s).", xmlGetNodePath(a_child)); */
-		crm_log_xml_debug_5(a_child, "contents\t%s");
-		crm_log_xml_debug_5(root, "found in\t%s");
+		crm_log_xml(LOG_DEBUG_5, "found:", a_child);
+		crm_log_xml(LOG_DEBUG_6, "in:",    root);
 		crm_validate_data(a_child);
 		return a_child;
 		);
@@ -239,6 +242,7 @@ copy_in_properties(crm_data_t* target, const crm_data_t *src)
 			 */
 			new_value = NULL;
 			incr_value = NULL;
+
 			/* do a quick check to decide if its worth
 			 *   constructing the various strings and
 			 *   performing string comparisions
@@ -272,33 +276,26 @@ copy_in_properties(crm_data_t* target, const crm_data_t *src)
 }
 
 crm_data_t*
-add_node_copy(crm_data_t *new_parent, const crm_data_t *xml_node)
+add_node_copy(crm_data_t *parent, const crm_data_t *src_node) 
 {
-	crm_data_t *node_copy = NULL;
-	
-	crm_validate_data(new_parent);
-	crm_validate_data(xml_node);
-		
-	if(xml_node != NULL && new_parent != NULL) {
-		const char *name = crm_element_name(xml_node);
-		CRM_CHECK(
-			HA_OK == ha_msg_addstruct_compress(new_parent, name, xml_node), return NULL);
-		
-		node_copy = find_entity(
-			new_parent, crm_element_name(xml_node), ID(xml_node));
-		crm_validate_data(node_copy);
-		crm_update_parents(new_parent);
-		crm_validate_data(new_parent);
+	const char *name = NULL;
+	crm_data_t *child = NULL;
+	CRM_CHECK(src_node != NULL, return NULL);
 
-	} else if(xml_node == NULL) {
-		crm_err("Could not add copy of NULL node");
+	crm_validate_data(src_node);
 
-	} else {
-		crm_err("Could not add copy of node to NULL parent");
-	}
+	name = crm_element_name(src_node);
+	CRM_CHECK(name != NULL, return NULL);
 	
-	crm_validate_data(node_copy);
-	return node_copy;
+	child = create_xml_node(parent, name);
+	copy_in_properties(child, src_node);
+
+	xml_child_iter(src_node, src_child,
+		       add_node_copy(child, src_child);
+		);
+	
+	crm_set_element_parent(child, parent);
+	return child;
 }
 
 const char *
@@ -375,6 +372,7 @@ create_xml_node(crm_data_t *parent, const char *name)
 		CRM_CHECK(ret_value != NULL, return NULL);
 		
 		crm_xml_add(ret_value, F_XML_TAGNAME, name);
+		crm_set_element_parent(ret_value, parent);
 		crm_validate_data(ret_value);
 		if(parent) {
 			crm_validate_data(parent);
@@ -385,16 +383,13 @@ create_xml_node(crm_data_t *parent, const char *name)
 					  parent, name, ret_value), return NULL);
 			crm_msg_del(ret_value);
 
-			crm_update_parents(parent);
 			crm_validate_data(parent);
 			ret_value = parent->values[parent->nfields-1];
-			crm_validate_data(ret_value);
 		}
 	}
 
 	crm_debug_5("Created node [%s [%s]]",
 		  crm_str(parent_name), crm_str(local_name));
-/*	set_node_tstamp(ret_value); */
 	return ret_value;
 }
 
@@ -434,9 +429,8 @@ free_xml_fn(crm_data_t *a_node)
 }
 
 void
-set_node_tstamp(crm_data_t *a_node)
+add_xml_tstamp(crm_data_t *a_node)
 {
-#if 0
 	char *since_epoch = NULL;
 	time_t a_time = time(NULL);
 	
@@ -454,25 +448,13 @@ set_node_tstamp(crm_data_t *a_node)
 		crm_validate_data(a_node);
 		crm_free(since_epoch);
 	}
-#endif
 }
 
 crm_data_t*
 copy_xml(const crm_data_t *src_node)
 {
-	crm_data_t *new_xml = NULL;
-	
-	CRM_CHECK(src_node != NULL, return NULL);
-	CRM_CHECK(crm_element_name(src_node) != NULL, return NULL);
-
-	crm_validate_data(src_node);
-	new_xml = ha_msg_copy(src_node);
-	crm_set_element_parent(new_xml, NULL);
-	crm_update_parents(new_xml);
-	crm_validate_data(new_xml);
-	return new_xml;
+	return add_node_copy(NULL, src_node);
 }
-
 
 crm_data_t*
 string2xml(const char *input)
@@ -621,7 +603,7 @@ write_xml_file(crm_data_t *xml_node, const char *filename)
 	now = time(NULL);
 	now_str = ctime(&now);
 	now_str[24] = EOS; /* replace the newline */
-	crm_xml_add(xml_node, "last_written", now_str);
+	crm_xml_add(xml_node, XML_CIB_ATTR_WRITTEN, now_str);
 	crm_validate_data(xml_node);
 	
 	{
@@ -1528,6 +1510,17 @@ log_xml_diff(unsigned int log_level, crm_data_t *diff, const char *function)
 		);
 }
 
+void
+purge_diff_markers(crm_data_t *a_node)
+{
+	CRM_CHECK(a_node != NULL, return);
+
+	xml_remove_prop(a_node, XML_DIFF_MARKER);
+	xml_child_iter(a_node, child,
+		       purge_diff_markers(child);
+		);
+}
+
 gboolean
 apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 {
@@ -1543,7 +1536,7 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 	xml_child_iter(removed, child_diff, 
 		       CRM_CHECK(root_nodes_seen == 0, result = FALSE);
 		       if(root_nodes_seen == 0) {
-			       *new = subtract_xml_object(old, child_diff, FALSE);
+			       *new = subtract_xml_object(old, child_diff, NULL);
 		       }
 		       root_nodes_seen++;
 		);
@@ -1583,7 +1576,7 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 		diff_of_diff = diff_xml_object(intermediate, diff, TRUE);
 		if(diff_of_diff != NULL) {
 			crm_warn("Diff application failed!");
-/* 			log_xml_diff(LOG_DEBUG, diff_of_diff, "diff:diff_of_diff"); */
+ 			log_xml_diff(LOG_DEBUG, diff_of_diff, "diff:diff_of_diff");
 			log_xml_diff(LOG_INFO, intermediate, "diff:actual_diff");
 			result = FALSE;
 		}
@@ -1600,6 +1593,8 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 		log_data_element("diff:input", NULL, LOG_DEBUG_2, 0, old, TRUE);
 /* 		CRM_CHECK(diff_of_diff != NULL); */
 		result = FALSE;
+	} else {
+		purge_diff_markers(*new);
 	}
 
 	return result;
@@ -1613,26 +1608,31 @@ diff_xml_object(crm_data_t *old, crm_data_t *new, gboolean suppress)
 	crm_data_t *tmp1 = NULL;
 	crm_data_t *added = NULL;
 	crm_data_t *removed = NULL;
-	
-	tmp1 = subtract_xml_object(old, new, suppress);
+
+	tmp1 = subtract_xml_object(old, new, "removed:top");
 	if(tmp1 != NULL) {
-		diff = create_xml_node(NULL, "diff");
-/*
-		if(can_prune_leaf(tmp1)) {
+		if(suppress && can_prune_leaf(tmp1)) {
 			ha_msg_del(tmp1);
 			tmp1 = NULL;
-		} else {
-*/
-		removed = create_xml_node(diff, "diff-removed");
-		added = create_xml_node(diff, "diff-added");
-		add_node_copy(removed, tmp1);
 
+		} else {
+			diff = create_xml_node(NULL, "diff");
+			removed = create_xml_node(diff, "diff-removed");
+			added = create_xml_node(diff, "diff-added");
+			add_node_copy(removed, tmp1);
+		}
+		
 		free_xml(tmp1);
 	}
 	
-	tmp1 = subtract_xml_object(new, old, suppress);
+	tmp1 = subtract_xml_object(new, old, "added:top");
 	if(tmp1 != NULL) {
-		/* never filter added nodes */
+		if(suppress && can_prune_leaf(tmp1)) {
+			ha_msg_del(tmp1);
+			return diff;
+			
+		}
+
 		if(diff == NULL) {
 			diff = create_xml_node(NULL, "diff");
 		}
@@ -1657,8 +1657,6 @@ can_prune_leaf(crm_data_t *xml_node)
 	
 	xml_prop_iter(xml_node, prop_name, prop_value,
 		      if(safe_str_eq(prop_name, XML_ATTR_ID)) {
-			      continue;
-		      } else if(safe_str_eq(prop_name, XML_ATTR_TSTAMP)) {
 			      continue;
 		      }		      
 		      can_prune = FALSE;
@@ -1740,7 +1738,7 @@ in_upper_context(int depth, int context, crm_data_t *xml_node)
 
 
 crm_data_t *
-subtract_xml_object(crm_data_t *left, crm_data_t *right, gboolean suppress)
+subtract_xml_object(crm_data_t *left, crm_data_t *right, const char *marker)
 {
 	gboolean skip = FALSE;
 	gboolean differences = FALSE;
@@ -1752,24 +1750,31 @@ subtract_xml_object(crm_data_t *left, crm_data_t *right, gboolean suppress)
 
 	int lpc = 0;
 	const char *filter[] = {
-		XML_ATTR_TSTAMP,
-		"last_written",
-		"debug_source",
-		"origin",
-		"te-allow-fail"
+		XML_ATTR_ORIGIN,
+		XML_DIFF_MARKER,
+		XML_CIB_ATTR_WRITTEN,		
 	};
 
+	crm_log_xml(LOG_DEBUG_5, "left:",  left);
+	crm_log_xml(LOG_DEBUG_5, "right:", right);
+	
 	if(left == NULL) {
 		return NULL;
+
 	} else if(right == NULL) {
+		crm_data_t *deleted = NULL;
+
 		crm_debug_5("Processing <%s id=%s> (complete copy)",
 			    crm_element_name(left), ID(left));
-		return copy_xml(left);
+		deleted = copy_xml(left);
+		crm_xml_add(deleted, XML_DIFF_MARKER, marker);
+
+		return deleted;
 	}
-	
+
 	name = crm_element_name(left);
 
-	/* sanity check */
+	/* sanity checks */
 	CRM_CHECK(name != NULL, return NULL);
 
 	CRM_CHECK(safe_str_eq(crm_element_name(left),
@@ -1783,13 +1788,12 @@ subtract_xml_object(crm_data_t *left, crm_data_t *right, gboolean suppress)
 	crm_debug_5("Processing <%s id=%s>", crm_str(name), ID(left));
 
 	xml_prop_iter(left, prop_name, left_value,
-		      skip = FALSE;
 		      if(safe_str_eq(prop_name, XML_ATTR_ID)) {
-			      skip = TRUE;
+			      continue;
 		      }
-		      for(lpc = 0;
-			  skip == FALSE && suppress && lpc < DIMOF(filter);
-			  lpc++) {
+
+		      skip = FALSE;
+		      for(lpc = 0; skip == FALSE && lpc < DIMOF(filter); lpc++){
 			      if(safe_str_eq(prop_name, filter[lpc])) {
 				      skip = TRUE;
 			      }
@@ -1819,22 +1823,36 @@ subtract_xml_object(crm_data_t *left, crm_data_t *right, gboolean suppress)
 		);
 
 	/* changes to child objects */
+	crm_debug_3("Processing children of <%s id=%s>",crm_str(name),ID(left));
 	xml_child_iter(
 		left, left_child,  
 		right_child = find_entity(
 			right, crm_element_name(left_child), ID(left_child));
 		child_diff = subtract_xml_object(
-			left_child, right_child, suppress);
+			left_child, right_child, marker);
 		if(child_diff != NULL) {
 			differences = TRUE;
 			add_node_copy(diff, child_diff);
 			free_xml(child_diff);
 		}
+		
 		);
+
+	if(differences == FALSE) {
+		/* check for XML_DIFF_MARKER in a child */ 
+		xml_child_iter(
+			right, right_child,  
+			if(crm_element_value(right_child, XML_DIFF_MARKER)) {
+				crm_debug_2("Found the root of the deletion: %s", name);
+				differences = TRUE;
+				break;
+			}
+			);
+	}
 	
 	if(differences == FALSE) {
 		free_xml(diff);
-		crm_debug_5("\tNo changes");
+		crm_debug_5("\tNo changes to <%s id=%s>", crm_str(name), ID(left));
 		return NULL;
 	}
 	crm_xml_add(diff, XML_ATTR_ID, ID(left));
@@ -1849,6 +1867,9 @@ add_xml_object(crm_data_t *parent, crm_data_t *target, const crm_data_t *update)
 	const char *right_val = NULL;
 	
 	int result = 0;
+
+	crm_log_xml(LOG_DEBUG_5, "update:", update);
+	crm_log_xml(LOG_DEBUG_5, "target:", target);
 
 	CRM_CHECK(update != NULL, return 0);
 
@@ -1866,18 +1887,24 @@ add_xml_object(crm_data_t *parent, crm_data_t *target, const crm_data_t *update)
 	}
 
 	if(target == NULL) {
-		target = add_node_copy(parent, update);
-		crm_debug_2("Added  <%s id=%s>",
-			    crm_str(object_name), crm_str(object_id));
+		target = create_xml_node(parent, object_name);
+		crm_debug_2("Added  <%s%s%s/>",
+			    crm_str(object_name),
+			    object_id?" id=":"", object_id?object_id:"");
 		CRM_CHECK(target != NULL, return 0);
-	} 
 
-	crm_debug_2("Found node <%s id=%s> to update",
-		    crm_str(object_name), crm_str(object_id));
+	} else {
+		crm_debug_2("Found node <%s%s%s/> to update",
+			    crm_str(object_name),
+			    object_id?" id=":"", object_id?object_id:"");
+	}
 	
 	xml_prop_iter(update, prop_name, left_value,
 		      right_val = crm_element_value(target, prop_name);
-		      if(right_val == NULL) {
+		      if(safe_str_eq(prop_name, XML_DIFF_MARKER)) {
+			      continue;
+
+		      } else if(right_val == NULL) {
 			      crm_xml_add(target, prop_name, left_value);
 			      crm_debug_2("\t%s: %s (added)",
 					  crm_str(prop_name),
@@ -2118,7 +2145,7 @@ xml2list(crm_data_t *parent)
 	xml_prop_iter(
 		nvpair_list, key, value, 
 		
-		crm_debug_2("Added %s=%s", key, value);
+		crm_debug_4("Added %s=%s", key, value);
 		
 		g_hash_table_insert(
 			nvpair_hash, crm_strdup(key), crm_strdup(value));
@@ -2202,11 +2229,16 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 	xml_prop_iter(
 		xml_obj, local_prop_name, local_prop_value,
 
+		if(safe_str_eq(local_prop_name, XML_DIFF_MARKER)) {
+			crm_err("Detected "XML_DIFF_MARKER" attribute");
+			continue;
+		}
+		
 		lookup_id = NULL;
 		if(ID(xml_obj) != NULL) {
 			for(lpc = 0; lpc < DIMOF(non_unique); lpc++) {
 				if(safe_str_eq(tag_name, non_unique[lpc])) {
-					/* this tag is never meant to have an ID */
+					/* this tag can have a non-unique ID */
 					break;
 				}
 			}
@@ -2254,3 +2286,105 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 	return modified;
 }
 
+typedef struct name_value_s 
+{
+	const char *name;
+	const char *value;
+} name_value_t;
+
+static gint
+sort_pairs(gconstpointer a, gconstpointer b)
+{
+	const name_value_t *pair_a = a;
+	const name_value_t *pair_b = b;
+	
+	if(a == NULL && b == NULL) {
+		return 0;
+	} else if(a == NULL) {
+		return 1;
+	} else if(b == NULL) {
+		return -1;
+	}
+
+	if(pair_a->name == NULL && pair_b->name == NULL) {
+		return 0;
+	} else if(pair_a->name == NULL) {
+		return 1;
+	} else if(pair_b->name == NULL) {
+		return -1;
+	}
+	return strcmp(pair_a->name, pair_b->name);
+}
+
+static void
+dump_pair(gpointer data, gpointer user_data)
+{
+	name_value_t *pair = data;
+	crm_data_t *parent = user_data;
+	crm_xml_add(parent, pair->name, pair->value);
+}
+
+static void
+free_pair(gpointer data, gpointer user_data)
+{
+	name_value_t *pair = data;
+	crm_free(pair);
+}
+
+static crm_data_t *
+sorted_xml(const crm_data_t *input)
+{
+	GListPtr sorted = NULL;
+	GListPtr unsorted = NULL;
+	name_value_t *pair = NULL;
+	crm_data_t *result = NULL;
+	const char *name = crm_element_name(input);
+
+	CRM_CHECK(input != NULL, return NULL);
+	
+	name = crm_element_name(input);
+	CRM_CHECK(name != NULL, return NULL);
+
+	result = create_xml_node(NULL, name);
+	
+	xml_prop_iter(input, p_name, p_value,
+		      crm_malloc0(pair, sizeof(name_value_t));
+		      pair->name  = p_name;
+		      pair->value = p_value;
+		      unsorted = g_list_prepend(unsorted, pair)
+		);
+
+	sorted = g_list_sort(unsorted, sort_pairs);
+	g_list_foreach(sorted, dump_pair, result);
+	g_list_foreach(sorted, free_pair, NULL);
+	g_list_free(sorted);
+	return result;
+}
+
+/* "c048eae664dba840e1d2060f00299e9d" */
+char *
+calculate_xml_digest(crm_data_t *input)
+{
+	int i = 0;
+	int digest_len = 16;
+	char *digest = NULL;
+	unsigned char *raw_digest = NULL;
+	crm_data_t *sorted = sorted_xml(input);
+	char *buffer = dump_xml_formatted(sorted);
+
+	CRM_CHECK(buffer != NULL && strlen(buffer) > 0,
+		  free_xml(sorted); return NULL);
+
+	crm_malloc0(digest, sizeof(char) * (2 * digest_len + 1));
+	crm_malloc0(raw_digest, sizeof(char) * (digest_len + 1));
+	MD5((unsigned char *)buffer, strlen(buffer), raw_digest);
+	for(i = 0; i < digest_len; i++) {
+ 		sprintf(digest+(2*i), "%02x", raw_digest[i]);
+ 	}
+        crm_debug_2("Digest is: %s\n", digest);
+	crm_log_xml(LOG_DEBUG_3,  "digest:source", sorted);
+	crm_free(buffer);
+	crm_free(raw_digest);
+	free_xml(sorted);
+	return digest;
+}

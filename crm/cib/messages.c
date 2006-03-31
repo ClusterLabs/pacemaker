@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.69 2006/03/17 01:09:01 andrew Exp $ */
+/* $Id: messages.c,v 1.70 2006/03/31 11:50:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -284,8 +284,6 @@ cib_update_counter(crm_data_t *xml_obj, const char *field, gboolean reset)
 	char *old_value = NULL;
 	int  int_value  = -1;
 
-	/* modify the timestamp */
-	set_node_tstamp(xml_obj);
 	if(reset == FALSE && crm_element_value(xml_obj, field) != NULL) {
 		old_value = crm_element_value_copy(xml_obj, field);
 	}
@@ -771,8 +769,6 @@ updateList(crm_data_t *local_cib, crm_data_t *xml_section, crm_data_t *failed,
 		crm_err("Invalid operation on section %s", crm_str(section));
 		return cib_operation;
 	}
-
-	set_node_tstamp(this_section);
 
 	if(safe_str_eq(crm_element_name(xml_section), section)) {
 		xml_child_iter(xml_section, a_child, 
