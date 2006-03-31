@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.62 2006/03/31 11:50:24 andrew Exp $ */
+/* $Id: xml.c,v 1.63 2006/03/31 12:45:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2289,7 +2289,7 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 typedef struct name_value_s 
 {
 	const char *name;
-	const char *value;
+	const void *value;
 } name_value_t;
 
 static gint
@@ -2363,14 +2363,21 @@ sorted_xml(const crm_data_t *input)
 
 /* "c048eae664dba840e1d2060f00299e9d" */
 char *
-calculate_xml_digest(crm_data_t *input)
+calculate_xml_digest(crm_data_t *input, gboolean sort)
 {
 	int i = 0;
 	int digest_len = 16;
 	char *digest = NULL;
 	unsigned char *raw_digest = NULL;
-	crm_data_t *sorted = sorted_xml(input);
-	char *buffer = dump_xml_formatted(sorted);
+	crm_data_t *sorted = NULL;
+	char *buffer = NULL;
+
+	if(sort) {
+		sorted = sorted_xml(input);
+	} else {
+		sorted = copy_xml(input);
+	}
+	buffer = dump_xml_formatted(sorted);
 
 	CRM_CHECK(buffer != NULL && strlen(buffer) > 0,
 		  free_xml(sorted); return NULL);

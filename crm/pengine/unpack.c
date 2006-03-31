@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.173 2006/03/31 12:17:27 andrew Exp $ */
+/* $Id: unpack.c,v 1.174 2006/03/31 12:45:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1158,7 +1158,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	g_hash_table_foreach(local_rsc_params, hash2field, pnow);
 
 	filter_action_parameters(pnow);
-	pnow_digest = calculate_xml_digest(pnow);
+	pnow_digest = calculate_xml_digest(pnow, TRUE);
 	param_digest = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
 
 	if(param_digest == NULL) {
@@ -1168,7 +1168,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 		crm_info("Faking parameter digest creation for %s", ID(xml_op));
 
 		filter_action_parameters(local_params);
-		local_param_digest = calculate_xml_digest(local_params);
+		local_param_digest = calculate_xml_digest(local_params, TRUE);
 		param_digest = local_param_digest;
 		
 		free_xml(local_params);
@@ -1420,8 +1420,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 
 	} else if(EXECRA_OK == actual_rc_i
 		  && is_probe == FALSE
-		  && rsc->role == RSC_ROLE_MASTER
-		  && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+		  && is_stop_action == FALSE
+		  && rsc->role == RSC_ROLE_MASTER) {
 		/* catch status ops that return 0 instead of 8 while they
 		 *   are supposed to be in master mode
 		 */

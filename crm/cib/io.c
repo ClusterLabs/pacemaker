@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.53 2006/03/31 11:50:23 andrew Exp $ */
+/* $Id: io.c,v 1.54 2006/03/31 12:45:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -101,7 +101,7 @@ validate_cib_digest(crm_data_t *local_cib)
 	int start = 0, length = 0, read_len = 0;
 
 	if(local_cib != NULL) {
-		digest = calculate_xml_digest(local_cib);
+		digest = calculate_xml_digest(local_cib, FALSE);
 	}
 	
 	s_res = stat(CIB_FILENAME ".sig", &buf);
@@ -150,7 +150,7 @@ write_cib_digest(crm_data_t *local_cib, char *digest)
 	CRM_ASSERT(digest_strm != NULL);
 
 	if(digest == NULL) {
-		digest = calculate_xml_digest(local_cib);
+		digest = calculate_xml_digest(local_cib, FALSE);
 		CRM_ASSERT(digest != NULL);
 		local_digest = digest;
 	}
@@ -580,7 +580,7 @@ write_cib_contents(gpointer p)
 		exit(LSB_EXIT_GENERIC);
 	}
 
-	digest = calculate_xml_digest(the_cib);
+	digest = calculate_xml_digest(the_cib, FALSE);
 	crm_info("Wrote version %s.%s.%s of the CIB to disk (digest: %s)",
 		 admin_epoch?admin_epoch:"0",
 		 epoch?epoch:"0", updates?updates:"0", digest);	

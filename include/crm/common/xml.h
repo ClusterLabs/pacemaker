@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.41 2006/03/31 11:50:24 andrew Exp $ */
+/* $Id: xml.h,v 1.42 2006/03/31 12:45:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -248,7 +248,7 @@ extern void crm_update_parents(crm_data_t *root);
 
 extern gboolean xml_has_children(crm_data_t *root);	 		
 
-extern char *calculate_xml_digest(crm_data_t *local_cib);
+extern char *calculate_xml_digest(crm_data_t *local_cib, gboolean sort);
 
 #if XML_PARANOIA_CHECKS
 #  define crm_validate_data(obj) xml_validate(obj)

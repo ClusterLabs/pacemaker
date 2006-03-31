@@ -506,7 +506,7 @@ build_operation_update(
 #endif
 		g_hash_table_foreach(op->params, hash2field, args_xml);
 		filter_action_parameters(args_xml);
-		digest = calculate_xml_digest(args_xml);
+		digest = calculate_xml_digest(args_xml, TRUE);
 		crm_xml_add(xml_op, XML_LRM_ATTR_OP_DIGEST, digest);
 #if CRM_DEPRECATED_SINCE_2_0_4
 #else
