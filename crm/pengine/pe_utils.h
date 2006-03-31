@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.40 2006/03/27 05:44:24 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.41 2006/03/31 12:05:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -165,6 +165,7 @@ extern rsc_to_node_t *rsc2node_new(
 extern GListPtr find_actions(GListPtr input, const char *key, node_t *on_node);
 extern GListPtr find_actions_exact(
 	GListPtr input, const char *key, node_t *on_node);
+extern GListPtr find_recurring_actions(GListPtr input, node_t *not_on_node);
 
 extern void set_id(crm_data_t *xml_obj, const char *prefix, int child);
 

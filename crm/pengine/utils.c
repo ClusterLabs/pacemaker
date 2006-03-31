@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.127 2006/03/27 05:44:24 andrew Exp $ */
+/* $Id: utils.c,v 1.128 2006/03/31 12:05:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1634,6 +1634,35 @@ pe_free_rsc_to_node(rsc_to_node_t *cons)
 		pe_free_shallow(cons->node_list_rh);
 		crm_free(cons);
 	}
+}
+
+GListPtr
+find_recurring_actions(GListPtr input, node_t *not_on_node)
+{
+	const char *value = NULL;
+	GListPtr result = NULL;
+	CRM_CHECK(input != NULL, return NULL);
+	
+	slist_iter(
+		action, action_t, input, lpc,
+		value = g_hash_table_lookup(action->extra, "interval");
+		if(value == NULL) {
+			/* skip */
+		} else if(safe_str_eq(CRMD_ACTION_CANCEL, action->task)) {
+			/* skip */
+		} else if(not_on_node == NULL) {
+			crm_debug_5("(null) Found: %s", action->uuid);
+			result = g_list_append(result, action);
+			
+		} else if(action->node == NULL) {
+			/* skip */
+		} else if(action->node->details != not_on_node->details) {
+			crm_debug_5("Found: %s", action->uuid);
+			result = g_list_append(result, action);
+		}
+		);
+
+	return result;
 }
 
 GListPtr

@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.121 2006/03/28 06:12:23 andrew Exp $ */
+/* $Id: native.c,v 1.122 2006/03/31 12:05:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -403,6 +403,7 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 	xml_child_iter_filter(
 		rsc->ops_xml, operation, "op",
 		
+		is_optional = TRUE;
 		name = crm_element_value(operation, "name");
 		interval = crm_element_value(operation, "interval");
 		interval_ms = crm_get_msec(interval);
@@ -1798,7 +1799,7 @@ pe_pre_notify(resource_t *rsc, node_t *node, action_t *op,
 
 void
 pe_post_notify(resource_t *rsc, node_t *node, action_t *op, 
-	notify_data_t *n_data, pe_working_set_t *data_set)
+	       notify_data_t *n_data, pe_working_set_t *data_set)
 {
 	crm_debug_2("%s: %s", rsc->id, op->uuid);
 	pe_notify(rsc, node, op->post_notify, op->post_notified,
@@ -1807,10 +1808,12 @@ pe_post_notify(resource_t *rsc, node_t *node, action_t *op,
 
 
 void
-NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *data_set)
+NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
+	     pe_working_set_t *data_set)
 {
 	action_t *start = NULL;
 	action_t *stop = NULL;
+	GListPtr possible_matches = NULL;
 
 	crm_debug("Executing: %s (role=%s)",rsc->id, role2text(rsc->next_role));
 
@@ -1827,6 +1830,15 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *d
 		stop = stop_action(rsc, current, FALSE);
 		start = start_action(rsc, next, FALSE);
 
+		possible_matches = find_recurring_actions(rsc->actions, next);
+		slist_iter(match, action_t, possible_matches, lpc,
+			   if(match->optional == FALSE) {
+				   crm_err("Found bad recurring action: %s",
+					   match->uuid);
+				   match->optional = TRUE;
+			   }
+			);
+			
 		if(data_set->remove_after_stop) {
 			DeleteRsc(rsc, current, data_set);
 		}
