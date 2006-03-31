@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.11 2006/03/28 12:03:06 andrew Exp $ */
+/* $Id: master.c,v 1.12 2006/03/31 12:00:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -288,14 +288,15 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				attr_value = g_hash_table_lookup(
 					chosen->details->attrs, attr_name);
 
-				crm_info("%s=%s for %s", attr_name,
-					 crm_str(attr_value),
-					 chosen->details->uname);
-				
 				if(attr_value != NULL) {
+					crm_debug("%s=%s for %s", attr_name,
+						  crm_str(attr_value),
+						  chosen->details->uname);
+				
 					child_rsc->priority = char2score(
 						attr_value);
 				}
+
 				crm_free(attr_name);
 				apply_master_location(child_rsc->rsc_location);
 				apply_master_location(rsc->rsc_location);
@@ -369,8 +370,8 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 			case RSC_ROLE_STOPPED:
 				if(child_rsc->priority < 0 ||master_max <= lpc){
-					pe_warn("Cannot promote %s (stopping)",
-						child_rsc->id);
+					crm_debug("Cannot promote %s (stopping)",
+						  child_rsc->id);
 					lpc--;
 				}
 				break;

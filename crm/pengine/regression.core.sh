@@ -20,7 +20,7 @@
 verbose=$1
 io_dir=testcases
 diff_opts="--ignore-all-space -U 1 -u"
-failed=.regression.failed
+failed=.regression.failed.diff
 # zero out the error log
 > $failed
 
