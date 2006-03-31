@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.172 2006/03/31 11:58:17 andrew Exp $ */
+/* $Id: unpack.c,v 1.173 2006/03/31 12:17:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1420,8 +1420,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 
 	} else if(EXECRA_OK == actual_rc_i
 		  && is_probe == FALSE
-		  && is_stop_action == FALSE
-		  && rsc->role == RSC_ROLE_MASTER) {
+		  && rsc->role == RSC_ROLE_MASTER
+		  && safe_str_eq(task, CRMD_ACTION_STATUS)) {
 		/* catch status ops that return 0 instead of 8 while they
 		 *   are supposed to be in master mode
 		 */
