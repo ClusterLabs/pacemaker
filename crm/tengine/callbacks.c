@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.72 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: callbacks.c,v 1.73 2006/03/31 12:03:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -376,15 +376,10 @@ void
 cib_action_updated(const HA_Message *msg, int call_id, int rc,
 		   crm_data_t *output, void *user_data)
 {
-	crm_action_t *action = user_data;
-	const char *task_uuid = crm_element_value(
-		action->xml, XML_LRM_ATTR_TASK_KEY);
-	
 	trigger_graph();
 
 	if(rc < cib_ok) {
-		crm_err("Update for action %d (%s) FAILED: %s",
-			action->id, task_uuid, cib_error2string(rc));
+		crm_err("Update %d FAILED: %s", call_id, cib_error2string(rc));
 	}
 }
 

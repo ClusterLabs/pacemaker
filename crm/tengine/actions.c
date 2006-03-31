@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.18 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: actions.c,v 1.19 2006/03/31 12:03:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -83,7 +83,7 @@ send_stonith_update(stonith_ops_t * op)
 	crm_xml_add(node_state, XML_CIB_ATTR_JOINSTATE, CRMD_JOINSTATE_DOWN);
 	crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE,  CRMD_JOINSTATE_DOWN);
 	crm_xml_add(node_state, XML_CIB_ATTR_REPLACE,   XML_CIB_TAG_LRM);
-	crm_xml_add(node_state, "origin",   __FUNCTION__);
+	crm_xml_add(node_state, XML_ATTR_ORIGIN,   __FUNCTION__);
 	
 	rc = te_cib_conn->cmds->update(
 		te_cib_conn, XML_CIB_TAG_STATUS, node_state, NULL,
@@ -306,7 +306,7 @@ cib_action_update(crm_action_t *action, int status)
 	crm_xml_add(xml_op, XML_LRM_ATTR_OPSTATUS, code);
 	crm_xml_add(xml_op, XML_LRM_ATTR_CALLID, "-1");
 	crm_xml_add(xml_op, XML_LRM_ATTR_RC, code);
-	crm_xml_add(xml_op, "origin", __FUNCTION__);
+	crm_xml_add(xml_op, XML_ATTR_ORIGIN, __FUNCTION__);
 
 	crm_free(code);
 
@@ -318,9 +318,10 @@ cib_action_update(crm_action_t *action, int status)
 		crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY), status, status);
 	crm_xml_add(xml_op,  XML_ATTR_TRANSITION_MAGIC, code);
 	crm_free(code);
-	
-	set_node_tstamp(xml_op);
 
+	crm_err("FIXME: Need to include op_digest for parameters in cib update for %s",
+		ID(xml_op));
+	
 	fragment = create_cib_fragment(state, XML_CIB_TAG_STATUS);
 	
 	crm_debug_3("Updating CIB with \"%s\" (%s): %s %s on %s",
@@ -333,8 +334,7 @@ cib_action_update(crm_action_t *action, int status)
 	crm_debug("Updating CIB with %s action %d: %s %s on %s (call_id=%d)",
 		  op_status2text(status), action->id, task_uuid, rsc_id, target, rc);
 
-	crm_debug_2("Waiting for callback id: %d", rc);
-	add_cib_op_callback(rc, FALSE, action, cib_action_updated);
+	add_cib_op_callback(rc, FALSE, NULL, cib_action_updated);
 
 	free_xml(fragment);
 	free_xml(state);
