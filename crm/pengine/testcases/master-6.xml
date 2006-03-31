@@ -1,5 +1,3 @@
-<?xml version="1.0"?>
-<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
 <cib cib_feature_revision="1" have_quorum="true" generated="true" admin_epoch="0" ccm_transition="4" num_peers="4" crm_feature_set="1.0.4" debug_source="create_node_entry" dc_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" epoch="4" num_updates="167">
    <configuration>
      <crm_config>
@@ -259,7 +257,7 @@
           </lrm_resource>
           <lrm_resource id="heartbeat_192.168.100.182" type="IPaddr" class="heartbeat" provider="heartbeat">
             <lrm_rsc_op id="heartbeat_192.168.100.182_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="0:b76c3e2e-f4d3-4800-af76-89ec8931503c" transition_magic="4:7;0:b76c3e2e-f4d3-4800-af76-89ec8931503c" rsc_state="monitor_failed" call_id="4" rc_code="7" op_status="4">
-              <parameters c_1="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+              <parameters 1="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
@@ -269,7 +267,7 @@
             <lrm_rsc_op id="ocf_msdummy:0_promote_0" operation="promote" origin="do_update_resource" transition_key="15:b76c3e2e-f4d3-4800-af76-89ec8931503c" transition_magic="0:0;15:b76c3e2e-f4d3-4800-af76-89ec8931503c" rsc_state="complete" call_id="48" rc_code="0" op_status="0">
               <parameters clone="0" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="ocf_msdummy:0_monitor_6000" operation="monitor" origin="do_update_resource" transition_key="14:b76c3e2e-f4d3-4800-af76-89ec8931503c" transition_magic="4:8;14:b76c3e2e-f4d3-4800-af76-89ec8931503c" rsc_state="monitor_failed" call_id="47" rc_code="8" op_status="4">
+            <lrm_rsc_op id="ocf_msdummy:0_monitor_6000" operation="monitor" origin="do_update_resource" transition_key="14:b76c3e2e-f4d3-4800-af76-89ec8931503c" transition_magic="4:8;14:b76c3e2e-f4d3-4800-af76-89ec8931503c" rsc_state="monitor_failed" call_id="49" rc_code="8" op_status="4">
               <parameters clone="0" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" te-target-rc="8" crm_feature_set="1.0.4" interval="6000" master_max="4" master_node_max="1" clone_node_max="2"/>
             </lrm_rsc_op>
             <lrm_rsc_op id="ocf_msdummy:0_stop_0" operation="stop" origin="do_update_resource" transition_key="14:b76c3e2e-f4d3-4800-af76-89ec8931503c" transition_magic="0:0;14:b76c3e2e-f4d3-4800-af76-89ec8931503c" rsc_state="stopped" call_id="45" rc_code="0" op_status="0"/>
@@ -380,10 +378,10 @@
           </lrm_resource>
           <lrm_resource id="heartbeat_192.168.100.182" type="IPaddr" class="heartbeat" provider="heartbeat">
             <lrm_rsc_op id="heartbeat_192.168.100.182_start_0" operation="start" origin="build_active_RAs" transition_key="7:b76c3e2e-f4d3-4800-af76-89ec8931503c" transition_magic="0:0;7:b76c3e2e-f4d3-4800-af76-89ec8931503c" rsc_state="running" call_id="31" rc_code="0" op_status="0">
-              <parameters c_1="192.168.100.182" crm_feature_set="1.0.4"/>
+              <parameters 1="192.168.100.182" crm_feature_set="1.0.4"/>
             </lrm_rsc_op>
             <lrm_rsc_op id="heartbeat_192.168.100.182_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="7:b76c3e2e-f4d3-4800-af76-89ec8931503c" transition_magic="0:0;7:b76c3e2e-f4d3-4800-af76-89ec8931503c" rsc_state="running" call_id="35" rc_code="0" op_status="0">
-              <parameters timeout="20000" c_1="192.168.100.182" crm_feature_set="1.0.4" interval="5000"/>
+              <parameters timeout="20000" 1="192.168.100.182" crm_feature_set="1.0.4" interval="5000"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
@@ -489,7 +487,7 @@
           </lrm_resource>
           <lrm_resource id="heartbeat_192.168.100.182" type="IPaddr" class="heartbeat" provider="heartbeat">
             <lrm_rsc_op id="heartbeat_192.168.100.182_monitor_0" operation="monitor" origin="build_active_RAs" transition_key="6:b76c3e2e-f4d3-4800-af76-89ec8931503c" transition_magic="4:7;6:b76c3e2e-f4d3-4800-af76-89ec8931503c" rsc_state="monitor_failed" call_id="4" rc_code="7" op_status="4">
-              <parameters c_1="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+              <parameters 1="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
@@ -571,7 +569,7 @@
           </lrm_resource>
           <lrm_resource id="heartbeat_192.168.100.182" type="IPaddr" class="heartbeat" provider="heartbeat">
             <lrm_rsc_op id="heartbeat_192.168.100.182_monitor_0" operation="monitor" origin="do_update_resource" transition_key="8:b76c3e2e-f4d3-4800-af76-89ec8931503c" transition_magic="4:7;8:b76c3e2e-f4d3-4800-af76-89ec8931503c" rsc_state="monitor_failed" call_id="4" rc_code="7" op_status="4">
-              <parameters c_1="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+              <parameters 1="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="ocf_msdummy:1" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
