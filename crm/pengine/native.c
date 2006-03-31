@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.122 2006/03/31 12:05:37 andrew Exp $ */
+/* $Id: native.c,v 1.123 2006/03/31 15:33:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -962,8 +962,13 @@ native_print(
 	resource_t *rsc, const char *pre_text, long options, void *print_data)
 {
 	node_t *node = NULL;	
-	const char *prov = crm_element_value(rsc->xml,XML_AGENT_ATTR_PROVIDER);
+	const char *prov = NULL;
+	const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
+	if(safe_str_eq(class, "ocf")) {
+		prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+	}
+	
 	if(rsc->running_on != NULL) {
 		node = rsc->running_on->data;
 	}
@@ -990,19 +995,17 @@ native_print(
 	if((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {
 		const char *desc = NULL;
 		desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
-		status_print("%s%s (%s%s%s:%s)%s%s",
+		status_print("%s%s\t(%s%s%s:%s)%s%s",
 			     pre_text?pre_text:"", rsc->id,
 			     prov?prov:"", prov?"::":"",
-			     crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
-			     crm_element_value(rsc->xml, XML_ATTR_TYPE),
+			     class, crm_element_value(rsc->xml, XML_ATTR_TYPE),
 			     desc?": ":"", desc?desc:"");
 
 	} else {
-		status_print("%s%s (%s%s%s:%s):\t%s %s%s",
+		status_print("%s%s\t(%s%s%s:%s):\t%s %s%s",
 			     pre_text?pre_text:"", rsc->id,
 			     prov?prov:"", prov?"::":"",
-			     crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
-			     crm_element_value(rsc->xml, XML_ATTR_TYPE),
+			     class, crm_element_value(rsc->xml, XML_ATTR_TYPE),
 			     (rsc->variant!=pe_native)?"":role2text(rsc->role),
 			     (rsc->variant!=pe_native)?"":node!=NULL?node->details->uname:"",
 			     rsc->is_managed?"":" (unmanaged) ");
