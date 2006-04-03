@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.90 2006/03/31 11:50:24 andrew Exp $ */
+/* $Id: crm.h,v 1.91 2006/04/03 16:38:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -267,6 +267,7 @@ extern void crm_log_message_adv(
 		new_obj = malloc(length);				\
 		if(new_obj == NULL) {					\
 			crm_crit("Out of memory... exiting");		\
+			cl_flush_logs();				\
 			exit(1);					\
 		} else {						\
 			memset(new_obj, 0, length);			\
@@ -281,11 +282,13 @@ extern void crm_log_message_adv(
 			crm_err("Potential memory leak:"		\
 				" %s at %s:%d not NULL before alloc.",	\
 				#new_obj, __FILE__, __LINE__);		\
+			cl_flush_logs();				\
 			abort();					\
 		}							\
 		new_obj = cl_malloc(length);				\
 		if(new_obj == NULL) {					\
 			crm_crit("Out of memory... exiting");		\
+			cl_flush_logs();				\
 			abort();					\
 		}							\
 		memset(new_obj, 0, length);				\
@@ -301,6 +304,7 @@ extern void crm_log_message_adv(
 		new_obj = cl_malloc(length);				\
 		if(new_obj == NULL) {					\
 			crm_crit("Out of memory... exiting");		\
+			cl_flush_logs();				\
 			abort();					\
 		}							\
 		memset(new_obj, 0, length);				\
