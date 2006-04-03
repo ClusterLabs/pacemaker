@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.176 2006/04/03 10:40:39 andrew Exp $ */
+/* $Id: unpack.c,v 1.177 2006/04/03 13:24:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -106,7 +106,7 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 		}
 		pe_config_err("Creating <nvpair id=%s name=%s/> directly"
 			      "beneath <crm_config> has been depreciated since"
-			      " 2.0.1%s", ID(a_child), name);
+			      " 2.0.1", ID(a_child), name);
 #else
 		pe_config_err("Creating <nvpair id=%s name=%s/> directly"
 			      "beneath <crm_config> has been depreciated since"
