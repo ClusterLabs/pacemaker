@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.71 2006/04/03 10:01:35 andrew Exp $ */
+/* $Id: messages.c,v 1.72 2006/04/03 15:15:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -562,6 +562,7 @@ cib_process_delete(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
+	crm_data_t *obj_root = NULL;
 	crm_debug_2("Processing \"%s\" event", op);
 
 	if(input == NULL) {
@@ -570,11 +571,12 @@ cib_process_delete(
 	}
 	
 	*result_cib = copy_xml(existing_cib);
+	obj_root = get_object_root(section, *result_cib);
 	
 	crm_validate_data(input);
 	crm_validate_data(*result_cib);
 
-	if(delete_xml_child(NULL, *result_cib, input) == FALSE) {
+	if(delete_xml_child(NULL, obj_root, input) == FALSE) {
 		crm_debug_2("No matching object to delete");
 	}
 	
@@ -588,6 +590,7 @@ cib_process_modify(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
+	crm_data_t *obj_root = NULL;
 	crm_debug_2("Processing \"%s\" event", op);
 
 	if(input == NULL) {
@@ -596,11 +599,12 @@ cib_process_modify(
 	}
 	
 	*result_cib = copy_xml(existing_cib);
+	obj_root = get_object_root(section, *result_cib);
 	
 	crm_validate_data(input);
 	crm_validate_data(*result_cib);
 
-	if(update_xml_child(*result_cib, input) == FALSE) {
+	if(update_xml_child(obj_root, input) == FALSE) {
 		return cib_NOTEXISTS;		
 	}
 	
