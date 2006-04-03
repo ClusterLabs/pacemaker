@@ -112,15 +112,19 @@ revision_check_callback(const HA_Message *msg, int call_id, int rc,
 	}
 }
 
+extern void populate_cib_nodes(ll_cluster_t *hb_cluster);
+
 static void
 do_cib_replaced(const char *event, HA_Message *msg)
 {
 	crm_debug("Updating the CIB after a replace");
+	populate_cib_nodes(fsa_cluster_conn);
 	do_update_cib_nodes(AM_I_DC, __FUNCTION__);
-	fsa_cluster_conn->llc_ops->client_status(
-		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
+	if(AM_I_DC) {
+		/* start the join process again so we get everyone's LRM status */
+		register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+	}
 }
-
 
 /*	 A_CIB_STOP, A_CIB_START, A_CIB_RESTART,	*/
 enum crmd_fsa_input

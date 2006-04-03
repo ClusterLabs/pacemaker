@@ -42,6 +42,7 @@ extern gboolean stop_all_resources(void);
 
 gboolean crm_shutdown(int nsig, gpointer unused);
 gboolean register_with_ha(ll_cluster_t *hb_cluster, const char *client_name);
+void populate_cib_nodes(ll_cluster_t *hb_cluster);
 
 
 GHashTable   *ipc_clients = NULL;
@@ -616,13 +617,69 @@ default_cib_update_callback(const HA_Message *msg, int call_id, int rc,
 	}
 }
 
-gboolean
-register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
+void
+populate_cib_nodes(ll_cluster_t *hb_cluster)
 {
 	int call_id = 0;
 	const char *ha_node = NULL;
 	crm_data_t *cib_node_list = NULL;
 	
+	/* Async get client status information in the cluster */
+	crm_debug_3("Requesting an initial dump of CRMD client_status");
+	fsa_cluster_conn->llc_ops->client_status(
+		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
+
+	crm_info("Requesting the list of configured nodes");
+	fsa_cluster_conn->llc_ops->init_nodewalk(fsa_cluster_conn);
+
+	cib_node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
+	do {
+		const char *ha_node_type = NULL;
+		const char *ha_node_uuid = NULL;
+		crm_data_t *cib_new_node = NULL;
+
+		ha_node = fsa_cluster_conn->llc_ops->nextnode(fsa_cluster_conn);
+		if(ha_node == NULL) {
+			continue;
+		}
+		
+		ha_node_type = fsa_cluster_conn->llc_ops->node_type(
+			fsa_cluster_conn, ha_node);
+		if(safe_str_neq(NORMALNODE, ha_node_type)) {
+			crm_debug("Node %s: skipping '%s'",
+				  ha_node, ha_node_type);
+			continue;
+		}
+
+		ha_node_uuid = get_uuid(fsa_cluster_conn, ha_node);
+		if(ha_node_uuid == NULL) {
+			crm_warn("Node %s: no uuid found", ha_node);
+			continue;	
+		}
+		
+		crm_notice("Node: %s (uuid: %s)", ha_node, ha_node_uuid);
+		cib_new_node = create_xml_node(cib_node_list, XML_CIB_TAG_NODE);
+		crm_xml_add(cib_new_node, XML_ATTR_ID,    ha_node_uuid);
+		crm_xml_add(cib_new_node, XML_ATTR_UNAME, ha_node);
+		crm_xml_add(cib_new_node, XML_ATTR_TYPE,  ha_node_type);
+
+	} while(ha_node != NULL);
+
+	fsa_cluster_conn->llc_ops->end_nodewalk(fsa_cluster_conn);
+	
+	/* Now update the CIB with the list of nodes */
+	call_id = fsa_cib_conn->cmds->update(
+		fsa_cib_conn, XML_CIB_TAG_NODES, cib_node_list, NULL,
+		cib_scope_local|cib_quorum_override|cib_inhibit_bcast);
+	
+	add_cib_op_callback(call_id, FALSE, NULL, default_cib_update_callback);
+
+	free_xml(cib_node_list);
+}
+
+gboolean
+register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
+{
 	crm_debug("Signing in with Heartbeat");
 	if (hb_cluster->llc_ops->signon(hb_cluster, client_name)!= HA_OK) {
 
@@ -686,57 +743,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	fsa_our_uuid = crm_strdup(fsa_our_uuid);
 	crm_info("UUID: %s", fsa_our_uuid);
 		
-	/* Async get client status information in the cluster */
-	crm_debug_3("Requesting an initial dump of CRMD client_status");
-	fsa_cluster_conn->llc_ops->client_status(
-		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
-
-	crm_info("Requesting the list of configured nodes");
-	fsa_cluster_conn->llc_ops->init_nodewalk(fsa_cluster_conn);
-
-	cib_node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
-	do {
-		const char *ha_node_type = NULL;
-		const char *ha_node_uuid = NULL;
-		crm_data_t *cib_new_node = NULL;
-
-		ha_node = fsa_cluster_conn->llc_ops->nextnode(fsa_cluster_conn);
-		if(ha_node == NULL) {
-			continue;
-		}
-		
-		ha_node_type = fsa_cluster_conn->llc_ops->node_type(
-			fsa_cluster_conn, ha_node);
-		if(safe_str_neq(NORMALNODE, ha_node_type)) {
-			crm_debug("Node %s: skipping '%s'",
-				  ha_node, ha_node_type);
-			continue;
-		}
-
-		ha_node_uuid = get_uuid(fsa_cluster_conn, ha_node);
-		if(ha_node_uuid == NULL) {
-			crm_warn("Node %s: no uuid found", ha_node);
-			continue;	
-		}
-		
-		crm_notice("Node: %s (uuid: %s)", ha_node, ha_node_uuid);
-		cib_new_node = create_xml_node(cib_node_list, XML_CIB_TAG_NODE);
-		crm_xml_add(cib_new_node, XML_ATTR_ID,    ha_node_uuid);
-		crm_xml_add(cib_new_node, XML_ATTR_UNAME, ha_node);
-		crm_xml_add(cib_new_node, XML_ATTR_TYPE,  ha_node_type);
-
-	} while(ha_node != NULL);
-
-	fsa_cluster_conn->llc_ops->end_nodewalk(fsa_cluster_conn);
-	
-	/* Now update the CIB with the list of nodes */
-	call_id = fsa_cib_conn->cmds->update(
-		fsa_cib_conn, XML_CIB_TAG_NODES, cib_node_list, NULL,
-		cib_scope_local|cib_quorum_override|cib_inhibit_bcast);
-	
-	add_cib_op_callback(call_id, FALSE, NULL, default_cib_update_callback);
-
-	free_xml(cib_node_list);
+	populate_cib_nodes(hb_cluster);
 	
 	return TRUE;
     
