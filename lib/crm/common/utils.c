@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.39 2006/04/03 09:51:56 andrew Exp $ */
+/* $Id: utils.c,v 1.40 2006/04/03 16:47:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1311,7 +1311,7 @@ get_last_sequence(const char *directory, const char *series)
 	
 	file_strm = fopen(series_file, "r");
 	if(file_strm == NULL) {
-		crm_err("%s does not exist", series_file);
+		crm_debug("%s does not exist", series_file);
 		crm_free(series_file);
 		return 0;
 	}
