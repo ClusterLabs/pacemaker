@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.72 2006/04/03 15:15:46 andrew Exp $ */
+/* $Id: messages.c,v 1.73 2006/04/03 15:58:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -230,18 +230,21 @@ cib_process_erase(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
+	crm_data_t *local_diff = NULL;
 	enum cib_errors result = cib_ok;
 
 	crm_debug_2("Processing \"%s\" event", op);
 	*answer = NULL;
 	*result_cib = createEmptyCib();
 
-	result = revision_check(existing_cib, *result_cib, options);
 	copy_in_properties(*result_cib, existing_cib);
 	
-	if(result == cib_ok && !(options & cib_inhibit_bcast)) {
-		cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, TRUE);
-	}
+	cib_update_counter(*result_cib, XML_ATTR_GENERATION, FALSE);
+	cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, TRUE);
+
+	local_diff = diff_cib_object(existing_cib, *result_cib, FALSE);
+	cib_replace_notify(*result_cib, result, local_diff);
+	free_xml(local_diff);
 	
 	return result;
 }
