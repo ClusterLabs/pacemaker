@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.48 2006/03/31 11:50:24 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.49 2006/04/03 10:10:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -139,6 +139,7 @@
 #define XML_RSC_ATTR_MASTER_NODEMAX	"master_node_max"
 #define XML_RSC_ATTR_STATE		"clone_state"
 #define XML_RSC_ATTR_MANAGED		"is_managed"
+#define XML_RSC_ATTR_TARGET_ROLE	"target_role"
 #define XML_RSC_ATTR_UNIQUE		"globally_unique"
 #define XML_RSC_ATTR_NOTIFY		"notify"
 #define XML_RSC_ATTR_STICKINESS		"resource_stickiness"

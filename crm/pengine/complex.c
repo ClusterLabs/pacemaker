@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.76 2006/03/27 05:44:24 andrew Exp $ */
+/* $Id: complex.c,v 1.77 2006/04/03 10:10:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -180,6 +180,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		XML_RSC_ATTR_MASTER_NODEMAX,
 		XML_RSC_ATTR_STICKINESS,
 		XML_RSC_ATTR_FAIL_STICKINESS,
+		XML_RSC_ATTR_TARGET_ROLE,
 	};
 
 	const char *rsc_attrs[] = {
@@ -332,13 +333,27 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	}
 
 	value = g_hash_table_lookup(
-		(*rsc)->parameters, "resource_failure_stickiness");
+		(*rsc)->parameters, XML_RSC_ATTR_FAIL_STICKINESS);
 	if(value != NULL) {
 		(*rsc)->fail_stickiness = char2score(value);
 	}
 	crm_debug_2("\tNode score per failure: %d%s",
 		    (*rsc)->fail_stickiness, value == NULL?" (default)":"");
+	
+	value = g_hash_table_lookup(
+		(*rsc)->parameters, XML_RSC_ATTR_TARGET_ROLE);
+	
+	if(value != NULL) {
+		(*rsc)->next_role = text2role(value);
+		if((*rsc)->next_role == RSC_ROLE_UNKNOWN) {
+			pe_config_err("%s: Unknown value for "
+				      XML_RSC_ATTR_TARGET_ROLE": %s",
+				      (*rsc)->id, value);
+		}
+	}
 
+	crm_debug_2("\tDesired next state: %s",
+		    (*rsc)->next_role!=RSC_ROLE_UNKNOWN?role2text((*rsc)->next_role):"default");
 
 	crm_debug_2("\tNotification of start/stop actions: %s",
 		    (*rsc)->notify?"required":"not required");
@@ -350,7 +365,8 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 }
 
 void
-order_actions(action_t *lh_action, action_t *rh_action, order_constraint_t *order) 
+order_actions(
+	action_t *lh_action, action_t *rh_action, order_constraint_t *order) 
 {
 	action_wrapper_t *wrapper = NULL;
 	GListPtr list = NULL;

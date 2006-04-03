@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.174 2006/03/31 12:45:02 andrew Exp $ */
+/* $Id: unpack.c,v 1.175 2006/04/03 10:10:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -246,12 +246,20 @@ param_value(GHashTable *hash, crm_data_t * parent, const char *name)
 	}
 	
 	value = crm_element_value(a_default, XML_NVPAIR_ATTR_VALUE);
+#if CRM_DEPRECATED_SINCE_2_0_1
 	if(value && hash) {
 		if(g_hash_table_lookup(hash, name) == NULL) {
 			g_hash_table_insert(
 				hash, crm_strdup(name), crm_strdup(value));
 		}
 	}
+#else
+	if(value != NULL) {
+		pe_config_err("Creating nvpair %s for %s directly beneath"
+			      " <crm_config> has been depreciated since 2.0.1"
+			      " and is now disabled", ID(a_default), name);
+	}
+#endif
 	return value;
 }
 
@@ -911,6 +919,7 @@ unpack_lrm_rsc_state(
 {
 	int fail_count = 0;
 	char *fail_attr = NULL;
+	const char *value = NULL;
 	const char *fail_val = NULL;
 	gboolean delete_resource = FALSE;
 
@@ -965,6 +974,18 @@ unpack_lrm_rsc_state(
 		rsc_entry, rsc_op, XML_LRM_TAG_RSC_OP,
 		op_list = g_list_append(op_list, rsc_op);
 		);
+
+	value = g_hash_table_lookup(rsc->parameters, XML_RSC_ATTR_TARGET_ROLE);
+	if(value != NULL) {
+		enum rsc_role_e req_role = text2role(value);
+		if(req_role != RSC_ROLE_UNKNOWN && req_role != rsc->next_role){
+			crm_debug("%s: Overwriting calculated next role %s"
+				  " with requested next role %s",
+				  rsc->id, role2text(rsc->next_role),
+				  role2text(req_role));
+			rsc->next_role = req_role;
+		}
+	}
 
 	if(op_list != NULL) {
 		saved_role = rsc->role;
@@ -1264,10 +1285,15 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 
 	if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
 		is_probe = TRUE;
+
+	} else if(interval > 0 && rsc->role < RSC_ROLE_STARTED) {
+		crm_debug_2("Ignoring pre-start recurring action");
+		return FALSE;
 	}
 	
 	if(rsc->orphan) {
-		crm_debug_2("Skipping param check for orphan: %s %s", rsc->id, task);
+		crm_debug_2("Skipping param check for orphan: %s %s",
+			    rsc->id, task);
 
 	} else if(safe_str_eq(task, CRMD_ACTION_STOP)) {
 		crm_debug_2("Ignoring stop params: %s", id);
@@ -1384,7 +1410,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		}
 	}
 #endif
-	
+
 	if(EXECRA_NOT_RUNNING == actual_rc_i) {
 		if(is_probe) {
 			/* treat these like stops */
@@ -1405,7 +1431,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		} else {
 			if(rsc->role != RSC_ROLE_MASTER) {
 				crm_err("%s reported %s in master mode on %s",
-					task, rsc->graph_name,
+					id, rsc->graph_name,
 					node->details->uname);
 			}
 			

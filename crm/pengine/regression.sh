@@ -21,8 +21,6 @@
 
 create_mode="true"
 echo Generating test outputs for these tests...
-#do_test master-1 "Stopped -> Promote"
-
 echo ""
 
 echo Done.
@@ -52,6 +50,9 @@ do_test params-1 "Params: Changed"
 do_test params-2 "Params: Resource definition"
 do_test orphan-0 "Orphan ignore"
 do_test orphan-1 "Orphan stop"
+
+do_test target-0 "Target Role : baseline"
+do_test target-1 "Target Role : test"
 
 echo ""
 do_test master-0 "Stopped -> Slave"
