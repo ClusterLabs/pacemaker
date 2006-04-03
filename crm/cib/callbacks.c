@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.116 2006/03/17 01:05:58 andrew Exp $ */
+/* $Id: callbacks.c,v 1.117 2006/04/03 10:01:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -542,12 +542,9 @@ cib_common_callback_worker(HA_Message *op_request, cib_client_t *cib_client,
 		crm_debug("Invalid operation %s from %s/%s",
 			  op, cib_client->name, cib_client->channel_name);
 		
-	} else if(cib_server_ops[call_type].modifies_cib) {
-		crm_info("Processing %s operation from %s/%s",
-			 op, cib_client->name, cib_client->channel_name);
 	} else {
-		crm_debug("Processing %s operation from %s/%s",
-			  op, cib_client->name, cib_client->channel_name);
+		crm_debug_2("Processing %s operation from %s/%s",
+			    op, cib_client->name, cib_client->channel_name);
 	}
 	
 	crm_log_message_adv(LOG_MSG, "Client[inbound]", op_request);
@@ -1385,7 +1382,7 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 	const char *op         = cl_get_string(msg, F_CIB_OPERATION);
 
 	crm_log_message_adv(LOG_MSG, "Peer[inbound]", msg);
-	crm_debug("Peer %s message (%s) from %s", op, seq, originator);
+	crm_debug_2("Peer %s message (%s) from %s", op, seq, originator);
 	
 	if(originator == NULL || safe_str_eq(originator, cib_our_uname)) {
  		crm_debug_3("Discarding %s message from ourselves", op);
@@ -1407,12 +1404,7 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 		return;
 	}
 
-	if(cib_server_ops[call_type].modifies_cib) {
-		crm_info("Processing %s msg (%s) from %s", op, seq, originator);
-
-	} else {
-		crm_debug("Processing %s msg (%s) from %s",op, seq, originator);
-	}
+	crm_debug_2("Processing %s msg (%s) from %s",op, seq, originator);
 
 	ha_msg_value_int(msg, F_CIB_CALLOPTS, &call_options);
 	crm_debug_4("Retrieved call options: %d", call_options);

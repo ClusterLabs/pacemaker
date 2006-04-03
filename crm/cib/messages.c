@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.70 2006/03/31 11:50:23 andrew Exp $ */
+/* $Id: messages.c,v 1.71 2006/04/03 10:01:35 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -53,6 +53,9 @@ extern const char *cib_our_uname;
 extern gboolean syncd_once;
 enum cib_errors revision_check(crm_data_t *cib_update, crm_data_t *cib_copy, int flags);
 int get_revision(crm_data_t *xml_obj, int cur_revision);
+
+#define CIB_DIFF_LEVEL LOG_DEBUG
+unsigned int cib_diff_loglevel = CIB_DIFF_LEVEL+1;
 
 enum cib_errors updateList(
 	crm_data_t *local_cib, crm_data_t *update_command, crm_data_t *failed,
@@ -139,7 +142,6 @@ cib_process_quit(
 	return result;
 }
 
-
 enum cib_errors 
 cib_process_readwrite(
 	const char *op, int options, const char *section, crm_data_t *input,
@@ -158,6 +160,7 @@ cib_process_readwrite(
 	}
 
 	if(safe_str_eq(op, CIB_OP_MASTER)) {
+		cib_diff_loglevel = CIB_DIFF_LEVEL;
 		if(cib_is_master == FALSE) {
 			crm_info("We are now in R/W mode");
 			cib_is_master = TRUE;
@@ -169,6 +172,7 @@ cib_process_readwrite(
 		
 	} else if(cib_is_master) {
 		crm_info("We are now in R/O mode");
+		cib_diff_loglevel = CIB_DIFF_LEVEL+1;
 		cib_is_master = FALSE;
 	}
 
