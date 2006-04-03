@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.30 2006/03/31 12:07:20 andrew Exp $ */
+/* $Id: util.h,v 1.31 2006/04/03 09:51:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -123,5 +123,13 @@ extern int crm_int_helper(const char *text, char **end_text);
 
 extern void crm_abort(const char *file, const char *function, int line,
 		      const char *condition, gboolean do_fork);
+
+extern char *generate_series_filename(
+	const char *directory, const char *series, int sequence, gboolean bzip);
+
+extern int get_last_sequence(const char *directory, const char *series);
+
+extern void write_last_sequence(
+	const char *directory, const char *series, int sequence, int max);
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.89 2006/03/21 17:56:36 andrew Exp $ */
+/* $Id: stages.c,v 1.90 2006/04/03 09:51:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -451,7 +451,7 @@ stage7(pe_working_set_t *data_set)
 	return TRUE;
 }
 
-static int transition_id = -1;
+int transition_id = -1;
 /*
  * Create a dependency graph to send to the transitioner (via the CRMd)
  */

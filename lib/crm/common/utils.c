@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.38 2006/03/31 11:58:17 andrew Exp $ */
+/* $Id: utils.c,v 1.39 2006/04/03 09:51:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1148,7 +1148,8 @@ filter_action_parameters(crm_data_t *param_set)
 		XML_RSC_ATTR_MULTIPLE,
 		XML_RSC_ATTR_STICKINESS,
 		XML_RSC_ATTR_FAIL_STICKINESS,
-
+		XML_RSC_ATTR_TARGET_ROLE,
+		
 /* ignore clone fields */
 		XML_RSC_ATTR_INCARNATION, 
 		XML_RSC_ATTR_INCARNATION_MAX, 
@@ -1263,4 +1264,132 @@ crm_abort(const char *file, const char *function, int line,
  		   do_fork?"non-":"", file, line, assert_condition);
 
 	abort();
+}
+
+char *
+generate_series_filename(
+	const char *directory, const char *series, int sequence, gboolean bzip)
+{
+	int len = 40;
+	char *filename = NULL;
+	const char *ext = "raw";
+
+	CRM_CHECK(directory  != NULL, return NULL);
+	CRM_CHECK(series != NULL, return NULL);
+	
+	len += strlen(directory);
+	len += strlen(series);
+	crm_malloc0(filename, sizeof(char)*len);
+	CRM_CHECK(filename != NULL, return NULL);
+
+	if(bzip) {
+		ext = "bz2";
+	}
+	sprintf(filename, "%s/%s-%d.%s", directory, series, sequence, ext);
+	
+	return filename;
+}
+
+int
+get_last_sequence(const char *directory, const char *series)
+{
+	FILE *file_strm = NULL;
+	int start = 0, length = 0, read_len = 0;
+	char *series_file = NULL;
+	char *buffer = NULL;
+	int seq = 0;
+	int len = 36;
+
+	CRM_CHECK(directory  != NULL, return 0);
+	CRM_CHECK(series != NULL, return 0);
+	
+	len += strlen(directory);
+	len += strlen(series);
+	crm_malloc0(series_file, sizeof(char)*len);
+	CRM_CHECK(series_file != NULL, return 0);
+	sprintf(series_file, "%s/%s.last", directory, series);
+	
+	file_strm = fopen(series_file, "r");
+	if(file_strm == NULL) {
+		crm_err("%s does not exist", series_file);
+		crm_free(series_file);
+		return 0;
+	}
+	
+	/* see how big the file is */
+	start  = ftell(file_strm);
+	fseek(file_strm, 0L, SEEK_END);
+	length = ftell(file_strm);
+	fseek(file_strm, 0L, start);
+	
+	CRM_ASSERT(start == ftell(file_strm));
+
+	crm_debug_3("Reading %d bytes from file", length);
+	crm_malloc0(buffer, sizeof(char) * (length+1));
+	read_len = fread(buffer, sizeof(char), length, file_strm);
+
+	if(read_len != length) {
+		crm_err("Calculated and read bytes differ: %d vs. %d",
+			length, read_len);
+		crm_free(buffer);
+		buffer = NULL;
+		
+	} else  if(length <= 0) {
+		crm_info("%s was not valid", series_file);
+		crm_free(buffer);
+		buffer = NULL;
+	}
+	
+	crm_free(series_file);
+	seq = crm_parse_int(buffer, "0");
+	crm_free(buffer);
+	fclose(file_strm);
+	return seq;
+}
+
+void
+write_last_sequence(
+	const char *directory, const char *series, int sequence, int max)
+{
+	int rc = 0;
+	int len = 36;
+	char *buffer = NULL;
+	FILE *file_strm = NULL;
+	char *series_file = NULL;
+
+	CRM_CHECK(directory  != NULL, return);
+	CRM_CHECK(series != NULL, return);
+
+	if(max == 0) {
+		return;
+	}
+	while(max > 0 && sequence > max) {
+		sequence -= max;
+	}
+	buffer = crm_itoa(sequence);
+	
+	len += strlen(directory);
+	len += strlen(series);
+	crm_malloc0(series_file, sizeof(char)*len);
+	CRM_CHECK(series_file != NULL, return);
+	sprintf(series_file, "%s/%s.last", directory, series);
+	
+	file_strm = fopen(series_file, "w");
+	if(file_strm == NULL) {
+		crm_err("%s does not exist", series_file);
+		crm_free(series_file);
+		return;
+	}
+
+	rc = fprintf(file_strm, "%s", buffer);
+	if(rc < 0) {
+		cl_perror("Cannot write output to %s", series_file);
+	}
+	
+	fflush(file_strm);
+	fclose(file_strm);
+
+
+	crm_free(series_file);
+	crm_free(buffer);
 }

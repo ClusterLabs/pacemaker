@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.105 2006/03/09 21:36:38 andrew Exp $ */
+/* $Id: pengine.c,v 1.106 2006/04/03 09:51:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,9 +41,18 @@ gboolean was_config_error = FALSE;
 gboolean was_config_warning = FALSE;
 unsigned int pengine_input_loglevel = LOG_INFO;
 
+#define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
+
+
+extern int transition_id;
+
+#define get_series() 	was_processing_error?"pe-error":was_processing_warning?"pe-warn":"pe-input"
+
 gboolean
 process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 {
+	int seq = -1;
+	const char *use_series = NULL;
 	const char *sys_to = cl_get_string(msg, F_CRM_SYS_TO);
 	const char *op = cl_get_string(msg, F_CRM_TASK);
 	const char *ref = cl_get_string(msg, XML_ATTR_REFERENCE);
@@ -68,42 +77,21 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		pe_working_set_t data_set;
 		crm_data_t *generation = create_xml_node(NULL, XML_TAG_CIB);
 		crm_data_t *log_input  = copy_xml(xml_data);
-		crm_data_t *status     = get_object_root(
-			XML_CIB_TAG_STATUS, log_input);
-
+		char *filename = NULL;
+#if HAVE_BZLIB_H
+		gboolean compress = TRUE;
+#else
+		gboolean compress = FALSE;
+#endif
+		
 		copy_in_properties(generation, xml_data);
 		crm_log_xml_info(generation, "[generation]");
-		
-#if 0
-		char *xml_buffer = NULL;
-		char *xml_buffer_ptr = NULL;
-		int max_xml = MAXLINE - 8;
-		
-		xml_buffer = dump_xml_unformatted(generation);
-		LogToCircularBuffer(input_buffer, LOG_INFO,
-				    "Generation: %s", xml_buffer);
-		crm_free(xml_buffer);
 
-		xml_buffer = dump_xml_unformatted(status);
-		xml_buffer_ptr = xml_buffer;
-
-		while(xml_buffer_ptr != NULL) {
-			LogToCircularBuffer(input_buffer, LOG_INFO,
-					    "PE xml: %s", xml_buffer_ptr);
-			if(strlen(xml_buffer_ptr) > max_xml) {
-				xml_buffer_ptr = xml_buffer_ptr + max_xml;
-			} else {
-				xml_buffer_ptr = NULL;;
-			}
-		}
-		crm_free(xml_buffer);
-#endif
 		was_processing_error = FALSE;
 		was_processing_warning = FALSE;
 
 		crm_zero_mem_stats(NULL);
 
-		
 		do_calculations(&data_set, xml_data, NULL);
 		crm_log_xml_debug_3(data_set.graph, "[out]");
 
@@ -117,25 +105,30 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		if(is_ipc_empty(sender) && crm_mem_stats(NULL)) {
 			pe_warn("Unfree'd memory");
 		}
+
+		use_series = get_series();
+
+		seq = get_last_sequence(PE_WORKING_DIR, use_series);
 	
+		filename = generate_series_filename(
+			PE_WORKING_DIR, use_series, seq, compress);
+		write_xml_file(log_input, filename, compress);
+		write_last_sequence(PE_WORKING_DIR, use_series, seq+1, -1);
+		
 		if(was_processing_error) {
-			crm_info("ERRORs found during PE processing."
-			       "  Input follows:");
-			crm_log_xml(
-				pengine_input_loglevel-2, "[input]", log_input);
+			crm_err("Transition %d:"
+				" ERRORs found during PE processing."
+				" Input stored in: %s",
+				transition_id, filename);
 
 		} else if(was_processing_warning) {
-			crm_log_maybe(pengine_input_loglevel-1,
-				      "WARNINGs found during PE processing."
-				      "  Input follows:");
-			crm_log_xml(
-				pengine_input_loglevel-1,"[input]", log_input);
+			crm_warn("Transition %d:"
+				 " WARNINGs found during PE processing."
+				 " Input stored in: %s",
+				 transition_id, filename);
 
-		} else if (crm_log_level > pengine_input_loglevel) {
-			crm_log_xml(
-				pengine_input_loglevel+1, "[input]", log_input);
 		} else {
-			crm_log_xml(pengine_input_loglevel, "[status]", status);
+			crm_info("PEngine input stored in: %s", filename);
 		}
 
 		if(was_config_error) {
@@ -146,9 +139,10 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 			crm_info("Configuration WARNINGs found during PE processing."
 				 "  Please run \"crm_verify -L\" to identify issues.");
 		}
-		
+
 		free_xml(generation);
 		free_xml(log_input);
+		crm_free(filename);
 		
 	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
 		crm_warn("Received quit message, terminating");

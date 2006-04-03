@@ -28,6 +28,7 @@ hadir		= $(sysconfdir)/ha.d
 halibdir	= $(libdir)/@HB_PKG@
 commmoddir	= $(halibdir)/modules/comm
 havarlibdir	= $(localstatedir)/lib/@HB_PKG@
+pe_varlibdir	= $(HA_VARLIBDIR)/$(HB_PKG)/pengine
 
 # sockets with path
 crmdir		= $(havarlibdir)/crm
@@ -86,5 +87,9 @@ clean-generic:
 	rm -f *.log *.debug *~
 
 install-exec-local:
+	$(mkinstalldirs) $(DESTDIR)/$(pe_varlibdir)
+	-chown $(HA_CCMUSER) $(DESTDIR)/$(pe_varlibdir)
+	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(pe_varlibdir)
+	-chmod 750 $(DESTDIR)/$(pe_varlibdir)
 
 uninstall-local:
