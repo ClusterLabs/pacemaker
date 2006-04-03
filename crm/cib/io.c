@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.55 2006/04/03 09:41:36 andrew Exp $ */
+/* $Id: io.c,v 1.56 2006/04/03 15:14:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -488,17 +488,16 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 	
 	if (initializeCib(new_cib) == FALSE) {
 		crm_err("Ignoring invalid or NULL CIB");
-		error_code = -1;
 		if(saved_cib != NULL) {
 			crm_warn("Reverting to last known CIB");
-			if (initializeCib(saved_cib)) {
+			if (initializeCib(saved_cib) == FALSE) {
 				/* oh we are so dead  */
 				crm_crit("Couldn't re-initialize the old CIB!");
 				cl_flush_logs();
 				exit(1);
 			}
 			
-		} else if(error_code != cib_ok) {
+		} else {
 			crm_crit("Could not write out new CIB and no saved"
 				 " version to revert to");
 		}
