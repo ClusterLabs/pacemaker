@@ -14,15 +14,20 @@ from CM_hb import HeartbeatCM
 
 class CIB:
     cib_option_template = '''
+    <cluster_property_set id="default-options">
+       <attributes>
         <nvpair id="c-pref-1" name="transition_idle_timeout" value="3m"/>
         <nvpair id="c-pref-2" name="symmetric_cluster" value="true"/>
-        <nvpair id="c-pref-3" name="short_resource_names" value="%d"/>
+        <nvpair id="c-pref-3" name="short_resource_names" value="true"/>
         <nvpair id="c-pref-4" name="stop_orphan_resources" value="true"/>
         <nvpair id="c-pref-5" name="stop_orphan_actions" value="true"/>
         <nvpair id="c-pref-6" name="remove_after_stop" value="false"/>
         <nvpair id="c-pref-7" name="is_managed_default" value="true"/>
         <nvpair id="c-pref-8" name="no_quorum_policy" value="stop"/>
-        <nvpair id="c-pref-9" name="default_resource_stickiness" value="0"/> ''' 
+        <nvpair id="c-pref-9" name="default_resource_stickiness" value="0"/>
+        <nvpair id="c-pref-10" name="stonith_enabled" value="%d"/>
+       </attributes>
+    </cluster_property_set>'''
 
 
     dc_ipaddr_resource_template = ''' 
@@ -174,9 +179,6 @@ class CIB:
           </primitive>
         </clone>"""
 
-    cib_fencing = """
-        <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/> """
-
     cib_template ='''
 <cib cib_feature_revision="1" have_quorum="false">
   <configuration>
@@ -202,9 +204,7 @@ class CIB:
         self.CM = CM
 
         #make up crm config
-        cib_options = self.cib_option_template % self.CM.use_short_names
-        if CM.Env["DoFencing"] == 1:
-            cib_options += self.cib_fencing
+        cib_options = self.cib_option_template % CM.Env["DoFencing"]
 
         #create resources and their constraints
         resources = ""
