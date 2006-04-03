@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.117 2006/04/03 10:01:34 andrew Exp $ */
+/* $Id: callbacks.c,v 1.118 2006/04/03 15:59:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -96,9 +96,15 @@ cib_prepare_common(HA_Message *root, const char *section)
 
 	} else if(safe_str_eq(crm_element_name(root), XML_TAG_FRAGMENT)) {
 		data = find_xml_node(root, XML_TAG_CIB, TRUE);
+		if(data != NULL) {
+			crm_debug_3("Extracted CIB from "XML_TAG_FRAGMENT);
+		} else {
+			crm_log_xml_debug_4(root, "No CIB");
+		}
 		
 	} else {
 		data = root;
+		crm_log_xml_debug_4(root, "cib:input");
 	}
 
 	/* grab the section specified for the command */
@@ -106,7 +112,15 @@ cib_prepare_common(HA_Message *root, const char *section)
 		int rc = revision_check(data, the_cib, 0/* call_options */);
 		if(rc == cib_ok) {
 			data = get_object_root(section, data);
+			if(data != NULL) {
+				crm_debug_3("Extracted %s from CIB", section);
+			} else {
+				crm_log_xml_debug_4(root, "No Section");
+			}
+		} else {
+			crm_debug_2("Revision check failed");
 		}
+		
 	}
 
 	return data;
