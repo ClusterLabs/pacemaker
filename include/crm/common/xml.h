@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.42 2006/03/31 12:45:02 andrew Exp $ */
+/* $Id: xml.h,v 1.43 2006/04/03 09:41:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -186,7 +186,8 @@ extern crm_data_t *stdin2xml(void);
 
 extern crm_data_t *string2xml(const char *input);
 
-extern int write_xml_file(crm_data_t *xml_node, const char *filename);
+extern int write_xml_file(
+	crm_data_t *xml_node, const char *filename, gboolean compress);
 
 extern char *dump_xml_formatted(const crm_data_t *msg);
 

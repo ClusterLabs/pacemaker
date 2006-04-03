@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.62 2006/01/26 11:36:58 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.63 2006/04/03 09:41:36 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -591,7 +591,8 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 					received_responses);
 				
 				filename[filename_len - 1] = '\0';
-				if (0 > write_xml_file(new_input->xml, filename)) {
+				if (0 > write_xml_file(
+					    new_input->xml, filename, FALSE)) {
 					crm_crit("Could not save response to"
 						 " %s", filename);
 				}

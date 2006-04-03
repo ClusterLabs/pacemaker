@@ -1,4 +1,4 @@
-/* $Id: crm_verify.c,v 1.5 2006/03/29 06:11:52 andrew Exp $ */
+/* $Id: crm_verify.c,v 1.6 2006/04/03 09:41:36 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -202,7 +202,7 @@ main(int argc, char **argv)
 		);
 
 	if(cib_save != NULL) {
-		write_xml_file(cib_object, cib_save);
+		write_xml_file(cib_object, cib_save, FALSE);
 	}
 	
 #if 0

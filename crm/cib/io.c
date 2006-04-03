@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.54 2006/03/31 12:45:02 andrew Exp $ */
+/* $Id: io.c,v 1.55 2006/04/03 09:41:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -574,7 +574,7 @@ write_cib_contents(gpointer p)
 		free_xml_from_parent(the_cib, cib_status_root);
 	}
 
-	rc = write_xml_file(the_cib, CIB_FILENAME);
+	rc = write_xml_file(the_cib, CIB_FILENAME, FALSE);
 	if(rc <= 0) {
 		crm_err("Changes couldn't be written to disk");
 		exit(LSB_EXIT_GENERIC);

@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.63 2006/03/31 12:45:02 andrew Exp $ */
+/* $Id: xml.c,v 1.64 2006/04/03 09:41:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -38,7 +38,9 @@
 #include <crm/common/xml.h>
 
 #include <clplumbing/md5.h>
-
+#if HAVE_BZLIB_H
+#  include <bzlib.h>
+#endif
 #include <crm/dmalloc_wrapper.h>
 
 int is_comment_start(const char *input);
@@ -582,13 +584,14 @@ dump_array(int log_level, const char *message, const char **array, int depth)
 }
 
 int
-write_xml_file(crm_data_t *xml_node, const char *filename) 
+write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress) 
 {
 	int res = 0;
 	char *now_str = NULL;
 	time_t now;
 
 	CRM_CHECK(filename != NULL, return -1);
+
 	crm_debug_3("Writing XML out to %s", filename);
 	crm_validate_data(xml_node);
 	if (xml_node == NULL) {
@@ -613,16 +616,58 @@ write_xml_file(crm_data_t *xml_node, const char *filename)
 			cl_perror("Cannot write to %s", filename);
 			
 		} else {
+			gboolean is_done = FALSE;
 			char *buffer = dump_xml_formatted(xml_node);
 			CRM_CHECK(buffer != NULL && strlen(buffer) > 0, return -1);
-			if(buffer != NULL && strlen(buffer) > 0) {
+			if(buffer == NULL || strlen(buffer) <= 0) {
+				is_done = TRUE;
+			}
+#if HAVE_BZLIB_H
+			if(compress && is_done == FALSE) {
+				int rc = BZ_OK;
+				BZFILE *bz_file = NULL;
+				unsigned int in = 0, out = 0;
+				is_done = TRUE;
+				bz_file = BZ2_bzWriteOpen(
+					&rc, file_output_strm, 5, 0, 0);
+				if(rc != BZ_OK) {
+					is_done = FALSE;
+					crm_err("bzWriteOpen failed: %d", rc);
+				}
+				if(is_done) {
+					BZ2_bzWrite(&rc, bz_file,
+						    buffer, strlen(buffer));
+					if(rc != BZ_OK) {
+						crm_err("bzWrite() failed: %d", rc);
+						is_done = FALSE;
+					}
+				}
+				if(is_done) {
+					BZ2_bzWriteClose(&rc, bz_file, 0, &in, &out);
+					if(rc != BZ_OK) {
+						crm_err("bzWriteClose() failed: %d",rc);
+						is_done = FALSE;
+					} else {
+						crm_debug("%s: In: %d, out: %d",
+							  filename, in, out);
+					}
+				}
+			}
+#endif
+			if(compress && is_done == FALSE) {
+				compress = FALSE;
+				crm_warn("bzlib failed or not installed."
+					 "  Writing uncompressed data to: %s",
+					 filename);
+			}
+			if(is_done == FALSE) {
 				res = fprintf(file_output_strm, "%s", buffer);
 				if(res < 0) {
 					cl_perror("Cannot write output to %s",
 						  filename);
 				}
+				fflush(file_output_strm);
 			}
-			fflush(file_output_strm);
 			fclose(file_output_strm);
 			crm_free(buffer);
 		}
