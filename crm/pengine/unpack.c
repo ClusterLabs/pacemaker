@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.175 2006/04/03 10:10:46 andrew Exp $ */
+/* $Id: unpack.c,v 1.176 2006/04/03 10:40:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -82,13 +82,7 @@ rsc_to_node_t *generate_location_rule(
 gboolean
 unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 {
-/* 	const char *attr_filter[] = { */
-/* 		"default_resource_stickiness", */
-/* 		"transition_idle_timeout", */
-/* 		"stonith_enabled", */
-/* 		"symmetric_cluster" */
-/* 	}; */
-	
+	const char *name = NULL;
 	const char *value = NULL;
 	GHashTable *config_hash = g_hash_table_new_full(
 		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
@@ -99,20 +93,27 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 		config, "cluster_property_set", NULL, config_hash,
 		NULL, 0, data_set);
 
+	xml_child_iter_filter(
+		config, a_child, XML_CIB_TAG_NVPAIR,
+
+		name = crm_element_value(a_child, XML_NVPAIR_ATTR_NAME);
+
 #if CRM_DEPRECATED_SINCE_2_0_1
-	param_value(config_hash, config, "transition_idle_timeout");
-	param_value(config_hash, config, "default_resource_stickiness");
-	param_value(config_hash, config, "default_resource_failure_stickiness");
-	param_value(config_hash, config, "stonith_enabled");
-	param_value(config_hash, config, "symmetric_cluster");
-	param_value(config_hash, config, "no_quorum_policy");
-	param_value(config_hash, config, "stop_orphan_resources");
-	param_value(config_hash, config, "stop_orphan_actions");
-	param_value(config_hash, config, "remove_after_stop");
-	param_value(config_hash, config, "is_managed_default");
-	param_value(config_hash, config, "short_resource_names");
-	param_value(config_hash, config, "stonith_action");
+		value = crm_element_value(a_child, XML_NVPAIR_ATTR_VALUE);
+		if(g_hash_table_lookup(config_hash, name) == NULL) {
+			g_hash_table_insert(
+				config_hash,crm_strdup(name),crm_strdup(value));
+		}
+		pe_config_err("Creating <nvpair id=%s name=%s/> directly"
+			      "beneath <crm_config> has been depreciated since"
+			      " 2.0.1%s", ID(a_child), name);
+#else
+		pe_config_err("Creating <nvpair id=%s name=%s/> directly"
+			      "beneath <crm_config> has been depreciated since"
+			      " 2.0.1 and is now disabled", ID(a_child), name);
 #endif
+		);
+	
 	get_cluster_pref("transition_idle_timeout");
 	if(value != NULL) {
 		long tmp = crm_get_msec(value);
@@ -220,47 +221,6 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 		 data_set->is_managed_default?"":"not ");
 
 	return TRUE;
-}
-
-const char *
-param_value(GHashTable *hash, crm_data_t * parent, const char *name) 
-{
-	const char *value = NULL;
-	const char *pref_name = NULL;
-	crm_data_t * a_default = NULL;
-
-	if(parent != NULL) {
-		crm_validate_data(parent);
-		xml_child_iter_filter(
-			parent, a_child, XML_CIB_TAG_NVPAIR,
-			pref_name = crm_element_value(a_child, XML_NVPAIR_ATTR_NAME);
-			if(safe_str_eq(name, pref_name)) {
-				a_default = a_child;
-				break;
-			}
-		);
-	}
-	
-	if(a_default == NULL) {
-		return NULL;
-	}
-	
-	value = crm_element_value(a_default, XML_NVPAIR_ATTR_VALUE);
-#if CRM_DEPRECATED_SINCE_2_0_1
-	if(value && hash) {
-		if(g_hash_table_lookup(hash, name) == NULL) {
-			g_hash_table_insert(
-				hash, crm_strdup(name), crm_strdup(value));
-		}
-	}
-#else
-	if(value != NULL) {
-		pe_config_err("Creating nvpair %s for %s directly beneath"
-			      " <crm_config> has been depreciated since 2.0.1"
-			      " and is now disabled", ID(a_default), name);
-	}
-#endif
-	return value;
 }
 
 gboolean

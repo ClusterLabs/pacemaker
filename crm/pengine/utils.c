@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.128 2006/03/31 12:05:37 andrew Exp $ */
+/* $Id: utils.c,v 1.129 2006/04/03 10:40:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -898,19 +898,25 @@ unpack_operation(
 	if(xml_obj != NULL) {
 		value = crm_element_value(xml_obj, "on_fail");
 	}
-#if CRM_DEPRECATED_SINCE_2_0_2
 	if(value == NULL && safe_str_eq(action->task, CRMD_ACTION_STOP)) {
 		value = g_hash_table_lookup(
 			action->rsc->parameters, "on_stopfail");
 		if(value != NULL) {
-			crm_err("The \"on_stopfail\" attribute in %s is deprecated",
-				action->rsc->id);
-			crm_err("Please use specify the \"on_fail\" attribute on the"
-				" \"stop\" operation instead");
-			
+#if CRM_DEPRECATED_SINCE_2_0_2
+			pe_config_err("The \"on_stopfail\" attribute used in"
+				      " %s has been deprecated since 2.0.2",
+				      action->rsc->id);
+#else
+			pe_config_err("The \"on_stopfail\" attribute used in"
+				      " %s has been deprecated since 2.0.2"
+				      " and is now disabled", action->rsc->id);
+			value = NULL;
+#endif
+			pe_config_err("Please use specify the \"on_fail\""
+				      " attribute on the \"stop\" operation"
+				      " instead");
 		}
 	}
-#endif
 	if(value == NULL) {
 
 	} else if(safe_str_eq(value, "block")) {
