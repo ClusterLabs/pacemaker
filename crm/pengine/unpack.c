@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.177 2006/04/03 13:24:35 andrew Exp $ */
+/* $Id: unpack.c,v 1.178 2006/04/03 15:05:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -93,12 +93,12 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 		config, "cluster_property_set", NULL, config_hash,
 		NULL, 0, data_set);
 
+#if CRM_DEPRECATED_SINCE_2_0_1
 	xml_child_iter_filter(
 		config, a_child, XML_CIB_TAG_NVPAIR,
 
 		name = crm_element_value(a_child, XML_NVPAIR_ATTR_NAME);
 
-#if CRM_DEPRECATED_SINCE_2_0_1
 		value = crm_element_value(a_child, XML_NVPAIR_ATTR_VALUE);
 		if(g_hash_table_lookup(config_hash, name) == NULL) {
 			g_hash_table_insert(
@@ -107,12 +107,17 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 		pe_config_err("Creating <nvpair id=%s name=%s/> directly"
 			      "beneath <crm_config> has been depreciated since"
 			      " 2.0.1", ID(a_child), name);
+		);
 #else
+	xml_child_iter_filter(
+		config, a_child, XML_CIB_TAG_NVPAIR,
+
+		name = crm_element_value(a_child, XML_NVPAIR_ATTR_NAME);
 		pe_config_err("Creating <nvpair id=%s name=%s/> directly"
 			      "beneath <crm_config> has been depreciated since"
 			      " 2.0.1 and is now disabled", ID(a_child), name);
-#endif
 		);
+#endif
 	
 	get_cluster_pref("transition_idle_timeout");
 	if(value != NULL) {
