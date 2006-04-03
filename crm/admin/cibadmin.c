@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.48 2006/01/26 10:16:09 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.49 2006/04/03 16:10:59 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -63,7 +63,6 @@ enum cib_errors do_init(void);
 int do_work(crm_data_t *input, int command_options, crm_data_t **output);
 
 gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
-crm_data_t *handleCibMod(crm_data_t *input);
 gboolean admin_message_timeout(gpointer data);
 void cib_connection_destroy(gpointer user_data);
 void cibadmin_op_callback(const HA_Message *msg, int call_id, int rc,
@@ -374,92 +373,11 @@ main(int argc, char **argv)
 	return -exit_code;
 }
 
-crm_data_t*
-handleCibMod(crm_data_t *cib_object)
-{
-	crm_data_t *fragment = NULL;
-
-	CRM_DEV_ASSERT(cib_object != NULL);
-	if(cib_object == NULL) {
-		return NULL;
-	}
-
-	
-	if(do_id_check(cib_object, NULL)) {
-		crm_err("ID Check failed.");
-		return NULL;
-	}
-	
-	crm_debug_4("Object creation complete");
-
-	/* create the cib request */
-	fragment = create_cib_fragment(cib_object, obj_type);
-
-	return fragment;
-}
-
-
 int
 do_work(crm_data_t *input, int call_options, crm_data_t **output) 
 {
 	/* construct the request */
-	if(strcmp(CIB_OP_QUERY, cib_action) == 0) {
-		crm_debug_2("Querying the CIB for section: %s",
-			    obj_type);
-
-		return the_cib->cmds->query_from(
-			the_cib, host, obj_type, output, call_options);
-		
-	} else if (strcmp(CIB_OP_ERASE, cib_action) == 0) {
-		crm_debug_4("CIB Erase op in progress");
-		return the_cib->cmds->erase(the_cib, output, call_options);
-		
-	} else if (strcmp(CIB_OP_CREATE, cib_action) == 0) {
-		enum cib_errors rc = cib_ok;
-		crm_debug_4("Performing %s op...", cib_action);
-		input = handleCibMod(input);
-		rc = the_cib->cmds->create(
-			the_cib, obj_type, input, output, call_options);
-		free_xml(input);
-		return rc;
-
-	} else if (strcmp(CIB_OP_UPDATE, cib_action) == 0) {
-		enum cib_errors rc = cib_ok;
-		crm_debug_4("Performing %s op...", cib_action);
-		input = handleCibMod(input);
-		rc = the_cib->cmds->update(
-			the_cib, obj_type, input, output, call_options);
-		free_xml(input);
-		return rc;
-
-	} else if (strcmp(CIB_OP_MODIFY, cib_action) == 0) {
-		enum cib_errors rc = cib_ok;
-		crm_debug_4("Performing %s op...", cib_action);
-
-		rc = the_cib->cmds->modify(
-			the_cib, obj_type, input, output, call_options);
-		free_xml(input);
-		return rc;
-
-	} else if (strcmp(CIB_OP_DELETE_ALT, cib_action) == 0) {
-		enum cib_errors rc = cib_ok;
-		crm_debug_4("Performing %s op...", cib_action);
-		input = handleCibMod(input);
-		rc = the_cib->cmds->delete_absolute(
-			the_cib, obj_type, input, output, call_options);
-		free_xml(input);
-		return rc;
-
-	} else if (strcmp(CIB_OP_DELETE, cib_action) == 0) {
-		enum cib_errors rc = cib_ok;
-		crm_debug_4("Performing %s op...", cib_action);
-
-		rc = the_cib->cmds->delete(
-			the_cib, obj_type, input, output, call_options);
-		free_xml(input);
-		return rc;
-
-	} else if (strcmp(CIB_OP_SYNC, cib_action) == 0) {
+	if (strcmp(CIB_OP_SYNC, cib_action) == 0) {
 		crm_debug_4("Performing %s op...", cib_action);
 		return the_cib->cmds->sync_from(
 			the_cib, host, obj_type, call_options);
@@ -475,9 +393,14 @@ do_work(crm_data_t *input, int call_options, crm_data_t **output)
 
 	} else if(cib_action != NULL) {
 		crm_debug_4("Passing \"%s\" to variant_op...", cib_action);
+		if(input != NULL && do_id_check(input, NULL)) {
+			crm_err("ID Check failed.");
+			return cib_id_check;
+		}
+			
 		return the_cib->cmds->variant_op(
 			the_cib, cib_action, host, obj_type,
-			NULL, output, call_options);
+			input, output, call_options);
 		
 	} else {
 		crm_err("You must specify an operation");
