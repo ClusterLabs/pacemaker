@@ -330,8 +330,7 @@ build_operation_update(
 	const char *state = NULL;
 	crm_data_t *xml_op = NULL;
 	char *op_id = NULL;
-	const char *caller_version = NULL;
-	
+	const char *caller_version = NULL;	
 
 	CRM_DEV_ASSERT(op != NULL);
 	if(crm_assert_failed) {
@@ -345,6 +344,8 @@ build_operation_update(
 		crm_debug_3("Ignoring cancelled op");
 		return TRUE;
 	}
+
+	crm_debug_3("Caller version: %s", caller_version);
 	
 	if(safe_str_eq(op->op_type, CRMD_ACTION_NOTIFY)) {
 		const char *n_type = g_hash_table_lookup(
