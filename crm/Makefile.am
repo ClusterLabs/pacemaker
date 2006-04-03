@@ -23,6 +23,7 @@ DIST_SUBDIRS		=  cib crmd pengine tengine admin test
 
 crm_libdir		= $(libdir)/$(HB_PKG)/crm
 crm_varlibdir		= $(HA_VARLIBDIR)/$(HB_PKG)/crm
+pengine_varlibdir	= $(HA_VARLIBDIR)/$(HB_PKG)/pengine
 crm_varrundir		= $(HA_VARRUNDIR)/$(HB_PKG)/crm
 noinst_HEADERS	 	= dmalloc_wrapper.h
 
@@ -33,6 +34,10 @@ install-exec-local:
 	-chown $(HA_CCMUSER) $(DESTDIR)/$(crm_varlibdir)
 	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(crm_varlibdir)
 	-chmod 750 $(DESTDIR)/$(crm_varlibdir)
+	$(mkinstalldirs) $(DESTDIR)/$(pengine_varlibdir)
+	-chown $(HA_CCMUSER) $(DESTDIR)/$(pengine_varlibdir)
+	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(pengine_varlibdir)
+	-chmod 750 $(DESTDIR)/$(pengine_varlibdir)
 	$(mkinstalldirs) $(DESTDIR)/$(crm_varrundir)
 	-chown $(HA_CCMUSER) $(DESTDIR)/$(crm_varrundir)
 	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(crm_varrundir)
