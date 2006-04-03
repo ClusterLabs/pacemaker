@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.64 2006/04/03 09:41:36 andrew Exp $ */
+/* $Id: xml.c,v 1.65 2006/04/03 13:58:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2396,7 +2396,8 @@ sorted_xml(const crm_data_t *input)
 		      crm_malloc0(pair, sizeof(name_value_t));
 		      pair->name  = p_name;
 		      pair->value = p_value;
-		      unsorted = g_list_prepend(unsorted, pair)
+		      unsorted = g_list_prepend(unsorted, pair);
+		      pair = NULL;
 		);
 
 	sorted = g_list_sort(unsorted, sort_pairs);
