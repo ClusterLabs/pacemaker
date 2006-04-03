@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.106 2006/04/03 09:51:56 andrew Exp $ */
+/* $Id: pengine.c,v 1.107 2006/04/03 10:50:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -128,7 +128,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 				 transition_id, filename);
 
 		} else {
-			crm_info("PEngine input stored in: %s", filename);
+			crm_info("PEngine Input stored in: %s", filename);
 		}
 
 		if(was_config_error) {
