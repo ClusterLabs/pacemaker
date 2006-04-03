@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.6 2006/03/18 17:23:49 andrew Exp $ */
+/* $Id: utils.c,v 1.7 2006/04/03 10:42:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -136,7 +136,7 @@ print_graph_action(int log_level, const char *prefix, crm_action_t *action)
 		case action_type_pseudo:
 			crm_log_maybe(log_level, "%s\tPseudo Op: %s", prefix,
 				      crm_element_value(
-					      action->xml, XML_LRM_ATTR_TASK));
+					      action->xml, XML_LRM_ATTR_TASK_KEY));
 			break;
 		case action_type_rsc:
 			crm_log_maybe(log_level, "%s\tResource Op: %s/%s on %s",
