@@ -1,0 +1,34 @@
+ <transition_graph global_timeout="3m" transition_id="0">
+   <synapse id="0">
+     <action_set>
+       <rsc_op id="8" rsc_id="rsc_c001n08" operation="stop" operation_key="rsc_c001n08_stop_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+         <primitive id="rsc_c001n08" class="ocf" provider="heartbeat" type="IPaddr" is_managed="1"/>
+         <attributes crm_feature_set="1.0.4" is_managed="1" target_role="Stopped" ip="127.0.0.11"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="1">
+     <action_set>
+       <rsc_op id="4" rsc_id="rsc_c001n03" operation="cancel" operation_key="rsc_c001n03_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
+         <primitive id="rsc_c001n03" class="ocf" provider="heartbeat" type="IPaddr" is_managed="1"/>
+         <attributes timeout="20000" crm_feature_set="1.0.4" interval="5000" task="monitor" is_managed="1" target_role="Master" ip="127.0.0.13"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="2">
+     <action_set>
+       <rsc_op id="14" rsc_id="rsc_c001n03" operation="promote" operation_key="rsc_c001n03_promote_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
+         <primitive id="rsc_c001n03" class="ocf" provider="heartbeat" type="IPaddr" is_managed="1"/>
+         <attributes crm_feature_set="1.0.4" is_managed="1" target_role="Master" ip="127.0.0.13"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="4" rsc_id="rsc_c001n03" operation="cancel" operation_key="rsc_c001n03_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+       </trigger>
+     </inputs>
+   </synapse>
+ </transition_graph>
+
