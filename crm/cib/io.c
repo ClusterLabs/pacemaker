@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.56 2006/04/03 15:14:56 andrew Exp $ */
+/* $Id: io.c,v 1.57 2006/04/03 15:56:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -487,6 +487,7 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 	}
 	
 	if (initializeCib(new_cib) == FALSE) {
+		error_code = cib_ACTIVATION;
 		crm_err("Ignoring invalid or NULL CIB");
 		if(saved_cib != NULL) {
 			crm_warn("Reverting to last known CIB");
