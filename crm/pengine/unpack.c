@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.179 2006/04/04 13:05:22 andrew Exp $ */
+/* $Id: unpack.c,v 1.180 2006/04/04 17:25:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1160,17 +1160,19 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 
 	if(safe_str_neq(pnow_digest, param_digest)) {
 		crm_data_t *params = find_xml_node(xml_op,XML_TAG_PARAMS,FALSE);
-		crm_data_t *local_params = copy_xml(params);
-		filter_action_parameters(local_params);
+		if(params) {
+			crm_data_t *local_params = copy_xml(params);
+			filter_action_parameters(local_params);
+			
+			crm_log_xml_err(pnow, "params:calc");
+			crm_log_xml_err(local_params, "params:used");
+			free_xml(local_params);
+		}
 
-		crm_log_xml_err(pnow, "params:calc");
-		crm_log_xml_err(local_params, "params:used");
-		free_xml(local_params);
-		
 		did_change = TRUE;
 		crm_info("Parameters to %s action changed: %s vs. %s",
 			 id, pnow_digest, param_digest);
-
+		
 		
 		custom_action(rsc, crm_strdup(id), task, NULL,
 			      FALSE, TRUE, data_set);
