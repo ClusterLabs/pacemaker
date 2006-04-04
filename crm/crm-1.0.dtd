@@ -18,8 +18,7 @@
 
 <!ELEMENT cib (configuration, status)>
 <!ATTLIST cib
-          timestamp    CDATA    #IMPLIED
-          last_written CDATA    #IMPLIED
+          cib-last-written CDATA    #IMPLIED
 
           admin_epoch  CDATA    #IMPLIED
           epoch        CDATA    #IMPLIED
@@ -27,19 +26,22 @@
           num_peers    CDATA    #IMPLIED        
 
           dc_uuid      CDATA    #IMPLIED
-          ccm_transition CDATA  #REQUIRED
+          ccm_transition CDATA  #IMPLIED
           have_quorum    (true|1|false|0)   'false'
-          cib_feature_revision  CDATA   #REQUIRED
-          crm_feature_set       CDATA   #REQUIRED
+          cib_feature_revision  CDATA   #IMPLIED
+          crm_feature_set       CDATA   #IMPLIED
 
           generated    CDATA    #IMPLIED        
-          debug_source CDATA    #IMPLIED>
+          crm-debug-origin CDATA    #IMPLIED>
 
 <!ELEMENT configuration (crm_config, nodes, resources, constraints)>
 <!-- Annotated version -->
 
 <!ELEMENT crm_config (cluster_property_set|nvpair)*>
 <!ELEMENT cluster_property_set (rule*, attributes)>
+<!ATTLIST cluster_property_set
+          id                CDATA        #IMPLIED>
+
 <!ELEMENT nodes       (node*)>
 <!-- Annotated version -->
 
@@ -162,7 +164,7 @@
 <!ELEMENT lifetime (rule+)>
 <!-- Annotated version -->
 
-<!ELEMENT rule (expression|time_expression|rule)+>
+<!ELEMENT rule (expression|time_expression|rule)*>
 <!ATTLIST rule
           id                    CDATA     #REQUIRED
           role                  CDATA     #IMPLIED
@@ -209,19 +211,18 @@
 <!-- Annotated version -->
 
 <!ELEMENT status (node_state*)>
-<!ELEMENT node_state ((transient_attributes|lrm), (transient_attributes|lrm)) >
+<!ELEMENT node_state (transient_attributes|lrm)*>
 <!ATTLIST node_state
         id              CDATA                   #REQUIRED
         uname           CDATA                   #REQUIRED
-        ha              (active|inactive)                   #IMPLIED
+        ha              (active|dead)           #IMPLIED
         crmd            (online|offline)        'offline'
         join            (pending|member|down)   'down'
         expected        (pending|member|down)   'down'
-        in_ccm          (true|1|false|0)            'false'
-	origin          CDATA                   #IMPLIED
+        in_ccm          (true|1|false|0)        'false'
+	crm-debug-origin CDATA                  #IMPLIED
         shutdown        CDATA                   #IMPLIED
-        clear_shutdown  CDATA                   #IMPLIED
-        timestamp       CDATA                   #IMPLIED>
+        clear_shutdown  CDATA                   #IMPLIED>
 <!ELEMENT lrm (lrm_resources)>
 <!-- Annotated version -->
 
@@ -241,7 +242,7 @@
           rc_code               CDATA #REQUIRED
           call_id               CDATA #REQUIRED
           rsc_state             CDATA #IMPLIED
-          origin                CDATA #IMPLIED
+          crm-debug-origin      CDATA #IMPLIED
           transition_key        CDATA #IMPLIED
           op_digest             CDATA #IMPLIED
           transition_magic      CDATA #REQUIRED>
