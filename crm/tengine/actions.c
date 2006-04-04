@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.19 2006/03/31 12:03:05 andrew Exp $ */
+/* $Id: actions.c,v 1.20 2006/04/04 13:19:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -242,33 +242,37 @@ gboolean
 cib_action_update(crm_action_t *action, int status)
 {
 	char *code = NULL;
-	crm_data_t *fragment = NULL;
+	char *digest = NULL;
+	crm_data_t *params   = NULL;
 	crm_data_t *state    = NULL;
 	crm_data_t *rsc      = NULL;
 	crm_data_t *xml_op   = NULL;
+	crm_data_t *action_rsc = NULL;
 	char *op_id = NULL;
 
 	enum cib_errors rc = cib_ok;
+
+	const char *name = NULL;
+	const char *value = NULL;
 	const char *task   = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 	const char *rsc_id = crm_element_value(action->xml, XML_LRM_ATTR_RSCID);
 	const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 	const char *task_uuid = crm_element_value(
 		action->xml, XML_LRM_ATTR_TASK_KEY);
 	
-	const char *target_uuid =
-		crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+	const char *target_uuid = crm_element_value(
+		action->xml, XML_LRM_ATTR_TARGET_UUID);
 
 	int call_options = cib_quorum_override|cib_scope_local;
 
-	if(status == LRM_OP_TIMEOUT) {
-		if(crm_element_value(action->xml, XML_LRM_ATTR_RSCID) != NULL) {
-			crm_warn("%s: %s %s on %s timed out",
-				 crm_element_name(action->xml), task_uuid, rsc_id, target);
-		} else {
-			crm_warn("%s: %s on %s timed out",
-				 crm_element_name(action->xml), task_uuid, target);
-		}
-	}
+	CRM_CHECK(rsc_id != NULL, return FALSE);
+	
+	crm_warn("%s: %s %s on %s timed out",
+		 crm_element_name(action->xml), task_uuid, rsc_id, target);
+
+	action_rsc = find_xml_node(action->xml, XML_CIB_TAG_RESOURCE, TRUE);
+	CRM_CHECK(action_rsc != NULL, return FALSE);
+
 	code = crm_itoa(status);
 	
 /*
@@ -280,7 +284,6 @@ cib_action_update(crm_action_t *action, int status)
           <lrm_resource id="rsc2" last_op="start" op_code="0" target="hadev"/>
 */
 
-	fragment = NULL;
 	state    = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
 	crm_xml_add(state, XML_ATTR_UUID,  target_uuid);
@@ -289,10 +292,19 @@ cib_action_update(crm_action_t *action, int status)
 	rsc = create_xml_node(state, XML_CIB_TAG_LRM);
 	rsc = create_xml_node(rsc,   XML_LRM_TAG_RESOURCES);
 	rsc = create_xml_node(rsc,   XML_LRM_TAG_RESOURCE);
+	crm_xml_add(rsc, XML_ATTR_ID, rsc_id);
 
-	xml_op = create_xml_node(rsc,XML_LRM_TAG_RSC_OP);
-	
-	crm_xml_add(rsc,    XML_ATTR_ID, rsc_id);
+	name = XML_ATTR_TYPE;
+	value = crm_element_value(action_rsc, name);
+	crm_xml_add(rsc, name, value);
+	name = XML_AGENT_ATTR_CLASS;
+	value = crm_element_value(action_rsc, name);
+	crm_xml_add(rsc, name, value);
+	name = XML_AGENT_ATTR_PROVIDER;
+	value = crm_element_value(action_rsc, name);
+	crm_xml_add(rsc, name, value);
+
+	xml_op = create_xml_node(rsc, XML_LRM_TAG_RSC_OP);	
 	crm_xml_add(xml_op, XML_ATTR_ID, task);
 	
 	op_id = generate_op_key(rsc_id, task, action->interval);
@@ -300,9 +312,6 @@ cib_action_update(crm_action_t *action, int status)
 	crm_free(op_id);
 	
 	crm_xml_add(xml_op, XML_LRM_ATTR_TASK, task);
-	crm_xml_add(rsc, XML_LRM_ATTR_RSCSTATE,
-			      get_rsc_state(task, status));
-	
 	crm_xml_add(xml_op, XML_LRM_ATTR_OPSTATUS, code);
 	crm_xml_add(xml_op, XML_LRM_ATTR_CALLID, "-1");
 	crm_xml_add(xml_op, XML_LRM_ATTR_RC, code);
@@ -319,24 +328,25 @@ cib_action_update(crm_action_t *action, int status)
 	crm_xml_add(xml_op,  XML_ATTR_TRANSITION_MAGIC, code);
 	crm_free(code);
 
-	crm_err("FIXME: Need to include op_digest for parameters in cib update for %s",
-		ID(xml_op));
-	
-	fragment = create_cib_fragment(state, XML_CIB_TAG_STATUS);
+	params = find_xml_node(action->xml, "attributes", TRUE);
+	params = copy_xml(params);
+	filter_action_parameters(params);
+	digest = calculate_xml_digest(params, TRUE);
+	crm_xml_add(xml_op, XML_LRM_ATTR_OP_DIGEST, digest);
+	crm_free(digest);
+	free_xml(params);
 	
 	crm_debug_3("Updating CIB with \"%s\" (%s): %s %s on %s",
 		  status<0?"new action":XML_ATTR_TIMEOUT,
 		  crm_element_name(action->xml), crm_str(task), rsc_id, target);
 	
 	rc = te_cib_conn->cmds->update(
-		te_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL, call_options);
+		te_cib_conn, XML_CIB_TAG_STATUS, state, NULL, call_options);
 
 	crm_debug("Updating CIB with %s action %d: %s %s on %s (call_id=%d)",
 		  op_status2text(status), action->id, task_uuid, rsc_id, target, rc);
 
 	add_cib_op_callback(rc, FALSE, NULL, cib_action_updated);
-
-	free_xml(fragment);
 	free_xml(state);
 
 	action->sent_update = TRUE;
