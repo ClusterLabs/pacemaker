@@ -324,7 +324,6 @@ gboolean
 build_operation_update(
 	crm_data_t *xml_rsc, lrm_op_t *op, const char *src, int lpc)
 {
-	int len = 0;
 	char *tmp = NULL;
 	char *fail_state = NULL;
 	const char *state = NULL;
@@ -448,14 +447,6 @@ build_operation_update(
 			crm_debug("Resource action %s/%s %s: %d",
 				  op->rsc_id, op->op_type,
 				  op_status2text(op->op_status), op->rc);
-			len = strlen(op->op_type);
-			len += strlen("_failed_");
-			crm_malloc0(fail_state, sizeof(char)*len);
-			if(fail_state != NULL) {
-				sprintf(fail_state, "%s_failed", op->op_type);
-			}
-			crm_xml_add(xml_op, XML_LRM_ATTR_RSCSTATE, fail_state);
-			crm_free(fail_state);			
 			break;
 		case LRM_OP_DONE:
 			if(safe_str_eq(CRMD_ACTION_START, op->op_type)) {
@@ -473,8 +464,6 @@ build_operation_update(
 					 CRMD_ACTION_GENERIC_OK, op->op_type);
 				state = CRMD_ACTION_GENERIC_OK;
 			}	
-
-			crm_xml_add(xml_op, XML_LRM_ATTR_RSCSTATE, state);
 			break;
 	}
 	
@@ -500,7 +489,7 @@ build_operation_update(
 		 */
 		crm_data_t *args_xml = NULL;
 		char *digest = NULL;
-#if CRM_DEPRECATED_SINCE_2_0_4
+#if CRM_DEPRECATED_SINCE_2_0_5
 		args_xml = create_xml_node(xml_op, XML_TAG_PARAMS);
 #else
 		args_xml = create_xml_node(NULL, XML_TAG_PARAMS);
@@ -509,7 +498,7 @@ build_operation_update(
 		filter_action_parameters(args_xml);
 		digest = calculate_xml_digest(args_xml, TRUE);
 		crm_xml_add(xml_op, XML_LRM_ATTR_OP_DIGEST, digest);
-#if CRM_DEPRECATED_SINCE_2_0_4
+#if CRM_DEPRECATED_SINCE_2_0_5
 #else
 		free_xml(args_xml);
 #endif
@@ -1146,8 +1135,8 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation,
 	
 	/* now do the op */
 	op = construct_op(msg, rsc->id, operation);
-	crm_info("Performing op %s on %s (interval=%dms)",
-		 operation, rid, op->interval);
+	crm_info("Performing op %s on %s (interval=%dms, key=%s)",
+		 operation, rid, op->interval, transition);
 
 	if((AM_I_DC == FALSE && fsa_state != S_NOT_DC)
 	   || (AM_I_DC && fsa_state != S_TRANSITION_ENGINE)) {

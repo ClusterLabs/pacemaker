@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.178 2006/04/03 15:05:03 andrew Exp $ */
+/* $Id: unpack.c,v 1.179 2006/04/04 13:05:22 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -889,7 +889,6 @@ unpack_lrm_rsc_state(
 	gboolean delete_resource = FALSE;
 
 	const char *rsc_id    = crm_element_value(rsc_entry, XML_ATTR_ID);
-	const char *rsc_state = crm_element_value(rsc_entry, XML_LRM_ATTR_RSCSTATE);
 
 	int max_call_id = -1;
 	GListPtr op_list = NULL;
@@ -900,9 +899,8 @@ unpack_lrm_rsc_state(
 	
 	resource_t *rsc = unpack_find_resource(data_set, node, rsc_id);
 	
-	crm_debug_3("[%s] Processing %s on %s (%s)",
-		    crm_element_name(rsc_entry),
-		    rsc_id, node->details->uname, rsc_state);
+	crm_debug_3("[%s] Processing %s on %s",
+		    crm_element_name(rsc_entry), rsc_id, node->details->uname);
 	
 	if(rsc == NULL) {
 		rsc = process_orphan_resource(rsc_entry, node, data_set);
@@ -1202,6 +1200,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 /* 	const char *target_rc   = NULL;	 */
 	const char *task_status = NULL;
 	const char *interval_s  = NULL;
+	const char *op_digest  = NULL;
 
 	int interval = 0;
 	int task_id_i = -1;
@@ -1222,6 +1221,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	task        = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
  	task_id     = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
 	task_status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
+	op_digest   = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
 
 	CRM_CHECK(id != NULL, return FALSE);
 	CRM_CHECK(task != NULL, return FALSE);
@@ -1263,7 +1263,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	} else if(safe_str_eq(task, CRMD_ACTION_STOP)) {
 		crm_debug_2("Ignoring stop params: %s", id);
 
-	} else if(params == NULL) {
+	} else if(op_digest == NULL && params == NULL) {
 		/* for older test cases */
 		crm_err("Skipping param check: %s %s", id, task);
 
