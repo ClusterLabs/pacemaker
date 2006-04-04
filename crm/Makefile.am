@@ -21,12 +21,15 @@ MAINTAINERCLEANFILES    = Makefile.in
 SUBDIRS			=  cib crmd pengine tengine admin test
 DIST_SUBDIRS		=  cib crmd pengine tengine admin test
 
-crm_libdir		= $(libdir)/$(HB_PKG)/crm
+dtddir			= $(HA_LIBDIR)/$(HB_PKG)
 crm_varlibdir		= $(HA_VARLIBDIR)/$(HB_PKG)/crm
 crm_varrundir		= $(HA_VARRUNDIR)/$(HB_PKG)/crm
 noinst_HEADERS	 	= dmalloc_wrapper.h
 
-crm_lib_SCRIPTS		= crm-1.0.dtd
+dtd_SCRIPTS		= crm.dtd
+
+crm.dtd: crm-1.0.dtd
+	cp crm-1.0.dtd crm.dtd
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(crm_varlibdir)
@@ -37,7 +40,3 @@ install-exec-local:
 	-chown $(HA_CCMUSER) $(DESTDIR)/$(crm_varrundir)
 	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(crm_varrundir)
 	-chmod 750 $(DESTDIR)/$(crm_varrundir)
-	$(mkinstalldirs) $(DESTDIR)/$(crm_libdir)
-	-chown $(HA_CCMUSER) $(DESTDIR)/$(crm_libdir)
-	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(crm_libdir)
-	-chmod 750 $(DESTDIR)/$(crm_libdir)

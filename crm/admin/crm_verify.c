@@ -1,4 +1,4 @@
-/* $Id: crm_verify.c,v 1.6 2006/04/03 09:41:36 andrew Exp $ */
+/* $Id: crm_verify.c,v 1.7 2006/04/04 14:23:21 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -205,17 +205,22 @@ main(int argc, char **argv)
 		write_xml_file(cib_object, cib_save, FALSE);
 	}
 	
-#if 0
+#if CRM_DEPRECATED_SINCE_2_0_5
 	status = get_object_root(XML_CIB_TAG_STATUS, cib_object);
 	xml_child_iter(status, node_state, XML_CIB_TAG_STATE,
 		       xml_remove_prop(node_state, XML_CIB_TAG_LRM);
 		);
-#endif	
+#endif
+	
 	crm_notice("Required feature set: %s", feature_set(cib_object));
  	if(do_id_check(cib_object, NULL)) {
 		pe_config_err("ID Check failed");
 	}
 
+	if(validate_with_dtd(cib_object, HA_LIBDIR"/heartbeat/crm.dtd") == FALSE) {
+		pe_config_err("CIB did not pass DTD validation");
+	}
+	
 	set_working_set_defaults(&data_set);
 	data_set.input = cib_object;
 	data_set.now = new_ha_date(TRUE);
