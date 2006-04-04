@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.14 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.15 2006/04/04 13:09:27 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -139,7 +139,6 @@ read_attr(cib_t *the_cib,
 {
 	const char *tag = NULL;
 	enum cib_errors rc = cib_ok;
-	crm_data_t *a_node = NULL;
 	crm_data_t *xml_obj = NULL;
 	crm_data_t *xml_next = NULL;
 	crm_data_t *fragment = NULL;
@@ -164,12 +163,13 @@ read_attr(cib_t *the_cib,
 	if(safe_str_eq(crm_element_name(fragment), section)) {
 		xml_obj = fragment;
 	} else {
+		crm_data_t *a_node = NULL;
 		a_node = find_xml_node(fragment, XML_TAG_CIB, TRUE);
 		xml_obj = get_object_root(section, a_node);
 	}
 #else
 	xml_obj = fragment;
-	CRM_CHECK(safe_str_eq(crm_element_name(xml_obj), XML_TAG_CIB),
+	CRM_CHECK(safe_str_eq(crm_element_name(xml_obj), section),
 		  return cib_output_data);
 #endif
 	CRM_ASSERT(xml_obj != NULL);
@@ -325,7 +325,7 @@ query_node_uuid(cib_t *the_cib, const char *uname, char **uuid)
 	}
 #else
 	xml_obj = fragment;
-	CRM_CHECK(safe_str_eq(crm_element_name(xml_obj), XML_TAG_CIB),
+	CRM_CHECK(safe_str_eq(crm_element_name(xml_obj), XML_CIB_TAG_NODES),
 		  return cib_output_data);
 #endif
 	CRM_ASSERT(xml_obj != NULL);
@@ -377,7 +377,7 @@ query_node_uname(cib_t *the_cib, const char *uuid, char **uname)
 	}
 #else
 	xml_obj = fragment;
-	CRM_CHECK(safe_str_eq(crm_element_name(xml_obj), XML_TAG_CIB),
+	CRM_CHECK(safe_str_eq(crm_element_name(xml_obj), XML_CIB_TAG_NODES),
 		  return cib_output_data);
 #endif
 	CRM_ASSERT(xml_obj != NULL);
@@ -410,7 +410,6 @@ query_node_uname(cib_t *the_cib, const char *uuid, char **uname)
 	const char *type = XML_CIB_TAG_NODES;				\
 									\
 	CRM_CHECK(uuid != NULL, return cib_missing_data);		\
-	CRM_CHECK(standby_value != NULL, return cib_missing_data);	\
 	str_length += strlen(attr_name);				\
 	str_length += strlen(uuid);					\
 	if(safe_str_eq(scope, "reboot")					\
@@ -432,6 +431,7 @@ query_standby(cib_t *the_cib, const char *uuid, const char *scope,
 	      char **standby_value)
 {
 	enum cib_errors rc = cib_ok;
+	CRM_CHECK(standby_value != NULL, return cib_missing_data);
 
 	if(scope != NULL) {
 		standby_common;
@@ -460,6 +460,7 @@ set_standby(cib_t *the_cib, const char *uuid, const char *scope,
 	    const char *standby_value)
 {
 	enum cib_errors rc = cib_ok;
+	CRM_CHECK(standby_value != NULL, return cib_missing_data);
 	if(scope != NULL) {
 		standby_common;
 		rc = update_attr(the_cib, cib_sync_call, type, uuid, set_name,
