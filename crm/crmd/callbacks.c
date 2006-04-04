@@ -629,8 +629,9 @@ crm_fsa_trigger(gpointer user_data)
 	if(fsa_diff_max_ms > 0) {
 		fsa_start = time_longclock();
 	}
-	crm_debug_3("Invoked");
+	crm_debug_2("Invoked (queue len: %d)", g_list_length(fsa_message_queue));
 	s_crmd_fsa(C_FSA_INTERNAL);
+	crm_debug_2("Exited  (queue len: %d)", g_list_length(fsa_message_queue));
 	if(fsa_diff_max_ms > 0) {
 		fsa_stop = time_longclock();
 		fsa_diff = sub_longclock(fsa_stop, fsa_start);
