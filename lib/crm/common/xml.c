@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.67 2006/04/04 13:08:52 andrew Exp $ */
+/* $Id: xml.c,v 1.68 2006/04/04 13:20:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2444,12 +2444,15 @@ calculate_xml_digest(crm_data_t *input, gboolean sort)
 }
 
 
-#include <libxml/parser.h>
-#include <libxml/tree.h>
+#if HAVE_LIBXML2
+#  include <libxml/parser.h>
+#  include <libxml/tree.h>
+#endif
 
 gboolean
 validate_with_dtd(crm_data_t *xml_blob, const char *dtd_file) 
 {
+#if HAVE_LIBXML2
 	char *buffer = NULL;
 	gboolean valid = TRUE;
 
@@ -2487,7 +2490,7 @@ validate_with_dtd(crm_data_t *xml_blob, const char *dtd_file)
 	xmlFreeDoc(doc);
 	
 	crm_free(buffer);
-	
+#endif	
 	return TRUE;
 /*	return valid; */
 }
