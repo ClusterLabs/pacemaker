@@ -1,4 +1,4 @@
-/* $Id: events.c,v 1.9 2006/03/31 11:58:17 andrew Exp $ */
+/* $Id: events.c,v 1.10 2006/04/04 13:05:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -496,7 +496,8 @@ process_graph_event(crm_data_t *event, const char *event_node)
 				crm_log_xml_debug_2(event, "match:pending");
 
 			} else if(rc != -1) {
-				crm_warn("Search terminated: %d", rc);
+				crm_warn("Search for %s terminated: %d",
+					 ID(event), rc);
 				abort_transition(INFINITY, tg_restart,
 						 "Unexpected event", event);
 			}
