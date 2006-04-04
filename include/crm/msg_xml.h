@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.49 2006/04/03 10:10:46 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.50 2006/04/04 13:19:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -180,7 +180,6 @@
 #define XML_LRM_ATTR_TASK_KEY		"operation_key"
 #define XML_LRM_ATTR_TARGET		"on_node"
 #define XML_LRM_ATTR_TARGET_UUID	"on_node_uuid"
-#define XML_LRM_ATTR_RSCSTATE		"rsc_state"
 #define XML_LRM_ATTR_RSCID		"rsc_id"
 #define XML_LRM_ATTR_OPSTATUS		"op_status"
 #define XML_LRM_ATTR_RC			"rc_code"
