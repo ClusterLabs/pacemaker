@@ -430,7 +430,7 @@ function make_constraint()
     uuid1=`uuidgen`
     uuid2=`uuidgen`
     
-    node_xml="<rsc_location id=\\\"${uuid1}\\\" rsc=\\\"${rsc}\\\"><rule id=\\\"${uuid2}\\\" result=\\\"${result}\\\"/></rsc_location>"
+    node_xml="<rsc_location id=\\\"${uuid1}\\\" rsc=\\\"${rsc}\\\"><rule id=\\\"${uuid2}\\\" score=\\\"${result}\\\"/></rsc_location>"
 
     make_constraint_adv $host "$node_xml"
 }

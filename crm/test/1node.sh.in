@@ -54,7 +54,7 @@ cts_assert "S_IDLE not reached on $test_node_1 (startup)!"
 
 do_cmd echo Create the first constraint and wait for S_IDLE
 crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
-do_cmd make_constraint $test_node_1 rsc1 can
+do_cmd make_constraint $test_node_1 rsc1 0
 cts_assert "Creation of first constraint failed."
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 120 \
     -s "crmd(.*) State transition (.*) \-> S_IDLE" 
@@ -64,7 +64,7 @@ do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 120 
 
 do_cmd echo Create the second constraint and wait for S_IDLE
 crm_log_pos=$(stat -L ${STAT_OPTS} $logfile)
-do_cmd make_constraint $test_node_1 rsc2 can
+do_cmd make_constraint $test_node_1 rsc2 0
 cts_assert "Creation of second constraint failed."
 do_cmd ${testdir}/testutils.pl -p $crm_log_pos -l ${logfile} --search -a -m 120 \
     -s "crmd(.*) State transition (.*) \-> S_IDLE" 
