@@ -26,6 +26,9 @@ class CIB:
         <nvpair id="c-pref-8" name="no_quorum_policy" value="stop"/>
         <nvpair id="c-pref-9" name="default_resource_stickiness" value="0"/>
         <nvpair id="c-pref-10" name="stonith_enabled" value="%d"/>
+        <nvpair id="c-pref-11" name="pe-error-series-max" value="-1"/>
+        <nvpair id="c-pref-12" name="pe-warn-series-max" value="-1"/>
+        <nvpair id="c-pref-13" name="pe-input-series-max" value="-1"/>
        </attributes>
     </cluster_property_set>'''
 

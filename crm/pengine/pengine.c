@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.107 2006/04/03 10:50:24 andrew Exp $ */
+/* $Id: pengine.c,v 1.108 2006/04/04 17:15:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,13 +46,27 @@ unsigned int pengine_input_loglevel = LOG_INFO;
 
 extern int transition_id;
 
-#define get_series() 	was_processing_error?"pe-error":was_processing_warning?"pe-warn":"pe-input"
+#define get_series() 	was_processing_error?1:was_processing_warning?2:3
+
+typedef struct series_s 
+{
+	int id;
+	const char *name;
+	const char *param;
+	int wrap;
+} series_t;
+
+series_t series[] = {
+	{ 0, "pe-unknown", "_dont_match_anything_", -1 },
+	{ 0, "pe-error",   "pe-error-series-max", -1 },
+	{ 0, "pe-warn",    "pe-warn-series-max", 200 },
+	{ 0, "pe-input",   "pe-input-series-max", 400 },
+};
+
 
 gboolean
 process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 {
-	int seq = -1;
-	const char *use_series = NULL;
 	const char *sys_to = cl_get_string(msg, F_CRM_SYS_TO);
 	const char *op = cl_get_string(msg, F_CRM_TASK);
 	const char *ref = cl_get_string(msg, XML_ATTR_REFERENCE);
@@ -74,15 +88,20 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		return FALSE;
 		
 	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
+		int seq = -1;
+		int series_id = 0;
+		int series_wrap = 0;
+		char *filename = NULL;
+		const char *value = NULL;
 		pe_working_set_t data_set;
 		crm_data_t *generation = create_xml_node(NULL, XML_TAG_CIB);
 		crm_data_t *log_input  = copy_xml(xml_data);
-		char *filename = NULL;
 #if HAVE_BZLIB_H
 		gboolean compress = TRUE;
 #else
 		gboolean compress = FALSE;
 #endif
+		
 		
 		copy_in_properties(generation, xml_data);
 		crm_log_xml_info(generation, "[generation]");
@@ -99,6 +118,23 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 			crm_err("Answer could not be sent");
 		}
 
+		series_id = get_series();
+		series_wrap = series[series_id].wrap;
+		value = g_hash_table_lookup(
+			data_set.config_hash, series[series_id].param);
+
+		if(value != NULL) {
+			series_wrap = crm_int_helper(value, NULL);
+			if(errno != 0) {
+				series_wrap = series[series_id].wrap;
+			}
+
+		} else {
+			pe_config_warn("No value specified for cluster"
+				       " preference: %s",
+				       series[series_id].param);
+		}   
+		
 		data_set.input = NULL;
 		cleanup_calculations(&data_set);
 		
@@ -106,14 +142,14 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 			pe_warn("Unfree'd memory");
 		}
 
-		use_series = get_series();
-
-		seq = get_last_sequence(PE_WORKING_DIR, use_series);
+		seq = get_last_sequence(PE_WORKING_DIR, series[series_id].name);
 	
 		filename = generate_series_filename(
-			PE_WORKING_DIR, use_series, seq, compress);
+			PE_WORKING_DIR, series[series_id].name, seq, compress);
 		write_xml_file(log_input, filename, compress);
-		write_last_sequence(PE_WORKING_DIR, use_series, seq+1, -1);
+
+		write_last_sequence(PE_WORKING_DIR, series[series_id].name,
+				    seq+1, series_wrap);
 		
 		if(was_processing_error) {
 			crm_err("Transition %d:"
