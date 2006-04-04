@@ -802,6 +802,8 @@ cib_error2string(enum cib_errors return_code)
 			break;
 		case cib_old_data:
 			error_msg = "Update was older than existing configuration";
+		case cib_dtd_validation:
+			error_msg = "Update does conform to the DTD in "HA_LIBDIR"/heartbeat/crm.dtd";
 			break;
 	}
 			
@@ -920,7 +922,9 @@ crm_data_t*
 get_cib_copy(cib_t *cib)
 {
 	crm_data_t *xml_cib;
+#if CRM_DEPRECATED_SINCE_2_0_4
 	crm_data_t *xml_cib_copy;
+#endif
 	int options = cib_scope_local|cib_sync_call;
 	if(cib->cmds->query(cib, NULL, &xml_cib, options) != cib_ok) {
 		crm_err("Couldnt retrieve the CIB");
