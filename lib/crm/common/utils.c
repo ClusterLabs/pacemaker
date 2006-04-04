@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.40 2006/04/03 16:47:21 andrew Exp $ */
+/* $Id: utils.c,v 1.41 2006/04/04 17:18:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1180,6 +1180,10 @@ filter_action_parameters(crm_data_t *param_set)
 	};
 
 	int lpc = 0;
+
+	if(param_set == NULL) {
+		return;
+	}
 	
 	for(lpc = 0; lpc < DIMOF(attr_filter); lpc++) {
 		xml_remove_prop(param_set, attr_filter[lpc]); 
