@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.66 2006/04/03 15:16:48 andrew Exp $ */
+/* $Id: xml.c,v 1.67 2006/04/04 13:08:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -82,7 +82,7 @@ find_xml_node(crm_data_t *root, const char * search_path, gboolean must_find)
 	
 	xml_child_iter_filter(
 		root, a_child, search_path,
-/* 		crm_debug_5("returning node (%s).", xmlGetNodePath(a_child)); */
+/* 		crm_debug_5("returning node (%s).", crm_element_name(a_child)); */
 		crm_log_xml(LOG_DEBUG_5, "found:", a_child);
 		crm_log_xml(LOG_DEBUG_6, "in:",    root);
 		crm_validate_data(a_child);
@@ -90,9 +90,9 @@ find_xml_node(crm_data_t *root, const char * search_path, gboolean must_find)
 		);
 
 	if(must_find) {
-		crm_warn("Could not find %s in %s.", search_path, xmlGetNodePath(root));
+		crm_warn("Could not find %s in %s.", search_path, crm_element_name(root));
 	} else if(root != NULL) {
-		crm_debug_3("Could not find %s in %s.", search_path, xmlGetNodePath(root));
+		crm_debug_3("Could not find %s in %s.", search_path, crm_element_name(root));
 	} else {
 		crm_debug_3("Could not find %s in <NULL>.", search_path);
 	}
@@ -135,7 +135,7 @@ find_xml_node_nested(crm_data_t *root, const char **search_path, int len)
 
 	if (is_found) {
 		crm_debug_5("returning node (%s).",
-			   xmlGetNodePath(lastMatch));
+			   crm_element_name(lastMatch));
 
 		crm_log_xml_debug_5(lastMatch, "found\t%s");
 		crm_log_xml_debug_5(root, "in \t%s");
@@ -149,7 +149,7 @@ find_xml_node_nested(crm_data_t *root, const char **search_path, int len)
 		   search_path, len);
 
 	crm_debug_2("Closest point was node (%s) starting from %s.",
-		    xmlGetNodePath(lastMatch), crm_element_name(root));
+		    crm_element_name(lastMatch), crm_element_name(root));
 
 	return NULL;
     
@@ -176,7 +176,7 @@ get_xml_attr_nested(crm_data_t *parent,
 
 	if(attr_name == NULL || strlen(attr_name) == 0) {
 		crm_err("Can not find attribute with no name in %s",
-		       xmlGetNodePath(parent));
+		       crm_element_name(parent));
 		return NULL;
 	}
 	
@@ -194,7 +194,7 @@ get_xml_attr_nested(crm_data_t *parent,
 	attr_value = crm_element_value(attr_parent, attr_name);
 	if((attr_value == NULL || strlen(attr_value) == 0) && error) {
 		crm_err("No value present for %s at %s",
-			attr_name, xmlGetNodePath(attr_parent));
+			attr_name, crm_element_name(attr_parent));
 		return NULL;
 	}
 	
@@ -210,12 +210,12 @@ find_entity(crm_data_t *parent, const char *node_name, const char *id)
 		parent, a_child, node_name,
 		if(id == NULL || safe_str_eq(id, ID(a_child))) {
 			crm_debug_4("returning node (%s).", 
-				  xmlGetNodePath(a_child));
+				  crm_element_name(a_child));
 			return a_child;
 		}
 		);
 	crm_debug_3("node <%s id=%s> not found in %s.",
-		    node_name, id, xmlGetNodePath(parent));
+		    node_name, id, crm_element_name(parent));
 	return NULL;
 }
 
@@ -2441,4 +2441,53 @@ calculate_xml_digest(crm_data_t *input, gboolean sort)
 	crm_free(raw_digest);
 	free_xml(sorted);
 	return digest;
+}
+
+
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
+gboolean
+validate_with_dtd(crm_data_t *xml_blob, const char *dtd_file) 
+{
+	char *buffer = NULL;
+	gboolean valid = TRUE;
+
+ 	xmlDocPtr doc = NULL;
+	xmlDtdPtr dtd = NULL;
+	xmlValidCtxtPtr cvp = NULL;
+	
+	CRM_CHECK(xml_blob != NULL, return FALSE);
+	CRM_CHECK(dtd_file != NULL, return FALSE);
+
+	buffer = dump_xml_formatted(xml_blob);
+	CRM_CHECK(buffer != NULL, return FALSE);
+
+ 	doc = xmlParseMemory(buffer, strlen(buffer));
+	CRM_CHECK(doc != NULL, crm_free(buffer); return TRUE);
+	
+	dtd = xmlParseDTD(NULL, (const xmlChar *)dtd_file);
+	CRM_CHECK(dtd != NULL, crm_free(buffer); return TRUE);
+
+	cvp = xmlNewValidCtxt();
+	CRM_CHECK(cvp != NULL, crm_free(buffer); return TRUE);
+	
+	cvp->userData = (void *) LOG_ERR;
+	cvp->error    = (xmlValidityErrorFunc) cl_log;
+	cvp->warning  = (xmlValidityWarningFunc) cl_log;
+	
+	if (!xmlValidateDtd(cvp, doc, dtd)) {
+		crm_err("CIB does not validate against %s\n", dtd_file);
+		valid = FALSE;
+		crm_log_xml_debug(xml_blob, "invalid");
+	}
+
+	xmlFreeValidCtxt(cvp);
+	xmlFreeDtd(dtd);
+	xmlFreeDoc(doc);
+	
+	crm_free(buffer);
+	
+	return TRUE;
+/*	return valid; */
 }

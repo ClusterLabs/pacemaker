@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.6 2005/09/16 16:55:23 andrew Exp $ */
+/* $Id: msg.c,v 1.7 2006/04/04 13:08:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -110,7 +110,7 @@ validate_crm_message(
 		crm_debug_3(
 		       "XML is valid and node with message type (%s) found.",
 		       type);
-	crm_debug_3("Returning node (%s)", xmlGetNodePath(action));
+	crm_debug_3("Returning node (%s)", crm_element_name(action));
 */
 	
 	return action;
