@@ -1310,9 +1310,7 @@ process_client_disconnect(crmd_client_t *curr_client)
 {
 	struct crm_subsystem_s *the_subsystem = NULL;
 
-	CRM_DEV_ASSERT(curr_client != NULL);
-	if(crm_assert_failed) { return; }
-	
+	CRM_CHECK(curr_client != NULL, return);
 	crm_debug_2("received HUP from %s", curr_client->table_key);
 		
 	if (curr_client->sub_sys == NULL) {
@@ -1347,11 +1345,6 @@ process_client_disconnect(crmd_client_t *curr_client)
 		 */
 		g_hash_table_remove(ipc_clients, curr_client->table_key);
 	}
-	
-	crm_free(curr_client->table_key);
-	crm_free(curr_client->sub_sys);
-	crm_free(curr_client->uuid);
-	crm_free(curr_client);
 }
 
 void update_dc(HA_Message *msg)
