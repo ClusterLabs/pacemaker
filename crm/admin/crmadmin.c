@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.63 2006/04/03 09:41:36 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.64 2006/04/05 14:35:50 lars Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -711,8 +711,10 @@ usage(const char *cmd, int exit_status)
 		"shutdown the CRMd on <node>\n", "kill", 'K');
 	fprintf(stream, "\t--%s (-%c) <node>\t: "
 		"request the status of <node>\n", "status", 'S');
+#if 0
 	fprintf(stream, "\t--%s (-%c)\t\t: "
 		"request the status of all nodes\n", "health", 'H');
+#endif
 	fprintf(stream, "\t--%s (-%c) <node>\t: "
 		"initiate an election from <node>\n", "election", 'E');
 	fprintf(stream, "\t--%s (-%c)\t: "
