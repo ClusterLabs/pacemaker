@@ -1,4 +1,4 @@
-/* $Id: crm_verify.c,v 1.9 2006/04/05 12:59:09 andrew Exp $ */
+/* $Id: crm_verify.c,v 1.10 2006/04/05 13:37:05 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -56,7 +56,8 @@ extern void cleanup_calculations(pe_working_set_t *data_set);
 int
 main(int argc, char **argv)
 {
-	crm_data_t * cib_object = NULL;
+	crm_data_t *cib_object = NULL;
+	crm_data_t *status = NULL;
 	int argerr = 0;
 	int flag;
 		
@@ -205,8 +206,8 @@ main(int argc, char **argv)
 		write_xml_file(cib_object, cib_save, FALSE);
 	}
 	
-#if CRM_DEPRECATED_SINCE_2_0_4
 	status = get_object_root(XML_CIB_TAG_STATUS, cib_object);
+#if CRM_DEPRECATED_SINCE_2_0_4
 	xml_child_iter_filter(status, node_state, XML_CIB_TAG_STATE,
 		       xml_remove_prop(node_state, XML_CIB_TAG_LRM);
 		);
