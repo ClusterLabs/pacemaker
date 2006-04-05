@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.16 2006/04/05 07:37:37 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.17 2006/04/05 08:05:26 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -145,6 +145,8 @@ read_attr(cib_t *the_cib,
 {
 	const char *tag = NULL;
 	enum cib_errors rc = cib_ok;
+	gboolean is_crm_config = FALSE;
+
 	crm_data_t *xml_obj = NULL;
 	crm_data_t *xml_next = NULL;
 	crm_data_t *fragment = NULL;
@@ -184,6 +186,7 @@ read_attr(cib_t *the_cib,
 
 	if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
 		tag = NULL;
+		is_crm_config = TRUE;
 		
 	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
 		tag = XML_CIB_TAG_NODE;
@@ -216,7 +219,11 @@ read_attr(cib_t *the_cib,
 		xml_obj = xml_next;
 	}
 	if(set_name != NULL) {
-		xml_next = find_entity(xml_obj, XML_TAG_ATTR_SETS, set_name);
+		if(is_crm_config) {
+			xml_next = find_entity(xml_obj, XML_CIB_TAG_PROPSET, set_name);
+		} else {
+			xml_next = find_entity(xml_obj, XML_TAG_ATTR_SETS, set_name);
+		}
 		if(xml_next == NULL) {
 			crm_debug("%s=%s object not found in %s",
 				  XML_TAG_ATTR_SETS, set_name,
