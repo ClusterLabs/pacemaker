@@ -29,7 +29,7 @@ noinst_HEADERS	 	= dmalloc_wrapper.h
 dtd_SCRIPTS		= crm.dtd
 
 crm.dtd: crm-1.0.dtd
-	cp crm-1.0.dtd crm.dtd
+	cp $(top_srcdir)/crm/crm-1.0.dtd crm.dtd
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(crm_varlibdir)
