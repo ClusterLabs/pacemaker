@@ -1,4 +1,4 @@
-/* $Id: crm_attribute.c,v 1.10 2006/03/27 14:53:16 andrew Exp $ */
+/* $Id: crm_attribute.c,v 1.11 2006/04/05 13:14:05 lars Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -415,7 +415,7 @@ usage(const char *cmd, int exit_status)
 	} else if(safe_str_eq(cmd, "crm_standby")) {
 		fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
 			"UUID of the node to change\n", "node-uuid", 'u');
-		fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
+		fprintf(stream, "\t--%s (-%c) <node_uname>\t: "
 			"uname of the node to change\n", "node-uname", 'U');
 		fprintf(stream, "\t--%s (-%c) <string>\t: "
 			"How long the preference lasts (reboot|forever)\n"
