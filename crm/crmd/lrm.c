@@ -489,7 +489,7 @@ build_operation_update(
 		 */
 		crm_data_t *args_xml = NULL;
 		char *digest = NULL;
-#if CRM_DEPRECATED_SINCE_2_0_5
+#if CRM_DEPRECATED_SINCE_2_0_4
 		args_xml = create_xml_node(xml_op, XML_TAG_PARAMS);
 #else
 		args_xml = create_xml_node(NULL, XML_TAG_PARAMS);
@@ -498,8 +498,7 @@ build_operation_update(
 		filter_action_parameters(args_xml);
 		digest = calculate_xml_digest(args_xml, TRUE);
 		crm_xml_add(xml_op, XML_LRM_ATTR_OP_DIGEST, digest);
-#if CRM_DEPRECATED_SINCE_2_0_5
-#else
+#if !CRM_DEPRECATED_SINCE_2_0_4
 		free_xml(args_xml);
 #endif
 	}

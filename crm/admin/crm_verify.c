@@ -1,4 +1,4 @@
-/* $Id: crm_verify.c,v 1.7 2006/04/04 14:23:21 andrew Exp $ */
+/* $Id: crm_verify.c,v 1.8 2006/04/05 09:59:35 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -205,7 +205,7 @@ main(int argc, char **argv)
 		write_xml_file(cib_object, cib_save, FALSE);
 	}
 	
-#if CRM_DEPRECATED_SINCE_2_0_5
+#if CRM_DEPRECATED_SINCE_2_0_4
 	status = get_object_root(XML_CIB_TAG_STATUS, cib_object);
 	xml_child_iter(status, node_state, XML_CIB_TAG_STATE,
 		       xml_remove_prop(node_state, XML_CIB_TAG_LRM);
