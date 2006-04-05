@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.64 2006/04/05 14:35:50 lars Exp $ */
+/* $Id: crmadmin.c,v 1.65 2006/04/05 14:38:14 lars Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -721,8 +721,10 @@ usage(const char *cmd, int exit_status)
 		"request the uname of the DC\n", "dc_lookup", 'D');
 	fprintf(stream, "\t--%s (-%c)\t\t: "
 		"request the uname of all member nodes\n", "nodes", 'N');
+#if 0
 	fprintf(stream, "\t--%s (-%c)\t: "
 		"request the names of all resources\n", "resources", 'R');
+#endif
 	fprintf(stream, "\t--%s (-%c) <rsc>\t: "
 		"request the location of <rsc>\n", "whereis", 'W');
 	fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
