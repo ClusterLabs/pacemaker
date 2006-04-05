@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.15 2006/04/04 13:09:27 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.16 2006/04/05 07:37:37 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -46,6 +46,7 @@ update_attr(cib_t *the_cib, int call_options,
 	    const char *attr_id, const char *attr_name, const char *attr_value)
 {
 	const char *tag = NULL;
+	gboolean is_crm_config = FALSE;
 	
 	enum cib_errors rc = cib_ok;
 	crm_data_t *xml_top = NULL;
@@ -64,6 +65,7 @@ update_attr(cib_t *the_cib, int call_options,
 	
 	if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
 		tag = NULL;
+		is_crm_config = TRUE;
 		
 	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
 		tag = XML_CIB_TAG_NODE;
@@ -93,7 +95,11 @@ update_attr(cib_t *the_cib, int call_options,
 	}
 
 	if(set_name != NULL) {
-		xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
+		if(is_crm_config) {
+			xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_PROPSET);
+		} else {
+			xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
+		}
 		if(xml_top == NULL) {
 			xml_top = xml_obj;
 		}

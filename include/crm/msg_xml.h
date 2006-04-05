@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.50 2006/04/04 13:19:45 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.51 2006/04/05 07:37:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -117,6 +117,7 @@
 #define XML_CIB_TAG_CONSTRAINT    	"constraint"
 #define XML_CIB_TAG_NVPAIR        	"nvpair"
 
+#define XML_CIB_TAG_PROPSET	   	"cluster_property_set"
 #define XML_TAG_ATTR_SETS	   	"instance_attributes"
 #define XML_TAG_ATTRS			"attributes"
 #define XML_TAG_PARAMS			"parameters"

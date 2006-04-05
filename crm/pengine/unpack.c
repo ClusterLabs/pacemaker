@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.180 2006/04/04 17:25:21 andrew Exp $ */
+/* $Id: unpack.c,v 1.181 2006/04/05 07:37:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -90,7 +90,7 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 	data_set->config_hash = config_hash;	
 
 	unpack_instance_attributes(
-		config, "cluster_property_set", NULL, config_hash,
+		config, XML_CIB_TAG_PROPSET, NULL, config_hash,
 		NULL, 0, data_set);
 
 #if CRM_DEPRECATED_SINCE_2_0_1
