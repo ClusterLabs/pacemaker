@@ -344,6 +344,7 @@ build_operation_update(
 		return TRUE;
 	}
 
+	caller_version = g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION);
 	crm_debug_3("Caller version: %s", caller_version);
 	
 	if(safe_str_eq(op->op_type, CRMD_ACTION_NOTIFY)) {
@@ -417,7 +418,6 @@ build_operation_update(
 	}
 	
 #if CRM_DEPRECATED_SINCE_2_0_3
-	caller_version = g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION);
 	if(compare_version("1.0.3", caller_version) > 0) {
 		CRM_CHECK(FALSE, ; );
 		fail_state = generate_transition_magic_v202(
@@ -487,20 +487,22 @@ build_operation_update(
 		 * however it will come at the cost of a potentially much
 		 *   larger CIB
 		 */
-		crm_data_t *args_xml = NULL;
 		char *digest = NULL;
+		crm_data_t *args_xml = NULL;
+		crm_data_t *args_parent = NULL;
 #if CRM_DEPRECATED_SINCE_2_0_4
-		args_xml = create_xml_node(xml_op, XML_TAG_PARAMS);
-#else
-		args_xml = create_xml_node(NULL, XML_TAG_PARAMS);
+		if(compare_version("1.0.5", caller_version) > 0) {
+			args_parent = xml_op;
+		}
 #endif
+		args_xml = create_xml_node(args_parent, XML_TAG_PARAMS);
 		g_hash_table_foreach(op->params, hash2field, args_xml);
 		filter_action_parameters(args_xml);
 		digest = calculate_xml_digest(args_xml, TRUE);
 		crm_xml_add(xml_op, XML_LRM_ATTR_OP_DIGEST, digest);
-#if !CRM_DEPRECATED_SINCE_2_0_4
-		free_xml(args_xml);
-#endif
+		if(args_parent == NULL) {
+			free_xml(args_xml);
+		}
 	}
 	
 	return TRUE;

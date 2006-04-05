@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.59 2006/04/05 09:59:35 andrew Exp $ */
+/* $Id: io.c,v 1.60 2006/04/05 13:42:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -478,9 +478,7 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 {
 	int error_code = cib_ok;
 	crm_data_t *saved_cib = get_the_CIB();
-#if !CRM_DEPRECATED_SINCE_2_0_4
 	const char *ignore_dtd = NULL;
-#endif
 
 	crm_log_xml_debug_4(new_cib, "Attempting to activate CIB");
 
@@ -489,15 +487,18 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 		crm_validate_data(saved_cib);
 	}
 
-#if !CRM_DEPRECATED_SINCE_2_0_4
 	ignore_dtd = crm_element_value(new_cib, "ignore_dtd");
-	if(crm_is_true(ignore_dtd) == FALSE
-	   && validate_with_dtd(new_cib, HA_LIBDIR"/heartbeat/crm.dtd") == FALSE) {
+	if(
+#if !CRM_DEPRECATED_SINCE_2_0_4
+	   ignore_dtd != NULL &&
+#endif
+	   crm_is_true(ignore_dtd) == FALSE
+	   && validate_with_dtd(
+		   new_cib, HA_LIBDIR"/heartbeat/crm.dtd") == FALSE) {
  		error_code = cib_dtd_validation;
 		crm_err("Ignoring invalid CIB");
-	} else
-#endif
-	if (initializeCib(new_cib) == FALSE) {
+
+	} else if (initializeCib(new_cib) == FALSE) {
 		error_code = cib_ACTIVATION;
 		crm_err("Ignoring invalid or NULL CIB");
 		if(saved_cib != NULL) {
