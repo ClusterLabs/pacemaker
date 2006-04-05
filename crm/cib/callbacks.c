@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.118 2006/04/03 15:59:17 andrew Exp $ */
+/* $Id: callbacks.c,v 1.119 2006/04/05 13:23:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -244,6 +244,34 @@ enum cib_errors cib_get_operation_id(const HA_Message * msg, int *operation);
 
 gboolean cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client);
 
+static void
+cib_ipc_connection_destroy(gpointer user_data)
+{
+	cib_client_t *cib_client = user_data;
+	
+	/* cib_process_disconnect */
+
+	if(cib_client == NULL) {
+		crm_debug_4("Destroying %p", user_data);
+		return;
+	}
+
+	if(cib_client->source != NULL) {
+		crm_debug_4("Deleting %s (%p) from mainloop",
+			    cib_client->name, cib_client->source);
+		G_main_del_IPC_Channel(cib_client->source); 
+		cib_client->source = NULL;
+	}
+	
+	crm_debug_3("Destroying %s (%p)", cib_client->name, user_data);
+	crm_free(cib_client->name);
+	crm_free(cib_client->callback_id);
+	crm_free(cib_client->id);
+	crm_free(cib_client);
+	crm_debug_4("Freed the cib client");
+
+	return;
+}
 
 static cib_client_t *
 cib_client_connect_common(
@@ -288,7 +316,7 @@ cib_client_connect_common(
 		if(callback != NULL) {
 			new_client->source = G_main_add_IPC_Channel(
 				G_PRIORITY_DEFAULT, channel, FALSE, callback,
-				new_client, default_ipc_connection_destroy);
+				new_client, cib_ipc_connection_destroy);
 		}
 
 		crm_debug_3("Channel %s connected for client %s",
@@ -524,9 +552,8 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 	}
 
 	if(channel->ch_status != IPC_CONNECT) {
-		keep_connection = FALSE;
 		crm_debug_2("Client disconnected");
-		cib_process_disconnect(channel, cib_client);	
+		keep_connection = cib_process_disconnect(channel, cib_client);	
 	}
 	
 	return keep_connection;
@@ -629,9 +656,8 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 	crm_debug_2("Processed %d messages", lpc);
 
 	if(channel->ch_status != IPC_CONNECT) {
-		keep_channel = FALSE;
 		crm_debug_2("Client disconnected");
-		cib_process_disconnect(channel, cib_client);	
+		keep_channel = cib_process_disconnect(channel, cib_client);	
 	}
 
 
@@ -1317,15 +1343,11 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 gboolean
 cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 {
-	gboolean keep_connection = TRUE;
-	
 	if (channel == NULL) {
-		keep_connection = FALSE;
 		CRM_DEV_ASSERT(cib_client == NULL);
 		
 	} else if (cib_client == NULL) {
 		crm_err("No client");
-		keep_connection = FALSE;
 		
 	} else {
 		CRM_DEV_ASSERT(channel->ch_status != IPC_CONNECT);
@@ -1339,30 +1361,15 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 				crm_err("Client %s not found in the hashtable",
 					cib_client->name);
 			}
-		}
-		
-		if(cib_client->source != NULL) {
-			crm_debug_3("deleting the IPC Channel");
- 			G_main_del_IPC_Channel(cib_client->source);
-			cib_client->source = NULL;
-		}
-
-   		crm_free(cib_client->name);
-  		crm_free(cib_client->callback_id);
-   		crm_free(cib_client->id);
-  		crm_free(cib_client);
-		crm_debug_3("Freed the cib client");
-
-		keep_connection = FALSE;
+		}		
 	}
 
 	if(cib_shutdown_flag && g_hash_table_size(client_list) == 0) {
 		crm_info("All clients disconnected...");
-		CRM_DEV_ASSERT(keep_connection == FALSE);
 		initiate_exit();
 	}
 	
-	return keep_connection;
+	return FALSE;
 }
 
 gboolean

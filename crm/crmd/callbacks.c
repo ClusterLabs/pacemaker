@@ -419,6 +419,31 @@ crmd_client_status_callback(const char * node, const char * client,
 	trigger_fsa(fsa_source);
 }
 
+static void
+crmd_ipc_connection_destroy(gpointer user_data)
+{
+	crmd_client_t *client = user_data;
+
+	if(client == NULL) {
+		crm_debug_4("No client to delete");
+		return;
+	}
+	
+	if(client->client_source != NULL) {
+		crm_debug_4("Deleting %s (%p) from mainloop",
+			    client->uuid, client->client_source);
+		G_main_del_IPC_Channel(client->client_source); 
+		client->client_source = NULL;
+	}
+
+	crm_debug_3("Freeing %s client", client->uuid);
+	crm_free(client->table_key);
+	crm_free(client->sub_sys);
+	crm_free(client->uuid);
+	crm_free(client);
+
+	return;
+}
 
 gboolean
 crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
@@ -451,7 +476,7 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 			G_main_add_IPC_Channel(
 				G_PRIORITY_LOW, client_channel,
 				FALSE,  crmd_ipc_msg_callback,
-				blank_client, default_ipc_connection_destroy);
+				blank_client, crmd_ipc_connection_destroy);
 	}
     
 	return TRUE;
