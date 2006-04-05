@@ -284,10 +284,11 @@ class HAResourceAudit(ClusterAudit):
             for inc_name in NumofInc.keys():
                 if NumofInc[inc_name] != min(up_count, MaxofInc[inc_name]):
                     passed = 0
-                    self.CM.log("Cloned resource "+ inc_name
-				+" has "+ NumofInc[inc_name]
-				+" active instances (max: "+ MaxofInc[inc_name]
-				+", active nodes: "+ up_count + ")")
+                    self.CM.log("Cloned resource "+ str(inc_name)
+				+" has "+ str(NumofInc[inc_name])
+				+" active instances (max: "
+				+ str(MaxofInc[inc_name])
+				+", active nodes: "+ str(up_count) + ")")
 		    
         Groups = self.CM.ResourceGroups()
         for group in Groups :
