@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.60 2006/04/05 13:42:23 andrew Exp $ */
+/* $Id: io.c,v 1.61 2006/04/06 13:28:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -489,7 +489,7 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 
 	ignore_dtd = crm_element_value(new_cib, "ignore_dtd");
 	if(
-#if !CRM_DEPRECATED_SINCE_2_0_4
+#if CRM_DEPRECATED_SINCE_2_0_4
 	   ignore_dtd != NULL &&
 #endif
 	   crm_is_true(ignore_dtd) == FALSE
