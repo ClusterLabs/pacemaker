@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.101 2006/02/19 09:03:16 andrew Exp $ */
+/* $Id: ccm.c,v 1.102 2006/04/06 11:05:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -185,8 +185,6 @@ do_ccm_event(long long action,
 		register_fsa_error(cause, I_ERROR, msg_data->data);
 		return I_NULL;
 	}
-	
-	CRM_DEV_ASSERT(oc->m_n_in != 0 || oc->m_n_out != 0);
 	
 	if(AM_I_DC == FALSE && oc->m_n_out != 0) {
 		/* Possibly move this logic to ghash_update_cib_node() */
