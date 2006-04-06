@@ -40,7 +40,8 @@
 <!ELEMENT crm_config (cluster_property_set|nvpair)*>
 <!ELEMENT cluster_property_set (rule*, attributes)>
 <!ATTLIST cluster_property_set
-          id                CDATA        #IMPLIED>
+          id                CDATA        #REQUIRED
+          score             CDATA        #IMPLIED>
 
 <!ELEMENT nodes       (node*)>
 <!-- Annotated version -->
@@ -134,7 +135,10 @@
 <!-- Annotated version -->
 
 <!ELEMENT instance_attributes (rule*, attributes)>
-<!ATTLIST instance_attributes id CDATA #IMPLIED>
+<!ATTLIST instance_attributes
+          id                CDATA        #REQUIRED
+          score             CDATA        #IMPLIED>
+
 <!-- Annotated version -->
 
 <!ELEMENT constraints (rsc_order*, rsc_colocation*, rsc_location*)>
