@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.77 2006/04/03 10:10:46 andrew Exp $ */
+/* $Id: complex.c,v 1.78 2006/04/06 11:00:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -434,13 +434,81 @@ void common_free(resource_t *rsc)
 	crm_debug_5("Resource freed");
 }
 
+typedef struct sorted_set_s 
+{
+		const char *name;
+		int score;
+		crm_data_t *attr_set;
+		node_t *node;
+		GHashTable *hash;
+		pe_working_set_t *data_set;		
+		int attrs_length;
+		const char **attrs;
+} sorted_set_t;
+
+static gint
+sort_pairs(gconstpointer a, gconstpointer b)
+{
+	const sorted_set_t *pair_a = a;
+	const sorted_set_t *pair_b = b;
+	
+	if(a == NULL && b == NULL) {
+		return 0;
+	} else if(a == NULL) {
+		return 1;
+	} else if(b == NULL) {
+		return -1;
+	}
+
+	if(safe_str_eq(pair_a->name, CIB_OPTIONS_FIRST)) {
+		return -1;
+
+	} else if(safe_str_eq(pair_b->name, CIB_OPTIONS_FIRST)) {
+		return 1;
+	}
+	
+	if(pair_a->score < pair_b->score) {
+		return 1;
+	} else if(pair_a->score > pair_b->score) {
+		return -1;
+	}
+	return 0;
+}
+
+static void
+unpack_attr_set(gpointer data, gpointer user_data)
+{
+	sorted_set_t *pair = data;
+	sorted_set_t *unpack_data = user_data;
+	crm_data_t *attributes = NULL;
+	
+	if(test_ruleset(pair->attr_set,
+			unpack_data->node, unpack_data->data_set) == FALSE) {
+		return;
+	}
+	
+	crm_debug_2("Adding attributes from %s", pair->name);
+	attributes = cl_get_struct(pair->attr_set, XML_TAG_ATTRS);
+	populate_hash(attributes, unpack_data->hash,
+		      unpack_data->attrs, unpack_data->attrs_length);
+}
+
+static void
+free_pair(gpointer data, gpointer user_data)
+{
+	sorted_set_t *pair = data;
+	crm_free(pair);
+}
+
 void
 unpack_instance_attributes(
 	crm_data_t *xml_obj, const char *set_name, node_t *node,
 	GHashTable *hash, const char **attrs, int attrs_length,
 	pe_working_set_t *data_set)
 {
-	crm_data_t *attributes = NULL;
+	GListPtr sorted = NULL;
+	const char *score = NULL;
+	sorted_set_t *pair = NULL;
 	
 	if(xml_obj == NULL) {
 		crm_debug_4("No instance attributes");
@@ -452,25 +520,35 @@ unpack_instance_attributes(
 		crm_debug_2("No instance attributes allowed");
 		return;
 	}
-	
+
 	crm_debug_2("Checking for attributes");
 	xml_child_iter_filter(
 		xml_obj, attr_set, set_name,
 
-		/* check any rules */
-		if(test_ruleset(attr_set, node, data_set) == FALSE) {
-			continue;
-		}
+		pair = NULL;
+		crm_malloc0(pair, sizeof(sorted_set_t));
+		pair->name     = ID(attr_set);
+		pair->attr_set = attr_set;
 		
-		crm_debug_2("Adding attributes");
-		attributes = cl_get_struct(attr_set, XML_TAG_ATTRS);
-		if(attributes == NULL) {
-			pe_err("%s with no %s child", set_name, XML_TAG_ATTRS);
-		} else {
-			populate_hash(attributes, hash, attrs, attrs_length);
-		}
-		
+		score = crm_element_value(attr_set, XML_RULE_ATTR_SCORE);
+		pair->score = char2score(score);
+
+		sorted = g_list_prepend(sorted, pair);
+
 		);
+
+	if(pair != NULL) {
+		pair->hash = hash;
+		pair->node = node;
+		pair->attrs = attrs;
+		pair->data_set = data_set;
+		pair->attrs_length = attrs_length;
+	}
+	
+	sorted = g_list_sort(sorted, sort_pairs);
+	g_list_foreach(sorted, unpack_attr_set, pair);
+	g_list_foreach(sorted, free_pair, NULL);
+	g_list_free(sorted);
 }
 
 void
