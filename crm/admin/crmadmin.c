@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.65 2006/04/05 14:38:14 lars Exp $ */
+/* $Id: crmadmin.c,v 1.66 2006/04/06 16:46:48 lars Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -130,8 +130,8 @@ main(int argc, char **argv)
 		/* daemon options */
 		{"kill", 1, 0, 'K'},  /* stop a node */
 		{"die", 0, 0, 0},  /* kill a node, no respawn */
-		{"crm_debug_inc", 1, 0, 'i'},
-		{"crm_debug_dec", 1, 0, 'd'},
+		{"debug_inc", 1, 0, 'i'},
+		{"debug_dec", 1, 0, 'd'},
 		{"status", 1, 0, 'S'},
 		{"standby", 1, 0, 's'},
 		{"active", 1, 0, 'a'},
