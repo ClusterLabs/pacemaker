@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.92 2006/04/05 13:43:34 andrew Exp $ */
+/* $Id: crm.h,v 1.93 2006/04/06 10:44:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,9 +39,9 @@
 #  define CRM_DEV_BUILD 0
 #endif
 
-#define CRM_DEPRECATED_SINCE_2_0_1 1
-#define CRM_DEPRECATED_SINCE_2_0_2 1
-#define CRM_DEPRECATED_SINCE_2_0_3 1
+#define CRM_DEPRECATED_SINCE_2_0_1 0
+#define CRM_DEPRECATED_SINCE_2_0_2 0
+#define CRM_DEPRECATED_SINCE_2_0_3 0
 #define CRM_DEPRECATED_SINCE_2_0_4 1
 #define CRM_DEPRECATED_SINCE_2_0_5 1
 #define CRM_DEPRECATED_SINCE_2_1_0 1
