@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.39 2006/04/04 13:07:36 andrew Exp $ */
+/* $Id: cib.h,v 1.40 2006/04/06 10:51:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -26,8 +26,10 @@
 #include <crm/common/xml.h>
 #include <ha_msg.h>
 
-#define CIB_FEATURE_SET "1.2"
+#define CIB_FEATURE_SET "1.3"
 #define USE_PESKY_FRAGMENTS 1
+
+#define CIB_OPTIONS_FIRST "cib-bootstrap-options"
 /* use compare_version() for doing comparisons */
 
 enum cib_variant {
