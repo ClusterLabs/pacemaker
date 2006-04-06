@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.78 2006/04/06 11:00:39 andrew Exp $ */
+/* $Id: complex.c,v 1.79 2006/04/06 13:05:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,6 +19,7 @@
 
 #include <portability.h>
 
+#include <crm/cib.h>
 #include <pengine.h>
 #include <pe_utils.h>
 #include <pe_rules.h>
