@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.17 2006/04/05 08:05:26 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.18 2006/04/07 14:08:07 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -39,6 +39,51 @@
 
 #include <crm/dmalloc_wrapper.h>
 
+#define attr_common_setup(section)					\
+	gboolean is_crm_config = FALSE;					\
+	gboolean is_node_transient = FALSE;				\
+	char *local_attr_id = NULL;					\
+	if(attr_id == NULL && attr_name == NULL) {			\
+		return cib_missing;					\
+									\
+	} else if(section == NULL) {					\
+		return cib_NOSECTION;					\
+	}								\
+	if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {		\
+		tag = NULL;						\
+		is_crm_config = TRUE;					\
+		if(set_name == NULL) {					\
+			set_name = CIB_OPTIONS_FIRST;			\
+		}							\
+									\
+	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {		\
+		tag = XML_CIB_TAG_NODE;					\
+		if(node_uuid == NULL) {				\
+			return cib_missing;				\
+		}							\
+		if(set_name == NULL) {					\
+			set_name = node_uuid;				\
+		}							\
+									\
+	} else if(node_uuid != NULL) {					\
+		is_node_transient = TRUE;				\
+		tag = XML_TAG_TRANSIENT_NODEATTRS;			\
+		if(node_uuid == NULL) {				\
+			return cib_missing;				\
+		}							\
+		if(set_name == NULL) {					\
+			set_name = node_uuid;				\
+		}							\
+	}								\
+									\
+	if(attr_id == NULL) {						\
+		local_attr_id = crm_concat(set_name, attr_name, '-');	\
+		attr_id = local_attr_id;				\
+									\
+	} else if(attr_name == NULL) {					\
+		attr_name = attr_id;					\
+	}								\
+
 
 enum cib_errors 
 update_attr(cib_t *the_cib, int call_options,
@@ -46,43 +91,28 @@ update_attr(cib_t *the_cib, int call_options,
 	    const char *attr_id, const char *attr_name, const char *attr_value)
 {
 	const char *tag = NULL;
-	gboolean is_crm_config = FALSE;
 	
 	enum cib_errors rc = cib_ok;
 	crm_data_t *xml_top = NULL;
 	crm_data_t *xml_obj = NULL;
 	crm_data_t *fragment = NULL;
 
-	if(attr_id == NULL) {
-		attr_id = attr_name;
-	}
-	if(attr_name == NULL) {
-		attr_name = attr_id;
+	attr_common_setup(section);	
+
+	CRM_CHECK(attr_id != NULL, return cib_missing);
+	CRM_CHECK(attr_name != NULL, return cib_missing);
+	CRM_CHECK(set_name != NULL, return cib_missing);
+
+	if(attr_value == NULL) {
+		return cib_missing_data;
 	}
 
-	CRM_ASSERT(attr_id != NULL);
-	CRM_ASSERT(attr_name != NULL);
-	
-	if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
-		tag = NULL;
-		is_crm_config = TRUE;
-		
-	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
-		tag = XML_CIB_TAG_NODE;
-		
-	} else if(section != NULL && node_uuid != NULL) {
+	if(is_node_transient) {
 		xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_STATE);
 		crm_xml_add(xml_obj, XML_ATTR_ID, node_uuid);
 		if(xml_top == NULL) {
 			xml_top = xml_obj;
 		}
-		tag = XML_TAG_TRANSIENT_NODEATTRS;
-
-	} else if(section != NULL) {
-		tag = XML_TAG_TRANSIENT_NODEATTRS;
-
-	} else {
-		return cib_NOSECTION;
 	}
 	
 	crm_debug_2("Creating %s/%s", section, tag);
@@ -94,22 +124,20 @@ update_attr(cib_t *the_cib, int call_options,
 		}
 	}
 
-	if(set_name != NULL) {
-		if(is_crm_config) {
-			xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_PROPSET);
-		} else {
-			xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
-		}
-		if(xml_top == NULL) {
-			xml_top = xml_obj;
-		}
-		crm_xml_add(xml_obj, XML_ATTR_ID, set_name);
-		xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
+	if(is_crm_config) {
+		xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_PROPSET);
+	} else {
+		xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
 	}
-	xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
+	crm_xml_add(xml_obj, XML_ATTR_ID, set_name);
+
 	if(xml_top == NULL) {
 		xml_top = xml_obj;
 	}
+
+	xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
+	xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
+
 	crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
@@ -134,7 +162,9 @@ update_attr(cib_t *the_cib, int call_options,
 			cib_error2string(rc));
 	}
 	
+	crm_free(local_attr_id);
 	free_xml(fragment);
+	
 	return rc;
 }
 
@@ -145,7 +175,6 @@ read_attr(cib_t *the_cib,
 {
 	const char *tag = NULL;
 	enum cib_errors rc = cib_ok;
-	gboolean is_crm_config = FALSE;
 
 	crm_data_t *xml_obj = NULL;
 	crm_data_t *xml_next = NULL;
@@ -154,6 +183,8 @@ read_attr(cib_t *the_cib,
 	CRM_ASSERT(attr_value != NULL);
 	*attr_value = NULL;
 
+	attr_common_setup(section);
+	
 	crm_debug("Searching for attribute %s (section=%s, node=%s, set=%s)",
 		  attr_name, section, crm_str(node_uuid), crm_str(set_name));
 
@@ -263,17 +294,16 @@ read_attr(cib_t *the_cib,
 		crm_debug("<%s id=%s name=%s/> not found in %s",
 			  XML_CIB_TAG_NVPAIR, attr_id, attr_name,
 			  crm_element_name(xml_obj));
-		return cib_NOTEXISTS;
-	}
-	xml_obj = xml_next;
-	
-	if(crm_element_value(xml_obj, XML_NVPAIR_ATTR_VALUE) != NULL) {
+
+	} else if(crm_element_value(xml_next, XML_NVPAIR_ATTR_VALUE) != NULL) {
 		*attr_value = crm_element_value_copy(
-			xml_obj, XML_NVPAIR_ATTR_VALUE);
+			xml_next, XML_NVPAIR_ATTR_VALUE);
 	}
 	
+	crm_free(local_attr_id);
 	free_xml(fragment);
-	return cib_ok;
+
+	return xml_next == NULL?cib_NOTEXISTS:cib_ok;
 }
 
 
@@ -285,7 +315,10 @@ delete_attr(cib_t *the_cib,
 	char *tmp = NULL;
 	enum cib_errors rc = cib_ok;
 	crm_data_t *xml_obj = NULL;
-
+	const char *tag = NULL;
+	
+	attr_common_setup(section);
+	
 	rc = read_attr(the_cib, section, node_uuid, set_name,
 		       attr_id, attr_name, &tmp);
 
@@ -295,6 +328,7 @@ delete_attr(cib_t *the_cib,
 	} else if(attr_value != NULL
 		  && safe_str_neq(attr_value, tmp)) {
 		crm_free(tmp);
+		crm_free(local_attr_id);
 		return cib_NOTEXISTS;
 	}
 	crm_free(tmp);
@@ -308,6 +342,7 @@ delete_attr(cib_t *the_cib,
 		the_cib, section, xml_obj, NULL,
 		cib_sync_call|cib_quorum_override);
 
+	crm_free(local_attr_id);
 	free_xml(xml_obj);
 	return rc;
 }
@@ -436,8 +471,7 @@ query_node_uname(cib_t *the_cib, const char *uuid, char **uname)
 	} else {							\
 		crm_malloc0(attr_id, str_length);			\
 		sprintf(attr_id, "%s-%s", attr_name, uuid);		\
-	}								\
-	set_name = crm_strdup(attr_id);
+	}
 
 enum cib_errors 
 query_standby(cib_t *the_cib, const char *uuid, const char *scope,
