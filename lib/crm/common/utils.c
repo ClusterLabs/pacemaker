@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.41 2006/04/04 17:18:06 andrew Exp $ */
+/* $Id: utils.c,v 1.42 2006/04/07 14:06:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -197,29 +197,31 @@ decode_hash_value(gpointer value, char **node, char **subsys)
 	char *char_value = (char*)value;
 	int value_len = strlen(char_value);
 
+	CRM_CHECK(value != NULL,  return FALSE);
+	CRM_CHECK(node != NULL,   return FALSE);
+	CRM_CHECK(subsys != NULL, return FALSE);
+	
+	*node = NULL;
+	*subsys = NULL;
+
 	crm_info("Decoding hash value: (%s:%d)", char_value, value_len);
     	
 	if (strcmp(CRM_SYSTEM_DC, (char*)value) == 0) {
 		*node = NULL;
 		*subsys = (char*)crm_strdup(char_value);
-		if (*subsys == NULL) {
-			crm_err("memory allocation failed in "
-			       "decode_hash_value()");
-			return FALSE;
-		}
+		CRM_CHECK(*subsys != NULL, return FALSE);
 		crm_info("Decoded value: (%s:%d)", *subsys,
 			 (int)strlen(*subsys));
 		return TRUE;
 		
-	} else if (char_value != NULL) {
-		if (decodeNVpair(char_value, '_', node, subsys)) {
-			return TRUE;
-		} else {
-			*node = NULL;
-			*subsys = NULL;
-			return FALSE;
-		}
+	} else if (decodeNVpair(char_value, '_', node, subsys)) {
+		return TRUE;
 	}
+
+	crm_free(*node);
+	crm_free(*subsys);
+	*node = NULL;
+	*subsys = NULL;
 	return FALSE;
 }
 
@@ -374,16 +376,8 @@ compare_version(const char *version1, const char *version2)
 		return 1;
 	}
 	
-	if(version1 != NULL) {
-		rest1 = crm_strdup(version1);
-	} else {
-		version1 = "<null>";
-	}
-	if(version2 != NULL) {
-		rest2 = crm_strdup(version2);
-	} else {
-		version2 = "<null>";
-	}
+	rest1 = crm_strdup(version1);
+	rest2 = crm_strdup(version2);
 	
 	while(1) {
 		int cmp = 0;
