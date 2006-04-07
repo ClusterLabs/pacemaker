@@ -112,13 +112,21 @@ revision_check_callback(const HA_Message *msg, int call_id, int rc,
 	}
 }
 
-extern void populate_cib_nodes(ll_cluster_t *hb_cluster);
+extern void populate_cib_nodes(
+	ll_cluster_t *hb_cluster, gboolean with_client_status);
 
 static void
 do_cib_replaced(const char *event, HA_Message *msg)
 {
 	crm_debug("Updating the CIB after a replace");
-	populate_cib_nodes(fsa_cluster_conn);
+#ifdef BUG
+	/* enabling this seems to cause delays (in the order of 3 minutes)
+	 *   in messages being received by the node that runs this
+	 *
+	 * no idea why :(
+	 */
+ 	populate_cib_nodes(fsa_cluster_conn, FALSE);
+#endif
 	do_update_cib_nodes(AM_I_DC, __FUNCTION__);
 	if(AM_I_DC) {
 		/* start the join process again so we get everyone's LRM status */

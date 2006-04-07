@@ -42,7 +42,7 @@ extern gboolean stop_all_resources(void);
 
 gboolean crm_shutdown(int nsig, gpointer unused);
 gboolean register_with_ha(ll_cluster_t *hb_cluster, const char *client_name);
-void populate_cib_nodes(ll_cluster_t *hb_cluster);
+void populate_cib_nodes(ll_cluster_t *hb_cluster, gboolean with_client_status);
 
 
 GHashTable   *ipc_clients = NULL;
@@ -569,11 +569,11 @@ do_read_config(long long action,
 	crm_debug_2("Querying the CIB... call %d", call_id);
 
 	/* defaults */
-	election_trigger->period_ms   = crm_get_msec("1min");
+	election_trigger->period_ms   = crm_get_msec("30s");
 	election_timeout->period_ms   = crm_get_msec("2min");
 	integration_timer->period_ms  = crm_get_msec("3min");
 	finalization_timer->period_ms = crm_get_msec("3min");
-	shutdown_escalation_timer->period_ms = crm_get_msec("5min");
+	shutdown_escalation_timer->period_ms = crm_get_msec("10min");
 	
 	return I_NULL;
 }
@@ -618,17 +618,20 @@ default_cib_update_callback(const HA_Message *msg, int call_id, int rc,
 }
 
 void
-populate_cib_nodes(ll_cluster_t *hb_cluster)
+populate_cib_nodes(ll_cluster_t *hb_cluster, gboolean with_client_status)
 {
 	int call_id = 0;
 	const char *ha_node = NULL;
 	crm_data_t *cib_node_list = NULL;
 	
 	/* Async get client status information in the cluster */
-	crm_debug_3("Requesting an initial dump of CRMD client_status");
-	fsa_cluster_conn->llc_ops->client_status(
-		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
-
+	crm_debug_2("Invoked");
+	if(with_client_status) {
+		crm_debug_3("Requesting an initial dump of CRMD client_status");
+		fsa_cluster_conn->llc_ops->client_status(
+			fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
+	}
+	
 	crm_info("Requesting the list of configured nodes");
 	fsa_cluster_conn->llc_ops->init_nodewalk(fsa_cluster_conn);
 
@@ -675,6 +678,7 @@ populate_cib_nodes(ll_cluster_t *hb_cluster)
 	add_cib_op_callback(call_id, FALSE, NULL, default_cib_update_callback);
 
 	free_xml(cib_node_list);
+	crm_debug_2("Complete");
 }
 
 gboolean
@@ -743,7 +747,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	fsa_our_uuid = crm_strdup(fsa_our_uuid);
 	crm_info("UUID: %s", fsa_our_uuid);
 		
-	populate_cib_nodes(hb_cluster);
+	populate_cib_nodes(hb_cluster, TRUE);
 	
 	return TRUE;
     
