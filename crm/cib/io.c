@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.61 2006/04/06 13:28:03 andrew Exp $ */
+/* $Id: io.c,v 1.62 2006/04/07 14:30:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -497,10 +497,14 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 		   new_cib, HA_LIBDIR"/heartbeat/crm.dtd") == FALSE) {
  		error_code = cib_dtd_validation;
 		crm_err("Ignoring invalid CIB");
+	}
 
-	} else if (initializeCib(new_cib) == FALSE) {
+	if(error_code == cib_ok && initializeCib(new_cib) == FALSE) {
 		error_code = cib_ACTIVATION;
 		crm_err("Ignoring invalid or NULL CIB");
+	}
+
+	if(error_code != cib_ok) {
 		if(saved_cib != NULL) {
 			crm_warn("Reverting to last known CIB");
 			if (initializeCib(saved_cib) == FALSE) {
@@ -514,7 +518,7 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 			crm_crit("Could not write out new CIB and no saved"
 				 " version to revert to");
 		}
-
+		
 	} else if(cib_writes_enabled) {
 		crm_debug_2("Triggering CIB write");
 		G_main_set_trigger(cib_writer);
