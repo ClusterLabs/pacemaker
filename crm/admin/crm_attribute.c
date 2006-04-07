@@ -1,4 +1,4 @@
-/* $Id: crm_attribute.c,v 1.11 2006/04/05 13:14:05 lars Exp $ */
+/* $Id: crm_attribute.c,v 1.12 2006/04/07 14:29:32 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -161,9 +161,6 @@ main(int argc, char **argv)
 			case 'n':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				attr_name = crm_strdup(optarg);
-				if(attr_id == NULL) {
-					attr_id = crm_strdup(optarg);
-				}
 				break;
 			case 'i':
 				crm_debug_2("Option %c => %s", flag, optarg);
