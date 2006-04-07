@@ -205,8 +205,7 @@ gboolean
 crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 {
 	int lpc = 0;
-	int rc = IPC_OK;
-	IPC_Message *msg = NULL;
+	HA_Message *msg = NULL;
 	ha_msg_input_t *new_input = NULL;
 	crmd_client_t *curr_client = (crmd_client_t*)user_data;
 	gboolean stay_connected = TRUE;
@@ -218,23 +217,17 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		if(client->ops->is_message_pending(client) == 0) {
 			break;
 		}
-		
-		rc = client->ops->recv(client, &msg);
-		if (rc != IPC_OK) {
-			crm_warn("Receive failure from %s: %d",
-				 curr_client->table_key, rc);
-			stay_connected = FALSE;
-			break;
-			
-		} else if (msg == NULL) {
+
+		msg = msgfromIPC_noauth(client);
+		if (msg == NULL) {
 			crm_err("%s: no message this time",
 				curr_client->table_key);
 			continue;
 		}
 
 		lpc++;
-		new_input = new_ipc_msg_input(msg);
-		msg->msg_done(msg);
+		new_input = new_ha_msg_input(msg);
+		crm_msg_del(msg);
 		
 		crm_debug_2("Processing msg from %s", curr_client->table_key);
 		crm_log_message_adv(LOG_DEBUG_2, "CRMd[inbound]", new_input->msg);

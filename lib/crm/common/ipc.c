@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.21 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: ipc.c,v 1.22 2006/04/07 15:41:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -155,7 +155,7 @@ crm_send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg, gboolean server)
 				      "IPC Channel to %d is no longer connected",
 				      (int)ipc_client->farside_pid);
 
-		} else if(server == FALSE) {
+		} else if(ipc_client->conntype == IPC_CLIENT) {
 			CRM_CHECK(ipc_client->send_queue->current_qlen < ipc_client->send_queue->max_qlen, ;);
 		}
 	}	
@@ -323,8 +323,7 @@ gboolean
 subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 {
 	int lpc = 0;
-	int rc = IPC_OK;
-	IPC_Message *msg = NULL;
+	HA_Message *msg = NULL;
 	ha_msg_input_t *new_input = NULL;
 	gboolean all_is_well = TRUE;
 	const char *sys_to;
@@ -336,21 +335,18 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 			break;
 		}
 
-		rc = sender->ops->recv(sender, &msg);
-		if (rc != IPC_OK) {
-			crm_err("Receive failure from %d: %d",
-				sender->farside_pid, rc);
-			return !all_is_well;
-
-		} else if (msg == NULL) {
+		msg = msgfromIPC_noauth(sender);
+		if (msg == NULL) {
 			crm_err("No message from %d this time",
 				sender->farside_pid);
 			continue;
 		}
 
 		lpc++;
-		new_input = new_ipc_msg_input(msg);
-		msg->msg_done(msg);
+		new_input = new_ha_msg_input(msg);
+		crm_msg_del(msg);
+		msg = NULL;
+		
 		crm_log_message(LOG_MSG, new_input->msg);
 
 		sys_to = cl_get_string(new_input->msg, F_CRM_SYS_TO);
@@ -405,18 +401,13 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 		}
 		
 		delete_ha_msg_input(new_input);
-		msg = NULL;
+		new_input = NULL;
 
 		if(sender->ch_status == IPC_CONNECT) {
 			break;
 		}
 	}
 
-	/* clean up after a break */
-	if(msg != NULL) {
-		msg->msg_done(msg);
-	}
-	
 	crm_debug_2("Processed %d messages", lpc);
 	if (sender->ch_status != IPC_CONNECT) {
 		crm_err("The server %d has left us: Shutting down...NOW",
