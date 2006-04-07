@@ -403,7 +403,7 @@ function make_resource()
     fi
     node_xml="$node_xml >";
     if [ ! -z "$args" -a "x$args" != "x-" ]; then
-	node_xml="$node_xml <instance_attributes> <attributes>${args} </attributes> </instance_attributes>"
+	node_xml="$node_xml <instance_attributes id=\\\"${id}\\\"> <attributes>${args} </attributes> </instance_attributes>"
     fi
     node_xml="$node_xml </primitive>";
     
