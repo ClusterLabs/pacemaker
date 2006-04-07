@@ -166,7 +166,6 @@ do_dc_join_offer_one(long long action,
 		     fsa_data_t *msg_data)
 {
 	oc_node_t member;
-	gpointer a_node = NULL;
 	ha_msg_input_t *welcome = fsa_typed_data(fsa_dt_ha_msg);
 	const char *join_to = NULL;
 
@@ -177,7 +176,7 @@ do_dc_join_offer_one(long long action,
 	}
 	
 	join_to = cl_get_string(welcome->msg, F_CRM_HOST_FROM);
-	if(a_node != NULL
+	if(join_to != NULL
 	   && (cur_state == S_INTEGRATION || cur_state == S_FINALIZE_JOIN)) {
 		/* note: it _is_ possible that a node will have been
 		 *  sick or starting up when the original offer was made.

@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.57 2006/03/27 09:56:16 andrew Exp $ */
+/* $Id: group.c,v 1.58 2006/04/07 14:28:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -48,6 +48,7 @@ typedef struct group_variant_data_s
 
 
 #define get_group_variant_data(data, rsc)				\
+	CRM_ASSERT(rsc != NULL);					\
 	CRM_ASSERT(rsc->variant == pe_group);				\
 	CRM_ASSERT(rsc->variant_opaque != NULL);			\
 	data = (group_variant_data_t *)rsc->variant_opaque;		\
@@ -462,11 +463,8 @@ void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 
 	crm_debug_3("Processing actions from %s", group_data->self->id);
 
+	CRM_CHECK(group_data->self != NULL, return);
 	group_data->self->fns->expand(group_data->self, data_set);
-
-	if(group_data->self == NULL) {
-		return;
-	}
 	
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
@@ -540,6 +538,7 @@ void group_print(
 void group_free(resource_t *rsc)
 {
 	group_variant_data_t *group_data = NULL;
+	CRM_CHECK(rsc != NULL, return);
 	get_group_variant_data(group_data, rsc);
 
 	crm_debug_3("Freeing %s", rsc->id);
@@ -554,8 +553,8 @@ void group_free(resource_t *rsc)
 	crm_debug_3("Freeing child list");
 	pe_free_shallow_adv(group_data->child_list, FALSE);
 
-	free_xml(group_data->self->xml);
 	if(group_data->self != NULL) {
+		free_xml(group_data->self->xml);
 		group_data->self->fns->free(group_data->self);
 	}
 

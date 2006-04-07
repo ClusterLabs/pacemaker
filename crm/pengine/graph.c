@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.78 2006/03/27 05:44:24 andrew Exp $ */
+/* $Id: graph.c,v 1.79 2006/04/07 14:28:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -423,13 +423,12 @@ action2xml(action_t *action, gboolean as_input)
 static gboolean
 should_dump_action(action_t *action) 
 {
-	const char * interval = g_hash_table_lookup(action->extra, "interval");
-	
-	if(action == NULL) {
-		pe_err("Cannot dump NULL action");
-		return FALSE;
+	const char * interval = NULL;
 
-	} else if(action->optional) {
+	CRM_CHECK(action != NULL, return FALSE);
+
+	interval = g_hash_table_lookup(action->extra, "interval");
+	if(action->optional) {
 		crm_debug_5("action %d was optional", action->id);
 		return FALSE;
 

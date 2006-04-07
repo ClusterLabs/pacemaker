@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.76 2006/03/27 05:44:24 andrew Exp $ */
+/* $Id: incarnation.c,v 1.77 2006/04/07 14:28:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -881,15 +881,12 @@ void clone_rsc_colocation_rh(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
 	clone_variant_data_t *clone_data = NULL;
+	CRM_CHECK(rsc_lh != NULL, return);
 	CRM_CHECK(rsc_lh->variant == pe_native, return);
 	
 	crm_debug_3("Processing RH of constraint %s", constraint->id);
 
-	if(rsc_lh == NULL) {
-		pe_err("rsc_lh was NULL for %s", constraint->id);
-		return;
-
-	} else if(rsc_rh == NULL) {
+	if(rsc_rh == NULL) {
 		pe_err("rsc_rh was NULL for %s", constraint->id);
 		return;
 		
