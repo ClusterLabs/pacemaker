@@ -1,4 +1,4 @@
-/* $Id: ctrl.c,v 1.3 2005/06/13 15:57:58 davidlee Exp $ */
+/* $Id: ctrl.c,v 1.4 2006/04/07 14:07:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,10 +41,9 @@
 
 #include <crm/dmalloc_wrapper.h>
 
+#if 0
 
 static int  wdt_interval_ms = 10000;
-
-
 
 void
 register_with_apphb(const char *client_name,
@@ -98,3 +97,5 @@ tickle_apphb_template(gpointer data)
 	}
 	return TRUE;
 }
+
+#endif
