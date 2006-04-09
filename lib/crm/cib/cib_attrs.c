@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.20 2006/04/09 18:30:48 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.21 2006/04/09 20:03:32 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -102,7 +102,6 @@ update_attr(cib_t *the_cib, int call_options,
 	enum cib_errors rc = cib_ok;
 	crm_data_t *xml_top = NULL;
 	crm_data_t *xml_obj = NULL;
-	crm_data_t *fragment = NULL;
 
 	attr_common_setup(section);	
 
@@ -150,13 +149,9 @@ update_attr(cib_t *the_cib, int call_options,
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 	
 	crm_log_xml_debug_2(xml_top, "Update");
-	fragment = create_cib_fragment(xml_top, section);
-	crm_log_xml_debug_3(fragment, "Update Fragment");
 	
-	free_xml(xml_top);
-	
-	rc = the_cib->cmds->update(
-		the_cib, section, fragment, NULL, call_options|cib_quorum_override);
+	rc = the_cib->cmds->update(the_cib, section, xml_top, NULL,
+				   call_options|cib_quorum_override);
 
 	if(rc == cib_diff_resync) {
 		/* this is an internal matter - the update succeeded */ 
@@ -171,7 +166,7 @@ update_attr(cib_t *the_cib, int call_options,
 	
 	crm_free(local_set_name);
 	crm_free(local_attr_id);
-	free_xml(fragment);
+	free_xml(xml_top);
 	
 	return rc;
 }
