@@ -341,6 +341,7 @@ get_message(void)
 {
 	fsa_data_t* message = g_list_nth_data(fsa_message_queue, 0);
 	fsa_message_queue = g_list_remove(fsa_message_queue, message);
+	crm_debug_2("Processing input %d", message->id);
 	return message;
 }
 
