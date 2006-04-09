@@ -32,14 +32,13 @@ class CIB:
        </attributes>
     </cluster_property_set>'''
 
-
     dc_ipaddr_resource_template = ''' 
         <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
           <operations>
              <op id="DcIPaddr-1" name="monitor" interval="5s" timeout="20s"/>
              <op id="DcIPaddr-2" name="start" timeout="40s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="DcIPaddr">
              <attributes>
                <nvpair id="DcIPaddr-1" name="ip" value="%s"/>
              </attributes>
@@ -52,7 +51,7 @@ class CIB:
             <op id="cluster_mon-1" name="monitor" interval="5s" timeout="20s" prereq="nothing"/>
             <op id="cluster_mon-2" name="start" timeout="20s" prereq="nothing"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="ClusterMon">
             <attributes>
                <nvpair id="cluster_mon-1" name="htmlfile" value="/suse/abeekhof/Export/cluster.html"/>
                <nvpair id="cluster_mon-2" name="update" value="10"/>
@@ -85,7 +84,7 @@ class CIB:
 
     master_slave_resource = ''' 
         <master_slave id="master_rsc_1">
-          <instance_attributes>
+          <instance_attributes id="master_rsc">
             <attributes>
               <nvpair id="clone_max_1" name="clone_max" value="%d"/>
               <nvpair id="clone_node_max_2" name="clone_node_max" value="%d"/>
@@ -98,7 +97,7 @@ class CIB:
               <op id="ocf_msdummy_monitor" name="monitor" interval="5s" timeout="10s"/>
               <op id="ocf_msdummy_monitor_master" name="monitor" interval="6s" timeout="10s" role="Master"/>
             </operations>
-            <instance_attributes>
+            <instance_attributes di="master-child">
               <attributes>
                 <nvpair id="logfile_id_1" name="logfile" value="/var/log/cts_ocfdummy.log"/>
               </attributes>
@@ -112,7 +111,7 @@ class CIB:
             <operations>
               <op id="ocf_chil%s_monitor" name="monitor" interval="5s" timeout="20s"/>
             </operations>
-            <instance_attributes>
+            <instance_attributes id="ip-1">
               <attributes>
                 <nvpair id="ocf_%s_ip_1" name="ip" value="%s"/>
               </attributes>
@@ -122,7 +121,7 @@ class CIB:
             <operations>
               <op id="heartbeat_%s_monitor" name="monitor" interval="5s" timeout="20s"/>
             </operations>
-            <instance_attributes>
+            <instance_attributes id="ip-2">
               <attributes>
                 <nvpair id="heartbeat_%s_ip_1" name="1" value="%s"/>
               </attributes>
@@ -132,7 +131,7 @@ class CIB:
             <operations>
               <op id="ocf_%s_monitor" name="monitor" interval="5s" timeout="20s"/>
             </operations>
-            <instance_attributes>
+            <instance_attributes id="ip-3">
               <attributes>
                 <nvpair id="ocf_%s_ip_1" name="ip" value="%s"/>
               </attributes>
@@ -147,7 +146,7 @@ class CIB:
             <op id="%s-1" name="monitor" interval="5s" timeout="20s"/>
             <op id="%s-2" name="start" timeout="40s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="ip-2">
             <attributes>
               <nvpair id="%s-1" name="ip" value="%s"/>
             </attributes>
@@ -163,7 +162,7 @@ class CIB:
 
     stonith_resource_template = """ 
         <clone id="DoFencing">
-          <instance_attributes>
+          <instance_attributes id="fencing">
             <attributes>
               <nvpair id="DoFencing-1" name="clone_max" value="%d"/>
               <nvpair id="DoFencing-2" name="clone_node_max" value="1"/>
@@ -174,7 +173,7 @@ class CIB:
               <op id="DoFencing-1" name="monitor" interval="20s" timeout="40s" prereq="nothing"/>
               <op id="DoFencing-2" name="start" timeout="20s" prereq="nothing"/>
             </operations>
-            <instance_attributes>
+            <instance_attributes id="fencing-child">
               <attributes>
                 <nvpair id="child_DoFencing-1" name="hostlist" value="%s"/>
               </attributes>
