@@ -269,7 +269,7 @@ do_election_count_vote(long long action,
 		we_loose = TRUE;
 
 	} else {
-/* 		CRM_DEV_ASSERT(strcmp(fsa_our_uname, vote_from) < 0); */
+		CRM_CHECK(strcmp(fsa_our_uname, vote_from) != 0, ;);
 		crm_debug("Them: %s (born=%d)  Us: %s (born=%d)",
 			  vote_from, your_node->node_born_on,
 			  fsa_our_uname, our_node->node_born_on);
@@ -289,6 +289,8 @@ do_election_count_vote(long long action,
 		HA_Message *novote = create_request(
 			CRM_OP_NOVOTE, NULL, vote_from,
 			CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+
+		update_dc(NULL, FALSE);
 		
 		if(cl_get_uuid(vote->msg, F_ORIGUUID, &vote_uuid_s) == HA_OK) {
 			cl_uuid_unparse(&vote_uuid_s, vote_uuid);
@@ -373,12 +375,6 @@ do_dc_takeover(long long action,
 	
 	crm_info("Taking over DC status for this partition");
 	set_bit_inplace(fsa_input_register, R_THE_DC);
-
-	crm_free(fsa_our_dc);
-	fsa_our_dc = crm_strdup(fsa_our_uname);
-
-	crm_free(fsa_our_dc_version);
-	fsa_our_dc_version = crm_strdup(CRM_FEATURE_SET);
 
 	if(voted != NULL) {
 		crm_debug_2("Destroying voted hash");

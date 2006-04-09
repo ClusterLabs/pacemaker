@@ -146,6 +146,8 @@ do_dc_join_offer_all(long long action,
 	current_join_id++;
 	initialize_join(TRUE);
 	do_update_cib_nodes(TRUE, __FUNCTION__);
+
+	update_dc(NULL, FALSE);	
 	
 	g_hash_table_foreach(
 		fsa_membership_copy->members, join_make_offer, NULL);

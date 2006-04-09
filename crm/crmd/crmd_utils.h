@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.22 2006/02/03 15:01:39 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.23 2006/04/09 14:38:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -69,6 +69,6 @@ extern void fsa_dump_inputs(
 	int log_level, const char *text, long long input_register);
 
 extern gboolean need_transition(enum crmd_fsa_state state);
-extern void update_dc(HA_Message *msg);
+extern void update_dc(HA_Message *msg, gboolean assert_same);
 
 #endif

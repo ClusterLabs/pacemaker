@@ -67,8 +67,6 @@ do_cl_join_announce(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
-	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
-	
 	/* Once we hear from the DC, we can stop the timer
 	 *
 	 * This timer was started either on startup or when a node
@@ -83,37 +81,14 @@ do_cl_join_announce(long long action,
 	}
 
 	if(AM_I_OPERATIONAL) {
-		const char *hb_from = cl_get_string(
-			input->msg, F_CRM_HOST_FROM);
+		/* send as a broadcast */
+		HA_Message *req = create_request(
+			CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
+			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
 		crm_debug("Announcing availability");
-		if(hb_from == NULL) {
-			crm_err("Failed to determin origin of hb message");
-			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-			return I_NULL;
-		}
-
-		if(fsa_our_dc == NULL) {
-			update_dc(input->msg);
-
-		} else if(safe_str_neq(fsa_our_dc, hb_from)) {
-			/* reset the fsa_our_dc to NULL */
-			crm_warn("Resetting our DC to NULL after DC_HB"
-				 " from unrecognised node.");
-			update_dc(NULL);
-			return I_NULL; /* for now, wait for the DC's
-					* to settle down
-					*/
-		}
-		
-		/* send as a broadcast */
-		{
-			HA_Message *req = create_request(
-				CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
-				CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
-
-			send_msg_via_ha(fsa_cluster_conn, req);
-		}
+		update_dc(NULL, FALSE);
+		send_msg_via_ha(fsa_cluster_conn, req);
 	
 	} else {
 		/* Delay announce until we have finished local startup */
@@ -158,10 +133,8 @@ do_cl_join_offer_respond(long long action,
 		query_call_id = 0;
 	}
 
-	if(fsa_our_dc == NULL) {
-		update_dc(input->msg);
-		
-	} else if(safe_str_neq(welcome_from, fsa_our_dc)) {
+	update_dc(input->msg, FALSE);
+	if(safe_str_neq(welcome_from, fsa_our_dc)) {
 		/* dont do anything until DC's sort themselves out */
 		crm_err("Expected a welcome from %s, but %s replied",
 			fsa_our_dc, welcome_from);
@@ -265,7 +238,8 @@ do_cl_join_finalize_respond(long long action,
 	ha_msg_value_int(input->msg, F_CRM_JOIN_ID, &join_id);
 	
 	if(was_nack) {
-		crm_err("Join join-%d with %s failed.  NACK'd", join_id, welcome_from);
+		crm_err("Join join-%d with %s failed.  NACK'd",
+			join_id, welcome_from);
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 		return I_NULL;
 	}
@@ -273,10 +247,9 @@ do_cl_join_finalize_respond(long long action,
 	if(AM_I_DC == FALSE && safe_str_eq(welcome_from, fsa_our_uname)) {
 		crm_warn("Discarding our own welcome - we're no longer the DC");
 		return I_NULL;
-		
-	} else if(fsa_our_dc == NULL) {
-		update_dc(input->msg);
 	} 	
+
+	update_dc(input->msg, TRUE);
 
 	/* send our status section to the DC */
 	crm_debug("Confirming join join-%d: %s",
