@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.62 2006/04/07 14:30:05 andrew Exp $ */
+/* $Id: io.c,v 1.63 2006/04/09 13:14:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -254,20 +254,41 @@ readCibXmlFile(const char *filename)
 	}
 	
 	crm_info("Reading cluster configuration from: %s", filename);
-	valid = validate_on_disk_cib(filename, &root);
-	crm_log_xml_info(root, "[on-disk]");
+	if(validate_on_disk_cib(filename, &root) == FALSE) {
+		valid = FALSE;
+		crm_err("%s has been manually changed"
+			" - please update the md5 digest in %s.sig",
+			filename, filename);
+	}
+	
+	if(root != NULL) {
+		const char *ignore_dtd = crm_element_value(root, "ignore_dtd");
+		gboolean dtd_ok = validate_with_dtd(
+			root, HA_LIBDIR"/heartbeat/crm.dtd");
+		
+		if(dtd_ok == FALSE
+#if CRM_DEPRECATED_SINCE_2_0_4
+		   && ignore_dtd != NULL
+#endif
+		   && crm_is_true(ignore_dtd) == FALSE) {
+			crm_err("On disk CIB does not conform to the DTD");
+			valid = FALSE;
+		}
+	}
 
+	crm_log_xml_info(root, "[on-disk]");
+	
 	if(root == NULL) {
 		crm_crit("Parse ERROR reading %s.", filename);
 		crm_crit("Inhibiting respawn by Heartbeat to avoid loss"
-			 " of configuration data.");
+			 " of existing configuration data.");
 		cl_flush_logs();
 		exit(100);
 
 	} else if(valid == FALSE) {
-		crm_err("%s has been manually changed"
-			" - please update the md5 digest in %s.sig",
-			filename, filename);
+		crm_err("%s does not contain a valid configuration", filename);
+		crm_crit("Inhibiting respawn by Heartbeat to avoid loss"
+			 " of existing configuration data.");
 		cl_flush_logs();
 		exit(100);
 	}
