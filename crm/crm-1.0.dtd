@@ -169,7 +169,7 @@
 <!ELEMENT lifetime (rule+)>
 <!-- Annotated version -->
 
-<!ELEMENT rule (expression|time_expression|rule)*>
+<!ELEMENT rule (expression|time_expression|rule)+>
 <!ATTLIST rule
           id                    CDATA     #REQUIRED
           role                  CDATA     #IMPLIED
