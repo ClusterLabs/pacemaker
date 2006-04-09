@@ -1347,7 +1347,7 @@ process_client_disconnect(crmd_client_t *curr_client)
 	}
 }
 
-void update_dc(HA_Message *msg)
+void update_dc(HA_Message *msg, gboolean assert_same)
 {
 	const char *dc_version = NULL;
 	const char *welcome_from = NULL;
@@ -1356,8 +1356,17 @@ void update_dc(HA_Message *msg)
 		dc_version = cl_get_string(msg, F_CRM_VERSION);
 		welcome_from = cl_get_string(msg, F_CRM_HOST_FROM);
 		
-		CRM_ASSERT(welcome_from != NULL);
-		CRM_DEV_ASSERT(dc_version != NULL);
+		CRM_CHECK(dc_version != NULL, return);
+		CRM_CHECK(welcome_from != NULL, return);
+		if(AM_I_DC) {
+			CRM_CHECK(safe_str_eq(welcome_from, fsa_our_uname),
+				  return);
+		}
+		if(assert_same) {
+			CRM_CHECK(fsa_our_dc != NULL, ;);
+			CRM_CHECK(safe_str_eq(fsa_our_dc, welcome_from), ;);
+		}
+		
 	}
 	
 	crm_free(fsa_our_dc);
