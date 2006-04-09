@@ -97,7 +97,7 @@ class CIB:
               <op id="ocf_msdummy_monitor" name="monitor" interval="5s" timeout="10s"/>
               <op id="ocf_msdummy_monitor_master" name="monitor" interval="6s" timeout="10s" role="Master"/>
             </operations>
-            <instance_attributes di="master-child">
+            <instance_attributes id="master-child">
               <attributes>
                 <nvpair id="logfile_id_1" name="logfile" value="/var/log/cts_ocfdummy.log"/>
               </attributes>
