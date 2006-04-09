@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.70 2006/04/09 12:55:44 andrew Exp $ */
+/* $Id: xml.c,v 1.71 2006/04/09 14:38:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2217,19 +2217,10 @@ assign_uuid(crm_data_t *xml_obj)
 	crm_free(new_uuid_s);
 }
 
-gboolean
-do_id_check(crm_data_t *xml_obj, GHashTable *id_hash) 
+static gboolean
+tag_needs_id(const char *tag_name) 
 {
 	int lpc = 0;
-	char *lookup_id = NULL;
-	gboolean modified = FALSE;
-
-	const char *tag_id = NULL;
-	const char *tag_name = NULL;
-	const char *lookup_value = NULL;
-
-	gboolean created_hash = FALSE;
-
 	const char *allowed_list[] = {
 		XML_TAG_CIB,
 		XML_TAG_FRAGMENT,
@@ -2237,17 +2228,50 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 		XML_CIB_TAG_RESOURCES,
 		XML_CIB_TAG_CONSTRAINTS,
 		XML_CIB_TAG_STATUS,
-		XML_CIB_TAG_LRM,
 		XML_LRM_TAG_RESOURCES,
-		XML_TAG_PARAMS,
 		"operations",
 	};
+	
+	for(lpc = 0; lpc < DIMOF(allowed_list); lpc++) {
+		if(safe_str_eq(tag_name, allowed_list[lpc])) {
+			/* this tag is never meant to have an ID */
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
 
+static gboolean
+non_unique_allowed(const char *tag_name) 
+{
+	int lpc = 0;
 	const char *non_unique[] = {
 		XML_LRM_TAG_RESOURCE,
 		XML_LRM_TAG_RSC_OP,
 	};
-	
+
+	for(lpc = 0; lpc < DIMOF(non_unique); lpc++) {
+		if(safe_str_eq(tag_name, non_unique[lpc])) {
+			/* this tag can have a non-unique ID */
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+gboolean
+do_id_check(crm_data_t *xml_obj, GHashTable *id_hash) 
+{
+	char *lookup_id = NULL;
+	gboolean modified = FALSE;
+
+	char *old_id = NULL;
+	const char *tag_id = NULL;
+	const char *tag_name = NULL;
+	const char *lookup_value = NULL;
+
+	gboolean created_hash = FALSE;
+
 	if(xml_obj == NULL) {
 		return FALSE;
 
@@ -2267,60 +2291,55 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 
 	tag_id = ID(xml_obj);
 	tag_name = TYPE(xml_obj);
+	if(tag_id != NULL) {
+		old_id = crm_strdup(tag_id);
+	}
 	
 	xml_prop_iter(
 		xml_obj, local_prop_name, local_prop_value,
+		
+		if(tag_needs_id(tag_name) == FALSE) {
+			break;
 
-		if(safe_str_eq(local_prop_name, XML_DIFF_MARKER)) {
+		} else if(tag_id != NULL && non_unique_allowed(tag_name)){
+			break;
+
+		} else if(safe_str_eq(local_prop_name, XML_DIFF_MARKER)) {
 			crm_err("Detected "XML_DIFF_MARKER" attribute");
 			continue;
 		}
-		
+
 		lookup_id = NULL;
-		if(ID(xml_obj) != NULL) {
-			for(lpc = 0; lpc < DIMOF(non_unique); lpc++) {
-				if(safe_str_eq(tag_name, non_unique[lpc])) {
-					/* this tag can have a non-unique ID */
-					break;
-				}
-			}
-			if(lpc < DIMOF(non_unique)) {
-				break;
-			}
+		if(tag_id != NULL) {
 			lookup_id = crm_concat(tag_name, tag_id, '-');
 			lookup_value = g_hash_table_lookup(id_hash, lookup_id);
-			if(lookup_value != NULL) {
-				char *old_id = crm_strdup(tag_id);
-				modified = TRUE;
-				assign_uuid(xml_obj);
-				tag_id = ID(xml_obj);
-				crm_err("\"id\" collision detected..."
-					" Multiple '%s' entries with id=\"%s\","
-					" assigned id=\"%s\"",
-					tag_name, old_id, tag_id);
-			}
-			g_hash_table_insert(
-				id_hash, lookup_id, crm_strdup(tag_id));
-			break;
-		}
-
-		for(lpc = 0; lpc < DIMOF(allowed_list); lpc++) {
-			if(safe_str_eq(tag_name, allowed_list[lpc])) {
-				/* this tag is never meant to have an ID */
+			if(lookup_value == NULL) {
+				g_hash_table_insert(
+					id_hash, lookup_id, crm_strdup(tag_id));
 				break;
 			}
 		}
-		if(lpc < DIMOF(allowed_list)) {
-			break;
-		} 
+
 		modified = TRUE;
-		crm_err("%s object with attributes but no ID field detected.",
-			tag_name);
+		crm_free(lookup_id);
 		assign_uuid(xml_obj);
+		tag_id = ID(xml_obj);
+
+		/* the first attribute was enough to do everything needed */
 		break;
-		
 		);
 
+	if(safe_str_neq(tag_id, old_id)) {
+		crm_err("\"id\" collision detected... Multiple '%s' entries"
+			" with id=\"%s\", assigned id=\"%s\"",
+			tag_name, old_id, tag_id);
+
+	} else if(old_id == NULL &&& tag_id != NULL) {
+		crm_err("Detected <%s.../> with attributes but no ID field",
+			tag_name);
+	}
+	crm_free(old_id);
+	
 	if(created_hash) {
 		g_hash_table_destroy(id_hash);
 	}
