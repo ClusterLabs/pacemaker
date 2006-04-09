@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.18 2006/04/07 14:08:07 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.19 2006/04/09 13:15:43 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -46,9 +46,13 @@
 	if(attr_id == NULL && attr_name == NULL) {			\
 		return cib_missing;					\
 									\
+	} else if(section == NULL && node_uuid == NULL) {		\
+		section = XML_CIB_TAG_CRMCONFIG;			\
+									\
 	} else if(section == NULL) {					\
-		return cib_NOSECTION;					\
+		section = XML_CIB_TAG_STATUS;				\
 	}								\
+									\
 	if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {		\
 		tag = NULL;						\
 		is_crm_config = TRUE;					\
@@ -65,15 +69,15 @@
 			set_name = node_uuid;				\
 		}							\
 									\
-	} else if(node_uuid != NULL) {					\
+	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {		\
 		is_node_transient = TRUE;				\
 		tag = XML_TAG_TRANSIENT_NODEATTRS;			\
-		if(node_uuid == NULL) {				\
-			return cib_missing;				\
-		}							\
 		if(set_name == NULL) {					\
 			set_name = node_uuid;				\
 		}							\
+									\
+	} else {							\
+		return cib_bad_section;					\
 	}								\
 									\
 	if(attr_id == NULL) {						\
