@@ -1,4 +1,4 @@
-/* $Id: events.c,v 1.10 2006/04/04 13:05:44 andrew Exp $ */
+/* $Id: events.c,v 1.11 2006/04/09 17:01:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -164,9 +164,7 @@ extract_event(crm_data_t *msg)
 static void
 update_failcount(crm_action_t *action, int rc) 
 {
-	char *attr_set  = NULL;
 	char *attr_name = NULL;
-	char *attr_id   = NULL;
 	
 	const char *task     = NULL;
 	const char *rsc_id   = NULL;
@@ -196,18 +194,13 @@ update_failcount(crm_action_t *action, int rc)
 	CRM_CHECK(on_uuid != NULL, return);
 	CRM_CHECK(on_node != NULL, return);
 	
-	attr_set = crm_concat("crmd-transient", on_uuid, '-');
 	attr_name = crm_concat("fail-count", rsc_id, '-');
-	attr_id = crm_concat(attr_name, on_uuid, '-');
 	crm_warn("Updating failcount for %s on %s after failed %s: rc=%d",
 		 rsc_id, on_node, task, rc);
 	
 	update_attr(te_cib_conn, cib_none, XML_CIB_TAG_STATUS,
-		    on_uuid, attr_set, attr_id, attr_name,
-		    XML_NVPAIR_ATTR_VALUE"++");
+		    on_uuid, NULL,NULL, attr_name, XML_NVPAIR_ATTR_VALUE"++");
 	
-	crm_free(attr_id);
-	crm_free(attr_set);
 	crm_free(attr_name);	
 }
 

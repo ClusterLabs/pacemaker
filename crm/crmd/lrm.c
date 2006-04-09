@@ -798,18 +798,13 @@ do_lrm_invoke(long long action,
 
 	} else if(safe_str_eq(operation, CRM_OP_PROBED)
 		  || safe_str_eq(crm_op, CRM_OP_REPROBE)) {
-		char *attr_id = crm_concat("lrm-probe", fsa_our_uuid, '-');
-		char *attr_set = crm_concat("crmd-transient", fsa_our_uuid,'-');
 		const char *probed = XML_BOOLEAN_TRUE;
 		if(safe_str_eq(crm_op, CRM_OP_REPROBE)) {
 			probed = XML_BOOLEAN_FALSE;
 		}
 		
-		update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_STATUS, fsa_our_uuid,
-			    attr_set, attr_id, CRM_OP_PROBED, probed);
-
-		crm_free(attr_id);
-		crm_free(attr_set);
+		update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_STATUS,
+			    fsa_our_uuid, NULL, NULL, CRM_OP_PROBED, probed);
 
 	} else if(operation != NULL) {
 		char rid[64];
