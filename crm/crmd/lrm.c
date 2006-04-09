@@ -344,8 +344,11 @@ build_operation_update(
 		return TRUE;
 	}
 
-	caller_version = g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION);
-	crm_debug_3("Caller version: %s", caller_version);
+	caller_version = fsa_our_dc_version;
+	CRM_CHECK(fsa_our_dc_version != NULL,
+		  caller_version = g_hash_table_lookup(
+			  op->params, XML_ATTR_CRM_VERSION));
+	crm_debug_3("DC version: %s", caller_version);
 	
 	if(safe_str_eq(op->op_type, CRMD_ACTION_NOTIFY)) {
 		const char *n_type = g_hash_table_lookup(
@@ -663,6 +666,7 @@ do_lrm_query(gboolean is_replace)
 		!shut_down, __FUNCTION__);
 
 	xml_data  = create_xml_node(xml_state, XML_CIB_TAG_LRM);
+	crm_xml_add(xml_data, XML_ATTR_ID, fsa_our_uuid);
 	rsc_list  = create_xml_node(xml_data, XML_LRM_TAG_RESOURCES);
 
 	/* Build a list of active (not always running) resources */
@@ -1027,6 +1031,7 @@ send_direct_ack(const char *to_host, const char *to_sys,
 		fsa_our_uname, NULL, NULL, NULL, NULL, NULL, FALSE, __FUNCTION__);
 
 	iter = create_xml_node(update, XML_CIB_TAG_LRM);
+	crm_xml_add(iter, XML_ATTR_ID, fsa_our_uuid);
 	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCES);
 	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCE);
 
@@ -1358,6 +1363,7 @@ do_update_resource(lrm_op_t* op)
 		fsa_our_uname, NULL, NULL, NULL, NULL, NULL, FALSE, __FUNCTION__);
 
 	iter = create_xml_node(update, XML_CIB_TAG_LRM);
+	crm_xml_add(iter, XML_ATTR_ID, fsa_our_uuid);
 	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCES);
 	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCE);
 
