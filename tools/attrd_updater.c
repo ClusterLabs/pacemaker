@@ -1,4 +1,4 @@
-/* $Id: attrd_updater.c,v 1.1 2006/04/09 12:50:04 andrew Exp $ */
+/* $Id: attrd_updater.c,v 1.2 2006/04/09 16:54:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -108,7 +108,7 @@ main(int argc, char ** argv)
 			      (void*)process_attrd_message, &attrd);
 
 	if(attrd == NULL) {
-		crm_err("Could not connect to "T_ATTRD);
+		fprintf(stderr, "Could not connect to "T_ATTRD);
 		return 1;
 	}
 
@@ -131,7 +131,7 @@ main(int argc, char ** argv)
 	}
 	
 	if(send_ipc_message(attrd, update) == FALSE) {
-		crm_err("Update failed");
+		fprintf(stderr, "Could not send update");
 		return 1;
 	}
 	return 0;
@@ -144,13 +144,13 @@ usage(const char* cmd, int exit_status)
 
 	stream = exit_status ? stderr : stdout;
 
-	fprintf(stream, "usage: %s [-srkh]"
-		"[-c configure file]\n", cmd);
-/* 	fprintf(stream, "\t-d\tsets debug level\n"); */
-/* 	fprintf(stream, "\t-s\tgets daemon status\n"); */
-/* 	fprintf(stream, "\t-r\trestarts daemon\n"); */
-/* 	fprintf(stream, "\t-k\tstops daemon\n"); */
-/* 	fprintf(stream, "\t-h\thelp message\n"); */
+	fprintf(stream, "usage: %s -n [-vdsS]\n", cmd);
+ 	fprintf(stream, "\t-n <string>\tthe attribute that changed\n");
+ 	fprintf(stream, "\t-v <string>\tthe attribute's value\n");
+ 	fprintf(stream, "\t\tIf no value is supplied, the attribute value for this node will be deleted\n");
+ 	fprintf(stream, "\t-d <string>\tthe time to delay in case further cahnges occur\n");
+ 	fprintf(stream, "\t-s <string>\tthe attribute set in which to place the value\n");
+ 	fprintf(stream, "\t-S <string>\tthe section in which to place the value\n");
 	fflush(stream);
 
 	exit(exit_status);
