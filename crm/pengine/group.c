@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.58 2006/04/07 14:28:12 andrew Exp $ */
+/* $Id: group.c,v 1.59 2006/04/09 12:57:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -461,7 +461,7 @@ void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	crm_debug_3("Processing actions from %s", group_data->self->id);
+	crm_debug_3("Processing actions from %s", rsc->id);
 
 	CRM_CHECK(group_data->self != NULL, return);
 	group_data->self->fns->expand(group_data->self, data_set);
