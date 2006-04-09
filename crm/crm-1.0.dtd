@@ -20,14 +20,15 @@
 <!ATTLIST cib
           cib-last-written CDATA    #IMPLIED
 
-          admin_epoch  CDATA    #IMPLIED
-          epoch        CDATA    #IMPLIED
-          num_updates  CDATA    #IMPLIED
+          admin_epoch  CDATA    #REQUIRED
+          epoch        CDATA    #REQUIRED
+          num_updates  CDATA    #REQUIRED
           num_peers    CDATA    #IMPLIED        
 
           dc_uuid      CDATA    #IMPLIED
           ccm_transition CDATA  #IMPLIED
           have_quorum    (true|1|false|0)   'false'
+          ignore_dtd     (true|1|false|0)   #IMPLIED
           cib_feature_revision  CDATA   #IMPLIED
           crm_feature_set       CDATA   #IMPLIED
 
@@ -228,6 +229,8 @@
         shutdown        CDATA                   #IMPLIED
         clear_shutdown  CDATA                   #IMPLIED>
 <!ELEMENT lrm (lrm_resources)>
+<!ATTLIST lrm id CDATA #REQUIRED>
+
 <!-- Annotated version -->
 
 <!ELEMENT lrm_resources (lrm_resource*)>
