@@ -183,7 +183,7 @@ class CIB:
         </clone>"""
 
     cib_template ='''
-<cib cib_feature_revision="1" have_quorum="false">
+<cib cib_feature_revision="1" have_quorum="false" ignore_dtd="false">
   <configuration>
      <crm_config>  %s 
      </crm_config>
