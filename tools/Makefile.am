@@ -22,7 +22,7 @@ MAINTAINERCLEANFILES    = Makefile.in ccdv
 INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include \
   			  -I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha
 
-EXTRA_DIST		= ccdv.c
+EXTRA_DIST		= ccdv.c attrd.h
 
 apigid			= @HA_APIGID@
 habindir		= @bindir@
@@ -33,7 +33,6 @@ habin_PROGRAMS		= cl_status cl_respawn
 sbin_PROGRAMS		= attrd_updater
 halib_SCRIPTS		= haresources2cib.py	
 halib_PROGRAMS		= attrd	
-include_HEADERS		= attrd.h
 
 ## SOURCES
 ccdv: 	$(top_srcdir)/tools/ccdv.c
