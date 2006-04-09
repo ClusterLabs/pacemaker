@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.63 2006/04/09 13:14:03 andrew Exp $ */
+/* $Id: io.c,v 1.64 2006/04/09 13:35:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -206,7 +206,7 @@ readCibXmlFile(const char *filename)
 {
 	int s_res = -1;
 	struct stat buf;
-	gboolean valid = FALSE;
+	gboolean valid = TRUE;
 
 	const char *name = NULL;
 	const char *value = NULL;
