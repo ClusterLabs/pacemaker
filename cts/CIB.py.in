@@ -146,7 +146,7 @@ class CIB:
             <op id="%s-1" name="monitor" interval="5s" timeout="20s"/>
             <op id="%s-2" name="start" timeout="40s"/>
           </operations>
-          <instance_attributes id="ip-2">
+          <instance_attributes id="%s">
             <attributes>
               <nvpair id="%s-1" name="ip" value="%s"/>
             </attributes>
@@ -233,7 +233,7 @@ class CIB:
         for node in self.CM.Env["nodes"]:
             ip = self.NextIP()
             per_node_resources = self.per_node_resource_template % \
-                ("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, ip)    
+                ("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, ip)    
             
             per_node_constraint = self.per_node_constraint_template % \
                 ("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, node)
