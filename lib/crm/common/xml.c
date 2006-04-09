@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.72 2006/04/09 14:51:02 andrew Exp $ */
+/* $Id: xml.c,v 1.73 2006/04/09 15:11:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2335,13 +2335,14 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 	if(modified == FALSE) {
 		/* nothing to report */
 		
-	} else if(safe_str_neq(tag_id, old_id)) {
+	} else if(old_id != NULL && safe_str_neq(tag_id, old_id)) {
 		crm_err("\"id\" collision detected... Multiple '%s' entries"
 			" with id=\"%s\", assigned id=\"%s\"",
 			tag_name, old_id, tag_id);
 
-	} else if(old_id == NULL &&& tag_id != NULL) {
-		crm_err("Detected <%s.../> object without an ID", tag_name);
+	} else if(old_id == NULL && tag_id != NULL) {
+		crm_err("Detected <%s.../> object without an ID. Assigned: %s",
+			tag_name, tag_id);
 	}
 	crm_free(old_id);
 	
