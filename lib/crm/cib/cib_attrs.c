@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.19 2006/04/09 13:15:43 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.20 2006/04/09 18:30:48 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -43,6 +43,7 @@
 	gboolean is_crm_config = FALSE;					\
 	gboolean is_node_transient = FALSE;				\
 	char *local_attr_id = NULL;					\
+	char *local_set_name = NULL;					\
 	if(attr_id == NULL && attr_name == NULL) {			\
 		return cib_missing;					\
 									\
@@ -66,14 +67,16 @@
 			return cib_missing;				\
 		}							\
 		if(set_name == NULL) {					\
-			set_name = node_uuid;				\
+			local_set_name = crm_concat(section, node_uuid, '-'); \
+			set_name = local_set_name;			\
 		}							\
 									\
 	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {		\
 		is_node_transient = TRUE;				\
 		tag = XML_TAG_TRANSIENT_NODEATTRS;			\
 		if(set_name == NULL) {					\
-			set_name = node_uuid;				\
+			local_set_name = crm_concat(section, node_uuid, '-'); \
+			set_name = local_set_name;			\
 		}							\
 									\
 	} else {							\
@@ -166,6 +169,7 @@ update_attr(cib_t *the_cib, int call_options,
 			cib_error2string(rc));
 	}
 	
+	crm_free(local_set_name);
 	crm_free(local_attr_id);
 	free_xml(fragment);
 	
@@ -304,6 +308,7 @@ read_attr(cib_t *the_cib,
 			xml_next, XML_NVPAIR_ATTR_VALUE);
 	}
 	
+	crm_free(local_set_name);
 	crm_free(local_attr_id);
 	free_xml(fragment);
 
@@ -346,6 +351,7 @@ delete_attr(cib_t *the_cib,
 		the_cib, section, xml_obj, NULL,
 		cib_sync_call|cib_quorum_override);
 
+	crm_free(local_set_name);
 	crm_free(local_attr_id);
 	free_xml(xml_obj);
 	return rc;
