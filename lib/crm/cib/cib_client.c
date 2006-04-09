@@ -800,8 +800,12 @@ cib_error2string(enum cib_errors return_code)
 		case cib_diff_resync:
 			error_msg = "Application of an update diff failed, requesting a full refresh";
 			break;
+		case cib_bad_section:
+			error_msg = "Invalid CIB section specified";
+			break;
 		case cib_old_data:
 			error_msg = "Update was older than existing configuration";
+			break;
 		case cib_dtd_validation:
 			error_msg = "Update does conform to the DTD in "HA_LIBDIR"/heartbeat/crm.dtd";
 			break;
