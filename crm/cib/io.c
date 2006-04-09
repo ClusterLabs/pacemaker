@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.64 2006/04/09 13:35:05 andrew Exp $ */
+/* $Id: io.c,v 1.65 2006/04/09 14:35:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -260,6 +260,37 @@ readCibXmlFile(const char *filename)
 			" - please update the md5 digest in %s.sig",
 			filename, filename);
 	}
+
+	/* Do this before DTD validation happens */
+	if(root != NULL) {
+		/* strip out the status section if there is one */
+		status = find_xml_node(root, XML_CIB_TAG_STATUS, TRUE);
+		if(status != NULL) {
+			free_xml_from_parent(root, status);
+		}
+		create_xml_node(root, XML_CIB_TAG_STATUS);
+		
+		/* fill in some defaults */
+		name = XML_ATTR_GENERATION_ADMIN;
+		value = crm_element_value(root, name);
+		if(value == NULL) {
+			crm_xml_add_int(root, name, 0);
+		}
+		
+		name = XML_ATTR_GENERATION;
+		value = crm_element_value(root, name);
+		if(value == NULL) {
+			crm_xml_add_int(root, name, 0);
+		}
+		
+		name = XML_ATTR_NUMUPDATES;
+		value = crm_element_value(root, name);
+		if(value == NULL) {
+			crm_xml_add_int(root, name, 0);
+		}
+	}
+	
+	crm_log_xml_info(root, "[on-disk]");
 	
 	if(root != NULL) {
 		const char *ignore_dtd = crm_element_value(root, "ignore_dtd");
@@ -276,7 +307,6 @@ readCibXmlFile(const char *filename)
 		}
 	}
 
-	crm_log_xml_info(root, "[on-disk]");
 	
 	if(root == NULL) {
 		crm_crit("Parse ERROR reading %s.", filename);
@@ -293,33 +323,7 @@ readCibXmlFile(const char *filename)
 		exit(100);
 	}
 
-	crm_xml_add(root, "generated", XML_BOOLEAN_FALSE);
-	
-	/* strip out the status section if there is one */
-	status = find_xml_node(root, XML_CIB_TAG_STATUS, TRUE);
-	if(status != NULL) {
-		free_xml_from_parent(root, status);
-	}
-	create_xml_node(root, XML_CIB_TAG_STATUS);
-
-	/* fill in some defaults */
-	name = XML_ATTR_GENERATION_ADMIN;
-	value = crm_element_value(root, name);
-	if(value == NULL) {
-		crm_xml_add(root, name, "0");
-	}
-	
-	name = XML_ATTR_GENERATION;
-	value = crm_element_value(root, name);
-	if(value == NULL) {
-		crm_xml_add(root, name, "0");
-	}
-	
-	name = XML_ATTR_NUMUPDATES;
-	value = crm_element_value(root, name);
-	if(value == NULL) {
-		crm_xml_add(root, name, "0");
-	}
+	crm_xml_add(root, "generated", XML_BOOLEAN_FALSE);	
 	
 	do_id_check(root, NULL);
 
