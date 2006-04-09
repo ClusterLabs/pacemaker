@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.71 2006/04/09 14:38:31 andrew Exp $ */
+/* $Id: xml.c,v 1.72 2006/04/09 14:51:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2229,6 +2229,7 @@ tag_needs_id(const char *tag_name)
 		XML_CIB_TAG_CONSTRAINTS,
 		XML_CIB_TAG_STATUS,
 		XML_LRM_TAG_RESOURCES,
+		"attributes",
 		"operations",
 	};
 	
@@ -2299,9 +2300,11 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 		xml_obj, local_prop_name, local_prop_value,
 		
 		if(tag_needs_id(tag_name) == FALSE) {
+			crm_debug_5("%s does not need an ID", tag_name);
 			break;
 
 		} else if(tag_id != NULL && non_unique_allowed(tag_name)){
+			crm_debug_5("%s does not need top be unique", tag_name);
 			break;
 
 		} else if(safe_str_eq(local_prop_name, XML_DIFF_MARKER)) {
@@ -2329,14 +2332,16 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 		break;
 		);
 
-	if(safe_str_neq(tag_id, old_id)) {
+	if(modified == FALSE) {
+		/* nothing to report */
+		
+	} else if(safe_str_neq(tag_id, old_id)) {
 		crm_err("\"id\" collision detected... Multiple '%s' entries"
 			" with id=\"%s\", assigned id=\"%s\"",
 			tag_name, old_id, tag_id);
 
 	} else if(old_id == NULL &&& tag_id != NULL) {
-		crm_err("Detected <%s.../> with attributes but no ID field",
-			tag_name);
+		crm_err("Detected <%s.../> object without an ID", tag_name);
 	}
 	crm_free(old_id);
 	
