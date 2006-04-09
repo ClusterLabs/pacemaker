@@ -1,4 +1,4 @@
-/* $Id: attrd.c,v 1.1 2006/04/09 12:50:04 andrew Exp $ */
+/* $Id: attrd.c,v 1.2 2006/04/09 16:54:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -456,6 +456,9 @@ attrd_ha_callback(HA_Message * msg, void* private_data)
 		
 		rc = delete_attr(cib_conn, section, attrd_uuid, set,
 				 NULL, attr, NULL);
+		if(rc == cib_NOTEXISTS) {
+			rc = cib_ok;
+		}
 
 	} else if(hash_entry->value == NULL) {
 		/* delete the attr */
@@ -463,6 +466,9 @@ attrd_ha_callback(HA_Message * msg, void* private_data)
 			 attr, hash_entry->set, hash_entry->section);
 		rc = delete_attr(cib_conn, hash_entry->section, attrd_uuid,
 				 hash_entry->set, NULL, attr, NULL);
+		if(rc == cib_NOTEXISTS) {
+			rc = cib_ok;
+		}
 		
 	} else {
 		/* send update */
