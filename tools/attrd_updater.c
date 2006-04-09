@@ -1,4 +1,4 @@
-/* $Id: attrd_updater.c,v 1.2 2006/04/09 16:54:51 andrew Exp $ */
+/* $Id: attrd_updater.c,v 1.3 2006/04/09 17:05:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -148,9 +148,11 @@ usage(const char* cmd, int exit_status)
  	fprintf(stream, "\t-n <string>\tthe attribute that changed\n");
  	fprintf(stream, "\t-v <string>\tthe attribute's value\n");
  	fprintf(stream, "\t\tIf no value is supplied, the attribute value for this node will be deleted\n");
- 	fprintf(stream, "\t-d <string>\tthe time to delay in case further cahnges occur\n");
+ 	fprintf(stream, "\t-d <string>\tthe time to wait (dampening) further changes occur\n");
  	fprintf(stream, "\t-s <string>\tthe attribute set in which to place the value\n");
+	fprintf(stream, "\t\tMost people have no need to specify this\n");
  	fprintf(stream, "\t-S <string>\tthe section in which to place the value\n");
+	fprintf(stream, "\t\tMost people have no need to specify this\n");
 	fflush(stream);
 
 	exit(exit_status);
