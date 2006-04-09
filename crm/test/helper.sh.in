@@ -428,9 +428,8 @@ function make_constraint()
     rsc=$2
     result=$3
     uuid1=`uuidgen`
-    uuid2=`uuidgen`
     
-    node_xml="<rsc_location id=\\\"${uuid1}\\\" rsc=\\\"${rsc}\\\"><rule id=\\\"${uuid2}\\\" score=\\\"${result}\\\"/></rsc_location>"
+    node_xml="<rsc_location id=\\\"${uuid1}\\\" rsc=\\\"${rsc}\\\"><rule id=\\\"${uuid1}\\\" score=\\\"${result}\\\"><expression id=\\\"${uuid1}\\\" attribute=\\\"#uname\\\" operation=\\\"eq\\\" value=\\\"${host}\\\"/></rule></rsc_location>"
 
     make_constraint_adv $host "$node_xml"
 }
