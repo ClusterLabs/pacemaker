@@ -29,8 +29,11 @@ habindir		= @bindir@
 halibdir		= $(libdir)/@HB_PKG@
 gliblib			= @GLIBLIB@
 
-habin_PROGRAMS		= cl_status cl_respawn
-halib_SCRIPTS	= haresources2cib.py	
+habin_PROGRAMS		= cl_status cl_respawn 
+sbin_PROGRAMS		= attrd_updater
+halib_SCRIPTS		= haresources2cib.py	
+halib_PROGRAMS		= attrd	
+include_HEADERS		= attrd.h
 
 ## SOURCES
 ccdv: 	$(top_srcdir)/tools/ccdv.c
@@ -51,6 +54,26 @@ cl_respawn_LDADD	= $(top_builddir)/lib/clplumbing/libplumb.la	\
 	  		  $(top_builddir)/lib/pils/libpils.la	\
 			  $(gliblib)					\
 			  $(top_builddir)/replace/libreplace.la
+
+
+attrd_SOURCES		= attrd.c
+attrd_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+attrd_LDADD		=  $(CRM_DEBUG_LIBS)				\
+		  $(top_builddir)/lib/clplumbing/libplumb.la		\
+		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
+		  $(top_builddir)/lib/hbclient/libhbclient.la		\
+		  $(top_builddir)/lib/crm/cib/libcib.la			\
+		  $(GLIBLIB)						\
+		  $(LIBRT)
+
+attrd_updater_SOURCES	= attrd_updater.c
+attrd_updater_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+attrd_updater_LDADD	=  $(CRM_DEBUG_LIBS)				\
+		  $(top_builddir)/lib/clplumbing/libplumb.la		\
+		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
+		  $(GLIBLIB)						\
+		  $(LIBRT)
+
 
 install-data-hook:    # install-exec-hook doesn't work (!)
 	-chgrp $(apigid) $(DESTDIR)/$(habindir)/cl_status
