@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.69 2006/04/07 14:05:30 andrew Exp $ */
+/* $Id: xml.c,v 1.70 2006/04/09 12:55:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -612,18 +612,16 @@ write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress)
 	crm_xml_add(xml_node, XML_CIB_ATTR_WRITTEN, now_str);
 	crm_validate_data(xml_node);
 	
+	buffer = dump_xml_formatted(xml_node);
+	CRM_CHECK(buffer != NULL && strlen(buffer) > 0, return -1);
+
 	file_output_strm = fopen(filename, "w");
 	if(file_output_strm == NULL) {
+		crm_free(buffer);
 		cl_perror("Cannot write to %s", filename);
 		return -1;
 		
 	} 
-
-	buffer = dump_xml_formatted(xml_node);
-	CRM_CHECK(buffer != NULL && strlen(buffer) > 0, return -1);
-	if(buffer == NULL || strlen(buffer) <= 0) {
-		is_done = TRUE;
-	}
 
 #if HAVE_BZLIB_H
 	if(compress && is_done == FALSE) {
