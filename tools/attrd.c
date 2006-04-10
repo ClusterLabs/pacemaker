@@ -1,4 +1,4 @@
-/* $Id: attrd.c,v 1.3 2006/04/10 12:51:37 andrew Exp $ */
+/* $Id: attrd.c,v 1.4 2006/04/10 13:02:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -165,7 +165,7 @@ attrd_ipc_callback(IPC_Channel *client, gpointer user_data)
 		
 		msg = msgfromIPC_noauth(client);
 		if (msg == NULL) {
-			crm_err("%s: no message this time", curr_client->id);
+			crm_debug("%s: no message this time", curr_client->id);
 			continue;
 		}
 
