@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.45 2006/04/10 12:49:15 andrew Exp $ */
+/* $Id: utils.c,v 1.46 2006/04/10 16:18:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -670,85 +670,6 @@ set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname)
 	const char *uuid_calc = get_uuid(hb, uname);
 	crm_xml_add(node, attr, uuid_calc);
 	return;
-}
-
-
-void
-crm_set_ha_options(ll_cluster_t *hb_cluster) 
-{
-#if 0
-	int facility;
-	char *param_val = NULL;
-	const char *param_name = NULL;
-
-	if(hb_cluster == NULL) {
-		crm_set_env_options();
-		return;
-	}
-	
-	/* change the logging facility to the one used by heartbeat daemon */
-	crm_debug("Switching to Heartbeat logger");
-	if (( facility =
-	      hb_cluster->llc_ops->get_logfacility(hb_cluster)) > 0) {
-		cl_log_set_facility(facility);
- 	}	
-	crm_debug_2("Facility: %d", facility);
-
-	param_name = KEY_LOGFILE;
-	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	crm_debug_3("%s = %s", param_name, param_val);
-	if(param_val != NULL) {
-		cl_log_set_logfile(param_val);
-		cl_free(param_val);
-		param_val = NULL;
-	}
-	
-	param_name = KEY_DBGFILE;
-	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	crm_debug_3("%s = %s", param_name, param_val);
-	if(param_val != NULL) {
-		cl_log_set_debugfile(param_val);
-		cl_free(param_val);
-		param_val = NULL;
-	}
-	
-	param_name = KEY_DEBUGLEVEL;
-	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	crm_debug_3("%s = %s", param_name, param_val);
-	if(param_val != NULL) {
-		int debug_level = crm_parse_int(param_val, NULL);
-		if(debug_level > 0 && (debug_level+LOG_INFO) > (int)crm_log_level) {
-			set_crm_log_level(LOG_INFO + debug_level);
-		}
-		cl_free(param_val);
-		param_val = NULL;
-	}
-
-	param_name = KEY_LOGDAEMON;
-	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	crm_debug_3("%s = %s", param_name, param_val);
-	if(param_val != NULL) {
-		int uselogd;
-		cl_str_to_boolean(param_val, &uselogd);
-		cl_log_set_uselogd(uselogd);
-		if(cl_log_get_uselogd()) {
-			cl_set_logging_wqueue_maxlen(500);
-		}
-		cl_free(param_val);
-		param_val = NULL;
-	}
-
-	param_name = KEY_CONNINTVAL;
-	param_val = hb_cluster->llc_ops->get_parameter(hb_cluster, param_name);
-	crm_debug_3("%s = %s", param_name, param_val);
-	if(param_val != NULL) {
-		int logdtime;
-		logdtime = crm_get_msec(param_val);
-		cl_log_set_logdtime(logdtime);
-		cl_free(param_val);
-		param_val = NULL;
-	}
-#endif
 }
 
 

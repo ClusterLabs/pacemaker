@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.41 2006/04/03 10:01:35 andrew Exp $ */
+/* $Id: main.c,v 1.42 2006/04/10 16:18:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -357,8 +357,6 @@ cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name)
 		return FALSE;
 	}
 
-	crm_set_ha_options(hb_cluster);
-	
 	crm_debug_3("Be informed of CIB messages");
 	if (HA_OK != hb_cluster->llc_ops->set_msg_callback(
 		    hb_cluster, T_CIB, cib_peer_callback, hb_cluster)){

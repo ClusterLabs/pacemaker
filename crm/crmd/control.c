@@ -706,8 +706,6 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 		return FALSE;
 	}
 
-	crm_set_ha_options(hb_cluster);
-	
 	crm_debug_3("Be informed of CRM messages");
 	if (HA_OK != hb_cluster->llc_ops->set_msg_callback(
 		    hb_cluster, T_CRM, crmd_ha_msg_callback, hb_cluster)){
