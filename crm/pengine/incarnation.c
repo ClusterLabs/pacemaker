@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.78 2006/04/10 07:23:27 andrew Exp $ */
+/* $Id: incarnation.c,v 1.79 2006/04/10 07:45:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1443,7 +1443,7 @@ clone_stonith_ordering(
 
 	if(is_fencing && stonith_op != NULL) {
 		char *key = started_key(rsc);
-		crm_err("Ordering %s before stonith op", key);
+		crm_debug("Ordering %s before stonith op", key);
 		custom_action_order(
 			rsc, key, NULL,
 			NULL, crm_strdup(CRM_OP_FENCE), stonith_op,

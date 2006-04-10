@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.124 2006/04/10 07:23:27 andrew Exp $ */
+/* $Id: native.c,v 1.125 2006/04/10 07:45:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2066,11 +2066,10 @@ native_stonith_ordering(
 {
 	gboolean run_unprotected = TRUE;
 	const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-	crm_err("%s class: %s", rsc->id, class);
 
 	if(stonith_op != NULL && safe_str_eq(class, "stonith")) {
 		char *key = start_key(rsc);
-		crm_err("Ordering %s before stonith op", key);
+		crm_debug("Ordering %s before stonith op", key);
 		custom_action_order(
 			rsc, key, NULL,
 			NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
