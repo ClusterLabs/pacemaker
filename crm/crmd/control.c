@@ -562,6 +562,8 @@ do_read_config(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
+	char *param_val = NULL;
+	const char *param_name = NULL;
 	int call_id = fsa_cib_conn->cmds->query(
  		fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
 
@@ -574,6 +576,18 @@ do_read_config(long long action,
 	integration_timer->period_ms  = crm_get_msec("3min");
 	finalization_timer->period_ms = crm_get_msec("3min");
 	shutdown_escalation_timer->period_ms = crm_get_msec("10min");
+
+	/* apparently we're not allowed to free the result of getenv */
+	param_name = ENV_PREFIX "" KEY_INITDEAD;
+	param_val = getenv(param_name);
+	if(param_val != NULL) {
+		int tmp = crm_get_msec(param_val);
+		if(tmp > 0) {
+			election_trigger->period_ms = 2 * tmp;
+		}
+		crm_debug("%s = %s", param_name, param_val);
+		param_val = NULL;
+	}
 	
 	return I_NULL;
 }
