@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.21 2006/04/09 20:03:32 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.22 2006/04/10 12:48:43 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -312,7 +312,7 @@ read_attr(cib_t *the_cib,
 
 
 enum cib_errors 
-delete_attr(cib_t *the_cib,
+delete_attr(cib_t *the_cib, int options, 
 	    const char *section, const char *node_uuid, const char *set_name,
 	    const char *attr_id, const char *attr_name, const char *attr_value)
 {
@@ -344,7 +344,7 @@ delete_attr(cib_t *the_cib,
 	
 	rc = the_cib->cmds->delete(
 		the_cib, section, xml_obj, NULL,
-		cib_sync_call|cib_quorum_override);
+		options|cib_quorum_override);
 
 	crm_free(local_set_name);
 	crm_free(local_attr_id);
@@ -534,7 +534,7 @@ delete_standby(cib_t *the_cib, const char *uuid, const char *scope,
 	enum cib_errors rc = cib_ok;
 	if(scope != NULL) {
 		standby_common;
-		rc = delete_attr(the_cib, type, uuid, set_name,
+		rc = delete_attr(the_cib, cib_sync_call, type, uuid, set_name,
 				 attr_id, attr_name, standby_value);
 		crm_free(attr_id);
 		crm_free(set_name);

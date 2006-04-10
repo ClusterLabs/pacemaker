@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.41 2006/04/09 12:56:50 andrew Exp $ */
+/* $Id: cib.h,v 1.42 2006/04/10 12:48:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -368,7 +368,7 @@ extern enum cib_errors read_attr(
 	const char *attr_id, const char *attr_name, char **attr_value);
 
 extern enum cib_errors delete_attr(
-	cib_t *the_cib,
+	cib_t *the_cib, int options, 
 	const char *section, const char *node_uuid, const char *set_name,
 	const char *attr_id, const char *attr_name, const char *attr_value);
 
