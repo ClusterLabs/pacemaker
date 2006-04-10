@@ -375,7 +375,6 @@ crmd_client_status_callback(const char * node, const char * client,
 		register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
 		
 	} else {
-		crm_data_t *fragment = NULL;
 		crm_debug_3("Got client status callback");
 		update = create_node_state(
 			node, NULL, NULL, status, join,
@@ -386,16 +385,13 @@ crmd_client_status_callback(const char * node, const char * client,
 				    XML_TAG_TRANSIENT_NODEATTRS);
 		}
 		
-		fragment = create_cib_fragment(update, XML_CIB_TAG_STATUS);
-
 		/* it is safe to keep these updates on the local node
 		 * each node updates their own CIB
 		 */
 		fsa_cib_conn->cmds->update(
-			fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
+			fsa_cib_conn, XML_CIB_TAG_STATUS, update, NULL,
 			cib_inhibit_bcast|cib_scope_local|cib_quorum_override);
 
-		free_xml(fragment);
 		free_xml(update);
 
 		if(AM_I_DC && safe_str_eq(status, OFFLINESTATUS)) {

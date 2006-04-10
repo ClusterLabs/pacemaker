@@ -1346,7 +1346,6 @@ do_update_resource(lrm_op_t* op)
           </...>
 */
 	int rc = cib_ok;
-	crm_data_t *fragment;
 	crm_data_t *update, *iter;
 	
 	CRM_DEV_ASSERT(op != NULL);
@@ -1378,7 +1377,6 @@ do_update_resource(lrm_op_t* op)
 	}
 	
 	build_operation_update(iter, op, __FUNCTION__, 0);
-	fragment = create_cib_fragment(update, XML_CIB_TAG_STATUS);
 
 	/* make it an asyncronous call and be done with it
 	 *
@@ -1398,7 +1396,7 @@ do_update_resource(lrm_op_t* op)
 	 * isnt acceptable
 	 */
 	rc = fsa_cib_conn->cmds->update(
-		fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
+		fsa_cib_conn, XML_CIB_TAG_STATUS, update, NULL,
 		cib_quorum_override);
 			
 	if(rc > 0) {
@@ -1411,7 +1409,6 @@ do_update_resource(lrm_op_t* op)
 		CRM_DEV_ASSERT(rc == cib_ok);
 	}
 	
-	free_xml(fragment);
 	free_xml(update);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.73 2006/04/03 15:58:42 andrew Exp $ */
+/* $Id: messages.c,v 1.74 2006/04/10 13:01:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -898,11 +898,10 @@ sync_our_cib(HA_Message *request, gboolean all)
 	const char *host            = cl_get_string(request, F_ORIG);
 	const char *op              = cl_get_string(request, F_CIB_OPERATION);
 
-	crm_data_t *sync_data       = create_cib_fragment(the_cib,XML_TAG_CIB);
 	HA_Message *replace_request = cib_msg_copy(request, FALSE);
 	
-	CRM_DEV_ASSERT(sync_data != NULL);
-	CRM_DEV_ASSERT(replace_request != NULL);
+	CRM_CHECK(the_cib != NULL, ;);
+	CRM_CHECK(replace_request != NULL, ;);
 	
 	crm_info("Syncing CIB to %s", all?"all peers":host);
 	if(all == FALSE && host == NULL) {
@@ -922,12 +921,11 @@ sync_our_cib(HA_Message *request, gboolean all)
 	ha_msg_mod(replace_request, F_CIB_OPERATION, CIB_OP_REPLACE);
 	ha_msg_add(replace_request, "original_"F_CIB_OPERATION, op);
 	ha_msg_add(replace_request, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
-	add_message_xml(replace_request, F_CIB_CALLDATA, sync_data);
+	add_message_xml(replace_request, F_CIB_CALLDATA, the_cib);
 	
 	if(send_ha_message(hb_conn, replace_request, all?NULL:host, FALSE) == FALSE) {
 		result = cib_not_connected;
 	}
 	ha_msg_del(replace_request);
-	free_xml(sync_data);
 	return result;
 }

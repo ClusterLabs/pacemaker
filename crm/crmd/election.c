@@ -371,7 +371,6 @@ do_dc_takeover(long long action,
 {
 	int rc = cib_ok;
 	crm_data_t *cib = NULL;
-	crm_data_t *fragment = NULL;
 	
 	crm_info("Taking over DC status for this partition");
 	set_bit_inplace(fsa_input_register, R_THE_DC);
@@ -391,13 +390,11 @@ do_dc_takeover(long long action,
 	cib = createEmptyCib();
 	crm_xml_add(cib, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 	crm_xml_add(cib, XML_ATTR_CIB_REVISION, CIB_FEATURE_SET);
-	fragment = create_cib_fragment(cib, XML_TAG_CIB);
 	fsa_cib_conn->cmds->update(
-		fsa_cib_conn, NULL, fragment, NULL, cib_quorum_override);
+		fsa_cib_conn, XML_TAG_CIB, cib, NULL, cib_quorum_override);
 	add_cib_op_callback(rc, FALSE, NULL, feature_update_callback);
 
 	free_xml(cib);
-	free_xml(fragment);
 	return I_NULL;
 }
 
