@@ -1,4 +1,4 @@
-/* $Id: attrd.c,v 1.4 2006/04/10 13:02:09 andrew Exp $ */
+/* $Id: attrd.c,v 1.5 2006/04/10 14:45:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -70,6 +70,7 @@ typedef struct attr_hash_entry_s
 		char *last_value;
 
 		int  timeout;
+		char *dampen;
 		guint  timer_id;
 		
 } attr_hash_entry_t;
@@ -456,59 +457,14 @@ attrd_cib_callback(const HA_Message *msg, int call_id, int rc,
 	crm_free(attr);
 }
 
-void
-attrd_ha_callback(HA_Message * msg, void* private_data)
+static attr_hash_entry_t *
+find_hash_entry(HA_Message * msg) 
 {
-	int rc = cib_ok;
-	attr_hash_entry_t *hash_entry = NULL;
-	const char *from = ha_msg_value(msg, F_ORIG);
-	const char *op   = ha_msg_value(msg, F_ATTRD_TASK);
-	const char *attr = ha_msg_value(msg, F_ATTRD_ATTRIBUTE);
-
-	crm_info("%s message from %s", op, from);
-	hash_entry = g_hash_table_lookup(attr_hash, attr);
-	stop_attrd_timer(hash_entry);
-	if(hash_entry == NULL) {
-		const char *set  = ha_msg_value(msg, F_ATTRD_SET);
-		const char *section = ha_msg_value(msg, F_ATTRD_SECTION);
-		rc = delete_attr(cib_conn, cib_none, section, attrd_uuid, set,
-				 NULL, attr, NULL);
-		crm_info("Sent delete %d: %s %s %s",
-			 rc, attr, set, section);
-
-	} else if(hash_entry->value == NULL) {
-		/* delete the attr */
-		rc = delete_attr(cib_conn, cib_none, hash_entry->section, attrd_uuid,
-				 hash_entry->set, NULL, attr, NULL);
-		crm_info("Sent delete %d: %s %s %s",
-			 rc, attr, hash_entry->set, hash_entry->section);
-		
-	} else {
-		/* send update */
-		rc = update_attr(cib_conn, cib_none, hash_entry->section,
- 				 attrd_uuid, hash_entry->set, NULL,
- 				 hash_entry->id, hash_entry->value);
-		crm_info("Sent update %d: %s=%s", rc, hash_entry->id,hash_entry->value);
-	}
-
-	add_cib_op_callback(rc, FALSE, crm_strdup(attr), attrd_cib_callback);
-	
-	return;
-}
-
-void
-attrd_local_callback(HA_Message * msg)
-{
-	attr_hash_entry_t *hash_entry = NULL;
-	const char *from  = ha_msg_value(msg, F_ORIG);
-	const char *op    = ha_msg_value(msg, F_ATTRD_TASK);
 	const char *attr  = ha_msg_value(msg, F_ATTRD_ATTRIBUTE);
-	const char *value = ha_msg_value(msg, F_ATTRD_VALUE);
-
-	crm_debug("%s message from %s: %s=%s", op, from, attr, value);
-
-	hash_entry = g_hash_table_lookup(attr_hash, attr);
+	attr_hash_entry_t *hash_entry = g_hash_table_lookup(attr_hash, attr);
 	if(hash_entry == NULL) {
+		const char *value = NULL;
+		
 		/* create one and add it */
 		crm_info("Creating hash entry for %s", attr);
 		crm_malloc0(hash_entry, sizeof(attr_hash_entry_t));
@@ -528,15 +484,75 @@ attrd_local_callback(HA_Message * msg)
 
 		value = ha_msg_value(msg, F_ATTRD_DAMPEN);
 		if(value != NULL) {
+			hash_entry->dampen = crm_strdup(value);
 			hash_entry->timeout = crm_get_msec(value);
 			crm_debug("\t%s->timeout: %s", attr, value);
 		}
 
 		g_hash_table_insert(attr_hash, hash_entry->id, hash_entry);
 		hash_entry = g_hash_table_lookup(attr_hash, attr);
-		CRM_CHECK(hash_entry != NULL, return);
+		CRM_CHECK(hash_entry != NULL, ;);
+	}
+	return hash_entry;
+}
+
+void
+attrd_ha_callback(HA_Message * msg, void* private_data)
+{
+	int rc = cib_ok;
+	attr_hash_entry_t *hash_entry = NULL;
+	const char *from = ha_msg_value(msg, F_ORIG);
+	const char *op   = ha_msg_value(msg, F_ATTRD_TASK);
+	const char *attr = ha_msg_value(msg, F_ATTRD_ATTRIBUTE);
+
+	crm_info("%s message from %s", op, from);
+	hash_entry = find_hash_entry(msg);
+	stop_attrd_timer(hash_entry);
+	if(hash_entry->value == NULL) {
+		/* delete the attr */
+		rc = delete_attr(cib_conn, cib_none, hash_entry->section, attrd_uuid,
+				 hash_entry->set, NULL, attr, NULL);
+		crm_info("Sent delete %d: %s %s %s",
+			 rc, attr, hash_entry->set, hash_entry->section);
+		
+	} else {
+		/* send update */
+		rc = update_attr(cib_conn, cib_none, hash_entry->section,
+ 				 attrd_uuid, hash_entry->set, NULL,
+ 				 hash_entry->id, hash_entry->value);
+		crm_info("Sent update %d: %s=%s", rc, hash_entry->id,hash_entry->value);
 	}
 
+	add_cib_op_callback(rc, FALSE, crm_strdup(attr), attrd_cib_callback);
+	
+	return;
+}
+
+static void
+update_for_hash_entry(gpointer key, gpointer value, gpointer user_data)
+{
+	attrd_timer_callback(value);
+}
+
+
+void
+attrd_local_callback(HA_Message * msg)
+{
+	attr_hash_entry_t *hash_entry = NULL;
+	const char *from  = ha_msg_value(msg, F_ORIG);
+	const char *op    = ha_msg_value(msg, F_ATTRD_TASK);
+	const char *attr  = ha_msg_value(msg, F_ATTRD_ATTRIBUTE);
+	const char *value = ha_msg_value(msg, F_ATTRD_VALUE);
+
+	if(safe_str_eq(op, "refresh")) {
+		crm_info("Sending full refresh");
+		g_hash_table_foreach(attr_hash, update_for_hash_entry, NULL);
+		return;
+	}
+
+	crm_debug("%s message from %s: %s=%s", op, from, attr, value);
+	hash_entry = find_hash_entry(msg);
+	
 	crm_free(hash_entry->last_value);
 	hash_entry->last_value = hash_entry->value;
 
@@ -581,6 +597,7 @@ attrd_timer_callback(void *user_data)
 	ha_msg_add(msg, F_ATTRD_ATTRIBUTE, hash_entry->id);
 	ha_msg_add(msg, F_ATTRD_SET, hash_entry->set);
 	ha_msg_add(msg, F_ATTRD_SECTION, hash_entry->section);
+	ha_msg_add(msg, F_ATTRD_DAMPEN, hash_entry->dampen);
 	send_ha_message(attrd_cluster_conn, msg, NULL, FALSE);
 	
 	return TRUE;
