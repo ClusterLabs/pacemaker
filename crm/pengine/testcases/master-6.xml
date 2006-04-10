@@ -1,6 +1,6 @@
 <cib cib_feature_revision="1" have_quorum="true" generated="true" admin_epoch="0" ccm_transition="4" num_peers="4" crm_feature_set="1.0.4" debug_source="create_node_entry" dc_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" epoch="4" num_updates="167">
    <configuration>
-     <crm_config>
+     <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
        <nvpair id="c-pref-1" name="transition_idle_timeout" value="3m"/>
        <nvpair id="c-pref-2" name="symmetric_cluster" value="true"/>
        <nvpair id="c-pref-3" name="short_resource_names" value="1"/>
@@ -11,7 +11,7 @@
        <nvpair id="c-pref-8" name="no_quorum_policy" value="stop"/>
        <nvpair id="c-pref-9" name="default_resource_stickiness" value="0"/>
        <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>
-     </crm_config>
+     </attributes></cluster_property_set></crm_config>
      <nodes>
        <node id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" uname="c001n08" type="normal">
          <instance_attributes id="master-6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">

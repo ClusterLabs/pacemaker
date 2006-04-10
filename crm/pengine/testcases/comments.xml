@@ -4,10 +4,10 @@
 <cib>
   <configuration>
     <!-- pre-comment -->
-    <crm_config>
+    <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
       <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
       <!-- post-comment -->
-    </crm_config>
+    </attributes></cluster_property_set></crm_config>
     <nodes>
       <node id="node2" uname="node2" type="member"/>
       <!-- embedded-comment -->

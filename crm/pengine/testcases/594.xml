@@ -1,13 +1,13 @@
   <cib cib_feature_revision="1" num_updates="117" have_quorum="true" epoch="6" generated="true" num_peers="1" origin="hadev1" ccm_transition="4" timestamp="1118302975" dc_uuid="6125a0df-456a-4395-829a-418e9a380d36" debug_source="process_join_ack_msg" last_written="Thu Jun  9 15:42:55 2005">
     <configuration>
-      <crm_config>
+      <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
         <nvpair id="transition_timeout" name="transition_timeout" value="120s"/>
         <nvpair id="require_quorum" name="require_quorum" value="true"/>
         <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
         <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="true"/>
         <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>
         <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>
-      </crm_config>
+      </attributes></cluster_property_set></crm_config>
       <nodes timestamp="1118302974">
         <node id="879e65f8-4b38-4c56-9552-4752ad436669" uname="hadev3" type="member"/>
         <node id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" type="member"/>

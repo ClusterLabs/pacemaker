@@ -1,12 +1,12 @@
 <cib cib_feature_revision="1" have_quorum="true" epoch="262" generated="true" admin_epoch="0" num_peers="3" origin="hadev2" last_written="Thu Jul  7 04:56:20 2005" dc_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" debug_source="finalize_join" num_updates="8358" ccm_transition="3">
   <configuration>
-      <crm_config>
+      <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
         <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="120s"/>
         <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
         <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="false"/>
         <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>
         <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>
-      </crm_config>
+      </attributes></cluster_property_set></crm_config>
       <nodes>
         <node id="6125a0df-456a-4395-829a-418e9a380d36" uname="hadev1" type="member"/>
         <node id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" type="member"/>

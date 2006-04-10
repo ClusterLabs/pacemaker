@@ -2,10 +2,10 @@
 <!DOCTYPE cib SYSTEM "crm-1.0.dtd">
 <cib have_quorum="true">
   <configuration>
-    <crm_config>
+    <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
       <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>
       <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>
-    </crm_config>
+    </attributes></cluster_property_set></crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member"/>
       <node id="uuid2" uname="node2" type="member"/>

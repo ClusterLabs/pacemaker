@@ -1,11 +1,11 @@
 <cib cib_feature_revision="1" have_quorum="false" epoche="1" admin_epoch="0" num_peers="2" origin="posic043" ccm_transition="8" generated="true" dc_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596" debug_source="finalize_join" epoch="3" num_updates="132">
    <configuration>
-     <crm_config>
+     <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
         <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="3m"/>
         <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
         <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="1"/>
         <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>
-     </crm_config>
+     </attributes></cluster_property_set></crm_config>
      <nodes>
        <node uname="posic042" id="829cb8c0-2689-44af-b3e3-2ba4091b1f37" type="member"/>
        <node uname="posic041" id="c5d5ed56-7340-4d81-afd6-40b5ee6803ad" type="member"/>

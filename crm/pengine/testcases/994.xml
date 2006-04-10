@@ -1,10 +1,10 @@
 <cib generated="true" admin_epoch="0" epoch="5" num_updates="88" have_quorum="true" num_peers="1" origin="paul" last_written="Fri Dec 16 14:27:59 2005" cib_feature_revision="1.2" crm_feature_set="1.0.3" debug_source="finalize_join" dc_uuid="6d3906ef-d88f-4363-afac-609884ddbb90" ccm_transition="1">
    <configuration>
-     <crm_config>
+     <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
        <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="120s"/>
        <nvpair id="symmetric_cluster" name="symmetric_cluster" value="true"/>
        <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>
-     </crm_config>
+     </attributes></cluster_property_set></crm_config>
      <nodes>
        <node id="6d3906ef-d88f-4363-afac-609884ddbb90" uname="paul" type="member"/>
      </nodes>
