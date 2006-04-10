@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.43 2006/04/09 12:56:13 andrew Exp $ */
+/* $Id: utils.c,v 1.44 2006/04/10 07:25:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1130,6 +1130,7 @@ void
 filter_action_parameters(crm_data_t *param_set) 
 {
 	const char *attr_filter[] = {
+		XML_ATTR_ID,
 		XML_LRM_ATTR_OP_DIGEST,
 		XML_ATTR_TE_TARGET_RC,
 		XML_ATTR_LRM_PROBE,
