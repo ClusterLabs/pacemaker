@@ -1,4 +1,4 @@
-/* $Id: crm_attribute.c,v 1.12 2006/04/07 14:29:32 andrew Exp $ */
+/* $Id: crm_attribute.c,v 1.13 2006/04/10 12:51:13 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -323,7 +323,7 @@ main(int argc, char **argv)
 	if(is_done) {
 			
 	} else if(DO_DELETE) {
-		rc = delete_attr(the_cib, type, dest_node, set_name,
+		rc = delete_attr(the_cib, cib_sync_call, type, dest_node, set_name,
 				 attr_id, attr_name, attr_value);
 			
 	} else if(DO_WRITE) {
