@@ -47,6 +47,32 @@ void finalize_join(const char *caller);
 
 static int current_join_id = 0;
 
+static void
+update_attrd(void) 
+{	
+	static IPC_Channel *attrd = NULL;
+	if(attrd == NULL) {
+		crm_info("Connecting to attrd...");
+		attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
+	}
+	
+	if(attrd != NULL) {
+		HA_Message *update = ha_msg_new(3);
+		ha_msg_add(update, F_TYPE, T_ATTRD);
+		ha_msg_add(update, F_ORIG, "crmd");
+		ha_msg_add(update, "task", "refresh");
+		if(send_ipc_message(attrd, update) == FALSE) {
+			crm_err("attrd refresh failed");
+			attrd = NULL;
+		} else {
+			crm_debug("sent attrd refresh");
+		}
+		
+	} else {
+		crm_err("Couldn't connect to attrd");
+	}
+}
+
 void
 initialize_join(gboolean before)
 {
@@ -349,6 +375,7 @@ do_dc_join_finalize(long long action,
 		/* Send _our_ CIB out to everyone */
 		fsa_cib_conn->cmds->sync_from(
 			fsa_cib_conn, fsa_our_uname, NULL,cib_quorum_override);
+		update_attrd();
 	}
 
 	finalize_join(__FUNCTION__);
@@ -373,7 +400,8 @@ finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 
 	} else if(AM_I_DC && fsa_state == S_FINALIZE_JOIN) {
 		finalize_join(__FUNCTION__);
-
+		update_attrd();
+		
 	} else {
 		crm_debug("No longer the DC in S_FINALIZE_JOIN: %s/%s",
 			  AM_I_DC?"DC":"CRMd", fsa_state2string(fsa_state));
