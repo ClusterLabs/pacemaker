@@ -571,7 +571,7 @@ do_read_config(long long action,
 	crm_debug_2("Querying the CIB... call %d", call_id);
 
 	/* defaults */
-	election_trigger->period_ms   = crm_get_msec("30s");
+	election_trigger->period_ms   = crm_get_msec("5s");
 	election_timeout->period_ms   = crm_get_msec("2min");
 	integration_timer->period_ms  = crm_get_msec("3min");
 	finalization_timer->period_ms = crm_get_msec("3min");
@@ -581,9 +581,9 @@ do_read_config(long long action,
 	param_name = ENV_PREFIX "" KEY_INITDEAD;
 	param_val = getenv(param_name);
 	if(param_val != NULL) {
-		int tmp = crm_get_msec(param_val);
-		if(tmp > 0) {
-			election_trigger->period_ms = 2 * tmp;
+		int tmp = crm_get_msec(param_val) / 2;
+		if(tmp > election_trigger->period_ms) {
+			election_trigger->period_ms = tmp;
 		}
 		crm_debug("%s = %s", param_name, param_val);
 		param_val = NULL;
