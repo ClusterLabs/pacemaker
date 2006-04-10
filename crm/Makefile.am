@@ -26,7 +26,7 @@ crm_varlibdir		= $(HA_VARLIBDIR)/$(HB_PKG)/crm
 crm_varrundir		= $(HA_VARRUNDIR)/$(HB_PKG)/crm
 noinst_HEADERS	 	= dmalloc_wrapper.h
 
-DIST_SOURCES		= crm-1.0.dtd
+EXTRA_DIST		= crm-1.0.dtd
 dtd_SCRIPTS		= crm.dtd
 
 crm.dtd: crm-1.0.dtd
