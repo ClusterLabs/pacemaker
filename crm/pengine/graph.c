@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.80 2006/04/10 07:23:27 andrew Exp $ */
+/* $Id: graph.c,v 1.81 2006/04/10 12:17:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -208,7 +208,7 @@ stonith_constraints(node_t *node,
 		    action_t *stonith_op, action_t *shutdown_op,
 		    pe_working_set_t *data_set)
 {
-	GListPtr stop_actions = NULL;
+	GListPtr action_list = NULL;
 	
 	if(shutdown_op != NULL && stonith_op != NULL) {
 		/* stop everything we can via shutdown_constraints() and then
@@ -250,11 +250,11 @@ stonith_constraints(node_t *node,
 			
 		} else if(stonith_op != NULL) {
 			char *key = stop_key(rsc);
-			stop_actions = find_actions(rsc->actions, key, node);
+			action_list = find_actions(rsc->actions, key, node);
 			crm_free(key);
 			
 			slist_iter(
-				action, action_t, stop_actions, lpc2,
+				action, action_t, action_list, lpc2,
 				if(node->details->online == FALSE
 				   || rsc->failed) {
 					crm_info("Stop of failed resource %s is"
@@ -284,8 +284,30 @@ stonith_constraints(node_t *node,
 				}
 				);
 
-			crm_debug_4("Adding stonith (%d) as an input to stop",
-				  stonith_op->id);
+			key = demote_key(rsc);
+			action_list = find_actions(rsc->actions, key, node);
+			crm_free(key);
+			
+			slist_iter(
+				action, action_t, action_list, lpc2,
+				if(node->details->online == FALSE || rsc->failed) {
+					crm_info("Demote of failed resource %s is"
+						 " implict after %s is fenced",
+						 rsc->id, node->details->uname);
+					/* the stop would never complete and is
+					 * now implied by the stonith operation
+					 */
+					action->pseudo = TRUE;
+					action->runnable = TRUE;
+					custom_action_order(
+						NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
+						rsc, demote_key(rsc), NULL,
+						pe_ordering_manditory, data_set);
+				}
+				);
+
+/* 			crm_debug_4("Adding stonith (%d) as an input to stop", */
+/* 				  stonith_op->id); */
 			
 /* 		} else if((rsc->unclean || node->details->unclean) */
 /* 			  && rsc->stopfail_type == pesf_block) { */
