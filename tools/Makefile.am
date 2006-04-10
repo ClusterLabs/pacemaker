@@ -32,7 +32,7 @@ gliblib			= @GLIBLIB@
 habin_PROGRAMS		= cl_status cl_respawn 
 sbin_PROGRAMS		= attrd_updater
 halib_SCRIPTS		= haresources2cib.py	
-halib_PROGRAMS		= attrd	
+halib_PROGRAMS		= attrd	pingd
 
 ## SOURCES
 ccdv: 	$(top_srcdir)/tools/ccdv.c
@@ -62,6 +62,15 @@ attrd_LDADD		=  $(CRM_DEBUG_LIBS)				\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(top_builddir)/lib/hbclient/libhbclient.la		\
 		  $(top_builddir)/lib/crm/cib/libcib.la			\
+		  $(GLIBLIB)						\
+		  $(LIBRT)
+
+pingd_SOURCES		= pingd.c
+pingd_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+pingd_LDADD		=  $(CRM_DEBUG_LIBS)				\
+		  $(top_builddir)/lib/clplumbing/libplumb.la		\
+		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
+		  $(top_builddir)/lib/hbclient/libhbclient.la		\
 		  $(GLIBLIB)						\
 		  $(LIBRT)
 
