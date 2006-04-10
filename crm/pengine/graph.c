@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.79 2006/04/07 14:28:12 andrew Exp $ */
+/* $Id: graph.c,v 1.80 2006/04/10 07:23:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -209,7 +209,6 @@ stonith_constraints(node_t *node,
 		    pe_working_set_t *data_set)
 {
 	GListPtr stop_actions = NULL;
-	gboolean run_unprotected = TRUE;
 	
 	if(shutdown_op != NULL && stonith_op != NULL) {
 		/* stop everything we can via shutdown_constraints() and then
@@ -233,29 +232,12 @@ stonith_constraints(node_t *node,
 	/*
 	 * Make sure the stonith OP occurs before we start any shared resources
 	 */
-	slist_iter(
-		rsc, resource_t, data_set->resources, lpc,
-
-		slist_iter(action, action_t, rsc->actions, lpc2,
-			   if(action->needs != rsc_req_stonith) {
-				   continue;
-			   }
-			   if(stonith_op != NULL) {
-				   custom_action_order(
-					   NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
-					   rsc, NULL, action,
-					   pe_ordering_manditory, data_set);
-				   
-			   } else if(run_unprotected == FALSE) {
-				   /* mark the start unrunnable */
-				   action->runnable = FALSE;
-				   
-			   } else {
-				   pe_err("SHARED RESOURCE %s IS NOT PROTECTED:"
-					  " Stonith disabled", rsc->id);
-			   }
+	if(stonith_op != NULL) {
+		slist_iter(
+			rsc, resource_t, data_set->resources, lpc,
+			rsc->fns->stonith_ordering(rsc, stonith_op, data_set);
 			);
-		);
+	}
 	
 	/* add the stonith OP as a stop pre-req and the mark the stop
 	 * as a pseudo op - since its now redundant

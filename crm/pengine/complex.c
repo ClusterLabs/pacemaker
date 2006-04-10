@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.79 2006/04/06 13:05:21 andrew Exp $ */
+/* $Id: complex.c,v 1.80 2006/04/10 07:23:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -57,6 +57,7 @@ resource_object_functions_t resource_class_functions[] = {
 		native_rsc_location,
 		native_expand,
 		native_children,
+		native_stonith_ordering,
 		native_parameter,
 		native_print,
 		native_active,
@@ -80,6 +81,7 @@ resource_object_functions_t resource_class_functions[] = {
 		group_rsc_location,
 		group_expand,
 		group_children,
+		group_stonith_ordering,
 		native_parameter,
 		group_print,
 		group_active,
@@ -103,6 +105,7 @@ resource_object_functions_t resource_class_functions[] = {
 		clone_rsc_location,
 		clone_expand,
 		clone_children,
+		clone_stonith_ordering,
 		native_parameter,
 		clone_print,
 		clone_active,
@@ -126,6 +129,7 @@ resource_object_functions_t resource_class_functions[] = {
 		clone_rsc_location,
 		clone_expand,
 		clone_children,
+		clone_stonith_ordering,
 		native_parameter,
 		clone_print,
 		clone_active,

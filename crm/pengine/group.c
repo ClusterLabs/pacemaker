@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.59 2006/04/09 12:57:37 andrew Exp $ */
+/* $Id: group.c,v 1.60 2006/04/10 07:23:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -625,4 +625,23 @@ group_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 			child_rsc, node, complete, force, data_set) || any_created;
 		);
 	return any_created;
+}
+
+void
+group_stonith_ordering(
+	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set)
+{
+#if 0
+	/* I dont think it is a good idea to be poking inside groups */
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
+
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
+		
+		child_rsc->fns->stonith_ordering(
+			child_rsc, stonith_op, data_set);
+		);
+#endif
+	native_stonith_ordering(rsc, stonith_op, data_set);
 }

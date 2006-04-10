@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.123 2006/03/31 15:33:16 andrew Exp $ */
+/* $Id: native.c,v 1.124 2006/04/10 07:23:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -208,6 +208,7 @@ native_parameter(
 	const char *value = NULL;
 
 	CRM_CHECK(rsc != NULL, return NULL);
+	CRM_CHECK(name != NULL && strlen(name) != 0, return NULL);
 
 	crm_debug_2("Looking up %s in %s", name, rsc->id);
 	
@@ -2056,4 +2057,44 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 			    pe_ordering_manditory, data_set);	
 
 	return TRUE;
+}
+
+
+void
+native_stonith_ordering(
+	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set)
+{
+	gboolean run_unprotected = TRUE;
+	const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+	crm_err("%s class: %s", rsc->id, class);
+
+	if(stonith_op != NULL && safe_str_eq(class, "stonith")) {
+		char *key = start_key(rsc);
+		crm_err("Ordering %s before stonith op", key);
+		custom_action_order(
+			rsc, key, NULL,
+			NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
+			pe_ordering_optional, data_set);
+		return;
+	}
+
+	slist_iter(action, action_t, rsc->actions, lpc2,
+		   if(action->needs != rsc_req_stonith) {
+			   continue;
+		   }
+		   if(stonith_op != NULL) {
+			   custom_action_order(
+				   NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
+				   rsc, NULL, action,
+				   pe_ordering_manditory, data_set);
+			   
+		   } else if(run_unprotected == FALSE) {
+			   /* mark the start unrunnable */
+			   action->runnable = FALSE;
+			   
+		   } else {
+			   pe_err("SHARED RESOURCE %s IS NOT PROTECTED:"
+				  " Stonith disabled", rsc->id);
+		   }
+		);
 }

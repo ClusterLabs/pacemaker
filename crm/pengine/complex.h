@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.31 2006/03/21 17:56:35 andrew Exp $ */
+/* $Id: complex.h,v 1.32 2006/04/10 07:23:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -86,6 +86,8 @@ typedef struct resource_object_functions_s
 
 		void (*expand)(resource_t *, pe_working_set_t *);
 		GListPtr (*children)(resource_t *);
+		void (*stonith_ordering)(
+			resource_t *, action_t *, pe_working_set_t *);
 
 		/* parameter result must be free'd */
 		char *(*parameter)(
@@ -138,6 +140,8 @@ extern void native_assign_color(resource_t *rsc, color_t *color);
 extern gboolean native_create_probe(
 	resource_t *rsc, node_t *node, action_t *complete, gboolean force, 
 	pe_working_set_t *data_set);
+extern void native_stonith_ordering(
+	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
 
 extern void group_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern GListPtr group_children(resource_t *rsc);
@@ -168,6 +172,8 @@ extern void group_create_notify_element(
 extern gboolean group_create_probe(
 	resource_t *rsc, node_t *node, action_t *complete, gboolean force,
 	pe_working_set_t *data_set);
+extern void group_stonith_ordering(
+	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
 
 extern void clone_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern GListPtr clone_children(resource_t *rsc);
@@ -197,6 +203,8 @@ extern void clone_create_notify_element(
 extern gboolean clone_create_probe(
 	resource_t *rsc, node_t *node, action_t *complete, gboolean force,
 	pe_working_set_t *data_set);
+extern void clone_stonith_ordering(
+	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
 
 extern void master_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern void master_create_actions(resource_t *rsc, pe_working_set_t *data_set);

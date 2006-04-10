@@ -51,6 +51,7 @@ digraph "g" {
 "DoFencing:child_DoFencing:1_stop_0 hadev1" -> "DoFencing_stopped_0" [ style = dashed]
 "DoFencing:child_DoFencing:2_stop_0 hadev1" -> "DoFencing_stopped_0" [ style = bold]
 "DoFencing_stop_0" -> "DoFencing_stopped_0" [ style = bold]
+"DoFencing_running_0" -> "stonith hadev3" [ style = dashed]
 "DcIPaddr_stop_0 hadev2" -> "do_shutdown hadev2" [ style = bold]
 "rsc_hadev2_stop_0 hadev2" -> "do_shutdown hadev2" [ style = bold]
 "DoFencing:child_DoFencing:0_stop_0 hadev2" -> "do_shutdown hadev2" [ style = bold]

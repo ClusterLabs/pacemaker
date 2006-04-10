@@ -70,4 +70,5 @@ digraph "g" {
 "DoFencing:child_DoFencing:1_stop_0 c001n03" -> "DoFencing_stopped_0" [ style = dashed]
 "DoFencing:child_DoFencing:2_stop_0 c001n01" -> "DoFencing_stopped_0" [ style = dashed]
 "DoFencing:child_DoFencing:3_stop_0 c001n08" -> "DoFencing_stopped_0" [ style = dashed]
+"DoFencing_running_0" -> "stonith c001n02" [ style = dashed]
 }

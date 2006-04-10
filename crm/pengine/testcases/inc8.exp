@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="1" rsc_id="rsc0" operation="start" operation_key="rsc0_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc0" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.4"/>
+         <attributes crm_feature_set="1.0.5"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -12,7 +12,7 @@
      <action_set>
        <rsc_op id="2" rsc_id="rsc1:child_rsc1:0" operation="start" operation_key="rsc1:child_rsc1:0_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.4" clone="0" clone_max="5" clone_node_max="1"/>
+         <attributes crm_feature_set="1.0.5" clone="0" clone_max="5" clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -25,7 +25,7 @@
      <action_set>
        <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="start" operation_key="rsc1:child_rsc1:1_start_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.4" clone="1" clone_max="5" clone_node_max="1"/>
+         <attributes crm_feature_set="1.0.5" clone="1" clone_max="5" clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -37,7 +37,7 @@
    <synapse id="3">
      <action_set>
        <pseudo_event id="4" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0">
-         <attributes crm_feature_set="1.0.4"/>
+         <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -45,7 +45,7 @@
    <synapse id="4">
      <action_set>
        <pseudo_event id="5" rsc_id="rsc1" operation="running" operation_key="rsc1_running_0">
-         <attributes crm_feature_set="1.0.4"/>
+         <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
      <inputs>

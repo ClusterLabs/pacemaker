@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="1" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.4"/>
+         <attributes crm_feature_set="1.0.5"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -19,7 +19,7 @@
      <action_set>
        <rsc_op id="4" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -28,7 +28,7 @@
      <action_set>
        <rsc_op id="6" rsc_id="rsc1" operation="stop" operation_key="rsc1_stop_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.4"/>
+         <attributes crm_feature_set="1.0.5"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -37,7 +37,7 @@
      <action_set>
        <rsc_op id="7" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_5000" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" class="heartbeat" type="apache"/>
-         <attributes timeout="3000" crm_feature_set="1.0.4" interval="5000"/>
+         <attributes timeout="3000" crm_feature_set="1.0.5" interval="5000"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -49,7 +49,7 @@
    <synapse id="4">
      <action_set>
        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
-         <attributes crm_feature_set="1.0.4"/>
+         <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -64,7 +64,7 @@
    <synapse id="5">
      <action_set>
        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
-         <attributes crm_feature_set="1.0.4" te-no-wait="true"/>
+         <attributes crm_feature_set="1.0.5" te-no-wait="true"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -76,7 +76,7 @@
    <synapse id="6">
      <action_set>
        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="uuid2">
-         <attributes crm_feature_set="1.0.4" te-no-wait="true"/>
+         <attributes crm_feature_set="1.0.5" te-no-wait="true"/>
        </rsc_op>
      </action_set>
      <inputs/>

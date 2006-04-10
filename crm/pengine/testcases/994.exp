@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
        <pseudo_event id="15" rsc_id="group_1" operation="start" operation_key="group_1_start_0">
-         <attributes crm_feature_set="1.0.4"/>
+         <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -14,7 +14,7 @@
    <synapse id="1">
      <action_set>
        <pseudo_event id="16" rsc_id="group_1" operation="running" operation_key="group_1_running_0">
-         <attributes crm_feature_set="1.0.4"/>
+         <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -29,7 +29,7 @@
    <synapse id="2">
      <action_set>
        <pseudo_event id="17" rsc_id="group_1" operation="stop" operation_key="group_1_stop_0">
-         <attributes crm_feature_set="1.0.4"/>
+         <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -37,7 +37,7 @@
    <synapse id="3">
      <action_set>
        <pseudo_event id="18" rsc_id="group_1" operation="stopped" operation_key="group_1_stopped_0">
-         <attributes crm_feature_set="1.0.4"/>
+         <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -50,7 +50,7 @@
      <action_set>
        <rsc_op id="3" rsc_id="group_1:postfix_9" operation="monitor" operation_key="group_1:postfix_9_monitor_120000" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
          <primitive class="lsb" id="group_1:postfix_9" provider="heartbeat" type="postfix"/>
-         <attributes timeout="60000" crm_feature_set="1.0.4" interval="120000"/>
+         <attributes timeout="60000" crm_feature_set="1.0.5" interval="120000"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -63,7 +63,7 @@
      <action_set>
        <rsc_op id="4" rsc_id="group_1:postfix_9" operation="stop" operation_key="group_1:postfix_9_stop_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
          <primitive class="lsb" id="group_1:postfix_9" provider="heartbeat" type="postfix"/>
-         <attributes crm_feature_set="1.0.4"/>
+         <attributes crm_feature_set="1.0.5"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -76,7 +76,7 @@
      <action_set>
        <rsc_op id="14" rsc_id="group_1:postfix_9" operation="start" operation_key="group_1:postfix_9_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
          <primitive class="lsb" id="group_1:postfix_9" provider="heartbeat" type="postfix"/>
-         <attributes crm_feature_set="1.0.4"/>
+         <attributes crm_feature_set="1.0.5"/>
        </rsc_op>
      </action_set>
      <inputs>
