@@ -1,4 +1,4 @@
-/* $Id: attrd.c,v 1.2 2006/04/09 16:54:28 andrew Exp $ */
+/* $Id: attrd.c,v 1.3 2006/04/10 12:51:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -102,8 +102,11 @@ static gboolean
 attrd_shutdown(int nsig, gpointer unused)
 {
 	need_shutdown = TRUE;
+	crm_info("Exiting");
 	if (mainloop != NULL && g_main_is_running(mainloop)) {
 		g_main_quit(mainloop);
+	} else {
+		exit(0);
 	}
 	return FALSE;
 }
@@ -437,6 +440,22 @@ main(int argc, char ** argv)
 	return 0;
 }
 
+static void
+attrd_cib_callback(const HA_Message *msg, int call_id, int rc,
+		   crm_data_t *output, void *user_data)
+{
+	char *attr = user_data;
+	if(rc == cib_NOTEXISTS) {
+		rc = cib_ok;
+	}
+	if(rc < cib_ok) {
+		crm_err("Update %d for %s failed: %s", call_id, attr, cib_error2string(rc));
+	} else {
+		crm_debug("Update %d for %s passed", call_id, attr);
+	}
+	crm_free(attr);
+}
+
 void
 attrd_ha_callback(HA_Message * msg, void* private_data)
 {
@@ -452,35 +471,27 @@ attrd_ha_callback(HA_Message * msg, void* private_data)
 	if(hash_entry == NULL) {
 		const char *set  = ha_msg_value(msg, F_ATTRD_SET);
 		const char *section = ha_msg_value(msg, F_ATTRD_SECTION);
-		crm_info("Send unknown delete %s %s %s", attr, set, section);
-		
-		rc = delete_attr(cib_conn, section, attrd_uuid, set,
+		rc = delete_attr(cib_conn, cib_none, section, attrd_uuid, set,
 				 NULL, attr, NULL);
-		if(rc == cib_NOTEXISTS) {
-			rc = cib_ok;
-		}
+		crm_info("Sent delete %d: %s %s %s",
+			 rc, attr, set, section);
 
 	} else if(hash_entry->value == NULL) {
 		/* delete the attr */
-		crm_info("Send delete %s %s %s",
-			 attr, hash_entry->set, hash_entry->section);
-		rc = delete_attr(cib_conn, hash_entry->section, attrd_uuid,
+		rc = delete_attr(cib_conn, cib_none, hash_entry->section, attrd_uuid,
 				 hash_entry->set, NULL, attr, NULL);
-		if(rc == cib_NOTEXISTS) {
-			rc = cib_ok;
-		}
+		crm_info("Sent delete %d: %s %s %s",
+			 rc, attr, hash_entry->set, hash_entry->section);
 		
 	} else {
 		/* send update */
-		crm_info("Send update %s=%s", hash_entry->id,hash_entry->value);
-		rc = update_attr(cib_conn, cib_sync_call, hash_entry->section,
+		rc = update_attr(cib_conn, cib_none, hash_entry->section,
  				 attrd_uuid, hash_entry->set, NULL,
  				 hash_entry->id, hash_entry->value);
+		crm_info("Sent update %d: %s=%s", rc, hash_entry->id,hash_entry->value);
 	}
-	
-	if(rc < cib_ok) {
-		crm_err("Update for %s failed: %s", attr, cib_error2string(rc));
-	}
+
+	add_cib_op_callback(rc, FALSE, crm_strdup(attr), attrd_cib_callback);
 	
 	return;
 }
