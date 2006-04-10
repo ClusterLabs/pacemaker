@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.31 2006/04/03 09:51:56 andrew Exp $ */
+/* $Id: util.h,v 1.32 2006/04/10 12:49:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -131,5 +131,8 @@ extern int get_last_sequence(const char *directory, const char *series);
 
 extern void write_last_sequence(
 	const char *directory, const char *series, int sequence, int max);
+
+extern void crm_make_daemon(
+	const char *name, gboolean daemonize, const char *pidfile);
 
 #endif

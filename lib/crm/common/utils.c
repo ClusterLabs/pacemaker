@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.44 2006/04/10 07:25:23 andrew Exp $ */
+/* $Id: utils.c,v 1.45 2006/04/10 12:49:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,6 +39,8 @@
 #include <clplumbing/cl_syslog.h>
 #include <clplumbing/cl_misc.h>
 #include <clplumbing/coredumps.h>
+#include <clplumbing/lsb_exitcodes.h>
+#include <clplumbing/cl_pidfile.h>
 
 #include <time.h> 
 
@@ -1386,4 +1388,40 @@ write_last_sequence(
 
 	crm_free(series_file);
 	crm_free(buffer);
+}
+
+void
+crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
+{
+	long pid;
+	const char *devnull = "/dev/null";
+
+	if(daemonize == FALSE) {
+		return;
+	}
+	
+	pid = fork();
+	if (pid < 0) {
+		fprintf(stderr, "%s: could not start daemon\n", name);
+		cl_perror("fork");
+		exit(LSB_EXIT_GENERIC);
+
+	} else if (pid > 0) {
+		exit(LSB_EXIT_OK);
+	}
+	
+	if (cl_lock_pidfile(pidfile) < 0 ) {
+		pid = cl_read_pidfile_no_checking(pidfile);
+		crm_warn("%s: already running [pid %ld] (%s).\n",
+			 name, pid, pidfile);
+		exit(LSB_EXIT_OK);
+	}
+	
+	umask(022);
+	close(FD_STDIN);
+	(void)open(devnull, O_RDONLY);		/* Stdin:  fd 0 */
+	close(FD_STDOUT);
+	(void)open(devnull, O_WRONLY);		/* Stdout: fd 1 */
+	close(FD_STDERR);
+	(void)open(devnull, O_WRONLY);		/* Stderr: fd 2 */
 }
