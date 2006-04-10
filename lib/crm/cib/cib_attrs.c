@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.22 2006/04/10 12:48:43 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.23 2006/04/10 13:05:55 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -316,26 +316,27 @@ delete_attr(cib_t *the_cib, int options,
 	    const char *section, const char *node_uuid, const char *set_name,
 	    const char *attr_id, const char *attr_name, const char *attr_value)
 {
-	char *tmp = NULL;
 	enum cib_errors rc = cib_ok;
 	crm_data_t *xml_obj = NULL;
 	const char *tag = NULL;
 	
 	attr_common_setup(section);
-	
-	rc = read_attr(the_cib, section, node_uuid, set_name,
-		       attr_id, attr_name, &tmp);
 
-	if(rc != cib_ok) {
-		return rc;
-
-	} else if(attr_value != NULL
-		  && safe_str_neq(attr_value, tmp)) {
+	if(attr_value != NULL) {
+		char *tmp = NULL;
+		rc = read_attr(the_cib, section, node_uuid, set_name,
+			       attr_id, attr_name, &tmp);
+		
+		if(rc != cib_ok) {
+			return rc;
+			
+		} else if(safe_str_neq(attr_value, tmp)) {
+			crm_free(tmp);
+			crm_free(local_attr_id);
+			return cib_NOTEXISTS;
+		}
 		crm_free(tmp);
-		crm_free(local_attr_id);
-		return cib_NOTEXISTS;
 	}
-	crm_free(tmp);
 
 	xml_obj = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);
 	crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
