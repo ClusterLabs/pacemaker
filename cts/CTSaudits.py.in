@@ -537,7 +537,7 @@ class PartitionAudit(ClusterAudit):
         passed = 1
         ccm_partitions = self.CM.find_partitions()
 
-        if len(ccm_partitions) == 0:
+        if ccm_partitions == None or len(ccm_partitions) == 0:
             return 1
 
         if len(ccm_partitions) > 1:
