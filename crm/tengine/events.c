@@ -1,4 +1,4 @@
-/* $Id: events.c,v 1.11 2006/04/09 17:01:58 andrew Exp $ */
+/* $Id: events.c,v 1.12 2006/04/10 12:43:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -356,7 +356,10 @@ match_graph_event(
 	}
 
 	if(action->failed) {
-		update_failcount(action, op_rc_i);
+		/* ignore probes */
+		if(target_rc != EXECRA_NOT_RUNNING) {
+			update_failcount(action, op_rc_i);
+		}
 		abort_transition(action->synapse->priority,
 				 tg_restart, "Event failed", event);
 
