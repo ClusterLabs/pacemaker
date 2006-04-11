@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.182 2006/04/09 15:34:13 andrew Exp $ */
+/* $Id: unpack.c,v 1.183 2006/04/11 08:51:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -938,18 +938,6 @@ unpack_lrm_rsc_state(
 		op_list = g_list_append(op_list, rsc_op);
 		);
 
-	value = g_hash_table_lookup(rsc->parameters, XML_RSC_ATTR_TARGET_ROLE);
-	if(value != NULL) {
-		enum rsc_role_e req_role = text2role(value);
-		if(req_role != RSC_ROLE_UNKNOWN && req_role != rsc->next_role){
-			crm_debug("%s: Overwriting calculated next role %s"
-				  " with requested next role %s",
-				  rsc->id, role2text(rsc->next_role),
-				  role2text(req_role));
-			rsc->next_role = req_role;
-		}
-	}
-
 	if(op_list != NULL) {
 		saved_role = rsc->role;
 		on_fail = action_fail_ignore;
@@ -969,6 +957,18 @@ unpack_lrm_rsc_state(
 		process_rsc_state(rsc, node, on_fail, data_set);
 	}
 	
+	value = g_hash_table_lookup(rsc->parameters, XML_RSC_ATTR_TARGET_ROLE);
+	if(value != NULL) {
+		enum rsc_role_e req_role = text2role(value);
+		if(req_role != RSC_ROLE_UNKNOWN && req_role != rsc->next_role){
+			crm_debug("%s: Overwriting calculated next role %s"
+				  " with requested next role %s",
+				  rsc->id, role2text(rsc->next_role),
+				  role2text(req_role));
+			rsc->next_role = req_role;
+		}
+	}
+
 	if(delete_resource) {
 		DeleteRsc(rsc, node, data_set);
 	}
