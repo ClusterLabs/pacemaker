@@ -1,4 +1,4 @@
-/* $Id: events.c,v 1.12 2006/04/10 12:43:48 andrew Exp $ */
+/* $Id: events.c,v 1.13 2006/04/11 07:36:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -331,7 +331,7 @@ match_graph_event(
 		case LRM_OP_NOTSUPPORTED:
 			action->failed = TRUE;
 			crm_log_maybe(log_level_fail,
-				"Action %s on %s failed (rc: %d vs. %d): %s",
+				"Action %s on %s failed (target: %d vs. rc: %d): %s",
 				update_event, this_uname, target_rc,
 				op_rc_i, op_status2text(op_status_i));
 			break;

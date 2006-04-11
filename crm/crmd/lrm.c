@@ -540,8 +540,9 @@ is_rsc_active(const char *rsc_id)
 	slist_iter(
 		op, lrm_op_t, op_list, llpc,
 		
-		crm_debug_2("Processing op %s for %s (status=%d, rc=%d)", 
-			    op->op_type, the_rsc->id, op->op_status, op->rc);
+		crm_debug_2("Processing op %s (%d) for %s (status=%d, rc=%d)", 
+			    op->op_type, op->call_id, the_rsc->id,
+			    op->op_status, op->rc);
 		
 		CRM_ASSERT(max_call_id <= op->call_id);			
 		if(safe_str_eq(op->op_type, CRMD_ACTION_STOP)) {
