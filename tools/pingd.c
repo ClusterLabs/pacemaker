@@ -1,4 +1,4 @@
-/* $Id: pingd.c,v 1.1 2006/04/10 12:50:08 andrew Exp $ */
+/* $Id: pingd.c,v 1.2 2006/04/11 07:37:07 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -49,7 +49,7 @@
 /* GMainLoop *mainloop = NULL; */
 const char *crm_system_name = "pingd";
 
-#define OPTARGS	"V?p:a:d:s:S:h:D"
+#define OPTARGS	"V?p:a:d:s:S:h:Dm:"
 
 IPC_Channel *attrd = NULL;
 GMainLoop*  mainloop = NULL;
