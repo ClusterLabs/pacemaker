@@ -452,7 +452,7 @@ class ClusterManager(UserDict):
 	    return 1
 
         if not self.ns.WaitForNodeToComeUp(node):
-            self.log("WaitForNodeToComeUp %s filed" % node)
+            self.log("WaitForNodeToComeUp %s failed" % node)
             return 0
 
         patterns = []
@@ -473,6 +473,14 @@ class ClusterManager(UserDict):
 #          during StartOnebyOne
 #	self.rsh.remote_python_call(
 #	    node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/hostcache")
+
+        if not self.ns.WaitForNodeToComeUp(node):
+            self.log("Second WaitForNodeToComeUp %s failed" % node)
+            return 0
+
+	if self.StataCM(node) and self.cluster_stable(self["DeadTime"]):
+            self.log ("%s was already started" %(node))
+	    return 1
 
         if self.rsh(node, self["StartCmd"]) != 0:
             self.log ("Warn: Start command failed on node %s" %(node))
