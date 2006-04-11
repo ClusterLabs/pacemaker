@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.125 2006/04/10 07:45:03 andrew Exp $ */
+/* $Id: native.c,v 1.126 2006/04/11 07:27:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1980,9 +1980,24 @@ StartRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 gboolean
 PromoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 {
+	char *key = NULL;
+	GListPtr action_list = NULL;
 	crm_debug_2("Executing: %s", rsc->id);
 
 	CRM_CHECK(rsc->next_role == RSC_ROLE_MASTER, return FALSE);
+
+	key = start_key(rsc);
+	action_list = find_actions_exact(rsc->actions, key, next);
+	crm_free(key);
+
+	slist_iter(start, action_t, action_list, lpc,
+		   if(start->runnable == FALSE) {
+			   crm_debug("%s\tPromote %s (canceled)",
+				     next->details->uname, rsc->id);
+			   return TRUE;
+		   }
+		);
+	
 	crm_notice("%s\tPromote %s", next->details->uname, rsc->id);
 	promote_action(rsc, next, FALSE);
 	return TRUE;
