@@ -248,11 +248,11 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 				  fsa_cause2string(fsa_data->fsa_cause),
 				  fsa_data->origin);
 		}
-
+/*
 		if(fsa_actions & A_SHUTDOWN) {
 			crm_log_level = LOG_DEBUG_2;
 		}
-		
+*/	
 #ifdef FSA_TRACE
 		if(new_actions != A_NOTHING) {
 			crm_debug_2("Adding FSA actions %.16llx for %s/%s",
