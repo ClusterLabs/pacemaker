@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.82 2006/04/12 08:44:36 andrew Exp $ */
+/* $Id: graph.c,v 1.83 2006/04/12 09:06:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -169,8 +169,7 @@ update_action(action_t *action)
 		}
 		);
 
-	crm_debug_3("Action %s: %s", action->uuid, change?"update":"untouched");
-	return change;
+	return FALSE;
 }
 
 
