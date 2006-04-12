@@ -1,4 +1,4 @@
-/* $Id: xml_diff.c,v 1.7 2006/01/23 16:07:02 andrew Exp $ */
+/* $Id: xml_diff.c,v 1.8 2006/04/12 08:22:50 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -189,7 +189,7 @@ main(int argc, char **argv)
 		fprintf(stderr, "Input second XML fragment:");
 		object_2 = stdin2xml();
 
-	} else if(xml_file_1 != NULL) {
+	} else if(xml_file_2 != NULL) {
 		FILE *xml_strm = fopen(xml_file_2, "r");
 		if(xml_strm != NULL) {
 			crm_debug("Reading: %s", xml_file_2);
