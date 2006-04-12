@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.126 2006/04/11 07:27:20 andrew Exp $ */
+/* $Id: native.c,v 1.127 2006/04/12 08:23:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1491,21 +1491,21 @@ native_constraint_violated(
 		return FALSE;
 	}
 	
-	if(color_lh->details->pending
-	   && color_rh->details->pending) {
+	if(color_lh == NULL && color_rh == NULL) {
+		return matched;
+		
+	} else if(color_lh == NULL || color_rh == NULL) {
+		return !matched;
+		
+	} else if(color_lh->details->pending
+		  && color_rh->details->pending) {
 		candidate_nodes_lh = color_lh->details->candidate_nodes;
 		candidate_nodes_rh = color_rh->details->candidate_nodes;
 		
 	} else if(color_lh->details->pending == FALSE
 		  && color_rh->details->pending == FALSE) {
 
-		if(color_lh == NULL && color_rh == NULL) {
-			return matched;
-			
-		} else if(color_lh == NULL || color_rh == NULL) {
-			return !matched;
-
-		} else if(color_lh->details->chosen_node == NULL
+		if(color_lh->details->chosen_node == NULL
 			  && color_rh->details->chosen_node == NULL) {
 			return matched;
 
