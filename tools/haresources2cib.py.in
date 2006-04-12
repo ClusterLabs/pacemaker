@@ -396,7 +396,7 @@ if __name__=="__main__" :
 			group_index += 1
 			id_index += len(fields)
 		else :
-			print "can not parse this line:"+line
+			sys.stderr.write("can not parse this line:"+line+"\n")
 	if enable_stonith :
 		node_num = 0
 		for nodes in node_list :
@@ -406,3 +406,7 @@ if __name__=="__main__" :
 			id_index += 1
 			
 	print cib[0].toprettyxml()
+	sys.stderr.write("Notice:\n")
+	sys.stderr.write("Please move the cib.xml generated to /var/lib/heartbeat/crm/.\n")
+	sys.stderr.write("It must be owned and read/writeable by user @HA_CCMUSER@.\n")
+	sys.stderr.write("Or owned and read/writable by group @HA_APIGROUP@.\n")
