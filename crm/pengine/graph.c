@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.81 2006/04/10 12:17:38 andrew Exp $ */
+/* $Id: graph.c,v 1.82 2006/04/12 08:44:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,7 +51,6 @@ update_action_states(GListPtr actions)
 gboolean
 update_action(action_t *action)
 {
-	gboolean change = FALSE;
 	enum action_tasks task = no_action;
 	
 	crm_debug_3("Processing action %s: %s",
@@ -169,10 +168,6 @@ update_action(action_t *action)
 				break;
 		}
 		);
-
-	if(change) {
-		update_action(action);
-	}
 
 	crm_debug_3("Action %s: %s", action->uuid, change?"update":"untouched");
 	return change;
