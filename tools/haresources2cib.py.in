@@ -338,6 +338,8 @@ def get_directive_list(config, directive) :
 if __name__=="__main__" :
 	resource_file = "/etc/ha.d/haresources"
 	config_file = "/etc/ha.d/ha.cf"
+	target_file = "/var/lib/heartbeat/crm/cib.xml"
+	to_stdout = False
 	
 	# Process arguments...
 	skipthis = None
@@ -348,6 +350,8 @@ if __name__=="__main__" :
 			continue
 		elif args[i] == "--no-ocf" :
 			using_ocf = 0
+		elif args[i] == "--stdout" :
+			to_stdout = True
 		elif args[i] == "--no-monitor" :
 			using_mon = 0
 		elif args[i] == "--config" or args[i] == "-c" :
@@ -356,6 +360,7 @@ if __name__=="__main__" :
 		elif args[i] == "--help" or args[i] == "-h" :
 			print "usage: " + sys.argv[0]  \
 				+  " [--no-ocf]"\
+				+  " [--stdout]"\
 				+  " [--no-monitor]"\
 				+  " [--config|-c configfile]"\
 				+  " [--help|-h]"\
@@ -404,9 +409,13 @@ if __name__=="__main__" :
 		for stonith_host in stonith_host_list :
 			add_stonith_host(cib, stonith_host, id_index, node_num)
 			id_index += 1
-			
-	print cib[0].toprettyxml()
-	sys.stderr.write("Notice:\n")
-	sys.stderr.write("Please move the cib.xml generated to /var/lib/heartbeat/crm/.\n")
-	sys.stderr.write("It must be owned and read/writeable by user @HA_CCMUSER@.\n")
-	sys.stderr.write("Or owned and read/writable by group @HA_APIGROUP@.\n")
+	if to_stdout :		
+		print cib[0].toprettyxml()
+	elif os.access(target_file, os.F_OK) or os.access(target_file+".sig", os.F_OK) :
+		sys.stderr.write("cib.xml or cib.xml.sig exist in /var/lib/heartbeat/crm/\n")
+		sys.stderr.write("please remove them before generating new cib.xml\n")
+	else :
+		cib_file = open(target_file, "w")
+		cib_file.write(cib[0].toprettyxml())
+		cib_file.close()
+		os.system("chown  @HA_CCMUSER@.@HA_APIGROUP@ "+target_file)
