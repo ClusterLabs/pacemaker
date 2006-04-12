@@ -1,4 +1,4 @@
-/* $Id: iso8601.c,v 1.13 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: iso8601.c,v 1.14 2006/04/12 08:24:20 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1173,6 +1173,14 @@ is_date_sane(ha_time_t *a_date)
 int
 compare_date(ha_time_t *lhs, ha_time_t *rhs)
 {
+	if(lhs == NULL && rhs == NULL) {
+		return 0;
+	} else if(lhs == NULL) {
+		return -1;
+	} else if(rhs == NULL) {
+		return 1;		
+	}
+	
 	normalize_time(lhs);
 	normalize_time(rhs);
 
