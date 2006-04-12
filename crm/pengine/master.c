@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.12 2006/03/31 12:00:59 andrew Exp $ */
+/* $Id: master.c,v 1.13 2006/04/12 08:40:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -268,6 +268,10 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		crm_debug_2("Assigning priority for %s", child_rsc->id);
 		CRM_CHECK(child_rsc->color != NULL, continue);
 		chosen = child_rsc->color->details->chosen_node;
+
+		if(child_rsc->role == RSC_ROLE_STARTED) {
+			child_rsc->role = RSC_ROLE_SLAVE;
+		}
 		
 		switch(child_rsc->next_role) {
 			case RSC_ROLE_STARTED:
@@ -281,10 +285,12 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 				CRM_CHECK(chosen != NULL, break);
 
-				len = 8 + strlen(child_rsc->id);
+				len = 8 + strlen(child_rsc->graph_name);
 				crm_malloc0(attr_name, len);
-				sprintf(attr_name, "master-%s", child_rsc->id);
+				sprintf(attr_name, "master-%s", child_rsc->graph_name);
 				
+				crm_debug_2("looking for %s on %s", attr_name,
+					  chosen->details->uname);
 				attr_value = g_hash_table_lookup(
 					chosen->details->attrs, attr_name);
 
