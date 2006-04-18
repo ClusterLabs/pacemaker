@@ -1061,11 +1061,8 @@ handle_shutdown_request(HA_Message *stored_msg)
 		CRMD_STATE_INACTIVE, FALSE, __FUNCTION__);
 	crm_xml_add_int(node_state, XML_CIB_ATTR_SHUTDOWN,  (int)now);
 	
-	fsa_cib_conn->cmds->update(
-		fsa_cib_conn, XML_CIB_TAG_STATUS, node_state, NULL,
-		cib_quorum_override);
-
-	crm_log_xml_debug(node_state, "Shutdown update");
+	fsa_cib_anon_update(XML_CIB_TAG_STATUS,node_state, cib_quorum_override);
+	crm_log_xml_debug_2(node_state, "Shutdown update");
 	free_xml(node_state);
 
 	/* will be picked up by the TE as long as its running */
