@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.83 2006/04/12 09:06:00 andrew Exp $ */
+/* $Id: graph.c,v 1.84 2006/04/18 11:15:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -83,7 +83,7 @@ update_action(action_t *action)
 			
 		} else if(safe_str_eq(other->action->task, CRMD_ACTION_START)) {
 			const char *interval = g_hash_table_lookup(
-				action->extra, "interval");
+				action->extra, XML_LRM_ATTR_INTERVAL);
 			int interval_i = 0;
 			if(interval != NULL) {
 				interval_i = crm_parse_int(interval, NULL);
@@ -425,7 +425,7 @@ should_dump_action(action_t *action)
 
 	CRM_CHECK(action != NULL, return FALSE);
 
-	interval = g_hash_table_lookup(action->extra, "interval");
+	interval = g_hash_table_lookup(action->extra, XML_LRM_ATTR_INTERVAL);
 	if(action->optional) {
 		crm_debug_5("action %d was optional", action->id);
 		return FALSE;

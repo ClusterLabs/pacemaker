@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.127 2006/04/12 08:23:41 andrew Exp $ */
+/* $Id: native.c,v 1.128 2006/04/18 11:15:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -406,13 +406,18 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 		
 		is_optional = TRUE;
 		name = crm_element_value(operation, "name");
-		interval = crm_element_value(operation, "interval");
+		interval = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
 		interval_ms = crm_get_msec(interval);
 
 		if(interval_ms <= 0) {
 			continue;
 		}
 
+		value = crm_element_value(operation, "disabled");
+		if(crm_is_true(value)) {
+			continue;
+		}
+		
 		key = generate_op_key(rsc->graph_name, name, interval_ms);
 		if(start != NULL) {
 			crm_debug_3("Marking %s %s due to %s",
@@ -446,7 +451,7 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 					FALSE, TRUE, data_set);
 
 				mon->task = CRMD_ACTION_CANCEL;
-				add_hash_param(mon->extra, "interval", interval);
+				add_hash_param(mon->extra, XML_LRM_ATTR_INTERVAL, interval);
 				add_hash_param(mon->extra, "task", name);
 				
 				custom_action_order(
@@ -1630,7 +1635,7 @@ register_state(resource_t *rsc, node_t *on_node, notify_data_t *n_data)
 	entry->rsc = rsc;
 	entry->node = on_node;
 
-	crm_err("%s state: %s", rsc->id, role2text(rsc->next_role));
+	crm_debug_2("%s state: %s", rsc->id, role2text(rsc->next_role));
 
 	switch(rsc->next_role) {
 		case RSC_ROLE_STOPPED:

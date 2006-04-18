@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.129 2006/04/03 10:40:39 andrew Exp $ */
+/* $Id: utils.c,v 1.130 2006/04/18 11:15:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -418,6 +418,7 @@ pe_find_resource(GListPtr rsc_list, const char *id)
 		}
 	}
 	/* error */
+	crm_debug("No match for %s", id);
 	return NULL;
 }
 
@@ -850,7 +851,7 @@ unpack_operation(
 	int lpc = 0;
 	const char *value = NULL;
 	const char *fields[] = {
-		"interval",
+		XML_LRM_ATTR_INTERVAL,
 		"timeout",
 		"start_delay",
 	};
@@ -1017,6 +1018,7 @@ crm_data_t *
 find_rsc_op_entry(resource_t *rsc, const char *key) 
 {
 	const char *name = NULL;
+	const char *value = NULL;
 	const char *interval = NULL;
 	char *match_key = NULL;
 	crm_data_t *op = NULL;
@@ -1025,19 +1027,27 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 		rsc->ops_xml, operation, "op",
 
 		name = crm_element_value(operation, "name");
-		interval = crm_element_value(operation, "interval");
+		interval = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
+		value = crm_element_value(operation, "disabled");
+		if(crm_is_true(value)) {
+			crm_debug_2("%s disabled", ID(operation));
+			continue;
+		}
+		
+		match_key = generate_op_key(
+			rsc->graph_name, name, crm_get_msec(interval));
 
-		match_key = generate_op_key(rsc->graph_name,name,crm_get_msec(interval));
 		crm_debug_2("Matching %s with %s", key, match_key);
 		if(safe_str_eq(key, match_key)) {
 			op = operation;
 		}
 		crm_free(match_key);
+
 		if(op != NULL) {
-			break;
+			return op;
 		}
 		);
-	crm_debug_2("No matching for %s", key);
+	crm_debug_2("No match for %s", key);
 	return op;
 }
 
@@ -1651,7 +1661,7 @@ find_recurring_actions(GListPtr input, node_t *not_on_node)
 	
 	slist_iter(
 		action, action_t, input, lpc,
-		value = g_hash_table_lookup(action->extra, "interval");
+		value = g_hash_table_lookup(action->extra, XML_LRM_ATTR_INTERVAL);
 		if(value == NULL) {
 			/* skip */
 		} else if(safe_str_eq(CRMD_ACTION_CANCEL, action->task)) {

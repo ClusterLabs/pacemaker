@@ -80,6 +80,7 @@
           description   CDATA         #IMPLIED
           interval      CDATA         #IMPLIED
           timeout       CDATA         #IMPLIED
+          disabled	(true|1|false|0)   'false'
           role       (Master|Slave|Started|Stopped) 'Started'
           prereq     (nothing|quorum|fencing)   #IMPLIED
           on_fail    (nothing|block|stop|fence) #IMPLIED>

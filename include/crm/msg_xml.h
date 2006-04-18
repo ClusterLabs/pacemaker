@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.51 2006/04/05 07:37:37 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.52 2006/04/18 11:15:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -177,6 +177,7 @@
 #define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 #define XML_CIB_ATTR_STONITH	    	"stonith"
 
+#define XML_LRM_ATTR_INTERVAL		"interval"
 #define XML_LRM_ATTR_TASK		"operation"
 #define XML_LRM_ATTR_TASK_KEY		"operation_key"
 #define XML_LRM_ATTR_TARGET		"on_node"

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.183 2006/04/11 08:51:49 andrew Exp $ */
+/* $Id: unpack.c,v 1.184 2006/04/18 11:15:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1123,11 +1123,15 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	const char *param_digest = NULL;
 	char *local_param_digest = NULL;
 
+	crm_data_t *params = NULL;
+	
 	const char *id   = ID(xml_op);
 	const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
 	action_t *action = custom_action(rsc, crm_strdup(id), task, active_node,
 					 TRUE, FALSE, data_set);
 
+	CRM_CHECK(active_node != NULL, return FALSE);
+	
 	local_rsc_params = g_hash_table_new_full(
 		g_str_hash, g_str_equal,
 		g_hash_destroy_str, g_hash_destroy_str);
@@ -1145,8 +1149,11 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	pnow_digest = calculate_xml_digest(pnow, TRUE);
 	param_digest = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
 
+#if CRM_DEPRECATED_SINCE_2_0_4
 	if(param_digest == NULL) {
-		crm_data_t *params = find_xml_node(xml_op, XML_TAG_PARAMS, TRUE);
+		params = find_xml_node(xml_op, XML_TAG_PARAMS, TRUE);
+	}
+	if(params != NULL) {
 		crm_data_t *local_params = copy_xml(params);
 
 		crm_info("Faking parameter digest creation for %s", ID(xml_op));
@@ -1157,6 +1164,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 		
 		free_xml(local_params);
 	}
+#endif
 
 	if(safe_str_neq(pnow_digest, param_digest)) {
 		crm_data_t *params = find_xml_node(xml_op,XML_TAG_PARAMS,FALSE);
@@ -1170,8 +1178,9 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 		}
 
 		did_change = TRUE;
-		crm_info("Parameters to %s action changed: %s vs. %s",
-			 id, pnow_digest, param_digest);
+		crm_info("Parameters to %s on %s changed: %s vs. %s",
+			 ID(xml_op), active_node->details->uname,
+			 pnow_digest, crm_str(param_digest));
 		
 		
 		custom_action(rsc, crm_strdup(id), task, NULL,
@@ -1213,7 +1222,10 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	gboolean is_probe = FALSE;
 	gboolean is_stop_action = FALSE;
 
-	crm_data_t *params = find_xml_node(xml_op, XML_TAG_PARAMS, FALSE);
+	crm_data_t *params = NULL;
+#if CRM_DEPRECATED_SINCE_2_0_4
+	params = find_xml_node(xml_op, XML_TAG_PARAMS, FALSE);
+#endif
 	
 	CRM_CHECK(rsc    != NULL, return FALSE);
 	CRM_CHECK(node   != NULL, return FALSE);
@@ -1222,6 +1234,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	id = ID(xml_op);
 	task        = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
  	task_id     = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
+        interval_s  = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
 	task_status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
 	op_digest   = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
 
@@ -1243,13 +1256,16 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		    id, task, task_id, task_status, node->details->uname,
 		    role2text(rsc->role));
 
-	if(params != NULL) {
-		interval_s = crm_element_value(params, "interval");
-		if(interval_s != NULL) {
-			interval = crm_parse_int(interval_s, NULL);
-		}
+#if CRM_DEPRECATED_SINCE_2_0_4
+	if(interval_s == NULL && params != NULL) {
+		interval_s = crm_element_value(params, XML_LRM_ATTR_INTERVAL);
 	}
-
+#endif
+	
+	CRM_CHECK(interval_s != NULL,
+		  crm_err("Invalid rsc op: %s", id); return FALSE);
+	interval = crm_parse_int(interval_s, NULL);
+	
 	if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
 		is_probe = TRUE;
 
@@ -1265,44 +1281,17 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	} else if(safe_str_eq(task, CRMD_ACTION_STOP)) {
 		crm_debug_2("Ignoring stop params: %s", id);
 
-	} else if(op_digest == NULL && params == NULL) {
-		/* for older test cases */
-		crm_err("Skipping param check: %s %s", id, task);
-
 	} else if(is_probe || safe_str_eq(task, CRMD_ACTION_START)) {
 		crm_debug_2("Checking resource definition: %s", rsc->id);
 		check_action_definition(rsc, node, xml_op, data_set);
 		
-	} else if(interval > 0 && data_set->stop_action_orphans) {
+	} else if(interval > 0) {
 		crm_data_t *op_match = NULL;
 		
 		crm_debug_2("Checking parameters for %s %s", id, task);
-		
-		xml_child_iter_filter(
-			rsc->ops_xml, operation, "op",
-			
-			int value = 0;
-			const char *name = NULL;
+		op_match = find_rsc_op_entry(rsc, id);
 
-			value = crm_get_msec(
-				crm_element_value(operation, "interval"));
-			
-			if(interval <= 0) {
-				break;
-				
-			} else if(value != interval) {
-				continue;
-			}
-
-			name = crm_element_value(operation, "name");
-			if(safe_str_neq(name, task)) {
-				continue;
-			}
-
-			op_match = operation;
-			);
-		
-		if(op_match == NULL && interval > 0 && data_set->stop_action_orphans) {
+		if(op_match == NULL && data_set->stop_action_orphans) {
 			/* create a cancel action */
 			pe_config_warn("Orphan action will be stopped: %s", id);
 
@@ -1310,15 +1299,16 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				rsc, crm_strdup(id), CRMD_ACTION_CANCEL, node,
 				FALSE, TRUE, data_set);
 
-			add_hash_param(action->extra, "interval", interval_s);
-			add_hash_param(action->extra, "task", task);
+			add_hash_param(action->extra, XML_LRM_ATTR_TASK, task);
+			add_hash_param(action->extra,
+				       XML_LRM_ATTR_INTERVAL, interval_s);
 			
 			custom_action_order(
 				rsc, NULL, action,
 				rsc, stop_key(rsc), NULL,
 				pe_ordering_optional, data_set);
 
-		} else if(op_match == NULL && interval > 0) {
+		} else if(op_match == NULL) {
 			pe_config_warn("Ignoring orphan action: %s", id);
 
 		} else {
