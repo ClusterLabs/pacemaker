@@ -1,4 +1,4 @@
-/* $Id: cib_attrs.c,v 1.23 2006/04/10 13:05:55 andrew Exp $ */
+/* $Id: cib_attrs.c,v 1.24 2006/04/18 11:28:56 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -183,10 +183,10 @@ read_attr(cib_t *the_cib,
 	crm_data_t *xml_next = NULL;
 	crm_data_t *fragment = NULL;
 
+	attr_common_setup(section);
+
 	CRM_ASSERT(attr_value != NULL);
 	*attr_value = NULL;
-
-	attr_common_setup(section);
 	
 	crm_debug("Searching for attribute %s (section=%s, node=%s, set=%s)",
 		  attr_name, section, crm_str(node_uuid), crm_str(set_name));
