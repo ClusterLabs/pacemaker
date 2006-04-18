@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.13 2006/04/12 08:40:17 andrew Exp $ */
+/* $Id: master.c,v 1.14 2006/04/18 11:19:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -287,13 +287,21 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 				len = 8 + strlen(child_rsc->graph_name);
 				crm_malloc0(attr_name, len);
-				sprintf(attr_name, "master-%s", child_rsc->graph_name);
+				sprintf(attr_name, "master-%s", child_rsc->id);
 				
 				crm_debug_2("looking for %s on %s", attr_name,
 					  chosen->details->uname);
 				attr_value = g_hash_table_lookup(
 					chosen->details->attrs, attr_name);
 
+				if(attr_value == NULL) {
+					sprintf(attr_name, "master-%s", child_rsc->graph_name);
+					crm_debug_2("looking for %s on %s", attr_name,
+						    chosen->details->uname);
+					attr_value = g_hash_table_lookup(
+						chosen->details->attrs, attr_name);
+				}
+				
 				if(attr_value != NULL) {
 					crm_debug("%s=%s for %s", attr_name,
 						  crm_str(attr_value),
