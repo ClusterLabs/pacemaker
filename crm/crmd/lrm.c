@@ -324,7 +324,6 @@ gboolean
 build_operation_update(
 	crm_data_t *xml_rsc, lrm_op_t *op, const char *src, int lpc)
 {
-	char *tmp = NULL;
 	char *fail_state = NULL;
 	const char *state = NULL;
 	crm_data_t *xml_op = NULL;
@@ -470,18 +469,12 @@ build_operation_update(
 			break;
 	}
 	
-	tmp = crm_itoa(op->call_id);
-	crm_xml_add(xml_op,  XML_LRM_ATTR_CALLID, tmp);
-	crm_free(tmp);
+	crm_xml_add_int(xml_op,  XML_LRM_ATTR_CALLID, op->call_id);
 
-	/* set these on 'xml_rsc' too to make life easy for the TE */
-	tmp = crm_itoa(op->rc);
-	crm_xml_add(xml_op, XML_LRM_ATTR_RC, tmp);
-	crm_free(tmp);
-
-	tmp = crm_itoa(op->op_status);
-	crm_xml_add(xml_op, XML_LRM_ATTR_OPSTATUS, tmp);
-	crm_free(tmp);
+	/* set these on 'xml_rsc' too to make life easy for the PE */
+	crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op->rc);
+	crm_xml_add_int(xml_op, XML_LRM_ATTR_OPSTATUS, op->op_status);
+	crm_xml_add_int(xml_op, XML_LRM_ATTR_INTERVAL, op->interval);
 
 	if(safe_str_neq(op->op_type, CRMD_ACTION_STOP)) {
 		/* this will enable us to later determin that the
@@ -780,10 +773,8 @@ do_lrm_invoke(long long action,
 		crm_data_t *fragment = do_lrm_query(TRUE);
 		crm_info("Forcing a local LRM refresh");
 
-		rc = fsa_cib_conn->cmds->update(
-			fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
-			cib_quorum_override);
-
+		fsa_cib_update(XML_CIB_TAG_STATUS, fragment,
+			       cib_quorum_override, rc);
 		free_xml(fragment);
 		
 	} else if(crm_op != NULL && safe_str_eq(crm_op, CRM_OP_LRM_QUERY)) {
@@ -846,9 +837,21 @@ do_lrm_invoke(long long action,
 
 			op_key  = crm_element_value(xml_rsc, "operation_key");
 			params  = find_xml_node(input->xml, XML_TAG_ATTRS,TRUE);
+			
 			if(params != NULL) {
-				op_task = crm_element_value(params, "task");
+				op_task = crm_element_value(
+					params, XML_LRM_ATTR_TASK);
+#if CRM_DEPRECATED_SINCE_2_0_4
+				if(op_task == NULL) {
+					op_task = crm_element_value(params, "task");
+				}
+#endif
 			}
+			CRM_CHECK(params != NULL
+				  && op_task != NULL
+				  && op_key != NULL,
+				  return I_NULL);
+
 			op = construct_op(input->xml, id_from_cib, op_task);
 			
 			CRM_ASSERT(op != NULL);
@@ -1396,9 +1399,7 @@ do_update_resource(lrm_op_t* op)
 	 * the alternative however means blocking here for too long, which
 	 * isnt acceptable
 	 */
-	rc = fsa_cib_conn->cmds->update(
-		fsa_cib_conn, XML_CIB_TAG_STATUS, update, NULL,
-		cib_quorum_override);
+	fsa_cib_update(XML_CIB_TAG_STATUS, update, cib_quorum_override, rc);
 			
 	if(rc > 0) {
 		/* the return code is a call number, not an error code */
