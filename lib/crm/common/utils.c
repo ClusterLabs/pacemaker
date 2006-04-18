@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.46 2006/04/10 16:18:08 andrew Exp $ */
+/* $Id: utils.c,v 1.47 2006/04/18 11:23:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -923,6 +923,26 @@ generate_op_key(const char *rsc_id, const char *op_type, int interval)
 	CRM_CHECK(op_id != NULL, return NULL);
 	sprintf(op_id, "%s_%s_%d", rsc_id, op_type, interval);
 	return op_id;
+}
+
+gboolean
+parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
+{
+	char *interval_s = NULL;
+	char *key2 = NULL;
+
+	if(decodeNVpair(key, '_', rsc_id, &key2) == FALSE) {
+		crm_err("Couldn't find '_' in: %s", key);
+		return FALSE;
+	}
+
+	if(decodeNVpair(key2, '_', op_type, &interval_s) == FALSE) {
+		crm_err("Couldn't find '_' in: %s", key2);
+		return FALSE;
+	}
+
+	*interval = crm_parse_int(interval_s, NULL);
+	return TRUE;
 }
 
 char *

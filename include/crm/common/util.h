@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.33 2006/04/10 16:18:25 andrew Exp $ */
+/* $Id: util.h,v 1.34 2006/04/18 11:23:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -83,6 +83,9 @@ extern const char *op_status2text(op_status_t status);
 
 extern char *generate_op_key(
 	const char *rsc_id, const char *op_type, int interval);
+
+extern gboolean parse_op_key(
+	const char *key, char **rsc_id, char **op_type, int *interval);
 
 extern char *generate_notify_key(
 	const char *rsc_id, const char *notify_type, const char *op_type);
