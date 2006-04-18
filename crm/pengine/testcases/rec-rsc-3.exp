@@ -2,8 +2,8 @@
    <synapse id="0">
      <action_set>
        <rsc_op id="4" rsc_id="rsc1" operation="monitor" operation_key="rsc1_monitor_0" on_node="node1" on_node_uuid="uuid1">
-         <primitive id="rsc1" class="heartbeat" type="apache" on_stopfail="ignore"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" on_stopfail="ignore"/>
+         <primitive id="rsc1" class="heartbeat" type="apache"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -11,8 +11,8 @@
    <synapse id="1">
      <action_set>
        <rsc_op id="6" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="uuid1">
-         <primitive id="rsc1" class="heartbeat" type="apache" on_stopfail="ignore"/>
-         <attributes crm_feature_set="1.0.5" on_stopfail="ignore"/>
+         <primitive id="rsc1" class="heartbeat" type="apache"/>
+         <attributes crm_feature_set="1.0.5"/>
        </rsc_op>
      </action_set>
      <inputs>

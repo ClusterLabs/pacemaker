@@ -97,10 +97,10 @@
 	 <lrm>
 	   <lrm_resources>
              <lrm_resource id="rsc_c001n08" type="IPaddr" class="ocf" provider="heartbeat" provider="heartbeat">
-               <lrm_rsc_op operation="start" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="2" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n08_start_0" origin="build_active_RAs">
+               <lrm_rsc_op operation="start" interval="0" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="2" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n08_start_0" origin="build_active_RAs">
                  <parameters is_managed="1" ip="127.0.0.11"/>
                </lrm_rsc_op>
-               <lrm_rsc_op operation="monitor" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="3" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n08_monitor_5000" origin="build_active_RAs">
+               <lrm_rsc_op operation="monitor" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="3" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n08_monitor_5000" interval="5000" origin="build_active_RAs">
                  <parameters is_managed="1" ip="127.0.0.11" timeout="20000" interval="5000"/>
                </lrm_rsc_op>
              </lrm_resource>
@@ -111,18 +111,18 @@
          <lrm>
            <lrm_resources>
              <lrm_resource id="DcIPaddr" type="IPaddr" class="ocf" provider="heartbeat" provider="heartbeat">
-               <lrm_rsc_op operation="start" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="4" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="DcIPaddr_start_0" origin="build_active_RAs">
+               <lrm_rsc_op operation="start" interval="0" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="4" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="DcIPaddr_start_0" origin="build_active_RAs">
                  <parameters is_managed="1" ip="127.0.0.10"/>
                </lrm_rsc_op>
-               <lrm_rsc_op operation="monitor" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="5" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="DcIPaddr_monitor_5000" origin="build_active_RAs">
+               <lrm_rsc_op operation="monitor" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="5" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="DcIPaddr_monitor_5000" interval="5000" origin="build_active_RAs">
                  <parameters is_managed="1" ip="127.0.0.10" timeout="20000" interval="5000"/>
                </lrm_rsc_op>
              </lrm_resource>
              <lrm_resource id="rsc_c001n02" type="IPaddr" class="ocf" provider="heartbeat" provider="heartbeat">
-               <lrm_rsc_op operation="start" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="5" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n02_start_0" origin="build_active_RAs">
+               <lrm_rsc_op operation="start" interval="0" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="5" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n02_start_0" origin="build_active_RAs">
                  <parameters is_managed="1" ip="127.0.0.12"/>
                </lrm_rsc_op>
-               <lrm_rsc_op operation="monitor" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="6" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n02_monitor_5000" origin="build_active_RAs">
+               <lrm_rsc_op operation="monitor" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="6" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n02_monitor_5000" interval="5000" origin="build_active_RAs">
                  <parameters is_managed="1" ip="127.0.0.12" timeout="20000" interval="5000"/>
                </lrm_rsc_op>
              </lrm_resource>
@@ -133,10 +133,10 @@
          <lrm>
            <lrm_resources>
              <lrm_resource id="rsc_c001n03" type="IPaddr" class="ocf" provider="heartbeat" provider="heartbeat">
-               <lrm_rsc_op operation="start" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="3" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n03_start_0" origin="build_active_RAs">
+               <lrm_rsc_op operation="start" interval="0" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="3" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n03_start_0" origin="build_active_RAs">
                  <parameters is_managed="1" ip="127.0.0.13"/>
                </lrm_rsc_op>
-               <lrm_rsc_op operation="monitor" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="4" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n03_monitor_5000" origin="build_active_RAs">
+               <lrm_rsc_op operation="monitor" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="4" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n03_monitor_5000" interval="5000" origin="build_active_RAs">
                  <parameters is_managed="1" ip="127.0.0.13" timeout="20000" interval="5000"/>
                </lrm_rsc_op>
              </lrm_resource>
@@ -147,10 +147,10 @@
          <lrm>
            <lrm_resources>
              <lrm_resource id="rsc_c001n01" type="IPaddr" class="ocf" provider="heartbeat" provider="heartbeat">
-               <lrm_rsc_op operation="start" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="2" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n01_start_0" origin="build_active_RAs">
+               <lrm_rsc_op operation="start" interval="0" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="2" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n01_start_0" origin="build_active_RAs">
                  <parameters is_managed="1" ip="127.0.0.14"/>
                </lrm_rsc_op>
-               <lrm_rsc_op operation="monitor" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="3" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n01_monitor_5000" origin="build_active_RAs">
+               <lrm_rsc_op operation="monitor" transition_key="0:0fbef83f-5f7a-4928-b803-3cdca478e889" op_status="0" call_id="3" rc_code="0" transition_magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" rsc_state="running" id="rsc_c001n01_monitor_5000" interval="5000" origin="build_active_RAs">
                  <parameters is_managed="1" ip="127.0.0.14" timeout="20000" interval="5000"/>
                </lrm_rsc_op>
              </lrm_resource>

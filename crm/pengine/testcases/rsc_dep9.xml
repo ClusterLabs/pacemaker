@@ -58,10 +58,10 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+            <lrm_rsc_op id="rsc1" operation="start" interval="0" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
           </lrm_resource>
           <lrm_resource id="rsc4" class="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc4" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+            <lrm_rsc_op id="rsc4" operation="start" interval="0" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

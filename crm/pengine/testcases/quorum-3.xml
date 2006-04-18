@@ -21,10 +21,10 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc1" operation="start" rsc_state="running" op_status="0" rc_code="0" call_id="1"/>
+            <lrm_rsc_op id="rsc1" operation="start" interval="0" rsc_state="running" op_status="0" rc_code="0" call_id="1" op_digest="e84efa5734680badc7f0316955c76514"/>
 	  </lrm_resource>
           <lrm_resource id="rsc2" class="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc2" operation="start" rsc_state="running" op_status="0" rc_code="0" call_id="1"/>
+            <lrm_rsc_op id="rsc2" operation="start" interval="0" rsc_state="running" op_status="0" rc_code="0" call_id="1" op_digest="e84efa5734680badc7f0316955c76514"/>
 	  </lrm_resource>
         </lrm_resources>
       </lrm>

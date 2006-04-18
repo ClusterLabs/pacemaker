@@ -46,10 +46,10 @@
 	</lrm_agents>
         <lrm_resources>
           <lrm_resource id="rsc1:child_rsc1:0" class="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc1:child_rsc1:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+            <lrm_rsc_op id="rsc1:child_rsc1:0" operation="start" interval="0" rsc_state="started" op_status="0" rc_code="0" call_id="1" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
 	  </lrm_resource>
           <lrm_resource id="rsc2:child_rsc2:0" class="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc2:child_rsc2:0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+            <lrm_rsc_op id="rsc2:child_rsc2:0" operation="start" interval="0" rsc_state="started" op_status="0" rc_code="0" call_id="1" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
 	  </lrm_resource>
         </lrm_resources>
       </lrm>

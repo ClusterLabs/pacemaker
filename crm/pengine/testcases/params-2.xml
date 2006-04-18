@@ -40,7 +40,7 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc1" type="apache">
-            <lrm_rsc_op id="rsc1_start_0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+            <lrm_rsc_op id="rsc1_start_0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" operation="start" interval="0" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -49,7 +49,7 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc2" type="apache">
-            <lrm_rsc_op id="rsc2_start_0" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+            <lrm_rsc_op id="rsc2_start_0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" operation="start" interval="0" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -58,7 +58,7 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc3" type="apache">
-            <lrm_rsc_op id="rsc3_stop_0" operation="stop" rsc_state="stopped" op_status="0" rc_code="0" call_id="2"/>
+            <lrm_rsc_op id="rsc3_stop_0" operation="stop" interval="0" rsc_state="stopped" op_status="0" rc_code="0" call_id="2"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

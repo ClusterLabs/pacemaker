@@ -155,67 +155,67 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" type="ssh" class="stonith">
-            <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="10" rc_code="7" op_status="0">
+            <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="10" rc_code="7" op_status="0">
               <parameters clone="0" clone_max="4" te-target-rc="7" hostlist="c001n08 c001n02 c001n03 c001n01 " lrm-is-probe="true" crm_feature_set="1.0.3" clone_node_max="1"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_c001n08" type="IPaddr" class="ocf" provider="heartbeat" rsc_state="starting">
-            <lrm_rsc_op id="rsc_c001n08_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="6" rc_code="7" op_status="0">
+            <lrm_rsc_op id="rsc_c001n08_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="6" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.184" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="rsc_c001n08_start_0" operation="start" op_status="0" call_id="12" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
+            <lrm_rsc_op id="rsc_c001n08_start_0" operation="start" interval="0" op_status="0" call_id="12" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
               <parameters is_managed="1" ip="192.168.100.184" timeout="40000" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="rsc_c001n08_monitor_5000" operation="monitor" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="14" rc_code="0" op_status="0">
+            <lrm_rsc_op id="rsc_c001n08_monitor_5000" interval="5000" operation="monitor" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="14" rc_code="0" op_status="0">
               <parameters is_managed="1" ip="192.168.100.184" timeout="20000" crm_feature_set="1.0.3" interval="5000"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="group-1:child_192.168.100.182" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="group-1:child_192.168.100.182_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="4" rc_code="7" op_status="0">
+            <lrm_rsc_op id="group-1:child_192.168.100.182_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="4" rc_code="7" op_status="0">
               <parameters ip="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_c001n01" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="rsc_c001n01_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="9" rc_code="7" op_status="0">
+            <lrm_rsc_op id="rsc_c001n01_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="9" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.187" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_c001n02" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="rsc_c001n02_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="7" rc_code="7" op_status="0">
+            <lrm_rsc_op id="rsc_c001n02_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="7" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.185" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="group-1:child_192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="group-1:child_192.168.100.183_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="5" rc_code="7" op_status="0">
+            <lrm_rsc_op id="group-1:child_192.168.100.183_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="5" rc_code="7" op_status="0">
               <parameters ip="192.168.100.183" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="DcIPaddr" type="IPaddr" class="ocf" provider="heartbeat" rsc_state="starting">
-            <lrm_rsc_op id="DcIPaddr_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="2" rc_code="7" op_status="0">
+            <lrm_rsc_op id="DcIPaddr_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="2" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.180" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="DcIPaddr_start_0" operation="start" op_status="0" call_id="11" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
+            <lrm_rsc_op id="DcIPaddr_start_0" operation="start" interval="0" op_status="0" call_id="11" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
               <parameters is_managed="1" ip="192.168.100.180" timeout="40000" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="13" rc_code="0" op_status="0">
+            <lrm_rsc_op id="DcIPaddr_monitor_5000" interval="5000" operation="monitor" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="13" rc_code="0" op_status="0">
               <parameters is_managed="1" ip="192.168.100.180" timeout="20000" crm_feature_set="1.0.3" interval="5000"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_c001n03" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="rsc_c001n03_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="8" rc_code="7" op_status="0">
+            <lrm_rsc_op id="rsc_c001n03_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="8" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.186" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="group-1:child_192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="group-1:child_192.168.100.181_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="3" rc_code="7" op_status="0">
+            <lrm_rsc_op id="group-1:child_192.168.100.181_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="3" rc_code="7" op_status="0">
               <parameters ip="192.168.100.181" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="DoFencing:child_DoFencing:3" rsc_state="starting" type="ssh" class="stonith">
-            <lrm_rsc_op id="DoFencing:child_DoFencing:3_start_0" operation="start" op_status="0" call_id="15" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
+            <lrm_rsc_op id="DoFencing:child_DoFencing:3_start_0" op_digest="7407e6f6764ea3d8873a6d7edc910821" operation="start" interval="0" op_status="0" call_id="15" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
               <parameters clone="3" clone_max="4" timeout="20000" hostlist="c001n08 c001n02 c001n03 c001n01 " crm_feature_set="1.0.3" clone_node_max="1"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="DoFencing:child_DoFencing:3_monitor_20000" operation="monitor" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="16" rc_code="0" op_status="0">
+            <lrm_rsc_op id="DoFencing:child_DoFencing:3_monitor_20000" interval="20000" operation="monitor" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="16" rc_code="0" op_status="0">
               <parameters clone="3" clone_max="4" timeout="40000" hostlist="c001n08 c001n02 c001n03 c001n01 " crm_feature_set="1.0.3" interval="20000" clone_node_max="1"/>
             </lrm_rsc_op>
           </lrm_resource>
@@ -233,64 +233,64 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" type="ssh" class="stonith">
-            <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="10" rc_code="7" op_status="0">
+            <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="10" rc_code="7" op_status="0">
               <parameters clone="0" clone_max="4" te-target-rc="7" hostlist="c001n08 c001n02 c001n03 c001n01 " lrm-is-probe="true" crm_feature_set="1.0.3" clone_node_max="1"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="group-1:child_192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="group-1:child_192.168.100.181_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="3" rc_code="7" op_status="0">
+            <lrm_rsc_op id="group-1:child_192.168.100.181_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="3" rc_code="7" op_status="0">
               <parameters ip="192.168.100.181" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="DcIPaddr" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="DcIPaddr_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="2" rc_code="7" op_status="0">
+            <lrm_rsc_op id="DcIPaddr_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="2" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.180" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_c001n03" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="rsc_c001n03_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="8" rc_code="7" op_status="0">
+            <lrm_rsc_op id="rsc_c001n03_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="8" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.186" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_c001n01" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="rsc_c001n01_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="9" rc_code="7" op_status="0">
+            <lrm_rsc_op id="rsc_c001n01_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="9" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.187" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="group-1:child_192.168.100.182" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="group-1:child_192.168.100.182_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="4" rc_code="7" op_status="0">
+            <lrm_rsc_op id="group-1:child_192.168.100.182_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="4" rc_code="7" op_status="0">
               <parameters ip="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_c001n08" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="rsc_c001n08_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="6" rc_code="7" op_status="0">
+            <lrm_rsc_op id="rsc_c001n08_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="6" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.184" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_c001n02" type="IPaddr" class="ocf" provider="heartbeat" rsc_state="starting">
-            <lrm_rsc_op id="rsc_c001n02_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="7" rc_code="7" op_status="0">
+            <lrm_rsc_op id="rsc_c001n02_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="7" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.185" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="rsc_c001n02_start_0" operation="start" op_status="0" call_id="12" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
+            <lrm_rsc_op id="rsc_c001n02_start_0" operation="start" interval="0" op_status="0" call_id="12" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
               <parameters is_managed="1" ip="192.168.100.185" timeout="40000" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="rsc_c001n02_monitor_5000" operation="monitor" origin="do_update_resource" transition_key="2:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;2:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="14" rc_code="0" op_status="0">
+            <lrm_rsc_op id="rsc_c001n02_monitor_5000" interval="5000" operation="monitor" origin="do_update_resource" transition_key="2:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;2:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="14" rc_code="0" op_status="0">
               <parameters is_managed="1" ip="192.168.100.185" timeout="20000" crm_feature_set="1.0.3" interval="5000"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="group-1:child_192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="group-1:child_192.168.100.183_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="5" rc_code="7" op_status="0">
+            <lrm_rsc_op id="group-1:child_192.168.100.183_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="5" rc_code="7" op_status="0">
               <parameters ip="192.168.100.183" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="DoFencing:child_DoFencing:1" type="ssh" class="stonith" rsc_state="starting">
-            <lrm_rsc_op id="DoFencing:child_DoFencing:1_monitor_0" operation="monitor" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="11" rc_code="7" op_status="0">
+            <lrm_rsc_op id="DoFencing:child_DoFencing:1_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="11" rc_code="7" op_status="0">
               <parameters clone="1" clone_max="4" te-target-rc="7" hostlist="c001n08 c001n02 c001n03 c001n01 " lrm-is-probe="true" crm_feature_set="1.0.3" clone_node_max="1"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="DoFencing:child_DoFencing:1_start_0" operation="start" op_status="0" call_id="13" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
+            <lrm_rsc_op id="DoFencing:child_DoFencing:1_start_0" op_digest="7407e6f6764ea3d8873a6d7edc910821" operation="start" interval="0" op_status="0" call_id="13" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
               <parameters clone="1" clone_max="4" timeout="20000" hostlist="c001n08 c001n02 c001n03 c001n01 " crm_feature_set="1.0.3" clone_node_max="1"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="DoFencing:child_DoFencing:1_monitor_20000" operation="monitor" origin="do_update_resource" transition_key="2:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;2:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="15" rc_code="0" op_status="0">
+            <lrm_rsc_op id="DoFencing:child_DoFencing:1_monitor_20000" interval="20000" operation="monitor" origin="do_update_resource" transition_key="2:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;2:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="15" rc_code="0" op_status="0">
               <parameters clone="1" clone_max="4" timeout="40000" hostlist="c001n08 c001n02 c001n03 c001n01 " crm_feature_set="1.0.3" interval="20000" clone_node_max="1"/>
             </lrm_rsc_op>
           </lrm_resource>
@@ -308,61 +308,61 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" type="ssh" class="stonith">
-            <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="10" rc_code="7" op_status="0">
+            <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="10" rc_code="7" op_status="0">
               <parameters clone="0" clone_max="4" te-target-rc="7" hostlist="c001n08 c001n02 c001n03 c001n01 " lrm-is-probe="true" crm_feature_set="1.0.3" clone_node_max="1"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="group-1:child_192.168.100.182" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="group-1:child_192.168.100.182_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="4" rc_code="7" op_status="0">
+            <lrm_rsc_op id="group-1:child_192.168.100.182_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="4" rc_code="7" op_status="0">
               <parameters ip="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_c001n08" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="rsc_c001n08_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="6" rc_code="7" op_status="0">
+            <lrm_rsc_op id="rsc_c001n08_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="6" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.184" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="DcIPaddr" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="DcIPaddr_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="2" rc_code="7" op_status="0">
+            <lrm_rsc_op id="DcIPaddr_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="2" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.180" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="group-1:child_192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="group-1:child_192.168.100.183_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="5" rc_code="7" op_status="0">
+            <lrm_rsc_op id="group-1:child_192.168.100.183_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="5" rc_code="7" op_status="0">
               <parameters ip="192.168.100.183" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_c001n02" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="rsc_c001n02_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="7" rc_code="7" op_status="0">
+            <lrm_rsc_op id="rsc_c001n02_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="7" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.185" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_c001n01" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="rsc_c001n01_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="9" rc_code="7" op_status="0">
+            <lrm_rsc_op id="rsc_c001n01_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="9" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.187" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="group-1:child_192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="group-1:child_192.168.100.181_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="3" rc_code="7" op_status="0">
+            <lrm_rsc_op id="group-1:child_192.168.100.181_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="3" rc_code="7" op_status="0">
               <parameters ip="192.168.100.181" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_c001n03" type="IPaddr" class="ocf" provider="heartbeat" rsc_state="starting">
-            <lrm_rsc_op id="rsc_c001n03_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="8" rc_code="7" op_status="0">
+            <lrm_rsc_op id="rsc_c001n03_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="8" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.186" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="rsc_c001n03_start_0" operation="start" op_status="0" call_id="11" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
+            <lrm_rsc_op id="rsc_c001n03_start_0" operation="start" interval="0" op_status="0" call_id="11" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
               <parameters is_managed="1" ip="192.168.100.186" timeout="40000" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="rsc_c001n03_monitor_5000" operation="monitor" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="13" rc_code="0" op_status="0">
+            <lrm_rsc_op id="rsc_c001n03_monitor_5000" interval="5000" operation="monitor" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="13" rc_code="0" op_status="0">
               <parameters is_managed="1" ip="192.168.100.186" timeout="20000" crm_feature_set="1.0.3" interval="5000"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="DoFencing:child_DoFencing:2" rsc_state="starting" type="ssh" class="stonith">
-            <lrm_rsc_op id="DoFencing:child_DoFencing:2_start_0" operation="start" op_status="0" call_id="12" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
+            <lrm_rsc_op id="DoFencing:child_DoFencing:2_start_0" op_digest="7407e6f6764ea3d8873a6d7edc910821" operation="start" interval="0" op_status="0" call_id="12" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
               <parameters clone="2" clone_max="4" timeout="20000" hostlist="c001n08 c001n02 c001n03 c001n01 " crm_feature_set="1.0.3" clone_node_max="1"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="DoFencing:child_DoFencing:2_monitor_20000" operation="monitor" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="14" rc_code="0" op_status="0">
+            <lrm_rsc_op id="DoFencing:child_DoFencing:2_monitor_20000" interval="20000" operation="monitor" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="14" rc_code="0" op_status="0">
               <parameters clone="2" clone_max="4" timeout="40000" hostlist="c001n08 c001n02 c001n03 c001n01 " crm_feature_set="1.0.3" interval="20000" clone_node_max="1"/>
             </lrm_rsc_op>
           </lrm_resource>
@@ -380,77 +380,77 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" type="ssh" class="stonith" rsc_state="starting">
-            <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="10" rc_code="7" op_status="0">
+            <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="10" rc_code="7" op_status="0">
               <parameters clone="0" clone_max="4" te-target-rc="7" hostlist="c001n08 c001n02 c001n03 c001n01 " lrm-is-probe="true" crm_feature_set="1.0.3" clone_node_max="1"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" op_status="0" call_id="14" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
+            <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" op_digest="7407e6f6764ea3d8873a6d7edc910821" operation="start" interval="0" op_status="0" call_id="14" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
               <parameters clone="0" clone_max="4" timeout="20000" hostlist="c001n08 c001n02 c001n03 c001n01 " crm_feature_set="1.0.3" clone_node_max="1"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_20000" operation="monitor" origin="do_update_resource" transition_key="2:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;2:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="18" rc_code="0" op_status="0">
+            <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_20000" interval="20000" operation="monitor" origin="do_update_resource" transition_key="2:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;2:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="18" rc_code="0" op_status="0">
               <parameters clone="0" clone_max="4" timeout="40000" hostlist="c001n08 c001n02 c001n03 c001n01 " crm_feature_set="1.0.3" interval="20000" clone_node_max="1"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="group-1:child_192.168.100.182" type="IPaddr" class="ocf" provider="heartbeat" rsc_state="starting">
-            <lrm_rsc_op id="group-1:child_192.168.100.182_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="4" rc_code="7" op_status="0">
+            <lrm_rsc_op id="group-1:child_192.168.100.182_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="4" rc_code="7" op_status="0">
               <parameters ip="192.168.100.182" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="group-1:child_192.168.100.182_start_0" operation="start" op_status="0" call_id="15" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
+            <lrm_rsc_op id="group-1:child_192.168.100.182_start_0" operation="start" interval="0" op_status="0" call_id="15" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
               <parameters ip="192.168.100.182" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="group-1:child_192.168.100.182_monitor_5000" operation="monitor" origin="do_update_resource" transition_key="2:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;2:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="16" rc_code="0" op_status="0">
+            <lrm_rsc_op id="group-1:child_192.168.100.182_monitor_5000" interval="5000" operation="monitor" origin="do_update_resource" transition_key="2:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;2:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="16" rc_code="0" op_status="0">
               <parameters ip="192.168.100.182" timeout="20000" crm_feature_set="1.0.3" interval="5000"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_c001n08" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="rsc_c001n08_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="6" rc_code="7" op_status="0">
+            <lrm_rsc_op id="rsc_c001n08_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="6" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.184" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_c001n02" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="rsc_c001n02_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="7" rc_code="7" op_status="0">
+            <lrm_rsc_op id="rsc_c001n02_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="7" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.185" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="DcIPaddr" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="DcIPaddr_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="2" rc_code="7" op_status="0">
+            <lrm_rsc_op id="DcIPaddr_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="2" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.180" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_c001n01" type="IPaddr" class="ocf" provider="heartbeat" rsc_state="starting">
-            <lrm_rsc_op id="rsc_c001n01_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="9" rc_code="7" op_status="0">
+            <lrm_rsc_op id="rsc_c001n01_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="9" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.187" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="rsc_c001n01_start_0" operation="start" op_status="0" call_id="12" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
+            <lrm_rsc_op id="rsc_c001n01_start_0" operation="start" interval="0" op_status="0" call_id="12" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
               <parameters is_managed="1" ip="192.168.100.187" timeout="40000" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="rsc_c001n01_monitor_5000" operation="monitor" origin="do_update_resource" transition_key="2:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;2:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="17" rc_code="0" op_status="0">
+            <lrm_rsc_op id="rsc_c001n01_monitor_5000" interval="5000" operation="monitor" origin="do_update_resource" transition_key="2:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;2:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="17" rc_code="0" op_status="0">
               <parameters is_managed="1" ip="192.168.100.187" timeout="20000" crm_feature_set="1.0.3" interval="5000"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_c001n03" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="rsc_c001n03_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="8" rc_code="7" op_status="0">
+            <lrm_rsc_op id="rsc_c001n03_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="8" rc_code="7" op_status="0">
               <parameters is_managed="1" ip="192.168.100.186" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="group-1:child_192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat" rsc_state="starting">
-            <lrm_rsc_op id="group-1:child_192.168.100.183_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="5" rc_code="7" op_status="0">
+            <lrm_rsc_op id="group-1:child_192.168.100.183_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="5" rc_code="7" op_status="0">
               <parameters ip="192.168.100.183" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="group-1:child_192.168.100.183_start_0" operation="start" op_status="0" call_id="19" rc_code="0" origin="do_update_resource" transition_key="2:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;2:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
+            <lrm_rsc_op id="group-1:child_192.168.100.183_start_0" operation="start" interval="0" op_status="0" call_id="19" rc_code="0" origin="do_update_resource" transition_key="2:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;2:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
               <parameters ip="192.168.100.183" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="group-1:child_192.168.100.183_monitor_5000" operation="monitor" origin="do_update_resource" transition_key="2:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;2:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="20" rc_code="0" op_status="0">
+            <lrm_rsc_op id="group-1:child_192.168.100.183_monitor_5000" interval="5000" operation="monitor" origin="do_update_resource" transition_key="2:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;2:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="20" rc_code="0" op_status="0">
               <parameters ip="192.168.100.183" timeout="20000" crm_feature_set="1.0.3" interval="5000"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="group-1:child_192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat" rsc_state="starting">
-            <lrm_rsc_op id="group-1:child_192.168.100.181_monitor_0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="3" rc_code="7" op_status="0">
+            <lrm_rsc_op id="group-1:child_192.168.100.181_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running" call_id="3" rc_code="7" op_status="0">
               <parameters ip="192.168.100.181" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="group-1:child_192.168.100.181_start_0" operation="start" op_status="0" call_id="11" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
+            <lrm_rsc_op id="group-1:child_192.168.100.181_start_0" operation="start" interval="0" op_status="0" call_id="11" rc_code="0" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="0:0;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="running">
               <parameters ip="192.168.100.181" crm_feature_set="1.0.3"/>
             </lrm_rsc_op>
-            <lrm_rsc_op id="group-1:child_192.168.100.181_monitor_5000" operation="monitor" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="4:7;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="monitor_failed" call_id="13" rc_code="7" op_status="4">
+            <lrm_rsc_op id="group-1:child_192.168.100.181_monitor_5000" interval="5000" operation="monitor" origin="do_update_resource" transition_key="1:13bb4a01-894d-44ea-b31f-9d506abf89a6" transition_magic="4:7;1:13bb4a01-894d-44ea-b31f-9d506abf89a6" rsc_state="monitor_failed" call_id="13" rc_code="7" op_status="4">
               <parameters ip="192.168.100.181" timeout="20000" crm_feature_set="1.0.3" interval="5000"/>
             </lrm_rsc_op>
           </lrm_resource>

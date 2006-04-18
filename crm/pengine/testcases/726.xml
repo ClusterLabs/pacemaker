@@ -124,29 +124,29 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
-            <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" origin="build_active_RAs" transition_key="0:0" transition_magic="0:0;0:some_key" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="DoFencing:child_DoFencing:0_stop_0" operation="stop" origin="build_active_RAs" transition_key="0:1" transition_magic="0:0;1:some_key" rsc_state="stopped" call_id="5" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" op_digest="f65ec266c6d4c0a4b781dca7efd56169" operation="start" interval="0" origin="build_active_RAs" transition_key="0:0" transition_magic="0:0;0:some_key" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="DoFencing:child_DoFencing:0_stop_0" operation="stop" interval="0" origin="build_active_RAs" transition_key="0:1" transition_magic="0:0;1:some_key" rsc_state="stopped" call_id="5" rc_code="0" op_status="0"/>
           </lrm_resource>
           <lrm_resource id="rsc_ibm1" class="ocf" provider="heartbeat" type="IPaddr">
-            <lrm_rsc_op id="rsc_ibm1_start_0" operation="start" origin="build_active_RAs" transition_key="0:1" transition_magic="0:0;1:some_key" rsc_state="running" call_id="7" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_ibm1_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1">
+            <lrm_rsc_op id="rsc_ibm1_start_0" op_digest="d8eeae5f6724dfcab8f57ef54367eb0a" operation="start" interval="0" origin="build_active_RAs" transition_key="0:1" transition_magic="0:0;1:some_key" rsc_state="running" call_id="7" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_ibm1_monitor_5000" interval="5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1">
 	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.12"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="rsc_test03" class="ocf" provider="heartbeat" type="IPaddr">
-            <lrm_rsc_op id="rsc_test03_start_0" operation="start" origin="build_active_RAs" transition_key="0:1" transition_magic="0:0;1:some_key" rsc_state="running" call_id="8" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_test03_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1">
+            <lrm_rsc_op id="rsc_test03_start_0" op_digest="74307acd7ffa84f71fe8a46100cdbbb0" operation="start" interval="0" origin="build_active_RAs" transition_key="0:1" transition_magic="0:0;1:some_key" rsc_state="running" call_id="8" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="rsc_test03_monitor_5000" interval="5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1">
 	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.14"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="DcIPaddr" provider="heartbeat" class="ocf" type="IPaddr">
-            <lrm_rsc_op id="DcIPaddr_start_0" operation="start" origin="build_active_RAs" transition_key="0:1" transition_magic="0:0;1:some_key" rsc_state="running" call_id="6" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1">
+            <lrm_rsc_op id="DcIPaddr_start_0" op_digest="21ccbd2b8e65014ca7b36a2070642a2e" operation="start" interval="0" origin="build_active_RAs" transition_key="0:1" transition_magic="0:0;1:some_key" rsc_state="running" call_id="6" rc_code="0" op_status="0"/>
+            <lrm_rsc_op id="DcIPaddr_monitor_5000" interval="5000" operation="monitor" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1">
 	      <parameters crm_feature_set="1.0.4" interval="5000" timeout="20000" ip="127.0.0.10"/>
             </lrm_rsc_op>
           </lrm_resource>
           <lrm_resource id="DoFencing:child_DoFencing:1" rsc_state="starting" op_status="-1" rc_code="-1" class="stonith" type="ssh">
-            <lrm_rsc_op id="DoFencing:child_DoFencing:1_start_0" operation="start" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1"/>
+            <lrm_rsc_op id="DoFencing:child_DoFencing:1_start_0" op_digest="f65ec266c6d4c0a4b781dca7efd56169" operation="start" interval="0" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -162,7 +162,7 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" rsc_state="starting" op_status="-1" rc_code="-1" class="stonith" type="ssh">
-            <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1"/>
+            <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" op_digest="f65ec266c6d4c0a4b781dca7efd56169" operation="start" interval="0" op_status="-1" rc_code="-1" origin="cib_action_update" transition_id="1" transition_key="-1:1" transition_magic="-1:-1;1:some_key" call_id="-1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

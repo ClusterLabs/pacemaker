@@ -104,7 +104,7 @@
      <action_set>
        <rsc_op id="4" rsc_id="rsc_c001n02" operation="cancel" operation_key="rsc_c001n02_monitor_5000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="rsc_c001n02" class="ocf" provider="heartbeat" type="IPaddr" is_managed="1"/>
-         <attributes crm_feature_set="1.0.5" interval="5000" task="monitor" is_managed="1" ip="127.0.0.12"/>
+         <attributes crm_feature_set="1.0.5" operation="monitor" interval="5000" is_managed="1" ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
      <inputs/>

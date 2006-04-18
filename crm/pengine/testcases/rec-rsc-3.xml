@@ -10,7 +10,11 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="heartbeat" type="apache" on_stopfail="ignore"/>
+      <primitive id="rsc1" class="heartbeat" type="apache">
+	<operations>
+	  <op id="rsc1-stop" name="stop" on_fail="ignore"/>
+	</operations>
+      </primitive>
     </resources>
     <constraints/>
   </configuration>
@@ -20,7 +24,7 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc1_stop_0" operation="stop" rsc_state="stop_failed" op_status="4" rc_code="6" call_id="1"/>
+            <lrm_rsc_op id="rsc1_stop_0" operation="stop" interval="0" rsc_state="stop_failed" op_status="4" rc_code="6" call_id="1"/>
 	  </lrm_resource>
         </lrm_resources>
       </lrm>
