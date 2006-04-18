@@ -422,9 +422,7 @@ finalize_join(const char *caller)
 	crm_debug_3("Update %s in the CIB to our uuid: %s",
 		    XML_ATTR_DC_UUID, crm_element_value(cib, XML_ATTR_DC_UUID));
 	
-	fsa_cib_conn->cmds->update(
-		fsa_cib_conn, NULL, cib, NULL, cib_quorum_override);
-
+	fsa_cib_anon_update(NULL, cib, cib_quorum_override);
 	free_xml(cib);
 	
 	crm_debug_3("Bumping the epoch and syncing to %d clients",
@@ -524,10 +522,8 @@ do_dc_join_ack(long long action,
 	 * We dont need to notify the TE of these updates, a transition will
 	 *   be started in due time
 	 */
-	call_id = fsa_cib_conn->cmds->update(
-		fsa_cib_conn, XML_CIB_TAG_STATUS, join_ack->xml, NULL,
-		cib_scope_local|cib_quorum_override);
-
+	fsa_cib_update(XML_CIB_TAG_STATUS, join_ack->xml,
+		       cib_scope_local|cib_quorum_override, call_id);
 	add_cib_op_callback(
 		call_id, FALSE, NULL, join_update_complete_callback);
  	crm_debug("join-%d: Registered callback for LRM update %d",

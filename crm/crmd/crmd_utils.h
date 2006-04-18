@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.23 2006/04/09 14:38:04 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.24 2006/04/18 10:59:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,6 +30,25 @@ extern void update_local_cib_adv(
 	crm_data_t *msg_data, gboolean do_now, const char *raised_from);
 
 #define update_local_cib(data) update_local_cib_adv(data, TRUE, __FUNCTION__)
+
+#define fsa_cib_update(section, data, options, call_id)			\
+	if(fsa_cib_conn != NULL) {					\
+		call_id = fsa_cib_conn->cmds->update(			\
+			fsa_cib_conn, section, data, NULL, options);	\
+									\
+	} else {							\
+		crm_err("No CIB connection available");			\
+	}
+
+#define fsa_cib_anon_update(section, data, options)			\
+	if(fsa_cib_conn != NULL) {					\
+		fsa_cib_conn->cmds->update(				\
+			fsa_cib_conn, section, data, NULL, options);	\
+									\
+	} else {							\
+		crm_err("No CIB connection available");			\
+	}
+
 
 extern long long toggle_bit   (long long  action_list, long long action);
 extern long long clear_bit    (long long  action_list, long long action);

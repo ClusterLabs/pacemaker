@@ -388,8 +388,8 @@ crmd_client_status_callback(const char * node, const char * client,
 		/* it is safe to keep these updates on the local node
 		 * each node updates their own CIB
 		 */
-		fsa_cib_conn->cmds->update(
-			fsa_cib_conn, XML_CIB_TAG_STATUS, update, NULL,
+		fsa_cib_anon_update(
+			XML_CIB_TAG_STATUS, update,
 			cib_inhibit_bcast|cib_scope_local|cib_quorum_override);
 
 		free_xml(update);

@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.102 2006/04/06 11:05:53 andrew Exp $ */
+/* $Id: ccm.c,v 1.103 2006/04/18 10:59:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -648,8 +648,7 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
 				     ghash_update_cib_node, &update_data);
 	}		
 	
-	call_id = fsa_cib_conn->cmds->update(
-		fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,call_options);
+	fsa_cib_update(XML_CIB_TAG_STATUS, fragment, call_options, call_id);
 	
 	add_cib_op_callback(call_id, FALSE, NULL, ccm_node_update_complete);
 	free_xml(fragment);
