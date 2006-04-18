@@ -53,6 +53,8 @@ class RemoteExec:
         #        -B: batch mode, -q: no stats (quiet)
         self.CpCommand = "@SCP@ -B -q"
 
+        self.OurNode=string.lower(os.uname()[1])
+        
     def setcmd(self, rshcommand):
 
         '''Set the name of the remote shell command'''
@@ -70,7 +72,11 @@ class RemoteExec:
         args= args[0]
         sysname = args[0]
         command = args[1]
-        ret = self.Command + " " + sysname + " '" + self._fixcmd(command) + "'"
+
+	if sysname == self.OurNode or sysname == "localhost":
+	    ret = self._fixcmd(command)
+	else:
+	    ret = self.Command + " " + sysname + " '" + self._fixcmd(command) + "'"
         #print ("About to run %s\n" % ret)
         return ret
 
@@ -147,19 +153,29 @@ class RemoteExec:
                 return rc
             print "Retrying command %s" % sshnoBlock
         return rc
-        
-    def remote_python_call(self, node, module, func, *args):
+ 
+    def remote_py(self, node, module, func, *args):
         '''Execute a remote python function
            If the call success, lastrc == 0 and return result.
            If the call fail, lastrc == 1 and return the reason (string)
         '''
         encode_args = binascii.b2a_base64(pickle.dumps(args))
-        result = self.readaline(node, \
+        result = self.readlines(node, \
             string.join(["@libdir@/heartbeat/cts/CTSproxy.py",module,func,encode_args]))
-        if self.lastrc == 0 :
-            return pickle.loads(binascii.a2b_base64(result))
+	
+	if result != None:
+	    result.pop()
+
+	if self.lastrc == 0:
+	    last_line=""
+	    if result != None:
+		array_len = len(result)
+		if array_len > 0:
+		    last_line=result.pop()
+		    #print "result: %s" % repr(last_line)
+		    return pickle.loads(binascii.a2b_base64(last_line)), result
         
-        return result
+        return -1, result
 
 class LogWatcher:
 

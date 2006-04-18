@@ -137,8 +137,8 @@ class LinuxHAv2(HeartbeatCM):
     def install_config(self, node):
         if not self.CIBsync.has_key(node) and self.Env["ClobberCIB"] == 1:
             self.CIBsync[node] = 1
-	    self.rsh.remote_python_call(node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
-	    self.rsh.remote_python_call(node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig")
+	    self.rsh.remote_py(node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
+	    self.rsh.remote_py(node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig")
 
 	    # Only install the CIB on the first node, all the other ones will pick it up from there
 	    if self.cib_installed == 1:
@@ -163,7 +163,7 @@ class LinuxHAv2(HeartbeatCM):
                     "root@" + (self["CIBfile"]%node)):
                     raise ValueError("Can not scp file to %s "%node)
 	
-	    self.rsh.remote_python_call(node, "os", "system", "chown @HA_CCMUSER@ @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
+	    self.rsh.remote_py(node, "os", "system", "chown @HA_CCMUSER@ @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
 
     def prepare(self):
         '''Finish the Initialization process. Prepare to test...'''
