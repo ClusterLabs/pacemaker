@@ -610,6 +610,7 @@ class StonithdTest(StonithTest):
     def __init__(self, cm, timeout=600):
         StonithTest.__init__(self, cm, timeout=600)
         self.name="Stonithd"
+        self.startall = SimulStartLite(cm)
         self.start = StartTest(cm)
         self.stop = StopTest(cm)
         self.init_node = None
@@ -638,15 +639,8 @@ class StonithdTest(StonithTest):
         while self.init_node == target_node:
             self.init_node = self.CM.Env.RandomNode()
 
-        if self.CM.ShouldBeStatus[target_node] == self.CM["down"]:
-            if not self.start(target_node):
-                self.CM.log("Node %s (target) failed to start"%target_node)
-                return None
-
-        if self.CM.ShouldBeStatus[self.init_node] == self.CM["down"]:
-            if not self.start(self.init_node):
-                self.CM.log("Node %s (init) failed to start"%self.init_node)
-                return None
+        if not self.startall(None):
+            return self.failure("Test setup failed")
 
         return 1
         
