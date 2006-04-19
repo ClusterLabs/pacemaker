@@ -213,7 +213,7 @@
 <!-- Annotated version -->
 
 <!ELEMENT status (node_state*)>
-<!ELEMENT node_state ((transient_attributes|lrm), (transient_attributes|lrm))>
+<!ELEMENT node_state (transient_attributes|lrm)*>
 <!ATTLIST node_state
         id              CDATA                   #REQUIRED
         uname           CDATA                   #REQUIRED
