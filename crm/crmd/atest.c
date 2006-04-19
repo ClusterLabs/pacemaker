@@ -1,4 +1,4 @@
-/* $Id: atest.c,v 1.9 2006/04/18 12:19:17 andrew Exp $ */
+/* $Id: atest.c,v 1.10 2006/04/19 06:08:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,41 +29,9 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <apphb.h>
-
-#include <clplumbing/ipc.h>
-#include <clplumbing/Gmain_timeout.h>
-#include <clplumbing/cl_log.h>
-#include <clplumbing/cl_signal.h>
-#include <clplumbing/lsb_exitcodes.h>
-#include <clplumbing/uids.h>
-#include <clplumbing/realtime.h>
-#include <clplumbing/GSource.h>
-#include <clplumbing/cl_poll.h>
-#include <clplumbing/coredumps.h>
-
 #include <crm/crm.h>
-#include <crm/common/ctrl.h>
-#include <crm/common/ipc.h>
-#include <crm/common/xml.h>
-
-#include <crmd.h>
-#include <crmd_fsa.h>
-#include <crmd_messages.h>
-#include <crm/cib.h>
-
-#include <crm/dmalloc_wrapper.h>
-
-const char* crm_system_name = "core";
-
-gboolean process_atest_message(
-	HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender);
-
-
-GMainLoop*  mainloop = NULL;
 
 #define OPTARGS	"V?f:"
-#include <bzlib.h>
 int
 main(int argc, char ** argv)
 {
