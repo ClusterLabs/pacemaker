@@ -51,10 +51,10 @@ class LinuxHAv2(HeartbeatCM):
     def __init__(self, Environment, randseed=None):
         HeartbeatCM.__init__(self, Environment, randseed=randseed)
 
-	self.cib_installed = 0
+        self.cib_installed = 0
         self.config = None
         self.cluster_monitor = 0
-	self.use_short_names = 1
+        self.use_short_names = 1
         self.update({
             "Name"           : "linux-ha-v2",
             "DeadTime"       : 300,
@@ -66,7 +66,7 @@ class LinuxHAv2(HeartbeatCM):
             "StatusCmd"      : "@sbindir@/crmadmin -S %s 2>/dev/null",
             "EpocheCmd"      : "@sbindir@/ccm_tool -e",
             "QuorumCmd"      : "@sbindir@/ccm_tool -q",
-	    "CibQuery"       : "@sbindir@/cibadmin -Ql",
+            "CibQuery"       : "@sbindir@/cibadmin -Ql",
             "ParitionCmd"    : "@sbindir@/ccm_tool -p",
             "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s monitor 0 0 EVERYTIME 2>/dev/null|grep return",
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
@@ -85,11 +85,11 @@ class LinuxHAv2(HeartbeatCM):
             # This wont work if we have multiple partitions
             # Use: "Pat:They_started" : "%s crmd:.*State transition.*-> S_NOT_DC",
             "Pat:They_started" : "Updating node state to member for %s",
-	    "Pat:We_started"   : "crmd.*%s: State transition.*-> S_IDLE",
-	    "Pat:We_stopped"   : "heartbeat.*%s.*Heartbeat shutdown complete",
+            "Pat:We_started"   : "crmd.*%s: State transition.*-> S_IDLE",
+            "Pat:We_stopped"   : "heartbeat.*%s.*Heartbeat shutdown complete",
             "Pat:Logd_stopped" : "%s logd:.*Exiting write process",
             "Pat:They_stopped" : "%s crmd:.*LOST:.* %s ",
-	    "Pat:All_stopped"  : "heartbeat.*%s.*Heartbeat shutdown complete",
+            "Pat:All_stopped"  : "heartbeat.*%s.*Heartbeat shutdown complete",
             "Pat:They_dead"    : "node %s.*: is dead",
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
 
@@ -114,14 +114,20 @@ class LinuxHAv2(HeartbeatCM):
                 r"Confirm not received from",
                 r"Welcome reply not received from",
                 r"Attempting to schedule .* after a stop",
-		r"Resource .* was active at shutdown",
-		r"duplicate entries for call_id",
+                r"Resource .* was active at shutdown",
+                r"duplicate entries for call_id",
+                r"Search terminated:",
+                r"No need to invoke the TE",
+                r":global_timer_callback",
+                r"Updating failcount for ",
+                r"Faking parameter digest creation",
+                r"Parameters to .* action changed:",
             ),
         })
         del self["Standby"]
-	if self.Env["DoBSC"]:
-	    del self["Pat:They_stopped"]
-	    del self["Pat:Logd_stopped"]
+        if self.Env["DoBSC"]:
+            del self["Pat:They_stopped"]
+            del self["Pat:Logd_stopped"]
 
         self.check_transitions = 0
         self.check_elections = 0
@@ -142,21 +148,21 @@ class LinuxHAv2(HeartbeatCM):
     def install_config(self, node):
         if not self.CIBsync.has_key(node) and self.Env["ClobberCIB"] == 1:
             self.CIBsync[node] = 1
-	    self.rsh.remote_py(node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
-	    self.rsh.remote_py(node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig")
+            self.rsh.remote_py(node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
+            self.rsh.remote_py(node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig")
 
-	    # Only install the CIB on the first node, all the other ones will pick it up from there
-	    if self.cib_installed == 1:
-		return None
+            # Only install the CIB on the first node, all the other ones will pick it up from there
+            if self.cib_installed == 1:
+                return None
 
-	    self.cib_installed = 1
+            self.cib_installed = 1
             if self.Env["CIBfilename"] == None:
                 self.debug("Installing Generated CIB on node %s" %(node))
-		warnings.filterwarnings("ignore")
-		cib_file=os.tmpnam()
-		warnings.resetwarnings()
+                warnings.filterwarnings("ignore")
+                cib_file=os.tmpnam()
+                warnings.resetwarnings()
                 os.system("rm -f "+cib_file)
-		self.debug("Creating new CIB for " + node + " in: " + cib_file)
+                self.debug("Creating new CIB for " + node + " in: " + cib_file)
                 os.system("echo \'" + self.default_cts_cib + "\' > " + cib_file)
                 if 0!=self.rsh.echo_cp(None, cib_file, node, "@HA_VARLIBDIR@/heartbeat/crm/cib.xml"):
                     raise ValueError("Can not create CIB on %s "%node)
@@ -166,8 +172,8 @@ class LinuxHAv2(HeartbeatCM):
                 self.debug("Installing CIB (%s) on node %s" %(self.Env["CIBfilename"], node))
                 if 0!=self.rsh.cp(self.Env["CIBfilename"], "root@" + (self["CIBfile"]%node)):
                     raise ValueError("Can not scp file to %s "%node)
-	
-	    self.rsh.remote_py(node, "os", "system", "chown @HA_CCMUSER@ @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
+        
+            self.rsh.remote_py(node, "os", "system", "chown @HA_CCMUSER@ @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
 
     def prepare(self):
         '''Finish the Initialization process. Prepare to test...'''
@@ -313,28 +319,28 @@ class LinuxHAv2(HeartbeatCM):
         return None
         
     def Configuration(self):
-	if self.config:
-	    return self.config.getElementsByTagName('configuration')[0]
+        if self.config:
+            return self.config.getElementsByTagName('configuration')[0]
 
-	warnings.filterwarnings("ignore")
-	cib_file=os.tmpnam()
-	warnings.resetwarnings()
-	
-	os.system("rm -f "+cib_file)
+        warnings.filterwarnings("ignore")
+        cib_file=os.tmpnam()
+        warnings.resetwarnings()
+        
+        os.system("rm -f "+cib_file)
 
         if self.Env["ClobberCIB"] == 1:
             if self.Env["CIBfilename"] == None:
-		self.debug("Creating new CIB in: " + cib_file)
+                self.debug("Creating new CIB in: " + cib_file)
                 os.system("echo \'"+ self.default_cts_cib +"\' > "+ cib_file)
             else:
                 os.system("cp "+self.Env["CIBfilename"]+" "+cib_file)
-        else:	    
-	    if 0 != self.rsh.echo_cp(
-		self.Env["nodes"][0], "@HA_VARLIBDIR@/heartbeat/crm/cib.xml", None, cib_file):
+        else:            
+            if 0 != self.rsh.echo_cp(
+                self.Env["nodes"][0], "@HA_VARLIBDIR@/heartbeat/crm/cib.xml", None, cib_file):
                 raise ValueError("Can not copy file to %s, maybe permission denied"%cib_file)
 
-	self.config = parse(cib_file)
-	os.remove(cib_file)
+        self.config = parse(cib_file)
+        os.remove(cib_file)
 
         return self.config.getElementsByTagName('configuration')[0]
     
@@ -354,10 +360,10 @@ class LinuxHAv2(HeartbeatCM):
         for grp in groups:
             for rsc in rscs:
                 if rsc in grp.childNodes:
-		    if self.use_short_names:
-			resource = HAResource(self,rsc)
-		    else:
-			resource = HAResource(self,rsc,grp.getAttribute('id'))
+                    if self.use_short_names:
+                        resource = HAResource(self,rsc)
+                    else:
+                        resource = HAResource(self,rsc,grp.getAttribute('id'))
                     ResourceList.append(resource)
         
         for inc in incs:
@@ -375,10 +381,10 @@ class LinuxHAv2(HeartbeatCM):
                 rsc.inc_no = i
                 rsc.inc_name = inc_name
                 rsc.inc_max = max
-		if self.use_short_names:
-		    rsc.rid = rsc.rid + ":%d"%i
-		else:
-		    rsc.rid = inc_name+":"+rsc.rid + ":%d"%i
+                if self.use_short_names:
+                    rsc.rid = rsc.rid + ":%d"%i
+                else:
+                    rsc.rid = inc_name+":"+rsc.rid + ":%d"%i
                 rsc.Instance = rsc.rid
                 ResourceList.append(rsc)
         return ResourceList
@@ -394,10 +400,10 @@ class LinuxHAv2(HeartbeatCM):
             GroupList.append(group)
             for rsc in rscs:
                 if rsc in grp.childNodes:
-		    if self.use_short_names:
-			resource = HAResource(self,rsc)
-		    else:
-			resource = HAResource(self,rsc,grp.getAttribute('id'))
+                    if self.use_short_names:
+                        resource = HAResource(self,rsc)
+                    else:
+                        resource = HAResource(self,rsc,grp.getAttribute('id'))
                     group.append(resource)
         return GroupList
         
@@ -462,11 +468,11 @@ class LinuxHAv2(HeartbeatCM):
             if self.ShouldBeStatus[node] == self["up"]:
                 quorum = self.rsh.readaline(node, self["QuorumCmd"])
                 if string.find(quorum, "1") != -1:
-		    return 1
+                    return 1
                 elif string.find(quorum, "0") != -1:
-		    return 0
-		else:
-		    self.log("WARN: Unexpected quorum test result from "+ node +":"+ quorum)
+                    return 0
+                else:
+                    self.log("WARN: Unexpected quorum test result from "+ node +":"+ quorum)
 
         return 0
     def Components(self):    
@@ -497,7 +503,7 @@ class LinuxHAv2(HeartbeatCM):
         out=self.rsh.readaline(node, self["StandbyQueryCmd"]%node)
         if not out:
             return "off"
-	out = out[:-1]
+        out = out[:-1]
         self.debug("Standby result: "+out)
         return out
 
@@ -509,7 +515,7 @@ class LinuxHAv2(HeartbeatCM):
             return True
 
         current_status = self.StandbyStatus(node)
-	cmd = self["StandbyCmd"] % (node, status)
+        cmd = self["StandbyCmd"] % (node, status)
         ret = self.rsh(node, cmd)
         return True
 
