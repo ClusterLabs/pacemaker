@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.58 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: utils.c,v 1.59 2006/04/19 12:24:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -93,7 +93,7 @@ stop_te_timer(crm_action_timer_t *timer)
 	}
 	
 	if(timer->source_id != 0) {
-		crm_debug("Stopping %s", timer_desc);
+		crm_debug_2("Stopping %s", timer_desc);
 		Gmain_timeout_remove(timer->source_id);
 		timer->source_id = 0;
 
@@ -117,10 +117,11 @@ abort_transition_graph(
 	const char *abort_text, crm_data_t *reason, const char *fn, int line) 
 {
 	int log_level = LOG_DEBUG;
+/*
 	if(abort_priority >= INFINITY) {
 		log_level = LOG_INFO;
 	}
-
+*/
 	update_abort_priority(
 		transition_graph, abort_priority, abort_action, abort_text);
 

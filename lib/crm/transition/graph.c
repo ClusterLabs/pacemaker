@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.8 2006/03/18 17:23:49 andrew Exp $ */
+/* $Id: graph.c,v 1.9 2006/04/19 12:24:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -258,9 +258,9 @@ run_graph(crm_graph_t *graph)
 			num_complete++;
 			
 		} else if (synapse->executed) {
-			int pending_log = LOG_DEBUG;
+			int pending_log = LOG_DEBUG_2;
 			if(synapse->priority > graph->abort_priority) {
-				pending_log = LOG_DEBUG_2;
+				pending_log = LOG_DEBUG_3;
 			} 
 			crm_log_maybe(pending_log,
 				      "Synapse %d: confirmation pending",
