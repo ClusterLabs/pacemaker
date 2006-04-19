@@ -691,6 +691,7 @@ if __name__ == '__main__':
     Environment["RecvLoss"] = RecvLoss
     Environment["IPBase"] = IPBase
     Environment["SuppressCib"] = SuppressCib
+    Environment["DoBSC"]    = 0
     Environment["use_logd"] = 0
     Environment["logfacility"] = LogFacility
 
