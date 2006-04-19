@@ -85,7 +85,7 @@
           on_fail       (nothing|block|stop|fence)     #IMPLIED>
 <!-- Annotated version -->
 
-<!ELEMENT group (primitive+,instance_attributes*)>
+<!ELEMENT group (instance_attributes*, primitive+)>
 <!ATTLIST group
           id            CDATA               #REQUIRED
           description   CDATA               #IMPLIED
