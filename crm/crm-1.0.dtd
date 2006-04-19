@@ -253,6 +253,7 @@
           crm-debug-origin      CDATA #IMPLIED
           transition_key        CDATA #IMPLIED
           op_digest             CDATA #IMPLIED
+          interval              CDATA #REQUIRED
           transition_magic      CDATA #REQUIRED>
 
 <!ELEMENT nvpair EMPTY>
