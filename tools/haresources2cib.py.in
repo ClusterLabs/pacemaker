@@ -336,9 +336,9 @@ def get_directive_list(config, directive) :
 	return directive_list
 		
 if __name__=="__main__" :
-	resource_file = "/etc/ha.d/haresources"
-	config_file = "/etc/ha.d/ha.cf"
-	target_file = "/var/lib/heartbeat/crm/cib.xml"
+	resource_file = "@HB_HA_DIR@/haresources"
+	config_file = "@HB_HA_DIR@/ha.cf"
+	target_file = "@HA_VARLIBHBDIR@/crm/cib.xml"
 	to_stdout = False
 	
 	# Process arguments...
@@ -412,7 +412,7 @@ if __name__=="__main__" :
 	if to_stdout :		
 		print cib[0].toprettyxml()
 	elif os.access(target_file, os.F_OK) or os.access(target_file+".sig", os.F_OK) :
-		sys.stderr.write("cib.xml or cib.xml.sig exist in /var/lib/heartbeat/crm/\n")
+		sys.stderr.write("cib.xml or cib.xml.sig exist in @HA_VARLIBHBDIR@/crm/\n")
 		sys.stderr.write("please remove them before generating new cib.xml\n")
 	else :
 		cib_file = open(target_file, "w")
