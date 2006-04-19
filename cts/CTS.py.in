@@ -505,7 +505,6 @@ class ClusterManager(UserDict):
         if self.ShouldBeStatus[node] != self["down"]:
             return 1
 
-        print "Waiting for "+ node
         if not self.ns.WaitForNodeToComeUp(node):
             self.log("WaitForNodeToComeUp %s failed" % node)
             return 0
