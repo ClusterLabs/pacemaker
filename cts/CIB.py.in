@@ -212,43 +212,55 @@ class CIB:
         resources = ""
         constraints = ""
 
-        if self.CM.Env["CIBResource"] == 1:
-            self.CM.log("Enabling DC resource")
-            resources += self.dc_ipaddr_resource_template % self.CM.Env["IPBase"]
-            constraints += self.dc_ipaddr_location_constraint
-            if self.CM.cluster_monitor == 1:
-                resources += self.clustermon_resource_template
-                constraints += self.clustermon_location_constraint
+        if self.CM.Env["DoBSC"] == 1:
+	    cib_options = cib_options + '''
+     <cluster_property_set id="bsc-options">
+       <attributes>
+	 <nvpair id="ident-string" name="ident-string" value="Linux-HA TEST configuration file - REMOVEME!!"/>
+       </attributes>
+    </cluster_property_set>'''
 
+        if self.CM.Env["CIBResource"] != 1:
+	    # generate cib
+	    self.cts_cib = self.cib_template %  (cib_options, resources, constraints)
+	    return
+
+	self.CM.log("Enabling DC resource")
+	resources += self.dc_ipaddr_resource_template % self.CM.Env["IPBase"]
+	constraints += self.dc_ipaddr_location_constraint
+	if self.CM.cluster_monitor == 1:
+	    resources += self.clustermon_resource_template
+	    constraints += self.clustermon_location_constraint
+	    
 	ip1=self.NextIP()
 	ip2=self.NextIP()
 	ip3=self.NextIP()
-        resources += self.resource_group_template % (ip1, ip1, ip1, ip1, ip2, ip2, ip2, ip2, ip3, ip3, ip3, ip3)
+	resources += self.resource_group_template % (ip1, ip1, ip1, ip1, ip2, ip2, ip2, ip2, ip3, ip3, ip3, ip3)
 
 	# lsb resource
 	resources += self.lsb_resource
 
-        # per node resource
-        fields = string.split(self.CM.Env["IPBase"], '.')
-        for node in self.CM.Env["nodes"]:
-            ip = self.NextIP()
-            per_node_resources = self.per_node_resource_template % \
-                ("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, ip)    
-            
-            per_node_constraint = self.per_node_constraint_template % \
-                ("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, node)
-
-            resources += per_node_resources
-            constraints += per_node_constraint
+	# per node resource
+	fields = string.split(self.CM.Env["IPBase"], '.')
+	for node in self.CM.Env["nodes"]:
+	    ip = self.NextIP()
+	    per_node_resources = self.per_node_resource_template % \
+		("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, ip)    
+	    
+	    per_node_constraint = self.per_node_constraint_template % \
+		("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, node)
+		
+	    resources += per_node_resources
+	    constraints += per_node_constraint
     
-        # fencing resource
-        nodelist = ""
-        len = 0
-        for node in self.CM.Env["nodes"]:
-            nodelist += node + " "
-            len = len + 1
-        stonith_resource = self.stonith_resource_template % (len, nodelist)
-        resources += stonith_resource
+	# fencing resource
+	nodelist = ""
+	len = 0
+	for node in self.CM.Env["nodes"]:
+	    nodelist += node + " "
+	    len = len + 1
+	stonith_resource = self.stonith_resource_template % (len, nodelist)
+	resources += stonith_resource
 	
 	#master slave resource
 	resources += self.master_slave_resource % (2*len, 2, len, 1)
