@@ -600,9 +600,9 @@ do_state_transition(long long actions,
 		  state_from, state_to, input, fsa_cause2string(cause),
 		  msg_data->origin);
 	
-	crm_info("State transition %s -> %s [ input=%s cause=%s origin=%s ]",
-		 state_from, state_to, input, fsa_cause2string(cause),
-		 msg_data->origin);
+	crm_info("%s: State transition %s -> %s [ input=%s cause=%s origin=%s ]",
+		 fsa_our_uname, state_from, state_to, input,
+		 fsa_cause2string(cause), msg_data->origin);
 
 	/* the last two clauses might cause trouble later */
 	if(election_timeout != NULL

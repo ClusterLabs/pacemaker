@@ -80,18 +80,19 @@ class LinuxHAv2(HeartbeatCM):
             "StandbyQueryCmd"    : "@sbindir@/crm_standby -GQ -U %s 2>/dev/null",
 
             # Patterns to look for in the log files for various occasions...
-            "Pat:DC_IDLE"      : "crmd:.*State transition.*-> S_IDLE",
+            "Pat:DC_IDLE"      : "crmd.*State transition.*-> S_IDLE",
             
             # This wont work if we have multiple partitions
             # Use: "Pat:They_started" : "%s crmd:.*State transition.*-> S_NOT_DC",
             "Pat:They_started" : "Updating node state to member for %s",
-            "Pat:We_started"   : "%s crmd:.*State transition.*-> S_IDLE",
-            "Pat:We_stopped"   : "%s heartbeat.*Heartbeat shutdown complete",
+	    "Pat:We_started"   : "crmd.*%s: State transition.*-> S_IDLE",
+	    "Pat:We_stopped"   : "heartbeat.*%s.*Heartbeat shutdown complete",
             "Pat:Logd_stopped" : "%s logd:.*Exiting write process",
             "Pat:They_stopped" : "%s crmd:.*LOST:.* %s ",
-            "Pat:All_stopped"  : "%s .*heartbeat.*Heartbeat shutdown complete",
+	    "Pat:All_stopped"  : "heartbeat.*%s.*Heartbeat shutdown complete",
             "Pat:They_dead"    : "node %s.*: is dead",
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
+
             
             # Bad news Regexes.  Should never occur.
             "BadRegexes"   : (
@@ -107,9 +108,9 @@ class LinuxHAv2(HeartbeatCM):
                 r"input=I_ERROR",
                 r", exiting\.",
                 r"WARN.*Ignoring HA message.*vote.*not in our membership list",
-                r"pengine:.*Attempting recovery of resource",
-                r"pengine:.*Handling failed ",
-                r"tengine:.*is taking more than 2x its timeout",
+                r"pengine.*Attempting recovery of resource",
+                r"pengine.*Handling failed ",
+                r"tengine.*is taking more than 2x its timeout",
                 r"Confirm not received from",
                 r"Welcome reply not received from",
                 r"Attempting to schedule .* after a stop",
@@ -118,6 +119,10 @@ class LinuxHAv2(HeartbeatCM):
             ),
         })
         del self["Standby"]
+	if self.Env["DoBSC"]:
+	    del self["Pat:They_stopped"]
+	    del self["Pat:Logd_stopped"]
+
         self.check_transitions = 0
         self.check_elections = 0
         self.CIBsync = {}
@@ -153,14 +158,13 @@ class LinuxHAv2(HeartbeatCM):
                 os.system("rm -f "+cib_file)
 		self.debug("Creating new CIB for " + node + " in: " + cib_file)
                 os.system("echo \'" + self.default_cts_cib + "\' > " + cib_file)
-                if 0!=self.rsh.cp(cib_file,"root@" + (self["CIBfile"]%node)):
-                    raise ValueError("Can not scp file to %s "%node)
+                if 0!=self.rsh.echo_cp(None, cib_file, node, "@HA_VARLIBDIR@/heartbeat/crm/cib.xml"):
+                    raise ValueError("Can not create CIB on %s "%node)
 
                 os.system("rm -f "+cib_file)
             else:
                 self.debug("Installing CIB (%s) on node %s" %(self.Env["CIBfilename"], node))
-                if 0!=self.rsh.cp(self.Env["CIBfilename"], 
-                    "root@" + (self["CIBfile"]%node)):
+                if 0!=self.rsh.cp(self.Env["CIBfilename"], "root@" + (self["CIBfile"]%node)):
                     raise ValueError("Can not scp file to %s "%node)
 	
 	    self.rsh.remote_py(node, "os", "system", "chown @HA_CCMUSER@ @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
@@ -324,9 +328,10 @@ class LinuxHAv2(HeartbeatCM):
                 os.system("echo \'"+ self.default_cts_cib +"\' > "+ cib_file)
             else:
                 os.system("cp "+self.Env["CIBfilename"]+" "+cib_file)
-        else:
-            if 0!=self.rsh.cp("root@"+self["CIBfile"]%self.Env["nodes"][0],cib_file):
-                raise ValueError("Can not copy file to %s, maybe permission denied"%self["TmpDir"])
+        else:	    
+	    if 0 != self.rsh.echo_cp(
+		self.Env["nodes"][0], "@HA_VARLIBDIR@/heartbeat/crm/cib.xml", None, cib_file):
+                raise ValueError("Can not copy file to %s, maybe permission denied"%cib_file)
 
 	self.config = parse(cib_file)
 	os.remove(cib_file)
