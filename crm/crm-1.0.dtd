@@ -16,25 +16,27 @@
  
 -->
 
+<!-- Annotated version -->
+
 <!ELEMENT cib (configuration, status)>
 <!ATTLIST cib
-          cib-last-written CDATA    #IMPLIED
+          cib-last-written CDATA        #IMPLIED
 
-          admin_epoch  CDATA    #REQUIRED
-          epoch        CDATA    #REQUIRED
-          num_updates  CDATA    #REQUIRED
-          num_peers    CDATA    #IMPLIED        
+          admin_epoch  CDATA        #REQUIRED
+          epoch        CDATA        #REQUIRED
+          num_updates  CDATA        #REQUIRED
+          num_peers    CDATA        #IMPLIED        
 
-          dc_uuid      CDATA    #IMPLIED
-          ccm_transition CDATA  #IMPLIED
-          have_quorum    (true|1|false|0)   'false'
-          ignore_dtd     (true|1|false|0)   #IMPLIED
           cib_feature_revision  CDATA   #IMPLIED
           crm_feature_set       CDATA   #IMPLIED
 
+          dc_uuid        CDATA             #IMPLIED
+          ccm_transition CDATA             #IMPLIED
+          have_quorum    (true|1|false|0)  'false'
+          ignore_dtd     (true|1|false|0)  #IMPLIED
+
           generated    CDATA    #IMPLIED        
           crm-debug-origin CDATA    #IMPLIED>
-
 <!ELEMENT configuration (crm_config, nodes, resources, constraints)>
 <!-- Annotated version -->
 
@@ -43,16 +45,15 @@
 <!ATTLIST cluster_property_set
           id                CDATA        #REQUIRED
           score             CDATA        #IMPLIED>
-
-<!ELEMENT nodes       (node*)>
+<!ELEMENT nodes              (node*)>
 <!-- Annotated version -->
 
 <!ELEMENT node (instance_attributes*)>
 <!ATTLIST node
-          id            CDATA         #REQUIRED
-          uname         CDATA         #REQUIRED
-          description   CDATA         #IMPLIED
-          type          (normal|member|ping) #REQUIRED>
+          id          CDATA                #REQUIRED
+          uname       CDATA                #REQUIRED
+          description CDATA                #IMPLIED
+          type        (normal|member|ping) #REQUIRED>
 <!ELEMENT resources   (primitive|group|clone|master_slave)*>
 <!-- Annotated version -->
 
@@ -78,61 +79,60 @@
           description   CDATA         #IMPLIED
           interval      CDATA         #IMPLIED
           timeout       CDATA         #IMPLIED
-          disabled	(true|1|false|0)   'false'
+          disabled      (true|1|false|0)               'false'
           role          (Master|Slave|Started|Stopped) 'Started'
-          prereq        (nothing|quorum|fencing)   #IMPLIED
-          on_fail       (nothing|block|stop|fence) #IMPLIED>
+          prereq        (nothing|quorum|fencing)       #IMPLIED
+          on_fail       (nothing|block|stop|fence)     #IMPLIED>
 <!-- Annotated version -->
 
 <!ELEMENT group (primitive+,instance_attributes*)>
 <!ATTLIST group
-          id                    CDATA               #REQUIRED
+          id            CDATA               #REQUIRED
           description   CDATA               #IMPLIED
 
-          is_managed            (true|1|false|0)                     'true'
-          restart_type          (ignore|restart)                 'ignore'
-          multiple_active       (stop_start|stop_only|block)     'stop_start'
-          resource_stickiness   (0|INFINITY|-INFINITY)           '0'
+          is_managed            (true|1|false|0)              'true'
+          restart_type          (ignore|restart)              'ignore'
+          multiple_active       (stop_start|stop_only|block)  'stop_start'
+          resource_stickiness   (0|INFINITY|-INFINITY)        '0'
 
-          ordered               (true|1|false|0)                     'true'
-          collocated            (true|1|false|0)                     'true'>
+          ordered               (true|1|false|0)              'true'
+          collocated            (true|1|false|0)              'true'>
 <!ELEMENT clone (instance_attributes*, (primitive|group))>
 <!ATTLIST clone
           id            CDATA               #REQUIRED
           description   CDATA               #IMPLIED
 
-          is_managed            (true|1|false|0)                     'true'
-          restart_type          (ignore|restart)                 'ignore'
-          multiple_active       (stop_start|stop_only|block)     'stop_start'
-          resource_stickiness   (0|INFINITY|-INFINITY)           '0'
-          notify                (true|1|false|0)                     'false'
+          is_managed            (true|1|false|0)              'true'
+          restart_type          (ignore|restart)              'ignore'
+          multiple_active       (stop_start|stop_only|block)  'stop_start'
+          resource_stickiness   (0|INFINITY|-INFINITY)        '0'
 
-          globally_unique       (true|1|false|0)                     'true'
+          notify                (true|1|false|0)              'false'
+          globally_unique       (true|1|false|0)              'true'
+          ordered               (true|1|false|0)              'true'
+          interleave            (true|1|false|0)              'false'>
 
-          ordered       (true|1|false|0)     'true'
-          interleave    (true|1|false|0)     'false'>
+
 <!ELEMENT master_slave (instance_attributes*, (primitive|group))>
 <!ATTLIST master_slave
           id            CDATA       #REQUIRED
           description   CDATA       #IMPLIED
 
-          is_managed            (true|1|false|0)                     'true'
-          restart_type          (ignore|restart)                 'ignore'
-          multiple_active       (stop_start|stop_only|block)     'stop_start'
-          resource_stickiness   (0|INFINITY|-INFINITY)           '0'
-          notify                (true|1|false|0)                     'false'
+          is_managed            (true|1|false|0)              'true'
+          restart_type          (ignore|restart)              'ignore'
+          multiple_active       (stop_start|stop_only|block)  'stop_start'
+          resource_stickiness   (0|INFINITY|-INFINITY)        '0'
 
-          globally_unique       (true|1|false|0)                     'true'
-
-          ordered          (true|1|false|0)  'true'
-          interleave       (true|1|false|0)  'false'>
+          notify                (true|1|false|0)              'false'
+          globally_unique       (true|1|false|0)              'true'
+          ordered               (true|1|false|0)              'true'
+          interleave            (true|1|false|0)              'false'>
 <!-- Annotated version -->
 
 <!ELEMENT instance_attributes (rule*, attributes)>
 <!ATTLIST instance_attributes
           id                CDATA        #REQUIRED
           score             CDATA        #IMPLIED>
-
 <!-- Annotated version -->
 
 <!ELEMENT constraints (rsc_order|rsc_colocation|rsc_location)*>
@@ -140,10 +140,10 @@
 <!ATTLIST rsc_order
           id        CDATA #REQUIRED
           from      CDATA #REQUIRED
-          action    (start|stop)        'start'
-          type      (before|after)      'after'
           to        CDATA #REQUIRED
-          symetrical    (true|1|false|0)    'true'>
+          action    (start|stop)         'start'
+          type      (before|after)       'after'
+          symetrical    (true|1|false|0) 'true'>
 <!-- Annotated version -->
 
 <!ELEMENT rsc_colocation (lifetime?)>
@@ -165,11 +165,11 @@
 
 <!ELEMENT rule (expression|time_expression|rule)+>
 <!ATTLIST rule
-          id                    CDATA     #REQUIRED
-          role                  CDATA     #IMPLIED
-          score                 CDATA     #IMPLIED
-          score_attribute       CDATA     #IMPLIED
-          boolean_op (or|and)     'and'>
+          id                  CDATA          #REQUIRED
+          role                CDATA          #IMPLIED
+          score               CDATA          #IMPLIED
+          score_attribute     CDATA          #IMPLIED
+          boolean_op          (or|and)      'and'>
 <!-- Annotated version -->
 
 <!ELEMENT expression EMPTY>
@@ -222,12 +222,11 @@
         join            (pending|member|down)   'down'
         expected        (pending|member|down)   'down'
         in_ccm          (true|1|false|0)        'false'
-	crm-debug-origin CDATA                  #IMPLIED
+        crm-debug-origin CDATA                  #IMPLIED
         shutdown        CDATA                   #IMPLIED
         clear_shutdown  CDATA                   #IMPLIED>
 <!ELEMENT lrm (lrm_resources)>
 <!ATTLIST lrm id CDATA #REQUIRED>
-
 <!-- Annotated version -->
 
 <!ELEMENT lrm_resources (lrm_resource*)>
@@ -251,12 +250,11 @@
           op_digest             CDATA #IMPLIED
           interval              CDATA #REQUIRED
           transition_magic      CDATA #REQUIRED>
-
 <!ELEMENT nvpair EMPTY>
 <!ATTLIST nvpair
-          id            CDATA #REQUIRED
-          name          CDATA #REQUIRED
-          value         CDATA #IMPLIED>
+          id     CDATA  #REQUIRED
+          name   CDATA  #REQUIRED
+          value  CDATA  #IMPLIED>
 <!ELEMENT parameters EMPTY>
 <!ELEMENT attributes (nvpair*)>
 <!ELEMENT transient_attributes (instance_attributes*)>
