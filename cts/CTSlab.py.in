@@ -783,10 +783,10 @@ if __name__ == '__main__':
 	  traceback.print_exc(50, logmethod)
         
     tests.summarize()
-    if test.Stats["failure"] > 0:
+    if tests.Stats["failure"] > 0:
 	sys.exit(test.Stats["failure"])
 
-    elif test.Stats["success"] != NumIter:
+    elif tests.Stats["success"] != NumIter:
         cm.Env.log("No failure count but success != requested iterations")
 	sys.exit(1)
 	
