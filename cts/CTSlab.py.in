@@ -653,9 +653,9 @@ if __name__ == '__main__':
     node_list = config.Parameters["node"]
 
     if DoBSC:
-	NumIter = 2
-	Version = 2
-	LimitNodes = 1
+        NumIter = 2
+        Version = 2
+        LimitNodes = 1
 
     if LogFacility == None:
         if config.Parameters.has_key("logfacility"): 
@@ -672,7 +672,7 @@ if __name__ == '__main__':
 
 #    alt_list = []
 #    for node in node_list:
-#	alt_list.append(string.lower(node))
+#        alt_list.append(string.lower(node))
 #    node_list = alt_list
 
     Environment = CtsLab(node_list)
@@ -696,7 +696,7 @@ if __name__ == '__main__':
     Environment["logfacility"] = LogFacility
 
     if config.Parameters.has_key("use_logd"):
-	Environment["use_logd"] = 1
+        Environment["use_logd"] = 1
     
     if Version == 2:
         from CM_LinuxHAv2 import LinuxHAv2
@@ -708,15 +708,15 @@ if __name__ == '__main__':
     Environment["reset"] = Stonith(sttype="external/ssh", parm=string.join(node_list, " "))
 
     if DoBSC:
-	Environment["DoBSC"]       = 1
-	Environment["ClobberCIB"]  = 1
-	Environment["CIBResource"] = 0 
+        Environment["DoBSC"]       = 1
+        Environment["ClobberCIB"]  = 1
+        Environment["CIBResource"] = 0 
         Environment["logger"]  = (FileLog(Environment), StdErrLog(Environment))
-	scenario = Scenario([ BasicSanityCheck(Environment) ])
+        scenario = Scenario([ BasicSanityCheck(Environment) ])
     else:
-	scenario = Scenario(
-	    [        InitClusterManager(Environment), PacketLoss(Environment)])
-	
+        scenario = Scenario(
+            [        InitClusterManager(Environment), PacketLoss(Environment)])
+        
     Environment.SupplyDefaults()
 
     # Your basic start up the world type of test scenario...
@@ -728,7 +728,7 @@ if __name__ == '__main__':
     # Create the Cluster Manager object
     cm = Environment['CMclass'](Environment)
     if TruncateLog:
-	cm.log("Truncating %s" % LogFile)
+        cm.log("Truncating %s" % LogFile)
         lf = open(LogFile, "w");
         if lf != None:
             lf.truncate(0)
@@ -748,16 +748,16 @@ if __name__ == '__main__':
         out=cm.rsh.readaline(node, "@sbindir@/crm_uuid")
         if not out:
             cm.log("    * %s: __undefined_uuid__" % node)
-	else:
-	    out = out[:-1]
-	    cm.log("    * %s: %s" % (node, out))
-	
+        else:
+            out = out[:-1]
+            cm.log("    * %s: %s" % (node, out))
+        
     Audits = AuditList(cm)
     Tests = []
     
     if Environment["DoBSC"]:
         test = BSC_AddResource(cm)
-	Tests.append(test)
+        Tests.append(test)
     elif TestCase != None:
         for test in TestList(cm):
             if test.name == TestCase:
@@ -772,7 +772,7 @@ if __name__ == '__main__':
         for test in Tests :
             cm.log(str(test.name));
         sys.exit(0)
-	
+        
     tests = RandomTests(scenario, cm, Tests, Audits)
     Environment.RandomTests = tests
     try :
@@ -780,13 +780,13 @@ if __name__ == '__main__':
     except :
         cm.Env.log("Exception by %s" % sys.exc_info()[0])
         for logmethod in Environment["logger"]:
-	  traceback.print_exc(50, logmethod)
+          traceback.print_exc(50, logmethod)
         
     tests.summarize()
     if tests.Stats["failure"] > 0:
-	sys.exit(test.Stats["failure"])
+        sys.exit(test.Stats["failure"])
 
     elif tests.Stats["success"] != NumIter:
         cm.Env.log("No failure count but success != requested iterations")
-	sys.exit(1)
-	
+        sys.exit(1)
+        
