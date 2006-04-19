@@ -38,7 +38,7 @@
 <!ELEMENT configuration (crm_config, nodes, resources, constraints)>
 <!-- Annotated version -->
 
-<!ELEMENT crm_config (cluster_property_set|nvpair)*>
+<!ELEMENT crm_config (cluster_property_set)*>
 <!ELEMENT cluster_property_set (rule*, attributes)>
 <!ATTLIST cluster_property_set
           id                CDATA        #REQUIRED
@@ -64,12 +64,10 @@
           type              CDATA        #REQUIRED
           provider          CDATA        #IMPLIED
 
-          is_managed            (true|1|false|0)                     'true'
-          on_stopfail           (ignore|stonith|block)           #IMPLIED
+          is_managed            (true|1|false|0)                 'true'
           restart_type          (ignore|restart)                 'ignore'
           multiple_active       (stop_start|stop_only|block)     'stop_start'
-          resource_stickiness   (0|INFINITY|-INFINITY)           '0'
-          start_prereq          (nothing|quorum|fencing)         #IMPLIED>
+          resource_stickiness   (0|INFINITY|-INFINITY)           '0'>
 <!-- Annotated version -->
 
 <!ELEMENT operations (op*)>
@@ -81,9 +79,9 @@
           interval      CDATA         #IMPLIED
           timeout       CDATA         #IMPLIED
           disabled	(true|1|false|0)   'false'
-          role       (Master|Slave|Started|Stopped) 'Started'
-          prereq     (nothing|quorum|fencing)   #IMPLIED
-          on_fail    (nothing|block|stop|fence) #IMPLIED>
+          role          (Master|Slave|Started|Stopped) 'Started'
+          prereq        (nothing|quorum|fencing)   #IMPLIED
+          on_fail       (nothing|block|stop|fence) #IMPLIED>
 <!-- Annotated version -->
 
 <!ELEMENT group (primitive+,instance_attributes*)>
@@ -92,11 +90,9 @@
           description   CDATA               #IMPLIED
 
           is_managed            (true|1|false|0)                     'true'
-          on_stopfail           (ignore|stonith|block)           #IMPLIED
           restart_type          (ignore|restart)                 'ignore'
           multiple_active       (stop_start|stop_only|block)     'stop_start'
           resource_stickiness   (0|INFINITY|-INFINITY)           '0'
-          start_prereq          (nothing|quorum|fencing)         #IMPLIED
 
           ordered               (true|1|false|0)                     'true'
           collocated            (true|1|false|0)                     'true'>
@@ -106,11 +102,9 @@
           description   CDATA               #IMPLIED
 
           is_managed            (true|1|false|0)                     'true'
-          on_stopfail           (ignore|stonith|block)           #IMPLIED
           restart_type          (ignore|restart)                 'ignore'
           multiple_active       (stop_start|stop_only|block)     'stop_start'
           resource_stickiness   (0|INFINITY|-INFINITY)           '0'
-          start_prereq          (nothing|quorum|fencing)         #IMPLIED
           notify                (true|1|false|0)                     'false'
 
           globally_unique       (true|1|false|0)                     'true'
@@ -123,11 +117,9 @@
           description   CDATA       #IMPLIED
 
           is_managed            (true|1|false|0)                     'true'
-          on_stopfail           (ignore|stonith|block)           #IMPLIED
           restart_type          (ignore|restart)                 'ignore'
           multiple_active       (stop_start|stop_only|block)     'stop_start'
           resource_stickiness   (0|INFINITY|-INFINITY)           '0'
-          start_prereq          (nothing|quorum|fencing)         #IMPLIED
           notify                (true|1|false|0)                     'false'
 
           globally_unique       (true|1|false|0)                     'true'
@@ -143,7 +135,7 @@
 
 <!-- Annotated version -->
 
-<!ELEMENT constraints (rsc_order*, rsc_colocation*, rsc_location*)>
+<!ELEMENT constraints (rsc_order|rsc_colocation|rsc_location)*>
 <!ELEMENT rsc_order (lifetime?)>
 <!ATTLIST rsc_order
           id        CDATA #REQUIRED
@@ -168,6 +160,7 @@
           description CDATA #IMPLIED
           rsc         CDATA #REQUIRED>
 <!ELEMENT lifetime (rule+)>
+<!ATTLIST lifetime id  CDATA     #REQUIRED>
 <!-- Annotated version -->
 
 <!ELEMENT rule (expression|time_expression|rule)+>
@@ -190,6 +183,7 @@
 
 <!ELEMENT date_expression (date_spec?,duration?)>
 <!ATTLIST date_expression
+        id         CDATA  #REQUIRED
         operation  (in_range|date_spec|gt|lt) 'in_range'
         start      CDATA  #IMPLIED
         end        CDATA  #IMPLIED>
@@ -197,6 +191,7 @@
 
 <!ELEMENT date_spec EMPTY>
 <!ATTLIST date_spec
+        id         CDATA  #REQUIRED
         monthdays  CDATA  #IMPLIED
         weekdays   CDATA  #IMPLIED
         yeardays   CDATA  #IMPLIED
@@ -208,6 +203,7 @@
 
 <!ELEMENT duration EMPTY>
 <!ATTLIST duration
+        id         CDATA  #REQUIRED
         monthdays  CDATA  #IMPLIED
         weekdays   CDATA  #IMPLIED
         yeardays   CDATA  #IMPLIED
@@ -217,7 +213,7 @@
 <!-- Annotated version -->
 
 <!ELEMENT status (node_state*)>
-<!ELEMENT node_state (transient_attributes|lrm)*>
+<!ELEMENT node_state ((transient_attributes|lrm), (transient_attributes|lrm))>
 <!ATTLIST node_state
         id              CDATA                   #REQUIRED
         uname           CDATA                   #REQUIRED
