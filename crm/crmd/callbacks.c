@@ -220,7 +220,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 
 		msg = msgfromIPC_noauth(client);
 		if (msg == NULL) {
-			crm_err("%s: no message this time",
+			crm_info("%s: no message this time",
 				curr_client->table_key);
 			continue;
 		}
