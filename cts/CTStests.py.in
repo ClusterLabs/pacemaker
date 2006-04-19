@@ -149,11 +149,6 @@ class RandomTests:
 Set up the given scenario, then run the selected tests at
 random for the selected number of iterations.
 ''')
-
-        if not self.CM.TestLogging():
-           sys.exit(1)
-        if not self.CM.CheckDf():
-           sys.exit(1)
         BadNews=CTS.LogWatcher(self.CM["LogFileName"], self.CM["BadRegexes"]
         ,        timeout=0)
         BadNews.setwatch()
@@ -193,8 +188,11 @@ random for the selected number of iterations.
                 # Better get the current info from the cluster...
                 self.CM.statall()
 		# Make sure logging is working and we have enough disk space...
-                self.CM.TestLogging()
-                self.CM.CheckDf()
+		if not self.CM.Env["DoBSC"]:
+		    if not self.CM.TestLogging():
+			sys.exit(1)
+		    if not self.CM.CheckDf():
+			sys.exit(1)
             stoptime=time.time()
             elapsed_time = stoptime - starttime
             test_time = stoptime - test.starttime
@@ -1576,7 +1574,7 @@ class ResourceRecover(CTSTest):
         self.CM.log("...resource %s on %s" % (label, nodes[0]))
 
 
-        pat=("""crmd:.* Performing op start on %s""" % (resource. rid))
+        pat=("""crmd.* Performing op start on %s""" % (resource.rid))
         watch = CTS.LogWatcher(self.CM["LogFileName"], [pat], timeout=240)
         watch.setwatch()
         
@@ -1619,7 +1617,7 @@ class ResourceRecover(CTSTest):
 #	
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-        return [ """ERROR: .* Action .*_monitor_.* on .* failed .*rc: 0 vs. 7.*: Error""" % self.rid,
+        return [ """ERROR: .* Action .*%s_monitor_.* on .* failed .*rc: 0 vs. 7.*: Error""" % self.rid,
 		 """Updating failcount for """
 		 ]
 
@@ -2117,10 +2115,10 @@ class BSC_AddResource(CTSTest):
 	self.resource_offset = 	self.resource_offset  + 1
 
 	r_id = "bsc-rsc-%s-%d" % (node, self.resource_offset)
-        start_pat = "%s crmd:.*Performing op start(.*) on %s"
+        start_pat = "crmd.*start_0 on %s complete"
 
         patterns = []
-        patterns.append(start_pat % (node, r_id))
+        patterns.append(start_pat % r_id)
 
         watch = CTS.LogWatcher(
             self.CM["LogFileName"], patterns, self.CM["DeadTime"])
