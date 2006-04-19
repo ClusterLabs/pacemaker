@@ -73,11 +73,29 @@ class RemoteExec:
         sysname = args[0]
         command = args[1]
 
-	if sysname == self.OurNode or sysname == "localhost":
-	    ret = self._fixcmd(command)
+	#print "sysname: %s, us: %s" % (sysname, self.OurNode)
+	if sysname == None or string.lower(sysname) == self.OurNode or sysname == "localhost":
+	    ret = command
 	else:
 	    ret = self.Command + " " + sysname + " '" + self._fixcmd(command) + "'"
-        #print ("About to run %s\n" % ret)
+	#print ("About to run %s\n" % ret)
+        return ret
+
+    def _cmd_noblock(self, *args):
+
+        '''Compute the string that will run the given command on the
+        given remote system'''
+
+        args= args[0]
+        sysname = args[0]
+        command = args[1]
+
+	#print "sysname: %s, us: %s" % (sysname, self.OurNode)
+	if sysname == None or string.lower(sysname) == self.OurNode or sysname == "localhost":
+	    ret = command + " &"
+	else:
+	    ret = self.CommandnoBlock + " " + sysname + " '" + self._fixcmd(command) + "'"
+	#print ("About to run %s\n" % ret)
         return ret
 
     def __call__(self, *args):
@@ -139,11 +157,28 @@ class RemoteExec:
             print "Retrying command %s" % cpstring
         return rc
 
+    def echo_cp(self, src_host, src_file, dest_host, dest_file):
+        '''Perform a remote copy via echo'''
+	(rc, lines) = self.remote_py(src_host, "os", "system", "cat %s" % src_file)
+	if rc != 0:
+	    print "Copy of %s:%s failed" % (src_host, src_file) 
+
+	elif dest_host == None:
+	    fd = open(dest_file, "w")
+	    fd.writelines(lines)
+	    fd.close()
+
+	else:
+	    big_line=""
+	    for line in lines:
+		big_line = big_line + line
+	    (rc, lines) = self.remote_py(dest_host, "os", "system", "echo '%s' > %s" % (big_line, dest_file))
+
+	return rc
+
     def noBlock(self, *args):
         '''Perform a remote execution without waiting for it to finish'''
-        sshnoBlock = self.CommandnoBlock
-        for arg in args:
-            sshnoBlock = sshnoBlock + " \'" + arg + "\'"
+        sshnoBlock = self._cmd_noblock(args)
         
         count=0;
         rc = 0;
@@ -160,8 +195,10 @@ class RemoteExec:
            If the call fail, lastrc == 1 and return the reason (string)
         '''
         encode_args = binascii.b2a_base64(pickle.dumps(args))
-        result = self.readlines(node, \
-            string.join(["@libdir@/heartbeat/cts/CTSproxy.py",module,func,encode_args]))
+	encode_cmd = string.join(["@libdir@/heartbeat/cts/CTSproxy.py",module,func,encode_args])
+
+	#print "%s: %s.%s %s" % (node, module, func, repr(args))
+        result = self.readlines(node, encode_cmd)
 	
 	if result != None:
 	    result.pop()
@@ -624,13 +661,15 @@ class ClusterManager(UserDict):
         '''Start the cluster manager on every node in the cluster.
         We can do it on a subset of the cluster if nodelist is not None.
         '''
-
+	ret = 1
         map = {}
         if not nodelist:
             nodelist=self.Env["nodes"]
         for node in nodelist:
             if self.ShouldBeStatus[node] == self["down"]:
-                self.StartaCM(node)
+                if not self.StartaCM(node):
+		    ret = 0
+	return ret
 
     def stopall(self, nodelist=None):
 
@@ -638,13 +677,15 @@ class ClusterManager(UserDict):
         We can do it on a subset of the cluster if nodelist is not None.
         '''
 
+	ret = 1
         map = {}
         if not nodelist:
             nodelist=self.Env["nodes"]
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == self["up"]:
-                self.StopaCM(node)
-
+                if not self.StopaCM(node):
+		    ret = 0
+	return ret
 
     def rereadall(self, nodelist=None):
 
@@ -814,8 +855,8 @@ class ClusterManager(UserDict):
         return 1
 
     def CheckDf(self):
-        dfcmd="df -B1000000 /var/log | tail -1 | tr -s ' ' | cut -d' ' -f2"
-        dfmin=500
+        dfcmd="df -k /var/log | tail -1 | tr -s ' ' | cut -d' ' -f2"
+        dfmin=500000
         result=1
         for node in self.Env["nodes"]:
             dfout=self.rsh.readaline(node, dfcmd)
@@ -1025,11 +1066,7 @@ as they might have been rebooted or crashed for some reason beforehand.
 
         # Now start the Cluster Manager on all the nodes.
         CM.log("Starting Cluster Manager on all nodes.")
-        CM.startall()
-
-
-        return 1
-
+        return CM.startall()
 
     def TearDown(self, CM):
         '''Set up the given ScenarioComponent'''
@@ -1037,7 +1074,7 @@ as they might have been rebooted or crashed for some reason beforehand.
         # Stop the cluster manager everywhere
 
         CM.log("Stopping Cluster Manager on all nodes")
-        CM.stopall()
+        return CM.stopall()
 
 class PingFest(ScenarioComponent):
     (
@@ -1159,15 +1196,16 @@ class BasicSanityCheck(ScenarioComponent):
         return self.Env["DoBSC"]
 
     def SetUp(self, CM):
-        for node in CM.Env["nodes"]:
-	    CM.log("Starting BSC node")
-            if not CM.StartaCM(node):
-		return 0
-        return 1
+
+        CM.prepare()
+
+        # Clear out the cobwebs
+        self.TearDown(CM)
+
+        # Now start the Cluster Manager on all the nodes.
+        CM.log("Starting Cluster Manager on BSC node(s).")
+        return CM.startall()
 
     def TearDown(self, CM):
-        for node in CM.Env["nodes"]:
-	    CM.log("Shutting down BSC node")
-            if not CM.StopaCM(node):
-		return 0
-        return 1
+        CM.log("Stopping Cluster Manager on BSC node(s).")
+        return CM.stopall()
