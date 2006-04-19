@@ -2111,7 +2111,7 @@ class BSC_AddResource(CTSTest):
         CTSTest.__init__(self, cm)
         self.name="AddResource"
 	self.resource_offset = 0
-	self.cib_cmd="""@libdir@/heartbeat/cibadmin -C -o %s -X '%s' """
+	self.cib_cmd="""@sbindir@/cibadmin -C -o %s -X '%s' """
 
     def __call__(self, node):
 	self.resource_offset = 	self.resource_offset  + 1
@@ -2153,10 +2153,10 @@ class BSC_AddResource(CTSTest):
 	self.CM.log("Creating %s::%s:%s (%s) on %s" % (rclass,type,id,ip,node))
 	rsc_xml="""
 <primitive id="%s" class="%s" type="%s"  provider="heartbeat">
-    <instance_attributes><attributes>
-        <nvpair id="bsc-ip-1" name="ip" value="%s"/>
+    <instance_attributes id="%s"><attributes>
+        <nvpair id="%s" name="ip" value="%s"/>
     </attributes></instance_attributes>
-</primitive>""" % (id, rclass, type, ip)
+</primitive>""" % (id, rclass, type, id, id, ip)
 
 	node_constraint="""
       <rsc_location id="run_%s" rsc="%s">
@@ -2166,20 +2166,12 @@ class BSC_AddResource(CTSTest):
       </rsc_location>""" % (id, id, id, id, node)
 
 	rc = 0
-	if self.CM.Env["DoBSC"]:
-	    rc = os.system(self.cib_cmd % ("constraint", node_constraint))
-	else:
-	    rc = self.rsh(node, self.cib_cmd % ("constraint", node_constraint))
-
+	(rc, lines) = self.CM.rsh.remote_py(node, "os", "system", self.cib_cmd % ("constraints", node_constraint))
 	if rc != 0:
 	    self.CM.log("Constraint creation failed: %d" % rc)
 	    return None
 
-	if self.CM.Env["DoBSC"]:
-	    rc = os.system(self.cib_cmd % ("primitive", rsc_xml))
-	else:
-	    rc = self.rsh(node, self.cib_cmd % ("primitive", rsc_xml))
-
+	(rc, lines) = self.CM.rsh.remote_py(node, "os", "system", self.cib_cmd % ("resources", rsc_xml))
 	if rc != 0:
 	    self.CM.log("Resource creation failed: %d" % rc)
 	    return None
