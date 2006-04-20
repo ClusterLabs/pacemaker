@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.20 2006/04/20 11:29:14 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.21 2006/04/20 11:32:03 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -329,16 +329,9 @@ migrate_resource(
 	crm_data_t *dont_run = NULL;
 
 	fragment = create_cib_fragment(NULL, NULL);
-#if CRM_DEPRECATED_SINCE_2_0_4
-	if(safe_str_eq(crm_element_name(fragment), XML_TAG_CIB)) {
-		cib = fragment;
-	} else {
-		cib = find_xml_node(fragment, XML_TAG_CIB, TRUE);
-	}
-#else
 	cib = fragment;
+
 	CRM_DEV_ASSERT(safe_str_eq(crm_element_name(cib), XML_TAG_CIB));
-#endif
 	constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
 	
 	id = crm_concat("cli-prefer", rsc_id, '-');
@@ -374,7 +367,8 @@ migrate_resource(
 				" the 'crm_resource -U' command or manually"
 				" with cibadmin\n", rsc_id, existing_node);
 			fprintf(stderr, "\tThis will be the case even if %s is"
-				" the last node in the cluster", existing_node);
+				" the last node in the cluster\n", existing_node);
+			fprintf(stderr, "\tThis messgae can be disabled with -S\n");
 		}
 		
 		crm_xml_add(dont_run, "rsc", rsc_id);
