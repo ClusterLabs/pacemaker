@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.66 2006/04/06 16:46:48 lars Exp $ */
+/* $Id: crmadmin.c,v 1.67 2006/04/20 10:55:22 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -544,7 +544,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		} else if (validate_crm_message(
 				   new_input->msg, crm_system_name, admin_uuid,
 				   XML_ATTR_RESPONSE) == FALSE) {
-			crm_info("Message was not a CRM response. Discarding.");
+			crm_debug_2("Message was not a CRM response. Discarding.");
 			continue;
 		}
 
