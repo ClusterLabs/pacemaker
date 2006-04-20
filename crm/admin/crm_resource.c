@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.19 2006/03/18 17:19:40 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.20 2006/04/20 11:29:14 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -363,7 +363,7 @@ migrate_resource(
 		}
 
 	} else {
-		if(do_force == FALSE) {
+		if(BE_QUIET == FALSE) {
 			fprintf(stderr,
 				"WARNING: Creating rsc_location constraint '%s'"
 				" with a score of -INFINITY for resource %s"
