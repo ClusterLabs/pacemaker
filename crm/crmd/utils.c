@@ -123,6 +123,7 @@ crm_timer_popped(gpointer data)
 
 	if(timer == wait_timer
 	   || timer == recheck_timer
+	   || timer == finalization_timer
 	   || timer == election_trigger) {
 		crm_info("%s (%s) just popped!",
 			get_timer_desc(timer),
