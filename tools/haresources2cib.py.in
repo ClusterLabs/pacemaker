@@ -167,6 +167,7 @@ def cib_resource(doc,index, rsc):
 
 	if params != None and len(params) != 0:
 		instance_attributes = doc.createElement("instance_attributes")
+		instance_attributes.setAttribute("id", id + "_inst_attr")
 		resource.appendChild(instance_attributes)
 		attributes = doc.createElement("attributes")
 		instance_attributes.appendChild(attributes)
@@ -238,6 +239,7 @@ def cib_resource_clone(doc, id, clone_max, clone_node_max):
 	resource_clone = doc.createElement("clone")
 	resource_clone.setAttribute("id",id)
 	instance_attributes = doc.createElement("instance_attributes")
+	instance_attributes.setAttribute("id", id + "_inst_attr")
 	resource_clone.appendChild(instance_attributes)
 	attributes = doc.createElement("attributes")
 	instance_attributes.appendChild(attributes)
@@ -301,6 +303,7 @@ def cib_stonith(doc, index, params):
 		start_op.setAttribute("prereq", "nothing")
 	if len(params) > 2 :
 		instance_attributes = doc.createElement("instance_attributes")
+		instance_attributes.setAttribute("id", id + "_inst_attr")
 		resource.appendChild(instance_attributes)
 		attributes = doc.createElement("attributes")
 		instance_attributes.appendChild(attributes)
