@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.65 2006/04/09 14:35:58 andrew Exp $ */
+/* $Id: io.c,v 1.66 2006/04/20 13:19:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -288,6 +288,10 @@ readCibXmlFile(const char *filename)
 		if(value == NULL) {
 			crm_xml_add_int(root, name, 0);
 		}
+
+		/* unset these and require the DC/CCM to update as needed */
+		crm_xml_add(root, XML_ATTR_HAVE_QUORUM, XML_BOOLEAN_FALSE);
+		xml_remove_prop(root, XML_ATTR_DC_UUID);
 	}
 	
 	crm_log_xml_info(root, "[on-disk]");
