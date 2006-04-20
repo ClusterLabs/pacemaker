@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.74 2006/04/10 13:01:21 andrew Exp $ */
+/* $Id: messages.c,v 1.75 2006/04/20 15:43:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -747,18 +747,18 @@ replace_section(
 	return cib_ok;
 }
 
-#define cib_update_xml_macro(parent, xml_update)				\
+#define cib_update_xml_macro(parent, xml_update)			\
 	if(operation == CIB_UPDATE_OP_DELETE) {				\
 		rc = delete_cib_object(parent, xml_update);		\
-		update_results(failed, xml_update, operation, rc);		\
+		update_results(failed, xml_update, operation, rc);	\
 									\
 	} else if(operation == CIB_UPDATE_OP_MODIFY) {			\
 		rc = update_cib_object(parent, xml_update);		\
-		update_results(failed, xml_update, operation, rc);		\
+		update_results(failed, xml_update, operation, rc);	\
 									\
 	} else {							\
 		rc = add_cib_object(parent, xml_update);		\
-		update_results(failed, xml_update, operation, rc);		\
+		update_results(failed, xml_update, operation, rc);	\
 	} 
 
 enum cib_errors

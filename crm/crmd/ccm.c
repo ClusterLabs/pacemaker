@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.103 2006/04/18 10:59:46 andrew Exp $ */
+/* $Id: ccm.c,v 1.104 2006/04/20 15:43:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -184,40 +184,50 @@ do_ccm_event(long long action,
 		 */
 		register_fsa_error(cause, I_ERROR, msg_data->data);
 		return I_NULL;
-	}
-	
-	if(AM_I_DC == FALSE && oc->m_n_out != 0) {
-		/* Possibly move this logic to ghash_update_cib_node() */
-		unsigned lpc = 0;
-		int offset = oc->m_out_idx;
-		for(lpc=0; lpc < oc->m_n_out; lpc++) {
-			const char *uname = oc->m_array[offset+lpc].node_uname;
-			if(uname == NULL) {
-				crm_err("CCM node had no name");
-				continue;
-				
-			} else {
-				/* remove any no-votes they had cast */
-				if(voted != NULL) {
-					g_hash_table_remove(voted, uname);
-				}
-				if(safe_str_eq(uname, fsa_our_dc)) {
-					crm_warn("Our DC node (%s) left the cluster",
-						 uname);
-					register_fsa_input(cause, I_ELECTION, NULL);
-				}
-			}
-		}
-	}
+	}	
 	
 	return return_input;
+}
+
+static void
+check_dead_member(const char *uname, GHashTable *members)
+{
+	CRM_CHECK(uname != NULL, return);
+	if(members != NULL && g_hash_table_lookup(members, uname) != NULL) {
+		crm_err("%s didnt really leave the membership!", uname);
+		return;
+	}
+
+	if(confirmed_nodes != NULL) {
+		g_hash_table_remove(confirmed_nodes, uname);
+	}
+	if(finalized_nodes != NULL) {
+		g_hash_table_remove(finalized_nodes, uname);
+	}
+	if(integrated_nodes != NULL) {
+		g_hash_table_remove(integrated_nodes, uname);
+	}
+
+	if(safe_str_eq(fsa_our_uname, uname)) {
+		crm_err("We're not part of the cluster anymore");
+	}
+	
+	if(AM_I_DC) {
+		/* remove any no-votes they had cast */
+		if(voted != NULL) {
+			g_hash_table_remove(voted, uname);
+		}
+
+	} else if(safe_str_eq(uname, fsa_our_dc)) {
+		crm_warn("Our DC node (%s) left the cluster", uname);
+		register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+	}
 }
 
 /*	 A_CCM_UPDATE_CACHE	*/
 /*
  * Take the opportunity to update the node status in the CIB as well
  */
-
 enum crmd_fsa_input
 do_ccm_update_cache(long long action,
 		    enum crmd_fsa_cause cause,
@@ -409,8 +419,7 @@ do_ccm_update_cache(long long action,
 				continue;
 			}
 			
-			member->node_id =
-				oc->m_array[offset+lpc].node_id;
+			member->node_id = oc->m_array[offset+lpc].node_id;
 			
 			member->node_born_on =
 				oc->m_array[offset+lpc].node_born_on;
@@ -425,22 +434,10 @@ do_ccm_update_cache(long long action,
 			member->node_uname =
 				crm_strdup(oc->m_array[offset+lpc].node_uname);
 
-			g_hash_table_insert(
-				members, member->node_uname, member);	
-
 			g_hash_table_insert(members, member->node_uname, member);
-			if(confirmed_nodes != NULL) {
-				g_hash_table_remove(
-					confirmed_nodes, member->node_uname);
-			}
-			if(finalized_nodes != NULL) {
-				g_hash_table_remove(
-					finalized_nodes, member->node_uname);
-			}
-			if(integrated_nodes != NULL) {
-				g_hash_table_remove(
-					integrated_nodes, member->node_uname);
-			}
+			check_dead_member(
+				member->node_uname, membership_copy->members);
+			
 		}
 	} else {
 		membership_copy->dead_members = NULL;
@@ -530,11 +527,6 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 		       oc->m_array[oc->m_out_idx+lpc].node_uname,
 		       oc->m_array[oc->m_out_idx+lpc].node_id,
 		       oc->m_array[oc->m_out_idx+lpc].node_born_on);
-		if(fsa_our_uname != NULL
-		   && 0 == strcmp(fsa_our_uname,
-			     oc->m_array[oc->m_out_idx+lpc].node_uname)) {
-			crm_err("We're not part of the cluster anymore");
-		}
 	}
 	
 	crm_debug_2("-----------------------");
@@ -627,18 +619,11 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
 
 	update_data.caller = caller;
 	update_data.updates = fragment;
-	update_data.state = XML_BOOLEAN_YES;
 	update_data.overwrite_join = overwrite;
 
 	if(overwrite == FALSE) {
 		call_options = call_options|cib_inhibit_bcast;
 		crm_debug_2("Inhibiting bcast for membership updates");
-	}
-
-	/* live nodes */
-	if(fsa_membership_copy->members != NULL) {
-		g_hash_table_foreach(fsa_membership_copy->members,
-				     ghash_update_cib_node, &update_data);
 	}
 
 	/* dead nodes */
@@ -648,6 +633,13 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
 				     ghash_update_cib_node, &update_data);
 	}		
 	
+	/* live nodes */
+	update_data.state = XML_BOOLEAN_YES;
+	if(fsa_membership_copy->members != NULL) {
+		g_hash_table_foreach(fsa_membership_copy->members,
+				     ghash_update_cib_node, &update_data);
+	}
+
 	fsa_cib_update(XML_CIB_TAG_STATUS, fragment, call_options, call_id);
 	
 	add_cib_op_callback(call_id, FALSE, NULL, ccm_node_update_complete);

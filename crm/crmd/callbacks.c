@@ -368,8 +368,7 @@ crmd_client_status_callback(const char * node, const char * client,
 		unget_uuid(node);
 	}
 	
-	if(safe_str_eq(node, fsa_our_dc)
-	   && safe_str_eq(status, OFFLINESTATUS)) {
+	if(safe_str_eq(node, fsa_our_dc) && safe_str_eq(status, OFFLINESTATUS)){
 		/* did our DC leave us */
 		crm_info("Got client status callback - our DC is dead");
 		register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);

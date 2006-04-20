@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.119 2006/04/05 13:23:34 andrew Exp $ */
+/* $Id: callbacks.c,v 1.120 2006/04/20 15:43:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1648,6 +1648,16 @@ cib_ccm_msg_callback(
 				crm_ghash_clfree, NULL);
 		}
 
+		if(membership != NULL && membership->m_n_out != 0) {
+			members = membership->m_n_out;
+			offset = membership->m_out_idx;
+			for(lpc = 0; lpc < members; lpc++) {
+				oc_node_t a_node = membership->m_array[lpc+offset];
+				crm_info("LOST: %s", a_node.node_uname);
+				g_hash_table_remove(
+					ccm_membership, a_node.node_uname);	
+			}
+		}
 		if(membership != NULL && membership->m_n_in != 0) {
 			members = membership->m_n_in;
 			offset = membership->m_in_idx;
@@ -1657,16 +1667,6 @@ cib_ccm_msg_callback(
 				crm_info("New peer: %s", uname);
 				g_hash_table_replace(
 					ccm_membership, uname, uname);	
-			}
-		}
-		if(membership != NULL && membership->m_n_out != 0) {
-			members = membership->m_n_out;
-			offset = membership->m_out_idx;
-			for(lpc = 0; lpc < members; lpc++) {
-				oc_node_t a_node = membership->m_array[lpc+offset];
-				crm_info("LOST: %s", a_node.node_uname);
-				g_hash_table_remove(
-					ccm_membership, a_node.node_uname);	
 			}
 		}
 	}
