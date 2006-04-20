@@ -411,6 +411,7 @@ do_stop(long long action,
 	enum crmd_fsa_input current_input,
 	fsa_data_t *msg_data)
 {
+	crm_data_t *node_state = NULL;
 	crm_debug_2("Stopping all remaining local resources");
 	if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
 		stop_all_resources();
@@ -426,7 +427,18 @@ do_stop(long long action,
 		crmd_fsa_stall(NULL);
 		return I_NULL;
 	}
-	
+
+#if 0
+	crm_debug("Sending \"stopped\" update to CIB");
+	node_state = create_node_state(
+		fsa_our_uname, NULL, XML_BOOLEAN_FALSE, 
+		OFFLINESTATUS, CRMD_STATE_INACTIVE, NULL, FALSE, __FUNCTION__);
+
+	fsa_cib_anon_update(
+		XML_CIB_TAG_STATUS, node_state, cib_quorum_override);
+#endif
+	free_xml(node_state);
+
 	return I_NULL;
 }
 
@@ -574,8 +586,8 @@ do_read_config(long long action,
 	election_trigger->period_ms   = crm_get_msec("5s");
 	election_timeout->period_ms   = crm_get_msec("2min");
 	integration_timer->period_ms  = crm_get_msec("3min");
-	finalization_timer->period_ms = crm_get_msec("3min");
-	shutdown_escalation_timer->period_ms = crm_get_msec("10min");
+	finalization_timer->period_ms = crm_get_msec("10min");
+	shutdown_escalation_timer->period_ms = crm_get_msec("20min");
 
 	/* apparently we're not allowed to free the result of getenv */
 	param_name = ENV_PREFIX "" KEY_INITDEAD;
@@ -685,10 +697,9 @@ populate_cib_nodes(ll_cluster_t *hb_cluster, gboolean with_client_status)
 	fsa_cluster_conn->llc_ops->end_nodewalk(fsa_cluster_conn);
 	
 	/* Now update the CIB with the list of nodes */
-	call_id = fsa_cib_conn->cmds->update(
-		fsa_cib_conn, XML_CIB_TAG_NODES, cib_node_list, NULL,
-		cib_scope_local|cib_quorum_override|cib_inhibit_bcast);
-	
+	fsa_cib_update(
+		XML_CIB_TAG_NODES, cib_node_list,
+		cib_scope_local|cib_quorum_override|cib_inhibit_bcast, call_id);
 	add_cib_op_callback(call_id, FALSE, NULL, default_cib_update_callback);
 
 	free_xml(cib_node_list);
