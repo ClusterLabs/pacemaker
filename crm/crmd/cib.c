@@ -160,6 +160,8 @@ do_cib_control(long long action,
 	}
 
 	if(action & start_actions) {
+		int rc = cib_ok;
+		
 		if(fsa_cib_conn == NULL) {
 			fsa_cib_conn = cib_new();
 		}
@@ -169,15 +171,20 @@ do_cib_control(long long action,
 				this_subsys->name);
 			return I_NULL;
 		}
+
+		rc = fsa_cib_conn->cmds->signon(
+			fsa_cib_conn, CRM_SYSTEM_CRMD, cib_command);
+
+		if(rc != cib_ok) {
+			/* a short wait that usually avoids stalling the FSA */
+			sleep(1); 
+			rc = fsa_cib_conn->cmds->signon(
+				fsa_cib_conn, CRM_SYSTEM_CRMD, cib_command);
+		}
 		
-		if(cib_ok != fsa_cib_conn->cmds->signon(
-			   fsa_cib_conn, CRM_SYSTEM_CRMD, cib_command)){
+		if(rc != cib_ok){
 			crm_debug("Could not connect to the CIB service");
-#if 0
-		} else if(cib_ok != fsa_cib_conn->cmds->set_op_callback(
-				  fsa_cib_conn, crmd_cib_op_callback)) {
-			crm_err("Could not set op callback");
-#endif
+
 		} else if(cib_ok != fsa_cib_conn->cmds->set_connection_dnotify(
 				  fsa_cib_conn, crmd_cib_connection_destroy)) {
 			crm_err("Could not set dnotify callback");
