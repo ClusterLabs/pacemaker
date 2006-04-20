@@ -343,10 +343,23 @@ build_operation_update(
 		return TRUE;
 	}
 
-	caller_version = fsa_our_dc_version;
-	CRM_CHECK(fsa_our_dc_version != NULL,
-		  caller_version = g_hash_table_lookup(
-			  op->params, XML_ATTR_CRM_VERSION));
+	if(AM_I_DC) {
+		caller_version = CRM_FEATURE_SET;
+
+	} else if(fsa_our_dc_version != NULL) {
+		caller_version = fsa_our_dc_version;
+
+	} else {
+		/* there is a small risk in formerly mixed clusters that
+		 *   it will be sub-optimal.
+		 * however with our upgrade policy, the update we send
+		 *   should still be completely supported anyway
+		 */
+		caller_version = g_hash_table_lookup(
+			op->params, XML_ATTR_CRM_VERSION);
+		crm_warn("Falling back to operation originator version: %s",
+			 caller_version);
+	}
 	crm_debug_3("DC version: %s", caller_version);
 	
 	if(safe_str_eq(op->op_type, CRMD_ACTION_NOTIFY)) {
