@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.128 2006/04/18 11:15:37 andrew Exp $ */
+/* $Id: native.c,v 1.129 2006/04/20 10:33:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -574,6 +574,12 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
 	order_restart(rsc);
+	custom_action_order(rsc, demote_key(rsc), NULL,
+			    rsc, stop_key(rsc), NULL,
+			    pe_ordering_manditory, data_set);
+	custom_action_order(rsc, start_key(rsc), NULL,
+			    rsc, promote_key(rsc), NULL,
+			    pe_ordering_optional, data_set);
 }
 
 void native_rsc_colocation_lh(
@@ -1986,6 +1992,7 @@ gboolean
 PromoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 {
 	char *key = NULL;
+	gboolean runnable = TRUE;
 	GListPtr action_list = NULL;
 	crm_debug_2("Executing: %s", rsc->id);
 
@@ -1997,14 +2004,26 @@ PromoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 
 	slist_iter(start, action_t, action_list, lpc,
 		   if(start->runnable == FALSE) {
-			   crm_debug("%s\tPromote %s (canceled)",
-				     next->details->uname, rsc->id);
-			   return TRUE;
+			   runnable = FALSE;
 		   }
 		);
+
+	if(runnable) {
+		promote_action(rsc, next, FALSE);
+		crm_notice("%s\tPromote %s", next->details->uname, rsc->id);
+		return TRUE;
+	} 
+
+	crm_debug("%s\tPromote %s (canceled)", next->details->uname, rsc->id);
+
+	key = promote_key(rsc);
+	action_list = find_actions_exact(rsc->actions, key, next);
+	crm_free(key);
+
+	slist_iter(promote, action_t, action_list, lpc,
+		   promote->runnable = FALSE;
+		);
 	
-	crm_notice("%s\tPromote %s", next->details->uname, rsc->id);
-	promote_action(rsc, next, FALSE);
 	return TRUE;
 }
 
