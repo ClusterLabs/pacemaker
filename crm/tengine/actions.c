@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.22 2006/04/19 14:21:39 andrew Exp $ */
+/* $Id: actions.c,v 1.23 2006/04/20 09:00:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -267,8 +267,8 @@ cib_action_update(crm_action_t *action, int status)
 
 	CRM_CHECK(rsc_id != NULL, return FALSE);
 	
-	crm_warn("%s: %s %s on %s timed out",
-		 crm_element_name(action->xml), task_uuid, rsc_id, target);
+	crm_warn("%s %d: %s on %s timed out",
+		 crm_element_name(action->xml), action->id, task_uuid, target);
 
 	action_rsc = find_xml_node(action->xml, XML_CIB_TAG_RESOURCE, TRUE);
 	CRM_CHECK(action_rsc != NULL, return FALSE);
