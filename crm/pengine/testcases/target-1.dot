@@ -24,5 +24,6 @@ digraph "g" {
 "rsc_c001n02_stop_0 c001n02" -> "rsc_c001n02_start_0 c001n02" [ style = dashed]
 "rsc_c001n03_stop_0 c001n03" -> "rsc_c001n03_start_0 c001n03" [ style = dashed]
 "rsc_c001n03_monitor_5000 c001n03" -> "rsc_c001n03_promote_0 c001n03" [ style = bold]
+"rsc_c001n03_start_0 c001n03" -> "rsc_c001n03_promote_0 c001n03" [ style = dashed]
 "rsc_c001n01_stop_0 c001n01" -> "rsc_c001n01_start_0 c001n01" [ style = dashed]
 }
