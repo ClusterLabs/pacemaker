@@ -65,10 +65,10 @@
           type              CDATA        #REQUIRED
           provider          CDATA        #IMPLIED
 
-          is_managed            (true|1|false|0)                 'true'
+          is_managed            (true|1|false|0|default)         'default'
           restart_type          (ignore|restart)                 'ignore'
           multiple_active       (stop_start|stop_only|block)     'stop_start'
-          resource_stickiness   (0|INFINITY|-INFINITY)           '0'>
+          resource_stickiness   CDATA                            #IMPLIED>
 <!-- Annotated version -->
 
 <!ELEMENT operations (op*)>
@@ -90,10 +90,10 @@
           id            CDATA               #REQUIRED
           description   CDATA               #IMPLIED
 
-          is_managed            (true|1|false|0)              'true'
+          is_managed            (true|1|false|0|default)      'default'
           restart_type          (ignore|restart)              'ignore'
           multiple_active       (stop_start|stop_only|block)  'stop_start'
-          resource_stickiness   (0|INFINITY|-INFINITY)        '0'
+          resource_stickiness   CDATA                         #IMPLIED
 
           ordered               (true|1|false|0)              'true'
           collocated            (true|1|false|0)              'true'>
@@ -102,10 +102,10 @@
           id            CDATA               #REQUIRED
           description   CDATA               #IMPLIED
 
-          is_managed            (true|1|false|0)              'true'
+          is_managed            (true|1|false|0|default)      'default'
           restart_type          (ignore|restart)              'ignore'
           multiple_active       (stop_start|stop_only|block)  'stop_start'
-          resource_stickiness   (0|INFINITY|-INFINITY)        '0'
+          resource_stickiness   CDATA                         #IMPLIED
 
           notify                (true|1|false|0)              'false'
           globally_unique       (true|1|false|0)              'true'
@@ -118,10 +118,10 @@
           id            CDATA       #REQUIRED
           description   CDATA       #IMPLIED
 
-          is_managed            (true|1|false|0)              'true'
+          is_managed            (true|1|false|0|default)      'default'
           restart_type          (ignore|restart)              'ignore'
           multiple_active       (stop_start|stop_only|block)  'stop_start'
-          resource_stickiness   (0|INFINITY|-INFINITY)        '0'
+          resource_stickiness   CDATA                         #IMPLIED
 
           notify                (true|1|false|0)              'false'
           globally_unique       (true|1|false|0)              'true'
