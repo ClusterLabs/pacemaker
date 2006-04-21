@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.90 2006/04/03 09:51:56 andrew Exp $ */
+/* $Id: stages.c,v 1.91 2006/04/21 09:18:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -511,11 +511,13 @@ choose_node_from_list(color_t *color)
 	*/
 	GListPtr nodes = color->details->candidate_nodes;
 	node_t *chosen = NULL;
+	int multiple = 0;
 
 	crm_debug_2("Choosing node for color %d", color->id);
 	color->details->candidate_nodes = g_list_sort(nodes, sort_node_weight);
+	nodes = color->details->candidate_nodes;
 
-	chosen = g_list_nth_data(color->details->candidate_nodes, 0);
+	chosen = g_list_nth_data(nodes, 0);
 
 	color->details->chosen_node = NULL;
 	color->details->pending = FALSE;
@@ -537,11 +539,38 @@ choose_node_from_list(color_t *color)
 		return FALSE;
 	}
 
+
+	slist_iter(candidate, node_t, nodes, lpc, 
+		   if(chosen->weight > 0
+		      && candidate->details->unclean == FALSE
+		      && candidate->weight == chosen->weight) {
+			   multiple++;
+		   } else {
+			   break;
+		   }
+		);
+
+	if(multiple > 1) {
+		int log_level = LOG_WARNING;
+		char *score = score2char(chosen->weight);
+		
+		crm_warn("%d nodes with equal score (%s) for running the"
+			 " listed resources (chose %s):",
+			 multiple, score, chosen->details->uname);
+		slist_iter(rsc, resource_t,
+			   color->details->allocated_resources, lpc,
+			   rsc->fns->print(
+				   rsc, "\t", pe_print_log|pe_print_rsconly,
+				   &log_level);
+			);
+		crm_free(score);
+	}
+	
 	/* todo: update the old node for each resource to reflect its
 	 * new resource count
 	 */
 
-	crm_debug_2("assigned %s to color %d", chosen->details->uname, color->id);
+	crm_debug_2("assigned %s to color %d",chosen->details->uname,color->id);
 	chosen->details->num_resources += color->details->num_resources;
 	color->details->chosen_node = node_copy(chosen);
 	

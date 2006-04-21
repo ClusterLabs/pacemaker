@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.41 2006/03/31 12:05:37 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.42 2006/04/21 09:18:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -173,6 +173,7 @@ extern const char *ordering_type2text(enum pe_ordering type);
 extern const char *fail2text(enum action_fail_response fail);
 
 extern int char2score(const char *score);
+extern char *score2char(int score);
 
 
 /* free the various structures */

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.131 2006/04/21 07:08:04 andrew Exp $ */
+/* $Id: utils.c,v 1.132 2006/04/21 09:18:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1853,6 +1853,20 @@ char2score(const char *score)
 	}
 	
 	return score_f;
+}
+
+
+char *
+score2char(int score) 
+{
+
+	if(score >= INFINITY) {
+		return crm_strdup("+"INFINITY_S);
+
+	} else if(score <= -INFINITY) {
+		return crm_strdup("-"INFINITY_S);
+	} 
+	return crm_itoa(score);
 }
 
 rsc_to_node_t *
