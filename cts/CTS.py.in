@@ -421,6 +421,7 @@ class ClusterManager(UserDict):
     def __init__(self, Environment, randseed=None):
         self.Env = Environment
         self.__InitialConditions()
+	self.clear_cache = 0
         self.data = {
             "up"             : "up",        # Status meaning up
             "down"           : "down",  # Status meaning down
@@ -523,19 +524,20 @@ class ClusterManager(UserDict):
 
         self.install_config(node)
 
-#       Clear out the host cache to prevent the PE from shooting nodes
-#          during StartOnebyOne
-#        self.rsh.remote_python_call(
-#            node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/hostcache")
-
         if not self.ns.WaitForNodeToComeUp(node):
             self.log("Second WaitForNodeToComeUp %s failed" % node)
             return 0
 
-	self.ShouldBeStatus[node] = "any"
+        self.ShouldBeStatus[node] = "any"
         if self.StataCM(node) and self.cluster_stable(self["DeadTime"]):
             self.log ("%s was already started" %(node))
             return 1
+
+        # Clear out the host cache so autojoin can be exercised
+        if self.clear_cache:
+            self.debug("Removing cache file on: "+node)
+            self.rsh.remote_py(node, "os", "system", 
+                               "rm -f @HA_VARLIBDIR@/heartbeat/hostcache")
 
         if self.rsh(node, self["StartCmd"]) != 0:
             self.log ("Warn: Start command failed on node %s" %(node))
@@ -568,6 +570,12 @@ class ClusterManager(UserDict):
         if not self.ns.IsNodeBooted(node):
             self.log("node %s not booted, StartaCMnoBlock failed." % node)
             return 0
+
+        # Clear out the host cache so autojoin can be exercised
+        if self.clear_cache:
+            self.debug("Removing cache file on: "+node)
+            self.rsh.remote_py(node, "os", "system", 
+                               "rm -f @HA_VARLIBDIR@/heartbeat/hostcache")
 
         self.rsh.noBlock(node, self["StartCmd"])
         self.ShouldBeStatus[node]=self["up"]
