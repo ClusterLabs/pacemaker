@@ -784,7 +784,7 @@ if __name__ == '__main__':
         
     tests.summarize()
     if tests.Stats["failure"] > 0:
-        sys.exit(test.Stats["failure"])
+        sys.exit(tests.Stats["failure"])
 
     elif tests.Stats["success"] != NumIter:
         cm.Env.log("No failure count but success != requested iterations")
