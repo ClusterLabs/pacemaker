@@ -546,7 +546,7 @@ is_rsc_active(const char *rsc_id)
 	slist_iter(
 		op, lrm_op_t, op_list, llpc,
 		
-		crm_debug_2("Processing op %s (%d) for %s (status=%d, rc=%d)", 
+		crm_debug("Processing op %s (%d) for %s (status=%d, rc=%d)", 
 			    op->op_type, op->call_id, the_rsc->id,
 			    op->op_status, op->rc);
 		
@@ -1351,6 +1351,19 @@ copy_lrm_rsc(const lrm_rsc_t *rsc)
 	return rsc_copy;
 }
 
+static void
+cib_rsc_callback(const HA_Message *msg, int call_id, int rc,
+		 crm_data_t *output, void *user_data)
+{
+	if(rc != cib_ok) {
+		crm_err("Resource update %d failed: %s",
+			call_id, cib_error2string(rc));	
+	} else {
+		crm_debug("Resource update %d complete", call_id);	
+	}
+}
+
+
 void
 do_update_resource(lrm_op_t* op)
 {
@@ -1365,10 +1378,7 @@ do_update_resource(lrm_op_t* op)
 	int rc = cib_ok;
 	crm_data_t *update, *iter;
 	
-	CRM_DEV_ASSERT(op != NULL);
-	if(crm_assert_failed) {
-		return;
-	}
+	CRM_CHECK(op != NULL, return);
 
 	update = create_node_state(
 		fsa_our_uname, NULL, NULL, NULL, NULL, NULL, FALSE, __FUNCTION__);
@@ -1416,7 +1426,8 @@ do_update_resource(lrm_op_t* op)
 			
 	if(rc > 0) {
 		/* the return code is a call number, not an error code */
-		crm_debug_3("Sent resource state update message: %d", rc);
+		crm_debug("Sent resource state update message: %d", rc);
+		add_cib_op_callback(rc, FALSE, NULL, cib_rsc_callback);
 		
 	} else {
 		crm_err("Resource state update failed: %s",

@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.9 2006/04/19 12:24:59 andrew Exp $ */
+/* $Id: graph.c,v 1.10 2006/04/21 07:08:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -76,27 +76,27 @@ update_synapse_confirmed(synapse_t *synapse, int action_id)
 		crm_debug_3("Processing action %d", action->id);
 		
 		if(action->id == action_id) {
-			crm_info("Confirmed: Action %d of Synapse %d",
+			crm_debug_2("Confirmed: Action %d of Synapse %d",
 				 action_id, synapse->id);
 			action->confirmed = TRUE;
 			updates = TRUE;
 
 		} else if(action->confirmed == FALSE) {
 			is_confirmed = FALSE;
-			crm_debug_2("Synapse %d still not confirmed after action %d",
+			crm_debug_3("Synapse %d still not confirmed after action %d",
 				    synapse->id, action_id);
 		}
 		
 		);
 
 	if(is_confirmed && synapse->confirmed == FALSE) {
-		crm_debug("Confirmed: Synapse %d", synapse->id);
+		crm_debug_2("Confirmed: Synapse %d", synapse->id);
 		synapse->confirmed = TRUE;
 		updates = TRUE;
 	}
 	
 	if(updates) {
-		crm_debug_2("Updated synapse %d", synapse->id);
+		crm_debug_3("Updated synapse %d", synapse->id);
 	}
 	return updates;
 }
@@ -173,12 +173,11 @@ initiate_action(crm_graph_t *graph, crm_action_t *action)
 	
 	action->executed = TRUE;
 	if(action->type == action_type_pseudo){
-		te_log_action(LOG_INFO,
-			      "Executing pseudo-event: %d", action->id);
+		crm_debug_2("Executing pseudo-event: %d", action->id);
 		return graph_fns->pseudo(graph, action);
 
 	} else if(action->type == action_type_rsc) {
-		te_log_action(LOG_INFO, "Executing rsc-event: %d", action->id);
+		crm_debug_2("Executing rsc-event: %d", action->id);
 		return graph_fns->rsc(graph, action);
 
 	} else if(action->type == action_type_crm) {
@@ -187,12 +186,12 @@ initiate_action(crm_graph_t *graph, crm_action_t *action)
 		CRM_CHECK(task != NULL, return FALSE);
 		
 		if(safe_str_eq(task, CRM_OP_FENCE)) {
-			te_log_action(LOG_INFO, "Executing STONITH-event: %d",
+			crm_info("Executing STONITH-event: %d",
 				      action->id);
 			return graph_fns->stonith(graph, action);
 		}
 		
-		te_log_action(LOG_INFO, "Executing crm-event: %d", action->id);
+		crm_info("Executing crm-event: %d", action->id);
 		return graph_fns->crmd(graph, action);
 	}
 	
@@ -209,7 +208,7 @@ fire_synapse(crm_graph_t *graph, synapse_t *synapse)
 	CRM_CHECK(synapse->ready, return FALSE);
 	CRM_CHECK(synapse->confirmed == FALSE, return TRUE);
 	
-	crm_debug("Synapse %d fired", synapse->id);
+	crm_debug_2("Synapse %d fired", synapse->id);
 	synapse->executed = TRUE;
 	slist_iter(
 		action, crm_action_t, synapse->actions, lpc,

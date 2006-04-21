@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.130 2006/04/18 11:15:37 andrew Exp $ */
+/* $Id: utils.c,v 1.131 2006/04/21 07:08:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -417,8 +417,7 @@ pe_find_resource(GListPtr rsc_list, const char *id)
 			return child_rsc;
 		}
 	}
-	/* error */
-	crm_debug("No match for %s", id);
+	crm_debug_2("No match for %s", id);
 	return NULL;
 }
 

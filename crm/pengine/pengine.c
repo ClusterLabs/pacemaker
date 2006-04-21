@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.108 2006/04/04 17:15:43 andrew Exp $ */
+/* $Id: pengine.c,v 1.109 2006/04/21 07:08:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -154,17 +154,18 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		if(was_processing_error) {
 			crm_err("Transition %d:"
 				" ERRORs found during PE processing."
-				" Input stored in: %s",
+				" PEngine Input stored in: %s",
 				transition_id, filename);
 
 		} else if(was_processing_warning) {
 			crm_warn("Transition %d:"
 				 " WARNINGs found during PE processing."
-				 " Input stored in: %s",
+				 " PEngine Input stored in: %s",
 				 transition_id, filename);
 
 		} else {
-			crm_info("PEngine Input stored in: %s", filename);
+			crm_info("Transition %d: PEngine Input stored in: %s",
+				 transition_id, filename);
 		}
 
 		if(was_config_error) {

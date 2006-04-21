@@ -1,4 +1,4 @@
-/* $Id: events.c,v 1.13 2006/04/11 07:36:49 andrew Exp $ */
+/* $Id: events.c,v 1.14 2006/04/21 07:08:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -258,7 +258,7 @@ match_graph_event(
 
 	}
 
-	crm_debug("Matched action (%d) %s", action->id, this_event);
+	crm_debug_2("Matched action (%d) %s", action->id, this_event);
 
 	CRM_CHECK(decode_transition_magic(
 			       magic, &update_te_uuid,
@@ -266,19 +266,21 @@ match_graph_event(
 
 	if(transition_i == -1) {
 		/* we never expect these - recompute */
-		crm_err("Detected an action initiated outside of a transition");
+		crm_err("Detected action %s initiated outside of a transition",
+			this_event);
 		crm_log_message(LOG_ERR, event);
 		return -2;
 		
 	} else if(safe_str_neq(update_te_uuid, te_uuid)) {
-		crm_info("Detected an action from a different transitioner:"
-			 " %s vs. %s", update_te_uuid, te_uuid);
+		crm_info("Detected action %s from a different transitioner:"
+			 " %s vs. %s", this_event, update_te_uuid, te_uuid);
 		crm_log_message(LOG_INFO, event);
 		return -3;
 		
 	} else if(transition_graph->id != transition_i) {
-		crm_warn("Detected an action from a different transition:"
-			 " %d vs. %d", transition_i, transition_graph->id);
+		crm_warn("Detected an action %s from a different transition:"
+			 " %d vs. %d", this_event, transition_i,
+			 transition_graph->id);
 		crm_log_message(LOG_INFO, event);
 		return -4;
 	}
@@ -289,13 +291,13 @@ match_graph_event(
 
 	target_rc_s = g_hash_table_lookup(action->params,XML_ATTR_TE_TARGET_RC);
 	if(target_rc_s != NULL) {
-		crm_debug("Target rc: %s vs. %d", target_rc_s, op_rc_i);
+		crm_debug_2("Target rc: %s vs. %d", target_rc_s, op_rc_i);
 		target_rc = crm_parse_int(target_rc_s, NULL);
 		if(target_rc == op_rc_i) {
 			crm_debug_2("Target rc: == %d", op_rc_i);
 			if(op_status_i != LRM_OP_DONE) {
-				crm_debug("Re-mapping op status to"
-					  " LRM_OP_DONE for %s", update_event);
+				crm_debug_2("Re-mapping op status to"
+					    " LRM_OP_DONE for %s",update_event);
 				op_status_i = LRM_OP_DONE;
 			}
 		} else {

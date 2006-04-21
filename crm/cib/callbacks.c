@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.120 2006/04/20 15:43:23 andrew Exp $ */
+/* $Id: callbacks.c,v 1.121 2006/04/21 07:08:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1406,7 +1406,7 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 	crm_debug_2("Peer %s message (%s) from %s", op, seq, originator);
 	
 	if(originator == NULL || safe_str_eq(originator, cib_our_uname)) {
- 		crm_debug_3("Discarding %s message from ourselves", op);
+ 		crm_debug("Discarding %s message %s from ourselves", op, seq);
 		return;
 
 	} else if(ccm_membership == NULL) {
