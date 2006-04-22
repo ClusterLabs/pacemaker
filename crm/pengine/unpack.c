@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.187 2006/04/22 17:35:44 andrew Exp $ */
+/* $Id: unpack.c,v 1.188 2006/04/22 17:47:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -977,9 +977,19 @@ unpack_lrm_rsc_state(
 			if(safe_str_eq(task, CRMD_ACTION_STOP)
 			   && safe_str_eq(status, "0")) {
 				stop_index = lpc;
+
 			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
 				start_index = lpc;
+
+			} else if(start_index <= stop_index
+				  && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+				const char *rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
+				if(safe_str_eq(rc, "0")
+				   || safe_str_eq(rc, "8")) {
+					start_index = lpc;
+				}
 			}
+			
 			unpack_rsc_op(rsc, node, rsc_op,
 				      &max_call_id, &on_fail, data_set);
 			);
@@ -1002,7 +1012,7 @@ unpack_lrm_rsc_state(
 			   
 			   interval = get_interval(rsc_op);
 			   if(safe_str_eq(interval, "0")) {
-				   crm_debug_3("Skipping %s/%s: non-recurring",
+				   crm_debug_4("Skipping %s/%s: non-recurring",
 					       id, node->details->uname);
 				   continue;
 			   }
