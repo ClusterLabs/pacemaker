@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.188 2006/04/22 17:47:31 andrew Exp $ */
+/* $Id: unpack.c,v 1.189 2006/04/22 18:14:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1025,7 +1025,7 @@ unpack_lrm_rsc_state(
 			   }
 			   task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 			   /* create the action */
-			   crm_err("Creating %s/%s", id, node->details->uname);
+			   crm_debug_2("Creating %s/%s", id, node->details->uname);
 			   custom_action(rsc, crm_strdup(id), task, node,
 					 TRUE, TRUE, data_set);
 			);
@@ -1500,6 +1500,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 
 			if(is_stop_action) {
 				rsc->role = RSC_ROLE_STOPPED;
+
 				/* clear any previous failure actions */
 				*on_fail = action_fail_ignore;
 				rsc->next_role = RSC_ROLE_UNKNOWN;
