@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.42 2006/04/21 09:18:26 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.43 2006/04/22 17:35:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -184,6 +184,7 @@ extern void pe_free_rsc_to_node(rsc_to_node_t *cons);
 extern void pe_free_shallow(GListPtr alist);
 extern void pe_free_shallow_adv(GListPtr alist, gboolean with_data);
 extern void pe_free_resources(GListPtr resources);
+extern void pe_free_action(action_t *action);
 extern void pe_free_actions(GListPtr actions);
 extern void pe_free_ordering(GListPtr constraints);
 

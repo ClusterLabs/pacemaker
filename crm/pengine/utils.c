@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.132 2006/04/21 09:18:26 andrew Exp $ */
+/* $Id: utils.c,v 1.133 2006/04/22 17:35:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1595,20 +1595,26 @@ pe_free_resources(GListPtr resources)
 	}
 }
 
+void
+pe_free_action(action_t *action) 
+{
+	if(action == NULL) {
+		return;
+	}
+	pe_free_shallow(action->actions_before);/* action_warpper_t* */
+	pe_free_shallow(action->actions_after); /* action_warpper_t* */
+	g_hash_table_destroy(action->extra);
+	crm_free(action->uuid);
+	crm_free(action);
+}
 
 void
 pe_free_actions(GListPtr actions) 
 {
 	GListPtr iterator = actions;
 	while(iterator != NULL) {
-		action_t *action = (action_t *)iterator->data;
+		pe_free_action(iterator->data);
 		iterator = iterator->next;
-
-		pe_free_shallow(action->actions_before);/* action_warpper_t* */
-		pe_free_shallow(action->actions_after); /* action_warpper_t* */
-		g_hash_table_destroy(action->extra);
-		crm_free(action->uuid);
-		crm_free(action);
 	}
 	if(actions != NULL) {
 		g_list_free(actions);

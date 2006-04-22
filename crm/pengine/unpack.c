@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.186 2006/04/22 10:46:02 andrew Exp $ */
+/* $Id: unpack.c,v 1.187 2006/04/22 17:35:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -878,6 +878,28 @@ process_rsc_state(resource_t *rsc, node_t *node,
 	}
 }
 
+static const char *
+get_interval(crm_data_t *xml_op) 
+{
+	const char *interval_s = NULL;
+        interval_s  = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+#if CRM_DEPRECATED_SINCE_2_0_4
+	if(interval_s == NULL) {
+		crm_data_t *params = NULL;
+		params = find_xml_node(xml_op, XML_TAG_PARAMS, FALSE);
+		if(params != NULL) {
+			interval_s = crm_element_value(
+				params, XML_LRM_ATTR_INTERVAL);
+		}
+	}
+#endif
+	
+	CRM_CHECK(interval_s != NULL,
+		  crm_err("Invalid rsc op: %s", ID(xml_op)); return "0");
+	
+	return interval_s;
+}
+
 static void
 unpack_lrm_rsc_state(
 	node_t *node, crm_data_t * rsc_entry, pe_working_set_t *data_set)
@@ -939,9 +961,10 @@ unpack_lrm_rsc_state(
 		);
 
 	if(op_list != NULL) {
+		int stop_index = -1;
+		int start_index = -1;
 		const char *task = NULL;
 		const char *status = NULL;
-		gboolean skip_mode = TRUE;
 		saved_role = rsc->role;
 		on_fail = action_fail_ignore;
 		rsc->role = RSC_ROLE_STOPPED;
@@ -953,24 +976,49 @@ unpack_lrm_rsc_state(
 			status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
 			if(safe_str_eq(task, CRMD_ACTION_STOP)
 			   && safe_str_eq(status, "0")) {
-				skip_mode = FALSE;
-				crm_info("Skipped everything prior to: %s",
-					  ID(rsc_op));
+				stop_index = lpc;
+			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
+				start_index = lpc;
 			}
-			if(skip_mode == FALSE) {
-				unpack_rsc_op(rsc, node, rsc_op,
-					      &max_call_id, &on_fail, data_set);
-			}
+			unpack_rsc_op(rsc, node, rsc_op,
+				      &max_call_id, &on_fail, data_set);
 			);
-		
-		if(skip_mode) {
-			/* no stop was found, just process everything */
-			slist_iter(
-				rsc_op, crm_data_t, sorted_op_list, lpc,
-				unpack_rsc_op(rsc, node, rsc_op,
-					      &max_call_id, &on_fail, data_set);
-				);
-		}
+
+		crm_debug_2("%s: Start index %d, stop index = %d",
+			    rsc->id, start_index, stop_index);
+		slist_iter(rsc_op, crm_data_t, sorted_op_list, lpc,
+			   const char *id = ID(rsc_op);
+			   const char *interval = NULL;
+			   if(start_index < stop_index) {
+				   crm_debug_2("Skipping %s/%s: not active",
+					       rsc->id, node->details->uname);
+				   break;
+				   
+			   } else if(lpc <= start_index) {
+				   crm_debug_3("Skipping %s/%s: old",
+					       id, node->details->uname);
+				   continue;
+			   }
+			   
+			   interval = get_interval(rsc_op);
+			   if(safe_str_eq(interval, "0")) {
+				   crm_debug_3("Skipping %s/%s: non-recurring",
+					       id, node->details->uname);
+				   continue;
+			   }
+
+			   status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
+			   if(safe_str_eq(status, "-1")) {
+				   crm_debug_3("Skipping %s/%s: status",
+					       id, node->details->uname);
+				   continue;
+			   }
+			   task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+			   /* create the action */
+			   crm_err("Creating %s/%s", id, node->details->uname);
+			   custom_action(rsc, crm_strdup(id), task, node,
+					 TRUE, TRUE, data_set);
+			);
 		
 		/* no need to free the contents */
 		g_list_free(sorted_op_list);
@@ -1232,7 +1280,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 /* 	const char *target_rc   = NULL;	 */
 	const char *task_status = NULL;
 	const char *interval_s  = NULL;
-	const char *op_digest  = NULL;
+	const char *op_digest   = NULL;
 
 	int interval = 0;
 	int task_id_i = -1;
@@ -1242,20 +1290,14 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	action_t *action = NULL;
 	gboolean is_probe = FALSE;
 	gboolean is_stop_action = FALSE;
-
-	crm_data_t *params = NULL;
-#if CRM_DEPRECATED_SINCE_2_0_4
-	params = find_xml_node(xml_op, XML_TAG_PARAMS, FALSE);
-#endif
 	
 	CRM_CHECK(rsc    != NULL, return FALSE);
 	CRM_CHECK(node   != NULL, return FALSE);
 	CRM_CHECK(xml_op != NULL, return FALSE);
 
-	id = ID(xml_op);
+	id	    = ID(xml_op);
 	task        = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
  	task_id     = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-        interval_s  = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
 	task_status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
 	op_digest   = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
 
@@ -1277,15 +1319,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		    id, task, task_id, task_status, node->details->uname,
 		    role2text(rsc->role));
 
-#if CRM_DEPRECATED_SINCE_2_0_4
-	if(interval_s == NULL && params != NULL) {
-		interval_s = crm_element_value(params, XML_LRM_ATTR_INTERVAL);
-	}
-#endif
-	
-	CRM_CHECK(interval_s != NULL,
-		  crm_err("Invalid rsc op: %s", id); return FALSE);
-	interval = crm_parse_int(interval_s, NULL);
+	interval_s = get_interval(xml_op);
+	interval = crm_parse_int(interval_s, "0");
 	
 	if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
 		is_probe = TRUE;
@@ -1314,18 +1349,19 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 
 		if(op_match == NULL && data_set->stop_action_orphans) {
 			/* create a cancel action */
+			action_t *cancel = NULL;
 			pe_config_warn("Orphan action will be stopped: %s", id);
 
-			action = custom_action(
+			cancel = custom_action(
 				rsc, crm_strdup(id), CRMD_ACTION_CANCEL, node,
 				FALSE, TRUE, data_set);
 
-			add_hash_param(action->extra, XML_LRM_ATTR_TASK, task);
-			add_hash_param(action->extra,
+			add_hash_param(cancel->extra, XML_LRM_ATTR_TASK, task);
+			add_hash_param(cancel->extra,
 				       XML_LRM_ATTR_INTERVAL, interval_s);
 			
 			custom_action_order(
-				rsc, NULL, action,
+				rsc, NULL, cancel,
 				rsc, stop_key(rsc), NULL,
 				pe_ordering_optional, data_set);
 
@@ -1370,25 +1406,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	CRM_CHECK(actual_rc != NULL, return FALSE);	
 	actual_rc_i = crm_parse_int(actual_rc, NULL);
 	
-#if 0
-	/* this wont work anymore now that we dont get the set of params,
-	 *   we only get the hash of them
-	 */
-	if(params != NULL) {
-		target_rc = crm_element_value(params, XML_ATTR_TE_TARGET_RC);
-	}
-	
-	if(target_rc != NULL && task_status_i != LRM_OP_PENDING) {
-		crm_debug_2("Exit code from %s: %s vs. %s",
-			    task, target_rc, actual_rc);
-		if(safe_str_eq(target_rc, actual_rc)) {
-			task_status_i = LRM_OP_DONE;
-		} else {
-			task_status_i = LRM_OP_ERROR;
-		}
-	}
-#endif
-
 	if(EXECRA_NOT_RUNNING == actual_rc_i) {
 		if(is_probe) {
 			/* treat these like stops */
@@ -1435,7 +1452,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	   || task_status_i == LRM_OP_TIMEOUT
 	   || task_status_i == LRM_OP_NOTSUPPORTED) {
 		action = custom_action(rsc, crm_strdup(id), task, NULL,
-				       TRUE, TRUE, data_set);
+				       TRUE, FALSE, data_set);
 		if(action->on_fail == action_fail_ignore) {
 			task_status_i = LRM_OP_DONE;
 		}
@@ -1461,30 +1478,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			if(safe_str_eq(task, CRMD_ACTION_START)) {
 				rsc->start_pending = TRUE;
 				rsc->role = RSC_ROLE_STARTED;
-		
-				/* make sure it is re-issued but,
-				 * only if we have quorum
-				 */
-				if(data_set->have_quorum == TRUE
-				   || data_set->no_quorum_policy == no_quorum_ignore){
-					/* do not specify the node, we may want
-					 * to start it elsewhere
-					 */
-					start_action(rsc, NULL, FALSE);
-				}
 				
 			} else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
 				rsc->role = RSC_ROLE_MASTER;
-
-			} else if(rsc->role > RSC_ROLE_STOPPED) {
-				crm_debug_2("Re-issuing pending recurring task:"
-					    " %s for %s on %s",
-					    task, rsc->id, node->details->id);
-				/* do not specify the node, we may want
-				 * to start it elsewhere
-				 */
-				custom_action(rsc, crm_strdup(id), task,
-					      NULL, FALSE, TRUE, data_set);
 			}
 			break;
 		
@@ -1504,34 +1500,11 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			} else if(safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
 				rsc->role = RSC_ROLE_SLAVE;
 				
-			} else {
-				/* make sure its already created and is optional
-				 *
-				 * creating it now tells Recurring() 
-				 *  that it can safely leave it optional
-				 */
-				if(rsc->role < RSC_ROLE_STARTED) {
-					crm_debug_2("%s active on %s",
-						    rsc->id,
-						    node->details->uname);
-					rsc->role = RSC_ROLE_STARTED;
-				}
-
-				/* the != start check is so i dont have to
-				 * update all the old testcases
-				 */
-				if(interval > 0
-				   || safe_str_neq(task, CRMD_ACTION_START)) {
-					crm_debug_2("%s: %s active on %s",
-						    rsc->id, id, node->details->uname);
-					/* we have to specify the node so that we know the
-					 * monitor is active later on
-					 */
-					custom_action(rsc, crm_strdup(id), task,
-						      node, TRUE, TRUE, data_set);
-				}
+			} else if(rsc->role < RSC_ROLE_STARTED) {
+				crm_debug_2("%s active on %s",
+					    rsc->id, node->details->uname);
+				rsc->role = RSC_ROLE_STARTED;
 			}
-			
 			break;
 
 		case LRM_OP_ERROR:
@@ -1540,17 +1513,10 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			crm_warn("Processing failed op (%s) for %s on %s",
 				 id, rsc->id, node->details->uname);
 
-			action = custom_action(
-				rsc, crm_strdup(id), task, NULL,
-				TRUE, TRUE, data_set);
-
 			if(*on_fail < action->on_fail) {
 				*on_fail = action->on_fail;
 			}
 			
-/* 			if(action->on_fail == action_fail_ignore) { */
-
-/* 			} else */
 			if(task_status_i == LRM_OP_NOTSUPPORTED
 			   || is_stop_action
 			   || safe_str_eq(task, CRMD_ACTION_START) ) {
@@ -1586,6 +1552,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				native_assign_color(rsc, data_set->no_color);
 			}
 			
+			pe_free_action(action);
+			action = NULL;
 			break;
 		case LRM_OP_CANCELLED:
 			/* do nothing?? */
@@ -1595,6 +1563,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 
 	crm_debug_2("Resource %s after %s: role=%s",
 		    rsc->id, task, role2text(rsc->role));
+
+	pe_free_action(action);
 	
 	return TRUE;
 }
