@@ -1,8 +1,5 @@
 digraph "g" {
 	size = "30,30"
-"rsc_hadev3_monitor_5000 hadev3" [ style="dashed" color="blue" fontcolor="black" ]
-"DoFencing:child_DoFencing:2_monitor_5000 hadev3" [ style="dashed" color="blue" fontcolor="black" ]
-"DcIPaddr_monitor_5000 hadev3" [ style="dashed" color="blue" fontcolor="black" ]
 "DoFencing:child_DoFencing:0_monitor_5000 hadev2" [ style="dashed" color="blue" fontcolor="black" ]
 "rsc_hadev2_monitor_5000 hadev2" [ style="dashed" color="blue" fontcolor="black" ]
 "DcIPaddr_monitor_5000 hadev2" [ style="dashed" color="blue" fontcolor="black" ]

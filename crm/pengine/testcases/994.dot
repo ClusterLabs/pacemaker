@@ -1,10 +1,8 @@
 digraph "g" {
 	size = "30,30"
 "group_1:Filesystem_2_monitor_120000 paul" [ style="dashed" color="blue" fontcolor="black" ]
-"group_1:postfix_9_monitor_0 <none>" [ style="dashed" color="blue" fontcolor="black" ]
 "group_1:postfix_9_monitor_120000 paul" [ style=bold color="green" fontcolor="black" ]
 "group_1:postfix_9_stop_0 paul" [ style=bold color="green" fontcolor="black" ]
-"group_1:datadisk_1_monitor_0 paul" [ style="dashed" color="blue" fontcolor="black" ]
 "group_1:datadisk_1_monitor_120000 paul" [ style="dashed" color="blue" fontcolor="black" ]
 "group_1:IPaddr_5_monitor_5000 paul" [ style="dashed" color="blue" fontcolor="black" ]
 "group_1:datadisk_1_stop_0 paul" [ style="dashed" color="blue" fontcolor="black" ]

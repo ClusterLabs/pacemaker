@@ -1,7 +1,7 @@
  <transition_graph global_timeout="3m" transition_id="0">
    <synapse id="0">
      <action_set>
-       <rsc_op id="6" rsc_id="DcIPaddr" operation="stop" operation_key="DcIPaddr_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+       <rsc_op id="4" rsc_id="DcIPaddr" operation="stop" operation_key="DcIPaddr_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.10"/>
        </rsc_op>
@@ -10,7 +10,7 @@
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="8" rsc_id="rsc_posic041" operation="stop" operation_key="rsc_posic041_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+       <rsc_op id="6" rsc_id="rsc_posic041" operation="stop" operation_key="rsc_posic041_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="rsc_posic041" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.11"/>
        </rsc_op>
@@ -19,7 +19,7 @@
    </synapse>
    <synapse id="2">
      <action_set>
-       <rsc_op id="10" rsc_id="rsc_posic042" operation="stop" operation_key="rsc_posic042_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+       <rsc_op id="8" rsc_id="rsc_posic042" operation="stop" operation_key="rsc_posic042_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="rsc_posic042" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.12"/>
        </rsc_op>
@@ -28,7 +28,7 @@
    </synapse>
    <synapse id="3">
      <action_set>
-       <rsc_op id="12" rsc_id="rsc_posic043" operation="stop" operation_key="rsc_posic043_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+       <rsc_op id="10" rsc_id="rsc_posic043" operation="stop" operation_key="rsc_posic043_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="rsc_posic043" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.13"/>
        </rsc_op>
@@ -37,7 +37,7 @@
    </synapse>
    <synapse id="4">
      <action_set>
-       <rsc_op id="15" rsc_id="rsc_posic044" operation="stop" operation_key="rsc_posic044_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+       <rsc_op id="13" rsc_id="rsc_posic044" operation="stop" operation_key="rsc_posic044_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="rsc_posic044" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1"/>
          <attributes crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.14"/>
        </rsc_op>
@@ -46,7 +46,7 @@
    </synapse>
    <synapse id="5">
      <action_set>
-       <rsc_op id="18" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" operation_key="DoFencing:child_DoFencing:0_monitor_5000" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+       <rsc_op id="16" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" operation_key="DoFencing:child_DoFencing:0_monitor_5000" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
          <attributes timeout="20000" crm_feature_set="1.0.5" interval="5000" clone="0" clone_max="4" hostlist="posic041 posic042 posic043 posic044 " clone_node_max="1"/>
        </rsc_op>
@@ -55,7 +55,7 @@
    </synapse>
    <synapse id="6">
      <action_set>
-       <rsc_op id="21" rsc_id="DoFencing:child_DoFencing:1" operation="monitor" operation_key="DoFencing:child_DoFencing:1_monitor_5000" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+       <rsc_op id="19" rsc_id="DoFencing:child_DoFencing:1" operation="monitor" operation_key="DoFencing:child_DoFencing:1_monitor_5000" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes timeout="20000" crm_feature_set="1.0.5" interval="5000" clone="1" clone_max="4" hostlist="posic041 posic042 posic043 posic044 " clone_node_max="1"/>
        </rsc_op>

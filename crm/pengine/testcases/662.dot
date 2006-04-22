@@ -1,14 +1,10 @@
 digraph "g" {
 	size = "30,30"
 "rsc_c001n09_monitor_5000 c001n09" [ style="dashed" color="blue" fontcolor="black" ]
-"DoFencing:child_DoFencing:1_monitor_5000 c001n09" [ style="dashed" color="blue" fontcolor="black" ]
 "DcIPaddr_monitor_5000 c001n09" [ style="dashed" color="blue" fontcolor="black" ]
 "DoFencing:child_DoFencing:3_monitor_5000 c001n09" [ style="dashed" color="blue" fontcolor="black" ]
 "rsc_c001n02_monitor_5000 c001n02" [ style="dashed" color="blue" fontcolor="black" ]
-"DoFencing:child_DoFencing:2_monitor_5000 c001n02" [ style="dashed" color="blue" fontcolor="black" ]
-"rsc_c001n04_monitor_5000 c001n02" [ style="dashed" color="blue" fontcolor="black" ]
 "DoFencing:child_DoFencing:0_monitor_5000 c001n02" [ style="dashed" color="blue" fontcolor="black" ]
-"DoFencing:child_DoFencing:0_monitor_5000 c001n03" [ style="dashed" color="blue" fontcolor="black" ]
 "rsc_c001n03_monitor_5000 c001n03" [ style="dashed" color="blue" fontcolor="black" ]
 "DoFencing:child_DoFencing:1_monitor_5000 c001n03" [ style="dashed" color="blue" fontcolor="black" ]
 "DoFencing:child_DoFencing:2_monitor_5000 c001n04" [ style="dashed" color="blue" fontcolor="black" ]

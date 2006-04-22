@@ -15,7 +15,6 @@ digraph "g" {
 "lsb_dummy_monitor_5000 c001n01" [ style="dashed" color="blue" fontcolor="black" ]
 "ocf_msdummy:5_monitor_5000 c001n01" [ style="dashed" color="blue" fontcolor="black" ]
 "rsc_c001n01_monitor_5000 c001n01" [ style="dashed" color="blue" fontcolor="black" ]
-"rsc_c001n02_monitor_5000 c001n01" [ style="dashed" color="blue" fontcolor="black" ]
 "child_DoFencing:2_monitor_20000 c001n01" [ style="dashed" color="blue" fontcolor="black" ]
 "rsc_c001n02_monitor_5000 c001n02" [ style="dashed" color="blue" fontcolor="black" ]
 "child_DoFencing:3_monitor_20000 c001n02" [ style="dashed" color="blue" fontcolor="black" ]

@@ -2,7 +2,6 @@ digraph "g" {
 	size = "30,30"
 "rsc_c001n08_monitor_5000 c001n08" [ style="dashed" color="blue" fontcolor="black" ]
 "ocf_msdummy:3_monitor_5000 c001n08" [ style="dashed" color="blue" fontcolor="black" ]
-"rsc_c001n01_monitor_5000 c001n08" [ style="dashed" color="blue" fontcolor="black" ]
 "child_DoFencing:0_monitor_20000 c001n08" [ style="dashed" color="blue" fontcolor="black" ]
 "ocf_msdummy:0_monitor_6000 c001n08" [ style="dashed" color="blue" fontcolor="black" ]
 "DcIPaddr_monitor_5000 c001n08" [ style="dashed" color="blue" fontcolor="black" ]
