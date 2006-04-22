@@ -19,7 +19,7 @@
 
 verbose=$1
 io_dir=testcases
-diff_opts="--ignore-all-space -U 1 -u"
+diff_opts="--ignore-all-space -u"
 failed=.regression.failed.diff
 # zero out the error log
 > $failed
@@ -85,7 +85,7 @@ function do_test {
     rc=2
     dot -Tpng $dot_output  2>/dev/null > $dot_png
     if [ -f $dot_expected ]; then
-	diff $diff_opts -q $dot_expected $dot_output >/dev/null
+	diff $diff_opts $dot_expected $dot_output >/dev/null
 	rc=$?
 	if [ $rc != 0 ]; then
 	    echo "Test $name	($base)...	* Failed (PE : dot)";
@@ -103,7 +103,7 @@ function do_test {
 
     rc2=2
     if [ -f $expected ]; then
-	diff $diff_opts -q $expected $output >/dev/null
+	diff $diff_opts $expected $output >/dev/null
 	rc2=$?
 	if [ $rc2 != 0 ]; then
 	    echo "Test $name	($base)...	* Failed (PE : raw)";
