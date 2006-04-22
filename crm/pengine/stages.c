@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.91 2006/04/21 09:18:26 andrew Exp $ */
+/* $Id: stages.c,v 1.92 2006/04/22 10:28:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -551,12 +551,15 @@ choose_node_from_list(color_t *color)
 		);
 
 	if(multiple > 1) {
-		int log_level = LOG_WARNING;
+		int log_level = LOG_INFO;
 		char *score = score2char(chosen->weight);
+		if(chosen->weight >= INFINITY) {
+			log_level = LOG_WARNING;
+		}
 		
-		crm_warn("%d nodes with equal score (%s) for running the"
-			 " listed resources (chose %s):",
-			 multiple, score, chosen->details->uname);
+		crm_log_maybe(log_level, "%d nodes with equal score (%s) for"
+			      " running the listed resources (chose %s):",
+			      multiple, score, chosen->details->uname);
 		slist_iter(rsc, resource_t,
 			   color->details->allocated_resources, lpc,
 			   rsc->fns->print(
