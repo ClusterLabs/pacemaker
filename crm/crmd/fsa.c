@@ -455,6 +455,8 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 			do_fsa_action(fsa_data, A_ELECTION_VOTE,	do_election_vote);
 		} else if(is_set(fsa_actions, A_ELECTION_COUNT)) {
 			do_fsa_action(fsa_data, A_ELECTION_COUNT,	do_election_count_vote);
+		} else if(is_set(fsa_actions, A_LRM_EVENT)) {
+			do_fsa_action(fsa_data, A_LRM_EVENT,		do_lrm_event);
 
 			/*
 			 * High priority actions
@@ -508,8 +510,6 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 			do_fsa_action(fsa_data, A_DC_JOIN_FINALIZE,	do_dc_join_finalize);
 		} else if(is_set(fsa_actions, A_LRM_INVOKE)) {
 			do_fsa_action(fsa_data, A_LRM_INVOKE,		do_lrm_invoke);
-		} else if(is_set(fsa_actions, A_LRM_EVENT)) {
-			do_fsa_action(fsa_data, A_LRM_EVENT,		do_lrm_event);
 		} else if(is_set(fsa_actions, A_PE_INVOKE)) {
 			do_fsa_action(fsa_data, A_PE_INVOKE,		do_pe_invoke);
 		} else if(is_set(fsa_actions, A_TE_INVOKE)) {
