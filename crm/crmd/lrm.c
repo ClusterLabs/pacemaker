@@ -546,9 +546,9 @@ is_rsc_active(const char *rsc_id)
 	slist_iter(
 		op, lrm_op_t, op_list, llpc,
 		
-		crm_debug("Processing op %s (%d) for %s (status=%d, rc=%d)", 
-			    op->op_type, op->call_id, the_rsc->id,
-			    op->op_status, op->rc);
+		crm_debug("Processing op %s_%d (%d) for %s (status=%d, rc=%d)", 
+			  op->op_type, op->interval, op->call_id, the_rsc->id,
+			  op->op_status, op->rc);
 		
 		CRM_ASSERT(max_call_id <= op->call_id);			
 		if(safe_str_eq(op->op_type, CRMD_ACTION_STOP)) {
@@ -1451,17 +1451,12 @@ do_lrm_event(long long action,
 	gboolean is_probe = FALSE;
 	int log_rsc_err = LOG_WARNING;
 	
-	if(msg_data->fsa_cause != C_LRM_OP_CALLBACK) {
-		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		return I_NULL;
-	}
+	CRM_CHECK(msg_data->fsa_cause == C_LRM_OP_CALLBACK, return I_NULL);
 
 	op = fsa_typed_data(fsa_dt_lrm);
 	
-	CRM_DEV_ASSERT(op != NULL);
-	CRM_DEV_ASSERT(op != NULL && op->rsc_id != NULL);
-
-	if(crm_assert_failed) { return I_NULL; }
+	CRM_CHECK(op != NULL, return I_NULL);
+	CRM_CHECK(op->rsc_id != NULL, return I_NULL);
 
 	probe_s = g_hash_table_lookup(op->params, XML_ATTR_LRM_PROBE);
 	is_probe = crm_is_true(probe_s);
