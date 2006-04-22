@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.184 2006/04/18 11:15:37 andrew Exp $ */
+/* $Id: unpack.c,v 1.185 2006/04/22 10:30:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -939,14 +939,34 @@ unpack_lrm_rsc_state(
 		);
 
 	if(op_list != NULL) {
+		const char *task = NULL;
+		gboolean skip_mode = TRUE;
 		saved_role = rsc->role;
 		on_fail = action_fail_ignore;
 		rsc->role = RSC_ROLE_STOPPED;
 		sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
+
+		slist_iter(
+			rsc_op, crm_data_t, sorted_op_list, lpc,
+			task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+			if(safe_str_eq(task, CRMD_ACTION_STOP)) {
+				skip_mode = FALSE;
+				crm_info("Skipped everything prior to: %s",
+					  ID(rsc_op));
+			}
+			if(skip_mode == FALSE) {
+				unpack_rsc_op(rsc, node, rsc_op,
+					      &max_call_id, &on_fail, data_set);
+			}
+			
+			);
 		
 		slist_iter(
 			rsc_op, crm_data_t, sorted_op_list, lpc,
-			
+
+			if(skip_mode == FALSE) {
+				break;
+			}
 			unpack_rsc_op(rsc, node, rsc_op,
 				      &max_call_id, &on_fail, data_set);
 			);
@@ -1270,7 +1290,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		is_probe = TRUE;
 
 	} else if(interval > 0 && rsc->role < RSC_ROLE_STARTED) {
-		crm_debug_2("Ignoring pre-start recurring action");
+		crm_debug_2("Skipping recurring action %s for stopped resource", id);
 		return FALSE;
 	}
 	
