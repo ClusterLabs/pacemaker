@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.185 2006/04/22 10:30:03 andrew Exp $ */
+/* $Id: unpack.c,v 1.186 2006/04/22 10:46:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -940,6 +940,7 @@ unpack_lrm_rsc_state(
 
 	if(op_list != NULL) {
 		const char *task = NULL;
+		const char *status = NULL;
 		gboolean skip_mode = TRUE;
 		saved_role = rsc->role;
 		on_fail = action_fail_ignore;
@@ -949,7 +950,9 @@ unpack_lrm_rsc_state(
 		slist_iter(
 			rsc_op, crm_data_t, sorted_op_list, lpc,
 			task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
-			if(safe_str_eq(task, CRMD_ACTION_STOP)) {
+			status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
+			if(safe_str_eq(task, CRMD_ACTION_STOP)
+			   && safe_str_eq(status, "0")) {
 				skip_mode = FALSE;
 				crm_info("Skipped everything prior to: %s",
 					  ID(rsc_op));
@@ -958,18 +961,16 @@ unpack_lrm_rsc_state(
 				unpack_rsc_op(rsc, node, rsc_op,
 					      &max_call_id, &on_fail, data_set);
 			}
-			
 			);
 		
-		slist_iter(
-			rsc_op, crm_data_t, sorted_op_list, lpc,
-
-			if(skip_mode == FALSE) {
-				break;
-			}
-			unpack_rsc_op(rsc, node, rsc_op,
-				      &max_call_id, &on_fail, data_set);
-			);
+		if(skip_mode) {
+			/* no stop was found, just process everything */
+			slist_iter(
+				rsc_op, crm_data_t, sorted_op_list, lpc,
+				unpack_rsc_op(rsc, node, rsc_op,
+					      &max_call_id, &on_fail, data_set);
+				);
+		}
 		
 		/* no need to free the contents */
 		g_list_free(sorted_op_list);
