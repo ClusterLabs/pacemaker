@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.104 2006/04/20 15:43:23 andrew Exp $ */
+/* $Id: ccm.c,v 1.105 2006/04/23 08:23:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -207,18 +207,15 @@ check_dead_member(const char *uname, GHashTable *members)
 	if(integrated_nodes != NULL) {
 		g_hash_table_remove(integrated_nodes, uname);
 	}
-
+	if(voted != NULL) {
+		g_hash_table_remove(voted, uname);
+	}
+	
 	if(safe_str_eq(fsa_our_uname, uname)) {
 		crm_err("We're not part of the cluster anymore");
 	}
 	
-	if(AM_I_DC) {
-		/* remove any no-votes they had cast */
-		if(voted != NULL) {
-			g_hash_table_remove(voted, uname);
-		}
-
-	} else if(safe_str_eq(uname, fsa_our_dc)) {
+	if(AM_I_DC == FALSE && safe_str_eq(uname, fsa_our_dc)) {
 		crm_warn("Our DC node (%s) left the cluster", uname);
 		register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 	}
