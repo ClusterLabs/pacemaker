@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.81 2006/04/21 07:33:15 andrew Exp $ */
+/* $Id: complex.c,v 1.82 2006/04/23 08:47:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -280,10 +280,8 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	(*rsc)->notify		   = crm_is_true(value); 
 	
 	value = g_hash_table_lookup((*rsc)->parameters, "is_managed");
-	if(value != NULL) {
-		if(safe_str_neq("default", value)) {
-			cl_str_to_boolean(value, &((*rsc)->is_managed));
-		}
+	if(value != NULL && safe_str_neq("default", value)) {
+		cl_str_to_boolean(value, &((*rsc)->is_managed));
 	}
 	if((*rsc)->is_managed == FALSE) {
 		crm_warn("Resource %s is currently not managed", (*rsc)->id);
@@ -325,10 +323,8 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	}
 
 	value = g_hash_table_lookup((*rsc)->parameters, "resource_stickiness");
-	if(value != NULL) {
-		if(safe_str_neq("default", value)) {
-			(*rsc)->stickiness = char2score(value);
-		}
+	if(value != NULL && safe_str_neq("default", value)) {
+		(*rsc)->stickiness = char2score(value);
 	}
 	if((*rsc)->stickiness > 0) {
 		crm_debug_2("\tPlacement: prefer current location%s",
