@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.43 2006/04/22 17:35:44 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.44 2006/04/23 19:49:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -82,9 +82,6 @@ extern void print_color(
 
 extern void print_color_details(
 	const char *pre_text, struct color_shared_s *color, gboolean details);
-
-extern void print_action(
-	const char *pre_text, action_t *action, gboolean details);
 
 extern void log_action(
 	unsigned int log_level, const char *pre_text, action_t *action, gboolean details);
