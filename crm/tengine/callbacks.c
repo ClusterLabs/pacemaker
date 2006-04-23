@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.75 2006/04/21 07:08:04 andrew Exp $ */
+/* $Id: callbacks.c,v 1.76 2006/04/23 18:23:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -221,7 +221,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 			start_global_timer(transition_timer,
 					   transition_graph->transition_timeout);
 			trigger_graph();
-			print_graph(LOG_DEBUG_2, transition_graph);
+			print_graph(LOG_DEBUG, transition_graph);
 		}
 
 	} else if(strcmp(op, CRM_OP_TE_HALT) == 0) {

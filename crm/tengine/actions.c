@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.23 2006/04/20 09:00:05 andrew Exp $ */
+/* $Id: actions.c,v 1.24 2006/04/23 18:23:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -440,7 +440,7 @@ void
 notify_crmd(crm_graph_t *graph)
 {	
 	HA_Message *cmd = NULL;
-	int log_level = LOG_DEBUG;
+	int log_level = LOG_DEBUG_2;
 	const char *op = CRM_OP_TEABORT;
 	int pending_callbacks = num_cib_op_callbacks();
 	
