@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.10 2006/04/21 07:08:04 andrew Exp $ */
+/* $Id: graph.c,v 1.11 2006/04/23 19:55:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -186,12 +186,12 @@ initiate_action(crm_graph_t *graph, crm_action_t *action)
 		CRM_CHECK(task != NULL, return FALSE);
 		
 		if(safe_str_eq(task, CRM_OP_FENCE)) {
-			crm_info("Executing STONITH-event: %d",
+			crm_debug_2("Executing STONITH-event: %d",
 				      action->id);
 			return graph_fns->stonith(graph, action);
 		}
 		
-		crm_info("Executing crm-event: %d", action->id);
+		crm_debug_2("Executing crm-event: %d", action->id);
 		return graph_fns->crmd(graph, action);
 	}
 	
