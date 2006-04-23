@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.7 2006/04/03 10:42:05 andrew Exp $ */
+/* $Id: utils.c,v 1.8 2006/04/23 19:50:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -104,75 +104,78 @@ actiontype2text(action_type_e type)
 }
 
 static void
-print_input(const char *prefix, crm_action_t *input, int log_level) 
+print_elem(int log_level, const char *prefix, gboolean as_input, crm_action_t *action) 
 {
-	const char *task_uuid = crm_element_value(
-		input->xml, XML_LRM_ATTR_TASK_KEY);
-	crm_log_maybe(log_level,
-		      "%s[Input %d] %s (id: %s, type: %s, priority=%d)",
-		      prefix, input->id,
-		      input->confirmed?"Satisfied":"Pending",	
-		      task_uuid,
-		      actiontype2text(input->type), 
-		      input->synapse->priority);
+	const char *key = NULL;
+	const char *host = NULL;
+	const char *class = "Action";
+	const char *state = "Pending";
 
-	if(input->confirmed == FALSE) {
-		crm_log_xml(log_level+2, "\t\t\tRaw input: ", input->xml);
+	if(action->failed) {
+		state = "Failed";
+
+	} else if(action->confirmed) {
+		state = "Completed";
+
+	} else if(action->executed) {
+		state = "In-flight";
+
+	} else if(action->sent_update) {
+		state = "Update sent";
 	}
-}
 
-
-void
-print_graph_action(int log_level, const char *prefix, crm_action_t *action) 
-{
-	crm_log_maybe(log_level, "%s[Action %d] %s%s",
-		      prefix, action->id,
-		      action->confirmed?"Completed":
-		        action->executed?"In-flight":
-		        action->sent_update?"Update sent":"Pending",
-		      action->can_fail?" (can fail)":"");
-		
+	if(as_input) {
+		class = "Input";
+	}
+	
+	key = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+	host = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+	
 	switch(action->type) {
 		case action_type_pseudo:
-			crm_log_maybe(log_level, "%s\tPseudo Op: %s", prefix,
-				      crm_element_value(
-					      action->xml, XML_LRM_ATTR_TASK_KEY));
+			crm_log_maybe(log_level,
+				      "%s[%s %d]: %s (id: %s, type: %s, priority: %d)",
+				      prefix, class, action->id, state, key,
+				      actiontype2text(action->type),
+				      action->synapse->priority);
 			break;
 		case action_type_rsc:
-			crm_log_maybe(log_level, "%s\tResource Op: %s/%s on %s",
-				      prefix,
-				      crm_element_value(
-					      action->xml, XML_LRM_ATTR_RSCID),
-				      crm_element_value(
-					      action->xml, XML_LRM_ATTR_TASK),
-				      crm_element_value(
-					      action->xml, XML_LRM_ATTR_TARGET)
-/* 				   crm_element_value( */
-/* 					   action->xml, XML_LRM_ATTR_TARGET_UUID) */
-				);
-			break;
+			crm_log_maybe(log_level,
+				      "%s[%s %d]: %s (id: %s, loc: %s, priority: %d)",
+				      prefix, class, action->id, state, key, host,
+				      action->synapse->priority);
 		case action_type_crm:	
-			crm_log_maybe(log_level, "%s\tCRM Op: %s on %s (%s)",
-				      prefix,
-				      crm_element_value(
-					      action->xml, XML_LRM_ATTR_TASK),
-				      crm_element_value(
-					      action->xml, XML_LRM_ATTR_TARGET),
-				      crm_element_value(
-					      action->xml, XML_LRM_ATTR_TARGET_UUID));
+			crm_log_maybe(log_level,
+				      "%s[%s %d]: %s (id: %s, loc: %s, type: %s, priority: %d)",
+				      prefix, class, action->id, state, key, host,
+				      actiontype2text(action->type),
+				      action->synapse->priority);
 			break;
+		default:
+			crm_err("%s[%s %d]: %s (id: %s, loc: %s, type: %s (unhandled), priority: %d)",
+				prefix, class, action->id, state, key, host,
+				actiontype2text(action->type),
+				action->synapse->priority);
 	}
 
-	if(action->timeout > 0) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s\ttimeout=%d, timer=%d", prefix,
-			   action->timeout,
-			   action->timer?action->timer->source_id:0);
+	if(as_input == FALSE) {
+		return;
+	}
+	
+	if(action->timer) {
+		crm_log_maybe(log_level, "%s\ttimeout=%d, timer=%d", prefix,
+			      action->timeout, action->timer->source_id);
 	}
 	
 	if(action->confirmed == FALSE) {
-		crm_log_xml(log_level+2, "\t\t\tRaw action: ", action->xml);
+		crm_log_xml(log_level+2, "\t\t\tRaw xml: ", action->xml);
 	}
+}
+
+void
+print_action(int log_level, const char *prefix, crm_action_t *action) 
+{
+	print_elem(log_level, prefix, FALSE, action);
 }
 
 void
@@ -198,13 +201,13 @@ print_graph(unsigned int log_level, crm_graph_t *graph)
 		if(synapse->confirmed == FALSE) {
 			slist_iter(
 				action, crm_action_t, synapse->actions, lpc2,
-				print_graph_action(log_level, "\t", action);
+				print_elem(log_level, "    ", FALSE, action);
 				);
 		}
 		if(synapse->executed == FALSE) {
 			slist_iter(
 				input, crm_action_t, synapse->inputs, lpc2,
-				print_input("\t", input, log_level);
+				print_elem(log_level, "     * ", TRUE, input);
 				);
 		}
 		

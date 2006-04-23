@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.24 2006/04/23 18:23:33 andrew Exp $ */
+/* $Id: actions.c,v 1.25 2006/04/23 19:50:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,7 +55,7 @@ te_start_action_timer(crm_action_t *action)
 static gboolean
 te_pseudo_action(crm_graph_t *graph, crm_action_t *pseudo) 
 {
-	crm_debug("Event handler: action %d executed", pseudo->id);
+	crm_info("Pseudo action %d confirmed", pseudo->id);
 	pseudo->confirmed = TRUE;
 	update_graph(graph, pseudo);
 	trigger_graph();
@@ -440,7 +440,7 @@ void
 notify_crmd(crm_graph_t *graph)
 {	
 	HA_Message *cmd = NULL;
-	int log_level = LOG_DEBUG_2;
+	int log_level = LOG_DEBUG;
 	const char *op = CRM_OP_TEABORT;
 	int pending_callbacks = num_cib_op_callbacks();
 	
@@ -473,7 +473,7 @@ notify_crmd(crm_graph_t *graph)
 	te_log_action(log_level, "Transition %d status: %s - %s",
 		      graph->id, op, graph->abort_reason);
 
-	print_graph(log_level, graph);
+	print_graph(LOG_DEBUG_2, graph);
 	
 	cmd = create_request(
 		op, NULL, NULL, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, NULL);

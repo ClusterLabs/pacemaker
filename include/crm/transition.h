@@ -1,4 +1,4 @@
-/* $Id: transition.h,v 1.5 2006/02/20 16:21:52 andrew Exp $ */
+/* $Id: transition.h,v 1.6 2006/04/23 19:50:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -135,7 +135,7 @@ extern gboolean update_graph(crm_graph_t *graph, crm_action_t *action);
 extern void destroy_graph(crm_graph_t *graph);
 extern const char *transition_status(enum transition_status state);
 extern void print_graph(unsigned int log_level, crm_graph_t *graph);
-extern void print_graph_action(
+extern void print_action(
 	int log_level, const char *prefix, crm_action_t *action);
 extern void update_abort_priority(
 	crm_graph_t *graph, int priority,

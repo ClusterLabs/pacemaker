@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.76 2006/04/23 18:23:33 andrew Exp $ */
+/* $Id: callbacks.c,v 1.77 2006/04/23 19:50:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -407,7 +407,7 @@ action_timer_callback(gpointer data)
 		crm_err("Ignoring timeout while not in transition");
 		
 	} else if(timer->reason == timeout_action_warn) {
-		print_graph_action(
+		print_action(
 			LOG_WARNING,"Action missed its timeout", timer->action);
 		
 	} else {
