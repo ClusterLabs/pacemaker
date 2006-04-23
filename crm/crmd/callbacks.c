@@ -285,19 +285,13 @@ lrm_dispatch(IPC_Channel *src_not_used, gpointer user_data)
 	return TRUE;
 }
 
+extern gboolean process_lrm_event(lrm_op_t *op);
+
 void
 lrm_op_callback(lrm_op_t* op)
 {
-	CRM_DEV_ASSERT(op != NULL);
-	if(crm_assert_failed) {
-		return;
-	}
-	
-	crm_debug_3("Invoked: %s/%s (%s)",
-		    op->op_type, op->rsc_id, op_status2text(op->op_status));
-
-	/* Make sure the LRM events are received in order */
-	register_fsa_input_later(C_LRM_OP_CALLBACK, I_LRM_EVENT, op);
+	CRM_CHECK(op != NULL, return);
+	process_lrm_event(op);
 }
 
 void

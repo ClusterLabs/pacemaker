@@ -57,6 +57,7 @@ gboolean build_active_RAs(crm_data_t *rsc_list);
 gboolean is_rsc_active(const char *rsc_id);
 
 void do_update_resource(lrm_op_t *op);
+gboolean process_lrm_event(lrm_op_t *op);
 
 enum crmd_fsa_input do_lrm_rsc_op(
 	lrm_rsc_t *rsc, char *rid, const char *operation,
@@ -1445,15 +1446,24 @@ do_lrm_event(long long action,
 	     enum crmd_fsa_input cur_input,
 	     fsa_data_t *msg_data)
 {
-	lrm_op_t* op = NULL;
-	const char *last_op = NULL;
-	const char *probe_s = NULL;
-	gboolean is_probe = FALSE;
-	int log_rsc_err = LOG_WARNING;
+	lrm_op_t *op = NULL;
 	
 	CRM_CHECK(msg_data->fsa_cause == C_LRM_OP_CALLBACK, return I_NULL);
 
 	op = fsa_typed_data(fsa_dt_lrm);
+	process_lrm_event(op);
+
+	return I_NULL;
+}
+
+
+gboolean
+process_lrm_event(lrm_op_t *op)
+{
+	const char *last_op = NULL;
+	const char *probe_s = NULL;
+	gboolean is_probe = FALSE;
+	int log_rsc_err = LOG_WARNING;
 	
 	CRM_CHECK(op != NULL, return I_NULL);
 	CRM_CHECK(op->rsc_id != NULL, return I_NULL);
@@ -1558,7 +1568,7 @@ do_lrm_event(long long action,
 		}
 	}
 	
-	return I_NULL;
+	return TRUE;
 }
 
 char *
