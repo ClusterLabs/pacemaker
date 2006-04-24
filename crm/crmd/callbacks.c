@@ -56,13 +56,16 @@ extern gboolean check_join_state(
 gboolean
 crmd_ha_msg_dispatch(ll_cluster_t *cluster_conn, gpointer user_data)
 {
+	IPC_Channel *channel = NULL;
 	gboolean stay_connected = TRUE;
-
-	IPC_Channel *channel = cluster_conn->llc_ops->ipcchan(cluster_conn);
 
 	crm_debug_3("Invoked");
 
-	if(cluster_conn != NULL && IPC_ISRCONN(channel)) {
+	if(cluster_conn != NULL) {
+		channel = cluster_conn->llc_ops->ipcchan(cluster_conn);
+	}
+	
+	if(channel != NULL && IPC_ISRCONN(channel)) {
 		if(cluster_conn->llc_ops->msgready(cluster_conn) == 0) {
 			crm_debug_2("no message ready yet");
 		}
@@ -70,7 +73,7 @@ crmd_ha_msg_dispatch(ll_cluster_t *cluster_conn, gpointer user_data)
 		cluster_conn->llc_ops->rcvmsg(cluster_conn, 0);
 	}
 	
-	if (cluster_conn == NULL || channel->ch_status != IPC_CONNECT) {
+	if (channel == NULL || channel->ch_status != IPC_CONNECT) {
 		if(is_set(fsa_input_register, R_HA_DISCONNECTED) == FALSE) {
 			crm_crit("Lost connection to heartbeat service.");
 		} else {
