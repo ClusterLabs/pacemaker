@@ -747,8 +747,8 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	}
 
 	crm_debug_3("Adding channel to mainloop");
-	G_main_add_IPC_Channel(
-		G_PRIORITY_HIGH, hb_cluster->llc_ops->ipcchan(hb_cluster),
+	G_main_add_ll_cluster(
+		G_PRIORITY_HIGH, hb_cluster,
 		FALSE, crmd_ha_msg_dispatch, hb_cluster /* userdata  */,  
 		crmd_ha_connection_destroy);
 
