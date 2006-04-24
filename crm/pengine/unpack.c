@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.189 2006/04/22 18:14:10 andrew Exp $ */
+/* $Id: unpack.c,v 1.190 2006/04/24 14:29:20 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1202,8 +1202,10 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	const char *param_digest = NULL;
 	char *local_param_digest = NULL;
 
+#if CRM_DEPRECATED_SINCE_2_0_4
 	crm_data_t *params = NULL;
-	
+#endif
+
 	const char *id   = ID(xml_op);
 	const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
 	action_t *action = custom_action(rsc, crm_strdup(id), task, active_node,
