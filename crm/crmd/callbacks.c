@@ -65,6 +65,9 @@ crmd_ha_msg_dispatch(ll_cluster_t *cluster_conn, gpointer user_data)
 		channel = cluster_conn->llc_ops->ipcchan(cluster_conn);
 	}
 	
+	CRM_CHECK(cluster_conn != NULL, ;);
+	CRM_CHECK(channel != NULL, ;);
+	
 	if(channel != NULL && IPC_ISRCONN(channel)) {
 		if(cluster_conn->llc_ops->msgready(cluster_conn) == 0) {
 			crm_debug_2("no message ready yet");
