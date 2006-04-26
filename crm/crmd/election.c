@@ -131,6 +131,12 @@ struct election_data_s
 		unsigned int winning_bornon;
 };
 
+static void
+log_node(gpointer key, gpointer value, gpointer user_data)
+{
+	crm_err("%s: %s", (char*)user_data, (char*)key);
+}
+
 enum crmd_fsa_input
 do_election_check(long long action,
 		       enum crmd_fsa_cause cause,
@@ -148,10 +154,23 @@ do_election_check(long long action,
 	if(fsa_state != S_ELECTION) {
 		crm_debug("Ignore election check: we not in an election");
 
-	} else if(voted_size == num_members) {
+	} else if(voted_size >= num_members) {
 		/* we won and everyone has voted */
 		crm_timer_stop(election_timeout);
 		register_fsa_input(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
+		if(voted_size > num_members) {
+			char *data = NULL;
+			
+			data = crm_strdup("member");
+			g_hash_table_foreach(
+				fsa_membership_copy->members, log_node, data);
+			crm_free(data);
+			
+			data = crm_strdup("voted");
+			g_hash_table_foreach(voted, log_node, data);
+			crm_free(data);
+			
+		}
 		crm_debug("Destroying voted hash");
 		g_hash_table_destroy(voted);
 		voted = NULL;
