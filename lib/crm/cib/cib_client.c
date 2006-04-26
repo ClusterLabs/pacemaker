@@ -666,7 +666,7 @@ cib_error2string(enum cib_errors return_code)
 			error_msg = "failed adding field to cib message";
 			break;			
 		case cib_id_check:
-			error_msg = "id-collision detected";
+			error_msg = "missing id or id-collision detected";
 			break;			
 		case cib_operation:
 			error_msg = "invalid operation";
