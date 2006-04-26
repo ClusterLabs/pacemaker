@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.8 2006/04/23 19:50:19 andrew Exp $ */
+/* $Id: utils.c,v 1.9 2006/04/26 15:55:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -106,6 +106,7 @@ actiontype2text(action_type_e type)
 static void
 print_elem(int log_level, const char *prefix, gboolean as_input, crm_action_t *action) 
 {
+	int priority = 0;
 	const char *key = NULL;
 	const char *host = NULL;
 	const char *class = "Action";
@@ -127,6 +128,10 @@ print_elem(int log_level, const char *prefix, gboolean as_input, crm_action_t *a
 	if(as_input) {
 		class = "Input";
 	}
+
+	if(as_input == FALSE) {
+		priority = action->synapse->priority;
+	}
 	
 	key = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
 	host = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
@@ -137,25 +142,26 @@ print_elem(int log_level, const char *prefix, gboolean as_input, crm_action_t *a
 				      "%s[%s %d]: %s (id: %s, type: %s, priority: %d)",
 				      prefix, class, action->id, state, key,
 				      actiontype2text(action->type),
-				      action->synapse->priority);
+				      priority);
 			break;
 		case action_type_rsc:
 			crm_log_maybe(log_level,
 				      "%s[%s %d]: %s (id: %s, loc: %s, priority: %d)",
 				      prefix, class, action->id, state, key, host,
-				      action->synapse->priority);
+				      priority);
+			break;
 		case action_type_crm:	
 			crm_log_maybe(log_level,
 				      "%s[%s %d]: %s (id: %s, loc: %s, type: %s, priority: %d)",
 				      prefix, class, action->id, state, key, host,
 				      actiontype2text(action->type),
-				      action->synapse->priority);
+				      priority);
 			break;
 		default:
 			crm_err("%s[%s %d]: %s (id: %s, loc: %s, type: %s (unhandled), priority: %d)",
 				prefix, class, action->id, state, key, host,
 				actiontype2text(action->type),
-				action->synapse->priority);
+				priority);
 	}
 
 	if(as_input == FALSE) {
