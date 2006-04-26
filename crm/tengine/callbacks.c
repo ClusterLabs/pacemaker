@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.78 2006/04/26 13:35:19 andrew Exp $ */
+/* $Id: callbacks.c,v 1.79 2006/04/26 15:56:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -423,6 +423,7 @@ static int
 unconfirmed_actions(gboolean send_updates)
 {
 	int unconfirmed = 0;
+	const char *task = NULL;
 	crm_debug_2("Unconfirmed actions...");
 	slist_iter(
 		synapse, synapse_t, transition_graph->synapses, lpc,
@@ -440,11 +441,12 @@ unconfirmed_actions(gboolean send_updates)
 			unconfirmed++;
 			crm_debug("Action %d: unconfirmed",action->id);
 
+			task = crm_element_value(action->xml,XML_LRM_ATTR_TASK);
 			if(action->type != action_type_rsc) {
 				continue;
 			} else if(send_updates == FALSE) {
 				continue;
-			} 	if(safe_str_eq(task, "cancel")) {
+			} else if(safe_str_eq(task, "cancel")) {
 				/* we dont need to update the CIB with these */
 				continue;
 			}
