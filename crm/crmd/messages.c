@@ -409,15 +409,17 @@ do_msg_route(long long action,
 		switch(result) {
 			case I_NULL:
 				break;
-			case I_DC_HEARTBEAT:
-				break;
 			case I_CIB_OP:
 				break;
-/* 			case I_JOIN_OFFER: */
-/* 				break; */
-/* 			case I_JOIN_RESULT: */
-/* 				break; */
-				/* what else should go here? */
+			case I_ROUTER:
+				if(cause == C_IPC_MESSAGE) {
+					/* process local messages immediately
+					 *  it might be the TE telling us its
+					 *  done
+					 */
+					break;
+				}
+				/* fall through */
 			default:
 				crm_debug_4("Defering local processing of message");
 				register_fsa_input_later(
