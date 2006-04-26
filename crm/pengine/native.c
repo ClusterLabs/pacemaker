@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.129 2006/04/20 10:33:49 andrew Exp $ */
+/* $Id: native.c,v 1.130 2006/04/26 15:57:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1735,7 +1735,7 @@ static void dup_attr(gpointer key, gpointer value, gpointer user_data)
 	g_hash_table_replace(user_data, crm_strdup(key), crm_strdup(value));
 }
 
-static void
+static action_t *
 pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	  notify_data_t *n_data, pe_working_set_t *data_set)
 {
@@ -1747,10 +1747,10 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	
 	if(op == NULL || confirm == NULL) {
 		crm_debug_2("Op=%p confirm=%p", op, confirm);
-		return;
+		return NULL;
 	}
 
-	CRM_CHECK(node != NULL, return);
+	CRM_CHECK(node != NULL, return NULL);
 
 	value = g_hash_table_lookup(op->extra, "notify_type");
 	task = g_hash_table_lookup(op->extra, "notify_operation");
@@ -1801,6 +1801,7 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 		trigger->actions_after = g_list_append(
 			trigger->actions_after, wrapper);
 	}	
+	return trigger;
 }
 
 void
@@ -1816,9 +1817,15 @@ void
 pe_post_notify(resource_t *rsc, node_t *node, action_t *op, 
 	       notify_data_t *n_data, pe_working_set_t *data_set)
 {
+	action_t *notify = NULL;
 	crm_debug_2("%s: %s", rsc->id, op->uuid);
-	pe_notify(rsc, node, op->post_notify, op->post_notified,
-		  n_data, data_set);
+	notify = pe_notify(rsc, node, op->post_notify, op->post_notified,
+			   n_data, data_set);
+
+	if(notify != NULL) {
+		notify->priority = INFINITY;
+	}
+	op->post_notify->priority = INFINITY;
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.108 2006/03/27 05:44:24 andrew Exp $ */
+/* $Id: pengine.h,v 1.109 2006/04/26 15:57:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -345,6 +345,7 @@ enum action_fail_response {
 struct action_s 
 {
 		int         id;
+		int         priority;
 		resource_t *rsc;
 		void       *rsc_opaque;
 		node_t     *node;

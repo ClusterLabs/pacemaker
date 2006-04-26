@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.84 2006/04/18 11:15:37 andrew Exp $ */
+/* $Id: graph.c,v 1.85 2006/04/26 15:57:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -515,7 +515,9 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 	if(action->rsc != NULL) {
 		synapse_priority = action->rsc->priority;
 	}
-
+	if(action->priority > synapse_priority) {
+		synapse_priority = action->priority;
+	}
 	if(synapse_priority > 0) {
 		crm_xml_add_int(syn, XML_CIB_ATTR_PRIORITY, synapse_priority);
 	}
