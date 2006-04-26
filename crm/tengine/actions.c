@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.25 2006/04/23 19:50:19 andrew Exp $ */
+/* $Id: actions.c,v 1.26 2006/04/26 13:35:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -473,7 +473,7 @@ notify_crmd(crm_graph_t *graph)
 	te_log_action(log_level, "Transition %d status: %s - %s",
 		      graph->id, op, graph->abort_reason);
 
-	print_graph(LOG_DEBUG_2, graph);
+	print_graph(LOG_DEBUG_3, graph);
 	
 	cmd = create_request(
 		op, NULL, NULL, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, NULL);

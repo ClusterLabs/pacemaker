@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.77 2006/04/23 19:50:19 andrew Exp $ */
+/* $Id: callbacks.c,v 1.78 2006/04/26 13:35:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -221,7 +221,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 			start_global_timer(transition_timer,
 					   transition_graph->transition_timeout);
 			trigger_graph();
-			print_graph(LOG_DEBUG, transition_graph);
+			print_graph(LOG_DEBUG_2, transition_graph);
 		}
 
 	} else if(strcmp(op, CRM_OP_TE_HALT) == 0) {
@@ -440,9 +440,15 @@ unconfirmed_actions(gboolean send_updates)
 			unconfirmed++;
 			crm_debug("Action %d: unconfirmed",action->id);
 
-			if(action->type == action_type_rsc && send_updates) {
-				cib_action_update(action, LRM_OP_PENDING);
+			if(action->type != action_type_rsc) {
+				continue;
+			} else if(send_updates == FALSE) {
+				continue;
+			} 	if(safe_str_eq(task, "cancel")) {
+				/* we dont need to update the CIB with these */
+				continue;
 			}
+			cib_action_update(action, LRM_OP_PENDING);
 			);
 		);
 	if(unconfirmed > 0) {
@@ -503,7 +509,7 @@ te_graph_trigger(gpointer user_data)
 
 	graph_rc = run_graph(transition_graph);
 	timeout = transition_graph->transition_timeout;
-	print_graph(LOG_DEBUG_2, transition_graph);
+	print_graph(LOG_DEBUG_3, transition_graph);
 
 	if(graph_rc == transition_active) {
 		crm_debug_3("Transition not yet complete");
