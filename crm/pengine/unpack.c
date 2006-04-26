@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.190 2006/04/24 14:29:20 lars Exp $ */
+/* $Id: unpack.c,v 1.191 2006/04/26 15:59:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1390,17 +1390,10 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	}
 	
 	if(task_status_i != LRM_OP_PENDING) {
-
 		task_id_i = crm_parse_int(task_id, "-1");
 
 		CRM_CHECK(task_id != NULL, return FALSE);
 		CRM_CHECK(task_id_i >= 0, return FALSE);
-
-		if(task_id_i == *max_call_id) {
-			crm_debug_2("Already processed this call");
-			return TRUE;
-		}
-
 		CRM_CHECK(task_id_i > *max_call_id, return FALSE);
 	}
 
@@ -1472,21 +1465,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	
 	switch(task_status_i) {
 		case LRM_OP_PENDING:
-			/*
-			 * TODO: this may need some more thought
-			 * Some cases:
-			 * - PE reinvoked with pending action that will succeed
-			 * - PE reinvoked with pending action that will fail
-			 * - After DC election
-			 * - After startup
-			 *
-			 * pending start - required start
-			 * pending stop  - required stop
-			 * pending <any> on unavailable node - stonith
-			 *
-			 * For now this should do
-			 */
-
 			if(safe_str_eq(task, CRMD_ACTION_START)) {
 				rsc->start_pending = TRUE;
 				rsc->role = RSC_ROLE_STARTED;
