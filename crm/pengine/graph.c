@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.85 2006/04/26 15:57:04 andrew Exp $ */
+/* $Id: graph.c,v 1.86 2006/04/27 13:16:02 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -95,7 +95,7 @@ update_action(action_t *action)
 		}
 
 		other->action->optional = FALSE;
-		crm_debug_2("* Marking action %s manditory because of %s",
+		crm_debug_2("* Marking action %s mandatory because of %s",
 			    other->action->uuid, action->uuid);
 		update_action(other->action);
 		);
@@ -157,7 +157,7 @@ update_action(action_t *action)
 			case start_rsc:
 			case started_rsc:
 				crm_debug_2("* (Recover) Marking action %s"
-					    " manditory because of %s",
+					    " mandatory because of %s",
 					    other->action->uuid, action->uuid);
 				other->action->optional = FALSE; 
 				update_action(other->action);
