@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.79 2006/04/10 07:45:03 andrew Exp $ */
+/* $Id: incarnation.c,v 1.80 2006/04/27 11:27:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -491,6 +491,7 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 	action->pseudo = TRUE;
 	action_complete->pseudo = TRUE;
+	action_complete->priority = INFINITY;
 	
 	child_starting_constraints(clone_data, pe_ordering_optional, 
 				   NULL, last_start_rsc, data_set);
@@ -506,6 +507,7 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 	action->pseudo = TRUE;
 	action_complete->pseudo = TRUE;
+	action_complete->priority = INFINITY;
 	
 	child_stopping_constraints(clone_data, pe_ordering_optional,
 				   NULL, last_stop_rsc, data_set);
@@ -548,6 +550,7 @@ clone_create_notifications(
 	notify = custom_action(clone_data->self, notify_key,
 			       CRMD_ACTION_NOTIFY, NULL,
 			       action->optional, TRUE, data_set);
+	
 	add_hash_param(notify->extra, "notify_type", "pre");
 	add_hash_param(notify->extra, "notify_operation", action->task);
 	if(clone_data->notify_confirm) {

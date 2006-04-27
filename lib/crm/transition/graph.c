@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.11 2006/04/23 19:55:54 andrew Exp $ */
+/* $Id: graph.c,v 1.12 2006/04/27 11:27:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -266,7 +266,7 @@ run_graph(crm_graph_t *graph)
 				      synapse->id);
 			num_pending++;
 			
-		} else if(synapse->priority <= graph->abort_priority) {
+		} else if(synapse->priority < graph->abort_priority) {
 			crm_debug_2("Skipping synapse %d: aborting",
 				    synapse->id);
 			num_skipped++;
