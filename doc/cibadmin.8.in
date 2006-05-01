@@ -1,4 +1,4 @@
-.TH CIBADMIN 8 "$Date: 2006/05/01 04:58:30 $" "Linux-HA/OpenHA Project" "Heartbeat Adminstration Guide"
+.TH CIBADMIN 8 "$Date: 2006/05/01 05:08:23 $" "Linux-HA/OpenHA Project" "Heartbeat @VERSION@ Adminstration Guide"
 .SH NAME
 \fIcibadmin\fP \- read, modify, or administer heartbeat Cluster Information Base
 .SH SYNOPSIS
