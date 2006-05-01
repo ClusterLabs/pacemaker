@@ -1,0 +1,211 @@
+.TH CIBADMIN 8 "$Date: 2006/05/01 04:58:30 $" "Linux-HA/OpenHA Project" "Heartbeat Adminstration Guide"
+.SH NAME
+\fIcibadmin\fP \- read, modify, or administer heartbeat Cluster Information Base
+.SH SYNOPSIS
+\fBcibadmin\fP (\-\-cib_query|\-Q) \-[Vrwlsmfbp] [-i xml-object-id|-o xml-object-type]
+[\-t t-flag-whatever] [\-h hostname]
+.PP
+\fBcibadmin\fP (\-\-cib_create|\-C) \-[Vrwlsmfbp] [\-X xml-string] [\-x xml-filename] [\-t t-flag-whatever] [\-h hostname]
+.PP
+\fBcibadmin\fP (\-\-cib_replace\-R) \-[Vrwlsmfbp] [\-i xml-object-id|-o xml-object-type] [\-X xml-string] [\-x xml-filename] [\-t t-flag-whatever] [\-h hostname]
+.PP
+\fBcibadmin\fP (\-\-cib_update|\-U) \-[Vrwlsmfbp] [\-i xml-object-id|-o xml-object-type] [\-X xml-string] [\-x xml-filename] [\-t t-flag-whatever] [\-h hostname]
+.PP
+\fBcibadmin\fP (\-\-cib_modify|\-M) \-[Vrwlsmfbp] [\-i xml-object-id|-o xml-object-type] [\-X xml-string] [\-x xml-filename] [\-t t-flag-whatever] [\-h hostname]
+.PP
+\fBcibadmin\fP (\-\-cib_delete|\-D) \-[Vrwlsmfbp] [\-i xml-object-id|-o xml-object-type] [\-t t-flag-whatever] [\-h hostname]
+.PP
+\fBcibadmin\fP (\-\-cib_delete_alt|\-d) \-[Vrwlsmfbp] \-o xml-object-type [\-X xml-string|\-x xml-filename] [\-t t-flag-whatever] [\-h hostname]
+.PP
+\fBcibadmin\fP \-\-cib_erase (\-E)
+.PP
+\fBcibadmin\fP \-\-cib_bump (\-B)
+.PP
+\fBcibadmin\fP \-\-cib_ismaster (\-m)
+.PP
+\fBcibadmin\fP \-\-cib_sync (\-S)
+.PP
+\fBcibadmin\fP \-\-cib_help (\-?)
+.SH DESCRIPTION
+\fBCibadmin\fP is the primary administrative command for manipulating the
+heartbeat CIB.
+It can be used to dump all or part of the CIB, to update all or part of it
+to modify all or part of it, to delete the entire CIB, or to
+perform miscellaneous CIB administrative operations.
+
+\fBCibadmin\fP operates on the XML trees of the CIB, largely without knowledge of the meaning
+of the updates or queries being performed.
+This means that shortcuts that seem natural to humans who understand the meaning of
+the elements in the XML tree are impossible to use with \fBcibadmin\fP - which requires
+a complete lack of ambiguity, and can only deal with valid XML subtrees (tags/elements)
+\- both on input and output.
+
+.SH OPTIONS
+.TP 8
+.BI "\-\-id (\-i) " xml-object-id
+the XML \fIid\fP of the XML object being operated on.
+\fIThis option is deprecated, and may go away in future versions of \fBcibadmin\fP\fR.
+.TP 8
+.BI  "\-\-obj_type (\-o) " object-type
+the type of object being operated on.
+Valid values are \fInodes, resources, status, constraints\fP
+.TP 8
+.B \-\-verbose (\-V)
+turn on debug mode.  Additional \fB\-V\fP options increase the verbosity of the output.
+.TP 8
+.B \-\-help (\-?)
+obtain a help message from the \fBcibadmin\fP.
+.TP 8
+.B \-\-cib_erase (\-E)
+Erase the contents of the whole CIB.
+.TP 8
+.B \-\-cib_query (\-Q)
+Query a portion of the CIB.
+.TP 8
+.B \-\-cib_create (\-C)
+Create a new CIB from the argument XML content.
+.TP 8
+.B \-\-cib_replace (\-R)
+Recursively \fIreplace\fP an XML object in the CIB.
+.TP 8
+.B \-\-cib_update (\-U)
+Recursively \fIupdate\fP an object in the CIB.
+Updating an object replaces like members in the XML, but does not delete
+attributes not mentioned.
+.TP 8
+.B \-\-cib_modify (\-M)
+Modify the attributes of an object in the CIB.
+Object to be modified must be specified with a \fB\-\-id\fP option.
+.TP 8
+.B \-\-cib_delete (\-D)
+Delete the first object matching the specified criteria.
+e.g., \f(CW</\fItagname\fP id="rsc1_op1" name="monitor"/>\fR.
+The tagname and all attributes must match in order for the element to be deleted.
+.TP 8
+.B \-\-cib_delete_alt (\-d)
+Delete the object at the specified fully qualified location.
+e.g., <resource id="rsc1"><operations><op id="rsc1_op1"/>...
+Requires \fB\-o\fP \fItype\fP option.
+.TP 8
+.B \-\-cib_ismaster (\-m)
+Print a message indicating whether or not the local instance of the CIB
+software is the master instance or not.
+Exits with return code 0 if it \fIis\fP the master instance, or 35 otherwise.
+.TP 8
+.B \-\-cib_sync (\-S)
+Force a full sync of the local CIB against the master CIB.
+(or does this force all slave copies to be updated?).
+.TP 8
+.BI "\-\-crm_xml (\-X) " xml-fragment-string
+specifies an XML tag or fragment on the command line for \fBcrmadmin\fP to operate on.
+Note that it must be a complete tag or XML fragment.
+.TP 8
+.BI "\-\-xml\-file (\-x) " filename
+specifies XML in a file for \fBcibadmin\fP to operate on.
+Note that it must be a complete tag or XML fragment.
+.TP 8
+.B \-\-xml_pipe (\-p)
+specifies that the XML for \fIcibadmin\fP to operate on will come from standard input.
+Note that it must be a complete tag or XML fragment.
+.SH SPECIALIZED OPTIONS
+.TP 8
+.B \-\-cib_bump (\-B)
+I have no idea what this option does \fB:\-)\fP
+.TP 8
+.BI "\-\-host (\-h)" hostname
+specifies the host to send this command to (rarely used, advanced option)
+.TP 8
+.B \-\-local (\-l) command takes effect locally (rarely used advanced option)
+.TP 8
+.B \-\-no\-bcast (\-b)
+Command will not be broadcast to other nodes, even if it modifies the CIB.
+This is a fairly dangerous, rarely used advanced option.
+.TP 8
+.B \-\-sync\-call (\-s)
+Wait for the operation given to \fIcibadmin\fP to complete before exiting.
+.SH EXAMPLES
+Need to put a few real examples here...
+To get a copy of the entire active CIB (including status section, etc.) delivered
+to stdout, issue this command:
+.RS
+\f(CWcibadmin \-Q\fP
+.RE
+.PP
+To get a copy of the status section (only) delivered
+to stdout, issue this command:
+.RS
+\f(CWcibadmin \-Q \-\-obj_type status\fP
+.RE
+.PP
+To add an IPaddr2 resource to the \fIresources\fP section, follow these steps:
+.IP 1.
+Create a file \fIfoo\fP with the following contents:
+.RS
+.nf
+\f(CW<primitive id="R_10.10.10.101" class="ocf" type="IPaddr2"
+ provider="heartbeat">
+ <instance_attributes>
+  <attributes>
+   <nvpair id="R_ip_P_ip" name="ip" value="10.10.10.101"/>
+   <nvpair id="R_ip_P_nic" name="nic" value="eth0"/>
+  </attributes>
+ </instance_attributes>
+</primitive>\fP
+.fi
+.RE
+.IP 2.
+Issue the following command:
+.RS
+\f(CWcibadmin \-\-obj_type resources \-U \-x foo\fP
+.RE
+.PP
+To change the IP address of the IPaddr2 resource previously added, issue the command below:
+.RS
+\f(CWcibadmin \-\-id R_10.10.10.101 \-M \-X '<nvpair id="R_ip_P_ip" name="ip" value="10.10.10.102"/>'
+.RE
+\fBNote:\fP This does \fInot\fP change the resource name to match the new IP address.
+To do that you have to delete and re-add the resource with a new id tag.
+.PP
+To remove the IP address added previously, issue the command below:
+.RS
+\f(CWcibadmin \-D \-X '<primitive id="R_10.10.10.101"/>'\fP
+.RE
+.PP
+To replace the CIB with a new hand-edited version of the CIB, issue the following command
+.RS
+\f(CWcibadmin \-R \-x $HOME/cib.xml\fP
+.RE
+\fBNOTE:\fP you should not edit the \fIcib.xml\fP file in place, but edit a copy of it,
+since it is frequently updated by the CIB at unpredictable times.
+.PP
+
+.SH FILES
+\f(CW@HA_VARLIBHBDIR@/crm/cib.xml\fP \- the CIB (minus status section) on disk.
+.SH SEE ALSO
+crmadmin(8),
+lrmadmin(8),
+heartbeat(8)
+.SH AUTHOR
+\fBcibadmin\fP was written by Andrew Beekhof.
+.PP
+This manual page was written by Alan Robertson.
+.SH CAVEATS
+\fBcibadmin\fP is perfectly willing to completely mangle your CIB
+if you ask it reasonably nicely.
+.PP
+Because the CIB is updated continually as things change in the cluster, relying
+on using the automatically maintained previous copy of the CIB on disk as a backup
+is likely to be a dissapointing experience.
+.SH BUGS
+Note carefully the long options.
+Some have \fB\-\fP characters in them, and some have \fB_\fP characters in them.
+
+\fIWhat does the \-t xxx flag do?\fP
+.PP
+\fIWhat does the \-r flag do?\fP
+.PP
+\fIWhat does the \-w flag do?\fP
+.PP
+\fIWhat does the \-f flag do?\fP
+.PP
+What does \-\-cib_bump (\-B) do?\fP
