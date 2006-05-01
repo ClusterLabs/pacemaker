@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.82 2006/04/23 08:47:05 andrew Exp $ */
+/* $Id: complex.c,v 1.83 2006/05/01 08:42:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -354,6 +354,8 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 			pe_config_err("%s: Unknown value for "
 				      XML_RSC_ATTR_TARGET_ROLE": %s",
 				      (*rsc)->id, value);
+		} else if((*rsc)->next_role == RSC_ROLE_STOPPED) {
+			native_assign_color(*rsc, data_set->no_color);
 		}
 	}
 
