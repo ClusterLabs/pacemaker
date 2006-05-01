@@ -1,4 +1,4 @@
-.TH CIBADMIN 8 "$Date: 2006/05/01 17:10:50 $" "Linux-HA/OpenHA Project" "Heartbeat @VERSION@ Adminstration Guide"
+.TH CIBADMIN 8 "$Date: 2006/05/01 21:09:55 $" "Linux-HA/OpenHA Project" "Heartbeat @VERSION@ Adminstration Guide"
 .SH NAME
 \fIcibadmin\fP \- read, modify, or administer heartbeat Cluster Information Base
 .SH SYNOPSIS
@@ -137,9 +137,8 @@ to stdout, issue this command:
 \f(CWcibadmin \-Q \-\-obj_type status\fP
 .RE
 .PP
-To add an IPaddr2 resource to the \fIresources\fP section, follow these steps:
-.IP 1.
-Create a file \fIfoo\fP with the following contents:
+To add an IPaddr2 resource to the \fIresources\fP section, first
+create a file \fIfoo\fP with the following contents:
 .RS
 .nf
 \f(CW<primitive id="R_10.10.10.101" class="ocf" type="IPaddr2"
@@ -153,8 +152,7 @@ Create a file \fIfoo\fP with the following contents:
 </primitive>\fP
 .fi
 .RE
-.IP 2.
-Issue the following command:
+Then, issue the following command:
 .RS
 \f(CWcibadmin \-\-obj_type resources \-U \-x foo\fP
 .RE
@@ -207,6 +205,7 @@ since it is frequently updated by the CIB at unpredictable times.
 .SH FILES
 \f(CW@HA_VARLIBHBDIR@/crm/cib.xml\fP \- the CIB (minus status section) on disk.
 .SH SEE ALSO
+crm_resource(8),
 crmadmin(8),
 lrmadmin(8),
 heartbeat(8)
