@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.14 2006/04/18 11:19:42 andrew Exp $ */
+/* $Id: master.c,v 1.15 2006/05/02 10:03:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -421,6 +421,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 	action->pseudo = TRUE;
 	action_complete->pseudo = TRUE;
+	action_complete->priority = INFINITY;
 	
 	child_promoting_constraints(clone_data, pe_ordering_optional, 
 				   NULL, last_promote_rsc, data_set);
@@ -433,6 +434,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action_complete = custom_action(
 		clone_data->self, demoted_key(rsc),
 		CRMD_ACTION_DEMOTED, NULL, !any_demoting, TRUE, data_set);
+	action_complete->priority = INFINITY;
 
 	action->pseudo = TRUE;
 	action_complete->pseudo = TRUE;
