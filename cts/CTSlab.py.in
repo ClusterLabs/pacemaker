@@ -745,10 +745,12 @@ if __name__ == '__main__':
         cm.log("Resource Monitoring is disabled")
     cm.log("Cluster nodes: ")
     for node in config.Parameters["node"]:
-        out=cm.rsh.readaline(node, "@sbindir@/crm_uuid")
-        if not out:
+	(rc, lines) = cm.rsh.remote_py(node, "os", "system", 
+				     "@sbindir@/crm_uuid")
+        if not lines:
             cm.log("    * %s: __undefined_uuid__" % node)
         else:
+	    out=lines[0]
             out = out[:-1]
             cm.log("    * %s: %s" % (node, out))
         
