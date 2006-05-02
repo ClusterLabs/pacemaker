@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.49 2006/04/03 16:10:59 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.50 2006/05/02 10:10:58 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -78,7 +78,6 @@ typedef struct str_list_s
 		struct str_list_s *next;
 } str_list_t;
 
-char *id = NULL;
 char *this_msg_reference = NULL;
 char *obj_type = NULL;
 char *status = NULL;
@@ -91,7 +90,7 @@ int request_id = 0;
 int operation_status = 0;
 cib_t *the_cib = NULL;
 
-#define OPTARGS	"V?i:o:QDUCEX:t:Srwlsh:MmBfbdRx:p"
+#define OPTARGS	"V?o:QDUCEX:t:Srwlsh:MmBfbdRx:p"
 
 int
 main(int argc, char **argv)
@@ -129,14 +128,13 @@ main(int argc, char **argv)
 		{"host",	0, 0, 'h'},
 		{F_CRM_DATA,    1, 0, 'X'},
 		{"xml-file",    1, 0, 'x'},
-		{"xml-pipe",0 , 0, 'p'},
+		{"xml-pipe",    0, 0, 'p'},
 		{"verbose",     0, 0, 'V'},
 		{"help",        0, 0, '?'},
 		{"reference",   1, 0, 0},
 		{"timeout",	1, 0, 't'},
 
 		/* common options */
-		{XML_ATTR_ID, 1, 0, 'i'},
 		{"obj_type", 1, 0, 'o'},
 
 		{0, 0, 0, 0}
@@ -234,10 +232,6 @@ main(int argc, char **argv)
 				break;
 			case '?':
 				usage(crm_system_name, LSB_EXIT_OK);
-				break;
-			case 'i':
-				crm_debug_2("Option %c => %s", flag, optarg);
-				id = crm_strdup(optarg);
 				break;
 			case 'o':
 				crm_debug_2("Option %c => %s", flag, optarg);
@@ -438,8 +432,6 @@ usage(const char *cmd, int exit_status)
 		" -x, or -p options\n", cmd, OPTARGS);
 
 	fprintf(stream, "Options\n");
-	fprintf(stream, "\t--%s (-%c) <id>\tid of the object being operated on\n",
-		XML_ATTR_ID, 'i');
 	fprintf(stream, "\t--%s (-%c) <type>\tobject type being operated on\n",
 		"obj_type", 'o');
 	fprintf(stream, "\t\tValid values are: nodes, resources, status, constraints\n");
@@ -452,7 +444,7 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_CREATE, 'C');
 	fprintf(stream, "\t--%s (-%c)\tRecursivly replace an object in the CIB\n", CIB_OP_REPLACE,'R');
 	fprintf(stream, "\t--%s (-%c)\tRecursivly update an object in the CIB\n", CIB_OP_UPDATE, 'U');
-	fprintf(stream, "\t--%s (-%c)\tUpdate the attributes of an object in the CIB\n", CIB_OP_MODIFY, 'M');
+	fprintf(stream, "\t--%s (-%c)\tFind the object somewhere in the CIB's XML tree and update is as --"CIB_OP_UPDATE" would\n", CIB_OP_MODIFY, 'M');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_DELETE, 'D');
 	fprintf(stream, "\t\t\tDelete the first object matching the supplied criteria\n");
 	fprintf(stream, "\t\t\tEg. <op id=\"rsc1_op1\" name=\"monitor\"/>\n");
