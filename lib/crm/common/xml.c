@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.73 2006/04/09 15:11:00 andrew Exp $ */
+/* $Id: xml.c,v 1.74 2006/05/02 09:59:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -266,7 +266,7 @@ copy_in_properties(crm_data_t* target, const crm_data_t *src)
 					local_prop_value = new_value;
 				}
 			}
-				
+
 			crm_xml_add(target, local_prop_name, local_prop_value);
 			crm_free(incr_value);
 			crm_free(new_value);
@@ -1905,9 +1905,6 @@ add_xml_object(crm_data_t *parent, crm_data_t *target, const crm_data_t *update)
 {
 	const char *object_id = NULL;
 	const char *object_name = NULL;
-	const char *right_val = NULL;
-	
-	int result = 0;
 
 	crm_log_xml(LOG_DEBUG_5, "update:", update);
 	crm_log_xml(LOG_DEBUG_5, "target:", target);
@@ -1929,62 +1926,28 @@ add_xml_object(crm_data_t *parent, crm_data_t *target, const crm_data_t *update)
 
 	if(target == NULL) {
 		target = create_xml_node(parent, object_name);
-		crm_debug_2("Added  <%s%s%s/>",
-			    crm_str(object_name),
-			    object_id?" id=":"", object_id?object_id:"");
 		CRM_CHECK(target != NULL, return 0);
+		crm_debug_2("Added  <%s%s%s/>", crm_str(object_name),
+			    object_id?" id=":"", object_id?object_id:"");
 
 	} else {
-		crm_debug_2("Found node <%s%s%s/> to update",
+		crm_debug_3("Found node <%s%s%s/> to update",
 			    crm_str(object_name),
 			    object_id?" id=":"", object_id?object_id:"");
 	}
-	
-	xml_prop_iter(update, prop_name, left_value,
-		      right_val = crm_element_value(target, prop_name);
-		      if(safe_str_eq(prop_name, XML_DIFF_MARKER)) {
-			      continue;
 
-		      } else if(right_val == NULL) {
-			      crm_xml_add(target, prop_name, left_value);
-			      crm_debug_2("\t%s: %s (added)",
-					  crm_str(prop_name),
-					  crm_str(left_value));
-			      
-		      } else if(safe_str_neq(left_value, right_val)) {
-			      crm_xml_add(target, prop_name, left_value);
-			      crm_debug_2("\t%s: %s->%s",
-					  crm_str(prop_name),
-					  crm_str(left_value),
-					  right_val);
-		      }
-		);
+	copy_in_properties(target, update);
 
-	crm_debug_3("Processing children of <%s id=%s>",
-		    crm_str(object_name), crm_str(object_id));
-	
 	xml_child_iter(
 		update, a_child,  
-		int tmp_result = 0;
-		crm_debug_3("Updating child <%s id=%s>",
+		crm_debug_4("Updating child <%s id=%s>",
 			    crm_element_name(a_child), ID(a_child));
-		
-		tmp_result = add_xml_object(target, NULL, a_child);
-		
-		if(tmp_result < 0) {
-			crm_err("Error updating child <%s id=%s>",
-				crm_element_name(a_child), ID(a_child));
-			
-			/*  only the first error is likely to be interesting */
-			if(result >= 0) {
-				result = tmp_result;
-			}
-		}
+		add_xml_object(target, NULL, a_child);
 		);
 
 	crm_debug_3("Finished with <%s id=%s>",
 		    crm_str(object_name), crm_str(object_id));
-	return result;
+	return 0;
 }
 
 gboolean
@@ -2003,7 +1966,7 @@ update_xml_child(crm_data_t *child, crm_data_t *to_update)
 
 	} else if(can_update) {
 		crm_log_xml_debug(child, "Update match found...");
-		copy_in_properties(child, to_update);
+		add_xml_object(NULL, child, to_update);
 	}
 	
 	xml_child_iter(
