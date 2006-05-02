@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.74 2006/05/02 09:59:15 andrew Exp $ */
+/* $Id: xml.c,v 1.75 2006/05/02 13:03:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -592,7 +592,8 @@ write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress)
 	char *now_str = NULL;
 	gboolean is_done = FALSE;
 	FILE *file_output_strm = NULL;
-
+	static mode_t cib_mode = S_IRUSR|S_IWUSR;
+	
 	CRM_CHECK(filename != NULL, return -1);
 
 	crm_debug_3("Writing XML out to %s", filename);
@@ -615,6 +616,12 @@ write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress)
 	buffer = dump_xml_formatted(xml_node);
 	CRM_CHECK(buffer != NULL && strlen(buffer) > 0, return -1);
 
+	/* establish the file with correct permissions */
+	file_output_strm = fopen(filename, "w");
+	fclose(file_output_strm);
+	chmod(filename, cib_mode);
+
+	/* now write it */
 	file_output_strm = fopen(filename, "w");
 	if(file_output_strm == NULL) {
 		crm_free(buffer);
