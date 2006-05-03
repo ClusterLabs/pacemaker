@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.5 2006/03/18 17:23:49 andrew Exp $ */
+/* $Id: unpack.c,v 1.6 2006/05/03 09:03:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -183,7 +183,7 @@ unpack_graph(crm_data_t *xml_graph)
 	crm_malloc0(new_graph, sizeof(crm_graph_t));
 	
 	new_graph->id = -1;
-	new_graph->abort_priority = -1;
+	new_graph->abort_priority = 0;
 	new_graph->transition_timeout = -1;
 
 	if(xml_graph != NULL) {
