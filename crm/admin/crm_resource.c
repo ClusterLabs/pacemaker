@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.21 2006/04/20 11:32:03 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.22 2006/05/03 08:58:09 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -615,7 +615,8 @@ main(int argc, char **argv)
 
 	if(rsc_cmd == 'L' || rsc_cmd == 'W' || rsc_cmd == 'D' || rsc_cmd == 'Q'
 	   || rsc_cmd == 'p' || rsc_cmd == 'M' || rsc_cmd == 'U'
-	   || rsc_cmd == 'G' || rsc_cmd == 'g') {
+	   || rsc_cmd == 'C' || rsc_cmd == 'G' || rsc_cmd == 'g') {
+		resource_t *rsc = NULL;
 		cib_conn = cib_new();
 		rc = cib_conn->cmds->signon(
 			cib_conn, crm_system_name, cib_command_synchronous);
@@ -624,17 +625,23 @@ main(int argc, char **argv)
 				cib_error2string(rc));
 			return rc;
 		}
-		set_working_set_defaults(&data_set);
 
-		if(rsc_cmd != 'D' && rsc_cmd != 'U') {
-			cib_xml_copy = get_cib_copy(cib_conn);
-			data_set.input = cib_xml_copy;
-			data_set.now = new_ha_date(TRUE);
-			stage0(&data_set);
+		cib_xml_copy = get_cib_copy(cib_conn);
+
+		set_working_set_defaults(&data_set);
+		data_set.input = cib_xml_copy;
+		data_set.now = new_ha_date(TRUE);
+
+		stage0(&data_set);
+		rsc = pe_find_resource(data_set.resources, rsc_id);
+		if(rsc != NULL) {
+			rsc_id = rsc->id;
+		} else {
+			rc = cib_NOTEXISTS;
 		}
 		
-	} else if(rsc_cmd == 'R' || rsc_cmd == 'D'
-		  || rsc_cmd == 'C' || rsc_cmd == 'P') {
+	}
+	if(rsc_cmd == 'R' || rsc_cmd == 'C' || rsc_cmd == 'P') {
 		GCHSource *src = NULL;
 		src = init_client_ipc_comms(CRM_SYSTEM_CRMD, crmd_msg_callback,
 				      NULL, &crmd_channel);
@@ -650,10 +657,14 @@ main(int argc, char **argv)
 
 		set_IPC_Channel_dnotify(src, resource_ipc_connection_destroy);
 	}
-	
 
 	if(rsc_cmd == 'L') {
+		rc = cib_ok;
 		do_find_resource_list(&data_set);
+		
+	} else if(rc == cib_NOTEXISTS) {
+		fprintf(stderr, "Resource %s not found: %s\n",
+			crm_str(rsc_id), cib_error2string(rc));
 		
 	} else if(rsc_cmd == 'W') {
 		CRM_DEV_ASSERT(rsc_id != NULL);
@@ -754,10 +765,15 @@ main(int argc, char **argv)
 		free_xml(msg_data);
 
 	} else if(rsc_cmd == 'C') {
-		delete_lrm_rsc(crmd_channel, host_uname, rsc_id);
-		sleep(10);
-		refresh_lrm(crmd_channel, host_uname);
-
+		resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+		if(rsc != NULL) {
+			delete_lrm_rsc(crmd_channel, host_uname, rsc->graph_name);
+			sleep(10);
+			refresh_lrm(crmd_channel, host_uname);
+		} else {
+			rc = cib_NOTEXISTS;
+		}
+		
 	} else {
 		fprintf(stderr, "Unknown command: %c\n", rsc_cmd);
 	}
