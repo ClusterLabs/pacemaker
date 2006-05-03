@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.22 2006/05/03 08:58:09 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.23 2006/05/03 09:01:52 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -727,6 +727,10 @@ main(int argc, char **argv)
 		
 	} else if(rsc_cmd == 'p') {
 		crm_data_t *msg_data = NULL;
+		if(prop_value == NULL) {
+			fprintf(stderr, "You need to set a value with the -v option");
+			return cib_NOTEXISTS;
+		}
 
 		CRM_DEV_ASSERT(rsc_id != NULL);
 		CRM_DEV_ASSERT(rsc_type != NULL);
