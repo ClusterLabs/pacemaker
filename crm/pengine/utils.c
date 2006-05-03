@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.133 2006/04/22 17:35:44 andrew Exp $ */
+/* $Id: utils.c,v 1.134 2006/05/03 09:02:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -389,6 +389,10 @@ pe_find_resource(GListPtr rsc_list, const char *id)
 	resource_t *rsc = NULL;
 	resource_t *child_rsc = NULL;
 
+	if(id == NULL) {
+		return NULL;
+	}
+	
 	crm_debug_4("Looking for %s in %d objects", id, g_list_length(rsc_list));
 	for(lpc = 0; lpc < g_list_length(rsc_list); lpc++) {
 		rsc = g_list_nth_data(rsc_list, lpc);
