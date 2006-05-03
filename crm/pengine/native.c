@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.130 2006/04/26 15:57:04 andrew Exp $ */
+/* $Id: native.c,v 1.131 2006/05/03 09:02:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1014,13 +1014,13 @@ native_print(
 			     desc?": ":"", desc?desc:"");
 
 	} else {
-		status_print("%s%s\t(%s%s%s:%s):\t%s %s%s",
+		status_print("%s%s\t(%s%s%s:%s):\t%s %s%s%s",
 			     pre_text?pre_text:"", rsc->id,
 			     prov?prov:"", prov?"::":"",
 			     class, crm_element_value(rsc->xml, XML_ATTR_TYPE),
 			     (rsc->variant!=pe_native)?"":role2text(rsc->role),
 			     (rsc->variant!=pe_native)?"":node!=NULL?node->details->uname:"",
-			     rsc->is_managed?"":" (unmanaged) ");
+			     rsc->is_managed?"":" (unmanaged)", rsc->failed?" FAILED":"");
 		
 #if CURSES_ENABLED
 		if(options & pe_print_ncurses) {
