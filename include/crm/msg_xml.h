@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.52 2006/04/18 11:15:37 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.53 2006/05/05 12:55:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,6 +54,7 @@
 #define XML_ATTR_VERSION		"version"
 #define XML_ATTR_DESC			"description"
 #define XML_ATTR_ID			"id"
+#define XML_ATTR_ID_LONG		"long-id"
 #define XML_ATTR_TYPE			"type"
 #define XML_ATTR_FILTER_TYPE		"type_filter"
 #define XML_ATTR_FILTER_ID		"id_filter"
