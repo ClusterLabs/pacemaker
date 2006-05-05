@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.60 2006/04/10 07:23:27 andrew Exp $ */
+/* $Id: group.c,v 1.61 2006/05/05 13:08:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -53,6 +53,8 @@ typedef struct group_variant_data_s
 	CRM_ASSERT(rsc->variant_opaque != NULL);			\
 	data = (group_variant_data_t *)rsc->variant_opaque;		\
 
+void group_assign_color(resource_t *rsc, color_t *group_color);
+
 void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
 	resource_t *self = NULL;
@@ -63,8 +65,8 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		rsc->parameters, XML_RSC_ATTR_ORDERED);
 	const char *group_colocated = g_hash_table_lookup(
 		rsc->parameters, "collocated");
+	const char *clone_id = NULL;
 	
-
 	crm_debug_3("Processing resource %s...", rsc->id);
 /* 	rsc->id = "dummy_group_rsc_id"; */
 
@@ -99,26 +101,20 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		return;
 	}
 
+	clone_id = crm_element_value(rsc->xml, XML_RSC_ATTR_INCARNATION);
+	
 	xml_child_iter_filter(
 		xml_obj, xml_native_rsc, XML_CIB_TAG_RESOURCE,
 
 		resource_t *new_rsc = NULL;
+		crm_xml_add(xml_native_rsc, XML_RSC_ATTR_INCARNATION, clone_id);
 		if(common_unpack(xml_native_rsc, &new_rsc,
-				 group_data->self->parameters, data_set) == FALSE) {
+				 rsc, data_set) == FALSE) {
 			pe_err("Failed unpacking resource %s",
 				crm_element_value(xml_obj, XML_ATTR_ID));
 			continue;
 		}
-		
-		crm_free(new_rsc->graph_name);
-		if(data_set->short_rsc_names) {
-			new_rsc->graph_name = crm_strdup(new_rsc->id);
-		} else {
-			new_rsc->graph_name = crm_concat(
-				group_data->self->id, new_rsc->id, ':');
-		}
 
-		new_rsc->parent = rsc;
 		group_data->num_children++;
 		group_data->child_list = g_list_append(
 			group_data->child_list, new_rsc);
@@ -174,6 +170,8 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
+	crm_debug_3("Coloring children of: %s", rsc->id);
+
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 		group_color = child_rsc->fns->color(child_rsc, data_set);
@@ -182,6 +180,22 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 		);
 	
 	return group_color;
+}
+
+void
+group_assign_color(resource_t *rsc, color_t *group_color)
+{
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
+
+	crm_debug_3("Coloring children of: %s", rsc->id);
+	CRM_CHECK(group_color != NULL, return);
+
+	native_assign_color(rsc, group_color);
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
+		native_assign_color(child_rsc, group_color);
+		);
 }
 
 void group_update_pseudo_status(resource_t *parent, resource_t *child);
@@ -247,6 +261,8 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
+	group_data->self->fns->internal_constraints(group_data->self, data_set);
+	
 	custom_action_order(
 		group_data->self, stopped_key(group_data->self), NULL,
 		group_data->self, start_key(group_data->self), NULL,
@@ -265,7 +281,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 
-		order_restart(child_rsc);
+		child_rsc->fns->internal_constraints(child_rsc, data_set);
 
 		if(group_data->ordered == FALSE) {
 			order_start_start(

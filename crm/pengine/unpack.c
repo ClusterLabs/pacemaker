@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.191 2006/04/26 15:59:04 andrew Exp $ */
+/* $Id: unpack.c,v 1.192 2006/05/05 13:08:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -167,13 +167,6 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 			 " - resources can run anywhere by default");
 	}
 
-	get_cluster_pref("short_resource_names");
-	if(value != NULL) {
-		cl_str_to_boolean(value, &data_set->short_rsc_names);
-	}
-	crm_info("Using short resource names: %s",
-		 data_set->short_rsc_names?"true":"false");
-	
 	get_cluster_pref("no_quorum_policy");
 	if(safe_str_eq(value, "ignore")) {
 		data_set->no_quorum_policy = no_quorum_ignore;
@@ -555,7 +548,7 @@ determine_online_status_fencing(crm_data_t * node_state, node_t *this_node)
 		/* mark it unclean */
 		this_node->details->unclean = TRUE;
 		
-		crm_warn("Node %s (%s)is un-expectedly down",
+		crm_warn("Node %s (%s) is un-expectedly down",
 			 this_node->details->uname, this_node->details->id);
 		crm_info("\tha_state=%s, ccm_state=%s,"
 			 " crm_state=%s, join_state=%s, expected=%s",
@@ -997,22 +990,30 @@ unpack_lrm_rsc_state(
 		crm_debug_2("%s: Start index %d, stop index = %d",
 			    rsc->id, start_index, stop_index);
 		slist_iter(rsc_op, crm_data_t, sorted_op_list, lpc,
+			   int interval = 0;
+			   char *key = NULL;
 			   const char *id = ID(rsc_op);
-			   const char *interval = NULL;
-			   if(start_index < stop_index) {
-				   crm_debug_2("Skipping %s/%s: not active",
+			   const char *interval_s = NULL;
+			   if(node->details->online == FALSE) {
+				   crm_debug_4("Skipping %s/%s: node is offline",
+					       rsc->id, node->details->uname);
+				   break;
+				   
+			   } else if(start_index < stop_index) {
+				   crm_debug_4("Skipping %s/%s: not active",
 					       rsc->id, node->details->uname);
 				   break;
 				   
 			   } else if(lpc <= start_index) {
-				   crm_debug_3("Skipping %s/%s: old",
+				   crm_debug_4("Skipping %s/%s: old",
 					       id, node->details->uname);
 				   continue;
 			   }
 			   
-			   interval = get_interval(rsc_op);
-			   if(safe_str_eq(interval, "0")) {
-				   crm_debug_4("Skipping %s/%s: non-recurring",
+			   interval_s = get_interval(rsc_op);
+			   interval = crm_parse_int(interval_s, "0");
+			   if(interval == 0) {
+				   crm_debug_3("Skipping %s/%s: non-recurring",
 					       id, node->details->uname);
 				   continue;
 			   }
@@ -1025,8 +1026,9 @@ unpack_lrm_rsc_state(
 			   }
 			   task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 			   /* create the action */
-			   crm_debug_2("Creating %s/%s", id, node->details->uname);
-			   custom_action(rsc, crm_strdup(id), task, node,
+			   key = generate_op_key(rsc->id, task, interval);
+			   crm_debug_2("Creating %s/%s", key, node->details->uname);
+			   custom_action(rsc, key, task, node,
 					 TRUE, TRUE, data_set);
 			);
 		
@@ -1193,6 +1195,10 @@ static gboolean
 check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op,
 			pe_working_set_t *data_set)
 {
+	int interval = 0;
+	char *key = NULL;
+	const char *interval_s = NULL;
+	
 	gboolean did_change = FALSE;
 
 	crm_data_t *pnow = NULL;
@@ -1206,12 +1212,47 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	crm_data_t *params = NULL;
 #endif
 
-	const char *id   = ID(xml_op);
+	action_t *action = NULL;
 	const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-	action_t *action = custom_action(rsc, crm_strdup(id), task, active_node,
-					 TRUE, FALSE, data_set);
 
 	CRM_CHECK(active_node != NULL, return FALSE);
+
+	interval_s = get_interval(xml_op);
+	interval = crm_parse_int(interval_s, "0");
+	key = generate_op_key(rsc->id, task, interval);
+
+	if(interval > 0) {
+		crm_data_t *op_match = NULL;
+
+		crm_debug_2("Checking parameters for %s %s", key, task);
+		op_match = find_rsc_op_entry(rsc, key);
+
+		if(op_match == NULL && data_set->stop_action_orphans) {
+			/* create a cancel action */
+			action_t *cancel = NULL;
+			pe_config_warn("Orphan action will be stopped: %s", key);
+
+			crm_free(key);
+			key = generate_op_key(rsc->id, CRMD_ACTION_CANCEL, interval);
+			
+			cancel = custom_action(
+				rsc, key, CRMD_ACTION_CANCEL, active_node,
+				FALSE, TRUE, data_set);
+
+			add_hash_param(cancel->extra, XML_LRM_ATTR_TASK, task);
+			add_hash_param(cancel->extra,
+				       XML_LRM_ATTR_INTERVAL, interval_s);
+			
+			custom_action_order(
+				rsc, NULL, cancel,
+				rsc, stop_key(rsc), NULL,
+				pe_ordering_optional, data_set);
+
+			return TRUE;
+		}
+	}
+
+	action = custom_action(rsc, key, task, active_node, TRUE, FALSE, data_set);
 	
 	local_rsc_params = g_hash_table_new_full(
 		g_str_hash, g_str_equal,
@@ -1226,7 +1267,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	g_hash_table_foreach(rsc->parameters, hash2field, pnow);
 	g_hash_table_foreach(local_rsc_params, hash2field, pnow);
 
-	filter_action_parameters(pnow);
+	filter_action_parameters(pnow, NULL);
 	pnow_digest = calculate_xml_digest(pnow, TRUE);
 	param_digest = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
 
@@ -1239,19 +1280,33 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 
 		crm_info("Faking parameter digest creation for %s", ID(xml_op));
 
-		filter_action_parameters(local_params);
+		filter_action_parameters(local_params, NULL);
 		local_param_digest = calculate_xml_digest(local_params, TRUE);
 		param_digest = local_param_digest;
 		
 		free_xml(local_params);
 	}
 #endif
-
+/*
+#if CRM_DEPRECATED_SINCE_2_0_5
+	if(safe_str_neq(pnow_digest, param_digest)) {
+		char *fallback_digest = NULL;
+		filter_action_parameters(pnow, "1.0.5");
+		fallback_digest = calculate_xml_digest(pnow, TRUE);
+		if(safe_str_eq(fallback_digest, param_digest)) {
+			crm_free(pnow_digest);
+			pnow_digest = fallback_digest;
+			fallback_digest = NULL;
+		}
+		crm_free(fallback_digest);
+	}
+#endif
+*/
 	if(safe_str_neq(pnow_digest, param_digest)) {
 		crm_data_t *params = find_xml_node(xml_op,XML_TAG_PARAMS,FALSE);
 		if(params) {
 			crm_data_t *local_params = copy_xml(params);
-			filter_action_parameters(local_params);
+			filter_action_parameters(local_params, "1.0.5");
 			
 			crm_log_xml_err(pnow, "params:calc");
 			crm_log_xml_err(local_params, "params:used");
@@ -1259,13 +1314,13 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 		}
 
 		did_change = TRUE;
-		crm_info("Parameters to %s on %s changed: %s vs. %s",
+		crm_info("Parameters to %s on %s changed: calculated %s vs. actual %s",
 			 ID(xml_op), active_node->details->uname,
 			 pnow_digest, crm_str(param_digest));
 		
 		
-		custom_action(rsc, crm_strdup(id), task, NULL,
-			      FALSE, TRUE, data_set);
+		key = generate_op_key(rsc->id, task, interval);
+		custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
 	}
 	
 	g_hash_table_destroy(action->extra);
@@ -1354,35 +1409,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		check_action_definition(rsc, node, xml_op, data_set);
 		
 	} else if(interval > 0) {
-		crm_data_t *op_match = NULL;
-		
-		crm_debug_2("Checking parameters for %s %s", id, task);
-		op_match = find_rsc_op_entry(rsc, id);
-
-		if(op_match == NULL && data_set->stop_action_orphans) {
-			/* create a cancel action */
-			action_t *cancel = NULL;
-			pe_config_warn("Orphan action will be stopped: %s", id);
-
-			cancel = custom_action(
-				rsc, crm_strdup(id), CRMD_ACTION_CANCEL, node,
-				FALSE, TRUE, data_set);
-
-			add_hash_param(cancel->extra, XML_LRM_ATTR_TASK, task);
-			add_hash_param(cancel->extra,
-				       XML_LRM_ATTR_INTERVAL, interval_s);
-			
-			custom_action_order(
-				rsc, NULL, cancel,
-				rsc, stop_key(rsc), NULL,
-				pe_ordering_optional, data_set);
-
-		} else if(op_match == NULL) {
-			pe_config_warn("Ignoring orphan action: %s", id);
-
-		} else {
-			check_action_definition(rsc, node, xml_op, data_set);
-		}		
+		check_action_definition(rsc, node, xml_op, data_set);
 	}
 	
 	if(safe_str_eq(task, CRMD_ACTION_STOP)) {
@@ -1431,7 +1458,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		} else {
 			if(rsc->role != RSC_ROLE_MASTER) {
 				crm_err("%s reported %s in master mode on %s",
-					id, rsc->graph_name,
+					id, rsc->id,
 					node->details->uname);
 			}
 			
@@ -1813,8 +1840,8 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	}
 
 	custom_action_order(
-		rsc_lh, generate_op_key(rsc_lh->graph_name, action, 0), NULL,
-		rsc_rh, generate_op_key(rsc_rh->graph_name, action_rh, 0), NULL,
+		rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
+		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
 		pe_ordering_optional, data_set);
 
 	if(rsc_rh->restart_type == pe_restart_restart
@@ -1839,8 +1866,8 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	action_rh = invert_action(action_rh);
 	
 	custom_action_order(
-		rsc_rh, generate_op_key(rsc_rh->graph_name, action_rh, 0), NULL,
-		rsc_lh, generate_op_key(rsc_lh->graph_name, action, 0), NULL,
+		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
+		rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
 		pe_ordering_optional, data_set);
 
 	if(rsc_lh->restart_type == pe_restart_restart

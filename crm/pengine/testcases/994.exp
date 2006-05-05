@@ -1,34 +1,37 @@
  <transition_graph global_timeout="120s" transition_id="0">
    <synapse id="0">
      <action_set>
-       <pseudo_event id="13" rsc_id="group_1" operation="start" operation_key="group_1_start_0">
+       <pseudo_event id="13" operation="start" operation_key="group_1_start_0">
          <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="16" rsc_id="group_1" operation="stopped" operation_key="group_1_stopped_0"/>
+         <pseudo_event id="15" operation="stop" operation_key="group_1_stop_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="16" operation="stopped" operation_key="group_1_stopped_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="1">
      <action_set>
-       <pseudo_event id="14" rsc_id="group_1" operation="running" operation_key="group_1_running_0">
+       <pseudo_event id="14" operation="running" operation_key="group_1_running_0">
          <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="12" rsc_id="group_1:postfix_9" operation="start" operation_key="group_1:postfix_9_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
+         <rsc_op id="12" operation="start" operation_key="postfix_9_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
        </trigger>
        <trigger>
-         <pseudo_event id="13" rsc_id="group_1" operation="start" operation_key="group_1_start_0"/>
+         <pseudo_event id="13" operation="start" operation_key="group_1_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="2">
      <action_set>
-       <pseudo_event id="15" rsc_id="group_1" operation="stop" operation_key="group_1_stop_0">
+       <pseudo_event id="15" operation="stop" operation_key="group_1_stop_0">
          <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
@@ -36,52 +39,52 @@
    </synapse>
    <synapse id="3">
      <action_set>
-       <pseudo_event id="16" rsc_id="group_1" operation="stopped" operation_key="group_1_stopped_0">
+       <pseudo_event id="16" operation="stopped" operation_key="group_1_stopped_0">
          <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="15" rsc_id="group_1" operation="stop" operation_key="group_1_stop_0"/>
+         <pseudo_event id="15" operation="stop" operation_key="group_1_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="4">
      <action_set>
-       <rsc_op id="2" rsc_id="group_1:postfix_9" operation="monitor" operation_key="group_1:postfix_9_monitor_120000" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
-         <primitive class="lsb" id="group_1:postfix_9" provider="heartbeat" type="postfix"/>
+       <rsc_op id="2" operation="monitor" operation_key="postfix_9_monitor_120000" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
+         <primitive class="lsb" id="postfix_9" provider="heartbeat" type="postfix" long-id="group_1:postfix_9"/>
          <attributes timeout="60000" crm_feature_set="1.0.5" interval="120000"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="12" rsc_id="group_1:postfix_9" operation="start" operation_key="group_1:postfix_9_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
+         <rsc_op id="12" operation="start" operation_key="postfix_9_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="5">
      <action_set>
-       <rsc_op id="3" rsc_id="group_1:postfix_9" operation="stop" operation_key="group_1:postfix_9_stop_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
-         <primitive class="lsb" id="group_1:postfix_9" provider="heartbeat" type="postfix"/>
+       <rsc_op id="3" operation="stop" operation_key="postfix_9_stop_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
+         <primitive class="lsb" id="postfix_9" provider="heartbeat" type="postfix" long-id="group_1:postfix_9"/>
          <attributes crm_feature_set="1.0.5"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="15" rsc_id="group_1" operation="stop" operation_key="group_1_stop_0"/>
+         <pseudo_event id="15" operation="stop" operation_key="group_1_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="6">
      <action_set>
-       <rsc_op id="12" rsc_id="group_1:postfix_9" operation="start" operation_key="group_1:postfix_9_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
-         <primitive class="lsb" id="group_1:postfix_9" provider="heartbeat" type="postfix"/>
+       <rsc_op id="12" operation="start" operation_key="postfix_9_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
+         <primitive class="lsb" id="postfix_9" provider="heartbeat" type="postfix" long-id="group_1:postfix_9"/>
          <attributes crm_feature_set="1.0.5"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="3" rsc_id="group_1:postfix_9" operation="stop" operation_key="group_1:postfix_9_stop_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
+         <rsc_op id="3" operation="stop" operation_key="postfix_9_stop_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
        </trigger>
      </inputs>
    </synapse>

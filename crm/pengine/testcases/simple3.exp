@@ -1,8 +1,8 @@
  <transition_graph global_timeout="60s" transition_id="0">
   <synapse id="0">
     <action_set>
-       <rsc_op id="3" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="node1">
-        <primitive id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
+       <rsc_op id="3" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="node1">
+         <primitive id="rsc1" class="heartbeat" type="apache" priority="1.0" long-id="rsc1"/>
          <attributes crm_feature_set="1.0.5"/>
       </rsc_op>
     </action_set>

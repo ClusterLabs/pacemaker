@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.44 2006/04/23 19:49:05 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.45 2006/05/05 13:08:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -114,47 +114,47 @@ extern rsc_to_node_t *rsc2node_new(
 	const char *id, resource_t *rsc, int weight, node_t *node,
 	pe_working_set_t *data_set);
 
-#define delete_key(rsc) generate_op_key(rsc->graph_name, CRMD_ACTION_DELETE, 0)
+#define delete_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_DELETE, 0)
 #define delete_action(rsc, node) custom_action(				\
 		rsc, delete_key(rsc), CRMD_ACTION_DELETE, node,		\
 		FALSE, TRUE, data_set);
 
-#define stopped_key(rsc) generate_op_key(rsc->graph_name, CRMD_ACTION_STOPPED, 0)
+#define stopped_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STOPPED, 0)
 #define stopped_action(rsc, node, optional) custom_action(		\
 		rsc, stopped_key(rsc), CRMD_ACTION_STOPPED, node,	\
 		optional, TRUE, data_set);
 
-#define stop_key(rsc) generate_op_key(rsc->graph_name, CRMD_ACTION_STOP, 0)
+#define stop_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STOP, 0)
 #define stop_action(rsc, node, optional) custom_action(			\
 		rsc, stop_key(rsc), CRMD_ACTION_STOP, node,		\
 		optional, TRUE, data_set);
 
-#define start_key(rsc) generate_op_key(rsc->graph_name, CRMD_ACTION_START, 0)
+#define start_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_START, 0)
 #define start_action(rsc, node, optional) custom_action(		\
 		rsc, start_key(rsc), CRMD_ACTION_START, node,		\
 		optional, TRUE, data_set)
 
-#define started_key(rsc) generate_op_key(rsc->graph_name, CRMD_ACTION_STARTED, 0)
+#define started_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STARTED, 0)
 #define started_action(rsc, node, optional) custom_action(		\
 		rsc, started_key(rsc), CRMD_ACTION_STARTED, node,	\
 		optional, TRUE, data_set)
 
-#define promote_key(rsc) generate_op_key(rsc->graph_name, CRMD_ACTION_PROMOTE, 0)
+#define promote_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_PROMOTE, 0)
 #define promote_action(rsc, node, optional) custom_action(		\
 		rsc, promote_key(rsc), CRMD_ACTION_PROMOTE, node,	\
 		optional, TRUE, data_set)
 
-#define promoted_key(rsc) generate_op_key(rsc->graph_name, CRMD_ACTION_PROMOTED, 0)
+#define promoted_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_PROMOTED, 0)
 #define promoted_action(rsc, node, optional) custom_action(		\
 		rsc, promoted_key(rsc), CRMD_ACTION_PROMOTED, node,	\
 		optional, TRUE, data_set)
 
-#define demote_key(rsc) generate_op_key(rsc->graph_name, CRMD_ACTION_DEMOTE, 0)
+#define demote_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_DEMOTE, 0)
 #define demote_action(rsc, node, optional) custom_action(		\
 		rsc, demote_key(rsc), CRMD_ACTION_DEMOTE, node,		\
 		optional, TRUE, data_set)
 
-#define demoted_key(rsc) generate_op_key(rsc->graph_name, CRMD_ACTION_DEMOTED, 0)
+#define demoted_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_DEMOTED, 0)
 #define demoted_action(rsc, node, optional) custom_action(		\
 		rsc, demoted_key(rsc), CRMD_ACTION_DEMOTED, node,	\
 		optional, TRUE, data_set)

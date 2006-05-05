@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.83 2006/05/01 08:42:51 andrew Exp $ */
+/* $Id: complex.c,v 1.84 2006/05/05 13:08:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -171,12 +171,13 @@ static void dup_attr(gpointer key, gpointer value, gpointer user_data)
 
 gboolean	
 common_unpack(crm_data_t * xml_obj, resource_t **rsc,
-	      GHashTable *defaults, pe_working_set_t *data_set)
+	      resource_t *parent, pe_working_set_t *data_set)
 {
 	int lpc = 0;
 	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *value = NULL;
-
+	GHashTable *defaults = parent?parent->parameters:NULL;
+	
 	const char *allowed_attrs[] = {
 		XML_CIB_ATTR_PRIORITY,
 		XML_RSC_ATTR_INCARNATION_MAX,
@@ -218,24 +219,37 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		return FALSE;
 	}
 	
-	(*rsc)->id   = id;
-	(*rsc)->graph_name = crm_strdup(id);
 	(*rsc)->xml  = xml_obj;
+	(*rsc)->parent  = NULL;
 	(*rsc)->ops_xml = find_xml_node(xml_obj, "operations", FALSE);
 	(*rsc)->variant = get_resource_type(crm_element_name(xml_obj));
-	
 	if((*rsc)->variant == pe_unknown) {
 		pe_err("Unknown resource type: %s", crm_element_name(xml_obj));
 		crm_free(*rsc);
 		return FALSE;
 	}
 	
+	(*rsc)->parameters = g_hash_table_new_full(
+		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
+	
+	value = crm_element_value(xml_obj, XML_RSC_ATTR_INCARNATION);
+	if(value) {
+		(*rsc)->id = crm_concat(id, value, ':');
+		add_hash_param((*rsc)->parameters, XML_RSC_ATTR_INCARNATION, value);
+		
+	} else {
+		(*rsc)->id = crm_strdup(id);
+	}
+
+	if(parent) {
+		(*rsc)->long_name = crm_concat(parent->long_name, (*rsc)->id, ':');
+	} else {
+		(*rsc)->long_name = crm_strdup((*rsc)->id);
+	}
+	
 	(*rsc)->fns = &resource_class_functions[(*rsc)->variant];
 	crm_debug_3("Unpacking resource...");
 	
-	(*rsc)->parameters = g_hash_table_new_full(
-		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
-
 	for(lpc = 0; lpc < DIMOF(rsc_attrs); lpc++) {
 		value = crm_element_value(xml_obj, rsc_attrs[lpc]);
 		if(value != NULL) {
@@ -257,7 +271,6 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	(*rsc)->starting	   = FALSE; 
 	(*rsc)->stopping	   = FALSE; 
 
-	(*rsc)->parent		   = NULL;
 	(*rsc)->candidate_colors   = NULL;
 	(*rsc)->rsc_cons	   = NULL; 
 	(*rsc)->actions            = NULL;
@@ -292,7 +305,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		new_con->node_list_rh = node_list_dup(data_set->nodes, FALSE);
 	}
 	
-	crm_debug_2("Options for %s", id);
+	crm_debug_2("Options for %s", (*rsc)->id);
 	value = g_hash_table_lookup((*rsc)->parameters, "globally_unique");
 	if(value != NULL) {
 		cl_str_to_boolean(value, &((*rsc)->globally_unique));
@@ -435,7 +448,8 @@ void common_free(resource_t *rsc)
 	pe_free_shallow_adv(rsc->candidate_colors, TRUE);
 	pe_free_shallow_adv(rsc->rsc_location, FALSE);
 	pe_free_shallow_adv(rsc->allowed_nodes, TRUE);
-	crm_free(rsc->graph_name);
+	crm_free(rsc->id);
+	crm_free(rsc->long_name);
 	crm_free(rsc->variant_opaque);
 	crm_free(rsc);
 	crm_debug_5("Resource freed");

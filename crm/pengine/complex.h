@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.32 2006/04/10 07:23:27 andrew Exp $ */
+/* $Id: complex.h,v 1.33 2006/05/05 13:08:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -214,8 +214,9 @@ extern void master_internal_constraints(
 
 /* extern resource_object_functions_t resource_variants[]; */
 extern resource_object_functions_t resource_class_functions[];
-extern gboolean common_unpack(crm_data_t *xml_obj, resource_t **rsc,
-			      GHashTable *defaults, pe_working_set_t *data_set);
+extern gboolean	common_unpack(crm_data_t * xml_obj, resource_t **rsc,
+			      resource_t *parent, pe_working_set_t *data_set);
+
 extern void common_print(resource_t *rsc, const char *pre_text, long options, void *print_data);
 
 extern void common_free(resource_t *rsc);

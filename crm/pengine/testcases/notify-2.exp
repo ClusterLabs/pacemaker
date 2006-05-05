@@ -1,34 +1,34 @@
  <transition_graph global_timeout="60s" transition_id="0">
    <synapse id="0">
      <action_set>
-       <rsc_op id="33" rsc_id="rsc1:child_rsc1:0" operation="notify" operation_key="rsc1:child_rsc1:0_pre_notify_start_0" on_node="node1" on_node_uuid="uuid1">
-         <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
+       <rsc_op id="33" operation="notify" operation_key="child_rsc1:0_pre_notify_start_0" on_node="node1" on_node_uuid="uuid1">
+         <primitive id="child_rsc1:0" class="heartbeat" type="apache" clone="0" long-id="rsc1:child_rsc1:0"/>
          <attributes notify_active_resource="child_rsc1:0 " notify_confirm="yes" notify_type="pre" crm_feature_set="1.0.5" notify_operation="start" notify_start_uname="node1 " notify_start_resource="child_rsc1:1 " notify_active_uname="node1 " clone="0" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="10" rsc_id="rsc1" operation="notify" operation_key="rsc1_pre_notify_start_0"/>
+         <pseudo_event id="10" operation="notify" operation_key="rsc1_pre_notify_start_0"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="1">
+   <synapse id="1" priority="1000000">
      <action_set>
-       <rsc_op id="34" rsc_id="rsc1:child_rsc1:0" operation="notify" operation_key="rsc1:child_rsc1:0_post_notify_start_0" on_node="node1" on_node_uuid="uuid1">
-         <primitive id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
+       <rsc_op id="34" operation="notify" operation_key="child_rsc1:0_post_notify_start_0" on_node="node1" on_node_uuid="uuid1">
+         <primitive id="child_rsc1:0" class="heartbeat" type="apache" clone="0" long-id="rsc1:child_rsc1:0"/>
          <attributes notify_active_resource="child_rsc1:0 " notify_confirm="yes" notify_type="post" crm_feature_set="1.0.5" notify_operation="start" notify_start_uname="node1 " notify_start_resource="child_rsc1:1 " notify_active_uname="node1 " clone="0" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="12" rsc_id="rsc1" operation="notify" operation_key="rsc1_post_notify_start_0"/>
+         <pseudo_event id="12" operation="notify" operation_key="rsc1_post_notify_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="2">
      <action_set>
-       <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="monitor" operation_key="rsc1:child_rsc1:1_monitor_0" on_node="node1" on_node_uuid="uuid1">
-         <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
+       <rsc_op id="3" operation="monitor" operation_key="child_rsc1:1_monitor_0" on_node="node1" on_node_uuid="uuid1">
+         <primitive id="child_rsc1:1" class="heartbeat" type="apache" clone="1" long-id="rsc1:child_rsc1:1"/>
          <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" clone="1" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
@@ -36,33 +36,33 @@
    </synapse>
    <synapse id="3">
      <action_set>
-       <rsc_op id="7" rsc_id="rsc1:child_rsc1:1" operation="start" operation_key="rsc1:child_rsc1:1_start_0" on_node="node1" on_node_uuid="uuid1">
-         <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
+       <rsc_op id="7" operation="start" operation_key="child_rsc1:1_start_0" on_node="node1" on_node_uuid="uuid1">
+         <primitive id="child_rsc1:1" class="heartbeat" type="apache" clone="1" long-id="rsc1:child_rsc1:1"/>
          <attributes notify_active_resource="child_rsc1:0 " crm_feature_set="1.0.5" notify_start_uname="node1 " notify_start_resource="child_rsc1:1 " notify_active_uname="node1 " clone="1" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="8" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0"/>
+         <pseudo_event id="8" operation="start" operation_key="rsc1_start_0"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="4">
+   <synapse id="4" priority="1000000">
      <action_set>
-       <rsc_op id="37" rsc_id="rsc1:child_rsc1:1" operation="notify" operation_key="rsc1:child_rsc1:1_post_notify_start_0" on_node="node1" on_node_uuid="uuid1">
-         <primitive id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
+       <rsc_op id="37" operation="notify" operation_key="child_rsc1:1_post_notify_start_0" on_node="node1" on_node_uuid="uuid1">
+         <primitive id="child_rsc1:1" class="heartbeat" type="apache" clone="1" long-id="rsc1:child_rsc1:1"/>
          <attributes notify_active_resource="child_rsc1:0 " notify_confirm="yes" notify_type="post" crm_feature_set="1.0.5" notify_operation="start" notify_start_uname="node1 " notify_start_resource="child_rsc1:1 " notify_active_uname="node1 " clone="1" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="12" rsc_id="rsc1" operation="notify" operation_key="rsc1_post_notify_start_0"/>
+         <pseudo_event id="12" operation="notify" operation_key="rsc1_post_notify_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="5">
      <action_set>
-       <pseudo_event id="8" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0">
+       <pseudo_event id="8" operation="start" operation_key="rsc1_start_0">
          <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
@@ -71,28 +71,28 @@
          <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <pseudo_event id="11" rsc_id="rsc1" operation="notified" operation_key="rsc1_confirmed-pre_notify_start_0"/>
+         <pseudo_event id="11" operation="notified" operation_key="rsc1_confirmed-pre_notify_start_0"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="6">
+   <synapse id="6" priority="1000000">
      <action_set>
-       <pseudo_event id="9" rsc_id="rsc1" operation="running" operation_key="rsc1_running_0">
+       <pseudo_event id="9" operation="running" operation_key="rsc1_running_0">
          <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="7" rsc_id="rsc1:child_rsc1:1" operation="start" operation_key="rsc1:child_rsc1:1_start_0" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="7" operation="start" operation_key="child_rsc1:1_start_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
-         <pseudo_event id="8" rsc_id="rsc1" operation="start" operation_key="rsc1_start_0"/>
+         <pseudo_event id="8" operation="start" operation_key="rsc1_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="7">
      <action_set>
-       <pseudo_event id="10" rsc_id="rsc1" operation="notify" operation_key="rsc1_pre_notify_start_0">
+       <pseudo_event id="10" operation="notify" operation_key="rsc1_pre_notify_start_0">
          <attributes notify_confirm="yes" notify_type="pre" crm_feature_set="1.0.5" notify_operation="start"/>
        </pseudo_event>
      </action_set>
@@ -100,79 +100,79 @@
    </synapse>
    <synapse id="8">
      <action_set>
-       <pseudo_event id="11" rsc_id="rsc1" operation="notified" operation_key="rsc1_confirmed-pre_notify_start_0">
+       <pseudo_event id="11" operation="notified" operation_key="rsc1_confirmed-pre_notify_start_0">
          <attributes notify_type="pre" crm_feature_set="1.0.5" notify_operation="start"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="10" rsc_id="rsc1" operation="notify" operation_key="rsc1_pre_notify_start_0"/>
+         <pseudo_event id="10" operation="notify" operation_key="rsc1_pre_notify_start_0"/>
        </trigger>
        <trigger>
-         <rsc_op id="33" rsc_id="rsc1:child_rsc1:0" operation="notify" operation_key="rsc1:child_rsc1:0_pre_notify_start_0" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="33" operation="notify" operation_key="child_rsc1:0_pre_notify_start_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="9">
+   <synapse id="9" priority="1000000">
      <action_set>
-       <pseudo_event id="12" rsc_id="rsc1" operation="notify" operation_key="rsc1_post_notify_start_0">
+       <pseudo_event id="12" operation="notify" operation_key="rsc1_post_notify_start_0">
          <attributes notify_confirm="yes" notify_type="post" crm_feature_set="1.0.5" notify_operation="start"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="9" rsc_id="rsc1" operation="running" operation_key="rsc1_running_0"/>
+         <pseudo_event id="9" operation="running" operation_key="rsc1_running_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="10">
      <action_set>
-       <pseudo_event id="13" rsc_id="rsc1" operation="notified" operation_key="rsc1_confirmed-post_notify_start_0">
+       <pseudo_event id="13" operation="notified" operation_key="rsc1_confirmed-post_notify_start_0">
          <attributes notify_type="pre" crm_feature_set="1.0.5" notify_operation="start"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="12" rsc_id="rsc1" operation="notify" operation_key="rsc1_post_notify_start_0"/>
+         <pseudo_event id="12" operation="notify" operation_key="rsc1_post_notify_start_0"/>
        </trigger>
        <trigger>
-         <rsc_op id="34" rsc_id="rsc1:child_rsc1:0" operation="notify" operation_key="rsc1:child_rsc1:0_post_notify_start_0" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="34" operation="notify" operation_key="child_rsc1:0_post_notify_start_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
-         <rsc_op id="37" rsc_id="rsc1:child_rsc1:1" operation="notify" operation_key="rsc1:child_rsc1:1_post_notify_start_0" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="37" operation="notify" operation_key="child_rsc1:1_post_notify_start_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="11">
      <action_set>
-       <rsc_op id="20" rsc_id="rsc2:child_rsc2:0" operation="stop" operation_key="rsc2:child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1">
-         <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
+       <rsc_op id="20" operation="stop" operation_key="child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1">
+         <primitive id="child_rsc2:0" class="heartbeat" type="apache" clone="0" long-id="rsc2:child_rsc2:0"/>
          <attributes notify_stop_uname="node1 " notify_stop_resource="child_rsc2:0 " crm_feature_set="1.0.5" clone="0" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="27" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0"/>
+         <pseudo_event id="27" operation="stop" operation_key="rsc2_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="12">
      <action_set>
-       <rsc_op id="38" rsc_id="rsc2:child_rsc2:0" operation="notify" operation_key="rsc2:child_rsc2:0_pre_notify_stop_0" on_node="node1" on_node_uuid="uuid1">
-         <primitive id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
+       <rsc_op id="38" operation="notify" operation_key="child_rsc2:0_pre_notify_stop_0" on_node="node1" on_node_uuid="uuid1">
+         <primitive id="child_rsc2:0" class="heartbeat" type="apache" clone="0" long-id="rsc2:child_rsc2:0"/>
          <attributes notify_stop_uname="node1 " notify_confirm="yes" notify_type="pre" notify_stop_resource="child_rsc2:0 " crm_feature_set="1.0.5" notify_operation="stop" clone="0" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="29" rsc_id="rsc2" operation="notify" operation_key="rsc2_pre_notify_stop_0"/>
+         <pseudo_event id="29" operation="notify" operation_key="rsc2_pre_notify_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="13">
      <action_set>
-       <rsc_op id="4" rsc_id="rsc2:child_rsc2:1" operation="monitor" operation_key="rsc2:child_rsc2:1_monitor_0" on_node="node1" on_node_uuid="uuid1">
-         <primitive id="rsc2:child_rsc2:1" class="heartbeat" type="apache"/>
+       <rsc_op id="4" operation="monitor" operation_key="child_rsc2:1_monitor_0" on_node="node1" on_node_uuid="uuid1">
+         <primitive id="child_rsc2:1" class="heartbeat" type="apache" clone="1" long-id="rsc2:child_rsc2:1"/>
          <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" clone="1" clone_max="2" notify="1" clone_node_max="2"/>
        </rsc_op>
      </action_set>
@@ -180,34 +180,34 @@
    </synapse>
    <synapse id="14">
      <action_set>
-       <pseudo_event id="27" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0">
+       <pseudo_event id="27" operation="stop" operation_key="rsc2_stop_0">
          <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="30" rsc_id="rsc2" operation="notified" operation_key="rsc2_confirmed-pre_notify_stop_0"/>
+         <pseudo_event id="30" operation="notified" operation_key="rsc2_confirmed-pre_notify_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="15">
+   <synapse id="15" priority="1000000">
      <action_set>
-       <pseudo_event id="28" rsc_id="rsc2" operation="stopped" operation_key="rsc2_stopped_0">
+       <pseudo_event id="28" operation="stopped" operation_key="rsc2_stopped_0">
          <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="20" rsc_id="rsc2:child_rsc2:0" operation="stop" operation_key="rsc2:child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="20" operation="stop" operation_key="child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
-         <pseudo_event id="27" rsc_id="rsc2" operation="stop" operation_key="rsc2_stop_0"/>
+         <pseudo_event id="27" operation="stop" operation_key="rsc2_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="16">
      <action_set>
-       <pseudo_event id="29" rsc_id="rsc2" operation="notify" operation_key="rsc2_pre_notify_stop_0">
+       <pseudo_event id="29" operation="notify" operation_key="rsc2_pre_notify_stop_0">
          <attributes notify_confirm="yes" notify_type="pre" crm_feature_set="1.0.5" notify_operation="stop"/>
        </pseudo_event>
      </action_set>
@@ -215,40 +215,40 @@
    </synapse>
    <synapse id="17">
      <action_set>
-       <pseudo_event id="30" rsc_id="rsc2" operation="notified" operation_key="rsc2_confirmed-pre_notify_stop_0">
+       <pseudo_event id="30" operation="notified" operation_key="rsc2_confirmed-pre_notify_stop_0">
          <attributes notify_type="pre" crm_feature_set="1.0.5" notify_operation="stop"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="29" rsc_id="rsc2" operation="notify" operation_key="rsc2_pre_notify_stop_0"/>
+         <pseudo_event id="29" operation="notify" operation_key="rsc2_pre_notify_stop_0"/>
        </trigger>
        <trigger>
-         <rsc_op id="38" rsc_id="rsc2:child_rsc2:0" operation="notify" operation_key="rsc2:child_rsc2:0_pre_notify_stop_0" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="38" operation="notify" operation_key="child_rsc2:0_pre_notify_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="18">
      <action_set>
-       <pseudo_event id="31" rsc_id="rsc2" operation="notify" operation_key="rsc2_post_notify_stop_0">
+       <pseudo_event id="31" operation="notify" operation_key="rsc2_post_notify_stop_0">
          <attributes notify_confirm="yes" notify_type="post" crm_feature_set="1.0.5" notify_operation="stop"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="28" rsc_id="rsc2" operation="stopped" operation_key="rsc2_stopped_0"/>
+         <pseudo_event id="28" operation="stopped" operation_key="rsc2_stopped_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="19">
      <action_set>
-       <pseudo_event id="32" rsc_id="rsc2" operation="notified" operation_key="rsc2_confirmed-post_notify_stop_0">
+       <pseudo_event id="32" operation="notified" operation_key="rsc2_confirmed-post_notify_stop_0">
          <attributes notify_type="pre" crm_feature_set="1.0.5" notify_operation="stop"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="31" rsc_id="rsc2" operation="notify" operation_key="rsc2_post_notify_stop_0"/>
+         <pseudo_event id="31" operation="notify" operation_key="rsc2_post_notify_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -272,10 +272,10 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="3" rsc_id="rsc1:child_rsc1:1" operation="monitor" operation_key="rsc1:child_rsc1:1_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="3" operation="monitor" operation_key="child_rsc1:1_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
-         <rsc_op id="4" rsc_id="rsc2:child_rsc2:1" operation="monitor" operation_key="rsc2:child_rsc2:1_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="4" operation="monitor" operation_key="child_rsc2:1_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>

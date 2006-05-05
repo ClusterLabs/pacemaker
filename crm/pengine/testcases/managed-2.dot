@@ -25,6 +25,7 @@ digraph "g" {
 "DoFencing_stopped_0" [ font_color=black style=filled fillcolor=purple ]
 "DcIPaddr_start_0 c001n09" -> "DcIPaddr_monitor_5000 c001n09" [ style = dashed]
 "DcIPaddr_stop_0 c001n09" -> "DcIPaddr_start_0 c001n09" [ style = dashed]
+"DoFencing_stop_0" -> "DoFencing_start_0" [ style = dashed]
 "DoFencing_stopped_0" -> "DoFencing_start_0" [ style = dashed]
 "DoFencing_start_0" -> "DoFencing_running_0" [ style = dashed]
 "DoFencing_stop_0" -> "DoFencing_stopped_0" [ style = dashed]

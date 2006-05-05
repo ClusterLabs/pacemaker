@@ -1,8 +1,8 @@
  <transition_graph global_timeout="120s" transition_id="0">
    <synapse id="0">
      <action_set>
-       <rsc_op id="3" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" operation_key="DoFencing:child_DoFencing:0_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
-         <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
+       <rsc_op id="3" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
+         <primitive id="child_DoFencing:0" class="stonith" type="ssh" clone="0" long-id="DoFencing:child_DoFencing:0"/>
          <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" clone="0" clone_max="8" hostlist="hadev1 hadev2 hadev3 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
@@ -10,33 +10,33 @@
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="4" rsc_id="DoFencing:child_DoFencing:0" operation="start" operation_key="DoFencing:child_DoFencing:0_start_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
-         <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
+       <rsc_op id="4" operation="start" operation_key="child_DoFencing:0_start_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
+         <primitive id="child_DoFencing:0" class="stonith" type="ssh" clone="0" long-id="DoFencing:child_DoFencing:0"/>
          <attributes timeout="20000" crm_feature_set="1.0.5" clone="0" clone_max="8" hostlist="hadev1 hadev2 hadev3 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="6" rsc_id="DoFencing" operation="start" operation_key="DoFencing_start_0"/>
+         <pseudo_event id="6" operation="start" operation_key="DoFencing_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="2">
      <action_set>
-       <rsc_op id="5" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" operation_key="DoFencing:child_DoFencing:0_monitor_5000" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
-         <primitive id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
+       <rsc_op id="5" operation="monitor" operation_key="child_DoFencing:0_monitor_5000" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
+         <primitive id="child_DoFencing:0" class="stonith" type="ssh" clone="0" long-id="DoFencing:child_DoFencing:0"/>
          <attributes timeout="20000" crm_feature_set="1.0.5" interval="5000" clone="0" clone_max="8" hostlist="hadev1 hadev2 hadev3 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="4" rsc_id="DoFencing:child_DoFencing:0" operation="start" operation_key="DoFencing:child_DoFencing:0_start_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3"/>
+         <rsc_op id="4" operation="start" operation_key="child_DoFencing:0_start_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="3">
      <action_set>
-       <pseudo_event id="6" rsc_id="DoFencing" operation="start" operation_key="DoFencing_start_0">
+       <pseudo_event id="6" operation="start" operation_key="DoFencing_start_0">
          <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
@@ -46,18 +46,18 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="4">
+   <synapse id="4" priority="1000000">
      <action_set>
-       <pseudo_event id="7" rsc_id="DoFencing" operation="running" operation_key="DoFencing_running_0">
+       <pseudo_event id="7" operation="running" operation_key="DoFencing_running_0">
          <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="4" rsc_id="DoFencing:child_DoFencing:0" operation="start" operation_key="DoFencing:child_DoFencing:0_start_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3"/>
+         <rsc_op id="4" operation="start" operation_key="child_DoFencing:0_start_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3"/>
        </trigger>
        <trigger>
-         <pseudo_event id="6" rsc_id="DoFencing" operation="start" operation_key="DoFencing_start_0"/>
+         <pseudo_event id="6" operation="start" operation_key="DoFencing_start_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -81,7 +81,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="3" rsc_id="DoFencing:child_DoFencing:0" operation="monitor" operation_key="DoFencing:child_DoFencing:0_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3"/>
+         <rsc_op id="3" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3"/>
        </trigger>
      </inputs>
    </synapse>

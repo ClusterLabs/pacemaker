@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.109 2006/04/26 15:57:04 andrew Exp $ */
+/* $Id: pengine.h,v 1.110 2006/05/05 13:08:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -99,7 +99,6 @@ typedef struct pe_working_set_s
 		gboolean remove_after_stop;
 		gboolean stop_rsc_orphans;
 		gboolean stop_action_orphans;
-		gboolean short_rsc_names;
 
 		int default_resource_stickiness;
 		int default_resource_fail_stickiness;
@@ -273,8 +272,8 @@ struct rsc_to_node_s {
 };
 
 struct resource_s { 
-		const char *id; 
-		char *graph_name; 
+		char *id; 
+		char *long_name; 
 		crm_data_t *xml; 
 		crm_data_t *ops_xml; 
 

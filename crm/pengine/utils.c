@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.134 2006/05/03 09:02:45 andrew Exp $ */
+/* $Id: utils.c,v 1.135 2006/05/05 13:08:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -400,13 +400,9 @@ pe_find_resource(GListPtr rsc_list, const char *id)
 		} else if(safe_str_eq(rsc->id, id)){
 			crm_debug_4("Found a match for %s", id);
 			return rsc;
-#if 0
-		} else if(data_set->short_rsc_names == FALSE
-			  && safe_str_eq(rsc->graph_name, id)) {
-#else
-		} else if(safe_str_eq(rsc->graph_name, id)) {
-#endif
-			crm_debug_3("Found a match for %s", id);
+			
+		} else if(safe_str_eq(rsc->long_name, id)) {
+			crm_debug_4("Found a match for %s", id);
 			return rsc;
 		}
 	}
@@ -758,7 +754,10 @@ custom_action(resource_t *rsc, char *key, const char *task,
 	
 	if(rsc != NULL) {
 		enum action_tasks a_task = text2task(action->task);
-		
+		int warn_level = LOG_DEBUG_3;
+		if(save_action) {
+			warn_level = LOG_WARNING;
+		}
 		if(action->node != NULL) {
 			unpack_instance_attributes(
 				action->op_entry, XML_TAG_ATTR_SETS,
@@ -769,26 +768,26 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			action->runnable = FALSE;
 
 		} else if(rsc->is_managed == FALSE) {
-			crm_warn("Action %s %s is for %s (unmanaged)",
+			crm_log_maybe(warn_level, "Action %s %s is for %s (unmanaged)",
 				 action->uuid, task, rsc->id);
 			action->optional = TRUE;
 /*   			action->runnable = FALSE; */
 
 #if 0
 		} else if(action->node->details->unclean) {
-			crm_warn("Action %s on %s is unrunnable (unclean)",
+			crm_log_maybe(warn_level, "Action %s on %s is unrunnable (unclean)",
 				 action->uuid, action->node?action->node->details->uname:"<none>");
 
 			action->runnable = FALSE;
 #endif	
 		} else if(action->node->details->online == FALSE) {
 			action->runnable = FALSE;
-			crm_warn("Action %s on %s is unrunnable (offline)",
+			crm_log_maybe(warn_level, "Action %s on %s is unrunnable (offline)",
 				 action->uuid, action->node->details->uname);
 			if(action->rsc->is_managed
 			   && save_action
 			   && a_task == stop_rsc) {
-				crm_warn("Marking node %s unclean",
+				crm_log_maybe(warn_level, "Marking node %s unclean",
 					 action->node->details->uname);
 				action->node->details->unclean = TRUE;
 			}
@@ -1038,9 +1037,8 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 		}
 		
 		match_key = generate_op_key(
-			rsc->graph_name, name, crm_get_msec(interval));
+			rsc->id, name, crm_get_msec(interval));
 
-		crm_debug_2("Matching %s with %s", key, match_key);
 		if(safe_str_eq(key, match_key)) {
 			op = operation;
 		}

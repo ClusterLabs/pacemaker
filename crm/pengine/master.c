@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.15 2006/05/02 10:03:40 andrew Exp $ */
+/* $Id: master.c,v 1.16 2006/05/05 13:08:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -56,7 +56,7 @@ typedef struct clone_variant_data_s
 
 void master_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
-	add_hash_param(rsc->parameters, "stateful", XML_BOOLEAN_TRUE);
+ 	add_hash_param(rsc->parameters, "stateful", XML_BOOLEAN_TRUE);
 	clone_unpack(rsc, data_set);
 }
 
@@ -285,7 +285,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 				CRM_CHECK(chosen != NULL, break);
 
-				len = 8 + strlen(child_rsc->graph_name);
+				len = 8 + strlen(child_rsc->id);
 				crm_malloc0(attr_name, len);
 				sprintf(attr_name, "master-%s", child_rsc->id);
 				
@@ -295,7 +295,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 					chosen->details->attrs, attr_name);
 
 				if(attr_value == NULL) {
-					sprintf(attr_name, "master-%s", child_rsc->graph_name);
+					sprintf(attr_name, "master-%s", child_rsc->long_name);
 					crm_debug_2("looking for %s on %s", attr_name,
 						    chosen->details->uname);
 					attr_value = g_hash_table_lookup(

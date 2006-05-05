@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.131 2006/05/03 09:02:24 andrew Exp $ */
+/* $Id: native.c,v 1.132 2006/05/05 13:08:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -418,7 +418,7 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 			continue;
 		}
 		
-		key = generate_op_key(rsc->graph_name, name, interval_ms);
+		key = generate_op_key(rsc->id, name, interval_ms);
 		if(start != NULL) {
 			crm_debug_3("Marking %s %s due to %s",
 				    key, start->optional?"optional":"manditory",
@@ -517,8 +517,11 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	enum rsc_role_e role = RSC_ROLE_UNKNOWN;
 	enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
-	if(rsc->color != NULL) {
-		chosen = rsc->color->details->chosen_node;
+	CRM_CHECK(rsc->color != NULL, return);
+
+	chosen = rsc->color->details->chosen_node;
+	if(chosen != NULL) {
+		CRM_CHECK(rsc->next_role != RSC_ROLE_UNKNOWN, rsc->next_role = RSC_ROLE_STARTED);
 	}
 
 	unpack_instance_attributes(
@@ -1680,7 +1683,7 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 	}
 
 	next_node = rsc->color->details->chosen_node;
-	op_key = generate_op_key(rsc->graph_name, op->task, 0);
+	op_key = generate_op_key(rsc->id, op->task, 0);
 	possible_matches = find_actions(rsc->actions, op_key, NULL);
 	
 	crm_debug_2("Creating notificaitons for: %s (%s->%s)",
@@ -1758,7 +1761,7 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	crm_debug_2("Creating actions for %s: %s (%s-%s)",
 		    op->uuid, rsc->id, value, task);
 	
-	key = generate_notify_key(rsc->graph_name, value, task);
+	key = generate_notify_key(rsc->id, value, task);
 	trigger = custom_action(rsc, key, op->task, node,
 				op->optional, TRUE, data_set);
 	g_hash_table_foreach(op->extra, dup_attr, trigger->extra);
@@ -2086,7 +2089,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	}
 	
 	target_rc = crm_itoa(EXECRA_NOT_RUNNING);
-	key = generate_op_key(rsc->graph_name, CRMD_ACTION_STATUS, 0);
+	key = generate_op_key(rsc->id, CRMD_ACTION_STATUS, 0);
 	probe = custom_action(rsc, key, CRMD_ACTION_STATUS, node,
 			      FALSE, TRUE, data_set);
 	
