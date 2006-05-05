@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.34 2006/04/18 11:23:45 andrew Exp $ */
+/* $Id: util.h,v 1.35 2006/05/05 13:16:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -114,7 +114,7 @@ extern char *crm_concat(const char *prefix, const char *suffix, char join);
 extern gboolean decode_op_key(
 	const char *key, char **rsc_id, char **op_type, int *interval);
 
-extern void filter_action_parameters(crm_data_t *param_set);
+extern void filter_action_parameters(crm_data_t *param_set, const char *version);
 
 extern gboolean safe_str_eq(const char *a, const char *b);
 extern gboolean safe_str_neq(const char *a, const char *b);

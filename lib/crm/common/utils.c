@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.47 2006/04/18 11:23:45 andrew Exp $ */
+/* $Id: utils.c,v 1.48 2006/05/05 13:16:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1070,7 +1070,7 @@ decode_transition_key(const char *key, char **uuid, int *transition_id)
 }
 
 void
-filter_action_parameters(crm_data_t *param_set) 
+filter_action_parameters(crm_data_t *param_set, const char *version) 
 {
 	const char *attr_filter[] = {
 		XML_ATTR_ID,
