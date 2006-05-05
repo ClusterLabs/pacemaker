@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.26 2006/04/26 13:35:19 andrew Exp $ */
+/* $Id: actions.c,v 1.27 2006/05/05 13:15:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -254,8 +254,8 @@ cib_action_update(crm_action_t *action, int status)
 
 	const char *name = NULL;
 	const char *value = NULL;
+	const char *rsc_id = NULL;
 	const char *task   = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-	const char *rsc_id = crm_element_value(action->xml, XML_LRM_ATTR_RSCID);
 	const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 	const char *task_uuid = crm_element_value(
 		action->xml, XML_LRM_ATTR_TASK_KEY);
@@ -273,6 +273,7 @@ cib_action_update(crm_action_t *action, int status)
 	action_rsc = find_xml_node(action->xml, XML_CIB_TAG_RESOURCE, TRUE);
 	CRM_CHECK(action_rsc != NULL, return FALSE);
 
+	rsc_id = ID(action_rsc);
 	code = crm_itoa(status);
 	
 /*
@@ -333,7 +334,7 @@ cib_action_update(crm_action_t *action, int status)
 
 	params = find_xml_node(action->xml, "attributes", TRUE);
 	params = copy_xml(params);
-	filter_action_parameters(params);
+	filter_action_parameters(params, NULL);
 	digest = calculate_xml_digest(params, TRUE);
 	crm_xml_add(xml_op, XML_LRM_ATTR_OP_DIGEST, digest);
 	crm_free(digest);
@@ -370,7 +371,6 @@ send_rsc_command(crm_action_t *action)
 
 	const char *task    = NULL;
 	const char *value   = NULL;
-	const char *rsc_id  = NULL;
 	const char *on_node = NULL;
 	const char *task_uuid = NULL;
 
@@ -380,7 +380,6 @@ send_rsc_command(crm_action_t *action)
 	rsc_op  = action->xml;
 	task    = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 	task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
-	rsc_id  = crm_element_value(rsc_op, XML_LRM_ATTR_RSCID);
 	on_node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
 	counter = generate_transition_key(transition_graph->id, te_uuid);
 	crm_xml_add(rsc_op, XML_ATTR_TRANSITION_KEY, counter);

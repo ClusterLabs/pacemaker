@@ -1,4 +1,4 @@
-/* $Id: events.c,v 1.15 2006/04/27 11:27:48 andrew Exp $ */
+/* $Id: events.c,v 1.16 2006/05/05 13:15:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -164,6 +164,7 @@ extract_event(crm_data_t *msg)
 static void
 update_failcount(crm_action_t *action, int rc) 
 {
+	crm_data_t *rsc = NULL;
 	char *attr_name = NULL;
 	
 	const char *task     = NULL;
@@ -183,14 +184,17 @@ update_failcount(crm_action_t *action, int rc)
 	}
 
 	CRM_CHECK(action->xml != NULL, return);
+
+	rsc = find_xml_node(action->xml, XML_CIB_TAG_RESOURCE, TRUE);
+	CRM_CHECK(rsc != NULL, return);
+	rsc_id = ID(rsc);
+	CRM_CHECK(rsc_id != NULL, return);
 	
 	task   = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-	rsc_id = crm_element_value(action->xml, XML_LRM_ATTR_RSCID);
 	on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 	on_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 
 	CRM_CHECK(task != NULL, return);
-	CRM_CHECK(rsc_id != NULL, return);
 	CRM_CHECK(on_uuid != NULL, return);
 	CRM_CHECK(on_node != NULL, return);
 	
