@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.50 2006/05/02 10:10:58 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.51 2006/05/05 12:52:43 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -194,8 +194,6 @@ main(int argc, char **argv)
 				cib_action = CIB_OP_SYNC;
 				break;
 			case 'U':
-				cib_action = CIB_OP_UPDATE;
-				break;
 			case 'M':
 				cib_action = CIB_OP_MODIFY;
 				break;
