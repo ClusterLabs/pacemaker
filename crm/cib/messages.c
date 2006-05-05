@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.75 2006/04/20 15:43:23 andrew Exp $ */
+/* $Id: messages.c,v 1.76 2006/05/05 12:54:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -60,9 +60,6 @@ unsigned int cib_diff_loglevel = CIB_DIFF_LEVEL+1;
 enum cib_errors updateList(
 	crm_data_t *local_cib, crm_data_t *update_command, crm_data_t *failed,
 	int operation, const char *section);
-
-enum cib_errors replace_section(
-	const char *section, crm_data_t *tmpCib, crm_data_t *command);
 
 gboolean check_generation(crm_data_t *newCib, crm_data_t *oldCib);
 
@@ -477,6 +474,7 @@ cib_process_replace(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
+	const char *tag = NULL;
 	gboolean send_notify   = FALSE;
 	gboolean verbose       = FALSE;
 	enum cib_errors result = cib_ok;
@@ -485,17 +483,23 @@ cib_process_replace(
 		    op, crm_str(section));
 	*answer = NULL;
 
+	if (input == NULL) {
+		return cib_NOOBJECT;
+	}
+
+	tag = crm_element_name(input);
+
 	if (options & cib_verbose) {
 		verbose = TRUE;
 	}
 	if(safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
 		section = NULL;
+
+	} else if(safe_str_eq(tag, section)) {
+		section = NULL;
 	}
 	
-	if (input == NULL) {
-		result = cib_NOOBJECT;
-		
-	} else if(section == NULL) {
+	if(safe_str_eq(tag, XML_TAG_CIB)) {
 		int updates = 0;
 		int epoch  = 0;
 		int admin_epoch = 0;
@@ -515,6 +519,7 @@ cib_process_replace(
 
 		} else if(replace_admin_epoch > admin_epoch) {
 			/* no more checks */
+
 		} else if(replace_epoch < epoch) {
 			reason = XML_ATTR_GENERATION;
 
@@ -538,10 +543,14 @@ cib_process_replace(
 		send_notify = TRUE;
 		
 	} else {
+		crm_data_t *obj_root = NULL;
 		*result_cib = copy_xml(existing_cib);
-		result = replace_section(section, *result_cib, input);
+		obj_root = get_object_root(section, *result_cib);
+		if(replace_xml_child(NULL, obj_root, input, FALSE) == FALSE) {
+			crm_debug_2("No matching object to replace");
+			result = cib_NOTEXISTS;
 
-		if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+		} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
 			send_notify = TRUE;
 		}
 	}
@@ -579,7 +588,7 @@ cib_process_delete(
 	crm_validate_data(input);
 	crm_validate_data(*result_cib);
 
-	if(delete_xml_child(NULL, obj_root, input) == FALSE) {
+	if(replace_xml_child(NULL, obj_root, input, TRUE) == FALSE) {
 		crm_debug_2("No matching object to delete");
 	}
 	
@@ -709,42 +718,6 @@ cib_process_change(
 	}
 
 	return result;
-}
-
-
-enum cib_errors
-replace_section(
-	const char *section, crm_data_t *tmpCib, crm_data_t *new_section)
-{
-	crm_data_t *old_section = NULL;
-
-	/* find the old and new versions of the section */
-	old_section = get_object_root(section, tmpCib);
-	
-	if(old_section == NULL) {
-		crm_err("The CIB is corrupt, cannot replace missing section %s",
-		       section);
-		return cib_NOSECTION;
-
-	} else if(new_section == NULL) {
-		crm_err("The CIB is corrupt, cannot set section %s to nothing",
-		       section);
-		return cib_NOSECTION;
-	}
-
-	xml_child_iter(
-		old_section, a_child, 
-		free_xml_from_parent(old_section, a_child);
-		);
-
-	copy_in_properties(old_section, new_section);
-
-	xml_child_iter(
-		new_section, a_child, 
-		add_node_copy(old_section, a_child);
-		);
-
-	return cib_ok;
 }
 
 #define cib_update_xml_macro(parent, xml_update)			\

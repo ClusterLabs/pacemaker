@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.75 2006/05/02 13:03:18 andrew Exp $ */
+/* $Id: xml.c,v 1.76 2006/05/05 12:54:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2020,31 +2020,37 @@ find_xml_child(crm_data_t *child, const char *tag, const char *id)
 }
 
 gboolean
-delete_xml_child(crm_data_t *parent, crm_data_t *child, crm_data_t *to_delete)
+replace_xml_child(crm_data_t *parent, crm_data_t *child, crm_data_t *update, gboolean delete_only)
 {
 	gboolean can_delete = FALSE;
 	const char *right_val = NULL;
 	
 	CRM_CHECK(child != NULL, return FALSE);
-	CRM_CHECK(to_delete != NULL, return FALSE);
+	CRM_CHECK(update != NULL, return FALSE);
 	
-	if(safe_str_eq(crm_element_name(to_delete), crm_element_name(child))) {
+	if(safe_str_eq(ID(child), ID(update))) {
 		can_delete = TRUE;
 	}
-	xml_prop_iter(to_delete, prop_name, left_value,
-		      if(can_delete == FALSE) {
-			      break;
-		      }
-		      right_val = crm_element_value(child, prop_name);
-		      if(safe_str_neq(left_value, right_val)) {
-			      can_delete = FALSE;
-		      }
-		);
+	if(safe_str_neq(crm_element_name(update), crm_element_name(child))) {
+		can_delete = FALSE;
+	}
+	if(can_delete && delete_only) {
+		xml_prop_iter(update, prop_name, left_value,
+			      right_val = crm_element_value(child, prop_name);
+			      if(safe_str_neq(left_value, right_val)) {
+				      can_delete = FALSE;
+			      }
+			);
+	}
 	
 	if(can_delete && parent != NULL) {
 		crm_log_xml_debug(child, "Delete match found...");
 		cl_msg_remove_value(parent, child);
 		child = NULL;
+		if(delete_only == FALSE) {
+			add_node_copy(parent, update);
+		}
+		return TRUE;
 		
 	} else if(can_delete) {
 		crm_log_xml_debug(child, "Cannot delete the search root");
@@ -2058,7 +2064,7 @@ delete_xml_child(crm_data_t *parent, crm_data_t *child, crm_data_t *to_delete)
 		if(can_delete) {
 			break;
 		}
-		can_delete = delete_xml_child(child, child_of_child, to_delete);
+		can_delete = replace_xml_child(child, child_of_child, update, delete_only);
 		);
 	
 	return can_delete;
