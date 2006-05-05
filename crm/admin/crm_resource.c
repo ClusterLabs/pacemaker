@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.23 2006/05/03 09:01:52 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.24 2006/05/05 12:53:35 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -266,7 +266,8 @@ crmd_msg_callback(IPC_Channel * server, void *private_data)
 
 static int
 delete_lrm_rsc(
-	IPC_Channel *crmd_channel, const char *host_uname, const char *rsc_id)
+	IPC_Channel *crmd_channel, const char *host_uname,
+	const char *rsc_id, const char *rsc_long_id)
 {
 	HA_Message *cmd = NULL;
 	crm_data_t *msg_data = NULL;
@@ -281,6 +282,7 @@ delete_lrm_rsc(
 	
 	rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);
 	crm_xml_add(rsc, XML_ATTR_ID, rsc_id);
+	crm_xml_add(rsc, XML_ATTR_ID_LONG, rsc_long_id);
 
 	params = create_xml_node(msg_data, XML_TAG_ATTRS);
 	crm_xml_add(params, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
@@ -636,7 +638,8 @@ main(int argc, char **argv)
 		rsc = pe_find_resource(data_set.resources, rsc_id);
 		if(rsc != NULL) {
 			rsc_id = rsc->id;
-		} else {
+
+		} else if(rsc_cmd != 'C') {
 			rc = cib_NOTEXISTS;
 		}
 		
@@ -771,11 +774,13 @@ main(int argc, char **argv)
 	} else if(rsc_cmd == 'C') {
 		resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 		if(rsc != NULL) {
-			delete_lrm_rsc(crmd_channel, host_uname, rsc->graph_name);
+			delete_lrm_rsc(crmd_channel, host_uname, rsc->id, rsc->long_name);
 			sleep(10);
 			refresh_lrm(crmd_channel, host_uname);
 		} else {
-			rc = cib_NOTEXISTS;
+			delete_lrm_rsc(crmd_channel, host_uname, rsc_id, NULL);
+			sleep(10);
+			refresh_lrm(crmd_channel, host_uname);
 		}
 		
 	} else {
