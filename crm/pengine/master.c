@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.16 2006/05/05 13:08:49 andrew Exp $ */
+/* $Id: master.c,v 1.17 2006/05/06 07:56:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -295,6 +295,9 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 					chosen->details->attrs, attr_name);
 
 				if(attr_value == NULL) {
+					crm_free(attr_name);
+					len = 8 + strlen(child_rsc->long_name);
+					crm_malloc0(attr_name, len);
 					sprintf(attr_name, "master-%s", child_rsc->long_name);
 					crm_debug_2("looking for %s on %s", attr_name,
 						    chosen->details->uname);
