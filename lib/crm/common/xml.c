@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.76 2006/05/05 12:54:33 andrew Exp $ */
+/* $Id: xml.c,v 1.77 2006/05/07 08:30:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -788,6 +788,7 @@ log_data_element(
 	char print_buffer[1000];
 	char *buffer = print_buffer;
 	const char *name = crm_element_name(data);
+	const char *hidden = NULL;	
 
 	crm_debug_5("Dumping %s...", name);
 	crm_validate_data(data);
@@ -819,13 +820,21 @@ log_data_element(
 	printed = sprintf(buffer, "<%s", name);
 	update_buffer_head(buffer, printed);
 
+	hidden = crm_element_value(data, "hidden");
 	xml_prop_iter(
 		data, prop_name, prop_value,
 
 		if(safe_str_eq(F_XML_TAGNAME, prop_name)) {
 			continue;
+
 		} else if(safe_str_eq(F_XML_PARENT, prop_name)) {
 			continue;
+
+		} else if(hidden != NULL
+			  && prop_name != NULL
+			  && strlen(prop_name) > 0
+			  && strcasestr(hidden, prop_name) != NULL) {
+			prop_value = "*****";
 		}
 		
 		crm_debug_5("Dumping <%s %s=\"%s\"...",
