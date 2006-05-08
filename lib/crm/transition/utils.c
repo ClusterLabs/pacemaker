@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.9 2006/04/26 15:55:42 andrew Exp $ */
+/* $Id: utils.c,v 1.10 2006/05/08 09:59:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -174,7 +174,7 @@ print_elem(int log_level, const char *prefix, gboolean as_input, crm_action_t *a
 	}
 	
 	if(action->confirmed == FALSE) {
-		crm_log_xml(log_level+2, "\t\t\tRaw xml: ", action->xml);
+		crm_log_xml(LOG_DEBUG_3, "\t\t\tRaw xml: ", action->xml);
 	}
 }
 
