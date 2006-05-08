@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.21 2006/05/08 12:09:46 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.22 2006/05/08 20:35:13 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -59,7 +59,6 @@ const char *crm_system_name = "crm_mon";
 
 #define OPTARGS	"V?i:nrh:cdp:1"
 
-#if CURSES_ENABLED
 void usage(const char *cmd, int exit_status);
 void blank_screen(void);
 int print_status(crm_data_t *cib);
@@ -155,7 +154,12 @@ main(int argc, char **argv)
 				as_html_file = crm_strdup(optarg);
 				break;
 			case 'c':
+#if CURSES_ENABLED
 				as_console = TRUE;
+#else
+				printf("You need to have curses available at compile time to enable console mode\n");
+				argerr++;
+#endif
 				break;
 			case '1':
 				one_shot = TRUE;
@@ -178,7 +182,13 @@ main(int argc, char **argv)
 	}
 
 	if(as_html_file == NULL) {
+#if CURSES_ENABLED
 		as_console = TRUE;
+#else
+		printf("Defaulting to one-shot mode\n");
+		printf("You need to have curses available at compile time to enable console mode\n");
+		one_shot = TRUE;
+#endif
 	}
 
 	if(daemonize) {
@@ -663,13 +673,3 @@ make_daemon(gboolean daemonize, const char *pidfile)
 	close(FD_STDERR);
 	(void)open(devnull, O_WRONLY);		/* Stderr: fd 2 */
 }
-
-#else
-int
-main(int argc, char **argv)
-{
-	fprintf(stderr, "The use of %s requires ncurses to be available"
-		" during the build process\n", crm_system_name);
-	exit(1);
-}
-#endif
