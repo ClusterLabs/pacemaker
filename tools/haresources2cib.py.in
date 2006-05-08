@@ -57,10 +57,9 @@ config_defaults = [
 	"no_quorum_policy=stop",
 	"default_resource_stickiness=0",
 	"stonith_enabled=false",
-	"stop_orphan_resources=false",
+	"stop_orphan_resources=true",
 	"stop_orphan_actions=true",
 	"remove_after_stop=false",
-	"short_resource_names=true",
 	"transition_idle_timeout=5min",
 	"is_managed_default=true",
 ]
@@ -77,7 +76,7 @@ def create_cib() :
 	configuration.appendChild(crm_config)
 
 	option_set = doc.createElement("cluster_property_set")
-	option_set.setAttribute("id","default")
+	option_set.setAttribute("id","cib-bootstrap-options")
 	crm_config.appendChild(option_set)
 
 	attr_list = doc.createElement("attributes")
@@ -87,7 +86,7 @@ def create_cib() :
 		option_details = string.split(option, '=')
 		nvpair = doc.createElement("nvpair")
 		attr_list.appendChild(nvpair)
-		nvpair.setAttribute("id",    option_details[0])
+		nvpair.setAttribute("id",    "cib-bootstrap-options-"+option_details[0])
 		nvpair.setAttribute("name",  option_details[0])
 		nvpair.setAttribute("value", option_details[1])
 		if option_details[0] == "stonith_enabled" and enable_stonith:
