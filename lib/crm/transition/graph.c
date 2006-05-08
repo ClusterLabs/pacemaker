@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.12 2006/04/27 11:27:48 andrew Exp $ */
+/* $Id: graph.c,v 1.13 2006/05/08 09:58:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -280,6 +280,8 @@ run_graph(crm_graph_t *graph)
 				num_fired++;
 
 			} else {
+				crm_debug_2("Synapse %d cannot fire",
+					    synapse->id);
 				num_incomplete++;
 			}
 		}
@@ -290,7 +292,7 @@ run_graph(crm_graph_t *graph)
 		stat_log_level = LOG_INFO;
 		pass_result = transition_complete;
 
-		if(num_incomplete != 0) {
+		if(num_incomplete != 0 && graph->abort_priority <= 0) {
 			stat_log_level = LOG_WARNING;
 			pass_result = transition_terminated;
 
