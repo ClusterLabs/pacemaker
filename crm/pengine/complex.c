@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.84 2006/05/05 13:08:49 andrew Exp $ */
+/* $Id: complex.c,v 1.85 2006/05/08 07:36:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -296,15 +296,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	if(value != NULL && safe_str_neq("default", value)) {
 		cl_str_to_boolean(value, &((*rsc)->is_managed));
 	}
-	if((*rsc)->is_managed == FALSE) {
-		crm_warn("Resource %s is currently not managed", (*rsc)->id);
 
-	} else if(data_set->symmetric_cluster) {
-		rsc_to_node_t *new_con = rsc2node_new(
-			"symmetric_default", *rsc, 0, NULL, data_set);
-		new_con->node_list_rh = node_list_dup(data_set->nodes, FALSE);
-	}
-	
 	crm_debug_2("Options for %s", (*rsc)->id);
 	value = g_hash_table_lookup((*rsc)->parameters, "globally_unique");
 	if(value != NULL) {
@@ -361,7 +353,8 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	value = g_hash_table_lookup(
 		(*rsc)->parameters, XML_RSC_ATTR_TARGET_ROLE);
 	
-	if(value != NULL) {
+	if(value != NULL && safe_str_neq("default", value)) {
+		(*rsc)->is_managed = TRUE;
 		(*rsc)->next_role = text2role(value);
 		if((*rsc)->next_role == RSC_ROLE_UNKNOWN) {
 			pe_config_err("%s: Unknown value for "
@@ -375,6 +368,15 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	crm_debug_2("\tDesired next state: %s",
 		    (*rsc)->next_role!=RSC_ROLE_UNKNOWN?role2text((*rsc)->next_role):"default");
 
+	if((*rsc)->is_managed == FALSE) {
+		crm_warn("Resource %s is currently not managed", (*rsc)->id);
+
+	} else if(data_set->symmetric_cluster) {
+		rsc_to_node_t *new_con = rsc2node_new(
+			"symmetric_default", *rsc, 0, NULL, data_set);
+		new_con->node_list_rh = node_list_dup(data_set->nodes, FALSE);
+	}
+	
 	crm_debug_2("\tNotification of start/stop actions: %s",
 		    (*rsc)->notify?"required":"not required");
 	
