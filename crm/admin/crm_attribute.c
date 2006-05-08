@@ -1,4 +1,4 @@
-/* $Id: crm_attribute.c,v 1.13 2006/04/10 12:51:13 andrew Exp $ */
+/* $Id: crm_attribute.c,v 1.14 2006/05/08 07:30:42 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -279,9 +279,8 @@ main(int argc, char **argv)
 			return 1;	
 		}
 	
-		set_name = crm_concat("crmd-transient",dest_node, '-');
+		set_name = NULL;
 		attr_name = crm_concat("fail-count", rsc_id, '-');
-		attr_id = crm_concat(attr_name, dest_node, '-');
 		
 	} else if(safe_str_eq(crm_system_name, "crm_standby")) {
 		if(dest_node == NULL) {
