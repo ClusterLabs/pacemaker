@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.77 2006/05/07 08:30:58 andrew Exp $ */
+/* $Id: xml.c,v 1.78 2006/05/08 07:42:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -315,7 +315,7 @@ crm_xml_add(crm_data_t* node, const char *name, const char *value)
 		
 	} else if(node == NULL) {
 		
-	} else if(parent_name == NULL && strcmp(name, F_XML_TAGNAME) != 0) {
+	} else if(parent_name == NULL && strcasecmp(name, F_XML_TAGNAME) != 0) {
 		
 	} else if (value == NULL || strlen(value) <= 0) {
 		xml_remove_prop(node, name);
@@ -347,7 +347,7 @@ crm_xml_add_int(crm_data_t* node, const char *name, int value)
 		
 	} else if(node == NULL) {
 		
-	} else if(parent_name == NULL && strcmp(name, F_XML_TAGNAME) != 0) {
+	} else if(parent_name == NULL && strcasecmp(name, F_XML_TAGNAME) != 0) {
 		
 	} else {
 		crm_validate_data(node);
@@ -2365,7 +2365,7 @@ sort_pairs(gconstpointer a, gconstpointer b)
 	} else if(pair_b->name == NULL) {
 		return -1;
 	}
-	return strcmp(pair_a->name, pair_b->name);
+	return strcasecmp(pair_a->name, pair_b->name);
 }
 
 static void

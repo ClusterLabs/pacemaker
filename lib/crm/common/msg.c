@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.7 2006/04/04 13:08:52 andrew Exp $ */
+/* $Id: msg.c,v 1.8 2006/05/08 07:42:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -86,7 +86,7 @@ validate_crm_message(
 	if (to == NULL) {
 		crm_info("No sub-system defined.");
 		action = NULL;
-	} else if (true_sys != NULL && strcmp(to, true_sys) != 0) {
+	} else if (true_sys != NULL && strcasecmp(to, true_sys) != 0) {
 		crm_debug_3("The message is not for this sub-system (%s != %s).",
 			  to, true_sys);
 		action = NULL;
@@ -95,7 +95,7 @@ validate_crm_message(
 	if (type == NULL) {
 		crm_info("No message type defined.");
 		return NULL;
-	} else if (msg_type != NULL && strcmp(msg_type, type) != 0) {
+	} else if (msg_type != NULL && strcasecmp(msg_type, type) != 0) {
 		crm_info("Expecting a (%s) message but received a (%s).",
 		       msg_type, type);
 		action = NULL;
@@ -276,7 +276,7 @@ create_reply_adv(HA_Message *original_request,
 		CRM_ASSERT(type != NULL);
 		return NULL;
 #if 0
-	} else if (strcmp(XML_ATTR_REQUEST, type) != 0) {
+	} else if (strcasecmp(XML_ATTR_REQUEST, type) != 0) {
 		crm_err("Cannot create new_message,"
 			" original message was not a request");
 		return NULL;

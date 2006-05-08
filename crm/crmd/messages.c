@@ -518,11 +518,11 @@ relay_message(HA_Message *relay_message, gboolean originated_locally)
 	
 	processing_complete = TRUE;
 	
-	is_for_dc   = (strcmp(CRM_SYSTEM_DC,   sys_to) == 0);
-	is_for_dcib = (strcmp(CRM_SYSTEM_DCIB, sys_to) == 0);
-	is_for_te   = (strcmp(CRM_SYSTEM_TENGINE, sys_to) == 0);
-	is_for_cib  = (strcmp(CRM_SYSTEM_CIB,  sys_to) == 0);
-	is_for_crm  = (strcmp(CRM_SYSTEM_CRMD, sys_to) == 0);
+	is_for_dc   = (strcasecmp(CRM_SYSTEM_DC,   sys_to) == 0);
+	is_for_dcib = (strcasecmp(CRM_SYSTEM_DCIB, sys_to) == 0);
+	is_for_te   = (strcasecmp(CRM_SYSTEM_TENGINE, sys_to) == 0);
+	is_for_cib  = (strcasecmp(CRM_SYSTEM_CIB,  sys_to) == 0);
+	is_for_crm  = (strcasecmp(CRM_SYSTEM_CRMD, sys_to) == 0);
 		
 	is_local = 0;
 	if(host_to == NULL || strlen(host_to) == 0) {
@@ -536,7 +536,7 @@ relay_message(HA_Message *relay_message, gboolean originated_locally)
 			is_local = 1;
 		}
 			
-	} else if(strcmp(fsa_our_uname, host_to) == 0) {
+	} else if(strcasecmp(fsa_our_uname, host_to) == 0) {
 		is_local=1;
 	}
 
@@ -613,7 +613,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 		filtered_from = sys_from;
 
 		/* The CIB can have two names on the DC */
-		if(strcmp(sys_from, CRM_SYSTEM_DCIB) == 0)
+		if(strcasecmp(sys_from, CRM_SYSTEM_DCIB) == 0)
 			filtered_from = CRM_SYSTEM_CIB;
 		
 		if (g_hash_table_lookup (ipc_clients, filtered_from) != NULL) {
@@ -664,10 +664,10 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 		 * only applies to te, pe etc.  not admin clients
 		 */
 
-		if (strcmp(CRM_SYSTEM_PENGINE, client_name) == 0) {
+		if (strcasecmp(CRM_SYSTEM_PENGINE, client_name) == 0) {
 			the_subsystem = pe_subsystem;
 			
-		} else if (strcmp(CRM_SYSTEM_TENGINE, client_name) == 0) {
+		} else if (strcasecmp(CRM_SYSTEM_TENGINE, client_name) == 0) {
 			the_subsystem = te_subsystem;
 		}
 
@@ -799,14 +799,14 @@ handle_request(ha_msg_input_t *stored_msg)
 		crm_log_message(LOG_ERR, stored_msg->msg);
 
 		/*========== common actions ==========*/
-	} else if(strcmp(op, CRM_OP_NOOP) == 0) {
+	} else if(strcasecmp(op, CRM_OP_NOOP) == 0) {
 		crm_debug_2("no-op from %s", crm_str(host_from));
 
-	} else if(strcmp(op, CRM_OP_NOVOTE) == 0) {
+	} else if(strcasecmp(op, CRM_OP_NOVOTE) == 0) {
 		register_fsa_input_adv(C_HA_MESSAGE, I_NULL, stored_msg,
 				       A_ELECTION_COUNT|A_ELECTION_CHECK, FALSE, __FUNCTION__);
 
-	} else if(strcmp(op, CRM_OP_VOTE) == 0) {
+	} else if(strcasecmp(op, CRM_OP_VOTE) == 0) {
 		/* count the vote and decide what to do after that */
 		register_fsa_input_adv(C_HA_MESSAGE, I_NULL, stored_msg,
 				       A_ELECTION_COUNT|A_ELECTION_CHECK, FALSE, __FUNCTION__);
@@ -822,13 +822,13 @@ handle_request(ha_msg_input_t *stored_msg)
 #endif
 		}
 		
-	} else if(strcmp(op, CRM_OP_LOCAL_SHUTDOWN) == 0) {
+	} else if(strcasecmp(op, CRM_OP_LOCAL_SHUTDOWN) == 0) {
 		
 		crm_shutdown(SIGTERM);
 		/*next_input = I_SHUTDOWN; */
 		next_input = I_NULL;
 			
-	} else if(strcmp(op, CRM_OP_PING) == 0) {
+	} else if(strcasecmp(op, CRM_OP_PING) == 0) {
 		/* eventually do some stuff to figure out
 		 * if we /are/ ok
 		 */
@@ -847,31 +847,31 @@ handle_request(ha_msg_input_t *stored_msg)
 		/* probably better to do this via signals on the
 		 * local node
 		 */
-	} else if(strcmp(op, CRM_OP_DEBUG_UP) == 0) {
+	} else if(strcasecmp(op, CRM_OP_DEBUG_UP) == 0) {
 		int level = get_crm_log_level();
 		set_crm_log_level(level+1);
 		crm_info("Debug set to %d (was %d)",
 			 get_crm_log_level(), level);
 		
-	} else if(strcmp(op, CRM_OP_DEBUG_DOWN) == 0) {
+	} else if(strcasecmp(op, CRM_OP_DEBUG_DOWN) == 0) {
 		int level = get_crm_log_level();
 		set_crm_log_level(level-1);
 		crm_info("Debug set to %d (was %d)",
 			 get_crm_log_level(), level);
 
-	} else if(strcmp(op, CRM_OP_JOIN_OFFER) == 0) {
+	} else if(strcasecmp(op, CRM_OP_JOIN_OFFER) == 0) {
 		next_input = I_JOIN_OFFER;
 		crm_debug("Raising I_JOIN_OFFER: join-%s",
 			  cl_get_string(stored_msg->msg, F_CRM_JOIN_ID));
 				
-	} else if(strcmp(op, CRM_OP_JOIN_ACKNAK) == 0) {
+	} else if(strcasecmp(op, CRM_OP_JOIN_ACKNAK) == 0) {
 		next_input = I_JOIN_RESULT;
 		crm_debug("Raising I_JOIN_RESULT: join-%s",
 			  cl_get_string(stored_msg->msg, F_CRM_JOIN_ID));
 
-	} else if(strcmp(op, CRM_OP_LRM_DELETE) == 0
-		|| strcmp(op, CRM_OP_LRM_REFRESH) == 0
-		|| strcmp(op, CRM_OP_REPROBE) == 0) {
+	} else if(strcasecmp(op, CRM_OP_LRM_DELETE) == 0
+		|| strcasecmp(op, CRM_OP_LRM_REFRESH) == 0
+		|| strcasecmp(op, CRM_OP_REPROBE) == 0) {
 		
 		cl_msg_modstring(stored_msg->msg, F_CRM_SYS_TO, CRM_SYSTEM_LRMD);
 		next_input = I_ROUTER;
@@ -879,7 +879,7 @@ handle_request(ha_msg_input_t *stored_msg)
 		/* this functionality should only be enabled
 		 *   if this is a development build
 		 */
-	} else if(CRM_DEV_BUILD && strcmp(op, CRM_OP_DIE) == 0/*constant condition*/) {
+	} else if(CRM_DEV_BUILD && strcasecmp(op, CRM_OP_DIE) == 0/*constant condition*/) {
 		crm_warn("Test-only code: Killing the CRM without mercy");
 		crm_warn("Inhibiting respawns");
 		exit(100);
@@ -890,7 +890,7 @@ handle_request(ha_msg_input_t *stored_msg)
 		gboolean dc_match = safe_str_eq(host_from, fsa_our_dc);
 
 		if(dc_match || fsa_our_dc == NULL) {
-			if(strcmp(op, CRM_OP_HBEAT) == 0) {
+			if(strcasecmp(op, CRM_OP_HBEAT) == 0) {
 				crm_debug_3("Received DC heartbeat from %s",
 					  host_from);
 				next_input = I_DC_HEARTBEAT;
@@ -903,7 +903,7 @@ handle_request(ha_msg_input_t *stored_msg)
 				crm_warn("Ignored Request");
 				crm_log_message(LOG_WARNING, stored_msg->msg);
 				
-			} else if(strcmp(op, CRM_OP_SHUTDOWN) == 0) {
+			} else if(strcasecmp(op, CRM_OP_SHUTDOWN) == 0) {
 				next_input = I_STOP;
 				
 			} else {
@@ -934,7 +934,7 @@ handle_request(ha_msg_input_t *stored_msg)
 					 op, fsa_state2string(fsa_state));
 			}
 			
-		} else if(strcmp(op, CRM_OP_TECOMPLETE) == 0) {
+		} else if(strcasecmp(op, CRM_OP_TECOMPLETE) == 0) {
 			crm_debug("Transition complete: %s/%s", op, message);
 			clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
  			if(fsa_state == S_TRANSITION_ENGINE) {
@@ -944,16 +944,16 @@ handle_request(ha_msg_input_t *stored_msg)
 					  op, fsa_state2string(fsa_state));
 			}
 
-		} else if(strcmp(op, CRM_OP_JOIN_ANNOUNCE) == 0) {
+		} else if(strcasecmp(op, CRM_OP_JOIN_ANNOUNCE) == 0) {
 			next_input = I_NODE_JOIN;
 			
-		} else if(strcmp(op, CRM_OP_JOIN_REQUEST) == 0) {
+		} else if(strcasecmp(op, CRM_OP_JOIN_REQUEST) == 0) {
 			next_input = I_JOIN_REQUEST;
 			
-		} else if(strcmp(op, CRM_OP_JOIN_CONFIRM) == 0) {
+		} else if(strcasecmp(op, CRM_OP_JOIN_CONFIRM) == 0) {
 			next_input = I_JOIN_RESULT;
 			
-		} else if(strcmp(op, CRM_OP_SHUTDOWN) == 0) {
+		} else if(strcasecmp(op, CRM_OP_SHUTDOWN) == 0) {
 			gboolean dc_match = safe_str_eq(host_from, fsa_our_dc);
 			if(dc_match) {
 				crm_err("We didnt ask to be shut down yet our"
@@ -971,7 +971,7 @@ handle_request(ha_msg_input_t *stored_msg)
 				next_input = I_ELECTION;			
 			}
 			
-		} else if(strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
+		} else if(strcasecmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
 			/* a slave wants to shut down */
 			/* create cib fragment and add to message */
 			next_input = handle_shutdown_request(stored_msg->msg);
@@ -1001,7 +1001,7 @@ handle_response(ha_msg_input_t *stored_msg)
 		crm_err("Bad message");
 		crm_log_message(LOG_ERR, stored_msg->msg);
 
- 	} else if(AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
+ 	} else if(AM_I_DC && strcasecmp(op, CRM_OP_PECALC) == 0) {
 
 		crm_debug_2("Processing %s reply %s (fsa=%s)",
 			  sys_from, msg_ref, crm_str(fsa_pe_ref));
@@ -1017,10 +1017,10 @@ handle_response(ha_msg_input_t *stored_msg)
 				  sys_from);
 		}
 		
-	} else if(strcmp(op, CRM_OP_VOTE) == 0
-		  || strcmp(op, CRM_OP_HBEAT) == 0
-		  || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0
-		  || strcmp(op, CRM_OP_SHUTDOWN) == 0) {
+	} else if(strcasecmp(op, CRM_OP_VOTE) == 0
+		  || strcasecmp(op, CRM_OP_HBEAT) == 0
+		  || strcasecmp(op, CRM_OP_SHUTDOWN_REQ) == 0
+		  || strcasecmp(op, CRM_OP_SHUTDOWN) == 0) {
 		crm_debug_2("Ignoring %s from %s in %s",
 			    op, host_from, fsa_state2string(fsa_state));
 		next_input = I_NULL;
@@ -1161,14 +1161,14 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 		send_ok = send_ipc_message(client_channel, msg);
 		msg = NULL;  /* so the crm_msg_del() below doesnt fail */
 		
-	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_CIB) == 0) {
+	} else if(sys != NULL && strcasecmp(sys, CRM_SYSTEM_CIB) == 0) {
 		crm_err("Sub-system (%s) has been incorporated into the CRMd.",
 			sys);
 		crm_err("Change the way we handle this CIB message");
 		crm_log_message(LOG_ERR, msg);
 		send_ok = FALSE;
 		
-	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_LRMD) == 0) {
+	} else if(sys != NULL && strcasecmp(sys, CRM_SYSTEM_LRMD) == 0) {
 		fsa_data_t *fsa_data = NULL;
 		ha_msg_input_t *msg_copy = new_ha_msg_input(msg);
 

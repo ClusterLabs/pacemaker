@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.68 2006/04/26 13:32:52 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.69 2006/05/08 07:42:17 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -170,12 +170,12 @@ main(int argc, char **argv)
 					printf(" with arg %s", optarg);
 				printf("\n");
 			
-				if (strcmp("reference",
+				if (strcasecmp("reference",
 					   long_options[option_index].name) == 0) {
 					this_msg_reference =
 						crm_strdup(optarg);
 
-				} else if (strcmp("die",
+				} else if (strcasecmp("die",
 						  long_options[option_index].name) == 0) {
 					DO_RESET = TRUE;
 					crmd_operation = CRM_OP_DIE;
@@ -549,7 +549,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		}
 
 		result = cl_get_string(new_input->msg, XML_ATTR_RESULT);
-		if(result == NULL || strcmp(result, "ok") == 0) {
+		if(result == NULL || strcasecmp(result, "ok") == 0) {
 			result = "pass";
 		} else {
 			result = "fail";

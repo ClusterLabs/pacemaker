@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.22 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: rules.c,v 1.23 2006/05/08 07:42:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -231,7 +231,7 @@ test_attr_expression(crm_data_t *expr, GHashTable *hash, pe_working_set_t *data_
 	
 	if(value != NULL && h_val != NULL) {
 		if(type == NULL || (safe_str_eq(type, "string"))) {
-			cmp = strcmp(h_val, value);
+			cmp = strcasecmp(h_val, value);
 			
 		} else if(safe_str_eq(type, "number")) {
 			int h_val_f = crm_parse_int(h_val, NULL);

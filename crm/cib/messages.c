@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.76 2006/05/05 12:54:33 andrew Exp $ */
+/* $Id: messages.c,v 1.77 2006/05/08 07:42:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -116,7 +116,7 @@ cib_process_default(
 		result = cib_operation;
 		crm_err("No operation specified");
 		
-	} else if(strcmp(CRM_OP_NOOP, op) == 0) {
+	} else if(strcasecmp(CRM_OP_NOOP, op) == 0) {
 		;
 
 	} else {
@@ -638,13 +638,13 @@ cib_process_change(
 
 	failed = create_xml_node(NULL, XML_TAG_FAILED);
 
-	if (strcmp(CIB_OP_CREATE, op) == 0) {
+	if (strcasecmp(CIB_OP_CREATE, op) == 0) {
 		cib_update_op = CIB_UPDATE_OP_ADD;
 		
-	} else if (strcmp(CIB_OP_UPDATE, op) == 0) {
+	} else if (strcasecmp(CIB_OP_UPDATE, op) == 0) {
 		cib_update_op = CIB_UPDATE_OP_MODIFY;
 		
-	} else if (strcmp(CIB_OP_DELETE_ALT, op) == 0) {
+	} else if (strcasecmp(CIB_OP_DELETE_ALT, op) == 0) {
 		cib_update_op = CIB_UPDATE_OP_DELETE;
 		
 	} else {

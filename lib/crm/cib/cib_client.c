@@ -608,43 +608,43 @@ cib_pluralSection(const char *a_section)
 	if (a_section == NULL) {
 		a_section_parent = crm_strdup("all");
 
-	} else if(strcmp(a_section, XML_TAG_CIB) == 0) {
+	} else if(strcasecmp(a_section, XML_TAG_CIB) == 0) {
 		a_section_parent = crm_strdup("all");
 
-	} else if(strcmp(a_section, XML_CIB_TAG_NODE) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_NODE) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_NODES);
 
-	} else if(strcmp(a_section, XML_CIB_TAG_STATE) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_STATE) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_STATUS);
 
-	} else if(strcmp(a_section, XML_CIB_TAG_CONSTRAINT) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_CONSTRAINT) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
 		
-	} else if(strcmp(a_section, XML_CONS_TAG_RSC_LOCATION) == 0) {
+	} else if(strcasecmp(a_section, XML_CONS_TAG_RSC_LOCATION) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
 		
-	} else if(strcmp(a_section, XML_CONS_TAG_RSC_DEPEND) == 0) {
+	} else if(strcasecmp(a_section, XML_CONS_TAG_RSC_DEPEND) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
 		
-	} else if(strcmp(a_section, XML_CONS_TAG_RSC_ORDER) == 0) {
+	} else if(strcasecmp(a_section, XML_CONS_TAG_RSC_ORDER) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
 		
-	} else if(strcmp(a_section, "resource") == 0) {
+	} else if(strcasecmp(a_section, "resource") == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
 
-	} else if(strcmp(a_section, XML_CIB_TAG_RESOURCE) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_RESOURCE) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
 
-	} else if(strcmp(a_section, XML_CIB_TAG_GROUP) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_GROUP) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
 
-	} else if(strcmp(a_section, XML_CIB_TAG_INCARNATION) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_INCARNATION) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
 		
-	} else if(strcmp(a_section, XML_CIB_TAG_NVPAIR) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_NVPAIR) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CRMCONFIG);
 
-	} else if(strcmp(a_section, XML_TAG_ATTR_SETS) == 0) {
+	} else if(strcasecmp(a_section, XML_TAG_ATTR_SETS) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CRMCONFIG);
 
 	} else {
@@ -856,22 +856,22 @@ cib_op2string(enum cib_update_op operation)
 int
 cib_section2enum(const char *a_section) 
 {
-	if(a_section == NULL || strcmp(a_section, "all") == 0) {
+	if(a_section == NULL || strcasecmp(a_section, "all") == 0) {
 		return cib_section_all;
 
-	} else if(strcmp(a_section, XML_CIB_TAG_NODES) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_NODES) == 0) {
 		return cib_section_nodes;
 
-	} else if(strcmp(a_section, XML_CIB_TAG_STATUS) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_STATUS) == 0) {
 		return cib_section_status;
 
-	} else if(strcmp(a_section, XML_CIB_TAG_CONSTRAINTS) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_CONSTRAINTS) == 0) {
 		return cib_section_constraints;
 		
-	} else if(strcmp(a_section, XML_CIB_TAG_RESOURCES) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_RESOURCES) == 0) {
 		return cib_section_resources;
 
-	} else if(strcmp(a_section, XML_CIB_TAG_CRMCONFIG) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_CRMCONFIG) == 0) {
 		return cib_section_crmconfig;
 
 	}
@@ -1215,7 +1215,7 @@ get_object_root(const char *object_type, crm_data_t *the_root)
 		/* get the whole cib */
 		return the_root;
 
-	} else if(strcmp(object_type, XML_CIB_TAG_STATUS) == 0) {
+	} else if(strcasecmp(object_type, XML_CIB_TAG_STATUS) == 0) {
 		/* these live in a different place */
 		tmp_node = find_xml_node(the_root, XML_CIB_TAG_STATUS, FALSE);
 

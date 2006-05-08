@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.111 2006/05/05 13:36:49 andrew Exp $ */
+/* $Id: pengine.c,v 1.112 2006/05/08 07:42:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -76,18 +76,18 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	if(op == NULL){
 		/* error */
 
-	} else if(strcmp(op, CRM_OP_HELLO) == 0) {
+	} else if(strcasecmp(op, CRM_OP_HELLO) == 0) {
 		/* ignore */
 		
 	} else if(safe_str_eq(cl_get_string(msg, F_CRM_MSG_TYPE),
 			      XML_ATTR_RESPONSE)) {
 		/* ignore */
 		
-	} else if(sys_to == NULL || strcmp(sys_to, CRM_SYSTEM_PENGINE) != 0) {
+	} else if(sys_to == NULL || strcasecmp(sys_to, CRM_SYSTEM_PENGINE) != 0) {
 		crm_debug_3("Bad sys-to %s", crm_str(sys_to));
 		return FALSE;
 		
-	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
+	} else if(strcasecmp(op, CRM_OP_PECALC) == 0) {
 		int seq = -1;
 		int series_id = 0;
 		int series_wrap = 0;
@@ -181,7 +181,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		free_xml(log_input);
 		crm_free(filename);
 		
-	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
+	} else if(strcasecmp(op, CRM_OP_QUIT) == 0) {
 		crm_warn("Received quit message, terminating");
 		exit(0);
 	}

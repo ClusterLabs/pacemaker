@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.51 2006/05/05 12:52:43 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.52 2006/05/08 07:42:17 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -369,17 +369,17 @@ int
 do_work(crm_data_t *input, int call_options, crm_data_t **output) 
 {
 	/* construct the request */
-	if (strcmp(CIB_OP_SYNC, cib_action) == 0) {
+	if (strcasecmp(CIB_OP_SYNC, cib_action) == 0) {
 		crm_debug_4("Performing %s op...", cib_action);
 		return the_cib->cmds->sync_from(
 			the_cib, host, obj_type, call_options);
 
-	} else if (strcmp(CIB_OP_SLAVE, cib_action) == 0
+	} else if (strcasecmp(CIB_OP_SLAVE, cib_action) == 0
 		   && (call_options ^ cib_scope_local) ) {
 		crm_debug_4("Performing %s op on all nodes...", cib_action);
 		return the_cib->cmds->set_slave_all(the_cib, call_options);
 
-	} else if (strcmp(CIB_OP_MASTER, cib_action) == 0) {
+	} else if (strcasecmp(CIB_OP_MASTER, cib_action) == 0) {
 		crm_debug_4("Performing %s op on all nodes...", cib_action);
 		return the_cib->cmds->set_master(the_cib, call_options);
 

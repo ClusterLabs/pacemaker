@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.24 2006/05/05 12:53:35 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.25 2006/05/08 07:42:17 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -248,7 +248,7 @@ crmd_msg_callback(IPC_Channel * server, void *private_data)
 		}
 
 /* 		result = cl_get_string(new_input->msg, XML_ATTR_RESULT); */
-/* 		if(result == NULL || strcmp(result, "ok") == 0) { */
+/* 		if(result == NULL || strcasecmp(result, "ok") == 0) { */
 /* 			result = "pass"; */
 /* 		} else { */
 /* 			result = "fail"; */

@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.79 2006/04/26 15:56:05 andrew Exp $ */
+/* $Id: callbacks.c,v 1.80 2006/05/08 07:42:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -169,10 +169,10 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 	
 	if(op == NULL){
 		/* error */
-	} else if(strcmp(op, CRM_OP_HELLO) == 0) {
+	} else if(strcasecmp(op, CRM_OP_HELLO) == 0) {
 		/* ignore */
 
-	} else if(sys_to == NULL || strcmp(sys_to, CRM_SYSTEM_TENGINE) != 0) {
+	} else if(sys_to == NULL || strcasecmp(sys_to, CRM_SYSTEM_TENGINE) != 0) {
 		crm_debug_2("Bad sys-to %s", crm_str(sys_to));
 		return FALSE;
 		
@@ -209,7 +209,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		crm_err("Message was a response not a request.  Discarding");
 		return TRUE;
 
-	} else if(strcmp(op, CRM_OP_TRANSITION) == 0) {
+	} else if(strcasecmp(op, CRM_OP_TRANSITION) == 0) {
 		if(transition_graph->complete == FALSE) {
 			crm_info("Another transition is already active");
 			abort_transition(
@@ -224,10 +224,10 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 			print_graph(LOG_DEBUG_2, transition_graph);
 		}
 
-	} else if(strcmp(op, CRM_OP_TE_HALT) == 0) {
+	} else if(strcasecmp(op, CRM_OP_TE_HALT) == 0) {
 		abort_transition(INFINITY, tg_stop, "Peer Halt", NULL);
 
-	} else if(strcmp(op, CRM_OP_TEABORT) == 0) {
+	} else if(strcasecmp(op, CRM_OP_TEABORT) == 0) {
 		abort_transition(INFINITY, tg_restart, "Peer Cancelled", NULL);
 
 	} else {

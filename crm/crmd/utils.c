@@ -1317,13 +1317,13 @@ process_client_disconnect(crmd_client_t *curr_client)
 	if (curr_client->sub_sys == NULL) {
 		crm_debug_2("Client hadn't registered with us yet");
 		
-	} else if (strcmp(CRM_SYSTEM_PENGINE, curr_client->sub_sys) == 0) {
+	} else if (strcasecmp(CRM_SYSTEM_PENGINE, curr_client->sub_sys) == 0) {
 		the_subsystem = pe_subsystem;
 		
-	} else if (strcmp(CRM_SYSTEM_TENGINE, curr_client->sub_sys) == 0) {
+	} else if (strcasecmp(CRM_SYSTEM_TENGINE, curr_client->sub_sys) == 0) {
 		the_subsystem = te_subsystem;
 			
-	} else if (strcmp(CRM_SYSTEM_CIB, curr_client->sub_sys) == 0){
+	} else if (strcasecmp(CRM_SYSTEM_CIB, curr_client->sub_sys) == 0){
 		the_subsystem = cib_subsystem;
 	}
 		

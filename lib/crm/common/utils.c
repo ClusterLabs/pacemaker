@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.48 2006/05/05 13:16:02 andrew Exp $ */
+/* $Id: utils.c,v 1.49 2006/05/08 07:42:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -179,7 +179,7 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 		return NULL;
 	}
     
-	if (strcmp(CRM_SYSTEM_DC, src_subsys) == 0) {
+	if (strcasecmp(CRM_SYSTEM_DC, src_subsys) == 0) {
 		hash_value = crm_strdup(src_subsys);
 		if (!hash_value) {
 			crm_err("memory allocation failed in "
@@ -208,7 +208,7 @@ decode_hash_value(gpointer value, char **node, char **subsys)
 
 	crm_info("Decoding hash value: (%s:%d)", char_value, value_len);
     	
-	if (strcmp(CRM_SYSTEM_DC, (char*)value) == 0) {
+	if (strcasecmp(CRM_SYSTEM_DC, (char*)value) == 0) {
 		*node = NULL;
 		*subsys = (char*)crm_strdup(char_value);
 		CRM_CHECK(*subsys != NULL, return FALSE);
@@ -529,7 +529,7 @@ safe_str_eq(const char *a, const char *b)
 		return TRUE;		
 	} else if(a == NULL || b == NULL) {
 		return FALSE;
-	} else if(strcmp(a, b) == 0) {
+	} else if(strcasecmp(a, b) == 0) {
 		return TRUE;
 	}
 	return FALSE;
@@ -544,7 +544,7 @@ safe_str_neq(const char *a, const char *b)
 	} else if(a==NULL || b==NULL) {
 		return TRUE;
 
-	} else if(strcmp(a, b) == 0) {
+	} else if(strcasecmp(a, b) == 0) {
 		return FALSE;
 	}
 	return TRUE;
