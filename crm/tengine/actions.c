@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.27 2006/05/05 13:15:15 andrew Exp $ */
+/* $Id: actions.c,v 1.28 2006/05/08 10:32:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -265,8 +265,6 @@ cib_action_update(crm_action_t *action, int status)
 
 	int call_options = cib_quorum_override|cib_scope_local;
 
-	CRM_CHECK(rsc_id != NULL, return FALSE);
-	
 	crm_warn("%s %d: %s on %s timed out",
 		 crm_element_name(action->xml), action->id, task_uuid, target);
 
@@ -274,6 +272,8 @@ cib_action_update(crm_action_t *action, int status)
 	CRM_CHECK(action_rsc != NULL, return FALSE);
 
 	rsc_id = ID(action_rsc);
+	CRM_CHECK(rsc_id != NULL, return FALSE);
+	
 	code = crm_itoa(status);
 	
 /*
