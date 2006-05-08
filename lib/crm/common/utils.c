@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.49 2006/05/08 07:42:19 andrew Exp $ */
+/* $Id: utils.c,v 1.50 2006/05/08 14:39:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1184,6 +1184,10 @@ crm_abort(const char *file, const char *function, int line,
  		   "Triggered %sfatal assert at %s:%d : %s",
  		   do_fork?"non-":"", file, line, assert_condition);
 
+	if(do_fork && crm_log_level < LOG_DEBUG) {
+		return;
+	}
+	
 	if(do_fork) {
 		pid=fork();
 	}
