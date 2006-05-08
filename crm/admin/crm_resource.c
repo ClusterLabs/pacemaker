@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.25 2006/05/08 07:42:17 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.26 2006/05/08 12:01:04 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -773,14 +773,22 @@ main(int argc, char **argv)
 
 	} else if(rsc_cmd == 'C') {
 		resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+
+		delete_lrm_rsc(crmd_channel, host_uname, rsc?rsc->id:rsc_id, rsc?rsc->long_name:NULL);
+		
+		sleep(5);
+		refresh_lrm(crmd_channel, host_uname);
+
 		if(rsc != NULL) {
-			delete_lrm_rsc(crmd_channel, host_uname, rsc->id, rsc->long_name);
-			sleep(10);
-			refresh_lrm(crmd_channel, host_uname);
-		} else {
-			delete_lrm_rsc(crmd_channel, host_uname, rsc_id, NULL);
-			sleep(10);
-			refresh_lrm(crmd_channel, host_uname);
+			char *now_s = NULL;
+			time_t now = time(NULL);
+
+			/* force the TE to start a transition */
+			sleep(5); /* wait for the refresh */
+			now_s = crm_itoa(now);
+			update_attr(cib_conn, cib_sync_call,
+				    NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s);
+			crm_free(now_s);
 		}
 		
 	} else {
