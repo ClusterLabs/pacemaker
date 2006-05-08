@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.20 2006/03/27 14:53:40 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.21 2006/05/08 12:09:46 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -433,7 +433,7 @@ print_status(crm_data_t *cib)
 		slist_iter(rsc, resource_t, data_set.resources, lpc2,
 			   gboolean is_active = rsc->fns->active(rsc, TRUE);
 			   gboolean partially_active = rsc->fns->active(rsc, FALSE);
-			   if(rsc->orphan) {
+			   if(rsc->orphan && is_active == FALSE) {
 				   continue;
 				   
 			   } else if(group_by_node == FALSE) {
