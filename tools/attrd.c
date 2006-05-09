@@ -1,4 +1,4 @@
-/* $Id: attrd.c,v 1.5 2006/04/10 14:45:45 andrew Exp $ */
+/* $Id: attrd.c,v 1.6 2006/05/09 09:18:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -460,39 +460,40 @@ attrd_cib_callback(const HA_Message *msg, int call_id, int rc,
 static attr_hash_entry_t *
 find_hash_entry(HA_Message * msg) 
 {
+	const char *value = NULL;
 	const char *attr  = ha_msg_value(msg, F_ATTRD_ATTRIBUTE);
 	attr_hash_entry_t *hash_entry = g_hash_table_lookup(attr_hash, attr);
-	if(hash_entry == NULL) {
-		const char *value = NULL;
-		
+
+	if(hash_entry == NULL) {	
 		/* create one and add it */
 		crm_info("Creating hash entry for %s", attr);
 		crm_malloc0(hash_entry, sizeof(attr_hash_entry_t));
 		hash_entry->id = crm_strdup(attr);
 
-		value = ha_msg_value(msg, F_ATTRD_SET);
-		if(value != NULL) {
-			hash_entry->set = crm_strdup(value);
-			crm_debug("\t%s->set: %s", attr, value);
-		}
-
-		value = ha_msg_value(msg, F_ATTRD_SECTION);
-		if(value != NULL) {
-			hash_entry->section = crm_strdup(value);
-			crm_debug("\t%s->section: %s", attr, value);
-		}
-
-		value = ha_msg_value(msg, F_ATTRD_DAMPEN);
-		if(value != NULL) {
-			hash_entry->dampen = crm_strdup(value);
-			hash_entry->timeout = crm_get_msec(value);
-			crm_debug("\t%s->timeout: %s", attr, value);
-		}
-
 		g_hash_table_insert(attr_hash, hash_entry->id, hash_entry);
 		hash_entry = g_hash_table_lookup(attr_hash, attr);
-		CRM_CHECK(hash_entry != NULL, ;);
+		CRM_CHECK(hash_entry != NULL, return NULL);
 	}
+
+	value = ha_msg_value(msg, F_ATTRD_SET);
+	if(value != NULL) {
+		hash_entry->set = crm_strdup(value);
+		crm_debug("\t%s->set: %s", attr, value);
+	}
+	
+	value = ha_msg_value(msg, F_ATTRD_SECTION);
+	if(value != NULL) {
+		hash_entry->section = crm_strdup(value);
+		crm_debug("\t%s->section: %s", attr, value);
+	}
+	
+	value = ha_msg_value(msg, F_ATTRD_DAMPEN);
+	if(value != NULL) {
+		hash_entry->dampen = crm_strdup(value);
+		hash_entry->timeout = crm_get_msec(value);
+		crm_debug("\t%s->timeout: %s", attr, value);
+	}
+
 	return hash_entry;
 }
 
