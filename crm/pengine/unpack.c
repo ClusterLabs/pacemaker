@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.192 2006/05/05 13:08:49 andrew Exp $ */
+/* $Id: unpack.c,v 1.193 2006/05/09 09:27:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1279,7 +1279,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 		crm_data_t *local_params = copy_xml(params);
 
 		crm_info("Faking parameter digest creation for %s", ID(xml_op));
-
+		
 		filter_action_parameters(local_params, NULL);
 		local_param_digest = calculate_xml_digest(local_params, TRUE);
 		param_digest = local_param_digest;
@@ -1303,21 +1303,21 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 #endif
 */
 	if(safe_str_neq(pnow_digest, param_digest)) {
-		crm_data_t *params = find_xml_node(xml_op,XML_TAG_PARAMS,FALSE);
+#if CRM_DEPRECATED_SINCE_2_0_4
 		if(params) {
 			crm_data_t *local_params = copy_xml(params);
-			filter_action_parameters(local_params, "1.0.5");
+			filter_action_parameters(local_params, NULL);
 			
-			crm_log_xml_err(pnow, "params:calc");
 			crm_log_xml_err(local_params, "params:used");
 			free_xml(local_params);
 		}
-
+#endif
 		did_change = TRUE;
 		crm_info("Parameters to %s on %s changed: calculated %s vs. actual %s",
 			 ID(xml_op), active_node->details->uname,
 			 pnow_digest, crm_str(param_digest));
-		
+
+		crm_log_xml_debug(pnow, "params:calc");
 		
 		key = generate_op_key(rsc->id, task, interval);
 		custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
