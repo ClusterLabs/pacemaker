@@ -316,7 +316,7 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	g_str_tmp = g_string_new("");
 	while(!feof(file)) {
 		memset(buff, 0, BUFF_LEN);
-		read_len = fread(buff, 1, BUFF_LEN, file);
+		read_len = fread(buff, 1, BUFF_LEN - 1, file);
 		if (0<read_len) {
 			g_string_append(g_str_tmp, buff);
 		}
