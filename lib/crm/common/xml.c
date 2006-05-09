@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.78 2006/05/08 07:42:19 andrew Exp $ */
+/* $Id: xml.c,v 1.79 2006/05/09 06:34:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -370,7 +370,7 @@ create_xml_node(crm_data_t *parent, const char *name)
 		ret_value = NULL;
 	} else {
 		local_name = name;
-		ret_value = ha_msg_new(1);
+		ret_value = ha_msg_new(3);
 		CRM_CHECK(ret_value != NULL, return NULL);
 		
 		crm_xml_add(ret_value, F_XML_TAGNAME, name);
@@ -2053,12 +2053,15 @@ replace_xml_child(crm_data_t *parent, crm_data_t *child, crm_data_t *update, gbo
 	}
 	
 	if(can_delete && parent != NULL) {
-		crm_log_xml_debug(child, "Delete match found...");
-		cl_msg_remove_value(parent, child);
-		child = NULL;
-		if(delete_only == FALSE) {
-			add_node_copy(parent, update);
+		crm_log_xml_debug_4(child, "Delete match found...");
+		if(delete_only) {
+			cl_msg_remove_value(parent, child);
+		} else {
+			/* preserve the order */
+			cl_msg_replace_value(parent, child, update,
+					     sizeof(struct ha_msg), FT_STRUCT);
 		}
+		child = NULL;
 		return TRUE;
 		
 	} else if(can_delete) {
