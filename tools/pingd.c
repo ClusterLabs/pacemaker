@@ -1,4 +1,4 @@
-/* $Id: pingd.c,v 1.2 2006/04/11 07:37:07 andrew Exp $ */
+/* $Id: pingd.c,v 1.3 2006/05/09 09:17:35 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -95,8 +95,20 @@ usage(const char *cmd, int exit_status)
 	stream = exit_status ? stderr : stdout;
 
 	fprintf(stream, "usage: %s [-%s]\n", cmd, OPTARGS);
-	fprintf(stream, "\t--%s (-%c) \t: This text\n", "help", '?');
-	fprintf(stream, "\t--%s (-%c) <filename>\t: Daemon pid file location\n", "pid-file", 'p');
+	fprintf(stream, "\t--%s (-%c) \t\t\tThis text\n", "help", '?');
+	fprintf(stream, "\t--%s (-%c) \t\tRun in daemon mode\n", "daemonize", 'D');
+	fprintf(stream, "\t--%s (-%c) <filename>\tFile in which to store the process' PID\n"
+		"\t\t\t\t\t* Default=/tmp/pingd.pid\n", "pid-file", 'p');
+	fprintf(stream, "\t--%s (-%c) <string>\tName of the node attribute to set\n"
+		"\t\t\t\t\t* Default=pingd\n", "attr-name", 'a');
+	fprintf(stream, "\t--%s (-%c) <string>\tName of the set in which to set the attribute\n"
+		"\t\t\t\t\t* Default=cib-bootstrap-options\n", "attr-set", 's');
+	fprintf(stream, "\t--%s (-%c) <string>\tWhich part of the CIB to put the attribute in\n"
+		"\t\t\t\t\t* Default=status\n", "attr-section", 'S');
+	fprintf(stream, "\t--%s (-%c) <single_host_name>\tMonitor a subset of the ping nodes listed in ha.cf (can be specified multiple times)\n", "ping-host", 'h');
+	fprintf(stream, "\t--%s (-%c) <integer>\t\tHow long to wait for no further changes to occur before updating the CIB with a changed attribute\n", "attr-dampen", 'd');
+	fprintf(stream, "\t--%s (-%c) <integer>\tFor every connected node, add <integer> to the value set in the CIB\n"
+		"\t\t\t\t\t\t* Default=1\n", "value-multiplier", 'm');
 
 	fflush(stream);
 
@@ -277,6 +289,9 @@ main(int argc, char **argv)
 				break;
 			case 'D':
 				daemonize = TRUE;
+				break;
+			case '?':
+				usage(crm_system_name, LSB_EXIT_GENERIC);
 				break;
 			default:
 				printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
