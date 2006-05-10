@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.132 2006/05/05 13:08:49 andrew Exp $ */
+/* $Id: native.c,v 1.133 2006/05/10 17:08:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1396,8 +1396,6 @@ native_assign_color(resource_t *rsc, color_t *color)
 	
 	crm_debug_2("Colored resource %s with color %d",
 		    rsc->id, local_color->id);
-	
-	print_resource(LOG_DEBUG_3, "Colored Resource", rsc, TRUE);
 	
 	return;
 }
