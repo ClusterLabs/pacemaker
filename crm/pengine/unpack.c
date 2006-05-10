@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.193 2006/05/09 09:27:29 andrew Exp $ */
+/* $Id: unpack.c,v 1.194 2006/05/10 18:14:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1039,7 +1039,7 @@ unpack_lrm_rsc_state(
 	}
 	
 	value = g_hash_table_lookup(rsc->parameters, XML_RSC_ATTR_TARGET_ROLE);
-	if(value != NULL) {
+	if(value != NULL && safe_str_neq("default", value)) {
 		enum rsc_role_e req_role = text2role(value);
 		if(req_role != RSC_ROLE_UNKNOWN && req_role != rsc->next_role){
 			crm_debug("%s: Overwriting calculated next role %s"
