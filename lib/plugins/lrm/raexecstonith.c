@@ -87,7 +87,7 @@ static struct RAExecOps raops =
 	get_resource_meta
 };
 
-static const char * meta_data1 = "\n"
+static const char * meta_data1 =
 "<?xml version=\"1.0\"?>\n"
 "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
 "<resource-agent name=\"";
@@ -338,8 +338,10 @@ get_providers(const char* class_path, const char* op_type, GList ** providers)
 		cl_log(LOG_ERR, "%s:%d: Parameter error: *providers==NULL."
 			"This will cause memory leak."
 			, __FUNCTION__, __LINE__);
-		*providers = NULL;
 	}
 
-	return 0;
+	/* Now temporarily make it fixed */
+	*providers = g_list_append(*providers, g_strdup("heartbeat"));
+
+	return g_list_length(*providers);
 }
