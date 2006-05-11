@@ -890,9 +890,15 @@ do_lrm_invoke(long long action,
 				}
 #endif
 			}
-			CRM_CHECK(params != NULL, return I_NULL);
-			CRM_CHECK(op_task != NULL, return I_NULL);
-			CRM_CHECK(op_interval != NULL, return I_NULL);
+			CRM_CHECK(params != NULL,
+				  crm_log_xml_warn(input->xml, "Bad command");
+				  return I_NULL);
+			CRM_CHECK(op_task != NULL,
+				  crm_log_xml_warn(input->xml, "Bad command");
+				  return I_NULL);
+			CRM_CHECK(op_interval != NULL,
+				  crm_log_xml_warn(input->xml, "Bad command");
+				  return I_NULL);
 
 			op = construct_op(input->xml, rsc->id, op_task);
 			CRM_ASSERT(op != NULL);
