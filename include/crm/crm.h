@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.93 2006/04/06 10:44:13 andrew Exp $ */
+/* $Id: crm.h,v 1.94 2006/05/11 09:39:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -209,7 +209,7 @@ typedef GList* GListPtr;
 #define crm_notice(w...)  do_crm_log(LOG_NOTICE,  __FILE__, __PRETTY_FUNCTION__, w)
 #define crm_info(w...)    do_crm_log(LOG_INFO,    __FILE__, __PRETTY_FUNCTION__, w)
 #define crm_log_maybe(level, fmt...) if(crm_log_level >= (level)) {	\
-		do_crm_log((level), __FILE__, __PRETTY_FUNCTION__, fmt);		\
+		do_crm_log((level), __FILE__, __PRETTY_FUNCTION__, fmt); \
 	}
 
 #define crm_debug(fmt...)   crm_log_maybe(LOG_DEBUG, fmt)
