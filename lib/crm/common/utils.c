@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.50 2006/05/08 14:39:52 andrew Exp $ */
+/* $Id: utils.c,v 1.51 2006/05/11 09:54:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -316,6 +316,7 @@ do_crm_log(int log_level, const char *file, const char *function,
 {
 	int log_as = log_level;
 	gboolean do_log = FALSE;
+
 	if(log_level <= (int)crm_log_level) {
 		do_log = TRUE;
 		if(log_level > LOG_INFO) {
@@ -334,25 +335,21 @@ do_crm_log(int log_level, const char *file, const char *function,
 
 		log_level -= LOG_INFO;
 		if(log_level > 1) {
-			if(file == NULL && function == NULL) {
-				cl_log(log_as, "[%d] %s", log_level, buf);
+			if(function == NULL) {
+				cl_log(log_as, "debug%d: %s", log_level, buf);
 				
 			} else {
-				cl_log(log_as, "mask(%s%s%s [%d]): %s",
-				       file?file:"",
-				       (file !=NULL && function !=NULL)?":":"",
-				       function?function:"", log_level, buf);
+				cl_log(log_as, "debug%d: %s:%s %s",
+				       log_level, function, file?file:"", buf);
 			}
 
 		} else {
-			if(file == NULL && function == NULL) {
+			if(function == NULL) {
 				cl_log(log_as, "%s", buf);
 				
 			} else {
-				cl_log(log_as, "mask(%s%s%s): %s",
-				       file?file:"",
-				       (file !=NULL && function !=NULL)?":":"",
-				       function?function:"", buf);
+				cl_log(log_as, "%s:%s %s",
+				       function, file?file:"", buf);
 			}
 		}
 
