@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.79 2006/05/09 06:34:05 andrew Exp $ */
+/* $Id: xml.c,v 1.80 2006/05/11 09:11:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -568,18 +568,18 @@ dump_array(int log_level, const char *message, const char **array, int depth)
 	int j;
 	
 	if(message != NULL) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, "%s", message);
+		crm_log_maybe(log_level, "%s", message);
 	}
 
-	do_crm_log(log_level, __FILE__, __FUNCTION__,  "Contents of the array:");
+	crm_log_maybe(log_level,  "Contents of the array:");
 	if(array == NULL || array[0] == NULL || depth == 0) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, "\t<empty>");
+		crm_log_maybe(log_level, "\t<empty>");
 		return;
 	}
 	
 	for (j=0; j < depth && array[j] != NULL; j++) {
 		if (array[j] == NULL) { break; }
-		do_crm_log(log_level, __FILE__, __FUNCTION__, "\t--> (%s).", array[j]);
+		crm_log_maybe(log_level, "\t--> (%s).", array[j]);
 	}
 }
 

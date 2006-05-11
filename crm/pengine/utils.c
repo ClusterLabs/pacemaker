@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.135 2006/05/05 13:08:49 andrew Exp $ */
+/* $Id: utils.c,v 1.136 2006/05/11 09:11:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1420,9 +1420,6 @@ print_resource(
 	rsc->fns->print(rsc, pre_text, options, &log_level);
 }
 
-
-#define util_log(fmt...)  do_crm_log(log_level,  __FILE__, __FUNCTION__, fmt)
-
 void
 log_action(unsigned int log_level, const char *pre_text, action_t *action, gboolean details)
 {
@@ -1431,9 +1428,9 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 	
 	if(action == NULL) {
 
-		util_log("%s%s: <NULL>",
-		       pre_text==NULL?"":pre_text,
-		       pre_text==NULL?"":": ");
+		crm_log_maybe(log_level, "%s%s: <NULL>",
+			      pre_text==NULL?"":pre_text,
+			      pre_text==NULL?"":": ");
 		return;
 	}
 

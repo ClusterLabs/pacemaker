@@ -142,7 +142,7 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 		} else if(safe_str_eq(sys_from, CRM_SYSTEM_DC)) {
 			level = LOG_WARNING;
 		}
-		do_crm_log(level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(level, 
 			   "Ignoring HA message (op=%s) from %s: not in our"
 			   " membership list (size=%d)", op, from,
 			   g_hash_table_size(fsa_membership_copy->members));
