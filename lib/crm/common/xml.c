@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.81 2006/05/11 09:36:17 andrew Exp $ */
+/* $Id: xml.c,v 1.82 2006/05/11 12:13:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2368,7 +2368,7 @@ sort_pairs(gconstpointer a, gconstpointer b)
 	} else if(pair_b->name == NULL) {
 		return -1;
 	}
-	return strcasecmp(pair_a->name, pair_b->name);
+	return strcmp(pair_a->name, pair_b->name);
 }
 
 static void
@@ -2444,7 +2444,7 @@ calculate_xml_digest(crm_data_t *input, gboolean sort)
 	for(i = 0; i < digest_len; i++) {
  		sprintf(digest+(2*i), "%02x", raw_digest[i]);
  	}
-        crm_debug_2("Digest is: %s\n", digest);
+        crm_debug_2("Digest %s: %s\n", digest, buffer);
 	crm_log_xml(LOG_DEBUG_3,  "digest:source", sorted);
 	crm_free(buffer);
 	crm_free(raw_digest);

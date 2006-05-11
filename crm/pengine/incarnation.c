@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.82 2006/05/08 07:42:18 andrew Exp $ */
+/* $Id: incarnation.c,v 1.83 2006/05/11 12:13:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -986,7 +986,7 @@ sort_notify_entries(gconstpointer a, gconstpointer b)
 	if(entry_a->rsc == NULL) { return 1; }
 	if(entry_b->rsc == NULL) { return -1; }
 
-	tmp = strcasecmp(entry_a->rsc->id, entry_b->rsc->id);
+	tmp = strcmp(entry_a->rsc->id, entry_b->rsc->id);
 	if(tmp != 0) {
 		return tmp;
 	}
@@ -995,7 +995,7 @@ sort_notify_entries(gconstpointer a, gconstpointer b)
 	if(entry_a->node == NULL) { return 1; }
 	if(entry_b->node == NULL) { return -1; }
 
-	return strcasecmp(entry_a->node->details->id, entry_b->node->details->id);
+	return strcmp(entry_a->node->details->id, entry_b->node->details->id);
 }
 
 static void
@@ -1385,7 +1385,7 @@ static gint sort_rsc_id(gconstpointer a, gconstpointer b)
 	CRM_ASSERT(resource1 != NULL);
 	CRM_ASSERT(resource2 != NULL);
 
-	return strcasecmp(resource1->id, resource2->id);
+	return strcmp(resource1->id, resource2->id);
 }
 
 gboolean
