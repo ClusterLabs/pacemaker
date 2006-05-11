@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.85 2006/05/08 07:36:01 andrew Exp $ */
+/* $Id: complex.c,v 1.86 2006/05/11 07:32:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -249,6 +249,10 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	
 	(*rsc)->fns = &resource_class_functions[(*rsc)->variant];
 	crm_debug_3("Unpacking resource...");
+
+	if(defaults != NULL) {
+		g_hash_table_foreach(defaults, dup_attr, (*rsc)->parameters);
+	}
 	
 	for(lpc = 0; lpc < DIMOF(rsc_attrs); lpc++) {
 		value = crm_element_value(xml_obj, rsc_attrs[lpc]);
@@ -262,9 +266,6 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		xml_obj, XML_TAG_ATTR_SETS, NULL, (*rsc)->parameters,
 		allowed_attrs, DIMOF(allowed_attrs), data_set);
 
-	if(defaults != NULL) {
-		g_hash_table_foreach(defaults, dup_attr, (*rsc)->parameters);
-	}
 	
 	(*rsc)->runnable	   = TRUE; 
 	(*rsc)->provisional	   = TRUE; 
