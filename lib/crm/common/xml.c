@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.80 2006/05/11 09:11:33 andrew Exp $ */
+/* $Id: xml.c,v 1.81 2006/05/11 09:36:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -853,7 +853,7 @@ log_data_element(
 
 	printed = sprintf(buffer, "%s>", has_children==0?"/":"");
 	update_buffer_head(buffer, printed);
-	do_crm_log(log_level,  function, NULL, "%s%s",
+	do_crm_log(log_level, NULL, function, "%s%s",
 		   prefix?prefix:"", print_buffer);
 	buffer = print_buffer;
 	
@@ -873,7 +873,7 @@ log_data_element(
 		printed = print_spaces(buffer, depth);
 		update_buffer_head(buffer, printed);
 	}
-	do_crm_log(log_level, function, NULL, "%s%s</%s>",
+	do_crm_log(log_level, NULL, function, "%s%s</%s>",
 		   prefix?prefix:"", print_buffer, name);
 	crm_debug_5("Dumped %s...", name);
 
