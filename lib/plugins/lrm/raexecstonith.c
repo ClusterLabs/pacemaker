@@ -87,29 +87,36 @@ static struct RAExecOps raops =
 	get_resource_meta
 };
 
-static const char * meta_data1 =
+static const char * const meta_template = 
 "<?xml version=\"1.0\"?>\n"
 "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
-"<resource-agent name=\"";
-
-static const char * meta_data2 = 
-"\" version=\"0.1\">\n"
-"  <version>1.0</version>\n";
-
-static const char * meta_data3 = 
-"  <actions>\n"
-"    <action name=\"start\"   timeout=\"15\" />\n"
-"    <action name=\"stop\"    timeout=\"15\" />\n"
-"    <action name=\"status\"  timeout=\"15\" />\n"
-"    <action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
-"    <action name=\"meta-data\"  timeout=\"15\" />\n"
-"  </actions>\n"
-"  <special tag=\"heartbeat\">\n"
-"    <version>2.0</version>\n"
-"  </special>\n"
+"<resource-agent name=\"%s\"\n"
+"<version>1.0</version>\n"
+"<longdesc lang=\"en\">\n"
+"%s\n"
+"</longdesc>\n"
+"<shortdesc lang=\"en\">%s</shortdesc>\n"
+"%s\n"
+"<actions>\n"
+"<action name=\"start\"   timeout=\"15\" />\n"
+"<action name=\"stop\"    timeout=\"15\" />\n"
+"<action name=\"status\"  timeout=\"15\" />\n"
+"<action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
+"<action name=\"meta-data\"  timeout=\"15\" />\n"
+"</actions>\n"
+"<special tag=\"heartbeat\">\n"
+"<version>2.0</version>\n"
+"</special>\n"
 "</resource-agent>\n";
 
 static const char * no_parameter_info = "<!-- No parameter segment --->";
+
+#define CHECKMETANULL(ret, which) \
+	if (ret == NULL) { \
+		cl_log(LOG_WARNING, "stonithRA plugin: cannot get %s" \
+			"segment of %s's metadata.", which, rsc_type); \
+		ret = no_parameter_info; \
+	}
 
 PIL_PLUGIN_BOILERPLATE2("1.0", Debug);
 
@@ -296,7 +303,10 @@ static char *
 get_resource_meta(const char* rsc_type, const char* provider)
 {
 	char * buffer;
-	const char * tmp = NULL;
+	int bufferlen = 0;
+	const char * meta_param = NULL;
+	const char * meta_longdesc = NULL;
+	const char * meta_shortdesc = NULL;
 	Stonith * stonith_obj = NULL;	
 
 	if ( provider != NULL ) {
@@ -305,17 +315,21 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	}
 
 	stonith_obj = stonith_new(rsc_type);
-	tmp = stonith_get_info(stonith_obj, ST_CONF_XML);
-	if (tmp == NULL) {
-		cl_log(LOG_WARNING, "stonithRA plugin: cannot get the parameter"
-			" segment of %s's metadata.", rsc_type);
-		tmp = no_parameter_info;
-	}
+	meta_longdesc = stonith_get_info(stonith_obj, ST_DEVICEDESCR);
+	CHECKMETANULL(meta_longdesc, "longdesc")
+	meta_shortdesc = stonith_get_info(stonith_obj, ST_DEVICENAME);
+	CHECKMETANULL(meta_shortdesc, "shortdesc") 
+	meta_param = stonith_get_info(stonith_obj, ST_CONF_XML);
+	CHECKMETANULL(meta_param, "parameters") 
 
-	buffer = g_new(char, strlen(meta_data1) + strlen(meta_data2)
-				+ strlen(tmp) + strlen(meta_data3) + 1);
-
-	sprintf(buffer, "%s%s%s%s", meta_data1, meta_data2, tmp, meta_data3);
+	
+	bufferlen = strlen(meta_template) + strlen(rsc_type)
+			+ strlen(meta_longdesc) + strlen(meta_shortdesc)
+			+ strlen(meta_param) + 1;
+	buffer = g_new(char, bufferlen);
+	buffer[bufferlen-1] = '\0';
+	snprintf(buffer, bufferlen-1, meta_template, rsc_type
+		, meta_longdesc, meta_shortdesc, meta_param);
 	stonith_delete(stonith_obj);
 
 	return buffer;
