@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.92 2006/04/22 10:28:08 andrew Exp $ */
+/* $Id: stages.c,v 1.93 2006/05/15 09:40:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -173,11 +173,7 @@ stage3(pe_working_set_t *data_set)
 			node->details->attrs, CRM_OP_PROBED);
 
 		crm_debug("%s probed: %s", node->details->uname, probed);
-		
-		if(crm_is_true(probed)) {
-			continue;
-
-		} else if(node->details->online == FALSE) {
+		if(node->details->online == FALSE) {
 			continue;
 			
 		} else if(node->details->unclean) {
@@ -190,21 +186,23 @@ stage3(pe_working_set_t *data_set)
 				data_set);
 
 			probe_complete->pseudo = TRUE;
+			probe_complete->optional = TRUE;
 		}
 
-		if(probed != NULL) {
+		if(probed != NULL && crm_is_true(probed) == FALSE) {
 			force_probe = TRUE;
 		}
 
 		probe_node_complete = custom_action(
 			NULL, crm_strdup(CRM_OP_PROBED),
 			CRM_OP_PROBED, node, FALSE, TRUE, data_set);
+		probe_node_complete->optional = crm_is_true(probed);
 		add_hash_param(probe_node_complete->extra,
 			       XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
-	
+		
 		custom_action_order(NULL, NULL, probe_node_complete,
 				    NULL, NULL, probe_complete,
-				    pe_ordering_manditory, data_set);
+				    pe_ordering_optional, data_set);
 		
 		slist_iter(
 			rsc, resource_t, data_set->resources, lpc2,
@@ -212,6 +210,9 @@ stage3(pe_working_set_t *data_set)
 			if(rsc->fns->create_probe(
 				   rsc, node, probe_node_complete,
 				   force_probe, data_set)) {
+
+				probe_complete->optional = FALSE;
+				probe_node_complete->optional = FALSE;
 				custom_action_order(
 					NULL, NULL, probe_complete,
 					rsc, start_key(rsc), NULL,

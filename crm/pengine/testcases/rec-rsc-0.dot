@@ -2,9 +2,9 @@ digraph "g" {
 	size = "30,30"
 "rsc1_stop_0 node1" [ style=bold color="green" fontcolor="black" ]
 "rsc1_stop_0 node2" [ style=bold color="green" fontcolor="black" ]
-"probe_complete" [ style=bold color="green" fontcolor="orange" ]
+"probe_complete" [ style="dashed" color="blue" fontcolor="orange" ]
 "probe_complete node1" [ style=bold color="green" fontcolor="black" ]
 "probe_complete node2" [ style=bold color="green" fontcolor="black" ]
-"probe_complete node1" -> "probe_complete" [ style = bold]
-"probe_complete node2" -> "probe_complete" [ style = bold]
+"probe_complete node1" -> "probe_complete" [ style = dashed]
+"probe_complete node2" -> "probe_complete" [ style = dashed]
 }

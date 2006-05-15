@@ -1,5 +1,8 @@
 digraph "g" {
 	size = "30,30"
+"probe_complete" [ style="dashed" color="blue" fontcolor="orange" ]
+"probe_complete node1" [ style="dashed" color="blue" fontcolor="black" ]
+"probe_complete node2" [ style="dashed" color="blue" fontcolor="black" ]
 "child_rsc1:0_stop_0 node1" [ style="dashed" color="blue" fontcolor="black" ]
 "child_rsc1:0_start_0 node1" [ style="dashed" color="blue" fontcolor="black" ]
 "child_rsc1:1_stop_0 node1" [ style="dashed" color="blue" fontcolor="black" ]
@@ -13,6 +16,8 @@ digraph "g" {
 "rsc1_running_0" [ style="dashed" color="blue" fontcolor="orange" ]
 "rsc1_stop_0" [ style=bold color="green" fontcolor="orange" ]
 "rsc1_stopped_0" [ style=bold color="green" fontcolor="orange" ]
+"probe_complete node1" -> "probe_complete" [ style = dashed]
+"probe_complete node2" -> "probe_complete" [ style = dashed]
 "rsc1_stop_0" -> "child_rsc1:0_stop_0 node1" [ style = dashed]
 "child_rsc1:0_stop_0 node1" -> "child_rsc1:0_start_0 node1" [ style = dashed]
 "rsc1_start_0" -> "child_rsc1:0_start_0 node1" [ style = dashed]

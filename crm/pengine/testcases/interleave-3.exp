@@ -1,253 +1,1082 @@
  <transition_graph global_timeout="120s" transition_id="0">
    <synapse id="0">
      <action_set>
-       <rsc_op id="53" operation="start" operation_key="child_CloneSet:0_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+       <rsc_op id="29" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+         <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="DcIPaddr"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.10"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="1">
+     <action_set>
+       <rsc_op id="36" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
+         <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="DcIPaddr"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.10"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="2">
+     <action_set>
+       <rsc_op id="43" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
+         <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="DcIPaddr"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.10"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="3">
+     <action_set>
+       <rsc_op id="52" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
+         <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="DcIPaddr"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.10"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="4">
+     <action_set>
+       <rsc_op id="62" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
+         <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="DcIPaddr"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.10"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="5">
+     <action_set>
+       <rsc_op id="67" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
+         <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="DcIPaddr"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.10"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="6">
+     <action_set>
+       <rsc_op id="77" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+         <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="DcIPaddr"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.10"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="7">
+     <action_set>
+       <rsc_op id="19" operation="monitor" operation_key="rsc_c001n09_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
+         <primitive id="rsc_c001n09" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n09"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.11"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="8">
+     <action_set>
+       <rsc_op id="30" operation="monitor" operation_key="rsc_c001n09_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+         <primitive id="rsc_c001n09" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n09"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.11"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="9">
+     <action_set>
+       <rsc_op id="37" operation="monitor" operation_key="rsc_c001n09_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
+         <primitive id="rsc_c001n09" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n09"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.11"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="10">
+     <action_set>
+       <rsc_op id="44" operation="monitor" operation_key="rsc_c001n09_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
+         <primitive id="rsc_c001n09" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n09"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.11"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="11">
+     <action_set>
+       <rsc_op id="53" operation="monitor" operation_key="rsc_c001n09_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
+         <primitive id="rsc_c001n09" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n09"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.11"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="12">
+     <action_set>
+       <rsc_op id="68" operation="monitor" operation_key="rsc_c001n09_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
+         <primitive id="rsc_c001n09" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n09"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.11"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="13">
+     <action_set>
+       <rsc_op id="78" operation="monitor" operation_key="rsc_c001n09_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+         <primitive id="rsc_c001n09" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n09"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.11"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="14">
+     <action_set>
+       <rsc_op id="20" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
+         <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n02"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.12"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="15">
+     <action_set>
+       <rsc_op id="45" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
+         <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n02"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.12"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="16">
+     <action_set>
+       <rsc_op id="54" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
+         <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n02"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.12"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="17">
+     <action_set>
+       <rsc_op id="69" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
+         <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n02"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.12"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="18">
+     <action_set>
+       <rsc_op id="79" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+         <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n02"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.12"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="19">
+     <action_set>
+       <rsc_op id="21" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
+         <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n03"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.13"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="20">
+     <action_set>
+       <rsc_op id="31" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+         <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n03"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.13"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="21">
+     <action_set>
+       <rsc_op id="46" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
+         <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n03"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.13"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="22">
+     <action_set>
+       <rsc_op id="55" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
+         <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n03"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.13"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="23">
+     <action_set>
+       <rsc_op id="70" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
+         <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n03"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.13"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="24">
+     <action_set>
+       <rsc_op id="80" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+         <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n03"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.13"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="25">
+     <action_set>
+       <rsc_op id="22" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
+         <primitive id="rsc_c001n04" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n04"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.14"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="26">
+     <action_set>
+       <rsc_op id="32" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+         <primitive id="rsc_c001n04" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n04"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.14"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="27">
+     <action_set>
+       <rsc_op id="38" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
+         <primitive id="rsc_c001n04" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n04"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.14"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="28">
+     <action_set>
+       <rsc_op id="56" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
+         <primitive id="rsc_c001n04" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n04"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.14"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="29">
+     <action_set>
+       <rsc_op id="71" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
+         <primitive id="rsc_c001n04" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n04"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.14"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="30">
+     <action_set>
+       <rsc_op id="81" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+         <primitive id="rsc_c001n04" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n04"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.14"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="31">
+     <action_set>
+       <rsc_op id="23" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
+         <primitive id="rsc_c001n05" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n05"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.15"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="32">
+     <action_set>
+       <rsc_op id="33" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+         <primitive id="rsc_c001n05" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n05"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.15"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="33">
+     <action_set>
+       <rsc_op id="39" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
+         <primitive id="rsc_c001n05" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n05"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.15"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="34">
+     <action_set>
+       <rsc_op id="47" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
+         <primitive id="rsc_c001n05" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n05"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.15"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="35">
+     <action_set>
+       <rsc_op id="63" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
+         <primitive id="rsc_c001n05" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n05"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.15"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="36">
+     <action_set>
+       <rsc_op id="72" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
+         <primitive id="rsc_c001n05" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n05"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.15"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="37">
+     <action_set>
+       <rsc_op id="82" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+         <primitive id="rsc_c001n05" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n05"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.15"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="38">
+     <action_set>
+       <rsc_op id="24" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
+         <primitive id="rsc_c001n06" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n06"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.16"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="39">
+     <action_set>
+       <rsc_op id="40" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
+         <primitive id="rsc_c001n06" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n06"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.16"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="40">
+     <action_set>
+       <rsc_op id="48" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
+         <primitive id="rsc_c001n06" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n06"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.16"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="41">
+     <action_set>
+       <rsc_op id="57" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
+         <primitive id="rsc_c001n06" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n06"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.16"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="42">
+     <action_set>
+       <rsc_op id="73" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
+         <primitive id="rsc_c001n06" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n06"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.16"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="43">
+     <action_set>
+       <rsc_op id="83" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+         <primitive id="rsc_c001n06" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n06"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.16"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="44">
+     <action_set>
+       <rsc_op id="25" operation="monitor" operation_key="rsc_c001n07_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
+         <primitive id="rsc_c001n07" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n07"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.17"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="45">
+     <action_set>
+       <rsc_op id="49" operation="monitor" operation_key="rsc_c001n07_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
+         <primitive id="rsc_c001n07" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n07"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.17"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="46">
+     <action_set>
+       <rsc_op id="58" operation="monitor" operation_key="rsc_c001n07_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
+         <primitive id="rsc_c001n07" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n07"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.17"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="47">
+     <action_set>
+       <rsc_op id="64" operation="monitor" operation_key="rsc_c001n07_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
+         <primitive id="rsc_c001n07" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n07"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.17"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="48">
+     <action_set>
+       <rsc_op id="84" operation="monitor" operation_key="rsc_c001n07_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+         <primitive id="rsc_c001n07" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n07"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.17"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="49">
+     <action_set>
+       <rsc_op id="26" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
+         <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n08"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.18"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="50">
+     <action_set>
+       <rsc_op id="59" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
+         <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n08"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.18"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="51">
+     <action_set>
+       <rsc_op id="74" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
+         <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0" long-id="rsc_c001n08"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="0" ip="127.0.0.18"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="52">
+     <action_set>
+       <rsc_op id="27" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
+         <primitive id="child_CloneSet:0" class="stonith" type="ssh" clone="0" long-id="CloneSet:child_CloneSet:0"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" clone="0" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="53">
+     <action_set>
+       <rsc_op id="34" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+         <primitive id="child_CloneSet:0" class="stonith" type="ssh" clone="0" long-id="CloneSet:child_CloneSet:0"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" clone="0" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="54">
+     <action_set>
+       <rsc_op id="41" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
+         <primitive id="child_CloneSet:0" class="stonith" type="ssh" clone="0" long-id="CloneSet:child_CloneSet:0"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" clone="0" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="55">
+     <action_set>
+       <rsc_op id="50" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
+         <primitive id="child_CloneSet:0" class="stonith" type="ssh" clone="0" long-id="CloneSet:child_CloneSet:0"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" clone="0" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="56">
+     <action_set>
+       <rsc_op id="60" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
+         <primitive id="child_CloneSet:0" class="stonith" type="ssh" clone="0" long-id="CloneSet:child_CloneSet:0"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" clone="0" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="57">
+     <action_set>
+       <rsc_op id="65" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
+         <primitive id="child_CloneSet:0" class="stonith" type="ssh" clone="0" long-id="CloneSet:child_CloneSet:0"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" clone="0" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="58">
+     <action_set>
+       <rsc_op id="75" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
+         <primitive id="child_CloneSet:0" class="stonith" type="ssh" clone="0" long-id="CloneSet:child_CloneSet:0"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" clone="0" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="59">
+     <action_set>
+       <rsc_op id="85" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+         <primitive id="child_CloneSet:0" class="stonith" type="ssh" clone="0" long-id="CloneSet:child_CloneSet:0"/>
+         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" clone="0" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="60">
+     <action_set>
+       <rsc_op id="122" operation="start" operation_key="child_CloneSet:0_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="child_CloneSet:0" class="stonith" type="ssh" clone="0" long-id="CloneSet:child_CloneSet:0"/>
          <attributes crm_feature_set="1.0.5" clone="0" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="69" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="138" operation="start" operation_key="CloneSet_start_0"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="1">
+   <synapse id="61">
      <action_set>
-       <rsc_op id="54" operation="monitor" operation_key="child_CloneSet:0_monitor_5000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+       <rsc_op id="123" operation="monitor" operation_key="child_CloneSet:0_monitor_5000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="child_CloneSet:0" class="stonith" type="ssh" clone="0" long-id="CloneSet:child_CloneSet:0"/>
          <attributes timeout="20000" crm_feature_set="1.0.5" interval="5000" clone="0" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="53" operation="start" operation_key="child_CloneSet:0_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+         <rsc_op id="122" operation="start" operation_key="child_CloneSet:0_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="2">
+   <synapse id="62">
      <action_set>
-       <rsc_op id="55" operation="start" operation_key="child_CloneSet:1_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
+       <rsc_op id="124" operation="start" operation_key="child_CloneSet:1_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="child_CloneSet:1" class="stonith" type="ssh" clone="1" long-id="CloneSet:child_CloneSet:1"/>
          <attributes crm_feature_set="1.0.5" clone="1" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="69" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="138" operation="start" operation_key="CloneSet_start_0"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="3">
+   <synapse id="63">
      <action_set>
-       <rsc_op id="56" operation="monitor" operation_key="child_CloneSet:1_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
+       <rsc_op id="125" operation="monitor" operation_key="child_CloneSet:1_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
          <primitive id="child_CloneSet:1" class="stonith" type="ssh" clone="1" long-id="CloneSet:child_CloneSet:1"/>
          <attributes timeout="20000" crm_feature_set="1.0.5" interval="5000" clone="1" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="55" operation="start" operation_key="child_CloneSet:1_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+         <rsc_op id="124" operation="start" operation_key="child_CloneSet:1_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="4">
+   <synapse id="64">
      <action_set>
-       <rsc_op id="57" operation="start" operation_key="child_CloneSet:2_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
+       <rsc_op id="126" operation="start" operation_key="child_CloneSet:2_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="child_CloneSet:2" class="stonith" type="ssh" clone="2" long-id="CloneSet:child_CloneSet:2"/>
          <attributes crm_feature_set="1.0.5" clone="2" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="69" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="138" operation="start" operation_key="CloneSet_start_0"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="5">
+   <synapse id="65">
      <action_set>
-       <rsc_op id="58" operation="monitor" operation_key="child_CloneSet:2_monitor_5000" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
+       <rsc_op id="127" operation="monitor" operation_key="child_CloneSet:2_monitor_5000" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="child_CloneSet:2" class="stonith" type="ssh" clone="2" long-id="CloneSet:child_CloneSet:2"/>
          <attributes timeout="20000" crm_feature_set="1.0.5" interval="5000" clone="2" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="57" operation="start" operation_key="child_CloneSet:2_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+         <rsc_op id="126" operation="start" operation_key="child_CloneSet:2_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="6">
+   <synapse id="66">
      <action_set>
-       <rsc_op id="59" operation="start" operation_key="child_CloneSet:3_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
+       <rsc_op id="128" operation="start" operation_key="child_CloneSet:3_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
          <primitive id="child_CloneSet:3" class="stonith" type="ssh" clone="3" long-id="CloneSet:child_CloneSet:3"/>
          <attributes crm_feature_set="1.0.5" clone="3" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="69" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="138" operation="start" operation_key="CloneSet_start_0"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="7">
+   <synapse id="67">
      <action_set>
-       <rsc_op id="60" operation="monitor" operation_key="child_CloneSet:3_monitor_5000" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
+       <rsc_op id="129" operation="monitor" operation_key="child_CloneSet:3_monitor_5000" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
          <primitive id="child_CloneSet:3" class="stonith" type="ssh" clone="3" long-id="CloneSet:child_CloneSet:3"/>
          <attributes timeout="20000" crm_feature_set="1.0.5" interval="5000" clone="3" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="59" operation="start" operation_key="child_CloneSet:3_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+         <rsc_op id="128" operation="start" operation_key="child_CloneSet:3_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="8">
+   <synapse id="68">
      <action_set>
-       <rsc_op id="61" operation="start" operation_key="child_CloneSet:4_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
+       <rsc_op id="130" operation="start" operation_key="child_CloneSet:4_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
          <primitive id="child_CloneSet:4" class="stonith" type="ssh" clone="4" long-id="CloneSet:child_CloneSet:4"/>
          <attributes crm_feature_set="1.0.5" clone="4" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="69" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="138" operation="start" operation_key="CloneSet_start_0"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="9">
+   <synapse id="69">
      <action_set>
-       <rsc_op id="62" operation="monitor" operation_key="child_CloneSet:4_monitor_5000" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
+       <rsc_op id="131" operation="monitor" operation_key="child_CloneSet:4_monitor_5000" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
          <primitive id="child_CloneSet:4" class="stonith" type="ssh" clone="4" long-id="CloneSet:child_CloneSet:4"/>
          <attributes timeout="20000" crm_feature_set="1.0.5" interval="5000" clone="4" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="61" operation="start" operation_key="child_CloneSet:4_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+         <rsc_op id="130" operation="start" operation_key="child_CloneSet:4_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="10">
+   <synapse id="70">
      <action_set>
-       <rsc_op id="63" operation="start" operation_key="child_CloneSet:5_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
+       <rsc_op id="132" operation="start" operation_key="child_CloneSet:5_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
          <primitive id="child_CloneSet:5" class="stonith" type="ssh" clone="5" long-id="CloneSet:child_CloneSet:5"/>
          <attributes crm_feature_set="1.0.5" clone="5" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="69" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="138" operation="start" operation_key="CloneSet_start_0"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="11">
+   <synapse id="71">
      <action_set>
-       <rsc_op id="64" operation="monitor" operation_key="child_CloneSet:5_monitor_5000" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
+       <rsc_op id="133" operation="monitor" operation_key="child_CloneSet:5_monitor_5000" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
          <primitive id="child_CloneSet:5" class="stonith" type="ssh" clone="5" long-id="CloneSet:child_CloneSet:5"/>
          <attributes timeout="20000" crm_feature_set="1.0.5" interval="5000" clone="5" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="63" operation="start" operation_key="child_CloneSet:5_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+         <rsc_op id="132" operation="start" operation_key="child_CloneSet:5_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="12">
+   <synapse id="72">
      <action_set>
-       <rsc_op id="65" operation="start" operation_key="child_CloneSet:6_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+       <rsc_op id="134" operation="start" operation_key="child_CloneSet:6_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="child_CloneSet:6" class="stonith" type="ssh" clone="6" long-id="CloneSet:child_CloneSet:6"/>
          <attributes crm_feature_set="1.0.5" clone="6" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="69" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="138" operation="start" operation_key="CloneSet_start_0"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="13">
+   <synapse id="73">
      <action_set>
-       <rsc_op id="66" operation="monitor" operation_key="child_CloneSet:6_monitor_5000" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+       <rsc_op id="135" operation="monitor" operation_key="child_CloneSet:6_monitor_5000" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="child_CloneSet:6" class="stonith" type="ssh" clone="6" long-id="CloneSet:child_CloneSet:6"/>
          <attributes timeout="20000" crm_feature_set="1.0.5" interval="5000" clone="6" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="65" operation="start" operation_key="child_CloneSet:6_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+         <rsc_op id="134" operation="start" operation_key="child_CloneSet:6_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="14">
+   <synapse id="74">
      <action_set>
-       <rsc_op id="67" operation="start" operation_key="child_CloneSet:7_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
+       <rsc_op id="136" operation="start" operation_key="child_CloneSet:7_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="child_CloneSet:7" class="stonith" type="ssh" clone="7" long-id="CloneSet:child_CloneSet:7"/>
          <attributes crm_feature_set="1.0.5" clone="7" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="69" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="138" operation="start" operation_key="CloneSet_start_0"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="15">
+   <synapse id="75">
      <action_set>
-       <rsc_op id="68" operation="monitor" operation_key="child_CloneSet:7_monitor_5000" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
+       <rsc_op id="137" operation="monitor" operation_key="child_CloneSet:7_monitor_5000" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="child_CloneSet:7" class="stonith" type="ssh" clone="7" long-id="CloneSet:child_CloneSet:7"/>
          <attributes timeout="20000" crm_feature_set="1.0.5" interval="5000" clone="7" clone_max="8" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="67" operation="start" operation_key="child_CloneSet:7_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+         <rsc_op id="136" operation="start" operation_key="child_CloneSet:7_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="16">
+   <synapse id="76">
      <action_set>
-       <pseudo_event id="69" operation="start" operation_key="CloneSet_start_0">
-         <attributes crm_feature_set="1.0.5"/>
-       </pseudo_event>
-     </action_set>
-     <inputs/>
-   </synapse>
-   <synapse id="17" priority="1000000">
-     <action_set>
-       <pseudo_event id="70" operation="running" operation_key="CloneSet_running_0">
+       <pseudo_event id="138" operation="start" operation_key="CloneSet_start_0">
          <attributes crm_feature_set="1.0.5"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="53" operation="start" operation_key="child_CloneSet:0_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+         <pseudo_event id="17" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="77" priority="1000000">
+     <action_set>
+       <pseudo_event id="139" operation="running" operation_key="CloneSet_running_0">
+         <attributes crm_feature_set="1.0.5"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="122" operation="start" operation_key="child_CloneSet:0_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
        <trigger>
-         <rsc_op id="55" operation="start" operation_key="child_CloneSet:1_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+         <rsc_op id="124" operation="start" operation_key="child_CloneSet:1_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
        </trigger>
        <trigger>
-         <rsc_op id="57" operation="start" operation_key="child_CloneSet:2_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+         <rsc_op id="126" operation="start" operation_key="child_CloneSet:2_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
        </trigger>
        <trigger>
-         <rsc_op id="59" operation="start" operation_key="child_CloneSet:3_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+         <rsc_op id="128" operation="start" operation_key="child_CloneSet:3_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
        </trigger>
        <trigger>
-         <rsc_op id="61" operation="start" operation_key="child_CloneSet:4_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+         <rsc_op id="130" operation="start" operation_key="child_CloneSet:4_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
        </trigger>
        <trigger>
-         <rsc_op id="63" operation="start" operation_key="child_CloneSet:5_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+         <rsc_op id="132" operation="start" operation_key="child_CloneSet:5_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
        </trigger>
        <trigger>
-         <rsc_op id="65" operation="start" operation_key="child_CloneSet:6_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+         <rsc_op id="134" operation="start" operation_key="child_CloneSet:6_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
        </trigger>
        <trigger>
-         <rsc_op id="67" operation="start" operation_key="child_CloneSet:7_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+         <rsc_op id="136" operation="start" operation_key="child_CloneSet:7_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
        </trigger>
        <trigger>
-         <pseudo_event id="69" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="138" operation="start" operation_key="CloneSet_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="78">
+     <action_set>
+       <pseudo_event id="17" operation="probe_complete" operation_key="probe_complete">
+         <attributes crm_feature_set="1.0.5"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="18" operation="probe_complete" operation_key="probe_complete" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="28" operation="probe_complete" operation_key="probe_complete" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="35" operation="probe_complete" operation_key="probe_complete" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="42" operation="probe_complete" operation_key="probe_complete" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="51" operation="probe_complete" operation_key="probe_complete" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="61" operation="probe_complete" operation_key="probe_complete" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="66" operation="probe_complete" operation_key="probe_complete" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="76" operation="probe_complete" operation_key="probe_complete" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="79">
+     <action_set>
+       <rsc_op id="18" operation="probe_complete" operation_key="probe_complete" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
+         <attributes crm_feature_set="1.0.5" te-no-wait="true"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="19" operation="monitor" operation_key="rsc_c001n09_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="20" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="21" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="22" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="23" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="24" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="25" operation="monitor" operation_key="rsc_c001n07_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="26" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="27" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="80">
+     <action_set>
+       <rsc_op id="28" operation="probe_complete" operation_key="probe_complete" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+         <attributes crm_feature_set="1.0.5" te-no-wait="true"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="29" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="30" operation="monitor" operation_key="rsc_c001n09_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="31" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="32" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="33" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="34" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="81">
+     <action_set>
+       <rsc_op id="35" operation="probe_complete" operation_key="probe_complete" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
+         <attributes crm_feature_set="1.0.5" te-no-wait="true"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="36" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="37" operation="monitor" operation_key="rsc_c001n09_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="38" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="39" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="40" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="41" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="82">
+     <action_set>
+       <rsc_op id="42" operation="probe_complete" operation_key="probe_complete" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
+         <attributes crm_feature_set="1.0.5" te-no-wait="true"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="43" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="44" operation="monitor" operation_key="rsc_c001n09_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="45" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="46" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="47" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="48" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="49" operation="monitor" operation_key="rsc_c001n07_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="50" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="83">
+     <action_set>
+       <rsc_op id="51" operation="probe_complete" operation_key="probe_complete" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
+         <attributes crm_feature_set="1.0.5" te-no-wait="true"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="52" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="53" operation="monitor" operation_key="rsc_c001n09_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="54" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="55" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="56" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="57" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="58" operation="monitor" operation_key="rsc_c001n07_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="59" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="60" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="84">
+     <action_set>
+       <rsc_op id="61" operation="probe_complete" operation_key="probe_complete" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
+         <attributes crm_feature_set="1.0.5" te-no-wait="true"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="62" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="63" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="64" operation="monitor" operation_key="rsc_c001n07_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="65" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="85">
+     <action_set>
+       <rsc_op id="66" operation="probe_complete" operation_key="probe_complete" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
+         <attributes crm_feature_set="1.0.5" te-no-wait="true"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="67" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="68" operation="monitor" operation_key="rsc_c001n09_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="69" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="70" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="71" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="72" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="73" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="74" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="75" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="86">
+     <action_set>
+       <rsc_op id="76" operation="probe_complete" operation_key="probe_complete" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+         <attributes crm_feature_set="1.0.5" te-no-wait="true"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="77" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="78" operation="monitor" operation_key="rsc_c001n09_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="79" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="80" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="81" operation="monitor" operation_key="rsc_c001n04_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="82" operation="monitor" operation_key="rsc_c001n05_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="83" operation="monitor" operation_key="rsc_c001n06_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="84" operation="monitor" operation_key="rsc_c001n07_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="85" operation="monitor" operation_key="child_CloneSet:0_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
        </trigger>
      </inputs>
    </synapse>

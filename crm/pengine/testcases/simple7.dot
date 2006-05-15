@@ -1,9 +1,9 @@
 digraph "g" {
 	size = "30,30"
-"probe_complete" [ style=bold color="green" fontcolor="orange" ]
+"probe_complete" [ style="dashed" color="blue" fontcolor="orange" ]
 "probe_complete node1" [ style=bold color="green" fontcolor="black" ]
 "rsc1_stop_0 node1" [ style=bold color="green" fontcolor="black" ]
 "do_shutdown node1" [ style=bold color="green" fontcolor="black" ]
-"probe_complete node1" -> "probe_complete" [ style = bold]
+"probe_complete node1" -> "probe_complete" [ style = dashed]
 "rsc1_stop_0 node1" -> "do_shutdown node1" [ style = bold]
 }
