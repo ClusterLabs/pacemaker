@@ -87,27 +87,27 @@ static struct RAExecOps raops =
 	get_resource_meta
 };
 
-static const char * const meta_template = 
-"<?xml version=\"1.0\"?>\n"
-"<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
-"<resource-agent name=\"%s\"\n"
-"<version>1.0</version>\n"
-"<longdesc lang=\"en\">\n"
-"%s\n"
-"</longdesc>\n"
-"<shortdesc lang=\"en\">%s</shortdesc>\n"
-"%s\n"
-"<actions>\n"
-"<action name=\"start\"   timeout=\"15\" />\n"
-"<action name=\"stop\"    timeout=\"15\" />\n"
-"<action name=\"status\"  timeout=\"15\" />\n"
-"<action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
-"<action name=\"meta-data\"  timeout=\"15\" />\n"
-"</actions>\n"
-"<special tag=\"heartbeat\">\n"
-"<version>2.0</version>\n"
-"</special>\n"
-"</resource-agent>\n";
+#define META_TEMPLATE						\
+"<?xml version=\"1.0\"?>\n"					\
+"<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"		\
+"<resource-agent name=\"%s\"\n"					\
+"<version>1.0</version>\n"					\
+"<longdesc lang=\"en\">\n"					\
+"%s\n"								\
+"</longdesc>\n"							\
+"<shortdesc lang=\"en\">%s</shortdesc>\n"			\
+"%s\n"								\
+"<actions>\n"							\
+"<action name=\"start\"   timeout=\"15\" />\n"			\
+"<action name=\"stop\"    timeout=\"15\" />\n"			\
+"<action name=\"status\"  timeout=\"15\" />\n"			\
+"<action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"	\
+"<action name=\"meta-data\"  timeout=\"15\" />\n"		\
+"</actions>\n"							\
+"<special tag=\"heartbeat\">\n"					\
+"<version>2.0</version>\n"					\
+"</special>\n"							\
+"</resource-agent>\n"
 
 static const char * no_parameter_info = "<!-- No parameter segment --->";
 
@@ -323,12 +323,12 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	CHECKMETANULL(meta_param, "parameters") 
 
 	
-	bufferlen = strlen(meta_template) + strlen(rsc_type)
+	bufferlen = STRLEN_CONST(META_TEMPLATE) + strlen(rsc_type)
 			+ strlen(meta_longdesc) + strlen(meta_shortdesc)
 			+ strlen(meta_param) + 1;
 	buffer = g_new(char, bufferlen);
 	buffer[bufferlen-1] = '\0';
-	snprintf(buffer, bufferlen-1, meta_template, rsc_type
+	snprintf(buffer, bufferlen-1, META_TEMPLATE, rsc_type
 		, meta_longdesc, meta_shortdesc, meta_param);
 	stonith_delete(stonith_obj);
 
