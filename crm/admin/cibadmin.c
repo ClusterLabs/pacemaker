@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.52 2006/05/08 07:42:17 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.53 2006/05/15 10:33:22 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -385,7 +385,7 @@ do_work(crm_data_t *input, int call_options, crm_data_t **output)
 
 	} else if(cib_action != NULL) {
 		crm_debug_4("Passing \"%s\" to variant_op...", cib_action);
-		if(input != NULL && do_id_check(input, NULL)) {
+		if(input != NULL && do_id_check(input, NULL, TRUE, FALSE)) {
 			crm_err("ID Check failed.");
 			return cib_id_check;
 		}
