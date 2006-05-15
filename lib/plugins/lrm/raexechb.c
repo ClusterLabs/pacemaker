@@ -57,22 +57,22 @@ static const char * RA_PATH = HB_RA_DIR;
 "  </longdesc>\n"\
 "  <shortdesc lang=\"en\">%s</shortdesc>\n"\
 "  <parameters>\n"\
-"     <parameter name=\"1\" unique="1" required="0">\n"
-"        <longdesc lang=\"en\">\n"
-"           This argument will be passed as the first argument to the"
-"           heartbeat resource agent (assuming it supports one)\n"
-"        </longdesc>\n"
-"        <shortdesc lang=\"en\">argv[1]</shortdesc>\n"
-"        <content type=\"string\" default=" " />\n"
-"     </parameter>\n"
-"     <parameter name=\"2\" unique="1" required="0">\n"
-"        <longdesc lang=\"en\">\n"
-"           This argument will be passed as the first argument to the"
-"           heartbeat resource agent (assuming it supports one)\n"
-"        </longdesc>\n"
-"        <shortdesc lang=\"en\">argv[2]</shortdesc>\n"
-"        <content type=\"string\" default=" " />\n"
-"     </parameter>\n"
+"     <parameter name=\"1\" unique=\"1\" required=\"0\">\n"\
+"        <longdesc lang=\"en\">\n"\
+"           This argument will be passed as the first argument to the"\
+"           heartbeat resource agent (assuming it supports one)\n"\
+"        </longdesc>\n"\
+"        <shortdesc lang=\"en\">argv[1]</shortdesc>\n"\
+"        <content type=\"string\" default=" " />\n"\
+"     </parameter>\n"\
+"     <parameter name=\"2\" unique=\"1\" required=\"0\">\n"\
+"        <longdesc lang=\"en\">\n"\
+"           This argument will be passed as the first argument to the"\
+"           heartbeat resource agent (assuming it supports one)\n"\
+"        </longdesc>\n"\
+"        <shortdesc lang=\"en\">argv[2]</shortdesc>\n"\
+"        <content type=\"string\" default=" " />\n"\
+"     </parameter>\n"\
 "  </parameters>\n"\
 "  <actions>\n"\
 "    <action name=\"start\"   timeout=\"15\" />\n"\
