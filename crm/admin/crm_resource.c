@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.27 2006/05/08 12:12:42 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.28 2006/05/15 10:03:30 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -642,7 +642,7 @@ main(int argc, char **argv)
 		if(rsc != NULL) {
 			rsc_id = rsc->id;
 
-		} else if(rsc_cmd != 'C') {
+		} else {
 			rc = cib_NOTEXISTS;
 		}
 		
@@ -667,6 +667,27 @@ main(int argc, char **argv)
 	if(rsc_cmd == 'L') {
 		rc = cib_ok;
 		do_find_resource_list(&data_set);
+		
+	} else if(rsc_cmd == 'C') {
+		resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+
+		delete_lrm_rsc(crmd_channel, host_uname,
+			       rsc?rsc->id:rsc_id, rsc?rsc->long_name:NULL);
+		
+		sleep(5);
+		refresh_lrm(crmd_channel, host_uname);
+
+		if(rsc != NULL) {
+			char *now_s = NULL;
+			time_t now = time(NULL);
+
+			/* force the TE to start a transition */
+			sleep(5); /* wait for the refresh */
+			now_s = crm_itoa(now);
+			update_attr(cib_conn, cib_sync_call,
+				    NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s);
+			crm_free(now_s);
+		}
 		
 	} else if(rc == cib_NOTEXISTS) {
 		fprintf(stderr, "Resource %s not found: %s\n",
@@ -764,8 +785,11 @@ main(int argc, char **argv)
 	} else if(rsc_cmd == 'D') {
 		crm_data_t *msg_data = NULL;
 
-		CRM_DEV_ASSERT(rsc_type != NULL);
-		CRM_DEV_ASSERT(rsc_id != NULL);
+		CRM_CHECK(rsc_id != NULL, return -1);
+		if(rsc_type == NULL) {
+			fprintf(stderr, "You need to specify a resource type with -t");
+			return -1;
+		}
 
 		msg_data = create_xml_node(NULL, rsc_type);
 		crm_xml_add(msg_data, XML_ATTR_ID, rsc_id);
@@ -774,26 +798,6 @@ main(int argc, char **argv)
 					    msg_data, NULL, cib_sync_call);
 		free_xml(msg_data);
 
-	} else if(rsc_cmd == 'C') {
-		resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
-
-		delete_lrm_rsc(crmd_channel, host_uname, rsc?rsc->id:rsc_id, rsc?rsc->long_name:NULL);
-		
-		sleep(5);
-		refresh_lrm(crmd_channel, host_uname);
-
-		if(rsc != NULL) {
-			char *now_s = NULL;
-			time_t now = time(NULL);
-
-			/* force the TE to start a transition */
-			sleep(5); /* wait for the refresh */
-			now_s = crm_itoa(now);
-			update_attr(cib_conn, cib_sync_call,
-				    NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s);
-			crm_free(now_s);
-		}
-		
 	} else {
 		fprintf(stderr, "Unknown command: %c\n", rsc_cmd);
 	}
