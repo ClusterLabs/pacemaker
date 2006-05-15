@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.77 2006/05/08 07:42:17 andrew Exp $ */
+/* $Id: messages.c,v 1.78 2006/05/15 09:30:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -553,8 +553,9 @@ cib_process_replace(
 		} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
 			send_notify = TRUE;
 		}
+		cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, FALSE);
 	}
-
+	
 	if(send_notify) {
 		crm_data_t *local_diff = NULL;
 		local_diff = diff_cib_object(existing_cib, *result_cib, FALSE);
@@ -562,10 +563,6 @@ cib_process_replace(
 		free_xml(local_diff);
 	}	
 
-	if(result == cib_ok && section != NULL) {
-		cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, FALSE);
-	}
-	
 	return result;
 }
 
