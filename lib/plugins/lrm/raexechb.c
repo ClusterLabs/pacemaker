@@ -50,39 +50,38 @@ static const char * RA_PATH = HB_RA_DIR;
 "<?xml version=\"1.0\"?>\n"\
 "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"\
 "<resource-agent name=%s"\
-"\" version=\"0.1\">\n"\
-"  <version>1.0</version>\n"\
-"  <longdesc lang=\"en\">\n"\
-"    %s"\
-"  </longdesc>\n"\
-"  <shortdesc lang=\"en\">%s</shortdesc>\n"\
-"  <parameters>\n"\
-"     <parameter name=\"1\" unique=\"1\" required=\"0\">\n"\
-"        <longdesc lang=\"en\">\n"\
-"           This argument will be passed as the first argument to the"\
-"           heartbeat resource agent (assuming it supports one)\n"\
-"        </longdesc>\n"\
-"        <shortdesc lang=\"en\">argv[1]</shortdesc>\n"\
-"        <content type=\"string\" default=" " />\n"\
-"     </parameter>\n"\
-"     <parameter name=\"2\" unique=\"1\" required=\"0\">\n"\
-"        <longdesc lang=\"en\">\n"\
-"           This argument will be passed as the first argument to the"\
-"           heartbeat resource agent (assuming it supports one)\n"\
-"        </longdesc>\n"\
-"        <shortdesc lang=\"en\">argv[2]</shortdesc>\n"\
-"        <content type=\"string\" default=" " />\n"\
-"     </parameter>\n"\
-"  </parameters>\n"\
-"  <actions>\n"\
-"    <action name=\"start\"   timeout=\"15\" />\n"\
-"    <action name=\"stop\"    timeout=\"15\" />\n"\
-"    <action name=\"status\"  timeout=\"15\" />\n"\
-"    <action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"\
-"    <action name=\"meta-data\"  timeout=\"5\" />\n"\
-"  </actions>\n"\
-"  <special tag=\"heartbeart\">\n"\
-"  </special>\n"\
+"<version>1.0</version>\n"\
+"<longdesc lang=\"en\">\n"\
+"%s"\
+"</longdesc>\n"\
+"<shortdesc lang=\"en\">%s</shortdesc>\n"\
+"<parameters>\n"\
+"<parameter name=\"1\" unique=\"1\" required=\"0\">\n"\
+"<longdesc lang=\"en\">\n"\
+"This argument will be passed as the first argument to the"\
+"heartbeat resource agent (assuming it supports one)\n"\
+"</longdesc>\n"\
+"<shortdesc lang=\"en\">argv[1]</shortdesc>\n"\
+"<content type=\"string\" default=" " />\n"\
+"</parameter>\n"\
+"<parameter name=\"2\" unique=\"1\" required=\"0\">\n"\
+"<longdesc lang=\"en\">\n"\
+"This argument will be passed as the first argument to the"\
+"heartbeat resource agent (assuming it supports one)\n"\
+"</longdesc>\n"\
+"<shortdesc lang=\"en\">argv[2]</shortdesc>\n"\
+"<content type=\"string\" default=" " />\n"\
+"</parameter>\n"\
+"</parameters>\n"\
+"<actions>\n"\
+"<action name=\"start\"   timeout=\"15\" />\n"\
+"<action name=\"stop\"    timeout=\"15\" />\n"\
+"<action name=\"status\"  timeout=\"15\" />\n"\
+"<action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"\
+"<action name=\"meta-data\"  timeout=\"5\" />\n"\
+"</actions>\n"\
+"<special tag=\"heartbeart\">\n"\
+"</special>\n"\
 "</resource-agent>\n"
 
 /* The begin of exported function list */
