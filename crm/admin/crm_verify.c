@@ -1,4 +1,4 @@
-/* $Id: crm_verify.c,v 1.10 2006/04/05 13:37:05 andrew Exp $ */
+/* $Id: crm_verify.c,v 1.11 2006/05/15 10:21:05 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -214,7 +214,7 @@ main(int argc, char **argv)
 #endif
 	
 	crm_notice("Required feature set: %s", feature_set(cib_object));
- 	if(do_id_check(cib_object, NULL)) {
+ 	if(do_id_check(cib_object, NULL, FALSE, FALSE)) {
 		pe_config_err("ID Check failed");
 	}
 

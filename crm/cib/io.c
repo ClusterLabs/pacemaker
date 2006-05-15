@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.66 2006/04/20 13:19:01 andrew Exp $ */
+/* $Id: io.c,v 1.67 2006/05/15 10:21:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -329,7 +329,14 @@ readCibXmlFile(const char *filename)
 
 	crm_xml_add(root, "generated", XML_BOOLEAN_FALSE);	
 	
-	do_id_check(root, NULL);
+	if(do_id_check(root, NULL, FALSE, FALSE)) {
+		crm_crit("%s does not contain a vaild configuration.",
+			 filename);
+		crm_crit("Inhibiting respawn by Heartbeat to avoid loss"
+			 " of configuration data.");
+		cl_flush_logs();
+		exit(100);
+	}
 
 	if (verifyCibXml(root) == FALSE) {
 		crm_crit("%s does not contain a vaild configuration.",

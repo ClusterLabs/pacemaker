@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.73 2006/03/18 17:23:48 andrew Exp $ */
+/* $Id: ptest.c,v 1.74 2006/05/15 10:21:04 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -242,7 +242,7 @@ main(int argc, char **argv)
  	CRM_CHECK(cib_object != NULL, return 4);
 
 	crm_notice("Required feature set: %s", feature_set(cib_object));
- 	do_id_check(cib_object, NULL);
+ 	do_id_check(cib_object, NULL, FALSE, FALSE);
 
 	crm_zero_mem_stats(NULL);
 	

@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.121 2006/04/21 07:08:03 andrew Exp $ */
+/* $Id: callbacks.c,v 1.122 2006/05/15 10:21:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1123,7 +1123,7 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 
 			update_counters(__FILE__, __FUNCTION__, result_cib);
 			
-			if(do_id_check(result_cib, NULL)) {
+			if(do_id_check(result_cib, NULL, TRUE, FALSE)) {
 				rc = cib_id_check;
 				if(call_options & cib_force_diff) {
 					crm_err("Global update introduces id collision!");

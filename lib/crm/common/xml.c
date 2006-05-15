@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.82 2006/05/11 12:13:06 andrew Exp $ */
+/* $Id: xml.c,v 1.83 2006/05/15 10:21:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2249,7 +2249,8 @@ non_unique_allowed(const char *tag_name)
 }
 
 gboolean
-do_id_check(crm_data_t *xml_obj, GHashTable *id_hash) 
+do_id_check(crm_data_t *xml_obj, GHashTable *id_hash,
+	    gboolean silent_add, gboolean silent_rename) 
 {
 	char *lookup_id = NULL;
 	gboolean modified = FALSE;
@@ -2273,7 +2274,7 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 
 	xml_child_iter(
 		xml_obj, xml_child, 
-		if(do_id_check(xml_child, id_hash)) {
+		if(do_id_check(xml_child, id_hash, silent_add, silent_rename)) {
 			modified = TRUE;
 		}
 		);
@@ -2309,9 +2310,12 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash)
 					id_hash, lookup_id, crm_strdup(tag_id));
 				break;
 			}
-		}
+			modified |= (!silent_rename);
 
-		modified = TRUE;
+		} else {
+			modified |= (!silent_add);
+		}
+		
 		crm_free(lookup_id);
 		assign_uuid(xml_obj);
 		tag_id = ID(xml_obj);
