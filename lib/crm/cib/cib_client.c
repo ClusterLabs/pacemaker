@@ -735,7 +735,7 @@ cib_error2string(enum cib_errors return_code)
 			error_msg = "The object already exists";
 			break;
 		case cib_NOTEXISTS:
-			error_msg = "The object does not exist";
+			error_msg = "The object/attribute does not exist";
 			break;
 		case CIBRES_CORRUPT:
 			error_msg = "The CIB is corrupt";

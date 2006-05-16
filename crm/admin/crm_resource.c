@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.28 2006/05/15 10:03:30 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.29 2006/05/16 12:41:28 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -62,11 +62,13 @@ const char *crm_system_name = NULL;
 const char *prop_name = NULL;
 const char *prop_value = NULL;
 const char *rsc_type = NULL;
-char rsc_cmd = 0;
+const char *prop_id = NULL;
+const char *prop_set = NULL;
+char rsc_cmd = 'L';
 char *our_pid = NULL;
 IPC_Channel *crmd_channel = NULL;
 
-#define OPTARGS	"V?SLRQDCPp:WMUr:H:v:t:g:G:g:f"
+#define OPTARGS	"V?LRQXDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:f"
 
 static int
 do_find_resource(const char *rsc, pe_working_set_t *data_set)
@@ -91,15 +93,11 @@ do_find_resource(const char *rsc, pe_working_set_t *data_set)
 		   found++;
 		);
 	
-	if(BE_QUIET) {
-		fprintf(stderr, "\n");
-	}
-	
-	if(found == 0) {
-		printf("resource %s is NOT running\n", rsc);
+	if(BE_QUIET == FALSE && found == 0) {
+		fprintf(stderr, "resource %s is NOT running\n", rsc);
 	}
 					
-	return found;
+	return 0;
 }
 
 static int
@@ -122,7 +120,7 @@ do_find_resource_list(pe_working_set_t *data_set)
 		return cib_NOTEXISTS;
 	}
 
-	return found;
+	return 0;
 }
 
 static int
@@ -142,14 +140,13 @@ dump_resource(const char *rsc, pe_working_set_t *data_set)
 	
 	crm_free(rsc_xml);
 	
-	return 1;
+	return 0;
 }
 
 static int
 dump_resource_attr(
 	const char *rsc, const char *attr, pe_working_set_t *data_set)
 {
-	crm_data_t *attrs = create_xml_node(NULL, "fake");
 	node_t *current = NULL;
 	resource_t *the_rsc = pe_find_resource(data_set->resources, rsc);
 	const char *value = NULL;
@@ -177,15 +174,112 @@ dump_resource_attr(
 	}
 	if(value != NULL) {
 		fprintf(stdout, "%s\n", value);
-		return 1;
-
-	} else {
-		/* debug */
-		g_hash_table_foreach(the_rsc->parameters, hash2field, attrs);
+		return 0;
 	}
 	return cib_NOTEXISTS;
 }
 
+static int
+set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
+		  const char *attr_name, const char *attr_value,
+		  cib_t *cib, pe_working_set_t *data_set)
+{
+	int rc = cib_ok;
+	int cib_options = cib_sync_call;
+	crm_data_t *xml_top = NULL;
+	crm_data_t *xml_obj = NULL;
+	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+	char *local_attr_id = NULL;
+	char *local_attr_set = NULL;
+
+	if(do_force) {
+		crm_debug("Forcing...");
+		cib_options |= cib_scope_local|cib_quorum_override;
+	}
+			
+	if(rsc == NULL) {
+		return cib_NOTEXISTS;
+	}
+
+	if(attr_set == NULL) {
+		local_attr_set = crm_strdup(rsc->id);
+		attr_set = local_attr_set;
+	}
+
+	if(attr_id == NULL) {
+		local_attr_id = crm_concat(attr_set, attr_name, '-');
+		attr_id = local_attr_id;
+	}
+
+	xml_top = create_xml_node(NULL, crm_element_name(rsc->xml));
+	crm_xml_add(xml_top, XML_ATTR_ID, rsc->id);
+
+	xml_obj = create_xml_node(xml_top, XML_TAG_ATTR_SETS);
+	crm_xml_add(xml_obj, XML_ATTR_ID, attr_set);
+
+	xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
+
+	xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
+	crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
+	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
+	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
+	
+	crm_log_xml_debug(xml_top, "Update");
+	
+	rc = cib->cmds->modify(cib, XML_CIB_TAG_RESOURCES, xml_top, NULL,
+			       cib_options);
+
+	free_xml(xml_top);
+	crm_free(local_attr_id);
+	crm_free(local_attr_set);
+	return rc;
+}
+
+static int
+delete_resource_attr(
+	const char *rsc_id, const char *attr_set, const char *attr_id,
+	const char *attr_name, cib_t *cib, pe_working_set_t *data_set)
+{
+	int rc = cib_ok;
+	int cib_options = cib_sync_call;
+	crm_data_t *xml_obj = NULL;
+	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+	char *local_attr_id = NULL;
+	char *local_attr_set = NULL;
+
+	if(do_force) {
+		crm_debug("Forcing...");
+		cib_options |= cib_scope_local|cib_quorum_override;
+	}
+			
+	if(rsc == NULL) {
+		return cib_NOTEXISTS;
+	}
+
+	if(attr_set == NULL) {
+		local_attr_set = crm_strdup(rsc->id);
+		attr_set = local_attr_set;
+	}
+
+	if(attr_id == NULL) {
+		local_attr_id = crm_concat(attr_set, attr_name, '-');
+		attr_id = local_attr_id;
+	}
+
+	xml_obj = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);
+	crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
+	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
+	
+	crm_log_xml_debug(xml_obj, "Delete");
+	
+	rc = cib->cmds->delete(cib, XML_CIB_TAG_RESOURCES, xml_obj, NULL,
+			       cib_options);
+
+	crm_free(local_attr_id);
+	crm_free(local_attr_set);
+	free_xml(xml_obj);
+	return rc;
+}
 
 static int
 dump_resource_prop(
@@ -202,7 +296,7 @@ dump_resource_prop(
 
 	if(value != NULL) {
 		fprintf(stdout, "%s\n", value);
-		return 1;
+		return 0;
 	}
 	return cib_NOTEXISTS;
 }
@@ -299,7 +393,7 @@ delete_lrm_rsc(
 	if(send_ipc_message(crmd_channel, cmd)) {
 		return 0;
 	}
-	return -1;
+	return cib_send_failed;
 }
 
 static int
@@ -313,7 +407,7 @@ refresh_lrm(IPC_Channel *crmd_channel, const char *host_uname)
 	if(send_ipc_message(crmd_channel, cmd)) {
 		return 0;
 	}
-	return -1;
+	return cib_send_failed;
 }
 
 static int
@@ -452,27 +546,30 @@ main(int argc, char **argv)
 	int option_index = 0;
 	static struct option long_options[] = {
 		/* Top-level Options */
-		{"verbose", 0, 0, 'V'},
-		{"help",    0, 0, '?'},
-		{"silent",  0, 0, 'S'},
-		{"list",    0, 0, 'L'},
-		{"refresh", 0, 0, 'R'},
-		{"reprobe", 0, 0, 'P'},
-		{"query",   0, 0, 'Q'},
-		{"delete",  0, 0, 'D'},
-		{"cleanup", 0, 0, 'C'},
-		{"locate",  0, 0, 'W'},
-		{"migrate", 0, 0, 'M'},
+		{"verbose",    0, 0, 'V'},
+		{"help",       0, 0, '?'},
+		{"quiet",      0, 0, 'Q'},
+		{"list",       0, 0, 'L'},
+		{"refresh",    0, 0, 'R'},
+		{"reprobe",    0, 0, 'P'},
+		{"query-xml",  0, 0, 'X'},
+		{"delete",     0, 0, 'D'},
+		{"cleanup",    0, 0, 'C'},
+		{"locate",     0, 0, 'W'},
+		{"migrate",    0, 0, 'M'},
 		{"un-migrate", 0, 0, 'U'},
-		{"get-parameter",1, 0, 'G'},
-		{"get-property",1, 0, 'g'},
-		{"resource",1, 0, 'r'},
+		{"resource",   1, 0, 'r'},
 		{"host-uname", 1, 0, 'H'},
 		{"host-uuid",  1, 0, 'h'},
-		{"set-property",    1, 0, 'p'},
+		{"force",      0, 0, 'f'},
+
+		{"set-parameter",   1, 0, 'p'},
+		{"get-parameter",   1, 0, 'g'},
+		{"delete-parameter",1, 0, 'd'},
 		{"property-value",  1, 0, 'v'},
-		{"resource-type",  1, 0, 't'},
-		{"force-relocation",  0, 0, 'f'},
+		{"get-property",    1, 0, 'G'},
+		{"set-property",    1, 0, 'S'},
+		{"resource-type",   1, 0, 't'},
 
 		{0, 0, 0, 0}
 	};
@@ -505,7 +602,7 @@ main(int argc, char **argv)
 			case '?':
 				usage(crm_system_name, LSB_EXIT_OK);
 				break;
-			case 'S':
+			case 'Q':
 				BE_QUIET = TRUE;
 				break;
 
@@ -517,7 +614,7 @@ main(int argc, char **argv)
 				rsc_cmd = flag;
 				break;
 				
-			case 'Q':
+			case 'X':
 				rsc_cmd = flag;
 				break;
 				
@@ -545,6 +642,18 @@ main(int argc, char **argv)
 				rsc_cmd = flag;
 				break;
 
+			case 'd':
+				crm_debug_2("Option %c => %s", flag, optarg);
+				prop_name = optarg;
+				rsc_cmd = flag;
+				break;
+
+			case 'S':
+				crm_debug_2("Option %c => %s", flag, optarg);
+				prop_name = optarg;
+				rsc_cmd = flag;
+				break;
+
 			case 'G':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				prop_name = optarg;
@@ -563,6 +672,14 @@ main(int argc, char **argv)
 				break;				
 			case 'f':
 				do_force = TRUE;
+				break;
+			case 'i':
+				crm_debug_2("Option %c => %s", flag, optarg);
+				prop_id = optarg;
+				break;
+			case 's':
+				crm_debug_2("Option %c => %s", flag, optarg);
+				prop_set = optarg;
 				break;
 			case 'r':
 				crm_debug_2("Option %c => %s", flag, optarg);
@@ -618,9 +735,11 @@ main(int argc, char **argv)
 		our_pid[10] = '\0';
 	}
 
-	if(rsc_cmd == 'L' || rsc_cmd == 'W' || rsc_cmd == 'D' || rsc_cmd == 'Q'
-	   || rsc_cmd == 'p' || rsc_cmd == 'M' || rsc_cmd == 'U'
-	   || rsc_cmd == 'C' || rsc_cmd == 'G' || rsc_cmd == 'g') {
+	if(rsc_cmd == 'L' || rsc_cmd == 'W' || rsc_cmd == 'D' || rsc_cmd == 'X'
+	   || rsc_cmd == 'M' || rsc_cmd == 'U' || rsc_cmd == 'C' 
+	   || rsc_cmd == 'p' || rsc_cmd == 'd' || rsc_cmd == 'g'
+	   || rsc_cmd == 'G' || rsc_cmd == 'S') {
+		
 		resource_t *rsc = NULL;
 		cib_conn = cib_new();
 		rc = cib_conn->cmds->signon(
@@ -697,17 +816,9 @@ main(int argc, char **argv)
 		CRM_DEV_ASSERT(rsc_id != NULL);
 		rc = do_find_resource(rsc_id, &data_set);
 		
-	} else if(rsc_cmd == 'Q') {
+	} else if(rsc_cmd == 'X') {
 		CRM_DEV_ASSERT(rsc_id != NULL);
 		rc = dump_resource(rsc_id, &data_set);
-
-	} else if(rsc_cmd == 'G') {
-		CRM_DEV_ASSERT(rsc_id != NULL);
-		rc = dump_resource_attr(rsc_id, prop_name, &data_set);
-
-	} else if(rsc_cmd == 'g') {
-		CRM_DEV_ASSERT(rsc_id != NULL);
-		rc = dump_resource_prop(rsc_id, prop_name, &data_set);
 
 	} else if(rsc_cmd == 'U') {
 		rc = migrate_resource(rsc_id, NULL, NULL, cib_conn);
@@ -752,11 +863,15 @@ main(int argc, char **argv)
 				" specified.\n", rsc_id);
 		}
 		
-	} else if(rsc_cmd == 'p') {
+	} else if(rsc_cmd == 'G') {
+		CRM_DEV_ASSERT(rsc_id != NULL);
+		rc = dump_resource_prop(rsc_id, prop_name, &data_set);
+
+	} else if(rsc_cmd == 'S') {
 		crm_data_t *msg_data = NULL;
 		if(prop_value == NULL) {
-			fprintf(stderr, "You need to set a value with the -v option");
-			return cib_NOTEXISTS;
+			fprintf(stderr, "You need to supply a value with the -v option\n");
+			return CIBRES_MISSING_FIELD;
 		}
 
 		CRM_DEV_ASSERT(rsc_id != NULL);
@@ -772,6 +887,24 @@ main(int argc, char **argv)
 					    msg_data, NULL, cib_sync_call);
 		free_xml(msg_data);
 
+	} else if(rsc_cmd == 'g') {
+		CRM_DEV_ASSERT(rsc_id != NULL);
+		rc = dump_resource_attr(rsc_id, prop_name, &data_set);
+
+	} else if(rsc_cmd == 'p') {
+		CRM_DEV_ASSERT(rsc_id != NULL);
+		if(prop_value == NULL) {
+			fprintf(stderr, "You need to supply a value with the -v option\n");
+			return CIBRES_MISSING_FIELD;
+		}
+		rc = set_resource_attr(rsc_id, prop_id, prop_set, prop_name,
+				       prop_value, cib_conn, &data_set);
+
+	} else if(rsc_cmd == 'd') {
+		CRM_DEV_ASSERT(rsc_id != NULL);
+		rc = delete_resource_attr(rsc_id, prop_id, prop_set, prop_name,
+					  cib_conn, &data_set);
+
 	} else if(rsc_cmd == 'P') {
 		HA_Message *cmd = NULL;
 		
@@ -785,10 +918,10 @@ main(int argc, char **argv)
 	} else if(rsc_cmd == 'D') {
 		crm_data_t *msg_data = NULL;
 
-		CRM_CHECK(rsc_id != NULL, return -1);
+		CRM_CHECK(rsc_id != NULL, return cib_NOTEXISTS);
 		if(rsc_type == NULL) {
 			fprintf(stderr, "You need to specify a resource type with -t");
-			return -1;
+			return cib_NOTEXISTS;
 		}
 
 		msg_data = create_xml_node(NULL, rsc_type);
@@ -806,19 +939,18 @@ main(int argc, char **argv)
 		cleanup_calculations(&data_set);
 		cib_conn->cmds->signoff(cib_conn);
 	}
-	if(rc == cib_NOTEXISTS) {
+	if(rc == cib_no_quorum) {
 		fprintf(stderr, "Error performing operation: %s\n",
 			cib_error2string(rc));
+		fprintf(stderr, "Try using -f\n");
 
-	} else if(rc < cib_ok) {
+	} else if(rc != cib_ok) {
 		fprintf(stderr, "Error performing operation: %s\n",
 			cib_error2string(rc));
 	}
 	
 	return rc;
 }
-
-
 
 void
 usage(const char *cmd, int exit_status)
@@ -833,12 +965,12 @@ usage(const char *cmd, int exit_status)
 		"turn on debug info. additional instances increase verbosity\n",
 		"verbose", 'V');
 	fprintf(stream, "\t--%s (-%c)\t: Print only the value on stdout (for use with -W)\n",
-		"silent", 'S');
+		"quiet", 'Q');
 
 	fprintf(stream, "\nCommands\n");
 	fprintf(stream, "\t--%s (-%c)\t: List all resources\n", "list", 'L');
 	fprintf(stream, "\t--%s (-%c)\t: Query a resource\n"
-		"\t\t\t  Requires: -r\n", "query", 'Q');
+		"\t\t\t  Requires: -r\n", "query-xml", 'X');
 	fprintf(stream, "\t--%s (-%c)\t: Locate a resource\n"
 		"\t\t\t  Requires: -r\n", "locate", 'W');
 	fprintf(stream, "\t--%s (-%c)\t: Migrate a resource from it current"
@@ -859,14 +991,20 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\t: Refresh the CIB from the LRM\n"
 		"\t\t\t  Optional: -H\n", "refresh", 'R');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
+		"Set the named parameter for a resource\n"
+		"\t\t\t  Requires: -r, -v.  Optional: -i, -s\n", "set-parameter", 'p');
+	fprintf(stream, "\t--%s (-%c) <string>\t: "
 		"Get the named parameter for a resource\n"
-		"\t\t\t  Requires: -r\n", "get-parameter", 'G');
+		"\t\t\t  Requires: -r.  Optional: -i, -s\n", "get-parameter", 'g');
+	fprintf(stream, "\t--%s (-%c) <string>: "
+		"Delete the named parameter for a resource\n"
+		"\t\t\t  Requires: -r.  Optional: -i\n", "delete-parameter", 'd');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
 		"Get the named property (eg. class, type, is_managed) a resource\n"
-		"\t\t\t  Requires: -r\n", "get-property", 'g');
+		"\t\t\t  Requires: -r\n", "get-property", 'G');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
 		"Set the named property (not parameter) for a resource\n"
-		"\t\t\t  Requires: -r, -t, -v", "set-property", 'p');
+		"\t\t\t  Requires: -r, -t, -v", "set-property", 'S');
 	fprintf(stream, "\nOptions\n");
 	fprintf(stream, "\t--%s (-%c) <string>\t: Resource ID\n", "resource", 'r');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
@@ -885,6 +1023,8 @@ usage(const char *cmd, int exit_status)
 		"\t\tNOTE: This will prevent the resource from running on this"
 		" node until the constraint is removed with -U\n",
 		"force-relocation", 'f');
+	fprintf(stream, "\t-%c <string>\t: (Advanced Use Only) ID of the instance_attributes object to change\n", 's');
+	fprintf(stream, "\t-%c <string>\t: (Advanced Use Only) ID of the nvpair object to change/delete\n", 'i');
 	fflush(stream);
 
 	exit(exit_status);
