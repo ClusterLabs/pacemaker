@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.29 2006/05/16 12:41:28 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.30 2006/05/16 15:25:19 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -917,18 +917,22 @@ main(int argc, char **argv)
 
 	} else if(rsc_cmd == 'D') {
 		crm_data_t *msg_data = NULL;
-
+		int cib_options = cib_sync_call;
+		
 		CRM_CHECK(rsc_id != NULL, return cib_NOTEXISTS);
 		if(rsc_type == NULL) {
 			fprintf(stderr, "You need to specify a resource type with -t");
 			return cib_NOTEXISTS;
 		}
 
+		if(do_force) {
+			cib_options |= cib_scope_local|cib_quorum_override;
+		}
 		msg_data = create_xml_node(NULL, rsc_type);
 		crm_xml_add(msg_data, XML_ATTR_ID, rsc_id);
 		
 		rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_RESOURCES,
-					    msg_data, NULL, cib_sync_call);
+					    msg_data, NULL, cib_options);
 		free_xml(msg_data);
 
 	} else {
