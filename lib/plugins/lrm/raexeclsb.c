@@ -60,8 +60,7 @@
 #define meta_data_template  \
 "<?xml version=\"1.0\"?>\n"\
 "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"\
-"<resource-agent name=%s"\
-"\" version=\"0.1\">\n"\
+"<resource-agent name=\"%s\" version=\"0.1\">\n"\
 "  <version>1.0</version>\n"\
 "  <longdesc lang=\"en\">\n"\
 "    %s"\
