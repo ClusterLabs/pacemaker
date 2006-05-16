@@ -57,7 +57,7 @@
  * The reload and the try-restart options are optional. Other init script
  * actions may be defined by the init script.
  */
-#define meta_data_template  "\n"\
+#define meta_data_template  \
 "<?xml version=\"1.0\"?>\n"\
 "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"\
 "<resource-agent name=%s"\
@@ -109,7 +109,7 @@
 		}
 
 #define RALSB_GET_VALUE(ptr, keyword)	\
-	if ( (ptr == NULL) & (0 == strncmp(buffer, keyword, strlen(keyword))) ) { \
+	if ( (ptr == NULL) & (0 == strncasecmp(buffer, keyword, strlen(keyword))) ) { \
 		(ptr) = g_strdup(buffer+strlen(keyword)); \
 		if (*(ptr+strlen(ptr)-1) == '\n') { \
 			*(ptr+strlen(ptr)-1) = ' '; \
@@ -348,13 +348,13 @@ get_resource_list(GList ** rsc_info)
 				break; /* donnot find */
 			}
 	
-			if (found_begin_tag == TRUE && 0 == strncmp(buffer
+			if (found_begin_tag == TRUE && 0 == strncasecmp(buffer
 		    		, LSB_INITSCRIPT_END_TAG
 				, strlen(LSB_INITSCRIPT_END_TAG)) ) {
 				is_lsb_script = TRUE;
 				break;
 			}
-			if (found_begin_tag == FALSE && 0 == strncmp(buffer
+			if (found_begin_tag == FALSE && 0 == strncasecmp(buffer
 				, LSB_INITSCRIPT_BEGIN_TAG
 				, strlen(LSB_INITSCRIPT_BEGIN_TAG)) ) {
 				found_begin_tag = TRUE;	
@@ -485,7 +485,7 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 			next_continue = FALSE;
 		}
 
-		if ( 0 == strncmp(buffer , LSB_INITSCRIPT_BEGIN_TAG
+		if ( 0 == strncasecmp(buffer , LSB_INITSCRIPT_BEGIN_TAG
 			, strlen(LSB_INITSCRIPT_BEGIN_TAG)) ) {
 			break;
 		}
@@ -506,7 +506,7 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 		RALSB_GET_VALUE(s_dscrpt,  SHORT_DSCR)
 		
 		/* Long description may cross multiple lines */
-		if ( (l_dscrpt == NULL) & (0 == strncmp(buffer, DESCRIPTION
+		if ( (l_dscrpt == NULL) & (0 == strncasecmp(buffer, DESCRIPTION
 			, strlen(DESCRIPTION))) ) {
 			l_dscrpt = g_string_new(buffer+strlen(DESCRIPTION));
 			/* Between # and keyword, more than one space, or a tab
@@ -527,7 +527,7 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 			continue;
 		}
 
-		if ( 0 == strncmp(buffer, LSB_INITSCRIPT_END_TAG
+		if ( 0 == strncasecmp(buffer, LSB_INITSCRIPT_END_TAG
 			, strlen(LSB_INITSCRIPT_END_TAG)) ) {
 			/* Get to the out border of LSB comment block */
 			break;
