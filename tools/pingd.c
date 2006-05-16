@@ -1,4 +1,4 @@
-/* $Id: pingd.c,v 1.3 2006/05/09 09:17:35 andrew Exp $ */
+/* $Id: pingd.c,v 1.4 2006/05/16 14:46:25 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -318,7 +318,7 @@ main(int argc, char **argv)
 
 	for(lpc = 0; attrd == NULL && lpc < 30; lpc++) {
 		crm_debug("attrd registration attempt: %d", lpc);
-		sleep(2);
+		sleep(5);
 		attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
 	}
 	

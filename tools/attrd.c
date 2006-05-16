@@ -1,4 +1,4 @@
-/* $Id: attrd.c,v 1.6 2006/05/09 09:18:17 andrew Exp $ */
+/* $Id: attrd.c,v 1.7 2006/05/16 14:46:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -398,14 +398,14 @@ main(int argc, char ** argv)
 
 	if(was_err == FALSE) {
 		int lpc = 0;
-		int max_retry = 10;
+		int max_retry = 20;
 		enum cib_errors rc = cib_not_connected;
 		cib_conn = cib_new();
 		for(lpc = 0; lpc < max_retry && rc != cib_ok; lpc++) {
 			crm_debug("CIB signon attempt %d", lpc);
 			rc = cib_conn->cmds->signon(
 				cib_conn, T_ATTRD, cib_command);
-			sleep(2);
+			sleep(5);
 		}
 		if(rc != cib_ok) {
 			crm_err("Signon to CIB failed: %s",
