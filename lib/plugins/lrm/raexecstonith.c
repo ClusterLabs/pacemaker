@@ -87,29 +87,29 @@ static struct RAExecOps raops =
 	get_resource_meta
 };
 
-#define META_TEMPLATE						\
-"<?xml version=\"1.0\"?>\n"					\
-"<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"		\
-"<resource-agent name=\"%s\">\n"					\
-"<version>1.0</version>\n"					\
-"<longdesc lang=\"en\">\n"					\
-"%s\n"								\
-"</longdesc>\n"							\
-"<shortdesc lang=\"en\">%s</shortdesc>\n"			\
-"%s\n"								\
-"<actions>\n"							\
-"<action name=\"start\"   timeout=\"15\" />\n"			\
-"<action name=\"stop\"    timeout=\"15\" />\n"			\
-"<action name=\"status\"  timeout=\"15\" />\n"			\
-"<action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"	\
-"<action name=\"meta-data\"  timeout=\"15\" />\n"		\
-"</actions>\n"							\
-"<special tag=\"heartbeat\">\n"					\
-"<version>2.0</version>\n"					\
-"</special>\n"							\
-"</resource-agent>\n"
+static const char META_TEMPLATE[] =
+"<?xml version=\"1.0\"?>\n"
+"<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
+"<resource-agent name=\"%s\">\n"
+"<version>1.0</version>\n"
+"<longdesc lang=\"en\">\n"
+"%s\n"
+"</longdesc>\n"	
+"<shortdesc lang=\"en\">%s</shortdesc>\n"
+"%s\n"
+"<actions>\n"
+"<action name=\"start\"   timeout=\"15\" />\n"
+"<action name=\"stop\"    timeout=\"15\" />\n"
+"<action name=\"status\"  timeout=\"15\" />\n"
+"<action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
+"<action name=\"meta-data\"  timeout=\"15\" />\n"
+"</actions>\n"
+"<special tag=\"heartbeat\">\n"
+"<version>2.0</version>\n"
+"</special>\n"
+"</resource-agent>\n";
 
-static const char * no_parameter_info = "<!-- No parameter segment --->";
+static const char * no_parameter_info = "<!-- No parameter segment -->";
 
 #define CHECKMETANULL(ret, which) \
 	if (ret == NULL) { \
