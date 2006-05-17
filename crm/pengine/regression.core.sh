@@ -50,7 +50,7 @@ function do_test {
     fi
 
 #    ../admin/crm_verify -X $input
-    ./ptest -V -X $input -D $dot_output > $output
+    ./ptest -V -X $input -D $dot_output -G $output
 
     if [ -s core ]; then
 	echo "Test $name	($base)...	Moved core to core.${base}";

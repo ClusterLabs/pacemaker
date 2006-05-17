@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.74 2006/05/15 10:21:04 andrew Exp $ */
+/* $Id: ptest.c,v 1.75 2006/05/17 07:59:02 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -36,7 +36,7 @@
 
 #include <crm/cib.h>
 
-#define OPTARGS	"V?X:wD:L"
+#define OPTARGS	"V?X:D:G:I:Lwx"
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -45,6 +45,7 @@
 #include <pengine.h>
 #include <pe_utils.h>
 
+gboolean use_stdin = FALSE;
 gboolean inhibit_exit = FALSE;
 extern crm_data_t * do_calculations(
 	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
@@ -89,6 +90,23 @@ init_dotfile(void)
 /* 	dot_write("	]"); */
 }
 
+static void
+usage(const char *cli, int exitcode)
+{
+	FILE *out = exitcode?stderr:stdout;
+	fprintf(out, "Usage: %s -(?|L|X|x) [-V] [-D] [-G] [-I]\n", cli);
+	fprintf(out, "    --%s (-%c): This text\n\n", "help", '?');
+	fprintf(out, "    --%s (-%c): Increase verbosity (can be supplied multiple times)\n\n", "verbose", 'V');
+	fprintf(out, "    --%s (-%c): Connect to the CIB and use the current contents as input\n", "live-check", 'L');
+	fprintf(out, "    --%s (-%c): Look for xml on stdin\n", "xml-stream", 'x');
+	fprintf(out, "    --%s (-%c)\t<filename> : Look for xml in the named file\n\n", "xml-file", 'X');
+
+	fprintf(out, "    --%s (-%c)\t<filename> : Save the transition graph to the named file\n", "save-graph",   'G');
+	fprintf(out, "    --%s (-%c)\t<filename> : Save the DOT formatted transition graph to the named file\n", "save-dotfile", 'D');
+	fprintf(out, "    --%s (-%c)\t<filename> : Save the input to the named file\n", "save-input",   'I');
+	exit(exitcode);
+}
+
 static char *
 create_action_name(action_t *action) 
 {
@@ -129,7 +147,8 @@ main(int argc, char **argv)
 	
 	const char *xml_file = NULL;
 	const char *dot_file = NULL;
-
+	const char *graph_file = NULL;
+	const char *input_file = NULL;
 	
 	cl_log_set_entity("ptest");
 	cl_log_set_facility(LOG_USER);
@@ -140,10 +159,17 @@ main(int argc, char **argv)
 		int option_index = 0;
 		static struct option long_options[] = {
 			/* Top-level Options */
-			{F_CRM_DATA,  1, 0, 'X'},
+			{"help",        0, 0, '?'},
+			{"verbose",     0, 0, 'V'},			
+
 			{"live-check",  0, 0, 'L'},
-			{"help", 0, 0, 0},
-      
+			{"xml-stream",  0, 0, 'x'},
+			{"xml-file",    1, 0, 'X'},
+
+			{"save-graph",  1, 0, 'G'},
+			{"save-dotfile",1, 0, 'D'},
+			{"save-input",  1, 0, 'I'},
+
 			{0, 0, 0, 0}
 		};
 #endif
@@ -171,11 +197,20 @@ main(int argc, char **argv)
 			case 'w':
 				inhibit_exit = TRUE;
 				break;
+			case 'x':
+				use_stdin = TRUE;
+				break;
 			case 'X':
 				xml_file = crm_strdup(optarg);
 				break;
 			case 'D':
 				dot_file = crm_strdup(optarg);
+				break;
+			case 'G':
+				graph_file = crm_strdup(optarg);
+				break;
+			case 'I':
+				input_file = crm_strdup(optarg);
 				break;
 			case 'V':
 				cl_log_enable_stderr(TRUE);
@@ -183,6 +218,9 @@ main(int argc, char **argv)
 				break;
 			case 'L':
 				USE_LIVE_CIB = TRUE;
+				break;
+			case '?':
+				usage("ptest", 0);
 				break;
 			default:
 				printf("?? getopt returned character code 0%o ??\n", flag);
@@ -205,6 +243,7 @@ main(int argc, char **argv)
   
 	if (argerr) {
 		crm_err("%d errors in option parsing", argerr);
+		usage("ptest", 1);
 	}
   
 	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");	
@@ -232,8 +271,12 @@ main(int argc, char **argv)
 	} else if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
 		cib_object = file2xml(xml_strm);
-	} else {
+
+	} else if(use_stdin) {
 		cib_object = stdin2xml();
+
+	} else {
+		usage("ptest", 1);
 	}
 
 #ifdef MCHECK
@@ -244,6 +287,15 @@ main(int argc, char **argv)
 	crm_notice("Required feature set: %s", feature_set(cib_object));
  	do_id_check(cib_object, NULL, FALSE, FALSE);
 
+	if(input_file != NULL) {
+		FILE *input_strm = fopen(input_file, "w");
+		msg_buffer = dump_xml_formatted(cib_object);
+		fprintf(input_strm, "%s\n", msg_buffer);
+		fflush(input_strm);
+		fclose(input_strm);
+		crm_free(msg_buffer);
+	}
+	
 	crm_zero_mem_stats(NULL);
 	
 	fake_now = crm_element_value(cib_object, "fake_now");
@@ -261,8 +313,16 @@ main(int argc, char **argv)
 	do_calculations(&data_set, cib_object, a_date);
 
 	msg_buffer = dump_xml_formatted(data_set.graph);
-	fprintf(stdout, "%s\n", msg_buffer);
-	fflush(stdout);
+	if(graph_file != NULL) {
+		FILE *graph_strm = fopen(graph_file, "w");
+		fprintf(graph_strm, "%s\n", msg_buffer);
+		fflush(graph_strm);
+		fclose(graph_strm);
+		
+	} else {
+		fprintf(stdout, "%s\n", msg_buffer);
+		fflush(stdout);
+	}
 	crm_free(msg_buffer);
 
 	dot_strm = fopen(dot_file, "w");
