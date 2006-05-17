@@ -1,4 +1,4 @@
-/* $Id: crm_attribute.c,v 1.15 2006/05/17 08:30:28 andrew Exp $ */
+/* $Id: crm_attribute.c,v 1.16 2006/05/17 08:53:17 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -291,6 +291,10 @@ main(int argc, char **argv)
 				the_cib, dest_node, type, attr_value);
 			
 		} else if(DO_WRITE) {
+			if(attr_value == NULL) {
+				fprintf(stderr, "Please specify 'true' or 'false' with -v\n");
+				return 1;
+			}
 			rc = set_standby(the_cib, dest_node, type, attr_value);
 
 		} else {
