@@ -1,4 +1,4 @@
-/* $Id: crm_attribute.c,v 1.14 2006/05/08 07:30:42 andrew Exp $ */
+/* $Id: crm_attribute.c,v 1.15 2006/05/17 08:30:28 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -233,19 +233,14 @@ main(int argc, char **argv)
 
 	if(safe_str_eq(crm_system_name, "crm_master")) {
 		int len = 0;
-		char *rsc = NULL;
-		
 		if(safe_str_eq(type, "reboot")) {
 			type = XML_CIB_TAG_STATUS;
 		} else {
 			type = XML_CIB_TAG_NODES;
 		}
-		rsc = getenv("OCF_RESOURCE_INSTANCE");
+		rsc_id = getenv("OCF_RESOURCE_INSTANCE");
 
-		CRM_DEV_ASSERT(rsc != NULL);
-		CRM_DEV_ASSERT(dest_node != NULL);
-
-		if(rsc == NULL && dest_node == NULL) {
+		if(rsc_id == NULL && dest_node == NULL) {
 			fprintf(stderr, "This program should only ever be "
 				"invoked from inside an OCF resource agent.\n");
 			fprintf(stderr, "DO NOT INVOKE MANUALLY FROM THE COMMAND LINE.\n");
@@ -254,11 +249,15 @@ main(int argc, char **argv)
 		} else if(dest_node == NULL) {
 			fprintf(stderr, "Could not determin node UUID.\n");
 			return 1;
+
+		} else if(rsc_id == NULL) {
+			fprintf(stderr, "Could not determin resource name.\n");
+			return 1;
 		}
 		
-		len = 8 + strlen(rsc);
+		len = 8 + strlen(rsc_id);
 		crm_malloc0(attr_name, len);
-		sprintf(attr_name, "master-%s", rsc);
+		sprintf(attr_name, "master-%s", rsc_id);
 
 		len = 2 + strlen(attr_name) + strlen(dest_node);
 		crm_malloc0(attr_id, len);
