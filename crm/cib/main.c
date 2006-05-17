@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.42 2006/04/10 16:18:08 andrew Exp $ */
+/* $Id: main.c,v 1.43 2006/05/17 08:29:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -295,10 +295,12 @@ init_start(void)
 			}
 		}
 
-		crm_debug_3("CCM Activation passed... all set to go!");
-		G_main_add_fd(G_PRIORITY_HIGH, cib_ev_fd, FALSE,
-			      cib_ccm_dispatch, cib_ev_token,
-			      default_ipc_connection_destroy);
+		if(was_error == FALSE) {
+			crm_debug_3("CCM Activation passed... all set to go!");
+			G_main_add_fd(G_PRIORITY_HIGH, cib_ev_fd, FALSE,
+				      cib_ccm_dispatch, cib_ev_token,
+				      default_ipc_connection_destroy);
+		}
 	}
 
 	if(was_error == FALSE) {
