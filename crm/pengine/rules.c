@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.24 2006/05/11 12:13:06 andrew Exp $ */
+/* $Id: rules.c,v 1.25 2006/05/17 12:06:47 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -330,16 +330,26 @@ phase_of_the_moon(ha_time_t *now)
 #define cron_check(xml_field, time_field)				\
 	value = crm_element_value(cron_spec, xml_field);		\
 	if(value != NULL) {						\
+		gboolean pass = TRUE;					\
 		decodeNVpair(value, '-', &value_low, &value_high);	\
-		CRM_CHECK(value_low != NULL, return FALSE);		\
+		if(value_low == NULL) {					\
+			value_low = crm_strdup(value);			\
+		}							\
 		value_low_i = crm_parse_int(value_low, "0");		\
 		value_high_i = crm_parse_int(value_high, "-1");		\
 		if(value_low_i > time_field) {				\
-			return FALSE;					\
+			pass = FALSE;					\
 		} else if(value_high_i < 0) {				\
 		} else if(value_high_i < time_field) {			\
-			return FALSE;					\
+			pass = FALSE;					\
 		}							\
+		crm_free(value_low);					\
+		crm_free(value_high);					\
+		if(pass == FALSE) {					\
+			crm_debug("Condition '%s' in %s: failed", value, xml_field); \
+			return pass;					\
+		}							\
+		crm_debug("Condition '%s' in %s: passed", value, xml_field); \
 	}
 
 gboolean
