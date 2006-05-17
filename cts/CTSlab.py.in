@@ -81,8 +81,8 @@ class Stonithd(ResetMechanism):
 
         self.rsc_id          = 'my_stonithd_id'
 
-        self.command = ""@SSH@ -l root -n -x"
-        self.command_noblock = ""@SSH@ -f -l root -n -x"
+        self.command = "@SSH@ -l root -n -x"
+        self.command_noblock = "@SSH@ -f -l root -n -x"
 
         self.stonithd_started_nodes = []
         self.fail_reason = ''
