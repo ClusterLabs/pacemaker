@@ -89,8 +89,8 @@
 "</resource-agent>\n"
 
 /* The keywords for lsb-compliant comment */
-#define LSB_INITSCRIPT_BEGIN_TAG "### BEGIN INIT INFO"
-#define LSB_INITSCRIPT_END_TAG "### END INIT INFO"
+#define LSB_INITSCRIPT_INFOBEGIN_TAG "### BEGIN INIT INFO"
+#define LSB_INITSCRIPT_INFOEND_TAG "### END INIT INFO"
 #define PROVIDES    "# Provides:" 
 #define REQ_START   "# Required-Start:"
 #define REQ_STOP    "# Required-Stop:"
@@ -341,30 +341,40 @@ get_resource_list(GList ** rsc_info)
 			} else {
 				next_continue = FALSE;
 			}
-			/* Shorte the search time */
+			/* Shorten the search time */
 			if (buffer[0] != '#' && buffer[0] != ' '
 				&& buffer[0] != '\n') {
 				break; /* donnot find */
 			}
 	
 			if (found_begin_tag == TRUE && 0 == strncasecmp(buffer
-		    		, LSB_INITSCRIPT_END_TAG
-				, strlen(LSB_INITSCRIPT_END_TAG)) ) {
+		    		, LSB_INITSCRIPT_INFOEND_TAG
+				, strlen(LSB_INITSCRIPT_INFOEND_TAG)) ) {
 				is_lsb_script = TRUE;
 				break;
 			}
 			if (found_begin_tag == FALSE && 0 == strncasecmp(buffer
-				, LSB_INITSCRIPT_BEGIN_TAG
-				, strlen(LSB_INITSCRIPT_BEGIN_TAG)) ) {
+				, LSB_INITSCRIPT_INFOBEGIN_TAG
+				, strlen(LSB_INITSCRIPT_INFOBEGIN_TAG)) ) {
 				found_begin_tag = TRUE;	
 			}
 		}
 		fclose(fp);
 		tmp = g_list_next(cur);
+
+/*
+ *  Temporarily remove the filter to the initscript, or many initscripts on
+ *  many distros, such as RHEL4 and fedora5, cannot be used by management GUI.
+ *  Please refer to the bug 
+ *  	http://www.osdl.org/developer_bugzilla/show_bug.cgi?id=1250
+ */
+
+#if 0
 		if ( is_lsb_script != TRUE ) {
 			*rsc_info = g_list_remove(*rsc_info, cur->data);
 			g_free(cur->data);
 		}
+#endif
 		cur = tmp;
 	}
 
@@ -471,6 +481,14 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 	meta_data = g_string_new("");
 
 	next_continue = FALSE;
+
+/*
+ *  Is not stick to the rule that the description should be located in the 
+ *  comment block between "### BEGIN INIT INFO" and "### END INIT INFO".
+ *  Please refer to the bug 
+ *  	http://www.osdl.org/developer_bugzilla/show_bug.cgi?id=1250
+ */
+#if 0
 	while (NULL != fgets(buffer, BUFLEN, fp)) {
 		/* Handle the lines over BUFLEN(80) columns, only
 		 * the first part is compared.
@@ -484,11 +502,12 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 			next_continue = FALSE;
 		}
 
-		if ( 0 == strncasecmp(buffer , LSB_INITSCRIPT_BEGIN_TAG
-			, strlen(LSB_INITSCRIPT_BEGIN_TAG)) ) {
+		if ( 0 == strncasecmp(buffer , LSB_INITSCRIPT_INFOBEGIN_TAG
+			, strlen(LSB_INITSCRIPT_INFOBEGIN_TAG)) ) {
 			break;
 		}
 	}
+#endif
 
 	/* Enter into the lsb-compliant comment block */
 	while ( NULL != fgets(buffer, BUFLEN, fp) ) {
@@ -526,10 +545,14 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 			continue;
 		}
 
-		if ( 0 == strncasecmp(buffer, LSB_INITSCRIPT_END_TAG
-			, strlen(LSB_INITSCRIPT_END_TAG)) ) {
+		if ( 0 == strncasecmp(buffer, LSB_INITSCRIPT_INFOEND_TAG
+			, strlen(LSB_INITSCRIPT_INFOEND_TAG)) ) {
 			/* Get to the out border of LSB comment block */
 			break;
+		}
+
+		if ( buffer[0] != '#' ) {
+			break; /* Out of comment block in the beginning */
 		}
 	}
 	fclose(fp);
