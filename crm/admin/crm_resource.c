@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.30 2006/05/16 15:25:19 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.31 2006/05/19 17:17:45 lars Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -202,7 +202,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	}
 
 	if(attr_set == NULL) {
-		local_attr_set = crm_strdup(rsc->id);
+		local_attr_set = crm_concat("cli-ias", rsc_id, '-');
 		attr_set = local_attr_set;
 	}
 
