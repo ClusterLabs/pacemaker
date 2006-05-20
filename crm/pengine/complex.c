@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.87 2006/05/16 08:43:21 andrew Exp $ */
+/* $Id: complex.c,v 1.88 2006/05/20 07:55:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -187,6 +187,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		XML_RSC_ATTR_STICKINESS,
 		XML_RSC_ATTR_FAIL_STICKINESS,
 		XML_RSC_ATTR_TARGET_ROLE,
+		XML_RSC_ATTR_NOTIFY,
 	};
 
 	const char *rsc_attrs[] = {
@@ -289,7 +290,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	(*rsc)->priority	   = crm_parse_int(value, "0"); 
 	(*rsc)->effective_priority = (*rsc)->priority;
 
-	value = g_hash_table_lookup((*rsc)->parameters, "notify");
+	value = g_hash_table_lookup((*rsc)->parameters, XML_RSC_ATTR_NOTIFY);
 	(*rsc)->notify		   = crm_is_true(value); 
 	
 	value = g_hash_table_lookup((*rsc)->parameters, "is_managed");
