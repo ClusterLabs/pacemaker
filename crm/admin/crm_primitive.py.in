@@ -101,7 +101,7 @@ def cib_resource(doc, id, ra_class, type, provider):
 	    op.setAttribute("timeout", stop_timeout)
 
 	instance_attributes = doc.createElement("instance_attributes")
-	instance_attributes.setAttribute("id", id + "_defaults")
+	instance_attributes.setAttribute("id", id)
 	resource.appendChild(instance_attributes)
 	attributes = doc.createElement("attributes")
 	instance_attributes.appendChild(attributes)
@@ -160,7 +160,7 @@ def print_usage():
 	    + " [--rsc-colocation resource=score]*"
 	print "Example:\n\t" + sys.argv[0] \
 	    + " --name cluster_ip_1 --type IPaddr --provider heartbeat --class ocf "\
-	    + "--rsc-option ip=192.168.1.101 --rsc-location node1=500 | cibadmin -U -p"
+	    + "--rsc-option ip=192.168.1.101 --rsc-location node1=500 | cibadmin -C -p"
 	sys.exit(1)
     
 if __name__=="__main__" :
