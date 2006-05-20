@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.22 2006/05/08 20:35:13 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.23 2006/05/20 07:40:57 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -136,7 +136,7 @@ main(int argc, char **argv)
 				alter_debug(DEBUG_INC);
 				break;
 			case 'i':
-				interval = atoi(optarg);
+				interval = crm_get_msec(optarg);
 				break;
 			case 'n':
 				group_by_node = TRUE;
