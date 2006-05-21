@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.83 2006/05/15 10:21:05 andrew Exp $ */
+/* $Id: xml.c,v 1.84 2006/05/21 20:24:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1042,10 +1042,10 @@ crm_element_value_copy(const crm_data_t *data, const char *name)
 	char *value_copy = NULL;
 	crm_validate_data(data);
 	value = cl_get_string(data, name);
-#if XML_PARANOIA_CHECKS
-	CRM_CHECK(cl_is_allocated(value) == 1, return NULL);
-#endif
 	if(value != NULL) {
+#if XML_PARANOIA_CHECKS
+		CRM_CHECK(cl_is_allocated(value) == 1, return NULL);
+#endif
 		value_copy = crm_strdup(value);
 	}
 	return value_copy;
@@ -2114,6 +2114,20 @@ hash2field(gpointer key, gpointer value, gpointer user_data)
 	}
 }
 
+void
+hash2metafield(gpointer key, gpointer value, gpointer user_data) 
+{
+	char *crm_name = NULL;
+
+	if(key == NULL || value == NULL) {
+		return;
+	}
+	
+	crm_name = crm_concat(CRM_META, key, '_');
+	hash2field(crm_name, value, user_data);
+	crm_free(crm_name);
+}
+
 
 #if CRM_DEPRECATED_SINCE_2_0_3
 GHashTable *
@@ -2217,6 +2231,8 @@ tag_needs_id(const char *tag_name)
 		XML_CIB_TAG_CONSTRAINTS,
 		XML_CIB_TAG_STATUS,
 		XML_LRM_TAG_RESOURCES,
+		"configuration",
+		"crm_config",
 		"attributes",
 		"operations",
 	};
@@ -2281,49 +2297,38 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash,
 
 	tag_id = ID(xml_obj);
 	tag_name = TYPE(xml_obj);
+	
+	if(tag_needs_id(tag_name) == FALSE) {
+		crm_debug_5("%s does not need an ID", tag_name);
+		return modified;
+
+	} else if(tag_id != NULL && non_unique_allowed(tag_name)){
+		crm_debug_5("%s does not need top be unique", tag_name);
+		return modified;
+	}
+	
+	lookup_id = NULL;
+	if(tag_id != NULL) {
+		lookup_id = crm_concat(tag_name, tag_id, '-');
+		lookup_value = g_hash_table_lookup(id_hash, lookup_id);
+		if(lookup_value == NULL) {
+			g_hash_table_insert(id_hash, lookup_id, crm_strdup(tag_id));
+			return modified;
+		}
+		modified |= (!silent_rename);
+		
+	} else {
+		modified |= (!silent_add);
+	}
+
 	if(tag_id != NULL) {
 		old_id = crm_strdup(tag_id);
 	}
 	
-	xml_prop_iter(
-		xml_obj, local_prop_name, local_prop_value,
-		
-		if(tag_needs_id(tag_name) == FALSE) {
-			crm_debug_5("%s does not need an ID", tag_name);
-			break;
-
-		} else if(tag_id != NULL && non_unique_allowed(tag_name)){
-			crm_debug_5("%s does not need top be unique", tag_name);
-			break;
-
-		} else if(safe_str_eq(local_prop_name, XML_DIFF_MARKER)) {
-			crm_err("Detected "XML_DIFF_MARKER" attribute");
-			continue;
-		}
-
-		lookup_id = NULL;
-		if(tag_id != NULL) {
-			lookup_id = crm_concat(tag_name, tag_id, '-');
-			lookup_value = g_hash_table_lookup(id_hash, lookup_id);
-			if(lookup_value == NULL) {
-				g_hash_table_insert(
-					id_hash, lookup_id, crm_strdup(tag_id));
-				break;
-			}
-			modified |= (!silent_rename);
-
-		} else {
-			modified |= (!silent_add);
-		}
-		
-		crm_free(lookup_id);
-		assign_uuid(xml_obj);
-		tag_id = ID(xml_obj);
-
-		/* the first attribute was enough to do everything needed */
-		break;
-		);
-
+	crm_free(lookup_id);
+	assign_uuid(xml_obj);
+	tag_id = ID(xml_obj);
+	
 	if(modified == FALSE) {
 		/* nothing to report */
 		

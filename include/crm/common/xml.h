@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.46 2006/05/15 10:21:05 andrew Exp $ */
+/* $Id: xml.h,v 1.47 2006/05/21 20:24:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,6 +54,8 @@ extern GHashTable *xml2list_202(crm_data_t *parent);
 #endif
 extern void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
 extern void hash2field(gpointer key, gpointer value, gpointer user_data);
+extern void hash2metafield(gpointer key, gpointer value, gpointer user_data);
+
 extern gboolean do_id_check(crm_data_t *xml_obj, GHashTable *id_hash,
 			    gboolean silent_add, gboolean silent_rename);
 
