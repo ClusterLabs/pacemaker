@@ -486,10 +486,11 @@ build_operation_update(
 	crm_xml_add_int(xml_op,  XML_LRM_ATTR_CALLID, op->call_id);
 
 	/* set these on 'xml_rsc' too to make life easy for the PE */
+	crm_xml_add(xml_op, XML_ATTR_CRM_VERSION, caller_version);
 	crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op->rc);
 	crm_xml_add_int(xml_op, XML_LRM_ATTR_OPSTATUS, op->op_status);
 	crm_xml_add_int(xml_op, XML_LRM_ATTR_INTERVAL, op->interval);
-
+	
 	if(safe_str_neq(op->op_type, CRMD_ACTION_STOP)) {
 		/* this will enable us to later determin that the
 		 *   resource's parameters have changed and we should force
@@ -501,7 +502,7 @@ build_operation_update(
 		crm_data_t *args_xml = NULL;
 		crm_data_t *args_parent = NULL;
 #if CRM_DEPRECATED_SINCE_2_0_4
-		if(compare_version("1.0.5", caller_version) > 0) {
+		if(compare_version("1.0.4", caller_version) > 0) {
 			args_parent = xml_op;
 		}
 #endif
@@ -877,22 +878,23 @@ do_lrm_invoke(long long action,
 			const char *op_task = NULL;
 			const char *op_interval = NULL;
 
-			crm_log_xml_debug(input->xml, "CancelOp");
-
-			op_interval = crm_element_value(params, "interval");
-			
-			if(params != NULL) {
-				op_task = crm_element_value(
-					params, XML_LRM_ATTR_TASK);
-#if CRM_DEPRECATED_SINCE_2_0_4
-				if(op_task == NULL) {
-					op_task = crm_element_value(params, "task");
-				}
-#endif
-			}
 			CRM_CHECK(params != NULL,
 				  crm_log_xml_warn(input->xml, "Bad command");
 				  return I_NULL);
+
+			op_task = crm_element_value(params, crm_meta_name(XML_LRM_ATTR_TASK));
+			op_interval = crm_element_value(params, crm_meta_name("interval"));
+#if CRM_DEPRECATED_SINCE_2_0_5
+			if(op_interval == NULL) {
+				op_interval = crm_element_value(params, "interval");
+			}
+			if(op_task == NULL) {
+				op_task = crm_element_value(params, XML_LRM_ATTR_TASK);
+				if(op_task == NULL) {
+					op_task = crm_element_value(params, "task");
+				}
+			}
+#endif
 			CRM_CHECK(op_task != NULL,
 				  crm_log_xml_warn(input->xml, "Bad command");
 				  return I_NULL);
@@ -962,6 +964,10 @@ lrm_op_t *
 construct_op(crm_data_t *rsc_op, const char *rsc_id, const char *operation)
 {
 	lrm_op_t *op = NULL;
+	const char *op_delay = NULL;
+	const char *op_timeout = NULL;
+	const char *op_interval = NULL;
+	
 	const char *transition = NULL;
 	CRM_DEV_ASSERT(rsc_id != NULL);
 
@@ -1007,29 +1013,35 @@ construct_op(crm_data_t *rsc_op, const char *rsc_id, const char *operation)
 	if(op->params == NULL) {
 		CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
 	}
+
+	op_delay = g_hash_table_lookup(op->params, crm_meta_name("start_delay"));
+	op_timeout = g_hash_table_lookup(op->params, crm_meta_name("timeout"));
+	op_interval = g_hash_table_lookup(op->params, crm_meta_name("interval"));
+#if CRM_DEPRECATED_SINCE_2_0_5
+	if(op_delay == NULL) {
+		op_delay = g_hash_table_lookup(op->params, "start_delay");
+	}
+	if(op_timeout == NULL) {
+		op_timeout = g_hash_table_lookup(op->params, "timeout");
+	}
+	if(op_interval == NULL) {
+		op_interval = g_hash_table_lookup(op->params, "interval");
+	}
+#endif
 	
-	op->interval = crm_parse_int(
-		g_hash_table_lookup(op->params, "interval"),    "0");
-	op->timeout  = crm_parse_int(
-		g_hash_table_lookup(op->params, "timeout"),     "0");
-	op->start_delay = crm_parse_int(
-		g_hash_table_lookup(op->params, "start_delay"), "0");
+	op->interval = crm_parse_int(op_interval, "0");
+	op->timeout  = crm_parse_int(op_timeout,  "0");
+	op->start_delay = crm_parse_int(op_delay, "0");
 
 	/* sanity */
 	if(op->interval < 0) {
 		op->interval = 0;
-		g_hash_table_replace(
-			op->params, crm_strdup("interval"), crm_strdup("0"));
 	}
 	if(op->timeout < 0) {
 		op->timeout = 0;
-		g_hash_table_replace(
-			op->params, crm_strdup("timeout"), crm_strdup("0"));
 	}
 	if(op->start_delay < 0) {
 		op->start_delay = 0;
-		g_hash_table_replace(
-			op->params, crm_strdup("start_delay"), crm_strdup("0"));
 	}
 
 	transition = crm_element_value(rsc_op, XML_ATTR_TRANSITION_KEY);
@@ -1038,11 +1050,12 @@ construct_op(crm_data_t *rsc_op, const char *rsc_id, const char *operation)
 	op->user_data = crm_strdup(transition);
 	op->user_data_len = 1+strlen(op->user_data);
 
-	if(safe_str_eq(operation, CRMD_ACTION_START)
-	   || safe_str_eq(operation, CRMD_ACTION_STOP)) {
-		char *interval_s = g_hash_table_lookup(op->params, "interval");
- 		CRM_CHECK(op->interval == 0, return NULL);
- 		CRM_CHECK(interval_s == NULL, return NULL);
+	if(op->interval != 0) {
+		if(safe_str_eq(operation, CRMD_ACTION_START)
+		   || safe_str_eq(operation, CRMD_ACTION_STOP)) {
+			crm_err("Start and Stop actions cannot have an interval");
+			op->interval = 0;
+		}
 	}
 
 	crm_debug_2("Constructed %s op for %s: interval=%d",
@@ -1211,7 +1224,6 @@ stop_recurring_action(gpointer key, gpointer value, gpointer user_data)
 		} else {
 			crm_err("Invalid call_id %d for %s",
 				op->call_id, rsc->id);
-			/* TODO: we probably need to look up the LRM to find it */
 		}
 	}
 }
@@ -1440,15 +1452,15 @@ gboolean
 process_lrm_event(lrm_op_t *op)
 {
 	const char *last_op = NULL;
-	const char *probe_s = NULL;
 	gboolean is_probe = FALSE;
 	int log_rsc_err = LOG_WARNING;
 	
 	CRM_CHECK(op != NULL, return I_NULL);
 	CRM_CHECK(op->rsc_id != NULL, return I_NULL);
 
-	probe_s = g_hash_table_lookup(op->params, XML_ATTR_LRM_PROBE);
-	is_probe = crm_is_true(probe_s);
+	if(op->interval == 0 && safe_str_eq(op->op_type, CRMD_ACTION_STATUS)) {
+		is_probe = TRUE;
+	}
 
 	switch(op->op_status) {
 		case LRM_OP_PENDING:

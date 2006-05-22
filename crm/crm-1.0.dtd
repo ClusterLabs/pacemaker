@@ -245,6 +245,7 @@
           rc_code               CDATA #REQUIRED
           call_id               CDATA #REQUIRED
           rsc_state             CDATA #IMPLIED
+          crm_feature_set       CDATA #IMPLIED
           crm-debug-origin      CDATA #IMPLIED
           transition_key        CDATA #IMPLIED
           op_digest             CDATA #IMPLIED
