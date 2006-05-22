@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.88 2006/05/22 08:27:33 andrew Exp $ */
+/* $Id: incarnation.c,v 1.89 2006/05/22 15:31:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -346,12 +346,19 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 			      if(child->provisional == FALSE) {
 				      CRM_CHECK(child->color != NULL, continue);
 				      current = child->color->details->chosen_node;
+
 			      } else if(child->running_on != NULL) {
 				      current = child->running_on->data;
 			      }
 			      
 			      if(current == NULL) {
 				      crm_debug_2("Not active: %s", child->id);
+				      continue;
+
+			      } else if(current->details->online == FALSE
+					|| current->details->unclean
+					|| current->details->shutdown) {
+				      crm_debug_2("Unavailable node: %s", child->id);
 				      continue;
 
 			      } else if(current->details != a_node->details) {
@@ -379,6 +386,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 				      continue;
 			      }
 
+			      crm_debug_2("Assigning color: %s", child->id);
 			      native_assign_color(child, new_color);
 			      
 			   );
@@ -398,6 +406,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	/* allocate the rest */
 	slist_iter(child, resource_t, clone_data->child_list, lpc2,
 		   if(child->provisional == FALSE) {
+			   crm_debug_2("Skipping allocated resource: %s", child->id);
 			   continue;
 		   }
 		   crm_debug_2("Processing unalloc'd resource: %s", child->id);
