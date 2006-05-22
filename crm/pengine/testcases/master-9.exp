@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="34" operation="stop" operation_key="child_DoFencing:1_stop_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <primitive id="child_DoFencing:1" long-id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
-         <attributes crm_feature_set="1.0.6" hostlist="sgi2 ibm1 va1 test02 " CRM_meta_clone_max="4" CRM_meta_clone="1"/>
+         <attributes crm_feature_set="1.0.6" hostlist="sgi2 ibm1 va1 test02 " CRM_meta_clone_max="4" CRM_meta_clone="1" CRM_meta_id="child_DoFencing" CRM_meta_class="stonith" CRM_meta_type="ssh" CRM_meta_clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -15,7 +15,7 @@
    <synapse id="1">
      <action_set>
        <pseudo_event id="37" operation="stop" operation_key="DoFencing_stop_0">
-         <attributes crm_feature_set="1.0.6"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_id="DoFencing" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -23,7 +23,7 @@
    <synapse id="2" priority="1000000">
      <action_set>
        <pseudo_event id="38" operation="stopped" operation_key="DoFencing_stopped_0">
-         <attributes crm_feature_set="1.0.6"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_id="DoFencing" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -39,7 +39,7 @@
      <action_set>
        <rsc_op id="5" operation="monitor" operation_key="ocf_msdummy:2_monitor_0" on_node="va1" on_node_uuid="b8f81462-2d65-42bf-bbb1-70db0ea29e5b">
          <primitive id="ocf_msdummy:2" long-id="master_rsc_1:ocf_msdummy:2" class="ocf" provider="heartbeat" type="/usr/lib64/heartbeat/cts/OCFMSDummy"/>
-         <attributes crm_feature_set="1.0.6" crm_meta_role="Slave" logfile="/var/log/cts_ocfdummy.log" crm_meta_stateful="true" CRM_meta_clone_max="8" CRM_meta_clone="2" CRM_meta_op_target_rc="7"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_role="Slave" logfile="/var/log/cts_ocfdummy.log" CRM_meta_stateful="true" CRM_meta_clone_max="8" CRM_meta_clone="2" CRM_meta_op_target_rc="7" CRM_meta_id="ocf_msdummy" CRM_meta_class="ocf" CRM_meta_provider="heartbeat" CRM_meta_type="/usr/lib64/heartbeat/cts/OCFMSDummy" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -48,7 +48,7 @@
      <action_set>
        <rsc_op id="8" operation="monitor" operation_key="ocf_msdummy:2_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <primitive id="ocf_msdummy:2" long-id="master_rsc_1:ocf_msdummy:2" class="ocf" provider="heartbeat" type="/usr/lib64/heartbeat/cts/OCFMSDummy"/>
-         <attributes crm_feature_set="1.0.6" crm_meta_role="Slave" logfile="/var/log/cts_ocfdummy.log" crm_meta_stateful="true" CRM_meta_clone_max="8" CRM_meta_clone="2" CRM_meta_op_target_rc="7"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_role="Slave" logfile="/var/log/cts_ocfdummy.log" CRM_meta_stateful="true" CRM_meta_clone_max="8" CRM_meta_clone="2" CRM_meta_op_target_rc="7" CRM_meta_id="ocf_msdummy" CRM_meta_class="ocf" CRM_meta_provider="heartbeat" CRM_meta_type="/usr/lib64/heartbeat/cts/OCFMSDummy" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -57,7 +57,7 @@
      <action_set>
        <rsc_op id="6" operation="monitor" operation_key="ocf_msdummy:3_monitor_0" on_node="va1" on_node_uuid="b8f81462-2d65-42bf-bbb1-70db0ea29e5b">
          <primitive id="ocf_msdummy:3" long-id="master_rsc_1:ocf_msdummy:3" class="ocf" provider="heartbeat" type="/usr/lib64/heartbeat/cts/OCFMSDummy"/>
-         <attributes crm_feature_set="1.0.6" crm_meta_role="Stopped" logfile="/var/log/cts_ocfdummy.log" crm_meta_stateful="true" CRM_meta_clone_max="8" CRM_meta_clone="3" CRM_meta_op_target_rc="7"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_role="Stopped" logfile="/var/log/cts_ocfdummy.log" CRM_meta_stateful="true" CRM_meta_clone_max="8" CRM_meta_clone="3" CRM_meta_op_target_rc="7" CRM_meta_id="ocf_msdummy" CRM_meta_class="ocf" CRM_meta_provider="heartbeat" CRM_meta_type="/usr/lib64/heartbeat/cts/OCFMSDummy" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -66,7 +66,7 @@
      <action_set>
        <rsc_op id="9" operation="monitor" operation_key="ocf_msdummy:3_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <primitive id="ocf_msdummy:3" long-id="master_rsc_1:ocf_msdummy:3" class="ocf" provider="heartbeat" type="/usr/lib64/heartbeat/cts/OCFMSDummy"/>
-         <attributes crm_feature_set="1.0.6" crm_meta_role="Stopped" logfile="/var/log/cts_ocfdummy.log" crm_meta_stateful="true" CRM_meta_clone_max="8" CRM_meta_clone="3" CRM_meta_op_target_rc="7"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_role="Stopped" logfile="/var/log/cts_ocfdummy.log" CRM_meta_stateful="true" CRM_meta_clone_max="8" CRM_meta_clone="3" CRM_meta_op_target_rc="7" CRM_meta_id="ocf_msdummy" CRM_meta_class="ocf" CRM_meta_provider="heartbeat" CRM_meta_type="/usr/lib64/heartbeat/cts/OCFMSDummy" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs/>

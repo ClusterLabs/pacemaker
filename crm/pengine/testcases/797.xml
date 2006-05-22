@@ -25,7 +25,7 @@
        </primitive>
        <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
          <operations>
-           <op id="1" name="monitor" interval="5s" timeout="20s"/>
+           <op id="2" name="monitor" interval="5s" timeout="20s"/>
          </operations>
          <instance_attributes>
            <attributes>
@@ -35,7 +35,7 @@
        </primitive>
        <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
          <operations>
-           <op id="1" name="monitor" interval="5s" timeout="20s"/>
+           <op id="3" name="monitor" interval="5s" timeout="20s"/>
          </operations>
          <instance_attributes>
            <attributes>
@@ -45,7 +45,7 @@
        </primitive>
        <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
          <operations>
-           <op id="1" name="monitor" interval="5s" timeout="20s"/>
+           <op id="4" name="monitor" interval="5s" timeout="20s"/>
          </operations>
          <instance_attributes>
            <attributes>
@@ -55,7 +55,7 @@
        </primitive>
        <primitive id="rsc_c001n01" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
          <operations>
-           <op id="1" name="monitor" interval="5s" timeout="20s"/>
+           <op id="5" name="monitor" interval="5s" timeout="20s"/>
          </operations>
          <instance_attributes>
            <attributes>
@@ -72,8 +72,8 @@
          </instance_attributes>
          <primitive id="child_DoFencing" class="stonith" type="ssh">
            <operations>
-             <op id="1" name="monitor" interval="5s" timeout="20s" prereq="nothing"/>
-             <op id="2" name="start" timeout="20s" prereq="nothing"/>
+             <op id="6" name="monitor" interval="5s" timeout="20s" prereq="nothing"/>
+             <op id="7" name="start" timeout="20s" prereq="nothing"/>
            </operations>
            <instance_attributes>
              <attributes>

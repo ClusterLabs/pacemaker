@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="4" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="192.168.100.180" CRM_meta_op_target_rc="7"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.180" CRM_meta_op_target_rc="7" CRM_meta_id="DcIPaddr" CRM_meta_is_managed="1" CRM_meta_class="ocf" CRM_meta_provider="heartbeat" CRM_meta_type="IPaddr"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -12,7 +12,7 @@
      <action_set>
        <rsc_op id="5" operation="monitor" operation_key="child_192.168.100.181_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="child_192.168.100.181" long-id="group-1:child_192.168.100.181" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="192.168.100.181" CRM_meta_op_target_rc="7"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.181" CRM_meta_op_target_rc="7" CRM_meta_id="child_192.168.100.181" CRM_meta_class="ocf" CRM_meta_provider="heartbeat" CRM_meta_type="IPaddr"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -21,7 +21,7 @@
      <action_set>
        <rsc_op id="6" operation="monitor" operation_key="child_192.168.100.182_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="child_192.168.100.182" long-id="group-1:child_192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="192.168.100.182" CRM_meta_op_target_rc="7"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.182" CRM_meta_op_target_rc="7" CRM_meta_id="child_192.168.100.182" CRM_meta_class="ocf" CRM_meta_provider="heartbeat" CRM_meta_type="IPaddr"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -30,7 +30,7 @@
      <action_set>
        <rsc_op id="7" operation="monitor" operation_key="child_192.168.100.183_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="child_192.168.100.183" long-id="group-1:child_192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="192.168.100.183" CRM_meta_op_target_rc="7"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.183" CRM_meta_op_target_rc="7" CRM_meta_id="child_192.168.100.183" CRM_meta_class="ocf" CRM_meta_provider="heartbeat" CRM_meta_type="IPaddr"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -39,7 +39,7 @@
      <action_set>
        <rsc_op id="8" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="rsc_c001n08" long-id="rsc_c001n08" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="192.168.100.184" CRM_meta_op_target_rc="7"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.184" CRM_meta_op_target_rc="7" CRM_meta_id="rsc_c001n08" CRM_meta_is_managed="1" CRM_meta_class="ocf" CRM_meta_provider="heartbeat" CRM_meta_type="IPaddr"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -48,7 +48,7 @@
      <action_set>
        <rsc_op id="9" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="rsc_c001n02" long-id="rsc_c001n02" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="192.168.100.185" CRM_meta_op_target_rc="7"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.185" CRM_meta_op_target_rc="7" CRM_meta_id="rsc_c001n02" CRM_meta_is_managed="1" CRM_meta_class="ocf" CRM_meta_provider="heartbeat" CRM_meta_type="IPaddr"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -57,7 +57,7 @@
      <action_set>
        <rsc_op id="10" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="rsc_c001n03" long-id="rsc_c001n03" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="192.168.100.186" CRM_meta_op_target_rc="7"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.186" CRM_meta_op_target_rc="7" CRM_meta_id="rsc_c001n03" CRM_meta_is_managed="1" CRM_meta_class="ocf" CRM_meta_provider="heartbeat" CRM_meta_type="IPaddr"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -66,7 +66,7 @@
      <action_set>
        <rsc_op id="11" operation="monitor" operation_key="rsc_c001n01_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="rsc_c001n01" long-id="rsc_c001n01" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="192.168.100.187" CRM_meta_op_target_rc="7"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.187" CRM_meta_op_target_rc="7" CRM_meta_id="rsc_c001n01" CRM_meta_is_managed="1" CRM_meta_class="ocf" CRM_meta_provider="heartbeat" CRM_meta_type="IPaddr"/>
        </rsc_op>
      </action_set>
      <inputs/>

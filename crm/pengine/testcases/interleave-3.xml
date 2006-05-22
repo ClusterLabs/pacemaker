@@ -36,7 +36,7 @@
       </primitive>
       <primitive id="rsc_c001n09" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0">
         <operations>
-          <op id="1" name="monitor" interval="5s" timeout="20s"/>
+          <op id="2" name="monitor" interval="5s" timeout="20s"/>
         </operations>
         <instance_attributes>
           <attributes>
@@ -46,7 +46,7 @@
       </primitive>
       <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0">
         <operations>
-          <op id="1" name="monitor" interval="5s" timeout="20s"/>
+          <op id="3" name="monitor" interval="5s" timeout="20s"/>
         </operations>
         <instance_attributes>
           <attributes>
@@ -56,7 +56,7 @@
       </primitive>
       <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0">
         <operations>
-          <op id="1" name="monitor" interval="5s" timeout="20s"/>
+          <op id="4" name="monitor" interval="5s" timeout="20s"/>
         </operations>
         <instance_attributes>
           <attributes>
@@ -66,7 +66,7 @@
       </primitive>
       <primitive id="rsc_c001n04" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0">
         <operations>
-          <op id="1" name="monitor" interval="5s" timeout="20s"/>
+          <op id="5" name="monitor" interval="5s" timeout="20s"/>
         </operations>
         <instance_attributes>
           <attributes>
@@ -76,7 +76,7 @@
       </primitive>
       <primitive id="rsc_c001n05" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0">
         <operations>
-          <op id="1" name="monitor" interval="5s" timeout="20s"/>
+          <op id="6" name="monitor" interval="5s" timeout="20s"/>
         </operations>
         <instance_attributes>
           <attributes>
@@ -86,7 +86,7 @@
       </primitive>
       <primitive id="rsc_c001n06" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0">
         <operations>
-          <op id="1" name="monitor" interval="5s" timeout="20s"/>
+          <op id="7" name="monitor" interval="5s" timeout="20s"/>
         </operations>
         <instance_attributes>
           <attributes>
@@ -96,7 +96,7 @@
       </primitive>
       <primitive id="rsc_c001n07" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0">
         <operations>
-          <op id="1" name="monitor" interval="5s" timeout="20s"/>
+          <op id="8" name="monitor" interval="5s" timeout="20s"/>
         </operations>
         <instance_attributes>
           <attributes>
@@ -106,7 +106,7 @@
       </primitive>
       <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="0">
         <operations>
-          <op id="1" name="monitor" interval="5s" timeout="20s"/>
+          <op id="9" name="monitor" interval="5s" timeout="20s"/>
         </operations>
         <instance_attributes>
           <attributes>
@@ -123,7 +123,7 @@
         </instance_attributes>
         <primitive id="child_DoFencing" class="stonith" type="ssh">
           <operations>
-            <op id="1" name="monitor" interval="5s" timeout="20s"/>
+            <op id="10" name="monitor" interval="5s" timeout="20s"/>
           </operations>
           <instance_attributes>
             <attributes>
@@ -141,7 +141,7 @@
         </instance_attributes>
         <primitive id="child_CloneSet" class="stonith" type="ssh">
           <operations>
-            <op id="1" name="monitor" interval="5s" timeout="20s"/>
+            <op id="11" name="monitor" interval="5s" timeout="20s"/>
           </operations>
           <instance_attributes>
             <attributes>
