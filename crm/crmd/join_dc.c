@@ -69,7 +69,7 @@ update_attrd(void)
 		}
 		
 	} else {
-		crm_err("Couldn't connect to attrd");
+		crm_info("Couldn't connect to attrd this time");
 	}
 }
 
