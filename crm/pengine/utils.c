@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.137 2006/05/22 08:27:33 andrew Exp $ */
+/* $Id: utils.c,v 1.138 2006/05/22 10:56:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -989,9 +989,22 @@ unpack_operation(
 	if(xml_obj == NULL) {
 		return;
 	}
+
+	xml_prop_iter(xml_obj, p_name, p_value,
+		if(p_value != NULL) {
+			g_hash_table_insert(action->meta, crm_strdup(p_name),
+					    crm_strdup(p_value));
+		}
+		);
+
+	unpack_instance_attributes(xml_obj, XML_TAG_META_SETS,
+				   NULL, action->meta, NULL,0, data_set);
 	
+	unpack_instance_attributes(xml_obj, XML_TAG_ATTR_SETS,
+				   NULL, action->meta, NULL,0, data_set);
+
 	for(;lpc < DIMOF(fields); lpc++) {
-		value = crm_element_value(xml_obj, fields[lpc]);
+		value = g_hash_table_lookup(action->meta, fields[lpc]);
 		if(value != NULL) {
 			char *tmp_ms = NULL;
 			int tmp_i = crm_get_msec(value);
@@ -999,7 +1012,7 @@ unpack_operation(
 				tmp_i = 0;
 			}
 			tmp_ms = crm_itoa(tmp_i);
-			g_hash_table_insert(
+			g_hash_table_replace(
 				action->meta, crm_strdup(fields[lpc]), tmp_ms);
 		}
 	}
