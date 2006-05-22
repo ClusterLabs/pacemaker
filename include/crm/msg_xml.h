@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.53 2006/05/05 12:55:41 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.54 2006/05/22 08:33:25 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -120,6 +120,7 @@
 
 #define XML_CIB_TAG_PROPSET	   	"cluster_property_set"
 #define XML_TAG_ATTR_SETS	   	"instance_attributes"
+#define XML_TAG_META_SETS	   	"meta_attributes"
 #define XML_TAG_ATTRS			"attributes"
 #define XML_TAG_PARAMS			"parameters"
 
@@ -241,9 +242,9 @@
 #define XML_ATTR_TRANSITION_MAGIC	"transition_magic"
 #define XML_ATTR_TRANSITION_KEY		"transition_key"
 
-#define XML_ATTR_TE_NOWAIT		"te-no-wait"
-#define XML_ATTR_TE_TARGET_RC		"te-target-rc"
-#define XML_ATTR_TE_ALLOWFAIL		"te-allow-fail"
+#define XML_ATTR_TE_NOWAIT		"op_no_wait"
+#define XML_ATTR_TE_TARGET_RC		"op_target_rc"
+#define XML_ATTR_TE_ALLOWFAIL		"op_allow_fail"
 #define XML_ATTR_LRM_PROBE		"lrm-is-probe"
 #define XML_TAG_TRANSIENT_NODEATTRS	"transient_attributes"
 
