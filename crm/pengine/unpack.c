@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.195 2006/05/22 08:27:33 andrew Exp $ */
+/* $Id: unpack.c,v 1.196 2006/05/22 15:30:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -596,27 +596,32 @@ determine_online_status(
 	}
 	
 	if(online) {
-		crm_debug_2("Node %s is online", this_node->details->uname);
 		this_node->details->online = TRUE;
 
 	} else {
 		/* remove node from contention */
 		this_node->fixed = TRUE;
 		this_node->weight = -INFINITY;
-		crm_debug_2("Node %s is down", this_node->details->uname);
 	}
 
 	if(online && this_node->details->shutdown) {
 		/* dont run resources here */
 		this_node->fixed = TRUE;
 		this_node->weight = -INFINITY;
-		crm_debug_2("Node %s is due for shutdown",
-			    this_node->details->uname);
 	}	
-	
+
 	if(this_node->details->unclean) {
 		pe_proc_warn("Node %s is unclean", this_node->details->uname);
+
+	} else if(this_node->details->online) {
+		crm_info("Node %s is %s", this_node->details->uname,
+			 this_node->details->shutdown?"shutting down":"online");
+
+	} else {
+		crm_debug_2("Node %s is offline", this_node->details->uname);
 	}
+	
+	
 
 	return online;
 }
@@ -1225,14 +1230,14 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	if(interval > 0) {
 		crm_data_t *op_match = NULL;
 
-		crm_err("Checking parameters for %s %s", key, task);
+		crm_debug_2("Checking parameters for %s %s", key, task);
 		op_match = find_rsc_op_entry(rsc, key);
 
 		if(op_match == NULL && data_set->stop_action_orphans) {
 			/* create a cancel action */
 			action_t *cancel = NULL;
-			pe_config_err("Orphan action will be stopped: %s on %s",
-				      key, active_node->details->uname);
+			crm_info("Orphan action will be stopped: %s on %s",
+				 key, active_node->details->uname);
 
 			crm_free(key);
 			key = generate_op_key(rsc->id, CRMD_ACTION_CANCEL, interval);
@@ -1251,8 +1256,8 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 				pe_ordering_optional, data_set);
 		}
 		if(op_match == NULL) {
-			pe_config_err("Orphan action detected: %s on %s",
-				      key, active_node->details->uname);
+			crm_debug("Orphan action detected: %s on %s",
+				  key, active_node->details->uname);
 			return TRUE;
 		}
 	}
