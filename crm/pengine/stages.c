@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.93 2006/05/15 09:40:54 andrew Exp $ */
+/* $Id: stages.c,v 1.94 2006/05/22 08:27:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -197,7 +197,7 @@ stage3(pe_working_set_t *data_set)
 			NULL, crm_strdup(CRM_OP_PROBED),
 			CRM_OP_PROBED, node, FALSE, TRUE, data_set);
 		probe_node_complete->optional = crm_is_true(probed);
-		add_hash_param(probe_node_complete->extra,
+		add_hash_param(probe_node_complete->meta,
 			       XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
 		
 		custom_action_order(NULL, NULL, probe_node_complete,
@@ -346,15 +346,15 @@ stage6(pe_working_set_t *data_set)
 			stonith_op->runnable = TRUE;
 
 			add_hash_param(
-				stonith_op->extra, XML_LRM_ATTR_TARGET,
+				stonith_op->meta, XML_LRM_ATTR_TARGET,
 				node->details->uname);
 
 			add_hash_param(
-				stonith_op->extra, XML_LRM_ATTR_TARGET_UUID,
+				stonith_op->meta, XML_LRM_ATTR_TARGET_UUID,
 				node->details->id);
 
 			add_hash_param(
-				stonith_op->extra, "stonith_action",
+				stonith_op->meta, "stonith_action",
 				data_set->stonith_action);
 			
 			if(down_op != NULL) {
@@ -380,7 +380,7 @@ stage6(pe_working_set_t *data_set)
 		crm_debug_2("Ordering shutdowns before %s on %s (DC)",
 			down_op->task, down_op->node->details->uname);
 
-		add_hash_param(dc_down->extra, XML_ATTR_TE_NOWAIT,
+		add_hash_param(dc_down->meta, XML_ATTR_TE_NOWAIT,
 			       XML_BOOLEAN_TRUE);
 		
 		slist_iter(

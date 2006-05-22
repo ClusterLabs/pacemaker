@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.110 2006/05/05 13:08:49 andrew Exp $ */
+/* $Id: pengine.h,v 1.111 2006/05/22 08:27:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -317,6 +317,7 @@ struct resource_s {
 		enum rsc_role_e role;
 		enum rsc_role_e next_role;
 
+		GHashTable *meta;	   
 		GHashTable *parameters;	   
 };
 
@@ -372,6 +373,7 @@ struct action_s
 		
 		int seen_count;
 
+		GHashTable *meta;
 		GHashTable *extra;
 		GHashTable *notify_keys;  /* do NOT free */
 		

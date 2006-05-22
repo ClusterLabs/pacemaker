@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.133 2006/05/10 17:08:45 andrew Exp $ */
+/* $Id: native.c,v 1.134 2006/05/22 08:27:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -451,8 +451,8 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 					FALSE, TRUE, data_set);
 
 				mon->task = CRMD_ACTION_CANCEL;
-				add_hash_param(mon->extra, XML_LRM_ATTR_INTERVAL, interval);
-				add_hash_param(mon->extra, "task", name);
+				add_hash_param(mon->meta, XML_LRM_ATTR_INTERVAL, interval);
+				add_hash_param(mon->meta, XML_LRM_ATTR_TASK, name);
 				
 				custom_action_order(
 					rsc, NULL, mon,
@@ -500,7 +500,7 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 
 		if(rsc->next_role == RSC_ROLE_MASTER) {
 			char *running_master = crm_itoa(EXECRA_RUNNING_MASTER);
-			add_hash_param(mon->extra, XML_ATTR_TE_TARGET_RC, running_master);
+			add_hash_param(mon->meta, XML_ATTR_TE_TARGET_RC, running_master);
 			custom_action_order(
 				rsc, promote_key(rsc), NULL,
 				rsc, NULL, mon,
@@ -1679,8 +1679,10 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 		crm_debug_4("No notificaitons required for %s", op->task);
 		return;
 	}
-
-	next_node = rsc->color->details->chosen_node;
+	if(rsc->color != NULL) {
+		next_node = rsc->color->details->chosen_node;
+	}
+	
 	op_key = generate_op_key(rsc->id, op->task, 0);
 	possible_matches = find_actions(rsc->actions, op_key, NULL);
 	
@@ -1753,8 +1755,8 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 
 	CRM_CHECK(node != NULL, return NULL);
 
-	value = g_hash_table_lookup(op->extra, "notify_type");
-	task = g_hash_table_lookup(op->extra, "notify_operation");
+	value = g_hash_table_lookup(op->meta, "notify_type");
+	task = g_hash_table_lookup(op->meta, "notify_operation");
 
 	crm_debug_2("Creating actions for %s: %s (%s-%s)",
 		    op->uuid, rsc->id, value, task);
@@ -1762,7 +1764,7 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	key = generate_notify_key(rsc->id, value, task);
 	trigger = custom_action(rsc, key, op->task, node,
 				op->optional, TRUE, data_set);
-	g_hash_table_foreach(op->extra, dup_attr, trigger->extra);
+	g_hash_table_foreach(op->meta, dup_attr, trigger->extra);
 	trigger->notify_keys = n_data->keys;
 
 	/* pseudo_notify before notify */
@@ -1781,7 +1783,7 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	op->actions_after = g_list_append(op->actions_after, wrapper);
 
 	
-	value = g_hash_table_lookup(op->extra, "notify_confirm");
+	value = g_hash_table_lookup(op->meta, "notify_confirm");
 	if(crm_is_true(value)) {
 		/* notify before pseudo_notified */
 		crm_debug_3("Ordering %s before %s (%d->%d)",
@@ -1970,7 +1972,7 @@ DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 	refresh = custom_action(
 		NULL, crm_strdup(CRM_OP_LRM_REFRESH), CRM_OP_LRM_REFRESH,
 		node, FALSE, TRUE, data_set);
-	add_hash_param(refresh->extra, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+	add_hash_param(refresh->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
 
 	custom_action_order(
 		rsc, NULL, delete, NULL, NULL, refresh, 
@@ -2093,16 +2095,11 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	
 	crm_notice("%s: Created probe for %s", node->details->uname, rsc->id);
 	
-	g_hash_table_insert(probe->extra,
-			    crm_strdup(XML_ATTR_TE_TARGET_RC), target_rc);
-
-	g_hash_table_insert(probe->extra,
-			    crm_strdup(XML_ATTR_LRM_PROBE),
-			    crm_strdup(XML_BOOLEAN_TRUE));
-	
+	add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, target_rc);
 	custom_action_order(rsc, NULL, probe, rsc, NULL, complete,
-			    pe_ordering_manditory, data_set);	
+			    pe_ordering_manditory, data_set);
 
+	crm_free(target_rc);
 	return TRUE;
 }
 

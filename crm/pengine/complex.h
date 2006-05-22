@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.33 2006/05/05 13:08:49 andrew Exp $ */
+/* $Id: complex.h,v 1.34 2006/05/22 08:27:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -234,7 +234,6 @@ extern void common_agent_constraints(
 extern void unpack_instance_attributes(
 	crm_data_t *xml_obj, const char *set_name, node_t *node, GHashTable *hash,
 	const char **attr_filter, int attrs_length, pe_working_set_t *data_set);
-extern void add_rsc_param(resource_t *rsc, const char *name, const char *value);
 extern void add_hash_param(GHashTable *hash, const char *name, const char *value);
 
 #if CURSES_ENABLED

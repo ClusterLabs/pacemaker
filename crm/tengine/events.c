@@ -1,4 +1,4 @@
-/* $Id: events.c,v 1.16 2006/05/05 13:15:15 andrew Exp $ */
+/* $Id: events.c,v 1.17 2006/05/22 08:27:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -293,7 +293,7 @@ match_graph_event(
 	stop_te_timer(action->timer);
 	action->confirmed = TRUE;
 
-	target_rc_s = g_hash_table_lookup(action->params,XML_ATTR_TE_TARGET_RC);
+	target_rc_s = g_hash_table_lookup(action->params,crm_meta_name(XML_ATTR_TE_TARGET_RC));
 	if(target_rc_s != NULL) {
 		crm_debug_2("Target rc: %s vs. %d", target_rc_s, op_rc_i);
 		target_rc = crm_parse_int(target_rc_s, NULL);
@@ -355,7 +355,7 @@ match_graph_event(
 	
 	if(action->failed) {
 		allow_fail = g_hash_table_lookup(
-			action->params, XML_ATTR_TE_ALLOWFAIL);
+			action->params, crm_meta_name(XML_ATTR_TE_ALLOWFAIL));
 		if(crm_is_true(allow_fail)) {
 			action->failed = FALSE;
 		}

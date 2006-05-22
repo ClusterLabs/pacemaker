@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.28 2006/05/08 10:32:42 andrew Exp $ */
+/* $Id: actions.c,v 1.29 2006/05/22 08:27:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -195,7 +195,7 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	ret = send_ipc_message(crm_ch, cmd);
 	crm_free(counter);
 	
-	value = g_hash_table_lookup(action->params, XML_ATTR_TE_NOWAIT);
+	value = g_hash_table_lookup(action->params, crm_meta_name(XML_ATTR_TE_NOWAIT));
 	if(ret == FALSE) {
 		crm_err("Action %d failed: send", action->id);
 		return FALSE;
@@ -315,6 +315,7 @@ cib_action_update(crm_action_t *action, int status)
 	crm_free(op_id);
 	
 	crm_xml_add(xml_op, XML_LRM_ATTR_TASK, task);
+	crm_xml_add(xml_op, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 	crm_xml_add(xml_op, XML_LRM_ATTR_OPSTATUS, code);
 	crm_xml_add(xml_op, XML_LRM_ATTR_CALLID, "-1");
 	crm_xml_add_int(xml_op, XML_LRM_ATTR_INTERVAL, action->interval);
@@ -334,7 +335,7 @@ cib_action_update(crm_action_t *action, int status)
 
 	params = find_xml_node(action->xml, "attributes", TRUE);
 	params = copy_xml(params);
-	filter_action_parameters(params, NULL);
+	filter_action_parameters(params, CRM_FEATURE_SET);
 	digest = calculate_xml_digest(params, TRUE);
 	crm_xml_add(xml_op, XML_LRM_ATTR_OP_DIGEST, digest);
 	crm_free(digest);

@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.87 2006/05/05 13:08:49 andrew Exp $ */
+/* $Id: graph.c,v 1.88 2006/05/22 08:27:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -83,7 +83,7 @@ update_action(action_t *action)
 			
 		} else if(safe_str_eq(other->action->task, CRMD_ACTION_START)) {
 			const char *interval = g_hash_table_lookup(
-				action->extra, XML_LRM_ATTR_INTERVAL);
+				action->meta, XML_LRM_ATTR_INTERVAL);
 			int interval_i = 0;
 			if(interval != NULL) {
 				interval_i = crm_parse_int(interval, NULL);
@@ -379,9 +379,8 @@ action2xml(action_t *action, gboolean as_input)
 	}
 
 	if(action->failure_is_fatal == FALSE) {
-		g_hash_table_insert(
-			action->extra, crm_strdup(XML_ATTR_TE_ALLOWFAIL),
-			crm_strdup(XML_BOOLEAN_TRUE));
+		add_hash_param(action->meta,
+			       XML_ATTR_TE_ALLOWFAIL, XML_BOOLEAN_TRUE);
 	}
 	
 	if(as_input) {
@@ -390,25 +389,42 @@ action2xml(action_t *action, gboolean as_input)
 
 	if(action->notify_keys != NULL) {
 		g_hash_table_foreach(
-			action->notify_keys, dup_attr, action->extra);
+			action->notify_keys, dup_attr, action->meta);
 	}
 	if(action->rsc != NULL && action->pseudo == FALSE) {
+		int lpc = 0;
+		
 		crm_data_t *rsc_xml = create_xml_node(
 			action_xml, crm_element_name(action->rsc->xml));
 
-		copy_in_properties(rsc_xml, action->rsc->xml);
+		const char *attr_list[] = {
+			XML_AGENT_ATTR_CLASS,
+			XML_AGENT_ATTR_PROVIDER,
+			XML_ATTR_TYPE
+		};
+
 		crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->id);
 		crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->long_name);
+
+		for(lpc = 0; lpc < DIMOF(attr_list); lpc++) {
+			crm_xml_add(rsc_xml, attr_list[lpc],
+				    g_hash_table_lookup(action->rsc->meta, attr_list[lpc]));
+		}
 		
 		args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
-		g_hash_table_foreach(action->extra, hash2field, args_xml);
-		
+		crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+
 		g_hash_table_foreach(
 			action->rsc->parameters, hash2field, args_xml);
 
+		g_hash_table_foreach(action->extra, hash2field, args_xml);
+/* 		g_hash_table_foreach(action->meta, hash2metafield, args_xml); */
+ 		g_hash_table_foreach(action->meta, hash2field, args_xml);
+		
 	} else {
 		args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
-		g_hash_table_foreach(action->extra, hash2field, args_xml);
+		crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+		g_hash_table_foreach(action->meta, hash2metafield, args_xml);
 	}
 	crm_log_xml_debug_2(action_xml, "dumped action");
 	
@@ -422,7 +438,7 @@ should_dump_action(action_t *action)
 
 	CRM_CHECK(action != NULL, return FALSE);
 
-	interval = g_hash_table_lookup(action->extra, XML_LRM_ATTR_INTERVAL);
+	interval = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
 	if(action->optional) {
 		crm_debug_5("action %d was optional", action->id);
 		return FALSE;

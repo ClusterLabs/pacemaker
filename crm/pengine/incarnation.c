@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.87 2006/05/22 08:15:37 andrew Exp $ */
+/* $Id: incarnation.c,v 1.88 2006/05/22 08:27:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -98,8 +98,8 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 	clone_data->child_list = g_list_append(
 		clone_data->child_list, child_rsc);
 	
-	add_rsc_param(child_rsc, XML_RSC_ATTR_INCARNATION, inc_num);
-	add_rsc_param(child_rsc, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
+	add_hash_param(child_rsc->meta, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
+	add_hash_param(child_rsc->parameters, crm_meta_name(XML_RSC_ATTR_INCARNATION_MAX), inc_max);
 	
 	print_resource(LOG_DEBUG_3, "Added", child_rsc, FALSE);
 	
@@ -118,15 +118,14 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	clone_variant_data_t *clone_data = NULL;
 	resource_t *self = NULL;
 
-	const char *ordered =
-		crm_element_value(xml_obj, XML_RSC_ATTR_ORDERED);
-	const char *interleave =
-		crm_element_value(xml_obj, XML_RSC_ATTR_INTERLEAVE);
-
+	const char *ordered = g_hash_table_lookup(
+		rsc->meta, XML_RSC_ATTR_ORDERED);
+	const char *interleave = g_hash_table_lookup(
+		rsc->meta, XML_RSC_ATTR_INTERLEAVE);
 	const char *max_clones = g_hash_table_lookup(
-		rsc->parameters, XML_RSC_ATTR_INCARNATION_MAX);
+		rsc->meta, XML_RSC_ATTR_INCARNATION_MAX);
 	const char *max_clones_node = g_hash_table_lookup(
-		rsc->parameters, XML_RSC_ATTR_INCARNATION_NODEMAX);
+		rsc->meta, XML_RSC_ATTR_INCARNATION_NODEMAX);
 
 	crm_debug_3("Processing resource %s...", rsc->id);
 
@@ -551,12 +550,12 @@ clone_create_notifications(
 			       CRMD_ACTION_NOTIFY, NULL,
 			       action->optional, TRUE, data_set);
 	
-	add_hash_param(notify->extra, "notify_type", "pre");
-	add_hash_param(notify->extra, "notify_operation", action->task);
+	add_hash_param(notify->meta, "notify_type", "pre");
+	add_hash_param(notify->meta, "notify_operation", action->task);
 	if(clone_data->notify_confirm) {
-		add_hash_param(notify->extra, "notify_confirm", "yes");
+		add_hash_param(notify->meta, "notify_confirm", "yes");
 	} else {
-		add_hash_param(notify->extra, "notify_confirm", "no");
+		add_hash_param(notify->meta, "notify_confirm", "no");
 	}
 	notify->pseudo = TRUE;
 
@@ -566,12 +565,12 @@ clone_create_notifications(
 	notify_complete = custom_action(clone_data->self, notify_key,
 			       CRMD_ACTION_NOTIFIED, NULL,
 			       action->optional, TRUE, data_set);
-	add_hash_param(notify_complete->extra, "notify_type", "pre");
-	add_hash_param(notify_complete->extra, "notify_operation", action->task);
+	add_hash_param(notify_complete->meta, "notify_type", "pre");
+	add_hash_param(notify_complete->meta, "notify_operation", action->task);
 	if(clone_data->notify_confirm) {
-		add_hash_param(notify->extra, "notify_confirm", "yes");
+		add_hash_param(notify->meta, "notify_confirm", "yes");
 	} else {
-		add_hash_param(notify->extra, "notify_confirm", "no");
+		add_hash_param(notify->meta, "notify_confirm", "no");
 	}
 	notify->pseudo = TRUE;
 	notify_complete->pseudo = TRUE;
@@ -597,12 +596,12 @@ clone_create_notifications(
 	notify = custom_action(clone_data->self, notify_key,
 			       CRMD_ACTION_NOTIFY, NULL,
 			       action_complete->optional, TRUE, data_set);
-	add_hash_param(notify->extra, "notify_type", "post");
-	add_hash_param(notify->extra, "notify_operation", action->task);
+	add_hash_param(notify->meta, "notify_type", "post");
+	add_hash_param(notify->meta, "notify_operation", action->task);
 	if(clone_data->notify_confirm) {
-		add_hash_param(notify->extra, "notify_confirm", "yes");
+		add_hash_param(notify->meta, "notify_confirm", "yes");
 	} else {
-		add_hash_param(notify->extra, "notify_confirm", "no");
+		add_hash_param(notify->meta, "notify_confirm", "no");
 	}
 	notify->pseudo = TRUE;
 
@@ -618,12 +617,12 @@ clone_create_notifications(
 	notify_complete = custom_action(clone_data->self, notify_key,
 			       CRMD_ACTION_NOTIFIED, NULL,
 			       action->optional, TRUE, data_set);
-	add_hash_param(notify_complete->extra, "notify_type", "pre");
-	add_hash_param(notify_complete->extra, "notify_operation", action->task);
+	add_hash_param(notify_complete->meta, "notify_type", "pre");
+	add_hash_param(notify_complete->meta, "notify_operation", action->task);
 	if(clone_data->notify_confirm) {
-		add_hash_param(notify->extra, "notify_confirm", "yes");
+		add_hash_param(notify->meta, "notify_confirm", "yes");
 	} else {
-		add_hash_param(notify->extra, "notify_confirm", "no");
+		add_hash_param(notify->meta, "notify_confirm", "no");
 	}
 	notify_complete->pseudo = TRUE;
 
@@ -1236,7 +1235,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 /* 		action, action_t, clone_data->self->actions, lpc2, */
 
 /* 		if(safe_str_eq(action->task, CRMD_ACTION_NOTIFY)) { */
-/* 			action->extra_xml = notify_xml; */
+/* 			action->meta_xml = notify_xml; */
 /* 		} */
 /* 		); */
 	

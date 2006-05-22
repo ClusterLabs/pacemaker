@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.88 2006/05/20 07:55:32 andrew Exp $ */
+/* $Id: complex.c,v 1.89 2006/05/22 08:27:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -173,11 +173,10 @@ gboolean
 common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	      resource_t *parent, pe_working_set_t *data_set)
 {
-	int lpc = 0;
-	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *value = NULL;
-	GHashTable *defaults = parent?parent->parameters:NULL;
-	
+	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
+
+#if CRM_DEPRECATED_SINCE_2_0_5
 	const char *allowed_attrs[] = {
 		XML_CIB_ATTR_PRIORITY,
 		XML_RSC_ATTR_INCARNATION_MAX,
@@ -189,20 +188,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		XML_RSC_ATTR_TARGET_ROLE,
 		XML_RSC_ATTR_NOTIFY,
 	};
-
-	const char *rsc_attrs[] = {
-		XML_RSC_ATTR_STOPFAIL,
-		XML_RSC_ATTR_RESTART,
-		XML_RSC_ATTR_MANAGED,
-		XML_RSC_ATTR_UNIQUE,
-		XML_RSC_ATTR_NOTIFY,
-		XML_RSC_ATTR_MULTIPLE,
-		XML_RSC_ATTR_START,
-#if CRM_DEPRECATED_SINCE_2_0_4
-		XML_RSC_ATTR_STICKINESS,
 #endif
-	};
-
 	crm_log_xml_debug_3(xml_obj, "Processing resource input...");
 	
 	if(id == NULL) {
@@ -233,10 +219,14 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	(*rsc)->parameters = g_hash_table_new_full(
 		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
 	
+	(*rsc)->meta = g_hash_table_new_full(
+		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
+	
 	value = crm_element_value(xml_obj, XML_RSC_ATTR_INCARNATION);
 	if(value) {
 		(*rsc)->id = crm_concat(id, value, ':');
-		add_hash_param((*rsc)->parameters, XML_RSC_ATTR_INCARNATION, value);
+		add_hash_param((*rsc)->meta, XML_RSC_ATTR_INCARNATION, value);
+		add_hash_param((*rsc)->parameters, crm_meta_name(XML_RSC_ATTR_INCARNATION), value);
 		
 	} else {
 		(*rsc)->id = crm_strdup(id);
@@ -251,22 +241,30 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	(*rsc)->fns = &resource_class_functions[(*rsc)->variant];
 	crm_debug_3("Unpacking resource...");
 
-	for(lpc = 0; lpc < DIMOF(rsc_attrs); lpc++) {
-		value = crm_element_value(xml_obj, rsc_attrs[lpc]);
-		if(value != NULL) {
-			add_hash_param(
-				(*rsc)->parameters, rsc_attrs[lpc], value);
-		}
-	}
+	/* meta attributes */
+	xml_prop_iter(
+		xml_obj, prop_name, prop_value,
+		add_hash_param((*rsc)->meta, prop_name, prop_value);
+		);
 	
 	unpack_instance_attributes(
-		xml_obj, XML_TAG_ATTR_SETS, NULL, (*rsc)->parameters,
-		allowed_attrs, DIMOF(allowed_attrs), data_set);
+		xml_obj, XML_TAG_META_SETS, NULL, (*rsc)->meta,
+		NULL, 0, data_set);
 
-	if(defaults != NULL) {
-		g_hash_table_foreach(defaults, dup_attr, (*rsc)->parameters);
+	if(parent != NULL) {
+		g_hash_table_foreach(parent->meta, dup_attr, (*rsc)->meta);
 	}	
-	
+
+#if CRM_DEPRECATED_SINCE_2_0_5
+	unpack_instance_attributes(
+		xml_obj, XML_TAG_ATTR_SETS, NULL, (*rsc)->meta,
+		allowed_attrs, DIMOF(allowed_attrs), data_set);
+#endif
+
+	if(parent != NULL) {
+		g_hash_table_foreach(parent->parameters, dup_attr, (*rsc)->parameters);
+	}	
+
 	(*rsc)->runnable	   = TRUE; 
 	(*rsc)->provisional	   = TRUE; 
 	(*rsc)->starting	   = FALSE; 
@@ -286,25 +284,25 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	(*rsc)->stickiness         = data_set->default_resource_stickiness;
 	(*rsc)->fail_stickiness    = data_set->default_resource_fail_stickiness;
 
-	value = g_hash_table_lookup((*rsc)->parameters, XML_CIB_ATTR_PRIORITY);
+	value = g_hash_table_lookup((*rsc)->meta, XML_CIB_ATTR_PRIORITY);
 	(*rsc)->priority	   = crm_parse_int(value, "0"); 
 	(*rsc)->effective_priority = (*rsc)->priority;
 
-	value = g_hash_table_lookup((*rsc)->parameters, XML_RSC_ATTR_NOTIFY);
+	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_NOTIFY);
 	(*rsc)->notify		   = crm_is_true(value); 
 	
-	value = g_hash_table_lookup((*rsc)->parameters, "is_managed");
+	value = g_hash_table_lookup((*rsc)->meta, "is_managed");
 	if(value != NULL && safe_str_neq("default", value)) {
 		cl_str_to_boolean(value, &((*rsc)->is_managed));
 	}
 
 	crm_debug_2("Options for %s", (*rsc)->id);
-	value = g_hash_table_lookup((*rsc)->parameters, "globally_unique");
+	value = g_hash_table_lookup((*rsc)->meta, "globally_unique");
 	if(value != NULL) {
 		cl_str_to_boolean(value, &((*rsc)->globally_unique));
 	}
 	
-	value = g_hash_table_lookup((*rsc)->parameters, XML_RSC_ATTR_RESTART);
+	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_RESTART);
 	if(safe_str_eq(value, "restart")) {
 		(*rsc)->restart_type = pe_restart_restart;
 		crm_debug_2("\tDependancy restart handling: restart");
@@ -314,7 +312,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		crm_debug_2("\tDependancy restart handling: ignore");
 	}
 
-	value = g_hash_table_lookup((*rsc)->parameters, "multiple_active");
+	value = g_hash_table_lookup((*rsc)->meta, "multiple_active");
 	if(safe_str_eq(value, "stop_only")) {
 		(*rsc)->recovery_type = recovery_stop_only;
 		crm_debug_2("\tMultiple running resource recovery: stop only");
@@ -328,7 +326,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		crm_debug_2("\tMultiple running resource recovery: stop/start");
 	}
 
-	value = g_hash_table_lookup((*rsc)->parameters, "resource_stickiness");
+	value = g_hash_table_lookup((*rsc)->meta, "resource_stickiness");
 	if(value != NULL && safe_str_neq("default", value)) {
 		(*rsc)->stickiness = char2score(value);
 	}
@@ -344,7 +342,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	}
 
 	value = g_hash_table_lookup(
-		(*rsc)->parameters, XML_RSC_ATTR_FAIL_STICKINESS);
+		(*rsc)->meta, XML_RSC_ATTR_FAIL_STICKINESS);
 	if(value != NULL) {
 		(*rsc)->fail_stickiness = char2score(value);
 	}
@@ -352,7 +350,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		    (*rsc)->fail_stickiness, value == NULL?" (default)":"");
 	
 	value = g_hash_table_lookup(
-		(*rsc)->parameters, XML_RSC_ATTR_TARGET_ROLE);
+		(*rsc)->meta, XML_RSC_ATTR_TARGET_ROLE);
 	
 	if(value != NULL && safe_str_neq("default", value)) {
 		(*rsc)->is_managed = TRUE;
@@ -378,7 +376,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		new_con->node_list_rh = node_list_dup(data_set->nodes, FALSE);
 	}
 	
-	crm_debug_2("\tNotification of start/stop actions: %s",
+	crm_debug_2("\tAction notification: %s",
 		    (*rsc)->notify?"required":"not required");
 	
 /* 	data_set->resources = g_list_append(data_set->resources, (*rsc)); */
@@ -442,6 +440,9 @@ void common_free(resource_t *rsc)
 	}
 	if(rsc->parameters != NULL) {
 		g_hash_table_destroy(rsc->parameters);
+	}
+	if(rsc->meta != NULL) {
+		g_hash_table_destroy(rsc->meta);
 	}
 	if(rsc->orphan) {
 		free_xml(rsc->xml);
@@ -553,7 +554,6 @@ unpack_instance_attributes(
 		crm_malloc0(pair, sizeof(sorted_set_t));
 		pair->name     = ID(attr_set);
 		pair->attr_set = attr_set;
-		
 		score = crm_element_value(attr_set, XML_RULE_ATTR_SCORE);
 		pair->score = char2score(score);
 
@@ -613,15 +613,6 @@ populate_hash(crm_data_t *nvpair_list, GHashTable *hash,
 		}
 		
 		);
-}
-
-
-
-void
-add_rsc_param(resource_t *rsc, const char *name, const char *value)
-{
-	CRM_CHECK(rsc != NULL, return);
-	add_hash_param(rsc->parameters, name, value);
 }
 
 void

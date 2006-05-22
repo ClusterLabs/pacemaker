@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.136 2006/05/11 09:11:33 andrew Exp $ */
+/* $Id: utils.c,v 1.137 2006/05/22 08:27:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -717,13 +717,10 @@ custom_action(resource_t *rsc, char *key, const char *task,
 				g_str_hash, g_str_equal,
 				g_hash_destroy_str, g_hash_destroy_str);
 
-			/* include our version number...
-			 *   so future versions know what to be compatible
-			 *   with when we're DC
-			 */
-			add_hash_param(action->extra,
-				       XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-			
+			action->meta = g_hash_table_new_full(
+				g_str_hash, g_str_equal,
+				g_hash_destroy_str, g_hash_destroy_str);
+
 			if(save_action) {
 				data_set->actions = g_list_append(
 					data_set->actions, action);
@@ -758,7 +755,8 @@ custom_action(resource_t *rsc, char *key, const char *task,
 		if(save_action) {
 			warn_level = LOG_WARNING;
 		}
-		if(action->node != NULL) {
+
+		if(action->node != NULL && action->op_entry != NULL) {
 			unpack_instance_attributes(
 				action->op_entry, XML_TAG_ATTR_SETS,
 				action->node, action->extra, NULL,0, data_set);
@@ -865,7 +863,7 @@ unpack_operation(
 	}
 	if(value == NULL && safe_str_eq(action->task, CRMD_ACTION_START)) {
 		value = g_hash_table_lookup(
-			action->rsc->parameters, "start_prereq");
+			action->rsc->meta, "start_prereq");
 	}
 	
 	if(value == NULL && safe_str_neq(action->task, CRMD_ACTION_START)) {
@@ -903,7 +901,7 @@ unpack_operation(
 	}
 	if(value == NULL && safe_str_eq(action->task, CRMD_ACTION_STOP)) {
 		value = g_hash_table_lookup(
-			action->rsc->parameters, "on_stopfail");
+			action->rsc->meta, "on_stopfail");
 		if(value != NULL) {
 #if CRM_DEPRECATED_SINCE_2_0_2
 			pe_config_err("The \"on_stopfail\" attribute used in"
@@ -995,17 +993,17 @@ unpack_operation(
 	for(;lpc < DIMOF(fields); lpc++) {
 		value = crm_element_value(xml_obj, fields[lpc]);
 		if(value != NULL) {
-			int tmp_i = crm_get_msec(value);
 			char *tmp_ms = NULL;
+			int tmp_i = crm_get_msec(value);
 			if(tmp_i < 0) {
 				tmp_i = 0;
 			}
 			tmp_ms = crm_itoa(tmp_i);
 			g_hash_table_insert(
-				action->extra, crm_strdup(fields[lpc]), tmp_ms);
+				action->meta, crm_strdup(fields[lpc]), tmp_ms);
 		}
 	}
-
+	
 /* 	if(safe_str_eq(native_data->agent->class, "stonith")) { */
 /* 		if(rsc->start_needs == rsc_req_stonith) { */
 /* 			pe_err("Stonith resources (eg. %s) cannot require" */
@@ -1603,6 +1601,7 @@ pe_free_action(action_t *action)
 	pe_free_shallow(action->actions_before);/* action_warpper_t* */
 	pe_free_shallow(action->actions_after); /* action_warpper_t* */
 	g_hash_table_destroy(action->extra);
+	g_hash_table_destroy(action->meta);
 	crm_free(action->uuid);
 	crm_free(action);
 }
@@ -1665,7 +1664,7 @@ find_recurring_actions(GListPtr input, node_t *not_on_node)
 	
 	slist_iter(
 		action, action_t, input, lpc,
-		value = g_hash_table_lookup(action->extra, XML_LRM_ATTR_INTERVAL);
+		value = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
 		if(value == NULL) {
 			/* skip */
 		} else if(safe_str_eq(CRMD_ACTION_CANCEL, action->task)) {

@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.17 2006/05/06 07:56:31 andrew Exp $ */
+/* $Id: master.c,v 1.18 2006/05/22 08:27:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -56,7 +56,8 @@ typedef struct clone_variant_data_s
 
 void master_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
- 	add_hash_param(rsc->parameters, "stateful", XML_BOOLEAN_TRUE);
+  	add_hash_param(rsc->parameters, crm_meta_name("stateful"),
+		       XML_BOOLEAN_TRUE);
 	clone_unpack(rsc, data_set);
 }
 
@@ -232,9 +233,9 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	resource_t *last_promote_rsc = NULL;
 	resource_t *last_demote_rsc = NULL;
 	const char *master_max_s = g_hash_table_lookup(
-		rsc->parameters, XML_RSC_ATTR_MASTER_MAX);
+		rsc->meta, XML_RSC_ATTR_MASTER_MAX);
 	const char *master_node_max_s = g_hash_table_lookup(
-		rsc->parameters, XML_RSC_ATTR_MASTER_NODEMAX);
+		rsc->meta, XML_RSC_ATTR_MASTER_NODEMAX);
 
 	int promoted = 0;
 	int master_max = crm_parse_int(master_max_s, "1");
@@ -395,8 +396,8 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 			default:
 				CRM_CHECK(FALSE/* unhandled */, ;);
 		}
-		add_hash_param(child_rsc->parameters,
-			       "crm_role", role2text(child_rsc->next_role));
+		add_hash_param(child_rsc->parameters, crm_meta_name("role"),
+			       role2text(child_rsc->next_role));
 		);
 	crm_info("Promoted %d (of %d) slaves to master", promoted, master_max);
 	g_hash_table_destroy(master_hash);
