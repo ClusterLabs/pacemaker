@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.51 2006/05/11 09:54:25 andrew Exp $ */
+/* $Id: utils.c,v 1.52 2006/05/22 08:31:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1069,31 +1069,31 @@ decode_transition_key(const char *key, char **uuid, int *transition_id)
 void
 filter_action_parameters(crm_data_t *param_set, const char *version) 
 {
-	const char *attr_filter[] = {
-		XML_ATTR_ID,
-		XML_LRM_ATTR_OP_DIGEST,
+#if CRM_DEPRECATED_SINCE_2_0_5
+	const char *filter_205[] = {
 		XML_ATTR_TE_TARGET_RC,
 		XML_ATTR_LRM_PROBE,
 		XML_RSC_ATTR_START,
 		XML_RSC_ATTR_NOTIFY,
 		XML_RSC_ATTR_UNIQUE,
 		XML_RSC_ATTR_MANAGED,
-		XML_ATTR_CRM_VERSION,
 		XML_RSC_ATTR_PRIORITY,
 		XML_RSC_ATTR_MULTIPLE,
 		XML_RSC_ATTR_STICKINESS,
 		XML_RSC_ATTR_FAIL_STICKINESS,
 		XML_RSC_ATTR_TARGET_ROLE,
-		
+
 /* ignore clone fields */
 		XML_RSC_ATTR_INCARNATION, 
 		XML_RSC_ATTR_INCARNATION_MAX, 
 		XML_RSC_ATTR_INCARNATION_NODEMAX,
 		XML_RSC_ATTR_MASTER_MAX,
 		XML_RSC_ATTR_MASTER_NODEMAX,
-
-/* ignore master fields */
+		
+/* old field names */
+		"role",
 		"crm_role",
+		"te-target-rc",
 		
 /* ignore notify fields */
  		"notify_stop_resource",
@@ -1111,18 +1111,51 @@ filter_action_parameters(crm_data_t *param_set, const char *version)
  		"notify_master_resource",
  		"notify_master_uname",
  		"notify_slave_resource",
- 		"notify_slave_uname",
+ 		"notify_slave_uname"		
+	};
+#endif
+	
+	const char *attr_filter[] = {
+		XML_ATTR_ID,
+		XML_ATTR_CRM_VERSION,
+		XML_LRM_ATTR_OP_DIGEST,
 	};
 
 	int lpc = 0;
-
+	static int meta_len = 0;
+	if(meta_len == 0) {
+		meta_len  = strlen(CRM_META);
+	}	
+	
 	if(param_set == NULL) {
 		return;
 	}
+
+#if CRM_DEPRECATED_SINCE_2_0_5
+/* 	if(version == NULL) { */
+		for(lpc = 0; lpc < DIMOF(filter_205); lpc++) {
+			xml_remove_prop(param_set, filter_205[lpc]); 
+		}
+/* 	} */
+#endif
 	
 	for(lpc = 0; lpc < DIMOF(attr_filter); lpc++) {
 		xml_remove_prop(param_set, attr_filter[lpc]); 
-	}	
+	}
+	
+	xml_prop_iter(param_set, prop_name, prop_value,      
+		      gboolean do_delete = FALSE;
+		      if(strncasecmp(prop_name, CRM_META, meta_len) == 0) {
+			      do_delete = TRUE;
+		      }
+
+		      if(do_delete) {
+			      /* remove it */
+			      xml_remove_prop(param_set, prop_name);
+			      /* unwind the counetr */
+			      __counter--;
+		      }
+		);
 }
 
 gboolean
