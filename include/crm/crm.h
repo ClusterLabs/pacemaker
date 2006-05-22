@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.95 2006/05/22 08:06:21 andrew Exp $ */
+/* $Id: crm.h,v 1.96 2006/05/22 11:03:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,7 +47,7 @@
 #define CRM_DEPRECATED_SINCE_2_1_0 1
 
 #define CRM_META			"CRM_meta"
-#if 0
+#if 1
 #  define crm_meta_name(field) CRM_META"_"field
 #else
 #  define crm_meta_name(field) field
@@ -89,7 +89,7 @@ extern gboolean crm_assert_failed;
 #define CIB_FILENAME	WORKING_DIR"/cib.xml"
 #define CIB_BACKUP	WORKING_DIR"/cib_backup.xml"
 
-#define CRM_FEATURE_SET	"1.0.5"
+#define CRM_FEATURE_SET	"1.0.6"
 
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1

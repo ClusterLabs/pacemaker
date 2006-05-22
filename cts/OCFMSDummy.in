@@ -135,9 +135,9 @@ do_change_state() {
 
 
 dummy_start() {
-    dummy_log "start instance #$OCF_RESKEY_clone slave"
-    do_start_resource $OCF_RESKEY_clone "slave"
-    if [ $OCF_RESKEY_clone -eq 0 ]; then
+    dummy_log "start instance #$OCF_RESKEY_CRM_meta_clone slave"
+    do_start_resource $OCF_RESKEY_CRM_meta_clone "slave"
+    if [ $OCF_RESKEY_CRM_meta_clone -eq 0 ]; then
         do_cmd $CRM_MASTER -v 1000
     fi
     sleep $start_delay
@@ -146,43 +146,43 @@ dummy_start() {
 
 dummy_stop() {
     touch $DUMMY_RESOURCE
-    dummy_log "stop instance #$OCF_RESKEY_clone"
-    do_stop_resource $OCF_RESKEY_clone
+    dummy_log "stop instance #$OCF_RESKEY_CRM_meta_clone"
+    do_stop_resource $OCF_RESKEY_CRM_meta_clone
     rc=$?
     sleep $stop_delay
     return $rc
 }
 
 dummy_monitor() {
-    dummy_log "monitor instance #$OCF_RESKEY_clone"
-    dummy_get_status $OCF_RESKEY_clone
+    dummy_log "monitor instance #$OCF_RESKEY_CRM_meta_clone"
+    dummy_get_status $OCF_RESKEY_CRM_meta_clone
     rc=$?
     sleep $monitor_delay
     return $rc
 }
 
 dummy_promote() {
-    dummy_log "promote instance #$OCF_RESKEY_clone"
-    do_change_state $OCF_RESKEY_clone "master"
+    dummy_log "promote instance #$OCF_RESKEY_CRM_meta_clone"
+    do_change_state $OCF_RESKEY_CRM_meta_clone "master"
     rc=$?
     sleep $promote_delay
     return $rc
 }
 
 dummy_demote() {
-    dummy_log "demote instance #$OCF_RESKEY_clone"
-    do_change_state $OCF_RESKEY_clone "slave"
+    dummy_log "demote instance #$OCF_RESKEY_CRM_meta_clone"
+    do_change_state $OCF_RESKEY_CRM_meta_clone "slave"
     rc=$?
     sleep $demote_delay
     return $rc
 }
 
 dummy_notify() {
-    dummy_log "notify instance #$OCF_RESKEY_clone"
+    dummy_log "notify instance #$OCF_RESKEY_CRM_meta_clone"
     touch $DUMMY_RESOURCE
     sleep $notify_delay
-        local n_type="$OCF_RESKEY_notify_type"
-        local n_op="$OCF_RESKEY_notify_operation"
+        local n_type="$OCF_RESKEY_CRM_meta_notify_type"
+        local n_op="$OCF_RESKEY_CRM_meta_notify_operation"
         set -- $n_active_resource
         local n_active="$#"
         set -- $notify_stop_resource
