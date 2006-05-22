@@ -12,12 +12,12 @@
     </nodes>
     <resources>
       <primitive id="rsc1" class="heartbeat" type="apache"/>
-      <group id="rsc2" priority="1.0">
+      <group id="rsc2">
 	<primitive id="child_rsc1" class="heartbeat" type="apache"/>
 	<primitive id="child_rsc2" class="heartbeat" type="apache"/>
 	<primitive id="child_rsc3" class="heartbeat" type="apache"/>
       </group>
-      <group id="rsc3" priority="1.0">
+      <group id="rsc3">
 	<primitive id="child_rsc4" class="heartbeat" type="apache"/>
 	<primitive id="child_rsc5" class="heartbeat" type="apache"/>
 	<primitive id="child_rsc6" class="heartbeat" type="apache"/>

@@ -2,8 +2,8 @@
    <synapse id="0">
      <action_set>
        <rsc_op id="6" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
-         <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="DcIPaddr"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.10"/>
+         <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="127.0.0.10" CRM_meta_op_target_rc="7"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -11,8 +11,8 @@
    <synapse id="1">
      <action_set>
        <rsc_op id="12" operation="stop" operation_key="DcIPaddr_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
-         <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="DcIPaddr"/>
-         <attributes crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.10"/>
+         <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="127.0.0.10"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -20,8 +20,8 @@
    <synapse id="2">
      <action_set>
        <rsc_op id="9" operation="monitor" operation_key="rsc_posic041_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
-         <primitive id="rsc_posic041" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="rsc_posic041"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.11"/>
+         <primitive id="rsc_posic041" long-id="rsc_posic041" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="127.0.0.11" CRM_meta_op_target_rc="7"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -29,8 +29,8 @@
    <synapse id="3">
      <action_set>
        <rsc_op id="14" operation="stop" operation_key="rsc_posic041_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
-         <primitive id="rsc_posic041" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="rsc_posic041"/>
-         <attributes crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.11"/>
+         <primitive id="rsc_posic041" long-id="rsc_posic041" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="127.0.0.11"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -38,8 +38,8 @@
    <synapse id="4">
      <action_set>
        <rsc_op id="10" operation="monitor" operation_key="rsc_posic042_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
-         <primitive id="rsc_posic042" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="rsc_posic042"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.12"/>
+         <primitive id="rsc_posic042" long-id="rsc_posic042" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="127.0.0.12" CRM_meta_op_target_rc="7"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -47,8 +47,8 @@
    <synapse id="5">
      <action_set>
        <rsc_op id="16" operation="stop" operation_key="rsc_posic042_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
-         <primitive id="rsc_posic042" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="rsc_posic042"/>
-         <attributes crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.12"/>
+         <primitive id="rsc_posic042" long-id="rsc_posic042" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -56,8 +56,8 @@
    <synapse id="6">
      <action_set>
        <rsc_op id="7" operation="monitor" operation_key="rsc_posic043_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
-         <primitive id="rsc_posic043" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="rsc_posic043"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.13"/>
+         <primitive id="rsc_posic043" long-id="rsc_posic043" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="127.0.0.13" CRM_meta_op_target_rc="7"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -65,8 +65,8 @@
    <synapse id="7">
      <action_set>
        <rsc_op id="18" operation="stop" operation_key="rsc_posic043_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
-         <primitive id="rsc_posic043" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="rsc_posic043"/>
-         <attributes crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.13"/>
+         <primitive id="rsc_posic043" long-id="rsc_posic043" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="127.0.0.13"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -74,8 +74,8 @@
    <synapse id="8">
      <action_set>
        <rsc_op id="11" operation="monitor" operation_key="rsc_posic044_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
-         <primitive id="rsc_posic044" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="rsc_posic044"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.14"/>
+         <primitive id="rsc_posic044" long-id="rsc_posic044" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="127.0.0.14" CRM_meta_op_target_rc="7"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -83,8 +83,8 @@
    <synapse id="9">
      <action_set>
        <rsc_op id="21" operation="stop" operation_key="rsc_posic044_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
-         <primitive id="rsc_posic044" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="rsc_posic044"/>
-         <attributes crm_feature_set="1.0.5" is_managed="1" ip="127.0.0.14"/>
+         <primitive id="rsc_posic044" long-id="rsc_posic044" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="127.0.0.14"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -92,8 +92,8 @@
    <synapse id="10">
      <action_set>
        <rsc_op id="24" operation="monitor" operation_key="child_DoFencing:0_monitor_5000" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
-         <primitive id="child_DoFencing:0" class="stonith" type="ssh" clone="0" long-id="DoFencing:child_DoFencing:0"/>
-         <attributes timeout="20000" crm_feature_set="1.0.5" interval="5000" clone="0" clone_max="4" hostlist="posic041 posic042 posic043 posic044 " clone_node_max="1"/>
+         <primitive id="child_DoFencing:0" long-id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
+         <attributes crm_feature_set="1.0.6" hostlist="posic041 posic042 posic043 posic044 " CRM_meta_clone_max="4" CRM_meta_clone="0" CRM_meta_timeout="20000" CRM_meta_interval="5000"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -101,8 +101,8 @@
    <synapse id="11">
      <action_set>
        <rsc_op id="27" operation="monitor" operation_key="child_DoFencing:1_monitor_5000" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
-         <primitive id="child_DoFencing:1" class="stonith" type="ssh" clone="1" long-id="DoFencing:child_DoFencing:1"/>
-         <attributes timeout="20000" crm_feature_set="1.0.5" interval="5000" clone="1" clone_max="4" hostlist="posic041 posic042 posic043 posic044 " clone_node_max="1"/>
+         <primitive id="child_DoFencing:1" long-id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
+         <attributes crm_feature_set="1.0.6" hostlist="posic041 posic042 posic043 posic044 " CRM_meta_clone_max="4" CRM_meta_clone="1" CRM_meta_timeout="20000" CRM_meta_interval="5000"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -110,7 +110,7 @@
    <synapse id="12">
      <action_set>
        <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete">
-         <attributes crm_feature_set="1.0.5"/>
+         <attributes crm_feature_set="1.0.6"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -125,7 +125,7 @@
    <synapse id="13">
      <action_set>
        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
-         <attributes crm_feature_set="1.0.5" te-no-wait="true"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_op_no_wait="true"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -140,7 +140,7 @@
    <synapse id="14">
      <action_set>
        <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
-         <attributes crm_feature_set="1.0.5" te-no-wait="true"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_op_no_wait="true"/>
        </rsc_op>
      </action_set>
      <inputs>

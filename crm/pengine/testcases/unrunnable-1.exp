@@ -1,72 +1,72 @@
  <transition_graph global_timeout="3m" transition_id="0">
    <synapse id="0">
      <action_set>
-       <rsc_op id="4" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
-         <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="DcIPaddr"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="1" ip="192.168.100.180"/>
+       <rsc_op id="4" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+         <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.180" CRM_meta_op_target_rc="7"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="5" operation="monitor" operation_key="child_192.168.100.181_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
-         <primitive id="child_192.168.100.181" class="ocf" type="IPaddr" provider="heartbeat" long-id="group-1:child_192.168.100.181"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" ip="192.168.100.181"/>
+       <rsc_op id="5" operation="monitor" operation_key="child_192.168.100.181_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+         <primitive id="child_192.168.100.181" long-id="group-1:child_192.168.100.181" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.181" CRM_meta_op_target_rc="7"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="2">
      <action_set>
-       <rsc_op id="6" operation="monitor" operation_key="child_192.168.100.182_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
-         <primitive id="child_192.168.100.182" class="ocf" type="IPaddr" provider="heartbeat" long-id="group-1:child_192.168.100.182"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" ip="192.168.100.182"/>
+       <rsc_op id="6" operation="monitor" operation_key="child_192.168.100.182_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+         <primitive id="child_192.168.100.182" long-id="group-1:child_192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.182" CRM_meta_op_target_rc="7"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="3">
      <action_set>
-       <rsc_op id="7" operation="monitor" operation_key="child_192.168.100.183_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
-         <primitive id="child_192.168.100.183" class="ocf" type="IPaddr" provider="heartbeat" long-id="group-1:child_192.168.100.183"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" ip="192.168.100.183"/>
+       <rsc_op id="7" operation="monitor" operation_key="child_192.168.100.183_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+         <primitive id="child_192.168.100.183" long-id="group-1:child_192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.183" CRM_meta_op_target_rc="7"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="4">
      <action_set>
-       <rsc_op id="8" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
-         <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="rsc_c001n08"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="1" ip="192.168.100.184"/>
+       <rsc_op id="8" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+         <primitive id="rsc_c001n08" long-id="rsc_c001n08" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.184" CRM_meta_op_target_rc="7"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="5">
      <action_set>
-       <rsc_op id="9" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
-         <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="rsc_c001n02"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="1" ip="192.168.100.185"/>
+       <rsc_op id="9" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+         <primitive id="rsc_c001n02" long-id="rsc_c001n02" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.185" CRM_meta_op_target_rc="7"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="6">
      <action_set>
-       <rsc_op id="10" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
-         <primitive id="rsc_c001n03" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="rsc_c001n03"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="1" ip="192.168.100.186"/>
+       <rsc_op id="10" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+         <primitive id="rsc_c001n03" long-id="rsc_c001n03" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.186" CRM_meta_op_target_rc="7"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="7">
      <action_set>
-       <rsc_op id="11" operation="monitor" operation_key="rsc_c001n01_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
-         <primitive id="rsc_c001n01" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1" long-id="rsc_c001n01"/>
-         <attributes te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.5" is_managed="1" ip="192.168.100.187"/>
+       <rsc_op id="11" operation="monitor" operation_key="rsc_c001n01_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+         <primitive id="rsc_c001n01" long-id="rsc_c001n01" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.187" CRM_meta_op_target_rc="7"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -74,45 +74,45 @@
    <synapse id="8">
      <action_set>
        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
-         <attributes crm_feature_set="1.0.5"/>
+         <attributes crm_feature_set="1.0.6"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+         <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="9">
      <action_set>
-       <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193">
-         <attributes crm_feature_set="1.0.5" te-no-wait="true"/>
+       <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+         <attributes crm_feature_set="1.0.6" CRM_meta_op_no_wait="true"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="4" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+         <rsc_op id="4" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
        </trigger>
        <trigger>
-         <rsc_op id="5" operation="monitor" operation_key="child_192.168.100.181_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+         <rsc_op id="5" operation="monitor" operation_key="child_192.168.100.181_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
        </trigger>
        <trigger>
-         <rsc_op id="6" operation="monitor" operation_key="child_192.168.100.182_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+         <rsc_op id="6" operation="monitor" operation_key="child_192.168.100.182_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
        </trigger>
        <trigger>
-         <rsc_op id="7" operation="monitor" operation_key="child_192.168.100.183_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+         <rsc_op id="7" operation="monitor" operation_key="child_192.168.100.183_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
        </trigger>
        <trigger>
-         <rsc_op id="8" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+         <rsc_op id="8" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
        </trigger>
        <trigger>
-         <rsc_op id="9" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+         <rsc_op id="9" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
        </trigger>
        <trigger>
-         <rsc_op id="10" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+         <rsc_op id="10" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
        </trigger>
        <trigger>
-         <rsc_op id="11" operation="monitor" operation_key="rsc_c001n01_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-9180-5e221530c193"/>
+         <rsc_op id="11" operation="monitor" operation_key="rsc_c001n01_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
        </trigger>
      </inputs>
    </synapse>

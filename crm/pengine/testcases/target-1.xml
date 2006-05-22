@@ -9,7 +9,7 @@
        <nodes>
          <node id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" uname="c001n08" type="member"/>
          <node id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" type="member"/>
-         <node id="5d9a8c11-8684-43ea-9180-5e221530c193" uname="c001n03" type="member"/>
+         <node id="5d9a8c11-8684-43ea-91.0.6e221530c193" uname="c001n03" type="member"/>
          <node id="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" uname="c001n01" type="member"/>
        </nodes>
        <resources>
@@ -147,7 +147,7 @@
 	   </instance_attributes>
 	 </transient_attributes>
        </node_state>
-       <node_state uname="c001n03" crmd="online" in_ccm="true" ha="active" expected="member" id="5d9a8c11-8684-43ea-9180-5e221530c193" origin="do_lrm_query" join="member">
+       <node_state uname="c001n03" crmd="online" in_ccm="true" ha="active" expected="member" id="5d9a8c11-8684-43ea-91.0.6e221530c193" origin="do_lrm_query" join="member">
          <lrm>
            <lrm_resources>
              <lrm_resource id="rsc_c001n03" type="IPaddr" class="ocf" provider="heartbeat" provider="heartbeat">

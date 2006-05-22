@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
        <pseudo_event id="26" operation="start" operation_key="group-1_start_0">
-         <attributes crm_feature_set="1.0.5"/>
+         <attributes crm_feature_set="1.0.6"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -17,7 +17,7 @@
    <synapse id="1">
      <action_set>
        <pseudo_event id="27" operation="running" operation_key="group-1_running_0">
-         <attributes crm_feature_set="1.0.5"/>
+         <attributes crm_feature_set="1.0.6"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -32,7 +32,7 @@
    <synapse id="2">
      <action_set>
        <pseudo_event id="28" operation="stop" operation_key="group-1_stop_0">
-         <attributes crm_feature_set="1.0.5"/>
+         <attributes crm_feature_set="1.0.6"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -40,7 +40,7 @@
    <synapse id="3">
      <action_set>
        <pseudo_event id="29" operation="stopped" operation_key="group-1_stopped_0">
-         <attributes crm_feature_set="1.0.5"/>
+         <attributes crm_feature_set="1.0.6"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -55,8 +55,8 @@
    <synapse id="4">
      <action_set>
        <rsc_op id="12" operation="monitor" operation_key="child_192.168.100.181_monitor_5000" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
-         <primitive id="child_192.168.100.181" class="ocf" type="IPaddr" provider="heartbeat" long-id="group-1:child_192.168.100.181"/>
-         <attributes timeout="20000" crm_feature_set="1.0.5" interval="5000" ip="192.168.100.181"/>
+         <primitive id="child_192.168.100.181" long-id="group-1:child_192.168.100.181" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.181" CRM_meta_timeout="20000" CRM_meta_interval="5000"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -68,8 +68,8 @@
    <synapse id="5">
      <action_set>
        <rsc_op id="13" operation="stop" operation_key="child_192.168.100.181_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
-         <primitive id="child_192.168.100.181" class="ocf" type="IPaddr" provider="heartbeat" long-id="group-1:child_192.168.100.181"/>
-         <attributes crm_feature_set="1.0.5" ip="192.168.100.181"/>
+         <primitive id="child_192.168.100.181" long-id="group-1:child_192.168.100.181" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.181"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -81,8 +81,8 @@
    <synapse id="6">
      <action_set>
        <rsc_op id="21" operation="start" operation_key="child_192.168.100.181_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
-         <primitive id="child_192.168.100.181" class="ocf" type="IPaddr" provider="heartbeat" long-id="group-1:child_192.168.100.181"/>
-         <attributes crm_feature_set="1.0.5" ip="192.168.100.181"/>
+         <primitive id="child_192.168.100.181" long-id="group-1:child_192.168.100.181" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.181"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -97,8 +97,8 @@
    <synapse id="7">
      <action_set>
        <rsc_op id="9" operation="monitor" operation_key="child_192.168.100.182_monitor_5000" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
-         <primitive id="child_192.168.100.182" class="ocf" type="IPaddr" provider="heartbeat" long-id="group-1:child_192.168.100.182"/>
-         <attributes timeout="20000" crm_feature_set="1.0.5" interval="5000" ip="192.168.100.182"/>
+         <primitive id="child_192.168.100.182" long-id="group-1:child_192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.182" CRM_meta_timeout="20000" CRM_meta_interval="5000"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -110,8 +110,8 @@
    <synapse id="8">
      <action_set>
        <rsc_op id="22" operation="stop" operation_key="child_192.168.100.182_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
-         <primitive id="child_192.168.100.182" class="ocf" type="IPaddr" provider="heartbeat" long-id="group-1:child_192.168.100.182"/>
-         <attributes crm_feature_set="1.0.5" ip="192.168.100.182"/>
+         <primitive id="child_192.168.100.182" long-id="group-1:child_192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.182"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -123,8 +123,8 @@
    <synapse id="9">
      <action_set>
        <rsc_op id="23" operation="start" operation_key="child_192.168.100.182_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
-         <primitive id="child_192.168.100.182" class="ocf" type="IPaddr" provider="heartbeat" long-id="group-1:child_192.168.100.182"/>
-         <attributes crm_feature_set="1.0.5" ip="192.168.100.182"/>
+         <primitive id="child_192.168.100.182" long-id="group-1:child_192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.182"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -139,8 +139,8 @@
    <synapse id="10">
      <action_set>
        <rsc_op id="11" operation="monitor" operation_key="child_192.168.100.183_monitor_5000" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
-         <primitive id="child_192.168.100.183" class="ocf" type="IPaddr" provider="heartbeat" long-id="group-1:child_192.168.100.183"/>
-         <attributes timeout="20000" crm_feature_set="1.0.5" interval="5000" ip="192.168.100.183"/>
+         <primitive id="child_192.168.100.183" long-id="group-1:child_192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.183" CRM_meta_timeout="20000" CRM_meta_interval="5000"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -152,8 +152,8 @@
    <synapse id="11">
      <action_set>
        <rsc_op id="24" operation="stop" operation_key="child_192.168.100.183_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
-         <primitive id="child_192.168.100.183" class="ocf" type="IPaddr" provider="heartbeat" long-id="group-1:child_192.168.100.183"/>
-         <attributes crm_feature_set="1.0.5" ip="192.168.100.183"/>
+         <primitive id="child_192.168.100.183" long-id="group-1:child_192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.183"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -165,8 +165,8 @@
    <synapse id="12">
      <action_set>
        <rsc_op id="25" operation="start" operation_key="child_192.168.100.183_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
-         <primitive id="child_192.168.100.183" class="ocf" type="IPaddr" provider="heartbeat" long-id="group-1:child_192.168.100.183"/>
-         <attributes crm_feature_set="1.0.5" ip="192.168.100.183"/>
+         <primitive id="child_192.168.100.183" long-id="group-1:child_192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.6" ip="192.168.100.183"/>
        </rsc_op>
      </action_set>
      <inputs>

@@ -16,7 +16,7 @@
           </attributes>
         </instance_attributes>
       </node>
-      <node id="5d9a8c11-8684-43ea-9180-5e221530c193" uname="c001n03" type="member"/>
+      <node id="5d9a8c11-8684-43ea-91.0.6e221530c193" uname="c001n03" type="member"/>
       <node id="c2896699-96b8-4dbc-a94e-6c3b9252b559" uname="c001n04" type="member"/>
       <node id="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" uname="c001n05" type="member"/>
       <node id="f91e6074-699d-48af-80d6-223132f291e2" uname="c001n06" type="member"/>
@@ -298,7 +298,7 @@
         </lrm_resources>
       </lrm>
     </node_state>
-    <node_state id="5d9a8c11-8684-43ea-9180-5e221530c193" uname="c001n03" crmd="online" origin="do_lrm_query" in_ccm="true" join="member" ha="active" expected="member">
+    <node_state id="5d9a8c11-8684-43ea-91.0.6e221530c193" uname="c001n03" crmd="online" origin="do_lrm_query" in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes>
         <instance_attributes>
 	  <attributes>

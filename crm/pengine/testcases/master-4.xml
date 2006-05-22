@@ -20,7 +20,7 @@
            </attributes>
          </instance_attributes>
        </node>
-       <node id="5d9a8c11-8684-43ea-9180-5e221530c193" uname="c001n03" type="normal"/>
+       <node id="5d9a8c11-8684-43ea-91.0.6e221530c193" uname="c001n03" type="normal"/>
        <node id="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" uname="c001n01" type="normal"/>
        <node id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" type="normal"/>
      </nodes>
@@ -202,10 +202,10 @@
            </lrm_resource>
            <lrm_resource id="ocf_msdummy:3" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:3_start_0" operation="start" interval="0" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="18" rc_code="0" op_status="0">
-               <parameters stateful="true" clone="3" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="3" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
              <lrm_rsc_op id="ocf_msdummy:3_monitor_5000" interval="5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="22" rc_code="0" op_status="0">
-               <parameters stateful="true" clone="3" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="3" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
            </lrm_resource>
            <lrm_resource id="rsc_c001n01" type="IPaddr" class="ocf" provider="heartbeat">
@@ -243,10 +243,10 @@
            </lrm_resource>
            <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:0_start_0" operation="start" interval="0" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="17" rc_code="0" op_status="0">
-               <parameters stateful="true" clone="0" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="0" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
              <lrm_rsc_op id="ocf_msdummy:0_monitor_5000" interval="5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="21" rc_code="0" op_status="0">
-               <parameters stateful="true" clone="0" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="0" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
            </lrm_resource>
            <lrm_resource id="DcIPaddr" type="IPaddr" class="ocf" provider="heartbeat">
@@ -259,17 +259,17 @@
            </lrm_resource>
            <lrm_resource id="ocf_msdummy:1" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:1_monitor_0" interval="0" operation="monitor" origin="build_active_RAs" transition_key="0:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;0:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="12" rc_code="7" op_status="4">
-               <parameters stateful="true" clone="1" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="1" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
            </lrm_resource>
          </lrm_resources>
        </lrm>
      </node_state>
-     <node_state id="5d9a8c11-8684-43ea-9180-5e221530c193" uname="c001n03" crmd="online" origin="do_lrm_query" shutdown="0" clear_shutdown="true" in_ccm="true" join="member" ha="active" expected="member">
-       <transient_attributes id="5d9a8c11-8684-43ea-9180-5e221530c193">
-         <instance_attributes id="crmd-transient-5d9a8c11-8684-43ea-9180-5e221530c193">
+     <node_state id="5d9a8c11-8684-43ea-91.0.6e221530c193" uname="c001n03" crmd="online" origin="do_lrm_query" shutdown="0" clear_shutdown="true" in_ccm="true" join="member" ha="active" expected="member">
+       <transient_attributes id="5d9a8c11-8684-43ea-91.0.6e221530c193">
+         <instance_attributes id="crmd-transient-5d9a8c11-8684-43ea-91.0.6e221530c193">
            <attributes>
-             <nvpair id="lrm-probe-5d9a8c11-8684-43ea-9180-5e221530c193" name="probe_complete" value="true"/>
+             <nvpair id="lrm-probe-5d9a8c11-8684-43ea-91.0.6e221530c193" name="probe_complete" value="true"/>
            </attributes>
          </instance_attributes>
        </transient_attributes>
@@ -287,10 +287,10 @@
            </lrm_resource>
            <lrm_resource id="ocf_msdummy:4" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:4_start_0" operation="start" interval="0" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="18" rc_code="0" op_status="0">
-               <parameters stateful="true" clone="4" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="4" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
              <lrm_rsc_op id="ocf_msdummy:4_monitor_5000" interval="5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="23" rc_code="0" op_status="0">
-               <parameters stateful="true" clone="4" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="4" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
            </lrm_resource>
            <lrm_resource id="rsc_c001n01" type="IPaddr" class="ocf" provider="heartbeat">
@@ -342,7 +342,7 @@
            </lrm_resource>
            <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:0_monitor_0" interval="0" operation="monitor" origin="build_active_RAs" transition_key="2:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;2:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="11" rc_code="7" op_status="4">
-               <parameters stateful="true" clone="0" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="0" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
            </lrm_resource>
            <lrm_resource id="DcIPaddr" type="IPaddr" class="ocf" provider="heartbeat">
@@ -352,10 +352,10 @@
            </lrm_resource>
            <lrm_resource id="ocf_msdummy:1" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:1_start_0" operation="start" interval="0" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="17" rc_code="0" op_status="0">
-               <parameters stateful="true" clone="1" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="1" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
              <lrm_rsc_op id="ocf_msdummy:1_monitor_5000" interval="5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="22" rc_code="0" op_status="0">
-               <parameters stateful="true" clone="1" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="1" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
            </lrm_resource>
          </lrm_resources>
@@ -378,10 +378,10 @@
            </lrm_resource>
            <lrm_resource id="ocf_msdummy:2" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:2_start_0" operation="start" interval="0" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="17" rc_code="0" op_status="0">
-               <parameters stateful="true" clone="2" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="2" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
              <lrm_rsc_op id="ocf_msdummy:2_monitor_5000" interval="5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="23" rc_code="0" op_status="0">
-               <parameters stateful="true" clone="2" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="2" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
            </lrm_resource>
            <lrm_resource id="lsb_dummy" type="/usr/lib/heartbeat/cts/LSBDummy" class="lsb" provider="heartbeat">
@@ -394,10 +394,10 @@
            </lrm_resource>
            <lrm_resource id="ocf_msdummy:5" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:5_start_0" operation="start" interval="0" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="18" rc_code="0" op_status="0">
-               <parameters stateful="true" clone="5" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="5" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
              <lrm_rsc_op id="ocf_msdummy:5_monitor_5000" interval="5000" operation="monitor" origin="build_active_RAs" transition_key="5:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;5:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="24" rc_code="0" op_status="0">
-               <parameters stateful="true" clone="5" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="5" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
            </lrm_resource>
            <lrm_resource id="rsc_c001n01" type="IPaddr" class="ocf" provider="heartbeat">
@@ -447,7 +447,7 @@
            </lrm_resource>
            <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:0_monitor_0" interval="0" operation="monitor" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="11" rc_code="7" op_status="4">
-               <parameters stateful="true" clone="0" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="0" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
            </lrm_resource>
            <lrm_resource id="DcIPaddr" type="IPaddr" class="ocf" provider="heartbeat">
@@ -457,7 +457,7 @@
            </lrm_resource>
            <lrm_resource id="ocf_msdummy:1" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:1_monitor_0" interval="0" operation="monitor" origin="build_active_RAs" transition_key="4:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;4:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="12" rc_code="7" op_status="4">
-               <parameters stateful="true" clone="1" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="1" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
            </lrm_resource>
          </lrm_resources>
@@ -519,12 +519,12 @@
            </lrm_resource>
            <lrm_resource id="ocf_msdummy:1" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:1_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="12" rc_code="7" op_status="4">
-               <parameters stateful="true" clone="1" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="1" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
            </lrm_resource>
            <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:0_monitor_0" interval="0" operation="monitor" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="4:7;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="monitor_failed" call_id="11" rc_code="7" op_status="4">
-               <parameters stateful="true" clone="0" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="0" clone_max="8" logfile="/var/log/cts_ocfdummy.log" te-target-rc="7" lrm-is-probe="true" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
            </lrm_resource>
            <lrm_resource id="child_DoFencing:3" type="ssh" class="stonith">
@@ -537,18 +537,18 @@
            </lrm_resource>
            <lrm_resource id="ocf_msdummy:6" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:6_start_0" operation="start" interval="0" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="15" rc_code="0" op_status="0">
-               <parameters stateful="true" clone="6" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="6" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
              <lrm_rsc_op id="ocf_msdummy:6_monitor_5000" interval="5000" operation="monitor" origin="do_update_resource" transition_key="7:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;7:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="19" rc_code="0" op_status="0">
-               <parameters stateful="true" clone="6" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="6" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
            </lrm_resource>
            <lrm_resource id="ocf_msdummy:7" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:7_start_0" operation="start" interval="0" origin="do_update_resource" transition_key="6:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;6:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="16" rc_code="0" op_status="0">
-               <parameters stateful="true" clone="7" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="7" clone_max="8" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
              <lrm_rsc_op id="ocf_msdummy:7_monitor_5000" interval="5000" operation="monitor" origin="do_update_resource" transition_key="7:a798051c-7b67-4033-a6dc-85775e8bf816" transition_magic="0:0;7:a798051c-7b67-4033-a6dc-85775e8bf816" rsc_state="running" call_id="20" rc_code="0" op_status="0">
-               <parameters stateful="true" clone="7" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
+               <parameters crm_meta_stateful="true" clone="7" clone_max="8" timeout="10000" logfile="/var/log/cts_ocfdummy.log" crm_feature_set="1.0.4" interval="5000" master_max="4" master_node_max="1" clone_node_max="2"/>
              </lrm_rsc_op>
            </lrm_resource>
          </lrm_resources>

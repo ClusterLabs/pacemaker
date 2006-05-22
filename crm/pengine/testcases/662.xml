@@ -10,7 +10,7 @@
       <nodes>
         <node id="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" uname="c001n09" type="member"/>
         <node id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" type="member"/>
-        <node id="5d9a8c11-8684-43ea-9180-5e221530c193" uname="c001n03" type="member"/>
+        <node id="5d9a8c11-8684-43ea-91.0.6e221530c193" uname="c001n03" type="member"/>
         <node id="c2896699-96b8-4dbc-a94e-6c3b9252b559" uname="c001n04" type="member"/>
       </nodes>
       <resources>
@@ -189,7 +189,7 @@
           </lrm_resources>
         </lrm>
       </node_state>
-      <node_state id="5d9a8c11-8684-43ea-9180-5e221530c193" uname="c001n03" crmd="online" origin="do_lrm_query" in_ccm="true" join="member" ha="active" expected="member">
+      <node_state id="5d9a8c11-8684-43ea-91.0.6e221530c193" uname="c001n03" crmd="online" origin="do_lrm_query" in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes>
         <instance_attributes>
 	  <attributes>
