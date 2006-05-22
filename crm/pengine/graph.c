@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.88 2006/05/22 08:27:33 andrew Exp $ */
+/* $Id: graph.c,v 1.89 2006/05/22 10:55:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -410,22 +410,21 @@ action2xml(action_t *action, gboolean as_input)
 			crm_xml_add(rsc_xml, attr_list[lpc],
 				    g_hash_table_lookup(action->rsc->meta, attr_list[lpc]));
 		}
-		
-		args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
-		crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-
-		g_hash_table_foreach(
-			action->rsc->parameters, hash2field, args_xml);
-
-		g_hash_table_foreach(action->extra, hash2field, args_xml);
-/* 		g_hash_table_foreach(action->meta, hash2metafield, args_xml); */
- 		g_hash_table_foreach(action->meta, hash2field, args_xml);
-		
-	} else {
-		args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
-		crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-		g_hash_table_foreach(action->meta, hash2metafield, args_xml);
 	}
+
+	args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
+	crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+
+	g_hash_table_foreach(action->extra, hash2field, args_xml);
+	if(action->rsc != NULL) {
+		g_hash_table_foreach(action->rsc->parameters, hash2field, args_xml);
+	}
+
+	g_hash_table_foreach(action->meta, hash2metafield, args_xml);
+	if(action->rsc != NULL) {
+		g_hash_table_foreach(action->rsc->meta, hash2metafield, args_xml);
+	}
+	
 	crm_log_xml_debug_2(action_xml, "dumped action");
 	
 	return action_xml;
