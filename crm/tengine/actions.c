@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.29 2006/05/22 08:27:33 andrew Exp $ */
+/* $Id: actions.c,v 1.30 2006/05/22 10:26:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -269,10 +269,14 @@ cib_action_update(crm_action_t *action, int status)
 		 crm_element_name(action->xml), action->id, task_uuid, target);
 
 	action_rsc = find_xml_node(action->xml, XML_CIB_TAG_RESOURCE, TRUE);
-	CRM_CHECK(action_rsc != NULL, return FALSE);
-
+	if(action_rsc == NULL) {
+		return FALSE;
+	}
+	
 	rsc_id = ID(action_rsc);
-	CRM_CHECK(rsc_id != NULL, return FALSE);
+	CRM_CHECK(rsc_id != NULL,
+		  crm_log_xml_err(action->xml, "Bad:action");
+		  return FALSE);
 	
 	code = crm_itoa(status);
 	
@@ -408,7 +412,7 @@ send_rsc_command(crm_action_t *action)
 #endif
 	
 	action->executed = TRUE;
-	value = g_hash_table_lookup(action->params, XML_ATTR_TE_NOWAIT);
+	value = g_hash_table_lookup(action->params, crm_meta_name(XML_ATTR_TE_NOWAIT));
 	if(crm_is_true(value)) {
 		crm_debug("Skipping wait for %d", action->id);
 		action->confirmed = TRUE;
