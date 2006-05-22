@@ -1,5 +1,4 @@
-Using CVS directory: .
-/* $Id: incarnation.c,v 1.86 2006/05/22 08:14:13 andrew Exp $ */
+/* $Id: incarnation.c,v 1.87 2006/05/22 08:15:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1406,7 +1405,8 @@ clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
-		if(num_probes >= clone_data->clone_node_max) {
+		if(rsc->globally_unique == FALSE
+		   && num_probes >= clone_data->clone_node_max) {
 			return FALSE;
 		}
 		if(pe_find_node_id(child_rsc->running_on, node->details->id)) {
