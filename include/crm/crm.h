@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.96 2006/05/22 11:03:41 andrew Exp $ */
+/* $Id: crm.h,v 1.97 2006/05/23 07:50:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -44,6 +44,9 @@
 #define CRM_DEPRECATED_SINCE_2_0_3 0
 #define CRM_DEPRECATED_SINCE_2_0_4 1
 #define CRM_DEPRECATED_SINCE_2_0_5 1
+#define CRM_DEPRECATED_SINCE_2_0_6 1
+#define CRM_DEPRECATED_SINCE_2_0_7 1
+#define CRM_DEPRECATED_SINCE_2_0_8 1
 #define CRM_DEPRECATED_SINCE_2_1_0 1
 
 #define CRM_META			"CRM_meta"
