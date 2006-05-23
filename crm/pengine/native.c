@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.135 2006/05/23 07:45:37 andrew Exp $ */
+/* $Id: native.c,v 1.136 2006/05/23 07:51:20 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1798,6 +1798,10 @@ pe_post_notify(resource_t *rsc, node_t *node, action_t *op,
 	       notify_data_t *n_data, pe_working_set_t *data_set)
 {
 	action_t *notify = NULL;
+
+	CRM_CHECK(op != NULL, return);
+	CRM_CHECK(rsc != NULL, return);
+	
 	crm_debug_2("%s: %s", rsc->id, op->uuid);
 	notify = pe_notify(rsc, node, op->post_notify, op->post_notified,
 			   n_data, data_set);
