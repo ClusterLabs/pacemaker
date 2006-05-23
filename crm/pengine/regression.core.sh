@@ -83,7 +83,7 @@ function do_test {
     fi
 
     rc=2
-    dot -Tpng $dot_output  2>/dev/null > $dot_png
+    #dot -Tpng $dot_output  2>/dev/null > $dot_png
     if [ -f $dot_expected ]; then
 	diff $diff_opts $dot_expected $dot_output >/dev/null
 	rc=$?

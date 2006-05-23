@@ -65,6 +65,7 @@ do_test master-6 "Promoted -> Promoted (2)"
 do_test master-7 "Promoted -> Fenced"
 do_test master-8 "Promoted -> Fenced -> Moved"
 do_test master-9 "Stopped + Promotable + No quorum"
+do_test master-10 "Stopped -> Promotable : notify with monitor"
 
 echo ""
 do_test rsc_dep1 "Must not     "
