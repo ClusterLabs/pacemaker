@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.90 2006/05/23 07:45:37 andrew Exp $ */
+/* $Id: complex.c,v 1.91 2006/05/23 10:00:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -212,7 +212,6 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	if(value) {
 		(*rsc)->id = crm_concat(id, value, ':');
 		add_hash_param((*rsc)->meta, XML_RSC_ATTR_INCARNATION, value);
-		add_hash_param((*rsc)->parameters, crm_meta_name(XML_RSC_ATTR_INCARNATION), value);
 		
 	} else {
 		(*rsc)->id = crm_strdup(id);

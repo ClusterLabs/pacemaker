@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.89 2006/05/22 15:31:30 andrew Exp $ */
+/* $Id: incarnation.c,v 1.90 2006/05/23 10:00:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -99,7 +99,6 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 		clone_data->child_list, child_rsc);
 	
 	add_hash_param(child_rsc->meta, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
-	add_hash_param(child_rsc->parameters, crm_meta_name(XML_RSC_ATTR_INCARNATION_MAX), inc_max);
 	
 	print_resource(LOG_DEBUG_3, "Added", child_rsc, FALSE);
 	
