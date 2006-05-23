@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.95 2006/05/22 15:30:06 andrew Exp $ */
+/* $Id: stages.c,v 1.96 2006/05/23 07:48:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,10 +34,6 @@
 #include <pe_utils.h>
 
 node_t *choose_fencer(action_t *stonith, node_t *node, GListPtr resources);
-void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
-
-
-
 
 /*
  * Unpack everything
@@ -442,7 +438,7 @@ stage7(pe_working_set_t *data_set)
 		} else {
 			/* fall back to action-to-action */
 			order_actions(
-				order->lh_action, order->rh_action, order);
+				order->lh_action, order->rh_action, order->type);
 		}
 		
 		);
