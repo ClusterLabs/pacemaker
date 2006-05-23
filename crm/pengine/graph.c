@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.89 2006/05/22 10:55:16 andrew Exp $ */
+/* $Id: graph.c,v 1.90 2006/05/23 09:57:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -422,7 +422,27 @@ action2xml(action_t *action, gboolean as_input)
 
 	g_hash_table_foreach(action->meta, hash2metafield, args_xml);
 	if(action->rsc != NULL) {
-		g_hash_table_foreach(action->rsc->meta, hash2metafield, args_xml);
+		int lpc = 0;
+		const char *key = NULL;
+		const char *value = NULL;
+		const char *meta_list[] = {
+			XML_RSC_ATTR_UNIQUE,
+			XML_RSC_ATTR_INCARNATION,
+			XML_RSC_ATTR_INCARNATION_MAX,
+			XML_RSC_ATTR_INCARNATION_NODEMAX,
+			XML_RSC_ATTR_MASTER_MAX,
+			XML_RSC_ATTR_MASTER_NODEMAX,
+		};
+		
+		for(lpc = 0; lpc < DIMOF(meta_list); lpc++) {
+			key = meta_list[lpc];
+			value = g_hash_table_lookup(action->rsc->meta, key);
+			if(value != NULL) {
+				char *crm_name = crm_concat(CRM_META, key, '_');
+				crm_xml_add(args_xml, crm_name, value);
+				crm_free(crm_name);
+			}
+		}
 	}
 	
 	crm_log_xml_debug_2(action_xml, "dumped action");

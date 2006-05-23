@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.136 2006/05/23 07:51:20 andrew Exp $ */
+/* $Id: native.c,v 1.137 2006/05/23 09:57:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1808,6 +1808,11 @@ pe_post_notify(resource_t *rsc, node_t *node, action_t *op,
 
 	if(notify != NULL) {
 		notify->priority = INFINITY;
+	}
+	
+	if(op->post_notify != NULL) {
+		notify = op->post_notify;
+		notify->priority = INFINITY;
 		slist_iter(
 			mon, action_t, rsc->actions, lpc,
 
@@ -1823,7 +1828,6 @@ pe_post_notify(resource_t *rsc, node_t *node, action_t *op,
 			order_actions(notify, mon, pe_ordering_optional);
 			);
 	}
-	op->post_notify->priority = INFINITY;
 }
 
 
