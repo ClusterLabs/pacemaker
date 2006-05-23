@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.34 2006/05/22 08:27:33 andrew Exp $ */
+/* $Id: complex.h,v 1.35 2006/05/23 07:45:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -227,7 +227,6 @@ extern gboolean is_active(rsc_to_node_t *cons);
 extern gboolean native_constraint_violated(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint);
 
-extern void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
 extern void common_agent_constraints(
 	GListPtr node_list, lrm_agent_t *agent, const char *id);
 

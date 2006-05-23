@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.111 2006/05/22 08:27:33 andrew Exp $ */
+/* $Id: pengine.h,v 1.112 2006/05/23 07:45:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -484,6 +484,7 @@ extern void graph_element_from_action(
 	action_t *action, pe_working_set_t *data_set);
 extern void set_working_set_defaults(pe_working_set_t *data_set);
 extern void cleanup_calculations(pe_working_set_t *data_set);
+extern void order_actions(action_t *lh_action, action_t *rh_action, enum pe_ordering order);
 
 extern const char* transition_idle_timeout;
 extern gboolean was_processing_error;

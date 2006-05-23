@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.89 2006/05/22 08:27:33 andrew Exp $ */
+/* $Id: complex.c,v 1.90 2006/05/23 07:45:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,7 +30,6 @@ gboolean update_node_weight(rsc_to_node_t *cons,const char *id,GListPtr nodes);
 gboolean is_active(rsc_to_node_t *cons);
 gboolean constraint_violated(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint);
-void order_actions(action_t *lh, action_t *rh, order_constraint_t *order);
 
 extern gboolean rsc_colocation_new(const char *id, enum con_strength strength,
 				   resource_t *rsc_lh, resource_t *rsc_rh);
@@ -176,19 +175,6 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	const char *value = NULL;
 	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
 
-#if CRM_DEPRECATED_SINCE_2_0_5
-	const char *allowed_attrs[] = {
-		XML_CIB_ATTR_PRIORITY,
-		XML_RSC_ATTR_INCARNATION_MAX,
-		XML_RSC_ATTR_INCARNATION_NODEMAX,
-		XML_RSC_ATTR_MASTER_MAX,
-		XML_RSC_ATTR_MASTER_NODEMAX,
-		XML_RSC_ATTR_STICKINESS,
-		XML_RSC_ATTR_FAIL_STICKINESS,
-		XML_RSC_ATTR_TARGET_ROLE,
-		XML_RSC_ATTR_NOTIFY,
-	};
-#endif
 	crm_log_xml_debug_3(xml_obj, "Processing resource input...");
 	
 	if(id == NULL) {
@@ -255,11 +241,12 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		g_hash_table_foreach(parent->meta, dup_attr, (*rsc)->meta);
 	}	
 
-#if CRM_DEPRECATED_SINCE_2_0_5
+	/* populate from the regular attributes until the GUI can create
+	 * meta attributes
+	 */
 	unpack_instance_attributes(
 		xml_obj, XML_TAG_ATTR_SETS, NULL, (*rsc)->meta,
-		allowed_attrs, DIMOF(allowed_attrs), data_set);
-#endif
+		NULL, 0, data_set);
 
 	if(parent != NULL) {
 		g_hash_table_foreach(parent->parameters, dup_attr, (*rsc)->parameters);
@@ -387,13 +374,13 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 
 void
 order_actions(
-	action_t *lh_action, action_t *rh_action, order_constraint_t *order) 
+	action_t *lh_action, action_t *rh_action, enum pe_ordering order) 
 {
 	action_wrapper_t *wrapper = NULL;
 	GListPtr list = NULL;
 	
-	crm_debug_2("Ordering %d: Action %d before %d",
-		  order?order->id:-1, lh_action->id, rh_action->id);
+	crm_debug_2("Ordering Action %s before %s",
+		  lh_action->uuid, rh_action->uuid);
 
 	log_action(LOG_DEBUG_4, "LH (order_actions)", lh_action, FALSE);
 	log_action(LOG_DEBUG_4, "RH (order_actions)", rh_action, FALSE);
@@ -402,18 +389,18 @@ order_actions(
 	crm_malloc0(wrapper, sizeof(action_wrapper_t));
 	if(wrapper != NULL) {
 		wrapper->action = rh_action;
-		wrapper->type = order->type;
+		wrapper->type = order;
 		
 		list = lh_action->actions_after;
 		list = g_list_append(list, wrapper);
 		lh_action->actions_after = list;
 		wrapper = NULL;
 	}
-	if(order->type != pe_ordering_recover) {
+	if(order != pe_ordering_recover) {
 		crm_malloc0(wrapper, sizeof(action_wrapper_t));
 		if(wrapper != NULL) {
 			wrapper->action = lh_action;
-			wrapper->type = order->type;
+			wrapper->type = order;
 			list = rh_action->actions_before;
 			list = g_list_append(list, wrapper);
 			rh_action->actions_before = list;

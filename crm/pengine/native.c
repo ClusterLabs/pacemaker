@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.134 2006/05/22 08:27:33 andrew Exp $ */
+/* $Id: native.c,v 1.135 2006/05/23 07:45:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -830,7 +830,7 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 				lh_action_iter, rh_rsc, order);
 
 		} else if(order->rh_action) {
-			order_actions(lh_action_iter, order->rh_action, order); 
+			order_actions(lh_action_iter, order->rh_action, order->type); 
 
 		}
 		);
@@ -875,7 +875,7 @@ void native_rsc_order_rh(
 	slist_iter(
 		rh_action_iter, action_t, rh_actions, lpc,
 
-		order_actions(lh_action, rh_action_iter, order); 
+		order_actions(lh_action, rh_action_iter, order->type); 
 		);
 
 	pe_free_shallow_adv(rh_actions, FALSE);
@@ -1744,7 +1744,6 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 {
 	char *key = NULL;
 	action_t *trigger = NULL;
-	action_wrapper_t *wrapper = NULL;
 	const char *value = NULL;
 	const char *task = NULL;
 	
@@ -1771,17 +1770,7 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	crm_debug_3("Ordering %s before %s (%d->%d)",
 		op->uuid, trigger->uuid, trigger->id, op->id);
 
-	crm_malloc0(wrapper, sizeof(action_wrapper_t));
-	wrapper->action = op;
-	wrapper->type = pe_ordering_manditory;
-	trigger->actions_before=g_list_append(trigger->actions_before, wrapper);
-
-	wrapper = NULL;
-	crm_malloc0(wrapper, sizeof(action_wrapper_t));
-	wrapper->action = trigger;
-	wrapper->type = pe_ordering_manditory;
-	op->actions_after = g_list_append(op->actions_after, wrapper);
-
+	order_actions(op, trigger, pe_ordering_manditory);
 	
 	value = g_hash_table_lookup(op->meta, "notify_confirm");
 	if(crm_is_true(value)) {
@@ -1790,19 +1779,7 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 			    trigger->uuid, confirm->uuid,
 			    confirm->id, trigger->id);
 
-		wrapper = NULL;
-		crm_malloc0(wrapper, sizeof(action_wrapper_t));
-		wrapper->action = trigger;
-		wrapper->type = pe_ordering_manditory;
-		confirm->actions_before = g_list_append(
-			confirm->actions_before, wrapper);
-
-		wrapper = NULL;
-		crm_malloc0(wrapper, sizeof(action_wrapper_t));
-		wrapper->action = confirm;
-		wrapper->type = pe_ordering_manditory;
-		trigger->actions_after = g_list_append(
-			trigger->actions_after, wrapper);
+		order_actions(trigger, confirm, pe_ordering_manditory);
 	}	
 	return trigger;
 }
@@ -1827,6 +1804,20 @@ pe_post_notify(resource_t *rsc, node_t *node, action_t *op,
 
 	if(notify != NULL) {
 		notify->priority = INFINITY;
+		slist_iter(
+			mon, action_t, rsc->actions, lpc,
+
+			const char *interval = g_hash_table_lookup(mon->meta, "interval");
+			if(interval == NULL || safe_str_eq(interval, "0")) {
+				crm_debug_3("Skipping %s: interval", mon->uuid); 
+				continue;
+			} else if(safe_str_eq(mon->task, "cancel")) {
+				crm_debug_3("Skipping %s: cancel", mon->uuid); 
+				continue;
+			}
+
+			order_actions(notify, mon, pe_ordering_optional);
+			);
 	}
 	op->post_notify->priority = INFINITY;
 }
