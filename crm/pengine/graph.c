@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.90 2006/05/23 09:57:52 andrew Exp $ */
+/* $Id: graph.c,v 1.91 2006/05/24 20:25:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -259,10 +259,18 @@ stonith_constraints(node_t *node,
 					 */
 					action->pseudo = TRUE;
 					action->runnable = TRUE;
-					custom_action_order(
-						NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
-						rsc, start_key(rsc), NULL,
-						pe_ordering_manditory, data_set);
+					if(action->optional) {
+						custom_action_order(
+							NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
+							rsc, start_key(rsc), NULL,
+							pe_ordering_manditory, data_set);
+					} else {
+						custom_action_order(
+							NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
+							rsc, NULL, action,
+							pe_ordering_manditory, data_set);
+					}
+
 				} else {
 					crm_info("Moving healthy resource %s"
 						 " off %s before fencing",
