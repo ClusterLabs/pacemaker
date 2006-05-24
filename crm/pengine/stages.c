@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.96 2006/05/23 07:48:15 andrew Exp $ */
+/* $Id: stages.c,v 1.97 2006/05/24 16:38:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -251,10 +251,10 @@ stage4(pe_working_set_t *data_set)
 				    " now that color %d is allocated",
 				    rsc->id, color->details->id); 
 
-			if(rsc->next_role != RSC_ROLE_UNKNOWN) {
-			} else if(chosen == NULL) {
+			if(chosen == NULL) {
 				rsc->next_role = RSC_ROLE_STOPPED;
-			} else {
+
+			} else if(rsc->next_role == RSC_ROLE_UNKNOWN) {
 				rsc->next_role = RSC_ROLE_STARTED;
 			}
 

@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.139 2006/05/24 16:07:24 andrew Exp $ */
+/* $Id: native.c,v 1.140 2006/05/24 16:38:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1721,8 +1721,12 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 	
 	/* start / promote */
 	if(rsc->next_role != RSC_ROLE_STOPPED) {	
-		CRM_CHECK(next_node != NULL, return);
-		if(task == start_rsc || task == action_promote) {
+		CRM_CHECK(next_node != NULL,;);
+
+		if(next_node == NULL) {
+			pe_proc_err("next role: %s", role2text(rsc->next_role));
+			
+		} else if(task == start_rsc || task == action_promote) {
 			if(task != start_rsc || registered == FALSE) {
 				pe_pre_notify(rsc, next_node, op, n_data, data_set);
 			}
@@ -1732,7 +1736,6 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 	
 	crm_free(op_key);
 	pe_free_shallow_adv(possible_matches, FALSE);
-
 }
 
 
