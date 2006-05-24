@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.91 2006/05/24 20:25:32 andrew Exp $ */
+/* $Id: graph.c,v 1.92 2006/05/24 20:45:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -257,6 +257,7 @@ stonith_constraints(node_t *node,
 					/* the stop would never complete and is
 					 * now implied by the stonith operation
 					 */
+					rsc->failed = TRUE;
 					action->pseudo = TRUE;
 					action->runnable = TRUE;
 					if(action->optional) {
@@ -264,11 +265,15 @@ stonith_constraints(node_t *node,
 							NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
 							rsc, start_key(rsc), NULL,
 							pe_ordering_manditory, data_set);
-					} else {
+					} else {						
 						custom_action_order(
 							NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
 							rsc, NULL, action,
 							pe_ordering_manditory, data_set);
+					}
+					if(action->rsc->parent) {
+						crm_info("Recalling actions for %s", action->rsc->parent->id);
+						action->rsc->parent->fns->create_actions(action->rsc->parent, data_set);
 					}
 
 				} else {
