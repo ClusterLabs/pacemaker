@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.138 2006/05/24 10:11:18 andrew Exp $ */
+/* $Id: native.c,v 1.139 2006/05/24 16:07:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1738,7 +1738,8 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 
 static void dup_attr(gpointer key, gpointer value, gpointer user_data)
 {
-	g_hash_table_replace(user_data, crm_strdup(key), crm_strdup(value));
+	char *meta_key = crm_concat(CRM_META, key, '_');
+	g_hash_table_replace(user_data, meta_key, crm_strdup(value));
 }
 
 static action_t *
