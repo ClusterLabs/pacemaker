@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.23 2006/05/20 07:40:57 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.24 2006/05/24 08:27:19 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -218,7 +218,7 @@ main(int argc, char **argv)
 
 	if(one_shot == FALSE) {
 		timer_id = Gmain_timeout_add(
-			interval*1000, mon_timer_popped, NULL);
+			interval, mon_timer_popped, NULL);
 	}
 
 	mon_timer_popped(NULL);
