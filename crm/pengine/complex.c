@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.91 2006/05/23 10:00:31 andrew Exp $ */
+/* $Id: complex.c,v 1.92 2006/05/24 20:13:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -193,7 +193,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	}
 	
 	(*rsc)->xml  = xml_obj;
-	(*rsc)->parent  = NULL;
+	(*rsc)->parent  = parent;
 	(*rsc)->ops_xml = find_xml_node(xml_obj, "operations", FALSE);
 	(*rsc)->variant = get_resource_type(crm_element_name(xml_obj));
 	if((*rsc)->variant == pe_unknown) {
@@ -248,7 +248,8 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		NULL, 0, data_set);
 
 	if(parent != NULL) {
-		g_hash_table_foreach(parent->parameters, dup_attr, (*rsc)->parameters);
+		g_hash_table_foreach(
+			parent->parameters, dup_attr, (*rsc)->parameters);
 	}	
 
 	(*rsc)->runnable	   = TRUE; 
