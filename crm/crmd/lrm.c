@@ -365,9 +365,17 @@ build_operation_update(
 	
 	if(safe_str_eq(op->op_type, CRMD_ACTION_NOTIFY)) {
 		const char *n_type = g_hash_table_lookup(
-			op->params, "notify_type");
+			op->params, crm_meta_name("notify_type"));
 		const char *n_task = g_hash_table_lookup(
-			op->params, "notify_operation");
+			op->params, crm_meta_name("notify_operation"));
+#if CRM_DEPRECATED_SINCE_2_0_5
+		if(n_type == NULL) {
+			n_type = g_hash_table_lookup(op->params, "notify_type");
+		}
+		if(n_task == NULL) {
+			n_task = g_hash_table_lookup(op->params, "notify_operation");
+		}
+#endif
 		CRM_DEV_ASSERT(n_type != NULL);
 		CRM_DEV_ASSERT(n_task != NULL);
 		op_id = generate_notify_key(op->rsc_id, n_type, n_task);
@@ -475,9 +483,8 @@ build_operation_update(
 				state = CRMD_ACTION_STARTED;
 		
 			} else {
-				crm_warn("Using status \"%s\" for op \"%s\""
-					 "... this is still in the experimental stage.",
-					 CRMD_ACTION_GENERIC_OK, op->op_type);
+				crm_debug("Using status \"%s\" for op \"%s\"",
+					  CRMD_ACTION_GENERIC_OK, op->op_type);
 				state = CRMD_ACTION_GENERIC_OK;
 			}	
 			break;
