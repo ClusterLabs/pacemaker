@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.137 2006/05/23 09:57:52 andrew Exp $ */
+/* $Id: native.c,v 1.138 2006/05/24 10:11:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -206,6 +206,8 @@ native_parameter(
 {
 	char *value_copy = NULL;
 	const char *value = NULL;
+	GHashTable *hash = rsc->parameters;
+	GHashTable *local_hash = NULL;
 
 	CRM_CHECK(rsc != NULL, return NULL);
 	CRM_CHECK(name != NULL && strlen(name) != 0, return NULL);
@@ -213,8 +215,6 @@ native_parameter(
 	crm_debug_2("Looking up %s in %s", name, rsc->id);
 	
 	if(create) {
-		GHashTable *local_hash = NULL;
-
 		if(node != NULL) {
 			crm_debug_2("Creating hash with node %s",
 				  node->details->uname);
@@ -225,24 +225,27 @@ native_parameter(
 		local_hash = g_hash_table_new_full(
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
-
+		
 		g_hash_table_foreach(
 			rsc->parameters, hash_copy_field, local_hash);
 		unpack_instance_attributes(
 			rsc->xml, XML_TAG_ATTR_SETS, node, local_hash,
 			NULL, 0, data_set);
 
-		value = g_hash_table_lookup(local_hash, name);
-		if(value != NULL) {
-			value_copy = crm_strdup(value);
-		}
+		hash = local_hash;
+	}
+		
+	value = g_hash_table_lookup(hash, name);
+	if(value == NULL) {
+		/* try meta attributes instead */
+		value = g_hash_table_lookup(rsc->meta, name);
+	}
+	
+	if(value != NULL) {
+		value_copy = crm_strdup(value);
+	}
+	if(local_hash != NULL) {
 		g_hash_table_destroy(local_hash);
-
-	} else {
-		value = g_hash_table_lookup(rsc->parameters, name);
-		if(value != NULL) {
-			value_copy = crm_strdup(value);
-		}
 	}
 	return value_copy;
 }
