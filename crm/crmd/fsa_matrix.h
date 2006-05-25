@@ -191,8 +191,8 @@ const enum crmd_fsa_state crmd_fsa_state [MAXINPUT][MAXSTATE] =
 	{
 		/* S_IDLE		==> */	S_RECOVERY,
 		/* S_ELECTION		==> */	S_RECOVERY,
-		/* S_INTEGRATION	==> */	S_INTEGRATION,
-		/* S_FINALIZE_JOIN	==> */	S_INTEGRATION,
+		/* S_INTEGRATION	==> */	S_RECOVERY,
+		/* S_FINALIZE_JOIN	==> */	S_RECOVERY,
 		/* S_NOT_DC		==> */	S_RECOVERY,
 		/* S_POLICY_ENGINE	==> */	S_RECOVERY,
 		/* S_RECOVERY		==> */	S_RECOVERY,
