@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.93 2006/05/24 20:49:28 andrew Exp $ */
+/* $Id: graph.c,v 1.94 2006/05/25 10:26:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -251,6 +251,7 @@ stonith_constraints(node_t *node,
 				action, action_t, action_list, lpc2,
 				if(node->details->online == FALSE
 				   || rsc->failed) {
+					resource_t *parent = NULL;
 					crm_info("Stop of failed resource %s is"
 						 " implict after %s is fenced",
 						 rsc->id, node->details->uname);
@@ -260,6 +261,7 @@ stonith_constraints(node_t *node,
 					action->pseudo = TRUE;
 					action->runnable = TRUE;
 					if(action->optional) {
+						/* does this case ever happen? */
 						custom_action_order(
 							NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
 							rsc, start_key(rsc), NULL,
@@ -270,9 +272,18 @@ stonith_constraints(node_t *node,
 							rsc, NULL, action,
 							pe_ordering_manditory, data_set);
 					}
-					if(action->rsc->parent) {
-						crm_info("Recalling actions for %s", action->rsc->parent->id);
-						action->rsc->parent->fns->create_actions(action->rsc->parent, data_set);
+
+					/* find the top-most resource */
+					parent = rsc->parent;
+					while(parent != NULL && parent->parent != NULL) {
+						parent = parent->parent;
+					}
+					
+					if(parent) {
+						crm_info("Re-creating actions for %s",
+							 parent->id);
+						parent->fns->create_actions(
+							parent, data_set);
 					}
 
 				} else {
