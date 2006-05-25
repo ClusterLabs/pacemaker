@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.24 2006/05/24 08:27:19 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.25 2006/05/25 18:18:39 lars Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -63,7 +63,7 @@ void usage(const char *cmd, int exit_status);
 void blank_screen(void);
 int print_status(crm_data_t *cib);
 /* #define printw_at(line, fmt...) move(line, 0); printw(fmt); line++ */
-void wait_for_refresh(int offset, const char *prefix, int seconds);
+void wait_for_refresh(int offset, const char *prefix, int msec);
 int print_html_status(crm_data_t *cib, const char *filename);
 void make_daemon(gboolean daemonize, const char *pidfile);
 gboolean mon_timer_popped(gpointer data);
@@ -74,7 +74,7 @@ char *pid_file = NULL;
 gboolean as_console = FALSE;
 gboolean group_by_node = FALSE;
 gboolean inactive_resources = FALSE;
-int interval = 15;
+int interval = 15000;
 gboolean daemonize = FALSE;
 GMainLoop*  mainloop = NULL;
 guint timer_id = 0;
@@ -337,12 +337,12 @@ mon_update(const HA_Message *msg, int call_id, int rc,
 }
 
 void
-wait_for_refresh(int offset, const char *prefix, int seconds) 
+wait_for_refresh(int offset, const char *prefix, int msec) 
 {
-	int lpc = seconds;
+	int lpc = msec / 1000;
 
 	if(as_console == FALSE) {
-		timer_id = Gmain_timeout_add(seconds*1000, mon_timer_popped, NULL);
+		timer_id = Gmain_timeout_add(msec, mon_timer_popped, NULL);
 		return;
 	}
 	
