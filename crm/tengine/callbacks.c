@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.80 2006/05/08 07:42:19 andrew Exp $ */
+/* $Id: callbacks.c,v 1.81 2006/05/25 14:20:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -300,7 +300,8 @@ tengine_stonith_callback(stonith_ops_t * op)
 		case STONITH_GENERIC:
 			stonith_action->failed = TRUE;
 			allow_fail = g_hash_table_lookup(
-				stonith_action->params, XML_ATTR_TE_ALLOWFAIL);
+				stonith_action->params,
+				crm_meta_name(XML_ATTR_TE_ALLOWFAIL));
 
 			if(FALSE == crm_is_true(allow_fail)) {
 				crm_err("Stonith of %s failed (%d)..."

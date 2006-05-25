@@ -1,4 +1,4 @@
-/* $Id: events.c,v 1.17 2006/05/22 08:27:33 andrew Exp $ */
+/* $Id: events.c,v 1.18 2006/05/25 14:20:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -178,7 +178,8 @@ update_failcount(crm_action_t *action, int rc)
 		return;
 	}
 
-	interval = g_hash_table_lookup(action->params, "interval");
+	interval = g_hash_table_lookup(
+		action->params, crm_meta_name("interval"));
 	if(interval == NULL) {
 		return;
 	}

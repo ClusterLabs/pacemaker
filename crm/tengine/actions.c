@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.30 2006/05/22 10:26:20 andrew Exp $ */
+/* $Id: actions.c,v 1.31 2006/05/25 14:20:26 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -116,20 +116,21 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 	id = ID(action->xml);
 	target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 	uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
-	type = g_hash_table_lookup(action->params, "stonith_action");
+	type = g_hash_table_lookup(action->params, crm_meta_name("stonith_action"));
 	
-	CRM_CHECK(id != NULL, return FALSE);
-	CRM_CHECK(uuid != NULL, return FALSE);
-	CRM_CHECK(type != NULL, return FALSE);
-	CRM_CHECK(target != NULL, return FALSE);
+	CRM_CHECK(id != NULL,
+		  crm_log_xml_warn(action->xml, "BadAction");
+		  return FALSE);
+	CRM_CHECK(uuid != NULL,
+		  crm_log_xml_warn(action->xml, "BadAction");
+		  return FALSE);
+	CRM_CHECK(type != NULL,
+		  crm_log_xml_warn(action->xml, "BadAction");
+		  return FALSE);
+	CRM_CHECK(target != NULL,
+		  crm_log_xml_warn(action->xml, "BadAction");
+		  return FALSE);
 
-	if(id == NULL || uuid == NULL || target == NULL) {
-		/* error */
-		te_log_action(LOG_ERR, "Corrupted command (id=%s): no node",
-			      crm_str(id));
-		return FALSE;
-	}
-	
 	te_log_action(LOG_INFO,
 		      "Executing %s fencing operation (%s) on %s (timeout=%d)",
 		      type, id, target,
