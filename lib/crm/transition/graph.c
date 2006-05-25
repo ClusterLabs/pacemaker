@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.13 2006/05/08 09:58:57 andrew Exp $ */
+/* $Id: graph.c,v 1.14 2006/05/25 14:45:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -274,11 +274,12 @@ run_graph(crm_graph_t *graph)
 		} else {
 			crm_debug_2("Synapse %d pending", synapse->id);
 			if(should_fire_synapse(synapse)) {
-				if(fire_synapse(graph, synapse) == FALSE) {
-					return transition_failed;
-				}
 				num_fired++;
-
+				CRM_CHECK(fire_synapse(graph, synapse),
+					  graph->abort_priority = INFINITY;
+					  num_incomplete++;
+					  num_fired--);
+				
 			} else {
 				crm_debug_2("Synapse %d cannot fire",
 					    synapse->id);

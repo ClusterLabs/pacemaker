@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.81 2006/05/25 14:20:26 andrew Exp $ */
+/* $Id: callbacks.c,v 1.82 2006/05/25 14:45:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -531,6 +531,7 @@ te_graph_trigger(gpointer user_data)
 		print_graph(LOG_WARNING, transition_graph);
 	}
 	
+	transition_graph->complete = TRUE;
 	notify_crmd(transition_graph);
 
 	return TRUE;	

@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.31 2006/05/25 14:20:26 andrew Exp $ */
+/* $Id: actions.c,v 1.32 2006/05/25 14:45:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -457,7 +457,7 @@ notify_crmd(crm_graph_t *graph)
 		return;
 	}
 
-	CRM_CHECK(graph->complete, return);
+	CRM_CHECK(graph->complete, graph->complete = TRUE);
 
 	switch(graph->completion_action) {
 		case tg_stop:
