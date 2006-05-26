@@ -1,5 +1,5 @@
  <transition_graph global_timeout="60s" transition_id="0">
-   <synapse id="0">
+   <synapse id="0" priority="1000000">
      <action_set>
        <rsc_op id="6" operation="monitor" operation_key="child_rsc1:0_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc1:0" long-id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
@@ -60,7 +60,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="5">
+   <synapse id="5" priority="1000000">
      <action_set>
        <rsc_op id="3" operation="monitor" operation_key="child_rsc1:1_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc1:1" long-id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
@@ -296,7 +296,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="22">
+   <synapse id="22" priority="1000000">
      <action_set>
        <rsc_op id="7" operation="monitor" operation_key="child_rsc2:0_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc2:0" long-id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
@@ -331,7 +331,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="25">
+   <synapse id="25" priority="1000000">
      <action_set>
        <rsc_op id="4" operation="monitor" operation_key="child_rsc2:1_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc2:1" long-id="rsc2:child_rsc2:1" class="heartbeat" type="apache"/>
@@ -340,7 +340,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="26">
+   <synapse id="26" priority="1000000">
      <action_set>
        <rsc_op id="8" operation="monitor" operation_key="child_rsc2:1_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc2:1" long-id="rsc2:child_rsc2:1" class="heartbeat" type="apache"/>
@@ -438,7 +438,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="34">
+   <synapse id="34" priority="1000000">
      <action_set>
        <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
          <attributes crm_feature_set="1.0.6" CRM_meta_op_no_wait="true"/>
@@ -453,7 +453,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="35">
+   <synapse id="35" priority="1000000">
      <action_set>
        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="uuid2">
          <attributes crm_feature_set="1.0.6" CRM_meta_op_no_wait="true"/>

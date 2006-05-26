@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.98 2006/05/26 10:05:56 andrew Exp $ */
+/* $Id: stages.c,v 1.99 2006/05/26 14:53:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -185,16 +185,15 @@ stage3(pe_working_set_t *data_set)
 			probe_complete->optional = TRUE;
 		}
 
-		/*
 		if(probed != NULL && crm_is_true(probed) == FALSE) {
 			force_probe = TRUE;
 		}
-		*/
 		
 		probe_node_complete = custom_action(
 			NULL, crm_strdup(CRM_OP_PROBED),
 			CRM_OP_PROBED, node, FALSE, TRUE, data_set);
 		probe_node_complete->optional = crm_is_true(probed);
+		probe_node_complete->priority = INFINITY;
 		add_hash_param(probe_node_complete->meta,
 			       XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
 		

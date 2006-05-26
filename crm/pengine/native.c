@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.142 2006/05/25 11:54:35 andrew Exp $ */
+/* $Id: native.c,v 1.143 2006/05/26 14:53:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2098,19 +2098,24 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		/* we already know the status of the resource on this node */
 		return FALSE;
 	}
-	
-	target_rc = crm_itoa(EXECRA_NOT_RUNNING);
+
 	key = generate_op_key(rsc->id, CRMD_ACTION_STATUS, 0);
 	probe = custom_action(rsc, key, CRMD_ACTION_STATUS, node,
 			      FALSE, TRUE, data_set);
+	probe->priority = INFINITY;
+
+	running = pe_find_node_id(rsc->running_on, node->details->id);
+	if(running == NULL) {
+		target_rc = crm_itoa(EXECRA_NOT_RUNNING);
+		add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, target_rc);
+		crm_free(target_rc);
+	}
 	
 	crm_notice("%s: Created probe for %s", node->details->uname, rsc->id);
 	
-	add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, target_rc);
 	custom_action_order(rsc, NULL, probe, rsc, NULL, complete,
 			    pe_ordering_manditory, data_set);
 
-	crm_free(target_rc);
 	return TRUE;
 }
 

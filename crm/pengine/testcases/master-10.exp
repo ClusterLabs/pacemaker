@@ -179,7 +179,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="12" priority="10">
+   <synapse id="12" priority="1000000">
      <action_set>
        <rsc_op id="3" operation="monitor" operation_key="child_rsc1:0_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc1:0" long-id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
@@ -188,7 +188,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="13" priority="10">
+   <synapse id="13" priority="1000000">
      <action_set>
        <rsc_op id="6" operation="monitor" operation_key="child_rsc1:0_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc1:0" long-id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
@@ -268,7 +268,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="19" priority="10">
+   <synapse id="19" priority="1000000">
      <action_set>
        <rsc_op id="4" operation="monitor" operation_key="child_rsc1:1_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc1:1" long-id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
@@ -277,7 +277,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="20" priority="10">
+   <synapse id="20" priority="1000000">
      <action_set>
        <rsc_op id="7" operation="monitor" operation_key="child_rsc1:1_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc1:1" long-id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
@@ -571,7 +571,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="39">
+   <synapse id="39" priority="1000000">
      <action_set>
        <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
          <attributes crm_feature_set="1.0.6" CRM_meta_op_no_wait="true"/>
@@ -586,7 +586,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="40">
+   <synapse id="40" priority="1000000">
      <action_set>
        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="uuid2">
          <attributes crm_feature_set="1.0.6" CRM_meta_op_no_wait="true"/>

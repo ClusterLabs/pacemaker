@@ -1,5 +1,5 @@
  <transition_graph global_timeout="60s" transition_id="0">
-   <synapse id="0">
+   <synapse id="0" priority="1000000">
      <action_set>
        <rsc_op id="12" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36">
          <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -46,7 +46,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="4">
+   <synapse id="4" priority="1000000">
      <action_set>
        <rsc_op id="10" operation="monitor" operation_key="rsc_hadev3_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <primitive id="rsc_hadev3" long-id="rsc_hadev3" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -55,7 +55,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="5">
+   <synapse id="5" priority="1000000">
      <action_set>
        <rsc_op id="13" operation="monitor" operation_key="rsc_hadev2_monitor_0" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36">
          <primitive id="rsc_hadev2" long-id="rsc_hadev2" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -169,7 +169,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="14">
+   <synapse id="14" priority="1000000">
      <action_set>
        <rsc_op id="9" operation="probe_complete" operation_key="probe_complete" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <attributes crm_feature_set="1.0.6" CRM_meta_op_no_wait="true"/>
@@ -181,7 +181,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="15">
+   <synapse id="15" priority="1000000">
      <action_set>
        <rsc_op id="11" operation="probe_complete" operation_key="probe_complete" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36">
          <attributes crm_feature_set="1.0.6" CRM_meta_op_no_wait="true"/>
