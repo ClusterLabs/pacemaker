@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.52 2006/05/22 08:31:53 andrew Exp $ */
+/* $Id: utils.c,v 1.53 2006/05/26 08:46:07 davidlee Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1121,6 +1121,7 @@ filter_action_parameters(crm_data_t *param_set, const char *version)
 		XML_LRM_ATTR_OP_DIGEST,
 	};
 
+	gboolean do_delete = FALSE;
 	int lpc = 0;
 	static int meta_len = 0;
 	if(meta_len == 0) {
@@ -1144,7 +1145,6 @@ filter_action_parameters(crm_data_t *param_set, const char *version)
 	}
 	
 	xml_prop_iter(param_set, prop_name, prop_value,      
-		      gboolean do_delete = FALSE;
 		      if(strncasecmp(prop_name, CRM_META, meta_len) == 0) {
 			      do_delete = TRUE;
 		      }
