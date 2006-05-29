@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.14 2006/05/25 14:45:54 andrew Exp $ */
+/* $Id: graph.c,v 1.15 2006/05/29 13:22:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -222,6 +222,9 @@ fire_synapse(crm_graph_t *graph, synapse_t *synapse)
 			crm_err("Failed initiating <%s id=%d> in synapse %d",
 				crm_element_name(action->xml),
 				action->id, synapse->id);
+			synapse->confirmed = TRUE;
+			action->confirmed = TRUE;
+			action->failed = TRUE;
 			return FALSE;
 		} 
 		);
@@ -276,6 +279,7 @@ run_graph(crm_graph_t *graph)
 			if(should_fire_synapse(synapse)) {
 				num_fired++;
 				CRM_CHECK(fire_synapse(graph, synapse),
+					  stat_log_level = LOG_ERR;
 					  graph->abort_priority = INFINITY;
 					  num_incomplete++;
 					  num_fired--);
