@@ -160,7 +160,7 @@ class CIB:
         </rsc_location> ''' 
 
     stonith_resource_template = """ 
-        <clone id="DoFencing">
+        <clone id="DoFencing" globally_unique="false">
           <instance_attributes id="fencing">
             <attributes>
               <nvpair id="DoFencing-1" name="clone_max" value="%d"/>
