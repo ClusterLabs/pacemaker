@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.33 2006/05/29 13:20:43 andrew Exp $ */
+/* $Id: actions.c,v 1.34 2006/05/29 13:25:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -151,8 +151,7 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 	st_op->private_data = crm_concat(id, key, ';');
 	crm_free(key);
 	
-	CRM_ASSERT(stonithd_input_IPC_channel() != NULL,
-		   crm_err("Cannot fence %s: stonith not available.  Exiting", target));
+	CRM_ASSERT(stonithd_input_IPC_channel() != NULL);
 		
 	if (ST_OK != stonithd_node_fence( st_op )) {
 		crm_err("Cannot fence %s: stonithd_node_fence() call failed ",
