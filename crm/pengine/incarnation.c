@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.90 2006/05/23 10:00:31 andrew Exp $ */
+/* $Id: incarnation.c,v 1.91 2006/05/29 10:09:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1403,37 +1403,25 @@ gboolean
 clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		    gboolean force, pe_working_set_t *data_set) 
 {
-	int num_probes = 0;
 	gboolean any_created = FALSE;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	/* we may already be running but under different names */
-	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
-
-		if(rsc->globally_unique == FALSE
-		   && num_probes >= clone_data->clone_node_max) {
-			return FALSE;
-		}
-		if(pe_find_node_id(child_rsc->running_on, node->details->id)) {
-			num_probes++;
-		}
-		);
-	
 	clone_data->child_list = g_list_sort(
 		clone_data->child_list, sort_rsc_id);
 
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
-		if(num_probes >= clone_data->clone_node_max) {
+		/* we may already be running but under different names */
+		if(rsc->globally_unique == FALSE
+		   && clone_data->clone_node_max == 1
+		   && pe_find_node_id(child_rsc->known_on, node->details->id)) {
 			break;
-		}
-		if(child_rsc->fns->create_probe(
+
+		} else if(child_rsc->fns->create_probe(
 			   child_rsc, node, complete, force, data_set)) {
 			any_created = TRUE;
-			num_probes++;
 		}
 		);
 
