@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.18 2006/05/22 08:27:33 andrew Exp $ */
+/* $Id: master.c,v 1.19 2006/05/29 16:01:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -267,7 +267,9 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
 		crm_debug_2("Assigning priority for %s", child_rsc->id);
-		CRM_CHECK(child_rsc->color != NULL, continue);
+		CRM_CHECK(child_rsc->color != NULL,
+			  crm_err("Resource %s is uncolored", child_rsc->id);
+			  continue);
 		chosen = child_rsc->color->details->chosen_node;
 
 		if(child_rsc->role == RSC_ROLE_STARTED) {
@@ -325,7 +327,9 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				child_rsc->priority = -INFINITY;
 				break;
 			default:
-				CRM_CHECK(FALSE/* unhandled */, ;);
+				CRM_CHECK(FALSE/* unhandled */,
+					  crm_err("Unknown resource role: %d for %s",
+						  child_rsc->next_role, child_rsc->id));
 		}
 		);
 	
@@ -337,7 +341,10 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
-		CRM_CHECK(child_rsc->color != NULL, continue);
+		CRM_CHECK(child_rsc->color != NULL,
+			  crm_err("Resource %s is uncolored", child_rsc->id);
+			  continue);
+
 		chosen = child_rsc->color->details->chosen_node;
 
 		switch(child_rsc->next_role) {
@@ -394,7 +401,9 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				}
 				break;
 			default:
-				CRM_CHECK(FALSE/* unhandled */, ;);
+				CRM_CHECK(FALSE/* unhandled */,
+					  crm_err("Unknown resource role: %d for %s",
+						  child_rsc->next_role, child_rsc->id));
 		}
 		add_hash_param(child_rsc->parameters, crm_meta_name("role"),
 			       role2text(child_rsc->next_role));
