@@ -57,7 +57,7 @@
 <!ELEMENT resources   (primitive|group|clone|master_slave)*>
 <!-- Annotated version -->
 
-<!ELEMENT primitive ((meta_attributes|instance_attributes)*, operations?, (meta_attributes|instance_attributes)*)>
+<!ELEMENT primitive (meta_attributes*, instance_attributes*, operations?)>
 <!ATTLIST primitive
           id                CDATA        #REQUIRED
           description       CDATA        #IMPLIED
@@ -85,7 +85,7 @@
           on_fail       (nothing|block|stop|restart|fence)     #IMPLIED>
 <!-- Annotated version -->
 
-<!ELEMENT group ((meta_attributes|instance_attributes)*, primitive+, (meta_attributes|instance_attributes|primitive)*)>
+<!ELEMENT group (meta_attributes*, instance_attributes*, primitive+)>
 <!ATTLIST group
           id            CDATA               #REQUIRED
           description   CDATA               #IMPLIED
@@ -97,7 +97,7 @@
 
           ordered               (true|1|false|0)              'true'
           collocated            (true|1|false|0)              'true'>
-<!ELEMENT clone ((meta_attributes|instance_attributes)*, (primitive|group), (meta_attributes|instance_attributes)*)>
+<!ELEMENT clone (meta_attributes*, instance_attributes*, (primitive|group))>
 <!ATTLIST clone
           id            CDATA               #REQUIRED
           description   CDATA               #IMPLIED
@@ -113,7 +113,7 @@
           interleave            (true|1|false|0)              'false'>
 
 
-<!ELEMENT master_slave ((meta_attributes|instance_attributes)*, (primitive|group), (meta_attributes|instance_attributes)*)>
+<!ELEMENT master_slave (meta_attributes*, instance_attributes*, (primitive|group))>
 <!ATTLIST master_slave
           id            CDATA       #REQUIRED
           description   CDATA       #IMPLIED
