@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.122 2006/05/15 10:21:04 andrew Exp $ */
+/* $Id: callbacks.c,v 1.123 2006/05/29 09:36:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1658,13 +1658,14 @@ cib_ccm_msg_callback(
 					ccm_membership, a_node.node_uname);	
 			}
 		}
-		if(membership != NULL && membership->m_n_in != 0) {
-			members = membership->m_n_in;
-			offset = membership->m_in_idx;
+		
+		if(membership != NULL && membership->m_n_member != 0) {
+			members = membership->m_n_member;
+			offset = membership->m_memb_idx;
 			for(lpc = 0; lpc < members; lpc++) {
 				oc_node_t a_node = membership->m_array[lpc+offset];
 				char *uname = crm_strdup(a_node.node_uname);
-				crm_info("New peer: %s", uname);
+				crm_info("PEER: %s", uname);
 				g_hash_table_replace(
 					ccm_membership, uname, uname);	
 			}
