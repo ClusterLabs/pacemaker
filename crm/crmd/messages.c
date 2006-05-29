@@ -848,16 +848,12 @@ handle_request(ha_msg_input_t *stored_msg)
 		 * local node
 		 */
 	} else if(strcasecmp(op, CRM_OP_DEBUG_UP) == 0) {
-		int level = get_crm_log_level();
-		set_crm_log_level(level+1);
-		crm_info("Debug set to %d (was %d)",
-			 get_crm_log_level(), level);
+		alter_debug(DEBUG_INC);
+		crm_info("Debug set to %d", get_crm_log_level());
 		
 	} else if(strcasecmp(op, CRM_OP_DEBUG_DOWN) == 0) {
-		int level = get_crm_log_level();
-		set_crm_log_level(level-1);
-		crm_info("Debug set to %d (was %d)",
-			 get_crm_log_level(), level);
+		alter_debug(DEBUG_DEC);
+		crm_info("Debug set to %d", get_crm_log_level());
 
 	} else if(strcasecmp(op, CRM_OP_JOIN_OFFER) == 0) {
 		next_input = I_JOIN_OFFER;
