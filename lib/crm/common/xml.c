@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.85 2006/05/29 11:53:53 andrew Exp $ */
+/* $Id: xml.c,v 1.86 2006/05/29 14:50:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2485,7 +2485,7 @@ validate_with_dtd(crm_data_t *xml_blob, const char *dtd_file)
 	CRM_CHECK(buffer != NULL, return FALSE);
 
  	doc = xmlParseMemory(buffer, strlen(buffer));
-	CRM_CHECK(doc != NULL, crm_free(buffer); return TRUE);
+	CRM_CHECK(doc != NULL, crm_free(buffer); return FALSE);
 	
 	dtd = xmlParseDTD(NULL, (const xmlChar *)dtd_file);
 	CRM_CHECK(dtd != NULL, crm_free(buffer); return TRUE);
