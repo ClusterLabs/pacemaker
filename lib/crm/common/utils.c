@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.55 2006/05/29 11:53:53 andrew Exp $ */
+/* $Id: utils.c,v 1.56 2006/05/29 13:21:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -280,10 +280,10 @@ set_crm_log_level(unsigned int level)
 {
 	unsigned int old = crm_log_level;
 
-	while(crm_log_level < level) {
+	while(crm_log_level < 100 && crm_log_level < level) {
 		alter_debug(DEBUG_INC);
 	}
-	while(crm_log_level > level) {
+	while(crm_log_level > 0 && crm_log_level > level) {
 		alter_debug(DEBUG_DEC);
 	}
 	
@@ -441,11 +441,15 @@ alter_debug(int nsig)
 	
 	switch(nsig) {
 		case DEBUG_INC:
-			crm_log_level++;
+			if (crm_log_level < 100) {
+				crm_log_level++;
+			}
 			break;
 
 		case DEBUG_DEC:
-			crm_log_level--;
+			if (crm_log_level > 0) {
+				crm_log_level--;
+			}
 			break;	
 
 		default:
