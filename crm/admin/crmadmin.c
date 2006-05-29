@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.70 2006/05/29 11:53:53 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.71 2006/05/29 13:18:03 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -275,19 +275,14 @@ main(int argc, char **argv)
 	hb_cluster = do_init();
 	if (hb_cluster != NULL) {
 		int res = do_work(hb_cluster);
-		if (res >= 0) {
+		if(res == 0) {
+		} else if (res > 0) {
 			/* wait for the reply by creating a mainloop and running it until
 			 * the callbacks are invoked...
 			 */
 			mainloop = g_main_new(FALSE);
 			expected_responses++;
-			if(res == 0) {
-				crm_debug_2("no reply expected,"
-					    " wait for the hello message only");
-				
-			} else {
-				crm_debug_2("Waiting for reply from the local CRM");
-			}
+			crm_debug_2("Waiting for reply from the local CRM");
 
 			message_timer_id = Gmain_timeout_add(
 				message_timeout_ms, admin_message_timeout, NULL);
