@@ -57,7 +57,7 @@
 <!ELEMENT resources   (primitive|group|clone|master_slave)*>
 <!-- Annotated version -->
 
-<!ELEMENT primitive (meta_attributes*, instance_attributes*, operations?)>
+<!ELEMENT primitive (operations?, meta_attributes*, instance_attributes*)>
 <!ATTLIST primitive
           id                CDATA        #REQUIRED
           description       CDATA        #IMPLIED
