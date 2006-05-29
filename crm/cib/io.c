@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.68 2006/05/29 11:53:53 andrew Exp $ */
+/* $Id: io.c,v 1.69 2006/05/29 14:50:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -264,7 +264,7 @@ readCibXmlFile(const char *filename)
 	/* Do this before DTD validation happens */
 	if(root != NULL) {
 		/* strip out the status section if there is one */
-		status = find_xml_node(root, XML_CIB_TAG_STATUS, TRUE);
+		status = find_xml_node(root, XML_CIB_TAG_STATUS, FALSE);
 		if(status != NULL) {
 			free_xml_from_parent(root, status);
 		}
