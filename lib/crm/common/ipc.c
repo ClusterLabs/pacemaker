@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.22 2006/04/07 15:41:36 andrew Exp $ */
+/* $Id: ipc.c,v 1.23 2006/05/29 11:53:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -65,10 +65,6 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboole
 		crm_err("Not connected to Heartbeat");
 		all_is_good = FALSE;
 		
-	} else if(get_stringlen(msg) >= MAXMSG) {
-		crm_err("Message is too large to send");
-		all_is_good = FALSE;
-
 	} else if(node != NULL) {
 		if(hb_conn->llc_ops->send_ordered_nodemsg(
 			   hb_conn, msg, node) != HA_OK) {
@@ -137,11 +133,6 @@ crm_send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg, gboolean server)
 	} else if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
 		crm_log_maybe(fail_level, "IPC Channel to %d is not connected",
 			      (int)ipc_client->farside_pid);
-		all_is_good = FALSE;
-
-	} else if(get_stringlen(msg) >= MAXMSG) {
-		crm_err("Message is to %d too large to send",
-			(int)ipc_client->farside_pid);
 		all_is_good = FALSE;
 	}
 
@@ -257,7 +248,7 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 	local_socket_len += strlen(channel_name);
 	local_socket_len += strlen(CRM_SOCK_DIR);
 
-	crm_malloc0(commpath, sizeof(char)*local_socket_len);
+	crm_malloc0(commpath, local_socket_len);
 	if(commpath != NULL) {
 		sprintf(commpath, CRM_SOCK_DIR "/%s", channel_name);
 		commpath[local_socket_len - 1] = '\0';

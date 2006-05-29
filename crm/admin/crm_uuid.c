@@ -1,4 +1,4 @@
-/* $Id: crm_uuid.c,v 1.2 2005/11/22 02:37:08 andrew Exp $ */
+/* $Id: crm_uuid.c,v 1.3 2006/05/29 11:53:53 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -70,8 +70,8 @@ main(int argc, char **argv)
 
 /* 	fprintf(stderr, "Reading %d bytes from: %s\n", UUID_LEN, UUID_FILE); */
 
-	buffer = cl_malloc(sizeof(char) * 50);
-	read_len = fread(uuid.uuid, sizeof(char), UUID_LEN, input);
+	buffer = cl_malloc(50);
+	read_len = fread(uuid.uuid, 1, UUID_LEN, input);
 	if(read_len != UUID_LEN) {
 		fprintf(stderr, "Calculated and read bytes differ: %d vs. %ld\n",
 			UUID_LEN, read_len);

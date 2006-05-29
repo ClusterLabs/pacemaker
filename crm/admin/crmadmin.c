@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.69 2006/05/08 07:42:17 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.70 2006/05/29 11:53:53 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -477,7 +477,7 @@ do_init(void)
 		cl_log_set_facility(facility);
 	}
 
-	crm_malloc0(admin_uuid, sizeof(char) * 11);
+	crm_malloc0(admin_uuid, 11);
 	if(admin_uuid != NULL) {
 		snprintf(admin_uuid, 10, "%d", getpid());
 		admin_uuid[10] = '\0';
@@ -584,7 +584,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			/* 31 = "test-_.xml" + an_int_as_string + '\0' */
 			filename_len = 31 + strlen(this_msg_reference);
 
-			crm_malloc0(filename, sizeof(char) * filename_len);
+			crm_malloc0(filename, filename_len);
 			if(filename != NULL) {
 				sprintf(filename, "%s-%s_%d.xml",
 					result, this_msg_reference,

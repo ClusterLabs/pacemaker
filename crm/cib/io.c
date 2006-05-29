@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.67 2006/05/15 10:21:04 andrew Exp $ */
+/* $Id: io.c,v 1.68 2006/05/29 11:53:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -120,8 +120,8 @@ validate_cib_digest(crm_data_t *local_cib)
 	CRM_ASSERT(start == ftell(expected_strm));
 
 	crm_debug_3("Reading %d bytes from file", length);
-	crm_malloc0(expected, sizeof(char) * (length+1));
-	read_len = fread(expected, sizeof(char), length, expected_strm);
+	crm_malloc0(expected, (length+1));
+	read_len = fread(expected, 1, length, expected_strm);
 	CRM_ASSERT(read_len == length);
 
 	if(expected == NULL) {
@@ -454,7 +454,7 @@ archive_file(const char *oldname, const char *newname, const char *ext)
 
 	} else {
 		int max_name_len = 1024;
-		crm_malloc0(backup_file, sizeof(char) * max_name_len);
+		crm_malloc0(backup_file, max_name_len);
 		if (ext == NULL) {
 			ext = back_ext;
 		}

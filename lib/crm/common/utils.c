@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.54 2006/05/28 07:03:37 andrew Exp $ */
+/* $Id: utils.c,v 1.55 2006/05/29 11:53:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -80,7 +80,7 @@ generateReference(const char *custom1, const char *custom2)
 	if(local_cust2 == NULL) { local_cust2 = "_empty_"; }
 	reference_len += strlen(local_cust2);
 	
-	crm_malloc0(since_epoch, reference_len*(sizeof(char)));
+	crm_malloc0(since_epoch, reference_len);
 
 	if(since_epoch != NULL) {
 		sprintf(since_epoch, "%s-%s-%ld-%u",
@@ -107,7 +107,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 		len = strlen(srcstring);
 		while(lpc <= len) {
 			if (srcstring[lpc] == separator) {
-				crm_malloc0(*name, sizeof(char)*lpc+1);
+				crm_malloc0(*name, lpc+1);
 				if(*name == NULL) {
 					break; /* and return FALSE */
 				}
@@ -122,7 +122,7 @@ decodeNVpair(const char *srcstring, char separator, char **name, char **value)
 					*value = NULL;
 				} else {
 
-					crm_malloc0(*value, sizeof(char)*len+1);
+					crm_malloc0(*value, len+1);
 					if(*value == NULL) {
 						crm_free(*name);
 						break; /* and return FALSE */
@@ -155,7 +155,7 @@ crm_concat(const char *prefix, const char *suffix, char join)
 	CRM_ASSERT(suffix != NULL);
 	len = strlen(prefix) + strlen(suffix) + 2;
 
-	crm_malloc0(new_str, sizeof(char)*(len));
+	crm_malloc0(new_str, (len));
 	sprintf(new_str, "%s%c%s", prefix, join, suffix);
 	new_str[len-1] = 0;
 	return new_str;
@@ -234,7 +234,7 @@ crm_itoa(int an_int)
 	int len = 32;
 	char *buffer = NULL;
 	
-	crm_malloc0(buffer, sizeof(char)*(len+1));
+	crm_malloc0(buffer, (len+1));
 	if(buffer != NULL) {
 		snprintf(buffer, len, "%d", an_int);
 	}
@@ -600,7 +600,7 @@ get_uuid(ll_cluster_t *hb, const char *uname)
 		
 	} 
 
-	crm_malloc0(uuid_calc, sizeof(char)*50);
+	crm_malloc0(uuid_calc, 50);
 	
 	if(uuid_calc == NULL) {
 		return NULL;
@@ -916,7 +916,7 @@ generate_op_key(const char *rsc_id, const char *op_type, int interval)
 	
 	len += strlen(op_type);
 	len += strlen(rsc_id);
-	crm_malloc0(op_id, sizeof(char)*len);
+	crm_malloc0(op_id, len);
 	CRM_CHECK(op_id != NULL, return NULL);
 	sprintf(op_id, "%s_%s_%d", rsc_id, op_type, interval);
 	return op_id;
@@ -955,7 +955,7 @@ generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_
 	len += strlen(op_type);
 	len += strlen(rsc_id);
 	len += strlen(notify_type);
-	crm_malloc0(op_id, sizeof(char)*len);
+	crm_malloc0(op_id, len);
 	if(op_id != NULL) {
 		sprintf(op_id, "%s_%s_notify_%s_0", rsc_id, notify_type, op_type);
 	}
@@ -972,7 +972,7 @@ generate_transition_magic_v202(const char *transition_key, int op_status)
 	
 	len += strlen(transition_key);
 	
-	crm_malloc0(fail_state, sizeof(char)*len);
+	crm_malloc0(fail_state, len);
 	if(fail_state != NULL) {
 		snprintf(fail_state, len, "%d:%s", op_status,transition_key);
 	}
@@ -989,7 +989,7 @@ generate_transition_magic(const char *transition_key, int op_status, int op_rc)
 	
 	len += strlen(transition_key);
 	
-	crm_malloc0(fail_state, sizeof(char)*len);
+	crm_malloc0(fail_state, len);
 	if(fail_state != NULL) {
 		snprintf(fail_state, len, "%d:%d;%s",
 			 op_status, op_rc, transition_key);
@@ -1041,7 +1041,7 @@ generate_transition_key(int transition_id, const char *node)
 	
 	len += strlen(node);
 	
-	crm_malloc0(fail_state, sizeof(char)*len);
+	crm_malloc0(fail_state, len);
 	if(fail_state != NULL) {
 		snprintf(fail_state, len, "%d:%s", transition_id, node);
 	}
@@ -1133,11 +1133,11 @@ filter_action_parameters(crm_data_t *param_set, const char *version)
 	}
 
 #if CRM_DEPRECATED_SINCE_2_0_5
-/* 	if(version == NULL) { */
+ 	if(version == NULL || compare_version("1.0.5", version)) {
 		for(lpc = 0; lpc < DIMOF(filter_205); lpc++) {
 			xml_remove_prop(param_set, filter_205[lpc]); 
 		}
-/* 	} */
+	}
 #endif
 	
 	for(lpc = 0; lpc < DIMOF(attr_filter); lpc++) {
@@ -1251,7 +1251,7 @@ generate_series_filename(
 	
 	len += strlen(directory);
 	len += strlen(series);
-	crm_malloc0(filename, sizeof(char)*len);
+	crm_malloc0(filename, len);
 	CRM_CHECK(filename != NULL, return NULL);
 
 	if(bzip) {
@@ -1277,7 +1277,7 @@ get_last_sequence(const char *directory, const char *series)
 	
 	len += strlen(directory);
 	len += strlen(series);
-	crm_malloc0(series_file, sizeof(char)*len);
+	crm_malloc0(series_file, len);
 	CRM_CHECK(series_file != NULL, return 0);
 	sprintf(series_file, "%s/%s.last", directory, series);
 	
@@ -1297,8 +1297,8 @@ get_last_sequence(const char *directory, const char *series)
 	CRM_ASSERT(start == ftell(file_strm));
 
 	crm_debug_3("Reading %d bytes from file", length);
-	crm_malloc0(buffer, sizeof(char) * (length+1));
-	read_len = fread(buffer, sizeof(char), length, file_strm);
+	crm_malloc0(buffer, (length+1));
+	read_len = fread(buffer, 1, length, file_strm);
 
 	if(read_len != length) {
 		crm_err("Calculated and read bytes differ: %d vs. %d",
@@ -1342,7 +1342,7 @@ write_last_sequence(
 	
 	len += strlen(directory);
 	len += strlen(series);
-	crm_malloc0(series_file, sizeof(char)*len);
+	crm_malloc0(series_file, len);
 	CRM_CHECK(series_file != NULL, return);
 	sprintf(series_file, "%s/%s.last", directory, series);
 	

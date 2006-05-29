@@ -1,4 +1,4 @@
-/* $Id: iso8601.c,v 1.14 2006/04/12 08:24:20 andrew Exp $ */
+/* $Id: iso8601.c,v 1.15 2006/05/29 11:53:53 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -81,7 +81,7 @@ log_date(int log_level, const char *prefix, ha_time_t *date_time, int flags)
 	CRM_CHECK(dt != NULL, return);
 	
 	if(flags & ha_log_date) {
-		crm_malloc0(date_s, sizeof(char)*(32));
+		crm_malloc0(date_s, 32);
 		if(date_s == NULL) {
 		} else if(flags & ha_date_weeks) {
 			snprintf(date_s, 31, "%d-W%.2d-%d",
@@ -97,7 +97,7 @@ log_date(int log_level, const char *prefix, ha_time_t *date_time, int flags)
 	}
 	if(flags & ha_log_time) {
 		int offset = 0;
-		crm_malloc0(time_s, sizeof(char)*(32));
+		crm_malloc0(time_s, 32);
 		if(time_s == NULL) {
 			return;
 		} 
@@ -109,7 +109,7 @@ log_date(int log_level, const char *prefix, ha_time_t *date_time, int flags)
 			offset =(dt->offset->hours * 100) + dt->offset->minutes;
 		}
 		
-		crm_malloc0(offset_s, sizeof(char)*(32));
+		crm_malloc0(offset_s, 32);
 		if((flags & ha_log_local) == 0 || offset == 0) {
 			snprintf(offset_s, 31, "Z");
 

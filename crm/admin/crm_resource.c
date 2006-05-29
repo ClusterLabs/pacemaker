@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.32 2006/05/20 07:40:03 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.33 2006/05/29 11:53:53 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -729,7 +729,7 @@ main(int argc, char **argv)
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
 
-	crm_malloc0(our_pid, sizeof(char) * 11);
+	crm_malloc0(our_pid, 11);
 	if(our_pid != NULL) {
 		snprintf(our_pid, 10, "%d", getpid());
 		our_pid[10] = '\0';

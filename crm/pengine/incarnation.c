@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.91 2006/05/29 10:09:04 andrew Exp $ */
+/* $Id: incarnation.c,v 1.92 2006/05/29 11:53:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1028,14 +1028,14 @@ expand_list(GListPtr list, int clones,
   clone_expand_reallocate:
 	if(rsc_list != NULL) {
 		crm_free(*rsc_list);
-		crm_malloc0(*rsc_list, sizeof(char)*list_len);
+		crm_malloc0(*rsc_list, list_len);
 		CRM_ASSERT(*rsc_list != NULL);
 		rsc_list_s = *rsc_list;
 		rsc_len = 0;
 	}
 	if(node_list != NULL) {
 		crm_free(*node_list);
-		crm_malloc0(*node_list, sizeof(char)*list_len);
+		crm_malloc0(*node_list, list_len);
 		CRM_ASSERT(*node_list != NULL);
 		node_list_s = *node_list;
 		node_len = 0;

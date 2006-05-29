@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.84 2006/05/21 20:24:23 andrew Exp $ */
+/* $Id: xml.c,v 1.85 2006/05/29 11:53:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -443,7 +443,7 @@ add_xml_tstamp(crm_data_t *a_node)
 		return;
 	}
 	
-	crm_malloc0(since_epoch, 128*(sizeof(char)));
+	crm_malloc0(since_epoch, 128);
 	if(since_epoch != NULL) {
 		sprintf(since_epoch, "%ld", (unsigned long)a_time);
 		ha_msg_mod(a_node, XML_ATTR_TSTAMP, since_epoch);
@@ -483,7 +483,7 @@ stdin2xml(void)
 	char *xml_buffer = NULL;
 	crm_data_t *xml_obj = NULL;
 
-	crm_malloc0(xml_buffer, sizeof(char)*(MAX_XML_BUFFER+1));
+	crm_malloc0(xml_buffer, (MAX_XML_BUFFER+1));
 	
 	while (more && lpc < MAX_XML_BUFFER) {
 		ch = fgetc(input);
@@ -547,8 +547,8 @@ file2xml(FILE *input)
 	CRM_ASSERT(start == ftell(input));
 
 	crm_debug_3("Reading %d bytes from file", length);
-	crm_malloc0(buffer, sizeof(char) * (length+1));
-	read_len = fread(buffer, sizeof(char), length, input);
+	crm_malloc0(buffer, (length+1));
+	read_len = fread(buffer, 1, length, input);
 	if(read_len != length) {
 		crm_err("Calculated and read bytes differ: %d vs. %d",
 			length, read_len);
@@ -2207,7 +2207,7 @@ assign_uuid(crm_data_t *xml_obj)
 	const char *tag_name = crm_element_name(xml_obj);
 	const char *tag_id = ID(xml_obj);
 	
-	crm_malloc0(new_uuid_s, sizeof(char)*38);
+	crm_malloc0(new_uuid_s, 38);
 	cl_uuid_generate(&new_uuid);
 	cl_uuid_unparse(&new_uuid, new_uuid_s);
 	
@@ -2447,8 +2447,8 @@ calculate_xml_digest(crm_data_t *input, gboolean sort)
 	CRM_CHECK(buffer != NULL && strlen(buffer) > 0,
 		  free_xml(sorted); return NULL);
 
-	crm_malloc0(digest, sizeof(char) * (2 * digest_len + 1));
-	crm_malloc0(raw_digest, sizeof(char) * (digest_len + 1));
+	crm_malloc0(digest, (2 * digest_len + 1));
+	crm_malloc0(raw_digest, (digest_len + 1));
 	MD5((unsigned char *)buffer, strlen(buffer), raw_digest);
 	for(i = 0; i < digest_len; i++) {
  		sprintf(digest+(2*i), "%02x", raw_digest[i]);
