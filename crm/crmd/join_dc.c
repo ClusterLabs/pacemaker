@@ -252,6 +252,7 @@ do_dc_join_filter_offer(long long action,
 {
 	crm_data_t *generation = NULL;
 
+	int cmp = 0;
 	int join_id = -1;
 	gboolean ack_nack_bool = TRUE;
 	const char *ack_nack = CRMD_JOINSTATE_MEMBER;
@@ -267,9 +268,11 @@ do_dc_join_filter_offer(long long action,
 	
 	generation = join_ack->xml;
 	ha_msg_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id);
-	crm_log_xml_debug_2(max_generation_xml, "Max generation");
-	crm_log_xml_debug_2(generation, "Their generation");
 
+	if(max_generation_xml != NULL && generation != NULL) {
+		cmp = cib_compare_generation(max_generation_xml, generation);
+	}
+	
 	if(join_node == NULL) {
 		crm_err("Node %s is not a member", join_from);
 		ack_nack_bool = FALSE;
@@ -288,17 +291,23 @@ do_dc_join_filter_offer(long long action,
 		max_generation_xml = copy_xml(generation);
 		max_generation_from = crm_strdup(join_from);
 
-	} else if(cib_compare_generation(max_generation_xml, generation) < 0) {
+	} else if(cmp < 0
+		  || (cmp == 0 && safe_str_eq(join_from, fsa_our_uname))) {
 		crm_debug("%s has a better generation number than"
 			  " the current max %s",
 			  join_from, max_generation_from);
+		if(max_generation_xml) {
+			crm_log_xml_debug(max_generation_xml, "Max generation");
+		}
+		crm_log_xml_debug(generation, "Their generation");
+		
 		crm_free(max_generation_from);
 		free_xml(max_generation_xml);
 		
 		max_generation_from = crm_strdup(join_from);
 		max_generation_xml = copy_xml(join_ack->xml);
 	}
-
+	
 	if(ack_nack_bool == FALSE) {
 		/* NACK this client */
 		ack_nack = CRMD_STATE_INACTIVE;
