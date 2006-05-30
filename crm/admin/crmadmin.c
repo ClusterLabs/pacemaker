@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.71 2006/05/29 13:18:03 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.72 2006/05/30 12:21:40 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -282,7 +282,7 @@ main(int argc, char **argv)
 			 */
 			mainloop = g_main_new(FALSE);
 			expected_responses++;
-			crm_debug_2("Waiting for reply from the local CRM");
+			crm_debug_2("Waiting for %d replies from the local CRM", expected_responses);
 
 			message_timer_id = Gmain_timeout_add(
 				message_timeout_ms, admin_message_timeout, NULL);
@@ -327,7 +327,7 @@ do_work(ll_cluster_t * hb_cluster)
 			crmd_operation = CRM_OP_PING;
 
 			if (BE_VERBOSE) {
-				expected_responses = -1;/* wait until timeout instead */
+				expected_responses = 1;
 			}
 			
 			crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
@@ -427,10 +427,11 @@ do_work(ll_cluster_t * hb_cluster)
 	}
 
 	if(sys_to == NULL) {
-		if (dest_node != NULL)
+		if (dest_node != NULL) {
 			sys_to = CRM_SYSTEM_CRMD;
-		else
+		} else {
 			sys_to = CRM_SYSTEM_DC;				
+		}
 	}
 	
 	{
@@ -445,7 +446,6 @@ do_work(ll_cluster_t * hb_cluster)
 	}
 	
 	return ret;
-
 }
 
 void
