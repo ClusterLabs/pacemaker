@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.138 2006/05/22 10:56:01 andrew Exp $ */
+/* $Id: utils.c,v 1.139 2006/05/30 08:54:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -132,11 +132,11 @@ node_list_and(GListPtr list1, GListPtr list2, gboolean filter)
 
 		if(other_node != NULL) {
 			new_node = node_copy(node);
-			crm_debug_3("Copied node %s: %d",
-				 new_node->details->uname, new_node->weight);
 		}
 		
 		if(new_node != NULL) {
+			crm_debug_4("%s: %d + %d", node->details->uname, 
+				    other_node->weight, new_node->weight);
 			new_node->weight = merge_weights(
 				new_node->weight, other_node->weight);
 
@@ -229,7 +229,7 @@ node_list_or(GListPtr list1, GListPtr list2, gboolean filter)
 	GListPtr result = NULL;
 	gboolean needs_filter = FALSE;
 
-	result = node_list_dup(list1, filter);
+	result = node_list_dup(list1, FALSE, filter);
 
 	slist_iter(
 		node, node_t, list2, lpc,
@@ -242,6 +242,10 @@ node_list_or(GListPtr list1, GListPtr list2, gboolean filter)
 			result, node->details->id);
 
 		if(other_node != NULL) {
+			crm_debug_4("%s + %s: %d + %d",
+				    node->details->uname, 
+				    other_node->details->uname, 
+				    node->weight, other_node->weight);
 			other_node->weight = merge_weights(
 				other_node->weight, node->weight);
 			
@@ -258,7 +262,7 @@ node_list_or(GListPtr list1, GListPtr list2, gboolean filter)
 	/* not the neatest way, but the most expedient for now */
 	if(filter && needs_filter) {
 		GListPtr old_result = result;
-		result = node_list_dup(old_result, filter);
+		result = node_list_dup(old_result, FALSE, filter);
 		pe_free_shallow_adv(old_result, TRUE);
 	}
 	
@@ -267,7 +271,7 @@ node_list_or(GListPtr list1, GListPtr list2, gboolean filter)
 }
 
 GListPtr 
-node_list_dup(GListPtr list1, gboolean filter)
+node_list_dup(GListPtr list1, gboolean reset, gboolean filter)
 {
 	GListPtr result = NULL;
 
@@ -279,6 +283,9 @@ node_list_dup(GListPtr list1, gboolean filter)
 		}
 		
 		new_node = node_copy(this_node);
+		if(reset) {
+			new_node->weight = 0;
+		}
 		if(new_node != NULL) {
 			result = g_list_append(result, new_node);
 		}
@@ -351,7 +358,7 @@ create_color(
 		crm_debug_5("populating node list");
 		new_color->details->highest_priority = resource->priority;
 		new_color->details->candidate_nodes  =
-			node_list_dup(node_list, TRUE);
+			node_list_dup(node_list, TRUE, TRUE);
 	}
 	
 	crm_action_debug_3(print_color("Created color", new_color, TRUE));
@@ -1839,6 +1846,7 @@ merge_weights(int w1, int w2)
 		result = -INFINITY;
 	}
 
+	crm_debug_5("%d + %d = %d", w1, w2, result);
 	return result;
 }
 

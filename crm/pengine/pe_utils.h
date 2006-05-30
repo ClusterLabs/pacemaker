@@ -1,4 +1,4 @@
-/* $Id: pe_utils.h,v 1.45 2006/05/05 13:08:49 andrew Exp $ */
+/* $Id: pe_utils.h,v 1.46 2006/05/30 08:54:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,7 +47,7 @@ extern node_t *node_copy(node_t *this_node) ;
 
 
 /* Binary like operators for lists of nodes */
-extern GListPtr node_list_dup(GListPtr list1, gboolean filter);
+extern GListPtr node_list_dup(GListPtr list1, gboolean reset, gboolean filter);
 
 extern GListPtr node_list_and(GListPtr list1, GListPtr list2, gboolean filter);
 

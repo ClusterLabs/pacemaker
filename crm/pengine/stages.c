@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.99 2006/05/26 14:53:58 andrew Exp $ */
+/* $Id: stages.c,v 1.100 2006/05/30 08:54:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -537,8 +537,9 @@ choose_node_from_list(color_t *color)
 		return FALSE;
 	}
 
-
 	slist_iter(candidate, node_t, nodes, lpc, 
+		   crm_debug("Color %d, Node %s: %d", color->id,
+			     candidate->details->uname, candidate->weight);
 		   if(chosen->weight > 0
 		      && candidate->details->unclean == FALSE
 		      && candidate->weight == chosen->weight) {

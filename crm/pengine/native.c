@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.144 2006/05/30 07:47:44 andrew Exp $ */
+/* $Id: native.c,v 1.145 2006/05/30 08:54:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -922,14 +922,8 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		
 	pe_free_shallow(rsc->allowed_nodes);
 	rsc->allowed_nodes = or_list;
-
-	slist_iter(node_rh, node_t, constraint->node_list_rh, lpc,
-		   native_update_node_weight(rsc, constraint, node_rh,
-					     rsc->allowed_nodes)
-		);
-
+	
 	print_resource(LOG_DEBUG_3, "after update: ", rsc, TRUE);
-
 }
 
 void native_expand(resource_t *rsc, pe_working_set_t *data_set)
@@ -1457,6 +1451,9 @@ native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
 		return;
 	}	
 	
+	crm_debug_3("Constraint %s, node %s, rsc %s: %d + %d",
+		   cons->id, node_rh->details->uname, rsc->id,
+		   node_rh->weight, cons_node->weight);
 	node_rh->weight = merge_weights(node_rh->weight, cons_node->weight);
 	if(node_rh->weight <= -INFINITY) {
 		crm_debug_3("Constraint %s (-INFINITY): node %s weight %d (%s).",

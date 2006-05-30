@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.93 2006/05/30 07:47:44 andrew Exp $ */
+/* $Id: complex.c,v 1.94 2006/05/30 08:54:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -363,7 +363,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	} else if(data_set->symmetric_cluster) {
 		rsc_to_node_t *new_con = rsc2node_new(
 			"symmetric_default", *rsc, 0, NULL, data_set);
-		new_con->node_list_rh = node_list_dup(data_set->nodes, FALSE);
+		new_con->node_list_rh = node_list_dup(data_set->nodes, TRUE, FALSE);
 	}
 	
 	crm_debug_2("\tAction notification: %s",

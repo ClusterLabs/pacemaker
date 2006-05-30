@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.197 2006/05/30 07:47:44 andrew Exp $ */
+/* $Id: unpack.c,v 1.198 2006/05/30 08:54:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2000,7 +2000,7 @@ generate_location_rule(
 		location_rule->role_filter = text2role(role);
 	}
 	if(do_and) {
-		match_L = node_list_dup(data_set->nodes, FALSE);
+		match_L = node_list_dup(data_set->nodes, TRUE, FALSE);
 		slist_iter(
 			node, node_t, match_L, lpc,
 			node->weight = score_f;
