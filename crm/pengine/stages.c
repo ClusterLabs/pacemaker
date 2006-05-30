@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.100 2006/05/30 08:54:32 andrew Exp $ */
+/* $Id: stages.c,v 1.101 2006/05/30 08:55:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -521,7 +521,9 @@ choose_node_from_list(color_t *color)
 	color->details->pending = FALSE;
 
 	if(chosen == NULL) {
-		crm_debug("Could not allocate a node for color %d", color->id);
+		if(color->id != 0) {
+			crm_debug("Could not allocate a node for color %d", color->id);
+		}
 		return FALSE;
 
 	} else if(chosen->details->unclean || chosen->details->shutdown) {
