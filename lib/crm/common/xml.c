@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.86 2006/05/29 14:50:40 andrew Exp $ */
+/* $Id: xml.c,v 1.87 2006/05/30 12:15:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -473,7 +473,7 @@ crm_data_t *
 stdin2xml(void) 
 {
 	int lpc = 0;
-	int MAX_XML_BUFFER = 20000;
+	int MAX_XML_BUFFER = 1000000;
 	
 	int ch = 0;
 	gboolean more = TRUE;
@@ -515,7 +515,11 @@ stdin2xml(void)
 				break;
 		}
 	}
-	
+
+	if(lpc >= MAX_XML_BUFFER) {
+		crm_err("Buffer limit exceeded... please annoy the developers to increase this value.");
+		crm_err("Please try reading from a file instead.");
+	}
 	xml_buffer[MAX_XML_BUFFER] = 0;
 	xml_obj = string2xml(xml_buffer);
 	crm_free(xml_buffer);
@@ -2509,6 +2513,5 @@ validate_with_dtd(crm_data_t *xml_blob, const char *dtd_file)
 	
 	crm_free(buffer);
 #endif	
-	return TRUE;
-/*	return valid; */
+	return valid;
 }
