@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.196 2006/05/22 15:30:06 andrew Exp $ */
+/* $Id: unpack.c,v 1.197 2006/05/30 07:47:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -341,6 +341,9 @@ unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
 			pe_config_err("Failed unpacking %s %s",
 				      crm_element_name(xml_obj),
 				      crm_element_value(xml_obj, XML_ATTR_ID));
+			if(new_rsc != NULL && new_rsc->fns != NULL) {
+				new_rsc->fns->free(new_rsc);
+			}
 		}
 		);
 	

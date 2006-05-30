@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.92 2006/05/24 20:13:34 andrew Exp $ */
+/* $Id: complex.c,v 1.93 2006/05/30 07:47:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -252,6 +252,9 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 			parent->parameters, dup_attr, (*rsc)->parameters);
 	}	
 
+	if((*rsc)->fns->unpack(*rsc, data_set) == FALSE) {
+		return FALSE;
+	}
 	(*rsc)->runnable	   = TRUE; 
 	(*rsc)->provisional	   = TRUE; 
 	(*rsc)->starting	   = FALSE; 
@@ -367,8 +370,6 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		    (*rsc)->notify?"required":"not required");
 	
 /* 	data_set->resources = g_list_append(data_set->resources, (*rsc)); */
-	(*rsc)->fns->unpack(*rsc, data_set);
-
 	return TRUE;
 }
 

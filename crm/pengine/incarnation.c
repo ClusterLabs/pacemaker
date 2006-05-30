@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.92 2006/05/29 11:53:53 andrew Exp $ */
+/* $Id: incarnation.c,v 1.93 2006/05/30 07:47:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -108,12 +108,12 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 	return TRUE;
 }
 
-void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
+gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
 	int lpc = 0;
-	crm_data_t * xml_tmp = NULL;
-	crm_data_t * xml_obj = rsc->xml;
-	crm_data_t *xml_self = copy_xml(rsc->xml);
+	crm_data_t *xml_tmp = NULL;
+	crm_data_t *xml_self = NULL;
+	crm_data_t *xml_obj = rsc->xml;
 	clone_variant_data_t *clone_data = NULL;
 	resource_t *self = NULL;
 
@@ -127,8 +127,9 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		rsc->meta, XML_RSC_ATTR_INCARNATION_NODEMAX);
 
 	crm_debug_3("Processing resource %s...", rsc->id);
-
+	
 	crm_malloc0(clone_data, sizeof(clone_variant_data_t));
+	rsc->variant_opaque = clone_data;
 	clone_data->child_list  = NULL;
 	clone_data->interleave  = FALSE;
 	clone_data->ordered     = FALSE;
@@ -141,13 +142,11 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	if(clone_data->clone_max < 0) {
 		clone_data->clone_max = g_list_length(data_set->nodes);
 	}
-	
-	/* this is a bit of a hack - but simplifies everything else */
-	ha_msg_mod(xml_self, F_XML_TAGNAME, XML_CIB_TAG_RESOURCE);
-/* 	set_id(xml_self, "self", -1); */
-	xml_tmp = find_xml_node(xml_obj, "operations", FALSE);
-	if(xml_tmp != NULL) {
-		add_node_copy(xml_self, xml_tmp);
+	if(crm_is_true(interleave)) {
+		clone_data->interleave = TRUE;
+	}
+	if(crm_is_true(ordered)) {
+		clone_data->ordered = TRUE;
 	}
 
 	clone_data->xml_obj_child = find_xml_node(
@@ -158,34 +157,38 @@ void clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 			xml_obj, XML_CIB_TAG_RESOURCE, TRUE);
 	}
 
-	CRM_CHECK(clone_data->xml_obj_child != NULL, return);
+	if(clone_data->xml_obj_child == NULL) {
+		pe_config_err("%s has nothing to clone", rsc->id);
+		return FALSE;
+	}
+	
+	xml_self = copy_xml(rsc->xml);
+	/* this is a bit of a hack - but simplifies everything else */
+	ha_msg_mod(xml_self, F_XML_TAGNAME, XML_CIB_TAG_RESOURCE);
+/* 	set_id(xml_self, "self", -1); */
+	xml_tmp = find_xml_node(xml_obj, "operations", FALSE);
+	if(xml_tmp != NULL) {
+		add_node_copy(xml_self, xml_tmp);
+	}
 
 	if(common_unpack(xml_self, &self, NULL, data_set)) {
 		clone_data->self = self;
 
 	} else {
 		crm_log_xml_err(xml_self, "Couldnt unpack dummy child");
-		return;
+		clone_data->self = self;
+		return FALSE;
 	}
 	
-	if(crm_is_true(interleave)) {
-		clone_data->interleave = TRUE;
-	}
-	if(crm_is_true(ordered)) {
-		clone_data->ordered = TRUE;
-	}
-
 	clone_data->notify_confirm = clone_data->self->notify;
 
-	rsc->variant_opaque = clone_data;
-
-/* 	clone_data->gloabally_unique && */
 	for(lpc = 0; lpc < clone_data->clone_max; lpc++) {
 		create_child_clone(rsc, lpc, data_set);
 	}
 	
 	crm_debug_3("Added %d children to resource %s...",
 		    clone_data->clone_max, rsc->id);
+	return TRUE;
 }
 
 resource_t *
@@ -1347,9 +1350,10 @@ void clone_free(resource_t *rsc)
 	crm_debug_3("Freeing child list");
 	pe_free_shallow_adv(clone_data->child_list, FALSE);
 
-	free_xml(clone_data->self->xml);
-	clone_data->self->fns->free(clone_data->self);
-
+	if(clone_data->self) {
+		free_xml(clone_data->self->xml);
+		clone_data->self->fns->free(clone_data->self);
+	}
 	common_free(rsc);
 }
 

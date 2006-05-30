@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.62 2006/05/22 08:27:33 andrew Exp $ */
+/* $Id: group.c,v 1.63 2006/05/30 07:47:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,7 +55,7 @@ typedef struct group_variant_data_s
 
 void group_assign_color(resource_t *rsc, color_t *group_color);
 
-void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
+gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
 	resource_t *self = NULL;
 	crm_data_t *xml_obj = rsc->xml;
@@ -98,7 +98,7 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 
 	} else {
 		crm_log_xml_err(xml_self, "Couldnt unpack dummy child");
-		return;
+		return FALSE;
 	}
 
 	clone_id = crm_element_value(rsc->xml, XML_RSC_ATTR_INCARNATION);
@@ -112,7 +112,9 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 				 rsc, data_set) == FALSE) {
 			pe_err("Failed unpacking resource %s",
 				crm_element_value(xml_obj, XML_ATTR_ID));
-			continue;
+			if(new_rsc != NULL && new_rsc->fns != NULL) {
+				new_rsc->fns->free(new_rsc);
+			}
 		}
 
 		group_data->num_children++;
@@ -131,9 +133,16 @@ void group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		group_data->last_child = new_rsc;
 		print_resource(LOG_DEBUG_3, "Added", new_rsc, FALSE);
 		);
-	crm_debug_3("Added %d children to resource %s...",
-		    group_data->num_children, group_data->self->id);
+
+	if(group_data->num_children == 0) {
+		pe_config_err("Group %s did not have any children", rsc->id);
+		return FALSE;
+	}
 	
+	crm_debug_3("Added %d children to resource %s...",
+		    group_data->num_children, rsc->id);
+	
+	return TRUE;
 }
 
 

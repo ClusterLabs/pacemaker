@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.19 2006/05/29 16:01:28 andrew Exp $ */
+/* $Id: master.c,v 1.20 2006/05/30 07:47:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,11 +54,11 @@ typedef struct clone_variant_data_s
 	CRM_ASSERT(rsc->variant == pe_master);				\
 	data = (clone_variant_data_t *)rsc->variant_opaque;
 
-void master_unpack(resource_t *rsc, pe_working_set_t *data_set)
+gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
   	add_hash_param(rsc->parameters, crm_meta_name("stateful"),
 		       XML_BOOLEAN_TRUE);
-	clone_unpack(rsc, data_set);
+	return clone_unpack(rsc, data_set);
 }
 
 static void

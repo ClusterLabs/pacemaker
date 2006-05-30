@@ -1,4 +1,4 @@
-/* $Id: complex.h,v 1.35 2006/05/23 07:45:37 andrew Exp $ */
+/* $Id: complex.h,v 1.36 2006/05/30 07:47:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -65,7 +65,7 @@ typedef struct notify_data_s {
 
 typedef struct resource_object_functions_s 
 {
-		void (*unpack)(resource_t *, pe_working_set_t *);
+		gboolean (*unpack)(resource_t *, pe_working_set_t *);
 		resource_t *(*find_child)(resource_t *, const char *);
 		int  (*num_allowed_nodes)(resource_t *);
 		color_t *(*color)(resource_t *, pe_working_set_t *);
@@ -106,7 +106,7 @@ typedef struct resource_object_functions_s
 extern char *native_parameter(
 	resource_t *rsc, node_t *node, gboolean create, const char *name,
 	pe_working_set_t *data_set);
-extern void native_unpack(resource_t *rsc, pe_working_set_t *data_set);
+extern gboolean native_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern GListPtr native_children(resource_t *rsc);
 extern resource_t *native_find_child(resource_t *rsc, const char *id);
 extern int  native_num_allowed_nodes(resource_t *rsc);
@@ -143,7 +143,7 @@ extern gboolean native_create_probe(
 extern void native_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
 
-extern void group_unpack(resource_t *rsc, pe_working_set_t *data_set);
+extern gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern GListPtr group_children(resource_t *rsc);
 extern resource_t *group_find_child(resource_t *rsc, const char *id);
 extern int  group_num_allowed_nodes(resource_t *rsc);
@@ -175,7 +175,7 @@ extern gboolean group_create_probe(
 extern void group_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
 
-extern void clone_unpack(resource_t *rsc, pe_working_set_t *data_set);
+extern gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern GListPtr clone_children(resource_t *rsc);
 extern resource_t *clone_find_child(resource_t *rsc, const char *id);
 extern int  clone_num_allowed_nodes(resource_t *rsc);
@@ -206,7 +206,7 @@ extern gboolean clone_create_probe(
 extern void clone_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
 
-extern void master_unpack(resource_t *rsc, pe_working_set_t *data_set);
+extern gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern void master_create_actions(resource_t *rsc, pe_working_set_t *data_set);
 extern void master_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);

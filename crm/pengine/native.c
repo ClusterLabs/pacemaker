@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.143 2006/05/26 14:53:58 andrew Exp $ */
+/* $Id: native.c,v 1.144 2006/05/30 07:47:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -163,7 +163,7 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 }
 
 
-void native_unpack(resource_t *rsc, pe_working_set_t *data_set)
+gboolean native_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
 	native_variant_data_t *native_data = NULL;
 
@@ -175,6 +175,7 @@ void native_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	rsc->running_on		= NULL;
 
 	rsc->variant_opaque = native_data;
+	return TRUE;
 }
 
 		
