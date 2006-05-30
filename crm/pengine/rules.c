@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.25 2006/05/17 12:06:47 andrew Exp $ */
+/* $Id: rules.c,v 1.26 2006/05/30 09:24:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -126,7 +126,10 @@ test_expression(crm_data_t *expr, node_t *node, resource_t *rsc,
 			accept = FALSE;
 	}
 		
-	crm_debug_2("Expression %s %s", ID(expr), accept?"passed":"failed");
+	crm_debug_2("Expression %s %s on %s for %s",
+		    ID(expr), accept?"passed":"failed",
+		    node?node->details->uname:"all ndoes",
+		    rsc?rsc->id:"all resources");
 	return accept;
 }
 

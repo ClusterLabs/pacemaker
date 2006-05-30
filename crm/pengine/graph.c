@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.94 2006/05/25 10:26:49 andrew Exp $ */
+/* $Id: graph.c,v 1.95 2006/05/30 09:24:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -468,7 +468,7 @@ action2xml(action_t *action, gboolean as_input)
 		}
 	}
 	
-	crm_log_xml_debug_2(action_xml, "dumped action");
+	crm_log_xml_debug_4(action_xml, "dumped action");
 	
 	return action_xml;
 }

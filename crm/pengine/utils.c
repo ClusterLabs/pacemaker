@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.139 2006/05/30 08:54:33 andrew Exp $ */
+/* $Id: utils.c,v 1.140 2006/05/30 09:24:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -626,14 +626,14 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	}
 
 	if(node1_weight > node2_weight) {
-		crm_debug_2("%s (%d) > %s (%d) : weight",
+		crm_debug_3("%s (%d) > %s (%d) : weight",
 			    node1->details->uname, node1_weight,
 			    node2->details->uname, node2_weight);
 		return -1;
 	}
 	
 	if(node1_weight < node2_weight) {
-		crm_debug_2("%s (%d) < %s (%d) : weight",
+		crm_debug_3("%s (%d) < %s (%d) : weight",
 			    node1->details->uname, node1_weight,
 			    node2->details->uname, node2_weight);
 		return 1;
@@ -646,14 +646,14 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	/* now try to balance resources across the cluster */
 	if(node1->details->num_resources
 	   < node2->details->num_resources) {
-		crm_debug_2("%s (%d) < %s (%d) : resources",
+		crm_debug_3("%s (%d) < %s (%d) : resources",
 			    node1->details->uname, node1->details->num_resources,
 			    node2->details->uname, node2->details->num_resources);
 		return -1;
 		
 	} else if(node1->details->num_resources
 		  > node2->details->num_resources) {
-		crm_debug_2("%s (%d) > %s (%d) : resources",
+		crm_debug_3("%s (%d) > %s (%d) : resources",
 			    node1->details->uname, node1->details->num_resources,
 			    node2->details->uname, node2->details->num_resources);
 		return 1;
@@ -694,10 +694,12 @@ custom_action(resource_t *rsc, char *key, const char *task,
 	}
 
 	if(action == NULL) {
-		crm_debug_2("Creating action %d: %s for %s on %s",
-			    data_set->action_id, task, rsc?rsc->id:"<NULL>",
-			    on_node?on_node->details->uname:"<NULL>");
-
+		if(save_action) {
+			crm_debug_2("Creating%s action %d: %s for %s on %s",
+				    optional?"":" manditory", data_set->action_id, key, rsc?rsc->id:"<NULL>",
+				    on_node?on_node->details->uname:"<NULL>");
+		}
+		
 		crm_malloc0(action, sizeof(action_t));
 		if(action != NULL) {
 			if(save_action) {
@@ -717,7 +719,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			action->dumped     = FALSE;
 			action->runnable   = TRUE;
 			action->processed  = FALSE;
-			action->optional   = TRUE;
+			action->optional   = optional;
 			action->seen_count = 0;
 			
 			action->extra = g_hash_table_new_full(
@@ -746,7 +748,9 @@ custom_action(resource_t *rsc, char *key, const char *task,
 						rsc->actions, action);
 				}
 			}
-			crm_debug_4("Action %d created", action->id);
+			if(save_action) {
+				crm_debug_4("Action %d created", action->id);
+			}
 		}
 	}
 
@@ -798,7 +802,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			}
 			
 		} else if(action->needs == rsc_req_nothing) {
-			crm_debug_2("Action %s doesnt require anything",
+			crm_debug_3("Action %s doesnt require anything",
 				  action->uuid);
 			action->runnable = TRUE;
 #if 0
@@ -807,7 +811,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			 * - if we dont have quorum we cant stonith anyway
 			 */
 		} else if(action->needs == rsc_req_stonith) {
-			crm_debug_2("Action %s requires only stonith", action->uuid);
+			crm_debug_3("Action %s requires only stonith", action->uuid);
 			action->runnable = TRUE;
 #endif
 		} else if(data_set->have_quorum == FALSE
@@ -819,7 +823,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			
 		} else if(data_set->have_quorum == FALSE
 			&& data_set->no_quorum_policy == no_quorum_freeze) {
-			crm_debug_2("Check resource is already active");
+			crm_debug_3("Check resource is already active");
 			if(rsc->fns->active(rsc, TRUE) == FALSE) {
 				action->runnable = FALSE;
 				crm_debug("%s\t%s %s (cancelled : quorum freeze)",
@@ -828,7 +832,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			}
 
 		} else {
-			crm_debug_2("Action %s is runnable", action->uuid);
+			crm_debug_3("Action %s is runnable", action->uuid);
 			action->runnable = TRUE;
 		}
 
@@ -900,7 +904,7 @@ unpack_operation(
 		action->needs = rsc_req_quorum;
 		value = "quorum (default)";
 	}
-	crm_debug_2("\tAction %s requires: %s", action->task, value);
+	crm_debug_3("\tAction %s requires: %s", action->task, value);
 
 	value = NULL;
 	if(xml_obj != NULL) {
@@ -973,7 +977,7 @@ unpack_operation(
 		value = "restart (and possibly migrate) (default)";
 	}
 	
-	crm_debug_2("\t%s failure handling: %s", action->task, value);
+	crm_debug_3("\t%s failure handling: %s", action->task, value);
 
 	value = NULL;
 	if(xml_obj != NULL) {
@@ -990,7 +994,7 @@ unpack_operation(
 			action->fail_role = RSC_ROLE_STARTED;
 		}
 	}
-	crm_debug_2("\t%s failure results in: %s",
+	crm_debug_3("\t%s failure results in: %s",
 		    action->task, role2text(action->fail_role));
 	
 	if(xml_obj == NULL) {
@@ -1066,7 +1070,7 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 			return op;
 		}
 		);
-	crm_debug_2("No match for %s", key);
+	crm_debug_3("No match for %s", key);
 	return op;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.198 2006/05/30 08:54:33 andrew Exp $ */
+/* $Id: unpack.c,v 1.199 2006/05/30 09:24:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1021,21 +1021,21 @@ unpack_lrm_rsc_state(
 			   interval_s = get_interval(rsc_op);
 			   interval = crm_parse_int(interval_s, "0");
 			   if(interval == 0) {
-				   crm_debug_3("Skipping %s/%s: non-recurring",
+				   crm_debug_4("Skipping %s/%s: non-recurring",
 					       id, node->details->uname);
 				   continue;
 			   }
 
 			   status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
 			   if(safe_str_eq(status, "-1")) {
-				   crm_debug_3("Skipping %s/%s: status",
+				   crm_debug_4("Skipping %s/%s: status",
 					       id, node->details->uname);
 				   continue;
 			   }
 			   task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 			   /* create the action */
 			   key = generate_op_key(rsc->id, task, interval);
-			   crm_debug_2("Creating %s/%s", key, node->details->uname);
+			   crm_debug_3("Creating %s/%s", key, node->details->uname);
 			   custom_action(rsc, key, task, node,
 					 TRUE, TRUE, data_set);
 			);
@@ -1131,17 +1131,17 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 		sort_return(0);
 
 	} else if(a_call_id >= 0 && a_call_id < b_call_id) {
-		crm_debug_2("%s (%d) < %s (%d) : call id",
+		crm_debug_4("%s (%d) < %s (%d) : call id",
 			    ID(a), a_call_id, ID(b), b_call_id);
 		sort_return(-1);
 
 	} else if(b_call_id >= 0 && a_call_id > b_call_id) {
-		crm_debug_2("%s (%d) > %s (%d) : call id",
+		crm_debug_4("%s (%d) > %s (%d) : call id",
 			    ID(a), a_call_id, ID(b), b_call_id);
 		sort_return(1);
 	}
 
-	crm_debug_3("%s (%d) == %s (%d) : continuing",
+	crm_debug_5("%s (%d) == %s (%d) : continuing",
 		    ID(a), a_call_id, ID(b), b_call_id);
 	
 	/* now process pending ops */
@@ -1183,12 +1183,12 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 		}
 		
 	} else if((a_id >= 0 && a_id < b_id) || b_id == -1) {
-		crm_debug_2("%s (%d) < %s (%d) : transition",
+		crm_debug_3("%s (%d) < %s (%d) : transition",
 			    ID(a), a_id, ID(b), b_id);
 		sort_return(-1);
 
 	} else if((b_id >= 0 && a_id > b_id) || a_id == -1) {
-		crm_debug_2("%s (%d) > %s (%d) : transition",
+		crm_debug_3("%s (%d) > %s (%d) : transition",
 			    ID(a), a_id, ID(b), b_id);
 		sort_return(1);
 	}
@@ -1404,11 +1404,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	} else if(safe_str_eq(task, CRMD_ACTION_STOP)) {
 		crm_debug_2("Ignoring stop params: %s", id);
 
-	} else if(is_probe || safe_str_eq(task, CRMD_ACTION_START)) {
-		crm_debug_2("Checking resource definition: %s", rsc->id);
-		check_action_definition(rsc, node, xml_op, data_set);
-		
-	} else if(interval > 0) {
+	} else if(is_probe || safe_str_eq(task, CRMD_ACTION_START) || interval > 0) {
+		crm_debug_3("Checking resource definition: %s", rsc->id);
 		check_action_definition(rsc, node, xml_op, data_set);
 	}
 	
@@ -1519,7 +1516,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				rsc->role = RSC_ROLE_SLAVE;
 				
 			} else if(rsc->role < RSC_ROLE_STARTED) {
-				crm_debug_2("%s active on %s",
+				crm_debug_3("%s active on %s",
 					    rsc->id, node->details->uname);
 				rsc->role = RSC_ROLE_STARTED;
 			}
@@ -1579,7 +1576,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			break;
 	}
 
-	crm_debug_2("Resource %s after %s: role=%s",
+	crm_debug_3("Resource %s after %s: role=%s",
 		    rsc->id, task, role2text(rsc->role));
 
 	pe_free_action(action);
@@ -1963,7 +1960,7 @@ generate_location_rule(
 	boolean = crm_element_value(rule_xml, XML_RULE_ATTR_BOOLEAN_OP);
 	role = crm_element_value(rule_xml, XML_RULE_ATTR_ROLE);
 
-	crm_debug_2("processing rule: %s", rule_id);
+	crm_debug_2("Processing rule: %s", rule_id);
 
 	if(role != NULL && text2role(role) == RSC_ROLE_UNKNOWN) {
 		pe_err("Bad role specified for %s: %s", rule_id, role);
@@ -2073,7 +2070,7 @@ generate_location_rule(
 		return NULL;
 	} 
 
-	crm_debug_2("%s: %d nodes matched",
+	crm_debug_3("%s: %d nodes matched",
 		    rule_id, g_list_length(location_rule->node_list_rh));
 	crm_action_debug_3(print_rsc_to_node("Added", location_rule, FALSE));
 	return location_rule;

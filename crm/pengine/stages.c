@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.101 2006/05/30 08:55:43 andrew Exp $ */
+/* $Id: stages.c,v 1.102 2006/05/30 09:24:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -511,7 +511,7 @@ choose_node_from_list(color_t *color)
 	node_t *chosen = NULL;
 	int multiple = 0;
 
-	crm_debug_2("Choosing node for color %d", color->id);
+	crm_debug_3("Choosing node for color %d", color->id);
 	color->details->candidate_nodes = g_list_sort(nodes, sort_node_weight);
 	nodes = color->details->candidate_nodes;
 
@@ -540,8 +540,8 @@ choose_node_from_list(color_t *color)
 	}
 
 	slist_iter(candidate, node_t, nodes, lpc, 
-		   crm_debug("Color %d, Node %s: %d", color->id,
-			     candidate->details->uname, candidate->weight);
+		   crm_debug_2("Color %d, Node[%d] %s: %d", color->id, lpc,
+			       candidate->details->uname, candidate->weight);
 		   if(chosen->weight > 0
 		      && candidate->details->unclean == FALSE
 		      && candidate->weight == chosen->weight) {
@@ -574,7 +574,6 @@ choose_node_from_list(color_t *color)
 	 * new resource count
 	 */
 
-	crm_debug_2("assigned %s to color %d",chosen->details->uname,color->id);
 	chosen->details->num_resources += color->details->num_resources;
 	color->details->chosen_node = node_copy(chosen);
 	

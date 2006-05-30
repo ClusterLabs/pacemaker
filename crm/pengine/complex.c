@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.94 2006/05/30 08:54:32 andrew Exp $ */
+/* $Id: complex.c,v 1.95 2006/05/30 09:24:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -500,7 +500,7 @@ unpack_attr_set(gpointer data, gpointer user_data)
 		return;
 	}
 	
-	crm_debug_2("Adding attributes from %s", pair->name);
+	crm_debug_3("Adding attributes from %s", pair->name);
 	attributes = cl_get_struct(pair->attr_set, XML_TAG_ATTRS);
 	populate_hash(attributes, unpack_data->hash,
 		      unpack_data->attrs, unpack_data->attrs_length);
@@ -534,7 +534,7 @@ unpack_instance_attributes(
 		return;
 	}
 
-	crm_debug_2("Checking for attributes");
+	crm_debug_4("Checking for attributes");
 	xml_child_iter_filter(
 		xml_obj, attr_set, set_name,
 
