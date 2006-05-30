@@ -267,7 +267,7 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 static int
 get_resource_list(GList ** rsc_info)
 {
-	cl_log(LOG_ERR, "get_resource_list: begin.");
+	int rc;
 
 	if ( rsc_info == NULL ) {
 		cl_log(LOG_ERR, "Parameter error: get_resource_list");
@@ -285,7 +285,10 @@ get_resource_list(GList ** rsc_info)
 		return -1;
 	}
 
-	return stonithd_list_stonith_types(rsc_info);
+	rc = stonithd_list_stonith_types(rsc_info);
+	stonithd_signoff();
+
+	return rc;
 }
 
 static int
