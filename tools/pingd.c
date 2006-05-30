@@ -1,4 +1,4 @@
-/* $Id: pingd.c,v 1.4 2006/05/16 14:46:25 andrew Exp $ */
+/* $Id: pingd.c,v 1.5 2006/05/30 14:06:06 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -353,6 +353,8 @@ static void count_ping_nodes(gpointer key, gpointer value, gpointer user_data)
 	}
 	
 	if(safe_str_eq(value, PINGSTATUS)) {
+		(*num_active)++;
+	} else if(safe_str_eq(value, LINKUP)) {
 		(*num_active)++;
 	}
 }
