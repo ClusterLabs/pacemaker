@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.88 2006/05/30 12:26:33 andrew Exp $ */
+/* $Id: xml.c,v 1.89 2006/05/31 06:01:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -837,7 +837,7 @@ log_data_element(
 		} else if(hidden != NULL
 			  && prop_name != NULL
 			  && strlen(prop_name) > 0
-			  && strcasestr(hidden, prop_name) != NULL) {
+			  && strstr(hidden, prop_name) != NULL) {
 			prop_value = "*****";
 		}
 		
@@ -2474,9 +2474,9 @@ calculate_xml_digest(crm_data_t *input, gboolean sort)
 gboolean
 validate_with_dtd(crm_data_t *xml_blob, const char *dtd_file) 
 {
+	gboolean valid = TRUE;
 #if HAVE_LIBXML2
 	char *buffer = NULL;
-	gboolean valid = TRUE;
 
  	xmlDocPtr doc = NULL;
 	xmlDtdPtr dtd = NULL;
