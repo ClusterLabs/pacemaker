@@ -284,14 +284,14 @@ main(int argc, char **argv)
 				strcpy(gAction, "Linking");
 				snprintf(gTarget, sizeof(gTarget), "%s", Basename(argv[i + 1]));
 			}
-		} else if (strchr("-+/", (int) argv[i][0]) != NULL) {
-			continue;
 		} else if (strncasecmp(Extension(argv[i]), ".c", 2) == 0) {
 			cc++;
 			snprintf(gTarget, sizeof(gTarget), "%s", Basename(argv[i]));
 		} else if ((strncasecmp(Extension(argv[i]), ".h", 2) == 0) && (cc == 0)) {
 			pch++;
 			snprintf(gTarget, sizeof(gTarget), "%s", Basename(argv[i]));
+		} else if (strchr("-+/", (int) argv[i][0]) != NULL) {
+			continue;
 		} else if ((i == 1) && (strcmp(Basename(argv[i]), "ar") == 0)) {
 			snprintf(gAr, sizeof(gAr), "%s", Basename(argv[i]));
 		} else if ((gArLibraryTarget[0] == '\0')
