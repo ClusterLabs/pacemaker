@@ -44,6 +44,7 @@ do_test simple8 "Stickiness"
 
 echo ""
 do_test date-1 "Dates"
+do_test standby "Standby"
 do_test comments "Comments"
 do_test params-0 "Params: No change"
 do_test params-1 "Params: Changed"
@@ -53,6 +54,7 @@ do_test orphan-1 "Orphan stop"
 
 do_test target-0 "Target Role : baseline"
 do_test target-1 "Target Role : test"
+
 
 echo ""
 do_test master-0 "Stopped -> Slave"

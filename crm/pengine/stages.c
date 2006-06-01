@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.102 2006/05/30 09:24:03 andrew Exp $ */
+/* $Id: stages.c,v 1.103 2006/06/01 16:41:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -526,7 +526,9 @@ choose_node_from_list(color_t *color)
 		}
 		return FALSE;
 
-	} else if(chosen->details->unclean || chosen->details->shutdown) {
+	} else if(chosen->details->unclean
+		  || chosen->details->standby
+		  || chosen->details->shutdown) {
 		crm_debug("All nodes for color %d are unavailable"
 			  ", unclean or shutting down", color->id);
 		color->details->chosen_node = NULL;

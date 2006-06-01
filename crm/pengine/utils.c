@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.142 2006/06/01 15:40:46 andrew Exp $ */
+/* $Id: utils.c,v 1.143 2006/06/01 16:41:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -618,10 +618,14 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	node1_weight = node1->weight;
 	node2_weight = node2->weight;
 	
-	if(node1->details->unclean || node1->details->shutdown) {
+	if(node1->details->unclean
+	   || node1->details->standby
+	   || node1->details->shutdown) {
 		node1_weight  = -INFINITY; 
 	}
-	if(node2->details->unclean || node2->details->shutdown) {
+	if(node2->details->unclean
+	   || node2->details->standby
+	   || node2->details->shutdown) {
 		node2_weight  = -INFINITY; 
 	}
 
