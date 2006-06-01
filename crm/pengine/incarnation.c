@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.94 2006/06/01 10:38:39 andrew Exp $ */
+/* $Id: incarnation.c,v 1.95 2006/06/01 14:45:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1423,10 +1423,15 @@ clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
-		/* we may already be running but under different names */
 		if(rsc->globally_unique == FALSE
-		   && clone_data->clone_node_max == 1
-		   && pe_find_node_id(child_rsc->known_on, node->details->id)) {
+		   && clone_data->clone_node_max == 1) {
+			/* only look for one copy */
+			if(pe_find_node_id(child_rsc->known_on, node->details->id) == NULL) {
+				if(child_rsc->fns->create_probe(
+					   child_rsc, node, complete, force, data_set)) {
+					any_created = TRUE;
+				}
+			}
 			break;
 
 		} else if(child_rsc->fns->create_probe(
