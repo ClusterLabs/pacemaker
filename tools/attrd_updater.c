@@ -1,4 +1,4 @@
-/* $Id: attrd_updater.c,v 1.3 2006/04/09 17:05:26 andrew Exp $ */
+/* $Id: attrd_updater.c,v 1.4 2006/06/01 08:43:37 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -108,7 +108,7 @@ main(int argc, char ** argv)
 			      (void*)process_attrd_message, &attrd);
 
 	if(attrd == NULL) {
-		fprintf(stderr, "Could not connect to "T_ATTRD);
+		fprintf(stderr, "Could not connect to "T_ATTRD"\n");
 		return 1;
 	}
 
@@ -131,7 +131,7 @@ main(int argc, char ** argv)
 	}
 	
 	if(send_ipc_message(attrd, update) == FALSE) {
-		fprintf(stderr, "Could not send update");
+		fprintf(stderr, "Could not send update\n");
 		return 1;
 	}
 	return 0;
