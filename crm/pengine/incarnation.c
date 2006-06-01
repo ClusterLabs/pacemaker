@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.93 2006/05/30 07:47:44 andrew Exp $ */
+/* $Id: incarnation.c,v 1.94 2006/06/01 10:38:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -471,7 +471,8 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 {
 	gboolean child_starting = FALSE;
 	gboolean child_stopping = FALSE;
-	action_t *action = NULL;
+	action_t *stop = NULL;
+	action_t *start = NULL;
 	action_t *action_complete = NULL;
 	resource_t *last_start_rsc = NULL;
 	resource_t *last_stop_rsc = NULL;
@@ -494,37 +495,42 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		);
 
 	/* start */
-	action = start_action(clone_data->self, NULL, !child_starting);
+	start = start_action(clone_data->self, NULL, !child_starting);
 	action_complete = custom_action(
 		clone_data->self, started_key(rsc),
 		CRMD_ACTION_STARTED, NULL, !child_starting, TRUE, data_set);
 
-	action->pseudo = TRUE;
+	start->pseudo = TRUE;
 	action_complete->pseudo = TRUE;
 	action_complete->priority = INFINITY;
 	
 	child_starting_constraints(clone_data, pe_ordering_optional, 
 				   NULL, last_start_rsc, data_set);
 
-	clone_create_notifications(rsc, action, action_complete, data_set);	
+	clone_create_notifications(
+		rsc, start, action_complete, data_set);	
 
 
 	/* stop */
-	action = stop_action(clone_data->self, NULL, !child_stopping);
+	stop = stop_action(clone_data->self, NULL, !child_stopping);
 	action_complete = custom_action(
 		clone_data->self, stopped_key(rsc),
 		CRMD_ACTION_STOPPED, NULL, !child_stopping, TRUE, data_set);
 
-	action->pseudo = TRUE;
+	stop->pseudo = TRUE;
 	action_complete->pseudo = TRUE;
 	action_complete->priority = INFINITY;
 	
 	child_stopping_constraints(clone_data, pe_ordering_optional,
 				   NULL, last_stop_rsc, data_set);
 
-	clone_create_notifications(rsc, action, action_complete, data_set);	
-
+	
+	clone_create_notifications(rsc, stop, action_complete, data_set);	
 	rsc->actions = clone_data->self->actions;	
+
+	if(stop->post_notified != NULL && start->pre_notify != NULL) {
+		order_actions(stop->post_notified, start->pre_notify, pe_ordering_optional);	
+	}
 }
 
 void
