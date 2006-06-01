@@ -1,4 +1,4 @@
-/* $Id: crm_attribute.c,v 1.17 2006/06/01 15:56:39 andrew Exp $ */
+/* $Id: crm_attribute.c,v 1.18 2006/06/01 16:05:59 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -329,8 +329,12 @@ main(int argc, char **argv)
 				 attr_id, attr_name, attr_value);
 		
 		if(safe_str_eq(crm_system_name, "crm_failcount")) {
+			char *now_s = NULL;
+			time_t now = time(NULL);
+			now_s = crm_itoa(now);
 			update_attr(the_cib, cib_sync_call,
 				    NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s);
+			crm_free(now_s);
 		}
 			
 	} else if(DO_WRITE) {
