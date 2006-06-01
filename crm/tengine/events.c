@@ -1,4 +1,4 @@
-/* $Id: events.c,v 1.18 2006/05/25 14:20:26 andrew Exp $ */
+/* $Id: events.c,v 1.19 2006/06/01 14:48:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -71,6 +71,45 @@ need_abort(crm_data_t *update)
 	return NULL;
 }
 
+static gboolean
+fail_incompletable_actions(crm_graph_t *graph, const char *down_node) 
+{
+	const char *target = NULL;
+	crm_data_t *last_action = NULL;
+
+	slist_iter(
+		synapse, synapse_t, graph->synapses, lpc,
+		if (synapse->confirmed) {
+			continue;
+		}
+
+		slist_iter(
+			action, crm_action_t, synapse->actions, lpc,
+
+			if(action->type == action_type_pseudo || action->confirmed) {
+				continue;
+			}
+			
+			target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+			if(safe_str_eq(target, down_node)) {
+				action->failed = TRUE;
+				last_action = action->xml;
+				update_graph(graph, action);
+				crm_notice("Action %d (%s) is scheduled for %s (offline)",
+					   action->id, ID(action->xml), down_node);
+			}
+			
+			);
+		);
+
+	if(last_action != NULL) {
+		crm_warn("Node %s shutdown resulted in un-runnable actions", down_node);
+		abort_transition(INFINITY, tg_restart, "Node failure", last_action);
+		return TRUE;
+	}
+	
+	return FALSE;
+}
 
 gboolean
 extract_event(crm_data_t *msg)
@@ -146,7 +185,8 @@ extract_event(crm_data_t *msg)
 				crm_info("Stonith/shutdown event not matched");
 				abort_transition(INFINITY, tg_restart,
 						 "Node failure", node_state);
-			}
+			}			
+			fail_incompletable_actions(transition_graph, event_node);
 		}
 
 		shutdown = 0;
@@ -294,7 +334,8 @@ match_graph_event(
 	stop_te_timer(action->timer);
 	action->confirmed = TRUE;
 
-	target_rc_s = g_hash_table_lookup(action->params,crm_meta_name(XML_ATTR_TE_TARGET_RC));
+	target_rc_s = g_hash_table_lookup(
+		action->params,crm_meta_name(XML_ATTR_TE_TARGET_RC));
 	if(target_rc_s != NULL) {
 		crm_debug_2("Target rc: %s vs. %d", target_rc_s, op_rc_i);
 		target_rc = crm_parse_int(target_rc_s, NULL);
