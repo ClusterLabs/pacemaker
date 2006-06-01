@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.140 2006/05/30 09:24:03 andrew Exp $ */
+/* $Id: utils.c,v 1.141 2006/06/01 08:54:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1278,6 +1278,8 @@ text2role(const char *role)
 	} else if(safe_str_eq(role, RSC_ROLE_MASTER_S)) {
 		return RSC_ROLE_MASTER;
 	} else if(safe_str_eq(role, RSC_ROLE_UNKNOWN_S)) {
+		return RSC_ROLE_UNKNOWN;
+	} else if(safe_str_eq(role, "default")) {
 		return RSC_ROLE_UNKNOWN;
 	}
 	crm_err("Unknown role: %s", role);
