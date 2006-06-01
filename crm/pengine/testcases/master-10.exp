@@ -50,7 +50,7 @@
      <action_set>
        <rsc_op id="16" operation="monitor" operation_key="child_rsc1:2_monitor_11000" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc1:2" long-id="rsc1:child_rsc1:2" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_id="mon-2" CRM_meta_op_target_rc="8" CRM_meta_name="monitor" CRM_meta_interval="11000" CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_master_max="2" CRM_meta_master_node_max="1"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_id="mon-2" CRM_meta_timeout="60000" CRM_meta_op_target_rc="8" CRM_meta_name="monitor" CRM_meta_interval="11000" CRM_meta_clone="2" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_master_max="2" CRM_meta_master_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -158,7 +158,7 @@
      <action_set>
        <rsc_op id="19" operation="monitor" operation_key="child_rsc1:3_monitor_11000" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc1:3" long-id="rsc1:child_rsc1:3" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_id="mon-2" CRM_meta_op_target_rc="8" CRM_meta_name="monitor" CRM_meta_interval="11000" CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_master_max="2" CRM_meta_master_node_max="1"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_id="mon-2" CRM_meta_timeout="60000" CRM_meta_op_target_rc="8" CRM_meta_name="monitor" CRM_meta_interval="11000" CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_master_max="2" CRM_meta_master_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -250,7 +250,7 @@
      <action_set>
        <rsc_op id="21" operation="monitor" operation_key="child_rsc1:0_monitor_1000" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc1:0" long-id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6" CRM_meta_role="Slave" CRM_meta_stateful="true" CRM_meta_id="mon-1" CRM_meta_name="monitor" CRM_meta_interval="1000" CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_master_max="2" CRM_meta_master_node_max="1"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_role="Slave" CRM_meta_stateful="true" CRM_meta_id="mon-1" CRM_meta_timeout="60000" CRM_meta_name="monitor" CRM_meta_interval="1000" CRM_meta_clone="0" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_master_max="2" CRM_meta_master_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -339,7 +339,7 @@
      <action_set>
        <rsc_op id="23" operation="monitor" operation_key="child_rsc1:1_monitor_1000" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc1:1" long-id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6" CRM_meta_role="Slave" CRM_meta_stateful="true" CRM_meta_id="mon-1" CRM_meta_name="monitor" CRM_meta_interval="1000" CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_master_max="2" CRM_meta_master_node_max="1"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_role="Slave" CRM_meta_stateful="true" CRM_meta_id="mon-1" CRM_meta_timeout="60000" CRM_meta_name="monitor" CRM_meta_interval="1000" CRM_meta_clone="1" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_master_max="2" CRM_meta_master_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>

@@ -49,7 +49,7 @@
    <synapse id="4">
      <action_set>
        <pseudo_event id="13" operation="start" operation_key="group1_start_0">
-         <attributes crm_feature_set="1.0.6" CRM_meta_id="1" CRM_meta_name="start" CRM_meta_prereq="quorum"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_id="1" CRM_meta_timeout="60000" CRM_meta_name="start" CRM_meta_prereq="quorum"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -120,7 +120,7 @@
    <synapse id="10">
      <action_set>
        <pseudo_event id="19" operation="start" operation_key="group2_start_0">
-         <attributes crm_feature_set="1.0.6" CRM_meta_id="2" CRM_meta_name="start" CRM_meta_prereq="fencing"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_id="2" CRM_meta_timeout="60000" CRM_meta_name="start" CRM_meta_prereq="fencing"/>
        </pseudo_event>
      </action_set>
      <inputs>

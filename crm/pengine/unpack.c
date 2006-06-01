@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.199 2006/05/30 09:24:03 andrew Exp $ */
+/* $Id: unpack.c,v 1.200 2006/06/01 15:40:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -119,20 +119,22 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 		);
 #endif
 	
-	get_cluster_pref("transition_idle_timeout");
+	get_cluster_pref("default_action_timeout");
+	if(value == NULL) {
+		get_cluster_pref("transition_idle_timeout");
+	}
 	if(value != NULL) {
 		long tmp = crm_get_msec(value);
 		if(tmp > 0) {
 			crm_free(data_set->transition_idle_timeout);
 			data_set->transition_idle_timeout = crm_strdup(value);
 		} else {
-			crm_err("Invalid value for transition_idle_timeout: %s",
+			crm_err("Invalid value for default_action_timeout: %s",
 				value);
 		}
 	}
 	
-	crm_debug("%s set to: %s",
-		 "transition_idle_timeout", data_set->transition_idle_timeout);
+	crm_debug("default_action_timeout set to: %s", data_set->transition_idle_timeout);
 
 	get_cluster_pref("default_"XML_RSC_ATTR_STICKINESS);
 	data_set->default_resource_stickiness = char2score(value);

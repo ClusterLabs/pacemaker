@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.141 2006/06/01 08:54:42 andrew Exp $ */
+/* $Id: utils.c,v 1.142 2006/06/01 15:40:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1014,6 +1014,11 @@ unpack_operation(
 	unpack_instance_attributes(xml_obj, XML_TAG_ATTR_SETS,
 				   NULL, action->meta, NULL,0, data_set);
 
+	if(g_hash_table_lookup(action->meta, "timeout") == NULL) {
+		g_hash_table_insert(action->meta, crm_strdup("timeout"),
+				    crm_strdup(data_set->transition_idle_timeout));
+	}
+	
 	for(;lpc < DIMOF(fields); lpc++) {
 		value = g_hash_table_lookup(action->meta, fields[lpc]);
 		if(value != NULL) {
