@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.112 2006/05/08 07:42:18 andrew Exp $ */
+/* $Id: pengine.c,v 1.113 2006/06/02 15:39:14 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -114,10 +114,24 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		do_calculations(&data_set, xml_data, NULL);
 		crm_log_xml_debug_3(data_set.graph, "[out]");
 
+#if 1
 		if(send_ipc_reply(sender, msg, data_set.graph) == FALSE) {
 			crm_err("Answer could not be sent");
 		}
+#else
+		HA_Message *reply = NULL;
 
+		reply = create_reply(msg, NULL);
+		if (reply != NULL) {
+			char *tmp_file = mktemp(HA_VARRUNHBDIR"/tgraph-XXXXXX");
+			write_xml_file(data_set.graph, tmp_file, FALSE);
+			ha_msg_add(reply, "on-disk-graph", tmp_file);
+			crm_free(tmp_file);
+			if(send_ipc_message(sender, reply) == FALSE) {
+				crm_err("Answer could not be sent");
+			}
+		}
+#endif
 		series_id = get_series();
 		series_wrap = series[series_id].wrap;
 		value = g_hash_table_lookup(
