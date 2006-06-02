@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.1 2006/05/31 14:59:12 andrew Exp $ */
+/* $Id: utils.c,v 1.2 2006/06/02 15:34:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -602,10 +602,14 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	node1_weight = node1->weight;
 	node2_weight = node2->weight;
 	
-	if(node1->details->unclean || node1->details->shutdown) {
+	if(node1->details->unclean
+	   || node1->details->standby
+	   || node1->details->shutdown) {
 		node1_weight  = -INFINITY; 
 	}
-	if(node2->details->unclean || node2->details->shutdown) {
+	if(node2->details->unclean
+	   || node2->details->standby
+	   || node2->details->shutdown) {
 		node2_weight  = -INFINITY; 
 	}
 
@@ -999,6 +1003,11 @@ unpack_operation(
 	unpack_instance_attributes(xml_obj, XML_TAG_ATTR_SETS,
 				   NULL, action->meta, NULL, data_set->now);
 
+       if(g_hash_table_lookup(action->meta, "timeout") == NULL) {
+               g_hash_table_insert(action->meta, crm_strdup("timeout"),
+                                   crm_strdup(data_set->transition_idle_timeout));
+       }
+	
 	for(;lpc < DIMOF(fields); lpc++) {
 		value = g_hash_table_lookup(action->meta, fields[lpc]);
 		if(value != NULL) {

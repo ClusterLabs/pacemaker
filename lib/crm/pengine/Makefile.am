@@ -50,7 +50,7 @@ AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
 lib_LTLIBRARIES	= libpe_rules.la libpe_status.la libpengine.la
 
 ## binary progs
-halib_PROGRAMS	= ptest 
+#halib_PROGRAMS	= ptest 
 
 ## SOURCES
 
@@ -71,14 +71,14 @@ libpengine_la_SOURCES	= pengine.c allocate.c \
 
 noinst_HEADERS	= utils.h allocate.h pengine.h
 
-ptest_SOURCES	= ptest.c 
+#ptest_SOURCES	= ptest.c 
 
-ptest_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-ptest_LDADD	= $(COMMONLIBS)		\
-		libpe_status.la		\
-		libpengine.la		\
-		$(top_builddir)/lib/crm/cib/libcib.la			\
-		$(top_builddir)/lib/crm/transition/libtransitioner.la
+#ptest_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+#ptest_LDADD	= $(COMMONLIBS)		\
+#		libpe_status.la		\
+#		libpengine.la		\
+#		$(top_builddir)/lib/crm/cib/libcib.la			\
+#		$(top_builddir)/lib/crm/transition/libtransitioner.la
 
 clean-generic:
 	rm -f *.log *.debug *~

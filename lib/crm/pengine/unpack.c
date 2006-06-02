@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.1 2006/05/31 14:59:12 andrew Exp $ */
+/* $Id: unpack.c,v 1.2 2006/06/02 15:34:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -120,20 +120,22 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 		);
 #endif
 	
-	get_cluster_pref("transition_idle_timeout");
+	get_cluster_pref("default_action_timeout");
+	if(value == NULL) {
+		get_cluster_pref("transition_idle_timeout");
+	}
 	if(value != NULL) {
 		long tmp = crm_get_msec(value);
 		if(tmp > 0) {
 			crm_free(data_set->transition_idle_timeout);
 			data_set->transition_idle_timeout = crm_strdup(value);
 		} else {
-			crm_err("Invalid value for transition_idle_timeout: %s",
+			crm_err("Invalid value for default_action_timeout: %s",
 				value);
 		}
 	}
 	
-	crm_debug("%s set to: %s",
-		 "transition_idle_timeout", data_set->transition_idle_timeout);
+	crm_debug("default_action_timeout set to: %s", data_set->transition_idle_timeout);
 
 	get_cluster_pref("default_"XML_RSC_ATTR_STICKINESS);
 	data_set->default_resource_stickiness = char2score(value);
@@ -1051,10 +1053,12 @@ unpack_lrm_rsc_state(
 	if(value != NULL && safe_str_neq("default", value)) {
 		enum rsc_role_e req_role = text2role(value);
 		if(req_role != RSC_ROLE_UNKNOWN && req_role != rsc->next_role){
-			crm_debug("%s: Overwriting calculated next role %s"
-				  " with requested next role %s",
-				  rsc->id, role2text(rsc->next_role),
-				  role2text(req_role));
+			if(rsc->next_role != RSC_ROLE_UNKNOWN) {
+				crm_debug("%s: Overwriting calculated next role %s"
+					  " with requested next role %s",
+					  rsc->id, role2text(rsc->next_role),
+					  role2text(req_role));
+			}
 			rsc->next_role = req_role;
 		}
 	}
