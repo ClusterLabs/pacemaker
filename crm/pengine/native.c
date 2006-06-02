@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.147 2006/06/02 09:58:30 andrew Exp $ */
+/* $Id: native.c,v 1.148 2006/06/02 15:36:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1760,7 +1760,8 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	CRM_CHECK(node != NULL, return NULL);
 
 	if(node->details->online == FALSE) {
-		crm_info("Skipping notification for %s", rsc->id);
+		crm_debug("Skipping notification for %s on %s",
+			  rsc->id, node->details->uname);
 		return NULL;
 	}
 	
