@@ -197,7 +197,7 @@ SlurpAll(int fd)
 	char *newbuf;
 	size_t ntoread;
 	ssize_t nread;
-	printf("%s%s%s.\n", gAction, gTarget[0] ? " " : "", gTarget);
+	printf("%s%s%s\n", gAction, gTarget[0] ? " " : "", gTarget);
 	fflush(stdout);
 	for(;;) {
 		if (gNBufUsed == (gNBufAllocated - 1)) {
