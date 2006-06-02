@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.54 2006/05/22 08:33:25 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.55 2006/06/02 15:52:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -231,8 +231,8 @@
 
 #define XML_NODE_ATTR_STATE		"state"
 
-#define XML_CONFIG_ATTR_DC_BEAT		"dc_heartbeat"
 #define XML_CONFIG_ATTR_DC_DEADTIME	"dc_deadtime"
+#define XML_CONFIG_ATTR_ELECTION_FAIL	"election_timeout"
 #define XML_CONFIG_ATTR_FORCE_QUIT	"shutdown_escalation"
 #define XML_CONFIG_ATTR_REANNOUNCE	"join_reannouce"
 #define XML_CONFIG_ATTR_RECHECK		"cluster_recheck_interval"
