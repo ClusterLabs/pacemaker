@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.146 2006/06/01 10:38:39 andrew Exp $ */
+/* $Id: native.c,v 1.147 2006/06/02 09:58:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2088,12 +2088,14 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	CRM_CHECK(node != NULL, return FALSE);
 
 	if(rsc->orphan) {
+		crm_debug_2("Skipping orphan: %s", rsc->id);
 		return FALSE;
 	}
 	
 	running = pe_find_node_id(rsc->known_on, node->details->id);
 	if(force == FALSE && running != NULL) {
 		/* we already know the status of the resource on this node */
+		crm_debug_3("Skipping active: %s", rsc->id);
 		return FALSE;
 	}
 
