@@ -738,7 +738,7 @@ cancel_monitor(lrm_rsc_t *rsc, const char *key)
 }
 
 static lrm_rsc_t *
-get_lrm_resource(crm_data_t *resource, crm_data_t *param_list, gboolean do_create)
+get_lrm_resource(crm_data_t *resource, crm_data_t *op_msg, gboolean do_create)
 {
 	char rid[64];
 	lrm_rsc_t *rsc = NULL;
@@ -766,7 +766,7 @@ get_lrm_resource(crm_data_t *resource, crm_data_t *param_list, gboolean do_creat
 		const char *type = crm_element_value(resource, XML_ATTR_TYPE);
 		const char *class = crm_element_value(resource, XML_AGENT_ATTR_CLASS);
 		const char *provider = crm_element_value(resource, XML_AGENT_ATTR_PROVIDER);
-		GHashTable *params = xml2list(param_list);
+		GHashTable *params = xml2list(op_msg);
 
 		CRM_CHECK(class != NULL, return NULL);
 		CRM_CHECK(type != NULL, return NULL);
@@ -776,14 +776,18 @@ get_lrm_resource(crm_data_t *resource, crm_data_t *param_list, gboolean do_creat
 		rid[63] = 0;
 
 #if CRM_DEPRECATED_SINCE_2_0_3
-		if(param_list != NULL) {
+		if(op_msg != NULL) {
 			if(g_hash_table_lookup(
 				   params, XML_ATTR_CRM_VERSION) == NULL) {
 				g_hash_table_destroy(params);
-				params = xml2list_202(param_list);
+				params = xml2list_202(op_msg);
 			}
 		}
 #endif
+		if(g_hash_table_size(params) == 0) {
+			crm_log_xml_warn(op_msg, "EmptyParams");
+		}
+		
 		fsa_lrm_conn->lrm_ops->add_rsc(
 			fsa_lrm_conn, rid, class, type, provider, params);
 		
@@ -873,7 +877,7 @@ do_lrm_invoke(long long action,
 		/* only the first 16 chars are used by the LRM */
 
 		params  = find_xml_node(input->xml, XML_TAG_ATTRS,TRUE);
-		rsc = get_lrm_resource(xml_rsc, params, TRUE);
+		rsc = get_lrm_resource(xml_rsc, input->xml, TRUE);
 
 		if(rsc == NULL) {
 			crm_err("Invalid resource definition");
