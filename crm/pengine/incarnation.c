@@ -1,4 +1,4 @@
-/* $Id: incarnation.c,v 1.95 2006/06/01 14:45:55 andrew Exp $ */
+/* $Id: incarnation.c,v 1.96 2006/06/02 10:00:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -149,6 +149,10 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		clone_data->ordered = TRUE;
 	}
 
+	crm_debug_2("Options for %s", rsc->id);
+	crm_debug_2("\tClone max: %d", clone_data->clone_max);
+	crm_debug_2("\tClone node max: %d", clone_data->clone_node_max);
+	
 	clone_data->xml_obj_child = find_xml_node(
 		xml_obj, XML_CIB_TAG_GROUP, FALSE);
 
@@ -1420,23 +1424,30 @@ clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	clone_data->child_list = g_list_sort(
 		clone_data->child_list, sort_rsc_id);
 
+	if(rsc->globally_unique == FALSE && clone_data->clone_node_max == 1) {
+		/* only look for one copy */	 
+		slist_iter(	 
+			child_rsc, resource_t, clone_data->child_list, lpc,	 
+
+			if(pe_find_node_id(child_rsc->running_on, node->details->id)) {	 
+				return child_rsc->fns->create_probe(
+					child_rsc, node, complete, force, data_set);
+			}
+			);
+	}
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
-		if(rsc->globally_unique == FALSE
-		   && clone_data->clone_node_max == 1) {
-			/* only look for one copy */
-			if(pe_find_node_id(child_rsc->known_on, node->details->id) == NULL) {
-				if(child_rsc->fns->create_probe(
-					   child_rsc, node, complete, force, data_set)) {
-					any_created = TRUE;
-				}
-			}
-			break;
-
-		} else if(child_rsc->fns->create_probe(
+		if(child_rsc->fns->create_probe(
 			   child_rsc, node, complete, force, data_set)) {
 			any_created = TRUE;
+		}
+		
+		if(any_created
+		   && rsc->globally_unique == FALSE
+		   && clone_data->clone_node_max == 1) {
+			/* only look for one copy (clone :0) */	 
+			break;
 		}
 		);
 
