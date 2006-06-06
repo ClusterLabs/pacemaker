@@ -1,4 +1,4 @@
-/* $Id: pingd.c,v 1.5 2006/05/30 14:06:06 andrew Exp $ */
+/* $Id: pingd.c,v 1.6 2006/06/06 16:50:17 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -372,9 +372,7 @@ send_update(void)
 	g_hash_table_foreach(ping_nodes, count_ping_nodes, &num_active);
 	crm_info("%d active ping nodes", num_active);
 
-	if(num_active > 0) {
-		ha_msg_add_int(update, F_ATTRD_VALUE, attr_multiplier*num_active);
-	}
+	ha_msg_add_int(update, F_ATTRD_VALUE, attr_multiplier*num_active);
 	
 	if(attr_set != NULL) {
 		ha_msg_add(update, F_ATTRD_SET,     attr_set);
