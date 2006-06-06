@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.82 2006/05/25 14:45:53 andrew Exp $ */
+/* $Id: callbacks.c,v 1.83 2006/06/06 20:59:17 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -115,7 +115,7 @@ te_update_diff(const char *event, HA_Message *msg)
 	log_cib_diff(LOG_DEBUG_2, diff, op);
 
 	set_name = "diff-added";
-	if(diff != NULL && aborted == NULL) {
+	if(diff != NULL) {
 		crm_data_t *section = NULL;
 		crm_data_t *change_set = find_xml_node(diff, set_name, FALSE);
 		change_set = find_xml_node(change_set, XML_TAG_CIB, FALSE);
@@ -134,13 +134,32 @@ te_update_diff(const char *event, HA_Message *msg)
 	
 	set_name = "diff-removed";
 	if(diff != NULL && aborted == NULL) {
+		crm_data_t *attrs = NULL;
+		crm_data_t *status = NULL;
 		crm_data_t *change_set = find_xml_node(diff, set_name, FALSE);
 		change_set = find_xml_node(change_set, XML_TAG_CIB, FALSE);
 
 		crm_debug_2("Checking change set: %s", set_name);
-		aborted = need_abort(change_set);
-	}
+		aborted = need_abort(change_set);		
 
+		if(aborted == NULL && change_set != NULL) {
+			status = get_object_root(XML_CIB_TAG_STATUS, change_set);
+		
+			xml_child_iter_filter(
+				status, node_state, XML_CIB_TAG_STATE,
+				
+				attrs = find_xml_node(
+					node_state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
+				
+				if(attrs != NULL) {
+					crm_info("Aborting on "XML_TAG_TRANSIENT_NODEATTRS" deletions");
+					abort_transition(INFINITY, tg_restart,
+							 XML_TAG_TRANSIENT_NODEATTRS, attrs);
+				}
+				);
+		}
+	}
+	
 	if(aborted != NULL) {
 		abort_transition(
 			INFINITY, tg_restart, "Non-status change", NULL);
