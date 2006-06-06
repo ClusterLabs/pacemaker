@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.33 2006/05/29 11:53:53 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.34 2006/06/06 06:17:53 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -897,7 +897,7 @@ main(int argc, char **argv)
 			fprintf(stderr, "You need to supply a value with the -v option\n");
 			return CIBRES_MISSING_FIELD;
 		}
-		rc = set_resource_attr(rsc_id, prop_id, prop_set, prop_name,
+		rc = set_resource_attr(rsc_id, prop_set, prop_id, prop_name,
 				       prop_value, cib_conn, &data_set);
 
 	} else if(rsc_cmd == 'd') {
