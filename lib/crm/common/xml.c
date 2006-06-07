@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.90 2006/06/06 16:36:31 andrew Exp $ */
+/* $Id: xml.c,v 1.91 2006/06/07 12:50:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1635,11 +1635,11 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 		intermediate = diff_xml_object(old, *new, FALSE);
 		diff_of_diff = diff_xml_object(intermediate, diff, TRUE);
 		if(diff_of_diff != NULL) {
-			crm_err("Diff application failed!");
+			crm_notice("Diff application failed!");
+			crm_log_xml_debug(old, "diff:old");
+			crm_log_xml_debug(*new, "diff:new");
  			log_xml_diff(LOG_DEBUG, diff_of_diff, "diff:diff_of_diff");
 			log_xml_diff(LOG_INFO, intermediate, "diff:actual_diff");
-			crm_log_xml_info(old, "diff:old");
-			crm_log_xml_info(*new, "diff:new");
 			result = FALSE;
 		}
 		free_xml(diff_of_diff);
