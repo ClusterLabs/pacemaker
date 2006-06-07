@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.104 2006/06/07 07:34:38 andrew Exp $ */
+/* $Id: stages.c,v 1.105 2006/06/07 09:01:00 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -302,6 +302,7 @@ stage6(pe_working_set_t *data_set)
 {
 	action_t *dc_down = NULL;
 	action_t *stonith_op = NULL;
+	gboolean integrity_lost = FALSE;
 	
 	crm_debug_3("Processing fencing and shutdown cases");
 	
@@ -309,6 +310,7 @@ stage6(pe_working_set_t *data_set)
 		node, node_t, data_set->nodes, lpc,
 
 		stonith_op = NULL;
+		
 		if(node->details->unclean && data_set->stonith_enabled
 		   && (data_set->have_quorum
 		       || data_set->no_quorum_policy == no_quorum_ignore)) {
@@ -352,19 +354,23 @@ stage6(pe_working_set_t *data_set)
 				dc_down = down_op;
 			}
 		}
-
 		if(node->details->unclean && stonith_op == NULL) {
-			pe_err("Node %s is unclean!", node->details->uname);
-			pe_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
-			if(data_set->stonith_enabled == FALSE) {
-				pe_warn("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
-			} else {
-				CRM_CHECK(data_set->have_quorum == FALSE, ;);
-				crm_notice("Cannot fence until quorum is attained (or no_quorum_policy is set to ignore)");
-			}
+			integrity_lost = TRUE;
+			pe_warn("Node %s is unclean!", node->details->uname);
 		}
 		);
 
+	if(integrity_lost) {
+		if(data_set->have_quorum == FALSE) {
+			crm_notice("Cannot fence unclean nodes until quorum is"
+				   " attained (or no_quorum_policy is set to ignore)");
+
+		} else if(data_set->stonith_enabled == FALSE) {
+			pe_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
+			pe_err("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
+		}
+	}
+	
 	if(dc_down != NULL) {
 		GListPtr shutdown_matches = find_actions(
 			data_set->actions, CRM_OP_SHUTDOWN, NULL);
