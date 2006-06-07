@@ -25,6 +25,7 @@
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ctrl.h>
+#include <crm/pengine/rules.h>
 
 #include <crmd.h>
 #include <crmd_fsa.h>
@@ -526,7 +527,9 @@ static void
 config_query_callback(const HA_Message *msg, int call_id, int rc,
 		      crm_data_t *output, void *user_data) 
 {
-	crm_debug("Call %d : Parsing CIB options", call_id);
+	const char *value = NULL;
+	GHashTable *config_hash = NULL;
+	
 	if(rc != cib_ok) {
 		fsa_data_t *msg_data = NULL;
 		crm_err("Local CIB query resulted in an error: %s",
@@ -535,35 +538,62 @@ config_query_callback(const HA_Message *msg, int call_id, int rc,
 		return;
 	}
 
+	crm_debug("Call %d : Parsing CIB options", call_id);
+	config_hash = g_hash_table_new_full(
+		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
+
 #if 0
-	/* disable until we can do it properly
-	 *   - most people use the defaults anyway
-	 */
-	crm_data_t *config   = output;
-	xml_child_iter_filter(
-		config, iter, XML_CIB_TAG_NVPAIR,
-
-		const char *name  = crm_element_value(iter, XML_NVPAIR_ATTR_NAME);
-		const char *value = crm_element_value(iter, XML_NVPAIR_ATTR_VALUE);
-
-		if(name == NULL || value == NULL) {
-			continue;
-			
-		} else if(safe_str_eq(name, XML_CONFIG_ATTR_DC_DEADTIME)) {
-			election_trigger->period_ms = crm_get_msec(value);
-
-		} else if(safe_str_eq(name, XML_CONFIG_ATTR_FORCE_QUIT)) {
-			shutdown_escalation_timer->period_ms = crm_get_msec(value);
-
-		} else if(safe_str_eq(name, XML_CONFIG_ATTR_RECHECK)) {
-			recheck_timer->period_ms = crm_get_msec(value);
+	unpack_instance_attributes(
+		output, XML_CIB_TAG_PROPSET, NULL, config_hash,
+		CIB_OPTIONS_FIRST, NULL);
+#endif
+	
+	value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
+	if(value != NULL) {
+		election_trigger->period_ms = crm_get_msec(value);
+	} else {
+		/* apparently we're not allowed to free the result of getenv */
+		char *param_val = NULL;
+		const char *param_name = NULL;
+		election_trigger->period_ms = crm_get_msec("5s");
+		param_name = ENV_PREFIX "" KEY_INITDEAD;
+		param_val = getenv(param_name);
+		if(param_val != NULL) {
+			int tmp = crm_get_msec(param_val) / 2;
+			if(tmp > election_trigger->period_ms) {
+				election_trigger->period_ms = tmp;
+			}
+			crm_debug("%s = %s", param_name, param_val);
+			param_val = NULL;
 		}
-		);
-#endif		
+	}
+	
+	value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
+	if(value == NULL) {
+		value = "20min";
+	}
+	shutdown_escalation_timer->period_ms = crm_get_msec(value);
+
+	value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
+	if(value == NULL) {
+		value = "2min";
+	}
+	election_timeout->period_ms = crm_get_msec(value);
+	
+	value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_RECHECK);
+	if(value != NULL) {
+		recheck_timer->period_ms = crm_get_msec(value);
+	}
+
+	/* defaults */
+	integration_timer->period_ms  = crm_get_msec("3min");
+	finalization_timer->period_ms = crm_get_msec("10min");
 
 	set_bit_inplace(fsa_input_register, R_READ_CONFIG);
 	crm_debug_3("Triggering FSA: %s", __FUNCTION__);
 	G_main_set_trigger(fsa_source);
+	
+	g_hash_table_destroy(config_hash);
 }
 
 /*	 A_READCONFIG	*/
@@ -574,32 +604,11 @@ do_read_config(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
-	char *param_val = NULL;
-	const char *param_name = NULL;
 	int call_id = fsa_cib_conn->cmds->query(
  		fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
 
 	add_cib_op_callback(call_id, FALSE, NULL, config_query_callback);
 	crm_debug_2("Querying the CIB... call %d", call_id);
-
-	/* defaults */
-	election_trigger->period_ms   = crm_get_msec("5s");
-	election_timeout->period_ms   = crm_get_msec("2min");
-	integration_timer->period_ms  = crm_get_msec("3min");
-	finalization_timer->period_ms = crm_get_msec("10min");
-	shutdown_escalation_timer->period_ms = crm_get_msec("20min");
-
-	/* apparently we're not allowed to free the result of getenv */
-	param_name = ENV_PREFIX "" KEY_INITDEAD;
-	param_val = getenv(param_name);
-	if(param_val != NULL) {
-		int tmp = crm_get_msec(param_val) / 2;
-		if(tmp > election_trigger->period_ms) {
-			election_trigger->period_ms = tmp;
-		}
-		crm_debug("%s = %s", param_name, param_val);
-		param_val = NULL;
-	}
 	
 	return I_NULL;
 }
