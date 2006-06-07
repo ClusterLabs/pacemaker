@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.103 2006/06/01 16:41:23 andrew Exp $ */
+/* $Id: stages.c,v 1.104 2006/06/07 07:34:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -300,38 +300,16 @@ stage5(pe_working_set_t *data_set)
 gboolean
 stage6(pe_working_set_t *data_set)
 {
-	action_t *down_op = NULL;
-	action_t *stonith_op = NULL;
 	action_t *dc_down = NULL;
+	action_t *stonith_op = NULL;
 	
 	crm_debug_3("Processing fencing and shutdown cases");
 	
 	slist_iter(
 		node, node_t, data_set->nodes, lpc,
-		if(node->details->online && node->details->shutdown) {
-			crm_info("Scheduling Node %s for shutdown",
-				 node->details->uname);
-			
-			down_op = custom_action(
-				NULL, crm_strdup(CRM_OP_SHUTDOWN),
-				CRM_OP_SHUTDOWN, node, FALSE, TRUE, data_set);
-			down_op->runnable = TRUE;
-			
-			shutdown_constraints(
-				node, down_op, data_set);
 
-			if(node->details->is_dc) {
-				dc_down = down_op;
-			}
-		}
-
-		if(node->details->unclean
-		   && data_set->stonith_enabled == FALSE) {
-			pe_err("Node %s is unclean!", node->details->uname);
-			pe_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
-			pe_warn("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
-
-		} else if(node->details->unclean && data_set->stonith_enabled
+		stonith_op = NULL;
+		if(node->details->unclean && data_set->stonith_enabled
 		   && (data_set->have_quorum
 		       || data_set->no_quorum_policy == no_quorum_ignore)) {
 			pe_warn("Scheduling Node %s for STONITH",
@@ -340,7 +318,6 @@ stage6(pe_working_set_t *data_set)
 			stonith_op = custom_action(
 				NULL, crm_strdup(CRM_OP_FENCE),
 				CRM_OP_FENCE, node, FALSE, TRUE, data_set);
-			stonith_op->runnable = TRUE;
 
 			add_hash_param(
 				stonith_op->meta, XML_LRM_ATTR_TARGET,
@@ -354,20 +331,38 @@ stage6(pe_working_set_t *data_set)
 				stonith_op->meta, "stonith_action",
 				data_set->stonith_action);
 			
-			if(down_op != NULL) {
-				down_op->failure_is_fatal = FALSE;
-			}
+			stonith_constraints(node, stonith_op, data_set);
 
 			if(node->details->is_dc) {
 				dc_down = stonith_op;
 			}
+
+		} else if(node->details->online && node->details->shutdown) {			
+			action_t *down_op = NULL;	
+			crm_info("Scheduling Node %s for shutdown",
+				 node->details->uname);
+
+			down_op = custom_action(
+				NULL, crm_strdup(CRM_OP_SHUTDOWN),
+				CRM_OP_SHUTDOWN, node, FALSE, TRUE, data_set);
+
+			shutdown_constraints(node, down_op, data_set);
+
+			if(node->details->is_dc) {
+				dc_down = down_op;
+			}
 		}
 
-		if(node->details->unclean) {
-			stonith_constraints(
-				node, stonith_op, down_op, data_set);
+		if(node->details->unclean && stonith_op == NULL) {
+			pe_err("Node %s is unclean!", node->details->uname);
+			pe_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
+			if(data_set->stonith_enabled == FALSE) {
+				pe_warn("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
+			} else {
+				CRM_CHECK(data_set->have_quorum == FALSE, ;);
+				crm_notice("Cannot fence until quorum is attained (or no_quorum_policy is set to ignore)");
+			}
 		}
-		
 		);
 
 	if(dc_down != NULL) {
@@ -375,24 +370,21 @@ stage6(pe_working_set_t *data_set)
 			data_set->actions, CRM_OP_SHUTDOWN, NULL);
 
 		crm_debug_2("Ordering shutdowns before %s on %s (DC)",
-			down_op->task, down_op->node->details->uname);
+			dc_down->task, dc_down->node->details->uname);
 
 		add_hash_param(dc_down->meta, XML_ATTR_TE_NOWAIT,
 			       XML_BOOLEAN_TRUE);
 		
 		slist_iter(
-			action, action_t, shutdown_matches, lpc,
-			if(action->node->details->is_dc) {
+			node_stop, action_t, shutdown_matches, lpc,
+			if(node_stop->node->details->is_dc) {
 				continue;
 			}
 			crm_debug("Ordering shutdown on %s before %s on %s",
-				action->node->details->uname,
+				node_stop->node->details->uname,
 				dc_down->task, dc_down->node->details->uname);
 
-			custom_action_order(
-				NULL, crm_strdup(action->task), action,
-				NULL, crm_strdup(dc_down->task), dc_down,
-				pe_ordering_manditory, data_set);
+			order_actions(node_stop, dc_down, pe_ordering_manditory);
 			);
 	}
 

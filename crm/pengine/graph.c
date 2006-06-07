@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.95 2006/05/30 09:24:03 andrew Exp $ */
+/* $Id: graph.c,v 1.96 2006/06/07 07:34:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -198,31 +198,14 @@ shutdown_constraints(
 }
 
 gboolean
-stonith_constraints(node_t *node,
-		    action_t *stonith_op, action_t *shutdown_op,
-		    pe_working_set_t *data_set)
+stonith_constraints(
+	node_t *node, action_t *stonith_op, pe_working_set_t *data_set)
 {
+	char *key = NULL;
 	GListPtr action_list = NULL;
+
+	CRM_CHECK(stonith_op != NULL, return FALSE);
 	
-	if(shutdown_op != NULL && stonith_op != NULL) {
-		/* stop everything we can via shutdown_constraints() and then
-		 *   shoot the node... the shutdown has been superceeded
-		 */
-		shutdown_op->pseudo = TRUE;
-		shutdown_op->runnable = TRUE;
-
-		/* shutdown before stonith */
-		/* Give any resources a chance to shutdown normally */
-		crm_debug_4("Adding shutdown (%d) as an input to stonith (%d)",
-			  shutdown_op->id, stonith_op->id);
-		
-		custom_action_order(
-			NULL, crm_strdup(CRM_OP_SHUTDOWN), shutdown_op,
-			NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
-			pe_ordering_manditory, data_set);
-		
-	}
-
 	/*
 	 * Make sure the stonith OP occurs before we start any shared resources
 	 */
@@ -241,66 +224,67 @@ stonith_constraints(node_t *node,
 
 		if(rsc->is_managed == FALSE) {
 			crm_debug_2("Skipping fencing constraints for unmanaged resource: %s", rsc->id);
+			continue;
 			
-		} else if(stonith_op != NULL) {
-			char *key = stop_key(rsc);
-			action_list = find_actions(rsc->actions, key, node);
-			crm_free(key);
-			
-			slist_iter(
-				action, action_t, action_list, lpc2,
-				if(node->details->online == FALSE
-				   || rsc->failed) {
-					resource_t *parent = NULL;
-					crm_info("Stop of failed resource %s is"
-						 " implict after %s is fenced",
-						 rsc->id, node->details->uname);
-					/* the stop would never complete and is
-					 * now implied by the stonith operation
-					 */
-					action->pseudo = TRUE;
-					action->runnable = TRUE;
-					if(action->optional) {
-						/* does this case ever happen? */
-						custom_action_order(
-							NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
-							rsc, start_key(rsc), NULL,
-							pe_ordering_manditory, data_set);
-					} else {						
-						custom_action_order(
-							NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
-							rsc, NULL, action,
-							pe_ordering_manditory, data_set);
-					}
+		} 
 
-					/* find the top-most resource */
-					parent = rsc->parent;
-					while(parent != NULL && parent->parent != NULL) {
-						parent = parent->parent;
-					}
-					
-					if(parent) {
-						crm_info("Re-creating actions for %s",
-							 parent->id);
-						parent->fns->create_actions(
-							parent, data_set);
-					}
-
-				} else {
-					crm_info("Moving healthy resource %s"
-						 " off %s before fencing",
-						 rsc->id, node->details->uname);
-					
-					/* stop healthy resources before the
-					 * stonith op
-					 */
+		key = stop_key(rsc);
+		action_list = find_actions(rsc->actions, key, node);
+		crm_free(key);
+		
+		slist_iter(
+			action, action_t, action_list, lpc2,
+			if(node->details->online == FALSE || rsc->failed) {
+				resource_t *parent = NULL;
+				crm_info("Stop of failed resource %s is"
+					 " implict after %s is fenced",
+					 rsc->id, node->details->uname);
+				/* the stop would never complete and is
+				 * now implied by the stonith operation
+				 */
+				action->pseudo = TRUE;
+				action->runnable = TRUE;
+				if(action->optional) {
+					/* does this case ever happen? */
 					custom_action_order(
-						rsc, stop_key(rsc), NULL,
-						NULL,crm_strdup(CRM_OP_FENCE),stonith_op,
+						NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
+						rsc, start_key(rsc), NULL,
+						pe_ordering_manditory, data_set);
+				} else {						
+					custom_action_order(
+						NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
+						rsc, NULL, action,
 						pe_ordering_manditory, data_set);
 				}
-				);
-
+				
+				/* find the top-most resource */
+				parent = rsc->parent;
+				while(parent != NULL && parent->parent != NULL) {
+					parent = parent->parent;
+				}
+				
+				if(parent) {
+					crm_info("Re-creating actions for %s",
+						 parent->id);
+					parent->fns->create_actions(
+						parent, data_set);
+				}
+				
+			} else {
+				crm_info("Moving healthy resource %s"
+					 " off %s before fencing",
+					 rsc->id, node->details->uname);
+				
+				/* stop healthy resources before the
+				 * stonith op
+				 */
+				custom_action_order(
+					rsc, stop_key(rsc), NULL,
+					NULL,crm_strdup(CRM_OP_FENCE),stonith_op,
+					pe_ordering_manditory, data_set);
+			}
+			);
+		
 			key = demote_key(rsc);
 			action_list = find_actions(rsc->actions, key, node);
 			crm_free(key);
@@ -341,7 +325,6 @@ stonith_constraints(node_t *node,
 /* 			/\* nothing to do here *\/ */
 /* 			pe_err("SHARED RESOURCE %s IS NOT PROTECTED", rsc->id); */
 /* 			continue; */
-		}
 		);
 	
 	return TRUE;

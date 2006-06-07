@@ -1,4 +1,4 @@
-/* $Id: pengine.h,v 1.112 2006/05/23 07:45:37 andrew Exp $ */
+/* $Id: pengine.h,v 1.113 2006/06/07 07:34:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -440,8 +440,7 @@ extern gboolean shutdown_constraints(
 	node_t *node, action_t *shutdown_op, pe_working_set_t *data_set);
 
 extern gboolean stonith_constraints(
-	node_t *node, action_t *stonith_op, action_t *shutdown_op,
-	pe_working_set_t *data_set);
+	node_t *node, action_t *stonith_op, pe_working_set_t *data_set);
 
 extern gboolean custom_action_order(
 	resource_t *lh_rsc, char *lh_task, action_t *lh_action,
