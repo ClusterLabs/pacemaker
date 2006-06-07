@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.1 2006/05/31 14:59:12 andrew Exp $ */
+/* $Id: native.c,v 1.2 2006/06/07 12:46:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,8 +19,8 @@
 
 #include <portability.h>
 
-#include <lib/crm/pengine/status.h>
-#include <lib/crm/pengine/rules.h>
+#include <crm/pengine/status.h>
+#include <crm/pengine/rules.h>
 #include <utils.h>
 #include <crm/msg_xml.h>
 
@@ -91,6 +91,8 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		       HAURL("v2/faq/resource_too_active"));
 		
 		if(rsc->recovery_type == recovery_stop_only) {
+			crm_debug("Making sure %s doesn't come up again", rsc->id);
+			/* make sure it doesnt come up again */
 			pe_free_shallow_adv(rsc->allowed_nodes, TRUE);
 			rsc->allowed_nodes = node_list_dup(
 				data_set->nodes, FALSE, FALSE);

@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.1 2006/05/31 14:59:12 andrew Exp $ */
+/* $Id: group.c,v 1.2 2006/06/07 12:46:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,7 +19,7 @@
 
 #include <portability.h>
 
-#include <lib/crm/pengine/status.h>
+#include <crm/pengine/status.h>
 #include <utils.h>
 #include <crm/msg_xml.h>
 #include <clplumbing/cl_misc.h>

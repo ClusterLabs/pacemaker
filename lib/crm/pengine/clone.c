@@ -1,4 +1,4 @@
-/* $Id: clone.c,v 1.2 2006/06/02 15:34:18 andrew Exp $ */
+/* $Id: clone.c,v 1.3 2006/06/07 12:46:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,7 +19,7 @@
 
 #include <portability.h>
 
-#include <lib/crm/pengine/status.h>
+#include <crm/pengine/status.h>
 #include <utils.h>
 #include <crm/msg_xml.h>
 

@@ -1,4 +1,4 @@
-/* $Id: stages.c,v 1.105 2006/06/07 09:01:00 andrew Exp $ */
+/* $Id: allocate.c,v 1.1 2006/06/07 12:46:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,73 +30,151 @@
 
 #include <glib.h>
 
-#include <pengine.h>
-#include <pe_utils.h>
+#include <crm/pengine/status.h>
+#include <lib/crm/pengine/pengine.h>
+#include <allocate.h>
+#include <lib/crm/pengine/utils.h>
 
 node_t *choose_fencer(action_t *stonith, node_t *node, GListPtr resources);
+void set_alloc_actions(pe_working_set_t *data_set);
 
-/*
- * Unpack everything
- * At the end you'll have:
- *  - A list of nodes
- *  - A list of resources (each with any dependencies on other resources)
- *  - A list of constraints between resources and nodes
- *  - A list of constraints between start/stop actions
- *  - A list of nodes that need to be stonith'd
- *  - A list of nodes that need to be shutdown
- *  - A list of the possible stop/start actions (without dependencies)
- */
+resource_alloc_functions_t resource_class_alloc_functions[] = {
+	{
+		native_set_cmds,
+		native_num_allowed_nodes,
+		native_color,
+		native_create_actions,
+		native_create_probe,
+		native_internal_constraints,
+		native_agent_constraints,
+		native_rsc_colocation_lh,
+		native_rsc_colocation_rh,
+		native_rsc_order_lh,
+		native_rsc_order_rh,
+		native_rsc_location,
+		native_expand,
+		native_stonith_ordering,
+		native_create_notify_element,
+	},
+	{
+ 		group_set_cmds,
+		group_num_allowed_nodes,
+		group_color,
+		group_create_actions,
+		group_create_probe,
+		group_internal_constraints,
+		group_agent_constraints,
+		group_rsc_colocation_lh,
+		group_rsc_colocation_rh,
+		group_rsc_order_lh,
+		group_rsc_order_rh,
+		group_rsc_location,
+		group_expand,
+		group_stonith_ordering,
+		group_create_notify_element,
+	},
+	{
+ 		clone_set_cmds,
+		clone_num_allowed_nodes,
+		clone_color,
+		clone_create_actions,
+		clone_create_probe,
+		clone_internal_constraints,
+		clone_agent_constraints,
+		clone_rsc_colocation_lh,
+		clone_rsc_colocation_rh,
+		clone_rsc_order_lh,
+		clone_rsc_order_rh,
+		clone_rsc_location,
+		clone_expand,
+		clone_stonith_ordering,
+		clone_create_notify_element,
+	},
+	{
+ 		clone_set_cmds,
+		clone_num_allowed_nodes,
+		clone_color,
+		master_create_actions,
+		clone_create_probe,
+		master_internal_constraints,
+		clone_agent_constraints,
+		clone_rsc_colocation_lh,
+		clone_rsc_colocation_rh,
+		clone_rsc_order_lh,
+		clone_rsc_order_rh,
+		clone_rsc_location,
+		clone_expand,
+		clone_stonith_ordering,
+		clone_create_notify_element,
+	}
+};
+
+color_t *add_color(resource_t *rh_resource, color_t *color);
+
+gboolean 
+apply_placement_constraints(pe_working_set_t *data_set)
+{
+	crm_debug_3("Applying constraints...");
+	slist_iter(
+		cons, rsc_to_node_t, data_set->placement_constraints, lpc,
+
+		cons->rsc_lh->cmds->rsc_location(cons->rsc_lh, cons);
+		);
+	
+	return TRUE;
+	
+}
+
+color_t *
+add_color(resource_t *resource, color_t *color)
+{
+	color_t *local_color = NULL;
+
+	if(color == NULL) {
+		pe_err("Cannot add NULL color");
+		return NULL;
+	}
+	
+	local_color = find_color(resource->candidate_colors, color);
+
+	if(local_color == NULL) {
+		crm_debug_4("Adding color %d", color->id);
+		
+		local_color = copy_color(color);
+		resource->candidate_colors =
+			g_list_append(resource->candidate_colors, local_color);
+
+	} else {
+		crm_debug_4("Color %d already present", color->id);
+	}
+
+	return local_color;
+}
+
+void
+set_alloc_actions(pe_working_set_t *data_set) 
+{
+	slist_iter(
+		rsc, resource_t, data_set->resources, lpc,
+		rsc->cmds = &resource_class_alloc_functions[rsc->variant];
+		rsc->cmds->set_cmds(rsc);
+		);
+}
+
 gboolean
 stage0(pe_working_set_t *data_set)
 {
-/*	int lpc; */
-	crm_data_t * config          = get_object_root(
-		XML_CIB_TAG_CRMCONFIG,   data_set->input);
-	crm_data_t * cib_nodes       = get_object_root(
-		XML_CIB_TAG_NODES,       data_set->input);
-	crm_data_t * cib_resources   = get_object_root(
-		XML_CIB_TAG_RESOURCES,   data_set->input);
-	crm_data_t * cib_status      = get_object_root(
-		XML_CIB_TAG_STATUS,      data_set->input);
 	crm_data_t * cib_constraints = get_object_root(
 		XML_CIB_TAG_CONSTRAINTS, data_set->input);
- 	const char *value = crm_element_value(
-		data_set->input, XML_ATTR_HAVE_QUORUM);
-	
-	crm_debug_3("Beginning unpack");
-	
-	/* reset remaining global variables */
-	
+
 	if(data_set->input == NULL) {
 		return FALSE;
 	}
 
-	if(data_set->input != NULL
-	   && crm_element_value(data_set->input, XML_ATTR_DC_UUID) != NULL) {
-		/* this should always be present */
-		data_set->dc_uuid = crm_element_value_copy(
-			data_set->input, XML_ATTR_DC_UUID);
-	}	
+	cluster_status(data_set);
 	
-	data_set->no_color = create_color(data_set, NULL, NULL);
-
-	unpack_config(config, data_set);
-
-	if(value != NULL) {
-		cl_str_to_boolean(value, &data_set->have_quorum);
-	}
-	
-	if(data_set->have_quorum == FALSE
-	   && data_set->no_quorum_policy != no_quorum_ignore) {
-		crm_warn("We do not have quorum"
-			 " - fencing and resource management disabled");
-	}
-	
-	unpack_nodes(cib_nodes, data_set);
-	unpack_resources(cib_resources, data_set);
-	unpack_status(cib_status, data_set);
+	set_alloc_actions(data_set);
 	unpack_constraints(cib_constraints, data_set);
-
 	return TRUE;
 }
 
@@ -109,7 +187,7 @@ stage0(pe_working_set_t *data_set)
 gboolean
 stage1(pe_working_set_t *data_set)
 {
-	crm_debug_3("Applying placement constraints");
+	crm_debug_3("Applying placement constraints");	
 	
 	slist_iter(
 		node, node_t, data_set->nodes, lpc,
@@ -125,9 +203,7 @@ stage1(pe_working_set_t *data_set)
 	apply_placement_constraints(data_set);
 
 	return TRUE;
-} 
-
-
+}
 
 /*
  * Choose a color for all resources from highest priority and XML_STRENGTH_VAL_MUST
@@ -147,7 +223,7 @@ stage2(pe_working_set_t *data_set)
 	/* Take (next) highest resource */
 	slist_iter(
 		lh_resource, resource_t, data_set->resources, lpc,
-		lh_resource->fns->color(lh_resource, data_set);
+		lh_resource->cmds->color(lh_resource, data_set);
 		);
 	
 	return TRUE;
@@ -204,7 +280,7 @@ stage3(pe_working_set_t *data_set)
 		slist_iter(
 			rsc, resource_t, data_set->resources, lpc2,
 			
-			if(rsc->fns->create_probe(
+			if(rsc->cmds->create_probe(
 				   rsc, node, probe_node_complete,
 				   force_probe, data_set)) {
 
@@ -261,7 +337,7 @@ stage4(pe_working_set_t *data_set)
 
 			slist_iter(
 				constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
-				rsc->fns->rsc_colocation_lh(
+				rsc->cmds->rsc_colocation_lh(
 					rsc, constraint->rsc_rh, constraint);
 				);	
 			
@@ -288,8 +364,8 @@ stage5(pe_working_set_t *data_set)
 	crm_debug_3("Creating actions and internal ording constraints");
 	slist_iter(
 		rsc, resource_t, data_set->resources, lpc,
-		rsc->fns->create_actions(rsc, data_set);
-		rsc->fns->internal_constraints(rsc, data_set);
+		rsc->cmds->create_actions(rsc, data_set);
+		rsc->cmds->internal_constraints(rsc, data_set);
 		);
 	return TRUE;
 }
@@ -302,7 +378,6 @@ stage6(pe_working_set_t *data_set)
 {
 	action_t *dc_down = NULL;
 	action_t *stonith_op = NULL;
-	gboolean integrity_lost = FALSE;
 	
 	crm_debug_3("Processing fencing and shutdown cases");
 	
@@ -310,7 +385,6 @@ stage6(pe_working_set_t *data_set)
 		node, node_t, data_set->nodes, lpc,
 
 		stonith_op = NULL;
-		
 		if(node->details->unclean && data_set->stonith_enabled
 		   && (data_set->have_quorum
 		       || data_set->no_quorum_policy == no_quorum_ignore)) {
@@ -354,23 +428,19 @@ stage6(pe_working_set_t *data_set)
 				dc_down = down_op;
 			}
 		}
+
 		if(node->details->unclean && stonith_op == NULL) {
-			integrity_lost = TRUE;
-			pe_warn("Node %s is unclean!", node->details->uname);
+			pe_err("Node %s is unclean!", node->details->uname);
+			pe_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
+			if(data_set->stonith_enabled == FALSE) {
+				pe_warn("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
+			} else {
+				CRM_CHECK(data_set->have_quorum == FALSE, ;);
+				crm_notice("Cannot fence until quorum is attained (or no_quorum_policy is set to ignore)");
+			}
 		}
 		);
 
-	if(integrity_lost) {
-		if(data_set->have_quorum == FALSE) {
-			crm_notice("Cannot fence unclean nodes until quorum is"
-				   " attained (or no_quorum_policy is set to ignore)");
-
-		} else if(data_set->stonith_enabled == FALSE) {
-			pe_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
-			pe_err("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
-		}
-	}
-	
 	if(dc_down != NULL) {
 		GListPtr shutdown_matches = find_actions(
 			data_set->actions, CRM_OP_SHUTDOWN, NULL);
@@ -419,7 +489,7 @@ stage7(pe_working_set_t *data_set)
 		}
 		
 		if(rsc != NULL) {
-			rsc->fns->rsc_order_lh(rsc, order);
+			rsc->cmds->rsc_order_lh(rsc, order);
 			continue;
 			
 		}
@@ -433,7 +503,7 @@ stage7(pe_working_set_t *data_set)
 		}
 		
 		if(rsc != NULL) {
-			rsc->fns->rsc_order_rh(order->lh_action, rsc, order);
+			rsc->cmds->rsc_order_rh(order->lh_action, rsc, order);
 		} else {
 			/* fall back to action-to-action */
 			order_actions(
@@ -476,7 +546,7 @@ stage8(pe_working_set_t *data_set)
 		rsc, resource_t, data_set->resources, lpc,
 
 		crm_debug_4("processing actions for rsc=%s", rsc->id);
-		rsc->fns->expand(rsc, data_set);
+		rsc->cmds->expand(rsc, data_set);
 		);
 	crm_log_xml_debug_3(
 		data_set->graph, "created resource-driven action list");

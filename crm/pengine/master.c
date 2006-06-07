@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.21 2006/06/07 10:09:32 andrew Exp $ */
+/* $Id: master.c,v 1.22 2006/06/07 12:46:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,9 +19,9 @@
 
 #include <portability.h>
 
-#include <pengine.h>
-#include <pe_utils.h>
 #include <crm/msg_xml.h>
+#include <allocate.h>
+#include <lib/crm/pengine/utils.h>
 
 extern void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
@@ -53,13 +53,6 @@ typedef struct clone_variant_data_s
 #define get_clone_variant_data(data, rsc)				\
 	CRM_ASSERT(rsc->variant == pe_master);				\
 	data = (clone_variant_data_t *)rsc->variant_opaque;
-
-gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set)
-{
-  	add_hash_param(rsc->parameters, crm_meta_name("stateful"),
-		       XML_BOOLEAN_TRUE);
-	return clone_unpack(rsc, data_set);
-}
 
 static void
 child_promoting_constraints(

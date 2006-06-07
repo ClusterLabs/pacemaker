@@ -1,4 +1,4 @@
-/* $Id: status.c,v 1.1 2006/05/31 14:59:12 andrew Exp $ */
+/* $Id: status.c,v 1.2 2006/06/07 12:46:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,7 +30,7 @@
 
 #include <glib.h>
 
-#include <status.h>
+#include <crm/pengine/status.h>
 #include <utils.h>
 
 crm_data_t * do_calculations(

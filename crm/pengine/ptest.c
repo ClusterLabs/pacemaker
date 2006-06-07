@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.75 2006/05/17 07:59:02 andrew Exp $ */
+/* $Id: ptest.c,v 1.76 2006/06/07 12:46:59 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -42,8 +42,8 @@
 #  include <getopt.h>
 #endif
 #include <glib.h>
-#include <pengine.h>
-#include <pe_utils.h>
+#include <lib/crm/pengine/pengine.h>
+#include <lib/crm/pengine/utils.h>
 
 gboolean use_stdin = FALSE;
 gboolean inhibit_exit = FALSE;

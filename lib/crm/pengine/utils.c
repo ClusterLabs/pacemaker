@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.2 2006/06/02 15:34:18 andrew Exp $ */
+/* $Id: utils.c,v 1.3 2006/06/07 12:46:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -26,7 +26,7 @@
 #include <glib.h>
 
 #include <pengine.h>
-#include <lib/crm/pengine/rules.h>
+#include <crm/pengine/rules.h>
 #include <utils.h>
 
 void print_str_str(gpointer key, gpointer value, gpointer user_data);

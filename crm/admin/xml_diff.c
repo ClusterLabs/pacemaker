@@ -1,4 +1,4 @@
-/* $Id: xml_diff.c,v 1.8 2006/04/12 08:22:50 andrew Exp $ */
+/* $Id: xml_diff.c,v 1.9 2006/06/07 12:46:57 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -199,7 +199,7 @@ main(int argc, char **argv)
 		}
 		
 	}
-
+	
 	CRM_ASSERT(object_1 != NULL);
 	CRM_ASSERT(object_2 != NULL);
 

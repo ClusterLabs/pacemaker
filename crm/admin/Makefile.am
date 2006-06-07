@@ -52,7 +52,7 @@ noinst_HEADERS		=
 crmadmin_SOURCES	= crmadmin.c
 crmadmin_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 crmadmin_LDADD		= $(COMMONLIBS) \
-			$(top_builddir)/crm/pengine/libpengine.la
+			$(top_builddir)/lib/crm/pengine/libpe_status.la
 
 crm_uuid_SOURCES	= crm_uuid.c
 crm_uuid_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
@@ -74,11 +74,13 @@ crm_diff_LDADD		= $(COMMONLIBS)
 crm_mon_SOURCES		= crm_mon.c
 crm_mon_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 crm_mon_LDADD		= $(COMMONLIBS) \
-			$(top_builddir)/crm/pengine/libpengine.la
+			$(top_builddir)/lib/crm/pengine/libpe_status.la
 
+# Arguments could be made that this should live in crm/pengine
 crm_verify_SOURCES	= crm_verify.c
 crm_verify_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 crm_verify_LDADD	= $(COMMONLIBS) \
+			$(top_builddir)/lib/crm/pengine/libpe_status.la \
 			$(top_builddir)/crm/pengine/libpengine.la
 
 crm_master_SOURCES	= crm_attribute.c
@@ -100,7 +102,7 @@ crm_failcount_LDADD	= $(COMMONLIBS)
 crm_resource_SOURCES	= crm_resource.c
 crm_resource_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 crm_resource_LDADD	= $(COMMONLIBS) \
-			$(top_builddir)/crm/pengine/libpengine.la
+			$(top_builddir)/lib/crm/pengine/libpe_status.la
 
 iso8601_SOURCES		= test.iso8601.c
 iso8601_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'

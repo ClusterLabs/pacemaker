@@ -1,4 +1,4 @@
-/* $Id: common.c,v 1.1 2006/05/31 14:59:12 andrew Exp $ */
+/* $Id: common.c,v 1.2 2006/06/07 12:46:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -25,8 +25,8 @@
 
 #include <glib.h>
 
-#include <status.h>
-#include <common.h>
+#include <crm/pengine/status.h>
+#include <crm/pengine/common.h>
 
 gboolean was_processing_error = FALSE;
 gboolean was_processing_warning = FALSE;

@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.72 2006/05/30 12:21:40 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.73 2006/06/07 12:46:57 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -42,8 +42,6 @@
 #include <crm/common/xml.h>
 #include <crm/common/ctrl.h>
 #include <crm/common/ipc.h>
-#include <crm/pengine/pengine.h>
-#include <crm/pengine/pe_utils.h>
 
 #include <crm/cib.h>
 

@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.1 2006/05/31 15:00:38 andrew Exp $ */
+/* $Id: complex.c,v 1.2 2006/06/07 12:46:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -22,7 +22,7 @@
 #include <crm/cib.h>
 #include <pengine.h>
 #include <utils.h>
-#include <lib/crm/pengine/rules.h>
+#include <crm/pengine/rules.h>
 #include <crm/msg_xml.h>
 #include <clplumbing/cl_misc.h>
 
@@ -299,6 +299,18 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	crm_debug_2("\tDesired next state: %s",
 		    (*rsc)->next_role!=RSC_ROLE_UNKNOWN?role2text((*rsc)->next_role):"default");
 
+	if((*rsc)->next_role == RSC_ROLE_STOPPED) {
+		crm_debug_2("Making sure %s doesn't get colored", (*rsc)->id);
+		/* make sure it doesnt come up again */
+		pe_free_shallow_adv((*rsc)->allowed_nodes, TRUE);
+		(*rsc)->allowed_nodes = node_list_dup(
+			data_set->nodes, FALSE, FALSE);
+		slist_iter(
+			node, node_t, (*rsc)->allowed_nodes, lpc,
+			node->weight = -INFINITY;
+			);
+	}
+	
 	if((*rsc)->is_managed == FALSE) {
 		crm_warn("Resource %s is currently not managed", (*rsc)->id);
 

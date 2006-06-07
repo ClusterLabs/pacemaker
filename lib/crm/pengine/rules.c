@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.1 2006/05/31 14:59:12 andrew Exp $ */
+/* $Id: rules.c,v 1.2 2006/06/07 12:46:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -24,7 +24,7 @@
 
 #include <glib.h>
 
-#include <lib/crm/pengine/rules.h>
+#include <crm/pengine/rules.h>
 
 ha_time_t *parse_xml_duration(ha_time_t *start, crm_data_t *duration_spec);
 

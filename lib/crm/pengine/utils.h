@@ -1,4 +1,4 @@
-/* $Id: utils.h,v 1.1 2006/05/31 14:59:12 andrew Exp $ */
+/* $Id: utils.h,v 1.2 2006/06/07 12:46:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,7 +19,7 @@
 #ifndef PE_UTILS__H
 #define PE_UTILS__H
 #include <lib/crm/pengine/pengine.h>
-#include <lib/crm/pengine/common.h>
+#include <crm/pengine/common.h>
 
 /* Node helper functions */
 extern node_t *pe_find_node_id(GListPtr node_list, const char *id);

@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.34 2006/06/06 06:17:53 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.35 2006/06/07 12:46:57 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -44,8 +44,8 @@
 #include <crm/common/ipc.h>
 
 #include <crm/cib.h>
-#include <crm/pengine/pengine.h>
-#include <crm/pengine/pe_utils.h>
+#include <crm/pengine/rules.h>
+#include <crm/pengine/status.h>
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -165,8 +165,8 @@ dump_resource_attr(
 	} 
 	
 	unpack_instance_attributes(
-		the_rsc->xml, XML_TAG_ATTR_SETS, current, the_rsc->parameters,
-		NULL, 0, data_set);
+		the_rsc->xml, XML_TAG_ATTR_SETS, current->details->attrs,
+		the_rsc->parameters, NULL, data_set->now);
 
 	if(the_rsc->parameters != NULL) {
 		crm_debug("Looking up %s in %s", attr, the_rsc->id);
@@ -756,7 +756,7 @@ main(int argc, char **argv)
 		data_set.input = cib_xml_copy;
 		data_set.now = new_ha_date(TRUE);
 
-		stage0(&data_set);
+		cluster_status(&data_set);
 		rsc = pe_find_resource(data_set.resources, rsc_id);
 		if(rsc != NULL) {
 			rsc_id = rsc->id;

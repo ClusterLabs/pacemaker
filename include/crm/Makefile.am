@@ -21,4 +21,4 @@ includedir=$(base_includedir)/heartbeat
 
 include_HEADERS		= crm.h cib.h msg_xml.h transition.h
 
-SUBDIRS                 = common
+SUBDIRS                 = common pengine

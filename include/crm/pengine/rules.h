@@ -1,4 +1,4 @@
-/* $Id: pe_rules.h,v 1.5 2005/09/15 08:05:24 andrew Exp $ */
+/* $Id: rules.h,v 1.1 2006/06/07 12:46:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,6 +19,10 @@
 #ifndef PENGINE_RULES__H
 #define PENGINE_RULES__H
 
+#include <crm/crm.h>
+#include <crm/common/iso8601.h>
+#include <crm/pengine/common.h>
+
 enum expression_type {
 	not_expr,
 	nested_rule,
@@ -31,12 +35,16 @@ enum expression_type {
 extern enum expression_type find_expression_type(crm_data_t *expr);
 
 extern gboolean test_ruleset(
-	crm_data_t *ruleset, node_t *node, pe_working_set_t *data_set);
+	crm_data_t *ruleset, GHashTable *node_hash, ha_time_t *now);
 
-extern gboolean test_rule(crm_data_t *rule, node_t *node, resource_t *rsc,
-			  pe_working_set_t *data_set);
+extern gboolean test_rule(crm_data_t *rule, GHashTable *node_hash,
+			  enum rsc_role_e role, ha_time_t *now);
 
-extern gboolean test_expression(crm_data_t *expr, node_t *node, resource_t *rsc,
-				pe_working_set_t *data_set);
+extern gboolean test_expression(crm_data_t *expr, GHashTable *node_hash,
+				enum rsc_role_e role, ha_time_t *now);
+
+extern void unpack_instance_attributes(
+	crm_data_t *xml_obj, const char *set_name, GHashTable *node_hash,
+	GHashTable *hash, const char *always_first, ha_time_t *now);
 
 #endif

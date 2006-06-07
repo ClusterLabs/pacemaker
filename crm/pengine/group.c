@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.63 2006/05/30 07:47:44 andrew Exp $ */
+/* $Id: group.c,v 1.64 2006/06/07 12:46:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,10 +19,11 @@
 
 #include <portability.h>
 
-#include <pengine.h>
-#include <pe_utils.h>
+#include <lib/crm/pengine/pengine.h>
+#include <lib/crm/pengine/utils.h>
 #include <crm/msg_xml.h>
 #include <clplumbing/cl_misc.h>
+#include <allocate.h>
 
 extern gboolean rsc_colocation_new(
 	const char *id, enum con_strength strength,
@@ -55,110 +56,16 @@ typedef struct group_variant_data_s
 
 void group_assign_color(resource_t *rsc, color_t *group_color);
 
-gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
+void group_set_cmds(resource_t *rsc)
 {
-	resource_t *self = NULL;
-	crm_data_t *xml_obj = rsc->xml;
-	crm_data_t *xml_self = copy_xml(rsc->xml);
 	group_variant_data_t *group_data = NULL;
-	const char *group_ordered = g_hash_table_lookup(
-		rsc->meta, XML_RSC_ATTR_ORDERED);
-	const char *group_colocated = g_hash_table_lookup(
-		rsc->meta, "collocated");
-	const char *clone_id = NULL;
-	
-	crm_debug_3("Processing resource %s...", rsc->id);
-/* 	rsc->id = "dummy_group_rsc_id"; */
-
-	crm_malloc0(group_data, sizeof(group_variant_data_t));
-	group_data->num_children = 0;
-	group_data->self	 = NULL;
-	group_data->child_list   = NULL;
-	group_data->first_child  = NULL;
-	group_data->last_child   = NULL;
-	rsc->variant_opaque = group_data;
-
-	group_data->ordered   = TRUE;
-	group_data->colocated = TRUE;
-
-	if(group_ordered != NULL) {
-		cl_str_to_boolean(group_ordered, &(group_data->ordered));
-	}
-	if(group_colocated != NULL) {
-		cl_str_to_boolean(group_colocated, &(group_data->colocated));
-	}
-	
-	/* this is a bit of a hack - but simplifies everything else */
-	ha_msg_mod(xml_self, F_XML_TAGNAME, XML_CIB_TAG_RESOURCE);
-/* 	set_id(xml_self, "self", -1); */
-
-	if(common_unpack(xml_self, &self, NULL,  data_set)) {
-		group_data->self = self;
-		self->restart_type = pe_restart_restart;
-
-	} else {
-		crm_log_xml_err(xml_self, "Couldnt unpack dummy child");
-		return FALSE;
-	}
-
-	clone_id = crm_element_value(rsc->xml, XML_RSC_ATTR_INCARNATION);
-	
-	xml_child_iter_filter(
-		xml_obj, xml_native_rsc, XML_CIB_TAG_RESOURCE,
-
-		resource_t *new_rsc = NULL;
-		crm_xml_add(xml_native_rsc, XML_RSC_ATTR_INCARNATION, clone_id);
-		if(common_unpack(xml_native_rsc, &new_rsc,
-				 rsc, data_set) == FALSE) {
-			pe_err("Failed unpacking resource %s",
-				crm_element_value(xml_obj, XML_ATTR_ID));
-			if(new_rsc != NULL && new_rsc->fns != NULL) {
-				new_rsc->fns->free(new_rsc);
-			}
-		}
-
-		group_data->num_children++;
-		group_data->child_list = g_list_append(
-			group_data->child_list, new_rsc);
-		
-		if(group_data->first_child == NULL) {
-			group_data->first_child = new_rsc;
-			
-		} else if(group_data->colocated) {
-			rsc_colocation_new(
-				"pe_group_internal_colo", pecs_must,
-				group_data->first_child, new_rsc,
-				NULL, NULL);
-		}
-		group_data->last_child = new_rsc;
-		print_resource(LOG_DEBUG_3, "Added", new_rsc, FALSE);
+	get_group_variant_data(group_data, rsc);
+	group_data->self->cmds = &resource_class_alloc_functions[group_data->self->variant];
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc->cmds = &resource_class_alloc_functions[child_rsc->variant];
+		child_rsc->cmds->set_cmds(child_rsc);
 		);
-
-	if(group_data->num_children == 0) {
-		pe_config_err("Group %s did not have any children", rsc->id);
-		return FALSE;
-	}
-	
-	crm_debug_3("Added %d children to resource %s...",
-		    group_data->num_children, rsc->id);
-	
-	return TRUE;
-}
-
-
-resource_t *
-group_find_child(resource_t *rsc, const char *id)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-	return pe_find_resource(group_data->child_list, id);
-}
-
-GListPtr group_children(resource_t *rsc)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-	return group_data->child_list;
 }
 
 int group_num_allowed_nodes(resource_t *rsc)
@@ -169,7 +76,7 @@ int group_num_allowed_nodes(resource_t *rsc)
 		pe_config_err("Cannot clone non-colocated group: %s", rsc->id);
 		return 0;
 	}
- 	return group_data->self->fns->num_allowed_nodes(group_data->self);
+ 	return group_data->self->cmds->num_allowed_nodes(group_data->self);
 }
 
 color_t *
@@ -183,7 +90,7 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
-		group_color = child_rsc->fns->color(child_rsc, data_set);
+		group_color = child_rsc->cmds->color(child_rsc, data_set);
 		CRM_CHECK(group_color != NULL, continue);
 		native_assign_color(rsc, group_color);
 		);
@@ -217,7 +124,7 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
-		child_rsc->fns->create_actions(child_rsc, data_set);
+		child_rsc->cmds->create_actions(child_rsc, data_set);
 		group_update_pseudo_status(rsc, child_rsc);
 		);
 
@@ -270,7 +177,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	group_data->self->fns->internal_constraints(group_data->self, data_set);
+	group_data->self->cmds->internal_constraints(group_data->self, data_set);
 	
 	custom_action_order(
 		group_data->self, stopped_key(group_data->self), NULL,
@@ -290,7 +197,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 
-		child_rsc->fns->internal_constraints(child_rsc, data_set);
+		child_rsc->cmds->internal_constraints(child_rsc, data_set);
 
 		if(group_data->ordered == FALSE) {
 			order_start_start(
@@ -371,7 +278,7 @@ void group_rsc_colocation_lh(
 	CRM_CHECK(group_data->self != NULL, return);
 
 	if(group_data->colocated) {
-		group_data->first_child->fns->rsc_colocation_lh(
+		group_data->first_child->cmds->rsc_colocation_lh(
 			group_data->first_child, rsc_rh, constraint); 
 		return;
 	}
@@ -384,7 +291,7 @@ void group_rsc_colocation_lh(
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
-		child_rsc->fns->rsc_colocation_lh(
+		child_rsc->cmds->rsc_colocation_lh(
 			child_rsc, rsc_rh, constraint); 
 		);
 }
@@ -401,7 +308,7 @@ void group_rsc_colocation_rh(
 	print_resource(LOG_DEBUG_3, "LHS", rsc_lh, TRUE);
 	
 	if(group_data->colocated) {
-		group_data->first_child->fns->rsc_colocation_rh(
+		group_data->first_child->cmds->rsc_colocation_rh(
 			rsc_lh, group_data->first_child, constraint); 
 		return;
 	}
@@ -414,7 +321,7 @@ void group_rsc_colocation_rh(
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
-		child_rsc->fns->rsc_colocation_rh(
+		child_rsc->cmds->rsc_colocation_rh(
 			rsc_lh, child_rsc, constraint); 
 		);
 }
@@ -448,7 +355,7 @@ void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order)
 	crm_free(start_id);
 	crm_free(stop_id);
 	
-	group_data->self->fns->rsc_order_lh(group_data->self, order);
+	group_data->self->cmds->rsc_order_lh(group_data->self, order);
 }
 
 void group_rsc_order_rh(
@@ -463,7 +370,7 @@ void group_rsc_order_rh(
 		return;
 	}
 
-	group_data->self->fns->rsc_order_rh(lh_action, group_data->self, order);
+	group_data->self->cmds->rsc_order_rh(lh_action, group_data->self, order);
 }
 
 void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
@@ -473,11 +380,11 @@ void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 
 	crm_debug_3("Processing actions from %s", group_data->self->id);
 
-	group_data->self->fns->rsc_location(group_data->self, constraint);
+	group_data->self->cmds->rsc_location(group_data->self, constraint);
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
-		child_rsc->fns->rsc_location(child_rsc, constraint);
+		child_rsc->cmds->rsc_location(child_rsc, constraint);
 		);
 }
 
@@ -489,103 +396,15 @@ void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 	crm_debug_3("Processing actions from %s", rsc->id);
 
 	CRM_CHECK(group_data->self != NULL, return);
-	group_data->self->fns->expand(group_data->self, data_set);
+	group_data->self->cmds->expand(group_data->self, data_set);
 	
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 
-		child_rsc->fns->expand(child_rsc, data_set);
+		child_rsc->cmds->expand(child_rsc, data_set);
 		);
 
 }
-
-gboolean group_active(resource_t *rsc, gboolean all)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-		gboolean child_active = child_rsc->fns->active(child_rsc, all);
-		if(all == FALSE && child_active) {
-			return TRUE;
-		} else if(child_active == FALSE) {
-			return FALSE;
-		}
-		);
-	if(all) {
-		return TRUE;
-	} else {
-		return FALSE;
-	}
-}
-
-void group_print(
-	resource_t *rsc, const char *pre_text, long options, void *print_data)
-{
-	const char *child_text = NULL;
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-	if(pre_text != NULL) {
-		child_text = "        ";
-	} else {
-		child_text = "    ";
-	}
-	
-	status_print("%sResource Group: %s",
-		     pre_text?pre_text:"", rsc->id);
-
-	if(options & pe_print_html) {
-		status_print("\n<ul>\n");
-
-	} else if((options & pe_print_log) == 0) {
-		status_print("\n");
-	}
-	
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-		
-		if(options & pe_print_html) {
-			status_print("<li>\n");
-		}
-		child_rsc->fns->print(
-			child_rsc, child_text, options, print_data);
-		if(options & pe_print_html) {
-			status_print("</li>\n");
-		}
-		);
-
-	if(options & pe_print_html) {
-		status_print("</ul>\n");
-	}
-}
-
-void group_free(resource_t *rsc)
-{
-	group_variant_data_t *group_data = NULL;
-	CRM_CHECK(rsc != NULL, return);
-	get_group_variant_data(group_data, rsc);
-
-	crm_debug_3("Freeing %s", rsc->id);
-
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-
-		crm_debug_3("Freeing child %s", child_rsc->id);
-		child_rsc->fns->free(child_rsc);
-		);
-
-	crm_debug_3("Freeing child list");
-	pe_free_shallow_adv(group_data->child_list, FALSE);
-
-	if(group_data->self != NULL) {
-		free_xml(group_data->self->xml);
-		group_data->self->fns->free(group_data->self);
-	}
-
-	common_free(rsc);
-}
-
 
 void
 group_agent_constraints(resource_t *rsc)
@@ -596,28 +415,8 @@ group_agent_constraints(resource_t *rsc)
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 		
-		child_rsc->fns->agent_constraints(child_rsc);
+		child_rsc->cmds->agent_constraints(child_rsc);
 		);
-}
-
-enum rsc_role_e
-group_resource_state(resource_t *rsc)
-{
-	enum rsc_role_e group_role = RSC_ROLE_UNKNOWN;
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-
-		if(child_rsc->next_role > group_role) {
-			group_role = rsc->next_role;
-		}
-		if(child_rsc->failed) {
-			rsc->failed = TRUE;
-		}
-		);
-	return group_role;
 }
 
 void
@@ -630,7 +429,7 @@ group_create_notify_element(resource_t *rsc, action_t *op,
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 		
-		child_rsc->fns->create_notify_element(
+		child_rsc->cmds->create_notify_element(
 			child_rsc, op, n_data, data_set);
 		);
 }
@@ -646,7 +445,7 @@ group_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 		
-		any_created = child_rsc->fns->create_probe(
+		any_created = child_rsc->cmds->create_probe(
 			child_rsc, node, complete, force, data_set) || any_created;
 		);
 	return any_created;
@@ -664,7 +463,7 @@ group_stonith_ordering(
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 		
-		child_rsc->fns->stonith_ordering(
+		child_rsc->cmds->stonith_ordering(
 			child_rsc, stonith_op, data_set);
 		);
 #endif

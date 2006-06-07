@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.96 2006/06/07 07:34:38 andrew Exp $ */
+/* $Id: graph.c,v 1.97 2006/06/07 12:46:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -28,8 +28,8 @@
 
 #include <glib.h>
 
-#include <pengine.h>
-#include <pe_utils.h>
+#include <lib/crm/pengine/utils.h>
+#include <allocate.h>
 
 gboolean update_action(action_t *action);
 
@@ -45,8 +45,6 @@ update_action_states(GListPtr actions)
 
 	return TRUE;
 }
-
-#define UPDATE_THEM 1
 
 gboolean
 update_action(action_t *action)
@@ -212,7 +210,7 @@ stonith_constraints(
 	if(stonith_op != NULL) {
 		slist_iter(
 			rsc, resource_t, data_set->resources, lpc,
-			rsc->fns->stonith_ordering(rsc, stonith_op, data_set);
+			rsc->cmds->stonith_ordering(rsc, stonith_op, data_set);
 			);
 	}
 	
@@ -225,7 +223,6 @@ stonith_constraints(
 		if(rsc->is_managed == FALSE) {
 			crm_debug_2("Skipping fencing constraints for unmanaged resource: %s", rsc->id);
 			continue;
-			
 		} 
 
 		key = stop_key(rsc);
@@ -266,7 +263,7 @@ stonith_constraints(
 				if(parent) {
 					crm_info("Re-creating actions for %s",
 						 parent->id);
-					parent->fns->create_actions(
+					parent->cmds->create_actions(
 						parent, data_set);
 				}
 				

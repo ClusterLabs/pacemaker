@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.25 2006/05/25 18:18:39 lars Exp $ */
+/* $Id: crm_mon.c,v 1.26 2006/06/07 12:46:57 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -46,7 +46,7 @@
 #include <crm/common/ipc.h>
 
 #include <crm/cib.h>
-#include <crm/pengine/pengine.h>
+#include <crm/pengine/status.h>
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -58,6 +58,7 @@
 const char *crm_system_name = "crm_mon";
 
 #define OPTARGS	"V?i:nrh:cdp:1"
+
 
 void usage(const char *cmd, int exit_status);
 void blank_screen(void);
@@ -383,7 +384,7 @@ print_status(crm_data_t *cib)
 	updates++;
 	set_working_set_defaults(&data_set);
 	data_set.input = cib;
-	stage0(&data_set);
+	cluster_status(&data_set);
 
 	dc = data_set.dc_node;
 
@@ -483,7 +484,7 @@ print_html_status(crm_data_t *cib, const char *filename)
 	updates++;
 	set_working_set_defaults(&data_set);
 	data_set.input = cib;
-	stage0(&data_set);
+	cluster_status(&data_set);
 
 	dc = data_set.dc_node;
 

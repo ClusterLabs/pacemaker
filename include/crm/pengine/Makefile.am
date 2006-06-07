@@ -17,6 +17,9 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-## Subdirectories...
-SUBDIRS		= common pengine cib transition
-DIST_SUBDIRS	= common pengine cib transition
+includedir=$(base_includedir)/heartbeat
+
+include_HEADERS		= common.h complex.h rules.h status.h
+
+clean-generic:
+	rm -f *~

@@ -1,4 +1,4 @@
-/* $Id: status.h,v 1.1 2006/05/31 14:59:12 andrew Exp $ */
+/* $Id: status.h,v 1.1 2006/06/07 12:46:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -21,7 +21,7 @@
 
 #include <glib.h>
 #include <crm/common/iso8601.h>
-#include <lib/crm/pengine/common.h>
+#include <crm/pengine/common.h>
 
 typedef struct node_s node_t;
 typedef struct color_s color_t;
@@ -113,7 +113,7 @@ struct node_s {
 		struct node_shared_s *details;
 };
 
-#include <lib/crm/pengine/complex.h>
+#include <crm/pengine/complex.h>
 
 struct resource_s { 
 		char *id; 

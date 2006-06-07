@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.2 2006/06/02 15:34:18 andrew Exp $ */
+/* $Id: unpack.c,v 1.3 2006/06/07 12:46:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,9 +30,9 @@
 
 #include <heartbeat.h> /* for ONLINESTATUS */
 
-#include <lib/crm/pengine/status.h>
+#include <crm/pengine/status.h>
 #include <utils.h>
-#include <lib/crm/pengine/rules.h>
+#include <crm/pengine/rules.h>
 
 gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 
@@ -1568,6 +1568,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			}
 
 			if(action->fail_role == RSC_ROLE_STOPPED) {
+				crm_err("Making sure %s doesn't come up again", rsc->id);
 				/* make sure it doesnt come up again */
 				pe_free_shallow_adv(rsc->allowed_nodes, TRUE);
 				rsc->allowed_nodes = node_list_dup(

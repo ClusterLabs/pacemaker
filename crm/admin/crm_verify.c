@@ -1,4 +1,4 @@
-/* $Id: crm_verify.c,v 1.11 2006/05/15 10:21:05 andrew Exp $ */
+/* $Id: crm_verify.c,v 1.12 2006/06/07 12:46:57 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -44,14 +44,13 @@
 #  include <getopt.h>
 #endif
 #include <glib.h>
-#include <crm/pengine/pengine.h>
-#include <crm/pengine/pe_utils.h>
+#include <crm/pengine/status.h>
 
 gboolean USE_LIVE_CIB = FALSE;
 char *cib_save = NULL;
 const char *crm_system_name = NULL;
 void usage(const char *cmd, int exit_status);
-extern void cleanup_calculations(pe_working_set_t *data_set);
+extern gboolean stage0(pe_working_set_t *data_set);
 
 int
 main(int argc, char **argv)

@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.113 2006/06/02 15:39:14 andrew Exp $ */
+/* $Id: pengine.c,v 1.114 2006/06/07 12:46:59 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,17 +29,12 @@
 
 #include <glib.h>
 
-#include <pengine.h>
-#include <pe_utils.h>
+#include <crm/pengine/status.h>
+#include <lib/crm/pengine/pengine.h>
+#include <lib/crm/pengine/utils.h>
 
 crm_data_t * do_calculations(
 	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
-
-gboolean was_processing_error = FALSE;
-gboolean was_processing_warning = FALSE;
-gboolean was_config_error = FALSE;
-gboolean was_config_warning = FALSE;
-unsigned int pengine_input_loglevel = LOG_INFO;
 
 #define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
 
@@ -114,24 +109,10 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		do_calculations(&data_set, xml_data, NULL);
 		crm_log_xml_debug_3(data_set.graph, "[out]");
 
-#if 1
 		if(send_ipc_reply(sender, msg, data_set.graph) == FALSE) {
 			crm_err("Answer could not be sent");
 		}
-#else
-		HA_Message *reply = NULL;
 
-		reply = create_reply(msg, NULL);
-		if (reply != NULL) {
-			char *tmp_file = mktemp(HA_VARRUNHBDIR"/tgraph-XXXXXX");
-			write_xml_file(data_set.graph, tmp_file, FALSE);
-			ha_msg_add(reply, "on-disk-graph", tmp_file);
-			crm_free(tmp_file);
-			if(send_ipc_message(sender, reply) == FALSE) {
-				crm_err("Answer could not be sent");
-			}
-		}
-#endif
 		series_id = get_series();
 		series_wrap = series[series_id].wrap;
 		value = g_hash_table_lookup(
@@ -226,7 +207,7 @@ do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *no
 	check_and_exit(-1);
 #endif
 	
-	crm_debug_5("unpack");		  
+	crm_debug_5("unpack constraints");		  
 	stage0(data_set);
 	
 #if MEMCHECK_STAGE_0
@@ -311,92 +292,4 @@ do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *no
 		);
 	
 	return data_set->graph;
-}
-
-void
-cleanup_calculations(pe_working_set_t *data_set)
-{
-	GListPtr iterator = NULL;
-
-	if(data_set == NULL) {
-		return;
-	}
-
-	if(data_set->config_hash != NULL) {
-		g_hash_table_destroy(data_set->config_hash);
-	}
-	
-	crm_free(data_set->dc_uuid);
-	crm_free(data_set->transition_idle_timeout);
-	
-	crm_debug_3("deleting order cons");
-	pe_free_ordering(data_set->ordering_constraints); 
-
-	crm_debug_3("deleting actions");
-	pe_free_actions(data_set->actions);
-
-	crm_debug_3("deleting resources");
-	pe_free_resources(data_set->resources); 
-	
-	crm_debug_3("deleting nodes");
-	pe_free_nodes(data_set->nodes);
-	
-	crm_debug_3("deleting colors");
-	pe_free_colors(data_set->colors);
-
-	crm_debug_3("deleting node cons");
-	iterator = data_set->placement_constraints;
-	while(iterator) {
-		pe_free_rsc_to_node(iterator->data);
-		iterator = iterator->next;
-	}
-	if(data_set->placement_constraints != NULL) {
-		g_list_free(data_set->placement_constraints);
-	}
-	free_xml(data_set->graph);
-	free_ha_date(data_set->now);
-	free_xml(data_set->input);
-	data_set->stonith_action = NULL;
-}
-
-
-void
-set_working_set_defaults(pe_working_set_t *data_set) 
-{
-	data_set->input = NULL;
-	data_set->now = NULL;
-	data_set->graph = NULL;
-	
-	data_set->transition_idle_timeout = crm_strdup("60s");
-	data_set->dc_uuid            = NULL;
-	data_set->dc_node            = NULL;
-	data_set->have_quorum        = FALSE;
-	data_set->stonith_enabled    = FALSE;
-	data_set->stonith_action     = NULL;
-	data_set->symmetric_cluster  = TRUE;
-	data_set->is_managed_default = TRUE;
-	data_set->no_quorum_policy   = no_quorum_freeze;
-	
-	data_set->remove_after_stop   = FALSE;
-	data_set->stop_action_orphans = TRUE;
-	data_set->stop_rsc_orphans    = TRUE;
-	
-	data_set->config_hash = NULL;
-	data_set->nodes       = NULL;
-	data_set->resources   = NULL;
-	data_set->ordering_constraints  = NULL;
-	data_set->placement_constraints = NULL;
-
-	data_set->no_color = NULL;
-	data_set->colors   = NULL;
-	data_set->actions  = NULL;	
-
-	data_set->num_synapse     = 0;
-	data_set->max_valid_nodes = 0;
-	data_set->order_id        = 1;
-	data_set->action_id       = 1;
-	data_set->color_id        = 0;
-
-	data_set->default_resource_stickiness = 0;
-	data_set->default_resource_fail_stickiness = 0;	
 }
