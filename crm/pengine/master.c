@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.20 2006/05/30 07:47:44 andrew Exp $ */
+/* $Id: master.c,v 1.21 2006/06/07 10:09:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -326,6 +326,12 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 			case RSC_ROLE_STOPPED:
 				child_rsc->priority = -INFINITY;
 				break;
+			case RSC_ROLE_MASTER:
+				/* the only reason we should be here is if
+				 * we're re-creating actions after a stonith
+				 */
+				promoted++;
+				break;
 			default:
 				CRM_CHECK(FALSE/* unhandled */,
 					  crm_err("Unknown resource role: %d for %s",
@@ -399,6 +405,12 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 						  child_rsc->id);
 					lpc--;
 				}
+				break;
+			case RSC_ROLE_MASTER:
+				/* the only reason we should be here is if
+				 * we're re-creating actions after a stonith
+				 */
+				promoted++;
 				break;
 			default:
 				CRM_CHECK(FALSE/* unhandled */,
