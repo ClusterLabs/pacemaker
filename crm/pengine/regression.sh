@@ -140,6 +140,7 @@ do_test rec-node-9 "Node Recover - no quorum - stop    "
 do_test rec-node-10 "Node Recover - no quorum - stop w/fence"
 do_test rec-node-11 "Node Recover - CRM down w/ group - fence   "
 do_test rec-node-12 "Node Recover - nothing active - fence   "
+do_test rec-node-13 "Node Recover - failed resource + shutdown - fence   "
 
 echo ""
 do_test multi1 "Multiple Active (stop/start)"
