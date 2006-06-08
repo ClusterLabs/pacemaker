@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.91 2006/06/07 12:50:02 andrew Exp $ */
+/* $Id: xml.c,v 1.92 2006/06/08 16:52:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2307,11 +2307,11 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash,
 	
 	if(tag_needs_id(tag_name) == FALSE) {
 		crm_debug_5("%s does not need an ID", tag_name);
-		return modified;
+		goto finish_id_check;
 
 	} else if(tag_id != NULL && non_unique_allowed(tag_name)){
 		crm_debug_5("%s does not need top be unique", tag_name);
-		return modified;
+		goto finish_id_check;
 	}
 	
 	lookup_id = NULL;
@@ -2320,7 +2320,7 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash,
 		lookup_value = g_hash_table_lookup(id_hash, lookup_id);
 		if(lookup_value == NULL) {
 			g_hash_table_insert(id_hash, lookup_id, crm_strdup(tag_id));
-			return modified;
+			goto finish_id_check;
 		}
 		modified |= (!silent_rename);
 		
@@ -2349,7 +2349,8 @@ do_id_check(crm_data_t *xml_obj, GHashTable *id_hash,
 			tag_name, tag_id);
 	}
 	crm_free(old_id);
-	
+
+  finish_id_check:
 	if(created_hash) {
 		g_hash_table_destroy(id_hash);
 	}
