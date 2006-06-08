@@ -1,4 +1,4 @@
-/* $Id: status.c,v 1.3 2006/06/08 13:39:10 andrew Exp $ */
+/* $Id: status.c,v 1.4 2006/06/08 16:53:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -63,7 +63,6 @@ unsigned int pengine_input_loglevel = LOG_INFO;
 gboolean
 cluster_status(pe_working_set_t *data_set)
 {
-/*	int lpc; */
 	crm_data_t * config          = get_object_root(
 		XML_CIB_TAG_CRMCONFIG,   data_set->input);
 	crm_data_t * cib_nodes       = get_object_root(
@@ -90,7 +89,7 @@ cluster_status(pe_working_set_t *data_set)
 			data_set->input, XML_ATTR_DC_UUID);
 	}	
 	
-	unpack_config(config, data_set);
+ 	unpack_config(config, data_set);
 
 	if(value != NULL) {
 		cl_str_to_boolean(value, &data_set->have_quorum);
@@ -102,10 +101,10 @@ cluster_status(pe_working_set_t *data_set)
 			 " - fencing and resource management disabled");
 	}
 	
-	unpack_nodes(cib_nodes, data_set);
-	unpack_resources(cib_resources, data_set);
-	unpack_status(cib_status, data_set);
-
+ 	unpack_nodes(cib_nodes, data_set);
+ 	unpack_resources(cib_resources, data_set);
+ 	unpack_status(cib_status, data_set);
+	
 	return TRUE;
 }
 
@@ -192,6 +191,10 @@ cleanup_calculations(pe_working_set_t *data_set)
 	free_ha_date(data_set->now);
 	free_xml(data_set->input);
 	data_set->stonith_action = NULL;
+
+	CRM_CHECK(data_set->colors == NULL, ;);
+	CRM_CHECK(data_set->ordering_constraints == NULL, ;);
+	CRM_CHECK(data_set->placement_constraints == NULL, ;);
 }
 
 

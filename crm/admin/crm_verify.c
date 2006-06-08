@@ -1,4 +1,4 @@
-/* $Id: crm_verify.c,v 1.12 2006/06/07 12:46:57 andrew Exp $ */
+/* $Id: crm_verify.c,v 1.13 2006/06/08 16:53:01 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -51,6 +51,7 @@ char *cib_save = NULL;
 const char *crm_system_name = NULL;
 void usage(const char *cmd, int exit_status);
 extern gboolean stage0(pe_working_set_t *data_set);
+void cleanup_alloc_calculations(pe_working_set_t *data_set);
 
 int
 main(int argc, char **argv)
@@ -211,7 +212,6 @@ main(int argc, char **argv)
 		       xml_remove_prop(node_state, XML_CIB_TAG_LRM);
 		);
 #endif
-	
 	crm_notice("Required feature set: %s", feature_set(cib_object));
  	if(do_id_check(cib_object, NULL, FALSE, FALSE)) {
 		pe_config_err("ID Check failed");
@@ -220,13 +220,12 @@ main(int argc, char **argv)
 	if(validate_with_dtd(cib_object, HA_LIBDIR"/heartbeat/crm.dtd") == FALSE) {
 		pe_config_err("CIB did not pass DTD validation");
 	}
-	
 	set_working_set_defaults(&data_set);
 	data_set.input = cib_object;
 	data_set.now = new_ha_date(TRUE);
 	stage0(&data_set);
 	
-	cleanup_calculations(&data_set);
+	cleanup_alloc_calculations(&data_set);
 
 	if(USE_LIVE_CIB) {
 		/* Calling msg2ipcchan() seems to initialize something

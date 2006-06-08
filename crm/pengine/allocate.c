@@ -1,4 +1,4 @@
-/* $Id: allocate.c,v 1.2 2006/06/08 13:39:10 andrew Exp $ */
+/* $Id: allocate.c,v 1.3 2006/06/08 16:53:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -932,15 +932,18 @@ cleanup_alloc_calculations(pe_working_set_t *data_set)
 		return;
 	}
 
-	crm_debug_3("deleting order cons");
-	pe_free_ordering(data_set->ordering_constraints); 
-
-	crm_debug_3("deleting colors");
+	crm_debug_3("deleting order cons: %p", data_set->ordering_constraints);
+	pe_free_ordering(data_set->ordering_constraints);
+	data_set->ordering_constraints = NULL;
+	
+	crm_debug_3("deleting colors: %p", data_set->colors);
 	pe_free_colors(data_set->colors);
-
-	crm_debug_3("deleting node cons");
+	data_set->colors = NULL;
+	
+	crm_debug_3("deleting node cons: %p", data_set->placement_constraints);
 	pe_free_rsc_to_node(data_set->placement_constraints);
-
+	data_set->placement_constraints = NULL;
+	
 	cleanup_calculations(data_set);
 }
 
