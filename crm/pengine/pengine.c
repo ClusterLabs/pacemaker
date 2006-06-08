@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.114 2006/06/07 12:46:59 andrew Exp $ */
+/* $Id: pengine.c,v 1.115 2006/06/08 13:39:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,7 +30,8 @@
 #include <glib.h>
 
 #include <crm/pengine/status.h>
-#include <lib/crm/pengine/pengine.h>
+#include <pengine.h>
+#include <allocate.h>
 #include <lib/crm/pengine/utils.h>
 
 crm_data_t * do_calculations(
@@ -131,7 +132,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		}   
 		
 		data_set.input = NULL;
-		cleanup_calculations(&data_set);
+		cleanup_alloc_calculations(&data_set);
 		
 		if(is_ipc_empty(sender) && crm_mem_stats(NULL)) {
 			pe_warn("Unfree'd memory");

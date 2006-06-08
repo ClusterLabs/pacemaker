@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.2 2006/06/07 12:46:56 andrew Exp $ */
+/* $Id: group.c,v 1.3 2006/06/08 13:39:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,11 +23,6 @@
 #include <utils.h>
 #include <crm/msg_xml.h>
 #include <clplumbing/cl_misc.h>
-
-extern gboolean rsc_colocation_new(
-	const char *id, enum con_strength strength,
-	resource_t *rsc_lh, resource_t *rsc_rh,
-	const char *state_lh, const char *state_rh);
 	
 
 typedef struct group_variant_data_s
@@ -122,13 +117,7 @@ gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 			group_data->child_list, new_rsc);
 		
 		if(group_data->first_child == NULL) {
-			group_data->first_child = new_rsc;
-			
-		} else if(group_data->colocated) {
-			rsc_colocation_new(
-				"pe_group_internal_colo", pecs_must,
-				group_data->first_child, new_rsc,
-				NULL, NULL);
+			group_data->first_child = new_rsc;			
 		}
 		group_data->last_child = new_rsc;
 		print_resource(LOG_DEBUG_3, "Added", new_rsc, FALSE);

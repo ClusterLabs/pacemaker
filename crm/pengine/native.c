@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.149 2006/06/07 12:46:59 andrew Exp $ */
+/* $Id: native.c,v 1.150 2006/06/08 13:39:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,11 +19,12 @@
 
 #include <portability.h>
 
-#include <lib/crm/pengine/pengine.h>
+#include <pengine.h>
 #include <crm/pengine/rules.h>
 #include <lib/crm/pengine/utils.h>
 #include <crm/msg_xml.h>
 #include <allocate.h>
+#include <utils.h>
 
 #define DELETE_THEN_REFRESH 1
 
@@ -440,6 +441,14 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	custom_action_order(rsc, start_key(rsc), NULL,
 			    rsc, promote_key(rsc), NULL,
 			    pe_ordering_optional, data_set);
+
+	custom_action_order(
+		rsc, stop_key(rsc), NULL, rsc, delete_key(rsc), NULL, 
+		pe_ordering_optional, data_set);
+
+	custom_action_order(
+		rsc, delete_key(rsc), NULL, rsc, start_key(rsc), NULL, 
+		pe_ordering_manditory, data_set);	
 }
 
 void native_rsc_colocation_lh(

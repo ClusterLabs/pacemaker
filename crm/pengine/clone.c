@@ -1,4 +1,4 @@
-/* $Id: clone.c,v 1.1 2006/06/07 12:46:57 andrew Exp $ */
+/* $Id: clone.c,v 1.2 2006/06/08 13:39:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -21,6 +21,7 @@
 
 #include <crm/msg_xml.h>
 #include <allocate.h>
+#include <utils.h>
 #include <lib/crm/pengine/utils.h>
 
 void clone_create_notifications(

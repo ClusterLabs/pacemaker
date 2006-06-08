@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.2 2006/06/07 12:46:56 andrew Exp $ */
+/* $Id: complex.c,v 1.3 2006/06/08 13:39:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -20,21 +20,10 @@
 #include <portability.h>
 
 #include <crm/cib.h>
-#include <pengine.h>
 #include <utils.h>
 #include <crm/pengine/rules.h>
 #include <crm/msg_xml.h>
 #include <clplumbing/cl_misc.h>
-
-gboolean update_node_weight(rsc_to_node_t *cons,const char *id,GListPtr nodes);
-gboolean is_active(rsc_to_node_t *cons);
-gboolean constraint_violated(
-	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint);
-
-extern gboolean rsc_colocation_new(const char *id, enum con_strength strength,
-				   resource_t *rsc_lh, resource_t *rsc_rh);
-rsc_to_node_t *generate_location_rule(
-	resource_t *rsc, crm_data_t *location_rule, pe_working_set_t *data_set);
 
 void populate_hash(crm_data_t *nvpair_list, GHashTable *hash,
 		   const char **attrs, int attrs_length);
@@ -98,13 +87,6 @@ int get_resource_type(const char *name)
 	}
 	
 	return pe_unknown;
-}
-
-gboolean
-is_active(rsc_to_node_t *cons)
-{
-	/* todo: check constraint lifetime */
-	return TRUE;
 }
 
 static void dup_attr(gpointer key, gpointer value, gpointer user_data)
@@ -299,25 +281,17 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	crm_debug_2("\tDesired next state: %s",
 		    (*rsc)->next_role!=RSC_ROLE_UNKNOWN?role2text((*rsc)->next_role):"default");
 
-	if((*rsc)->next_role == RSC_ROLE_STOPPED) {
+	if((*rsc)->variant == pe_native && (*rsc)->next_role == RSC_ROLE_STOPPED) {
 		crm_debug_2("Making sure %s doesn't get colored", (*rsc)->id);
 		/* make sure it doesnt come up again */
-		pe_free_shallow_adv((*rsc)->allowed_nodes, TRUE);
-		(*rsc)->allowed_nodes = node_list_dup(
-			data_set->nodes, FALSE, FALSE);
-		slist_iter(
-			node, node_t, (*rsc)->allowed_nodes, lpc,
-			node->weight = -INFINITY;
-			);
+		resource_location(*rsc, NULL, -INFINITY, "target_role", data_set);
 	}
 	
 	if((*rsc)->is_managed == FALSE) {
 		crm_warn("Resource %s is currently not managed", (*rsc)->id);
 
-	} else if(data_set->symmetric_cluster) {
-		rsc_to_node_t *new_con = rsc2node_new(
-			"symmetric_default", *rsc, 0, NULL, data_set);
-		new_con->node_list_rh = node_list_dup(data_set->nodes, TRUE, FALSE);
+	} else if((*rsc)->variant == pe_native && data_set->symmetric_cluster) {
+		resource_location(*rsc, NULL, 0, "symmetric_default", data_set);
 	}
 	
 	crm_debug_2("\tAction notification: %s",
@@ -327,41 +301,6 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	return TRUE;
 }
 
-void
-order_actions(
-	action_t *lh_action, action_t *rh_action, enum pe_ordering order) 
-{
-	action_wrapper_t *wrapper = NULL;
-	GListPtr list = NULL;
-	
-	crm_debug_2("Ordering Action %s before %s",
-		  lh_action->uuid, rh_action->uuid);
-
-	log_action(LOG_DEBUG_4, "LH (order_actions)", lh_action, FALSE);
-	log_action(LOG_DEBUG_4, "RH (order_actions)", rh_action, FALSE);
-
-	
-	crm_malloc0(wrapper, sizeof(action_wrapper_t));
-	if(wrapper != NULL) {
-		wrapper->action = rh_action;
-		wrapper->type = order;
-		
-		list = lh_action->actions_after;
-		list = g_list_append(list, wrapper);
-		lh_action->actions_after = list;
-		wrapper = NULL;
-	}
-	if(order != pe_ordering_recover) {
-		crm_malloc0(wrapper, sizeof(action_wrapper_t));
-		if(wrapper != NULL) {
-			wrapper->action = lh_action;
-			wrapper->type = order;
-			list = rh_action->actions_before;
-			list = g_list_append(list, wrapper);
-			rh_action->actions_before = list;
-		}
-	}
-}
 
 
 void common_free(resource_t *rsc)
@@ -372,14 +311,7 @@ void common_free(resource_t *rsc)
 	
 	crm_debug_5("Freeing %s", rsc->id);
 
-	while(rsc->rsc_cons) {
- 		pe_free_rsc_colocation(
-			(rsc_colocation_t*)rsc->rsc_cons->data);
-		rsc->rsc_cons = rsc->rsc_cons->next;
-	}
-	if(rsc->rsc_cons != NULL) {
-		g_list_free(rsc->rsc_cons);
-	}
+ 	pe_free_shallow(rsc->rsc_cons);
 	if(rsc->parameters != NULL) {
 		g_hash_table_destroy(rsc->parameters);
 	}

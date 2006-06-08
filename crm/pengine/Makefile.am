@@ -56,12 +56,12 @@ lib_LTLIBRARIES	= libpengine.la
 halib_PROGRAMS	= ptest pengine
 
 ## SOURCES
-noinst_HEADERS	= allocate.h 
+noinst_HEADERS	= allocate.h utils.h
 #utils.h pengine.h
 
 libpengine_la_LDFLAGS	= -version-info 3:0:0
 # -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version 
-libpengine_la_SOURCES	= pengine.c allocate.c \
+libpengine_la_SOURCES	= pengine.c allocate.c utils.c \
 			native.c group.c clone.c master.c graph.c
 
 pengine_SOURCES	= main.c

@@ -1,4 +1,4 @@
-/* $Id: allocate.h,v 1.1 2006/06/07 12:46:57 andrew Exp $ */
+/* $Id: allocate.h,v 1.2 2006/06/08 13:39:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,7 +23,7 @@
 #include <crm/common/xml.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/complex.h>
-#include <lib/crm/pengine/pengine.h>
+#include <pengine.h>
 
 typedef struct notify_entry_s {
 	resource_t *rsc;
@@ -170,5 +170,17 @@ extern gboolean native_constraint_violated(
 extern void common_agent_constraints(
 	GListPtr node_list, lrm_agent_t *agent, const char *id);
 
+
+extern gboolean unpack_rsc_to_attr(crm_data_t *xml_obj, pe_working_set_t *data_set);
+
+extern gboolean unpack_rsc_to_node(crm_data_t *xml_obj, pe_working_set_t *data_set);
+
+extern gboolean unpack_rsc_order(crm_data_t *xml_obj, pe_working_set_t *data_set);
+
+extern gboolean unpack_rsc_colocation(crm_data_t *xml_obj, pe_working_set_t *data_set);
+
+extern gboolean unpack_rsc_location(crm_data_t *xml_obj, pe_working_set_t *data_set);
+
+extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.64 2006/06/07 12:46:57 andrew Exp $ */
+/* $Id: group.c,v 1.65 2006/06/08 13:39:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,7 +19,7 @@
 
 #include <portability.h>
 
-#include <lib/crm/pengine/pengine.h>
+#include <pengine.h>
 #include <lib/crm/pengine/utils.h>
 #include <crm/msg_xml.h>
 #include <clplumbing/cl_misc.h>
@@ -199,6 +199,13 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 		child_rsc->cmds->internal_constraints(child_rsc, data_set);
 
+		if(group_data->colocated) {
+			rsc_colocation_new(
+				"pe_group_internal_colo", pecs_must,
+				group_data->self, child_rsc,
+				NULL, NULL);
+		}
+	
 		if(group_data->ordered == FALSE) {
 			order_start_start(
 				group_data->self, child_rsc, pe_ordering_optional);

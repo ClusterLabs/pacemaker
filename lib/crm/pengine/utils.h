@@ -1,4 +1,4 @@
-/* $Id: utils.h,v 1.2 2006/06/07 12:46:56 andrew Exp $ */
+/* $Id: utils.h,v 1.3 2006/06/08 13:39:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -18,8 +18,8 @@
  */
 #ifndef PE_UTILS__H
 #define PE_UTILS__H
-#include <lib/crm/pengine/pengine.h>
 #include <crm/pengine/common.h>
+#include <crm/pengine/status.h>
 
 /* Node helper functions */
 extern node_t *pe_find_node_id(GListPtr node_list, const char *id);
@@ -43,23 +43,6 @@ extern GListPtr node_list_or(GListPtr list1, GListPtr list2, gboolean filter);
 extern void pe_free_shallow(GListPtr alist);
 extern void pe_free_shallow_adv(GListPtr alist, gboolean with_data);
 
-
-/* Constraint helper functions */
-extern rsc_colocation_t *invert_constraint(rsc_colocation_t *constraint);
-
-extern rsc_to_node_t *copy_constraint(rsc_to_node_t *constraint);
-
-/* Color helper functions */
-extern void add_color_to_rsc(resource_t *rsc, color_t *color);
-
-extern color_t *find_color(GListPtr candidate_colors, color_t *other_color);
-
-extern color_t *create_color(
-	pe_working_set_t *data_set, resource_t *resource, GListPtr resources);
-
-extern color_t *copy_color(color_t *a_color);
-
-
 /* For creating the transition graph */
 extern crm_data_t *action2xml(action_t *action, gboolean as_input);
 
@@ -70,18 +53,6 @@ extern void print_node(
 extern void print_resource(
 	int log_level, const char *pre_text, resource_t *rsc, gboolean details);
 
-extern void print_rsc_to_node(
-	const char *pre_text, rsc_to_node_t *cons, gboolean details);
-
-extern void print_rsc_colocation(
-	const char *pre_text, rsc_colocation_t *cons, gboolean details);
-
-extern void print_color(
-	const char *pre_text, color_t *color, gboolean details);
-
-extern void print_color_details(
-	const char *pre_text, struct color_shared_s *color, gboolean details);
-
 extern void log_action(
 	unsigned int log_level, const char *pre_text, action_t *action, gboolean details);
 
@@ -91,17 +62,12 @@ extern gint sort_rsc_node_weight(gconstpointer a, gconstpointer b);
 extern gint sort_cons_strength(gconstpointer a, gconstpointer b);
 extern gint sort_color_weight(gconstpointer a, gconstpointer b);
 extern gint sort_node_weight(gconstpointer a, gconstpointer b);
-extern gint sort_action_id(gconstpointer a, gconstpointer b);
 
 extern crm_data_t *find_rsc_op_entry(resource_t *rsc, const char *key);
 
 extern action_t *custom_action(
 	resource_t *rsc, char *key, const char *task, node_t *on_node,
 	gboolean optional, gboolean foo, pe_working_set_t *data_set);
-
-extern rsc_to_node_t *rsc2node_new(
-	const char *id, resource_t *rsc, int weight, node_t *node,
-	pe_working_set_t *data_set);
 
 #define delete_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_DELETE, 0)
 #define delete_action(rsc, node) custom_action(				\
@@ -154,18 +120,14 @@ extern GListPtr find_actions_exact(
 extern GListPtr find_recurring_actions(GListPtr input, node_t *not_on_node);
 
 extern void set_id(crm_data_t *xml_obj, const char *prefix, int child);
-
-/* free the various structures */
-extern void pe_free_nodes(GListPtr nodes);
-extern void pe_free_colors(GListPtr colors);
-extern void pe_free_rsc_colocation(rsc_colocation_t *cons);
-extern void pe_free_rsc_to_node(rsc_to_node_t *cons);
-extern void pe_free_resources(GListPtr resources);
 extern void pe_free_action(action_t *action);
-extern void pe_free_actions(GListPtr actions);
-extern void pe_free_ordering(GListPtr constraints);
 
-extern const char *strength2text(enum con_strength strength);
-extern const char *ordering_type2text(enum pe_ordering type);
+extern void
+resource_location(resource_t *rsc, node_t *node, int score, const char *tag,
+		  pe_working_set_t *data_set);
+
+extern void order_actions(action_t *lh_action, action_t *rh_action, enum pe_ordering order);
+extern const char *get_interval(crm_data_t *xml_op);
+extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 
 #endif

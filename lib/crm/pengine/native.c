@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.2 2006/06/07 12:46:56 andrew Exp $ */
+/* $Id: native.c,v 1.3 2006/06/08 13:39:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -21,6 +21,7 @@
 
 #include <crm/pengine/status.h>
 #include <crm/pengine/rules.h>
+#include <crm/pengine/complex.h>
 #include <utils.h>
 #include <crm/msg_xml.h>
 
@@ -61,8 +62,8 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 	if(rsc->variant != pe_native) {
 	} else if(rsc->is_managed == FALSE) {
 		crm_info("resource %s isnt managed", rsc->id);
-		rsc2node_new(
-			"not_managed_default", rsc, INFINITY, node, data_set);
+		resource_location(rsc, node, INFINITY,
+				  "not_managed_default", data_set);
 		return;
 
 #if 0
@@ -71,7 +72,8 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 			 rsc->id);
 #endif
 	} else if(rsc->stickiness > 0 || rsc->stickiness < 0) {
-		rsc2node_new("stickiness", rsc, rsc->stickiness, node,data_set);
+		resource_location(rsc, node, rsc->stickiness,
+				  "stickiness", data_set);
 		crm_debug("Resource %s: preferring current location (%s/%s)",
 			  rsc->id, node->details->uname, node->details->id);
 	}
@@ -378,12 +380,6 @@ native_print(
 			log_action(LOG_DEBUG_4, "\trsc action: ", action, FALSE);
 			);
 		
-		status_print("%s\t=== Colors\n", pre_text);
-		slist_iter(
-			color, color_t, rsc->candidate_colors, lpc,
-			print_color("\t", color, FALSE)
-			);
-
 		status_print("%s\t=== Allowed Nodes\n", pre_text);
 		slist_iter(
 			node, node_t, rsc->allowed_nodes, lpc,
@@ -417,7 +413,7 @@ gboolean
 DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 {
 	action_t *delete = NULL;
-	action_t *refresh = NULL;
+ 	action_t *refresh = NULL;
 
 	char *stop = NULL;
 	char *start = NULL;
@@ -444,26 +440,16 @@ DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		 rsc->id, node->details->uname);
 	
 	delete = delete_action(rsc, node);
-	
-	custom_action_order(
-		rsc, stop, NULL, rsc, NULL, delete,
-		pe_ordering_optional, data_set);
 
-	custom_action_order(
-		rsc, NULL, delete, rsc, start, NULL, 
-		pe_ordering_manditory, data_set);
-	
 #if DELETE_THEN_REFRESH
 	refresh = custom_action(
 		NULL, crm_strdup(CRM_OP_LRM_REFRESH), CRM_OP_LRM_REFRESH,
 		node, FALSE, TRUE, data_set);
+
 	add_hash_param(refresh->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
 
-	custom_action_order(
-		rsc, NULL, delete, NULL, NULL, refresh, 
-		pe_ordering_optional, data_set);
+	order_actions(delete, refresh, pe_ordering_optional);
 #endif
-	
 	
 	return TRUE;
 }

@@ -1,4 +1,4 @@
-/* $Id: clone.c,v 1.3 2006/06/07 12:46:55 andrew Exp $ */
+/* $Id: clone.c,v 1.4 2006/06/08 13:39:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -26,11 +26,6 @@
 void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
 	pe_working_set_t *data_set);
-
-extern gboolean rsc_colocation_new(
-	const char *id, enum con_strength strength,
-	resource_t *rsc_lh, resource_t *rsc_rh,
-	const char *state_lh, const char *state_rh);
 
 typedef struct clone_variant_data_s
 {

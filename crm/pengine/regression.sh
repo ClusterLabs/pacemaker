@@ -18,7 +18,6 @@
  #
 
 . regression.core.sh
-
 create_mode="true"
 echo Generating test outputs for these tests...
 echo ""

@@ -1,4 +1,4 @@
-/* $Id: status.c,v 1.2 2006/06/07 12:46:56 andrew Exp $ */
+/* $Id: status.c,v 1.3 2006/06/08 13:39:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,6 +32,7 @@
 
 #include <crm/pengine/status.h>
 #include <utils.h>
+#include <unpack.h>
 
 crm_data_t * do_calculations(
 	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
@@ -89,8 +90,6 @@ cluster_status(pe_working_set_t *data_set)
 			data_set->input, XML_ATTR_DC_UUID);
 	}	
 	
-	data_set->no_color = create_color(data_set, NULL, NULL);
-
 	unpack_config(config, data_set);
 
 	if(value != NULL) {
@@ -110,11 +109,65 @@ cluster_status(pe_working_set_t *data_set)
 	return TRUE;
 }
 
+static void
+pe_free_resources(GListPtr resources)
+{ 
+	resource_t *rsc = NULL;
+	GListPtr iterator = resources;
+	while(iterator != NULL) {
+		iterator = iterator;
+		rsc = (resource_t *)iterator->data;
+		iterator = iterator->next;
+		rsc->fns->free(rsc);
+	}
+	if(resources != NULL) {
+		g_list_free(resources);
+	}
+}
+
+static void
+pe_free_actions(GListPtr actions) 
+{
+	GListPtr iterator = actions;
+	while(iterator != NULL) {
+		pe_free_action(iterator->data);
+		iterator = iterator->next;
+	}
+	if(actions != NULL) {
+		g_list_free(actions);
+	}
+}
+
+static void
+pe_free_nodes(GListPtr nodes)
+{
+	GListPtr iterator = nodes;
+	while(iterator != NULL) {
+		node_t *node = (node_t*)iterator->data;
+		struct node_shared_s *details = node->details;
+		iterator = iterator->next;
+
+		crm_debug_5("deleting node");
+		crm_debug_5("%s is being deleted", details->uname);
+		print_node("delete", node, FALSE);
+		
+		if(details != NULL) {
+			if(details->attrs != NULL) {
+				g_hash_table_destroy(details->attrs);
+			}
+			pe_free_shallow_adv(details->running_rsc, FALSE);
+			crm_free(details);
+		}
+		crm_free(node);
+	}
+	if(nodes != NULL) {
+		g_list_free(nodes);
+	}
+}
+
 void
 cleanup_calculations(pe_working_set_t *data_set)
 {
-	GListPtr iterator = NULL;
-
 	if(data_set == NULL) {
 		return;
 	}
@@ -126,9 +179,6 @@ cleanup_calculations(pe_working_set_t *data_set)
 	crm_free(data_set->dc_uuid);
 	crm_free(data_set->transition_idle_timeout);
 	
-	crm_debug_3("deleting order cons");
-	pe_free_ordering(data_set->ordering_constraints); 
-
 	crm_debug_3("deleting actions");
 	pe_free_actions(data_set->actions);
 
@@ -138,18 +188,6 @@ cleanup_calculations(pe_working_set_t *data_set)
 	crm_debug_3("deleting nodes");
 	pe_free_nodes(data_set->nodes);
 	
-	crm_debug_3("deleting colors");
-	pe_free_colors(data_set->colors);
-
-	crm_debug_3("deleting node cons");
-	iterator = data_set->placement_constraints;
-	while(iterator) {
-		pe_free_rsc_to_node(iterator->data);
-		iterator = iterator->next;
-	}
-	if(data_set->placement_constraints != NULL) {
-		g_list_free(data_set->placement_constraints);
-	}
 	free_xml(data_set->graph);
 	free_ha_date(data_set->now);
 	free_xml(data_set->input);

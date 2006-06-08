@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.97 2006/06/07 12:46:57 andrew Exp $ */
+/* $Id: graph.c,v 1.98 2006/06/08 13:39:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -28,8 +28,9 @@
 
 #include <glib.h>
 
-#include <lib/crm/pengine/utils.h>
 #include <allocate.h>
+#include <lib/crm/pengine/utils.h>
+#include <utils.h>
 
 gboolean update_action(action_t *action);
 
@@ -522,6 +523,24 @@ should_dump_action(action_t *action)
 	return TRUE;
 }
 
+/* lowest to highest */
+static gint sort_action_id(gconstpointer a, gconstpointer b)
+{
+	const action_wrapper_t *action_wrapper2 = (const action_wrapper_t*)a;
+	const action_wrapper_t *action_wrapper1 = (const action_wrapper_t*)b;
+
+	if(a == NULL) { return 1; }
+	if(b == NULL) { return -1; }
+  
+	if(action_wrapper1->action->id > action_wrapper2->action->id) {
+		return -1;
+	}
+	
+	if(action_wrapper1->action->id < action_wrapper2->action->id) {
+		return 1;
+	}
+	return 0;
+}
 
 void
 graph_element_from_action(action_t *action, pe_working_set_t *data_set)
@@ -589,3 +608,4 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 		   
 		);
 }
+

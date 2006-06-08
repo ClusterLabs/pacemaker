@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.3 2006/06/07 12:46:56 andrew Exp $ */
+/* $Id: unpack.c,v 1.4 2006/06/08 13:39:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -33,51 +33,13 @@
 #include <crm/pengine/status.h>
 #include <utils.h>
 #include <crm/pengine/rules.h>
-
-gint sort_op_by_callid(gconstpointer a, gconstpointer b);
-
-gboolean unpack_rsc_to_attr(crm_data_t *xml_obj, pe_working_set_t *data_set);
-
-gboolean unpack_rsc_to_node(crm_data_t *xml_obj, pe_working_set_t *data_set);
-
-gboolean unpack_rsc_order(crm_data_t *xml_obj, pe_working_set_t *data_set);
-
-gboolean unpack_rsc_colocation(crm_data_t *xml_obj, pe_working_set_t *data_set);
-
-gboolean unpack_rsc_location(crm_data_t *xml_obj, pe_working_set_t *data_set);
-
-gboolean unpack_lrm_resources(
-	node_t *node, crm_data_t * lrm_state, pe_working_set_t *data_set);
-
-gboolean add_node_attrs(
-	crm_data_t * attrs, node_t *node, pe_working_set_t *data_set);
-
-gboolean unpack_rsc_op(
-	resource_t *rsc, node_t *node, crm_data_t *xml_op,
-	int *max_call_id, enum action_fail_response *failed, pe_working_set_t *data_set);
-
-gboolean determine_online_status(
-	crm_data_t * node_state, node_t *this_node, pe_working_set_t *data_set);
-
-gboolean rsc_colocation_new(
-	const char *id, enum con_strength strength,
-	resource_t *rsc_lh, resource_t *rsc_rh,
-	const char *state_lh, const char *state_rh);
-
-gboolean create_ordering(
-	const char *id, enum con_strength strength,
-	resource_t *rsc_lh, resource_t *rsc_rh, pe_working_set_t *data_set);
-
-const char *param_value(
-	GHashTable *hash, crm_data_t * parent, const char *name);
-
-rsc_to_node_t *generate_location_rule(
-	resource_t *rsc, crm_data_t *location_rule, pe_working_set_t *data_set);
+#include <unpack.h>
 
 #define get_cluster_pref(pref) value = g_hash_table_lookup(config_hash, pref); \
 	if(value == NULL) {						\
 		pe_config_warn("No value specified for cluster preference: %s", pref); \
 	}
+
 
 
 gboolean
@@ -356,51 +318,6 @@ unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
 	return TRUE;
 }
 
-gboolean 
-unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
-{
-	crm_data_t *lifetime = NULL;
-	crm_debug_2("Begining unpack... %s",
-		    xml_constraints?crm_element_name(xml_constraints):"<none>");
-	xml_child_iter(
-		xml_constraints, xml_obj, 
-
-		const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-		if(id == NULL) {
-			pe_config_err("Constraint <%s...> must have an id",
-				crm_element_name(xml_obj));
-			continue;
-		}
-
-		crm_debug_3("Processing constraint %s %s",
-			    crm_element_name(xml_obj),id);
-
-		lifetime = cl_get_struct(xml_obj, "lifetime");
-
-		if(test_ruleset(lifetime, NULL, data_set->now) == FALSE) {
-			crm_info("Constraint %s %s is not active",
-				 crm_element_name(xml_obj), id);
-
-		} else if(safe_str_eq(XML_CONS_TAG_RSC_ORDER,
-				      crm_element_name(xml_obj))) {
-			unpack_rsc_order(xml_obj, data_set);
-
-		} else if(safe_str_eq(XML_CONS_TAG_RSC_DEPEND,
-				      crm_element_name(xml_obj))) {
-			unpack_rsc_colocation(xml_obj, data_set);
-
-		} else if(safe_str_eq(XML_CONS_TAG_RSC_LOCATION,
-				      crm_element_name(xml_obj))) {
-			unpack_rsc_location(xml_obj, data_set);
-
-		} else {
-			pe_err("Unsupported constraint type: %s",
-				crm_element_name(xml_obj));
-		}
-		);
-
-	return TRUE;
-}
 
 /* remove nodes that are down, stopping */
 /* create +ve rsc_to_node constraints between resources and the nodes they are running on */
@@ -689,8 +606,6 @@ increment_clone(char *last_rsc_id)
 	}
 }
 
-extern gboolean DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set);
-
 static resource_t *
 unpack_find_resource(
 	pe_working_set_t *data_set, node_t *node, const char *rsc_id)
@@ -769,51 +684,9 @@ process_orphan_resource(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *d
 		print_resource(LOG_DEBUG_3, "Added orphan", rsc, FALSE);
 			
 		CRM_CHECK(rsc != NULL, return NULL);
-		slist_iter(
-			any_node, node_t, data_set->nodes, lpc,
-			rsc2node_new(
-				"__orphan_dont_run__", rsc,
-				-INFINITY, any_node, data_set);
-			);
+		resource_location(rsc, NULL, -INFINITY, "__orphan_dont_run__", data_set);
 	}
 	return rsc;
-}
-
-static gboolean
-check_rsc_parameters(resource_t *rsc, node_t *node, crm_data_t *rsc_entry,
-		     pe_working_set_t *data_set) 
-{
-	int attr_lpc = 0;
-	gboolean force_restart = FALSE;
-	gboolean delete_resource = FALSE;
-	
-	const char *value = NULL;
-	const char *old_value = NULL;
-	const char *attr_list[] = {
-		XML_ATTR_TYPE, 
-		XML_AGENT_ATTR_CLASS,
- 		XML_AGENT_ATTR_PROVIDER
-	};
-
-	for(; attr_lpc < DIMOF(attr_list); attr_lpc++) {
-		value = crm_element_value(rsc->xml, attr_list[attr_lpc]);
-		old_value = crm_element_value(rsc_entry, attr_list[attr_lpc]);
-		if(safe_str_eq(value, old_value)) {
-			continue;
-		}
-		
-		force_restart = TRUE;
-		crm_notice("Forcing restart of %s on %s, %s changed: %s -> %s",
-			   rsc->id, node->details->uname, attr_list[attr_lpc],
-			   crm_str(old_value), crm_str(value));
-	}
-	if(force_restart) {
-		/* make sure the restart happens */
-		stop_action(rsc, node, FALSE);
-		rsc->start_pending = TRUE;
-		delete_resource = TRUE;
-	}
-	return delete_resource;
 }
 
 static void
@@ -861,9 +734,9 @@ process_rsc_state(resource_t *rsc, node_t *node,
 			/* make sure it comes up somewhere else
 			 * or not at all
 			 */
-			rsc2node_new("__action_migration_auto__",
-				     rsc, -INFINITY, node, data_set);
-				
+			resource_location(rsc, node, -INFINITY,
+					  "__action_migration_auto__",data_set);
+
 		} else {
 			stop_action(rsc, node, FALSE);
 		}
@@ -875,34 +748,9 @@ process_rsc_state(resource_t *rsc, node_t *node,
 			   stop->optional = TRUE;
 			);
 		crm_free(key);
-			
-/* 			if(rsc->failed == FALSE && node->details->online) { */
-/* 				delete_resource = TRUE; */
-/* 			}			 */
 	}
 }
 
-static const char *
-get_interval(crm_data_t *xml_op) 
-{
-	const char *interval_s = NULL;
-        interval_s  = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
-#if CRM_DEPRECATED_SINCE_2_0_4
-	if(interval_s == NULL) {
-		crm_data_t *params = NULL;
-		params = find_xml_node(xml_op, XML_TAG_PARAMS, FALSE);
-		if(params != NULL) {
-			interval_s = crm_element_value(
-				params, XML_LRM_ATTR_INTERVAL);
-		}
-	}
-#endif
-	
-	CRM_CHECK(interval_s != NULL,
-		  crm_err("Invalid rsc op: %s", ID(xml_op)); return "0");
-	
-	return interval_s;
-}
 
 static void
 unpack_lrm_rsc_state(
@@ -912,9 +760,8 @@ unpack_lrm_rsc_state(
 	char *fail_attr = NULL;
 	const char *value = NULL;
 	const char *fail_val = NULL;
-	gboolean delete_resource = FALSE;
 
-	const char *rsc_id    = crm_element_value(rsc_entry, XML_ATTR_ID);
+	const char *rsc_id  = crm_element_value(rsc_entry, XML_ATTR_ID);
 
 	int max_call_id = -1;
 	GListPtr op_list = NULL;
@@ -933,8 +780,6 @@ unpack_lrm_rsc_state(
 	} 
 	CRM_ASSERT(rsc != NULL);
 	
-	delete_resource = check_rsc_parameters(rsc, node, rsc_entry, data_set);
-
 	/* process failure stickiness */
 	fail_count = 0;
 	fail_attr = crm_concat("fail-count", rsc->id, '-');
@@ -945,9 +790,8 @@ unpack_lrm_rsc_state(
 	}
 	crm_free(fail_attr);
 	if(fail_count > 0 && rsc->fail_stickiness != 0) {
-		rsc2node_new("fail_stickiness", rsc,
-			     fail_count * rsc->fail_stickiness,
-			     node, data_set);
+		resource_location(rsc, node, fail_count * rsc->fail_stickiness,
+				  "fail_stickiness", data_set);
 		crm_debug("Setting failure stickiness for %s on %s: %d",
 			  rsc->id, node->details->uname,
 			  fail_count * rsc->fail_stickiness);
@@ -1062,10 +906,6 @@ unpack_lrm_rsc_state(
 			rsc->next_role = req_role;
 		}
 	}
-
-	if(delete_resource) {
-		DeleteRsc(rsc, node, data_set);
-	}
 		
 	if(saved_role > rsc->role) {
 		rsc->role = saved_role;
@@ -1087,258 +927,7 @@ unpack_lrm_resources(node_t *node, crm_data_t * lrm_rsc_list, pe_working_set_t *
 	return TRUE;
 }
 
-#define sort_return(an_int) crm_free(a_uuid); crm_free(b_uuid); return an_int
 
-gint
-sort_op_by_callid(gconstpointer a, gconstpointer b)
-{
-	char *a_uuid = NULL;
-	char *b_uuid = NULL;
- 	const char *a_task_id = cl_get_string(a, XML_LRM_ATTR_CALLID);
- 	const char *b_task_id = cl_get_string(b, XML_LRM_ATTR_CALLID);
-
-	const char *a_key = cl_get_string(a, XML_ATTR_TRANSITION_MAGIC);
- 	const char *b_key = cl_get_string(b, XML_ATTR_TRANSITION_MAGIC);
-
-	const char *a_xml_id = ID(a);
-	const char *b_xml_id = ID(b);
-	
-	int a_id = -1;
-	int b_id = -1;
-
-	int a_rc = -1;
-	int b_rc = -1;
-
-	int a_status = -1;
-	int b_status = -1;
-	
-	int a_call_id = -1;
-	int b_call_id = -1;
-
-	if(safe_str_eq(a_xml_id, b_xml_id)) {
-		/* We have duplicate lrm_rsc_op entries in the status
-		 *    section which is unliklely to be a good thing
-		 *    - we can handle it easily enough, but we need to get
-		 *    to the bottom of why its happening.
-		 */
-		pe_err("Duplicate lrm_rsc_op entries named %s", a_xml_id);
-		sort_return(0);
-	}
-	
-	CRM_CHECK(a_task_id != NULL && b_task_id != NULL, sort_return(0));	
-	a_call_id = crm_parse_int(a_task_id, NULL);
-	b_call_id = crm_parse_int(b_task_id, NULL);
-	
-	if(a_call_id == -1 && b_call_id == -1) {
-		/* both are pending ops so it doesnt matter since
-		 *   stops are never pending
-		 */
-		sort_return(0);
-
-	} else if(a_call_id >= 0 && a_call_id < b_call_id) {
-		crm_debug_4("%s (%d) < %s (%d) : call id",
-			    ID(a), a_call_id, ID(b), b_call_id);
-		sort_return(-1);
-
-	} else if(b_call_id >= 0 && a_call_id > b_call_id) {
-		crm_debug_4("%s (%d) > %s (%d) : call id",
-			    ID(a), a_call_id, ID(b), b_call_id);
-		sort_return(1);
-	}
-
-	crm_debug_5("%s (%d) == %s (%d) : continuing",
-		    ID(a), a_call_id, ID(b), b_call_id);
-	
-	/* now process pending ops */
-	CRM_CHECK(a_key != NULL && b_key != NULL, sort_return(0));
-	CRM_CHECK(decode_transition_magic(
-			       a_key,&a_uuid,&a_id,&a_status, &a_rc), sort_return(0));
-	CRM_CHECK(decode_transition_magic(
-			       b_key,&b_uuid,&b_id,&b_status, &b_rc), sort_return(0));
-
-	/* try and determin the relative age of the operation...
-	 * some pending operations (ie. a start) may have been supuerceeded
-	 *   by a subsequent stop
-	 *
-	 * [a|b]_id == -1 means its a shutdown operation and _always_ comes last
-	 */
-	if(safe_str_neq(a_uuid, b_uuid) || a_id == b_id) {
-		/*
-		 * some of the logic in here may be redundant...
-		 *
-		 * if the UUID from the TE doesnt match then one better
-		 *   be a pending operation.
-		 * pending operations dont survive between elections and joins
-		 *   because we query the LRM directly
-		 */
-		
-		CRM_CHECK(a_call_id == -1 || b_call_id == -1, sort_return(0));
-		CRM_CHECK(a_call_id >= 0  || b_call_id >= 0, sort_return(0));
-
-		if(b_call_id == -1) {
-			crm_debug_2("%s (%d) < %s (%d) : transition + call id",
-				    ID(a), a_call_id, ID(b), b_call_id);
-			sort_return(-1);
-		}
-
-		if(a_call_id == -1) {
-			crm_debug_2("%s (%d) > %s (%d) : transition + call id",
-				    ID(a), a_call_id, ID(b), b_call_id);
-			sort_return(1);
-		}
-		
-	} else if((a_id >= 0 && a_id < b_id) || b_id == -1) {
-		crm_debug_3("%s (%d) < %s (%d) : transition",
-			    ID(a), a_id, ID(b), b_id);
-		sort_return(-1);
-
-	} else if((b_id >= 0 && a_id > b_id) || a_id == -1) {
-		crm_debug_3("%s (%d) > %s (%d) : transition",
-			    ID(a), a_id, ID(b), b_id);
-		sort_return(1);
-	}
-
-	/* we should never end up here */
-	crm_err("%s (%d:%d:%s) ?? %s (%d:%d:%s) : default",
-		ID(a), a_call_id, a_id, a_uuid, ID(b), b_call_id, b_id, b_uuid);
-	CRM_CHECK(FALSE, sort_return(0)); 
-}
-
-static gboolean
-check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op,
-			pe_working_set_t *data_set)
-{
-	char *key = NULL;
-	int interval = 0;
-	const char *interval_s = NULL;
-	
-	gboolean did_change = FALSE;
-
-	crm_data_t *pnow = NULL;
-	GHashTable *local_rsc_params = NULL;
-	
-	char *pnow_digest = NULL;
-	const char *param_digest = NULL;
-	char *local_param_digest = NULL;
-
-#if CRM_DEPRECATED_SINCE_2_0_4
-	crm_data_t *params = NULL;
-#endif
-
-	action_t *action = NULL;
-	const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-	const char *op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
-
-	CRM_CHECK(active_node != NULL, return FALSE);
-
-	interval_s = get_interval(xml_op);
-	interval = crm_parse_int(interval_s, "0");
-	key = generate_op_key(rsc->id, task, interval);
-
-	if(interval > 0) {
-		crm_data_t *op_match = NULL;
-
-		crm_debug_2("Checking parameters for %s %s", key, task);
-		op_match = find_rsc_op_entry(rsc, key);
-
-		if(op_match == NULL && data_set->stop_action_orphans) {
-			/* create a cancel action */
-			action_t *cancel = NULL;
-			crm_info("Orphan action will be stopped: %s on %s",
-				 key, active_node->details->uname);
-
-			crm_free(key);
-			key = generate_op_key(rsc->id, CRMD_ACTION_CANCEL, interval);
-
-			cancel = custom_action(
-				rsc, key, CRMD_ACTION_CANCEL, active_node,
-				FALSE, TRUE, data_set);
-
-			add_hash_param(cancel->meta, XML_LRM_ATTR_TASK, task);
-			add_hash_param(cancel->meta,
-				       XML_LRM_ATTR_INTERVAL, interval_s);
-
-			custom_action_order(
-				rsc, NULL, cancel,
-				rsc, stop_key(rsc), NULL,
-				pe_ordering_optional, data_set);
-		}
-		if(op_match == NULL) {
-			crm_debug("Orphan action detected: %s on %s",
-				  key, active_node->details->uname);
-			return TRUE;
-		}
-	}
-
-	action = custom_action(rsc, key, task, active_node, TRUE, FALSE, data_set);
-	
-	local_rsc_params = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
-		g_hash_destroy_str, g_hash_destroy_str);
-	
-	unpack_instance_attributes(
-		rsc->xml, XML_TAG_ATTR_SETS, active_node->details->attrs,
-		local_rsc_params, NULL, data_set->now);
-	
-	pnow = create_xml_node(NULL, XML_TAG_PARAMS);
-	g_hash_table_foreach(action->extra, hash2field, pnow);
-	g_hash_table_foreach(rsc->parameters, hash2field, pnow);
-	g_hash_table_foreach(local_rsc_params, hash2field, pnow);
-
-	filter_action_parameters(pnow, op_version);
-	pnow_digest = calculate_xml_digest(pnow, TRUE);
-	param_digest = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
-
-#if CRM_DEPRECATED_SINCE_2_0_4
-	if(param_digest == NULL) {
-		params = find_xml_node(xml_op, XML_TAG_PARAMS, TRUE);
-	}
-	if(params != NULL) {
-		crm_data_t *local_params = copy_xml(params);
-
-		crm_warn("Faking parameter digest creation for %s", ID(xml_op));		
-		filter_action_parameters(local_params, op_version);
-		xml_remove_prop(local_params, "interval");
-		xml_remove_prop(local_params, "timeout");
-		crm_log_xml_warn(local_params, "params:used");
-
-		local_param_digest = calculate_xml_digest(local_params, TRUE);
-		param_digest = local_param_digest;
-		
-		free_xml(local_params);
-	}
-#endif
-
-	if(safe_str_neq(pnow_digest, param_digest)) {
-#if CRM_DEPRECATED_SINCE_2_0_4
-		if(params) {
-			crm_data_t *local_params = copy_xml(params);
-			filter_action_parameters(local_params, op_version);
-			xml_remove_prop(local_params, "interval");
-			xml_remove_prop(local_params, "timeout");
-			
-			free_xml(local_params);
-		}
-#endif
-		did_change = TRUE;
-		crm_log_xml_info(pnow, "params:calc");
- 		crm_warn("Parameters to %s on %s changed: recorded %s vs. calculated %s",
-			 ID(xml_op), active_node->details->uname,
-			 crm_str(param_digest), pnow_digest);
-
-		key = generate_op_key(rsc->id, task, interval);
-		custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
-	}
-
-	free_xml(pnow);
-	crm_free(pnow_digest);
-	crm_free(local_param_digest);
-	g_hash_table_destroy(local_rsc_params);
-
-	pe_free_action(action);
-	
-	return did_change;
-}
 
 gboolean
 unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
@@ -1400,18 +989,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	} else if(interval > 0 && rsc->role < RSC_ROLE_STARTED) {
 		crm_debug_2("Skipping recurring action %s for stopped resource", id);
 		return FALSE;
-	}
-	
-	if(rsc->orphan) {
-		crm_debug_2("Skipping param check for orphan: %s %s",
-			    rsc->id, task);
-
-	} else if(safe_str_eq(task, CRMD_ACTION_STOP)) {
-		crm_debug_2("Ignoring stop params: %s", id);
-
-	} else if(is_probe || safe_str_eq(task, CRMD_ACTION_START) || interval > 0) {
-		crm_debug_3("Checking resource definition: %s", rsc->id);
-		check_action_definition(rsc, node, xml_op, data_set);
 	}
 	
 	if(safe_str_eq(task, CRMD_ACTION_STOP)) {
@@ -1542,8 +1119,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			   || safe_str_eq(task, CRMD_ACTION_START) ) {
 				crm_warn("Handling failed %s for %s on %s",
 					 task, rsc->id, node->details->uname);
-				rsc2node_new("dont_run__failed_stopstart",
-					     rsc, -INFINITY, node, data_set);
+				resource_location(rsc, node, -INFINITY,
+					  "__dont_run__failed_stopstart__",
+					  data_set);
 			}
 			
 			if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
@@ -1597,305 +1175,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 }
 
 gboolean
-rsc_colocation_new(const char *id, enum con_strength strength,
-		   resource_t *rsc_lh, resource_t *rsc_rh,
-		   const char *state_lh, const char *state_rh)
-{
-	rsc_colocation_t *new_con      = NULL;
- 	rsc_colocation_t *inverted_con = NULL; 
-
-	if(rsc_lh == NULL){
-		pe_config_err("No resource found for LHS %s", id);
-		return FALSE;
-
-	} else if(rsc_rh == NULL){
-		pe_config_err("No resource found for RHS of %s", id);
-		return FALSE;
-	}
-
-	crm_malloc0(new_con, sizeof(rsc_colocation_t));
-	if(new_con == NULL) {
-		return FALSE;
-	}
-	if(safe_str_eq(state_lh, CRMD_ACTION_STARTED)) {
-		state_lh = NULL;
-	}
-	if(safe_str_eq(state_rh, CRMD_ACTION_STARTED)) {
-		state_rh = NULL;
-	}
-
-	new_con->id       = id;
-	new_con->rsc_lh   = rsc_lh;
-	new_con->rsc_rh   = rsc_rh;
-	new_con->strength = strength;
-	new_con->state_lh = state_lh;
-	new_con->state_rh = state_rh;
-
-	inverted_con = invert_constraint(new_con);
-	
-	crm_debug_4("Adding constraint %s (%p) to %s",
-		  new_con->id, new_con, rsc_lh->id);
-	
-	rsc_lh->rsc_cons = g_list_insert_sorted(
-		rsc_lh->rsc_cons, new_con, sort_cons_strength);
-	
-	crm_debug_4("Adding constraint %s (%p) to %s",
-		  inverted_con->id, inverted_con, rsc_rh->id);
-	
-	rsc_rh->rsc_cons = g_list_insert_sorted(
-		rsc_rh->rsc_cons, inverted_con, sort_cons_strength);
-	
-	return TRUE;
-}
-
-/* LHS before RHS */
-gboolean
-custom_action_order(
-	resource_t *lh_rsc, char *lh_action_task, action_t *lh_action,
-	resource_t *rh_rsc, char *rh_action_task, action_t *rh_action,
-	enum pe_ordering type, pe_working_set_t *data_set)
-{
-	order_constraint_t *order = NULL;
-
-	if((lh_action == NULL && lh_rsc == NULL)
-	   || (rh_action == NULL && rh_rsc == NULL)){
-		pe_config_err("Invalid inputs lh_rsc=%p, lh_a=%p,"
-			      " rh_rsc=%p, rh_a=%p",
-			      lh_rsc, lh_action, rh_rsc, rh_action);
-		crm_free(lh_action_task);
-		crm_free(rh_action_task);
-		return FALSE;
-	}
-
-	crm_malloc0(order, sizeof(order_constraint_t));
-	if(order == NULL) { return FALSE; }
-	
-	order->id             = data_set->order_id++;
-	order->type           = type;
-	order->lh_rsc         = lh_rsc;
-	order->rh_rsc         = rh_rsc;
-	order->lh_action      = lh_action;
-	order->rh_action      = rh_action;
-	order->lh_action_task = lh_action_task;
-	order->rh_action_task = rh_action_task;
-	
-	data_set->ordering_constraints = g_list_append(
-		data_set->ordering_constraints, order);
-	
-	if(lh_rsc != NULL && rh_rsc != NULL) {
-		crm_debug_4("Created ordering constraint %d (%s):"
-			 " %s/%s before %s/%s",
-			 order->id, ordering_type2text(order->type),
-			 lh_rsc->id, lh_action_task,
-			 rh_rsc->id, rh_action_task);
-		
-	} else if(lh_rsc != NULL) {
-		crm_debug_4("Created ordering constraint %d (%s):"
-			 " %s/%s before action %d (%s)",
-			 order->id, ordering_type2text(order->type),
-			 lh_rsc->id, lh_action_task,
-			 rh_action->id, rh_action_task);
-		
-	} else if(rh_rsc != NULL) {
-		crm_debug_4("Created ordering constraint %d (%s):"
-			 " action %d (%s) before %s/%s",
-			 order->id, ordering_type2text(order->type),
-			 lh_action->id, lh_action_task,
-			 rh_rsc->id, rh_action_task);
-		
-	} else {
-		crm_debug_4("Created ordering constraint %d (%s):"
-			 " action %d (%s) before action %d (%s)",
-			 order->id, ordering_type2text(order->type),
-			 lh_action->id, lh_action_task,
-			 rh_action->id, rh_action_task);
-	}
-	
-	return TRUE;
-}
-
-gboolean
-unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
-{
-	enum con_strength strength_e = pecs_ignore;
-
-	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
-	const char *id_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
-	const char *id_lh = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
-	const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-	const char *state_lh = crm_element_value(xml_obj, XML_RULE_ATTR_FROMSTATE);
-	const char *state_rh = crm_element_value(xml_obj, XML_RULE_ATTR_TOSTATE);
-
-	resource_t *rsc_lh = pe_find_resource(data_set->resources, id_lh);
-	resource_t *rsc_rh = pe_find_resource(data_set->resources, id_rh);
- 
-	if(rsc_lh == NULL) {
-		pe_config_err("No resource (con=%s, rsc=%s)", id, id_lh);
-		return FALSE;
-		
-	} else if(rsc_rh == NULL) {
-		pe_config_err("No resource (con=%s, rsc=%s)", id, id_rh);
-		return FALSE;
-	}
-
-	/* the docs indicate that only +/- INFINITY are allowed,
-	 *   but no-one ever reads the docs so all positive values will
-	 *   count as "must" and negative values as "must not"
-	 */
-	if(score == NULL || score[0] != '-') {
-		strength_e = pecs_must;
-	} else {
-		strength_e = pecs_must_not;
-	}
-	return rsc_colocation_new(id, strength_e, rsc_lh, rsc_rh,
-				  state_lh, state_rh);
-}
-
-static const char *
-invert_action(const char *action) 
-{
-	if(safe_str_eq(action, CRMD_ACTION_START)) {
-		return CRMD_ACTION_STOP;
-
-	} else if(safe_str_eq(action, CRMD_ACTION_STOP)) {
-		return CRMD_ACTION_START;
-		
-	} else if(safe_str_eq(action, CRMD_ACTION_PROMOTE)) {
-		return CRMD_ACTION_DEMOTE;
-		
-	} else if(safe_str_eq(action, CRMD_ACTION_DEMOTE)) {
-		return CRMD_ACTION_PROMOTE;
-
-	} else if(safe_str_eq(action, CRMD_ACTION_STARTED)) {
-		return CRMD_ACTION_STOPPED;
-		
-	} else if(safe_str_eq(action, CRMD_ACTION_STOPPED)) {
-		return CRMD_ACTION_STARTED;
-		
-	}
-	pe_err("Unknown action: %s", action);
-	return NULL;
-}
-
-
-gboolean
-unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
-{
-	gboolean symmetrical_bool = TRUE;
-	
-	const char *id     = crm_element_value(xml_obj, XML_ATTR_ID);
-	const char *type   = crm_element_value(xml_obj, XML_ATTR_TYPE);
-	const char *id_rh  = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
-	const char *id_lh  = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
-	const char *action = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
-	const char *action_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TOACTION);
-
-	const char *symmetrical = crm_element_value(
-		xml_obj, XML_CONS_ATTR_SYMMETRICAL);
-
-	resource_t *rsc_lh   = NULL;
-	resource_t *rsc_rh   = NULL;
-
-	if(xml_obj == NULL) {
-		pe_config_err("No constraint object to process.");
-		return FALSE;
-
-	} else if(id == NULL) {
-		pe_config_err("%s constraint must have an id",
-			crm_element_name(xml_obj));
-		return FALSE;
-		
-	} else if(id_lh == NULL || id_rh == NULL) {
-		pe_config_err("Constraint %s needs two sides lh: %s rh: %s",
-			      id, crm_str(id_lh), crm_str(id_rh));
-		return FALSE;
-	}
-
-	if(action == NULL) {
-		action = CRMD_ACTION_START;
-	}
-	if(action_rh == NULL) {
-		action_rh = action;
-	}
-	CRM_CHECK(action != NULL, return FALSE);
-	CRM_CHECK(action_rh != NULL, return FALSE);
-	
-	if(safe_str_eq(type, "before")) {
-		id_lh  = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
-		id_rh  = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
-		action = crm_element_value(xml_obj, XML_CONS_ATTR_TOACTION);
-		action_rh = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
-		if(action_rh == NULL) {
-			action_rh = CRMD_ACTION_START;
-		}
-		if(action == NULL) {
-			action = action_rh;
-		}
-	}
-
-	CRM_CHECK(action != NULL, return FALSE);
-	CRM_CHECK(action_rh != NULL, return FALSE);
-	
-	rsc_lh   = pe_find_resource(data_set->resources, id_rh);
-	rsc_rh   = pe_find_resource(data_set->resources, id_lh);
-
-	if(rsc_lh == NULL) {
-		pe_config_err("Constraint %s: no resource found for LHS of %s", id, id_lh);
-		return FALSE;
-	
-	} else if(rsc_rh == NULL) {
-		pe_config_err("Constraint %s: no resource found for RHS of %s", id, id_rh);
-		return FALSE;
-	}
-
-	custom_action_order(
-		rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
-		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
-		pe_ordering_optional, data_set);
-
-	if(rsc_rh->restart_type == pe_restart_restart
-	   && safe_str_eq(action, action_rh)) {
-		if(safe_str_eq(action, CRMD_ACTION_START)) {
-			crm_debug_2("Recover start-start: %s-%s",
-				rsc_lh->id, rsc_rh->id);
-  			order_start_start(rsc_lh, rsc_rh, pe_ordering_recover);
- 		} else if(safe_str_eq(action, CRMD_ACTION_STOP)) {
-			crm_debug_2("Recover stop-stop: %s-%s",
-				rsc_rh->id, rsc_lh->id);
-  			order_stop_stop(rsc_rh, rsc_lh, pe_ordering_recover); 
-		}
-	}
-
-	cl_str_to_boolean(symmetrical, &symmetrical_bool);
-	if(symmetrical_bool == FALSE) {
-		return TRUE;
-	}
-	
-	action = invert_action(action);
-	action_rh = invert_action(action_rh);
-	
-	custom_action_order(
-		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
-		rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
-		pe_ordering_optional, data_set);
-
-	if(rsc_lh->restart_type == pe_restart_restart
-	   && safe_str_eq(action, action_rh)) {
-		if(safe_str_eq(action, CRMD_ACTION_START)) {
-			crm_debug_2("Recover start-start (2): %s-%s",
-				rsc_lh->id, rsc_rh->id);
-  			order_start_start(rsc_lh, rsc_rh, pe_ordering_recover);
-		} else if(safe_str_eq(action, CRMD_ACTION_STOP)) { 
-			crm_debug_2("Recover stop-stop (2): %s-%s",
-				rsc_rh->id, rsc_lh->id);
-  			order_stop_stop(rsc_rh, rsc_lh, pe_ordering_recover); 
-		}
-	}
-	
-	return TRUE;
-}
-
-gboolean
 add_node_attrs(crm_data_t *xml_obj, node_t *node, pe_working_set_t *data_set)
 {
  	g_hash_table_insert(node->details->attrs,
@@ -1923,169 +1202,3 @@ add_node_attrs(crm_data_t *xml_obj, node_t *node, pe_working_set_t *data_set)
 	return TRUE;
 }
 
-gboolean
-unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
-{
-	const char *id_lh   = crm_element_value(xml_obj, "rsc");
-	const char *id      = crm_element_value(xml_obj, XML_ATTR_ID);
-	resource_t *rsc_lh  = pe_find_resource(data_set->resources, id_lh);
-	
-	if(rsc_lh == NULL) {
-		/* only a warn as BSC adds the constraint then the resource */
-		pe_config_warn("No resource (con=%s, rsc=%s)", id, id_lh);
-		return FALSE;
-
-	} else if(rsc_lh->is_managed == FALSE) {
-		crm_debug_2("Ignoring constraint %s: resource %s not managed",
-			    id, id_lh);
-		return FALSE;
-	}
-
-	xml_child_iter_filter(
-		xml_obj, rule_xml, XML_TAG_RULE,
-		crm_debug_2("Unpacking %s/%s", id, ID(rule_xml));
-		generate_location_rule(rsc_lh, rule_xml, data_set);
-		);
-	return TRUE;
-}
-
-rsc_to_node_t *
-generate_location_rule(
-	resource_t *rsc, crm_data_t *rule_xml, pe_working_set_t *data_set)
-{	
-	const char *rule_id = NULL;
-	const char *score   = NULL;
-	const char *boolean = NULL;
-	const char *role    = NULL;
-	const char *attr_score = NULL;
-
-	GListPtr match_L  = NULL;
-	
-	int score_f   = 0;
-	gboolean do_and = TRUE;
-	gboolean accept = TRUE;
-	gboolean raw_score = TRUE;
-	
-	rsc_to_node_t *location_rule = NULL;
-	
-	rule_id = crm_element_value(rule_xml, XML_ATTR_ID);
-	boolean = crm_element_value(rule_xml, XML_RULE_ATTR_BOOLEAN_OP);
-	role = crm_element_value(rule_xml, XML_RULE_ATTR_ROLE);
-
-	crm_debug_2("Processing rule: %s", rule_id);
-
-	if(role != NULL && text2role(role) == RSC_ROLE_UNKNOWN) {
-		pe_err("Bad role specified for %s: %s", rule_id, role);
-		return NULL;
-	}
-	
-	score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE);
-	if(score != NULL) {
-		score_f = char2score(score);
-
-	} else {
-		score = crm_element_value(
-			rule_xml, XML_RULE_ATTR_SCORE_ATTRIBUTE);
-		if(score == NULL) {
-			score = crm_element_value(
-				rule_xml, XML_RULE_ATTR_SCORE_MANGLED);
-		}
-		if(score != NULL) {
-			raw_score = FALSE;
-		}
-	}
-	
-	if(safe_str_eq(boolean, "or")) {
-		do_and = FALSE;
-	}
-	
-	location_rule = rsc2node_new(rule_id, rsc, 0, NULL, data_set);
-	
-	if(location_rule == NULL) {
-		return NULL;
-	}
-	if(role != NULL) {
-		crm_debug_2("Setting role filter: %s", role);
-		location_rule->role_filter = text2role(role);
-	}
-	if(do_and) {
-		match_L = node_list_dup(data_set->nodes, TRUE, FALSE);
-		slist_iter(
-			node, node_t, match_L, lpc,
-			node->weight = score_f;
-			);
-	}
-
-	xml_child_iter(
-		rule_xml, expr, 		
-
-		enum expression_type type = find_expression_type(expr);
-		if(type == not_expr) {
-			pe_err("Expression <%s id=%s...> is not valid",
-			       crm_element_name(expr), crm_str(ID(expr)));
-			continue;	
-		}	
-		
-		slist_iter(
-			node, node_t, data_set->nodes, lpc,
-
-			if(type == nested_rule) {
-				accept = test_rule(
-					expr, node->details->attrs,
-					RSC_ROLE_UNKNOWN, data_set->now);
-			} else {
-				accept = test_expression(
-					expr, node->details->attrs,
-					RSC_ROLE_UNKNOWN, data_set->now);
-			}
-			
-			if(raw_score == FALSE) {
-				attr_score = g_hash_table_lookup(
-					node->details->attrs, score);
-				if(attr_score == NULL) {
-					accept = FALSE;
-					pe_warn("node %s did not have a value"
-						" for %s",
-						node->details->uname, score);
-				} else {
-					score_f = char2score(score);
-				}
-			}
-			
-			if(!do_and && accept) {
-				node_t *local = pe_find_node_id(
-					match_L, node->details->id);
-				if(local == NULL) {
-					local = node_copy(node);
-					match_L = g_list_append(match_L, local);
-				}
-				local->weight = merge_weights(
-					local->weight, score_f);
-				crm_debug_5("node %s already matched",
-					    node->details->uname);
-				
-			} else if(do_and && !accept) {
-				/* remove it */
-				node_t *delete = pe_find_node_id(
-					match_L, node->details->id);
-				if(delete != NULL) {
-					match_L = g_list_remove(match_L,delete);
-					crm_debug_5("node %s did not match",
-						    node->details->uname);
-				}
-				crm_free(delete);
-			}
-			);
-		);
-	
-	location_rule->node_list_rh = match_L;
-	if(location_rule->node_list_rh == NULL) {
-		crm_debug_2("No matching nodes for rule %s", rule_id);
-		return NULL;
-	} 
-
-	crm_debug_3("%s: %d nodes matched",
-		    rule_id, g_list_length(location_rule->node_list_rh));
-	crm_action_debug_3(print_rsc_to_node("Added", location_rule, FALSE));
-	return location_rule;
-}

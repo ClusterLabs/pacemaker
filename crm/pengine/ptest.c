@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.76 2006/06/07 12:46:59 andrew Exp $ */
+/* $Id: ptest.c,v 1.77 2006/06/08 13:39:10 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -42,8 +42,9 @@
 #  include <getopt.h>
 #endif
 #include <glib.h>
-#include <lib/crm/pengine/pengine.h>
+#include <pengine.h>
 #include <lib/crm/pengine/utils.h>
+#include <allocate.h>
 
 gboolean use_stdin = FALSE;
 gboolean inhibit_exit = FALSE;
@@ -398,7 +399,7 @@ main(int argc, char **argv)
 	}
 
 	data_set.input = NULL;
-	cleanup_calculations(&data_set);
+	cleanup_alloc_calculations(&data_set);
 	destroy_graph(transition);
 	
 	crm_mem_stats(NULL);
