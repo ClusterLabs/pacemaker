@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.35 2006/06/07 12:46:57 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.36 2006/06/08 13:36:37 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -165,7 +165,7 @@ dump_resource_attr(
 	} 
 	
 	unpack_instance_attributes(
-		the_rsc->xml, XML_TAG_ATTR_SETS, current->details->attrs,
+		the_rsc->xml, XML_TAG_ATTR_SETS, current?current->details->attrs:NULL,
 		the_rsc->parameters, NULL, data_set->now);
 
 	if(the_rsc->parameters != NULL) {
