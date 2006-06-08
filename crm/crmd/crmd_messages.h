@@ -41,6 +41,7 @@ extern int register_fsa_input_adv(
 	gboolean prepend, const char *raised_from);
 
 extern void fsa_dump_queue(int log_level);
+extern void route_message(enum crmd_fsa_cause cause, ha_msg_input_t *input);
 
 #define crmd_fsa_stall(cur_input) if(cur_input != NULL) {		\
 		register_fsa_input_adv(					\

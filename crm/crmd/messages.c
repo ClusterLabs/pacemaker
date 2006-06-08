@@ -386,60 +386,50 @@ do_msg_route(long long action,
 	     enum crmd_fsa_input current_input,
 	     fsa_data_t *msg_data)
 {
-	enum crmd_fsa_input result = I_NULL;
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
-	gboolean routed = FALSE;
+	route_message(msg_data->fsa_cause, input);
+	return I_NULL;
+}
 
-	if(msg_data->fsa_cause != C_IPC_MESSAGE
-	   && msg_data->fsa_cause != C_HA_MESSAGE) {
-		/* dont try and route these */
-		crm_warn("Can only process HA and IPC messages");
-		return I_NULL;
-	}
+void
+route_message(enum crmd_fsa_cause cause, ha_msg_input_t *input)
+{
+	enum crmd_fsa_input result = I_NULL;
+
+	CRM_CHECK(cause == C_IPC_MESSAGE || cause == C_HA_MESSAGE, return);
 
 	/* try passing the buck first */
 	crm_debug_4("Attempting to route message");
-	routed = relay_message(input->msg, cause==C_IPC_MESSAGE);
-	
-	if(routed == FALSE) {
-		crm_debug_4("Message wasn't routed... try handling locally");
-		
-		/* calculate defer */
-		result = handle_message(input);
-		switch(result) {
-			case I_NULL:
-				break;
-			case I_CIB_OP:
-				break;
-			case I_ROUTER:
-				if(cause == C_IPC_MESSAGE) {
-					/* process local messages immediately
-					 *  it might be the TE telling us its
-					 *  done
-					 */
-					break;
-				}
-				/* fall through */
-			default:
-				crm_debug_4("Defering local processing of message");
-				register_fsa_input_later(
-					cause, result, msg_data->data);
-				
-				result = I_NULL;
-				break;
-		}
-		if(result == I_NULL) {
-			crm_debug_4("Message processed");
-			
-		} else {
-			register_fsa_input(cause, result, msg_data->data);
-		}
-		
-	} else {
+	if(relay_message(input->msg, cause==C_IPC_MESSAGE)) {
 		crm_debug_4("Message routed...");
 		input->msg = NULL;
+		return;
 	}
-	return I_NULL;
+	
+	crm_debug_4("Message wasn't routed... try handling locally");
+	
+	/* calculate defer */
+	result = handle_message(input);
+	switch(result) {
+		case I_NULL:
+			crm_debug_4("Message processed");
+			break;
+		case I_CIB_OP:
+			break;
+		case I_ROUTER:
+			break;
+		default:
+			crm_debug_4("Defering local processing of message");
+			register_fsa_input_later(cause, result, input);
+			
+			result = I_NULL;
+			break;
+	}
+
+	if(result != I_NULL) {
+		/* add to the front of the queue */
+		register_fsa_input(cause, result, input);
+	}
 }
 
 

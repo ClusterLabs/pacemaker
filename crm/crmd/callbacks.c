@@ -182,20 +182,10 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 	}
 
 	if(new_input == NULL) {
-		int msg_id = -1;
 		crm_log_message_adv(LOG_MSG, "HA[inbound]", msg);
 		new_input = new_ha_msg_input(msg);
-		msg_id = register_fsa_input(C_HA_MESSAGE, I_ROUTER, new_input);
-		crm_debug_2("Submitted %s from %s for processing (job=%d)",
-			    op, from, msg_id);
+		route_message(C_HA_MESSAGE, new_input);
 	}
-
-	
-#if 0
-	if(ha_msg_value(msg, XML_ATTR_REFERENCE) == NULL) {
-		ha_msg_add(new_input->msg, XML_ATTR_REFERENCE, seq);
-	}
-#endif
 
 	delete_ha_msg_input(new_input);
 	trigger_fsa(fsa_source);
@@ -240,7 +230,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		crm_debug_2("Processing msg from %s", curr_client->table_key);
 		crm_log_message_adv(LOG_DEBUG_2, "CRMd[inbound]", new_input->msg);
 		if(crmd_authorize_message(new_input, curr_client)) {
-			register_fsa_input(C_IPC_MESSAGE, I_ROUTER, new_input);
+			route_message(C_IPC_MESSAGE, new_input);
 		}
 		delete_ha_msg_input(new_input);
 		
