@@ -1,4 +1,4 @@
-/* $Id: status.h,v 1.1 2006/06/07 12:46:55 andrew Exp $ */
+/* $Id: status.h,v 1.2 2006/06/08 14:08:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -25,7 +25,9 @@
 
 typedef struct node_s node_t;
 typedef struct color_s color_t;
+typedef struct action_s action_t;
 typedef struct resource_s resource_t;
+typedef struct action_wrapper_s action_wrapper_t;
 
 typedef enum no_quorum_policy_e {
 	no_quorum_freeze,
@@ -166,6 +168,50 @@ struct resource_s {
 		GHashTable *parameters;	   
 };
 
+struct action_s 
+{
+		int         id;
+		int         priority;
+		resource_t *rsc;
+		void       *rsc_opaque;
+		node_t     *node;
+		const char *task;
+
+		char *uuid;
+		crm_data_t *op_entry;
+		
+		gboolean pseudo;
+		gboolean runnable;
+		gboolean optional;
+		gboolean failure_is_fatal;
+
+		enum rsc_start_requirement needs;
+		enum action_fail_response  on_fail;
+		enum rsc_role_e fail_role;
+		
+		gboolean dumped;
+		gboolean processed;
+
+		action_t *pre_notify;
+		action_t *pre_notified;
+		action_t *post_notify;
+		action_t *post_notified;
+		
+		int seen_count;
+
+		GHashTable *meta;
+		GHashTable *extra;
+		GHashTable *notify_keys;  /* do NOT free */
+		
+		GListPtr actions_before; /* action_warpper_t* */
+		GListPtr actions_after;  /* action_warpper_t* */
+};
+
+struct action_wrapper_s 
+{
+		enum pe_ordering type;
+		action_t *action;
+};
 
 gboolean cluster_status(pe_working_set_t *data_set);
 extern void set_working_set_defaults(pe_working_set_t *data_set);

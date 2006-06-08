@@ -1,4 +1,4 @@
-/* $Id: common.h,v 1.1 2006/06/07 12:46:55 andrew Exp $ */
+/* $Id: common.h,v 1.2 2006/06/08 14:08:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -92,6 +92,14 @@ enum rsc_start_requirement {
 	rsc_req_stonith
 };
 
+enum pe_ordering {
+	pe_ordering_manditory,
+	pe_ordering_restart,
+	pe_ordering_recover,
+	pe_ordering_postnotify,
+	pe_ordering_optional
+};
+
 enum rsc_role_e {
 	RSC_ROLE_UNKNOWN,
 	RSC_ROLE_STOPPED,
@@ -118,7 +126,6 @@ enum pe_print_options {
 	pe_print_max_details = 0x0040,
 	pe_print_rsconly = 0x0080,
 };
-
 
 extern int merge_weights(int w1, int w2);
 

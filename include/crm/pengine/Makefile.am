@@ -20,6 +20,3 @@ MAINTAINERCLEANFILES    = Makefile.in
 includedir=$(base_includedir)/heartbeat
 
 include_HEADERS		= common.h complex.h rules.h status.h
-
-clean-generic:
-	rm -f *~
