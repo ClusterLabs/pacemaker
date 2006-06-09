@@ -1,4 +1,4 @@
-.TH CIBADMIN 8 "$Date: 2006/05/01 21:09:55 $" "Linux-HA/OpenHA Project" "Heartbeat @VERSION@ Adminstration Guide"
+.TH CIBADMIN 8 "$Date: 2006/06/09 18:58:24 $" "Linux-HA/OpenHA Project" "Heartbeat @VERSION@ Adminstration Guide"
 .SH NAME
 \fIcibadmin\fP \- read, modify, or administer heartbeat Cluster Information Base
 .SH SYNOPSIS
@@ -79,7 +79,7 @@ Object to be modified must be specified with a \fB\-\-id\fP option.
 .TP 8
 .B \-\-cib_delete (\-D)
 Delete the first object matching the specified criteria.
-e.g., \f(CW</\fItagname\fP id="rsc1_op1" name="monitor"/>\fR.
+e.g., \f(CW<\fItagname\fP id="rsc1_op1" name="monitor"/>\fR.
 The tagname and all attributes must match in order for the element to be deleted.
 .TP 8
 .B \-\-cib_delete_alt (\-d)
@@ -143,7 +143,7 @@ create a file \fIfoo\fP with the following contents:
 .nf
 \f(CW<primitive id="R_10.10.10.101" class="ocf" type="IPaddr2"
  provider="heartbeat">
- <instance_attributes id="RA_R_10.10.10.10">
+ <instance_attributes id="RA_R_10.10.10.101">
   <attributes>
    <nvpair id="R_ip_P_ip" name="ip" value="10.10.10.101"/>
    <nvpair id="R_ip_P_nic" name="nic" value="eth0"/>
