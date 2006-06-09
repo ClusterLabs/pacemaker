@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.37 2006/06/09 10:15:06 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.38 2006/06/09 10:16:51 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -434,7 +434,7 @@ migrate_resource(
 	constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
 	
 	id = crm_concat("cli-prefer", rsc_id, '-');
-	can_run = create_xml_node(constraints, XML_CONS_TAG_RSC_LOCATION);
+	can_run = create_xml_node(NULL, XML_CONS_TAG_RSC_LOCATION);
 	crm_xml_add(can_run, XML_ATTR_ID, id);
 	crm_free(id);
 
@@ -520,6 +520,8 @@ migrate_resource(
 		crm_xml_add(expr, XML_EXPR_ATTR_OPERATION, "eq");
 		crm_xml_add(expr, XML_EXPR_ATTR_VALUE, preferred_node);
 		crm_xml_add(expr, XML_EXPR_ATTR_TYPE, "string");
+
+		add_node_copy(constraints, can_run);
 	}
 
 	if(preferred_node != NULL || existing_node != NULL) {
@@ -530,6 +532,7 @@ migrate_resource(
 	
 	free_xml(fragment);
 	free_xml(dont_run);
+	free_xml(can_run);
 	return rc;
 }
 
