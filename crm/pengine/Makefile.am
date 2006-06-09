@@ -56,7 +56,7 @@ lib_LTLIBRARIES	= libpengine.la
 halib_PROGRAMS	= ptest pengine
 
 ## SOURCES
-noinst_HEADERS	= allocate.h utils.h
+noinst_HEADERS	= allocate.h utils.h pengine.h
 #utils.h pengine.h
 
 libpengine_la_LDFLAGS	= -version-info 3:0:0
