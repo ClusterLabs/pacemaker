@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.36 2006/06/08 13:36:37 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.37 2006/06/09 10:15:06 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -439,7 +439,7 @@ migrate_resource(
 	crm_free(id);
 
 	id = crm_concat("cli-standby", rsc_id, '-');
-	dont_run = create_xml_node(constraints, XML_CONS_TAG_RSC_LOCATION);
+	dont_run = create_xml_node(NULL, XML_CONS_TAG_RSC_LOCATION);
 	crm_xml_add(dont_run, XML_ATTR_ID, id);
 	crm_free(id);
 
@@ -487,6 +487,8 @@ migrate_resource(
 		crm_xml_add(expr, XML_EXPR_ATTR_OPERATION, "eq");
 		crm_xml_add(expr, XML_EXPR_ATTR_VALUE, existing_node);
 		crm_xml_add(expr, XML_EXPR_ATTR_TYPE, "string");
+
+		add_node_copy(constraints, dont_run);
 	}
 	
 	if(preferred_node == NULL) {
@@ -527,6 +529,7 @@ migrate_resource(
 	}
 	
 	free_xml(fragment);
+	free_xml(dont_run);
 	return rc;
 }
 
@@ -560,7 +563,6 @@ main(int argc, char **argv)
 		{"un-migrate", 0, 0, 'U'},
 		{"resource",   1, 0, 'r'},
 		{"host-uname", 1, 0, 'H'},
-		{"host-uuid",  1, 0, 'h'},
 		{"force",      0, 0, 'f'},
 
 		{"set-parameter",   1, 0, 'p'},
@@ -699,11 +701,6 @@ main(int argc, char **argv)
 			case 'H':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				host_uname = optarg;
-				break;
-				
-			case 'h':
-				crm_debug_2("Option %c => %s", flag, optarg);
-				host_id = crm_strdup(optarg);
 				break;
 				
 			default:
