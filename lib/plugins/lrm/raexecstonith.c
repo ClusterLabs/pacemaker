@@ -188,7 +188,8 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	g_snprintf(buffer_tmp, sizeof(buffer_tmp), "%s_%d"
 		, 	"STONITH_RA_EXEC", getpid());
 	if (ST_OK != stonithd_signon(buffer_tmp)) {
-		cl_log(LOG_ERR, "STONITH_RA_EXEC: Cannot sign on the stonithd.");
+		cl_log(LOG_ERR, "%s:%d: Cannot sign on the stonithd."
+			, __FUNCTION__, __LINE__);
 		exit(EXECRA_UNKNOWN_ERROR);
 	}
 
@@ -280,8 +281,10 @@ get_resource_list(GList ** rsc_info)
 		*rsc_info = NULL;
 	}
 
+	cl_log(LOG_INFO, "To get stonith resource list");
 	if (ST_OK != stonithd_signon("STONITH_RA")) {
-		cl_log(LOG_ERR, "Can not signon to the stonithd.");
+		cl_log(LOG_ERR, "%s:%d: Can not signon to the stonithd."
+			, __FUNCTION__, __LINE__);
 		return -1;
 	}
 
