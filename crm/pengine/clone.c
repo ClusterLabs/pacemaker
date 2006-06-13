@@ -1,4 +1,4 @@
-/* $Id: clone.c,v 1.2 2006/06/08 13:39:10 andrew Exp $ */
+/* $Id: clone.c,v 1.3 2006/06/13 13:09:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -696,6 +696,37 @@ clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		NULL, last_rsc, data_set);
 }
 
+static resource_t*
+find_compatible_child(resource_t *local_child, resource_t *rsc)
+{
+	node_t *local_node = NULL;
+	node_t *node = NULL;
+	clone_variant_data_t *clone_data = NULL;
+	get_clone_variant_data(clone_data, rsc);
+	CRM_ASSERT(local_child->color != NULL);
+	
+	local_node = local_child->color->details->candidate_nodes->data;
+	if(local_node == NULL) {
+		crm_debug("Can't colocate unrunnable child %s with %s",
+			 local_child->id, rsc->id);
+		return NULL;
+	}
+	
+	slist_iter(
+		child_rsc, resource_t, clone_data->child_list, lpc,
+		CRM_ASSERT(child_rsc->color != NULL);
+		node = child_rsc->color->details->candidate_nodes->data;
+		if(node->details == local_node->details) {
+			crm_info("Colocating %s with %s on %s",
+				 local_child->id, child_rsc->id, node->details->uname);
+			return child_rsc;
+		}
+		);
+	crm_debug("Can't colocate child %s with %s",
+		 local_child->id, rsc->id);
+	return NULL;
+}
+
 void clone_rsc_colocation_lh(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
@@ -747,37 +778,29 @@ void clone_rsc_colocation_lh(
 	}
 	
 	if(do_interleave) {
-		resource_t *child_lh = NULL;
-		resource_t *child_rh = NULL;
+		resource_t *rh_child = NULL;
 		
-		GListPtr iter_lh = clone_data->child_list;
-		GListPtr iter_rh = clone_data_rh->child_list;
+		slist_iter(lh_child, resource_t, clone_data->child_list, lpc,
 
-		crm_debug_2("Interleaving %s with %s",
-			    constraint->rsc_lh->id, constraint->rsc_rh->id);
-		/* If the resource have different numbers of incarnations,
-		 *   then just do as many as are available
-		 */
-		while(iter_lh != NULL && iter_rh != NULL) {
-			child_lh = iter_lh->data;
-			child_rh = iter_rh->data;
-			iter_lh = iter_lh->next;
-			iter_rh = iter_rh->next;
-			
-			crm_debug_3("Colocating %s with %s", child_lh->id, child_rh->id);
-			child_lh->cmds->rsc_colocation_lh(child_lh, child_rh, constraint);
-		}
+			   CRM_ASSERT(lh_child != NULL);
+			   rh_child = find_compatible_child(lh_child, rsc_rh);
+			   if(rh_child == NULL) {
+				   continue;
+			   }
+			   lh_child->cmds->rsc_colocation_lh(
+				   lh_child, rh_child, constraint);
+			);
 		return;
-
 	}
 	
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 		
-		print_resource(LOG_DEBUG_3, "LHS", child_rsc, TRUE);
 		child_rsc->cmds->rsc_colocation_lh(child_rsc, constraint->rsc_rh, constraint);
 		);
 }
+
+
 
 void clone_rsc_colocation_rh(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
