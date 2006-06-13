@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.65 2006/06/08 13:39:10 andrew Exp $ */
+/* $Id: group.c,v 1.66 2006/06/13 13:08:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -199,10 +199,10 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 		child_rsc->cmds->internal_constraints(child_rsc, data_set);
 
-		if(group_data->colocated) {
+		if(group_data->colocated && child_rsc != group_data->first_child) {
 			rsc_colocation_new(
-				"pe_group_internal_colo", pecs_must,
-				group_data->self, child_rsc,
+				"group:internal_colocation", pecs_must,
+				group_data->first_child, child_rsc,
 				NULL, NULL);
 		}
 	
@@ -282,7 +282,6 @@ void group_rsc_colocation_lh(
 	crm_debug_4("Processing constraints from %s", rsc_lh->id);
 
 	get_group_variant_data(group_data, rsc_lh);
-	CRM_CHECK(group_data->self != NULL, return);
 
 	if(group_data->colocated) {
 		group_data->first_child->cmds->rsc_colocation_lh(
@@ -308,7 +307,6 @@ void group_rsc_colocation_rh(
 {
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc_rh);
-	CRM_CHECK(group_data->self != NULL, return);
 	CRM_CHECK(rsc_lh->variant == pe_native, return);
 
 	crm_debug_3("Processing RH of constraint %s", constraint->id);
