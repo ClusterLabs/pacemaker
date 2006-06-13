@@ -1,4 +1,4 @@
-/* $Id: allocate.c,v 1.3 2006/06/08 16:53:01 andrew Exp $ */
+/* $Id: allocate.c,v 1.4 2006/06/13 09:43:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -323,27 +323,31 @@ stage4(pe_working_set_t *data_set)
 		}
 		
 		choose_node_from_list(color);
-		chosen = color->details->chosen_node;
 		
 		slist_iter(
 			rsc, resource_t, color->details->allocated_resources, lpc2,
 			crm_debug_2("Processing colocation constraints for %s"
 				    " now that color %d is allocated",
-				    rsc->id, color->details->id); 
-
-			if(chosen == NULL) {
-				rsc->next_role = RSC_ROLE_STOPPED;
-
-			} else if(rsc->next_role == RSC_ROLE_UNKNOWN) {
-				rsc->next_role = RSC_ROLE_STARTED;
-			}
-
+				    rsc->id, color->details->id);
+			
 			slist_iter(
 				constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
 				rsc->cmds->rsc_colocation_lh(
 					rsc, constraint->rsc_rh, constraint);
 				);	
 			
+			);
+
+		chosen = color->details->chosen_node;
+		
+		slist_iter(
+			rsc, resource_t, color->details->allocated_resources, lpc2,
+			if(chosen == NULL) {
+				rsc->next_role = RSC_ROLE_STOPPED;
+
+			} else if(rsc->next_role == RSC_ROLE_UNKNOWN) {
+				rsc->next_role = RSC_ROLE_STARTED;
+			}
 			);
 		);
 

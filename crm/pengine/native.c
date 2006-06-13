@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.150 2006/06/08 13:39:10 andrew Exp $ */
+/* $Id: native.c,v 1.151 2006/06/13 09:43:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -191,9 +191,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
 
-		crm_action_debug_3(
-			print_rsc_colocation(
-				"Pre-Processing constraint", constraint,FALSE));
+		crm_debug_3("Pre-Processing %s", constraint->id);
 		
 		rsc->cmds->rsc_colocation_lh(
 			rsc, constraint->rsc_rh, constraint);
@@ -226,9 +224,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 #if 1
 	slist_iter(
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
-		crm_action_debug_3(
-			print_rsc_colocation(
-				"Post-Processing constraint",constraint,FALSE));
+		crm_debug_3("Post-Processing %s", constraint->id);
 		rsc->cmds->rsc_colocation_lh(
 			rsc, constraint->rsc_rh, constraint);
 		);
@@ -585,12 +581,32 @@ void native_rsc_colocation_rh(
 		if(update_lh) {
 			pe_warn("Marking resource %s unrunnable as a result",
 				 rsc_lh->id);
-			rsc_lh->runnable = FALSE;
+			resource_location(rsc_lh, NULL, -INFINITY,
+					  constraint->id, NULL);
+			if(rsc_lh->color) {
+				crm_free(rsc_lh->color->details->chosen_node);
+				rsc_lh->color->details->chosen_node = NULL;
+				
+				pe_free_shallow_adv(
+					rsc_lh->color->details->candidate_nodes,
+					TRUE);
+				rsc_lh->color->details->candidate_nodes = NULL;
+			}
 		}
 		if(update_rh) {
 			pe_warn("Marking resource %s unrunnable as a result",
 				 rsc_rh->id);
-			rsc_rh->runnable = FALSE;
+			resource_location(rsc_rh, NULL, -INFINITY,
+					  constraint->id, NULL);
+			if(rsc_rh->color) {
+				crm_free(rsc_rh->color->details->chosen_node);
+				rsc_rh->color->details->chosen_node = NULL;
+
+				pe_free_shallow_adv(
+					rsc_rh->color->details->candidate_nodes,
+					TRUE);
+				rsc_rh->color->details->candidate_nodes = NULL;
+			}
 		}		
 	}
 
