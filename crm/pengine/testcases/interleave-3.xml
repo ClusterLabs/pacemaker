@@ -114,7 +114,7 @@
           </attributes>
         </instance_attributes>
       </primitive>
-      <clone id="DoFencing" resource_stickiness="200">
+      <clone id="DoFencing" interleave="1" resource_stickiness="200">
         <instance_attributes>
           <attributes>
             <nvpair id="1" name="clone_max" value="8"/>
