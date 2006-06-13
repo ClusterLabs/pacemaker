@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.4 2006/06/08 13:39:10 andrew Exp $ */
+/* $Id: utils.c,v 1.5 2006/06/13 10:30:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1147,9 +1147,14 @@ resource_location(resource_t *rsc, node_t *node, int score, const char *tag,
 	if(node != NULL) {
 		resource_node_score(rsc, node, score, tag);
 
-	} else {
+	} else if(data_set != NULL) {
 		slist_iter(
 			node, node_t, data_set->nodes, lpc,
+			resource_node_score(rsc, node, score, tag);
+			);
+	} else {
+		slist_iter(
+			node, node_t, rsc->allowed_nodes, lpc,
 			resource_node_score(rsc, node, score, tag);
 			);
 	}
