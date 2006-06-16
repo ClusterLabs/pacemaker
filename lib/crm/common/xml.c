@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.92 2006/06/08 16:52:06 andrew Exp $ */
+/* $Id: xml.c,v 1.93 2006/06/16 10:07:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -42,6 +42,8 @@
 #  include <bzlib.h>
 #endif
 #include <crm/dmalloc_wrapper.h>
+
+#define XML_BUFFER_SIZE	4096
 
 int is_comment_start(const char *input);
 int is_comment_end(const char *input);
@@ -472,55 +474,20 @@ string2xml(const char *input)
 crm_data_t *
 stdin2xml(void) 
 {
-	int lpc = 0;
-	int MAX_XML_BUFFER = 1000000;
-	
-	int ch = 0;
-	gboolean more = TRUE;
-	gboolean inTag = FALSE;
-	FILE *input = stdin;
+ 	size_t data_length = 0;
+ 	size_t read_chars = 0;
+  
+  	char *xml_buffer = NULL;
+  	crm_data_t *xml_obj = NULL;
+  
+ 	do {
+ 		crm_realloc(xml_buffer, XML_BUFFER_SIZE + data_length + 1);
+ 		read_chars = fread(xml_buffer + data_length, 1, XML_BUFFER_SIZE, stdin);
+ 		data_length += read_chars;
+ 	} while (read_chars > 0);
+  	
+ 	xml_buffer[data_length] = '\0';
 
-	char *xml_buffer = NULL;
-	crm_data_t *xml_obj = NULL;
-
-	crm_malloc0(xml_buffer, (MAX_XML_BUFFER+1));
-	
-	while (more && lpc < MAX_XML_BUFFER) {
-		ch = fgetc(input);
-/* 		crm_debug_3("Got [%c]", ch); */
-		switch(ch) {
-			case EOF: 
-			case 0:
-				ch = 0;
-				more = FALSE; 
-				xml_buffer[lpc++] = ch;
-				break;
-			case '>':
-			case '<':
-				inTag = TRUE;
-				if(ch == '>') { inTag = FALSE; }
-				xml_buffer[lpc++] = ch;
-				break;
-			case '\n':
-			case '\r':
-			case '\t':
-			case ' ':
-				ch = ' ';
-				if(inTag) {
-					xml_buffer[lpc++] = ch;
-				} 
-				break;
-			default:
-				xml_buffer[lpc++] = ch;
-				break;
-		}
-	}
-
-	if(lpc >= MAX_XML_BUFFER) {
-		crm_err("Buffer limit exceeded... please annoy the developers to increase this value.");
-		crm_err("Please try reading from a file instead.");
-	}
-	xml_buffer[MAX_XML_BUFFER] = 0;
 	xml_obj = string2xml(xml_buffer);
 	crm_free(xml_buffer);
 

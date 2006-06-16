@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.97 2006/05/23 07:50:50 andrew Exp $ */
+/* $Id: crm.h,v 1.98 2006/06/16 10:07:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -279,8 +279,16 @@ extern void crm_log_message_adv(
 			crm_crit("Out of memory... exiting");		\
 			cl_flush_logs();				\
 			exit(1);					\
-		} else {						\
-			memset(new_obj, 0, length);			\
+		}							\
+		memset(new_obj, 0, length);				\
+	}
+#  define crm_realloc(new_obj,length)					\
+	{								\
+		new_obj = realloc(new_obj, length);			\
+		if(new_obj == NULL) {					\
+			crm_crit("Out of memory... exiting");		\
+			cl_flush_logs();				\
+			exit(1);					\
 		}							\
 	}
 #  define crm_free(x) if(x) { free(x); x=NULL; }
@@ -303,6 +311,21 @@ extern void crm_log_message_adv(
 		}							\
 		memset(new_obj, 0, length);				\
 	}
+/* it's not a memory leak to already have an object to realloc, that's
+ * the usual case, however if it does have a value, it must have been
+ * allocated by the same allocator! */ 
+#    define crm_realloc(new_obj,length)					\
+	{								\
+		if (new_obj != NULL) {					\
+			CRM_ASSERT(cl_is_allocated(new_obj) == 1);	\
+		}							\
+		new_obj = cl_realloc(new_obj, length);			\
+		if(new_obj == NULL) {					\
+			crm_crit("Out of memory... exiting");		\
+			cl_flush_logs();				\
+			abort();					\
+		}							\
+	}
 #    define crm_free(x) if(x) {				\
 		CRM_ASSERT(cl_is_allocated(x) == 1);	\
 		cl_free(x);				\
@@ -318,6 +341,15 @@ extern void crm_log_message_adv(
 			abort();					\
 		}							\
 		memset(new_obj, 0, length);				\
+	}
+#    define crm_realloc(new_obj,length)					\
+	{								\
+		new_obj = cl_realloc(new_obj, length);			\
+		if(new_obj == NULL) {					\
+			crm_crit("Out of memory... exiting");		\
+			cl_flush_logs();				\
+			abort();					\
+		}							\
 	}
 #    define crm_free(x) if(x) {				\
 		cl_free(x);				\
