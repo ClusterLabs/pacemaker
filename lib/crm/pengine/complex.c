@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.3 2006/06/08 13:39:10 andrew Exp $ */
+/* $Id: complex.c,v 1.4 2006/06/16 11:03:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -157,14 +157,10 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		xml_obj, prop_name, prop_value,
 		add_hash_param((*rsc)->meta, prop_name, prop_value);
 		);
-	
+
 	unpack_instance_attributes(
 		xml_obj, XML_TAG_META_SETS, NULL, (*rsc)->meta,
 		NULL, data_set->now);
-
-	if(parent != NULL) {
-		g_hash_table_foreach(parent->meta, dup_attr, (*rsc)->meta);
-	}	
 
 	/* populate from the regular attributes until the GUI can create
 	 * meta attributes
@@ -174,6 +170,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		NULL, data_set->now);
 
 	if(parent != NULL) {
+		g_hash_table_foreach(parent->meta, dup_attr, (*rsc)->meta);
 		g_hash_table_foreach(
 			parent->parameters, dup_attr, (*rsc)->parameters);
 	}	
