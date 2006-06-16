@@ -1,4 +1,4 @@
-/* $Id: allocate.c,v 1.5 2006/06/16 07:28:34 andrew Exp $ */
+/* $Id: allocate.c,v 1.6 2006/06/16 08:09:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1218,7 +1218,6 @@ generate_location_rule(
 			raw_score = FALSE;
 		}
 	}
-	
 	if(safe_str_eq(boolean, "or")) {
 		do_and = FALSE;
 	}
@@ -1272,21 +1271,27 @@ generate_location_rule(
 						" for %s",
 						node->details->uname, score);
 				} else {
-					score_f = char2score(score);
+					crm_debug_2("node %s had value %s for %s",
+						 node->details->uname, attr_score, score);
+					score_f = char2score(attr_score);
 				}
 			}
 			
-			if(!do_and && accept) {
+			if(accept) {
 				node_t *local = pe_find_node_id(
 					match_L, node->details->id);
-				if(local == NULL) {
+				if(local == NULL && do_and) {
+					continue;
+					
+				} else if(local == NULL) {
 					local = node_copy(node);
 					match_L = g_list_append(match_L, local);
 				}
+				
 				local->weight = merge_weights(
 					local->weight, score_f);
-				crm_debug_5("node %s already matched",
-					    node->details->uname);
+				crm_debug_3("node %s now has weight %d",
+					    node->details->uname,local->weight);
 				
 			} else if(do_and && !accept) {
 				/* remove it */

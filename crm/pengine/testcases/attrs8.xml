@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
+<cib dc_uuid="uuid1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+	<attributes>
+	  <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
+	</attributes>
+    </cluster_property_set></crm_config>
+    <nodes>
+      <node id="uuid1" uname="node1" type="member"/>
+      <node id="uuid2" uname="node2" type="member"/>
+    </nodes>
+    <resources>
+      <primitive id="rsc1" class="heartbeat" type="apache"/>
+    </resources>
+    <constraints>
+      <rsc_location id="run_rsc1" rsc="rsc1">
+	<rule id="pingd:rule" score_attribute="pingd">
+	  <expression attribute="pingd" operation="defined" id="blah"/>
+	</rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+      <transient_attributes id="uuid1">
+	<instance_attributes id="status-uuid1">
+	  <attributes>
+	    <nvpair id="status-uuid1-probe_complete" name="probe_complete" value="true"/>
+	    <nvpair id="status-uuid1-pingd" name="pingd" value="200"/>
+	  </attributes>
+	</instance_attributes>
+      </transient_attributes>
+    </node>
+    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+      <transient_attributes id="uuid2">
+	<instance_attributes id="status-uuid2">
+	  <attributes>
+	    <nvpair id="status-uuid2-probe_complete" name="probe_complete" value="true"/>
+	    <nvpair id="status-uuid2-pingd" name="pingd" value="400"/>
+	  </attributes>
+	</instance_attributes>
+      </transient_attributes>
+    </node>
+  </status>
+</cib>

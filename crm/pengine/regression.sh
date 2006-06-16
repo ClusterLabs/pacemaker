@@ -101,6 +101,7 @@ do_test attrs4 "string: exists       "
 do_test attrs5 "string: not_exists   "
 do_test attrs6 "is_dc: true          "
 do_test attrs7 "is_dc: false         "
+do_test attrs8 "score_attribute      "
 
 echo ""
 do_test mon-rsc-1 "Schedule Monitor - start"
