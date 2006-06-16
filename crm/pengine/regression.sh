@@ -86,6 +86,7 @@ do_test order3 "Order stop	  "
 do_test order4 "Order (multiple)  "
 do_test order5 "Order (move)  "
 do_test order6 "Order (move w/ restart)  "
+do_test order7 "Order (manditory)  "
 
 #echo ""
 #do_test agent1 "version: lt (empty)"

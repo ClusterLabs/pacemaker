@@ -25,6 +25,17 @@ failed=.regression.failed.diff
 > $failed
 
 num_failed=0
+function ptest() {
+    build_dir=`pwd | sed -e "s/Development/build/"`
+    if [ -x ptest ]; then
+	./ptest $*
+    elif [ -x $build_dir/ptest ]; then
+	$build_dir/ptest $*
+    else
+	echo No build directory found, using installed version
+	`which ptest` $*
+    fi
+}
 
 function do_test {
 
@@ -50,7 +61,7 @@ function do_test {
     fi
 
 #    ../admin/crm_verify -X $input
-    ./ptest -V -X $input -D $dot_output -G $output
+    ptest -V -X $input -D $dot_output -G $output
 
     if [ -s core ]; then
 	echo "Test $name	($base)...	Moved core to core.${base}";

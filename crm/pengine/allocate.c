@@ -1,4 +1,4 @@
-/* $Id: allocate.c,v 1.4 2006/06/13 09:43:12 andrew Exp $ */
+/* $Id: allocate.c,v 1.5 2006/06/16 07:28:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1027,11 +1027,13 @@ gboolean
 unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 {
 	gboolean symmetrical_bool = TRUE;
+	enum pe_ordering cons_weight = pe_ordering_optional;
 	
 	const char *id     = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *type   = crm_element_value(xml_obj, XML_ATTR_TYPE);
 	const char *id_rh  = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
 	const char *id_lh  = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
+	const char *score  = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
 	const char *action = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
 	const char *action_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TOACTION);
 
@@ -1093,10 +1095,15 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		return FALSE;
 	}
 
+	if(crm_atoi(score, "0") > 0) {
+		/* the name seems weird but the effect is correct */
+		cons_weight = pe_ordering_restart;
+	}
+	
 	custom_action_order(
 		rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
 		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
-		pe_ordering_optional, data_set);
+		cons_weight, data_set);
 
 	if(rsc_rh->restart_type == pe_restart_restart
 	   && safe_str_eq(action, action_rh)) {
@@ -1122,7 +1129,7 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	custom_action_order(
 		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
 		rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
-		pe_ordering_optional, data_set);
+		cons_weight, data_set);
 
 	if(rsc_lh->restart_type == pe_restart_restart
 	   && safe_str_eq(action, action_rh)) {

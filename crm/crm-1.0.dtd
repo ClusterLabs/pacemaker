@@ -148,6 +148,7 @@
           to        CDATA #REQUIRED
           action    (start|stop)         'start'
           type      (before|after)       'after'
+          score     CDATA                '0'
           symmetrical    (true|1|false|0) 'true'>
 <!-- Annotated version -->
 

@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.151 2006/06/13 09:43:12 andrew Exp $ */
+/* $Id: native.c,v 1.152 2006/06/16 07:28:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -636,17 +636,6 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 		lh_actions = g_list_append(NULL, lh_action);
 
 	} else if(lh_action == NULL && lh_rsc != NULL) {
-#if 0
-/* this should be safe to remove */
-		if(order->strength == pecs_must) {
-			crm_debug_4("No LH-Side (%s/%s) found for constraint..."
-				  " creating",
-				  lh_rsc->id, order->lh_action_task);
-			pe_err("BROKEN CODE");
-			custom_action(
-				lh_rsc, order->lh_action_task, NULL, NULL);
-		}
-#endif
 		lh_actions = find_actions(
 			lh_rsc->actions, order->lh_action_task, NULL);
 
@@ -654,22 +643,22 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 			crm_debug_4("No LH-Side (%s/%s) found for constraint",
 				  lh_rsc->id, order->lh_action_task);
 
-			if(order->rh_rsc != NULL) {
-				crm_debug_4("RH-Side was: (%s/%s)",
-					  order->rh_rsc->id,
-					  order->rh_action_task);
+			if(lh_rsc->next_role == RSC_ROLE_STOPPED) {
+				resource_t *rh_rsc = order->rh_rsc;
+				if(order->rh_action && order->type == pe_ordering_restart) {
+					crm_debug("No LH(%s/%s) found for RH(%s)...",
+						lh_rsc->id, order->lh_action_task,
+						order->rh_action->uuid);
+					order->rh_action->runnable = FALSE;
+					return;
 				
-			} else if(order->rh_action != NULL
-				  && order->rh_action->rsc != NULL) {
-				crm_debug_4("RH-Side was: (%s/%s)",
-					  order->rh_action->rsc->id,
-					  order->rh_action_task);
-				
-			} else if(order->rh_action != NULL) {
-				crm_debug_4("RH-Side was: %s",
-					  order->rh_action_task);
-			} else {
-				crm_debug_4("RH-Side was NULL");
+				} else if(rh_rsc != NULL) {
+					crm_debug("No LH(%s/%s) found for RH(%s/%s)...",
+						  lh_rsc->id, order->lh_action_task,
+						  rh_rsc->id, order->rh_action_task);
+					rh_rsc->cmds->rsc_order_rh(NULL, rh_rsc, order);
+					return;
+				}
 			}
 			
 			return;
@@ -757,7 +746,13 @@ void native_rsc_order_rh(
 	slist_iter(
 		rh_action_iter, action_t, rh_actions, lpc,
 
+		if(lh_action) {
 		order_actions(lh_action, rh_action_iter, order->type); 
+
+		} else if(order->type == pe_ordering_restart) {
+			rh_action_iter->runnable = FALSE;
+		}
+		
 		);
 
 	pe_free_shallow_adv(rh_actions, FALSE);
