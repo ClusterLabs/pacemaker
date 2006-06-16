@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.4 2006/06/08 13:39:10 andrew Exp $ */
+/* $Id: unpack.c,v 1.5 2006/06/16 09:29:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -607,8 +607,24 @@ increment_clone(char *last_rsc_id)
 }
 
 static resource_t *
+create_fake_resource(const char *rsc_id, crm_data_t *rsc_entry, pe_working_set_t *data_set) 
+{
+	resource_t *rsc = NULL;
+	crm_data_t *xml_rsc  = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
+	crm_log_xml_info(rsc_entry, "Orphan resource");
+	copy_in_properties(xml_rsc, rsc_entry);
+	crm_xml_add(xml_rsc, XML_ATTR_ID, rsc_id);
+	
+	common_unpack(xml_rsc, &rsc, NULL, data_set);
+	rsc->orphan = TRUE;
+	
+	data_set->resources = g_list_append(data_set->resources, rsc);
+	return rsc;
+}
+
+static resource_t *
 unpack_find_resource(
-	pe_working_set_t *data_set, node_t *node, const char *rsc_id)
+	pe_working_set_t *data_set, node_t *node, const char *rsc_id, crm_data_t *rsc_entry)
 {
 	resource_t *rsc = NULL;
 	gboolean is_duped_clone = FALSE;
@@ -619,7 +635,13 @@ unpack_find_resource(
 		rsc = pe_find_resource(data_set->resources, alt_rsc_id);
 		/* no match */
 		if(rsc == NULL) {
-			crm_debug_3("not found");
+			crm_err("%s not found: %d", alt_rsc_id, is_duped_clone);
+			if(is_duped_clone) {
+				/* create one */
+				rsc = create_fake_resource(alt_rsc_id, rsc_entry, data_set);
+				crm_info("Making sure orphan %s is stopped", rsc->id);
+				resource_location(rsc, NULL, -INFINITY, "__orphan_clone_dont_run__", data_set);
+			}
 			break;
 			
 			/* not running anywhere else */
@@ -655,27 +677,14 @@ static resource_t *
 process_orphan_resource(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_set) 
 {
 	resource_t *rsc = NULL;
-	gboolean is_duped_clone = FALSE;
 	const char *rsc_id   = crm_element_value(rsc_entry, XML_ATTR_ID);
-	crm_data_t *xml_rsc  = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
 	
 	crm_log_xml_info(rsc_entry, "Orphan resource");
-	
 	pe_config_warn("Nothing known about resource %s running on %s",
 		       rsc_id, node->details->uname);
-
-	if(pe_find_resource(data_set->resources, rsc_id) != NULL) {
-		is_duped_clone = TRUE;
-	}
+	rsc = create_fake_resource(rsc_id, rsc_entry, data_set);
 	
-	copy_in_properties(xml_rsc, rsc_entry);
-	
-	common_unpack(xml_rsc, &rsc, NULL, data_set);
-	rsc->orphan = TRUE;
-	
-	data_set->resources = g_list_append(data_set->resources, rsc);
-	
-	if(data_set->stop_rsc_orphans == FALSE && is_duped_clone == FALSE) {
+	if(data_set->stop_rsc_orphans == FALSE) {
 		rsc->is_managed = FALSE;
 		
 	} else {
@@ -770,7 +779,7 @@ unpack_lrm_rsc_state(
 	enum action_fail_response on_fail = FALSE;
 	enum rsc_role_e saved_role = RSC_ROLE_UNKNOWN;
 	
-	resource_t *rsc = unpack_find_resource(data_set, node, rsc_id);
+	resource_t *rsc = unpack_find_resource(data_set, node, rsc_id, rsc_entry);
 	
 	crm_debug_3("[%s] Processing %s on %s",
 		    crm_element_name(rsc_entry), rsc_id, node->details->uname);
