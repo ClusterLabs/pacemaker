@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.26 2006/06/07 12:46:57 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.27 2006/06/16 10:00:17 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -57,7 +57,7 @@
 /* GMainLoop *mainloop = NULL; */
 const char *crm_system_name = "crm_mon";
 
-#define OPTARGS	"V?i:nrh:cdp:1"
+#define OPTARGS	"V?i:nrh:cdp:1X:"
 
 
 void usage(const char *cmd, int exit_status);
@@ -70,6 +70,7 @@ void make_daemon(gboolean daemonize, const char *pidfile);
 gboolean mon_timer_popped(gpointer data);
 void mon_update(const HA_Message*, int, int, crm_data_t*,void*);
 
+char *xml_file = NULL;
 char *as_html_file = NULL;
 char *pid_file = NULL;
 gboolean as_console = FALSE;
@@ -112,6 +113,7 @@ main(int argc, char **argv)
 		{"one-shot", 0, 0, '1'},		
 		{"daemonize", 0, 0, 'd'},		
 		{"pid-file", 0, 0, 'p'},		
+		{"xml-file", 0, 0, 'X'},		
 
 		{0, 0, 0, 0}
 	};
@@ -150,6 +152,10 @@ main(int argc, char **argv)
 				break;
 			case 'p':
 				pid_file = crm_strdup(optarg);
+				break;
+			case 'X':
+				xml_file = crm_strdup(optarg);
+				one_shot = TRUE;
 				break;
 			case 'h':
 				as_html_file = crm_strdup(optarg);
@@ -199,7 +205,6 @@ main(int argc, char **argv)
 	if(one_shot) {
 		daemonize = FALSE;
 		as_console = FALSE;
-		as_html_file = NULL;
 	}
 	
 	if(daemonize && as_html_file == NULL) {
@@ -220,6 +225,11 @@ main(int argc, char **argv)
 	if(one_shot == FALSE) {
 		timer_id = Gmain_timeout_add(
 			interval, mon_timer_popped, NULL);
+	} else if(xml_file != NULL) {
+		FILE *xml_strm = fopen(xml_file, "r");
+		crm_data_t *cib_object = file2xml(xml_strm);
+		one_shot = TRUE;
+		mon_update(NULL, 0, cib_ok, cib_object, NULL);
 	}
 
 	mon_timer_popped(NULL);
@@ -300,7 +310,6 @@ mon_timer_popped(gpointer data)
 	return FALSE;
 }
 
-
 void
 mon_update(const HA_Message *msg, int call_id, int rc,
 	   crm_data_t *output, void*user_data) 
@@ -323,6 +332,10 @@ mon_update(const HA_Message *msg, int call_id, int rc,
 		} else {
 			print_status(cib);
 		}
+		if(one_shot) {
+			exit(LSB_EXIT_OK);
+		}
+		
 			
 	} else if(one_shot) {
 		fprintf(stderr, "Query failed: %s", cib_error2string(rc));
@@ -458,10 +471,6 @@ print_status(crm_data_t *cib)
 			);
 	}
 
-	if(one_shot) {
-		exit(LSB_EXIT_OK);
-	}
-	
 	refresh();
 	data_set.input = NULL;
 	cleanup_calculations(&data_set);
@@ -596,6 +605,7 @@ print_html_status(crm_data_t *cib, const char *filename)
 		cl_perror("Unable to rename %s->%s", filename_tmp, filename);
 	}
 	crm_free(filename_tmp);
+
 	return 0;
 }
 

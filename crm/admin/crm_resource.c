@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.38 2006/06/09 10:16:51 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.39 2006/06/16 10:00:17 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -67,8 +67,9 @@ const char *prop_set = NULL;
 char rsc_cmd = 'L';
 char *our_pid = NULL;
 IPC_Channel *crmd_channel = NULL;
+char *xml_file = NULL;
 
-#define OPTARGS	"V?LRQXDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:f"
+#define OPTARGS	"V?LRQxDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:fX:"
 
 static int
 do_find_resource(const char *rsc, pe_working_set_t *data_set)
@@ -96,7 +97,9 @@ do_find_resource(const char *rsc, pe_working_set_t *data_set)
 	if(BE_QUIET == FALSE && found == 0) {
 		fprintf(stderr, "resource %s is NOT running\n", rsc);
 	}
-					
+	
+	the_rsc->fns->print(the_rsc, NULL, pe_print_printf, stdout);
+	
 	return 0;
 }
 
@@ -558,7 +561,7 @@ main(int argc, char **argv)
 		{"list",       0, 0, 'L'},
 		{"refresh",    0, 0, 'R'},
 		{"reprobe",    0, 0, 'P'},
-		{"query-xml",  0, 0, 'X'},
+		{"query-xml",  0, 0, 'x'},
 		{"delete",     0, 0, 'D'},
 		{"cleanup",    0, 0, 'C'},
 		{"locate",     0, 0, 'W'},
@@ -576,6 +579,8 @@ main(int argc, char **argv)
 		{"set-property",    1, 0, 'S'},
 		{"resource-type",   1, 0, 't'},
 
+		{"xml-file", 0, 0, 'X'},		
+		
 		{0, 0, 0, 0}
 	};
 #endif
@@ -607,6 +612,9 @@ main(int argc, char **argv)
 			case '?':
 				usage(crm_system_name, LSB_EXIT_OK);
 				break;
+			case 'X':
+				xml_file = crm_strdup(optarg);
+				break;
 			case 'Q':
 				BE_QUIET = TRUE;
 				break;
@@ -619,7 +627,7 @@ main(int argc, char **argv)
 				rsc_cmd = flag;
 				break;
 				
-			case 'X':
+			case 'x':
 				rsc_cmd = flag;
 				break;
 				
@@ -735,23 +743,28 @@ main(int argc, char **argv)
 		our_pid[10] = '\0';
 	}
 
-	if(rsc_cmd == 'L' || rsc_cmd == 'W' || rsc_cmd == 'D' || rsc_cmd == 'X'
+	if(rsc_cmd == 'L' || rsc_cmd == 'W' || rsc_cmd == 'D' || rsc_cmd == 'x'
 	   || rsc_cmd == 'M' || rsc_cmd == 'U' || rsc_cmd == 'C' 
 	   || rsc_cmd == 'p' || rsc_cmd == 'd' || rsc_cmd == 'g'
 	   || rsc_cmd == 'G' || rsc_cmd == 'S') {
 		
 		resource_t *rsc = NULL;
-		cib_conn = cib_new();
-		rc = cib_conn->cmds->signon(
-			cib_conn, crm_system_name, cib_command_synchronous);
-		if(rc != cib_ok) {
-			fprintf(stderr, "Error signing on to the CIB service: %s\n",
-				cib_error2string(rc));
-			return rc;
+		if(xml_file != NULL) {
+			FILE *xml_strm = fopen(xml_file, "r");
+			cib_xml_copy = file2xml(xml_strm);
+		} else {
+			cib_conn = cib_new();
+			rc = cib_conn->cmds->signon(
+				cib_conn, crm_system_name, cib_command_synchronous);
+			if(rc != cib_ok) {
+				fprintf(stderr, "Error signing on to the CIB service: %s\n",
+					cib_error2string(rc));
+				return rc;
+			}
+
+			cib_xml_copy = get_cib_copy(cib_conn);
 		}
-
-		cib_xml_copy = get_cib_copy(cib_conn);
-
+		
 		set_working_set_defaults(&data_set);
 		data_set.input = cib_xml_copy;
 		data_set.now = new_ha_date(TRUE);
@@ -816,7 +829,7 @@ main(int argc, char **argv)
 		CRM_DEV_ASSERT(rsc_id != NULL);
 		rc = do_find_resource(rsc_id, &data_set);
 		
-	} else if(rsc_cmd == 'X') {
+	} else if(rsc_cmd == 'x') {
 		CRM_DEV_ASSERT(rsc_id != NULL);
 		rc = dump_resource(rsc_id, &data_set);
 
@@ -974,7 +987,7 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\nCommands\n");
 	fprintf(stream, "\t--%s (-%c)\t: List all resources\n", "list", 'L');
 	fprintf(stream, "\t--%s (-%c)\t: Query a resource\n"
-		"\t\t\t  Requires: -r\n", "query-xml", 'X');
+		"\t\t\t  Requires: -r\n", "query-xml", 'x');
 	fprintf(stream, "\t--%s (-%c)\t: Locate a resource\n"
 		"\t\t\t  Requires: -r\n", "locate", 'W');
 	fprintf(stream, "\t--%s (-%c)\t: Migrate a resource from it current"

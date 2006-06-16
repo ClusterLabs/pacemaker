@@ -1,4 +1,4 @@
-/* $Id: crm_verify.c,v 1.13 2006/06/08 16:53:01 andrew Exp $ */
+/* $Id: crm_verify.c,v 1.14 2006/06/16 10:00:17 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -193,7 +193,7 @@ main(int argc, char **argv)
 		crm_info("Reading XML from: %s", xml_file);
 		cib_object = file2xml(xml_strm);
 	} else {
-		fprintf(stderr, "Reading XML from: stdin");
+		fprintf(stderr, "Reading XML from: stdin\n");
 		cib_object = stdin2xml();
 	}
 
