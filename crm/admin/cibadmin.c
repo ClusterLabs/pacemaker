@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.53 2006/05/15 10:33:22 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.54 2006/06/19 11:59:18 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -383,6 +383,7 @@ do_work(crm_data_t *input, int call_options, crm_data_t **output)
 		crm_debug_4("Performing %s op on all nodes...", cib_action);
 		return the_cib->cmds->set_master(the_cib, call_options);
 
+
 	} else if(cib_action != NULL) {
 		crm_debug_4("Passing \"%s\" to variant_op...", cib_action);
 		if(input != NULL && do_id_check(input, NULL, TRUE, FALSE)) {
@@ -432,7 +433,7 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "Options\n");
 	fprintf(stream, "\t--%s (-%c) <type>\tobject type being operated on\n",
 		"obj_type", 'o');
-	fprintf(stream, "\t\tValid values are: nodes, resources, status, constraints\n");
+	fprintf(stream, "\t\tValid values are: nodes, resources, constraints, crm_config, status\n");
 	fprintf(stream, "\t--%s (-%c)\tturn on debug info."
 		"  additional instance increase verbosity\n", "verbose", 'V');
 	fprintf(stream, "\t--%s (-%c)\tthis help message\n", "help", '?');
