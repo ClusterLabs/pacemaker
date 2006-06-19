@@ -1,4 +1,4 @@
-/* $Id: allocate.c,v 1.6 2006/06/16 08:09:09 andrew Exp $ */
+/* $Id: allocate.c,v 1.7 2006/06/19 10:47:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -651,6 +651,7 @@ stage6(pe_working_set_t *data_set)
 {
 	action_t *dc_down = NULL;
 	action_t *stonith_op = NULL;
+	action_t *last_stonith = NULL;
 	gboolean integrity_lost = FALSE;
 	
 	crm_debug_3("Processing fencing and shutdown cases");
@@ -685,6 +686,12 @@ stage6(pe_working_set_t *data_set)
 
 			if(node->details->is_dc) {
 				dc_down = stonith_op;
+
+			} else {
+				if(last_stonith) {
+					order_actions(last_stonith, stonith_op, pe_ordering_manditory);
+				}
+				last_stonith = stonith_op;			
 			}
 
 		} else if(node->details->online && node->details->shutdown) {			
@@ -723,7 +730,6 @@ stage6(pe_working_set_t *data_set)
 	if(dc_down != NULL) {
 		GListPtr shutdown_matches = find_actions(
 			data_set->actions, CRM_OP_SHUTDOWN, NULL);
-
 		crm_debug_2("Ordering shutdowns before %s on %s (DC)",
 			dc_down->task, dc_down->node->details->uname);
 
@@ -741,6 +747,10 @@ stage6(pe_working_set_t *data_set)
 
 			order_actions(node_stop, dc_down, pe_ordering_manditory);
 			);
+
+		if(last_stonith && dc_down != last_stonith) {
+			order_actions(last_stonith, dc_down, pe_ordering_manditory);
+		}
 	}
 
 	return TRUE;
@@ -770,7 +780,6 @@ stage7(pe_working_set_t *data_set)
 		if(rsc != NULL) {
 			rsc->cmds->rsc_order_lh(rsc, order);
 			continue;
-			
 		}
 
 		/* try action-to-rsc_action */
