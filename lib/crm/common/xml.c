@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.93 2006/06/16 10:07:16 andrew Exp $ */
+/* $Id: xml.c,v 1.94 2006/06/19 12:03:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1955,7 +1955,7 @@ update_xml_child(crm_data_t *child, crm_data_t *to_update)
 		can_update = FALSE;
 
 	} else if(can_update) {
-		crm_log_xml_debug(child, "Update match found...");
+		crm_log_xml_debug_2(child, "Update match found...");
 		add_xml_object(NULL, child, to_update);
 	}
 	
