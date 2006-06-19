@@ -51,6 +51,7 @@ class LinuxHAv2(HeartbeatCM):
     def __init__(self, Environment, randseed=None):
         HeartbeatCM.__init__(self, Environment, randseed=randseed)
 
+	self.clear_cache = 0
         self.cib_installed = 0
         self.config = None
         self.cluster_monitor = 0
