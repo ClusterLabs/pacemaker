@@ -109,7 +109,7 @@
 
           notify                (true|1|false|0)              'false'
           globally_unique       (true|1|false|0)              'true'
-          ordered               (true|1|false|0)              'true'
+          ordered               (true|1|false|0)              'false'
           interleave            (true|1|false|0)              'false'>
 
 
@@ -125,7 +125,7 @@
 
           notify                (true|1|false|0)              'false'
           globally_unique       (true|1|false|0)              'true'
-          ordered               (true|1|false|0)              'true'
+          ordered               (true|1|false|0)              'false'
           interleave            (true|1|false|0)              'false'>
 <!-- Annotated version -->
 
