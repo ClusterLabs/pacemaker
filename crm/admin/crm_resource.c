@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.39 2006/06/16 10:00:17 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.40 2006/06/19 13:45:48 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -470,7 +470,7 @@ migrate_resource(
 				" with cibadmin\n", rsc_id, existing_node);
 			fprintf(stderr, "\tThis will be the case even if %s is"
 				" the last node in the cluster\n", existing_node);
-			fprintf(stderr, "\tThis messgae can be disabled with -S\n");
+			fprintf(stderr, "\tThis messgae can be disabled with -Q\n");
 		}
 		
 		crm_xml_add(dont_run, "rsc", rsc_id);
