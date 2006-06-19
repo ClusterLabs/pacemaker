@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.5 2006/06/16 09:29:10 andrew Exp $ */
+/* $Id: unpack.c,v 1.6 2006/06/19 09:34:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -635,7 +635,7 @@ unpack_find_resource(
 		rsc = pe_find_resource(data_set->resources, alt_rsc_id);
 		/* no match */
 		if(rsc == NULL) {
-			crm_err("%s not found: %d", alt_rsc_id, is_duped_clone);
+			crm_debug_2("%s not found: %d", alt_rsc_id, is_duped_clone);
 			if(is_duped_clone) {
 				/* create one */
 				rsc = create_fake_resource(alt_rsc_id, rsc_entry, data_set);
