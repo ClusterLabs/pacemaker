@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.27 2006/06/16 10:00:17 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.28 2006/06/19 10:56:50 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -471,7 +471,11 @@ print_status(crm_data_t *cib)
 			);
 	}
 
-	refresh();
+#if CURSES_ENABLED
+	if(as_console) {
+		refresh();
+	}
+#endif
 	data_set.input = NULL;
 	cleanup_calculations(&data_set);
 	return 0;
