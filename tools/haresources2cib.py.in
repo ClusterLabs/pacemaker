@@ -32,10 +32,12 @@ using_mon = 1
 enable_stonith = False
 
 ocf_ra_setting = {
-	"apache"    :{"params":["configfile"],"time":["120s","60s"]},
+	"apache"    :{"params":["configfile","httpd","port","statusurl","options"],"time":["120s","60s"]},
 	"IPaddr"    :{"params":["ip","netmask","nic","broadcast"],"time":["5s","5s"]},
 	"IPaddr2"   :{"params":["ip","netmask","nic","broadcast"],"time":["5s","5s"]},
 	"db2"       :{"params":["instance"],"time":["120s","60s"]},
+	"oracle"    :{"params":["sid","home","user"],"time":["120s","60s"]},
+	"oralsnr"   :{"params":["sid","home","user","listener"],"time":["120s","60s"]},
 	"AudibleAlarm":{"params":["nodelist"],"time":["120s","60s"]},
 	"Delay"     :{"params":["delay","stopdelay"],"time":["120s","60s"]},
 	"Filesystem":{"params":["device","directory","fstype","options"],"time":["120s","60s"]},
@@ -56,11 +58,15 @@ config_defaults = [
 	"symmetric_cluster=true",
 	"no_quorum_policy=stop",
 	"default_resource_stickiness=0",
+	"default_resource_failure_stickiness=0",
 	"stonith_enabled=false",
+	"stonith_action=reboot",
 	"stop_orphan_resources=true",
 	"stop_orphan_actions=true",
 	"remove_after_stop=false",
+	"short_resource_names=true",
 	"transition_idle_timeout=5min",
+	"default_action_timeout=5s",
 	"is_managed_default=true",
 ]
 
@@ -71,6 +77,9 @@ def create_cib() :
 
 	configuration = doc.createElement("configuration")
 	cib.appendChild(configuration)
+	cib.setAttribute("admin_epoch","0")
+	cib.setAttribute("epoch","0")
+	cib.setAttribute("num_updates","0")
 
 	crm_config = doc.createElement("crm_config")
 	configuration.appendChild(crm_config)
@@ -113,7 +122,7 @@ def get_ra_class(type) :
 			"Please refer to http://www.linux-ha.org/ResourceAgent\n")
 	return "UNKNOWN"
 		
-def cib_resource(doc,index, rsc):
+def cib_resource(doc,user_res_id,index, rsc):
 
 	id, type, params = None, None, None
 	
@@ -137,7 +146,13 @@ def cib_resource(doc,index, rsc):
 			type = fields[0]
 			params = fields[1:]
 		
-	id = type+"_"+str(index)
+	if user_res_id == "" :
+		if type == "IPaddr" :
+			id = type+"_"+string.replace(string.split(params[0],'/')[0],'.','_')
+		else :
+			id = type+"_"+str(index)
+	else :
+		id = user_res_id
 	
 	resource = doc.createElement("primitive")
 	resource.setAttribute("id",id)
@@ -213,6 +228,27 @@ def cib_resource(doc,index, rsc):
 				i += 1
 	return id, resource
 
+def cib_rsc_order(doc, args):
+	rsc_order = doc.createElement("rsc_order")
+	rsc_order.setAttribute("id","rsc_order_"+args[0]+"_"+args[3])
+	rsc_order.setAttribute("from",args[0])
+	rsc_order.setAttribute("action",args[1])
+	rsc_order.setAttribute("type",args[2])
+	rsc_order.setAttribute("to",args[3])
+	rsc_order.setAttribute("symmetrical","true")
+	return rsc_order
+
+def cib_rsc_colocation(doc, args):
+	if len(args) != 3 :
+		sys.stderr.write("rsc_colocation: bad usage\n")
+		return
+	rsc_colocation = doc.createElement("rsc_colocation")
+	rsc_colocation.setAttribute("id","rsc_colocation_"+args[0]+"_"+args[1])
+	rsc_colocation.setAttribute("from",args[0])
+	rsc_colocation.setAttribute("to",args[1])
+	rsc_colocation.setAttribute("score",args[2])
+	return rsc_colocation
+
 def cib_rsc_location(doc, id, node):
 	rsc_location = doc.createElement("rsc_location")
 	rsc_location.setAttribute("id","rsc_location_"+id)
@@ -254,29 +290,42 @@ def cib_resource_clone(doc, id, clone_max, clone_node_max):
 	attributes.appendChild(nvpair)
 	return resource_clone
 
-def add_resource(cib,index,node,rsc):
-	id,resource = cib_resource(cib[0],index,rsc)
+def add_resource(cib,user_res_id,index,node,rsc):
+	id,resource = cib_resource(cib[0],user_res_id,index,rsc)
 	cib[1].appendChild(resource)
 	rsc_location = cib_rsc_location(cib[0],id,node)
 	cib[2].appendChild(rsc_location)
 
-def add_resource_group(cib,index,node,rscs):
-	groupid = "group_"+str(index)
+def add_resource_group(cib,user_res_id,index,node,rscs):
+	if user_res_id == "" :
+		groupid = "group_"+str(group_index)
+	else :
+		groupid = user_res_id
 	resource_group = cib_resource_group(cib[0],groupid)
 	cib[1].appendChild(resource_group)
 	for rsc in rscs :
-		rid,resource = cib_resource(cib[0],index,rsc)
+		rid,resource = cib_resource(cib[0],"",index,rsc)
 		resource_group.appendChild(resource)
 		index += 1
 	rsc_location = cib_rsc_location(cib[0],groupid,node)
 	cib[2].appendChild(rsc_location)
-	
+
+def add_clone(cib,user_res_id, index,rsc) :
+	if user_res_id == "" :
+		cloneid = "clone_"+str(index)
+	else :
+		cloneid = user_res_id
+	clone = cib_resource_clone(cib[0], cloneid, node_num, 1)
+	cib[1].appendChild(clone)
+	id,resource = cib_resource(cib[0],"",index,rsc)
+	clone.appendChild(resource)
+
 def add_stonith_clone(cib, index, params, node_num) :
 	clone = cib_resource_clone(cib[0], "clone_"+str(index), node_num, 1)
 	cib[1].appendChild(clone)
 	id, stonith = cib_stonith(cib[0], index, params)
 	clone.appendChild(stonith)
-	
+
 def cib_stonith(doc, index, params):
 	id = "stonith_"+str(index)
 	resource = doc.createElement("primitive")
@@ -325,8 +374,7 @@ def add_stonith_host(cib, stonith_host, index, node_num) :
 		cib[1].appendChild(resource)
 		stonith_location = cib_rsc_location(cib[0],id,params[0])
 		cib[2].appendChild(stonith_location)
-		
-	
+
 def get_directive_list(config, directive) :
 	directive_list = []
 	for line in config :
@@ -374,6 +422,9 @@ if __name__=="__main__" :
 	config = open(config_file, "r").readlines()
 	
 	node_list = get_directive_list(config, "node")
+	node_num = 0
+	for nodes in node_list :
+		node_num += len(string.split(nodes)) -1
 	stonith_host_list = get_directive_list(config, "stonith_host")
 	
 	if len(stonith_host_list) != 0 :
@@ -386,7 +437,9 @@ if __name__=="__main__" :
 	group_index = 1
 	for line in file.readlines() :
 		line = string.strip(line)
-		if len (line) == 0 or line[0] == '#' :
+		if len (line) == 0 :
+			continue
+		if line[0] == '#' and string.find(line,"#rsc_order") != 0 and string.find(line,"#rsc_colocation") != 0 :
 			continue
 		if line[-1] == '\\' :
 			pre_line += line[:-1] + " "
@@ -395,19 +448,31 @@ if __name__=="__main__" :
 			line = pre_line + line
 			pre_line = ""
 		fields = string.split(line)
-		if len(fields) == 2 :
-			add_resource(cib, id_index, fields[0], fields[1])
+		if fields[len(fields)-1][0] == '#' :
+			user_res_id = fields[len(fields)-1][1:]
+			fields.pop()
+		else :
+			user_res_id = ""
+		if fields[0] == "#rsc_order" and len(fields) == 5 :
+			rsc_order = cib_rsc_order(cib[0],fields[1:])
+			cib[2].appendChild(rsc_order)
+		elif fields[0] == "#rsc_colocation" and len(fields) == 4 :
+			rsc_colocation = cib_rsc_colocation(cib[0],fields[1:])
+			cib[2].appendChild(rsc_colocation)
+		elif string.find(user_res_id, "clone:") == 0 :
+			add_clone(cib, user_res_id[len("clone:"):], group_index, fields[1])
+			group_index += 10
+			id_index += 1
+		elif len(fields) == 2 :
+			add_resource(cib, user_res_id, id_index, fields[0], fields[1])
 			id_index += 1
 		elif len(fields) > 2 :
-			add_resource_group(cib, group_index, fields[0], fields[1:])
-			group_index += 1
+			add_resource_group(cib, user_res_id, group_index, fields[0], fields[1:])
+			group_index += 10
 			id_index += len(fields)
 		else :
 			sys.stderr.write("can not parse this line:"+line+"\n")
 	if enable_stonith :
-		node_num = 0
-		for nodes in node_list :
-			node_num += len(string.split(nodes)) -1
 		for stonith_host in stonith_host_list :
 			add_stonith_host(cib, stonith_host, id_index, node_num)
 			id_index += 1
