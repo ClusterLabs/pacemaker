@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.79 2006/05/29 11:53:53 andrew Exp $ */
+/* $Id: messages.c,v 1.80 2006/06/20 09:47:55 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -633,7 +633,6 @@ cib_process_change(
 
 	crm_debug_2("Processing \"%s\" event for section=%s", op, crm_str(section));
 
-	failed = create_xml_node(NULL, XML_TAG_FAILED);
 
 	if (strcasecmp(CIB_OP_CREATE, op) == 0) {
 		cib_update_op = CIB_UPDATE_OP_ADD;
@@ -668,6 +667,7 @@ cib_process_change(
 	
 	crm_validate_data(input);
 	crm_validate_data(*result_cib);
+	failed = create_xml_node(NULL, XML_TAG_FAILED);
 	
 	/* make changes to a temp copy then activate */
 	if(section == NULL) {
@@ -712,6 +712,8 @@ cib_process_change(
 		}
 		crm_log_xml_err(failed, "CIB Update failures");
 		*answer = failed;
+	} else {
+		free_xml(failed);
 	}
 
 	return result;
