@@ -1,4 +1,4 @@
-<cib cib_feature_revision="1" have_quorum="true" generated="true" admin_epoch="0" epoch="4" num_updates="98" num_peers="4" origin="c001n08" ccm_transition="5" dc_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" debug_source="finalize_join">
+<cib cib_feature_revision="1" have_quorum="true" generated="true" admin_epoch="0" epoch="4" num_updates="98" num_peers="4"  ccm_transition="5" dc_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" >
   <configuration>
     <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
       <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="3m"/>
@@ -113,11 +113,11 @@
     </constraints>
   </configuration>
   <status>
-    <node_state id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" uname="c001n08" in_ccm="true" join="member" origin="do_lrm_query" crmd="online" ha="active" expected="member">
+    <node_state id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" uname="c001n08" in_ccm="true" join="member"  crmd="online" ha="active" expected="member">
     </node_state>
-    <node_state id="5d9a8c11-8684-43ea-91.0.6e221530c193" uname="c001n03" crmd="online" origin="do_lrm_query" in_ccm="true" join="member" ha="active" expected="member">
+    <node_state id="5d9a8c11-8684-43ea-91.0.6e221530c193" uname="c001n03" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
     </node_state>
-    <node_state id="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" uname="c001n01" crmd="online" origin="do_lrm_query" in_ccm="true" join="member" ha="active" expected="member">
+    <node_state id="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" uname="c001n01" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
     </node_state>
   </status>
 </cib>

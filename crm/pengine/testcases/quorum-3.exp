@@ -12,7 +12,7 @@
      <action_set>
        <rsc_op id="8" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" long-id="rsc1" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_id="stop-1" CRM_meta_on_fail="block" CRM_meta_timeout="60000" CRM_meta_name="stop"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -30,7 +30,7 @@
      <action_set>
        <rsc_op id="10" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2" long-id="rsc2" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_id="stop-2" CRM_meta_on_fail="block" CRM_meta_timeout="60000" CRM_meta_name="stop"/>
        </rsc_op>
      </action_set>
      <inputs/>

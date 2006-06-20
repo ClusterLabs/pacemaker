@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
        <pseudo_event id="1" operation="stop" operation_key="rsc1_stop_0">
-         <attributes crm_feature_set="1.0.6"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_id="stop-1" CRM_meta_on_fail="block" CRM_meta_timeout="60000" CRM_meta_name="stop"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -48,7 +48,7 @@
    <synapse id="4">
      <action_set>
        <pseudo_event id="7" operation="stop" operation_key="rsc2_stop_0">
-         <attributes crm_feature_set="1.0.6"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_id="stop-2" CRM_meta_on_fail="block" CRM_meta_timeout="60000" CRM_meta_name="stop"/>
        </pseudo_event>
      </action_set>
      <inputs>

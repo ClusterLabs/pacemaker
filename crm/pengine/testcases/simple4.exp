@@ -1,5 +1,5 @@
  <transition_graph global_timeout="60s" transition_id="0">
-   <synapse id="0" priority="1">
+   <synapse id="0">
      <action_set>
        <rsc_op id="1" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc1" long-id="rsc1" class="heartbeat" type="apache"/>

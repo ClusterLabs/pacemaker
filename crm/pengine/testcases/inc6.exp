@@ -44,7 +44,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="5" priority="1">
+   <synapse id="5">
      <action_set>
        <rsc_op id="44" operation="stop" operation_key="child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc2:0" long-id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
@@ -57,7 +57,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="6" priority="1">
+   <synapse id="6">
      <action_set>
        <rsc_op id="45" operation="start" operation_key="child_rsc2:0_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc2:0" long-id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
@@ -82,7 +82,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="8" priority="1">
+   <synapse id="8">
      <action_set>
        <rsc_op id="46" operation="stop" operation_key="child_rsc2:1_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc2:1" long-id="rsc2:child_rsc2:1" class="heartbeat" type="apache"/>
@@ -95,7 +95,7 @@
        </trigger>
      </inputs>
   </synapse>
-   <synapse id="9" priority="1">
+   <synapse id="9">
     <action_set>
        <rsc_op id="47" operation="start" operation_key="child_rsc2:1_start_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc2:1" long-id="rsc2:child_rsc2:1" class="heartbeat" type="apache"/>
@@ -245,7 +245,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="22" priority="1">
+   <synapse id="22">
      <action_set>
        <rsc_op id="62" operation="stop" operation_key="child_rsc4:1_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc4:1" long-id="rsc4:child_rsc4:1" class="heartbeat" type="apache"/>
@@ -258,7 +258,7 @@
       </trigger>
      </inputs>
    </synapse>
-   <synapse id="23" priority="1">
+   <synapse id="23">
      <action_set>
        <rsc_op id="63" operation="start" operation_key="child_rsc4:1_start_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc4:1" long-id="rsc4:child_rsc4:1" class="heartbeat" type="apache"/>
@@ -366,7 +366,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="32" priority="1">
+   <synapse id="32">
     <action_set>
        <rsc_op id="70" operation="stop" operation_key="child_rsc5:1_stop_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc5:1" long-id="rsc5:child_rsc5:1" class="heartbeat" type="apache"/>
@@ -379,7 +379,7 @@
       </trigger>
     </inputs>
   </synapse>
-   <synapse id="33" priority="1">
+   <synapse id="33">
      <action_set>
        <rsc_op id="71" operation="start" operation_key="child_rsc5:1_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc5:1" long-id="rsc5:child_rsc5:1" class="heartbeat" type="apache"/>
@@ -529,7 +529,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="46" priority="1">
+   <synapse id="46">
      <action_set>
        <rsc_op id="84" operation="stop" operation_key="child_rsc7:0_stop_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc7:0" long-id="rsc7:child_rsc7:0" class="heartbeat" type="apache"/>
@@ -542,7 +542,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="47" priority="1">
+   <synapse id="47">
      <action_set>
        <rsc_op id="85" operation="start" operation_key="child_rsc7:0_start_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc7:0" long-id="rsc7:child_rsc7:0" class="heartbeat" type="apache"/>
@@ -567,7 +567,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="49" priority="1">
+   <synapse id="49">
      <action_set>
        <rsc_op id="86" operation="stop" operation_key="child_rsc7:1_stop_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc7:1" long-id="rsc7:child_rsc7:1" class="heartbeat" type="apache"/>
@@ -580,7 +580,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="50" priority="1">
+   <synapse id="50">
      <action_set>
        <rsc_op id="87" operation="start" operation_key="child_rsc7:1_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc7:1" long-id="rsc7:child_rsc7:1" class="heartbeat" type="apache"/>

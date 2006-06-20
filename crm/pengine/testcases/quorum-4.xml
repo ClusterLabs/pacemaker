@@ -1,4 +1,4 @@
-<cib cib_feature_revision="1" have_quorum="false" epoch="262" generated="true" admin_epoch="0" num_peers="3" origin="hadev2" last_written="Thu Jul  7 04:56:20 2005" dc_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" debug_source="finalize_join" num_updates="8358" ccm_transition="3">
+<cib cib_feature_revision="1" have_quorum="false" epoch="262" generated="true" admin_epoch="0" num_peers="3"  cib-last-written="Thu Jul  7 04:56:20 2005" dc_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3"  num_updates="8358" ccm_transition="3">
   <configuration>
       <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
         <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="120s"/>
@@ -29,7 +29,7 @@
       </constraints>
     </configuration>
   <status>
-    <node_state id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" in_ccm="true" join="member" origin="do_lrm_query" crmd="online" ha="active" expected="member">
+    <node_state id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" in_ccm="true" join="member"  crmd="online" ha="active" expected="member">
     </node_state>
   </status>
 </cib>

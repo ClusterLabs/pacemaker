@@ -8,7 +8,7 @@
     </action_set>
     <inputs/>
   </synapse>
-   <synapse id="1" priority="1">
+   <synapse id="1">
      <action_set>
        <rsc_op id="4" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc1" long-id="rsc1" class="heartbeat" type="apache"/>

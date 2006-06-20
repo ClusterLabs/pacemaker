@@ -17,7 +17,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="2" priority="1">
+   <synapse id="2">
      <action_set>
        <rsc_op id="14" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2" long-id="rsc2" class="heartbeat" type="apache"/>
@@ -26,7 +26,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="3" priority="1">
+   <synapse id="3">
      <action_set>
        <rsc_op id="15" operation="start" operation_key="rsc2_start_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc2" long-id="rsc2" class="heartbeat" type="apache"/>
@@ -60,7 +60,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="6" priority="1">
+   <synapse id="6">
      <action_set>
        <rsc_op id="18" operation="stop" operation_key="rsc4_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc4" long-id="rsc4" class="heartbeat" type="apache"/>
@@ -69,7 +69,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="7" priority="1">
+   <synapse id="7">
      <action_set>
        <rsc_op id="19" operation="start" operation_key="rsc4_start_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc4" long-id="rsc4" class="heartbeat" type="apache"/>
@@ -94,7 +94,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="9" priority="1">
+   <synapse id="9">
      <action_set>
        <rsc_op id="20" operation="stop" operation_key="rsc5_stop_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc5" long-id="rsc5" class="heartbeat" type="apache"/>
@@ -107,7 +107,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="10" priority="1">
+   <synapse id="10">
      <action_set>
        <rsc_op id="21" operation="start" operation_key="rsc5_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc5" long-id="rsc5" class="heartbeat" type="apache"/>
@@ -132,7 +132,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="12" priority="1">
+   <synapse id="12">
      <action_set>
        <rsc_op id="22" operation="stop" operation_key="rsc6_stop_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc6" long-id="rsc6" class="heartbeat" type="apache"/>
@@ -141,7 +141,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="13" priority="1">
+   <synapse id="13">
      <action_set>
        <rsc_op id="23" operation="start" operation_key="rsc6_start_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc6" long-id="rsc6" class="heartbeat" type="apache"/>
@@ -169,7 +169,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="15" priority="1">
+   <synapse id="15">
      <action_set>
        <rsc_op id="24" operation="stop" operation_key="rsc7_stop_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc7" long-id="rsc7" class="heartbeat" type="apache"/>
@@ -178,7 +178,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="16" priority="1">
+   <synapse id="16">
      <action_set>
        <rsc_op id="25" operation="start" operation_key="rsc7_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc7" long-id="rsc7" class="heartbeat" type="apache"/>

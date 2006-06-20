@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE cib SYSTEM "crm-1.0.dtd">
-<cib>
+<cib num_updates="1" epoch="1" admin_epoch="0">
   <configuration>
     <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
       <nvpair id="stonith_enabled" name="stonith_enabled" value="false"/>
@@ -11,12 +11,20 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="heartbeat" type="apache" on_stopfail="block"/>
-      <primitive id="rsc2" class="heartbeat" type="apache" on_stopfail="block"/>
+      <primitive id="rsc1" class="heartbeat" type="apache">
+	<operations>
+	  <op id="stop-1" name="stop" on_fail="block"/>
+	</operations>
+      </primitive>
+      <primitive id="rsc2" class="heartbeat" type="apache">
+	<operations>
+	  <op id="stop-2" name="stop" on_fail="block"/>
+	</operations>
+      </primitive>
     </resources>
     <constraints/>
   </configuration>
   <status>
-    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
+    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" in_ccm="true"/>
   </status>
 </cib>

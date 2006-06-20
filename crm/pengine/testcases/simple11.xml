@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<cib>
+<cib num_updates="1" epoch="1" admin_epoch="0">
   <configuration>
     <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
       <nvpair id="symmetric_cluster" name="symetric_cluster" value="false"/>
@@ -27,7 +27,9 @@
     </resources>
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
-	<rule id="can1" score="1"/>
+	<rule id="can1" score="1">
+	  <expression attribute="#uname" operation="ne" value="darthvader"/>
+	</rule>
 	<rule id="score1" score="10.0">
 	  <expression attribute="#uname" operation="eq" value="node1"/>
 	</rule>
@@ -40,7 +42,7 @@
     </constraints>
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
-    <node_state id="node2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true"/>
+    <node_state id="node1" uname="node1" crmd="online" join="member" expected="member" in_ccm="true"/>
+    <node_state id="node2" uname="node2" crmd="online" join="member" expected="member" in_ccm="true"/>
   </status>
 </cib>
