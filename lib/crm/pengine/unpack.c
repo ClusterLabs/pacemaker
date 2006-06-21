@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.6 2006/06/19 09:34:38 andrew Exp $ */
+/* $Id: unpack.c,v 1.7 2006/06/21 11:06:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -280,8 +280,6 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 		crm_action_debug_3(print_node("Added", new_node, FALSE));
 		);
   
-/* 	data_set->nodes = g_list_sort(data_set->nodes, sort_node_weight); */
-
 	return TRUE;
 }
 
