@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.3 2006/06/08 13:39:10 andrew Exp $ */
+/* $Id: native.c,v 1.4 2006/06/21 09:47:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -415,9 +415,6 @@ DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 	action_t *delete = NULL;
  	action_t *refresh = NULL;
 
-	char *stop = NULL;
-	char *start = NULL;
-
 	if(rsc->failed) {
 		crm_debug_2("Resource %s not deleted from %s: failed",
 			    rsc->id, node->details->uname);
@@ -433,9 +430,6 @@ DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		return FALSE;
 	}
 	
-	stop = stop_key(rsc);
-	start = start_key(rsc);
-
 	crm_notice("Removing %s from %s",
 		 rsc->id, node->details->uname);
 	
