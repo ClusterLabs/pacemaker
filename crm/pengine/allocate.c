@@ -1,4 +1,4 @@
-/* $Id: allocate.c,v 1.7 2006/06/19 10:47:31 andrew Exp $ */
+/* $Id: allocate.c,v 1.8 2006/06/21 09:50:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -433,15 +433,16 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 		if(op_match == NULL && data_set->stop_action_orphans) {
 			/* create a cancel action */
 			action_t *cancel = NULL;
+			char *cancel_key = NULL;
+			
 			crm_info("Orphan action will be stopped: %s on %s",
 				 key, active_node->details->uname);
 
-			crm_free(key);
-			key = generate_op_key(rsc->id, CRMD_ACTION_CANCEL, interval);
+			cancel_key = generate_op_key(rsc->id, CRMD_ACTION_CANCEL, interval);
 
 			cancel = custom_action(
-				rsc, key, CRMD_ACTION_CANCEL, active_node,
-				FALSE, TRUE, data_set);
+				rsc, cancel_key, CRMD_ACTION_CANCEL,
+				active_node, FALSE, TRUE, data_set);
 
 			add_hash_param(cancel->meta, XML_LRM_ATTR_TASK, task);
 			add_hash_param(cancel->meta,
@@ -455,6 +456,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 		if(op_match == NULL) {
 			crm_debug("Orphan action detected: %s on %s",
 				  key, active_node->details->uname);
+			crm_free(key); key = NULL;
 			return TRUE;
 		}
 	}
@@ -499,16 +501,6 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 #endif
 
 	if(safe_str_neq(pnow_digest, param_digest)) {
-#if CRM_DEPRECATED_SINCE_2_0_4
-		if(params) {
-			crm_data_t *local_params = copy_xml(params);
-			filter_action_parameters(local_params, op_version);
-			xml_remove_prop(local_params, "interval");
-			xml_remove_prop(local_params, "timeout");
-			
-			free_xml(local_params);
-		}
-#endif
 		did_change = TRUE;
 		crm_log_xml_info(pnow, "params:calc");
  		crm_warn("Parameters to %s on %s changed: recorded %s vs. calculated %s",
@@ -558,7 +550,7 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 	if(check_rsc_parameters(rsc, node, rsc_entry, data_set)) {
 		DeleteRsc(rsc, node, data_set);
 	}
-
+	
 	xml_child_iter_filter(
 		rsc_entry, rsc_op, XML_LRM_TAG_RSC_OP,
 		op_list = g_list_append(op_list, rsc_op);
