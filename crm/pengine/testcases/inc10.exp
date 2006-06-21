@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
        <rsc_op id="16" operation="stop" operation_key="child_DoFencing:2_stop_0" on_node="xen-2" on_node_uuid="e3aa8547-3d52-47df-a8a3-ca94538a5282">
-         <primitive id="child_DoFencing:1" long-id="child_DoFencing:2" class="stonith" provider="heartbeat" type="null"/>
+         <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" provider="heartbeat" type="null"/>
          <attributes crm_feature_set="1.0.6" hostlist="xen-1,xen-2,xen-3,xen-4" CRM_meta_globally_unique="false" CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
        </rsc_op>
      </action_set>
@@ -116,7 +116,7 @@
    <synapse id="9">
      <action_set>
        <rsc_op id="53" operation="notify" operation_key="ocfs2:3_pre_notify_stop_0" on_node="xen-1" on_node_uuid="43746e52-5e02-49bb-a110-c420078855c5">
-         <primitive id="ocfs2:1" long-id="ocfs2:3" class="ocf" provider="heartbeat" type="Filesystem"/>
+         <primitive id="ocfs2:3" long-id="ocfs2-clone:ocfs2:3" class="ocf" provider="heartbeat" type="Filesystem"/>
          <attributes crm_feature_set="1.0.6" CRM_meta_notify_operation="stop" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="pre" directory="/mnt/share1" fstype="ocfs2" device="/dev/hdb1" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:3 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-1 " CRM_meta_globally_unique="false" CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
        </rsc_op>
      </action_set>
@@ -129,7 +129,7 @@
    <synapse id="10" priority="1000000">
      <action_set>
        <rsc_op id="54" operation="notify" operation_key="ocfs2:3_post_notify_stop_0" on_node="xen-1" on_node_uuid="43746e52-5e02-49bb-a110-c420078855c5">
-         <primitive id="ocfs2:1" long-id="ocfs2:3" class="ocf" provider="heartbeat" type="Filesystem"/>
+         <primitive id="ocfs2:3" long-id="ocfs2-clone:ocfs2:3" class="ocf" provider="heartbeat" type="Filesystem"/>
          <attributes crm_feature_set="1.0.6" CRM_meta_notify_operation="stop" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" directory="/mnt/share1" fstype="ocfs2" device="/dev/hdb1" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:3 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-1 " CRM_meta_globally_unique="false" CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
        </rsc_op>
      </action_set>
