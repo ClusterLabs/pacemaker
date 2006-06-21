@@ -160,7 +160,7 @@
           score     (INFINITY|-INFINITY) #REQUIRED>
 <!-- Annotated version -->
 
-<!ELEMENT rsc_location (lifetime?,rule+)>
+<!ELEMENT rsc_location (lifetime?,rule*)>
 <!ATTLIST rsc_location
           id          CDATA #REQUIRED
           description CDATA #IMPLIED
@@ -169,7 +169,7 @@
 <!ATTLIST lifetime id  CDATA     #REQUIRED>
 <!-- Annotated version -->
 
-<!ELEMENT rule (expression|date_expression|rule)+>
+<!ELEMENT rule (expression|date_expression|rule)*>
 <!ATTLIST rule
           id                  CDATA          #REQUIRED
           role                CDATA          #IMPLIED
