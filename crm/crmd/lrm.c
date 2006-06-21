@@ -498,29 +498,25 @@ build_operation_update(
 	crm_xml_add_int(xml_op, XML_LRM_ATTR_OPSTATUS, op->op_status);
 	crm_xml_add_int(xml_op, XML_LRM_ATTR_INTERVAL, op->interval);
 	
-	if(safe_str_neq(op->op_type, CRMD_ACTION_STOP)) {
-		/* this will enable us to later determin that the
-		 *   resource's parameters have changed and we should force
-		 *   a restart
-		 * however it will come at the cost of a potentially much
-		 *   larger CIB
-		 */
-		char *digest = NULL;
-		crm_data_t *args_xml = NULL;
-		crm_data_t *args_parent = NULL;
+	/* this will enable us to later determin that the
+	 *   resource's parameters have changed and we should force
+	 *   a restart
+	 */
+	char *digest = NULL;
+	crm_data_t *args_xml = NULL;
+	crm_data_t *args_parent = NULL;
 #if CRM_DEPRECATED_SINCE_2_0_4
-		if(compare_version("1.0.4", caller_version) > 0) {
-			args_parent = xml_op;
-		}
+	if(compare_version("1.0.4", caller_version) > 0) {
+		args_parent = xml_op;
+	}
 #endif
-		args_xml = create_xml_node(args_parent, XML_TAG_PARAMS);
-		g_hash_table_foreach(op->params, hash2field, args_xml);
-		filter_action_parameters(args_xml, caller_version);
-		digest = calculate_xml_digest(args_xml, TRUE);
-		crm_xml_add(xml_op, XML_LRM_ATTR_OP_DIGEST, digest);
-		if(args_parent == NULL) {
-			free_xml(args_xml);
-		}
+	args_xml = create_xml_node(args_parent, XML_TAG_PARAMS);
+	g_hash_table_foreach(op->params, hash2field, args_xml);
+	filter_action_parameters(args_xml, caller_version);
+	digest = calculate_xml_digest(args_xml, TRUE);
+	crm_xml_add(xml_op, XML_LRM_ATTR_OP_DIGEST, digest);
+	if(args_parent == NULL) {
+		free_xml(args_xml);
 	}
 	
 	return TRUE;
