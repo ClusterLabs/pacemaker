@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.7 2006/06/21 11:06:38 andrew Exp $ */
+/* $Id: unpack.c,v 1.8 2006/06/21 14:48:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -637,8 +637,11 @@ unpack_find_resource(
 			if(is_duped_clone) {
 				/* create one */
 				rsc = create_fake_resource(alt_rsc_id, rsc_entry, data_set);
-				crm_info("Making sure orphan %s is stopped", rsc->id);
+				crm_info("Making sure orphan %s/%s is stopped on %s",
+					 rsc_id, rsc->id, node->details->uname);
 				resource_location(rsc, NULL, -INFINITY, "__orphan_clone_dont_run__", data_set);
+				rsc->clone_name = crm_strdup(rsc_id);
+				crm_debug("Set clone name %s for orphan %s", rsc->clone_name, rsc->id);
 			}
 			break;
 			
@@ -666,7 +669,9 @@ unpack_find_resource(
 	if(is_duped_clone && rsc != NULL) {
 		crm_info("Internally renamed %s on %s to %s",
 			 rsc_id, node->details->uname, rsc->id);
-/* 		rsc->name = rsc_id; */
+ 		rsc->clone_name = crm_strdup(rsc_id);
+		crm_debug("Set clone name %s for %s", rsc->clone_name, rsc->id);
+		
 	}
 	return rsc;
 }

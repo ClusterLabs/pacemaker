@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.4 2006/06/16 11:03:56 andrew Exp $ */
+/* $Id: complex.c,v 1.5 2006/06/21 14:48:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -324,7 +324,8 @@ void common_free(resource_t *rsc)
 	pe_free_shallow_adv(rsc->rsc_location, FALSE);
 	pe_free_shallow_adv(rsc->allowed_nodes, TRUE);
 	crm_free(rsc->id);
-	crm_free(rsc->long_name);
+	crm_free(rsc->long_name);	
+	crm_free(rsc->clone_name);
 	crm_free(rsc->variant_opaque);
 	crm_free(rsc);
 	crm_debug_5("Resource freed");

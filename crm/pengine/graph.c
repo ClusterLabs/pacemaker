@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.98 2006/06/08 13:39:10 andrew Exp $ */
+/* $Id: graph.c,v 1.99 2006/06/21 14:48:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -407,9 +407,16 @@ action2xml(action_t *action, gboolean as_input)
 			XML_ATTR_TYPE
 		};
 
-		crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->id);
-		crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->long_name);
+		if(action->rsc->clone_name != NULL) {
+			crm_debug("Using clone name %s for %s", action->rsc->clone_name, action->rsc->id);
+			crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->clone_name);
+			crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
 
+		} else {
+			crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->id);
+			crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->long_name);
+		}
+		
 		for(lpc = 0; lpc < DIMOF(attr_list); lpc++) {
 			crm_xml_add(rsc_xml, attr_list[lpc],
 				    g_hash_table_lookup(action->rsc->meta, attr_list[lpc]));

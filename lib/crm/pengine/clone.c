@@ -1,4 +1,4 @@
-/* $Id: clone.c,v 1.4 2006/06/08 13:39:10 andrew Exp $ */
+/* $Id: clone.c,v 1.5 2006/06/21 14:48:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -87,7 +87,7 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 		       crm_element_value(child_copy, XML_ATTR_ID));
 		return FALSE;
 	}
-/* 	child_rsc->parent = clone_data->self; */
+/* 	child_rsc->globally_unique = rsc->globally_unique; */
 	
 	crm_debug_3("Setting clone attributes for: %s", child_rsc->id);
 	clone_data->child_list = g_list_append(
@@ -138,7 +138,7 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	
 	clone_data->active_clones  = 0;
 	clone_data->xml_obj_child  = NULL;
-	clone_data->clone_node_max = crm_parse_int(max_clones_node,"1");
+	clone_data->clone_node_max = crm_parse_int(max_clones_node, "1");
 
 	clone_data->clone_max = crm_parse_int(max_clones, "-1");
 	if(clone_data->clone_max < 0) {
@@ -150,10 +150,11 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	if(crm_is_true(ordered)) {
 		clone_data->ordered = TRUE;
 	}
-	
+
 	crm_debug("Options for %s", rsc->id);
 	crm_debug("\tClone max: %d", clone_data->clone_max);
 	crm_debug("\tClone node max: %d", clone_data->clone_node_max);
+	crm_debug("\tClone is unique: %s", rsc->globally_unique?"true":"false");
 	
 	clone_data->xml_obj_child = find_xml_node(
 		xml_obj, XML_CIB_TAG_GROUP, FALSE);

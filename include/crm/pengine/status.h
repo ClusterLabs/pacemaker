@@ -1,4 +1,4 @@
-/* $Id: status.h,v 1.2 2006/06/08 14:08:09 andrew Exp $ */
+/* $Id: status.h,v 1.3 2006/06/21 14:48:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -119,6 +119,7 @@ struct node_s {
 
 struct resource_s { 
 		char *id; 
+		char *clone_name; 
 		char *long_name; 
 		crm_data_t *xml; 
 		crm_data_t *ops_xml; 
