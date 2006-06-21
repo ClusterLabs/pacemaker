@@ -69,8 +69,8 @@
      <lrm>
        <lrm_resources>
          <lrm_resource id="DoFencing:child_DoFencing:0" class="heartbeat" type="apache">
-           <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" op_digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:2422658a-ee60-43e6-a836-ae3116923ae8" transition_magic="0:0:2422658a-ee60-43e6-a836-ae3116923ae8" call_id="2" rc_code="0" op_status="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-           <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_5000" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="0:2422658a-ee60-43e6-a836-ae3116923ae8" transition_magic="0:0:2422658a-ee60-43e6-a836-ae3116923ae8" call_id="3" rc_code="0" op_status="0"  op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8">
+           <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" op_digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:2422658a-ee60-43e6-a836-ae3116923ae8" crm_feature_set="1.0.6" transition_magic="0:0:2422658a-ee60-43e6-a836-ae3116923ae8" call_id="2" rc_code="0" op_status="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+           <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_5000" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="0:2422658a-ee60-43e6-a836-ae3116923ae8" crm_feature_set="1.0.6" transition_magic="0:0:2422658a-ee60-43e6-a836-ae3116923ae8" call_id="3" rc_code="0" op_status="0"  op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8">
 	      
             </lrm_rsc_op>
          </lrm_resource>

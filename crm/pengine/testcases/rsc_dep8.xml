@@ -50,7 +50,7 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc1" operation="start" interval="0" op_status="0" rc_code="0" call_id="1" op_digest="9d52bf4c88392688f8b12775fdbb957a" transition_magic=""/>
+            <lrm_rsc_op id="rsc1" operation="start" interval="0" op_status="0" rc_code="0" call_id="1" op_digest="9d52bf4c88392688f8b12775fdbb957a" crm_feature_set="1.0.6" transition_magic=""/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -59,7 +59,7 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc4" class="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc4" operation="start" interval="0" op_status="0" rc_code="0" call_id="1" op_digest="832a553db174ca6fa88a2fca778f277a" transition_magic=""/>
+            <lrm_rsc_op id="rsc4" operation="start" interval="0" op_status="0" rc_code="0" call_id="1" op_digest="832a553db174ca6fa88a2fca778f277a" crm_feature_set="1.0.6" transition_magic=""/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
