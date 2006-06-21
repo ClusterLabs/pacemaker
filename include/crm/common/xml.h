@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.47 2006/05/21 20:24:23 andrew Exp $ */
+/* $Id: xml.h,v 1.48 2006/06/21 08:40:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -254,7 +254,8 @@ extern gboolean xml_has_children(crm_data_t *root);
 
 extern char *calculate_xml_digest(crm_data_t *local_cib, gboolean sort);
 
-extern gboolean validate_with_dtd(crm_data_t *xml_blob, const char *dtd_file);
+extern gboolean validate_with_dtd(
+	crm_data_t *xml_blob, gboolean to_logs, const char *dtd_file);
 
 #if XML_PARANOIA_CHECKS
 #  define crm_validate_data(obj) xml_validate(obj)

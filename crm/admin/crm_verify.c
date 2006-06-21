@@ -1,4 +1,4 @@
-/* $Id: crm_verify.c,v 1.14 2006/06/16 10:00:17 andrew Exp $ */
+/* $Id: crm_verify.c,v 1.15 2006/06/21 08:40:13 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -217,7 +217,8 @@ main(int argc, char **argv)
 		pe_config_err("ID Check failed");
 	}
 
-	if(validate_with_dtd(cib_object, HA_LIBDIR"/heartbeat/crm.dtd") == FALSE) {
+	if(validate_with_dtd(
+		   cib_object, FALSE, HA_LIBDIR"/heartbeat/crm.dtd") == FALSE) {
 		pe_config_err("CIB did not pass DTD validation");
 	}
 	set_working_set_defaults(&data_set);

@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.94 2006/06/19 12:03:58 andrew Exp $ */
+/* $Id: xml.c,v 1.95 2006/06/21 08:40:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2443,7 +2443,8 @@ calculate_xml_digest(crm_data_t *input, gboolean sort)
 #endif
 
 gboolean
-validate_with_dtd(crm_data_t *xml_blob, const char *dtd_file) 
+validate_with_dtd(
+	crm_data_t *xml_blob, gboolean to_logs, const char *dtd_file) 
 {
 	gboolean valid = TRUE;
 #if HAVE_LIBXML2
@@ -2467,10 +2468,16 @@ validate_with_dtd(crm_data_t *xml_blob, const char *dtd_file)
 
 	cvp = xmlNewValidCtxt();
 	CRM_CHECK(cvp != NULL, crm_free(buffer); return TRUE);
-	
-	cvp->userData = (void *) LOG_ERR;
-	cvp->error    = (xmlValidityErrorFunc) cl_log;
-	cvp->warning  = (xmlValidityWarningFunc) cl_log;
+
+	if(to_logs) {
+		cvp->userData = (void *) LOG_ERR;
+		cvp->error    = (xmlValidityErrorFunc) cl_log;
+		cvp->warning  = (xmlValidityWarningFunc) cl_log;
+	} else {
+		cvp->userData = (void *) stderr;
+		cvp->error    = (xmlValidityErrorFunc) fprintf;
+		cvp->warning  = (xmlValidityWarningFunc) fprintf;
+	}
 	
 	if (!xmlValidateDtd(cvp, doc, dtd)) {
 		crm_err("CIB does not validate against %s", dtd_file);

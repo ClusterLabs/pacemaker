@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.69 2006/05/29 14:50:03 andrew Exp $ */
+/* $Id: io.c,v 1.70 2006/06/21 08:40:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -299,7 +299,7 @@ readCibXmlFile(const char *filename)
 	if(root != NULL) {
 		const char *ignore_dtd = crm_element_value(root, "ignore_dtd");
 		gboolean dtd_ok = validate_with_dtd(
-			root, HA_LIBDIR"/heartbeat/crm.dtd");
+			root, TRUE, HA_LIBDIR"/heartbeat/crm.dtd");
 		
 		if(dtd_ok == FALSE
 #if CRM_DEPRECATED_SINCE_2_0_4
@@ -530,7 +530,7 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 #endif
 	   crm_is_true(ignore_dtd) == FALSE
 	   && validate_with_dtd(
-		   new_cib, HA_LIBDIR"/heartbeat/crm.dtd") == FALSE) {
+		   new_cib, TRUE, HA_LIBDIR"/heartbeat/crm.dtd") == FALSE) {
  		error_code = cib_dtd_validation;
 		crm_err("Ignoring invalid CIB");
 	}
