@@ -41,16 +41,8 @@
       </primitive>
     </resources>
     <constraints>
-      <rsc_location id="same_1_2" rsc="rsc1">
-        <rule id="colocate_1_2" score="INFINITY">
-          <expression id="exp1" attribute="rsc2" operation="colocated"/>
-        </rule>
-      </rsc_location>
-      <rsc_location id="same_3_4" rsc="rsc3">
-        <rule id="colocate_3_4" score="INFINITY">
-          <expression id="exp2" attribute="rsc4" operation="colocated"/>
-        </rule>
-      </rsc_location>
+      <rsc_colocation id="same_1_2" from="rsc1" to="rsc2" score="INFINITY"/>
+      <rsc_colocation id="same_3_4" from="rsc3" to="rsc4" score="INFINITY"/>
     </constraints>
   </configuration>
   <status>

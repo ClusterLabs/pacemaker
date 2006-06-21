@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.77 2006/06/08 13:39:10 andrew Exp $ */
+/* $Id: ptest.c,v 1.78 2006/06/21 08:31:27 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -36,7 +36,7 @@
 
 #include <crm/cib.h>
 
-#define OPTARGS	"V?X:D:G:I:Lwx"
+#define OPTARGS	"V?X:D:G:I:Lwxd:"
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -51,6 +51,7 @@ gboolean inhibit_exit = FALSE;
 extern crm_data_t * do_calculations(
 	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
 extern void cleanup_calculations(pe_working_set_t *data_set);
+char *use_date = NULL;
 
 FILE *dot_strm = NULL;
 #define DOT_PREFIX "PE_DOT: "
@@ -132,9 +133,9 @@ gboolean USE_LIVE_CIB = FALSE;
 int
 main(int argc, char **argv)
 {
+	gboolean all_good = TRUE;
 	enum transition_status graph_rc = -1;
 	crm_graph_t *transition = NULL;
-	const char *fake_now = NULL;
 	ha_time_t *a_date = NULL;
 	cib_t *	cib_conn = NULL;
 	
@@ -203,6 +204,9 @@ main(int argc, char **argv)
 				break;
 			case 'X':
 				xml_file = crm_strdup(optarg);
+				break;
+			case 'd':
+				use_date = crm_strdup(optarg);
 				break;
 			case 'D':
 				dot_file = crm_strdup(optarg);
@@ -287,7 +291,11 @@ main(int argc, char **argv)
 
 	crm_notice("Required feature set: %s", feature_set(cib_object));
  	do_id_check(cib_object, NULL, FALSE, FALSE);
-
+	if(!validate_with_dtd(cib_object,FALSE,HA_LIBDIR"/heartbeat/crm.dtd")) {
+		crm_crit("%s is not a valid configuration", xml_file?xml_file:"stding");
+ 		all_good = FALSE;
+	}
+	
 	if(input_file != NULL) {
 		FILE *input_strm = fopen(input_file, "w");
 		msg_buffer = dump_xml_formatted(cib_object);
@@ -299,16 +307,12 @@ main(int argc, char **argv)
 	
 	crm_zero_mem_stats(NULL);
 	
-	fake_now = crm_element_value(cib_object, "fake_now");
-	if(fake_now != NULL) {
-		char *fake_now_copy = crm_strdup(fake_now);
-		char *fake_now_mutable = fake_now_copy;
-		a_date = parse_date(&fake_now_mutable);
+	if(use_date != NULL) {
+		a_date = parse_date(&use_date);
 		log_date(LOG_WARNING, "Set fake 'now' to",
 			 a_date, ha_log_date|ha_log_time);
 		log_date(LOG_WARNING, "Set fake 'now' to (localtime)",
 			 a_date, ha_log_date|ha_log_time|ha_log_local);
-		crm_free(fake_now_copy);
 	}
 
 	do_calculations(&data_set, cib_object, a_date);
@@ -403,8 +407,8 @@ main(int argc, char **argv)
 	destroy_graph(transition);
 	
 	crm_mem_stats(NULL);
- 	CRM_CHECK(crm_mem_stats(NULL) == FALSE, crm_err("Memory leak detected"));
-	CRM_CHECK(graph_rc == transition_complete, crm_err("An invalid transition was produced"));
+ 	CRM_CHECK(crm_mem_stats(NULL) == FALSE, all_good = FALSE; crm_err("Memory leak detected"));
+	CRM_CHECK(graph_rc == transition_complete, all_good = FALSE; crm_err("An invalid transition was produced"));
 
 	crm_free(cib_object);	
 
@@ -418,6 +422,9 @@ main(int argc, char **argv)
 		GMainLoop*  mainloop = g_main_new(FALSE);
 		g_main_run(mainloop);		
 	}
-	
-	return 0;
+
+	if(all_good) {
+		return 0;
+	}
+	return 5;
 }

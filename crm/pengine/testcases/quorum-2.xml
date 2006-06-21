@@ -10,7 +10,7 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="heartbeat" type="apache"/>
+      <primitive id="rsc1" class="heartbeat" type="apache">
 	<operations>
 	  <op id="stop-1" name="stop" on_fail="block"/>
 	</operations>

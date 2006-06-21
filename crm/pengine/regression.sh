@@ -42,19 +42,23 @@ do_test simple12 "Priority (eq)"
 do_test simple8 "Stickiness"
 
 echo ""
-do_test date-1 "Dates"
-do_test standby "Standby"
-do_test comments "Comments"
 do_test params-0 "Params: No change"
 do_test params-1 "Params: Changed"
 do_test params-2 "Params: Resource definition"
+
+echo ""
 do_test orphan-0 "Orphan ignore"
 do_test orphan-1 "Orphan stop"
 
-do_test probe-0 "Probe (anon clone)"
+echo ""
 do_test target-0 "Target Role : baseline"
 do_test target-1 "Target Role : test"
 
+echo ""
+do_test date-1 "Dates" -d "2005-020"
+do_test probe-0 "Probe (anon clone)"
+do_test standby "Standby"
+do_test comments "Comments"
 
 echo ""
 do_test master-0 "Stopped -> Slave"
@@ -207,14 +211,6 @@ do_test 797 "Bugzilla 797"
 do_test 829 "Bugzilla 829"
 do_test 994 "Bugzilla 994"
 do_test unrunnable-1 "Unrunnable"
-
-echo ""
-do_test bad1 "Bad node		"
-do_test bad2 "Bad rsc		"
-do_test bad3 "No rsc class	"
-do_test bad4 "Bad data		"
-do_test bad5 "Bad data		"
-do_test bad6 "Bad lrm_rsc	"
 
 echo ""
 

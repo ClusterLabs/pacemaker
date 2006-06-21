@@ -10,6 +10,11 @@
     </nodes>
     <resources>
       <group id="1">
+        <instance_attributes id="G_utility_instance_attrs">
+          <attributes>
+            <nvpair id="G_utility_target_role" name="target_role" value="started"/>
+          </attributes>
+        </instance_attributes>
 	<primitive id="rsc1" class="heartbeat" type="apache">
          <instance_attributes id="G_utility_instance_attrs">
            <attributes>
@@ -25,11 +30,6 @@
          </instance_attributes>
 	</primitive>
 	<primitive id="rsc3" class="heartbeat" type="apache"/>
-         <instance_attributes id="G_utility_instance_attrs">
-           <attributes>
-             <nvpair id="G_utility_target_role" name="target_role" value="started"/>
-           </attributes>
-         </instance_attributes>
       </group>
     </resources>
     <constraints/>

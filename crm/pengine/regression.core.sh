@@ -19,7 +19,7 @@
 
 verbose=$1
 io_dir=testcases
-diff_opts="--ignore-all-space -u"
+diff_opts="--ignore-all-space -u -N"
 failed=.regression.failed.diff
 # zero out the error log
 > $failed
@@ -39,8 +39,8 @@ function ptest() {
 
 function do_test {
 
-    base=$1;
-    name=$2;
+    base=$1; shift
+    name=$1; shift
     input=$io_dir/${base}.xml
     output=$io_dir/${base}.pe.out
     expected=$io_dir/${base}.exp
@@ -52,38 +52,40 @@ function do_test {
 
     if [ ! -f $input ]; then
 	echo "Test $name	($base)...	Error (PE : input)";
+	num_failed=`expr $num_failed + 1`
 	return;
     fi
 
+    echo "Test $base	:	$name";
     if [ "$create_mode" != "true" -a ! -f $expected ]; then
-	echo "Test $name	($base)...	Error (PE : expected)";
+	echo "	Error (PE : expected)";
 #	return;
     fi
 
 #    ../admin/crm_verify -X $input
-    ptest -V -X $input -D $dot_output -G $output
+    ptest -V -X $input -D $dot_output -G $output $*
+    if [ $? != 0 ]; then
+	echo "	* Failed (PE : rc)";
+	num_failed=`expr $num_failed + 1`
+    fi
 
     if [ -s core ]; then
-	echo "Test $name	($base)...	Moved core to core.${base}";
+	echo "	Moved core to core.${base}";
+	num_failed=`expr $num_failed + 1`
 	rm -f core.$base
 	mv core core.$base
-	return;
     fi
 
     if [ ! -s $output ]; then
-	echo "Test $name	($base)...	Error (PE : raw output)";
+	echo "	Error (PE : no graph)";
+	num_failed=`expr $num_failed + 1`
 	rm $output
 	return;
     fi
 
     if [ ! -s $dot_output ]; then
-	echo "Test $name	($base)...	Error (PE : dot output)";
-	rm $output
-	return;
-    fi
-
-    if [ ! -s $output ]; then
-	echo "Test $name	($base)...	Error (PE : fixed output)";
+	echo "	Error (PE : no dot-file)";
+	num_failed=`expr $num_failed + 1`
 	rm $output
 	return;
     fi
@@ -91,51 +93,29 @@ function do_test {
     if [ "$create_mode" = "true" ]; then
 	cp "$output" "$expected"
 	cp "$dot_output" "$dot_expected"
+	echo "	Created expected output (PE)" 
     fi
 
-    rc=2
-    #dot -Tpng $dot_output  2>/dev/null > $dot_png
-    if [ -f $dot_expected ]; then
-	diff $diff_opts $dot_expected $dot_output >/dev/null
-	rc=$?
-	if [ $rc != 0 ]; then
-	    echo "Test $name	($base)...	* Failed (PE : dot)";
-	    diff $diff_opts $dot_expected $dot_output 2>/dev/null >> $failed
-	    num_failed=`expr $num_failed + 1`
-	else 
-	    rm $dot_output
-	fi
-    else
-	echo "Test $name	($base)...	* No expected dot output";
-	echo "==== Raw results for PE test ($base) ====" >> $failed
-	cat $dot_output 2>/dev/null >> $failed
+    diff $diff_opts $dot_expected $dot_output >/dev/null
+    rc=$?
+    if [ $rc != 0 ]; then
+	echo "	* Failed (PE : dot)";
+	diff $diff_opts $dot_expected $dot_output 2>/dev/null >> $failed
+	num_failed=`expr $num_failed + 1`
+    else 
 	rm $dot_output
     fi
 
-    rc2=2
-    if [ -f $expected ]; then
-	diff $diff_opts $expected $output >/dev/null
-	rc2=$?
-	if [ $rc2 != 0 ]; then
-	    echo "Test $name	($base)...	* Failed (PE : raw)";
-	    diff $diff_opts $expected $output 2>/dev/null >> $failed
-	    num_failed=`expr $num_failed + 1`
-	else 
-	    rm $output
-	fi
-    else
-	echo "Test $name	($base)...	* No expected raw output";
-	echo "==== Raw results for PE test ($base) ====" >> $failed
-	cat $output 2>/dev/null >> $failed
+    diff $diff_opts $expected $output >/dev/null
+    rc2=$?
+    if [ $rc2 != 0 ]; then
+	echo "	* Failed (PE : raw)";
+	diff $diff_opts $expected $output 2>/dev/null >> $failed
+	num_failed=`expr $num_failed + 1`
+    else 
 	rm $output
     fi
     
-    if [ "$create_mode" = "true" ]; then
-	echo "Test $name	($base)...	Created expected output (PE)" 
-    elif [ "$rc" = 0 -a "$rc2" = 0 ]; then
-	echo "Test $name	($base)...	Passed (PE)";
-    fi
-
     if [ "$test_te" = "true" ]; then
 	../tengine/ttest -X $output 2> $te_output
 	
@@ -155,7 +135,7 @@ function do_test {
 	    echo "==== Raw results for TE test ($base) ====" >> $failed
 	    cat $te_output 2>/dev/null >> $failed
 	elif [ "$rc" = 0 ]; then
-	    echo "Test $name	($base)...	Passed (TE)";
+	    :
 	elif [ "$rc" = 1 ]; then
 	    echo "Test $name	($base)...	* Failed (TE)";
 	    diff $diff_opts $te_expected $te_output 2>/dev/null >> $failed
@@ -169,27 +149,20 @@ function do_test {
     rm -f $output $te_output
 }
 
-
-#function do_test {
-#    base=$1;
-#    input=$io_dir/${base}.xml
-#    expected=$io_dir/${base}.exp
-#    te_expected=$io_dir/${base}.te.exp
-#    mv $input $expected $te_expected testcases.saved
-#}
-
 function test_results {
-
-    if [ -s $failed ]; then
-	if [ "$verbose" = "-v" ]; then
-	    echo "Results of $num_failed failed tests...."
-	    less $failed
+    if [ $num_failed != 0 ]; then
+	if [ -s $failed ]; then
+	    if [ "$verbose" = "-v" ]; then
+		echo "Results of $num_failed failed tests...."
+		less $failed
+	    else
+		echo "Results of $num_failed failed tests are in $failed...."
+		echo "Use $0 -v to display them automatically."
+	    fi
 	else
-	    echo "Results of $num_failed failed tests are in $failed...."
-	    echo "Use $0 -v to display them automatically."
+	    echo "$num_failed tests failed (no diff results)"
+	    rm $failed
 	fi
-    else
-	rm $failed
     fi
 }
 
