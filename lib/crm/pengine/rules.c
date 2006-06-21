@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.2 2006/06/07 12:46:56 andrew Exp $ */
+/* $Id: rules.c,v 1.3 2006/06/21 14:53:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -56,6 +56,7 @@ test_rule(crm_data_t *rule, GHashTable *node_hash, enum rsc_role_e role,
 	  ha_time_t *now) 
 {
 	gboolean test = TRUE;
+	gboolean empty = TRUE;
 	gboolean passed = TRUE;
 	gboolean do_and = TRUE;
 
@@ -69,6 +70,7 @@ test_rule(crm_data_t *rule, GHashTable *node_hash, enum rsc_role_e role,
 	xml_child_iter(
 		rule, expr, 
 		test = test_expression(expr, node_hash, role, now);
+		empty = FALSE;
 		
 		if(test && do_and == FALSE) {
 			crm_debug_3("Expression %s/%s passed",
@@ -81,7 +83,11 @@ test_rule(crm_data_t *rule, GHashTable *node_hash, enum rsc_role_e role,
 			return FALSE;
 		}
 		);
-		
+
+	if(empty) {
+		crm_err("Invalid Rule %s: rules must contain at least one expression", ID(rule));
+	}
+	
 	crm_debug_2("Rule %s %s", ID(rule), passed?"passed":"failed");
 	return passed;
 }

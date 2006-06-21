@@ -1,4 +1,4 @@
-/* $Id: allocate.c,v 1.8 2006/06/21 09:50:04 andrew Exp $ */
+/* $Id: allocate.c,v 1.9 2006/06/21 14:53:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1151,6 +1151,7 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 gboolean
 unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 {
+	gboolean empty = TRUE;
 	const char *id_lh   = crm_element_value(xml_obj, "rsc");
 	const char *id      = crm_element_value(xml_obj, XML_ATTR_ID);
 	resource_t *rsc_lh  = pe_find_resource(data_set->resources, id_lh);
@@ -1168,9 +1169,16 @@ unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 
 	xml_child_iter_filter(
 		xml_obj, rule_xml, XML_TAG_RULE,
+		empty = FALSE;
 		crm_debug_2("Unpacking %s/%s", id, ID(rule_xml));
 		generate_location_rule(rsc_lh, rule_xml, data_set);
 		);
+
+	if(empty) {
+		pe_config_err("Invalid location constraint %s:"
+			      " rsc_location must contain at least one rule",
+			      ID(xml_obj));
+	}
 	return TRUE;
 }
 
