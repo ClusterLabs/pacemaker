@@ -82,7 +82,7 @@
           disabled      (true|1|false|0)               'false'
           role          (Master|Slave|Started|Stopped) 'Started'
           prereq        (nothing|quorum|fencing)       #IMPLIED
-          on_fail       (nothing|block|stop|restart|fence)     #IMPLIED>
+          on_fail       (ignore|block|stop|restart|fence)     #IMPLIED>
 <!-- Annotated version -->
 
 <!ELEMENT group (meta_attributes*, instance_attributes*, primitive*)>
