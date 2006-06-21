@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.152 2006/06/16 07:28:34 andrew Exp $ */
+/* $Id: native.c,v 1.153 2006/06/21 11:06:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -977,6 +977,25 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 void
 native_agent_constraints(resource_t *rsc)
 {
+}
+
+static gint sort_color_weight(gconstpointer a, gconstpointer b)
+{
+	const color_t *color1 = (const color_t*)a;
+	const color_t *color2 = (const color_t*)b;
+
+	if(a == NULL) { return 1; }
+	if(b == NULL) { return -1; }
+  
+	if(color1->local_weight > color2->local_weight) {
+		return -1;
+	}
+	
+	if(color1->local_weight < color2->local_weight) {
+		return 1;
+	}
+	
+	return 0;
 }
 
 gboolean

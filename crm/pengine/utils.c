@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.145 2006/06/08 13:39:10 andrew Exp $ */
+/* $Id: utils.c,v 1.146 2006/06/21 11:06:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -175,26 +175,6 @@ gint sort_cons_strength(gconstpointer a, gconstpointer b)
 	}
 	return 0;
 }
-
-gint sort_color_weight(gconstpointer a, gconstpointer b)
-{
-	const color_t *color1 = (const color_t*)a;
-	const color_t *color2 = (const color_t*)b;
-
-	if(a == NULL) { return 1; }
-	if(b == NULL) { return -1; }
-  
-	if(color1->local_weight > color2->local_weight) {
-		return -1;
-	}
-	
-	if(color1->local_weight < color2->local_weight) {
-		return 1;
-	}
-	
-	return 0;
-}
-
 
 void
 print_color_details(const char *pre_text,
@@ -430,4 +410,71 @@ ordering_type2text(enum pe_ordering type)
 			break;
 	}
 	return result;
+}
+
+
+/* return -1 if 'a' is more preferred
+ * return  1 if 'b' is more preferred
+ */
+gint sort_node_weight(gconstpointer a, gconstpointer b)
+{
+	const node_t *node1 = (const node_t*)a;
+	const node_t *node2 = (const node_t*)b;
+
+	int node1_weight = 0;
+	int node2_weight = 0;
+	
+	if(a == NULL) { return 1; }
+	if(b == NULL) { return -1; }
+
+	node1_weight = node1->weight;
+	node2_weight = node2->weight;
+	
+	if(node1->details->unclean
+	   || node1->details->standby
+	   || node1->details->shutdown) {
+		node1_weight  = -INFINITY; 
+	}
+	if(node2->details->unclean
+	   || node2->details->standby
+	   || node2->details->shutdown) {
+		node2_weight  = -INFINITY; 
+	}
+
+	if(node1_weight > node2_weight) {
+		crm_debug_3("%s (%d) > %s (%d) : weight",
+			    node1->details->uname, node1_weight,
+			    node2->details->uname, node2_weight);
+		return -1;
+	}
+	
+	if(node1_weight < node2_weight) {
+		crm_debug_3("%s (%d) < %s (%d) : weight",
+			    node1->details->uname, node1_weight,
+			    node2->details->uname, node2_weight);
+		return 1;
+	}
+
+	crm_debug_3("%s (%d) == %s (%d) : weight",
+		    node1->details->uname, node1_weight,
+		    node2->details->uname, node2_weight);
+	
+	/* now try to balance resources across the cluster */
+	if(node1->details->num_resources
+	   < node2->details->num_resources) {
+		crm_debug_3("%s (%d) < %s (%d) : resources",
+			    node1->details->uname, node1->details->num_resources,
+			    node2->details->uname, node2->details->num_resources);
+		return -1;
+		
+	} else if(node1->details->num_resources
+		  > node2->details->num_resources) {
+		crm_debug_3("%s (%d) > %s (%d) : resources",
+			    node1->details->uname, node1->details->num_resources,
+			    node2->details->uname, node2->details->num_resources);
+		return 1;
+	}
+	
+	crm_debug_4("%s = %s", node1->details->uname, node2->details->uname);
+	return 0;
 }

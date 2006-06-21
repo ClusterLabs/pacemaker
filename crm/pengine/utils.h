@@ -1,4 +1,4 @@
-/* $Id: utils.h,v 1.1 2006/06/08 13:39:10 andrew Exp $ */
+/* $Id: utils.h,v 1.2 2006/06/21 11:06:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -69,5 +69,8 @@ extern gboolean create_ordering(
 
 extern rsc_to_node_t *generate_location_rule(
 	resource_t *rsc, crm_data_t *location_rule, pe_working_set_t *data_set);
+
+extern gint sort_cons_strength(gconstpointer a, gconstpointer b);
+extern gint sort_node_weight(gconstpointer a, gconstpointer b);
 
 #endif

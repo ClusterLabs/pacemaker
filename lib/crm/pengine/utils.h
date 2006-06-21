@@ -1,4 +1,4 @@
-/* $Id: utils.h,v 1.3 2006/06/08 13:39:10 andrew Exp $ */
+/* $Id: utils.h,v 1.4 2006/06/21 11:06:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,10 +58,6 @@ extern void log_action(
 
 /* Sorting functions */
 extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);
-extern gint sort_rsc_node_weight(gconstpointer a, gconstpointer b);
-extern gint sort_cons_strength(gconstpointer a, gconstpointer b);
-extern gint sort_color_weight(gconstpointer a, gconstpointer b);
-extern gint sort_node_weight(gconstpointer a, gconstpointer b);
 
 extern crm_data_t *find_rsc_op_entry(resource_t *rsc, const char *key);
 
