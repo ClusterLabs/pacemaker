@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="3" operation="monitor" operation_key="child_DoFencing_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <primitive id="child_DoFencing" long-id="child_DoFencing" class="stonith" type="ssh"/>
-         <attributes crm_feature_set="1.0.6" hostlist="hadev1 hadev2 hadev3 " CRM_meta_op_target_rc="7"/>
+         <attributes crm_feature_set="1.0.6" hostlist="hadev1 hadev2 hadev3 " CRM_meta_timeout="120000" CRM_meta_op_target_rc="7"/>
        </rsc_op>
      </action_set>
      <inputs/>
