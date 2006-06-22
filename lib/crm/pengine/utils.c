@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.6 2006/06/21 11:06:13 andrew Exp $ */
+/* $Id: utils.c,v 1.7 2006/06/22 13:34:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -540,6 +540,7 @@ unpack_operation(
 	action_t *action, crm_data_t *xml_obj, pe_working_set_t* data_set)
 {
 	int lpc = 0;
+	const char *class = NULL;
 	const char *value = NULL;
 	const char *fields[] = {
 		XML_LRM_ATTR_INTERVAL,
@@ -583,6 +584,16 @@ unpack_operation(
 	} else {
 		action->needs = rsc_req_quorum;
 		value = "quorum (default)";
+	}
+
+	class = g_hash_table_lookup(action->rsc->meta, "class");
+	if(safe_str_eq(class, "stonith")) {
+		if(action->needs == rsc_req_stonith) {
+			pe_config_err("Stonith resources (eg. %s) cannot require"
+				      " fencing to start", action->rsc->id);
+		}
+		action->needs = rsc_req_nothing;
+		value = "nothing (fencing override)";
 	}
 	crm_debug_3("\tAction %s requires: %s", action->task, value);
 
@@ -712,15 +723,6 @@ unpack_operation(
 				action->meta, crm_strdup(fields[lpc]), tmp_ms);
 		}
 	}
-	
-/* 	if(safe_str_eq(native_data->agent->class, "stonith")) { */
-/* 		if(rsc->start_needs == rsc_req_stonith) { */
-/* 			pe_err("Stonith resources (eg. %s) cannot require" */
-/* 			       " fencing to start", rsc->id); */
-/* 		} */
-/* 		rsc->start_needs = rsc_req_quorum; */
-/* 	} */
-
 }
 
 crm_data_t *
