@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.40 2006/06/19 13:45:48 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.41 2006/06/22 09:10:23 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -69,7 +69,7 @@ char *our_pid = NULL;
 IPC_Channel *crmd_channel = NULL;
 char *xml_file = NULL;
 
-#define OPTARGS	"V?LRQxDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:fX:"
+#define OPTARGS	"V?LRQxDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:fX:l"
 
 static int
 do_find_resource(const char *rsc, pe_working_set_t *data_set)
@@ -98,19 +98,38 @@ do_find_resource(const char *rsc, pe_working_set_t *data_set)
 		fprintf(stderr, "resource %s is NOT running\n", rsc);
 	}
 	
-	the_rsc->fns->print(the_rsc, NULL, pe_print_printf, stdout);
-	
 	return 0;
 }
 
+static void
+print_raw_rsc(resource_t *rsc, int level) 
+{
+	int lpc = 0;
+	GListPtr children = NULL;
+	for(; lpc < level; lpc++) {
+		printf("  ");
+	}
+	printf(" * %s\n", rsc->id);
+	children = rsc->fns->children(rsc);
+	slist_iter(child, resource_t, children, lpc,
+		   print_raw_rsc(child, level+1);
+		);
+}
+
+
 static int
-do_find_resource_list(pe_working_set_t *data_set)
+do_find_resource_list(pe_working_set_t *data_set, gboolean raw)
 {
 	int found = 0;
 	
 	slist_iter(
 		rsc, resource_t, data_set->resources, lpc,
-		if(rsc->orphan && rsc->fns->active(rsc, TRUE) == FALSE) {
+		if(raw) {
+			found++;
+			print_raw_rsc(rsc, 0);
+			continue;
+			
+		} else if(rsc->orphan && rsc->fns->active(rsc, TRUE) == FALSE) {
 			continue;
 		}
 		rsc->fns->print(
@@ -559,6 +578,7 @@ main(int argc, char **argv)
 		{"help",       0, 0, '?'},
 		{"quiet",      0, 0, 'Q'},
 		{"list",       0, 0, 'L'},
+		{"list-raw",   0, 0, 'l'},
 		{"refresh",    0, 0, 'R'},
 		{"reprobe",    0, 0, 'P'},
 		{"query-xml",  0, 0, 'x'},
@@ -620,26 +640,15 @@ main(int argc, char **argv)
 				break;
 
 			case 'L':
-				rsc_cmd = flag;
-				break;
-				
+			case 'l':
 			case 'R':
-				rsc_cmd = flag;
-				break;
-				
 			case 'x':
-				rsc_cmd = flag;
-				break;
-				
 			case 'D':
-				rsc_cmd = flag;
-				break;
-				
 			case 'C':
-				rsc_cmd = flag;
-				break;
-				
 			case 'P':
+			case 'W':
+			case 'M':
+			case 'U':
 				rsc_cmd = flag;
 				break;
 				
@@ -673,16 +682,6 @@ main(int argc, char **argv)
 				rsc_cmd = flag;
 				break;
 				
-			case 'W':
-				rsc_cmd = flag;
-				break;
-				
-			case 'M':
-				rsc_cmd = flag;
-				break;				
-			case 'U':
-				rsc_cmd = flag;
-				break;				
 			case 'f':
 				do_force = TRUE;
 				break;
@@ -746,7 +745,7 @@ main(int argc, char **argv)
 	if(rsc_cmd == 'L' || rsc_cmd == 'W' || rsc_cmd == 'D' || rsc_cmd == 'x'
 	   || rsc_cmd == 'M' || rsc_cmd == 'U' || rsc_cmd == 'C' 
 	   || rsc_cmd == 'p' || rsc_cmd == 'd' || rsc_cmd == 'g'
-	   || rsc_cmd == 'G' || rsc_cmd == 'S') {
+	   || rsc_cmd == 'G' || rsc_cmd == 'S' || rsc_cmd == 'l') {
 		
 		resource_t *rsc = NULL;
 		if(xml_file != NULL) {
@@ -798,7 +797,11 @@ main(int argc, char **argv)
 
 	if(rsc_cmd == 'L') {
 		rc = cib_ok;
-		do_find_resource_list(&data_set);
+		do_find_resource_list(&data_set, FALSE);
+		
+	} else if(rsc_cmd == 'l') {
+		rc = cib_ok;
+		do_find_resource_list(&data_set, TRUE);
 		
 	} else if(rsc_cmd == 'C') {
 		resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
