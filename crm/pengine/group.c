@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.66 2006/06/13 13:08:07 andrew Exp $ */
+/* $Id: group.c,v 1.67 2006/06/22 13:32:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -460,8 +460,6 @@ void
 group_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set)
 {
-#if 0
-	/* I dont think it is a good idea to be poking inside groups */
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
@@ -471,6 +469,6 @@ group_stonith_ordering(
 		child_rsc->cmds->stonith_ordering(
 			child_rsc, stonith_op, data_set);
 		);
-#endif
-	native_stonith_ordering(rsc, stonith_op, data_set);
 }
+
+		
