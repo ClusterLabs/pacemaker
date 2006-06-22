@@ -242,10 +242,6 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 			crm_err("No reply message - disconnected - %d", rc);
 			rc = cib_not_connected;
 			
-		} else if(rc != IPC_OK) {
-			crm_err("No reply message - failed - %d", rc);
-			rc = cib_reply_failed;
-			
 		} else if(reg_msg == NULL) {
 			crm_err("No reply message - empty - %d", rc);
 			rc = cib_reply_failed;
