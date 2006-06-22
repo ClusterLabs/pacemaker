@@ -330,6 +330,9 @@ build_operation_update(
 	crm_data_t *xml_op = NULL;
 	char *op_id = NULL;
 	const char *caller_version = NULL;	
+	char *digest = NULL;
+	crm_data_t *args_xml = NULL;
+	crm_data_t *args_parent = NULL;
 
 	CRM_DEV_ASSERT(op != NULL);
 	if(crm_assert_failed) {
@@ -502,9 +505,7 @@ build_operation_update(
 	 *   resource's parameters have changed and we should force
 	 *   a restart
 	 */
-	char *digest = NULL;
-	crm_data_t *args_xml = NULL;
-	crm_data_t *args_parent = NULL;
+	args_parent = NULL;
 #if CRM_DEPRECATED_SINCE_2_0_4
 	if(compare_version("1.0.4", caller_version) > 0) {
 		args_parent = xml_op;
