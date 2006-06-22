@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.101 2006/06/22 13:32:15 andrew Exp $ */
+/* $Id: graph.c,v 1.102 2006/06/22 16:20:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -357,8 +357,20 @@ action2xml(action_t *action, gboolean as_input)
 		char *clone_key = NULL;
 		const char *interval_s = g_hash_table_lookup(action->meta, "interval");
 		int interval = crm_parse_int(interval_s, "0");
+
+		if(safe_str_eq(action->task, CRMD_ACTION_NOTIFY)) {			
+			const char *n_type = g_hash_table_lookup(
+				action->extra, crm_meta_name("notify_type"));
+			const char *n_task = g_hash_table_lookup(
+				action->extra, crm_meta_name("notify_operation"));
+			CRM_CHECK(n_type != NULL, ;);
+			CRM_CHECK(n_task != NULL, ;);
+			clone_key = generate_notify_key(action->rsc->clone_name, n_type, n_task);
+			
+		} else {
+			clone_key = generate_op_key(action->rsc->clone_name, action->task, interval);
+		}
 		
-		clone_key = generate_op_key(action->rsc->clone_name, action->task, interval);
 		crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, clone_key);
 		crm_xml_add(action_xml, "internal_"XML_LRM_ATTR_TASK_KEY, action->uuid);
 		crm_free(clone_key);
