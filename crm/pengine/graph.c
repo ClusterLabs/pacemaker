@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.99 2006/06/21 14:48:01 andrew Exp $ */
+/* $Id: graph.c,v 1.100 2006/06/22 13:27:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -372,8 +372,20 @@ action2xml(action_t *action, gboolean as_input)
 	crm_free(action_id_s);
 	
 	crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
-	crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, action->uuid);
-
+	if(action->rsc != NULL && action->rsc->clone_name != NULL) {
+		char *clone_key = NULL;
+		const char *interval_s = g_hash_table_lookup(action->meta, "interval");
+		int interval = crm_parse_int(interval_s, "0");
+		
+		clone_key = generate_op_key(action->rsc->clone_name, action->task, interval);
+		crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, clone_key);
+		crm_xml_add(action_xml, "internal_"XML_LRM_ATTR_TASK_KEY, action->uuid);
+		crm_free(clone_key);
+		
+	} else {
+		crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, action->uuid);
+	}
+	
 	if(needs_node_info && action->node != NULL) {
 		crm_xml_add(action_xml, XML_LRM_ATTR_TARGET,
 			    action->node->details->uname);
