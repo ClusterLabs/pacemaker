@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.124 2006/06/22 09:15:40 andrew Exp $ */
+/* $Id: callbacks.c,v 1.125 2006/06/22 15:11:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -85,6 +85,7 @@ extern ll_cluster_t *hb_conn;
 extern unsigned long cib_num_ops, cib_num_local, cib_num_updates, cib_num_fail;
 extern unsigned long cib_bad_connects, cib_num_timeouts;
 extern longclock_t cib_call_time;
+extern enum cib_errors cib_status;
 
 static HA_Message *
 cib_prepare_common(HA_Message *root, const char *section)
@@ -1082,6 +1083,11 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 	   && privileged == FALSE) {
 		/* abort */
 		rc = cib_not_authorized;
+	}
+
+	if(cib_status != cib_ok) {
+		*reply = cib_construct_reply(request, the_cib, cib_status);
+		return cib_status;
 	}
 	
 	if(rc == cib_ok

@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.70 2006/06/21 08:40:13 andrew Exp $ */
+/* $Id: io.c,v 1.71 2006/06/22 15:11:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -79,6 +79,7 @@ extern gboolean cib_have_quorum;
 extern GHashTable *peer_hash;
 extern GHashTable *ccm_membership;
 extern GTRIGSource *cib_writer;
+extern enum cib_errors cib_status;
 
 int set_connected_peers(crm_data_t *xml_obj);
 void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data);
@@ -231,9 +232,8 @@ readCibXmlFile(const char *filename)
 			     && (buf.st_mode & (S_IRUSR|S_IWUSR)));
 	
 	if( S_ISREG(buf.st_mode) == FALSE ) {
+		cib_status = cib_bad_permissions;
 		crm_err("%s must be a regular file", filename);
-		cl_flush_logs();
-		exit(100);
 		
 	} else if( user_readwritable == FALSE ) {
 		struct group *cib_grp = getgrnam(HA_APIGROUP);
@@ -246,9 +246,9 @@ readCibXmlFile(const char *filename)
 			crm_err("%s must be owned and read/writeable by user %s,"
 				" or owned and read/writable by group %s",
 				filename, HA_CCMUSER, HA_APIGROUP);
-			cl_flush_logs();
-			exit(100);
-		}
+			cib_status = cib_bad_permissions;
+			return NULL;
+		} 
 		crm_warn("%s should be owned and read/writeable by user %s",
 			 filename, HA_CCMUSER);
 	}
@@ -257,8 +257,10 @@ readCibXmlFile(const char *filename)
 	if(validate_on_disk_cib(filename, &root) == FALSE) {
 		valid = FALSE;
 		crm_err("%s has been manually changed"
-			" - please update the md5 digest in %s.sig",
+			" - if this was intended, please remove the md5 digest in %s.sig",
 			filename, filename);
+			cib_status = cib_bad_digest;
+			return NULL;
 	}
 
 	/* Do this before DTD validation happens */
@@ -314,37 +316,27 @@ readCibXmlFile(const char *filename)
 	
 	if(root == NULL) {
 		crm_crit("Parse ERROR reading %s.", filename);
-		crm_crit("Inhibiting respawn by Heartbeat to avoid loss"
-			 " of existing configuration data.");
-		cl_flush_logs();
-		exit(100);
-
+		cib_status = cib_bad_config;		
+		return NULL;
+		
 	} else if(valid == FALSE) {
 		crm_err("%s does not contain a valid configuration", filename);
-		crm_crit("Inhibiting respawn by Heartbeat to avoid loss"
-			 " of existing configuration data.");
-		cl_flush_logs();
-		exit(100);
+		cib_status = cib_bad_config;
 	}
 
+	
 	crm_xml_add(root, "generated", XML_BOOLEAN_FALSE);	
 	
 	if(do_id_check(root, NULL, FALSE, FALSE)) {
 		crm_crit("%s does not contain a vaild configuration.",
 			 filename);
-		crm_crit("Inhibiting respawn by Heartbeat to avoid loss"
-			 " of configuration data.");
-		cl_flush_logs();
-		exit(100);
+		cib_status = cib_bad_config;
 	}
 
 	if (verifyCibXml(root) == FALSE) {
 		crm_crit("%s does not contain a vaild configuration.",
 			 filename);
-		crm_crit("Inhibiting respawn by Heartbeat to avoid loss"
-			 " of configuration data.");
-		cl_flush_logs();
-		exit(100);
+		cib_status = cib_bad_config;
 	}
 
 	return root;
@@ -555,7 +547,7 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 				 " version to revert to");
 		}
 		
-	} else if(cib_writes_enabled) {
+	} else if(cib_writes_enabled && cib_status == cib_ok) {
 		crm_debug_2("Triggering CIB write");
 		G_main_set_trigger(cib_writer);
 	}

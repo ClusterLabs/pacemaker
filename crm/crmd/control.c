@@ -192,14 +192,15 @@ do_exit(long long action,
 	
 	if(is_set(fsa_input_register, R_IN_RECOVERY)) {
 		crm_err("Could not recover from internal error");
-		exit_code = 2;			
-		
-	} else if(is_set(fsa_input_register, R_STAYDOWN)) {
+		exit_code = 2;		
+	} 
+	if(is_set(fsa_input_register, R_STAYDOWN)) {
 		crm_warn("Inhibiting respawn by Heartbeat");
 		exit_code = 100;
 	}
 	
 	crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
+	cl_flush_logs();
 	exit(exit_code);
 
 	return I_NULL;
@@ -529,12 +530,19 @@ config_query_callback(const HA_Message *msg, int call_id, int rc,
 {
 	const char *value = NULL;
 	GHashTable *config_hash = NULL;
-	
+
 	if(rc != cib_ok) {
 		fsa_data_t *msg_data = NULL;
 		crm_err("Local CIB query resulted in an error: %s",
 			cib_error2string(rc));
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+
+		if(rc == cib_bad_permissions
+		   || rc == cib_bad_digest
+		   || rc == cib_bad_config) {
+			crm_err("The cluster is mis-configured - shutting down and staying down");
+			set_bit_inplace(fsa_input_register, R_STAYDOWN);
+		}
 		return;
 	}
 
@@ -542,11 +550,9 @@ config_query_callback(const HA_Message *msg, int call_id, int rc,
 	config_hash = g_hash_table_new_full(
 		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
 
-#if 0
 	unpack_instance_attributes(
 		output, XML_CIB_TAG_PROPSET, NULL, config_hash,
 		CIB_OPTIONS_FIRST, NULL);
-#endif
 	
 	value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
 	if(value != NULL) {

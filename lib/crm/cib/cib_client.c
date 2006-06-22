@@ -662,6 +662,15 @@ cib_error2string(enum cib_errors return_code)
 {
 	const char *error_msg = NULL;
 	switch(return_code) {
+		case cib_bad_permissions:
+			error_msg = "bad permissions for the on-disk configuration. shutdown heartbeat and repair.";
+			break;
+		case cib_bad_digest:
+			error_msg = "the on-disk configuration was manually altered. shutdown heartbeat and repair.";
+			break;
+		case cib_bad_config:
+			error_msg = "the on-disk configuration is not valid";
+			break;
 		case cib_msg_field_add:
 			error_msg = "failed adding field to cib message";
 			break;			

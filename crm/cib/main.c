@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.44 2006/06/22 09:15:40 andrew Exp $ */
+/* $Id: main.c,v 1.45 2006/06/22 15:11:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,6 +55,7 @@
 
 gboolean cib_shutdown_flag = FALSE;
 gboolean stand_alone = FALSE;
+enum cib_errors cib_status = cib_ok;
 
 extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
@@ -100,7 +101,7 @@ main(int argc, char ** argv)
 {
 	int flag;
 	int argerr = 0;
-
+	
 	crm_log_init(crm_system_name);
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, cib_shutdown, NULL, NULL);

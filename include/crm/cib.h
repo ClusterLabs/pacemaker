@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.42 2006/04/10 12:48:43 andrew Exp $ */
+/* $Id: cib.h,v 1.43 2006/06/22 15:11:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -115,7 +115,10 @@ enum cib_errors {
 	cib_old_data		= -45,
 	cib_id_check		= -46,
 	cib_dtd_validation	= -47,
-	cib_bad_section		= -48
+	cib_bad_section		= -48,
+	cib_bad_digest		= -49,
+	cib_bad_permissions	= -50,
+	cib_bad_config		= -51
 };
 
 enum cib_update_op {
