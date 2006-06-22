@@ -42,3 +42,19 @@ ocf_SCRIPTS		=	OCFMSDummy
 lsbdir			=	$(libdir)/heartbeat/cts
 lsb_SCRIPTS		=	LSBDummy
 			
+## Python scripts *.py can generate *.pyc and *.pyo alongside.
+## Should remove these on "uninstall".
+##
+## This code was copied, with adaptation, from the expansion in "Makefile.in"
+## of the corresponding code to uninstall "hard_SCRIPTS".
+uninstall-hook:
+	@$(NORMAL_UNINSTALL)
+	@list='$(hard_SCRIPTS)'; for p in $$list; do \
+	  f=`echo "$$p" | sed 's|^.*/||;$(transform)'`; \
+	  fc="$${f}c"; \
+	  fo="$${f}o"; \
+	  echo " rm -f '$(DESTDIR)$(harddir)/$$fc'"; \
+	  rm -f "$(DESTDIR)$(harddir)/$$fc"; \
+	  echo " rm -f '$(DESTDIR)$(harddir)/$$fo'"; \
+	  rm -f "$(DESTDIR)$(harddir)/$$fo"; \
+	done
