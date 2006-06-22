@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.7 2006/06/22 13:34:10 andrew Exp $ */
+/* $Id: utils.c,v 1.8 2006/06/22 16:21:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -688,23 +688,21 @@ unpack_operation(
 	crm_debug_3("\t%s failure results in: %s",
 		    action->task, role2text(action->fail_role));
 	
-	if(xml_obj == NULL) {
-		return;
+	if(xml_obj != NULL) {
+		xml_prop_iter(xml_obj, p_name, p_value,
+			      if(p_value != NULL) {
+				      g_hash_table_insert(action->meta, crm_strdup(p_name),
+							  crm_strdup(p_value));
+			      }
+			);
+
+		unpack_instance_attributes(xml_obj, XML_TAG_META_SETS,
+					   NULL, action->meta, NULL, data_set->now);
+		
+		unpack_instance_attributes(xml_obj, XML_TAG_ATTR_SETS,
+					   NULL, action->meta, NULL, data_set->now);
 	}
-
-	xml_prop_iter(xml_obj, p_name, p_value,
-		if(p_value != NULL) {
-			g_hash_table_insert(action->meta, crm_strdup(p_name),
-					    crm_strdup(p_value));
-		}
-		);
-
-	unpack_instance_attributes(xml_obj, XML_TAG_META_SETS,
-				   NULL, action->meta, NULL, data_set->now);
 	
-	unpack_instance_attributes(xml_obj, XML_TAG_ATTR_SETS,
-				   NULL, action->meta, NULL, data_set->now);
-
        if(g_hash_table_lookup(action->meta, "timeout") == NULL) {
                g_hash_table_insert(action->meta, crm_strdup("timeout"),
                                    crm_strdup(data_set->transition_idle_timeout));
