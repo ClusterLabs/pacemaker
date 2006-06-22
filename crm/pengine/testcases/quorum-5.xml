@@ -13,9 +13,10 @@
         <node id="879e65f8-4b38-4c56-9552-4752ad436669" uname="hadev3" type="member"/>
       </nodes>
       <resources>
-	<group id="group1" start_prereq="nothing">
+	<group id="group1">
           <primitive id="child_DoFencing_1" class="stonith" type="ssh">
             <operations>
+	      <op id="0" name="start" prereq="nothing"/>
               <op id="1" name="monitor" interval="5s" timeout="20s"/>
             </operations>
             <instance_attributes>
