@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.43 2006/05/17 08:29:27 andrew Exp $ */
+/* $Id: main.c,v 1.44 2006/06/22 09:15:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -54,6 +54,7 @@
 #include <crm/dmalloc_wrapper.h>
 
 gboolean cib_shutdown_flag = FALSE;
+gboolean stand_alone = FALSE;
 
 extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
@@ -75,7 +76,7 @@ extern int write_cib_contents(gpointer p);
 ll_cluster_t *hb_conn = NULL;
 GTRIGSource *cib_writer = NULL;
 
-#define OPTARGS	"hV"
+#define OPTARGS	"hVs"
 
 static void
 cib_diskwrite_complete(gpointer userdata, int status, int signo, int exitcode)
@@ -119,6 +120,9 @@ main(int argc, char ** argv)
 			case 'V':
 				cl_log_enable_stderr(1);
 				alter_debug(DEBUG_INC);
+				break;
+			case 's':
+				stand_alone = TRUE;
 				break;
 			case 'h':		/* Help message */
 				usage(crm_system_name, LSB_EXIT_OK);
@@ -192,12 +196,12 @@ int
 init_start(void)
 {
 	gboolean was_error = FALSE;
-
+	if(stand_alone == FALSE) {
 	hb_conn = ll_cluster_new("heartbeat");
 	if(cib_register_ha(hb_conn, CRM_SYSTEM_CIB) == FALSE) {
 		crm_crit("Cannot sign in to heartbeat... terminating");
-		fprintf(stderr, "Cannot sign in to heartbeat... terminating");
 		exit(1);
+	}
 	}
 
 	if(startCib(CIB_FILENAME) == FALSE){
@@ -224,6 +228,26 @@ init_start(void)
 	was_error = was_error || init_server_ipc_comms(
 		crm_strdup(cib_channel_ro_synchronous), cib_client_connect_ro_synch,
 		default_ipc_connection_destroy);
+	
+	if(stand_alone) {
+		if(was_error) {
+			crm_err("Couldnt start");
+			return 1;
+		}
+		cib_is_master = TRUE;
+		
+		/* Create the mainloop and run it... */
+		mainloop = g_main_new(FALSE);
+		crm_info("Starting %s mainloop", crm_system_name);
+
+/* 		Gmain_timeout_add(crm_get_msec("10s"), cib_msg_timeout, NULL); */
+/* 		Gmain_timeout_add( */
+/* 			crm_get_msec(cib_stat_interval), cib_stats, NULL);  */
+		
+		g_main_run(mainloop);
+		return_to_orig_privs();
+		return 0;
+	}	
 	
 	if(was_error == FALSE) {
 		crm_debug_3("Be informed of CRM Client Status changes");

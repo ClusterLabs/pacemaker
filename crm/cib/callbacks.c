@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.123 2006/05/29 09:36:00 andrew Exp $ */
+/* $Id: callbacks.c,v 1.124 2006/06/22 09:15:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,6 +51,7 @@
 
 extern GMainLoop*  mainloop;
 extern gboolean cib_shutdown_flag;
+extern gboolean stand_alone;
 
 extern void GHFunc_count_peers(
 	gpointer key, gpointer value, gpointer user_data);
@@ -819,7 +820,7 @@ cib_process_request(
 		local_notify = FALSE;
 	}
 	
-	if(needs_forward) {
+	if(needs_forward && stand_alone == FALSE) {
 		HA_Message *forward_msg = cib_msg_copy(request, TRUE);
 		ha_msg_add(forward_msg, F_CIB_DELEGATED, cib_our_uname);
 		
@@ -937,7 +938,7 @@ cib_process_request(
 		}
 	}
 
-	if(needs_reply == FALSE) {
+	if(needs_reply == FALSE || stand_alone) {
 		/* nothing more to do...
 		 * this was a non-originating slave update
 		 */
