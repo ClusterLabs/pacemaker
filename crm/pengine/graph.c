@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.100 2006/06/22 13:27:28 andrew Exp $ */
+/* $Id: graph.c,v 1.101 2006/06/22 13:32:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -304,25 +304,6 @@ stonith_constraints(
 						pe_ordering_manditory, data_set);
 				}
 				);
-
-/* 			crm_debug_4("Adding stonith (%d) as an input to stop", */
-/* 				  stonith_op->id); */
-			
-/* 		} else if((rsc->unclean || node->details->unclean) */
-/* 			  && rsc->stopfail_type == pesf_block) { */
-			
-/* 			/\* depend on the stop action which will fail *\/ */
-/* 			pe_err("SHARED RESOURCE %s WILL REMAIN BLOCKED" */
-/* 				 " ON NODE %s UNTIL %s", */
-/* 				rsc->id, node->details->uname, */
-/* 				data_set->stonith_enabled?"QUORUM RETURNS":"CLEANED UP MANUALLY"); */
-/* 			continue; */
-			
-/* 		} else if((rsc->unclean || node->details->unclean) */
-/* 			  && rsc->stopfail_type == pesf_ignore) { */
-/* 			/\* nothing to do here *\/ */
-/* 			pe_err("SHARED RESOURCE %s IS NOT PROTECTED", rsc->id); */
-/* 			continue; */
 		);
 	
 	return TRUE;

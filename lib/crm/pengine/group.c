@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.3 2006/06/08 13:39:10 andrew Exp $ */
+/* $Id: group.c,v 1.4 2006/06/22 13:32:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -63,7 +63,6 @@ gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	const char *clone_id = NULL;
 	
 	crm_debug_3("Processing resource %s...", rsc->id);
-/* 	rsc->id = "dummy_group_rsc_id"; */
 
 	crm_malloc0(group_data, sizeof(group_variant_data_t));
 	group_data->num_children = 0;
@@ -85,7 +84,6 @@ gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	
 	/* this is a bit of a hack - but simplifies everything else */
 	ha_msg_mod(xml_self, F_XML_TAGNAME, XML_CIB_TAG_RESOURCE);
-/* 	set_id(xml_self, "self", -1); */
 
 	if(common_unpack(xml_self, &self, NULL,  data_set)) {
 		group_data->self = self;
