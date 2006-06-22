@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.9 2006/06/21 15:56:49 andrew Exp $ */
+/* $Id: unpack.c,v 1.10 2006/06/22 09:11:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -671,10 +671,6 @@ unpack_find_resource(
 			crm_info("Internally renamed %s on %s to %s",
 				 rsc_id, node->details->uname, rsc->id);
 			rsc->clone_name = crm_strdup(rsc_id);
-
-		} else {
-			crm_debug_2("Resetting clone_name %s for %s because of %s",
-				 rsc->clone_name, rsc->id, rsc_id);
 		}
 	}
 	
@@ -759,6 +755,12 @@ process_rsc_state(resource_t *rsc, node_t *node,
 			stop_action(rsc, node, FALSE);
 		}
 			
+	} else if(rsc->clone_name) {
+		crm_debug_2("Resetting clone_name %s for %s (stopped)",
+			    rsc->clone_name, rsc->id);
+		crm_free(rsc->clone_name);
+		rsc->clone_name = NULL;
+
 	} else {
 		char *key = stop_key(rsc);
 		GListPtr possible_matches = find_actions(rsc->actions, key, node);
@@ -769,30 +771,102 @@ process_rsc_state(resource_t *rsc, node_t *node,
 	}
 }
 
+/* create active recurring operations as optional */ 
+static void
+process_recurring(node_t *node, resource_t *rsc,
+		  int start_index, int stop_index,
+		  GListPtr sorted_op_list, pe_working_set_t *data_set)
+{
+	const char *task = NULL;
+	const char *status = NULL;
+	
+	crm_debug_2("%s: Start index %d, stop index = %d",
+		    rsc->id, start_index, stop_index);
+	slist_iter(rsc_op, crm_data_t, sorted_op_list, lpc,
+		   int interval = 0;
+		   char *key = NULL;
+		   const char *id = ID(rsc_op);
+		   const char *interval_s = NULL;
+		   if(node->details->online == FALSE) {
+			   crm_debug_4("Skipping %s/%s: node is offline",
+				       rsc->id, node->details->uname);
+			   break;
+			   
+		   } else if(start_index < stop_index) {
+			   crm_debug_4("Skipping %s/%s: not active",
+				       rsc->id, node->details->uname);
+			   break;
+			   
+		   } else if(lpc <= start_index) {
+			   crm_debug_4("Skipping %s/%s: old",
+				       id, node->details->uname);
+			   continue;
+		   }
+		   
+		   interval_s = get_interval(rsc_op);
+		   interval = crm_parse_int(interval_s, "0");
+		   if(interval == 0) {
+			   crm_debug_4("Skipping %s/%s: non-recurring",
+				       id, node->details->uname);
+			   continue;
+		   }
+		   
+		   status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
+		   if(safe_str_eq(status, "-1")) {
+			   crm_debug_4("Skipping %s/%s: status",
+				       id, node->details->uname);
+			   continue;
+		   }
+		   task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+		   /* create the action */
+		   key = generate_op_key(rsc->id, task, interval);
+		   crm_debug_3("Creating %s/%s", key, node->details->uname);
+		   custom_action(rsc, key, task, node, TRUE, TRUE, data_set);
+		);
+}
 
 static void
 unpack_lrm_rsc_state(
 	node_t *node, crm_data_t * rsc_entry, pe_working_set_t *data_set)
-{
+{	
 	int fail_count = 0;
+	int stop_index = -1;
+	int start_index = -1;
+	int max_call_id = -1;
+
 	char *fail_attr = NULL;
+	const char *task = NULL;
+	const char *status = NULL;
 	const char *value = NULL;
 	const char *fail_val = NULL;
-
 	const char *rsc_id  = crm_element_value(rsc_entry, XML_ATTR_ID);
 
-	int max_call_id = -1;
+	resource_t *rsc = NULL;
 	GListPtr op_list = NULL;
 	GListPtr sorted_op_list = NULL;
 
 	enum action_fail_response on_fail = FALSE;
 	enum rsc_role_e saved_role = RSC_ROLE_UNKNOWN;
 	
-	resource_t *rsc = unpack_find_resource(data_set, node, rsc_id, rsc_entry);
-	
 	crm_debug_3("[%s] Processing %s on %s",
 		    crm_element_name(rsc_entry), rsc_id, node->details->uname);
-	
+
+	/* extract operations */
+	op_list = NULL;
+	sorted_op_list = NULL;
+		
+	xml_child_iter_filter(
+		rsc_entry, rsc_op, XML_LRM_TAG_RSC_OP,
+		op_list = g_list_append(op_list, rsc_op);
+		);
+
+	if(op_list == NULL) {
+		/* if there are no operations, there is nothing to do */
+		return;
+	}
+
+	/* find the resource */
+	rsc = unpack_find_resource(data_set, node, rsc_id, rsc_entry);
 	if(rsc == NULL) {
 		rsc = process_orphan_resource(rsc_entry, node, data_set);
 	} 
@@ -818,99 +892,44 @@ unpack_lrm_rsc_state(
 	/* process operations */
 	max_call_id = -1;
 
-	op_list = NULL;
-	sorted_op_list = NULL;
+	saved_role = rsc->role;
+	on_fail = action_fail_ignore;
+	rsc->role = RSC_ROLE_STOPPED;
+	sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
+	
+	slist_iter(
+		rsc_op, crm_data_t, sorted_op_list, lpc,
+		task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+		status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
+		if(safe_str_eq(task, CRMD_ACTION_STOP)
+		   && safe_str_eq(status, "0")) {
+			stop_index = lpc;
+			
+		} else if(safe_str_eq(task, CRMD_ACTION_START)) {
+			start_index = lpc;
+			
+		} else if(start_index <= stop_index
+			  && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+			const char *rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
+			if(safe_str_eq(rc, "0")
+			   || safe_str_eq(rc, "8")) {
+				start_index = lpc;
+			}
+		}
 		
-	xml_child_iter_filter(
-		rsc_entry, rsc_op, XML_LRM_TAG_RSC_OP,
-		op_list = g_list_append(op_list, rsc_op);
+		unpack_rsc_op(rsc, node, rsc_op,
+			      &max_call_id, &on_fail, data_set);
 		);
 
-	if(op_list != NULL) {
-		int stop_index = -1;
-		int start_index = -1;
-		const char *task = NULL;
-		const char *status = NULL;
-		saved_role = rsc->role;
-		on_fail = action_fail_ignore;
-		rsc->role = RSC_ROLE_STOPPED;
-		sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
-
-		slist_iter(
-			rsc_op, crm_data_t, sorted_op_list, lpc,
-			task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
-			status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
-			if(safe_str_eq(task, CRMD_ACTION_STOP)
-			   && safe_str_eq(status, "0")) {
-				stop_index = lpc;
-
-			} else if(safe_str_eq(task, CRMD_ACTION_START)) {
-				start_index = lpc;
-
-			} else if(start_index <= stop_index
-				  && safe_str_eq(task, CRMD_ACTION_STATUS)) {
-				const char *rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
-				if(safe_str_eq(rc, "0")
-				   || safe_str_eq(rc, "8")) {
-					start_index = lpc;
-				}
-			}
-			
-			unpack_rsc_op(rsc, node, rsc_op,
-				      &max_call_id, &on_fail, data_set);
-			);
-
-		crm_debug_2("%s: Start index %d, stop index = %d",
-			    rsc->id, start_index, stop_index);
-		slist_iter(rsc_op, crm_data_t, sorted_op_list, lpc,
-			   int interval = 0;
-			   char *key = NULL;
-			   const char *id = ID(rsc_op);
-			   const char *interval_s = NULL;
-			   if(node->details->online == FALSE) {
-				   crm_debug_4("Skipping %s/%s: node is offline",
-					       rsc->id, node->details->uname);
-				   break;
-				   
-			   } else if(start_index < stop_index) {
-				   crm_debug_4("Skipping %s/%s: not active",
-					       rsc->id, node->details->uname);
-				   break;
-				   
-			   } else if(lpc <= start_index) {
-				   crm_debug_4("Skipping %s/%s: old",
-					       id, node->details->uname);
-				   continue;
-			   }
-			   
-			   interval_s = get_interval(rsc_op);
-			   interval = crm_parse_int(interval_s, "0");
-			   if(interval == 0) {
-				   crm_debug_4("Skipping %s/%s: non-recurring",
-					       id, node->details->uname);
-				   continue;
-			   }
-
-			   status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
-			   if(safe_str_eq(status, "-1")) {
-				   crm_debug_4("Skipping %s/%s: status",
-					       id, node->details->uname);
-				   continue;
-			   }
-			   task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
-			   /* create the action */
-			   key = generate_op_key(rsc->id, task, interval);
-			   crm_debug_3("Creating %s/%s", key, node->details->uname);
-			   custom_action(rsc, key, task, node,
-					 TRUE, TRUE, data_set);
-			);
-		
-		/* no need to free the contents */
-		g_list_free(sorted_op_list);
-		
-		process_rsc_state(rsc, node, on_fail, data_set);
-	}
+	/* create active recurring operations as optional */ 
+	process_recurring(node, rsc, start_index, stop_index,
+			  sorted_op_list, data_set);
 	
+	/* no need to free the contents */
+	g_list_free(sorted_op_list);
+	
+	process_rsc_state(rsc, node, on_fail, data_set);
+
 	value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
 	if(value != NULL && safe_str_neq("default", value)) {
 		enum rsc_role_e req_role = text2role(value);
