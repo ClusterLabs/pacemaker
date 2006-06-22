@@ -1,4 +1,4 @@
-/* $Id: clone.c,v 1.3 2006/06/13 13:09:06 andrew Exp $ */
+/* $Id: clone.c,v 1.4 2006/06/22 09:14:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -126,6 +126,9 @@ can_run_resources(node_t *node)
 	if(node->details->online == FALSE
 	   ||  node->details->unclean
 	   ||  node->details->standby) {
+		crm_debug_2("%s: online=%d, unclean=%d, standby=%d",
+			    node->details->uname, node->details->online,
+			    node->details->unclean, node->details->standby);
 		return FALSE;
 	}
 	return TRUE;
@@ -920,40 +923,21 @@ static void
 expand_list(GListPtr list, int clones,
 	    char **rsc_list, char **node_list, char **uuid_list)
 {
-	int rsc_len = 0;
-	int node_len = 0;
-	int list_len = 100 * clones;
-
-	char *rsc_list_s = NULL;
-	char *node_list_s = NULL;
-
 	const char *uname = NULL;
 	const char *rsc_id = NULL;
-
 	const char *last_rsc_id = NULL;
 	
-  clone_expand_reallocate:
-	if(rsc_list != NULL) {
-		crm_free(*rsc_list);
-		crm_malloc0(*rsc_list, list_len);
-		CRM_ASSERT(*rsc_list != NULL);
-		rsc_list_s = *rsc_list;
-		rsc_len = 0;
+	CRM_CHECK(list != NULL, return);
+	if(rsc_list) {
+		CRM_CHECK(*rsc_list == NULL, *rsc_list = NULL);
 	}
-	if(node_list != NULL) {
-		crm_free(*node_list);
-		crm_malloc0(*node_list, list_len);
-		CRM_ASSERT(*node_list != NULL);
-		node_list_s = *node_list;
-		node_len = 0;
-	}
-	/* keep BEAM extra happy */
-	if(rsc_list_s == NULL || node_list_s == NULL) {
-		return;
+	if(node_list) {
+		CRM_CHECK(*node_list == NULL, *node_list = NULL);
 	}
 	
 	slist_iter(entry, notify_entry_t, list, lpc,
 
+		   CRM_CHECK(entry != NULL, continue);
 		   rsc_id = entry->rsc->id;
 		   CRM_CHECK(rsc_id != NULL, rsc_id = "__none__");
 		   uname = NULL;
@@ -969,27 +953,29 @@ expand_list(GListPtr list, int clones,
 		   last_rsc_id = rsc_id;
 
 		   if(rsc_list != NULL) {
-			   if(rsc_len + 1 + strlen(rsc_id) >= list_len) {
-				   list_len *= 2;
-				   goto clone_expand_reallocate;
+			   int existing_len = 0;
+			   int len = 2 + strlen(rsc_id); /* +1 space, +1 EOS */
+			   if(rsc_list && *rsc_list) {
+				   existing_len = strlen(*rsc_list);
 			   }
-			   sprintf(rsc_list_s, "%s ", rsc_id);
-			   rsc_list_s += strlen(rsc_id);
-			   rsc_len += strlen(rsc_id);
-			   rsc_list_s++;
-			   rsc_len++;
+
+			   crm_debug_5("Adding %s (%dc) at offset %d",
+				       rsc_id, len-2, existing_len);
+			   crm_realloc(*rsc_list, len + existing_len);
+			   sprintf(*rsc_list + existing_len, "%s ", rsc_id);
 		   }
 		   
 		   if(node_list != NULL) {
-			   if(node_len + 1 + strlen(uname) >= list_len) {
-				   list_len *= 2;
-				   goto clone_expand_reallocate;
+			   int existing_len = 0;
+			   int len = 2 + strlen(uname);
+			   if(node_list && *node_list) {
+				   existing_len = strlen(*node_list);
 			   }
-			   sprintf(node_list_s, "%s ", uname);
-			   node_list_s += strlen(uname);
-			   node_len += strlen(uname);
-			   node_list_s++;
-			   node_len++;
+			   
+			   crm_debug_5("Adding %s (%dc) at offset %d",
+				       uname, len-2, existing_len);
+			   crm_realloc(*node_list, len + existing_len);
+			   sprintf(*node_list + existing_len, "%s ", uname);
 		   }
 		   );
 }
