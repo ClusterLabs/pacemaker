@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.153 2006/06/21 11:06:13 andrew Exp $ */
+/* $Id: native.c,v 1.154 2006/06/22 13:33:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1755,6 +1755,7 @@ void
 native_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set)
 {
+	gboolean is_unprotected = FALSE;
 	gboolean run_unprotected = TRUE;
 	const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
@@ -1783,8 +1784,12 @@ native_stonith_ordering(
 			   action->runnable = FALSE;
 			   
 		   } else {
-			   pe_err("SHARED RESOURCE %s IS NOT PROTECTED:"
-				  " Stonith disabled", rsc->id);
-		   }
+			   is_unprotected = TRUE;
+		   }   
 		);
+
+	if(is_unprotected) {
+		pe_err("SHARED RESOURCE %s IS NOT PROTECTED:"
+		       " Stonith disabled", rsc->id);
+	}
 }
