@@ -1,4 +1,4 @@
-/* $Id: allocate.c,v 1.9 2006/06/21 14:53:48 andrew Exp $ */
+/* $Id: allocate.c,v 1.10 2006/06/23 08:54:13 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -537,9 +537,11 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
 	CRM_CHECK(rsc_id != NULL, return);
-	CRM_CHECK(rsc != NULL, return);	
+	if(rsc == NULL) {
+		crm_warn("Skipping param check for resource with no actions");
+		return;
 
-	if(rsc->orphan) {
+	} else if(rsc->orphan) {
 		crm_debug_2("Skipping param check for orphan: %s %s",
 			    rsc->id, task);
 		return;
