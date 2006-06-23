@@ -424,7 +424,7 @@ do_stop(long long action,
 	}
 
 	if(g_hash_table_size(shutdown_ops) > 0) {
-		crm_info("Waiting on %d stop operations to complete",
+		crm_info("Waiting on %d lrm operations to complete",
 			g_hash_table_size(shutdown_ops));
 		crmd_fsa_stall(NULL);
 		return I_NULL;

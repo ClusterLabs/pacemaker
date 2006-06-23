@@ -285,13 +285,12 @@ stop_all_resources(void)
 {
 	GListPtr lrm_list = NULL;
 
-	crm_info("Making sure all active resources are stopped before exit");
+	crm_info("Checking for active resources before exit");
 	
 	if(fsa_lrm_conn == NULL) {
 		return TRUE;
 
 	} else if(is_set(fsa_input_register, R_SENT_RSC_STOP)) {
-		crm_debug("Already sent stop operation");
 		return TRUE;
 	}
 
@@ -316,6 +315,8 @@ stop_all_resources(void)
 		crm_info("Waiting for %d pending stop operations "
 			 " to complete before exiting",
 			 g_hash_table_size(shutdown_ops));
+		g_hash_table_foreach(
+			shutdown_ops, ghash_print_pending, NULL);
 	}
 
 	return TRUE;
