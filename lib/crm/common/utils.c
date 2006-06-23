@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.56 2006/05/29 13:21:14 andrew Exp $ */
+/* $Id: utils.c,v 1.57 2006/06/23 08:53:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1215,15 +1215,18 @@ crm_abort(const char *file, const char *function, int line,
 {
 	int pid = 0;
 
-	do_crm_log(LOG_ERR, file, function,
- 		   "Triggered %sfatal assert at %s:%d : %s",
- 		   do_fork?"non-":"", file, line, assert_condition);
+	if(do_fork == FALSE) {
+		do_crm_log(LOG_ERR, file, function,
+			   "Triggered fatal assert at %s:%d : %s",
+			   file, line, assert_condition);
 
-	if(do_fork && crm_log_level < LOG_DEBUG) {
+	} else if(crm_log_level < LOG_DEBUG) {
+		do_crm_log(LOG_ERR, file, function,
+			   "Triggered non-fatal assert at %s:%d : %s",
+			   file, line, assert_condition);
 		return;
-	}
-	
-	if(do_fork) {
+
+	} else {
 		pid=fork();
 	}
 	
@@ -1233,7 +1236,9 @@ crm_abort(const char *file, const char *function, int line,
 			return;
 
 		default:	/* Parent */
-			crm_debug("Child %d forked to record assert failure", pid);
+			do_crm_log(LOG_ERR, file, function,
+				   "Forked child %d to record non-fatal assert at %s:%d : %s",
+				   pid, file, line, assert_condition);
 			return;
 
 		case 0:	/* Child */
