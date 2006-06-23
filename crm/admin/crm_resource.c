@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.41 2006/06/22 09:10:23 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.42 2006/06/23 08:32:00 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -606,8 +606,9 @@ main(int argc, char **argv)
 #endif
 
 	crm_system_name = basename(argv[0]);
-	crm_log_init(crm_system_name);
-	crm_log_level = LOG_ERR;
+	cl_log_set_entity(crm_system_name);
+	cl_log_set_facility(LOG_USER);
+	set_crm_log_level(LOG_ERR);
 	cl_log_enable_stderr(TRUE);
 	
 	if(argc < 2) {
