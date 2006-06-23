@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.10 2006/06/22 09:11:50 andrew Exp $ */
+/* $Id: unpack.c,v 1.11 2006/06/23 10:29:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -193,6 +193,8 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 	const char *id     = NULL;
 	const char *uname  = NULL;
 	const char *type   = NULL;
+	const char *blind_faith = g_hash_table_lookup(
+		data_set->config_hash, "startup_fencing");
 
 	crm_debug_2("Begining unpack... %s",
 		    xml_nodes?crm_element_name(xml_nodes):"<none>");
@@ -246,16 +248,16 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 /* 			new_node->weight = -INFINITY; */
 /* 		} */
 		
-		if(data_set->stonith_enabled) {
+		if(data_set->stonith_enabled == FALSE || crm_is_true(blind_faith)) {
+			/* blind faith... */
+			new_node->details->unclean = FALSE; 
+
+		} else {
 			/* all nodes are unclean until we've seen their
 			 * status entry
 			 */
 			new_node->details->unclean = TRUE;
-		} else {
-			/* blind faith... */
-			new_node->details->unclean = FALSE; 
 		}
-		
 		
 		if(type == NULL
 		   || safe_str_eq(type, "member")
