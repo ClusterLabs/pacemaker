@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <glib.h>
 #include <clplumbing/cl_log.h>
+#include <clplumbing/uids.h>
 #include <pils/plugin.h>
 #include <dirent.h>
 #include <libgen.h>  /* Add it for compiling on OSX */
@@ -201,8 +202,8 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	/* send the RA operation to stonithd to simulate a RA's actions */
 	if ( 0==STRNCMP_CONST(op_type, "start") 
 		|| 0==STRNCMP_CONST(op_type, "stop") ) {
-		cl_log(LOG_DEBUG
-			, "Will %s STONITH resource <rsc_id=%s> : Device=%s"
+		cl_log(LOG_INFO
+			, "Try to %s STONITH resource <rsc_id=%s> : Device=%s"
 			, op_type, rsc_id, rsc_type);
 	}
 
@@ -269,6 +270,7 @@ static int
 get_resource_list(GList ** rsc_info)
 {
 	int rc;
+	int     needprivs = !cl_have_full_privs();
 
 	if ( rsc_info == NULL ) {
 		cl_log(LOG_ERR, "Parameter error: get_resource_list");
@@ -281,16 +283,21 @@ get_resource_list(GList ** rsc_info)
 		*rsc_info = NULL;
 	}
 
-	cl_log(LOG_INFO, "To get stonith resource list");
+	if (needprivs) {
+		return_to_orig_privs();
+	}
 	if (ST_OK != stonithd_signon("STONITH_RA")) {
 		cl_log(LOG_ERR, "%s:%d: Can not signon to the stonithd."
 			, __FUNCTION__, __LINE__);
-		return -1;
+		rc = -1;
+	} else {
+		rc = stonithd_list_stonith_types(rsc_info);
+		stonithd_signoff();
 	}
 
-	rc = stonithd_list_stonith_types(rsc_info);
-	stonithd_signoff();
-
+	if (needprivs) {
+		return_to_dropped_privs();
+	}
 	return rc;
 }
 
