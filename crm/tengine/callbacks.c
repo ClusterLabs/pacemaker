@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.84 2006/06/23 08:33:53 andrew Exp $ */
+/* $Id: callbacks.c,v 1.85 2006/06/23 12:35:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -230,7 +230,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 
 	} else if(strcasecmp(op, CRM_OP_TRANSITION) == 0) {
 		const char *graph_file = cl_get_string(msg, F_CRM_TGRAPH);
-/* 		const char *graph_input = cl_get_string(msg, F_CRM_TGRAPH_INPUT); */
+ 		const char *graph_input = cl_get_string(msg, F_CRM_TGRAPH_INPUT);
 		CRM_CHECK(graph_file != NULL, crm_err("No graph filename provided"); return TRUE);
 
 		if(transition_graph->complete == FALSE) {
@@ -246,7 +246,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 				  return TRUE);
 			
 			destroy_graph(transition_graph);
-			crm_debug("Read graph from: %s", graph_file);
+			crm_debug("Read graph from %s based on %s", graph_file, graph_input);
 			transition_graph = unpack_graph(graph_data);
 			start_global_timer(transition_timer,
 					   transition_graph->transition_timeout);
