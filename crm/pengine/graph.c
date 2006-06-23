@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.102 2006/06/22 16:20:27 andrew Exp $ */
+/* $Id: graph.c,v 1.103 2006/06/23 12:34:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -432,7 +432,7 @@ action2xml(action_t *action, gboolean as_input)
 	crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 
 	g_hash_table_foreach(action->extra, hash2field, args_xml);
-	if(action->rsc != NULL) {
+	if(action->rsc != NULL && safe_str_neq(action->task, CRMD_ACTION_STOP)) {
 		g_hash_table_foreach(action->rsc->parameters, hash2field, args_xml);
 	}
 
