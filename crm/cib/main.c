@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.45 2006/06/22 15:11:56 andrew Exp $ */
+/* $Id: main.c,v 1.46 2006/06/23 12:30:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -119,11 +119,11 @@ main(int argc, char ** argv)
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
 			case 'V':
-				cl_log_enable_stderr(1);
 				alter_debug(DEBUG_INC);
 				break;
 			case 's':
 				stand_alone = TRUE;
+				cl_log_enable_stderr(1);
 				break;
 			case 'h':		/* Help message */
 				usage(crm_system_name, LSB_EXIT_OK);
