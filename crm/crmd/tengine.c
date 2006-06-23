@@ -150,14 +150,20 @@ do_te_invoke(long long action,
 
 	if(action & A_TE_INVOKE) {
 		ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
-		if(input->xml != NULL) {
+		const char *graph_file = cl_get_string(input->msg, F_CRM_TGRAPH);
+		const char *graph_input = cl_get_string(input->msg, F_CRM_TGRAPH_INPUT);
 
+		if(graph_file != NULL) {
+			
 			crm_debug("Starting a transition");
 			set_bit_inplace(fsa_input_register, R_IN_TRANSITION);
 			
 			cmd = create_request(
-				CRM_OP_TRANSITION, input->xml, NULL,
+				CRM_OP_TRANSITION, NULL, NULL,
 				CRM_SYSTEM_TENGINE, CRM_SYSTEM_DC, NULL);
+
+			ha_msg_add(cmd, F_CRM_TGRAPH, graph_file);
+			ha_msg_add(cmd, F_CRM_TGRAPH_INPUT, graph_input);
 			
 			send_request(cmd, NULL);
 

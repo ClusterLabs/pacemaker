@@ -1,4 +1,4 @@
-/* $Id: msg_xml.h,v 1.55 2006/06/02 15:52:13 andrew Exp $ */
+/* $Id: msg_xml.h,v 1.56 2006/06/23 08:33:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,6 +31,8 @@
 #define F_CRM_JOIN_ID			"join_id"
 #define F_CRM_ELECTION_ID		"election-id"
 #define F_CRM_ELECTION_OWNER		"election-owner"
+#define F_CRM_TGRAPH			"crm-tgraph"
+#define F_CRM_TGRAPH_INPUT		"crm-tgraph-in"
 
 /*---- Common tags/attrs */
 #define XML_DIFF_MARKER			"__crm_diff_marker__"

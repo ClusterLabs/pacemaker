@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.116 2006/06/13 09:39:05 andrew Exp $ */
+/* $Id: pengine.c,v 1.117 2006/06/23 08:33:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -88,16 +88,17 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		int series_id = 0;
 		int series_wrap = 0;
 		char *filename = NULL;
+		char *graph_file = NULL;
 		const char *value = NULL;
 		pe_working_set_t data_set;
 		crm_data_t *generation = create_xml_node(NULL, XML_TAG_CIB);
 		crm_data_t *log_input  = copy_xml(xml_data);
+		HA_Message *reply = NULL;
 #if HAVE_BZLIB_H
 		gboolean compress = TRUE;
 #else
 		gboolean compress = FALSE;
 #endif
-		
 		
 		copy_in_properties(generation, xml_data);
 		crm_log_xml_info(generation, "[generation]");
@@ -105,13 +106,16 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		was_processing_error = FALSE;
 		was_processing_warning = FALSE;
 
+		graph_file = crm_strdup(WORKING_DIR"/graph.XXXXXX");
+		mktemp(graph_file);
+
 		crm_zero_mem_stats(NULL);
 
 		do_calculations(&data_set, xml_data, NULL);
-		crm_log_xml_debug_3(data_set.graph, "[out]");
 
-		if(send_ipc_reply(sender, msg, data_set.graph) == FALSE) {
-			crm_err("Answer could not be sent");
+		crm_info("Writing the TE graph to %s", graph_file);
+		if(write_xml_file(data_set.graph, graph_file, FALSE) < 0) {
+			crm_err("TE graph could not be written to disk");
 		}
 
 		series_id = get_series();
@@ -129,15 +133,15 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 			pe_config_warn("No value specified for cluster"
 				       " preference: %s",
 				       series[series_id].param);
-		}   
-		
+		}		
+
 		data_set.input = NULL;
 		cleanup_alloc_calculations(&data_set);
 		
-		if(is_ipc_empty(sender) && crm_mem_stats(NULL)) {
+		if(crm_mem_stats(NULL)) {
 			pe_warn("Unfree'd memory");
 		}
-
+		
 		seq = get_last_sequence(PE_WORKING_DIR, series[series_id].name);
 	
 		filename = generate_series_filename(
@@ -173,7 +177,16 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 				 "  Please run \"crm_verify -L\" to identify issues.");
 		}
 
+		reply = create_reply(msg, NULL);
+		ha_msg_add(reply, F_CRM_TGRAPH, graph_file);
+		ha_msg_add(reply, F_CRM_TGRAPH_INPUT, filename);
+		CRM_ASSERT(reply != NULL);
+		if(send_ipc_message(sender, reply) == FALSE) {
+			crm_err("Answer could not be sent");
+		}
+
 		free_xml(generation);
+		crm_free(graph_file);
 		free_xml(log_input);
 		crm_free(filename);
 		
