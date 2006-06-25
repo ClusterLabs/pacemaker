@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.4 2006/06/22 13:32:15 andrew Exp $ */
+/* $Id: group.c,v 1.5 2006/06/25 14:56:13 lars Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -122,8 +122,14 @@ gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		);
 
 	if(group_data->num_children == 0) {
+#if 0
+		/* Bug #1287 */
 		pe_config_err("Group %s did not have any children", rsc->id);
 		return FALSE;
+#else
+		pe_config_warn("Group %s did not have any children", rsc->id);
+		return TRUE;
+#endif
 	}
 	
 	crm_debug_3("Added %d children to resource %s...",
