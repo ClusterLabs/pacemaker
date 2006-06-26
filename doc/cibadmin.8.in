@@ -1,4 +1,4 @@
-.TH CIBADMIN 8 "$Date: 2006/06/09 18:58:24 $" "Linux-HA/OpenHA Project" "Heartbeat @VERSION@ Adminstration Guide"
+.TH CIBADMIN 8 "$Date: 2006/06/26 12:45:11 $" "Linux-HA/OpenHA Project" "Heartbeat @VERSION@ Adminstration Guide"
 .SH NAME
 \fIcibadmin\fP \- read, modify, or administer heartbeat Cluster Information Base
 .SH SYNOPSIS
@@ -112,10 +112,11 @@ Note that it must be a complete tag or XML fragment.
 .B \-\-cib_bump (\-B)
 I have no idea what this option does \fB:\-)\fP
 .TP 8
-.BI "\-\-host (\-h)" hostname
+.BI "\-\-host (\-h) " hostname
 specifies the host to send this command to (rarely used, advanced option)
 .TP 8
-.B \-\-local (\-l) command takes effect locally (rarely used advanced option)
+.B \-\-local (\-l)
+command takes effect locally (rarely used, advanced option)
 .TP 8
 .B \-\-no\-bcast (\-b)
 Command will not be broadcast to other nodes, even if it modifies the CIB.
