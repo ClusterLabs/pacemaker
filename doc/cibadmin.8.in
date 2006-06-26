@@ -1,4 +1,4 @@
-.TH CIBADMIN 8 "$Date: 2006/06/26 12:45:11 $" "Linux-HA/OpenHA Project" "Heartbeat @VERSION@ Adminstration Guide"
+.TH CIBADMIN 8 "$Date: 2006/06/26 12:54:48 $" "Linux-HA/OpenHA Project" "Heartbeat @VERSION@ Adminstration Guide"
 .SH NAME
 \fIcibadmin\fP \- read, modify, or administer heartbeat Cluster Information Base
 .SH SYNOPSIS
@@ -22,6 +22,10 @@
 \fBcibadmin\fP \-\-cib_bump (\-B)
 .PP
 \fBcibadmin\fP \-\-cib_ismaster (\-m)
+.PP
+\fBcibadmin\fP \-\-cib_master (\-w)
+.PP
+\fBcibadmin\fP \-\-cib_slave (\-r)
 .PP
 \fBcibadmin\fP \-\-cib_sync (\-S)
 .PP
@@ -110,7 +114,19 @@ Note that it must be a complete tag or XML fragment.
 .SH SPECIALIZED OPTIONS
 .TP 8
 .B \-\-cib_bump (\-B)
-I have no idea what this option does \fB:\-)\fP
+This forcibly increases the update counter of the CIB.
+.TP 8
+.B \-\-cib_master (\-w)
+This command forces the local CIB instance into read-write mode. This is
+a highly dangerous command.
+.TP 8
+.B \-\-cib_slave (\-r)
+This command forces the local CIB instance into read-only mode. This is
+a highly dangerous command.
+.TP 8
+.B \-\-force_quorum (\-f)
+This will force a write to the CIB, regardless of whether the cluster
+has quorum or not. Use carefully.
 .TP 8
 .BI "\-\-host (\-h) " hostname
 specifies the host to send this command to (rarely used, advanced option)
@@ -226,11 +242,3 @@ Note carefully the long options.
 Some have \fB\-\fP characters in them, and some have \fB_\fP characters in them.
 
 \fIWhat does the \-t xxx flag do?\fP
-.PP
-\fIWhat does the \-r flag do?\fP
-.PP
-\fIWhat does the \-w flag do?\fP
-.PP
-\fIWhat does the \-f flag do?\fP
-.PP
-What does \-\-cib_bump (\-B) do?\fP
