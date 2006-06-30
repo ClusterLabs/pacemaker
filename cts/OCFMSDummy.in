@@ -19,16 +19,6 @@ CRM_MASTER="/usr/sbin/crm_master"
 #DUMMY_RESOURCE=@OCF_RA_DIR@/heartbeat/OCFMSDummy
 DUMMY_RESOURCE=@libdir@/heartbeat/cts/OCFMSDummy
 
-DUMMY_LOGFILE="/var/log/OCFMSDummy.lOG"
-
-if [ "x$OCF_RESKEY_resource" != "x" ]; then
-        DUMMY_RESOURCE=$OCF_RESKEY_resource
-fi
-
-if [ "x$OCF_RESKEY_logfile" != "x" ]; then
-	DUMMY_LOGFILE=$OCF_RESKEY_logfile
-fi
-
 start_delay=1
 
 stop_delay=1
@@ -36,11 +26,6 @@ monitor_delay=1
 promote_delay=1
 demote_delay=1
 notify_delay=1
-
-dummy_log () {
-    echo $1 $2 $3
-    echo `date +%T` $1 $2 $3 >> $DUMMY_LOGFILE
-}
 
 do_cmd() {
     local cmd="$*"
@@ -63,27 +48,25 @@ do_cmd() {
 
 
 dummy_get_status() {
-    tmp=`mktemp`
     instance=$1
     basename=`basename $DUMMY_RESOURCE`
-    $PS $basename > $tmp
-    $GREP -e "$basename.*#$instance" $tmp > /dev/null 
+    result=`$PS $basename`
+    echo $result | $GREP -e "$basename.*#$instance" >/dev/null 
     running=$?
 
     if [ ! $running -eq 0 ]; then
-         dummy_log "status: instance #$instance not running"
+         ocf_log info "status: instance #$instance not running"
          return $OCF_NOT_RUNNING
     fi
-    $GREP -e "master #$instance" $tmp > /dev/null
+    echo $result | $GREP -e "master #$instance" >/dev/null
     state=$?
 
-    rm -rf $tmp
 
     if [ $state -eq 0 ]; then    # master
-        dummy_log "status: instance #$instance is running as master"
+        ocf_log info "status: instance #$instance is running as master"
         return $OCF_RUNNING_MASTER
     else        # slave
-        dummy_log "status: instance #$instance is running as slave"
+        ocf_log info "status: instance #$instance is running as slave"
         return $OCF_SUCCESS
     fi 
 }
@@ -109,7 +92,7 @@ do_stop_resource () {
     rm -f $tmp
 
     for pid in $pids; do
-        dummy_log "trying to kill pid $pid (instance #$instance)"
+        ocf_log info "trying to kill pid $pid (instance #$instance)"
         kill -9 $pid
     done
     return $OCF_SUCCESS
@@ -118,24 +101,24 @@ do_stop_resource () {
 do_change_state() {
     instance=$1
     request_state=$2
-    dummy_log "before state changed: "
+    ocf_log info "before state changed: "
     dummy_get_status $instance
     # not running, can't promote
     if [ $? -eq $OCF_NOT_RUNNING ] ;then
-        dummy_log "instance #$instance not running, can't change state"
+        ocf_log info "instance #$instance not running, can't change state"
         return $OCF_ERROR;
     fi
     do_stop_resource $instance
     do_start_resource $instance $request_state
     rc=$?
-    dummy_log "after state changed: "
+    ocf_log info "after state changed: "
     dummy_get_status $instance
     return $rc
 }
 
 
 dummy_start() {
-    dummy_log "start instance #$OCF_RESKEY_CRM_meta_clone slave"
+    ocf_log info "start instance #$OCF_RESKEY_CRM_meta_clone slave"
     do_start_resource $OCF_RESKEY_CRM_meta_clone "slave"
     if [ $OCF_RESKEY_CRM_meta_clone -eq 0 ]; then
         do_cmd $CRM_MASTER -v 1000
@@ -146,7 +129,7 @@ dummy_start() {
 
 dummy_stop() {
     touch $DUMMY_RESOURCE
-    dummy_log "stop instance #$OCF_RESKEY_CRM_meta_clone"
+    ocf_log info "stop instance #$OCF_RESKEY_CRM_meta_clone"
     do_stop_resource $OCF_RESKEY_CRM_meta_clone
     rc=$?
     sleep $stop_delay
@@ -154,7 +137,7 @@ dummy_stop() {
 }
 
 dummy_monitor() {
-    dummy_log "monitor instance #$OCF_RESKEY_CRM_meta_clone"
+    ocf_log info "monitor instance #$OCF_RESKEY_CRM_meta_clone"
     dummy_get_status $OCF_RESKEY_CRM_meta_clone
     rc=$?
     sleep $monitor_delay
@@ -162,7 +145,7 @@ dummy_monitor() {
 }
 
 dummy_promote() {
-    dummy_log "promote instance #$OCF_RESKEY_CRM_meta_clone"
+    ocf_log info "promote instance #$OCF_RESKEY_CRM_meta_clone"
     do_change_state $OCF_RESKEY_CRM_meta_clone "master"
     rc=$?
     sleep $promote_delay
@@ -170,7 +153,7 @@ dummy_promote() {
 }
 
 dummy_demote() {
-    dummy_log "demote instance #$OCF_RESKEY_CRM_meta_clone"
+    ocf_log info "demote instance #$OCF_RESKEY_CRM_meta_clone"
     do_change_state $OCF_RESKEY_CRM_meta_clone "slave"
     rc=$?
     sleep $demote_delay
@@ -178,7 +161,7 @@ dummy_demote() {
 }
 
 dummy_notify() {
-    dummy_log "notify instance #$OCF_RESKEY_CRM_meta_clone"
+    ocf_log info "notify instance #$OCF_RESKEY_CRM_meta_clone"
     touch $DUMMY_RESOURCE
     sleep $notify_delay
         local n_type="$OCF_RESKEY_CRM_meta_notify_type"
@@ -234,7 +217,7 @@ usage ()
 {
 	echo "OCFMSDummy start|stop|monitor|promote|demote|notify"
 }
-case $1 in
+case $__OCF_ACTION in
     start)   dummy_start   ;;
     stop)    dummy_stop    ;;
     monitor) dummy_monitor ;;
@@ -246,6 +229,6 @@ case $1 in
 # master and slave are resource operations. 
     master)  dummy_resource_run_loop ;;
     slave)   dummy_resource_run_loop ;;
-    *) usage $1
+    *) usage $__OCF_ACTION
        exit $OCF_ERR_ARGS ;;
 esac
