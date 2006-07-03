@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.125 2006/06/22 15:11:56 andrew Exp $ */
+/* $Id: callbacks.c,v 1.126 2006/07/03 15:15:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -128,11 +128,36 @@ cib_prepare_common(HA_Message *root, const char *section)
 	return data;
 }
 
+static gboolean
+verify_section(const char *section)
+{
+	if(section == NULL) {
+		return TRUE;
+	} else if(safe_str_eq(section, XML_TAG_CIB)) {
+		return TRUE;
+	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+		return TRUE;
+	} else if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
+		return TRUE;
+	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
+		return TRUE;
+	} else if(safe_str_eq(section, XML_CIB_TAG_RESOURCES)) {
+		return TRUE;
+	} else if(safe_str_eq(section, XML_CIB_TAG_CONSTRAINTS)) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
 static enum cib_errors
 cib_prepare_none(HA_Message *request, HA_Message **data, const char **section)
 {
 	*data = NULL;
 	*section = cl_get_string(request, F_CIB_SECTION);
+	if(verify_section(*section) == FALSE) {
+		return cib_bad_section;
+	}
 	return cib_ok;
 }
 
@@ -142,6 +167,9 @@ cib_prepare_data(HA_Message *request, HA_Message **data, const char **section)
 	HA_Message *input_fragment = cl_get_struct(request, F_CIB_CALLDATA);
 	*section = cl_get_string(request, F_CIB_SECTION);
 	*data = cib_prepare_common(input_fragment, *section);
+	if(verify_section(*section) == FALSE) {
+		return cib_bad_section;
+	}
 	return cib_ok;
 }
 
@@ -150,6 +178,9 @@ cib_prepare_sync(HA_Message *request, HA_Message **data, const char **section)
 {
 	*section = cl_get_string(request, F_CIB_SECTION);
 	*data = request;
+	if(verify_section(*section) == FALSE) {
+		return cib_bad_section;
+	}
 	return cib_ok;
 }
 
@@ -157,7 +188,10 @@ static enum cib_errors
 cib_prepare_diff(HA_Message *request, HA_Message **data, const char **section)
 {
 	HA_Message *input_fragment = cl_get_struct(request,F_CIB_UPDATE_DIFF);
-	*section = NULL;	
+	*section = NULL;
+	if(input_fragment == NULL) {
+		input_fragment = cl_get_struct(request, F_CIB_CALLDATA);
+	}
 	*data = cib_prepare_common(input_fragment, NULL);
 	return cib_ok;
 }

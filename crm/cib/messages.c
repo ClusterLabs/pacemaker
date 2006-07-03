@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.80 2006/06/20 09:47:55 andrew Exp $ */
+/* $Id: messages.c,v 1.81 2006/07/03 15:15:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -372,10 +372,19 @@ cib_process_diff(
 	if(diff_del_admin_epoch == diff_add_admin_epoch
 	   && diff_del_epoch == diff_add_epoch
 	   && diff_del_updates == diff_add_updates) {
-		apply_diff = FALSE;
-		log_level = LOG_ERR;
-		reason = "+ and - versions in the diff did not change";
-		log_cib_diff(LOG_ERR, input, __FUNCTION__);
+		if(diff_add_admin_epoch == -1 && diff_add_epoch == -1 && diff_add_updates == -1) {
+			diff_add_epoch = this_epoch;
+			diff_add_updates = this_updates + 1;
+			diff_add_admin_epoch = this_admin_epoch;
+			diff_del_epoch = this_epoch;
+			diff_del_updates = this_updates;
+			diff_del_admin_epoch = this_admin_epoch;
+		} else {
+			apply_diff = FALSE;
+			log_level = LOG_ERR;
+			reason = "+ and - versions in the diff did not change";
+			log_cib_diff(LOG_ERR, input, __FUNCTION__);
+		}
 	}
 
 	if(apply_diff && diff_del_admin_epoch > this_admin_epoch) {
@@ -415,7 +424,7 @@ cib_process_diff(
 	}
 
 	if(apply_diff
-	   && apply_cib_diff(existing_cib, input, result_cib) == FALSE) {
+	   && apply_xml_diff(existing_cib, input, result_cib) == FALSE) {
 		log_level = LOG_WARNING;
 		reason = "Failed application of an update diff";
 		if(options & cib_force_diff && cib_is_master == FALSE) {

@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.54 2006/06/19 11:59:18 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.55 2006/07/03 15:15:30 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -90,7 +90,7 @@ int request_id = 0;
 int operation_status = 0;
 cib_t *the_cib = NULL;
 
-#define OPTARGS	"V?o:QDUCEX:t:Srwlsh:MmBfbdRx:p"
+#define OPTARGS	"V?o:QDUCEX:t:Srwlsh:MmBfbdRx:pP"
 
 int
 main(int argc, char **argv)
@@ -113,6 +113,7 @@ main(int argc, char **argv)
 		{CIB_OP_REPLACE, 0, 0, 'R'},
 		{CIB_OP_UPDATE,  0, 0, 'U'},
 		{CIB_OP_MODIFY,  0, 0, 'M'},
+		{"patch",	 0, 0, 'P'},
 		{CIB_OP_DELETE,  0, 0, 'D'},
 		{CIB_OP_DELETE_ALT,  0, 0, 'd'},
 		{CIB_OP_BUMP,    0, 0, 'B'},
@@ -189,6 +190,9 @@ main(int argc, char **argv)
 				break;
 			case 'Q':
 				cib_action = CIB_OP_QUERY;
+				break;
+			case 'P':
+				cib_action = CIB_OP_APPLY_DIFF;
 				break;
 			case 'S':
 				cib_action = CIB_OP_SYNC;
