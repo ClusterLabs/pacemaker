@@ -5,35 +5,29 @@ GLOBAL TODOs:
 Versionize DTD so we can validate against a specific version
 
 Background
-The CIB is described quite well in section 5 of the crm.txt (checked into CVS in the crm directory) so it is not repeated here.
-Suffice to say that it stores the configuration and runtime data required for cluster-wide resource management in XML format.
+ The CIB is described quite well in section 5 of the crm.txt (checked into CVS in the crm directory) so it is not repeated here.
+ Suffice to say that it stores the configuration and runtime data required for cluster-wide resource management in XML format.
 
 CIB: Information Structure
-The CIB is divided into two main sections: The "static" configuration part and the "dynamic" status.
+ The CIB is divided into two main sections: The "static" configuration part and the "dynamic" status.
 
-The configuration contains - surprisingly - the configuration of the cluster, namely node attributes, resource instance configuration, and the constraints which describe the dependencies between all these.
-To identify the most recent configuration available in the cluster, this section is time-stamped with the unique timestamp of the last update.
+ The configuration contains - surprisingly - the configuration of the cluster, namely node attributes, resource instance configuration, and the constraints which describe the dependencies between all these.
+ To identify the most recent configuration available in the cluster, this section is time-stamped with the unique timestamp of the last update.
 
-The status part is dynamically generated / updated by the CRM system and represents the current status of the cluster; which nodes are up, down or crashed, which resources are running where etc.
-The timestamps here represent when the last change went into this section.
+ The status part is dynamically generated / updated by the CRM system and represents the current status of the cluster; which nodes are up, down or crashed, which resources are running where etc.
 
-All timestamps are given in seconds since the epoch with millisecond precision.
+ Every information carrying object has an "id" tag, which is basically the UUID of it, should we ever need to access it directly.
+ Unless otherwise stated, the id field is a short name consisting simple ascii characters [a-zA-Z0-9_\-]
+ The exception is for resources because the LRM can support only id's of up to 64 characters.
 
-Every information carrying object has an "id" tag, which is basically the UUID of it, should we ever need to access it directly.
-
-More details are given in the annotated DTD below.
+Other Notes
+ The description field in all elements is opaque to the CRM and is for administrative comments.
 
 TODO
  * Is the version element necessary in <cib>? If we flag the DTD against which the CIB validates, the version is implicit...
  * Do we need to know about ping nodes...?
  * The integer comparison type really should be number
-
-General Notes
-The description field in all elements is opaque to the CRM and is for administrative comments.
-
-Unless otherwise stated, the id field is a short name consisting of up to 64 simple ascii characters [a-zA-Z0-9_\-]
 -->
-
 <!ELEMENT cib (configuration, status)>
 <!ATTLIST cib
           cib-last-written CDATA        #IMPLIED
@@ -69,7 +63,6 @@ Additionally, num_peers and have_quorum are used during the election process to 
  * ccm_transition stores the membership instance from the ConsensusClusterMembership layer.
  * cib_feature_revision is the feature set that this configuration requires
 -->
-
 <!ELEMENT configuration (crm_config, nodes, resources, constraints)>
 
 <!--
@@ -78,7 +71,10 @@ crm_config
 Used to specify cluster-wide options.
 
 The use of multiple cluster_property_set sections and time-based rule expressions allows the the cluster to behave differently (for example) during buisness hours than it does overnight.
+-->
+<!ELEMENT crm_config (cluster_property_set)*>
 
+<!--
 Current crm_config options:
 
  * transition_idle_timeout (interval, default=60s):
@@ -130,8 +126,6 @@ Current crm_config options:
    * FALSE : Ignore the action
    This mostly effects the CRM's behavior when the interval for a recurring action is changed.
 -->
-
-<!ELEMENT crm_config (cluster_property_set)*>
 <!ELEMENT cluster_property_set (rule*, attributes)>
 <!ATTLIST cluster_property_set
           id                CDATA        #REQUIRED
@@ -165,6 +159,7 @@ Ideally it would be possible to have the CRMd on each node gather some of this i
 
 <!--
  * class
+   Specifies the location and standard the resource script conforms to
    * ocf
      Most OCF RAs started out life as v1 Heartbeat resource agents.
      These have all been ported to meet the OCF specifications.
@@ -208,8 +203,13 @@ Ideally it would be possible to have the CRMd on each node gather some of this i
  * resource_stickiness
    See the description of the default_resource_stickiness cluster attribute.
    resource_stickiness allows you to override the cluster's default for the individual resource.
+
+NOTE: primitive resources may contain at most one "operations" object.
+      The CRM will complain about your configuration if this criteria is not met.
+      Please use crm_verify to ensure your configuration is valid.
+      The DTD is written this way to be order in-sensitive.
 -->
-<!ELEMENT primitive (operations?, meta_attributes*, instance_attributes*)>
+<!ELEMENT primitive (operations|meta_attributes|instance_attributes)*>
 <!ATTLIST primitive
           id                CDATA        #REQUIRED
           description       CDATA        #IMPLIED
@@ -267,8 +267,12 @@ Defining a resource group is a quick way to make sure that the resources:
  * are all started on the same node, and
  * are started and stopped in the correct (sequential) order
 though either or both of these properties can be disabled.
+
+NOTE: Do not create empty groups.  
+      They are temporarily supported because the GUI requires it but will be removed as soon as possible.
+      The DTD is written this way to be order in-sensitive.
 -->
-<!ELEMENT group (meta_attributes*, instance_attributes*, primitive*)>
+<!ELEMENT group (meta_attributes|instance_attributes|primitive)*>
 <!ATTLIST group
           id            CDATA               #REQUIRED
           description   CDATA               #IMPLIED
@@ -302,9 +306,15 @@ Using a cloned group is a much better way of achieving the same result.
    Behaviour in response to a failed action or notificaiton is likely to be improved in future releases.
 
    See http://linux-ha.org/v2/Concepts/Clones for more information on notify actions
+
+
+NOTE: Clones must contain exactly one primitive or one group resource. 
+      The CRM will complain about your configuration if this criteria is not met.
+      Please use crm_verify to ensure your configuration is valid.
+      The DTD is written this way to be order in-sensitive.
 -->
 
-<!ELEMENT clone (meta_attributes*, instance_attributes*, (primitive|group))>
+<!ELEMENT clone (meta_attributes|instance_attributes|primitive|group)*>
 <!ATTLIST clone
           id            CDATA               #REQUIRED
           description   CDATA               #IMPLIED
@@ -321,8 +331,14 @@ Using a cloned group is a much better way of achieving the same result.
 <!--
 Master/Slave resources are a superset of Clones in that instances can also be in one of two states.
 The meaning of the states is specific to the resource.
+
+NOTE: master_slave must contain exactly one primitive resource OR one group resource.
+      It may not contain both, nor may it contain neither.
+      The CRM will complain about your configuration if this criteria is not met.
+      Please use crm_verify to ensure your configuration is valid.
+      The DTD is written this way to be order in-sensitive.
 -->
-<!ELEMENT master_slave (meta_attributes*, instance_attributes*, (primitive|group))>
+<!ELEMENT master_slave (meta_attributes|instance_attributes|primitive|group)*>
 <!ATTLIST master_slave
           id            CDATA       #REQUIRED
           description   CDATA       #IMPLIED
@@ -401,9 +417,7 @@ Common instance attributes for nodes:
 Every constraint entry also has a 'lifetime' attribute, which expresses when this constraint is applicable.
 For example, a constraint may only be valid during certain times of the day, or days of the week.
 Eventually, we would like to be able to support constraints that only last until events such as the next reboot or the next transition.
-
 -->
-
 <!ELEMENT constraints (rsc_order|rsc_colocation|rsc_location)*>
 
 <!--
