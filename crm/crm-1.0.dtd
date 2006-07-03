@@ -428,7 +428,6 @@ rsc_ordering constraints express dependencies between the actions on two resourc
  * to : A resource id
  * symmetrical : If TRUE, create the reverse constraint for the other action also.
 -->
-
 <!ELEMENT rsc_order (lifetime?)>
 <!ATTLIST rsc_order
           id        CDATA #REQUIRED
@@ -445,7 +444,6 @@ Specify where a resource should run relative to another resource
 NOTE: Currently, only values of + and - INFINITY are permitted for the score.
 This may change in the future.
 -->
-
 <!ELEMENT rsc_colocation (lifetime?)>
 <!ATTLIST rsc_colocation
           id        CDATA #REQUIRED
@@ -466,7 +464,6 @@ If multiple nodes have the same weighting, the node with the fewest running reso
 
 The rsc field is, surprisingly, a resource id.
 -->
-
 <!ELEMENT rsc_location (lifetime?,rule*)>
 <!ATTLIST rsc_location
           id          CDATA #REQUIRED
@@ -518,7 +515,6 @@ The rsc field is, surprisingly, a resource id.
       </node>
     </nodes>
 -->
-
 <!ELEMENT rule (expression|date_expression|rule)*>
 <!ATTLIST rule
           id                  CDATA          #REQUIRED
@@ -700,8 +696,32 @@ Example 7: Friday the 13th if it is a full moon
     <date_spec weekdays="5" monthdays="13" moon="4"/>
   </date_expression>
 </rule>
+-->
 
-status
+<!--
+You don't have to give a value.
+There's a difference between a key not being present and a key not having a value.
+-->
+<!ELEMENT nvpair EMPTY>
+<!ATTLIST nvpair
+          id     CDATA  #REQUIRED
+          name   CDATA  #REQUIRED
+          value  CDATA  #IMPLIED>
+
+<!ELEMENT attributes (nvpair*)>
+
+<!--
+These attributes take effect only if no value has previously been applied as part of the node's definition.
+Additionally, when the node reboots all settings made here are erased.
+
+id must be the UUID of the node.
+-->
+<!ELEMENT transient_attributes (instance_attributes*)>
+<!ATTLIST transient_attributes id CDATA #IMPLIED>
+
+<!--=========== Status - Advanced Use Only ===========-->
+
+<!--
 Details about the status of each node configured.
 
 HERE BE DRAGONS
@@ -710,13 +730,10 @@ Never, ever edit this section directly or using cibadmin.
 The consequences of doing so are many and varied but rarely ever good or what you anticipated.
 To discourage this, the status section is no longer even written to disk, and is always discarded at startup.
 
-node_state
-
 To avoid duplication of data, state entries only carry references to nodes and resources.
-
 -->
-
 <!ELEMENT status (node_state*)>
+
 <!--
 The state of a given node.
 
@@ -732,7 +749,6 @@ This information is updated by the DC based on inputs from sources such as the C
 Ideally, there should be a node_state entry for every entry in the <nodes> list.
 
 -->
-
 <!ELEMENT node_state (transient_attributes|lrm)*>
 <!ATTLIST node_state
         id              CDATA                   #REQUIRED
@@ -807,24 +823,3 @@ The parameters section allows us to detect when a resource's definition has chan
           op_digest             CDATA #IMPLIED
           interval              CDATA #REQUIRED
           transition_magic      CDATA #REQUIRED>
-
-<!--
-You don't have to give a value.
-There's a difference between a key not being present and a key not having a value.
--->
-<!ELEMENT nvpair EMPTY>
-<!ATTLIST nvpair
-          id     CDATA  #REQUIRED
-          name   CDATA  #REQUIRED
-          value  CDATA  #IMPLIED>
-
-<!ELEMENT attributes (nvpair*)>
-
-<!--
-These attributes take effect only if no value has previously been applied as part of the node's definition.
-Additionally, when the node reboots all settings made here are erased.
-
-id must be the UUID of the node.
--->
-<!ELEMENT transient_attributes (instance_attributes*)>
-<!ATTLIST transient_attributes id CDATA #IMPLIED>
