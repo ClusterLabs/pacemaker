@@ -24,7 +24,7 @@ Other Notes
  The description field in all elements is opaque to the CRM and is for administrative comments.
 
 TODO
- * Is the version element necessary in <cib>? If we flag the DTD against which the CIB validates, the version is implicit...
+ * Figure out a sane way to version the DTD
  * Do we need to know about ping nodes...?
  * The integer comparison type really should be number
 -->
@@ -217,7 +217,7 @@ NOTE: primitive resources may contain at most one "operations" object.
           type              CDATA        #REQUIRED
           provider          CDATA        #IMPLIED
 
-          is_managed            (true|1|false|0|#default)        '#IMPLIED'
+          is_managed            CDATA                            #IMPLIED
           restart_type          (ignore|restart)                 'ignore'
           multiple_active       (stop_start|stop_only|block)     'stop_start'
           resource_stickiness   CDATA                             #IMPLIED>
@@ -277,7 +277,7 @@ NOTE: Do not create empty groups.
           id            CDATA               #REQUIRED
           description   CDATA               #IMPLIED
 
-          is_managed            (true|1|false|0|#default)     #IMPLIED
+          is_managed            CDATA                         #IMPLIED
           restart_type          (ignore|restart)              'ignore'
           multiple_active       (stop_start|stop_only|block)  'stop_start'
           resource_stickiness   (0|INFINITY|-INFINITY)        #IMPLIED
@@ -319,7 +319,7 @@ NOTE: Clones must contain exactly one primitive or one group resource.
           id            CDATA               #REQUIRED
           description   CDATA               #IMPLIED
 
-          is_managed            (true|1|false|0|#default)     #IMPLIED
+          is_managed            CDATA                         #IMPLIED
           restart_type          (ignore|restart)              'ignore'
           multiple_active       (stop_start|stop_only|block)  'stop_start'
           resource_stickiness   CDATA                         #IMPLIED
@@ -343,7 +343,7 @@ NOTE: master_slave must contain exactly one primitive resource OR one group reso
           id            CDATA       #REQUIRED
           description   CDATA       #IMPLIED
 
-          is_managed            (true|1|false|0|#default)     #IMPLIED
+          is_managed            CDATA                         #IMPLIED
           restart_type          (ignore|restart)              'ignore'
           multiple_active       (stop_start|stop_only|block)  'stop_start'
           resource_stickiness   CDATA                         #IMPLIED
