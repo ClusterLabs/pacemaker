@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.81 2006/07/03 15:15:30 andrew Exp $ */
+/* $Id: messages.c,v 1.82 2006/07/03 15:27:06 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -559,6 +559,9 @@ cib_process_replace(
 			crm_debug_2("No matching object to replace");
 			result = cib_NOTEXISTS;
 
+		} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
+			send_notify = TRUE;
+			
 		} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
 			send_notify = TRUE;
 		}
