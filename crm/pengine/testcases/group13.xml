@@ -1,0 +1,54 @@
+ <cib generated="true" admin_epoch="0" epoch="4" num_updates="637" have_quorum="true" num_peers="1" cib_feature_revision="1.3" crm-debug-origin="create_node_entry" cib-last-written="Wed Jun 28 12:59:47 2006" ccm_transition="1" dc_uuid="cd13842c-3f58-4e7d-8126-685259527532">
+   <configuration>
+     <crm_config/>
+     <nodes>
+       <node id="cd13842c-3f58-4e7d-8126-685259527532" uname="jamesltc" type="normal"/>
+     </nodes>
+     <resources>
+       <group id="nfs">
+         <primitive id="resource_nfs" class="lsb" type="nfs" provider="heartbeat">
+           <instance_attributes id="resource_nfs_instance_attrs">
+             <attributes/>
+           </instance_attributes>
+         </primitive>
+       </group>
+       <group id="fs">
+         <primitive id="resource_fs" class="ocf" type="Filesystem" provider="heartbeat">
+           <instance_attributes id="resource_fs_instance_attrs">
+             <attributes>
+               <nvpair id="24d3d088-4c2e-4051-a91f-fb9054c6903c" name="device" value="/dev/hdb"/>
+               <nvpair id="fff00499-d867-4bbe-ad3d-49e023c8ac17" name="directory" value="/data"/>
+               <nvpair id="a78a0c35-e67e-46a4-88ff-da44614ce83a" name="fstype" value="ext2"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+       </group>
+     </resources>
+     <constraints>
+       <rsc_colocation id="colocation_beekhof" from="nfs" to="fs" score="INFINITY"/>
+     </constraints>
+   </configuration>
+   <status>
+     <node_state id="cd13842c-3f58-4e7d-8126-685259527532" uname="jamesltc" crmd="online" crm-debug-origin="do_update_resource" shutdown="0" in_ccm="true" join="member" ha="active" expected="member">
+       <lrm id="cd13842c-3f58-4e7d-8126-685259527532">
+         <lrm_resources>
+           <lrm_resource id="resource_nfs" type="nfs" class="lsb" provider="heartbeat">
+             <lrm_rsc_op id="resource_nfs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition_magic="0:0;0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call_id="2" crm_feature_set="1.0.6" rc_code="0" op_status="0" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+           </lrm_resource>
+           <lrm_resource id="resource_fs" type="Filesystem" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="resource_fs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition_magic="4:7;0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call_id="3" crm_feature_set="1.0.6" rc_code="7" op_status="4" interval="0" op_digest="018dec0f53e0e4d161c44af3eed91747"/>
+             <lrm_rsc_op id="resource_fs_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="251:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition_magic="4:2;251:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call_id="504" crm_feature_set="1.0.6" rc_code="2" op_status="4" interval="0" op_digest="018dec0f53e0e4d161c44af3eed91747"/>
+             <lrm_rsc_op id="resource_fs_stop_0" operation="stop" crm-debug-origin="do_update_resource" transition_key="253:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition_magic="0:0;253:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call_id="505" crm_feature_set="1.0.6" rc_code="0" op_status="0" interval="0" op_digest="018dec0f53e0e4d161c44af3eed91747"/>
+           </lrm_resource>
+         </lrm_resources>
+       </lrm>
+       <transient_attributes id="cd13842c-3f58-4e7d-8126-685259527532">
+         <instance_attributes id="status-cd13842c-3f58-4e7d-8126-685259527532">
+           <attributes>
+             <nvpair id="status-cd13842c-3f58-4e7d-8126-685259527532-probe_complete" name="probe_complete" value="true"/>
+           </attributes>
+         </instance_attributes>
+       </transient_attributes>
+     </node_state>
+   </status>
+ </cib>

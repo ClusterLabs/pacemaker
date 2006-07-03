@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.67 2006/06/22 13:32:58 andrew Exp $ */
+/* $Id: group.c,v 1.68 2006/07/03 11:47:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -88,6 +88,13 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 
 	crm_debug_3("Coloring children of: %s", rsc->id);
 
+	slist_iter(
+		coloc, rsc_colocation_t, rsc->rsc_cons, lpc,
+		crm_debug_3("Pre-Processing %s for %s", coloc->id, rsc->id);
+		group_data->first_child->cmds->rsc_colocation_lh(
+			group_data->first_child, coloc->rsc_rh, coloc);
+		);
+	
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
 		group_color = child_rsc->cmds->color(child_rsc, data_set);

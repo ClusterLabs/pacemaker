@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.154 2006/06/22 13:33:34 andrew Exp $ */
+/* $Id: native.c,v 1.155 2006/07/03 11:47:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -209,6 +209,8 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 			new_color = create_color(data_set, rsc,
 						 rsc->allowed_nodes);
 			native_assign_color(rsc, new_color);
+			crm_debug_3("Colored resource %s with new color %d",
+				    rsc->id, rsc->color->id);
 		}
 		
 		if(new_color == NULL) {
@@ -229,7 +231,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 			rsc, constraint->rsc_rh, constraint);
 		);
 #endif
-	print_resource(LOG_DEBUG_3, "Colored", rsc, TRUE);
+	print_resource(LOG_DEBUG_3, "Colored ", rsc, TRUE);
 
 	return new_color;
 }
