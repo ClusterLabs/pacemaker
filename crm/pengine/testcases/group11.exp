@@ -26,7 +26,7 @@
      <action_set>
        <rsc_op id="3" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" long-id="1:rsc1" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6" target_role="started" CRM_meta_timeout="60000"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -39,7 +39,7 @@
      <action_set>
        <rsc_op id="4" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2" long-id="1:rsc2" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6" target_role="Stopped" CRM_meta_timeout="60000"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000"/>
        </rsc_op>
      </action_set>
      <inputs>

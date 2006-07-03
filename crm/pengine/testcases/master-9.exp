@@ -12,7 +12,7 @@
      <action_set>
        <rsc_op id="47" operation="stop" operation_key="child_DoFencing:1_stop_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <primitive id="child_DoFencing:1" long-id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
-         <attributes crm_feature_set="1.0.6" hostlist="sgi2 ibm1 va1 test02 " CRM_meta_timeout="180000" CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="180000" CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>

@@ -128,7 +128,7 @@
      <action_set>
        <rsc_op id="41" operation="stop" operation_key="rsc_ibm1_stop_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a">
          <primitive id="rsc_ibm1" long-id="rsc_ibm1" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="127.0.0.12" CRM_meta_timeout="120000"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="120000"/>
        </rsc_op>
      </action_set>
      <inputs/>

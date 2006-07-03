@@ -65,7 +65,7 @@
    <synapse id="7">
      <action_set>
        <pseudo_event id="33" operation="stop" operation_key="rsc_c001n02_stop_0">
-         <attributes crm_feature_set="1.0.6" ip="127.0.0.12" CRM_meta_timeout="180000"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="180000"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -151,7 +151,7 @@
    <synapse id="15">
      <action_set>
        <pseudo_event id="40" operation="stop" operation_key="child_DoFencing:0_stop_0">
-         <attributes crm_feature_set="1.0.6" hostlist="c001n08 c001n02 c001n03 c001n01 " CRM_meta_timeout="180000" CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="180000" CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>

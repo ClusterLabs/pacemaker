@@ -57,7 +57,7 @@
      <action_set>
        <rsc_op id="28" operation="stop" operation_key="rsc_c001n08_stop_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="rsc_c001n08" long-id="rsc_c001n08" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" target_role="Stopped" ip="127.0.0.11" CRM_meta_timeout="180000"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="180000"/>
        </rsc_op>
      </action_set>
      <inputs/>

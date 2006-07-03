@@ -120,7 +120,7 @@
      <action_set>
        <rsc_op id="136" operation="stop" operation_key="rsc_c001n09_stop_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="rsc_c001n09" long-id="rsc_c001n09" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="127.0.0.11" CRM_meta_timeout="120000"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="120000"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -174,7 +174,7 @@
      <action_set>
        <rsc_op id="137" operation="stop" operation_key="rsc_c001n02_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="rsc_c001n02" long-id="rsc_c001n02" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="127.0.0.12" CRM_meta_timeout="120000"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="120000"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -237,7 +237,7 @@
      <action_set>
        <rsc_op id="138" operation="stop" operation_key="rsc_c001n03_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="rsc_c001n03" long-id="rsc_c001n03" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="127.0.0.13" CRM_meta_timeout="120000"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="120000"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -300,7 +300,7 @@
      <action_set>
        <rsc_op id="139" operation="stop" operation_key="rsc_c001n04_stop_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="rsc_c001n04" long-id="rsc_c001n04" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="127.0.0.14" CRM_meta_timeout="120000"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="120000"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -372,7 +372,7 @@
      <action_set>
        <rsc_op id="140" operation="stop" operation_key="rsc_c001n05_stop_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
          <primitive id="rsc_c001n05" long-id="rsc_c001n05" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="127.0.0.15" CRM_meta_timeout="120000"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="120000"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -435,7 +435,7 @@
      <action_set>
        <rsc_op id="141" operation="stop" operation_key="rsc_c001n06_stop_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
          <primitive id="rsc_c001n06" long-id="rsc_c001n06" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="127.0.0.16" CRM_meta_timeout="120000"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="120000"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -489,7 +489,7 @@
      <action_set>
        <rsc_op id="142" operation="stop" operation_key="rsc_c001n07_stop_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
          <primitive id="rsc_c001n07" long-id="rsc_c001n07" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="127.0.0.17" CRM_meta_timeout="120000"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="120000"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -525,7 +525,7 @@
      <action_set>
        <rsc_op id="143" operation="stop" operation_key="rsc_c001n08_stop_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="rsc_c001n08" long-id="rsc_c001n08" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="127.0.0.18" CRM_meta_timeout="120000"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="120000"/>
        </rsc_op>
      </action_set>
      <inputs/>

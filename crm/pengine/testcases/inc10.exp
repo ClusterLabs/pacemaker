@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="16" operation="stop" operation_key="child_DoFencing:2_stop_0" on_node="xen-2" on_node_uuid="e3aa8547-3d52-47df-a8a3-ca94538a5282">
          <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" provider="heartbeat" type="null"/>
-         <attributes crm_feature_set="1.0.6" hostlist="xen-1,xen-2,xen-3,xen-4" CRM_meta_timeout="60000" CRM_meta_globally_unique="false" CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_globally_unique="false" CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -91,7 +91,7 @@
      <action_set>
        <rsc_op id="27" operation="stop" operation_key="ocfs2:1_stop_0" internal_operation_key="ocfs2:2_stop_0" on_node="xen-2" on_node_uuid="e3aa8547-3d52-47df-a8a3-ca94538a5282">
          <primitive id="ocfs2:1" long-id="ocfs2:2" class="ocf" provider="heartbeat" type="Filesystem"/>
-         <attributes crm_feature_set="1.0.6" directory="/mnt/share1" fstype="ocfs2" device="/dev/hdb1" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:3 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_timeout="60000" CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-1 " CRM_meta_globally_unique="false" CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:3 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_timeout="60000" CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-1 " CRM_meta_globally_unique="false" CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>

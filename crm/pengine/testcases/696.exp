@@ -65,7 +65,7 @@
      <action_set>
        <rsc_op id="22" operation="stop" operation_key="rsc_hadev1_stop_0" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669">
          <primitive id="rsc_hadev1" long-id="rsc_hadev1" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="1.0.6" ip="10.0.0.11" CRM_meta_timeout="120000"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="120000"/>
        </rsc_op>
      </action_set>
      <inputs/>

@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
        <pseudo_event id="2" operation="stop" operation_key="ocf_msdummy:6_stop_0">
-         <attributes crm_feature_set="1.0.6" CRM_meta_role="Stopped" logfile="/var/log/cts_ocfdummy.log" CRM_meta_stateful="true" CRM_meta_timeout="180000" CRM_meta_clone="6" CRM_meta_clone_max="12" CRM_meta_clone_node_max="2" CRM_meta_master_max="6" CRM_meta_master_node_max="1"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="180000" CRM_meta_clone="6" CRM_meta_clone_max="12" CRM_meta_clone_node_max="2" CRM_meta_master_max="6" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
