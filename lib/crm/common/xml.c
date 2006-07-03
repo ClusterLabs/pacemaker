@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.95 2006/06/21 08:40:13 andrew Exp $ */
+/* $Id: xml.c,v 1.96 2006/07/03 12:00:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2209,6 +2209,9 @@ tag_needs_id(const char *tag_name)
 		"crm_config",
 		"attributes",
 		"operations",
+		"diff",
+		"diff-added",
+		"diff-removed",
 	};
 	
 	for(lpc = 0; lpc < DIMOF(allowed_list); lpc++) {
