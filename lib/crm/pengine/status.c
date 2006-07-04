@@ -1,4 +1,4 @@
-/* $Id: status.c,v 1.6 2006/07/03 11:57:37 andrew Exp $ */
+/* $Id: status.c,v 1.7 2006/07/04 07:36:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -255,15 +255,15 @@ pe_find_resource(GListPtr rsc_list, const char *id)
 	for(lpc = 0; lpc < g_list_length(rsc_list); lpc++) {
 		rsc = g_list_nth_data(rsc_list, lpc);
 		if(rsc == NULL) {
-		} else if(rsc->id && strcmp(rsc->id, id)){
+		} else if(rsc->id && strcmp(rsc->id, id) == 0){
 			crm_debug_4("Found a match for %s", id);
 			return rsc;
 			
-		} else if(rsc->long_name && strcmp(rsc->long_name, id)) {
+		} else if(rsc->long_name && strcmp(rsc->long_name, id) == 0) {
 			crm_debug_4("Found a match for %s", id);
 			return rsc;
 
-		} else if(rsc->clone_name && strcmp(rsc->clone_name, id)) {
+		} else if(rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
 			crm_debug_4("Found a match for %s", id);
 			return rsc;
 		}
