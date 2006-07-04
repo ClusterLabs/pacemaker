@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.96 2006/07/03 12:00:23 andrew Exp $ */
+/* $Id: xml.c,v 1.97 2006/07/04 06:24:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1496,6 +1496,11 @@ parse_xml(const char *input, int *offset)
 		crm_err("Error parsing token: %s", error);
 		crm_err("Error at or before: %s", our_input+lpc-3);
 		return NULL;
+	}
+	
+	if(offset == NULL && lpc+1 < (ssize_t)strlen(input)) {
+		crm_err("Ignoring trailing characters in XML input: Parsed %d characters of a possible %d",
+			lpc, (int)strlen(input));
 	}
 	
 	crm_debug_4("Finished processing %s tag", tag_name);
