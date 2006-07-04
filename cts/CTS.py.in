@@ -358,12 +358,14 @@ class LogWatcher:
 class NodeStatus:
     def __init__(self, Env):
         self.Env = Env
+        self.rsh = RemoteExec()
+
     def IsNodeBooted(self, node):
         '''Return TRUE if the given node is booted (responds to pings'''
         return os.system("@PING@ -nq -c1 @PING_TIMEOUT_OPT@ %s >/dev/null 2>&1" % node) == 0
 
     def IsSshdUp(self, node):
-         return os.system("@SSH@ %s echo >/dev/null 2>&1" % node) == 0
+         return self.rsh(node, "true") == 0;
 
     def WaitForNodeToComeUp(self, node, Timeout=300):
         '''Return TRUE when given node comes up, or None/FALSE if timeout'''
