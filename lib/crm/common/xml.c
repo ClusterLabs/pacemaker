@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.97 2006/07/04 06:24:01 andrew Exp $ */
+/* $Id: xml.c,v 1.98 2006/07/04 08:38:39 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1233,6 +1233,52 @@ is_comment_end(const char *input)
 	return 0;
 }
 
+static gboolean
+drop_whitespace(const char *input, int *offset)
+{
+	char ch = 0;
+	int len = 0, lpc = 0;
+	gboolean more = TRUE;
+	const char *our_input = input;
+
+	if(input == NULL) {
+		return FALSE;
+	}
+	if(offset != NULL) {
+		our_input = input + (*offset);
+	}
+
+	len = strlen(our_input);
+	while(lpc < len && more) {
+		ch = our_input[lpc];
+		crm_debug_6("Processing char %c[%d]", ch, lpc);
+		switch(ch) {
+			case 0:
+				more = FALSE;
+			case ' ':
+			case '\t':
+			case '\n':
+			case '\r':
+				lpc++;
+				crm_debug_6("Skipping whitespace char %d", our_input[lpc]);
+				break;
+			default:
+				more = FALSE;
+				break;
+		}
+	}
+
+	crm_debug_4("Finished processing whitespace");
+	if(offset != NULL) {
+		(*offset) += lpc;
+	}
+	if(lpc > 0) {
+		crm_debug_5("Skipped %d whitespace chars", lpc);
+		return TRUE;
+	}
+	return FALSE;
+}
+
 gboolean
 drop_comments(const char *input, int *offset)
 {
@@ -1498,9 +1544,15 @@ parse_xml(const char *input, int *offset)
 		return NULL;
 	}
 	
-	if(offset == NULL && lpc+1 < (ssize_t)strlen(input)) {
-		crm_err("Ignoring trailing characters in XML input: Parsed %d characters of a possible %d",
-			lpc, (int)strlen(input));
+	if(offset == NULL) {
+		lpc++;
+		drop_comments(our_input, &lpc);
+		drop_whitespace(our_input, &lpc);
+		if(lpc < (ssize_t)strlen(input)) {
+			crm_err("Ignoring trailing characters in XML input.");
+			crm_err("Parsed %d characters of a possible %d.  Trailing text was: ...\'%20s\'",
+				lpc, (int)strlen(input), input+lpc);
+		}
 	}
 	
 	crm_debug_4("Finished processing %s tag", tag_name);
@@ -1529,8 +1581,6 @@ log_xml_diff(unsigned int log_level, crm_data_t *diff, const char *function)
 		}
 		
 		);
-/* 	crm_log_maybe(log_level, " === "); */
-
 	is_first = TRUE;
 	xml_child_iter(
 		added, child, 
