@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.126 2006/07/03 15:15:30 andrew Exp $ */
+/* $Id: callbacks.c,v 1.127 2006/07/04 14:07:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -52,6 +52,9 @@
 extern GMainLoop*  mainloop;
 extern gboolean cib_shutdown_flag;
 extern gboolean stand_alone;
+
+extern enum cib_errors cib_update_counter(
+	crm_data_t *xml_obj, const char *field, gboolean reset);
 
 extern void GHFunc_count_peers(
 	gpointer key, gpointer value, gpointer user_data);
@@ -446,26 +449,34 @@ cib_client_connect_null(IPC_Channel *channel, gpointer user_data)
 gboolean
 cib_rw_callback(IPC_Channel *channel, gpointer user_data)
 {
-	return cib_common_callback(channel, user_data, FALSE, TRUE);
+	gboolean result = FALSE;
+	result = cib_common_callback(channel, user_data, FALSE, TRUE);
+	return result;
 }
 
 
 gboolean
 cib_ro_synchronous_callback(IPC_Channel *channel, gpointer user_data)
 {
-	return cib_common_callback(channel, user_data, TRUE, FALSE);
+	gboolean result = FALSE;
+	result = cib_common_callback(channel, user_data, TRUE, FALSE);
+	return result;
 }
 
 gboolean
 cib_rw_synchronous_callback(IPC_Channel *channel, gpointer user_data)
 {
-	return cib_common_callback(channel, user_data, TRUE, TRUE);
+	gboolean result = FALSE;
+	result = cib_common_callback(channel, user_data, TRUE, TRUE);
+	return result;
 }
 
 gboolean
 cib_ro_callback(IPC_Channel *channel, gpointer user_data)
 {
-	return cib_common_callback(channel, user_data, FALSE, FALSE);
+	gboolean result = FALSE;
+	result = cib_common_callback(channel, user_data, FALSE, FALSE);
+	return result;
 }
 
 gboolean
@@ -609,6 +620,8 @@ cib_common_callback_worker(HA_Message *op_request, cib_client_t *cib_client,
 
 	longclock_t call_stop = 0;
 	longclock_t call_start = 0;
+	cl_mem_stats_t saved_stats;
+	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	call_start = time_longclock();
 	cib_client->num_calls++;
@@ -624,21 +637,16 @@ cib_common_callback_worker(HA_Message *op_request, cib_client_t *cib_client,
 			    op, cib_client->name, cib_client->channel_name);
 	}
 	
-	crm_log_message_adv(LOG_MSG, "Client[inbound]", op_request);
-	ha_msg_add(op_request, F_CIB_CLIENTID, cib_client->id);
-	ha_msg_add(op_request, F_CIB_CLIENTNAME, cib_client->name);
-
 	if(rc == cib_ok) {
 		cib_process_request(
 			op_request, force_synchronous, privileged, FALSE,
 			cib_client);
 	}
 		
-	crm_debug_3("Cleaning up request");
-	crm_msg_del(op_request);
-
 	call_stop = time_longclock();
 	cib_call_time += (call_stop - call_start);
+
+	crm_diff_mem_stats(LOG_WARNING, __PRETTY_FUNCTION__, &saved_stats);
 }
 
 gboolean
@@ -680,10 +688,18 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 
 		lpc++;
 		crm_assert_failed = FALSE;
+
+		crm_log_message_adv(LOG_MSG, "Client[inbound]", op_request);
+		ha_msg_add(op_request, F_CIB_CLIENTID, cib_client->id);
+		ha_msg_add(op_request, F_CIB_CLIENTNAME, cib_client->name);
+		
 		cib_common_callback_worker(
 			op_request, cib_client, force_synchronous, privileged);
-		
+
+		crm_debug_3("Cleaning up request");
+		crm_msg_del(op_request);
 		op_request = NULL;		
+
 		if(channel->ch_status == IPC_CONNECT) {
 			break;
 		}
@@ -700,6 +716,291 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 	return keep_channel;
 }
 
+static void
+do_local_notify(HA_Message *notify_src, const char *client_id, gboolean sync_reply, gboolean from_peer) 
+{
+	/* send callback to originating child */
+	cib_client_t *client_obj = NULL;
+	HA_Message *client_reply = NULL;
+	enum cib_errors local_rc = cib_ok;
+	cl_mem_stats_t saved_stats;
+	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
+
+	crm_debug_2("Performing notification");
+	
+	client_reply = cib_msg_copy(notify_src, TRUE);
+	
+	if(client_id != NULL) {
+		client_obj = g_hash_table_lookup(
+			client_list, client_id);
+	} else {
+		crm_debug("No client to sent the response to."
+			  "  F_CIB_CLIENTID not set.");
+	}
+	
+	crm_debug_3("Sending callback to request originator");
+	if(client_obj == NULL) {
+		local_rc = cib_reply_failed;
+		ha_msg_del(client_reply);
+		
+	} else {
+		const char *client_id = client_obj->callback_id;
+		crm_debug_2("Sending %ssync response to %s %s",
+			    sync_reply?"":"an a-",
+			    client_obj->name,
+			    from_peer?"(originator of delegated request)":"");
+		
+		if(sync_reply) {
+			client_id = client_obj->id;
+		}
+		local_rc = send_via_callback_channel(client_reply, client_id);
+		
+		client_reply = NULL;
+	} 
+	
+	if(local_rc != cib_ok) {
+		crm_warn("%sSync reply to %s failed: %s",
+			 sync_reply?"":"A-",
+			 client_obj?client_obj->name:"<unknown>", cib_error2string(local_rc));
+	}
+	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+}
+
+static void
+parse_local_options(
+	cib_client_t *cib_client, int call_type, int call_options, const char *host, const char *op, 
+	gboolean *local_notify, gboolean *needs_reply, gboolean *process, gboolean *needs_forward) 
+{
+	if(cib_server_ops[call_type].modifies_cib
+	   && !(call_options & cib_inhibit_bcast)) {
+		/* we need to send an update anyway */
+		*needs_reply = TRUE;
+	} else {
+		*needs_reply = FALSE;
+	}
+	
+	if(host == NULL && (call_options & cib_scope_local)) {
+		crm_debug("Processing locally scoped %s op from %s",
+			  op, cib_client->name);
+		*local_notify = TRUE;
+		
+	} else if(host == NULL && cib_is_master) {
+		crm_debug("Processing master %s op locally from %s",
+			  op, cib_client->name);
+		*local_notify = TRUE;
+		
+	} else if(safe_str_eq(host, cib_our_uname)) {
+		crm_debug("Processing locally addressed %s op from %s",
+			  op, cib_client->name);
+		*local_notify = TRUE;
+	} else {
+		crm_debug("%s op from %s needs to be forwarded to %s",
+			  op, cib_client->name,
+			  host?host:"the master instance");
+		*needs_forward = TRUE;
+		*process = FALSE;
+	}		
+}
+
+static gboolean
+parse_peer_options(
+	cib_client_t *cib_client, int call_type, HA_Message *request, 
+	gboolean *local_notify, gboolean *needs_reply, gboolean *process, gboolean *needs_forward) 
+{
+	const char *op         = cl_get_string(request, F_CIB_OPERATION);
+	const char *originator = cl_get_string(request, F_ORIG);
+	const char *host       = cl_get_string(request, F_CIB_HOST);
+	const char *reply_to   = cl_get_string(request, F_CIB_ISREPLY);
+	const char *update     = cl_get_string(request, F_CIB_GLOBAL_UPDATE);
+	const char *delegated  = cl_get_string(request, F_CIB_DELEGATED);
+
+	if(safe_str_eq(op, "cib_shutdown_req")) {
+		if(reply_to != NULL) {
+			crm_debug("Processing %s from %s", op, host);
+			*needs_reply = FALSE;
+			
+		} else {
+			crm_debug("Processing %s reply from %s", op, host);
+		}
+		return TRUE;
+		
+	} else if(crm_is_true(update) && safe_str_eq(reply_to, cib_our_uname)) {
+		crm_debug("Processing global/peer update from %s"
+			  " that originated from us", originator);
+		*needs_reply = FALSE;
+		if(cl_get_string(request, F_CIB_CLIENTID) != NULL) {
+			*local_notify = TRUE;
+		}
+		return TRUE;
+		
+	} else if(crm_is_true(update)) {
+		crm_debug("Processing global/peer update from %s", originator);
+		*needs_reply = FALSE;
+		return TRUE;
+
+	} else if(host != NULL && safe_str_eq(host, cib_our_uname)) {
+		crm_debug("Processing request sent to us from %s", originator);
+		return TRUE;
+
+	} else if(delegated != NULL && cib_is_master == TRUE) {
+		crm_debug("Processing request sent to master instance from %s",
+			originator);
+		return TRUE;
+
+	} else if(reply_to != NULL && safe_str_eq(reply_to, cib_our_uname)) {
+		crm_debug("Forward reply sent from %s to local clients",
+			  originator);
+		*process = FALSE;
+		*needs_reply = FALSE;
+		*local_notify = TRUE;
+		return TRUE;
+
+	} else if(delegated != NULL) {
+		crm_debug("Ignoring msg for master instance");
+
+	} else if(host != NULL) {
+		/* this is for a specific instance and we're not it */
+		crm_debug("Ignoring msg for instance on %s", crm_str(host));
+		
+	} else if(reply_to == NULL && cib_is_master == FALSE) {
+		/* this is for the master instance and we're not it */
+		crm_debug("Ignoring reply to %s", crm_str(reply_to));
+		
+	} else {
+		crm_err("Nothing for us to do?");
+		crm_log_message_adv(LOG_ERR, "Peer[inbound]", request);
+	}
+
+	return FALSE;
+}
+
+		
+static void
+forward_request(HA_Message *request, cib_client_t *cib_client,
+		int call_options, const char *host, const char *op)
+{
+	HA_Message *forward_msg = NULL;
+	cl_mem_stats_t saved_stats;
+	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
+
+	forward_msg = cib_msg_copy(request, TRUE);
+	ha_msg_add(forward_msg, F_CIB_DELEGATED, cib_our_uname);
+	
+	if(host != NULL) {
+		crm_debug_2("Forwarding %s op to %s", op, host);
+		send_ha_message(hb_conn, forward_msg, host, FALSE);
+		
+	} else {
+		crm_debug_2("Forwarding %s op to master instance", op);
+		send_ha_message(hb_conn, forward_msg, NULL, FALSE);
+	}
+	
+	if(call_options & cib_discard_reply) {
+		crm_debug_2("Client not interested in reply");
+		
+	} else if(call_options & cib_sync_call) {
+		/* keep track of the request so we can time it
+		 * out if required
+		 */
+		crm_err("Registering delegated call from %s",
+			cib_client->id);
+		cib_client->delegated_calls = g_list_append(
+			cib_client->delegated_calls, forward_msg);
+		forward_msg = NULL;
+		
+	} 
+	crm_msg_del(forward_msg);
+	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+}
+
+static void
+send_peer_reply(HA_Message *msg, crm_data_t *result_diff, const char *originator, gboolean broadcast)
+{
+	cl_mem_stats_t saved_stats;
+	HA_Message *reply_copy = NULL;
+
+	CRM_ASSERT(msg != NULL);
+
+	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
+ 	reply_copy = cib_msg_copy(msg, FALSE);
+	
+	if(broadcast) {
+		/* this (successful) call modified the CIB _and_ the
+		 * change needs to be broadcast...
+		 *   send via HA to other nodes
+		 */
+		int diff_add_updates = 0;
+		int diff_add_epoch   = 0;
+		int diff_add_admin_epoch = 0;
+		
+		int diff_del_updates = 0;
+		int diff_del_epoch   = 0;
+		int diff_del_admin_epoch = 0;
+		
+		cib_diff_version_details(
+			result_diff,
+			&diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates, 
+			&diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
+
+		crm_debug("Sending update diff %d.%d.%d -> %d.%d.%d",
+			    diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
+			    diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
+
+		ha_msg_add(reply_copy, F_CIB_ISREPLY, originator);
+		ha_msg_add(reply_copy, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
+		ha_msg_mod(reply_copy, F_CIB_OPERATION, CIB_OP_APPLY_DIFF);
+
+ 		add_message_xml(reply_copy, F_CIB_UPDATE_DIFF, result_diff);
+		crm_log_message(LOG_DEBUG_3, reply_copy);
+#if 1
+  		send_ha_message(hb_conn, reply_copy, NULL, TRUE);
+#else		
+		/* code to verify the messaging layer leaks */ 
+ 		CRM_ASSERT(hb_conn->llc_ops->sendclustermsg(hb_conn, reply_copy) == HA_OK);
+		{
+			IPC_Channel *ipc = NULL;
+			IPC_Queue *send_q = NULL;
+			ipc = hb_conn->llc_ops->ipcchan(hb_conn);
+			if(ipc != NULL) {
+				ipc->ops->waitout(ipc);
+				send_q = ipc->send_queue;
+			}
+			if(send_q != NULL) {
+				CRM_CHECK(send_q->current_qlen == 0 ,
+					  crm_err("Send Queue len: %d", (int)send_q->current_qlen));
+			}
+		}
+#endif
+		
+	} else if(originator != NULL) {
+		/* send reply via HA to originating node */
+		crm_debug_2("Sending request result to originator only");
+		ha_msg_add(reply_copy, F_CIB_ISREPLY, originator);
+#if 1
+  		send_ha_message(hb_conn, reply_copy, originator, FALSE);
+#else		
+		/* code to verify the messaging layer leaks */ 
+ 		CRM_ASSERT(hb_conn->llc_ops->send_ordered_nodemsg(hb_conn, reply_copy) == HA_OK);
+		{
+			IPC_Channel *ipc = NULL;
+			IPC_Queue *send_q = NULL;
+			ipc = hb_conn->llc_ops->ipcchan(hb_conn);
+			if(ipc != NULL) {
+				ipc->ops->waitout(ipc);
+				send_q = ipc->send_queue;
+			}
+			if(send_q != NULL) {
+				CRM_CHECK(send_q->current_qlen == 0 ,
+					  crm_err("Send Queue len: %d", (int)send_q->current_qlen));
+			}
+		}
+#endif
+	}
+	
+	crm_msg_del(reply_copy);
+	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+}
+	
 void
 cib_process_request(
 	HA_Message *request, gboolean force_synchronous, gboolean privileged,
@@ -720,10 +1021,7 @@ cib_process_request(
 	const char *op         = cl_get_string(request, F_CIB_OPERATION);
 	const char *originator = cl_get_string(request, F_ORIG);
 	const char *host       = cl_get_string(request, F_CIB_HOST);
-	const char *reply_to   = cl_get_string(request, F_CIB_ISREPLY);
 	const char *update     = cl_get_string(request, F_CIB_GLOBAL_UPDATE);
-	const char *delegated  = cl_get_string(request, F_CIB_DELEGATED);
-	const char *client_id  = NULL;
 
 	crm_debug_4("%s Processing msg %s",
 		  cib_our_uname, cl_get_string(request, F_SEQ));
@@ -756,96 +1054,17 @@ cib_process_request(
 		cib_num_updates++;
 	}
 	
-	
 	if(rc != cib_ok) {
 		/* TODO: construct error reply */
 		crm_err("Pre-processing of command failed: %s",
 			cib_error2string(rc));
 		
 	} else if(from_peer == FALSE) {
-
-		if(cib_server_ops[call_type].modifies_cib
-		   && !(call_options & cib_inhibit_bcast)) {
-			/* we need to send an update anyway */
-			needs_reply = TRUE;
-		} else {
-			needs_reply = FALSE;
-		}
+		parse_local_options(cib_client, call_type, call_options, host, op,
+				    &local_notify, &needs_reply, &process, &needs_forward);
 		
-		if(host == NULL && (call_options & cib_scope_local)) {
-			crm_debug("Processing locally scoped %s op from %s",
-				  op, cib_client->name);
-			local_notify = TRUE;
-
-		} else if(host == NULL && cib_is_master) {
-			crm_debug("Processing master %s op locally from %s",
-				  op, cib_client->name);
-			local_notify = TRUE;
-
-		} else if(safe_str_eq(host, cib_our_uname)) {
-			crm_debug("Processing locally addressed %s op from %s",
-				  op, cib_client->name);
-			local_notify = TRUE;
-		} else {
-			crm_debug("%s op from %s needs to be forwarded to %s",
-				  op, cib_client->name,
-				  host?host:"the master instance");
-			needs_forward = TRUE;
-			process = FALSE;
-		}
-		
-	} else if(safe_str_eq(op, "cib_shutdown_req")) {
-		if(reply_to != NULL) {
-			crm_debug("Processing %s from %s", op, host);
-			needs_reply = FALSE;
-			
-		} else {
-			crm_debug("Processing %s reply from %s", op, host);
-		}
-		
-	} else if(crm_is_true(update) && safe_str_eq(reply_to, cib_our_uname)) {
-		crm_debug("Processing global/peer update from %s"
-			  " that originated from us", originator);
-		needs_reply = FALSE;
-		if(cl_get_string(request, F_CIB_CLIENTID) != NULL) {
-			local_notify = TRUE;
-		}
-		
-	} else if(crm_is_true(update)) {
-		crm_debug("Processing global/peer update from %s", originator);
-		needs_reply = FALSE;
-
-	} else if(host != NULL && safe_str_eq(host, cib_our_uname)) {
-		crm_debug("Processing request sent to us from %s", originator);
-
-	} else if(delegated != NULL && cib_is_master == TRUE) {
-		crm_debug("Processing request sent to master instance from %s",
-			originator);
-
-	} else if(reply_to != NULL && safe_str_eq(reply_to, cib_our_uname)) {
-		crm_debug("Forward reply sent from %s to local clients",
-			  originator);
-		process = FALSE;
-		needs_reply = FALSE;
-		local_notify = TRUE;
-
-	} else if(delegated != NULL) {
-		crm_debug("Ignoring msg for master instance");
-		return;
-
-	} else if(host != NULL) {
-		/* this is for a specific instance and we're not it */
-		crm_debug("Ignoring msg for instance on %s", crm_str(host));
-		return;
-		
-	} else if(reply_to == NULL && cib_is_master == FALSE) {
-		/* this is for the master instance and we're not it */
-		crm_debug("Ignoring %s reply to %s", op, crm_str(reply_to));
-		return;
-		
-	} else {
-		crm_err("Nothing for us to do?");
-		crm_log_message_adv(LOG_ERR, "Peer[inbound]", request);
+	} else if(parse_peer_options(cib_client, call_type, request,
+				     &local_notify, &needs_reply, &process, &needs_forward) == FALSE) {
 		return;
 	}
 	crm_debug_3("Finished determining processing actions");
@@ -856,33 +1075,7 @@ cib_process_request(
 	}
 	
 	if(needs_forward && stand_alone == FALSE) {
-		HA_Message *forward_msg = cib_msg_copy(request, TRUE);
-		ha_msg_add(forward_msg, F_CIB_DELEGATED, cib_our_uname);
-		
-		if(host != NULL) {
-			crm_debug_2("Forwarding %s op to %s", op, host);
-			send_ha_message(hb_conn, forward_msg, host, FALSE);
-			
-		} else {
-			crm_debug_2("Forwarding %s op to master instance", op);
-			send_ha_message(hb_conn, forward_msg, NULL, FALSE);
-		}
-		
-		if(call_options & cib_discard_reply) {
-			crm_debug_2("Client not interested in reply");
-			crm_msg_del(forward_msg);
-			
-		} else if(call_options & cib_sync_call) {
-			/* keep track of the request so we can time it
-			 * out if required
-			 */
-			crm_debug_2("Registering delegated call from %s",
-				    cib_client->id);
-			cib_client->delegated_calls = g_list_append(
-				cib_client->delegated_calls, forward_msg);
-		} else {
-			crm_msg_del(forward_msg);
-		}
+		forward_request(request, cib_client, call_options, host, op);
 		return;
 	}
 
@@ -923,124 +1116,51 @@ cib_process_request(
 	crm_debug_3("processing response cases");
 
 	if(local_notify) {
-		/* send callback to originating child */
-		cib_client_t *client_obj = NULL;
-		HA_Message *client_reply = NULL;
-		enum cib_errors local_rc = cib_ok;
-		crm_debug_2("Performing notification");
-
+		const char *client_id = cl_get_string(request, F_CIB_CLIENTID);
 		if(process == FALSE) {
-			client_reply = cib_msg_copy(request, TRUE);
+			do_local_notify(request, client_id, call_options & cib_sync_call, from_peer);
 		} else {
-			/* can we set this to FALSE? */
-			client_reply = cib_msg_copy(op_reply, TRUE);
-		}
-		
-		client_id = cl_get_string(request, F_CIB_CLIENTID);
-		if(client_id != NULL) {
-			client_obj = g_hash_table_lookup(
-				client_list, client_id);
-		} else {
-			crm_debug("No client to sent the response to."
-				  "  F_CIB_CLIENTID not set.");
-		}
-		
-		crm_debug_3("Sending callback to request originator");
-		if(client_obj == NULL) {
-			local_rc = cib_reply_failed;
-			
-		} else {
-			const char *client_id = client_obj->callback_id;
-			crm_debug_2("Sending %ssync response to %s %s",
-				  (call_options & cib_sync_call)?"":"an a-",
-				  client_obj->name,
-				  from_peer?"(originator of delegated request)":"");
-
-			if(call_options & cib_sync_call) {
-				client_id = client_obj->id;
-			}
-			local_rc = send_via_callback_channel(
-				client_reply, client_id);
-
-			client_reply = NULL;
-		} 
-
-		if(local_rc != cib_ok) {
-			crm_warn("%sSync reply to %s failed: %s",
-				 (call_options & cib_sync_call)?"":"A-",
-				 client_obj?client_obj->name:"<unknown>", cib_error2string(local_rc));
-			crm_log_message(LOG_DEBUG, op_reply);
+			do_local_notify(op_reply, client_id, call_options & cib_sync_call, from_peer);
 		}
 	}
 
+	/* from now on we are the server */ 
 	if(needs_reply == FALSE || stand_alone) {
 		/* nothing more to do...
 		 * this was a non-originating slave update
 		 */
 		crm_debug_2("Completed slave update");
-		crm_msg_del(op_reply);
-		free_xml(result_diff);
-		return;
-	}
-	
-	crm_debug_4("add the originator to message");
 
-	CRM_DEV_ASSERT(op_reply != NULL);
-	CRM_DEV_ASSERT(cib_server_ops[call_type].modifies_cib == FALSE
-		       || result_diff != NULL || rc != cib_ok);
-	
-	/* from now on we are the server */ 
-	if(rc == cib_ok
+	} else if(rc == cib_ok
 	   && result_diff != NULL
 	   && !(call_options & cib_inhibit_bcast)) {
-		/* this (successful) call modified the CIB _and_ the
-		 * change needs to be broadcast...
-		 *   send via HA to other nodes
-		 */
-		HA_Message *op_bcast = cib_msg_copy(request, FALSE);
-		int diff_add_updates = 0;
-		int diff_add_epoch  = 0;
-		int diff_add_admin_epoch = 0;
-		
-		int diff_del_updates = 0;
-		int diff_del_epoch  = 0;
-		int diff_del_admin_epoch = 0;
-		
-		cib_diff_version_details(
-			result_diff,
-			&diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates, 
-			&diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
-
-		crm_debug("Sending update diff %d.%d.%d -> %d.%d.%d",
-			    diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
-			    diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
-
-		ha_msg_add(op_bcast, F_CIB_ISREPLY, originator);
-		ha_msg_add(op_bcast, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
-		ha_msg_mod(op_bcast, F_CIB_OPERATION, CIB_OP_APPLY_DIFF);
-
-		add_message_xml(op_bcast, F_CIB_UPDATE_DIFF, result_diff);
-		crm_log_message(LOG_DEBUG_3, op_bcast);
-		send_ha_message(hb_conn, op_bcast, NULL, TRUE);
-		crm_msg_del(op_bcast);
+		CRM_DEV_ASSERT(cib_server_ops[call_type].modifies_cib == FALSE
+			       || result_diff != NULL || rc != cib_ok);
+		send_peer_reply(request, result_diff, originator, TRUE);
 		
 	} else if((call_options & cib_discard_reply) == 0) {
-		crm_debug_2("Sending replies");
-		if(from_peer && originator != NULL) {
-			/* send reply via HA to originating node */
-			crm_debug_2("Sending request result to originator only");
-			ha_msg_add(op_reply, F_CIB_ISREPLY, originator);
-			send_ha_message(hb_conn, op_reply, originator, FALSE);
-		}
+		gboolean should_send = TRUE;
+		CRM_DEV_ASSERT(cib_server_ops[call_type].modifies_cib == FALSE
+			       || result_diff != NULL || rc != cib_ok);
+		
 		if(call_options & cib_inhibit_bcast ) {
+			should_send = FALSE;
 			crm_debug("Request not broadcast: inhibited");
 		}
 		if(cib_server_ops[call_type].modifies_cib == FALSE) {
+			should_send = FALSE;
 			crm_debug_2("Request not broadcast: R/O call");
 		}
 		if(rc != cib_ok) {
+			should_send = FALSE;
 			crm_warn("Request not broadcast: call failed: %s",
 				 cib_error2string(rc));
+		}
+		if(from_peer == FALSE) {
+			should_send = FALSE;
+		}
+		if(should_send) {
+			send_peer_reply(op_reply, result_diff, originator, FALSE);
 		}
 	}
 	
@@ -1153,6 +1273,10 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 		}
 
 		if(rc == cib_ok) {
+			START_stat_free_op();
+			result_cib = copy_xml(current_cib);
+			END_stat_free_op();
+
 			rc = cib_server_ops[call_type].fn(
 				op, call_options, section, input,
 				current_cib, &result_cib, &output);
@@ -1163,6 +1287,15 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 			CRM_DEV_ASSERT(current_cib != result_cib);
 
 			update_counters(__FILE__, __FUNCTION__, result_cib);
+
+			if(section == NULL && cib_server_ops[call_type].fn == cib_process_replace) {
+				/* skip */
+			} else if(cib_server_ops[call_type].fn == cib_process_change
+				  && (call_options & cib_inhibit_bcast)) {
+				/* skip */
+			} else {
+				cib_update_counter(result_cib, XML_ATTR_NUMUPDATES, FALSE);
+			}
 			
 			if(do_id_check(result_cib, NULL, TRUE, FALSE)) {
 				rc = cib_id_check;
@@ -1177,8 +1310,10 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 		}
 
 		if(rc != cib_ok) {
+			START_stat_free_op();
 			free_xml(result_cib);
-
+			END_stat_free_op();
+			
 		} else if(activateCibXml(result_cib, CIB_FILENAME) != 0){
 			crm_warn("Activation failed");
 			rc = cib_ACTIVATION;

@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.82 2006/07/03 15:27:06 andrew Exp $ */
+/* $Id: messages.c,v 1.83 2006/07/04 14:07:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -48,6 +48,7 @@
 #include <crm/dmalloc_wrapper.h>
 
 #define MAX_DIFF_RETRY 5
+volatile cl_mem_stats_t *active_stats = NULL;
 
 extern const char *cib_our_uname;
 extern gboolean syncd_once;
@@ -232,13 +233,12 @@ cib_process_erase(
 
 	crm_debug_2("Processing \"%s\" event", op);
 	*answer = NULL;
+	free_xml(*result_cib);
 	*result_cib = createEmptyCib();
 
-	copy_in_properties(*result_cib, existing_cib);
-	
+	copy_in_properties(*result_cib, existing_cib);	
 	cib_update_counter(*result_cib, XML_ATTR_GENERATION, FALSE);
-	cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, TRUE);
-
+	
 	local_diff = diff_cib_object(existing_cib, *result_cib, FALSE);
 	cib_replace_notify(*result_cib, result, local_diff);
 	free_xml(local_diff);
@@ -257,10 +257,7 @@ cib_process_bump(
 		  op, crm_str(crm_element_value(the_cib, XML_ATTR_GENERATION)));
 	
 	*answer = NULL;
-	*result_cib = copy_xml(the_cib);
-
 	cib_update_counter(*result_cib, XML_ATTR_GENERATION, FALSE);
-	cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, FALSE);
 	
 	return result;
 }
@@ -288,6 +285,8 @@ cib_update_counter(crm_data_t *xml_obj, const char *field, gboolean reset)
 	char *old_value = NULL;
 	int  int_value  = -1;
 
+	START_stat_free_op();
+	
 	if(reset == FALSE && crm_element_value(xml_obj, field) != NULL) {
 		old_value = crm_element_value_copy(xml_obj, field);
 	}
@@ -303,8 +302,9 @@ cib_update_counter(crm_data_t *xml_obj, const char *field, gboolean reset)
 		  field, int_value, crm_str(old_value), crm_str(new_value));
 	crm_xml_add(xml_obj, field, new_value);
 	crm_free(new_value);
-
 	crm_free(old_value);
+
+	END_stat_free_op();	
 	return cib_ok;
 }
 
@@ -423,20 +423,22 @@ cib_process_diff(
 		reason = "current \""XML_ATTR_NUMUPDATES"\" is greater than required";
 	}
 
-	if(apply_diff
-	   && apply_xml_diff(existing_cib, input, result_cib) == FALSE) {
-		log_level = LOG_WARNING;
-		reason = "Failed application of an update diff";
-		if(options & cib_force_diff && cib_is_master == FALSE) {
-  			log_level = LOG_INFO;
-			reason = "Failed application of a global update.  Requesting full refresh.";
-			do_resync = TRUE;
-		} else if(options & cib_force_diff) {
-			reason = "Failed application of a global update.  Not requesting full refresh.";
+	if(apply_diff) {
+		crm_free(*result_cib);
+		*result_cib = NULL;
+		if(apply_xml_diff(existing_cib, input, result_cib) == FALSE) {
+			log_level = LOG_WARNING;
+			reason = "Failed application of an update diff";
+			if(options & cib_force_diff && cib_is_master == FALSE) {
+				log_level = LOG_INFO;
+				reason = "Failed application of a global update.  Requesting full refresh.";
+				do_resync = TRUE;
+			} else if(options & cib_force_diff) {
+				reason = "Failed application of a global update.  Not requesting full refresh.";
+			}
 		}
 	}
 	
-
 	if(reason != NULL) {
 		crm_log_maybe(
 			log_level,
@@ -548,13 +550,16 @@ cib_process_replace(
 			result = cib_old_data;
 		}
 		sync_in_progress = 0;
+		free_xml(*result_cib);
+	START_stat_free_op();
 		*result_cib = copy_xml(input);
+	END_stat_free_op();
 		send_notify = TRUE;
 		
 	} else {
 		crm_data_t *obj_root = NULL;
-		*result_cib = copy_xml(existing_cib);
 		obj_root = get_object_root(section, *result_cib);
+	START_stat_free_op();
 		if(replace_xml_child(NULL, obj_root, input, FALSE) == FALSE) {
 			crm_debug_2("No matching object to replace");
 			result = cib_NOTEXISTS;
@@ -565,7 +570,7 @@ cib_process_replace(
 		} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
 			send_notify = TRUE;
 		}
-		cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, FALSE);
+	END_stat_free_op();
 	}
 	
 	if(send_notify) {
@@ -591,17 +596,17 @@ cib_process_delete(
 		return cib_NOOBJECT;
 	}
 	
-	*result_cib = copy_xml(existing_cib);
 	obj_root = get_object_root(section, *result_cib);
 	
 	crm_validate_data(input);
 	crm_validate_data(*result_cib);
 
+	START_stat_free_op();
 	if(replace_xml_child(NULL, obj_root, input, TRUE) == FALSE) {
 		crm_debug_2("No matching object to delete");
 	}
+	END_stat_free_op();
 	
-	cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, FALSE);
 	return cib_ok;
 }
 
@@ -619,17 +624,18 @@ cib_process_modify(
 		return cib_NOOBJECT;
 	}
 	
-	*result_cib = copy_xml(existing_cib);
 	obj_root = get_object_root(section, *result_cib);
 	
 	crm_validate_data(input);
 	crm_validate_data(*result_cib);
 
+	START_stat_free_op();
 	if(update_xml_child(obj_root, input) == FALSE) {
+		END_stat_free_op();
 		return cib_NOTEXISTS;		
 	}
+	END_stat_free_op();
 	
-	cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, FALSE);
 	return cib_ok;
 }
 
@@ -675,8 +681,6 @@ cib_process_change(
 		return cib_NOOBJECT;
 	}
 	
-	*result_cib = copy_xml(existing_cib);
-	
 	crm_validate_data(input);
 	crm_validate_data(*result_cib);
 	failed = create_xml_node(NULL, XML_TAG_FAILED);
@@ -696,7 +700,10 @@ cib_process_change(
 			XML_CIB_TAG_CRMCONFIG
 		};
 
+	START_stat_free_op();
 		copy_in_properties(*result_cib, input);
+	END_stat_free_op();
+	
 		for(lpc = 0; lpc < DIMOF(type_list); lpc++) {
 			type = type_list[lpc];
 	
@@ -714,10 +721,6 @@ cib_process_change(
 			*result_cib, input, failed, cib_update_op, section);
 	}
 
-	if(result == cib_ok && !(options & cib_inhibit_bcast)) {
-		cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, FALSE);
-	}
-	
 	if (result != cib_ok || xml_has_children(failed)) {
 		if(result == cib_ok) {
 			result = cib_unknown;
@@ -732,6 +735,7 @@ cib_process_change(
 }
 
 #define cib_update_xml_macro(parent, xml_update)			\
+	START_stat_free_op();						\
 	if(operation == CIB_UPDATE_OP_DELETE) {				\
 		rc = delete_cib_object(parent, xml_update);		\
 		update_results(failed, xml_update, operation, rc);	\
@@ -743,7 +747,8 @@ cib_process_change(
 	} else {							\
 		rc = add_cib_object(parent, xml_update);		\
 		update_results(failed, xml_update, operation, rc);	\
-	} 
+	}								\
+	END_stat_free_op();
 
 enum cib_errors
 updateList(crm_data_t *local_cib, crm_data_t *xml_section, crm_data_t *failed,
@@ -812,10 +817,10 @@ update_results(
 
 		add_node_copy(xml_node, target);
 		
-		crm_xml_add(xml_node, XML_FAILCIB_ATTR_ID, ID(target));
+		crm_xml_add(xml_node, XML_FAILCIB_ATTR_ID,      ID(target));
 		crm_xml_add(xml_node, XML_FAILCIB_ATTR_OBJTYPE, TYPE(target));
-		crm_xml_add(xml_node, XML_FAILCIB_ATTR_OP, operation_msg);
-		crm_xml_add(xml_node, XML_FAILCIB_ATTR_REASON, error_msg);
+		crm_xml_add(xml_node, XML_FAILCIB_ATTR_OP,      operation_msg);
+		crm_xml_add(xml_node, XML_FAILCIB_ATTR_REASON,  error_msg);
 
 		crm_warn("Action %s failed: %s (cde=%d)",
 			  operation_msg, error_msg, return_code);

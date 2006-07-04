@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.35 2006/05/05 13:16:02 andrew Exp $ */
+/* $Id: util.h,v 1.36 2006/07/04 14:07:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -93,6 +93,10 @@ extern char *generate_notify_key(
 extern gboolean crm_mem_stats(volatile cl_mem_stats_t *mem_stats);
 
 extern void crm_zero_mem_stats(volatile cl_mem_stats_t *stats);
+
+extern void crm_save_mem_stats(const char *location, cl_mem_stats_t *saved_stats);
+
+extern gboolean crm_diff_mem_stats(int log_level, const char *location, cl_mem_stats_t *saved_stats);
 
 extern char *generate_transition_magic_v202(
 	const char *transition_key, int op_status);

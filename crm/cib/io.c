@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.71 2006/06/22 15:11:56 andrew Exp $ */
+/* $Id: io.c,v 1.72 2006/07/04 14:07:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -557,6 +557,7 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 		CRM_DEV_ASSERT(the_cib == NULL);
 	}
 
+	START_stat_free_op();
 	if(the_cib != new_cib) {
 		free_xml(new_cib);
 		CRM_DEV_ASSERT(error_code != cib_ok);
@@ -565,6 +566,7 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 	if(the_cib != saved_cib) {
 		free_xml(saved_cib);
 	}
+	END_stat_free_op();
 	
 	return error_code;
     
@@ -702,9 +704,11 @@ update_counters(const char *file, const char *fn, crm_data_t *xml_obj)
 {
 	gboolean did_update = FALSE;
 
+	START_stat_free_op();
 	did_update = did_update || update_quorum(xml_obj);
 	did_update = did_update || set_transition(xml_obj);
 	did_update = did_update || set_connected_peers(xml_obj);
+	END_stat_free_op();
 	
 	if(did_update) {
 		do_crm_log(LOG_DEBUG, file, fn, "Counters updated");
