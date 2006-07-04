@@ -404,6 +404,12 @@ do_startup(long long action,
 }
 
 extern GHashTable *shutdown_ops;
+static void
+ghash_print_pending(gpointer key, gpointer value, gpointer user_data) 
+{
+	const char *action = key;
+	crm_debug("Pending action: %s", action);
+}
 
 /*	 A_STOP	*/
 enum crmd_fsa_input
@@ -415,19 +421,22 @@ do_stop(long long action,
 {
 	crm_data_t *node_state = NULL;
 	crm_debug_2("Stopping all remaining local resources");
+
+	if(g_hash_table_size(shutdown_ops) > 0) {
+		crm_info("Waiting on %d lrm operations to complete",
+			g_hash_table_size(shutdown_ops));
+		g_hash_table_foreach(
+			shutdown_ops, ghash_print_pending, NULL);
+		crmd_fsa_stall(NULL);
+		return I_NULL;
+	}
+
 	if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
 		stop_all_resources();
 
 	} else {
 		crm_err("Exiting with no LRM connection..."
 			" resources may be active!");
-	}
-
-	if(g_hash_table_size(shutdown_ops) > 0) {
-		crm_info("Waiting on %d lrm operations to complete",
-			g_hash_table_size(shutdown_ops));
-		crmd_fsa_stall(NULL);
-		return I_NULL;
 	}
 
 #if 0

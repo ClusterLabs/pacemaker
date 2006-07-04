@@ -45,8 +45,6 @@
 #include <crm/dmalloc_wrapper.h>
 
 char *make_stop_id(const char *rsc, int call_id);
-void ghash_print_pending(gpointer key, gpointer value, gpointer user_data);
-
 gboolean stop_all_resources(void);
 gboolean resource_stopped(gpointer key, gpointer value, gpointer user_data);
 
@@ -280,6 +278,13 @@ do_lrm_control(long long action,
 	return I_NULL;
 }
 
+static void
+ghash_print_pending(gpointer key, gpointer value, gpointer user_data) 
+{
+	const char *action = key;
+	crm_err("Pending action: %s", action);
+}
+
 gboolean
 stop_all_resources(void)
 {
@@ -294,6 +299,13 @@ stop_all_resources(void)
 		return TRUE;
 	}
 
+	CRM_CHECK(g_hash_table_size(shutdown_ops) == 0,
+		  crm_err("%d pending LRM operations at shutdown",
+			  g_hash_table_size(shutdown_ops));
+		  g_hash_table_foreach(
+			shutdown_ops, ghash_print_pending, NULL);
+		);
+
 	lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
 	slist_iter(
 		rsc_id, char, lrm_list, lpc,
@@ -302,22 +314,11 @@ stop_all_resources(void)
 			crm_err("Resource %s was active at shutdown."
 				"  You may ignore this error if it is unmanaged.",
 				rsc_id);
-/* 			do_lrm_rsc_op(NULL, rsc_id, CRMD_ACTION_STOP, NULL, NULL); */
 		}
 		);
 
 	set_bit_inplace(fsa_input_register, R_SENT_RSC_STOP);
-	
-	if(g_hash_table_size(shutdown_ops) == 0) {
-		register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
-
-	} else {
-		crm_info("Waiting for %d pending stop operations "
-			 " to complete before exiting",
-			 g_hash_table_size(shutdown_ops));
-		g_hash_table_foreach(
-			shutdown_ops, ghash_print_pending, NULL);
-	}
+	register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 
 	return TRUE;
 }
@@ -1554,20 +1555,6 @@ process_lrm_event(lrm_op_t *op)
 		}
 		crm_free(op_id);
 	}
-	
-	if(is_set(fsa_input_register, R_SENT_RSC_STOP)) {
-		if(g_hash_table_size(shutdown_ops) == 0) {
-			register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
-			
-		} else {
-			crm_info("Still waiting for %d pending stop operations"
-				 " to complete before exiting",
-				 g_hash_table_size(shutdown_ops));
-			g_hash_table_foreach(
-				shutdown_ops, ghash_print_pending, NULL);
-		}
-	}
-	
 	return TRUE;
 }
 
@@ -1580,13 +1567,6 @@ make_stop_id(const char *rsc, int call_id)
 		snprintf(op_id, strlen(rsc) + 34, "%s:%d", rsc, call_id);
 	}
 	return op_id;
-}
-
-void
-ghash_print_pending(gpointer key, gpointer value, gpointer user_data) 
-{
-	const char *uname = key;
-	crm_debug("Pending action: %s", uname);
 }
 
 gboolean
