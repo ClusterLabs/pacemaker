@@ -1,4 +1,4 @@
-/* $Id: crm_verify.c,v 1.15 2006/06/21 08:40:13 andrew Exp $ */
+/* $Id: crm_verify.c,v 1.16 2006/07/04 14:11:11 lars Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -228,6 +228,7 @@ main(int argc, char **argv)
 	
 	cleanup_alloc_calculations(&data_set);
 
+#if 0
 	if(USE_LIVE_CIB) {
 		/* Calling msg2ipcchan() seems to initialize something
 		 *   which isn't free'd when we disconnect and free the
@@ -237,7 +238,8 @@ main(int argc, char **argv)
 		volatile cl_mem_stats_t *active_stats = cl_malloc_getstats();
 		active_stats->numfree++;
 	}
-	
+#endif
+
  	CRM_CHECK(crm_mem_stats(NULL) == FALSE, ; );
 	
 	if(was_config_error) {
