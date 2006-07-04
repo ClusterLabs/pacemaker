@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.57 2006/06/23 08:53:45 andrew Exp $ */
+/* $Id: utils.c,v 1.58 2006/07/04 15:17:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1198,6 +1198,7 @@ crm_zero_mem_stats(volatile cl_mem_stats_t *stats)
 	if(stats != NULL) {
 		cl_malloc_setstats(stats);
 	}
+	crm_debug("Resetting memory stats");
 	active_stats = cl_malloc_getstats();
 	active_stats->numalloc = 0;
 	active_stats->numfree = 0;
@@ -1208,6 +1209,63 @@ crm_zero_mem_stats(volatile cl_mem_stats_t *stats)
 	active_stats->arena = 0;
 }
 
+void
+crm_save_mem_stats(const char *location, cl_mem_stats_t *saved_stats)
+{
+	volatile cl_mem_stats_t *stats = cl_malloc_getstats();
+	if(saved_stats == NULL) {
+		return;
+	}
+	crm_debug("Saving memory stats: %s", location);
+	*saved_stats = *stats;
+}
+
+gboolean
+crm_diff_mem_stats(int log_level, const char *location, cl_mem_stats_t *saved_stats)
+{
+	volatile cl_mem_stats_t *stats = cl_malloc_getstats();
+	if(saved_stats->nbytes_alloc < stats->nbytes_alloc) {
+		crm_log_maybe(log_level,
+			      "Memory usage increase detected at %s:"
+			      " %lu alloc's vs. %lu free's (%lu)"
+			      " (%lu bytes not freed: req=%lu, alloc'd=%lu)",
+			      location,
+			      stats->numalloc - saved_stats->numalloc,
+			      stats->numfree - saved_stats->numfree,
+			      (stats->numalloc - saved_stats->numalloc) - (stats->numfree - saved_stats->numfree),
+			      stats->nbytes_alloc - saved_stats->nbytes_alloc,
+			      stats->nbytes_req - saved_stats->nbytes_req,
+			      stats->mallocbytes - saved_stats->mallocbytes);
+		return TRUE;
+		
+	} else if(saved_stats->nbytes_alloc > stats->nbytes_alloc) {
+		crm_log_maybe(log_level+2,
+			      "Memory usage decrease detected at %s:"
+			      " %lu alloc's vs. %lu free's (%lu)"
+			      " (%lu bytes not freed: req=%lu, alloc'd=%lu)",
+			      location,
+			      saved_stats->numalloc - stats->numalloc,
+			      saved_stats->numfree - stats->numfree,
+			      (saved_stats->numalloc - stats->numalloc) - (saved_stats->numfree - stats->numfree),
+			      saved_stats->nbytes_alloc - stats->nbytes_alloc,
+			      saved_stats->nbytes_req - stats->nbytes_req,
+			      saved_stats->mallocbytes - stats->mallocbytes);
+		return TRUE;
+	} 
+
+	crm_debug_2("Memory usage constant at %s:"
+		    " %lu alloc's vs. %lu free's (%lu)"
+		    " (%lu bytes not freed: req=%lu, alloc'd=%lu)",
+		    location,
+		    stats->numalloc,
+		    stats->numfree,
+		    stats->numalloc - stats->numfree,
+		    stats->nbytes_alloc,
+		    stats->nbytes_req,
+		    stats->mallocbytes);
+	
+	return FALSE;
+}
 
 void
 crm_abort(const char *file, const char *function, int line,
