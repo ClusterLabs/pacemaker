@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.146 2006/06/21 11:06:13 andrew Exp $ */
+/* $Id: utils.c,v 1.147 2006/07/05 14:20:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -413,6 +413,21 @@ ordering_type2text(enum pe_ordering type)
 }
 
 
+gboolean
+can_run_resources(const node_t *node)
+{
+	if(node->details->online == FALSE
+	   || node->details->shutdown
+	   || node->details->unclean
+	   || node->details->standby) {
+		crm_debug_2("%s: online=%d, unclean=%d, standby=%d",
+			    node->details->uname, node->details->online,
+			    node->details->unclean, node->details->standby);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /* return -1 if 'a' is more preferred
  * return  1 if 'b' is more preferred
  */
@@ -430,14 +445,10 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	node1_weight = node1->weight;
 	node2_weight = node2->weight;
 	
-	if(node1->details->unclean
-	   || node1->details->standby
-	   || node1->details->shutdown) {
+	if(can_run_resources(node1) == FALSE) {
 		node1_weight  = -INFINITY; 
 	}
-	if(node2->details->unclean
-	   || node2->details->standby
-	   || node2->details->shutdown) {
+	if(can_run_resources(node2) == FALSE) {
 		node2_weight  = -INFINITY; 
 	}
 
@@ -476,5 +487,48 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	}
 	
 	crm_debug_4("%s = %s", node1->details->uname, node2->details->uname);
+	return 0;
+}
+
+gint sort_color_weight(gconstpointer a, gconstpointer b)
+{
+	const color_t *color1 = (const color_t*)a;
+	const color_t *color2 = (const color_t*)b;
+
+	int color1_weight = 0;
+	int color2_weight = 0;
+	
+	if(a == NULL) { return 1; }
+	if(b == NULL) { return -1; }
+
+	color1_weight = color1->local_weight;
+	color2_weight = color2->local_weight;
+
+	if(color1_weight > color2_weight) {
+		crm_debug_3("%d (%d) > %d (%d) : weight",
+			    color1->id, color1_weight,
+			    color2->id, color2_weight);
+		return -1;
+	}
+	
+	if(color1_weight < color2_weight) {
+		crm_debug_3("%d (%d) < %d (%d) : weight",
+			    color1->id, color1_weight,
+			    color2->id, color2_weight);
+		return 1;
+	}
+
+	crm_debug_3("%d (%d) == %d (%d) : weight",
+		    color1->id, color1_weight,
+		    color2->id, color2_weight);
+	
+	if(color1->id < color2->id) {
+		return -1;
+		
+	} else if(color1->id > color2->id) {
+		return 1;
+	}
+	CRM_CHECK(color1->id != color2->id,
+		  crm_err("Color %d duplicated in list", color1->id));
 	return 0;
 }

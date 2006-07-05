@@ -1,4 +1,4 @@
-/* $Id: utils.h,v 1.2 2006/06/21 11:06:13 andrew Exp $ */
+/* $Id: utils.h,v 1.3 2006/07/05 14:20:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -72,5 +72,8 @@ extern rsc_to_node_t *generate_location_rule(
 
 extern gint sort_cons_strength(gconstpointer a, gconstpointer b);
 extern gint sort_node_weight(gconstpointer a, gconstpointer b);
+extern gint sort_color_weight(gconstpointer a, gconstpointer b);
+
+extern gboolean can_run_resources(const node_t *node);
 
 #endif

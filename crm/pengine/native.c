@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.155 2006/07/03 11:47:38 andrew Exp $ */
+/* $Id: native.c,v 1.156 2006/07/05 14:20:02 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -791,14 +791,14 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		crm_debug_2("RHS of constraint %s is NULL", constraint->id);
 		return;
 	}
-	print_resource(LOG_DEBUG_3, "before update: ", rsc, TRUE);
 	or_list = node_list_or(
 		rsc->allowed_nodes, constraint->node_list_rh, FALSE);
 		
 	pe_free_shallow(rsc->allowed_nodes);
 	rsc->allowed_nodes = or_list;
-	
-	print_resource(LOG_DEBUG_3, "after update: ", rsc, TRUE);
+	slist_iter(node, node_t, or_list, lpc,
+		   crm_debug_3("%s + %s : %d", rsc->id, node->details->uname, node->weight);
+		);
 }
 
 void native_expand(resource_t *rsc, pe_working_set_t *data_set)
@@ -981,24 +981,6 @@ native_agent_constraints(resource_t *rsc)
 {
 }
 
-static gint sort_color_weight(gconstpointer a, gconstpointer b)
-{
-	const color_t *color1 = (const color_t*)a;
-	const color_t *color2 = (const color_t*)b;
-
-	if(a == NULL) { return 1; }
-	if(b == NULL) { return -1; }
-  
-	if(color1->local_weight > color2->local_weight) {
-		return -1;
-	}
-	
-	if(color1->local_weight < color2->local_weight) {
-		return 1;
-	}
-	
-	return 0;
-}
 
 gboolean
 native_choose_color(resource_t *rsc, color_t *no_color)
@@ -1068,18 +1050,32 @@ native_choose_color(resource_t *rsc, color_t *no_color)
 void
 native_assign_color(resource_t *rsc, color_t *color) 
 {
-	color_t *local_color = add_color(rsc, color);
-	GListPtr intersection = NULL;
-	GListPtr old_list = NULL;
+	color_t *local_color = NULL;
 
 	rsc->provisional = FALSE;
 	
+	if(rsc->color != NULL) {
+		/* TODO: check its a clone */
+		CRM_CHECK(color->id != rsc->color->id, return);
+		rsc->color->details->allocated_resources =
+			g_list_remove(rsc->color->details->allocated_resources, rsc);
+		(rsc->color->details->num_resources)--;
+		rsc->candidate_colors =
+			g_list_remove(rsc->candidate_colors, rsc->color);
+		crm_free(rsc->color);
+		rsc->color = NULL;
+	}
+	
+	local_color = add_color(rsc, color);
 	CRM_CHECK(local_color != NULL, return);
 
 	local_color->details->allocated_resources =
 		g_list_append(local_color->details->allocated_resources,rsc);
 
 	if(rsc->variant == pe_native) {
+		GListPtr old_list = NULL;
+		GListPtr intersection = NULL;
+
 		(local_color->details->num_resources)++;
 		rsc->color = copy_color(local_color);
 		crm_debug_3("Created intersection for color %d",
