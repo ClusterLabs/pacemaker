@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.73 2006/06/07 12:46:57 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.74 2006/07/05 15:21:00 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -105,7 +105,7 @@ int operation_status = 0;
 const char *sys_to = NULL;
 const char *crm_system_name = NULL;
 
-#define OPTARGS	"V?K:S:HE:Dd:i:RNqt:B"
+#define OPTARGS	"V?K:S:HE:Dd:i:RNqt:Bv"
 
 int
 main(int argc, char **argv)
@@ -138,6 +138,7 @@ main(int argc, char **argv)
 		{"dc_lookup", 0, 0, 'D'},
 		{"nodes", 0, 0, 'N'},
 		{"option", 1, 0, 'o'},
+		{"version", 0, 0, 'v'},
 
 		{0, 0, 0, 0}
 	};
@@ -192,7 +193,12 @@ main(int argc, char **argv)
    digit_optind = this_option_optind;
    printf ("option %c\n", c);
 */
-			
+
+			case 'v':
+				fprintf(stdout, "CRM Version %s (CIB feature set %s)\n",
+					CRM_FEATURE_SET, CIB_FEATURE_SET);
+				exit(0);
+				break;
 			case 'V':
 				BE_VERBOSE = TRUE;
 				admin_verbose = XML_BOOLEAN_TRUE;
@@ -685,10 +691,11 @@ usage(const char *cmd, int exit_status)
 
 	stream = exit_status ? stderr : stdout;
 
-	fprintf(stream, "usage: %s [-?vs] [command] [command args]\n", cmd);
+	fprintf(stream, "usage: %s [-?Vs] [command] [command args]\n", cmd);
 
 	fprintf(stream, "Options\n");
 	fprintf(stream, "\t--%s (-%c)\t: this help message\n", "help", '?');
+	fprintf(stream, "\t--%s (-%c)\t: version details\n", "version", 'v');
 	fprintf(stream, "\t--%s (-%c)\t: "
 		"turn on debug info. additional instances increase verbosity\n",
 		"verbose", 'V');
