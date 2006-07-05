@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.74 2006/07/05 15:21:00 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.75 2006/07/05 15:27:01 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -195,8 +195,8 @@ main(int argc, char **argv)
 */
 
 			case 'v':
-				fprintf(stdout, "CRM Version %s (CIB feature set %s)\n",
-					CRM_FEATURE_SET, CIB_FEATURE_SET);
+				fprintf(stdout, "HA Version %s, CRM Version %s (CIB feature set %s)\n",
+					VERSION, CRM_FEATURE_SET, CIB_FEATURE_SET);
 				exit(0);
 				break;
 			case 'V':
