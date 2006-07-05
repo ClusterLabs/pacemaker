@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.127 2006/07/04 14:07:42 andrew Exp $ */
+/* $Id: callbacks.c,v 1.128 2006/07/05 15:11:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -804,7 +804,7 @@ parse_local_options(
 
 static gboolean
 parse_peer_options(
-	cib_client_t *cib_client, int call_type, HA_Message *request, 
+	int call_type, HA_Message *request, 
 	gboolean *local_notify, gboolean *needs_reply, gboolean *process, gboolean *needs_forward) 
 {
 	const char *op         = cl_get_string(request, F_CIB_OPERATION);
@@ -876,11 +876,12 @@ parse_peer_options(
 
 		
 static void
-forward_request(HA_Message *request, cib_client_t *cib_client,
-		int call_options, const char *host, const char *op)
+forward_request(HA_Message *request, cib_client_t *cib_client, int call_options)
 {
 	HA_Message *forward_msg = NULL;
 	cl_mem_stats_t saved_stats;
+	const char *op         = cl_get_string(request, F_CIB_OPERATION);
+	const char *host       = cl_get_string(request, F_CIB_HOST);
 	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	forward_msg = cib_msg_copy(request, TRUE);
@@ -922,7 +923,7 @@ send_peer_reply(HA_Message *msg, crm_data_t *result_diff, const char *originator
 	CRM_ASSERT(msg != NULL);
 
 	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
- 	reply_copy = cib_msg_copy(msg, FALSE);
+ 	reply_copy = cib_msg_copy(msg, TRUE);
 	
 	if(broadcast) {
 		/* this (successful) call modified the CIB _and_ the
@@ -952,49 +953,13 @@ send_peer_reply(HA_Message *msg, crm_data_t *result_diff, const char *originator
 
  		add_message_xml(reply_copy, F_CIB_UPDATE_DIFF, result_diff);
 		crm_log_message(LOG_DEBUG_3, reply_copy);
-#if 1
   		send_ha_message(hb_conn, reply_copy, NULL, TRUE);
-#else		
-		/* code to verify the messaging layer leaks */ 
- 		CRM_ASSERT(hb_conn->llc_ops->sendclustermsg(hb_conn, reply_copy) == HA_OK);
-		{
-			IPC_Channel *ipc = NULL;
-			IPC_Queue *send_q = NULL;
-			ipc = hb_conn->llc_ops->ipcchan(hb_conn);
-			if(ipc != NULL) {
-				ipc->ops->waitout(ipc);
-				send_q = ipc->send_queue;
-			}
-			if(send_q != NULL) {
-				CRM_CHECK(send_q->current_qlen == 0 ,
-					  crm_err("Send Queue len: %d", (int)send_q->current_qlen));
-			}
-		}
-#endif
 		
 	} else if(originator != NULL) {
 		/* send reply via HA to originating node */
 		crm_debug_2("Sending request result to originator only");
 		ha_msg_add(reply_copy, F_CIB_ISREPLY, originator);
-#if 1
   		send_ha_message(hb_conn, reply_copy, originator, FALSE);
-#else		
-		/* code to verify the messaging layer leaks */ 
- 		CRM_ASSERT(hb_conn->llc_ops->send_ordered_nodemsg(hb_conn, reply_copy) == HA_OK);
-		{
-			IPC_Channel *ipc = NULL;
-			IPC_Queue *send_q = NULL;
-			ipc = hb_conn->llc_ops->ipcchan(hb_conn);
-			if(ipc != NULL) {
-				ipc->ops->waitout(ipc);
-				send_q = ipc->send_queue;
-			}
-			if(send_q != NULL) {
-				CRM_CHECK(send_q->current_qlen == 0 ,
-					  crm_err("Send Queue len: %d", (int)send_q->current_qlen));
-			}
-		}
-#endif
 	}
 	
 	crm_msg_del(reply_copy);
@@ -1063,8 +1028,8 @@ cib_process_request(
 		parse_local_options(cib_client, call_type, call_options, host, op,
 				    &local_notify, &needs_reply, &process, &needs_forward);
 		
-	} else if(parse_peer_options(cib_client, call_type, request,
-				     &local_notify, &needs_reply, &process, &needs_forward) == FALSE) {
+	} else if(parse_peer_options(call_type, request, &local_notify,
+				     &needs_reply, &process, &needs_forward) == FALSE) {
 		return;
 	}
 	crm_debug_3("Finished determining processing actions");
@@ -1075,7 +1040,7 @@ cib_process_request(
 	}
 	
 	if(needs_forward && stand_alone == FALSE) {
-		forward_request(request, cib_client, call_options, host, op);
+		forward_request(request, cib_client, call_options);
 		return;
 	}
 
@@ -1139,27 +1104,21 @@ cib_process_request(
 		send_peer_reply(request, result_diff, originator, TRUE);
 		
 	} else if((call_options & cib_discard_reply) == 0) {
-		gboolean should_send = TRUE;
 		CRM_DEV_ASSERT(cib_server_ops[call_type].modifies_cib == FALSE
 			       || result_diff != NULL || rc != cib_ok);
+		crm_debug("Directed reply to %s", originator);
 		
-		if(call_options & cib_inhibit_bcast ) {
-			should_send = FALSE;
+		if(call_options & cib_inhibit_bcast) {
 			crm_debug("Request not broadcast: inhibited");
 		}
 		if(cib_server_ops[call_type].modifies_cib == FALSE) {
-			should_send = FALSE;
 			crm_debug_2("Request not broadcast: R/O call");
 		}
 		if(rc != cib_ok) {
-			should_send = FALSE;
 			crm_warn("Request not broadcast: call failed: %s",
 				 cib_error2string(rc));
 		}
-		if(from_peer == FALSE) {
-			should_send = FALSE;
-		}
-		if(should_send) {
+		if(from_peer) {
 			send_peer_reply(op_reply, result_diff, originator, FALSE);
 		}
 	}
