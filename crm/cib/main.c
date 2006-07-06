@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.48 2006/07/06 13:30:24 andrew Exp $ */
+/* $Id: main.c,v 1.49 2006/07/06 16:52:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -170,11 +170,10 @@ cib_stats(gpointer data)
 		crm_zero_mem_stats(crm_running_stats);
 	}
 	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
-	if(crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, crm_running_stats)) {
-		crm_err("Total alloc's %ld for %ld bytes",
-			crm_running_stats->numalloc, crm_running_stats->nbytes_alloc);
-	}
+	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, crm_running_stats);
 	*crm_running_stats = saved_stats;		
+	crm_info("Total alloc's %ld for %ld bytes",
+		 crm_running_stats->numalloc, crm_running_stats->nbytes_alloc);
 	
 	if(cib_stat_interval_ms == 0) {
 		cib_stat_interval_ms = crm_get_msec(cib_stat_interval);

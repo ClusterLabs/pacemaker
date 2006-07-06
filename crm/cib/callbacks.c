@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.131 2006/07/06 13:30:24 andrew Exp $ */
+/* $Id: callbacks.c,v 1.132 2006/07/06 16:52:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1583,7 +1583,7 @@ cib_ha_dispatch(IPC_Channel *channel, gpointer user_data)
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
 	}
 	
-	crm_diff_mem_stats(LOG_WARNING, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
+	crm_diff_mem_stats(LOG_DEBUG, LOG_DEBUG, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return (channel->ch_status == IPC_CONNECT);
 }
 

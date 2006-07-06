@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.85 2006/07/06 10:55:09 andrew Exp $ */
+/* $Id: messages.c,v 1.86 2006/07/06 16:52:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -430,10 +430,13 @@ cib_process_diff(
 			reason = "Failed application of an update diff";
 			if(options & cib_force_diff && cib_is_master == FALSE) {
 				log_level = LOG_INFO;
-				reason = "Failed application of a global update.  Requesting full refresh.";
+				reason = "Failed application of a global update."
+					"  Requesting full refresh.";
 				do_resync = TRUE;
+
 			} else if(options & cib_force_diff) {
-				reason = "Failed application of a global update.  Not requesting full refresh.";
+				reason = "Failed application of a global update."
+					"  Not requesting full refresh.";
 			}
 		}
 	}
