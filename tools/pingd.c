@@ -1,4 +1,4 @@
-/* $Id: pingd.c,v 1.6 2006/06/06 16:50:17 andrew Exp $ */
+/* $Id: pingd.c,v 1.7 2006/07/06 09:30:27 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -388,6 +388,7 @@ send_update(void)
 		crm_err("Could not send update");
 		exit(1);
 	}
+	crm_msg_del(update);
 }
 
 void

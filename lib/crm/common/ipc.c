@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.23 2006/05/29 11:53:53 andrew Exp $ */
+/* $Id: ipc.c,v 1.24 2006/07/06 09:30:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -52,6 +52,8 @@ gboolean
 send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboolean force_ordered)
 {
 	gboolean all_is_good = TRUE;
+	cl_mem_stats_t saved_stats;
+	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	if (msg == NULL) {
 		crm_err("cant send NULL message");
@@ -100,6 +102,7 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboole
 			ipc = hb_conn->llc_ops->ipcchan(hb_conn);
 		}
 		if(ipc != NULL) {
+			ipc->ops->resume_io(ipc);
 			send_q = ipc->send_queue;
 		}
 		if(send_q != NULL) {
@@ -108,15 +111,18 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboole
 	}
 	
 	crm_log_message_adv(all_is_good?LOG_MSG:LOG_WARNING,"HA[outbound]",msg);
+	crm_diff_mem_stats(LOG_DEBUG, __PRETTY_FUNCTION__, &saved_stats);
 	return all_is_good;
 }
 
 /* frees msg */
 gboolean 
-crm_send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg, gboolean server)
+send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 {
 	gboolean all_is_good = TRUE;
 	int fail_level = LOG_WARNING;
+	cl_mem_stats_t saved_stats;
+	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	if(ipc_client != NULL && ipc_client->conntype == IPC_CLIENT) {
 		fail_level = LOG_ERR;
@@ -149,10 +155,11 @@ crm_send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg, gboolean server)
 		} else if(ipc_client->conntype == IPC_CLIENT) {
 			CRM_CHECK(ipc_client->send_queue->current_qlen < ipc_client->send_queue->max_qlen, ;);
 		}
-	}	
-
+	}
+	ipc_client->ops->resume_io(ipc_client);
+	
 	crm_log_message_adv(all_is_good?LOG_MSG:LOG_WARNING,"IPC[outbound]",msg);
-	crm_msg_del(msg);
+	crm_diff_mem_stats(LOG_DEBUG, __PRETTY_FUNCTION__, &saved_stats);
 	
 	return all_is_good;
 }

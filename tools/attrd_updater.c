@@ -1,4 +1,4 @@
-/* $Id: attrd_updater.c,v 1.4 2006/06/01 08:43:37 andrew Exp $ */
+/* $Id: attrd_updater.c,v 1.5 2006/07/06 09:30:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -132,8 +132,10 @@ main(int argc, char ** argv)
 	
 	if(send_ipc_message(attrd, update) == FALSE) {
 		fprintf(stderr, "Could not send update\n");
+		crm_msg_del(update);
 		return 1;
 	}
+	crm_msg_del(update);
 	return 0;
 }
 

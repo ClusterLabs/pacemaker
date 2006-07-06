@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.46 2006/06/23 12:30:38 andrew Exp $ */
+/* $Id: main.c,v 1.47 2006/07/06 09:30:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -370,7 +370,6 @@ usage(const char* cmd, int exit_status)
 
 	exit(exit_status);
 }
-
 
 gboolean
 cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name)

@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.36 2006/02/17 13:20:03 andrew Exp $ */
+/* $Id: notify.c,v 1.37 2006/07/06 09:30:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -71,6 +71,8 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 
 	int qlen = 0;
 	int max_qlen = 0;
+	cl_mem_stats_t saved_stats;
+	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	
 	CRM_DEV_ASSERT(client != NULL);
 	CRM_DEV_ASSERT(update_msg != NULL);
@@ -110,7 +112,11 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	ipc_client = client->channel;
 	qlen = ipc_client->send_queue->current_qlen;
 	max_qlen = ipc_client->send_queue->max_qlen;
-	
+
+#if 1
+	/* get_chan_status() causes memory to be allocated that isnt free'd
+	 *   until the message is read (which messes up the memory stats) 
+	 */
 	if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
 		crm_debug_2("Skipping notification to disconnected"
 			    " client %s/%s", client->name, client->id);
@@ -134,7 +140,9 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 		}
 
 		/* these are critical */
-	} else if(client->diffs && is_diff) {
+	} else
+#endif
+		if(client->diffs && is_diff) {
 		do_send = TRUE;
 
 	} else if(client->confirmations && is_confirm) {
@@ -145,7 +153,6 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	}
 
 	if(do_send) {
-
 		crm_debug_2("Notifying client %s/%s of %s update (queue=%d)",
 			    client->name, client->channel_name, type, qlen);
 
@@ -155,20 +162,16 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 				 is_confirm?"Confirmation":is_post?"Post":"Pre",
 				 client->name, client->id);
 			
-		} else {
-			HA_Message *msg_copy = ha_msg_copy(update_msg);
-
-			if(crm_send_ipc_message(
-				   ipc_client, msg_copy, TRUE) == FALSE) {
-				crm_warn("Notification of client %s/%s failed",
-					 client->name, client->id);
-			}
+		} else if(send_ipc_message(ipc_client, update_msg) == FALSE) {
+			crm_warn("Notification of client %s/%s failed",
+				 client->name, client->id);
 		}
 		
 	} else {
 		crm_debug_3("Client %s/%s not interested in %s notifications",
 			    client->name, client->channel_name, type);	
 	}
+	crm_diff_mem_stats(LOG_DEBUG, __PRETTY_FUNCTION__, &saved_stats);
 }
 
 void
@@ -178,6 +181,8 @@ cib_pre_notify(
 	HA_Message *update_msg = NULL;
 	const char *type = NULL;
 	const char *id = NULL;
+	cl_mem_stats_t saved_stats;
+	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	update_msg = ha_msg_new(6);
 
@@ -221,6 +226,7 @@ cib_pre_notify(
 	}
 		
 	crm_msg_del(update_msg);
+	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
 }
 
 void
@@ -245,6 +251,8 @@ cib_diff_notify(
 	int del_admin_epoch = 0;
 
 	int log_level = LOG_INFO;
+	cl_mem_stats_t saved_stats;
+	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	
 	if(diff == NULL) {
 		return;
@@ -275,6 +283,7 @@ cib_diff_notify(
 	}
 	
 	do_cib_notify(options, op, update, result, diff, T_CIB_DIFF_NOTIFY);
+	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
 }
 
 void
@@ -382,6 +391,8 @@ cib_replace_notify(crm_data_t *update, enum cib_errors result, crm_data_t *diff)
 	int del_updates = 0;
 	int del_epoch  = 0;
 	int del_admin_epoch = 0;
+	cl_mem_stats_t saved_stats;
+	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	if(diff == NULL) {
 		return;
@@ -413,4 +424,5 @@ cib_replace_notify(crm_data_t *update, enum cib_errors result, crm_data_t *diff)
 	
 	g_hash_table_foreach(client_list, cib_notify_client, replace_msg);
 	crm_msg_del(replace_msg);
+	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
 }

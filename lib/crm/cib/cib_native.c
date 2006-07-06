@@ -229,8 +229,9 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 			   native->callback_channel, reg_msg) == FALSE) {
 			rc = cib_callback_register;
 		}
-		crm_free(uuid_ticket);
 
+		crm_msg_del(reg_msg);
+		crm_free(uuid_ticket);
 	}
 	if(rc == cib_ok) {
 		/* In theory IPC_INTR could trip us up here */
@@ -439,13 +440,14 @@ cib_native_perform_op(
 	crm_debug_3("Sending %s message to CIB service", op);
 	if(send_ipc_message(native->command_channel, op_msg) == FALSE) {
 		crm_err("Sending message to CIB service FAILED");
+		crm_msg_del(op_msg);
 		return cib_send_failed;
 
 	} else {
 		crm_debug_3("Message sent");
 	}
 
-	op_msg = NULL;
+	crm_msg_del(op_msg);
 
 	if((call_options & cib_discard_reply)) {
 		crm_debug_3("Discarding reply");
@@ -829,6 +831,7 @@ cib_native_register_callback(cib_t* cib, const char *callback, int enabled)
 	ha_msg_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
 	ha_msg_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
 	send_ipc_message(native->callback_channel, notify_msg);
+	crm_msg_del(notify_msg);
 	return cib_ok;
 }
 

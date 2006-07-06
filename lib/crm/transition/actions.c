@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.3 2006/03/31 11:50:24 andrew Exp $ */
+/* $Id: actions.c,v 1.4 2006/07/06 09:30:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -190,6 +190,7 @@ te_crm_command(action_t *action)
 	crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
 	ret = send_ipc_message(crm_ch, cmd);
 	crm_free(counter);
+	crm_msg_del(cmd);
 	
 	value = g_hash_table_lookup(action->params, XML_ATTR_TE_NOWAIT);
 	if(ret == FALSE) {
@@ -354,6 +355,7 @@ cib_action_update(action_t *action, int status)
 		ha_msg_add(cmd, F_CRM_SYS_FROM, CRM_SYSTEM_TENGINE);
 		ha_msg_addstruct(cmd, crm_element_name(state), state);
 		send_ipc_message(crm_ch, cmd);
+		crm_msg_del(cmd);
 	}
 #endif
 	free_xml(fragment);
@@ -432,6 +434,7 @@ cib_action_updated(
 #else
 	crm_log_message(LOG_INFO, cmd);
 #endif
+	crm_msg_del(cmd);
 	
 	action->invoked = TRUE;
 	value = g_hash_table_lookup(action->params, XML_ATTR_TE_NOWAIT);

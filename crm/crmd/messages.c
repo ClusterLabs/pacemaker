@@ -1145,7 +1145,6 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 	if (client_channel != NULL) {
 		crm_debug_3("Sending message via channel %s.", sys);
 		send_ok = send_ipc_message(client_channel, msg);
-		msg = NULL;  /* so the crm_msg_del() below doesnt fail */
 		
 	} else if(sys != NULL && strcasecmp(sys, CRM_SYSTEM_CIB) == 0) {
 		crm_err("Sub-system (%s) has been incorporated into the CRMd.",

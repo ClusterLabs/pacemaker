@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.83 2006/07/04 14:07:42 andrew Exp $ */
+/* $Id: messages.c,v 1.84 2006/07/06 09:30:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -284,8 +284,6 @@ cib_update_counter(crm_data_t *xml_obj, const char *field, gboolean reset)
 	char *new_value = NULL;
 	char *old_value = NULL;
 	int  int_value  = -1;
-
-	START_stat_free_op();
 	
 	if(reset == FALSE && crm_element_value(xml_obj, field) != NULL) {
 		old_value = crm_element_value_copy(xml_obj, field);
@@ -301,10 +299,10 @@ cib_update_counter(crm_data_t *xml_obj, const char *field, gboolean reset)
 	crm_debug_4("%s %d(%s)->%s",
 		  field, int_value, crm_str(old_value), crm_str(new_value));
 	crm_xml_add(xml_obj, field, new_value);
+
 	crm_free(new_value);
 	crm_free(old_value);
 
-	END_stat_free_op();	
 	return cib_ok;
 }
 
@@ -551,16 +549,15 @@ cib_process_replace(
 		}
 		sync_in_progress = 0;
 		free_xml(*result_cib);
-	START_stat_free_op();
 		*result_cib = copy_xml(input);
-	END_stat_free_op();
 		send_notify = TRUE;
 		
 	} else {
 		crm_data_t *obj_root = NULL;
+		gboolean ok = TRUE;
 		obj_root = get_object_root(section, *result_cib);
-	START_stat_free_op();
-		if(replace_xml_child(NULL, obj_root, input, FALSE) == FALSE) {
+		ok = replace_xml_child(NULL, obj_root, input, FALSE);
+		if(ok == FALSE) {
 			crm_debug_2("No matching object to replace");
 			result = cib_NOTEXISTS;
 
@@ -570,7 +567,6 @@ cib_process_replace(
 		} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
 			send_notify = TRUE;
 		}
-	END_stat_free_op();
 	}
 	
 	if(send_notify) {
@@ -601,11 +597,9 @@ cib_process_delete(
 	crm_validate_data(input);
 	crm_validate_data(*result_cib);
 
-	START_stat_free_op();
 	if(replace_xml_child(NULL, obj_root, input, TRUE) == FALSE) {
 		crm_debug_2("No matching object to delete");
 	}
-	END_stat_free_op();
 	
 	return cib_ok;
 }
@@ -629,12 +623,9 @@ cib_process_modify(
 	crm_validate_data(input);
 	crm_validate_data(*result_cib);
 
-	START_stat_free_op();
 	if(update_xml_child(obj_root, input) == FALSE) {
-		END_stat_free_op();
 		return cib_NOTEXISTS;		
 	}
-	END_stat_free_op();
 	
 	return cib_ok;
 }
@@ -700,9 +691,7 @@ cib_process_change(
 			XML_CIB_TAG_CRMCONFIG
 		};
 
-	START_stat_free_op();
 		copy_in_properties(*result_cib, input);
-	END_stat_free_op();
 	
 		for(lpc = 0; lpc < DIMOF(type_list); lpc++) {
 			type = type_list[lpc];
@@ -735,7 +724,6 @@ cib_process_change(
 }
 
 #define cib_update_xml_macro(parent, xml_update)			\
-	START_stat_free_op();						\
 	if(operation == CIB_UPDATE_OP_DELETE) {				\
 		rc = delete_cib_object(parent, xml_update);		\
 		update_results(failed, xml_update, operation, rc);	\
@@ -748,7 +736,6 @@ cib_process_change(
 		rc = add_cib_object(parent, xml_update);		\
 		update_results(failed, xml_update, operation, rc);	\
 	}								\
-	END_stat_free_op();
 
 enum cib_errors
 updateList(crm_data_t *local_cib, crm_data_t *xml_section, crm_data_t *failed,

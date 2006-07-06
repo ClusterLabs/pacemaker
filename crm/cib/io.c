@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.72 2006/07/04 14:07:42 andrew Exp $ */
+/* $Id: io.c,v 1.73 2006/07/06 09:30:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,6 +36,7 @@
 
 #include <cibio.h>
 #include <crm/cib.h>
+#include <crm/common/util.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
@@ -508,6 +509,9 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 	crm_data_t *saved_cib = get_the_CIB();
 	const char *ignore_dtd = NULL;
 
+	long new_bytes, new_allocs, new_frees;
+	long old_bytes, old_allocs, old_frees;
+
 	crm_log_xml_debug_4(new_cib, "Attempting to activate CIB");
 
 	CRM_ASSERT(new_cib != saved_cib);
@@ -550,14 +554,22 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 	} else if(cib_writes_enabled && cib_status == cib_ok) {
 		crm_debug_2("Triggering CIB write");
 		G_main_set_trigger(cib_writer);
+
+		crm_xml_nbytes(new_cib, &new_bytes, &new_allocs, &new_frees);
+		crm_xml_nbytes(saved_cib, &old_bytes, &old_allocs, &old_frees);
+
+		if(new_bytes != old_bytes) {
+			crm_info("CIB size is %ld bytes (was %ld)", new_bytes, old_bytes);
+		}	
+		crm_adjust_mem_stats(
+			new_bytes - old_bytes, new_allocs - old_allocs, new_frees - old_frees);
 	}
 	
 	if(the_cib != saved_cib && the_cib != new_cib) {
 		CRM_DEV_ASSERT(error_code != cib_ok);
 		CRM_DEV_ASSERT(the_cib == NULL);
 	}
-
-	START_stat_free_op();
+	
 	if(the_cib != new_cib) {
 		free_xml(new_cib);
 		CRM_DEV_ASSERT(error_code != cib_ok);
@@ -566,7 +578,6 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 	if(the_cib != saved_cib) {
 		free_xml(saved_cib);
 	}
-	END_stat_free_op();
 	
 	return error_code;
     
@@ -704,11 +715,9 @@ update_counters(const char *file, const char *fn, crm_data_t *xml_obj)
 {
 	gboolean did_update = FALSE;
 
-	START_stat_free_op();
 	did_update = did_update || update_quorum(xml_obj);
 	did_update = did_update || set_transition(xml_obj);
 	did_update = did_update || set_connected_peers(xml_obj);
-	END_stat_free_op();
 	
 	if(did_update) {
 		do_crm_log(LOG_DEBUG, file, fn, "Counters updated");

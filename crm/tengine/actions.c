@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.34 2006/05/29 13:25:16 andrew Exp $ */
+/* $Id: actions.c,v 1.35 2006/07/06 09:30:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -192,6 +192,7 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
 	ret = send_ipc_message(crm_ch, cmd);
 	crm_free(counter);
+	crm_msg_del(cmd);
 	
 	value = g_hash_table_lookup(action->params, crm_meta_name(XML_ATTR_TE_NOWAIT));
 	if(ret == FALSE) {
@@ -408,6 +409,7 @@ send_rsc_command(crm_action_t *action)
 		send_ipc_message(crm_ch, cmd);
 	}
 #endif
+	crm_msg_del(cmd);
 	
 	action->executed = TRUE;
 	value = g_hash_table_lookup(action->params, crm_meta_name(XML_ATTR_TE_NOWAIT));
@@ -485,6 +487,7 @@ notify_crmd(crm_graph_t *graph)
 	}
 
 	send_ipc_message(crm_ch, cmd);
+	crm_msg_del(cmd);
 
 	graph->abort_reason = NULL;
 	graph->completion_action = tg_restart;	

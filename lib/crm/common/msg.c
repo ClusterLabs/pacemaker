@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.8 2006/05/08 07:42:19 andrew Exp $ */
+/* $Id: msg.c,v 1.9 2006/07/06 09:30:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -148,6 +148,7 @@ send_hello_message(IPC_Channel *ipc_client,
 	crm_debug_4("hello message sent");
 	
 	free_xml(hello_node);
+	crm_msg_del(hello);
 }
 
 
@@ -322,6 +323,7 @@ send_ipc_reply(IPC_Channel *ipc_channel,
 
 	if (reply != NULL) {
 		was_sent = send_ipc_message(ipc_channel, reply);
+		crm_msg_del(reply);
 	}
 	return was_sent;
 }

@@ -67,6 +67,7 @@ update_attrd(void)
 		} else {
 			crm_debug("sent attrd refresh");
 		}
+		crm_msg_del(update);
 		
 	} else {
 		crm_info("Couldn't connect to attrd this time");

@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.42 2006/06/23 08:32:00 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.43 2006/07/06 09:30:27 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -388,6 +388,7 @@ delete_lrm_rsc(
 	IPC_Channel *crmd_channel, const char *host_uname,
 	const char *rsc_id, const char *rsc_long_id)
 {
+	int rc = cib_send_failed;
 	HA_Message *cmd = NULL;
 	crm_data_t *msg_data = NULL;
 	crm_data_t *rsc = NULL;
@@ -413,23 +414,26 @@ delete_lrm_rsc(
 	crm_free(key);
 
 	if(send_ipc_message(crmd_channel, cmd)) {
-		return 0;
+		rc = 0;
 	}
-	return cib_send_failed;
+	crm_msg_del(cmd);
+	return rc;
 }
 
 static int
 refresh_lrm(IPC_Channel *crmd_channel, const char *host_uname)  
 {
 	HA_Message *cmd = NULL;
+	int rc = cib_send_failed;
 	
 	cmd = create_request(CRM_OP_LRM_REFRESH, NULL, host_uname,
 			     CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 	
 	if(send_ipc_message(crmd_channel, cmd)) {
-		return 0;
+		rc = 0;
 	}
-	return cib_send_failed;
+	crm_msg_del(cmd);
+	return rc;
 }
 
 static int
@@ -928,6 +932,7 @@ main(int argc, char **argv)
 		cmd = create_request(CRM_OP_REPROBE, NULL, host_uname,
 				     CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 		send_ipc_message(crmd_channel, cmd);
+		crm_msg_del(cmd);
 
 	} else if(rsc_cmd == 'R') {
 		refresh_lrm(crmd_channel, host_uname);

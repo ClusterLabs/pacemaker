@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.75 2006/07/05 15:27:01 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.76 2006/07/06 09:30:27 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -447,6 +447,7 @@ do_work(ll_cluster_t * hb_cluster)
 			ha_msg_mod(cmd, XML_ATTR_REFERENCE, this_msg_reference);
 		}
 		send_ipc_message(crmd_channel, cmd);
+		crm_msg_del(cmd);
 	}
 	
 	return ret;
