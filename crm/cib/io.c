@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.73 2006/07/06 09:30:28 andrew Exp $ */
+/* $Id: io.c,v 1.74 2006/07/06 10:55:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -560,9 +560,9 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 
 		if(new_bytes != old_bytes) {
 			crm_info("CIB size is %ld bytes (was %ld)", new_bytes, old_bytes);
+			crm_adjust_mem_stats(new_bytes - old_bytes, new_allocs - old_allocs,
+					     new_frees - old_frees);
 		}	
-		crm_adjust_mem_stats(
-			new_bytes - old_bytes, new_allocs - old_allocs, new_frees - old_frees);
 	}
 	
 	if(the_cib != saved_cib && the_cib != new_cib) {

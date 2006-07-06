@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.59 2006/07/06 09:30:27 andrew Exp $ */
+/* $Id: utils.c,v 1.60 2006/07/06 10:55:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1216,7 +1216,7 @@ crm_save_mem_stats(const char *location, cl_mem_stats_t *saved_stats)
 	if(saved_stats == NULL) {
 		return;
 	}
-	crm_debug("Saving memory stats: %s", location);
+	crm_debug_2("Saving memory stats: %s", location);
 	*saved_stats = *stats;
 }
 
@@ -1272,7 +1272,7 @@ crm_diff_mem_stats(int log_level, const char *location, cl_mem_stats_t *saved_st
 {
 	gboolean increase = TRUE;
 	gboolean was_change = FALSE;
-	gboolean reset_on_change = TRUE;
+	gboolean reset_on_change = (log_level != LOG_ERR);
 
 	volatile cl_mem_stats_t *stats = cl_malloc_getstats();
 
@@ -1319,10 +1319,10 @@ crm_diff_mem_stats(int log_level, const char *location, cl_mem_stats_t *saved_st
 		      delta_allocs, delta_frees, delta_allocs - delta_frees,
 		      delta_bytes, delta_req);
 	
-	if(reset_on_change) {
+	if(reset_on_change && increase) {
 		*stats = *saved_stats;		
 	}
-	return TRUE;
+	return increase;
 }
 
 void

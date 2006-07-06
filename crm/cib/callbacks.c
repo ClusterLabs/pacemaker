@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.129 2006/07/06 09:30:28 andrew Exp $ */
+/* $Id: callbacks.c,v 1.130 2006/07/06 10:55:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -679,8 +679,15 @@ cib_common_callback_worker(HA_Message *op_request, cib_client_t *cib_client,
 	longclock_t call_stop = 0;
 	longclock_t call_start = 0;
 	cl_mem_stats_t saved_stats;
+	cl_mem_stats_t *running_stats = NULL;
+	if(running_stats == NULL) {
+		START_stat_free_op();
+		crm_malloc0(running_stats, sizeof(cl_mem_stats_t));
+		END_stat_free_op();
+		crm_save_mem_stats("running-stats", running_stats);
+	}
 	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
-
+	
 	call_start = time_longclock();
 	cib_client->num_calls++;
 	op = cl_get_string(op_request, F_CIB_OPERATION);
@@ -705,6 +712,7 @@ cib_common_callback_worker(HA_Message *op_request, cib_client_t *cib_client,
 	cib_call_time += (call_stop - call_start);
 
 	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, "running-cib-usage", running_stats);
 }
 
 gboolean
@@ -717,7 +725,6 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 	cl_mem_stats_t saved_stats;
 	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
-	
 	if(cib_client == NULL) {
 		crm_err("Receieved call from unknown source. Discarding.");
 		return FALSE;
@@ -771,7 +778,7 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 		keep_channel = cib_process_disconnect(channel, cib_client);	
 	}
 
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_DEBUG, __PRETTY_FUNCTION__, &saved_stats);
 	return keep_channel;
 }
 
@@ -1138,7 +1145,6 @@ cib_process_request(
 			local_notify = FALSE;
 		}		
 	}
-
 	crm_debug_3("processing response cases");
 
 	if(local_notify) {
@@ -1187,8 +1193,9 @@ cib_process_request(
 	crm_msg_del(op_reply);
 	free_xml(result_diff);
 
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
-
+	if(crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats)) {
+		crm_log_message_adv(LOG_ERR,"IPC[leak]", request);
+	}
 	return;	
 }
 
@@ -1355,8 +1362,7 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 			op, call_options, section, input,
 			current_cib, &result_cib, &output);
 
-		CRM_DEV_ASSERT(result_cib == NULL);
-		free_xml(result_cib);
+		CRM_CHECK(result_cib == NULL, free_xml(result_cib));
 	}	
 	
 	if((call_options & cib_discard_reply) == 0) {
@@ -1585,7 +1591,7 @@ cib_ha_dispatch(IPC_Channel *channel, gpointer user_data)
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
 	}
 	
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_DEBUG, __PRETTY_FUNCTION__, &saved_stats);
 	return (channel->ch_status == IPC_CONNECT);
 }
 
