@@ -1,4 +1,4 @@
-/* $Id: xml_diff.c,v 1.9 2006/06/07 12:46:57 andrew Exp $ */
+/* $Id: xml_diff.c,v 1.10 2006/07/06 16:48:38 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -71,6 +71,9 @@ main(int argc, char **argv)
 	crm_data_t *output = NULL;
 	const char *xml_file_1 = NULL;
 	const char *xml_file_2 = NULL;
+
+	long new_bytes = 0, new_allocs = 0, new_frees = 0;
+	long old_bytes = 0, old_allocs = 0, old_frees = 0;
 	
 #ifdef HAVE_GETOPT_H
 	int option_index = 0;
@@ -203,15 +206,18 @@ main(int argc, char **argv)
 	CRM_ASSERT(object_1 != NULL);
 	CRM_ASSERT(object_2 != NULL);
 
-	if(as_cib == FALSE) {
-		if(apply) {
+	crm_zero_mem_stats(NULL);
+	
+	if(apply) {
+		if(as_cib == FALSE) {
 			apply_xml_diff(object_1, object_2, &output);
 		} else {
-			output = diff_xml_object(object_1, object_2, filter);
-		}
-	} else {
-		if(apply) {
 			apply_cib_diff(object_1, object_2, &output);
+		}
+		
+	} else {
+		if(as_cib == FALSE) {
+			output = diff_xml_object(object_1, object_2, filter);
 		} else {
 			output = diff_cib_object(object_1, object_2, filter);
 		}
@@ -223,11 +229,15 @@ main(int argc, char **argv)
 		crm_free(buffer);
 	}
 
+	crm_xml_nbytes(output, &new_bytes, &new_allocs, &new_frees);
+	crm_adjust_mem_stats(crm_running_stats, new_bytes - old_bytes,
+			     new_allocs - old_allocs, new_frees - old_frees);
+	
+	crm_mem_stats(NULL);
+
 	free_xml(object_1);
 	free_xml(object_2);
 	free_xml(output);
-
-	crm_mem_stats(NULL);
 	
 	if(apply == FALSE && output != NULL) {
 		return 1;
