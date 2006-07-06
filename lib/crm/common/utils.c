@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.60 2006/07/06 10:55:09 andrew Exp $ */
+/* $Id: utils.c,v 1.61 2006/07/06 13:30:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1194,19 +1194,17 @@ crm_mem_stats(volatile cl_mem_stats_t *mem_stats)
 void
 crm_zero_mem_stats(volatile cl_mem_stats_t *stats)
 {
-	volatile cl_mem_stats_t *active_stats = NULL;
-	if(stats != NULL) {
-		cl_malloc_setstats(stats);
+	if(stats == NULL) {
+		crm_debug("Resetting global memory stats");
+		stats = cl_malloc_getstats();
 	}
-	crm_debug("Resetting memory stats");
-	active_stats = cl_malloc_getstats();
-	active_stats->numalloc = 0;
-	active_stats->numfree = 0;
-	active_stats->numrealloc = 0;
-	active_stats->nbytes_req = 0;
-	active_stats->nbytes_alloc = 0;
-	active_stats->mallocbytes = 0;
-	active_stats->arena = 0;
+	stats->numalloc = 0;
+	stats->numfree = 0;
+	stats->numrealloc = 0;
+	stats->nbytes_req = 0;
+	stats->nbytes_alloc = 0;
+	stats->mallocbytes = 0;
+	stats->arena = 0;
 }
 
 void
@@ -1250,79 +1248,83 @@ crm_xml_nbytes(crm_data_t *xml, long *bytes, long *allocs, long *frees)
 }
 
 void
-crm_adjust_mem_stats(long bytes, long allocs, long frees) 
-{
-	volatile cl_mem_stats_t *stats = cl_malloc_getstats();
-
+crm_adjust_mem_stats(volatile cl_mem_stats_t *stats, long bytes, long allocs, long frees) 
+{	
 	if(bytes == 0&& allocs == 0 && frees == 0) {
 		return;
 	}
 
+	if(stats == NULL) {
+		stats = cl_malloc_getstats();
+	}
+	
 	stats->nbytes_alloc -= bytes;
 	stats->numalloc     -= allocs;
 	stats->numfree      -= frees;
 
-	crm_debug("Adjusting CIB Memory usage by: %10ld bytes, %5ld allocs, %5ld frees",
+	crm_debug("Adjusted CIB Memory usage by: %10ld bytes, %5ld allocs, %5ld frees",
 		  bytes, allocs, frees);
 }
 
+cl_mem_stats_t *crm_running_stats = NULL;
 
 gboolean
-crm_diff_mem_stats(int log_level, const char *location, cl_mem_stats_t *saved_stats)
+crm_diff_mem_stats(int log_level_up, int log_level_down, const char *location,
+		   volatile cl_mem_stats_t *stats, volatile cl_mem_stats_t *saved_stats)
 {
+	long delta_allocs = 0;
+	long delta_frees  = 0;
+	long delta_bytes  = 0;
+	long delta_req    = 0;
+
 	gboolean increase = TRUE;
-	gboolean was_change = FALSE;
-	gboolean reset_on_change = (log_level != LOG_ERR);
+	gboolean reset_on_change = (log_level_up != LOG_ERR);
 
-	volatile cl_mem_stats_t *stats = cl_malloc_getstats();
-
-	static long running_total = 0;
-	static long running_total_bytes = 0;
-
-	long last_running_total = running_total;
-	long last_running_total_bytes = running_total_bytes;
-
-	long delta_allocs = stats->numalloc - saved_stats->numalloc;
-	long delta_frees  = stats->numfree - saved_stats->numfree;
-	long delta_bytes  = stats->nbytes_alloc - saved_stats->nbytes_alloc;
-	long delta_req    = stats->nbytes_req - saved_stats->nbytes_req;
 /* 	long delta_malloc = stats->mallocbytes - saved_stats->mallocbytes; */
+
+	if(stats == NULL && saved_stats == NULL) {
+		crm_err("Comparision doesnt make sense");
+		return FALSE;
+		
+	} else if(stats == NULL) {
+		stats = cl_malloc_getstats();
+
+	} else if(saved_stats == NULL) {
+		saved_stats = cl_malloc_getstats();
+	}
+
+	delta_allocs = stats->numalloc - saved_stats->numalloc;
+	delta_frees  = stats->numfree - saved_stats->numfree;
+	delta_bytes  = stats->nbytes_alloc - saved_stats->nbytes_alloc;
+	delta_req    = stats->nbytes_req - saved_stats->nbytes_req;
 	
-	running_total += delta_allocs;
-	running_total -= delta_frees;
-	running_total_bytes += delta_bytes;
-
-	if(running_total != last_running_total) {
-		was_change = TRUE;
-	}
-	if(running_total_bytes != last_running_total_bytes) {
-		was_change = TRUE;
-	}
-
-	if(was_change == FALSE) {
+	if(delta_bytes == 0) {
 		crm_debug("Memory usage constant at %s: %ld alloc's %ld free's",
 			  location, delta_allocs, delta_frees);
 		return FALSE;
 	}
 
-	if(saved_stats->nbytes_alloc > stats->nbytes_alloc) {
+	if(delta_bytes < 0) {
 		increase = FALSE;
+		reset_on_change = (log_level_down != LOG_ERR);
 	}
 
- 	crm_log_maybe(increase?log_level:log_level+2,
-		      "Running total %10ld (%10ld bytes)"
-		      " Memory usage %s detected at %s:\t"
+ 	crm_log_maybe(increase?log_level_up:log_level_down,
+		      "Memory usage %s detected at %s:\t"
 		      " %10ld alloc's vs. %10ld free's (%5ld change"
-		      " %10ld bytes leaked: %10ld requested)",
-		      running_total, running_total_bytes,
+		      " %10ld bytes leaked)",
 		      increase?"increase":"decrease", location,
 		      delta_allocs, delta_frees, delta_allocs - delta_frees,
-		      delta_bytes, delta_req);
+		      delta_bytes);
 	
-	if(reset_on_change && increase) {
-		*stats = *saved_stats;		
+	if(reset_on_change) {
+		crm_debug("resetting %s stats", location);
+		*stats = *saved_stats;
+		if(crm_running_stats) {
+			crm_adjust_mem_stats(crm_running_stats, delta_bytes, delta_allocs, delta_frees);
+		}
 	}
-	return increase;
+	return TRUE;
 }
 
 void

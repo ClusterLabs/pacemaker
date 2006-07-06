@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.37 2006/07/06 09:30:28 andrew Exp $ */
+/* $Id: util.h,v 1.38 2006/07/06 13:30:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -96,11 +96,14 @@ extern void crm_zero_mem_stats(volatile cl_mem_stats_t *stats);
 
 extern void crm_save_mem_stats(const char *location, cl_mem_stats_t *saved_stats);
 
-extern gboolean crm_diff_mem_stats(int log_level, const char *location, cl_mem_stats_t *saved_stats);
+extern gboolean crm_diff_mem_stats(
+	int log_level_up, int log_level_down, const char *location,
+	volatile cl_mem_stats_t *stats, volatile cl_mem_stats_t *saved_stats);
 
 extern void crm_xml_nbytes(crm_data_t *xml, long *bytes, long *allocs, long *frees);
 
-extern void crm_adjust_mem_stats(long bytes, long allocs, long frees);
+extern void crm_adjust_mem_stats(
+	volatile cl_mem_stats_t *stats, long bytes, long allocs, long frees);
 
 extern char *generate_transition_magic_v202(
 	const char *transition_key, int op_status);
@@ -143,5 +146,7 @@ extern void write_last_sequence(
 
 extern void crm_make_daemon(
 	const char *name, gboolean daemonize, const char *pidfile);
+
+extern cl_mem_stats_t *crm_running_stats;
 
 #endif

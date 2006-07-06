@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.130 2006/07/06 10:55:09 andrew Exp $ */
+/* $Id: callbacks.c,v 1.131 2006/07/06 13:30:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -382,7 +382,7 @@ cib_client_connect_rw_synch(IPC_Channel *channel, gpointer user_data)
 	new_client = cib_client_connect_common(
 		channel, cib_channel_ro_synchronous, cib_rw_synchronous_callback);
 
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	if(new_client == NULL) {
 		return FALSE;
 	}
@@ -398,7 +398,7 @@ cib_client_connect_ro_synch(IPC_Channel *channel, gpointer user_data)
 	new_client = cib_client_connect_common(
 		channel, cib_channel_ro_synchronous, cib_ro_synchronous_callback);
 
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	if(new_client == NULL) {
 		return FALSE;
 	}
@@ -463,7 +463,7 @@ cib_client_connect_rw_ro(IPC_Channel *channel, gpointer user_data)
 	send_ipc_message(channel, reg_msg);		
 	crm_msg_del(reg_msg);
 	
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return TRUE;
 }
 
@@ -476,7 +476,7 @@ cib_client_connect_null(IPC_Channel *channel, gpointer user_data)
 	new_client = cib_client_connect_common(
 		channel, cib_channel_callback, cib_null_callback);
 
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	if(new_client == NULL) {
 		return FALSE;
 	}
@@ -490,7 +490,7 @@ cib_rw_callback(IPC_Channel *channel, gpointer user_data)
 	cl_mem_stats_t saved_stats;
 	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	result = cib_common_callback(channel, user_data, FALSE, TRUE);
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return result;
 }
 
@@ -502,7 +502,7 @@ cib_ro_synchronous_callback(IPC_Channel *channel, gpointer user_data)
 	cl_mem_stats_t saved_stats;
 	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	result = cib_common_callback(channel, user_data, TRUE, FALSE);
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return result;
 }
 
@@ -513,7 +513,7 @@ cib_rw_synchronous_callback(IPC_Channel *channel, gpointer user_data)
 	cl_mem_stats_t saved_stats;
 	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	result = cib_common_callback(channel, user_data, TRUE, TRUE);
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return result;
 }
 
@@ -524,7 +524,7 @@ cib_ro_callback(IPC_Channel *channel, gpointer user_data)
 	cl_mem_stats_t saved_stats;
 	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	result = cib_common_callback(channel, user_data, FALSE, FALSE);
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return result;
 }
 
@@ -660,7 +660,7 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 		keep_connection = cib_process_disconnect(channel, cib_client);	
 	}
 	
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return keep_connection;
 }
 
@@ -679,13 +679,6 @@ cib_common_callback_worker(HA_Message *op_request, cib_client_t *cib_client,
 	longclock_t call_stop = 0;
 	longclock_t call_start = 0;
 	cl_mem_stats_t saved_stats;
-	cl_mem_stats_t *running_stats = NULL;
-	if(running_stats == NULL) {
-		START_stat_free_op();
-		crm_malloc0(running_stats, sizeof(cl_mem_stats_t));
-		END_stat_free_op();
-		crm_save_mem_stats("running-stats", running_stats);
-	}
 	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	
 	call_start = time_longclock();
@@ -711,8 +704,7 @@ cib_common_callback_worker(HA_Message *op_request, cib_client_t *cib_client,
 	call_stop = time_longclock();
 	cib_call_time += (call_stop - call_start);
 
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
-	crm_diff_mem_stats(LOG_ERR, "running-cib-usage", running_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
 
 gboolean
@@ -778,7 +770,7 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 		keep_channel = cib_process_disconnect(channel, cib_client);	
 	}
 
-	crm_diff_mem_stats(LOG_DEBUG, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_WARNING, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return keep_channel;
 }
 
@@ -827,7 +819,7 @@ do_local_notify(HA_Message *notify_src, const char *client_id, gboolean sync_rep
 			 sync_reply?"":"A-",
 			 client_obj?client_obj->name:"<unknown>", cib_error2string(local_rc));
 	}
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
 
 static void
@@ -975,7 +967,7 @@ forward_request(HA_Message *request, cib_client_t *cib_client, int call_options)
 		
 	} 
 	crm_msg_del(forward_msg);
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
 
 static void
@@ -1028,7 +1020,7 @@ send_peer_reply(
 	}
 	
 	crm_msg_del(reply_copy);
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
 	
 void
@@ -1193,8 +1185,8 @@ cib_process_request(
 	crm_msg_del(op_reply);
 	free_xml(result_diff);
 
-	if(crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats)) {
-		crm_log_message_adv(LOG_ERR,"IPC[leak]", request);
+	if(crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats)) {
+		;/* 		crm_log_message_adv(LOG_ERR,"IPC[leak]", request); */
 	}
 	return;	
 }
@@ -1443,7 +1435,7 @@ send_via_callback_channel(HA_Message *msg, const char *token)
 		}
 	}
 	
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return rc;
 }
 
@@ -1571,7 +1563,7 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 		initiate_exit();
 	}
 	
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return FALSE;
 }
 
@@ -1591,7 +1583,7 @@ cib_ha_dispatch(IPC_Channel *channel, gpointer user_data)
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
 	}
 	
-	crm_diff_mem_stats(LOG_DEBUG, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_WARNING, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return (channel->ch_status == IPC_CONNECT);
 }
 
@@ -1640,7 +1632,7 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 	
 	cib_process_request(msg, FALSE, TRUE, TRUE, NULL);
 
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return;
 }
 

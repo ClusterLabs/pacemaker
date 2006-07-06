@@ -119,14 +119,7 @@ static void
 do_cib_replaced(const char *event, HA_Message *msg)
 {
 	crm_debug("Updating the CIB after a replace");
-#ifdef BUG
-	/* enabling this seems to cause delays (in the order of 3 minutes)
-	 *   in messages being received by the node that runs this
-	 *
-	 * no idea why :(
-	 */
  	populate_cib_nodes(fsa_cluster_conn, FALSE);
-#endif
 	do_update_cib_nodes(AM_I_DC, __FUNCTION__);
 	if(AM_I_DC) {
 		/* start the join process again so we get everyone's LRM status */

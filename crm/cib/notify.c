@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.37 2006/07/06 09:30:28 andrew Exp $ */
+/* $Id: notify.c,v 1.38 2006/07/06 13:30:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -171,7 +171,7 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 		crm_debug_3("Client %s/%s not interested in %s notifications",
 			    client->name, client->channel_name, type);	
 	}
-	crm_diff_mem_stats(LOG_DEBUG, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_DEBUG, LOG_DEBUG, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
 
 void
@@ -226,7 +226,7 @@ cib_pre_notify(
 	}
 		
 	crm_msg_del(update_msg);
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
 
 void
@@ -283,7 +283,7 @@ cib_diff_notify(
 	}
 	
 	do_cib_notify(options, op, update, result, diff, T_CIB_DIFF_NOTIFY);
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
 
 void
@@ -424,5 +424,5 @@ cib_replace_notify(crm_data_t *update, enum cib_errors result, crm_data_t *diff)
 	
 	g_hash_table_foreach(client_list, cib_notify_client, replace_msg);
 	crm_msg_del(replace_msg);
-	crm_diff_mem_stats(LOG_ERR, __PRETTY_FUNCTION__, &saved_stats);
+	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
