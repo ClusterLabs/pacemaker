@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.86 2006/07/06 16:52:16 andrew Exp $ */
+/* $Id: messages.c,v 1.87 2006/07/07 20:43:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -423,7 +423,7 @@ cib_process_diff(
 	}
 
 	if(apply_diff) {
-		crm_free(*result_cib);
+		free_xml(*result_cib);
 		*result_cib = NULL;
 		if(apply_xml_diff(existing_cib, input, result_cib) == FALSE) {
 			log_level = LOG_WARNING;
