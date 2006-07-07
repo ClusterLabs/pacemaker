@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.75 2006/07/06 13:30:24 andrew Exp $ */
+/* $Id: io.c,v 1.76 2006/07/07 08:23:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -101,10 +101,6 @@ validate_cib_digest(crm_data_t *local_cib)
 	gboolean passed = FALSE;
 	FILE *expected_strm = NULL;
 	int start = 0, length = 0, read_len = 0;
-
-	if(local_cib != NULL) {
-		digest = calculate_xml_digest(local_cib, FALSE);
-	}
 	
 	s_res = stat(CIB_FILENAME ".sig", &buf);
 	
@@ -113,6 +109,10 @@ validate_cib_digest(crm_data_t *local_cib)
 		return TRUE;
 	}
 
+	if(local_cib != NULL) {
+		digest = calculate_xml_digest(local_cib, FALSE);
+	}
+	
 	expected_strm = fopen(CIB_FILENAME ".sig", "r");
 	start  = ftell(expected_strm);
 	fseek(expected_strm, 0L, SEEK_END);
@@ -152,9 +152,9 @@ write_cib_digest(crm_data_t *local_cib, char *digest)
 	CRM_ASSERT(digest_strm != NULL);
 
 	if(digest == NULL) {
-		digest = calculate_xml_digest(local_cib, FALSE);
+		local_digest = calculate_xml_digest(local_cib, FALSE);
 		CRM_ASSERT(digest != NULL);
-		local_digest = digest;
+		digest = local_digest;
 	}
 	
 	rc = fprintf(digest_strm, "%s", digest);
