@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.136 2006/07/07 20:24:48 andrew Exp $ */
+/* $Id: callbacks.c,v 1.137 2006/07/07 20:47:24 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -813,13 +813,14 @@ do_local_notify(HA_Message *notify_src, const char *client_id, gboolean sync_rep
 		}
 		local_rc = send_via_callback_channel(client_reply, client_id);
 	} 
-	ha_msg_del(client_reply);
 	
 	if(local_rc != cib_ok) {
 		crm_warn("%sSync reply to %s failed: %s",
 			 sync_reply?"":"A-",
 			 client_obj?client_obj->name:"<unknown>", cib_error2string(local_rc));
 	}
+
+	ha_msg_del(client_reply);
 	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
 
@@ -1187,7 +1188,9 @@ cib_process_request(
 	free_xml(result_diff);
 
 	if(crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats)) {
-		;/* 		crm_log_message_adv(LOG_ERR,"IPC[leak]", request); */
+#if HA_MALLOC_TRACK
+		cl_malloc_dump_allocated(LOG_DEBUG, FALSE);
+#endif
 	}
 	return;	
 }
@@ -1245,7 +1248,7 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 	const char *section = NULL;
 	gboolean global_update = crm_is_true(
 		cl_get_string(request, F_CIB_GLOBAL_UPDATE));
-
+	
 	*reply = NULL;
 	*cib_diff = NULL;
 	if(per_action_cib) {
