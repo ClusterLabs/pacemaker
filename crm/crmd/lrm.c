@@ -518,6 +518,7 @@ build_operation_update(
 	filter_action_parameters(args_xml, caller_version);
 	digest = calculate_xml_digest(args_xml, TRUE);
 	crm_xml_add(xml_op, XML_LRM_ATTR_OP_DIGEST, digest);
+	crm_free(digest);
 	if(args_parent == NULL) {
 		free_xml(args_xml);
 	}
