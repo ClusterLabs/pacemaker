@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.51 2006/07/07 20:08:49 andrew Exp $ */
+/* $Id: main.c,v 1.52 2006/07/07 20:38:50 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -58,6 +58,7 @@ gboolean stand_alone = FALSE;
 gboolean per_action_cib = FALSE;
 enum cib_errors cib_status = cib_ok;
 
+extern char *ccm_transition_id;
 extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
 GMainLoop*  mainloop = NULL;
@@ -138,6 +139,9 @@ main(int argc, char ** argv)
 		}
 	}
 
+	crm_info("Retrieval of a per-action CIB: %s",
+		 per_action_cib?"enabled":"disabled");
+	
 	if (optind > argc) {
 		++argerr;
 	}
@@ -206,7 +210,7 @@ cib_stats(gpointer data)
 		      cib_num_fail, cib_bad_connects, cib_num_timeouts);
 
 #ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated();
+	cl_malloc_dump_allocated(TRUE);
 #endif
 
 	last_stat = cib_num_ops;
@@ -440,6 +444,12 @@ cib_ha_connection_destroy(gpointer user_data)
 		crm_err("Heartbeat connection lost!  Exiting.");
 	}
 		
+	uninitializeCib();
+	crm_free(ccm_transition_id);
+#ifdef HA_MALLOC_TRACK
+	cl_malloc_dump_allocated(FALSE);
+#endif
+
 	if (mainloop != NULL && g_main_is_running(mainloop)) {
 		g_main_quit(mainloop);
 		
@@ -519,6 +529,7 @@ startCib(const char *filename)
 	if(activateCibXml(cib, filename) == 0) {
 		active = TRUE;
 		crm_info("CIB Initialization completed successfully");
+		uninitializeCib();
 	}
 	
 	return active;
