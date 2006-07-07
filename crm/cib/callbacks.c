@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.133 2006/07/07 08:22:43 andrew Exp $ */
+/* $Id: callbacks.c,v 1.134 2006/07/07 08:29:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1232,7 +1232,7 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 	crm_data_t *output   = NULL;
 	crm_data_t *input    = NULL;
 
-	crm_data_t *current_cib = the_cib;
+	crm_data_t *current_cib = NULL;
 	crm_data_t *result_cib  = NULL;
 	
 	int call_type      = 0;
@@ -1247,6 +1247,11 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 
 	*reply = NULL;
 	*cib_diff = NULL;
+	if(per_action_cib) {
+		CRM_CHECK(the_cib == NULL, free_xml(the_cib));
+		the_cib = readCibXmlFile(CIB_FILENAME, FALSE);
+	}
+	current_cib = the_cib;
 	
 	/* Start processing the request... */
 	op = cl_get_string(request, F_CIB_OPERATION);
@@ -1262,6 +1267,7 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 
 	if(cib_status != cib_ok) {
 		*reply = cib_construct_reply(request, the_cib, cib_status);
+		uninitializeCib();
 		return cib_status;
 	}
 	
@@ -1364,6 +1370,7 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 	if(call_type >= 0) {
 		cib_server_ops[call_type].cleanup(op, &input, &output);
 	}
+	uninitializeCib();
 	return rc;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.76 2006/07/07 08:23:32 andrew Exp $ */
+/* $Id: io.c,v 1.77 2006/07/07 08:29:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -204,7 +204,7 @@ validate_on_disk_cib(const char *filename, crm_data_t **on_disk_cib)
  * It is the callers responsibility to free the output of this function
  */
 crm_data_t*
-readCibXmlFile(const char *filename)
+readCibXmlFile(const char *filename, gboolean discard_status)
 {
 	int s_res = -1;
 	struct stat buf;
@@ -264,15 +264,18 @@ readCibXmlFile(const char *filename)
 			return NULL;
 	}
 
+	status = find_xml_node(root, XML_CIB_TAG_STATUS, FALSE);
+	if(root != NULL && discard_status && status != NULL) {
+		/* strip out the status section if there is one */
+		free_xml_from_parent(root, status);
+		status = NULL;
+	}
+	if(status == NULL) {
+		create_xml_node(root, XML_CIB_TAG_STATUS);		
+	}
+	
 	/* Do this before DTD validation happens */
 	if(root != NULL) {
-		/* strip out the status section if there is one */
-		status = find_xml_node(root, XML_CIB_TAG_STATUS, FALSE);
-		if(status != NULL) {
-			free_xml_from_parent(root, status);
-		}
-		create_xml_node(root, XML_CIB_TAG_STATUS);
-		
 		/* fill in some defaults */
 		name = XML_ATTR_GENERATION_ADMIN;
 		value = crm_element_value(root, name);
@@ -506,7 +509,7 @@ int
 activateCibXml(crm_data_t *new_cib, const char *ignored)
 {
 	int error_code = cib_ok;
-	crm_data_t *saved_cib = get_the_CIB();
+	crm_data_t *saved_cib = the_cib;
 	const char *ignore_dtd = NULL;
 
 	long new_bytes, new_allocs, new_frees;
@@ -550,6 +553,12 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 			crm_crit("Could not write out new CIB and no saved"
 				 " version to revert to");
 		}
+		
+	} else if(per_action_cib && cib_writes_enabled && cib_status == cib_ok) {
+		write_cib_contents(the_cib);
+		uninitializeCib();
+		free_xml(saved_cib);
+		return error_code;
 		
 	} else if(cib_writes_enabled && cib_status == cib_ok) {
 		crm_debug_2("Triggering CIB write");
@@ -629,13 +638,16 @@ write_cib_contents(gpointer p)
 	 *
 	 * So delete the status section before we write it out
 	 */
-	cib_status_root = find_xml_node(the_cib, XML_CIB_TAG_STATUS, TRUE);
-	CRM_DEV_ASSERT(cib_status_root != NULL);
-	
-	if(cib_status_root != NULL) {
-		free_xml_from_parent(the_cib, cib_status_root);
+	if(p == NULL) {
+		cib_status_root = find_xml_node(
+			the_cib, XML_CIB_TAG_STATUS, TRUE);
+		CRM_DEV_ASSERT(cib_status_root != NULL);
+		
+		if(cib_status_root != NULL) {
+			free_xml_from_parent(the_cib, cib_status_root);
+		}
 	}
-
+	
 	rc = write_xml_file(the_cib, CIB_FILENAME, FALSE);
 	if(rc <= 0) {
 		crm_err("Changes couldn't be written to disk");
@@ -659,7 +671,11 @@ write_cib_contents(gpointer p)
 		exit(LSB_EXIT_GENERIC);
 	}
 #endif
-	exit(LSB_EXIT_OK);
+	if(p == NULL) {
+		exit(LSB_EXIT_OK);
+	}
+	
+	crm_free(digest);
 	return HA_OK;
 }
 

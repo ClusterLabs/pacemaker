@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.49 2006/07/06 16:52:16 andrew Exp $ */
+/* $Id: main.c,v 1.50 2006/07/07 08:29:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,6 +55,7 @@
 
 gboolean cib_shutdown_flag = FALSE;
 gboolean stand_alone = FALSE;
+gboolean per_action_cib = FALSE;
 enum cib_errors cib_status = cib_ok;
 
 extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
@@ -77,7 +78,7 @@ extern int write_cib_contents(gpointer p);
 ll_cluster_t *hb_conn = NULL;
 GTRIGSource *cib_writer = NULL;
 
-#define OPTARGS	"hVs"
+#define OPTARGS	"hVsf"
 
 static void
 cib_diskwrite_complete(gpointer userdata, int status, int signo, int exitcode)
@@ -127,6 +128,9 @@ main(int argc, char ** argv)
 				break;
 			case 'h':		/* Help message */
 				usage(crm_system_name, LSB_EXIT_OK);
+				break;
+			case 'f':
+				per_action_cib = TRUE;
 				break;
 			default:
 				++argerr;
@@ -495,7 +499,8 @@ cib_shutdown(int nsig, gpointer unused)
 gboolean
 startCib(const char *filename)
 {
-	crm_data_t *cib = readCibXmlFile(filename);
+	gboolean active = FALSE;
+	crm_data_t *cib = readCibXmlFile(filename, TRUE);
 
 	if(cib == NULL) {
 		crm_warn("Cluster configuration not found: %s."
@@ -507,10 +512,10 @@ startCib(const char *filename)
 		crm_xml_add(cib, XML_ATTR_NUMUPDATES, "0");
 	}
 	
-	if(activateCibXml(cib, filename) != 0) {
-		return FALSE;
+	if(activateCibXml(cib, filename) == 0) {
+		active = TRUE;
+		crm_info("CIB Initialization completed successfully");
 	}
-
-	crm_info("CIB Initialization completed successfully");
-	return TRUE;
+	
+	return active;
 }

@@ -1,4 +1,4 @@
-/* $Id: cibio.h,v 1.17 2006/07/04 14:07:42 andrew Exp $ */
+/* $Id: cibio.h,v 1.18 2006/07/07 08:29:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -34,6 +34,7 @@
 #include <crm/common/xml.h>
 
 extern gboolean initialized;
+extern gboolean per_action_cib;
 extern crm_data_t *the_cib;
 extern crm_data_t *node_search;
 extern crm_data_t *resource_search;
@@ -48,7 +49,7 @@ extern gboolean uninitializeCib(void);
 extern crm_data_t *createEmptyCib(void);
 extern gboolean verifyCibXml(crm_data_t *cib);
 extern crm_data_t *readCibXml(char *buffer);
-extern crm_data_t *readCibXmlFile(const char *filename);
+extern crm_data_t *readCibXmlFile(const char *filename, gboolean discard_status);
 extern int activateCibBuffer(char *buffer, const char *filename);
 extern int activateCibXml(crm_data_t *doc, const char *filename);
 
