@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.53 2006/07/07 20:59:30 andrew Exp $ */
+/* $Id: main.c,v 1.54 2006/07/07 21:26:29 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -529,7 +529,9 @@ startCib(const char *filename)
 	if(activateCibXml(cib, filename) == 0) {
 		active = TRUE;
 		crm_info("CIB Initialization completed successfully");
-		uninitializeCib();
+		if(per_action_cib) {
+			uninitializeCib();
+		}
 	}
 	
 	return active;
