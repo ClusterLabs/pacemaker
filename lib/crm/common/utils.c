@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.62 2006/07/07 20:25:52 andrew Exp $ */
+/* $Id: utils.c,v 1.63 2006/07/07 21:10:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1278,10 +1278,11 @@ crm_diff_mem_stats(int log_level_up, int log_level_down, const char *location,
 	long delta_req    = 0;
 
 	gboolean increase = TRUE;
-	gboolean reset_on_change = (log_level_up != LOG_ERR);
+	gboolean reset_on_change = (log_level_up == LOG_DEBUG);
 
 /* 	long delta_malloc = stats->mallocbytes - saved_stats->mallocbytes; */
-
+	return FALSE;
+	
 	if(stats == NULL && saved_stats == NULL) {
 		crm_err("Comparision doesnt make sense");
 		return FALSE;
@@ -1306,7 +1307,7 @@ crm_diff_mem_stats(int log_level_up, int log_level_down, const char *location,
 
 	if(delta_bytes < 0) {
 		increase = FALSE;
-		reset_on_change = (log_level_down != LOG_ERR);
+		reset_on_change = (log_level_down == LOG_DEBUG);
 	}
 
  	crm_log_maybe(increase?log_level_up:log_level_down,
@@ -1317,9 +1318,8 @@ crm_diff_mem_stats(int log_level_up, int log_level_down, const char *location,
 		      delta_allocs, delta_frees, delta_allocs - delta_frees,
 		      delta_bytes);
 	
-	reset_on_change = FALSE;
 	if(reset_on_change) {
-		crm_info("resetting %s stats", location);
+		crm_info("Resetting %s stats", location);
 		*stats = *saved_stats;
 		if(crm_running_stats) {
 			crm_adjust_mem_stats(crm_running_stats, delta_bytes, delta_allocs, delta_frees);
