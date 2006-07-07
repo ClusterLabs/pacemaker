@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.98 2006/07/04 08:38:39 andrew Exp $ */
+/* $Id: xml.c,v 1.99 2006/07/07 20:53:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -423,10 +423,8 @@ free_xml_fn(crm_data_t *a_node)
 		 * with a parent and without the parent knowning
 		 */
 		CRM_CHECK(has_parent == 0, return);
-		if(has_parent == 0) {
-			crm_validate_data(a_node);
-			crm_msg_del(a_node);
-		}
+		crm_validate_data(a_node);
+		ha_msg_del(a_node);
 	}
 	
 	return;
