@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.50 2006/07/07 08:29:34 andrew Exp $ */
+/* $Id: main.c,v 1.51 2006/07/07 20:08:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -204,6 +204,10 @@ cib_stats(gpointer data)
 		      " %lu timeouts, %lu bad connects)",
 		      cib_num_ops, cib_calls_ms, cib_num_local, cib_num_updates,
 		      cib_num_fail, cib_bad_connects, cib_num_timeouts);
+
+#ifdef HA_MALLOC_TRACK
+	cl_malloc_dump_allocated();
+#endif
 
 	last_stat = cib_num_ops;
 	cib_call_time = 0;
