@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.77 2006/07/07 08:29:34 andrew Exp $ */
+/* $Id: io.c,v 1.78 2006/07/07 09:04:40 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -296,7 +296,7 @@ readCibXmlFile(const char *filename, gboolean discard_status)
 		}
 
 		/* unset these and require the DC/CCM to update as needed */
-		crm_xml_add(root, XML_ATTR_HAVE_QUORUM, XML_BOOLEAN_FALSE);
+		update_counters(__FILE__, __PRETTY_FUNCTION__, root);
 		xml_remove_prop(root, XML_ATTR_DC_UUID);
 	}
 	
@@ -362,7 +362,7 @@ uninitializeCib(void)
 	
 	
 	if(tmp_cib == NULL) {
-		crm_err("The CIB has already been deallocated.");
+		crm_debug("The CIB has already been deallocated.");
 		return FALSE;
 	}
 	
@@ -373,11 +373,11 @@ uninitializeCib(void)
 	constraint_search = NULL;
 	status_search = NULL;
 
-	crm_err("Deallocating the CIB.");
+	crm_debug("Deallocating the CIB.");
 	
 	free_xml(tmp_cib);
 
-	crm_err("The CIB has been deallocated.");
+	crm_info("The CIB has been deallocated.");
 	
 	return TRUE;
 }
@@ -682,8 +682,12 @@ write_cib_contents(gpointer p)
 gboolean
 set_transition(crm_data_t *xml_obj)
 {
-	const char *current = crm_element_value(
-		xml_obj, XML_ATTR_CCM_TRANSITION);
+	const char *current = NULL;
+	if(xml_obj == NULL) {
+		return FALSE;
+	}
+
+	current = crm_element_value(xml_obj, XML_ATTR_CCM_TRANSITION);
 	if(safe_str_neq(current, ccm_transition_id)) {
 		crm_debug("CCM transition: old=%s, new=%s",
 			  current, ccm_transition_id);
@@ -699,8 +703,12 @@ set_connected_peers(crm_data_t *xml_obj)
 	int active = 0;
 	int current = 0;
 	char *peers_s = NULL;
-	const char *current_s = crm_element_value(xml_obj, XML_ATTR_NUMPEERS);
-
+	const char *current_s = NULL;
+	if(xml_obj == NULL) {
+		return FALSE;
+	}
+	
+	current_s = crm_element_value(xml_obj, XML_ATTR_NUMPEERS);
 	g_hash_table_foreach(peer_hash, GHFunc_count_peers, &active);
 	current = crm_parse_int(current_s, "0");
 	if(current != active) {
@@ -717,7 +725,12 @@ gboolean
 update_quorum(crm_data_t *xml_obj) 
 {
 	const char *quorum_value = XML_BOOLEAN_FALSE;
-	const char *current = crm_element_value(xml_obj, XML_ATTR_HAVE_QUORUM);
+	const char *current = NULL;
+	if(xml_obj == NULL) {
+		return FALSE;
+	}
+	
+	current = crm_element_value(xml_obj, XML_ATTR_HAVE_QUORUM);
 	if(cib_have_quorum) {
 		quorum_value = XML_BOOLEAN_TRUE;
 	}
