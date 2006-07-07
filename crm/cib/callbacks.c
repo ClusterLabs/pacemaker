@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.132 2006/07/06 16:52:15 andrew Exp $ */
+/* $Id: callbacks.c,v 1.133 2006/07/07 08:22:43 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1930,6 +1930,7 @@ terminate_ha_connection(const char *caller)
 		
 	} else {
 		crm_err("%s: No heartbeat connection", caller);
+		uninitializeCib();
 		exit(LSB_EXIT_OK);
 	}
 }
