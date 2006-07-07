@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.52 2006/07/07 20:38:50 andrew Exp $ */
+/* $Id: main.c,v 1.53 2006/07/07 20:59:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -210,7 +210,7 @@ cib_stats(gpointer data)
 		      cib_num_fail, cib_bad_connects, cib_num_timeouts);
 
 #ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(TRUE);
+	cl_malloc_dump_allocated(LOG_ERR, TRUE);
 #endif
 
 	last_stat = cib_num_ops;
@@ -447,7 +447,7 @@ cib_ha_connection_destroy(gpointer user_data)
 	uninitializeCib();
 	crm_free(ccm_transition_id);
 #ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(FALSE);
+	cl_malloc_dump_allocated(LOG_ERR, FALSE);
 #endif
 
 	if (mainloop != NULL && g_main_is_running(mainloop)) {

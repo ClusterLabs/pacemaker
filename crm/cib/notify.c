@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.38 2006/07/06 13:30:24 andrew Exp $ */
+/* $Id: notify.c,v 1.39 2006/07/07 20:59:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -294,6 +294,8 @@ do_cib_notify(
 	HA_Message *update_msg = NULL;
 	const char *type = NULL;
 	const char *id = NULL;
+	cl_mem_stats_t saved_stats;
+	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	update_msg = ha_msg_new(8);
 
@@ -336,6 +338,7 @@ do_cib_notify(
 
 	crm_debug_3("Notifying clients");
 	g_hash_table_foreach(client_list, cib_notify_client, update_msg);
+	crm_msg_del(update_msg);
 
 	if(update == NULL) {
 		if(result == cib_ok) {
@@ -359,9 +362,8 @@ do_cib_notify(
 		}
 	}
 
-	crm_msg_del(update_msg);
-
 	crm_debug_3("Notify complete");
+	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
 
 
