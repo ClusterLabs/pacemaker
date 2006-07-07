@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.79 2006/07/07 20:24:48 andrew Exp $ */
+/* $Id: io.c,v 1.80 2006/07/07 20:54:42 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -299,8 +299,10 @@ readCibXmlFile(const char *filename, gboolean discard_status)
 		update_counters(__FILE__, __PRETTY_FUNCTION__, root);
 		xml_remove_prop(root, XML_ATTR_DC_UUID);
 	}
-	
-	crm_log_xml_info(root, "[on-disk]");
+
+	if(discard_status) {
+		crm_log_xml_info(root, "[on-disk]");
+	}
 	
 	if(root != NULL) {
 		const char *ignore_dtd = crm_element_value(root, "ignore_dtd");
