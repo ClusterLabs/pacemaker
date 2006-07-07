@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.78 2006/07/07 09:04:40 andrew Exp $ */
+/* $Id: io.c,v 1.79 2006/07/07 20:24:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -556,9 +556,6 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 		
 	} else if(per_action_cib && cib_writes_enabled && cib_status == cib_ok) {
 		write_cib_contents(the_cib);
-		uninitializeCib();
-		free_xml(saved_cib);
-		return error_code;
 		
 	} else if(cib_writes_enabled && cib_status == cib_ok) {
 		crm_debug_2("Triggering CIB write");

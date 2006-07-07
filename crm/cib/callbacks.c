@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.135 2006/07/07 20:08:49 andrew Exp $ */
+/* $Id: callbacks.c,v 1.136 2006/07/07 20:24:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,6 +31,7 @@
 #include <hb_api.h>
 #include <clplumbing/uids.h>
 #include <clplumbing/cl_uuid.h>
+#include <clplumbing/cl_malloc.h>
 #include <clplumbing/Gmain_timeout.h>
 
 #include <crm/crm.h>
@@ -1250,6 +1251,7 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 	if(per_action_cib) {
 		CRM_CHECK(the_cib == NULL, free_xml(the_cib));
 		the_cib = readCibXmlFile(CIB_FILENAME, FALSE);
+		CRM_CHECK(the_cib != NULL, return cib_NOOBJECT);
 	}
 	current_cib = the_cib;
 	
@@ -1267,7 +1269,9 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 
 	if(cib_status != cib_ok) {
 		*reply = cib_construct_reply(request, the_cib, cib_status);
-		uninitializeCib();
+		if(per_action_cib) {
+			uninitializeCib();
+		}
 		return cib_status;
 	}
 	
@@ -1370,7 +1374,9 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 	if(call_type >= 0) {
 		cib_server_ops[call_type].cleanup(op, &input, &output);
 	}
-	uninitializeCib();
+	if(per_action_cib) {
+		uninitializeCib();
+	}
 	return rc;
 }
 
@@ -1937,10 +1943,6 @@ terminate_ha_connection(const char *caller)
 		
 	} else {
 		crm_err("%s: No heartbeat connection", caller);
-		uninitializeCib();
-#ifdef HA_MALLOC_TRACK
-		cl_malloc_dump_allocated();
-#endif
 		exit(LSB_EXIT_OK);
 	}
 }
