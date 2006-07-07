@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.61 2006/07/06 13:30:24 andrew Exp $ */
+/* $Id: utils.c,v 1.62 2006/07/07 20:25:52 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1299,8 +1299,8 @@ crm_diff_mem_stats(int log_level_up, int log_level_down, const char *location,
 	delta_req    = stats->nbytes_req - saved_stats->nbytes_req;
 	
 	if(delta_bytes == 0) {
-		crm_debug("Memory usage constant at %s: %ld alloc's %ld free's",
-			  location, delta_allocs, delta_frees);
+		crm_debug_2("Memory usage constant at %s: %ld alloc's %ld free's",
+			    location, delta_allocs, delta_frees);
 		return FALSE;
 	}
 
@@ -1317,8 +1317,9 @@ crm_diff_mem_stats(int log_level_up, int log_level_down, const char *location,
 		      delta_allocs, delta_frees, delta_allocs - delta_frees,
 		      delta_bytes);
 	
+	reset_on_change = FALSE;
 	if(reset_on_change) {
-		crm_debug("resetting %s stats", location);
+		crm_info("resetting %s stats", location);
 		*stats = *saved_stats;
 		if(crm_running_stats) {
 			crm_adjust_mem_stats(crm_running_stats, delta_bytes, delta_allocs, delta_frees);
