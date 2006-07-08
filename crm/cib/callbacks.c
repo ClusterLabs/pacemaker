@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.137 2006/07/07 20:47:24 andrew Exp $ */
+/* $Id: callbacks.c,v 1.138 2006/07/08 13:45:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -961,8 +961,8 @@ forward_request(HA_Message *request, cib_client_t *cib_client, int call_options)
 		/* keep track of the request so we can time it
 		 * out if required
 		 */
-		crm_err("Registering delegated call from %s",
-			cib_client->id);
+		crm_debug_2("Registering delegated call from %s",
+			    cib_client->id);
 		cib_client->delegated_calls = g_list_append(
 			cib_client->delegated_calls, forward_msg);
 		forward_msg = NULL;
