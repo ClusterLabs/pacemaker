@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.99 2006/07/07 20:53:19 andrew Exp $ */
+/* $Id: xml.c,v 1.100 2006/07/08 13:49:03 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1648,11 +1648,36 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 		result = FALSE;
 
 	} else if(result) {
+		int lpc = 0;
 		crm_data_t *intermediate = NULL;
 		crm_data_t *diff_of_diff = NULL;
+		crm_data_t *calc_added = NULL;
+		crm_data_t *calc_removed = NULL;
+
+		const char *value = NULL;
+		const char *name = NULL;
+		const char *version_attrs[] = {
+			XML_ATTR_NUMUPDATES,
+			XML_ATTR_GENERATION,
+			XML_ATTR_GENERATION_ADMIN
+		};
 		
 		crm_debug_2("Verification Phase");
 		intermediate = diff_xml_object(old, *new, FALSE);
+		calc_added = find_xml_node(intermediate, "diff-added", FALSE);
+		calc_removed = find_xml_node(intermediate, "diff-removed", FALSE);
+
+		/* add any version details to the diff so they match */
+		for(lpc = 0; lpc < DIMOF(version_attrs); lpc++) {
+			name = version_attrs[lpc];
+
+			value = crm_element_value(added, name);
+			crm_xml_add(calc_added, name, value);
+
+			value = crm_element_value(removed, name);
+			crm_xml_add(calc_removed, name, value);	
+		}
+		
 		diff_of_diff = diff_xml_object(intermediate, diff, TRUE);
 		if(diff_of_diff != NULL) {
 			crm_notice("Diff application failed!");
@@ -1662,6 +1687,7 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 			log_xml_diff(LOG_INFO, intermediate, "diff:actual_diff");
 			result = FALSE;
 		}
+		
 		free_xml(diff_of_diff);
 		free_xml(intermediate);
 		diff_of_diff = NULL;
