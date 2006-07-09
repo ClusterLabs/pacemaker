@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.138 2006/07/08 13:45:23 andrew Exp $ */
+/* $Id: callbacks.c,v 1.139 2006/07/09 09:55:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -793,8 +793,8 @@ do_local_notify(HA_Message *notify_src, const char *client_id, gboolean sync_rep
 		client_obj = g_hash_table_lookup(
 			client_list, client_id);
 	} else {
-		crm_debug("No client to sent the response to."
-			  "  F_CIB_CLIENTID not set.");
+		crm_debug_2("No client to sent the response to."
+			    "  F_CIB_CLIENTID not set.");
 	}
 	
 	crm_debug_3("Sending callback to request originator");
@@ -814,7 +814,7 @@ do_local_notify(HA_Message *notify_src, const char *client_id, gboolean sync_rep
 		local_rc = send_via_callback_channel(client_reply, client_id);
 	} 
 	
-	if(local_rc != cib_ok) {
+	if(local_rc != cib_ok && client_obj != NULL) {
 		crm_warn("%sSync reply to %s failed: %s",
 			 sync_reply?"":"A-",
 			 client_obj?client_obj->name:"<unknown>", cib_error2string(local_rc));
@@ -1320,12 +1320,27 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 
 			update_counters(__FILE__, __FUNCTION__, result_cib);
 
-			if(section == NULL && cib_server_ops[call_type].fn == cib_process_replace) {
+			if(global_update) {
 				/* skip */
+				CRM_CHECK(call_type == 4 || call_type == 11,
+					  crm_err("Call type: %d", call_type);
+					  crm_log_message(LOG_ERR, request));
+				crm_debug_2("Skipping update: global replace");
+
 			} else if(cib_server_ops[call_type].fn == cib_process_change
 				  && (call_options & cib_inhibit_bcast)) {
 				/* skip */
+				crm_debug_2("Skipping update: inhibit broadcast");
+
 			} else {
+				const char *op         = cl_get_string(
+					request, F_CIB_OPERATION);
+				const char *originator = cl_get_string(
+					request, F_ORIG);
+
+				crm_debug_2("Upping counter: %s %s %d %d",
+					  op, originator, call_options,
+					global_update);
 				cib_update_counter(result_cib, XML_ATTR_NUMUPDATES, FALSE);
 			}
 			
