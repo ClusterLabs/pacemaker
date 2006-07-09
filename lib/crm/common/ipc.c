@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.25 2006/07/06 13:30:23 andrew Exp $ */
+/* $Id: ipc.c,v 1.26 2006/07/09 09:54:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -102,7 +102,7 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboole
 			ipc = hb_conn->llc_ops->ipcchan(hb_conn);
 		}
 		if(ipc != NULL) {
-			ipc->ops->resume_io(ipc);
+/* 			ipc->ops->resume_io(ipc); */
 			send_q = ipc->send_queue;
 		}
 		if(send_q != NULL) {
@@ -156,7 +156,7 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 			CRM_CHECK(ipc_client->send_queue->current_qlen < ipc_client->send_queue->max_qlen, ;);
 		}
 	}
-	ipc_client->ops->resume_io(ipc_client);
+/* 	ipc_client->ops->resume_io(ipc_client); */
 	
 	crm_log_message_adv(all_is_good?LOG_MSG:LOG_WARNING,"IPC[outbound]",msg);
 	crm_diff_mem_stats(LOG_DEBUG, LOG_DEBUG, __PRETTY_FUNCTION__, NULL, &saved_stats);

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.54 2006/07/07 21:26:29 andrew Exp $ */
+/* $Id: main.c,v 1.55 2006/07/09 09:54:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -155,7 +155,7 @@ main(int argc, char ** argv)
 }
 
 unsigned long cib_num_ops = 0;
-const char *cib_stat_interval = "10s";
+const char *cib_stat_interval = "10min";
 unsigned long cib_num_local = 0, cib_num_updates = 0, cib_num_fail = 0;
 unsigned long cib_bad_connects = 0, cib_num_timeouts = 0;
 longclock_t cib_call_time = 0;
