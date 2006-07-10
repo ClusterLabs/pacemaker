@@ -45,7 +45,7 @@
 #include <crm/dmalloc_wrapper.h>
 
 char *make_stop_id(const char *rsc, int call_id);
-gboolean stop_all_resources(void);
+gboolean verify_stopped(gboolean force, int log_level);
 gboolean resource_stopped(gpointer key, gpointer value, gpointer user_data);
 
 gboolean build_operation_update(
@@ -177,6 +177,7 @@ do_lrm_control(long long action,
 	int ret = HA_OK;
 
 	if(action & A_LRM_DISCONNECT) {
+		verify_stopped(TRUE, LOG_ERR);
 		if(lrm_source) {
 			crm_debug("Removing LRM connection from MainLoop");
 			if(G_main_del_IPC_Channel(lrm_source) == FALSE) {
@@ -282,39 +283,50 @@ static void
 ghash_print_pending(gpointer key, gpointer value, gpointer user_data) 
 {
 	const char *action = key;
-	crm_err("Pending action: %s", action);
+	int *log_level = user_data;
+	crm_log_maybe(*log_level, "Pending action: %s", action);
 }
 
 gboolean
-stop_all_resources(void)
+verify_stopped(gboolean force, int log_level)
 {
 	GListPtr lrm_list = NULL;
 
 	crm_info("Checking for active resources before exit");
-	
-	if(fsa_lrm_conn == NULL) {
-		return TRUE;
 
-	} else if(is_set(fsa_input_register, R_SENT_RSC_STOP)) {
+	if(fsa_lrm_conn == NULL) {
+		crm_err("Exiting with no LRM connection..."
+			" resources may be active!");
 		return TRUE;
 	}
 
-	CRM_CHECK(g_hash_table_size(shutdown_ops) == 0,
-		  crm_err("%d pending LRM operations at shutdown",
-			  g_hash_table_size(shutdown_ops));
-		  g_hash_table_foreach(
-			shutdown_ops, ghash_print_pending, NULL);
-		);
+	if(g_hash_table_size(shutdown_ops) > 0) {
+		crm_log_maybe(log_level,
+			      "%d pending LRM operations at shutdown%s",
+			      g_hash_table_size(shutdown_ops),
+			      force?"":"... waiting");
 
+		if(force || !is_set(fsa_input_register, R_SENT_RSC_STOP)) {
+			g_hash_table_foreach(
+				shutdown_ops, ghash_print_pending, &log_level);
+		}
+
+		if(force == FALSE) {
+			return FALSE;
+		}
+	}
+	
 	lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
 	slist_iter(
 		rsc_id, char, lrm_list, lpc,
 
-		if(is_rsc_active(rsc_id)) {
-			crm_err("Resource %s was active at shutdown."
-				"  You may ignore this error if it is unmanaged.",
-				rsc_id);
+		if(is_rsc_active(rsc_id) == FALSE) {
+			continue;
 		}
+		
+		crm_err("Resource %s was active at shutdown."
+			"  You may ignore this error if it is unmanaged.",
+			rsc_id);
 		);
 
 	set_bit_inplace(fsa_input_register, R_SENT_RSC_STOP);

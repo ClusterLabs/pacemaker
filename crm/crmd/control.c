@@ -39,7 +39,7 @@
 #include <crm/dmalloc_wrapper.h>
 
 extern void crmd_ha_connection_destroy(gpointer user_data);
-extern gboolean stop_all_resources(void);
+extern gboolean verify_stopped(gboolean force, int log_level);
 
 gboolean crm_shutdown(int nsig, gpointer unused);
 gboolean register_with_ha(ll_cluster_t *hb_cluster, const char *client_name);
@@ -185,6 +185,7 @@ do_exit(long long action,
 		exit_code = 1;
 		log_level = LOG_ERR;
 		exit_type = "forcefully";
+		verify_stopped(TRUE, LOG_ERR);
 	}
 	
 	crm_log_maybe(log_level, "Performing %s - %s exiting the CRMd",
@@ -403,14 +404,6 @@ do_startup(long long action,
 	return I_NULL;
 }
 
-extern GHashTable *shutdown_ops;
-static void
-ghash_print_pending(gpointer key, gpointer value, gpointer user_data) 
-{
-	const char *action = key;
-	crm_debug("Pending action: %s", action);
-}
-
 /*	 A_STOP	*/
 enum crmd_fsa_input
 do_stop(long long action,
@@ -419,36 +412,9 @@ do_stop(long long action,
 	enum crmd_fsa_input current_input,
 	fsa_data_t *msg_data)
 {
-	crm_data_t *node_state = NULL;
-	crm_debug_2("Stopping all remaining local resources");
-
-	if(g_hash_table_size(shutdown_ops) > 0) {
-		crm_info("Waiting on %d lrm operations to complete",
-			g_hash_table_size(shutdown_ops));
-		g_hash_table_foreach(
-			shutdown_ops, ghash_print_pending, NULL);
+	if(verify_stopped(FALSE, LOG_DEBUG) == FALSE) {
 		crmd_fsa_stall(NULL);
-		return I_NULL;
 	}
-
-	if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
-		stop_all_resources();
-
-	} else {
-		crm_err("Exiting with no LRM connection..."
-			" resources may be active!");
-	}
-
-#if 0
-	crm_debug("Sending \"stopped\" update to CIB");
-	node_state = create_node_state(
-		fsa_our_uname, NULL, XML_BOOLEAN_FALSE, 
-		OFFLINESTATUS, CRMD_STATE_INACTIVE, NULL, FALSE, __FUNCTION__);
-
-	fsa_cib_anon_update(
-		XML_CIB_TAG_STATUS, node_state, cib_quorum_override);
-#endif
-	free_xml(node_state);
 
 	return I_NULL;
 }
