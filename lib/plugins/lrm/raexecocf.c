@@ -436,7 +436,7 @@ get_providers(const char* class_path, const char* ra_type, GList ** providers)
 			}
 
 			stat(namelist[file_num]->d_name, &prop);
-			if (S_ISDIR(prop.st_mode)) {
+			if (!S_ISDIR(prop.st_mode)) {
 				free(namelist[file_num]);
 				continue;
 			}
