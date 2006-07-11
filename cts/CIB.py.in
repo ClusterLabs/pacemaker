@@ -36,8 +36,8 @@ class CIB:
     dc_ipaddr_resource_template = ''' 
         <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
           <operations>
-             <op id="DcIPaddr-1" name="monitor" interval="5s" timeout="20s"/>
-             <op id="DcIPaddr-2" name="start" timeout="40s"/>
+             <op id="DcIPaddr-1" name="monitor" interval="5s" timeout="45s"/>
+             <op id="DcIPaddr-2" name="start" timeout="45s"/>
           </operations>
           <instance_attributes id="DcIPaddr">
              <attributes>
@@ -49,8 +49,8 @@ class CIB:
     clustermon_resource_template = ''' 
         <primitive id="cluster_mon" class="ocf" type="ClusterMon" provider="heartbeat" is_managed="1">
           <operations>
-            <op id="cluster_mon-1" name="monitor" interval="5s" timeout="20s" prereq="nothing"/>
-            <op id="cluster_mon-2" name="start" timeout="20s" prereq="nothing"/>
+            <op id="cluster_mon-1" name="monitor" interval="5s" timeout="45s" prereq="nothing"/>
+            <op id="cluster_mon-2" name="start" timeout="45s" prereq="nothing"/>
           </operations>
           <instance_attributes id="ClusterMon">
             <attributes>
@@ -79,7 +79,7 @@ class CIB:
     lsb_resource = ''' 
         <primitive id="lsb_dummy" class="lsb" type="@libdir@/heartbeat/cts/LSBDummy" provider="heartbeat">
           <operations>
-            <op id="ocf_lsb_monitor" name="monitor" interval="5s" timeout="20s"/>
+            <op id="ocf_lsb_monitor" name="monitor" interval="5s" timeout="45s"/>
           </operations>
         </primitive> '''
 
@@ -95,8 +95,8 @@ class CIB:
           </instance_attributes>
           <primitive id="ocf_msdummy" class="ocf" type="@libdir@/heartbeat/cts/OCFMSDummy" provider="heartbeat">
             <operations>
-              <op id="ocf_msdummy_monitor" name="monitor" interval="5s" timeout="10s"/>
-              <op id="ocf_msdummy_monitor_master" name="monitor" interval="6s" timeout="10s" role="Master"/>
+              <op id="ocf_msdummy_monitor" name="monitor" interval="5s" timeout="60s"/>
+              <op id="ocf_msdummy_monitor_master" name="monitor" interval="6s" timeout="60s" role="Master"/>
             </operations>
             <instance_attributes id="master-child">
               <attributes>
@@ -110,7 +110,7 @@ class CIB:
         <group id="group-1">
           <primitive id="ocf_%s" class="ocf" type="IPaddr" provider="heartbeat">
             <operations>
-              <op id="ocf_chil%s_monitor" name="monitor" interval="5s" timeout="20s"/>
+              <op id="ocf_chil%s_monitor" name="monitor" interval="5s" timeout="45s"/>
             </operations>
             <instance_attributes id="ip-1">
               <attributes>
@@ -120,7 +120,7 @@ class CIB:
           </primitive>
           <primitive id="heartbeat_%s" class="heartbeat" type="IPaddr" provider="heartbeat">
             <operations>
-              <op id="heartbeat_%s_monitor" name="monitor" interval="5s" timeout="20s"/>
+              <op id="heartbeat_%s_monitor" name="monitor" interval="5s" timeout="45s"/>
             </operations>
             <instance_attributes id="ip-2">
               <attributes>
@@ -130,7 +130,7 @@ class CIB:
           </primitive>
           <primitive id="ocf_%s" class="ocf" type="IPaddr" provider="heartbeat">
             <operations>
-              <op id="ocf_%s_monitor" name="monitor" interval="5s" timeout="20s"/>
+              <op id="ocf_%s_monitor" name="monitor" interval="5s" timeout="45s"/>
             </operations>
             <instance_attributes id="ip-3">
               <attributes>
@@ -144,8 +144,8 @@ class CIB:
     per_node_resource_template = ''' 
         <primitive id="%s" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
           <operations>
-            <op id="%s-1" name="monitor" interval="5s" timeout="20s"/>
-            <op id="%s-2" name="start" timeout="40s"/>
+            <op id="%s-1" name="monitor" interval="5s" timeout="45s"/>
+            <op id="%s-2" name="start" timeout="45s"/>
           </operations>
           <instance_attributes id="%s">
             <attributes>
@@ -171,8 +171,8 @@ class CIB:
           </instance_attributes>
           <primitive id="child_DoFencing" class="stonith" type="ssh">
             <operations>
-              <op id="DoFencing-1" name="monitor" interval="20s" timeout="40s" prereq="nothing"/>
-              <op id="DoFencing-2" name="start" timeout="20s" prereq="nothing"/>
+              <op id="DoFencing-1" name="monitor" interval="20s" timeout="45s" prereq="nothing"/>
+              <op id="DoFencing-2" name="start" timeout="45s" prereq="nothing"/>
             </operations>
             <instance_attributes id="fencing-child">
               <attributes>
