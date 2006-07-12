@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.26 2006/07/09 09:54:09 andrew Exp $ */
+/* $Id: ipc.c,v 1.27 2006/07/12 09:31:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -270,11 +270,13 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 
 	if (ch == NULL) {
 		crm_err("Could not access channel on: %s", commpath);
+		crm_free(commpath);
 		return NULL;
 		
 	} else if (ch->ops->initiate_connection(ch) != IPC_OK) {
 		crm_debug("Could not init comms on: %s", commpath);
 		ch->ops->destroy(ch);
+		crm_free(commpath);
 		return NULL;
 	}
 
@@ -284,6 +286,7 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 
 	crm_debug_3("Processing of %s complete", commpath);
 
+	crm_free(commpath);
 	return ch;
 }
 
