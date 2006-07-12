@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.78 2006/06/21 08:31:27 andrew Exp $ */
+/* $Id: ptest.c,v 1.79 2006/07/12 15:42:35 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -306,6 +306,9 @@ main(int argc, char **argv)
 	}
 	
 	crm_zero_mem_stats(NULL);
+#ifdef HA_MALLOC_TRACK
+	cl_malloc_dump_allocated(LOG_DEBUG_2, TRUE);
+#endif
 	
 	if(use_date != NULL) {
 		a_date = parse_date(&use_date);
@@ -407,6 +410,9 @@ main(int argc, char **argv)
 	destroy_graph(transition);
 	
 	crm_mem_stats(NULL);
+#ifdef HA_MALLOC_TRACK
+	cl_malloc_dump_allocated(LOG_ERR, TRUE);
+#endif
  	CRM_CHECK(crm_mem_stats(NULL) == FALSE, all_good = FALSE; crm_err("Memory leak detected"));
 	CRM_CHECK(graph_rc == transition_complete, all_good = FALSE; crm_err("An invalid transition was produced"));
 

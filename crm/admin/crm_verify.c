@@ -1,4 +1,4 @@
-/* $Id: crm_verify.c,v 1.16 2006/07/04 14:11:11 lars Exp $ */
+/* $Id: crm_verify.c,v 1.17 2006/07/12 15:42:35 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -161,13 +161,17 @@ main(int argc, char **argv)
   
 	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
 
+	crm_zero_mem_stats(NULL);
+#ifdef HA_MALLOC_TRACK
+	cl_malloc_dump_allocated(LOG_DEBUG_2, TRUE);
+#endif
+	
 	if(USE_LIVE_CIB) {
 		cib_conn = cib_new();
 		rc = cib_conn->cmds->signon(
 			cib_conn, crm_system_name, cib_command_synchronous);
 	}
 	
-	crm_zero_mem_stats(NULL);
 	
 	if(USE_LIVE_CIB) {
 		if(rc == cib_ok) {
@@ -239,22 +243,20 @@ main(int argc, char **argv)
 		active_stats->numfree++;
 	}
 #endif
-
- 	CRM_CHECK(crm_mem_stats(NULL) == FALSE, ; );
 	
 	if(was_config_error) {
 		fprintf(stderr, "Errors found during check: config not valid\n");
 		if(crm_log_level < LOG_WARNING) {
 			fprintf(stderr, "  -V may provide more details\n");
 		}
-		return 2;
+		rc = 2;
 		
 	} else if(was_config_warning) {
 		fprintf(stderr, "Warnings found during check: config may not be valid\n");
 		if(crm_log_level < LOG_WARNING) {
 			fprintf(stderr, "  Use -V for more details\n");
 		}
-		return 1;
+		rc = 1;
 	}
 	
 	if(USE_LIVE_CIB) {
@@ -262,7 +264,12 @@ main(int argc, char **argv)
 		cib_delete(cib_conn);
 	}	
 
-	return 0;
+ 	CRM_CHECK(crm_mem_stats(NULL) == FALSE, ; );
+#ifdef HA_MALLOC_TRACK
+	cl_malloc_dump_allocated(LOG_ERR, TRUE);
+#endif
+	
+	return rc;
 }
 
 
