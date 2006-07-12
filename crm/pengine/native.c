@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.156 2006/07/05 14:20:02 andrew Exp $ */
+/* $Id: native.c,v 1.157 2006/07/12 15:41:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -389,7 +389,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	
 	if(g_list_length(rsc->running_on) > 1) {
  		if(rsc->recovery_type == recovery_stop_start) {
-			pe_err("Attempting recovery of resource %s", rsc->id);
+			pe_proc_err("Attempting recovery of resource %s", rsc->id);
 			StopRsc(rsc, NULL, data_set);
 			rsc->role = RSC_ROLE_STOPPED;
 		}

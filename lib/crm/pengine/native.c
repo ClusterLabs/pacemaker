@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.4 2006/06/21 09:47:01 andrew Exp $ */
+/* $Id: native.c,v 1.5 2006/07/12 15:41:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -87,8 +87,8 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		/* these are errors because hardly any gets it right
 		 *   at the moment and this way the might notice
 		 */
-		pe_err("Resource %s::%s:%s appears to be active on %d nodes.",
-		       class, type, rsc->id, g_list_length(rsc->running_on));
+		pe_proc_err("Resource %s::%s:%s appears to be active on %d nodes.",
+			    class, type, rsc->id, g_list_length(rsc->running_on));
 		cl_log(LOG_ERR, "See %s for more information.",
 		       HAURL("v2/faq/resource_too_active"));
 		
