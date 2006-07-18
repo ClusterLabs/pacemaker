@@ -1,4 +1,4 @@
-/* $Id: messages.c,v 1.87 2006/07/07 20:43:33 andrew Exp $ */
+/* $Id: messages.c,v 1.88 2006/07/18 06:15:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -569,6 +569,12 @@ cib_process_replace(
 			send_notify = TRUE;
 			
 		} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+			send_notify = TRUE;
+
+		} else if(safe_str_eq(tag, XML_CIB_TAG_STATUS)) {
+			send_notify = TRUE;
+
+		} else if(safe_str_eq(tag, XML_CIB_TAG_NODES)) {
 			send_notify = TRUE;
 		}
 	}
