@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.11 2006/06/23 10:29:16 andrew Exp $ */
+/* $Id: unpack.c,v 1.12 2006/07/18 06:14:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -714,9 +714,12 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		    rsc->id, role2text(rsc->role),
 		    node->details->uname);
 
-	rsc->known_on = g_list_append(rsc->known_on, node);
+	if(rsc->role != RSC_ROLE_UNKNOWN) { 
+		rsc->known_on = g_list_append(rsc->known_on, node);
+	}
 
-	if(rsc->role != RSC_ROLE_STOPPED) { 
+	if(rsc->role != RSC_ROLE_STOPPED
+		&& rsc->role != RSC_ROLE_UNKNOWN) { 
 		if(on_fail != action_fail_ignore) {
 			rsc->failed = TRUE;
 			crm_debug_2("Force stop");
@@ -896,7 +899,7 @@ unpack_lrm_rsc_state(
 
 	saved_role = rsc->role;
 	on_fail = action_fail_ignore;
-	rsc->role = RSC_ROLE_STOPPED;
+	rsc->role = RSC_ROLE_UNKNOWN;
 	sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
 	
 	slist_iter(
