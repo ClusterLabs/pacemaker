@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.139 2006/07/09 09:55:57 andrew Exp $ */
+/* $Id: callbacks.c,v 1.140 2006/07/18 06:20:07 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -191,12 +191,22 @@ cib_prepare_sync(HA_Message *request, HA_Message **data, const char **section)
 static enum cib_errors
 cib_prepare_diff(HA_Message *request, HA_Message **data, const char **section)
 {
-	HA_Message *input_fragment = cl_get_struct(request,F_CIB_UPDATE_DIFF);
+	HA_Message *input_fragment = NULL;
+	const char *update     = cl_get_string(request, F_CIB_GLOBAL_UPDATE);
+
+	*data = NULL;
 	*section = NULL;
-	if(input_fragment == NULL) {
+
+	if(crm_is_true(update)) {
+		input_fragment = cl_get_struct(request,F_CIB_UPDATE_DIFF);
+		
+	} else {
 		input_fragment = cl_get_struct(request, F_CIB_CALLDATA);
 	}
+
+	CRM_CHECK(input_fragment != NULL,crm_log_message(LOG_WARNING, request));
 	*data = cib_prepare_common(input_fragment, NULL);
+
 	return cib_ok;
 }
 
