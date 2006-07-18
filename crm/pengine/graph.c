@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.103 2006/06/23 12:34:51 andrew Exp $ */
+/* $Id: graph.c,v 1.104 2006/07/18 06:19:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -200,9 +200,6 @@ gboolean
 stonith_constraints(
 	node_t *node, action_t *stonith_op, pe_working_set_t *data_set)
 {
-	char *key = NULL;
-	GListPtr action_list = NULL;
-
 	CRM_CHECK(stonith_op != NULL, return FALSE);
 	
 	/*
@@ -218,93 +215,6 @@ stonith_constraints(
 	/* add the stonith OP as a stop pre-req and the mark the stop
 	 * as a pseudo op - since its now redundant
 	 */
-	slist_iter(
-		rsc, resource_t, node->details->running_rsc, lpc,
-
-		if(rsc->is_managed == FALSE) {
-			crm_debug_2("Skipping fencing constraints for unmanaged resource: %s", rsc->id);
-			continue;
-		} 
-
-		key = stop_key(rsc);
-		action_list = find_actions(rsc->actions, key, node);
-		crm_free(key);
-		
-		slist_iter(
-			action, action_t, action_list, lpc2,
-			if(node->details->online == FALSE || rsc->failed) {
-				resource_t *parent = NULL;
-				crm_info("Stop of failed resource %s is"
-					 " implict after %s is fenced",
-					 rsc->id, node->details->uname);
-				/* the stop would never complete and is
-				 * now implied by the stonith operation
-				 */
-				action->pseudo = TRUE;
-				action->runnable = TRUE;
-				if(action->optional) {
-					/* does this case ever happen? */
-					custom_action_order(
-						NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
-						rsc, start_key(rsc), NULL,
-						pe_ordering_manditory, data_set);
-				} else {						
-					custom_action_order(
-						NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
-						rsc, NULL, action,
-						pe_ordering_manditory, data_set);
-				}
-				
-				/* find the top-most resource */
-				parent = rsc->parent;
-				while(parent != NULL && parent->parent != NULL) {
-					parent = parent->parent;
-				}
-				
-				if(parent) {
-					crm_info("Re-creating actions for %s",
-						 parent->id);
-					parent->cmds->create_actions(
-						parent, data_set);
-				}
-				
-			} else {
-				crm_info("Moving healthy resource %s"
-					 " off %s before fencing",
-					 rsc->id, node->details->uname);
-				
-				/* stop healthy resources before the
-				 * stonith op
-				 */
-				custom_action_order(
-					rsc, stop_key(rsc), NULL,
-					NULL,crm_strdup(CRM_OP_FENCE),stonith_op,
-					pe_ordering_manditory, data_set);
-			}
-			);
-		
-			key = demote_key(rsc);
-			action_list = find_actions(rsc->actions, key, node);
-			crm_free(key);
-			
-			slist_iter(
-				action, action_t, action_list, lpc2,
-				if(node->details->online == FALSE || rsc->failed) {
-					crm_info("Demote of failed resource %s is"
-						 " implict after %s is fenced",
-						 rsc->id, node->details->uname);
-					/* the stop would never complete and is
-					 * now implied by the stonith operation
-					 */
-					action->pseudo = TRUE;
-					action->runnable = TRUE;
-					custom_action_order(
-						NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
-						rsc, demote_key(rsc), NULL,
-						pe_ordering_manditory, data_set);
-				}
-				);
-		);
 	
 	return TRUE;
 }

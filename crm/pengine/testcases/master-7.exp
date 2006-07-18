@@ -299,9 +299,6 @@
        <trigger>
          <pseudo_event id="71" operation="stop" operation_key="DoFencing_stop_0"/>
        </trigger>
-       <trigger>
-         <crm_event id="96" operation="stonith" operation_key="stonith" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
-       </trigger>
      </inputs>
    </synapse>
    <synapse id="23" priority="1000000">

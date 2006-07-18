@@ -1,4 +1,4 @@
-/* $Id: clone.c,v 1.5 2006/07/05 14:20:02 andrew Exp $ */
+/* $Id: clone.c,v 1.6 2006/07/18 06:19:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1295,28 +1295,13 @@ void
 clone_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set)
 {
-	gboolean is_fencing = FALSE;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
-		const char *class = crm_element_value(
-			child_rsc->xml, XML_AGENT_ATTR_CLASS);
-
-		if(safe_str_eq(class, "stonith")) {
-			is_fencing = TRUE;
-			break;
-		}
+		child_rsc->cmds->stonith_ordering(
+			child_rsc, stonith_op, data_set);
 		);
-
-	if(is_fencing && stonith_op != NULL) {
-		char *key = started_key(rsc);
-		crm_debug("Ordering %s before stonith op", key);
-		custom_action_order(
-			rsc, key, NULL,
-			NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
-			pe_ordering_optional, data_set);
-	}
 }

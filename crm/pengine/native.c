@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.157 2006/07/12 15:41:45 andrew Exp $ */
+/* $Id: native.c,v 1.158 2006/07/18 06:19:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1748,46 +1748,170 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	return TRUE;
 }
 
+static void
+native_start_constraints(
+	resource_t *rsc,  action_t *stonith_op, gboolean is_stonith,
+	pe_working_set_t *data_set)
+{
+	gboolean is_unprotected = FALSE;
+	gboolean run_unprotected = TRUE;
+
+	if(is_stonith) {
+		char *key = start_key(rsc);
+		crm_debug_2("Ordering %s action before stonith events", key);
+		custom_action_order(
+			rsc, key, NULL,
+			NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
+			pe_ordering_optional, data_set);
+
+	} else {
+		slist_iter(action, action_t, rsc->actions, lpc2,
+			   if(action->needs != rsc_req_stonith) {
+				   crm_debug_3("%s doesnt need to wait for stonith events", action->uuid);
+				   continue;
+			   }
+			   crm_debug_2("Ordering %s after stonith events", action->uuid);
+			   if(stonith_op != NULL) {
+				   custom_action_order(
+					   NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
+					   rsc, NULL, action,
+					   pe_ordering_manditory, data_set);
+				   
+			   } else if(run_unprotected == FALSE) {
+				   /* mark the start unrunnable */
+				   action->runnable = FALSE;
+				   
+			   } else {
+				   is_unprotected = TRUE;
+			   }   
+			);
+	}
+	
+	if(is_unprotected) {
+		pe_err("SHARED RESOURCE %s IS NOT PROTECTED:"
+		       " Stonith disabled", rsc->id);
+	}
+
+}
+
+static void
+native_stop_constraints(
+	resource_t *rsc,  action_t *stonith_op, gboolean is_stonith,
+	pe_working_set_t *data_set)
+{
+	char *key = NULL;
+	GListPtr action_list = NULL;
+	node_t *node = stonith_op->node;
+
+	key = stop_key(rsc);
+	action_list = find_actions(rsc->actions, key, node);
+	crm_free(key);
+
+	/* add the stonith OP as a stop pre-req and the mark the stop
+	 * as a pseudo op - since its now redundant
+	 */
+	
+	slist_iter(
+		action, action_t, action_list, lpc2,
+		if(node->details->online == FALSE || rsc->failed) {
+			resource_t *parent = NULL;
+			crm_warn("Stop of failed resource %s is"
+				 " implict after %s is fenced",
+				 rsc->id, node->details->uname);
+			/* the stop would never complete and is
+			 * now implied by the stonith operation
+			 */
+			action->pseudo = TRUE;
+			action->runnable = TRUE;
+			if(is_stonith) {
+				/* do nothing */
+				
+			} else if(action->optional) {
+				/* does this case ever happen? */
+				custom_action_order(
+					NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
+					rsc, start_key(rsc), NULL,
+					pe_ordering_manditory, data_set);
+			} else {						
+				custom_action_order(
+					NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
+					rsc, NULL, action,
+					pe_ordering_manditory, data_set);
+			}
+			
+			/* find the top-most resource */
+			parent = rsc->parent;
+			while(parent != NULL && parent->parent != NULL) {
+				parent = parent->parent;
+			}
+			
+			if(parent) {
+				crm_info("Re-creating actions for %s",
+					 parent->id);
+				parent->cmds->create_actions(parent, data_set);
+			}
+			
+		} else if(is_stonith == FALSE) {
+			crm_info("Moving healthy resource %s"
+				 " off %s before fencing",
+				 rsc->id, node->details->uname);
+			
+			/* stop healthy resources before the
+			 * stonith op
+			 */
+			custom_action_order(
+				rsc, stop_key(rsc), NULL,
+				NULL,crm_strdup(CRM_OP_FENCE),stonith_op,
+				pe_ordering_manditory, data_set);
+		}
+		);
+	
+	key = demote_key(rsc);
+	action_list = find_actions(rsc->actions, key, node);
+	crm_free(key);
+	
+	slist_iter(
+		action, action_t, action_list, lpc2,
+		if(node->details->online == FALSE || rsc->failed) {
+			crm_info("Demote of failed resource %s is"
+				 " implict after %s is fenced",
+				 rsc->id, node->details->uname);
+			/* the stop would never complete and is
+			 * now implied by the stonith operation
+			 */
+			action->pseudo = TRUE;
+			action->runnable = TRUE;
+			if(is_stonith == FALSE) {
+				custom_action_order(
+					NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
+					rsc, demote_key(rsc), NULL,
+					pe_ordering_manditory, data_set);
+			}
+		}
+		);	
+}
 
 void
 native_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set)
 {
-	gboolean is_unprotected = FALSE;
-	gboolean run_unprotected = TRUE;
+	gboolean is_stonith = FALSE;
 	const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
-	if(stonith_op != NULL && safe_str_eq(class, "stonith")) {
-		char *key = start_key(rsc);
-		crm_debug("Ordering %s before stonith op", key);
-		custom_action_order(
-			rsc, key, NULL,
-			NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
-			pe_ordering_optional, data_set);
+	if(rsc->is_managed == FALSE) {
+		crm_debug_3("Skipping fencing constraints for unmanaged resource: %s", rsc->id);
 		return;
-	}
+	} 
 
-	slist_iter(action, action_t, rsc->actions, lpc2,
-		   if(action->needs != rsc_req_stonith) {
-			   continue;
-		   }
-		   if(stonith_op != NULL) {
-			   custom_action_order(
-				   NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
-				   rsc, NULL, action,
-				   pe_ordering_manditory, data_set);
-			   
-		   } else if(run_unprotected == FALSE) {
-			   /* mark the start unrunnable */
-			   action->runnable = FALSE;
-			   
-		   } else {
-			   is_unprotected = TRUE;
-		   }   
-		);
-
-	if(is_unprotected) {
-		pe_err("SHARED RESOURCE %s IS NOT PROTECTED:"
-		       " Stonith disabled", rsc->id);
+	if(stonith_op != NULL && safe_str_eq(class, "stonith")) {
+		is_stonith = TRUE;
 	}
+	
+	/* Start constraints */
+	native_start_constraints(rsc,  stonith_op, is_stonith, data_set);
+ 
+	/* Stop constraints */
+
+	native_stop_constraints(rsc,  stonith_op, is_stonith, data_set);
+	
 }
