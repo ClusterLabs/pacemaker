@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.86 2006/07/18 06:16:08 andrew Exp $ */
+/* $Id: callbacks.c,v 1.87 2006/07/18 06:18:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -231,31 +231,40 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 	} else if(strcasecmp(op, CRM_OP_TRANSITION) == 0) {
 		const char *graph_file = cl_get_string(msg, F_CRM_TGRAPH);
  		const char *graph_input = cl_get_string(msg, F_CRM_TGRAPH_INPUT);
-		CRM_CHECK(graph_file != NULL, crm_err("No graph filename provided"); return TRUE);
+		CRM_CHECK(graph_file != NULL || xml_data != NULL,
+			  crm_err("No graph provided");
+			  crm_log_message(LOG_WARNING, msg);
+			  return TRUE);
 
 		if(transition_graph->complete == FALSE) {
 			crm_info("Another transition is already active");
 			abort_transition(
-				INFINITY,tg_restart,"Transition Active",NULL);
+				INFINITY, tg_restart, "Transition Active", NULL);
 
 		}  else {
-			FILE *graph_fd = fopen(graph_file, "r");
-			crm_data_t *graph_data = file2xml(graph_fd, FALSE);
-			CRM_CHECK(graph_fd != NULL,
-				  crm_err("Could not open graph filename: %s", graph_file);
-				  return TRUE);
-			
 			destroy_graph(transition_graph);
 			crm_debug("Read graph from %s based on %s", graph_file, graph_input);
-			transition_graph = unpack_graph(graph_data);
+
+			if(graph_file == NULL) {
+				transition_graph = unpack_graph(xml_data);
+
+			} else {
+				FILE *graph_fd = fopen(graph_file, "r");
+				crm_data_t *graph_data = file2xml(graph_fd, FALSE);
+				CRM_CHECK(graph_fd != NULL,
+					  crm_err("Could not open graph filename: %s", graph_file);
+					  return TRUE);
+				transition_graph = unpack_graph(graph_data);
+				fclose(graph_fd);
+				free_xml(graph_data);
+				unlink(graph_file);
+			}
+			
 			start_global_timer(transition_timer,
 					   transition_graph->transition_timeout);
 			trigger_graph();
 			print_graph(LOG_DEBUG_2, transition_graph);
-			fclose(graph_fd);
-			free_xml(graph_data);
 		}
-		unlink(graph_file);
 		
 	} else if(strcasecmp(op, CRM_OP_TE_HALT) == 0) {
 		abort_transition(INFINITY, tg_stop, "Peer Halt", NULL);

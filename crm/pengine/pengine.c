@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.118 2006/07/06 09:30:28 andrew Exp $ */
+/* $Id: pengine.c,v 1.119 2006/07/18 06:18:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -63,6 +63,7 @@ series_t series[] = {
 gboolean
 process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 {
+	gboolean send_via_disk = FALSE;
 	const char *sys_to = cl_get_string(msg, F_CRM_SYS_TO);
 	const char *op = cl_get_string(msg, F_CRM_TASK);
 	const char *ref = cl_get_string(msg, XML_ATTR_REFERENCE);
@@ -113,11 +114,6 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 		do_calculations(&data_set, xml_data, NULL);
 
-		crm_info("Writing the TE graph to %s", graph_file);
-		if(write_xml_file(data_set.graph, graph_file, FALSE) < 0) {
-			crm_err("TE graph could not be written to disk");
-		}
-
 		series_id = get_series();
 		series_wrap = series[series_id].wrap;
 		value = g_hash_table_lookup(
@@ -136,6 +132,19 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		}		
 
 		data_set.input = NULL;
+		reply = create_reply(msg, data_set.graph);
+		ha_msg_add(reply, F_CRM_TGRAPH_INPUT, filename);
+		CRM_ASSERT(reply != NULL);
+		if(send_ipc_message(sender, reply) == FALSE) {
+			send_via_disk = TRUE;
+			crm_err("Answer could not be sent via IPC, send via the disk instead");	           
+			crm_info("Writing the TE graph to %s", graph_file);
+			if(write_xml_file(data_set.graph, graph_file, FALSE) < 0) {
+				crm_err("TE graph could not be written to disk");
+			}
+		}
+		crm_msg_del(reply);
+		
 		cleanup_alloc_calculations(&data_set);
 		
 		if(crm_mem_stats(NULL)) {
@@ -177,14 +186,16 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 				 "  Please run \"crm_verify -L\" to identify issues.");
 		}
 
-		reply = create_reply(msg, NULL);
-		ha_msg_add(reply, F_CRM_TGRAPH, graph_file);
-		ha_msg_add(reply, F_CRM_TGRAPH_INPUT, filename);
-		CRM_ASSERT(reply != NULL);
-		if(send_ipc_message(sender, reply) == FALSE) {
-			crm_err("Answer could not be sent");
+		if(send_via_disk) {
+			reply = create_reply(msg, NULL);
+			ha_msg_add(reply, F_CRM_TGRAPH, graph_file);
+			ha_msg_add(reply, F_CRM_TGRAPH_INPUT, filename);
+			CRM_ASSERT(reply != NULL);
+			if(send_ipc_message(sender, reply) == FALSE) {
+				crm_err("Answer could not be sent");
+			}
 		}
-
+		
 		free_xml(generation);
 		crm_free(graph_file);
 		free_xml(log_input);
