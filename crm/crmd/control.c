@@ -716,7 +716,6 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 		return FALSE;
 	}
 
-#if 0
 	crm_debug_3("Be informed of Node Status changes");
 	if (HA_OK != hb_cluster->llc_ops->set_nstatus_callback(
 		    hb_cluster, crmd_ha_status_callback, hb_cluster)){
@@ -725,7 +724,6 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 			hb_cluster->llc_ops->errmsg(hb_cluster));
 		return FALSE;
 	}
-#endif
 	
 	crm_debug_3("Be informed of CRM Client Status changes");
 	if (HA_OK != hb_cluster->llc_ops->set_cstatus_callback(

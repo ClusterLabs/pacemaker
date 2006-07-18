@@ -172,7 +172,7 @@ do_dc_join_offer_all(long long action,
 	 */
 	current_join_id++;
 	initialize_join(TRUE);
-	do_update_cib_nodes(TRUE, __FUNCTION__);
+/* 	do_update_cib_nodes(TRUE, __FUNCTION__); */
 
 	update_dc(NULL, FALSE);	
 	

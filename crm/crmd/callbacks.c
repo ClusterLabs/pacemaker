@@ -297,26 +297,29 @@ crmd_ha_status_callback(
 	const char *node, const char * status,	void* private_data)
 {
 	crm_data_t *update = NULL;
-
 	crm_notice("Status update: Node %s now has status [%s]",node,status);
 
-	if(safe_str_neq(status, DEADSTATUS)) {
-		crm_debug_3("nstatus callback was not for a dead node");
-		return;
+	if(safe_str_eq(status, DEADSTATUS)) {
+		/* this node is taost */
+		update = create_node_state(
+			node, status, XML_BOOLEAN_NO, OFFLINESTATUS,
+			CRMD_STATE_INACTIVE, NULL, TRUE, __FUNCTION__);
+		crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_TAG_TRANSIENT_NODEATTRS);
+
+	} else if(safe_str_eq(status, ACTIVESTATUS)) {
+		update = create_node_state(
+			node, status, NULL, NULL, NULL, NULL, FALSE, __FUNCTION__);
 	}
-
-	/* this node is taost */
-	update = create_node_state(
-		node, status, XML_BOOLEAN_NO, OFFLINESTATUS,
-		CRMD_STATE_INACTIVE, NULL, TRUE, __FUNCTION__);
-	crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_TAG_TRANSIENT_NODEATTRS);
-
-	/* this change should not be broadcast */
-	update_local_cib(create_cib_fragment(update, XML_CIB_TAG_STATUS));
-	trigger_fsa(fsa_source);
-	free_xml(update);
+		
+	if(update != NULL) {
+		/* this change should not be broadcast */
+		fsa_cib_anon_update(
+			XML_CIB_TAG_STATUS, update,
+			cib_inhibit_bcast|cib_scope_local|cib_quorum_override);
+		trigger_fsa(fsa_source);
+		free_xml(update);
+	}
 }
-
 
 void
 crmd_client_status_callback(const char * node, const char * client,

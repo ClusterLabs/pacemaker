@@ -16,6 +16,6 @@
     </constraints>
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" crmd="offline" join="down" expected="down" in_ccm="true"/>
+    <node_state id="node1" ha="active" uname="node1" crmd="offline" join="down" expected="down" in_ccm="true"/>
   </status>
 </cib>

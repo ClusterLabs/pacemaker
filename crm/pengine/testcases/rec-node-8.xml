@@ -42,6 +42,6 @@
         </lrm_resources>
       </lrm>
     </node_state>
-    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" in_ccm="true"/>
+    <node_state id="uuid2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true"/>
   </status>
 </cib>

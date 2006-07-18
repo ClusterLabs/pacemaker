@@ -881,6 +881,7 @@ do_lrm_invoke(long long action,
 	} else if(operation != NULL) {
 		lrm_rsc_t *rsc = NULL;
 		crm_data_t *params = NULL;
+		gboolean create_rsc = TRUE;
 		crm_data_t *xml_rsc = find_xml_node(
 			input->xml, XML_CIB_TAG_RESOURCE, TRUE);
 
@@ -889,12 +890,27 @@ do_lrm_invoke(long long action,
 		/* only the first 16 chars are used by the LRM */
 
 		params  = find_xml_node(input->xml, XML_TAG_ATTRS,TRUE);
-		rsc = get_lrm_resource(xml_rsc, input->xml, TRUE);
 
-		if(rsc == NULL) {
+		if(safe_str_eq(operation, CRMD_ACTION_STOP)) {
+			create_rsc = FALSE;
+		}
+		
+		rsc = get_lrm_resource(xml_rsc, input->xml, create_rsc);
+
+		if(rsc == NULL && create_rsc) {
 			crm_err("Invalid resource definition");
-			crm_log_xml_err(input->xml, "Bad command");
+			crm_log_xml_warn(input->xml, "Bad command");
 
+		} else if(rsc == NULL) {
+			lrm_op_t* op = NULL;
+			crm_err("Not creating resource for a stop event");
+			crm_log_xml_warn(input->xml, "Bad command");
+
+			op = construct_op(input->xml, ID(xml_rsc), operation);
+			CRM_ASSERT(op != NULL);
+			send_direct_ack(from_host, from_sys, op, ID(xml_rsc));
+			free_lrm_op(op);			
+			
 		} else if(safe_str_eq(operation, CRMD_ACTION_CANCEL)) {
 			lrm_op_t* op = NULL;
 			char *op_key = NULL;

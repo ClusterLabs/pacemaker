@@ -1,4 +1,4 @@
-/* $Id: ccm.c,v 1.105 2006/04/23 08:23:41 andrew Exp $ */
+/* $Id: ccm.c,v 1.106 2006/07/18 06:17:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -660,7 +660,7 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	
 	if(data->overwrite_join) {
 		if(safe_str_neq(peer_online, ONLINESTATUS)) {
-			join  = CRMD_STATE_INACTIVE;
+			join  = CRMD_JOINSTATE_DOWN;
 			
 		} else {
 			const char *peer_member = g_hash_table_lookup(

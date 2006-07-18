@@ -17,7 +17,7 @@
     </constraints>
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" crmd="online" join="member" expected="member" in_ccm="true" shutdown="1086187789">
+    <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true" shutdown="1086187789">
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
