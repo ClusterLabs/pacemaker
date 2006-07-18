@@ -12,8 +12,6 @@ digraph "g" {
 "rsc2_start_0 node1" [ style=bold color="green" fontcolor="black" ]
 "rsc4_stop_0 node1" [ style=bold color="green" fontcolor="black" ]
 "rsc4_start_0 node2" [ style=bold color="green" fontcolor="black" ]
-"rsc1_stop_0 node1" [ style="dashed" color="blue" fontcolor="black" ]
-"rsc1_start_0 node1" [ style="dashed" color="blue" fontcolor="black" ]
 "rsc3_start_0 node2" [ style=bold color="green" fontcolor="black" ]
 "probe_complete node1" -> "probe_complete" [ style = bold]
 "probe_complete node2" -> "probe_complete" [ style = bold]
@@ -26,7 +24,5 @@ digraph "g" {
 "probe_complete" -> "rsc2_start_0 node1" [ style = bold]
 "probe_complete" -> "rsc4_start_0 node2" [ style = bold]
 "rsc4_stop_0 node1" -> "rsc4_start_0 node2" [ style = bold]
-"probe_complete" -> "rsc1_start_0 node1" [ style = dashed]
-"rsc1_stop_0 node1" -> "rsc1_start_0 node1" [ style = dashed]
 "probe_complete" -> "rsc3_start_0 node2" [ style = bold]
 }

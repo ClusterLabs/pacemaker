@@ -1,4 +1,4 @@
-/* $Id: io.c,v 1.80 2006/07/07 20:54:42 andrew Exp $ */
+/* $Id: io.c,v 1.81 2006/07/18 06:15:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -184,7 +184,7 @@ validate_on_disk_cib(const char *filename, crm_data_t **on_disk_cib)
 	if (s_res == 0) {
 		cib_file = fopen(filename, "r");
 		crm_debug_2("Reading cluster configuration from: %s", filename);
-		root = file2xml(cib_file);
+		root = file2xml(cib_file, FALSE);
 		fclose(cib_file);
 		
 		if(validate_cib_digest(root) == FALSE) {

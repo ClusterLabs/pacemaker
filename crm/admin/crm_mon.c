@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.28 2006/06/19 10:56:50 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.29 2006/07/18 06:15:54 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -227,7 +227,12 @@ main(int argc, char **argv)
 			interval, mon_timer_popped, NULL);
 	} else if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
-		crm_data_t *cib_object = file2xml(xml_strm);
+		crm_data_t *cib_object = NULL;
+		if(strstr(xml_file, ".bz2") != NULL) {
+			cib_object = file2xml(xml_strm, TRUE);
+		} else {
+			cib_object = file2xml(xml_strm, FALSE);
+		}
 		one_shot = TRUE;
 		mon_update(NULL, 0, cib_ok, cib_object, NULL);
 	}

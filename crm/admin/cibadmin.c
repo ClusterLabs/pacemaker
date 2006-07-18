@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.55 2006/07/03 15:15:30 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.56 2006/07/18 06:15:54 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -296,7 +296,7 @@ main(int argc, char **argv)
 
 	if(admin_input_file != NULL) {
 		FILE *xml_strm = fopen(admin_input_file, "r");
-		input = file2xml(xml_strm);
+		input = file2xml(xml_strm, FALSE);
 		if(input == NULL) {
 			fprintf(stderr, "Couldn't parse input file: %s\n", admin_input_file);
 			return 1;

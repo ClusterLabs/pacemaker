@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.48 2006/06/21 08:40:13 andrew Exp $ */
+/* $Id: xml.h,v 1.49 2006/07/18 06:16:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -183,7 +183,7 @@ extern crm_data_t *add_node_copy(
  *
  * Whitespace between tags is discarded.
  */
-extern crm_data_t *file2xml(FILE *input);
+extern crm_data_t *file2xml(FILE *input, gboolean compressed);
 
 extern crm_data_t *stdin2xml(void);
 

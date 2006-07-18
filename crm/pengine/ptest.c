@@ -1,4 +1,4 @@
-/* $Id: ptest.c,v 1.79 2006/07/12 15:42:35 andrew Exp $ */
+/* $Id: ptest.c,v 1.80 2006/07/18 06:15:54 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -36,7 +36,7 @@
 
 #include <crm/cib.h>
 
-#define OPTARGS	"V?X:D:G:I:Lwxd:"
+#define OPTARGS	"V?X:D:G:I:Lwxd:a"
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -48,6 +48,7 @@
 
 gboolean use_stdin = FALSE;
 gboolean inhibit_exit = FALSE;
+gboolean all_actions = FALSE;
 extern crm_data_t * do_calculations(
 	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
 extern void cleanup_calculations(pe_working_set_t *data_set);
@@ -195,7 +196,9 @@ main(int argc, char **argv)
     
 				break;
 #endif
-      
+			case 'a':
+				all_actions = TRUE;
+				break;
 			case 'w':
 				inhibit_exit = TRUE;
 				break;
@@ -275,8 +278,12 @@ main(int argc, char **argv)
 		
 	} else if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
-		cib_object = file2xml(xml_strm);
-
+		if(strstr(xml_file, ".bz2") != NULL) {
+			cib_object = file2xml(xml_strm, TRUE);
+		} else {
+			cib_object = file2xml(xml_strm, FALSE);
+		}
+		
 	} else if(use_stdin) {
 		cib_object = stdin2xml();
 
@@ -347,10 +354,12 @@ main(int argc, char **argv)
 					  action_name, "purple");
 
 			} else if(action->optional) {
-				dot_write("\"%s\" [ style=\"dashed\" color=\"%s\" fontcolor=\"%s\" ]",
-					  action_name, "blue",
-					  action->pseudo?"orange":"black");
-
+				if(all_actions) {
+					dot_write("\"%s\" [ style=\"dashed\" color=\"%s\" fontcolor=\"%s\" ]",
+						  action_name, "blue",
+						  action->pseudo?"orange":"black");
+				}
+				
 			} else {
 				dot_write("\"%s\" [ font_color=purple style=filled fillcolor=%s ]",
 					  action_name, "red");
@@ -384,9 +393,11 @@ main(int argc, char **argv)
 			}
 			before_name = create_action_name(before->action);
 			after_name = create_action_name(action);
-			dot_write("\"%s\" -> \"%s\" [ style = %s]",
-				  before_name, after_name,
-				  optional?"dashed":"bold");
+			if(all_actions || optional == FALSE) {
+				dot_write("\"%s\" -> \"%s\" [ style = %s]",
+					  before_name, after_name,
+					  optional?"dashed":"bold");
+			}
 			crm_free(before_name);
 			crm_free(after_name);
 			);

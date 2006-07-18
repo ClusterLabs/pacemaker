@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.23 2006/02/16 15:20:32 andrew Exp $ */
+/* $Id: ttest.c,v 1.24 2006/07/18 06:16:08 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -137,7 +137,7 @@ main(int argc, char **argv)
 	if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
 		if(xml_strm) {
-			xml_graph = file2xml(xml_strm);
+			xml_graph = file2xml(xml_strm, FALSE);
 		} else {
 			crm_err("Could not open %s for reading", xml_file);
 			xml_file = NULL;

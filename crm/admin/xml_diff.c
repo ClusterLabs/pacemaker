@@ -1,4 +1,4 @@
-/* $Id: xml_diff.c,v 1.10 2006/07/06 16:48:38 andrew Exp $ */
+/* $Id: xml_diff.c,v 1.11 2006/07/18 06:15:54 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -179,7 +179,7 @@ main(int argc, char **argv)
 		FILE *xml_strm = fopen(xml_file_1, "r");
 		if(xml_strm != NULL) {
 			crm_debug("Reading: %s", xml_file_1);
-			object_1 = file2xml(xml_strm);
+			object_1 = file2xml(xml_strm, FALSE);
 		} else {
 			cl_perror("File not found: %s", xml_file_1);
 		}
@@ -196,7 +196,7 @@ main(int argc, char **argv)
 		FILE *xml_strm = fopen(xml_file_2, "r");
 		if(xml_strm != NULL) {
 			crm_debug("Reading: %s", xml_file_2);
-			object_2 = file2xml(xml_strm);
+			object_2 = file2xml(xml_strm, FALSE);
 		} else {
 			cl_perror("File not found: %s", xml_file_2);
 		}

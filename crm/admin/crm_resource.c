@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.43 2006/07/06 09:30:27 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.44 2006/07/18 06:15:54 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -755,7 +755,12 @@ main(int argc, char **argv)
 		resource_t *rsc = NULL;
 		if(xml_file != NULL) {
 			FILE *xml_strm = fopen(xml_file, "r");
-			cib_xml_copy = file2xml(xml_strm);
+			if(strstr(xml_file, ".bz2") != NULL) {
+				cib_xml_copy = file2xml(xml_strm, TRUE);
+			} else {
+				cib_xml_copy = file2xml(xml_strm, FALSE);
+			}
+
 		} else {
 			cib_conn = cib_new();
 			rc = cib_conn->cmds->signon(

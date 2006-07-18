@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.100 2006/07/08 13:49:03 andrew Exp $ */
+/* $Id: xml.c,v 1.101 2006/07/18 06:16:09 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -495,33 +495,80 @@ stdin2xml(void)
 
 
 crm_data_t*
-file2xml(FILE *input)
+file2xml(FILE *input, gboolean compressed)
 {
-	
+	int rc = 0;
 	char *buffer = NULL;
+	gboolean work_done = FALSE;
 	crm_data_t *new_obj = NULL;
-	int start = 0, length = 0, read_len = 0;
+	size_t length = 0, read_len = 0;
 
 	if(input == NULL) {
 		crm_err("No file to read");
 		return NULL;
 	}
-	
-	/* see how big the file is */
-	start  = ftell(input);
-	fseek(input, 0L, SEEK_END);
-	length = ftell(input);
-	fseek(input, 0L, start);
-	
-	CRM_ASSERT(start == ftell(input));
 
-	crm_debug_3("Reading %d bytes from file", length);
-	crm_malloc0(buffer, (length+1));
-	read_len = fread(buffer, 1, length, input);
+	if(compressed) {
+#if HAVE_BZLIB_H
+		BZFILE *bz_file = BZ2_bzReadOpen(&rc, input, 0, 0, NULL, 0);
+		if ( rc != BZ_OK ) {
+			BZ2_bzReadClose ( &rc, bz_file);
+			return NULL;
+		}
+		
+		rc = BZ_OK;
+		while ( rc == BZ_OK ) {
+			crm_realloc(buffer, XML_BUFFER_SIZE + length + 1);
+			read_len = BZ2_bzRead (
+				&rc, bz_file, buffer + length, XML_BUFFER_SIZE);
+
+			crm_debug_5("Read %ld bytes from file: %d",
+				    (long)read_len, rc);
+
+			if ( rc == BZ_OK || rc == BZ_STREAM_END) {
+				length += read_len;
+			}
+		}
+
+		buffer[length] = '\0';
+		read_len = length;
+
+		if ( rc != BZ_STREAM_END ) {
+			crm_err("Couldnt read compressed xml from file");
+			crm_free(buffer);
+		}
+
+		BZ2_bzReadClose (&rc, bz_file);
+		if(buffer == NULL) {
+			return NULL;
+		}
+
+		work_done = TRUE;
+#else
+		crm_err("Cannot read compressed files:"
+			" bzlib was not available at compile time");
+#endif
+	}	
+	
+	if(work_done == FALSE) {
+		int start = 0;
+		start  = ftell(input);
+		fseek(input, 0L, SEEK_END);
+		length = ftell(input);
+		fseek(input, 0L, start);
+		
+		CRM_ASSERT(start == ftell(input));
+		
+		crm_debug_3("Reading %ld bytes from file", (long)length);
+		crm_malloc0(buffer, (length+1));
+		read_len = fread(buffer, 1, length, input);
+	}
+
+	/* see how big the file is */
 	if(read_len != length) {
-		crm_err("Calculated and read bytes differ: %d vs. %d",
-			length, read_len);
-	} else  if(length > 0) {
+		crm_err("Calculated and read bytes differ: %ld vs. %ld",
+			(long)length, (long)read_len);
+	} else if(length > 0) {
 		new_obj = string2xml(buffer);
 	} else {
 		crm_warn("File contained no XML");
@@ -599,8 +646,8 @@ write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress)
 		
 	} 
 
+	if(compress) {
 #if HAVE_BZLIB_H
-	if(compress && is_done == FALSE) {
 		int rc = BZ_OK;
 		BZFILE *bz_file = NULL;
 		unsigned int in = 0, out = 0;
@@ -627,12 +674,10 @@ write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress)
 					  filename, in, out);
 			}
 		}
-	}
+#else
+		crm_err("Cannot write compressed files:"
+			" bzlib was not available at compile time");		
 #endif
-	if(compress && is_done == FALSE) {
-		compress = FALSE;
-		crm_warn("bzlib failed or not installed."
-			 "  Writing uncompressed data to: %s",filename);
 	}
 	if(is_done == FALSE) {
 		res = fprintf(file_output_strm, "%s", buffer);

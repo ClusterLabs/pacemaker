@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.85 2006/06/23 12:35:15 andrew Exp $ */
+/* $Id: callbacks.c,v 1.86 2006/07/18 06:16:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -240,7 +240,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 
 		}  else {
 			FILE *graph_fd = fopen(graph_file, "r");
-			crm_data_t *graph_data = file2xml(graph_fd);
+			crm_data_t *graph_data = file2xml(graph_fd, FALSE);
 			CRM_CHECK(graph_fd != NULL,
 				  crm_err("Could not open graph filename: %s", graph_file);
 				  return TRUE);
