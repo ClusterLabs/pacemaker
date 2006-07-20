@@ -41,4 +41,5 @@ ocf_SCRIPTS		=	OCFMSDummy
 
 lsbdir			=	$(libdir)/heartbeat/cts
 lsb_SCRIPTS		=	LSBDummy
-			
+
+all-local: $(hard_PYTHON)
