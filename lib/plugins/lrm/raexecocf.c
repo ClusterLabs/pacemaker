@@ -434,8 +434,9 @@ get_providers(const char* class_path, const char* ra_type, GList ** providers)
 				free(namelist[file_num]);
 				continue;
 			}
-
-			stat(namelist[file_num]->d_name, &prop);
+			snprintf(tmp_buffer,FILENAME_MAX,"%s/%s",
+				 class_path, namelist[file_num]->d_name);
+			stat(tmp_buffer, &prop);
 			if (!S_ISDIR(prop.st_mode)) {
 				free(namelist[file_num]);
 				continue;
