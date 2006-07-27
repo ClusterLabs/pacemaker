@@ -9,9 +9,6 @@
        <trigger>
          <pseudo_event id="74" operation="stop" operation_key="master_rsc_1_stop_0"/>
        </trigger>
-       <trigger>
-         <crm_event id="80" operation="stonith" operation_key="stonith" on_node="c001n04" on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d"/>
-       </trigger>
      </inputs>
    </synapse>
    <synapse id="1">

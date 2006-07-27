@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.158 2006/07/18 06:19:33 andrew Exp $ */
+/* $Id: native.c,v 1.159 2006/07/27 10:01:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1826,16 +1826,10 @@ native_stop_constraints(
 			if(is_stonith) {
 				/* do nothing */
 				
-			} else if(action->optional) {
-				/* does this case ever happen? */
+			} else {
 				custom_action_order(
 					NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
 					rsc, start_key(rsc), NULL,
-					pe_ordering_manditory, data_set);
-			} else {						
-				custom_action_order(
-					NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
-					rsc, NULL, action,
 					pe_ordering_manditory, data_set);
 			}
 			
