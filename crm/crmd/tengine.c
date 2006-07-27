@@ -139,11 +139,18 @@ do_te_invoke(long long action,
 		crm_info("Waiting for the TE to connect before action %s",
 			fsa_action2string(action));
 
+		if(is_set(fsa_input_register, R_SHUTDOWN)) {
+			CRM_CHECK((action & A_TE_INVOKE) == 0,
+				  crm_warn("A_TE_INVOKE invoked after shutdown of the TE"));
+			return I_NULL;
+		}
+		
 		if(action & A_TE_INVOKE) {
 			register_fsa_input(
 				msg_data->fsa_cause, msg_data->fsa_input,
 				msg_data->data);
 		}
+
 		crmd_fsa_stall(NULL);
 		return I_NULL;
 	}
