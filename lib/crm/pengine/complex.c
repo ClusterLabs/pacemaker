@@ -1,4 +1,4 @@
-/* $Id: complex.c,v 1.5 2006/06/21 14:48:01 andrew Exp $ */
+/* $Id: complex.c,v 1.6 2006/08/03 14:21:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -266,7 +266,6 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		(*rsc)->meta, XML_RSC_ATTR_TARGET_ROLE);
 	
 	if(value != NULL && safe_str_neq("default", value)) {
-		(*rsc)->is_managed = TRUE;
 		(*rsc)->next_role = text2role(value);
 		if((*rsc)->next_role == RSC_ROLE_UNKNOWN) {
 			pe_config_err("%s: Unknown value for "
