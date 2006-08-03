@@ -19,27 +19,25 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-harddir			= $(libdir)/heartbeat/cts
+ctsdir		= @hb_libdir@/cts
 
-hard_PYTHON	=				\
+cts_PYTHON	=				\
 			CM_fs.py		\
 			CM_hb.py		\
 			CM_LinuxHAv2.py		\
 			CTS.py			\
 			CTSaudits.py		\
 			CTSlab.py		\
-			CTSproxy.py		\
 			CTStests.py		\
 			extracttests.py		\
 			OCFIPraTest.py		\
 			CIB.py
 
-hard_DATA =		README
+cts_DATA	=	README
 
-ocfdir			=	$(libdir)/heartbeat/cts
-ocf_SCRIPTS		=	OCFMSDummy
+cts_SCRIPTS	=				\
+			CTSproxy.py		\
+			OCFMSDummy		\
+			LSBDummy
 
-lsbdir			=	$(libdir)/heartbeat/cts
-lsb_SCRIPTS		=	LSBDummy
-
-all-local: $(hard_PYTHON)
+all-local: $(cts_PYTHON)
