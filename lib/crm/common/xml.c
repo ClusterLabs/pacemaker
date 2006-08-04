@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.101 2006/07/18 06:16:09 andrew Exp $ */
+/* $Id: xml.c,v 1.102 2006/08/04 09:47:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -2096,31 +2096,32 @@ update_xml_child(crm_data_t *child, crm_data_t *to_update)
 }
 
 
-gboolean
-find_xml_child(crm_data_t *child, const char *tag, const char *id)
+int
+find_xml_children(crm_data_t **children, crm_data_t *root,
+		  const char *tag, const char *field, const char *value)
 {
-	gboolean match_found = TRUE;
+	int match_found = 0;
 	
-	CRM_CHECK(child != NULL, return FALSE);
+	CRM_CHECK(root != NULL, return FALSE);
+	CRM_CHECK(children != NULL, return FALSE);
 	
-	if(safe_str_neq(tag, crm_element_name(child))) {
-		match_found = FALSE;
+	if(tag != NULL && safe_str_neq(tag, crm_element_name(root))) {
 
-	} else if(safe_str_neq(id, ID(child))) {
-		match_found = FALSE;
+	} else if(value != NULL
+		  && safe_str_neq(value, crm_element_value(root, field))) {
 
-	} else if(match_found) {
-		crm_err("Update match found for <%s id=%s.../>", tag, id);
-		crm_log_xml_debug(child, __FUNCTION__);
+	} else {
+		if(*children == NULL) {
+			*children = create_xml_node(NULL, __FUNCTION__);
+		}
+		add_node_copy(*children, root);
+		match_found = 1;
 	}
 	
 	xml_child_iter(
-		child, child_of_child, 
-		/* only find the first one */
-		if(match_found) {
-			break;
-		}
-		match_found = find_xml_child(child_of_child, tag, id);
+		root, child, 
+		match_found += find_xml_children(
+			children, child, tag, field, value);
 		);
 	
 	return match_found;

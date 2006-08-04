@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.49 2006/07/18 06:16:09 andrew Exp $ */
+/* $Id: xml.h,v 1.50 2006/08/04 09:47:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -236,7 +236,9 @@ extern gboolean replace_xml_child(
 
 extern gboolean update_xml_child(crm_data_t *child, crm_data_t *to_update);
 
-extern gboolean find_xml_child(crm_data_t *child, const char *tag, const char *id);
+extern int find_xml_children(
+	crm_data_t **children, crm_data_t *root,
+	const char *tag, const char *field, const char *value);
 
 /*
  *
