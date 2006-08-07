@@ -51,4 +51,4 @@ ChangeLog: $(SPECSRC)
 
 
 %.txt: %.html
-	if [ "X$(HTML2TXT)" = "X" ]; then echo "Lynx or user-defined HTML2TXT required to convert $< to $@" >$@ ; else $(HTML2TXT) -dump $< >$@ ; fi
+	if [ "X$(HTML2TXT)" = "X" ]; then echo "Lynx or w3m or user-defined HTML2TXT required to convert $< to $@" >$@ ; else $(HTML2TXT) -dump $< >$@ ; fi
