@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.10 2006/08/14 09:06:32 andrew Exp $ */
+/* $Id: utils.c,v 1.11 2006/08/14 09:14:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1062,8 +1062,8 @@ static void
 resource_node_score(resource_t *rsc, node_t *node, int score, const char *tag) 
 {
 	node_t *match = NULL;
-	crm_debug("Setting %s for %s on %s: %d",
-		  tag, rsc->id, node->details->uname, score);
+	crm_debug_2("Setting %s for %s on %s: %d",
+		    tag, rsc->id, node->details->uname, score);
 	match = pe_find_node_id(rsc->allowed_nodes, node->details->id);
 	if(match == NULL) {
 		match = node_copy(node);

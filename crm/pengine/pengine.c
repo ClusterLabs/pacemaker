@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.120 2006/08/14 09:06:31 andrew Exp $ */
+/* $Id: pengine.c,v 1.121 2006/08/14 09:14:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -132,10 +132,17 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 				       series[series_id].param);
 		}		
 
+		seq = get_last_sequence(PE_WORKING_DIR, series[series_id].name);	
+		
 		data_set.input = NULL;
 		reply = create_reply(msg, data_set.graph);
-		ha_msg_add(reply, F_CRM_TGRAPH_INPUT, filename);
 		CRM_ASSERT(reply != NULL);
+
+		filename = generate_series_filename(
+			PE_WORKING_DIR, series[series_id].name, seq, compress);
+		ha_msg_add(reply, F_CRM_TGRAPH_INPUT, filename);
+		crm_free(filename); filename = NULL;
+
 		if(send_ipc_message(sender, reply) == FALSE) {
 			send_via_disk = TRUE;
 			crm_err("Answer could not be sent via IPC, send via the disk instead");	           
@@ -147,17 +154,15 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		crm_msg_del(reply);
 		
 		cleanup_alloc_calculations(&data_set);
-		
+
 		if(crm_mem_stats(NULL)) {
 			pe_warn("Unfree'd memory");
 		}
-		
-		seq = get_last_sequence(PE_WORKING_DIR, series[series_id].name);
-	
+
 		filename = generate_series_filename(
 			PE_WORKING_DIR, series[series_id].name, seq, compress);
-		write_xml_file(log_input, filename, compress);
 
+		write_xml_file(log_input, filename, compress);
 		write_last_sequence(PE_WORKING_DIR, series[series_id].name,
 				    seq+1, series_wrap);
 		

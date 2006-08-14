@@ -1,4 +1,4 @@
-/* $Id: clone.c,v 1.6 2006/08/14 09:06:32 andrew Exp $ */
+/* $Id: clone.c,v 1.7 2006/08/14 09:14:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -151,10 +151,10 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		clone_data->ordered = TRUE;
 	}
 
-	crm_debug("Options for %s", rsc->id);
-	crm_debug("\tClone max: %d", clone_data->clone_max);
-	crm_debug("\tClone node max: %d", clone_data->clone_node_max);
-	crm_debug("\tClone is unique: %s", rsc->globally_unique?"true":"false");
+	crm_debug_2("Options for %s", rsc->id);
+	crm_debug_2("\tClone max: %d", clone_data->clone_max);
+	crm_debug_2("\tClone node max: %d", clone_data->clone_node_max);
+	crm_debug_2("\tClone is unique: %s", rsc->globally_unique?"true":"false");
 	
 	clone_data->xml_obj_child = find_xml_node(
 		xml_obj, XML_CIB_TAG_GROUP, FALSE);

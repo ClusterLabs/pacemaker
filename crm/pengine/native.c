@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.159 2006/07/27 10:01:15 andrew Exp $ */
+/* $Id: native.c,v 1.160 2006/08/14 09:14:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -384,8 +384,8 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		chosen?chosen->details->attrs:NULL,
 		rsc->parameters, NULL, data_set->now);
 
-	crm_debug("%s: %s->%s", rsc->id,
-		  role2text(rsc->role), role2text(rsc->next_role));
+	crm_debug_2("%s: %s->%s", rsc->id,
+		    role2text(rsc->role), role2text(rsc->next_role));
 	
 	if(g_list_length(rsc->running_on) > 1) {
  		if(rsc->recovery_type == recovery_stop_start) {
@@ -648,16 +648,16 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 			if(lh_rsc->next_role == RSC_ROLE_STOPPED) {
 				resource_t *rh_rsc = order->rh_rsc;
 				if(order->rh_action && order->type == pe_ordering_restart) {
-					crm_debug("No LH(%s/%s) found for RH(%s)...",
-						lh_rsc->id, order->lh_action_task,
-						order->rh_action->uuid);
+					crm_debug_3("No LH(%s/%s) found for RH(%s)...",
+						    lh_rsc->id, order->lh_action_task,
+						    order->rh_action->uuid);
 					order->rh_action->runnable = FALSE;
 					return;
 				
 				} else if(rh_rsc != NULL) {
-					crm_debug("No LH(%s/%s) found for RH(%s/%s)...",
-						  lh_rsc->id, order->lh_action_task,
-						  rh_rsc->id, order->rh_action_task);
+					crm_debug_3("No LH(%s/%s) found for RH(%s/%s)...",
+						    lh_rsc->id, order->lh_action_task,
+						    rh_rsc->id, order->rh_action_task);
 					rh_rsc->cmds->rsc_order_rh(NULL, rh_rsc, order);
 					return;
 				}

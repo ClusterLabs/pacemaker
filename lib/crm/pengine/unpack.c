@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.16 2006/08/14 09:06:32 andrew Exp $ */
+/* $Id: unpack.c,v 1.17 2006/08/14 09:14:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -84,26 +84,26 @@ unpack_config(crm_data_t *config, pe_working_set_t *data_set)
 
 	value = pe_pref(data_set->config_hash, "default-resource-stickiness");
 	data_set->default_resource_stickiness = char2score(value);
-	crm_info("Default stickiness: %d",
+	crm_debug("Default stickiness: %d",
 		 data_set->default_resource_stickiness);
 
 	value = pe_pref(data_set->config_hash, "default-resource-failure-stickiness");
 	data_set->default_resource_fail_stickiness = char2score(value);
-	crm_info("Default failure stickiness: %d",
+	crm_debug("Default failure stickiness: %d",
 		 data_set->default_resource_fail_stickiness);
 	
 	value = pe_pref(data_set->config_hash, "stonith-enabled");
 	cl_str_to_boolean(value, &data_set->stonith_enabled);
-	crm_info("STONITH of failed nodes is %s",
+	crm_debug("STONITH of failed nodes is %s",
 		 data_set->stonith_enabled?"enabled":"disabled");	
 
 	data_set->stonith_action = pe_pref(data_set->config_hash, "stonith-action");
-	crm_info("STONITH will %s nodes", data_set->stonith_action);	
+	crm_debug("STONITH will %s nodes", data_set->stonith_action);	
 	
 	value = pe_pref(data_set->config_hash, "symmetric-cluster");
 	cl_str_to_boolean(value, &data_set->symmetric_cluster);
 	if(data_set->symmetric_cluster) {
-		crm_info("Cluster is symmetric"
+		crm_debug("Cluster is symmetric"
 			 " - resources can run anywhere by default");
 	}
 
@@ -120,10 +120,10 @@ unpack_config(crm_data_t *config, pe_working_set_t *data_set)
 	
 	switch (data_set->no_quorum_policy) {
 		case no_quorum_freeze:
-			crm_info("On loss of CCM Quorum: Freeze resources");
+			crm_debug("On loss of CCM Quorum: Freeze resources");
 			break;
 		case no_quorum_stop:
-			crm_info("On loss of CCM Quorum: Stop ALL resources");
+			crm_debug("On loss of CCM Quorum: Stop ALL resources");
 			break;
 		case no_quorum_ignore:
 			crm_notice("On loss of CCM Quorum: Ignore");
@@ -132,22 +132,22 @@ unpack_config(crm_data_t *config, pe_working_set_t *data_set)
 
 	value = pe_pref(data_set->config_hash, "stop-orphan-resources");
 	cl_str_to_boolean(value, &data_set->stop_rsc_orphans);
-	crm_info("Orphan resources are %s",
+	crm_debug("Orphan resources are %s",
 		 data_set->stop_rsc_orphans?"stopped":"ignored");	
 	
 	value = pe_pref(data_set->config_hash, "stop-orphan-actions");
 	cl_str_to_boolean(value, &data_set->stop_action_orphans);
-	crm_info("Orphan resource actions are %s",
+	crm_debug("Orphan resource actions are %s",
 		 data_set->stop_action_orphans?"stopped":"ignored");	
 
 	value = pe_pref(data_set->config_hash, "remove-after-stop");
 	cl_str_to_boolean(value, &data_set->remove_after_stop);
-	crm_info("Stopped resources are removed from the status section: %s",
+	crm_debug("Stopped resources are removed from the status section: %s",
 		 data_set->remove_after_stop?"true":"false");	
 	
 	value = pe_pref(data_set->config_hash, "is-managed-default");
 	cl_str_to_boolean(value, &data_set->is_managed_default);
-	crm_info("By default resources are %smanaged",
+	crm_debug("By default resources are %smanaged",
 		 data_set->is_managed_default?"":"not ");
 
 	return TRUE;

@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.36 2006/08/14 09:00:56 andrew Exp $ */
+/* $Id: actions.c,v 1.37 2006/08/14 09:14:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -55,7 +55,7 @@ te_start_action_timer(crm_action_t *action)
 static gboolean
 te_pseudo_action(crm_graph_t *graph, crm_action_t *pseudo) 
 {
-	crm_info("Pseudo action %d confirmed", pseudo->id);
+	crm_info("Pseudo action %d fired and confirmed", pseudo->id);
 	pseudo->confirmed = TRUE;
 	update_graph(graph, pseudo);
 	trigger_graph();
@@ -475,7 +475,7 @@ notify_crmd(crm_graph_t *graph)
 	}
 
 	te_log_action(log_level, "Transition %d status: %s - %s",
-		      graph->id, op, graph->abort_reason);
+		      graph->id, op, crm_str(graph->abort_reason));
 
 	print_graph(LOG_DEBUG_3, graph);
 	

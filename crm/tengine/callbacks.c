@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.88 2006/08/14 09:10:56 andrew Exp $ */
+/* $Id: callbacks.c,v 1.89 2006/08/14 09:14:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -243,7 +243,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 
 		}  else {
 			destroy_graph(transition_graph);
-			crm_debug("Read graph from %s based on %s", graph_file, graph_input);
+			crm_debug("Processing graph derived from %s", graph_input);
 
 			if(graph_file == NULL) {
 				transition_graph = unpack_graph(xml_data);

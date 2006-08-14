@@ -1,4 +1,4 @@
-/* $Id: events.c,v 1.22 2006/08/14 08:52:30 andrew Exp $ */
+/* $Id: events.c,v 1.23 2006/08/14 09:14:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -140,14 +140,14 @@ extract_event(crm_data_t *msg)
 
 		/* Transient node attribute changes... */
 		event_node = crm_element_value(node_state, XML_ATTR_ID);
-		crm_debug("Processing state update from %s", event_node);
-		crm_log_xml_debug_3(node_state,"Processing");
+		crm_debug_2("Processing state update from %s", event_node);
+		crm_log_xml_debug_3(node_state, "Processing");
 
 		attrs = find_xml_node(
 			node_state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
 
 		if(attrs != NULL) {
-			crm_info("Aborting on "XML_TAG_TRANSIENT_NODEATTRS" changes");
+			crm_info("Aborting on "XML_TAG_TRANSIENT_NODEATTRS" changes for %s", event_node);
 			abort_transition(INFINITY, tg_restart,
 					 XML_TAG_TRANSIENT_NODEATTRS, attrs);
 		}
@@ -162,8 +162,7 @@ extract_event(crm_data_t *msg)
 			xml_child_iter(
 				rsc, rsc_op,  
 				
-				crm_log_xml_debug_3(
-					rsc_op, "Processing resource update");
+				crm_log_xml_debug_3(rsc_op, "Processing resource update");
 				process_graph_event(rsc_op, event_node);
 				);
 			);
@@ -174,7 +173,6 @@ extract_event(crm_data_t *msg)
 		if(safe_str_eq(ccm_state, XML_BOOLEAN_FALSE)
 		   || safe_str_eq(crmd_state, CRMD_JOINSTATE_DOWN)) {
 			crm_action_t *shutdown = NULL;
-			crm_debug_3("A shutdown we requested?");
 			shutdown = match_down_event(0, event_node, NULL);
 			
 			if(shutdown != NULL) {
@@ -182,9 +180,8 @@ extract_event(crm_data_t *msg)
 				trigger_graph();
 
 			} else {
-				crm_info("Stonith/shutdown event not matched");
-				abort_transition(INFINITY, tg_restart,
-						 "Node failure", node_state);
+				crm_info("Stonith/shutdown of %s not matched", event_node);
+				abort_transition(INFINITY, tg_restart, "Node failure", node_state);
 			}			
 			fail_incompletable_actions(transition_graph, event_node);
 		}
@@ -192,9 +189,8 @@ extract_event(crm_data_t *msg)
 		shutdown = 0;
 		ha_msg_value_int(node_state, XML_CIB_ATTR_SHUTDOWN, &shutdown);
 		if(shutdown != 0) {
-			crm_info("Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute");
-			abort_transition(INFINITY, tg_restart,
-					 "Shutdown request", node_state);
+			crm_info("Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute for %s", event_node);
+			abort_transition(INFINITY, tg_restart, "Shutdown request", node_state);
 		}
 		);
 
