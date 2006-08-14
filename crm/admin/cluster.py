@@ -1,6 +1,6 @@
 #!/bin/env python
 #
-#	$Id: cluster.py,v 1.1 2006/08/14 08:37:54 andrew Exp $
+#	$Id: cluster.py,v 1.2 2006/08/14 13:07:46 andrew Exp $
 #
 #	pingd OCF Resource Agent
 #	Records (in the CIB) the current number of ping nodes a 
@@ -88,22 +88,25 @@ global_opt_table = [
     ]
 
 def help_(text):
+    utl.log_dev("Looking up help text for: %s" % text)
     if text == "short":
 	utl.log_info("cluster.py [global options] [topic [topic...]] [command]")
 	return
     if text:
-	choice = findpossible(text)
+	choice = findpossible(text, None, False)
 	for key in choice.keys():
 	    alias, e = choice[key]
+	    utl.log_dev("Help text for: %s" % alias[0])
 	    if e:
 		sub_cmd=""
 		if len(e) > 4:
 		    utl.log_info("\n"+e[4]+"\n")
-		    possible = findpossible("", alias[0]).keys()
-		    possible.remove("up")
-		    possible.remove("help")
-		    possible.remove("exit")
-		    if possible:
+		possible = findpossible("", alias[0]).keys()
+		utl.log_dev("Possible sub-commands: "+repr(possible))
+		possible.remove("up")
+		possible.remove("help")
+		possible.remove("exit")
+		if possible:
 			sub_cmd=' ('+'|'.join(possible)+')'
 		if e[3]:
 		    utl.log_info("Usage: %s %s%s" % (alias[0], e[3], sub_cmd))
@@ -116,7 +119,7 @@ def help_(text):
 
 # Stolen from Mercurial commands.py
 
-def findpossible(cmd, topic=None):
+def findpossible(cmd, topic=None, filter=True):
     """
     Return cmd -> (aliases, command table entry)
     for each matching command.
@@ -131,7 +134,7 @@ def findpossible(cmd, topic=None):
     for e in table.keys():
 	t = table[e]
 	#utl.log_debug("Looking for "+topic +" in "+repr(t[1]))
-	if t[1] and topic not in t[1]:
+	if filter and t[1] and topic not in t[1]:
 	    continue
         aliases = e.lstrip("^").split("|")
         found = None
@@ -239,12 +242,10 @@ def main_loop(args):
 	    cmdoptions["topic"] = cmd
 	    
 	if not cmd:
-	    utl.log_err(repr(args))
-	    cmd = "_unknown_"
-	    raise UnknownCommand(None, "")
-	else:
-	    d = lambda: func(*cmd_args, **cmdoptions)
-	    return d()
+	    utl.log_dev(repr(args))
+	    return 0
+	d = lambda: func(*cmd_args, **cmdoptions)
+	return d()
 
     except crm.HelpRequest, inst:
 	help_(inst.args[0])
@@ -341,7 +342,7 @@ while True:
             utl.log_err("%s\n" % inst.args[0])
 
     except KeyboardInterrupt:
-        utl.exit_(0)
+        pass
 
     except EOFError:
         utl.exit_(0)
