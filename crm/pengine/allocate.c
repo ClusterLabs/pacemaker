@@ -1,4 +1,4 @@
-/* $Id: allocate.c,v 1.11 2006/08/14 09:00:54 andrew Exp $ */
+/* $Id: allocate.c,v 1.12 2006/08/14 09:06:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -811,9 +811,8 @@ stage8(pe_working_set_t *data_set)
 
 	transition_id++;
 	transition_id_s = crm_itoa(transition_id);
+	value = pe_pref(data_set->config_hash, "network-delay");
 	crm_debug("Creating transition graph %d.", transition_id);
-	value = cluster_option(
-		data_set->config_hash, NULL, "network-delay", NULL, "60s");
 	
 	data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
 	crm_xml_add(data_set->graph, "network-delay", value);
@@ -968,7 +967,7 @@ unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
 
 		const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
 		if(id == NULL) {
-			pe_config_err("Constraint <%s...> must have an id",
+			crm_config_err("Constraint <%s...> must have an id",
 				crm_element_name(xml_obj));
 			continue;
 		}
@@ -1050,16 +1049,16 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	resource_t *rsc_rh   = NULL;
 
 	if(xml_obj == NULL) {
-		pe_config_err("No constraint object to process.");
+		crm_config_err("No constraint object to process.");
 		return FALSE;
 
 	} else if(id == NULL) {
-		pe_config_err("%s constraint must have an id",
+		crm_config_err("%s constraint must have an id",
 			crm_element_name(xml_obj));
 		return FALSE;
 		
 	} else if(id_lh == NULL || id_rh == NULL) {
-		pe_config_err("Constraint %s needs two sides lh: %s rh: %s",
+		crm_config_err("Constraint %s needs two sides lh: %s rh: %s",
 			      id, crm_str(id_lh), crm_str(id_rh));
 		return FALSE;
 	}
@@ -1093,11 +1092,11 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	rsc_rh   = pe_find_resource(data_set->resources, id_lh);
 
 	if(rsc_lh == NULL) {
-		pe_config_err("Constraint %s: no resource found for LHS of %s", id, id_lh);
+		crm_config_err("Constraint %s: no resource found for LHS of %s", id, id_lh);
 		return FALSE;
 	
 	} else if(rsc_rh == NULL) {
-		pe_config_err("Constraint %s: no resource found for RHS of %s", id, id_rh);
+		crm_config_err("Constraint %s: no resource found for RHS of %s", id, id_rh);
 		return FALSE;
 	}
 
@@ -1163,7 +1162,7 @@ unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	
 	if(rsc_lh == NULL) {
 		/* only a warn as BSC adds the constraint then the resource */
-		pe_config_warn("No resource (con=%s, rsc=%s)", id, id_lh);
+		crm_config_warn("No resource (con=%s, rsc=%s)", id, id_lh);
 		return FALSE;
 
 	} else if(rsc_lh->is_managed == FALSE) {
@@ -1180,7 +1179,7 @@ unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		);
 
 	if(empty) {
-		pe_config_err("Invalid location constraint %s:"
+		crm_config_err("Invalid location constraint %s:"
 			      " rsc_location must contain at least one rule",
 			      ID(xml_obj));
 	}
@@ -1342,11 +1341,11 @@ rsc_colocation_new(const char *id, enum con_strength strength,
  	rsc_colocation_t *inverted_con = NULL; 
 
 	if(rsc_lh == NULL){
-		pe_config_err("No resource found for LHS %s", id);
+		crm_config_err("No resource found for LHS %s", id);
 		return FALSE;
 
 	} else if(rsc_rh == NULL){
-		pe_config_err("No resource found for RHS of %s", id);
+		crm_config_err("No resource found for RHS of %s", id);
 		return FALSE;
 	}
 
@@ -1396,7 +1395,7 @@ custom_action_order(
 
 	if((lh_action == NULL && lh_rsc == NULL)
 	   || (rh_action == NULL && rh_rsc == NULL)){
-		pe_config_err("Invalid inputs lh_rsc=%p, lh_a=%p,"
+		crm_config_err("Invalid inputs lh_rsc=%p, lh_a=%p,"
 			      " rh_rsc=%p, rh_a=%p",
 			      lh_rsc, lh_action, rh_rsc, rh_action);
 		crm_free(lh_action_task);
@@ -1467,11 +1466,11 @@ unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	resource_t *rsc_rh = pe_find_resource(data_set->resources, id_rh);
  
 	if(rsc_lh == NULL) {
-		pe_config_err("No resource (con=%s, rsc=%s)", id, id_lh);
+		crm_config_err("No resource (con=%s, rsc=%s)", id, id_lh);
 		return FALSE;
 		
 	} else if(rsc_rh == NULL) {
-		pe_config_err("No resource (con=%s, rsc=%s)", id, id_rh);
+		crm_config_err("No resource (con=%s, rsc=%s)", id, id_rh);
 		return FALSE;
 	}
 

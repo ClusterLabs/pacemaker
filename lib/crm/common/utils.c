@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.63 2006/07/07 21:10:16 andrew Exp $ */
+/* $Id: utils.c,v 1.64 2006/08/14 09:06:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -59,8 +59,156 @@
 static uint ref_counter = 0;
 gboolean crm_assert_failed = FALSE;
 unsigned int crm_log_level = LOG_INFO;
+gboolean crm_config_error = FALSE;
+gboolean crm_config_warning = FALSE;
 
 void crm_set_env_options(void);
+
+gboolean
+check_time(const char *value) 
+{
+	if(crm_get_msec(value) < 5000) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
+check_timer(const char *value) 
+{
+	if(crm_get_msec(value) < 0) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
+check_boolean(const char *value) 
+{
+	int tmp = FALSE;
+	if(crm_str_to_boolean(value, &tmp) != 1) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
+check_number(const char *value) 
+{
+	errno = 0;
+	crm_int_helper(value, NULL);
+	if(errno != 0) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+
+const char *
+cluster_option(GHashTable* options, gboolean(*validate)(const char*),
+	       const char *name, const char *old_name, const char *def_value)
+{
+	const char *value = NULL;
+	CRM_ASSERT(name != NULL);
+	CRM_ASSERT(options != NULL);
+
+	value = g_hash_table_lookup(options, name);
+	if(value == NULL && old_name) {
+		value = g_hash_table_lookup(options, old_name);
+		if(value != NULL) {
+			crm_config_warn("Using deprecated name '%s' for"
+				       " cluster option '%s'", old_name, name);
+		}
+	}
+
+	if(value == NULL) {
+		g_hash_table_insert(
+			options, crm_strdup(name), crm_strdup(def_value));
+		value = g_hash_table_lookup(options, name);
+		crm_notice("Using default value '%s' for cluster option '%s'",
+			   value, name);
+	}
+	
+	if(validate && validate(value) == FALSE) {
+		crm_config_err("Value '%s' for cluster option '%s' is invalid."
+			      "  Defaulting to %s", value, name, def_value);
+		g_hash_table_replace(options, crm_strdup(name),
+				     crm_strdup(def_value));
+		value = g_hash_table_lookup(options, name);
+	}
+	
+	return value;
+}
+
+
+const char *
+get_cluster_pref(GHashTable *options, pe_cluster_option *option_list, int len, const char *name)
+{
+	int lpc = 0;
+	const char *value = NULL;
+	gboolean found = FALSE;
+	for(lpc = 0; lpc < len; lpc++) {
+		if(safe_str_eq(name, option_list[lpc].name)) {
+			found = TRUE;
+			value = cluster_option(options, 
+					       option_list[lpc].is_valid,
+					       option_list[lpc].name,
+					       option_list[lpc].alt_name,
+					       option_list[lpc].default_value);
+		}
+	}
+	CRM_CHECK(found, crm_err("No option named: %s", name));
+	CRM_ASSERT(value != NULL);
+	return value;
+}
+
+void
+config_metadata(const char *name, const char *version, const char *desc_short, const char *desc_long,
+		pe_cluster_option *option_list, int len)
+{
+	int lpc = 0;
+
+	fprintf(stdout, "<?xml version=\"1.0\"?>"
+		"<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
+		"<resource-agent name=\"%s\">\n"
+		"  <version>%s</version>\n"
+		"  <longdesc lang=\"en\">%s</longdesc>\n"
+		"  <shortdesc lang=\"en\">%s</shortdesc>\n"
+		"  <parameters>\n", name, version, desc_long, desc_short);
+	
+	for(lpc = 0; lpc < len; lpc++) {
+		if(option_list[lpc].description_long == NULL
+			&& option_list[lpc].description_short == NULL) {
+			continue;
+		}
+		fprintf(stdout, "    <parameter name=\"%s\" unique=\"0\">\n"
+			"      <shortdesc lang=\"en\">%s</shortdesc>\n"
+			"      <content type=\"%s\" default=\"%s\"/>\n"
+			"      <longdesc lang=\"en\">%s%s%s</longdesc>\n"
+			"    </parameter>\n",
+			option_list[lpc].name,
+			option_list[lpc].description_short,
+			option_list[lpc].type,
+			option_list[lpc].default_value,
+			option_list[lpc].description_long?option_list[lpc].description_long:option_list[lpc].description_short,
+			option_list[lpc].values?"  Allowed values: ":"",
+			option_list[lpc].values?option_list[lpc].values:"");
+	}
+	fprintf(stdout, "  </parameters>\n</resource-agent>\n");
+}
+
+void
+verify_all_options(GHashTable *options, pe_cluster_option *option_list, int len)
+{
+	int lpc = 0;
+	for(lpc = 0; lpc < len; lpc++) {
+		cluster_option(options, 
+			       option_list[lpc].is_valid,
+			       option_list[lpc].name,
+			       option_list[lpc].alt_name,
+			       option_list[lpc].default_value);
+	}
+}
 
 char *
 generateReference(const char *custom1, const char *custom2)
@@ -834,6 +982,10 @@ crm_get_msec(const char * input)
 	}else if (strncasecmp(units, "m", 1) == 0
 	||	strncasecmp(units, "min", 3) == 0) {
 		multiplier = 60*1000;
+		divisor = 1;	
+	}else if (strncasecmp(units, "h", 1) == 0
+	||	strncasecmp(units, "hr", 2) == 0) {
+		multiplier = 60*60*1000;
 		divisor = 1;	
 	}else if (*units != EOS && *units != '\n'
 	&&	*units != '\r') {

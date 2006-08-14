@@ -1,4 +1,4 @@
-/* $Id: common.h,v 1.3 2006/08/14 09:00:57 andrew Exp $ */
+/* $Id: common.h,v 1.4 2006/08/14 09:06:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -46,8 +46,6 @@
 
 extern gboolean was_processing_error;
 extern gboolean was_processing_warning;
-extern gboolean was_config_error;
-extern gboolean was_config_warning;
 extern unsigned int pengine_input_loglevel;
 
 /* order is significant here
@@ -141,21 +139,18 @@ extern int char2score(const char *score);
 extern char *score2char(int score);
 
 extern void add_hash_param(GHashTable *hash, const char *name, const char *value);
-extern const char *default_action_timeout(GHashTable* options);
-extern const char *cluster_option(
-	GHashTable* options, gboolean(*validate)(const char*),
-	const char *name, const char *old_name, const char *def_value);
+extern void pe_metadata(void);
+extern void verify_pe_options(GHashTable *options);
+extern const char *pe_pref(GHashTable *options, const char *name);
 
 
 /* Helper macros to avoid NULL pointers */
 #define safe_val3(def, t,u,v)       (t?t->u?t->u->v:def:def)
 #define safe_val5(def, t,u,v,w,x)   (t?t->u?t->u->v?t->u->v->w?t->u->v->w->x:def:def:def:def)
 
-#define pe_err(fmt...) { was_processing_error = TRUE; was_config_error = TRUE; crm_err(fmt); }
-#define pe_warn(fmt...) { was_processing_warning = TRUE; was_config_warning = TRUE; crm_warn(fmt); }
+#define pe_err(fmt...) { was_processing_error = TRUE; crm_config_error = TRUE; crm_err(fmt); }
+#define pe_warn(fmt...) { was_processing_warning = TRUE; crm_config_warning = TRUE; crm_warn(fmt); }
 #define pe_proc_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
 #define pe_proc_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
-#define pe_config_err(fmt...) { was_config_error = TRUE; crm_err(fmt); }
-#define pe_config_warn(fmt...) { was_config_warning = TRUE; crm_warn(fmt); }
 
 #endif

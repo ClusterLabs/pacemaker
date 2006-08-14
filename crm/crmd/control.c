@@ -498,6 +498,36 @@ do_recover(long long action,
 	return I_NULL;
 }
 
+pe_cluster_option crmd_opts[] = {
+	/* name, old-name, validate, default, description */
+	{ XML_CONFIG_ATTR_DC_DEADTIME, NULL, "time", NULL, "10s", &check_time, "How long to wait for a response from other nodes during startup.", "The \"correct\" value will depend on the speed and load of your network." },
+	{ XML_CONFIG_ATTR_RECHECK, NULL, "time", "Zero disables polling.  Positive values are an interval in seconds (unless other SI units are specified. eg. 5min)", "0", &check_timer, "Polling interval for time based changes to options, resource parameters and constraints.", "The Cluster is primarily event driven, however the configuration can have elements that change based on time.  To ensure these changes take effect, we can optionally poll the cluster's status for changes." },
+	{ XML_CONFIG_ATTR_ELECTION_FAIL, NULL, "time", NULL, "2min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
+	{ XML_CONFIG_ATTR_FORCE_QUIT, NULL, "time", NULL, "20min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
+	{ "crmd-integration-timeout", NULL, "time", NULL, "3min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
+	{ "crmd-finalization-timeout", NULL, "time", NULL, "10min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
+};
+
+void
+crmd_metadata(void)
+{
+	config_metadata("CRM Daemon", "1.0",
+			"CRM Daemon Options",
+			"This is a fake resource that details the options that can be configured for the CRM Daemon.",
+			crmd_opts, DIMOF(crmd_opts));
+}
+
+static void
+verify_crmd_options(GHashTable *options)
+{
+	verify_all_options(options, crmd_opts, DIMOF(crmd_opts));
+}
+
+static const char *
+crmd_pref(GHashTable *options, const char *name)
+{
+	return get_cluster_pref(options, crmd_opts, DIMOF(crmd_opts), name);
+}
 
 static void
 config_query_callback(const HA_Message *msg, int call_id, int rc,
@@ -530,45 +560,41 @@ config_query_callback(const HA_Message *msg, int call_id, int rc,
 		CIB_OPTIONS_FIRST, NULL);
 	
 	value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
-	if(value != NULL) {
-		election_trigger->period_ms = crm_get_msec(value);
-	} else {
+	if(value == NULL) {
 		/* apparently we're not allowed to free the result of getenv */
-		char *param_val = NULL;
-		const char *param_name = NULL;
-		election_trigger->period_ms = crm_get_msec("5s");
-		param_name = ENV_PREFIX "" KEY_INITDEAD;
-		param_val = getenv(param_name);
+		char *param_val = getenv(ENV_PREFIX "" KEY_INITDEAD);
+
+		value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
 		if(param_val != NULL) {
-			int tmp = crm_get_msec(param_val) / 2;
-			if(tmp > election_trigger->period_ms) {
-				election_trigger->period_ms = tmp;
+			int from_env = crm_get_msec(param_val) / 2;
+			int from_defaults = crm_get_msec(value);
+			if(from_env > from_defaults) {
+				g_hash_table_replace(
+					config_hash, crm_strdup(XML_CONFIG_ATTR_DC_DEADTIME),
+					crm_strdup(param_val));
 			}
-			crm_debug("%s = %s", param_name, param_val);
-			param_val = NULL;
 		}
 	}
+
+	verify_crmd_options(config_hash);
+
+	value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
+	election_trigger->period_ms = crm_get_msec(value);
 	
-	value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
-	if(value == NULL) {
-		value = "20min";
-	}
+	value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
 	shutdown_escalation_timer->period_ms = crm_get_msec(value);
 
-	value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
-	if(value == NULL) {
-		value = "2min";
-	}
+	value = crmd_pref(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
 	election_timeout->period_ms = crm_get_msec(value);
 	
-	value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_RECHECK);
-	if(value != NULL) {
-		recheck_timer->period_ms = crm_get_msec(value);
-	}
+	value = crmd_pref(config_hash, XML_CONFIG_ATTR_RECHECK);
+	recheck_timer->period_ms = crm_get_msec(value);
 
-	/* defaults */
-	integration_timer->period_ms  = crm_get_msec("3min");
-	finalization_timer->period_ms = crm_get_msec("10min");
+	value = crmd_pref(config_hash, "crmd-integration-timeout");
+	integration_timer->period_ms  = crm_get_msec(value);
+
+	value = crmd_pref(config_hash, "crmd-finalization-timeout");
+	finalization_timer->period_ms = crm_get_msec(value);
 
 	set_bit_inplace(fsa_input_register, R_READ_CONFIG);
 	crm_debug_3("Triggering FSA: %s", __FUNCTION__);

@@ -1,4 +1,4 @@
-/* $Id: crm_verify.c,v 1.18 2006/07/18 06:15:54 andrew Exp $ */
+/* $Id: crm_verify.c,v 1.19 2006/08/14 09:06:31 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -218,12 +218,12 @@ main(int argc, char **argv)
 #endif
 	crm_notice("Required feature set: %s", feature_set(cib_object));
  	if(do_id_check(cib_object, NULL, FALSE, FALSE)) {
-		pe_config_err("ID Check failed");
+		crm_config_err("ID Check failed");
 	}
 
 	if(validate_with_dtd(
 		   cib_object, FALSE, HA_LIBDIR"/heartbeat/crm.dtd") == FALSE) {
-		pe_config_err("CIB did not pass DTD validation");
+		crm_config_err("CIB did not pass DTD validation");
 	}
 	set_working_set_defaults(&data_set);
 	data_set.input = cib_object;
@@ -244,14 +244,14 @@ main(int argc, char **argv)
 	}
 #endif
 	
-	if(was_config_error) {
+	if(crm_config_error) {
 		fprintf(stderr, "Errors found during check: config not valid\n");
 		if(crm_log_level < LOG_WARNING) {
 			fprintf(stderr, "  -V may provide more details\n");
 		}
 		rc = 2;
 		
-	} else if(was_config_warning) {
+	} else if(crm_config_warning) {
 		fprintf(stderr, "Warnings found during check: config may not be valid\n");
 		if(crm_log_level < LOG_WARNING) {
 			fprintf(stderr, "  Use -V for more details\n");

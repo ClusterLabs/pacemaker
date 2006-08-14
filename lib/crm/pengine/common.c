@@ -1,4 +1,4 @@
-/* $Id: common.c,v 1.3 2006/08/14 09:00:57 andrew Exp $ */
+/* $Id: common.c,v 1.4 2006/08/14 09:06:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,8 +30,75 @@
 
 gboolean was_processing_error = FALSE;
 gboolean was_processing_warning = FALSE;
-gboolean was_config_error = FALSE;
-gboolean was_config_warning = FALSE;
+
+static gboolean
+check_quorum(const char *value) 
+{
+	if(safe_str_eq(value, "stop")) {
+		return TRUE;
+
+	} else if(safe_str_eq(value, "freeze")) {
+		return TRUE;
+
+	} else if(safe_str_eq(value, "ignore")) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+static gboolean
+check_stonith_action(const char *value) 
+{
+	if(safe_str_eq(value, "reboot")) {
+		return TRUE;
+
+	} else if(safe_str_eq(value, "poweroff")) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+pe_cluster_option pe_opts[] = {
+	/* name, old-name, validate, default, description */
+	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore", "stop", &check_quorum, "What to do when the cluster does not have quorum", NULL },
+	{ "symmetric-cluster", "symmetric_cluster", "boolean", NULL, "true", &check_boolean, "All resources can run anywhere by default", NULL },
+	{ "stonith-enabled", "stonith_enabled", "boolean", NULL, "false", &check_boolean, "Failed nodes are STONITH'd", NULL },
+	{ "stonith-action", "stonith_action", "enum", "reboot, poweroff", "reboot", &check_stonith_action, "Action to send to STONITH device", NULL },
+	{ "default-resource-stickiness", "default_resource_stickiness", "integer", NULL, "0", &check_number, "", NULL },
+	{ "default-resource-failure-stickiness", "default_resource_failure_stickiness", "integer", NULL, "0", &check_number, "", NULL },
+	{ "is-managed-default", "is_managed_default", "boolean", NULL, "true", &check_boolean, "Should the cluster start/stop resources as required", NULL },
+	{ "network-delay", "transition_idle_timeout", "time", NULL, "60s", &check_time, "Round trip delay over the network (excluding action execution)", "The \"correct\" value will depend on the speed and load of your network." },
+	{ "default-action-timeout", "default_action_timeout", "time", NULL, "20s", &check_time, "How long to wait for actions to complete", NULL },
+	{ "stop-orphan-resources", "stop_orphan_resources", "boolean", NULL, "true", &check_boolean, "Should deleted resources be stopped", NULL },
+	{ "stop-orphan-actions", "stop_orphan_actions", "boolean", NULL, "true", &check_boolean, "Should deleted actions be cancelled", NULL },
+ 	{ "remove-after-stop", "remove_after_stop", "boolean", NULL, "false", &check_boolean, NULL, NULL },
+/* 	{ "", "", , "0", "", NULL }, */
+	{ "pe-error-series-max", NULL, "integer", NULL, "-1", &check_number, "", NULL },
+	{ "pe-warn-series-max",  NULL, "integer", NULL, "-1", &check_number, "", NULL },
+	{ "pe-input-series-max", NULL, "integer", NULL, "-1", &check_number, "", NULL },
+	{ "startup-fencing", "startup_fencing", "boolean", NULL, "true", &check_boolean, "STONITH unseen nodes", "Advanced Use Only!  Not using the default is very unsafe!" }
+};
+
+void
+pe_metadata(void)
+{
+	config_metadata("Policy Engine", "1.0",
+			"Policy Engine Options",
+			"This is a fake resource that details the options that can be configured for the Policy Engine.",
+			pe_opts, DIMOF(pe_opts));
+}
+
+void
+verify_pe_options(GHashTable *options)
+{
+	verify_all_options(options, pe_opts, DIMOF(pe_opts));
+}
+
+const char *
+pe_pref(GHashTable *options, const char *name)
+{
+	return get_cluster_pref(options, pe_opts, DIMOF(pe_opts), name);
+}
 
 const char *
 fail2text(enum action_fail_response fail)
@@ -293,61 +360,4 @@ add_hash_param(GHashTable *hash, const char *name, const char *value)
 	} else if(g_hash_table_lookup(hash, name) == NULL) {
 		g_hash_table_insert(hash, crm_strdup(name), crm_strdup(value));
 	}
-}
-
-
-static gboolean
-check_action_timeout(const char *value) 
-{
-	long tmp = crm_get_msec(value);
-	if(tmp < 5) {
-		return FALSE;
-	}
-	return TRUE;
-}
-
-const char *
-default_action_timeout(GHashTable* options)
-{
-	return cluster_option(options, &check_action_timeout,
-			      "default_action_timeout",
-			      "transition_idle_timeout", "60s");
-}
-
-const char *
-cluster_option(GHashTable* options, gboolean(*validate)(const char*),
-	       const char *name, const char *old_name, const char *def_value)
-{
-	const char *value = NULL;
-	CRM_ASSERT(name != NULL);
-	CRM_ASSERT(options != NULL);
-
-	return "60s";
-	
-	value = g_hash_table_lookup(options, name);
-	if(value == NULL && old_name) {
-		value = g_hash_table_lookup(options, old_name);
-		if(value != NULL) {
-			pe_config_warn("Using deprecated name '%s' for"
-				       " cluster option '%s'", old_name, name);
-		}
-	}
-
-	if(value == NULL) {
-		g_hash_table_insert(
-			options, crm_strdup(name), crm_strdup(def_value));
-		value = g_hash_table_lookup(options, name);
-		crm_notice("Using default value '%s' for cluster option '%s'",
-			   value, name);
-	}
-	
-	if(validate && validate(value) == FALSE) {
-		pe_config_err("Value '%s' for cluster option '%s' is invalid."
-			      "  Defaulting to %s", value, name, def_value);
-		g_hash_table_replace(options, crm_strdup(name),
-				     crm_strdup(def_value));
-		value = g_hash_table_lookup(options, name);
-	}
-	
-	return value;
 }

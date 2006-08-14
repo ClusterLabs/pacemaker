@@ -1,4 +1,4 @@
-/* $Id: clone.c,v 1.5 2006/06/21 14:48:01 andrew Exp $ */
+/* $Id: clone.c,v 1.6 2006/08/14 09:06:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -165,7 +165,7 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	}
 
 	if(clone_data->xml_obj_child == NULL) {
-		pe_config_err("%s has nothing to clone", rsc->id);
+		crm_config_err("%s has nothing to clone", rsc->id);
 		return FALSE;
 	}
 	

@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.15 2006/08/14 09:00:57 andrew Exp $ */
+/* $Id: unpack.c,v 1.16 2006/08/14 09:06:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -35,22 +35,17 @@
 #include <crm/pengine/rules.h>
 #include <unpack.h>
 
-#define get_cluster_pref(pref) value = g_hash_table_lookup(config_hash, pref); \
-	if(value == NULL) {						\
-		pe_config_warn("No value specified for cluster preference: %s", pref); \
-	}
-
 
 
 gboolean
-unpack_config(crm_data_t * config, pe_working_set_t *data_set)
+unpack_config(crm_data_t *config, pe_working_set_t *data_set)
 {
 	const char *name = NULL;
 	const char *value = NULL;
 	GHashTable *config_hash = g_hash_table_new_full(
 		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
 
-	data_set->config_hash = config_hash;	
+	data_set->config_hash = config_hash;
 
 	unpack_instance_attributes(
 		config, XML_CIB_TAG_PROPSET, NULL, config_hash,
@@ -67,7 +62,7 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 			g_hash_table_insert(
 				config_hash,crm_strdup(name),crm_strdup(value));
 		}
-		pe_config_err("Creating <nvpair id=%s name=%s/> directly"
+		crm_config_err("Creating <nvpair id=%s name=%s/> directly"
 			      "beneath <crm_config> has been depreciated since"
 			      " 2.0.1", ID(a_child), name);
 		);
@@ -76,50 +71,43 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 		config, a_child, XML_CIB_TAG_NVPAIR,
 
 		name = crm_element_value(a_child, XML_NVPAIR_ATTR_NAME);
-		pe_config_err("Creating <nvpair id=%s name=%s/> directly"
+		crm_config_err("Creating <nvpair id=%s name=%s/> directly"
 			      "beneath <crm_config> has been depreciated since"
 			      " 2.0.1 and is now disabled", ID(a_child), name);
 		);
 #endif
+	verify_pe_options(data_set->config_hash);
 	
-	data_set->transition_idle_timeout = crm_strdup(
-		default_action_timeout(data_set->config_hash));
-	crm_debug("default_action_timeout set to: %s", data_set->transition_idle_timeout);
+	value = pe_pref(data_set->config_hash, "default-action-timeout");
+	data_set->transition_idle_timeout = crm_strdup(value);
+	crm_debug("Default action timeout: %s", data_set->transition_idle_timeout);
 
-	get_cluster_pref("default_"XML_RSC_ATTR_STICKINESS);
+	value = pe_pref(data_set->config_hash, "default-resource-stickiness");
 	data_set->default_resource_stickiness = char2score(value);
 	crm_info("Default stickiness: %d",
 		 data_set->default_resource_stickiness);
 
-	get_cluster_pref("default_"XML_RSC_ATTR_FAIL_STICKINESS);
+	value = pe_pref(data_set->config_hash, "default-resource-failure-stickiness");
 	data_set->default_resource_fail_stickiness = char2score(value);
 	crm_info("Default failure stickiness: %d",
 		 data_set->default_resource_fail_stickiness);
 	
-	get_cluster_pref("stonith_enabled");
-	if(value != NULL) {
-		cl_str_to_boolean(value, &data_set->stonith_enabled);
-	}
+	value = pe_pref(data_set->config_hash, "stonith-enabled");
+	cl_str_to_boolean(value, &data_set->stonith_enabled);
 	crm_info("STONITH of failed nodes is %s",
 		 data_set->stonith_enabled?"enabled":"disabled");	
 
-	get_cluster_pref("stonith_action");
-	if(value == NULL || safe_str_neq(value, "poweroff")) {
-		value = "reboot";
-	}
-	data_set->stonith_action = value;
+	data_set->stonith_action = pe_pref(data_set->config_hash, "stonith-action");
 	crm_info("STONITH will %s nodes", data_set->stonith_action);	
 	
-	get_cluster_pref("symmetric_cluster");
-	if(value != NULL) {
-		cl_str_to_boolean(value, &data_set->symmetric_cluster);
-	}
+	value = pe_pref(data_set->config_hash, "symmetric-cluster");
+	cl_str_to_boolean(value, &data_set->symmetric_cluster);
 	if(data_set->symmetric_cluster) {
 		crm_info("Cluster is symmetric"
 			 " - resources can run anywhere by default");
 	}
 
-	get_cluster_pref("no_quorum_policy");
+	value = pe_pref(data_set->config_hash, "no-quorum-policy");
 	if(safe_str_eq(value, "ignore")) {
 		data_set->no_quorum_policy = no_quorum_ignore;
 		
@@ -142,31 +130,23 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 			break;
 	}
 
-	get_cluster_pref("stop_orphan_resources");
-	if(value != NULL) {
-		cl_str_to_boolean(value, &data_set->stop_rsc_orphans);
-	}
+	value = pe_pref(data_set->config_hash, "stop-orphan-resources");
+	cl_str_to_boolean(value, &data_set->stop_rsc_orphans);
 	crm_info("Orphan resources are %s",
 		 data_set->stop_rsc_orphans?"stopped":"ignored");	
 	
-	get_cluster_pref("stop_orphan_actions");
-	if(value != NULL) {
-		cl_str_to_boolean(value, &data_set->stop_action_orphans);
-	}
+	value = pe_pref(data_set->config_hash, "stop-orphan-actions");
+	cl_str_to_boolean(value, &data_set->stop_action_orphans);
 	crm_info("Orphan resource actions are %s",
 		 data_set->stop_action_orphans?"stopped":"ignored");	
 
-	get_cluster_pref("remove_after_stop");
-	if(value != NULL) {
-		cl_str_to_boolean(value, &data_set->remove_after_stop);
-	}
+	value = pe_pref(data_set->config_hash, "remove-after-stop");
+	cl_str_to_boolean(value, &data_set->remove_after_stop);
 	crm_info("Stopped resources are removed from the status section: %s",
 		 data_set->remove_after_stop?"true":"false");	
 	
-	get_cluster_pref("is_managed_default");
-	if(value != NULL) {
-		cl_str_to_boolean(value, &data_set->is_managed_default);
-	}
+	value = pe_pref(data_set->config_hash, "is-managed-default");
+	cl_str_to_boolean(value, &data_set->is_managed_default);
 	crm_info("By default resources are %smanaged",
 		 data_set->is_managed_default?"":"not ");
 
@@ -180,8 +160,8 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 	const char *id     = NULL;
 	const char *uname  = NULL;
 	const char *type   = NULL;
-	const char *blind_faith = g_hash_table_lookup(
-		data_set->config_hash, "startup_fencing");
+	const char *blind_faith = pe_pref(
+		data_set->config_hash, "startup-fencing");
 
 	crm_debug_2("Begining unpack... %s",
 		    xml_nodes?crm_element_name(xml_nodes):"<none>");
@@ -196,11 +176,11 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 		crm_debug_3("Processing node %s/%s", uname, id);
 
 		if(id == NULL) {
-			pe_config_err("Must specify id tag in <node>");
+			crm_config_err("Must specify id tag in <node>");
 			continue;
 		}
 		if(type == NULL) {
-			pe_config_err("Must specify type tag in <node>");
+			crm_config_err("Must specify type tag in <node>");
 			continue;
 		}
 		crm_malloc0(new_node, sizeof(node_t));
@@ -290,7 +270,7 @@ unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
 			print_resource(LOG_DEBUG_3, "Added", new_rsc, FALSE);
 
 		} else {
-			pe_config_err("Failed unpacking %s %s",
+			crm_config_err("Failed unpacking %s %s",
 				      crm_element_name(xml_obj),
 				      crm_element_value(xml_obj, XML_ATTR_ID));
 			if(new_rsc != NULL && new_rsc->fns != NULL) {
@@ -339,7 +319,7 @@ unpack_status(crm_data_t * status, pe_working_set_t *data_set)
 			continue;
 
 		} else if(this_node == NULL) {
-			pe_config_warn("Node %s in status section no longer exists",
+			crm_config_warn("Node %s in status section no longer exists",
 				       uname);
 			continue;
 		}
@@ -484,7 +464,7 @@ determine_online_status(
 		crm_element_value(node_state, XML_CIB_ATTR_EXPSTATE);
 	
 	if(this_node == NULL) {
-		pe_config_err("No node to check");
+		crm_config_err("No node to check");
 		return online;
 	}
 
@@ -679,7 +659,7 @@ process_orphan_resource(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *d
 	const char *rsc_id   = crm_element_value(rsc_entry, XML_ATTR_ID);
 	
 	crm_log_xml_info(rsc_entry, "Orphan resource");
-	pe_config_warn("Nothing known about resource %s running on %s",
+	crm_config_warn("Nothing known about resource %s running on %s",
 		       rsc_id, node->details->uname);
 	rsc = create_fake_resource(rsc_id, rsc_entry, data_set);
 	

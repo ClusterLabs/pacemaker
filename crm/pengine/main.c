@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.21 2006/02/14 12:02:53 andrew Exp $ */
+/* $Id: main.c,v 1.22 2006/08/14 09:06:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,6 +36,7 @@
 
 #include <crm/common/ipc.h>
 #include <crm/common/ctrl.h>
+#include <crm/pengine/common.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -81,7 +82,12 @@ main(int argc, char ** argv)
 				break;
 		}
 	}
-    
+
+	if(argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
+		pe_metadata();
+		return 0;
+	}
+	
 	if (optind > argc) {
 		++argerr;
 	}

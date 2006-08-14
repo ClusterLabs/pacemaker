@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.20 2005/06/14 11:09:03 davidlee Exp $ */
+/* $Id: main.c,v 1.21 2006/08/14 09:06:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -85,6 +85,11 @@ main(int argc, char ** argv)
 				++argerr;
 				break;
 		}
+    }
+
+    if(argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
+	    crmd_metadata();
+	    return 0;
     }
     
     if (optind > argc) {

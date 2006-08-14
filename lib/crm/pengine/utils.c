@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.9 2006/08/14 09:00:57 andrew Exp $ */
+/* $Id: utils.c,v 1.10 2006/08/14 09:06:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -589,7 +589,7 @@ unpack_operation(
 	class = g_hash_table_lookup(action->rsc->meta, "class");
 	if(safe_str_eq(class, "stonith")) {
 		if(action->needs == rsc_req_stonith) {
-			pe_config_err("Stonith resources (eg. %s) cannot require"
+			crm_config_err("Stonith resources (eg. %s) cannot require"
 				      " fencing to start", action->rsc->id);
 		}
 		action->needs = rsc_req_nothing;
@@ -606,16 +606,16 @@ unpack_operation(
 			action->rsc->meta, "on_stopfail");
 		if(value != NULL) {
 #if CRM_DEPRECATED_SINCE_2_0_2
-			pe_config_err("The \"on_stopfail\" attribute used in"
+			crm_config_err("The \"on_stopfail\" attribute used in"
 				      " %s has been deprecated since 2.0.2",
 				      action->rsc->id);
 #else
-			pe_config_err("The \"on_stopfail\" attribute used in"
+			crm_config_err("The \"on_stopfail\" attribute used in"
 				      " %s has been deprecated since 2.0.2"
 				      " and is now disabled", action->rsc->id);
 			value = NULL;
 #endif
-			pe_config_err("Please use specify the \"on_fail\""
+			crm_config_err("Please use specify the \"on_fail\""
 				      " attribute on the \"stop\" operation"
 				      " instead");
 		}
@@ -706,7 +706,7 @@ unpack_operation(
        if(g_hash_table_lookup(action->meta, "timeout") == NULL) {
                g_hash_table_insert(
 		       action->meta, crm_strdup("timeout"),
-		       crm_strdup(default_action_timeout(data_set->config_hash)));
+		       crm_strdup(pe_pref(data_set->config_hash, "default-action-timeout")));
        }
 	
 	for(;lpc < DIMOF(fields); lpc++) {

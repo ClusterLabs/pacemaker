@@ -1,4 +1,4 @@
-/* $Id: atest.c,v 1.10 2006/04/19 06:08:43 andrew Exp $ */
+/* $Id: atest.c,v 1.11 2006/08/14 09:06:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -35,6 +35,9 @@
 int
 main(int argc, char ** argv)
 {
+	if(crm_get_msec("0") < 0) {
+		fprintf(stderr, "error\n");
+	}
 	return 0;
 }
 

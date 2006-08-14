@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.119 2006/07/18 06:18:23 andrew Exp $ */
+/* $Id: pengine.c,v 1.120 2006/08/14 09:06:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -100,10 +100,12 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 #else
 		gboolean compress = FALSE;
 #endif
-		
 		copy_in_properties(generation, xml_data);
 		crm_log_xml_info(generation, "[generation]");
 
+		crm_config_error = FALSE;
+		crm_config_warning = FALSE;	
+		
 		was_processing_error = FALSE;
 		was_processing_warning = FALSE;
 
@@ -116,8 +118,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 		series_id = get_series();
 		series_wrap = series[series_id].wrap;
-		value = g_hash_table_lookup(
-			data_set.config_hash, series[series_id].param);
+		value = pe_pref(data_set.config_hash, series[series_id].param);
 
 		if(value != NULL) {
 			series_wrap = crm_int_helper(value, NULL);
@@ -177,11 +178,11 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 				 transition_id, filename);
 		}
 
-		if(was_config_error) {
+		if(crm_config_error) {
 			crm_info("Configuration ERRORs found during PE processing."
 			       "  Please run \"crm_verify -L\" to identify issues.");
 
-		} else if(was_processing_warning) {
+		} else if(crm_config_warning) {
 			crm_info("Configuration WARNINGs found during PE processing."
 				 "  Please run \"crm_verify -L\" to identify issues.");
 		}

@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.38 2006/07/06 13:30:23 andrew Exp $ */
+/* $Id: util.h,v 1.39 2006/08/14 09:06:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,6 +29,11 @@
 #define DEBUG_DEC SIGUSR2
 
 extern unsigned int crm_log_level;
+extern gboolean crm_config_error;
+extern gboolean crm_config_warning;
+
+#define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
+#define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
 
 extern gboolean crm_log_init(const char *entity);
 
@@ -148,5 +153,36 @@ extern void crm_make_daemon(
 	const char *name, gboolean daemonize, const char *pidfile);
 
 extern cl_mem_stats_t *crm_running_stats;
+
+typedef struct pe_cluster_option_s {
+	const char *name;
+	const char *alt_name;
+	const char *type;
+	const char *values;
+	const char *default_value;
+
+	gboolean (*is_valid)(const char *);
+
+	const char *description_short;
+	const char *description_long;
+	
+} pe_cluster_option;
+
+extern const char *cluster_option(
+	GHashTable* options, gboolean(*validate)(const char*),
+	const char *name, const char *old_name, const char *def_value);
+
+extern const char *get_cluster_pref(
+	GHashTable *options, pe_cluster_option *option_list, int len, const char *name);
+
+extern void config_metadata(
+	const char *name, const char *version, const char *desc_short, const char *desc_long,
+	pe_cluster_option *option_list, int len);
+
+extern void verify_all_options(GHashTable *options, pe_cluster_option *option_list, int len);
+extern gboolean check_time(const char *value);
+extern gboolean check_timer(const char *value);
+extern gboolean check_boolean(const char *value);
+extern gboolean check_number(const char *value);
 
 #endif

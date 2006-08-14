@@ -1,4 +1,4 @@
-/* $Id: group.c,v 1.68 2006/07/03 11:47:38 andrew Exp $ */
+/* $Id: group.c,v 1.69 2006/08/14 09:06:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -73,7 +73,7 @@ int group_num_allowed_nodes(resource_t *rsc)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 	if(group_data->colocated == FALSE) {
-		pe_config_err("Cannot clone non-colocated group: %s", rsc->id);
+		crm_config_err("Cannot clone non-colocated group: %s", rsc->id);
 		return 0;
 	}
  	return group_data->self->cmds->num_allowed_nodes(group_data->self);
@@ -297,7 +297,7 @@ void group_rsc_colocation_lh(
 	}
 	
 	if(constraint->strength != pecs_must_not) {
-		pe_config_err("Cannot colocate resources with"
+		crm_config_err("Cannot colocate resources with"
 			      " non-colocated group: %s", rsc_lh->id);
 		return;
 	} 
@@ -326,7 +326,7 @@ void group_rsc_colocation_rh(
 	}
 	
 	if(constraint->strength != pecs_must_not) {
-		pe_config_err("Cannot colocate resources with"
+		crm_config_err("Cannot colocate resources with"
 			      " non-colocated group: %s", rsc_rh->id);
 		return;
 	} 
