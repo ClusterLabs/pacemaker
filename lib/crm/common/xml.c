@@ -1,4 +1,4 @@
-/* $Id: xml.c,v 1.102 2006/08/04 09:47:21 andrew Exp $ */
+/* $Id: xml.c,v 1.103 2006/08/14 16:32:05 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -497,7 +497,6 @@ stdin2xml(void)
 crm_data_t*
 file2xml(FILE *input, gboolean compressed)
 {
-	int rc = 0;
 	char *buffer = NULL;
 	gboolean work_done = FALSE;
 	crm_data_t *new_obj = NULL;
@@ -510,6 +509,7 @@ file2xml(FILE *input, gboolean compressed)
 
 	if(compressed) {
 #if HAVE_BZLIB_H
+		int rc = 0;
 		BZFILE *bz_file = BZ2_bzReadOpen(&rc, input, 0, 0, NULL, 0);
 		if ( rc != BZ_OK ) {
 			BZ2_bzReadClose ( &rc, bz_file);
