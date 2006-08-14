@@ -1507,11 +1507,11 @@ process_lrm_event(lrm_op_t *op)
 			break;
 		case LRM_OP_ERROR:
 			crm_err("LRM operation (%d) %s_%d on %s %s: (%d) %s",
-				      op->call_id, op->op_type,
-				      op->interval,
-				      crm_str(op->rsc_id),
-				      op_status2text(op->op_status),
-				      op->rc, execra_code2string(op->rc));
+				op->call_id, op->op_type,
+				op->interval,
+				crm_str(op->rsc_id),
+				op_status2text(op->op_status),
+				op->rc, execra_code2string(op->rc));
 			if(op->output != NULL) {
 				crm_debug("Result: %s", op->output);
 			}
@@ -1524,11 +1524,10 @@ process_lrm_event(lrm_op_t *op)
 				 op_status2text(op->op_status));
 			break;
 		case LRM_OP_TIMEOUT:
-			crm_err("LRM operation (%d) %s_%d on %s %s",
-				op->call_id, op->op_type,
-				op->interval,
+			crm_err("LRM operation (%d) %s_%d on %s %s (timeout=%dms)",
+				op->call_id, op->op_type, op->interval,
 				crm_str(op->rsc_id),
-				op_status2text(op->op_status));
+				op_status2text(op->op_status), op->timeout);
 			break;
 		case LRM_OP_NOTSUPPORTED:
 			crm_err("LRM operation (%d) %s_%d on %s %s",

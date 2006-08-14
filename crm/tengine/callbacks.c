@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.87 2006/07/18 06:18:23 andrew Exp $ */
+/* $Id: callbacks.c,v 1.88 2006/08/14 09:10:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -482,8 +482,6 @@ unconfirmed_actions(gboolean send_updates)
 			}
 			
 			unconfirmed++;
-			crm_debug("Action %d: unconfirmed",action->id);
-
 			task = crm_element_value(action->xml,XML_LRM_ATTR_TASK);
 			if(action->type != action_type_rsc) {
 				continue;
@@ -493,6 +491,7 @@ unconfirmed_actions(gboolean send_updates)
 				/* we dont need to update the CIB with these */
 				continue;
 			}
+			crm_err("Action %d unconfirmed from peer", action->id);
 			cib_action_update(action, LRM_OP_PENDING);
 			);
 		);
