@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#	$Id: ocf-tester,v 1.1 2006/08/14 09:14:13 andrew Exp $
+#	$Id: ocf-tester,v 1.2 2006/08/14 09:38:20 andrew Exp $
 #
 #	pingd OCF RA. Does nothing but wait a few seconds, can be
 #	configured to fail occassionally.
@@ -42,7 +42,7 @@ function assert() {
     exit_code=$1; shift
     if [ $rc != $target ]; then
 	num_errors=`expr $num_errors + 1`
-	echo -e " * rc=$rc: $msg"
+	echo -e "* rc=$rc: $msg"
 	if [ ! -z $exit_code ]; then
 	    echo "Aborting tests"
 	    exit $exit_code
@@ -52,11 +52,13 @@ function assert() {
 
 done=0
 ra_args=""
+verbose=0
 while test "$done" = "0"; do
     case "$1" in
         -n) ra_args="$ra_args OCF_RESOURCE_INSTANCE=$2"; shift; shift;;
         -o) name=${2%%=*}; value=${2##*=}; 
 	    ra_args="$ra_args OCF_RESKEY_$name=$value"; shift; shift;;
+	-v) verbose=1; shift;;
 	-?) usage 0;;
 	-*) echo "unknown option: $1"; usage 1;;
 	*) done=1;;
@@ -77,7 +79,11 @@ function test_command() {
     #echo $msg
     #echo Running: "export $ra_args; bash $agent $action 2>&1 > /dev/null"
     export $ra_args; 
-    bash $agent $action >/dev/null 2>&1
+    if [ $verbose = 0 ]; then
+	bash $agent $action >/dev/null 2>&1
+    else
+	bash $agent $action
+    fi
     rc=$?
     #echo rc: $rc
     return $rc
@@ -85,6 +91,10 @@ function test_command() {
 
 # Begin tests
 echo Beginning tests for $agent...
+
+if [ ! -f $agent ]; then
+    assert 7 0 "Could not find file: $agent"
+fi
 
 test_command meta-data
 rc=$?
@@ -136,7 +146,7 @@ assert $rc 0 "Monitoring an active resource should return 0"
 test_command notify
 rc=$?
 if [ $rc = 3 ]; then
-    echo " * Your agent does not support the notify action (optional)"
+    echo "* Your agent does not support the notify action (optional)"
 else
     assert $? 0 "The notify action cannot fail and must return 0"
 fi
@@ -144,13 +154,13 @@ fi
 test_command demote "Checking for demote action"
 if [ $? = 3 ]; then
     has_demote=0
-    echo " * Your agent does not support the demote action (optional)"
+    echo "* Your agent does not support the demote action (optional)"
 fi
 
 test_command promote "Checking for promote action"
 if [ $? = 3 ]; then
     has_promote=0
-    echo " * Your agent does not support the promote action (optional)"
+    echo "* Your agent does not support the promote action (optional)"
 fi
 
 if [ $has_promote = 1 -a $has_demote = 1 ]; then
@@ -176,10 +186,10 @@ if [ $has_promote = 1 -a $has_demote = 1 ]; then
     assert $? 0 "Demote failed" 1
 
 elif [ $has_promote = 0 -a $has_demote = 0 ]; then
-    echo " * Your agent does not support master/slave (optional)"
+    echo "* Your agent does not support master/slave (optional)"
 
 else
-    echo " * Your agent partially supports master/slave"
+    echo "* Your agent partially supports master/slave"
     num_errors=`expr $num_errors + 1`
 fi
 
