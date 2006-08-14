@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.14 2006/08/14 08:51:23 andrew Exp $ */
+/* $Id: unpack.c,v 1.15 2006/08/14 09:00:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -82,21 +82,8 @@ unpack_config(crm_data_t * config, pe_working_set_t *data_set)
 		);
 #endif
 	
-	get_cluster_pref("default_action_timeout");
-	if(value == NULL) {
-		get_cluster_pref("transition_idle_timeout");
-	}
-	if(value != NULL) {
-		long tmp = crm_get_msec(value);
-		if(tmp > 0) {
-			crm_free(data_set->transition_idle_timeout);
-			data_set->transition_idle_timeout = crm_strdup(value);
-		} else {
-			crm_err("Invalid value for default_action_timeout: %s",
-				value);
-		}
-	}
-	
+	data_set->transition_idle_timeout = crm_strdup(
+		default_action_timeout(data_set->config_hash));
 	crm_debug("default_action_timeout set to: %s", data_set->transition_idle_timeout);
 
 	get_cluster_pref("default_"XML_RSC_ATTR_STICKINESS);

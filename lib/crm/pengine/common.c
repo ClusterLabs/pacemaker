@@ -1,4 +1,4 @@
-/* $Id: common.c,v 1.2 2006/06/07 12:46:56 andrew Exp $ */
+/* $Id: common.c,v 1.3 2006/08/14 09:00:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -295,3 +295,59 @@ add_hash_param(GHashTable *hash, const char *name, const char *value)
 	}
 }
 
+
+static gboolean
+check_action_timeout(const char *value) 
+{
+	long tmp = crm_get_msec(value);
+	if(tmp < 5) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+const char *
+default_action_timeout(GHashTable* options)
+{
+	return cluster_option(options, &check_action_timeout,
+			      "default_action_timeout",
+			      "transition_idle_timeout", "60s");
+}
+
+const char *
+cluster_option(GHashTable* options, gboolean(*validate)(const char*),
+	       const char *name, const char *old_name, const char *def_value)
+{
+	const char *value = NULL;
+	CRM_ASSERT(name != NULL);
+	CRM_ASSERT(options != NULL);
+
+	return "60s";
+	
+	value = g_hash_table_lookup(options, name);
+	if(value == NULL && old_name) {
+		value = g_hash_table_lookup(options, old_name);
+		if(value != NULL) {
+			pe_config_warn("Using deprecated name '%s' for"
+				       " cluster option '%s'", old_name, name);
+		}
+	}
+
+	if(value == NULL) {
+		g_hash_table_insert(
+			options, crm_strdup(name), crm_strdup(def_value));
+		value = g_hash_table_lookup(options, name);
+		crm_notice("Using default value '%s' for cluster option '%s'",
+			   value, name);
+	}
+	
+	if(validate && validate(value) == FALSE) {
+		pe_config_err("Value '%s' for cluster option '%s' is invalid."
+			      "  Defaulting to %s", value, name, def_value);
+		g_hash_table_replace(options, crm_strdup(name),
+				     crm_strdup(def_value));
+		value = g_hash_table_lookup(options, name);
+	}
+	
+	return value;
+}

@@ -1,4 +1,4 @@
-/* $Id: allocate.c,v 1.10 2006/06/23 08:54:13 andrew Exp $ */
+/* $Id: allocate.c,v 1.11 2006/08/14 09:00:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -806,14 +806,17 @@ int transition_id = -1;
 gboolean
 stage8(pe_working_set_t *data_set)
 {
+	const char *value = NULL;
 	char *transition_id_s = NULL;
 
 	transition_id++;
 	transition_id_s = crm_itoa(transition_id);
 	crm_debug("Creating transition graph %d.", transition_id);
+	value = cluster_option(
+		data_set->config_hash, NULL, "network-delay", NULL, "60s");
 	
 	data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
-	crm_xml_add(data_set->graph, "global_timeout", data_set->transition_idle_timeout);
+	crm_xml_add(data_set->graph, "network-delay", value);
 	crm_xml_add(data_set->graph, "transition_id", transition_id_s);
 	crm_free(transition_id_s);
 	

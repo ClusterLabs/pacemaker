@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.35 2006/07/06 09:30:28 andrew Exp $ */
+/* $Id: actions.c,v 1.36 2006/08/14 09:00:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -420,7 +420,7 @@ send_rsc_command(crm_action_t *action)
 		trigger_graph();
 
 	} else if(action->timeout > 0) {
-		int action_timeout = 2 * action->timeout;
+		int action_timeout = 2 * action->timeout + transition_graph->network_delay;
 		crm_debug_3("Setting timer for action %s", task_uuid);
 		if(transition_graph->transition_timeout < action_timeout) {
 			crm_debug("Action %d:"

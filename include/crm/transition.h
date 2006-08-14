@@ -1,4 +1,4 @@
-/* $Id: transition.h,v 1.6 2006/04/23 19:50:19 andrew Exp $ */
+/* $Id: transition.h,v 1.7 2006/08/14 09:00:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -102,6 +102,7 @@ typedef struct crm_graph_s
 		int num_actions;
 		int num_synapses;
 
+		int network_delay;
 		int transition_timeout;
 
 		GListPtr synapses; /* synpase_t* */

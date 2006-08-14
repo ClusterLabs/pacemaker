@@ -1,4 +1,4 @@
-/* $Id: common.h,v 1.2 2006/06/08 14:08:09 andrew Exp $ */
+/* $Id: common.h,v 1.3 2006/08/14 09:00:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -141,6 +141,10 @@ extern int char2score(const char *score);
 extern char *score2char(int score);
 
 extern void add_hash_param(GHashTable *hash, const char *name, const char *value);
+extern const char *default_action_timeout(GHashTable* options);
+extern const char *cluster_option(
+	GHashTable* options, gboolean(*validate)(const char*),
+	const char *name, const char *old_name, const char *def_value);
 
 
 /* Helper macros to avoid NULL pointers */

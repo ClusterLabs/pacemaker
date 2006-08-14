@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.6 2006/05/03 09:03:21 andrew Exp $ */
+/* $Id: unpack.c,v 1.7 2006/08/14 09:00:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -184,15 +184,18 @@ unpack_graph(crm_data_t *xml_graph)
 	
 	new_graph->id = -1;
 	new_graph->abort_priority = 0;
+	new_graph->network_delay = -1;
 	new_graph->transition_timeout = -1;
 
 	if(xml_graph != NULL) {
 		t_id = crm_element_value(xml_graph, "transition_id");
-		time = crm_element_value(xml_graph, "global_timeout");
 		CRM_CHECK(t_id != NULL, return NULL);
-		CRM_CHECK(time != NULL, return NULL);
-		new_graph->transition_timeout = crm_get_msec(time);
 		new_graph->id = crm_parse_int(t_id, "-1");
+
+		time = crm_element_value(xml_graph, "network-delay");
+		CRM_CHECK(time != NULL, return NULL);
+		new_graph->network_delay = crm_get_msec(time);
+		new_graph->transition_timeout = new_graph->network_delay;
 	}
 	
 	xml_child_iter_filter(

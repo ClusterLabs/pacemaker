@@ -1,4 +1,4 @@
-/* $Id: status.c,v 1.7 2006/07/04 07:36:01 andrew Exp $ */
+/* $Id: status.c,v 1.8 2006/08/14 09:00:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -205,7 +205,7 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->now = NULL;
 	data_set->graph = NULL;
 	
-	data_set->transition_idle_timeout = crm_strdup("60s");
+	data_set->transition_idle_timeout = NULL;
 	data_set->dc_uuid            = NULL;
 	data_set->dc_node            = NULL;
 	data_set->have_quorum        = FALSE;
