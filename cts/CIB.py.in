@@ -97,16 +97,11 @@ class CIB:
               <nvpair id="master_node_max_4" name="master_node_max" value="%d"/>
             </attributes>
           </instance_attributes>
-          <primitive id="ocf_msdummy" class="ocf" type="@libdir@/heartbeat/cts/OCFMSDummy" provider="heartbeat">
+          <primitive id="ocf_msdummy" class="ocf" type="Stateful" provider="heartbeat">
             <operations>
               <op id="ocf_msdummy_monitor" name="monitor" interval="5s"/>
               <op id="ocf_msdummy_monitor_master" name="monitor" interval="6s" role="Master"/>
             </operations>
-            <instance_attributes id="master-child">
-              <attributes>
-                <nvpair id="logfile_id_1" name="logfile" value="/var/log/cts_ocfdummy.log"/>
-              </attributes>
-            </instance_attributes>
           </primitive>
         </master_slave>'''
 
