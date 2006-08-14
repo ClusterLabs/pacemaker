@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.29 2006/07/18 06:15:54 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.30 2006/08/14 15:59:18 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -213,12 +213,14 @@ main(int argc, char **argv)
 	
 	make_daemon(daemonize, pid_file);
 
+#if CURSES_ENABLED
 	if(as_console) {
 		initscr();
 		cbreak();
 		noecho();
 	}
-
+#endif
+	
 	crm_info("Starting %s", crm_system_name);
 	mainloop = g_main_new(FALSE);
 
@@ -243,11 +245,13 @@ main(int argc, char **argv)
 	
 	crm_info("Exiting %s", crm_system_name);	
 	
+#if CURSES_ENABLED
 	if(as_console) {
 		echo();
 		nocbreak();
 		endwin();
 	}
+#endif
 	return 0;
 }
 
