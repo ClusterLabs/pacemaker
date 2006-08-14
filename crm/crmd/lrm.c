@@ -80,7 +80,6 @@ void free_recurring_op(gpointer value);
 
 GHashTable *monitors = NULL;
 GHashTable *resources = NULL;
-GHashTable *resources_confirmed = NULL;
 GHashTable *shutdown_ops = NULL;
 
 int num_lrm_register_fails = 0;
@@ -204,10 +203,6 @@ do_lrm_control(long long action,
 			g_hash_destroy_str, free_recurring_op);
 
 		resources = g_hash_table_new_full(
-			g_str_hash, g_str_equal,
-			g_hash_destroy_str, g_hash_destroy_str);
-		
-		resources_confirmed = g_hash_table_new_full(
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
 		
@@ -1223,19 +1218,8 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 			operation, rsc->id, call_id);
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 
-	} else if(op->interval > 0) {
-		struct recurring_op_s *op = NULL;
-		crm_malloc0(op, sizeof(struct recurring_op_s));
-		crm_debug_2("Adding recurring %s op for %s (%d)",
-			    op_id, rsc->id, call_id);
-		
-		op->call_id = call_id;
-		op->rsc_id  = crm_strdup(rsc->id);
-		g_hash_table_insert(monitors, op_id, op);
-		op_id = NULL;
-		
 	} else {
-		/* record all non-recurring operations so we can wait
+		/* record all operations so we can wait
 		 * for them to complete during shutdown
 		 */
 		char *call_id_s = make_stop_id(rsc->id, call_id);
@@ -1243,6 +1227,18 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 			shutdown_ops, call_id_s, crm_strdup(rsc->id));
 		crm_debug_2("Recording pending op: %s/%s %s",
 			    rsc->id, operation, call_id_s);
+
+		if(op->interval > 0) {
+			struct recurring_op_s *op = NULL;
+			crm_malloc0(op, sizeof(struct recurring_op_s));
+			crm_debug_2("Adding recurring %s op for %s (%d)",
+				    op_id, rsc->id, call_id);
+			
+			op->call_id = call_id;
+			op->rsc_id  = crm_strdup(rsc->id);
+			g_hash_table_insert(monitors, op_id, op);
+			op_id = NULL;
+		}
 	}
 
 	crm_free(op_id);
@@ -1492,15 +1488,12 @@ do_lrm_event(long long action,
 gboolean
 process_lrm_event(lrm_op_t *op)
 {
-	const char *last_op = NULL;
-	gboolean is_probe = FALSE;
-	int log_rsc_err = LOG_WARNING;
-	
 	CRM_CHECK(op != NULL, return I_NULL);
 	CRM_CHECK(op->rsc_id != NULL, return I_NULL);
 
-	if(op->interval == 0 && safe_str_eq(op->op_type, CRMD_ACTION_STATUS)) {
-		is_probe = TRUE;
+	if(op->rc == 8 || op->rc == 7) {
+		/* Leave it up to the TE/PE to decide if this is an error */ 
+		op->op_status = LRM_OP_DONE;
 	}
 
 	switch(op->op_status) {
@@ -1514,11 +1507,7 @@ process_lrm_event(lrm_op_t *op)
 				execra_code2string(op->rc));
 			break;
 		case LRM_OP_ERROR:
-			if(is_probe) {
-				log_rsc_err = LOG_INFO;
-			}
-			crm_log_maybe(log_rsc_err,
-				      "LRM operation (%d) %s_%d on %s %s: (%d) %s",
+			crm_err("LRM operation (%d) %s_%d on %s %s: (%d) %s",
 				      op->call_id, op->op_type,
 				      op->interval,
 				      crm_str(op->rsc_id),
@@ -1534,20 +1523,8 @@ process_lrm_event(lrm_op_t *op)
 				 op->interval,
 				 crm_str(op->rsc_id),
 				 op_status2text(op->op_status));
-			return I_NULL;
 			break;
 		case LRM_OP_TIMEOUT:
-			last_op = g_hash_table_lookup(
-				resources_confirmed, crm_strdup(op->rsc_id));
-
-			if(safe_str_eq(last_op, CRMD_ACTION_STOP)
-			   && safe_str_eq(op->op_type, CRMD_ACTION_MON)) {
-				crm_err("LRM sent a timed out %s operation"
-					" _after_ a confirmed stop",
-					op->op_type);
-				return I_NULL;
-			}
-
 			crm_err("LRM operation (%d) %s_%d on %s %s",
 				op->call_id, op->op_type,
 				op->interval,
@@ -1569,23 +1546,34 @@ process_lrm_event(lrm_op_t *op)
 				 op_status2text(op->op_status));
 			break;
 	}
-	g_hash_table_replace(resources_confirmed,
-			     crm_strdup(op->rsc_id), crm_strdup(op->op_type));
-
-	do_update_resource(op);
+	
+	if(op->op_status != LRM_OP_CANCELLED) {
+		do_update_resource(op);
+		if(op->interval > 0) {
+			crm_debug("Op %d %s_%s_%d returned",
+				  op->call_id, op->rsc_id, op->op_type,
+				  op->interval);
+			return TRUE;
+		}
+		
+	} else if(op->interval == 0) {
+		crm_err("No update sent for cancelled op %d: %s_%s_%d",
+			op->call_id, op->rsc_id, op->op_type, op->interval);
+	}
 
 	if(g_hash_table_size(shutdown_ops) > 0) {
 		char *op_id = make_stop_id(op->rsc_id, op->call_id);
 		if(g_hash_table_remove(shutdown_ops, op_id)) {
-			crm_debug_2("Op %d (%s %s) confirmed",
-				  op->call_id, op->op_type, op->rsc_id);
-
-		} else if(op->interval == 0) {
-			crm_err("Op %d (%s %s) not matched: %s",
-				op->call_id, op->op_type, op->rsc_id, op_id);
+			crm_debug_2("Op %d %s_%s_%d is confirmed",
+				    op->call_id, op->rsc_id, op->op_type,
+				    op->interval);
+			crm_free(op_id);
+			return TRUE;
 		}
 		crm_free(op_id);
 	}
+	crm_err("Op %d %s_%s_%d not matched",
+		op->call_id, op->rsc_id, op->op_type, op->interval);
 	return TRUE;
 }
 

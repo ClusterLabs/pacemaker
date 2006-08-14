@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.13 2006/07/18 06:17:34 andrew Exp $ */
+/* $Id: unpack.c,v 1.14 2006/08/14 08:51:23 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -1072,8 +1072,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		if(is_stop_action) {
 			task_status_i = LRM_OP_DONE;
  		} else {
-			CRM_CHECK(task_status_i == LRM_OP_ERROR,
-				task_status_i = LRM_OP_ERROR);
+			task_status_i = LRM_OP_ERROR;
 		}
 		
 	} else if(EXECRA_RUNNING_MASTER == actual_rc_i) {
@@ -1081,15 +1080,14 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		   || (rsc->role == RSC_ROLE_MASTER
 		       && safe_str_eq(task, CRMD_ACTION_STATUS))) {
 			task_status_i = LRM_OP_DONE;
+
 		} else {
+			task_status_i = LRM_OP_ERROR;
 			if(rsc->role != RSC_ROLE_MASTER) {
 				crm_err("%s reported %s in master mode on %s",
 					id, rsc->id,
 					node->details->uname);
 			}
-			
-			CRM_CHECK(task_status_i == LRM_OP_ERROR,
-				task_status_i = LRM_OP_ERROR);
 		}
 		rsc->role = RSC_ROLE_MASTER;
 
