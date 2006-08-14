@@ -1,4 +1,4 @@
-/* $Id: events.c,v 1.21 2006/06/22 12:58:45 andrew Exp $ */
+/* $Id: events.c,v 1.22 2006/08/14 08:52:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -497,25 +497,13 @@ void
 process_graph_event(crm_data_t *event, const char *event_node)
 {
 	int rc                = -1;
-	int op_status_i       = 0;
 	const char *magic     = NULL;
 	const char *rsc_id    = NULL;
-	const char *op_status = NULL;
 
 	CRM_ASSERT(event != NULL);
 	rsc_id    = crm_element_value(event, XML_ATTR_ID);
-	op_status = crm_element_value(event, XML_LRM_ATTR_OPSTATUS);
 	magic     = crm_element_value(event, XML_ATTR_TRANSITION_MAGIC);
 
-	if(op_status != NULL) {
-		op_status_i = crm_parse_int(op_status, NULL);
-		if(op_status_i == LRM_OP_PENDING) {
-			/* just information that the action was sent */
-			crm_debug_2("Ignoring TE initiated updates");
-			return;
-		}
-	}
-	
 	if(magic == NULL) {
 		crm_log_xml_debug_2(event, "Skipping \"non-change\"");
 		return;

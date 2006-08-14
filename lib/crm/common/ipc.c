@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.27 2006/07/12 09:31:36 andrew Exp $ */
+/* $Id: ipc.c,v 1.28 2006/08/14 08:52:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -153,7 +153,11 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 				      (int)ipc_client->farside_pid);
 
 		} else if(ipc_client->conntype == IPC_CLIENT) {
-			CRM_CHECK(ipc_client->send_queue->current_qlen < ipc_client->send_queue->max_qlen, ;);
+			if(ipc_client->send_queue->current_qlen >= ipc_client->send_queue->max_qlen) {
+				crm_err("Send queue to %d (size=%d) full.",
+					ipc_client->farside_pid,
+					(int)ipc_client->send_queue->max_qlen);
+			}
 		}
 	}
 /* 	ipc_client->ops->resume_io(ipc_client); */

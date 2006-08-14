@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.59 2006/04/19 12:24:59 andrew Exp $ */
+/* $Id: utils.c,v 1.60 2006/08/14 08:52:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,53 +32,6 @@
 
 extern cib_t *te_cib_conn;
 
-
-const char *
-get_rsc_state(const char *task, op_status_t status) 
-{
-	if(safe_str_eq(CRMD_ACTION_START, task)) {
-		if(status == LRM_OP_PENDING) {
-			return CRMD_ACTION_START_PENDING;
-		} else if(status == LRM_OP_DONE) {
-			return CRMD_ACTION_STARTED;
-		} else {
-			return CRMD_ACTION_START_FAIL;
-		}
-		
-	} else if(safe_str_eq(CRMD_ACTION_STOP, task)) {
-		if(status == LRM_OP_PENDING) {
-			return CRMD_ACTION_STOP_PENDING;
-		} else if(status == LRM_OP_DONE) {
-			return CRMD_ACTION_STOPPED;
-		} else {
-			return CRMD_ACTION_STOP_FAIL;
-		}
-		
-	} else {
-		if(safe_str_eq(CRMD_ACTION_MON, task)) {
-			if(status == LRM_OP_PENDING) {
-				return CRMD_ACTION_MON_PENDING;
-			} else if(status == LRM_OP_DONE) {
-				return CRMD_ACTION_MON_OK;
-			} else {
-				return CRMD_ACTION_MON_FAIL;
-			}
-		} else {
-			const char *rsc_state = NULL;
-			if(status == LRM_OP_PENDING) {
-				rsc_state = CRMD_ACTION_GENERIC_PENDING;
-			} else if(status == LRM_OP_DONE) {
-				rsc_state = CRMD_ACTION_GENERIC_OK;
-			} else {
-				rsc_state = CRMD_ACTION_GENERIC_FAIL;
-			}
-			crm_warn("Using status \"%s\" for op \"%s\"..."
-				 " this is still in the experimental stage.",
-				 rsc_state, task);
-			return rsc_state;
-		}
-	}
-}
 
 gboolean
 stop_te_timer(crm_action_timer_t *timer)

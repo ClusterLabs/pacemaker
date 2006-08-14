@@ -1461,7 +1461,6 @@ do_update_resource(lrm_op_t* op)
 	} else {
 		crm_err("Resource state update failed: %s",
 			cib_error2string(rc));	
-		CRM_DEV_ASSERT(rc == cib_ok);
 	}
 	
 	free_xml(update);
