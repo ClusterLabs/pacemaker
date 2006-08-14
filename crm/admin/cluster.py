@@ -1,6 +1,6 @@
 #!/bin/env python
 #
-#	$Id: cluster.py,v 1.2 2006/08/14 13:07:46 andrew Exp $
+#	$Id: cluster.py,v 1.3 2006/08/14 15:54:05 andrew Exp $
 #
 #	pingd OCF Resource Agent
 #	Records (in the CIB) the current number of ping nodes a 
@@ -53,11 +53,11 @@ table = {
     "^help": (
 	crm.help, None, [('v', 'verbose', None, 'extra information')],
 	"[-v]"),
-    "^up": (crm.up, None, [], None, "Move up a level in the heirarchy"),
-    "^crm": (crm.cd_, ["crm"], [], None),
-    "^nodes": (crm.cd_, ["crm"], [], None),
+    "^up":        (crm.up, None, [], None, "Move up a level in the heirarchy"),
+    "^crm":       (crm.cd_, ["crm"], [], None),
+    "^nodes":     (crm.cd_, ["crm"], [], None),
     "^resources": (crm.cd_, ["crm"], [], None),
-    "^config": (crm.cd_, ["crm"], [], None),
+    "^config":    (crm.cd_, ["crm"], [], None),
     "^list": (
 	crm.do_list, ["nodes", "resources"], [('t', 'topic', "", '')],
 	None),
@@ -96,22 +96,25 @@ def help_(text):
 	choice = findpossible(text, None, False)
 	for key in choice.keys():
 	    alias, e = choice[key]
-	    utl.log_dev("Help text for: %s" % alias[0])
+	    text = alias[0]
+	    utl.log_dev("Help text for: %s" % text)
 	    if e:
 		sub_cmd=""
 		if len(e) > 4:
 		    utl.log_info("\n"+e[4]+"\n")
-		possible = findpossible("", alias[0]).keys()
+		possible = findpossible("", text).keys()
 		utl.log_dev("Possible sub-commands: "+repr(possible))
 		possible.remove("up")
 		possible.remove("help")
 		possible.remove("exit")
+		if text in possible:
+		    possible.remove(text)
 		if possible:
 			sub_cmd=' ('+'|'.join(possible)+')'
 		if e[3]:
-		    utl.log_info("Usage: %s %s%s" % (alias[0], e[3], sub_cmd))
+		    utl.log_info("Usage: %s %s%s" % (text, e[3], sub_cmd))
 		else:
-		    utl.log_info("Usage: %s%s" % (alias[0], sub_cmd))
+		    utl.log_info("Usage: %s%s" % (text, sub_cmd))
 	if choice:
 	    return;
     utl.log_err("No help text available for: %s" % text)
@@ -127,24 +130,32 @@ def findpossible(cmd, topic=None, filter=True):
     """
     if not topic:
 	topic = utl.crm_topic
+	utl.log_dev("Searching in default topic: %s" % topic)
 	
-    #utl.log_debug("Looking for completions in %s" % topic)
+    utl.log_dev("Looking for completions of %s in %s" % (cmd, topic))
     choice = {}
     debugchoice = {}
+    topicchoice = {}
     for e in table.keys():
 	t = table[e]
-	#utl.log_debug("Looking for "+topic +" in "+repr(t[1]))
+	#utl.log_dev("Processing: %s / %s" % (e, repr(t)))
+	aliases = e.lstrip("^").split("|")
+	found = None
+	if "^%s"%topic == e and t[0] == crm.cd_:
+	    #utl.log_dev("Found: topic")
+	    topicchoice[topic] = (aliases, table[e])
 	if filter and t[1] and topic not in t[1]:
+	    #utl.log_dev("Skip: filter")
 	    continue
-        aliases = e.lstrip("^").split("|")
-        found = None
-        if cmd in aliases:
-            found = cmd
-        else:
-            for a in aliases:
-                if a.startswith(cmd):
-                    found = a
-                    break
+	elif cmd in aliases:
+	    #utl.log_dev("Found: alias")
+	    found = cmd
+	else:
+	    for a in aliases:
+		if a.startswith(cmd):
+		    #utl.log_dev("Found: alias prefix")
+		    found = a
+		    break
         if found is not None:
             if aliases[0].startswith("debug"):
                 debugchoice[found] = (aliases, table[e])
@@ -154,6 +165,9 @@ def findpossible(cmd, topic=None, filter=True):
     if not choice and debugchoice:
         choice = debugchoice
 
+    if not choice and topicchoice:
+        choice = topicchoice
+
     return choice
 
 def findcmd(cmd):
@@ -161,6 +175,7 @@ def findcmd(cmd):
     choice = findpossible(cmd)
 
     if choice.has_key(cmd):
+	#utl.log_dev("Choice has: %s" % cmd)
         return choice[cmd]
 
     if len(choice) > 1:
@@ -169,6 +184,7 @@ def findcmd(cmd):
         raise AmbiguousCommand(cmd, clist)
 
     if choice:
+	#utl.log_dev("Returning first: %s" % (repr(choice.values()[0])))
         return choice.values()[0]
 
     raise UnknownCommand(cmd)
@@ -192,8 +208,10 @@ def parse(args):
 
     if args:
 	cmd, args = args[0], args[1:]
+	utl.log_dev("Initial Command: %s" % cmd)
 	aliases, i = findcmd(cmd)
 	cmd = aliases[0]
+	utl.log_dev("Found Command: %s" % cmd)
 	defaults = []
 	if defaults:
 	    args = defaults.split() + args
@@ -222,29 +240,24 @@ def parse(args):
     return (cmd, cmd and i[0] or None, args, options, cmdoptions)
 
 def main_loop(args):
-    global global_opts
     cmd = None
-    cmd_args = []
-    cmdoptions = {}
-
     if not args:
 	return 0
 
     try:
-	utl.log_dev("Loop Input: "+repr(args))
-	cmd, func, new_args, ignore, new_cmdoptions = parse(args)
-
-	cmd_args.extend(new_args)
-	utl.log_dev(repr(cmd_args))
-	cmdoptions.update(new_cmdoptions)
+	cmd, func, cmd_args, ignore, cmd_options = parse(args)
 
 	if func == crm.cd_:
-	    cmdoptions["topic"] = cmd
+	    cmd_options["topic"] = cmd
+
+	utl.log_dev("Func Command: %s" % cmd)
+	utl.log_dev("Func Args: %s" % repr(cmd_args))
+	utl.log_dev("Func Opts: %s" % repr(cmd_options))
 	    
 	if not cmd:
 	    utl.log_dev(repr(args))
 	    return 0
-	d = lambda: func(*cmd_args, **cmdoptions)
+	d = lambda: func(*cmd_args, **cmd_options)
 	return d()
 
     except crm.HelpRequest, inst:

@@ -1,5 +1,5 @@
 #
-#	$Id: crm_commands.py,v 1.1 2006/08/14 08:37:54 andrew Exp $
+#	$Id: crm_commands.py,v 1.2 2006/08/14 15:54:05 andrew Exp $
 #
 #	pingd OCF Resource Agent
 #	Records (in the CIB) the current number of ping nodes a 
@@ -38,10 +38,10 @@ class ReparseRequest(Exception):
     """Exception raised when a command changed the command-line."""
 
 def up(*args, **cmdoptions):
-    l = len(topic_stack)
+    l = len(utl.topic_stack)
     if l > 1:
-	topic_stack.pop()
-	utl.set_topic(topic_stack[-1])
+	utl.topic_stack.pop()
+	utl.set_topic(utl.topic_stack[-1])
     else:
 	utl.log_debug("Already at the top of the stack")
 
@@ -55,7 +55,7 @@ def toggle_flag(*args, **cmdoptions):
     return utl.global_opts[flag]
 
 def cd_(*args, **cmdoptions):
-    global crm_topic
+    utl.log_dev("args: %s\nopts: %s" % (repr(args), repr(cmdoptions)))
     if not cmdoptions["topic"]:
 	utl.log_err("No topic specified")
 	return 1
