@@ -1,4 +1,4 @@
-/* $Id: unpack.c,v 1.17 2006/08/14 09:14:45 andrew Exp $ */
+/* $Id: unpack.c,v 1.18 2006/08/14 09:40:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -160,8 +160,14 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 	const char *id     = NULL;
 	const char *uname  = NULL;
 	const char *type   = NULL;
+	gboolean unseen_are_unclean = TRUE;
 	const char *blind_faith = pe_pref(
 		data_set->config_hash, "startup-fencing");
+	
+	if(crm_is_true(blind_faith) == FALSE) {
+		unseen_are_unclean = FALSE;
+		crm_warn("Blind faith: not fencing unseen nodes");
+	}
 
 	crm_debug_2("Begining unpack... %s",
 		    xml_nodes?crm_element_name(xml_nodes):"<none>");
@@ -215,7 +221,7 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 /* 			new_node->weight = -INFINITY; */
 /* 		} */
 		
-		if(data_set->stonith_enabled == FALSE || crm_is_true(blind_faith)) {
+		if(data_set->stonith_enabled == FALSE || unseen_are_unclean == FALSE) {
 			/* blind faith... */
 			new_node->details->unclean = FALSE; 
 
