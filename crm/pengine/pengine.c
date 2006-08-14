@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.121 2006/08/14 09:14:45 andrew Exp $ */
+/* $Id: pengine.c,v 1.122 2006/08/14 16:31:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -127,9 +127,9 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 			}
 
 		} else {
-			pe_config_warn("No value specified for cluster"
-				       " preference: %s",
-				       series[series_id].param);
+			crm_config_warn("No value specified for cluster"
+					" preference: %s",
+					series[series_id].param);
 		}		
 
 		seq = get_last_sequence(PE_WORKING_DIR, series[series_id].name);	
