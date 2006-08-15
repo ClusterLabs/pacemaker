@@ -37,7 +37,6 @@ cts_DATA	=	README
 
 cts_SCRIPTS	=				\
 			CTSproxy.py		\
-			OCFMSDummy		\
 			LSBDummy
 
 all-local: $(cts_PYTHON)
