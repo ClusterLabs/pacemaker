@@ -471,6 +471,7 @@ cib_native_perform_op(
 		}
 		CRM_CHECK(ha_msg_value_int(
 				  op_reply, F_CIB_CALLID, &reply_id) == HA_OK,
+			  crm_msg_del(op_reply);
 			  return cib_reply_failed);
 
 		if(reply_id == msg_id) {
@@ -619,8 +620,10 @@ cib_native_rcvmsg(cib_t* cib, int blocking)
 
 	} else if (cib_native_msgready(cib) == FALSE) {
 		crm_debug("Waiting for message from CIB service...");
-		if(native->callback_channel
-		   && native->callback_channel->ch_status != IPC_CONNECT) {
+		if(native->callback_channel == NULL) {
+			return 0;
+			
+		} else if(native->callback_channel->ch_status != IPC_CONNECT) {
 			return 0;
 			
 		} else if(native->command_channel

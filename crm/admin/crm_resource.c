@@ -1,4 +1,4 @@
-/* $Id: crm_resource.c,v 1.45 2006/08/04 09:50:02 andrew Exp $ */
+/* $Id: crm_resource.c,v 1.46 2006/08/17 07:17:15 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -183,7 +183,7 @@ dump_resource_attr(
 	} else if(g_list_length(the_rsc->running_on) > 1) {
 		fprintf(stderr, "%s is active on more than one node,"
 			" returning the default value for %s\n",
-			the_rsc->id, value);
+			the_rsc->id, crm_str(value));
 	} 
 	
 	unpack_instance_attributes(
@@ -984,6 +984,9 @@ main(int argc, char **argv)
 		if(prop_value == NULL) {
 			fprintf(stderr, "You need to supply a value with the -v option\n");
 			return CIBRES_MISSING_FIELD;
+
+		} else if(cib_conn == NULL) {
+			return cib_connection;
 		}
 
 		CRM_DEV_ASSERT(rsc_id != NULL);
@@ -1036,6 +1039,9 @@ main(int argc, char **argv)
 		if(rsc_type == NULL) {
 			fprintf(stderr, "You need to specify a resource type with -t");
 			return cib_NOTEXISTS;
+
+		} else if(cib_conn == NULL) {
+			return cib_connection;
 		}
 
 		if(do_force) {
@@ -1043,7 +1049,7 @@ main(int argc, char **argv)
 		}
 		msg_data = create_xml_node(NULL, rsc_type);
 		crm_xml_add(msg_data, XML_ATTR_ID, rsc_id);
-		
+
 		rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_RESOURCES,
 					    msg_data, NULL, cib_options);
 		free_xml(msg_data);

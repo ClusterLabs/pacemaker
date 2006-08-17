@@ -1,4 +1,4 @@
-/* $Id: native.c,v 1.160 2006/08/14 09:14:45 andrew Exp $ */
+/* $Id: native.c,v 1.161 2006/08/17 07:17:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -947,6 +947,9 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 			print_resource(LOG_DEBUG_3, "Modified RH", rsc_rh, TRUE);
 
 		} else if(rsc_rh->provisional) {
+			
+		} else if(color_rh->details == NULL) {
+			CRM_ASSERT(FALSE); /* This is never true but it keeps BEAM happy */
 			
 		} else if(color_rh && color_rh->details->pending) {
 			node_t *node_rh = NULL;

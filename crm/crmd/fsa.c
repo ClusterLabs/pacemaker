@@ -169,7 +169,7 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 	fsa_actions = clear_bit(fsa_actions, an_action);
 	crm_debug_3("Invoking action %s (%.16llx)",
 		    fsa_action2string(an_action), an_action);
-	if(do_time_check && action_diff_max_ms > 0) {
+	if(do_time_check) {
 		action_start = time_longclock();
 	}
 
@@ -182,7 +182,7 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 	crm_debug_3("Action complete: %s (%.16llx)",
 		    fsa_action2string(an_action), an_action);
 
-	if(do_time_check && action_diff_max_ms > 0) {
+	if(do_time_check) {
 		action_stop = time_longclock();
 		action_diff = sub_longclock(action_stop, action_start);
 		action_diff_ms = longclockto_ms(action_diff);
