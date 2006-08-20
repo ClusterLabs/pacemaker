@@ -1,4 +1,4 @@
-/* $Id: crm_verify.c,v 1.19 2006/08/14 09:06:31 andrew Exp $ */
+/* $Id: crm_verify.c,v 1.20 2006/08/20 10:54:57 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -63,7 +63,7 @@ main(int argc, char **argv)
 		
 	pe_working_set_t data_set;
 	cib_t *	cib_conn = NULL;
-	enum cib_errors rc = cib_ok;
+	int rc = cib_ok;
 	
 	const char *xml_file = NULL;
 	crm_system_name = basename(argv[0]);
