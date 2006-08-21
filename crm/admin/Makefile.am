@@ -22,6 +22,7 @@ INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 		-I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha	\
 		-I$(top_builddir) -I$(top_srcdir)
 
+halibdir	= $(libdir)/@HB_PKG@
 hasbindir	= $(sbindir)
 LIBRT 		= @LIBRT@
 AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
@@ -38,11 +39,11 @@ COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 		$(LIBRT)
 
 
-hasbin_PYTHON		= crm_primitive.py cluster.py crm_utils.py crm_commands.py
+halib_PYTHON		= crm_primitive.py crm_utils.py crm_commands.py
 ## binary progs
 hasbin_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 \
 			crm_master crm_standby crm_failcount crm_attribute \
-			crm_resource crm_verify crm_uuid
+			crm_resource crm_verify crm_uuid cluster
 
 ## SOURCES
 

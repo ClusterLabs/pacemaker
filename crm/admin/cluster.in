@@ -1,10 +1,4 @@
-#!/bin/env python
-#
-#	$Id: cluster.py,v 1.3 2006/08/14 15:54:05 andrew Exp $
-#
-#	pingd OCF Resource Agent
-#	Records (in the CIB) the current number of ping nodes a 
-#	   cluster node can connect to.
+#!@PYTHON@
 #
 # Copyright (c) 2006 Andrew Beekhof
 #                    All Rights Reserved.
@@ -37,8 +31,11 @@ import traceback
 from popen2 import Popen3
 
 # Module copied from Mercurial
+
+sys.path.append("@HA_LIBDIR@/heartbeat")
 import crm_utils as utl
 import crm_commands as crm 
+
 
 class ParseError(Exception):
     """Exception raised on errors in parsing the command line."""
