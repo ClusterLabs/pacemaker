@@ -1,4 +1,4 @@
-/* $Id: crmd_fsa.h,v 1.44 2005/09/02 12:40:52 andrew Exp $ */
+/* $Id: crmd_fsa.h,v 1.50 2006/02/20 12:10:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -62,6 +62,7 @@ struct crm_subsystem_s {
  		const char*	command;  /* Command with path */
 		const char*	args;     /* Command arguments */
 
+		gboolean	sent_kill;
 		IPC_Channel	*ipc;	  /* How can we communicate with it */
 		long long	flag_connected;	  /*  */
 		long long	flag_required;	  /*  */
@@ -114,15 +115,15 @@ extern ll_lrm_t       *fsa_lrm_conn;
 extern cib_t	      *fsa_cib_conn;
 
 extern const char *fsa_our_uname;
+extern const char *fsa_our_uuid;
 extern char	  *fsa_pe_ref; /* the last invocation of the PE */
 extern char       *fsa_our_dc;
+extern char	  *fsa_our_dc_version;
 extern GListPtr   fsa_message_queue;
 
 extern fsa_timer_t *election_trigger;		/*  */
 extern fsa_timer_t *election_timeout;		/*  */
 extern fsa_timer_t *shutdown_escalation_timer;	/*  */
-extern fsa_timer_t *shutdown_timer;		/*  */
-extern fsa_timer_t *dc_heartbeat;
 extern fsa_timer_t *integration_timer;
 extern fsa_timer_t *finalization_timer;
 extern fsa_timer_t *wait_timer;
@@ -141,7 +142,7 @@ extern GHashTable *confirmed_nodes;
 extern GHashTable *crmd_peer_state;
 
 /* these two should be moved elsewhere... */
-extern crm_data_t *do_update_cib_nodes(crm_data_t *updates, gboolean overwrite);
+extern void do_update_cib_nodes(gboolean overwrite, const char *caller);
 extern gboolean do_dc_heartbeat(gpointer data);
 
 gboolean add_cib_op_callback(

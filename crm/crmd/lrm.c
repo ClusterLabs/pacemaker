@@ -45,20 +45,20 @@
 #include <crm/dmalloc_wrapper.h>
 
 char *make_stop_id(const char *rsc, int call_id);
-void ghash_print_pending(gpointer key, gpointer value, gpointer user_data);
-
-gboolean stop_all_resources(void);
+gboolean verify_stopped(gboolean force, int log_level);
 gboolean resource_stopped(gpointer key, gpointer value, gpointer user_data);
 
 gboolean build_operation_update(
 	crm_data_t *rsc_list, lrm_op_t *op, const char *src, int lpc);
 
 gboolean build_active_RAs(crm_data_t *rsc_list);
+gboolean is_rsc_active(const char *rsc_id);
 
 void do_update_resource(lrm_op_t *op);
+gboolean process_lrm_event(lrm_op_t *op);
 
 enum crmd_fsa_input do_lrm_rsc_op(
-	lrm_rsc_t *rsc, char *rid, const char *operation,
+	lrm_rsc_t *rsc, const char *operation,
 	crm_data_t *msg, HA_Message *request);
 
 enum crmd_fsa_input do_fake_lrm_op(gpointer data);
@@ -69,14 +69,17 @@ void stop_recurring_action(
 gboolean remove_recurring_action(
 	gpointer key, gpointer value, gpointer user_data);
 
+lrm_op_t *construct_op(
+	crm_data_t *rsc_op, const char *rsc_id, const char *operation);
+
+void send_direct_ack(const char *to_host, const char *to_sys,
+		     lrm_op_t* op, const char *rsc_id);
+
 void free_recurring_op(gpointer value);
 
-void nack_rsc_op(lrm_op_t* op, HA_Message *msg);
 
-GHashTable *xml2list(crm_data_t *parent);
 GHashTable *monitors = NULL;
 GHashTable *resources = NULL;
-GHashTable *resources_confirmed = NULL;
 GHashTable *shutdown_ops = NULL;
 
 int num_lrm_register_fails = 0;
@@ -160,6 +163,7 @@ crmd_rscstate2string(enum crmd_rscstate state)
 	return "<unknown>";
 }
 
+GCHSource *lrm_source = NULL;
 
 /*	 A_LRM_CONNECT	*/
 enum crmd_fsa_input
@@ -172,15 +176,26 @@ do_lrm_control(long long action,
 	int ret = HA_OK;
 
 	if(action & A_LRM_DISCONNECT) {
+		verify_stopped(TRUE, LOG_ERR);
+		if(lrm_source) {
+			crm_debug("Removing LRM connection from MainLoop");
+			if(G_main_del_IPC_Channel(lrm_source) == FALSE) {
+				crm_err("Could not remove LRM connection"
+					" from MainLoop");
+			}
+			lrm_source = NULL;			
+		}
 		if(fsa_lrm_conn) {
 			fsa_lrm_conn->lrm_ops->signoff(fsa_lrm_conn);
+			crm_info("Disconnected from the LRM");
+			clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
+			fsa_lrm_conn = NULL;
 		}
 		/* TODO: Clean up the hashtable */
 	}
 
 	if(action & A_LRM_CONNECT) {
 	
-		crm_debug_4("LRM: connect...");
 		ret = HA_OK;
 		
 		monitors = g_hash_table_new_full(
@@ -188,10 +203,6 @@ do_lrm_control(long long action,
 			g_hash_destroy_str, free_recurring_op);
 
 		resources = g_hash_table_new_full(
-			g_str_hash, g_str_equal,
-			g_hash_destroy_str, g_hash_destroy_str);
-		
-		resources_confirmed = g_hash_table_new_full(
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
 		
@@ -206,7 +217,7 @@ do_lrm_control(long long action,
 		}
 
 		if(ret == HA_OK) {
-			crm_debug_4("LRM: sigon...");
+			crm_debug("Connecting to the LRM");
 			ret = fsa_lrm_conn->lrm_ops->signon(
 				fsa_lrm_conn, CRM_SYSTEM_CRMD);
 		}
@@ -243,14 +254,14 @@ do_lrm_control(long long action,
 		/* TODO: create a destroy handler that causes
 		 * some recovery to happen
 		 */
-		G_main_add_IPC_Channel(G_PRIORITY_LOW,
-			      fsa_lrm_conn->lrm_ops->ipcchan(fsa_lrm_conn),
-			      FALSE,
-			      lrm_dispatch,
-			      fsa_lrm_conn,
-			      default_ipc_connection_destroy);
+		lrm_source = G_main_add_IPC_Channel(
+			G_PRIORITY_LOW,
+			fsa_lrm_conn->lrm_ops->ipcchan(fsa_lrm_conn),
+			FALSE, lrm_dispatch, fsa_lrm_conn,
+			default_ipc_connection_destroy);
 
 		set_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
+		crm_debug("LRM connection established");
 		
 	}	
 
@@ -263,42 +274,58 @@ do_lrm_control(long long action,
 	return I_NULL;
 }
 
+static void
+ghash_print_pending(gpointer key, gpointer value, gpointer user_data) 
+{
+	const char *action = key;
+	int *log_level = user_data;
+	crm_log_maybe(*log_level, "Pending action: %s", action);
+}
+
 gboolean
-stop_all_resources(void)
+verify_stopped(gboolean force, int log_level)
 {
 	GListPtr lrm_list = NULL;
 
-	crm_info("Makeing sure all active resources are stopped before exit");
-	
-	if(fsa_lrm_conn == NULL) {
-		return TRUE;
+	crm_info("Checking for active resources before exit");
 
-	} else if(is_set(fsa_input_register, R_SENT_RSC_STOP)) {
-		crm_debug("Already sent stop operation");
+	if(fsa_lrm_conn == NULL) {
+		crm_err("Exiting with no LRM connection..."
+			" resources may be active!");
 		return TRUE;
 	}
 
+	if(g_hash_table_size(shutdown_ops) > 0) {
+		crm_log_maybe(log_level,
+			      "%d pending LRM operations at shutdown%s",
+			      g_hash_table_size(shutdown_ops),
+			      force?"":"... waiting");
+
+		if(force || !is_set(fsa_input_register, R_SENT_RSC_STOP)) {
+			g_hash_table_foreach(
+				shutdown_ops, ghash_print_pending, &log_level);
+		}
+
+		if(force == FALSE) {
+			return FALSE;
+		}
+	}
+	
 	lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
 	slist_iter(
 		rsc_id, char, lrm_list, lpc,
 
-		const char *last_op = g_hash_table_lookup(resources, rsc_id);
-		if(safe_str_neq(last_op, CRMD_ACTION_STOP)) {
-			crm_warn("Resource %s was active at shutdown", rsc_id);
-			do_lrm_rsc_op(NULL, rsc_id, CRMD_ACTION_STOP, NULL, NULL);
+		if(is_rsc_active(rsc_id) == FALSE) {
+			continue;
 		}
+		
+		crm_err("Resource %s was active at shutdown."
+			"  You may ignore this error if it is unmanaged.",
+			rsc_id);
 		);
 
 	set_bit_inplace(fsa_input_register, R_SENT_RSC_STOP);
-	
-	if(g_hash_table_size(shutdown_ops) == 0) {
-		register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
-
-	} else {
-		crm_info("Waiting for %d pending stop operations "
-			 " to complete before exiting",
-			 g_hash_table_size(shutdown_ops));
-	}
+	register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 
 	return TRUE;
 }
@@ -307,31 +334,60 @@ gboolean
 build_operation_update(
 	crm_data_t *xml_rsc, lrm_op_t *op, const char *src, int lpc)
 {
-	int len = 0;
-	char *tmp = NULL;
 	char *fail_state = NULL;
 	const char *state = NULL;
 	crm_data_t *xml_op = NULL;
 	char *op_id = NULL;
+	const char *caller_version = NULL;	
+	char *digest = NULL;
+	crm_data_t *args_xml = NULL;
+	crm_data_t *args_parent = NULL;
 
 	CRM_DEV_ASSERT(op != NULL);
 	if(crm_assert_failed) {
 		return FALSE;
 	}
 
-	crm_debug("%s: Updating resouce %s after %s %s op",
+	crm_debug_2("%s: Updating resouce %s after %s %s op",
 		 src, op->rsc_id, op_status2text(op->op_status), op->op_type);
 
 	if(op->op_status == LRM_OP_CANCELLED) {
-		crm_debug("Ignoring cancelled op");
+		crm_debug_3("Ignoring cancelled op");
 		return TRUE;
 	}
+
+	if(AM_I_DC) {
+		caller_version = CRM_FEATURE_SET;
+
+	} else if(fsa_our_dc_version != NULL) {
+		caller_version = fsa_our_dc_version;
+
+	} else {
+		/* there is a small risk in formerly mixed clusters that
+		 *   it will be sub-optimal.
+		 * however with our upgrade policy, the update we send
+		 *   should still be completely supported anyway
+		 */
+		caller_version = g_hash_table_lookup(
+			op->params, XML_ATTR_CRM_VERSION);
+		crm_warn("Falling back to operation originator version: %s",
+			 caller_version);
+	}
+	crm_debug_3("DC version: %s", caller_version);
 	
 	if(safe_str_eq(op->op_type, CRMD_ACTION_NOTIFY)) {
 		const char *n_type = g_hash_table_lookup(
-			op->params, "notify_type");
+			op->params, crm_meta_name("notify_type"));
 		const char *n_task = g_hash_table_lookup(
-			op->params, "notify_operation");
+			op->params, crm_meta_name("notify_operation"));
+#if CRM_DEPRECATED_SINCE_2_0_5
+		if(n_type == NULL) {
+			n_type = g_hash_table_lookup(op->params, "notify_type");
+		}
+		if(n_task == NULL) {
+			n_task = g_hash_table_lookup(op->params, "notify_operation");
+		}
+#endif
 		CRM_DEV_ASSERT(n_type != NULL);
 		CRM_DEV_ASSERT(n_task != NULL);
 		op_id = generate_notify_key(op->rsc_id, n_type, n_task);
@@ -359,7 +415,7 @@ build_operation_update(
 	if(xml_op != NULL) {
 		const char *old_status_s = crm_element_value(
 			xml_op, XML_LRM_ATTR_OPSTATUS);
-		int old_status = crm_atoi(old_status_s, "-2");
+		int old_status = crm_parse_int(old_status_s, "-2");
 		int log_level = LOG_ERR;
 
 		if(old_status_s == NULL) {
@@ -376,11 +432,11 @@ build_operation_update(
  		crm_log_maybe(log_level,
 			      "Duplicate %s operations in get_cur_state()",
 			      op_id);
- 		crm_log_maybe(log_level-2,
+ 		crm_log_maybe(log_level+2,
 			      "New entry: %s %s (call=%d, status=%s)",
 			      op_id, op->user_data, op->call_id,
 			      op_status2text(op->op_status));
-		crm_log_xml(log_level-2, "Existing entry", xml_op);
+		crm_log_xml(log_level+2, "Existing entry", xml_op);
 		crm_free(op_id);
 		return FALSE;
 		
@@ -390,14 +446,27 @@ build_operation_update(
 	crm_xml_add(xml_op, XML_ATTR_ID, op_id);
 	crm_free(op_id);
 
-	crm_xml_add(xml_rsc, XML_LRM_ATTR_LASTOP, op->op_type);
 	crm_xml_add(xml_op,  XML_LRM_ATTR_TASK,   op->op_type);
-	crm_xml_add(xml_op,  "origin", src);
+	crm_xml_add(xml_op,  XML_ATTR_ORIGIN, src);
 	
 	if(op->user_data == NULL) {
 		op->user_data = generate_transition_key(-1, fsa_our_uname);
 	}
-	fail_state = generate_transition_magic(op->user_data, op->op_status);
+	
+#if CRM_DEPRECATED_SINCE_2_0_3
+	if(compare_version("1.0.3", caller_version) > 0) {
+		CRM_CHECK(FALSE, ; );
+		fail_state = generate_transition_magic_v202(
+			op->user_data, op->op_status);
+	} else {
+		fail_state = generate_transition_magic(
+			op->user_data, op->op_status, op->rc);
+	}
+#else
+	fail_state = generate_transition_magic(
+		op->user_data, op->op_status, op->rc);
+#endif
+	
 	crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, op->user_data);
 	crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC, fail_state);
 	crm_free(fail_state);	
@@ -411,17 +480,9 @@ build_operation_update(
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
-			crm_debug("Resource action %s/%s failed: %d",
-				  op->rsc_id, op->op_type, op->op_status);
-			len = strlen(op->op_type);
-			len += strlen("_failed_");
-			crm_malloc0(fail_state, sizeof(char)*len);
-			if(fail_state != NULL) {
-				sprintf(fail_state, "%s_failed", op->op_type);
-			}
-			crm_xml_add(xml_op, XML_LRM_ATTR_RSCSTATE, fail_state);
-			crm_xml_add(xml_rsc, XML_LRM_ATTR_RSCSTATE, fail_state);
-			crm_free(fail_state);			
+			crm_debug("Resource action %s/%s %s: %d",
+				  op->rsc_id, op->op_type,
+				  op_status2text(op->op_status), op->rc);
 			break;
 		case LRM_OP_DONE:
 			if(safe_str_eq(CRMD_ACTION_START, op->op_type)) {
@@ -434,51 +495,98 @@ build_operation_update(
 				state = CRMD_ACTION_STARTED;
 		
 			} else {
-				crm_warn("Using status \"%s\" for op \"%s\""
-					 "... this is still in the experimental stage.",
-					 CRMD_ACTION_GENERIC_OK, op->op_type);
+				crm_debug("Using status \"%s\" for op \"%s\"",
+					  CRMD_ACTION_GENERIC_OK, op->op_type);
 				state = CRMD_ACTION_GENERIC_OK;
 			}	
-
-			crm_xml_add(xml_op, XML_LRM_ATTR_RSCSTATE, state);
-			crm_xml_add(xml_rsc, XML_LRM_ATTR_RSCSTATE, state);
 			break;
 	}
 	
-	tmp = crm_itoa(op->call_id);
-	crm_xml_add(xml_op,  XML_LRM_ATTR_CALLID, tmp);
-	crm_free(tmp);
+	crm_xml_add_int(xml_op,  XML_LRM_ATTR_CALLID, op->call_id);
 
-	/* set these on 'xml_rsc' too to make life easy for the TE */
-	tmp = crm_itoa(op->rc);
-	crm_xml_add(xml_op, XML_LRM_ATTR_RC, tmp);
-	crm_xml_add(xml_rsc, XML_LRM_ATTR_RC, tmp);
-	crm_free(tmp);
-
-	tmp = crm_itoa(op->op_status);
-	crm_xml_add(xml_op, XML_LRM_ATTR_OPSTATUS, tmp);
-	crm_xml_add(xml_rsc, XML_LRM_ATTR_OPSTATUS, tmp);
-	crm_free(tmp);
-
-	set_node_tstamp(xml_op);
+	/* set these on 'xml_rsc' too to make life easy for the PE */
+	crm_xml_add(xml_op, XML_ATTR_CRM_VERSION, caller_version);
+	crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op->rc);
+	crm_xml_add_int(xml_op, XML_LRM_ATTR_OPSTATUS, op->op_status);
+	crm_xml_add_int(xml_op, XML_LRM_ATTR_INTERVAL, op->interval);
 	
-#if 0
-	if(safe_str_neq(op->op_type, CRMD_ACTION_STOP)) {
-		/* this will enable us to later determin that the
-		 *   resource's parameters have changed and we should force
-		 *   a restart
-		 * however it will come at the cost of a potentially much
-		 *   larger CIB
-		 * it may also requires MAXDEPTH to be increased
-		 */
-		crm_data_t *args_xml = NULL;
-		args_xml = create_xml_node(xml_op, XML_TAG_PARAMS);
-		g_hash_table_foreach(op->params, hash2field, args_xml);
+	/* this will enable us to later determin that the
+	 *   resource's parameters have changed and we should force
+	 *   a restart
+	 */
+	args_parent = NULL;
+#if CRM_DEPRECATED_SINCE_2_0_4
+	if(compare_version("1.0.4", caller_version) > 0) {
+		args_parent = xml_op;
 	}
 #endif
-
+	args_xml = create_xml_node(args_parent, XML_TAG_PARAMS);
+	g_hash_table_foreach(op->params, hash2field, args_xml);
+	filter_action_parameters(args_xml, caller_version);
+	digest = calculate_xml_digest(args_xml, TRUE);
+	crm_xml_add(xml_op, XML_LRM_ATTR_OP_DIGEST, digest);
+	crm_free(digest);
+	if(args_parent == NULL) {
+		free_xml(args_xml);
+	}
+	
 	return TRUE;
 }
+
+gboolean
+is_rsc_active(const char *rsc_id) 
+{
+	GList *op_list  = NULL;
+	gboolean active = FALSE;
+	lrm_rsc_t *the_rsc = NULL;
+	state_flag_t cur_state = 0;
+	int max_call_id = -1;
+	
+	if(fsa_lrm_conn == NULL) {
+		return FALSE;
+	}
+
+	the_rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rsc_id);
+
+	crm_debug_2("Processing lrm_rsc_t entry %s", rsc_id);
+	
+	if(the_rsc == NULL) {
+		crm_err("NULL resource returned from the LRM");
+		return FALSE;
+	}
+	
+	op_list = the_rsc->ops->get_cur_state(the_rsc, &cur_state);
+	
+	crm_debug_3("\tcurrent state:%s",cur_state==LRM_RSC_IDLE?"Idle":"Busy");
+	
+	slist_iter(
+		op, lrm_op_t, op_list, llpc,
+		
+		crm_debug("Processing op %s_%d (%d) for %s (status=%d, rc=%d)", 
+			  op->op_type, op->interval, op->call_id, the_rsc->id,
+			  op->op_status, op->rc);
+		
+		CRM_ASSERT(max_call_id <= op->call_id);			
+		if(safe_str_eq(op->op_type, CRMD_ACTION_STOP)) {
+			active = FALSE;
+			
+		} else if(op->rc == EXECRA_NOT_RUNNING) {
+			active = FALSE;
+
+		} else {
+			active = TRUE;
+		}
+		
+		max_call_id = op->call_id;
+		lrm_free_op(op);
+		);
+
+	g_list_free(op_list);
+	lrm_free_rsc(the_rsc);
+
+	return active;
+}
+
 
 gboolean
 build_active_RAs(crm_data_t *rsc_list)
@@ -529,15 +637,17 @@ build_active_RAs(crm_data_t *rsc_list)
 				    op->op_type, the_rsc->id, op->op_status, op->rc);
 
 			if(max_call_id < op->call_id) {
-				build_operation_update(xml_rsc, op, __FUNCTION__, llpc);
+				build_operation_update(
+					xml_rsc, op, __FUNCTION__, llpc);
 
 			} else if(max_call_id > op->call_id) {
 				crm_err("Bad call_id in list=%d. Previous call_id=%d",
 					op->call_id, max_call_id);
 
 			} else {
-				crm_debug("Skipping duplicate entry for call_id=%d",
-					op->call_id);
+				crm_warn("lrm->get_cur_state() returned"
+					 " duplicate entries for call_id=%d",
+					 op->call_id);
 			}
 			max_call_id = op->call_id;
 			found_op = TRUE;
@@ -561,22 +671,25 @@ build_active_RAs(crm_data_t *rsc_list)
 crm_data_t*
 do_lrm_query(gboolean is_replace)
 {
+	gboolean shut_down = FALSE;
 	crm_data_t *xml_result= NULL;
 	crm_data_t *xml_state = NULL;
 	crm_data_t *xml_data  = NULL;
 	crm_data_t *rsc_list  = NULL;
-	const char *exp_state = CRMD_STATE_ACTIVE;
+	const char *exp_state = CRMD_JOINSTATE_MEMBER;
 
 	if(is_set(fsa_input_register, R_SHUTDOWN)) {
 		exp_state = CRMD_STATE_INACTIVE;
+		shut_down = TRUE;
 	}
 	
 	xml_state = create_node_state(
-		fsa_our_uname, fsa_our_uname,
-		ACTIVESTATUS, XML_BOOLEAN_TRUE, ONLINESTATUS,
-		CRMD_JOINSTATE_MEMBER, exp_state, __FUNCTION__);
+		fsa_our_uname, ACTIVESTATUS, XML_BOOLEAN_TRUE,
+		ONLINESTATUS, CRMD_JOINSTATE_MEMBER, exp_state,
+		!shut_down, __FUNCTION__);
 
 	xml_data  = create_xml_node(xml_state, XML_CIB_TAG_LRM);
+	crm_xml_add(xml_data, XML_ATTR_ID, fsa_our_uuid);
 	rsc_list  = create_xml_node(xml_data, XML_LRM_TAG_RESOURCES);
 
 	/* Build a list of active (not always running) resources */
@@ -586,11 +699,115 @@ do_lrm_query(gboolean is_replace)
 		crm_xml_add(xml_state, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM);
 	}
 
-	xml_result = create_cib_fragment(xml_state, NULL);
+	xml_result = create_cib_fragment(xml_state, XML_CIB_TAG_STATUS);
 
 	crm_log_xml_debug_3(xml_state, "Current state of the LRM");
 	
 	return xml_result;
+}
+
+struct recurring_op_s 
+{
+		char *rsc_id;
+		int   call_id;
+};
+
+
+static void
+cancel_monitor(lrm_rsc_t *rsc, const char *key)
+{
+	struct recurring_op_s *existing_op = NULL;
+
+	if(rsc == NULL) {	
+		crm_err("No resource to cancel and operation for");
+		return;
+		
+	} else if(key == NULL) {
+		crm_err("No operation to cancel");
+		return;
+	}
+	
+	existing_op = g_hash_table_lookup(monitors, key);
+	if(existing_op != NULL) {
+		crm_debug("Cancelling previous invocation of %s (%d)",
+			  key, existing_op->call_id);
+		/* cancel it so we can then restart it without conflict */
+		if(rsc->ops->cancel_op(rsc, existing_op->call_id) != HA_OK) {
+			crm_info("Couldn't cancel %s (%d)",
+				 key, existing_op->call_id);
+		} else {
+			g_hash_table_remove(monitors, key);
+		}
+
+	} else {
+		crm_debug("No previous invocation of %s", key);
+	}
+}
+
+static lrm_rsc_t *
+get_lrm_resource(crm_data_t *resource, crm_data_t *op_msg, gboolean do_create)
+{
+	char rid[64];
+	lrm_rsc_t *rsc = NULL;
+	const char *short_id = ID(resource);
+	const char *long_id = crm_element_value(resource, XML_ATTR_ID_LONG);
+		
+	crm_debug_2("Retrieving %s from the LRM.", short_id);
+	CRM_CHECK(short_id != NULL, return NULL);
+	
+	if(rsc == NULL) {
+		/* check if its already there (short name) */
+		strncpy(rid, short_id, 64);
+		rid[63] = 0;
+		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
+	}
+	if(rsc == NULL && long_id != NULL) {
+		/* try the long name instead */
+		strncpy(rid, long_id, 64);
+		rid[63] = 0;
+		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
+	}
+
+	if(rsc == NULL && do_create) {
+		/* add it to the LRM */
+		const char *type = crm_element_value(resource, XML_ATTR_TYPE);
+		const char *class = crm_element_value(resource, XML_AGENT_ATTR_CLASS);
+		const char *provider = crm_element_value(resource, XML_AGENT_ATTR_PROVIDER);
+		GHashTable *params = xml2list(op_msg);
+
+		CRM_CHECK(class != NULL, return NULL);
+		CRM_CHECK(type != NULL, return NULL);
+
+		crm_debug("Adding rsc %s before operation", short_id);
+		strncpy(rid, short_id, 64);
+		rid[63] = 0;
+
+#if CRM_DEPRECATED_SINCE_2_0_3
+		if(op_msg != NULL) {
+			if(g_hash_table_lookup(
+				   params, XML_ATTR_CRM_VERSION) == NULL) {
+				g_hash_table_destroy(params);
+				params = xml2list_202(op_msg);
+			}
+		}
+#endif
+		if(g_hash_table_size(params) == 0) {
+			crm_log_xml_warn(op_msg, "EmptyParams");
+		}
+		
+		fsa_lrm_conn->lrm_ops->add_rsc(
+			fsa_lrm_conn, rid, class, type, provider, params);
+		
+		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
+		g_hash_table_destroy(params);
+
+		if(rsc == NULL) {
+			fsa_data_t *msg_data = NULL;
+			crm_err("Could not add resource %s to LRM", rid);
+			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+		}
+	}
+	return rsc;
 }
 
 /*	 A_LRM_INVOKE	*/
@@ -602,14 +819,40 @@ do_lrm_invoke(long long action,
 	      fsa_data_t *msg_data)
 {
 	const char *crm_op = NULL;
+	const char *from_sys = NULL;
+	const char *from_host = NULL;
 	const char *operation = NULL;
 	enum crmd_fsa_input next_input = I_NULL;
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
-		
-	crm_op = cl_get_string(input->msg, F_CRM_TASK);
-	operation = crm_element_value(input->xml, XML_LRM_ATTR_TASK);
+
+	crm_op    = cl_get_string(input->msg, F_CRM_TASK);
+	from_sys  = cl_get_string(input->msg, F_CRM_SYS_FROM);
+	if(safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
+		from_host = cl_get_string(input->msg, F_CRM_HOST_FROM);
+	}
 	
-	if(crm_op != NULL && safe_str_eq(crm_op, "lrm_query")) {
+	crm_debug_2("LRM command from: %s", from_sys);
+	
+	if(safe_str_eq(crm_op, CRM_OP_LRM_DELETE)) {
+		operation = CRMD_ACTION_DELETE;
+
+	} else if(safe_str_eq(operation, CRM_OP_LRM_REFRESH)) {
+		crm_op = CRM_OP_LRM_REFRESH;
+
+	} else if(input->xml != NULL) {
+		operation = crm_element_value(input->xml, XML_LRM_ATTR_TASK);
+	}
+
+	if(crm_op != NULL && safe_str_eq(crm_op, CRM_OP_LRM_REFRESH)) {
+		enum cib_errors rc = cib_ok;
+		crm_data_t *fragment = do_lrm_query(TRUE);
+		crm_info("Forcing a local LRM refresh");
+
+		fsa_cib_update(XML_CIB_TAG_STATUS, fragment,
+			       cib_quorum_override, rc);
+		free_xml(fragment);
+		
+	} else if(crm_op != NULL && safe_str_eq(crm_op, CRM_OP_LRM_QUERY)) {
 		crm_data_t *data = do_lrm_query(FALSE);
 		HA_Message *reply = create_reply(input->msg, data);
 
@@ -620,35 +863,128 @@ do_lrm_invoke(long long action,
 		}
 		free_xml(data);
 
+	} else if(safe_str_eq(operation, CRM_OP_PROBED)
+		  || safe_str_eq(crm_op, CRM_OP_REPROBE)) {
+		const char *probed = XML_BOOLEAN_TRUE;
+		if(safe_str_eq(crm_op, CRM_OP_REPROBE)) {
+			probed = XML_BOOLEAN_FALSE;
+		}
+		
+		update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_STATUS,
+			    fsa_our_uuid, NULL, NULL, CRM_OP_PROBED, probed);
+
 	} else if(operation != NULL) {
-		char rid[64];
 		lrm_rsc_t *rsc = NULL;
-		const char *id_from_cib = NULL;
+		crm_data_t *params = NULL;
+		gboolean create_rsc = TRUE;
 		crm_data_t *xml_rsc = find_xml_node(
 			input->xml, XML_CIB_TAG_RESOURCE, TRUE);
 
-		CRM_DEV_ASSERT(xml_rsc != NULL);
-		if(crm_assert_failed) {
-			crm_log_xml_err(input->xml, "Bad resource");
-			return I_NULL;
-		}
-		
-		id_from_cib = crm_element_value(xml_rsc, XML_ATTR_ID);
-		CRM_DEV_ASSERT(id_from_cib != NULL);
-		if(crm_assert_failed) {
-			crm_err("No value for %s in %s.",
-				XML_ATTR_ID, crm_element_name(xml_rsc));
-			crm_log_xml_err(input->xml, "Bad command");
-			return I_NULL;
-		}
+		CRM_CHECK(xml_rsc != NULL, return I_NULL);
 		
 		/* only the first 16 chars are used by the LRM */
-		strncpy(rid, id_from_cib, 64);
-		rid[63] = 0;
+
+		params  = find_xml_node(input->xml, XML_TAG_ATTRS,TRUE);
+
+		if(safe_str_eq(operation, CRMD_ACTION_STOP)) {
+			create_rsc = FALSE;
+		}
 		
-		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
-		next_input = do_lrm_rsc_op(rsc, rid, operation, input->xml,
-				input->msg);
+		rsc = get_lrm_resource(xml_rsc, input->xml, create_rsc);
+
+		if(rsc == NULL && create_rsc) {
+			crm_err("Invalid resource definition");
+			crm_log_xml_warn(input->xml, "Bad command");
+
+		} else if(rsc == NULL) {
+			lrm_op_t* op = NULL;
+			crm_err("Not creating resource for a stop event");
+			crm_log_xml_warn(input->xml, "Bad command");
+
+			op = construct_op(input->xml, ID(xml_rsc), operation);
+			op->op_status = LRM_OP_DONE;
+			op->rc = 0;
+			CRM_ASSERT(op != NULL);
+			send_direct_ack(from_host, from_sys, op, ID(xml_rsc));
+			free_lrm_op(op);			
+			
+		} else if(safe_str_eq(operation, CRMD_ACTION_CANCEL)) {
+			lrm_op_t* op = NULL;
+			char *op_key = NULL;
+			const char *op_task = NULL;
+			const char *op_interval = NULL;
+
+			CRM_CHECK(params != NULL,
+				  crm_log_xml_warn(input->xml, "Bad command");
+				  return I_NULL);
+
+			op_task = crm_element_value(params, crm_meta_name(XML_LRM_ATTR_TASK));
+			op_interval = crm_element_value(params, crm_meta_name("interval"));
+#if CRM_DEPRECATED_SINCE_2_0_5
+			if(op_interval == NULL) {
+				op_interval = crm_element_value(params, "interval");
+			}
+			if(op_task == NULL) {
+				op_task = crm_element_value(params, XML_LRM_ATTR_TASK);
+				if(op_task == NULL) {
+					op_task = crm_element_value(params, "task");
+				}
+			}
+#endif
+			CRM_CHECK(op_task != NULL,
+				  crm_log_xml_warn(input->xml, "Bad command");
+				  return I_NULL);
+			CRM_CHECK(op_interval != NULL,
+				  crm_log_xml_warn(input->xml, "Bad command");
+				  return I_NULL);
+
+			op = construct_op(input->xml, rsc->id, op_task);
+			CRM_ASSERT(op != NULL);
+			op_key = generate_op_key(
+				rsc->id,op_task,crm_parse_int(op_interval,"0"));
+
+			cancel_monitor(rsc, op_key);
+			
+			op->op_status = LRM_OP_DONE;
+			op->rc = EXECRA_OK;
+			send_direct_ack(from_host, from_sys, op, rsc->id);
+			crm_free(op_key);
+			free_lrm_op(op);			
+			
+		} else if(safe_str_eq(operation, CRMD_ACTION_DELETE)) {
+			int rc = HA_OK;
+			lrm_op_t* op = NULL;
+
+			op = construct_op(input->xml, rsc->id, operation);
+			CRM_ASSERT(op != NULL);
+			op->op_status = LRM_OP_DONE;
+			op->rc = EXECRA_OK;
+
+			if(rsc == NULL) {
+				crm_debug("Resource %s was already removed",
+					 rsc->id);
+
+			} else {
+				crm_info("Removing resource %s from the LRM",
+					 rsc->id);
+				rc = fsa_lrm_conn->lrm_ops->delete_rsc(
+					fsa_lrm_conn, rsc->id);
+				if(rc != HA_OK) {
+					crm_err("Failed to remove resource %s",
+						rsc->id);
+					op->op_status = LRM_OP_ERROR;
+					op->rc = EXECRA_UNKNOWN_ERROR;
+				}
+			}
+
+			send_direct_ack(from_host, from_sys, op, rsc->id);
+			free_lrm_op(op);			
+			
+		} else if(rsc != NULL) {
+			next_input = do_lrm_rsc_op(
+				rsc, operation, input->xml, input->msg);
+		}
+		
 		lrm_free_rsc(rsc);
 		
 	} else {
@@ -660,167 +996,78 @@ do_lrm_invoke(long long action,
 	return next_input;
 }
 
-struct recurring_op_s 
+lrm_op_t *
+construct_op(crm_data_t *rsc_op, const char *rsc_id, const char *operation)
 {
-		char *rsc_id;
-		int   call_id;
-};
-
-void
-nack_rsc_op(lrm_op_t* op, HA_Message *msg)
-{
-	HA_Message *reply = NULL;
-	crm_data_t *update, *iter;
-	crm_data_t *fragment;
-
-	CRM_DEV_ASSERT(op != NULL);
-	if(crm_assert_failed) {
-		return;
-	}
-	CRM_DEV_ASSERT(msg != NULL);
-	if(crm_assert_failed) {
-		return;
-	}
-
-	crm_info("NACK'ing resource op: %s for %s", op->op_type, op->rsc_id);
+	lrm_op_t *op = NULL;
+	const char *op_delay = NULL;
+	const char *op_timeout = NULL;
+	const char *op_interval = NULL;
 	
-	update = create_xml_node(NULL, XML_CIB_TAG_STATE);
-	set_uuid(fsa_cluster_conn, update, XML_ATTR_UUID, fsa_our_uname);
-	crm_xml_add(update,  XML_ATTR_UNAME, fsa_our_uname);
-
-	iter = create_xml_node(update, XML_CIB_TAG_LRM);
-	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCES);
-	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCE);
-
-	crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
-
-	op->rc = 99;
-	op->op_status = LRM_OP_ERROR;
-	build_operation_update(iter, op, __FUNCTION__, 0);
-	fragment = create_cib_fragment(update, NULL);
-
-	reply = create_reply(msg, fragment);
-	crm_log_xml_debug_2(update, "NACK Update");
-	crm_log_message_adv(LOG_DEBUG_2, "NACK'd msg", msg);
-	crm_log_message_adv(LOG_DEBUG_2, "NACK Reply", reply);
-	
-	if(relay_message(reply, TRUE) == FALSE) {
-		crm_log_message_adv(LOG_ERR, "Unable to route reply", reply);
-		crm_msg_del(reply);
-	}
-	free_xml(fragment);
-	free_xml(update);
-}
-
-enum crmd_fsa_input
-do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation,
-	      crm_data_t *msg, HA_Message *request)
-{
-	int call_id  = 0;
-	char *op_id  = NULL;
-	lrm_op_t* op = NULL;
-
-	const char *type = NULL;
-	const char *class = NULL;
-	const char *provider = NULL;
 	const char *transition = NULL;
-	
-	GHashTable *params   = NULL;
-	fsa_data_t *msg_data = NULL;
+	CRM_DEV_ASSERT(rsc_id != NULL);
 
-	CRM_DEV_ASSERT(rid != NULL);
-	
-	if(rsc != NULL) {
-		class = rsc->class;
-		type = rsc->type;
-
-	} else if(msg != NULL) {
-		crm_data_t *xml_rsc = find_xml_node(
-			msg, XML_CIB_TAG_RESOURCE, TRUE);
-
-		class = crm_element_value(xml_rsc, XML_AGENT_ATTR_CLASS);
-		CRM_DEV_ASSERT(class != NULL);
-		if(crm_assert_failed) { return I_NULL; }
-		
-		type = crm_element_value(xml_rsc, XML_ATTR_TYPE);
-		CRM_DEV_ASSERT(type != NULL);
-		if(crm_assert_failed) { return I_NULL; }
-
-		provider = crm_element_value(xml_rsc, XML_AGENT_ATTR_PROVIDER);
-	}
-	
-	if(msg != NULL) {
-		transition = crm_element_value(msg, XML_ATTR_TRANSITION_KEY);
-		if(transition == NULL) {
-			crm_err("Missing transition");
-			crm_log_message(LOG_ERR, msg);
-		}
-	}
-
-	if(rsc == NULL) {
-		/* check if its already there */
-		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
-	}
-
-	if(rsc == NULL) {
-		/* add it to the list */
-		crm_debug_2("adding rsc %s before operation", rid);
-		if(msg != NULL) {
-			params = xml2list(msg);
-
-		} else {
-			CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
-		}
-		fsa_lrm_conn->lrm_ops->add_rsc(
-			fsa_lrm_conn, rid, class, type, provider, params);
-		
-		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
-	}
-	
-	if(rsc == NULL) {
-		crm_err("Could not add resource %s to LRM", rid);
-		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		return I_NULL;
-	}
-
-	/* stop the monitor before stopping the resource */
-	if(safe_str_eq(operation, CRMD_ACTION_STOP)) {
-		g_hash_table_foreach(monitors, stop_recurring_action, rsc);
-		g_hash_table_foreach_remove(
-			monitors, remove_recurring_action, rsc);
-	}
-	
-	
-	/* now do the op */
-	crm_info("Performing op %s on %s", operation, rid);
 	crm_malloc0(op, sizeof(lrm_op_t));
 	op->op_type   = crm_strdup(operation);
 	op->op_status = LRM_OP_PENDING;
-	op->user_data = NULL;
-	op->user_data_len = 0;
-	
-	if(transition != NULL) {
-		op->user_data = crm_strdup(transition);
-		op->user_data_len = 1+strlen(op->user_data);
-	} else {
+	op->rc = -1;
+	op->rsc_id = crm_strdup(rsc_id);
+	op->interval = 0;
+	op->timeout  = 0;
+	op->start_delay = 0;
+	op->app_name = crm_strdup(CRM_SYSTEM_CRMD);
+
+	if(rsc_op == NULL) {
+		CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
+		op->user_data = NULL;
+		op->user_data_len = 0;
+		/* the stop_all_resources() case
+		 * by definition there is no DC (or they'd be shutting
+		 *   us down).
+		 * So we should put our version here.
+		 */
+		op->params = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, g_hash_destroy_str);
+		
+		g_hash_table_insert(op->params,
+				    crm_strdup(XML_ATTR_CRM_VERSION),
+				    crm_strdup(CRM_FEATURE_SET));
+
+		crm_debug_2("Constructed %s op for %s", operation, rsc_id);
+		return op;
+	}
+
+	op->params = xml2list(rsc_op);
+#if CRM_DEPRECATED_SINCE_2_0_3
+	if(g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION) == NULL) {
+		g_hash_table_destroy(op->params);
+		op->params = xml2list_202(rsc_op);
+	}
+#endif
+		
+	if(op->params == NULL) {
 		CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
 	}
-	
 
-	if(params == NULL) {
-		if(msg != NULL) {
-			params = xml2list(msg);
-		} else {
-			CRM_DEV_ASSERT(safe_str_eq(
-					       CRMD_ACTION_STOP, operation));
-		}
+	op_delay = g_hash_table_lookup(op->params, crm_meta_name("start_delay"));
+	op_timeout = g_hash_table_lookup(op->params, crm_meta_name("timeout"));
+	op_interval = g_hash_table_lookup(op->params, crm_meta_name("interval"));
+#if CRM_DEPRECATED_SINCE_2_0_5
+	if(op_delay == NULL) {
+		op_delay = g_hash_table_lookup(op->params, "start_delay");
 	}
-
-	op->params = params;
-	op->interval = crm_get_msec(g_hash_table_lookup(op->params,"interval"));
-	op->timeout  = crm_get_msec(g_hash_table_lookup(op->params, "timeout"));
-	op->start_delay = crm_get_msec(
-		g_hash_table_lookup(op->params,"start_delay"));
+	if(op_timeout == NULL) {
+		op_timeout = g_hash_table_lookup(op->params, "timeout");
+	}
+	if(op_interval == NULL) {
+		op_interval = g_hash_table_lookup(op->params, "interval");
+	}
+#endif
+	
+	op->interval = crm_parse_int(op_interval, "0");
+	op->timeout  = crm_parse_int(op_timeout,  "0");
+	op->start_delay = crm_parse_int(op_delay, "0");
 
 	/* sanity */
 	if(op->interval < 0) {
@@ -832,117 +1079,166 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, char *rid, const char *operation,
 	if(op->start_delay < 0) {
 		op->start_delay = 0;
 	}
-	if(g_hash_table_lookup(op->params, "timeout") != NULL) {
-		char *timeout_ms = crm_itoa(op->timeout);
-		g_hash_table_replace(
-			op->params, crm_strdup("timeout"), timeout_ms);
-	}
-	if(g_hash_table_lookup(op->params, "interval") != NULL) {
-		char *interval_ms = crm_itoa(op->interval);
-		g_hash_table_replace(
-			op->params, crm_strdup("interval"), interval_ms);
-	}
-	if(g_hash_table_lookup(op->params, "start_delay") != NULL) {
-		char *delay_ms = crm_itoa(op->start_delay);
-		g_hash_table_replace(
-			op->params, crm_strdup("start_delay"), delay_ms);
+
+	transition = crm_element_value(rsc_op, XML_ATTR_TRANSITION_KEY);
+	CRM_CHECK(transition != NULL, return op);
+	
+	op->user_data = crm_strdup(transition);
+	op->user_data_len = 1+strlen(op->user_data);
+
+	if(op->interval != 0) {
+		if(safe_str_eq(operation, CRMD_ACTION_START)
+		   || safe_str_eq(operation, CRMD_ACTION_STOP)) {
+			crm_err("Start and Stop actions cannot have an interval");
+			op->interval = 0;
+		}
 	}
 
-	if(safe_str_eq(operation, CRMD_ACTION_START)
-	   || safe_str_eq(operation, CRMD_ACTION_STOP)) {
-		char *tmp = g_hash_table_lookup(op->params, "interval");
-/* 		CRM_DEV_ASSERT(op->interval == 0); */
-/* 		CRM_DEV_ASSERT(tmp == NULL); */
-		if(op->interval != 0) {
-			crm_err("Interval for %s oepration was not 0",
-				operation);
-		}
-		if(tmp != NULL) {
-			crm_warn("An interval (%s) was specified for a"
-				 " %s operation", tmp, operation);
-		}
-		
+	crm_debug_2("Constructed %s op for %s: interval=%d",
+		    operation, rsc_id, op->interval);	
+	
+	return op;
+}
 
+void
+send_direct_ack(const char *to_host, const char *to_sys,
+		lrm_op_t* op, const char *rsc_id)
+{
+	HA_Message *reply = NULL;
+	crm_data_t *update, *iter;
+	crm_data_t *fragment;
+	
+	CRM_DEV_ASSERT(op != NULL);
+	if(crm_assert_failed) {
+		return;
+	}
+	if(op->rsc_id == NULL) {
+		CRM_DEV_ASSERT(rsc_id != NULL);
+		op->rsc_id = crm_strdup(rsc_id);
+	}
+	if(to_sys == NULL) {
+		to_sys = CRM_SYSTEM_TENGINE;
+	}
+	crm_info("ACK'ing resource op: %s for %s", op->op_type, op->rsc_id);
+	
+	update = create_node_state(
+		fsa_our_uname, NULL, NULL, NULL, NULL, NULL, FALSE, __FUNCTION__);
+
+	iter = create_xml_node(update, XML_CIB_TAG_LRM);
+	crm_xml_add(iter, XML_ATTR_ID, fsa_our_uuid);
+	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCES);
+	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCE);
+
+	crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
+
+	build_operation_update(iter, op, __FUNCTION__, 0);	
+	fragment = create_cib_fragment(update, XML_CIB_TAG_STATUS);
+
+	reply = create_request(CRM_OP_INVOKE_LRM, fragment, to_host,
+			       to_sys, CRM_SYSTEM_LRMD, NULL);
+
+	crm_debug("Sending ACK: %s", cl_get_string(reply, XML_ATTR_REFERENCE));
+
+	crm_log_xml_debug_2(update, "ACK Update");
+	crm_log_message_adv(LOG_DEBUG_3, "ACK Reply", reply);
+	
+	if(relay_message(reply, TRUE) == FALSE) {
+		crm_log_message_adv(LOG_ERR, "Unable to route reply", reply);
+		crm_msg_del(reply);
+	}
+	free_xml(fragment);
+	free_xml(update);
+}
+
+
+enum crmd_fsa_input
+do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
+	      crm_data_t *msg, HA_Message *request)
+{
+	int call_id  = 0;
+	char *op_id  = NULL;
+	lrm_op_t* op = NULL;
+
+	fsa_data_t *msg_data = NULL;
+	const char *transition = NULL;	
+
+	CRM_CHECK(rsc != NULL, return I_NULL);
+	
+	if(msg != NULL) {
+		transition = crm_element_value(msg, XML_ATTR_TRANSITION_KEY);
+		if(transition == NULL) {
+			crm_err("Missing transition");
+			crm_log_message(LOG_ERR, msg);
+		}
+	}
+
+	/* stop the monitor before stopping the resource */
+	if(safe_str_eq(operation, CRMD_ACTION_STOP)) {
+		g_hash_table_foreach(monitors, stop_recurring_action, rsc);
+		g_hash_table_foreach_remove(
+			monitors, remove_recurring_action, rsc);
 	}
 	
-	if(safe_str_neq(operation, CRMD_ACTION_STOP)) {
-		if((AM_I_DC == FALSE && fsa_state != S_NOT_DC)
-		   || (AM_I_DC && fsa_state != S_TRANSITION_ENGINE)) {
+	/* now do the op */
+	op = construct_op(msg, rsc->id, operation);
+	crm_info("Performing op %s on %s (interval=%dms, key=%s)",
+		 operation, rsc->id, op->interval, transition);
+
+	if((AM_I_DC == FALSE && fsa_state != S_NOT_DC)
+	   || (AM_I_DC && fsa_state != S_TRANSITION_ENGINE)) {
+		if(safe_str_neq(operation, CRMD_ACTION_STOP)) {
 			crm_info("Discarding attempt to perform action %s on %s"
-				 " in state %s", operation, rid,
+				 " in state %s", operation, rsc->id,
 				 fsa_state2string(fsa_state));
-			op->rsc_id = crm_strdup(rsc->id);
-			nack_rsc_op(op, request);
+			op->rc = 99;
+			op->op_status = LRM_OP_ERROR;
+			send_direct_ack(NULL, NULL, op, rsc->id);
 			free_lrm_op(op);
 			crm_free(op_id);
 			return I_NULL;
 		}
 	}
-	
+
+	op_id = generate_op_key(rsc->id, op->op_type, op->interval);
+
 	if(op->interval > 0) {
-		struct recurring_op_s *existing_op = NULL;
-
-		op_id = generate_op_key(rsc->id, op->op_type, op->interval);
-		existing_op = g_hash_table_lookup(monitors, op_id);
-		if(existing_op != NULL) {
-			crm_debug("Cancelling previous invocation of"
-				  " %s on %s (%d)",
-				  crm_str(op_id), rsc->id,existing_op->call_id);
-			/*cancel it so we can then restart it without conflict*/
-			rsc->ops->cancel_op(rsc, existing_op->call_id);
-			g_hash_table_remove(monitors, op_id);
-		}
-	}
-
-	op->app_name = crm_strdup(CRM_SYSTEM_CRMD);
-	
-	if(safe_str_eq(operation, CRMD_ACTION_MON)) {
+		cancel_monitor(rsc, op_id);
 		op->target_rc = CHANGED;
 
 	} else {
 		op->target_rc = EVERYTIME;
 	}
 
-	if(safe_str_eq(CRMD_ACTION_MON, operation)) {
-		const char *last_op = g_hash_table_lookup(resources, rsc->id);
-		if(safe_str_eq(last_op, CRMD_ACTION_STOP)) {
-			crm_warn("Attempting to schedule %s after a stop.",
-				 op_id);
-			free_lrm_op(op);
-			crm_free(op_id);
-			return I_NULL;			
-		}
-	}	
-
-	g_hash_table_replace(
-		resources, crm_strdup(rsc->id), crm_strdup(operation));
+	g_hash_table_replace(resources,crm_strdup(rsc->id), crm_strdup(op_id));
 
 	call_id = rsc->ops->perform_op(rsc, op);
 
 	if(call_id <= 0) {
 		crm_err("Operation %s on %s failed: %d",
-			operation, rid, call_id);
+			operation, rsc->id, call_id);
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 
-	} else if(op->interval > 0) {
-		struct recurring_op_s *op = NULL;
-		crm_malloc0(op, sizeof(struct recurring_op_s));
-		crm_debug("Adding recurring %s op for %s (%d)",
-			  op_id, rsc->id, call_id);
-		
-		op->call_id = call_id;
-		op->rsc_id  = crm_strdup(rsc->id);
-		g_hash_table_insert(monitors, op_id, op);
-		op_id = NULL;
-		
 	} else {
-		/* record all non-recurring operations so we can wait
+		/* record all operations so we can wait
 		 * for them to complete during shutdown
 		 */
 		char *call_id_s = make_stop_id(rsc->id, call_id);
 		g_hash_table_replace(
 			shutdown_ops, call_id_s, crm_strdup(rsc->id));
-		crm_debug("Recording pending op: %s", call_id_s);
+		crm_debug_2("Recording pending op: %s/%s %s",
+			    rsc->id, operation, call_id_s);
+
+		if(op->interval > 0) {
+			struct recurring_op_s *op = NULL;
+			crm_malloc0(op, sizeof(struct recurring_op_s));
+			crm_debug_2("Adding recurring %s op for %s (%d)",
+				    op_id, rsc->id, call_id);
+			
+			op->call_id = call_id;
+			op->rsc_id  = crm_strdup(rsc->id);
+			g_hash_table_insert(monitors, op_id, op);
+			op_id = NULL;
+		}
 	}
 
 	crm_free(op_id);
@@ -965,7 +1261,6 @@ stop_recurring_action(gpointer key, gpointer value, gpointer user_data)
 		} else {
 			crm_err("Invalid call_id %d for %s",
 				op->call_id, rsc->id);
-			/* TODO: we probably need to look up the LRM to find it */
 		}
 	}
 }
@@ -1085,38 +1380,59 @@ copy_lrm_rsc(const lrm_rsc_t *rsc)
 	return rsc_copy;
 }
 
+static void
+cib_rsc_callback(const HA_Message *msg, int call_id, int rc,
+		 crm_data_t *output, void *user_data)
+{
+	if(rc != cib_ok) {
+		crm_err("Resource update %d failed: %s",
+			call_id, cib_error2string(rc));	
+	} else {
+		crm_debug("Resource update %d complete", call_id);	
+	}
+}
+
+
 void
 do_update_resource(lrm_op_t* op)
 {
 /*
   <status>
-  <nodes_status id=uname>
-  <lrm>
-  <lrm_resources>
-  <lrm_resource id=>
-  </...>
+    <nodes_status id=uname>
+      <lrm>
+        <lrm_resources>
+          <lrm_resource id=...>
+          </...>
 */
-	crm_data_t *update, *iter;
-	crm_data_t *fragment;
 	int rc = cib_ok;
+	crm_data_t *update, *iter;
+	
+	CRM_CHECK(op != NULL, return);
 
-	CRM_DEV_ASSERT(op != NULL);
-	if(crm_assert_failed) {
-		return;
-	}
-
-	update = create_xml_node(NULL, XML_CIB_TAG_STATE);
-	set_uuid(fsa_cluster_conn, update, XML_ATTR_UUID, fsa_our_uname);
-	crm_xml_add(update,  XML_ATTR_UNAME, fsa_our_uname);
+	update = create_node_state(
+		fsa_our_uname, NULL, NULL, NULL, NULL, NULL, FALSE, __FUNCTION__);
 
 	iter = create_xml_node(update, XML_CIB_TAG_LRM);
+	crm_xml_add(iter, XML_ATTR_ID, fsa_our_uuid);
 	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCES);
 	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCE);
 
 	crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
+	if(op->interval == 0) {
+		lrm_rsc_t *rsc = NULL;
+		crm_debug_2("Updating %s resource definitions after %s op",
+			    op->rsc_id, op->op_type);
+		
+		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, op->rsc_id);
 
+		crm_xml_add(iter, XML_ATTR_TYPE, rsc->type);
+		crm_xml_add(iter, XML_AGENT_ATTR_CLASS, rsc->class);
+		crm_xml_add(iter, XML_AGENT_ATTR_PROVIDER,rsc->provider);
+		
+		lrm_free_rsc(rsc);
+	}
+	
 	build_operation_update(iter, op, __FUNCTION__, 0);
-	fragment = create_cib_fragment(update, NULL);
 
 	/* make it an asyncronous call and be done with it
 	 *
@@ -1135,21 +1451,18 @@ do_update_resource(lrm_op_t* op)
 	 * the alternative however means blocking here for too long, which
 	 * isnt acceptable
 	 */
-	rc = fsa_cib_conn->cmds->modify(
-		fsa_cib_conn, XML_CIB_TAG_STATUS, fragment, NULL,
-		cib_quorum_override);
+	fsa_cib_update(XML_CIB_TAG_STATUS, update, cib_quorum_override, rc);
 			
 	if(rc > 0) {
 		/* the return code is a call number, not an error code */
-		crm_debug_3("Sent resource state update message: %d", rc);
+		crm_debug("Sent resource state update message: %d", rc);
+		add_cib_op_callback(rc, FALSE, NULL, cib_rsc_callback);
 		
 	} else {
 		crm_err("Resource state update failed: %s",
 			cib_error2string(rc));	
-		CRM_DEV_ASSERT(rc == cib_ok);
 	}
 	
-	free_xml(fragment);
 	free_xml(update);
 }
 
@@ -1160,116 +1473,106 @@ do_lrm_event(long long action,
 	     enum crmd_fsa_input cur_input,
 	     fsa_data_t *msg_data)
 {
-	lrm_op_t* op = NULL;
-	const char *last_op = NULL;
+	lrm_op_t *op = NULL;
 	
-	if(msg_data->fsa_cause != C_LRM_OP_CALLBACK) {
-		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		return I_NULL;
-	}
+	CRM_CHECK(msg_data->fsa_cause == C_LRM_OP_CALLBACK, return I_NULL);
 
 	op = fsa_typed_data(fsa_dt_lrm);
-	
-	CRM_DEV_ASSERT(op != NULL);
-	CRM_DEV_ASSERT(op != NULL && op->rsc_id != NULL);
+	process_lrm_event(op);
 
-	if(crm_assert_failed) {
-		return I_NULL;
-	}
+	return I_NULL;
+}
 
-	if(op->op_status == LRM_OP_DONE && op->rc != EXECRA_OK) {
-		crm_warn("Mapping operation %d status with a rc=%d"
-			 " to status %d",
-			 op->op_status, op->rc, LRM_OP_ERROR);
-		op->op_status = LRM_OP_ERROR;
+
+gboolean
+process_lrm_event(lrm_op_t *op)
+{
+	CRM_CHECK(op != NULL, return I_NULL);
+	CRM_CHECK(op->rsc_id != NULL, return I_NULL);
+
+	if(op->rc == 8 || op->rc == 7) {
+		/* Leave it up to the TE/PE to decide if this is an error */ 
+		op->op_status = LRM_OP_DONE;
 	}
 
 	switch(op->op_status) {
 		case LRM_OP_PENDING:
 			/* this really shouldnt happen */
-			crm_err("LRM operation (%d) %s on %s %s: %s",
+			crm_err("LRM operation (%d) %s_%d on %s %s: %s",
 				op->call_id, op->op_type,
+				op->interval,
 				crm_str(op->rsc_id),
 				op_status2text(op->op_status),
 				execra_code2string(op->rc));
 			break;
 		case LRM_OP_ERROR:
-			crm_err("LRM operation (%d) %s on %s %s: %s",
+			crm_err("LRM operation (%d) %s_%d on %s %s: (%d) %s",
 				op->call_id, op->op_type,
+				op->interval,
 				crm_str(op->rsc_id),
 				op_status2text(op->op_status),
-				execra_code2string(op->rc));
-			crm_debug("Result: %s", op->output);
+				op->rc, execra_code2string(op->rc));
+			if(op->output != NULL) {
+				crm_debug("Result: %s", op->output);
+			}
 			break;
 		case LRM_OP_CANCELLED:
-			crm_warn("LRM operation (%d) %s on %s %s",
+			crm_warn("LRM operation (%d) %s_%d on %s %s",
 				 op->call_id, op->op_type,
+				 op->interval,
 				 crm_str(op->rsc_id),
 				 op_status2text(op->op_status));
-			return I_NULL;
 			break;
 		case LRM_OP_TIMEOUT:
-			last_op = g_hash_table_lookup(
-				resources_confirmed, crm_strdup(op->rsc_id));
-
-			if(safe_str_eq(last_op, CRMD_ACTION_STOP)
-			   && safe_str_eq(op->op_type, CRMD_ACTION_MON)) {
-				crm_err("LRM sent a timed out %s operation"
-					" _after_ a confirmed stop",
-					op->op_type);
-				return I_NULL;
-			}
-
-			crm_err("LRM operation (%d) %s on %s %s",
-				op->call_id, op->op_type,
+			crm_err("LRM operation (%d) %s_%d on %s %s (timeout=%dms)",
+				op->call_id, op->op_type, op->interval,
 				crm_str(op->rsc_id),
-				op_status2text(op->op_status));
+				op_status2text(op->op_status), op->timeout);
 			break;
 		case LRM_OP_NOTSUPPORTED:
-			crm_err("LRM operation (%d) %s on %s %s",
+			crm_err("LRM operation (%d) %s_%d on %s %s",
 				op->call_id, op->op_type,
+				op->interval,
 				crm_str(op->rsc_id),
 				op_status2text(op->op_status));
 			break;
 		case LRM_OP_DONE:
-			crm_debug("LRM operation (%d) %s on %s %s",
-				  op->call_id, op->op_type,
-				  crm_str(op->rsc_id),
-				  op_status2text(op->op_status));
+			crm_info("LRM operation (%d) %s_%d on %s %s",
+				 op->call_id, op->op_type,
+				 op->interval,
+				 crm_str(op->rsc_id),
+				 op_status2text(op->op_status));
 			break;
 	}
-	g_hash_table_replace(resources_confirmed,
-			     crm_strdup(op->rsc_id), crm_strdup(op->op_type));
-
-	do_update_resource(op);
+	
+	if(op->op_status != LRM_OP_CANCELLED) {
+		do_update_resource(op);
+		if(op->interval > 0) {
+			crm_debug("Op %d %s_%s_%d returned",
+				  op->call_id, op->rsc_id, op->op_type,
+				  op->interval);
+			return TRUE;
+		}
+		
+	} else if(op->interval == 0) {
+		crm_err("No update sent for cancelled op %d: %s_%s_%d",
+			op->call_id, op->rsc_id, op->op_type, op->interval);
+	}
 
 	if(g_hash_table_size(shutdown_ops) > 0) {
 		char *op_id = make_stop_id(op->rsc_id, op->call_id);
 		if(g_hash_table_remove(shutdown_ops, op_id)) {
-			crm_debug("Op %d (%s %s) confirmed",
-				  op->call_id, op->op_type, op->rsc_id);
-
-		} else if(op->interval == 0) {
-			crm_err("Op %d (%s %s) not matched: %s",
-				op->call_id, op->op_type, op->rsc_id, op_id);
+			crm_debug_2("Op %d %s_%s_%d is confirmed",
+				    op->call_id, op->rsc_id, op->op_type,
+				    op->interval);
+			crm_free(op_id);
+			return TRUE;
 		}
 		crm_free(op_id);
 	}
-	
-	if(is_set(fsa_input_register, R_SENT_RSC_STOP)) {
-		if(g_hash_table_size(shutdown_ops) == 0) {
-			register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
-			
-		} else {
-			crm_debug("Still waiting for %d pending stop operations"
-				  " to complete before exiting",
-				  g_hash_table_size(shutdown_ops));
-			g_hash_table_foreach(
-				shutdown_ops, ghash_print_pending, NULL);
-		}
-	}
-	
-	return I_NULL;
+	crm_err("Op %d %s_%s_%d not matched",
+		op->call_id, op->rsc_id, op->op_type, op->interval);
+	return TRUE;
 }
 
 char *
@@ -1281,13 +1584,6 @@ make_stop_id(const char *rsc, int call_id)
 		snprintf(op_id, strlen(rsc) + 34, "%s:%d", rsc, call_id);
 	}
 	return op_id;
-}
-
-void
-ghash_print_pending(gpointer key, gpointer value, gpointer user_data) 
-{
-	const char *uname = key;
-	crm_debug("Pending action: %s", uname);
 }
 
 gboolean

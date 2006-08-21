@@ -46,23 +46,22 @@ AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
 
 
 ## binary progs
-halib_PROGRAMS	= ttest tengine
+halib_PROGRAMS	= tengine ttest
 
 ## SOURCES
-noinst_HEADERS	= tengine.h
+noinst_HEADERS	= tengine.h te_callbacks.h
 
-tengine_SOURCES	= tengine.c unpack.c utils.c callbacks.c main.c
-tengine_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-tengine_LDFLAGS	= $(XML_LIBS)
+tengine_SOURCES	= actions.c events.c utils.c callbacks.c main.c
+tengine_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 tengine_LDADD	= $(COMMONLIBS) \
-                    $(top_builddir)/lib/fencing/libstonithd.la
+                    $(top_builddir)/lib/fencing/libstonithd.la \
+                    $(top_builddir)/lib/crm/transition/libtransitioner.la
 
-ttest_SOURCES	= tengine.c unpack.c utils.c callbacks.c ttest.c
-ttest_CFLAGS	= $(XML_FLAGS) -DTESTING=1 -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-ttest_LDFLAGS	= $(XML_LIBS)
+ttest_SOURCES	= actions.c events.c utils.c callbacks.c ttest.c
+ttest_CFLAGS	= -DTESTING=1 -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 ttest_LDADD	= $(COMMONLIBS) \
-                    $(top_builddir)/lib/fencing/libstonithd.la
-
+                    $(top_builddir)/lib/fencing/libstonithd.la \
+                    $(top_builddir)/lib/crm/transition/libtransitioner.la
 
 clean-generic:
 	rm -f *.log *.debug *~

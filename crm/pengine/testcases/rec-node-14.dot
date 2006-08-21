@@ -1,0 +1,8 @@
+digraph "g" {
+	size = "30,30"
+"stonith node1" [ style=bold color="green" fontcolor="black" ]
+"stonith node2" [ style=bold color="green" fontcolor="black" ]
+"stonith node3" [ style=bold color="green" fontcolor="black" ]
+"stonith node3" -> "stonith node2" [ style = bold]
+"stonith node1" -> "stonith node3" [ style = bold]
+}

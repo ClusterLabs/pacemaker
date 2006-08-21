@@ -35,12 +35,13 @@ extern void register_fsa_error_adv(
 
 #define register_fsa_error(cause, input, new_data) register_fsa_error_adv(cause, input, msg_data, new_data, __FUNCTION__)
 
-extern void register_fsa_input_adv(
+extern int register_fsa_input_adv(
 	enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 	void *data, long long with_actions,
 	gboolean prepend, const char *raised_from);
 
 extern void fsa_dump_queue(int log_level);
+extern void route_message(enum crmd_fsa_cause cause, ha_msg_input_t *input);
 
 #define crmd_fsa_stall(cur_input) if(cur_input != NULL) {		\
 		register_fsa_input_adv(					\
@@ -78,7 +79,7 @@ gboolean have_wait_message(void);
 extern gboolean relay_message(
 	HA_Message *relay_message, gboolean originated_locally);
 
-extern void crmd_ha_msg_callback(const HA_Message * msg, void* private_data);
+extern void crmd_ha_msg_callback(HA_Message * msg, void* private_data);
 
 extern gboolean crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data);
 

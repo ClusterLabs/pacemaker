@@ -170,6 +170,8 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 
 	/* execute the RA */
 	execl(ra_pathname, ra_pathname, op_type, NULL);
+	cl_perror("(%s:%s:%d) execl failed for %s" 
+		  , __FILE__, __FUNCTION__, __LINE__, ra_pathname);
 
 	switch (errno) {
 		case ENOENT:   /* No such file or directory */
@@ -181,7 +183,6 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 			exit_value = EXECRA_EXEC_UNKNOWN_ERROR;
 	}
 
-	cl_log(LOG_ERR, "execl error when to execute RA %s.", rsc_type);
 	exit(exit_value);
 }
 
@@ -192,7 +193,7 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
          * no actual mapping except validating, which ensure the return code
          * will be in the range 0 to 7. Too strict?
          */
-        if (ret_execra < 0 || ret_execra > 7) {
+        if (ret_execra < 0 || ret_execra > 9) {
                 cl_log(LOG_WARNING, "mapped the invalid return code %d."
                         , ret_execra);
                 ret_execra = EXECRA_UNKNOWN_ERROR;
@@ -315,7 +316,7 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	g_str_tmp = g_string_new("");
 	while(!feof(file)) {
 		memset(buff, 0, BUFF_LEN);
-		read_len = fread(buff, 1, BUFF_LEN, file);
+		read_len = fread(buff, 1, BUFF_LEN - 1, file);
 		if (0<read_len) {
 			g_string_append(g_str_tmp, buff);
 		}
@@ -433,9 +434,10 @@ get_providers(const char* class_path, const char* ra_type, GList ** providers)
 				free(namelist[file_num]);
 				continue;
 			}
-
-			stat(namelist[file_num]->d_name, &prop);
-			if (S_ISDIR(prop.st_mode)) {
+			snprintf(tmp_buffer,FILENAME_MAX,"%s/%s",
+				 class_path, namelist[file_num]->d_name);
+			stat(tmp_buffer, &prop);
+			if (!S_ISDIR(prop.st_mode)) {
 				free(namelist[file_num]);
 				continue;
 			}

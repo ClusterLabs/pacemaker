@@ -1,0 +1,115 @@
+<cib generated="true" admin_epoch="0" epoch="5" num_updates="88" have_quorum="true" num_peers="1"  cib-last-written="Fri Dec 16 14:27:59 2005" cib_feature_revision="1.2" crm_feature_set="1.0.3"  dc_uuid="6d3906ef-d88f-4363-afac-609884ddbb90" ccm_transition="1">
+   <configuration>
+     <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
+       <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="120s"/>
+       <nvpair id="symmetric_cluster" name="symmetric_cluster" value="true"/>
+       <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>
+     </attributes></cluster_property_set></crm_config>
+     <nodes>
+       <node id="6d3906ef-d88f-4363-afac-609884ddbb90" uname="paul" type="member"/>
+     </nodes>
+     <resources>
+       <group id="group_1">
+         <primitive class="heartbeat" id="datadisk_1" provider="heartbeat" type="datadisk">
+           <operations>
+             <op id="datadisk_1_mon" interval="120s" name="monitor" timeout="60s"/>
+           </operations>
+           <instance_attributes>
+             <attributes>
+               <nvpair id="datadisk_1_attr_1" name="1" value="r0"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+         <primitive class="ocf" id="Filesystem_2" provider="heartbeat" type="Filesystem">
+           <operations>
+             <op id="Filesystem_2_mon" interval="120s" name="monitor" timeout="60s"/>
+           </operations>
+           <instance_attributes>
+             <attributes>
+               <nvpair id="Filesystem_2_device" name="device" value="/dev/drbd0"/>
+               <nvpair id="Filesystem_2_directory" name="directory" value="/home"/>
+               <nvpair id="Filesystem_2_fstype" name="fstype" value="reiserfs"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+         <primitive class="ocf" id="IPaddr_5" provider="heartbeat" type="IPaddr">
+           <operations>
+             <op id="IPaddr_5_mon" interval="5s" name="monitor" timeout="5s"/>
+           </operations>
+           <instance_attributes>
+             <attributes>
+               <nvpair id="IPaddr_5_attr_0" name="ip" value="10.10.10.222"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+         <primitive class="lsb" id="postfix_9" provider="heartbeat" type="postfix">
+           <operations>
+             <op id="postfix_9_mon" interval="120s" name="monitor" timeout="60s"/>
+           </operations>
+         </primitive>
+       </group>
+     </resources>
+     <constraints/>
+   </configuration>
+ <status>
+   <node_state id="6d3906ef-d88f-4363-afac-609884ddbb90" uname="paul" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
+     <lrm>
+       <lrm_resources>
+         <lrm_resource id="group_1:Filesystem_2" type="Filesystem" class="ocf" provider="heartbeat">
+           <lrm_rsc_op id="group_1:Filesystem_2_monitor_0" op_digest="9432f65d5b188b6b7dd1b626b2d1a541" interval="0" operation="monitor"  transition_key="0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="0:7;0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" call_id="3" rc_code="7" op_status="0">
+             
+           </lrm_rsc_op>
+           <lrm_rsc_op id="group_1:Filesystem_2_start_0" op_digest="9432f65d5b188b6b7dd1b626b2d1a541" operation="start" interval="0" op_status="0" call_id="10" rc_code="0"  transition_key="2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="0:0;2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc">
+             
+           </lrm_rsc_op>
+           <lrm_rsc_op id="group_1:Filesystem_2_monitor_120000" op_digest="9432f65d5b188b6b7dd1b626b2d1a541" interval="120000" operation="monitor"  transition_key="2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="0:0;2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" call_id="11" rc_code="0" op_status="0">
+             
+           </lrm_rsc_op>
+         </lrm_resource>
+         <lrm_resource id="group_1:postfix_9" type="postfix" class="lsb" provider="heartbeat">
+           <lrm_rsc_op id="group_1:postfix_9_monitor_0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" operation="monitor"  transition_key="0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="4:3;0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" call_id="5" rc_code="3" op_status="4">
+             
+           </lrm_rsc_op>
+           <lrm_rsc_op id="group_1:postfix_9_stop_0" operation="stop" interval="0"  transition_key="1:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="0:0;1:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" call_id="7" rc_code="0" op_status="0"/>
+           <lrm_rsc_op id="group_1:postfix_9_start_0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" operation="start" interval="0" op_status="0" call_id="14" rc_code="0"  transition_key="2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="0:0;2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc">
+             
+           </lrm_rsc_op>
+           <lrm_rsc_op id="group_1:postfix_9_monitor_120000" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="120000" operation="monitor"  transition_key="2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="4:3;2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" call_id="15" rc_code="3" op_status="4">
+             
+           </lrm_rsc_op>
+         </lrm_resource>
+         <lrm_resource id="group_1:datadisk_1" type="datadisk" class="heartbeat" provider="heartbeat">
+           <lrm_rsc_op id="group_1:datadisk_1_monitor_0" op_digest="eaef18223bea84e8b011465368d9f74e" interval="0" operation="monitor"  transition_key="0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="0:0;0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" call_id="2" rc_code="0" op_status="0">
+             
+           </lrm_rsc_op>
+           <lrm_rsc_op id="group_1:datadisk_1_stop_0" operation="stop" interval="0"  transition_key="1:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="0:0;1:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" call_id="6" rc_code="0" op_status="0"/>
+           <lrm_rsc_op id="group_1:datadisk_1_start_0" op_digest="eaef18223bea84e8b011465368d9f74e" operation="start" interval="0" op_status="0" call_id="8" rc_code="0"  transition_key="2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="0:0;2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc">
+             
+           </lrm_rsc_op>
+           <lrm_rsc_op id="group_1:datadisk_1_monitor_120000" op_digest="eaef18223bea84e8b011465368d9f74e" interval="120000" operation="monitor"  transition_key="2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="0:0;2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" call_id="9" rc_code="0" op_status="0">
+             
+           </lrm_rsc_op>
+         </lrm_resource>
+         <lrm_resource id="group_1:IPaddr_5" type="IPaddr" class="ocf" provider="heartbeat">
+           <lrm_rsc_op id="group_1:IPaddr_5_monitor_0" op_digest="5d059fa9a93ba162aa5e2b13e390ed4a" interval="0" operation="monitor"  transition_key="0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="0:7;0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" call_id="4" rc_code="7" op_status="0">
+             
+           </lrm_rsc_op>
+           <lrm_rsc_op id="group_1:IPaddr_5_start_0" op_digest="5d059fa9a93ba162aa5e2b13e390ed4a" operation="start" interval="0" op_status="0" call_id="12" rc_code="0"  transition_key="2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="0:0;2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc">
+             
+           </lrm_rsc_op>
+           <lrm_rsc_op id="group_1:IPaddr_5_monitor_5000" op_digest="5d059fa9a93ba162aa5e2b13e390ed4a" interval="5000" operation="monitor"  transition_key="2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="0:0;2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" call_id="13" rc_code="0" op_status="0">
+             
+           </lrm_rsc_op>
+         </lrm_resource>
+       </lrm_resources>
+     </lrm>
+     <transient_attributes id="6d3906ef-d88f-4363-afac-609884ddbb90">
+       <instance_attributes id="crmd-transient--6d3906ef-d88f-4363-afac-609884ddbb90">
+         <attributes>
+           <nvpair id="lrm-probe-6d3906ef-d88f-4363-afac-609884ddbb90" name="probe_complete" value="true"/>
+         </attributes>
+       </instance_attributes>
+     </transient_attributes>
+   </node_state>
+ </status>
+</cib>

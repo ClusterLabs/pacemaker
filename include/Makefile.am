@@ -31,4 +31,4 @@ include_HEADERS	        = apphb.h apphb_notify.h HBauth.h HBcomm.h	\
 			  recoverymgr.h replace_uuid.h compress.h
 
 SUBDIRS                 = clplumbing ocf pils saf 			\
-			  stonith fencing lrm crm
+			  stonith fencing lrm crm mgmt	

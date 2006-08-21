@@ -1,4 +1,4 @@
-/* $Id: cibmon.c,v 1.28 2005/07/03 22:15:49 alan Exp $ */
+/* $Id: cibmon.c,v 1.29 2005/10/25 14:02:15 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -139,7 +139,7 @@ main(int argc, char **argv)
 				usage(crm_system_name, LSB_EXIT_OK);
 				break;
 			case 'm':
-				max_failures = crm_atoi(optarg, "30");
+				max_failures = crm_parse_int(optarg, "30");
 				break;
 			case 'a':
 				pre_notify = TRUE;

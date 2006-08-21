@@ -28,21 +28,20 @@ hadir		= $(sysconfdir)/ha.d
 halibdir	= $(libdir)/@HB_PKG@
 commmoddir	= $(halibdir)/modules/comm
 havarlibdir	= $(localstatedir)/lib/@HB_PKG@
-XML_FLAGS	= `xml2-config --cflags`
-XML_LIBS	= `xml2-config --libs`
+pe_varlibdir	= $(HA_VARLIBDIR)/$(HB_PKG)/pengine
 
 # sockets with path
 crmdir		= $(havarlibdir)/crm
 apigid		= @HA_APIGID@
 crmuid		= @HA_CCMUID@
 
+
 COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 		$(top_builddir)/lib/clplumbing/libplumb.la		\
 		$(top_builddir)/lib/pils/libpils.la			\
 		$(top_builddir)/lib/crm/common/libcrmcommon.la		\
+		$(top_builddir)/lib/crm/pengine/libpe_status.la		\
 		libpengine.la						\
-		$(top_builddir)/lib/crm/cib/libcib.la			\
-		$(top_builddir)/lib/apphb/libapphb.la			\
 		$(GLIBLIB)						\
 		$(CURSESLIBS)						\
 		$(LIBRT)
@@ -57,33 +56,33 @@ lib_LTLIBRARIES	= libpengine.la
 halib_PROGRAMS	= ptest pengine
 
 ## SOURCES
+noinst_HEADERS	= allocate.h utils.h pengine.h
+#utils.h pengine.h
 
-libpengine_la_SOURCES	= color.c unpack.c graph.c			\
-			native.c group.c incarnation.c complex.c	\
-			rules.c pengine.c stages.c utils.c
-
-libpengine_la_LDFLAGS	= -version-info 0:0:0
-
-noinst_HEADERS	= pe_utils.h pengine.h complex.h pe_rules.h
-
-ptest_SOURCES	= ptest.c
-
-ptest_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-ptest_LDFLAGS	= 
-ptest_LDADD	= $(COMMONLIBS) 
+libpengine_la_LDFLAGS	= -version-info 3:0:0
+# -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version 
+libpengine_la_SOURCES	= pengine.c allocate.c utils.c \
+			native.c group.c clone.c master.c graph.c
 
 pengine_SOURCES	= main.c
-
 pengine_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-pengine_LDFLAGS	= 
-pengine_LDADD	= $(COMMONLIBS) \
-		$(top_builddir)/lib/hbclient/libhbclient.la
+pengine_LDADD	= $(COMMONLIBS)	$(top_builddir)/lib/crm/cib/libcib.la
+# libcib for get_object_root()
+#		$(top_builddir)/lib/hbclient/libhbclient.la
 
-#
+ptest_SOURCES	= ptest.c 
+ptest_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+ptest_LDADD	= $(COMMONLIBS)						\
+		$(top_builddir)/lib/crm/cib/libcib.la			\
+		$(top_builddir)/lib/crm/transition/libtransitioner.la
 
 clean-generic:
-	rm -f *.log *.debug *~
+	rm -f *.log *.debug *~ .gres.* testcases/.gres.*
 
 install-exec-local:
+	$(mkinstalldirs) $(DESTDIR)/$(pe_varlibdir)
+	-chown $(HA_CCMUSER) $(DESTDIR)/$(pe_varlibdir)
+	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(pe_varlibdir)
+	-chmod 750 $(DESTDIR)/$(pe_varlibdir)
 
 uninstall-local:

@@ -1,0 +1,9 @@
+digraph "g" {
+	size = "30,30"
+"resource_nfs_stop_0 jamesltc" [ style=bold color="green" fontcolor="black" ]
+"nfs_stop_0" [ style=bold color="green" fontcolor="orange" ]
+"nfs_stopped_0" [ style=bold color="green" fontcolor="orange" ]
+"nfs_stop_0" -> "resource_nfs_stop_0 jamesltc" [ style = bold]
+"resource_nfs_stop_0 jamesltc" -> "nfs_stopped_0" [ style = bold]
+"nfs_stop_0" -> "nfs_stopped_0" [ style = bold]
+}

@@ -1,0 +1,215 @@
+#!/bin/bash
+#
+#	$Id: ocf-tester,v 1.2 2006/08/14 09:38:20 andrew Exp $
+#
+#	pingd OCF RA. Does nothing but wait a few seconds, can be
+#	configured to fail occassionally.
+#
+# Copyright (c) 2004 SUSE LINUX AG, Lars Marowsky-Brée
+#                    All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of version 2 of the GNU General Public License as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it would be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# Further, this software is distributed without any warranty that it is
+# free of the rightful claim of any third person regarding infringement
+# or the like.  Any license provided herein, whether implied or
+# otherwise, applies only to this software file.  Patent licenses, if
+# any, provided herein do not apply to combinations of this program with
+# other software, or any other product whatsoever.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
+#
+
+num_errors=0
+
+function usage() {
+    echo "ocf-tester [-h] [-r resource_name] [-o name=value]* /full/path/to/resource"
+    exit $1
+}
+
+function assert() {
+    rc=$1; shift
+    target=$1; shift
+    msg=$1; shift
+    exit_code=$1; shift
+    if [ $rc != $target ]; then
+	num_errors=`expr $num_errors + 1`
+	echo -e "* rc=$rc: $msg"
+	if [ ! -z $exit_code ]; then
+	    echo "Aborting tests"
+	    exit $exit_code
+	fi
+    fi
+}
+
+done=0
+ra_args=""
+verbose=0
+while test "$done" = "0"; do
+    case "$1" in
+        -n) ra_args="$ra_args OCF_RESOURCE_INSTANCE=$2"; shift; shift;;
+        -o) name=${2%%=*}; value=${2##*=}; 
+	    ra_args="$ra_args OCF_RESKEY_$name=$value"; shift; shift;;
+	-v) verbose=1; shift;;
+	-?) usage 0;;
+	-*) echo "unknown option: $1"; usage 1;;
+	*) done=1;;
+    esac
+done
+
+agent=$1
+stopped_rc=7
+has_demote=1
+has_promote=1
+
+function test_command() {
+    action=$1; shift
+    msg="Testing: $action"
+    if [ "x$1" != x ]; then
+	msg="$1"
+    fi
+    #echo $msg
+    #echo Running: "export $ra_args; bash $agent $action 2>&1 > /dev/null"
+    export $ra_args; 
+    if [ $verbose = 0 ]; then
+	bash $agent $action >/dev/null 2>&1
+    else
+	bash $agent $action
+    fi
+    rc=$?
+    #echo rc: $rc
+    return $rc
+}
+
+# Begin tests
+echo Beginning tests for $agent...
+
+if [ ! -f $agent ]; then
+    assert 7 0 "Could not find file: $agent"
+fi
+
+test_command meta-data
+rc=$?
+if [ $rc = 3 ]; then
+    assert $rc 0 "Your agent does not support the meta-data action"
+else
+    assert $rc 0 "The meta-data action cannot fail and must return 0"
+fi
+
+test_command validate-all
+rc=$?
+if [ $rc = 3 ]; then
+    assert $rc 0 "Your agent does not support the validate-all action"
+else
+    assert $rc 0 "Validation failed.  Did you supply enough options with -o ?" 1
+fi
+
+test_command monitor "Checking current state"
+rc=$?
+if [ $rc = 3 ]; then
+    assert $rc 7 "Your agent does not support the monitor action" 1
+
+elif [ $rc = 1 ]; then
+    assert $rc 7 "Monitoring a stopped resources should return 0"
+    echo "Test updated to expect 1 for stopped resources for the remainder of this run"
+    stopped_rc=1
+
+elif [ $rc = 8 ]; then
+    test_command demote "Cleanup, demote"
+    assert $? 0 "Your agent was a master and could not be demoted" 1
+
+    test_command stop "Cleanup, stop"
+    assert $? 0 "Your agent was a master and could not be stopped" 1
+
+elif [ $rc != 7 ]; then
+    test_command stop
+    assert $? 0 "Your agent was active and could not be stopped" 1
+fi
+
+test_command monitor
+assert $rc $stopped_rc "Monitoring a stopped resource should return $stopped_rc"
+
+test_command start
+assert $? 0 "Start failed.  Did you supply enough options with -o ?" 1
+
+test_command monitor
+assert $rc 0 "Monitoring an active resource should return 0"
+
+test_command notify
+rc=$?
+if [ $rc = 3 ]; then
+    echo "* Your agent does not support the notify action (optional)"
+else
+    assert $? 0 "The notify action cannot fail and must return 0"
+fi
+
+test_command demote "Checking for demote action"
+if [ $? = 3 ]; then
+    has_demote=0
+    echo "* Your agent does not support the demote action (optional)"
+fi
+
+test_command promote "Checking for promote action"
+if [ $? = 3 ]; then
+    has_promote=0
+    echo "* Your agent does not support the promote action (optional)"
+fi
+
+if [ $has_promote = 1 -a $has_demote = 1 ]; then
+    test_command demote "Testing: demotion of started resource"
+    assert $? 0 "Demoting a start resource should not fail"
+
+    test_command promote
+    assert $? 0 "Promote failed"
+
+    test_command demote
+    assert $? 0 "Demote failed" 1
+
+    test_command demote "Testing: demotion of demoted resource"
+    assert $? 0 "Demoting a demoted resource should not fail"
+
+    test_command promote "Promoting resource"
+    assert $? 0 "Promote failed" 1
+
+    test_command promote "Testing: promotion of promoted resource"
+    assert $? 0 "Promoting a promoted resource should not fail"
+
+    test_command demote "Demoting resource"
+    assert $? 0 "Demote failed" 1
+
+elif [ $has_promote = 0 -a $has_demote = 0 ]; then
+    echo "* Your agent does not support master/slave (optional)"
+
+else
+    echo "* Your agent partially supports master/slave"
+    num_errors=`expr $num_errors + 1`
+fi
+
+test_command stop
+assert $? 0 "Stop failed" 1
+
+test_command start "Restarting resource..."
+assert $? 0 "Start failed" 1
+
+test_command start "Testing: starting a started resource"
+assert $? 0 "Starting a running resource is required to succeed"
+
+test_command stop "Stopping resource"
+assert $? 0 "Stop could not clean up after multiple starts" 1
+
+test_command stop "Testing: stopping a stoped resource"
+assert $? 0 "Stopping a stopped resource is required to succeed"
+
+if [ $num_errors != 0 ]; then
+    echo Tests failed: $agent failed $num_errors tests
+else 
+    echo $agent passed all tests
+fi

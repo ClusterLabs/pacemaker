@@ -1,4 +1,4 @@
-/* $Id: ipc.h,v 1.10 2005/07/08 20:55:20 andrew Exp $ */
+/* $Id: ipc.h,v 1.11 2006/07/06 09:30:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,10 +37,7 @@ typedef struct crmd_client_s
 extern gboolean send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg,
 				const char *node, gboolean force_ordered);
 
-extern gboolean crm_send_ipc_message(
-	IPC_Channel *ipc_client, HA_Message *msg, gboolean is_server);
-
-#define send_ipc_message(ipc, msg) crm_send_ipc_message(ipc, msg, FALSE)
+extern gboolean send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg);
 
 extern void default_ipc_connection_destroy(gpointer user_data);
 

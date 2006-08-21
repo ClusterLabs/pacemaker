@@ -1,4 +1,4 @@
-/* $Id: callbacks.h,v 1.10 2005/06/13 11:54:53 andrew Exp $ */
+/* $Id: callbacks.h,v 1.14 2006/02/02 11:10:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -47,10 +47,12 @@ typedef struct cib_client_s
 
 		IPC_Channel *channel;
 		GCHSource   *source;
+		unsigned long num_calls;
 
 		int pre_notify;
 		int post_notify;
 		int confirmations;
+		int replace;
 		int diffs;
 		
 		GList *delegated_calls;
@@ -62,8 +64,8 @@ typedef struct cib_operation_s
 		gboolean	modifies_cib;
 		gboolean	needs_privileges;
 		gboolean	needs_quorum;
-		gboolean	needs_section;
-		gboolean	needs_data;
+		enum cib_errors (*prepare)(HA_Message *, crm_data_t**, const char **);
+		enum cib_errors (*cleanup)(const char *, crm_data_t**, crm_data_t**);
 		enum cib_errors (*fn)(
 			const char *, int, const char *,
 			crm_data_t*, crm_data_t*, crm_data_t**, crm_data_t**);
@@ -71,13 +73,24 @@ typedef struct cib_operation_s
 
 extern cib_operation_t cib_server_ops[];
 
-extern gboolean cib_client_connect(IPC_Channel *channel, gpointer user_data);
+extern gboolean cib_client_connect_null(
+	IPC_Channel *channel, gpointer user_data);
+extern gboolean cib_client_connect_rw_ro(
+	IPC_Channel *channel, gpointer user_data);
+extern gboolean cib_client_connect_rw_synch(
+	IPC_Channel *channel, gpointer user_data);
+extern gboolean cib_client_connect_ro_synch(
+	IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_null_callback (IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_rw_callback   (IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_ro_callback   (IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_ha_dispatch   (IPC_Channel *channel, gpointer user_data);
+extern gboolean cib_rw_synchronous_callback(
+	IPC_Channel *channel, gpointer user_data);
+extern gboolean cib_ro_synchronous_callback(
+	IPC_Channel *channel, gpointer user_data);
 
-extern void cib_peer_callback(const HA_Message * msg, void* private_data);
+extern void cib_peer_callback(HA_Message * msg, void* private_data);
 extern void cib_client_status_callback(const char * node, const char * client,
 				       const char * status, void * private);
 

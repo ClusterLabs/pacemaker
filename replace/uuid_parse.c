@@ -226,7 +226,7 @@ uuid_parse(const char *in, uuid_t uu)
 		if (i== 36)
 			if (*cp == 0)
 				continue;
-		if (!isxdigit(*cp))
+		if (!isxdigit((int) *cp))
 			return -1;
 	}
 	uuid.time_low = strtoul(in, NULL, 16);

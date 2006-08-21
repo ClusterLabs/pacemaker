@@ -1,4 +1,4 @@
-/* $Id: primatives.c,v 1.27 2005/09/12 11:00:19 andrew Exp $ */
+/* $Id: primatives.c,v 1.33 2006/03/16 23:29:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -318,7 +318,7 @@ delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec)
 	}
 	object_id = crm_element_value(delete_spec, XML_ATTR_ID);
 
-	crm_debug_2("Processing: <%s id=%s>",
+	crm_debug_3("Processing: <%s id=%s>",
 		    crm_str(object_name), crm_str(object_id));
 	
 	if(delete_spec == NULL) {
@@ -339,7 +339,7 @@ delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec)
 		; /* nothing */
 		
 	} else if(equiv_node == NULL) {
-		result = cib_NOTEXISTS;
+		result = cib_ok;
 
 	} else if(xml_has_children(delete_spec) == FALSE) {
 		/*  only leaves are deleted */
@@ -350,12 +350,12 @@ delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec)
 	} else {
 
 		xml_child_iter(
-			delete_spec, child, NULL,
+			delete_spec, child, 
 
 			int tmp_result = delete_cib_object(equiv_node, child);
 			
 			/*  only the first error is likely to be interesting */
-			if(result == cib_ok) {
+			if(tmp_result != cib_ok && result == cib_ok) {
 				result = tmp_result;
 			}
 			);
@@ -377,7 +377,10 @@ add_cib_object(crm_data_t *parent, crm_data_t *new_obj)
 	}
 	object_id = crm_element_value(new_obj, XML_ATTR_ID);
 
-	if(new_obj == NULL) {
+	crm_debug_3("Processing: <%s id=%s>",
+		    crm_str(object_name), crm_str(object_id));
+	
+	if(new_obj == NULL || object_name == NULL) {
 		result = cib_NOOBJECT;
 
 	} else if(parent == NULL) {
@@ -397,9 +400,8 @@ add_cib_object(crm_data_t *parent, crm_data_t *new_obj)
 	} else if(equiv_node != NULL) {
 		result = cib_EXISTS;
 
-	} else if(add_node_copy(parent, new_obj) == NULL) {
-		result = cib_NODECOPY;
-		
+	} else {
+		result = update_cib_object(parent, new_obj);
 	}
 
 	return result;
@@ -427,6 +429,9 @@ update_cib_object(crm_data_t *parent, crm_data_t *update)
 	CRM_DEV_ASSERT(object_name != NULL);
 	if(crm_assert_failed) { return cib_NOOBJECT; }
 
+	crm_debug_3("Processing: <%s id=%s>",
+		    crm_str(object_name), crm_str(object_id));
+	
 	if(object_id == NULL) {
 		/*  placeholder object */
 		target = find_xml_node(parent, object_name, FALSE);
@@ -436,15 +441,7 @@ update_cib_object(crm_data_t *parent, crm_data_t *update)
 	}
 
 	if(target == NULL) {
-		target = add_node_copy(parent, update);
-		crm_debug_2("Added  <%s id=%s>",
-			    crm_str(object_name), crm_str(object_id));
-
-		CRM_DEV_ASSERT(target != NULL);
-		if(crm_assert_failed) { return cib_NODECOPY; }
-
-		return cib_ok;
-		
+		target = create_xml_node(parent, object_name);
 	} 
 
 	crm_debug_2("Found node <%s id=%s> to update",
@@ -463,23 +460,13 @@ update_cib_object(crm_data_t *parent, crm_data_t *update)
 		xml_remove_prop(target, XML_CIB_ATTR_REPLACE);
 	}
 	
-	if(safe_str_eq(XML_CIB_TAG_STATE, object_name)){
-		update_node_state(target, update);
-		
-	} else {
-		copy_in_properties(target, update);
-	}
+	copy_in_properties(target, update);
 
-	CRM_DEV_ASSERT(cl_is_allocated(object_name));
-	if(object_id != NULL) {
-		CRM_DEV_ASSERT(cl_is_allocated(object_id));
-	}
-	
 	crm_debug_3("Processing children of <%s id=%s>",
 		    crm_str(object_name), crm_str(object_id));
 	
 	xml_child_iter(
-		update, a_child, NULL, 
+		update, a_child,  
 		int tmp_result = 0;
 		crm_debug_3("Updating child <%s id=%s>",
 			    crm_element_name(a_child), ID(a_child));
@@ -501,66 +488,5 @@ update_cib_object(crm_data_t *parent, crm_data_t *update)
 		  crm_str(object_name), crm_str(object_id));
 
 	return result;
-}
-
-void
-update_node_state(crm_data_t *target, crm_data_t *update)
-{
-	const char *source	= NULL;
-	gboolean any_updates    = FALSE;
-	gboolean clear_stonith  = FALSE;
-	gboolean clear_shutdown = FALSE;
-
-	xml_prop_iter(
-		update, local_prop_name, local_prop_value,
-		
-		if(local_prop_name == NULL) {
-			/*  error */
-			
-		} else if(strcmp(local_prop_name, XML_ATTR_ID) == 0) {
-			
-		} else if(strcmp(local_prop_name, XML_ATTR_TSTAMP) == 0) {
-
-		} else if(strcmp(local_prop_name, XML_CIB_ATTR_CLEAR_SHUTDOWN) == 0) {
-			clear_shutdown = TRUE;
-			
-		} else if(strcmp(local_prop_name, XML_CIB_ATTR_CLEAR_STONITH) == 0) {
-			clear_stonith = TRUE;
-			clear_shutdown = TRUE;			
-			
-		} else if(strcmp(local_prop_name, XML_CIB_ATTR_SOURCE) == 0) {
-			source = local_prop_value;
-			
-		} else {
-			any_updates = TRUE;
-			crm_xml_add(target, local_prop_name, local_prop_value);
-		}
-		);
-	
-	xml_remove_prop(target, XML_CIB_ATTR_CLEAR_SHUTDOWN);
-	if(clear_shutdown) {
-		/*  unset XML_CIB_ATTR_SHUTDOWN  */
-		if(crm_element_value(target, XML_CIB_ATTR_SHUTDOWN) != NULL) {
-			crm_debug_2("Clearing %s", XML_CIB_ATTR_SHUTDOWN);
-			xml_remove_prop(target, XML_CIB_ATTR_SHUTDOWN);
-			any_updates = TRUE;
-		}
-	}
-
-	xml_remove_prop(target, XML_CIB_ATTR_CLEAR_STONITH);
-	if(clear_stonith) {
-		/*  unset XML_CIB_ATTR_STONITH */
-		if(crm_element_value(target, XML_CIB_ATTR_STONITH) != NULL) {
-			crm_debug_2("Clearing %s", XML_CIB_ATTR_STONITH);
-			xml_remove_prop(target, XML_CIB_ATTR_STONITH);
-			any_updates = TRUE;
-		}
-	}
-	
-	if(any_updates) {
-		set_node_tstamp(target);
-		crm_xml_add(target, XML_CIB_ATTR_SOURCE, source);
-	}
-	
 }
 

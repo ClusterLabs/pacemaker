@@ -88,26 +88,51 @@ do_timer_control(long long action,
 	return I_NULL;
 }
 
+static const char *
+get_timer_desc(fsa_timer_t *timer) 
+{
+	if(timer == election_trigger) {
+		return "Election Trigger";
+
+ 	} else if(timer == election_timeout) {
+		return "Election Timeout";
+		
+ 	} else if(timer == shutdown_escalation_timer) {
+		return "Shutdown Escalation";
+
+ 	} else if(timer == integration_timer) {
+		return "Integration Timer";
+
+ 	} else if(timer == finalization_timer) {
+		return "Finalization Timer";
+
+ 	} else if(timer == wait_timer) {
+		return "Wait Timer";
+
+ 	} else if(timer == recheck_timer) {
+		return "PEngine Recheck Timer";
+		
+	}	
+	return "Unknown Timer";
+}
+
 gboolean
 crm_timer_popped(gpointer data)
 {
 	fsa_timer_t *timer = (fsa_timer_t *)data;
 
-	if(timer == election_trigger) {
-		crm_info("Election Trigger (%s) just popped!",
-			 fsa_input2string(timer->fsa_input));
-
- 	} else if(timer == election_timeout) {
-		crm_info("Election Timeout (%s) just popped!",
-			 fsa_input2string(timer->fsa_input));
-
- 	} else if(timer == shutdown_escalation_timer) {
-		crm_err("Shutdown Escalation Timer (%s) just popped!",
+	if(timer == wait_timer
+	   || timer == recheck_timer
+	   || timer == finalization_timer
+	   || timer == election_trigger) {
+		crm_info("%s (%s) just popped!",
+			get_timer_desc(timer),
 			fsa_input2string(timer->fsa_input));
 		
 	} else {
-		crm_info("Timer %s just popped!",
-			 fsa_input2string(timer->fsa_input));
+		crm_err("%s (%s) just popped!",
+			get_timer_desc(timer),
+			fsa_input2string(timer->fsa_input));
 	}
 
 	if(timer->repeat == FALSE) {
@@ -133,6 +158,8 @@ crm_timer_popped(gpointer data)
 	} else if(timer->fsa_input != I_NULL) {
 		register_fsa_input(C_TIMER_POPPED, timer->fsa_input, NULL);
 	}
+	
+	crm_debug_3("Triggering FSA: %s", __FUNCTION__);
 	G_main_set_trigger(fsa_source);
 	
 	return TRUE;
@@ -141,22 +168,12 @@ crm_timer_popped(gpointer data)
 gboolean
 crm_timer_start(fsa_timer_t *timer)
 {
-	const char *timer_desc = NULL;
-	if(timer == election_trigger) {
-		timer_desc = "Election Trigger";
+	const char *timer_desc = get_timer_desc(timer);
 
- 	} else if(timer == election_timeout) {
-		timer_desc = "Election Timeout";
-		
-	} else {
-		timer_desc = "Timer";
-	}
-
-	if((timer->source_id == (guint)-1 || timer->source_id == (guint)-2)
-	   && timer->period_ms > 0) {
+	if(timer->source_id == 0 && timer->period_ms > 0) {
 		timer->source_id = Gmain_timeout_add(
 			timer->period_ms, timer->callback, (void*)timer);
-
+		CRM_ASSERT(timer->source_id != 0);
 		crm_debug("Started %s (%s:%dms), src=%d",
 			  timer_desc, fsa_input2string(timer->fsa_input),
 			  timer->period_ms, timer->source_id);
@@ -179,37 +196,23 @@ crm_timer_start(fsa_timer_t *timer)
 gboolean
 crm_timer_stop(fsa_timer_t *timer)
 {
-	const char *timer_desc = NULL;
-	if(timer == election_trigger) {
-		timer_desc = "Election Trigger";
-
- 	} else if(timer == election_timeout) {
-		timer_desc = "Election Timeout";
-		
- 	} else if(timer == wait_timer) {
-		timer_desc = "Stall Timeout";
-		
-	} else {
-		timer_desc = "Timer";
-	}
+	const char *timer_desc = get_timer_desc(timer);
 
 	if(timer == NULL) {
 		crm_err("Attempted to stop NULL timer");
 		return FALSE;
 		
-	} else if(timer->source_id != (guint)-1
-		  && timer->source_id != (guint)-2) {
+	} else if(timer->source_id != 0) {
 		crm_debug("Stopping %s (%s:%dms), src=%d",
 			  timer_desc, fsa_input2string(timer->fsa_input),
 			  timer->period_ms, timer->source_id);
 		Gmain_timeout_remove(timer->source_id);
-		timer->source_id = -2;
+		timer->source_id = 0;
 		
 	} else {
 		crm_debug_2("%s (%s:%dms) already stopped",
 			  timer_desc, fsa_input2string(timer->fsa_input),
 			  timer->period_ms);
-		timer->source_id = -2;
 		return FALSE;
 	}
 	return TRUE;
@@ -577,6 +580,9 @@ fsa_action2string(long long action)
 		case A_ELECTION_VOTE:
 			actionAsText = "A_ELECTION_VOTE";
 			break;
+		case A_ELECTION_CHECK:
+			actionAsText = "A_ELECTION_CHECK";
+			break;
 		case A_CL_JOIN_ANNOUNCE:
 			actionAsText = "A_CL_JOIN_ANNOUNCE";
 			break;
@@ -673,6 +679,9 @@ fsa_action2string(long long action)
 		case A_TE_STOP:
 			actionAsText = "A_TE_STOP";
 			break;
+		case A_TE_HALT:
+			actionAsText = "A_TE_HALT";
+			break;
 		case A_TE_CANCEL:
 			actionAsText = "A_TE_CANCEL";
 			break;
@@ -726,100 +735,100 @@ fsa_dump_inputs(int log_level, const char *text, long long input_register)
 	}
 
 	if(is_set(input_register, R_THE_DC)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
+		crm_log_maybe(log_level,
 			   "%s %.16llx (R_THE_DC)", text, R_THE_DC);
 	}
 	if(is_set(input_register, R_STARTING)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_STARTING)", text, R_STARTING);
+		crm_log_maybe(log_level, "%s %.16llx (R_STARTING)",
+			      text, R_STARTING);
 	}
 	if(is_set(input_register, R_SHUTDOWN)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_SHUTDOWN)", text, R_SHUTDOWN);
+		crm_log_maybe(log_level, "%s %.16llx (R_SHUTDOWN)",
+			      text, R_SHUTDOWN);
 	}
 	if(is_set(input_register, R_STAYDOWN)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_STAYDOWN)", text, R_STAYDOWN);
+		crm_log_maybe(log_level, "%s %.16llx (R_STAYDOWN)",
+			      text, R_STAYDOWN);
 	}
 	if(is_set(input_register, R_JOIN_OK)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_JOIN_OK)", text, R_JOIN_OK);
+		crm_log_maybe(log_level, "%s %.16llx (R_JOIN_OK)",
+			      text, R_JOIN_OK);
 	}
-	if(is_set(input_register, R_HAVE_RES)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_HAVE_RES)", text, R_HAVE_RES);
+	if(is_set(input_register, R_READ_CONFIG)) {
+		crm_log_maybe(log_level, "%s %.16llx (R_READ_CONFIG)",
+			      text, R_READ_CONFIG);
 	}
 	if(is_set(input_register, R_INVOKE_PE)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_INVOKE_PE)", text, R_INVOKE_PE);
+		crm_log_maybe(log_level, "%s %.16llx (R_INVOKE_PE)",
+			      text, R_INVOKE_PE);
 	}
 	if(is_set(input_register, R_CIB_CONNECTED)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_CIB_CONNECTED)", text, R_CIB_CONNECTED);
+		crm_log_maybe(log_level, "%s %.16llx (R_CIB_CONNECTED)",
+			      text, R_CIB_CONNECTED);
 	}
 	if(is_set(input_register, R_PE_CONNECTED)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_PE_CONNECTED)", text, R_PE_CONNECTED);
+		crm_log_maybe(log_level, "%s %.16llx (R_PE_CONNECTED)",
+			      text, R_PE_CONNECTED);
 	}
 	if(is_set(input_register, R_TE_CONNECTED)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_TE_CONNECTED)", text, R_TE_CONNECTED);
+		crm_log_maybe(log_level, "%s %.16llx (R_TE_CONNECTED)",
+			      text, R_TE_CONNECTED);
 	}
 	if(is_set(input_register, R_LRM_CONNECTED)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_LRM_CONNECTED)", text, R_LRM_CONNECTED);
+		crm_log_maybe(log_level, "%s %.16llx (R_LRM_CONNECTED)",
+			      text, R_LRM_CONNECTED);
 	}
 	if(is_set(input_register, R_CIB_REQUIRED)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_CIB_REQUIRED)", text, R_CIB_REQUIRED);
+		crm_log_maybe(log_level, "%s %.16llx (R_CIB_REQUIRED)",
+			      text, R_CIB_REQUIRED);
 	}
 	if(is_set(input_register, R_PE_REQUIRED)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_PE_REQUIRED)", text, R_PE_REQUIRED);
+		crm_log_maybe(log_level, "%s %.16llx (R_PE_REQUIRED)",
+			      text, R_PE_REQUIRED);
 	}
 	if(is_set(input_register, R_TE_REQUIRED)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_TE_REQUIRED)", text, R_TE_REQUIRED);
+		crm_log_maybe(log_level, "%s %.16llx (R_TE_REQUIRED)",
+			      text, R_TE_REQUIRED);
 	}
 	if(is_set(input_register, R_REQ_PEND)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_REQ_PEND)", text, R_REQ_PEND);
+		crm_log_maybe(log_level, "%s %.16llx (R_REQ_PEND)",
+			      text, R_REQ_PEND);
 	}
 	if(is_set(input_register, R_PE_PEND)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_PE_PEND)", text, R_PE_PEND);
+		crm_log_maybe(log_level, "%s %.16llx (R_PE_PEND)",
+			      text, R_PE_PEND);
 	}
 	if(is_set(input_register, R_TE_PEND)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_TE_PEND)", text, R_TE_PEND);
+		crm_log_maybe(log_level, "%s %.16llx (R_TE_PEND)",
+			      text, R_TE_PEND);
 	}
 	if(is_set(input_register, R_RESP_PEND)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_RESP_PEND)", text, R_RESP_PEND);
+		crm_log_maybe(log_level, "%s %.16llx (R_RESP_PEND)",
+			      text, R_RESP_PEND);
 	}
 	if(is_set(input_register, R_CIB_DONE)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_CIB_DONE)", text, R_CIB_DONE);
+		crm_log_maybe(log_level, "%s %.16llx (R_CIB_DONE)",
+			      text, R_CIB_DONE);
 	}
 	if(is_set(input_register, R_HAVE_CIB)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_HAVE_CIB)", text, R_HAVE_CIB);
+		crm_log_maybe(log_level, "%s %.16llx (R_HAVE_CIB)",
+			      text, R_HAVE_CIB);
 	}
 	if(is_set(input_register, R_CIB_ASKED)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_CIB_ASKED)", text, R_CIB_ASKED);
+		crm_log_maybe(log_level, "%s %.16llx (R_CIB_ASKED)",
+			      text, R_CIB_ASKED);
 	}
 	if(is_set(input_register, R_CCM_DATA)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_CCM_DATA)", text, R_CCM_DATA);
+		crm_log_maybe(log_level, "%s %.16llx (R_CCM_DATA)",
+			      text, R_CCM_DATA);
 	}	
 	if(is_set(input_register, R_PEER_DATA)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_PEER_DATA)", text, R_PEER_DATA);
+		crm_log_maybe(log_level, "%s %.16llx (R_PEER_DATA)",
+			      text, R_PEER_DATA);
 	}
 	if(is_set(input_register, R_IN_RECOVERY)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__,
-			   "%s %.16llx (R_IN_RECOVERY)", text, R_IN_RECOVERY);
+		crm_log_maybe(log_level, "%s %.16llx (R_IN_RECOVERY)",
+			      text, R_IN_RECOVERY);
 	}
 }
 
@@ -829,267 +838,272 @@ fsa_dump_actions(long long action, const char *text)
 	int log_level = LOG_DEBUG_3;
 	
 	if(is_set(action, A_READCONFIG)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_READCONFIG) %s", A_READCONFIG, text);
 	}
 	if(is_set(action, A_STARTUP)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_STARTUP) %s", A_STARTUP, text);
 	}
 	if(is_set(action, A_STARTED)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_STARTED) %s", A_STARTED, text);
 	}
 	if(is_set(action, A_HA_CONNECT)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_CONNECT) %s", A_HA_CONNECT, text);
 	}
 	if(is_set(action, A_HA_DISCONNECT)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_DISCONNECT) %s",
 			  A_HA_DISCONNECT, text);
 	}
 	if(is_set(action, A_LRM_CONNECT)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_LRM_CONNECT) %s",
 			  A_LRM_CONNECT, text);
 	}
 	if(is_set(action, A_LRM_EVENT)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_LRM_EVENT) %s",
 			  A_LRM_EVENT, text);
 	}
 	if(is_set(action, A_LRM_INVOKE)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_LRM_INVOKE) %s",
 			  A_LRM_INVOKE, text);
 	}
 	if(is_set(action, A_LRM_DISCONNECT)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_LRM_DISCONNECT) %s",
 			  A_LRM_DISCONNECT, text);
 	}
 	if(is_set(action, A_DC_TIMER_STOP)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_DC_TIMER_STOP) %s",
 			  A_DC_TIMER_STOP, text);
 	}
 	if(is_set(action, A_DC_TIMER_START)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_DC_TIMER_START) %s",
 			  A_DC_TIMER_START, text);
 	}
 	if(is_set(action, A_INTEGRATE_TIMER_START)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_INTEGRATE_TIMER_START) %s",
 			  A_INTEGRATE_TIMER_START, text);
 	}
 	if(is_set(action, A_INTEGRATE_TIMER_STOP)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_INTEGRATE_TIMER_STOP) %s",
 			  A_INTEGRATE_TIMER_STOP, text);
 	}
 	if(is_set(action, A_FINALIZE_TIMER_START)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_FINALIZE_TIMER_START) %s",
 			  A_FINALIZE_TIMER_START, text);
 	}
 	if(is_set(action, A_FINALIZE_TIMER_STOP)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_FINALIZE_TIMER_STOP) %s",
 			  A_FINALIZE_TIMER_STOP, text);
 	}
 	if(is_set(action, A_ELECTION_COUNT)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_ELECTION_COUNT) %s",
 			  A_ELECTION_COUNT, text);
 	}
 	if(is_set(action, A_ELECTION_VOTE)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_ELECTION_VOTE) %s",
 			  A_ELECTION_VOTE, text);
 	}
+	if(is_set(action, A_ELECTION_CHECK)) {
+		crm_log_maybe(log_level, 
+			   "Action %.16llx (A_ELECTION_CHECK) %s",
+			  A_ELECTION_CHECK, text);
+	}
 	if(is_set(action, A_CL_JOIN_ANNOUNCE)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_CL_JOIN_ANNOUNCE) %s",
 			  A_CL_JOIN_ANNOUNCE, text);
 	}
 	if(is_set(action, A_CL_JOIN_REQUEST)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_CL_JOIN_REQUEST) %s",
 			  A_CL_JOIN_REQUEST, text);
 	}
 	if(is_set(action, A_CL_JOIN_RESULT)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_CL_JOIN_RESULT) %s",
 			  A_CL_JOIN_RESULT, text);
 	}
 	if(is_set(action, A_DC_JOIN_OFFER_ALL)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_DC_JOIN_OFFER_ALL) %s",
 			  A_DC_JOIN_OFFER_ALL, text);
 	}
 	if(is_set(action, A_DC_JOIN_OFFER_ONE)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_DC_JOIN_OFFER_ONE) %s",
 			  A_DC_JOIN_OFFER_ONE, text);
 	}
 	if(is_set(action, A_DC_JOIN_PROCESS_REQ)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_DC_JOIN_PROCESS_REQ) %s",
 			  A_DC_JOIN_PROCESS_REQ, text);
 	}
 	if(is_set(action, A_DC_JOIN_PROCESS_ACK)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_DC_JOIN_PROCESS_ACK) %s",
 			  A_DC_JOIN_PROCESS_ACK, text);
 	}
 	if(is_set(action, A_DC_JOIN_FINALIZE)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_DC_JOIN_FINALIZE) %s",
 			  A_DC_JOIN_FINALIZE, text);
 	}
 	if(is_set(action, A_MSG_PROCESS)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_MSG_PROCESS) %s",
 			  A_MSG_PROCESS, text);
 	}
 	if(is_set(action, A_MSG_ROUTE)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_MSG_ROUTE) %s",
 			  A_MSG_ROUTE, text);
 	}
 	if(is_set(action, A_RECOVER)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_RECOVER) %s",
 			  A_RECOVER, text);
 	}
 	if(is_set(action, A_DC_RELEASE)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_DC_RELEASE) %s",
 			  A_DC_RELEASE, text);
 	}
 	if(is_set(action, A_DC_RELEASED)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_DC_RELEASED) %s",
 			  A_DC_RELEASED, text);
 	}
 	if(is_set(action, A_DC_TAKEOVER)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_DC_TAKEOVER) %s",
 			  A_DC_TAKEOVER, text);
 	}
 	if(is_set(action, A_SHUTDOWN)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_SHUTDOWN) %s", A_SHUTDOWN, text);
 	}
 	if(is_set(action, A_SHUTDOWN_REQ)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_SHUTDOWN_REQ) %s",
 			  A_SHUTDOWN_REQ, text);
 	}
 	if(is_set(action, A_STOP)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_STOP  ) %s", A_STOP  , text);
 	}
 	if(is_set(action, A_EXIT_0)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_EXIT_0) %s", A_EXIT_0, text);
 	}
 	if(is_set(action, A_EXIT_1)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_EXIT_1) %s", A_EXIT_1, text);
 	}
 	if(is_set(action, A_CCM_CONNECT)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_CCM_CONNECT) %s",
 			  A_CCM_CONNECT, text);
 	}
 	if(is_set(action, A_CCM_DISCONNECT)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_CCM_DISCONNECT) %s",
 			  A_CCM_DISCONNECT, text);
 	}
 	if(is_set(action, A_CCM_EVENT)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_CCM_EVENT) %s",
 			  A_CCM_EVENT, text);
 	}
 	if(is_set(action, A_CCM_UPDATE_CACHE)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_CCM_UPDATE_CACHE) %s",
 			  A_CCM_UPDATE_CACHE, text);
 	}
 	if(is_set(action, A_CIB_BUMPGEN)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_CIB_BUMPGEN) %s",
 			  A_CIB_BUMPGEN, text);
 	}
 	if(is_set(action, A_CIB_INVOKE)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_CIB_INVOKE) %s",
 			  A_CIB_INVOKE, text);
 	}
 	if(is_set(action, A_CIB_START)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_CIB_START) %s",
 			  A_CIB_START, text);
 	}
 	if(is_set(action, A_CIB_STOP)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_CIB_STOP) %s", A_CIB_STOP, text);
 	}
 	if(is_set(action, A_TE_INVOKE)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_TE_INVOKE) %s", A_TE_INVOKE, text);
 	}
 	if(is_set(action, A_TE_START)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_TE_START) %s",
 			  A_TE_START, text);
 	}
 	if(is_set(action, A_TE_STOP)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_TE_STOP) %s", A_TE_STOP, text);
 	}
 	if(is_set(action, A_TE_CANCEL)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_TE_CANCEL) %s",
 			  A_TE_CANCEL, text);
 	}
 	if(is_set(action, A_PE_INVOKE)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_PE_INVOKE) %s",
 			  A_PE_INVOKE, text);
 	}
 	if(is_set(action, A_PE_START)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_PE_START) %s", A_PE_START, text);
 	}
 	if(is_set(action, A_PE_STOP)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_PE_STOP) %s", A_PE_STOP, text);
 	}
 	if(is_set(action, A_NODE_BLOCK)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_NODE_BLOCK) %s",
 			  A_NODE_BLOCK, text);
 	}
 	if(is_set(action, A_UPDATE_NODESTATUS)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_UPDATE_NODESTATUS) %s",
 			  A_UPDATE_NODESTATUS, text);
 	}
 	if(is_set(action, A_LOG)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_LOG   ) %s", A_LOG, text);
 	}
 	if(is_set(action, A_ERROR)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_ERROR ) %s", A_ERROR, text);
 	}
 	if(is_set(action, A_WARN)) {
-		do_crm_log(log_level, __FILE__, __FUNCTION__, 
+		crm_log_maybe(log_level, 
 			   "Action %.16llx (A_WARN  ) %s", A_WARN, text);
 	}
 }
@@ -1113,8 +1127,10 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	
 	crm_xml_add(tmp1, XML_ATTR_UNAME, uname);
 	crm_xml_add(tmp1, XML_ATTR_TYPE, type);
-	
-	update_local_cib(create_cib_fragment(tmp1, NULL));
+
+	fsa_cib_anon_update(XML_CIB_TAG_NODES, tmp1,
+			    cib_scope_local|cib_quorum_override);
+
 	free_xml(tmp1);
 	
 }
@@ -1246,10 +1262,9 @@ copy_ccm_node(oc_node_t a_node, oc_node_t *a_node_copy)
 
 crm_data_t*
 create_node_state(
-	const char *uuid, const char *uname,
-	const char *ha_state, const char *ccm_state,
+	const char *uname, const char *ha_state, const char *ccm_state,
 	const char *crmd_state, const char *join_state, const char *exp_state,
-	const char *src)
+	gboolean clear_shutdown, const char *src)
 {
 	crm_data_t *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
@@ -1262,8 +1277,19 @@ create_node_state(
 	crm_xml_add(node_state, XML_CIB_ATTR_CRMDSTATE, crmd_state);
 	crm_xml_add(node_state, XML_CIB_ATTR_JOINSTATE, join_state);
 	crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE,  exp_state);
-	crm_xml_add(node_state, "origin", src);
+	crm_xml_add(node_state, XML_ATTR_ORIGIN, src);
 
+	if(clear_shutdown) {
+		crm_xml_add(node_state, XML_CIB_ATTR_SHUTDOWN,  "0");
+#if CRM_DEPRECATED_SINCE_2_0_3
+		crm_xml_add(node_state, "clear_shutdown",  "true");
+#endif
+/* 		crm_xml_add(node_state, */
+/* 			    XML_CIB_ATTR_REPLACE, XML_TAG_TRANSIENT_NODEATTRS); */
+	}
+	
+		
+	
 	crm_log_xml_debug_3(node_state, "created");
 
 	return node_state;
@@ -1287,28 +1313,31 @@ process_client_disconnect(crmd_client_t *curr_client)
 {
 	struct crm_subsystem_s *the_subsystem = NULL;
 
-	CRM_DEV_ASSERT(curr_client != NULL);
-	if(crm_assert_failed) { return; }
-	
+	CRM_CHECK(curr_client != NULL, return);
 	crm_debug_2("received HUP from %s", curr_client->table_key);
 		
 	if (curr_client->sub_sys == NULL) {
-		crm_debug("Client hadn't registered with us yet");
+		crm_debug_2("Client hadn't registered with us yet");
 		
-	} else if (strcmp(CRM_SYSTEM_PENGINE, curr_client->sub_sys) == 0) {
+	} else if (strcasecmp(CRM_SYSTEM_PENGINE, curr_client->sub_sys) == 0) {
 		the_subsystem = pe_subsystem;
 		
-	} else if (strcmp(CRM_SYSTEM_TENGINE, curr_client->sub_sys) == 0) {
+	} else if (strcasecmp(CRM_SYSTEM_TENGINE, curr_client->sub_sys) == 0) {
 		the_subsystem = te_subsystem;
 			
-	} else if (strcmp(CRM_SYSTEM_CIB, curr_client->sub_sys) == 0){
+	} else if (strcasecmp(CRM_SYSTEM_CIB, curr_client->sub_sys) == 0){
 		the_subsystem = cib_subsystem;
 	}
 		
 	if(the_subsystem != NULL) {
 		the_subsystem->ipc = NULL;
+		crm_info("Received HUP from %s:[%d]",
+			 the_subsystem->name, the_subsystem->pid);
 		
-	} /* else that was a transient client */
+	} else {
+		/* else that was a transient client */
+		crm_debug("Received HUP from transient client");
+	}
 	
 	if (curr_client->table_key != NULL) {
 		/*
@@ -1319,9 +1348,42 @@ process_client_disconnect(crmd_client_t *curr_client)
 		 */
 		g_hash_table_remove(ipc_clients, curr_client->table_key);
 	}
+}
+
+void update_dc(HA_Message *msg, gboolean assert_same)
+{
+	const char *dc_version = NULL;
+	const char *welcome_from = NULL;
+
+	if(msg != NULL) {
+		dc_version = cl_get_string(msg, F_CRM_VERSION);
+		welcome_from = cl_get_string(msg, F_CRM_HOST_FROM);
+		
+		CRM_CHECK(dc_version != NULL, return);
+		CRM_CHECK(welcome_from != NULL, return);
+		if(AM_I_DC) {
+			CRM_CHECK(safe_str_eq(welcome_from, fsa_our_uname),
+				  return);
+		}
+		if(assert_same) {
+			CRM_CHECK(fsa_our_dc != NULL, ;);
+			CRM_CHECK(safe_str_eq(fsa_our_dc, welcome_from), ;);
+		}
+		
+	}
 	
-	crm_free(curr_client->table_key);
-	crm_free(curr_client->sub_sys);
-	crm_free(curr_client->uuid);
-	crm_free(curr_client);
+	crm_free(fsa_our_dc);
+	crm_free(fsa_our_dc_version);
+	fsa_our_dc = NULL;
+	fsa_our_dc_version = NULL;
+
+	if(welcome_from != NULL) {
+		fsa_our_dc = crm_strdup(welcome_from);
+	}
+	if(dc_version != NULL) {
+		fsa_our_dc_version = crm_strdup(dc_version);
+	}
+
+	crm_info("Set DC to %s (%s)",
+		 crm_str(fsa_our_dc), crm_str(fsa_our_dc_version));
 }

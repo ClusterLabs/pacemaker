@@ -1,4 +1,4 @@
-/* $Id: fsa_proto.h,v 1.18 2005/02/15 09:45:43 andrew Exp $ */
+/* $Id: fsa_proto.h,v 1.20 2006/01/12 15:10:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -150,6 +150,14 @@ do_election_count_vote(long long action,
 		       enum crmd_fsa_input cur_input,
 		       fsa_data_t *msg_data);
 
+/*	A_ELECTION_CHECK	*/
+enum crmd_fsa_input
+do_election_check(long long action,
+		  enum crmd_fsa_cause cause,
+		  enum crmd_fsa_state cur_state,
+		  enum crmd_fsa_input cur_input,
+		  fsa_data_t *msg_data);
+
 /*	A_ELECT_TIMER_START, A_ELECTION_TIMEOUT	*/
 enum crmd_fsa_input
 do_election_timer_ctrl(long long action,
@@ -224,7 +232,7 @@ do_dc_join_ack(long long action,
 
 /*	A_DC_JOIN_REQ	*/
 enum crmd_fsa_input
-do_dc_join_req(long long action,
+do_dc_join_filter_offer(long long action,
 	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
 	       enum crmd_fsa_input cur_input,
@@ -257,7 +265,7 @@ do_cl_join_announce(long long action,
 
 /*	 A_CL_JOIN_REQUEST	*/
 enum crmd_fsa_input
-do_cl_join_request(long long action,
+do_cl_join_offer_respond(long long action,
 		   enum crmd_fsa_cause cause,
 		   enum crmd_fsa_state cur_state,
 		   enum crmd_fsa_input current_input,
@@ -265,7 +273,7 @@ do_cl_join_request(long long action,
 
 /*	 A_CL_JOIN_RESULT	*/
 enum crmd_fsa_input
-do_cl_join_result(long long action,
+do_cl_join_finalize_respond(long long action,
 		  enum crmd_fsa_cause cause,
 		  enum crmd_fsa_state cur_state,
 		  enum crmd_fsa_input current_input,

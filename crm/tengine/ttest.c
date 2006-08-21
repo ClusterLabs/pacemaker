@@ -1,4 +1,4 @@
-/* $Id: ttest.c,v 1.21 2005/06/14 11:38:26 davidlee Exp $ */
+/* $Id: ttest.c,v 1.24 2006/07/18 06:16:08 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -43,23 +43,41 @@
 #include <tengine.h>
 #include <clplumbing/GSource.h>
 
-extern gboolean unpack_graph(crm_data_t *xml_graph);
-extern gboolean initiate_transition(void);
-extern gboolean initialize_graph(void);
-
 GMainLoop*  mainloop = NULL;
+crm_graph_t *transition_graph = NULL;
+cib_t *te_cib_conn = NULL;
+
+static gboolean
+ttest_pseudo_command(crm_graph_t *graph, crm_action_t *pseudo) 
+{
+	crm_debug("Event handler: action %d executed", pseudo->id);
+	pseudo->confirmed = TRUE;
+	update_graph(graph, pseudo);
+	trigger_graph();
+	return TRUE;
+}
+
+static gboolean
+ttest_rsc_command(crm_graph_t *graph, crm_action_t *pseudo)
+{
+/* 	send_rsc_command(action); */
+	return TRUE;
+}
+
+crm_graph_functions_t ttest_graph_fns = {
+	ttest_pseudo_command,
+	ttest_rsc_command,
+	ttest_pseudo_command,
+	ttest_pseudo_command,
+};
 
 int
 main(int argc, char **argv)
 {
 	int flag;
 	int argerr = 0;
-	crm_data_t *xml_graph = NULL;
-	HA_Message *cmd = NULL;
-	
 	const char *xml_file = NULL;
-	
-	IPC_Channel* channels[2];
+	crm_data_t *xml_graph = NULL;
   
 	set_crm_log_level(0);
 /* 	crm_log_init("ttest"); */
@@ -73,6 +91,11 @@ main(int argc, char **argv)
 	/* and for good measure... - this enum is a bit field (!) */
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
 	set_crm_log_level(LOG_WARNING);
+
+	transition_trigger = G_main_add_TriggerHandler(
+		G_PRIORITY_LOW, te_graph_trigger, NULL, NULL);
+
+	set_graph_functions(&ttest_graph_fns);
 
 	while (1) {
 		flag = getopt(argc, argv, OPTARGS);
@@ -110,14 +133,11 @@ main(int argc, char **argv)
 		crm_err("%d errors in option parsing", argerr);
 	}
   
-	crm_debug_4("Initializing graph...");
-	initialize_graph();
-	
 	crm_debug("=#=#=#=#= Getting XML =#=#=#=#=");
 	if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
 		if(xml_strm) {
-			xml_graph = file2xml(xml_strm);
+			xml_graph = file2xml(xml_strm, FALSE);
 		} else {
 			crm_err("Could not open %s for reading", xml_file);
 			xml_file = NULL;
@@ -127,42 +147,21 @@ main(int argc, char **argv)
 	if(xml_file == NULL) {
 		xml_graph = stdin2xml();
 	}
-  
+
 #ifdef MTRACE  
 	mtrace();
 #endif
-	if (ipc_channel_pair(channels) != IPC_OK) {
-		cl_perror("Can't create ipc channel pair");
-		exit(1);
-	}
-	crm_ch = channels[0];
 
-/* 	fcntl(channels[0]->ops->get_send_select_fd(channels[0]), F_SETFL, O_NONBLOCK); */
-/* 	fcntl(channels[0]->ops->get_recv_select_fd(channels[0]), F_SETFL, O_NONBLOCK); */
-/* 	fcntl(channels[1]->ops->get_send_select_fd(channels[0]), F_SETFL, O_NONBLOCK); */
-/* 	fcntl(channels[1]->ops->get_recv_select_fd(channels[0]), F_SETFL, O_NONBLOCK); */
-	
-	G_main_add_IPC_Channel(G_PRIORITY_HIGH,
-			       channels[1], FALSE,
-			       subsystem_msg_dispatch,
-			       (void*)process_te_message, 
-			       default_ipc_connection_destroy);
+	transition_graph = unpack_graph(xml_graph);
+	trigger_graph();
+	print_graph(LOG_DEBUG, transition_graph);
+	transition_graph->completion_action = tg_shutdown;
 
-	/* send transition graph over IPC instead */
-	cmd = create_request(CRM_OP_TRANSITION, xml_graph, NULL,
-			     CRM_SYSTEM_TENGINE, CRM_SYSTEM_TENGINE, NULL);
-
-
-	
-	send_ipc_message(channels[0], cmd);
-	free_xml(xml_graph);
-
-    /* Create the mainloop and run it... */
 	mainloop = g_main_new(FALSE);
-	crm_debug("Starting mainloop");
+	
 	g_main_run(mainloop);
-
-	initialize_graph();
+	
+	crm_info("Exiting ttest");
 	
 #ifdef MTRACE  
 	muntrace();

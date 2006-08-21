@@ -1,4 +1,4 @@
-/* $Id: crmd.h,v 1.9 2004/08/18 15:20:22 andrew Exp $ */
+/* $Id: crmd.h,v 1.10 2006/08/14 09:06:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,5 +31,7 @@ extern GMainLoop  *crmd_mainloop;
 extern const char *crm_system_name;
 
 extern GHashTable *ipc_clients;
+
+extern void crmd_metadata(void);
 
 #endif

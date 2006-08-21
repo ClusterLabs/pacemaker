@@ -71,9 +71,7 @@ do_pe_control(long long action,
 	long long start_actions = A_PE_START;
 	
 	if(action & stop_actions) {
-		if(stop_subsystem(this_subsys) == FALSE) {
-			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		}
+		stop_subsystem(this_subsys, FALSE);
 	}
 
 	if(action & start_actions) {
@@ -159,8 +157,17 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 	HA_Message *cmd = NULL;
 	int ccm_transition_id = -1;
 	gboolean cib_has_quorum = FALSE;
-	crm_data_t *local_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
-
+	crm_data_t *local_cib = NULL;
+	
+#if CRM_DEPRECATED_SINCE_2_0_4
+	if(safe_str_eq(crm_element_name(output), XML_TAG_CIB)) {
+		local_cib = output;
+	} else {
+		local_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
+	}
+#else
+	local_cib = output;
+#endif
 	if(call_id != fsa_pe_query) {
 		crm_debug_2("Skipping superceeded CIB query: %d (current=%d)",
 			    call_id, fsa_pe_query);
@@ -189,7 +196,7 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 	cib_has_quorum = crm_is_true(
 		crm_element_value(local_cib, XML_ATTR_HAVE_QUORUM));
 
-	ccm_transition_id = crm_atoi(
+	ccm_transition_id = crm_parse_int(
 		crm_element_value(local_cib, XML_ATTR_CCM_TRANSITION), "-1");
 
 	if(ccm_transition_id < (int)fsa_membership_copy->id) {

@@ -1,4 +1,4 @@
-/* $Id: graph.c,v 1.59 2005/08/25 09:25:06 andrew Exp $ */
+/* $Id: graph.c,v 1.104 2006/07/18 06:19:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -28,8 +28,9 @@
 
 #include <glib.h>
 
-#include <pengine.h>
-#include <pe_utils.h>
+#include <allocate.h>
+#include <lib/crm/pengine/utils.h>
+#include <utils.h>
 
 gboolean update_action(action_t *action);
 
@@ -46,25 +47,22 @@ update_action_states(GListPtr actions)
 	return TRUE;
 }
 
-#define UPDATE_THEM 1
-
 gboolean
 update_action(action_t *action)
 {
-	gboolean change = FALSE;
 	enum action_tasks task = no_action;
 	
-	crm_debug_3("Processing action %d: %s",
-		    action->id, action->optional?"optional":"required");
+	crm_debug_3("Processing action %s: %s",
+		    action->uuid, action->optional?"optional":"required");
 
 	slist_iter(
 		other, action_wrapper_t, action->actions_before, lpc,
-		crm_debug_3("\tChecking action %d: %s/%s",
-			    other->action->id, ordering_type2text(other->type),
+		crm_debug_3("\tChecking action %s: %s/%s",
+			    other->action->uuid, ordering_type2text(other->type),
 			    other->action->optional?"optional":"required");
 
 		if(other->type == pe_ordering_restart
-			  && action->rsc->start_pending == FALSE) {
+		   && action->rsc->role > RSC_ROLE_STOPPED) {
 			crm_debug_3("Upgrading %s constraint to %s",
 				    ordering_type2text(other->type),
 				    ordering_type2text(pe_ordering_manditory));
@@ -84,10 +82,10 @@ update_action(action_t *action)
 			
 		} else if(safe_str_eq(other->action->task, CRMD_ACTION_START)) {
 			const char *interval = g_hash_table_lookup(
-				action->extra, "interval");
+				action->meta, XML_LRM_ATTR_INTERVAL);
 			int interval_i = 0;
 			if(interval != NULL) {
-				interval_i = atoi(interval);
+				interval_i = crm_parse_int(interval, NULL);
 				if(interval_i > 0) {
 					crm_debug_3("Ignoring: start + recurring");
 					continue;
@@ -96,8 +94,8 @@ update_action(action_t *action)
 		}
 
 		other->action->optional = FALSE;
-		crm_debug_2("* Marking action %d manditory because of %d",
-			    other->action->id, action->id);
+		crm_debug_2("* Marking action %s mandatory because of %s",
+			    other->action->uuid, action->uuid);
 		update_action(other->action);
 		);
 
@@ -106,19 +104,19 @@ update_action(action_t *action)
 		
 		if(action->pseudo == FALSE && action->runnable == FALSE) {
 			if(other->action->runnable == FALSE) {
-				crm_debug_2("Action %d already un-runnable",
-					  other->action->id);
+				crm_debug_2("Action %s already un-runnable",
+					  other->action->uuid);
 			} else if(action->optional == FALSE) {
 				other->action->runnable = FALSE;
-				crm_debug_2("Marking action %d un-runnable"
-					  " because of %d",
-					  other->action->id, action->id);
+				crm_debug_2("Marking action %s un-runnable"
+					  " because of %s",
+					  other->action->uuid, action->uuid);
 				update_action(other->action);
 			}
 		}
 
-		crm_debug_3("\t(Recover) Checking action %d: %s/%s",
-			    other->action->id, ordering_type2text(other->type),
+		crm_debug_3("\t(Recover) Checking action %s: %s/%s",
+			    other->action->uuid, ordering_type2text(other->type),
 			    other->action->optional?"optional":"required");
 
 		if(other->action->rsc == NULL) {
@@ -133,10 +131,7 @@ update_action(action_t *action)
 			
 		} else if(other->type == pe_ordering_restart) {
 		} else if(other->type == pe_ordering_postnotify) {
-			CRM_DEV_ASSERT(action->rsc == other->action->rsc);
-			if(crm_assert_failed) {
-				continue;
-			}
+			CRM_CHECK(action->rsc == other->action->rsc, continue);
 
 		} else {
 			crm_debug_3("\t  Ignoring: ordering %s",
@@ -156,29 +151,24 @@ update_action(action_t *action)
 			case stop_rsc:
 			case stopped_rsc:
 				crm_debug_3("\t  Ignoring: action %s",
-					    action->task);
+					    action->uuid);
 				break;
 			case start_rsc:
 			case started_rsc:
-				crm_debug_2("* (Recover) Marking action %d"
-					    " manditory because of %d",
-					    other->action->id, action->id);
+				crm_debug_2("* (Recover) Marking action %s"
+					    " mandatory because of %s",
+					    other->action->uuid, action->uuid);
 				other->action->optional = FALSE; 
 				update_action(other->action);
 				break;
 			default:
 				crm_debug_3("\t  Ignoring: action %s",
-					    action->task);
+					    action->uuid);
 				break;
 		}
 		);
 
-	if(change) {
-		update_action(action);
-	}
-
-	crm_debug_3("Action %d: %s", action->id, change?"update":"untouched");
-	return change;
+	return FALSE;
 }
 
 
@@ -192,6 +182,10 @@ shutdown_constraints(
 	slist_iter(
 		rsc, resource_t, node->details->running_rsc, lpc,
 
+		if(rsc->is_managed == FALSE) {
+			continue;
+		}
+		
 		custom_action_order(
 			rsc, stop_key(rsc), NULL,
 			NULL, crm_strdup(CRM_OP_SHUTDOWN), shutdown_op,
@@ -203,114 +197,24 @@ shutdown_constraints(
 }
 
 gboolean
-stonith_constraints(node_t *node,
-		    action_t *stonith_op, action_t *shutdown_op,
-		    pe_working_set_t *data_set)
+stonith_constraints(
+	node_t *node, action_t *stonith_op, pe_working_set_t *data_set)
 {
-	GListPtr stop_actions = NULL;
-	gboolean run_unprotected = TRUE;
+	CRM_CHECK(stonith_op != NULL, return FALSE);
 	
-	if(shutdown_op != NULL) {
-		/* stop everything we can via shutdown_constraints() and then
-		 *   shoot the node... the shutdown has been superceeded
-		 */
-		shutdown_op->pseudo = TRUE;
-		shutdown_op->runnable = TRUE;
-
-		/* shutdown before stonith */
-		/* Give any resources a chance to shutdown normally */
-		crm_debug_4("Adding shutdown (%d) as an input to stonith (%d)",
-			  shutdown_op->id, stonith_op->id);
-		
-		custom_action_order(
-			NULL, crm_strdup(CRM_OP_SHUTDOWN), shutdown_op,
-			NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
-			pe_ordering_manditory, data_set);
-		
-	}
-
 	/*
 	 * Make sure the stonith OP occurs before we start any shared resources
 	 */
-	slist_iter(
-		rsc, resource_t, data_set->resources, lpc,
-
-		slist_iter(action, action_t, rsc->actions, lpc2,
-			   if(action->needs != rsc_req_stonith) {
-				   continue;
-			   }
-			   if(stonith_op != NULL) {
-				   custom_action_order(
-					   NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
-					   rsc, NULL, action,
-					   pe_ordering_manditory, data_set);
-				   
-			   } else if(run_unprotected == FALSE) {
-				   /* mark the start unrunnable */
-				   action->runnable = FALSE;
-				   
-			   } else {
-				   pe_err("SHARED RESOURCE %s IS NOT PROTECTED:"
-					  " Stonith disabled", rsc->id);
-			   }
+	if(stonith_op != NULL) {
+		slist_iter(
+			rsc, resource_t, data_set->resources, lpc,
+			rsc->cmds->stonith_ordering(rsc, stonith_op, data_set);
 			);
-		);
+	}
 	
 	/* add the stonith OP as a stop pre-req and the mark the stop
 	 * as a pseudo op - since its now redundant
 	 */
-	slist_iter(
-		rsc, resource_t, node->details->running_rsc, lpc,
-
-		if(stonith_op != NULL) {
-			char *key = stop_key(rsc);
-			stop_actions = find_actions(rsc->actions, key, node);
-			crm_free(key);
-			
-			slist_iter(
-				action, action_t, stop_actions, lpc2,
-				if(node->details->online == FALSE
-				   || rsc->unclean) {
-					/* the stop would never complete and is
-					 * now implied by the stonith operation
-					 */
-					action->pseudo = TRUE;
-					action->runnable = TRUE;
-					custom_action_order(
-						NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
-						rsc, stop_key(rsc), NULL,
-						pe_ordering_manditory, data_set);
-				} else {
-					/* stop healthy resources before the
-					 * stonith op
-					 */
-					custom_action_order(
-						rsc, stop_key(rsc), NULL,
-						NULL,crm_strdup(CRM_OP_FENCE),stonith_op,
-						pe_ordering_manditory, data_set);
-				}
-				);
-
-			crm_debug_4("Adding stonith (%d) as an input to stop",
-				  stonith_op->id);
-			
-/* 		} else if((rsc->unclean || node->details->unclean) */
-/* 			  && rsc->stopfail_type == pesf_block) { */
-			
-/* 			/\* depend on the stop action which will fail *\/ */
-/* 			pe_err("SHARED RESOURCE %s WILL REMAIN BLOCKED" */
-/* 				 " ON NODE %s UNTIL %s", */
-/* 				rsc->id, node->details->uname, */
-/* 				data_set->stonith_enabled?"QUORUM RETURNS":"CLEANED UP MANUALLY"); */
-/* 			continue; */
-			
-/* 		} else if((rsc->unclean || node->details->unclean) */
-/* 			  && rsc->stopfail_type == pesf_ignore) { */
-/* 			/\* nothing to do here *\/ */
-/* 			pe_err("SHARED RESOURCE %s IS NOT PROTECTED", rsc->id); */
-/* 			continue; */
-		}
-		);
 	
 	return TRUE;
 }
@@ -340,6 +244,12 @@ action2xml(action_t *action, gboolean as_input)
 	} else if(safe_str_eq(action->task, CRM_OP_SHUTDOWN)) {
 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 
+	} else if(safe_str_eq(action->task, CRM_OP_LRM_REFRESH)) {
+		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
+
+/* 	} else if(safe_str_eq(action->task, CRMD_ACTION_PROBED)) { */
+/* 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT); */
+
 	} else if(action->pseudo) {
 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_PSEUDO_EVENT);
 		needs_node_info = FALSE;
@@ -352,30 +262,45 @@ action2xml(action_t *action, gboolean as_input)
 	crm_xml_add(action_xml, XML_ATTR_ID, action_id_s);
 	crm_free(action_id_s);
 	
-	if(action->rsc != NULL) {
-		crm_xml_add(
-			action_xml, XML_LRM_ATTR_RSCID, action->rsc->id);
-	}
 	crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
-	crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, action->uuid);
+	if(action->rsc != NULL && action->rsc->clone_name != NULL) {
+		char *clone_key = NULL;
+		const char *interval_s = g_hash_table_lookup(action->meta, "interval");
+		int interval = crm_parse_int(interval_s, "0");
 
+		if(safe_str_eq(action->task, CRMD_ACTION_NOTIFY)) {			
+			const char *n_type = g_hash_table_lookup(
+				action->extra, crm_meta_name("notify_type"));
+			const char *n_task = g_hash_table_lookup(
+				action->extra, crm_meta_name("notify_operation"));
+			CRM_CHECK(n_type != NULL, ;);
+			CRM_CHECK(n_task != NULL, ;);
+			clone_key = generate_notify_key(action->rsc->clone_name, n_type, n_task);
+			
+		} else {
+			clone_key = generate_op_key(action->rsc->clone_name, action->task, interval);
+		}
+		
+		crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, clone_key);
+		crm_xml_add(action_xml, "internal_"XML_LRM_ATTR_TASK_KEY, action->uuid);
+		crm_free(clone_key);
+		
+	} else {
+		crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, action->uuid);
+	}
+	
 	if(needs_node_info && action->node != NULL) {
 		crm_xml_add(action_xml, XML_LRM_ATTR_TARGET,
 			    action->node->details->uname);
 
 		crm_xml_add(action_xml, XML_LRM_ATTR_TARGET_UUID,
-			    action->node->details->id);
-		
-		CRM_DEV_ASSERT(NULL != crm_element_value(
-				       action_xml, XML_LRM_ATTR_TARGET));
-		
-		CRM_DEV_ASSERT(NULL != crm_element_value(
-				       action_xml, XML_LRM_ATTR_TARGET_UUID));
-
+			    action->node->details->id);		
 	}
 
-	crm_xml_add(action_xml, "allow_fail",
-		action->failure_is_fatal?XML_BOOLEAN_FALSE:XML_BOOLEAN_TRUE);
+	if(action->failure_is_fatal == FALSE) {
+		add_hash_param(action->meta,
+			       XML_ATTR_TE_ALLOWFAIL, XML_BOOLEAN_TRUE);
+	}
 	
 	if(as_input) {
 		return action_xml;
@@ -383,77 +308,175 @@ action2xml(action_t *action, gboolean as_input)
 
 	if(action->notify_keys != NULL) {
 		g_hash_table_foreach(
-			action->notify_keys, dup_attr, action->extra);
+			action->notify_keys, dup_attr, action->meta);
 	}
 	if(action->rsc != NULL && action->pseudo == FALSE) {
+		int lpc = 0;
+		
 		crm_data_t *rsc_xml = create_xml_node(
 			action_xml, crm_element_name(action->rsc->xml));
 
-		copy_in_properties(rsc_xml, action->rsc->xml);
+		const char *attr_list[] = {
+			XML_AGENT_ATTR_CLASS,
+			XML_AGENT_ATTR_PROVIDER,
+			XML_ATTR_TYPE
+		};
 
-		args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
-		g_hash_table_foreach(action->extra, hash2nvpair, args_xml);
+		if(action->rsc->clone_name != NULL) {
+			crm_debug("Using clone name %s for %s", action->rsc->clone_name, action->rsc->id);
+			crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->clone_name);
+			crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
+
+		} else {
+			crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->id);
+			crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->long_name);
+		}
 		
-		g_hash_table_foreach(
-			action->rsc->parameters, hash2nvpair, args_xml);
+		for(lpc = 0; lpc < DIMOF(attr_list); lpc++) {
+			crm_xml_add(rsc_xml, attr_list[lpc],
+				    g_hash_table_lookup(action->rsc->meta, attr_list[lpc]));
+		}
+	}
 
-	} else {
-		args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
-		g_hash_table_foreach(action->extra, hash2nvpair, args_xml);
+	args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
+	crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+
+	g_hash_table_foreach(action->extra, hash2field, args_xml);
+	if(action->rsc != NULL && safe_str_neq(action->task, CRMD_ACTION_STOP)) {
+		g_hash_table_foreach(action->rsc->parameters, hash2field, args_xml);
+	}
+
+	g_hash_table_foreach(action->meta, hash2metafield, args_xml);
+	if(action->rsc != NULL) {
+		int lpc = 0;
+		const char *key = NULL;
+		const char *value = NULL;
+		const char *meta_list[] = {
+			XML_RSC_ATTR_UNIQUE,
+			XML_RSC_ATTR_INCARNATION,
+			XML_RSC_ATTR_INCARNATION_MAX,
+			XML_RSC_ATTR_INCARNATION_NODEMAX,
+			XML_RSC_ATTR_MASTER_MAX,
+			XML_RSC_ATTR_MASTER_NODEMAX,
+		};
+		
+		for(lpc = 0; lpc < DIMOF(meta_list); lpc++) {
+			key = meta_list[lpc];
+			value = g_hash_table_lookup(action->rsc->meta, key);
+			if(value != NULL) {
+				char *crm_name = crm_concat(CRM_META, key, '_');
+				crm_xml_add(args_xml, crm_name, value);
+				crm_free(crm_name);
+			}
+		}
 	}
 	
-	crm_log_xml_debug_2(action_xml, "dumped action");
+	crm_log_xml_debug_4(action_xml, "dumped action");
 	
 	return action_xml;
+}
+
+static gboolean
+should_dump_action(action_t *action) 
+{
+	const char * interval = NULL;
+
+	CRM_CHECK(action != NULL, return FALSE);
+
+	interval = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
+	if(action->optional) {
+		crm_debug_5("action %d was optional", action->id);
+		return FALSE;
+
+	} else if(action->pseudo == FALSE && action->runnable == FALSE) {
+		crm_debug_5("action %d was not runnable", action->id);
+		return FALSE;
+
+	} else if(action->dumped) {
+		crm_debug_5("action %d was already dumped", action->id);
+		return FALSE;
+
+	} else if(action->rsc != NULL
+		  && action->rsc->is_managed == FALSE) {
+
+		/* make sure probes go through */
+		if(safe_str_neq(action->task, CRMD_ACTION_STATUS)) {
+			pe_warn("action %d (%s) was for an unmanaged resource (%s)",
+				action->id, action->uuid, action->rsc->id);
+			return FALSE;
+		}
+		
+		if(interval != NULL && safe_str_neq(interval, "0")) {
+			pe_warn("action %d (%s) was for an unmanaged resource (%s)",
+				action->id, action->uuid, action->rsc->id);
+			return FALSE;
+		}
+	}
+	
+	if(action->pseudo
+	   || safe_str_eq(action->task,  CRM_OP_FENCE)
+	   || safe_str_eq(action->task,  CRM_OP_SHUTDOWN)) {
+		/* skip the next checks */
+		return TRUE;
+	}
+
+	if(action->node == NULL) {
+		pe_err("action %d (%s) was not allocated",
+		       action->id, action->uuid);
+		log_action(LOG_DEBUG, "Unallocated action", action, FALSE);
+		return FALSE;
+		
+	} else if(action->node->details->online == FALSE) {
+		pe_err("action %d was (%s) scheduled for offline node",
+		       action->id, action->uuid);
+		log_action(LOG_DEBUG, "Action for offline node", action, FALSE);
+		return FALSE;
+#if 0
+		/* but this would also affect resources that can be safely
+		 *  migrated before a fencing op
+		 */
+	} else if(action->node->details->unclean == FALSE) {
+		pe_err("action %d was (%s) scheduled for unclean node",
+		       action->id, action->uuid);
+		log_action(LOG_DEBUG, "Action for unclean node", action, FALSE);
+		return FALSE;
+#endif
+	}
+	return TRUE;
+}
+
+/* lowest to highest */
+static gint sort_action_id(gconstpointer a, gconstpointer b)
+{
+	const action_wrapper_t *action_wrapper2 = (const action_wrapper_t*)a;
+	const action_wrapper_t *action_wrapper1 = (const action_wrapper_t*)b;
+
+	if(a == NULL) { return 1; }
+	if(b == NULL) { return -1; }
+  
+	if(action_wrapper1->action->id > action_wrapper2->action->id) {
+		return -1;
+	}
+	
+	if(action_wrapper1->action->id < action_wrapper2->action->id) {
+		return 1;
+	}
+	return 0;
 }
 
 void
 graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 {
 	int last_action = -1;
-	char *syn_id = NULL;
+	int synapse_priority = 0;
 	crm_data_t * syn = NULL;
 	crm_data_t * set = NULL;
 	crm_data_t * in  = NULL;
 	crm_data_t * input = NULL;
 	crm_data_t * xml_action = NULL;
-	if(action == NULL) {
-		pe_err("Cannot dump NULL action");
-		return;
 
-	} else if(action->optional) {
-		crm_debug_5("action %d was optional", action->id);
+	if(should_dump_action(action) == FALSE) {
 		return;
-
-	} else if(action->pseudo == FALSE && action->runnable == FALSE) {
-		crm_debug_5("action %d was not runnable", action->id);
-		return;
-
-	} else if(action->dumped) {
-		crm_debug_5("action %d was already dumped", action->id);
-		return;
-
-	} else if(action->pseudo
-		  || safe_str_eq(action->task,  CRM_OP_FENCE)
-		  || safe_str_eq(action->task,  CRM_OP_SHUTDOWN)) {
-		/* skip the next two checks */
-		
-	} else if(action->rsc != NULL && action->rsc->is_managed == FALSE) {
-		pe_warn("action %d was for an unmanaged resource (%s)",
-			action->id, action->rsc->id);
-		return;
-		
-	} else {
-		if(action->node == NULL) {
-			pe_err("action %d was not allocated", action->id);
-			log_action(LOG_DEBUG, "Unallocated action", action, FALSE);
-			return;
-			
-		} else if(action->node->details->online == FALSE) {
-			pe_err("action %d was scheduled for offline node", action->id);
-			log_action(LOG_DEBUG, "Action for offline node", action, FALSE);
-			return;
-		}
 	}
 	
 	action->dumped = TRUE;
@@ -462,10 +485,18 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 	set = create_xml_node(syn, "action_set");
 	in  = create_xml_node(syn, "inputs");
 
-	syn_id = crm_itoa(data_set->num_synapse);
-	crm_xml_add(syn, XML_ATTR_ID, syn_id);
-	crm_free(syn_id);
+	crm_xml_add_int(syn, XML_ATTR_ID, data_set->num_synapse);
 	data_set->num_synapse++;
+
+	if(action->rsc != NULL) {
+		synapse_priority = action->rsc->priority;
+	}
+	if(action->priority > synapse_priority) {
+		synapse_priority = action->priority;
+	}
+	if(synapse_priority > 0) {
+		crm_xml_add_int(syn, XML_CIB_ATTR_PRIORITY, synapse_priority);
+	}
 	
 	xml_action = action2xml(action, FALSE);
 	add_node_copy(set, xml_action);
@@ -489,7 +520,7 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 			   continue;
 		   }
 
-		   CRM_DEV_ASSERT(last_action < wrapper->action->id);
+		   CRM_CHECK(last_action < wrapper->action->id, ;);
 		   last_action = wrapper->action->id;
 		   input = create_xml_node(in, "trigger");
 		   
@@ -499,3 +530,4 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 		   
 		);
 }
+

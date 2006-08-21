@@ -57,11 +57,10 @@
  * The reload and the try-restart options are optional. Other init script
  * actions may be defined by the init script.
  */
-#define meta_data_template  "\n"\
+#define meta_data_template  \
 "<?xml version=\"1.0\"?>\n"\
 "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"\
-"<resource-agent name=%s"\
-"\" version=\"0.1\">\n"\
+"<resource-agent name=\"%s\" version=\"0.1\">\n"\
 "  <version>1.0</version>\n"\
 "  <longdesc lang=\"en\">\n"\
 "    %s"\
@@ -90,8 +89,8 @@
 "</resource-agent>\n"
 
 /* The keywords for lsb-compliant comment */
-#define LSB_INITSCRIPT_BEGIN_TAG "### BEGIN INIT INFO"
-#define LSB_INITSCRIPT_END_TAG "### END INIT INFO"
+#define LSB_INITSCRIPT_INFOBEGIN_TAG "### BEGIN INIT INFO"
+#define LSB_INITSCRIPT_INFOEND_TAG "### END INIT INFO"
 #define PROVIDES    "# Provides:" 
 #define REQ_START   "# Required-Start:"
 #define REQ_STOP    "# Required-Stop:"
@@ -109,7 +108,7 @@
 		}
 
 #define RALSB_GET_VALUE(ptr, keyword)	\
-	if ( (ptr == NULL) & (0 == strncmp(buffer, keyword, strlen(keyword))) ) { \
+	if ( (ptr == NULL) & (0 == strncasecmp(buffer, keyword, strlen(keyword))) ) { \
 		(ptr) = g_strdup(buffer+strlen(keyword)); \
 		if (*(ptr+strlen(ptr)-1) == '\n') { \
 			*(ptr+strlen(ptr)-1) = ' '; \
@@ -125,11 +124,11 @@ static const char * RA_PATH = LSB_RA_DIR;
  * specification.
  */
 static const int status_op_exitcode_map[] = { 
-	EXECRA_OK,
-	EXECRA_UNKNOWN_ERROR,
-	EXECRA_UNKNOWN_ERROR,
-	EXECRA_NOT_RUNNING,
-	EXECRA_UNKNOWN_ERROR
+	EXECRA_OK,		/* LSB_STATUS_OK */
+	EXECRA_NOT_RUNNING,	/* LSB_STATUS_VAR_PID */
+	EXECRA_NOT_RUNNING,	/* LSB_STATUS_VAR_LOCK */
+	EXECRA_NOT_RUNNING,	/* LSB_STATUS_STOPPED */
+	EXECRA_UNKNOWN_ERROR	/* LSB_STATUS_UNKNOWN */
 };
 
 /* The begin of exported function list */
@@ -263,19 +262,18 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 	} 
 
 	execv(ra_pathname, params_argv);
-        cl_log(LOG_ERR, "execv error when to execute a LSB RA %s.", rsc_type);
+	cl_perror("(%s:%s:%d) execv failed for %s"
+		  , __FILE__, __FUNCTION__, __LINE__, ra_pathname);
 
         switch (errno) {
                 case ENOENT:   /* No such file or directory */
 			/* Fall down */
                 case EISDIR:   /* Is a directory */
                         exit_value = EXECRA_NO_RA;
-        		cl_log(LOG_ERR, "Cause: No such file or directory.");
                         break;
 
                 default:
                         exit_value = EXECRA_EXEC_UNKNOWN_ERROR;
-        		cl_log(LOG_ERR, "Cause: execv unknow error.");
         }
 
         exit(exit_value);
@@ -285,18 +283,17 @@ static uniform_ret_execra_t
 map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 {
 	/* Except op_type equals 'status', the UNIFORM_RET_EXECRA is compatible
-	   with LSB standard.
-	*/
-	if ( 0 == STRNCMP_CONST(op_type, "status")) {
-		if (ret_execra < 0 || ret_execra > 4 ) {
-			ret_execra = EXECRA_UNKNOWN_ERROR;
-		}
-		return status_op_exitcode_map[ret_execra];
+	 * with the LSB standard.
+	 */
+	if (ret_execra < 0) {
+		return EXECRA_UNKNOWN_ERROR;
 	}
-	/* For none-status operation return code */
-	if ( ret_execra < 0 || ret_execra > 7 ) {
-		ret_execra = EXECRA_UNKNOWN_ERROR;
-	} 
+	if (	0 == STRNCMP_CONST(op_type, "status")
+	|| 	0 == STRNCMP_CONST(op_type, "monitor")) {
+		if (ret_execra < DIMOF(status_op_exitcode_map)) {
+			ret_execra =  status_op_exitcode_map[ret_execra];
+		}
+	}
 	return ret_execra;
 }
 
@@ -344,30 +341,40 @@ get_resource_list(GList ** rsc_info)
 			} else {
 				next_continue = FALSE;
 			}
-			/* Shorte the search time */
+			/* Shorten the search time */
 			if (buffer[0] != '#' && buffer[0] != ' '
 				&& buffer[0] != '\n') {
 				break; /* donnot find */
 			}
 	
-			if (found_begin_tag == TRUE && 0 == strncmp(buffer
-		    		, LSB_INITSCRIPT_END_TAG
-				, strlen(LSB_INITSCRIPT_END_TAG)) ) {
+			if (found_begin_tag == TRUE && 0 == strncasecmp(buffer
+		    		, LSB_INITSCRIPT_INFOEND_TAG
+				, strlen(LSB_INITSCRIPT_INFOEND_TAG)) ) {
 				is_lsb_script = TRUE;
 				break;
 			}
-			if (found_begin_tag == FALSE && 0 == strncmp(buffer
-				, LSB_INITSCRIPT_BEGIN_TAG
-				, strlen(LSB_INITSCRIPT_BEGIN_TAG)) ) {
+			if (found_begin_tag == FALSE && 0 == strncasecmp(buffer
+				, LSB_INITSCRIPT_INFOBEGIN_TAG
+				, strlen(LSB_INITSCRIPT_INFOBEGIN_TAG)) ) {
 				found_begin_tag = TRUE;	
 			}
 		}
 		fclose(fp);
 		tmp = g_list_next(cur);
+
+/*
+ *  Temporarily remove the filter to the initscript, or many initscripts on
+ *  many distros, such as RHEL4 and fedora5, cannot be used by management GUI.
+ *  Please refer to the bug 
+ *  	http://www.osdl.org/developer_bugzilla/show_bug.cgi?id=1250
+ */
+
+#if 0
 		if ( is_lsb_script != TRUE ) {
 			*rsc_info = g_list_remove(*rsc_info, cur->data);
 			g_free(cur->data);
 		}
+#endif
 		cur = tmp;
 	}
 
@@ -412,7 +419,7 @@ prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 	 * Add the teminating NULL pointer. 
 	 */
 	params_argv[2] = NULL;
-	if (ht_size != 0) {
+	if ( (ht_size != 0) && (0 != STRNCMP_CONST(op_type, "status")) ) {
 		cl_log(LOG_WARNING, "For LSB init script, no additional "
 			"parameters are needed.");
 	}
@@ -474,6 +481,14 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 	meta_data = g_string_new("");
 
 	next_continue = FALSE;
+
+/*
+ *  Is not stick to the rule that the description should be located in the 
+ *  comment block between "### BEGIN INIT INFO" and "### END INIT INFO".
+ *  Please refer to the bug 
+ *  	http://www.osdl.org/developer_bugzilla/show_bug.cgi?id=1250
+ */
+#if 0
 	while (NULL != fgets(buffer, BUFLEN, fp)) {
 		/* Handle the lines over BUFLEN(80) columns, only
 		 * the first part is compared.
@@ -487,11 +502,12 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 			next_continue = FALSE;
 		}
 
-		if ( 0 == strncmp(buffer , LSB_INITSCRIPT_BEGIN_TAG
-			, strlen(LSB_INITSCRIPT_BEGIN_TAG)) ) {
+		if ( 0 == strncasecmp(buffer , LSB_INITSCRIPT_INFOBEGIN_TAG
+			, strlen(LSB_INITSCRIPT_INFOBEGIN_TAG)) ) {
 			break;
 		}
 	}
+#endif
 
 	/* Enter into the lsb-compliant comment block */
 	while ( NULL != fgets(buffer, BUFLEN, fp) ) {
@@ -508,7 +524,7 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 		RALSB_GET_VALUE(s_dscrpt,  SHORT_DSCR)
 		
 		/* Long description may cross multiple lines */
-		if ( (l_dscrpt == NULL) & (0 == strncmp(buffer, DESCRIPTION
+		if ( (l_dscrpt == NULL) & (0 == strncasecmp(buffer, DESCRIPTION
 			, strlen(DESCRIPTION))) ) {
 			l_dscrpt = g_string_new(buffer+strlen(DESCRIPTION));
 			/* Between # and keyword, more than one space, or a tab
@@ -529,10 +545,14 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 			continue;
 		}
 
-		if ( 0 == strncmp(buffer, LSB_INITSCRIPT_END_TAG
-			, strlen(LSB_INITSCRIPT_END_TAG)) ) {
+		if ( 0 == strncasecmp(buffer, LSB_INITSCRIPT_INFOEND_TAG
+			, strlen(LSB_INITSCRIPT_INFOEND_TAG)) ) {
 			/* Get to the out border of LSB comment block */
 			break;
+		}
+
+		if ( buffer[0] != '#' ) {
+			break; /* Out of comment block in the beginning */
 		}
 	}
 	fclose(fp);

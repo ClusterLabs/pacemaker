@@ -1,5 +1,7 @@
 digraph "g" {
 	size = "30,30"
-"rsc1_stop_0" [ tooltip="node1" style=bold color="green" fontcolor="black" ]
-"rsc1_stop_0" [ tooltip="node2" style=bold color="green" fontcolor="black" ]
+"probe_complete node1" [ style=bold color="green" fontcolor="black" ]
+"probe_complete node2" [ style=bold color="green" fontcolor="black" ]
+"rsc1_stop_0 node1" [ style=bold color="green" fontcolor="black" ]
+"rsc1_stop_0 node2" [ style=bold color="green" fontcolor="black" ]
 }

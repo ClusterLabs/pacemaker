@@ -1,4 +1,4 @@
-/* $Id: pengine.c,v 1.89 2005/09/13 10:37:23 andrew Exp $ */
+/* $Id: pengine.c,v 1.122 2006/08/14 16:31:38 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,18 +29,41 @@
 
 #include <glib.h>
 
+#include <crm/pengine/status.h>
 #include <pengine.h>
-#include <pe_utils.h>
+#include <allocate.h>
+#include <lib/crm/pengine/utils.h>
 
 crm_data_t * do_calculations(
 	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
 
-gboolean was_processing_error = FALSE;
-gboolean was_processing_warning = FALSE;
+#define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
+
+
+extern int transition_id;
+
+#define get_series() 	was_processing_error?1:was_processing_warning?2:3
+
+typedef struct series_s 
+{
+	int id;
+	const char *name;
+	const char *param;
+	int wrap;
+} series_t;
+
+series_t series[] = {
+	{ 0, "pe-unknown", "_dont_match_anything_", -1 },
+	{ 0, "pe-error",   "pe-error-series-max", -1 },
+	{ 0, "pe-warn",    "pe-warn-series-max", 200 },
+	{ 0, "pe-input",   "pe-input-series-max", 400 },
+};
+
 
 gboolean
 process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 {
+	gboolean send_via_disk = FALSE;
 	const char *sys_to = cl_get_string(msg, F_CRM_SYS_TO);
 	const char *op = cl_get_string(msg, F_CRM_TASK);
 	const char *ref = cl_get_string(msg, XML_ATTR_REFERENCE);
@@ -50,91 +73,142 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	if(op == NULL){
 		/* error */
 
-	} else if(strcmp(op, CRM_OP_HELLO) == 0) {
+	} else if(strcasecmp(op, CRM_OP_HELLO) == 0) {
 		/* ignore */
 		
 	} else if(safe_str_eq(cl_get_string(msg, F_CRM_MSG_TYPE),
 			      XML_ATTR_RESPONSE)) {
 		/* ignore */
 		
-	} else if(sys_to == NULL || strcmp(sys_to, CRM_SYSTEM_PENGINE) != 0) {
+	} else if(sys_to == NULL || strcasecmp(sys_to, CRM_SYSTEM_PENGINE) != 0) {
 		crm_debug_3("Bad sys-to %s", crm_str(sys_to));
 		return FALSE;
 		
-	} else if(strcmp(op, CRM_OP_PECALC) == 0) {
+	} else if(strcasecmp(op, CRM_OP_PECALC) == 0) {
+		int seq = -1;
+		int series_id = 0;
+		int series_wrap = 0;
+		char *filename = NULL;
+		char *graph_file = NULL;
+		const char *value = NULL;
 		pe_working_set_t data_set;
 		crm_data_t *generation = create_xml_node(NULL, XML_TAG_CIB);
-		crm_data_t *status     = get_object_root(
-			XML_CIB_TAG_STATUS, xml_data);
-		crm_data_t *log_input  = status;
-		log_input  = xml_data;
-
-
+		crm_data_t *log_input  = copy_xml(xml_data);
+		HA_Message *reply = NULL;
+#if HAVE_BZLIB_H
+		gboolean compress = TRUE;
+#else
+		gboolean compress = FALSE;
+#endif
 		copy_in_properties(generation, xml_data);
 		crm_log_xml_info(generation, "[generation]");
-		crm_log_xml_debug(status, "[status]");
 
-#if 0
-		char *xml_buffer = NULL;
-		char *xml_buffer_ptr = NULL;
-		int max_xml = MAXLINE - 8;
+		crm_config_error = FALSE;
+		crm_config_warning = FALSE;	
 		
-		xml_buffer = dump_xml_unformatted(generation);
-		LogToCircularBuffer(input_buffer, LOG_INFO,
-				    "Generation: %s", xml_buffer);
-		crm_free(xml_buffer);
-
-		xml_buffer = dump_xml_unformatted(status);
-		xml_buffer_ptr = xml_buffer;
-
-		while(xml_buffer_ptr != NULL) {
-			LogToCircularBuffer(input_buffer, LOG_INFO,
-					    "PE xml: %s", xml_buffer_ptr);
-			if(strlen(xml_buffer_ptr) > max_xml) {
-				xml_buffer_ptr = xml_buffer_ptr + max_xml;
-			} else {
-				xml_buffer_ptr = NULL;;
-			}
-		}
-		crm_free(xml_buffer);
-#endif
 		was_processing_error = FALSE;
 		was_processing_warning = FALSE;
 
+		graph_file = crm_strdup(WORKING_DIR"/graph.XXXXXX");
+		mktemp(graph_file);
+
 		crm_zero_mem_stats(NULL);
 
-		
 		do_calculations(&data_set, xml_data, NULL);
-		crm_log_xml_debug_3(data_set.graph, "[out]");
 
-		if (send_ipc_reply(sender, msg, data_set.graph) ==FALSE) {
-			crm_err("Answer could not be sent");
-		}
+		series_id = get_series();
+		series_wrap = series[series_id].wrap;
+		value = pe_pref(data_set.config_hash, series[series_id].param);
 
-		cleanup_calculations(&data_set);
+		if(value != NULL) {
+			series_wrap = crm_int_helper(value, NULL);
+			if(errno != 0) {
+				series_wrap = series[series_id].wrap;
+			}
+
+		} else {
+			crm_config_warn("No value specified for cluster"
+					" preference: %s",
+					series[series_id].param);
+		}		
+
+		seq = get_last_sequence(PE_WORKING_DIR, series[series_id].name);	
 		
-		if(is_ipc_empty(sender) && crm_mem_stats(NULL)) {
+		data_set.input = NULL;
+		reply = create_reply(msg, data_set.graph);
+		CRM_ASSERT(reply != NULL);
+
+		filename = generate_series_filename(
+			PE_WORKING_DIR, series[series_id].name, seq, compress);
+		ha_msg_add(reply, F_CRM_TGRAPH_INPUT, filename);
+		crm_free(filename); filename = NULL;
+
+		if(send_ipc_message(sender, reply) == FALSE) {
+			send_via_disk = TRUE;
+			crm_err("Answer could not be sent via IPC, send via the disk instead");	           
+			crm_info("Writing the TE graph to %s", graph_file);
+			if(write_xml_file(data_set.graph, graph_file, FALSE) < 0) {
+				crm_err("TE graph could not be written to disk");
+			}
+		}
+		crm_msg_del(reply);
+		
+		cleanup_alloc_calculations(&data_set);
+
+		if(crm_mem_stats(NULL)) {
 			pe_warn("Unfree'd memory");
 		}
-	
+
+		filename = generate_series_filename(
+			PE_WORKING_DIR, series[series_id].name, seq, compress);
+
+		write_xml_file(log_input, filename, compress);
+		write_last_sequence(PE_WORKING_DIR, series[series_id].name,
+				    seq+1, series_wrap);
+		
 		if(was_processing_error) {
-			crm_info("ERRORs found during PE processing."
-			       "  Input follows:");
-			crm_log_xml_info(log_input, "[input]");
+			crm_err("Transition %d:"
+				" ERRORs found during PE processing."
+				" PEngine Input stored in: %s",
+				transition_id, filename);
 
 		} else if(was_processing_warning) {
-			crm_debug("WARNINGs found during PE processing."
-				"  Input follows:");
-			crm_log_xml_debug(log_input, "[input]");
+			crm_warn("Transition %d:"
+				 " WARNINGs found during PE processing."
+				 " PEngine Input stored in: %s",
+				 transition_id, filename);
 
-		} else if(crm_log_level > LOG_DEBUG) {
-			crm_log_xml_debug_2(log_input, "[input]");
+		} else {
+			crm_info("Transition %d: PEngine Input stored in: %s",
+				 transition_id, filename);
 		}
 
-		free_xml(generation);
+		if(crm_config_error) {
+			crm_info("Configuration ERRORs found during PE processing."
+			       "  Please run \"crm_verify -L\" to identify issues.");
 
+		} else if(crm_config_warning) {
+			crm_info("Configuration WARNINGs found during PE processing."
+				 "  Please run \"crm_verify -L\" to identify issues.");
+		}
+
+		if(send_via_disk) {
+			reply = create_reply(msg, NULL);
+			ha_msg_add(reply, F_CRM_TGRAPH, graph_file);
+			ha_msg_add(reply, F_CRM_TGRAPH_INPUT, filename);
+			CRM_ASSERT(reply != NULL);
+			if(send_ipc_message(sender, reply) == FALSE) {
+				crm_err("Answer could not be sent");
+			}
+		}
 		
-	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
+		free_xml(generation);
+		crm_free(graph_file);
+		free_xml(log_input);
+		crm_free(filename);
+		crm_msg_del(reply);
+		
+	} else if(strcasecmp(op, CRM_OP_QUIT) == 0) {
 		crm_warn("Received quit message, terminating");
 		exit(0);
 	}
@@ -144,25 +218,37 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 #define MEMCHECK_STAGE_0 0
 
+#define check_and_exit(stage) 	cleanup_calculations(data_set);		\
+	crm_mem_stats(NULL);						\
+	crm_err("Exiting: stage %d", stage);				\
+	exit(1);
 
 crm_data_t *
 do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now)
 {
-	
+	int rsc_log_level = LOG_INFO;
 /*	pe_debug_on(); */
 	set_working_set_defaults(data_set);
-	data_set->input = copy_xml(xml_input);
+	data_set->input = xml_input;
 	data_set->now = now;
 	if(data_set->now == NULL) {
 		data_set->now = new_ha_date(TRUE);
 	}
+
+#if MEMCHECK_STAGE_SETUP
+	check_and_exit(-1);
+#endif
 	
-	crm_debug_5("unpack");		  
+	crm_debug_5("unpack constraints");		  
 	stage0(data_set);
 	
 #if MEMCHECK_STAGE_0
 	check_and_exit(0);
 #endif
+
+	slist_iter(rsc, resource_t, data_set->resources, lpc,
+		   rsc->fns->print(rsc, NULL, pe_print_log, &rsc_log_level);
+		);
 
 	crm_debug_5("apply placement constraints");
 	stage1(data_set);
@@ -221,11 +307,6 @@ do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *no
 #endif
 
 	crm_debug_2("=#=#=#=#= Summary =#=#=#=#=");
-	crm_debug_2("========= All Actions =========");
-	slist_iter(action, action_t, data_set->actions, lpc,
-		   log_action(LOG_DEBUG_2, "\t", action, TRUE)
-		);
-	
 	crm_debug_2("\t========= Set %d (Un-runnable) =========", -1);
 	crm_action_debug_2(
 		slist_iter(action, action_t, data_set->actions, lpc,
@@ -238,79 +319,4 @@ do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *no
 		);
 	
 	return data_set->graph;
-}
-
-void
-cleanup_calculations(pe_working_set_t *data_set)
-{
-	GListPtr iterator = NULL;
-
-	if(data_set == NULL) {
-		return;
-	}
-	
-	crm_free(data_set->dc_uuid);
-	crm_free(data_set->transition_idle_timeout);
-	
-	crm_debug_3("deleting order cons");
-	pe_free_ordering(data_set->ordering_constraints); 
-
-	crm_debug_3("deleting actions");
-	pe_free_actions(data_set->actions);
-
-	crm_debug_3("deleting resources");
-	pe_free_resources(data_set->resources); 
-	
-	crm_debug_3("deleting nodes");
-	pe_free_nodes(data_set->nodes);
-	
-	crm_debug_3("deleting colors");
-	pe_free_colors(data_set->colors);
-
-	crm_debug_3("deleting node cons");
-	iterator = data_set->placement_constraints;
-	while(iterator) {
-		pe_free_rsc_to_node(iterator->data);
-		iterator = iterator->next;
-	}
-	if(data_set->placement_constraints != NULL) {
-		g_list_free(data_set->placement_constraints);
-	}
-	free_xml(data_set->graph);
-	free_ha_date(data_set->now);
-	free_xml(data_set->input);
-}
-
-
-void
-set_working_set_defaults(pe_working_set_t *data_set) 
-{
-	data_set->input = NULL;
-	data_set->now = NULL;
-	data_set->graph = NULL;
-	
-	data_set->transition_idle_timeout = crm_strdup("60s");
-	data_set->dc_uuid           = NULL;
-	data_set->dc_node           = NULL;
-	data_set->have_quorum       = FALSE;
-	data_set->stonith_enabled   = FALSE;
-	data_set->symmetric_cluster = TRUE;
-	data_set->no_quorum_policy  = no_quorum_freeze;
-	
-	
-	data_set->nodes     = NULL;
-	data_set->resources = NULL;
-	data_set->ordering_constraints  = NULL;
-	data_set->placement_constraints = NULL;
-
-	data_set->no_color = NULL;
-	data_set->colors   = NULL;
-	data_set->actions  = NULL;	
-
-	data_set->num_synapse = 0;
-	data_set->max_valid_nodes = 0;
-	data_set->order_id = 1;
-	data_set->action_id = 1;
-	data_set->color_id = 0;
-
 }

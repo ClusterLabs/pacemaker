@@ -25,7 +25,7 @@
 ##                        $(auxdir)/sys_siglist.m4
 EXTRA_DIST              = bootstrap rc.config.heartbeat 	\
 			heartbeat.spec.in heartbeat.spec	\
-			ConfigureMe autoconf-2.53.diff README.in
+			ConfigureMe autoconf-2.53.diff README.in libltdl.tar
 
 RPMREL			= @RPMREL@
 RPM			= @RPM@
@@ -47,7 +47,7 @@ AUTOMAKE_OPTIONS	= foreign
 ##ACLOCAL                 = aclocal -I $(auxdir)
 
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
-                        DRF/stamp-h.in libtool.m4 ltdl.m4
+                        DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar
 coredir = 		@HA_COREDIR@
 hauser = 		@HA_CCMUSER@
 
@@ -57,12 +57,26 @@ if SNMP_SUBAGENT_BUILD
 SNMP_SUBAGENT_DIR = snmp_subagent
 endif
 
-SUBDIRS	=		$(LIBLTDL_DIR) debian pkg port replace include 	\
-			lib						\
-			ldirectord heartbeat membership telecom		\
-			linux-ha contrib resources			\
-			crm lrm $(SNMP_SUBAGENT_DIR)			\
-			tools logd fencing doc cts
+if MGMT_BUILD
+MGMT_DIR = mgmt
+endif
+
+if CIM_PROVIDER_BUILD
+CIM_PROVIDER_DIR = cim
+endif
+
+if TSA_PLUGIN_BUILD
+TSA_PLUGIN_DIR = tsa_plugin
+endif
+
+if LDIRECTORD_BUILD
+LDIRECTORD_DIR = ldirectord
+endif
+
+SUBDIRS	= $(LIBLTDL_DIR) debian pkg port replace include lib                 \
+          heartbeat membership telecom linux-ha contrib resources lrm crm    \
+          fencing logd $(SNMP_SUBAGENT_DIR) tools doc cts $(MGMT_DIR)        \
+          $(CIM_PROVIDER_DIR) $(LDIRECTORD_DIR) config $(TSA_PLUGIN_DIR)
 
 HANDY_DOCS = doc/ChangeLog doc/GettingStarted.html doc/DirectoryMap.txt
 HBDOCS = doc/heartbeat_api.html
@@ -104,7 +118,7 @@ portfile:	dist
 clean-generic: am_config_clean
 
 am_config_clean:
-		rm -fr $(PACKAGE)-*.tar.gz
+		rm -fr $(PACKAGE)-*.tar.gz libltdl.tar
 
 drpm:		dist
 		$(RPM) --nodeps $(RPMFLAGS) $(TARFILE) </dev/null;

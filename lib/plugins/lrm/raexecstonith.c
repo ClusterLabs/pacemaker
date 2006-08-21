@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <glib.h>
 #include <clplumbing/cl_log.h>
+#include <clplumbing/uids.h>
 #include <pils/plugin.h>
 #include <dirent.h>
 #include <libgen.h>  /* Add it for compiling on OSX */
@@ -87,29 +88,36 @@ static struct RAExecOps raops =
 	get_resource_meta
 };
 
-static const char * meta_data1 = "\n"
+static const char META_TEMPLATE[] =
 "<?xml version=\"1.0\"?>\n"
 "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
-"<resource-agent name=\"";
-
-static const char * meta_data2 = 
-"\" version=\"0.1\">\n"
-"  <version>1.0</version>\n";
-
-static const char * meta_data3 = 
-"  <actions>\n"
-"    <action name=\"start\"   timeout=\"15\" />\n"
-"    <action name=\"stop\"    timeout=\"15\" />\n"
-"    <action name=\"status\"  timeout=\"15\" />\n"
-"    <action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
-"    <action name=\"meta-data\"  timeout=\"15\" />\n"
-"  </actions>\n"
-"  <special tag=\"heartbeat\">\n"
-"    <version>2.0</version>\n"
-"  </special>\n"
+"<resource-agent name=\"%s\">\n"
+"<version>1.0</version>\n"
+"<longdesc lang=\"en\">\n"
+"%s\n"
+"</longdesc>\n"	
+"<shortdesc lang=\"en\">%s</shortdesc>\n"
+"%s\n"
+"<actions>\n"
+"<action name=\"start\"   timeout=\"15\" />\n"
+"<action name=\"stop\"    timeout=\"15\" />\n"
+"<action name=\"status\"  timeout=\"15\" />\n"
+"<action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
+"<action name=\"meta-data\"  timeout=\"15\" />\n"
+"</actions>\n"
+"<special tag=\"heartbeat\">\n"
+"<version>2.0</version>\n"
+"</special>\n"
 "</resource-agent>\n";
 
-static const char * no_parameter_info = "<!-- No parameter segment --->";
+static const char * no_parameter_info = "<!-- No parameter segment -->";
+
+#define CHECKMETANULL(ret, which) \
+	if (ret == NULL) { \
+		cl_log(LOG_WARNING, "stonithRA plugin: cannot get %s" \
+			"segment of %s's metadata.", which, rsc_type); \
+		ret = no_parameter_info; \
+	}
 
 PIL_PLUGIN_BOILERPLATE2("1.0", Debug);
 
@@ -181,7 +189,8 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	g_snprintf(buffer_tmp, sizeof(buffer_tmp), "%s_%d"
 		, 	"STONITH_RA_EXEC", getpid());
 	if (ST_OK != stonithd_signon(buffer_tmp)) {
-		cl_log(LOG_ERR, "STONITH_RA_EXEC: Cannot sign on the stonithd.");
+		cl_log(LOG_ERR, "%s:%d: Cannot sign on the stonithd."
+			, __FUNCTION__, __LINE__);
 		exit(EXECRA_UNKNOWN_ERROR);
 	}
 
@@ -191,8 +200,12 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	 * variables. This is a important thing to think about and do.
 	 */
 	/* send the RA operation to stonithd to simulate a RA's actions */
-	cl_log(LOG_DEBUG, "Will send the stonith RA operation to stonithd: "
-		"%s %s", rsc_type, op_type);
+	if ( 0==STRNCMP_CONST(op_type, "start") 
+		|| 0==STRNCMP_CONST(op_type, "stop") ) {
+		cl_log(LOG_INFO
+			, "Try to %s STONITH resource <rsc_id=%s> : Device=%s"
+			, op_type, rsc_id, rsc_type);
+	}
 
 	op = g_new(stonithRA_ops_t, 1);
 	op->ra_name = g_strdup(rsc_type);
@@ -206,14 +219,13 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 		exit(EXECRA_EXEC_UNKNOWN_ERROR);
 	}
 
-	cl_log(LOG_DEBUG, "Waiting until the final result returned.");
 	/* May be redundant */
 	/*
 	while (stonithd_op_result_ready() != TRUE) {
 		;
 	}
 	*/
-	cl_log(LOG_DEBUG, "Will call stonithd_receive_ops_result.");
+	/* cl_log(LOG_DEBUG, "Will call stonithd_receive_ops_result."); */
 	if (ST_OK != stonithd_receive_ops_result(TRUE)) {
 		cl_log(LOG_ERR, "stonithd_receive_ops_result failed.");
 		/* Need to improve the granularity for error return code */
@@ -228,14 +240,14 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	g_free(op);
 
 	stonithd_signoff();
-	cl_log(LOG_DEBUG, "stonithRA orignal exit code=%d", exit_value);
+	/* cl_log(LOG_DEBUG, "stonithRA orignal exit code=%d", exit_value); */
 	exit(map_ra_retvalue(exit_value, op_type, NULL));
 }
 
 static void
 stonithRA_ops_callback(stonithRA_ops_t * op, void * private_data)
 {
-	cl_log(LOG_DEBUG, "setting exit code=%d", exit_value);
+	/* cl_log(LOG_DEBUG, "setting exit code=%d", exit_value); */
 	exit_value = op->op_result;
 }
 
@@ -257,7 +269,8 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 static int
 get_resource_list(GList ** rsc_info)
 {
-	cl_log(LOG_ERR, "get_resource_list: begin.");
+	int rc;
+	int     needprivs = !cl_have_full_privs();
 
 	if ( rsc_info == NULL ) {
 		cl_log(LOG_ERR, "Parameter error: get_resource_list");
@@ -270,12 +283,22 @@ get_resource_list(GList ** rsc_info)
 		*rsc_info = NULL;
 	}
 
+	if (needprivs) {
+		return_to_orig_privs();
+	}
 	if (ST_OK != stonithd_signon("STONITH_RA")) {
-		cl_log(LOG_ERR, "Can not signon to the stonithd.");
-		return -1;
+		cl_log(LOG_ERR, "%s:%d: Can not signon to the stonithd."
+			, __FUNCTION__, __LINE__);
+		rc = -1;
+	} else {
+		rc = stonithd_list_stonith_types(rsc_info);
+		stonithd_signoff();
 	}
 
-	return stonithd_list_stonith_types(rsc_info);
+	if (needprivs) {
+		return_to_dropped_privs();
+	}
+	return rc;
 }
 
 static int
@@ -293,49 +316,59 @@ static char *
 get_resource_meta(const char* rsc_type, const char* provider)
 {
 	char * buffer;
-	const char * tmp = NULL;
+	int bufferlen = 0;
+	const char * meta_param = NULL;
+	const char * meta_longdesc = NULL;
+	const char * meta_shortdesc = NULL;
 	Stonith * stonith_obj = NULL;	
 
 	if ( provider != NULL ) {
-		cl_log(LOG_ERR, "stonithRA plugin: now donnot take the provider"
-			" into account.");
-		return NULL;
+		cl_log(LOG_NOTICE, "stonithRA plugin: provider attribution "
+			"isnot needed and will be ignored.");
 	}
 
 	stonith_obj = stonith_new(rsc_type);
-	tmp = stonith_get_info(stonith_obj, ST_CONF_XML);
-	if (tmp == NULL) {
-		cl_log(LOG_WARNING, "stonithRA plugin: cannot get the parameter"
-			" segment of %s's metadata.", rsc_type);
-		tmp = no_parameter_info;
-	}
+	meta_longdesc = stonith_get_info(stonith_obj, ST_DEVICEDESCR);
+	CHECKMETANULL(meta_longdesc, "longdesc")
+	meta_shortdesc = stonith_get_info(stonith_obj, ST_DEVICENAME);
+	CHECKMETANULL(meta_shortdesc, "shortdesc") 
+	meta_param = stonith_get_info(stonith_obj, ST_CONF_XML);
+	CHECKMETANULL(meta_param, "parameters") 
 
-	buffer = g_new(char, strlen(meta_data1) + strlen(meta_data2)
-				+ strlen(tmp) + strlen(meta_data3) + 1);
-
-	sprintf(buffer, "%s%s%s%s", meta_data1, meta_data2, tmp, meta_data3);
+	
+	bufferlen = STRLEN_CONST(META_TEMPLATE) + strlen(rsc_type)
+			+ strlen(meta_longdesc) + strlen(meta_shortdesc)
+			+ strlen(meta_param) + 1;
+	buffer = g_new(char, bufferlen);
+	buffer[bufferlen-1] = '\0';
+	snprintf(buffer, bufferlen-1, META_TEMPLATE, rsc_type
+		, meta_longdesc, meta_shortdesc, meta_param);
 	stonith_delete(stonith_obj);
 
 	return buffer;
 }
 
 /* 
- * Currently should return *providers = NULL, but rmain the old code for
+ * Currently should return *providers = NULL, but remain the old code for
  * possible unsing in the future
  */
 static int
 get_providers(const char* class_path, const char* op_type, GList ** providers)
 {
 	if ( providers == NULL ) {
-		cl_log(LOG_ERR, "Parameter error: get_providers");
+		cl_log(LOG_ERR, "%s:%d: Parameter error: providers==NULL"
+			, __FUNCTION__, __LINE__);
 		return -2;
 	}
 
 	if ( *providers != NULL ) {
-		cl_log(LOG_ERR, "Parameter error: get_providers."\
-			"will cause memory leak.");
-		*providers = NULL;
+		cl_log(LOG_ERR, "%s:%d: Parameter error: *providers==NULL."
+			"This will cause memory leak."
+			, __FUNCTION__, __LINE__);
 	}
 
-	return 0;
+	/* Now temporarily make it fixed */
+	*providers = g_list_append(*providers, g_strdup("heartbeat"));
+
+	return g_list_length(*providers);
 }

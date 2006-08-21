@@ -1,4 +1,4 @@
-/* $Id: xml_diff.c,v 1.3 2005/06/14 11:55:29 davidlee Exp $ */
+/* $Id: xml_diff.c,v 1.11 2006/07/18 06:15:54 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -53,12 +53,15 @@
 const char *crm_system_name = "diff";
 void usage(const char *cmd, int exit_status);
 
-#define OPTARGS	"V?o:n:p:sc"
+#define OPTARGS	"V?o:n:p:scfO:N:"
 
 int
 main(int argc, char **argv)
 {
-	gboolean apply = TRUE;
+	gboolean apply = FALSE;
+	gboolean raw_1  = FALSE;
+	gboolean raw_2  = FALSE;
+	gboolean filter = FALSE;
 	gboolean use_stdin = FALSE;
 	gboolean as_cib = FALSE;
 	int argerr = 0;
@@ -68,6 +71,9 @@ main(int argc, char **argv)
 	crm_data_t *output = NULL;
 	const char *xml_file_1 = NULL;
 	const char *xml_file_2 = NULL;
+
+	long new_bytes = 0, new_allocs = 0, new_frees = 0;
+	long old_bytes = 0, old_allocs = 0, old_frees = 0;
 	
 #ifdef HAVE_GETOPT_H
 	int option_index = 0;
@@ -75,6 +81,8 @@ main(int argc, char **argv)
 		/* Top-level Options */
 		{"original", 1, 0, 'o'},
 		{"new",      1, 0, 'n'},
+		{"original-string", 1, 0, 'O'},
+		{"new-string",      1, 0, 'N'},
 		{"patch",    1, 0, 'p'},
 		{"stdin",    0, 0, 's'},
 		{"cib",      0, 0, 'c'},
@@ -105,15 +113,24 @@ main(int argc, char **argv)
 		switch(flag) {
 			case 'o':
 				xml_file_1 = optarg;
-				apply = FALSE;
+				break;
+			case 'O':
+				xml_file_1 = optarg;
+				raw_1 = TRUE;
 				break;
 			case 'n':
 				xml_file_2 = optarg;
-				apply = FALSE;
+				break;
+			case 'N':
+				xml_file_2 = optarg;
+				raw_2 = TRUE;
 				break;
 			case 'p':
 				xml_file_2 = optarg;
 				apply = TRUE;
+				break;
+			case 'f':
+				filter = TRUE;
 				break;
 			case 's':
 				use_stdin = TRUE;
@@ -149,7 +166,12 @@ main(int argc, char **argv)
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
 
-	if(use_stdin) {
+	crm_zero_mem_stats(NULL);
+	
+	if(raw_1) {
+		object_1 = string2xml(xml_file_1);
+
+	} else if(use_stdin) {
 		fprintf(stderr, "Input first XML fragment:");
 		object_1 = stdin2xml();
 
@@ -157,52 +179,72 @@ main(int argc, char **argv)
 		FILE *xml_strm = fopen(xml_file_1, "r");
 		if(xml_strm != NULL) {
 			crm_debug("Reading: %s", xml_file_1);
-			object_1 = file2xml(xml_strm);
+			object_1 = file2xml(xml_strm, FALSE);
 		} else {
 			cl_perror("File not found: %s", xml_file_1);
 		}
 	}
 	
-	if(use_stdin) {
+	if(raw_2) {
+		object_2 = string2xml(xml_file_2);
+
+	} else if(use_stdin) {
 		fprintf(stderr, "Input second XML fragment:");
 		object_2 = stdin2xml();
 
-	} else if(xml_file_1 != NULL) {
+	} else if(xml_file_2 != NULL) {
 		FILE *xml_strm = fopen(xml_file_2, "r");
 		if(xml_strm != NULL) {
 			crm_debug("Reading: %s", xml_file_2);
-			object_2 = file2xml(xml_strm);
+			object_2 = file2xml(xml_strm, FALSE);
 		} else {
 			cl_perror("File not found: %s", xml_file_2);
 		}
 		
 	}
-
+	
 	CRM_ASSERT(object_1 != NULL);
 	CRM_ASSERT(object_2 != NULL);
 
-	if(as_cib == FALSE) {
-		if(apply) {
+	crm_zero_mem_stats(NULL);
+	
+	if(apply) {
+		if(as_cib == FALSE) {
 			apply_xml_diff(object_1, object_2, &output);
 		} else {
-			output = diff_xml_object(object_1, object_2, FALSE);
-		}
-	} else {
-		if(apply) {
 			apply_cib_diff(object_1, object_2, &output);
+		}
+		
+	} else {
+		if(as_cib == FALSE) {
+			output = diff_xml_object(object_1, object_2, filter);
 		} else {
-			output = diff_cib_object(object_1, object_2, FALSE);
+			output = diff_cib_object(object_1, object_2, filter);
 		}
 	}
-	
 	
 	if(output != NULL) {
 		char *buffer = dump_xml_formatted(output);
 		fprintf(stdout, "%s", crm_str(buffer));
 		crm_free(buffer);
 	}
+
+	crm_xml_nbytes(output, &new_bytes, &new_allocs, &new_frees);
+	crm_adjust_mem_stats(crm_running_stats, new_bytes - old_bytes,
+			     new_allocs - old_allocs, new_frees - old_frees);
+	
+	crm_mem_stats(NULL);
+
+	free_xml(object_1);
+	free_xml(object_2);
+	free_xml(output);
+	
+	if(apply == FALSE && output != NULL) {
+		return 1;
+	}
 	
 	return 0;
+	
 }
 
 
@@ -213,40 +255,17 @@ usage(const char *cmd, int exit_status)
 
 	stream = exit_status != 0 ? stderr : stdout;
 
-	fprintf(stream, "usage: %s [-?Vio] command\n"
-		"\twhere necessary, XML data will be expected using -X"
-		" or on STDIN if -X isnt specified\n", cmd);
+	fprintf(stream, "usage: %s [-?V] [oO] [pnN]\n", cmd);
 
 	fprintf(stream, "Options\n");
-	fprintf(stream, "\t--%s (-%c) <id>\tid of the object being operated on\n",
-		XML_ATTR_ID, 'i');
-	fprintf(stream, "\t--%s (-%c) <type>\tobject type being operated on\n",
-		"obj_type", 'o');
-	fprintf(stream, "\t--%s (-%c)\tturn on debug info."
-		"  additional instance increase verbosity\n", "verbose", 'V');
 	fprintf(stream, "\t--%s (-%c)\tthis help message\n", "help", '?');
-	fprintf(stream, "\nCommands\n");
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ERASE,  'E');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_QUERY,  'Q');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_CREATE, 'C');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_REPLACE,'R');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_UPDATE, 'U');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_DELETE, 'D');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_BUMP,   'B');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ISMASTER,'M');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_SYNC,   'S');
-	fprintf(stream, "\nXML data\n");
-	fprintf(stream, "\t--%s (-%c) <string>\t\n", F_CRM_DATA, 'X');
-	fprintf(stream, "\nAdvanced Options\n");
-	fprintf(stream, "\t--%s (-%c)\tsend command to specified host."
-		" Applies to %s and %s commands only\n", "host", 'h',
-		CIB_OP_QUERY, CIB_OP_SYNC);
-	fprintf(stream, "\t--%s (-%c)\tcommand takes effect locally"
-		" on the specified host\n", "local", 'l');
-	fprintf(stream, "\t--%s (-%c)\tcommand will not be broadcast even if"
-		" it altered the CIB\n", "no-bcast", 'b');
-	fprintf(stream, "\t--%s (-%c)\twait for call to complete before"
-		" returning\n", "sync-call", 's');
+	fprintf(stream, "\t--%s (-%c) <filename>\t\n", "original", 'o');
+	fprintf(stream, "\t--%s (-%c) <filename>\t\n", "new",   'n');
+	fprintf(stream, "\t--%s (-%c) <string>\t\n", "original-string",   'O');
+	fprintf(stream, "\t--%s (-%c) <string>\t\n", "new-string",       'N');
+	fprintf(stream, "\t--%s (-%c) <filename>\tApply a patch to the original XML\n", "patch", 'p');
+	fprintf(stream, "\t--%s (-%c)\tCompare/patch the inputs as a CIB\n", "cib",   'c');
+	fprintf(stream, "\t--%s (-%c)\tRead the inputs from stdin\n", "stdin", 's');
 
 	fflush(stream);
 

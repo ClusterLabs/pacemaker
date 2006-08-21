@@ -18,19 +18,26 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 ## Subdirectories
-SUBDIRS			=  cib crmd pengine tengine admin test
-DIST_SUBDIRS		=  cib crmd pengine tengine admin test
+SUBDIRS			=  cib crmd pengine tengine admin
+DIST_SUBDIRS		=  cib crmd pengine tengine admin
 
-crmdir			= $(HA_VARLIBDIR)/$(HB_PKG)/crm
-crm_sock_dir		= $(HA_VARRUNDIR)/$(HB_PKG)/crm
-noinst_HEADERS 	= dmalloc_wrapper.h
+dtddir			= $(HA_LIBDIR)/$(HB_PKG)
+crm_varlibdir		= $(HA_VARLIBDIR)/$(HB_PKG)/crm
+crm_varrundir		= $(HA_VARRUNDIR)/$(HB_PKG)/crm
+noinst_HEADERS	 	= dmalloc_wrapper.h
+
+EXTRA_DIST		= crm-1.0.dtd
+dtd_SCRIPTS		= crm.dtd
+
+crm.dtd: crm-1.0.dtd
+	cp $(top_srcdir)/crm/crm-1.0.dtd crm.dtd
 
 install-exec-local:
-	$(mkinstalldirs) $(DESTDIR)/$(crmdir)
-	-chown $(HA_CCMUSER) $(DESTDIR)/$(crmdir)
-	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(crmdir)
-	-chmod g+w $(DESTDIR)/$(crmdir)
-	-mkdir $(DESTDIR)/$(crm_sock_dir)
-	-chown $(HA_CCMUSER) $(DESTDIR)/$(crm_sock_dir)
-	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(crm_sock_dir)
-#	-chmod g+w $(DESTDIR)/$(crm_sock_dir)
+	$(mkinstalldirs) $(DESTDIR)/$(crm_varlibdir)
+	-chown $(HA_CCMUSER) $(DESTDIR)/$(crm_varlibdir)
+	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(crm_varlibdir)
+	-chmod 750 $(DESTDIR)/$(crm_varlibdir)
+	$(mkinstalldirs) $(DESTDIR)/$(crm_varrundir)
+	-chown $(HA_CCMUSER) $(DESTDIR)/$(crm_varrundir)
+	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(crm_varrundir)
+	-chmod 750 $(DESTDIR)/$(crm_varrundir)

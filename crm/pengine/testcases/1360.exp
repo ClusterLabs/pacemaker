@@ -1,0 +1,85 @@
+ <transition_graph network_delay="60s" transition_id="0">
+   <synapse id="0">
+     <action_set>
+       <rsc_op id="10" operation="stop" operation_key="dollies:0_stop_0" on_node="ssgtest1a" on_node_uuid="94ef659b-5fd8-4d6b-b0ed-3b40339f8132">
+         <primitive id="dollies:0" long-id="dolly:dollies:0" class="ocf" provider="gn1" type="clone_server"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="14" operation="stop" operation_key="dolly_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="1">
+     <action_set>
+       <rsc_op id="11" operation="start" operation_key="dollies:0_start_0" on_node="ssgtest1b" on_node_uuid="c728b2aa-1e73-491f-a03c-8f0598bab169">
+         <primitive id="dollies:0" long-id="dolly:dollies:0" class="ocf" provider="gn1" type="clone_server"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="10" operation="stop" operation_key="dollies:0_stop_0" on_node="ssgtest1a" on_node_uuid="94ef659b-5fd8-4d6b-b0ed-3b40339f8132"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="12" operation="start" operation_key="dolly_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="2">
+     <action_set>
+       <pseudo_event id="12" operation="start" operation_key="dolly_start_0">
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="14" operation="stop" operation_key="dolly_stop_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="15" operation="stopped" operation_key="dolly_stopped_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="3" priority="1000000">
+     <action_set>
+       <pseudo_event id="13" operation="running" operation_key="dolly_running_0">
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="11" operation="start" operation_key="dollies:0_start_0" on_node="ssgtest1b" on_node_uuid="c728b2aa-1e73-491f-a03c-8f0598bab169"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="12" operation="start" operation_key="dolly_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="4">
+     <action_set>
+       <pseudo_event id="14" operation="stop" operation_key="dolly_stop_0">
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1"/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="5" priority="1000000">
+     <action_set>
+       <pseudo_event id="15" operation="stopped" operation_key="dolly_stopped_0">
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="10" operation="stop" operation_key="dollies:0_stop_0" on_node="ssgtest1a" on_node_uuid="94ef659b-5fd8-4d6b-b0ed-3b40339f8132"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="14" operation="stop" operation_key="dolly_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+ </transition_graph>
+

@@ -23,7 +23,7 @@ Licensed under the GNU GPL.
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import time, os, popen2, string
+import time, os, popen2, string, re
 import CTS
 import os
 import popen2
@@ -279,15 +279,43 @@ class HAResourceAudit(ClusterAudit):
                 
                 if running:
                     NumofInc[resource.inc_name] += 1
+
         if self.CM.HasQuorum(None):
             for inc_name in NumofInc.keys():
-                if NumofInc[inc_name] != min(up_count,MaxofInc[inc_name]):
+                if NumofInc[inc_name] != min(up_count, MaxofInc[inc_name]):
                     passed = 0
-                    self.CM.log("Incarnation %s has %d instances(max %d instances).\
-                        Now %d nodes are up"%(str(inc_name),NumofInc[inc_name], \
-                        MaxofInc[inc_name],up_count))
+                    self.CM.log("Cloned resource "+ str(inc_name)
+				+" has "+ str(NumofInc[inc_name])
+				+" active instances (max: "
+				+ str(MaxofInc[inc_name])
+				+", active nodes: "+ str(up_count) + ")")
+		    
+        Groups = self.CM.ResourceGroups()
+        for group in Groups :
+	    group_printed = 0
+	    first_rsc = group[0].rid
+            RunningNodes = NodeofRsc[first_rsc]
+            for rsc in group :
+                if RunningNodes != NodeofRsc[rsc.rid]:
+                    passed = 0 
 
-        #Make sure the resouces with "must","placement" constraint are running on the same node
+		    if group_printed == 0:
+			group_printed = 1
+			self.CM.log("Group audit failed for: %s" % repr(group))
+			if not NodeofRsc[first_rsc] or len(NodeofRsc[first_rsc]) == 0:
+			    self.CM.log("* %s not running" % first_rsc)
+			else:
+			    self.CM.log("* %s running on %s"
+					%(first_rsc, repr(NodeofRsc[first_rsc])))
+
+		    if not NodeofRsc[rsc.rid] or len(NodeofRsc[rsc.rid]) == 0:
+			self.CM.log("* %s not running" % rsc.rid)
+		    else:
+			self.CM.log("* %s running on %s"
+				    %(rsc.rid, repr(NodeofRsc[rsc.rid])))
+                                
+        # Make sure the resouces with "must","placement" constraint
+        #   are running on the same node
         Dependancies = self.CM.Dependencies()
         for dependency in Dependancies:
             if dependency["type"] == "placement" and dependency["strength"] == "must":
@@ -373,6 +401,109 @@ class CrmdStateAudit(ClusterAudit):
             return 1
         return 0
 
+class CIBAudit(ClusterAudit):
+    def __init__(self, cm):
+        self.CM = cm
+        self.Stats = {"calls":0
+        ,        "success":0
+        ,        "failure":0
+        ,        "skipped":0
+        ,        "auditfail":0}
+
+    def has_key(self, key):
+        return self.Stats.has_key(key)
+
+    def __setitem__(self, key, value):
+        self.Stats[key] = value
+        
+    def __getitem__(self, key):
+        return self.Stats[key]
+    
+    def incr(self, name):
+        '''Increment (or initialize) the value associated with the given name'''
+        if not self.Stats.has_key(name):
+            self.Stats[name]=0
+        self.Stats[name] = self.Stats[name]+1
+
+    def __call__(self):
+        self.CM.debug("Do Audit %s"%self.name())
+        passed = 1
+        ccm_partitions = self.CM.find_partitions()
+
+        if len(ccm_partitions) == 0:
+	    self.CM.debug("\tNo partitions to audit")
+            return 1
+        
+        for partition in ccm_partitions:
+	    self.CM.debug("\tAuditing CIB consistency for: %s" %partition)
+            partition_passed = 0
+            if self.audit_cib_contents(partition) == 0:
+                passed = 0
+        
+        return passed
+
+    def audit_cib_contents(self, hostlist):
+	passed = 1
+	first_host = None
+	first_host_xml = ""
+	partition_hosts = hostlist.split()
+	for a_host in partition_hosts:
+		if first_host == None:
+			first_host = a_host
+			first_host_xml = self.store_remote_cib(a_host)
+			#self.CM.debug("Retrieved CIB: %s" % first_host_xml) 
+		else:
+			a_host_xml = self.store_remote_cib(a_host)
+			diff_cmd="@sbindir@/crm_diff -c -VV -f -N \'%s\' -O '%s'" % (a_host_xml, first_host_xml)
+
+		        infile, outfile, errfile = os.popen3(diff_cmd)
+			diff_lines = outfile.readlines()
+        		for line in diff_lines:
+			    if not re.search("<diff/>", line):
+				passed = 0
+				self.CM.log("CibDiff[%s-%s]: %s" 
+					    % (first_host, a_host, line)) 
+			    else:
+				self.CM.debug("CibDiff[%s-%s] Ignoring: %s" 
+					      % (first_host, a_host, line)) 
+
+			diff_lines = errfile.readlines()
+        		for line in diff_lines:
+			    passed = 0
+			    self.CM.log("CibDiff[%s-%s] ERROR: %s" 
+					% (first_host, a_host, line)) 
+
+	return passed
+		
+    def store_remote_cib(self, node):
+	combined = ""
+	first_line = 1
+	extra_debug = 0
+        #self.CM.debug("\tRetrieving CIB from: %s" % node)
+        lines = self.CM.rsh.readlines(node, self.CM["CibQuery"])
+	if extra_debug:
+	    self.CM.debug("Start Cib[%s]" % node) 
+        for line in lines:
+	    combined = combined + line[:-1]
+	    if first_line:
+                self.CM.debug("[Cib]" + line)
+		first_line = 0
+	    elif extra_debug:
+                self.CM.debug("[Cib]" + line) 
+
+	if extra_debug:
+	    self.CM.debug("End Cib[%s]" % node) 
+
+	#self.CM.debug("Complete CIB: %s" % combined) 
+	return combined
+
+    def name(self):
+        return "CibAudit"
+    
+    def is_applicable(self):
+        if self.CM["Name"] == "linux-ha-v2":
+            return 1
+        return 0
 
 class PartitionAudit(ClusterAudit):
     def __init__(self, cm):
@@ -406,7 +537,7 @@ class PartitionAudit(ClusterAudit):
         passed = 1
         ccm_partitions = self.CM.find_partitions()
 
-        if len(ccm_partitions) == 0:
+        if ccm_partitions == None or len(ccm_partitions) == 0:
             return 1
 
         if len(ccm_partitions) > 1:
@@ -435,7 +566,7 @@ class PartitionAudit(ClusterAudit):
             
 
     def audit_partition(self, partition):
-        passed = 0
+        passed = 1
         dc_found = []
         dc_allowed_list = []
         lowest_epoche = None
@@ -460,31 +591,58 @@ class PartitionAudit(ClusterAudit):
 	    self.NodeEpoche[node] = self.trim2int(self.NodeEpoche[node])
 	    self.NodeQuorum[node] = self.trim_string(self.NodeQuorum[node])
 
-            if lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
+	    if not self.NodeEpoche[node]:
+		self.CM.log("Warn: Node %s dissappeared: cant determin epoche" %(node))
+                self.CM.ShouldBeStatus[node] = self.CM["down"]
+		# not in itself a reason to fail the audit (not what we're
+		#  checking for in this audit)
+            elif lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
                 lowest_epoche = self.NodeEpoche[node]
                 
+	if not lowest_epoche:
+	    self.CM.log("Lowest epoche not determined in %s" % (partition))
+	    passed = 0
+
         for node in node_list:
             if self.CM.ShouldBeStatus[node] == self.CM["up"]:
                 if self.CM.is_node_dc(node, self.NodeState[node]):
                     dc_found.append(node)
                     if self.NodeEpoche[node] == lowest_epoche:
-                        passed = 1
-                    elif not self.NodeEpoche[node]:
-                        self.CM.log("Cant determin epoche for DC %s" %(node))
-                        passed = 0
-
-                    else:
+                        self.CM.debug("%s: OK" % node)
+		    elif not self.NodeEpoche[node]:
+                        self.CM.debug("Check on %s ignored: no node epoche" % node)
+                    elif not lowest_epoche:
+                        self.CM.debug("Check on %s ignored: no lowest epoche" % node)
+		    else:
                         self.CM.log("DC %s is not the oldest node (%d vs. %d)"
                             %(node, self.NodeEpoche[node], lowest_epoche))
                         passed = 0
 
         if len(dc_found) == 0:
-                self.CM.log("DC not found on any of the %d allowed nodes: %s (of %s)"
-                            %(len(dc_allowed_list), str(dc_allowed_list), str(node_list)))
+	    self.CM.log("DC not found on any of the %d allowed nodes: %s (of %s)"
+			%(len(dc_allowed_list), str(dc_allowed_list), str(node_list)))
+
         elif len(dc_found) > 1:
-                self.CM.log("%d DCs (%s) found in cluster partition: %s"
-                            %(len(dc_found), str(dc_found), str(node_list)))
+	    self.CM.log("%d DCs (%s) found in cluster partition: %s"
+			%(len(dc_found), str(dc_found), str(node_list)))
+	    passed = 0
+
+        elif self.CM.Env["CIBResource"] == 1 and self.NodeQuorum[dc_found[0]]:
+            if self.audit_dc_resources(node_list, dc_found) == 0:
                 passed = 0
+
+            Resources = self.CM.Resources()
+            for node in node_list:
+		if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+		    for resource in Resources:
+			if resource.rid == "rsc_"+node:
+			    if resource.IsRunningOn(node) == 0:
+				self.CM.log("Node %s is not running its own resource" %(node))
+				passed = 0
+
+        elif self.CM.Env["CIBResource"] == 1:
+            # no quorum means no resource management
+            self.CM.debug("Not auditing resources - no quorum")
 
         if passed == 0:
             for node in node_list:
@@ -492,20 +650,6 @@ class PartitionAudit(ClusterAudit):
                     self.CM.log("epoche %s : %s"  
                                 %(self.NodeEpoche[node], self.NodeState[node]))
 
-        if self.CM.Env["CIBResource"] == 1 and len(dc_found) > 0 and self.NodeQuorum[dc_found[0]]:
-            if self.audit_dc_resources(node_list, dc_found) == 0:
-                passed = 0
-
-            Resources = self.CM.Resources()
-            for node in node_list:
-                for resource in Resources:
-                    if resource.rid == "rsc_"+node:
-                        if resource.IsRunningOn(node) == 0:
-                            self.CM.log("Node %s is not running its own resource" %(node))
-                            passed = 0
-        elif self.CM.Env["CIBResource"] == 1:
-            # no quorum means no resource management
-            self.CM.debug("Not auditing resources - no quorum")
 
         return passed
 
@@ -545,6 +689,7 @@ AllAuditClasses.append(CrmdStateAudit)
 AllAuditClasses.append(PartitionAudit)
 AllAuditClasses.append(ResourceAudit)
 AllAuditClasses.append(HAResourceAudit)
+AllAuditClasses.append(CIBAudit)
 
 def AuditList(cm):
     result = []

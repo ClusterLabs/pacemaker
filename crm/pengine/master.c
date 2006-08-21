@@ -1,4 +1,4 @@
-/* $Id: master.c,v 1.1 2005/09/12 11:04:22 andrew Exp $ */
+/* $Id: master.c,v 1.22 2006/06/07 12:46:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -19,9 +19,9 @@
 
 #include <portability.h>
 
-#include <pengine.h>
-#include <pe_utils.h>
 #include <crm/msg_xml.h>
+#include <allocate.h>
+#include <lib/crm/pengine/utils.h>
 
 extern void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
@@ -32,14 +32,16 @@ typedef struct clone_variant_data_s
 		resource_t *self;
 
 		int clone_max;
-		int clone_max_node;
+		int clone_node_max;
 
 		int active_clones;
 		int max_nodes;
-
+		
 		gboolean interleave;
 		gboolean ordered;
 
+		crm_data_t *xml_obj_child;
+		
 		gboolean notify_confirm;
 		
 		GListPtr child_list; /* resource_t* */
@@ -51,12 +53,6 @@ typedef struct clone_variant_data_s
 #define get_clone_variant_data(data, rsc)				\
 	CRM_ASSERT(rsc->variant == pe_master);				\
 	data = (clone_variant_data_t *)rsc->variant_opaque;
-
-void master_unpack(resource_t *rsc, pe_working_set_t *data_set)
-{
-	add_hash_param(rsc->parameters, "stateful", XML_BOOLEAN_TRUE);
-	clone_unpack(rsc, data_set);
-}
 
 static void
 child_promoting_constraints(
@@ -189,12 +185,39 @@ master_update_pseudo_status(
 
 }
 
+#define apply_master_location(list)					\
+	slist_iter(							\
+		cons, rsc_to_node_t, list, lpc2,			\
+		cons_node = NULL;					\
+		if(cons->role_filter == RSC_ROLE_MASTER) {		\
+			crm_debug("Applying %s to %s",			\
+				  cons->id, child_rsc->id);		\
+			cons_node = pe_find_node_id(			\
+				cons->node_list_rh, chosen->details->id); \
+		}							\
+		if(cons_node != NULL) {				\
+			int new_priority = merge_weights(		\
+				child_rsc->priority, cons_node->weight); \
+			crm_debug("\t%s: %d->%d", child_rsc->id,	\
+				  child_rsc->priority, new_priority);	\
+			child_rsc->priority = new_priority;		\
+		}							\
+		);
+
+struct masters_s 
+{
+		node_t *node;
+		int num_masters;
+};
+
 void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 {
 	int len = 0;
 	node_t *chosen = NULL;
 	char *attr_name = NULL;
 	const char *attr_value = NULL;
+
+	node_t *cons_node = NULL;
 	
 	action_t *action = NULL;
 	action_t *action_complete = NULL;
@@ -202,25 +225,30 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	gboolean any_demoting = FALSE;
 	resource_t *last_promote_rsc = NULL;
 	resource_t *last_demote_rsc = NULL;
-	const char *master_max_s =
-		get_rsc_param(rsc, XML_RSC_ATTR_MASTER_MAX);
-	const char *master_node_max_s =
-		get_rsc_param(rsc, XML_RSC_ATTR_MASTER_NODEMAX);
+	const char *master_max_s = g_hash_table_lookup(
+		rsc->meta, XML_RSC_ATTR_MASTER_MAX);
+	const char *master_node_max_s = g_hash_table_lookup(
+		rsc->meta, XML_RSC_ATTR_MASTER_NODEMAX);
 
 	int promoted = 0;
-	int max_nodes = 0;
-	int master_max = crm_atoi(master_max_s, "1");
-	int master_node_max = crm_atoi(master_node_max_s, "1");
+	int master_max = crm_parse_int(master_max_s, "1");
+	int master_node_max = crm_parse_int(master_node_max_s, "1");
+
+	struct masters_s *master_hash_obj = NULL;
+	GHashTable *master_hash = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+
 	
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
 	/* how many can we have? */
-	if(master_max >  clone_data->max_nodes * clone_data->clone_max_node) {
-		master_max = clone_data->max_nodes * clone_data->clone_max_node;
+	if(master_max >  clone_data->max_nodes * clone_data->clone_node_max) {
+		master_max = clone_data->max_nodes * clone_data->clone_node_max;
 		crm_info("Limited to %d masters (potential slaves)",master_max);
 	}
-	if(master_max >  max_nodes * master_node_max) {
+	if(master_max >  clone_data->max_nodes * master_node_max) {
 		master_max = clone_data->max_nodes * master_node_max;
 		crm_info("Limited to %d masters (available nodes)", master_max);
 	}
@@ -228,12 +256,18 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	/*
 	 * assign priority
 	 */
-
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
-		CRM_DEV_ASSERT(child_rsc->color != NULL);
+		crm_debug_2("Assigning priority for %s", child_rsc->id);
+		CRM_CHECK(child_rsc->color != NULL,
+			  crm_err("Resource %s is uncolored", child_rsc->id);
+			  continue);
 		chosen = child_rsc->color->details->chosen_node;
+
+		if(child_rsc->role == RSC_ROLE_STARTED) {
+			child_rsc->role = RSC_ROLE_SLAVE;
+		}
 		
 		switch(child_rsc->next_role) {
 			case RSC_ROLE_STARTED:
@@ -245,36 +279,59 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				
 				child_rsc->priority = -1;
 
-				CRM_DEV_ASSERT(chosen != NULL);
+				CRM_CHECK(chosen != NULL, break);
 
 				len = 8 + strlen(child_rsc->id);
 				crm_malloc0(attr_name, len);
 				sprintf(attr_name, "master-%s", child_rsc->id);
 				
+				crm_debug_2("looking for %s on %s", attr_name,
+					  chosen->details->uname);
 				attr_value = g_hash_table_lookup(
 					chosen->details->attrs, attr_name);
 
-				crm_err("%s=%s for %s", attr_name,
-					crm_str(attr_value),
-					chosen->details->uname);
+				if(attr_value == NULL) {
+					crm_free(attr_name);
+					len = 8 + strlen(child_rsc->long_name);
+					crm_malloc0(attr_name, len);
+					sprintf(attr_name, "master-%s", child_rsc->long_name);
+					crm_debug_2("looking for %s on %s", attr_name,
+						    chosen->details->uname);
+					attr_value = g_hash_table_lookup(
+						chosen->details->attrs, attr_name);
+				}
 				
 				if(attr_value != NULL) {
+					crm_debug("%s=%s for %s", attr_name,
+						  crm_str(attr_value),
+						  chosen->details->uname);
+				
 					child_rsc->priority = char2score(
 						attr_value);
 				}
+
 				crm_free(attr_name);
+				apply_master_location(child_rsc->rsc_location);
+				apply_master_location(rsc->rsc_location);
 				break;
+
 			case RSC_ROLE_SLAVE:
-				child_rsc->priority = -1;
-				break;
 			case RSC_ROLE_STOPPED:
-				child_rsc->priority = -2;
+				child_rsc->priority = -INFINITY;
+				break;
+			case RSC_ROLE_MASTER:
+				/* the only reason we should be here is if
+				 * we're re-creating actions after a stonith
+				 */
+				promoted++;
 				break;
 			default:
-				CRM_DEV_ASSERT(FALSE/* unhandled */);
+				CRM_CHECK(FALSE/* unhandled */,
+					  crm_err("Unknown resource role: %d for %s",
+						  child_rsc->next_role, child_rsc->id));
 		}
 		);
-
+	
 	/* sort based on the new "promote" priority */
 	clone_data->child_list = g_list_sort(
 		clone_data->child_list, sort_rsc_priority);
@@ -282,16 +339,48 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	/* mark the first N as masters */
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
+
+		CRM_CHECK(child_rsc->color != NULL,
+			  crm_err("Resource %s is uncolored", child_rsc->id);
+			  continue);
+
+		chosen = child_rsc->color->details->chosen_node;
+
 		switch(child_rsc->next_role) {
 			case RSC_ROLE_STARTED:
-				if(child_rsc->priority > 0 && master_max > lpc){
+
+				master_hash_obj = g_hash_table_lookup(
+					master_hash, chosen->details->id);
+				if(master_hash_obj == NULL) {
+					crm_malloc0(master_hash_obj,
+						    sizeof(struct masters_s));
+					master_hash_obj->node = chosen;
+					g_hash_table_insert(
+						master_hash,
+						crm_strdup(chosen->details->id),
+						master_hash_obj);
+				}
+
+				if(master_hash_obj->num_masters >= master_node_max) {
+					crm_info("Demoting %s (node master max)",
+						 child_rsc->id);
+					child_rsc->next_role = RSC_ROLE_SLAVE;
+
+				} else if(child_rsc->priority < 0) {
+					crm_info("Demoting %s (priority)",
+						 child_rsc->id);
+					child_rsc->next_role = RSC_ROLE_SLAVE;
+					
+				} else if(master_max <= promoted) {
+					crm_info("Demoting %s (masters max)",
+						 child_rsc->id);
+					child_rsc->next_role = RSC_ROLE_SLAVE;
+
+				} else {
 					crm_info("Promoting %s", child_rsc->id);
 					child_rsc->next_role = RSC_ROLE_MASTER;
 					promoted++;
-					
-				} else {
-					crm_info("Demoting %s", child_rsc->id);
-					child_rsc->next_role = RSC_ROLE_SLAVE;
+					master_hash_obj->num_masters++;
 				}
 				break;
 				
@@ -305,17 +394,28 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 			case RSC_ROLE_STOPPED:
 				if(child_rsc->priority < 0 ||master_max <= lpc){
-					pe_warn("Cannot promote %s (stopping)",
-						child_rsc->id);
+					crm_debug("Cannot promote %s (stopping)",
+						  child_rsc->id);
 					lpc--;
 				}
 				break;
+			case RSC_ROLE_MASTER:
+				/* the only reason we should be here is if
+				 * we're re-creating actions after a stonith
+				 */
+				promoted++;
+				break;
 			default:
-				CRM_DEV_ASSERT(FALSE/* unhandled */);
+				CRM_CHECK(FALSE/* unhandled */,
+					  crm_err("Unknown resource role: %d for %s",
+						  child_rsc->next_role, child_rsc->id));
 		}
+		add_hash_param(child_rsc->parameters, crm_meta_name("role"),
+			       role2text(child_rsc->next_role));
 		);
 	crm_info("Promoted %d (of %d) slaves to master", promoted, master_max);
-	
+	g_hash_table_destroy(master_hash);
+
 	/* create actions as normal */
 	clone_create_actions(rsc, data_set);
 
@@ -335,10 +435,11 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action = promote_action(clone_data->self, NULL, !any_promoting);
 	action_complete = custom_action(
 		clone_data->self, promoted_key(rsc),
-		CRMD_ACTION_PROMOTED, NULL, !any_promoting, data_set);
+		CRMD_ACTION_PROMOTED, NULL, !any_promoting, TRUE, data_set);
 
 	action->pseudo = TRUE;
 	action_complete->pseudo = TRUE;
+	action_complete->priority = INFINITY;
 	
 	child_promoting_constraints(clone_data, pe_ordering_optional, 
 				   NULL, last_promote_rsc, data_set);
@@ -350,7 +451,8 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action = demote_action(clone_data->self, NULL, !any_demoting);
 	action_complete = custom_action(
 		clone_data->self, demoted_key(rsc),
-		CRMD_ACTION_DEMOTED, NULL, !any_demoting, data_set);
+		CRMD_ACTION_DEMOTED, NULL, !any_demoting, TRUE, data_set);
+	action_complete->priority = INFINITY;
 
 	action->pseudo = TRUE;
 	action_complete->pseudo = TRUE;

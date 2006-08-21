@@ -1,2 +1,19 @@
- <transition_graph global_timeout="60s" transition_id="0"/>
+ <transition_graph network_delay="60s" transition_id="0">
+   <synapse id="0" priority="1000000">
+     <action_set>
+       <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
+         <attributes crm_feature_set="1.0.6" CRM_meta_op_no_wait="true"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="1" priority="1000000">
+     <action_set>
+       <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="uuid2">
+         <attributes crm_feature_set="1.0.6" CRM_meta_op_no_wait="true"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+ </transition_graph>
 

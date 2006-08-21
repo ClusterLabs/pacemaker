@@ -1,4 +1,4 @@
-/* $Id: crmadmin.c,v 1.57 2005/09/12 19:32:36 andrew Exp $ */
+/* $Id: crmadmin.c,v 1.76 2006/07/06 09:30:27 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -65,8 +65,6 @@ void crmd_ipc_connection_destroy(gpointer user_data);
 gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
 char *pluralSection(const char *a_section);
 crm_data_t *handleCibMod(void);
-int do_find_resource(const char *rsc, crm_data_t *xml_node);
-int do_find_resource_list(int level, crm_data_t *xml_node);
 int do_find_node_list(crm_data_t *xml_node);
 gboolean admin_message_timeout(gpointer data);
 gboolean is_node_online(crm_data_t *node_state);
@@ -105,9 +103,9 @@ char *crm_option = NULL;
 
 int operation_status = 0;
 const char *sys_to = NULL;
-const char *crm_system_name = "crmadmin";
+const char *crm_system_name = NULL;
 
-#define OPTARGS	"V?K:S:HE:DW:d:i:RNqt:B"
+#define OPTARGS	"V?K:S:HE:Dd:i:RNqt:Bv"
 
 int
 main(int argc, char **argv)
@@ -130,18 +128,17 @@ main(int argc, char **argv)
 		/* daemon options */
 		{"kill", 1, 0, 'K'},  /* stop a node */
 		{"die", 0, 0, 0},  /* kill a node, no respawn */
-		{"crm_debug_inc", 1, 0, 'i'},
-		{"crm_debug_dec", 1, 0, 'd'},
+		{"debug_inc", 1, 0, 'i'},
+		{"debug_dec", 1, 0, 'd'},
 		{"status", 1, 0, 'S'},
 		{"standby", 1, 0, 's'},
 		{"active", 1, 0, 'a'},
 		{"health", 0, 0, 'H'},
 		{"election", 0, 0, 'E'},
 		{"dc_lookup", 0, 0, 'D'},
-		{"resources", 0, 0, 'R'},
 		{"nodes", 0, 0, 'N'},
-		{"whereis", 1, 0, 'W'},
 		{"option", 1, 0, 'o'},
+		{"version", 0, 0, 'v'},
 
 		{0, 0, 0, 0}
 	};
@@ -172,12 +169,12 @@ main(int argc, char **argv)
 					printf(" with arg %s", optarg);
 				printf("\n");
 			
-				if (strcmp("reference",
+				if (strcasecmp("reference",
 					   long_options[option_index].name) == 0) {
 					this_msg_reference =
 						crm_strdup(optarg);
 
-				} else if (strcmp("die",
+				} else if (strcasecmp("die",
 						  long_options[option_index].name) == 0) {
 					DO_RESET = TRUE;
 					crmd_operation = CRM_OP_DIE;
@@ -196,7 +193,12 @@ main(int argc, char **argv)
    digit_optind = this_option_optind;
    printf ("option %c\n", c);
 */
-			
+
+			case 'v':
+				fprintf(stdout, "HA Version %s, CRM Version %s (CIB feature set %s)\n",
+					VERSION, CRM_FEATURE_SET, CIB_FEATURE_SET);
+				exit(0);
+				break;
 			case 'V':
 				BE_VERBOSE = TRUE;
 				admin_verbose = XML_BOOLEAN_TRUE;
@@ -218,11 +220,6 @@ main(int argc, char **argv)
 				break;
 			case 'B':
 				BASH_EXPORT = TRUE;
-				break;
-			case 'W':
-				DO_RESOURCE = TRUE;
-				crm_debug_2("Option %c => %s", flag, optarg);
-				rsc_name = crm_strdup(optarg);
 				break;
 			case 'K':
 				DO_RESET = TRUE;
@@ -254,9 +251,6 @@ main(int argc, char **argv)
 			case 'N':
 				DO_NODE_LIST = TRUE;
 				break;
-			case 'R':
-				DO_RESOURCE_LIST = TRUE;
-				break;
 			case 'H':
 				DO_HEALTH = TRUE;
 				break;
@@ -285,19 +279,14 @@ main(int argc, char **argv)
 	hb_cluster = do_init();
 	if (hb_cluster != NULL) {
 		int res = do_work(hb_cluster);
-		if (res >= 0) {
+		if(res == 0) {
+		} else if (res > 0) {
 			/* wait for the reply by creating a mainloop and running it until
 			 * the callbacks are invoked...
 			 */
 			mainloop = g_main_new(FALSE);
 			expected_responses++;
-			if(res == 0) {
-				crm_debug_2("no reply expected,"
-					    " wait for the hello message only");
-				
-			} else {
-				crm_debug_2("Waiting for reply from the local CRM");
-			}
+			crm_debug_2("Waiting for %d replies from the local CRM", expected_responses);
 
 			message_timer_id = Gmain_timeout_add(
 				message_timeout_ms, admin_message_timeout, NULL);
@@ -342,7 +331,7 @@ do_work(ll_cluster_t * hb_cluster)
 			crmd_operation = CRM_OP_PING;
 
 			if (BE_VERBOSE) {
-				expected_responses = -1;/* wait until timeout instead */
+				expected_responses = 1;
 			}
 			
 			crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
@@ -372,35 +361,25 @@ do_work(ll_cluster_t * hb_cluster)
 
 		dest_node = NULL;
 
-	} else if(DO_RESOURCE || DO_RESOURCE_LIST || DO_NODE_LIST) {
+	} else if(DO_NODE_LIST) {
 
 		cib_t *	the_cib = cib_new();
 		crm_data_t *output = NULL;
 		
 		enum cib_errors rc = the_cib->cmds->signon(
-			the_cib, crm_system_name, cib_command);
+			the_cib, crm_system_name, cib_command_synchronous);
 
 		if(rc != cib_ok) {
 			return -1;
-			
-		} else if(DO_RESOURCE) {
-			output = get_cib_copy(the_cib);
-			do_find_resource(rsc_name, output);
-
-		} else if(DO_RESOURCE_LIST) {
-			crm_data_t *rscs = NULL;
-			output = get_cib_copy(the_cib);
-			rscs = get_object_root(XML_CIB_TAG_RESOURCES, output);
-			do_find_resource_list(0, rscs);
-			
-		} else if(DO_NODE_LIST) {
-			output = get_cib_copy(the_cib);
-			do_find_node_list(output);
 		}
-
+			
+		output = get_cib_copy(the_cib);
+		do_find_node_list(output);
+		
 		free_xml(output);
 		the_cib->cmds->signoff(the_cib);
-		exit(rc);		
+		exit(rc);
+		
 	} else if(DO_RESET) {
 		/* tell dest_node to initiate the shutdown proceedure
 		 *
@@ -452,10 +431,11 @@ do_work(ll_cluster_t * hb_cluster)
 	}
 
 	if(sys_to == NULL) {
-		if (dest_node != NULL)
+		if (dest_node != NULL) {
 			sys_to = CRM_SYSTEM_CRMD;
-		else
+		} else {
 			sys_to = CRM_SYSTEM_DC;				
+		}
 	}
 	
 	{
@@ -467,10 +447,10 @@ do_work(ll_cluster_t * hb_cluster)
 			ha_msg_mod(cmd, XML_ATTR_REFERENCE, this_msg_reference);
 		}
 		send_ipc_message(crmd_channel, cmd);
+		crm_msg_del(cmd);
 	}
 	
 	return ret;
-
 }
 
 void
@@ -497,7 +477,7 @@ do_init(void)
 		cl_log_set_facility(facility);
 	}
 
-	crm_malloc0(admin_uuid, sizeof(char) * 11);
+	crm_malloc0(admin_uuid, 11);
 	if(admin_uuid != NULL) {
 		snprintf(admin_uuid, 10, "%d", getpid());
 		admin_uuid[10] = '\0';
@@ -564,12 +544,12 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		} else if (validate_crm_message(
 				   new_input->msg, crm_system_name, admin_uuid,
 				   XML_ATTR_RESPONSE) == FALSE) {
-			crm_info("Message was not a CRM response. Discarding.");
+			crm_debug_2("Message was not a CRM response. Discarding.");
 			continue;
 		}
 
 		result = cl_get_string(new_input->msg, XML_ATTR_RESULT);
-		if(result == NULL || strcmp(result, "ok") == 0) {
+		if(result == NULL || strcasecmp(result, "ok") == 0) {
 			result = "pass";
 		} else {
 			result = "fail";
@@ -604,14 +584,15 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			/* 31 = "test-_.xml" + an_int_as_string + '\0' */
 			filename_len = 31 + strlen(this_msg_reference);
 
-			crm_malloc0(filename, sizeof(char) * filename_len);
+			crm_malloc0(filename, filename_len);
 			if(filename != NULL) {
 				sprintf(filename, "%s-%s_%d.xml",
 					result, this_msg_reference,
 					received_responses);
 				
 				filename[filename_len - 1] = '\0';
-				if (0 > write_xml_file(new_input->xml, filename)) {
+				if (0 > write_xml_file(
+					    new_input->xml, filename, FALSE)) {
 					crm_crit("Could not save response to"
 						 " %s", filename);
 				}
@@ -651,80 +632,6 @@ admin_message_timeout(gpointer data)
 }
 
 
-int
-do_find_resource(const char *rsc, crm_data_t *xml_node)
-{
-	int found = 0;
-	crm_data_t *nodestates = get_object_root(XML_CIB_TAG_STATUS, xml_node);
-	const char *path2[] = {
-		XML_CIB_TAG_LRM,
-		XML_LRM_TAG_RESOURCES
-	};
-
-	xml_child_iter(
-		nodestates, a_node, XML_CIB_TAG_STATE,
-		crm_data_t *rscstates = NULL;
-
-		if(is_node_online(a_node) == FALSE) {
-			crm_debug_3("Skipping offline node: %s",
-				crm_element_value(a_node, XML_ATTR_ID));
-			continue;
-		}
-		
-		rscstates = find_xml_node_nested(a_node, path2, DIMOF(path2));
-		xml_child_iter(
-			rscstates, rsc_state, XML_LRM_TAG_RESOURCE,
-			const char *id = crm_element_value(
-				rsc_state,XML_ATTR_ID);
-			const char *target = crm_element_value(
-				a_node, XML_ATTR_UNAME);
-			const char *last_op = crm_element_value(
-				rsc_state,XML_LRM_ATTR_LASTOP);
-			const char *op_code = crm_element_value(
-				rsc_state,XML_LRM_ATTR_OPSTATUS);
-			
-			crm_debug_3("checking %s:%s for %s", target, id, rsc);
-
-			if(safe_str_neq(rsc, id)){
-				crm_debug_4("no match");
-				continue;
-			}
-			
-			if(safe_str_eq("stop", last_op)) {
-				crm_debug_3("resource %s is stopped on: %s",
-					  rsc, target);
-				
-			} else if(safe_str_eq(op_code, "-1")) {
-				crm_debug_3("resource %s is pending on: %s",
-					  rsc, target);				
-
-			} else if(safe_str_neq(op_code, "0")) {
-				crm_debug_3("resource %s is failed on: %s",
-					  rsc, target);				
-
-			} else {
-				crm_debug_3("resource %s is running on: %s",
-					  rsc, target);				
-				printf("resource %s is running on: %s\n",
-				       rsc, target);
-				if(BE_SILENT) {
-					fprintf(stderr, "%s ", target);
-				}
-				found++;
-			}
-			);
-		if(BE_SILENT) {
-			fprintf(stderr, "\n");
-		}
-		);
-	
-	if(found == 0) {
-		printf("resource %s is NOT running\n", rsc);
-	}
-					
-	return found;
-}
-
 gboolean
 is_node_online(crm_data_t *node_state) 
 {
@@ -750,55 +657,13 @@ is_node_online(crm_data_t *node_state)
 	return FALSE;
 }
 
-
-int
-do_find_resource_list(int level, crm_data_t *resource_list)
-{
-	int lpc = 0;
-	int found = 0;
-	const char *name = NULL;
-	const char *type = NULL;
-	const char *class = NULL;
-
-	xml_child_iter(
-		resource_list, rsc, NULL,
-		name = crm_element_name(rsc);
-		if(safe_str_eq(name, XML_CIB_TAG_RESOURCE)) {
-			class = crm_element_value(rsc, "class");
-			type = crm_element_value(rsc, XML_ATTR_TYPE);
-			for(lpc = 0; lpc < level; lpc++) {
-				printf("\t");
-			}
-			found++;
-			printf("%s: %s (%s::%s)\n",
-			       name, ID(rsc), crm_str(class), crm_str(type));
-		} else if(safe_str_eq(name, XML_CIB_TAG_GROUP)
-			  || safe_str_eq(name, XML_CIB_TAG_INCARNATION)) {
-			for(lpc = 0; lpc < level; lpc++) {
-				printf("\t");
-			}
-			printf("%s: %s (complex)\n", name, ID(rsc));
-			do_find_resource_list(level+1, rsc);
-			found++;
-		}
-		);
-	if(found == 0) {
-		for(lpc = 0; lpc < level; lpc++) {
-			printf("\t");
-		}
-		printf("NO resources configured\n");
-	}
-					
-	return found;
-}
-
 int
 do_find_node_list(crm_data_t *xml_node)
 {
 	int found = 0;
 	crm_data_t *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
 
-	xml_child_iter(
+	xml_child_iter_filter(
 		nodes, node, XML_CIB_TAG_NODE,	
 		if(BASH_EXPORT) {
 			printf("export %s=%s\n",
@@ -827,10 +692,11 @@ usage(const char *cmd, int exit_status)
 
 	stream = exit_status ? stderr : stdout;
 
-	fprintf(stream, "usage: %s [-?vs] [command] [command args]\n", cmd);
+	fprintf(stream, "usage: %s [-?Vs] [command] [command args]\n", cmd);
 
 	fprintf(stream, "Options\n");
 	fprintf(stream, "\t--%s (-%c)\t: this help message\n", "help", '?');
+	fprintf(stream, "\t--%s (-%c)\t: version details\n", "version", 'v');
 	fprintf(stream, "\t--%s (-%c)\t: "
 		"turn on debug info. additional instances increase verbosity\n",
 		"verbose", 'V');
@@ -846,22 +712,16 @@ usage(const char *cmd, int exit_status)
 		"shutdown the CRMd on <node>\n", "kill", 'K');
 	fprintf(stream, "\t--%s (-%c) <node>\t: "
 		"request the status of <node>\n", "status", 'S');
+#if 0
 	fprintf(stream, "\t--%s (-%c)\t\t: "
 		"request the status of all nodes\n", "health", 'H');
+#endif
 	fprintf(stream, "\t--%s (-%c) <node>\t: "
 		"initiate an election from <node>\n", "election", 'E');
 	fprintf(stream, "\t--%s (-%c)\t: "
 		"request the uname of the DC\n", "dc_lookup", 'D');
 	fprintf(stream, "\t--%s (-%c)\t\t: "
 		"request the uname of all member nodes\n", "nodes", 'N');
-	fprintf(stream, "\t--%s (-%c)\t: "
-		"request the names of all resources\n", "resources", 'R');
-	fprintf(stream, "\t--%s (-%c) <rsc>\t: "
-		"request the location of <rsc>\n", "whereis", 'W');
-	fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
-		"Tell the node to enter \"standby\" mode\n", "standby", 's');
-	fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
-		"Tell the node to exit \"standby\" mode\n", "active", 'a');
 /*	fprintf(stream, "\t--%s (-%c)\t\n", "disconnect", 'D'); */
 	fflush(stream);
 

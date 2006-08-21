@@ -68,13 +68,15 @@ int cib_client_set_master(cib_t *cib, int call_options);
 
 int cib_client_bump_epoch(cib_t *cib, int call_options);
 int cib_client_create(cib_t *cib, const char *section, crm_data_t *data,
-	      crm_data_t **output_data, int call_options);
+		      crm_data_t **output_data, int call_options);
 int cib_client_modify(cib_t *cib, const char *section, crm_data_t *data,
-	      crm_data_t **output_data, int call_options);
+		      crm_data_t **output_data, int call_options);
+int cib_client_update(cib_t *cib, const char *section, crm_data_t *data,
+		      crm_data_t **output_data, int call_options);
 int cib_client_replace(cib_t *cib, const char *section, crm_data_t *data,
-	       crm_data_t **output_data, int call_options);
+		       crm_data_t **output_data, int call_options);
 int cib_client_delete(cib_t *cib, const char *section, crm_data_t *data,
-	      crm_data_t **output_data, int call_options);
+		      crm_data_t **output_data, int call_options);
 int cib_client_delete_absolute(
 	cib_t *cib, const char *section, crm_data_t *data,
 	crm_data_t **output_data, int call_options);
@@ -93,6 +95,7 @@ int cib_client_del_notify_callback(
 gint ciblib_GCompareFunc(gconstpointer a, gconstpointer b);
 
 extern cib_t *cib_native_new(cib_t *cib);
+extern void cib_native_delete(cib_t *cib);
 
 static enum cib_variant configured_variant = cib_native;
 
@@ -130,7 +133,6 @@ cib_new(void)
 
 	/* the rest will get filled in by the variant constructor */
 	crm_malloc0(new_cib->cmds, sizeof(cib_api_operations_t));
-	memset(new_cib->cmds, 0, sizeof(cib_api_operations_t));
 
 	new_cib->cmds->set_op_callback     = cib_client_set_op_callback;
 	new_cib->cmds->add_notify_callback = cib_client_add_notify_callback;
@@ -153,6 +155,7 @@ cib_new(void)
 
 	new_cib->cmds->create  = cib_client_create;
 	new_cib->cmds->modify  = cib_client_modify;
+	new_cib->cmds->update  = cib_client_update;
 	new_cib->cmds->replace = cib_client_replace;
 	new_cib->cmds->delete  = cib_client_delete;
 	new_cib->cmds->erase   = cib_client_erase;
@@ -167,6 +170,16 @@ cib_new(void)
 	
 	return new_cib;
 }
+
+void
+cib_delete(cib_t *cib)
+{
+	cib_native_delete(cib);
+	g_hash_table_destroy(cib_op_callback_table);
+	crm_free(cib->cmds);
+	crm_free(cib);
+}
+
 
 int
 cib_client_set_op_callback(
@@ -347,6 +360,21 @@ int cib_client_create(cib_t *cib, const char *section, crm_data_t *data,
 
 int cib_client_modify(cib_t *cib, const char *section, crm_data_t *data,
 	   crm_data_t **output_data, int call_options) 
+{
+	if(cib == NULL) {
+		return cib_missing;
+	} else if(cib->state == cib_disconnected) {
+		return cib_not_connected;
+	} else if(cib->cmds->variant_op == NULL) {
+		return cib_variant;
+	} 
+
+	return cib->cmds->variant_op(cib, CIB_OP_MODIFY, NULL, section,
+				     data, output_data, call_options);
+}
+
+int cib_client_update(cib_t *cib, const char *section, crm_data_t *data,
+		      crm_data_t **output_data, int call_options) 
 {
 	if(cib == NULL) {
 		return cib_missing;
@@ -565,6 +593,9 @@ remove_cib_op_callback(int call_id, gboolean all_callbacks)
 int
 num_cib_op_callbacks(void)
 {
+	if(cib_op_callback_table == NULL) {
+		return 0;
+	}
 	return g_hash_table_size(cib_op_callback_table);
 }
 
@@ -577,43 +608,43 @@ cib_pluralSection(const char *a_section)
 	if (a_section == NULL) {
 		a_section_parent = crm_strdup("all");
 
-	} else if(strcmp(a_section, XML_TAG_CIB) == 0) {
+	} else if(strcasecmp(a_section, XML_TAG_CIB) == 0) {
 		a_section_parent = crm_strdup("all");
 
-	} else if(strcmp(a_section, XML_CIB_TAG_NODE) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_NODE) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_NODES);
 
-	} else if(strcmp(a_section, XML_CIB_TAG_STATE) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_STATE) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_STATUS);
 
-	} else if(strcmp(a_section, XML_CIB_TAG_CONSTRAINT) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_CONSTRAINT) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
 		
-	} else if(strcmp(a_section, XML_CONS_TAG_RSC_LOCATION) == 0) {
+	} else if(strcasecmp(a_section, XML_CONS_TAG_RSC_LOCATION) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
 		
-	} else if(strcmp(a_section, XML_CONS_TAG_RSC_DEPEND) == 0) {
+	} else if(strcasecmp(a_section, XML_CONS_TAG_RSC_DEPEND) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
 		
-	} else if(strcmp(a_section, XML_CONS_TAG_RSC_ORDER) == 0) {
+	} else if(strcasecmp(a_section, XML_CONS_TAG_RSC_ORDER) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
 		
-	} else if(strcmp(a_section, "resource") == 0) {
+	} else if(strcasecmp(a_section, "resource") == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
 
-	} else if(strcmp(a_section, XML_CIB_TAG_RESOURCE) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_RESOURCE) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
 
-	} else if(strcmp(a_section, XML_CIB_TAG_GROUP) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_GROUP) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
 
-	} else if(strcmp(a_section, XML_CIB_TAG_INCARNATION) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_INCARNATION) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
 		
-	} else if(strcmp(a_section, XML_CIB_TAG_NVPAIR) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_NVPAIR) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CRMCONFIG);
 
-	} else if(strcmp(a_section, XML_TAG_ATTR_SETS) == 0) {
+	} else if(strcasecmp(a_section, XML_TAG_ATTR_SETS) == 0) {
 		a_section_parent = crm_strdup(XML_CIB_TAG_CRMCONFIG);
 
 	} else {
@@ -631,8 +662,20 @@ cib_error2string(enum cib_errors return_code)
 {
 	const char *error_msg = NULL;
 	switch(return_code) {
+		case cib_bad_permissions:
+			error_msg = "bad permissions for the on-disk configuration. shutdown heartbeat and repair.";
+			break;
+		case cib_bad_digest:
+			error_msg = "the on-disk configuration was manually altered. shutdown heartbeat and repair.";
+			break;
+		case cib_bad_config:
+			error_msg = "the on-disk configuration is not valid";
+			break;
 		case cib_msg_field_add:
 			error_msg = "failed adding field to cib message";
+			break;			
+		case cib_id_check:
+			error_msg = "missing id or id-collision detected";
 			break;			
 		case cib_operation:
 			error_msg = "invalid operation";
@@ -701,7 +744,7 @@ cib_error2string(enum cib_errors return_code)
 			error_msg = "The object already exists";
 			break;
 		case cib_NOTEXISTS:
-			error_msg = "The object does not exist";
+			error_msg = "The object/attribute does not exist";
 			break;
 		case CIBRES_CORRUPT:
 			error_msg = "The CIB is corrupt";
@@ -766,8 +809,14 @@ cib_error2string(enum cib_errors return_code)
 		case cib_diff_resync:
 			error_msg = "Application of an update diff failed, requesting a full refresh";
 			break;
+		case cib_bad_section:
+			error_msg = "Invalid CIB section specified";
+			break;
 		case cib_old_data:
 			error_msg = "Update was older than existing configuration";
+			break;
+		case cib_dtd_validation:
+			error_msg = "Update does conform to the DTD in "HA_LIBDIR"/heartbeat/crm.dtd";
 			break;
 	}
 			
@@ -816,22 +865,22 @@ cib_op2string(enum cib_update_op operation)
 int
 cib_section2enum(const char *a_section) 
 {
-	if(a_section == NULL || strcmp(a_section, "all") == 0) {
+	if(a_section == NULL || strcasecmp(a_section, "all") == 0) {
 		return cib_section_all;
 
-	} else if(strcmp(a_section, XML_CIB_TAG_NODES) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_NODES) == 0) {
 		return cib_section_nodes;
 
-	} else if(strcmp(a_section, XML_CIB_TAG_STATUS) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_STATUS) == 0) {
 		return cib_section_status;
 
-	} else if(strcmp(a_section, XML_CIB_TAG_CONSTRAINTS) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_CONSTRAINTS) == 0) {
 		return cib_section_constraints;
 		
-	} else if(strcmp(a_section, XML_CIB_TAG_RESOURCES) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_RESOURCES) == 0) {
 		return cib_section_resources;
 
-	} else if(strcmp(a_section, XML_CIB_TAG_CRMCONFIG) == 0) {
+	} else if(strcasecmp(a_section, XML_CIB_TAG_CRMCONFIG) == 0) {
 		return cib_section_crmconfig;
 
 	}
@@ -864,8 +913,8 @@ cib_compare_generation(crm_data_t *left, crm_data_t *right)
 			elem_r = crm_element_value(right, attributes[lpc]);
 		}
 	
-		if(elem_l != NULL) { int_elem_l = atoi(elem_l); }
-		if(elem_r != NULL) { int_elem_r = atoi(elem_r); }
+		if(elem_l != NULL) { int_elem_l = crm_parse_int(elem_l, NULL); }
+		if(elem_r != NULL) { int_elem_r = crm_parse_int(elem_r, NULL); }
 
 		if(int_elem_l < int_elem_r) {
 			crm_debug_2("%s (%s < %s)", attributes[lpc],
@@ -882,12 +931,13 @@ cib_compare_generation(crm_data_t *left, crm_data_t *right)
 	return 0;
 }
 
-
 crm_data_t*
 get_cib_copy(cib_t *cib)
 {
 	crm_data_t *xml_cib;
+#if CRM_DEPRECATED_SINCE_2_0_4
 	crm_data_t *xml_cib_copy;
+#endif
 	int options = cib_scope_local|cib_sync_call;
 	if(cib->cmds->query(cib, NULL, &xml_cib, options) != cib_ok) {
 		crm_err("Couldnt retrieve the CIB");
@@ -897,11 +947,19 @@ get_cib_copy(cib_t *cib)
 		return NULL;
 	}
 
-	xml_cib_copy = copy_xml(
-		find_xml_node(xml_cib, XML_TAG_CIB, TRUE));
+	if(safe_str_eq(crm_element_name(xml_cib), XML_TAG_CIB)) {
+		return xml_cib;
+		
+#if CRM_DEPRECATED_SINCE_2_0_4
+	} else {
+		xml_cib_copy = copy_xml(
+			find_xml_node(xml_cib, XML_TAG_CIB, TRUE));
+		free_xml(xml_cib);
+		return xml_cib_copy;
+#endif
+	}
 	free_xml(xml_cib);
-	
-	return xml_cib_copy;
+	return NULL;
 }
 
 crm_data_t*
@@ -937,20 +995,20 @@ apply_cib_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 	int diff_del_epoch  = 0;
 	int diff_del_admin_epoch = 0;
 
-	CRM_DEV_ASSERT(diff != NULL);
-	CRM_DEV_ASSERT(old != NULL);
+	CRM_CHECK(diff != NULL, return FALSE);
+	CRM_CHECK(old != NULL, return FALSE);
 	
 	value = crm_element_value(old, XML_ATTR_GENERATION_ADMIN);
-	this_admin_epoch = atoi(value?value:"0");
+	this_admin_epoch = crm_parse_int(value, "0");
 	crm_debug_3("%s=%d (%s)", XML_ATTR_GENERATION_ADMIN,
 		  this_admin_epoch, value);
 	
 	value = crm_element_value(old, XML_ATTR_GENERATION);
-	this_epoch = atoi(value?value:"0");
+	this_epoch = crm_parse_int(value, "0");
 	crm_debug_3("%s=%d (%s)", XML_ATTR_GENERATION, this_epoch, value);
 	
 	value = crm_element_value(old, XML_ATTR_NUMUPDATES);
-	this_updates = atoi(value?value:"0");
+	this_updates = crm_parse_int(value, "0");
 	crm_debug_3("%s=%d (%s)", XML_ATTR_NUMUPDATES, this_updates, value);
 	
 	cib_diff_version_details(
@@ -986,7 +1044,6 @@ apply_cib_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 			cl_msg_remove(tmp, XML_ATTR_GENERATION_ADMIN);
 			cl_msg_remove(tmp, XML_ATTR_GENERATION);
 			cl_msg_remove(tmp, XML_ATTR_NUMUPDATES);
-			CRM_DEV_ASSERT(tmp->nfields == len - 3);
 		}
 		
 		tmp = find_xml_node(diff_copy, "diff-added", TRUE);
@@ -995,7 +1052,6 @@ apply_cib_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 			cl_msg_remove(tmp, XML_ATTR_GENERATION_ADMIN);
 			cl_msg_remove(tmp, XML_ATTR_GENERATION);
 			cl_msg_remove(tmp, XML_ATTR_NUMUPDATES);
-			CRM_DEV_ASSERT(tmp->nfields == len - 3);
 		}
 		
 		result = apply_xml_diff(old, diff_copy, new);
@@ -1118,13 +1174,13 @@ cib_version_details(
 		
 	} else {
 		value = crm_element_value(cib, XML_ATTR_GENERATION_ADMIN);
-		*admin_epoch = atoi(value?value:"-1");
+		*admin_epoch = crm_parse_int(value, "-1");
 
 		value  = crm_element_value(cib, XML_ATTR_GENERATION);
-		*epoch = atoi(value?value:"-1");
+		*epoch = crm_parse_int(value, "-1");
 
 		value = crm_element_value(cib, XML_ATTR_NUMUPDATES);
-		*updates = atoi(value?value:"-1");
+		*updates = crm_parse_int(value, "-1");
 	}
 	return TRUE;	
 }
@@ -1163,12 +1219,12 @@ get_object_root(const char *object_type, crm_data_t *the_root)
 
 	if(object_type == NULL
 	   || strlen(object_type) == 0
-	   || safe_str_eq("all", object_type)
+	   || safe_str_eq(XML_CIB_TAG_SECTION_ALL, object_type)
 	   || safe_str_eq(XML_TAG_CIB, object_type)) {
 		/* get the whole cib */
 		return the_root;
 
-	} else if(strcmp(object_type, XML_CIB_TAG_STATUS) == 0) {
+	} else if(strcasecmp(object_type, XML_CIB_TAG_STATUS) == 0) {
 		/* these live in a different place */
 		tmp_node = find_xml_node(the_root, XML_CIB_TAG_STATUS, FALSE);
 
@@ -1210,81 +1266,59 @@ get_crm_option(crm_data_t *cib, const char *name, gboolean do_warn)
 	if(safe_str_eq(value, "")) {
 		value = NULL;
 	}
-	return value;
 	
+	return value;
 }
-
 
 crm_data_t*
 create_cib_fragment_adv(
-	crm_data_t *update, const char *section, const char *source)
+	crm_data_t *update, const char *update_section, const char *source)
 {
 	crm_data_t *cib = NULL;
 	gboolean whole_cib = FALSE;
-	crm_data_t *fragment = create_xml_node(NULL, XML_TAG_FRAGMENT);
 	crm_data_t *object_root  = NULL;
-	char *auto_section = NULL;
 	const char *update_name = NULL;
-	if(update != NULL) {
-		update_name = crm_element_name(update);
-	}
-	auto_section = cib_pluralSection(update_name);
+
+/* 	crm_debug("Creating a blank fragment: %s", update_section); */
 	
-	if(update == NULL && section == NULL) {
+	if(update == NULL && update_section == NULL) {
 		crm_debug_3("Creating a blank fragment");
 		update = createEmptyCib();
-		section = auto_section;
+		crm_xml_add(cib, XML_ATTR_ORIGIN, source);
+		return update;
 
 	} else if(update == NULL) {
 		crm_err("No update to create a fragment for");
-		cib = createEmptyCib();
 		return NULL;
 		
-	} else if(section == NULL) {
-		section = auto_section;
-
-	} else if(strcmp(auto_section, section) != 0) {
-		crm_err("Values for update (tag=%s) and section (%s)"
-			" were not consistent", crm_element_name(update), section);
-		crm_free(auto_section);
-		return NULL;
-		
+	} else if(update_section == NULL) {
+		update_section = cib_pluralSection(update_name);
 	}
 
-	if(safe_str_eq(section, "all")
-	   && safe_str_eq(crm_element_name(update), XML_TAG_CIB)) {
+	if(safe_str_eq(crm_element_name(update), XML_TAG_CIB)) {
 		whole_cib = TRUE;
 	}
 	
-	crm_xml_add(fragment, XML_ATTR_SECTION, section);
-
 	if(whole_cib == FALSE) {
 		cib = createEmptyCib();
-		crm_xml_add(cib, "debug_source", source);
-		object_root = get_object_root(section, cib);
+		crm_xml_add(cib, XML_ATTR_ORIGIN, source);
+		object_root = get_object_root(update_section, cib);
 		add_node_copy(object_root, update);
-		add_node_copy(fragment, cib);
-		free_xml(cib);
-		cib = find_xml_node(fragment, XML_TAG_CIB, TRUE);
 
 	} else {
-		add_node_copy(fragment, update);
-		cib = find_xml_node(fragment, XML_TAG_CIB, TRUE);
-		crm_xml_add(cib, "debug_source", source);
+		cib = copy_xml(update);
+		crm_xml_add(cib, XML_ATTR_ORIGIN, source);
 	}
 	
-	crm_free(auto_section);
-
 	crm_debug_3("Verifying created fragment");
 	if(verifyCibXml(cib) == FALSE) {
 		crm_err("Fragment creation failed");
-		crm_log_xml_err(update, "[src]");
-		crm_log_xml_err(fragment, "[created]");
-		free_xml(fragment);
-		fragment = NULL;
+		crm_log_xml_err(cib, "[src]");		
+		free_xml(cib);
+		cib = NULL;
 	}
 	
-	return fragment;
+	return cib;
 }
 
 /*
@@ -1301,13 +1335,8 @@ createEmptyCib(void)
 	config = create_xml_node(cib_root, XML_CIB_TAG_CONFIGURATION);
 	status = create_xml_node(cib_root, XML_CIB_TAG_STATUS);
 
-	set_node_tstamp(cib_root);
-	set_node_tstamp(config);
-	set_node_tstamp(status);
-	
 /* 	crm_xml_add(cib_root, "version", "1"); */
 	crm_xml_add(cib_root, "generated", XML_BOOLEAN_TRUE);
-	crm_xml_add(cib_root, XML_ATTR_CIB_REVISION, cib_feature_revision_s);
 
 	create_xml_node(config, XML_CIB_TAG_CRMCONFIG);
 	create_xml_node(config, XML_CIB_TAG_NODES);
@@ -1328,28 +1357,32 @@ createEmptyCib(void)
 gboolean
 verifyCibXml(crm_data_t *cib)
 {
+	int lpc = 0;
 	gboolean is_valid = TRUE;
 	crm_data_t *tmp_node = NULL;
+
+	const char *sections[] = {
+		XML_CIB_TAG_NODES,
+		XML_CIB_TAG_RESOURCES,
+		XML_CIB_TAG_CONSTRAINTS,
+		XML_CIB_TAG_STATUS,
+		XML_CIB_TAG_CRMCONFIG
+	};
 	
 	if (cib == NULL) {
 		crm_warn("CIB was empty.");
 		return FALSE;
 	}
-	
-	tmp_node = get_object_root(XML_CIB_TAG_NODES, cib);
-	if (tmp_node == NULL) { is_valid = FALSE; }
 
-	tmp_node = get_object_root(XML_CIB_TAG_RESOURCES, cib);
-	if (tmp_node == NULL) { is_valid = FALSE; }
-
-	tmp_node = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
-	if (tmp_node == NULL) { is_valid = FALSE; }
-
-	tmp_node = get_object_root(XML_CIB_TAG_STATUS, cib);
-	if (tmp_node == NULL) { is_valid = FALSE; }
-
-	tmp_node = get_object_root(XML_CIB_TAG_CRMCONFIG, cib);
-	if (tmp_node == NULL) { is_valid = FALSE; }
+	/* basic tests... are the standard section all there */
+	for(lpc = 0; lpc < DIMOF(sections); lpc++) {
+		tmp_node = get_object_root(sections[lpc], cib);
+		if (tmp_node == NULL) {
+			crm_warn("Section %s is not present in the CIB",
+				 sections[lpc]);
+			is_valid = FALSE;
+		}
+	}
 
 	/* more integrity tests */
 

@@ -20,6 +20,10 @@ MAINTAINERCLEANFILES	= Makefile.in
 INCLUDES	= -I$(top_srcdir)/include -I$(top_builddir)/include \
 		-I$(top_srcdir)/linux-ha -I$(top_builddir)/linux-ha
 
+QUIET_LIBTOOL_OPTS	= @QUIET_LIBTOOL_OPTS@
+LIBTOOL		= @LIBTOOL@ @QUIET_LIBTOOL_OPTS@
+
+
 noinst_LTLIBRARIES	= libreplace.la
 libreplace_la_SOURCES	=
 libreplace_la_LIBADD	= @LTLIBOBJS@

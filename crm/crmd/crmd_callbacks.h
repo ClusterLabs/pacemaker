@@ -30,10 +30,10 @@ extern void crmd_ccm_msg_callback(
  */
 
 extern gboolean crmd_ha_msg_dispatch(
-	IPC_Channel *channel, gpointer user_data);
+	ll_cluster_t *cluster_conn, gpointer user_data);
 
 extern void crmd_ha_msg_callback(
-	const HA_Message * msg, void* private_data);
+	HA_Message * msg, void* private_data);
 
 extern gboolean crmd_ipc_msg_callback(
 	IPC_Channel *client, gpointer user_data);

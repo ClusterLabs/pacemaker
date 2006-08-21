@@ -1,4 +1,4 @@
-/* $Id: crm.h,v 1.76 2005/09/02 12:31:44 andrew Exp $ */
+/* $Id: crm.h,v 1.98 2006/06/16 10:07:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,11 +39,22 @@
 #  define CRM_DEV_BUILD 0
 #endif
 
-#define CRM_DEPRECATED_SINCE_2_0_1 1
-#define CRM_DEPRECATED_SINCE_2_0_2 1
-#define CRM_DEPRECATED_SINCE_2_0_3 1
+#define CRM_DEPRECATED_SINCE_2_0_1 0
+#define CRM_DEPRECATED_SINCE_2_0_2 0
+#define CRM_DEPRECATED_SINCE_2_0_3 0
 #define CRM_DEPRECATED_SINCE_2_0_4 1
+#define CRM_DEPRECATED_SINCE_2_0_5 1
+#define CRM_DEPRECATED_SINCE_2_0_6 1
+#define CRM_DEPRECATED_SINCE_2_0_7 1
+#define CRM_DEPRECATED_SINCE_2_0_8 1
 #define CRM_DEPRECATED_SINCE_2_1_0 1
+
+#define CRM_META			"CRM_meta"
+#if 1
+#  define crm_meta_name(field) CRM_META"_"field
+#else
+#  define crm_meta_name(field) field
+#endif
 
 #define ipc_call_diff_max_ms 5000
 #define action_diff_warn_ms  5000
@@ -54,24 +65,21 @@
 #include <crm/common/util.h>
 
 #define CRM_ASSERT(expr) if((expr) == FALSE) {				\
-		do_crm_log(LOG_CRIT, __FILE__, __PRETTY_FUNCTION__,	\
-			   "Triggered dev assert at %s:%d : %s",	\
-			   __FILE__, __LINE__, #expr);			\
-		abort();						\
-	}
+	crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, FALSE); \
+}
 
 extern gboolean crm_assert_failed;
 
-#define CRM_DEV_ASSERT(expr) crm_assert_failed = FALSE;			\
+#define CRM_DEV_ASSERT(expr)						\
+	crm_assert_failed = FALSE;					\
 	if((expr) == FALSE) {						\
 		crm_assert_failed = TRUE;				\
-		do_crm_log(CRM_DEV_BUILD?LOG_CRIT:LOG_ERR,		\
-			   __FILE__, __PRETTY_FUNCTION__,		\
-			   "Triggered dev assert at %s:%d : %s",	\
-			   __FILE__, __LINE__, #expr);			\
-		if(CRM_DEV_BUILD) {					\
-			abort();					\
-		}							\
+		crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, TRUE); \
+	}
+
+#define CRM_CHECK(expr, failure_action) if((expr) == FALSE) {		\
+		crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, TRUE); \
+		failure_action;						\
 	}
 
 /* Clean these up at some point, some probably should be runtime options */
@@ -84,7 +92,7 @@ extern gboolean crm_assert_failed;
 #define CIB_FILENAME	WORKING_DIR"/cib.xml"
 #define CIB_BACKUP	WORKING_DIR"/cib_backup.xml"
 
-#define CRM_VERSION	"1.0"
+#define CRM_FEATURE_SET	"1.0.6"
 
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1
@@ -118,6 +126,7 @@ extern gboolean crm_assert_failed;
 #define CRM_OP_RETRIVE_CIB	"retrieve_cib"
 #define CRM_OP_PING		"ping"
 #define CRM_OP_VOTE		"vote"
+#define CRM_OP_NOVOTE		"no-vote"
 #define CRM_OP_HELLO		"hello"
 #define CRM_OP_HBEAT		"dc_beat"
 #define CRM_OP_PECALC		"pe_calc"
@@ -138,6 +147,11 @@ extern gboolean crm_assert_failed;
 #define CRM_OP_DEBUG_UP		"debug_inc"
 #define CRM_OP_DEBUG_DOWN	"debug_dec"
 #define CRM_OP_INVOKE_LRM	"lrm_invoke"
+#define CRM_OP_LRM_REFRESH	"lrm_refresh"
+#define CRM_OP_LRM_QUERY	"lrm_query"
+#define CRM_OP_LRM_DELETE	"lrm_delete"
+#define CRM_OP_PROBED		"probe_complete"
+#define CRM_OP_REPROBE		"probe_again"
 
 #define CRMD_STATE_ACTIVE	"member"
 #define CRMD_STATE_INACTIVE	"down"
@@ -145,6 +159,9 @@ extern gboolean crm_assert_failed;
 #define CRMD_JOINSTATE_DOWN	CRMD_STATE_INACTIVE
 #define CRMD_JOINSTATE_PENDING	"pending"
 #define CRMD_JOINSTATE_MEMBER	CRMD_STATE_ACTIVE
+
+#define CRMD_ACTION_DELETE		"delete"
+#define CRMD_ACTION_CANCEL		"cancel"
 
 #define CRMD_ACTION_START		"start"
 #define CRMD_ACTION_STARTED		"running"
@@ -156,9 +173,15 @@ extern gboolean crm_assert_failed;
 #define CRMD_ACTION_STOP_FAIL		"stop_failed"
 #define CRMD_ACTION_STOP_PENDING	"stopping"
 
+#define CRMD_ACTION_PROMOTE		"promote"
+#define CRMD_ACTION_PROMOTED		"promoted"
+#define CRMD_ACTION_DEMOTE		"demote"
+#define CRMD_ACTION_DEMOTED		"demoted"
+
 #define CRMD_ACTION_NOTIFY		"notify"
 #define CRMD_ACTION_NOTIFIED		"notified"
 
+#define CRMD_ACTION_STATUS		"monitor"
 #define CRMD_ACTION_MON			"monitor"
 #define CRMD_ACTION_MON_PENDING		CRMD_ACTION_STARTED
 #define CRMD_ACTION_MON_OK		CRMD_ACTION_STARTED
@@ -169,11 +192,6 @@ extern gboolean crm_assert_failed;
 #define CRMD_ACTION_GENERIC_FAIL	"pending_failed"
 
 typedef GList* GListPtr;
-
-#define crm_atoi(text, default) atoi(text?text:default)
-
-extern gboolean safe_str_eq(const char *a, const char *b);
-extern gboolean safe_str_neq(const char *a, const char *b);
 
 #define slist_iter(child, child_type, parent, counter, a)		\
 	{								\
@@ -195,28 +213,27 @@ extern gboolean safe_str_neq(const char *a, const char *b);
 
 #define LOG_MSG  LOG_DEBUG_3
 
-#define crm_crit(w...)    do_crm_log(LOG_CRIT,    __FILE__, __FUNCTION__, w)
-#define crm_err(w...)     do_crm_log(LOG_ERR,     __FILE__, __FUNCTION__, w)
-#define crm_warn(w...)    do_crm_log(LOG_WARNING, __FILE__, __FUNCTION__, w)
-#define crm_notice(w...)  do_crm_log(LOG_NOTICE,  __FILE__, __FUNCTION__, w)
-#define crm_info(w...)    do_crm_log(LOG_INFO,    __FILE__, __FUNCTION__, w)
-#define crm_log_maybe(level, fmt...) if(crm_log_level >= level) {	\
-		do_crm_log(level, __FILE__, __FUNCTION__, fmt);		\
+#define crm_crit(w...)    do_crm_log(LOG_CRIT,    __FILE__, __PRETTY_FUNCTION__, w)
+#define crm_err(w...)     do_crm_log(LOG_ERR,     __FILE__, __PRETTY_FUNCTION__, w)
+#define crm_warn(w...)    do_crm_log(LOG_WARNING, __FILE__, __PRETTY_FUNCTION__, w)
+#define crm_notice(w...)  do_crm_log(LOG_NOTICE,  __FILE__, __PRETTY_FUNCTION__, w)
+#define crm_info(w...)    do_crm_log(LOG_INFO,    __FILE__, __PRETTY_FUNCTION__, w)
+#define crm_log_maybe(level, fmt...) if(crm_log_level >= (level)) {	\
+		do_crm_log((level), __FILE__, __PRETTY_FUNCTION__, fmt); \
 	}
 
 #define crm_debug(fmt...)   crm_log_maybe(LOG_DEBUG, fmt)
 #define crm_debug_2(fmt...) crm_log_maybe(LOG_DEBUG_2, fmt)
+#define crm_debug_3(fmt...) crm_log_maybe(LOG_DEBUG_3, fmt)
 
 /* If this is not a developmental build, give the compiler every chance to
  * optimize these away
  */
 #if CRM_DEV_BUILD
-#  define crm_debug_3(fmt...) crm_log_maybe(LOG_DEBUG_3, fmt)
 #  define crm_debug_4(fmt...) crm_log_maybe(LOG_DEBUG_4, fmt)
 #  define crm_debug_5(fmt...) crm_log_maybe(LOG_DEBUG_5, fmt)
 #  define crm_debug_6(fmt...) crm_log_maybe(LOG_DEBUG_6, fmt)
 #else
-#  define crm_debug_3(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }
 #  define crm_debug_4(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }
 #  define crm_debug_5(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }
 #  define crm_debug_6(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }
@@ -239,7 +256,7 @@ extern void crm_log_message_adv(
 #define crm_action_debug_4(x) crm_do_action(LOG_DEBUG_4, x)
 
 #define crm_log_xml(level, text, xml)   if(crm_log_level >= level) {  \
-		print_xml_formatted(level,  __FUNCTION__, xml, text); \
+		print_xml_formatted(level,  __PRETTY_FUNCTION__, xml, text); \
 	}
 #define crm_log_xml_crit(xml, text)    crm_log_xml(LOG_CRIT,    text, xml)
 #define crm_log_xml_err(xml, text)     crm_log_xml(LOG_ERR,     text, xml)
@@ -260,13 +277,21 @@ extern void crm_log_message_adv(
 		new_obj = malloc(length);				\
 		if(new_obj == NULL) {					\
 			crm_crit("Out of memory... exiting");		\
+			cl_flush_logs();				\
 			exit(1);					\
-		} else {						\
-			memset(new_obj, 0, length);			\
+		}							\
+		memset(new_obj, 0, length);				\
+	}
+#  define crm_realloc(new_obj,length)					\
+	{								\
+		new_obj = realloc(new_obj, length);			\
+		if(new_obj == NULL) {					\
+			crm_crit("Out of memory... exiting");		\
+			cl_flush_logs();				\
+			exit(1);					\
 		}							\
 	}
 #  define crm_free(x) if(x) { free(x); x=NULL; }
-#  define crm_is_allocated(obj) obj?TRUE:FALSE
 #else
 #  if CRM_DEV_BUILD
 #    define crm_malloc0(new_obj,length)					\
@@ -275,32 +300,62 @@ extern void crm_log_message_adv(
 			crm_err("Potential memory leak:"		\
 				" %s at %s:%d not NULL before alloc.",	\
 				#new_obj, __FILE__, __LINE__);		\
+			cl_flush_logs();				\
 			abort();					\
 		}							\
 		new_obj = cl_malloc(length);				\
 		if(new_obj == NULL) {					\
 			crm_crit("Out of memory... exiting");		\
+			cl_flush_logs();				\
 			abort();					\
 		}							\
 		memset(new_obj, 0, length);				\
 	}
-#else
+/* it's not a memory leak to already have an object to realloc, that's
+ * the usual case, however if it does have a value, it must have been
+ * allocated by the same allocator! */ 
+#    define crm_realloc(new_obj,length)					\
+	{								\
+		if (new_obj != NULL) {					\
+			CRM_ASSERT(cl_is_allocated(new_obj) == 1);	\
+		}							\
+		new_obj = cl_realloc(new_obj, length);			\
+		if(new_obj == NULL) {					\
+			crm_crit("Out of memory... exiting");		\
+			cl_flush_logs();				\
+			abort();					\
+		}							\
+	}
+#    define crm_free(x) if(x) {				\
+		CRM_ASSERT(cl_is_allocated(x) == 1);	\
+		cl_free(x);				\
+		x=NULL;				\
+	}
+#  else
 #    define crm_malloc0(new_obj,length)					\
 	{								\
 		new_obj = cl_malloc(length);				\
 		if(new_obj == NULL) {					\
 			crm_crit("Out of memory... exiting");		\
+			cl_flush_logs();				\
 			abort();					\
 		}							\
 		memset(new_obj, 0, length);				\
 	}
-#  endif
-#  define crm_free(x) if(x) {				\
-		CRM_ASSERT(cl_is_allocated(x) == 1);	\
+#    define crm_realloc(new_obj,length)					\
+	{								\
+		new_obj = cl_realloc(new_obj, length);			\
+		if(new_obj == NULL) {					\
+			crm_crit("Out of memory... exiting");		\
+			cl_flush_logs();				\
+			abort();					\
+		}							\
+	}
+#    define crm_free(x) if(x) {				\
 		cl_free(x);				\
 		x=NULL;				\
 	}
-#  define crm_is_allocated(obj) cl_is_allocated(obj)
+#  endif
 #endif
 
 #define crm_msg_del(msg) if(msg != NULL) { ha_msg_del(msg); msg = NULL; }

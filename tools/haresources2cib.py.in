@@ -1,0 +1,488 @@
+#!@PYTHON@
+
+'''haresources2cib.py.in, convert the haresources file of heartbeat 1.x
+   to cib.xml for heartbeat 2.x
+'''
+
+__copyright__='''
+Author: Huang Zhen <zhenhltc@cn.ibm.com>
+Copyright (C) 2005 International Business Machines
+'''
+
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+import sys,string,os
+import xml.dom.minidom
+
+using_ocf = 1
+using_mon = 1
+enable_stonith = False
+
+ocf_ra_setting = {
+	"apache"    :{"params":["configfile","httpd","port","statusurl","options"],"time":["120s","60s"]},
+	"IPaddr"    :{"params":["ip","netmask","nic","broadcast"],"time":["5s","5s"]},
+	"IPaddr2"   :{"params":["ip","netmask","nic","broadcast"],"time":["5s","5s"]},
+	"db2"       :{"params":["instance"],"time":["120s","60s"]},
+	"oracle"    :{"params":["sid","home","user"],"time":["120s","60s"]},
+	"oralsnr"   :{"params":["sid","home","user","listener"],"time":["120s","60s"]},
+	"AudibleAlarm":{"params":["nodelist"],"time":["120s","60s"]},
+	"Delay"     :{"params":["delay","stopdelay"],"time":["120s","60s"]},
+	"Filesystem":{"params":["device","directory","fstype","options"],"time":["120s","60s"]},
+	"ICP"       :{"params":["driveid","device"],"time":["120s","60s"]},
+	"IPsrcaddr" :{"params":["ipaddress"],"time":["5s","5s"]},
+	"IPv6addr"  :{"params":["ipv6addr"],"time":["5s","5s"]},
+	"LinuxSCSI" :{"params":["scsi"],"time":["120s","60s"]},
+	"LVM"       :{"params":["volgrpname"],"time":["120s","60s"]},
+	"MailTo"    :{"params":["email","subject"],"time":["120s","60s"]},
+	"portblock" :{"params":["protocol","portno","action"],"time":["120s","60s"]},
+	"Raid1"     :{"params":["raidconf","raiddev"],"time":["120s","60s"]},
+	"ServeRAID" :{"params":["serveraid","mergegroup"],"time":["120s","60s"]},
+	"WinPopup"  :{"params":["hostfile"],"time":["120s","60s"]},
+	"Xinetd"    :{"params":["service"],"time":["120s","60s"]}
+	}
+
+config_defaults = [
+	"symmetric_cluster=true",
+	"no_quorum_policy=stop",
+	"default_resource_stickiness=0",
+	"default_resource_failure_stickiness=0",
+	"stonith_enabled=false",
+	"stonith_action=reboot",
+	"stop_orphan_resources=true",
+	"stop_orphan_actions=true",
+	"remove_after_stop=false",
+	"short_resource_names=true",
+	"transition_idle_timeout=5min",
+	"default_action_timeout=5s",
+	"is_managed_default=true",
+]
+
+def create_cib() :
+	doc = xml.dom.minidom.Document()
+	cib = doc.createElement("cib")
+	doc.appendChild(cib)
+
+	configuration = doc.createElement("configuration")
+	cib.appendChild(configuration)
+	cib.setAttribute("admin_epoch","0")
+	cib.setAttribute("epoch","0")
+	cib.setAttribute("num_updates","0")
+
+	crm_config = doc.createElement("crm_config")
+	configuration.appendChild(crm_config)
+
+	option_set = doc.createElement("cluster_property_set")
+	option_set.setAttribute("id","cib-bootstrap-options")
+	crm_config.appendChild(option_set)
+
+	attr_list = doc.createElement("attributes")
+	option_set.appendChild(attr_list)
+
+	for option in config_defaults:
+		option_details = string.split(option, '=')
+		nvpair = doc.createElement("nvpair")
+		attr_list.appendChild(nvpair)
+		nvpair.setAttribute("id",    "cib-bootstrap-options-"+option_details[0])
+		nvpair.setAttribute("name",  option_details[0])
+		nvpair.setAttribute("value", option_details[1])
+		if option_details[0] == "stonith_enabled" and enable_stonith:
+			nvpair.setAttribute("value", "true")
+			
+
+	configuration.appendChild(doc.createElement("nodes"))
+	resources = doc.createElement("resources")
+	configuration.appendChild(resources)
+	constraints = doc.createElement("constraints")
+	configuration.appendChild(constraints)
+
+	status = doc.createElement("status")
+	cib.appendChild(status)
+
+	return doc, resources, constraints
+	
+def get_ra_class(type) :
+	if os.path.exists("@HB_RA_DIR@"+"/"+type) :
+		return "heartbeat"
+	if os.path.exists("@LSB_RA_DIR@"+"/"+type) :
+		return "lsb"
+	sys.stderr.write(type+" is an unknown Resource Agent. " \
+			"Please refer to http://www.linux-ha.org/ResourceAgent\n")
+	return "UNKNOWN"
+		
+def cib_resource(doc,user_res_id,index, rsc):
+
+	id, type, params = None, None, None
+	
+	#if no parameters in rsc, like "apache", "192.168.0.11"
+	if string.find(rsc, "::") == -1 :
+		#if there is a IP address in rsc, like "192.168.0.11"
+		if len(string.split(string.split(rsc,'/')[0],'.')) == 4 :
+			type = "IPaddr"
+			params = [rsc]
+		#no IP address, like "apache"
+		else :
+			type = rsc
+	#else there have "::" in rsc,
+	#like "IPaddr::192.168.0.11", "IPaddr2::192.168.0.11"
+	else :
+		if string.find(rsc, "IPaddr") == 0 :
+			type = string.split(rsc, "::")[0]
+			params = [string.split(rsc, "::")[1]]
+		else :			
+			fields = string.split(rsc,"::")
+			type = fields[0]
+			params = fields[1:]
+		
+	if user_res_id == "" :
+		if type == "IPaddr" :
+			id = type+"_"+string.replace(string.split(params[0],'/')[0],'.','_')
+		else :
+			id = type+"_"+str(index)
+	else :
+		id = user_res_id
+	
+	resource = doc.createElement("primitive")
+	resource.setAttribute("id",id)
+	resource.setAttribute("type",type)
+	if using_ocf and type in ocf_ra_setting:
+		resource.setAttribute("class","ocf")
+	else :
+		ra_class = get_ra_class(type)
+		resource.setAttribute("class",ra_class)
+	resource.setAttribute("provider","heartbeat")
+
+	if using_mon :
+		operations = doc.createElement("operations")
+		resource.appendChild(operations)
+		mon_op = doc.createElement("op")
+		operations.appendChild(mon_op)
+		mon_op.setAttribute("id", id + "_mon")
+		mon_op.setAttribute("name","monitor")
+		interval = "120s"
+		timeout = "60s"
+		if using_ocf and type in ocf_ra_setting :
+			interval = ocf_ra_setting[type]["time"][0]
+			timeout = ocf_ra_setting[type]["time"][1]
+		mon_op.setAttribute("interval", interval)
+		mon_op.setAttribute("timeout", timeout)
+
+	if params != None and len(params) != 0:
+		instance_attributes = doc.createElement("instance_attributes")
+		instance_attributes.setAttribute("id", id + "_inst_attr")
+		resource.appendChild(instance_attributes)
+		attributes = doc.createElement("attributes")
+		instance_attributes.appendChild(attributes)
+		if using_ocf and type in ocf_ra_setting :
+			if type in ["IPaddr", "IPaddr2"] :
+				unsort = string.split(params[0], "/")
+				params = [None, None, None, None]
+				#ip
+				params[0] = unsort[0]
+				for param in unsort[1:] :
+					if len(string.split(param, ".")) == 4 :
+						#broadcast
+						params[3] = param
+						break
+					try :
+						int(param)
+						#netmask bits
+						params[1] = param
+					except ValueError:
+						#nic
+						params[2] = param
+			for i in range(0,len(params)) :
+				if params[i] == None :
+					continue
+				nvpair = doc.createElement("nvpair")
+				name = ocf_ra_setting[type]["params"][i]
+				nvpair.setAttribute("id",id + "_attr_" + str(i))
+				nvpair.setAttribute("name",name)
+				if i == len(ocf_ra_setting[type]["params"]) - 1 :
+					nvpair.setAttribute("value",string.join(params[i:]))
+					attributes.appendChild(nvpair)
+					break
+				else :						
+					nvpair.setAttribute("value",str(params[i]))
+					attributes.appendChild(nvpair)
+		else :
+			i = 1
+			for param in params :
+				nvpair = doc.createElement("nvpair")
+				nvpair.setAttribute("id",id + "_attr_" + str(i))
+				nvpair.setAttribute("name",str(i))
+				nvpair.setAttribute("value",str(param))
+				attributes.appendChild(nvpair)
+				i += 1
+	return id, resource
+
+def cib_rsc_order(doc, args):
+	rsc_order = doc.createElement("rsc_order")
+	rsc_order.setAttribute("id","rsc_order_"+args[0]+"_"+args[3])
+	rsc_order.setAttribute("from",args[0])
+	rsc_order.setAttribute("action",args[1])
+	rsc_order.setAttribute("type",args[2])
+	rsc_order.setAttribute("to",args[3])
+	rsc_order.setAttribute("symmetrical","true")
+	return rsc_order
+
+def cib_rsc_colocation(doc, args):
+	if len(args) != 3 :
+		sys.stderr.write("rsc_colocation: bad usage\n")
+		return
+	rsc_colocation = doc.createElement("rsc_colocation")
+	rsc_colocation.setAttribute("id","rsc_colocation_"+args[0]+"_"+args[1])
+	rsc_colocation.setAttribute("from",args[0])
+	rsc_colocation.setAttribute("to",args[1])
+	rsc_colocation.setAttribute("score",args[2])
+	return rsc_colocation
+
+def cib_rsc_location(doc, id, node):
+	rsc_location = doc.createElement("rsc_location")
+	rsc_location.setAttribute("id","rsc_location_"+id)
+	rsc_location.setAttribute("rsc",id)
+	rule = doc.createElement("rule")
+	rule.setAttribute("id","prefered_location_"+id)
+	rule.setAttribute("score","100")
+	rsc_location.appendChild(rule)
+	expression = doc.createElement("expression")
+	expression.setAttribute("id","prefered_location_"+id+"_expr")
+	expression.setAttribute("attribute","#uname")
+	expression.setAttribute("operation","eq")
+	expression.setAttribute("value", node)
+	rule.appendChild(expression)
+	return rsc_location
+
+def cib_resource_group(doc, id):
+	resource_group = doc.createElement("group")
+	resource_group.setAttribute("id",id)
+	return resource_group
+
+def cib_resource_clone(doc, id, clone_max, clone_node_max):
+	resource_clone = doc.createElement("clone")
+	resource_clone.setAttribute("id",id)
+	instance_attributes = doc.createElement("instance_attributes")
+	instance_attributes.setAttribute("id", id + "_inst_attr")
+	resource_clone.appendChild(instance_attributes)
+	attributes = doc.createElement("attributes")
+	instance_attributes.appendChild(attributes)
+	nvpair = doc.createElement("nvpair")
+	nvpair.setAttribute("id",id + "_attr_1")
+	nvpair.setAttribute("name", "clone_max")
+	nvpair.setAttribute("value", str(clone_max))
+	attributes.appendChild(nvpair)
+	nvpair = doc.createElement("nvpair")
+	nvpair.setAttribute("id",id + "_attr_2")
+	nvpair.setAttribute("name", "clone_node_max")
+	nvpair.setAttribute("value", str(clone_node_max))
+	attributes.appendChild(nvpair)
+	return resource_clone
+
+def add_resource(cib,user_res_id,index,node,rsc):
+	id,resource = cib_resource(cib[0],user_res_id,index,rsc)
+	cib[1].appendChild(resource)
+	rsc_location = cib_rsc_location(cib[0],id,node)
+	cib[2].appendChild(rsc_location)
+
+def add_resource_group(cib,user_res_id,index,node,rscs):
+	if user_res_id == "" :
+		groupid = "group_"+str(group_index)
+	else :
+		groupid = user_res_id
+	resource_group = cib_resource_group(cib[0],groupid)
+	cib[1].appendChild(resource_group)
+	for rsc in rscs :
+		rid,resource = cib_resource(cib[0],"",index,rsc)
+		resource_group.appendChild(resource)
+		index += 1
+	rsc_location = cib_rsc_location(cib[0],groupid,node)
+	cib[2].appendChild(rsc_location)
+
+def add_clone(cib,user_res_id, index,rsc) :
+	if user_res_id == "" :
+		cloneid = "clone_"+str(index)
+	else :
+		cloneid = user_res_id
+	clone = cib_resource_clone(cib[0], cloneid, node_num, 1)
+	cib[1].appendChild(clone)
+	id,resource = cib_resource(cib[0],"",index,rsc)
+	clone.appendChild(resource)
+
+def add_stonith_clone(cib, index, params, node_num) :
+	clone = cib_resource_clone(cib[0], "clone_"+str(index), node_num, 1)
+	cib[1].appendChild(clone)
+	id, stonith = cib_stonith(cib[0], index, params)
+	clone.appendChild(stonith)
+
+def cib_stonith(doc, index, params):
+	id = "stonith_"+str(index)
+	resource = doc.createElement("primitive")
+	resource.setAttribute("id",id)
+	resource.setAttribute("type",params[1])
+	resource.setAttribute("class","stonith")
+	resource.setAttribute("provider","heartbeat")
+	if using_mon :
+		operations = doc.createElement("operations")
+		resource.appendChild(operations)
+		mon_op = doc.createElement("op")
+		operations.appendChild(mon_op)
+		mon_op.setAttribute("id", id + "_mon")
+		mon_op.setAttribute("name","monitor")
+		mon_op.setAttribute("interval", "5s")
+		mon_op.setAttribute("timeout", "20s")
+		mon_op.setAttribute("prereq", "nothing")
+		start_op = doc.createElement("op")
+		operations.appendChild(start_op)
+		start_op.setAttribute("id", id + "_start")
+		start_op.setAttribute("name","start")
+		start_op.setAttribute("timeout", "20s")
+		start_op.setAttribute("prereq", "nothing")
+	if len(params) > 2 :
+		instance_attributes = doc.createElement("instance_attributes")
+		instance_attributes.setAttribute("id", id + "_inst_attr")
+		resource.appendChild(instance_attributes)
+		attributes = doc.createElement("attributes")
+		instance_attributes.appendChild(attributes)
+		names = string.split(os.popen("stonith -n -t "+params[1]).readline())
+		for i in range(2, len(params)) :
+			nvpair = doc.createElement("nvpair")
+			nvpair.setAttribute("id", id + "_attr_" + str(i))
+			nvpair.setAttribute("name", names[i-2])
+			nvpair.setAttribute("value", params[i])
+			attributes.appendChild(nvpair)
+		
+	return id, resource
+
+def add_stonith_host(cib, stonith_host, index, node_num) :
+	params = string.split(stonith_host)[1:]
+	if params[0] == "*" :
+		add_stonith_clone(cib, index, params, node_num)
+	else :
+		id, resource = cib_stonith(cib[0], index, params)
+		cib[1].appendChild(resource)
+		stonith_location = cib_rsc_location(cib[0],id,params[0])
+		cib[2].appendChild(stonith_location)
+
+def get_directive_list(config, directive) :
+	directive_list = []
+	for line in config :
+		line = line.lstrip()
+		if len (line) == 0 or line[0] == "#" :
+			continue
+		if string.split(line)[0] == directive :
+			directive_list.append(line)
+	return directive_list
+		
+if __name__=="__main__" :
+	resource_file = "@HB_HA_DIR@/haresources"
+	config_file = "@HB_HA_DIR@/ha.cf"
+	target_file = "@HA_VARLIBHBDIR@/crm/cib.xml"
+	to_stdout = False
+	
+	# Process arguments...
+	skipthis = None
+	args = sys.argv[1:]
+	for i in range(0, len(args)) :
+		if skipthis :
+			skipthis = None
+			continue
+		elif args[i] == "--no-ocf" :
+			using_ocf = 0
+		elif args[i] == "--stdout" :
+			to_stdout = True
+		elif args[i] == "--no-monitor" :
+			using_mon = 0
+		elif args[i] == "--config" or args[i] == "-c" :
+			skipthis = True
+			config_file = args[i+1]
+		elif args[i] == "--help" or args[i] == "-h" :
+			print "usage: " + sys.argv[0]  \
+				+  " [--no-ocf]"\
+				+  " [--stdout]"\
+				+  " [--no-monitor]"\
+				+  " [--config|-c configfile]"\
+				+  " [--help|-h]"\
+				+  " [resourcefile]"
+			sys.exit(1)
+		else:
+			resource_file = args[i]
+	
+	config = open(config_file, "r").readlines()
+	
+	node_list = get_directive_list(config, "node")
+	node_num = 0
+	for nodes in node_list :
+		node_num += len(string.split(nodes)) -1
+	stonith_host_list = get_directive_list(config, "stonith_host")
+	
+	if len(stonith_host_list) != 0 :
+		enable_stonith = True
+	
+	file = open(resource_file, "r")
+	cib = create_cib()
+	pre_line = ""
+	id_index = 1
+	group_index = 1
+	for line in file.readlines() :
+		line = string.strip(line)
+		if len (line) == 0 :
+			continue
+		if line[0] == '#' and string.find(line,"#rsc_order") != 0 and string.find(line,"#rsc_colocation") != 0 :
+			continue
+		if line[-1] == '\\' :
+			pre_line += line[:-1] + " "
+			continue
+		else :
+			line = pre_line + line
+			pre_line = ""
+		fields = string.split(line)
+		if fields[len(fields)-1][0] == '#' :
+			user_res_id = fields[len(fields)-1][1:]
+			fields.pop()
+		else :
+			user_res_id = ""
+		if fields[0] == "#rsc_order" and len(fields) == 5 :
+			rsc_order = cib_rsc_order(cib[0],fields[1:])
+			cib[2].appendChild(rsc_order)
+		elif fields[0] == "#rsc_colocation" and len(fields) == 4 :
+			rsc_colocation = cib_rsc_colocation(cib[0],fields[1:])
+			cib[2].appendChild(rsc_colocation)
+		elif string.find(user_res_id, "clone:") == 0 :
+			add_clone(cib, user_res_id[len("clone:"):], group_index, fields[1])
+			group_index += 10
+			id_index += 1
+		elif len(fields) == 2 :
+			add_resource(cib, user_res_id, id_index, fields[0], fields[1])
+			id_index += 1
+		elif len(fields) > 2 :
+			add_resource_group(cib, user_res_id, group_index, fields[0], fields[1:])
+			group_index += 10
+			id_index += len(fields)
+		else :
+			sys.stderr.write("can not parse this line:"+line+"\n")
+	if enable_stonith :
+		for stonith_host in stonith_host_list :
+			add_stonith_host(cib, stonith_host, id_index, node_num)
+			id_index += 1
+	if to_stdout :		
+		print cib[0].toprettyxml()
+	elif os.access(target_file, os.F_OK) or os.access(target_file+".sig", os.F_OK) :
+		sys.stderr.write("cib.xml or cib.xml.sig exist in @HA_VARLIBHBDIR@/crm/\n")
+		sys.stderr.write("please remove them before generating new cib.xml\n")
+	else :
+		cib_file = open(target_file, "w")
+		cib_file.write(cib[0].toprettyxml())
+		cib_file.close()
+		os.system("chown  @HA_CCMUSER@.@HA_APIGROUP@ "+target_file)

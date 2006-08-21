@@ -1,4 +1,4 @@
-/* $Id: xml.h,v 1.29 2005/09/12 11:00:19 andrew Exp $ */
+/* $Id: xml.h,v 1.50 2006/08/04 09:47:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -32,7 +32,11 @@
 #include <clplumbing/cl_log.h> 
 
 /* #define USE_LIBXML 1 */
-#define XML_PARANOIA_CHECKS 1
+#if CRM_DEV_BUILD
+#  define XML_PARANOIA_CHECKS 1
+#else
+#  define XML_PARANOIA_CHECKS 0
+#endif
 
 #ifdef USE_LIBXML
 #  include <libxml/tree.h> 
@@ -43,9 +47,17 @@
 
 extern gboolean add_message_xml(
 	HA_Message *msg, const char *field, const crm_data_t *xml);
-extern crm_data_t *get_message_xml(const HA_Message *msg, const char *field);
+extern crm_data_t *get_message_xml(HA_Message *msg, const char *field);
 extern GHashTable *xml2list(crm_data_t *parent);
-extern void do_id_check(crm_data_t *xml_obj, GHashTable *id_hash);
+#if CRM_DEPRECATED_SINCE_2_0_3
+extern GHashTable *xml2list_202(crm_data_t *parent);
+#endif
+extern void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
+extern void hash2field(gpointer key, gpointer value, gpointer user_data);
+extern void hash2metafield(gpointer key, gpointer value, gpointer user_data);
+
+extern gboolean do_id_check(crm_data_t *xml_obj, GHashTable *id_hash,
+			    gboolean silent_add, gboolean silent_rename);
 
 /*
  * Replacement function for xmlCopyPropList which at the very least,
@@ -146,7 +158,12 @@ extern void unlink_xml_node(crm_data_t *node);
 /*
  * Set a timestamp attribute on a_node
  */
-extern void set_node_tstamp(crm_data_t *a_node);
+extern void add_xml_tstamp(crm_data_t *a_node);
+
+/*
+ * 
+ */
+extern void purge_diff_markers(crm_data_t *a_node);
 
 /*
  * Returns a deep copy of src_node
@@ -166,13 +183,14 @@ extern crm_data_t *add_node_copy(
  *
  * Whitespace between tags is discarded.
  */
-extern crm_data_t *file2xml(FILE *input);
+extern crm_data_t *file2xml(FILE *input, gboolean compressed);
 
 extern crm_data_t *stdin2xml(void);
 
 extern crm_data_t *string2xml(const char *input);
 
-extern int write_xml_file(crm_data_t *xml_node, const char *filename);
+extern int write_xml_file(
+	crm_data_t *xml_node, const char *filename, gboolean compress);
 
 extern char *dump_xml_formatted(const crm_data_t *msg);
 
@@ -204,7 +222,7 @@ extern crm_data_t *find_entity(
 	crm_data_t *parent, const char *node_name, const char *id);
 
 extern crm_data_t *subtract_xml_object(
-	crm_data_t *left, crm_data_t *right, gboolean suppress);
+	crm_data_t *left, crm_data_t *right, const char *marker);
 
 extern int add_xml_object(
 	crm_data_t *parent, crm_data_t *target, const crm_data_t *update);
@@ -213,8 +231,14 @@ extern void xml_remove_prop(crm_data_t *obj, const char *name);
 
 extern void crm_set_element_parent(crm_data_t *data, crm_data_t *parent);
 
-extern gboolean delete_xml_child(
-	crm_data_t *parent, crm_data_t *child, crm_data_t *to_delete);
+extern gboolean replace_xml_child(
+	crm_data_t *parent, crm_data_t *child, crm_data_t *update, gboolean delete_only);
+
+extern gboolean update_xml_child(crm_data_t *child, crm_data_t *to_update);
+
+extern int find_xml_children(
+	crm_data_t **children, crm_data_t *root,
+	const char *tag, const char *field, const char *value);
 
 /*
  *
@@ -224,29 +248,62 @@ extern char *crm_element_value_copy(const crm_data_t *data, const char *name);
 
 extern const char *crm_element_name(const crm_data_t *data);
 
-extern void crm_validate_data(const crm_data_t *root);
+extern void xml_validate(const crm_data_t *root);
 
 extern void crm_update_parents(crm_data_t *root);
 
 extern gboolean xml_has_children(crm_data_t *root);	 		
 
-#   define xmlGetNodePath(data) crm_element_value(data, XML_ATTR_TAGNAME)
-#   define xml_child_iter(parent, child, filter, loop_code)		\
+extern char *calculate_xml_digest(crm_data_t *local_cib, gboolean sort);
+
+extern gboolean validate_with_dtd(
+	crm_data_t *xml_blob, gboolean to_logs, const char *dtd_file);
+
+#if XML_PARANOIA_CHECKS
+#  define crm_validate_data(obj) xml_validate(obj)
+#else
+#  define crm_validate_data(obj) CRM_DEV_ASSERT(obj != NULL)
+#endif
+
+#define xml_child_iter(parent, child, loop_code)			\
 	if(parent != NULL) {						\
 		int __counter = 0;					\
 		crm_data_t *child = NULL;				\
 		crm_validate_data(parent);				\
 		for (__counter = 0; __counter < parent->nfields; __counter++) { \
-			if(parent->types[__counter] != FT_STRUCT) {		\
+			if(parent->types[__counter] != FT_STRUCT	\
+			   && parent->types[__counter] != FT_UNCOMPRESS) { \
 				continue;				\
 			}						\
 			child = parent->values[__counter];		\
 			if(child == NULL) {				\
 				crm_debug_4("Skipping %s == NULL",	\
 					  parent->names[__counter]);	\
-			} else if(filter == NULL			\
+			} else {					\
+				loop_code;				\
+			}						\
+		}							\
+	} else {							\
+		crm_debug_4("Parent of loop was NULL");			\
+	}
+
+#define xml_child_iter_filter(parent, child, filter, loop_code)		\
+	if(parent != NULL) {						\
+		int __counter = 0;					\
+		crm_data_t *child = NULL;				\
+		crm_validate_data(parent);				\
+		for (__counter = 0; __counter < parent->nfields; __counter++) { \
+			if(parent->types[__counter] != FT_STRUCT	\
+			   && parent->types[__counter] != FT_UNCOMPRESS) { \
+				continue;				\
+			}						\
+			child = parent->values[__counter];		\
+			if(child == NULL) {				\
+				crm_debug_4("Skipping %s == NULL",	\
+					  parent->names[__counter]);	\
+			} else if(filter == NULL/*constant condition*/	\
 				  || safe_str_eq(filter, parent->names[__counter])) { \
-				loop_code;					\
+				loop_code;				\
 			} else {					\
 				crm_debug_4("Skipping <%s../>",		\
 					  parent->names[__counter]);	\

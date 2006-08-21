@@ -1,4 +1,4 @@
-/* $Id: alphasort.c,v 1.6 2004/02/17 22:12:01 lars Exp $ */
+/* $Id: alphasort.c,v 1.7 2006/04/07 15:02:39 davidlee Exp $ */
 /*
  *
  * alphasort - replacement for alphasort functions.
@@ -34,6 +34,10 @@
 #include <sys/stat.h>
 
 #include <unistd.h>		/* XXX for _POSIX_VERSION ifdefs */
+
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
 
 #if !defined sgi && !defined _POSIX_VERSION
 #include <sys/dir.h>

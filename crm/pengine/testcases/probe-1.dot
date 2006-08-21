@@ -1,0 +1,12 @@
+digraph "g" {
+	size = "30,30"
+"probe_complete" [ style=bold color="green" fontcolor="orange" ]
+"probe_complete c001n05" [ style=bold color="green" fontcolor="black" ]
+"DcIPaddr_monitor_0 c001n05" [ style=bold color="green" fontcolor="black" ]
+"DcIPaddr_start_0 c001n05" [ style=bold color="green" fontcolor="black" ]
+"DcIPaddr_monitor_5000 c001n05" [ style=bold color="green" fontcolor="black" ]
+"probe_complete c001n05" -> "probe_complete" [ style = bold]
+"DcIPaddr_monitor_0 c001n05" -> "probe_complete c001n05" [ style = bold]
+"probe_complete" -> "DcIPaddr_start_0 c001n05" [ style = bold]
+"DcIPaddr_start_0 c001n05" -> "DcIPaddr_monitor_5000 c001n05" [ style = bold]
+}

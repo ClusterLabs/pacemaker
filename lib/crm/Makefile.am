@@ -18,5 +18,5 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 ## Subdirectories...
-SUBDIRS		= common cib
-DIST_SUBDIRS	= common cib
+SUBDIRS		= common pengine cib transition
+DIST_SUBDIRS	= common pengine cib transition

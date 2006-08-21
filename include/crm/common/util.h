@@ -1,4 +1,4 @@
-/* $Id: util.h,v 1.22 2005/09/12 11:00:19 andrew Exp $ */
+/* $Id: util.h,v 1.39 2006/08/14 09:06:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,6 +29,11 @@
 #define DEBUG_DEC SIGUSR2
 
 extern unsigned int crm_log_level;
+extern gboolean crm_config_error;
+extern gboolean crm_config_warning;
+
+#define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
+#define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
 
 extern gboolean crm_log_init(const char *entity);
 
@@ -44,20 +49,14 @@ extern char *crm_itoa(int an_int);
 
 extern char *crm_strdup(const char *a);
 
-extern char *generate_hash_key(const char *crm_msg_reference,
-			       const char *sys);
+extern char *generate_hash_key(const char *crm_msg_reference, const char *sys);
 
-extern char *generate_hash_value(const char *src_node,
-				 const char *src_subsys);
+extern char *generate_hash_value(const char *src_node, const char *src_subsys);
 
-extern gboolean decode_hash_value(gpointer value,
-				  char **node,
-				  char **subsys);
+extern gboolean decode_hash_value(gpointer value, char **node, char **subsys);
 
 extern gboolean decodeNVpair(const char *srcstring,
-		      char separator,
-		      char **name,
-		      char **value);
+			     char separator, char **name, char **value);
 
 extern int compare_version(const char *version1, const char *version2);
 
@@ -68,10 +67,12 @@ extern void alter_debug(int nsig);
 
 extern void g_hash_destroy_str(gpointer data);
 
+extern const char *get_uuid(ll_cluster_t *hb, const char *uname);
+extern const char *get_uname(ll_cluster_t *hb, const char *uuid);
+extern void unget_uuid(const char *uname);
+
 extern void set_uuid(
 	ll_cluster_t* hb, crm_data_t *node, const char *attr, const char *uname);
-
-extern void crm_set_ha_options(ll_cluster_t *hb_cluster);
 
 extern gboolean crm_is_true(const char * s);
 
@@ -88,6 +89,9 @@ extern const char *op_status2text(op_status_t status);
 extern char *generate_op_key(
 	const char *rsc_id, const char *op_type, int interval);
 
+extern gboolean parse_op_key(
+	const char *key, char **rsc_id, char **op_type, int *interval);
+
 extern char *generate_notify_key(
 	const char *rsc_id, const char *notify_type, const char *op_type);
 
@@ -95,11 +99,26 @@ extern gboolean crm_mem_stats(volatile cl_mem_stats_t *mem_stats);
 
 extern void crm_zero_mem_stats(volatile cl_mem_stats_t *stats);
 
-extern char *generate_transition_magic(
+extern void crm_save_mem_stats(const char *location, cl_mem_stats_t *saved_stats);
+
+extern gboolean crm_diff_mem_stats(
+	int log_level_up, int log_level_down, const char *location,
+	volatile cl_mem_stats_t *stats, volatile cl_mem_stats_t *saved_stats);
+
+extern void crm_xml_nbytes(crm_data_t *xml, long *bytes, long *allocs, long *frees);
+
+extern void crm_adjust_mem_stats(
+	volatile cl_mem_stats_t *stats, long bytes, long allocs, long frees);
+
+extern char *generate_transition_magic_v202(
 	const char *transition_key, int op_status);
 
+extern char *generate_transition_magic(
+	const char *transition_key, int op_status, int op_rc);
+
 extern gboolean decode_transition_magic(
-	const char *magic, char **uuid, int *transition_id, int *op_status);
+	const char *magic, char **uuid,
+	int *transition_id, int *op_status, int *op_rc);
 
 extern char *generate_transition_key(int transition_id, const char *node);
 
@@ -107,5 +126,63 @@ extern gboolean decode_transition_key(
 	const char *key, char **uuid, int *transition_id);
 
 extern char *crm_concat(const char *prefix, const char *suffix, char join);
+
+extern gboolean decode_op_key(
+	const char *key, char **rsc_id, char **op_type, int *interval);
+
+extern void filter_action_parameters(crm_data_t *param_set, const char *version);
+
+extern gboolean safe_str_eq(const char *a, const char *b);
+extern gboolean safe_str_neq(const char *a, const char *b);
+extern int crm_parse_int(const char *text, const char *default_text);
+extern int crm_int_helper(const char *text, char **end_text);
+#define crm_atoi(text, default_text) crm_parse_int(text, default_text)
+
+extern void crm_abort(const char *file, const char *function, int line,
+		      const char *condition, gboolean do_fork);
+
+extern char *generate_series_filename(
+	const char *directory, const char *series, int sequence, gboolean bzip);
+
+extern int get_last_sequence(const char *directory, const char *series);
+
+extern void write_last_sequence(
+	const char *directory, const char *series, int sequence, int max);
+
+extern void crm_make_daemon(
+	const char *name, gboolean daemonize, const char *pidfile);
+
+extern cl_mem_stats_t *crm_running_stats;
+
+typedef struct pe_cluster_option_s {
+	const char *name;
+	const char *alt_name;
+	const char *type;
+	const char *values;
+	const char *default_value;
+
+	gboolean (*is_valid)(const char *);
+
+	const char *description_short;
+	const char *description_long;
+	
+} pe_cluster_option;
+
+extern const char *cluster_option(
+	GHashTable* options, gboolean(*validate)(const char*),
+	const char *name, const char *old_name, const char *def_value);
+
+extern const char *get_cluster_pref(
+	GHashTable *options, pe_cluster_option *option_list, int len, const char *name);
+
+extern void config_metadata(
+	const char *name, const char *version, const char *desc_short, const char *desc_long,
+	pe_cluster_option *option_list, int len);
+
+extern void verify_all_options(GHashTable *options, pe_cluster_option *option_list, int len);
+extern gboolean check_time(const char *value);
+extern gboolean check_timer(const char *value);
+extern gboolean check_boolean(const char *value);
+extern gboolean check_number(const char *value);
 
 #endif

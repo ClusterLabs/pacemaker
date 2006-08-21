@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.18 2005/05/20 09:58:43 andrew Exp $ */
+/* $Id: main.c,v 1.22 2006/08/14 09:06:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -29,11 +29,14 @@
 #include <fcntl.h>
 
 #include <hb_api.h>
+#include <heartbeat.h>
 #include <clplumbing/uids.h>
 #include <clplumbing/coredumps.h>
+#include <clplumbing/cl_misc.h>
 
 #include <crm/common/ipc.h>
 #include <crm/common/ctrl.h>
+#include <crm/pengine/common.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -48,17 +51,20 @@ void usage(const char* cmd, int exit_status);
 int init_start(void);
 gboolean pengine_shutdown(int nsig, gpointer unused);
 extern gboolean process_pe_message(crm_data_t * msg, IPC_Channel *sender);
+extern unsigned int pengine_input_loglevel;
 
 int
 main(int argc, char ** argv)
 {
-	gboolean allow_cores = TRUE;
-	int	argerr = 0;
 	int flag;
+	int argerr = 0;
+	char *param_val = NULL;
+	gboolean allow_cores = TRUE;
+	const char *param_name = NULL;
     
 	crm_log_init(crm_system_name);
-	G_main_add_SignalHandler(
-		G_PRIORITY_HIGH, SIGTERM, pengine_shutdown, NULL, NULL);
+ 	G_main_add_SignalHandler(
+ 		G_PRIORITY_HIGH, SIGTERM, pengine_shutdown, NULL, NULL);
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -76,7 +82,12 @@ main(int argc, char ** argv)
 				break;
 		}
 	}
-    
+
+	if(argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
+		pe_metadata();
+		return 0;
+	}
+	
 	if (optind > argc) {
 		++argerr;
 	}
@@ -84,7 +95,20 @@ main(int argc, char ** argv)
 	if (argerr) {
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
-    
+
+	param_name = ENV_PREFIX "" KEY_LOG_PENGINE_INPUTS;
+	param_val = getenv(param_name);
+	crm_debug("%s = %s", param_name, param_val);
+	pengine_input_loglevel = crm_log_level;
+	if(param_val != NULL) {
+		int do_log = 0;
+		cl_str_to_boolean(param_val, &do_log);
+		if(do_log == FALSE) {
+			pengine_input_loglevel = crm_log_level + 1;
+		}
+		param_val = NULL;
+	}
+	
 	/* read local config file */
 	crm_debug_4("do start");
 	return init_start();
@@ -144,20 +168,7 @@ usage(const char* cmd, int exit_status)
 gboolean
 pengine_shutdown(int nsig, gpointer unused)
 {
-#if 0
-	static int shuttingdown = 0;
-  
-	if (!shuttingdown) {
-		shuttingdown = 1;
-	}
-	if (mainloop != NULL && g_main_is_running(mainloop)) {
-		g_main_quit(mainloop);
-	}else{
-		exit(LSB_EXIT_OK);
-	}
-	return TRUE;
-#else
-	return FALSE;
-#endif
+	crm_info("Exiting PEngine (SIGTERM)");
+	exit(LSB_EXIT_OK);
 }
 

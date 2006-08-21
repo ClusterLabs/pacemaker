@@ -1,4 +1,4 @@
-/* $Id: scandir.c,v 1.8 2004/02/17 22:12:01 lars Exp $ */
+/* $Id: scandir.c,v 1.13 2005/11/02 12:31:47 davidlee Exp $ */
 /* scandir: Scan a directory, collecting all (selected) items into a an array.
  *
  * This code borrowed from 'libit', which can be found here:
@@ -11,6 +11,19 @@
  * Below is the email I received from pinard@iro.umontreal.ca (François Pinard)
  * when I sent him an email asking him about the license, etc. of this
  * code which I obtained from his site.
+ *
+ * I think the correct spelling of his name is Rich Salz.  I think he's now 
+ * rsalz@datapower.com...
+ * -- 
+ * Rich Salz, Chief Security Architect
+ * DataPower Technology                           http://www.datapower.com
+ * XS40 XML Security Gateway   http://www.datapower.com/products/xs40.html
+ *
+ *	Copyright(C):	none (public domain)
+ *	License:	none (public domain)
+ *	Author:		Rich Salz <rsalz@datapower.com>
+ *
+ *
  *
  *	-- Alan Robertson
  *	   alanr@unix.sh
@@ -37,6 +50,33 @@
  * completely sure of the spelling) a long while ago.  I think that nowadays,
  * Rick is better known as the main author of the nice INN package.
  *
+ **************************************************************************
+ *
+ * I spent a little time verifying this with Rick Salz.
+ * The results are below:
+ *
+ **************************************************************************
+ *
+ * Date: Tue, 20 Sep 2005 21:52:09 -0400 (EDT)
+ * From: Rich Salz <rsalz@datapower.com>
+ * To: Alan Robertson <alanr@unix.sh>
+ * Subject: Re: Verifying permissions/licenses/etc on some old code of yours -
+ *  scandir.c
+ * In-Reply-To: <433071CA.8000107@unix.sh>
+ * Message-ID: <Pine.LNX.4.44L0.0509202151270.9198-100000@smtp.datapower.com>
+ * Content-Type: TEXT/PLAIN; charset=US-ASCII
+ *
+ * yes, it's most definitely in the public domain.
+ *
+ * I'm glad you find it useful.  I'm surprised it hasn't been replaced by,
+ * e.g,. something in GLibC.  Ii'm impressed you tracked me down.
+ *
+ *	/r$
+ *
+ * -- 
+ * Rich Salz                  Chief Security Architect
+ * DataPower Technology       http://www.datapower.com
+ * XS40 XML Security Gateway  http://www.datapower.com/products/xs40.html
  * ---------------------------------------------------------------------->
  * Subject:	scandir, ftw REDUX
  * Date: 	1 Jan 88 00:47:01 GMT
@@ -69,6 +109,7 @@
 #include <dirent.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <string.h>
 
 #ifndef NULL
 # define NULL ((void *) 0)
@@ -127,7 +168,31 @@ scandir (const char *directory_name,
       {
 	/* User wants them all, or he wants this one.  Copy the entry.  */
 
-	if (copy = (struct dirent *) malloc (sizeof (struct dirent)),
+	/*
+	 * On some OSes the declaration of "entry->d_name" is a minimal-length
+	 * placeholder.  Example: Solaris:
+	 * 	/usr/include/sys/dirent.h:
+	 *		"char d_name[1];"
+	 *	man page "dirent(3)":
+	 *		The field d_name is the beginning of the character array
+	 *		giving the name of the directory entry. This name is
+	 *		null terminated and may have at most MAXNAMLEN chars.
+	 * So our malloc length may need to be increased accordingly.
+	 *	sizeof(entry->d_name): space (possibly minimal) in struct.
+	 * 	strlen(entry->d_name): actual length of the entry. 
+	 *
+	 *			John Kavadias <john_kavadias@hotmail.com>
+	 *			David Lee <t.d.lee@durham.ac.uk>
+	 */
+	int namelength = strlen(entry->d_name) + 1;	/* length with NULL */
+	int extra = 0;
+
+	if (sizeof(entry->d_name) <= namelength) {
+		/* allocated space <= required space */
+		extra += namelength - sizeof(entry->d_name);
+	}
+
+	if (copy = (struct dirent *) malloc (sizeof (struct dirent) + extra),
 	    copy == NULL)
 	  {
 	    closedir (directory);
@@ -165,7 +230,7 @@ scandir (const char *directory_name,
   /* Sort?  */
 
   if (counter > 1 && compare_function)
-    qsort ((char *) array, counter, sizeof (struct dirent)
+    qsort ((char *) array, counter, sizeof (struct dirent *)
   	,	(int (*)(const void *, const void *))(compare_function));
 
   return counter;

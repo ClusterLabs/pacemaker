@@ -64,9 +64,15 @@ crmdManagedChildDied(
 {
 	struct crm_subsystem_s *the_subsystem = p->privatedata;
 	
+	crm_info("Process %s:[%d] exited (signal=%d, exitcode=%d)",
+		 the_subsystem->name, the_subsystem->pid, signo, exitcode);
+	
 	the_subsystem->pid = -1;
-	the_subsystem->ipc = NULL;
+	the_subsystem->ipc = NULL;	
 	clear_bit_inplace(fsa_input_register, the_subsystem->flag_connected);
+
+	crm_debug_3("Triggering FSA: %s", __FUNCTION__);
+	G_main_set_trigger(fsa_source);
 
 	if(is_set(fsa_input_register, the_subsystem->flag_required)) {
 		/* this wasnt supposed to happen */
@@ -93,36 +99,41 @@ static ProcTrack_ops crmd_managed_child_ops = {
 };
 
 gboolean
-stop_subsystem(struct crm_subsystem_s*	the_subsystem)
+stop_subsystem(struct crm_subsystem_s *the_subsystem, gboolean force_quit)
 {
-	IPC_Channel *client_channel = the_subsystem->ipc;
+	int quit_signal = SIGTERM;
 	crm_debug_2("Stopping sub-system \"%s\"", the_subsystem->name);
 	clear_bit_inplace(fsa_input_register, the_subsystem->flag_required);
 	
 	if (the_subsystem->pid <= 0) {
 		crm_debug_2("Client %s not running", the_subsystem->name);
+		return FALSE;
+		
+	}
 
-	} else if(FALSE == is_set(
-			  fsa_input_register, the_subsystem->flag_connected)) {
+	if(is_set(fsa_input_register, the_subsystem->flag_connected) == FALSE) {
 		/* running but not yet connected */
-		crm_warn("Stopping %s before it had connected",
-			 the_subsystem->name);
-		
-		CL_KILL(the_subsystem->pid, -SIGKILL);
-		the_subsystem->pid = -1;
-		
-	} else if(client_channel == NULL
-		  || client_channel->ops->get_chan_status(
-			  client_channel) != IPC_CONNECT) {
-		crm_err("Client %s has already quit", the_subsystem->name);
+		crm_debug("Stopping %s before it had connected",
+			  the_subsystem->name);
+	}
+/*
+	if(force_quit && the_subsystem->sent_kill == FALSE) {
+		quit_signal = SIGKILL;
+
+	} else if(force_quit) {
+		crm_debug("Already sent -KILL to %s: [%d]",
+			  the_subsystem->name, the_subsystem->pid);
+	}
+*/
+	errno = 0;
+	if(CL_KILL(the_subsystem->pid, quit_signal) == 0) {
+		crm_info("Sent -TERM to %s: [%d]",
+			 the_subsystem->name, the_subsystem->pid);
+		the_subsystem->sent_kill = TRUE;
 		
 	} else {
-		HA_Message *quit = create_request(
-			CRM_OP_QUIT, NULL, NULL, the_subsystem->name,
-			AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
-	
-		crm_info("Sending quit message to %s.", the_subsystem->name);
-		send_ipc_message(client_channel, quit);
+		cl_perror("Sent -TERM to %s: [%d]",
+			  the_subsystem->name, the_subsystem->pid);
 	}
 	
 	return TRUE;
@@ -176,10 +187,16 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 		default:	/* Parent */
 			NewTrackedProc(pid, 0, PT_LOGNORMAL,
 				       the_subsystem, &crmd_managed_child_ops);
+			crm_debug_2("Client %s is has pid: %d",
+				    the_subsystem->name, pid);
 			the_subsystem->pid = pid;
 			return TRUE;
 
 		case 0:		/* Child */
+			/* create a new process group to avoid
+			 * being interupted by heartbeat
+			 */
+			setpgid(0, 0);
 			break;
 	}
 

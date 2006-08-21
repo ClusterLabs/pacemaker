@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <!DOCTYPE cib SYSTEM "crm-1.0.dtd">
 <!-- must -->
-<cib>
+<cib num_updates="1" epoch="1" admin_epoch="0">
   <configuration>
-    <crm_config>
+    <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
       <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
-    </crm_config>
+    </attributes></cluster_property_set></crm_config>
     <nodes>
       <node id="node1" uname="node1" type="member"/>
       <node id="node2" uname="node2" type="member"/>
@@ -41,33 +41,25 @@
       </primitive>
     </resources>
     <constraints>
-      <rsc_location id="same_1_2" rsc="rsc1">
-        <rule id="colocate_1_2" score="INFINITY">
-          <expression id="exp1" attribute="rsc2" operation="colocated"/>
-        </rule>
-      </rsc_location>
-      <rsc_location id="same_3_4" rsc="rsc3">
-        <rule id="colocate_3_4" score="INFINITY">
-          <expression id="exp2" attribute="rsc4" operation="colocated"/>
-        </rule>
-      </rsc_location>
+      <rsc_colocation id="same_1_2" from="rsc1" to="rsc2" score="INFINITY"/>
+      <rsc_colocation id="same_3_4" from="rsc3" to="rsc4" score="INFINITY"/>
     </constraints>
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+    <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <lrm>
         <lrm_resources>
-          <lrm_resource id="rsc1" last_op="start" rsc_state="started" op_status="0" rc_code="0">
-            <lrm_rsc_op id="rsc1" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+          <lrm_resource id="rsc1" class="heartbeat" type="apache">
+            <lrm_rsc_op id="rsc1" operation="start" interval="0" op_status="0" rc_code="0" call_id="1" op_digest="9d52bf4c88392688f8b12775fdbb957a" crm_feature_set="1.0.6" transition_magic=""/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
     </node_state>
-    <node_state id="node2" uname="node2" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+    <node_state id="node2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
       <lrm>
         <lrm_resources>
-          <lrm_resource id="rsc4" last_op="start" rsc_state="started" op_status="0" rc_code="0">
-            <lrm_rsc_op id="rsc4" operation="start" rsc_state="started" op_status="0" rc_code="0" call_id="1"/>
+          <lrm_resource id="rsc4" class="heartbeat" type="apache">
+            <lrm_rsc_op id="rsc4" operation="start" interval="0" op_status="0" rc_code="0" call_id="1" op_digest="832a553db174ca6fa88a2fca778f277a" crm_feature_set="1.0.6" transition_magic=""/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

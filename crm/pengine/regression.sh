@@ -18,29 +18,14 @@
  #
 
 . regression.core.sh
-
 create_mode="true"
 echo Generating test outputs for these tests...
-#do_test bad7
-
 echo ""
 
 echo Done.
 echo ""
 echo Performing the following tests...
 create_mode="false"
-
-do_test 594 "Bugzilla 594"
-do_test 662 "Bugzilla 662"
-do_test 696 "Bugzilla 696"
-do_test 726 "Bugzilla 726"
-do_test 735 "Bugzilla 735"
-do_test 764 "Bugzilla 764"
-do_test 797 "Bugzilla 797"
-do_test 829 "Bugzilla 829"
-
-echo ""
-do_test date-1 "Dates"
 
 echo ""
 do_test simple1 "Offline     "
@@ -55,6 +40,39 @@ do_test simple7 "Shutdown    "
 do_test simple11 "Priority (ne)"
 do_test simple12 "Priority (eq)"
 do_test simple8 "Stickiness"
+
+echo ""
+do_test params-0 "Params: No change"
+do_test params-1 "Params: Changed"
+do_test params-2 "Params: Resource definition"
+
+echo ""
+do_test orphan-0 "Orphan ignore"
+do_test orphan-1 "Orphan stop"
+
+echo ""
+do_test target-0 "Target Role : baseline"
+do_test target-1 "Target Role : test"
+
+echo ""
+do_test date-1 "Dates" -d "2005-020"
+do_test probe-0 "Probe (anon clone)"
+do_test probe-1 "Pending Probe"
+do_test standby "Standby"
+do_test comments "Comments"
+
+echo ""
+do_test master-0 "Stopped -> Slave"
+do_test master-1 "Stopped -> Promote"
+do_test master-2 "Stopped -> Promote : notify"
+do_test master-3 "Stopped -> Promote : master location"
+do_test master-4 "Started -> Promote : master location"
+do_test master-5 "Promoted -> Promoted"
+do_test master-6 "Promoted -> Promoted (2)"
+do_test master-7 "Promoted -> Fenced"
+do_test master-8 "Promoted -> Fenced -> Moved"
+do_test master-9 "Stopped + Promotable + No quorum"
+do_test master-10 "Stopped -> Promotable : notify with monitor"
 
 echo ""
 do_test rsc_dep1 "Must not     "
@@ -73,6 +91,7 @@ do_test order3 "Order stop	  "
 do_test order4 "Order (multiple)  "
 do_test order5 "Order (move)  "
 do_test order6 "Order (move w/ restart)  "
+do_test order7 "Order (manditory)  "
 
 #echo ""
 #do_test agent1 "version: lt (empty)"
@@ -87,6 +106,7 @@ do_test attrs4 "string: exists       "
 do_test attrs5 "string: not_exists   "
 do_test attrs6 "is_dc: true          "
 do_test attrs7 "is_dc: false         "
+do_test attrs8 "score_attribute      "
 
 echo ""
 do_test mon-rsc-1 "Schedule Monitor - start"
@@ -124,6 +144,10 @@ do_test rec-node-7 "Node Recover - no quorum - ignore  "
 do_test rec-node-8 "Node Recover - no quorum - freeze  "
 do_test rec-node-9 "Node Recover - no quorum - stop    "
 do_test rec-node-10 "Node Recover - no quorum - stop w/fence"
+do_test rec-node-11 "Node Recover - CRM down w/ group - fence   "
+do_test rec-node-12 "Node Recover - nothing active - fence   "
+do_test rec-node-13 "Node Recover - failed resource + shutdown - fence   "
+do_test rec-node-14 "Serialize all stonith's"
 
 echo ""
 do_test multi1 "Multiple Active (stop/start)"
@@ -139,8 +163,11 @@ do_test group4 "Group + Native (nothing)"
 do_test group5 "Group + Native (move)   "
 do_test group6 "Group + Group (move)    "
 do_test group7 "Group colocation"
+do_test group13 "Group colocation (cant run)"
 do_test group8 "Group anti-colocation"
 do_test group9 "Group recovery"
+do_test group10 "Group partial recovery"
+do_test group11 "Group target_role"
 
 echo ""
 do_test inc0 "Incarnation start					" 
@@ -152,6 +179,8 @@ do_test inc5 "Inter-incarnation ordering, silent restart, stop, move (restart 1)
 do_test inc6 "Inter-incarnation ordering, silent restart, stop, move (restart 2)"
 do_test inc7 "Clone colocation"
 do_test inc8 "Clone anti-colocation"
+do_test inc9 "Non-unique clone"
+do_test inc10 "Non-unique clone (stop)"
 
 echo ""
 
@@ -173,14 +202,20 @@ do_test notify-2 "Notify simple, confirm"
 do_test notify-3 "Notify move, confirm"
 #do_test notify-2 "Notify - 764"
 
-
 echo ""
-do_test bad1 "Bad node		"
-do_test bad2 "Bad rsc		"
-do_test bad3 "No rsc class	"
-do_test bad4 "Bad data		"
-do_test bad5 "Bad data		"
-do_test bad6 "Bad lrm_rsc	"
+
+do_test 594 "OSDL #594"
+do_test 662 "OSDL #662"
+do_test 696 "OSDL #696"
+do_test 726 "OSDL #726"
+do_test 735 "OSDL #735"
+do_test 764 "OSDL #764"
+do_test 797 "OSDL #797"
+do_test 829 "OSDL #829"
+do_test 994 "OSDL #994"
+do_test 1360 "OSDL #1360 - Clone stickiness"
+do_test unrunnable-1 "Unrunnable"
+do_test stonith-0 "Stonith loop"
 
 echo ""
 

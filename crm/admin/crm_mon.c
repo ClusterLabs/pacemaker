@@ -1,4 +1,4 @@
-/* $Id: crm_mon.c,v 1.10 2005/09/12 07:05:54 andrew Exp $ */
+/* $Id: crm_mon.c,v 1.30 2006/08/14 15:59:18 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -46,7 +46,7 @@
 #include <crm/common/ipc.h>
 
 #include <crm/cib.h>
-#include <crm/pengine/pengine.h>
+#include <crm/pengine/status.h>
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -57,31 +57,42 @@
 /* GMainLoop *mainloop = NULL; */
 const char *crm_system_name = "crm_mon";
 
-#define OPTARGS	"V?i:nrh:cdp:"
+#define OPTARGS	"V?i:nrh:cdp:1X:"
 
-#if CURSES_ENABLED
+
 void usage(const char *cmd, int exit_status);
 void blank_screen(void);
 int print_status(crm_data_t *cib);
-#define printw_at(line, fmt...) move(line, 0); printw(fmt); line++
-void wait_for_refresh(int offset, const char *prefix, int seconds);
+/* #define printw_at(line, fmt...) move(line, 0); printw(fmt); line++ */
+void wait_for_refresh(int offset, const char *prefix, int msec);
 int print_html_status(crm_data_t *cib, const char *filename);
 void make_daemon(gboolean daemonize, const char *pidfile);
 gboolean mon_timer_popped(gpointer data);
 void mon_update(const HA_Message*, int, int, crm_data_t*,void*);
 
+char *xml_file = NULL;
 char *as_html_file = NULL;
 char *pid_file = NULL;
 gboolean as_console = FALSE;
 gboolean group_by_node = FALSE;
 gboolean inactive_resources = FALSE;
-int interval = 15;
+int interval = 15000;
 gboolean daemonize = FALSE;
 GMainLoop*  mainloop = NULL;
 guint timer_id = 0;
 cib_t *cib_conn = NULL;
 int failed_connections = 0;
+gboolean one_shot = FALSE;
 
+#if CURSES_ENABLED
+#  define print_as(fmt...) if(as_console) {	\
+		printw(fmt);			\
+	} else {				\
+		fprintf(stdout, fmt);		\
+	}
+#else
+#  define print_as(fmt...) fprintf(stdout, fmt);
+#endif
 int
 main(int argc, char **argv)
 {
@@ -99,8 +110,10 @@ main(int argc, char **argv)
 		{"inactive", 0, 0, 'r'},
 		{"as-html", 1, 0, 'h'},		
 		{"as-console", 0, 0, 'c'},		
+		{"one-shot", 0, 0, '1'},		
 		{"daemonize", 0, 0, 'd'},		
 		{"pid-file", 0, 0, 'p'},		
+		{"xml-file", 0, 0, 'X'},		
 
 		{0, 0, 0, 0}
 	};
@@ -126,7 +139,7 @@ main(int argc, char **argv)
 				alter_debug(DEBUG_INC);
 				break;
 			case 'i':
-				interval = atoi(optarg);
+				interval = crm_get_msec(optarg);
 				break;
 			case 'n':
 				group_by_node = TRUE;
@@ -140,11 +153,23 @@ main(int argc, char **argv)
 			case 'p':
 				pid_file = crm_strdup(optarg);
 				break;
+			case 'X':
+				xml_file = crm_strdup(optarg);
+				one_shot = TRUE;
+				break;
 			case 'h':
 				as_html_file = crm_strdup(optarg);
 				break;
 			case 'c':
+#if CURSES_ENABLED
 				as_console = TRUE;
+#else
+				printf("You need to have curses available at compile time to enable console mode\n");
+				argerr++;
+#endif
+				break;
+			case '1':
+				one_shot = TRUE;
 				break;
 			default:
 				printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
@@ -164,39 +189,69 @@ main(int argc, char **argv)
 	}
 
 	if(as_html_file == NULL) {
+#if CURSES_ENABLED
 		as_console = TRUE;
+#else
+		printf("Defaulting to one-shot mode\n");
+		printf("You need to have curses available at compile time to enable console mode\n");
+		one_shot = TRUE;
+#endif
 	}
 
 	if(daemonize) {
 		as_console = FALSE;
 	}
 
+	if(one_shot) {
+		daemonize = FALSE;
+		as_console = FALSE;
+	}
+	
 	if(daemonize && as_html_file == NULL) {
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
 	
 	make_daemon(daemonize, pid_file);
 
+#if CURSES_ENABLED
 	if(as_console) {
 		initscr();
 		cbreak();
 		noecho();
 	}
-
-	crm_info("Starting %s", crm_system_name);
+#endif
 	
+	crm_info("Starting %s", crm_system_name);
 	mainloop = g_main_new(FALSE);
-	timer_id = Gmain_timeout_add(interval*1000, mon_timer_popped, NULL);
+
+	if(one_shot == FALSE) {
+		timer_id = Gmain_timeout_add(
+			interval, mon_timer_popped, NULL);
+	} else if(xml_file != NULL) {
+		FILE *xml_strm = fopen(xml_file, "r");
+		crm_data_t *cib_object = NULL;
+		if(strstr(xml_file, ".bz2") != NULL) {
+			cib_object = file2xml(xml_strm, TRUE);
+		} else {
+			cib_object = file2xml(xml_strm, FALSE);
+		}
+		one_shot = TRUE;
+		mon_update(NULL, 0, cib_ok, cib_object, NULL);
+	}
+
+	mon_timer_popped(NULL);
 	g_main_run(mainloop);
 	return_to_orig_privs();
 	
 	crm_info("Exiting %s", crm_system_name);	
 	
+#if CURSES_ENABLED
 	if(as_console) {
 		echo();
 		nocbreak();
 		endwin();
 	}
+#endif
 	return 0;
 }
 
@@ -206,13 +261,18 @@ mon_timer_popped(gpointer data)
 	int rc = cib_ok;
 	int options = cib_scope_local;
 
-	Gmain_timeout_remove(timer_id);
-
+	if(timer_id > 0) {
+		Gmain_timeout_remove(timer_id);
+	}
+	
 	if(as_console) {
+#if CURSES_ENABLED
 		move(0, 0);
-		printw("Updating...");
+		printw("Updating...\n");
 		clrtoeol();
 		refresh();
+#endif
+		
 	} else {
 		crm_notice("Updating...");
 	}
@@ -220,10 +280,21 @@ mon_timer_popped(gpointer data)
 	if(cib_conn == NULL) {
 		crm_debug_4("Creating CIB connection");
 		cib_conn = cib_new();
-		CRM_DEV_ASSERT(cib_conn != NULL);
 	}
-	if(cib_conn != NULL && cib_conn->state != cib_connected_query){
+
+	CRM_DEV_ASSERT(cib_conn != NULL);
+	if(crm_assert_failed) {
+		return FALSE;
+		
+	} else if(cib_conn->state != cib_connected_query){
 		crm_debug_4("Connecting to the CIB");
+#if CURSES_ENABLED
+		if(as_console) {
+			printw("Signing on...\n");
+			clrtoeol();
+			refresh();
+		}
+#endif
 		if(cib_ok == cib_conn->cmds->signon(
 			   cib_conn, crm_system_name, cib_query)) {
 			failed_connections = 0;
@@ -234,13 +305,19 @@ mon_timer_popped(gpointer data)
 			wait_for_refresh(0, "Not connected: ", 2*interval);
 			return FALSE;
 		}
+#if CURSES_ENABLED
+		if(as_console) {
+			printw("Querying...\n");
+			clrtoeol();
+			refresh();
+		}
+#endif
 	}
 	if(as_console) { blank_screen(); }
 	rc = cib_conn->cmds->query(cib_conn, NULL, NULL, options);
 	add_cib_op_callback(rc, FALSE, NULL, mon_update);
 	return FALSE;
 }
-
 
 void
 mon_update(const HA_Message *msg, int call_id, int rc,
@@ -249,14 +326,30 @@ mon_update(const HA_Message *msg, int call_id, int rc,
 	const char *prefix = NULL;
 	if(rc == cib_ok) {
 		crm_data_t *cib = NULL;
-		cib = find_xml_node(output,XML_TAG_CIB,TRUE);
+#if CRM_DEPRECATED_SINCE_2_0_4
+		if( safe_str_eq(crm_element_name(output), XML_TAG_CIB) ) {
+			cib = output;
+		} else {
+			cib = find_xml_node(output,XML_TAG_CIB,TRUE);
+		}
+#else
+		cib = output;
+		CRM_DEV_ASSERT(safe_str_eq(crm_element_name(cib), XML_TAG_CIB));
+#endif		
 		if(as_html_file) {
 			print_html_status(cib, as_html_file);
-		}
-		if(as_console) {
+		} else {
 			print_status(cib);
 		}
+		if(one_shot) {
+			exit(LSB_EXIT_OK);
+		}
+		
 			
+	} else if(one_shot) {
+		fprintf(stderr, "Query failed: %s", cib_error2string(rc));
+		exit(LSB_EXIT_OK);
+
 	} else {
 		CRM_DEV_ASSERT(cib_conn->cmds->signoff(cib_conn) == cib_ok);
 		crm_err("Query failed: %s", cib_error2string(rc));
@@ -267,22 +360,24 @@ mon_update(const HA_Message *msg, int call_id, int rc,
 }
 
 void
-wait_for_refresh(int offset, const char *prefix, int seconds) 
+wait_for_refresh(int offset, const char *prefix, int msec) 
 {
-	int lpc = seconds;
+	int lpc = msec / 1000;
 
 	if(as_console == FALSE) {
-		timer_id = Gmain_timeout_add(seconds*1000, mon_timer_popped, NULL);
+		timer_id = Gmain_timeout_add(msec, mon_timer_popped, NULL);
 		return;
 	}
 	
 	crm_notice("%sRefresh in %ds...", prefix?prefix:"", lpc);
 	while(lpc > 0) {
-		move(offset, 0);
+#if CURSES_ENABLED
+		move(0, 0);
 /* 		printw("%sRefresh in \033[01;32m%ds\033[00m...", prefix?prefix:"", lpc); */
-		printw("%sRefresh in %ds...", prefix?prefix:"", lpc);
+		printw("%sRefresh in %ds...\n", prefix?prefix:"", lpc);
 		clrtoeol();
 		refresh();
+#endif
 		lpc--;
 		if(lpc == 0) {
 			timer_id = Gmain_timeout_add(
@@ -293,69 +388,106 @@ wait_for_refresh(int offset, const char *prefix, int seconds)
 	}
 }
 
-
 int
 print_status(crm_data_t *cib) 
 {
-	static int updates = 0;
-	int lpc = 0;
-	pe_working_set_t data_set;
 	node_t *dc = NULL;
+	static int updates = 0;
+	pe_working_set_t data_set;
+	char *since_epoch = NULL;
+	time_t a_time = time(NULL);
+	int print_opts = pe_print_ncurses;
+	if(as_console) {
+		blank_screen();
+	} else {
+		print_opts = pe_print_printf;
+	}
+
 	updates++;
 	set_working_set_defaults(&data_set);
 	data_set.input = cib;
-	stage0(&data_set);
+	cluster_status(&data_set);
 
 	dc = data_set.dc_node;
 
-	lpc++;
+	print_as("\n\n============\n");
+
+	if(a_time == (time_t)-1) {
+		cl_perror("set_node_tstamp(): Invalid time returned");
+		return 1;
+	}
 	
-	printw_at(lpc, "============");
+	since_epoch = ctime(&a_time);
+	if(since_epoch != NULL) {
+		print_as("Last updated: %s", since_epoch);
+	}
+
 	if(dc == NULL) {
-		printw_at(lpc, "Current DC: NONE");
+		print_as("Current DC: NONE\n");
 	} else {
-		printw_at(lpc, "Current DC: %s (%s)",
+		print_as("Current DC: %s (%s)\n",
 			  dc->details->uname, dc->details->id);
 	}
-	printw_at(lpc, "%d Nodes configured.",
+	print_as("%d Nodes configured.\n",
 		  g_list_length(data_set.nodes));
-	printw_at(lpc, "%d Resources configured.",
+	print_as("%d Resources configured.\n",
 		  g_list_length(data_set.resources));
-	printw_at(lpc, "============");
+	print_as("============\n\n");
 
-	lpc++;
-	
 	slist_iter(node, node_t, data_set.nodes, lpc2,
-		   printw_at(lpc, "Node: %s (%s): %s",
-			     node->details->uname, node->details->id,
-			     node->details->online?"online":"OFFLINE");
+		   const char *node_mode = "OFFLINE";
+		   if(node->details->standby) {
+			   node_mode = "standby";
+		   } else if(node->details->online) {
+			   node_mode = "online";
+		   }
+		   
+		   print_as("Node: %s (%s): %s\n",
+			  node->details->uname, node->details->id,
+			  node_mode);
 		   if(group_by_node) {
 			   slist_iter(rsc, resource_t,
 				      node->details->running_rsc, lpc2,
-				      common_printw(rsc, "\t", &lpc);
-/* 				      rsc->fns->printw(rsc, "\t", &lpc); */
-				      lpc++;
+ 				      rsc->fns->print(
+					      rsc, "\t", print_opts|pe_print_rsconly, stdout);
 				   );
 		   }
 		);
 
-	lpc++;
-	
-	if(group_by_node && inactive_resources) {
-		printw_at(lpc, "Full list of resources:");
+	if(group_by_node == FALSE && inactive_resources) {
+		print_as("\nFull list of resources:\n");
+
+	} else if(inactive_resources) {
+		print_as("\nInactive resources:\n");
 	}
+	
 	if(group_by_node == FALSE || inactive_resources) {
+		print_as("\n");
 		slist_iter(rsc, resource_t, data_set.resources, lpc2,
-			   rsc->fns->printw(rsc, NULL, &lpc);
-			   lpc++;
+			   gboolean is_active = rsc->fns->active(rsc, TRUE);
+			   gboolean partially_active = rsc->fns->active(rsc, FALSE);
+			   if(rsc->orphan && is_active == FALSE) {
+				   continue;
+				   
+			   } else if(group_by_node == FALSE) {
+				   if(partially_active || inactive_resources) {
+					   rsc->fns->print(rsc, NULL, print_opts, stdout);
+				   }
+				   
+			   } else if(is_active == FALSE && inactive_resources) {
+				   rsc->fns->print(rsc, NULL, print_opts, stdout);
+			   }
 			);
 	}
-	move(lpc, 0);
 
-	refresh();
+#if CURSES_ENABLED
+	if(as_console) {
+		refresh();
+	}
+#endif
 	data_set.input = NULL;
 	cleanup_calculations(&data_set);
-	return lpc;
+	return 0;
 }
 
 int
@@ -364,15 +496,17 @@ print_html_status(crm_data_t *cib, const char *filename)
 	static int updates = 0;
 	pe_working_set_t data_set;
 	node_t *dc = NULL;
+	char *filename_tmp = crm_concat(filename, "tmp", '.');
 
-	FILE *stream = fopen(filename, "w");
+	FILE *stream = fopen(filename_tmp, "w");
 	if(stream == NULL) {
+		crm_free(filename_tmp);
 		return -1;
 	}	
 	updates++;
 	set_working_set_defaults(&data_set);
 	data_set.input = cib;
-	stage0(&data_set);
+	cluster_status(&data_set);
 
 	dc = data_set.dc_node;
 
@@ -448,7 +582,8 @@ print_html_status(crm_data_t *cib, const char *filename)
 			   slist_iter(rsc, resource_t,
 				      node->details->running_rsc, lpc2,
 				      fprintf(stream, "<li>");
-				      common_html(rsc, "\t", stream);
+				      rsc->fns->print(rsc, NULL,
+						      pe_print_html, stream);
 				      fprintf(stream, "</li>\n");
 				   );
 			   fprintf(stream, "</ul>\n");
@@ -469,7 +604,7 @@ print_html_status(crm_data_t *cib, const char *filename)
 			   if(group_by_node && rsc->fns->active(rsc, TRUE)) {
 				   continue;
 			   }
-			   rsc->fns->html(rsc, NULL, stream);
+			   rsc->fns->print(rsc, NULL, pe_print_html, stream);
 			);
 	}
 
@@ -479,6 +614,11 @@ print_html_status(crm_data_t *cib, const char *filename)
 	fflush(stream);
 	fclose(stream);
 
+	if(rename(filename_tmp, filename) != 0) {
+		cl_perror("Unable to rename %s->%s", filename_tmp, filename);
+	}
+	crm_free(filename_tmp);
+
 	return 0;
 }
 
@@ -486,12 +626,14 @@ print_html_status(crm_data_t *cib, const char *filename)
 void
 blank_screen(void) 
 {
+#if CURSES_ENABLED
 	int lpc = 0;
 	for(lpc = 0; lpc < LINES; lpc++) {
 		move(lpc, 0);
 		clrtoeol();
 	}
 	move(0, 0);
+#endif
 }
 
 
@@ -509,6 +651,8 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c) \t:Group resources by node\n", "group-by-node", 'n');
 	fprintf(stream, "\t--%s (-%c) \t:Display inactive resources\n", "inactive", 'r');
 	fprintf(stream, "\t--%s (-%c) \t: Display cluster status on the console\n", "as-console", 'c');
+	fprintf(stream, "\t--%s (-%c) \t: Display the cluster status once on "
+		"the console and exit (doesnt use ncurses)\n", "one-shot", '1');
 	fprintf(stream, "\t--%s (-%c) <filename>\t: Write cluster status to the named file\n", "as-html", 'h');
 	fprintf(stream, "\t--%s (-%c) \t: Run in the background as a daemon\n", "daemonize", 'd');
 	fprintf(stream, "\t--%s (-%c) <filename>\t: Daemon pid file location\n", "pid-file", 'p');
@@ -553,13 +697,3 @@ make_daemon(gboolean daemonize, const char *pidfile)
 	close(FD_STDERR);
 	(void)open(devnull, O_WRONLY);		/* Stderr: fd 2 */
 }
-
-#else
-int
-main(int argc, char **argv)
-{
-	fprintf(stderr, "The use of %s requires ncurses to be available"
-		" during the build process\n", crm_system_name);
-	exit(1);
-}
-#endif

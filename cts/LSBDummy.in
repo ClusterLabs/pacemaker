@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+# WARNING: This script is for CTS testing only
+#
+
+ra=@OCF_RA_DIR@/heartbeat/IPaddr
+ip="127.0.0.100"
+
+rc=0
+case $1 in
+	start)  OCF_RESKEY_ip=$ip $ra start
+		rc=$?;;
+	stop)   OCF_RESKEY_ip=$ip $ra stop
+		rc=$?;;
+	status) OCF_RESKEY_ip=$ip $ra status
+		rc=$?;; 
+	restart)OCF_RESKEY_ip=$ip $ra start
+                rc=$?;;
+        try-restart) 	rc=0;;
+        reload)  	rc=0;;
+	force-reload) 	rc=0;;
+esac
+
+exit $rc

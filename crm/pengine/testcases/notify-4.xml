@@ -1,11 +1,11 @@
-<cib cib_feature_revision="1" have_quorum="false" generated="true" admin_epoch="0" epoch="2" num_updates="16" num_peers="2" origin="c001n08" ccm_transition="2" dc_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" debug_source="finalize_join">
+<cib cib_feature_revision="1" have_quorum="false" generated="true" admin_epoch="0" epoch="2" num_updates="16" num_peers="2"  ccm_transition="2" dc_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" >
    <configuration>
-     <crm_config>
+     <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
         <nvpair id="transition_idle_timeout" name="transition_idle_timeout" value="3m"/>
         <nvpair id="symmetric_cluster" name="symetric_cluster" value="true"/>
         <nvpair id="suppress_cib_writes" name="suppress_cib_writes" value="1"/>
         <nvpair id="no_quorum_policy" name="no_quorum_policy" value="stop"/>
-     </crm_config>
+     </attributes></cluster_property_set></crm_config>
      <nodes>
        <node id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" uname="c001n08" type="member"/>
        <node id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" type="member"/>
@@ -65,17 +65,19 @@
      </constraints>
    </configuration>
  <status>
-   <node_state id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" uname="c001n08" in_ccm="true" join="member" origin="do_lrm_query" crmd="online" ha="active" expected="member">
+   <node_state id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" uname="c001n08" in_ccm="true" join="member"  crmd="online" ha="active" expected="member">
      <lrm>
        <lrm_resources>
-         <lrm_resource id="DoFencing:child_DoFencing:0" last_op="monitor" rsc_state="running" rc_code="0" op_status="0">
-           <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" origin="build_active_RAs" transition_key="0:2422658a-ee60-43e6-a836-ae3116923ae8" transition_magic="0:0:2422658a-ee60-43e6-a836-ae3116923ae8" rsc_state="running" call_id="2" rc_code="0" op_status="0"/>
-           <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_5000" operation="monitor" origin="build_active_RAs" transition_key="0:2422658a-ee60-43e6-a836-ae3116923ae8" transition_magic="0:0:2422658a-ee60-43e6-a836-ae3116923ae8" rsc_state="running" call_id="3" rc_code="0" op_status="0"/>
+         <lrm_resource id="DoFencing:child_DoFencing:0" class="heartbeat" type="apache">
+           <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" op_digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:2422658a-ee60-43e6-a836-ae3116923ae8" crm_feature_set="1.0.6" transition_magic="0:0:2422658a-ee60-43e6-a836-ae3116923ae8" call_id="2" rc_code="0" op_status="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+           <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_5000" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="0:2422658a-ee60-43e6-a836-ae3116923ae8" crm_feature_set="1.0.6" transition_magic="0:0:2422658a-ee60-43e6-a836-ae3116923ae8" call_id="3" rc_code="0" op_status="0"  op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8">
+	      
+            </lrm_rsc_op>
          </lrm_resource>
        </lrm_resources>
      </lrm>
    </node_state>
-   <node_state id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" crmd="online" origin="do_lrm_query" in_ccm="true" join="member" ha="active" expected="member">
+   <node_state id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
      <lrm>
        <lrm_resources/>
      </lrm>

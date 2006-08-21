@@ -72,9 +72,7 @@ do_te_control(long long action,
 /* 		} */
 	
 	if(action & stop_actions) {
-		if(stop_subsystem(this_subsys) == FALSE) {
-			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		}
+		stop_subsystem(this_subsys, FALSE);
 	}
 
 	if(action & start_actions) {
@@ -108,16 +106,12 @@ do_te_invoke(long long action,
 			  fsa_action2string(action));
 		return I_NULL;
 		
-	} else if(fsa_state != S_TRANSITION_ENGINE && action ^ A_TE_CANCEL) {
+	} else if(fsa_state != S_TRANSITION_ENGINE && (action & A_TE_INVOKE)) {
 		crm_debug("No need to invoke the TE (%s) in state %s",
 			  fsa_action2string(action),
 			  fsa_state2string(fsa_state));
 		return I_NULL;
 		
-	} else if(is_set(fsa_input_register, R_SHUTDOWN)) {
-		crm_err("No point invoking the TE, we're shutting down");
-		return I_NULL;
-
 	} else if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE) {
 		if(te_subsystem->pid > 0) {
 			int pid_status = -1;
@@ -145,25 +139,39 @@ do_te_invoke(long long action,
 		crm_info("Waiting for the TE to connect before action %s",
 			fsa_action2string(action));
 
+		if(is_set(fsa_input_register, R_SHUTDOWN)) {
+			CRM_CHECK((action & A_TE_INVOKE) == 0,
+				  crm_warn("A_TE_INVOKE invoked after shutdown of the TE"));
+			return I_NULL;
+		}
+		
 		if(action & A_TE_INVOKE) {
 			register_fsa_input(
 				msg_data->fsa_cause, msg_data->fsa_input,
 				msg_data->data);
 		}
+
 		crmd_fsa_stall(NULL);
 		return I_NULL;
 	}
 
 	if(action & A_TE_INVOKE) {
 		ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
-		if(input->xml != NULL) {
+		const char *graph_file = cl_get_string(input->msg, F_CRM_TGRAPH);
+		const char *graph_input = cl_get_string(input->msg, F_CRM_TGRAPH_INPUT);
 
+		if(graph_file != NULL || input->xml != NULL) {			
 			crm_debug("Starting a transition");
 			set_bit_inplace(fsa_input_register, R_IN_TRANSITION);
 			
 			cmd = create_request(
 				CRM_OP_TRANSITION, input->xml, NULL,
 				CRM_SYSTEM_TENGINE, CRM_SYSTEM_DC, NULL);
+
+			ha_msg_add(cmd, F_CRM_TGRAPH_INPUT, graph_input);
+			if(graph_file) {
+				ha_msg_add(cmd, F_CRM_TGRAPH, graph_file);
+			}
 			
 			send_request(cmd, NULL);
 

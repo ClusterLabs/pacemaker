@@ -1,4 +1,4 @@
-/* $Id: crm_attribute.c,v 1.2 2005/09/12 21:11:17 andrew Exp $ */
+/* $Id: crm_attribute.c,v 1.18 2006/06/01 16:05:59 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -44,6 +44,7 @@
 #include <crm/common/ipc.h>
 
 #include <crm/cib.h>
+#include <sys/utsname.h>
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -54,16 +55,19 @@ void usage(const char *cmd, int exit_status);
 gboolean BE_QUIET = FALSE;
 gboolean DO_WRITE = TRUE;
 gboolean DO_DELETE = FALSE;
-char *dest_node   = NULL;
-const char *type        = NULL;
-const char *dest_uname       = NULL;
-char *set_name    = NULL;
+gboolean inhibit_pe = FALSE;
+
+char *dest_node = NULL;
+char *set_name  = NULL;
 char *attr_id   = NULL;
-char *attr_name   = NULL;
-const char *attr_value  = NULL;
+char *attr_name = NULL;
+const char *type       = NULL;
+const char *rsc_id     = NULL;
+const char *dest_uname = NULL;
+const char *attr_value = NULL;
 const char *crm_system_name = "crm_master";
 
-#define OPTARGS	"V?GDQU:u:s:n:v:l:t:i:"
+#define OPTARGS	"V?GDQU:u:s:n:v:l:t:i:!r:"
 
 int
 main(int argc, char **argv)
@@ -89,7 +93,9 @@ main(int argc, char **argv)
 		{"set-name", 1, 0,   's'},
 		{"attr-name", 1, 0,  'n'},
 		{"attr-value", 1, 0, 'v'},
+		{"resource-id", 1, 0, 'r'},
 		{"lifetime", 1, 0, 'l'},
+		{"inhibit-policy-engine", 0, 0, '!'},
 		{"type", 1, 0, 't'},
 
 		{0, 0, 0, 0}
@@ -155,9 +161,6 @@ main(int argc, char **argv)
 			case 'n':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				attr_name = crm_strdup(optarg);
-				if(attr_id == NULL) {
-					attr_id = crm_strdup(optarg);
-				}
 				break;
 			case 'i':
 				crm_debug_2("Option %c => %s", flag, optarg);
@@ -166,6 +169,13 @@ main(int argc, char **argv)
 			case 'v':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				attr_value = optarg;
+				break;
+			case 'r':
+				crm_debug_2("Option %c => %s", flag, optarg);
+				rsc_id = optarg;
+				break;
+			case '!':
+				inhibit_pe = TRUE;
 				break;
 			default:
 				printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
@@ -190,47 +200,64 @@ main(int argc, char **argv)
 	}
 
 	the_cib = cib_new();
-	rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
+	rc = the_cib->cmds->signon(
+		the_cib, crm_system_name, cib_command_synchronous);
 
 	if(rc != cib_ok) {
-		crm_err("Error signing on to the CIB service: %s",
+		fprintf(stderr, "Error signing on to the CIB service: %s\n",
 			cib_error2string(rc));
 		return rc;
 	}
 	
+	if(safe_str_eq(crm_system_name, "crm_master")) {
+		struct utsname name;
+		if(uname(&name) != 0) {
+			cl_perror("uname(3) call failed");
+			return 1;
+		}
+		dest_uname = name.nodename;
+		crm_info("Detected: %s", dest_uname);
+	}
+
 	if(dest_node == NULL && dest_uname != NULL) {
 		rc = query_node_uuid(the_cib, dest_uname, &dest_node);
 		if(rc != cib_ok) {
-			crm_err("Could not map uname=%s to a UUID: %s",
+			fprintf(stderr,"Could not map uname=%s to a UUID: %s\n",
 				dest_uname, cib_error2string(rc));
 			return rc;
 		} else {
-			crm_info("Mapped %s to %s", dest_uname, crm_str(dest_node));
+			crm_info("Mapped %s to %s",
+				 dest_uname, crm_str(dest_node));
 		}
 	}
 
 	if(safe_str_eq(crm_system_name, "crm_master")) {
 		int len = 0;
-		char *rsc = NULL;
-		
-		dest_node = getenv("OCF_RESKEY_target_uuid");
-		if(dest_node == NULL) {
-			crm_err("Please specify a value for -U or -u");
-			return 1;
-		}
 		if(safe_str_eq(type, "reboot")) {
 			type = XML_CIB_TAG_STATUS;
 		} else {
 			type = XML_CIB_TAG_NODES;
 		}
-		rsc = getenv("OCF_RESOURCE_INSTANCE");
+		rsc_id = getenv("OCF_RESOURCE_INSTANCE");
 
-		CRM_DEV_ASSERT(rsc != NULL);
-		CRM_DEV_ASSERT(dest_node != NULL);
+		if(rsc_id == NULL && dest_node == NULL) {
+			fprintf(stderr, "This program should only ever be "
+				"invoked from inside an OCF resource agent.\n");
+			fprintf(stderr, "DO NOT INVOKE MANUALLY FROM THE COMMAND LINE.\n");
+			return 1;
 
-		len = 8 + strlen(rsc);
+		} else if(dest_node == NULL) {
+			fprintf(stderr, "Could not determin node UUID.\n");
+			return 1;
+
+		} else if(rsc_id == NULL) {
+			fprintf(stderr, "Could not determin resource name.\n");
+			return 1;
+		}
+		
+		len = 8 + strlen(rsc_id);
 		crm_malloc0(attr_name, len);
-		sprintf(attr_name, "master-%s", rsc);
+		sprintf(attr_name, "master-%s", rsc_id);
 
 		len = 2 + strlen(attr_name) + strlen(dest_node);
 		crm_malloc0(attr_id, len);
@@ -240,10 +267,23 @@ main(int argc, char **argv)
 		crm_malloc0(set_name, len);
 		sprintf(set_name, "master-%s", dest_node);
 		
+	} else if(safe_str_eq(crm_system_name, "crm_failcount")) {
+		type = XML_CIB_TAG_STATUS;
+		if(rsc_id == NULL) {
+			fprintf(stderr,"Please specify a resource with -r\n");
+			return 1;
+		}
+		if(dest_node == NULL) {
+			fprintf(stderr,"Please specify a node with -U or -u\n");
+			return 1;	
+		}
+	
+		set_name = NULL;
+		attr_name = crm_concat("fail-count", rsc_id, '-');
+		
 	} else if(safe_str_eq(crm_system_name, "crm_standby")) {
 		if(dest_node == NULL) {
-			crm_err("Please specify a value for -U or -u");
-			fprintf(stderr,"Please specify a value for -U or -u\n");
+			fprintf(stderr,"Please specify a node with -U or -u\n");
 			return 1;
 
 		} else if(DO_DELETE) {
@@ -251,6 +291,10 @@ main(int argc, char **argv)
 				the_cib, dest_node, type, attr_value);
 			
 		} else if(DO_WRITE) {
+			if(attr_value == NULL) {
+				fprintf(stderr, "Please specify 'true' or 'false' with -v\n");
+				return 1;
+			}
 			rc = set_standby(the_cib, dest_node, type, attr_value);
 
 		} else {
@@ -274,23 +318,36 @@ main(int argc, char **argv)
 		type = XML_CIB_TAG_CRMCONFIG;
 
 	} else if (type == NULL) {
-		crm_err("Please specify a value for -t");
-		fprintf(stderr,"Please specify a value for -t\n");
+		fprintf(stderr, "Please specify a value for -t\n");
 		return 1;
 	}
 
 	if(is_done) {
 			
 	} else if(DO_DELETE) {
-		rc = delete_attr(the_cib, type, dest_node, set_name,
+		rc = delete_attr(the_cib, cib_sync_call, type, dest_node, set_name,
 				 attr_id, attr_name, attr_value);
+		
+		if(safe_str_eq(crm_system_name, "crm_failcount")) {
+			char *now_s = NULL;
+			time_t now = time(NULL);
+			now_s = crm_itoa(now);
+			update_attr(the_cib, cib_sync_call,
+				    NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s);
+			crm_free(now_s);
+		}
 			
 	} else if(DO_WRITE) {
+		int cib_opts = cib_sync_call;
 		CRM_DEV_ASSERT(type != NULL);
 		CRM_DEV_ASSERT(attr_name != NULL);
 		CRM_DEV_ASSERT(attr_value != NULL);
-		
-		rc = update_attr(the_cib, type, dest_node, set_name,
+
+		if(inhibit_pe) {
+			crm_warn("Inhibiting notifications for this update");
+			cib_opts |= cib_inhibit_notify;
+		}
+		rc = update_attr(the_cib, cib_opts, type, dest_node, set_name,
 				 attr_id, attr_name, attr_value);
 
 	} else {
@@ -313,12 +370,12 @@ main(int argc, char **argv)
 	}
 	the_cib->cmds->signoff(the_cib);
 	if(DO_WRITE == FALSE && rc == cib_NOTEXISTS) {
-		crm_warn("Error performing operation: %s",
-			 cib_error2string(rc));
+		fprintf(stderr, "Error performing operation: %s\n",
+			cib_error2string(rc));
 
 	} else if(rc != cib_ok) {
-		crm_warn("Error performing operation: %s",
-			 cib_error2string(rc));
+		fprintf(stderr, "Error performing operation: %s\n",
+			cib_error2string(rc));
 	}
 	return rc;
 }
@@ -336,6 +393,9 @@ usage(const char *cmd, int exit_status)
 	} else if(safe_str_eq(cmd, "crm_standby")) {
 		fprintf(stream, "usage: %s [-?V] -(u|U) -(D|G|v) [-l]\n", cmd);
 
+	} else if(safe_str_eq(cmd, "crm_failcount")) {
+		fprintf(stream, "usage: %s [-?V] -(u|U) -(D|G|v) -r\n", cmd);
+
 	} else {
 		fprintf(stream, "usage: %s [-?V] -(D|G|v) [options]\n", cmd);
 	}
@@ -348,7 +408,8 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\t: Print only the value on stdout"
 		" (use with -G)\n", "quiet", 'Q');
 	fprintf(stream, "\t--%s (-%c)\t: "
-		"Retrieve rather than set the attribute\n", "get-value", 'G');
+		"Retrieve rather than set the %s\n", "get-value", 'G',
+		safe_str_eq(cmd, "crm_master")?"named attribute":"preference to be promoted");
 	fprintf(stream, "\t--%s (-%c)\t: "
 		"Delete rather than set the attribute\n", "delete-attr", 'D');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
@@ -362,7 +423,7 @@ usage(const char *cmd, int exit_status)
 	} else if(safe_str_eq(cmd, "crm_standby")) {
 		fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
 			"UUID of the node to change\n", "node-uuid", 'u');
-		fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
+		fprintf(stream, "\t--%s (-%c) <node_uname>\t: "
 			"uname of the node to change\n", "node-uname", 'U');
 		fprintf(stream, "\t--%s (-%c) <string>\t: "
 			"How long the preference lasts (reboot|forever)\n"
@@ -375,18 +436,24 @@ usage(const char *cmd, int exit_status)
 		"UUID of the node to change\n", "node-uuid", 'u');
 	fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
 		"uname of the node to change\n", "node-uname", 'U');
-	fprintf(stream, "\t--%s (-%c) <string>\t: "
-		"Set of attributes in which to read/write the attribute\n",
-		"set-name", 's');
-	fprintf(stream, "\t--%s (-%c) <string>\t: "
-		"Attribute to set\n", "attr-name", 'n');
-	fprintf(stream, "\t--%s (-%c) <string>\t: "
-		"Which section of the CIB to set the attribute: (%s|%s|%s)\n",
-		"type", 't',
-		XML_CIB_TAG_NODES, XML_CIB_TAG_STATUS, XML_CIB_TAG_CRMCONFIG);
-	fprintf(stream, "\t    -t=%s options: -(U|u) -n [-s]\n", XML_CIB_TAG_NODES);
-	fprintf(stream, "\t    -t=%s options: -(U|u) -n [-s]\n", XML_CIB_TAG_STATUS);
-	fprintf(stream, "\t    -t=%s options: -n [-s]\n", XML_CIB_TAG_CRMCONFIG);
+
+	if(safe_str_eq(cmd, "crm_failcount")) {
+		fprintf(stream, "\t--%s (-%c) <resource name>\t: "
+			"name of the resource to operate on\n", "resource-id", 'r');
+	} else {
+		fprintf(stream, "\t--%s (-%c) <string>\t: "
+			"Set of attributes in which to read/write the attribute\n",
+			"set-name", 's');
+		fprintf(stream, "\t--%s (-%c) <string>\t: "
+			"Attribute to set\n", "attr-name", 'n');
+		fprintf(stream, "\t--%s (-%c) <string>\t: "
+			"Which section of the CIB to set the attribute: (%s|%s|%s)\n",
+			"type", 't',
+			XML_CIB_TAG_NODES, XML_CIB_TAG_STATUS, XML_CIB_TAG_CRMCONFIG);
+		fprintf(stream, "\t    -t=%s options: -(U|u) -n [-s]\n", XML_CIB_TAG_NODES);
+		fprintf(stream, "\t    -t=%s options: -(U|u) -n [-s]\n", XML_CIB_TAG_STATUS);
+		fprintf(stream, "\t    -t=%s options: -n [-s]\n", XML_CIB_TAG_CRMCONFIG);
+	}
 	fflush(stream);
 
 	exit(exit_status);

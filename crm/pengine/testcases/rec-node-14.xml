@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
+<cib num_updates="1" epoch="1" admin_epoch="0" dc_uuid="uuid2">
+  <configuration>
+    <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
+      <nvpair id="stonith_enabled" name="stonith_enabled" value="true"/>
+      <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
+    </attributes></cluster_property_set></crm_config>
+    <nodes>
+      <node id="uuid1" uname="node1" type="member"/>
+      <node id="uuid2" uname="node2" type="member"/>
+      <node id="uuid3" uname="node3" type="member"/>
+    </nodes>
+    <resources>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="uuid1" uname="node1" crmd="online" join="member" expected="member" in_ccm="false"/>
+    <node_state id="uuid2" uname="node2" crmd="online" join="member" expected="member" in_ccm="false"/>
+    <node_state id="uuid3" uname="node3" crmd="online" join="member" expected="member" in_ccm="false"/>
+  </status>
+</cib>

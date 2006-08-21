@@ -1,4 +1,4 @@
-/* $Id: msg.c,v 1.5 2005/06/15 13:39:48 andrew Exp $ */
+/* $Id: msg.c,v 1.9 2006/07/06 09:30:27 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -86,7 +86,7 @@ validate_crm_message(
 	if (to == NULL) {
 		crm_info("No sub-system defined.");
 		action = NULL;
-	} else if (true_sys != NULL && strcmp(to, true_sys) != 0) {
+	} else if (true_sys != NULL && strcasecmp(to, true_sys) != 0) {
 		crm_debug_3("The message is not for this sub-system (%s != %s).",
 			  to, true_sys);
 		action = NULL;
@@ -95,7 +95,7 @@ validate_crm_message(
 	if (type == NULL) {
 		crm_info("No message type defined.");
 		return NULL;
-	} else if (msg_type != NULL && strcmp(msg_type, type) != 0) {
+	} else if (msg_type != NULL && strcasecmp(msg_type, type) != 0) {
 		crm_info("Expecting a (%s) message but received a (%s).",
 		       msg_type, type);
 		action = NULL;
@@ -110,7 +110,7 @@ validate_crm_message(
 		crm_debug_3(
 		       "XML is valid and node with message type (%s) found.",
 		       type);
-	crm_debug_3("Returning node (%s)", xmlGetNodePath(action));
+	crm_debug_3("Returning node (%s)", crm_element_name(action));
 */
 	
 	return action;
@@ -148,6 +148,7 @@ send_hello_message(IPC_Channel *ipc_client,
 	crm_debug_4("hello message sent");
 	
 	free_xml(hello_node);
+	crm_msg_del(hello);
 }
 
 
@@ -232,7 +233,7 @@ create_request_adv(const char *task, crm_data_t *msg_data,
 
 	ha_msg_add(request, F_CRM_ORIGIN,	origin);
 	ha_msg_add(request, F_TYPE,		T_CRM);
-	ha_msg_add(request, F_CRM_VERSION,	CRM_VERSION);
+	ha_msg_add(request, F_CRM_VERSION,	CRM_FEATURE_SET);
 	ha_msg_add(request, F_CRM_MSG_TYPE,     XML_ATTR_REQUEST);
 	ha_msg_add(request, XML_ATTR_REFERENCE, reference);
 	ha_msg_add(request, F_CRM_TASK,		task);
@@ -273,9 +274,10 @@ create_reply_adv(HA_Message *original_request,
 	if (type == NULL) {
 		crm_err("Cannot create new_message,"
 			" no message type in original message");
+		CRM_ASSERT(type != NULL);
 		return NULL;
 #if 0
-	} else if (strcmp(XML_ATTR_REQUEST, type) != 0) {
+	} else if (strcasecmp(XML_ATTR_REQUEST, type) != 0) {
 		crm_err("Cannot create new_message,"
 			" original message was not a request");
 		return NULL;
@@ -285,7 +287,7 @@ create_reply_adv(HA_Message *original_request,
 
 	ha_msg_add(reply, F_CRM_ORIGIN,		origin);
 	ha_msg_add(reply, F_TYPE,		T_CRM);
-	ha_msg_add(reply, F_CRM_VERSION,	CRM_VERSION);
+	ha_msg_add(reply, F_CRM_VERSION,	CRM_FEATURE_SET);
 	ha_msg_add(reply, F_CRM_MSG_TYPE,	XML_ATTR_RESPONSE);
 	ha_msg_add(reply, XML_ATTR_REFERENCE,	crm_msg_reference);
 	ha_msg_add(reply, F_CRM_TASK,		operation);
@@ -321,6 +323,7 @@ send_ipc_reply(IPC_Channel *ipc_channel,
 
 	if (reply != NULL) {
 		was_sent = send_ipc_message(ipc_channel, reply);
+		crm_msg_del(reply);
 	}
 	return was_sent;
 }

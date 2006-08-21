@@ -1,4 +1,4 @@
-/* $Id: ipc.c,v 1.13 2005/09/11 20:56:56 andrew Exp $ */
+/* $Id: ipc.c,v 1.28 2006/08/14 08:52:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -52,6 +52,8 @@ gboolean
 send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboolean force_ordered)
 {
 	gboolean all_is_good = TRUE;
+	cl_mem_stats_t saved_stats;
+	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	if (msg == NULL) {
 		crm_err("cant send NULL message");
@@ -61,55 +63,70 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboole
 		crm_err("No heartbeat connection specified");
 		all_is_good = FALSE;
 
-	} else if(hb_conn->llc_ops->chan_is_connected(hb_conn) != HA_OK) {
+	} else if(hb_conn->llc_ops->chan_is_connected(hb_conn) == FALSE) {
 		crm_err("Not connected to Heartbeat");
 		all_is_good = FALSE;
 		
-	} else if(get_stringlen(msg) >= MAXMSG) {
-		crm_err("Message is too large to send");
-		all_is_good = FALSE;
-
 	} else if(node != NULL) {
 		if(hb_conn->llc_ops->send_ordered_nodemsg(
 			   hb_conn, msg, node) != HA_OK) {
-			IPC_Channel *ipc = hb_conn->llc_ops->ipcchan(hb_conn);
 			all_is_good = FALSE;
 			crm_err("Send failed");
-			CRM_DEV_ASSERT(ipc->send_queue->current_qlen < ipc->send_queue->max_qlen);
+			
 		} else {
 			crm_debug_2("Message sent...");
 		}
+
 	} else if(force_ordered) {
 		if(hb_conn->llc_ops->send_ordered_clustermsg(hb_conn, msg) != HA_OK) {
-			IPC_Channel *ipc = hb_conn->llc_ops->ipcchan(hb_conn);
 			all_is_good = FALSE;
 			crm_err("Broadcast Send failed");
-			CRM_DEV_ASSERT(ipc->send_queue->current_qlen < ipc->send_queue->max_qlen);
 		} else {
 			crm_debug_2("Broadcast message sent...");
 		}
 	} else {
 		if(hb_conn->llc_ops->sendclustermsg(hb_conn, msg) != HA_OK) {
-			IPC_Channel *ipc = hb_conn->llc_ops->ipcchan(hb_conn);
 			all_is_good = FALSE;
 			crm_err("Broadcast Send failed");
-			CRM_DEV_ASSERT(ipc->send_queue->current_qlen < ipc->send_queue->max_qlen);
+
 		} else {
 			crm_debug_2("Broadcast message sent...");
 		}
 	}
+
+	if(all_is_good == FALSE && hb_conn != NULL) {
+		IPC_Channel *ipc = NULL;
+		IPC_Queue *send_q = NULL;
+		
+		if(hb_conn->llc_ops->chan_is_connected(hb_conn) != HA_OK) {
+			ipc = hb_conn->llc_ops->ipcchan(hb_conn);
+		}
+		if(ipc != NULL) {
+/* 			ipc->ops->resume_io(ipc); */
+			send_q = ipc->send_queue;
+		}
+		if(send_q != NULL) {
+			CRM_CHECK(send_q->current_qlen < send_q->max_qlen, ;);
+		}
+	}
 	
 	crm_log_message_adv(all_is_good?LOG_MSG:LOG_WARNING,"HA[outbound]",msg);
+	crm_diff_mem_stats(LOG_DEBUG, LOG_DEBUG, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return all_is_good;
 }
 
-#define ipc_log(fmt...) do_crm_log(server?LOG_WARNING:LOG_ERR, __FILE__, __FUNCTION__, fmt)
-
 /* frees msg */
 gboolean 
-crm_send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg, gboolean server)
+send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 {
 	gboolean all_is_good = TRUE;
+	int fail_level = LOG_WARNING;
+	cl_mem_stats_t saved_stats;
+	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
+
+	if(ipc_client != NULL && ipc_client->conntype == IPC_CLIENT) {
+		fail_level = LOG_ERR;
+	}
 
 	if (msg == NULL) {
 		crm_err("cant send NULL message");
@@ -120,28 +137,33 @@ crm_send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg, gboolean server)
 		all_is_good = FALSE;
 
 	} else if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
-		ipc_log("IPC Channel is not connected");
-		all_is_good = FALSE;
-
-	} else if(get_stringlen(msg) >= MAXMSG) {
-		crm_err("Message is too large to send");
+		crm_log_maybe(fail_level, "IPC Channel to %d is not connected",
+			      (int)ipc_client->farside_pid);
 		all_is_good = FALSE;
 	}
 
 	if(all_is_good && msg2ipcchan(msg, ipc_client) != HA_OK) {
-		ipc_log("Could not send IPC, message");
+		crm_log_maybe(fail_level, "Could not send IPC message to %d",
+			(int)ipc_client->farside_pid);
 		all_is_good = FALSE;
 
 		if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
-			ipc_log("IPC Channel is no longer connected");
+			crm_log_maybe(fail_level,
+				      "IPC Channel to %d is no longer connected",
+				      (int)ipc_client->farside_pid);
 
-		} else if(server == FALSE) {
-			CRM_DEV_ASSERT(ipc_client->send_queue->current_qlen < ipc_client->send_queue->max_qlen);
+		} else if(ipc_client->conntype == IPC_CLIENT) {
+			if(ipc_client->send_queue->current_qlen >= ipc_client->send_queue->max_qlen) {
+				crm_err("Send queue to %d (size=%d) full.",
+					ipc_client->farside_pid,
+					(int)ipc_client->send_queue->max_qlen);
+			}
 		}
-	}	
-
+	}
+/* 	ipc_client->ops->resume_io(ipc_client); */
+	
 	crm_log_message_adv(all_is_good?LOG_MSG:LOG_WARNING,"IPC[outbound]",msg);
-	crm_msg_del(msg);
+	crm_diff_mem_stats(LOG_DEBUG, LOG_DEBUG, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	
 	return all_is_good;
 }
@@ -237,7 +259,7 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 	local_socket_len += strlen(channel_name);
 	local_socket_len += strlen(CRM_SOCK_DIR);
 
-	crm_malloc0(commpath, sizeof(char)*local_socket_len);
+	crm_malloc0(commpath, local_socket_len);
 	if(commpath != NULL) {
 		sprintf(commpath, CRM_SOCK_DIR "/%s", channel_name);
 		commpath[local_socket_len - 1] = '\0';
@@ -252,11 +274,13 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 
 	if (ch == NULL) {
 		crm_err("Could not access channel on: %s", commpath);
+		crm_free(commpath);
 		return NULL;
 		
 	} else if (ch->ops->initiate_connection(ch) != IPC_OK) {
 		crm_debug("Could not init comms on: %s", commpath);
 		ch->ops->destroy(ch);
+		crm_free(commpath);
 		return NULL;
 	}
 
@@ -266,6 +290,7 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 
 	crm_debug_3("Processing of %s complete", commpath);
 
+	crm_free(commpath);
 	return ch;
 }
 
@@ -303,32 +328,30 @@ gboolean
 subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 {
 	int lpc = 0;
-	IPC_Message *msg = NULL;
+	HA_Message *msg = NULL;
 	ha_msg_input_t *new_input = NULL;
 	gboolean all_is_well = TRUE;
 	const char *sys_to;
 	const char *task;
 
-	while(sender->ops->is_message_pending(sender)) {
+	while(IPC_ISRCONN(sender)) {
 		gboolean process = FALSE;
-		if (sender->ch_status == IPC_DISCONNECT) {
-			/* The message which was pending for us is that
-			 * the IPC status is now IPC_DISCONNECT */
-			crm_debug("Channel is disconnected");
+		if(sender->ops->is_message_pending(sender) == 0) {
 			break;
 		}
-		if (sender->ops->recv(sender, &msg) != IPC_OK) {
-			perror("Receive failure:");
-			return !all_is_well;
-		}
+
+		msg = msgfromIPC_noauth(sender);
 		if (msg == NULL) {
-			crm_err("No message this time");
+			crm_err("No message from %d this time",
+				sender->farside_pid);
 			continue;
 		}
 
 		lpc++;
-		new_input = new_ipc_msg_input(msg);
-		msg->msg_done(msg);
+		new_input = new_ha_msg_input(msg);
+		crm_msg_del(msg);
+		msg = NULL;
+		
 		crm_log_message(LOG_MSG, new_input->msg);
 
 		sys_to = cl_get_string(new_input->msg, F_CRM_SYS_TO);
@@ -383,17 +406,17 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 		}
 		
 		delete_ha_msg_input(new_input);
-		msg = NULL;
+		new_input = NULL;
+
+		if(sender->ch_status == IPC_CONNECT) {
+			break;
+		}
 	}
 
-	/* clean up after a break */
-	if(msg != NULL) {
-		msg->msg_done(msg);
-	}
-	
 	crm_debug_2("Processed %d messages", lpc);
 	if (sender->ch_status != IPC_CONNECT) {
-		crm_err("The server has left us: Shutting down...NOW");
+		crm_err("The server %d has left us: Shutting down...NOW",
+			sender->farside_pid);
 
 		exit(1); /* shutdown properly later */
 		

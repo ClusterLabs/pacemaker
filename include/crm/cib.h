@@ -1,4 +1,4 @@
-/* $Id: cib.h,v 1.30 2005/09/12 19:32:36 andrew Exp $ */
+/* $Id: cib.h,v 1.43 2006/06/22 15:11:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -26,8 +26,11 @@
 #include <crm/common/xml.h>
 #include <ha_msg.h>
 
-#define cib_feature_revision 1
-#define cib_feature_revision_s "1"
+#define CIB_FEATURE_SET "1.3"
+#define USE_PESKY_FRAGMENTS 1
+
+#define CIB_OPTIONS_FIRST "cib-bootstrap-options"
+/* use compare_version() for doing comparisons */
 
 enum cib_variant {
 	cib_native,
@@ -44,6 +47,8 @@ enum cib_state {
 enum cib_conn_type {
 	cib_command,
 	cib_query,
+	cib_query_synchronous,
+	cib_command_synchronous,
 	cib_no_connection
 };
 
@@ -107,7 +112,13 @@ enum cib_errors {
 	cib_no_quorum		= -42,
 	cib_diff_failed		= -43,
 	cib_diff_resync		= -44,
-	cib_old_data		= -45
+	cib_old_data		= -45,
+	cib_id_check		= -46,
+	cib_dtd_validation	= -47,
+	cib_bad_section		= -48,
+	cib_bad_digest		= -49,
+	cib_bad_permissions	= -50,
+	cib_bad_config		= -51
 };
 
 enum cib_update_op {
@@ -138,6 +149,7 @@ enum cib_section {
 #define CIB_OP_QUERY	"cib_query"
 #define CIB_OP_CREATE	"cib_create"
 #define CIB_OP_UPDATE	"cib_update"
+#define CIB_OP_MODIFY	"cib_modify"
 #define CIB_OP_DELETE	"cib_delete"
 #define CIB_OP_DELETE_ALT	"cib_delete_alt"
 #define CIB_OP_ERASE	"cib_erase"
@@ -176,10 +188,13 @@ enum cib_section {
 #define T_CIB_POST_NOTIFY	"cib_post_notify"
 #define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
 #define T_CIB_DIFF_NOTIFY	"cib_diff_notify"
+#define T_CIB_REPLACE_NOTIFY	"cib_refresh_notify"
 
 #define cib_channel_ro		"cib_ro"
 #define cib_channel_rw		"cib_rw"
 #define cib_channel_callback	"cib_callback"
+#define cib_channel_ro_synchronous	"cib_ro_syncronous"
+#define cib_channel_rw_synchronous	"cib_rw_syncronous"
 
 typedef struct cib_s cib_t;
 
@@ -240,6 +255,8 @@ typedef struct cib_api_operations_s
 			   crm_data_t **output_data, int call_options);
 		int (*modify)(cib_t *cib, const char *section, crm_data_t *data,
 			   crm_data_t **output_data, int call_options);
+		int (*update)(cib_t *cib, const char *section, crm_data_t *data,
+			   crm_data_t **output_data, int call_options);
 		int (*replace)(cib_t *cib, const char *section, crm_data_t *data,
 			   crm_data_t **output_data, int call_options);
 		int (*delete)(cib_t *cib, const char *section, crm_data_t *data,
@@ -298,6 +315,7 @@ typedef struct cib_callback_client_s
 
 /* Core functions */
 extern cib_t *cib_new(void);
+extern void cib_delete(cib_t *cib);
 
 extern gboolean   startCib(const char *filename);
 extern crm_data_t *get_cib_copy(cib_t *cib);
@@ -325,7 +343,7 @@ extern crm_data_t *createEmptyCib(void);
 extern gboolean verifyCibXml(crm_data_t *cib);
 extern int cib_section2enum(const char *a_section);
 
-#define create_cib_fragment(update,section) create_cib_fragment_adv(update, section, __FUNCTION__)
+#define create_cib_fragment(update,cib_section) create_cib_fragment_adv(update, cib_section, __FUNCTION__)
 
 extern crm_data_t *diff_cib_object(
 	crm_data_t *old, crm_data_t *new,gboolean suppress);
@@ -343,7 +361,7 @@ extern gboolean cib_version_details(
 	crm_data_t *cib, int *admin_epoch, int *epoch, int *updates);
 
 extern enum cib_errors update_attr(
-	cib_t *the_cib,
+	cib_t *the_cib, int call_options,
 	const char *section, const char *node_uuid, const char *set_name,
 	const char *attr_id, const char *attr_name, const char *attr_value);
 
@@ -353,7 +371,7 @@ extern enum cib_errors read_attr(
 	const char *attr_id, const char *attr_name, char **attr_value);
 
 extern enum cib_errors delete_attr(
-	cib_t *the_cib,
+	cib_t *the_cib, int options, 
 	const char *section, const char *node_uuid, const char *set_name,
 	const char *attr_id, const char *attr_name, const char *attr_value);
 
@@ -374,6 +392,8 @@ extern enum cib_errors set_standby(
 enum cib_errors delete_standby(
 	cib_t *the_cib,
 	const char *uuid, const char *scope, const char *standby_value);
+
+extern const char *feature_set(crm_data_t *xml_obj);
 
 #endif
 

@@ -1,4 +1,4 @@
-/* $Id: crmd_utils.h,v 1.19 2005/05/31 14:54:28 andrew Exp $ */
+/* $Id: crmd_utils.h,v 1.24 2006/04/18 10:59:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -31,6 +31,25 @@ extern void update_local_cib_adv(
 
 #define update_local_cib(data) update_local_cib_adv(data, TRUE, __FUNCTION__)
 
+#define fsa_cib_update(section, data, options, call_id)			\
+	if(fsa_cib_conn != NULL) {					\
+		call_id = fsa_cib_conn->cmds->update(			\
+			fsa_cib_conn, section, data, NULL, options);	\
+									\
+	} else {							\
+		crm_err("No CIB connection available");			\
+	}
+
+#define fsa_cib_anon_update(section, data, options)			\
+	if(fsa_cib_conn != NULL) {					\
+		fsa_cib_conn->cmds->update(				\
+			fsa_cib_conn, section, data, NULL, options);	\
+									\
+	} else {							\
+		crm_err("No CIB connection available");			\
+	}
+
+
 extern long long toggle_bit   (long long  action_list, long long action);
 extern long long clear_bit    (long long  action_list, long long action);
 extern long long set_bit      (long long  action_list, long long action);
@@ -47,15 +66,15 @@ extern gboolean crm_timer_start(fsa_timer_t *timer);
 extern gboolean crm_timer_popped(gpointer data);
 
 extern crm_data_t *create_node_state(
-	const char *uuid, const char *uname,
-	const char *ha_state, const char *ccm_state,
+	const char *uname, const char *ha_state, const char *ccm_state,
 	const char *crmd_state, const char *join_state, const char *exp_state,
-	const char *src);
+	gboolean clear_shutdown, const char *src);
 
 extern void create_node_entry(
 	const char *uuid, const char *uname, const char *type);
 
-extern gboolean stop_subsystem (struct crm_subsystem_s *centry);
+extern gboolean stop_subsystem (
+	struct crm_subsystem_s *centry, gboolean force_quit);
 extern gboolean start_subsystem(struct crm_subsystem_s *centry);
 
 extern lrm_op_t *copy_lrm_op(const lrm_op_t *op);
@@ -69,5 +88,6 @@ extern void fsa_dump_inputs(
 	int log_level, const char *text, long long input_register);
 
 extern gboolean need_transition(enum crmd_fsa_state state);
+extern void update_dc(HA_Message *msg, gboolean assert_same);
 
 #endif

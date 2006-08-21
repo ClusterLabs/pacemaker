@@ -34,14 +34,14 @@ CLEANFILES              = ChangeLog $(txtfiles)
 
 SPECSRC 		= $(top_builddir)/heartbeat.spec
 
-OTHER_DOCS              = AUTHORS COPYING ChangeLog \
+OTHER_DOCS              = AUTHORS COPYING COPYING.LGPL ChangeLog \
                                 README authkeys ha.cf startstop haresources \
 				DirectoryMap.txt apphbd.cf ha_logd.cf
 
 doc_DATA		= $(OTHER_DOCS) $(txtfiles) $(htmlfiles) 
 
-man_MANS		= heartbeat.8 apphbd.8 cl_status.1 ha_logd.8 ha_logger.1 \
-			 hb_standby.1 hb_takeover.1
+man_MANS		= heartbeat.8 apphbd.8 cibadmin.8 cl_status.1 ha_logd.8 ha_logger.1 \
+			 hb_standby.1 hb_takeover.1 hb_addnode.1 hb_delnode.1
 
 EXTRA_DIST = $(txtfiles) $(htmlfiles) $(man_MANS) $(OTHER_DOCS)
 
@@ -51,4 +51,4 @@ ChangeLog: $(SPECSRC)
 
 
 %.txt: %.html
-	if [ "X$(HTML2TXT)" = "X" ]; then echo "Lynx or user-defined HTML2TXT required to convert $< to $@" >$@ ; else $(HTML2TXT) -dump $< >$@ ; fi
+	if [ "X$(HTML2TXT)" = "X" ]; then echo "Lynx or w3m or user-defined HTML2TXT required to convert $< to $@" >$@ ; else $(HTML2TXT) -dump $< >$@ ; fi

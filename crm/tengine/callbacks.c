@@ -1,4 +1,4 @@
-/* $Id: callbacks.c,v 1.46 2005/09/12 07:52:09 andrew Exp $ */
+/* $Id: callbacks.c,v 1.89 2006/08/14 09:14:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -30,12 +30,46 @@
 #include <heartbeat.h>
 
 #include <tengine.h>
+#include <te_callbacks.h>
+
+#include <clplumbing/Gmain_timeout.h>
 
 void te_update_confirm(const char *event, HA_Message *msg);
 void te_update_diff(const char *event, HA_Message *msg);
 crm_data_t *need_abort(crm_data_t *update);
 void cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
 			 crm_data_t *output, void *user_data);
+
+extern char *te_uuid;
+gboolean shuttingdown = FALSE;
+crm_graph_t *transition_graph;
+GTRIGSource *transition_trigger = NULL;
+crm_action_timer_t *transition_timer = NULL;
+
+static gboolean
+start_global_timer(crm_action_timer_t *timer, int timeout)
+{
+	CRM_ASSERT(timer != NULL);
+	CRM_CHECK(timer > 0, return FALSE);
+	CRM_CHECK(timer->source_id == 0, return FALSE);
+
+	if(timeout <= 0) {
+		crm_err("Tried to start timer with period: %d", timeout);
+
+	} else if(timer->source_id == 0) {
+		crm_debug_2("Starting abort timer: %dms", timeout);
+		timer->timeout = timeout;
+		timer->source_id = Gmain_timeout_add(
+			timeout, global_timer_callback, (void*)timer);
+		CRM_ASSERT(timer->source_id != 0);
+		return TRUE;
+
+	} else {
+		crm_err("Timer is already active with period: %d", timer->timeout);
+	}
+	
+	return FALSE;		
+}
 
 void
 te_update_diff(const char *event, HA_Message *msg)
@@ -75,13 +109,13 @@ te_update_diff(const char *event, HA_Message *msg)
 		&diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates, 
 		&diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
 	
-	crm_debug("Processing diff (%s): %d.%d.%d -> %d.%d.%d", op,
+	crm_info("Processing diff (%s): %d.%d.%d -> %d.%d.%d", op,
 		  diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
 		  diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
 	log_cib_diff(LOG_DEBUG_2, diff, op);
 
 	set_name = "diff-added";
-	if(diff != NULL && aborted == NULL) {
+	if(diff != NULL) {
 		crm_data_t *section = NULL;
 		crm_data_t *change_set = find_xml_node(diff, set_name, FALSE);
 		change_set = find_xml_node(change_set, XML_TAG_CIB, FALSE);
@@ -90,11 +124,9 @@ te_update_diff(const char *event, HA_Message *msg)
 			crm_debug_2("Checking status changes");
 			section=get_object_root(XML_CIB_TAG_STATUS,change_set);
 		}
-		if(section != NULL && extract_event(section) == FALSE) {
-			send_complete("Unexpected status update",
-				      section, te_update, i_cancel);
-			free_xml(diff);
-			return;
+		
+		if(section != NULL) {
+			extract_event(section);
 		}
 		crm_debug_2("Checking change set: %s", set_name);
 		aborted = need_abort(change_set);
@@ -102,283 +134,144 @@ te_update_diff(const char *event, HA_Message *msg)
 	
 	set_name = "diff-removed";
 	if(diff != NULL && aborted == NULL) {
+		crm_data_t *attrs = NULL;
+		crm_data_t *status = NULL;
 		crm_data_t *change_set = find_xml_node(diff, set_name, FALSE);
 		change_set = find_xml_node(change_set, XML_TAG_CIB, FALSE);
 
 		crm_debug_2("Checking change set: %s", set_name);
-		aborted = need_abort(change_set);
-	}
+		aborted = need_abort(change_set);		
 
+		if(aborted == NULL && change_set != NULL) {
+			status = get_object_root(XML_CIB_TAG_STATUS, change_set);
+		
+			xml_child_iter_filter(
+				status, node_state, XML_CIB_TAG_STATE,
+				
+				attrs = find_xml_node(
+					node_state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
+				
+				if(attrs != NULL) {
+					crm_info("Aborting on "XML_TAG_TRANSIENT_NODEATTRS" deletions");
+					abort_transition(INFINITY, tg_restart,
+							 XML_TAG_TRANSIENT_NODEATTRS, attrs);
+				}
+				);
+		}
+	}
+	
 	if(aborted != NULL) {
-		send_complete("Non-status change", diff, te_update, i_cancel);
-		free_xml(diff);
-		return;
+		abort_transition(
+			INFINITY, tg_restart, "Non-status change", NULL);
 	}
 	
 	free_xml(diff);
 	return;
 }
 
-crm_data_t *
-need_abort(crm_data_t *update)
-{
-	crm_data_t *section_xml = NULL;
-	const char *section = NULL;
 
-	if(update == NULL) {
-		return NULL;
-	}
-	
-	section = XML_CIB_TAG_NODES;
-	section_xml = get_object_root(section, update);
-	xml_child_iter(section_xml, child, NULL,
-		       return section_xml;
-		);
-
-	section = XML_CIB_TAG_RESOURCES;
-	section_xml = get_object_root(section, update);
-	xml_child_iter(section_xml, child, NULL,
-		       return section_xml;
-		);
-
-	section = XML_CIB_TAG_CONSTRAINTS;
-	section_xml = get_object_root(section, update);
-	xml_child_iter(section_xml, child, NULL,
-		       return section_xml;
-		);
-
-	section = XML_CIB_TAG_CRMCONFIG;
-	section_xml = get_object_root(section, update);
-	xml_child_iter(section_xml, child, NULL,
-		       return section_xml;
-		);
-	return NULL;
-}
-
-
-void
-te_update_confirm(const char *event, HA_Message *msg)
-{
-	int rc = -1;
-	gboolean done = FALSE;
-	const char *op = cl_get_string(msg, F_CIB_OPERATION);
-	const char *type = cl_get_string(msg, F_CIB_OBJTYPE);
-	crm_data_t *update = get_message_xml(msg, F_CIB_UPDATE);
-
-	ha_msg_value_int(msg, F_CIB_RC, &rc);
-	crm_debug("Processing %s...", event);
-	crm_log_xml_debug_2(update, "Processing update");
-	
-	if(op == NULL) {
-		crm_err("Illegal CIB update, the operation must be specified");
-		send_complete("Illegal update", update, te_update, i_cancel);
-		done = TRUE;
-		
-	} else if(te_fsa_state == s_abort_pending) {
-		/* take no further actions if an abort is pending */
-		crm_debug("Ignoring CIB update while waiting for an abort");
-		done = TRUE;
-		
-	} else if(strcmp(op, CIB_OP_ERASE) == 0) {
-		/* these are always unexpected, trigger the PE */
-		crm_err("Need to trigger an election here so that"
-			" the current state of all nodes is obtained");
-		send_complete("Erase event", update, te_update, i_cancel);
-		done = TRUE;
-
-	} else if(strcmp(op, CIB_OP_CREATE) == 0
-		  || strcmp(op, CIB_OP_DELETE) == 0
-		  || strcmp(op, CIB_OP_REPLACE) == 0
-		  || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
-		
-		/* these are always unexpected, trigger the PE */
-		send_complete("Non-update change", update, te_update, i_cancel);
-		done = TRUE;
-		
-	} else if(strcmp(op, CIB_OP_UPDATE) != 0) {
-		crm_debug_2("Ignoring %s op confirmation", op);
-		done = TRUE;
-	}
-
-	if(done) {
-		free_xml(update);
-		return;
-	}
-	
-	if(safe_str_eq(type, XML_CIB_TAG_CRMCONFIG)) {
-		/* ignore - for the moment */
-		crm_debug("Ignoring changes to the %s section", type);
-		
-	} else if(safe_str_eq(type, XML_CIB_TAG_NODES)) {
-		/* ignore new nodes until they sign up */
-		crm_debug("Ignoring changes to the %s section", type);
-
-	} else if(safe_str_eq(type, XML_CIB_TAG_STATUS)) {
-		/* this _may_ not be un-expected */
-		if(extract_event(update) == FALSE) {
-			send_complete("Unexpected status update",
-				      update, te_update, i_cancel);
-		}
-
-	} else if(safe_str_eq(type, XML_CIB_TAG_NODES)
-		|| safe_str_eq(type, XML_CIB_TAG_RESOURCES)
-		|| safe_str_eq(type, XML_CIB_TAG_CONSTRAINTS)) {
-		/* these are never expected	 */
-		crm_debug("Aborting on changes to the %s section", type);
-		send_complete("Non-status update", update, te_update, i_cancel);
-
-	} else if(safe_str_eq(type, XML_TAG_CIB)) {
-		crm_data_t *section_xml = NULL;
-		const char *section = NULL;
-		gboolean abort = FALSE;
-
-		section = XML_CIB_TAG_NODES;
-		if(abort == FALSE) {
-			section_xml = get_object_root(section, update);
-			xml_child_iter(section_xml, child, NULL,
-				       abort = TRUE;
-				       break;
-				);
-		}
-		section = XML_CIB_TAG_RESOURCES;
-		if(abort == FALSE) {
-			section_xml = get_object_root(section, update);
-			xml_child_iter(section_xml, child, NULL,
-				       abort = TRUE;
-				       break;
-				);
-		}
-		section = XML_CIB_TAG_CONSTRAINTS;
-		if(abort == FALSE) {
-			section_xml = get_object_root(section, update);
-			xml_child_iter(section_xml, child, NULL,
-				       abort = TRUE;
-				       break;
-				);
-		}
-		section = XML_CIB_TAG_CRMCONFIG;
-		if(abort == FALSE) {
-			section_xml = get_object_root(section, update);
-			xml_child_iter(section_xml, child, NULL,
-				       abort = TRUE;
-				       break;
-				);
-		}
-		if(abort) {
-			send_complete("Non-status update", update,
-				      te_update, i_cancel);
-		} 
-
-		section = XML_CIB_TAG_STATUS;
-		if(abort == FALSE) {
-			section_xml = get_object_root(section, update);
-			if(extract_event(section_xml) == FALSE) {
-				send_complete("Unexpected global status update",
-					      section_xml, te_update, i_cancel);
-			}
-		}
-		
-	} else {
-		crm_err("Ignoring update confirmation for %s object", type);
-		crm_log_xml_debug(update, "Ignored update");
-	}
-
-	free_xml(update);
-}
 
 gboolean
 process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 {
 	crm_data_t *xml_obj = NULL;
 	
+	const char *from     = cl_get_string(msg, F_ORIG);
 	const char *sys_to   = cl_get_string(msg, F_CRM_SYS_TO);
 	const char *sys_from = cl_get_string(msg, F_CRM_SYS_FROM);
 	const char *ref      = cl_get_string(msg, XML_ATTR_REFERENCE);
 	const char *op       = cl_get_string(msg, F_CRM_TASK);
 	const char *type     = cl_get_string(msg, F_CRM_MSG_TYPE);
 
+	crm_debug_2("Processing %s (%s) message", op, ref);
 	crm_log_message(LOG_DEBUG_3, msg);
-	crm_debug("Processing %s (%s) message", op, ref);
 	
 	if(op == NULL){
 		/* error */
-	} else if(strcmp(op, CRM_OP_HELLO) == 0) {
+	} else if(strcasecmp(op, CRM_OP_HELLO) == 0) {
 		/* ignore */
 
-	} else if(sys_to == NULL || strcmp(sys_to, CRM_SYSTEM_TENGINE) != 0) {
+	} else if(sys_to == NULL || strcasecmp(sys_to, CRM_SYSTEM_TENGINE) != 0) {
 		crm_debug_2("Bad sys-to %s", crm_str(sys_to));
 		return FALSE;
 		
-#ifdef TESTING
-	} else if(strcmp(op, CRM_OP_EVENTCC) == 0) {
-		crm_debug_4("Processing %s...", op);
-		xml_obj = find_xml_node(xml_data, XML_TAG_CIB, TRUE);
-		CRM_DEV_ASSERT(xml_obj != NULL);
-		if(xml_obj != NULL) {
-			xml_obj = get_object_root(XML_CIB_TAG_STATUS, xml_obj);
-			CRM_DEV_ASSERT(xml_obj != NULL);
-		}
-		if(xml_obj != NULL) {
-			crm_log_message_adv(LOG_DEBUG, "Processing Loopbacked Action", msg);
-			extract_event(xml_obj);
-		} else {
-			crm_log_message_adv(LOG_ERR, "Invalid Loopbacked Action", msg);
-		}
-#endif 
-
 	} else if(safe_str_eq(op, CRM_OP_INVOKE_LRM)
 		  && safe_str_eq(sys_from, CRM_SYSTEM_LRMD)
-		  && safe_str_eq(type, XML_ATTR_RESPONSE) ){
-		crm_err("Processing %s reply...", op);
-		xml_obj = find_xml_node(xml_data, XML_TAG_CIB, TRUE);
-		CRM_DEV_ASSERT(xml_obj != NULL);
-		if(xml_obj != NULL) {
-			xml_obj = get_object_root(XML_CIB_TAG_STATUS, xml_obj);
-			CRM_DEV_ASSERT(xml_obj != NULL);
-		}
-		if(xml_obj != NULL) {
-			crm_log_message_adv(LOG_DEBUG, "Processing NACK Reply", msg);
-			extract_event(xml_obj);
+/* 		  && safe_str_eq(type, XML_ATTR_RESPONSE) */
+		){
+#if CRM_DEPRECATED_SINCE_2_0_4
+		if(safe_str_eq(crm_element_name(xml_data), XML_TAG_CIB)) {
+			xml_obj = xml_data;
 		} else {
-			crm_log_message_adv(LOG_ERR, "Invalid NACK Reply", msg);
+			xml_obj = find_xml_node(xml_data, XML_TAG_CIB, TRUE);
 		}
-		
+#else
+		xml_obj = xml_data;
+		CRM_CHECK(xml_obj != NULL,
+			  crm_log_message_adv(LOG_ERR, "Invalid (N)ACK", msg);
+			  return FALSE);
+#endif
+		CRM_CHECK(xml_obj != NULL,
+			  crm_log_message_adv(LOG_ERR, "Invalid (N)ACK", msg);
+			  return FALSE);
+		xml_obj = get_object_root(XML_CIB_TAG_STATUS, xml_obj);
+
+		CRM_CHECK(xml_obj != NULL,
+			  crm_log_message_adv(LOG_ERR, "Invalid (N)ACK", msg);
+			  return FALSE);
+
+		crm_log_message_adv(LOG_DEBUG_2, "Processing (N)ACK", msg);
+		crm_debug("Processing (N)ACK from %s", from);
+		extract_event(xml_obj);
 		
 	} else if(safe_str_eq(type, XML_ATTR_RESPONSE)) {
-		crm_info("Message was a response not a request.  Discarding");
+		crm_err("Message was a response not a request.  Discarding");
 		return TRUE;
 
-	} else if(strcmp(op, CRM_OP_TRANSITION) == 0) {
-		if(te_fsa_state != s_idle) {
-			crm_debug("Attempt to start another transition");
-			send_complete("Attempt to start another transition",
-				      NULL, te_abort, i_cancel);
+	} else if(strcasecmp(op, CRM_OP_TRANSITION) == 0) {
+		const char *graph_file = cl_get_string(msg, F_CRM_TGRAPH);
+ 		const char *graph_input = cl_get_string(msg, F_CRM_TGRAPH_INPUT);
+		CRM_CHECK(graph_file != NULL || xml_data != NULL,
+			  crm_err("No graph provided");
+			  crm_log_message(LOG_WARNING, msg);
+			  return TRUE);
 
-		} else {
-			te_fsa_state = te_state_matrix[i_transition][te_fsa_state];
-			CRM_DEV_ASSERT(te_fsa_state == s_in_transition);
-			initialize_graph();
-			unpack_graph(xml_data);
-			
-			crm_debug("Initiating transition...");
-			if(initiate_transition() == FALSE) {
-				/* nothing to be done.. means we're done. */
-				crm_info("No actions to be taken..."
-					 " transition compelte.");
+		if(transition_graph->complete == FALSE) {
+			crm_info("Another transition is already active");
+			abort_transition(
+				INFINITY, tg_restart, "Transition Active", NULL);
+
+		}  else {
+			destroy_graph(transition_graph);
+			crm_debug("Processing graph derived from %s", graph_input);
+
+			if(graph_file == NULL) {
+				transition_graph = unpack_graph(xml_data);
+
+			} else {
+				FILE *graph_fd = fopen(graph_file, "r");
+				crm_data_t *graph_data = file2xml(graph_fd, FALSE);
+				CRM_CHECK(graph_fd != NULL,
+					  crm_err("Could not open graph filename: %s", graph_file);
+					  return TRUE);
+				transition_graph = unpack_graph(graph_data);
+				fclose(graph_fd);
+				free_xml(graph_data);
+				unlink(graph_file);
 			}
+			
+			start_global_timer(transition_timer,
+					   transition_graph->transition_timeout);
+			trigger_graph();
+			print_graph(LOG_DEBUG_2, transition_graph);
 		}
-
-	} else if(strcmp(op, CRM_OP_TE_HALT) == 0) {
-		send_complete(CRM_OP_TE_HALT, NULL, te_halt, i_cancel);
-
-	} else if(strcmp(op, CRM_OP_TEABORT) == 0) {
-		send_complete(CRM_OP_TEABORTED, NULL, te_abort, i_cancel);
-
-	} else if(strcmp(op, CRM_OP_QUIT) == 0) {
-		crm_info("Received quit message, terminating");
-		/* wait for pending actions to complete? */
-		exit(0);
 		
+	} else if(strcasecmp(op, CRM_OP_TE_HALT) == 0) {
+		abort_transition(INFINITY, tg_stop, "Peer Halt", NULL);
+
+	} else if(strcasecmp(op, CRM_OP_TEABORT) == 0) {
+		abort_transition(INFINITY, tg_restart, "Peer Cancelled", NULL);
+
 	} else {
 		crm_err("Unknown command: %s::%s from %s", type, op, sys_from);
 	}
@@ -389,109 +282,86 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 }
 
 void
-tengine_stonith_callback(stonith_ops_t * op, void * private_data)
+tengine_stonith_callback(stonith_ops_t * op)
 {
-	int *action_id = NULL;
-	const char *fail_text = "Fencing op failed";
-	int fail_code = te_failed;
-	void *fail_data = NULL;
-	crm_data_t *update = NULL;
+	const char *allow_fail  = NULL;
+	int stonith_id = -1;
+	crm_action_t *stonith_action = NULL;
+	char *op_key = NULL;
+	char *call_id = NULL;
 
 	if(op == NULL) {
 		crm_err("Called with a NULL op!");
 		return;
 	}
 	
-	crm_info("optype=%d, node_name=%s, result=%d, node_list=%s",
-		 op->optype, op->node_name, op->op_result,
-		 (char *)op->node_list);
+	crm_info("call=%d, optype=%d, node_name=%s, result=%d, node_list=%s, action=%s",
+		 op->call_id, op->optype, op->node_name, op->op_result,
+		 (char *)op->node_list, op->private_data);
 
-	
 	/* this will mark the event complete if a match is found */
-	crm_malloc0(action_id, sizeof(int));
-	*action_id = match_down_event(
-		op->node_uuid, CRM_OP_FENCE, op->op_result);
-	if(*action_id == -1) {
-		crm_err("Stonith action not matched");
-	}
-	
-	if(op->op_result == STONITH_SUCCEEDED) {
-		enum cib_errors rc = cib_ok;
-		const char *target = op->node_name;
-		const char *uuid   = op->node_uuid;
-		
-		/* zero out the node-status & remove all LRM status info */
-		crm_data_t *node_state = create_xml_node(
-			NULL, XML_CIB_TAG_STATE);
+	CRM_CHECK(op->private_data != NULL, return);
 
-		CRM_DEV_ASSERT(op->node_name != NULL);
-		CRM_DEV_ASSERT(op->node_uuid != NULL);
-
-		crm_xml_add(node_state, XML_ATTR_UUID, uuid);
-		crm_xml_add(node_state, XML_ATTR_UNAME, target);
-		crm_xml_add(node_state, XML_CIB_ATTR_HASTATE, DEADSTATUS);
-		crm_xml_add(node_state, XML_CIB_ATTR_INCCM, XML_BOOLEAN_NO);
-		crm_xml_add(node_state, XML_CIB_ATTR_CRMDSTATE, OFFLINESTATUS);
-		crm_xml_add(
-			node_state, XML_CIB_ATTR_JOINSTATE,CRMD_JOINSTATE_DOWN);
-		crm_xml_add(
-			node_state, XML_CIB_ATTR_EXPSTATE, CRMD_JOINSTATE_DOWN);
-		crm_xml_add(node_state, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM);
-		create_xml_node(node_state, XML_CIB_TAG_LRM);
-		
-		update = create_cib_fragment(node_state, NULL);
-		free_xml(node_state);
-	
-		rc = te_cib_conn->cmds->modify(
-			te_cib_conn, XML_CIB_TAG_STATUS, update, NULL,
-			cib_quorum_override);	
-
-		if(*action_id < 0) {
-			fail_text = "Stonith not matched";
-			fail_data = update;
-			fail_code = te_update;
-
-		} else if(rc < cib_ok) {
-			crm_err("CIB update failed: %s", cib_error2string(rc));
-			fail_text = "Couldnt update CIB after stonith";
-			fail_data = update;
-			fail_code = te_failed;
-			
-		} else {
-			add_cib_op_callback(
-				rc, FALSE, action_id, cib_fencing_updated);
-			free_xml(update);
+	/* filter out old STONITH actions */
+	decodeNVpair(op->private_data, ';', &call_id, &op_key);
+	if(op_key != NULL) {
+		char *key = generate_transition_key(
+			transition_graph->id, te_uuid);
+		gboolean key_matched = safe_str_eq(key, op_key);
+		crm_free(key);
+		if(key_matched == FALSE) {
+			crm_info("Ignoring old STONITH op: %s",
+				 op->private_data);
 			return;
-		}		
+		}
 	}
 
-	send_complete(fail_text, fail_data, fail_code, i_cancel);
-	process_trigger(*action_id);
-	free_xml(update);
-
-	return;
-}
-
-void
-cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
-		    crm_data_t *output, void *user_data)
-{
-	int *action_id = user_data;
-	CRM_ASSERT(action_id != NULL);
+#if 1
+	stonith_id = crm_parse_int(call_id, "-1");
+	if(stonith_id < 0) {
+		crm_err("Stonith action not matched: %s (%s)",
+			call_id, op->private_data);
+		return;
+	}
+#endif
 	
-	if(rc < cib_ok) {
-		HA_Message *msg_copy = ha_msg_copy(msg);
-		const char *fail_text = "Couldnt update CIB after stonith";
-		crm_err("CIB update failed: %s", cib_error2string(rc));
-		send_complete(fail_text, msg_copy, te_failed, i_cancel);
-		ha_msg_del(msg_copy);
-
-	} else {
-		process_trigger(*action_id);
-		check_for_completion();
+ 	stonith_action = match_down_event(
+		stonith_id, op->node_uuid, CRM_OP_FENCE);
+	
+	if(stonith_action == NULL) {
+		crm_err("Stonith action not matched");
+		return;
 	}
 
-	crm_free(action_id);
+	switch(op->op_result) {
+		case STONITH_SUCCEEDED:
+			send_stonith_update(op);
+			break;
+		case STONITH_CANNOT:
+		case STONITH_TIMEOUT:
+		case STONITH_GENERIC:
+			stonith_action->failed = TRUE;
+			allow_fail = g_hash_table_lookup(
+				stonith_action->params,
+				crm_meta_name(XML_ATTR_TE_ALLOWFAIL));
+
+			if(FALSE == crm_is_true(allow_fail)) {
+				crm_err("Stonith of %s failed (%d)..."
+					" aborting transition.",
+					op->node_name, op->op_result);
+				abort_transition(INFINITY, tg_restart,
+						 "Stonith failed", NULL);
+			}
+			break;
+		default:
+			crm_err("Unsupported action result: %d", op->op_result);
+			abort_transition(INFINITY, tg_restart,
+					 "Unsupport Stonith result", NULL);
+	}
+	
+	update_graph(transition_graph, stonith_action);
+	trigger_graph();
+	return;
 }
 
 void
@@ -500,7 +370,7 @@ tengine_stonith_connection_destroy(gpointer user_data)
 #if 0
 	crm_err("Fencing daemon has left us: Shutting down...NOW");
 	/* shutdown properly later */
-	CRM_DEV_ASSERT(FALSE/* fencing daemon died */);
+	CRM_CHECK(FALSE/* fencing daemon died */);
 #else
 	crm_err("Fencing daemon has left us");
 #endif
@@ -531,3 +401,181 @@ tengine_stonith_dispatch(IPC_Channel *sender, void *user_data)
 	}
 	return TRUE;
 }
+
+
+void
+cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
+		    crm_data_t *output, void *user_data)
+{
+	trigger_graph();
+
+	if(rc < cib_ok) {
+		crm_err("CIB update failed: %s", cib_error2string(rc));
+		crm_log_xml_warn(msg, "[Failed Update]");
+	}
+}
+
+void
+cib_action_updated(const HA_Message *msg, int call_id, int rc,
+		   crm_data_t *output, void *user_data)
+{
+	trigger_graph();
+
+	if(rc < cib_ok) {
+		crm_err("Update %d FAILED: %s", call_id, cib_error2string(rc));
+	}
+}
+
+
+gboolean
+action_timer_callback(gpointer data)
+{
+	crm_action_timer_t *timer = NULL;
+	
+	if(data == NULL) {
+		crm_err("Timer popped with no data");
+		return FALSE;
+	}
+	
+	timer = (crm_action_timer_t*)data;
+	stop_te_timer(timer);
+
+	crm_warn("Timer popped (abort_level=%d, complete=%s)",
+		 transition_graph->abort_priority,
+		 transition_graph->complete?"true":"false");
+
+	CRM_CHECK(timer->action != NULL, return FALSE);
+
+	if(transition_graph->complete) {
+		crm_err("Ignoring timeout while not in transition");
+		
+	} else if(timer->reason == timeout_action_warn) {
+		print_action(
+			LOG_WARNING,"Action missed its timeout", timer->action);
+		
+	} else {
+		/* fail the action */
+		cib_action_update(timer->action, LRM_OP_TIMEOUT);
+	}
+
+	return FALSE;
+}
+
+
+static int
+unconfirmed_actions(gboolean send_updates)
+{
+	int unconfirmed = 0;
+	const char *task = NULL;
+	crm_debug_2("Unconfirmed actions...");
+	slist_iter(
+		synapse, synapse_t, transition_graph->synapses, lpc,
+
+		/* lookup event */
+		slist_iter(
+			action, crm_action_t, synapse->actions, lpc2,
+			if(action->executed == FALSE) {
+				continue;
+				
+			} else if(action->confirmed) {
+				continue;
+			}
+			
+			unconfirmed++;
+			task = crm_element_value(action->xml,XML_LRM_ATTR_TASK);
+			if(action->type != action_type_rsc) {
+				continue;
+			} else if(send_updates == FALSE) {
+				continue;
+			} else if(safe_str_eq(task, "cancel")) {
+				/* we dont need to update the CIB with these */
+				continue;
+			}
+			crm_err("Action %d unconfirmed from peer", action->id);
+			cib_action_update(action, LRM_OP_PENDING);
+			);
+		);
+	if(unconfirmed > 0) {
+		crm_info("Waiting on %d unconfirmed actions", unconfirmed);
+	}
+	return unconfirmed;
+}
+
+gboolean
+global_timer_callback(gpointer data)
+{
+	crm_action_timer_t *timer = NULL;
+	
+	if(data == NULL) {
+		crm_err("Timer popped with no data");
+		return FALSE;
+	}
+	
+	timer = (crm_action_timer_t*)data;
+	stop_te_timer(timer);
+
+	crm_warn("Timer popped (abort_level=%d, complete=%s)",
+		 transition_graph->abort_priority,
+		 transition_graph->complete?"true":"false");
+
+	CRM_CHECK(timer->action == NULL, return FALSE);
+	
+	if(transition_graph->complete) {
+		crm_err("Ignoring timeout while not in transition");
+		
+	} else if(timer->reason == timeout_abort) {
+		int unconfirmed = unconfirmed_actions(FALSE);
+		crm_warn("Transition abort timeout reached..."
+			 " marking transition complete.");
+
+		transition_graph->complete = TRUE;
+		abort_transition(INFINITY, tg_restart, "Global Timeout", NULL);
+
+		if(unconfirmed != 0) {
+			crm_warn("Writing %d unconfirmed actions to the CIB",
+				 unconfirmed);
+			unconfirmed_actions(TRUE);
+		}
+	}
+	return FALSE;		
+}
+
+gboolean
+te_graph_trigger(gpointer user_data) 
+{
+	int timeout = 0;
+	enum transition_status graph_rc = -1;
+
+	if(transition_graph->complete) {
+		notify_crmd(transition_graph);
+		return TRUE;	
+	}
+
+	graph_rc = run_graph(transition_graph);
+	timeout = transition_graph->transition_timeout;
+	print_graph(LOG_DEBUG_3, transition_graph);
+
+	if(graph_rc == transition_active) {
+		crm_debug_3("Transition not yet complete");
+		stop_te_timer(transition_timer);
+		start_global_timer(transition_timer, timeout);
+		return TRUE;		
+
+	} else if(graph_rc == transition_pending) {
+		timeout = transition_timer->timeout;
+		crm_debug_3("Transition not yet complete - no actions fired");
+		return TRUE;		
+	}
+	
+	if(graph_rc != transition_complete) {
+		crm_err("Transition failed: %s", transition_status(graph_rc));
+		print_graph(LOG_WARNING, transition_graph);
+	}
+	
+	transition_graph->complete = TRUE;
+	notify_crmd(transition_graph);
+
+	return TRUE;	
+}
+
+

@@ -30,6 +30,7 @@
 
 #include <crm/crm.h>
 #include <crm/cib.h>
+#include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <cib_private.h>
 
@@ -56,6 +57,7 @@ gboolean cib_native_msgready(cib_t* cib);
 int cib_native_rcvmsg(cib_t* cib, int blocking);
 gboolean cib_native_dispatch(IPC_Channel *channel, gpointer user_data);
 cib_t *cib_native_new (cib_t *cib);
+void cib_native_delete(cib_t *cib);
 int cib_native_set_connection_dnotify(
 	cib_t *cib, void (*dnotify)(gpointer user_data));
 
@@ -92,6 +94,12 @@ cib_native_new (cib_t *cib)
 	return cib;
 }
 
+void
+cib_native_delete(cib_t *cib)
+{
+	crm_free(cib->variant_opaque);
+}
+
 int
 cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 {
@@ -106,10 +114,23 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 		native->command_channel = init_client_ipc_comms_nodispatch(
 			cib_channel_rw);
 		
-	} else {
+	} else if(type == cib_query) {
 		cib->state = cib_connected_query;
 		native->command_channel = init_client_ipc_comms_nodispatch(
 			cib_channel_ro);
+		
+	} else if(type == cib_query_synchronous) {
+		cib->state = cib_connected_query;
+		native->command_channel = init_client_ipc_comms_nodispatch(
+			cib_channel_ro_synchronous);
+		
+	} else if(type == cib_command_synchronous) {
+		cib->state = cib_connected_query;
+		native->command_channel = init_client_ipc_comms_nodispatch(
+			cib_channel_rw_synchronous);
+		
+	} else {
+		return cib_not_connected;		
 	}
 	
 	if(native->command_channel == NULL) {
@@ -122,11 +143,15 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 		rc = cib_authentication;
 	}
 	
+	if(type == cib_query_synchronous || type == cib_command_synchronous) {
+		return rc;
+	}
 
 	if(rc == cib_ok) {
 		crm_debug_4("Connecting callback channel");
 		native->callback_source = init_client_ipc_comms(
-			cib_channel_callback, cib_native_dispatch, cib, &(native->callback_channel));
+			cib_channel_callback, cib_native_dispatch,
+			cib, &(native->callback_channel));
 		
 		if(native->callback_channel == NULL) {
 			crm_debug("Connection to callback channel failed");
@@ -204,8 +229,9 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 			   native->callback_channel, reg_msg) == FALSE) {
 			rc = cib_callback_register;
 		}
-		crm_free(uuid_ticket);
 
+		crm_msg_del(reg_msg);
+		crm_free(uuid_ticket);
 	}
 	if(rc == cib_ok) {
 		/* In theory IPC_INTR could trip us up here */
@@ -217,10 +243,6 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 			crm_err("No reply message - disconnected - %d", rc);
 			rc = cib_not_connected;
 			
-		} else if(rc != IPC_OK) {
-			crm_err("No reply message - failed - %d", rc);
-			rc = cib_reply_failed;
-			
 		} else if(reg_msg == NULL) {
 			crm_err("No reply message - empty - %d", rc);
 			rc = cib_reply_failed;
@@ -229,7 +251,7 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 	}
 	
 	if(rc == cib_ok) {
-		crm_info("Connection to CIB successful");
+		crm_debug("Connection to CIB successful");
 		return cib_ok;
 	}
 	crm_warn("Connection to CIB failed: %s", cib_error2string(rc));
@@ -242,7 +264,7 @@ cib_native_signoff(cib_t* cib)
 {
 	cib_native_opaque_t *native = cib->variant_opaque;
 
-	crm_info("Signing out of the CIB Service");
+	crm_debug("Signing out of the CIB Service");
 	
 	/* close channels */
 	if (native->command_channel != NULL) {
@@ -306,6 +328,75 @@ cib_native_inputfd(cib_t* cib)
 	return ch->ops->get_recv_select_fd(ch);
 }
 
+static HA_Message *
+cib_create_op(
+	int call_id, const char *op, const char *host, const char *section,
+	crm_data_t *data, int call_options) 
+{
+	int  rc = HA_OK;
+	HA_Message *op_msg = NULL;
+	op_msg = ha_msg_new(8);
+	CRM_CHECK(op_msg != NULL, return NULL);
+	
+	if(rc == HA_OK) {
+		rc = ha_msg_add(op_msg, F_TYPE, T_CIB);
+	}
+	if(rc == HA_OK) {
+		rc = ha_msg_add(op_msg, F_CIB_OPERATION, op);
+	}
+	if(rc == HA_OK && host != NULL) {
+		rc = ha_msg_add(op_msg, F_CIB_HOST, host);
+	}
+	if(rc == HA_OK && section != NULL) {
+		rc = ha_msg_add(op_msg, F_CIB_SECTION, section);
+	}
+	if(rc == HA_OK) {
+		rc = ha_msg_add_int(op_msg, F_CIB_CALLID, call_id);
+	}
+	if(rc == HA_OK) {
+		crm_debug_4("Sending call options: %.8lx, %d",
+			  (long)call_options, call_options);
+		rc = ha_msg_add_int(op_msg, F_CIB_CALLOPTS, call_options);
+	}
+#if 0
+	if(rc == HA_OK && cib->call_timeout > 0) {
+		rc = ha_msg_add_int(op_msg, F_CIB_TIMEOUT, cib->call_timeout);
+	}
+#endif
+	if(rc == HA_OK && data != NULL) {
+#if 0		
+		const char *tag = crm_element_name(data);
+		crm_data_t *cib = data;
+		if(safe_str_neq(tag, XML_TAG_CIB)) {
+			cib = find_xml_node(data, XML_TAG_CIB, FALSE);
+			if(cib != NULL) {
+				tag = XML_TAG_CIB;
+			}
+		}
+		if(safe_str_eq(tag, XML_TAG_CIB)) {
+			const char *version = feature_set(cib);
+			crm_xml_add(cib, XML_ATTR_CIB_REVISION, version);
+		} else {
+			crm_info("Skipping feature check for %s tag", tag);
+		}
+#endif
+
+		add_message_xml(op_msg, F_CIB_CALLDATA, data);
+	}
+	
+	if (rc != HA_OK) {
+		crm_err("Failed to create CIB operation message");
+		crm_log_message(LOG_ERR, op_msg);
+		crm_msg_del(op_msg);
+		return NULL;
+	}
+
+	if(call_options & cib_inhibit_bcast) {
+		CRM_CHECK((call_options & cib_scope_local), return NULL);
+	}
+	return op_msg;
+}
+
 int
 cib_native_perform_op(
 	cib_t *cib, const char *op, const char *host, const char *section,
@@ -318,7 +409,7 @@ cib_native_perform_op(
 
  	cib_native_opaque_t *native = cib->variant_opaque;
 
-	if(cib->state ==  cib_disconnected) {
+	if(cib->state == cib_disconnected) {
 		return cib_not_connected;
 	}
 
@@ -328,53 +419,7 @@ cib_native_perform_op(
 	
 	if(op == NULL) {
 		crm_err("No operation specified");
-		rc = cib_operation;
-	}
-
-	op_msg = ha_msg_new(8);
-	if (op_msg == NULL) {
-		crm_err("No memory to create HA_Message");
-		return cib_create_msg;
-	}
-	
-	if(rc == HA_OK) {
-		rc = ha_msg_add(op_msg, F_TYPE, "cib");
-	}
-	if(rc == HA_OK) {
-		rc = ha_msg_add(op_msg, F_CIB_OPERATION, op);
-	}
-	if(rc == HA_OK && host != NULL) {
-		CRM_DEV_ASSERT(crm_is_allocated(host) == 1);
-		rc = ha_msg_add(op_msg, F_CIB_HOST, host);
-	}
-	if(rc == HA_OK && section != NULL) {
-		rc = ha_msg_add(op_msg, F_CIB_SECTION, section);
-	}
-	if(rc == HA_OK) {
-		rc = ha_msg_add_int(op_msg, F_CIB_CALLID, cib->call_id);
-	}
-	if(rc == HA_OK) {
-		crm_debug_4("Sending call options: %.8lx, %d",
-			  (long)call_options, call_options);
-		rc = ha_msg_add_int(op_msg, F_CIB_CALLOPTS, call_options);
-	}
-	if(rc == HA_OK && cib->call_timeout > 0) {
-		rc = ha_msg_add_int(op_msg, F_CIB_TIMEOUT, cib->call_timeout);
-	}
-
-	if(rc == HA_OK && data != NULL) {
-		add_message_xml(op_msg, F_CIB_CALLDATA, data);
-	}
-	
-	if (rc != HA_OK) {
-		crm_err("Failed to create CIB operation message");
-		crm_log_message(LOG_ERR, op_msg);
-		crm_msg_del(op_msg);
-		return cib_create_msg;
-	}
-
-	if(call_options & cib_inhibit_bcast) {
-		CRM_DEV_ASSERT((call_options & cib_scope_local));
+		return cib_operation;
 	}
 
 	cib->call_id++;
@@ -382,20 +427,27 @@ cib_native_perform_op(
 	 *    with the cib_errors enum
 	 * use 2 because we use it as (cib->call_id - 1) below
 	 */
-	if(cib->call_id < 2) {
-		cib->call_id = 2;
+	if(cib->call_id < 1) {
+		cib->call_id = 1;
+	}
+	
+	op_msg = cib_create_op(
+		cib->call_id, op, host, section, data, call_options);
+	if(op_msg == NULL) {
+		return cib_create_msg;
 	}
 	
 	crm_debug_3("Sending %s message to CIB service", op);
 	if(send_ipc_message(native->command_channel, op_msg) == FALSE) {
 		crm_err("Sending message to CIB service FAILED");
+		crm_msg_del(op_msg);
 		return cib_send_failed;
 
 	} else {
 		crm_debug_3("Message sent");
 	}
 
-	op_msg = NULL;
+	crm_msg_del(op_msg);
 
 	if((call_options & cib_discard_reply)) {
 		crm_debug_3("Discarding reply");
@@ -403,66 +455,63 @@ cib_native_perform_op(
 
 	} else if(!(call_options & cib_sync_call)) {
 		crm_debug_3("Async call, returning");
-		return cib->call_id - 1;
+		CRM_CHECK(cib->call_id != 0, return cib_reply_failed);
+		return cib->call_id;
 	}
 
 	rc = IPC_OK;
 	crm_debug_3("Waiting for a syncronous reply");
-	while(native->command_channel->ops->get_chan_status(
-		      native->command_channel) == IPC_CONNECT) {
+	while(IPC_ISRCONN(native->command_channel)) {
+		int reply_id = -1;
+		int msg_id = cib->call_id;
 
-		rc = native->command_channel->ops->waitin(
-			native->command_channel);
-
-		if(rc == IPC_OK) {
-			int msg_id = cib->call_id - 1;
-			int reply_id = -1;
-			op_reply = msgfromIPC_noauth(native->command_channel);
-			if(op_reply == NULL) {
-				break;
-			}
-			CRM_DEV_ASSERT(HA_OK == ha_msg_value_int(
-					       op_reply, F_CIB_CALLID, &reply_id));
-
-			CRM_DEV_ASSERT(reply_id <= msg_id);
-			
-			if(reply_id == msg_id) {
-				break;
-
-			} else if(reply_id < msg_id) {
-				crm_debug("Recieved old reply: %d (wanted %d)",
-					reply_id, msg_id);
-				crm_log_message_adv(
-					LOG_MSG, "Old reply", op_reply);
-			} else {
-				crm_err("Received a __future__ reply:"
-					" %d (wanted %d)", reply_id, msg_id);
-			}
-			crm_msg_del(op_reply);
-
-		} else if(rc == IPC_INTR) {
-			crm_debug_3("a signal arrived, retry the read");
-
-		} else {
+		op_reply = msgfromIPC(native->command_channel, MSG_ALLOWINTR);
+		if(op_reply == NULL) {
 			break;
 		}
+		CRM_CHECK(ha_msg_value_int(
+				  op_reply, F_CIB_CALLID, &reply_id) == HA_OK,
+			  crm_msg_del(op_reply);
+			  return cib_reply_failed);
+
+		if(reply_id == msg_id) {
+			break;
+			
+		} else if(reply_id < msg_id) {
+			crm_debug("Recieved old reply: %d (wanted %d)",
+				  reply_id, msg_id);
+			crm_log_message_adv(
+				LOG_MSG, "Old reply", op_reply);
+
+		} else if((reply_id - 10000) > msg_id) {
+			/* wrap-around case */
+			crm_debug("Recieved old reply: %d (wanted %d)",
+				  reply_id, msg_id);
+			crm_log_message_adv(
+				LOG_MSG, "Old reply", op_reply);
+		} else {
+			crm_err("Received a __future__ reply:"
+				" %d (wanted %d)", reply_id, msg_id);
+		}
+		crm_msg_del(op_reply);
+		op_reply = NULL;
 	}
 
-	if(native->command_channel->ops->get_chan_status(
-		   native->command_channel) != IPC_CONNECT) {
-		crm_err("No reply message - disconnected - %d", rc);
-		cib->state = cib_disconnected;
-		crm_msg_del(op_reply);
-		return cib_not_connected;
-		
-	} else if(rc != IPC_OK) {
-		crm_err("No reply message - failed - %d", rc);
-		crm_msg_del(op_reply);
-		return cib_reply_failed;
-
-	} else if(op_reply == NULL) {
+	if(op_reply == NULL) {
+		if(IPC_ISRCONN(native->command_channel) == FALSE) {
+			crm_err("No reply message - disconnected - %d",
+				native->command_channel->ch_status);
+			cib->state = cib_disconnected;
+			return cib_not_connected;
+		}
 		crm_err("No reply message - empty - %d", rc);
 		return cib_reply_failed;
+	}
+	
+	if(IPC_ISRCONN(native->command_channel) == FALSE) {
+		crm_err("CIB disconnected: %d", 
+			native->command_channel->ch_status);
+		cib->state = cib_disconnected;
 	}
 	
 	crm_debug_3("Syncronous reply recieved");
@@ -501,7 +550,6 @@ cib_native_perform_op(
 gboolean
 cib_native_msgready(cib_t* cib)
 {
-	IPC_Channel *ch = NULL;
 	cib_native_opaque_t *native = NULL;
 	
 	if (cib == NULL) {
@@ -511,21 +559,42 @@ cib_native_msgready(cib_t* cib)
 
 	native = cib->variant_opaque;
 
-	ch = cib_native_channel(cib);
-	if (ch == NULL) {
-		crm_err("No channel");
+	if(native->command_channel != NULL) {
+		/* drain the channel */
+		IPC_Channel *cmd_ch = native->command_channel;
+		HA_Message *cmd_msg = NULL;
+		while(cmd_ch->ch_status != IPC_DISCONNECT
+		      && cmd_ch->ops->is_message_pending(cmd_ch)) {
+			/* we're not supposed to receive anything on
+			 *   this channel
+			 */
+			crm_err("Message pending on command channel [%d]",
+				cmd_ch->farside_pid);
+			cmd_msg = msgfromIPC_noauth(cmd_ch);
+			crm_log_message_adv(LOG_ERR, "cib:cmd", cmd_msg);
+			crm_msg_del(cmd_msg);
+		}
+
+	} else {
+		crm_err("No command channel");
+	}	
+
+	if(native->callback_channel == NULL) {
+		crm_err("No callback channel");
 		return FALSE;
+
+	} else if(native->callback_channel->ch_status == IPC_DISCONNECT) {
+		crm_info("Lost connection to the CIB service [%d].",
+			 native->callback_channel->farside_pid);
+		return FALSE;
+
+	} else if(native->callback_channel->ops->is_message_pending(
+			  native->callback_channel)) {
+		crm_debug_4("Message pending on command channel [%d]",
+			    native->callback_channel->farside_pid);
+		return TRUE;
 	}
 
-	if(native->command_channel->ops->is_message_pending(
-		   native->command_channel)) {
-		crm_debug_3("Message pending on command channel");
-	}
-	if(native->callback_channel->ops->is_message_pending(
-		   native->callback_channel)) {
-		crm_debug_4("Message pending on callback channel");
-		return TRUE;
-	} 
 	crm_debug_3("No message pending");
 	return FALSE;
 }
@@ -535,20 +604,37 @@ cib_native_rcvmsg(cib_t* cib, int blocking)
 {
 	const char *type = NULL;
 	struct ha_msg* msg = NULL;
-	IPC_Channel *ch = cib_native_channel(cib);
+	cib_native_opaque_t *native = NULL;
+	
+	if (cib == NULL) {
+		crm_err("No CIB!");
+		return FALSE;
+	}
 
+	native = cib->variant_opaque;
+	
 	/* if it is not blocking mode and no message in the channel, return */
 	if (blocking == 0 && cib_native_msgready(cib) == FALSE) {
 		crm_debug_3("No message ready and non-blocking...");
 		return 0;
 
 	} else if (cib_native_msgready(cib) == FALSE) {
-		crm_debug_3("Waiting for message from CIB service...");
-		ch->ops->waitin(ch);
+		crm_debug("Waiting for message from CIB service...");
+		if(native->callback_channel == NULL) {
+			return 0;
+			
+		} else if(native->callback_channel->ch_status != IPC_CONNECT) {
+			return 0;
+			
+		} else if(native->command_channel
+			  && native->command_channel->ch_status != IPC_CONNECT){
+			return 0;
+		}
+		native->callback_channel->ops->waitin(native->callback_channel);
 	}
 
 	/* IPC_INTR is not a factor here */
-	msg = msgfromIPC_noauth(ch);
+	msg = msgfromIPC_noauth(native->callback_channel);
 	if (msg == NULL) {
 		crm_warn("Received a NULL msg from CIB service.");
 		return 0;
@@ -673,6 +759,7 @@ cib_native_dispatch(IPC_Channel *channel, gpointer user_data)
 {
 	int lpc = 0;
 	cib_t *cib = user_data;
+	cib_native_opaque_t *native = NULL;
 
 	crm_debug_3("Received callback");
 
@@ -680,6 +767,8 @@ cib_native_dispatch(IPC_Channel *channel, gpointer user_data)
 		crm_err("user_data field must contain the CIB struct");
 		return FALSE;
 	}
+
+	native = cib->variant_opaque;
 	
 	while(cib_native_msgready(cib)) {
  		lpc++; 
@@ -691,8 +780,18 @@ cib_native_dispatch(IPC_Channel *channel, gpointer user_data)
 
 	crm_debug_3("%d CIB messages dispatched", lpc);
 
-	if (channel && (channel->ch_status != IPC_CONNECT)) {
-		crm_crit("Lost connection to the CIB service.");
+	if(native->callback_channel
+	   && native->callback_channel->ch_status != IPC_CONNECT) {
+		crm_crit("Lost connection to the CIB service [%d/callback].",
+			channel->farside_pid);
+		G_main_del_IPC_Channel(native->callback_source);
+		return FALSE;
+
+	} else if(native->command_channel
+		  && native->command_channel->ch_status != IPC_CONNECT) {
+		crm_crit("Lost connection to the CIB service [%d/command].",
+			channel->farside_pid);
+
 		return FALSE;
 	}
 
@@ -735,6 +834,7 @@ cib_native_register_callback(cib_t* cib, const char *callback, int enabled)
 	ha_msg_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
 	ha_msg_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
 	send_ipc_message(native->callback_channel, notify_msg);
+	crm_msg_del(notify_msg);
 	return cib_ok;
 }
 

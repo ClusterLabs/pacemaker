@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
+<cib num_updates="1" epoch="1" admin_epoch="0">
+  <configuration>
+    <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
+      <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
+    </attributes></cluster_property_set></crm_config>
+    <nodes>
+      <node id="uuid1" uname="node1" type="member"/>
+    </nodes>
+    <resources>
+      <primitive id="rsc1" class="heartbeat" type="apache"/>
+      <primitive id="rsc2" class="heartbeat" type="apache"/>
+      <primitive id="rsc3" class="heartbeat" type="apache"/>
+      <primitive id="rscA" class="heartbeat" type="apache"/>
+      <primitive id="rscB" class="heartbeat" type="apache"/>
+      <primitive id="rscC" class="heartbeat" type="apache"/>
+    </resources>
+    <constraints>
+      <rsc_order id="order1" from="rsc2" action="start" type="after" to="rsc1"/>
+      <rsc_order id="order2" from="rsc3" action="start" type="after" to="rsc1" score="100"/>
+      <rsc_order id="order3" from="rscB" action="start" type="after" to="rscA"/>
+      <rsc_order id="order4" from="rscC" action="start" type="after" to="rscA" score="100"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
+      <lrm>
+        <lrm_resources>
+          <lrm_resource id="rsc1" class="heartbeat" type="apache">
+            <lrm_rsc_op id="rsc1" operation="start" interval="0" op_status="0" rc_code="0" call_id="1" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition_magic=""/>
+          </lrm_resource>
+          <lrm_resource id="rscA" class="heartbeat" type="apache">
+            <lrm_rsc_op id="rscA" operation="stop" interval="0" op_status="4" rc_code="1" call_id="1" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition_magic=""/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

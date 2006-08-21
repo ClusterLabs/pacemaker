@@ -1,28 +1,25 @@
 <?xml version="1.0"?>
 <!DOCTYPE cib SYSTEM "crm-1.0.dtd">
 <!-- lrm status -->
-<cib>
+<cib num_updates="1" epoch="1" admin_epoch="0">
   <configuration>
-    <crm_config>
+    <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
       <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
-    </crm_config>
+    </attributes></cluster_property_set></crm_config>
     <nodes>
       <node id="node1" uname="node1" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="heartbeat" type="apache" priority="1.0"/>
+      <primitive id="rsc1" class="heartbeat" type="apache"/>
     </resources>
     <constraints> 
     </constraints> 
   </configuration>
   <status>
-    <node_state id="node1" uname="node1" crmd="online" join="member" expected="member" timestamp="1086187789" in_ccm="true">
+    <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <lrm>
-	<lrm_agents>
-	  <lrm_agent class="heartbeat" type="apache"/>
-	</lrm_agents>
         <lrm_resources>
-          <lrm_resource id="rsc2" last_op="stop" rsc_state="stopped" op_status="0" rc_code="0" on_node="hadev"/>
+          <lrm_resource id="rsc2" class="heartbeat" type="apache"/>
         </lrm_resources>
       </lrm>
     </node_state>

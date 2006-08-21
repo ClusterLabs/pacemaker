@@ -1,0 +1,18 @@
+digraph "g" {
+	size = "30,30"
+"dollies:0_stop_0 ssgtest1a" [ style=bold color="green" fontcolor="black" ]
+"dollies:0_start_0 ssgtest1b" [ style=bold color="green" fontcolor="black" ]
+"dolly_start_0" [ style=bold color="green" fontcolor="orange" ]
+"dolly_running_0" [ style=bold color="green" fontcolor="orange" ]
+"dolly_stop_0" [ style=bold color="green" fontcolor="orange" ]
+"dolly_stopped_0" [ style=bold color="green" fontcolor="orange" ]
+"dolly_stop_0" -> "dollies:0_stop_0 ssgtest1a" [ style = bold]
+"dollies:0_stop_0 ssgtest1a" -> "dollies:0_start_0 ssgtest1b" [ style = bold]
+"dolly_start_0" -> "dollies:0_start_0 ssgtest1b" [ style = bold]
+"dolly_stop_0" -> "dolly_start_0" [ style = bold]
+"dolly_stopped_0" -> "dolly_start_0" [ style = bold]
+"dollies:0_start_0 ssgtest1b" -> "dolly_running_0" [ style = bold]
+"dolly_start_0" -> "dolly_running_0" [ style = bold]
+"dollies:0_stop_0 ssgtest1a" -> "dolly_stopped_0" [ style = bold]
+"dolly_stop_0" -> "dolly_stopped_0" [ style = bold]
+}

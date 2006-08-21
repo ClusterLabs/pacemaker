@@ -20,10 +20,12 @@
 
 #include <sys/param.h>
 
+#include <heartbeat.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ctrl.h>
+#include <crm/pengine/rules.h>
 
 #include <crmd.h>
 #include <crmd_fsa.h>
@@ -37,10 +39,11 @@
 #include <crm/dmalloc_wrapper.h>
 
 extern void crmd_ha_connection_destroy(gpointer user_data);
-extern gboolean stop_all_resources(void);
+extern gboolean verify_stopped(gboolean force, int log_level);
 
 gboolean crm_shutdown(int nsig, gpointer unused);
 gboolean register_with_ha(ll_cluster_t *hb_cluster, const char *client_name);
+void populate_cib_nodes(ll_cluster_t *hb_cluster, gboolean with_client_status);
 
 
 GHashTable   *ipc_clients = NULL;
@@ -58,10 +61,13 @@ do_ha_control(long long action,
 	
 	if(action & A_HA_DISCONNECT) {
 		if(fsa_cluster_conn != NULL) {
+			set_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
 			fsa_cluster_conn->llc_ops->signoff(
 				fsa_cluster_conn, FALSE);
+			fsa_cluster_conn->llc_ops->delete(fsa_cluster_conn);
+			fsa_cluster_conn = NULL;
 		}
-		
+		crm_info("Disconnected from Heartbeat");
 	}
 	
 	if(action & A_HA_CONNECT) {
@@ -79,6 +85,8 @@ do_ha_control(long long action,
 			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 			return I_NULL;
 		}
+		clear_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
+		crm_info("Connected to Heartbeat");
 	} 
 	
 	if(action & ~(A_HA_CONNECT|A_HA_DISCONNECT)) {
@@ -98,43 +106,39 @@ do_shutdown(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
-	enum crmd_fsa_input next_input = I_NULL;
-	enum crmd_fsa_input tmp = I_NULL;
+	int lpc = 0;
+	gboolean continue_shutdown = TRUE;
+	struct crm_subsystem_s *subsystems[] = {
+		pe_subsystem,
+		te_subsystem
+	};
 
 	/* just in case */
 	set_bit_inplace(fsa_input_register, R_SHUTDOWN);
-	
-	/* last attempt to shut these down */
-	if(is_set(fsa_input_register, R_PE_CONNECTED)) {
-		crm_warn("Last attempt to shutdown the PolicyEngine");
-		tmp = do_pe_control(A_PE_STOP, cause, cur_state,
-				    current_input, msg_data);
-		if(tmp != I_NULL) {
-			next_input = I_ERROR;
-			crm_err("Failed to shutdown the PolicyEngine");
+
+	for(lpc = 0; lpc < DIMOF(subsystems); lpc++) {
+		struct crm_subsystem_s *a_subsystem = subsystems[lpc];
+		if(is_set(fsa_input_register, a_subsystem->flag_connected)) {
+			crm_info("Terminating the %s", a_subsystem->name);
+			if(stop_subsystem(a_subsystem, TRUE) == FALSE) {
+				/* its gone... */
+				crm_err("Faking %s exit", a_subsystem->name);
+				clear_bit_inplace(fsa_input_register,
+						  a_subsystem->flag_connected);
+			}
+			continue_shutdown = FALSE;
 		}
 	}
 
-	if(is_set(fsa_input_register, R_TE_CONNECTED)) {
-		crm_warn("Last attempt to shutdown the Transitioner");
-		tmp = do_pe_control(A_TE_STOP, cause, cur_state,
-				    current_input, msg_data);
-		if(tmp != I_NULL) {
-			next_input = I_ERROR;
-			crm_err("Failed to shutdown the Transitioner");
-		}
-	}
+	if(continue_shutdown == FALSE) {
+		crm_info("Waiting for subsystems to exit");
+		crmd_fsa_stall(NULL);
 
-	crm_info("Stopping all remaining local resources");
-	if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
-		stop_all_resources();
 	} else {
-		crm_err("Exiting with no LRM connection..."
-			" resources may be active!");
 		register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 	}
 	
-	return next_input;
+	return I_NULL;
 }
 
 /*	 A_SHUTDOWN_REQ	*/
@@ -145,7 +149,6 @@ do_shutdown_req(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
-	enum crmd_fsa_input next_input = I_NULL;
 	HA_Message *msg = NULL;
 	
 	crm_info("Sending shutdown request to DC: %s", crm_str(fsa_our_dc));
@@ -156,15 +159,14 @@ do_shutdown_req(long long action,
 /* 	set_bit_inplace(fsa_input_register, R_STAYDOWN); */
 	
 	if(send_request(msg, NULL) == FALSE) {
-		next_input = I_ERROR;
-#if 0
-		/* this shouldnt be required */
-	} else {
-		crm_timer_start(shutdown_timer);
-#endif
+		if(AM_I_DC) {
+			crm_info("Processing shutdown locally");
+		} else {
+			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+		}
 	}
 
-	return next_input;
+	return I_NULL;
 }
 
 /*	 A_EXIT_0, A_EXIT_1	*/
@@ -176,42 +178,32 @@ do_exit(long long action,
 	fsa_data_t *msg_data)
 {
 	int exit_code = 0;
-	gboolean do_exit = FALSE;
+	int log_level = LOG_INFO;
+	const char *exit_type = "gracefully";
 	
-	if(action & A_EXIT_0) {
-		if(is_set(fsa_input_register, R_PE_CONNECTED)) {
-			crm_info("Waiting for the PE to disconnect");
-			crmd_fsa_stall(NULL);
-			
-		} else if(is_set(fsa_input_register, R_TE_CONNECTED)) {
-			crm_info("Waiting for the TE to disconnect");
-			crmd_fsa_stall(NULL);
-		} else {
-			do_exit = TRUE;
-			crm_info("Performing %s - gracefully exiting the CRMd",
-				 fsa_action2string(action));
-		}
-		
-	} else {
-		do_exit = TRUE;
+	if(action & A_EXIT_1) {
 		exit_code = 1;
-		crm_warn("Performing %s - forcefully exiting the CRMd... now!",
-			 fsa_action2string(action));
-	}
-
-	if(do_exit) {
-		if(is_set(fsa_input_register, R_IN_RECOVERY)) {
-			crm_info("Could not recover from internal error");
-			exit_code = 2;			
-			
-		} else if(is_set(fsa_input_register, R_STAYDOWN)) {
-			crm_info("Inhibiting respawn by Heartbeat");
-			exit_code = 100;
-		}
-		crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
-		exit(exit_code);
+		log_level = LOG_ERR;
+		exit_type = "forcefully";
+		verify_stopped(TRUE, LOG_ERR);
 	}
 	
+	crm_log_maybe(log_level, "Performing %s - %s exiting the CRMd",
+		      fsa_action2string(action), exit_type);
+	
+	if(is_set(fsa_input_register, R_IN_RECOVERY)) {
+		crm_err("Could not recover from internal error");
+		exit_code = 2;		
+	} 
+	if(is_set(fsa_input_register, R_STAYDOWN)) {
+		crm_warn("Inhibiting respawn by Heartbeat");
+		exit_code = 100;
+	}
+	
+	crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
+	cl_flush_logs();
+	exit(exit_code);
+
 	return I_NULL;
 }
 
@@ -227,7 +219,7 @@ do_startup(long long action,
 	int was_error = 0;
 	int interval = 1; /* seconds between DC heartbeats */
 
-	crm_info("Register Signal Handler");
+	crm_debug("Registering Signal Handlers");
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, crm_shutdown, NULL, NULL);
 
@@ -237,32 +229,30 @@ do_startup(long long action,
 	ipc_clients = g_hash_table_new(g_str_hash, g_str_equal);
 	
 	if(was_error == 0) {
-		crm_info("Init server comms");
+		crm_debug("Init server comms");
 		was_error = init_server_ipc_comms(
 			crm_strdup(CRM_SYSTEM_CRMD), crmd_client_connect,
 			default_ipc_connection_destroy);
 	}	
 
 	if(was_error == 0) {
-		crm_info("Creating CIB object");
+		crm_debug("Creating CIB object");
 		fsa_cib_conn = cib_new();
 	}
 	
 	/* set up the timers */
-	crm_malloc0(dc_heartbeat, sizeof(fsa_timer_t));
 	crm_malloc0(integration_timer, sizeof(fsa_timer_t));
 	crm_malloc0(finalization_timer, sizeof(fsa_timer_t));
 	crm_malloc0(election_trigger, sizeof(fsa_timer_t));
 	crm_malloc0(election_timeout, sizeof(fsa_timer_t));
 	crm_malloc0(shutdown_escalation_timer, sizeof(fsa_timer_t));
 	crm_malloc0(wait_timer, sizeof(fsa_timer_t));
-	crm_malloc0(shutdown_timer, sizeof(fsa_timer_t));
 	crm_malloc0(recheck_timer, sizeof(fsa_timer_t));
 
 	interval = interval * 1000;
 
 	if(election_trigger != NULL) {
-		election_trigger->source_id = -1;
+		election_trigger->source_id = 0;
 		election_trigger->period_ms = -1;
 		election_trigger->fsa_input = I_DC_TIMEOUT;
 		election_trigger->callback = crm_timer_popped;
@@ -271,18 +261,8 @@ do_startup(long long action,
 		was_error = TRUE;
 	}
 	
-	if(dc_heartbeat != NULL) {
-		dc_heartbeat->source_id = -1;
-		dc_heartbeat->period_ms = -1;
-		dc_heartbeat->fsa_input = I_NULL;
-		dc_heartbeat->callback = do_dc_heartbeat;
-		dc_heartbeat->repeat = FALSE;
-	} else {
-		was_error = TRUE;
-	}
-	
 	if(election_timeout != NULL) {
-		election_timeout->source_id = -1;
+		election_timeout->source_id = 0;
 		election_timeout->period_ms = -1;
 		election_timeout->fsa_input = I_ELECTION_DC;
 		election_timeout->callback = crm_timer_popped;
@@ -292,7 +272,7 @@ do_startup(long long action,
 	}
 	
 	if(integration_timer != NULL) {
-		integration_timer->source_id = -1;
+		integration_timer->source_id = 0;
 		integration_timer->period_ms = -1;
 		integration_timer->fsa_input = I_INTEGRATED;
 		integration_timer->callback = crm_timer_popped;
@@ -302,17 +282,31 @@ do_startup(long long action,
 	}
 	
 	if(finalization_timer != NULL) {
-		finalization_timer->source_id = -1;
+		finalization_timer->source_id = 0;
 		finalization_timer->period_ms = -1;
 		finalization_timer->fsa_input = I_FINALIZED;
 		finalization_timer->callback = crm_timer_popped;
 		finalization_timer->repeat = FALSE;
+		/* for possible enabling... a bug in the join protocol left
+		 *    a slave in S_PENDING while we think its in S_NOT_DC
+		 *
+		 * raising I_FINALIZED put us into a transition loop which is
+		 *    never resolved.
+		 * in this loop we continually send probes which the node
+		 *    NACK's because its in S_PENDING
+		 *
+		 * if we have nodes where heartbeat is active but the
+		 *    CRM is not... then this will be handled in the
+		 *    integration phase
+		 */
+		finalization_timer->fsa_input = I_ELECTION;
+
 	} else {
 		was_error = TRUE;
 	}
 	
 	if(shutdown_escalation_timer != NULL) {
-		shutdown_escalation_timer->source_id = -1;
+		shutdown_escalation_timer->source_id = 0;
 		shutdown_escalation_timer->period_ms = -1;
 		shutdown_escalation_timer->fsa_input = I_STOP;
 		shutdown_escalation_timer->callback = crm_timer_popped;
@@ -322,7 +316,7 @@ do_startup(long long action,
 	}
 	
 	if(wait_timer != NULL) {
-		wait_timer->source_id = -1;
+		wait_timer->source_id = 0;
 		wait_timer->period_ms = 500;
 		wait_timer->fsa_input = I_NULL;
 		wait_timer->callback = crm_timer_popped;
@@ -331,18 +325,8 @@ do_startup(long long action,
 		was_error = TRUE;
 	}
 
-	if(shutdown_timer != NULL) {
-		shutdown_timer->source_id = -1;
-		shutdown_timer->period_ms = -1;
-		shutdown_timer->fsa_input = I_SHUTDOWN;
-		shutdown_timer->callback = crm_timer_popped;
-		shutdown_timer->repeat = TRUE;
-	} else {
-		was_error = TRUE;
-	}
-
 	if(recheck_timer != NULL) {
-		recheck_timer->source_id = -1;
+		recheck_timer->source_id = 0;
 		recheck_timer->period_ms = -1;
 		recheck_timer->fsa_input = I_PE_CALC;
 		recheck_timer->callback = crm_timer_popped;
@@ -420,8 +404,6 @@ do_startup(long long action,
 	return I_NULL;
 }
 
-extern GHashTable *shutdown_ops;
-
 /*	 A_STOP	*/
 enum crmd_fsa_input
 do_stop(long long action,
@@ -430,11 +412,10 @@ do_stop(long long action,
 	enum crmd_fsa_input current_input,
 	fsa_data_t *msg_data)
 {
-	if(g_hash_table_size(shutdown_ops) > 0) {
-		crm_err("%d stop operations outstanding at exit",
-			g_hash_table_size(shutdown_ops));
+	if(verify_stopped(FALSE, LOG_DEBUG) == FALSE) {
+		crmd_fsa_stall(NULL);
 	}
-	
+
 	return I_NULL;
 }
 
@@ -463,6 +444,13 @@ do_started(long long action,
 	} else if(is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
 		crm_info("Delaying start, CIB (%.16llx) not connected",
 			 R_CIB_CONNECTED);
+
+		crmd_fsa_stall(NULL);
+		return I_NULL;
+
+	} else if(is_set(fsa_input_register, R_READ_CONFIG) == FALSE) {
+		crm_info("Delaying start, Config not read (%.16llx)",
+			 R_READ_CONFIG);
 
 		crmd_fsa_stall(NULL);
 		return I_NULL;
@@ -510,6 +498,111 @@ do_recover(long long action,
 	return I_NULL;
 }
 
+pe_cluster_option crmd_opts[] = {
+	/* name, old-name, validate, default, description */
+	{ XML_CONFIG_ATTR_DC_DEADTIME, NULL, "time", NULL, "10s", &check_time, "How long to wait for a response from other nodes during startup.", "The \"correct\" value will depend on the speed and load of your network." },
+	{ XML_CONFIG_ATTR_RECHECK, NULL, "time", "Zero disables polling.  Positive values are an interval in seconds (unless other SI units are specified. eg. 5min)", "0", &check_timer, "Polling interval for time based changes to options, resource parameters and constraints.", "The Cluster is primarily event driven, however the configuration can have elements that change based on time.  To ensure these changes take effect, we can optionally poll the cluster's status for changes." },
+	{ XML_CONFIG_ATTR_ELECTION_FAIL, NULL, "time", NULL, "2min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
+	{ XML_CONFIG_ATTR_FORCE_QUIT, NULL, "time", NULL, "20min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
+	{ "crmd-integration-timeout", NULL, "time", NULL, "3min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
+	{ "crmd-finalization-timeout", NULL, "time", NULL, "10min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
+};
+
+void
+crmd_metadata(void)
+{
+	config_metadata("CRM Daemon", "1.0",
+			"CRM Daemon Options",
+			"This is a fake resource that details the options that can be configured for the CRM Daemon.",
+			crmd_opts, DIMOF(crmd_opts));
+}
+
+static void
+verify_crmd_options(GHashTable *options)
+{
+	verify_all_options(options, crmd_opts, DIMOF(crmd_opts));
+}
+
+static const char *
+crmd_pref(GHashTable *options, const char *name)
+{
+	return get_cluster_pref(options, crmd_opts, DIMOF(crmd_opts), name);
+}
+
+static void
+config_query_callback(const HA_Message *msg, int call_id, int rc,
+		      crm_data_t *output, void *user_data) 
+{
+	const char *value = NULL;
+	GHashTable *config_hash = NULL;
+
+	if(rc != cib_ok) {
+		fsa_data_t *msg_data = NULL;
+		crm_err("Local CIB query resulted in an error: %s",
+			cib_error2string(rc));
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+
+		if(rc == cib_bad_permissions
+		   || rc == cib_bad_digest
+		   || rc == cib_bad_config) {
+			crm_err("The cluster is mis-configured - shutting down and staying down");
+			set_bit_inplace(fsa_input_register, R_STAYDOWN);
+		}
+		return;
+	}
+
+	crm_debug("Call %d : Parsing CIB options", call_id);
+	config_hash = g_hash_table_new_full(
+		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
+
+	unpack_instance_attributes(
+		output, XML_CIB_TAG_PROPSET, NULL, config_hash,
+		CIB_OPTIONS_FIRST, NULL);
+	
+	value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
+	if(value == NULL) {
+		/* apparently we're not allowed to free the result of getenv */
+		char *param_val = getenv(ENV_PREFIX "" KEY_INITDEAD);
+
+		value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
+		if(param_val != NULL) {
+			int from_env = crm_get_msec(param_val) / 2;
+			int from_defaults = crm_get_msec(value);
+			if(from_env > from_defaults) {
+				g_hash_table_replace(
+					config_hash, crm_strdup(XML_CONFIG_ATTR_DC_DEADTIME),
+					crm_strdup(param_val));
+			}
+		}
+	}
+
+	verify_crmd_options(config_hash);
+
+	value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
+	election_trigger->period_ms = crm_get_msec(value);
+	
+	value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
+	shutdown_escalation_timer->period_ms = crm_get_msec(value);
+
+	value = crmd_pref(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
+	election_timeout->period_ms = crm_get_msec(value);
+	
+	value = crmd_pref(config_hash, XML_CONFIG_ATTR_RECHECK);
+	recheck_timer->period_ms = crm_get_msec(value);
+
+	value = crmd_pref(config_hash, "crmd-integration-timeout");
+	integration_timer->period_ms  = crm_get_msec(value);
+
+	value = crmd_pref(config_hash, "crmd-finalization-timeout");
+	finalization_timer->period_ms = crm_get_msec(value);
+
+	set_bit_inplace(fsa_input_register, R_READ_CONFIG);
+	crm_debug_3("Triggering FSA: %s", __FUNCTION__);
+	G_main_set_trigger(fsa_source);
+	
+	g_hash_table_destroy(config_hash);
+}
+
 /*	 A_READCONFIG	*/
 enum crmd_fsa_input
 do_read_config(long long action,
@@ -518,62 +611,12 @@ do_read_config(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
-	/* this one probably is worthwhile blocking on */
-	crm_data_t *cib_copy = get_cib_copy(fsa_cib_conn);
-	crm_data_t *config   = get_object_root(XML_CIB_TAG_CRMCONFIG, cib_copy);
+	int call_id = fsa_cib_conn->cmds->query(
+ 		fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
 
-	dc_heartbeat->period_ms = 0;
+	add_cib_op_callback(call_id, FALSE, NULL, config_query_callback);
+	crm_debug_2("Querying the CIB... call %d", call_id);
 	
-	xml_child_iter(
-		config, iter, XML_CIB_TAG_NVPAIR,
-
-		const char *name  = crm_element_value(iter, XML_NVPAIR_ATTR_NAME);
-		const char *value = crm_element_value(iter, XML_NVPAIR_ATTR_VALUE);
-
-		if(name == NULL || value == NULL) {
-			continue;
-			
-		} else if(safe_str_eq(name, XML_CONFIG_ATTR_DC_BEAT)) {
-			dc_heartbeat->period_ms = crm_get_msec(value);
-			
-		} else if(safe_str_eq(name, XML_CONFIG_ATTR_DC_DEADTIME)) {
-			election_trigger->period_ms = crm_get_msec(value);
-
-		} else if(safe_str_eq(name, XML_CONFIG_ATTR_FORCE_QUIT)) {
-			shutdown_escalation_timer->period_ms = crm_get_msec(value);
-
-		} else if(safe_str_eq(name, XML_CONFIG_ATTR_RECHECK)) {
-			recheck_timer->period_ms = crm_get_msec(value);
-		}
-		);
-		
-	if(dc_heartbeat->period_ms < 1) {
-		/* sensible default */
-		dc_heartbeat->period_ms = crm_get_msec(
-			getenv("HA_"KEY_KEEPALIVE));
-	}
-	
-	election_timeout->period_ms   = dc_heartbeat->period_ms * 6;
-	integration_timer->period_ms  = dc_heartbeat->period_ms * 6;
-	finalization_timer->period_ms = dc_heartbeat->period_ms * 6;
-	integration_timer->period_ms  = crm_get_msec("5min");
-	finalization_timer->period_ms = crm_get_msec("5min");
-	
-	if(election_trigger->period_ms < 1
-	   || election_trigger->period_ms > election_timeout->period_ms) {
-		/* sensible default */
-		election_trigger->period_ms = election_timeout->period_ms * 2;
-	}
-	
-	if(shutdown_escalation_timer->period_ms < 1
-	   || election_timeout->period_ms > shutdown_escalation_timer->period_ms) {
-		/* sensible default - 32 election cycles */
-		shutdown_escalation_timer->period_ms
-			= (election_timeout->period_ms + election_trigger->period_ms) * 32;
-	}
-	shutdown_timer->period_ms = election_trigger->period_ms;
-	
-
 	return I_NULL;
 }
 
@@ -587,21 +630,12 @@ crm_shutdown(int nsig, gpointer unused)
 			register_fsa_input_before(C_SHUTDOWN, I_ERROR, NULL);
 
 		} else {
+			crm_info("Requesting shutdown");
 			set_bit_inplace(fsa_input_register, R_SHUTDOWN);
-/* 			set_bit_inplace(fsa_input_register, R_STAYDOWN); */
+			register_fsa_input(C_SHUTDOWN,I_SHUTDOWN,NULL);
 
-			/* if we ever win an election we're the last man standing */
-			election_timeout->fsa_input = I_STOP;
-
-			if(is_set(fsa_input_register, R_SHUTDOWN)) {
-				/* cant rely on this... */
-				crm_timer_start(shutdown_escalation_timer);
-				register_fsa_input(C_SHUTDOWN,I_SHUTDOWN,NULL);
-
-			} else {
-				crm_err("Could not set R_SHUTDOWN");
-				exit(LSB_EXIT_ENOTSUPPORTED);
-			}
+			/* cant rely on this... */
+			crm_timer_start(shutdown_escalation_timer);
 		}
 		
 	} else {
@@ -612,6 +646,81 @@ crm_shutdown(int nsig, gpointer unused)
 	return TRUE;
 }
 
+static void
+default_cib_update_callback(const HA_Message *msg, int call_id, int rc,
+		     crm_data_t *output, void *user_data) 
+{
+	if(rc != cib_ok) {
+		fsa_data_t *msg_data = NULL;
+		crm_err("CIB Update failed: %s", cib_error2string(rc));
+		crm_log_xml_warn(output, "update:failed");
+		
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+	}
+}
+
+void
+populate_cib_nodes(ll_cluster_t *hb_cluster, gboolean with_client_status)
+{
+	int call_id = 0;
+	const char *ha_node = NULL;
+	crm_data_t *cib_node_list = NULL;
+	
+	/* Async get client status information in the cluster */
+	crm_debug_2("Invoked");
+	if(with_client_status) {
+		crm_debug_3("Requesting an initial dump of CRMD client_status");
+		fsa_cluster_conn->llc_ops->client_status(
+			fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
+	}
+	
+	crm_info("Requesting the list of configured nodes");
+	fsa_cluster_conn->llc_ops->init_nodewalk(fsa_cluster_conn);
+
+	cib_node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
+	do {
+		const char *ha_node_type = NULL;
+		const char *ha_node_uuid = NULL;
+		crm_data_t *cib_new_node = NULL;
+
+		ha_node = fsa_cluster_conn->llc_ops->nextnode(fsa_cluster_conn);
+		if(ha_node == NULL) {
+			continue;
+		}
+		
+		ha_node_type = fsa_cluster_conn->llc_ops->node_type(
+			fsa_cluster_conn, ha_node);
+		if(safe_str_neq(NORMALNODE, ha_node_type)) {
+			crm_debug("Node %s: skipping '%s'",
+				  ha_node, ha_node_type);
+			continue;
+		}
+
+		ha_node_uuid = get_uuid(fsa_cluster_conn, ha_node);
+		if(ha_node_uuid == NULL) {
+			crm_warn("Node %s: no uuid found", ha_node);
+			continue;	
+		}
+		
+		crm_notice("Node: %s (uuid: %s)", ha_node, ha_node_uuid);
+		cib_new_node = create_xml_node(cib_node_list, XML_CIB_TAG_NODE);
+		crm_xml_add(cib_new_node, XML_ATTR_ID,    ha_node_uuid);
+		crm_xml_add(cib_new_node, XML_ATTR_UNAME, ha_node);
+		crm_xml_add(cib_new_node, XML_ATTR_TYPE,  ha_node_type);
+
+	} while(ha_node != NULL);
+
+	fsa_cluster_conn->llc_ops->end_nodewalk(fsa_cluster_conn);
+	
+	/* Now update the CIB with the list of nodes */
+	fsa_cib_update(
+		XML_CIB_TAG_NODES, cib_node_list,
+		cib_scope_local|cib_quorum_override|cib_inhibit_bcast, call_id);
+	add_cib_op_callback(call_id, FALSE, NULL, default_cib_update_callback);
+
+	free_xml(cib_node_list);
+	crm_debug_2("Complete");
+}
 
 gboolean
 register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
@@ -624,8 +733,6 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 		return FALSE;
 	}
 
-	crm_set_ha_options(hb_cluster);
-	
 	crm_debug_3("Be informed of CRM messages");
 	if (HA_OK != hb_cluster->llc_ops->set_msg_callback(
 		    hb_cluster, T_CRM, crmd_ha_msg_callback, hb_cluster)){
@@ -635,7 +742,6 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 		return FALSE;
 	}
 
-#if 0
 	crm_debug_3("Be informed of Node Status changes");
 	if (HA_OK != hb_cluster->llc_ops->set_nstatus_callback(
 		    hb_cluster, crmd_ha_status_callback, hb_cluster)){
@@ -644,7 +750,6 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 			hb_cluster->llc_ops->errmsg(hb_cluster));
 		return FALSE;
 	}
-#endif
 	
 	crm_debug_3("Be informed of CRM Client Status changes");
 	if (HA_OK != hb_cluster->llc_ops->set_cstatus_callback(
@@ -656,8 +761,8 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	}
 
 	crm_debug_3("Adding channel to mainloop");
-	G_main_add_IPC_Channel(
-		G_PRIORITY_HIGH, hb_cluster->llc_ops->ipcchan(hb_cluster),
+	G_main_add_ll_cluster(
+		G_PRIORITY_HIGH, hb_cluster,
 		FALSE, crmd_ha_msg_dispatch, hb_cluster /* userdata  */,  
 		crmd_ha_connection_destroy);
 
@@ -667,13 +772,19 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 		crm_err("get_mynodeid() failed");
 		return FALSE;
 	}
-	crm_info("FSA Hostname: %s", fsa_our_uname);
+	crm_info("Hostname: %s", fsa_our_uname);
 
-	/* Async get client status information in the cluster */
-	crm_debug_3("Requesting an initial dump of CRMD client_status");
-	fsa_cluster_conn->llc_ops->client_status(
-		fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
-
+	crm_debug_3("Finding our node uuid");
+	fsa_our_uuid = get_uuid(fsa_cluster_conn, fsa_our_uname);
+	if(fsa_our_uuid == NULL) {
+		crm_err("get_uuid_by_name() failed");
+		return FALSE;
+	}
+	/* copy it so that unget_uuid() doesn't trash the value on us */
+	fsa_our_uuid = crm_strdup(fsa_our_uuid);
+	crm_info("UUID: %s", fsa_our_uuid);
+		
+	populate_cib_nodes(hb_cluster, TRUE);
 	
 	return TRUE;
     

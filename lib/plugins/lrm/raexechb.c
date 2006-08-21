@@ -22,7 +22,7 @@
  */
 
 #include <portability.h>
-#include <stdio.h>		
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -46,28 +46,67 @@
 
 static const char * RA_PATH = HB_RA_DIR;
 
-#define meta_data_template  "\n"\
-"<?xml version=\"1.0\"?>\n"\
-"<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"\
-"<resource-agent name=%s"\
-"\" version=\"0.1\">\n"\
-"  <version>1.0</version>\n"\
-"  <longdesc lang=\"en\">\n"\
-"    %s"\
-"  </longdesc>\n"\
-"  <shortdesc lang=\"en\">%s</shortdesc>\n"\
-"  <parameters>\n"\
-"  </parameters>\n"\
-"  <actions>\n"\
-"    <action name=\"start\"   timeout=\"15\" />\n"\
-"    <action name=\"stop\"    timeout=\"15\" />\n"\
-"    <action name=\"status\"  timeout=\"15\" />\n"\
-"    <action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"\
-"    <action name=\"meta-data\"  timeout=\"5\" />\n"\
-"  </actions>\n"\
-"  <special tag=\"heartbeart\">\n"\
-"  </special>\n"\
-"</resource-agent>\n"
+static const char meta_data_template[] =
+"<?xml version=\"1.0\"?>\n"
+"<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
+"<resource-agent name=\"%s\">\n"
+"<version>1.0</version>\n"
+"<longdesc lang=\"en\">\n"
+"%s"
+"</longdesc>\n"
+"<shortdesc lang=\"en\">%s</shortdesc>\n"
+"<parameters>\n"
+"<parameter name=\"1\" unique=\"1\" required=\"0\">\n"
+"<longdesc lang=\"en\">\n"
+"This argument will be passed as the first argument to the "
+"heartbeat resource agent (assuming it supports one)\n"
+"</longdesc>\n"
+"<shortdesc lang=\"en\">argv[1]</shortdesc>\n"
+"<content type=\"string\" default=\" \" />\n"
+"</parameter>\n"
+"<parameter name=\"2\" unique=\"1\" required=\"0\">\n"
+"<longdesc lang=\"en\">\n"
+"This argument will be passed as the second argument to the "
+"heartbeat resource agent (assuming it supports one)\n"
+"</longdesc>\n"
+"<shortdesc lang=\"en\">argv[2]</shortdesc>\n"
+"<content type=\"string\" default=\" \" />\n"
+"</parameter>\n"
+"<parameter name=\"3\" unique=\"1\" required=\"0\">\n"
+"<longdesc lang=\"en\">\n"
+"This argument will be passed as the third argument to the "
+"heartbeat resource agent (assuming it supports one)\n"
+"</longdesc>\n"
+"<shortdesc lang=\"en\">argv[3]</shortdesc>\n"
+"<content type=\"string\" default=\" \" />\n"
+"</parameter>\n"
+"<parameter name=\"4\" unique=\"1\" required=\"0\">\n"
+"<longdesc lang=\"en\">\n"
+"This argument will be passed as the fourth argument to the "
+"heartbeat resource agent (assuming it supports one)\n"
+"</longdesc>\n"
+"<shortdesc lang=\"en\">argv[4]</shortdesc>\n"
+"<content type=\"string\" default=\" \" />\n"
+"</parameter>\n"
+"<parameter name=\"5\" unique=\"1\" required=\"0\">\n"
+"<longdesc lang=\"en\">\n"
+"This argument will be passed as the fifth argument to the "
+"heartbeat resource agent (assuming it supports one)\n"
+"</longdesc>\n"
+"<shortdesc lang=\"en\">argv[5]</shortdesc>\n"
+"<content type=\"string\" default=\" \" />\n"
+"</parameter>\n"
+"</parameters>\n"
+"<actions>\n"
+"<action name=\"start\"   timeout=\"15\" />\n"
+"<action name=\"stop\"    timeout=\"15\" />\n"
+"<action name=\"status\"  timeout=\"15\" />\n"
+"<action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
+"<action name=\"meta-data\"  timeout=\"5\" />\n"
+"</actions>\n"
+"<special tag=\"heartbeart\">\n"
+"</special>\n"
+"</resource-agent>\n";
 
 /* The begin of exported function list */
 static int execra(const char * rsc_id,
@@ -113,6 +152,7 @@ static PILPlugin*               OurPlugin;
 static PILInterface*		OurInterface;
 static void*			OurImports;
 static void*			interfprivate;
+static int			idebuglevel = 0;
 
 /*
  * Our plugin initialization and registration function
@@ -133,8 +173,13 @@ PIL_PLUGIN_INIT(PILPlugin * us, const PILPluginImports* imports)
 	/* Register ourself as a plugin */
 	imports->register_plugin(us, &OurPIExports);  
 
+	if (getenv(HADEBUGVAL) != NULL && atoi(getenv(HADEBUGVAL)) > 0 ) {
+		idebuglevel = atoi(getenv(HADEBUGVAL));
+		cl_log(LOG_DEBUG, "LRM debug level set to %d", idebuglevel);
+	}
+
 	/*  Register our interfaces */
- 	return imports->register_interface(us, PIL_PLUGINTYPE_S,  PIL_PLUGIN_S,	
+ 	return imports->register_interface(us, PIL_PLUGINTYPE_S,  PIL_PLUGIN_S,
 		&raops, NULL, &OurInterface, &OurImports,
 		interfprivate); 
 }
@@ -151,7 +196,6 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 	char ra_pathname[RA_MAX_NAME_LENGTH];
 	uniform_ret_execra_t exit_value;
 	GString * debug_info;
-	char * inherit_debuglevel = NULL;
 	char * optype_tmp = NULL;
 	int index_tmp = 0;
 
@@ -184,8 +228,7 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 	get_ra_pathname(RA_PATH, rsc_type, NULL, ra_pathname);
 
 	/* let this log show only high loglevel. */
-	inherit_debuglevel = getenv(HADEBUGVAL);
-	if ((inherit_debuglevel != NULL) && (atoi(inherit_debuglevel) > 1)) {
+	if (idebuglevel  > 1) {
 		debug_info = g_string_new("");
 		do {
 			g_string_append(debug_info, params_argv[index_tmp]);
@@ -198,19 +241,18 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 
 		g_string_free(debug_info, TRUE);
 	} 
-	
+
 	execv(ra_pathname, params_argv);
-	cl_log(LOG_ERR, "execv error when to execute a heartbeat RA %s.", rsc_type);
+	cl_perror("(%s:%s:%d) execv failed for %s"
+		  , __FILE__, __FUNCTION__, __LINE__, ra_pathname);
 
 	switch (errno) {
 		case ENOENT:   /* No such file or directory */
 		case EISDIR:   /* Is a directory */
 			exit_value = EXECRA_NO_RA;
-			cl_log(LOG_ERR, "Cause: No such file or directory.");
 			break;
 		default:
 			exit_value = EXECRA_EXEC_UNKNOWN_ERROR;
-			cl_log(LOG_ERR, "Cause: execv unknow error.");
         }
         exit(exit_value);
 }
@@ -266,7 +308,7 @@ prepare_cmd_parameters(const char * rsc_type, const char * op_type,
 static uniform_ret_execra_t 
 map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 {
-	
+
 	/* Now there is no formal related specification for Heartbeat RA 
 	 * scripts. Temporarily deal as LSB init script.
 	 */
@@ -278,30 +320,52 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 		   * running_pattern1 = "*running*",
 		   * running_pattern2 = "*OK*";
 	const char * lower_std_output = NULL;
-	
-	if ( 0 == STRNCMP_CONST(op_type, "status") ) {
+
+	if (	0 == STRNCMP_CONST(op_type, "status")
+	||	0 == STRNCMP_CONST(op_type, "monitor")) {
 		if (std_output == NULL ) {
-			cl_log(LOG_WARNING, "The heartbeat RA may not to output "
-				"status string, such as 'running', to stdout.");
-			return EXECRA_UNKNOWN_ERROR; /* EXECRA_NOT_RUNNING ? */
+			cl_log(LOG_WARNING, "No status output from the (hb) resource agent.");
+			return EXECRA_NOT_RUNNING;
+		}else if (idebuglevel) {
+			cl_log(LOG_DEBUG, "RA output was: [%s]", std_output);
 		}
+
 	 	lower_std_output = g_ascii_strdown(std_output, -1);
 
 		if ( TRUE == g_pattern_match_simple(stop_pattern1
 			, lower_std_output) || TRUE ==
 			g_pattern_match_simple(stop_pattern2
 			, lower_std_output) ) {
+			if (idebuglevel) {
+				cl_log(LOG_DEBUG
+				,	"RA output [%s] matched stopped pattern"
+				" [%s] or [%s]"
+				,	std_output
+				,	stop_pattern1
+				,	stop_pattern2);
+			}
 			return EXECRA_NOT_RUNNING; /* stopped */
 		}
 		if ( TRUE == g_pattern_match_simple(running_pattern1
 			, lower_std_output) || TRUE ==
 			g_pattern_match_simple(running_pattern2
 			, std_output) ) {
+			if (idebuglevel) {
+				cl_log(LOG_DEBUG
+				,	"RA output [%s] matched running"
+				" pattern [%s] or [%s]"
+				,	std_output, running_pattern1
+				,	running_pattern2);
+			}
 			return EXECRA_OK; /* running */
 		}
+		/* It didn't say it was running - must be stopped */
+		cl_log(LOG_DEBUG, "RA output [%s] didn't match any pattern"
+		,	std_output);
+		return EXECRA_NOT_RUNNING; /* stopped */
 	}
-	/* For none-status operation return code */
-	if ( ret_execra < 0 || ret_execra > 7 ) {
+	/* For non-status operation return code */
+	if (ret_execra < 0) {
 		ret_execra = EXECRA_UNKNOWN_ERROR;
 	}
 	return ret_execra;
@@ -310,7 +374,7 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 static int 
 get_resource_list(GList ** rsc_info)
 {
-	return get_runnable_list(RA_PATH, rsc_info);			
+	return get_runnable_list(RA_PATH, rsc_info);
 }
 
 static char*
@@ -322,10 +386,24 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 	g_string_sprintf( meta_data, meta_data_template, rsc_type
 			, rsc_type, rsc_type);
 	return meta_data->str;
-}	
+}
 static int
 get_provider_list(const char* ra_type, GList ** providers)
 {
-	*providers = NULL;
-	return 0;
+        if ( providers == NULL ) {
+                cl_log(LOG_ERR, "%s:%d: Parameter error: providers==NULL"
+                        , __FUNCTION__, __LINE__);
+                return -2;
+        }
+
+        if ( *providers != NULL ) {
+                cl_log(LOG_ERR, "%s:%d: Parameter error: *providers==NULL."
+                        "This will cause memory leak."
+                        , __FUNCTION__, __LINE__);
+        }
+
+        /* Now temporarily make it fixed */
+        *providers = g_list_append(*providers, g_strdup("heartbeat"));
+
+        return g_list_length(*providers);
 }

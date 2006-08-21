@@ -1,4 +1,4 @@
-/* $Id: cibadmin.c,v 1.41 2005/09/12 10:12:19 andrew Exp $ */
+/* $Id: cibadmin.c,v 1.56 2006/07/18 06:15:54 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -60,10 +60,9 @@ IPC_Channel *crmd_channel = NULL;
 const char *host = NULL;
 void usage(const char *cmd, int exit_status);
 enum cib_errors do_init(void);
-int do_work(const char *xml_text, int command_options, crm_data_t **output);
+int do_work(crm_data_t *input, int command_options, crm_data_t **output);
 
 gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
-crm_data_t *handleCibMod(const char *xml);
 gboolean admin_message_timeout(gpointer data);
 void cib_connection_destroy(gpointer user_data);
 void cibadmin_op_callback(const HA_Message *msg, int call_id, int rc,
@@ -79,7 +78,6 @@ typedef struct str_list_s
 		struct str_list_s *next;
 } str_list_t;
 
-char *id = NULL;
 char *this_msg_reference = NULL;
 char *obj_type = NULL;
 char *status = NULL;
@@ -92,7 +90,7 @@ int request_id = 0;
 int operation_status = 0;
 cib_t *the_cib = NULL;
 
-#define OPTARGS	"V?i:o:QDUCEX:t:Srwlsh:MBfbdR"
+#define OPTARGS	"V?o:QDUCEX:t:Srwlsh:MmBfbdRx:pP"
 
 int
 main(int argc, char **argv)
@@ -100,7 +98,10 @@ main(int argc, char **argv)
 	int argerr = 0;
 	int flag;
 	char *admin_input_xml = NULL;
+	char *admin_input_file = NULL;
+	gboolean admin_input_stdin = FALSE;
 	crm_data_t *output = NULL;
+	crm_data_t *input = NULL;
 	
 #ifdef HAVE_GETOPT_H
 	int option_index = 0;
@@ -111,13 +112,15 @@ main(int argc, char **argv)
 		{CIB_OP_CREATE,  0, 0, 'C'},
 		{CIB_OP_REPLACE, 0, 0, 'R'},
 		{CIB_OP_UPDATE,  0, 0, 'U'},
+		{CIB_OP_MODIFY,  0, 0, 'M'},
+		{"patch",	 0, 0, 'P'},
 		{CIB_OP_DELETE,  0, 0, 'D'},
 		{CIB_OP_DELETE_ALT,  0, 0, 'd'},
 		{CIB_OP_BUMP,    0, 0, 'B'},
 		{CIB_OP_SYNC,    0, 0, 'S'},
 		{CIB_OP_SLAVE,   0, 0, 'r'},
 		{CIB_OP_MASTER,  0, 0, 'w'},
-		{CIB_OP_ISMASTER,0, 0, 'M'},
+		{CIB_OP_ISMASTER,0, 0, 'm'},
 		
 		{"force-quorum",0, 0, 'f'},
 		{"local",	0, 0, 'l'},
@@ -125,21 +128,23 @@ main(int argc, char **argv)
 		{"no-bcast",	0, 0, 'b'},
 		{"host",	0, 0, 'h'},
 		{F_CRM_DATA,    1, 0, 'X'},
+		{"xml-file",    1, 0, 'x'},
+		{"xml-pipe",    0, 0, 'p'},
 		{"verbose",     0, 0, 'V'},
 		{"help",        0, 0, '?'},
 		{"reference",   1, 0, 0},
 		{"timeout",	1, 0, 't'},
 
 		/* common options */
-		{XML_ATTR_ID, 1, 0, 'i'},
 		{"obj_type", 1, 0, 'o'},
 
 		{0, 0, 0, 0}
 	};
 #endif
 
-	crm_log_init(crm_system_name);
+	cl_log_set_entity("cibadmin");
 	cl_log_set_facility(LOG_USER);
+	set_crm_log_level(LOG_CRIT-1);
 	
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);
@@ -186,11 +191,15 @@ main(int argc, char **argv)
 			case 'Q':
 				cib_action = CIB_OP_QUERY;
 				break;
+			case 'P':
+				cib_action = CIB_OP_APPLY_DIFF;
+				break;
 			case 'S':
 				cib_action = CIB_OP_SYNC;
 				break;
 			case 'U':
-				cib_action = CIB_OP_UPDATE;
+			case 'M':
+				cib_action = CIB_OP_MODIFY;
 				break;
 			case 'R':
 				cib_action = CIB_OP_REPLACE;
@@ -204,7 +213,7 @@ main(int argc, char **argv)
 			case 'd':
 				cib_action = CIB_OP_DELETE_ALT;
 				break;
-			case 'M':
+			case 'm':
 				cib_action = CIB_OP_ISMASTER;
 				command_options |= cib_scope_local;
 				break;
@@ -226,16 +235,20 @@ main(int argc, char **argv)
 			case '?':
 				usage(crm_system_name, LSB_EXIT_OK);
 				break;
-			case 'i':
-				crm_debug_2("Option %c => %s", flag, optarg);
-				id = crm_strdup(optarg);
-				break;
 			case 'o':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				obj_type = crm_strdup(optarg);
 				break;
 			case 'X':
+				crm_debug_2("Option %c => %s", flag, optarg);
 				admin_input_xml = crm_strdup(optarg);
+				break;
+			case 'x':
+				crm_debug_2("Option %c => %s", flag, optarg);
+				admin_input_file = crm_strdup(optarg);
+				break;
+			case 'p':
+				admin_input_stdin = TRUE;
 				break;
 			case 'h':
 				host = crm_strdup(optarg);
@@ -281,14 +294,40 @@ main(int argc, char **argv)
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
 
+	if(admin_input_file != NULL) {
+		FILE *xml_strm = fopen(admin_input_file, "r");
+		input = file2xml(xml_strm, FALSE);
+		if(input == NULL) {
+			fprintf(stderr, "Couldn't parse input file: %s\n", admin_input_file);
+			return 1;
+		}
+		
+	} else if(admin_input_xml != NULL) {
+		input = string2xml(admin_input_xml);
+		if(input == NULL) {
+			fprintf(stderr, "Couldn't parse input string: %s\n", admin_input_xml);
+			return 1;
+		}
+	} else if(admin_input_stdin) {
+		input = stdin2xml();
+		if(input == NULL) {
+			fprintf(stderr, "Couldn't parse input from STDIN.\n");
+			return 1;
+		}
+	}
+	
+	if(input != NULL) {
+		crm_log_xml_debug(input, "[admin input]");
+	}
+	
 	exit_code = do_init();
 	if(exit_code != cib_ok) {
 		crm_err("Init failed, could not perform requested operations");
 		fprintf(stderr, "Init failed, could not perform requested operations\n");
 		return -exit_code;
-	}
+	}	
 
-	exit_code = do_work(admin_input_xml, command_options, &output);
+	exit_code = do_work(input, command_options, &output);
 	if (exit_code > 0) {
 		/* wait for the reply by creating a mainloop and running it until
 		 * the callbacks are invoked...
@@ -330,121 +369,35 @@ main(int argc, char **argv)
 	return -exit_code;
 }
 
-crm_data_t*
-handleCibMod(const char *xml)
-{
-	const char *attr_name = NULL;
-	const char *attr_value = NULL;
-	crm_data_t *fragment = NULL;
-	crm_data_t *cib_object = NULL;
-
-	if(xml == NULL) {
-		cib_object = stdin2xml();
-	} else {
-		cib_object = string2xml(xml);
-	}
-	
-	if(cib_object == NULL) {
-		return NULL;
-	}
-	
-	attr_name = XML_ATTR_ID;
-	
-	attr_value = crm_element_value(cib_object, attr_name);
-	if(attr_name == NULL || strlen(attr_name) == 0) {
-		crm_err("No value for %s specified.", attr_name);
-		return NULL;
-	}
-	
-	crm_debug_4("Object creation complete");
-
-	/* create the cib request */
-	fragment = create_cib_fragment(cib_object, NULL);
-
-	return fragment;
-}
-
-
 int
-do_work(const char *admin_input_xml, int call_options, crm_data_t **output) 
+do_work(crm_data_t *input, int call_options, crm_data_t **output) 
 {
 	/* construct the request */
-	crm_data_t *msg_data = NULL;
-	char *obj_type_parent = NULL;
-
-	obj_type_parent = cib_pluralSection(obj_type);
-
-	if(strcmp(CIB_OP_QUERY, cib_action) == 0) {
-		crm_debug_2("Querying the CIB for section: %s",
-			    obj_type_parent);
-
-		return the_cib->cmds->query_from(
-			the_cib, host, obj_type_parent, output, call_options);
-		
-	} else if (strcmp(CIB_OP_ERASE, cib_action) == 0) {
-		crm_debug_4("CIB Erase op in progress");
-		return the_cib->cmds->erase(the_cib, output, call_options);
-		
-	} else if (strcmp(CIB_OP_CREATE, cib_action) == 0) {
-		enum cib_errors rc = cib_ok;
-		crm_debug_4("Performing %s op...", cib_action);
-		msg_data = handleCibMod(admin_input_xml);
-		rc = the_cib->cmds->create(
-			the_cib, obj_type_parent, msg_data, output, call_options);
-		free_xml(msg_data);
-		return rc;
-
-	} else if (strcmp(CIB_OP_UPDATE, cib_action) == 0) {
-		enum cib_errors rc = cib_ok;
-		crm_debug_4("Performing %s op...", cib_action);
-		msg_data = handleCibMod(admin_input_xml);
-		rc = the_cib->cmds->modify(
-			the_cib, obj_type_parent, msg_data, output, call_options);
-		free_xml(msg_data);
-		return rc;
-
-	} else if (strcmp(CIB_OP_DELETE_ALT, cib_action) == 0) {
-		enum cib_errors rc = cib_ok;
-		crm_debug_4("Performing %s op...", cib_action);
-		msg_data = handleCibMod(admin_input_xml);
-		rc = the_cib->cmds->delete_absolute(
-			the_cib, obj_type_parent, msg_data, output, call_options);
-		free_xml(msg_data);
-		return rc;
-
-	} else if (strcmp(CIB_OP_DELETE, cib_action) == 0) {
-		enum cib_errors rc = cib_ok;
-		crm_debug_4("Performing %s op...", cib_action);
-
-		if(admin_input_xml == NULL) {
-			msg_data = stdin2xml();
-		} else {
-			msg_data = string2xml(admin_input_xml);
-		}
-		rc = the_cib->cmds->delete(
-			the_cib, obj_type_parent, msg_data, output, call_options);
-		free_xml(msg_data);
-		return rc;
-
-	} else if (strcmp(CIB_OP_SYNC, cib_action) == 0) {
+	if (strcasecmp(CIB_OP_SYNC, cib_action) == 0) {
 		crm_debug_4("Performing %s op...", cib_action);
 		return the_cib->cmds->sync_from(
-			the_cib, host, obj_type_parent, call_options);
+			the_cib, host, obj_type, call_options);
 
-	} else if (strcmp(CIB_OP_SLAVE, cib_action) == 0
+	} else if (strcasecmp(CIB_OP_SLAVE, cib_action) == 0
 		   && (call_options ^ cib_scope_local) ) {
 		crm_debug_4("Performing %s op on all nodes...", cib_action);
 		return the_cib->cmds->set_slave_all(the_cib, call_options);
 
-	} else if (strcmp(CIB_OP_MASTER, cib_action) == 0) {
+	} else if (strcasecmp(CIB_OP_MASTER, cib_action) == 0) {
 		crm_debug_4("Performing %s op on all nodes...", cib_action);
 		return the_cib->cmds->set_master(the_cib, call_options);
 
+
 	} else if(cib_action != NULL) {
 		crm_debug_4("Passing \"%s\" to variant_op...", cib_action);
+		if(input != NULL && do_id_check(input, NULL, TRUE, FALSE)) {
+			crm_err("ID Check failed.");
+			return cib_id_check;
+		}
+			
 		return the_cib->cmds->variant_op(
-			the_cib, cib_action, host, obj_type_parent,
-			NULL, output, call_options);
+			the_cib, cib_action, host, obj_type,
+			input, output, call_options);
 		
 	} else {
 		crm_err("You must specify an operation");
@@ -478,25 +431,23 @@ usage(const char *cmd, int exit_status)
 	stream = exit_status != 0 ? stderr : stdout;
 
 	fprintf(stream, "usage: %s [%s] command\n"
-		"\twhere necessary, XML data will be expected using -X"
-		" or on STDIN if -X isnt specified\n", cmd, OPTARGS);
+		"\twhere necessary, XML data will be obtained using -X,"
+		" -x, or -p options\n", cmd, OPTARGS);
 
 	fprintf(stream, "Options\n");
-	fprintf(stream, "\t--%s (-%c) <id>\tid of the object being operated on\n",
-		XML_ATTR_ID, 'i');
 	fprintf(stream, "\t--%s (-%c) <type>\tobject type being operated on\n",
 		"obj_type", 'o');
-	fprintf(stream, "\t\tValid values are: node, resource, node_state, constraint, nvpair\n");
+	fprintf(stream, "\t\tValid values are: nodes, resources, constraints, crm_config, status\n");
 	fprintf(stream, "\t--%s (-%c)\tturn on debug info."
 		"  additional instance increase verbosity\n", "verbose", 'V');
 	fprintf(stream, "\t--%s (-%c)\tthis help message\n", "help", '?');
 	fprintf(stream, "\nCommands\n");
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ERASE,  'E');
+	fprintf(stream, "\t--%s (-%c)\tErase the contents of the whole CIB\n", CIB_OP_ERASE,  'E');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_QUERY,  'Q');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_CREATE, 'C');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_REPLACE,'R');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_UPDATE, 'U');
-
+	fprintf(stream, "\t--%s (-%c)\tRecursivly replace an object in the CIB\n", CIB_OP_REPLACE,'R');
+	fprintf(stream, "\t--%s (-%c)\tRecursivly update an object in the CIB\n", CIB_OP_UPDATE, 'U');
+	fprintf(stream, "\t--%s (-%c)\tFind the object somewhere in the CIB's XML tree and update is as --"CIB_OP_UPDATE" would\n", CIB_OP_MODIFY, 'M');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_DELETE, 'D');
 	fprintf(stream, "\t\t\tDelete the first object matching the supplied criteria\n");
 	fprintf(stream, "\t\t\tEg. <op id=\"rsc1_op1\" name=\"monitor\"/>\n");
@@ -508,10 +459,12 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t\t\tRequires -o\n");
 
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_BUMP,   'B');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ISMASTER,'M');
+	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ISMASTER,'m');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_SYNC,   'S');
 	fprintf(stream, "\nXML data\n");
-	fprintf(stream, "\t--%s (-%c) <string>\t\n", F_CRM_DATA, 'X');
+	fprintf(stream, "\t--%s (-%c) <string>\t\tRetrieve XML from the supplied string\n", F_CRM_DATA, 'X');
+	fprintf(stream, "\t--%s (-%c) <filename>\tRetrieve XML from the named file\n", "xml-file", 'x');
+	fprintf(stream, "\t--%s (-%c)\t\t\tRetrieve XML from STDIN\n", "xml-pipe", 'p');
 	fprintf(stream, "\nAdvanced Options\n");
 	fprintf(stream, "\t--%s (-%c)\tsend command to specified host."
 		" Applies to %s and %s commands only\n", "host", 'h',
@@ -545,8 +498,6 @@ admin_message_timeout(gpointer data)
 			(int)message_timeout_ms/1000);
 	}
 	
-	
-	
 	g_main_quit(mainloop);
 	return FALSE;
 }
@@ -577,13 +528,13 @@ cibadmin_op_callback(const HA_Message *msg, int call_id, int rc,
 	if(safe_str_eq(cib_action, CIB_OP_ISMASTER) && rc != cib_ok) {
 		crm_info("CIB on %s is _not_ the master instance",
 			 host?host:"localhost");
-		fprintf(stderr, "CIB on %s is _not_ the master instance",
+		fprintf(stderr, "CIB on %s is _not_ the master instance\n",
 			 host?host:"localhost");
 		
 	} else if(safe_str_eq(cib_action, CIB_OP_ISMASTER)) {
 		crm_info("CIB on %s _is_ the master instance",
 			 host?host:"localhost");
-		fprintf(stderr, "CIB on %s _is_ the master instance",
+		fprintf(stderr, "CIB on %s _is_ the master instance\n",
 			 host?host:"localhost");
 		
 	} else if(rc != 0) {
