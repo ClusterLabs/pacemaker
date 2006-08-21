@@ -40,10 +40,11 @@ COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 
 
 halib_PYTHON		= crm_primitive.py crm_utils.py crm_commands.py
-## binary progs
 hasbin_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 \
 			crm_master crm_standby crm_failcount crm_attribute \
-			crm_resource crm_verify crm_uuid cluster
+			crm_resource crm_verify crm_uuid 
+
+hasbin_SCRIPTS		= cluster
 
 ## SOURCES
 
