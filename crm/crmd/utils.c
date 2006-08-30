@@ -1271,6 +1271,12 @@ create_node_state(
 	crm_debug_2("%s Creating node state entry for %s", src, uname);
 	set_uuid(fsa_cluster_conn, node_state, XML_ATTR_UUID, uname);
 
+	if(ID(node_state) == NULL) {
+		crm_debug("Node %s is not a cluster member", uname);
+		free_xml(node_state);
+		return NULL;
+	}
+	
 	crm_xml_add(node_state, XML_ATTR_UNAME,         uname);
 	crm_xml_add(node_state, XML_CIB_ATTR_HASTATE,   ha_state);
 	crm_xml_add(node_state, XML_CIB_ATTR_INCCM,     ccm_state);

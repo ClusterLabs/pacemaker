@@ -310,12 +310,14 @@ match_graph_event(
 		crm_err("Detected action %s initiated outside of a transition",
 			this_event);
 		crm_log_message(LOG_ERR, event);
+		crm_free(update_te_uuid);
 		return -2;
 		
 	} else if(safe_str_neq(update_te_uuid, te_uuid)) {
 		crm_info("Detected action %s from a different transitioner:"
 			 " %s vs. %s", this_event, update_te_uuid, te_uuid);
 		crm_log_message(LOG_INFO, event);
+		crm_free(update_te_uuid);
 		return -3;
 		
 	} else if(transition_graph->id != transition_i) {
@@ -323,8 +325,11 @@ match_graph_event(
 			 " %d vs. %d", this_event, transition_i,
 			 transition_graph->id);
 		crm_log_message(LOG_INFO, event);
+		crm_free(update_te_uuid);
 		return -4;
 	}
+
+	crm_free(update_te_uuid);
 	
 	/* stop this event's timer if it had one */
 	stop_te_timer(action->timer);

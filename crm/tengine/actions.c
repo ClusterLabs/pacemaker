@@ -371,7 +371,7 @@ send_rsc_command(crm_action_t *action)
 {
 	HA_Message *cmd = NULL;
 	crm_data_t *rsc_op  = NULL;
-	char *counter = crm_itoa(transition_graph->id);
+	char *counter = NULL;
 
 	const char *task    = NULL;
 	const char *value   = NULL;
