@@ -1,9 +1,9 @@
- <transition_graph network_delay="60s" transition_id="0">
+ <transition_graph network-delay="60s" transition_id="0">
   <synapse id="0">
     <action_set>
        <rsc_op id="4" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" long-id="rsc1" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -12,7 +12,7 @@
     <action_set>
        <rsc_op id="5" operation="stop" operation_key="rsc1_stop_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1" long-id="rsc1" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -21,7 +21,7 @@
      <action_set>
        <rsc_op id="6" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" long-id="rsc1" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000"/>
       </rsc_op>
     </action_set>
     <inputs>
