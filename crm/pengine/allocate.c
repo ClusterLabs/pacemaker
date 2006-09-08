@@ -574,7 +574,7 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 		}
 		
 		if(is_probe || safe_str_eq(task, CRMD_ACTION_START) || interval > 0) {
-			crm_debug("Checking resource definition: %s", rsc->id);
+			crm_debug_2("Checking resource definition: %s", rsc->id);
 			check_action_definition(rsc, node, rsc_op, data_set);
 		}
 		crm_debug_3("Ignoring %s params: %s", task, id);
@@ -894,7 +894,7 @@ choose_node_from_list(color_t *color)
 	}
 
 	slist_iter(candidate, node_t, nodes, lpc, 
-		   crm_debug_2("Color %d, Node[%d] %s: %d", color->id, lpc,
+		   crm_debug("Color %d, Node[%d] %s: %d", color->id, lpc,
 			       candidate->details->uname, candidate->weight);
 		   if(chosen->weight > 0
 		      && candidate->details->unclean == FALSE
@@ -1219,7 +1219,7 @@ generate_location_rule(
 	score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE);
 	if(score != NULL) {
 		score_f = char2score(score);
-
+		
 	} else {
 		score = crm_element_value(
 			rule_xml, XML_RULE_ATTR_SCORE_ATTRIBUTE);
@@ -1284,8 +1284,8 @@ generate_location_rule(
 						" for %s",
 						node->details->uname, score);
 				} else {
-					crm_debug_2("node %s had value %s for %s",
-						 node->details->uname, attr_score, score);
+					crm_debug("Rule %s: node %s had value %s for %s",
+						  rule_id, node->details->uname, attr_score, score);
 					score_f = char2score(attr_score);
 				}
 			}

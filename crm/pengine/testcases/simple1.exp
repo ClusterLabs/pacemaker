@@ -1,2 +1,2 @@
- <transition_graph network_delay="60s" transition_id="0"/>
+ <transition_graph network-delay="60s" transition_id="0"/>
 

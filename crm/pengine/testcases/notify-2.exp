@@ -1,9 +1,9 @@
- <transition_graph network_delay="60s" transition_id="0">
+ <transition_graph network-delay="60s" transition_id="0">
    <synapse id="0">
      <action_set>
        <rsc_op id="33" operation="notify" operation_key="child_rsc1:0_pre_notify_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc1:0" long-id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6" CRM_meta_notify_operation="start" CRM_meta_timeout="60000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="pre" CRM_meta_notify_active_resource="child_rsc1:0 " CRM_meta_notify_start_uname="node1 " CRM_meta_notify_start_resource="child_rsc1:1 " CRM_meta_notify_active_uname="node1 " CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_notify_operation="start" CRM_meta_timeout="20000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="pre" CRM_meta_notify_active_resource="child_rsc1:0 " CRM_meta_notify_start_uname="node1 " CRM_meta_notify_start_resource="child_rsc1:1 " CRM_meta_notify_active_uname="node1 " CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -16,7 +16,7 @@
      <action_set>
        <rsc_op id="34" operation="notify" operation_key="child_rsc1:0_post_notify_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc1:0" long-id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6" CRM_meta_notify_operation="start" CRM_meta_timeout="60000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" CRM_meta_notify_active_resource="child_rsc1:0 " CRM_meta_notify_start_uname="node1 " CRM_meta_notify_start_resource="child_rsc1:1 " CRM_meta_notify_active_uname="node1 " CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_notify_operation="start" CRM_meta_timeout="20000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" CRM_meta_notify_active_resource="child_rsc1:0 " CRM_meta_notify_start_uname="node1 " CRM_meta_notify_start_resource="child_rsc1:1 " CRM_meta_notify_active_uname="node1 " CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -29,7 +29,7 @@
      <action_set>
        <rsc_op id="3" operation="monitor" operation_key="child_rsc1:1_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc1:1" long-id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_op_target_rc="7" CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7" CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -38,7 +38,7 @@
      <action_set>
        <rsc_op id="7" operation="start" operation_key="child_rsc1:1_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc1:1" long-id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6" CRM_meta_notify_active_resource="child_rsc1:0 " CRM_meta_timeout="60000" CRM_meta_notify_start_uname="node1 " CRM_meta_notify_start_resource="child_rsc1:1 " CRM_meta_notify_active_uname="node1 " CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_notify_active_resource="child_rsc1:0 " CRM_meta_timeout="20000" CRM_meta_notify_start_uname="node1 " CRM_meta_notify_start_resource="child_rsc1:1 " CRM_meta_notify_active_uname="node1 " CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -51,7 +51,7 @@
      <action_set>
        <rsc_op id="37" operation="notify" operation_key="child_rsc1:1_post_notify_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc1:1" long-id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6" CRM_meta_notify_operation="start" CRM_meta_timeout="60000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" CRM_meta_notify_active_resource="child_rsc1:0 " CRM_meta_notify_start_uname="node1 " CRM_meta_notify_start_resource="child_rsc1:1 " CRM_meta_notify_active_uname="node1 " CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_notify_operation="start" CRM_meta_timeout="20000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" CRM_meta_notify_active_resource="child_rsc1:0 " CRM_meta_notify_start_uname="node1 " CRM_meta_notify_start_resource="child_rsc1:1 " CRM_meta_notify_active_uname="node1 " CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -63,7 +63,7 @@
    <synapse id="5">
      <action_set>
        <pseudo_event id="8" operation="start" operation_key="rsc1_start_0">
-         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -78,7 +78,7 @@
    <synapse id="6" priority="1000000">
      <action_set>
        <pseudo_event id="9" operation="running" operation_key="rsc1_running_0">
-         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -93,7 +93,7 @@
    <synapse id="7">
      <action_set>
        <pseudo_event id="10" operation="notify" operation_key="rsc1_pre_notify_start_0">
-         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="pre" CRM_meta_notify_operation="start" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="pre" CRM_meta_notify_operation="start" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -101,7 +101,7 @@
    <synapse id="8">
      <action_set>
        <pseudo_event id="11" operation="notified" operation_key="rsc1_confirmed-pre_notify_start_0">
-         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_notify_type="pre" CRM_meta_notify_operation="start" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_notify_type="pre" CRM_meta_notify_operation="start" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -116,7 +116,7 @@
    <synapse id="9">
      <action_set>
        <pseudo_event id="12" operation="notify" operation_key="rsc1_post_notify_start_0">
-         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" CRM_meta_notify_operation="start" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" CRM_meta_notify_operation="start" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -128,7 +128,7 @@
    <synapse id="10" priority="1000000">
      <action_set>
        <pseudo_event id="13" operation="notified" operation_key="rsc1_confirmed-post_notify_start_0">
-         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_notify_type="pre" CRM_meta_notify_operation="start" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_notify_type="pre" CRM_meta_notify_operation="start" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -147,7 +147,7 @@
      <action_set>
        <rsc_op id="20" operation="stop" operation_key="child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc2:0" long-id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6" CRM_meta_notify_stop_uname="node1 " CRM_meta_timeout="60000" CRM_meta_notify_stop_resource="child_rsc2:0 " CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_notify_stop_uname="node1 " CRM_meta_timeout="20000" CRM_meta_notify_stop_resource="child_rsc2:0 " CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -160,7 +160,7 @@
      <action_set>
        <rsc_op id="38" operation="notify" operation_key="child_rsc2:0_pre_notify_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc2:0" long-id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6" CRM_meta_notify_operation="stop" CRM_meta_timeout="60000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="pre" CRM_meta_notify_stop_uname="node1 " CRM_meta_notify_stop_resource="child_rsc2:0 " CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_notify_operation="stop" CRM_meta_timeout="20000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="pre" CRM_meta_notify_stop_uname="node1 " CRM_meta_notify_stop_resource="child_rsc2:0 " CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -173,7 +173,7 @@
      <action_set>
        <rsc_op id="4" operation="monitor" operation_key="child_rsc2:1_monitor_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="child_rsc2:1" long-id="rsc2:child_rsc2:1" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_op_target_rc="7" CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7" CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -181,7 +181,7 @@
    <synapse id="14">
      <action_set>
        <pseudo_event id="27" operation="stop" operation_key="rsc2_stop_0">
-         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -193,7 +193,7 @@
    <synapse id="15" priority="1000000">
      <action_set>
        <pseudo_event id="28" operation="stopped" operation_key="rsc2_stopped_0">
-         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -208,7 +208,7 @@
    <synapse id="16">
      <action_set>
        <pseudo_event id="29" operation="notify" operation_key="rsc2_pre_notify_stop_0">
-         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="pre" CRM_meta_notify_operation="stop" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="pre" CRM_meta_notify_operation="stop" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -216,7 +216,7 @@
    <synapse id="17">
      <action_set>
        <pseudo_event id="30" operation="notified" operation_key="rsc2_confirmed-pre_notify_stop_0">
-         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_notify_type="pre" CRM_meta_notify_operation="stop" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_notify_type="pre" CRM_meta_notify_operation="stop" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -231,7 +231,7 @@
    <synapse id="18">
      <action_set>
        <pseudo_event id="31" operation="notify" operation_key="rsc2_post_notify_stop_0">
-         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" CRM_meta_notify_operation="stop" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" CRM_meta_notify_operation="stop" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -243,7 +243,7 @@
    <synapse id="19">
      <action_set>
        <pseudo_event id="32" operation="notified" operation_key="rsc2_confirmed-post_notify_stop_0">
-         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="60000" CRM_meta_notify_type="pre" CRM_meta_notify_operation="stop" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
+         <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_notify_type="pre" CRM_meta_notify_operation="stop" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2"/>
        </pseudo_event>
      </action_set>
      <inputs>

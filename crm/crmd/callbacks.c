@@ -304,11 +304,15 @@ crmd_ha_status_callback(
 		update = create_node_state(
 			node, status, XML_BOOLEAN_NO, OFFLINESTATUS,
 			CRMD_STATE_INACTIVE, NULL, TRUE, __FUNCTION__);
-		crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_TAG_TRANSIENT_NODEATTRS);
-
+		if(update) {
+			crm_xml_add(update, XML_CIB_ATTR_REPLACE,
+				    XML_TAG_TRANSIENT_NODEATTRS);
+		}
+		
 	} else if(safe_str_eq(status, ACTIVESTATUS)) {
 		update = create_node_state(
-			node, status, NULL, NULL, NULL, NULL, FALSE, __FUNCTION__);
+			node, status, NULL, NULL, NULL, NULL,
+			FALSE, __FUNCTION__);
 	}
 		
 	if(update != NULL) {
@@ -318,12 +322,16 @@ crmd_ha_status_callback(
 			cib_inhibit_bcast|cib_scope_local|cib_quorum_override);
 		trigger_fsa(fsa_source);
 		free_xml(update);
+
+	} else {
+		crm_info("Ping node %s is %s", node, status);
 	}
+	
 }
 
 void
 crmd_client_status_callback(const char * node, const char * client,
-		 const char * status, void * private)
+			    const char * status, void * private)
 {
 	const char *join = NULL;
 	crm_data_t *update = NULL;

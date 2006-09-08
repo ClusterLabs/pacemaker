@@ -74,8 +74,8 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 	} else if(rsc->stickiness > 0 || rsc->stickiness < 0) {
 		resource_location(rsc, node, rsc->stickiness,
 				  "stickiness", data_set);
-		crm_debug("Resource %s: preferring current location (%s/%s)",
-			  rsc->id, node->details->uname, node->details->id);
+		crm_debug("Resource %s: preferring current location (node=%s, weight=%d)",
+			  rsc->id, node->details->uname, rsc->stickiness);
 	}
 	
 	if(rsc->variant == pe_native && g_list_length(rsc->running_on) > 1) {
