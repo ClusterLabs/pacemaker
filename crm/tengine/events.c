@@ -198,51 +198,81 @@ extract_event(crm_data_t *msg)
 }
 
 static void
-update_failcount(crm_action_t *action, int rc) 
+update_failcount(crm_data_t *event, const char *event_node, int rc) 
 {
-	crm_data_t *rsc = NULL;
 	char *attr_name = NULL;
 	
-	const char *task     = NULL;
-	const char *rsc_id   = NULL;
-	const char *on_node  = NULL;
-	const char *on_uuid  = NULL;
-	const char *interval = NULL;
+	char *task     = NULL;
+	char *rsc_id   = NULL;
+	const char *on_node  = event_node;
+	const char *on_uuid  = event_node;
+	int interval = 0;
 
 	if(rc == 99) {
 		/* this is an internal code for "we're busy, try again" */
 		return;
 	}
 
-	interval = g_hash_table_lookup(
-		action->params, crm_meta_name("interval"));
-	if(interval == NULL) {
-		return;
+	CRM_CHECK(on_uuid != NULL, return);
+
+	CRM_CHECK(parse_op_key(ID(event), &rsc_id, &task, &interval),return);
+	CRM_CHECK(task != NULL, crm_free(rsc_id); return);
+	CRM_CHECK(rsc_id != NULL, crm_free(task); return);
+	/* CRM_CHECK(on_node != NULL, return); */
+	
+	if(interval > 0) {
+		attr_name = crm_concat("fail-count", rsc_id, '-');
+		crm_warn("Updating failcount for %s on %s after failed %s: rc=%d",
+			 rsc_id, on_node, task, rc);
+	
+		update_attr(te_cib_conn, cib_none, XML_CIB_TAG_STATUS,
+			    on_uuid, NULL,NULL, attr_name,
+			    XML_NVPAIR_ATTR_VALUE"++");
+		crm_free(attr_name);	
 	}
 
-	CRM_CHECK(action->xml != NULL, return);
+	crm_free(rsc_id);
+	crm_free(task);
+}
 
-	rsc = find_xml_node(action->xml, XML_CIB_TAG_RESOURCE, TRUE);
-	CRM_CHECK(rsc != NULL, return);
-	rsc_id = ID(rsc);
-	CRM_CHECK(rsc_id != NULL, return);
-	
-	task   = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-	on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-	on_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+static int
+status_from_rc(crm_action_t *action, int orig_status, int rc)
+{
+	int status = orig_status;
+	const char *target_rc_s = g_hash_table_lookup(
+		action->params, crm_meta_name(XML_ATTR_TE_TARGET_RC));
 
-	CRM_CHECK(task != NULL, return);
-	CRM_CHECK(on_uuid != NULL, return);
-	CRM_CHECK(on_node != NULL, return);
+	if(target_rc_s != NULL) {
+		int target_rc = 0;
+		crm_debug_2("Target rc: %s vs. %d", target_rc_s, rc);
+		target_rc = crm_parse_int(target_rc_s, NULL);
+		if(target_rc == rc) {
+			crm_debug_2("Target rc: == %d", rc);
+			if(status != LRM_OP_DONE) {
+				crm_debug_2("Re-mapping op status to"
+					    " LRM_OP_DONE for rc=%d", rc);
+				status = LRM_OP_DONE;
+			}
+		} else {
+			crm_debug_2("Target rc: != %d", rc);
+			if(status != LRM_OP_ERROR) {
+				crm_info("Re-mapping op status to"
+					 " LRM_OP_ERROR for rc=%d", rc);
+				status = LRM_OP_ERROR;
+			}
+		}
+	}
 	
-	attr_name = crm_concat("fail-count", rsc_id, '-');
-	crm_warn("Updating failcount for %s on %s after failed %s: rc=%d",
-		 rsc_id, on_node, task, rc);
-	
-	update_attr(te_cib_conn, cib_none, XML_CIB_TAG_STATUS,
-		    on_uuid, NULL,NULL, attr_name, XML_NVPAIR_ATTR_VALUE"++");
-	
-	crm_free(attr_name);	
+	/* 99 is the code we use for direct nack's */
+	if(rc != 99 && status != LRM_OP_DONE) {
+		const char *task, *uname;
+		task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+		uname  = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+		crm_warn("Action %s on %s failed (target: %s vs. rc: %d): %s",
+			 task, uname, target_rc_s, rc, op_status2text(status));
+	}
+
+	return status;
 }
 
 /*
@@ -255,9 +285,6 @@ int
 match_graph_event(
 	crm_action_t *action, crm_data_t *event, const char *event_node)
 {
-	int log_level_fail = LOG_ERR;
-	int target_rc = 0;
-	const char *target_rc_s = NULL;
 	const char *allow_fail  = NULL;
 	const char *this_action = NULL;
 	const char *this_node   = NULL;
@@ -296,15 +323,19 @@ match_graph_event(
 		crm_debug_2("Action %d : Node mismatch %s (%s) vs. %s",
 			    action->id, this_node, this_uname, event_node);
 		return -1;
-
 	}
-
+	
 	crm_debug_2("Matched action (%d) %s", action->id, this_event);
 
 	CRM_CHECK(decode_transition_magic(
 			       magic, &update_te_uuid,
 			       &transition_i, &op_status_i, &op_rc_i), return -2);
 
+	op_status_i = status_from_rc(action, op_status_i, op_rc_i);
+	if(op_status_i != LRM_OP_DONE) {
+		update_failcount(event, event_node, op_rc_i);
+	}
+	
 	if(transition_i == -1) {
 		/* we never expect these - recompute */
 		crm_err("Detected action %s initiated outside of a transition",
@@ -334,28 +365,6 @@ match_graph_event(
 	/* stop this event's timer if it had one */
 	stop_te_timer(action->timer);
 	action->confirmed = TRUE;
-
-	target_rc_s = g_hash_table_lookup(
-		action->params,crm_meta_name(XML_ATTR_TE_TARGET_RC));
-	if(target_rc_s != NULL) {
-		crm_debug_2("Target rc: %s vs. %d", target_rc_s, op_rc_i);
-		target_rc = crm_parse_int(target_rc_s, NULL);
-		if(target_rc == op_rc_i) {
-			crm_debug_2("Target rc: == %d", op_rc_i);
-			if(op_status_i != LRM_OP_DONE) {
-				crm_debug_2("Re-mapping op status to"
-					    " LRM_OP_DONE for %s",update_event);
-				op_status_i = LRM_OP_DONE;
-			}
-		} else {
-			crm_debug_2("Target rc: != %d", op_rc_i);
-			if(op_status_i != LRM_OP_ERROR) {
-				crm_info("Re-mapping op status to"
-					 " LRM_OP_ERROR for %s", update_event);
-				op_status_i = LRM_OP_ERROR;
-			}
-		}
-	}
 	
 	/* Process OP status */
 	switch(op_status_i) {
@@ -371,18 +380,9 @@ match_graph_event(
 		case LRM_OP_DONE:
 			break;
 		case LRM_OP_ERROR:
-			/* This is the code we use for direct nack's */
-			if(op_rc_i == 99) {
-				log_level_fail = LOG_WARNING;
-			}
-			/* fall through */
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
 			action->failed = TRUE;
-			crm_log_maybe(log_level_fail,
-				"Action %s on %s failed (target: %d vs. rc: %d): %s",
-				update_event, this_uname, target_rc,
-				op_rc_i, op_status2text(op_status_i));
 			break;
 		case LRM_OP_CANCELLED:
 			/* do nothing?? */
@@ -405,10 +405,6 @@ match_graph_event(
 	}
 
 	if(action->failed) {
-		/* ignore probes */
-		if(target_rc != EXECRA_NOT_RUNNING) {
-			update_failcount(action, op_rc_i);
-		}
 		abort_transition(action->synapse->priority+1,
 				 tg_restart, "Event failed", event);
 
@@ -544,6 +540,9 @@ process_graph_event(crm_data_t *event, const char *event_node)
 	/* unexpected event, trigger a pe-recompute */
 	/* possibly do this only for certain types of actions */
 	crm_warn("Event not found.");
+	if(rc != EXECRA_OK) {
+		update_failcount(event, event_node, rc);
+	}
 	crm_log_xml_info(event, "match:not-found");
 	abort_transition(INFINITY, tg_restart, "Unexpected event", event);
 	return;
