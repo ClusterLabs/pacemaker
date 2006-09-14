@@ -183,7 +183,6 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	(*rsc)->starting	   = FALSE; 
 	(*rsc)->stopping	   = FALSE; 
 
-	(*rsc)->candidate_colors   = NULL;
 	(*rsc)->rsc_cons	   = NULL; 
 	(*rsc)->actions            = NULL;
 	(*rsc)->failed		   = FALSE;
@@ -319,7 +318,6 @@ void common_free(resource_t *rsc)
 	}
 	pe_free_shallow_adv(rsc->running_on, FALSE);
 	pe_free_shallow_adv(rsc->known_on, FALSE);
-	pe_free_shallow_adv(rsc->candidate_colors, TRUE);
 	pe_free_shallow_adv(rsc->rsc_location, FALSE);
 	pe_free_shallow_adv(rsc->allowed_nodes, TRUE);
 	crm_free(rsc->id);

@@ -225,8 +225,6 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->ordering_constraints  = NULL;
 	data_set->placement_constraints = NULL;
 
-	data_set->no_color = NULL;
-	data_set->colors   = NULL;
 	data_set->actions  = NULL;	
 
 	data_set->num_synapse     = 0;

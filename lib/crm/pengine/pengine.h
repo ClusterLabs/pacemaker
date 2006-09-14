@@ -62,23 +62,6 @@ enum pe_ordering {
 	pe_ordering_optional
 };
 
-
-struct color_shared_s {
-		int      id;
-		int    highest_priority;
-		GListPtr candidate_nodes; /* node_t* */
-		GListPtr allocated_resources; /* resources_t* */
-		node_t  *chosen_node;
-		gboolean pending;
-		int	 num_resources;
-};
-
-struct color_s { 
-		int id; 
-		struct color_shared_s *details;
-		int local_weight;
-};
-
 struct rsc_colocation_s { 
 		const char	*id;
 		resource_t	*rsc_lh;
@@ -195,8 +178,6 @@ extern gboolean unpack_nodes(crm_data_t *xml_nodes, pe_working_set_t *data_set);
 extern gboolean unpack_status(crm_data_t *status, pe_working_set_t *data_set);
 
 extern gboolean apply_placement_constraints(pe_working_set_t *data_set);
-
-extern gboolean choose_node_from_list(color_t *color);
 
 extern gboolean update_action_states(GListPtr actions);
 

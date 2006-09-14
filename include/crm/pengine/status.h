@@ -24,7 +24,6 @@
 #include <crm/pengine/common.h>
 
 typedef struct node_s node_t;
-typedef struct color_s color_t;
 typedef struct action_s action_t;
 typedef struct resource_s resource_t;
 typedef struct action_wrapper_s action_wrapper_t;
@@ -69,9 +68,6 @@ typedef struct pe_working_set_s
 		no_quorum_policy_t no_quorum_policy;
 
 		GHashTable *config_hash;
-		
-		/* intermediate steps */
-		color_t *no_color;
 		
 		GListPtr nodes;
 		GListPtr resources;
@@ -151,13 +147,10 @@ struct resource_s {
 		
 		gboolean orphan;
 		
-		GListPtr candidate_colors; /* color_t*          */
 		GListPtr rsc_cons;         /* rsc_colocation_t* */
 		GListPtr rsc_location;     /* rsc_to_node_t*    */
 		GListPtr actions;	   /* action_t*         */
 
-		color_t *color;
-		GListPtr colors;	   /* color_t*  */
 		GListPtr running_on;       /* node_t*   */
 		GListPtr known_on;	   /* node_t* */
 		GListPtr allowed_nodes;    /* node_t*   */

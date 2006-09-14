@@ -53,22 +53,6 @@ enum pe_stop_fail {
 };
 
 
-struct color_shared_s {
-		int      id;
-		int    highest_priority;
-		GListPtr candidate_nodes; /* node_t* */
-		GListPtr allocated_resources; /* resources_t* */
-		node_t  *chosen_node;
-		gboolean pending;
-		int	 num_resources;
-};
-
-struct color_s { 
-		int id; 
-		struct color_shared_s *details;
-		int local_weight;
-};
-
 struct rsc_colocation_s { 
 		const char	*id;
 		resource_t	*rsc_lh;
