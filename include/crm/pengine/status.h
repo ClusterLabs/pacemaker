@@ -74,7 +74,6 @@ typedef struct pe_working_set_s
 		GListPtr placement_constraints;
 		GListPtr ordering_constraints;
 		
-		GListPtr colors;
 		GListPtr actions;
 
 		/* stats */
@@ -82,7 +81,6 @@ typedef struct pe_working_set_s
 		int max_valid_nodes;
 		int order_id;
 		int action_id;
-		int color_id;
 
 		/* final output */
 		crm_data_t *graph;
@@ -151,6 +149,7 @@ struct resource_s {
 		GListPtr rsc_location;     /* rsc_to_node_t*    */
 		GListPtr actions;	   /* action_t*         */
 
+		node_t *allocated_to;
 		GListPtr running_on;       /* node_t*   */
 		GListPtr known_on;	   /* node_t* */
 		GListPtr allowed_nodes;    /* node_t*   */
