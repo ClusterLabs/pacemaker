@@ -105,8 +105,11 @@ native_choose_node(resource_t *rsc)
 
 	crm_debug_3("Choosing node for %s from %d candidates",
 		    rsc->id, g_list_length(rsc->allowed_nodes));
+
 	if(rsc->allowed_nodes) {
-		nodes = g_list_sort(rsc->allowed_nodes, sort_node_weight);
+		rsc->allowed_nodes = g_list_sort(
+			rsc->allowed_nodes, sort_node_weight);
+		nodes = rsc->allowed_nodes;
 		chosen = g_list_nth_data(nodes, 0);
 	}
 	
