@@ -28,9 +28,6 @@
 
 #define DELETE_THEN_REFRESH 1
 
-void native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
-			       node_t *cons_node, GListPtr nodes);
-
 void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 				   resource_t *rsc_rh, gboolean update_rh);
 
@@ -518,6 +515,88 @@ filter_colocation_constraint(
 	return TRUE;
 }
 
+static void
+native_update_node_weight(
+	resource_t *rsc, const char *id, node_t *node, int score)
+{
+	node_t *node_rh = NULL;
+	CRM_CHECK(node != NULL, return);
+	
+	node_rh = pe_find_node_id(
+		rsc->allowed_nodes, node->details->id);
+
+	if(node_rh == NULL) {
+		pe_err("Node not found - adding %s to %s",
+		       node->details->id, rsc->id);
+		node_rh = node_copy(node);
+		rsc->allowed_nodes = g_list_append(
+			rsc->allowed_nodes, node_rh);
+
+		node_rh = pe_find_node_id(
+			rsc->allowed_nodes, node->details->id);
+
+		CRM_CHECK(node_rh != NULL, return);
+		return;
+	}
+
+	CRM_CHECK(node_rh != NULL, return);
+	
+	if(node_rh == NULL) {
+		pe_err("Node not found - cant update");
+		return;
+	}
+
+	if(node_rh->weight >= INFINITY && score <= -INFINITY) {
+		pe_err("Constraint \"%s\" mixes +/- INFINITY (%s)",
+		       id, rsc->id);
+		
+	} else if(node_rh->details->shutdown == TRUE
+		  || node_rh->details->online == FALSE
+		  || node_rh->details->unclean == TRUE) {
+
+	} else if(node_rh->weight <= -INFINITY && score >= INFINITY) {
+		pe_err("Constraint \"%s\" mixes +/- INFINITY (%s)",
+			 id, rsc->id);
+	}
+
+	if(node_rh->fixed) {
+		/* warning */
+		crm_debug_2("Constraint %s is irrelevant as the"
+			 " weight of node %s is fixed as %d (%s).",
+			 id, node_rh->details->uname,
+			 node_rh->weight, rsc->id);
+		return;
+	}	
+	
+	crm_debug_3("Constraint %s, node %s, rsc %s: %d + %d",
+		   id, node_rh->details->uname, rsc->id,
+		   node_rh->weight, score);
+	node_rh->weight = merge_weights(node_rh->weight, score);
+	if(node_rh->weight <= -INFINITY) {
+		crm_debug_3("Constraint %s (-INFINITY): node %s weight %d (%s).",
+			    id, node_rh->details->uname,
+			    node_rh->weight, rsc->id);
+		
+	} else if(node_rh->weight >= INFINITY) {
+		crm_debug_3("Constraint %s (+INFINITY): node %s weight %d (%s).",
+			    id, node_rh->details->uname,
+			    node_rh->weight, rsc->id);
+
+	} else {
+		crm_debug_3("Constraint %s (%d): node %s weight %d (%s).",
+			    id, score, node_rh->details->uname,
+			    node_rh->weight, rsc->id);
+	}
+
+	if(node_rh->weight < 0) {
+		node_rh->fixed = TRUE;
+	}
+
+	crm_action_debug_3(print_node("Updated", node_rh, FALSE));
+
+	return;
+}
+
 void native_rsc_colocation_rh(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
@@ -536,18 +615,33 @@ void native_rsc_colocation_rh(
 
 	} else if( (!rsc_lh->provisional) && (!rsc_rh->provisional) ) {
 		/* error check */
-		crm_err("%s and %s are both allocated", rsc_lh->id, rsc_rh->id);
+		if(rsc_lh->allocated_to == rsc_rh->allocated_to) {
+			return;
+
+		} else if(rsc_lh->allocated_to && rsc_rh->allocated_to
+		   && rsc_lh->allocated_to->details
+			  == rsc_rh->allocated_to->details) {
+			return;
+		}
+		
+		crm_err("%s and %s are both allocated"
+			" but to different nodes: %s vs. %s",
+			rsc_lh->id, rsc_rh->id,
+			rsc_lh->allocated_to?rsc_lh->allocated_to->details->uname:"n/a",
+			rsc_rh->allocated_to?rsc_rh->allocated_to->details->uname:"n/a");
 		return;
 		
 	} else if(rsc_lh->provisional == FALSE) {
 		/* update _them_    : postproc color version */
 		native_update_node_weight(
-			rsc_rh, NULL, rsc_lh->allocated_to, NULL);
+			rsc_rh, constraint->id, rsc_lh->allocated_to,
+			constraint->strength==pecs_must?INFINITY:-INFINITY);
 		
 	} else if(rsc_rh->provisional == FALSE) {
 		/* update _us_  : postproc color alt version */
 		native_update_node_weight(
-			rsc_lh, NULL, rsc_rh->allocated_to, NULL);
+			rsc_lh, constraint->id, rsc_rh->allocated_to,
+			constraint->strength==pecs_must?INFINITY:-INFINITY);
 
 	} else {
 		pe_warn("Un-expected combination of inputs");
@@ -748,87 +842,6 @@ native_agent_constraints(resource_t *rsc)
 
 
 
-void
-native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons, /*change to id*/
-			  node_t *cons_node, GListPtr unused)
-{
-	node_t *node_rh = NULL;
-	CRM_CHECK(cons_node != NULL, return);
-	
-	node_rh = pe_find_node_id(
-		rsc->allowed_nodes, cons_node->details->id);
-
-	if(node_rh == NULL) {
-		pe_err("Node not found - adding %s to %s",
-		       cons_node->details->id, rsc->id);
-		node_rh = node_copy(cons_node);
-		rsc->allowed_nodes = g_list_append(
-			rsc->allowed_nodes, node_rh);
-
-		node_rh = pe_find_node_id(
-			rsc->allowed_nodes, cons_node->details->id);
-
-		CRM_CHECK(node_rh != NULL, return);
-		return;
-	}
-
-	CRM_CHECK(node_rh != NULL, return);
-	
-	if(node_rh == NULL) {
-		pe_err("Node not found - cant update");
-		return;
-	}
-
-	if(node_rh->weight >= INFINITY && cons_node->weight <= -INFINITY) {
-		pe_err("Constraint \"%s\" mixes +/- INFINITY (%s)",
-		       cons->id, rsc->id);
-		
-	} else if(node_rh->details->shutdown == TRUE
-		  || node_rh->details->online == FALSE
-		  || node_rh->details->unclean == TRUE) {
-
-	} else if(node_rh->weight <= -INFINITY && cons_node->weight >= INFINITY) {
-		pe_err("Constraint \"%s\" mixes +/- INFINITY (%s)",
-			 cons->id, rsc->id);
-	}
-
-	if(node_rh->fixed) {
-		/* warning */
-		crm_debug_2("Constraint %s is irrelevant as the"
-			 " weight of node %s is fixed as %d (%s).",
-			 cons->id, node_rh->details->uname,
-			 node_rh->weight, rsc->id);
-		return;
-	}	
-	
-	crm_debug_3("Constraint %s, node %s, rsc %s: %d + %d",
-		   cons->id, node_rh->details->uname, rsc->id,
-		   node_rh->weight, cons_node->weight);
-	node_rh->weight = merge_weights(node_rh->weight, cons_node->weight);
-	if(node_rh->weight <= -INFINITY) {
-		crm_debug_3("Constraint %s (-INFINITY): node %s weight %d (%s).",
-			    cons->id, node_rh->details->uname,
-			    node_rh->weight, rsc->id);
-		
-	} else if(node_rh->weight >= INFINITY) {
-		crm_debug_3("Constraint %s (+INFINITY): node %s weight %d (%s).",
-			    cons->id, node_rh->details->uname,
-			    node_rh->weight, rsc->id);
-
-	} else {
-		crm_debug_3("Constraint %s (%d): node %s weight %d (%s).",
-			    cons->id, cons_node->weight, node_rh->details->uname,
-			    node_rh->weight, rsc->id);
-	}
-
-	if(node_rh->weight < 0) {
-		node_rh->fixed = TRUE;
-	}
-
-	crm_action_debug_3(print_node("Updated", node_rh, FALSE));
-
-	return;
-}
 
 
 /*
