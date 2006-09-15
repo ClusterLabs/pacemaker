@@ -323,6 +323,7 @@ void common_free(resource_t *rsc)
 	crm_free(rsc->id);
 	crm_free(rsc->long_name);	
 	crm_free(rsc->clone_name);
+	crm_free(rsc->allocated_to);
 	crm_free(rsc->variant_opaque);
 	crm_free(rsc);
 	crm_debug_5("Resource freed");

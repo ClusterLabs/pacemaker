@@ -24,34 +24,16 @@ extern rsc_colocation_t *invert_constraint(rsc_colocation_t *constraint);
 
 extern rsc_to_node_t *copy_constraint(rsc_to_node_t *constraint);
 
-
-/* Color helper functions */
-extern void add_color_to_rsc(resource_t *rsc, color_t *color);
-
-extern color_t *find_color(GListPtr candidate_colors, color_t *other_color);
-
-extern color_t *create_color(
-	pe_working_set_t *data_set, resource_t *resource, GListPtr resources);
-
-extern color_t *copy_color(color_t *a_color);
-
 extern void print_rsc_to_node(
 	const char *pre_text, rsc_to_node_t *cons, gboolean details);
 
 extern void print_rsc_colocation(
 	const char *pre_text, rsc_colocation_t *cons, gboolean details);
 
-extern void print_color(
-	const char *pre_text, color_t *color, gboolean details);
-
-extern void print_color_details(
-	const char *pre_text, struct color_shared_s *color, gboolean details);
-
 extern rsc_to_node_t *rsc2node_new(
 	const char *id, resource_t *rsc, int weight, node_t *node,
 	pe_working_set_t *data_set);
 
-extern void pe_free_colors(GListPtr colors);
 extern void pe_free_rsc_to_node(GListPtr constraints);
 extern void pe_free_ordering(GListPtr constraints);
 
@@ -72,7 +54,6 @@ extern rsc_to_node_t *generate_location_rule(
 
 extern gint sort_cons_strength(gconstpointer a, gconstpointer b);
 extern gint sort_node_weight(gconstpointer a, gconstpointer b);
-extern gint sort_color_weight(gconstpointer a, gconstpointer b);
 
 extern gboolean can_run_resources(const node_t *node);
 

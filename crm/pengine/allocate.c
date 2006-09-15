@@ -109,253 +109,6 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 	}
 };
 
-color_t *add_color(resource_t *rh_resource, color_t *color);
-
-gboolean 
-apply_placement_constraints(pe_working_set_t *data_set)
-{
-	crm_debug_3("Applying constraints...");
-	slist_iter(
-		cons, rsc_to_node_t, data_set->placement_constraints, lpc,
-
-		cons->rsc_lh->cmds->rsc_location(cons->rsc_lh, cons);
-		);
-	
-	return TRUE;
-	
-}
-
-color_t *
-add_color(resource_t *resource, color_t *color)
-{
-	color_t *local_color = NULL;
-
-	if(color == NULL) {
-		pe_err("Cannot add NULL color");
-		return NULL;
-	}
-	
-	local_color = find_color(resource->candidate_colors, color);
-
-	if(local_color == NULL) {
-		crm_debug_4("Adding color %d", color->id);
-		
-		local_color = copy_color(color);
-		resource->candidate_colors =
-			g_list_append(resource->candidate_colors, local_color);
-
-	} else {
-		crm_debug_4("Color %d already present", color->id);
-	}
-
-	return local_color;
-}
-
-void
-set_alloc_actions(pe_working_set_t *data_set) 
-{
-	slist_iter(
-		rsc, resource_t, data_set->resources, lpc,
-		rsc->cmds = &resource_class_alloc_functions[rsc->variant];
-		rsc->cmds->set_cmds(rsc);
-		);
-}
-
-gboolean
-stage0(pe_working_set_t *data_set)
-{
-	crm_data_t * cib_constraints = get_object_root(
-		XML_CIB_TAG_CONSTRAINTS, data_set->input);
-
-	if(data_set->input == NULL) {
-		return FALSE;
-	}
-
-	cluster_status(data_set);
-	
-	set_alloc_actions(data_set);
-	data_set->no_color = create_color(data_set, NULL, NULL);
-
-	unpack_constraints(cib_constraints, data_set);
-	return TRUE;
-}
-
-/*
- * Count how many valid nodes we have (so we know the maximum number of
- *  colors we can resolve).
- *
- * Apply node constraints (ie. filter the "allowed_nodes" part of resources
- */
-gboolean
-stage1(pe_working_set_t *data_set)
-{
-	crm_debug_3("Applying placement constraints");	
-	
-	slist_iter(
-		node, node_t, data_set->nodes, lpc,
-		if(node == NULL) {
-			/* error */
-		} else if(node->weight >= 0.0 /* global weight */
-			  && node->details->online
-			  && node->details->type == node_member) {
-			data_set->max_valid_nodes++;
-		}
-		);
-
-	apply_placement_constraints(data_set);
-
-	return TRUE;
-}
-
-/*
- * Choose a color for all resources from highest priority and XML_STRENGTH_VAL_MUST
- *  dependencies to lowest, creating new colors as necessary (returned
- *  as "colors").
- *
- * Some nodes may be colored as a "no_color" meaning that it was unresolvable
- *  given the current node stati and constraints.
- */
-gboolean
-stage3(pe_working_set_t *data_set)
-{
-	crm_debug_3("Coloring resources");
-	
-	crm_debug_5("create \"no color\"");
-	
-	/* Take (next) highest resource */
-	slist_iter(
-		rsc, resource_t, data_set->resources, lpc,
-		rsc->cmds->internal_constraints(rsc, data_set);
-		rsc->cmds->color(rsc, data_set);
-		);
-	
-	return TRUE;
-}
-
-/*
- * Check nodes for resources started outside of the LRM
- */
-gboolean
-stage2(pe_working_set_t *data_set)
-{
-	action_t *probe_complete = NULL;
-	action_t *probe_node_complete = NULL;
-
-	slist_iter(
-		node, node_t, data_set->nodes, lpc,
-		gboolean force_probe = FALSE;
-		const char *probed = g_hash_table_lookup(
-			node->details->attrs, CRM_OP_PROBED);
-
-		crm_debug_2("%s probed: %s", node->details->uname, probed);
-		if(node->details->online == FALSE) {
-			continue;
-			
-		} else if(node->details->unclean) {
-			continue;
-
-		} else if(probe_complete == NULL) {
-			probe_complete = custom_action(
-				NULL, crm_strdup(CRM_OP_PROBED),
-				CRM_OP_PROBED, NULL, FALSE, TRUE,
-				data_set);
-
-			probe_complete->pseudo = TRUE;
-			probe_complete->optional = TRUE;
-		}
-
-		if(probed != NULL && crm_is_true(probed) == FALSE) {
-			force_probe = TRUE;
-		}
-		
-		probe_node_complete = custom_action(
-			NULL, crm_strdup(CRM_OP_PROBED),
-			CRM_OP_PROBED, node, FALSE, TRUE, data_set);
-		probe_node_complete->optional = crm_is_true(probed);
-		probe_node_complete->priority = INFINITY;
-		add_hash_param(probe_node_complete->meta,
-			       XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
-		
-		custom_action_order(NULL, NULL, probe_node_complete,
-				    NULL, NULL, probe_complete,
-				    pe_ordering_optional, data_set);
-		
-		slist_iter(
-			rsc, resource_t, data_set->resources, lpc2,
-			
-			if(rsc->cmds->create_probe(
-				   rsc, node, probe_node_complete,
-				   force_probe, data_set)) {
-
-				probe_complete->optional = FALSE;
-				probe_node_complete->optional = FALSE;
-				custom_action_order(
-					NULL, NULL, probe_complete,
-					rsc, start_key(rsc), NULL,
-					pe_ordering_manditory, data_set);
-			}
-			);
-		);
-
-	return TRUE;
-}
-
-/*
- * Choose a node for each (if possible) color
- */
-gboolean
-stage4(pe_working_set_t *data_set)
-{
-	node_t *chosen = NULL;
-	crm_debug_3("Assigning nodes to colors");
-
-	slist_iter(
-		color, color_t, data_set->colors, lpc,
-
-		crm_debug_4("assigning node to color %d", color->id);
-		
-		if(color == NULL) {
-			pe_err("NULL color detected");
-			continue;
-			
-		} else if(color->details->pending == FALSE) {
-			continue;
-		}
-		
-		choose_node_from_list(color);
-		
-		slist_iter(
-			rsc, resource_t, color->details->allocated_resources, lpc2,
-			crm_debug_2("Processing colocation constraints for %s"
-				    " now that color %d is allocated",
-				    rsc->id, color->details->id);
-			
-			slist_iter(
-				constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
-				rsc->cmds->rsc_colocation_lh(
-					rsc, constraint->rsc_rh, constraint);
-				);	
-			
-			);
-
-		chosen = color->details->chosen_node;
-		
-		slist_iter(
-			rsc, resource_t, color->details->allocated_resources, lpc2,
-			if(chosen == NULL) {
-				rsc->next_role = RSC_ROLE_STOPPED;
-
-			} else if(rsc->next_role == RSC_ROLE_UNKNOWN) {
-				rsc->next_role = RSC_ROLE_STARTED;
-			}
-			);
-		);
-
-	crm_debug_3("done");
-	return TRUE;
-	
-}
-
 static gboolean
 check_rsc_parameters(resource_t *rsc, node_t *node, crm_data_t *rsc_entry,
 		     pe_working_set_t *data_set) 
@@ -614,6 +367,178 @@ check_actions(pe_working_set_t *data_set)
 		);
 }
 
+static gboolean 
+apply_placement_constraints(pe_working_set_t *data_set)
+{
+	crm_debug_3("Applying constraints...");
+	slist_iter(
+		cons, rsc_to_node_t, data_set->placement_constraints, lpc,
+
+		cons->rsc_lh->cmds->rsc_location(cons->rsc_lh, cons);
+		);
+	
+	return TRUE;
+	
+}
+
+void
+set_alloc_actions(pe_working_set_t *data_set) 
+{
+	slist_iter(
+		rsc, resource_t, data_set->resources, lpc,
+		rsc->cmds = &resource_class_alloc_functions[rsc->variant];
+		rsc->cmds->set_cmds(rsc);
+		);
+}
+
+gboolean
+stage0(pe_working_set_t *data_set)
+{
+	crm_data_t * cib_constraints = get_object_root(
+		XML_CIB_TAG_CONSTRAINTS, data_set->input);
+
+	if(data_set->input == NULL) {
+		return FALSE;
+	}
+
+	cluster_status(data_set);
+	
+	set_alloc_actions(data_set);
+
+	unpack_constraints(cib_constraints, data_set);
+	return TRUE;
+}
+
+/*
+ * Check nodes for resources started outside of the LRM
+ */
+gboolean
+stage1(pe_working_set_t *data_set)
+{
+	action_t *probe_complete = NULL;
+	action_t *probe_node_complete = NULL;
+
+	slist_iter(
+		node, node_t, data_set->nodes, lpc,
+		gboolean force_probe = FALSE;
+		const char *probed = g_hash_table_lookup(
+			node->details->attrs, CRM_OP_PROBED);
+
+		crm_debug_2("%s probed: %s", node->details->uname, probed);
+		if(node->details->online == FALSE) {
+			continue;
+			
+		} else if(node->details->unclean) {
+			continue;
+
+		} else if(probe_complete == NULL) {
+			probe_complete = custom_action(
+				NULL, crm_strdup(CRM_OP_PROBED),
+				CRM_OP_PROBED, NULL, FALSE, TRUE,
+				data_set);
+
+			probe_complete->pseudo = TRUE;
+			probe_complete->optional = TRUE;
+		}
+
+		if(probed != NULL && crm_is_true(probed) == FALSE) {
+			force_probe = TRUE;
+		}
+		
+		probe_node_complete = custom_action(
+			NULL, crm_strdup(CRM_OP_PROBED),
+			CRM_OP_PROBED, node, FALSE, TRUE, data_set);
+		probe_node_complete->optional = crm_is_true(probed);
+		probe_node_complete->priority = INFINITY;
+		add_hash_param(probe_node_complete->meta,
+			       XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+		
+		custom_action_order(NULL, NULL, probe_node_complete,
+				    NULL, NULL, probe_complete,
+				    pe_ordering_optional, data_set);
+		
+		slist_iter(
+			rsc, resource_t, data_set->resources, lpc2,
+			
+			if(rsc->cmds->create_probe(
+				   rsc, node, probe_node_complete,
+				   force_probe, data_set)) {
+
+				probe_complete->optional = FALSE;
+				probe_node_complete->optional = FALSE;
+				custom_action_order(
+					NULL, NULL, probe_complete,
+					rsc, start_key(rsc), NULL,
+					pe_ordering_manditory, data_set);
+			}
+			);
+		);
+
+	return TRUE;
+}
+
+
+/*
+ * Count how many valid nodes we have (so we know the maximum number of
+ *  colors we can resolve).
+ *
+ * Apply node constraints (ie. filter the "allowed_nodes" part of resources
+ */
+gboolean
+stage2(pe_working_set_t *data_set)
+{
+	crm_debug_3("Applying placement constraints");	
+	
+	slist_iter(
+		node, node_t, data_set->nodes, lpc,
+		if(node == NULL) {
+			/* error */
+
+		} else if(node->weight >= 0.0 /* global weight */
+			  && node->details->online
+			  && node->details->type == node_member) {
+			data_set->max_valid_nodes++;
+		}
+		);
+
+	apply_placement_constraints(data_set);
+
+	return TRUE;
+}
+
+
+/*
+ * Choose a color for all resources from highest priority and XML_STRENGTH_VAL_MUST
+ *  dependencies to lowest, creating new colors as necessary (returned
+ *  as "colors").
+ *
+ * Some nodes may be colored as a "no_color" meaning that it was unresolvable
+ *  given the current node stati and constraints.
+ */
+gboolean
+stage3(pe_working_set_t *data_set)
+{
+	
+	/* Take (next) highest resource */
+	slist_iter(
+		rsc, resource_t, data_set->resources, lpc,
+		rsc->cmds->internal_constraints(rsc, data_set);
+		rsc->cmds->color(rsc, data_set);
+		);
+	
+	return TRUE;
+}
+
+/*
+ * Choose a node for each (if possible) color
+ */
+gboolean
+stage4(pe_working_set_t *data_set)
+{
+	return TRUE;
+}
+
+
 
 /*
  * Attach nodes to the actions that need to be taken
@@ -849,91 +774,6 @@ stage8(pe_working_set_t *data_set)
 	return TRUE;
 }
 
-
-gboolean
-choose_node_from_list(color_t *color)
-{
-	/*
-	  1. Sort by weight
-	  2. color.chosen_node = the node (of those with the highest wieght)
-				   with the fewest resources
-	  3. remove color.chosen_node from all other colors
-	*/
-	GListPtr nodes = color->details->candidate_nodes;
-	node_t *chosen = NULL;
-	int multiple = 0;
-
-	crm_debug_3("Choosing node for color %d", color->id);
-	color->details->candidate_nodes = g_list_sort(nodes, sort_node_weight);
-	nodes = color->details->candidate_nodes;
-
-	chosen = g_list_nth_data(nodes, 0);
-
-	color->details->chosen_node = NULL;
-	color->details->pending = FALSE;
-
-	if(chosen == NULL) {
-		if(color->id != 0) {
-			crm_debug("Could not allocate a node for color %d", color->id);
-		}
-		return FALSE;
-
-	} else if(chosen->details->unclean
-		  || chosen->details->standby
-		  || chosen->details->shutdown) {
-		crm_debug("All nodes for color %d are unavailable"
-			  ", unclean or shutting down", color->id);
-		color->details->chosen_node = NULL;
-		return FALSE;
-		
-	} else if(chosen->weight < 0) {
-		crm_debug_2("Even highest ranked node for color %d, had weight %d",
-			  color->id, chosen->weight);
-		color->details->chosen_node = NULL;
-		return FALSE;
-	}
-
-	slist_iter(candidate, node_t, nodes, lpc, 
-		   crm_debug("Color %d, Node[%d] %s: %d", color->id, lpc,
-			       candidate->details->uname, candidate->weight);
-		   if(chosen->weight > 0
-		      && candidate->details->unclean == FALSE
-		      && candidate->weight == chosen->weight) {
-			   multiple++;
-		   } else {
-			   break;
-		   }
-		);
-
-	if(multiple > 1) {
-		int log_level = LOG_INFO;
-		char *score = score2char(chosen->weight);
-		if(chosen->weight >= INFINITY) {
-			log_level = LOG_WARNING;
-		}
-		
-		crm_log_maybe(log_level, "%d nodes with equal score (%s) for"
-			      " running the listed resources (chose %s):",
-			      multiple, score, chosen->details->uname);
-		slist_iter(rsc, resource_t,
-			   color->details->allocated_resources, lpc,
-			   rsc->fns->print(
-				   rsc, "\t", pe_print_log|pe_print_rsconly,
-				   &log_level);
-			);
-		crm_free(score);
-	}
-	
-	/* todo: update the old node for each resource to reflect its
-	 * new resource count
-	 */
-
-	chosen->details->num_resources += color->details->num_resources;
-	color->details->chosen_node = node_copy(chosen);
-	
-	return TRUE;
-}
-
 void
 cleanup_alloc_calculations(pe_working_set_t *data_set)
 {
@@ -944,10 +784,6 @@ cleanup_alloc_calculations(pe_working_set_t *data_set)
 	crm_debug_3("deleting order cons: %p", data_set->ordering_constraints);
 	pe_free_ordering(data_set->ordering_constraints);
 	data_set->ordering_constraints = NULL;
-	
-	crm_debug_3("deleting colors: %p", data_set->colors);
-	pe_free_colors(data_set->colors);
-	data_set->colors = NULL;
 	
 	crm_debug_3("deleting node cons: %p", data_set->placement_constraints);
 	pe_free_rsc_to_node(data_set->placement_constraints);
@@ -1367,14 +1203,18 @@ rsc_colocation_new(const char *id, enum con_strength strength,
 	new_con->state_lh = state_lh;
 	new_con->state_rh = state_rh;
 
-	inverted_con = invert_constraint(new_con);
 	
 	crm_debug_4("Adding constraint %s (%p) to %s",
 		  new_con->id, new_con, rsc_lh->id);
 	
 	rsc_lh->rsc_cons = g_list_insert_sorted(
 		rsc_lh->rsc_cons, new_con, sort_cons_strength);
+
+	/* colocation constraints are not bi-directional anymore */
+	return TRUE;
 	
+	inverted_con = invert_constraint(new_con);
+
 	crm_debug_4("Adding constraint %s (%p) to %s",
 		  inverted_con->id, inverted_con, rsc_rh->id);
 	

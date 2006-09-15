@@ -48,7 +48,7 @@ struct resource_alloc_functions_s
 {
 		void (*set_cmds)(resource_t *);
 		int  (*num_allowed_nodes)(resource_t *);
-		color_t *(*color)(resource_t *, pe_working_set_t *);
+		node_t *(*color)(resource_t *, pe_working_set_t *);
 		void (*create_actions)(resource_t *, pe_working_set_t *);
 		gboolean (*create_probe)(
 			resource_t *, node_t *, action_t *, gboolean, pe_working_set_t *);
@@ -77,7 +77,7 @@ extern void native_set_cmds(resource_t *rsc);
 extern void group_set_cmds(resource_t *rsc);
 extern void clone_set_cmds(resource_t *rsc);
 extern int  native_num_allowed_nodes(resource_t *rsc);
-extern color_t * native_color(resource_t *rsc, pe_working_set_t *data_set);
+extern node_t * native_color(resource_t *rsc, pe_working_set_t *data_set);
 extern void native_create_actions(
 	resource_t *rsc, pe_working_set_t *data_set);
 extern void native_internal_constraints(
@@ -96,7 +96,7 @@ extern void native_dump(resource_t *rsc, const char *pre_text, gboolean details)
 extern void native_create_notify_element(
 	resource_t *rsc, action_t *op,
 	notify_data_t *n_data,pe_working_set_t *data_set);
-extern void native_assign_color(resource_t *rsc, color_t *color);
+extern void native_assign_color(resource_t *rsc, node_t *node);
 extern gboolean native_create_probe(
 	resource_t *rsc, node_t *node, action_t *complete, gboolean force, 
 	pe_working_set_t *data_set);
@@ -104,7 +104,7 @@ extern void native_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
 
 extern int  group_num_allowed_nodes(resource_t *rsc);
-extern color_t *group_color(resource_t *rsc, pe_working_set_t *data_set);
+extern node_t *group_color(resource_t *rsc, pe_working_set_t *data_set);
 extern void group_create_actions(
 	resource_t *rsc, pe_working_set_t *data_set);
 extern void group_internal_constraints(
@@ -130,7 +130,7 @@ extern void group_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
 
 extern int  clone_num_allowed_nodes(resource_t *rsc);
-extern color_t *clone_color(resource_t *rsc, pe_working_set_t *data_set);
+extern node_t *clone_color(resource_t *rsc, pe_working_set_t *data_set);
 extern void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set);
 extern void clone_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);

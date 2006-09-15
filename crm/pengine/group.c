@@ -54,8 +54,6 @@ typedef struct group_variant_data_s
 	CRM_ASSERT(rsc->variant_opaque != NULL);			\
 	data = (group_variant_data_t *)rsc->variant_opaque;		\
 
-void group_assign_color(resource_t *rsc, color_t *group_color);
-
 void group_set_cmds(resource_t *rsc)
 {
 	group_variant_data_t *group_data = NULL;
@@ -79,10 +77,10 @@ int group_num_allowed_nodes(resource_t *rsc)
  	return group_data->self->cmds->num_allowed_nodes(group_data->self);
 }
 
-color_t *
+node_t *
 group_color(resource_t *rsc, pe_working_set_t *data_set)
 {
-	color_t *group_color = NULL;
+	node_t *group_node = NULL;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
@@ -97,28 +95,11 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 	
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
-		group_color = child_rsc->cmds->color(child_rsc, data_set);
-		CRM_CHECK(group_color != NULL, continue);
-		native_assign_color(rsc, group_color);
+		group_node = child_rsc->cmds->color(child_rsc, data_set);
+		CRM_CHECK(group_node != NULL, continue);
 		);
 	
-	return group_color;
-}
-
-void
-group_assign_color(resource_t *rsc, color_t *group_color)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-
-	crm_debug_3("Coloring children of: %s", rsc->id);
-	CRM_CHECK(group_color != NULL, return);
-
-	native_assign_color(rsc, group_color);
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-		native_assign_color(child_rsc, group_color);
-		);
+	return group_node;
 }
 
 void group_update_pseudo_status(resource_t *parent, resource_t *child);

@@ -99,6 +99,7 @@ int clone_num_allowed_nodes(resource_t *rsc)
 	return num_nodes;
 }
 
+#if 0
 static gint sort_rsc_provisional(gconstpointer a, gconstpointer b)
 {
 	const resource_t *resource1 = (const resource_t*)a;
@@ -119,7 +120,6 @@ static gint sort_rsc_provisional(gconstpointer a, gconstpointer b)
 	CRM_CHECK(FALSE, return 0);
 	return 0;
 }
-
 
 static GListPtr
 next_color(GListPtr head, GListPtr iter, int max)
@@ -153,12 +153,12 @@ next_color(GListPtr head, GListPtr iter, int max)
 	crm_debug_3("Nothing available: %p", head);
 	return NULL;
 }
+#endif		
 
-extern void group_assign_color(resource_t *rsc, color_t *group_color);
-
-color_t *
+node_t *
 clone_color(resource_t *rsc, pe_working_set_t *data_set)
 {
+#if 0
 	GListPtr color_ptr = NULL;
 	GListPtr child_colors = NULL;
 	int local_node_max = 0;
@@ -356,7 +356,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 			   crm_err("Bad variant: %d", replace_rsc->variant);
 		   }
 		);
-		
+#endif		
 	return NULL;
 }
 
@@ -757,6 +757,7 @@ clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 static resource_t*
 find_compatible_child(resource_t *local_child, resource_t *rsc)
 {
+#if 0
 	node_t *local_node = NULL;
 	node_t *node = NULL;
 	clone_variant_data_t *clone_data = NULL;
@@ -782,6 +783,7 @@ find_compatible_child(resource_t *local_child, resource_t *rsc)
 		);
 	crm_debug("Can't colocate child %s with %s",
 		 local_child->id, rsc->id);
+#endif
 	return NULL;
 }
 

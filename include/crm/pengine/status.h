@@ -139,6 +139,7 @@ struct resource_s {
 		gboolean runnable;
 		gboolean provisional;
 		gboolean globally_unique;
+		gboolean is_allocating;
 		
 		gboolean failed;
 		gboolean start_pending;

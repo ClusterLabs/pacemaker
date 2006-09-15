@@ -415,7 +415,6 @@ main(int argc, char **argv)
 		crm_crit("Transition failed: %s", transition_status(graph_rc));
 		print_graph(LOG_ERR, transition);
 	}
-
 	data_set.input = NULL;
 	cleanup_alloc_calculations(&data_set);
 	destroy_graph(transition);

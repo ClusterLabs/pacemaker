@@ -113,10 +113,6 @@ extern gboolean process_pe_message(
 extern gboolean unpack_constraints(
 	crm_data_t *xml_constraints, pe_working_set_t *data_set);
 
-extern gboolean apply_placement_constraints(pe_working_set_t *data_set);
-
-extern gboolean choose_node_from_list(color_t *color);
-
 extern gboolean update_action_states(GListPtr actions);
 
 extern gboolean shutdown_constraints(
@@ -154,7 +150,6 @@ extern gboolean custom_action_order(
 			    rsc2, stop_key(rsc2) ,NULL,		\
 			    type, data_set)
 
-extern gboolean process_colored_constraints(resource_t *rsc);
 extern void graph_element_from_action(
 	action_t *action, pe_working_set_t *data_set);
 
