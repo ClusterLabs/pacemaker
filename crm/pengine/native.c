@@ -28,6 +28,8 @@
 
 #define DELETE_THEN_REFRESH 1
 
+void node_list_update(GListPtr list1, GListPtr list2);
+
 void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 				   resource_t *rsc_rh, gboolean update_rh);
 
@@ -609,8 +611,12 @@ void native_rsc_colocation_rh(
 	}
 	
 	if(rsc_lh->provisional && rsc_rh->provisional) {
-		crm_err("combine priorities of %s and %s",
-			rsc_lh->id, rsc_rh->id);
+#if 0
+		/* should we do this? */
+		crm_debug("combine priorities of %s and %s",
+			  rsc_lh->id, rsc_rh->id);
+		node_list_update(rsc_lh->allowed_nodes, rsc_rh->allowed_nodes);
+#endif
 		return;
 
 	} else if( (!rsc_lh->provisional) && (!rsc_rh->provisional) ) {
@@ -648,6 +654,31 @@ void native_rsc_colocation_rh(
 	}
 }
 
+void
+node_list_update(GListPtr list1, GListPtr list2)
+{
+	node_t *other_node = NULL;
+
+	slist_iter(
+		node, node_t, list1, lpc,
+
+		if(node == NULL) {
+			continue;
+		}
+
+		other_node = (node_t*)pe_find_node_id(
+			list2, node->details->id);
+
+		if(other_node != NULL) {
+			crm_debug_4("%s + %s: %d + %d",
+				    node->details->uname, 
+				    other_node->details->uname, 
+				    node->weight, other_node->weight);
+			node->weight = merge_weights(
+				other_node->weight, node->weight);
+		}
+		);	
+}
 
 void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 {
