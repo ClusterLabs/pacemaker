@@ -50,7 +50,7 @@ AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
 lib_LTLIBRARIES	= libpe_rules.la libpe_status.la
 
 ## SOURCES
-noinst_HEADERS	= unpack.h utils.h pengine.h
+noinst_HEADERS	= unpack.h utils.h
 
 rule_files = rules.c common.c
 status_files = status.c unpack.c utils.c complex.c native.c group.c clone.c
