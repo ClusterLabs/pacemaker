@@ -28,11 +28,6 @@ void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
 	pe_working_set_t *data_set);
 
-extern gboolean rsc_colocation_new(
-	const char *id, enum con_strength strength,
-	resource_t *rsc_lh, resource_t *rsc_rh,
-	const char *state_lh, const char *state_rh);
-
 typedef struct clone_variant_data_s
 {
 		resource_t *self;
@@ -824,14 +819,14 @@ void clone_rsc_colocation_lh(
 		} else if(clone_data->interleave) {
 			do_interleave = TRUE;
 
-		} else if(constraint->strength != pecs_must_not) {
+		} else if(constraint->score != INFINITY) {
 			pe_warn("rsc_colocations other than \"-INFINITY\""
 				" are not supported for non-interleaved "
 				XML_CIB_TAG_INCARNATION" resources");
 			return;
 		}
 
-	} else if(constraint->strength != pecs_must_not) {
+	} else if(constraint->score != -INFINITY) {
 		pe_warn("Co-location scores other than \"-INFINITY\" are not "
 			" allowed for non-"XML_CIB_TAG_INCARNATION" resources");
 		return;
@@ -875,7 +870,7 @@ void clone_rsc_colocation_rh(
 		pe_err("rsc_rh was NULL for %s", constraint->id);
 		return;
 		
-	} else if(constraint->strength != pecs_must_not) {
+	} else if(constraint->score != -INFINITY) {
 		pe_warn("rsc_dependencies other than \"must_not\" "
 			"are not supported for clone resources");
 		return;

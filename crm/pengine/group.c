@@ -24,12 +24,7 @@
 #include <crm/msg_xml.h>
 #include <clplumbing/cl_misc.h>
 #include <allocate.h>
-
-extern gboolean rsc_colocation_new(
-	const char *id, enum con_strength strength,
-	resource_t *rsc_lh, resource_t *rsc_rh,
-	const char *state_lh, const char *state_rh);
-	
+#include <utils.h>
 
 typedef struct group_variant_data_s
 {
@@ -189,7 +184,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 		if(group_data->colocated && child_rsc != group_data->first_child) {
 			rsc_colocation_new(
-				"group:internal_colocation", pecs_must,
+				"group:internal_colocation", INFINITY,
 				group_data->first_child, child_rsc,
 				NULL, NULL);
 		}
@@ -277,7 +272,7 @@ void group_rsc_colocation_lh(
 		return;
 	}
 	
-	if(constraint->strength != pecs_must_not) {
+	if(constraint->score > 0) {
 		crm_config_err("Cannot colocate resources with"
 			      " non-colocated group: %s", rsc_lh->id);
 		return;
@@ -306,7 +301,7 @@ void group_rsc_colocation_rh(
 		return;
 	}
 	
-	if(constraint->strength != pecs_must_not) {
+	if(constraint->score > 0) {
 		crm_config_err("Cannot colocate resources with"
 			      " non-colocated group: %s", rsc_rh->id);
 		return;

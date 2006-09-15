@@ -41,7 +41,7 @@ invert_constraint(rsc_colocation_t *constraint)
 	}
 	
 	inverted_con->id = constraint->id;
-	inverted_con->strength = constraint->strength;
+	inverted_con->score = constraint->score;
 
 	/* swap the direction */
 	inverted_con->rsc_lh = constraint->rsc_rh;
@@ -64,11 +64,11 @@ gint sort_cons_strength(gconstpointer a, gconstpointer b)
 	if(a == NULL) { return 1; }
 	if(b == NULL) { return -1; }
   
-	if(rsc_constraint1->strength > rsc_constraint2->strength) {
+	if(rsc_constraint1->score > rsc_constraint2->score) {
 		return 1;
 	}
 	
-	if(rsc_constraint1->strength < rsc_constraint2->strength) {
+	if(rsc_constraint1->score < rsc_constraint2->score) {
 		return -1;
 	}
 	return 0;
@@ -117,10 +117,10 @@ print_rsc_colocation(const char *pre_text, rsc_colocation_t *cons, gboolean deta
 
 	if(details == FALSE) {
 
-		crm_debug_4("\t%s --> %s, %s",
+		crm_debug_4("\t%s --> %s, %d",
 			  safe_val3(NULL, cons, rsc_lh, id), 
 			  safe_val3(NULL, cons, rsc_rh, id), 
-			  strength2text(cons->strength));
+			  cons->score);
 	}
 } 
 
@@ -194,29 +194,6 @@ rsc2node_new(const char *id, resource_t *rsc,
 	return new_con;
 }
 
-
-
-const char *
-strength2text(enum con_strength strength)
-{
-	const char *result = "<unknown>";
-	switch(strength)
-	{
-		case pecs_ignore:
-			result = "ignore";
-			break;
-		case pecs_must:
-			result = XML_STRENGTH_VAL_MUST;
-			break;
-		case pecs_must_not:
-			result = XML_STRENGTH_VAL_MUSTNOT;
-			break;
-		case pecs_startstop:
-			result = "start/stop";
-			break;
-	}
-	return result;
-}
 
 const char *
 ordering_type2text(enum pe_ordering type)

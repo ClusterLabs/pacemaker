@@ -1169,7 +1169,7 @@ generate_location_rule(
 }
 
 gboolean
-rsc_colocation_new(const char *id, enum con_strength strength,
+rsc_colocation_new(const char *id, int score,
 		   resource_t *rsc_lh, resource_t *rsc_rh,
 		   const char *state_lh, const char *state_rh)
 {
@@ -1199,7 +1199,7 @@ rsc_colocation_new(const char *id, enum con_strength strength,
 	new_con->id       = id;
 	new_con->rsc_lh   = rsc_lh;
 	new_con->rsc_rh   = rsc_rh;
-	new_con->strength = strength;
+	new_con->score = score;
 	new_con->state_lh = state_lh;
 	new_con->state_rh = state_rh;
 
@@ -1210,8 +1210,10 @@ rsc_colocation_new(const char *id, enum con_strength strength,
 	rsc_lh->rsc_cons = g_list_insert_sorted(
 		rsc_lh->rsc_cons, new_con, sort_cons_strength);
 
-	/* colocation constraints are not bi-directional anymore */
-	return TRUE;
+	/* +ve colocation constraints are not bi-directional anymore */
+	if(score > 0) {
+		return TRUE;
+	}
 	
 	inverted_con = invert_constraint(new_con);
 
@@ -1293,8 +1295,7 @@ custom_action_order(
 gboolean
 unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
 {
-	enum con_strength strength_e = pecs_ignore;
-
+	int score_i = 0;
 	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *id_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
 	const char *id_lh = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
@@ -1318,13 +1319,9 @@ unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	 *   but no-one ever reads the docs so all positive values will
 	 *   count as "must" and negative values as "must not"
 	 */
-	if(score == NULL || score[0] != '-') {
-		strength_e = pecs_must;
-	} else {
-		strength_e = pecs_must_not;
-	}
-	return rsc_colocation_new(id, strength_e, rsc_lh, rsc_rh,
-				  state_lh, state_rh);
+	score_i = crm_parse_int(score, "0");
+	return rsc_colocation_new(
+		id, score_i, rsc_lh, rsc_rh, state_lh, state_rh);
 }
 
 gboolean is_active(rsc_to_node_t *cons)

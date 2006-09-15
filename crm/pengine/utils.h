@@ -37,17 +37,12 @@ extern rsc_to_node_t *rsc2node_new(
 extern void pe_free_rsc_to_node(GListPtr constraints);
 extern void pe_free_ordering(GListPtr constraints);
 
-extern const char *strength2text(enum con_strength strength);
 extern const char *ordering_type2text(enum pe_ordering type);
 
 extern gboolean rsc_colocation_new(
-	const char *id, enum con_strength strength,
+	const char *id, int score,
 	resource_t *rsc_lh, resource_t *rsc_rh,
 	const char *state_lh, const char *state_rh);
-
-extern gboolean create_ordering(
-	const char *id, enum con_strength strength,
-	resource_t *rsc_lh, resource_t *rsc_rh, pe_working_set_t *data_set);
 
 extern rsc_to_node_t *generate_location_rule(
 	resource_t *rsc, crm_data_t *location_rule, pe_working_set_t *data_set);

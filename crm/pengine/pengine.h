@@ -38,14 +38,6 @@ typedef struct order_constraint_s order_constraint_t;
 
 #include <crm/pengine/complex.h>
 
-enum con_strength {
-	pecs_ignore,
-	pecs_must,
-	pecs_must_not,
-	pecs_startstop
-};
-
-
 enum pe_stop_fail {
 	pesf_block,
 	pesf_stonith,
@@ -61,7 +53,7 @@ struct rsc_colocation_s {
 		const char *state_lh;
 		const char *state_rh;
 		
-		enum con_strength strength;
+		int score;
 };
 
 struct rsc_to_node_s { 

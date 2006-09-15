@@ -231,21 +231,16 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 
 		crm_debug_3("Pre-Processing %s", constraint->id);		
 
-		rsc->cmds->rsc_colocation_lh(
-			rsc, constraint->rsc_rh, constraint);
-
-		if(constraint->strength == pecs_must) {
-			/* or use ordering constraints */
-			constraint->rsc_rh->cmds->color(constraint->rsc_rh, data_set);
-		}
-
+		/* or use ordering constraints? */
+		constraint->rsc_rh->cmds->color(
+			constraint->rsc_rh, data_set);
 		rsc->cmds->rsc_colocation_lh(
 			rsc, constraint->rsc_rh, constraint);
 		
 		);
 
 	if(native_choose_node(rsc) ) {
-		crm_debug_3("Allocated resource %s to %s",
+		crm_debug("Allocated resource %s to %s",
 			    rsc->id, rsc->allocated_to->details->uname);
 	} else {
 		pe_warn("Resource %s cannot run anywhere", rsc->id);
@@ -498,9 +493,7 @@ static gboolean
 filter_colocation_constraint(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
-	if(constraint->strength == pecs_ignore
-		|| constraint->strength == pecs_startstop){
-		crm_debug_4("Skipping constraint type %d", constraint->strength);
+	if(constraint->score == 0){
 		return FALSE;
 	}
 
@@ -605,9 +598,9 @@ native_update_node_weight(
 void native_rsc_colocation_rh(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
-	crm_debug_2("%sColocating %s with %s (%s)",
-		    constraint->strength == pecs_must?"":"Anti-",
-		    rsc_lh->id, rsc_rh->id, constraint->id);
+	crm_debug_2("%sColocating %s with %s (%s, weight=%d)",
+		    constraint->score >= 0?"":"Anti-",
+		    rsc_lh->id, rsc_rh->id, constraint->id, constraint->score);
 	
 	if(filter_colocation_constraint(rsc_lh, rsc_rh, constraint) == FALSE) {
 		return;
@@ -624,7 +617,10 @@ void native_rsc_colocation_rh(
 
 	} else if( (!rsc_lh->provisional) && (!rsc_rh->provisional) ) {
 		/* error check */
-		if(rsc_lh->allocated_to == rsc_rh->allocated_to) {
+		if(constraint->score != INFINITY) {
+			return;
+			
+		} else if(rsc_lh->allocated_to == rsc_rh->allocated_to) {
 			return;
 
 		} else if(rsc_lh->allocated_to && rsc_rh->allocated_to
@@ -640,20 +636,17 @@ void native_rsc_colocation_rh(
 			rsc_rh->allocated_to?rsc_rh->allocated_to->details->uname:"n/a");
 		return;
 		
-	} else if(rsc_lh->provisional == FALSE) {
-		/* update _them_    : postproc color version */
+	} else if(rsc_lh->provisional == FALSE && rsc_lh->allocated_to) {
+		crm_debug_3("update _them_    : postproc color version");
 		native_update_node_weight(
 			rsc_rh, constraint->id, rsc_lh->allocated_to,
-			constraint->strength==pecs_must?INFINITY:-INFINITY);
+			constraint->score);
 		
-	} else if(rsc_rh->provisional == FALSE) {
-		/* update _us_  : postproc color alt version */
+	} else if(rsc_rh->provisional == FALSE && rsc_rh->allocated_to) {
+		crm_debug_3("update _us_  : postproc color alt version ");
 		native_update_node_weight(
 			rsc_lh, constraint->id, rsc_rh->allocated_to,
-			constraint->strength==pecs_must?INFINITY:-INFINITY);
-
-	} else {
-		pe_warn("Un-expected combination of inputs");
+			constraint->score);
 	}
 }
 

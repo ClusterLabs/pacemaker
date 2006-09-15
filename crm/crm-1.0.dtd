@@ -449,7 +449,7 @@ This may change in the future.
           id        CDATA #REQUIRED
           from      CDATA #REQUIRED
           to        CDATA #REQUIRED
-          score     (INFINITY|-INFINITY) #REQUIRED>
+          score     CDATA #REQUIRED>
 
 <!--
 Specify which nodes are eligible for running a given resource.
