@@ -365,6 +365,13 @@ native_print(
 			     rsc->runnable?"":"non-startable, ",
 			     crm_element_name(rsc->xml),
 			     (double)rsc->priority);
+		status_print("%s\tAllowed Nodes", pre_text);
+		slist_iter(node, node_t, rsc->allowed_nodes, lpc,
+			   status_print("%s\t * %s %d",
+					pre_text,
+					node->details->uname,
+					node->weight);
+			);	
 	}
 
 	if(options & pe_print_max_details) {
