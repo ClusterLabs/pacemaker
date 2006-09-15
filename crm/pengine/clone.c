@@ -94,7 +94,6 @@ int clone_num_allowed_nodes(resource_t *rsc)
 	return num_nodes;
 }
 
-#if 0
 static gint sort_rsc_provisional(gconstpointer a, gconstpointer b)
 {
 	const resource_t *resource1 = (const resource_t*)a;
@@ -116,48 +115,17 @@ static gint sort_rsc_provisional(gconstpointer a, gconstpointer b)
 	return 0;
 }
 
-static GListPtr
-next_color(GListPtr head, GListPtr iter, int max)
+static node_t *
+next_node(resource_t *rsc, int max)
 {
-	color_t *color = NULL;
-	GListPtr local_iter = iter;
-	crm_debug_4("Checking iter: %p", iter);
-	if(local_iter != NULL) {
-		local_iter = local_iter->next;
-	}	
-	for(; local_iter != NULL; local_iter = local_iter->next) {
-		color = local_iter->data;
-		crm_debug_5("Color %d: %d",
-			  color->details->id, color->details->num_resources);
-		if(color->details->num_resources < max) {
-			return local_iter;
-		}
-	}
-	
-	local_iter = head;
-	crm_debug_4("Now checking head: %p", head);
-	for(; local_iter != NULL; local_iter = local_iter->next) {
-		color = local_iter->data;
-		crm_debug_5("Color %d: %d",
-			  color->details->id, color->details->num_resources);
-		if(color->details->num_resources < max) {
-			return local_iter;
-		}
-	}	
-
-	crm_debug_3("Nothing available: %p", head);
 	return NULL;
 }
-#endif		
 
 node_t *
 clone_color(resource_t *rsc, pe_working_set_t *data_set)
 {
-#if 0
-	GListPtr color_ptr = NULL;
-	GListPtr child_colors = NULL;
 	int local_node_max = 0;
-	int reverse_pointer = 0;
+/* 	int reverse_pointer = 0; */
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
@@ -189,32 +157,20 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 
 	clone_data->self->allowed_nodes = g_list_sort(
 		clone_data->self->allowed_nodes, sort_node_weight);
-	
+
 	slist_iter(a_node, node_t, clone_data->self->allowed_nodes, lpc,
-		   color_t *new_color = NULL;
+		   
 		   if(can_run_resources(a_node) == FALSE) {
 			   crm_debug_2("Node cant run resources: %s",
 				       a_node->details->uname);
 			   continue;
 		   }
-		   crm_debug_3("Processing node %s for: %s",
-			       a_node->details->uname, rsc->id);
-
-		   new_color = create_color(data_set, NULL, NULL);
-		   new_color->local_weight = a_node->weight;
-		   new_color->details->candidate_nodes = g_list_append(
-			   NULL, node_copy(a_node));
-		   child_colors = g_list_append(child_colors, new_color);
-		   crm_debug_3("Created color %d for node %s (score = %d): %s",
-			       new_color->id, a_node->details->uname, a_node->weight, rsc->id);
+		   crm_debug_3("Processing node %s (score=%d) for: %s",
+			       a_node->details->uname, a_node->weight, rsc->id);
 
 		   slist_iter(child, resource_t, clone_data->child_list, lpc2,
 			      node_t *current = NULL;
-			      if(child->provisional == FALSE) {
-				      CRM_CHECK(child->color != NULL, continue);
-				      current = child->color->details->chosen_node;
-
-			      } else if(child->running_on != NULL) {
+			      if(child->running_on != NULL) {
 				      current = child->running_on->data;
 			      }
 			      
@@ -232,21 +188,12 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 				      crm_debug_2("Wrong node: %s", child->id);
 				      continue;
 
-			      } else if(child->provisional == FALSE) {
-				      /* make sure it shows up */
-				      native_assign_color(child, new_color);
-				      crm_debug("Previously colored: %s",
-						child->id);
-				      
-				      continue;
-				      
 			      } else if(g_list_length(child->running_on) != 1) {
 				      crm_debug("active != 1: %s", child->id);
 				      
 				      continue;
 
-			      } else if(new_color->details->num_resources
-					>= local_node_max) {
+			      } else if(a_node->count >= local_node_max) {
 				      crm_warn("Node %s too full for: %s",
 					       a_node->details->uname,
 					       child->id);
@@ -254,13 +201,9 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 			      }
 
 			      a_node->weight = merge_weights(a_node->weight, child->stickiness);
-			      new_color->local_weight = a_node->weight;
-
-			      crm_debug_2("Assigning color: %s", child->id);
-			      native_assign_color(child, new_color);
+			      native_assign_node(rsc, NULL, a_node);
 			   );
-		   
-		   native_assign_color(rsc, new_color);
+		   native_assign_node(clone_data->self, NULL, a_node);
 		);
 
 	while(local_node_max > 1
@@ -271,32 +214,24 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 			  local_node_max);
 	}
 	
-
-	child_colors = g_list_sort(child_colors, sort_color_weight);
-	
 	/* allocate the rest */
 	slist_iter(child, resource_t, clone_data->child_list, lpc2,
+		   node_t *node = NULL;
 		   if(child->provisional == FALSE) {
 			   crm_debug_2("Skipping allocated resource: %s", child->id);
 			   continue;
 		   }
 		   crm_debug_2("Processing unalloc'd resource: %s", child->id);
-		   color_ptr = next_color(
-			   child_colors, color_ptr, local_node_max);
-		   if(child->variant == pe_native) {
-			   native_assign_color(child, color_ptr?color_ptr->data:data_set->no_color);
-		   } else if(child->variant == pe_group) {
-			   group_assign_color(child, color_ptr?color_ptr->data:data_set->no_color);
-		   } else {
-			   crm_err("Bad variant: %d", child->variant);
-		   }
+		   node = next_node(rsc, local_node_max);
+		   native_assign_node(child, NULL, node);
 		);
 
 	clone_data->self->provisional = FALSE;
 	if(rsc->stickiness >= INFINITY) {
 		return NULL;
 	}
-	
+
+#if 0
 	reverse_pointer = g_list_length(child_colors) - 1;
 	slist_iter(color, color_t, child_colors, lpc,
 		   color_t *replace_color = NULL;
@@ -351,7 +286,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 			   crm_err("Bad variant: %d", replace_rsc->variant);
 		   }
 		);
-#endif		
+#endif
 	return NULL;
 }
 

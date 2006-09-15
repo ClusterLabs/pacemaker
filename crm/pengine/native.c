@@ -90,6 +90,7 @@ typedef struct native_variant_data_s
 	data = (native_variant_data_t *)rsc->variant_opaque;
 
 
+
 static gboolean
 native_choose_node(resource_t *rsc)
 {
@@ -101,7 +102,6 @@ native_choose_node(resource_t *rsc)
 	*/
 	GListPtr nodes = NULL;
 	node_t *chosen = NULL;
-	int multiple = 0;
 
 	crm_debug_3("Choosing node for %s from %d candidates",
 		    rsc->id, g_list_length(rsc->allowed_nodes));
@@ -113,64 +113,7 @@ native_choose_node(resource_t *rsc)
 		chosen = g_list_nth_data(nodes, 0);
 	}
 	
-	if(chosen == NULL) {
-		crm_debug("Could not allocate a node for %s", rsc->id);
-		rsc->next_role = RSC_ROLE_STOPPED;
-		return FALSE;
-
-	} else if(chosen->details->unclean
-		  || chosen->details->standby
-		  || chosen->details->shutdown) {
-		crm_debug("All nodes for color %s are unavailable"
-			  ", unclean or shutting down", rsc->id);
-		rsc->next_role = RSC_ROLE_STOPPED;
-		return FALSE;
-		
-	} else if(chosen->weight < 0) {
-		crm_debug_2("Even highest ranked node for color %s, had weight %d",
-			  rsc->id, chosen->weight);
-		rsc->next_role = RSC_ROLE_STOPPED;
-		return FALSE;
-	}
-
-	if(rsc->next_role == RSC_ROLE_UNKNOWN) {
-		rsc->next_role = RSC_ROLE_STARTED;
-	}
-	
-	slist_iter(candidate, node_t, nodes, lpc, 
-		   crm_debug("Color %s, Node[%d] %s: %d", rsc->id, lpc,
-			       candidate->details->uname, candidate->weight);
-		   if(chosen->weight > 0
-		      && candidate->details->unclean == FALSE
-		      && candidate->weight == chosen->weight) {
-			   multiple++;
-		   } else {
-			   break;
-		   }
-		);
-
-	if(multiple > 1) {
-		int log_level = LOG_INFO;
-		char *score = score2char(chosen->weight);
-		if(chosen->weight >= INFINITY) {
-			log_level = LOG_WARNING;
-		}
-		
-		crm_log_maybe(log_level, "%d nodes with equal score (%s) for"
-			      " running the listed resources (chose %s):",
-			      multiple, score, chosen->details->uname);
-		crm_free(score);
-	}
-	
-	/* todo: update the old node for each resource to reflect its
-	 * new resource count
-	 */
-
-	crm_debug("Assigning %s to %s", chosen->details->uname, rsc->id);
-	rsc->allocated_to = node_copy(chosen);
-	chosen->details->num_resources++;
-	
-	return TRUE;
+	return native_assign_node(rsc, nodes, chosen);
 }
 
 void native_set_cmds(resource_t *rsc)

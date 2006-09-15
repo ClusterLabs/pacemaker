@@ -51,5 +51,6 @@ extern gint sort_cons_strength(gconstpointer a, gconstpointer b);
 extern gint sort_node_weight(gconstpointer a, gconstpointer b);
 
 extern gboolean can_run_resources(const node_t *node);
+extern gboolean native_assign_node(resource_t *rsc, GListPtr candidates, node_t *chosen);
 
 #endif

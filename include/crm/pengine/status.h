@@ -106,6 +106,7 @@ struct node_shared_s {
 struct node_s { 
 		int	weight; 
 		gboolean fixed;
+		int      count;
 		struct node_shared_s *details;
 };
 
