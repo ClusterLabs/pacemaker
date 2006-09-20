@@ -560,36 +560,50 @@ void native_rsc_colocation_rh(
 
 	} else if( (!rsc_lh->provisional) && (!rsc_rh->provisional) ) {
 		/* error check */
-		if(constraint->score != INFINITY) {
-			return;
-			
-		} else if(rsc_lh->allocated_to == rsc_rh->allocated_to) {
-			return;
-
-		} else if(rsc_lh->allocated_to && rsc_rh->allocated_to
-		   && rsc_lh->allocated_to->details
-			  == rsc_rh->allocated_to->details) {
+		struct node_shared_s *details_lh;
+		struct node_shared_s *details_rh;
+		if((constraint->score > -INFINITY) && (constraint->score < INFINITY)) {
 			return;
 		}
+
+		details_rh = rsc_rh->allocated_to?rsc_rh->allocated_to->details:NULL;
+		details_lh = rsc_lh->allocated_to?rsc_lh->allocated_to->details:NULL;
 		
-		crm_err("%s and %s are both allocated"
-			" but to different nodes: %s vs. %s",
-			rsc_lh->id, rsc_rh->id,
-			rsc_lh->allocated_to?rsc_lh->allocated_to->details->uname:"n/a",
-			rsc_rh->allocated_to?rsc_rh->allocated_to->details->uname:"n/a");
+		if(constraint->score == INFINITY && details_lh != details_rh) {
+			crm_err("%s and %s are both allocated"
+				" but to different nodes: %s vs. %s",
+				rsc_lh->id, rsc_rh->id,
+				details_lh?details_lh->uname:"n/a",
+				details_rh?details_rh->uname:"n/a");
+
+		} else if(constraint->score == -INFINITY && details_lh == details_rh) {
+			crm_err("%s and %s are both allocated"
+				" but to the SAME node: %s",
+				rsc_lh->id, rsc_rh->id,
+				details_rh?details_rh->uname:"n/a");
+		}
+		
 		return;
 		
-	} else if(rsc_lh->provisional == FALSE && rsc_lh->allocated_to) {
-		crm_debug_3("update _them_    : postproc color version");
-		native_update_node_weight(
-			rsc_rh, constraint->id, rsc_lh->allocated_to,
-			constraint->score);
+	} else if(rsc_lh->provisional == FALSE) {
+		crm_debug_3("update _them_ : postproc version");
+		if(rsc_lh->allocated_to) {
+			native_update_node_weight(
+				rsc_rh, constraint->id, rsc_lh->allocated_to,
+				constraint->score);
+		} else {
+			rsc_lh->provisional = FALSE;
+		}
 		
-	} else if(rsc_rh->provisional == FALSE && rsc_rh->allocated_to) {
-		crm_debug_3("update _us_  : postproc color alt version ");
-		native_update_node_weight(
-			rsc_lh, constraint->id, rsc_rh->allocated_to,
-			constraint->score);
+	} else if(rsc_rh->provisional == FALSE) {
+		crm_debug_3("update _us_ : postproc version");
+		if(rsc_rh->allocated_to) {
+			native_update_node_weight(
+				rsc_lh, constraint->id, rsc_rh->allocated_to,
+				constraint->score);
+		} else {
+			rsc_lh->provisional = FALSE;
+		}
 	}
 }
 
