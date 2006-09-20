@@ -280,37 +280,39 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	/* allocate the rest - if possible */
 	if(local_node_max < clone_data->clone_node_max) {
 		local_node_max++;
-		node_list = clone_data->self->allowed_nodes;
-
-		slist_iter(child, resource_t, clone_data->child_list, lpc2,
-			   if(child->provisional == FALSE) {
-				   crm_debug_3("Remainder: Skipping allocated resource: %s", child->id);
-				   continue;
-			   }
-
-			   if(node_list && (pre_allocated+allocated) >= clone_data->clone_max) {
-				   crm_debug("Allocated maximum possible clone instances");
-				   node_list = NULL;
-			   }
-
-			   while(node_list && local_node_max <= ((node_t*)node_list->data)->count) {
-				   node_list = node_list->next;
-			   }
-
-			   if(node_list) {
-				   allocated++;
-				   native_assign_node(child, NULL, node_list->data);
-
-			   } else {
-				   crm_debug("Child %s not allocated", child->id);
-				   native_assign_node(child, NULL, NULL);
-			   }
-			   
-			);
-
-		crm_debug("Rest: Total=%d, New=%d, Max=%d", pre_allocated, allocated, clone_data->clone_max);
-		CRM_ASSERT(pre_allocated+allocated <= clone_data->clone_max);
 	}
+	
+	node_list = clone_data->self->allowed_nodes;
+
+	slist_iter(child, resource_t, clone_data->child_list, lpc2,
+		   if(child->provisional == FALSE) {
+			   crm_debug("Remainder: Skipping allocated resource: %s", child->id);
+			   continue;
+		   }
+		   
+		   crm_debug("Remainder: Processing: %s", child->id);
+		   if(node_list && (pre_allocated+allocated) >= clone_data->clone_max) {
+			   crm_debug("Allocated maximum possible clone instances");
+			   node_list = NULL;
+		   }
+		   
+		   while(node_list && local_node_max <= ((node_t*)node_list->data)->count) {
+			   node_list = node_list->next;
+		   }
+		   
+		   if(node_list) {
+			   allocated++;
+			   native_assign_node(child, NULL, node_list->data);
+			   
+		   } else {
+			   crm_debug("Child %s not allocated", child->id);
+			   native_assign_node(child, NULL, NULL);
+		   }
+		   
+		);
+
+	crm_debug("Remainder: Total=%d, New=%d, Max=%d", pre_allocated, allocated, clone_data->clone_max);
+	CRM_ASSERT(pre_allocated+allocated <= clone_data->clone_max);
 
 	clone_data->self->provisional = FALSE;
 	if(rsc->stickiness >= INFINITY) {

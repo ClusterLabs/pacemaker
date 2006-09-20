@@ -319,7 +319,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 		return FALSE;
 		
 	} else if(chosen->weight < 0) {
-		crm_debug_2("Even highest ranked node for color %s, had weight %d",
+		crm_debug("Even highest ranked node for %s, had weight %d",
 			  rsc->id, chosen->weight);
 		rsc->next_role = RSC_ROLE_STOPPED;
 		return FALSE;
