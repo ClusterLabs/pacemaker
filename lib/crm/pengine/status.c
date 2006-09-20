@@ -155,6 +155,7 @@ pe_free_nodes(GListPtr nodes)
 				g_hash_table_destroy(details->attrs);
 			}
 			pe_free_shallow_adv(details->running_rsc, FALSE);
+			pe_free_shallow_adv(details->allocated_rsc, FALSE);
 			crm_free(details);
 		}
 		crm_free(node);

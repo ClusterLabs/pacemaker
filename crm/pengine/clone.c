@@ -115,9 +115,22 @@ static gint sort_rsc_provisional(gconstpointer a, gconstpointer b)
 	return 0;
 }
 
-static node_t *
-next_node(resource_t *rsc, int max)
+static resource_t *
+find_clone_child(resource_t *rsc, GListPtr resource_list)
 {
+	crm_debug("foo");
+	slist_iter(
+		child, resource_t, resource_list, lpc,
+		if(child->parent) {
+			crm_debug("%p / %p vs. %s / %s", rsc, child->parent, rsc->id, child->parent->id); 
+			if(child->parent == rsc) {
+				return child;
+			}
+		} else {
+			crm_debug("Child %s has no parent", child->id);
+		}
+		);
+	
 	return NULL;
 }
 
@@ -125,7 +138,10 @@ node_t *
 clone_color(resource_t *rsc, pe_working_set_t *data_set)
 {
 	int local_node_max = 0;
-/* 	int reverse_pointer = 0; */
+	GListPtr node_list = NULL;
+	int reverse_pointer = 0;
+	int allocated = 0, pre_allocated = 0;
+
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
@@ -143,6 +159,8 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
  		clone_data->child_list, sort_rsc_provisional);
 
 	crm_debug_2("Coloring children of: %s", rsc->id);
+	clone_data->self->allowed_nodes = g_list_sort(
+		clone_data->self->allowed_nodes, sort_node_weight);
 	
 	if(rsc->stickiness <= 0) {
 		while(local_node_max > 1
@@ -155,92 +173,146 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		}
 	}
 
-	clone_data->self->allowed_nodes = g_list_sort(
-		clone_data->self->allowed_nodes, sort_node_weight);
-
-	slist_iter(a_node, node_t, clone_data->self->allowed_nodes, lpc,
+	slist_iter(child, resource_t, clone_data->child_list, lpc2,
+		   node_t *current = NULL;
+		   if(child->running_on != NULL) {
+			   current = child->running_on->data;
+		   }
 		   
-		   if(can_run_resources(a_node) == FALSE) {
+		   if(current == NULL) {
+			   crm_debug_2("Not active: %s", child->id);
+			   continue;
+			   
+		   } else if(can_run_resources(current) == FALSE) {
 			   crm_debug_2("Node cant run resources: %s",
-				       a_node->details->uname);
+				       current->details->uname);
+			   continue;
+			   
+		   } else if(g_list_length(child->running_on) != 1) {
+			   crm_debug("active != 1: %s", child->id);
+			   
+			   continue;
+			   
+		   } else if(current->count >= local_node_max) {
+			   crm_warn("Node %s too full for: %s",
+				    current->details->uname,
+				    child->id);
 			   continue;
 		   }
-		   crm_debug_3("Processing node %s (score=%d) for: %s",
-			       a_node->details->uname, a_node->weight, rsc->id);
 
-		   slist_iter(child, resource_t, clone_data->child_list, lpc2,
-			      node_t *current = NULL;
-			      if(child->running_on != NULL) {
-				      current = child->running_on->data;
-			      }
-			      
-			      if(current == NULL) {
-				      crm_debug_2("Not active: %s", child->id);
-				      continue;
+		   if(allocated >= clone_data->clone_max) {
+			   crm_debug_2("Reached maximum allocation: %s", child->id);
+			   break;
+		   }
 
-			      } else if(current->details->online == FALSE
-					|| current->details->unclean
-					|| current->details->shutdown) {
-				      crm_debug_2("Unavailable node: %s", child->id);
-				      continue;
+		   crm_debug("Foo: %s", child->id);
+		   current = pe_find_node_id(
+			   clone_data->self->allowed_nodes, current->details->id);
+		   current->weight = merge_weights(current->weight, child->stickiness);
 
-			      } else if(current->details != a_node->details) {
-				      crm_debug_2("Wrong node: %s", child->id);
-				      continue;
-
-			      } else if(g_list_length(child->running_on) != 1) {
-				      crm_debug("active != 1: %s", child->id);
-				      
-				      continue;
-
-			      } else if(a_node->count >= local_node_max) {
-				      crm_warn("Node %s too full for: %s",
-					       a_node->details->uname,
-					       child->id);
-				      continue;
-			      }
-
-			      a_node->weight = merge_weights(a_node->weight, child->stickiness);
-			      native_assign_node(rsc, NULL, a_node);
-			   );
-		   native_assign_node(clone_data->self, NULL, a_node);
+		   if(native_assign_node(child, NULL, current)) {
+			   allocated++;
+		   }
+/* 		   native_assign_node(clone_data->self, NULL, current); */
 		);
 
-	while(local_node_max > 1
-	      && clone_data->max_nodes * (local_node_max -1)
-	      >= clone_data->clone_max) {
-		local_node_max--;
-		crm_debug("Dropped the effective value of clone_node_max to: %d",
-			  local_node_max);
+	crm_debug("Running: Total=%d, New=%d, Max=%d",
+		  pre_allocated+allocated, allocated, clone_data->clone_max);
+	
+	local_node_max = (int) (clone_data->clone_max / clone_data->max_nodes);
+	if(local_node_max < 1) {
+		local_node_max = 1;
+	}
+	if(local_node_max > clone_data->clone_node_max) {
+		local_node_max = clone_data->clone_node_max;
 	}
 	
-	/* allocate the rest */
+	pre_allocated = allocated;
+	allocated = 0;
+
+	if(rsc->stickiness != 0) {
+		clone_data->self->allowed_nodes = g_list_sort(
+			clone_data->self->allowed_nodes, sort_node_weight);
+	}
+	
+	/* distribute a constant spread */
+	node_list = clone_data->self->allowed_nodes;
 	slist_iter(child, resource_t, clone_data->child_list, lpc2,
-		   node_t *node = NULL;
+		   if(allocated+pre_allocated >= clone_data->clone_max) {
+			   break;
+		   }
 		   if(child->provisional == FALSE) {
-			   crm_debug_2("Skipping allocated resource: %s", child->id);
+			   crm_debug_3("Spread: Skipping allocated resource: %s", child->id);
 			   continue;
 		   }
-		   crm_debug_2("Processing unalloc'd resource: %s", child->id);
-		   node = next_node(rsc, local_node_max);
-		   native_assign_node(child, NULL, node);
+
+		   while(node_list && local_node_max <= ((node_t*)node_list->data)->count) {
+			   node_list = node_list->next;
+		   }
+
+		   if(node_list) {
+			   allocated++;
+			   native_assign_node(child, NULL, node_list->data);
+		   }
 		);
+
+	crm_debug("Spread: Total=%d, New=%d, Max=%d",
+		  pre_allocated+allocated, allocated, clone_data->clone_max);
+
+	CRM_ASSERT(pre_allocated+allocated <= clone_data->clone_max);
+	pre_allocated += allocated;
+	allocated = 0;
+
+	/* allocate the rest - if possible */
+	if(local_node_max < clone_data->clone_node_max) {
+		local_node_max++;
+		node_list = clone_data->self->allowed_nodes;
+
+		slist_iter(child, resource_t, clone_data->child_list, lpc2,
+			   if(child->provisional == FALSE) {
+				   crm_debug_3("Remainder: Skipping allocated resource: %s", child->id);
+				   continue;
+			   }
+
+			   if(node_list && (pre_allocated+allocated) >= clone_data->clone_max) {
+				   crm_debug("Allocated maximum possible clone instances");
+				   node_list = NULL;
+			   }
+
+			   while(node_list && local_node_max <= ((node_t*)node_list->data)->count) {
+				   node_list = node_list->next;
+			   }
+
+			   if(node_list) {
+				   allocated++;
+				   native_assign_node(child, NULL, node_list->data);
+
+			   } else {
+				   crm_debug("Child %s not allocated", child->id);
+				   native_assign_node(child, NULL, NULL);
+			   }
+			   
+			);
+
+		crm_debug("Rest: Total=%d, New=%d, Max=%d", pre_allocated, allocated, clone_data->clone_max);
+		CRM_ASSERT(pre_allocated+allocated <= clone_data->clone_max);
+	}
 
 	clone_data->self->provisional = FALSE;
 	if(rsc->stickiness >= INFINITY) {
 		return NULL;
 	}
-
-#if 0
-	reverse_pointer = g_list_length(child_colors) - 1;
-	slist_iter(color, color_t, child_colors, lpc,
-		   color_t *replace_color = NULL;
+	
+	/* observe node preferences */
+	reverse_pointer = g_list_length(clone_data->self->allowed_nodes) - 1;
+	slist_iter(a_node, node_t, clone_data->self->allowed_nodes, lpc,
+		   node_t *replace_node = NULL;
 		   resource_t *replace_rsc = NULL;
 		   
-		   CRM_CHECK(color != NULL, continue);
-		   if(color->details->num_resources != 0) {
-			   crm_debug_4("color %d has %d resources",
-				       color->id, color->details->num_resources);
+		   CRM_ASSERT(a_node != NULL);
+		   if(a_node->count != 0) {
+			   crm_debug_4("Node %s has %d resources",
+				       a_node->details->uname, a_node->count);
 			   break;
 
 		   } else if(lpc >= reverse_pointer) {
@@ -248,45 +320,31 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 			   break;
 		   }
 
-		   crm_debug_3("Color %d has %d resources, stealing one from...",
-			       color->id, color->details->num_resources);
-		   
-		   do {
+		   crm_debug_3("Node %s has %d resources, stealing one from...",
+			       a_node->details->uname, a_node->count);
+
+		   while(replace_rsc == NULL) {
 			   crm_debug_3("lpc %d, reverse lpc %d", lpc, reverse_pointer);
 			   if(lpc >= reverse_pointer) {
 				   return NULL;
 			   }
-			   replace_color = g_list_nth_data(child_colors, reverse_pointer);
+			   replace_node = g_list_nth_data(clone_data->self->allowed_nodes, reverse_pointer);
 			   reverse_pointer--;
 
-			   CRM_CHECK(replace_color != NULL, continue);
-			   CRM_CHECK(replace_color->details->num_resources >= 0, continue);
-			   if(replace_color->details->num_resources == 0) {
-				   continue;
+			   crm_debug("Trying to reallocated an instance of %s to %s from %s",
+				     rsc->id, a_node->details->uname, replace_node->details->uname);
+			   replace_rsc = find_clone_child(rsc, replace_node->details->allocated_rsc);
+			   if(replace_rsc == NULL) {
+				   CRM_ASSERT(replace_node->count == 0);
+				   crm_debug("nothing on %s", replace_node->details->uname);
 			   }
+		   } 
 
-			   CRM_CHECK(replace_color->details->allocated_resources != NULL, continue);
-			   replace_rsc = replace_color->details->allocated_resources->data;
-
-			   crm_debug_3("\tColor %d with %d resources (index = %d, rsc = %s)",
-				       replace_color->id, replace_color->details->num_resources,
-				       reverse_pointer+1, replace_rsc?replace_rsc->id:"none");
-
-		   } while(replace_color == NULL
-			   || replace_color->id == 0
-			   || replace_color->details->num_resources == 0);
-
-		   if(replace_rsc->variant == pe_native) {
-			   native_assign_color(replace_rsc, color);
-
-		   } else if(replace_rsc->variant == pe_group) {
-			   group_assign_color(replace_rsc, color);
-
-		   } else {
-			   crm_err("Bad variant: %d", replace_rsc->variant);
-		   }
+		   crm_debug("Reallocating %s to %s from %s",
+			     replace_rsc->id, a_node->details->uname, replace_node->details->uname);
+		   native_assign_node(replace_rsc, NULL, a_node);
 		);
-#endif
+
 	return NULL;
 }
 

@@ -358,9 +358,21 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 	 * new resource count
 	 */
 
+	if(rsc->allocated_to) {
+		node_t *old = rsc->allocated_to;
+		old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc, rsc);
+		old->details->num_resources--;
+		old->count--;
+	}
+	
 	crm_debug("Assigning %s to %s", chosen->details->uname, rsc->id);
+	rsc->provisional = FALSE;
+	crm_free(rsc->allocated_to);
 	rsc->allocated_to = node_copy(chosen);
+
+	chosen->details->allocated_rsc = g_list_append(chosen->details->allocated_rsc, rsc);
 	chosen->details->num_resources++;
 	chosen->count++;
+
 	return TRUE;
 }

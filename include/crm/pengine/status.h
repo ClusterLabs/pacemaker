@@ -98,6 +98,7 @@ struct node_shared_s {
 		gboolean is_dc;
 		int	 num_resources;
 		GListPtr running_rsc;	/* resource_t* */
+		GListPtr allocated_rsc;	/* resource_t* */
 		
 		GHashTable *attrs;	/* char* => char* */
 		enum node_type type;
