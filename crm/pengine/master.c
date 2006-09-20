@@ -158,7 +158,6 @@ child_demoting_constraints(
 	}
 }
 
-#if 0
 static void
 master_update_pseudo_status(
 	resource_t *child, gboolean *demoting, gboolean *promoting) 
@@ -184,7 +183,7 @@ master_update_pseudo_status(
 		);
 
 }
-#endif
+
 #define apply_master_location(list)					\
 	slist_iter(							\
 		cons, rsc_to_node_t, list, lpc2,			\
@@ -212,7 +211,6 @@ struct masters_s
 
 void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 {
-#if 0
 	int len = 0;
 	node_t *chosen = NULL;
 	char *attr_name = NULL;
@@ -261,10 +259,10 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
 		crm_debug_2("Assigning priority for %s", child_rsc->id);
-		CRM_CHECK(child_rsc->color != NULL,
-			  crm_err("Resource %s is uncolored", child_rsc->id);
+		CRM_CHECK(child_rsc->allocated_to != NULL,
+			  crm_err("Resource %s is unallocated", child_rsc->id);
 			  continue);
-		chosen = child_rsc->color->details->chosen_node;
+		chosen = child_rsc->allocated_to;
 
 		if(child_rsc->role == RSC_ROLE_STARTED) {
 			child_rsc->role = RSC_ROLE_SLAVE;
@@ -341,11 +339,11 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
-		CRM_CHECK(child_rsc->color != NULL,
-			  crm_err("Resource %s is uncolored", child_rsc->id);
+		CRM_CHECK(child_rsc->allocated_to != NULL,
+			  crm_err("Resource %s is unallocated", child_rsc->id);
 			  continue);
 
-		chosen = child_rsc->color->details->chosen_node;
+		chosen = child_rsc->allocated_to;
 
 		switch(child_rsc->next_role) {
 			case RSC_ROLE_STARTED:
@@ -462,7 +460,6 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				   NULL, last_demote_rsc, data_set);
 
 	clone_create_notifications(rsc, action, action_complete, data_set);	
-#endif
 }
 
 void
