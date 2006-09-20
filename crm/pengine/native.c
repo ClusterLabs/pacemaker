@@ -103,6 +103,10 @@ native_choose_node(resource_t *rsc)
 	GListPtr nodes = NULL;
 	node_t *chosen = NULL;
 
+	if(rsc->provisional == FALSE) {
+		return rsc->allocated_to?TRUE:FALSE;
+	}
+	
 	crm_debug_3("Choosing node for %s from %d candidates",
 		    rsc->id, g_list_length(rsc->allowed_nodes));
 
@@ -456,35 +460,20 @@ filter_colocation_constraint(
 	return TRUE;
 }
 
-static void
+static gboolean
 native_update_node_weight(
 	resource_t *rsc, const char *id, node_t *node, int score)
 {
 	node_t *node_rh = NULL;
-	CRM_CHECK(node != NULL, return);
+	CRM_CHECK(node != NULL, return FALSE);
 	
 	node_rh = pe_find_node_id(
 		rsc->allowed_nodes, node->details->id);
 
 	if(node_rh == NULL) {
-		pe_err("Node not found - adding %s to %s",
-		       node->details->id, rsc->id);
-		node_rh = node_copy(node);
-		rsc->allowed_nodes = g_list_append(
-			rsc->allowed_nodes, node_rh);
-
-		node_rh = pe_find_node_id(
-			rsc->allowed_nodes, node->details->id);
-
-		CRM_CHECK(node_rh != NULL, return);
-		return;
-	}
-
-	CRM_CHECK(node_rh != NULL, return);
-	
-	if(node_rh == NULL) {
-		pe_err("Node not found - cant update");
-		return;
+		pe_warn("%s not found in %s",
+			node->details->uname, rsc->id);
+		return FALSE;
 	}
 
 	if(node_rh->weight >= INFINITY && score <= -INFINITY) {
@@ -506,7 +495,7 @@ native_update_node_weight(
 			 " weight of node %s is fixed as %d (%s).",
 			 id, node_rh->details->uname,
 			 node_rh->weight, rsc->id);
-		return;
+		return TRUE;
 	}	
 	
 	crm_debug_3("Constraint %s, node %s, rsc %s: %d + %d",
@@ -535,7 +524,7 @@ native_update_node_weight(
 
 	crm_action_debug_3(print_node("Updated", node_rh, FALSE));
 
-	return;
+	return TRUE;
 }
 
 void native_rsc_colocation_rh(
@@ -586,21 +575,28 @@ void native_rsc_colocation_rh(
 		return;
 		
 	} else if(rsc_lh->provisional == FALSE) {
-		crm_debug_3("update _them_ : postproc version");
+		crm_err("update _them_ : postproc version");
 		if(rsc_lh->allocated_to) {
-			native_update_node_weight(
-				rsc_rh, constraint->id, rsc_lh->allocated_to,
-				constraint->score);
+			if(native_update_node_weight(
+				   rsc_rh, constraint->id, rsc_lh->allocated_to,
+				   constraint->score) == FALSE) {
+				rsc_rh->provisional = FALSE;
+			}
+			
 		} else {
-			rsc_lh->provisional = FALSE;
+			rsc_rh->provisional = FALSE;
 		}
 		
 	} else if(rsc_rh->provisional == FALSE) {
-		crm_debug_3("update _us_ : postproc version");
+		crm_err("update _us_ : postproc version");
 		if(rsc_rh->allocated_to) {
-			native_update_node_weight(
-				rsc_lh, constraint->id, rsc_rh->allocated_to,
-				constraint->score);
+			if(native_update_node_weight(
+				   rsc_lh, constraint->id, rsc_rh->allocated_to,
+				   constraint->score) == FALSE) {
+				crm_warn("%s cant run anywhere", rsc_lh->id);
+				rsc_lh->provisional = FALSE;
+			}
+			
 		} else {
 			rsc_lh->provisional = FALSE;
 		}
