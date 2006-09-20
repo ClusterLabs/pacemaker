@@ -199,16 +199,6 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 			   
 			   continue;
 			   
-		   } else if(current->count >= local_node_max) {
-			   crm_warn("Node %s too full for: %s",
-				    current->details->uname,
-				    child->id);
-			   continue;
-		   }
-
-		   if(allocated >= clone_data->clone_max) {
-			   crm_debug_2("Reached maximum allocation: %s", child->id);
-			   break;
 		   }
 
 		   chosen = pe_find_node_id(
@@ -216,6 +206,17 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		   if(chosen == NULL) {
 			   /* unmanaged mode */
 			   chosen = current;
+		   }
+
+		   if(chosen->count >= local_node_max) {
+			   crm_warn("Node %s too full for: %s",
+				    chosen->details->uname,
+				    child->id);
+			   continue;
+
+		   } else if(allocated >= clone_data->clone_max) {
+			   crm_debug_2("Reached maximum allocation: %s", child->id);
+			   break;
 		   }
 		   
 		   chosen->weight = merge_weights(chosen->weight, child->stickiness);
@@ -758,14 +759,12 @@ clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 static resource_t*
 find_compatible_child(resource_t *local_child, resource_t *rsc)
 {
-#if 0
 	node_t *local_node = NULL;
 	node_t *node = NULL;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
-	CRM_ASSERT(local_child->color != NULL);
 	
-	local_node = local_child->color->details->candidate_nodes->data;
+	local_node = local_child->allocated_to;
 	if(local_node == NULL) {
 		crm_debug("Can't colocate unrunnable child %s with %s",
 			 local_child->id, rsc->id);
@@ -774,8 +773,7 @@ find_compatible_child(resource_t *local_child, resource_t *rsc)
 	
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
-		CRM_ASSERT(child_rsc->color != NULL);
-		node = child_rsc->color->details->candidate_nodes->data;
+		node = child_rsc->allocated_to;
 		if(node->details == local_node->details) {
 			crm_info("Colocating %s with %s on %s",
 				 local_child->id, child_rsc->id, node->details->uname);
@@ -784,7 +782,6 @@ find_compatible_child(resource_t *local_child, resource_t *rsc)
 		);
 	crm_debug("Can't colocate child %s with %s",
 		 local_child->id, rsc->id);
-#endif
 	return NULL;
 }
 

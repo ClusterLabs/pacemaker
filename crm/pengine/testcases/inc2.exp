@@ -35,7 +35,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="20" operation="stop" operation_key="rsc1_stop_0"/>
+         <pseudo_event id="21" operation="stop" operation_key="rsc1_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -51,7 +51,7 @@
          <rsc_op id="13" operation="stop" operation_key="child_rsc1:2_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
-         <pseudo_event id="18" operation="start" operation_key="rsc1_start_0"/>
+         <pseudo_event id="19" operation="start" operation_key="rsc1_start_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -73,7 +73,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="20" operation="stop" operation_key="rsc1_stop_0"/>
+         <pseudo_event id="21" operation="stop" operation_key="rsc1_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -89,7 +89,7 @@
          <rsc_op id="15" operation="stop" operation_key="child_rsc1:3_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
-         <pseudo_event id="18" operation="start" operation_key="rsc1_start_0"/>
+         <pseudo_event id="19" operation="start" operation_key="rsc1_start_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -111,13 +111,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="20" operation="stop" operation_key="rsc1_stop_0"/>
+         <pseudo_event id="21" operation="stop" operation_key="rsc1_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="10">
      <action_set>
-       <pseudo_event id="18" operation="start" operation_key="rsc1_start_0">
+       <pseudo_event id="19" operation="start" operation_key="rsc1_start_0">
          <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2"/>
        </pseudo_event>
      </action_set>
@@ -126,16 +126,16 @@
          <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <pseudo_event id="20" operation="stop" operation_key="rsc1_stop_0"/>
+         <pseudo_event id="21" operation="stop" operation_key="rsc1_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="21" operation="stopped" operation_key="rsc1_stopped_0"/>
+         <pseudo_event id="22" operation="stopped" operation_key="rsc1_stopped_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="11" priority="1000000">
      <action_set>
-       <pseudo_event id="19" operation="running" operation_key="rsc1_running_0">
+       <pseudo_event id="20" operation="running" operation_key="rsc1_running_0">
          <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2"/>
        </pseudo_event>
      </action_set>
@@ -147,13 +147,13 @@
          <rsc_op id="16" operation="start" operation_key="child_rsc1:3_start_0" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
        <trigger>
-         <pseudo_event id="18" operation="start" operation_key="rsc1_start_0"/>
+         <pseudo_event id="19" operation="start" operation_key="rsc1_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="12">
      <action_set>
-       <pseudo_event id="20" operation="stop" operation_key="rsc1_stop_0">
+       <pseudo_event id="21" operation="stop" operation_key="rsc1_stop_0">
          <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2"/>
        </pseudo_event>
      </action_set>
@@ -161,7 +161,7 @@
    </synapse>
    <synapse id="13" priority="1000000">
      <action_set>
-       <pseudo_event id="21" operation="stopped" operation_key="rsc1_stopped_0">
+       <pseudo_event id="22" operation="stopped" operation_key="rsc1_stopped_0">
          <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2"/>
        </pseudo_event>
      </action_set>
@@ -176,7 +176,7 @@
          <rsc_op id="17" operation="stop" operation_key="child_rsc1:4_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
-         <pseudo_event id="20" operation="stop" operation_key="rsc1_stop_0"/>
+         <pseudo_event id="21" operation="stop" operation_key="rsc1_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
