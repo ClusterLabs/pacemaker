@@ -30,15 +30,7 @@
     </constraints>
   </configuration>
   <status>
-    <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
-      <lrm>
-        <lrm_resources/>
-      </lrm>
-    </node_state>
-    <node_state id="node2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
-      <lrm>
-        <lrm_resources/>
-      </lrm>
-    </node_state>
+    <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true"/>
+    <node_state id="node2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true"/>
   </status>
 </cib>

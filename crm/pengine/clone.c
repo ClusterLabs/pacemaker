@@ -141,6 +141,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	GListPtr node_list = NULL;
 	int reverse_pointer = 0;
 	int allocated = 0, pre_allocated = 0;
+/* 	int level = LOG_ERR; */
 
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
@@ -159,6 +160,9 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
  		clone_data->child_list, sort_rsc_provisional);
 
 	crm_debug_2("Coloring children of: %s", rsc->id);
+/* 	rsc->fns->print(rsc, "alloc: ", */
+/* 			pe_print_details|pe_print_dev|pe_print_log, &level); */
+
 	clone_data->self->allowed_nodes = g_list_sort(
 		clone_data->self->allowed_nodes, sort_node_weight);
 	
@@ -175,6 +179,8 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 
 	slist_iter(child, resource_t, clone_data->child_list, lpc2,
 		   node_t *current = NULL;
+		   node_t *chosen = NULL;
+		   
 		   if(child->running_on != NULL) {
 			   current = child->running_on->data;
 		   }
@@ -205,24 +211,31 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 			   break;
 		   }
 
-		   crm_debug("Foo: %s", child->id);
-		   current = pe_find_node_id(
+		   chosen = pe_find_node_id(
 			   clone_data->self->allowed_nodes, current->details->id);
-		   current->weight = merge_weights(current->weight, child->stickiness);
-
-		   if(native_assign_node(child, NULL, current)) {
+		   if(chosen == NULL) {
+			   /* unmanaged mode */
+			   chosen = current;
+		   }
+		   
+		   chosen->weight = merge_weights(chosen->weight, child->stickiness);
+		   if(native_assign_node(child, NULL, chosen)) {
 			   allocated++;
 		   }
+		   
 /* 		   native_assign_node(clone_data->self, NULL, current); */
 		);
 
 	crm_debug("Running: Total=%d, New=%d, Max=%d",
 		  pre_allocated+allocated, allocated, clone_data->clone_max);
-	
-	local_node_max = (int) (clone_data->clone_max / clone_data->max_nodes);
-	if(local_node_max < 1) {
-		local_node_max = 1;
+
+	if(clone_data->max_nodes) {
+		local_node_max = (int) (clone_data->clone_max / clone_data->max_nodes);
+		if(local_node_max < 1) {
+			local_node_max = 1;
+		}
 	}
+	
 	if(local_node_max > clone_data->clone_node_max) {
 		local_node_max = clone_data->clone_node_max;
 	}
