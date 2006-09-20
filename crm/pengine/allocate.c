@@ -1174,7 +1174,6 @@ rsc_colocation_new(const char *id, int score,
 		   const char *state_lh, const char *state_rh)
 {
 	rsc_colocation_t *new_con      = NULL;
- 	rsc_colocation_t *inverted_con = NULL; 
 
 	if(rsc_lh == NULL){
 		crm_config_err("No resource found for LHS %s", id);
@@ -1210,19 +1209,6 @@ rsc_colocation_new(const char *id, int score,
 	rsc_lh->rsc_cons = g_list_insert_sorted(
 		rsc_lh->rsc_cons, new_con, sort_cons_strength);
 
-	/* +ve colocation constraints are not bi-directional anymore */
-	if(score > 0) {
-		return TRUE;
-	}
-	
-	inverted_con = invert_constraint(new_con);
-
-	crm_debug_4("Adding constraint %s (%p) to %s",
-		  inverted_con->id, inverted_con, rsc_rh->id);
-	
-	rsc_rh->rsc_cons = g_list_insert_sorted(
-		rsc_rh->rsc_cons, inverted_con, sort_cons_strength);
-	
 	return TRUE;
 }
 
