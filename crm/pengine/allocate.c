@@ -1305,7 +1305,9 @@ unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	 *   but no-one ever reads the docs so all positive values will
 	 *   count as "must" and negative values as "must not"
 	 */
-	score_i = crm_parse_int(score, "0");
+	if(score) {
+		score_i = char2score(score);
+	}
 	return rsc_colocation_new(
 		id, score_i, rsc_lh, rsc_rh, state_lh, state_rh);
 }
