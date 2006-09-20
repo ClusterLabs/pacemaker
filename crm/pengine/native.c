@@ -575,12 +575,14 @@ void native_rsc_colocation_rh(
 		return;
 		
 	} else if(rsc_lh->provisional == FALSE) {
-		crm_err("update _them_ : postproc version");
+		crm_debug_3("update _them_ : postproc version");
 		if(rsc_lh->allocated_to) {
 			if(native_update_node_weight(
 				   rsc_rh, constraint->id, rsc_lh->allocated_to,
 				   constraint->score) == FALSE) {
 				rsc_rh->provisional = FALSE;
+				crm_warn("%s cant run on %s", rsc_rh->id,
+					rsc_lh->allocated_to->details->uname);
 			}
 			
 		} else {
@@ -588,12 +590,13 @@ void native_rsc_colocation_rh(
 		}
 		
 	} else if(rsc_rh->provisional == FALSE) {
-		crm_err("update _us_ : postproc version");
+		crm_debug_3("update _us_ : postproc version");
 		if(rsc_rh->allocated_to) {
 			if(native_update_node_weight(
 				   rsc_lh, constraint->id, rsc_rh->allocated_to,
 				   constraint->score) == FALSE) {
-				crm_warn("%s cant run anywhere", rsc_lh->id);
+				crm_warn("%s cant run on %s", rsc_lh->id,
+					rsc_rh->allocated_to->details->uname);
 				rsc_lh->provisional = FALSE;
 			}
 			
