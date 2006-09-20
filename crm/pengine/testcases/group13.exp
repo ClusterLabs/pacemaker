@@ -1,7 +1,7 @@
  <transition_graph network-delay="60s" transition_id="0">
    <synapse id="0">
      <action_set>
-       <pseudo_event id="6" operation="stop" operation_key="nfs_stop_0">
+       <pseudo_event id="7" operation="stop" operation_key="nfs_stop_0">
          <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000"/>
        </pseudo_event>
      </action_set>
@@ -9,7 +9,7 @@
    </synapse>
    <synapse id="1">
      <action_set>
-       <pseudo_event id="7" operation="stopped" operation_key="nfs_stopped_0">
+       <pseudo_event id="8" operation="stopped" operation_key="nfs_stopped_0">
          <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000"/>
        </pseudo_event>
      </action_set>
@@ -18,7 +18,7 @@
          <rsc_op id="3" operation="stop" operation_key="resource_nfs_stop_0" on_node="jamesltc" on_node_uuid="cd13842c-3f58-4e7d-8126-685259527532"/>
        </trigger>
        <trigger>
-         <pseudo_event id="6" operation="stop" operation_key="nfs_stop_0"/>
+         <pseudo_event id="7" operation="stop" operation_key="nfs_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -31,7 +31,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="6" operation="stop" operation_key="nfs_stop_0"/>
+         <pseudo_event id="7" operation="stop" operation_key="nfs_stop_0"/>
        </trigger>
      </inputs>
    </synapse>

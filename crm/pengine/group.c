@@ -75,24 +75,48 @@ int group_num_allowed_nodes(resource_t *rsc)
 node_t *
 group_color(resource_t *rsc, pe_working_set_t *data_set)
 {
+	gboolean first = TRUE;
 	node_t *group_node = NULL;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
+	if(rsc->provisional == FALSE) {
+		return rsc->allocated_to;
+	}
+	if(rsc->is_allocating) {
+		crm_err("Dependancy loop detected involving %s", rsc->id);
+		return NULL;
+	}
+	rsc->is_allocating = TRUE;
+	
 	crm_debug_3("Coloring children of: %s", rsc->id);
 
 	slist_iter(
 		coloc, rsc_colocation_t, rsc->rsc_cons, lpc,
-		crm_debug_3("Pre-Processing %s for %s", coloc->id, rsc->id);
+		crm_debug("Pre-Processing %s for %s", coloc->id, rsc->id);
+		coloc->rsc_rh->cmds->color(coloc->rsc_rh, data_set);
 		group_data->first_child->cmds->rsc_colocation_lh(
 			group_data->first_child, coloc->rsc_rh, coloc);
 		);
-	
+
+	/* combine the child weights */
+	crm_debug("Processing %s", rsc->id);
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
-		group_node = child_rsc->cmds->color(child_rsc, data_set);
-		CRM_CHECK(group_node != NULL, continue);
+		if(first) {
+			crm_debug("Color %s", child_rsc->id);
+			group_node = child_rsc->cmds->color(child_rsc, data_set);
+			first = FALSE;
+		} else if(child_rsc->provisional) {
+			native_assign_node(child_rsc, NULL, group_node);
+		} else {
+			crm_debug_2("Skip %s", child_rsc->id);
+			break;
+		}
 		);
+
+	rsc->provisional = FALSE;
+	rsc->is_allocating = FALSE;
 	
 	return group_node;
 }
@@ -185,7 +209,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		if(group_data->colocated && child_rsc != group_data->first_child) {
 			rsc_colocation_new(
 				"group:internal_colocation", INFINITY,
-				group_data->first_child, child_rsc,
+				child_rsc, group_data->first_child,
 				NULL, NULL);
 		}
 	

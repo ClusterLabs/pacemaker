@@ -24,7 +24,7 @@
       </group>
     </resources>
     <constraints>
-      <rsc_colocation id="coloc1" from="rsc2" to="rsc3" score="-INFINITY"/>
+      <rsc_colocation id="coloc1" from="rsc3" to="rsc2" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status>
