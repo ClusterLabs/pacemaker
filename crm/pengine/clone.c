@@ -260,8 +260,15 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 			   continue;
 		   }
 
-		   while(node_list && local_node_max <= ((node_t*)node_list->data)->count) {
-			   node_list = node_list->next;
+		   while(node_list) {
+			   node_t *node = node_list->data;
+			   if(can_run_resources(node) == FALSE) {
+				   node_list = node_list->next;
+			   } else if(local_node_max <= node->count) {
+				   node_list = node_list->next;
+			   } else {
+				   break;
+			   }
 		   }
 
 		   if(node_list) {
@@ -296,8 +303,15 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 			   node_list = NULL;
 		   }
 		   
-		   while(node_list && local_node_max <= ((node_t*)node_list->data)->count) {
-			   node_list = node_list->next;
+		   while(node_list) {
+			   node_t *node = node_list->data;
+			   if(can_run_resources(node) == FALSE) {
+				   node_list = node_list->next;
+			   } else if(local_node_max <= node->count) {
+				   node_list = node_list->next;
+			   } else {
+				   break;
+			   }
 		   }
 		   
 		   if(node_list) {
