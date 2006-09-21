@@ -203,12 +203,12 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 
 		   chosen = pe_find_node_id(
 			   clone_data->self->allowed_nodes, current->details->id);
+
 		   if(chosen == NULL) {
 			   /* unmanaged mode */
-			   chosen = current;
-		   }
-
-		   if(chosen->count >= local_node_max) {
+			   continue;
+			   
+		   } else if(chosen->count >= local_node_max) {
 			   crm_warn("Node %s too full for: %s",
 				    chosen->details->uname,
 				    child->id);
