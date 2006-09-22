@@ -1,0 +1,216 @@
+.TH CRM_RESOURCE 8 "$Date: 2006/08/31 11:53:00 $" "Linux\-HA/OpenHA Project" "Heartbeat @VERSION@ Administration Guide"
+.SH NAME
+\fIcrm_resource\fP \- Interact with the Cluster Resource Manager
+.SH SYNOPSIS
+\fBcrm_resource\fP [\-?VS] \-(L|Q|W|D|C|P|p) [options]
+.SH DESCRIPTION
+\fBcrm_resource\fP allow resources to be listed, started, stopped, migrated and so forth.
+.TP 8
+.BI \-\-help,\ \-?
+this help message
+.TP 8
+.BI \-\-verbose,\ \-V
+turn on debug info. additional instances increase verbosity
+.TP 8
+.BI \-\-quiet,\ \-Q
+Print only the value on stdout (for use with \fB\-W\fP)
+.SS COMMANDS
+.TP 8
+.BI \-\-list,\ \-L
+List all resources
+.TP 8
+.BI \-\-query\-xml,\ \-x
+Query a resource.
+
+Requires: \fB\-r\fP
+.TP 8
+.BI \-\-locate,\ \-W
+Locate a resource.
+
+Requires: \fB\-r\fP
+.TP 8
+.BI \-\-migrate,\ \-M
+Migrate a resource from it current location.
+
+Use \fB\-H\fP to specify a destination.  If \fB\-H\fP is not specified, we will force the resource to move by creating a rule for the current location and a score of \-INFINITY
+
+\fBNOTE:\fP This will prevent the resource from running on this node until the constraint is removed with \fB\-U\fP
+
+Requires: \fB\-r\fP, Optional: \fB\-H\fP, \fB\-f\fP
+.TP 8
+.BI \-\-un\-migrate,\ \-U
+Remove all constraints created by \fB\-M\fP
+
+Requires: \fB\-r\fP
+.TP 8
+.BI \-\-delete,\ \-D
+Delete a resource from the CIB.
+
+Requires: \fB\-r\fP, \fB\-t\fP
+.TP 8
+.BI \-\-cleanup,\ \-C
+Delete a resource from the LRM.
+
+Requires: \fB\-r\fP.  Optional: \fB\-H\fP
+.TP 8
+.BI \-\-reprobe,\ \-P
+Recheck for resources started outside of the CRM.
+
+Optional: \fB\-H\fP
+.TP 8
+.BI \-\-refresh,\ \-R
+Refresh the CIB from the LRM.
+
+Optional: \fB\-H\fP
+.TP 8
+.BI \-\-set\-parameter\  string ,\ \-p\  string
+Set the named parameter for a resource.
+
+Requires: \fB\-r\fP, \fB\-v\fP.  Optional: \fB\-i\fP, \fB\-s\fP
+.TP 8
+.BI \-\-get\-parameter\  string ,\ \-g\  string
+Get the named parameter for a resource.
+
+Requires: \fB\-r\fP.  Optional: \fB\-i\fP, \fB\-s\fP
+.TP 8
+.BI \-\-delete\-parameter\  string ,\ \-d\  string
+Delete the named parameter for a resource.
+
+Requires: \fB\-r\fP.  Optional: \fB\-i\fP
+.TP 8
+.BI \-\-get\-property\  string ,\ \-G\  string
+Get the named property (eg. class, type, is_managed) a resource.
+
+Requires: \fB\-r\fP
+.TP 8
+.BI \-\-set\-property\  string ,\ \-S\  string
+Set the named property (not parameter) for a resource.
+
+Requires: \fB\-r\fP, \fB\-t\fP, \fB\-v\fP
+.SS OPTIONS
+.TP 8
+.BI \-\-resource\  string ,\ \-r\  string
+Resource ID
+.TP 8
+.BI \-\-resource\-type\  string ,\ \-t\  string
+Resource type (primitive, clone, group, ...)
+.TP 8
+.BI \-\-property\-value\  string ,\ \-v\  string
+Property value
+.TP 8
+.BI \-\-host\-uname\  string ,\ \-H\  string
+Host name
+.TP 8
+.BI \-\-force\-relocation,\ \-f
+Force the resource to move by creating a rule for the current location and a score of \-INFINITY
+
+This should be used if the resource's stickiness and constraint scores total more than INFINITY (Currently 10,000)
+
+\fBNOTE:\fP This will prevent the resource from running on this node until the constraint is removed with \fB\-U\fP
+.TP 8
+.BI \-s\  string
+(Advanced Use Only) ID of the instance_attributes object to change
+.TP 8
+.BI \-i\  string
+(Advanced Use Only) ID of the nvpair object to change/delete
+
+.SH EXAMPLES
+
+Listing all resources
+.RS
+\fBcrm_resource \-L\fP
+.RE
+.PP
+Checking where a resource is running (and if it does)
+.RS
+\fBcrm_resource \-W \-r my_first_ip\fP
+
+\fBresource my_first_ip is running on: server1\fP
+
+\fBcrm_resource \-W \-r my_first_ip\fP
+
+\fBresource my_first_ip is NOT running\fP
+.RE
+.PP
+Start/stop a resource
+.RS
+\fBcrm_resource \-r my_first_ip \-p target_role \-v started\fP
+
+\fBcrm_resource \-r my_first_ip \-p target_role \-v stopped\fP
+.RE
+.PP
+Query the definition of a resource
+.RS
+\fBcrm_resource \-Q \-r my_first_ip\fP
+.RE
+.PP
+Migrating a resource away from its current location
+.RS
+\fBcrm_resource \-M \-r my_first_ip\fP
+.RE
+.PP
+Migrating a resource to a specific location
+.RS
+\fBcrm_resource \-M \-r my_first_ip \-H c001n02\fP
+.RE
+.PP
+Allow a resource to return to its normal location
+.RS
+\fBcrm_resource \-U \-r my_first_ip\fP
+
+\fBNOTE:\fP the values of resource_stickiness and default_resource_stickiness may mean that it doesnt move back. In such cases, you should use \fB\-M\fP to move it back and then run this command.
+.RE
+.PP
+Deleting a resource from the CR
+.RS
+\fBcrm_resource \-D \-r my_first_ip \-t primitive\fP
+.RE
+.PP
+Deleting a resource group from the CRM
+.RS
+\fBcrm_resource \-D \-r my_first_group \-t group\fP
+.RE
+.PP
+Disabling a resource management for a resource in the CRM
+.RS
+\fBcrm_resource \-p is_managed \-r my_first_ip \-t primitive \-v off\fP
+.RE
+.PP
+Enabling a resource management for a resource in the CRM
+.RS
+\fBcrm_resource \-p is_managed \-r my_first_ip \-t primitive \-v on\fP
+.RE
+.PP
+Resetting a failed resource after having been manually cleaned up
+.RS
+\fBcrm_resource \-C \-H c001n02 \-r my_first_ip\fP
+.RE
+.PP
+Rechecking all nodes for resources started outside of the CRM
+.RS
+\fBcrm_resource \-P\fP
+.RE
+.PP
+Rechecking one node for resources started outside of the CRM
+.RS
+\fBcrm_resource \-P \-H c001n02\fP
+.RE
+.PP
+.SH FILES
+.PP
+.SH SEE ALSO
+.BR cibadmin (8),
+.BR crmadmin (8),
+.BR lrmadmin (8),
+.BR heartbeat (8)
+.SH NOTES
+.PP
+.SH AUTHOR
+\fBcrm_resource\fP was written by Andrew Beekhof.
+.PP
+This manual page was originally written by Gildas Le Nadan (Genome Research Limited, 2006).
+.PP
+.SH CAVEATS
+.PP
+.SH BUGS
+.PP
