@@ -1092,9 +1092,15 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
 	offset = len-1;
 	
 	while(offset > 0 && isdigit(key[offset])) {
+		int digits = offset-len;
 		ch = key[offset] - '0';
 		CRM_CHECK(ch < 10, return FALSE);
-		*interval = ((*interval) * 10) + ch;
+		CRM_CHECK(ch >= 0, return FALSE);
+		while(digits > 1) {
+			digits--;
+			ch = ch * 10;
+		}
+		*interval +=  ch;
 		offset--;
 	}
 
@@ -1110,13 +1116,14 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
 		offset--;
 	}
 
+	CRM_CHECK(key[offset] == '_',
+		  crm_free(mutable_key); return FALSE);
+
 	mutable_key_ptr = mutable_key+offset+1;
 
 	crm_debug_3("Action: %s", mutable_key_ptr);
 	*op_type = crm_strdup(mutable_key_ptr);
 
-	CRM_CHECK(key[offset] == '_',
-		  crm_free(mutable_key); return FALSE);
 	mutable_key[offset] = 0;
 	offset--;
 
