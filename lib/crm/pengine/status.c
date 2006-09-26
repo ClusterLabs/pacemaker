@@ -155,6 +155,7 @@ pe_free_nodes(GListPtr nodes)
 				g_hash_table_destroy(details->attrs);
 			}
 			pe_free_shallow_adv(details->running_rsc, FALSE);
+			pe_free_shallow_adv(details->allocated_rsc, FALSE);
 			crm_free(details);
 		}
 		crm_free(node);
@@ -192,7 +193,6 @@ cleanup_calculations(pe_working_set_t *data_set)
 	free_xml(data_set->input);
 	data_set->stonith_action = NULL;
 
-	CRM_CHECK(data_set->colors == NULL, ;);
 	CRM_CHECK(data_set->ordering_constraints == NULL, ;);
 	CRM_CHECK(data_set->placement_constraints == NULL, ;);
 }
@@ -225,15 +225,12 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->ordering_constraints  = NULL;
 	data_set->placement_constraints = NULL;
 
-	data_set->no_color = NULL;
-	data_set->colors   = NULL;
 	data_set->actions  = NULL;	
 
 	data_set->num_synapse     = 0;
 	data_set->max_valid_nodes = 0;
 	data_set->order_id        = 1;
 	data_set->action_id       = 1;
-	data_set->color_id        = 0;
 
 	data_set->default_resource_stickiness = 0;
 	data_set->default_resource_fail_stickiness = 0;	

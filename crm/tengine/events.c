@@ -215,7 +215,9 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 
 	CRM_CHECK(on_uuid != NULL, return);
 
-	CRM_CHECK(parse_op_key(ID(event), &rsc_id, &task, &interval),return);
+	CRM_CHECK(parse_op_key(ID(event), &rsc_id, &task, &interval),
+		  crm_err("Couldn't parse: %s", ID(event));
+		  return);
 	CRM_CHECK(task != NULL, crm_free(rsc_id); return);
 	CRM_CHECK(rsc_id != NULL, crm_free(task); return);
 	/* CRM_CHECK(on_node != NULL, return); */

@@ -1095,6 +1095,12 @@ resource_location(resource_t *rsc, node_t *node, int score, const char *tag,
 			resource_node_score(rsc, node, score, tag);
 			);
 	}
+
+	if(node == NULL && score == -INFINITY) {
+		rsc->provisional = FALSE;
+		crm_free(rsc->allocated_to);
+		rsc->allocated_to = NULL;
+	}
 }
 
 void

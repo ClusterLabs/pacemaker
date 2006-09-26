@@ -158,7 +158,6 @@ child_demoting_constraints(
 	}
 }
 
-
 static void
 master_update_pseudo_status(
 	resource_t *child, gboolean *demoting, gboolean *promoting) 
@@ -260,12 +259,11 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
 		crm_debug_2("Assigning priority for %s", child_rsc->id);
-		CRM_CHECK(child_rsc->color != NULL,
-			  crm_err("Resource %s is uncolored", child_rsc->id);
-			  continue);
-		chosen = child_rsc->color->details->chosen_node;
-
-		if(child_rsc->role == RSC_ROLE_STARTED) {
+		chosen = child_rsc->allocated_to;
+		if(chosen == NULL) {
+			continue;
+			
+		} else if(child_rsc->role == RSC_ROLE_STARTED) {
 			child_rsc->role = RSC_ROLE_SLAVE;
 		}
 		
@@ -286,7 +284,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				sprintf(attr_name, "master-%s", child_rsc->id);
 				
 				crm_debug_2("looking for %s on %s", attr_name,
-					  chosen->details->uname);
+					    chosen->details->uname);
 				attr_value = g_hash_table_lookup(
 					chosen->details->attrs, attr_name);
 
@@ -340,12 +338,11 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
-		CRM_CHECK(child_rsc->color != NULL,
-			  crm_err("Resource %s is uncolored", child_rsc->id);
-			  continue);
-
-		chosen = child_rsc->color->details->chosen_node;
-
+		chosen = child_rsc->allocated_to;
+		if(chosen == NULL) {
+			continue;
+		}
+		
 		switch(child_rsc->next_role) {
 			case RSC_ROLE_STARTED:
 

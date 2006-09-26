@@ -24,12 +24,7 @@
 #include <crm/msg_xml.h>
 #include <clplumbing/cl_misc.h>
 #include <allocate.h>
-
-extern gboolean rsc_colocation_new(
-	const char *id, enum con_strength strength,
-	resource_t *rsc_lh, resource_t *rsc_rh,
-	const char *state_lh, const char *state_rh);
-	
+#include <utils.h>
 
 typedef struct group_variant_data_s
 {
@@ -54,8 +49,6 @@ typedef struct group_variant_data_s
 	CRM_ASSERT(rsc->variant_opaque != NULL);			\
 	data = (group_variant_data_t *)rsc->variant_opaque;		\
 
-void group_assign_color(resource_t *rsc, color_t *group_color);
-
 void group_set_cmds(resource_t *rsc)
 {
 	group_variant_data_t *group_data = NULL;
@@ -79,46 +72,53 @@ int group_num_allowed_nodes(resource_t *rsc)
  	return group_data->self->cmds->num_allowed_nodes(group_data->self);
 }
 
-color_t *
+node_t *
 group_color(resource_t *rsc, pe_working_set_t *data_set)
 {
-	color_t *group_color = NULL;
+	gboolean first = TRUE;
+	node_t *group_node = NULL;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
+	if(rsc->provisional == FALSE) {
+		return rsc->allocated_to;
+	}
+	if(rsc->is_allocating) {
+		crm_err("Dependancy loop detected involving %s", rsc->id);
+		return NULL;
+	}
+	rsc->is_allocating = TRUE;
+	
 	crm_debug_3("Coloring children of: %s", rsc->id);
 
 	slist_iter(
 		coloc, rsc_colocation_t, rsc->rsc_cons, lpc,
-		crm_debug_3("Pre-Processing %s for %s", coloc->id, rsc->id);
+		crm_debug("Pre-Processing %s for %s", coloc->id, rsc->id);
+		coloc->rsc_rh->cmds->color(coloc->rsc_rh, data_set);
 		group_data->first_child->cmds->rsc_colocation_lh(
 			group_data->first_child, coloc->rsc_rh, coloc);
 		);
-	
+
+	/* combine the child weights */
+	crm_debug("Processing %s", rsc->id);
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
-		group_color = child_rsc->cmds->color(child_rsc, data_set);
-		CRM_CHECK(group_color != NULL, continue);
-		native_assign_color(rsc, group_color);
+		if(first) {
+			crm_debug("Color %s", child_rsc->id);
+			group_node = child_rsc->cmds->color(child_rsc, data_set);
+			first = FALSE;
+		} else if(child_rsc->provisional) {
+			native_assign_node(child_rsc, NULL, group_node);
+		} else {
+			crm_debug_2("Skip %s", child_rsc->id);
+			break;
+		}
 		);
+
+	rsc->provisional = FALSE;
+	rsc->is_allocating = FALSE;
 	
-	return group_color;
-}
-
-void
-group_assign_color(resource_t *rsc, color_t *group_color)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-
-	crm_debug_3("Coloring children of: %s", rsc->id);
-	CRM_CHECK(group_color != NULL, return);
-
-	native_assign_color(rsc, group_color);
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-		native_assign_color(child_rsc, group_color);
-		);
+	return group_node;
 }
 
 void group_update_pseudo_status(resource_t *parent, resource_t *child);
@@ -208,8 +208,8 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 		if(group_data->colocated && child_rsc != group_data->first_child) {
 			rsc_colocation_new(
-				"group:internal_colocation", pecs_must,
-				group_data->first_child, child_rsc,
+				"group:internal_colocation", INFINITY,
+				child_rsc, group_data->first_child,
 				NULL, NULL);
 		}
 	
@@ -296,7 +296,7 @@ void group_rsc_colocation_lh(
 		return;
 	}
 	
-	if(constraint->strength != pecs_must_not) {
+	if(constraint->score > 0) {
 		crm_config_err("Cannot colocate resources with"
 			      " non-colocated group: %s", rsc_lh->id);
 		return;
@@ -325,7 +325,7 @@ void group_rsc_colocation_rh(
 		return;
 	}
 	
-	if(constraint->strength != pecs_must_not) {
+	if(constraint->score > 0) {
 		crm_config_err("Cannot colocate resources with"
 			      " non-colocated group: %s", rsc_rh->id);
 		return;

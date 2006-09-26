@@ -20,7 +20,7 @@
 	<primitive id="rsc4" class="heartbeat" type="apache" />
 	<primitive id="rsc5" class="heartbeat" type="apache" />
       </group>
-      <group id="bar">
+      <group id="bar" resource_stickiness="0">
 	<primitive id="rsc6" class="heartbeat" type="apache"/>
 	<primitive id="rsc7" class="heartbeat" type="apache" />
 	<primitive id="rsc8" class="heartbeat" type="apache" />

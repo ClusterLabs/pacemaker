@@ -48,8 +48,6 @@ typedef struct group_variant_data_s
 	CRM_ASSERT(rsc->variant_opaque != NULL);			\
 	data = (group_variant_data_t *)rsc->variant_opaque;		\
 
-void group_assign_color(resource_t *rsc, color_t *group_color);
-
 gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
 	resource_t *self = NULL;

@@ -38,36 +38,12 @@ typedef struct order_constraint_s order_constraint_t;
 
 #include <crm/pengine/complex.h>
 
-enum con_strength {
-	pecs_ignore,
-	pecs_must,
-	pecs_must_not,
-	pecs_startstop
-};
-
-
 enum pe_stop_fail {
 	pesf_block,
 	pesf_stonith,
 	pesf_ignore
 };
 
-
-struct color_shared_s {
-		int      id;
-		int    highest_priority;
-		GListPtr candidate_nodes; /* node_t* */
-		GListPtr allocated_resources; /* resources_t* */
-		node_t  *chosen_node;
-		gboolean pending;
-		int	 num_resources;
-};
-
-struct color_s { 
-		int id; 
-		struct color_shared_s *details;
-		int local_weight;
-};
 
 struct rsc_colocation_s { 
 		const char	*id;
@@ -77,7 +53,7 @@ struct rsc_colocation_s {
 		const char *state_lh;
 		const char *state_rh;
 		
-		enum con_strength strength;
+		int score;
 };
 
 struct rsc_to_node_s { 
@@ -129,10 +105,6 @@ extern gboolean process_pe_message(
 extern gboolean unpack_constraints(
 	crm_data_t *xml_constraints, pe_working_set_t *data_set);
 
-extern gboolean apply_placement_constraints(pe_working_set_t *data_set);
-
-extern gboolean choose_node_from_list(color_t *color);
-
 extern gboolean update_action_states(GListPtr actions);
 
 extern gboolean shutdown_constraints(
@@ -170,7 +142,6 @@ extern gboolean custom_action_order(
 			    rsc2, stop_key(rsc2) ,NULL,		\
 			    type, data_set)
 
-extern gboolean process_colored_constraints(resource_t *rsc);
 extern void graph_element_from_action(
 	action_t *action, pe_working_set_t *data_set);
 

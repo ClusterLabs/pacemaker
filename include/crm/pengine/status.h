@@ -24,7 +24,6 @@
 #include <crm/pengine/common.h>
 
 typedef struct node_s node_t;
-typedef struct color_s color_t;
 typedef struct action_s action_t;
 typedef struct resource_s resource_t;
 typedef struct action_wrapper_s action_wrapper_t;
@@ -70,15 +69,11 @@ typedef struct pe_working_set_s
 
 		GHashTable *config_hash;
 		
-		/* intermediate steps */
-		color_t *no_color;
-		
 		GListPtr nodes;
 		GListPtr resources;
 		GListPtr placement_constraints;
 		GListPtr ordering_constraints;
 		
-		GListPtr colors;
 		GListPtr actions;
 
 		/* stats */
@@ -86,7 +81,6 @@ typedef struct pe_working_set_s
 		int max_valid_nodes;
 		int order_id;
 		int action_id;
-		int color_id;
 
 		/* final output */
 		crm_data_t *graph;
@@ -104,6 +98,7 @@ struct node_shared_s {
 		gboolean is_dc;
 		int	 num_resources;
 		GListPtr running_rsc;	/* resource_t* */
+		GListPtr allocated_rsc;	/* resource_t* */
 		
 		GHashTable *attrs;	/* char* => char* */
 		enum node_type type;
@@ -112,6 +107,7 @@ struct node_shared_s {
 struct node_s { 
 		int	weight; 
 		gboolean fixed;
+		int      count;
 		struct node_shared_s *details;
 };
 
@@ -145,19 +141,18 @@ struct resource_s {
 		gboolean runnable;
 		gboolean provisional;
 		gboolean globally_unique;
+		gboolean is_allocating;
 		
 		gboolean failed;
 		gboolean start_pending;
 		
 		gboolean orphan;
 		
-		GListPtr candidate_colors; /* color_t*          */
 		GListPtr rsc_cons;         /* rsc_colocation_t* */
 		GListPtr rsc_location;     /* rsc_to_node_t*    */
 		GListPtr actions;	   /* action_t*         */
 
-		color_t *color;
-		GListPtr colors;	   /* color_t*  */
+		node_t *allocated_to;
 		GListPtr running_on;       /* node_t*   */
 		GListPtr known_on;	   /* node_t* */
 		GListPtr allowed_nodes;    /* node_t*   */

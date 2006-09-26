@@ -28,12 +28,7 @@
 
 #define DELETE_THEN_REFRESH 1
 
-extern color_t *add_color(resource_t *rh_resource, color_t *color);
-
-gboolean native_choose_color(resource_t *lh_resource, color_t *no_color);
-
-void native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
-			       node_t *cons_node, GListPtr nodes);
+void node_list_update(GListPtr list1, GListPtr list2);
 
 void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 				   resource_t *rsc_rh, gboolean update_rh);
@@ -42,8 +37,6 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 				      resource_t *rsc_rh, gboolean update_rh);
 
 void filter_nodes(resource_t *rsc);
-
-int num_allowed_nodes4color(color_t *color);
 
 void create_notifications(resource_t *rsc, pe_working_set_t *data_set);
 void Recurring(resource_t *rsc, action_t *start, node_t *node,
@@ -96,6 +89,37 @@ typedef struct native_variant_data_s
 	CRM_ASSERT(rsc->variant_opaque != NULL);			\
 	data = (native_variant_data_t *)rsc->variant_opaque;
 
+
+
+static gboolean
+native_choose_node(resource_t *rsc)
+{
+	/*
+	  1. Sort by weight
+	  2. color.chosen_node = the node (of those with the highest wieght)
+				   with the fewest resources
+	  3. remove color.chosen_node from all other colors
+	*/
+	GListPtr nodes = NULL;
+	node_t *chosen = NULL;
+
+	if(rsc->provisional == FALSE) {
+		return rsc->allocated_to?TRUE:FALSE;
+	}
+	
+	crm_debug_3("Choosing node for %s from %d candidates",
+		    rsc->id, g_list_length(rsc->allowed_nodes));
+
+	if(rsc->allowed_nodes) {
+		rsc->allowed_nodes = g_list_sort(
+			rsc->allowed_nodes, sort_node_weight);
+		nodes = rsc->allowed_nodes;
+		chosen = g_list_nth_data(nodes, 0);
+	}
+	
+	return native_assign_node(rsc, nodes, chosen);
+}
+
 void native_set_cmds(resource_t *rsc)
 {
 }
@@ -108,132 +132,79 @@ int native_num_allowed_nodes(resource_t *rsc)
 		return 0;
 	}
 	
-	if(rsc->color) {
-		crm_debug_4("Colored case");
-		num_nodes = num_allowed_nodes4color(rsc->color);
-		
-	} else if(rsc->candidate_colors) {
-		/* TODO: sort colors first */
-		color_t *color = g_list_nth_data(rsc->candidate_colors, 0);
-		crm_debug_4("Candidate colors case");
-		num_nodes = num_allowed_nodes4color(color);
-
-	} else {
-		crm_debug_4("Default case");
-		slist_iter(
-			this_node, node_t, rsc->allowed_nodes, lpc,
-			crm_debug_3("Rsc %s Checking %s: %d",
-				    rsc->id, this_node->details->uname,
-				    this_node->weight);
-			if(this_node->details->shutdown
-			   || this_node->details->online == FALSE) {
-				this_node->weight = -INFINITY;
-			}
-			if(this_node->weight < 0) {				
-				continue;
-/* 			} else if(this_node->details->unclean) { */
-/* 				continue; */
-			}
-			
-			num_nodes++;
-			);
-	}
-	crm_debug_2("Resource %s can run on %d nodes", rsc->id, num_nodes);
-	return num_nodes;
-}
-
-int num_allowed_nodes4color(color_t *color) 
-{
-	int num_nodes = 0;
-
-	if(color->details->pending == FALSE) {
-		if(color->details->chosen_node) {
-			return 1;
-		}
-		return 0;
-	}
-	
+	crm_debug_4("Default case");
 	slist_iter(
-		this_node, node_t, color->details->candidate_nodes, lpc,
-		crm_debug_3("Checking %s: %d",
-			    this_node->details->uname, this_node->weight);
+		this_node, node_t, rsc->allowed_nodes, lpc,
+		crm_debug_3("Rsc %s Checking %s: %d",
+			    rsc->id, this_node->details->uname,
+			    this_node->weight);
 		if(this_node->details->shutdown
 		   || this_node->details->online == FALSE) {
 			this_node->weight = -INFINITY;
 		}
-		if(this_node->weight < 0) {
+		if(this_node->weight < 0) {				
 			continue;
-/* 		} else if(this_node->details->unclean) { */
-/* 			continue; */
+/* 			} else if(this_node->details->unclean) { */
+/* 				continue; */
 		}
+		
 		num_nodes++;
 		);
 
+	crm_debug_2("Resource %s can run on %d nodes", rsc->id, num_nodes);
 	return num_nodes;
 }
 
 
-color_t *
+node_t *
 native_color(resource_t *rsc, pe_working_set_t *data_set)
 {
-	color_t *new_color = NULL;
-
-	print_resource(LOG_DEBUG_2, "Coloring: ", rsc, FALSE);
+	print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);
 	
 	if(rsc->provisional == FALSE) {
-		return rsc->color;		
+		return rsc->allocated_to;
+	}
+	if(rsc->is_allocating) {
+		crm_err("Dependancy loop detected involving %s", rsc->id);
+		return NULL;
 	}
 	
-	rsc->rsc_cons = g_list_sort(
-		rsc->rsc_cons, sort_cons_strength);
+	rsc->is_allocating = TRUE;
+	rsc->rsc_cons = g_list_sort(rsc->rsc_cons, sort_cons_strength);
 
-	/*------ Pre-processing */
+	/*------ Pre-processing ------*/
 	slist_iter(
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
 
-		crm_debug_3("Pre-Processing %s", constraint->id);
-		
+		crm_debug_3("Pre-Processing %s", constraint->id);		
+
+		/* or use ordering constraints? */
+		constraint->rsc_rh->cmds->color(
+			constraint->rsc_rh, data_set);
 		rsc->cmds->rsc_colocation_lh(
 			rsc, constraint->rsc_rh, constraint);
+		
 		);
 
-	if( native_choose_color(rsc, data_set->no_color) ) {
-		crm_debug_3("Colored resource %s with color %d",
-			    rsc->id, rsc->color->id);
-		new_color = rsc->color;
-		
+	if(native_choose_node(rsc) ) {
+		crm_debug("Allocated resource %s to %s",
+			    rsc->id, rsc->allocated_to->details->uname);
 	} else {
-		if(rsc->allowed_nodes != NULL) {
-			/* filter out nodes with a negative weight */
-			filter_nodes(rsc);
-			new_color = create_color(data_set, rsc,
-						 rsc->allowed_nodes);
-			native_assign_color(rsc, new_color);
-			crm_debug_3("Colored resource %s with new color %d",
-				    rsc->id, rsc->color->id);
-		}
-		
-		if(new_color == NULL) {
-			pe_warn("Resource %s cannot run anywhere", rsc->id);
-			print_resource(LOG_ERR, "No color: ", rsc, FALSE);
-			native_assign_color(rsc, data_set->no_color);
-			new_color = data_set->no_color;
-		}
+		pe_warn("Resource %s cannot run anywhere", rsc->id);
 	}
 	rsc->provisional = FALSE;
+	rsc->is_allocating = FALSE;
 
-	/*------ Post-processing */
-#if 1
+	/*------ Post-processing ------*/
 	slist_iter(
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
 		crm_debug_3("Post-Processing %s", constraint->id);
 		rsc->cmds->rsc_colocation_lh(
 			rsc, constraint->rsc_rh, constraint);
 		);
-#endif
-	print_resource(LOG_DEBUG_3, "Colored ", rsc, TRUE);
+	print_resource(LOG_DEBUG_3, "Allocated ", rsc, TRUE);
 
-	return new_color;
+	return rsc->allocated_to;
 }
 
 void
@@ -372,9 +343,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	enum rsc_role_e role = RSC_ROLE_UNKNOWN;
 	enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
-	CRM_CHECK(rsc->color != NULL, return);
-
-	chosen = rsc->color->details->chosen_node;
+	chosen = rsc->allocated_to;
 	if(chosen != NULL) {
 		CRM_CHECK(rsc->next_role != RSC_ROLE_UNKNOWN, rsc->next_role = RSC_ROLE_STARTED);
 	}
@@ -471,9 +440,7 @@ static gboolean
 filter_colocation_constraint(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
-	if(constraint->strength == pecs_ignore
-		|| constraint->strength == pecs_startstop){
-		crm_debug_4("Skipping constraint type %d", constraint->strength);
+	if(constraint->score == 0){
 		return FALSE;
 	}
 
@@ -493,139 +460,177 @@ filter_colocation_constraint(
 	return TRUE;
 }
 
+static gboolean
+native_update_node_weight(
+	resource_t *rsc, const char *id, node_t *node, int score)
+{
+	node_t *node_rh = NULL;
+	CRM_CHECK(node != NULL, return FALSE);
+	
+	node_rh = pe_find_node_id(
+		rsc->allowed_nodes, node->details->id);
+
+	if(node_rh == NULL) {
+		pe_warn("%s not found in %s",
+			node->details->uname, rsc->id);
+		return FALSE;
+	}
+
+	if(node_rh->weight >= INFINITY && score <= -INFINITY) {
+		pe_err("Constraint \"%s\" mixes +/- INFINITY (%s)",
+		       id, rsc->id);
+		
+	} else if(node_rh->details->shutdown == TRUE
+		  || node_rh->details->online == FALSE
+		  || node_rh->details->unclean == TRUE) {
+
+	} else if(node_rh->weight <= -INFINITY && score >= INFINITY) {
+		pe_err("Constraint \"%s\" mixes +/- INFINITY (%s)",
+			 id, rsc->id);
+	}
+
+	if(node_rh->fixed) {
+		/* warning */
+		crm_debug_2("Constraint %s is irrelevant as the"
+			 " weight of node %s is fixed as %d (%s).",
+			 id, node_rh->details->uname,
+			 node_rh->weight, rsc->id);
+		return TRUE;
+	}	
+	
+	crm_debug_3("Constraint %s, node %s, rsc %s: %d + %d",
+		   id, node_rh->details->uname, rsc->id,
+		   node_rh->weight, score);
+	node_rh->weight = merge_weights(node_rh->weight, score);
+	if(node_rh->weight <= -INFINITY) {
+		crm_debug_3("Constraint %s (-INFINITY): node %s weight %d (%s).",
+			    id, node_rh->details->uname,
+			    node_rh->weight, rsc->id);
+		
+	} else if(node_rh->weight >= INFINITY) {
+		crm_debug_3("Constraint %s (+INFINITY): node %s weight %d (%s).",
+			    id, node_rh->details->uname,
+			    node_rh->weight, rsc->id);
+
+	} else {
+		crm_debug_3("Constraint %s (%d): node %s weight %d (%s).",
+			    id, score, node_rh->details->uname,
+			    node_rh->weight, rsc->id);
+	}
+
+	if(node_rh->weight < 0) {
+		node_rh->fixed = TRUE;
+	}
+
+	crm_action_debug_3(print_node("Updated", node_rh, FALSE));
+
+	return TRUE;
+}
+
 void native_rsc_colocation_rh(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
-	gboolean do_check = FALSE;
-	gboolean update_lh = FALSE;
-	gboolean update_rh = FALSE;
-	
-	crm_debug_2("%sColocating %s with %s (%s)",
-		    constraint->strength == pecs_must?"":"Anti-",
-		    rsc_lh->id, rsc_rh->id, constraint->id);
+	crm_debug_2("%sColocating %s with %s (%s, weight=%d)",
+		    constraint->score >= 0?"":"Anti-",
+		    rsc_lh->id, rsc_rh->id, constraint->id, constraint->score);
 	
 	if(filter_colocation_constraint(rsc_lh, rsc_rh, constraint) == FALSE) {
 		return;
 	}
 	
 	if(rsc_lh->provisional && rsc_rh->provisional) {
-		if(constraint->strength == pecs_must) {
-			/* update effective_priorities */
-			crm_debug_3("Priority update");
-			native_rsc_colocation_rh_must(
-				rsc_lh, update_lh, rsc_rh, update_rh);
-		} else {
-			/* nothing */
-			crm_debug_4(
-				"Skipping constraint, both sides provisional");
-		}
+#if 0
+		/* should we do this? */
+		crm_debug("combine priorities of %s and %s",
+			  rsc_lh->id, rsc_rh->id);
+		node_list_update(rsc_lh->allowed_nodes, rsc_rh->allowed_nodes);
+#endif
 		return;
 
-	} else if( (!rsc_lh->provisional) && (!rsc_rh->provisional)
-		   && (!rsc_lh->color->details->pending)
-		   && (!rsc_rh->color->details->pending) ) {
+	} else if( (!rsc_lh->provisional) && (!rsc_rh->provisional) ) {
 		/* error check */
-		do_check = TRUE;
-		if(rsc_lh->effective_priority < rsc_rh->effective_priority) {
-			update_lh = TRUE;
-			
-		} else if(rsc_lh->effective_priority
-			  > rsc_rh->effective_priority) {
-			update_rh = TRUE;
-
-		} else {
-			update_lh = TRUE;
-			update_rh = TRUE;
-		}
-
-	} else if(rsc_lh->provisional == FALSE
-		  && rsc_lh->color->details->pending == FALSE) {
-		/* update _them_    : postproc color version */
-		update_rh = TRUE;
-		
-	} else if(rsc_rh->provisional == FALSE
-		  && rsc_rh->color->details->pending == FALSE) {
-		/* update _us_  : postproc color alt version */
-		update_lh = TRUE;
-
-	} else if(rsc_lh->provisional == FALSE) {
-		/* update _them_    : preproc version */
-		update_rh = TRUE;
-		
-	} else if(rsc_rh->provisional == FALSE) {
-		/* update _us_  : postproc version */
-		update_lh = TRUE;
-
-	} else {
-		pe_warn("Un-expected combination of inputs");
-		return;
-	}
-	
-
-	if(update_lh) {
-		crm_debug_4("Updating LHS");
-	}
-	if(update_rh) {
-		crm_debug_4("Updating RHS");
-	}		
-
-	if(do_check) {
-		if(native_constraint_violated(
-			   rsc_lh, rsc_rh, constraint) == FALSE) {
-
-			crm_debug_4("Constraint satisfied");
+		struct node_shared_s *details_lh;
+		struct node_shared_s *details_rh;
+		if((constraint->score > -INFINITY) && (constraint->score < INFINITY)) {
 			return;
 		}
-		/* else constraint cant be satisified */
-		pe_warn("Constraint %s could not be satisfied",
-			 constraint->id);
+
+		details_rh = rsc_rh->allocated_to?rsc_rh->allocated_to->details:NULL;
+		details_lh = rsc_lh->allocated_to?rsc_lh->allocated_to->details:NULL;
 		
-		if(update_lh) {
-			pe_warn("Marking resource %s unrunnable as a result",
-				 rsc_lh->id);
-			resource_location(rsc_lh, NULL, -INFINITY,
-					  constraint->id, NULL);
-			if(rsc_lh->color) {
-				crm_free(rsc_lh->color->details->chosen_node);
-				rsc_lh->color->details->chosen_node = NULL;
-				
-				pe_free_shallow_adv(
-					rsc_lh->color->details->candidate_nodes,
-					TRUE);
-				rsc_lh->color->details->candidate_nodes = NULL;
-			}
+		if(constraint->score == INFINITY && details_lh != details_rh) {
+			crm_err("%s and %s are both allocated"
+				" but to different nodes: %s vs. %s",
+				rsc_lh->id, rsc_rh->id,
+				details_lh?details_lh->uname:"n/a",
+				details_rh?details_rh->uname:"n/a");
+
+		} else if(constraint->score == -INFINITY && details_lh == details_rh) {
+			crm_err("%s and %s are both allocated"
+				" but to the SAME node: %s",
+				rsc_lh->id, rsc_rh->id,
+				details_rh?details_rh->uname:"n/a");
 		}
-		if(update_rh) {
-			pe_warn("Marking resource %s unrunnable as a result",
-				 rsc_rh->id);
-			resource_location(rsc_rh, NULL, -INFINITY,
-					  constraint->id, NULL);
-			if(rsc_rh->color) {
-				crm_free(rsc_rh->color->details->chosen_node);
-				rsc_rh->color->details->chosen_node = NULL;
-
-				pe_free_shallow_adv(
-					rsc_rh->color->details->candidate_nodes,
-					TRUE);
-				rsc_rh->color->details->candidate_nodes = NULL;
-			}
-		}		
-	}
-
-	if(constraint->strength == pecs_must) {
-		native_rsc_colocation_rh_must(
-			rsc_lh, update_lh, rsc_rh, update_rh);
+		
 		return;
 		
-	} else if(constraint->strength != pecs_must_not) {
-		/* unknown type */
-		pe_err("Unknown constraint type %d", constraint->strength);
-		return;
+	} else if(rsc_lh->provisional == FALSE) {
+		crm_debug_3("update _them_ : postproc version");
+		if(rsc_lh->allocated_to) {
+			if(native_update_node_weight(
+				   rsc_rh, constraint->id, rsc_lh->allocated_to,
+				   constraint->score) == FALSE) {
+				rsc_rh->provisional = FALSE;
+				crm_warn("%s cant run on %s", rsc_rh->id,
+					rsc_lh->allocated_to->details->uname);
+			}
+			
+		} else {
+			rsc_rh->provisional = FALSE;
+		}
+		
+	} else if(rsc_rh->provisional == FALSE) {
+		crm_debug_3("update _us_ : postproc version");
+		if(rsc_rh->allocated_to) {
+			if(native_update_node_weight(
+				   rsc_lh, constraint->id, rsc_rh->allocated_to,
+				   constraint->score) == FALSE) {
+				crm_warn("%s cant run on %s", rsc_lh->id,
+					rsc_rh->allocated_to->details->uname);
+				rsc_lh->provisional = FALSE;
+			}
+			
+		} else {
+			rsc_lh->provisional = FALSE;
+		}
 	}
-
-	native_rsc_colocation_rh_mustnot(rsc_lh, update_lh,rsc_rh, update_rh);
 }
 
+void
+node_list_update(GListPtr list1, GListPtr list2)
+{
+	node_t *other_node = NULL;
+
+	slist_iter(
+		node, node_t, list1, lpc,
+
+		if(node == NULL) {
+			continue;
+		}
+
+		other_node = (node_t*)pe_find_node_id(
+			list2, node->details->id);
+
+		if(other_node != NULL) {
+			crm_debug_4("%s + %s: %d + %d",
+				    node->details->uname, 
+				    other_node->details->uname, 
+				    node->weight, other_node->weight);
+			node->weight = merge_weights(
+				other_node->weight, node->weight);
+		}
+		);	
+}
 
 void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 {
@@ -813,446 +818,13 @@ void native_expand(resource_t *rsc, pe_working_set_t *data_set)
 
 
 
-void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
-				   resource_t *rsc_rh, gboolean update_rh)
-{
-	gboolean do_merge = FALSE;
-	GListPtr old_list = NULL;
-	GListPtr merged_node_list = NULL;
-	int max_pri = rsc_lh->effective_priority;
-	if(max_pri < rsc_rh->effective_priority) {
-		max_pri = rsc_rh->effective_priority;
-	}
-	rsc_lh->effective_priority = max_pri;
-	rsc_rh->effective_priority = max_pri;
-	
-	crm_debug_2("Colocating %s with %s."
-		    " Update LHS: %s, Update RHS: %s",
-		    rsc_lh->id, rsc_rh->id,
-		    update_lh?"true":"false", update_rh?"true":"false");
-	
-	if(rsc_lh->color && rsc_rh->color) {
-		do_merge = TRUE;
-		merged_node_list = node_list_and(
-			rsc_lh->color->details->candidate_nodes,
-			rsc_rh->color->details->candidate_nodes, TRUE);
-			
-	} else if(rsc_lh->color) {
-		do_merge = TRUE;
-		merged_node_list = node_list_and(
-			rsc_lh->color->details->candidate_nodes,
-			rsc_rh->allowed_nodes, TRUE);
-
-	} else if(rsc_rh->color) {
-		do_merge = TRUE;
-		merged_node_list = node_list_and(
-			rsc_lh->allowed_nodes,
-			rsc_rh->color->details->candidate_nodes, TRUE);
-	}
-		
-	if(update_lh && rsc_rh != rsc_lh) {
-		CRM_CHECK(rsc_lh->color != rsc_rh->color, return);
-		crm_free(rsc_lh->color);
-		rsc_lh->runnable      = rsc_rh->runnable;
-		rsc_lh->provisional   = rsc_rh->provisional;
-
-		CRM_CHECK(rsc_rh->color != NULL, return);
-		native_assign_color(rsc_lh, rsc_rh->color);
-	}
-	if(update_rh && rsc_rh != rsc_lh) {
-		CRM_CHECK(rsc_lh->color != rsc_rh->color, return);
-		crm_free(rsc_rh->color);
-		rsc_rh->runnable      = rsc_lh->runnable;
-		rsc_rh->provisional   = rsc_lh->provisional;
-
-		CRM_CHECK(rsc_lh->color != NULL, return);
-		native_assign_color(rsc_rh, rsc_lh->color);
-	}
-
-	if((update_rh || update_lh) && do_merge) {
-		crm_debug_4("Merging candidate nodes");
-		old_list = rsc_rh->color->details->candidate_nodes;
-		rsc_rh->color->details->candidate_nodes = merged_node_list;
-		pe_free_shallow(old_list);
-	}
-		
-	crm_debug_4("Finished processing pecs_must constraint");
-}
-
-void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
-				      resource_t *rsc_rh, gboolean update_rh)
-{
-	color_t *color_lh = NULL;
-	color_t *color_rh = NULL;
-
-	crm_debug_4("Processing pecs_must_not constraint");
-	/* pecs_must_not */
-	color_rh = rsc_rh->color;
-	color_lh = rsc_lh->color;
-
-	if(update_lh) {
-		if(rsc_lh->provisional && color_rh != NULL) {
-			color_lh = add_color(rsc_lh, color_rh);
-			color_lh->local_weight = -INFINITY;
-			crm_debug_2("LH: Removed color %d from resource %s",
-				color_lh->id, rsc_lh->id);
-			
-			crm_action_debug_3(
-				print_color("Removed LH", color_lh, FALSE));
-			
-			print_resource(LOG_DEBUG_3, "Modified LH", rsc_lh,TRUE);
-
-		} else if(rsc_lh->provisional) {
-			
-		} else if(color_lh && color_lh->details->pending) {
-			node_t *node_lh = NULL;
-			
-			node_lh = pe_find_node_id(
-				color_lh->details->candidate_nodes,
-				safe_val5(NULL, color_rh, details,
-					  chosen_node, details, id));
-
-			if(node_lh != NULL) {
-				node_lh->weight = -INFINITY;
-
-				crm_debug_2("LH: Removed node %s from color %d",
-					node_lh->details->uname, color_lh->id);
-				
-				crm_action_debug_3(
-					print_node("Removed LH", node_lh, FALSE));
-				
-				crm_action_debug_3(
-					print_color("Modified LH", color_lh, FALSE));
-			}
-			
-		} else {
-			/* error, rsc marked as unrunnable above */
-			pe_warn("lh else");
-		}
-	}
-
-	/* in case anything was modified */
-	color_rh = rsc_rh->color;
-	color_lh = rsc_lh->color;
-	if(update_rh) {
-		if(rsc_rh->provisional && color_lh != NULL) {
-			color_rh = add_color(rsc_lh, color_lh);
-			color_rh->local_weight = -INFINITY;
-			crm_debug_2("RH: Removed color %d from resource %s",
-				color_rh->id, rsc_rh->id);
-			
-			crm_action_debug_3(
-				print_color("Removed RH", color_rh, FALSE));
-
-			print_resource(LOG_DEBUG_3, "Modified RH", rsc_rh, TRUE);
-
-		} else if(rsc_rh->provisional) {
-			
-		} else if(color_rh->details == NULL) {
-			CRM_ASSERT(FALSE); /* This is never true but it keeps BEAM happy */
-			
-		} else if(color_rh && color_rh->details->pending) {
-			node_t *node_rh = NULL;
-			node_rh = pe_find_node_id(
-				color_rh->details->candidate_nodes,
-				safe_val5(NULL, color_lh, details,
-					  chosen_node, details, id));
-
-			if(node_rh != NULL) {
-				node_rh->weight = -INFINITY;
-				
-				crm_debug_2("RH: Removed node %s from color %d",
-					node_rh->details->uname, color_rh->id);
-				
-				crm_action_debug_3(
-					print_node("Removed RH", node_rh, FALSE));
-				
-				crm_action_debug_3(
-					print_color("Modified RH", color_rh, FALSE));
-			}
-
-		} else {
-			/* error, rsc marked as unrunnable above */
-			pe_warn("rh else");
-		}
-	}
-}
-
-
 void
 native_agent_constraints(resource_t *rsc)
 {
 }
 
 
-gboolean
-native_choose_color(resource_t *rsc, color_t *no_color)
-{
-	GListPtr sorted_colors = NULL;
-	if(rsc->runnable == FALSE) {
-		native_assign_color(rsc, no_color);
-	}
 
-	if(rsc->provisional == FALSE) {
-		return !rsc->provisional;
-	}
-	
-	sorted_colors = g_list_sort(
-		rsc->candidate_colors, sort_color_weight);
-	
-	rsc->candidate_colors = sorted_colors;
-	
-	crm_debug_2("Choose a color from %d possibilities",
-		    g_list_length(sorted_colors));
-	
-	slist_iter(
-		this_color, color_t, rsc->candidate_colors, lpc,
-		GListPtr intersection = NULL;
-		GListPtr minus = NULL;
-		int len = 0;
-
-		if(this_color == NULL) {
-			pe_err("color was NULL");
-			continue;
-			
-		} else if(this_color->local_weight < 0) {
-			/* no valid color available */
-			crm_debug("no valid color available");
-			break;
-			
-		} else if(rsc->effective_priority
-		   < this_color->details->highest_priority) {
-
-			minus = node_list_minus(
-				this_color->details->candidate_nodes, 
-				rsc->allowed_nodes, TRUE);
-
-			len = g_list_length(minus);
-			pe_free_shallow(minus);
-			
-		} else {
-			intersection = node_list_and(
-				this_color->details->candidate_nodes, 
-				rsc->allowed_nodes, TRUE);
-
-			len = g_list_length(intersection);
-			pe_free_shallow(intersection);
-			
-		}
-		if(len > 0) {
-			crm_debug("Assigning color to %s", rsc->id);
-			native_assign_color(rsc, this_color);
-			break;
-		}
-		);
-
-	return !rsc->provisional;
-}
-
-
-void
-native_assign_color(resource_t *rsc, color_t *color) 
-{
-	color_t *local_color = NULL;
-
-	rsc->provisional = FALSE;
-	
-	if(rsc->color != NULL) {
-		/* TODO: check its a clone */
-		CRM_CHECK(color->id != rsc->color->id, return);
-		rsc->color->details->allocated_resources =
-			g_list_remove(rsc->color->details->allocated_resources, rsc);
-		(rsc->color->details->num_resources)--;
-		rsc->candidate_colors =
-			g_list_remove(rsc->candidate_colors, rsc->color);
-		crm_free(rsc->color);
-		rsc->color = NULL;
-	}
-	
-	local_color = add_color(rsc, color);
-	CRM_CHECK(local_color != NULL, return);
-
-	local_color->details->allocated_resources =
-		g_list_append(local_color->details->allocated_resources,rsc);
-
-	if(rsc->variant == pe_native) {
-		GListPtr old_list = NULL;
-		GListPtr intersection = NULL;
-
-		(local_color->details->num_resources)++;
-		rsc->color = copy_color(local_color);
-		crm_debug_3("Created intersection for color %d",
-			    local_color->id);
-		intersection = node_list_and(
-			local_color->details->candidate_nodes, 
-			rsc->allowed_nodes, FALSE);
-		old_list = local_color->details->candidate_nodes;
-		
-		pe_free_shallow(old_list);
-		
-		local_color->details->candidate_nodes = intersection;
-	}
-	
-	crm_debug_2("Colored resource %s with color %d",
-		    rsc->id, local_color->id);
-	
-	return;
-}
-
-void
-native_update_node_weight(resource_t *rsc, rsc_to_node_t *cons,
-			  node_t *cons_node, GListPtr nodes)
-{
-	node_t *node_rh = NULL;
-	CRM_CHECK(cons_node != NULL, return);
-	
-	node_rh = pe_find_node_id(
-		rsc->allowed_nodes, cons_node->details->id);
-
-	if(node_rh == NULL) {
-		pe_err("Node not found - adding %s to %s",
-		       cons_node->details->id, rsc->id);
-		node_rh = node_copy(cons_node);
-		rsc->allowed_nodes = g_list_append(
-			rsc->allowed_nodes, node_rh);
-
-		node_rh = pe_find_node_id(
-			rsc->allowed_nodes, cons_node->details->id);
-
-		CRM_CHECK(node_rh != NULL, return);
-		return;
-	}
-
-	CRM_CHECK(node_rh != NULL, return);
-	
-	if(node_rh == NULL) {
-		pe_err("Node not found - cant update");
-		return;
-	}
-
-	if(node_rh->weight >= INFINITY && cons_node->weight <= -INFINITY) {
-		pe_err("Constraint \"%s\" mixes +/- INFINITY (%s)",
-		       cons->id, rsc->id);
-		
-	} else if(node_rh->details->shutdown == TRUE
-		  || node_rh->details->online == FALSE
-		  || node_rh->details->unclean == TRUE) {
-
-	} else if(node_rh->weight <= -INFINITY && cons_node->weight >= INFINITY) {
-		pe_err("Constraint \"%s\" mixes +/- INFINITY (%s)",
-			 cons->id, rsc->id);
-	}
-
-	if(node_rh->fixed) {
-		/* warning */
-		crm_debug_2("Constraint %s is irrelevant as the"
-			 " weight of node %s is fixed as %d (%s).",
-			 cons->id, node_rh->details->uname,
-			 node_rh->weight, rsc->id);
-		return;
-	}	
-	
-	crm_debug_3("Constraint %s, node %s, rsc %s: %d + %d",
-		   cons->id, node_rh->details->uname, rsc->id,
-		   node_rh->weight, cons_node->weight);
-	node_rh->weight = merge_weights(node_rh->weight, cons_node->weight);
-	if(node_rh->weight <= -INFINITY) {
-		crm_debug_3("Constraint %s (-INFINITY): node %s weight %d (%s).",
-			    cons->id, node_rh->details->uname,
-			    node_rh->weight, rsc->id);
-		
-	} else if(node_rh->weight >= INFINITY) {
-		crm_debug_3("Constraint %s (+INFINITY): node %s weight %d (%s).",
-			    cons->id, node_rh->details->uname,
-			    node_rh->weight, rsc->id);
-
-	} else {
-		crm_debug_3("Constraint %s (%d): node %s weight %d (%s).",
-			    cons->id, cons_node->weight, node_rh->details->uname,
-			    node_rh->weight, rsc->id);
-	}
-
-	if(node_rh->weight < 0) {
-		node_rh->fixed = TRUE;
-	}
-
-	crm_action_debug_3(print_node("Updated", node_rh, FALSE));
-
-	return;
-}
-
-gboolean
-native_constraint_violated(
-	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
-{
-	GListPtr result = NULL;
-	color_t *color_lh = NULL;
-	color_t *color_rh = NULL;
-
-	GListPtr candidate_nodes_lh = NULL;
-	GListPtr candidate_nodes_rh = NULL;
-
-	gboolean matched = FALSE;
-
-	color_lh = rsc_lh->color;
-	color_rh = rsc_rh->color;
-
-	if(constraint->strength == pecs_must_not) {
-		matched = TRUE;
-	}
-			
-	if(rsc_lh->provisional || rsc_rh->provisional) {
-		return FALSE;
-	}
-	
-	if(color_lh == NULL && color_rh == NULL) {
-		return matched;
-		
-	} else if(color_lh == NULL || color_rh == NULL) {
-		return !matched;
-		
-	} else if(color_lh->details->pending
-		  && color_rh->details->pending) {
-		candidate_nodes_lh = color_lh->details->candidate_nodes;
-		candidate_nodes_rh = color_rh->details->candidate_nodes;
-		
-	} else if(color_lh->details->pending == FALSE
-		  && color_rh->details->pending == FALSE) {
-
-		if(color_lh->details->chosen_node == NULL
-			  && color_rh->details->chosen_node == NULL) {
-			return matched;
-
-		} else if(color_lh->details->chosen_node == NULL
-			  || color_rh->details->chosen_node == NULL) {
-			return !matched;
-
-		} else if(safe_str_eq(
-				  color_lh->details->chosen_node->details->id,
-				  color_rh->details->chosen_node->details->id)) {
-			return matched;
-		}
-		return !matched;
-		
-	} else if(color_lh->details->pending) {
-		candidate_nodes_lh = color_lh->details->candidate_nodes;
-		candidate_nodes_rh = g_list_append(
-			NULL, color_rh->details->chosen_node);
-
-	} else if(color_rh->details->pending) {
-		candidate_nodes_rh = color_rh->details->candidate_nodes;
-		candidate_nodes_lh = g_list_append(
-			NULL, color_lh->details->chosen_node);
-	}
-
-	result = node_list_and(candidate_nodes_lh, candidate_nodes_rh, TRUE);
-
-	if(g_list_length(result) == 0 && constraint->strength == pecs_must) {
-		/* free result */
-		return TRUE;
-	}
-	return FALSE;
-}
 
 
 /*
@@ -1367,10 +939,7 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 		crm_debug_4("No notificaitons required for %s", op->task);
 		return;
 	}
-	if(rsc->color != NULL) {
-		next_node = rsc->color->details->chosen_node;
-	}
-	
+	next_node = rsc->allocated_to;
 	op_key = generate_op_key(rsc->id, op->task, 0);
 	possible_matches = find_actions(rsc->actions, op_key, NULL);
 	
@@ -1908,7 +1477,6 @@ native_stonith_ordering(
 	native_start_constraints(rsc,  stonith_op, is_stonith, data_set);
  
 	/* Stop constraints */
-
 	native_stop_constraints(rsc,  stonith_op, is_stonith, data_set);
-	
 }
+

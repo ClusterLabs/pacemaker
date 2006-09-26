@@ -365,12 +365,13 @@ native_print(
 			     rsc->runnable?"":"non-startable, ",
 			     crm_element_name(rsc->xml),
 			     (double)rsc->priority);
-
-		status_print("%s\t%d candidate colors, %d allowed nodes,"
-			     " %d rsc_cons",
-			     pre_text, g_list_length(rsc->candidate_colors),
-			     g_list_length(rsc->allowed_nodes),
-			     g_list_length(rsc->rsc_cons));
+		status_print("%s\tAllowed Nodes", pre_text);
+		slist_iter(node, node_t, rsc->allowed_nodes, lpc,
+			   status_print("%s\t * %s %d",
+					pre_text,
+					node->details->uname,
+					node->weight);
+			);	
 	}
 
 	if(options & pe_print_max_details) {
@@ -391,7 +392,6 @@ native_print(
 void native_free(resource_t *rsc)
 {
 	crm_debug_4("Freeing Allowed Nodes");
-	crm_free(rsc->color);
 	common_free(rsc);
 }
 

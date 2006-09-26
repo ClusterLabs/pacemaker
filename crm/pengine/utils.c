@@ -41,7 +41,7 @@ invert_constraint(rsc_colocation_t *constraint)
 	}
 	
 	inverted_con->id = constraint->id;
-	inverted_con->strength = constraint->strength;
+	inverted_con->score = constraint->score;
 
 	/* swap the direction */
 	inverted_con->rsc_lh = constraint->rsc_rh;
@@ -55,108 +55,6 @@ invert_constraint(rsc_colocation_t *constraint)
 	return inverted_con;
 }
 
-/*
- * Create a new color with the contents of "nodes" as the list of
- *  possible nodes that resources with this color can be run on.
- *
- * Typically, when creating a color you will provide the node list from
- *  the resource you will first assign the color to.
- *
- * If "colors" != NULL, it will be added to that list
- * If "resources" != NULL, it will be added to every provisional resource
- *  in that list
- */
-color_t *
-create_color(
-	pe_working_set_t *data_set, resource_t *resource, GListPtr node_list)
-{
-	color_t *new_color = NULL;
-	
-	crm_debug_5("Creating color");
-	crm_malloc0(new_color, sizeof(color_t));
-	if(new_color == NULL) {
-		return NULL;
-	}
-	
-	new_color->id           = data_set->color_id++;
-	new_color->local_weight = 1.0;
-	
-	crm_debug_5("Creating color details");
-	crm_malloc0(new_color->details, sizeof(struct color_shared_s));
-
-	if(new_color->details == NULL) {
-		crm_free(new_color);
-		return NULL;
-	}
-		
-	new_color->details->id                  = new_color->id;
-	new_color->details->highest_priority    = -1;
-	new_color->details->chosen_node         = NULL;
-	new_color->details->candidate_nodes     = NULL;
-	new_color->details->allocated_resources = NULL;
-	new_color->details->pending             = TRUE;
-	
-	if(resource != NULL) {
-		crm_debug_5("populating node list");
-		new_color->details->highest_priority = resource->priority;
-		new_color->details->candidate_nodes  =
-			node_list_dup(node_list, TRUE, TRUE);
-	}
-	
-	crm_action_debug_3(print_color("Created color", new_color, TRUE));
-
-	CRM_CHECK(data_set != NULL, return NULL);
-	data_set->colors = g_list_append(data_set->colors, new_color);
-	return new_color;
-}
-
-color_t *
-copy_color(color_t *a_color) 
-{
-	color_t *color_copy = NULL;
-
-	if(a_color == NULL) {
-		pe_err("Cannot copy NULL");
-		return NULL;
-	}
-	
-	crm_malloc0(color_copy, sizeof(color_t));
-	if(color_copy != NULL) {
-		color_copy->id      = a_color->id;
-		color_copy->details = a_color->details;
-		color_copy->local_weight = 1.0;
-	}
-	return color_copy;
-}
-
-gint gslist_color_compare(gconstpointer a, gconstpointer b);
-color_t *
-find_color(GListPtr candidate_colors, color_t *other_color)
-{
-	GListPtr tmp = g_list_find_custom(candidate_colors, other_color,
-					    gslist_color_compare);
-	if(tmp != NULL) {
-		return (color_t *)tmp->data;
-	}
-	return NULL;
-}
-
-
-gint gslist_color_compare(gconstpointer a, gconstpointer b)
-{
-	const color_t *color_a = (const color_t*)a;
-	const color_t *color_b = (const color_t*)b;
-
-/*	crm_debug_5("%d vs. %d", a?color_a->id:-2, b?color_b->id:-2); */
-	if(a == b) {
-		return 0;
-	} else if(a == NULL || b == NULL) {
-		return 1;
-	} else if(color_a->id == color_b->id) {
-		return 0;
-	}
-	return 1;
-}
 
 gint sort_cons_strength(gconstpointer a, gconstpointer b)
 {
@@ -166,58 +64,14 @@ gint sort_cons_strength(gconstpointer a, gconstpointer b)
 	if(a == NULL) { return 1; }
 	if(b == NULL) { return -1; }
   
-	if(rsc_constraint1->strength > rsc_constraint2->strength) {
+	if(rsc_constraint1->score > rsc_constraint2->score) {
 		return 1;
 	}
 	
-	if(rsc_constraint1->strength < rsc_constraint2->strength) {
+	if(rsc_constraint1->score < rsc_constraint2->score) {
 		return -1;
 	}
 	return 0;
-}
-
-void
-print_color_details(const char *pre_text,
-		    struct color_shared_s *color,
-		    gboolean details)
-{ 
-	if(color == NULL) {
-		crm_debug_4("%s%s: <NULL>",
-		       pre_text==NULL?"":pre_text,
-		       pre_text==NULL?"":": ");
-		return;
-	}
-	crm_debug_4("%s%sColor %d: node=%s (from %d candidates)",
-	       pre_text==NULL?"":pre_text,
-	       pre_text==NULL?"":": ",
-	       color->id, 
-	       color->chosen_node==NULL?"<unset>":color->chosen_node->details->uname,
-	       g_list_length(color->candidate_nodes)); 
-	if(details) {
-		slist_iter(node, node_t, color->candidate_nodes, lpc,
-			   print_node("\t", node, FALSE));
-	}
-}
-
-void
-print_color(const char *pre_text, color_t *color, gboolean details)
-{ 
-	if(color == NULL) {
-		crm_debug_4("%s%s: <NULL>",
-		       pre_text==NULL?"":pre_text,
-		       pre_text==NULL?"":": ");
-		return;
-	}
-	crm_debug_4("%s%sColor %d: (weight=%d, node=%s, possible=%d)",
-		    pre_text==NULL?"":pre_text,
-		    pre_text==NULL?"":": ",
-		    color->id, 
-		    color->local_weight,
-		    safe_val5("<unset>",color,details,chosen_node,details,uname),
-		    g_list_length(color->details->candidate_nodes)); 
-	if(details) {
-		print_color_details("\t", color->details, details);
-	}
 }
 
 void
@@ -263,35 +117,12 @@ print_rsc_colocation(const char *pre_text, rsc_colocation_t *cons, gboolean deta
 
 	if(details == FALSE) {
 
-		crm_debug_4("\t%s --> %s, %s",
+		crm_debug_4("\t%s --> %s, %d",
 			  safe_val3(NULL, cons, rsc_lh, id), 
 			  safe_val3(NULL, cons, rsc_rh, id), 
-			  strength2text(cons->strength));
+			  cons->score);
 	}
 } 
-
-void
-pe_free_colors(GListPtr colors)
-{
-	GListPtr iterator = colors;
-	while(iterator != NULL) {
-		color_t *color = (color_t *)iterator->data;
-		struct color_shared_s *details = color->details;
-		iterator = iterator->next;
-		
-		if(details != NULL) {
-			pe_free_shallow(details->candidate_nodes);
-			pe_free_shallow_adv(details->allocated_resources, FALSE);
-			crm_free(details->chosen_node);
-			crm_free(details);
-		}
-		crm_free(color);
-	}
-	if(colors != NULL) {
-		g_list_free(colors);
-	}
-}
-
 
 void
 pe_free_ordering(GListPtr constraints) 
@@ -363,29 +194,6 @@ rsc2node_new(const char *id, resource_t *rsc,
 	return new_con;
 }
 
-
-
-const char *
-strength2text(enum con_strength strength)
-{
-	const char *result = "<unknown>";
-	switch(strength)
-	{
-		case pecs_ignore:
-			result = "ignore";
-			break;
-		case pecs_must:
-			result = XML_STRENGTH_VAL_MUST;
-			break;
-		case pecs_must_not:
-			result = XML_STRENGTH_VAL_MUSTNOT;
-			break;
-		case pecs_startstop:
-			result = "start/stop";
-			break;
-	}
-	return result;
-}
 
 const char *
 ordering_type2text(enum pe_ordering type)
@@ -490,45 +298,81 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	return 0;
 }
 
-gint sort_color_weight(gconstpointer a, gconstpointer b)
+
+gboolean
+native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 {
-	const color_t *color1 = (const color_t*)a;
-	const color_t *color2 = (const color_t*)b;
-
-	int color1_weight = 0;
-	int color2_weight = 0;
+	int multiple = 0;
+	CRM_ASSERT(rsc->variant == pe_native);
 	
-	if(a == NULL) { return 1; }
-	if(b == NULL) { return -1; }
+	if(chosen == NULL) {
+		crm_debug("Could not allocate a node for %s", rsc->id);
+		rsc->next_role = RSC_ROLE_STOPPED;
+		return FALSE;
 
-	color1_weight = color1->local_weight;
-	color2_weight = color2->local_weight;
-
-	if(color1_weight > color2_weight) {
-		crm_debug_3("%d (%d) > %d (%d) : weight",
-			    color1->id, color1_weight,
-			    color2->id, color2_weight);
-		return -1;
-	}
-	
-	if(color1_weight < color2_weight) {
-		crm_debug_3("%d (%d) < %d (%d) : weight",
-			    color1->id, color1_weight,
-			    color2->id, color2_weight);
-		return 1;
-	}
-
-	crm_debug_3("%d (%d) == %d (%d) : weight",
-		    color1->id, color1_weight,
-		    color2->id, color2_weight);
-	
-	if(color1->id < color2->id) {
-		return -1;
+	} else if(chosen->details->unclean
+		  || chosen->details->standby
+		  || chosen->details->shutdown) {
+		crm_debug("All nodes for color %s are unavailable"
+			  ", unclean or shutting down", rsc->id);
+		rsc->next_role = RSC_ROLE_STOPPED;
+		return FALSE;
 		
-	} else if(color1->id > color2->id) {
-		return 1;
+	} else if(chosen->weight < 0) {
+		crm_debug("Even highest ranked node for %s, had weight %d",
+			  rsc->id, chosen->weight);
+		rsc->next_role = RSC_ROLE_STOPPED;
+		return FALSE;
 	}
-	CRM_CHECK(color1->id != color2->id,
-		  crm_err("Color %d duplicated in list", color1->id));
-	return 0;
+
+	if(rsc->next_role == RSC_ROLE_UNKNOWN) {
+		rsc->next_role = RSC_ROLE_STARTED;
+	}
+	
+	slist_iter(candidate, node_t, nodes, lpc, 
+		   crm_debug("Color %s, Node[%d] %s: %d", rsc->id, lpc,
+			       candidate->details->uname, candidate->weight);
+		   if(chosen->weight > 0
+		      && candidate->details->unclean == FALSE
+		      && candidate->weight == chosen->weight) {
+			   multiple++;
+		   } else {
+			   break;
+		   }
+		);
+
+	if(multiple > 1) {
+		int log_level = LOG_INFO;
+		char *score = score2char(chosen->weight);
+		if(chosen->weight >= INFINITY) {
+			log_level = LOG_WARNING;
+		}
+		
+		crm_log_maybe(log_level, "%d nodes with equal score (%s) for"
+			      " running the listed resources (chose %s):",
+			      multiple, score, chosen->details->uname);
+		crm_free(score);
+	}
+	
+	/* todo: update the old node for each resource to reflect its
+	 * new resource count
+	 */
+
+	if(rsc->allocated_to) {
+		node_t *old = rsc->allocated_to;
+		old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc, rsc);
+		old->details->num_resources--;
+		old->count--;
+	}
+	
+	crm_debug("Assigning %s to %s", chosen->details->uname, rsc->id);
+	rsc->provisional = FALSE;
+	crm_free(rsc->allocated_to);
+	rsc->allocated_to = node_copy(chosen);
+
+	chosen->details->allocated_rsc = g_list_append(chosen->details->allocated_rsc, rsc);
+	chosen->details->num_resources++;
+	chosen->count++;
+
+	return TRUE;
 }
