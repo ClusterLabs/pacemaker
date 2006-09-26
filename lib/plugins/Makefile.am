@@ -25,4 +25,4 @@ LRM_DIR = lrm
 endif
 
 SUBDIRS			= InterfaceMgr HBauth HBcomm HBcompress stonith AppHBNotification \
-			  $(LRM_DIR)  quorum  tiebreaker
+			  $(LRM_DIR)  quorum  tiebreaker quorumd
