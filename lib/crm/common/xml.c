@@ -2100,7 +2100,8 @@ update_xml_child(crm_data_t *child, crm_data_t *to_update)
 
 int
 find_xml_children(crm_data_t **children, crm_data_t *root,
-		  const char *tag, const char *field, const char *value)
+		  const char *tag, const char *field, const char *value,
+		  gboolean search_matches)
 {
 	int match_found = 0;
 	
@@ -2119,12 +2120,15 @@ find_xml_children(crm_data_t **children, crm_data_t *root,
 		add_node_copy(*children, root);
 		match_found = 1;
 	}
-	
-	xml_child_iter(
-		root, child, 
-		match_found += find_xml_children(
-			children, child, tag, field, value);
-		);
+
+	if(search_matches || match_found == 0) {
+		xml_child_iter(
+			root, child, 
+			match_found += find_xml_children(
+				children, child, tag, field, value,
+				search_matches);
+			);
+	}
 	
 	return match_found;
 }

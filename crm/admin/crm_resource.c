@@ -233,7 +233,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	if(attr_set != NULL) {
 		matches = find_xml_children(
 			&set_children, rsc->xml, 
-			XML_TAG_ATTR_SETS, XML_ATTR_ID, attr_set);
+			XML_TAG_ATTR_SETS, XML_ATTR_ID, attr_set, TRUE);
 		crm_log_xml_debug(set_children, "search by set:");
 	}
 
@@ -241,13 +241,13 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	if(attr_id == NULL) {
 		matches = find_xml_children(
 			&nv_children, set_children?set_children:rsc->xml,
-			XML_CIB_TAG_NVPAIR, XML_NVPAIR_ATTR_NAME, attr_name);
+			XML_CIB_TAG_NVPAIR, XML_NVPAIR_ATTR_NAME, attr_name, FALSE);
 		crm_log_xml_debug(nv_children, "search by name:");
 
 	} else if(attr_id != NULL) {
 		matches = find_xml_children(
 			&nv_children, set_children?set_children:rsc->xml,
-			XML_CIB_TAG_NVPAIR, XML_ATTR_ID, attr_id);
+			XML_CIB_TAG_NVPAIR, XML_ATTR_ID, attr_id, FALSE);
 		crm_log_xml_debug(nv_children, "search by id:");
 	}
 	
@@ -261,14 +261,14 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 			set_children = NULL;
 			find_xml_children(
 				&set_children, rsc->xml, 
-				XML_TAG_ATTR_SETS, NULL, NULL);
+				XML_TAG_ATTR_SETS, NULL, NULL, FALSE);
 			xml_child_iter(
 				set_children, set,
 				free_xml(nv_children);
 				nv_children = NULL;
 				find_xml_children(
 					&nv_children, set,
-					XML_CIB_TAG_NVPAIR, XML_NVPAIR_ATTR_NAME, attr_name);
+					XML_CIB_TAG_NVPAIR, XML_NVPAIR_ATTR_NAME, attr_name, FALSE);
 				xml_child_iter(
 					nv_children, child,
 					fprintf(stderr,"  Set: %s,\tValue: %s,\tID: %s\n",

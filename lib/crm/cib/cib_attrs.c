@@ -98,7 +98,7 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 		/* filter by node */
 		matches = find_xml_children(
 			&set_children, xml_search, 
-			NULL, XML_ATTR_ID, node_uuid);
+			NULL, XML_ATTR_ID, node_uuid, FALSE);
 		crm_log_xml_debug(set_children, "search by node:");
 		if(matches == 0) {
 			crm_info("No node matching id=%s in %s", node_uuid, TYPE(xml_search));
@@ -110,7 +110,7 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 	if(set_name != NULL) {
 		matches = find_xml_children(
 			&set_children, set_children?set_children:xml_search, 
-			XML_TAG_ATTR_SETS, XML_ATTR_ID, set_name);
+			XML_TAG_ATTR_SETS, XML_ATTR_ID, set_name, FALSE);
 		crm_log_xml_debug(set_children, "search by set:");
 		if(matches == 0) {
 			crm_info("No set matching id=%s in %s", set_name, TYPE(xml_search));
@@ -122,13 +122,13 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 	if(attr_id == NULL) {
 		matches = find_xml_children(
 			&nv_children, set_children?set_children:xml_search,
-			XML_CIB_TAG_NVPAIR, XML_NVPAIR_ATTR_NAME, attr_name);
+			XML_CIB_TAG_NVPAIR, XML_NVPAIR_ATTR_NAME, attr_name, FALSE);
 		crm_log_xml_debug(nv_children, "search by name:");
 
 	} else if(attr_id != NULL) {
 		matches = find_xml_children(
 			&nv_children, set_children?set_children:xml_search,
-			XML_CIB_TAG_NVPAIR, XML_ATTR_ID, attr_id);
+			XML_CIB_TAG_NVPAIR, XML_ATTR_ID, attr_id, FALSE);
 		crm_log_xml_debug(nv_children, "search by id:");
 	}
 	
@@ -145,14 +145,14 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 			set_children = NULL;
 			find_xml_children(
 				&set_children, xml_search, 
-				XML_TAG_ATTR_SETS, NULL, NULL);
+				XML_TAG_ATTR_SETS, NULL, NULL, FALSE);
 			xml_child_iter(
 				set_children, set,
 				free_xml(nv_children);
 				nv_children = NULL;
 				find_xml_children(
 					&nv_children, set,
-					XML_CIB_TAG_NVPAIR, XML_NVPAIR_ATTR_NAME, attr_name);
+					XML_CIB_TAG_NVPAIR, XML_NVPAIR_ATTR_NAME, attr_name, FALSE);
 				xml_child_iter(
 					nv_children, child,
 					crm_info("  Set: %s,\tValue: %s,\tID: %s\n",
@@ -256,6 +256,8 @@ update_attr(cib_t *the_cib, int call_options,
 		
 		xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
 		crm_free(local_set_name);
+	} else {
+		xml_obj = NULL;
 	}
 
 	xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
@@ -399,7 +401,6 @@ delete_attr(cib_t *the_cib, int options,
 			}
 			local_attr_id = crm_strdup(ID(xml_obj));
 			attr_id = local_attr_id;			
-			free_xml(xml_obj);
 			xml_obj = NULL;
 		}
 	}

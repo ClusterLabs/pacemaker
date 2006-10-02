@@ -238,7 +238,8 @@ extern gboolean update_xml_child(crm_data_t *child, crm_data_t *to_update);
 
 extern int find_xml_children(
 	crm_data_t **children, crm_data_t *root,
-	const char *tag, const char *field, const char *value);
+	const char *tag, const char *field, const char *value,
+	gboolean search_matches);
 
 /*
  *
