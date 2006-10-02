@@ -1092,7 +1092,7 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
 	offset = len-1;
 	
 	while(offset > 0 && isdigit(key[offset])) {
-		int digits = offset-len;
+		int digits = len-offset;
 		ch = key[offset] - '0';
 		CRM_CHECK(ch < 10, return FALSE);
 		CRM_CHECK(ch >= 0, return FALSE);
