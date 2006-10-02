@@ -333,7 +333,7 @@ main(int argc, char **argv)
 			time_t now = time(NULL);
 			now_s = crm_itoa(now);
 			update_attr(the_cib, cib_sync_call,
-				    NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s);
+				    XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, "last-lrm-refresh", now_s);
 			crm_free(now_s);
 		}
 			
