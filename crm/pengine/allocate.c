@@ -1116,9 +1116,9 @@ generate_location_rule(
 					node->details->attrs, score);
 				if(attr_score == NULL) {
 					accept = FALSE;
-					pe_warn("node %s did not have a value"
-						" for %s",
-						node->details->uname, score);
+					crm_debug("node %s did not have a value"
+						  " for %s",
+						  node->details->uname, score);
 				} else {
 					crm_debug("Rule %s: node %s had value %s for %s",
 						  rule_id, node->details->uname, attr_score, score);
