@@ -1405,6 +1405,7 @@ do_update_resource(lrm_op_t* op)
           </...>
 */
 	int rc = cib_ok;
+	lrm_rsc_t *rsc = NULL;
 	crm_data_t *update, *iter;
 	
 	CRM_CHECK(op != NULL, return);
@@ -1418,19 +1419,14 @@ do_update_resource(lrm_op_t* op)
 	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCE);
 
 	crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
-	if(op->interval == 0) {
-		lrm_rsc_t *rsc = NULL;
-		crm_debug_2("Updating %s resource definitions after %s op",
-			    op->rsc_id, op->op_type);
 		
-		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, op->rsc_id);
-
-		crm_xml_add(iter, XML_ATTR_TYPE, rsc->type);
-		crm_xml_add(iter, XML_AGENT_ATTR_CLASS, rsc->class);
-		crm_xml_add(iter, XML_AGENT_ATTR_PROVIDER,rsc->provider);
-		
-		lrm_free_rsc(rsc);
-	}
+	rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, op->rsc_id);
+	
+	crm_xml_add(iter, XML_ATTR_TYPE, rsc->type);
+	crm_xml_add(iter, XML_AGENT_ATTR_CLASS, rsc->class);
+	crm_xml_add(iter, XML_AGENT_ATTR_PROVIDER,rsc->provider);
+	
+	lrm_free_rsc(rsc);
 	
 	build_operation_update(iter, op, __FUNCTION__, 0);
 
