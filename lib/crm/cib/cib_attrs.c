@@ -134,7 +134,13 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 	
 		
 	if(matches == 1) {
-		xml_child_iter(nv_children, child, return child);
+		crm_data_t *single_match = NULL;
+		xml_child_iter(nv_children, child,
+			       single_match = copy_xml(child);
+			       break;
+			);
+		free_xml(nv_children);
+		return single_match;
 		
 	} else if(matches > 1) {
 		crm_err("Multiple attributes match name=%s in %s:\n",
@@ -208,7 +214,8 @@ update_attr(cib_t *the_cib, int call_options,
 		return rc;
 	}
 		
-	xml_obj = find_attr_details(xml_search, node_uuid, set_name, attr_id, attr_name);
+	xml_obj = find_attr_details(
+		xml_search, node_uuid, set_name, attr_id, attr_name);
 	free_xml(xml_search);
 
 	if(xml_obj != NULL) {
@@ -269,9 +276,9 @@ update_attr(cib_t *the_cib, int call_options,
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 	
-	crm_log_xml_debug_2(xml_top, "Update");
+	crm_log_xml_debug_2(xml_top, "update_attr");
 	
-	rc = the_cib->cmds->update(the_cib, section, xml_top, NULL,
+	rc = the_cib->cmds->modify(the_cib, section, xml_top, NULL,
 				   call_options|cib_quorum_override);
 
 	if(rc == cib_diff_resync) {
