@@ -107,6 +107,7 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 			crm_debug("Color %s", child_rsc->id);
 			group_node = child_rsc->cmds->color(child_rsc, data_set);
 			first = FALSE;
+
 		} else if(child_rsc->provisional) {
 			native_assign_node(child_rsc, NULL, group_node);
 		} else {

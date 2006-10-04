@@ -1022,6 +1022,34 @@ unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	return TRUE;
 }
 
+static int
+get_node_score(const char *rule, const char *score, gboolean raw, node_t *node)
+{
+	int score_f = 0;
+	if(score == NULL) {
+		pe_err("Rule %s: no score specified.  Assuming 0.", rule);
+	
+	} else if(raw) {
+		score_f = char2score(score);
+	
+	} else {
+		const char *attr_score = g_hash_table_lookup(
+			node->details->attrs, score);
+		if(attr_score == NULL) {
+			crm_debug("Rule %s: node %s did not have a value for %s",
+				  rule, node->details->uname, score);
+			score_f = -INFINITY;
+			
+		} else {
+			crm_debug("Rule %s: node %s had value %s for %s",
+				  rule, node->details->uname, attr_score, score);
+			score_f = char2score(attr_score);
+		}
+	}
+	return score_f;
+}
+
+
 rsc_to_node_t *
 generate_location_rule(
 	resource_t *rsc, crm_data_t *rule_xml, pe_working_set_t *data_set)
@@ -1030,7 +1058,6 @@ generate_location_rule(
 	const char *score   = NULL;
 	const char *boolean = NULL;
 	const char *role    = NULL;
-	const char *attr_score = NULL;
 
 	GListPtr match_L  = NULL;
 	
@@ -1084,7 +1111,7 @@ generate_location_rule(
 		match_L = node_list_dup(data_set->nodes, TRUE, FALSE);
 		slist_iter(
 			node, node_t, match_L, lpc,
-			node->weight = score_f;
+			node->weight = get_node_score(rule_id, score, raw_score, node);
 			);
 	}
 
@@ -1092,6 +1119,8 @@ generate_location_rule(
 		rule_xml, expr, 		
 
 		enum expression_type type = find_expression_type(expr);
+		crm_debug_2("Processing expression: %s", ID(expr));
+
 		if(type == not_expr) {
 			pe_err("Expression <%s id=%s...> is not valid",
 			       crm_element_name(expr), crm_str(ID(expr)));
@@ -1110,21 +1139,11 @@ generate_location_rule(
 					expr, node->details->attrs,
 					RSC_ROLE_UNKNOWN, data_set->now);
 			}
-			
-			if(raw_score == FALSE) {
-				attr_score = g_hash_table_lookup(
-					node->details->attrs, score);
-				if(attr_score == NULL) {
-					accept = FALSE;
-					crm_debug("node %s did not have a value"
-						  " for %s",
-						  node->details->uname, score);
-				} else {
-					crm_debug("Rule %s: node %s had value %s for %s",
-						  rule_id, node->details->uname, attr_score, score);
-					score_f = char2score(attr_score);
-				}
-			}
+
+			score_f = get_node_score(rule_id, score, raw_score, node);
+/* 			if(accept && score_f == -INFINITY) { */
+/* 				accept = FALSE; */
+/* 			} */
 			
 			if(accept) {
 				node_t *local = pe_find_node_id(
@@ -1136,11 +1155,13 @@ generate_location_rule(
 					local = node_copy(node);
 					match_L = g_list_append(match_L, local);
 				}
-				
-				local->weight = merge_weights(
-					local->weight, score_f);
-				crm_debug_3("node %s now has weight %d",
-					    node->details->uname,local->weight);
+
+				if(do_and == FALSE) {
+					local->weight = merge_weights(
+						local->weight, score_f);
+				}
+				crm_debug_2("node %s now has weight %d",
+					    node->details->uname, local->weight);
 				
 			} else if(do_and && !accept) {
 				/* remove it */
