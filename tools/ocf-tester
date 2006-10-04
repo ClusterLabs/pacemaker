@@ -73,12 +73,12 @@ function test_command() {
     if [ "x$1" != x ]; then
 	msg="$1"
     fi
-    #echo $msg
     #echo Running: "export $ra_args; bash $agent $action 2>&1 > /dev/null"
     export $ra_args; 
     if [ $verbose = 0 ]; then
 	bash $agent $action >/dev/null 2>&1
     else
+    	echo $msg
 	bash $agent $action
     fi
     rc=$?
@@ -132,20 +132,20 @@ elif [ $rc != 7 ]; then
 fi
 
 test_command monitor
-assert $rc $stopped_rc "Monitoring a stopped resource should return $stopped_rc"
+assert $? $stopped_rc "Monitoring a stopped resource should return $stopped_rc"
 
 test_command start
 assert $? 0 "Start failed.  Did you supply enough options with -o ?" 1
 
 test_command monitor
-assert $rc 0 "Monitoring an active resource should return 0"
+assert $? 0 "Monitoring an active resource should return 0"
 
 test_command notify
 rc=$?
 if [ $rc = 3 ]; then
     echo "* Your agent does not support the notify action (optional)"
 else
-    assert $? 0 "The notify action cannot fail and must return 0"
+    assert $rc 0 "The notify action cannot fail and must return 0"
 fi
 
 test_command demote "Checking for demote action"
