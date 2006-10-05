@@ -227,6 +227,9 @@ This allows us to specify how long an action can take
  * name : the name of the operation.
    Supported operations are start, stop, & monitor
 
+ * start_delay : delay the operation after starting the resource
+   By default this value is in milliseconds, however you can also specify a value in seconds like so timeout="5s". Used for the monitor operation.
+
  * timeout : the maximum period of time before considering the action failed.
    By default this value is in milliseconds, however you can also specify a value in seconds like so timeout="5s".
 
@@ -257,6 +260,7 @@ Parameters specific to each operation can be passed using the instance_attribute
           description   CDATA         #IMPLIED
           interval      CDATA         #IMPLIED
           timeout       CDATA         #IMPLIED
+          start_delay   CDATA         '0'
           disabled      (true|1|false|0)               'false'
           role          (Master|Slave|Started|Stopped) 'Started'
           prereq        (nothing|quorum|fencing)       #IMPLIED
