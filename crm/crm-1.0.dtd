@@ -280,7 +280,7 @@ NOTE: Do not create empty groups.
           is_managed            CDATA                         #IMPLIED
           restart_type          (ignore|restart)              'ignore'
           multiple_active       (stop_start|stop_only|block)  'stop_start'
-          resource_stickiness   (0|INFINITY|-INFINITY)        #IMPLIED
+          resource_stickiness   CDATA			      #IMPLIED
 
           ordered               (true|1|false|0)              'true'
           collocated            (true|1|false|0)              'true'>
