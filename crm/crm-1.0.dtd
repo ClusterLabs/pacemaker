@@ -611,6 +611,7 @@ This may change in a future release.
 <!ELEMENT date_spec EMPTY>
 <!ATTLIST date_spec
         id         CDATA  #REQUIRED
+        hours      CDATA  #IMPLIED
         monthdays  CDATA  #IMPLIED
         weekdays   CDATA  #IMPLIED
         yeardays   CDATA  #IMPLIED
@@ -629,6 +630,7 @@ Eg. months=11 should be equivalent to writing years=1, months=-1 but is not enco
 <!ELEMENT duration EMPTY>
 <!ATTLIST duration
         id         CDATA  #REQUIRED
+        hours      CDATA  #IMPLIED
         monthdays  CDATA  #IMPLIED
         weekdays   CDATA  #IMPLIED
         yeardays   CDATA  #IMPLIED
