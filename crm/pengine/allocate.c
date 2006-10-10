@@ -518,12 +518,9 @@ stage2(pe_working_set_t *data_set)
 gboolean
 stage3(pe_working_set_t *data_set)
 {
-	
-	/* Take (next) highest resource */
 	slist_iter(
 		rsc, resource_t, data_set->resources, lpc,
 		rsc->cmds->internal_constraints(rsc, data_set);
-		rsc->cmds->color(rsc, data_set);
 		);
 	
 	return TRUE;
@@ -535,6 +532,11 @@ stage3(pe_working_set_t *data_set)
 gboolean
 stage4(pe_working_set_t *data_set)
 {
+	/* Take (next) highest resource */
+	slist_iter(
+		rsc, resource_t, data_set->resources, lpc,
+		rsc->cmds->color(rsc, data_set);
+		);
 	return TRUE;
 }
 
