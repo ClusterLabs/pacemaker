@@ -518,6 +518,8 @@ do_crm_log(int log_level, const char *file, const char *function,
 	int log_as = log_level;
 	gboolean do_log = FALSE;
 
+	file = NULL; /* ignore filename */
+	
 	if(log_level <= (int)crm_log_level) {
 		do_log = TRUE;
 		if(log_level > LOG_INFO) {
