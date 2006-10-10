@@ -336,8 +336,6 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 		      && candidate->details->unclean == FALSE
 		      && candidate->weight == chosen->weight) {
 			   multiple++;
-		   } else {
-			   break;
 		   }
 		);
 
