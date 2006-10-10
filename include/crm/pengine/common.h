@@ -135,9 +135,6 @@ extern const char *role2text(enum rsc_role_e role);
 
 extern const char *fail2text(enum action_fail_response fail);
 
-extern int char2score(const char *score);
-extern char *score2char(int score);
-
 extern void add_hash_param(GHashTable *hash, const char *name, const char *value);
 extern void pe_metadata(void);
 extern void verify_pe_options(GHashTable *options);

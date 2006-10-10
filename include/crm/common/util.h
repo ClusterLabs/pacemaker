@@ -185,4 +185,7 @@ extern gboolean check_timer(const char *value);
 extern gboolean check_boolean(const char *value);
 extern gboolean check_number(const char *value);
 
+extern int char2score(const char *score);
+extern char *score2char(int score);
+
 #endif

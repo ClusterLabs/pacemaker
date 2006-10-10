@@ -300,51 +300,6 @@ merge_weights(int w1, int w2)
 	return result;
 }
 
-
-int
-char2score(const char *score) 
-{
-	int score_f = 0;
-	
-	if(score == NULL) {
-		
-	} else if(safe_str_eq(score, MINUS_INFINITY_S)) {
-		score_f = -INFINITY;
-		
-	} else if(safe_str_eq(score, INFINITY_S)) {
-		score_f = INFINITY;
-		
-	} else if(safe_str_eq(score, "+"INFINITY_S)) {
-		score_f = INFINITY;
-		
-	} else {
-		score_f = crm_parse_int(score, NULL);
-		if(score_f > 0 && score_f > INFINITY) {
-			score_f = INFINITY;
-			
-		} else if(score_f < 0 && score_f < -INFINITY) {
-			score_f = -INFINITY;
-		}
-	}
-	
-	return score_f;
-}
-
-
-char *
-score2char(int score) 
-{
-
-	if(score >= INFINITY) {
-		return crm_strdup("+"INFINITY_S);
-
-	} else if(score <= -INFINITY) {
-		return crm_strdup("-"INFINITY_S);
-	} 
-	return crm_itoa(score);
-}
-
-
 void
 add_hash_param(GHashTable *hash, const char *name, const char *value)
 {

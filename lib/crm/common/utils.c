@@ -96,11 +96,64 @@ gboolean
 check_number(const char *value) 
 {
 	errno = 0;
-	crm_int_helper(value, NULL);
+	if(value == NULL) {
+		return FALSE;
+		
+	} else if(safe_str_eq(value, MINUS_INFINITY_S)) {
+		
+	} else if(safe_str_eq(value, INFINITY_S)) {
+
+	} else {
+		crm_int_helper(value, NULL);
+	}
+
 	if(errno != 0) {
 		return FALSE;
 	}
 	return TRUE;
+}
+
+int
+char2score(const char *score) 
+{
+	int score_f = 0;
+	
+	if(score == NULL) {
+		
+	} else if(safe_str_eq(score, MINUS_INFINITY_S)) {
+		score_f = -INFINITY;
+		
+	} else if(safe_str_eq(score, INFINITY_S)) {
+		score_f = INFINITY;
+		
+	} else if(safe_str_eq(score, "+"INFINITY_S)) {
+		score_f = INFINITY;
+		
+	} else {
+		score_f = crm_parse_int(score, NULL);
+		if(score_f > 0 && score_f > INFINITY) {
+			score_f = INFINITY;
+			
+		} else if(score_f < 0 && score_f < -INFINITY) {
+			score_f = -INFINITY;
+		}
+	}
+	
+	return score_f;
+}
+
+
+char *
+score2char(int score) 
+{
+
+	if(score >= INFINITY) {
+		return crm_strdup("+"INFINITY_S);
+
+	} else if(score <= -INFINITY) {
+		return crm_strdup("-"INFINITY_S);
+	} 
+	return crm_itoa(score);
 }
 
 
