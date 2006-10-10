@@ -75,7 +75,6 @@ int group_num_allowed_nodes(resource_t *rsc)
 node_t *
 group_color(resource_t *rsc, pe_working_set_t *data_set)
 {
-	gboolean first = TRUE;
 	node_t *group_node = NULL;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
@@ -83,37 +82,21 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 	if(rsc->provisional == FALSE) {
 		return rsc->allocated_to;
 	}
+	/* combine the child weights */
+	crm_debug("Processing %s", rsc->id);
 	if(rsc->is_allocating) {
 		crm_err("Dependancy loop detected involving %s", rsc->id);
 		return NULL;
 	}
 	rsc->is_allocating = TRUE;
 	
-	crm_debug_3("Coloring children of: %s", rsc->id);
+	group_data->last_child->rsc_cons = g_list_concat(
+		group_data->last_child->rsc_cons, rsc->rsc_cons);
+	rsc->rsc_cons = NULL;
 
-	slist_iter(
-		coloc, rsc_colocation_t, rsc->rsc_cons, lpc,
-		crm_debug("Pre-Processing %s for %s", coloc->id, rsc->id);
-		coloc->rsc_rh->cmds->color(coloc->rsc_rh, data_set);
-		group_data->first_child->cmds->rsc_colocation_lh(
-			group_data->first_child, coloc->rsc_rh, coloc);
-		);
-
-	/* combine the child weights */
-	crm_debug("Processing %s", rsc->id);
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
-		if(first) {
-			crm_debug("Color %s", child_rsc->id);
-			group_node = child_rsc->cmds->color(child_rsc, data_set);
-			first = FALSE;
-
-		} else if(child_rsc->provisional) {
-			native_assign_node(child_rsc, NULL, group_node);
-		} else {
-			crm_debug_2("Skip %s", child_rsc->id);
-			break;
-		}
+		group_node = child_rsc->cmds->color(child_rsc, data_set);
 		);
 
 	rsc->provisional = FALSE;
@@ -210,8 +193,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		if(group_data->colocated && child_rsc != group_data->first_child) {
 			rsc_colocation_new(
 				"group:internal_colocation", INFINITY,
-				child_rsc, group_data->first_child,
-				NULL, NULL);
+				last_rsc, child_rsc, NULL, NULL);
 		}
 	
 		if(group_data->ordered == FALSE) {
@@ -292,8 +274,8 @@ void group_rsc_colocation_lh(
 	get_group_variant_data(group_data, rsc_lh);
 
 	if(group_data->colocated) {
-		group_data->first_child->cmds->rsc_colocation_lh(
-			group_data->first_child, rsc_rh, constraint); 
+		group_data->last_child->cmds->rsc_colocation_lh(
+			group_data->last_child, rsc_rh, constraint); 
 		return;
 	}
 	
@@ -321,8 +303,8 @@ void group_rsc_colocation_rh(
 	print_resource(LOG_DEBUG_3, "LHS", rsc_lh, TRUE);
 	
 	if(group_data->colocated) {
-		group_data->first_child->cmds->rsc_colocation_rh(
-			rsc_lh, group_data->first_child, constraint); 
+		group_data->last_child->cmds->rsc_colocation_rh(
+			rsc_lh, group_data->last_child, constraint); 
 		return;
 	}
 	
@@ -391,15 +373,20 @@ void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	crm_debug_3("Processing actions from %s", group_data->self->id);
+	crm_debug("Processing rsc_location %s for %s",
+		  constraint->id, group_data->self->id);
 
-	group_data->self->cmds->rsc_location(group_data->self, constraint);
-
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-		child_rsc->cmds->rsc_location(child_rsc, constraint);
-		);
+	if(group_data->colocated) {
+		group_data->first_child->cmds->rsc_location(
+			group_data->first_child, constraint);
+	} else {
+		slist_iter(
+			child_rsc, resource_t, group_data->child_list, lpc,
+			child_rsc->cmds->rsc_location(child_rsc, constraint);
+			);
+	}
 }
+
 
 void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 {

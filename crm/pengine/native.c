@@ -28,7 +28,7 @@
 
 #define DELETE_THEN_REFRESH 1
 
-void node_list_update(GListPtr list1, GListPtr list2);
+void node_list_update(GListPtr list1, GListPtr list2, int factor);
 
 void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 				   resource_t *rsc_rh, gboolean update_rh);
@@ -159,11 +159,12 @@ int native_num_allowed_nodes(resource_t *rsc)
 node_t *
 native_color(resource_t *rsc, pe_working_set_t *data_set)
 {
-	print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);
 	
 	if(rsc->provisional == FALSE) {
 		return rsc->allocated_to;
 	}
+
+	print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);
 	if(rsc->is_allocating) {
 		crm_err("Dependancy loop detected involving %s", rsc->id);
 		return NULL;
@@ -172,13 +173,19 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	rsc->is_allocating = TRUE;
 	rsc->rsc_cons = g_list_sort(rsc->rsc_cons, sort_cons_strength);
 
-	/*------ Pre-processing ------*/
 	slist_iter(
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
 
 		crm_debug_3("Pre-Processing %s", constraint->id);		
 
-		/* or use ordering constraints? */
+		if(rsc->provisional && constraint->rsc_rh->provisional) {
+			crm_info("Combine scores from %s and %s",
+				 rsc->id, constraint->rsc_rh->id);
+			node_list_update(constraint->rsc_rh->allowed_nodes,
+					 rsc->allowed_nodes,
+					 constraint->score/INFINITY);
+		}
+		
 		constraint->rsc_rh->cmds->color(
 			constraint->rsc_rh, data_set);
 		rsc->cmds->rsc_colocation_lh(
@@ -186,22 +193,20 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		
 		);
 
-	if(native_choose_node(rsc) ) {
+	if(rsc->provisional && native_choose_node(rsc) ) {
 		crm_debug("Allocated resource %s to %s",
 			    rsc->id, rsc->allocated_to->details->uname);
-	} else {
+
+	} else if(rsc->allocated_to == NULL) {
 		pe_warn("Resource %s cannot run anywhere", rsc->id);
+
+	} else {
+		crm_debug("Pre-Allocated resource %s to %s",
+			  rsc->id, rsc->allocated_to->details->uname);
 	}
+	
 	rsc->provisional = FALSE;
 	rsc->is_allocating = FALSE;
-
-	/*------ Post-processing ------*/
-	slist_iter(
-		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
-		crm_debug_3("Post-Processing %s", constraint->id);
-		rsc->cmds->rsc_colocation_lh(
-			rsc, constraint->rsc_rh, constraint);
-		);
 	print_resource(LOG_DEBUG_3, "Allocated ", rsc, TRUE);
 
 	return rsc->allocated_to;
@@ -539,12 +544,6 @@ void native_rsc_colocation_rh(
 	}
 	
 	if(rsc_lh->provisional && rsc_rh->provisional) {
-#if 0
-		/* should we do this? */
-		crm_debug("combine priorities of %s and %s",
-			  rsc_lh->id, rsc_rh->id);
-		node_list_update(rsc_lh->allowed_nodes, rsc_rh->allowed_nodes);
-#endif
 		return;
 
 	} else if( (!rsc_lh->provisional) && (!rsc_rh->provisional) ) {
@@ -585,8 +584,10 @@ void native_rsc_colocation_rh(
 					rsc_lh->allocated_to->details->uname);
 			}
 			
-		} else {
+		} else if(constraint->score == INFINITY) {
 			rsc_rh->provisional = FALSE;
+			crm_notice("%s must run with %s which can't run anywhere",
+				   rsc_rh->id, rsc_lh->id);
 		}
 		
 	} else if(rsc_rh->provisional == FALSE) {
@@ -600,14 +601,16 @@ void native_rsc_colocation_rh(
 				rsc_lh->provisional = FALSE;
 			}
 			
-		} else {
+		} else if(constraint->score == INFINITY) {
 			rsc_lh->provisional = FALSE;
+			crm_notice("%s must run with %s which can't run anywhere",
+				   rsc_lh->id, rsc_rh->id);
 		}
 	}
 }
 
 void
-node_list_update(GListPtr list1, GListPtr list2)
+node_list_update(GListPtr list1, GListPtr list2, int factor)
 {
 	node_t *other_node = NULL;
 
@@ -622,12 +625,11 @@ node_list_update(GListPtr list1, GListPtr list2)
 			list2, node->details->id);
 
 		if(other_node != NULL) {
-			crm_debug_4("%s + %s: %d + %d",
+			crm_debug_3("%s: %d + %d",
 				    node->details->uname, 
-				    other_node->details->uname, 
 				    node->weight, other_node->weight);
 			node->weight = merge_weights(
-				other_node->weight, node->weight);
+				factor*other_node->weight, node->weight);
 		}
 		);	
 }
