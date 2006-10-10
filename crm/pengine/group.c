@@ -370,21 +370,23 @@ void group_rsc_order_rh(
 
 void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 {
+	gboolean reset_scores = TRUE;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
 	crm_debug("Processing rsc_location %s for %s",
 		  constraint->id, group_data->self->id);
 
-	if(group_data->colocated) {
-		group_data->first_child->cmds->rsc_location(
-			group_data->first_child, constraint);
-	} else {
-		slist_iter(
-			child_rsc, resource_t, group_data->child_list, lpc,
-			child_rsc->cmds->rsc_location(child_rsc, constraint);
-			);
-	}
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc->cmds->rsc_location(child_rsc, constraint);
+		if(group_data->colocated && reset_scores) {
+			reset_scores = FALSE;
+			slist_iter(node, node_t, constraint->node_list_rh, lpc2,
+				   node->weight = 0;
+				);
+		}
+		);
 }
 
 
