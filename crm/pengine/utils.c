@@ -310,9 +310,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 		rsc->next_role = RSC_ROLE_STOPPED;
 		return FALSE;
 
-	} else if(chosen->details->unclean
-		  || chosen->details->standby
-		  || chosen->details->shutdown) {
+	} else if(can_run_resources(chosen) == FALSE) {
 		crm_debug("All nodes for color %s are unavailable"
 			  ", unclean or shutting down", rsc->id);
 		rsc->next_role = RSC_ROLE_STOPPED;
@@ -331,7 +329,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 	
 	slist_iter(candidate, node_t, nodes, lpc, 
 		   crm_debug("Color %s, Node[%d] %s: %d", rsc->id, lpc,
-			       candidate->details->uname, candidate->weight);
+			     candidate->details->uname, candidate->weight);
 		   if(chosen->weight > 0
 		      && candidate->details->unclean == FALSE
 		      && candidate->weight == chosen->weight) {
@@ -358,7 +356,8 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 
 	if(rsc->allocated_to) {
 		node_t *old = rsc->allocated_to;
-		old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc, rsc);
+		old->details->allocated_rsc = g_list_remove(
+			old->details->allocated_rsc, rsc);
 		old->details->num_resources--;
 		old->count--;
 	}
