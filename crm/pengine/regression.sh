@@ -56,6 +56,8 @@ do_test target-1 "Target Role : test"
 
 echo ""
 do_test date-1 "Dates" -d "2005-020"
+do_test date-2 "Date Spec - Pass" -d "2005-020T12:30"
+do_test date-3 "Date Spec - Fail" -d "2005-020T11:30"
 do_test probe-0 "Probe (anon clone)"
 do_test probe-1 "Pending Probe"
 do_test standby "Standby"

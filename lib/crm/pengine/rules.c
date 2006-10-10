@@ -340,9 +340,12 @@ phase_of_the_moon(ha_time_t *now)
 		}							\
 		value_low_i = crm_parse_int(value_low, "0");		\
 		value_high_i = crm_parse_int(value_high, "-1");		\
-		if(value_low_i > time_field) {				\
+		if(value_high_i < 0) {					\
+			if(value_low_i != time_field) {			\
+				pass = FALSE;				\
+			}						\
+		} else if(value_low_i > time_field) {			\
 			pass = FALSE;					\
-		} else if(value_high_i < 0) {				\
 		} else if(value_high_i < time_field) {			\
 			pass = FALSE;					\
 		}							\

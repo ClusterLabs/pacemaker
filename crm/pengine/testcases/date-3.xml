@@ -1,0 +1,53 @@
+ <cib admin_epoch="0" have_quorum="true" num_peers="2" cib_feature_revision="1.3" ccm_transition="4" generated="true" dc_uuid="f83e8e33-3e0f-46d6-93d4-8dace5be52db" epoch="181" num_updates="4980" cib-last-written="Tue Oct 10 18:35:20 2006">
+   <configuration>
+     <crm_config>
+       <cluster_property_set id="overrides" score="2">
+         <rule id="test_failback_rule" boolean_op="and">
+           <date_expression id="test_failback_expr" operation="date_spec">
+             <date_spec id="test_failback_spec" hours="12"/>
+           </date_expression>
+         </rule>
+         <attributes>
+           <nvpair name="network-delay" id="overrides-network-delay" value="10s"/>
+         </attributes>
+       </cluster_property_set>
+       <cluster_property_set id="boo" score="1">
+         <attributes>
+           <nvpair name="network-delay" id="cib-bootstrap-options-network-delay" value="50s"/>
+           <nvpair name="cluster_recheck_interval" id="cib-bootstrap-options-cluster_recheck_interval" value="60"/>
+         </attributes>
+       </cluster_property_set>
+     </crm_config>
+     <nodes>
+       <node id="3f9539b2-cd3b-4176-af89-e1b91fd9c8c7" uname="router1" type="normal"/>
+       <node id="f83e8e33-3e0f-46d6-93d4-8dace5be52db" uname="router2" type="normal"/>
+     </nodes>
+     <resources>
+       <group id="test" description="test resource">
+         <primitive id="test_ip" class="heartbeat" type="IPaddr2_vlan" provider="heartbeat">
+           <instance_attributes id="test_ip_inst">
+             <attributes>
+               <nvpair id="test_ip_inst_attr" name="1" value="10.1.1.1/24/sit0"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+         <primitive id="test_mailto" class="ocf" type="MailTo" provider="heartbeat">
+           <instance_attributes id="test_mailto_inst">
+             <attributes>
+               <nvpair id="test_mailto_inst_attr0" name="email" value="root"/>
+               <nvpair id="test_mailto_inst_attr1" name="subject" value="Test IP Failover"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+       </group>
+     </resources>
+     <constraints>
+       <rsc_location id="test_location" rsc="test">
+         <rule id="test_preferred_location" score="100">
+           <expression attribute="#uname" id="test_preferred_location_expr" operation="eq" value="router1"/>
+         </rule>
+       </rsc_location>
+     </constraints>
+   </configuration>
+   <status/>
+ </cib>
