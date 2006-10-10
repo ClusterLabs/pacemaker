@@ -24,6 +24,23 @@
 
 char command = 0;
 
+static void
+usage(int rc) 
+{
+	fprintf(stderr, "Usage: iso8601 [-(O|W|L)] -(d|p|D) <string> \n");
+	fprintf(stderr, "Input Options:\n");
+	fprintf(stderr, "\t-d Parse an ISO8601 date/time.  Eg. '2005-01-20 00:30:00 +01:00' or '2005-040'\n");
+	fprintf(stderr, "\t-p Parse an ISO8601 date/time interval/period (wth start time).  Eg. '2005-040/2005-043'\n");
+	fprintf(stderr, "\t-D Parse an ISO8601 date/time duration (wth start time). Eg. '2005-040/P1M'\n");
+	fprintf(stderr, "\nOutput Options:\n");
+	fprintf(stderr, "\tBy default, shows the result in 'universal' date/time\n");
+	fprintf(stderr, "\t-L  Show result as a 'local' date/time\n");
+	fprintf(stderr, "\t-O  Show result as an 'ordinal' date/time\n");
+	fprintf(stderr, "\t-W  Show result as an 'calendar week' date/time\n");
+	fprintf(stderr, "\nFor more information on the ISO8601 standard, see: http://en.wikipedia.org/wiki/ISO_8601\n");
+	exit(rc);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -52,6 +69,7 @@ main(int argc, char **argv)
 				alter_debug(DEBUG_INC);
 				break;
 			case '?':
+				usage(0);
 				break;
 			case 'd':
 			case 'p':
@@ -71,25 +89,36 @@ main(int argc, char **argv)
 		}
 	}
 
-	CRM_ASSERT(input_s != NULL);
+	if(input_s == NULL) {
+		usage(1);
+	}
+	
 	mutable_s = input_s;
 
 	if(command == 'd') {
 		ha_time_t *date_time = parse_date(&mutable_s);
-		CRM_ASSERT(date_time != NULL);
+		if(date_time != NULL) {
+			fprintf(stderr, "Invalid date/time specified: %s\n", input_s);
+			usage(1);
+		}
 		log_date(LOG_INFO, "parsed", date_time,
 			 print_options|ha_log_date|ha_log_time);
 		
 	} else if(command == 'p') {
 		ha_time_period_t *interval = parse_time_period(&mutable_s);
-		CRM_ASSERT(interval != NULL);
+		if(interval != NULL) {
+			fprintf(stderr, "Invalid interval specified: %s\n", input_s);
+			usage(1);
+		}
 		log_time_period(LOG_INFO, interval,
 				print_options|ha_log_date|ha_log_time);
 		
 	} else if(command == 'D') {
 		ha_time_t *duration = parse_time_duration(&mutable_s);
-		CRM_ASSERT(duration != NULL);
-		
+		if(duration != NULL) {
+			fprintf(stderr, "Invalid duration specified: %s\n", input_s);
+			usage(1);
+		}
 	}
 	return 0;
 }
