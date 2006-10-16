@@ -482,10 +482,11 @@ find_hash_entry(HA_Message * msg)
 	}
 	
 	value = ha_msg_value(msg, F_ATTRD_SECTION);
-	if(value != NULL) {
-		hash_entry->section = crm_strdup(value);
-		crm_debug("\t%s->section: %s", attr, value);
+	if(value == NULL) {
+		value = XML_CIB_TAG_STATUS;
 	}
+	hash_entry->section = crm_strdup(value);
+	crm_debug("\t%s->section: %s", attr, value);
 	
 	value = ha_msg_value(msg, F_ATTRD_DAMPEN);
 	if(value != NULL) {
