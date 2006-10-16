@@ -22,6 +22,8 @@ INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 		-I$(top_builddir)/linux-ha  -I$(top_srcdir)/linux-ha \
 		-I$(top_builddir)           -I$(top_srcdir)
 
+EXTRA_DIST	= version.h
+
 hadir		= $(sysconfdir)/ha.d
 halibdir	= $(libdir)/@HB_PKG@
 commmoddir	= $(halibdir)/modules/comm
@@ -57,7 +59,7 @@ halib_PROGRAMS	= crmd atest
 
 noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h 	\
 		fsa_matrix.h fsa_proto.h crmd_utils.h crmd_callbacks.h \
-		crmd_lrm.h
+		crmd_lrm.h version.h
 
 atest_SOURCES	= atest.c
 atest_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
@@ -96,3 +98,25 @@ graphs:	fsa_inputs.png fsa_inputs_by_action.png fsa_actions_by_state.png
 
 %.dot : fsa_matrix.h
 	perl make_dot.pl
+
+version.h: version
+
+VERSION_FILE="$(top_builddir)/crm/crmd/version.h"
+CRM_HG_VERSION=$(shell hg -R $(top_srcdir) id | tr ' ' ':')
+CRM_NOW_VERSION=$(shell test -f $(VERSION_FILE) && head -n 1 $(VERSION_FILE))
+
+version:
+	if [ "x$(CRM_HG_VERSION)" = "x" -a "x$(CRM_NOW_VERSION)" = "x" ]; then		\
+		echo "Unknown CRM version"; 						\
+		echo "/* unknown */" > $(VERSION_FILE); 				\
+		echo "#define CRM_HG_VERSION \"unknown\"" >> $(VERSION_FILE); 		\
+	elif [ "x$(CRM_HG_VERSION)" = "x" ]; then					\
+		echo "Exported CRM version correct: $(CRM_NOW_VERSION)"; 		\
+	elif [ "/* $(CRM_HG_VERSION) */" = "$(CRM_NOW_VERSION)" ]; then 		\
+		echo "CRM version correct: $(CRM_NOW_VERSION)"; 			\
+	else 										\
+		echo "Updating CRM version"; 						\
+		echo "/* $(CRM_HG_VERSION) */" > $(VERSION_FILE); 			\
+		echo "#define CRM_HG_VERSION \"$(CRM_HG_VERSION)\"" >> $(VERSION_FILE); \
+	fi
+

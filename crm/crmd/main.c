@@ -50,6 +50,7 @@
 #include <crmd.h>
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
+#include <crm/crmd/version.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -72,6 +73,8 @@ main(int argc, char ** argv)
 
     crm_log_init(crm_system_name);
 
+    crm_info("CRM Hg Version: %s\n", CRM_HG_VERSION);
+    
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
 			case 'V':
@@ -89,6 +92,10 @@ main(int argc, char ** argv)
 
     if(argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
 	    crmd_metadata();
+	    return 0;
+    } else if(argc - optind == 1 && safe_str_eq("version", argv[optind])) {
+	    fprintf(stderr, "CRM Version: ");
+	    fprintf(stdout, "%s (%s)\n", CRM_FEATURE_SET, CRM_HG_VERSION);
 	    return 0;
     }
     
@@ -165,13 +172,11 @@ usage(const char* cmd, int exit_status)
 
     stream = exit_status ? stderr : stdout;
 
-    fprintf(stream, "usage: %s [-srkh]"
-			"[-c configure file]\n", cmd);
-/* 	fprintf(stream, "\t-d\tsets debug level\n"); */
-/* 	fprintf(stream, "\t-s\tgets daemon status\n"); */
-/* 	fprintf(stream, "\t-r\trestarts daemon\n"); */
-/* 	fprintf(stream, "\t-k\tstops daemon\n"); */
-/* 	fprintf(stream, "\t-h\thelp message\n"); */
+    fprintf(stream, "usage: %s [-V] [-h|version|metadata]\n", cmd);
+    fprintf(stream, "\t-h\t: this help message\n");
+    fprintf(stream, "\t-V\t: increase verbosity\n");
+    fprintf(stream, "\tmetadata\t: show configurable crmd options\n");
+    fprintf(stream, "\tversion\t\t: show version information and quit\n");
     fflush(stream);
 
     exit(exit_status);
