@@ -18,6 +18,7 @@
  */
 
 #include <portability.h>
+#include <config.h>
 
 #include <sys/param.h>
 #include <stdio.h>
@@ -95,7 +96,7 @@ main(int argc, char ** argv)
 	    return 0;
     } else if(argc - optind == 1 && safe_str_eq("version", argv[optind])) {
 	    fprintf(stderr, "CRM Version: ");
-	    fprintf(stdout, "%s (%s)\n", CRM_FEATURE_SET, CRM_HG_VERSION);
+	    fprintf(stdout, "%s (%s)\n", VERSION, CRM_HG_VERSION);
 	    return 0;
     }
     
