@@ -53,7 +53,7 @@ AM_CFLAGS	= @CFLAGS@						\
 lib_LTLIBRARIES	= 
 
 ## binary progs
-halib_PROGRAMS	= crmd atest
+halib_PROGRAMS	= version crmd atest
 
 ## SOURCES
 
@@ -99,7 +99,10 @@ graphs:	fsa_inputs.png fsa_inputs_by_action.png fsa_actions_by_state.png
 %.dot : fsa_matrix.h
 	perl make_dot.pl
 
+.PHONY: version
 version.h: version
+version.c:
+	touch $(top_builddir)/crm/crmd/version.c
 
 VERSION_FILE="$(top_builddir)/crm/crmd/version.h"
 CRM_HG_VERSION=$(shell hg -R $(top_srcdir) id | tr ' ' ':')
