@@ -111,7 +111,7 @@ version:
 		echo "/* unknown */" > $(VERSION_FILE); 				\
 		echo "#define CRM_HG_VERSION \"unknown\"" >> $(VERSION_FILE); 		\
 	elif [ "x$(CRM_HG_VERSION)" = "x" ]; then					\
-		echo "Exported CRM version correct: $(CRM_NOW_VERSION)"; 		\
+		echo "Using exported CRM version: $(CRM_NOW_VERSION)"; 			\
 	elif [ "/* $(CRM_HG_VERSION) */" = "$(CRM_NOW_VERSION)" ]; then 		\
 		echo "CRM version correct: $(CRM_NOW_VERSION)"; 			\
 	else 										\
