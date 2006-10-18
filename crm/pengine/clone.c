@@ -832,26 +832,27 @@ void clone_rsc_colocation_lh(
 			clone_data_rh, constraint->rsc_rh);
 		if(clone_data->clone_node_max
 		   != clone_data_rh->clone_node_max) {
-			pe_err("Cannot interleave "XML_CIB_TAG_INCARNATION
-			       " %s and %s because"
-			       " they do not support the same number of"
-			       " resources per node",
-			       constraint->rsc_lh->id, constraint->rsc_rh->id);
+			crm_config_err("Cannot interleave "XML_CIB_TAG_INCARNATION
+				       " %s and %s because"
+				       " they do not support the same number of"
+					" resources per node",
+				       constraint->rsc_lh->id, constraint->rsc_rh->id);
 			
 		/* only the LHS side needs to be labeled as interleave */
 		} else if(clone_data->interleave) {
 			do_interleave = TRUE;
 
-		} else if(constraint->score != INFINITY) {
-			pe_warn("rsc_colocations other than \"-INFINITY\""
-				" are not supported for non-interleaved "
-				XML_CIB_TAG_INCARNATION" resources");
+		} else if(constraint->score >= INFINITY) {
+			crm_config_err("Manditory co-location of non-interleaved clones (%s)"
+				       " with other clone (%s) resources is not supported",
+				       rsc_lh->id, rsc_rh->id)
 			return;
 		}
 
-	} else if(constraint->score != -INFINITY) {
-		pe_warn("Co-location scores other than \"-INFINITY\" are not "
-			" allowed for non-"XML_CIB_TAG_INCARNATION" resources");
+	} else if(constraint->score >= INFINITY) {
+		crm_config_err("Manditory co-location of clones (%s) with other"
+			       " non-clone (%s) resources is not supported",
+			       rsc_lh->id, rsc_rh->id)
 		return;
 	}
 	
@@ -893,9 +894,10 @@ void clone_rsc_colocation_rh(
 		pe_err("rsc_rh was NULL for %s", constraint->id);
 		return;
 		
-	} else if(constraint->score != -INFINITY) {
-		pe_warn("rsc_dependencies other than \"must_not\" "
-			"are not supported for clone resources");
+	} else if(constraint->score >= INFINITY) {
+		crm_config_err("%s: Maniditory colocation of non-clone"
+			       " resources with clone resources (%s)"
+			       " is not supported", rsc_lh->id, rsc_rh->id);
 		return;
 		
 	} else {
