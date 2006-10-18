@@ -375,6 +375,8 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		   native_assign_node(replace_rsc, NULL, a_node);
 		);
 
+	rsc->cmds->create_actions(rsc, data_set);
+	
 	return NULL;
 }
 
@@ -430,10 +432,12 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	clone_variant_data_t *clone_data = NULL;
 
 	get_clone_variant_data(clone_data, rsc);
+
+	crm_debug_2("Creating actions for %s", rsc->id);
 	
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
-		child_rsc->cmds->create_actions(child_rsc, data_set);
+ 		child_rsc->cmds->create_actions(child_rsc, data_set);
 		clone_update_pseudo_status(
 			child_rsc, &child_stopping, &child_starting);
 		

@@ -101,8 +101,13 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 
 	rsc->provisional = FALSE;
 	rsc->is_allocating = FALSE;
-	
-	return group_node;
+
+	rsc->cmds->create_actions(rsc, data_set);
+
+	if(group_data->colocated) {
+		return group_node;
+	} 
+	return NULL;
 }
 
 void group_update_pseudo_status(resource_t *parent, resource_t *child);
@@ -113,9 +118,10 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
+	crm_debug_2("Creating actions for %s", rsc->id);
+	
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
-		child_rsc->cmds->create_actions(child_rsc, data_set);
 		group_update_pseudo_status(rsc, child_rsc);
 		);
 
@@ -155,8 +161,11 @@ group_update_pseudo_status(resource_t *parent, resource_t *child)
 		}
 		if(safe_str_eq(CRMD_ACTION_STOP, action->task) && action->runnable) {
 			group_data->child_stopping = TRUE;
+			crm_debug_3("Based on %s the group is stopping", action->uuid);
+
 		} else if(safe_str_eq(CRMD_ACTION_START, action->task) && action->runnable) {
 			group_data->child_starting = TRUE;
+			crm_debug_3("Based on %s the group is starting", action->uuid);
 		}
 		
 		);

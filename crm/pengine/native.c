@@ -198,17 +198,22 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 			    rsc->id, rsc->allocated_to->details->uname);
 
 	} else if(rsc->allocated_to == NULL) {
-		pe_warn("Resource %s cannot run anywhere", rsc->id);
-
+		if(rsc->orphan == FALSE) {
+			pe_warn("Resource %s cannot run anywhere", rsc->id);
+		} else {
+			crm_info("Stopping orphan resource %s", rsc->id);
+		}
+		
 	} else {
 		crm_debug("Pre-Allocated resource %s to %s",
 			  rsc->id, rsc->allocated_to->details->uname);
 	}
 	
-	rsc->provisional = FALSE;
 	rsc->is_allocating = FALSE;
 	print_resource(LOG_DEBUG_3, "Allocated ", rsc, TRUE);
 
+	rsc->cmds->create_actions(rsc, data_set);
+	
 	return rsc->allocated_to;
 }
 
@@ -348,6 +353,8 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	enum rsc_role_e role = RSC_ROLE_UNKNOWN;
 	enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
+	crm_debug_2("Creating actions for %s", rsc->id);
+	
 	chosen = rsc->allocated_to;
 	if(chosen != NULL) {
 		CRM_CHECK(rsc->next_role != RSC_ROLE_UNKNOWN, rsc->next_role = RSC_ROLE_STARTED);
@@ -574,7 +581,7 @@ void native_rsc_colocation_rh(
 		return;
 		
 	} else if(rsc_lh->provisional == FALSE) {
-		crm_debug_3("update _them_ : postproc version");
+		crm_debug_3("update _them_ : postproc version %p", rsc_rh->allocated_to);
 		if(rsc_lh->allocated_to) {
 			if(native_update_node_weight(
 				   rsc_rh, constraint->id, rsc_lh->allocated_to,
@@ -591,7 +598,7 @@ void native_rsc_colocation_rh(
 		}
 		
 	} else if(rsc_rh->provisional == FALSE) {
-		crm_debug_3("update _us_ : postproc version");
+		crm_debug_3("update _us_ : postproc version %p", rsc_rh->allocated_to);
 		if(rsc_rh->allocated_to) {
 			if(native_update_node_weight(
 				   rsc_lh, constraint->id, rsc_rh->allocated_to,

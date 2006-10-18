@@ -19,7 +19,7 @@
    </synapse>
    <synapse id="2" priority="3">
      <action_set>
-       <rsc_op id="10" operation="start" operation_key="rsc3_start_0" on_node="node1" on_node_uuid="node1">
+       <rsc_op id="11" operation="start" operation_key="rsc3_start_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc3" long-id="rsc3" class="heartbeat" type="apache"/>
          <attributes crm_feature_set="1.0.6" priority="3.0" CRM_meta_timeout="20000"/>
        </rsc_op>
@@ -50,7 +50,7 @@
    </synapse>
    <synapse id="5" priority="2">
      <action_set>
-       <rsc_op id="11" operation="start" operation_key="rsc2_start_0" on_node="node1" on_node_uuid="node1">
+       <rsc_op id="10" operation="start" operation_key="rsc2_start_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc2" long-id="rsc2" class="heartbeat" type="apache"/>
          <attributes crm_feature_set="1.0.6" priority="2.0" CRM_meta_timeout="20000"/>
        </rsc_op>

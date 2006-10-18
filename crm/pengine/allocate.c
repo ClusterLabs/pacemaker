@@ -508,12 +508,7 @@ stage2(pe_working_set_t *data_set)
 
 
 /*
- * Choose a color for all resources from highest priority and XML_STRENGTH_VAL_MUST
- *  dependencies to lowest, creating new colors as necessary (returned
- *  as "colors").
- *
- * Some nodes may be colored as a "no_color" meaning that it was unresolvable
- *  given the current node stati and constraints.
+ * Create internal resource constraints before allocation
  */
 gboolean
 stage3(pe_working_set_t *data_set)
@@ -527,39 +522,26 @@ stage3(pe_working_set_t *data_set)
 }
 
 /*
- * Choose a node for each (if possible) color
+ * Check for orphaned or redefined actions
  */
 gboolean
 stage4(pe_working_set_t *data_set)
 {
-	/* Take (next) highest resource */
-	slist_iter(
-		rsc, resource_t, data_set->resources, lpc,
-		rsc->cmds->color(rsc, data_set);
-		);
+	check_actions(data_set);
 	return TRUE;
 }
 
 
 
-/*
- * Attach nodes to the actions that need to be taken
- *
- * Mark actions XML_LRM_ATTR_OPTIONAL if possible (Ie. if the start and stop are
- *  for the same node)
- *
- * Mark unrunnable actions
- */
 gboolean
 stage5(pe_working_set_t *data_set)
 {
-	crm_debug_3("Creating actions and internal ording constraints");
-	
-	check_actions(data_set);
+	/* Take (next) highest resource and assign it */
 	slist_iter(
 		rsc, resource_t, data_set->resources, lpc,
-		rsc->cmds->create_actions(rsc, data_set);
+		rsc->cmds->color(rsc, data_set);
 		);
+	
 	return TRUE;
 }
 

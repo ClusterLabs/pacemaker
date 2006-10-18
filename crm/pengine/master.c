@@ -242,6 +242,8 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
+	crm_debug_2("Creating actions for %s", rsc->id);
+	
 	/* how many can we have? */
 	if(master_max >  clone_data->max_nodes * clone_data->clone_node_max) {
 		master_max = clone_data->max_nodes * clone_data->clone_node_max;
@@ -421,6 +423,8 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		gboolean child_promoting = FALSE;
 		gboolean child_demoting = FALSE;
 
+		crm_debug("Creating actions for %s", rsc->id);
+		child_rsc->cmds->create_actions(child_rsc, data_set);
 		master_update_pseudo_status(
 			child_rsc, &child_demoting, &child_promoting);
 

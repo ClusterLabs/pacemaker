@@ -22,7 +22,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="14" operation="start" operation_key="postfix_9_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
+         <rsc_op id="8" operation="start" operation_key="postfix_9_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
        </trigger>
        <trigger>
          <pseudo_event id="15" operation="start" operation_key="group_1_start_0"/>
@@ -58,7 +58,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="14" operation="start" operation_key="postfix_9_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
+         <rsc_op id="8" operation="start" operation_key="postfix_9_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
        </trigger>
      </inputs>
    </synapse>
@@ -77,7 +77,7 @@
    </synapse>
    <synapse id="6">
      <action_set>
-       <rsc_op id="14" operation="start" operation_key="postfix_9_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
+       <rsc_op id="8" operation="start" operation_key="postfix_9_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
          <primitive id="postfix_9" long-id="group_1:postfix_9" class="lsb" provider="heartbeat" type="postfix"/>
          <attributes crm_feature_set="1.0.6" CRM_meta_timeout="20000"/>
        </rsc_op>
