@@ -286,11 +286,11 @@ void group_rsc_colocation_lh(
 		group_data->last_child->cmds->rsc_colocation_lh(
 			group_data->last_child, rsc_rh, constraint); 
 		return;
-	}
-	
-	if(constraint->score >= INFINITY) {
-		crm_config_err("%s: Cannot perform manditory colocation with"
-			       " non-colocated group: %s", rsc_rh->id, rsc_lh->id);
+
+	} else if(constraint->score >= INFINITY) {
+		crm_config_err("%s: Cannot perform manditory colocation"
+			       " between non-colocated group and %s",
+			       rsc_lh->id, rsc_rh->id);
 		return;
 	} 
 
@@ -310,14 +310,16 @@ void group_rsc_colocation_rh(
 
 	crm_debug_3("Processing RH of constraint %s", constraint->id);
 	print_resource(LOG_DEBUG_3, "LHS", rsc_lh, TRUE);
+
+	if(rsc_rh->provisional) {
+		return;
 	
-	if(group_data->colocated) {
+	} else if(group_data->colocated) {
 		group_data->last_child->cmds->rsc_colocation_rh(
 			rsc_lh, group_data->last_child, constraint); 
 		return;
-	}
-	
-	if(constraint->score >= INFINITY) {
+
+	} else if(constraint->score >= INFINITY) {
 		crm_config_err("%s: Cannot perform manditory colocation with"
 			       " non-colocated group: %s", rsc_lh->id, rsc_rh->id);
 		return;
