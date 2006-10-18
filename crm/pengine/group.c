@@ -288,9 +288,9 @@ void group_rsc_colocation_lh(
 		return;
 	}
 	
-	if(constraint->score > 0) {
-		crm_config_err("Cannot colocate resources with"
-			      " non-colocated group: %s", rsc_lh->id);
+	if(constraint->score >= INFINITY) {
+		crm_config_err("%s: Cannot perform manditory colocation with"
+			       " non-colocated group: %s", rsc_rh->id, rsc_lh->id);
 		return;
 	} 
 
@@ -317,9 +317,9 @@ void group_rsc_colocation_rh(
 		return;
 	}
 	
-	if(constraint->score > 0) {
-		crm_config_err("Cannot colocate resources with"
-			      " non-colocated group: %s", rsc_rh->id);
+	if(constraint->score >= INFINITY) {
+		crm_config_err("%s: Cannot perform manditory colocation with"
+			       " non-colocated group: %s", rsc_lh->id, rsc_rh->id);
 		return;
 	} 
 
