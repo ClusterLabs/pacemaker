@@ -167,7 +167,7 @@ text2task(const char *task)
 	} else if(safe_str_eq(task, CRM_OP_LRM_REFRESH)) {
 		return no_action;	
 	} 
-	pe_err("Unsupported action: %s", task);
+	crm_config_warn("Unsupported action: %s", task);
 	return no_action;
 }
 
