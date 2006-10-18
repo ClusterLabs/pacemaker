@@ -1097,9 +1097,11 @@ resource_location(resource_t *rsc, node_t *node, int score, const char *tag,
 	}
 
 	if(node == NULL && score == -INFINITY) {
-		rsc->provisional = FALSE;
-		crm_free(rsc->allocated_to);
-		rsc->allocated_to = NULL;
+		if(rsc->allocated_to) {
+			crm_info("Deallocating %s from %s", rsc->id, rsc->allocated_to->details->uname);
+			crm_free(rsc->allocated_to);
+			rsc->allocated_to = NULL;
+		}
 	}
 }
 
