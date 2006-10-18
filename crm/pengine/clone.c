@@ -843,16 +843,27 @@ void clone_rsc_colocation_lh(
 			do_interleave = TRUE;
 
 		} else if(constraint->score >= INFINITY) {
-			crm_config_err("Manditory co-location of non-interleaved clones (%s)"
-				       " with other clone (%s) resources is not supported",
-				       rsc_lh->id, rsc_rh->id)
+			GListPtr lhs = NULL, rhs = NULL;
+			lhs = rsc_lh->allowed_nodes;
+			
+			slist_iter(
+				child_rsc, resource_t, clone_data_rh->child_list, lpc,
+				if(child_rsc->allocated_to != NULL) {
+					rhs = g_list_append(rhs, child_rsc->allocated_to);
+				}
+				);
+			
+			rsc_lh->allowed_nodes = node_list_and(lhs, rhs, FALSE);
+			
+			pe_free_shallow_adv(rhs, FALSE);
+			pe_free_shallow(lhs);
 			return;
 		}
 
 	} else if(constraint->score >= INFINITY) {
 		crm_config_err("Manditory co-location of clones (%s) with other"
 			       " non-clone (%s) resources is not supported",
-			       rsc_lh->id, rsc_rh->id)
+			       rsc_lh->id, rsc_rh->id);
 		return;
 	}
 	
@@ -894,10 +905,24 @@ void clone_rsc_colocation_rh(
 		pe_err("rsc_rh was NULL for %s", constraint->id);
 		return;
 		
+	} else if(rsc_rh->provisional) {
+		return;
+		
 	} else if(constraint->score >= INFINITY) {
-		crm_config_err("%s: Maniditory colocation of non-clone"
-			       " resources with clone resources (%s)"
-			       " is not supported", rsc_lh->id, rsc_rh->id);
+		GListPtr lhs = NULL, rhs = NULL;
+		lhs = rsc_lh->allowed_nodes;
+		
+		slist_iter(
+			child_rsc, resource_t, clone_data->child_list, lpc,
+			if(child_rsc->allocated_to != NULL) {
+				rhs = g_list_append(rhs, child_rsc->allocated_to);
+			}
+			);
+
+		rsc_lh->allowed_nodes = node_list_and(lhs, rhs, FALSE);
+
+		pe_free_shallow_adv(rhs, FALSE);
+		pe_free_shallow(lhs);
 		return;
 		
 	} else {
