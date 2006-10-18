@@ -50,8 +50,8 @@ struct rsc_colocation_s {
 		resource_t	*rsc_lh;
 		resource_t	*rsc_rh;
 
-		const char *state_lh;
-		const char *state_rh;
+		int role_lh;
+		int role_rh;
 		
 		int score;
 };

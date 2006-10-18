@@ -452,7 +452,9 @@ This may change in the future.
 <!ATTLIST rsc_colocation
           id        CDATA #REQUIRED
           from      CDATA #REQUIRED
+          from_role CDATA #IMPLIED
           to        CDATA #REQUIRED
+          to_role   CDATA #IMPLIED
           score     CDATA #REQUIRED>
 
 <!--

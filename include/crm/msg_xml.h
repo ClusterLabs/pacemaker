@@ -204,8 +204,8 @@
 #define XML_RULE_ATTR_ROLE		"role"
 #define XML_RULE_ATTR_RESULT		"result"
 #define XML_RULE_ATTR_BOOLEAN_OP	"boolean_op"
-#define XML_RULE_ATTR_FROMSTATE		"from_state"
-#define XML_RULE_ATTR_TOSTATE		"to_state"
+#define XML_RULE_ATTR_FROMSTATE		"from_role"
+#define XML_RULE_ATTR_TOSTATE		"to_role"
 
 #define XML_TAG_EXPRESSION		"expression"
 #define XML_EXPR_ATTR_ATTRIBUTE		"attribute"

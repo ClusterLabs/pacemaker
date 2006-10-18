@@ -46,8 +46,8 @@ invert_constraint(rsc_colocation_t *constraint)
 	/* swap the direction */
 	inverted_con->rsc_lh = constraint->rsc_rh;
 	inverted_con->rsc_rh = constraint->rsc_lh;
-	inverted_con->state_lh = constraint->state_rh;
-	inverted_con->state_rh = constraint->state_lh;
+	inverted_con->role_lh = constraint->role_rh;
+	inverted_con->role_rh = constraint->role_lh;
 
 	crm_action_debug_3(
 		print_rsc_colocation("Inverted constraint", inverted_con, FALSE));

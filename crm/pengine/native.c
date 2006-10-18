@@ -456,17 +456,17 @@ filter_colocation_constraint(
 		return FALSE;
 	}
 
-	if(constraint->state_lh != NULL
-	   && text2role(constraint->state_lh) != rsc_lh->next_role) {
+	if(constraint->role_lh != RSC_ROLE_UNKNOWN
+	   && constraint->role_lh != rsc_lh->next_role) {
 		crm_debug_4("RH: Skipping constraint: \"%s\" state filter",
-			    constraint->state_rh);
+			    role2text(constraint->role_rh));
 		return FALSE;
 	}
 	
-	if(constraint->state_rh != NULL
-	   && text2role(constraint->state_rh) != rsc_rh->next_role) {
+	if(constraint->role_rh != RSC_ROLE_UNKNOWN
+	   && constraint->role_rh != rsc_rh->next_role) {
 		crm_debug_4("RH: Skipping constraint: \"%s\" state filter",
-			    constraint->state_rh);
+			    role2text(constraint->role_rh));
 		return FALSE;
 	}
 	return TRUE;
@@ -550,10 +550,10 @@ void native_rsc_colocation_rh(
 		return;
 	}
 	
-	if(rsc_lh->provisional && rsc_rh->provisional) {
+	if(rsc_rh->provisional) {
 		return;
 
-	} else if( (!rsc_lh->provisional) && (!rsc_rh->provisional) ) {
+	} else if(rsc_lh->provisional == FALSE) {
 		/* error check */
 		struct node_shared_s *details_lh;
 		struct node_shared_s *details_rh;
@@ -580,25 +580,7 @@ void native_rsc_colocation_rh(
 		
 		return;
 		
-	} else if(rsc_lh->provisional == FALSE) {
-		crm_debug_3("update _them_ : postproc version %p", rsc_rh->allocated_to);
-		if(rsc_lh->allocated_to) {
-			if(native_update_node_weight(
-				   rsc_rh, constraint->id, rsc_lh->allocated_to,
-				   constraint->score) == FALSE) {
-				rsc_rh->provisional = FALSE;
-				crm_warn("%s cant run on %s", rsc_rh->id,
-					rsc_lh->allocated_to->details->uname);
-			}
-			
-		} else if(constraint->score == INFINITY) {
-			rsc_rh->provisional = FALSE;
-			crm_notice("%s must run with %s which can't run anywhere",
-				   rsc_rh->id, rsc_lh->id);
-		}
-		
-	} else if(rsc_rh->provisional == FALSE) {
-		crm_debug_3("update _us_ : postproc version %p", rsc_rh->allocated_to);
+	} else {
 		if(rsc_rh->allocated_to) {
 			if(native_update_node_weight(
 				   rsc_lh, constraint->id, rsc_rh->allocated_to,

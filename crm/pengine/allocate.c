@@ -99,7 +99,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		master_internal_constraints,
 		clone_agent_constraints,
 		clone_rsc_colocation_lh,
-		clone_rsc_colocation_rh,
+		master_rsc_colocation_rh,
 		clone_rsc_order_lh,
 		clone_rsc_order_rh,
 		clone_rsc_location,
@@ -1193,19 +1193,23 @@ rsc_colocation_new(const char *id, int score,
 	if(new_con == NULL) {
 		return FALSE;
 	}
-	if(safe_str_eq(state_lh, CRMD_ACTION_STARTED)) {
-		state_lh = NULL;
+
+	if(state_lh == NULL
+	   || safe_str_eq(state_lh, RSC_ROLE_STARTED_S)) {
+		state_lh = RSC_ROLE_UNKNOWN_S;
 	}
-	if(safe_str_eq(state_rh, CRMD_ACTION_STARTED)) {
-		state_rh = NULL;
-	}
+
+	if(state_rh == NULL
+	   || safe_str_eq(state_rh, RSC_ROLE_STARTED_S)) {
+		state_rh = RSC_ROLE_UNKNOWN_S;
+	} 
 
 	new_con->id       = id;
 	new_con->rsc_lh   = rsc_lh;
 	new_con->rsc_rh   = rsc_rh;
 	new_con->score = score;
-	new_con->state_lh = state_lh;
-	new_con->state_rh = state_rh;
+	new_con->role_lh = text2role(state_lh);
+	new_con->role_rh = text2role(state_rh);
 
 	
 	crm_debug_4("Adding constraint %s (%p) to %s",
