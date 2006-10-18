@@ -304,6 +304,8 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 {
 	int multiple = 0;
 	CRM_ASSERT(rsc->variant == pe_native);
+
+	rsc->provisional = FALSE;
 	
 	if(chosen == NULL) {
 		crm_debug("Could not allocate a node for %s", rsc->id);
@@ -363,7 +365,6 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 	}
 	
 	crm_debug("Assigning %s to %s", chosen->details->uname, rsc->id);
-	rsc->provisional = FALSE;
 	crm_free(rsc->allocated_to);
 	rsc->allocated_to = node_copy(chosen);
 
