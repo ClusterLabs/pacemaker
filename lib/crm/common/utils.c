@@ -171,6 +171,9 @@ cluster_option(GHashTable* options, gboolean(*validate)(const char*),
 		if(value != NULL) {
 			crm_config_warn("Using deprecated name '%s' for"
 				       " cluster option '%s'", old_name, name);
+			g_hash_table_insert(
+				options, crm_strdup(name), crm_strdup(value));
+			value = g_hash_table_lookup(options, old_name);
 		}
 	}
 
