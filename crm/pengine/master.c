@@ -551,13 +551,14 @@ void master_rsc_colocation_rh(
 		return;
 
 	} else if(constraint->role_rh == RSC_ROLE_UNKNOWN) {
+		crm_debug_3("Handling %s as a clone colocation", constraint->id);
 		clone_rsc_colocation_rh(rsc_lh, rsc_rh, constraint);
 		return;
 	}
 	
 	CRM_CHECK(rsc_lh != NULL, return);
 	CRM_CHECK(rsc_lh->variant == pe_native, return);
-	crm_debug_3("Processing RH of constraint %s", constraint->id);
+	crm_debug_3("Processing constraint %s: %d", constraint->id, constraint->score);
 
 	if(constraint->score < INFINITY) {
 		slist_iter(

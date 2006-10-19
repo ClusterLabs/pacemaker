@@ -176,7 +176,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
 
-		crm_debug_3("Pre-Processing %s", constraint->id);		
+		crm_debug_3("%s: Pre-Processing %s", rsc->id, constraint->id);		
 
 		if(rsc->provisional && constraint->rsc_rh->provisional) {
 			crm_info("Combine scores from %s and %s",
@@ -193,6 +193,8 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		
 		);
 
+	print_resource(LOG_DEBUG, "Allocating: ", rsc, FALSE);
+	
 	if(rsc->provisional && native_choose_node(rsc) ) {
 		crm_debug("Allocated resource %s to %s",
 			    rsc->id, rsc->allocated_to->details->uname);
