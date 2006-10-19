@@ -203,6 +203,23 @@ master_update_pseudo_status(
 		}							\
 		);
 
+#define apply_master_colocation(list)					\
+	slist_iter(							\
+		cons, rsc_colocation_t, list, lpc2,			\
+		cons_node = cons->rsc_lh->allocated_to;			\
+		if(cons->role_lh == RSC_ROLE_MASTER			\
+		   && cons_node != NULL					\
+		   && chosen->details == cons_node->details) {		\
+			int new_priority = merge_weights(		\
+				child_rsc->priority, cons->score);	\
+			crm_debug("Applying %s to %s",			\
+				  cons->id, child_rsc->id);		\
+			crm_debug("\t%s: %d->%d", child_rsc->id,	\
+				  child_rsc->priority, new_priority);	\
+			child_rsc->priority = new_priority;		\
+		}							\
+		);
+
 struct masters_s 
 {
 		node_t *node;
@@ -311,8 +328,6 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 				}
 
 				crm_free(attr_name);
-				apply_master_location(child_rsc->rsc_location);
-				apply_master_location(rsc->rsc_location);
 				break;
 
 			case RSC_ROLE_SLAVE:
@@ -330,6 +345,10 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 					  crm_err("Unknown resource role: %d for %s",
 						  child_rsc->next_role, child_rsc->id));
 		}
+		apply_master_location(child_rsc->rsc_location);
+		apply_master_location(rsc->rsc_location);
+		apply_master_colocation(rsc->rsc_cons);
+		apply_master_colocation(child_rsc->rsc_cons);
 		);
 	
 	/* sort based on the new "promote" priority */
@@ -518,3 +537,52 @@ master_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	
 }
 
+void master_rsc_colocation_rh(
+	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
+{
+	clone_variant_data_t *clone_data = NULL;
+	get_clone_variant_data(clone_data, rsc_rh);
+
+	if(rsc_rh->provisional) {
+		return;
+
+	} else if(rsc_rh == NULL) {
+		pe_err("rsc_rh was NULL for %s", constraint->id);
+		return;
+
+	} else if(constraint->role_rh == RSC_ROLE_UNKNOWN) {
+		clone_rsc_colocation_rh(rsc_lh, rsc_rh, constraint);
+		return;
+	}
+	
+	CRM_CHECK(rsc_lh != NULL, return);
+	CRM_CHECK(rsc_lh->variant == pe_native, return);
+	crm_debug_3("Processing RH of constraint %s", constraint->id);
+
+	if(constraint->score < INFINITY) {
+		slist_iter(
+			child_rsc, resource_t, clone_data->child_list, lpc,
+			
+			child_rsc->cmds->rsc_colocation_rh(rsc_lh, child_rsc, constraint);
+			);
+
+	} else {
+		GListPtr lhs = NULL, rhs = NULL;
+		lhs = rsc_lh->allowed_nodes;
+
+		slist_iter(
+			child_rsc, resource_t, clone_data->child_list, lpc,
+			if(child_rsc->allocated_to != NULL
+			   && child_rsc->next_role == constraint->role_rh) {
+				rhs = g_list_append(rhs, child_rsc->allocated_to);
+			}
+			);
+	
+		rsc_lh->allowed_nodes = node_list_and(lhs, rhs, FALSE);
+		
+		pe_free_shallow_adv(rhs, FALSE);
+		pe_free_shallow(lhs);
+	}
+
+	return;
+}

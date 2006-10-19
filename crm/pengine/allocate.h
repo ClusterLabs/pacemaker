@@ -158,6 +158,8 @@ extern gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern void master_create_actions(resource_t *rsc, pe_working_set_t *data_set);
 extern void master_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);
+extern void master_rsc_colocation_rh(
+	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 
 
 /* extern resource_object_functions_t resource_variants[]; */

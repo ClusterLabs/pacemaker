@@ -899,6 +899,8 @@ void clone_rsc_colocation_rh(
 	CRM_CHECK(rsc_lh != NULL, return);
 	CRM_CHECK(rsc_lh->variant == pe_native, return);
 	
+	get_clone_variant_data(clone_data, rsc_rh);
+	
 	crm_debug_3("Processing RH of constraint %s", constraint->id);
 
 	if(rsc_rh == NULL) {
@@ -928,8 +930,6 @@ void clone_rsc_colocation_rh(
 	} else {
 		print_resource(LOG_DEBUG_3, "LHS", rsc_lh, FALSE);
 	}
-	
-	get_clone_variant_data(clone_data, rsc_rh);
 
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
