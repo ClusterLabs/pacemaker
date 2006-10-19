@@ -146,9 +146,14 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	if(clone_data->self->provisional == FALSE) {
+	if(rsc->provisional == FALSE) {
+		return NULL;
+
+	} else if(rsc->is_allocating) {
+		crm_err("Dependancy loop detected involving %s", rsc->id);
 		return NULL;
 	}
+
 	local_node_max = clone_data->clone_node_max; 
 	clone_data->max_nodes = rsc->cmds->num_allowed_nodes(rsc);
 	
@@ -328,8 +333,9 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	crm_debug("Remainder: Total=%d, New=%d, Max=%d", pre_allocated, allocated, clone_data->clone_max);
 	CRM_ASSERT(pre_allocated+allocated <= clone_data->clone_max);
 
-	clone_data->self->provisional = FALSE;
+	rsc->provisional = FALSE;
 	if(rsc->stickiness >= INFINITY) {
+		rsc->cmds->create_actions(rsc, data_set);
 		return NULL;
 	}
 	
@@ -901,13 +907,14 @@ void clone_rsc_colocation_rh(
 	
 	get_clone_variant_data(clone_data, rsc_rh);
 	
-	crm_debug_3("Processing RH of constraint %s", constraint->id);
+	crm_debug_3("Processing constraint %s: %d", constraint->id, constraint->score);
 
 	if(rsc_rh == NULL) {
 		pe_err("rsc_rh was NULL for %s", constraint->id);
 		return;
 		
 	} else if(rsc_rh->provisional) {
+		crm_debug_3("%s is still provisional", rsc_rh->id);
 		return;
 		
 	} else if(constraint->score >= INFINITY) {
@@ -926,15 +933,11 @@ void clone_rsc_colocation_rh(
 		pe_free_shallow_adv(rhs, FALSE);
 		pe_free_shallow(lhs);
 		return;
-		
-	} else {
-		print_resource(LOG_DEBUG_3, "LHS", rsc_lh, FALSE);
 	}
 
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 		
-		print_resource(LOG_DEBUG_3, "RHS", child_rsc, FALSE);
 		child_rsc->cmds->rsc_colocation_rh(rsc_lh, child_rsc, constraint);
 		);
 }
