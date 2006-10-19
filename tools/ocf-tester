@@ -193,17 +193,32 @@ fi
 test_command stop
 assert $? 0 "Stop failed" 1
 
+test_command monitor
+assert $? $stopped_rc "Monitoring a stopped resource should return $stopped_rc"
+
 test_command start "Restarting resource..."
 assert $? 0 "Start failed" 1
+
+test_command monitor
+assert $? 0 "Monitoring an active resource should return 0"
 
 test_command start "Testing: starting a started resource"
 assert $? 0 "Starting a running resource is required to succeed"
 
+test_command monitor
+assert $? 0 "Monitoring an active resource should return 0"
+
 test_command stop "Stopping resource"
 assert $? 0 "Stop could not clean up after multiple starts" 1
 
-test_command stop "Testing: stopping a stoped resource"
+test_command monitor
+assert $? $stopped_rc "Monitoring a stopped resource should return $stopped_rc"
+
+test_command stop "Testing: stopping a stopped resource"
 assert $? 0 "Stopping a stopped resource is required to succeed"
+
+test_command monitor
+assert $? $stopped_rc "Monitoring a stopped resource should return $stopped_rc"
 
 if [ $num_errors != 0 ]; then
     echo Tests failed: $agent failed $num_errors tests
