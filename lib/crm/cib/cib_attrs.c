@@ -204,8 +204,8 @@ update_attr(cib_t *the_cib, int call_options,
 		CRM_CHECK(node_uuid != NULL, return cib_NOTEXISTS);
 	}
 	
-	rc = the_cib->cmds->query(
-		the_cib, section, &xml_search, cib_sync_call);
+	rc = the_cib->cmds->query(the_cib, section, &xml_search,
+				  cib_sync_call|cib_scope_local);
 	
 	if(rc != cib_ok) {
 		crm_err("Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
@@ -386,8 +386,8 @@ delete_attr(cib_t *the_cib, int options,
 	}
 	
 	if(attr_id == NULL || attr_value != NULL) {
-		rc = the_cib->cmds->query(
-			the_cib, section, &xml_search, cib_sync_call);
+		rc = the_cib->cmds->query(the_cib, section, &xml_search,
+					  cib_sync_call|cib_scope_local);
 
 		if(rc != cib_ok) {
 			crm_err("Query failed for section=%s of the CIB: %s",
@@ -441,8 +441,8 @@ query_node_uuid(cib_t *the_cib, const char *uname, char **uuid)
 	CRM_ASSERT(uname != NULL);
 	CRM_ASSERT(uuid != NULL);
 	
-	rc = the_cib->cmds->query(
-		the_cib, XML_CIB_TAG_NODES, &fragment, cib_sync_call);
+	rc = the_cib->cmds->query(the_cib, XML_CIB_TAG_NODES, &fragment,
+				  cib_sync_call|cib_scope_local);
 	if(rc != cib_ok) {
 		return rc;
 	}
@@ -493,8 +493,8 @@ query_node_uname(cib_t *the_cib, const char *uuid, char **uname)
 	CRM_ASSERT(uname != NULL);
 	CRM_ASSERT(uuid != NULL);
 	
-	rc = the_cib->cmds->query(
-		the_cib, XML_CIB_TAG_NODES, &fragment, cib_sync_call);
+	rc = the_cib->cmds->query(the_cib, XML_CIB_TAG_NODES, &fragment,
+				  cib_sync_call|cib_scope_local);
 	if(rc != cib_ok) {
 		return rc;
 	}
