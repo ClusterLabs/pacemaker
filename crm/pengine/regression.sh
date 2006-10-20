@@ -171,6 +171,7 @@ do_test inc8 "Clone anti-colocation"
 do_test inc9 "Non-unique clone"
 do_test inc10 "Non-unique clone (stop)"
 do_test inc11 "Primitive colocation with clones" 
+do_test inc12 "Clone shutdown" 
 
 echo ""
 do_test master-0 "Stopped -> Slave"

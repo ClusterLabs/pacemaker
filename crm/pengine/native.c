@@ -196,7 +196,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	print_resource(LOG_DEBUG, "Allocating: ", rsc, FALSE);
 	
 	if(rsc->provisional && native_choose_node(rsc) ) {
-		crm_debug("Allocated resource %s to %s",
+		crm_debug_3("Allocated resource %s to %s",
 			    rsc->id, rsc->allocated_to->details->uname);
 
 	} else if(rsc->allocated_to == NULL) {

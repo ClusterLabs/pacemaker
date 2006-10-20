@@ -118,7 +118,6 @@ static gint sort_rsc_provisional(gconstpointer a, gconstpointer b)
 static resource_t *
 find_clone_child(resource_t *rsc, GListPtr resource_list)
 {
-	crm_debug("foo");
 	slist_iter(
 		child, resource_t, resource_list, lpc,
 		if(child->parent) {
@@ -137,6 +136,7 @@ find_clone_child(resource_t *rsc, GListPtr resource_list)
 node_t *
 clone_color(resource_t *rsc, pe_working_set_t *data_set)
 {
+	int local_max = 0;
 	int local_node_max = 0;
 	GListPtr node_list = NULL;
 	int reverse_pointer = 0;
@@ -154,6 +154,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		return NULL;
 	}
 
+	local_max = clone_data->clone_max;
 	local_node_max = clone_data->clone_node_max; 
 	clone_data->max_nodes = rsc->cmds->num_allowed_nodes(rsc);
 	
@@ -171,17 +172,19 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	clone_data->self->allowed_nodes = g_list_sort(
 		clone_data->self->allowed_nodes, sort_node_weight);
 	
-	if(rsc->stickiness <= 0) {
+	if(local_max > clone_data->max_nodes * local_node_max) {
+		local_max = clone_data->max_nodes * local_node_max;
+
+	} else if(rsc->stickiness <= 0) {
 		while(local_node_max > 1
-		      && clone_data->max_nodes * (local_node_max -1)
-		      >= clone_data->clone_max) {			
+		      && local_max < clone_data->max_nodes * (local_node_max-1)) {
 			local_node_max--;
 			crm_debug("Dropped the effective value of"
 				  " clone_node_max to: %d",
 				  local_node_max);
 		}
 	}
-
+	
 	slist_iter(child, resource_t, clone_data->child_list, lpc2,
 		   node_t *current = NULL;
 		   node_t *chosen = NULL;
@@ -219,7 +222,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 				    child->id);
 			   continue;
 
-		   } else if(allocated >= clone_data->clone_max) {
+		   } else if(allocated >= local_max) {
 			   crm_debug_2("Reached maximum allocation: %s", child->id);
 			   break;
 		   }
@@ -233,10 +236,10 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		);
 
 	crm_debug("Running: Total=%d, New=%d, Max=%d",
-		  pre_allocated+allocated, allocated, clone_data->clone_max);
+		  pre_allocated+allocated, allocated, local_max);
 
 	if(clone_data->max_nodes) {
-		local_node_max = (int) (clone_data->clone_max / clone_data->max_nodes);
+		local_node_max = (int) (local_max / clone_data->max_nodes);
 		if(local_node_max < 1) {
 			local_node_max = 1;
 		}
@@ -257,7 +260,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	/* distribute a constant spread */
 	node_list = clone_data->self->allowed_nodes;
 	slist_iter(child, resource_t, clone_data->child_list, lpc2,
-		   if(allocated+pre_allocated >= clone_data->clone_max) {
+		   if(allocated+pre_allocated >= local_max) {
 			   break;
 		   }
 		   if(child->provisional == FALSE) {
@@ -283,9 +286,9 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		);
 
 	crm_debug("Spread: Total=%d, New=%d, Max=%d",
-		  pre_allocated+allocated, allocated, clone_data->clone_max);
+		  pre_allocated+allocated, allocated, local_max);
 
-	CRM_ASSERT(pre_allocated+allocated <= clone_data->clone_max);
+	CRM_ASSERT(pre_allocated+allocated <= local_max);
 	pre_allocated += allocated;
 	allocated = 0;
 
@@ -303,7 +306,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		   }
 		   
 		   crm_debug("Remainder: Processing: %s", child->id);
-		   if(node_list && (pre_allocated+allocated) >= clone_data->clone_max) {
+		   if(node_list && (pre_allocated+allocated) >= local_max) {
 			   crm_debug("Allocated maximum possible clone instances");
 			   node_list = NULL;
 		   }
@@ -330,8 +333,8 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		   
 		);
 
-	crm_debug("Remainder: Total=%d, New=%d, Max=%d", pre_allocated, allocated, clone_data->clone_max);
-	CRM_ASSERT(pre_allocated+allocated <= clone_data->clone_max);
+	crm_debug("Remainder: Total=%d, New=%d, Max=%d", pre_allocated, allocated, local_max);
+	CRM_ASSERT(pre_allocated+allocated <= local_max);
 
 	rsc->provisional = FALSE;
 	if(rsc->stickiness >= INFINITY) {
@@ -346,7 +349,10 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		   resource_t *replace_rsc = NULL;
 		   
 		   CRM_ASSERT(a_node != NULL);
-		   if(a_node->count != 0) {
+		   if(can_run_resources(a_node) == FALSE) {
+			   continue;
+			   
+		   } else if(a_node->count != 0) {
 			   crm_debug_4("Node %s has %d resources",
 				       a_node->details->uname, a_node->count);
 			   break;
