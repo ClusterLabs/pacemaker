@@ -587,6 +587,20 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 static int
 get_provider_list(const char* ra_type, GList ** providers)
 {
-	*providers = NULL;
-	return 0;
+	if ( providers == NULL ) {
+		cl_log(LOG_ERR, "%s:%d: Parameter error: providers==NULL"
+			, __FUNCTION__, __LINE__);
+		return -2;
+	}
+
+	if ( *providers != NULL ) {
+		cl_log(LOG_ERR, "%s:%d: Parameter error: *providers==NULL."
+			"This will cause memory leak."
+			, __FUNCTION__, __LINE__);
+	}
+
+	/* Now temporarily make it fixed */
+	*providers = g_list_append(*providers, g_strdup("heartbeat"));
+
+	return g_list_length(*providers);
 }
