@@ -208,7 +208,8 @@ readCibXmlFile(const char *filename, gboolean discard_status)
 {
 	int s_res = -1;
 	struct stat buf;
-	gboolean valid = TRUE;
+	FILE *cib_file = NULL;
+	gboolean dtd_ok = TRUE;
 
 	const char *name = NULL;
 	const char *value = NULL;
@@ -235,6 +236,7 @@ readCibXmlFile(const char *filename, gboolean discard_status)
 	if( S_ISREG(buf.st_mode) == FALSE ) {
 		cib_status = cib_bad_permissions;
 		crm_err("%s must be a regular file", filename);
+		return NULL;
 		
 	} else if( user_readwritable == FALSE ) {
 		struct group *cib_grp = getgrnam(HA_APIGROUP);
@@ -255,92 +257,82 @@ readCibXmlFile(const char *filename, gboolean discard_status)
 	}
 	
 	crm_info("Reading cluster configuration from: %s", filename);
-	if(validate_on_disk_cib(filename, &root) == FALSE) {
-		valid = FALSE;
-		crm_err("%s has been manually changed"
+	cib_file = fopen(filename, "r");
+	root = file2xml(cib_file, FALSE);
+	fclose(cib_file);
+	if(root == NULL) {
+		/* file exists, but isnt valid - turn off disk-writes and continue */
+		crm_err("%s exists but does NOT contain valid XML. ", filename);
+		crm_err("Continuing with an empty configuration.  %s will NOT be overwritten.", filename);
+		cib_writes_enabled = FALSE;
+		return NULL;
+
+	} else if(validate_cib_digest(root) == FALSE) {
+		crm_err("%s has been manually changed!"
 			" - if this was intended, please remove the md5 digest in %s.sig",
 			filename, filename);
-			cib_status = cib_bad_digest;
-			return NULL;
+		cib_status = cib_bad_digest;
 	}
 
 	status = find_xml_node(root, XML_CIB_TAG_STATUS, FALSE);
-	if(root != NULL && discard_status && status != NULL) {
+	if(discard_status && status != NULL) {
 		/* strip out the status section if there is one */
 		free_xml_from_parent(root, status);
 		status = NULL;
 	}
-	if(status == NULL) {
-		create_xml_node(root, XML_CIB_TAG_STATUS);		
-	}
+	create_xml_node(root, XML_CIB_TAG_STATUS);		
 	
 	/* Do this before DTD validation happens */
-	if(root != NULL) {
-		/* fill in some defaults */
-		name = XML_ATTR_GENERATION_ADMIN;
-		value = crm_element_value(root, name);
-		if(value == NULL) {
-			crm_xml_add_int(root, name, 0);
-		}
-		
-		name = XML_ATTR_GENERATION;
-		value = crm_element_value(root, name);
-		if(value == NULL) {
-			crm_xml_add_int(root, name, 0);
-		}
-		
-		name = XML_ATTR_NUMUPDATES;
-		value = crm_element_value(root, name);
-		if(value == NULL) {
-			crm_xml_add_int(root, name, 0);
-		}
 
-		/* unset these and require the DC/CCM to update as needed */
-		update_counters(__FILE__, __PRETTY_FUNCTION__, root);
-		xml_remove_prop(root, XML_ATTR_DC_UUID);
+	/* fill in some defaults */
+	name = XML_ATTR_GENERATION_ADMIN;
+	value = crm_element_value(root, name);
+	if(value == NULL) {
+		crm_xml_add_int(root, name, 0);
 	}
+	
+	name = XML_ATTR_GENERATION;
+	value = crm_element_value(root, name);
+	if(value == NULL) {
+		crm_xml_add_int(root, name, 0);
+	}
+	
+	name = XML_ATTR_NUMUPDATES;
+	value = crm_element_value(root, name);
+	if(value == NULL) {
+		crm_xml_add_int(root, name, 0);
+	}
+	
+	/* unset these and require the DC/CCM to update as needed */
+	update_counters(__FILE__, __PRETTY_FUNCTION__, root);
+	xml_remove_prop(root, XML_ATTR_DC_UUID);
 
 	if(discard_status) {
 		crm_log_xml_info(root, "[on-disk]");
 	}
 	
-	if(root != NULL) {
+	dtd_ok = validate_with_dtd(root, TRUE, HA_LIBDIR"/heartbeat/crm.dtd");
+	if(dtd_ok == FALSE) {
 		const char *ignore_dtd = crm_element_value(root, "ignore_dtd");
-		gboolean dtd_ok = validate_with_dtd(
-			root, TRUE, HA_LIBDIR"/heartbeat/crm.dtd");
-		
-		if(dtd_ok == FALSE
+		if(
 #if CRM_DEPRECATED_SINCE_2_0_4
-		   && ignore_dtd != NULL
+		   ignore_dtd != NULL &&
 #endif
-		   && crm_is_true(ignore_dtd) == FALSE) {
-			crm_err("On disk CIB does not conform to the DTD");
-			valid = FALSE;
+		   crm_is_true(ignore_dtd) == FALSE) {
+			cib_status = cib_dtd_validation;
 		}
-	}
-
-	
-	if(root == NULL) {
-		crm_crit("Parse ERROR reading %s.", filename);
-		cib_status = cib_bad_config;		
-		return NULL;
 		
-	} else if(valid == FALSE) {
-		crm_err("%s does not contain a valid configuration", filename);
-		cib_status = cib_bad_config;
-	}
-
-	
+	} 
 	crm_xml_add(root, "generated", XML_BOOLEAN_FALSE);	
 	
 	if(do_id_check(root, NULL, FALSE, FALSE)) {
-		crm_crit("%s does not contain a vaild configuration.",
+		crm_err("%s does not contain a vaild configuration: ID check failed",
 			 filename);
-		cib_status = cib_bad_config;
+		cib_status = cib_id_check;
 	}
 
 	if (verifyCibXml(root) == FALSE) {
-		crm_crit("%s does not contain a vaild configuration.",
+		crm_err("%s does not contain a vaild configuration: structure test failed",
 			 filename);
 		cib_status = cib_bad_config;
 	}
