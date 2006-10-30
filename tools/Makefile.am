@@ -38,7 +38,7 @@ sbin_SCRIPTS		= ocf-tester
 
 ## SOURCES
 ccdv: 	$(top_srcdir)/tools/ccdv.c
-	gcc -o ccdv $(top_srcdir)/tools/ccdv.c
+	gcc $(AM_CFLAGS) $(CFLAGS) -o ccdv $(top_srcdir)/tools/ccdv.c
 
 cl_status_SOURCES	= cl_status.c
 # A little trick. Now ccdv can be auto-built but not auto-cleaned.
