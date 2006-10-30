@@ -301,7 +301,7 @@ get_resource_meta(const char* rsc_type, const char* provider)
 
 	get_ra_pathname(RA_PATH, rsc_type, provider, ra_pathname);
 
-	strncat(ra_pathname, " meta-data",RA_MAX_NAME_LENGTH);
+	strncat(ra_pathname, " meta-data",RA_MAX_NAME_LENGTH-strlen(ra_pathname)-1);
 	tmp_for_setenv = g_hash_table_new(g_str_hash, g_str_equal);
 	add_OCF_env_vars(tmp_for_setenv, "DUMMY_INSTANCE", rsc_type, provider);
 	raexec_setenv(tmp_for_setenv);
@@ -358,7 +358,7 @@ add_prefix_foreach(gpointer key, gpointer value, gpointer user_data)
 	
 	newkey = g_new(gchar, keylen);
 	strncpy(newkey, "OCF_RESKEY_", keylen);
-	strncat(newkey, key, keylen);
+	strncat(newkey, key, keylen-strlen(newkey)-1);
 	g_hash_table_insert(new_hashtable, (gpointer)newkey, g_strdup(value));
 }
 
