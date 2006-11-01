@@ -117,18 +117,18 @@ extern void native_add_running(
 	do_crm_log(LOG_WARNING, NULL, NULL, fmt);
 #endif
 
-#define status_print(fmt...)				\
+#define status_print(fmt, args...)			\
 	if(options & pe_print_html) {			\
 		FILE *stream = print_data;		\
-		fprintf(stream, fmt);			\
+		fprintf(stream, fmt, ##args);		\
 	} else if(options & pe_print_ncurses) {		\
-		status_printw(fmt);			\
+		status_printw(fmt, ##args);		\
 	} else if(options & pe_print_printf) {		\
 		FILE *stream = print_data;		\
-		fprintf(stream, fmt);			\
+		fprintf(stream, fmt, ##args);		\
 	} else if(options & pe_print_log) {		\
 		int log_level = *(int*)print_data;	\
-		do_crm_log(log_level, NULL, NULL, fmt);	\
+		do_crm_log(log_level, fmt, ##args);	\
 	}
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;

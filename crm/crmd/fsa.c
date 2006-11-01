@@ -75,7 +75,7 @@ extern GHashTable *integrated_nodes;
 extern void initialize_join(gboolean before);
 
 #define DOT_PREFIX "actions:trace: "
-#define do_dot_log(fmt...)     do_crm_log(LOG_DEBUG_2, NULL, NULL, fmt)
+#define do_dot_log(fmt, args...)     do_crm_log(LOG_DEBUG_2, fmt, ##args)
 
 long long do_state_transition(long long actions,
 			      enum crmd_fsa_state cur_state,
@@ -173,7 +173,7 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 		action_start = time_longclock();
 	}
 
-	do_crm_log(action_log_level, NULL, NULL,
+	do_crm_log(action_log_level,
 		   DOT_PREFIX"\t// %s", fsa_action2string(an_action));
 	result = function(an_action, fsa_data->fsa_cause, fsa_state,
 			  fsa_data->fsa_input, fsa_data);

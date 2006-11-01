@@ -1148,13 +1148,13 @@ log_cib_diff(int log_level, crm_data_t *diff, const char *function)
 		&del_admin_epoch, &del_epoch, &del_updates);
 
 	if(add_updates != del_updates) {
-		do_crm_log(log_level, NULL, function, "Diff: --- %d.%d.%d",
+		do_crm_log(log_level, "%s: Diff: --- %d.%d.%d", function,
 			   del_admin_epoch, del_epoch, del_updates);
-		do_crm_log(log_level, NULL, function, "Diff: +++ %d.%d.%d",
+		do_crm_log(log_level, "%s: Diff: +++ %d.%d.%d", function,
 			   add_admin_epoch, add_epoch, add_updates);
 	} else if(diff != NULL) {
-		do_crm_log(log_level, NULL, function,
-			   "Local-only Change: %d.%d.%d",
+		do_crm_log(log_level,
+			   "%s: Local-only Change: %d.%d.%d", function,
 			   add_admin_epoch, add_epoch, add_updates);
 	}
 	

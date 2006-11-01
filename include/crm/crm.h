@@ -213,30 +213,41 @@ typedef GList* GListPtr;
 
 #define LOG_MSG  LOG_DEBUG_3
 
-#define crm_crit(w...)    do_crm_log(LOG_CRIT,    __FILE__, __PRETTY_FUNCTION__, w)
-#define crm_err(w...)     do_crm_log(LOG_ERR,     __FILE__, __PRETTY_FUNCTION__, w)
-#define crm_warn(w...)    do_crm_log(LOG_WARNING, __FILE__, __PRETTY_FUNCTION__, w)
-#define crm_notice(w...)  do_crm_log(LOG_NOTICE,  __FILE__, __PRETTY_FUNCTION__, w)
-#define crm_info(w...)    do_crm_log(LOG_INFO,    __FILE__, __PRETTY_FUNCTION__, w)
-#define crm_log_maybe(level, fmt...) if(crm_log_level >= (level)) {	\
-		do_crm_log((level), __FILE__, __PRETTY_FUNCTION__, fmt); \
+#define do_crm_log(level, fmt, args...) do {				\
+		if(level > 1) {						\
+			cl_log(level, "debug%d: %s: " fmt,		\
+			       level, __PRETTY_FUNCTION__, ##args);	\
+		} else {						\
+			cl_log(level, "%s: " fmt,			\
+			       __PRETTY_FUNCTION__, ##args);		\
+		}							\
+	} while(0)
+		
+
+#define crm_crit(fmt, args...)    do_crm_log(LOG_CRIT,    fmt, ##args)
+#define crm_err(fmt, args...)     do_crm_log(LOG_ERR,     fmt, ##args)
+#define crm_warn(fmt, args...)    do_crm_log(LOG_WARNING, fmt, ##args)
+#define crm_notice(fmt, args...)  do_crm_log(LOG_NOTICE,  fmt, ##args)
+#define crm_info(fmt, args...)    do_crm_log(LOG_INFO,    fmt, ##args)
+#define crm_log_maybe(level, fmt, args...) if(crm_log_level >= (level)) { \
+		do_crm_log((level), fmt, ##args);			\
 	}
 
-#define crm_debug(fmt...)   crm_log_maybe(LOG_DEBUG, fmt)
-#define crm_debug_2(fmt...) crm_log_maybe(LOG_DEBUG_2, fmt)
-#define crm_debug_3(fmt...) crm_log_maybe(LOG_DEBUG_3, fmt)
+#define crm_debug(fmt, args...)   crm_log_maybe(LOG_DEBUG,   fmt, ##args)
+#define crm_debug_2(fmt, args...) crm_log_maybe(LOG_DEBUG_2, fmt, ##args)
+#define crm_debug_3(fmt, args...) crm_log_maybe(LOG_DEBUG_3, fmt, ##args)
 
 /* If this is not a developmental build, give the compiler every chance to
  * optimize these away
  */
 #if CRM_DEV_BUILD
-#  define crm_debug_4(fmt...) crm_log_maybe(LOG_DEBUG_4, fmt)
-#  define crm_debug_5(fmt...) crm_log_maybe(LOG_DEBUG_5, fmt)
-#  define crm_debug_6(fmt...) crm_log_maybe(LOG_DEBUG_6, fmt)
+#  define crm_debug_4(fmt, args...) crm_log_maybe(LOG_DEBUG_4, fmt, ##args)
+#  define crm_debug_5(fmt, args...) crm_log_maybe(LOG_DEBUG_5, fmt, ##args)
+#  define crm_debug_6(fmt, args...) crm_log_maybe(LOG_DEBUG_6, fmt, ##args)
 #else
-#  define crm_debug_4(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }
-#  define crm_debug_5(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }
-#  define crm_debug_6(w...) if(0) { do_crm_log(LOG_DEBUG, NULL, NULL, w); }
+#  define crm_debug_4(fmt, args...) if(0) { do_crm_log(LOG_DEBUG, fmt, ##args); }
+#  define crm_debug_5(fmt, args...) if(0) { do_crm_log(LOG_DEBUG, fmt, ##args); }
+#  define crm_debug_6(fmt, args...) if(0) { do_crm_log(LOG_DEBUG, fmt, ##args); }
 #endif
 
 extern void crm_log_message_adv(

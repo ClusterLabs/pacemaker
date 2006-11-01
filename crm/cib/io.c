@@ -418,7 +418,7 @@ initializeCib(crm_data_t *new_cib)
 		return FALSE;
 	}
 
-	update_counters(__FILE__, __FUNCTION__, new_cib);
+	update_counters(__FILE__, __PRETTY_FUNCTION__, new_cib);
 	
 	the_cib = new_cib;
 	initialized = TRUE;
@@ -745,7 +745,7 @@ update_counters(const char *file, const char *fn, crm_data_t *xml_obj)
 	did_update = did_update || set_connected_peers(xml_obj);
 	
 	if(did_update) {
-		do_crm_log(LOG_DEBUG, file, fn, "Counters updated");
+		do_crm_log(LOG_DEBUG, "Counters updated by %s", fn);
 	}
 	return did_update;
 }

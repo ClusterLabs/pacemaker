@@ -359,15 +359,15 @@ fsa_typed_data_adv(
 {
 	void *ret_val = NULL;
 	if(fsa_data == NULL) {
-		do_crm_log(LOG_ERR, NULL, caller, "No FSA data available");
+		do_crm_log(LOG_ERR, "%s: No FSA data available", caller);
 		
 	} else if(fsa_data->data == NULL) {
-		do_crm_log(LOG_ERR, NULL, caller, "No message data available");
+		do_crm_log(LOG_ERR, "%s: No message data available", caller);
 
 	} else if(fsa_data->data_type != a_type) {
-		do_crm_log(LOG_CRIT, NULL, caller, 
-			   "Message data was the wrong type! %d vs. requested=%d."
-			   "  Origin: %s",
+		do_crm_log(LOG_CRIT,  
+			   "%s: Message data was the wrong type! %d vs. requested=%d."
+			   "  Origin: %s", caller,
 			   fsa_data->data_type, a_type, fsa_data->origin);
 		CRM_ASSERT(fsa_data->data_type == a_type);
 	} else {

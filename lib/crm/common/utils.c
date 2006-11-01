@@ -504,64 +504,11 @@ void
 crm_log_message_adv(int level, const char *prefix, const HA_Message *msg)
 {
 	if((int)crm_log_level >= level) {
-		do_crm_log(level, NULL, NULL, "#========= %s message start ==========#", prefix?prefix:"");
+		do_crm_log(level, "#========= %s message start ==========#", prefix?prefix:"");
 		if(level > LOG_DEBUG) {
 			cl_log_message(LOG_DEBUG, msg);
 		} else {
 			cl_log_message(level, msg);
-		}
-	}
-}
-
-
-void
-do_crm_log(int log_level, const char *file, const char *function,
-	   const char *fmt, ...)
-{
-	int log_as = log_level;
-	gboolean do_log = FALSE;
-
-	file = NULL; /* ignore filename */
-	
-	if(log_level <= (int)crm_log_level) {
-		do_log = TRUE;
-		if(log_level > LOG_INFO) {
-			log_as = LOG_DEBUG;
-		}
-	}
-
-	if(do_log) {
-		va_list ap;
-		int	nbytes;
-		char    buf[MAXLINE];
-		
-		va_start(ap, fmt);
-		nbytes=vsnprintf(buf, MAXLINE, fmt, ap);
-		va_end(ap);
-
-		log_level -= LOG_INFO;
-		if(log_level > 1) {
-			if(function == NULL) {
-				cl_log(log_as, "debug%d: %s", log_level, buf);
-				
-			} else {
-				cl_log(log_as, "debug%d: %s:%s %s",
-				       log_level, function, file?file:"", buf);
-			}
-
-		} else {
-			if(function == NULL) {
-				cl_log(log_as, "%s", buf);
-				
-			} else {
-				cl_log(log_as, "%s:%s %s",
-				       function, file?file:"", buf);
-			}
-		}
-
-		if(nbytes > MAXLINE) {
-			cl_log(LOG_WARNING, "Log from %s() was truncated",
-			       crm_str(function));
 		}
 	}
 }
@@ -1584,14 +1531,14 @@ crm_abort(const char *file, const char *function, int line,
 	int pid = 0;
 
 	if(do_fork == FALSE) {
-		do_crm_log(LOG_ERR, file, function,
-			   "Triggered fatal assert at %s:%d : %s",
-			   file, line, assert_condition);
+		do_crm_log(LOG_ERR, 
+			   "%s: Triggered fatal assert at %s:%d : %s",
+			   function, file, line, assert_condition);
 
 	} else if(crm_log_level < LOG_DEBUG) {
-		do_crm_log(LOG_ERR, file, function,
-			   "Triggered non-fatal assert at %s:%d : %s",
-			   file, line, assert_condition);
+		do_crm_log(LOG_ERR, 
+			   "%s: Triggered non-fatal assert at %s:%d : %s",
+			   function, file, line, assert_condition);
 		return;
 
 	} else {
@@ -1604,9 +1551,9 @@ crm_abort(const char *file, const char *function, int line,
 			return;
 
 		default:	/* Parent */
-			do_crm_log(LOG_ERR, file, function,
-				   "Forked child %d to record non-fatal assert at %s:%d : %s",
-				   pid, file, line, assert_condition);
+			do_crm_log(LOG_ERR, 
+				   "%s: Forked child %d to record non-fatal assert at %s:%d : %s",
+				   function, pid, file, line, assert_condition);
 			return;
 
 		case 0:	/* Child */

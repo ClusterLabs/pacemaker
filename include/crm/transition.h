@@ -144,11 +144,10 @@ extern void update_abort_priority(
 extern const char *actiontype2text(action_type_e type);
 
 #ifdef TESTING
-#   define te_log_action(log_level, fmt...) {				\
-		do_crm_log(log_level, __FILE__, __FUNCTION__, fmt);	\
-		fprintf(stderr, fmt);					\
-		fprintf(stderr, "\n");					\
+#   define te_log_action(log_level, fmt, args...) {			\
+		do_crm_log(log_level, fmt, ##args);			\
+		fprintf(stderr, fmt"\n", ##args);			\
 	}
 #else
-#   define te_log_action(log_level, fmt...) do_crm_log(log_level, __FILE__, __FUNCTION__, fmt)
+#   define te_log_action(log_level, fmt, args...) do_crm_log(log_level, fmt, ##args)
 #endif

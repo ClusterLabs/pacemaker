@@ -37,9 +37,6 @@ extern gboolean crm_config_warning;
 
 extern gboolean crm_log_init(const char *entity);
 
-extern void do_crm_log(int log_level, const char *file, const char *function,
-		       const char *format, ...) G_GNUC_PRINTF(4,5);
-
 /* returns the old value */
 extern unsigned int set_crm_log_level(unsigned int level);
 
