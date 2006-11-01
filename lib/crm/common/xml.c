@@ -1297,19 +1297,11 @@ drop_whitespace(const char *input, int *offset)
 	while(lpc < len && more) {
 		ch = our_input[lpc];
 		crm_debug_6("Processing char %c[%d]", ch, lpc);
-		switch(ch) {
-			case 0:
-				more = FALSE;
-			case ' ':
-			case '\t':
-			case '\n':
-			case '\r':
-				lpc++;
-				crm_debug_6("Skipping whitespace char %d", our_input[lpc]);
-				break;
-			default:
-				more = FALSE;
-				break;
+		if(isspace(ch)) {
+			lpc++;
+
+		} else {
+			more = FALSE;
 		}
 	}
 
