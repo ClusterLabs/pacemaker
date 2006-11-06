@@ -214,9 +214,10 @@ typedef GList* GListPtr;
 #define LOG_MSG  LOG_DEBUG_3
 
 #define do_crm_log(level, fmt, args...) do {				\
-		if(level > 1) {						\
-			cl_log(level, "debug%d: %s: " fmt,		\
-			       level, __PRETTY_FUNCTION__, ##args);	\
+		if(crm_log_level < (level)) {				\
+		} else if(level > LOG_DEBUG) {				\
+			cl_log(LOG_DEBUG, "debug%d: %s: " fmt,		\
+			       level-LOG_DEBUG, __PRETTY_FUNCTION__, ##args); \
 		} else {						\
 			cl_log(level, "%s: " fmt,			\
 			       __PRETTY_FUNCTION__, ##args);		\
@@ -241,9 +242,9 @@ typedef GList* GListPtr;
  * optimize these away
  */
 #if CRM_DEV_BUILD
-#  define crm_debug_4(fmt, args...) crm_log_maybe(LOG_DEBUG_4, fmt, ##args)
-#  define crm_debug_5(fmt, args...) crm_log_maybe(LOG_DEBUG_5, fmt, ##args)
-#  define crm_debug_6(fmt, args...) crm_log_maybe(LOG_DEBUG_6, fmt, ##args)
+#  define crm_debug_4(fmt, args...) do_crm_log(LOG_DEBUG_4, fmt, ##args)
+#  define crm_debug_5(fmt, args...) do_crm_log(LOG_DEBUG_5, fmt, ##args)
+#  define crm_debug_6(fmt, args...) do_crm_log(LOG_DEBUG_6, fmt, ##args)
 #else
 #  define crm_debug_4(fmt, args...) if(0) { do_crm_log(LOG_DEBUG, fmt, ##args); }
 #  define crm_debug_5(fmt, args...) if(0) { do_crm_log(LOG_DEBUG, fmt, ##args); }
