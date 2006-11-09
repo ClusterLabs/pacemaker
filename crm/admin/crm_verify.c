@@ -38,7 +38,7 @@
 #include <crm/cib.h>
 #include <clplumbing/lsb_exitcodes.h>
 
-#define OPTARGS	"V?X:LS:"
+#define OPTARGS	"V?X:x:pLS:"
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -65,7 +65,10 @@ main(int argc, char **argv)
 	cib_t *	cib_conn = NULL;
 	int rc = cib_ok;
 	
+	gboolean xml_stdin = FALSE;
 	const char *xml_file = NULL;
+	const char *xml_string = NULL;
+	
 	crm_system_name = basename(argv[0]);
 	
 	g_log_set_handler(NULL,
@@ -91,7 +94,9 @@ main(int argc, char **argv)
 		int option_index = 0;
 		static struct option long_options[] = {
 			/* Top-level Options */
-			{"xml-file",    1, 0, 'X'},
+			{F_CRM_DATA,    1, 0, 'X'},
+			{"xml-file",    1, 0, 'x'},
+			{"xml-pipe",    0, 0, 'p'},
 			{"save-xml",    1, 0, 'S'},
 			{"live-check",  0, 0, 'L'},
 			{"help", 0, 0, '?'},
@@ -121,7 +126,15 @@ main(int argc, char **argv)
 #endif
       
 			case 'X':
+				crm_debug_2("Option %c => %s", flag, optarg);
+				xml_string = crm_strdup(optarg);
+				break;
+			case 'x':
+				crm_debug_2("Option %c => %s", flag, optarg);
 				xml_file = crm_strdup(optarg);
+				break;
+			case 'p':
+				xml_stdin = TRUE;
 				break;
 			case 'S':
 				cib_save = crm_strdup(optarg);
@@ -194,18 +207,33 @@ main(int argc, char **argv)
 	
 	} else if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
-		crm_info("Reading XML from: %s", xml_file);
 		cib_object = file2xml(xml_strm, FALSE);
-	} else {
-		fprintf(stderr, "Reading XML from: stdin\n");
+		if(cib_object == NULL) {
+			fprintf(stderr,
+				"Couldn't parse input file: %s\n", xml_file);
+			return 1;
+		}
+		
+	} else if(xml_string != NULL) {
+		cib_object = string2xml(xml_string);
+		if(cib_object == NULL) {
+			fprintf(stderr,
+				"Couldn't parse input string: %s\n", xml_string);
+			return 1;
+		}
+	} else if(xml_stdin) {
 		cib_object = stdin2xml();
+		if(cib_object == NULL) {
+			fprintf(stderr, "Couldn't parse input from STDIN.\n");
+			return 1;
+		}
+
+	} else {
+		fprintf(stderr, "No configuration source specified."
+			"  Use --help for usage information.\n");
+		return 3;
 	}
-
- 	CRM_CHECK(cib_object != NULL,
-		  fprintf(stderr, "No config supplied\n");
-		  return 3;
-		);
-
+	
 	if(cib_save != NULL) {
 		write_xml_file(cib_object, cib_save, FALSE);
 	}
@@ -279,7 +307,7 @@ usage(const char *cmd, int exit_status)
 	FILE *stream;
 
 	stream = exit_status ? stderr : stdout;
-	fprintf(stream, "usage: %s [-V] -(?|L|X)\n", cmd);
+	fprintf(stream, "usage: %s [-V] -(?|L|X|x|p)\n", cmd);
 
 	fprintf(stream, "\t--%s (-%c)\t: this help message\n", "help", '?');
 	fprintf(stream, "\t--%s (-%c)\t: "
@@ -287,8 +315,12 @@ usage(const char *cmd, int exit_status)
 		"verbose", 'V');
 	fprintf(stream, "\t--%s (-%c)\t: Connect to the running cluster\n",
 		"live-check", 'L');
-	fprintf(stream, "\t--%s (-%c) <string>\t: Use the configuration in the named file\n",
-		"xml-file", 'X');
+	fprintf(stream, "\t--%s (-%c) <string>\t: Use the configuration in the supplied string\n",
+		F_CRM_DATA, 'X');
+	fprintf(stream, "\t--%s (-%c) <file>\t: Use the configuration in the named file\n",
+		"xml-file", 'x');
+	fprintf(stream, "\t--%s (-%c) \t\t: Use the configuration piped in via stdin\n",
+		"xml-pipe", 'p');
 	fflush(stream);
 
 	exit(exit_status);
