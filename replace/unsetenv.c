@@ -31,7 +31,7 @@
 extern char **environ;
 #endif
 
-void
+int
 unsetenv (const char *name)
 {
 	const size_t len = strlen (name);
@@ -48,4 +48,5 @@ unsetenv (const char *name)
 			/* Continue the loop in case NAME appears again.  */  
 		}
 	}
+	return 0;
 }
