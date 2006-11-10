@@ -40,7 +40,7 @@ extern void pe_free_ordering(GListPtr constraints);
 extern const char *ordering_type2text(enum pe_ordering type);
 
 extern gboolean rsc_colocation_new(
-	const char *id, int score,
+	const char *id, const char *node_attr, int score,
 	resource_t *rsc_lh, resource_t *rsc_rh,
 	const char *state_lh, const char *state_rh);
 

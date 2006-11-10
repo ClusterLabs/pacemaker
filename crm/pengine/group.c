@@ -90,8 +90,8 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 	}
 	rsc->is_allocating = TRUE;
 	
-	group_data->last_child->rsc_cons = g_list_concat(
-		group_data->last_child->rsc_cons, rsc->rsc_cons);
+	group_data->first_child->rsc_cons = g_list_concat(
+		group_data->first_child->rsc_cons, rsc->rsc_cons);
 	rsc->rsc_cons = NULL;
 
 	slist_iter(
@@ -199,10 +199,10 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 		child_rsc->cmds->internal_constraints(child_rsc, data_set);
 
-		if(group_data->colocated && child_rsc != group_data->first_child) {
+		if(group_data->colocated && last_rsc != NULL) {
 			rsc_colocation_new(
-				"group:internal_colocation", INFINITY,
-				last_rsc, child_rsc, NULL, NULL);
+				"group:internal_colocation", NULL, INFINITY,
+				child_rsc, last_rsc, NULL, NULL);
 		}
 	
 		if(group_data->ordered == FALSE) {
@@ -283,8 +283,8 @@ void group_rsc_colocation_lh(
 	get_group_variant_data(group_data, rsc_lh);
 
 	if(group_data->colocated) {
-		group_data->last_child->cmds->rsc_colocation_lh(
-			group_data->last_child, rsc_rh, constraint); 
+		group_data->first_child->cmds->rsc_colocation_lh(
+			group_data->first_child, rsc_rh, constraint); 
 		return;
 
 	} else if(constraint->score >= INFINITY) {
@@ -315,8 +315,8 @@ void group_rsc_colocation_rh(
 		return;
 	
 	} else if(group_data->colocated) {
-		group_data->last_child->cmds->rsc_colocation_rh(
-			rsc_lh, group_data->last_child, constraint); 
+		group_data->first_child->cmds->rsc_colocation_rh(
+			rsc_lh, group_data->first_child, constraint); 
 		return;
 
 	} else if(constraint->score >= INFINITY) {
