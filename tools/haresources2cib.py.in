@@ -55,19 +55,19 @@ ocf_ra_setting = {
 	}
 
 config_defaults = [
-	"symmetric_cluster=true",
-	"no_quorum_policy=stop",
-	"default_resource_stickiness=0",
-	"default_resource_failure_stickiness=0",
-	"stonith_enabled=false",
-	"stonith_action=reboot",
-	"stop_orphan_resources=true",
-	"stop_orphan_actions=true",
-	"remove_after_stop=false",
-	"short_resource_names=true",
-	"transition_idle_timeout=5min",
-	"default_action_timeout=5s",
-	"is_managed_default=true",
+	"symmetric-cluster=true",
+	"no_quorum-policy=stop",
+	"default-resource-stickiness=0",
+	"default-resource-failure-stickiness=0",
+	"stonith-enabled=false",
+	"stonith-action=reboot",
+	"stop-orphan-resources=true",
+	"stop-orphan-actions=true",
+	"remove-after-stop=false",
+	"short-resource-names=true",
+	"transition-idle-timeout=5min",
+	"default-action-timeout=5s",
+	"is-managed-default=true",
 ]
 
 def create_cib() :
