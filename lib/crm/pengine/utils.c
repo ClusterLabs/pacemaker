@@ -539,23 +539,20 @@ void
 unpack_operation(
 	action_t *action, crm_data_t *xml_obj, pe_working_set_t* data_set)
 {
-	int lpc = 0;
+	int value_i = 0;
+	int start_delay = 0;
+	char *value_ms = NULL;
 	const char *class = NULL;
 	const char *value = NULL;
-	const char *fields[] = {
-		XML_LRM_ATTR_INTERVAL,
-		"timeout",
-		"start_delay",
-	};
-
+	const char *field = NULL;
+	
 	CRM_CHECK(action->rsc != NULL, return);
 	
 	if(xml_obj != NULL) {
 		value = crm_element_value(xml_obj, "prereq");
 	}
 	if(value == NULL && safe_str_eq(action->task, CRMD_ACTION_START)) {
-		value = g_hash_table_lookup(
-			action->rsc->meta, "start_prereq");
+		value = g_hash_table_lookup(action->rsc->meta, "start_prereq");
 	}
 	
 	if(value == NULL && safe_str_neq(action->task, CRMD_ACTION_START)) {
@@ -702,26 +699,43 @@ unpack_operation(
 		unpack_instance_attributes(xml_obj, XML_TAG_ATTR_SETS,
 					   NULL, action->meta, NULL, data_set->now);
 	}
-	
-       if(g_hash_table_lookup(action->meta, "timeout") == NULL) {
-               g_hash_table_insert(
-		       action->meta, crm_strdup("timeout"),
-		       crm_strdup(pe_pref(data_set->config_hash, "default-action-timeout")));
-       }
-	
-	for(;lpc < DIMOF(fields); lpc++) {
-		value = g_hash_table_lookup(action->meta, fields[lpc]);
-		if(value != NULL) {
-			char *tmp_ms = NULL;
-			int tmp_i = crm_get_msec(value);
-			if(tmp_i < 0) {
-				tmp_i = 0;
-			}
-			tmp_ms = crm_itoa(tmp_i);
-			g_hash_table_replace(
-				action->meta, crm_strdup(fields[lpc]), tmp_ms);
+
+	field = XML_LRM_ATTR_INTERVAL;
+	value = g_hash_table_lookup(action->meta, field);
+	if(value != NULL) {
+		value_i = crm_get_msec(value);
+		if(value_i < 0) {
+			value_i = 0;
 		}
+		value_ms = crm_itoa(value_i);
+		g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
 	}
+
+	field = "start_delay";
+	value = g_hash_table_lookup(action->meta, field);
+	if(value != NULL) {
+		value_i = crm_get_msec(value);
+		if(value_i < 0) {
+			value_i = 0;
+		}
+		start_delay = value_i;
+		value_ms = crm_itoa(value_i);
+		g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
+	}
+
+	field = "timeout";
+	value = g_hash_table_lookup(action->meta, field);
+	if(value == NULL) {
+		value = pe_pref(
+			data_set->config_hash, "default-action-timeout");
+	}
+	value_i = crm_get_msec(value);
+	if(value_i < 0) {
+		value_i = 0;
+	}
+	value_i += start_delay;
+	value_ms = crm_itoa(value_i);
+	g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
 }
 
 crm_data_t *
