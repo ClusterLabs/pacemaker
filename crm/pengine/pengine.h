@@ -47,6 +47,7 @@ enum pe_stop_fail {
 
 struct rsc_colocation_s { 
 		const char	*id;
+		const char	*node_attribute;
 		resource_t	*rsc_lh;
 		resource_t	*rsc_rh;
 

@@ -474,71 +474,40 @@ filter_colocation_constraint(
 	return TRUE;
 }
 
-static gboolean
-native_update_node_weight(
-	resource_t *rsc, const char *id, node_t *node, int score)
+static void
+colocation_match(
+	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint) 
 {
-	node_t *node_rh = NULL;
-	CRM_CHECK(node != NULL, return FALSE);
+	const char *tmp = NULL;
+	const char *value = NULL;
+	gboolean do_check = FALSE;
+	const char *attribute = "#id";
+
+	if(constraint->node_attribute != NULL) {
+		attribute = constraint->node_attribute;
+	}
+
+	if(rsc_rh->allocated_to) {
+		value = g_hash_table_lookup(rsc_rh->allocated_to->details->attrs, attribute);
+		do_check = TRUE;
+	}
 	
-	node_rh = pe_find_node_id(
-		rsc->allowed_nodes, node->details->id);
+	slist_iter(
+		node, node_t, rsc_lh->allowed_nodes, lpc,
+		tmp = g_hash_table_lookup(node->details->attrs, attribute);
+		if(do_check && safe_str_eq(tmp, value)) {
+			crm_debug("%s: %s.%s += %d", constraint->id, rsc_lh->id,
+				  node->details->uname, constraint->score);
+			node->weight = merge_weights(
+				constraint->score, node->weight);
 
-	if(node_rh == NULL) {
-		pe_warn("%s not found in %s",
-			node->details->uname, rsc->id);
-		return FALSE;
-	}
-
-	if(node_rh->weight >= INFINITY && score <= -INFINITY) {
-		pe_err("Constraint \"%s\" mixes +/- INFINITY (%s)",
-		       id, rsc->id);
+		} else if(do_check == FALSE || constraint->score >= INFINITY) {
+			crm_debug("%s: %s.%s = -INFINITY (%s)", constraint->id, rsc_lh->id,
+				  node->details->uname, do_check?"failed":"unallocated");
+			node->weight = -INFINITY;
+		}
 		
-	} else if(node_rh->details->shutdown == TRUE
-		  || node_rh->details->online == FALSE
-		  || node_rh->details->unclean == TRUE) {
-
-	} else if(node_rh->weight <= -INFINITY && score >= INFINITY) {
-		pe_err("Constraint \"%s\" mixes +/- INFINITY (%s)",
-			 id, rsc->id);
-	}
-
-	if(node_rh->fixed) {
-		/* warning */
-		crm_debug_2("Constraint %s is irrelevant as the"
-			 " weight of node %s is fixed as %d (%s).",
-			 id, node_rh->details->uname,
-			 node_rh->weight, rsc->id);
-		return TRUE;
-	}	
-	
-	crm_debug_3("Constraint %s, node %s, rsc %s: %d + %d",
-		   id, node_rh->details->uname, rsc->id,
-		   node_rh->weight, score);
-	node_rh->weight = merge_weights(node_rh->weight, score);
-	if(node_rh->weight <= -INFINITY) {
-		crm_debug_3("Constraint %s (-INFINITY): node %s weight %d (%s).",
-			    id, node_rh->details->uname,
-			    node_rh->weight, rsc->id);
-		
-	} else if(node_rh->weight >= INFINITY) {
-		crm_debug_3("Constraint %s (+INFINITY): node %s weight %d (%s).",
-			    id, node_rh->details->uname,
-			    node_rh->weight, rsc->id);
-
-	} else {
-		crm_debug_3("Constraint %s (%d): node %s weight %d (%s).",
-			    id, score, node_rh->details->uname,
-			    node_rh->weight, rsc->id);
-	}
-
-	if(node_rh->weight < 0) {
-		node_rh->fixed = TRUE;
-	}
-
-	crm_action_debug_3(print_node("Updated", node_rh, FALSE));
-
-	return TRUE;
+		);
 }
 
 void native_rsc_colocation_rh(
@@ -583,20 +552,7 @@ void native_rsc_colocation_rh(
 		return;
 		
 	} else {
-		if(rsc_rh->allocated_to) {
-			if(native_update_node_weight(
-				   rsc_lh, constraint->id, rsc_rh->allocated_to,
-				   constraint->score) == FALSE) {
-				crm_warn("%s cant run on %s", rsc_lh->id,
-					rsc_rh->allocated_to->details->uname);
-				rsc_lh->provisional = FALSE;
-			}
-			
-		} else if(constraint->score == INFINITY) {
-			rsc_lh->provisional = FALSE;
-			crm_notice("%s must run with %s which can't run anywhere",
-				   rsc_lh->id, rsc_rh->id);
-		}
+		colocation_match(rsc_lh, rsc_rh, constraint);
 	}
 }
 

@@ -1,7 +1,6 @@
-digraph "g" {
-	size = "30,30"
-"probe_complete node1" [ style=bold color="green" fontcolor="black" ]
-"rsc1_stop_0 node1" [ style=bold color="green" fontcolor="black" ]
+ digraph "g" {
 "do_shutdown node1" [ style=bold color="green" fontcolor="black" ]
+"probe_complete node1" [ style=bold color="green" fontcolor="black" ]
 "rsc1_stop_0 node1" -> "do_shutdown node1" [ style = bold]
+"rsc1_stop_0 node1" [ style=bold color="green" fontcolor="black" ]
 }

@@ -88,6 +88,9 @@ function do_test {
 	num_failed=`expr $num_failed + 1`
 	rm $output
 	return;
+    else
+	sort $dot_output > $dot_output.sort
+	mv -f $dot_output.sort $dot_output
     fi
 
     if [ "$create_mode" = "true" ]; then

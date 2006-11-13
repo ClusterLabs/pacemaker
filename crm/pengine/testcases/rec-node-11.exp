@@ -28,7 +28,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="7" operation="start" operation_key="rsc2_start_0" on_node="node2" on_node_uuid="uuid2"/>
+         <rsc_op id="8" operation="start" operation_key="rsc2_start_0" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
        <trigger>
          <pseudo_event id="9" operation="start" operation_key="group1_start_0"/>
@@ -66,7 +66,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="6" operation="stop" operation_key="rsc2_stop_0"/>
+         <pseudo_event id="7" operation="stop" operation_key="rsc2_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -81,7 +81,7 @@
    </synapse>
    <synapse id="6">
      <action_set>
-       <rsc_op id="8" operation="start" operation_key="rsc1_start_0" on_node="node2" on_node_uuid="uuid2">
+       <rsc_op id="6" operation="start" operation_key="rsc1_start_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1" long-id="group1:rsc1" class="heartbeat" type="apache"/>
          <attributes crm_feature_set="1.0.7" CRM_meta_timeout="20000"/>
        </rsc_op>
@@ -109,7 +109,7 @@
    </synapse>
    <synapse id="8">
      <action_set>
-       <pseudo_event id="6" operation="stop" operation_key="rsc2_stop_0">
+       <pseudo_event id="7" operation="stop" operation_key="rsc2_stop_0">
          <attributes crm_feature_set="1.0.7" CRM_meta_id="stop-2" CRM_meta_on_fail="block" CRM_meta_timeout="20000" CRM_meta_name="stop"/>
        </pseudo_event>
      </action_set>
@@ -121,17 +121,17 @@
    </synapse>
    <synapse id="9">
      <action_set>
-       <rsc_op id="7" operation="start" operation_key="rsc2_start_0" on_node="node2" on_node_uuid="uuid2">
+       <rsc_op id="8" operation="start" operation_key="rsc2_start_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc2" long-id="group1:rsc2" class="heartbeat" type="apache"/>
          <attributes crm_feature_set="1.0.7" CRM_meta_timeout="20000"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="6" operation="stop" operation_key="rsc2_stop_0"/>
+         <rsc_op id="6" operation="start" operation_key="rsc1_start_0" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
        <trigger>
-         <rsc_op id="8" operation="start" operation_key="rsc1_start_0" on_node="node2" on_node_uuid="uuid2"/>
+         <pseudo_event id="7" operation="stop" operation_key="rsc2_stop_0"/>
        </trigger>
        <trigger>
          <crm_event id="15" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>

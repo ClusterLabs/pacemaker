@@ -490,6 +490,9 @@ unconfirmed_actions(gboolean send_updates)
 			} else if(safe_str_eq(task, "cancel")) {
 				/* we dont need to update the CIB with these */
 				continue;
+			} else if(safe_str_eq(task, "stop")) {
+				/* *never* update the CIB with these */
+				continue;
 			}
 			crm_err("Action %d unconfirmed from peer", action->id);
 			cib_action_update(action, LRM_OP_PENDING);

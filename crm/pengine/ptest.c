@@ -69,8 +69,8 @@ FILE *dot_strm = NULL;
 static void
 init_dotfile(void)
 {
-	dot_write("digraph \"g\" {");
-	dot_write("	size = \"30,30\"");
+	dot_write(" digraph \"g\" {");
+/* 	dot_write("	size = \"30,30\""); */
 /* 	dot_write("	graph ["); */
 /* 	dot_write("		fontsize = \"12\""); */
 /* 	dot_write("		fontname = \"Times-Roman\""); */

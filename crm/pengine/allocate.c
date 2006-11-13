@@ -1174,7 +1174,7 @@ generate_location_rule(
 }
 
 gboolean
-rsc_colocation_new(const char *id, int score,
+rsc_colocation_new(const char *id, const char *node_attr, int score,
 		   resource_t *rsc_lh, resource_t *rsc_rh,
 		   const char *state_lh, const char *state_rh)
 {
@@ -1210,7 +1210,7 @@ rsc_colocation_new(const char *id, int score,
 	new_con->score = score;
 	new_con->role_lh = text2role(state_lh);
 	new_con->role_rh = text2role(state_rh);
-
+	new_con->node_attribute = node_attr;
 	
 	crm_debug_4("Adding constraint %s (%p) to %s",
 		  new_con->id, new_con, rsc_lh->id);
@@ -1297,6 +1297,7 @@ unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
 	const char *state_lh = crm_element_value(xml_obj, XML_RULE_ATTR_FROMSTATE);
 	const char *state_rh = crm_element_value(xml_obj, XML_RULE_ATTR_TOSTATE);
+	const char *attr = crm_element_value(xml_obj, "node_attribute");
 
 	resource_t *rsc_lh = pe_find_resource(data_set->resources, id_lh);
 	resource_t *rsc_rh = pe_find_resource(data_set->resources, id_rh);
@@ -1318,7 +1319,7 @@ unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		score_i = char2score(score);
 	}
 	return rsc_colocation_new(
-		id, score_i, rsc_lh, rsc_rh, state_lh, state_rh);
+		id, attr, score_i, rsc_lh, rsc_rh, state_lh, state_rh);
 }
 
 gboolean is_active(rsc_to_node_t *cons)
