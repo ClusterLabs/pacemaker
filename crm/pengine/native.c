@@ -416,9 +416,11 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
 	order_restart(rsc);
+
 	custom_action_order(rsc, demote_key(rsc), NULL,
 			    rsc, stop_key(rsc), NULL,
 			    pe_ordering_manditory, data_set);
+
 	custom_action_order(rsc, start_key(rsc), NULL,
 			    rsc, promote_key(rsc), NULL,
 			    pe_ordering_optional, data_set);
@@ -430,6 +432,23 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	custom_action_order(
 		rsc, delete_key(rsc), NULL, rsc, start_key(rsc), NULL, 
 		pe_ordering_manditory, data_set);	
+
+	if(rsc->notify) {
+		char *key1 = NULL;
+		char *key2 = NULL;
+
+		key1 = generate_op_key(rsc->id, "confirmed-post_notify_start", 0);
+		key2 = generate_op_key(rsc->id, "pre_notify_promote", 0);
+		custom_action_order(
+			rsc, key1, NULL, rsc, key2, NULL, 
+			pe_ordering_optional, data_set);	
+
+		key1 = generate_op_key(rsc->id, "pre_notify_demote", 0);
+		key2 = generate_op_key(rsc->id, "post_notify_stop", 0);
+		custom_action_order(
+			rsc, key1, NULL, rsc, key2, NULL, 
+			pe_ordering_optional, data_set);	
+	}
 }
 
 void native_rsc_colocation_lh(
