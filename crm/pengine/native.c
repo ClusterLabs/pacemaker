@@ -443,8 +443,8 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 			rsc, key1, NULL, rsc, key2, NULL, 
 			pe_ordering_optional, data_set);	
 
-		key1 = generate_op_key(rsc->id, "pre_notify_demote", 0);
-		key2 = generate_op_key(rsc->id, "post_notify_stop", 0);
+		key1 = generate_op_key(rsc->id, "confirmed-post_notify_demote", 0);
+		key2 = generate_op_key(rsc->id, "pre_notify_stop", 0);
 		custom_action_order(
 			rsc, key1, NULL, rsc, key2, NULL, 
 			pe_ordering_optional, data_set);	
