@@ -137,18 +137,18 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 		all_is_good = FALSE;
 
 	} else if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
-		crm_log_maybe(fail_level, "IPC Channel to %d is not connected",
+		do_crm_log(fail_level, "IPC Channel to %d is not connected",
 			      (int)ipc_client->farside_pid);
 		all_is_good = FALSE;
 	}
 
 	if(all_is_good && msg2ipcchan(msg, ipc_client) != HA_OK) {
-		crm_log_maybe(fail_level, "Could not send IPC message to %d",
+		do_crm_log(fail_level, "Could not send IPC message to %d",
 			(int)ipc_client->farside_pid);
 		all_is_good = FALSE;
 
 		if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
-			crm_log_maybe(fail_level,
+			do_crm_log(fail_level,
 				      "IPC Channel to %d is no longer connected",
 				      (int)ipc_client->farside_pid);
 

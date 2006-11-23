@@ -78,7 +78,7 @@ abort_transition_graph(
 	update_abort_priority(
 		transition_graph, abort_priority, abort_action, abort_text);
 
-	crm_log_maybe(log_level, "%s:%d - Triggered graph processing : %s",
+	do_crm_log(log_level, "%s:%d - Triggered graph processing : %s",
 		      fn, line, abort_text);
 
 	if(reason != NULL) {

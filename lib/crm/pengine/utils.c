@@ -457,26 +457,26 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			action->runnable = FALSE;
 
 		} else if(rsc->is_managed == FALSE) {
-			crm_log_maybe(warn_level, "Action %s %s is for %s (unmanaged)",
+			do_crm_log(warn_level, "Action %s %s is for %s (unmanaged)",
 				 action->uuid, task, rsc->id);
 			action->optional = TRUE;
 /*   			action->runnable = FALSE; */
 
 #if 0
 		} else if(action->node->details->unclean) {
-			crm_log_maybe(warn_level, "Action %s on %s is unrunnable (unclean)",
+			do_crm_log(warn_level, "Action %s on %s is unrunnable (unclean)",
 				 action->uuid, action->node?action->node->details->uname:"<none>");
 
 			action->runnable = FALSE;
 #endif	
 		} else if(action->node->details->online == FALSE) {
 			action->runnable = FALSE;
-			crm_log_maybe(warn_level, "Action %s on %s is unrunnable (offline)",
+			do_crm_log(warn_level, "Action %s on %s is unrunnable (offline)",
 				 action->uuid, action->node->details->uname);
 			if(action->rsc->is_managed
 			   && save_action
 			   && a_task == stop_rsc) {
-				crm_log_maybe(warn_level, "Marking node %s unclean",
+				do_crm_log(warn_level, "Marking node %s unclean",
 					 action->node->details->uname);
 				action->node->details->unclean = TRUE;
 			}
@@ -826,7 +826,7 @@ print_resource(
 	long options = pe_print_log;
 	
 	if(rsc == NULL) {
-		crm_log_maybe(log_level-1, "%s%s: <NULL>",
+		do_crm_log(log_level-1, "%s%s: <NULL>",
 			      pre_text==NULL?"":pre_text,
 			      pre_text==NULL?"":": ");
 		return;
@@ -845,7 +845,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 	
 	if(action == NULL) {
 
-		crm_log_maybe(log_level, "%s%s: <NULL>",
+		do_crm_log(log_level, "%s%s: <NULL>",
 			      pre_text==NULL?"":pre_text,
 			      pre_text==NULL?"":": ");
 		return;
@@ -867,7 +867,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 	switch(text2task(action->task)) {
 		case stonith_node:
 		case shutdown_crm:
-			crm_log_maybe(log_level,
+			do_crm_log(log_level,
 				      "%s%s%sAction %d: %s%s%s%s%s%s",
 				      pre_text==NULL?"":pre_text,
 				      pre_text==NULL?"":": ",
@@ -880,7 +880,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 				      node_uuid?")":"");
 			break;
 		default:
-			crm_log_maybe(log_level,
+			do_crm_log(log_level,
 				      "%s%s%sAction %d: %s %s%s%s%s%s%s",
 				      pre_text==NULL?"":pre_text,
 				      pre_text==NULL?"":": ",
@@ -897,22 +897,22 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 	}
 
 	if(details) {
-		crm_log_maybe(log_level+1, "\t\t====== Preceeding Actions");
+		do_crm_log(log_level+1, "\t\t====== Preceeding Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_before, lpc,
 			log_action(log_level+1, "\t\t", other->action, FALSE);
 			);
 #if 1
-		crm_log_maybe(log_level+1, "\t\t====== Subsequent Actions");
+		do_crm_log(log_level+1, "\t\t====== Subsequent Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_after, lpc,
 			log_action(log_level+1, "\t\t", other->action, FALSE);
 			);		
 #endif
-		crm_log_maybe(log_level+1, "\t\t====== End");
+		do_crm_log(log_level+1, "\t\t====== End");
 
 	} else {
-		crm_log_maybe(log_level, "\t\t(seen=%d, before=%d, after=%d)",
+		do_crm_log(log_level, "\t\t(seen=%d, before=%d, after=%d)",
 			      action->seen_count,
 			      g_list_length(action->actions_before),
 			      g_list_length(action->actions_after));

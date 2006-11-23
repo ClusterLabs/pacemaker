@@ -279,7 +279,7 @@ ghash_print_pending(gpointer key, gpointer value, gpointer user_data)
 {
 	const char *action = key;
 	int *log_level = user_data;
-	crm_log_maybe(*log_level, "Pending action: %s", action);
+	do_crm_log(*log_level, "Pending action: %s", action);
 }
 
 gboolean
@@ -296,7 +296,7 @@ verify_stopped(gboolean force, int log_level)
 	}
 
 	if(g_hash_table_size(shutdown_ops) > 0) {
-		crm_log_maybe(log_level,
+		do_crm_log(log_level,
 			      "%d pending LRM operations at shutdown%s",
 			      g_hash_table_size(shutdown_ops),
 			      force?"":"... waiting");
@@ -429,10 +429,10 @@ build_operation_update(
 			/* ??safe to mask?? */
 /* 			log_level = LOG_WARNING; */
 		}
- 		crm_log_maybe(log_level,
+ 		do_crm_log(log_level,
 			      "Duplicate %s operations in get_cur_state()",
 			      op_id);
- 		crm_log_maybe(log_level+2,
+ 		do_crm_log(log_level+2,
 			      "New entry: %s %s (call=%d, status=%s)",
 			      op_id, op->user_data, op->call_id,
 			      op_status2text(op->op_status));

@@ -188,7 +188,7 @@ do_exit(long long action,
 		verify_stopped(TRUE, LOG_ERR);
 	}
 	
-	crm_log_maybe(log_level, "Performing %s - %s exiting the CRMd",
+	do_crm_log(log_level, "Performing %s - %s exiting the CRMd",
 		      fsa_action2string(action), exit_type);
 	
 	if(is_set(fsa_input_register, R_IN_RECOVERY)) {

@@ -252,7 +252,7 @@ fsa_dump_queue(int log_level)
 	}
 	slist_iter(
 		data, fsa_data_t, fsa_message_queue, lpc,
-		crm_log_maybe(log_level, 
+		do_crm_log(log_level, 
 			   "queue[%d(%d)]: input %s raised by %s()\t(cause=%s)",
 			   lpc, data->id, fsa_input2string(data->fsa_input),
 			   data->origin, fsa_cause2string(data->fsa_cause));
@@ -1110,7 +1110,7 @@ send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 	
 	if(log_level == LOG_WARNING
 	   || (safe_str_neq(op, CRM_OP_HBEAT))) {
-		crm_log_maybe(log_level,
+		do_crm_log(log_level,
 			   "Sending %sHA message (ref=%s) to %s@%s %s.",
 			   broadcast?"broadcast ":"directed ",
 			   cl_get_string(msg, XML_ATTR_REFERENCE),

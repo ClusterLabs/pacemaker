@@ -442,7 +442,7 @@ cib_process_diff(
 	}
 	
 	if(reason != NULL) {
-		crm_log_maybe(
+		do_crm_log(
 			log_level,
 			"Diff %d.%d.%d -> %d.%d.%d not applied to %d.%d.%d: %s",
 			diff_del_admin_epoch,diff_del_epoch,diff_del_updates,

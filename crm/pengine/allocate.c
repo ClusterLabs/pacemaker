@@ -1170,7 +1170,6 @@ generate_location_rule(
 
 	crm_debug_3("%s: %d nodes matched",
 		    rule_id, g_list_length(location_rule->node_list_rh));
-	crm_action_debug_3(print_rsc_to_node("Added", location_rule, FALSE));
 	return location_rule;
 }
 

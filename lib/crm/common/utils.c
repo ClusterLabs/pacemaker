@@ -1506,7 +1506,7 @@ crm_diff_mem_stats(int log_level_up, int log_level_down, const char *location,
 		reset_on_change = (log_level_down == LOG_DEBUG);
 	}
 
- 	crm_log_maybe(increase?log_level_up:log_level_down,
+ 	do_crm_log(increase?log_level_up:log_level_down,
 		      "Memory usage %s detected at %s:\t"
 		      " %10ld alloc's vs. %10ld free's (%5ld change"
 		      " %10ld bytes leaked)",

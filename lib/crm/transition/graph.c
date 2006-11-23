@@ -264,7 +264,7 @@ run_graph(crm_graph_t *graph)
 			if(synapse->priority > graph->abort_priority) {
 				pending_log = LOG_DEBUG_3;
 			} 
-			crm_log_maybe(pending_log,
+			do_crm_log(pending_log,
 				      "Synapse %d: confirmation pending",
 				      synapse->id);
 			num_pending++;
@@ -310,9 +310,9 @@ run_graph(crm_graph_t *graph)
 	}
 	
 	
-	crm_log_maybe(stat_log_level+1,
+	do_crm_log(stat_log_level+1,
 		      "====================================================");
-	crm_log_maybe(stat_log_level,
+	do_crm_log(stat_log_level,
 		      "Transition %d: (Complete=%d, Pending=%d,"
 		      " Fired=%d, Skipped=%d, Incomplete=%d)",
 		      graph->id, num_complete, num_pending, num_fired,

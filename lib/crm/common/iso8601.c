@@ -126,7 +126,7 @@ log_date(int log_level, const char *prefix, ha_time_t *date_time, int flags)
 				 offset>0?"+":"-", hr, mins);
 		}
 	}
-	crm_log_maybe(log_level, "%s%s%s%s%s%s",
+	do_crm_log(log_level, "%s%s%s%s%s%s",
 		      prefix?prefix:"", prefix?": ":"",
 		      date_s?date_s:"", (date_s!=NULL&&time_s!=NULL)?" ":"",
 		      time_s?time_s:"", offset_s?offset_s:"");
@@ -1236,7 +1236,7 @@ log_tm_date(int log_level, struct tm *some_tm)
 	tzn = NULL;
 #endif
 
-	crm_log_maybe(log_level,
+	do_crm_log(log_level,
 		      "%.2d/%.2d/%.4d %.2d:%.2d:%.2d %s"
 		      " (wday=%d, yday=%d, dst=%d, offset=%ld)",
 		      some_tm->tm_mday,

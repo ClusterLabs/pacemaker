@@ -584,18 +584,18 @@ dump_array(int log_level, const char *message, const char **array, int depth)
 	int j;
 	
 	if(message != NULL) {
-		crm_log_maybe(log_level, "%s", message);
+		do_crm_log(log_level, "%s", message);
 	}
 
-	crm_log_maybe(log_level,  "Contents of the array:");
+	do_crm_log(log_level,  "Contents of the array:");
 	if(array == NULL || array[0] == NULL || depth == 0) {
-		crm_log_maybe(log_level, "\t<empty>");
+		do_crm_log(log_level, "\t<empty>");
 		return;
 	}
 	
 	for (j=0; j < depth && array[j] != NULL; j++) {
 		if (array[j] == NULL) { break; }
-		crm_log_maybe(log_level, "\t--> (%s).", array[j]);
+		do_crm_log(log_level, "\t--> (%s).", array[j]);
 	}
 }
 
@@ -1614,7 +1614,7 @@ log_xml_diff(unsigned int log_level, crm_data_t *diff, const char *function)
 		if(is_first) {
 			is_first = FALSE;
 		} else {
-			crm_log_maybe(log_level, " --- ");
+			do_crm_log(log_level, " --- ");
 		}
 		
 		);
@@ -1625,7 +1625,7 @@ log_xml_diff(unsigned int log_level, crm_data_t *diff, const char *function)
 		if(is_first) {
 			is_first = FALSE;
 		} else {
-			crm_log_maybe(log_level, " --- ");
+			do_crm_log(log_level, " --- ");
 		}
 		);
 }

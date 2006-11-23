@@ -267,7 +267,7 @@ cib_diff_notify(
 		&del_admin_epoch, &del_epoch, &del_updates);
 
 	if(add_updates != del_updates) {
-		crm_log_maybe(log_level,
+		do_crm_log(log_level,
 			      "Update (client: %s%s%s): %d.%d.%d -> %d.%d.%d (%s)",
 			      client, call_id?", call:":"", call_id?call_id:"",
 			      del_admin_epoch, del_epoch, del_updates,
@@ -275,7 +275,7 @@ cib_diff_notify(
 			      cib_error2string(result));
 
 	} else if(diff != NULL) {
-		crm_log_maybe(log_level,
+		do_crm_log(log_level,
 			      "Local-only Change (client:%s%s%s): %d.%d.%d (%s)",
 			      client, call_id?", call: ":"", call_id?call_id:"",
 			      add_admin_epoch, add_epoch, add_updates,

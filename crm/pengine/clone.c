@@ -134,11 +134,11 @@ static gint sort_clone_instance(gconstpointer a, gconstpointer b)
 
 	if(resource1->running_on && resource2->running_on) {
 		if(g_list_length(resource1->running_on) < g_list_length(resource2->running_on)) {
-			crm_log_maybe(level, "%s < %s: running_on", resource1->id, resource2->id);
+			do_crm_log(level, "%s < %s: running_on", resource1->id, resource2->id);
 			return -1;
 			
 		} else if(g_list_length(resource1->running_on) > g_list_length(resource2->running_on)) {
-			crm_log_maybe(level, "%s > %s: running_on", resource1->id, resource2->id);
+			do_crm_log(level, "%s > %s: running_on", resource1->id, resource2->id);
 			return 1;
 		}
 	}
@@ -152,10 +152,10 @@ static gint sort_clone_instance(gconstpointer a, gconstpointer b)
 	
 	if(node1 != node2) {
 		if(node1 == NULL) {
-			crm_log_maybe(level, "%s > %s: active", resource1->id, resource2->id);
+			do_crm_log(level, "%s > %s: active", resource1->id, resource2->id);
 			return 1;
 		} else if(node2 == NULL) {
-			crm_log_maybe(level, "%s < %s: active", resource1->id, resource2->id);
+			do_crm_log(level, "%s < %s: active", resource1->id, resource2->id);
 			return -1;
 		}
 	}
@@ -164,33 +164,33 @@ static gint sort_clone_instance(gconstpointer a, gconstpointer b)
 	can2 = can_run_resources(node2);
 	if(can1 != can2) {
 		if(can1) {
-			crm_log_maybe(level, "%s < %s: can", resource1->id, resource2->id);
+			do_crm_log(level, "%s < %s: can", resource1->id, resource2->id);
 			return -1;
 		}
-		crm_log_maybe(level, "%s > %s: can", resource1->id, resource2->id);
+		do_crm_log(level, "%s > %s: can", resource1->id, resource2->id);
 		return 1;
 	}
 
 	node1 = parent_node_instance(resource1, node1);
 	node2 = parent_node_instance(resource2, node2);
 	if(node1 != NULL && node2 == NULL) {
-		crm_log_maybe(level, "%s < %s: not allowed", resource1->id, resource2->id);
+		do_crm_log(level, "%s < %s: not allowed", resource1->id, resource2->id);
 		return -1;
 	} else if(node1 == NULL && node2 != NULL) {
-		crm_log_maybe(level, "%s > %s: not allowed", resource1->id, resource2->id);
+		do_crm_log(level, "%s > %s: not allowed", resource1->id, resource2->id);
 		return 1;
 	}
 	
 	if(node1->count < node2->count) {
-		crm_log_maybe(level, "%s < %s: count", resource1->id, resource2->id);
+		do_crm_log(level, "%s < %s: count", resource1->id, resource2->id);
 		return -1;
 
 	} else if(node1->count > node2->count) {
-		crm_log_maybe(level, "%s > %s: count", resource1->id, resource2->id);
+		do_crm_log(level, "%s > %s: count", resource1->id, resource2->id);
 		return 1;
 	}
 
-	crm_log_maybe(level, "%s == %s: default", resource1->id, resource2->id);
+	do_crm_log(level, "%s == %s: default", resource1->id, resource2->id);
 	return 0;
 }
 

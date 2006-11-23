@@ -194,7 +194,7 @@ cib_stats(gpointer data)
 		double stat_1 = (1000*cib_calls_ms)/calls_diff;
 		
 		local_log_level = LOG_INFO;
-		crm_log_maybe(local_log_level,
+		do_crm_log(local_log_level,
 			      "Processed %lu operations"
 			      " (%.2fus average, %lu%% utilization) in the last %s",
 			      calls_diff, stat_1, 
@@ -202,7 +202,7 @@ cib_stats(gpointer data)
 			      cib_stat_interval);
 	}
 	
-	crm_log_maybe(local_log_level+1,
+	do_crm_log(local_log_level+1,
 		      "\tDetail: %lu operations (%ums total)"
 		      " (%lu local, %lu updates, %lu failures,"
 		      " %lu timeouts, %lu bad connects)",

@@ -444,11 +444,11 @@ cibmon_diff(const char *event, HA_Message *msg)
 
 	if(rc < cib_ok) {
 		log_level = LOG_WARNING;
-		crm_log_maybe(log_level, "[%s] %s ABORTED: %s",
+		do_crm_log(log_level, "[%s] %s ABORTED: %s",
 			      event, op, cib_error2string(rc));
 		
 	} else {
-		crm_log_maybe(log_level, "[%s] %s confirmed", event, op);
+		do_crm_log(log_level, "[%s] %s confirmed", event, op);
 	}
 
 	log_cib_diff(log_level, diff, op);

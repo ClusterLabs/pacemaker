@@ -35,8 +35,6 @@
 #include <crm/pengine/rules.h>
 #include <unpack.h>
 
-
-
 gboolean
 unpack_config(crm_data_t *config, pe_working_set_t *data_set)
 {
@@ -251,8 +249,6 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 		data_set->nodes = g_list_append(data_set->nodes, new_node);    
 		crm_debug_3("Done with node %s",
 			    crm_element_value(xml_obj, XML_ATTR_UNAME));
-
-		crm_action_debug_3(print_node("Added", new_node, FALSE));
 		);
   
 	return TRUE;

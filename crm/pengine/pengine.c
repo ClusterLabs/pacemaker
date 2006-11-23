@@ -308,15 +308,15 @@ do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *no
 
 	crm_debug_2("=#=#=#=#= Summary =#=#=#=#=");
 	crm_debug_2("\t========= Set %d (Un-runnable) =========", -1);
-	crm_action_debug_2(
+	if(crm_log_level > LOG_DEBUG) {
 		slist_iter(action, action_t, data_set->actions, lpc,
 			   if(action->optional == FALSE
 			      && action->runnable == FALSE
 			      && action->pseudo == FALSE) {
 				   log_action(LOG_DEBUG_2, "\t", action, TRUE);
 			   }
-			)
-		);
+			);
+	}
 	
 	return data_set->graph;
 }

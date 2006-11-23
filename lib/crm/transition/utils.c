@@ -138,20 +138,20 @@ print_elem(int log_level, const char *prefix, gboolean as_input, crm_action_t *a
 	
 	switch(action->type) {
 		case action_type_pseudo:
-			crm_log_maybe(log_level,
+			do_crm_log(log_level,
 				      "%s[%s %d]: %s (id: %s, type: %s, priority: %d)",
 				      prefix, class, action->id, state, key,
 				      actiontype2text(action->type),
 				      priority);
 			break;
 		case action_type_rsc:
-			crm_log_maybe(log_level,
+			do_crm_log(log_level,
 				      "%s[%s %d]: %s (id: %s, loc: %s, priority: %d)",
 				      prefix, class, action->id, state, key, host,
 				      priority);
 			break;
 		case action_type_crm:	
-			crm_log_maybe(log_level,
+			do_crm_log(log_level,
 				      "%s[%s %d]: %s (id: %s, loc: %s, type: %s, priority: %d)",
 				      prefix, class, action->id, state, key, host,
 				      actiontype2text(action->type),
@@ -169,7 +169,7 @@ print_elem(int log_level, const char *prefix, gboolean as_input, crm_action_t *a
 	}
 	
 	if(action->timer) {
-		crm_log_maybe(log_level, "%s\ttimeout=%d, timer=%d", prefix,
+		do_crm_log(log_level, "%s\ttimeout=%d, timer=%d", prefix,
 			      action->timeout, action->timer->source_id);
 	}
 	
@@ -197,7 +197,7 @@ print_graph(unsigned int log_level, crm_graph_t *graph)
 	slist_iter(
 		synapse, synapse_t, graph->synapses, lpc,
 
-		crm_log_maybe(log_level, "Synapse %d %s (priority: %d)",
+		do_crm_log(log_level, "Synapse %d %s (priority: %d)",
 			      synapse->id,
 			      synapse->confirmed?"was confirmed":
 			        synapse->executed?"was executed":
