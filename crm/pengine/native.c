@@ -28,6 +28,8 @@
 
 #define DELETE_THEN_REFRESH 1
 
+resource_t *ultimate_parent(resource_t *rsc);
+
 void node_list_update(GListPtr list1, GListPtr list2, int factor);
 
 void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
@@ -155,21 +157,36 @@ int native_num_allowed_nodes(resource_t *rsc)
 	return num_nodes;
 }
 
+resource_t *
+ultimate_parent(resource_t *rsc)
+{
+	resource_t *parent = rsc;
+	while(parent->parent) {
+		parent = parent->parent;
+	}
+	return parent;
+}
 
 node_t *
 native_color(resource_t *rsc, pe_working_set_t *data_set)
 {
+	if(rsc->parent && rsc->parent->is_allocating == FALSE) {
+		/* never allocate children on their own */
+		crm_debug("Escalating allocation of %s to its parent: %s",
+			  rsc->id, rsc->parent->id);
+		rsc->parent->cmds->color(rsc->parent, data_set);
+	}
 	
+	print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);
 	if(rsc->provisional == FALSE) {
 		return rsc->allocated_to;
 	}
 
-	print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);
 	if(rsc->is_allocating) {
 		crm_err("Dependancy loop detected involving %s", rsc->id);
 		return NULL;
 	}
-	
+
 	rsc->is_allocating = TRUE;
 	rsc->rsc_cons = g_list_sort(rsc->rsc_cons, sort_cons_strength);
 
@@ -214,8 +231,6 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	rsc->is_allocating = FALSE;
 	print_resource(LOG_DEBUG_3, "Allocated ", rsc, TRUE);
 
-	rsc->cmds->create_actions(rsc, data_set);
-	
 	return rsc->allocated_to;
 }
 

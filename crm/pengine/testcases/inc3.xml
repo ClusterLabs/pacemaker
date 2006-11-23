@@ -24,6 +24,7 @@
           <attributes>
             <nvpair name="clone_max" value="5"/>
             <nvpair name="clone_node_max" value="3"/>
+            <nvpair name="resource_stickiness" value="1"/>
           </attributes>
         </instance_attributes>
 	<primitive id="child_rsc2" class="heartbeat" type="apache"/>

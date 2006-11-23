@@ -58,6 +58,7 @@
             <attributes>
               <nvpair id="5" name="clone_max" value="3"/>
               <nvpair id="6" name="clone_node_max" value="1"/>
+              <nvpair name="resource_stickiness" value="1"/>
             </attributes>
           </instance_attributes>
           <primitive id="child_DoFencing" class="stonith" type="ssh">

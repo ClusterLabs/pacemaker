@@ -102,8 +102,6 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 	rsc->provisional = FALSE;
 	rsc->is_allocating = FALSE;
 
-	rsc->cmds->create_actions(rsc, data_set);
-
 	if(group_data->colocated) {
 		return group_node;
 	} 
@@ -122,6 +120,7 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc->cmds->create_actions(child_rsc, data_set);
 		group_update_pseudo_status(rsc, child_rsc);
 		);
 

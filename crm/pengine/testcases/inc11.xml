@@ -33,6 +33,7 @@
             <nvpair id="rsc1-attr2" name="clone_node_max" value="1"/>
             <nvpair id="rsc1-attr3" name="master_max" value="1"/>
             <nvpair id="rsc1-attr4" name="master_node_max" value="1"/>
+            <nvpair name="resource_stickiness" value="1"/>
           </attributes>
         </instance_attributes>
 	<primitive id="child_rsc1" class="heartbeat" type="apache"/>

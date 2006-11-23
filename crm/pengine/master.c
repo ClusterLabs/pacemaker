@@ -22,6 +22,7 @@
 #include <crm/msg_xml.h>
 #include <allocate.h>
 #include <lib/crm/pengine/utils.h>
+#include <utils.h>
 
 extern void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
@@ -34,6 +35,9 @@ typedef struct clone_variant_data_s
 		int clone_max;
 		int clone_node_max;
 
+		int master_max;
+		int master_node_max;
+		
 		int active_clones;
 		int max_nodes;
 		
@@ -220,56 +224,68 @@ master_update_pseudo_status(
 		}							\
 		);
 
-struct masters_s 
+static node_t *
+can_be_master(resource_t *rsc)
 {
-		node_t *node;
-		int num_masters;
-};
+	node_t *node = NULL;
+	node_t *local_node = NULL;
+	clone_variant_data_t *clone_data = NULL;
 
-void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
+	node = rsc->allocated_to;
+	if(rsc->priority < 0) {
+		crm_debug_2("%s cannot be master: preference",
+			    rsc->id);
+		return NULL;
+	} else if(node == NULL) {
+		crm_debug_2("%s cannot be master: not allocated",
+			    rsc->id);
+		return NULL;
+	} else if(can_run_resources(node) == FALSE) {
+		crm_debug_2("Node cant run any resources: %s",
+			    node->details->uname);
+		return NULL;
+	}
+
+	get_clone_variant_data(clone_data, rsc->parent);
+	local_node = pe_find_node_id(
+		clone_data->self->allowed_nodes, node->details->id);
+
+	if(local_node == NULL) {
+		crm_err("%s cannot run on %s: node not allowed",
+			rsc->id, node->details->uname);
+		return NULL;
+
+	} else if(local_node->count < clone_data->master_node_max) {
+		return local_node;
+
+	} else {
+		crm_debug_2("%s cannot be master on %s: node full",
+			    rsc->id, node->details->uname);
+	}
+
+	return NULL;
+}
+
+node_t *
+master_color(resource_t *rsc, pe_working_set_t *data_set)
 {
 	int len = 0;
+	int promoted = 0;
 	node_t *chosen = NULL;
+	node_t *cons_node = NULL;
+
 	char *attr_name = NULL;
 	const char *attr_value = NULL;
-
-	node_t *cons_node = NULL;
-	
-	action_t *action = NULL;
-	action_t *action_complete = NULL;
-	gboolean any_promoting = FALSE;
-	gboolean any_demoting = FALSE;
-	resource_t *last_promote_rsc = NULL;
-	resource_t *last_demote_rsc = NULL;
-	const char *master_max_s = g_hash_table_lookup(
-		rsc->meta, XML_RSC_ATTR_MASTER_MAX);
-	const char *master_node_max_s = g_hash_table_lookup(
-		rsc->meta, XML_RSC_ATTR_MASTER_NODEMAX);
-
-	int promoted = 0;
-	int master_max = crm_parse_int(master_max_s, "1");
-	int master_node_max = crm_parse_int(master_node_max_s, "1");
-
-	struct masters_s *master_hash_obj = NULL;
-	GHashTable *master_hash = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
-		g_hash_destroy_str, g_hash_destroy_str);
-
 	
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	crm_debug_2("Creating actions for %s", rsc->id);
+	clone_color(rsc, data_set);
 	
-	/* how many can we have? */
-	if(master_max >  clone_data->max_nodes * clone_data->clone_node_max) {
-		master_max = clone_data->max_nodes * clone_data->clone_node_max;
-		crm_info("Limited to %d masters (potential slaves)",master_max);
-	}
-	if(master_max >  clone_data->max_nodes * master_node_max) {
-		master_max = clone_data->max_nodes * master_node_max;
-		crm_info("Limited to %d masters (available nodes)", master_max);
-	}
+	/* count now tracks the number of masters allocated */
+	slist_iter(node, node_t, clone_data->self->allowed_nodes, lpc,
+		   node->count = 0;
+		);
 	
 	/*
 	 * assign priority
@@ -359,80 +375,45 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
-		chosen = child_rsc->allocated_to;
+		chosen = NULL;
+		crm_info("Processing %s", child_rsc->id);
+		if(promoted < clone_data->master_max) {
+			chosen = can_be_master(child_rsc);
+		}
+
 		if(chosen == NULL) {
+			if(child_rsc->next_role == RSC_ROLE_STARTED) {
+				child_rsc->next_role = RSC_ROLE_SLAVE;
+			}
 			continue;
 		}
+
+		chosen->count++;
+		crm_info("Promoting %s", child_rsc->id);
+		child_rsc->next_role = RSC_ROLE_MASTER;
+		promoted++;
 		
-		switch(child_rsc->next_role) {
-			case RSC_ROLE_STARTED:
-
-				master_hash_obj = g_hash_table_lookup(
-					master_hash, chosen->details->id);
-				if(master_hash_obj == NULL) {
-					crm_malloc0(master_hash_obj,
-						    sizeof(struct masters_s));
-					master_hash_obj->node = chosen;
-					g_hash_table_insert(
-						master_hash,
-						crm_strdup(chosen->details->id),
-						master_hash_obj);
-				}
-
-				if(master_hash_obj->num_masters >= master_node_max) {
-					crm_info("Demoting %s (node master max)",
-						 child_rsc->id);
-					child_rsc->next_role = RSC_ROLE_SLAVE;
-
-				} else if(child_rsc->priority < 0) {
-					crm_info("Demoting %s (priority)",
-						 child_rsc->id);
-					child_rsc->next_role = RSC_ROLE_SLAVE;
-					
-				} else if(master_max <= promoted) {
-					crm_info("Demoting %s (masters max)",
-						 child_rsc->id);
-					child_rsc->next_role = RSC_ROLE_SLAVE;
-
-				} else {
-					crm_info("Promoting %s", child_rsc->id);
-					child_rsc->next_role = RSC_ROLE_MASTER;
-					promoted++;
-					master_hash_obj->num_masters++;
-				}
-				break;
-				
-			case RSC_ROLE_SLAVE:
-				if(child_rsc->priority < 0 ||master_max <= lpc){
-					pe_warn("Cannot promote %s (slave)",
-						child_rsc->id);
-					lpc--;
-				}
-				break;
-
-			case RSC_ROLE_STOPPED:
-				if(child_rsc->priority < 0 ||master_max <= lpc){
-					crm_debug("Cannot promote %s (stopping)",
-						  child_rsc->id);
-					lpc--;
-				}
-				break;
-			case RSC_ROLE_MASTER:
-				/* the only reason we should be here is if
-				 * we're re-creating actions after a stonith
-				 */
-				promoted++;
-				break;
-			default:
-				CRM_CHECK(FALSE/* unhandled */,
-					  crm_err("Unknown resource role: %d for %s",
-						  child_rsc->next_role, child_rsc->id));
-		}
 		add_hash_param(child_rsc->parameters, crm_meta_name("role"),
 			       role2text(child_rsc->next_role));
 		);
-	crm_info("Promoted %d (of %d) slaves to master", promoted, master_max);
-	g_hash_table_destroy(master_hash);
+	
+	crm_info("Promoted %d instances of a possible %d to master", promoted, clone_data->master_max);
+	return NULL;
+}
+
+void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
+{
+	action_t *action = NULL;
+	action_t *action_complete = NULL;
+	gboolean any_promoting = FALSE;
+	gboolean any_demoting = FALSE;
+	resource_t *last_promote_rsc = NULL;
+	resource_t *last_demote_rsc = NULL;
+
+	clone_variant_data_t *clone_data = NULL;
+	get_clone_variant_data(clone_data, rsc);
+	
+	crm_debug("Creating actions for %s", rsc->id);
 
 	/* create actions as normal */
 	clone_create_actions(rsc, data_set);
@@ -442,7 +423,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		gboolean child_promoting = FALSE;
 		gboolean child_demoting = FALSE;
 
-		crm_debug("Creating actions for %s", rsc->id);
+		crm_debug_2("Creating actions for %s", child_rsc->id);
 		child_rsc->cmds->create_actions(child_rsc, data_set);
 		master_update_pseudo_status(
 			child_rsc, &child_demoting, &child_promoting);

@@ -155,6 +155,7 @@ extern void clone_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
 
 extern gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set);
+extern node_t *master_color(resource_t *rsc, pe_working_set_t *data_set);
 extern void master_create_actions(resource_t *rsc, pe_working_set_t *data_set);
 extern void master_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);

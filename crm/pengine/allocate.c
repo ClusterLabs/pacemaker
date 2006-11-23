@@ -93,7 +93,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 	{
  		clone_set_cmds,
 		clone_num_allowed_nodes,
-		clone_color,
+		master_color,
 		master_create_actions,
 		clone_create_probe,
 		master_internal_constraints,
@@ -536,10 +536,11 @@ stage4(pe_working_set_t *data_set)
 gboolean
 stage5(pe_working_set_t *data_set)
 {
-	/* Take (next) highest resource and assign it */
+	/* Take (next) highest resource, assign it and create its actions */
 	slist_iter(
 		rsc, resource_t, data_set->resources, lpc,
 		rsc->cmds->color(rsc, data_set);
+		rsc->cmds->create_actions(rsc, data_set);	
 		);
 	
 	return TRUE;
@@ -908,8 +909,8 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	CRM_CHECK(action != NULL, return FALSE);
 	CRM_CHECK(action_rh != NULL, return FALSE);
 	
-	rsc_lh   = pe_find_resource(data_set->resources, id_rh);
-	rsc_rh   = pe_find_resource(data_set->resources, id_lh);
+	rsc_lh = pe_find_resource(data_set->resources, id_rh);
+	rsc_rh = pe_find_resource(data_set->resources, id_lh);
 
 	if(rsc_lh == NULL) {
 		crm_config_err("Constraint %s: no resource found for LHS of %s", id, id_lh);
@@ -1311,13 +1312,10 @@ unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		return FALSE;
 	}
 
-	/* the docs indicate that only +/- INFINITY are allowed,
-	 *   but no-one ever reads the docs so all positive values will
-	 *   count as "must" and negative values as "must not"
-	 */
 	if(score) {
 		score_i = char2score(score);
 	}
+
 	return rsc_colocation_new(
 		id, attr, score_i, rsc_lh, rsc_rh, state_lh, state_rh);
 }
