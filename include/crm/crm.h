@@ -50,11 +50,7 @@
 #define CRM_DEPRECATED_SINCE_2_1_0 1
 
 #define CRM_META			"CRM_meta"
-#if 1
-#  define crm_meta_name(field) CRM_META"_"field
-#else
-#  define crm_meta_name(field) field
-#endif
+#define crm_meta_name(field) CRM_META"_"field
 
 #define ipc_call_diff_max_ms 5000
 #define action_diff_warn_ms  5000
