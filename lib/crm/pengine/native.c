@@ -27,18 +27,10 @@
 
 #define DELETE_THEN_REFRESH 1
 
-typedef struct native_variant_data_s
-{
-/* 		GListPtr allowed_nodes;    /\* node_t*   *\/ */
-
-} native_variant_data_t;
+#define VARIANT_NATIVE 1
+#include <lib/crm/pengine/variant.h>
 
 gboolean DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set);
-
-#define get_native_variant_data(data, rsc)				\
-	CRM_ASSERT(rsc->variant == pe_native);				\
-	CRM_ASSERT(rsc->variant_opaque != NULL);			\
-	data = (native_variant_data_t *)rsc->variant_opaque;
 
 void
 native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)

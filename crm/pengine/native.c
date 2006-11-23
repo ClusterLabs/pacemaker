@@ -28,6 +28,9 @@
 
 #define DELETE_THEN_REFRESH 1
 
+#define VARIANT_NATIVE 1
+#include <lib/crm/pengine/variant.h>
+
 resource_t *ultimate_parent(resource_t *rsc);
 
 void node_list_update(GListPtr list1, GListPtr list2, int factor);
@@ -76,19 +79,6 @@ gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,pe
 /* Slave */	{ RoleError,	StopRsc,	RoleError,	NullOp,		PromoteRsc, },
 /* Master */	{ RoleError,	RoleError,	RoleError,	DemoteRsc,	NullOp,     },
 };
-
-
-typedef struct native_variant_data_s
-{
-/* 		GListPtr allowed_nodes;    /\* node_t*   *\/ */
-
-} native_variant_data_t;
-
-#define get_native_variant_data(data, rsc)				\
-	CRM_ASSERT(rsc->variant == pe_native);				\
-	CRM_ASSERT(rsc->variant_opaque != NULL);			\
-	data = (native_variant_data_t *)rsc->variant_opaque;
-
 
 
 static gboolean

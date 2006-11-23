@@ -26,28 +26,8 @@
 #include <allocate.h>
 #include <utils.h>
 
-typedef struct group_variant_data_s
-{
-		int num_children;
-		GListPtr child_list; /* resource_t* */
-		resource_t *self;
-		resource_t *first_child;
-		resource_t *last_child;
-
-		gboolean colocated;
-		gboolean ordered;
-		
-		gboolean child_starting;
-		gboolean child_stopping;
-		
-} group_variant_data_t;
-
-
-#define get_group_variant_data(data, rsc)				\
-	CRM_ASSERT(rsc != NULL);					\
-	CRM_ASSERT(rsc->variant == pe_group);				\
-	CRM_ASSERT(rsc->variant_opaque != NULL);			\
-	data = (group_variant_data_t *)rsc->variant_opaque;		\
+#define VARIANT_GROUP 1
+#include <lib/crm/pengine/variant.h>
 
 void group_set_cmds(resource_t *rsc)
 {

@@ -24,33 +24,12 @@
 #include <utils.h>
 #include <lib/crm/pengine/utils.h>
 
+#define VARIANT_CLONE 1
+#include <lib/crm/pengine/variant.h>
+
 void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
 	pe_working_set_t *data_set);
-
-typedef struct clone_variant_data_s
-{
-		resource_t *self;
-
-		int clone_max;
-		int clone_node_max;
-
-		int master_max;
-		int master_node_max;
-
-		int active_clones;
-		int max_nodes;
-		
-		gboolean interleave;
-		gboolean ordered;
-
-		crm_data_t *xml_obj_child;
-		
-		gboolean notify_confirm;
-		
-		GListPtr child_list; /* resource_t* */
-		
-} clone_variant_data_t;
 
 void child_stopping_constraints(
 	clone_variant_data_t *clone_data, enum pe_ordering type,
@@ -59,13 +38,6 @@ void child_stopping_constraints(
 void child_starting_constraints(
 	clone_variant_data_t *clone_data, enum pe_ordering type,
 	resource_t *child, resource_t *last, pe_working_set_t *data_set);
-
-
-#define get_clone_variant_data(data, rsc)				\
-	CRM_ASSERT(rsc->variant == pe_clone || rsc->variant == pe_master); \
-	data = (clone_variant_data_t *)rsc->variant_opaque;
-
-
 
 void clone_set_cmds(resource_t *rsc)
 {
