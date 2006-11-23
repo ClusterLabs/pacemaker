@@ -22,40 +22,6 @@
 #include <utils.h>
 #include <lib/crm/pengine/utils.h>
 
-/* only for rsc_colocation constraints */
-rsc_colocation_t *
-invert_constraint(rsc_colocation_t *constraint) 
-{
-	rsc_colocation_t *inverted_con = NULL;
-
-	crm_debug_3("Inverting constraint");
-	if(constraint == NULL) {
-		pe_err("Cannot invert NULL constraint");
-		return NULL;
-	}
-
-	crm_malloc0(inverted_con, sizeof(rsc_colocation_t));
-
-	if(inverted_con == NULL) {
-		return NULL;
-	}
-	
-	inverted_con->id = constraint->id;
-	inverted_con->score = constraint->score;
-
-	/* swap the direction */
-	inverted_con->rsc_lh = constraint->rsc_rh;
-	inverted_con->rsc_rh = constraint->rsc_lh;
-	inverted_con->role_lh = constraint->role_rh;
-	inverted_con->role_rh = constraint->role_lh;
-
-	crm_action_debug_3(
-		print_rsc_colocation("Inverted constraint", inverted_con, FALSE));
-	
-	return inverted_con;
-}
-
-
 gint sort_cons_strength(gconstpointer a, gconstpointer b)
 {
 	const rsc_colocation_t *rsc_constraint1 = (const rsc_colocation_t*)a;
@@ -347,7 +313,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 			log_level = LOG_WARNING;
 		}
 		
-		crm_log_maybe(log_level, "%d nodes with equal score (%s) for"
+		do_crm_log(log_level, "%d nodes with equal score (%s) for"
 			      " running the listed resources (chose %s):",
 			      multiple, score, chosen->details->uname);
 		crm_free(score);

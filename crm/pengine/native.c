@@ -38,8 +38,6 @@ void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 				      resource_t *rsc_rh, gboolean update_rh);
 
-void filter_nodes(resource_t *rsc);
-
 void create_notifications(resource_t *rsc, pe_working_set_t *data_set);
 void Recurring(resource_t *rsc, action_t *start, node_t *node,
 			      pe_working_set_t *data_set);
@@ -315,7 +313,7 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 				mon = NULL;
 			}
 			
-			crm_log_maybe(log_level, "%s action %s (%s vs. %s)",
+			do_crm_log(log_level, "%s action %s (%s vs. %s)",
 				      foo , key, value?value:role2text(RSC_ROLE_SLAVE),
 				      role2text(rsc->next_role));
 			crm_free(key);
@@ -804,35 +802,6 @@ void native_expand(resource_t *rsc, pe_working_set_t *data_set)
 void
 native_agent_constraints(resource_t *rsc)
 {
-}
-
-
-
-
-
-/*
- * Remove any nodes with a -ve weight
- */
-void
-filter_nodes(resource_t *rsc)
-{
-	print_resource(LOG_DEBUG_3, "Filtering nodes for: ", rsc, FALSE);
-	slist_iter(
-		node, node_t, rsc->allowed_nodes, lpc,
-		if(node == NULL) {
-			pe_err("Invalid NULL node");
-			
-		} else if(node->weight < 0.0
-			  || node->details->shutdown
-			  || node->details->online == FALSE
-			  || node->details->type == node_ping) {
-			crm_action_debug_3(print_node("Removing", node, FALSE));
-			rsc->allowed_nodes =
-				g_list_remove(rsc->allowed_nodes, node);
-			crm_free(node);
-			lpc = -1; /* restart the loop */
-		}
-		);
 }
 
 void
