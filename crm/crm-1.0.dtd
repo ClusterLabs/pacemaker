@@ -437,7 +437,8 @@ rsc_ordering constraints express dependencies between the actions on two resourc
           id        CDATA #REQUIRED
           from      CDATA #REQUIRED
           to        CDATA #REQUIRED
-          action    (start|stop)         'start'
+          action    CDATA #IMPLIED       'start'
+          to_action CDATA #IMPLIED       'start'
           type      (before|after)       'after'
           score     CDATA                '0'
           symmetrical    (true|1|false|0) 'true'>

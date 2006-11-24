@@ -934,13 +934,21 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	if(rsc_rh->restart_type == pe_restart_restart
 	   && safe_str_eq(action, action_rh)) {
 		if(safe_str_eq(action, CRMD_ACTION_START)) {
-			crm_debug_2("Recover start-start: %s-%s",
-				rsc_lh->id, rsc_rh->id);
-  			order_start_start(rsc_lh, rsc_rh, pe_ordering_recover);
+			crm_debug_2("Recover %s.%s-%s.%s",
+				    rsc_lh->id, action, rsc_rh->id, action_rh);
+/* 			order_start_start(rsc_lh, rsc_rh, pe_ordering_recover); */
+			custom_action_order(
+				rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
+				rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
+				pe_ordering_recover, data_set);
  		} else if(safe_str_eq(action, CRMD_ACTION_STOP)) {
-			crm_debug_2("Recover stop-stop: %s-%s",
-				rsc_rh->id, rsc_lh->id);
-  			order_stop_stop(rsc_rh, rsc_lh, pe_ordering_recover); 
+			crm_debug_2("Recover %s.%s-%s.%s",
+				    rsc_rh->id, action_rh, rsc_lh->id, action);
+/*   			order_stop_stop(rsc_rh, rsc_lh, pe_ordering_recover);   */
+			custom_action_order(
+				rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
+				rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
+				pe_ordering_recover, data_set);
 		}
 	}
 
@@ -951,6 +959,12 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	
 	action = invert_action(action);
 	action_rh = invert_action(action_rh);
+
+	if(action == NULL || action_rh == NULL) {
+		crm_config_err("Cannot invert rsc_order constraint %s."
+			       " Please specify the inverse manually.", id);
+		return TRUE;
+	}
 	
 	custom_action_order(
 		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
@@ -962,11 +976,19 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		if(safe_str_eq(action, CRMD_ACTION_START)) {
 			crm_debug_2("Recover start-start (2): %s-%s",
 				rsc_lh->id, rsc_rh->id);
-  			order_start_start(rsc_lh, rsc_rh, pe_ordering_recover);
+/*   			order_start_start(rsc_lh, rsc_rh, pe_ordering_recover); */
+			custom_action_order(
+				rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
+				rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
+				pe_ordering_recover, data_set);
 		} else if(safe_str_eq(action, CRMD_ACTION_STOP)) { 
 			crm_debug_2("Recover stop-stop (2): %s-%s",
 				rsc_rh->id, rsc_lh->id);
-  			order_stop_stop(rsc_rh, rsc_lh, pe_ordering_recover); 
+/*   			order_stop_stop(rsc_rh, rsc_lh, pe_ordering_recover);  */
+			custom_action_order(
+				rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
+				rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
+				pe_ordering_recover, data_set);
 		}
 	}
 	

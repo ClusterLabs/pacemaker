@@ -104,6 +104,7 @@ static gint sort_clone_instance(gconstpointer a, gconstpointer b)
 	 *  - inactive instances
 	 */	
 
+	do_crm_log(level, "%s ? %s", resource1->id, resource2->id);
 	if(resource1->running_on && resource2->running_on) {
 		if(g_list_length(resource1->running_on) < g_list_length(resource2->running_on)) {
 			do_crm_log(level, "%s < %s: running_on", resource1->id, resource2->id);
@@ -153,6 +154,11 @@ static gint sort_clone_instance(gconstpointer a, gconstpointer b)
 		return 1;
 	}
 	
+	if(node1 == NULL) {
+		do_crm_log(level, "%s == %s: not allowed", resource1->id, resource2->id);
+		return 0;
+	}
+
 	if(node1->count < node2->count) {
 		do_crm_log(level, "%s < %s: count", resource1->id, resource2->id);
 		return -1;
@@ -263,7 +269,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		slist_iter(node, node_t, clone_data->self->allowed_nodes, lpc,
 			   node->count = 0;
 			);
-
+		
 		slist_iter(child, resource_t, clone_data->child_list, lpc,
 			   if(child->running_on) {
 				   node_t *local_node = parent_node_instance(
@@ -271,6 +277,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 				   local_node->count++;
 			   }
 			);
+
 		clone_data->child_list = g_list_sort(
 			clone_data->child_list, sort_clone_instance);
 	}

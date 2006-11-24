@@ -190,8 +190,11 @@ ordering_type2text(enum pe_ordering type)
 gboolean
 can_run_resources(const node_t *node)
 {
-	if(node == NULL
-	   || node->details->online == FALSE
+	if(node == NULL) {
+		crm_err("No node supplied");
+		return FALSE;
+		
+	} else if(node->details->online == FALSE
 	   || node->details->shutdown
 	   || node->details->unclean
 	   || node->details->standby) {
