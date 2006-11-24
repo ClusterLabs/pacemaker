@@ -1181,8 +1181,8 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 	
 	/* now do the op */
 	op = construct_op(msg, rsc->id, operation);
-	crm_info("Performing op %s on %s (interval=%dms, key=%s)",
-		 operation, rsc->id, op->interval, transition);
+	crm_info("Performing op=%s_%s_%d key=%s)",
+		 rsc->id, operation, op->interval, transition);
 
 	if((AM_I_DC == FALSE && fsa_state != S_NOT_DC)
 	   || (AM_I_DC && fsa_state != S_TRANSITION_ENGINE)) {
