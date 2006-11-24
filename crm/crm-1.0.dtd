@@ -437,11 +437,11 @@ rsc_ordering constraints express dependencies between the actions on two resourc
           id        CDATA #REQUIRED
           from      CDATA #REQUIRED
           to        CDATA #REQUIRED
-          action    CDATA #IMPLIED       'start'
-          to_action CDATA #IMPLIED       'start'
-          type      (before|after)       'after'
-          score     CDATA                '0'
-          symmetrical    (true|1|false|0) 'true'>
+          action    CDATA		'start'
+          to_action CDATA		'start'
+          type      (before|after)	'after'
+          score     CDATA		'0'
+          symmetrical (true|1|false|0)	'true'>
 
 <!--
 Specify where a resource should run relative to another resource
