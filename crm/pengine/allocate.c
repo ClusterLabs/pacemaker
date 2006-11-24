@@ -675,33 +675,25 @@ stage7(pe_working_set_t *data_set)
 	slist_iter(
 		order, order_constraint_t, data_set->ordering_constraints, lpc,
 
-		/* try rsc_action-to-rsc_action */
 		resource_t *rsc = order->lh_rsc;
-		if(rsc == NULL && order->lh_action) {
-			rsc = order->lh_action->rsc;
-		}
+		crm_debug_2("Applying ordering constraint: %d", order->id);
 		
 		if(rsc != NULL) {
+			crm_debug_3("rsc_action-to-*");
 			rsc->cmds->rsc_order_lh(rsc, order);
 			continue;
 		}
 
-		/* try action-to-rsc_action */
-		
-		/* que off the rh resource */
 		rsc = order->rh_rsc;
-		if(rsc == NULL && order->rh_action) {
-			rsc = order->rh_action->rsc;
-		}
-		
 		if(rsc != NULL) {
+			crm_debug_3("action-to-rsc_action");
 			rsc->cmds->rsc_order_rh(order->lh_action, rsc, order);
+
 		} else {
-			/* fall back to action-to-action */
+			crm_debug_3("action-to-action");
 			order_actions(
 				order->lh_action, order->rh_action, order->type);
 		}
-		
 		);
 
 	update_action_states(data_set->actions);
@@ -838,6 +830,12 @@ invert_action(const char *action)
 	} else if(safe_str_eq(action, CRMD_ACTION_DEMOTE)) {
 		return CRMD_ACTION_PROMOTE;
 
+	} else if(safe_str_eq(action, CRMD_ACTION_PROMOTED)) {
+		return CRMD_ACTION_DEMOTED;
+		
+	} else if(safe_str_eq(action, CRMD_ACTION_DEMOTED)) {
+		return CRMD_ACTION_PROMOTED;
+
 	} else if(safe_str_eq(action, CRMD_ACTION_STARTED)) {
 		return CRMD_ACTION_STOPPED;
 		
@@ -852,23 +850,24 @@ invert_action(const char *action)
 gboolean
 unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 {
+	resource_t *rsc_lh = NULL;
+	resource_t *rsc_rh = NULL;
 	gboolean symmetrical_bool = TRUE;
 	enum pe_ordering cons_weight = pe_ordering_optional;
+
+	const char *id_rh  = NULL;
+	const char *id_lh  = NULL;
+	const char *action = NULL;
+	const char *action_rh = NULL;
 	
 	const char *id     = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *type   = crm_element_value(xml_obj, XML_ATTR_TYPE);
-	const char *id_rh  = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
-	const char *id_lh  = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
 	const char *score  = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-	const char *action = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
-	const char *action_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TOACTION);
-
 	const char *symmetrical = crm_element_value(
 		xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 
-	resource_t *rsc_lh   = NULL;
-	resource_t *rsc_rh   = NULL;
-
+	cl_str_to_boolean(symmetrical, &symmetrical_bool);
+	
 	if(xml_obj == NULL) {
 		crm_config_err("No constraint object to process.");
 		return FALSE;
@@ -878,40 +877,45 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 			crm_element_name(xml_obj));
 		return FALSE;
 		
-	} else if(id_lh == NULL || id_rh == NULL) {
+	}
+
+	if(safe_str_eq(type, "before")) {
+		id_lh  = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
+		id_rh  = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
+		action = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
+		action_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TOACTION);
+		
+	} else {
+		type="after";
+		id_rh  = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
+		id_lh  = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
+		action = crm_element_value(xml_obj, XML_CONS_ATTR_TOACTION);
+		action_rh = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
+		if(action == NULL) {
+			action = action_rh;
+		}
+	}
+
+	if(id_lh == NULL || id_rh == NULL) {
 		crm_config_err("Constraint %s needs two sides lh: %s rh: %s",
 			      id, crm_str(id_lh), crm_str(id_rh));
 		return FALSE;
 	}
-
+	
 	if(action == NULL) {
 		action = CRMD_ACTION_START;
 	}
 	if(action_rh == NULL) {
 		action_rh = action;
 	}
-	CRM_CHECK(action != NULL, return FALSE);
-	CRM_CHECK(action_rh != NULL, return FALSE);
-	
-	if(safe_str_eq(type, "before")) {
-		id_lh  = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
-		id_rh  = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
-		action = crm_element_value(xml_obj, XML_CONS_ATTR_TOACTION);
-		action_rh = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
-		if(action_rh == NULL) {
-			action_rh = CRMD_ACTION_START;
-		}
-		if(action == NULL) {
-			action = action_rh;
-		}
-	}
-
-	CRM_CHECK(action != NULL, return FALSE);
-	CRM_CHECK(action_rh != NULL, return FALSE);
 	
 	rsc_lh = pe_find_resource(data_set->resources, id_rh);
 	rsc_rh = pe_find_resource(data_set->resources, id_lh);
 
+	crm_debug("%s: %s.%s %s %s.%s%s",
+		  id, rsc_lh->id, action, type, rsc_rh->id, action_rh,
+		  symmetrical_bool?" (symmetrical)":"");
+	
 	if(rsc_lh == NULL) {
 		crm_config_err("Constraint %s: no resource found for LHS of %s", id, id_lh);
 		return FALSE;
@@ -941,6 +945,7 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 				rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
 				rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
 				pe_ordering_recover, data_set);
+
  		} else if(safe_str_eq(action, CRMD_ACTION_STOP)) {
 			crm_debug_2("Recover %s.%s-%s.%s",
 				    rsc_rh->id, action_rh, rsc_lh->id, action);
@@ -952,7 +957,6 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		}
 	}
 
-	cl_str_to_boolean(symmetrical, &symmetrical_bool);
 	if(symmetrical_bool == FALSE) {
 		return TRUE;
 	}
@@ -1251,19 +1255,27 @@ custom_action_order(
 	enum pe_ordering type, pe_working_set_t *data_set)
 {
 	order_constraint_t *order = NULL;
+	if(lh_rsc == NULL && lh_action) {
+		lh_rsc = lh_action->rsc;
+	}
+	if(rh_rsc == NULL && rh_action) {
+		rh_rsc = rh_action->rsc;
+	}
 
 	if((lh_action == NULL && lh_rsc == NULL)
 	   || (rh_action == NULL && rh_rsc == NULL)){
-		crm_config_err("Invalid inputs lh_rsc=%p, lh_a=%p,"
-			      " rh_rsc=%p, rh_a=%p",
+		crm_config_err("Invalid inputs %p.%p %p.%p",
 			      lh_rsc, lh_action, rh_rsc, rh_action);
 		crm_free(lh_action_task);
 		crm_free(rh_action_task);
 		return FALSE;
 	}
-
+	
 	crm_malloc0(order, sizeof(order_constraint_t));
 	if(order == NULL) { return FALSE; }
+
+	crm_debug_2("Creating ordering constraint %d",
+		    data_set->order_id);
 	
 	order->id             = data_set->order_id++;
 	order->type           = type;
