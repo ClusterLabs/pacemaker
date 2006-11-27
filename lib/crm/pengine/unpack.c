@@ -1032,8 +1032,17 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	actual_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
 	CRM_CHECK(actual_rc != NULL, return FALSE);	
 	actual_rc_i = crm_parse_int(actual_rc, NULL);
-	
-	if(EXECRA_NOT_RUNNING == actual_rc_i) {
+
+	if(EXECRA_NOT_INSTALLED == actual_rc_i) {
+		if(is_probe) {
+			/* treat these like stops */
+			is_stop_action = TRUE;
+			task_status_i = LRM_OP_DONE;
+ 		} else {
+			task_status_i = LRM_OP_ERROR;
+		}
+		
+	} else if(EXECRA_NOT_RUNNING == actual_rc_i) {
 		if(is_probe) {
 			/* treat these like stops */
 			is_stop_action = TRUE;
