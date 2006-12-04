@@ -16,7 +16,7 @@ class CIB:
     cib_option_template = '''
     <cluster_property_set id="cib-bootstrap-options">
        <attributes>
-        <nvpair id="cib-bootstrap-options-default-action-timeout"  name="default-action-timeout" value="10s"/>
+        <nvpair id="cib-bootstrap-options-default-action-timeout"  name="default-action-timeout" value="30s"/>
         <nvpair id="cib-bootstrap-options-network-delay"           name="network-delay"          value="60s"/>
         <nvpair id="cib-bootstrap-options-symmetric-cluster"       name="symmetric-cluster"      value="true"/>
         <nvpair id="cib-bootstrap-options-stop-orphan-resources"   name="stop-orphan-resources"  value="true"/>
@@ -127,7 +127,7 @@ class CIB:
           </primitive>
           <primitive id="heartbeat_%s" class="heartbeat" type="IPaddr" provider="heartbeat">
             <operations>
-              <op id="heartbeat_%s_monitor" name="monitor" interval="5s timeout="20s"/>
+              <op id="heartbeat_%s_monitor" name="monitor" interval="5s" timeout="20s"/>
               <op id="heartbeat_%s_start" name="start" timeout="20s"/>
               <op id="heartbeat_%s_stop" name="stop" timeout="20s"/>
             </operations>
@@ -159,9 +159,9 @@ class CIB:
             <op id="%s-2" name="start" timeout="20s"/>
             <op id="%s-3" name="stop" timeout="20s"/>
           </operations>
-          <instance_attributes id="%s">
+          <instance_attributes id="%s-inst-attr">
             <attributes>
-              <nvpair id="%s-1" name="ip" value="%s"/>
+              <nvpair id="%s-nvpair-1" name="ip" value="%s"/>
             </attributes>
           </instance_attributes>
         </primitive> '''
@@ -249,7 +249,7 @@ class CIB:
 	ip1=self.NextIP()
 	ip2=self.NextIP()
 	ip3=self.NextIP()
-	resources += self.resource_group_template % (ip1, ip1, ip1, ip1, ip2, ip2, ip2, ip2, ip3, ip3, ip3, ip3)
+	resources += self.resource_group_template % (ip1, ip1, ip1, ip1, ip1, ip1, ip2, ip2, ip2, ip2, ip2, ip2, ip3, ip3, ip3, ip3, ip3, ip3)
 
 	# lsb resource
 	resources += self.lsb_resource
@@ -258,8 +258,9 @@ class CIB:
 	fields = string.split(self.CM.Env["IPBase"], '.')
 	for node in self.CM.Env["nodes"]:
 	    ip = self.NextIP()
+            rnode="rsc_"+node
 	    per_node_resources = self.per_node_resource_template % \
-		("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, ip)    
+		(rnode, rnode, rnode, rnode, rnode, rnode, ip)
 	    
 	    per_node_constraint = self.per_node_constraint_template % \
 		("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, node)
