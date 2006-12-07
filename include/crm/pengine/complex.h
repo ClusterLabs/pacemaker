@@ -107,7 +107,8 @@ extern void common_print(resource_t *rsc, const char *pre_text, long options, vo
 extern void common_free(resource_t *rsc);
 extern void native_add_running(
 	resource_t *rsc, node_t *node, pe_working_set_t *data_set);
-
+extern void get_meta_attributes(GHashTable *meta_hash, resource_t *rsc,
+				node_t *node, pe_working_set_t *data_set);
 
 #if CURSES_ENABLED
 #  define status_printw(fmt...) printw(fmt)

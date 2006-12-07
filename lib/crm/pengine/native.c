@@ -45,29 +45,19 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		}
 		);
 	
+	crm_debug_2("Adding %s to %s", rsc->id, node->details->uname);
+	
 	rsc->running_on = g_list_append(rsc->running_on, node);
 	if(rsc->variant == pe_native) {
 		node->details->running_rsc = g_list_append(
 			node->details->running_rsc, rsc);
 	}
-	
-	if(rsc->variant != pe_native) {
-	} else if(rsc->is_managed == FALSE) {
+
+	if(rsc->is_managed == FALSE) {
 		crm_info("resource %s isnt managed", rsc->id);
 		resource_location(rsc, node, INFINITY,
 				  "not_managed_default", data_set);
 		return;
-
-#if 0
-	} else if(rsc->failed) {
-		crm_info("Skipping resource stickiness for failed resource %s",
-			 rsc->id);
-#endif
-	} else if(rsc->stickiness > 0 || rsc->stickiness < 0) {
-		resource_location(rsc, node, rsc->stickiness,
-				  "stickiness", data_set);
-		crm_debug("Resource %s: preferring current location (node=%s, weight=%d)",
-			  rsc->id, node->details->uname, rsc->stickiness);
 	}
 	
 	if(rsc->variant == pe_native && g_list_length(rsc->running_on) > 1) {

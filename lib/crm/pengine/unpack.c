@@ -684,10 +684,53 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		  enum action_fail_response on_fail,
 		  pe_working_set_t *data_set) 
 {
+	int fail_count = 0;
+	char *fail_attr = NULL;
+	const char *value = NULL;
+	GHashTable *meta_hash = NULL;
+
 	crm_debug_2("Resource %s is %s on %s",
 		    rsc->id, role2text(rsc->role),
 		    node->details->uname);
 
+	meta_hash = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+	get_meta_attributes(meta_hash, rsc, node, data_set);
+
+	/* update resource preferences that relate to the current node */
+	value = g_hash_table_lookup(meta_hash, "resource_stickiness");
+	if(value != NULL && safe_str_neq("default", value)) {
+		rsc->stickiness = char2score(value);
+	} else {
+		rsc->stickiness = data_set->default_resource_stickiness;
+	}
+	
+	value = g_hash_table_lookup(meta_hash, XML_RSC_ATTR_FAIL_STICKINESS);
+	if(value != NULL && safe_str_neq("default", value)) {
+		rsc->fail_stickiness = char2score(value);
+	} else {
+		rsc->fail_stickiness = data_set->default_resource_fail_stickiness;
+	}
+
+	/* process failure stickiness */
+	fail_attr = crm_concat("fail-count", rsc->id, '-');
+	value = g_hash_table_lookup(node->details->attrs, fail_attr);
+	if(value != NULL) {
+		crm_debug("%s: %s", fail_attr, value);
+		fail_count = crm_parse_int(value, "0");
+	}
+	crm_free(fail_attr);
+	
+	if(fail_count > 0 && rsc->fail_stickiness != 0) {
+		resource_location(rsc, node, fail_count * rsc->fail_stickiness,
+				  "fail_stickiness", data_set);
+		crm_debug("Setting failure stickiness for %s on %s: %d",
+			  rsc->id, node->details->uname,
+			  fail_count * rsc->fail_stickiness);
+	}
+
+	/* process current state */
 	if(rsc->role != RSC_ROLE_UNKNOWN) { 
 		rsc->known_on = g_list_append(rsc->known_on, node);
 	}
@@ -699,10 +742,16 @@ process_rsc_state(resource_t *rsc, node_t *node,
 			crm_debug_2("Force stop");
 		}
 
-		crm_debug_2("Adding %s to %s",
-			    rsc->id, node->details->uname);
 		native_add_running(rsc, node, data_set);
-			
+
+		if(rsc->is_managed && rsc->stickiness != 0) {
+			resource_location(rsc, node, rsc->stickiness,
+					  "stickiness", data_set);
+			crm_debug("Resource %s: preferring current location"
+				  " (node=%s, weight=%d)", rsc->id,
+				  node->details->uname, rsc->stickiness);
+		}
+	
 		if(on_fail == action_fail_ignore) {
 			/* nothing to do */
 		} else if(node->details->unclean) {
@@ -748,6 +797,7 @@ process_rsc_state(resource_t *rsc, node_t *node,
 			);
 		crm_free(key);
 	}
+	g_hash_table_destroy(meta_hash);
 }
 
 /* create active recurring operations as optional */ 
@@ -808,16 +858,13 @@ static void
 unpack_lrm_rsc_state(
 	node_t *node, crm_data_t * rsc_entry, pe_working_set_t *data_set)
 {	
-	int fail_count = 0;
 	int stop_index = -1;
 	int start_index = -1;
 	int max_call_id = -1;
 
-	char *fail_attr = NULL;
 	const char *task = NULL;
 	const char *status = NULL;
 	const char *value = NULL;
-	const char *fail_val = NULL;
 	const char *rsc_id  = crm_element_value(rsc_entry, XML_ATTR_ID);
 
 	resource_t *rsc = NULL;
@@ -851,23 +898,6 @@ unpack_lrm_rsc_state(
 	} 
 	CRM_ASSERT(rsc != NULL);
 	
-	/* process failure stickiness */
-	fail_count = 0;
-	fail_attr = crm_concat("fail-count", rsc->id, '-');
-	fail_val = g_hash_table_lookup(node->details->attrs, fail_attr);
-	if(fail_val != NULL) {
-		crm_debug("%s: %s", fail_attr, fail_val);
-		fail_count = crm_parse_int(fail_val, "0");
-	}
-	crm_free(fail_attr);
-	if(fail_count > 0 && rsc->fail_stickiness != 0) {
-		resource_location(rsc, node, fail_count * rsc->fail_stickiness,
-				  "fail_stickiness", data_set);
-		crm_debug("Setting failure stickiness for %s on %s: %d",
-			  rsc->id, node->details->uname,
-			  fail_count * rsc->fail_stickiness);
-	}
-
 	/* process operations */
 	max_call_id = -1;
 

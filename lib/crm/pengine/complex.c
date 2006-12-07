@@ -94,6 +94,34 @@ static void dup_attr(gpointer key, gpointer value, gpointer user_data)
 	add_hash_param(user_data, key, value);
 }
 
+void
+get_meta_attributes(GHashTable *meta_hash, resource_t *rsc,
+		    node_t *node, pe_working_set_t *data_set)
+{
+	GHashTable *node_hash = NULL;
+	if(node) {
+		node_hash = node->details->attrs;
+	}
+	
+	xml_prop_iter(rsc->xml, prop_name, prop_value,
+		      add_hash_param(meta_hash, prop_name, prop_value);
+		);
+
+	unpack_instance_attributes(rsc->xml, XML_TAG_META_SETS, node_hash,
+				   meta_hash, NULL, data_set->now);
+
+	/* populate from the regular attributes until the GUI can create
+	 * meta attributes
+	 */
+	unpack_instance_attributes(rsc->xml, XML_TAG_ATTR_SETS, node_hash,
+				   meta_hash, NULL, data_set->now);
+
+	/* set anything else based on the parent */
+	if(rsc->parent != NULL) {
+		g_hash_table_foreach(rsc->parent->meta, dup_attr, meta_hash);
+	}	
+}
+
 gboolean	
 common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	      resource_t *parent, pe_working_set_t *data_set)
@@ -152,28 +180,12 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	(*rsc)->fns = &resource_class_functions[(*rsc)->variant];
 	crm_debug_3("Unpacking resource...");
 
-	/* meta attributes */
-	xml_prop_iter(
-		xml_obj, prop_name, prop_value,
-		add_hash_param((*rsc)->meta, prop_name, prop_value);
-		);
-
-	unpack_instance_attributes(
-		xml_obj, XML_TAG_META_SETS, NULL, (*rsc)->meta,
-		NULL, data_set->now);
-
-	/* populate from the regular attributes until the GUI can create
-	 * meta attributes
-	 */
-	unpack_instance_attributes(
-		xml_obj, XML_TAG_ATTR_SETS, NULL, (*rsc)->meta,
-		NULL, data_set->now);
+	get_meta_attributes((*rsc)->meta, *rsc, NULL, data_set);
 
 	if(parent != NULL) {
-		g_hash_table_foreach(parent->meta, dup_attr, (*rsc)->meta);
 		g_hash_table_foreach(
 			parent->parameters, dup_attr, (*rsc)->parameters);
-	}	
+	}
 
 	if((*rsc)->fns->unpack(*rsc, data_set) == FALSE) {
 		return FALSE;
@@ -242,28 +254,13 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	if(value != NULL && safe_str_neq("default", value)) {
 		(*rsc)->stickiness = char2score(value);
 	}
-	if((*rsc)->stickiness > 0) {
-		crm_debug_2("\tPlacement: prefer current location%s",
-			    value == NULL?" (default)":"");
-	} else if((*rsc)->stickiness < 0) {
-		crm_warn("\tPlacement: always move from the current location%s",
-			 value == NULL?" (default)":"");
-	} else {
-		crm_debug_2("\tPlacement: optimal%s",
-			    value == NULL?" (default)":"");
-	}
 
-	value = g_hash_table_lookup(
-		(*rsc)->meta, XML_RSC_ATTR_FAIL_STICKINESS);
+	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_STICKINESS);
 	if(value != NULL) {
 		(*rsc)->fail_stickiness = char2score(value);
 	}
-	crm_debug_2("\tNode score per failure: %d%s",
-		    (*rsc)->fail_stickiness, value == NULL?" (default)":"");
 	
-	value = g_hash_table_lookup(
-		(*rsc)->meta, XML_RSC_ATTR_TARGET_ROLE);
-	
+	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_TARGET_ROLE);
 	if(value != NULL && safe_str_neq("default", value)) {
 		(*rsc)->next_role = text2role(value);
 		if((*rsc)->next_role == RSC_ROLE_UNKNOWN) {
