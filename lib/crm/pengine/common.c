@@ -73,9 +73,9 @@ pe_cluster_option pe_opts[] = {
 	{ "stop-orphan-actions", "stop_orphan_actions", "boolean", NULL, "true", &check_boolean, "Should deleted actions be cancelled", NULL },
  	{ "remove-after-stop", "remove_after_stop", "boolean", NULL, "false", &check_boolean, NULL, NULL },
 /* 	{ "", "", , "0", "", NULL }, */
-	{ "pe-error-series-max", NULL, "integer", NULL, "-1", &check_number, "", NULL },
-	{ "pe-warn-series-max",  NULL, "integer", NULL, "-1", &check_number, "", NULL },
-	{ "pe-input-series-max", NULL, "integer", NULL, "-1", &check_number, "", NULL },
+	{ "pe-error-series-max", NULL, "integer", NULL, "-1", &check_number, "The number of PE inputs resulting in ERRORs to save", "Zero to disable, -1 to store unlimited." },
+	{ "pe-warn-series-max",  NULL, "integer", NULL, "-1", &check_number, "The number of PE inputs resulting in WARNINGs to save", "Zero to disable, -1 to store unlimited." },
+	{ "pe-input-series-max", NULL, "integer", NULL, "-1", &check_number, "The number of other PE inputs to save", "Zero to disable, -1 to store unlimited." },
 	{ "startup-fencing", "startup_fencing", "boolean", NULL, "true", &check_boolean, "STONITH unseen nodes", "Advanced Use Only!  Not using the default is very unsafe!" }
 };
 
