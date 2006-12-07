@@ -85,7 +85,7 @@ do_find_resource(const char *rsc, pe_working_set_t *data_set)
 		   crm_debug_3("resource %s is running on: %s",
 			       rsc, node->details->uname);
 		   if(BE_QUIET) {
-			   fprintf(stdout, "%s\n ", node->details->uname);
+			   fprintf(stdout, "%s\n", node->details->uname);
 		   } else {
 			   fprintf(stdout, "resource %s is running on: %s\n",
 				   rsc, node->details->uname);
