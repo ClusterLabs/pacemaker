@@ -1578,7 +1578,7 @@ class ResourceRecover(CTSTest):
         self.CM.log("...resource %s on %s" % (label, nodes[0]))
 
 
-        pat=("""crmd.* Performing op start on %s""" % (resource.rid))
+        pat=("""crmd.* Performing op=%s_start_0""" % (resource.rid))
         watch = CTS.LogWatcher(self.CM["LogFileName"], [pat], timeout=240)
         watch.setwatch()
         
