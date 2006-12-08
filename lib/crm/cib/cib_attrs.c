@@ -538,13 +538,12 @@ query_node_uname(cib_t *the_cib, const char *uuid, char **uname)
 	int str_length = 3;						\
 	char *set_name = NULL;						\
 	const char *attr_name  = "standby";				\
-	const char *type = XML_CIB_TAG_NODES;				\
 									\
 	CRM_CHECK(uuid != NULL, return cib_missing_data);		\
 	str_length += strlen(attr_name);				\
 	str_length += strlen(uuid);					\
-	if(safe_str_eq(scope, "reboot")					\
-	   || safe_str_eq(scope, XML_CIB_TAG_STATUS)) {			\
+	if(safe_str_eq(type, "reboot")					\
+	   || safe_str_eq(type, XML_CIB_TAG_STATUS)) {			\
 		const char *extra = "transient";			\
  		type = XML_CIB_TAG_STATUS;				\
 		str_length += strlen(extra);				\
@@ -557,13 +556,15 @@ query_node_uname(cib_t *the_cib, const char *uuid, char **uname)
 	}
 
 enum cib_errors 
-query_standby(cib_t *the_cib, const char *uuid, const char *scope,
-	      char **standby_value)
+query_standby(cib_t *the_cib, const char *uuid,
+	      char **scope, char **standby_value)
 {
 	enum cib_errors rc = cib_ok;
 	CRM_CHECK(standby_value != NULL, return cib_missing_data);
-
-	if(scope != NULL) {
+	CRM_CHECK(scope != NULL, return cib_missing_data);
+	
+	if(*scope != NULL) {
+		const char *type = *scope;
 		standby_common;
 		rc = read_attr(the_cib, type, uuid, set_name,
 			       attr_id, attr_name, standby_value);
@@ -571,14 +572,15 @@ query_standby(cib_t *the_cib, const char *uuid, const char *scope,
 		crm_free(set_name);
 
 	} else {
-		rc = query_standby(
-			the_cib, uuid, XML_CIB_TAG_NODES, standby_value);
+		*scope = crm_strdup(XML_CIB_TAG_NODE);
+		rc = query_standby(the_cib, uuid, scope, standby_value);
 
 		if(rc == cib_NOTEXISTS) {
+			crm_free(*scope);
+			*scope = crm_strdup(XML_CIB_TAG_STATUS);
 			crm_debug("No standby value found with "
 				  "lifetime=forever, checking lifetime=reboot");
-			rc = query_standby(the_cib, uuid,
-					   XML_CIB_TAG_STATUS, standby_value);
+			rc = query_standby(the_cib, uuid, scope, standby_value);
 		}
 	}
 	
@@ -592,6 +594,7 @@ set_standby(cib_t *the_cib, const char *uuid, const char *scope,
 	enum cib_errors rc = cib_ok;
 	CRM_CHECK(standby_value != NULL, return cib_missing_data);
 	if(scope != NULL) {
+		const char *type = scope;
 		standby_common;
 		rc = update_attr(the_cib, cib_sync_call, type, uuid, set_name,
 				 attr_id, attr_name, standby_value);
@@ -611,6 +614,7 @@ delete_standby(cib_t *the_cib, const char *uuid, const char *scope,
 {
 	enum cib_errors rc = cib_ok;
 	if(scope != NULL) {
+		const char *type = scope;
 		standby_common;
 		rc = delete_attr(the_cib, cib_sync_call, type, uuid, set_name,
 				 attr_id, attr_name, standby_value);

@@ -385,9 +385,8 @@ extern enum cib_errors query_node_uuid(
 extern enum cib_errors query_node_uname(
 	cib_t *the_cib, const char *uuid, char **uname);
 
-extern enum cib_errors query_standby(
-	cib_t *the_cib,
-	const char *uuid, const char *scope, char **standby_value);
+extern enum cib_errors query_standby(cib_t *the_cib, const char *uuid,
+				     char **scope, char **standby_value);
 
 extern enum cib_errors set_standby(
 	cib_t *the_cib,
