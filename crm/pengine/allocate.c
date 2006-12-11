@@ -357,7 +357,7 @@ check_actions(pe_working_set_t *data_set)
 		if(node == NULL) {
 			continue;
 		}
-		crm_debug("Processing node %s", node->details->uname);
+		crm_debug_2("Processing node %s", node->details->uname);
 		if(node->details->online || data_set->stonith_enabled) {
 			xml_child_iter_filter(
 				lrm_rscs, rsc_entry, XML_LRM_TAG_RESOURCE,
@@ -714,7 +714,7 @@ stage8(pe_working_set_t *data_set)
 	transition_id++;
 	transition_id_s = crm_itoa(transition_id);
 	value = pe_pref(data_set->config_hash, "network-delay");
-	crm_debug("Creating transition graph %d.", transition_id);
+	crm_debug_2("Creating transition graph %d.", transition_id);
 	
 	data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
 	crm_xml_add(data_set->graph, "network-delay", value);
@@ -746,7 +746,7 @@ stage8(pe_working_set_t *data_set)
 		);
 
 	crm_log_xml_debug_3(data_set->graph, "created generic action list");
-	crm_notice("Created transition graph %d.", transition_id);
+	crm_debug_2("Created transition graph %d.", transition_id);
 	
 	return TRUE;
 }
