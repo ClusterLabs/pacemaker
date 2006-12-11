@@ -925,7 +925,7 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		return FALSE;
 	}
 
-	if(char2score(score, "0") > 0) {
+	if(char2score(score) > 0) {
 		/* the name seems weird but the effect is correct */
 		cons_weight = pe_ordering_restart;
 	}
