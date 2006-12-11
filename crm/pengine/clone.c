@@ -874,28 +874,12 @@ void clone_rsc_colocation_rh(
 
 void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order)
 {
-	char *stop_id = NULL;
-	char *start_id = NULL;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	crm_debug_3("Processing LH of ordering constraint %d", order->id);
+	crm_debug_2("%s->%s", order->lh_action_task, order->rh_action_task);
 
-	stop_id = stop_key(rsc);
-	start_id = start_key(rsc);
-	
-	if(safe_str_eq(order->lh_action_task, start_id)) {
-		crm_free(order->lh_action_task);
-		order->lh_action_task = started_key(rsc);
-
-	} else if(safe_str_eq(order->lh_action_task, stop_id)) {
-		crm_free(order->lh_action_task);
-		order->lh_action_task = stopped_key(rsc);
-	}
-
-	crm_free(start_id);
-	crm_free(stop_id);
-	
+	convert_non_atomic_task(rsc, order);
 	clone_data->self->cmds->rsc_order_lh(clone_data->self, order);
 }
 
@@ -905,7 +889,7 @@ void clone_rsc_order_rh(
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	crm_debug_3("Processing RH of ordering constraint %d", order->id);
+	crm_debug_2("%s->%s", lh_action->uuid, order->rh_action_task);
 
  	clone_data->self->cmds->rsc_order_rh(lh_action, clone_data->self, order);
 
@@ -916,7 +900,8 @@ void clone_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	crm_debug_3("Processing location constraint %s for %s", constraint->id, rsc->id);
+	crm_debug_3("Processing location constraint %s for %s",
+		    constraint->id, rsc->id);
 
 	clone_data->self->cmds->rsc_location(clone_data->self, constraint);
 	slist_iter(

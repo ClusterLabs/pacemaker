@@ -61,6 +61,7 @@ enum action_fail_response {
 	action_fail_fence
 };
 
+/* the "done" action must be the "pre" action +1 */  
 enum action_tasks {
 	no_action,
 	monitor_rsc,

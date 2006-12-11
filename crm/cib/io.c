@@ -23,7 +23,6 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <sys/stat.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -86,9 +85,6 @@ int set_connected_peers(crm_data_t *xml_obj);
 void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data);
 int write_cib_contents(gpointer p);
 
-#include <sys/types.h>
-#include <pwd.h>
-#include <grp.h>
 
 
 static gboolean
@@ -204,74 +200,55 @@ validate_on_disk_cib(const char *filename, crm_data_t **on_disk_cib)
  * It is the callers responsibility to free the output of this function
  */
 crm_data_t*
-readCibXmlFile(const char *filename, gboolean discard_status)
+readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 {
-	int s_res = -1;
 	struct stat buf;
 	FILE *cib_file = NULL;
 	gboolean dtd_ok = TRUE;
 
+	char *filename = NULL;
 	const char *name = NULL;
 	const char *value = NULL;
+	const char *ignore_dtd = NULL;
 	
 	crm_data_t *root = NULL;
 	crm_data_t *status = NULL;
 
-	struct passwd *cib_user = NULL;
-	gboolean user_readwritable = FALSE;
-	
-	if(filename != NULL) {
-		s_res = stat(filename, &buf);
-	}
-	
-	if (s_res != 0) {
-		return NULL;
-	}
-	
-	cib_user = getpwnam(HA_CCMUSER);
-	user_readwritable = (cib_user != NULL
-			     && buf.st_uid == cib_user->pw_uid
-			     && (buf.st_mode & (S_IRUSR|S_IWUSR)));
-	
-	if( S_ISREG(buf.st_mode) == FALSE ) {
+	if(!crm_is_writable(dir, file, HA_CCMUSER, HA_APIGROUP, FALSE)) {
 		cib_status = cib_bad_permissions;
-		crm_err("%s must be a regular file", filename);
 		return NULL;
-		
-	} else if( user_readwritable == FALSE ) {
-		struct group *cib_grp = getgrnam(HA_APIGROUP);
-		gboolean group_readwritable = (
-			cib_grp != NULL
-			&& buf.st_gid == cib_grp->gr_gid
-			&& (buf.st_mode & (S_IRGRP|S_IWGRP)));
-		
-		if( group_readwritable == FALSE ) {
-			crm_err("%s must be owned and read/writeable by user %s,"
-				" or owned and read/writable by group %s",
-				filename, HA_CCMUSER, HA_APIGROUP);
-			cib_status = cib_bad_permissions;
-			return NULL;
-		} 
-		crm_warn("%s should be owned and read/writeable by user %s",
-			 filename, HA_CCMUSER);
 	}
 	
-	crm_info("Reading cluster configuration from: %s", filename);
-	cib_file = fopen(filename, "r");
-	root = file2xml(cib_file, FALSE);
-	fclose(cib_file);
-	if(root == NULL) {
-		/* file exists, but isnt valid - turn off disk-writes and continue */
-		crm_err("%s exists but does NOT contain valid XML. ", filename);
-		crm_err("Continuing with an empty configuration.  %s will NOT be overwritten.", filename);
-		cib_writes_enabled = FALSE;
-		return NULL;
+	filename = crm_concat(dir, file, '/');
+	if(stat(filename, &buf) != 0) {
+		crm_warn("Cluster configuration not found: %s."
+			 "  Creating an empty one.", filename);
 
-	} else if(validate_cib_digest(root) == FALSE) {
-		crm_err("%s has been manually changed!"
-			" - if this was intended, please remove the md5 digest in %s.sig",
-			filename, filename);
-		cib_status = cib_bad_digest;
+	} else {
+		crm_info("Reading cluster configuration from: %s", filename);
+		cib_file = fopen(filename, "r");
+		root = file2xml(cib_file, FALSE);
+		fclose(cib_file);
+
+		if(root == NULL) {
+			crm_err("%s exists but does NOT contain valid XML. ",
+				filename);
+			crm_err("Continuing with an empty configuration."
+				"  %s will NOT be overwritten.", filename);
+			cib_writes_enabled = FALSE;
+
+		} else if(validate_cib_digest(root) == FALSE) {
+			crm_err("%s has been manually changed! If this was"
+				" intended, remove the digest in %s.sig",
+				filename, filename);
+			cib_status = cib_bad_digest;
+		}
+	}
+
+	if(root == NULL) {
+		root = createEmptyCib();	
+	} else {
+		crm_xml_add(root, "generated", XML_BOOLEAN_FALSE);	
 	}
 
 	status = find_xml_node(root, XML_CIB_TAG_STATUS, FALSE);
@@ -311,32 +288,35 @@ readCibXmlFile(const char *filename, gboolean discard_status)
 		crm_log_xml_info(root, "[on-disk]");
 	}
 	
+	ignore_dtd = crm_element_value(root, "ignore_dtd");
 	dtd_ok = validate_with_dtd(root, TRUE, HA_LIBDIR"/heartbeat/crm.dtd");
 	if(dtd_ok == FALSE) {
-		const char *ignore_dtd = crm_element_value(root, "ignore_dtd");
-		if(
-#if CRM_DEPRECATED_SINCE_2_0_4
-		   ignore_dtd != NULL &&
-#endif
-		   crm_is_true(ignore_dtd) == FALSE) {
+		if(ignore_dtd == NULL
+		   && crm_is_true(ignore_dtd) == FALSE) {
 			cib_status = cib_dtd_validation;
 		}
 		
-	} 
-	crm_xml_add(root, "generated", XML_BOOLEAN_FALSE);	
+	} else if(ignore_dtd == NULL) {
+		crm_notice("Enabling DTD validation on"
+			   " the existing (sane) configuration");
+		crm_xml_add(root, "ignore_dtd", XML_BOOLEAN_FALSE);	
+	}	
 	
 	if(do_id_check(root, NULL, FALSE, FALSE)) {
-		crm_err("%s does not contain a vaild configuration: ID check failed",
+		crm_err("%s does not contain a vaild configuration:"
+			" ID check failed",
 			 filename);
 		cib_status = cib_id_check;
 	}
 
 	if (verifyCibXml(root) == FALSE) {
-		crm_err("%s does not contain a vaild configuration: structure test failed",
+		crm_err("%s does not contain a vaild configuration:"
+			" structure test failed",
 			 filename);
 		cib_status = cib_bad_config;
 	}
 
+	crm_free(filename);
 	return root;
 }
 

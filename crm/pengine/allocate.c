@@ -300,7 +300,7 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 		return;
 	}
 
-	crm_debug_2("Processing %s on %s", rsc->id, node->details->uname);
+	crm_debug_3("Processing %s on %s", rsc->id, node->details->uname);
 	
 	if(check_rsc_parameters(rsc, node, rsc_entry, data_set)) {
 		DeleteRsc(rsc, node, data_set);
@@ -327,10 +327,8 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 		}
 		
 		if(is_probe || safe_str_eq(task, CRMD_ACTION_START) || interval > 0) {
-			crm_debug_2("Checking resource definition: %s", rsc->id);
 			check_action_definition(rsc, node, rsc_op, data_set);
 		}
-		crm_debug_3("Ignoring %s params: %s", task, id);
 		);
 
 	g_list_free(sorted_op_list);
@@ -357,7 +355,7 @@ check_actions(pe_working_set_t *data_set)
 		if(node == NULL) {
 			continue;
 		}
-		crm_debug("Processing node %s", node->details->uname);
+		crm_debug_2("Processing node %s", node->details->uname);
 		if(node->details->online || data_set->stonith_enabled) {
 			xml_child_iter_filter(
 				lrm_rscs, rsc_entry, XML_LRM_TAG_RESOURCE,
@@ -670,27 +668,27 @@ stage6(pe_working_set_t *data_set)
 gboolean
 stage7(pe_working_set_t *data_set)
 {
-	crm_debug_3("Applying ordering constraints");
+	crm_debug_4("Applying ordering constraints");
 
 	slist_iter(
 		order, order_constraint_t, data_set->ordering_constraints, lpc,
 
 		resource_t *rsc = order->lh_rsc;
-		crm_debug_2("Applying ordering constraint: %d", order->id);
+		crm_debug_3("Applying ordering constraint: %d", order->id);
 		
 		if(rsc != NULL) {
-			crm_debug_3("rsc_action-to-*");
+			crm_debug_4("rsc_action-to-*");
 			rsc->cmds->rsc_order_lh(rsc, order);
 			continue;
 		}
 
 		rsc = order->rh_rsc;
 		if(rsc != NULL) {
-			crm_debug_3("action-to-rsc_action");
+			crm_debug_4("action-to-rsc_action");
 			rsc->cmds->rsc_order_rh(order->lh_action, rsc, order);
 
 		} else {
-			crm_debug_3("action-to-action");
+			crm_debug_4("action-to-action");
 			order_actions(
 				order->lh_action, order->rh_action, order->type);
 		}
@@ -714,7 +712,7 @@ stage8(pe_working_set_t *data_set)
 	transition_id++;
 	transition_id_s = crm_itoa(transition_id);
 	value = pe_pref(data_set->config_hash, "network-delay");
-	crm_debug("Creating transition graph %d.", transition_id);
+	crm_debug_2("Creating transition graph %d.", transition_id);
 	
 	data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
 	crm_xml_add(data_set->graph, "network-delay", value);
@@ -746,7 +744,7 @@ stage8(pe_working_set_t *data_set)
 		);
 
 	crm_log_xml_debug_3(data_set->graph, "created generic action list");
-	crm_notice("Created transition graph %d.", transition_id);
+	crm_debug_2("Created transition graph %d.", transition_id);
 	
 	return TRUE;
 }
@@ -773,8 +771,6 @@ gboolean
 unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
 {
 	crm_data_t *lifetime = NULL;
-	crm_debug_2("Begining unpack... %s",
-		    xml_constraints?crm_element_name(xml_constraints):"<none>");
 	xml_child_iter(
 		xml_constraints, xml_obj, 
 
@@ -827,7 +823,7 @@ invert_action(const char *action)
 	} else if(safe_str_eq(action, CRMD_ACTION_PROMOTE)) {
 		return CRMD_ACTION_DEMOTE;
 		
-	} else if(safe_str_eq(action, CRMD_ACTION_DEMOTE)) {
+ 	} else if(safe_str_eq(action, CRMD_ACTION_DEMOTE)) {
 		return CRMD_ACTION_PROMOTE;
 
 	} else if(safe_str_eq(action, CRMD_ACTION_PROMOTED)) {
@@ -841,9 +837,8 @@ invert_action(const char *action)
 		
 	} else if(safe_str_eq(action, CRMD_ACTION_STOPPED)) {
 		return CRMD_ACTION_STARTED;
-		
 	}
-	pe_err("Unknown action: %s", action);
+	crm_config_warn("Unknown action: %s", action);
 	return NULL;
 }
 

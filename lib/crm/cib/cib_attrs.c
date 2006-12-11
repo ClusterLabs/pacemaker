@@ -572,7 +572,7 @@ query_standby(cib_t *the_cib, const char *uuid,
 		crm_free(set_name);
 
 	} else {
-		*scope = crm_strdup(XML_CIB_TAG_NODE);
+		*scope = crm_strdup(XML_CIB_TAG_NODES);
 		rc = query_standby(the_cib, uuid, scope, standby_value);
 
 		if(rc == cib_NOTEXISTS) {
