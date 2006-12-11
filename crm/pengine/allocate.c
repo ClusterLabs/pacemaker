@@ -300,7 +300,7 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 		return;
 	}
 
-	crm_debug_2("Processing %s on %s", rsc->id, node->details->uname);
+	crm_debug_3("Processing %s on %s", rsc->id, node->details->uname);
 	
 	if(check_rsc_parameters(rsc, node, rsc_entry, data_set)) {
 		DeleteRsc(rsc, node, data_set);
@@ -327,10 +327,8 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 		}
 		
 		if(is_probe || safe_str_eq(task, CRMD_ACTION_START) || interval > 0) {
-			crm_debug_2("Checking resource definition: %s", rsc->id);
 			check_action_definition(rsc, node, rsc_op, data_set);
 		}
-		crm_debug_3("Ignoring %s params: %s", task, id);
 		);
 
 	g_list_free(sorted_op_list);
@@ -670,27 +668,27 @@ stage6(pe_working_set_t *data_set)
 gboolean
 stage7(pe_working_set_t *data_set)
 {
-	crm_debug_3("Applying ordering constraints");
+	crm_debug_4("Applying ordering constraints");
 
 	slist_iter(
 		order, order_constraint_t, data_set->ordering_constraints, lpc,
 
 		resource_t *rsc = order->lh_rsc;
-		crm_debug_2("Applying ordering constraint: %d", order->id);
+		crm_debug_3("Applying ordering constraint: %d", order->id);
 		
 		if(rsc != NULL) {
-			crm_debug_3("rsc_action-to-*");
+			crm_debug_4("rsc_action-to-*");
 			rsc->cmds->rsc_order_lh(rsc, order);
 			continue;
 		}
 
 		rsc = order->rh_rsc;
 		if(rsc != NULL) {
-			crm_debug_3("action-to-rsc_action");
+			crm_debug_4("action-to-rsc_action");
 			rsc->cmds->rsc_order_rh(order->lh_action, rsc, order);
 
 		} else {
-			crm_debug_3("action-to-action");
+			crm_debug_4("action-to-action");
 			order_actions(
 				order->lh_action, order->rh_action, order->type);
 		}
@@ -773,8 +771,6 @@ gboolean
 unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
 {
 	crm_data_t *lifetime = NULL;
-	crm_debug_2("Begining unpack... %s",
-		    xml_constraints?crm_element_name(xml_constraints):"<none>");
 	xml_child_iter(
 		xml_constraints, xml_obj, 
 
@@ -1273,7 +1269,7 @@ custom_action_order(
 	crm_malloc0(order, sizeof(order_constraint_t));
 	if(order == NULL) { return FALSE; }
 
-	crm_debug_2("Creating ordering constraint %d",
+	crm_debug_3("Creating ordering constraint %d",
 		    data_set->order_id);
 	
 	order->id             = data_set->order_id++;

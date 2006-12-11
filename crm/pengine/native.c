@@ -594,7 +594,7 @@ node_list_update(GListPtr list1, GListPtr list2, int factor)
 			list2, node->details->id);
 
 		if(other_node != NULL) {
-			crm_debug_3("%s: %d + %d",
+			crm_debug_2("%s: %d + %d",
 				    node->details->uname, 
 				    node->weight, other_node->weight);
 			node->weight = merge_weights(

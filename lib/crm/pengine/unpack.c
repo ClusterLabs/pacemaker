@@ -167,8 +167,6 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 		crm_warn("Blind faith: not fencing unseen nodes");
 	}
 
-	crm_debug_2("Begining unpack... %s",
-		    xml_nodes?crm_element_name(xml_nodes):"<none>");
 	xml_child_iter_filter(
 		xml_nodes, xml_obj, XML_CIB_TAG_NODE,
 
@@ -257,13 +255,11 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 gboolean 
 unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
 {
-	crm_debug_2("Begining unpack... %s",
-		    xml_resources?crm_element_name(xml_resources):"<none>");
 	xml_child_iter(
 		xml_resources, xml_obj, 
 
 		resource_t *new_rsc = NULL;
-		crm_debug_2("Begining unpack... %s",
+		crm_debug_3("Begining unpack... %s",
 			    xml_obj?crm_element_name(xml_obj):"<none>");
 		if(common_unpack(xml_obj, &new_rsc, NULL, data_set)) {
 			data_set->resources = g_list_append(
@@ -809,7 +805,7 @@ process_recurring(node_t *node, resource_t *rsc,
 	const char *task = NULL;
 	const char *status = NULL;
 	
-	crm_debug_2("%s: Start index %d, stop index = %d",
+	crm_debug_3("%s: Start index %d, stop index = %d",
 		    rsc->id, start_index, stop_index);
 	slist_iter(rsc_op, crm_data_t, sorted_op_list, lpc,
 		   int interval = 0;
@@ -1033,7 +1029,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		is_probe = TRUE;
 
 	} else if(interval > 0 && rsc->role < RSC_ROLE_STARTED) {
-		crm_debug_2("Skipping recurring action %s for stopped resource", id);
+		crm_debug_3("Skipping recurring action %s for stopped resource", id);
 		return FALSE;
 	}
 	

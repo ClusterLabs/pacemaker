@@ -45,7 +45,7 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		}
 		);
 	
-	crm_debug_2("Adding %s to %s", rsc->id, node->details->uname);
+	crm_debug_3("Adding %s to %s", rsc->id, node->details->uname);
 	
 	rsc->running_on = g_list_append(rsc->running_on, node);
 	if(rsc->variant == pe_native) {
@@ -90,7 +90,7 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		}
 		
 	} else {
-		crm_debug_2("Resource %s is active on: %s",
+		crm_debug_3("Resource %s is active on: %s",
 			    rsc->id, node->details->uname);
 	}
 	
