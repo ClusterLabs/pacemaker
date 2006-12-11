@@ -72,8 +72,8 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 	}
 	rsc->is_allocating = TRUE;
 	
-	group_data->last_child->rsc_cons = g_list_concat(
-		group_data->last_child->rsc_cons, rsc->rsc_cons);
+	group_data->first_child->rsc_cons = g_list_concat(
+		group_data->first_child->rsc_cons, rsc->rsc_cons);
 	rsc->rsc_cons = NULL;
 
 	/* process in reverse so that all scores are merged before allocation */

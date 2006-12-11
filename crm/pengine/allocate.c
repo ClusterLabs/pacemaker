@@ -1274,7 +1274,7 @@ custom_action_order(
 	crm_malloc0(order, sizeof(order_constraint_t));
 	if(order == NULL) { return FALSE; }
 
-	crm_debug_2("Creating ordering constraint %d",
+	crm_debug_3("Creating ordering constraint %d",
 		    data_set->order_id);
 	
 	order->id             = data_set->order_id++;

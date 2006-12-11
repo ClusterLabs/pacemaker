@@ -273,12 +273,6 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	crm_debug_2("\tDesired next state: %s",
 		    (*rsc)->next_role!=RSC_ROLE_UNKNOWN?role2text((*rsc)->next_role):"default");
 
-	if((*rsc)->variant == pe_native && (*rsc)->next_role == RSC_ROLE_STOPPED) {
-		crm_debug_2("Making sure %s doesn't get colored", (*rsc)->id);
-		/* make sure it doesnt come up again */
-		resource_location(*rsc, NULL, -INFINITY, "target_role", data_set);
-	}
-	
 	if((*rsc)->is_managed == FALSE) {
 		crm_warn("Resource %s is currently not managed", (*rsc)->id);
 
