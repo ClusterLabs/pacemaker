@@ -1263,7 +1263,7 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 	*cib_diff = NULL;
 	if(per_action_cib) {
 		CRM_CHECK(the_cib == NULL, free_xml(the_cib));
-		the_cib = readCibXmlFile(CIB_FILENAME, FALSE);
+		the_cib = readCibXmlFile(WORKING_DIR, "cib.xml", FALSE);
 		CRM_CHECK(the_cib != NULL, return cib_NOOBJECT);
 	}
 	current_cib = the_cib;
@@ -1383,9 +1383,11 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 			cib_diff_notify(call_options, client, call_id, op,
 					input, rc, *cib_diff);
 		}
-		
-		log_xml_diff(rc==cib_ok?cib_diff_loglevel:cib_diff_loglevel+1,
-			     *cib_diff, "cib:diff");
+		if(rc == cib_ok) {
+			log_xml_diff(cib_diff_loglevel, *cib_diff, "cib:diff");
+		} else {
+			log_xml_diff(cib_diff_loglevel+1, *cib_diff, "cib:diff");
+		}
 		
 	} else {
 		rc = cib_server_ops[call_type].fn(
