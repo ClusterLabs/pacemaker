@@ -518,13 +518,13 @@ colocation_match(
 		node, node_t, rsc_lh->allowed_nodes, lpc,
 		tmp = g_hash_table_lookup(node->details->attrs, attribute);
 		if(do_check && safe_str_eq(tmp, value)) {
-			crm_debug("%s: %s.%s += %d", constraint->id, rsc_lh->id,
+			crm_debug_2("%s: %s.%s += %d", constraint->id, rsc_lh->id,
 				  node->details->uname, constraint->score);
 			node->weight = merge_weights(
 				constraint->score, node->weight);
 
 		} else if(do_check == FALSE || constraint->score >= INFINITY) {
-			crm_debug("%s: %s.%s = -INFINITY (%s)", constraint->id, rsc_lh->id,
+			crm_debug_2("%s: %s.%s = -INFINITY (%s)", constraint->id, rsc_lh->id,
 				  node->details->uname, do_check?"failed":"unallocated");
 			node->weight = -INFINITY;
 		}
@@ -1254,7 +1254,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		crm_free(target_rc);
 	}
 	
-	crm_notice("%s: Created probe for %s", node->details->uname, rsc->id);
+	crm_debug_2("%s: Created probe for %s", node->details->uname, rsc->id);
 	
 	custom_action_order(rsc, NULL, probe, rsc, NULL, complete,
 			    pe_ordering_manditory, data_set);

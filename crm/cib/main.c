@@ -230,7 +230,7 @@ init_start(void)
 	}
 	}
 
-	if(startCib(CIB_FILENAME) == FALSE){
+	if(startCib("cib.xml") == FALSE){
 		crm_crit("Cannot start CIB... terminating");
 		exit(1);
 	}
@@ -514,17 +514,9 @@ gboolean
 startCib(const char *filename)
 {
 	gboolean active = FALSE;
-	crm_data_t *cib = readCibXmlFile(filename, TRUE);
+	crm_data_t *cib = readCibXmlFile(WORKING_DIR, filename, TRUE);
 
-	if(cib == NULL) {
-		crm_warn("Cluster configuration not found: %s."
-			 "  Creating an empty one.", filename);
-
-		cib = createEmptyCib();
-		crm_xml_add(cib, XML_ATTR_GENERATION_ADMIN, "0");
-		crm_xml_add(cib, XML_ATTR_GENERATION, "0");
-		crm_xml_add(cib, XML_ATTR_NUMUPDATES, "0");
-	}
+	CRM_ASSERT(cib != NULL);
 	
 	if(activateCibXml(cib, filename) == 0) {
 		active = TRUE;

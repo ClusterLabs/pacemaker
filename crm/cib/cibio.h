@@ -49,7 +49,8 @@ extern gboolean uninitializeCib(void);
 extern crm_data_t *createEmptyCib(void);
 extern gboolean verifyCibXml(crm_data_t *cib);
 extern crm_data_t *readCibXml(char *buffer);
-extern crm_data_t *readCibXmlFile(const char *filename, gboolean discard_status);
+extern crm_data_t *readCibXmlFile(
+	const char *dir, const char *file, gboolean discard_status);
 extern int activateCibBuffer(char *buffer, const char *filename);
 extern int activateCibXml(crm_data_t *doc, const char *filename);
 

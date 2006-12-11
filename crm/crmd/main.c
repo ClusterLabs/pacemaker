@@ -113,7 +113,15 @@ main(int argc, char ** argv)
     if(cl_enable_coredumps(1) != 0) {
 	    crm_warn("Cannot enable coredumps");
     }
- 
+    
+    if(crm_is_writable(HA_VARLIBDIR"/heartbeat/pengine", NULL,
+		       HA_CCMUSER, HA_APIGROUP, FALSE) == FALSE) {
+	    fprintf(stderr,"ERROR: Bad permissions on "
+		    HA_VARLIBDIR"/heartbeat/pengine... See logs for details\n");
+	    fflush(stderr);
+	    return 100;
+    }
+    
     return init_start();
 }
 

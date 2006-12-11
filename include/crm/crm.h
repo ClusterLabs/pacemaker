@@ -211,6 +211,7 @@ typedef GList* GListPtr;
 
 #define do_crm_log(level, fmt, args...) do {				\
 		if(crm_log_level < (level)) {				\
+			continue;					\
 		} else if(level > LOG_DEBUG) {				\
 			cl_log(LOG_DEBUG, "debug%d: %s: " fmt,		\
 			       level-LOG_INFO, __PRETTY_FUNCTION__, ##args); \

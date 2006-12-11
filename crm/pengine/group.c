@@ -55,7 +55,9 @@ int group_num_allowed_nodes(resource_t *rsc)
 node_t *
 group_color(resource_t *rsc, pe_working_set_t *data_set)
 {
+	resource_t *child = NULL;
 	node_t *group_node = NULL;
+	GListPtr child_iter = NULL;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
@@ -70,15 +72,18 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 	}
 	rsc->is_allocating = TRUE;
 	
-	group_data->first_child->rsc_cons = g_list_concat(
-		group_data->first_child->rsc_cons, rsc->rsc_cons);
+	group_data->last_child->rsc_cons = g_list_concat(
+		group_data->last_child->rsc_cons, rsc->rsc_cons);
 	rsc->rsc_cons = NULL;
 
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-		group_node = child_rsc->cmds->color(child_rsc, data_set);
-		);
-
+	/* process in reverse so that all scores are merged before allocation */
+	child_iter = g_list_last(group_data->child_list);
+	for(; child_iter != NULL; ) {
+		child = child_iter->data;
+		child_iter = g_list_previous(child_iter);
+		group_node = child->cmds->color(child, data_set);
+	}
+	
 	rsc->provisional = FALSE;
 	rsc->is_allocating = FALSE;
 

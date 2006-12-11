@@ -24,13 +24,16 @@
 #endif
 
 #include <sys/param.h>
-#include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 
 #include <stdlib.h>
 #include <ctype.h>
+#include <pwd.h>
+#include <grp.h>
 
 #include <heartbeat.h>
 #include <ha_msg.h>
@@ -707,14 +710,8 @@ safe_str_neq(const char *a, const char *b)
 char *
 crm_strdup(const char *a)
 {
-	char *ret = NULL;
 	CRM_CHECK(a != NULL, return NULL);
-	if(a != NULL) {
-		ret = cl_strdup(a);
-	} else {
-		crm_warn("Cannot dup NULL string");
-	}
-	return ret;
+	return cl_strdup(a);
 } 
 
 static GHashTable *crm_uuid_cache = NULL;
@@ -1724,4 +1721,80 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
 	(void)open(devnull, O_WRONLY);		/* Stdout: fd 1 */
 	close(FD_STDERR);
 	(void)open(devnull, O_WRONLY);		/* Stderr: fd 2 */
+}
+
+gboolean
+crm_is_writable(const char *dir, const char *file,
+		const char *user, const char *group, gboolean need_both)
+{
+	int s_res = -1;
+	struct stat buf;
+	char *full_file = NULL;
+	const char *target = NULL;
+	
+	gboolean pass = TRUE;
+	gboolean readwritable = FALSE;
+
+	CRM_ASSERT(dir != NULL);
+	if(file != NULL) {
+		full_file = crm_concat(dir, file, '/');
+		target = full_file;
+		s_res = stat(full_file, &buf);
+		if( s_res == 0 && S_ISREG(buf.st_mode) == FALSE ) {
+			crm_err("%s must be a regular file", target);
+			pass = FALSE;
+			goto out;
+		}
+	}
+	
+	if (s_res != 0) {
+		target = dir;
+		s_res = stat(dir, &buf);
+		if(s_res != 0) {
+			crm_err("%s must exist and be a directory", dir);
+			pass = FALSE;
+			goto out;
+
+		} else if( S_ISDIR(buf.st_mode) == FALSE ) {
+			crm_err("%s must be a directory", dir);
+			pass = FALSE;
+		}
+	}
+
+	if(user) {
+		struct passwd *sys_user = NULL;
+		sys_user = getpwnam(user);
+		readwritable = (sys_user != NULL
+				&& buf.st_uid == sys_user->pw_uid
+				&& (buf.st_mode & (S_IRUSR|S_IWUSR)));
+		if(readwritable == FALSE) {
+			crm_err("%s must be owned and r/w by user %s",
+				target, user);
+			if(need_both) {
+				pass = FALSE;
+			}
+		}
+	}	
+
+	if(group) {
+		struct group *sys_grp = getgrnam(group);
+		readwritable = (
+			sys_grp != NULL
+			&& buf.st_gid == sys_grp->gr_gid
+			&& (buf.st_mode & (S_IRGRP|S_IWGRP)));		
+		if(readwritable == FALSE) {
+			if(need_both || user == NULL) {
+				pass = FALSE;
+				crm_err("%s must be owned and r/w by group %s",
+					target, group);
+			} else {
+				crm_warn("%s should be owned and r/w by group %s",
+					 target, group);
+			}
+		}
+	}
+
+  out:
+	crm_free(full_file);
+	return pass;
 }

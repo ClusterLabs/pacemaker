@@ -185,4 +185,8 @@ extern gboolean check_number(const char *value);
 extern int char2score(const char *score);
 extern char *score2char(int score);
 
+extern gboolean crm_is_writable(
+	const char *dir, const char *file,
+	const char *user, const char *group, gboolean need_both);
+
 #endif

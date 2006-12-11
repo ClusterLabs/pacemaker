@@ -96,7 +96,7 @@ unpack_config(crm_data_t *config, pe_working_set_t *data_set)
 		 data_set->stonith_enabled?"enabled":"disabled");	
 
 	data_set->stonith_action = pe_pref(data_set->config_hash, "stonith-action");
-	crm_debug("STONITH will %s nodes", data_set->stonith_action);	
+	crm_debug_2("STONITH will %s nodes", data_set->stonith_action);	
 	
 	value = pe_pref(data_set->config_hash, "symmetric-cluster");
 	cl_str_to_boolean(value, &data_set->symmetric_cluster);
@@ -130,23 +130,23 @@ unpack_config(crm_data_t *config, pe_working_set_t *data_set)
 
 	value = pe_pref(data_set->config_hash, "stop-orphan-resources");
 	cl_str_to_boolean(value, &data_set->stop_rsc_orphans);
-	crm_debug("Orphan resources are %s",
-		 data_set->stop_rsc_orphans?"stopped":"ignored");	
+	crm_debug_2("Orphan resources are %s",
+		    data_set->stop_rsc_orphans?"stopped":"ignored");	
 	
 	value = pe_pref(data_set->config_hash, "stop-orphan-actions");
 	cl_str_to_boolean(value, &data_set->stop_action_orphans);
-	crm_debug("Orphan resource actions are %s",
-		 data_set->stop_action_orphans?"stopped":"ignored");	
+	crm_debug_2("Orphan resource actions are %s",
+		    data_set->stop_action_orphans?"stopped":"ignored");	
 
 	value = pe_pref(data_set->config_hash, "remove-after-stop");
 	cl_str_to_boolean(value, &data_set->remove_after_stop);
-	crm_debug("Stopped resources are removed from the status section: %s",
-		 data_set->remove_after_stop?"true":"false");	
+	crm_debug_2("Stopped resources are removed from the status section: %s",
+		    data_set->remove_after_stop?"true":"false");	
 	
 	value = pe_pref(data_set->config_hash, "is-managed-default");
 	cl_str_to_boolean(value, &data_set->is_managed_default);
-	crm_debug("By default resources are %smanaged",
-		 data_set->is_managed_default?"":"not ");
+	crm_debug_2("By default resources are %smanaged",
+		    data_set->is_managed_default?"":"not ");
 
 	return TRUE;
 }

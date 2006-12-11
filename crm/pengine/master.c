@@ -351,7 +351,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc, resource_t, clone_data->child_list, lpc,
 
 		chosen = NULL;
-		crm_info("Processing %s", child_rsc->id);
+		crm_debug_2("Processing %s", child_rsc->id);
 		if(promoted < clone_data->master_max) {
 			chosen = can_be_master(child_rsc);
 		}

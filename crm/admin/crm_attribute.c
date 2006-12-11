@@ -299,18 +299,27 @@ main(int argc, char **argv)
 
 		} else {
 			char *read_value = NULL;
+			char *scope = NULL;
+			if(type) {
+				scope = crm_strdup(type);
+			}
 			rc = query_standby(
-				the_cib, dest_node, type, &read_value);
+				the_cib, dest_node, &scope, &read_value);
 
 			if(BE_QUIET == FALSE) {
-				fprintf(stdout, "%s%s %s%s value=%s\n",
-					attr_id?"id=":"", attr_id?attr_id:"",
-					attr_name?"name=":"", attr_name?attr_name:"",
-					read_value?read_value:"(null)");
+				if(attr_id) {
+					fprintf(stdout, "id=%s ", attr_id);
+				}
+				if(attr_name) {
+					fprintf(stdout, "name=%s ", attr_name);
+				}
+				fprintf(stdout, "scope=%s value=%s\n",
+					scope, read_value?read_value:"(null)");
 				
 			} else if(read_value != NULL) {
 				fprintf(stdout, "%s\n", read_value);
 			}
+			crm_free(scope);
 		}
 		is_done = TRUE;
 
