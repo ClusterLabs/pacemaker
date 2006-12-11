@@ -670,8 +670,8 @@ write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress)
 				crm_err("bzWriteClose() failed: %d",rc);
 				is_done = FALSE;
 			} else {
-				crm_debug("%s: In: %d, out: %d",
-					  filename, in, out);
+				crm_debug_2("%s: In: %d, out: %d",
+					    filename, in, out);
 			}
 		}
 #else
@@ -1607,6 +1607,11 @@ log_xml_diff(unsigned int log_level, crm_data_t *diff, const char *function)
 	crm_data_t *added = find_xml_node(diff, "diff-added", FALSE);
 	crm_data_t *removed = find_xml_node(diff, "diff-removed", FALSE);
 	gboolean is_first = TRUE;
+
+	if(crm_log_level < log_level) {
+		/* nothing will ever be printed */
+		return;
+	}
 	
 	xml_child_iter(
 		removed, child, 
