@@ -299,7 +299,10 @@ main(int argc, char **argv)
 
 		} else {
 			char *read_value = NULL;
-			char *scope = crm_strdup(type);
+			char *scope = NULL;
+			if(type) {
+				scope = crm_strdup(type);
+			}
 			rc = query_standby(
 				the_cib, dest_node, &scope, &read_value);
 
