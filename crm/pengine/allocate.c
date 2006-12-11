@@ -827,7 +827,7 @@ invert_action(const char *action)
 	} else if(safe_str_eq(action, CRMD_ACTION_PROMOTE)) {
 		return CRMD_ACTION_DEMOTE;
 		
-	} else if(safe_str_eq(action, CRMD_ACTION_DEMOTE)) {
+ 	} else if(safe_str_eq(action, CRMD_ACTION_DEMOTE)) {
 		return CRMD_ACTION_PROMOTE;
 
 	} else if(safe_str_eq(action, CRMD_ACTION_PROMOTED)) {
@@ -841,9 +841,8 @@ invert_action(const char *action)
 		
 	} else if(safe_str_eq(action, CRMD_ACTION_STOPPED)) {
 		return CRMD_ACTION_STARTED;
-		
 	}
-	pe_err("Unknown action: %s", action);
+	crm_config_warn("Unknown action: %s", action);
 	return NULL;
 }
 
