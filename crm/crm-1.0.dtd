@@ -831,5 +831,7 @@ The parameters section allows us to detect when a resource's definition has chan
           crm-debug-origin      CDATA #IMPLIED
           transition_key        CDATA #IMPLIED
           op_digest             CDATA #IMPLIED
+          op_restart_digest     CDATA #IMPLIED
+          op_force_restart      CDATA #IMPLIED
           interval              CDATA #REQUIRED
           transition_magic      CDATA #REQUIRED>

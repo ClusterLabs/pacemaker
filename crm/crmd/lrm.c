@@ -330,6 +330,169 @@ verify_stopped(gboolean force, int log_level)
 	return TRUE;
 }
 
+static const char *
+get_rsc_metadata(const char *type, const char *class, const char *provider)
+{
+	int len = 0;
+	char *key = NULL;
+	char *metadata = NULL;
+	static GHashTable *meta_hash = NULL;
+	if(meta_hash == NULL) {
+		meta_hash = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, g_hash_destroy_str);
+	}
+
+	CRM_CHECK(type != NULL, return NULL);
+	CRM_CHECK(class != NULL, return NULL);
+	if(provider == NULL) {
+		provider = "heartbeat";
+	}
+
+	crm_debug("Grabbing metadata for %s::%s:%s", class, type, provider);
+
+	len = strlen(type) + strlen(class) + strlen(provider) + 3;
+
+	crm_malloc0(key, len);
+	sprintf(key, "%s::%s:%s", type, class, provider);
+	key[len-1] = 0;
+
+	metadata = g_hash_table_lookup(meta_hash, key);
+	if(metadata) {
+		crm_free(key);
+		goto out;
+	}
+
+	metadata = fsa_lrm_conn->lrm_ops->get_rsc_type_metadata(
+		fsa_lrm_conn, class, type, provider);
+
+	if(metadata) {
+ 		g_hash_table_insert(meta_hash, key, metadata);
+	}
+
+  out:
+	if(metadata == NULL) {
+		crm_warn("No metadata found for %s::%s:%s",
+			 class, type, provider);
+	}
+	
+	return metadata;
+}
+
+static GListPtr
+get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op) 
+{
+	gboolean supported = FALSE;
+	GListPtr restart_list = NULL;
+
+	const char *value = NULL;
+	const char *metadata_str = get_rsc_metadata(
+		rsc->type, rsc->class, rsc->provider);
+
+	crm_data_t *params = NULL;
+	crm_data_t *actions = NULL;
+	crm_data_t *metadata = NULL;
+
+	if(metadata_str == NULL) {
+		return NULL;
+	}
+	
+	metadata = string2xml(metadata_str);
+	actions = find_xml_node(metadata, "actions", TRUE);
+	
+	xml_child_iter_filter(
+		actions, action, "action",
+		value = crm_element_value(action, "name");
+		if(safe_str_eq("reload", value)) {
+			supported = TRUE;
+			break;
+		}
+		);
+
+	if(supported == FALSE) {
+		return NULL;
+	}
+	
+	params = find_xml_node(metadata, "parameters", TRUE);
+	xml_child_iter_filter(
+		params, param, "parameter",
+		value = crm_element_value(param, "unique");
+		if(crm_is_true(value)) {
+			value = crm_element_value(param, "name");
+			crm_debug("Attr %s is not reloadable", value);
+			restart_list = g_list_append(
+				restart_list, crm_strdup(value));
+		}
+		);
+
+	free_xml(metadata);
+	return restart_list;
+}
+
+static void
+append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version) 
+{
+	int len = 0;
+	char *list = NULL;
+	char *digest = NULL;
+	lrm_rsc_t *rsc = NULL;
+	const char *value = NULL;
+	crm_data_t *restart = NULL;
+	GListPtr restart_list = NULL;
+
+	if(op->interval > 0) {
+		/* monitors are not reloadable */
+		return;
+
+/* 	} else if(safe_str_neq(CRMD_ACTION_START, op->op_type) */
+/* 		&& safe_str_neq("reload", op->op_type)) { */
+/* 		/\* only starts and reloads are potentially reloadable *\/ */
+/* 		return; */
+		
+	} else if(compare_version("1.0.7", version) > 0) {
+		crm_info("Caller version %s does not support reloads", version);
+		return;
+	}
+
+	rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, op->rsc_id);
+	if(rsc == NULL) {
+		crm_info("Resource %s no longer in the LRM", op->rsc_id);
+		return;
+	}
+
+	restart = create_xml_node(NULL, "restart");
+	restart_list = get_rsc_restart_list(rsc, op);
+	if(restart_list == NULL) {
+		crm_info("Resource %s does not support reloads", op->rsc_id);
+		return;
+	}
+
+	slist_iter(param, const char, restart_list, lpc,
+		   int start = len;
+		   value = g_hash_table_lookup(op->params, param);
+		   crm_xml_add(restart, param, value);
+
+		   if(list == NULL) {
+			   len = strlen(param);
+			   crm_malloc0(list, len+1);
+			   sprintf(list, "%s", param);
+		   } else {
+			   len += strlen(param)+1;
+			   crm_realloc(list, len+1);
+			   sprintf(list+start, " %s", param);
+		   }
+		);
+	
+	digest = calculate_xml_digest(restart, TRUE);
+	crm_xml_add(update, XML_LRM_ATTR_OP_RESTART, list);
+	crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
+
+	crm_debug("%s : %s", digest, list);
+	free_xml(restart);
+	crm_free(digest);
+	crm_free(list);
+}
+
 gboolean
 build_operation_update(
 	crm_data_t *xml_rsc, lrm_op_t *op, const char *src, int lpc)
@@ -349,7 +512,7 @@ build_operation_update(
 	}
 
 	crm_debug_2("%s: Updating resouce %s after %s %s op",
-		 src, op->rsc_id, op_status2text(op->op_status), op->op_type);
+		  src, op->rsc_id, op_status2text(op->op_status), op->op_type);
 
 	if(op->op_status == LRM_OP_CANCELLED) {
 		crm_debug_3("Ignoring cancelled op");
@@ -529,6 +692,8 @@ build_operation_update(
 	if(args_parent == NULL) {
 		free_xml(args_xml);
 	}
+
+	append_restart_list(xml_op, op, caller_version);
 	
 	return TRUE;
 }
