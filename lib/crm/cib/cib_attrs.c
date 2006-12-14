@@ -99,7 +99,7 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 		matches = find_xml_children(
 			&set_children, xml_search, 
 			NULL, XML_ATTR_ID, node_uuid, FALSE);
-		crm_log_xml_debug(set_children, "search by node:");
+		crm_log_xml_debug_2(set_children, "search by node:");
 		if(matches == 0) {
 			crm_info("No node matching id=%s in %s", node_uuid, TYPE(xml_search));
 			return NULL;
@@ -111,7 +111,7 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 		matches = find_xml_children(
 			&set_children, set_children?set_children:xml_search, 
 			XML_TAG_ATTR_SETS, XML_ATTR_ID, set_name, FALSE);
-		crm_log_xml_debug(set_children, "search by set:");
+		crm_log_xml_debug_2(set_children, "search by set:");
 		if(matches == 0) {
 			crm_info("No set matching id=%s in %s", set_name, TYPE(xml_search));
 			return NULL;
@@ -123,7 +123,7 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 		matches = find_xml_children(
 			&nv_children, set_children?set_children:xml_search,
 			XML_CIB_TAG_NVPAIR, XML_NVPAIR_ATTR_NAME, attr_name, FALSE);
-		crm_log_xml_debug(nv_children, "search by name:");
+		crm_log_xml_debug_2(nv_children, "search by name:");
 
 	} else if(attr_id != NULL) {
 		matches = find_xml_children(
