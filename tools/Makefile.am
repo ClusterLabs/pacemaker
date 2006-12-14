@@ -23,7 +23,7 @@ INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include \
   			  -I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
   			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl
 
-EXTRA_DIST		= ccdv.c attrd.h ocf-tester
+EXTRA_DIST		= ccdv.c attrd.h ocf-tester dopd.h
 
 apigid			= @HA_APIGID@
 habindir		= @bindir@
@@ -31,9 +31,9 @@ halibdir		= $(libdir)/@HB_PKG@
 gliblib			= @GLIBLIB@
 
 habin_PROGRAMS		= cl_status cl_respawn 
-sbin_PROGRAMS		= attrd_updater
+sbin_PROGRAMS		= attrd_updater drbd-peer-outdater
 halib_SCRIPTS		= haresources2cib.py
-halib_PROGRAMS		= attrd	pingd
+halib_PROGRAMS		= attrd	pingd dopd
 sbin_SCRIPTS		= ocf-tester
 
 ## SOURCES
@@ -67,6 +67,16 @@ attrd_LDADD		=  $(CRM_DEBUG_LIBS)				\
 		  $(GLIBLIB)						\
 		  $(LIBRT)
 
+dopd_SOURCES		= dopd.c
+dopd_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+dopd_LDADD		=  $(CRM_DEBUG_LIBS)				\
+		  $(top_builddir)/lib/clplumbing/libplumb.la		\
+		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
+		  $(top_builddir)/lib/hbclient/libhbclient.la		\
+		  $(top_builddir)/lib/crm/cib/libcib.la			\
+		  $(GLIBLIB)						\
+		  $(LIBRT)
+
 pingd_SOURCES		= pingd.c
 pingd_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 pingd_LDADD		=  $(CRM_DEBUG_LIBS)				\
@@ -79,6 +89,14 @@ pingd_LDADD		=  $(CRM_DEBUG_LIBS)				\
 attrd_updater_SOURCES	= attrd_updater.c
 attrd_updater_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 attrd_updater_LDADD	=  $(CRM_DEBUG_LIBS)				\
+		  $(top_builddir)/lib/clplumbing/libplumb.la		\
+		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
+		  $(GLIBLIB)						\
+		  $(LIBRT)
+
+drbd_peer_outdater_SOURCES	= drbd-peer-outdater.c
+drbd_peer_outdater_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
+drbd_peer_outdater_LDADD	=  $(CRM_DEBUG_LIBS)				\
 		  $(top_builddir)/lib/clplumbing/libplumb.la		\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(GLIBLIB)						\
