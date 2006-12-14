@@ -1554,6 +1554,10 @@ parse_xml(const char *input, int *offset)
 					}
 					break;
 				case '>':
+					while(our_input[lpc+1] != '<') {
+						lpc++;
+					}
+					break;
 				case ' ':
 				case '\t':
 				case '\n':
