@@ -367,11 +367,11 @@ class CrmdStateAudit(ClusterAudit):
 
         for node in self.CM.Env["nodes"]:
 	    should_be = self.CM.ShouldBeStatus[node]
-	    rc = self.CM.StataCM(node)
-	    if rc:
+	    rc = self.CM.test_node_CM(node)
+	    if rc > 0:
 		if should_be == self.CM["down"]:
                     down_are_up = down_are_up + 1
-		if not self.CM.node_stable(node):
+		if rc == 1:
 		    unstable_list.append(node)
 	    elif should_be == self.CM["up"]:
 		up_are_down = up_are_down + 1

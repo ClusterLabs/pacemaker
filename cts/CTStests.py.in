@@ -189,7 +189,6 @@ random for the selected number of iterations.
                 self.CM.statall()
                 # Make sure logging is working and we have enough disk space...
                 if not self.CM.Env["DoBSC"]:
-                    self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
                     if not self.CM.TestLogging():
                         sys.exit(1)
                     if not self.CM.CheckDf():
@@ -2033,10 +2032,6 @@ class NearQuorumPointTest(CTSTest):
         self.CM.debug("start nodes:" + repr(startset))
         self.CM.debug("stop nodes:" + repr(stopset))
 
-        if not self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"]):
-            self.log("WaitForAllNodesToComeUp filed")
-            return self.skipped()
- 
         #add search patterns
         watchpats = [ ]
         for node in stopset:
@@ -2206,10 +2201,6 @@ class SimulStopLite(CTSTest):
         '''Perform the 'SimulStopLite' setup work. '''
         self.incr("calls")
 
-        if not self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"]):
-            self.log("WaitForAllNodesToComeUp filed")
-            return self.skipped()
-
         self.CM.debug("Setup: " + self.name)
 
         #     We ignore the "node" parameter...
@@ -2271,10 +2262,6 @@ class SimulStartLite(CTSTest):
         '''Perform the 'SimulStartList' setup work. '''
         self.incr("calls")
         self.CM.debug("Setup: " + self.name)
-
-        if not self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"]):
-            self.log("WaitForAllNodesToComeUp filed")
-            return self.skipped()
 
         #        We ignore the "node" parameter...
         watchpats = [ ]
@@ -2344,8 +2331,6 @@ class LoggingTest(CTSTest):
         '''Perform the 'Logging' test. '''
         self.incr("calls")
         
-        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
-
         # Make sure logging is working and we have enough disk space...
         if not self.CM.TestLogging():
             sys.exit(1)
