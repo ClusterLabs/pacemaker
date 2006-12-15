@@ -153,10 +153,22 @@ random for the selected number of iterations.
         ,        timeout=0)
         BadNews.setwatch()
 
+        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
+
+	for node in self.CM.Env["nodes"]:
+	    if node in self.CM.Env["oprofile"]:
+                self.CM.log("Enabling oprofile on %s" % node) 
+                self.CM.rsh.remote_py(node, "os", "system", "opcontrol --init")
+                self.CM.rsh.remote_py(node, "os", "system", "opcontrol --start")
+
         if not self.Scenario.SetUp(self.CM):
             return None
 
-        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
+        for node in self.CM.Env["nodes"]:
+	    if node in self.CM.Env["oprofile"]:
+                self.CM.rsh.remote_py(
+                    node, "os", "system", "opcontrol --save=cts.setup")
+
         testcount=1
         time.sleep(30)
 
@@ -179,6 +191,12 @@ random for the selected number of iterations.
             starttime=time.time()
             test.starttime=starttime
             ret=test(nodechoice)
+
+	    for node in self.CM.Env["nodes"]:
+		if node in self.CM.Env["oprofile"]:
+                    self.CM.rsh.remote_py(
+                        node, "os", "system", 
+                        "opcontrol --save=cts.%d" % (testcount-1))
 
             if ret:
                 self.incr("success")
@@ -211,6 +229,11 @@ random for the selected number of iterations.
 
         self.Scenario.TearDown(self.CM)
         
+	for node in self.CM.Env["nodes"]:
+	    if node in self.CM.Env["oprofile"]:
+                self.CM.log("Disabling oprofile on %s" % node) 
+                self.CM.rsh.remote_py(node, "os", "system", "opcontrol --shutdown")
+
         self.audit(BadNews, None)
 
         for test in self.Tests:
