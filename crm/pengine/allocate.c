@@ -169,7 +169,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 
 	CRM_CHECK(active_node != NULL, return FALSE);
 
-	interval_s = get_interval(xml_op);
+	interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
 	interval = crm_parse_int(interval_s, "0");
 	key = generate_op_key(rsc->id, task, interval);
 
@@ -295,7 +295,7 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 		is_probe = FALSE;
 		task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 
-		interval_s = get_interval(rsc_op);
+		interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
 		interval = crm_parse_int(interval_s, "0");
 		
 		if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {

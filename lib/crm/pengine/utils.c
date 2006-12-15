@@ -1155,28 +1155,6 @@ order_actions(
 	}
 }
 
-const char *
-get_interval(crm_data_t *xml_op) 
-{
-	const char *interval_s = NULL;
-        interval_s  = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
-#if CRM_DEPRECATED_SINCE_2_0_4
-	if(interval_s == NULL) {
-		crm_data_t *params = NULL;
-		params = find_xml_node(xml_op, XML_TAG_PARAMS, FALSE);
-		if(params != NULL) {
-			interval_s = crm_element_value(
-				params, XML_LRM_ATTR_INTERVAL);
-		}
-	}
-#endif
-	
-	CRM_CHECK(interval_s != NULL,
-		  crm_err("Invalid rsc op: %s", ID(xml_op)); return "0");
-	
-	return interval_s;
-}
-
 #define sort_return(an_int) crm_free(a_uuid); crm_free(b_uuid); return an_int
 
 gint
