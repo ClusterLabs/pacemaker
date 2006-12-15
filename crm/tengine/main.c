@@ -190,6 +190,7 @@ init_start(void)
 		/* create a blank one */
 		transition_graph = unpack_graph(NULL);
 		transition_graph->complete = TRUE;
+		transition_graph->abort_reason = "DC Takeover";
 		transition_graph->completion_action = tg_restart;
 
 		crm_malloc0(transition_timer, sizeof(crm_action_timer_t));
