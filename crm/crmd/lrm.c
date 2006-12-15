@@ -349,9 +349,7 @@ get_rsc_metadata(const char *type, const char *class, const char *provider)
 		provider = "heartbeat";
 	}
 
-	crm_debug("Grabbing metadata for %s::%s:%s", class, type, provider);
-
-	len = strlen(type) + strlen(class) + strlen(provider) + 3;
+	len = strlen(type) + strlen(class) + strlen(provider) + 4;
 
 	crm_malloc0(key, len);
 	sprintf(key, "%s::%s:%s", type, class, provider);
@@ -359,10 +357,12 @@ get_rsc_metadata(const char *type, const char *class, const char *provider)
 
 	metadata = g_hash_table_lookup(meta_hash, key);
 	if(metadata) {
+		crm_debug_2("Returning cached metadata for %s", key);
 		crm_free(key);
 		goto out;
 	}
 
+	crm_debug("Retreiving metadata for %s", key);
 	metadata = fsa_lrm_conn->lrm_ops->get_rsc_type_metadata(
 		fsa_lrm_conn, class, type, provider);
 
@@ -444,13 +444,12 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 		/* monitors are not reloadable */
 		return;
 
-/* 	} else if(safe_str_neq(CRMD_ACTION_START, op->op_type) */
-/* 		&& safe_str_neq("reload", op->op_type)) { */
-/* 		/\* only starts and reloads are potentially reloadable *\/ */
-/* 		return; */
+	} else if(safe_str_neq(CRMD_ACTION_START, op->op_type)) {
+		/* only starts are potentially reloadable */
+		return;
 		
-	} else if(compare_version("1.0.7", version) > 0) {
-		crm_info("Caller version %s does not support reloads", version);
+	} else if(compare_version("1.0.8", version) > 0) {
+		crm_debug("Caller version %s does not support reloads", version);
 		return;
 	}
 
