@@ -212,7 +212,7 @@ typedef GList* GListPtr;
 #define do_crm_log(level, fmt, args...) do {				\
 		if(crm_log_level < (level)) {				\
 			continue;					\
-		} else if(level > LOG_DEBUG) {				\
+		} else if((level) > LOG_DEBUG) {			\
 			cl_log(LOG_DEBUG, "debug%d: %s: " fmt,		\
 			       level-LOG_INFO, __PRETTY_FUNCTION__, ##args); \
 		} else {						\
@@ -236,11 +236,11 @@ typedef GList* GListPtr;
 extern void crm_log_message_adv(
 	int level, const char *alt_debugfile, const HA_Message *msg);
 
-#define crm_log_message(level, msg) if(crm_log_level >= level) {	\
+#define crm_log_message(level, msg) if(crm_log_level >= (level)) {	\
 		crm_log_message_adv(level, NULL, msg);			\
 	}
 
-#define crm_log_xml(level, text, xml)   if(crm_log_level >= level) {  \
+#define crm_log_xml(level, text, xml)   if(crm_log_level >= (level)) {	\
 		print_xml_formatted(level,  __PRETTY_FUNCTION__, xml, text); \
 	}
 #define crm_log_xml_crit(xml, text)    crm_log_xml(LOG_CRIT,    text, xml)
