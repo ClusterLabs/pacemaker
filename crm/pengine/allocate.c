@@ -295,7 +295,7 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 		is_probe = FALSE;
 		task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 
-		interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+		interval_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL);
 		interval = crm_parse_int(interval_s, "0");
 		
 		if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
