@@ -648,7 +648,10 @@ if __name__ == '__main__':
            HaveSeed = 1
        else:
            NumIter=int(args[i])
-          
+     
+    if not oprofile:
+	oprofile = []
+
     #
     # This reading of HBconfig here is ugly, and I suppose ought to
     # be done by the Cluster manager.  This would probably mean moving the
