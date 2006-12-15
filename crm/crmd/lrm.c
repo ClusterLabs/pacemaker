@@ -1647,6 +1647,8 @@ do_lrm_event(long long action,
 gboolean
 process_lrm_event(lrm_op_t *op)
 {
+	char *op_id = NULL;
+	int log_level = LOG_ERR;
 	CRM_CHECK(op != NULL, return I_NULL);
 	CRM_CHECK(op->rsc_id != NULL, return I_NULL);
 
@@ -1656,82 +1658,67 @@ process_lrm_event(lrm_op_t *op)
 	}
 
 	switch(op->op_status) {
-		case LRM_OP_PENDING:
-			/* this really shouldnt happen */
-			crm_err("LRM operation (%d) %s_%d on %s %s: %s",
-				op->call_id, op->op_type,
-				op->interval,
-				crm_str(op->rsc_id),
-				op_status2text(op->op_status),
-				execra_code2string(op->rc));
-			break;
 		case LRM_OP_ERROR:
-			crm_err("LRM operation (%d) %s_%d on %s %s: (%d) %s",
-				op->call_id, op->op_type,
-				op->interval,
-				crm_str(op->rsc_id),
-				op_status2text(op->op_status),
-				op->rc, execra_code2string(op->rc));
-			if(op->output != NULL) {
-				crm_debug("Result: %s", op->output);
-			}
+		case LRM_OP_PENDING:
+		case LRM_OP_NOTSUPPORTED:
 			break;
 		case LRM_OP_CANCELLED:
-			crm_warn("LRM operation (%d) %s_%d on %s %s",
-				 op->call_id, op->op_type,
-				 op->interval,
-				 crm_str(op->rsc_id),
-				 op_status2text(op->op_status));
-			break;
-		case LRM_OP_TIMEOUT:
-			crm_err("LRM operation (%d) %s_%d on %s %s (timeout=%dms)",
-				op->call_id, op->op_type, op->interval,
-				crm_str(op->rsc_id),
-				op_status2text(op->op_status), op->timeout);
-			break;
-		case LRM_OP_NOTSUPPORTED:
-			crm_err("LRM operation (%d) %s_%d on %s %s",
-				op->call_id, op->op_type,
-				op->interval,
-				crm_str(op->rsc_id),
-				op_status2text(op->op_status));
+			log_level = LOG_WARNING;
 			break;
 		case LRM_OP_DONE:
-			crm_info("LRM operation (%d) %s_%d on %s %s",
-				 op->call_id, op->op_type,
-				 op->interval,
-				 crm_str(op->rsc_id),
-				 op_status2text(op->op_status));
+			log_level = LOG_INFO;
 			break;
+		case LRM_OP_TIMEOUT:
+			log_level = LOG_DEBUG_3;
+			crm_err("LRM operation %s_%s_%d (%d) %s (timeout=%dms)",
+				crm_str(op->rsc_id), op->op_type, op->interval,
+				op->call_id, op_status2text(op->op_status),
+				op->timeout);
+			/* set op->rc because the lrm doesn't bother */
+			op->rc = -1;
+			break;
+		default:
+			crm_err("Mapping unknown status (%d) to ERROR",
+				op->op_status);
+			op->op_status = LRM_OP_ERROR;
+	}
+
+	do_crm_log(log_level, "LRM operation %s_%s_%d (call=%d, rc=%d) %s %s",
+		   crm_str(op->rsc_id), op->op_type, op->interval,
+		   op->call_id, op->rc, op_status2text(op->op_status),
+		   op->op_status==LRM_OP_ERROR?execra_code2string(op->rc):"");
+
+	if(op_status == LRM_OP_ERROR && op->output != NULL) {
+		crm_info("Result: %s", op->output);
 	}
 	
 	if(op->op_status != LRM_OP_CANCELLED) {
 		do_update_resource(op);
 		if(op->interval > 0) {
-			crm_debug("Op %d %s_%s_%d returned",
-				  op->call_id, op->rsc_id, op->op_type,
-				  op->interval);
+			/* dont remove active recurring ops from
+			 * the shutdown list
+			 */
 			return TRUE;
 		}
 		
 	} else if(op->interval == 0) {
-		crm_err("No update sent for cancelled op %d: %s_%s_%d",
-			op->call_id, op->rsc_id, op->op_type, op->interval);
+		crm_err("Op %s_%s_%d (call=%d): cancelled!",
+			  op->rsc_id, op->op_type, op->interval, op->call_id);
 	}
 
-	if(g_hash_table_size(shutdown_ops) > 0) {
-		char *op_id = make_stop_id(op->rsc_id, op->call_id);
-		if(g_hash_table_remove(shutdown_ops, op_id)) {
-			crm_debug_2("Op %d %s_%s_%d is confirmed",
-				    op->call_id, op->rsc_id, op->op_type,
-				    op->interval);
-			crm_free(op_id);
-			return TRUE;
-		}
-		crm_free(op_id);
+	op_id = make_stop_id(op->rsc_id, op->call_id);
+	if(g_hash_table_remove(shutdown_ops, op_id)) {
+		crm_debug("Op %s_%s_%d (call=%d): confirmed",
+			  op->rsc_id, op->op_type, op->interval, op->call_id);
+		goto out;
 	}
+
+	/* most likely scenario is that it previously timed out */
 	crm_err("Op %d %s_%s_%d not matched",
 		op->call_id, op->rsc_id, op->op_type, op->interval);
+
+  out:
+	crm_free(op_id);
 	return TRUE;
 }
 

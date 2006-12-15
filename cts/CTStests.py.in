@@ -2137,7 +2137,7 @@ class BSC_AddResource(CTSTest):
         self.resource_offset =         self.resource_offset  + 1
 
         r_id = "bsc-rsc-%s-%d" % (node, self.resource_offset)
-        start_pat = "crmd.*start_0 on %s complete"
+        start_pat = "crmd.*%s_start_0.*complete"
 
         patterns = []
         patterns.append(start_pat % r_id)
