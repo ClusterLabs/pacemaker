@@ -1170,6 +1170,8 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
 	const char *a_xml_id = ID(a);
 	const char *b_xml_id = ID(b);
+
+	int dummy = -1;
 	
 	int a_id = -1;
 	int b_id = -1;
@@ -1220,9 +1222,11 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 	/* now process pending ops */
 	CRM_CHECK(a_key != NULL && b_key != NULL, sort_return(0));
 	CRM_CHECK(decode_transition_magic(
-			       a_key,&a_uuid,&a_id,&a_status, &a_rc), sort_return(0));
+			  a_key, &a_uuid, &a_id, &dummy, &a_status, &a_rc),
+		  sort_return(0));
 	CRM_CHECK(decode_transition_magic(
-			       b_key,&b_uuid,&b_id,&b_status, &b_rc), sort_return(0));
+			  b_key, &b_uuid, &b_id, &dummy, &b_status, &b_rc),
+		  sort_return(0));
 
 	/* try and determin the relative age of the operation...
 	 * some pending operations (ie. a start) may have been supuerceeded

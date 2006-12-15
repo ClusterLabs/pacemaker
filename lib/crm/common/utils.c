@@ -1198,7 +1198,7 @@ generate_transition_magic(const char *transition_key, int op_status, int op_rc)
 
 gboolean
 decode_transition_magic(
-	const char *magic, char **uuid, int *transition_id,
+	const char *magic, char **uuid, int *transition_id, int *action_id,
 	int *op_status, int *op_rc)
 {
 	char *rc = NULL;
@@ -1217,7 +1217,8 @@ decode_transition_magic(
 	}
 
 	
-	CRM_CHECK(decode_transition_key(key, uuid, transition_id), return FALSE);
+	CRM_CHECK(decode_transition_key(key, uuid, transition_id, action_id),
+		  return FALSE);
 	
 	*op_rc = crm_parse_int(rc, NULL);
 	*op_status = crm_parse_int(status, NULL);
@@ -1231,7 +1232,7 @@ decode_transition_magic(
 }
 
 char *
-generate_transition_key(int transition_id, const char *node)
+generate_transition_key(int transition_id, int action_id, const char *node)
 {
 	int len = 40;
 	char *fail_state = NULL;
@@ -1242,26 +1243,46 @@ generate_transition_key(int transition_id, const char *node)
 	
 	crm_malloc0(fail_state, len);
 	if(fail_state != NULL) {
-		snprintf(fail_state, len, "%d:%s", transition_id, node);
+		snprintf(fail_state, len, "%d:%d:%s",
+			 action_id, transition_id, node);
 	}
 	return fail_state;
 }
 
 
 gboolean
-decode_transition_key(const char *key, char **uuid, int *transition_id)
+decode_transition_key(
+	const char *key, char **uuid, int *transition_id, int *action_id)
 {
+	char *tmp = NULL;
+	char *action = NULL;
 	char *transition = NULL;
+
+	*uuid = NULL;
+	*action_id = -1;
+	*transition_id = -1;
 	
-	if(decodeNVpair(key, ':', &transition, uuid) == FALSE) {
+	if(decodeNVpair(key, ':', &action, &tmp) == FALSE) {
 		crm_err("Couldn't find ':' in: %s", key);
 		return FALSE;
 	}
-	
-	*transition_id = crm_parse_int(transition, NULL);
 
-	crm_free(transition);
-	
+	*action_id = crm_parse_int(action, NULL);
+	crm_free(action);
+
+	if(decodeNVpair(tmp, ':', &transition, uuid) == FALSE) {
+		/* this would be an error but some versions dont
+		 * have the action
+		 */
+		*transition_id = *action_id;
+		*action_id = -1;
+		*uuid = tmp;
+
+	} else {
+		*transition_id = crm_parse_int(transition, NULL);
+		crm_free(transition);
+		crm_free(tmp);
+	}
 	return TRUE;
 }
 

@@ -612,22 +612,17 @@ build_operation_update(
 	crm_xml_add(xml_op,  XML_ATTR_ORIGIN, src);
 	
 	if(op->user_data == NULL) {
-		op->user_data = generate_transition_key(-1, fsa_our_uname);
+		op->user_data = generate_transition_key(-1, 0, fsa_our_uname);
 	}
 	
-#if CRM_DEPRECATED_SINCE_2_0_3
 	if(compare_version("1.0.3", caller_version) > 0) {
-		CRM_CHECK(FALSE, ; );
 		fail_state = generate_transition_magic_v202(
 			op->user_data, op->op_status);
+
 	} else {
 		fail_state = generate_transition_magic(
 			op->user_data, op->op_status, op->rc);
 	}
-#else
-	fail_state = generate_transition_magic(
-		op->user_data, op->op_status, op->rc);
-#endif
 	
 	crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, op->user_data);
 	crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC, fail_state);
