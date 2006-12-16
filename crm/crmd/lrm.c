@@ -1683,7 +1683,7 @@ process_lrm_event(lrm_op_t *op)
 		   op->call_id, op->rc, op_status2text(op->op_status),
 		   op->op_status==LRM_OP_ERROR?execra_code2string(op->rc):"");
 
-	if(op_status == LRM_OP_ERROR && op->output != NULL) {
+	if(op->op_status == LRM_OP_ERROR && op->output != NULL) {
 		crm_info("Result: %s", op->output);
 	}
 	
