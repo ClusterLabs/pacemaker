@@ -141,7 +141,6 @@ extern void pe_metadata(void);
 extern void verify_pe_options(GHashTable *options);
 extern const char *pe_pref(GHashTable *options, const char *name);
 
-
 /* Helper macros to avoid NULL pointers */
 #define safe_val3(def, t,u,v)       (t?t->u?t->u->v:def:def)
 #define safe_val5(def, t,u,v,w,x)   (t?t->u?t->u->v?t->u->v->w?t->u->v->w->x:def:def:def:def)

@@ -34,6 +34,7 @@ extern void send_stonith_update(stonith_ops_t * op);
 extern gboolean cib_action_update(crm_action_t *action, int status);
 
 /* utils */
+extern crm_action_t *get_action(int id, gboolean confirmed);
 extern gboolean stop_te_timer(crm_action_timer_t *timer);
 extern const char *get_rsc_state(const char *task, op_status_t status);
 

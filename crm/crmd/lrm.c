@@ -330,6 +330,168 @@ verify_stopped(gboolean force, int log_level)
 	return TRUE;
 }
 
+static const char *
+get_rsc_metadata(const char *type, const char *class, const char *provider)
+{
+	int len = 0;
+	char *key = NULL;
+	char *metadata = NULL;
+	static GHashTable *meta_hash = NULL;
+	if(meta_hash == NULL) {
+		meta_hash = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, g_hash_destroy_str);
+	}
+
+	CRM_CHECK(type != NULL, return NULL);
+	CRM_CHECK(class != NULL, return NULL);
+	if(provider == NULL) {
+		provider = "heartbeat";
+	}
+
+	len = strlen(type) + strlen(class) + strlen(provider) + 4;
+
+	crm_malloc0(key, len);
+	sprintf(key, "%s::%s:%s", type, class, provider);
+	key[len-1] = 0;
+
+	metadata = g_hash_table_lookup(meta_hash, key);
+	if(metadata) {
+		crm_debug_2("Returning cached metadata for %s", key);
+		crm_free(key);
+		goto out;
+	}
+
+	crm_debug("Retreiving metadata for %s", key);
+	metadata = fsa_lrm_conn->lrm_ops->get_rsc_type_metadata(
+		fsa_lrm_conn, class, type, provider);
+
+	if(metadata) {
+ 		g_hash_table_insert(meta_hash, key, metadata);
+	}
+
+  out:
+	if(metadata == NULL) {
+		crm_warn("No metadata found for %s::%s:%s",
+			 class, type, provider);
+	}
+	
+	return metadata;
+}
+
+static GListPtr
+get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op) 
+{
+	gboolean supported = FALSE;
+	GListPtr restart_list = NULL;
+
+	const char *value = NULL;
+	const char *metadata_str = get_rsc_metadata(
+		rsc->type, rsc->class, rsc->provider);
+
+	crm_data_t *params = NULL;
+	crm_data_t *actions = NULL;
+	crm_data_t *metadata = NULL;
+
+	if(metadata_str == NULL) {
+		return NULL;
+	}
+	
+	metadata = string2xml(metadata_str);
+	actions = find_xml_node(metadata, "actions", TRUE);
+	
+	xml_child_iter_filter(
+		actions, action, "action",
+		value = crm_element_value(action, "name");
+		if(safe_str_eq("reload", value)) {
+			supported = TRUE;
+			break;
+		}
+		);
+
+	if(supported == FALSE) {
+		return NULL;
+	}
+	
+	params = find_xml_node(metadata, "parameters", TRUE);
+	xml_child_iter_filter(
+		params, param, "parameter",
+		value = crm_element_value(param, "unique");
+		if(crm_is_true(value)) {
+			value = crm_element_value(param, "name");
+			crm_debug("Attr %s is not reloadable", value);
+			restart_list = g_list_append(
+				restart_list, crm_strdup(value));
+		}
+		);
+
+	free_xml(metadata);
+	return restart_list;
+}
+
+static void
+append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version) 
+{
+	int len = 0;
+	char *list = NULL;
+	char *digest = NULL;
+	lrm_rsc_t *rsc = NULL;
+	const char *value = NULL;
+	crm_data_t *restart = NULL;
+	GListPtr restart_list = NULL;
+
+	if(op->interval > 0) {
+		/* monitors are not reloadable */
+		return;
+
+	} else if(safe_str_neq(CRMD_ACTION_START, op->op_type)) {
+		/* only starts are potentially reloadable */
+		return;
+		
+	} else if(compare_version("1.0.8", version) > 0) {
+		crm_debug("Caller version %s does not support reloads", version);
+		return;
+	}
+
+	rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, op->rsc_id);
+	if(rsc == NULL) {
+		crm_info("Resource %s no longer in the LRM", op->rsc_id);
+		return;
+	}
+
+	restart = create_xml_node(NULL, "restart");
+	restart_list = get_rsc_restart_list(rsc, op);
+	if(restart_list == NULL) {
+		crm_info("Resource %s does not support reloads", op->rsc_id);
+		return;
+	}
+
+	slist_iter(param, const char, restart_list, lpc,
+		   int start = len;
+		   value = g_hash_table_lookup(op->params, param);
+		   crm_xml_add(restart, param, value);
+
+		   if(list == NULL) {
+			   len = strlen(param);
+			   crm_malloc0(list, len+1);
+			   sprintf(list, "%s", param);
+		   } else {
+			   len += strlen(param)+1;
+			   crm_realloc(list, len+1);
+			   sprintf(list+start, " %s", param);
+		   }
+		);
+	
+	digest = calculate_xml_digest(restart, TRUE);
+	crm_xml_add(update, XML_LRM_ATTR_OP_RESTART, list);
+	crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
+
+	crm_debug("%s : %s", digest, list);
+	free_xml(restart);
+	crm_free(digest);
+	crm_free(list);
+}
+
 gboolean
 build_operation_update(
 	crm_data_t *xml_rsc, lrm_op_t *op, const char *src, int lpc)
@@ -349,7 +511,7 @@ build_operation_update(
 	}
 
 	crm_debug_2("%s: Updating resouce %s after %s %s op",
-		 src, op->rsc_id, op_status2text(op->op_status), op->op_type);
+		  src, op->rsc_id, op_status2text(op->op_status), op->op_type);
 
 	if(op->op_status == LRM_OP_CANCELLED) {
 		crm_debug_3("Ignoring cancelled op");
@@ -450,22 +612,17 @@ build_operation_update(
 	crm_xml_add(xml_op,  XML_ATTR_ORIGIN, src);
 	
 	if(op->user_data == NULL) {
-		op->user_data = generate_transition_key(-1, fsa_our_uname);
+		op->user_data = generate_transition_key(-1, 0, fsa_our_uname);
 	}
 	
-#if CRM_DEPRECATED_SINCE_2_0_3
 	if(compare_version("1.0.3", caller_version) > 0) {
-		CRM_CHECK(FALSE, ; );
 		fail_state = generate_transition_magic_v202(
 			op->user_data, op->op_status);
+
 	} else {
 		fail_state = generate_transition_magic(
 			op->user_data, op->op_status, op->rc);
 	}
-#else
-	fail_state = generate_transition_magic(
-		op->user_data, op->op_status, op->rc);
-#endif
 	
 	crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, op->user_data);
 	crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC, fail_state);
@@ -529,6 +686,8 @@ build_operation_update(
 	if(args_parent == NULL) {
 		free_xml(args_xml);
 	}
+
+	append_restart_list(xml_op, op, caller_version);
 	
 	return TRUE;
 }
@@ -1483,6 +1642,8 @@ do_lrm_event(long long action,
 gboolean
 process_lrm_event(lrm_op_t *op)
 {
+	char *op_id = NULL;
+	int log_level = LOG_ERR;
 	CRM_CHECK(op != NULL, return I_NULL);
 	CRM_CHECK(op->rsc_id != NULL, return I_NULL);
 
@@ -1492,82 +1653,67 @@ process_lrm_event(lrm_op_t *op)
 	}
 
 	switch(op->op_status) {
-		case LRM_OP_PENDING:
-			/* this really shouldnt happen */
-			crm_err("LRM operation (%d) %s_%d on %s %s: %s",
-				op->call_id, op->op_type,
-				op->interval,
-				crm_str(op->rsc_id),
-				op_status2text(op->op_status),
-				execra_code2string(op->rc));
-			break;
 		case LRM_OP_ERROR:
-			crm_err("LRM operation (%d) %s_%d on %s %s: (%d) %s",
-				op->call_id, op->op_type,
-				op->interval,
-				crm_str(op->rsc_id),
-				op_status2text(op->op_status),
-				op->rc, execra_code2string(op->rc));
-			if(op->output != NULL) {
-				crm_debug("Result: %s", op->output);
-			}
+		case LRM_OP_PENDING:
+		case LRM_OP_NOTSUPPORTED:
 			break;
 		case LRM_OP_CANCELLED:
-			crm_warn("LRM operation (%d) %s_%d on %s %s",
-				 op->call_id, op->op_type,
-				 op->interval,
-				 crm_str(op->rsc_id),
-				 op_status2text(op->op_status));
-			break;
-		case LRM_OP_TIMEOUT:
-			crm_err("LRM operation (%d) %s_%d on %s %s (timeout=%dms)",
-				op->call_id, op->op_type, op->interval,
-				crm_str(op->rsc_id),
-				op_status2text(op->op_status), op->timeout);
-			break;
-		case LRM_OP_NOTSUPPORTED:
-			crm_err("LRM operation (%d) %s_%d on %s %s",
-				op->call_id, op->op_type,
-				op->interval,
-				crm_str(op->rsc_id),
-				op_status2text(op->op_status));
+			log_level = LOG_WARNING;
 			break;
 		case LRM_OP_DONE:
-			crm_info("LRM operation (%d) %s_%d on %s %s",
-				 op->call_id, op->op_type,
-				 op->interval,
-				 crm_str(op->rsc_id),
-				 op_status2text(op->op_status));
+			log_level = LOG_INFO;
 			break;
+		case LRM_OP_TIMEOUT:
+			log_level = LOG_DEBUG_3;
+			crm_err("LRM operation %s_%s_%d (%d) %s (timeout=%dms)",
+				crm_str(op->rsc_id), op->op_type, op->interval,
+				op->call_id, op_status2text(op->op_status),
+				op->timeout);
+			/* set op->rc because the lrm doesn't bother */
+			op->rc = -1;
+			break;
+		default:
+			crm_err("Mapping unknown status (%d) to ERROR",
+				op->op_status);
+			op->op_status = LRM_OP_ERROR;
+	}
+
+	do_crm_log(log_level, "LRM operation %s_%s_%d (call=%d, rc=%d) %s %s",
+		   crm_str(op->rsc_id), op->op_type, op->interval,
+		   op->call_id, op->rc, op_status2text(op->op_status),
+		   op->op_status==LRM_OP_ERROR?execra_code2string(op->rc):"");
+
+	if(op->op_status == LRM_OP_ERROR && op->output != NULL) {
+		crm_info("Result: %s", op->output);
 	}
 	
 	if(op->op_status != LRM_OP_CANCELLED) {
 		do_update_resource(op);
 		if(op->interval > 0) {
-			crm_debug("Op %d %s_%s_%d returned",
-				  op->call_id, op->rsc_id, op->op_type,
-				  op->interval);
+			/* dont remove active recurring ops from
+			 * the shutdown list
+			 */
 			return TRUE;
 		}
 		
 	} else if(op->interval == 0) {
-		crm_err("No update sent for cancelled op %d: %s_%s_%d",
-			op->call_id, op->rsc_id, op->op_type, op->interval);
+		crm_err("Op %s_%s_%d (call=%d): cancelled!",
+			  op->rsc_id, op->op_type, op->interval, op->call_id);
 	}
 
-	if(g_hash_table_size(shutdown_ops) > 0) {
-		char *op_id = make_stop_id(op->rsc_id, op->call_id);
-		if(g_hash_table_remove(shutdown_ops, op_id)) {
-			crm_debug_2("Op %d %s_%s_%d is confirmed",
-				    op->call_id, op->rsc_id, op->op_type,
-				    op->interval);
-			crm_free(op_id);
-			return TRUE;
-		}
-		crm_free(op_id);
+	op_id = make_stop_id(op->rsc_id, op->call_id);
+	if(g_hash_table_remove(shutdown_ops, op_id)) {
+		crm_debug("Op %s_%s_%d (call=%d): confirmed",
+			  op->rsc_id, op->op_type, op->interval, op->call_id);
+		goto out;
 	}
+
+	/* most likely scenario is that it previously timed out */
 	crm_err("Op %d %s_%s_%d not matched",
 		op->call_id, op->rsc_id, op->op_type, op->interval);
+
+  out:
+	crm_free(op_id);
 	return TRUE;
 }
 

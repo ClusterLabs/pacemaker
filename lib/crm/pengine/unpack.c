@@ -827,8 +827,8 @@ process_recurring(node_t *node, resource_t *rsc,
 				       id, node->details->uname);
 			   continue;
 		   }
-		   
-		   interval_s = get_interval(rsc_op);
+		   	
+		   interval_s = crm_element_value(rsc_op,XML_LRM_ATTR_INTERVAL);
 		   interval = crm_parse_int(interval_s, "0");
 		   if(interval == 0) {
 			   crm_debug_4("Skipping %s/%s: non-recurring",
@@ -1022,7 +1022,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		    id, task, task_id, task_status, node->details->uname,
 		    role2text(rsc->role));
 
-	interval_s = get_interval(xml_op);
+	interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
 	interval = crm_parse_int(interval_s, "0");
 	
 	if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {

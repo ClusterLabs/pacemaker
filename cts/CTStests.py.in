@@ -153,10 +153,22 @@ random for the selected number of iterations.
         ,        timeout=0)
         BadNews.setwatch()
 
+        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
+
+	for node in self.CM.Env["nodes"]:
+	    if node in self.CM.Env["oprofile"]:
+                self.CM.log("Enabling oprofile on %s" % node) 
+                self.CM.rsh.remote_py(node, "os", "system", "opcontrol --init")
+                self.CM.rsh.remote_py(node, "os", "system", "opcontrol --start")
+
         if not self.Scenario.SetUp(self.CM):
             return None
 
-        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
+        for node in self.CM.Env["nodes"]:
+	    if node in self.CM.Env["oprofile"]:
+                self.CM.rsh.remote_py(
+                    node, "os", "system", "opcontrol --save=cts.setup")
+
         testcount=1
         time.sleep(30)
 
@@ -180,6 +192,12 @@ random for the selected number of iterations.
             test.starttime=starttime
             ret=test(nodechoice)
 
+	    for node in self.CM.Env["nodes"]:
+		if node in self.CM.Env["oprofile"]:
+                    self.CM.rsh.remote_py(
+                        node, "os", "system", 
+                        "opcontrol --save=cts.%d" % (testcount-1))
+
             if ret:
                 self.incr("success")
             else:
@@ -189,7 +207,6 @@ random for the selected number of iterations.
                 self.CM.statall()
                 # Make sure logging is working and we have enough disk space...
                 if not self.CM.Env["DoBSC"]:
-                    self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
                     if not self.CM.TestLogging():
                         sys.exit(1)
                     if not self.CM.CheckDf():
@@ -212,6 +229,11 @@ random for the selected number of iterations.
 
         self.Scenario.TearDown(self.CM)
         
+	for node in self.CM.Env["nodes"]:
+	    if node in self.CM.Env["oprofile"]:
+                self.CM.log("Disabling oprofile on %s" % node) 
+                self.CM.rsh.remote_py(node, "os", "system", "opcontrol --shutdown")
+
         self.audit(BadNews, None)
 
         for test in self.Tests:
@@ -2033,10 +2055,6 @@ class NearQuorumPointTest(CTSTest):
         self.CM.debug("start nodes:" + repr(startset))
         self.CM.debug("stop nodes:" + repr(stopset))
 
-        if not self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"]):
-            self.log("WaitForAllNodesToComeUp filed")
-            return self.skipped()
- 
         #add search patterns
         watchpats = [ ]
         for node in stopset:
@@ -2119,7 +2137,7 @@ class BSC_AddResource(CTSTest):
         self.resource_offset =         self.resource_offset  + 1
 
         r_id = "bsc-rsc-%s-%d" % (node, self.resource_offset)
-        start_pat = "crmd.*start_0 on %s complete"
+        start_pat = "crmd.*%s_start_0.*complete"
 
         patterns = []
         patterns.append(start_pat % r_id)
@@ -2206,10 +2224,6 @@ class SimulStopLite(CTSTest):
         '''Perform the 'SimulStopLite' setup work. '''
         self.incr("calls")
 
-        if not self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"]):
-            self.log("WaitForAllNodesToComeUp filed")
-            return self.skipped()
-
         self.CM.debug("Setup: " + self.name)
 
         #     We ignore the "node" parameter...
@@ -2271,10 +2285,6 @@ class SimulStartLite(CTSTest):
         '''Perform the 'SimulStartList' setup work. '''
         self.incr("calls")
         self.CM.debug("Setup: " + self.name)
-
-        if not self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"]):
-            self.log("WaitForAllNodesToComeUp filed")
-            return self.skipped()
 
         #        We ignore the "node" parameter...
         watchpats = [ ]
@@ -2344,8 +2354,6 @@ class LoggingTest(CTSTest):
         '''Perform the 'Logging' test. '''
         self.incr("calls")
         
-        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
-
         # Make sure logging is working and we have enough disk space...
         if not self.CM.TestLogging():
             sys.exit(1)

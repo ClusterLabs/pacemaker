@@ -123,7 +123,6 @@ resource_location(resource_t *rsc, node_t *node, int score, const char *tag,
 		  pe_working_set_t *data_set);
 
 extern void order_actions(action_t *lh_action, action_t *rh_action, enum pe_ordering order);
-extern const char *get_interval(crm_data_t *xml_op);
 extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 
 #endif

@@ -286,9 +286,9 @@ tengine_stonith_callback(stonith_ops_t * op)
 {
 	const char *allow_fail  = NULL;
 	int stonith_id = -1;
+	int transition_id = -1;
+	char *uuid = NULL;
 	crm_action_t *stonith_action = NULL;
-	char *op_key = NULL;
-	char *call_id = NULL;
 
 	if(op == NULL) {
 		crm_err("Called with a NULL op!");
@@ -303,30 +303,21 @@ tengine_stonith_callback(stonith_ops_t * op)
 	CRM_CHECK(op->private_data != NULL, return);
 
 	/* filter out old STONITH actions */
-	decodeNVpair(op->private_data, ';', &call_id, &op_key);
-	if(op_key != NULL) {
-		char *key = generate_transition_key(
-			transition_graph->id, te_uuid);
-		gboolean key_matched = safe_str_eq(key, op_key);
-		crm_free(key);
-		if(key_matched == FALSE) {
-			crm_info("Ignoring old STONITH op: %s",
-				 op->private_data);
-			return;
-		}
+
+	CRM_CHECK(decode_transition_key(
+			  op->private_data, &uuid, &transition_id, &stonith_id),
+		  crm_err("Invalid event detected");
+		);
+	
+	if(transition_graph->complete
+	   || stonith_id < 0
+	   || safe_str_neq(uuid, te_uuid)
+	   || transition_graph->id != transition_id) {
+		crm_info("Ignoring STONITH action initiated outside"
+			 " of the current transition");
 	}
 
-#if 1
-	stonith_id = crm_parse_int(call_id, "-1");
-	if(stonith_id < 0) {
-		crm_err("Stonith action not matched: %s (%s)",
-			call_id, op->private_data);
-		return;
-	}
-#endif
-	
- 	stonith_action = match_down_event(
-		stonith_id, op->node_uuid, CRM_OP_FENCE);
+	stonith_action = get_action(stonith_id, TRUE);
 	
 	if(stonith_action == NULL) {
 		crm_err("Stonith action not matched");

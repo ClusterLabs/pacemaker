@@ -163,17 +163,13 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	const char *param_digest = NULL;
 	char *local_param_digest = NULL;
 
-#if CRM_DEPRECATED_SINCE_2_0_4
-	crm_data_t *params = NULL;
-#endif
-
 	action_t *action = NULL;
 	const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
 	const char *op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
 
 	CRM_CHECK(active_node != NULL, return FALSE);
 
-	interval_s = get_interval(xml_op);
+	interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
 	interval = crm_parse_int(interval_s, "0");
 	key = generate_op_key(rsc->id, task, interval);
 
@@ -232,26 +228,6 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	filter_action_parameters(pnow, op_version);
 	pnow_digest = calculate_xml_digest(pnow, TRUE);
 	param_digest = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
-
-#if CRM_DEPRECATED_SINCE_2_0_4
-	if(param_digest == NULL) {
-		params = find_xml_node(xml_op, XML_TAG_PARAMS, TRUE);
-	}
-	if(params != NULL) {
-		crm_data_t *local_params = copy_xml(params);
-
-		crm_warn("Faking parameter digest creation for %s", ID(xml_op));		
-		filter_action_parameters(local_params, op_version);
-		xml_remove_prop(local_params, "interval");
-		xml_remove_prop(local_params, "timeout");
-		crm_log_xml_warn(local_params, "params:used");
-
-		local_param_digest = calculate_xml_digest(local_params, TRUE);
-		param_digest = local_param_digest;
-		
-		free_xml(local_params);
-	}
-#endif
 
 	if(safe_str_neq(pnow_digest, param_digest)) {
 		did_change = TRUE;
@@ -319,7 +295,7 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 		is_probe = FALSE;
 		task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 
-		interval_s = get_interval(rsc_op);
+		interval_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL);
 		interval = crm_parse_int(interval_s, "0");
 		
 		if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {

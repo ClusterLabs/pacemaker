@@ -361,7 +361,7 @@ class NodeStatus:
         self.rsh = RemoteExec()
 
     def IsNodeBooted(self, node):
-        '''Return TRUE if the given node is booted (responds to pings'''
+        '''Return TRUE if the given node is booted (responds to pings)'''
         return os.system("@PING@ -nq -c1 @PING_TIMEOUT_OPT@ %s >/dev/null 2>&1" % node) == 0
 
     def IsSshdUp(self, node):
@@ -521,10 +521,6 @@ class ClusterManager(UserDict):
         if self.ShouldBeStatus[node] != self["down"]:
             return 1
 
-        if not self.ns.WaitForNodeToComeUp(node):
-            self.log("WaitForNodeToComeUp %s failed" % node)
-            return 0
-
         patterns = []
         # Technically we should always be able to notice ourselves starting
         if self.upcount() == 0:
@@ -538,10 +534,6 @@ class ClusterManager(UserDict):
         watch.setwatch()
 
         self.install_config(node)
-
-        if not self.ns.WaitForNodeToComeUp(node):
-            self.log("Second WaitForNodeToComeUp %s failed" % node)
-            return 0
 
         self.ShouldBeStatus[node] = "any"
         if self.StataCM(node) and self.cluster_stable(self["DeadTime"]):
@@ -582,10 +574,6 @@ class ClusterManager(UserDict):
 
         self.debug("Starting %s on node %s" %(self["Name"], node))
 
-        if not self.ns.IsNodeBooted(node):
-            self.log("node %s not booted, StartaCMnoBlock failed." % node)
-            return 0
-
         # Clear out the host cache so autojoin can be exercised
         if self.clear_cache:
             self.debug("Removing cache file on: "+node)
@@ -605,10 +593,6 @@ class ClusterManager(UserDict):
         if self.ShouldBeStatus[node] != self["up"]:
             return 1
 
-        if not self.ns.WaitForNodeToComeUp(node):
-            self.log("WaitForNodeToComeUp %s filed" % node)
-            return 0
-
         if self.rsh(node, self["StopCmd"]) == 0:
             self.ShouldBeStatus[node]=self["down"]
             self.cluster_stable(self["DeadTime"])
@@ -623,10 +607,6 @@ class ClusterManager(UserDict):
         '''Stop the cluster manager on a given node with none-block mode'''
 
         self.debug("Stopping %s on node %s" %(self["Name"], node))
-
-        if not self.ns.IsNodeBooted(node):
-            self.log("node %s not booted, StopaCNnoBlock failed." % node)
-            return 0
 
         self.rsh.noBlock(node, self["StopCmd"])
         self.ShouldBeStatus[node]=self["down"]
@@ -644,10 +624,6 @@ class ClusterManager(UserDict):
         '''Force the cluster manager on a given node to reread its config
            This may be a no-op on certain cluster managers.
         '''
-        if not self.ns.WaitForNodeToComeUp(node):
-            self.log("WaitForNodeToComeUp %s filed" % node)
-            return 0
-
         rc=self.rsh(node, self["RereadCmd"])
         if rc == 0:
             return 1
@@ -744,12 +720,7 @@ class ClusterManager(UserDict):
         return result
 
     def isolate_node(self, node):
-
         '''isolate the communication between the nodes'''
-        if not self.ns.WaitForNodeToComeUp(node):
-            self.log("WaitForNodeToComeUp %s filed in isolate_node" % node) 
-            return None
-
         rc = self.rsh(node, self["BreakCommCmd"])
         if rc == 0:
             return 1
@@ -758,12 +729,7 @@ class ClusterManager(UserDict):
         return None
  
     def unisolate_node(self, node):
-
         '''fix the communication between the nodes'''
-        if not self.ns.WaitForNodeToComeUp(node):
-            self.log("WaitForNodeToComeUp %s filed in unisolate_node" % node)
-            return None
-
         rc = self.rsh(node, self["FixCommCmd"])
         if rc == 0:
             return 1
@@ -773,10 +739,6 @@ class ClusterManager(UserDict):
         
     def reducecomm_node(self,node):
         '''reduce the communication between the nodes'''
-        if not self.ns.WaitForNodeToComeUp(node):
-            self.log("WaitForNodeToComeUp %s filed in reducecomm_node" % node)
-            return None
-
         rc = self.rsh(node, self["ReduceCommCmd"]%(self.Env["XmitLoss"],self.Env["RecvLoss"]))
         if rc == 0:
             return 1
@@ -787,11 +749,6 @@ class ClusterManager(UserDict):
     def savecomm_node(self,node):
         '''save current the communication between the nodes'''
         rc = 0
-
-        if not self.ns.WaitForNodeToComeUp(node):
-            self.log("WaitForNodeToComeUp %s filed in savecomm_node" % node)
-            return None
-
         if float(self.Env["XmitLoss"])!=0 or float(self.Env["RecvLoss"])!=0 :
             rc = self.rsh(node, self["SaveFileCmd"]);
         if rc == 0:
@@ -803,10 +760,6 @@ class ClusterManager(UserDict):
     def restorecomm_node(self,node):
         '''restore the saved communication between the nodes'''
         rc = 0
-        if not self.ns.WaitForNodeToComeUp(node):
-            self.log("WaitForNodeToComeUp %s filed in restoreomm_node" % node)
-            return None
-
         if float(self.Env["XmitLoss"])!=0 or float(self.Env["RecvLoss"])!=0 :
             rc = self.rsh(node, self["RestoreCommCmd"]);
         if rc == 0:
@@ -971,10 +924,6 @@ class Process(Component):
         self.KillCmd = "killall -9 " + self.name
         
     def kill(self, node):
-        if not self.CM.ns.WaitForNodeToComeUp(node):
-            self.CM.log("WaitForNodeToComeUp %s filed in kill" % node)
-            return None
-
         if self.CM.rsh(node, self.KillCmd) != 0:
             self.log ("Warn: Kill %s failed on node %s" %(name,node))
             return None

@@ -106,7 +106,6 @@ send_stonith_update(stonith_ops_t * op)
 static gboolean
 te_fence_node(crm_graph_t *graph, crm_action_t *action)
 {
-	char *key = NULL;
 	const char *id = NULL;
 	const char *uuid = NULL;
 	const char *target = NULL;
@@ -147,9 +146,8 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 	st_op->node_name = crm_strdup(target);
 	st_op->node_uuid = crm_strdup(uuid);
 	
-	key = generate_transition_key(transition_graph->id, te_uuid);
-	st_op->private_data = crm_concat(id, key, ';');
-	crm_free(key);
+	st_op->private_data = generate_transition_key(
+		transition_graph->id, action->id, te_uuid);
 	
 	CRM_ASSERT(stonithd_input_IPC_channel() != NULL);
 		
@@ -188,7 +186,8 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	cmd = create_request(task, NULL, on_node, CRM_SYSTEM_CRMD,
 			     CRM_SYSTEM_TENGINE, NULL);
 	
-	counter = generate_transition_key(transition_graph->id, te_uuid);
+	counter = generate_transition_key(
+		transition_graph->id, action->id, te_uuid);
 	crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
 	ret = send_ipc_message(crm_ch, cmd);
 	crm_free(counter);
@@ -327,7 +326,7 @@ cib_action_update(crm_action_t *action, int status)
 
 	crm_free(code);
 
-	code = generate_transition_key(transition_graph->id, te_uuid);
+	code = generate_transition_key(transition_graph->id, action->id,te_uuid);
 	crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, code);
 	crm_free(code);
 
@@ -385,7 +384,8 @@ send_rsc_command(crm_action_t *action)
 	task    = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 	task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
 	on_node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
-	counter = generate_transition_key(transition_graph->id, te_uuid);
+	counter = generate_transition_key(
+		transition_graph->id, action->id, te_uuid);
 	crm_xml_add(rsc_op, XML_ATTR_TRANSITION_KEY, counter);
 
 	crm_info("Initiating action %d: %s on %s",

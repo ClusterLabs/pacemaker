@@ -191,6 +191,8 @@
 #define XML_LRM_ATTR_RC			"rc_code"
 #define XML_LRM_ATTR_CALLID		"call_id"
 #define XML_LRM_ATTR_OP_DIGEST		"op_digest"
+#define XML_LRM_ATTR_OP_RESTART		"op_force_restart"
+#define XML_LRM_ATTR_RESTART_DIGEST	"op_restart_digest"
 
 #define XML_TAG_GRAPH			"transition_graph"
 #define XML_GRAPH_TAG_RSC_OP		"rsc_op"
