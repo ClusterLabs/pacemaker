@@ -257,8 +257,7 @@ extern void crm_log_message_adv(
 #define crm_str(x)    (const char*)(x?x:"<null>")
 
 #if CRM_USE_MALLOC
-#  define crm_malloc0(new_obj,length)					\
-	{								\
+#  define crm_malloc0(new_obj,length) do {				\
 		new_obj = malloc(length);				\
 		if(new_obj == NULL) {					\
 			crm_crit("Out of memory... exiting");		\
@@ -266,7 +265,7 @@ extern void crm_log_message_adv(
 			exit(1);					\
 		}							\
 		memset(new_obj, 0, length);				\
-	}
+	} while(0)
 #  define crm_realloc(new_obj,length)					\
 	{								\
 		new_obj = realloc(new_obj, length);			\
@@ -275,7 +274,7 @@ extern void crm_log_message_adv(
 			cl_flush_logs();				\
 			exit(1);					\
 		}							\
-	}
+	} while(0)
 #  define crm_free(x) if(x) { free(x); x=NULL; }
 #else
 #  if CRM_DEV_BUILD
@@ -295,12 +294,11 @@ extern void crm_log_message_adv(
 			abort();					\
 		}							\
 		memset(new_obj, 0, length);				\
-	}
+	} while(0)
 /* it's not a memory leak to already have an object to realloc, that's
  * the usual case, however if it does have a value, it must have been
  * allocated by the same allocator! */ 
-#    define crm_realloc(new_obj,length)					\
-	{								\
+#    define crm_realloc(new_obj,length) do {				\
 		if (new_obj != NULL) {					\
 			CRM_ASSERT(cl_is_allocated(new_obj) == 1);	\
 		}							\
@@ -310,15 +308,14 @@ extern void crm_log_message_adv(
 			cl_flush_logs();				\
 			abort();					\
 		}							\
-	}
+	} while(0)
 #    define crm_free(x) if(x) {				\
 		CRM_ASSERT(cl_is_allocated(x) == 1);	\
 		cl_free(x);				\
-		x=NULL;				\
+		x=NULL;					\
 	}
 #  else
-#    define crm_malloc0(new_obj,length)					\
-	{								\
+#    define crm_malloc0(new_obj,length) do {				\
 		new_obj = cl_malloc(length);				\
 		if(new_obj == NULL) {					\
 			crm_crit("Out of memory... exiting");		\
@@ -326,19 +323,19 @@ extern void crm_log_message_adv(
 			abort();					\
 		}							\
 		memset(new_obj, 0, length);				\
-	}
-#    define crm_realloc(new_obj,length)					\
-	{								\
+	} while(0)
+#    define crm_realloc(new_obj,length) do {				\
 		new_obj = cl_realloc(new_obj, length);			\
 		if(new_obj == NULL) {					\
 			crm_crit("Out of memory... exiting");		\
 			cl_flush_logs();				\
 			abort();					\
 		}							\
-	}
+	} while(0)
+	
 #    define crm_free(x) if(x) {				\
 		cl_free(x);				\
-		x=NULL;				\
+		x=NULL;					\
 	}
 #  endif
 #endif
