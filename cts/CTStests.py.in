@@ -605,6 +605,11 @@ class StonithTest(CTSTest):
         # wait for the cluster to stabilize
         self.CM.cluster_stable()
 
+	if node in self.CM.Env["oprofile"]:
+	    self.CM.log("Enabling oprofile on %s" % node) 
+	    self.CM.rsh.remote_py(node, "os", "system", "opcontrol --init")
+	    self.CM.rsh.remote_py(node, "os", "system", "opcontrol --start")
+
         # return case processing
         if rc == 0:
             return self.failure("Node %s did not restart" %node)
