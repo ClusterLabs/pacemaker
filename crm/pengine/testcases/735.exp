@@ -1,4 +1,4 @@
- <transition_graph network-delay="120s" transition_id="0">
+ <transition_graph cluster-delay="120s" transition_id="0">
    <synapse id="0" priority="1000000">
      <action_set>
        <rsc_op id="6" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669">

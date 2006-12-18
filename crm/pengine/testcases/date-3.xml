@@ -8,12 +8,12 @@
            </date_expression>
          </rule>
          <attributes>
-           <nvpair name="network-delay" id="overrides-network-delay" value="10s"/>
+           <nvpair name="cluster-delay" id="overrides-network-delay" value="10s"/>
          </attributes>
        </cluster_property_set>
        <cluster_property_set id="boo" score="1">
          <attributes>
-           <nvpair name="network-delay" id="cib-bootstrap-options-network-delay" value="50s"/>
+           <nvpair name="cluster-delay" id="cib-bootstrap-options-network-delay" value="50s"/>
            <nvpair name="cluster_recheck_interval" id="cib-bootstrap-options-cluster_recheck_interval" value="60"/>
          </attributes>
        </cluster_property_set>

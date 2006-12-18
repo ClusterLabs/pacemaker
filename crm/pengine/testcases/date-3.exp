@@ -1,2 +1,2 @@
- <transition_graph network-delay="50s" transition_id="0"/>
+ <transition_graph cluster-delay="50s" transition_id="0"/>
 
