@@ -47,7 +47,7 @@
 
 int is_comment_start(const char *input);
 int is_comment_end(const char *input);
-gboolean drop_comments(const char *input, int *offset);
+gboolean drop_comments(const char *input, size_t *offset);
 
 void dump_array(
 	int log_level, const char *message, const char **array, int depth);
@@ -60,7 +60,7 @@ int log_data_element(const char *function, const char *prefix, int log_level,
 int dump_data_element(
 	int depth, char **buffer, const crm_data_t *data, gboolean formatted);
 
-crm_data_t *parse_xml(const char *input, int *offset);
+crm_data_t *parse_xml(const char *input, size_t *offset);
 int get_tag_name(const char *input);
 int get_attr_name(const char *input);
 int get_attr_value(const char *input);
@@ -1100,14 +1100,16 @@ crm_update_parents(crm_data_t *xml_root)
 int
 get_tag_name(const char *input) 
 {
-	int lpc = 0;
 	char ch = 0;
+	size_t lpc = 0;
+	size_t max = strlen(input);
+
 	const char *error = NULL;
 	gboolean do_special = FALSE;
 	
-	for(lpc = 0; error == NULL && lpc < (ssize_t)strlen(input); lpc++) {
+	for(lpc = 0; error == NULL && lpc < max; lpc++) {
 		ch = input[lpc];
-		crm_debug_5("Processing char %c [%d]", ch, lpc);
+		crm_debug_5("Processing char %c [%d]", ch, (int)lpc);
 
 		switch(ch) {
 			case 0:
@@ -1150,13 +1152,14 @@ get_tag_name(const char *input)
 int
 get_attr_name(const char *input) 
 {
-	int lpc = 0;
 	char ch = 0;
+	size_t lpc = 0;
+	size_t max = strlen(input);
 	const char *error = NULL;
 	
-	for(lpc = 0; error == NULL && lpc < (ssize_t)strlen(input); lpc++) {
+	for(lpc = 0; error == NULL && lpc < max; lpc++) {
 		ch = input[lpc];
-		crm_debug_5("Processing char %c[%d]", ch, lpc);
+		crm_debug_5("Processing char %c[%d]", ch, (int)lpc);
 
 		switch(ch) {
 			case 0:
@@ -1172,7 +1175,7 @@ get_attr_name(const char *input)
 			default:
 				if('a' <= ch && ch <= 'z') {
 				} else if('A' <= ch && ch <= 'Z') {
-				} else if(isdigit((int) ch)) {
+				} else if('0' <= ch && ch <= '9') {
 				} else if(ch == '_') {
 				} else if(ch == '-') {
 				} else {
@@ -1188,13 +1191,15 @@ get_attr_name(const char *input)
 int
 get_attr_value(const char *input) 
 {
-	int lpc = 0;
 	char ch = 0;
+	size_t lpc = 0;
+	size_t max = strlen(input);
+
 	const char *error = NULL;
 	
-	for(lpc = 0; error == NULL && lpc < (ssize_t)strlen(input); lpc++) {
+	for(lpc = 0; error == NULL && lpc < max; lpc++) {
 		ch = input[lpc];
-		crm_debug_5("Processing char %c [%d]", ch, lpc);
+		crm_debug_5("Processing char %c [%d]", ch, (int)lpc);
 		
 		switch(ch) {
 			case 0:
@@ -1220,9 +1225,11 @@ get_attr_value(const char *input)
 int
 is_comment_start(const char *input)
 {
+	size_t max = 0;
 	CRM_CHECK(input != NULL, return 0);
+	max = strlen(input);
 	
-	if(strlen(input) > 4
+	if(max > 4
 	   && input[0] == '<'
 	   && input[1] == '!'
 	   && input[2] == '-'
@@ -1230,19 +1237,19 @@ is_comment_start(const char *input)
 		crm_debug_6("Found comment start: <!--");
 		return 4;
 		
-	} else if(strlen(input) > 2
+	} else if(max > 2
 	   && input[0] == '<'
 	   && input[1] == '!') {
 		crm_debug_6("Found comment start: <!");
 		return 2;
 
-	} else if(strlen(input) > 2
+	} else if(max > 2
 	   && input[0] == '<'
 	   && input[1] == '?') {
 		crm_debug_6("Found comment start: <?");
 		return 2;
 	}
-	if(strlen(input) > 3) {
+	if(max > 3) {
 		crm_debug_6("Not comment start: %c%c%c%c", input[0], input[1], input[2], input[3]);
 	} else {
 		crm_debug_6("Not comment start");
@@ -1255,22 +1262,24 @@ is_comment_start(const char *input)
 int
 is_comment_end(const char *input)
 {
+	size_t max = 0;
 	CRM_CHECK(input != NULL, return 0);
+	max = strlen(input);
 	
-	if(strlen(input) > 2
+	if(max > 2
 	   && input[0] == '-'
 	   && input[1] == '-'
 	   && input[2] == '>') {
 		crm_debug_6("Found comment end: -->");
 		return 3;
 		
-	} else if(strlen(input) > 1
+	} else if(max > 1
 	   && input[0] == '?'
 	   && input[1] == '>') {
 		crm_debug_6("Found comment end: ?>");
 		return 2;
 	}
-	if(strlen(input) > 2) {
+	if(max > 2) {
 		crm_debug_6("Not comment end: %c%c%c", input[0], input[1], input[2]);
 	} else {
 		crm_debug_6("Not comment end");
@@ -1279,7 +1288,7 @@ is_comment_end(const char *input)
 }
 
 static gboolean
-drop_whitespace(const char *input, int *offset)
+drop_whitespace(const char *input, size_t *offset)
 {
 	char ch = 0;
 	int len = 0, lpc = 0;
@@ -1317,7 +1326,7 @@ drop_whitespace(const char *input, int *offset)
 }
 
 gboolean
-drop_comments(const char *input, int *offset)
+drop_comments(const char *input, size_t *offset)
 {
 	gboolean more = TRUE;
 	gboolean in_directive = FALSE;
@@ -1421,10 +1430,10 @@ drop_comments(const char *input, int *offset)
 
 
 crm_data_t*
-parse_xml(const char *input, int *offset)
+parse_xml(const char *input, size_t *offset)
 {
-	int len = 0, lpc = 0;
 	char ch = 0;
+	size_t lpc = 0, len = 0, max =0;
 	char *tag_name = NULL;
 	char *attr_name = NULL;
 	char *attr_value = NULL;
@@ -1440,15 +1449,15 @@ parse_xml(const char *input, int *offset)
 	if(offset != NULL) {
 		our_input = input + (*offset);
 	}
-
-	len = strlen(our_input);
+	max = strlen(our_input);
+	len = max;
 	while(lpc < len && were_comments) {
 		were_comments = drop_comments(our_input, &lpc);
 	}
 	CRM_CHECK(our_input[lpc] == '<', return NULL);
 	lpc++;
 	len = get_tag_name(our_input + lpc);
-	crm_debug_5("Tag length: %d", len);
+	crm_debug_5("Tag length: %d", (int)len);
 	if(len < 0) {
 		return NULL;
 	}
@@ -1462,9 +1471,9 @@ parse_xml(const char *input, int *offset)
 	ha_msg_add(new_obj, F_XML_TAGNAME, tag_name);
 	lpc += len;
 
-	for(; more && error == NULL && lpc < (ssize_t)strlen(input); lpc++) {
+	for(; more && error == NULL && lpc < max; lpc++) {
 			ch = our_input[lpc];
-			crm_debug_5("Processing char %c[%d]", ch, lpc);
+			crm_debug_5("Processing char %c[%d]", ch, (int)lpc);
 			switch(ch) {
 				case 0:
 					error = "unexpected EOS";
@@ -1589,10 +1598,10 @@ parse_xml(const char *input, int *offset)
 		lpc++;
 		drop_comments(our_input, &lpc);
 		drop_whitespace(our_input, &lpc);
-		if(lpc < (ssize_t)strlen(input)) {
+		if(lpc < max) {
 			crm_err("Ignoring trailing characters in XML input.");
 			crm_err("Parsed %d characters of a possible %d.  Trailing text was: ...\'%20s\'",
-				lpc, (int)strlen(input), input+lpc);
+				(int)lpc, (int)max, input+lpc);
 		}
 	}
 	
@@ -2546,6 +2555,7 @@ calculate_xml_digest(crm_data_t *input, gboolean sort)
 	unsigned char *raw_digest = NULL;
 	crm_data_t *sorted = NULL;
 	char *buffer = NULL;
+	size_t buffer_len = 0;
 
 	if(sort) {
 		sorted = sorted_xml(input);
@@ -2553,13 +2563,14 @@ calculate_xml_digest(crm_data_t *input, gboolean sort)
 		sorted = copy_xml(input);
 	}
 	buffer = dump_xml_formatted(sorted);
-
-	CRM_CHECK(buffer != NULL && strlen(buffer) > 0,
+	buffer_len = strlen(buffer);
+	
+	CRM_CHECK(buffer != NULL && buffer_len > 0,
 		  free_xml(sorted); return NULL);
 
 	crm_malloc0(digest, (2 * digest_len + 1));
 	crm_malloc0(raw_digest, (digest_len + 1));
-	MD5((unsigned char *)buffer, strlen(buffer), raw_digest);
+	MD5((unsigned char *)buffer, buffer_len, raw_digest);
 	for(i = 0; i < digest_len; i++) {
  		sprintf(digest+(2*i), "%02x", raw_digest[i]);
  	}
