@@ -247,18 +247,12 @@ copy_in_properties(crm_data_t* target, const crm_data_t *src)
 			new_value = NULL;
 			incr_value = NULL;
 
-			/* do a quick check to decide if its worth
-			 *   constructing the various strings and
-			 *   performing string comparisions
-			 */
-			value_len = strlen(local_prop_value);
-			if(value_len > 2
-			   && local_prop_value[0] == local_prop_value[0]
-			   && local_prop_value[value_len-1] == '+'
-			   && local_prop_value[value_len-2] == '+') {
+			if(strstr(local_prop_value, "++") > local_prop_value) {
 				int old_int = 0;
 				const char *old_value = NULL;
-				incr_value=crm_concat(local_prop_name,"+",'+');
+				value_len = strlen(local_prop_value);
+				crm_malloc0(incr_value, value_len+2);
+				sprintf(incr_value, "%s++", local_prop_name);
 
 				if(safe_str_eq(local_prop_value, incr_value)) {
 					old_value = crm_element_value(
