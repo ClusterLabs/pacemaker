@@ -192,7 +192,7 @@ unpack_graph(crm_data_t *xml_graph)
 		CRM_CHECK(t_id != NULL, return NULL);
 		new_graph->id = crm_parse_int(t_id, "-1");
 
-		time = crm_element_value(xml_graph, "network-delay");
+		time = crm_element_value(xml_graph, "cluster-delay");
 		CRM_CHECK(time != NULL, return NULL);
 		new_graph->network_delay = crm_get_msec(time);
 		new_graph->transition_timeout = new_graph->network_delay;

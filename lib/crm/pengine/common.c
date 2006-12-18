@@ -67,7 +67,7 @@ pe_cluster_option pe_opts[] = {
 	{ "default-resource-stickiness", "default_resource_stickiness", "integer", NULL, "0", &check_number, "", NULL },
 	{ "default-resource-failure-stickiness", "default_resource_failure_stickiness", "integer", NULL, "0", &check_number, "", NULL },
 	{ "is-managed-default", "is_managed_default", "boolean", NULL, "true", &check_boolean, "Should the cluster start/stop resources as required", NULL },
-	{ "network-delay", "transition_idle_timeout", "time", NULL, "60s", &check_time, "Round trip delay over the network (excluding action execution)", "The \"correct\" value will depend on the speed and load of your network." },
+	{ "cluster-delay", "transition_idle_timeout", "time", NULL, "60s", &check_time, "Round trip delay over the network (excluding action execution)", "The \"correct\" value will depend on the speed and load of your network and cluster nodes." },
 	{ "default-action-timeout", "default_action_timeout", "time", NULL, "20s", &check_time, "How long to wait for actions to complete", NULL },
 	{ "stop-orphan-resources", "stop_orphan_resources", "boolean", NULL, "true", &check_boolean, "Should deleted resources be stopped", NULL },
 	{ "stop-orphan-actions", "stop_orphan_actions", "boolean", NULL, "true", &check_boolean, "Should deleted actions be cancelled", NULL },
