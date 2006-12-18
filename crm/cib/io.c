@@ -486,9 +486,6 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 	crm_data_t *saved_cib = the_cib;
 	const char *ignore_dtd = NULL;
 
-	long new_bytes, new_allocs, new_frees;
-	long old_bytes, old_allocs, old_frees;
-
 	crm_log_xml_debug_4(new_cib, "Attempting to activate CIB");
 
 	CRM_ASSERT(new_cib != saved_cib);
@@ -529,12 +526,18 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 		}
 		
 	} else if(per_action_cib && cib_writes_enabled && cib_status == cib_ok) {
+		crm_err("Per-action CIB");
 		write_cib_contents(the_cib);
 		
 	} else if(cib_writes_enabled && cib_status == cib_ok) {
 		crm_debug_2("Triggering CIB write");
 		G_main_set_trigger(cib_writer);
-
+	}
+#if CIB_MEM_STATS
+	/* this chews through a bunch of CPU */
+	if(the_cib == new_cib) {
+		long new_bytes, new_allocs, new_frees;
+		long old_bytes, old_allocs, old_frees;
 		crm_xml_nbytes(new_cib, &new_bytes, &new_allocs, &new_frees);
 		crm_xml_nbytes(saved_cib, &old_bytes, &old_allocs, &old_frees);
 
@@ -549,6 +552,7 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 			}
 		}
 	}
+#endif
 	
 	if(the_cib != saved_cib && the_cib != new_cib) {
 		CRM_DEV_ASSERT(error_code != cib_ok);
