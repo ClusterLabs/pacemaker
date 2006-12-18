@@ -708,11 +708,13 @@ safe_str_neq(const char *a, const char *b)
 }
 
 char *
-crm_strdup(const char *a)
+crm_strdup(const char *src)
 {
-	CRM_CHECK(a != NULL, return NULL);
-	return cl_strdup(a);
-} 
+	char *dup = NULL;
+	CRM_CHECK(src != NULL, return NULL);
+	crm_malloc0(dup, strlen(src) + 1);
+	return strcpy(dup, src);
+}
 
 static GHashTable *crm_uuid_cache = NULL;
 static GHashTable *crm_uname_cache = NULL;
