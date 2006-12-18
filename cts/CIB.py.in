@@ -17,7 +17,7 @@ class CIB:
     <cluster_property_set id="cib-bootstrap-options">
        <attributes>
         <nvpair id="cib-bootstrap-options-default-action-timeout"  name="default-action-timeout" value="10s"/>
-        <nvpair id="cib-bootstrap-options-network-delay"           name="network-delay"          value="60s"/>
+        <nvpair id="cib-bootstrap-options-cluster-delay"           name="cluster-delay"          value="60s"/>
         <nvpair id="cib-bootstrap-options-symmetric-cluster"       name="symmetric-cluster"      value="true"/>
         <nvpair id="cib-bootstrap-options-stop-orphan-resources"   name="stop-orphan-resources"  value="true"/>
         <nvpair id="cib-bootstrap-options-stop-orphan-actions"     name="stop-orphan-actions"    value="true"/>

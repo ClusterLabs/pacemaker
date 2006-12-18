@@ -687,11 +687,11 @@ stage8(pe_working_set_t *data_set)
 
 	transition_id++;
 	transition_id_s = crm_itoa(transition_id);
-	value = pe_pref(data_set->config_hash, "network-delay");
+	value = pe_pref(data_set->config_hash, "cluster-delay");
 	crm_debug_2("Creating transition graph %d.", transition_id);
 	
 	data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
-	crm_xml_add(data_set->graph, "network-delay", value);
+	crm_xml_add(data_set->graph, "cluster-delay", value);
 	crm_xml_add(data_set->graph, "transition_id", transition_id_s);
 	crm_free(transition_id_s);
 	
