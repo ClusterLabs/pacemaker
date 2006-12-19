@@ -257,86 +257,57 @@ extern void crm_log_message_adv(
 #define crm_str(x)    (const char*)(x?x:"<null>")
 
 #if CRM_USE_MALLOC
-#  define crm_malloc0(new_obj,length) do {				\
-		new_obj = malloc(length);				\
-		if(new_obj == NULL) {					\
-			crm_crit("Out of memory... exiting");		\
-			cl_flush_logs();				\
-			exit(1);					\
-		}							\
-		memset(new_obj, 0, length);				\
+#  define crm_malloc0(malloc_obj, length) do {				\
+		malloc_obj = malloc(length);				\
+		CRM_ASSERT(malloc_obj != NULL);				\
+		memset(malloc_obj, 0, length);				\
 	} while(0)
-#  define crm_realloc(new_obj,length)					\
+#  define crm_realloc(realloc_obj, length)				\
 	{								\
-		new_obj = realloc(new_obj, length);			\
-		if(new_obj == NULL) {					\
-			crm_crit("Out of memory... exiting");		\
-			cl_flush_logs();				\
-			exit(1);					\
-		}							\
+		realloc_obj = realloc(realloc_obj, length);			\
+		CRM_ASSERT(realloc_obj != NULL);			\
 	} while(0)
-#  define crm_free(x) if(x) { free(x); x=NULL; }
+#  define crm_free(free_obj) if(free_obj) { free(free_obj); free_obj=NULL; }
 #else
 #  if CRM_DEV_BUILD
-#    define crm_malloc0(new_obj,length)					\
-	{								\
-		if(new_obj) {						\
+#    define crm_malloc0(malloc_obj, length) do {			\
+		if(malloc_obj) {					\
 			crm_err("Potential memory leak:"		\
 				" %s at %s:%d not NULL before alloc.",	\
-				#new_obj, __FILE__, __LINE__);		\
-			cl_flush_logs();				\
-			abort();					\
+				#malloc_obj, __FILE__, __LINE__);	\
 		}							\
-		new_obj = cl_malloc(length);				\
-		if(new_obj == NULL) {					\
-			crm_crit("Out of memory... exiting");		\
-			cl_flush_logs();				\
-			abort();					\
-		}							\
-		memset(new_obj, 0, length);				\
+		malloc_obj = cl_malloc(length);				\
+		CRM_ASSERT(malloc_obj != NULL);				\
+		memset(malloc_obj, 0, length);				\
 	} while(0)
 /* it's not a memory leak to already have an object to realloc, that's
  * the usual case, however if it does have a value, it must have been
- * allocated by the same allocator! */ 
-#    define crm_realloc(new_obj,length) do {				\
-		if (new_obj != NULL) {					\
-			CRM_ASSERT(cl_is_allocated(new_obj) == 1);	\
+ * allocated by the same allocator!
+ */ 
+#    define crm_realloc(realloc_obj, length) do {			\
+		if (realloc_obj != NULL) {				\
+			CRM_ASSERT(cl_is_allocated(realloc_obj) == 1);	\
 		}							\
-		new_obj = cl_realloc(new_obj, length);			\
-		if(new_obj == NULL) {					\
-			crm_crit("Out of memory... exiting");		\
-			cl_flush_logs();				\
-			abort();					\
-		}							\
+		realloc_obj = cl_realloc(realloc_obj, length);		\
+		CRM_ASSERT(realloc_obj != NULL);			\
 	} while(0)
-#    define crm_free(x) if(x) {				\
-		CRM_ASSERT(cl_is_allocated(x) == 1);	\
-		cl_free(x);				\
-		x=NULL;					\
+#    define crm_free(free_obj) if(free_obj) {			\
+		CRM_ASSERT(cl_is_allocated(free_obj) == 1);	\
+		cl_free(free_obj);				\
+		free_obj=NULL;					\
 	}
 #  else
-#    define crm_malloc0(new_obj,length) do {				\
-		new_obj = cl_malloc(length);				\
-		if(new_obj == NULL) {					\
-			crm_crit("Out of memory... exiting");		\
-			cl_flush_logs();				\
-			abort();					\
-		}							\
-		memset(new_obj, 0, length);				\
+#    define crm_malloc0(malloc_obj, length) do {			\
+		malloc_obj = cl_malloc(length);				\
+		CRM_ASSERT(malloc_obj != NULL);				\
+		memset(malloc_obj, 0, length);				\
 	} while(0)
-#    define crm_realloc(new_obj,length) do {				\
-		new_obj = cl_realloc(new_obj, length);			\
-		if(new_obj == NULL) {					\
-			crm_crit("Out of memory... exiting");		\
-			cl_flush_logs();				\
-			abort();					\
-		}							\
+#    define crm_realloc(realloc_obj, length) do {			\
+		realloc_obj = cl_realloc(realloc_obj, length);		\
+		CRM_ASSERT(realloc_obj != NULL);			\
 	} while(0)
 	
-#    define crm_free(x) if(x) {				\
-		cl_free(x);				\
-		x=NULL;					\
-	}
+#    define crm_free(free_obj) if(free_obj) { cl_free(free_obj); free_obj=NULL; }
 #  endif
 #endif
 
