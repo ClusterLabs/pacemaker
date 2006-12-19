@@ -296,6 +296,37 @@ add_node_copy(crm_data_t *parent, const crm_data_t *src_node)
 	return child;
 }
 
+
+int
+add_node_nocopy(crm_data_t *parent, const char *name, crm_data_t *child)
+{
+
+	int next = 0;
+	crm_validate_data(parent);
+	crm_validate_data(child);	
+
+	if(name == NULL) {
+		name = crm_element_name(child);
+	}
+	CRM_ASSERT(name != NULL && name[0] != 0);
+	
+	if (parent->nfields >= parent->nalloc
+		&& ha_msg_expand(parent) != HA_OK ){
+		crm_err("Parent expansion failed");
+		return HA_FAIL;
+	}
+
+	next = parent->nfields;
+	parent->names[next] = crm_strdup(name);
+	parent->nlens[next] = strlen(name);
+	parent->values[next] = child;
+	parent->vlens[next] = sizeof(struct ha_msg);
+	parent->types[next] = FT_UNCOMPRESS;
+	parent->nfields++;	
+	
+	return HA_OK;
+}
+
 const char *
 crm_xml_add(crm_data_t* node, const char *name, const char *value)
 {
@@ -1392,7 +1423,6 @@ drop_comments(const char *input, size_t *offset, size_t max)
 	return FALSE;
 }
 
-
 crm_data_t*
 parse_xml(const char *input, size_t *offset)
 {
@@ -1461,12 +1491,12 @@ parse_xml(const char *input, size_t *offset)
 						error = "error parsing child";
 						break;
 					} 
-					ha_msg_addstruct_compress(
-						new_obj, crm_element_name(child), child);
+					add_node_nocopy(new_obj, NULL, child);
+/* 					ha_msg_addstruct_compress( */
+/* 						new_obj, crm_element_name(child), child); */
 					
 					crm_debug_4("Finished parsing child: %s",
 						    crm_element_name(child));
-					ha_msg_del(child);
 					if(our_input[lpc] == '<') {
 						lpc--; /* allow the '<' to be processed */
 					}
@@ -1729,16 +1759,13 @@ diff_xml_object(crm_data_t *old, crm_data_t *new, gboolean suppress)
 	if(tmp1 != NULL) {
 		if(suppress && can_prune_leaf(tmp1)) {
 			ha_msg_del(tmp1);
-			tmp1 = NULL;
 
 		} else {
 			diff = create_xml_node(NULL, "diff");
 			removed = create_xml_node(diff, "diff-removed");
 			added = create_xml_node(diff, "diff-added");
-			add_node_copy(removed, tmp1);
+			add_node_nocopy(removed, NULL, tmp1);
 		}
-		
-		free_xml(tmp1);
 	}
 	
 	tmp1 = subtract_xml_object(new, old, "added:top");
@@ -1758,8 +1785,7 @@ diff_xml_object(crm_data_t *old, crm_data_t *new, gboolean suppress)
 		if(added == NULL) {
 			added = create_xml_node(diff, "diff-added");
 		}
-		add_node_copy(added, tmp1);
-		free_xml(tmp1);
+		add_node_nocopy(added, NULL, tmp1);
 	}
 
 	return diff;
@@ -1949,8 +1975,7 @@ subtract_xml_object(crm_data_t *left, crm_data_t *right, const char *marker)
 			left_child, right_child, marker);
 		if(child_diff != NULL) {
 			differences = TRUE;
-			add_node_copy(diff, child_diff);
-			free_xml(child_diff);
+			add_node_nocopy(diff, NULL, child_diff);
 		}
 		
 		);

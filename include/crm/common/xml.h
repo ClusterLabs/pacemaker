@@ -177,6 +177,8 @@ extern crm_data_t *copy_xml(const crm_data_t *src_node);
 extern crm_data_t *add_node_copy(
 	crm_data_t *new_parent, const crm_data_t *xml_node);
 
+extern int add_node_nocopy(crm_data_t *parent, const char *name, crm_data_t *child);
+
 
 /*
  * XML I/O Functions
