@@ -100,24 +100,12 @@ extern const char *get_xml_attr_nested(crm_data_t *parent,
 				       const char **node_path, int length,
 				       const char *attr_name, gboolean error);
 
-/*
- * Free the XML "stuff" associated with a_node
- *
- * If a_node is part of another XML blob, barf.
- *   (Should be using free_xml_from_parent)
- *
- * Otherwise, free everything recursivly
- *
- * Wont barf on NULL.
- *
- */
-extern void free_xml_fn(crm_data_t *a_node);
-#if 1
-#  define free_xml(xml_obj) free_xml_fn(xml_obj); xml_obj = NULL
-#else
-#  define free_xml(xml_obj) xml_obj = NULL
-#endif
-
+#define free_xml(a_node) do {				\
+		if(a_node != NULL) {			\
+			crm_validate_data(a_node);	\
+			ha_msg_del(a_node);		\
+		}					\
+	} while(0)
 
 void free_xml_from_parent(crm_data_t *parent, crm_data_t *a_node);
 #define zap_xml_from_parent(parent, xml_obj) free_xml_from_parent(parent, xml_obj); xml_obj = NULL
@@ -231,8 +219,6 @@ extern int add_xml_object(
 
 extern void xml_remove_prop(crm_data_t *obj, const char *name);
 
-extern void crm_set_element_parent(crm_data_t *data, crm_data_t *parent);
-
 extern gboolean replace_xml_child(
 	crm_data_t *parent, crm_data_t *child, crm_data_t *update, gboolean delete_only);
 
@@ -252,8 +238,6 @@ extern char *crm_element_value_copy(const crm_data_t *data, const char *name);
 extern const char *crm_element_name(const crm_data_t *data);
 
 extern void xml_validate(const crm_data_t *root);
-
-extern void crm_update_parents(crm_data_t *root);
 
 extern gboolean xml_has_children(crm_data_t *root);	 		
 
@@ -324,14 +308,13 @@ extern gboolean validate_with_dtd(
 		crm_debug_5("Searching %d fields", parent->nfields);	\
 		for (__counter = 0; __counter < parent->nfields; __counter++) { \
 			crm_debug_5("Searching field %d", __counter);	\
+			prop_name = parent->names[__counter];		\
 			if(parent->types[__counter] != FT_STRING) {	\
 				continue;				\
-			} else if(safe_str_eq(parent->names[__counter], F_XML_TAGNAME)) { \
-				continue;				\
-			} else if(safe_str_eq(parent->names[__counter], F_XML_PARENT)) { \
+			} else if(prop_name[0] == '_'			\
+				  && prop_name[1] == '_') {		\
 				continue;				\
 			}						\
-			prop_name = parent->names[__counter];		\
 			prop_value = parent->values[__counter];		\
 			code;						\
 		}							\

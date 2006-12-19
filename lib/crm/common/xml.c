@@ -292,7 +292,6 @@ add_node_copy(crm_data_t *parent, const crm_data_t *src_node)
 		       add_node_copy(child, src_child);
 		);
 	
-	crm_set_element_parent(child, parent);
 	return child;
 }
 
@@ -401,7 +400,6 @@ create_xml_node(crm_data_t *parent, const char *name)
 		CRM_CHECK(ret_value != NULL, return NULL);
 		
 		crm_xml_add(ret_value, F_XML_TAGNAME, name);
-		crm_set_element_parent(ret_value, parent);
 		crm_validate_data(ret_value);
 		if(parent) {
 			crm_validate_data(parent);
@@ -431,28 +429,6 @@ free_xml_from_parent(crm_data_t *parent, crm_data_t *a_node)
 	crm_validate_data(parent);
 	cl_msg_remove_value(parent, a_node);	
 	crm_validate_data(parent);
-}
-
-
-void
-free_xml_fn(crm_data_t *a_node)
-{
-        if(a_node == NULL) {
-		; /*  nothing to do */
-	} else {
-		int has_parent = 0;
-		crm_validate_data(a_node);
-		ha_msg_value_int(a_node, F_XML_PARENT, &has_parent);
-
-		/* there is no way in hell we should be deleting anything
-		 * with a parent and without the parent knowning
-		 */
-		CRM_CHECK(has_parent == 0, return);
-		crm_validate_data(a_node);
-		ha_msg_del(a_node);
-	}
-	
-	return;
 }
 
 void
@@ -488,7 +464,6 @@ string2xml(const char *input)
 {
 	crm_data_t *output = parse_xml(input, NULL);
 	if(output != NULL) {
-		crm_update_parents(output);
 		crm_validate_data(output);
 	}
 	return output;
@@ -753,7 +728,6 @@ add_message_xml(HA_Message *msg, const char *field, const crm_data_t *xml)
 	crm_validate_data(msg);
 	CRM_CHECK(field != NULL, return FALSE);
 	ha_msg_addstruct_compress(msg, field, xml);
-	crm_update_parents(msg);
 	return TRUE;
 }
 
@@ -869,9 +843,6 @@ log_data_element(
 		} else if(safe_str_eq(F_XML_TAGNAME, prop_name)) {
 			continue;
 
-		} else if(safe_str_eq(F_XML_PARENT, prop_name)) {
-			continue;
-
 		} else if(hidden != NULL
 			  && prop_name[0] != 0
 			  && strstr(hidden, prop_name) != NULL) {
@@ -969,8 +940,6 @@ dump_data_element(
 	xml_prop_iter(data, prop_name, prop_value,
 			if(safe_str_eq(F_XML_TAGNAME, prop_name)) {
 				continue;
-			} else if(safe_str_eq(F_XML_PARENT, prop_name)) {
-				continue;
 			}
 			crm_debug_5("Dumping <%s %s=\"%s\"...",
 			  name, prop_name, prop_value);
@@ -1051,19 +1020,6 @@ xml_validate(const crm_data_t *xml_root)
 	}
 }
 
-
-void
-crm_set_element_parent(crm_data_t *data, crm_data_t *parent)
-{
-	crm_validate_data(data);
-	if(parent != NULL) {
-		ha_msg_mod_int(data, F_XML_PARENT, 1);
-		
-	} else {
-		ha_msg_mod_int(data, F_XML_PARENT, 0);
-	}
-}
-
 const char *
 crm_element_value(const crm_data_t *data, const char *name)
 {
@@ -1108,19 +1064,6 @@ xml_remove_prop(crm_data_t *obj, const char *name)
 		cl_msg_remove(obj, name);
 	}
 }
-
-void
-crm_update_parents(crm_data_t *xml_root)
-{
-	crm_validate_data(xml_root);
-	xml_child_iter(
-		xml_root, a_child, 
-		crm_set_element_parent(a_child, xml_root);
-		crm_update_parents(a_child);
-		);
-}
-
-
 
 int
 get_tag_name(const char *input, size_t offset, size_t max) 

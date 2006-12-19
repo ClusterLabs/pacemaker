@@ -37,7 +37,6 @@
 /*---- Common tags/attrs */
 #define XML_DIFF_MARKER			"__crm_diff_marker__"
 #define XML_ATTR_TAGNAME		F_XML_TAGNAME
-#define XML_ATTR_PARENT			F_XML_PARENT
 #define XML_TAG_CIB			"cib"
 #define XML_TAG_FAILED			"failed"
 
