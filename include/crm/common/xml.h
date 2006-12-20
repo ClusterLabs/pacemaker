@@ -239,7 +239,7 @@ extern const char *crm_element_name(const crm_data_t *data);
 
 extern void xml_validate(const crm_data_t *root);
 
-extern gboolean xml_has_children(crm_data_t *root);	 		
+extern gboolean xml_has_children(const crm_data_t *root);	 		
 
 extern char *calculate_xml_digest(crm_data_t *local_cib, gboolean sort);
 
