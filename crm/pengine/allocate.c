@@ -128,7 +128,8 @@ check_rsc_parameters(resource_t *rsc, node_t *node, crm_data_t *rsc_entry,
 	for(; attr_lpc < DIMOF(attr_list); attr_lpc++) {
 		value = crm_element_value(rsc->xml, attr_list[attr_lpc]);
 		old_value = crm_element_value(rsc_entry, attr_list[attr_lpc]);
-		if(safe_str_eq(value, old_value)) {
+		if(value == old_value /* ie. NULL */
+		   || crm_str_eq(value, old_value, TRUE)) {
 			continue;
 		}
 		
