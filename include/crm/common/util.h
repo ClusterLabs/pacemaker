@@ -129,7 +129,9 @@ extern gboolean decode_op_key(
 
 extern void filter_action_parameters(crm_data_t *param_set, const char *version);
 
-extern gboolean safe_str_eq(const char *a, const char *b);
+#define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
+
+extern gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
 extern gboolean safe_str_neq(const char *a, const char *b);
 extern int crm_parse_int(const char *text, const char *default_text);
 extern int crm_int_helper(const char *text, char **end_text);
