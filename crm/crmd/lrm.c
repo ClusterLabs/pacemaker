@@ -1057,7 +1057,8 @@ do_lrm_invoke(long long action,
 
 		} else if(rsc == NULL) {
 			lrm_op_t* op = NULL;
-			crm_err("Not creating resource for a stop event");
+			crm_err("Not creating resource for a stop event: %s",
+				ID(input->xml));
 			crm_log_xml_warn(input->xml, "Bad command");
 
 			op = construct_op(input->xml, ID(xml_rsc), operation);
