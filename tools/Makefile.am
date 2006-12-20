@@ -31,9 +31,9 @@ halibdir		= $(libdir)/@HB_PKG@
 gliblib			= @GLIBLIB@
 
 habin_PROGRAMS		= cl_status cl_respawn 
-sbin_PROGRAMS		= attrd_updater drbd-peer-outdater
+sbin_PROGRAMS		= attrd_updater
 halib_SCRIPTS		= haresources2cib.py
-halib_PROGRAMS		= attrd	pingd dopd
+halib_PROGRAMS		= attrd	pingd dopd drbd-peer-outdater
 sbin_SCRIPTS		= ocf-tester
 
 ## SOURCES
