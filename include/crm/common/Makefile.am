@@ -18,6 +18,6 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-includedir=$(base_includedir)/heartbeat
+includedir=$(base_includedir)/heartbeat/crm/common
 
 include_HEADERS = xml.h ipc.h msg.h ctrl.h util.h iso8601.h
