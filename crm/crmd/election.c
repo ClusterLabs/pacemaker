@@ -46,7 +46,7 @@ do_election_vote(long long action,
 	gboolean not_voting = FALSE;
 	HA_Message *vote = NULL;
 	
-	/* dont vote if we're in one of these states or wanting to shut down */
+	/* don't vote if we're in one of these states or wanting to shut down */
 	switch(cur_state) {
 		case S_RECOVERY:
 		case S_STOPPING:
@@ -217,7 +217,7 @@ do_election_count_vote(long long action,
 		fsa_membership_copy->members, vote_from);
 	
 	if(your_node == NULL) {
-		crm_debug("Election ignore: The other side doesnt exist in CCM.");
+		crm_debug("Election ignore: The other side doesn't exist in CCM.");
 		return I_NULL;
 	}	
 	
@@ -252,7 +252,7 @@ do_election_count_vote(long long action,
 	}
 	
 	if(vote_from == NULL || crm_str_eq(vote_from, fsa_our_uname)) {
-		/* dont count our own vote */
+		/* don't count our own vote */
 		crm_info("Election ignore: our %s (%s)", op,crm_str(vote_from));
 		return I_NULL;
 
@@ -264,7 +264,7 @@ do_election_count_vote(long long action,
 	crm_info("Election check: %s from %s", op, vote_from);
 	if(our_node == NULL
 		|| fsa_membership_copy->last_event == OC_EV_MS_EVICTED) {
-		crm_info("Election fail: we dont exist in CCM");
+		crm_info("Election fail: we don't exist in CCM");
 		we_loose = TRUE;
 
 	} else if(compare_version(your_version, CRM_FEATURE_SET) < 0) {
