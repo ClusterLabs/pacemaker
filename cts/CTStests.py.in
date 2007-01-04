@@ -1596,7 +1596,7 @@ class ResourceRecover(CTSTest):
             return self.skipped()
 
         self.rid = self.CM.Env.RandomGen.choice(resourcelist)
-        self.CM.log("...resource %s on %s" % (self.rid, node))
+        self.CM.debug("Shooting %s..." % self.rid)
 
         pats = []
         pats.append("crmd.* Performing op=%s_start_0" % self.rid)
