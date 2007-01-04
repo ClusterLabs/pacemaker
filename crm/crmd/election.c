@@ -216,6 +216,11 @@ do_election_count_vote(long long action,
 	your_node = (oc_node_t*)g_hash_table_lookup(
 		fsa_membership_copy->members, vote_from);
 	
+	if(your_node == NULL) {
+		crm_debug("Election ignore: The other side doesnt exist in CCM.");
+		return I_NULL;
+	}	
+	
  	if(voted == NULL) {
 		crm_debug("Created voted hash");
  		voted = g_hash_table_new_full(
@@ -224,41 +229,34 @@ do_election_count_vote(long long action,
  	}
 
 	ha_msg_value_int(vote->msg, F_CRM_ELECTION_ID, &election_id);
+	crm_debug("Election %d, owner: %s", election_id, election_owner);
 	
 	/* update the list of nodes that have voted */
-	if(your_node != NULL) {
-		char *op_copy = NULL;
-		char *uname_copy = NULL;
-		if(safe_str_eq(op, CRM_OP_NOVOTE)) {
-			if(safe_str_neq(fsa_our_uuid, election_owner)) {
-				crm_err("Recieved %s for %s (we are %s)",
-					op, election_owner, fsa_our_uuid);
-			}	
-		}
-		crm_debug("Election owner: %s", election_owner);
-		if(safe_str_eq(fsa_our_uuid, election_owner)) {
-			if(election_id != current_election_id) {
-				crm_debug("Ignore old novote from %s: %d vs. %d",
-					  your_node->node_uname,
-					  election_id, current_election_id);
-			}
+	if(crm_str_eq(fsa_our_uuid, election_owner)) {
+		if(election_id == current_election_id) {
+			char *uname_copy = NULL;
+			char *op_copy = crm_strdup(op);
 			uname_copy = crm_strdup(your_node->node_uname);
-			op_copy = crm_strdup(op);
 			g_hash_table_replace(voted, uname_copy, op_copy);
-			crm_info("Updated voted hash for %s to %s", uname_copy, op_copy);
+			crm_info("Updated voted hash for %s to %s",
+				 your_node->node_uname, op);
+		} else {
+			crm_debug("Ignore old '%s' from %s: %d vs. %d",
+				  op, your_node->node_uname,
+				  election_id, current_election_id);
+			return I_NULL;
 		}
-		
+			
 	} else {
-		crm_debug("Election ignore: The other side doesnt exist in CCM.");
-		return I_NULL;
+		CRM_CHECK(crm_str_neq(op, CRM_OP_NOVOTE), return I_NULL);
 	}
 	
-	if(vote_from == NULL || safe_str_eq(vote_from, fsa_our_uname)) {
+	if(vote_from == NULL || crm_str_eq(vote_from, fsa_our_uname)) {
 		/* dont count our own vote */
-		crm_info("Election ignore: our %s (%s)", op, crm_str(vote_from));
+		crm_info("Election ignore: our %s (%s)", op,crm_str(vote_from));
 		return I_NULL;
 
-	} else if(safe_str_eq(op, CRM_OP_NOVOTE)) {
+	} else if(crm_str_eq(op, CRM_OP_NOVOTE)) {
 		crm_info("Election ignore: no-vote from %s", vote_from);
 		return I_NULL;
 	}
