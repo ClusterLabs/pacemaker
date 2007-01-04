@@ -344,8 +344,6 @@ class CtsLab(UserDict):
             self["reset"] = Stonith()
         if not self.has_key("CMclass"):
             self["CMclass"] = HeartbeatCM
-        if not self.has_key("HAdir"):
-            self["HAdir"] = "@sysconfdir@/ha.d"
         if not self.has_key("LogFileName"):
             self["LogFileName"] = "/var/log/ha-log"
         if not self.has_key("logfacility"):
@@ -501,7 +499,7 @@ if __name__ == '__main__':
     from CTS import Scenario, InitClusterManager, PingFest, PacketLoss, BasicSanityCheck
     import CM_hb
 
-    HAdir = "/etc/ha.d"
+    HAdir = "@sysconfdir@/ha.d"
     LogFile = "/var/log/ha-log-local7"
     DoStonith = 1
     DoStandby = 1
