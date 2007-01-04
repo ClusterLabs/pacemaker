@@ -497,6 +497,7 @@ build_operation_update(
 	crm_data_t *xml_rsc, lrm_op_t *op, const char *src, int lpc)
 {
 	char *fail_state = NULL;
+	const char *task = NULL;
 	const char *state = NULL;
 	crm_data_t *xml_op = NULL;
 	char *op_id = NULL;
@@ -536,8 +537,14 @@ build_operation_update(
 			 caller_version);
 	}
 	crm_debug_3("DC version: %s", caller_version);
-	
-	if(safe_str_eq(op->op_type, CRMD_ACTION_NOTIFY)) {
+
+	task = op->op_type;
+	if(op->op_status == LRM_OP_DONE && crm_str_eq(task, "reload", TRUE)) {
+		/* remap successful reloads to starts */
+		task = CRMD_ACTION_START;
+	}
+
+	if(safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
 		const char *n_type = g_hash_table_lookup(
 			op->params, crm_meta_name("notify_type"));
 		const char *n_task = g_hash_table_lookup(
@@ -559,7 +566,7 @@ build_operation_update(
 		op->rc = 0;
 		
 	} else {
-		op_id = generate_op_key(op->rsc_id, op->op_type, op->interval);
+		op_id = generate_op_key(op->rsc_id, task, op->interval);
 	}
 
 	/* Handle recurring ops - infer last op_status */
@@ -608,7 +615,7 @@ build_operation_update(
 	crm_xml_add(xml_op, XML_ATTR_ID, op_id);
 	crm_free(op_id);
 
-	crm_xml_add(xml_op,  XML_LRM_ATTR_TASK,   op->op_type);
+	crm_xml_add(xml_op,  XML_LRM_ATTR_TASK,   task);
 	crm_xml_add(xml_op,  XML_ATTR_ORIGIN, src);
 	
 	if(op->user_data == NULL) {
@@ -638,22 +645,22 @@ build_operation_update(
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
 			crm_debug("Resource action %s/%s %s: %d",
-				  op->rsc_id, op->op_type,
+				  op->rsc_id, task,
 				  op_status2text(op->op_status), op->rc);
 			break;
 		case LRM_OP_DONE:
-			if(safe_str_eq(CRMD_ACTION_START, op->op_type)) {
+			if(crm_str_eq(CRMD_ACTION_START, task, TRUE)) {
 				state = CRMD_ACTION_STARTED;
 
-			} else if(safe_str_eq(CRMD_ACTION_STOP, op->op_type)) {
+			} else if(crm_str_eq(CRMD_ACTION_STOP, task, TRUE)) {
 				state = CRMD_ACTION_STOPPED;
 				
-			} else if(safe_str_eq(CRMD_ACTION_MON, op->op_type)) {
+			} else if(crm_str_eq(CRMD_ACTION_MON, task, TRUE)) {
 				state = CRMD_ACTION_STARTED;
 		
 			} else {
 				crm_debug("Using status \"%s\" for op \"%s\"",
-					  CRMD_ACTION_GENERIC_OK, op->op_type);
+					  CRMD_ACTION_GENERIC_OK, task);
 				state = CRMD_ACTION_GENERIC_OK;
 			}	
 			break;
