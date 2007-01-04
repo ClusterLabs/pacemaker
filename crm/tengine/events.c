@@ -204,7 +204,6 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 	
 	char *task     = NULL;
 	char *rsc_id   = NULL;
-	const char *on_node  = event_node;
 	const char *on_uuid  = event_node;
 	int interval = 0;
 
@@ -220,12 +219,11 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 		  return);
 	CRM_CHECK(task != NULL, crm_free(rsc_id); return);
 	CRM_CHECK(rsc_id != NULL, crm_free(task); return);
-	/* CRM_CHECK(on_node != NULL, return); */
 	
 	if(interval > 0) {
 		attr_name = crm_concat("fail-count", rsc_id, '-');
 		crm_warn("Updating failcount for %s on %s after failed %s: rc=%d",
-			 rsc_id, on_node, task, rc);
+			 rsc_id, on_uuid, task, rc);
 	
 		update_attr(te_cib_conn, cib_none, XML_CIB_TAG_STATUS,
 			    on_uuid, NULL,NULL, attr_name,
