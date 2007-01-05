@@ -232,7 +232,7 @@ do_election_count_vote(long long action,
 	crm_debug("Election %d, owner: %s", election_id, election_owner);
 	
 	/* update the list of nodes that have voted */
-	if(crm_str_eq(fsa_our_uuid, election_owner)) {
+	if(crm_str_eq(fsa_our_uuid, election_owner, TRUE)) {
 		if(election_id == current_election_id) {
 			char *uname_copy = NULL;
 			char *op_copy = crm_strdup(op);
@@ -251,12 +251,12 @@ do_election_count_vote(long long action,
 		CRM_CHECK(crm_str_neq(op, CRM_OP_NOVOTE), return I_NULL);
 	}
 	
-	if(vote_from == NULL || crm_str_eq(vote_from, fsa_our_uname)) {
+	if(vote_from == NULL || crm_str_eq(vote_from, fsa_our_uname, TRUE)) {
 		/* don't count our own vote */
 		crm_info("Election ignore: our %s (%s)", op,crm_str(vote_from));
 		return I_NULL;
 
-	} else if(crm_str_eq(op, CRM_OP_NOVOTE)) {
+	} else if(crm_str_eq(op, CRM_OP_NOVOTE, TRUE)) {
 		crm_info("Election ignore: no-vote from %s", vote_from);
 		return I_NULL;
 	}
