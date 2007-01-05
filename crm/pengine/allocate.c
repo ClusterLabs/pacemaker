@@ -37,6 +37,7 @@
 #include <lib/crm/pengine/utils.h>
 
 void set_alloc_actions(pe_working_set_t *data_set);
+gboolean migrate_madness(pe_working_set_t *data_set);
 
 resource_alloc_functions_t resource_class_alloc_functions[] = {
 	{
@@ -672,9 +673,109 @@ stage7(pe_working_set_t *data_set)
 		);
 
 	update_action_states(data_set->actions);
+	migrate_madness(data_set);
 
 	return TRUE;
 }
+
+
+gboolean
+migrate_madness(pe_working_set_t *data_set)
+{
+	const char *value = NULL;
+
+	slist_iter(
+		rsc, resource_t, data_set->resources, lpc,
+
+		if(rsc->parent != NULL) {
+			continue;
+		}
+	
+		value = g_hash_table_lookup(rsc->meta, "allow_migrate");
+		if(crm_is_true(value) == FALSE) {
+			continue;
+		}
+
+		rsc->can_migrate = TRUE;
+		
+		if(rsc->variant == pe_native
+		   && rsc->next_role == RSC_ROLE_STARTED
+		   && rsc->can_migrate
+		   && rsc->is_managed
+		   && rsc->failed == FALSE
+		   && rsc->start_pending == FALSE
+		   && g_list_length(rsc->running_on) == 1) {
+			char *key = NULL;
+			action_t *stop = NULL;
+			action_t *start = NULL;
+			action_t *other = NULL;
+			action_t *action = NULL;
+			GListPtr action_list = NULL;
+			crm_debug_4("Processing actions for rsc=%s", rsc->id);
+
+			/* does anyone depend on us?
+			 * check start action first
+			 */
+			key = start_key(rsc);
+			action_list = find_actions(rsc->actions, key, NULL);
+			CRM_CHECK(action_list != NULL, continue);
+			action = action_list->data;
+			crm_free(key);
+
+			if(action->pseudo
+			   || action->optional
+			   || action->runnable == FALSE) {
+				crm_debug_3("Skipping: start");
+				continue;
+			}
+
+			slist_iter(other_w, action_wrapper_t, action->actions_after, lpc,
+				   other = other_w->action;
+				   if(other->rsc != NULL
+				      && other->rsc != action->rsc) {
+					   crm_debug_2("Skipping: start depends");
+					   goto skip;
+				   }
+				);
+
+			start = action;
+			
+			/* does anyone depend on us? (cont)
+			 * check stop action
+			 */
+			key = stop_key(rsc);
+			action_list = find_actions(rsc->actions, key, NULL);
+			CRM_CHECK(action_list != NULL, continue);
+			action = action_list->data;
+			crm_free(key);
+
+			if(action->pseudo
+			   || action->optional
+			   || action->runnable == FALSE) {
+				crm_debug_3("Skipping: stop");
+				continue;
+			}
+			slist_iter(other_w, action_wrapper_t, action->actions_before, lpc,
+				   other = other_w->action;
+				   if(other->rsc != NULL
+				      && other->rsc != action->rsc) {
+					   crm_debug_2("Skipping: stop depends");
+					   goto skip;
+				   }
+				);
+			stop = action;
+
+			crm_err("Do migrate: %s", rsc->id);
+			stop->task = "migrate";
+			start->task = "migrate";
+			add_hash_param(stop->extra, "migrate-to", start->node->details->uname);
+			add_hash_param(start->extra, "migrate-from", stop->node->details->uname);
+		}
+	  skip:
+		);
+	return TRUE;
+}
+
 
 int transition_id = -1;
 /*
