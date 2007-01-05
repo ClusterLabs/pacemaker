@@ -248,7 +248,7 @@ do_election_count_vote(long long action,
 		}
 			
 	} else {
-		CRM_CHECK(crm_str_neq(op, CRM_OP_NOVOTE), return I_NULL);
+		CRM_CHECK(safe_str_neq(op, CRM_OP_NOVOTE), return I_NULL);
 	}
 	
 	if(vote_from == NULL || crm_str_eq(vote_from, fsa_our_uname, TRUE)) {
