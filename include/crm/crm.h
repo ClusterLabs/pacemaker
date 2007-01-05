@@ -159,6 +159,9 @@ extern gboolean crm_assert_failed;
 #define CRMD_ACTION_DELETE		"delete"
 #define CRMD_ACTION_CANCEL		"cancel"
 
+#define CRMD_ACTION_MIGRATE_TO		"migrate_to"
+#define CRMD_ACTION_MIGRATE_FROM	"migrate_from"
+
 #define CRMD_ACTION_START		"start"
 #define CRMD_ACTION_STARTED		"running"
 #define CRMD_ACTION_START_FAIL		"start_failed"

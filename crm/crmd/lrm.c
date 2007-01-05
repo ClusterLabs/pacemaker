@@ -1339,15 +1339,17 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 		}
 	}
 
+	op = construct_op(msg, rsc->id, operation);
+
 	/* stop the monitor before stopping the resource */
-	if(safe_str_eq(operation, CRMD_ACTION_STOP)) {
+	if(crm_str_eq(operation, CRMD_ACTION_STOP, TRUE)
+	   || crm_str_eq(operation, CRMD_ACTION_MIGRATE_TO, TRUE)) {
 		g_hash_table_foreach(monitors, stop_recurring_action, rsc);
 		g_hash_table_foreach_remove(
 			monitors, remove_recurring_action, rsc);
 	}
 	
 	/* now do the op */
-	op = construct_op(msg, rsc->id, operation);
 	crm_info("Performing op=%s_%s_%d key=%s)",
 		 rsc->id, operation, op->interval, transition);
 
@@ -1377,7 +1379,6 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 	}
 
 	g_hash_table_replace(resources,crm_strdup(rsc->id), crm_strdup(op_id));
-
 	call_id = rsc->ops->perform_op(rsc, op);
 
 	if(call_id <= 0) {

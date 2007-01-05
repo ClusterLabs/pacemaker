@@ -729,9 +729,10 @@ migrate_madness(pe_working_set_t *data_set)
 				continue;
 			}
 
-			slist_iter(other_w, action_wrapper_t, action->actions_after, lpc,
+			slist_iter(other_w, action_wrapper_t, action->actions_before, lpc,
 				   other = other_w->action;
-				   if(other->rsc != NULL
+				   if(other->optional == FALSE
+				      && other->rsc != NULL
 				      && other->rsc != action->rsc) {
 					   crm_debug_2("Skipping: start depends");
 					   goto skip;
@@ -755,9 +756,10 @@ migrate_madness(pe_working_set_t *data_set)
 				crm_debug_3("Skipping: stop");
 				continue;
 			}
-			slist_iter(other_w, action_wrapper_t, action->actions_before, lpc,
+			slist_iter(other_w, action_wrapper_t, action->actions_after, lpc,
 				   other = other_w->action;
-				   if(other->rsc != NULL
+				   if(other->optional == FALSE
+				      && other->rsc != NULL
 				      && other->rsc != action->rsc) {
 					   crm_debug_2("Skipping: stop depends");
 					   goto skip;
@@ -766,16 +768,20 @@ migrate_madness(pe_working_set_t *data_set)
 			stop = action;
 
 			crm_err("Do migrate: %s", rsc->id);
-			stop->task = "migrate";
-			start->task = "migrate";
-			add_hash_param(stop->extra, "migrate-to", start->node->details->uname);
-			add_hash_param(start->extra, "migrate-from", stop->node->details->uname);
+			crm_free(stop->uuid);
+			stop->task = CRMD_ACTION_MIGRATE_TO;
+			stop->uuid = generate_op_key(rsc->id, stop->task, 0);
+			add_hash_param(stop->meta, stop->task, start->node->details->uname);
+
+			crm_free(start->uuid);
+			start->task = CRMD_ACTION_MIGRATE_FROM;
+			start->uuid = generate_op_key(rsc->id, start->task, 0);
+			add_hash_param(start->meta, start->task, stop->node->details->uname);
 		}
 	  skip:
 		);
 	return TRUE;
 }
-
 
 int transition_id = -1;
 /*
