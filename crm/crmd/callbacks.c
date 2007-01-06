@@ -602,7 +602,7 @@ crmd_ccm_msg_callback(
 		register_fsa_input_adv(
 			C_CCM_CALLBACK, I_CCM_EVENT, event_data,
 			trigger_transition?A_TE_CANCEL:A_NOTHING,
-			FALSE, __FUNCTION__);
+			TRUE, __FUNCTION__);
 		
 		if (event_data->oc) {
 			crm_free(event_data->oc);
