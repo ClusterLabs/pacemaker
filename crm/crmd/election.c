@@ -84,6 +84,10 @@ do_election_vote(long long action,
 	ha_msg_add_int(vote, F_CRM_ELECTION_ID, current_election_id);
 
 	send_request(vote, NULL);
+	crm_debug("Destroying voted hash");
+	g_hash_table_destroy(voted);
+	voted = NULL;
+	
 	if(cur_state == S_ELECTION || cur_state == S_RELEASE_DC) {
 		crm_timer_start(election_timeout);		
 
