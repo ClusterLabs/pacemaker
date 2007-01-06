@@ -777,6 +777,7 @@ migrate_madness(pe_working_set_t *data_set)
 			start->task = CRMD_ACTION_MIGRATE_FROM;
 			start->uuid = generate_op_key(rsc->id, start->task, 0);
 			add_hash_param(start->meta, start->task, stop->node->details->uname);
+			add_hash_param(start->meta, CRMD_ACTION_MIGRATE_FROM"_uuid", stop->node->details->id);
 		}
 	  skip:
 		);

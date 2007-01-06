@@ -678,6 +678,7 @@ process_orphan_resource(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *d
 static void
 process_rsc_state(resource_t *rsc, node_t *node,
 		  enum action_fail_response on_fail,
+		  crm_data_t *migrate_op,
 		  pe_working_set_t *data_set) 
 {
 	int fail_count = 0;
@@ -685,6 +686,15 @@ process_rsc_state(resource_t *rsc, node_t *node,
 	const char *value = NULL;
 	GHashTable *meta_hash = NULL;
 
+	if(on_fail == action_migrate_failure) {
+		node_t *from = NULL;
+		const char *uuid = NULL;
+		uuid = crm_element_value(migrate_op, CRMD_ACTION_MIGRATE_FROM);
+		from = pe_find_node_id(data_set->nodes, uuid);
+		process_rsc_state(rsc, from, action_fail_recover,NULL,data_set);
+		on_fail = action_fail_recover;
+	}
+	
 	crm_debug_2("Resource %s is %s on %s",
 		    rsc->id, role2text(rsc->role),
 		    node->details->uname);
@@ -867,6 +877,8 @@ unpack_lrm_rsc_state(
 	GListPtr op_list = NULL;
 	GListPtr sorted_op_list = NULL;
 
+	crm_data_t *migrate_op = NULL;
+	
 	enum action_fail_response on_fail = FALSE;
 	enum rsc_role_e saved_role = RSC_ROLE_UNKNOWN;
 	
@@ -920,6 +932,8 @@ unpack_lrm_rsc_state(
 			   || safe_str_eq(rc, "8")) {
 				start_index = lpc;
 			}
+		} else if(safe_str_eq(task, CRMD_ACTION_MIGRATE_FROM)) {
+			migrate_op = rsc_op;
 		}
 		
 		unpack_rsc_op(rsc, node, rsc_op,
@@ -933,7 +947,7 @@ unpack_lrm_rsc_state(
 	/* no need to free the contents */
 	g_list_free(sorted_op_list);
 	
-	process_rsc_state(rsc, node, on_fail, data_set);
+	process_rsc_state(rsc, node, on_fail, migrate_op, data_set);
 
 	value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
 	if(value != NULL && safe_str_neq("default", value)) {

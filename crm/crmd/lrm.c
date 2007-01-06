@@ -539,8 +539,26 @@ build_operation_update(
 	crm_debug_3("DC version: %s", caller_version);
 
 	task = op->op_type;
-	if(op->op_status == LRM_OP_DONE && crm_str_eq(task, "reload", TRUE)) {
-		/* remap successful reloads to starts */
+	/* remap the task name under various scenarios
+	 * this makes life easier for the PE when its trying determin the current state 
+	 */
+	if(crm_str_eq(task, "reload", TRUE)) {
+		if(op->op_status == LRM_OP_DONE) {
+			task = CRMD_ACTION_START;
+		} else {
+			task = CRMD_ACTION_STATUS;
+		}
+
+	} else if(crm_str_eq(task, CRMD_ACTION_MIGRATE_TO, TRUE)) {
+		/* if the migrate_from fails it will have enough info to do the right thing */
+		if(op->op_status == LRM_OP_DONE) {
+			task = CRMD_ACTION_STOP;
+		} else {
+			task = CRMD_ACTION_STATUS;
+		}
+
+	} else if(op->op_status == LRM_OP_DONE
+		  && crm_str_eq(task, CRMD_ACTION_MIGRATE_FROM, TRUE)) {
 		task = CRMD_ACTION_START;
 	}
 
@@ -695,6 +713,13 @@ build_operation_update(
 	}
 
 	append_restart_list(xml_op, op, caller_version);
+
+	if(op->op_status != LRM_OP_DONE
+	   && crm_str_eq(op->op_type, CRMD_ACTION_MIGRATE_FROM, TRUE)) {
+		const char *host = g_hash_table_lookup(
+			op->params, crm_meta_name(CRMD_ACTION_MIGRATE_FROM));
+		crm_xml_add(xml_op, CRMD_ACTION_MIGRATE_FROM, host);
+	}	
 	
 	return TRUE;
 }
