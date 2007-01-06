@@ -488,7 +488,7 @@ main(int argc, char **argv)
 	int rc;
 
 	/* Get the name of the binary for logging purposes */
-	bname = ha_strdup(argv[0]);
+	bname = cl_strdup(argv[0]);
 	crm_log_init(bname);
 
 	dopd_cluster_conn = ll_cluster_new("heartbeat");
@@ -552,7 +552,7 @@ main(int argc, char **argv)
 				dopd_timeout_dispatch, (gpointer)dopd_cluster_conn,
 				dopd_dispatch_destroy);
 	rc = init_server_ipc_comms(
-			ha_strdup(T_OUTDATER),
+			cl_strdup(T_OUTDATER),
 			outdater_client_connect,
 			outdater_client_destroy);
 	if (rc != 0)
