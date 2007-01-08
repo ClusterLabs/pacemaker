@@ -19,11 +19,13 @@
       <node id="node2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <group id="foo">
-	<primitive id="rsc1" class="heartbeat" type="apache" allow_migrate="true"/>
-      </group>
-      <primitive id="rsc2" class="heartbeat" type="apache" />
-      <primitive id="rsc3" class="heartbeat" type="apache" allow_migrate="true"/>
+      <primitive id="rsc3" class="heartbeat" type="apache">
+         <instance_attributes id="rsc3-attrs">
+           <attributes>
+             <nvpair name="allow_migrate" id="rsc3-allow_migrate" value="on"/>
+           </attributes>
+         </instance_attributes>
+      </primitive>
     </resources>
     <constraints>
     </constraints>
@@ -32,14 +34,8 @@
     <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <lrm>
         <lrm_resources>
-          <lrm_resource id="foo:rsc1" class="heartbeat" type="apache">
-            <lrm_rsc_op id="foo:rsc1" operation="start" interval="0" op_status="0" rc_code="0" call_id="1" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition_magic=""/>
-          </lrm_resource>
           <lrm_resource id="rsc3" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc3" operation="start" interval="0" op_status="0" rc_code="0" call_id="1" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition_magic=""/>
-          </lrm_resource>
-          <lrm_resource id="rsc2" class="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc2" operation="start" interval="0" op_status="0" rc_code="0" call_id="1" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition_magic=""/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
