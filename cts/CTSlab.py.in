@@ -745,9 +745,10 @@ if __name__ == '__main__':
     cm.log(">>>>>>>>>>>>>>>> BEGINNING " + repr(NumIter) + " TESTS ")
     cm.log("HA configuration directory: " + Environment["HAdir"])
     cm.log("System log files: " + Environment["LogFileName"])
-    cm.log("Enable Stonith: " + ("%d" % Environment["DoStonith"]))
-    cm.log("Enable Fencing: " + ("%d" % Environment["DoFencing"]))
-    cm.log("Enable Standby: " + ("%d" % Environment["DoStandby"]))
+    cm.log("Enable Stonith:   %d" % Environment["DoStonith"])
+    cm.log("Enable Fencing:   %d" % Environment["DoFencing"])
+    cm.log("Enable Standby:   %d" % Environment["DoStandby"])
+    cm.log("Enable Resources: %d" % Environment["CIBResource"])
     if Environment.has_key("SuppressMonitoring") \
     and Environment["SuppressMonitoring"]:
         cm.log("Resource Monitoring is disabled")
