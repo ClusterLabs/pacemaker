@@ -110,7 +110,6 @@ class LinuxHAv2(HeartbeatCM):
                 r", exiting\.",
                 r"WARN.*Ignoring HA message.*vote.*not in our membership list",
                 r"pengine.*Attempting recovery of resource",
-                r"pengine.*Handling failed ",
                 r"tengine.*is taking more than 2x its timeout",
                 r"Confirm not received from",
                 r"Welcome reply not received from",
@@ -312,13 +311,13 @@ class LinuxHAv2(HeartbeatCM):
         Execute an operation on a resource
         '''
         self.rsh.readaline(node, self["ExecuteRscOp"] % (resource, op))
-        return self.rsh.lastrc == 0
+        return self.rsh.lastrc
 
     def ResourceLocation(self, rid):
         ResourceNodes = []
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == self["up"]:
-                if self.ResourceOp(rid, "monitor", node):
+                if self.ResourceOp(rid, "monitor", node) == 0:
                     ResourceNodes.append(node)
         return ResourceNodes
 
@@ -557,7 +556,8 @@ class HAResource(Resource):
         on the given node in the cluster.
         We call the status operation for the resource script.
         '''
-        return self.CM.ResourceOp(self.rid, "monitor", nodename)
+        rc = self.CM.ResourceOp(self.rid, "monitor", nodename)
+        return (rc == 0)
         
     def RunningNodes(self):
         return self.CM.ResourceLocation(self.rid)
@@ -575,7 +575,7 @@ class HAResource(Resource):
         return self.CM.ResourceOp(self.rid, "stop", nodename)
 
     def IsWorkingCorrectly(self, nodename):
-        return self.CM.ResourceOp(self.rid, "monitor", nodename)
+        return self.IsRunningOn(nodename)
 
 
 #######################################################################
