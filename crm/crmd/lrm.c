@@ -417,9 +417,8 @@ gboolean
 build_operation_update(
 	crm_data_t *xml_rsc, lrm_op_t *op, const char *src, int lpc)
 {
-	char *fail_state = NULL;
+	char *magic = NULL;
 	const char *task = NULL;
-	const char *state = NULL;
 	crm_data_t *xml_op = NULL;
 	char *op_id = NULL;
 	const char *caller_version = NULL;	
@@ -470,7 +469,7 @@ build_operation_update(
 			task = CRMD_ACTION_STATUS;
 		}
 
-	} else if(crm_str_eq(task, CRMD_ACTION_MIGRATE_TO, TRUE)) {
+	} else if(crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)) {
 		/* if the migrate_from fails it will have enough info to do the right thing */
 		if(op->op_status == LRM_OP_DONE) {
 			task = CRMD_ACTION_STOP;
@@ -479,7 +478,7 @@ build_operation_update(
 		}
 
 	} else if(op->op_status == LRM_OP_DONE
-		  && crm_str_eq(task, CRMD_ACTION_MIGRATE_FROM, TRUE)) {
+		  && crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
 		task = CRMD_ACTION_START;
 	}
 
@@ -521,32 +520,7 @@ build_operation_update(
 
 	xml_op = find_entity(xml_rsc, XML_LRM_TAG_RSC_OP, op_id);
 	if(xml_op != NULL) {
-		const char *old_status_s = crm_element_value(
-			xml_op, XML_LRM_ATTR_OPSTATUS);
-		int old_status = crm_parse_int(old_status_s, "-2");
-		int log_level = LOG_ERR;
-
-		if(old_status_s == NULL) {
-			crm_err("No value for "XML_LRM_ATTR_OPSTATUS);
-			
-		} else if(old_status == op->op_status) {
-			/* safe to mask */
-			log_level = LOG_WARNING;
-			
-		} else if(old_status == LRM_OP_PENDING){
-			/* ??safe to mask?? */
-/* 			log_level = LOG_WARNING; */
-		}
- 		do_crm_log(log_level,
-			      "Duplicate %s operations in get_cur_state()",
-			      op_id);
- 		do_crm_log(log_level+2,
-			      "New entry: %s %s (call=%d, status=%s)",
-			      op_id, op->user_data, op->call_id,
-			      op_status2text(op->op_status));
-		crm_log_xml(log_level+2, "Existing entry", xml_op);
-		crm_free(op_id);
-		return FALSE;
+		crm_log_xml(LOG_DEBUG, "Replacing existing entry", xml_op);
 		
 	} else {
 		xml_op = create_xml_node(xml_rsc, XML_LRM_TAG_RSC_OP);
@@ -554,25 +528,25 @@ build_operation_update(
 	crm_xml_add(xml_op, XML_ATTR_ID, op_id);
 	crm_free(op_id);
 
-	crm_xml_add(xml_op,  XML_LRM_ATTR_TASK,   task);
-	crm_xml_add(xml_op,  XML_ATTR_ORIGIN, src);
+	crm_xml_add(xml_op, XML_LRM_ATTR_TASK, task);
+	crm_xml_add(xml_op, XML_ATTR_ORIGIN,   src);
 	
 	if(op->user_data == NULL) {
 		op->user_data = generate_transition_key(-1, 0, fsa_our_uname);
 	}
 	
 	if(compare_version("1.0.3", caller_version) > 0) {
-		fail_state = generate_transition_magic_v202(
+		magic = generate_transition_magic_v202(
 			op->user_data, op->op_status);
 
 	} else {
-		fail_state = generate_transition_magic(
+		magic = generate_transition_magic(
 			op->user_data, op->op_status, op->rc);
 	}
 	
-	crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, op->user_data);
-	crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC, fail_state);
-	crm_free(fail_state);	
+	crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY,   op->user_data);
+	crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC, magic);
+	crm_free(magic);	
 	
 	switch(op->op_status) {
 		case LRM_OP_PENDING:
@@ -622,10 +596,10 @@ build_operation_update(
 	append_restart_list(xml_op, op, caller_version);
 
 	if(op->op_status != LRM_OP_DONE
-	   && crm_str_eq(op->op_type, CRMD_ACTION_MIGRATE_FROM, TRUE)) {
+	   && crm_str_eq(op->op_type, CRMD_ACTION_MIGRATED, TRUE)) {
 		const char *host = g_hash_table_lookup(
-			op->params, crm_meta_name(CRMD_ACTION_MIGRATE_FROM));
-		crm_xml_add(xml_op, CRMD_ACTION_MIGRATE_FROM, host);
+			op->params, crm_meta_name(CRMD_ACTION_MIGRATED"_uuid"));
+		crm_xml_add(xml_op, CRMD_ACTION_MIGRATED, host);
 	}	
 	
 	return TRUE;
@@ -665,7 +639,15 @@ is_rsc_active(const char *rsc_id)
 			  op->op_status, op->rc);
 		
 		CRM_ASSERT(max_call_id <= op->call_id);			
-		if(safe_str_eq(op->op_type, CRMD_ACTION_STOP)) {
+		if(op->rc == EXECRA_OK
+		   && safe_str_eq(op->op_type, CRMD_ACTION_STOP)) {
+			active = FALSE;
+			
+		} else if(op->rc == EXECRA_OK
+			  && safe_str_eq(op->op_type, CRMD_ACTION_MIGRATE)) {
+			/* a stricter check is too complex...
+			 * leave that to the PE
+			 */
 			active = FALSE;
 			
 		} else if(op->rc == EXECRA_NOT_RUNNING) {
@@ -1275,7 +1257,7 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 
 	/* stop the monitor before stopping the resource */
 	if(crm_str_eq(operation, CRMD_ACTION_STOP, TRUE)
-	   || crm_str_eq(operation, CRMD_ACTION_MIGRATE_TO, TRUE)) {
+	   || crm_str_eq(operation, CRMD_ACTION_MIGRATE, TRUE)) {
 		g_hash_table_foreach(monitors, stop_recurring_action, rsc);
 		g_hash_table_foreach_remove(
 			monitors, remove_recurring_action, rsc);

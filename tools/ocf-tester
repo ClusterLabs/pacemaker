@@ -220,6 +220,20 @@ assert $? 0 "Stopping a stopped resource is required to succeed"
 test_command monitor
 assert $? $stopped_rc "Monitoring a stopped resource should return $stopped_rc"
 
+test_command migrate_to "Checking for migrate_to action"
+rc=$?
+if [ $rc != 3 ]; then
+    test_command migrate_from "Checking for migrate_from action"
+fi
+if [ $? = 3 ]; then
+    echo "* Your agent does not support the migrate action (optional)"
+fi
+
+test_command reload "Checking for reload action"
+if [ $? = 3 ]; then
+    echo "* Your agent does not support the reload action (optional)"
+fi
+
 if [ $num_errors != 0 ]; then
     echo Tests failed: $agent failed $num_errors tests
 else 

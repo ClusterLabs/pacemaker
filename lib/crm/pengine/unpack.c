@@ -689,7 +689,7 @@ process_rsc_state(resource_t *rsc, node_t *node,
 	if(on_fail == action_migrate_failure) {
 		node_t *from = NULL;
 		const char *uuid = NULL;
-		uuid = crm_element_value(migrate_op, CRMD_ACTION_MIGRATE_FROM);
+		uuid = crm_element_value(migrate_op, CRMD_ACTION_MIGRATED);
 		from = pe_find_node_id(data_set->nodes, uuid);
 		process_rsc_state(rsc, from, action_fail_recover,NULL,data_set);
 		on_fail = action_fail_recover;
@@ -932,7 +932,7 @@ unpack_lrm_rsc_state(
 			   || safe_str_eq(rc, "8")) {
 				start_index = lpc;
 			}
-		} else if(safe_str_eq(task, CRMD_ACTION_MIGRATE_FROM)) {
+		} else if(safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
 			migrate_op = rsc_op;
 		}
 		

@@ -88,7 +88,7 @@ extern gboolean crm_assert_failed;
 #define CIB_FILENAME	WORKING_DIR"/cib.xml"
 #define CIB_BACKUP	WORKING_DIR"/cib_backup.xml"
 
-#define CRM_FEATURE_SET	"1.0.7"
+#define CRM_FEATURE_SET	"1.0.8"
 
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1
@@ -159,18 +159,14 @@ extern gboolean crm_assert_failed;
 #define CRMD_ACTION_DELETE		"delete"
 #define CRMD_ACTION_CANCEL		"cancel"
 
-#define CRMD_ACTION_MIGRATE_TO		"migrate_to"
-#define CRMD_ACTION_MIGRATE_FROM	"migrate_from"
+#define CRMD_ACTION_MIGRATE		"migrate_to"
+#define CRMD_ACTION_MIGRATED		"migrate_from"
 
 #define CRMD_ACTION_START		"start"
 #define CRMD_ACTION_STARTED		"running"
-#define CRMD_ACTION_START_FAIL		"start_failed"
-#define CRMD_ACTION_START_PENDING	"starting"
 
 #define CRMD_ACTION_STOP		"stop"
 #define CRMD_ACTION_STOPPED		"stopped"
-#define CRMD_ACTION_STOP_FAIL		"stop_failed"
-#define CRMD_ACTION_STOP_PENDING	"stopping"
 
 #define CRMD_ACTION_PROMOTE		"promote"
 #define CRMD_ACTION_PROMOTED		"promoted"
@@ -181,14 +177,6 @@ extern gboolean crm_assert_failed;
 #define CRMD_ACTION_NOTIFIED		"notified"
 
 #define CRMD_ACTION_STATUS		"monitor"
-#define CRMD_ACTION_MON			"monitor"
-#define CRMD_ACTION_MON_PENDING		CRMD_ACTION_STARTED
-#define CRMD_ACTION_MON_OK		CRMD_ACTION_STARTED
-#define CRMD_ACTION_MON_FAIL		"monitor_failed"
-/* #define CRMD_ACTION_GENERIC		"pending" */
-#define CRMD_ACTION_GENERIC_PENDING	"pending"
-#define CRMD_ACTION_GENERIC_OK		"complete"
-#define CRMD_ACTION_GENERIC_FAIL	"pending_failed"
 
 typedef GList* GListPtr;
 

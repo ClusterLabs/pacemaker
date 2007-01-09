@@ -145,7 +145,7 @@ text2task(const char *task)
 		return shutdown_crm;
 	} else if(safe_str_eq(task, CRM_OP_FENCE)) {
 		return stonith_node;
-	} else if(safe_str_eq(task, CRMD_ACTION_MON)) {
+	} else if(safe_str_eq(task, CRMD_ACTION_STATUS)) {
 		return monitor_rsc;
 	} else if(safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
 		return action_notify;
@@ -168,6 +168,8 @@ text2task(const char *task)
 	} else if(safe_str_eq(task, CRM_OP_PROBED)) {
 		return no_action;
 	} else if(safe_str_eq(task, CRM_OP_LRM_REFRESH)) {
+		return no_action;	
+	} else if(safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
 		return no_action;	
 	} 
 	crm_config_warn("Unsupported action: %s", task);
@@ -203,7 +205,7 @@ task2text(enum action_tasks task)
 			result = CRM_OP_FENCE;
 			break;
 		case monitor_rsc:
-			result = CRMD_ACTION_MON;
+			result = CRMD_ACTION_STATUS;
 			break;
 		case action_notify:
 			result = CRMD_ACTION_NOTIFY;
