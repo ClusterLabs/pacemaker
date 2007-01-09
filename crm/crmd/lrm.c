@@ -81,89 +81,10 @@ void free_recurring_op(gpointer value);
 GHashTable *monitors = NULL;
 GHashTable *resources = NULL;
 GHashTable *shutdown_ops = NULL;
+GCHSource *lrm_source = NULL;
 
 int num_lrm_register_fails = 0;
 int max_lrm_register_fails = 30;
-
-enum crmd_rscstate {
-	crmd_rscstate_NULL,
-	crmd_rscstate_START,
-	crmd_rscstate_START_PENDING,
-	crmd_rscstate_START_OK,	
-	crmd_rscstate_START_FAIL,	
-	crmd_rscstate_STOP,
-	crmd_rscstate_STOP_PENDING,
-	crmd_rscstate_STOP_OK,	
-	crmd_rscstate_STOP_FAIL,		
-	crmd_rscstate_MON,
-	crmd_rscstate_MON_PENDING,
-	crmd_rscstate_MON_OK,
-	crmd_rscstate_MON_FAIL,		
-	crmd_rscstate_GENERIC_PENDING,
-	crmd_rscstate_GENERIC_OK,
-	crmd_rscstate_GENERIC_FAIL	
-};
-
-
-const char *crmd_rscstate2string(enum crmd_rscstate state);
-
-const char *
-crmd_rscstate2string(enum crmd_rscstate state) 
-{
-	switch(state) {
-		case crmd_rscstate_NULL:
-			return NULL;
-			
-		case crmd_rscstate_START:
-			return CRMD_ACTION_START;
-			
-		case crmd_rscstate_START_PENDING:
-			return CRMD_ACTION_START_PENDING;
-			
-		case crmd_rscstate_START_OK:
-			return CRMD_ACTION_STARTED;
-			
-		case crmd_rscstate_START_FAIL:
-			return CRMD_ACTION_START_FAIL;
-			
-		case crmd_rscstate_STOP:
-			return CRMD_ACTION_STOP;
-			
-		case crmd_rscstate_STOP_PENDING:
-			return CRMD_ACTION_STOP_PENDING;
-			
-		case crmd_rscstate_STOP_OK:
-			return CRMD_ACTION_STOPPED;
-			
-		case crmd_rscstate_STOP_FAIL:
-			return CRMD_ACTION_STOP_FAIL;
-			
-		case crmd_rscstate_MON:
-			return CRMD_ACTION_MON;
-			
-		case crmd_rscstate_MON_PENDING:
-			return CRMD_ACTION_MON_PENDING;
-			
-		case crmd_rscstate_MON_OK:
-			return CRMD_ACTION_MON_OK;
-			
-		case crmd_rscstate_MON_FAIL:
-			return CRMD_ACTION_MON_FAIL;
-			
-		case crmd_rscstate_GENERIC_PENDING:
-			return CRMD_ACTION_GENERIC_PENDING;
-			
-		case crmd_rscstate_GENERIC_OK:
-			return CRMD_ACTION_GENERIC_OK;
-			
-		case crmd_rscstate_GENERIC_FAIL:
-			return CRMD_ACTION_GENERIC_FAIL;
-			
-	}
-	return "<unknown>";
-}
-
-GCHSource *lrm_source = NULL;
 
 /*	 A_LRM_CONNECT	*/
 enum crmd_fsa_input
@@ -667,20 +588,6 @@ build_operation_update(
 				  op_status2text(op->op_status), op->rc);
 			break;
 		case LRM_OP_DONE:
-			if(crm_str_eq(CRMD_ACTION_START, task, TRUE)) {
-				state = CRMD_ACTION_STARTED;
-
-			} else if(crm_str_eq(CRMD_ACTION_STOP, task, TRUE)) {
-				state = CRMD_ACTION_STOPPED;
-				
-			} else if(crm_str_eq(CRMD_ACTION_MON, task, TRUE)) {
-				state = CRMD_ACTION_STARTED;
-		
-			} else {
-				crm_debug("Using status \"%s\" for op \"%s\"",
-					  CRMD_ACTION_GENERIC_OK, task);
-				state = CRMD_ACTION_GENERIC_OK;
-			}	
 			break;
 	}
 	
