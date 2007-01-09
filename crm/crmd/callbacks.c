@@ -520,10 +520,18 @@ crmd_ccm_msg_callback(
 	crm_info("Quorum %s after event=%s (id=%d)", 
 		 ccm_have_quorum(event)?"(re)attained":"lost",
 		 ccm_event_name(event), instance);
+
+	/*
+	 * OC_EV_MS_NEW_MEMBERSHIP: membership with quorum
+	 * OC_EV_MS_MS_INVALID: membership without quorum
+	 * OC_EV_MS_NOT_PRIMARY: previous membership no longer valid
+	 * OC_EV_MS_PRIMARY_RESTORED: previous membership restored
+	 * OC_EV_MS_EVICTED: the client is evicted from ccm.
+	 */
 	
 	switch(event) {
 		case OC_EV_MS_NEW_MEMBERSHIP:
-		case OC_EV_MS_INVALID:/* fall through */
+		case OC_EV_MS_INVALID:
 			update_cache = TRUE;
 			update_quorum = TRUE;
 			break;
