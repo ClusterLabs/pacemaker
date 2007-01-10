@@ -1387,6 +1387,37 @@ filter_action_parameters(crm_data_t *param_set, const char *version)
 		);
 }
 
+void
+filter_reload_parameters(crm_data_t *param_set, const char *restart_string) 
+{
+	int len = 0;
+	char *name = NULL;
+	char *match = NULL;
+	
+	if(param_set == NULL) {
+		return;
+	}
+
+	xml_prop_iter(param_set, prop_name, prop_value,      
+		      name = NULL;
+		      len = strlen(prop_name) + 3;
+
+		      crm_malloc0(name, len);
+		      sprintf(name, " %s ", prop_name);
+		      name[len-1] = 0;
+		      
+		      match = strstr(restart_string, name);
+		      if(match == NULL) {
+			      /* remove it */
+			      crm_err("%s not found in %s", prop_name, restart_string);
+			      xml_remove_prop(param_set, prop_name);
+			      /* unwind the counetr */
+			      __counter--;
+		      }
+		      crm_free(name);
+		);
+}
+
 gboolean
 crm_mem_stats(volatile cl_mem_stats_t *mem_stats)
 {

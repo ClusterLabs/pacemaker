@@ -128,6 +128,7 @@ extern gboolean decode_op_key(
 	const char *key, char **rsc_id, char **op_type, int *interval);
 
 extern void filter_action_parameters(crm_data_t *param_set, const char *version);
+extern void filter_reload_parameters(crm_data_t *param_set, const char *restart_string);
 
 #define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 

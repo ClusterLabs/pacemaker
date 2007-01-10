@@ -391,16 +391,10 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 		   int start = len;
 		   value = g_hash_table_lookup(op->params, param);
 		   crm_xml_add(restart, param, value);
-
-		   if(list == NULL) {
-			   len = strlen(param);
-			   crm_malloc0(list, len+1);
-			   sprintf(list, "%s", param);
-		   } else {
-			   len += strlen(param)+1;
-			   crm_realloc(list, len+1);
-			   sprintf(list+start, " %s", param);
-		   }
+		   
+		   len += strlen(param) + 2;
+		   crm_realloc(list, len+1);
+		   sprintf(list+start, " %s ", param);
 		);
 	
 	digest = calculate_xml_digest(restart, TRUE);
