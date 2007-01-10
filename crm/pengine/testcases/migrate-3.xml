@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!DOCTYPE cib SYSTEM "crm-1.0.dtd">
+<!-- shutdown -->
+<cib num_updates="1" epoch="1" admin_epoch="0">
+  <configuration>
+    <crm_config><cluster_property_set id="cib-bootstrap-options"><attributes>
+      <nvpair id="no_quorum_policy" name="no_quorum_policy" value="ignore"/>
+      <nvpair id="symmetric_cluster" name="symmetric_cluster" value="true"/>
+      <nvpair id="default_resource_stickiness" name="default_resource_stickiness" value="100"/>
+    </attributes></cluster_property_set></crm_config>
+    <nodes>
+      <node id="node1" uname="node1" type="member">
+         <instance_attributes id="nodes-node1">
+           <attributes>
+             <nvpair name="standby" id="standby-node1" value="on"/>
+           </attributes>
+         </instance_attributes>
+      </node>
+      <node id="node2" uname="node2" type="member"/>
+    </nodes>
+    <resources>
+      <primitive id="rsc3" class="heartbeat" type="apache">
+         <instance_attributes id="rsc3-attrs">
+           <attributes>
+             <nvpair name="allow_migrate" id="rsc3-allow_migrate" value="on"/>
+           </attributes>
+         </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
+      <lrm id="node1">
+        <lrm_resources>
+          <lrm_resource id="rsc3" class="heartbeat" type="apache">
+            <lrm_rsc_op id="rsc3_start_0" operation="start" interval="0" op_status="0" rc_code="0" call_id="1" op_digest="a4ee04201fa9196ee5ef9928c48f35eb" crm_feature_set="1.0.6" transition_magic=""/>
+            <lrm_rsc_op id="rsc3_monitor_0" operation="monitor" interval="0" op_status="4" rc_code="0" call_id="2" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition_magic=""/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true"/>
+  </status>
+</cib>

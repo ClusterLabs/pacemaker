@@ -20,15 +20,16 @@
 #include <portability.h>
 #include <crm/common/iso8601.h>
 
-#define OPTARGS	"V?d:p:D:WOL"
+#define OPTARGS	"V?d:p:D:WOLn"
 
 char command = 0;
 
 static void
 usage(int rc) 
 {
-	fprintf(stderr, "Usage: iso8601 [-(O|W|L)] -(d|p|D) <string> \n");
+	fprintf(stderr, "Usage: iso8601 [-(O|W|L)] -(n|d|p|D) <string> \n");
 	fprintf(stderr, "Input Options:\n");
+	fprintf(stderr, "\t-n Display the current date/time\n");
 	fprintf(stderr, "\t-d Parse an ISO8601 date/time.  Eg. '2005-01-20 00:30:00 +01:00' or '2005-040'\n");
 	fprintf(stderr, "\t-p Parse an ISO8601 date/time interval/period (wth start time).  Eg. '2005-040/2005-043'\n");
 	fprintf(stderr, "\t-D Parse an ISO8601 date/time duration (wth start time). Eg. '2005-040/P1M'\n");
@@ -71,6 +72,9 @@ main(int argc, char **argv)
 			case '?':
 				usage(0);
 				break;
+			case 'n':
+				command = flag;
+				break;
 			case 'd':
 			case 'p':
 			case 'D':
@@ -89,7 +93,7 @@ main(int argc, char **argv)
 		}
 	}
 
-	if(input_s == NULL) {
+	if(input_s == NULL && command != 'n') {
 		usage(1);
 	}
 	
@@ -97,7 +101,7 @@ main(int argc, char **argv)
 
 	if(command == 'd') {
 		ha_time_t *date_time = parse_date(&mutable_s);
-		if(date_time != NULL) {
+		if(date_time == NULL) {
 			fprintf(stderr, "Invalid date/time specified: %s\n", input_s);
 			usage(1);
 		}
@@ -106,7 +110,7 @@ main(int argc, char **argv)
 		
 	} else if(command == 'p') {
 		ha_time_period_t *interval = parse_time_period(&mutable_s);
-		if(interval != NULL) {
+		if(interval == NULL) {
 			fprintf(stderr, "Invalid interval specified: %s\n", input_s);
 			usage(1);
 		}
@@ -115,10 +119,20 @@ main(int argc, char **argv)
 		
 	} else if(command == 'D') {
 		ha_time_t *duration = parse_time_duration(&mutable_s);
-		if(duration != NULL) {
+		if(duration == NULL) {
 			fprintf(stderr, "Invalid duration specified: %s\n", input_s);
 			usage(1);
 		}
+
+	} else if(command == 'n') {
+		ha_time_t *now = new_ha_date(TRUE);
+		if(now == NULL) {
+			fprintf(stderr, "Internal error: couldnt determin 'now' !\n");
+			usage(1);
+		}
+		log_date(LOG_INFO, "Current date/time", now,
+			 print_options|ha_log_date|ha_log_time);
 	}
+	
 	return 0;
 }

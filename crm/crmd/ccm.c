@@ -254,9 +254,16 @@ do_ccm_update_cache(long long action,
 	event = ccm_data->event;
 	oc = ccm_data->oc;
 
-	crm_debug_2("Updating CCM cache after a \"%s\" event.", 
-		 ccm_event_name(event));
+	if(fsa_membership_copy != NULL
+	   && fsa_membership_copy->id >= oc->m_instance) {
+		crm_debug("Ignoring superceeded CCM event %d (%s).", 
+			  oc->m_instance, ccm_event_name(event));
+		return I_NULL;
+	}
 
+	crm_debug("Updating cache after CCM event %d (%s).", 
+		  oc->m_instance, ccm_event_name(event));
+	
 	crm_debug_2("instance=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
 		  "new_idx=%d, old_idx=%d",
 		  oc->m_instance,

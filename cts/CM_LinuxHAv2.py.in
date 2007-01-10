@@ -110,7 +110,6 @@ class LinuxHAv2(HeartbeatCM):
                 r", exiting\.",
                 r"WARN.*Ignoring HA message.*vote.*not in our membership list",
                 r"pengine.*Attempting recovery of resource",
-                r"pengine.*Handling failed ",
                 r"tengine.*is taking more than 2x its timeout",
                 r"Confirm not received from",
                 r"Welcome reply not received from",
@@ -296,6 +295,31 @@ class LinuxHAv2(HeartbeatCM):
             self.debug("%s _is_ the DC" % node)
             
         return rc
+
+    def active_resources(self, node):
+        (rc, output) = self.rsh.remote_py(
+            node, "os", "system", """@sbindir@/crm_mon -1 | grep "Started %s" """ % node)
+
+        resources = []
+        for line in output:
+            fields = line.split()
+            resources.append(fields[0])
+        return resources
+
+    def ResourceOp(self, resource, op, node):
+        '''
+        Execute an operation on a resource
+        '''
+        self.rsh.readaline(node, self["ExecuteRscOp"] % (resource, op))
+        return self.rsh.lastrc
+
+    def ResourceLocation(self, rid):
+        ResourceNodes = []
+        for node in self.Env["nodes"]:
+            if self.ShouldBeStatus[node] == self["up"]:
+                if self.ResourceOp(rid, "monitor", node) == 0:
+                    ResourceNodes.append(node)
+        return ResourceNodes
 
     def isolate_node(self, node, allowlist):
         '''isolate the communication between the nodes'''
@@ -532,38 +556,26 @@ class HAResource(Resource):
         on the given node in the cluster.
         We call the status operation for the resource script.
         '''
-        out=self.CM.rsh.readaline(nodename, self.CM["IsRscRunning"]%self.rid)
-        return re.search("0",out)
+        rc = self.CM.ResourceOp(self.rid, "monitor", nodename)
+        return (rc == 0)
         
     def RunningNodes(self):
-        ResourceNodes = []
-        for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-                if self.IsRunningOn(node):
-                    ResourceNodes.append(node)
-        return ResourceNodes
-
-    def _ResourceOperation(self, operation, nodename):
-        '''
-        Execute an operation on the resource
-        '''
-        self.CM.rsh.readaline(nodename, self.CM["ExecuteRscOp"]%(self.rid,operation))
-        return self.CM.rsh.lastrc == 0
+        return self.CM.ResourceLocation(self.rid)
 
     def Start(self, nodename):
         '''
         This member function starts or activates the resource.
         '''
-        return self._ResourceOperation("start", nodename)
+        return self.CM.ResourceOp(self.rid, "start", nodename)
 
     def Stop(self, nodename):
         '''
         This member function stops or deactivates the resource.
         '''
-        return self._ResourceOperation("stop", nodename)
+        return self.CM.ResourceOp(self.rid, "stop", nodename)
 
     def IsWorkingCorrectly(self, nodename):
-        return self._ResourceOperation("monitor", nodename)
+        return self.IsRunningOn(nodename)
 
 
 #######################################################################

@@ -824,7 +824,7 @@ ha_set_tm_time(ha_time_t *lhs, struct tm *rhs)
 		lhs->has->years = TRUE;
 	}
 
-	if(rhs->tm_yday > 0) {
+	if(rhs->tm_yday >= 0) {
 		/* days since January 1 [0-365] */
 		lhs->yeardays = 1 + rhs->tm_yday;
 		lhs->has->yeardays =TRUE;

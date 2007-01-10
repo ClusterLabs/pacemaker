@@ -136,6 +136,7 @@ struct resource_s {
 
 		gboolean notify;
 		gboolean is_managed;
+		gboolean can_migrate;
 		gboolean starting;
 		gboolean stopping;
 		gboolean runnable;
