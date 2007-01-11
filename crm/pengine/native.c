@@ -171,7 +171,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	}
 
 	if(rsc->is_allocating) {
-		crm_err("Dependancy loop detected involving %s", rsc->id);
+		crm_debug("Dependancy loop detected involving %s", rsc->id);
 		return NULL;
 	}
 

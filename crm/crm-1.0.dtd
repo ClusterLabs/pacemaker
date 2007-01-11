@@ -451,13 +451,14 @@ This may change in the future.
 -->
 <!ELEMENT rsc_colocation (lifetime?)>
 <!ATTLIST rsc_colocation
-          id        CDATA #REQUIRED
-          from      CDATA #REQUIRED
-          from_role CDATA #IMPLIED
-          to        CDATA #REQUIRED
-          to_role   CDATA #IMPLIED
-          node_attribute   CDATA #IMPLIED
-          score     CDATA #REQUIRED>
+          id             CDATA #REQUIRED
+          from           CDATA #REQUIRED
+          from_role      CDATA #IMPLIED
+          to             CDATA #REQUIRED
+          to_role        CDATA #IMPLIED
+	  symmetrical    CDATA #IMPLIED
+          node_attribute CDATA #IMPLIED
+          score          CDATA #REQUIRED>
 
 <!--
 Specify which nodes are eligible for running a given resource.

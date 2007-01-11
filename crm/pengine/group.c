@@ -67,7 +67,7 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 	/* combine the child weights */
 	crm_debug("Processing %s", rsc->id);
 	if(rsc->is_allocating) {
-		crm_err("Dependancy loop detected involving %s", rsc->id);
+		crm_debug("Dependancy loop detected involving %s", rsc->id);
 		return NULL;
 	}
 	rsc->is_allocating = TRUE;

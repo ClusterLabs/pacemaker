@@ -1471,6 +1471,8 @@ unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	const char *state_lh = crm_element_value(xml_obj, XML_RULE_ATTR_FROMSTATE);
 	const char *state_rh = crm_element_value(xml_obj, XML_RULE_ATTR_TOSTATE);
 	const char *attr = crm_element_value(xml_obj, "node_attribute");
+	const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
+
 
 	resource_t *rsc_lh = pe_find_resource(data_set->resources, id_lh);
 	resource_t *rsc_rh = pe_find_resource(data_set->resources, id_rh);
@@ -1488,8 +1490,14 @@ unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		score_i = char2score(score);
 	}
 
-	return rsc_colocation_new(
+	rsc_colocation_new(
 		id, attr, score_i, rsc_lh, rsc_rh, state_lh, state_rh);
+	
+	if(crm_is_true(symmetrical)) {
+		rsc_colocation_new(
+			id, attr, score_i, rsc_rh, rsc_lh, state_rh, state_lh);
+	}
+	return TRUE;
 }
 
 gboolean is_active(rsc_to_node_t *cons)
