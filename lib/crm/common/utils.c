@@ -1409,7 +1409,8 @@ filter_reload_parameters(crm_data_t *param_set, const char *restart_string)
 		      match = strstr(restart_string, name);
 		      if(match == NULL) {
 			      /* remove it */
-			      crm_err("%s not found in %s", prop_name, restart_string);
+			      crm_debug_3("%s not found in %s",
+					  prop_name, restart_string);
 			      xml_remove_prop(param_set, prop_name);
 			      /* unwind the counetr */
 			      __counter--;
