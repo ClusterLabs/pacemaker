@@ -21,6 +21,7 @@
 create_mode="true"
 echo Generating test outputs for these tests...
 echo ""
+do_test params-4 "Params: Reload"
 
 echo Done.
 echo ""
@@ -45,6 +46,7 @@ echo ""
 do_test params-0 "Params: No change"
 do_test params-1 "Params: Changed"
 do_test params-2 "Params: Resource definition"
+do_test params-4 "Params: Reload"
 
 echo ""
 do_test orphan-0 "Orphan ignore"

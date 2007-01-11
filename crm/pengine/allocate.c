@@ -182,7 +182,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	if(interval > 0) {
 		crm_data_t *op_match = NULL;
 
-		crm_debug_2("Checking parameters for %s %s", key, task);
+		crm_debug_2("Checking parameters for %s", key);
 		op_match = find_rsc_op_entry(rsc, key);
 
 		if(op_match == NULL && data_set->stop_action_orphans) {
@@ -254,9 +254,9 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 		if(safe_str_neq(digest_restart_calc, digest_restart)) {
 			did_change = TRUE;
 			crm_log_xml_info(params_restart, "params:restart");
-			crm_warn("Restart: Parameters to %s on %s changed: recorded %s vs. calculated (restart) %s",
-				 ID(xml_op), active_node->details->uname,
-				 crm_str(digest_all), digest_all_calc);
+			crm_warn("Parameters to %s on %s changed: recorded %s vs. calculated (restart) %s",
+				 key, active_node->details->uname,
+				 crm_str(digest_restart), digest_restart_calc);
 			
 			key = generate_op_key(rsc->id, task, interval);
 			custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
@@ -266,11 +266,10 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 
 	if(safe_str_neq(digest_all_calc, digest_all)) {
 		action_t *op = NULL;
-		
 		did_change = TRUE;
 		crm_log_xml_info(params_all, "params:all");
  		crm_warn("Parameters to %s on %s changed: recorded %s vs. calculated (all) %s",
-			 ID(xml_op), active_node->details->uname,
+			 key, active_node->details->uname,
 			 crm_str(digest_all), digest_all_calc);
 		
 		key = generate_op_key(rsc->id, task, interval);
@@ -737,6 +736,7 @@ migrate_reload_madness(pe_working_set_t *data_set)
 		   || rsc->start_pending
 		   || rsc->next_role != RSC_ROLE_STARTED		   
 		   || g_list_length(rsc->running_on) != 1) {
+			crm_debug_3("%s: resource", rsc->id);
 			continue;
 		}
 		
@@ -745,6 +745,7 @@ migrate_reload_madness(pe_working_set_t *data_set)
 		crm_free(key);
 
 		if(action_list == NULL) {
+			crm_debug_3("%s: no start action", rsc->id);
 			continue;
 		}
 		
@@ -757,6 +758,7 @@ migrate_reload_madness(pe_working_set_t *data_set)
 
 		if(rsc->can_migrate == FALSE
 		   && start->allow_reload_conversion == FALSE) {
+			crm_debug_3("%s: no need to continue", rsc->id);
 			continue;
 		}
 		
@@ -765,6 +767,7 @@ migrate_reload_madness(pe_working_set_t *data_set)
 		crm_free(key);
 
 		if(action_list == NULL) {
+			crm_debug_3("%s: no stop action", rsc->id);
 			continue;
 		}
 		
@@ -773,6 +776,7 @@ migrate_reload_madness(pe_working_set_t *data_set)
 		action = start;
 		if(action->pseudo
 		   || action->optional
+		   || action->node == NULL
 		   || action->runnable == FALSE) {
 			crm_debug_3("Skipping: %s", action->task);
 				continue;
@@ -781,6 +785,7 @@ migrate_reload_madness(pe_working_set_t *data_set)
 		action = stop;
 		if(action->pseudo
 		   || action->optional
+		   || action->node == NULL
 		   || action->runnable == FALSE) {
 			crm_debug_3("Skipping: %s", action->task);
 				continue;
@@ -808,7 +813,7 @@ migrate_reload_madness(pe_working_set_t *data_set)
 			}
 			);
 
-		if(rsc->can_migrate && stop->node != start->node) {
+		if(rsc->can_migrate && stop->node->details != start->node->details) {
 			crm_info("Migrating %s from %s to %s", rsc->id,
 				 stop->node->details->uname,
 				 start->node->details->uname);
@@ -829,7 +834,7 @@ migrate_reload_madness(pe_working_set_t *data_set)
 				stop->node->details->id);
 
 		} else if(start->allow_reload_conversion
-			&& stop->node == start->node) {
+			&& stop->node->details == start->node->details) {
 			crm_info("Rewriting restart of %s on %s as a reload",
 				 rsc->id, start->node->details->uname);
 			crm_free(start->uuid);
@@ -837,6 +842,9 @@ migrate_reload_madness(pe_working_set_t *data_set)
 			start->uuid = generate_op_key(rsc->id, start->task, 0);
 
 			stop->pseudo = TRUE; /* easier than trying to delete it from the graph */
+
+		} else {
+			crm_debug_3("%s nothing to do", rsc->id);
 		}
 		
 	  skip:
