@@ -168,6 +168,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 
 	const char *restart_list = NULL;
 	const char *digest_restart = NULL;
+	char *digest_restart_calc = NULL;
 
 	action_t *action = NULL;
 	const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
@@ -243,8 +244,6 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	}
 	
 	if(start_op && digest_restart) {
-		char *digest_restart_calc = NULL;
-
 		params_restart = copy_xml(params_all);
 		if(restart_list) {
 			filter_reload_parameters(params_restart, restart_list);
@@ -283,6 +282,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	free_xml(params_all);
 	free_xml(params_restart);
 	crm_free(digest_all_calc);
+	crm_free(digest_restart_calc);
 	g_hash_table_destroy(local_rsc_params);
 
 	pe_free_action(action);
