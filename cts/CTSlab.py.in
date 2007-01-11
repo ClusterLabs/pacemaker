@@ -662,7 +662,8 @@ if __name__ == '__main__':
     if DoBSC:
         NumIter = 2
         Version = 2
-        LimitNodes = 1
+        while len(node_list) > 1:
+            node_list.pop(len(node_list)-1)
 
     if LogFacility == None:
         if config.Parameters.has_key("logfacility"): 

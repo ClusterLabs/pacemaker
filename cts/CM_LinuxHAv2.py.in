@@ -30,10 +30,16 @@ Additional Audits, Revised Start action, Default Configuration:
 import os,sys,CTS,CTSaudits,CTStests, warnings
 from CTS import *
 from CM_hb import HeartbeatCM
-from xml.dom.minidom import *
 from CTSaudits import ClusterAudit
 from CTStests import *
 from CIB import *
+try:
+    from xml.dom.minidom import *
+except ImportError:
+    sys.__stdout__.write("Python module xml.dom.minidom not found\n")
+    sys.__stdout__.write("Please install python-xml or similar before continuing\n")
+    sys.__stdout__.flush()
+    sys.exit(1)
 
 #######################################################################
 #
@@ -141,7 +147,8 @@ class LinuxHAv2(HeartbeatCM):
         '''Return list of errors which are known and very noisey should be ignored'''
         if 1:
             return [ 
-                "crmadmin:"
+                "crmadmin:",
+                "ERROR: Message hist queue is filling up"
                 ]
         return []
 
