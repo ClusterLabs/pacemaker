@@ -178,6 +178,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 
 	interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
 	interval = crm_parse_int(interval_s, "0");
+	/* we need to reconstruct the key because of the way we used to construct resource IDs */
 	key = generate_op_key(rsc->id, task, interval);
 
 	if(interval > 0) {
