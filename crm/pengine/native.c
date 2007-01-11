@@ -1428,3 +1428,135 @@ native_stonith_ordering(
 	native_stop_constraints(rsc,  stonith_op, is_stonith, data_set);
 }
 
+void
+native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
+{
+	char *key = NULL;
+	GListPtr action_list = NULL;
+	
+	const char *value = NULL;
+	action_t *stop = NULL;
+	action_t *start = NULL;
+	action_t *other = NULL;
+	action_t *action = NULL;
+
+	if(rsc->variant != pe_native) {
+		return;
+	}
+	
+	if(rsc->is_managed == FALSE
+	   || rsc->failed
+	   || rsc->start_pending
+	   || rsc->next_role != RSC_ROLE_STARTED		   
+	   || g_list_length(rsc->running_on) != 1) {
+		crm_debug_3("%s: resource", rsc->id);
+		return;
+	}
+	
+	key = start_key(rsc);
+	action_list = find_actions(rsc->actions, key, NULL);
+	crm_free(key);
+	
+	if(action_list == NULL) {
+		crm_debug_3("%s: no start action", rsc->id);
+		return;
+	}
+	
+	start = action_list->data;
+	
+	value = g_hash_table_lookup(rsc->meta, "allow_migrate");
+	if(crm_is_true(value)) {
+		rsc->can_migrate = TRUE;	
+	}
+	
+	if(rsc->can_migrate == FALSE
+	   && start->allow_reload_conversion == FALSE) {
+		crm_debug_3("%s: no need to continue", rsc->id);
+		return;
+	}
+	
+	key = stop_key(rsc);
+	action_list = find_actions(rsc->actions, key, NULL);
+	crm_free(key);
+	
+	if(action_list == NULL) {
+		crm_debug_3("%s: no stop action", rsc->id);
+		return;
+	}
+	
+	stop = action_list->data;
+	
+	action = start;
+	if(action->pseudo
+	   || action->optional
+	   || action->node == NULL
+	   || action->runnable == FALSE) {
+		crm_debug_3("Skipping: %s", action->task);
+		return;
+	}
+	
+	action = stop;
+	if(action->pseudo
+	   || action->optional
+	   || action->node == NULL
+	   || action->runnable == FALSE) {
+		crm_debug_3("Skipping: %s", action->task);
+		return;
+	}
+	
+	slist_iter(
+		other_w, action_wrapper_t, start->actions_before, lpc,
+		other = other_w->action;
+		if(other->optional == FALSE
+		   && other->rsc != NULL
+		   && other->rsc != start->rsc) {
+			crm_debug_2("Skipping: start depends");
+			return;
+		}
+		);
+	
+	slist_iter(
+		other_w, action_wrapper_t, stop->actions_after, lpc,
+		other = other_w->action;
+		if(other->optional == FALSE
+		   && other->rsc != NULL
+		   && other->rsc != stop->rsc) {
+			crm_debug_2("Skipping: stop depends");
+			return;
+		}
+		);
+	
+	if(rsc->can_migrate && stop->node->details != start->node->details) {
+		crm_info("Migrating %s from %s to %s", rsc->id,
+			 stop->node->details->uname,
+			 start->node->details->uname);
+		
+		crm_free(stop->uuid);
+		stop->task = CRMD_ACTION_MIGRATE;
+		stop->uuid = generate_op_key(rsc->id, stop->task, 0);
+		add_hash_param(stop->meta, stop->task,
+			       start->node->details->uname);
+		
+		crm_free(start->uuid);
+		start->task = CRMD_ACTION_MIGRATED;
+		start->uuid = generate_op_key(rsc->id, start->task, 0);
+		add_hash_param(start->meta, stop->task,
+			       stop->node->details->uname);
+		add_hash_param(
+			start->meta, CRMD_ACTION_MIGRATED"_uuid",
+			stop->node->details->id);
+		
+	} else if(start->allow_reload_conversion
+		  && stop->node->details == start->node->details) {
+		crm_info("Rewriting restart of %s on %s as a reload",
+			 rsc->id, start->node->details->uname);
+		crm_free(start->uuid);
+		start->task = "reload";
+		start->uuid = generate_op_key(rsc->id, start->task, 0);
+		
+		stop->pseudo = TRUE; /* easier than trying to delete it from the graph */
+		
+	} else {
+		crm_debug_3("%s nothing to do", rsc->id);
+	}
+}

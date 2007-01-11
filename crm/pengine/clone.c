@@ -1269,3 +1269,16 @@ clone_stonith_ordering(
 			child_rsc, stonith_op, data_set);
 		);
 }
+
+void
+clone_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
+{
+	clone_variant_data_t *clone_data = NULL;
+	get_clone_variant_data(clone_data, rsc);
+
+	slist_iter(
+		child_rsc, resource_t, clone_data->child_list, lpc,
+		
+		child_rsc->cmds->migrate_reload(child_rsc, data_set);
+		);
+}

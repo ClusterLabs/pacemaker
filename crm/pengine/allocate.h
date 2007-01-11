@@ -65,6 +65,7 @@ struct resource_alloc_functions_s
 		void (*rsc_location)(resource_t *, rsc_to_node_t *);
 
 		void (*expand)(resource_t *, pe_working_set_t *);
+		void (*migrate_reload)(resource_t *, pe_working_set_t *);
 		void (*stonith_ordering)(
 			resource_t *, action_t *, pe_working_set_t *);
 
@@ -102,6 +103,7 @@ extern gboolean native_create_probe(
 	pe_working_set_t *data_set);
 extern void native_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
+extern void native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set);
 
 extern int  group_num_allowed_nodes(resource_t *rsc);
 extern node_t *group_color(resource_t *rsc, pe_working_set_t *data_set);
@@ -128,6 +130,7 @@ extern gboolean group_create_probe(
 	pe_working_set_t *data_set);
 extern void group_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
+extern void group_migrate_reload(resource_t *rsc, pe_working_set_t *data_set);
 
 extern int  clone_num_allowed_nodes(resource_t *rsc);
 extern node_t *clone_color(resource_t *rsc, pe_working_set_t *data_set);
@@ -153,6 +156,7 @@ extern gboolean clone_create_probe(
 	pe_working_set_t *data_set);
 extern void clone_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
+extern void clone_migrate_reload(resource_t *rsc, pe_working_set_t *data_set);
 
 extern gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern node_t *master_color(resource_t *rsc, pe_working_set_t *data_set);

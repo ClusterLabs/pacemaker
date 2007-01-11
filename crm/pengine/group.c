@@ -446,4 +446,15 @@ group_stonith_ordering(
 		);
 }
 
+void
+group_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
+{
+	group_variant_data_t *group_data = NULL;
+	get_group_variant_data(group_data, rsc);
+
+	slist_iter(
+		child_rsc, resource_t, group_data->child_list, lpc,
 		
+		child_rsc->cmds->migrate_reload(child_rsc, data_set);
+		);
+}
