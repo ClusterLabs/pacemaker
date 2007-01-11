@@ -46,7 +46,6 @@ import CTSaudits
 import time, os, re, types, string, tempfile, sys
 from CTSaudits import *
 from stat import *
-from xml.dom.minidom import *
 
 #        List of all class objects for tests which we ought to
 #        consider running.
