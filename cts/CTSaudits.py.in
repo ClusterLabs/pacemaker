@@ -627,7 +627,8 @@ class PartitionAudit(ClusterAudit):
 			%(len(dc_found), str(dc_found), str(node_list)))
 	    passed = 0
 
-        elif self.CM.Env["CIBResource"] == 1 and self.NodeQuorum[dc_found[0]]:
+        elif self.CM.Env["CIBResource"] == 1 and self.NodeQuorum[dc_found[0]] == "1":
+            self.CM.debug("%s: %s" % (dc_found[0], self.NodeQuorum[dc_found[0]]))
             if self.audit_dc_resources(node_list, dc_found) == 0:
                 passed = 0
 

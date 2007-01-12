@@ -37,21 +37,51 @@ class CIB:
        </attributes>
     </cluster_property_set>'''
 
-    dc_ipaddr_resource_template = ''' 
-        <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
+    ipaddr_template = ''' 
+        <primitive id="%s" class="ocf" type="IPaddr" provider="heartbeat">
           <operations>
-             <op id="DcIPaddr-1" name="monitor" interval="5s"/>
-             <op id="DcIPaddr-2" name="start"/>
+            <op id="%s-mon" name="monitor" interval="5s"/>
           </operations>
-          <instance_attributes id="DcIPaddr">
+          <instance_attributes id="%s">
+            <attributes>
+              <nvpair id="%s-ip" name="ip" value="%s"/>
+            </attributes>
+          </instance_attributes>
+        </primitive> '''
+
+    hb_ipaddr_template = ''' 
+        <primitive id="%s" class="heartbeat" type="IPaddr">
+          <operations>
+            <op id="%s-mon" name="monitor" interval="5s"/>
+          </operations>
+          <instance_attributes id="%s">
+            <attributes>
+              <nvpair id="%s-ip" name="1" value="%s"/>
+            </attributes>
+          </instance_attributes>
+        </primitive> '''
+
+    lsb_resource = ''' 
+        <primitive id="lsb_dummy" class="lsb" type="@libdir@/heartbeat/cts/LSBDummy" provider="heartbeat">
+          <operations>
+            <op id="ocf_lsb_monitor" name="monitor" interval="5s"/>
+          </operations>
+        </primitive> '''
+
+    dummy_resource_template = ''' 
+        <primitive id="%s" class="ocf" type="Dummy" provider="heartbeat">
+          <operations>
+             <op id="%s-mon" name="monitor" interval="10s"/>
+          </operations>
+          <instance_attributes id="%s">
              <attributes>
-               <nvpair id="DcIPaddr-1" name="ip" value="%s"/>
+               <nvpair id="%s-migrate" name="allow_migrate" value="1"/>
              </attributes>
           </instance_attributes>
         </primitive> '''
     
     clustermon_resource_template = ''' 
-        <primitive id="cluster_mon" class="ocf" type="ClusterMon" provider="heartbeat" is_managed="1">
+        <primitive id="cluster_mon" class="ocf" type="ClusterMon" provider="heartbeat">
           <operations>
             <op id="cluster_mon-1" name="monitor" interval="5s" prereq="nothing"/>
             <op id="cluster_mon-2" name="start" prereq="nothing"/>
@@ -80,13 +110,6 @@ class CIB:
           </rule>
         </rsc_location> '''
 
-    lsb_resource = ''' 
-        <primitive id="lsb_dummy" class="lsb" type="@libdir@/heartbeat/cts/LSBDummy" provider="heartbeat">
-          <operations>
-            <op id="ocf_lsb_monitor" name="monitor" interval="5s"/>
-          </operations>
-        </primitive> '''
-
     master_slave_resource = ''' 
         <master_slave id="master_rsc_1">
           <instance_attributes id="master_rsc">
@@ -105,53 +128,7 @@ class CIB:
           </primitive>
         </master_slave>'''
 
-    resource_group_template = ''' 
-        <group id="group-1">
-          <primitive id="ocf_%s" class="ocf" type="IPaddr" provider="heartbeat">
-            <operations>
-              <op id="ocf_chil%s_monitor" name="monitor" interval="5s"/>
-            </operations>
-            <instance_attributes id="ip-1">
-              <attributes>
-                <nvpair id="ocf_%s_ip_1" name="ip" value="%s"/>
-              </attributes>
-            </instance_attributes>
-          </primitive>
-          <primitive id="heartbeat_%s" class="heartbeat" type="IPaddr" provider="heartbeat">
-            <operations>
-              <op id="heartbeat_%s_monitor" name="monitor" interval="5s"/>
-            </operations>
-            <instance_attributes id="ip-2">
-              <attributes>
-                <nvpair id="heartbeat_%s_ip_1" name="1" value="%s"/>
-              </attributes>
-            </instance_attributes>
-          </primitive>
-          <primitive id="ocf_%s" class="ocf" type="IPaddr" provider="heartbeat">
-            <operations>
-              <op id="ocf_%s_monitor" name="monitor" interval="5s"/>
-            </operations>
-            <instance_attributes id="ip-3">
-              <attributes>
-                <nvpair id="ocf_%s_ip_1" name="ip" value="%s"/>
-              </attributes>
-            </instance_attributes>
-          </primitive>
-        </group> '''  
-
-
-    per_node_resource_template = ''' 
-        <primitive id="%s" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
-          <operations>
-            <op id="%s-1" name="monitor" interval="5s"/>
-            <op id="%s-2" name="start"/>
-          </operations>
-          <instance_attributes id="%s">
-            <attributes>
-              <nvpair id="%s-1" name="ip" value="%s"/>
-            </attributes>
-          </instance_attributes>
-        </primitive> '''
+    resource_group_template = '''<group id="group-1">%s %s %s</group>'''
 
     per_node_constraint_template = ''' 
         <rsc_location id="run_%s" rsc="%s">
@@ -225,8 +202,8 @@ class CIB:
 	    self.cts_cib = self.cib_template %  (cib_options, resources, constraints)
 	    return
 
-	self.CM.log("Enabling DC resource")
-	resources += self.dc_ipaddr_resource_template % self.CM.Env["IPBase"]
+        resources += self.hb_ipaddr_template % \
+            ("DcIPaddr", "DcIPaddr", "DcIPaddr", "DcIPaddr", self.CM.Env["IPBase"])
 	constraints += self.dc_ipaddr_location_constraint
 	if self.CM.cluster_monitor == 1:
 	    resources += self.clustermon_resource_template
@@ -235,17 +212,24 @@ class CIB:
 	ip1=self.NextIP()
 	ip2=self.NextIP()
 	ip3=self.NextIP()
-	resources += self.resource_group_template % (ip1, ip1, ip1, ip1, ip2, ip2, ip2, ip2, ip3, ip3, ip3, ip3)
+        ip1_rsc = self.ipaddr_template % (ip1, ip1, ip1, ip1, ip1)
+        ip2_rsc = self.ipaddr_template % (ip2, ip2, ip2, ip2, ip2)
+        ip3_rsc = self.ipaddr_template % (ip3, ip3, ip3, ip3, ip3)
+	resources += self.resource_group_template % (ip1_rsc, ip2_rsc, ip3_rsc)
 
 	# lsb resource
 	resources += self.lsb_resource
+
+        # Mirgator
+        resources += self.dummy_resource_template % \
+            ("migrator", "migrator", "migrator", "migrator")
 
 	# per node resource
 	fields = string.split(self.CM.Env["IPBase"], '.')
 	for node in self.CM.Env["nodes"]:
 	    ip = self.NextIP()
-	    per_node_resources = self.per_node_resource_template % \
-		("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, ip)    
+	    per_node_resources = self.ipaddr_template % \
+		("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, ip)    
 	    
 	    per_node_constraint = self.per_node_constraint_template % \
 		("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, node)

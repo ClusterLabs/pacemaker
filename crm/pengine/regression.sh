@@ -141,6 +141,12 @@ do_test rec-node-14 "Serialize all stonith's"
 echo ""
 do_test multi1 "Multiple Active (stop/start)"
 
+echo ""
+do_test migrate-1 "Migrate (migrate)"
+do_test migrate-2 "Migrate (stable)"
+do_test migrate-3 "Migrate (failed migrate_to)"
+do_test migrate-4 "Migrate (failed migrate_from)"
+
 #echo ""
 #do_test complex1 "Complex	"
 

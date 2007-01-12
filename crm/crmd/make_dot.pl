@@ -23,9 +23,11 @@
 
 $do_links2self=1;
 
-make_inputs_dot("fsa_matrix.h", "fsa_inputs.dot", "const enum crmd_fsa_state crmd_fsa_state", "const long long crmd_fsa_actions");
+$input_file = $ARGV[0];
+$output_dir = $ARGV[1];
+make_inputs_dot($input_file, $output_dir."/fsa_inputs.dot", "const enum crmd_fsa_state crmd_fsa_state", "const long long crmd_fsa_actions");
 
-make_actions_dot("fsa_matrix.h", "fsa_actions_by_state.dot", "fsa_inputs_by_action.dot", "const long long crmd_fsa_actions", "ELSEIF_INVOKE_FSA_ACTION");
+make_actions_dot($input_file, $output_dir."/fsa_actions_by_state.dot", $output_dir."/fsa_inputs_by_action.dot", "const long long crmd_fsa_actions", "ELSEIF_INVOKE_FSA_ACTION");
 
 sub make_inputs_dot
 {
@@ -101,8 +103,6 @@ sub make_inputs_dot
     
     foreach $line (@lines)	
     {
-	
-	
 	$seen_start=1 if($line =~ /$start/);
 	$seen_start=0 if($line =~ /$stop/);
 	

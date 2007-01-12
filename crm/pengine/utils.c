@@ -283,7 +283,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 		return FALSE;
 
 	} else if(can_run_resources(chosen) == FALSE) {
-		crm_debug("All nodes for color %s are unavailable"
+		crm_debug("All nodes for resource %s are unavailable"
 			  ", unclean or shutting down", rsc->id);
 		rsc->next_role = RSC_ROLE_STOPPED;
 		return FALSE;

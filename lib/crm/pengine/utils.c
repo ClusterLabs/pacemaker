@@ -660,6 +660,11 @@ unpack_operation(
 			value = "resource block (default)";
 		}
 		
+	} else if(value == NULL
+		  && safe_str_eq(action->task, CRMD_ACTION_MIGRATED)) {
+		action->on_fail = action_migrate_failure;		
+		value = "atomic migration recovery (default)";
+		
 	} else if(value == NULL) {
 		action->on_fail = action_fail_recover;		
 		value = "restart (and possibly migrate) (default)";
