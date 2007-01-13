@@ -110,7 +110,7 @@ msg_start_outdate(struct ha_msg *msg, void *private)
 	char rc_string[4];
 	HA_Message *msg2 = NULL;
 	const char *drbd_resource = ha_msg_value(msg, F_DOPD_RES);
-	char *command;
+	char *command = NULL;
 
 	/* execute outdate command */
 	crm_malloc0(command, strlen(OUTDATE_COMMAND) + 1 + strlen(drbd_resource) + 1);
