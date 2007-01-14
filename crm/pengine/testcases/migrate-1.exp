@@ -12,7 +12,7 @@
      <action_set>
        <rsc_op id="5" operation="migrate_from" operation_key="rsc3_migrate_from_0" on_node="node2" on_node_uuid="node2">
          <primitive id="rsc3" long-id="rsc3" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.8" allow_migrate="on" CRM_meta_migrate_to="node1" CRM_meta_timeout="20000" CRM_meta_migrate_from_uuid="node1"/>
+         <attributes crm_feature_set="1.0.8" allow_migrate="on" CRM_meta_migrate_source_uuid="node1" CRM_meta_timeout="20000" CRM_meta_migrate_target="node2" CRM_meta_migrate_source="node1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -28,7 +28,7 @@
      <action_set>
        <rsc_op id="6" operation="migrate_to" operation_key="rsc3_migrate_to_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc3" long-id="rsc3" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="1.0.8" allow_migrate="on" CRM_meta_migrate_to="node2" CRM_meta_timeout="20000"/>
+         <attributes crm_feature_set="1.0.8" allow_migrate="on" CRM_meta_timeout="20000" CRM_meta_migrate_target="node2" CRM_meta_migrate_source="node1"/>
        </rsc_op>
      </action_set>
      <inputs/>
