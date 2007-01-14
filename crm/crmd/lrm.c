@@ -592,7 +592,7 @@ build_operation_update(
 	if(op->op_status != LRM_OP_DONE
 	   && crm_str_eq(op->op_type, CRMD_ACTION_MIGRATED, TRUE)) {
 		const char *host = g_hash_table_lookup(
-			op->params, crm_meta_name(CRMD_ACTION_MIGRATED"_uuid"));
+			op->params, crm_meta_name("migrate_source_uuid"));
 		crm_xml_add(xml_op, CRMD_ACTION_MIGRATED, host);
 	}	
 	

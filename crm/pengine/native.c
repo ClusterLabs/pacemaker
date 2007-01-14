@@ -1534,17 +1534,20 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		crm_free(stop->uuid);
 		stop->task = CRMD_ACTION_MIGRATE;
 		stop->uuid = generate_op_key(rsc->id, stop->task, 0);
-		add_hash_param(stop->meta, stop->task,
+		add_hash_param(stop->meta, "migrate_source",
+			       stop->node->details->uname);
+		add_hash_param(stop->meta, "migrate_target",
 			       start->node->details->uname);
 		
 		crm_free(start->uuid);
 		start->task = CRMD_ACTION_MIGRATED;
 		start->uuid = generate_op_key(rsc->id, start->task, 0);
-		add_hash_param(start->meta, stop->task,
+		add_hash_param(start->meta, "migrate_source_uuid",
+			       stop->node->details->id);
+		add_hash_param(start->meta, "migrate_source",
 			       stop->node->details->uname);
-		add_hash_param(
-			start->meta, CRMD_ACTION_MIGRATED"_uuid",
-			stop->node->details->id);
+		add_hash_param(start->meta, "migrate_target",
+			       start->node->details->uname);
 		
 	} else if(start->allow_reload_conversion
 		  && stop->node->details == start->node->details) {
