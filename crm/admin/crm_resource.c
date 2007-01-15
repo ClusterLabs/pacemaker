@@ -65,12 +65,13 @@ const char *prop_value = NULL;
 const char *rsc_type = NULL;
 const char *prop_id = NULL;
 const char *prop_set = NULL;
+char *migrate_lifetime = NULL;
 char rsc_cmd = 'L';
 char *our_pid = NULL;
 IPC_Channel *crmd_channel = NULL;
 char *xml_file = NULL;
 
-#define OPTARGS	"V?LRQxDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:fX:lm"
+#define OPTARGS	"V?LRQxDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:fX:lmu:"
 
 static int
 do_find_resource(const char *rsc, pe_working_set_t *data_set)
@@ -532,6 +533,7 @@ migrate_resource(
 	const char *existing_node, const char *preferred_node,
 	cib_t *	cib_conn) 
 {
+	char *later_s = NULL;
 	enum cib_errors rc = cib_ok;
 	char *id = NULL;
 	crm_data_t *cib = NULL;
@@ -539,7 +541,8 @@ migrate_resource(
 	crm_data_t *expr = NULL;
 	crm_data_t *constraints = NULL;
 	crm_data_t *fragment = NULL;
-
+	crm_data_t *lifetime = NULL;
+	
 	crm_data_t *can_run = NULL;
 	crm_data_t *dont_run = NULL;
 
@@ -559,6 +562,32 @@ migrate_resource(
 	crm_xml_add(dont_run, XML_ATTR_ID, id);
 	crm_free(id);
 
+	if(migrate_lifetime) {
+		char *life = crm_strdup(migrate_lifetime);
+		char *life_mutable = life;
+		
+		ha_time_t *later = NULL;
+		ha_time_t *now = new_ha_date(TRUE);
+		ha_time_t *duration = parse_time_duration(&life_mutable);
+		
+		if(duration == NULL) {
+			fprintf(stderr, "Invalid duration specified: %s\n",
+				migrate_lifetime);
+			fprintf(stderr, "Please refer to"
+				" http://en.wikipedia.org/wiki/ISO_8601"
+				" for examples of valid durations\n");
+			return cib_invalid_argument;
+		}
+		later = add_time(now, duration);
+		later_s = date_to_string(later, ha_log_date|ha_log_time);
+		printf("Migration will take effect until: %s\n", later_s);
+
+		free_ha_date(duration);
+		free_ha_date(later);
+		free_ha_date(now);
+		crm_free(life);
+	}
+	
 	if(existing_node == NULL) {
 		crm_log_xml_notice(can_run, "Deleting");
 		rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_CONSTRAINTS,
@@ -604,6 +633,23 @@ migrate_resource(
 		crm_xml_add(expr, XML_EXPR_ATTR_VALUE, existing_node);
 		crm_xml_add(expr, XML_EXPR_ATTR_TYPE, "string");
 
+		if(later_s) {
+			lifetime = create_xml_node(dont_run, "lifetime");
+
+			rule = create_xml_node(lifetime, XML_TAG_RULE);
+			id = crm_concat("cli-standby-lifetime", rsc_id, '-');
+			crm_xml_add(rule, XML_ATTR_ID, id);
+			crm_free(id);
+
+			expr = create_xml_node(rule, "date_expression");
+			id = crm_concat("cli-standby-lifetime-end",rsc_id,'-');
+			crm_xml_add(expr, XML_ATTR_ID, id);
+			crm_free(id);			
+
+			crm_xml_add(expr, "operation", "lt");
+			crm_xml_add(expr, "end", later_s);
+		}
+		
 		add_node_copy(constraints, dont_run);
 	}
 	
@@ -637,6 +683,23 @@ migrate_resource(
 		crm_xml_add(expr, XML_EXPR_ATTR_VALUE, preferred_node);
 		crm_xml_add(expr, XML_EXPR_ATTR_TYPE, "string");
 
+		if(later_s) {
+			lifetime = create_xml_node(can_run, "lifetime");
+
+			rule = create_xml_node(lifetime, XML_TAG_RULE);
+			id = crm_concat("cli-prefer-lifetime", rsc_id, '-');
+			crm_xml_add(rule, XML_ATTR_ID, id);
+			crm_free(id);
+
+			expr = create_xml_node(rule, "date_expression");
+			id = crm_concat("cli-prefer-lifetime-end", rsc_id, '-');
+			crm_xml_add(expr, XML_ATTR_ID, id);
+			crm_free(id);			
+
+			crm_xml_add(expr, "operation", "lt");
+			crm_xml_add(expr, "end", later_s);
+		}
+		
 		add_node_copy(constraints, can_run);
 	}
 
@@ -683,6 +746,7 @@ main(int argc, char **argv)
 		{"un-migrate", 0, 0, 'U'},
 		{"resource",   1, 0, 'r'},
 		{"host-uname", 1, 0, 'H'},
+		{"lifetime",   1, 0, 'u'},
 		{"force",      0, 0, 'f'},
 		{"meta",       0, 0, 'm'},
 
@@ -749,6 +813,10 @@ main(int argc, char **argv)
 			case 'M':
 			case 'U':
 				rsc_cmd = flag;
+				break;
+				
+			case 'u':
+				migrate_lifetime = crm_strdup(optarg);
 				break;
 				
 			case 'p':
@@ -1120,7 +1188,7 @@ usage(const char *cmd, int exit_status)
 		" creating a rule for the current location and a score of -INFINITY\n"
 		"\t\tNOTE: This will prevent the resource from running on this"
 		" node until the constraint is removed with -U\n"
-		"\t\t\t  Requires: -r, Optional: -H, -f\n", "migrate", 'M');
+		"\t\t\t  Requires: -r, Optional: -H, -f --lifetime\n", "migrate", 'M');
 	fprintf(stream, "\t--%s (-%c)\t: Remove all constraints created by -M\n"
 		"\t\t\t  Requires: -r\n", "un-migrate", 'U');
 	fprintf(stream, "\t--%s (-%c)\t: Delete a resource from the CIB\n"
@@ -1152,13 +1220,15 @@ usage(const char *cmd, int exit_status)
 		"Host name\n", "host-uname", 'H');
 	fprintf(stream, "\t--%s\t: Modify a resource's configuration option rather than one which is passed to the resource agent script."
 		"\n\t\tFor use with -p, -g, -d\n", "meta");
+	fprintf(stream, "\t--%s (-%c) <string>\t: "
+		"Lifespan of migration constraints\n", "lifetime", 'u');
 	fprintf(stream, "\t--%s (-%c)\t: "
 		"Force the resource to move by creating a rule for the"
 		" current location and a score of -INFINITY\n"
 		"\t\tThis should be used if the resource's stickiness and"
 		" constraint scores total more than INFINITY (Currently 100,000)\n"
 		"\t\tNOTE: This will prevent the resource from running on this"
-		" node until the constraint is removed with -U\n",
+		" node until the constraint is removed with -U or the --lifetime duration expires\n",
 		"force-relocation", 'f');
 	fprintf(stream, "\t-%c <string>\t: (Advanced Use Only) ID of the instance_attributes object to change\n", 's');
 	fprintf(stream, "\t-%c <string>\t: (Advanced Use Only) ID of the nvpair object to change/delete\n", 'i');
