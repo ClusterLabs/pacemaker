@@ -302,7 +302,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 		crm_xml_add(root, "ignore_dtd", XML_BOOLEAN_FALSE);	
 	}	
 	
-	if(do_id_check(root, NULL, FALSE, FALSE)) {
+	if(do_id_check(root, NULL, TRUE, FALSE)) {
 		crm_err("%s does not contain a vaild configuration:"
 			" ID check failed",
 			 filename);
