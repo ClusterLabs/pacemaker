@@ -123,6 +123,8 @@ main(int argc, char **argv)
 			fprintf(stderr, "Invalid duration specified: %s\n", input_s);
 			usage(1);
 		}
+		log_date(LOG_INFO, "Duration", duration,
+			 print_options|ha_log_date|ha_log_time|ha_log_local);
 
 	} else if(command == 'n') {
 		ha_time_t *now = new_ha_date(TRUE);
