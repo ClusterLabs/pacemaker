@@ -1031,7 +1031,8 @@ main(int argc, char **argv)
 			fprintf(stderr, "Resource %s not migrated:"
 				" not found\n", rsc_id);
 
-		} else if(g_list_length(rsc->running_on) > 1) {
+		} else if(rsc->variant == pe_native
+			  && g_list_length(rsc->running_on) > 1) {
 			fprintf(stderr, "Resource %s not migrated:"
 				" active on multiple nodes\n", rsc_id);
 			
