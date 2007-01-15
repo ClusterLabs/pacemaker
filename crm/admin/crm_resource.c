@@ -939,13 +939,19 @@ main(int argc, char **argv)
 		rc = migrate_resource(rsc_id, NULL, NULL, cib_conn);
 
 	} else if(rsc_cmd == 'M') {
+		node_t *dest = NULL;
+		node_t *current = NULL;
 		const char *current_uname = NULL;
 		resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 		if(rsc != NULL && rsc->running_on != NULL) {
-			node_t *current = rsc->running_on->data;
+			current = rsc->running_on->data;
 			if(current != NULL) {
 				current_uname = current->details->uname;
 			}
+		}
+
+		if(host_uname != NULL) {
+			dest = pe_find_node(data_set.nodes, host_uname);
 		}
 		
 		if(rsc == NULL) {
@@ -956,6 +962,10 @@ main(int argc, char **argv)
 			fprintf(stderr, "Resource %s not migrated:"
 				" active on multiple nodes\n", rsc_id);
 			
+		} else if(host_uname != NULL && dest == NULL) {
+			fprintf(stderr, "Error performing operation: "
+				"%s is not a known node", host_uname);
+
 		} else if(host_uname != NULL
 			  && safe_str_eq(current_uname, host_uname)) {
 			fprintf(stderr, "Error performing operation: "
