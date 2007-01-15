@@ -62,13 +62,13 @@ void normalize_time(ha_time_t *a_time);
 #define GMTOFF(tm) (timezone)
 #endif
 
-
-void
-log_date(int log_level, const char *prefix, ha_time_t *date_time, int flags) 
+char *
+date_to_string(ha_time_t *date_time, int flags) 
 {
 	char *date_s = NULL;
 	char *time_s = NULL;
 	char *offset_s = NULL;
+	char *result_s = NULL;
 	ha_time_t *dt = NULL;
 	
 	if(flags & ha_log_local) {
@@ -78,11 +78,13 @@ log_date(int log_level, const char *prefix, ha_time_t *date_time, int flags)
 		dt = date_time->normalized;
 	}
 
-	CRM_CHECK(dt != NULL, return);
+	CRM_CHECK(dt != NULL, return NULL);
 	
 	if(flags & ha_log_date) {
 		crm_malloc0(date_s, 32);
 		if(date_s == NULL) {
+			return NULL;
+			
 		} else if(flags & ha_date_weeks) {
 			snprintf(date_s, 31, "%d-W%.2d-%d",
 				 dt->weekyears, dt->weeks, dt->weekdays);
@@ -99,7 +101,7 @@ log_date(int log_level, const char *prefix, ha_time_t *date_time, int flags)
 		int offset = 0;
 		crm_malloc0(time_s, 32);
 		if(time_s == NULL) {
-			return;
+			return NULL;
 		} 
 
 		snprintf(time_s, 31, "%.2d:%.2d:%.2d",
@@ -126,14 +128,29 @@ log_date(int log_level, const char *prefix, ha_time_t *date_time, int flags)
 				 offset>0?"+":"-", hr, mins);
 		}
 	}
-	do_crm_log(log_level, "%s%s%s%s%s%s",
-		      prefix?prefix:"", prefix?": ":"",
-		      date_s?date_s:"", (date_s!=NULL&&time_s!=NULL)?" ":"",
-		      time_s?time_s:"", offset_s?offset_s:"");
+
+	crm_malloc0(result_s, 100);
+
+	snprintf(result_s, 100, "%s%s%s%s",
+		 date_s?date_s:"", (date_s!=NULL&&time_s!=NULL)?" ":"",
+		 time_s?time_s:"", offset_s?offset_s:"");
 
 	crm_free(date_s);
 	crm_free(time_s);
 	crm_free(offset_s);
+
+	return result_s;
+}
+
+void
+log_date(int log_level, const char *prefix, ha_time_t *date_time, int flags) 
+{
+	char *date_s = date_to_string(date_time, flags);
+	do_crm_log(log_level, "%s%s%s",
+		      prefix?prefix:"", prefix?": ":"",
+		      date_s?date_s:"__invalid_date__");
+
+	crm_free(date_s);
 }
 
 void

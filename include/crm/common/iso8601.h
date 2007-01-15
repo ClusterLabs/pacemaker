@@ -90,6 +90,7 @@ typedef struct ha_time_period_s
 
 extern int str_lookup(const char *str, enum date_fields);
 
+extern char *date_to_string(ha_time_t *dt, int flags);
 extern void log_date(int log_level, const char *prefix, ha_time_t *dt, int flags);
 extern void log_time_period(int log_level, ha_time_period_t *dtp, int flags);
 
