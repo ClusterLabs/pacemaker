@@ -21,8 +21,6 @@
 #include <crm/pengine/common.h>
 #include <crm/pengine/status.h>
 
-/* Node helper functions */
-extern node_t *pe_find_node_id(GListPtr node_list, const char *id);
 
 extern node_t *node_copy(node_t *this_node) ;
 

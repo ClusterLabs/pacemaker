@@ -215,5 +215,7 @@ gboolean cluster_status(pe_working_set_t *data_set);
 extern void set_working_set_defaults(pe_working_set_t *data_set);
 extern void cleanup_calculations(pe_working_set_t *data_set);
 extern resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
+extern node_t *pe_find_node(GListPtr node_list, const char *uname);
+extern node_t *pe_find_node_id(GListPtr node_list, const char *id);
 
 #endif

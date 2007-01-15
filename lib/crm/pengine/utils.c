@@ -59,21 +59,6 @@ pe_free_shallow_adv(GListPtr alist, gboolean with_data)
 	}
 }
 
-node_t *
-pe_find_node_id(GListPtr nodes, const char *id)
-{
-	unsigned lpc = 0;
-	node_t *node = NULL;
-  
-	for(lpc = 0; lpc < g_list_length(nodes); lpc++) {
-		node = g_list_nth_data(nodes, lpc);
-		if(safe_str_eq(node->details->id, id)) {
-			return node;
-		}
-	}
-	/* error */
-	return NULL;
-}
 
 node_t *
 node_copy(node_t *this_node) 
