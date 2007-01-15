@@ -55,6 +55,7 @@ void usage(const char *cmd, int exit_status);
 
 gboolean do_force = FALSE;
 gboolean BE_QUIET = FALSE;
+const char *attr_set_type = XML_TAG_ATTR_SETS;
 char *host_id = NULL;
 const char *rsc_id = NULL;
 const char *host_uname = NULL;
@@ -69,7 +70,7 @@ char *our_pid = NULL;
 IPC_Channel *crmd_channel = NULL;
 char *xml_file = NULL;
 
-#define OPTARGS	"V?LRQxDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:fX:l"
+#define OPTARGS	"V?LRQxDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:fX:lm"
 
 static int
 do_find_resource(const char *rsc, pe_working_set_t *data_set)
@@ -187,7 +188,7 @@ dump_resource_attr(
 	} 
 	
 	unpack_instance_attributes(
-		the_rsc->xml, XML_TAG_ATTR_SETS, current?current->details->attrs:NULL,
+		the_rsc->xml, attr_set_type, current?current->details->attrs:NULL,
 		the_rsc->parameters, NULL, data_set->now);
 
 	if(the_rsc->parameters != NULL) {
@@ -233,7 +234,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	if(attr_set != NULL) {
 		matches = find_xml_children(
 			&set_children, rsc->xml, 
-			XML_TAG_ATTR_SETS, XML_ATTR_ID, attr_set, TRUE);
+			attr_set_type, XML_ATTR_ID, attr_set, TRUE);
 		crm_log_xml_debug(set_children, "search by set:");
 	}
 
@@ -261,7 +262,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 			set_children = NULL;
 			find_xml_children(
 				&set_children, rsc->xml, 
-				XML_TAG_ATTR_SETS, NULL, NULL, FALSE);
+				attr_set_type, NULL, NULL, FALSE);
 			xml_child_iter(
 				set_children, set,
 				free_xml(nv_children);
@@ -313,7 +314,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 		xml_top = create_xml_node(NULL, crm_element_name(rsc->xml));
 		crm_xml_add(xml_top, XML_ATTR_ID, rsc->id);
 		
-		xml_obj = create_xml_node(xml_top, XML_TAG_ATTR_SETS);
+		xml_obj = create_xml_node(xml_top, attr_set_type);
 		crm_xml_add(xml_obj, XML_ATTR_ID, attr_set);
 		
 		xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
@@ -683,6 +684,7 @@ main(int argc, char **argv)
 		{"resource",   1, 0, 'r'},
 		{"host-uname", 1, 0, 'H'},
 		{"force",      0, 0, 'f'},
+		{"meta",       0, 0, 'm'},
 
 		{"set-parameter",   1, 0, 'p'},
 		{"get-parameter",   1, 0, 'g'},
@@ -732,7 +734,10 @@ main(int argc, char **argv)
 			case 'Q':
 				BE_QUIET = TRUE;
 				break;
-
+			case 'm':
+				attr_set_type = XML_TAG_META_SETS;
+				break;
+				
 			case 'L':
 			case 'l':
 			case 'R':
@@ -1128,19 +1133,13 @@ usage(const char *cmd, int exit_status)
 		"\t\t\t  Optional: -H\n", "refresh", 'R');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
 		"Set the named parameter for a resource\n"
-		"\t\t\t  Requires: -r, -v.  Optional: -i, -s\n", "set-parameter", 'p');
+		"\t\t\t  Requires: -r, -v.  Optional: -i, -s, --meta\n", "set-parameter", 'p');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
 		"Get the named parameter for a resource\n"
-		"\t\t\t  Requires: -r.  Optional: -i, -s\n", "get-parameter", 'g');
+		"\t\t\t  Requires: -r.  Optional: -i, -s, --meta\n", "get-parameter", 'g');
 	fprintf(stream, "\t--%s (-%c) <string>: "
 		"Delete the named parameter for a resource\n"
-		"\t\t\t  Requires: -r.  Optional: -i\n", "delete-parameter", 'd');
-	fprintf(stream, "\t--%s (-%c) <string>\t: "
-		"Get the named property (eg. class, type, is_managed) a resource\n"
-		"\t\t\t  Requires: -r\n", "get-property", 'G');
-	fprintf(stream, "\t--%s (-%c) <string>\t: "
-		"Set the named property (not parameter) for a resource\n"
-		"\t\t\t  Requires: -r, -t, -v", "set-property", 'S');
+		"\t\t\t  Requires: -r.  Optional: -i, --meta\n", "delete-parameter", 'd');
 	fprintf(stream, "\nOptions\n");
 	fprintf(stream, "\t--%s (-%c) <string>\t: Resource ID\n", "resource", 'r');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
@@ -1151,11 +1150,13 @@ usage(const char *cmd, int exit_status)
 		"Property value\n", "property-value", 'v');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
 		"Host name\n", "host-uname", 'H');
+	fprintf(stream, "\t--%s\t: Modify a resource's configuration option rather than one which is passed to the resource agent script."
+		"\n\t\tFor use with -p, -g, -d\n", "meta");
 	fprintf(stream, "\t--%s (-%c)\t: "
 		"Force the resource to move by creating a rule for the"
 		" current location and a score of -INFINITY\n"
 		"\t\tThis should be used if the resource's stickiness and"
-		" constraint scores total more than INFINITY (Currently 10,000)\n"
+		" constraint scores total more than INFINITY (Currently 100,000)\n"
 		"\t\tNOTE: This will prevent the resource from running on this"
 		" node until the constraint is removed with -U\n",
 		"force-relocation", 'f');
