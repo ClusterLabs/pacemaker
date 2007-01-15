@@ -66,7 +66,7 @@ config_defaults = [
 	"remove-after-stop=false",
 	"short-resource-names=true",
 	"transition-idle-timeout=5min",
-	"default-action-timeout=5s",
+	"default-action-timeout=15s",
 	"is-managed-default=true",
 ]
 
