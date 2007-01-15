@@ -818,6 +818,9 @@ cib_error2string(enum cib_errors return_code)
 		case cib_dtd_validation:
 			error_msg = "Update does conform to the DTD in "HA_LIBDIR"/heartbeat/crm.dtd";
 			break;
+		case cib_invalid_argument:
+			error_msg = "Invalid argument";
+			break;
 	}
 			
 	if(error_msg == NULL) {

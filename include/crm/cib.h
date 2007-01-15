@@ -118,7 +118,8 @@ enum cib_errors {
 	cib_bad_section		= -48,
 	cib_bad_digest		= -49,
 	cib_bad_permissions	= -50,
-	cib_bad_config		= -51
+	cib_bad_config		= -51,
+	cib_invalid_argument	= -52
 };
 
 enum cib_update_op {
