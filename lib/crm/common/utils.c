@@ -166,10 +166,12 @@ cluster_option(GHashTable* options, gboolean(*validate)(const char*),
 {
 	const char *value = NULL;
 	CRM_ASSERT(name != NULL);
-	CRM_ASSERT(options != NULL);
 
-	value = g_hash_table_lookup(options, name);
-	if(value == NULL && old_name) {
+	if(options != NULL) {
+		value = g_hash_table_lookup(options, name);
+	}
+
+	if(value == NULL && old_name && options != NULL) {
 		value = g_hash_table_lookup(options, old_name);
 		if(value != NULL) {
 			crm_config_warn("Using deprecated name '%s' for"
@@ -181,11 +183,16 @@ cluster_option(GHashTable* options, gboolean(*validate)(const char*),
 	}
 
 	if(value == NULL) {
+		crm_notice("Using default value '%s' for cluster option '%s'",
+			   value, name);
+
+		if(options == NULL) {
+			return def_value;
+		}
+		
 		g_hash_table_insert(
 			options, crm_strdup(name), crm_strdup(def_value));
 		value = g_hash_table_lookup(options, name);
-		crm_notice("Using default value '%s' for cluster option '%s'",
-			   value, name);
 	}
 	
 	if(validate && validate(value) == FALSE) {
