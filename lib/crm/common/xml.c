@@ -1488,7 +1488,6 @@ parse_xml(const char *input, size_t *offset)
 	}
 	
 	if(offset == NULL) {
-		lpc++;
 		drop_comments(our_input, &lpc, max);
 		drop_whitespace(our_input, &lpc, max);
 		if(lpc < max) {
