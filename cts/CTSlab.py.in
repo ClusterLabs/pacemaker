@@ -374,7 +374,7 @@ class CtsLab(UserDict):
         "Log using each of the supplied logging methods"
         for logfcn in self._logfunctions:
             if logfcn.name() != "StdErrLog":
-                logfcn(string.strip(args))
+                logfcn("debug: %s" % string.strip(args))
 
     def __setitem__(self, key, value):
         '''Since this function gets called whenever we modify the
