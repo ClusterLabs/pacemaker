@@ -415,6 +415,7 @@ build_operation_update(
 	const char *task = NULL;
 	crm_data_t *xml_op = NULL;
 	char *op_id = NULL;
+	char *local_user_data = NULL;
 	const char *caller_version = NULL;	
 	char *digest = NULL;
 	crm_data_t *args_xml = NULL;
@@ -526,7 +527,8 @@ build_operation_update(
 	crm_xml_add(xml_op, XML_ATTR_ORIGIN,   src);
 	
 	if(op->user_data == NULL) {
-		op->user_data = generate_transition_key(-1, 0, fsa_our_uname);
+		local_user_data = generate_transition_key(-1, 0, fsa_our_uname);
+		op->user_data = local_user_data;
 	}
 	
 	if(compare_version("1.0.3", caller_version) > 0) {
@@ -596,6 +598,10 @@ build_operation_update(
 		crm_xml_add(xml_op, CRMD_ACTION_MIGRATED, host);
 	}	
 	
+	if(local_user_data) {
+		crm_free(local_user_data);
+		op->user_data = NULL;
+	}
 	return TRUE;
 }
 
