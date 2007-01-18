@@ -928,6 +928,8 @@ add_time(ha_time_t *lhs, ha_time_t *rhs)
 	add_minutes(answer, rhs->minutes);
 	add_seconds(answer, rhs->seconds);
 
+	normalize_time(answer);
+	
 	return answer;
 }
 
@@ -953,6 +955,8 @@ subtract_time(ha_time_t *lhs, ha_time_t *rhs)
 	sub_minutes(answer, rhs->minutes);
 	sub_seconds(answer, rhs->seconds);
 
+	normalize_time(answer);
+	
 	return answer;
 }
 
