@@ -574,11 +574,14 @@ migrate_resource(
 			fprintf(stderr, "Invalid duration specified: %s\n",
 				migrate_lifetime);
 			fprintf(stderr, "Please refer to"
-				" http://en.wikipedia.org/wiki/ISO_8601"
+				" http://en.wikipedia.org/wiki/ISO_8601#Duration"
 				" for examples of valid durations\n");
 			return cib_invalid_argument;
 		}
 		later = add_time(now, duration);
+		log_date(LOG_INFO, "now     ", now, ha_log_date|ha_log_time);
+		log_date(LOG_INFO, "later   ", later, ha_log_date|ha_log_time);
+		log_date(LOG_INFO, "duration", duration, ha_log_date|ha_log_time|ha_log_local);
 		later_s = date_to_string(later, ha_log_date|ha_log_time);
 		printf("Migration will take effect until: %s\n", later_s);
 
@@ -616,22 +619,6 @@ migrate_resource(
 		}
 		
 		crm_xml_add(dont_run, "rsc", rsc_id);
-		rule = create_xml_node(dont_run, XML_TAG_RULE);
-		expr = create_xml_node(rule, XML_TAG_EXPRESSION);
-		id = crm_concat("cli-standby-rule", rsc_id, '-');
-		crm_xml_add(rule, XML_ATTR_ID, id);
-		crm_free(id);
-		
-		crm_xml_add(rule, XML_RULE_ATTR_SCORE, MINUS_INFINITY_S);
-		
-		id = crm_concat("cli-standby-expr", rsc_id, '-');
-		crm_xml_add(expr, XML_ATTR_ID, id);
-		crm_free(id);
-		
-		crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, "#uname");
-		crm_xml_add(expr, XML_EXPR_ATTR_OPERATION, "eq");
-		crm_xml_add(expr, XML_EXPR_ATTR_VALUE, existing_node);
-		crm_xml_add(expr, XML_EXPR_ATTR_TYPE, "string");
 
 		if(later_s) {
 			lifetime = create_xml_node(dont_run, "lifetime");
@@ -650,6 +637,23 @@ migrate_resource(
 			crm_xml_add(expr, "end", later_s);
 		}
 		
+		rule = create_xml_node(dont_run, XML_TAG_RULE);
+		expr = create_xml_node(rule, XML_TAG_EXPRESSION);
+		id = crm_concat("cli-standby-rule", rsc_id, '-');
+		crm_xml_add(rule, XML_ATTR_ID, id);
+		crm_free(id);
+		
+		crm_xml_add(rule, XML_RULE_ATTR_SCORE, MINUS_INFINITY_S);
+		
+		id = crm_concat("cli-standby-expr", rsc_id, '-');
+		crm_xml_add(expr, XML_ATTR_ID, id);
+		crm_free(id);
+		
+		crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, "#uname");
+		crm_xml_add(expr, XML_EXPR_ATTR_OPERATION, "eq");
+		crm_xml_add(expr, XML_EXPR_ATTR_VALUE, existing_node);
+		crm_xml_add(expr, XML_EXPR_ATTR_TYPE, "string");
+		
 		add_node_copy(constraints, dont_run);
 	}
 	
@@ -666,22 +670,6 @@ migrate_resource(
 
 	} else {
 		crm_xml_add(can_run, "rsc", rsc_id);
-		rule = create_xml_node(can_run, XML_TAG_RULE);
-		expr = create_xml_node(rule, XML_TAG_EXPRESSION);
-		id = crm_concat("cli-prefer-rule", rsc_id, '-');
-		crm_xml_add(rule, XML_ATTR_ID, id);
-		crm_free(id);
-
-		crm_xml_add(rule, XML_RULE_ATTR_SCORE, INFINITY_S);
-	
-		id = crm_concat("cli-prefer-expr", rsc_id, '-');
-		crm_xml_add(expr, XML_ATTR_ID, id);
-		crm_free(id);
-
-		crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, "#uname");
-		crm_xml_add(expr, XML_EXPR_ATTR_OPERATION, "eq");
-		crm_xml_add(expr, XML_EXPR_ATTR_VALUE, preferred_node);
-		crm_xml_add(expr, XML_EXPR_ATTR_TYPE, "string");
 
 		if(later_s) {
 			lifetime = create_xml_node(can_run, "lifetime");
@@ -699,6 +687,23 @@ migrate_resource(
 			crm_xml_add(expr, "operation", "lt");
 			crm_xml_add(expr, "end", later_s);
 		}
+
+		rule = create_xml_node(can_run, XML_TAG_RULE);
+		expr = create_xml_node(rule, XML_TAG_EXPRESSION);
+		id = crm_concat("cli-prefer-rule", rsc_id, '-');
+		crm_xml_add(rule, XML_ATTR_ID, id);
+		crm_free(id);
+
+		crm_xml_add(rule, XML_RULE_ATTR_SCORE, INFINITY_S);
+	
+		id = crm_concat("cli-prefer-expr", rsc_id, '-');
+		crm_xml_add(expr, XML_ATTR_ID, id);
+		crm_free(id);
+
+		crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, "#uname");
+		crm_xml_add(expr, XML_EXPR_ATTR_OPERATION, "eq");
+		crm_xml_add(expr, XML_EXPR_ATTR_VALUE, preferred_node);
+		crm_xml_add(expr, XML_EXPR_ATTR_TYPE, "string");
 		
 		add_node_copy(constraints, can_run);
 	}
@@ -1038,12 +1043,12 @@ main(int argc, char **argv)
 			
 		} else if(host_uname != NULL && dest == NULL) {
 			fprintf(stderr, "Error performing operation: "
-				"%s is not a known node", host_uname);
+				"%s is not a known node\n", host_uname);
 
 		} else if(host_uname != NULL
 			  && safe_str_eq(current_uname, host_uname)) {
 			fprintf(stderr, "Error performing operation: "
-				"%s is already active on %s",
+				"%s is already active on %s\n",
 				rsc_id, host_uname);
 
 		} else if(current_uname != NULL
@@ -1189,7 +1194,7 @@ usage(const char *cmd, int exit_status)
 		" creating a rule for the current location and a score of -INFINITY\n"
 		"\t\tNOTE: This will prevent the resource from running on this"
 		" node until the constraint is removed with -U\n"
-		"\t\t\t  Requires: -r, Optional: -H, -f --lifetime\n", "migrate", 'M');
+		"\t\t\t  Requires: -r, Optional: -H, -f, --lifetime\n", "migrate", 'M');
 	fprintf(stream, "\t--%s (-%c)\t: Remove all constraints created by -M\n"
 		"\t\t\t  Requires: -r\n", "un-migrate", 'U');
 	fprintf(stream, "\t--%s (-%c)\t: Delete a resource from the CIB\n"
