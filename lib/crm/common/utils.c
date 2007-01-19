@@ -864,7 +864,7 @@ crm_set_env_options(void)
 	crm_debug("%s = %s", param_name, param_val);
 	if(param_val != NULL) {
 		int facility = cl_syslogfac_str2int(param_val);
-		if(facility > 0) {
+		if(facility >= 0) {
 			cl_log_set_facility(facility);
 		}
 		param_val = NULL;
@@ -1141,6 +1141,7 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
 	mutable_key_ptr = mutable_key+offset+1;
 
 	crm_debug_3("  Action: %s", mutable_key_ptr);
+	
 	*op_type = crm_strdup(mutable_key_ptr);
 
 	mutable_key[offset] = 0;
