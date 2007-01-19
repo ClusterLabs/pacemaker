@@ -3,22 +3,13 @@
 # WARNING: This script is for CTS testing only
 #
 
-ra=@OCF_RA_DIR@/heartbeat/IPaddr
-ip="127.0.0.100"
+OCF_RESOURCE_INSTANCE=LSBDummy
+export OCF_RESOURCE_INSTANCE
 
-rc=0
-case $1 in
-	start)  OCF_RESKEY_ip=$ip $ra start
-		rc=$?;;
-	stop)   OCF_RESKEY_ip=$ip $ra stop
-		rc=$?;;
-	status) OCF_RESKEY_ip=$ip $ra status
-		rc=$?;; 
-	restart)OCF_RESKEY_ip=$ip $ra start
-                rc=$?;;
-        try-restart) 	rc=0;;
-        reload)  	rc=0;;
-	force-reload) 	rc=0;;
-esac
+action=$1
+if [ "$action" = "status" ]; then
+    action="monitor"
+fi
 
-exit $rc
+@OCF_RA_DIR@/heartbeat/Dummy $action
+exit $?
