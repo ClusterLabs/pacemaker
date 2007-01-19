@@ -200,12 +200,12 @@ extract_event(crm_data_t *msg)
 static void
 update_failcount(crm_data_t *event, const char *event_node, int rc) 
 {
-	char *attr_name = NULL;
-	
-	char *task     = NULL;
-	char *rsc_id   = NULL;
-	const char *on_uuid  = event_node;
 	int interval = 0;
+	char *task = NULL;
+	char *rsc_id = NULL;
+	char *attr_name = NULL;
+	const char *id  = ID(event);
+	const char *on_uuid  = event_node;
 
 	if(rc == 99) {
 		/* this is an internal code for "we're busy, try again" */
@@ -214,7 +214,7 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 
 	CRM_CHECK(on_uuid != NULL, return);
 
-	CRM_CHECK(parse_op_key(ID(event), &rsc_id, &task, &interval),
+	CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval),
 		  crm_err("Couldn't parse: %s", ID(event));
 		  return);
 	CRM_CHECK(task != NULL, crm_free(rsc_id); return);
@@ -228,7 +228,7 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 		update_attr(te_cib_conn, cib_none, XML_CIB_TAG_STATUS,
 			    on_uuid, NULL,NULL, attr_name,
 			    XML_NVPAIR_ATTR_VALUE"++");
-		crm_free(attr_name);	
+		crm_free(attr_name);
 	}
 
 	crm_free(rsc_id);
@@ -471,7 +471,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 		  crm_err("Invalid event %s detected", id);
 		  abort_transition(INFINITY, tg_restart,"Bad event", event);
 		);
-	
+
 	if(transition_num == -1) {
 		crm_err("Action %s initiated outside of a transition", id);
 		abort_transition(INFINITY, tg_restart,"Unexpected event",event);
