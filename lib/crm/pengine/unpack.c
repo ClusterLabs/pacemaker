@@ -1170,8 +1170,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
-			crm_warn("Processing failed op (%s) for %s on %s",
-				 id, rsc->id, node->details->uname);
+			crm_warn("Processing failed op (%s) on %s",
+				 id, node->details->uname);
 
 			if(*on_fail < action->on_fail) {
 				*on_fail = action->on_fail;
