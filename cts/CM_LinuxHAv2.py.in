@@ -76,7 +76,7 @@ class LinuxHAv2(HeartbeatCM):
             "CibQuery"       : "@sbindir@/cibadmin -Ql",
             "ParitionCmd"    : "@sbindir@/ccm_tool -p",
             "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s monitor 0 0 EVERYTIME 2>/dev/null|grep return",
-            "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -E %s %s 0 0 EVERYTIME 2>/dev/null",
+            "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -n %s -E %s %s 0 %d EVERYTIME 2>/dev/null",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
             "TmpDir"         : "/tmp",
             "BreakCommCmd2"  : "@libdir@/heartbeat/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
@@ -313,11 +313,13 @@ class LinuxHAv2(HeartbeatCM):
             resources.append(fields[0])
         return resources
 
-    def ResourceOp(self, resource, op, node):
+    def ResourceOp(self, resource, op, node, interval=0, app="lrmadmin"):
         '''
         Execute an operation on a resource
         '''
-        self.rsh.readaline(node, self["ExecuteRscOp"] % (resource, op))
+        self.debug(self["ExecuteRscOp"] % (app, resource, op, interval))
+        self.rsh.readaline(node, self["ExecuteRscOp"] 
+                           % (app, resource, op, interval))
         return self.rsh.lastrc
 
     def ResourceLocation(self, rid):
