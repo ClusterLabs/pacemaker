@@ -1582,7 +1582,7 @@ class ResourceRecover(CTSTest):
         self.action = "fail"
 
         # make sure the interval is greater than 0 so failcount is updated
-        self.interval = 10000
+        self.interval = 1
 
     def __call__(self, node):
         '''Perform the 'ResourceRecover' test. '''
@@ -1654,6 +1654,8 @@ class ResourceRecover(CTSTest):
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
         return [ """Updating failcount for %s""" % self.rid,
+                 """Unknown operation: fail""",
+                 """ERROR: sending stonithRA op to stonithd failed.""",
                  """ERROR: process_graph_event: Action %s_%s_%d initiated outside of a transition""" % (self.rid, self.action, self.interval)
                  ]
 
