@@ -1579,6 +1579,8 @@ class ResourceRecover(CTSTest):
         self.startall = SimulStartLite(cm)
         self.max=30
         self.rid=None
+        self.action = "fail"
+        self.interval = 10000
 
     def __call__(self, node):
         '''Perform the 'ResourceRecover' test. '''
@@ -1598,28 +1600,40 @@ class ResourceRecover(CTSTest):
         self.CM.debug("Shooting %s..." % self.rid)
 
         pats = []
+        pats.append("crmd.* Performing op=%s_stop_0" % self.rid)
         pats.append("crmd.* Performing op=%s_start_0" % self.rid)
         pats.append("crmd.* LRM operation %s_start_0.*complete" % self.rid)
-        pats.append("Updating failcount for %s on .* after failed monitor"
-                    % self.rid)
-        watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=240)
+        pats.append("Updating failcount for %s on .* after .* %s"
+                    % (self.rid, self.action))
+
+        watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=60)
         watch.setwatch()
         
-        # stop a resource
-        self.CM.ResourceOp(self.rid, "stop", node)
+        # fail a resource by calling an action it doesn't support
+        # make sure the interval is greater than 0 so failcount is updated
+        self.CM.ResourceOp(self.rid, self.action, node, self.interval, "crmd")
 
-        # wait for the resource to be started
-        if not watch.lookforall():
-            self.CM.log("Warn: Patterns not found: " + repr(watch.unmatched))
+        # Temporary hack until the lrmd does the right thing
+        self.CM.rsh.remote_py(node, "os", "system",
+                              "@sbindir@/crm_resource -R -H %s" % node)
 
+        watch.lookforall()
+
+        self.CM.cluster_stable()
         recovernode=self.CM.ResourceLocation(self.rid)
+
         if len(recovernode)==1:
             self.CM.debug("Recovered: %s is running on %s" 
                           %(self.rid, recovernode[0]))
-            self.CM.cluster_stable()
-            return self.success()
+            if not watch.unmatched: 
+                return self.success()
+            else:
+                return self.failure("Patterns not found: %s" 
+                                    % repr(watch.unmatched))
+
         elif len(recovernode)==0:
-            return self.failure("%s was not recovered and is inactive" %(self.rid))
+            return self.failure("%s was not recovered and is inactive" 
+                                % self.rid)
         else:
             return self.failure("%s is now active on more than one node: %s"
                                 %(self.rid, str(recovernode)))
@@ -1638,8 +1652,8 @@ class ResourceRecover(CTSTest):
     
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-        return [ """ERROR: .* Action .*%s_monitor_.* on .* failed .*target: 0 vs. rc: 7.*: Error""" % self.rid,
-                 """Updating failcount for %s""" % self.rid
+        return [ """Updating failcount for %s""" % self.rid,
+                 """ERROR: process_graph_event: Action %s_%s_%d initiated outside of a transition""" % (self.rid, self.action, self.interval)
                  ]
 
 AllTestClasses.append(ResourceRecover)
