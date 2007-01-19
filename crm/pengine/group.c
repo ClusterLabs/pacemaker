@@ -71,6 +71,7 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 		return NULL;
 	}
 	rsc->is_allocating = TRUE;
+	group_data->self->role = group_data->first_child->role;
 	
 	group_data->first_child->rsc_cons = g_list_concat(
 		group_data->first_child->rsc_cons, rsc->rsc_cons);
@@ -83,9 +84,10 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 		child_iter = g_list_previous(child_iter);
 		group_node = child->cmds->color(child, data_set);
 	}
-	
-	rsc->provisional = FALSE;
+
+	group_data->self->next_role = group_data->first_child->next_role;	
 	rsc->is_allocating = FALSE;
+	rsc->provisional = FALSE;
 
 	if(group_data->colocated) {
 		return group_node;
@@ -230,6 +232,14 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 			order_start_start(group_data->self, child_rsc,
 					  pe_ordering_optional);
+
+			/* recovery */
+			custom_action_order(
+				child_rsc, stop_key(child_rsc), NULL,
+				group_data->self, stopped_key(group_data->self), NULL,
+				pe_ordering_recover, data_set);
+			order_start_start(group_data->self, child_rsc,
+					  pe_ordering_recover);
 		}
 		
 		last_rsc = child_rsc;

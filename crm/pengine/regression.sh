@@ -21,6 +21,7 @@
 create_mode="true"
 echo Generating test outputs for these tests...
 echo ""
+do_test rec-rsc-9 "Resource Recover - group/group"
 
 echo Done.
 echo ""
@@ -114,6 +115,7 @@ do_test rec-rsc-5 "Resource Recover - stop - fence "
 do_test rec-rsc-6 "Resource Recover - multiple - restart"
 do_test rec-rsc-7 "Resource Recover - multiple - stop   "
 do_test rec-rsc-8 "Resource Recover - multiple - block  "
+do_test rec-rsc-9 "Resource Recover - group/group"
 
 echo ""
 do_test quorum-1 "No quorum - ignore"

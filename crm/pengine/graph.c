@@ -52,7 +52,7 @@ update_action(action_t *action)
 {
 	enum action_tasks task = no_action;
 	
-	crm_debug_3("Processing action %s: %s",
+	crm_debug_2("Processing action %s: %s",
 		    action->uuid, action->optional?"optional":"required");
 
 	slist_iter(
@@ -63,7 +63,7 @@ update_action(action_t *action)
 
 		if(other->type == pe_ordering_restart
 		   && action->rsc->role > RSC_ROLE_STOPPED) {
-			crm_debug_3("Upgrading %s constraint to %s",
+			crm_debug_3("\t  Upgrading %s constraint to %s",
 				    ordering_type2text(other->type),
 				    ordering_type2text(pe_ordering_manditory));
 			other->type = pe_ordering_manditory;
