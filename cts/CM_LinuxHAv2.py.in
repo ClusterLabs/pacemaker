@@ -317,7 +317,6 @@ class LinuxHAv2(HeartbeatCM):
         '''
         Execute an operation on a resource
         '''
-        self.debug(self["ExecuteRscOp"] % (app, resource, op, interval))
         self.rsh.readaline(node, self["ExecuteRscOp"] 
                            % (app, resource, op, interval))
         return self.rsh.lastrc
