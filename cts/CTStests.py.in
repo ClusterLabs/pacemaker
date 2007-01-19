@@ -1580,6 +1580,8 @@ class ResourceRecover(CTSTest):
         self.max=30
         self.rid=None
         self.action = "fail"
+
+        # make sure the interval is greater than 0 so failcount is updated
         self.interval = 10000
 
     def __call__(self, node):
@@ -1610,7 +1612,6 @@ class ResourceRecover(CTSTest):
         watch.setwatch()
         
         # fail a resource by calling an action it doesn't support
-        # make sure the interval is greater than 0 so failcount is updated
         self.CM.ResourceOp(self.rid, self.action, node, self.interval, "crmd")
 
         # Temporary hack until the lrmd does the right thing
