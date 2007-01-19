@@ -310,17 +310,19 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 	gboolean is_probe = FALSE;
 	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
+	CRM_CHECK(rsc != NULL, return);
+	CRM_CHECK(node != NULL, return);
 	CRM_CHECK(rsc_id != NULL, return);
-	if(rsc == NULL) {
-		crm_warn("Skipping param check for resource with no actions");
+	if(rsc->orphan) {
+		crm_debug_2("Skipping param check for %s: orphan", rsc->id);
 		return;
-
-	} else if(rsc->orphan) {
-		crm_debug_2("Skipping param check for orphan: %s %s",
-			    rsc->id, task);
+		
+	} else if(pe_find_node_id(rsc->running_on, node->details->id) == NULL) {
+		crm_debug_2("Skipping param check for %s: no longer active on %s",
+			    rsc->id, node->details->uname);
 		return;
 	}
-
+	
 	crm_debug_3("Processing %s on %s", rsc->id, node->details->uname);
 	
 	if(check_rsc_parameters(rsc, node, rsc_entry, data_set)) {
@@ -374,6 +376,11 @@ check_actions(pe_working_set_t *data_set)
 		node = pe_find_node_id(data_set->nodes, id);
 
 		if(node == NULL) {
+			continue;
+
+		} else if(can_run_resources(node) == FALSE) {
+			crm_debug_2("Skipping param check for %s: cant run resources",
+				    node->details->uname);
 			continue;
 		}
 		crm_debug_2("Processing node %s", node->details->uname);
