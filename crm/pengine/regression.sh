@@ -21,7 +21,6 @@
 create_mode="true"
 echo Generating test outputs for these tests...
 echo ""
-do_test rec-rsc-9 "Resource Recover - group/group"
 
 echo Done.
 echo ""
