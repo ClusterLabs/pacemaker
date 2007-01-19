@@ -46,7 +46,6 @@
 
 char *make_stop_id(const char *rsc, int call_id);
 gboolean verify_stopped(gboolean force, int log_level);
-gboolean resource_stopped(gpointer key, gpointer value, gpointer user_data);
 
 gboolean build_operation_update(
 	crm_data_t *rsc_list, lrm_op_t *op, const char *src, int lpc);
@@ -1656,15 +1655,4 @@ make_stop_id(const char *rsc, int call_id)
 		snprintf(op_id, strlen(rsc) + 34, "%s:%d", rsc, call_id);
 	}
 	return op_id;
-}
-
-gboolean
-resource_stopped(gpointer key, gpointer value, gpointer user_data)
-{
-	const char *this_rsc = value;
-	const char *target_rsc = user_data;
-	if(safe_str_eq(this_rsc, target_rsc)) {
-		return TRUE;
-	}
-	return FALSE;
 }
