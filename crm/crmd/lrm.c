@@ -527,8 +527,15 @@ build_operation_update(
 	crm_xml_add(xml_op, XML_ATTR_ORIGIN,   src);
 	
 	if(op->user_data == NULL) {
-		local_user_data = generate_transition_key(-1, 0, fsa_our_uname);
+		char *id = crm_itoa(op->call_id);
+
+		crm_debug("Generating fake transition key for:"
+			  " %s_%s_%d %d from %s",
+			  op->rsc_id, op->op_type, op->interval, op->call_id,
+			  op->app_name);
+		local_user_data = generate_transition_key(-1, 0, id);
 		op->user_data = local_user_data;
+		crm_free(id);
 	}
 	
 	if(compare_version("1.0.3", caller_version) > 0) {
