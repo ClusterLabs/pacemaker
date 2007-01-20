@@ -30,8 +30,6 @@
 #define VARIANT_NATIVE 1
 #include <lib/crm/pengine/variant.h>
 
-gboolean DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set);
-
 void
 native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 {
@@ -389,43 +387,4 @@ native_resource_state(resource_t *rsc)
 	}
 
 	return RSC_ROLE_STOPPED;
-}
-
-gboolean
-DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
-{
-	action_t *delete = NULL;
- 	action_t *refresh = NULL;
-
-	if(rsc->failed) {
-		crm_debug_2("Resource %s not deleted from %s: failed",
-			    rsc->id, node->details->uname);
-		return FALSE;
-		
-	} else if(node == NULL) {
-		crm_debug_2("Resource %s not deleted: NULL node", rsc->id);
-		return FALSE;
-		
-	} else if(node->details->unclean || node->details->online == FALSE) {
-		crm_debug_2("Resource %s not deleted from %s: unrunnable",
-			    rsc->id, node->details->uname);
-		return FALSE;
-	}
-	
-	crm_notice("Removing %s from %s",
-		 rsc->id, node->details->uname);
-	
-	delete = delete_action(rsc, node);
-
-#if DELETE_THEN_REFRESH
-	refresh = custom_action(
-		NULL, crm_strdup(CRM_OP_LRM_REFRESH), CRM_OP_LRM_REFRESH,
-		node, FALSE, TRUE, data_set);
-
-	add_hash_param(refresh->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
-
-	order_actions(delete, refresh, pe_order_optional);
-#endif
-	
-	return TRUE;
 }
