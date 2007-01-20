@@ -226,12 +226,12 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 			order_start_start(
 				last_rsc, child_rsc, pe_order_implies_right);
 			order_stop_stop(
-				child_rsc, last_rsc, pe_order_implies_right);
+				last_rsc, child_rsc, pe_order_implies_right);
 
 		} else {
 			custom_action_order(
 				child_rsc, stop_key(child_rsc), NULL,
-				this_rsc, stopped_key(this_rsc), NULL,
+				this_rsc,  stopped_key(this_rsc), NULL,
 				pe_order_optional, data_set);
 
 			order_start_start(
@@ -240,7 +240,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 			/* recovery */
 			custom_action_order(
 				child_rsc, stop_key(child_rsc), NULL,
-				this_rsc, stopped_key(this_rsc), NULL,
+				this_rsc,  stopped_key(this_rsc), NULL,
 				pe_order_implies_right, data_set);
 			order_start_start(
 				this_rsc, child_rsc, pe_order_implies_right);
