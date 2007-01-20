@@ -629,7 +629,8 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 
 			if(lh_rsc->next_role == RSC_ROLE_STOPPED) {
 				resource_t *rh_rsc = order->rh_rsc;
-				if(order->rh_action && order->type == pe_order_internal_restart) {
+				if(order->rh_action
+				   && (order->type & pe_order_internal_restart)) {
 					crm_debug_3("No LH(%s/%s) found for RH(%s)...",
 						    lh_rsc->id, order->lh_action_task,
 						    order->rh_action->uuid);
@@ -733,7 +734,7 @@ void native_rsc_order_rh(
 		if(lh_action) {
 		order_actions(lh_action, rh_action_iter, order->type); 
 
-		} else if(order->type == pe_order_internal_restart) {
+		} else if(order->type & pe_order_internal_restart) {
 			rh_action_iter->runnable = FALSE;
 		}
 		

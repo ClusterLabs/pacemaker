@@ -165,24 +165,29 @@ const char *
 ordering_type2text(enum pe_ordering type)
 {
 	const char *result = "<unknown>";
-	switch(type)
-	{
-		case pe_order_implies_left:
-			result = "right_implies_left"; /* was: mandatory */
-			break;
-		case pe_order_internal_restart:
-			result = "internal_restart";   /* upgrades to: right_implies_left */
-			break;
-		case pe_order_implies_right:
-			result = "left_implies_right"; /* was: recover  */
-			break;
-		case pe_order_optional:		       /* pure ordering, nothing implied */
-			result = "optional";
-			break;
-		case pe_order_postnotify:
-			result = "post_notify";
-			break;
+	if(type & pe_order_implies_left) {
+		/* was: mandatory */
+		result = "right_implies_left";
+
+	} else if(type & pe_order_internal_restart) {
+		/* upgrades to: right_implies_left */
+		result = "internal_restart";
+
+	} else if(type & pe_order_implies_right) {
+		/* was: recover  */
+		result = "left_implies_right";
+
+	} else if(type & pe_order_optional) {
+		/* pure ordering, nothing implied */
+		result = "optional";
+		
+	} else if(type & pe_order_postnotify) {
+		result = "post_notify";
+		
+	} else {
+		crm_err("Unknown ordering type: %.3x", type);
 	}
+	
 	return result;
 }
 
@@ -433,7 +438,11 @@ order_actions(
 		lh_action->actions_after = list;
 		wrapper = NULL;
 	}
-	if(order != pe_order_implies_right) {
+
+	order |= pe_order_implies_right;
+	order ^= pe_order_implies_right;
+	
+	if(order) {
 		crm_malloc0(wrapper, sizeof(action_wrapper_t));
 		if(wrapper != NULL) {
 			wrapper->action = lh_action;

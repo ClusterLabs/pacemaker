@@ -45,11 +45,11 @@ enum pe_stop_fail {
 };
 
 enum pe_ordering {
-	pe_order_implies_left,		/* was: _mandatory */
-	pe_order_internal_restart,	/* upgrades to: right_implies_left */
-	pe_order_implies_right,		/* was: _recover  */
-	pe_order_postnotify,
-	pe_order_optional		/* pure ordering, nothing implied */
+	pe_order_implies_left		= 0x01, /* was: _mandatory */
+	pe_order_internal_restart	= 0x02, /* upgrades to: right_implies_left */
+	pe_order_implies_right		= 0x04, /* was: _recover  */
+	pe_order_postnotify		= 0x08,
+	pe_order_optional		= 0x10  /* pure ordering, nothing implied */
 };
 
 struct rsc_colocation_s { 
