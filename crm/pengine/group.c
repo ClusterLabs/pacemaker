@@ -168,7 +168,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	custom_action_order(
 		group_data->self, stopped_key(group_data->self), NULL,
 		group_data->self, start_key(group_data->self), NULL,
-		pe_ordering_optional, data_set);
+		pe_ordering_restart, data_set);
 
 	custom_action_order(
 		group_data->self, stop_key(group_data->self), NULL,
@@ -208,6 +208,8 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 				group_data->self, stopped_key(group_data->self), NULL,
 				pe_ordering_optional, data_set);
 
+			/* recovery */
+			
 			continue;
 		}
 		
@@ -253,6 +255,15 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 		order_stop_stop(
 			group_data->self, last_rsc, pe_ordering_optional);
+
+		/* recovery */
+		custom_action_order(
+			last_rsc, start_key(last_rsc), NULL,
+			group_data->self, started_key(group_data->self), NULL,
+			pe_ordering_recover, data_set);
+
+		order_stop_stop(
+			group_data->self, last_rsc, pe_ordering_recover);
 	}
 		
 }
