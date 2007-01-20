@@ -159,10 +159,12 @@ group_update_pseudo_status(resource_t *parent, resource_t *child)
 
 void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
+	resource_t *this_rsc = NULL;
 	resource_t *last_rsc = NULL;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
+	this_rsc = group_data->self;
 	group_data->self->cmds->internal_constraints(group_data->self, data_set);
 	
 	custom_action_order(
@@ -229,19 +231,19 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		} else {
 			custom_action_order(
 				child_rsc, stop_key(child_rsc), NULL,
-				group_data->self, stopped_key(group_data->self), NULL,
+				this_rsc, stopped_key(this_rsc), NULL,
 				pe_order_optional, data_set);
 
-			order_start_start(group_data->self, child_rsc,
-					  pe_order_optional);
+			order_start_start(
+				this_rsc, child_rsc, pe_order_optional);
 
 			/* recovery */
 			custom_action_order(
 				child_rsc, stop_key(child_rsc), NULL,
-				group_data->self, stopped_key(group_data->self), NULL,
+				this_rsc, stopped_key(this_rsc), NULL,
 				pe_order_implies_right, data_set);
-			order_start_start(group_data->self, child_rsc,
-					  pe_order_implies_right);
+			order_start_start(
+				this_rsc, child_rsc, pe_order_implies_right);
 		}
 		
 		last_rsc = child_rsc;
@@ -250,20 +252,18 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	if(group_data->ordered && last_rsc != NULL) {
 		custom_action_order(
 			last_rsc, start_key(last_rsc), NULL,
-			group_data->self, started_key(group_data->self), NULL,
+			this_rsc, started_key(this_rsc), NULL,
 			pe_order_optional, data_set);
 
-		order_stop_stop(
-			group_data->self, last_rsc, pe_order_optional);
+		order_stop_stop(this_rsc, last_rsc, pe_order_optional);
 
 		/* recovery */
 		custom_action_order(
 			last_rsc, start_key(last_rsc), NULL,
-			group_data->self, started_key(group_data->self), NULL,
+			this_rsc, started_key(this_rsc), NULL,
 			pe_order_implies_right, data_set);
 
-		order_stop_stop(
-			group_data->self, last_rsc, pe_order_implies_right);
+		order_stop_stop(this_rsc, last_rsc, pe_order_implies_right);
 	}
 		
 }
