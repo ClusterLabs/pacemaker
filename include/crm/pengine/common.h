@@ -93,11 +93,11 @@ enum rsc_start_requirement {
 };
 
 enum pe_ordering {
-	pe_ordering_manditory,
-	pe_ordering_restart,
-	pe_ordering_recover,
-	pe_ordering_postnotify,
-	pe_ordering_optional
+	pe_order_implies_left,		/* was: _mandatory */
+	pe_order_internal_restart,	/* upgrades to: right_implies_left */
+	pe_order_implies_right,		/* was: _recover  */
+	pe_order_postnotify,
+	pe_order_optional		/* pure ordering, nothing implied */
 };
 
 enum rsc_role_e {

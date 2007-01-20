@@ -40,7 +40,7 @@ child_promoting_constraints(
 {
 /* 	if(clone_data->ordered */
 /* 	   || clone_data->self->restart_type == pe_restart_restart) { */
-/* 		type = pe_ordering_manditory; */
+/* 		type = pe_order_implies_left; */
 /* 	} */
 	if(child == NULL) {
 		if(clone_data->ordered && last != NULL) {
@@ -91,7 +91,7 @@ child_demoting_constraints(
 {
 /* 	if(clone_data->ordered */
 /* 	   || clone_data->self->restart_type == pe_restart_restart) { */
-/* 		type = pe_ordering_manditory; */
+/* 		type = pe_order_implies_left; */
 /* 	} */
 	
 	if(child == NULL) {
@@ -101,7 +101,7 @@ child_demoting_constraints(
 			custom_action_order(
 				clone_data->self, demote_key(clone_data->self), NULL,
 				last, demote_key(last), NULL,
-				pe_ordering_manditory, data_set);
+				pe_order_implies_left, data_set);
 		}
 		
 	} else if(clone_data->ordered && last != NULL) {
@@ -417,7 +417,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action_complete->pseudo = TRUE;
 	action_complete->priority = INFINITY;
 	
-	child_promoting_constraints(clone_data, pe_ordering_optional, 
+	child_promoting_constraints(clone_data, pe_order_optional, 
 				   NULL, last_promote_rsc, data_set);
 
 	clone_create_notifications(rsc, action, action_complete, data_set);	
@@ -433,7 +433,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action->pseudo = TRUE;
 	action_complete->pseudo = TRUE;
 	
-	child_demoting_constraints(clone_data, pe_ordering_optional,
+	child_demoting_constraints(clone_data, pe_order_optional,
 				   NULL, last_demote_rsc, data_set);
 
 	clone_create_notifications(rsc, action, action_complete, data_set);	
@@ -452,25 +452,25 @@ master_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	custom_action_order(
 		clone_data->self, demoted_key(clone_data->self), NULL,
 		clone_data->self, start_key(clone_data->self), NULL,
-		pe_ordering_optional, data_set);
+		pe_order_optional, data_set);
 
 	/* global started before promote */
 	custom_action_order(
 		clone_data->self, started_key(clone_data->self), NULL,
 		clone_data->self, promote_key(clone_data->self), NULL,
-		pe_ordering_optional, data_set);
+		pe_order_optional, data_set);
 
 	/* global demoted before stop */
 	custom_action_order(
 		clone_data->self, demoted_key(clone_data->self), NULL,
 		clone_data->self, stop_key(clone_data->self), NULL,
-		pe_ordering_optional, data_set);
+		pe_order_optional, data_set);
 
 	/* global demote before demoted */
 	custom_action_order(
 		clone_data->self, demote_key(clone_data->self), NULL,
 		clone_data->self, demoted_key(clone_data->self), NULL,
-		pe_ordering_optional, data_set);
+		pe_order_optional, data_set);
 	
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
@@ -479,12 +479,12 @@ master_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		custom_action_order(
 			child_rsc, demote_key(child_rsc), NULL,
 			child_rsc, promote_key(child_rsc), NULL,
-			pe_ordering_restart, data_set);
+			pe_order_internal_restart, data_set);
 		
-		child_promoting_constraints(clone_data, pe_ordering_optional,
+		child_promoting_constraints(clone_data, pe_order_optional,
 					    child_rsc, last_rsc, data_set);
 
-		child_demoting_constraints(clone_data, pe_ordering_optional,
+		child_demoting_constraints(clone_data, pe_order_optional,
 					   child_rsc, last_rsc, data_set);
 
 		last_rsc = child_rsc;

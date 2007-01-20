@@ -131,7 +131,7 @@ extern gboolean custom_action_order(
 #define order_restart(rsc1)						\
 	custom_action_order(rsc1, stop_key(rsc1), NULL,		\
 			    rsc1, start_key(rsc1), NULL,	\
-			    pe_ordering_restart, data_set)
+			    pe_order_internal_restart, data_set)
 
 #define order_stop_start(rsc1, rsc2, type)				\
 	custom_action_order(rsc1, stop_key(rsc1), NULL,		\

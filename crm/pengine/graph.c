@@ -61,15 +61,15 @@ update_action(action_t *action)
 			    other->action->uuid, ordering_type2text(other->type),
 			    other->action->optional?"optional":"required");
 
-		if(other->type == pe_ordering_restart
+		if(other->type == pe_order_internal_restart
 		   && action->rsc->role > RSC_ROLE_STOPPED) {
 			crm_debug_3("\t  Upgrading %s constraint to %s",
 				    ordering_type2text(other->type),
-				    ordering_type2text(pe_ordering_manditory));
-			other->type = pe_ordering_manditory;
+				    ordering_type2text(pe_order_implies_left));
+			other->type = pe_order_implies_left;
 		}
 		
-		if(other->type != pe_ordering_manditory) {
+		if(other->type != pe_order_implies_left) {
 			crm_debug_3("\t  Ignoring: %s",
 				    ordering_type2text(other->type));
 			continue;
@@ -122,15 +122,15 @@ update_action(action_t *action)
 		if(other->action->rsc == NULL) {
 			continue;
 			
-		} else if(other->type == pe_ordering_recover) {
+		} else if(other->type == pe_order_implies_right) {
 			if(other->action->rsc->restart_type != pe_restart_restart) {
 				crm_debug_3("\t  Ignoring: restart type %d",
 					    other->action->rsc->restart_type);
 				continue;
 			}
 			
-		} else if(other->type == pe_ordering_restart) {
-		} else if(other->type == pe_ordering_postnotify) {
+		} else if(other->type == pe_order_internal_restart) {
+		} else if(other->type == pe_order_postnotify) {
 			CRM_CHECK(action->rsc == other->action->rsc, continue);
 
 		} else {
@@ -189,7 +189,7 @@ shutdown_constraints(
 		custom_action_order(
 			rsc, stop_key(rsc), NULL,
 			NULL, crm_strdup(CRM_OP_SHUTDOWN), shutdown_op,
-			pe_ordering_manditory, data_set);
+			pe_order_implies_left, data_set);
 
 		);	
 

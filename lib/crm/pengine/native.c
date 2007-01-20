@@ -424,7 +424,7 @@ DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 
 	add_hash_param(refresh->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
 
-	order_actions(delete, refresh, pe_ordering_optional);
+	order_actions(delete, refresh, pe_order_optional);
 #endif
 	
 	return TRUE;

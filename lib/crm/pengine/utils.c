@@ -1133,7 +1133,7 @@ order_actions(
 		lh_action->actions_after = list;
 		wrapper = NULL;
 	}
-	if(order != pe_ordering_recover) {
+	if(order != pe_order_implies_right) {
 		crm_malloc0(wrapper, sizeof(action_wrapper_t));
 		if(wrapper != NULL) {
 			wrapper->action = lh_action;

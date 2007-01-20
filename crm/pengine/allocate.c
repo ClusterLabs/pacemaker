@@ -213,7 +213,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 			custom_action_order(
 				rsc, NULL, cancel,
 				rsc, stop_key(rsc), NULL,
-				pe_ordering_optional, data_set);
+				pe_order_optional, data_set);
 		}
 		if(op_match == NULL) {
 			crm_debug("Orphan action detected: %s on %s",
@@ -481,7 +481,7 @@ stage1(pe_working_set_t *data_set)
 		
 		custom_action_order(NULL, NULL, probe_node_complete,
 				    NULL, NULL, probe_complete,
-				    pe_ordering_optional, data_set);
+				    pe_order_optional, data_set);
 		
 		slist_iter(
 			rsc, resource_t, data_set->resources, lpc2,
@@ -495,7 +495,7 @@ stage1(pe_working_set_t *data_set)
 				custom_action_order(
 					NULL, NULL, probe_complete,
 					rsc, start_key(rsc), NULL,
-					pe_ordering_manditory, data_set);
+					pe_order_implies_left, data_set);
 			}
 			);
 		);
@@ -619,7 +619,7 @@ stage6(pe_working_set_t *data_set)
 
 			} else {
 				if(last_stonith) {
-					order_actions(last_stonith, stonith_op, pe_ordering_manditory);
+					order_actions(last_stonith, stonith_op, pe_order_implies_left);
 				}
 				last_stonith = stonith_op;			
 			}
@@ -675,11 +675,11 @@ stage6(pe_working_set_t *data_set)
 				node_stop->node->details->uname,
 				dc_down->task, dc_down->node->details->uname);
 
-			order_actions(node_stop, dc_down, pe_ordering_manditory);
+			order_actions(node_stop, dc_down, pe_order_implies_left);
 			);
 
 		if(last_stonith && dc_down != last_stonith) {
-			order_actions(last_stonith, dc_down, pe_ordering_manditory);
+			order_actions(last_stonith, dc_down, pe_order_implies_left);
 		}
 	}
 
@@ -882,7 +882,7 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	resource_t *rsc_lh = NULL;
 	resource_t *rsc_rh = NULL;
 	gboolean symmetrical_bool = TRUE;
-	enum pe_ordering cons_weight = pe_ordering_optional;
+	enum pe_ordering cons_weight = pe_order_optional;
 
 	const char *id_rh  = NULL;
 	const char *id_lh  = NULL;
@@ -956,7 +956,7 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 
 	if(char2score(score) > 0) {
 		/* the name seems weird but the effect is correct */
-		cons_weight = pe_ordering_restart;
+		cons_weight = pe_order_internal_restart;
 	}
 	
 	custom_action_order(
@@ -969,20 +969,20 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		if(safe_str_eq(action, CRMD_ACTION_START)) {
 			crm_debug_2("Recover %s.%s-%s.%s",
 				    rsc_lh->id, action, rsc_rh->id, action_rh);
-/* 			order_start_start(rsc_lh, rsc_rh, pe_ordering_recover); */
+/* 			order_start_start(rsc_lh, rsc_rh, pe_order_implies_right); */
 			custom_action_order(
 				rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
 				rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
-				pe_ordering_recover, data_set);
+				pe_order_implies_right, data_set);
 
  		} else if(safe_str_eq(action, CRMD_ACTION_STOP)) {
 			crm_debug_2("Recover %s.%s-%s.%s",
 				    rsc_rh->id, action_rh, rsc_lh->id, action);
-/*   			order_stop_stop(rsc_rh, rsc_lh, pe_ordering_recover);   */
+/*   			order_stop_stop(rsc_rh, rsc_lh, pe_order_implies_right);   */
 			custom_action_order(
 				rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
 				rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
-				pe_ordering_recover, data_set);
+				pe_order_implies_right, data_set);
 		}
 	}
 
@@ -1009,19 +1009,19 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		if(safe_str_eq(action, CRMD_ACTION_START)) {
 			crm_debug_2("Recover start-start (2): %s-%s",
 				rsc_lh->id, rsc_rh->id);
-/*   			order_start_start(rsc_lh, rsc_rh, pe_ordering_recover); */
+/*   			order_start_start(rsc_lh, rsc_rh, pe_order_implies_right); */
 			custom_action_order(
 				rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
 				rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
-				pe_ordering_recover, data_set);
+				pe_order_implies_right, data_set);
 		} else if(safe_str_eq(action, CRMD_ACTION_STOP)) { 
 			crm_debug_2("Recover stop-stop (2): %s-%s",
 				rsc_rh->id, rsc_lh->id);
-/*   			order_stop_stop(rsc_rh, rsc_lh, pe_ordering_recover);  */
+/*   			order_stop_stop(rsc_rh, rsc_lh, pe_order_implies_right);  */
 			custom_action_order(
 				rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
 				rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
-				pe_ordering_recover, data_set);
+				pe_order_implies_right, data_set);
 		}
 	}
 	

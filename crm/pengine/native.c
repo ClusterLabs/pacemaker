@@ -304,7 +304,7 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 				custom_action_order(
 					rsc, NULL, mon,
 					rsc, promote_key(rsc), NULL,
-					pe_ordering_optional, data_set);
+					pe_order_optional, data_set);
 
 				mon = NULL;
 			}
@@ -343,7 +343,7 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 
 		custom_action_order(rsc, start_key(rsc), NULL,
 				    NULL, crm_strdup(key), mon,
-				    pe_ordering_restart, data_set);
+				    pe_order_internal_restart, data_set);
 
 		if(rsc->next_role == RSC_ROLE_MASTER) {
 			char *running_master = crm_itoa(EXECRA_RUNNING_MASTER);
@@ -351,7 +351,7 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 			custom_action_order(
 				rsc, promote_key(rsc), NULL,
 				rsc, NULL, mon,
-				pe_ordering_optional, data_set);
+				pe_order_optional, data_set);
 			crm_free(running_master);
 		}		
 		);	
@@ -428,19 +428,19 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 	custom_action_order(rsc, demote_key(rsc), NULL,
 			    rsc, stop_key(rsc), NULL,
-			    pe_ordering_manditory, data_set);
+			    pe_order_implies_left, data_set);
 
 	custom_action_order(rsc, start_key(rsc), NULL,
 			    rsc, promote_key(rsc), NULL,
-			    pe_ordering_optional, data_set);
+			    pe_order_optional, data_set);
 
 	custom_action_order(
 		rsc, stop_key(rsc), NULL, rsc, delete_key(rsc), NULL, 
-		pe_ordering_optional, data_set);
+		pe_order_optional, data_set);
 
 	custom_action_order(
 		rsc, delete_key(rsc), NULL, rsc, start_key(rsc), NULL, 
-		pe_ordering_manditory, data_set);	
+		pe_order_implies_left, data_set);	
 
 	if(rsc->notify) {
 		char *key1 = NULL;
@@ -450,13 +450,13 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		key2 = generate_op_key(rsc->id, "pre_notify_promote", 0);
 		custom_action_order(
 			rsc, key1, NULL, rsc, key2, NULL, 
-			pe_ordering_optional, data_set);	
+			pe_order_optional, data_set);	
 
 		key1 = generate_op_key(rsc->id, "confirmed-post_notify_demote", 0);
 		key2 = generate_op_key(rsc->id, "pre_notify_stop", 0);
 		custom_action_order(
 			rsc, key1, NULL, rsc, key2, NULL, 
-			pe_ordering_optional, data_set);	
+			pe_order_optional, data_set);	
 	}
 }
 
@@ -629,7 +629,7 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 
 			if(lh_rsc->next_role == RSC_ROLE_STOPPED) {
 				resource_t *rh_rsc = order->rh_rsc;
-				if(order->rh_action && order->type == pe_ordering_restart) {
+				if(order->rh_action && order->type == pe_order_internal_restart) {
 					crm_debug_3("No LH(%s/%s) found for RH(%s)...",
 						    lh_rsc->id, order->lh_action_task,
 						    order->rh_action->uuid);
@@ -733,7 +733,7 @@ void native_rsc_order_rh(
 		if(lh_action) {
 		order_actions(lh_action, rh_action_iter, order->type); 
 
-		} else if(order->type == pe_ordering_restart) {
+		} else if(order->type == pe_order_internal_restart) {
 			rh_action_iter->runnable = FALSE;
 		}
 		
@@ -984,7 +984,7 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	crm_debug_3("Ordering %s before %s (%d->%d)",
 		op->uuid, trigger->uuid, trigger->id, op->id);
 
-	order_actions(op, trigger, pe_ordering_manditory);
+	order_actions(op, trigger, pe_order_implies_left);
 	
 	value = g_hash_table_lookup(op->meta, "notify_confirm");
 	if(crm_is_true(value)) {
@@ -993,7 +993,7 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 			    trigger->uuid, confirm->uuid,
 			    confirm->id, trigger->id);
 
-		order_actions(trigger, confirm, pe_ordering_manditory);
+		order_actions(trigger, confirm, pe_order_implies_left);
 	}	
 	return trigger;
 }
@@ -1039,7 +1039,7 @@ pe_post_notify(resource_t *rsc, node_t *node, action_t *op,
 				continue;
 			}
 
-			order_actions(notify, mon, pe_ordering_optional);
+			order_actions(notify, mon, pe_order_optional);
 			);
 	}
 }
@@ -1088,7 +1088,7 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 			stop = stop_action(rsc, current, FALSE);
 			start = start_action(rsc, next, FALSE);
 /* 			/\* make the restart required *\/ */
-/* 			order_stop_start(rsc, rsc, pe_ordering_manditory); */
+/* 			order_stop_start(rsc, rsc, pe_order_implies_left); */
 			
 		} else if(rsc->start_pending) {
 			start = start_action(rsc, next, TRUE);
@@ -1263,7 +1263,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	crm_debug_2("%s: Created probe for %s", node->details->uname, rsc->id);
 	
 	custom_action_order(rsc, NULL, probe, rsc, NULL, complete,
-			    pe_ordering_manditory, data_set);
+			    pe_order_implies_left, data_set);
 
 	return TRUE;
 }
@@ -1282,7 +1282,7 @@ native_start_constraints(
 		custom_action_order(
 			rsc, key, NULL,
 			NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
-			pe_ordering_optional, data_set);
+			pe_order_optional, data_set);
 
 	} else {
 		slist_iter(action, action_t, rsc->actions, lpc2,
@@ -1295,7 +1295,7 @@ native_start_constraints(
 				   custom_action_order(
 					   NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
 					   rsc, NULL, action,
-					   pe_ordering_manditory, data_set);
+					   pe_order_implies_left, data_set);
 				   
 			   } else if(run_unprotected == FALSE) {
 				   /* mark the start unrunnable */
@@ -1350,7 +1350,7 @@ native_stop_constraints(
 				custom_action_order(
 					NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
 					rsc, start_key(rsc), NULL,
-					pe_ordering_manditory, data_set);
+					pe_order_implies_left, data_set);
 			}
 			
 			/* find the top-most resource */
@@ -1376,7 +1376,7 @@ native_stop_constraints(
 			custom_action_order(
 				rsc, stop_key(rsc), NULL,
 				NULL,crm_strdup(CRM_OP_FENCE),stonith_op,
-				pe_ordering_manditory, data_set);
+				pe_order_implies_left, data_set);
 		}
 		);
 	
@@ -1399,7 +1399,7 @@ native_stop_constraints(
 				custom_action_order(
 					NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
 					rsc, demote_key(rsc), NULL,
-					pe_ordering_manditory, data_set);
+					pe_order_implies_left, data_set);
 			}
 		}
 		);	

@@ -167,19 +167,19 @@ ordering_type2text(enum pe_ordering type)
 	const char *result = "<unknown>";
 	switch(type)
 	{
-		case pe_ordering_manditory:
-			result = "manditory";
+		case pe_order_implies_left:
+			result = "right_implies_left"; /* was: mandatory */
 			break;
-		case pe_ordering_restart:
-			result = "restart";
+		case pe_order_internal_restart:
+			result = "internal_restart";   /* upgrades to: right_implies_left */
 			break;
-		case pe_ordering_recover:
-			result = "recover";
+		case pe_order_implies_right:
+			result = "left_implies_right"; /* was: recover  */
 			break;
-		case pe_ordering_optional:
+		case pe_order_optional:		       /* pure ordering, nothing implied */
 			result = "optional";
 			break;
-		case pe_ordering_postnotify:
+		case pe_order_postnotify:
 			result = "post_notify";
 			break;
 	}
