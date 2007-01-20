@@ -407,3 +407,122 @@ convert_non_atomic_task(resource_t *rsc, order_constraint_t *order)
 	crm_free(raw_task);
 	crm_free(rid);
 }
+
+
+void
+order_actions(
+	action_t *lh_action, action_t *rh_action, enum pe_ordering order) 
+{
+	action_wrapper_t *wrapper = NULL;
+	GListPtr list = NULL;
+	
+	crm_debug_2("Ordering Action %s before %s",
+		  lh_action->uuid, rh_action->uuid);
+
+	log_action(LOG_DEBUG_4, "LH (order_actions)", lh_action, FALSE);
+	log_action(LOG_DEBUG_4, "RH (order_actions)", rh_action, FALSE);
+
+	
+	crm_malloc0(wrapper, sizeof(action_wrapper_t));
+	if(wrapper != NULL) {
+		wrapper->action = rh_action;
+		wrapper->type = order;
+		
+		list = lh_action->actions_after;
+		list = g_list_append(list, wrapper);
+		lh_action->actions_after = list;
+		wrapper = NULL;
+	}
+	if(order != pe_order_implies_right) {
+		crm_malloc0(wrapper, sizeof(action_wrapper_t));
+		if(wrapper != NULL) {
+			wrapper->action = lh_action;
+			wrapper->type = order;
+			list = rh_action->actions_before;
+			list = g_list_append(list, wrapper);
+			rh_action->actions_before = list;
+		}
+	}
+}
+
+
+void
+log_action(unsigned int log_level, const char *pre_text, action_t *action, gboolean details)
+{
+	const char *node_uname = NULL;
+	const char *node_uuid = NULL;
+	
+	if(action == NULL) {
+
+		do_crm_log(log_level, "%s%s: <NULL>",
+			      pre_text==NULL?"":pre_text,
+			      pre_text==NULL?"":": ");
+		return;
+	}
+
+
+	if(action->pseudo) {
+		node_uname = NULL;
+		node_uuid = NULL;
+		
+	} else if(action->node != NULL) {
+		node_uname = action->node->details->uname;
+		node_uuid = action->node->details->id;
+	} else {
+		node_uname = "<none>";
+		node_uuid = NULL;
+	}
+	
+	switch(text2task(action->task)) {
+		case stonith_node:
+		case shutdown_crm:
+			do_crm_log(log_level,
+				      "%s%s%sAction %d: %s%s%s%s%s%s",
+				      pre_text==NULL?"":pre_text,
+				      pre_text==NULL?"":": ",
+				      action->pseudo?"Pseduo ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
+				      action->id, action->uuid,
+				      node_uname?"\ton ":"",
+				      node_uname?node_uname:"",
+				      node_uuid?"\t\t(":"",
+				      node_uuid?node_uuid:"",
+				      node_uuid?")":"");
+			break;
+		default:
+			do_crm_log(log_level,
+				      "%s%s%sAction %d: %s %s%s%s%s%s%s",
+				      pre_text==NULL?"":pre_text,
+				      pre_text==NULL?"":": ",
+				      action->optional?"Optional ":action->pseudo?"Pseduo ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
+				      action->id, action->uuid,
+				      safe_val3("<none>", action, rsc, id),
+				      node_uname?"\ton ":"",
+				      node_uname?node_uname:"",
+				      node_uuid?"\t\t(":"",
+				      node_uuid?node_uuid:"",
+				      node_uuid?")":"");
+			
+			break;
+	}
+
+	if(details) {
+		do_crm_log(log_level+1, "\t\t====== Preceeding Actions");
+		slist_iter(
+			other, action_wrapper_t, action->actions_before, lpc,
+			log_action(log_level+1, "\t\t", other->action, FALSE);
+			);
+		do_crm_log(log_level+1, "\t\t====== Subsequent Actions");
+		slist_iter(
+			other, action_wrapper_t, action->actions_after, lpc,
+			log_action(log_level+1, "\t\t", other->action, FALSE);
+			);		
+		do_crm_log(log_level+1, "\t\t====== End");
+
+	} else {
+		do_crm_log(log_level, "\t\t(seen=%d, before=%d, after=%d)",
+			      action->seen_count,
+			      g_list_length(action->actions_before),
+			      g_list_length(action->actions_after));
+	}
+}
+

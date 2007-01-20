@@ -355,12 +355,6 @@ native_print(
 	}
 
 	if(options & pe_print_max_details) {
-		status_print("%s\t=== Actions.\n", pre_text);
-		slist_iter(
-			action, action_t, rsc->actions, lpc, 
-			log_action(LOG_DEBUG_4, "\trsc action: ", action, FALSE);
-			);
-		
 		status_print("%s\t=== Allowed Nodes\n", pre_text);
 		slist_iter(
 			node, node_t, rsc->allowed_nodes, lpc,

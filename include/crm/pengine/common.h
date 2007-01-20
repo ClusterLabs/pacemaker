@@ -92,14 +92,6 @@ enum rsc_start_requirement {
 	rsc_req_stonith
 };
 
-enum pe_ordering {
-	pe_order_implies_left,		/* was: _mandatory */
-	pe_order_internal_restart,	/* upgrades to: right_implies_left */
-	pe_order_implies_right,		/* was: _recover  */
-	pe_order_postnotify,
-	pe_order_optional		/* pure ordering, nothing implied */
-};
-
 enum rsc_role_e {
 	RSC_ROLE_UNKNOWN,
 	RSC_ROLE_STOPPED,

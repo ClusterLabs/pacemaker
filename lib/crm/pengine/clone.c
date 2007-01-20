@@ -30,14 +30,6 @@ void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
 	pe_working_set_t *data_set);
 
-void child_stopping_constraints(
-	clone_variant_data_t *clone_data, enum pe_ordering type,
-	resource_t *child, resource_t *last, pe_working_set_t *data_set);
-
-void child_starting_constraints(
-	clone_variant_data_t *clone_data, enum pe_ordering type,
-	resource_t *child, resource_t *last, pe_working_set_t *data_set);
-
 
 #define get_clone_variant_data(data, rsc)				\
 	CRM_ASSERT(rsc->variant == pe_clone || rsc->variant == pe_master); \

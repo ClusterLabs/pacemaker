@@ -54,5 +54,10 @@ extern gboolean can_run_resources(const node_t *node);
 extern gboolean native_assign_node(resource_t *rsc, GListPtr candidates, node_t *chosen);
 
 extern void convert_non_atomic_task(resource_t *rsc, order_constraint_t *order);
+extern void order_actions(
+	action_t *lh_action, action_t *rh_action, enum pe_ordering order);
+
+extern void log_action(unsigned int log_level, const char *pre_text,
+		       action_t *action, gboolean details);
 
 #endif

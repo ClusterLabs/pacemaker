@@ -26,7 +26,6 @@
 typedef struct node_s node_t;
 typedef struct action_s action_t;
 typedef struct resource_s resource_t;
-typedef struct action_wrapper_s action_wrapper_t;
 
 typedef enum no_quorum_policy_e {
 	no_quorum_freeze,
@@ -203,12 +202,6 @@ struct action_s
 		
 		GListPtr actions_before; /* action_warpper_t* */
 		GListPtr actions_after;  /* action_warpper_t* */
-};
-
-struct action_wrapper_s 
-{
-		enum pe_ordering type;
-		action_t *action;
 };
 
 gboolean cluster_status(pe_working_set_t *data_set);
