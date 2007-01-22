@@ -1404,8 +1404,8 @@ native_stop_constraints(
 				parent->cmds->create_actions(parent, data_set);
 
 				/* make sure we dont mess anything up in create_actions */
-				CRM_CHECK(action->pseudo);
-				CRM_CHECK(action->runnable);
+				CRM_CHECK(action->pseudo, action->pseudo = TRUE);
+				CRM_CHECK(action->runnable, action->runnable = TRUE);
 			}
 			
 		} else if(is_stonith == FALSE) {
