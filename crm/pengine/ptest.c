@@ -345,32 +345,39 @@ main(int argc, char **argv)
 	slist_iter(
 		action, action_t, data_set.actions, lpc,
 
+		const char *style = "filled";
+		const char *font  = "black";
+		const char *color = "black";
+		const char *fill  = NULL;
 		char *action_name = create_action_name(action);
 		crm_debug_3("Action %d: %p", action->id, action);
 
-		if(action->dumped == FALSE) {
-			if(action->rsc != NULL && action->rsc->is_managed == FALSE) {
-				dot_write("\"%s\" [ font_color=black style=filled fillcolor=%s ]",
-					  action_name, "purple");
-
-			} else if(action->optional) {
-				if(all_actions) {
-					dot_write("\"%s\" [ style=\"dashed\" color=\"%s\" fontcolor=\"%s\" ]",
-						  action_name, "blue",
-						  action->pseudo?"orange":"black");
-				}
-				
-			} else {
-				dot_write("\"%s\" [ font_color=purple style=filled fillcolor=%s ]",
-					  action_name, "red");
- 				CRM_CHECK(action->runnable == FALSE, ;);
-			}
-			
-		} else {
-			dot_write("\"%s\" [ style=bold color=\"%s\" fontcolor=\"%s\" ]",
-				  action_name, "green",
-				  action->pseudo?"orange":"black");
+		if(action->pseudo) {
+			font = "orange";
 		}
+		
+		if(action->dumped) {
+			style = "bold";
+			color = "green";
+			
+		} else if(action->rsc != NULL && action->rsc->is_managed == FALSE) {
+			fill = "purple";
+			
+		} else if(action->optional) {
+			style = "dashed";
+			color = "blue";
+			if(all_actions == FALSE) {
+				goto dont_write;
+			}			
+				
+		} else {
+			fill = "red";
+			CRM_CHECK(action->runnable == FALSE, ;);	
+		}
+		
+		dot_write("\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"  %s%s]",
+			  action_name, style, color, font, fill?"fillcolor=":"", fill?fill:"");
+	  dont_write:
 		crm_free(action_name);
 		);
 
