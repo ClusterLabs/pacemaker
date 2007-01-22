@@ -12,11 +12,11 @@
 "rsc3_monitor_0 node1" -> "probe_complete node1" [ style = bold]
 "rsc3_monitor_0 node1" [ style=bold color="green" fontcolor="black" ]
 "rsc3_start_0 node1" [ style=bold color="green" fontcolor="black" ]
-"rscA_stop_0 node1" [ font_color=black style=filled fillcolor=purple ]
+"rscA_stop_0 node1" [ style=filled color="black" fontcolor="black"  fillcolor=purple]
 "rscB_monitor_0 node1" -> "probe_complete node1" [ style = bold]
 "rscB_monitor_0 node1" [ style=bold color="green" fontcolor="black" ]
 "rscB_start_0 node1" [ style=bold color="green" fontcolor="black" ]
 "rscC_monitor_0 node1" -> "probe_complete node1" [ style = bold]
 "rscC_monitor_0 node1" [ style=bold color="green" fontcolor="black" ]
-"rscC_start_0 node1" [ font_color=purple style=filled fillcolor=red ]
+"rscC_start_0 node1" [ style=filled color="black" fontcolor="black"  fillcolor=red]
 }
