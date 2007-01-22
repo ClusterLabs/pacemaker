@@ -12,7 +12,6 @@
 "rsc3_monitor_0 node1" -> "probe_complete node1" [ style = bold]
 "rsc3_monitor_0 node1" [ style=bold color="green" fontcolor="black" ]
 "rsc3_start_0 node1" [ style=bold color="green" fontcolor="black" ]
-"rscA_stop_0 node1" [ style=filled color="black" fontcolor="black"  fillcolor=purple]
 "rscB_monitor_0 node1" -> "probe_complete node1" [ style = bold]
 "rscB_monitor_0 node1" [ style=bold color="green" fontcolor="black" ]
 "rscB_start_0 node1" [ style=bold color="green" fontcolor="black" ]

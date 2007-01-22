@@ -362,6 +362,9 @@ main(int argc, char **argv)
 			
 		} else if(action->rsc != NULL && action->rsc->is_managed == FALSE) {
 			fill = "purple";
+			if(all_actions == FALSE) {
+				goto dont_write;
+			}			
 			
 		} else if(action->optional) {
 			style = "dashed";
