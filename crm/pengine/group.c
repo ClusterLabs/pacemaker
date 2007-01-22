@@ -112,20 +112,24 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		);
 
 	op = start_action(group_data->self, NULL, !group_data->child_starting);
-	op->pseudo   = TRUE;
+	op->pseudo = TRUE;
+	op->runnable = TRUE;
 
 	op = custom_action(group_data->self, started_key(group_data->self),
 			   CRMD_ACTION_STARTED, NULL,
 			   !group_data->child_starting, TRUE, data_set);
-	op->pseudo   = TRUE;
+	op->pseudo = TRUE;
+	op->runnable = TRUE;
 
 	op = stop_action(group_data->self, NULL, !group_data->child_stopping);
-	op->pseudo   = TRUE;
+	op->pseudo = TRUE;
+	op->runnable = TRUE;
 	
 	op = custom_action(group_data->self, stopped_key(group_data->self),
 			   CRMD_ACTION_STOPPED, NULL,
 			   !group_data->child_stopping, TRUE, data_set);
-	op->pseudo   = TRUE;
+	op->pseudo = TRUE;
+	op->runnable = TRUE;
 
 	rsc->actions = group_data->self->actions;
 }

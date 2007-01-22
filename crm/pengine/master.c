@@ -414,7 +414,9 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		CRMD_ACTION_PROMOTED, NULL, !any_promoting, TRUE, data_set);
 
 	action->pseudo = TRUE;
+	action->runnable = TRUE;
 	action_complete->pseudo = TRUE;
+	action_complete->runnable = TRUE;
 	action_complete->priority = INFINITY;
 	
 	child_promoting_constraints(clone_data, pe_order_optional, 
@@ -431,7 +433,9 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action_complete->priority = INFINITY;
 
 	action->pseudo = TRUE;
+	action->runnable = TRUE;
 	action_complete->pseudo = TRUE;
+	action_complete->runnable = TRUE;
 	
 	child_demoting_constraints(clone_data, pe_order_optional,
 				   NULL, last_demote_rsc, data_set);

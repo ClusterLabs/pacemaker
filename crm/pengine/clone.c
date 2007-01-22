@@ -342,7 +342,7 @@ clone_update_pseudo_status(
 
 		} else if(safe_str_eq(CRMD_ACTION_START, action->task)) {
 			if(action->runnable == FALSE) {
-				crm_debug_3("Skipping pseduo-op: %s run=%d, pseudo=%d",
+				crm_debug_3("Skipping pseudo-op: %s run=%d, pseudo=%d",
 					    action->uuid, action->runnable, action->pseudo);
 			} else {
 				crm_debug_2("Starting due to: %s", action->uuid);
@@ -391,7 +391,9 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		CRMD_ACTION_STARTED, NULL, !child_starting, TRUE, data_set);
 
 	start->pseudo = TRUE;
+	start->runnable = TRUE;
 	action_complete->pseudo = TRUE;
+	action_complete->runnable = TRUE;
 	action_complete->priority = INFINITY;
 	
 	child_starting_constraints(clone_data, pe_order_optional, 
@@ -408,7 +410,9 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		CRMD_ACTION_STOPPED, NULL, !child_stopping, TRUE, data_set);
 
 	stop->pseudo = TRUE;
+	stop->runnable = TRUE;
 	action_complete->pseudo = TRUE;
+	action_complete->runnable = TRUE;
 	action_complete->priority = INFINITY;
 	
 	child_stopping_constraints(clone_data, pe_order_optional,
@@ -464,7 +468,6 @@ clone_create_notifications(
 	} else {
 		add_hash_param(notify->meta, "notify_confirm", "no");
 	}
-	notify->pseudo = TRUE;
 
 	/* create pre_notify_complete */
 	notify_key = generate_notify_key(
@@ -480,7 +483,9 @@ clone_create_notifications(
 		add_hash_param(notify->meta, "notify_confirm", "no");
 	}
 	notify->pseudo = TRUE;
+	notify->runnable = TRUE;
 	notify_complete->pseudo = TRUE;
+	notify_complete->runnable = TRUE;
 
 	/* pre_notify before pre_notify_complete */
 	custom_action_order(
@@ -510,7 +515,6 @@ clone_create_notifications(
 	} else {
 		add_hash_param(notify->meta, "notify_confirm", "no");
 	}
-	notify->pseudo = TRUE;
 
 	/* action_complete before post_notify */
 	custom_action_order(
@@ -531,7 +535,11 @@ clone_create_notifications(
 	} else {
 		add_hash_param(notify->meta, "notify_confirm", "no");
 	}
+
+	notify->pseudo = TRUE;
+	notify->runnable = TRUE;
 	notify_complete->pseudo = TRUE;
+	notify_complete->runnable = TRUE;
 
 	/* post_notify before post_notify_complete */
 	custom_action_order(

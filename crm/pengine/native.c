@@ -1375,8 +1375,8 @@ native_stop_constraints(
 		if(node->details->online == FALSE || rsc->failed) {
 			resource_t *parent = NULL;
 			crm_warn("Stop of failed resource %s is"
-				 " implict after %s is fenced",
-				 rsc->id, node->details->uname);
+				 " implicit after %s is fenced",
+				 action->uuid, node->details->uname);
 			/* the stop would never complete and is
 			 * now implied by the stonith operation
 			 */
@@ -1402,6 +1402,10 @@ native_stop_constraints(
 				crm_info("Re-creating actions for %s",
 					 parent->id);
 				parent->cmds->create_actions(parent, data_set);
+
+				/* make sure we dont mess anything up in create_actions */
+				CRM_CHECK(action->pseudo);
+				CRM_CHECK(action->runnable);
 			}
 			
 		} else if(is_stonith == FALSE) {

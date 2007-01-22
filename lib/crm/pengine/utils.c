@@ -438,22 +438,18 @@ custom_action(resource_t *rsc, char *key, const char *task,
 				action->extra, NULL, data_set->now);
 		}
 
-		if(action->node == NULL) {
+		if(action->pseudo) {
+			/* leave untouched */
+			
+		} else if(action->node == NULL) {
 			action->runnable = FALSE;
-
+			
 		} else if(rsc->is_managed == FALSE) {
 			do_crm_log(warn_level, "Action %s %s is for %s (unmanaged)",
 				 action->uuid, task, rsc->id);
 			action->optional = TRUE;
 /*   			action->runnable = FALSE; */
 
-#if 0
-		} else if(action->node->details->unclean) {
-			do_crm_log(warn_level, "Action %s on %s is unrunnable (unclean)",
-				 action->uuid, action->node?action->node->details->uname:"<none>");
-
-			action->runnable = FALSE;
-#endif	
 		} else if(action->node->details->online == FALSE) {
 			action->runnable = FALSE;
 			do_crm_log(warn_level, "Action %s on %s is unrunnable (offline)",
@@ -482,18 +478,18 @@ custom_action(resource_t *rsc, char *key, const char *task,
 		} else if(data_set->have_quorum == FALSE
 			&& data_set->no_quorum_policy == no_quorum_stop) {
 			action->runnable = FALSE;
-			crm_debug("%s\t%s %s (cancelled : quorum)",
+			crm_debug("%s\t%s (cancelled : quorum)",
 				  action->node->details->uname,
-				  action->task, rsc->id);
+				  action->uuid);
 			
 		} else if(data_set->have_quorum == FALSE
 			&& data_set->no_quorum_policy == no_quorum_freeze) {
 			crm_debug_3("Check resource is already active");
 			if(rsc->fns->active(rsc, TRUE) == FALSE) {
 				action->runnable = FALSE;
-				crm_debug("%s\t%s %s (cancelled : quorum freeze)",
+				crm_debug("%s\t%s (cancelled : quorum freeze)",
 					  action->node->details->uname,
-					  action->task, rsc->id);
+					  action->uuid);
 			}
 
 		} else {

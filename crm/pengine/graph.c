@@ -385,15 +385,18 @@ should_dump_action(action_t *action)
 
 	interval = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
 	if(action->optional) {
-		crm_debug_5("action %d was optional", action->id);
+		crm_debug_5("action %d (%s) was optional",
+			    action->id, action->uuid);
 		return FALSE;
 
-	} else if(action->pseudo == FALSE && action->runnable == FALSE) {
-		crm_debug_5("action %d was not runnable", action->id);
+	} else if(action->runnable == FALSE) {
+		crm_debug_5("action %d (%s) was not runnable",
+			    action->id, action->uuid);
 		return FALSE;
 
 	} else if(action->dumped) {
-		crm_debug_5("action %d was already dumped", action->id);
+		crm_debug_5("action %d (%s) was already dumped",
+			    action->id, action->uuid);
 		return FALSE;
 
 	} else if(action->rsc != NULL
