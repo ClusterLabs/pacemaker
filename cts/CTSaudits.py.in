@@ -629,9 +629,6 @@ class PartitionAudit(ClusterAudit):
 
         elif self.CM.Env["CIBResource"] == 1 and self.NodeQuorum[dc_found[0]] == "1":
             self.CM.debug("%s: %s" % (dc_found[0], self.NodeQuorum[dc_found[0]]))
-            if self.audit_dc_resources(node_list, dc_found) == 0:
-                passed = 0
-
             Resources = self.CM.Resources()
             for node in node_list:
 		if self.CM.ShouldBeStatus[node] == self.CM["up"]:
@@ -654,30 +651,6 @@ class PartitionAudit(ClusterAudit):
 
         return passed
 
-    def audit_dc_resources(self, node_list, dc_list):
-        passed = 1
-        Resources = self.CM.Resources()
-        for resource in Resources:
-            if resource.rid == "DcIPaddr":
-                self.CM.debug("Auditing resource: %s" %(resource))
-                # All DCs are running the resource
-                for dc in dc_list:
-                    if self.NodeQuorum[dc]:
-                        if resource.IsRunningOn(dc) == 0:
-                            self.CM.log("Resource %s not running on DC: %s" 
-                                        %(resource, dc))
-                            passed = 0
-
-                # All nodes running the resource are DCs
-                for node in node_list:
-                    if resource.IsRunningOn(node):
-                        if self.CM.is_node_dc(node, self.NodeState[node]) == 0:
-                            self.CM.log("Resource %s is running on non-DC node %s"  
-                                        %("DcIPaddr", node))
-                            passed = 0
-
-        return passed
-        
     def name(self):
         return "PartitionAudit"
     

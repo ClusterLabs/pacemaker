@@ -96,13 +96,6 @@ class CIB:
           </instance_attributes>
         </primitive> ''' 
 
-    dc_ipaddr_location_constraint = ''' 
-        <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
-          <rule id="cant_run_DcIPaddr" score="-INFINITY" boolean_op="and">
-             <expression id="dc_ip_expr" attribute="#is_dc" operation="eq" value="false"/>
-          </rule>
-        </rsc_location> '''
-
     clustermon_location_constraint = ''' 
         <rsc_location id="run_cluster_mon" rsc="cluster_mon">
           <rule id="cant_run_cluster_mon" score="-INFINITY" boolean_op="and">
@@ -202,9 +195,6 @@ class CIB:
 	    self.cts_cib = self.cib_template %  (cib_options, resources, constraints)
 	    return
 
-        resources += self.hb_ipaddr_template % \
-            ("DcIPaddr", "DcIPaddr", "DcIPaddr", "DcIPaddr", self.CM.Env["IPBase"])
-	constraints += self.dc_ipaddr_location_constraint
 	if self.CM.cluster_monitor == 1:
 	    resources += self.clustermon_resource_template
 	    constraints += self.clustermon_location_constraint
@@ -213,7 +203,7 @@ class CIB:
 	ip2=self.NextIP()
 	ip3=self.NextIP()
         ip1_rsc = self.ipaddr_template % (ip1, ip1, ip1, ip1, ip1)
-        ip2_rsc = self.ipaddr_template % (ip2, ip2, ip2, ip2, ip2)
+        ip2_rsc = self.hb_ipaddr_template % (ip2, ip2, ip2, ip2, ip2)
         ip3_rsc = self.ipaddr_template % (ip3, ip3, ip3, ip3, ip3)
 	resources += self.resource_group_template % (ip1_rsc, ip2_rsc, ip3_rsc)
 
