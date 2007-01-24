@@ -2039,12 +2039,18 @@ gboolean
 replace_xml_child(crm_data_t *parent, crm_data_t *child, crm_data_t *update, gboolean delete_only)
 {
 	gboolean can_delete = FALSE;
+
+	const char *up_id = NULL;
+	const char *child_id = NULL;
 	const char *right_val = NULL;
 	
 	CRM_CHECK(child != NULL, return FALSE);
 	CRM_CHECK(update != NULL, return FALSE);
+
+	up_id = ID(update);
+	child_id = ID(child);
 	
-	if(safe_str_eq(ID(child), ID(update))) {
+	if(child_id == up_id || safe_str_eq(child_id, up_id)) {
 		can_delete = TRUE;
 	}
 	if(safe_str_neq(crm_element_name(update), crm_element_name(child))) {

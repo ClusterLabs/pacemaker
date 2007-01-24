@@ -690,7 +690,8 @@ gboolean
 crm_str_eq(const char *a, const char *b, gboolean use_case) 
 {
 	if(a == NULL || b == NULL) {
-		CRM_ASSERT(a != b);
+		/* shouldn't be comparing NULLs */
+		CRM_CHECK(a != b, return TRUE);
 		return FALSE;
 
 	} else if(use_case && a[0] != b[0]) {

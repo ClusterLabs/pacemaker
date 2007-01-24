@@ -1041,10 +1041,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	
 	if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
 		is_probe = TRUE;
-
-	} else if(interval > 0 && rsc->role < RSC_ROLE_STARTED) {
-		crm_debug_3("Skipping recurring action %s for stopped resource", id);
-		return FALSE;
 	}
 	
 	if(safe_str_eq(task, CRMD_ACTION_STOP)) {
