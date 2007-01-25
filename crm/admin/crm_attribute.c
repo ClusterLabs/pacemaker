@@ -209,7 +209,8 @@ main(int argc, char **argv)
 		return rc;
 	}
 	
-	if(safe_str_eq(crm_system_name, "crm_master")) {
+	if(safe_str_eq(crm_system_name, "crm_master")
+	   || (dest_uname == NULL && safe_str_eq(crm_system_name, "crm_standby"))) {
 		struct utsname name;
 		if(uname(&name) != 0) {
 			cl_perror("uname(3) call failed");
