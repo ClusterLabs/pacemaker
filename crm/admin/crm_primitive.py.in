@@ -121,20 +121,16 @@ def cib_resource(doc, id, ra_class, type, provider):
 	return resource
 
 def cib_rsc_location(doc, id, node, score):
-	rsc_location = doc.createElement("rsc_location")
-	rsc_location.setAttribute("id",  id+"_prefer_"+node)
-	rsc_location.setAttribute("rsc", id)
 	rule = doc.createElement("rule")
 	rule.setAttribute("id", id+"_prefer_"+node+"_rule")
 	rule.setAttribute("score", score)
-	rsc_location.appendChild(rule)
 	expression = doc.createElement("expression")
 	expression.setAttribute("id",id+"_prefer_"+node+"_expr")
 	expression.setAttribute("attribute","#uname")
 	expression.setAttribute("operation","eq")
 	expression.setAttribute("value", node)
 	rule.appendChild(expression)
-	return rsc_location
+	return rule
 
 def cib_rsc_colocation(doc, id, other_resource, score):
 	rsc_colocation = doc.createElement("rsc_colocation")
@@ -239,6 +235,7 @@ if __name__=="__main__" :
 		else:
 			print "Unknown argument: "+ args[i]
 			print_usage()
+
 	cib = create_cib()
 	pre_line = ""
 	id_index = 1
@@ -250,13 +247,15 @@ if __name__=="__main__" :
 
 	cib[1].appendChild(resource)
 
-	for i in range(0, len(rsc_location)) :
-		if rsc_location[i] == None :
-			continue
-		
-		param = string.split(rsc_location[i], "=")
-		location_rule = cib_rsc_location(cib[0], rsc_name, param[0], param[1])
-		cib[2].appendChild(location_rule)
+	if rsc_location != None :
+		rsc_loc = cib[0].createElement("rsc_location")
+		rsc_loc.setAttribute("id",  rsc_name+"_preferences")
+		rsc_loc.setAttribute("rsc", rsc_name)
+		for i in range(0, len(rsc_location)) :
+			param = string.split(rsc_location[i], "=")
+			location_rule = cib_rsc_location(cib[0], rsc_name, param[0], param[1])
+			rsc_loc.appendChild(location_rule)
+		cib[2].appendChild(rsc_loc)
 
 	for i in range(0, len(rsc_colocation)) :
 		if rsc_location[i] == None :
