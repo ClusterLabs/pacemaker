@@ -31,9 +31,21 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
     <ul>
     <xsl:apply-templates select="node()"/>
     Preferred Locations:
-    <xsl:apply-templates select="/cib/configuration/constraints/rsc_location/@rsc=@id"/>
+    <xsl:call-template name="location_prefs">
+      <xsl:with-param name="resource" select="@id"/>
+    </xsl:call-template>
     </ul>
   </li>
+</xsl:template>
+
+<xsl:template name="location_prefs">
+    <xsl:parameter name="resource"/>
+    <xsl:for-each select="/cib/configuration/constraints/rsc_location">
+	<xsl:if test="@rsc = $resource">
+	  <xsl:apply-templates/>
+	</xsl:if>
+	<xsl:text> </xsl:text>
+    </xsl:for-each>
 </xsl:template>
 
 <xsl:template match="group">
@@ -114,7 +126,6 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <h3>Inter-Resource Relationships</h3>
   <xsl:apply-templates select="rsc_colocation"/>
   <xsl:apply-templates select="rsc_order"/>
-  <xsl:apply-templates select="rsc_location"/>
 </xsl:template>
 
 <xsl:template match="configuration">
