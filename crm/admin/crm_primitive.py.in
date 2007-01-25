@@ -68,6 +68,8 @@ def cib_resource(doc, id, ra_class, type, provider):
 	resource.setAttribute("class", ra_class)
 	
 	if ra_class == "ocf":
+		if not provider:
+			provider = "heartbeat"
 		resource.setAttribute("provider", provider)
 
 	elif ra_class != "lsb" and ra_class != "heartbeat": 
@@ -241,6 +243,7 @@ if __name__=="__main__" :
 	pre_line = ""
 	id_index = 1
 	resource = cib_resource(cib[0], rsc_name, rsc_class, rsc_type, rsc_provider)
+
 	if print_rsc_only:
 		print resource.toprettyxml()
 		sys.exit(0)
