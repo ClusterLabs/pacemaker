@@ -29,6 +29,8 @@
 
 #define NO_MASTER_PREFS 0
 
+extern gint sort_clone_instance(gconstpointer a, gconstpointer b);
+
 extern void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
 	pe_working_set_t *data_set);
@@ -241,6 +243,30 @@ can_be_master(resource_t *rsc)
 	return NULL;
 }
 
+static gint sort_master_instance(gconstpointer a, gconstpointer b)
+{
+	int rc;
+	const resource_t *resource1 = (const resource_t*)a;
+	const resource_t *resource2 = (const resource_t*)b;
+
+	CRM_ASSERT(resource1 != NULL);
+	CRM_ASSERT(resource2 != NULL);
+
+	rc = sort_rsc_priority(a, b);
+	if( rc != 0 ) {
+		return rc;
+	}
+	
+	if(resource1->role > resource2->role) {
+		return -1;
+
+	} else if(resource1->role < resource2->role) {
+		return 1;
+	}
+	
+	return sort_clone_instance(a, b);
+}
+
 node_t *
 master_color(resource_t *rsc, pe_working_set_t *data_set)
 {
@@ -261,7 +287,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(node, node_t, clone_data->self->allowed_nodes, lpc,
 		   node->count = 0;
 		);
-	
+
 	/*
 	 * assign priority
 	 */
@@ -344,7 +370,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 	
 	/* sort based on the new "promote" priority */
 	clone_data->child_list = g_list_sort(
-		clone_data->child_list, sort_rsc_priority);
+		clone_data->child_list, sort_master_instance);
 
 	/* mark the first N as masters */
 	slist_iter(

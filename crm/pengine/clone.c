@@ -27,6 +27,8 @@
 #define VARIANT_CLONE 1
 #include <lib/crm/pengine/variant.h>
 
+gint sort_clone_instance(gconstpointer a, gconstpointer b);
+
 void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
 	pe_working_set_t *data_set);
@@ -81,7 +83,7 @@ parent_node_instance(const resource_t *rsc, node_t *node)
 		clone_data->self->allowed_nodes, node->details->id);
 }
 
-static gint sort_clone_instance(gconstpointer a, gconstpointer b)
+gint sort_clone_instance(gconstpointer a, gconstpointer b)
 {
 	int level = LOG_DEBUG_3;
 	node_t *node1 = NULL;
