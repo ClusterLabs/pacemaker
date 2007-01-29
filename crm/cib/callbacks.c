@@ -391,7 +391,7 @@ cib_client_connect_rw_synch(IPC_Channel *channel, gpointer user_data)
 	cib_client_t *new_client = NULL;
 	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	new_client = cib_client_connect_common(
-		channel, cib_channel_ro_synchronous, cib_rw_synchronous_callback);
+		channel, cib_channel_rw_synchronous, cib_rw_synchronous_callback);
 
 	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	if(new_client == NULL) {
