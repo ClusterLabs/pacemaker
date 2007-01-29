@@ -559,7 +559,7 @@ Valid tests using this test would be of the form:
           attribute  CDATA                    #REQUIRED
           operation  (lt|gt|lte|gte|eq|ne|defined|not_defined) #REQUIRED
           value      CDATA                    #IMPLIED
-          type       (integer|string|version) 'string'>
+          type       (number|string|version) 'string'>
 
 <!--
  * start : A date-time conforming to the ISO8601 specification.
