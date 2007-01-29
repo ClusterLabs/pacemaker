@@ -476,6 +476,12 @@ master_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		clone_data->self, demoted_key(clone_data->self), NULL,
 		pe_order_optional, data_set);
 	
+	/* global demoted before promote */
+	custom_action_order(
+		clone_data->self, demoted_key(clone_data->self), NULL,
+		clone_data->self, promote_key(clone_data->self), NULL,
+		pe_order_internal_restart, data_set);
+
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
 

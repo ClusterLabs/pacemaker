@@ -195,7 +195,7 @@ do_test master-8 "Promoted -> Fenced -> Moved"
 do_test master-9 "Stopped + Promotable + No quorum"
 do_test master-10 "Stopped -> Promotable : notify with monitor"
 do_test master-11 "Stopped -> Promote : colocation"
-
+do_test novell-239082 "Demote/Promote ordering"
 
 echo ""
 do_test managed-0 "Managed (reference)"
