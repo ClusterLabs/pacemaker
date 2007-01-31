@@ -390,7 +390,9 @@ do_work(crm_data_t *input, int call_options, crm_data_t **output)
 
 	} else if(cib_action != NULL) {
 		crm_debug_4("Passing \"%s\" to variant_op...", cib_action);
-		if(input != NULL && do_id_check(input, NULL, TRUE, FALSE)) {
+		if(strcasecmp(CIB_OP_APPLY_DIFF, cib_action) != 0 
+		   && input != NULL
+		   && do_id_check(input, NULL, TRUE, FALSE)) {
 			crm_err("ID Check failed.");
 			return cib_id_check;
 		}
