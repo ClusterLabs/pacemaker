@@ -28,7 +28,7 @@
 num_errors=0
 
 function usage() {
-    echo "ocf-tester [-h] [-r resource_name] [-o name=value]* /full/path/to/resource"
+    echo "ocf-tester [-h] -n resource_name [-o name=value]* /full/path/to/resource"
     exit $1
 }
 
@@ -52,7 +52,7 @@ ra_args=""
 verbose=0
 while test "$done" = "0"; do
     case "$1" in
-        -n) ra_args="$ra_args OCF_RESOURCE_INSTANCE=$2"; shift; shift;;
+        -n) OCF_RESOURCE_INSTANCE=$2; ra_args="$ra_args OCF_RESOURCE_INSTANCE=$2"; shift; shift;;
         -o) name=${2%%=*}; value=${2##*=}; 
 	    ra_args="$ra_args OCF_RESKEY_$name=$value"; shift; shift;;
 	-v) verbose=1; shift;;
@@ -62,7 +62,16 @@ while test "$done" = "0"; do
     esac
 done
 
+if [ "x" = "x$OCF_RESOURCE_INSTANCE" ]; then
+    echo "You must give your resource a name"
+    usage 1
+fi
+
 agent=$1
+if [ ! -e $agent ]; then
+    echo "You must provide the full path to your resource agent"
+    usage 1
+fi
 stopped_rc=7
 has_demote=1
 has_promote=1
@@ -107,6 +116,7 @@ if [ $rc = 3 ]; then
     assert $rc 0 "Your agent does not support the validate-all action"
 else
     assert $rc 0 "Validation failed.  Did you supply enough options with -o ?" 1
+    usage $rc
 fi
 
 test_command monitor "Checking current state"
