@@ -111,11 +111,11 @@ extern void get_meta_attributes(GHashTable *meta_hash, resource_t *rsc,
 				node_t *node, pe_working_set_t *data_set);
 
 #if CURSES_ENABLED
-#  define status_printw(fmt...) printw(fmt)
+#  define status_printw(fmt, args...) printw(fmt, ##args)
 #else
-#  define status_printw(fmt...) \
+#  define status_printw(fmt, args...) \
 	crm_err("printw support requires ncurses to be available during configure"); \
-	do_crm_log(LOG_WARNING, NULL, NULL, fmt);
+	do_crm_log(LOG_WARNING, fmt, ##args);
 #endif
 
 #define status_print(fmt, args...)			\
