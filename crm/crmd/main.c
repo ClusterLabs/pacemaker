@@ -51,7 +51,7 @@
 #include <crmd.h>
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
-#include <crm/crmd/version.h>
+#include <ha_version.h>
 
 #include <crm/dmalloc_wrapper.h>
 
@@ -74,7 +74,7 @@ main(int argc, char ** argv)
 
     crm_log_init(crm_system_name);
 
-    crm_info("CRM Hg Version: %s\n", CRM_HG_VERSION);
+    crm_info("CRM Hg Version: %s\n", HA_HG_VERSION);
     
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -96,7 +96,7 @@ main(int argc, char ** argv)
 	    return 0;
     } else if(argc - optind == 1 && safe_str_eq("version", argv[optind])) {
 	    fprintf(stderr, "CRM Version: ");
-	    fprintf(stdout, "%s (%s)\n", VERSION, CRM_HG_VERSION);
+	    fprintf(stdout, "%s (%s)\n", VERSION, HA_HG_VERSION);
 	    return 0;
     }
     
