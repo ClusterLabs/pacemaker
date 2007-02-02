@@ -616,6 +616,7 @@ unpack_operation(
 		value = "force migration";
 		
 	} else if(safe_str_eq(value, "stop")) {
+		action->on_fail = action_fail_stop;
 		action->fail_role = RSC_ROLE_STOPPED;
 		value = "stop resource";
 		

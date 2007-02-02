@@ -58,7 +58,7 @@ enum action_fail_response {
 	action_migrate_failure, /* recovery from a failed atomic migration */
 	action_fail_migrate,    /* recover by moving it somewhere else */
 	action_fail_block,
-/* 	action_fail_stop, */
+	action_fail_stop,
 	action_fail_fence
 };
 
