@@ -260,9 +260,9 @@ main(int argc, char **argv)
 		crm_malloc0(attr_name, len);
 		sprintf(attr_name, "master-%s", rsc_id);
 
-		len = 2 + strlen(attr_name) + strlen(dest_node);
+		len = 3 + strlen(type) + strlen(attr_name) + strlen(dest_node);
 		crm_malloc0(attr_id, len);
-		sprintf(attr_id, "%s-%s", attr_name, dest_node);
+		sprintf(attr_id, "%s-%s-%s", type, attr_name, dest_node);
 
 		len = 8 + strlen(dest_node);
 		crm_malloc0(set_name, len);
