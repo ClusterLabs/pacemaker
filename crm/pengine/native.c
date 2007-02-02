@@ -1022,12 +1022,12 @@ pe_post_notify(resource_t *rsc, node_t *node, action_t *op,
 			   n_data, data_set);
 
 	if(notify != NULL) {
+/* 		crm_err("Upgrading priority for %s to INFINITY", notify->uuid); */
 		notify->priority = INFINITY;
 	}
-	
+
 	notify = op->post_notified;
 	if(notify != NULL) {
-		notify->priority = INFINITY;
 		slist_iter(
 			mon, action_t, rsc->actions, lpc,
 

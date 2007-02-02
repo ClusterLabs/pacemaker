@@ -397,6 +397,7 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action_complete->pseudo = TRUE;
 	action_complete->runnable = TRUE;
 	action_complete->priority = INFINITY;
+/* 	crm_err("Upgrading priority for %s to INFINITY", action_complete->uuid); */
 	
 	child_starting_constraints(clone_data, pe_order_optional, 
 				   NULL, last_start_rsc, data_set);
@@ -416,6 +417,7 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action_complete->pseudo = TRUE;
 	action_complete->runnable = TRUE;
 	action_complete->priority = INFINITY;
+/* 	crm_err("Upgrading priority for %s to INFINITY", action_complete->uuid); */
 	
 	child_stopping_constraints(clone_data, pe_order_optional,
 				   NULL, last_stop_rsc, data_set);
@@ -540,8 +542,13 @@ clone_create_notifications(
 
 	notify->pseudo = TRUE;
 	notify->runnable = TRUE;
+	notify->priority = INFINITY;
+/* 	crm_err("Upgrading priority for %s to INFINITY", notify->uuid); */
+
 	notify_complete->pseudo = TRUE;
 	notify_complete->runnable = TRUE;
+	notify_complete->priority = INFINITY;
+/* 	crm_err("Upgrading priority for %s to INFINITY", notify_complete->uuid); */
 
 	/* post_notify before post_notify_complete */
 	custom_action_order(

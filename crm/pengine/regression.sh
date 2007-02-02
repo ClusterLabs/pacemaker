@@ -214,6 +214,7 @@ do_test notify-0 "Notify reference"
 do_test notify-1 "Notify simple"
 do_test notify-2 "Notify simple, confirm"
 do_test notify-3 "Notify move, confirm"
+do_test novell-239079 "Notification priority"
 #do_test notify-2 "Notify - 764"
 
 echo ""

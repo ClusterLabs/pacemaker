@@ -122,7 +122,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="10">
+   <synapse id="10" priority="1000000">
      <action_set>
        <pseudo_event id="38" operation="notify" operation_key="configstorecloneset_post_notify_start_0">
          <attributes crm_feature_set="1.0.8" CRM_meta_timeout="20000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" CRM_meta_notify_operation="start" CRM_meta_globally_unique="false" CRM_meta_clone_node_max="1"/>
