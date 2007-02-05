@@ -47,4 +47,3 @@ SUBDIRS			=  	\
 	lrm			\
 	$(MGMT_DIR)
 
-#	bindings
