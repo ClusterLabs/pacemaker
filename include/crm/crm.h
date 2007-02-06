@@ -303,5 +303,5 @@ extern void crm_log_message_adv(
 #endif
 
 #define crm_msg_del(msg) if(msg != NULL) { ha_msg_del(msg); msg = NULL; }
-
+#define crm_strdup(str) crm_strdup_fn(str, __FILE__, __PRETTY_FUNCTION__, __LINE__)
 #endif

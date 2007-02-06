@@ -44,7 +44,7 @@ extern unsigned int get_crm_log_level(void);
 
 extern char *crm_itoa(int an_int);
 
-extern char *crm_strdup(const char *a);
+extern char *crm_strdup_fn(const char *a, const char *file, const char *fn, int line);
 
 extern char *generate_hash_key(const char *crm_msg_reference, const char *sys);
 
@@ -64,6 +64,7 @@ extern void alter_debug(int nsig);
 
 extern void g_hash_destroy_str(gpointer data);
 
+extern void empty_uuid_cache(void);
 extern const char *get_uuid(ll_cluster_t *hb, const char *uname);
 extern const char *get_uname(ll_cluster_t *hb, const char *uuid);
 extern void unget_uuid(const char *uname);
