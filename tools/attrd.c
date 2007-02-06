@@ -419,7 +419,7 @@ main(int argc, char ** argv)
 	
 	if(was_err == FALSE) {
 		int rc = init_server_ipc_comms(
-			crm_strdup(attrd_channel), attrd_connect,
+			channel_name, attrd_connect,
 			default_ipc_connection_destroy);
 		
 		if(rc != 0) {
@@ -451,8 +451,10 @@ main(int argc, char ** argv)
 	crm_free(channel_name);
 	crm_free(attrd_uuid);
 	empty_uuid_cache();
-	
+
+#ifdef HA_MALLOC_TRACK
 	cl_malloc_dump_allocated(LOG_ERR, FALSE);
+#endif
 	return 0;
 }
 
