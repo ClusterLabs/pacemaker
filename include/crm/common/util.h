@@ -50,8 +50,6 @@ extern char *generate_hash_key(const char *crm_msg_reference, const char *sys);
 
 extern char *generate_hash_value(const char *src_node, const char *src_subsys);
 
-extern gboolean decode_hash_value(gpointer value, char **node, char **subsys);
-
 extern gboolean decodeNVpair(const char *srcstring,
 			     char separator, char **name, char **value);
 

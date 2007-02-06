@@ -407,41 +407,6 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 	return hash_value;
 }
 
-gboolean
-decode_hash_value(gpointer value, char **node, char **subsys)
-{
-	char *char_value = (char*)value;
-	int value_len = strlen(char_value);
-
-	CRM_CHECK(value != NULL,  return FALSE);
-	CRM_CHECK(node != NULL,   return FALSE);
-	CRM_CHECK(subsys != NULL, return FALSE);
-	
-	*node = NULL;
-	*subsys = NULL;
-
-	crm_info("Decoding hash value: (%s:%d)", char_value, value_len);
-    	
-	if (strcasecmp(CRM_SYSTEM_DC, (char*)value) == 0) {
-		*node = NULL;
-		*subsys = (char*)crm_strdup(char_value);
-		CRM_CHECK(*subsys != NULL, return FALSE);
-		crm_info("Decoded value: (%s:%d)", *subsys,
-			 (int)strlen(*subsys));
-		return TRUE;
-		
-	} else if (decodeNVpair(char_value, '_', node, subsys)) {
-		return TRUE;
-	}
-
-	crm_free(*node);
-	crm_free(*subsys);
-	*node = NULL;
-	*subsys = NULL;
-	return FALSE;
-}
-
-
 char *
 crm_itoa(int an_int)
 {
@@ -740,8 +705,10 @@ static GHashTable *crm_uname_cache = NULL;
 void
 empty_uuid_cache(void)
 {
-	g_hash_table_destroy(crm_uuid_cache);
-	crm_uuid_cache = NULL;
+	if(crm_uuid_cache != NULL) {
+		g_hash_table_destroy(crm_uuid_cache);
+		crm_uuid_cache = NULL;
+	}
 }
 
 void
