@@ -722,16 +722,27 @@ safe_str_neq(const char *a, const char *b)
 }
 
 char *
-crm_strdup(const char *src)
+crm_strdup_fn(const char *src, const char *file, const char *fn, int line)
 {
 	char *dup = NULL;
 	CRM_CHECK(src != NULL, return NULL);
+#ifdef HA_MALLOC_TRACK
+	dup = cl_malloc_track(strlen(src) + 1, file, fn, line);
+#else
 	crm_malloc0(dup, strlen(src) + 1);
+#endif
 	return strcpy(dup, src);
 }
 
 static GHashTable *crm_uuid_cache = NULL;
 static GHashTable *crm_uname_cache = NULL;
+
+void
+empty_uuid_cache(void)
+{
+	g_hash_table_destroy(crm_uuid_cache);
+	crm_uuid_cache = NULL;
+}
 
 void
 unget_uuid(const char *uname)
@@ -1546,8 +1557,10 @@ crm_diff_mem_stats(int log_level_up, int log_level_down, const char *location,
 	gboolean reset_on_change = (log_level_up == LOG_DEBUG);
 
 /* 	long delta_malloc = stats->mallocbytes - saved_stats->mallocbytes; */
+#ifndef HA_MALLOC_TRACK
+	crm_err("Skipping comparision");
 	return FALSE;
-	
+#endif	
 	if(stats == NULL && saved_stats == NULL) {
 		crm_err("Comparision doesnt make sense");
 		return FALSE;
@@ -1565,7 +1578,7 @@ crm_diff_mem_stats(int log_level_up, int log_level_down, const char *location,
 	delta_req    = stats->nbytes_req - saved_stats->nbytes_req;
 	
 	if(delta_bytes == 0) {
-		crm_debug_2("Memory usage constant at %s: %ld alloc's %ld free's",
+		crm_info("Memory usage constant at %s: %ld alloc's %ld free's",
 			    location, delta_allocs, delta_frees);
 		return FALSE;
 	}

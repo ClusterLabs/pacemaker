@@ -1198,7 +1198,7 @@ cib_process_request(
 	free_xml(result_diff);
 
 	if(crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats)) {
-#if HA_MALLOC_TRACK
+#ifdef HA_MALLOC_TRACK
 		cl_malloc_dump_allocated(LOG_DEBUG, FALSE);
 #endif
 	}
