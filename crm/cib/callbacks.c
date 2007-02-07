@@ -317,12 +317,10 @@ cib_ipc_connection_destroy(gpointer user_data)
 	crm_debug_3("Destroying %s (%p)", cib_client->name, user_data);
 	num_clients--;
 	crm_debug("Num unfree'd clients: %d", num_clients);
-	START_stat_free_op();
 	crm_free(cib_client->name);
 	crm_free(cib_client->callback_id);
 	crm_free(cib_client->id);
 	crm_free(cib_client);
-	END_stat_free_op();
 	crm_debug_4("Freed the cib client");
 
 	return;
@@ -358,9 +356,7 @@ cib_client_connect_common(
 		return NULL;
 		
 	} else {
-		START_stat_free_op();
 		crm_malloc0(new_client, sizeof(cib_client_t));
-		END_stat_free_op();
 		num_clients++;
 		new_client->channel = channel;
 		new_client->channel_name = channel_name;
@@ -436,26 +432,19 @@ cib_client_connect_rw_ro(IPC_Channel *channel, gpointer user_data)
 	cl_uuid_generate(&client_id);
 	cl_uuid_unparse(&client_id, uuid_str);
 
-	START_stat_free_op();
 	CRM_CHECK(new_client->id == NULL, crm_free(new_client->id));
 	new_client->id = crm_strdup(uuid_str);
-	END_stat_free_op();
 	
 	cl_uuid_generate(&client_id);
 	cl_uuid_unparse(&client_id, uuid_str);
 
-	START_stat_free_op();
 	CRM_CHECK(new_client->callback_id == NULL, crm_free(new_client->callback_id));
 	new_client->callback_id = crm_strdup(uuid_str);
-	END_stat_free_op();
 	
 	/* make sure we can find ourselves later for sync calls
 	 * redirected to the master instance
 	 */
-	START_stat_free_op();
-	g_hash_table_insert(
-		client_list, new_client->id, new_client);
-	END_stat_free_op();
+	g_hash_table_insert(client_list, new_client->id, new_client);
 	
 	reg_msg = ha_msg_new(3);
 	ha_msg_add(reg_msg, F_CIB_OPERATION, CRM_OP_REGISTER);
@@ -609,13 +598,11 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 			return FALSE;
 		}
 
-		START_stat_free_op();
 		CRM_CHECK(cib_client->id == NULL, crm_free(cib_client->id));
 		CRM_CHECK(cib_client->name == NULL, crm_free(cib_client->name));
 		cib_client->id   = crm_strdup(uuid_ticket);
 		cib_client->name = crm_strdup(client_name);
 		g_hash_table_insert(client_list, cib_client->id, cib_client);
-		END_stat_free_op();
 
 		crm_debug_2("Registered %s on %s channel",
 			    cib_client->id, cib_client->channel_name);
@@ -700,7 +687,6 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 		return FALSE;
 	}
 
-	START_stat_free_op();
 	if(cib_client->name == NULL) {
 		cib_client->name = crm_itoa(channel->farside_pid);
 	}
@@ -708,7 +694,6 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 		cib_client->id = crm_strdup(cib_client->name);
 		g_hash_table_insert(client_list, cib_client->id, cib_client);
 	}
-	END_stat_free_op();
 	
 	crm_debug_2("Callback for %s on %s channel",
 		    cib_client->id, cib_client->channel_name);
@@ -1535,12 +1520,10 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 			    cib_client->id);
 		
 		if(cib_client->id != NULL) {
-			START_stat_free_op();
 			if(!g_hash_table_remove(client_list, cib_client->id)) {
 				crm_err("Client %s not found in the hashtable",
 					cib_client->name);
 			}
-			END_stat_free_op();
 		}		
 	}
 
