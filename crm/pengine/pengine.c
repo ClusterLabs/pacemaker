@@ -113,8 +113,6 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		graph_file = crm_strdup(WORKING_DIR"/graph.XXXXXX");
 		mktemp(graph_file);
 
-		crm_zero_mem_stats(NULL);
-
 		do_calculations(&data_set, xml_data, NULL);
 
 		series_id = get_series();
@@ -155,10 +153,6 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		crm_msg_del(reply);
 		
 		cleanup_alloc_calculations(&data_set);
-
-		if(crm_mem_stats(NULL)) {
-			pe_warn("Unfree'd memory");
-		}
 
 		filename = generate_series_filename(
 			PE_WORKING_DIR, series[series_id].name, seq, compress);

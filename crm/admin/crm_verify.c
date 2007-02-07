@@ -174,7 +174,6 @@ main(int argc, char **argv)
   
 	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
 
-	crm_zero_mem_stats(NULL);
 #ifdef HA_MALLOC_TRACK
 	cl_malloc_dump_allocated(LOG_DEBUG_2, TRUE);
 #endif
@@ -292,7 +291,6 @@ main(int argc, char **argv)
 		cib_delete(cib_conn);
 	}	
 
- 	CRM_CHECK(crm_mem_stats(NULL) == FALSE, ; );
 #ifdef HA_MALLOC_TRACK
 	cl_malloc_dump_allocated(LOG_ERR, TRUE);
 #endif

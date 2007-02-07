@@ -387,13 +387,10 @@ cib_client_connect_common(
 gboolean
 cib_client_connect_rw_synch(IPC_Channel *channel, gpointer user_data)
 {
-	cl_mem_stats_t saved_stats;
 	cib_client_t *new_client = NULL;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	new_client = cib_client_connect_common(
 		channel, cib_channel_rw_synchronous, cib_rw_synchronous_callback);
 
-	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	if(new_client == NULL) {
 		return FALSE;
 	}
@@ -403,13 +400,10 @@ cib_client_connect_rw_synch(IPC_Channel *channel, gpointer user_data)
 gboolean
 cib_client_connect_ro_synch(IPC_Channel *channel, gpointer user_data)
 {
-	cl_mem_stats_t saved_stats;
 	cib_client_t *new_client = NULL;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	new_client = cib_client_connect_common(
 		channel, cib_channel_ro_synchronous, cib_ro_synchronous_callback);
 
-	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	if(new_client == NULL) {
 		return FALSE;
 	}
@@ -424,8 +418,6 @@ cib_client_connect_rw_ro(IPC_Channel *channel, gpointer user_data)
 	cib_client_t *new_client = NULL;
 	char uuid_str[UU_UNPARSE_SIZEOF];
 	gboolean (*callback)(IPC_Channel *channel, gpointer user_data);
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	
 	callback = cib_ro_callback;
 	if(safe_str_eq(user_data, cib_channel_rw)) {
@@ -474,20 +466,16 @@ cib_client_connect_rw_ro(IPC_Channel *channel, gpointer user_data)
 	send_ipc_message(channel, reg_msg);		
 	crm_msg_del(reg_msg);
 	
-	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return TRUE;
 }
 
 gboolean
 cib_client_connect_null(IPC_Channel *channel, gpointer user_data)
 {
-	cl_mem_stats_t saved_stats;
 	cib_client_t *new_client = NULL;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	new_client = cib_client_connect_common(
 		channel, cib_channel_callback, cib_null_callback);
 
-	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	if(new_client == NULL) {
 		return FALSE;
 	}
@@ -498,10 +486,7 @@ gboolean
 cib_rw_callback(IPC_Channel *channel, gpointer user_data)
 {
 	gboolean result = FALSE;
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	result = cib_common_callback(channel, user_data, FALSE, TRUE);
-	crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return result;
 }
 
@@ -510,10 +495,7 @@ gboolean
 cib_ro_synchronous_callback(IPC_Channel *channel, gpointer user_data)
 {
 	gboolean result = FALSE;
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	result = cib_common_callback(channel, user_data, TRUE, FALSE);
-	crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return result;
 }
 
@@ -521,10 +503,7 @@ gboolean
 cib_rw_synchronous_callback(IPC_Channel *channel, gpointer user_data)
 {
 	gboolean result = FALSE;
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	result = cib_common_callback(channel, user_data, TRUE, TRUE);
-	crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return result;
 }
 
@@ -532,10 +511,7 @@ gboolean
 cib_ro_callback(IPC_Channel *channel, gpointer user_data)
 {
 	gboolean result = FALSE;
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	result = cib_common_callback(channel, user_data, FALSE, FALSE);
-	crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return result;
 }
 
@@ -551,8 +527,6 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 	const char *uuid_ticket = NULL;
 	const char *client_name = NULL;
 	gboolean register_failed = FALSE;
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	if(cib_client == NULL) {
 		crm_err("Discarding IPC message from unknown source"
@@ -671,7 +645,6 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 		keep_connection = cib_process_disconnect(channel, cib_client);	
 	}
 	
-	crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return keep_connection;
 }
 
@@ -689,8 +662,6 @@ cib_common_callback_worker(HA_Message *op_request, cib_client_t *cib_client,
 
 	longclock_t call_stop = 0;
 	longclock_t call_start = 0;
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	
 	call_start = time_longclock();
 	cib_client->num_calls++;
@@ -714,8 +685,6 @@ cib_common_callback_worker(HA_Message *op_request, cib_client_t *cib_client,
 		
 	call_stop = time_longclock();
 	cib_call_time += (call_stop - call_start);
-
-	crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
 
 gboolean
@@ -725,8 +694,6 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 	int lpc = 0;
 	HA_Message *op_request = NULL;
 	gboolean keep_channel = TRUE;
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	if(cib_client == NULL) {
 		crm_err("Receieved call from unknown source. Discarding.");
@@ -781,7 +748,6 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 		keep_channel = cib_process_disconnect(channel, cib_client);	
 	}
 
-	crm_diff_mem_stats(LOG_WARNING, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return keep_channel;
 }
 
@@ -792,8 +758,6 @@ do_local_notify(HA_Message *notify_src, const char *client_id, gboolean sync_rep
 	cib_client_t *client_obj = NULL;
 	HA_Message *client_reply = NULL;
 	enum cib_errors local_rc = cib_ok;
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	crm_debug_2("Performing notification");
 	
@@ -831,7 +795,6 @@ do_local_notify(HA_Message *notify_src, const char *client_id, gboolean sync_rep
 	}
 
 	ha_msg_del(client_reply);
-	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
 
 static void
@@ -947,10 +910,8 @@ static void
 forward_request(HA_Message *request, cib_client_t *cib_client, int call_options)
 {
 	HA_Message *forward_msg = NULL;
-	cl_mem_stats_t saved_stats;
 	const char *op         = cl_get_string(request, F_CIB_OPERATION);
 	const char *host       = cl_get_string(request, F_CIB_HOST);
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	forward_msg = cib_msg_copy(request, TRUE);
 	ha_msg_add(forward_msg, F_CIB_DELEGATED, cib_our_uname);
@@ -979,19 +940,16 @@ forward_request(HA_Message *request, cib_client_t *cib_client, int call_options)
 		
 	} 
 	crm_msg_del(forward_msg);
-	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
 
 static void
 send_peer_reply(
 	HA_Message *msg, crm_data_t *result_diff, const char *originator, gboolean broadcast)
 {
-	cl_mem_stats_t saved_stats;
 	HA_Message *reply_copy = NULL;
 
 	CRM_ASSERT(msg != NULL);
 
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
  	reply_copy = cib_msg_copy(msg, TRUE);
 	
 	if(broadcast) {
@@ -1032,7 +990,6 @@ send_peer_reply(
 	}
 	
 	crm_msg_del(reply_copy);
-	crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
 	
 void
@@ -1057,9 +1014,6 @@ cib_process_request(
 	const char *host       = cl_get_string(request, F_CIB_HOST);
 	const char *update     = cl_get_string(request, F_CIB_GLOBAL_UPDATE);
 
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
-	
 	crm_debug_4("%s Processing msg %s",
 		  cib_our_uname, cl_get_string(request, F_SEQ));
 
@@ -1197,11 +1151,6 @@ cib_process_request(
 	crm_msg_del(op_reply);
 	free_xml(result_diff);
 
-	if(crm_diff_mem_stats(LOG_ERR, LOG_WARNING, __PRETTY_FUNCTION__, NULL, &saved_stats)) {
-#ifdef HA_MALLOC_TRACK
-		cl_malloc_dump_allocated(LOG_DEBUG, FALSE);
-#endif
-	}
 	return;	
 }
 
@@ -1416,8 +1365,6 @@ send_via_callback_channel(HA_Message *msg, const char *token)
 	cib_client_t *hash_client = NULL;
 	GList *list_item = NULL;
 	enum cib_errors rc = cib_ok;
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	
 	crm_debug_3("Delivering msg %p to client %s", msg, token);
 
@@ -1478,7 +1425,6 @@ send_via_callback_channel(HA_Message *msg, const char *token)
 		}
 	}
 	
-	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return rc;
 }
 
@@ -1575,9 +1521,6 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 gboolean
 cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 {
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
-
 	if (channel == NULL) {
 		CRM_DEV_ASSERT(cib_client == NULL);
 		
@@ -1606,7 +1549,6 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 		initiate_exit();
 	}
 	
-	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return FALSE;
 }
 
@@ -1614,8 +1556,6 @@ gboolean
 cib_ha_dispatch(IPC_Channel *channel, gpointer user_data)
 {
 	ll_cluster_t *hb_cluster = (ll_cluster_t*)user_data;
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	crm_debug_3("Invoked");
 	if(IPC_ISRCONN(channel)) {
@@ -1626,7 +1566,6 @@ cib_ha_dispatch(IPC_Channel *channel, gpointer user_data)
 		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
 	}
 	
-	crm_diff_mem_stats(LOG_DEBUG, LOG_DEBUG, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return (channel->ch_status == IPC_CONNECT);
 }
 
@@ -1638,8 +1577,6 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 	const char *originator = cl_get_string(msg, F_ORIG);
 	const char *seq        = cl_get_string(msg, F_SEQ);
 	const char *op         = cl_get_string(msg, F_CIB_OPERATION);
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	crm_log_message_adv(LOG_MSG, "Peer[inbound]", msg);
 	crm_debug_2("Peer %s message (%s) from %s", op, seq, originator);
@@ -1675,7 +1612,6 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 	
 	cib_process_request(msg, FALSE, TRUE, TRUE, NULL);
 
-	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return;
 }
 

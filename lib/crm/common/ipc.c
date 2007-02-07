@@ -52,8 +52,6 @@ gboolean
 send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboolean force_ordered)
 {
 	gboolean all_is_good = TRUE;
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	if (msg == NULL) {
 		crm_err("cant send NULL message");
@@ -111,7 +109,6 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboole
 	}
 	
 	crm_log_message_adv(all_is_good?LOG_MSG:LOG_WARNING,"HA[outbound]",msg);
-	crm_diff_mem_stats(LOG_DEBUG, LOG_DEBUG, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	return all_is_good;
 }
 
@@ -121,8 +118,6 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 {
 	gboolean all_is_good = TRUE;
 	int fail_level = LOG_WARNING;
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	if(ipc_client != NULL && ipc_client->conntype == IPC_CLIENT) {
 		fail_level = LOG_ERR;
@@ -163,7 +158,6 @@ send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg)
 /* 	ipc_client->ops->resume_io(ipc_client); */
 	
 	crm_log_message_adv(all_is_good?LOG_MSG:LOG_WARNING,"IPC[outbound]",msg);
-	crm_diff_mem_stats(LOG_DEBUG, LOG_DEBUG, __PRETTY_FUNCTION__, NULL, &saved_stats);
 	
 	return all_is_good;
 }

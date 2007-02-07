@@ -91,21 +91,6 @@ extern gboolean parse_op_key(
 extern char *generate_notify_key(
 	const char *rsc_id, const char *notify_type, const char *op_type);
 
-extern gboolean crm_mem_stats(volatile cl_mem_stats_t *mem_stats);
-
-extern void crm_zero_mem_stats(volatile cl_mem_stats_t *stats);
-
-extern void crm_save_mem_stats(const char *location, cl_mem_stats_t *saved_stats);
-
-extern gboolean crm_diff_mem_stats(
-	int log_level_up, int log_level_down, const char *location,
-	volatile cl_mem_stats_t *stats, volatile cl_mem_stats_t *saved_stats);
-
-extern void crm_xml_nbytes(crm_data_t *xml, long *bytes, long *allocs, long *frees);
-
-extern void crm_adjust_mem_stats(
-	volatile cl_mem_stats_t *stats, long bytes, long allocs, long frees);
-
 extern char *generate_transition_magic_v202(
 	const char *transition_key, int op_status);
 

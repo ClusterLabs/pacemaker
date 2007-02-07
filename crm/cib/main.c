@@ -170,19 +170,6 @@ cib_stats(gpointer data)
 	unsigned int cib_calls_ms = 0;
 	static unsigned long cib_stat_interval_ms = 0;
 
-	cl_mem_stats_t saved_stats;
-	if(crm_running_stats == NULL) {
-		START_stat_free_op();
-		crm_malloc0(crm_running_stats, sizeof(cl_mem_stats_t));
-		END_stat_free_op();
-		crm_zero_mem_stats(crm_running_stats);
-	}
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
-	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, crm_running_stats);
-	*crm_running_stats = saved_stats;		
-	crm_debug_2("Total alloc's %ld for %ld bytes",
-		    crm_running_stats->numalloc, crm_running_stats->nbytes_alloc);
-	
 	if(cib_stat_interval_ms == 0) {
 		cib_stat_interval_ms = crm_get_msec(cib_stat_interval);
 	}
@@ -210,7 +197,7 @@ cib_stats(gpointer data)
 		      cib_num_fail, cib_bad_connects, cib_num_timeouts);
 
 #ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(LOG_ERR, TRUE);
+	cl_malloc_dump_allocated(LOG_DEBUG, TRUE);
 #endif
 
 	last_stat = cib_num_ops;
