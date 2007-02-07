@@ -491,6 +491,7 @@ crm_log_message_adv(int level, const char *prefix, const HA_Message *msg)
 int
 compare_version(const char *version1, const char *version2)
 {
+	int rc = 0;
 	int lpc = 0;
 	char *step1 = NULL, *step2 = NULL;
 	char *rest1 = NULL, *rest2 = NULL;
@@ -505,7 +506,7 @@ compare_version(const char *version1, const char *version2)
 	
 	rest1 = crm_strdup(version1);
 	rest2 = crm_strdup(version2);
-	
+
 	while(1) {
 		int cmp = 0;
 		int step1_i = 0;
@@ -515,6 +516,13 @@ compare_version(const char *version1, const char *version2)
 		decodeNVpair(rest1, '.', &step1, &tmp1);
 		decodeNVpair(rest2, '.', &step2, &tmp2);
 
+		if(step1 == NULL && step2 == NULL) {
+			CRM_CHECK(tmp1 == tmp2 && tmp1 == NULL,
+				  crm_err("Leftover data: %s, %s",
+					  crm_str(tmp1), crm_str(tmp2)));
+			break;
+		}
+		
 		if(step1 != NULL) {
 			step1_i = crm_parse_int(step1, NULL);
 		}
@@ -536,27 +544,34 @@ compare_version(const char *version1, const char *version2)
 		crm_free(rest1);
 		crm_free(rest2);
 
-		rest1 = tmp1;
-		rest2 = tmp2;
-
-		if(step1 == NULL && step2 == NULL) {
-			break;
-		}
-
 		crm_free(step1);
 		crm_free(step2);
+
+		rest1 = tmp1;
+		rest2 = tmp2;
 		
 		if(cmp < 0) {
-			crm_debug_3("%s < %s", version1, version2);
-			return -1;
+			rc = -1;
+			break;
 			
 		} else if(cmp > 0) {
-			crm_debug_3("%s > %s", version1, version2);
-			return 1;
+			rc = 1;
+			break;
 		}
 	}
-	crm_debug_3("%s == %s", version1, version2);
-	return 0;
+	
+	crm_free(rest1);
+	crm_free(rest2);
+
+	if(rc == 0) {
+		crm_debug_3("%s == %s", version1, version2);
+	} else if(rc < 0) {
+		crm_debug_3("%s < %s", version1, version2);
+	} else if(rc > 0) {
+		crm_debug_3("%s > %s", version1, version2);
+	}
+	
+	return rc;
 }
 
 gboolean do_stderr = FALSE;
