@@ -174,6 +174,13 @@ cib_new(void)
 void
 cib_delete(cib_t *cib)
 {
+	GList *list = cib->notify_list;
+	while(list != NULL) {
+		cib_notify_client_t *client = g_list_nth_data(list, 0);
+		list = g_list_remove(list, client);
+		crm_free(client);
+	}
+	
 	cib_native_delete(cib);
 	g_hash_table_destroy(cib_op_callback_table);
 	crm_free(cib->cmds);
