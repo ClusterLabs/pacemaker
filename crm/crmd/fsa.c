@@ -638,6 +638,10 @@ do_state_transition(long long actions,
 	if(next_state != S_IDLE) {
 		crm_timer_stop(recheck_timer);
 	}
+
+#ifdef HA_MALLOC_TRACK
+	cl_malloc_dump_allocated(LOG_DEBUG, TRUE);
+#endif
 	
 	switch(next_state) {
 		case S_PENDING:			
@@ -734,9 +738,6 @@ do_state_transition(long long actions,
 			break;
 			
 		case S_IDLE:
-#ifdef HA_MALLOC_TRACK
-			cl_malloc_dump_allocated(LOG_NOTICE, FALSE);
-#endif
 			CRM_DEV_ASSERT(AM_I_DC);
 			dump_rsc_info();
 			if(is_set(fsa_input_register, R_SHUTDOWN)){
