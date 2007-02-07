@@ -699,7 +699,6 @@ void native_rsc_order_rh(
 {
 	GListPtr rh_actions = NULL;
 	action_t *rh_action = order->rh_action;
-
 	crm_debug_3("Processing RH of ordering constraint %d", order->id);
 
 	if(rh_action != NULL) {
@@ -711,20 +710,15 @@ void native_rsc_order_rh(
 		
 		if(rh_actions == NULL) {
 			crm_debug_4("No RH-Side (%s/%s) found for constraint..."
-				  " ignoring",
-				  rsc->id, order->rh_action_task);
-			crm_debug_4("LH-Side was: (%s/%s)",
-				  order->lh_rsc?order->lh_rsc->id:order->lh_action?order->lh_action->rsc->id:"<NULL>",
-				  order->lh_action_task);
+				  " ignoring", rsc->id, order->rh_action_task);
+			crm_debug_4("LH-Side was: %s", lh_action->uuid);
 			return;
 		}
 			
 	}  else if(rh_action == NULL) {
 		crm_debug_4("No RH-Side (%s) specified for constraint..."
 			  " ignoring", order->rh_action_task);
-		crm_debug_4("LH-Side was: (%s/%s)",
-			  order->lh_rsc?order->lh_rsc->id:order->lh_action?order->lh_action->rsc->id:"<NULL>",
-			  order->lh_action_task);
+		crm_debug_4("LH-Side was: %s", lh_action->uuid);
 		return;
 	} 
 
