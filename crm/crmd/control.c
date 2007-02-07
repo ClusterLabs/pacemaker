@@ -174,9 +174,22 @@ do_shutdown_req(long long action,
 extern char *max_generation_from;
 extern crm_data_t *max_generation_xml;
 
-static void free_mem(void) 
+static void free_mem(fsa_data_t *msg_data) 
 {
 	int lpc = 0;
+
+	crm_debug("Stage %d", lpc++);
+	while(is_message()) {
+		fsa_data_t *fsa_data = get_message();
+		crm_info("Dropping %s: [ state=%s cause=%s origin=%s ]",
+			 fsa_input2string(fsa_data->fsa_input),
+			 fsa_state2string(fsa_state),
+			 fsa_cause2string(fsa_data->fsa_cause),
+			 fsa_data->origin);
+		delete_fsa_input(fsa_data);
+	}
+	delete_fsa_input(msg_data);
+	
 	crm_debug("Stage %d", lpc++);
 	empty_uuid_cache();
 
@@ -202,6 +215,9 @@ static void free_mem(void)
 	}
 	if(confirmed_nodes) {
 		g_hash_table_destroy(confirmed_nodes);
+	}
+	if(crmd_peer_state) {
+		g_hash_table_destroy(crmd_peer_state);
 	}
 
 	crm_debug("Stage %d", lpc++);
@@ -230,6 +246,9 @@ static void free_mem(void)
 
  	crm_free(max_generation_from);
  	free_xml(max_generation_xml);
+#ifdef HA_MALLOC_TRACK
+	cl_malloc_dump_allocated(LOG_ERR, FALSE);
+#endif
 }
 
 /*	 A_EXIT_0, A_EXIT_1	*/
@@ -263,12 +282,9 @@ do_exit(long long action,
 		exit_code = 100;
 	}
 
-	free_mem();
+	free_mem(msg_data);
 	
 	crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
-#ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(LOG_ERR, FALSE);
-#endif
 	cl_flush_logs();
 	exit(exit_code);
 
