@@ -136,8 +136,6 @@ extern void write_last_sequence(
 extern void crm_make_daemon(
 	const char *name, gboolean daemonize, const char *pidfile);
 
-extern cl_mem_stats_t *crm_running_stats;
-
 typedef struct pe_cluster_option_s {
 	const char *name;
 	const char *alt_name;

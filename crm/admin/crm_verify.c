@@ -259,18 +259,6 @@ main(int argc, char **argv)
 	
 	cleanup_alloc_calculations(&data_set);
 
-#if 0
-	if(USE_LIVE_CIB) {
-		/* Calling msg2ipcchan() seems to initialize something
-		 *   which isn't free'd when we disconnect and free the
-		 *   CIB connection.
-		 * Fake this extra free and move along.
-		 */
-		volatile cl_mem_stats_t *active_stats = cl_malloc_getstats();
-		active_stats->numfree++;
-	}
-#endif
-	
 	if(crm_config_error) {
 		fprintf(stderr, "Errors found during check: config not valid\n");
 		if(crm_log_level < LOG_WARNING) {

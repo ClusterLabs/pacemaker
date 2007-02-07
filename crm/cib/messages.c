@@ -48,7 +48,6 @@
 #include <crm/dmalloc_wrapper.h>
 
 #define MAX_DIFF_RETRY 5
-volatile cl_mem_stats_t *active_stats = NULL;
 
 extern const char *cib_our_uname;
 extern gboolean syncd_once;
