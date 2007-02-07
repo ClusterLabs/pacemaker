@@ -1153,25 +1153,34 @@ copy_ccm_data(const struct crmd_ccm_data_s *ccm_input)
 void
 delete_ccm_data(struct crmd_ccm_data_s *ccm_input) 
 {
-	int lpc, offset;
+	int lpc, offset = 0;
 	oc_node_t *a_node = NULL;
 	oc_ev_membership_t *oc_in = ccm_input->oc;
-	offset = oc_in->m_memb_idx;
+	if(oc_in != NULL) {
+		offset = oc_in->m_memb_idx;
+	}
 	for(lpc = 0; lpc < oc_in->m_n_member; lpc++) {
 		a_node = &oc_in->m_array[lpc+offset];
 		crm_free(a_node->node_uname);
+		a_node->node_uname = NULL;
 	}
 
-	offset = oc_in->m_in_idx;
+	if(oc_in != NULL) {
+		offset = oc_in->m_in_idx;
+	}
 	for(lpc = 0; lpc < oc_in->m_n_in; lpc++) {
 		a_node = &oc_in->m_array[lpc+offset];
 		crm_free(a_node->node_uname);
+		a_node->node_uname = NULL;
 	}
 
-	offset = oc_in->m_out_idx;
+	if(oc_in != NULL) {
+		offset = oc_in->m_out_idx;
+	}
 	for(lpc = 0; lpc < oc_in->m_n_out; lpc++) {
 		a_node = &oc_in->m_array[lpc+offset];
 		crm_free(a_node->node_uname);
+		a_node->node_uname = NULL;
 	}
  	crm_free(ccm_input->oc);
  	crm_free(ccm_input);

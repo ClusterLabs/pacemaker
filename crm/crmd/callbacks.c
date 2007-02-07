@@ -616,12 +616,8 @@ crmd_ccm_msg_callback(
 			C_CCM_CALLBACK, I_CCM_EVENT, event_data,
 			trigger_transition?A_TE_CANCEL:A_NOTHING,
 			TRUE, __FUNCTION__);
-		
-		if (event_data->oc) {
-			crm_free(event_data->oc);
-			event_data->oc = NULL;
-		}
-		crm_free(event_data);
+
+		delete_ccm_data(event_data);
 	} 
 	
 	oc_ev_callback_done(cookie);
