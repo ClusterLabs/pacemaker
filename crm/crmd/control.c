@@ -38,6 +38,8 @@
 
 #include <crm/dmalloc_wrapper.h>
 
+char *ipc_server = NULL;
+
 extern void crmd_ha_connection_destroy(gpointer user_data);
 extern gboolean verify_stopped(gboolean force, int log_level);
 
@@ -169,6 +171,67 @@ do_shutdown_req(long long action,
 	return I_NULL;
 }
 
+extern char *max_generation_from;
+extern crm_data_t *max_generation_xml;
+
+static void free_mem(void) 
+{
+	int lpc = 0;
+	crm_debug("Stage %d", lpc++);
+	empty_uuid_cache();
+
+	crm_debug("Stage %d", lpc++);
+	free_ccm_cache(fsa_membership_copy);
+
+	crm_free(cib_subsystem);
+
+	crm_debug("Stage %d", lpc++);
+	crmd_ipc_connection_destroy(te_subsystem->client);
+	crm_free(te_subsystem);
+
+	crm_debug("Stage %d", lpc++);
+	crmd_ipc_connection_destroy(pe_subsystem->client);
+	crm_free(pe_subsystem);
+
+	crm_debug("Stage %d", lpc++);
+	if(integrated_nodes) {
+		g_hash_table_destroy(integrated_nodes);
+	}
+	if(finalized_nodes) {
+		g_hash_table_destroy(finalized_nodes);
+	}
+	if(confirmed_nodes) {
+		g_hash_table_destroy(confirmed_nodes);
+	}
+
+	crm_debug("Stage %d", lpc++);
+	if(ipc_clients) {
+		g_hash_table_destroy(ipc_clients);
+	}
+
+	crm_debug("Stage %d", lpc++);
+	cib_delete(fsa_cib_conn);
+	fsa_cib_conn = NULL;
+	
+	crm_debug("Stage %d", lpc++);
+	crm_free(integration_timer);
+	crm_free(finalization_timer);
+	crm_free(election_trigger);
+	crm_free(election_timeout);
+	crm_free(shutdown_escalation_timer);
+	crm_free(wait_timer);
+	crm_free(recheck_timer);
+
+	crm_debug("Stage %d", lpc++);
+	crm_free(fsa_our_dc_version);
+	crm_free(fsa_our_uuid);
+	crm_free(fsa_our_dc);
+	crm_free(ipc_server);
+
+ 	crm_free(max_generation_from);
+ 	free_xml(max_generation_xml);
+}
+
 /*	 A_EXIT_0, A_EXIT_1	*/
 enum crmd_fsa_input
 do_exit(long long action,
@@ -199,14 +262,18 @@ do_exit(long long action,
 		crm_warn("Inhibiting respawn by Heartbeat");
 		exit_code = 100;
 	}
+
+	free_mem();
 	
 	crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
+#ifdef HA_MALLOC_TRACK
+	cl_malloc_dump_allocated(LOG_ERR, FALSE);
+#endif
 	cl_flush_logs();
 	exit(exit_code);
 
 	return I_NULL;
 }
-
 
 /*	 A_STARTUP	*/
 enum crmd_fsa_input
@@ -228,18 +295,19 @@ do_startup(long long action,
 
 	ipc_clients = g_hash_table_new(g_str_hash, g_str_equal);
 	
+	crm_debug("Creating CIB object");
+	fsa_cib_conn = cib_new();
+
 	if(was_error == 0) {
 		crm_debug("Init server comms");
+		if(ipc_server == NULL) {
+			ipc_server = crm_strdup(CRM_SYSTEM_CRMD);
+		}
 		was_error = init_server_ipc_comms(
-			crm_strdup(CRM_SYSTEM_CRMD), crmd_client_connect,
+			ipc_server, crmd_client_connect,
 			default_ipc_connection_destroy);
 	}	
 
-	if(was_error == 0) {
-		crm_debug("Creating CIB object");
-		fsa_cib_conn = cib_new();
-	}
-	
 	/* set up the timers */
 	crm_malloc0(integration_timer, sizeof(fsa_timer_t));
 	crm_malloc0(finalization_timer, sizeof(fsa_timer_t));
@@ -737,6 +805,7 @@ populate_cib_nodes(ll_cluster_t *hb_cluster, gboolean with_client_status)
 gboolean
 register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 {
+	const char *const_uuid = NULL;
 	crm_debug("Signing in with Heartbeat");
 	if (hb_cluster->llc_ops->signon(hb_cluster, client_name)!= HA_OK) {
 
@@ -787,13 +856,13 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	crm_info("Hostname: %s", fsa_our_uname);
 
 	crm_debug_3("Finding our node uuid");
-	fsa_our_uuid = get_uuid(fsa_cluster_conn, fsa_our_uname);
-	if(fsa_our_uuid == NULL) {
+	const_uuid = get_uuid(fsa_cluster_conn, fsa_our_uname);
+	if(const_uuid == NULL) {
 		crm_err("get_uuid_by_name() failed");
 		return FALSE;
 	}
 	/* copy it so that unget_uuid() doesn't trash the value on us */
-	fsa_our_uuid = crm_strdup(fsa_our_uuid);
+	fsa_our_uuid = crm_strdup(const_uuid);
 	crm_info("UUID: %s", fsa_our_uuid);
 		
 	populate_cib_nodes(hb_cluster, TRUE);

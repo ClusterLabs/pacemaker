@@ -487,7 +487,8 @@ int cib_client_add_notify_callback(
 	
 	if(list_item != NULL) {
 		crm_warn("Callback already present");
-
+		crm_free(new_client);
+		
 	} else {
 		cib->notify_list = g_list_append(
 			cib->notify_list, new_client);

@@ -410,28 +410,33 @@ crmd_client_status_callback(const char * node, const char * client,
 	trigger_fsa(fsa_source);
 }
 
-static void
+void
 crmd_ipc_connection_destroy(gpointer user_data)
 {
+	GCHSource *source = NULL;
 	crmd_client_t *client = user_data;
 
 	if(client == NULL) {
 		crm_debug_4("No client to delete");
 		return;
 	}
-	
-	if(client->client_source != NULL) {
-		crm_debug_4("Deleting %s (%p) from mainloop",
-			    client->uuid, client->client_source);
-		G_main_del_IPC_Channel(client->client_source); 
-		client->client_source = NULL;
-	}
 
-	crm_debug_3("Freeing %s client", client->uuid);
-	crm_free(client->table_key);
-	crm_free(client->sub_sys);
-	crm_free(client->uuid);
-	crm_free(client);
+	source = client->client_source;
+	client->client_source = NULL;
+	crm_debug_3("Processing %s (%p)", client->uuid, source);
+	if(source != NULL) {
+		crm_debug_2("Deleting %s (%p) from mainloop",
+			    client->uuid, source);
+		/* this will re-call crmd_ipc_connection_destroy() */
+		G_main_del_IPC_Channel(source);
+
+	} else {
+		crm_debug_2("Freeing %s client", client->uuid);
+		crm_free(client->table_key);
+		crm_free(client->sub_sys);
+		crm_free(client->uuid);
+		crm_free(client);
+	}
 
 	return;
 }

@@ -24,6 +24,9 @@
 
 #define CLIENT_EXIT_WAIT 30
 
+extern void free_ccm_cache(oc_node_list_t *tmp);
+extern void delete_ccm_data(struct crmd_ccm_data_s *ccm_input);
+
 extern void process_client_disconnect(crmd_client_t *curr_client);
 
 extern void update_local_cib_adv(

@@ -49,7 +49,6 @@ void crmd_ccm_msg_callback(oc_ed_t event,
 			     size_t size,
 			     const void *data);
 
-gboolean ghash_node_clfree(gpointer key, gpointer value, gpointer user_data);
 void ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data);
 
 #define CCM_EVENT_DETAIL 0
@@ -453,22 +452,9 @@ do_ccm_update_cache(long long action,
 		    g_hash_table_size(fsa_membership_copy->members),
 		    g_hash_table_size(fsa_membership_copy->new_members),
 		    g_hash_table_size(fsa_membership_copy->dead_members));
-	
-	/* Free the old copy */
-	if(tmp != NULL) {
-		if(tmp->members != NULL)
-			g_hash_table_foreach_remove(
-				tmp->members, ghash_node_clfree, NULL);
-		if(tmp->new_members != NULL)
-			g_hash_table_foreach_remove(
-				tmp->new_members, ghash_node_clfree, NULL);
-		if(tmp->dead_members != NULL)
-			g_hash_table_foreach_remove(
-				tmp->dead_members, ghash_node_clfree, NULL);
-		crm_free(tmp);
-	}
-	crm_debug_3("Free'd old copies");
 
+	free_ccm_cache(tmp);
+	
 	set_bit_inplace(fsa_input_register, R_CCM_DATA);
 
 	if(cur_state != S_STOPPING) {
@@ -687,15 +673,4 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	free_xml(tmp1);
 }
 
-gboolean
-ghash_node_clfree(gpointer key, gpointer value, gpointer user_data)
-{
-	/* value->node_uname is free'd as "key" */
-	if(key != NULL) {
-		crm_free(key);
-	}
-	if(value != NULL) {
-		crm_free(value);
-	}
-	return TRUE;
-}
+

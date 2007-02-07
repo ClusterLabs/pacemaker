@@ -50,7 +50,7 @@ char	*fsa_our_dc_version = NULL;
 ll_lrm_t	*fsa_lrm_conn;
 ll_cluster_t	*fsa_cluster_conn;
 oc_node_list_t	*fsa_membership_copy;
-const char	*fsa_our_uuid = NULL;
+char		*fsa_our_uuid = NULL;
 const char	*fsa_our_uname = NULL;
 
 fsa_timer_t *wait_timer = NULL;
@@ -734,6 +734,9 @@ do_state_transition(long long actions,
 			break;
 			
 		case S_IDLE:
+#ifdef HA_MALLOC_TRACK
+			cl_malloc_dump_allocated(LOG_NOTICE, FALSE);
+#endif
 			CRM_DEV_ASSERT(AM_I_DC);
 			dump_rsc_info();
 			if(is_set(fsa_input_register, R_SHUTDOWN)){

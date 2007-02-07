@@ -144,8 +144,8 @@ do_cib_control(long long action,
 	if(action & stop_actions) {
 		crm_info("Disconnecting CIB");
 		clear_bit_inplace(fsa_input_register, R_CIB_CONNECTED);
-		if(fsa_cib_conn != NULL
-		   && fsa_cib_conn->state != cib_disconnected) {
+		CRM_ASSERT(fsa_cib_conn != NULL);
+		if(fsa_cib_conn->state != cib_disconnected) {
 			fsa_cib_conn->cmds->set_slave(
 				fsa_cib_conn, cib_scope_local);
 			fsa_cib_conn->cmds->signoff(fsa_cib_conn);
@@ -155,9 +155,7 @@ do_cib_control(long long action,
 	if(action & start_actions) {
 		int rc = cib_ok;
 		
-		if(fsa_cib_conn == NULL) {
-			fsa_cib_conn = cib_new();
-		}
+		CRM_ASSERT(fsa_cib_conn != NULL);
 		
 		if(cur_state == S_STOPPING) {
 			crm_err("Ignoring request to start %s after shutdown",
