@@ -216,6 +216,7 @@ init_start(void)
 	}
 
 	destroy_graph(transition_graph);
+	crm_free(transition_timer);
 	
 	te_cib_conn->cmds->signoff(te_cib_conn);
 	cib_delete(te_cib_conn);
