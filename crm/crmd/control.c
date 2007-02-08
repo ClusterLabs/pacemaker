@@ -173,6 +173,7 @@ do_shutdown_req(long long action,
 
 extern char *max_generation_from;
 extern crm_data_t *max_generation_xml;
+extern GHashTable *meta_hash;
 
 static void free_mem(fsa_data_t *msg_data) 
 {
@@ -218,6 +219,9 @@ static void free_mem(fsa_data_t *msg_data)
 	}
 	if(crmd_peer_state) {
 		g_hash_table_destroy(crmd_peer_state);
+	}
+	if(meta_hash) {
+		g_hash_table_destroy(meta_hash);
 	}
 
 	crm_debug("Stage %d", lpc++);
@@ -315,18 +319,17 @@ do_startup(long long action,
 
 	ipc_clients = g_hash_table_new(g_str_hash, g_str_equal);
 	
-	crm_debug("Creating CIB object");
+	crm_debug("Creating CIB and LRM objects");
 	fsa_cib_conn = cib_new();
+	fsa_lrm_conn = ll_lrm_new(XML_CIB_TAG_LRM);	
+	
+	crm_debug("Init server comms");
+	if(ipc_server == NULL) {
+		ipc_server = crm_strdup(CRM_SYSTEM_CRMD);
+	}
 
-	if(was_error == 0) {
-		crm_debug("Init server comms");
-		if(ipc_server == NULL) {
-			ipc_server = crm_strdup(CRM_SYSTEM_CRMD);
-		}
-		was_error = init_server_ipc_comms(
-			ipc_server, crmd_client_connect,
-			default_ipc_connection_destroy);
-	}	
+	was_error = init_server_ipc_comms(ipc_server, crmd_client_connect,
+					  default_ipc_connection_destroy);
 
 	/* set up the timers */
 	crm_malloc0(integration_timer, sizeof(fsa_timer_t));

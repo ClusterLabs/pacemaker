@@ -76,6 +76,7 @@ void send_direct_ack(const char *to_host, const char *to_sys,
 
 void free_recurring_op(gpointer value);
 
+GHashTable *meta_hash = NULL;
 
 GHashTable *monitors = NULL;
 GHashTable *resources = NULL;
@@ -109,7 +110,6 @@ do_lrm_control(long long action,
 			fsa_lrm_conn->lrm_ops->signoff(fsa_lrm_conn);
 			crm_info("Disconnected from the LRM");
 			clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
-			fsa_lrm_conn = NULL;
 		}
 		/* TODO: Clean up the hashtable */
 	}
@@ -130,7 +130,6 @@ do_lrm_control(long long action,
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
 		
-		fsa_lrm_conn = ll_lrm_new(XML_CIB_TAG_LRM);	
 		if(NULL == fsa_lrm_conn) {
 			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 			ret = HA_FAIL;
@@ -256,7 +255,6 @@ get_rsc_metadata(const char *type, const char *class, const char *provider)
 	int len = 0;
 	char *key = NULL;
 	char *metadata = NULL;
-	static GHashTable *meta_hash = NULL;
 	if(meta_hash == NULL) {
 		meta_hash = g_hash_table_new_full(
 			g_str_hash, g_str_equal,
