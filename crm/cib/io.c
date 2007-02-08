@@ -121,7 +121,8 @@ validate_cib_digest(crm_data_t *local_cib)
 	crm_malloc0(expected, (length+1));
 	read_len = fread(expected, 1, length, expected_strm);
 	CRM_ASSERT(read_len == length);
-
+	fclose(expected_strm);
+	
 	if(expected == NULL) {
 		crm_err("On-disk digest is empty");
 		
