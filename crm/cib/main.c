@@ -80,6 +80,9 @@ ll_cluster_t *hb_conn = NULL;
 GTRIGSource *cib_writer = NULL;
 
 #define OPTARGS	"hVsf"
+#if HAVE_LIBXML2
+#  include <libxml/parser.h>
+#endif
 
 static void
 cib_diskwrite_complete(gpointer userdata, int status, int signo, int exitcode)
@@ -155,6 +158,10 @@ main(int argc, char ** argv)
 	rc = init_start();
 	crm_free(ccm_transition_id);
 	crm_free(cib_our_uname);
+
+#if HAVE_LIBXML2
+	xmlCleanupParser();
+#endif	
 	if(hb_conn) {
 		hb_conn->llc_ops->delete(hb_conn);
 	}
