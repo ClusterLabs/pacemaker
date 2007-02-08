@@ -276,7 +276,6 @@ get_rsc_metadata(const char *type, const char *class, const char *provider)
 	metadata = g_hash_table_lookup(meta_hash, key);
 	if(metadata) {
 		crm_debug_2("Returning cached metadata for %s", key);
-		crm_free(key);
 		goto out;
 	}
 
@@ -286,14 +285,15 @@ get_rsc_metadata(const char *type, const char *class, const char *provider)
 
 	if(metadata) {
  		g_hash_table_insert(meta_hash, key, metadata);
-	}
+		key = NULL; /* prevent it from being free'd */
+
+	} else {
+		crm_warn("No metadata found for %s", key);
+	}		
 
   out:
-	if(metadata == NULL) {
-		crm_warn("No metadata found for %s::%s:%s",
-			 class, type, provider);
-	}
 	
+	crm_free(key);
 	return metadata;
 }
 
@@ -377,13 +377,13 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 		return;
 	}
 
-	restart = create_xml_node(NULL, "restart");
 	restart_list = get_rsc_restart_list(rsc, op);
 	if(restart_list == NULL) {
 		crm_info("Resource %s does not support reloads", op->rsc_id);
 		return;
 	}
 
+	restart = create_xml_node(NULL, "restart");
 	slist_iter(param, const char, restart_list, lpc,
 		   int start = len;
 		   value = g_hash_table_lookup(op->params, param);
