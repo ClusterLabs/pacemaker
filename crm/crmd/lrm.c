@@ -393,6 +393,12 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 		   crm_realloc(list, len+1);
 		   sprintf(list+start, " %s ", param);
 		);
+
+	while(g_list_length(restart_list) > 0) {
+		char *data = g_list_nth_data(restart_list, 0);
+		crm_free(data);
+		restart_list = g_list_remove(restart_list, data);
+	}
 	
 	digest = calculate_xml_digest(restart, TRUE);
 	crm_xml_add(update, XML_LRM_ATTR_OP_RESTART, list);
