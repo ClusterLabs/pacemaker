@@ -103,11 +103,9 @@ main(int argc, char ** argv)
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
     
-	/* read local config file */
-    
+	/* read local config file */    
 	crm_debug_3("Starting...");
 	rc = init_start();
-	destroy_graph(transition_graph);
 	return rc;
 }
 
@@ -217,6 +215,15 @@ init_start(void)
 			 crm_system_name);
 	}
 
+	destroy_graph(transition_graph);
+	
+	te_cib_conn->cmds->signoff(te_cib_conn);
+	cib_delete(te_cib_conn);
+	te_cib_conn = NULL;
+
+	stonithd_signoff();
+	
+	crm_free(te_uuid);
 	
 	if(init_ok) {
 		return 0;
