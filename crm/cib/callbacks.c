@@ -77,13 +77,14 @@ void cib_process_request(
 
 gboolean syncd_once = FALSE;
 
-GHashTable *peer_hash = NULL;
+extern GHashTable *client_list;
+extern GHashTable *ccm_membership;
+extern GHashTable *peer_hash;
+
 int        next_client_id  = 0;
 gboolean   cib_is_master   = FALSE;
 gboolean   cib_have_quorum = FALSE;
 char *     ccm_transition_id = NULL;
-GHashTable *client_list    = NULL;
-GHashTable *ccm_membership = NULL;
 extern const char *cib_our_uname;
 extern ll_cluster_t *hb_conn;
 extern unsigned long cib_num_ops, cib_num_local, cib_num_updates, cib_num_fail;
@@ -1727,11 +1728,6 @@ gboolean cib_ccm_dispatch(int fd, gpointer user_data)
 	}
 }
 
-static void crm_ghash_clfree(gpointer data)
-{
-	crm_free(data);
-}
-
 void 
 cib_ccm_msg_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data)
@@ -1800,12 +1796,6 @@ cib_ccm_msg_callback(
 			  cib_have_quorum?"(re)attained":"lost",
 			  ccm_event_name(event), instance);
 		
-		if(ccm_membership == NULL) {
-			ccm_membership = g_hash_table_new_full(
-				g_str_hash, g_str_equal,
-				crm_ghash_clfree, NULL);
-		}
-
 		if(membership != NULL && membership->m_n_out != 0) {
 			members = membership->m_n_out;
 			offset = membership->m_out_idx;

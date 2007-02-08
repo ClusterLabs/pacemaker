@@ -76,6 +76,10 @@ gboolean startCib(const char *filename);
 extern gboolean cib_msg_timeout(gpointer data);
 extern int write_cib_contents(gpointer p);
 
+GHashTable *client_list    = NULL;
+GHashTable *ccm_membership = NULL;
+GHashTable *peer_hash = NULL;
+
 ll_cluster_t *hb_conn = NULL;
 GTRIGSource *cib_writer = NULL;
 
@@ -120,7 +124,10 @@ main(int argc, char ** argv)
 	set_sigchld_proctrack(G_PRIORITY_HIGH);
 
 	client_list = g_hash_table_new(g_str_hash, g_str_equal);
-	peer_hash = g_hash_table_new(g_str_hash, g_str_equal);
+	ccm_membership = g_hash_table_new_full(
+		g_str_hash, g_str_equal, g_hash_destroy_str, NULL);
+	peer_hash = g_hash_table_new_full(
+		g_str_hash, g_str_equal,g_hash_destroy_str, g_hash_destroy_str);
 	
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -156,15 +163,20 @@ main(int argc, char ** argv)
     
 	/* read local config file */
 	rc = init_start();
+
+	CRM_CHECK(g_hash_table_size(client_list) == 0, crm_err("Memory leak"));
+	g_hash_table_destroy(ccm_membership);	
+	g_hash_table_destroy(client_list);
+	g_hash_table_destroy(peer_hash);
 	crm_free(ccm_transition_id);
 	crm_free(cib_our_uname);
-
 #if HAVE_LIBXML2
 	xmlCleanupParser();
 #endif	
 	if(hb_conn) {
 		hb_conn->llc_ops->delete(hb_conn);
 	}
+
 #ifdef HA_MALLOC_TRACK
 	cl_malloc_dump_allocated(LOG_ERR, FALSE);
 #endif
@@ -394,7 +406,7 @@ init_start(void)
 	crm_free(channel3);
 	crm_free(channel4);
 	crm_free(channel5);
-	
+
 	return 0;
 }
 
