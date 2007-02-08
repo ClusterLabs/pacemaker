@@ -786,7 +786,8 @@ do_lrm_query(gboolean is_replace)
 	}
 
 	xml_result = create_cib_fragment(xml_state, XML_CIB_TAG_STATUS);
-
+	free_xml(xml_state);
+	
 	crm_log_xml_debug_3(xml_state, "Current state of the LRM");
 	
 	return xml_result;
