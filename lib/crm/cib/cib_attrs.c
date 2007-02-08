@@ -233,6 +233,7 @@ update_attr(cib_t *the_cib, int call_options,
 		CRM_CHECK(set_name != NULL, return cib_missing);
 		
 		if(attr_value == NULL) {
+			free_xml(xml_obj);
 			return cib_missing_data;
 		}
 		
@@ -267,6 +268,7 @@ update_attr(cib_t *the_cib, int call_options,
 		xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
 		crm_free(local_set_name);
 	} else {
+		free_xml(xml_obj);
 		xml_obj = NULL;
 	}
 
