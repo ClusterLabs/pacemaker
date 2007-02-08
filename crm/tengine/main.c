@@ -61,9 +61,10 @@ extern crm_graph_functions_t te_graph_fns;
 int
 main(int argc, char ** argv)
 {
-	gboolean allow_cores = TRUE;
-	int argerr = 0;
 	int flag;
+	int rc = 0;
+	int argerr = 0;
+	gboolean allow_cores = TRUE;
 	
 	crm_log_init(crm_system_name);
 	G_main_add_SignalHandler(
@@ -105,8 +106,9 @@ main(int argc, char ** argv)
 	/* read local config file */
     
 	crm_debug_3("Starting...");
-	return init_start();
-
+	rc = init_start();
+	destroy_graph(transition_graph);
+	return rc;
 }
 
 
