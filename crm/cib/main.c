@@ -225,38 +225,48 @@ cib_stats(gpointer data)
 int
 init_start(void)
 {
+	char *channel1 = NULL;
+	char *channel2 = NULL;
+	char *channel3 = NULL;
+	char *channel4 = NULL;
+	char *channel5 = NULL;
 	gboolean was_error = FALSE;
 	if(stand_alone == FALSE) {
-	hb_conn = ll_cluster_new("heartbeat");
-	if(cib_register_ha(hb_conn, CRM_SYSTEM_CIB) == FALSE) {
-		crm_crit("Cannot sign in to heartbeat... terminating");
-		exit(1);
-	}
+		hb_conn = ll_cluster_new("heartbeat");
+		if(cib_register_ha(hb_conn, CRM_SYSTEM_CIB) == FALSE) {
+			crm_crit("Cannot sign in to heartbeat... terminating");
+			exit(1);
+		}
 	}
 
 	if(startCib("cib.xml") == FALSE){
 		crm_crit("Cannot start CIB... terminating");
 		exit(1);
 	}
-	
+
+	channel1 = crm_strdup(cib_channel_callback);
 	was_error = init_server_ipc_comms(
-		crm_strdup(cib_channel_callback), cib_client_connect_null,
+		channel1, cib_client_connect_null,
 		default_ipc_connection_destroy);
 
+	channel2 = crm_strdup(cib_channel_ro);
 	was_error = was_error || init_server_ipc_comms(
-		crm_strdup(cib_channel_ro), cib_client_connect_rw_ro,
+		channel2, cib_client_connect_rw_ro,
 		default_ipc_connection_destroy);
 
+	channel3 = crm_strdup(cib_channel_rw);
 	was_error = was_error || init_server_ipc_comms(
-		crm_strdup(cib_channel_rw), cib_client_connect_rw_ro,
+		channel3, cib_client_connect_rw_ro,
 		default_ipc_connection_destroy);
 
+	channel4 = crm_strdup(cib_channel_rw_synchronous);
 	was_error = was_error || init_server_ipc_comms(
-		crm_strdup(cib_channel_rw_synchronous), cib_client_connect_rw_synch,
+		channel4, cib_client_connect_rw_synch,
 		default_ipc_connection_destroy);
 
+	channel5 = crm_strdup(cib_channel_ro_synchronous);
 	was_error = was_error || init_server_ipc_comms(
-		crm_strdup(cib_channel_ro_synchronous), cib_client_connect_ro_synch,
+		channel5, cib_client_connect_ro_synch,
 		default_ipc_connection_destroy);
 	
 	if(stand_alone) {
@@ -276,7 +286,7 @@ init_start(void)
 		
 		g_main_run(mainloop);
 		return_to_orig_privs();
-		return 0;
+		goto cleanup;
 	}	
 	
 	if(was_error == FALSE) {
@@ -377,6 +387,13 @@ init_start(void)
 	} else {
 		crm_err("Couldnt start all communication channels, exiting.");
 	}
+
+  cleanup:	
+	crm_free(channel1);
+	crm_free(channel2);
+	crm_free(channel3);
+	crm_free(channel4);
+	crm_free(channel5);
 	
 	return 0;
 }
