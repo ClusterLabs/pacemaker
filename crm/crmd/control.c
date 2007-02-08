@@ -228,6 +228,10 @@ static void free_mem(fsa_data_t *msg_data)
 	crm_debug("Stage %d", lpc++);
 	cib_delete(fsa_cib_conn);
 	fsa_cib_conn = NULL;
+
+	if(fsa_lrm_conn) {
+		fsa_lrm_conn->lrm_ops->delete(fsa_lrm_conn);
+	}
 	
 	crm_debug("Stage %d", lpc++);
 	crm_free(integration_timer);
