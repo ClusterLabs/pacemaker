@@ -440,6 +440,8 @@ crm_graph_functions_t te_graph_fns = {
 	te_fence_node
 };
 
+extern GMainLoop*  mainloop;
+
 void
 notify_crmd(crm_graph_t *graph)
 {	
@@ -471,6 +473,10 @@ notify_crmd(crm_graph_t *graph)
 
 		case tg_shutdown:
 			crm_info("Exiting after transition");
+			if (mainloop != NULL && g_main_is_running(mainloop)) {
+				g_main_quit(mainloop);
+				return;
+			}
 			exit(LSB_EXIT_OK);
 	}
 
