@@ -68,7 +68,7 @@ oc_ev_t *cib_ev_token;
 gboolean cib_writes_enabled = TRUE;
 
 void usage(const char* cmd, int exit_status);
-int init_start(void);
+int cib_init(void);
 gboolean cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name);
 gboolean cib_shutdown(int nsig, gpointer unused);
 void cib_ha_connection_destroy(gpointer user_data);
@@ -162,7 +162,7 @@ main(int argc, char ** argv)
 	}
     
 	/* read local config file */
-	rc = init_start();
+	rc = cib_init();
 
 	CRM_CHECK(g_hash_table_size(client_list) == 0, crm_err("Memory leak"));
 	g_hash_table_destroy(ccm_membership);	
@@ -180,6 +180,7 @@ main(int argc, char ** argv)
 #ifdef HA_MALLOC_TRACK
 	cl_malloc_dump_allocated(LOG_ERR, FALSE);
 #endif
+	crm_info("Done");
 	return rc;
 }
 
@@ -235,7 +236,7 @@ cib_stats(gpointer data)
 }
 
 int
-init_start(void)
+cib_init(void)
 {
 	char *channel1 = NULL;
 	char *channel2 = NULL;
