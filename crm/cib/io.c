@@ -635,6 +635,8 @@ write_cib_contents(gpointer p)
 		 epoch?epoch:"0", updates?updates:"0", digest);	
 	
 	rc = write_cib_digest(the_cib, digest);
+	crm_free(digest);
+
 	if(rc <= 0) {
 		crm_err("Digest couldn't be written to disk");
 		exit(LSB_EXIT_GENERIC);
@@ -650,7 +652,6 @@ write_cib_contents(gpointer p)
 		exit(LSB_EXIT_OK);
 	}
 	
-	crm_free(digest);
 	return HA_OK;
 }
 
