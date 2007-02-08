@@ -196,10 +196,10 @@ gboolean
 can_run_resources(const node_t *node)
 {
 	if(node == NULL) {
-		crm_err("No node supplied");
-		return FALSE;
-		
-	} else if(node->details->online == FALSE
+		return FALSE;	
+	}
+	
+	if(node->details->online == FALSE
 	   || node->details->shutdown
 	   || node->details->unclean
 	   || node->details->standby) {
