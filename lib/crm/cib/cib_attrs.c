@@ -101,7 +101,9 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 			NULL, XML_ATTR_ID, node_uuid, FALSE);
 		crm_log_xml_debug_2(set_children, "search by node:");
 		if(matches == 0) {
-			crm_info("No node matching id=%s in %s", node_uuid, TYPE(xml_search));
+			CRM_CHECK(set_children == NULL, crm_err("Memory leak"));
+			crm_info("No node matching id=%s in %s",
+				 node_uuid, TYPE(xml_search));
 			return NULL;
 		}
 	}
@@ -117,6 +119,7 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 		crm_log_xml_debug_2(set_children, "search by set:");
 		if(matches == 0) {
 			crm_info("No set matching id=%s in %s", set_name, TYPE(xml_search));
+			CRM_CHECK(set_children == NULL, crm_err("Memory leak"));
 			return NULL;
 		}
 	}
@@ -143,6 +146,7 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 			       break;
 			);
 		free_xml(nv_children);
+		free_xml(set_children);
 		return single_match;
 		
 	} else if(matches > 1) {
@@ -179,6 +183,7 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 				);
 		}
 	}
+	free_xml(set_children);
 	return NULL;
 }
 
