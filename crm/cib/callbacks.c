@@ -1771,8 +1771,7 @@ cib_ccm_msg_callback(
 	}
 	
 	if(update_id) {
-		CRM_DEV_ASSERT(membership != NULL);
-		if(crm_assert_failed) { return; }
+		CRM_CHECK(membership != NULL, return);
 	
 		if(ccm_transition_id != NULL) {
 			crm_free(ccm_transition_id);

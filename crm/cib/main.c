@@ -102,6 +102,7 @@ int
 main(int argc, char ** argv)
 {
 	int flag;
+	int rc = 0;
 	int argerr = 0;
 	
 	crm_log_init(crm_system_name);
@@ -151,7 +152,16 @@ main(int argc, char ** argv)
 	}
     
 	/* read local config file */
-	return init_start();
+	rc = init_start();
+	crm_free(ccm_transition_id);
+	crm_free(cib_our_uname);
+	if(hb_conn) {
+		hb_conn->llc_ops->delete(hb_conn);
+	}
+#ifdef HA_MALLOC_TRACK
+	cl_malloc_dump_allocated(LOG_ERR, FALSE);
+#endif
+	return rc;
 }
 
 unsigned long cib_num_ops = 0;
@@ -432,10 +442,6 @@ cib_ha_connection_destroy(gpointer user_data)
 	}
 		
 	uninitializeCib();
-	crm_free(ccm_transition_id);
-#ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(LOG_ERR, FALSE);
-#endif
 
 	if (mainloop != NULL && g_main_is_running(mainloop)) {
 		g_main_quit(mainloop);
