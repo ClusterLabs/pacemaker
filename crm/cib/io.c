@@ -215,7 +215,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	crm_data_t *root = NULL;
 	crm_data_t *status = NULL;
 
-	if(!crm_is_writable(dir, file, HA_CCMUSER, HA_APIGROUP, FALSE)) {
+	if(!crm_is_writable(dir, file, HA_CCMUSER, NULL, FALSE)) {
 		cib_status = cib_bad_permissions;
 		return NULL;
 	}
