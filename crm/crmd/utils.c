@@ -1423,7 +1423,7 @@ process_client_disconnect(crmd_client_t *curr_client)
 		 *	curr_client->table_key
 		 * Value is cleaned up by:
 		 *      crmd_ipc_connection_destroy
-		 *   via:
+		 *   which will also call:
 		 *	G_main_del_IPC_Channel
 		 */
 		g_hash_table_remove(ipc_clients, curr_client->table_key);
