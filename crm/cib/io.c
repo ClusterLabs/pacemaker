@@ -577,6 +577,7 @@ int
 write_cib_contents(gpointer p) 
 {
 	int rc = 0;
+	int exit_rc = LSB_EXIT_OK;
 	char *digest = NULL;
 	crm_data_t *cib_status_root = NULL;
 	const char *digest_filename = CIB_FILENAME ".sig";
@@ -591,14 +592,14 @@ write_cib_contents(gpointer p)
 	if(validate_on_disk_cib(CIB_FILENAME, NULL) == FALSE) {
 		crm_err("%s was manually modified while Heartbeat was active!",
 			CIB_FILENAME);
-		rc = LSB_EXIT_GENERIC;
+		exit_rc = LSB_EXIT_GENERIC;
 		goto cleanup;
 	}
 
 	rc = archive_file(CIB_FILENAME, NULL, "last");
 	if(rc != 0) {
 		crm_err("Could not make backup of the existing CIB: %d", rc);
-		rc = LSB_EXIT_GENERIC;
+		exit_rc = LSB_EXIT_GENERIC;
 		goto cleanup;
 	}
 
@@ -629,7 +630,7 @@ write_cib_contents(gpointer p)
 	rc = write_xml_file(the_cib, CIB_FILENAME, FALSE);
 	if(rc <= 0) {
 		crm_err("Changes couldn't be written to disk");
-		rc = LSB_EXIT_GENERIC;
+		exit_rc = LSB_EXIT_GENERIC;
 		goto cleanup;
 	}
 
@@ -639,32 +640,33 @@ write_cib_contents(gpointer p)
 		 epoch?epoch:"0", updates?updates:"0", digest);	
 	
 	rc = write_cib_digest(the_cib, digest);
-	crm_free(digest);
 
 	if(rc <= 0) {
 		crm_err("Digest couldn't be written to disk");
-		rc = LSB_EXIT_GENERIC;
+		exit_rc = LSB_EXIT_GENERIC;
 		goto cleanup;
 	}
 
 #if 0
 	if(validate_on_disk_cib(CIB_FILENAME, NULL) == FALSE) {
 		crm_err("wrote incorrect digest");
-		rc = LSB_EXIT_GENERIC;
+		exit_rc = LSB_EXIT_GENERIC;
 		goto cleanup;
 	}
 #endif
 
   cleanup:
+	crm_free(digest);
+
 	if(p == NULL) {
 		/* fork-and-write mode */
 		uninitializeCib();
 		cib_cleanup();
-		exit(rc);
+		exit(exit_rc);
 	}
 
 	/* stand-alone mode */
-	return HA_OK;
+	return exit_rc;
 }
 
 gboolean
