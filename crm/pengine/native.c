@@ -289,12 +289,13 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 			int log_level = LOG_DEBUG_2;
 			const char *foo = "Ignoring";
 			if(is_optional) {
+				char *local_key = crm_strdup(key);
 				log_level = LOG_INFO;
 				foo = "Cancelling";
 				/* its running : cancel it */
 
 				mon = custom_action(
-					rsc, crm_strdup(key), CRMD_ACTION_CANCEL, node,
+					rsc, local_key, CRMD_ACTION_CANCEL, node,
 					FALSE, TRUE, data_set);
 
 				mon->task = CRMD_ACTION_CANCEL;
@@ -516,7 +517,8 @@ colocation_match(
 	}
 
 	if(rsc_rh->allocated_to) {
-		value = g_hash_table_lookup(rsc_rh->allocated_to->details->attrs, attribute);
+		value = g_hash_table_lookup(
+			rsc_rh->allocated_to->details->attrs, attribute);
 		do_check = TRUE;
 	}
 	
