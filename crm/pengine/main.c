@@ -48,7 +48,7 @@ GMainLoop*  mainloop = NULL;
 const char* crm_system_name = SYS_NAME;
 
 void usage(const char* cmd, int exit_status);
-int init_start(void);
+int pe_init(void);
 gboolean pengine_shutdown(int nsig, gpointer unused);
 extern gboolean process_pe_message(crm_data_t * msg, IPC_Channel *sender);
 extern unsigned int pengine_input_loglevel;
@@ -111,12 +111,12 @@ main(int argc, char ** argv)
 	
 	/* read local config file */
 	crm_debug_4("do start");
-	return init_start();
+	return pe_init();
 }
 
 
 int
-init_start(void)
+pe_init(void)
 {
 	IPC_Channel *crm_ch = NULL;
 

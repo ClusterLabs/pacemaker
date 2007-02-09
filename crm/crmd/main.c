@@ -59,7 +59,7 @@ const char* crm_system_name = SYS_NAME;
 #define OPTARGS	"hV"
 
 void usage(const char* cmd, int exit_status);
-int init_start(void);
+int crmd_init(void);
 void crmd_hamsg_callback(const HA_Message * msg, void* private_data);
 gboolean crmd_tickle_apphb(gpointer data);
 extern void init_dotfile(void);
@@ -122,12 +122,12 @@ main(int argc, char ** argv)
 	    return 100;
     }
     
-    return init_start();
+    return crmd_init();
 }
 
 
 int
-init_start(void)
+crmd_init(void)
 {
     int exit_code = 0;
     enum crmd_fsa_state state;

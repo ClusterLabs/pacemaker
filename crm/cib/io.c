@@ -84,7 +84,7 @@ extern enum cib_errors cib_status;
 int set_connected_peers(crm_data_t *xml_obj);
 void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data);
 int write_cib_contents(gpointer p);
-
+extern void cib_cleanup(void);
 
 
 static gboolean
@@ -591,13 +591,15 @@ write_cib_contents(gpointer p)
 	if(validate_on_disk_cib(CIB_FILENAME, NULL) == FALSE) {
 		crm_err("%s was manually modified while Heartbeat was active!",
 			CIB_FILENAME);
-		exit(LSB_EXIT_GENERIC);
+		rc = LSB_EXIT_GENERIC;
+		goto cleanup;
 	}
 
 	rc = archive_file(CIB_FILENAME, NULL, "last");
 	if(rc != 0) {
 		crm_err("Could not make backup of the existing CIB: %d", rc);
-		exit(LSB_EXIT_GENERIC);
+		rc = LSB_EXIT_GENERIC;
+		goto cleanup;
 	}
 
 	rc = archive_file(digest_filename, NULL, "last");
@@ -627,7 +629,8 @@ write_cib_contents(gpointer p)
 	rc = write_xml_file(the_cib, CIB_FILENAME, FALSE);
 	if(rc <= 0) {
 		crm_err("Changes couldn't be written to disk");
-		exit(LSB_EXIT_GENERIC);
+		rc = LSB_EXIT_GENERIC;
+		goto cleanup;
 	}
 
 	digest = calculate_xml_digest(the_cib, FALSE);
@@ -640,19 +643,27 @@ write_cib_contents(gpointer p)
 
 	if(rc <= 0) {
 		crm_err("Digest couldn't be written to disk");
-		exit(LSB_EXIT_GENERIC);
+		rc = LSB_EXIT_GENERIC;
+		goto cleanup;
 	}
 
 #if 0
 	if(validate_on_disk_cib(CIB_FILENAME, NULL) == FALSE) {
 		crm_err("wrote incorrect digest");
-		exit(LSB_EXIT_GENERIC);
+		rc = LSB_EXIT_GENERIC;
+		goto cleanup;
 	}
 #endif
+
+  cleanup:
 	if(p == NULL) {
-		exit(LSB_EXIT_OK);
+		/* fork-and-write mode */
+		uninitializeCib();
+		cib_cleanup();
+		exit(rc);
 	}
-	
+
+	/* stand-alone mode */
 	return HA_OK;
 }
 

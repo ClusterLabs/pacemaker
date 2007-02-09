@@ -52,7 +52,7 @@ extern GTRIGSource *transition_trigger;
 extern crm_action_timer_t *transition_timer;
 
 void usage(const char* cmd, int exit_status);
-int init_start(void);
+int te_init(void);
 gboolean tengine_shutdown(int nsig, gpointer unused);
 extern void te_update_confirm(const char *event, HA_Message *msg);
 extern void te_update_diff(const char *event, HA_Message *msg);
@@ -105,13 +105,13 @@ main(int argc, char ** argv)
     
 	/* read local config file */    
 	crm_debug_3("Starting...");
-	rc = init_start();
+	rc = te_init();
 	return rc;
 }
 
 
 int
-init_start(void)
+te_init(void)
 {
 	int init_ok = TRUE;
 	
