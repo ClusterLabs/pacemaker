@@ -83,10 +83,17 @@ GHashTable *peer_hash = NULL;
 ll_cluster_t *hb_conn = NULL;
 GTRIGSource *cib_writer = NULL;
 
+char *channel1 = NULL;
+char *channel2 = NULL;
+char *channel3 = NULL;
+char *channel4 = NULL;
+char *channel5 = NULL;
+
 #define OPTARGS	"hVsf"
 #if HAVE_LIBXML2
 #  include <libxml/parser.h>
 #endif
+void cib_cleanup(void);
 
 static void
 cib_diskwrite_complete(gpointer userdata, int status, int signo, int exitcode)
@@ -165,6 +172,22 @@ main(int argc, char ** argv)
 	rc = cib_init();
 
 	CRM_CHECK(g_hash_table_size(client_list) == 0, crm_err("Memory leak"));
+	cib_cleanup();
+
+	if(hb_conn) {
+		hb_conn->llc_ops->delete(hb_conn);
+	}
+	
+#ifdef HA_MALLOC_TRACK
+	cl_malloc_dump_allocated(LOG_ERR, FALSE);
+#endif
+	crm_info("Done");
+	return rc;
+}
+
+void
+cib_cleanup(void) 
+{
 	g_hash_table_destroy(ccm_membership);	
 	g_hash_table_destroy(client_list);
 	g_hash_table_destroy(peer_hash);
@@ -172,16 +195,12 @@ main(int argc, char ** argv)
 	crm_free(cib_our_uname);
 #if HAVE_LIBXML2
 	xmlCleanupParser();
-#endif	
-	if(hb_conn) {
-		hb_conn->llc_ops->delete(hb_conn);
-	}
-
-#ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(LOG_ERR, FALSE);
 #endif
-	crm_info("Done");
-	return rc;
+	crm_free(channel1);
+	crm_free(channel2);
+	crm_free(channel3);
+	crm_free(channel4);
+	crm_free(channel5);
 }
 
 unsigned long cib_num_ops = 0;
@@ -238,11 +257,6 @@ cib_stats(gpointer data)
 int
 cib_init(void)
 {
-	char *channel1 = NULL;
-	char *channel2 = NULL;
-	char *channel3 = NULL;
-	char *channel4 = NULL;
-	char *channel5 = NULL;
 	gboolean was_error = FALSE;
 	if(stand_alone == FALSE) {
 		hb_conn = ll_cluster_new("heartbeat");
@@ -299,7 +313,7 @@ cib_init(void)
 		
 		g_main_run(mainloop);
 		return_to_orig_privs();
-		goto cleanup;
+		return 0;
 	}	
 	
 	if(was_error == FALSE) {
@@ -400,14 +414,7 @@ cib_init(void)
 	} else {
 		crm_err("Couldnt start all communication channels, exiting.");
 	}
-
-  cleanup:	
-	crm_free(channel1);
-	crm_free(channel2);
-	crm_free(channel3);
-	crm_free(channel4);
-	crm_free(channel5);
-
+	
 	return 0;
 }
 
