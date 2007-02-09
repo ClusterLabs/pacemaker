@@ -149,7 +149,6 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	unsigned int	j;
 	struct rlimit	oflimits;
 	const char 	*devnull = "/dev/null";
-	char *args = NULL;
 
 	crm_info("Starting sub-system \"%s\"", the_subsystem->name);
 	set_bit_inplace(fsa_input_register, the_subsystem->flag_required);
@@ -200,8 +199,8 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 			break;
 	}
 
-	crm_debug("Executing \"%s %s\" (pid %d)",
-		  the_subsystem->command, the_subsystem->args, (int) getpid());
+	crm_debug("Executing \"%s (%s)\" (pid %d)",
+		  the_subsystem->command, the_subsystem->name, (int) getpid());
 
 	/* A precautionary measure */
 	getrlimit(RLIMIT_NOFILE, &oflimits);
@@ -213,22 +212,26 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	(void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
 	(void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
 	
-	if(the_subsystem->args != NULL) {
-		args = crm_strdup(the_subsystem->args);
-	}
 	{
-		char* const start_args[] = {
-			crm_strdup(the_subsystem->command),
-			args,
-			NULL
+#if WITH_VALGRIND
+		char *opts[] = { crm_strdup(VALGRIND_BIN),
+ 				 crm_strdup("--show-reachable=yes"),
+				 crm_strdup("--leak-check=full"),
+				 crm_strdup("--time-stamp=yes"),
+				 crm_strdup("--gen-suppressions=all"),
+				 crm_strdup(VALGRIND_LOG),
+				 crm_strdup(the_subsystem->command),
+				 NULL
 		};
-		
-		(void)execvp(the_subsystem->command, start_args);
+		(void)execvp(VALGRIND_BIN, opts);
+#else
+		char *opts[] = { crm_strdup(the_subsystem->command), NULL };
+		(void)execvp(the_subsystem->command, opts);
+#endif
 	}
 	
 	/* Should not happen */
-	cl_perror("FATAL: Cannot exec %s %s",
-		  the_subsystem->command, crm_str(the_subsystem->args));
+	cl_perror("FATAL: Cannot exec %s", the_subsystem->command);
 
 	exit(100); /* Suppress respawning */
 	return TRUE; /* never reached */
