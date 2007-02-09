@@ -36,12 +36,6 @@ halib_SCRIPTS		= haresources2cib.py
 halib_PROGRAMS		= attrd	pingd
 sbin_SCRIPTS		= ocf-tester
 
-if BUILD_DRBD_OUTDATE_PEER
-EXTRA_DIST		+= dopd.h
-halib_PROGRAMS		+= dopd 
-sbin_PROGRAMS		+= drbd-peer-outdater
-endif
-
 ## SOURCES
 ccdv: 	$(top_srcdir)/tools/ccdv.c
 	gcc $(AM_CFLAGS) $(CFLAGS) -o ccdv $(top_srcdir)/tools/ccdv.c
@@ -73,18 +67,6 @@ attrd_LDADD		=  $(CRM_DEBUG_LIBS)				\
 		  $(GLIBLIB)						\
 		  $(LIBRT)
 
-if BUILD_DRBD_OUTDATE_PEER
-dopd_SOURCES		= dopd.c
-dopd_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-dopd_LDADD		=  $(CRM_DEBUG_LIBS)				\
-		  $(top_builddir)/lib/clplumbing/libplumb.la		\
-		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
-		  $(top_builddir)/lib/hbclient/libhbclient.la		\
-		  $(top_builddir)/lib/crm/cib/libcib.la			\
-		  $(GLIBLIB)						\
-		  $(LIBRT)
-endif
-
 pingd_SOURCES		= pingd.c
 pingd_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 pingd_LDADD		=  $(CRM_DEBUG_LIBS)				\
@@ -101,17 +83,6 @@ attrd_updater_LDADD	=  $(CRM_DEBUG_LIBS)				\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(GLIBLIB)						\
 		  $(LIBRT)
-
-if BUILD_DRBD_OUTDATE_PEER
-drbd_peer_outdater_SOURCES	= drbd-peer-outdater.c
-drbd_peer_outdater_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-drbd_peer_outdater_LDADD	=  $(CRM_DEBUG_LIBS)				\
-		  $(top_builddir)/lib/clplumbing/libplumb.la		\
-		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
-		  $(GLIBLIB)						\
-		  $(LIBRT)
-endif
-
 
 install-data-hook:    # install-exec-hook doesn't work (!)
 	-chgrp $(apigid) $(DESTDIR)/$(habindir)/cl_status
