@@ -66,8 +66,6 @@ do_ha_control(long long action,
 			set_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
 			fsa_cluster_conn->llc_ops->signoff(
 				fsa_cluster_conn, FALSE);
-			fsa_cluster_conn->llc_ops->delete(fsa_cluster_conn);
-			fsa_cluster_conn = NULL;
 		}
 		crm_info("Disconnected from Heartbeat");
 	}
@@ -179,6 +177,9 @@ static void free_mem(fsa_data_t *msg_data)
 {
 	int lpc = 0;
 
+	fsa_cluster_conn->llc_ops->delete(fsa_cluster_conn);
+	fsa_cluster_conn = NULL;
+	
 	crm_debug("Stage %d", lpc++);
 	while(is_message()) {
 		fsa_data_t *fsa_data = get_message();
