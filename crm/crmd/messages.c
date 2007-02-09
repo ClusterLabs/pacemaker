@@ -826,6 +826,7 @@ handle_request(ha_msg_input_t *stored_msg)
 		crm_info("Current ping state: %s", fsa_state2string(fsa_state));
 		
 		msg = create_reply(stored_msg->msg, ping);
+		free_xml(ping);
 		
 		if(relay_message(msg, TRUE) == FALSE) {
 			crm_msg_del(msg);
@@ -1132,8 +1133,7 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 	
 	crm_debug_4("relaying msg to sub_sys=%s via IPC", sys);
 
-	client_channel =
-		(IPC_Channel*)g_hash_table_lookup(ipc_clients, sys);
+	client_channel = (IPC_Channel*)g_hash_table_lookup(ipc_clients, sys);
 
 	if(cl_get_string(msg, F_CRM_HOST_FROM) == NULL) {
 		ha_msg_add(msg, F_CRM_HOST_FROM, fsa_our_uname);
