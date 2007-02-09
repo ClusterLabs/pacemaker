@@ -172,43 +172,64 @@ do_shutdown_req(long long action,
 extern char *max_generation_from;
 extern crm_data_t *max_generation_xml;
 extern GHashTable *meta_hash;
+extern GHashTable *resources;
+
+void log_connected_client(gpointer key, gpointer value, gpointer user_data);
+
+void
+log_connected_client(gpointer key, gpointer value, gpointer user_data)
+{
+	crmd_client_t *client = value;
+	crm_err("%s is still connected at exit", client->table_key);
+}
+
 
 static void free_mem(fsa_data_t *msg_data) 
 {
-	int lpc = 0;
-
 	fsa_cluster_conn->llc_ops->delete(fsa_cluster_conn);
 	fsa_cluster_conn = NULL;
 	
-	crm_debug("Stage %d", lpc++);
-	while(is_message()) {
-		fsa_data_t *fsa_data = get_message();
-		crm_info("Dropping %s: [ state=%s cause=%s origin=%s ]",
-			 fsa_input2string(fsa_data->fsa_input),
-			 fsa_state2string(fsa_state),
-			 fsa_cause2string(fsa_data->fsa_cause),
-			 fsa_data->origin);
-		delete_fsa_input(fsa_data);
-	}
-	delete_fsa_input(msg_data);
+	slist_destroy(fsa_data_t, fsa_data, fsa_message_queue, 
+		      crm_info("Dropping %s: [ state=%s cause=%s origin=%s ]",
+			       fsa_input2string(fsa_data->fsa_input),
+			       fsa_state2string(fsa_state),
+			       fsa_cause2string(fsa_data->fsa_cause),
+			       fsa_data->origin);
+		      delete_fsa_input(fsa_data);
+		);
 	
-	crm_debug("Stage %d", lpc++);
-	empty_uuid_cache();
+	delete_fsa_input(msg_data);
 
-	crm_debug("Stage %d", lpc++);
+	if(ipc_clients) {
+		crm_debug("Number of connected clients: %d",
+			  g_hash_table_size(ipc_clients));
+/* 		g_hash_table_foreach(ipc_clients, log_connected_client, NULL); */
+		g_hash_table_destroy(ipc_clients);
+	}
+	
+	empty_uuid_cache();
 	free_ccm_cache(fsa_membership_copy);
 
-	crm_free(cib_subsystem);
-
-	crm_debug("Stage %d", lpc++);
-	crmd_ipc_connection_destroy(te_subsystem->client);
+	if(te_subsystem->client && te_subsystem->client->client_source) {
+		crm_debug("Full destroy: TE");
+		G_main_del_IPC_Channel(te_subsystem->client->client_source);
+	} else {
+		crm_debug("Partial destroy: TE");
+		crmd_ipc_connection_destroy(te_subsystem->client);
+	}
 	crm_free(te_subsystem);
-
-	crm_debug("Stage %d", lpc++);
-	crmd_ipc_connection_destroy(pe_subsystem->client);
+	
+	if(pe_subsystem->client && pe_subsystem->client->client_source) {
+		crm_debug("Full destroy: PE");
+		G_main_del_IPC_Channel(pe_subsystem->client->client_source);
+	} else {
+		crm_debug("Partial destroy: PE");
+		crmd_ipc_connection_destroy(pe_subsystem->client);
+	}
 	crm_free(pe_subsystem);
-
-	crm_debug("Stage %d", lpc++);
+	
+	crm_free(cib_subsystem);
+	
 	if(integrated_nodes) {
 		g_hash_table_destroy(integrated_nodes);
 	}
@@ -224,13 +245,10 @@ static void free_mem(fsa_data_t *msg_data)
 	if(meta_hash) {
 		g_hash_table_destroy(meta_hash);
 	}
-
-	crm_debug("Stage %d", lpc++);
-	if(ipc_clients) {
-		g_hash_table_destroy(ipc_clients);
+	if(resources) {
+		g_hash_table_destroy(resources);
 	}
 
-	crm_debug("Stage %d", lpc++);
 	cib_delete(fsa_cib_conn);
 	fsa_cib_conn = NULL;
 
@@ -238,7 +256,6 @@ static void free_mem(fsa_data_t *msg_data)
 		fsa_lrm_conn->lrm_ops->delete(fsa_lrm_conn);
 	}
 	
-	crm_debug("Stage %d", lpc++);
 	crm_free(integration_timer);
 	crm_free(finalization_timer);
 	crm_free(election_trigger);
@@ -247,7 +264,6 @@ static void free_mem(fsa_data_t *msg_data)
 	crm_free(wait_timer);
 	crm_free(recheck_timer);
 
-	crm_debug("Stage %d", lpc++);
 	crm_free(fsa_our_dc_version);
 	crm_free(fsa_our_uuid);
 	crm_free(fsa_our_dc);
