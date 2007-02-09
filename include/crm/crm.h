@@ -179,9 +179,20 @@ extern gboolean crm_assert_failed;
 #define CRMD_ACTION_STATUS		"monitor"
 
 typedef GList* GListPtr;
+#define slist_destroy(child_type, child, parent, a)			\
+	{		 						\
+		GListPtr __crm_iter_head = parent;			\
+		child_type *child = NULL;				\
+		while(__crm_iter_head != NULL) {			\
+			child = __crm_iter_head->data;			\
+			__crm_iter_head = __crm_iter_head->next;	\
+			{ a; }						\
+		}							\
+		g_list_free(parent);					\
+	}
 
 #define slist_iter(child, child_type, parent, counter, a)		\
-	{								\
+	{		 						\
 		GListPtr __crm_iter_head = parent;			\
 		child_type *child = NULL;				\
 		int counter = 0;					\
