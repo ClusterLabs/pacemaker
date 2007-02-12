@@ -327,7 +327,7 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
 		);
 
 	if(supported == FALSE) {
-		return NULL;
+		goto cleanup;
 	}
 	
 	params = find_xml_node(metadata, "parameters", TRUE);
@@ -341,7 +341,7 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
 				restart_list, crm_strdup(value));
 		}
 		);
-
+  cleanup:
 	free_xml(metadata);
 	return restart_list;
 }
@@ -378,7 +378,7 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 
 	restart_list = get_rsc_restart_list(rsc, op);
 	if(restart_list == NULL) {
-		crm_info("Resource %s does not support reloads", op->rsc_id);
+		crm_debug("Resource %s does not support reloads", op->rsc_id);
 		return;
 	}
 
@@ -398,6 +398,9 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 	crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
 
 	crm_debug("%s : %s", digest, list);
+	slist_destroy(char, child, restart_list,
+		      crm_free(child);
+		);
 	free_xml(restart);
 	crm_free(digest);
 	crm_free(list);
