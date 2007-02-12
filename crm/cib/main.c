@@ -51,7 +51,6 @@
 #include <cibio.h>
 #include <callbacks.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 gboolean cib_shutdown_flag = FALSE;
 gboolean stand_alone = FALSE;

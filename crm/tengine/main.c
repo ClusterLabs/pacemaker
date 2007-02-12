@@ -40,7 +40,6 @@
 
 #include <tengine.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 #define SYS_NAME     CRM_SYSTEM_TENGINE
 #define OPTARGS      "hVc"

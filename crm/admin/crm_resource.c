@@ -50,7 +50,6 @@
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
 #endif
-#include <crm/dmalloc_wrapper.h>
 void usage(const char *cmd, int exit_status);
 
 gboolean do_force = FALSE;

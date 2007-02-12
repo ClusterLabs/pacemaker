@@ -46,7 +46,6 @@
 #include <ha_msg.h>
 
 
-#include <crm/dmalloc_wrapper.h>
 
 gboolean 
 send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboolean force_ordered)

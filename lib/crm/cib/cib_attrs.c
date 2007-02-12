@@ -37,7 +37,6 @@
 #include <crm/common/xml.h>
 #include <crm/cib.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 #define attr_common_setup(section)					\
 	gboolean is_crm_config = FALSE;					\

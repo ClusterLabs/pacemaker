@@ -48,7 +48,6 @@
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
 #endif
-#include <crm/dmalloc_wrapper.h>
 
 int message_timer_id = -1;
 int message_timeout_ms = 30*1000;

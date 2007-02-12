@@ -36,7 +36,6 @@
 #include <fsa_proto.h>
 #include <fsa_matrix.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 longclock_t action_start = 0;
 longclock_t action_stop = 0;

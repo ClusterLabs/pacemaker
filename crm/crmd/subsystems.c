@@ -48,7 +48,6 @@
 #include <crm/cib.h>
 #include <crmd.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 static void
 crmdManagedChildRegistered(ProcTrack* p)

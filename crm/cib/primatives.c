@@ -37,7 +37,6 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 
 /*

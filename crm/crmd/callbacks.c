@@ -35,7 +35,6 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 GHashTable *crmd_peer_state = NULL;
 

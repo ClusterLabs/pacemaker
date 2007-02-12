@@ -37,7 +37,6 @@
 #include <crm/common/xml.h>
 #include <crm/cib.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 
 

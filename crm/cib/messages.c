@@ -45,7 +45,6 @@
 #include <callbacks.h>
 #include <notify.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 #define MAX_DIFF_RETRY 5
 

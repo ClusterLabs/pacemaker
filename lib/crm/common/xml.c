@@ -41,7 +41,6 @@
 #if HAVE_BZLIB_H
 #  include <bzlib.h>
 #endif
-#include <crm/dmalloc_wrapper.h>
 
 #define XML_BUFFER_SIZE	4096
 

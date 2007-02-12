@@ -36,7 +36,6 @@
 #include <crmd_messages.h>
 #include <crmd_utils.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 void copy_ccm_node(oc_node_t a_node, oc_node_t *a_node_copy);
 

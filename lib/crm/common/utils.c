@@ -53,7 +53,6 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
-#include <crm/dmalloc_wrapper.h>
 
 #ifndef MAXLINE
 #    define MAXLINE 512

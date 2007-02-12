@@ -47,7 +47,6 @@
 #include <crm/cib.h>
 #include <crmd.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 struct crm_subsystem_s *cib_subsystem = NULL;
 

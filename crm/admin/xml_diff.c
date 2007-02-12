@@ -48,7 +48,6 @@
 #endif
 
 #include <ha_msg.h> /* someone complaining about _ha_msg_mod not being found */
-#include <crm/dmalloc_wrapper.h>
 
 const char *crm_system_name = "diff";
 void usage(const char *cmd, int exit_status);

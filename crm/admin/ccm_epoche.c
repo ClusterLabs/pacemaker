@@ -37,7 +37,6 @@
 
 #include <crm/crm.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 const char* crm_system_name = "ccm_tool";
 oc_ev_t *ccm_token = NULL;

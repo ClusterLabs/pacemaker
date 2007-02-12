@@ -39,7 +39,6 @@
 #include <cibio.h>
 #include <cibmessages.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 
 

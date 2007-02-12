@@ -41,7 +41,6 @@
 #include <callbacks.h>
 #include <notify.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 extern GHashTable *client_list;
 int pending_updates = 0;

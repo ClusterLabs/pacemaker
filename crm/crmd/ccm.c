@@ -36,7 +36,6 @@
 #include <fsa_proto.h>
 #include <crmd_callbacks.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 

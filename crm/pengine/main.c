@@ -38,7 +38,6 @@
 #include <crm/common/ctrl.h>
 #include <crm/pengine/common.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 #define SYS_NAME CRM_SYSTEM_PENGINE
 #define OPTARGS	"hVc"

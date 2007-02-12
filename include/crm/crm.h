@@ -20,7 +20,6 @@
 #define CRM__H
 
 #include <stdlib.h>
-#include <ha_config.h>
 #include <glib.h>
 #undef MIN
 #undef MAX

@@ -36,7 +36,6 @@
 #include <crmd_messages.h>
 #include <crmd_lrm.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 GListPtr fsa_message_queue = NULL;
 extern void crm_shutdown(int nsig);

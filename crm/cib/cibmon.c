@@ -48,7 +48,6 @@
 #  include <getopt.h>
 #endif
 #include <ha_msg.h> /* someone complaining about _ha_msg_mod not being found */
-#include <crm/dmalloc_wrapper.h>
 
 #define UPDATE_PREFIX "cib.updates:"
 

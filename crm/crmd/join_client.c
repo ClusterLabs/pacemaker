@@ -27,7 +27,6 @@
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 int reannounce_count = 0;
 void join_query_callback(const HA_Message *msg, int call_id, int rc,

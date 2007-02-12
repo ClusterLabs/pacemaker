@@ -52,7 +52,6 @@
 #  include <getopt.h>
 #endif
 
-#include <crm/dmalloc_wrapper.h>
 
 /* GMainLoop *mainloop = NULL; */
 const char *crm_system_name = "crm_mon";

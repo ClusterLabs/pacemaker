@@ -36,7 +36,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 char *ipc_server = NULL;
 

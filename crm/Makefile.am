@@ -24,7 +24,6 @@ DIST_SUBDIRS		=  cib crmd pengine tengine admin
 dtddir			= $(HA_LIBDIR)/$(HB_PKG)
 crm_varlibdir		= $(HA_VARLIBDIR)/$(HB_PKG)/crm
 crm_varrundir		= $(HA_VARRUNDIR)/$(HB_PKG)/crm
-noinst_HEADERS	 	= dmalloc_wrapper.h
 
 EXTRA_DIST		= crm-1.0.dtd
 dtd_SCRIPTS		= crm.dtd

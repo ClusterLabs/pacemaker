@@ -37,7 +37,6 @@
 #include <crm/common/msg.h>
 #include <crm/common/ipc.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 HA_Message *create_common_message(
 	HA_Message *original_request, crm_data_t *xml_response_data);

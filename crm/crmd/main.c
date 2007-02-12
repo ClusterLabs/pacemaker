@@ -53,7 +53,6 @@
 #include <crmd_messages.h>
 #include <ha_version.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 const char* crm_system_name = SYS_NAME;
 #define OPTARGS	"hV"

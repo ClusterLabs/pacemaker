@@ -48,7 +48,6 @@
 #include <cibprimatives.h>
 #include <notify.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 extern GMainLoop*  mainloop;
 extern gboolean cib_shutdown_flag;

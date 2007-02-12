@@ -42,7 +42,6 @@
 
 #include <lrm/raexec.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 char *make_stop_id(const char *rsc, int call_id);
 gboolean verify_stopped(gboolean force, int log_level);
