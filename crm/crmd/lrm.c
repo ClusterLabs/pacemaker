@@ -283,15 +283,20 @@ get_rsc_metadata(const char *type, const char *class, const char *provider)
 		fsa_lrm_conn, class, type, provider);
 
 	if(metadata) {
- 		g_hash_table_insert(meta_hash, key, metadata);
+		/* copy the metadata because the LRM likes using
+		 *   g_alloc instead of cl_malloc
+		 */
+		char *m_copy = crm_strdup(metadata);
+ 		g_hash_table_insert(meta_hash, key, m_copy);
 		key = NULL; /* prevent it from being free'd */
-
+		g_free(metadata);
+		metadata = m_copy;
+		
 	} else {
 		crm_warn("No metadata found for %s", key);
 	}		
 
   out:
-	
 	crm_free(key);
 	return metadata;
 }
