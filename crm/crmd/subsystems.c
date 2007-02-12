@@ -218,7 +218,8 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
  				 crm_strdup("--show-reachable=yes"),
 				 crm_strdup("--leak-check=full"),
 				 crm_strdup("--time-stamp=yes"),
-				 crm_strdup("--gen-suppressions=all"),
+				 crm_strdup("--suppressions="VALGRIND_SUPP),
+/* 				 crm_strdup("--gen-suppressions=all"), */
 				 crm_strdup(VALGRIND_LOG),
 				 crm_strdup(the_subsystem->command),
 				 NULL

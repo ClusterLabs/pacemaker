@@ -245,7 +245,14 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 			cib_status = cib_bad_digest;
 		}
 	}
-
+	
+#ifdef WITH_VALGRIND
+	cib_writes_enabled = FALSE;
+	crm_err("*********************************************************");
+	crm_err("*** Disabling disk writes to avoid confusing Valgrind ***");
+	crm_err("*********************************************************");	
+#endif
+	
 	if(root == NULL) {
 		root = createEmptyCib();	
 	} else {
