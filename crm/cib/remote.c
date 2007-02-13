@@ -16,6 +16,7 @@
 
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
+#include "callbacks.h"
 
 #undef KEYFILE
 #include <gnutls/gnutls.h>
@@ -31,6 +32,8 @@
 #  endif
 #endif
 
+extern int num_clients;
+
 #define DH_BITS 1024
 gnutls_dh_params dh_params;
 gnutls_anon_server_credentials anon_cred;
@@ -40,6 +43,11 @@ char *cib_recv_tls_string(gnutls_session_t *session);
 int authenticate_user(const char* user, const char* passwd);
 gboolean cib_remote_listen(int ssock, gpointer data);
 gboolean cib_remote_msg(int csock, gpointer data);
+char *cib_send_tls_msg(gnutls_session_t *session, HA_Message *msg);
+extern struct IPC_CHANNEL* socket_server_channel_new(int sockfd);
+extern void cib_process_request(
+	HA_Message *request, gboolean privileged, gboolean force_synchronous,
+	gboolean from_peer, cib_client_t *cib_client);
 
 static void debug_log(int level, const char *str)
 {
@@ -168,15 +176,19 @@ cib_remote_listen(int ssock, gpointer data)
 	char *msg = NULL;
 	int lpc = 0;
 	int csock;
-	GFDSource *chan = NULL;
 	unsigned laddr;
 	struct sockaddr_in addr;
 	gnutls_session *session = NULL;
+	cib_client_t *new_client = NULL;
 
 	crm_data_t *login = NULL;
 	const char *user = NULL;
 	const char *pass = NULL;
 	const char *tmp = NULL;
+
+	cl_uuid_t client_id;
+	char uuid_str[UU_UNPARSE_SIZEOF];
+	
 	
 	crm_debug("New connection");
 	
@@ -236,13 +248,24 @@ cib_remote_listen(int ssock, gpointer data)
 
 	/* send ACK */
 
-/* 	client_t* client = cl_malloc(sizeof(client_t)); */
-	chan = G_main_add_fd(G_PRIORITY_HIGH, csock, FALSE,
-			     cib_remote_msg, session,
-			     default_ipc_connection_destroy);
-/* 	client->ch = chan */
-/* 	client->session = session; */
-/* 	g_hash_table_insert(clients, (gpointer)&client->id, client); */
+	crm_malloc0(new_client, sizeof(cib_client_t));
+	num_clients++;
+	new_client->channel_name = "remote";
+
+	cl_uuid_generate(&client_id);
+	cl_uuid_unparse(&client_id, uuid_str);
+
+	CRM_CHECK(new_client->id == NULL, crm_free(new_client->id));
+	new_client->id = crm_strdup(uuid_str);
+	
+	new_client->callback_id = NULL;
+	new_client->channel = (void*)session;
+	
+	new_client->source = (void*)G_main_add_fd(
+		G_PRIORITY_HIGH, csock, FALSE, cib_remote_msg, new_client,
+		default_ipc_connection_destroy);
+
+	g_hash_table_insert(client_list, new_client->id, new_client);
 	return TRUE;
 
   bail:
@@ -256,16 +279,51 @@ cib_remote_listen(int ssock, gpointer data)
 gboolean
 cib_remote_msg(int csock, gpointer data)
 {
-	/*
-	 * data ::= gnutls_session*
-	 */
-	char* msg = cib_recv_tls_string(data);
-
-	crm_err("Got: %s", msg);
+	cl_uuid_t call_id;
+	char call_uuid[UU_UNPARSE_SIZEOF];
+	const char *value = NULL;
+	crm_data_t *command = NULL;
+	cib_client_t *client = data;
+	char* msg = cib_recv_tls_string((void*)client->channel);
 	if(msg == NULL) {
 		return FALSE;
 	}
 
+	command = string2xml(msg);
+	if(command == NULL) {
+		crm_err("Could not parse: %s", msg);
+		goto bail;
+	}
+	
+	crm_log_xml(LOG_MSG+1, "Command: ", command);
+
+	value = crm_element_name(command);
+	if(safe_str_neq(value, "cib_command")) {
+		goto bail;
+	}
+
+	cl_uuid_generate(&call_id);
+	cl_uuid_unparse(&call_id, call_uuid);
+
+	crm_xml_add(command, F_TYPE, T_CIB);
+	crm_xml_add(command, F_CIB_CLIENTID, client->id);
+	crm_xml_add(command, F_CIB_CLIENTNAME, client->name);
+	crm_xml_add(command, F_CIB_CALLID, call_uuid);
+	if(crm_element_value(command, F_CIB_CALLOPTS) == NULL) {
+		crm_xml_add_int(command, F_CIB_CALLOPTS, 0);
+	}
+	
+	crm_log_xml(LOG_MSG, "Fixed Command: ", command);
+
+	/* unset dangerous options */
+	xml_remove_prop(command, F_ORIG);
+	xml_remove_prop(command, F_CIB_HOST);
+	xml_remove_prop(command, F_CIB_GLOBAL_UPDATE);
+	
+ 	cib_process_request(command, TRUE, TRUE, FALSE, client);
+	
+  bail:
+	free_xml(command);
 	crm_free(msg);
 	return TRUE;
 }
@@ -341,6 +399,24 @@ authenticate_user(const char* user, const char* passwd)
 	return pass;
 }
 
+
+char*
+cib_send_tls_msg(gnutls_session_t *session, HA_Message *msg)
+{
+	char *xml_text = NULL;
+	ha_msg_mod(msg, F_XML_TAGNAME, "cib_result");
+	crm_log_xml(LOG_DEBUG_2, "Result: ", msg);
+	xml_text = dump_xml_unformatted(msg);
+	if(xml_text != NULL) {
+		int len = strlen(xml_text);
+		len++; /* null char */
+		crm_debug_3("Message size: %d", len);
+		gnutls_record_send (*session, xml_text, len);
+	}
+	crm_free(xml_text);
+	return NULL;
+	
+}
 
 char*
 cib_recv_tls_string(gnutls_session_t *session)
