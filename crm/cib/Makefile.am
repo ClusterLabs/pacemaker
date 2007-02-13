@@ -55,15 +55,16 @@ noinst_HEADERS		= cibio.h cibmessages.h cibprimatives.h notify.h \
 			callbacks.h
 
 cib_SOURCES		= io.c primatives.c messages.c cib.c notify.c \
-			callbacks.c main.c
+			callbacks.c main.c remote.c
 cib_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB) \
-			$(top_builddir)/membership/ccm/libccmclient.la  
+			$(top_builddir)/membership/ccm/libccmclient.la
 
+cib_LDFLAGS		= `libgnutls-config --libs` -lpam
 
 cibmon_SOURCES		= cibmon.c
 cibmon_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-cibmon_LDADD		= $(COMMONLIBS) 				
+cibmon_LDADD		= $(COMMONLIBS)
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

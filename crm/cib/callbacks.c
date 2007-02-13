@@ -100,21 +100,23 @@ cib_prepare_common(HA_Message *root, const char *section)
 	if(root == NULL) {
 		return NULL;
 
-	} else if(safe_str_eq(crm_element_name(root), XML_TAG_FRAGMENT)) {
+	} else if(safe_str_eq(crm_element_name(root), XML_TAG_FRAGMENT)
+		|| safe_str_eq(crm_element_name(root), F_CIB_CALLDATA)) {
 		data = find_xml_node(root, XML_TAG_CIB, TRUE);
 		if(data != NULL) {
-			crm_debug_3("Extracted CIB from "XML_TAG_FRAGMENT);
+			crm_debug_3("Extracted CIB from %s", TYPE(root));
 		} else {
 			crm_log_xml_debug_4(root, "No CIB");
 		}
 		
 	} else {
 		data = root;
-		crm_log_xml_debug_4(root, "cib:input");
 	}
 
 	/* grab the section specified for the command */
-	if(data != NULL && safe_str_eq(crm_element_name(data), XML_TAG_CIB)){
+	if(section != NULL
+	   && data != NULL
+	   && safe_str_eq(crm_element_name(data), XML_TAG_CIB)){
 		int rc = revision_check(data, the_cib, 0/* call_options */);
 		if(rc == cib_ok) {
 			data = get_object_root(section, data);
@@ -129,6 +131,7 @@ cib_prepare_common(HA_Message *root, const char *section)
 		
 	}
 
+	crm_log_xml_debug_4(root, "cib:input");
 	return data;
 }
 
@@ -736,6 +739,8 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 	return keep_channel;
 }
 
+extern void cib_send_remote_msg(void *session, HA_Message *msg);
+
 static void
 do_local_notify(HA_Message *notify_src, const char *client_id, gboolean sync_reply, gboolean from_peer) 
 {
@@ -759,6 +764,10 @@ do_local_notify(HA_Message *notify_src, const char *client_id, gboolean sync_rep
 	crm_debug_3("Sending callback to request originator");
 	if(client_obj == NULL) {
 		local_rc = cib_reply_failed;
+		
+	} else if (crm_str_eq(client_obj->channel_name, "remote", FALSE)) {
+		crm_debug("Send message over TLS connection");
+		cib_send_remote_msg(client_obj->channel, client_reply);
 		
 	} else {
 		const char *client_id = client_obj->callback_id;
@@ -809,6 +818,12 @@ parse_local_options(
 		crm_debug("Processing locally addressed %s op from %s",
 			  op, cib_client->name);
 		*local_notify = TRUE;
+
+	} else if(stand_alone) {
+		*needs_forward = FALSE;
+		*local_notify = TRUE;
+		*process = TRUE;
+		
 	} else {
 		crm_debug("%s op from %s needs to be forwarded to %s",
 			  op, cib_client->name,
@@ -1020,7 +1035,7 @@ cib_process_request(
 		call_options |= cib_sync_call;
 	}
 	
-	crm_debug_2("Processing %s message (%s) to %s...",
+	crm_debug_2("Processing %s message (%s) for %s...",
 		    from_peer?"peer":"local",
 		    from_peer?originator:cib_our_uname, host?host:"master");
 
@@ -1050,7 +1065,7 @@ cib_process_request(
 		local_notify = FALSE;
 	}
 	
-	if(needs_forward && stand_alone == FALSE) {
+	if(needs_forward) {
 		forward_request(request, cib_client, call_options);
 		return;
 	}
@@ -1223,6 +1238,7 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 	}
 	
 	if(rc == cib_ok
+	   && stand_alone == FALSE
 	   && global_update == FALSE
 	   && cib_server_ops[call_type].needs_quorum
 	   && can_write(call_options) == FALSE) {
@@ -1241,7 +1257,7 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 	}
 	
 	if(rc != cib_ok) {
-		crm_debug_2("Call setup failed");
+		crm_debug_2("Call setup failed: %s", cib_error2string(rc));
 		
 	} else if(cib_server_ops[call_type].modifies_cib) {
 		if((call_options & cib_inhibit_notify) == 0) {
