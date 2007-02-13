@@ -169,12 +169,13 @@ init_remote_listener(int port)
 	struct sockaddr_in 	saddr;
 	int			optval;
 
-	if(port < 0) {
+	if(port <= 0) {
 		/* dont start it */
 		return 0;
 	}
 	
 #ifdef HAVE_GNUTLS_GNUTLS_H
+	crm_notice("Starting a tls listener on port %d.", port);	
 	/* init pam & gnutls lib */
 	gnutls_global_init();
 /* 	gnutls_global_set_log_level (10); */
@@ -183,6 +184,8 @@ init_remote_listener(int port)
 	gnutls_dh_params_generate2(dh_params, DH_BITS);
 	gnutls_anon_allocate_server_credentials (&anon_cred);
 	gnutls_anon_set_server_dh_params (anon_cred, dh_params);
+#else
+	crm_notice("Starting a plaintext listener on port %d.", port);	
 #endif
 	
 	/* create server socket */
@@ -383,7 +386,7 @@ cib_remote_msg(int csock, gpointer data)
 
 	command = string2xml(msg);
 	if(command == NULL) {
-		crm_err("Could not parse: %s", msg);
+		crm_info("Could not parse command: %s", msg);
 		goto bail;
 	}
 	
@@ -447,7 +450,8 @@ construct_pam_passwd(int n, const struct pam_message **msg,
 			default:
 /* 			case PAM_ERROR_MSG: */
 /* 			case PAM_TEXT_INFO: */
-				crm_err("Unhandled message type: %d", msg[i]->msg_style);
+				crm_err("Unhandled message type: %d",
+					msg[i]->msg_style);
 				goto bail;
 				break;
 		}
@@ -481,7 +485,8 @@ authenticate_user(const char* user, const char* passwd)
 	
 	rc = pam_authenticate (handle, 0);
 	if(rc != PAM_SUCCESS) {
-		crm_err("pam_authenticate: %s (%d)", pam_strerror(handle, rc), rc);
+		crm_err("pam_authenticate: %s (%d)",
+			pam_strerror(handle, rc), rc);
 		goto bail;
 	}
         rc = pam_acct_mgmt(handle, 0);       /* permitted access? */

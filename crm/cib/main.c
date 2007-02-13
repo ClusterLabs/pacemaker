@@ -272,9 +272,6 @@ cib_init(void)
 		}
 	} else {
 		cib_our_uname = crm_strdup("localhost");
-		init_remote_listener(9899);
-		mainloop = g_main_new(FALSE);
-		g_main_run(mainloop);
 	}
 
 	channel1 = crm_strdup(cib_channel_callback);
@@ -562,7 +559,11 @@ startCib(const char *filename)
 	CRM_ASSERT(cib != NULL);
 	
 	if(activateCibXml(cib, filename) == 0) {
+		int port = 0;
 		active = TRUE;
+		ha_msg_value_int(cib, "remote_access_port", &port);
+		init_remote_listener(port);
+
 		crm_info("CIB Initialization completed successfully");
 		if(per_action_cib) {
 			uninitializeCib();
