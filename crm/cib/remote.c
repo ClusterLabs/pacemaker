@@ -435,9 +435,9 @@ static int
 construct_pam_passwd(int n, const struct pam_message **msg,
 		     struct pam_response **resp, void *data)
 {
-	struct pam_response *reply;
 	int i;
 	char* passwd = (char*)data;
+	struct pam_response *reply = NULL;
 
 	crm_malloc0(reply, n * sizeof(*reply));
 	CRM_ASSERT(reply != NULL);
@@ -512,10 +512,13 @@ cib_send_plaintext(int sock, HA_Message *msg)
 	crm_log_xml(LOG_DEBUG_2, "Result: ", msg);
 	xml_text = dump_xml_unformatted(msg);
 	if(xml_text != NULL) {
+		int rc = 0;
 		int len = strlen(xml_text);
 		len++; /* null char */
 		crm_debug_3("Message size: %d", len);
 		write (sock, xml_text, len);
+		CRM_CHECK(len == rc,
+			  crm_warn("Wrote %d of %d bytes", rc, len));
 	}
 	crm_free(xml_text);
 	return NULL;
