@@ -22,6 +22,8 @@ INCLUDES        = -I$(top_builddir)/include  -I$(top_srcdir)/include  \
 		  -I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
 		  -I$(top_builddir)          -I$(top_srcdir)
 
+EXTRA_DIST	= cib.pam
+
 hadir		= $(sysconfdir)/ha.d
 halibdir	= $(libdir)/@HB_PKG@
 commmoddir	= $(halibdir)/modules/comm
@@ -48,7 +50,6 @@ AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
 ## binary progs
 halib_PROGRAMS	= cib cibmon
 
-
 ## SOURCES
 #noinst_HEADERS		= config.h control.h crmd.h
 noinst_HEADERS		= cibio.h cibmessages.h cibprimatives.h notify.h \
@@ -70,5 +71,6 @@ clean-generic:
 	rm -f *.log *.debug *.xml *~
 
 install-exec-local:
+#	cp -f $(top_srcdir)/crm/cib/cib.pam $(DESTDIR)/etc/pam.d/cib
 
 uninstall-local:
