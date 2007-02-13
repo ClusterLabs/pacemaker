@@ -111,7 +111,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		was_processing_warning = FALSE;
 
 		graph_file = crm_strdup(WORKING_DIR"/graph.XXXXXX");
-		mktemp(graph_file);
+		graph_file = mktemp(graph_file);
 
 		do_calculations(&data_set, xml_data, NULL);
 
