@@ -14,6 +14,7 @@
 #include <fcntl.h>
 #include <glib.h>
 
+#include <crm/common/ipc.h>
 #include <crm/common/xml.h>
 
 #undef KEYFILE
@@ -37,10 +38,10 @@ gnutls_anon_server_credentials anon_cred;
 int init_remote_listener(int port);
 char *cib_recv_tls_string(gnutls_session_t *session);
 int authenticate_user(const char* user, const char* passwd);
-gboolean on_listen(GIOChannel *source, GIOCondition condition, gpointer data);
-gboolean on_msg_arrived(GIOChannel *source, GIOCondition condition, gpointer data);
+gboolean cib_remote_listen(int ssock, gpointer data);
+gboolean cib_remote_msg(int csock, gpointer data);
 
-static void debug_log (int level, const char *str)
+static void debug_log(int level, const char *str)
 {
 	fputs (str, stderr);
 }
@@ -50,7 +51,6 @@ init_remote_listener(int port)
 {
 	int 			ssock;
 	struct sockaddr_in 	saddr;
-	GIOChannel* 		sch;
 	int			optval;
 
 	if(port < 0) {
@@ -90,10 +90,11 @@ init_remote_listener(int port)
 	if (listen(ssock, 10) == -1) {
 		crm_err("Can not start listen.  Shutting down.");
 		return -3;
-	}	
-
-	sch = g_io_channel_unix_new(ssock);
-	g_io_add_watch(sch, G_IO_IN|G_IO_ERR|G_IO_HUP, on_listen, NULL);
+	}
+	
+	G_main_add_fd(G_PRIORITY_HIGH, ssock, FALSE,
+		      cib_remote_listen, NULL,
+		      default_ipc_connection_destroy);
 	
 	return 0;
 }
@@ -162,12 +163,12 @@ check_group_membership(const char* usr, const char* grp)
 }
 
 gboolean
-on_listen(GIOChannel *source, GIOCondition condition, gpointer data)
+cib_remote_listen(int ssock, gpointer data)
 {
 	char *msg = NULL;
-	GIOChannel *chan;
 	int lpc = 0;
-	int ssock, csock;
+	int csock;
+	GFDSource *chan = NULL;
 	unsigned laddr;
 	struct sockaddr_in addr;
 	gnutls_session *session = NULL;
@@ -177,14 +178,9 @@ on_listen(GIOChannel *source, GIOCondition condition, gpointer data)
 	const char *pass = NULL;
 	const char *tmp = NULL;
 	
-	if ((condition & G_IO_IN) == 0) {
-		return TRUE;
-	}
-
 	crm_debug("New connection");
 	
 	/* accept the connection */
-	ssock = g_io_channel_unix_get_fd(source);
 	laddr = sizeof(addr);
 	csock = accept(ssock, (struct sockaddr*)&addr, &laddr);
 	if (csock == -1) {
@@ -241,10 +237,9 @@ on_listen(GIOChannel *source, GIOCondition condition, gpointer data)
 	/* send ACK */
 
 /* 	client_t* client = cl_malloc(sizeof(client_t)); */
-	chan = g_io_channel_unix_new(csock);
-	g_io_channel_set_close_on_unref(chan, TRUE);
-	g_io_add_watch(chan, G_IO_IN|G_IO_ERR|G_IO_HUP, on_msg_arrived,
-		       session/* userdata */);
+	chan = G_main_add_fd(G_PRIORITY_HIGH, csock, FALSE,
+			     cib_remote_msg, session,
+			     default_ipc_connection_destroy);
 /* 	client->ch = chan */
 /* 	client->session = session; */
 /* 	g_hash_table_insert(clients, (gpointer)&client->id, client); */
@@ -259,14 +254,12 @@ on_listen(GIOChannel *source, GIOCondition condition, gpointer data)
 }
 
 gboolean
-on_msg_arrived(GIOChannel *source, GIOCondition condition, gpointer data)
+cib_remote_msg(int csock, gpointer data)
 {
-	char* msg;
-	if ((condition & G_IO_IN) == 0) {
-		return TRUE;
-	}
-
-	msg = cib_recv_tls_string(data);
+	/*
+	 * data ::= gnutls_session*
+	 */
+	char* msg = cib_recv_tls_string(data);
 
 	crm_err("Got: %s", msg);
 	if(msg == NULL) {
