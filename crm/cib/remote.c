@@ -176,7 +176,6 @@ init_remote_listener(int port)
 	
 #ifdef HAVE_GNUTLS_GNUTLS_H
 	crm_notice("Starting a tls listener on port %d.", port);	
-	/* init pam & gnutls lib */
 	gnutls_global_init();
 /* 	gnutls_global_set_log_level (10); */
 	gnutls_global_set_log_function (debug_log);
@@ -185,7 +184,10 @@ init_remote_listener(int port)
 	gnutls_anon_allocate_server_credentials (&anon_cred);
 	gnutls_anon_set_server_dh_params (anon_cred, dh_params);
 #else
-	crm_notice("Starting a plaintext listener on port %d.", port);	
+	crm_warn("Starting a _plain_text_ listener on port %d.", port);	
+#endif
+#ifndef HAVE_PAM
+	crm_warn("PAM is _not_ enabled!");	
 #endif
 	
 	/* create server socket */
@@ -324,7 +326,7 @@ cib_remote_listen(int ssock, gpointer data)
 	user = crm_element_value(login, "user");
 	pass = crm_element_value(login, "password");
 
-	if(check_group_membership(user, "admin") == FALSE) {
+	if(check_group_membership(user, HA_APIGROUP) == FALSE) {
 		crm_err("User is not a member of the required group");
 		goto bail;
 
