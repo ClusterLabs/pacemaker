@@ -1,3 +1,4 @@
+#include <portability.h>
 #include <crm/crm.h>
 
 #include <sys/param.h>
@@ -53,8 +54,8 @@ const int tls_kx_order[] = {
 };
 gnutls_dh_params dh_params;
 gnutls_anon_server_credentials anon_cred;
-char *cib_send_tls(gnutls_session_t *session, HA_Message *msg);
-char *cib_recv_tls(gnutls_session_t *session);
+char *cib_send_tls(gnutls_session *session, HA_Message *msg);
+char *cib_recv_tls(gnutls_session *session);
 #endif
 
 extern int num_clients;
@@ -101,7 +102,7 @@ create_tls_session(int csock)
 }
 
 char*
-cib_send_tls(gnutls_session_t *session, HA_Message *msg)
+cib_send_tls(gnutls_session *session, HA_Message *msg)
 {
 	char *xml_text = NULL;
 	ha_msg_mod(msg, F_XML_TAGNAME, "cib_result");
@@ -119,7 +120,7 @@ cib_send_tls(gnutls_session_t *session, HA_Message *msg)
 }
 
 char*
-cib_recv_tls(gnutls_session_t *session)
+cib_recv_tls(gnutls_session *session)
 {
 	int len = 0;
 	char* buf = NULL;
