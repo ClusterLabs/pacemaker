@@ -233,10 +233,17 @@ update_attr(cib_t *the_cib, int call_options,
 	if(attr_id == NULL || xml_obj == NULL) {
 		attr_common_setup(section);	
 		
-		CRM_CHECK(attr_id != NULL, return cib_missing);
-		CRM_CHECK(set_name != NULL, return cib_missing);
+		CRM_CHECK(attr_id != NULL,
+			  crm_free(local_attr_id);
+			  free_xml(xml_obj);
+			  return cib_missing);
+		CRM_CHECK(set_name != NULL,
+			  crm_free(local_attr_id);
+			  free_xml(xml_obj);
+			  return cib_missing);
 		
 		if(attr_value == NULL) {
+			crm_free(local_attr_id);
 			free_xml(xml_obj);
 			return cib_missing_data;
 		}

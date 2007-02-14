@@ -39,6 +39,7 @@ void clone_create_notifications(
 static gboolean
 create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set) 
 {
+	gboolean rc = TRUE;
 	char *inc_num = NULL;
 	char *inc_max = NULL;
 	resource_t *child_rsc = NULL;
@@ -59,7 +60,7 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 			 rsc, data_set) == FALSE) {
 		pe_err("Failed unpacking resource %s",
 		       crm_element_value(child_copy, XML_ATTR_ID));
-		return FALSE;
+		goto bail;
 	}
 /* 	child_rsc->globally_unique = rsc->globally_unique; */
 	
@@ -70,11 +71,12 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 	add_hash_param(child_rsc->meta, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
 	
 	print_resource(LOG_DEBUG_3, "Added", child_rsc, FALSE);
-	
+
+  bail:
 	crm_free(inc_num);
 	crm_free(inc_max);
 	
-	return TRUE;
+	return rc;
 }
 
 gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set)

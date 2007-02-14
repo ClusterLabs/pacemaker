@@ -165,6 +165,7 @@ cib_new(void)
 	
 	cib_native_new(new_cib);
 	if(verify_cib_cmds(new_cib) == FALSE) {
+		cib_delete(new_cib);
 		return NULL;
 	}
 	
@@ -1289,6 +1290,7 @@ create_cib_fragment_adv(
 	gboolean whole_cib = FALSE;
 	crm_data_t *object_root  = NULL;
 	const char *update_name = NULL;
+	char *local_section = NULL;
 
 /* 	crm_debug("Creating a blank fragment: %s", update_section); */
 	
@@ -1303,7 +1305,8 @@ create_cib_fragment_adv(
 		return NULL;
 		
 	} else if(update_section == NULL) {
-		update_section = cib_pluralSection(update_name);
+		local_section = cib_pluralSection(update_name);
+		update_section = local_section;
 	}
 
 	if(safe_str_eq(crm_element_name(update), XML_TAG_CIB)) {
@@ -1320,7 +1323,8 @@ create_cib_fragment_adv(
 		cib = copy_xml(update);
 		crm_xml_add(cib, XML_ATTR_ORIGIN, source);
 	}
-	
+
+	crm_free(local_section);
 	crm_debug_3("Verifying created fragment");
 	if(verifyCibXml(cib) == FALSE) {
 		crm_err("Fragment creation failed");

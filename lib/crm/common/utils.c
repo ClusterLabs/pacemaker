@@ -519,6 +519,8 @@ compare_version(const char *version1, const char *version2)
 			CRM_CHECK(tmp1 == tmp2 && tmp1 == NULL,
 				  crm_err("Leftover data: %s, %s",
 					  crm_str(tmp1), crm_str(tmp2)));
+			crm_free(tmp1);
+			crm_free(tmp2);
 			break;
 		}
 		
@@ -1215,29 +1217,36 @@ decode_transition_magic(
 	char *magic2 = NULL;
 	char *status = NULL;
 
+	gboolean result = TRUE;
+	
 	if(decodeNVpair(magic, ':', &status, &magic2) == FALSE) {
 		crm_err("Couldn't find ':' in: %s", magic);
-		return FALSE;
+		result = FALSE;
+		goto bail;
 	}
 
 	if(decodeNVpair(magic2, ';', &rc, &key) == FALSE) {
 		crm_err("Couldn't find ';' in: %s", magic2);
-		return FALSE;
+		result = FALSE;
+		goto bail;
 	}
 
 	
 	CRM_CHECK(decode_transition_key(key, uuid, transition_id, action_id),
-		  return FALSE);
+		  result = FALSE;
+		  goto bail;
+		);
 	
 	*op_rc = crm_parse_int(rc, NULL);
 	*op_status = crm_parse_int(status, NULL);
 
+  bail:
 	crm_free(rc);
 	crm_free(key);
 	crm_free(magic2);
 	crm_free(status);
 	
-	return TRUE;
+	return result;
 }
 
 char *
@@ -1563,21 +1572,20 @@ write_last_sequence(
 	len += strlen(directory);
 	len += strlen(series);
 	crm_malloc0(series_file, len);
-	CRM_CHECK(series_file != NULL, return);
 	sprintf(series_file, "%s/%s.last", directory, series);
 	
 	file_strm = fopen(series_file, "w");
 	if(file_strm == NULL) {
 		crm_err("%s does not exist", series_file);
-		crm_free(series_file);
-		return;
+		goto bail;
 	}
 
 	rc = fprintf(file_strm, "%s", buffer);
 	if(rc < 0) {
 		cl_perror("Cannot write output to %s", series_file);
 	}
-	
+
+  bail:
 	fflush(file_strm);
 	fclose(file_strm);
 

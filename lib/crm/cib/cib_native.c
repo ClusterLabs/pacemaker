@@ -156,18 +156,18 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 		if(native->callback_channel == NULL) {
 			crm_debug("Connection to callback channel failed");
 			rc = cib_connection;
+
+		} else if(native->callback_channel->ch_status != IPC_CONNECT) {
+			crm_err("Connection may have succeeded,"
+				" but authentication to callback channel failed");
+			rc = cib_authentication;
+			
 		} else if(native->callback_source == NULL) {
 			crm_err("Callback source not recorded");
 			rc = cib_connection;
 		} else {
 			native->callback_channel->send_queue->max_qlen = 500;
-		}
-		
-	} else if(rc == cib_ok
-		  && native->callback_channel->ch_status != IPC_CONNECT) {
-		crm_err("Connection may have succeeded,"
-			" but authentication to callback channel failed");
-		rc = cib_authentication;
+		}		
 	}
 	
 	if(rc == cib_ok) {
@@ -335,8 +335,10 @@ cib_create_op(
 {
 	int  rc = HA_OK;
 	HA_Message *op_msg = NULL;
-	op_msg = ha_msg_new(8);
+	op_msg = ha_msg_new(9);
 	CRM_CHECK(op_msg != NULL, return NULL);
+
+	rc = ha_msg_add(op_msg, F_XML_TAGNAME, "cib_command");
 	
 	if(rc == HA_OK) {
 		rc = ha_msg_add(op_msg, F_TYPE, T_CIB);

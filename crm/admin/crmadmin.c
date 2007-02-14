@@ -517,6 +517,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 	       && server->ops->is_message_pending(server) == TRUE) {
 		if(new_input != NULL) {
 			delete_ha_msg_input(new_input);
+			new_input = NULL;
 		}
 		
 		if (server->ops->recv(server, &msg) != IPC_OK) {

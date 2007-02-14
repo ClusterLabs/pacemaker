@@ -66,6 +66,7 @@ validate_crm_message(
 	const char *crm_msg_reference = NULL;
 	HA_Message *action = NULL;
 	const char *true_sys;
+	char *local_sys = NULL;
 	
 	
 	if (msg == NULL) {
@@ -80,7 +81,10 @@ validate_crm_message(
 	action = msg;
 	true_sys = sys;
 
-	if (uuid != NULL) { true_sys = generate_hash_key(sys, uuid); }
+	if (uuid != NULL) {
+		local_sys = generate_hash_key(sys, uuid);
+		true_sys = local_sys;
+	}
 
 	if (to == NULL) {
 		crm_info("No sub-system defined.");
@@ -90,10 +94,13 @@ validate_crm_message(
 			  to, true_sys);
 		action = NULL;
 	}
-    
+
+	crm_free(local_sys);
+	
 	if (type == NULL) {
 		crm_info("No message type defined.");
 		return NULL;
+		
 	} else if (msg_type != NULL && strcasecmp(msg_type, type) != 0) {
 		crm_info("Expecting a (%s) message but received a (%s).",
 		       msg_type, type);
