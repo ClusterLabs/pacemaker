@@ -61,7 +61,7 @@ cib_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB) \
 			$(top_builddir)/membership/ccm/libccmclient.la
 
-cib_LDFLAGS		= `libgnutls-config --libs` -lpam
+cib_LDFLAGS		= `libgnutls-config --libs`
 
 cibmon_SOURCES		= cibmon.c
 cibmon_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
