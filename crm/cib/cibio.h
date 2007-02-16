@@ -1,4 +1,3 @@
-/* $Id: cibio.h,v 1.18 2006/07/07 08:29:34 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

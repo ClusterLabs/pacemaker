@@ -1,4 +1,3 @@
-/* $Id: transition.h,v 1.7 2006/08/14 09:00:56 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

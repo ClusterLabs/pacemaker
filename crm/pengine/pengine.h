@@ -1,4 +1,3 @@
-/* $Id: pengine.h,v 1.115 2006/06/09 06:42:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

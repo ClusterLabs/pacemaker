@@ -1,4 +1,3 @@
-/* $Id: cib_attrs.c,v 1.24 2006/04/18 11:28:56 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>

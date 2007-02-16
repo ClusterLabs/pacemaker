@@ -1,4 +1,3 @@
-/* $Id: te_callbacks.h,v 1.2 2006/02/20 16:21:51 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

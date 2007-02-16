@@ -1,4 +1,3 @@
-/* $Id: te_fsa.h,v 1.1 2005/05/30 15:09:36 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

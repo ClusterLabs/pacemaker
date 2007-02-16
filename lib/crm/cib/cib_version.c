@@ -1,4 +1,3 @@
-/* $Id: cib_version.c,v 1.5 2006/03/29 06:14:57 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>

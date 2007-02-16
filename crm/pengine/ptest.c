@@ -1,4 +1,3 @@
-/* $Id: ptest.c,v 1.80 2006/07/18 06:15:54 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>

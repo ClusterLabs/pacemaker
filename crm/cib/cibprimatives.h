@@ -1,4 +1,3 @@
-/* $Id: cibprimatives.h,v 1.13 2005/09/12 11:00:19 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

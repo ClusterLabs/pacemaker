@@ -1,4 +1,3 @@
-/* $Id: NoSuchFunctionName.c,v 1.2 2004/02/17 22:12:01 lars Exp $ */
 /*
  * Copyright (C) 2002 Alan Robertson <alanr@unix.sh>
  * This software licensed under the GNU LGPL.

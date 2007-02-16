@@ -1,4 +1,3 @@
-/* $Id: iso8601.h,v 1.3 2005/08/08 12:14:47 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 

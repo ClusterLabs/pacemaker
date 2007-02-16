@@ -1,4 +1,3 @@
-/* $Id: crm_mon.c,v 1.30 2006/08/14 15:59:18 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>

@@ -1,4 +1,3 @@
-/* $Id: setenv.c,v 1.6 2005/11/18 09:43:19 davidlee Exp $ */
 /*
  * Copyright (C) 2001 Alan Robertson <alanr@unix.sh>
  * This software licensed under the GNU LGPL.

@@ -1,4 +1,3 @@
-/* $Id: strndup.c,v 1.1 2004/04/20 18:01:33 msoffen Exp $ */
 #include <portability.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,9 +36,3 @@ char *strndup(const char *str, size_t len)
 	return (char *)memcpy (new, str, len);
 }
 
-/* 
- * $Log: strndup.c,v $
- * Revision 1.1  2004/04/20 18:01:33  msoffen
- * Created strndup function from code in glibc
- *
- */

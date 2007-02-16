@@ -1,4 +1,3 @@
-/* $Id: utils.c,v 1.60 2006/08/14 08:52:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

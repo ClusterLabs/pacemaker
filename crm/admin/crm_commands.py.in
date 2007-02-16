@@ -1,5 +1,4 @@
 #
-#	$Id: crm_commands.py,v 1.2 2006/08/14 15:54:05 andrew Exp $
 #
 #	pingd OCF Resource Agent
 #	Records (in the CIB) the current number of ping nodes a 

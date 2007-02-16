@@ -1,4 +1,3 @@
-/* $Id: callbacks.c,v 1.89 2006/08/14 09:14:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

@@ -1,4 +1,3 @@
-/* $Id: fsa_proto.h,v 1.20 2006/01/12 15:10:08 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

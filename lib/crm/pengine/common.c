@@ -1,4 +1,3 @@
-/* $Id: common.c,v 1.4 2006/08/14 09:06:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
