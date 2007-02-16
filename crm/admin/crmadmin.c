@@ -600,6 +600,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		}
 	  cleanup:
 		delete_ha_msg_input(new_input);
+		new_input = NULL;
 	}
 
 	if (server->ch_status == IPC_DISCONNECT) {

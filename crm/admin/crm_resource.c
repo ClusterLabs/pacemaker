@@ -455,7 +455,8 @@ crmd_msg_callback(IPC_Channel * server, void *private_data)
 			    XML_ATTR_RESPONSE) == FALSE) {
 			crm_info("Message was not a CRM response. Discarding.");
 		}
-		delete_ha_msg_input(new_input);		
+		delete_ha_msg_input(new_input);
+		new_input = NULL;		
 	}
 
 	if (server->ch_status == IPC_DISCONNECT) {

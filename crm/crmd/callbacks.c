@@ -232,9 +232,8 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 			route_message(C_IPC_MESSAGE, new_input);
 		}
 		delete_ha_msg_input(new_input);
-		
+		new_input = NULL;		
 		msg = NULL;
-		new_input = NULL;
 
 		if(client->ch_status != IPC_CONNECT) {
 			break;
