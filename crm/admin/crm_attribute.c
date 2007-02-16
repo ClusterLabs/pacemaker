@@ -207,15 +207,14 @@ main(int argc, char **argv)
 		return rc;
 	}
 	
-	if(safe_str_eq(crm_system_name, "crm_master")
-	   || (dest_uname == NULL && safe_str_eq(crm_system_name, "crm_standby"))) {
+	if(dest_uname == NULL) {
 		struct utsname name;
 		if(uname(&name) != 0) {
 			cl_perror("uname(3) call failed");
 			return 1;
 		}
 		dest_uname = name.nodename;
-		crm_info("Detected: %s", dest_uname);
+		crm_info("Detected uname: %s", dest_uname);
 	}
 
 	if(dest_node == NULL && dest_uname != NULL) {
@@ -442,7 +441,7 @@ usage(const char *cmd, int exit_status)
 	
 	fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
 		"UUID of the node to change\n", "node-uuid", 'u');
-	fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
+	fprintf(stream, "\t--%s (-%c) <node_uname>\t: "
 		"uname of the node to change\n", "node-uname", 'U');
 
 	if(safe_str_eq(cmd, "crm_failcount")) {
