@@ -700,7 +700,13 @@ void native_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order)
 {
 	GListPtr rh_actions = NULL;
-	action_t *rh_action = order->rh_action;
+	action_t *rh_action = NULL;
+
+	CRM_CHECK(rsc != NULL, return);
+	CRM_CHECK(order != NULL, return);
+	CRM_CHECK(lh_action != NULL, return);
+
+	rh_action = order->rh_action;
 	crm_debug_3("Processing RH of ordering constraint %d", order->id);
 
 	if(rh_action != NULL) {
