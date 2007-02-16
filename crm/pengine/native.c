@@ -704,7 +704,6 @@ void native_rsc_order_rh(
 
 	CRM_CHECK(rsc != NULL, return);
 	CRM_CHECK(order != NULL, return);
-	CRM_CHECK(lh_action != NULL, return);
 
 	rh_action = order->rh_action;
 	crm_debug_3("Processing RH of ordering constraint %d", order->id);
@@ -712,29 +711,25 @@ void native_rsc_order_rh(
 	if(rh_action != NULL) {
 		rh_actions = g_list_append(NULL, rh_action);
 
-	} else if(rh_action == NULL && rsc != NULL) {
+	} else if(rsc != NULL) {
 		rh_actions = find_actions(
 			rsc->actions, order->rh_action_task, NULL);
-		
-		if(rh_actions == NULL) {
-			crm_debug_4("No RH-Side (%s/%s) found for constraint..."
-				  " ignoring", rsc->id, order->rh_action_task);
-			crm_debug_4("LH-Side was: %s", lh_action->uuid);
-			return;
-		}
-			
-	}  else if(rh_action == NULL) {
-		crm_debug_4("No RH-Side (%s) specified for constraint..."
-			  " ignoring", order->rh_action_task);
-		crm_debug_4("LH-Side was: %s", lh_action->uuid);
-		return;
-	} 
+	}
 
+	if(rh_actions == NULL && lh_action != NULL) {
+		crm_debug_4("No RH-Side (%s/%s) found for constraint..."
+			    " ignoring", rsc->id,order->rh_action_task);
+		if(lh_action) {
+			crm_debug_4("LH-Side was: %s", lh_action->uuid);
+		}
+		return;
+	}
+	
 	slist_iter(
 		rh_action_iter, action_t, rh_actions, lpc,
 
 		if(lh_action) {
-		order_actions(lh_action, rh_action_iter, order->type); 
+			order_actions(lh_action, rh_action_iter, order->type); 
 
 		} else if(order->type & pe_order_internal_restart) {
 			rh_action_iter->runnable = FALSE;
