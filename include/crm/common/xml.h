@@ -1,4 +1,3 @@
-/* $Id: xml.h,v 1.50 2006/08/04 09:47:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

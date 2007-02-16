@@ -1,4 +1,3 @@
-/* $Id: clone.c,v 1.6 2006/07/18 06:19:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

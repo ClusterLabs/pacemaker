@@ -1,4 +1,3 @@
-/* $Id: cib_private.h,v 1.1 2005/04/21 15:47:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

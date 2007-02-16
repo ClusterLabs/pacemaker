@@ -1,4 +1,3 @@
-/* $Id: master.c,v 1.22 2006/06/07 12:46:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

@@ -1,4 +1,3 @@
-/* $Id: unpack.c,v 1.18 2006/08/14 09:40:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

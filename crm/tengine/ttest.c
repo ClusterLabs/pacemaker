@@ -1,4 +1,3 @@
-/* $Id: ttest.c,v 1.24 2006/07/18 06:16:08 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>

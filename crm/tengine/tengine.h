@@ -1,4 +1,3 @@
-/* $Id: tengine.h,v 1.36 2006/02/27 09:55:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

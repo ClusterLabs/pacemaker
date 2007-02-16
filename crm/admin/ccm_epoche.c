@@ -1,4 +1,3 @@
-/* $Id: ccm_epoche.c,v 1.8 2005/07/14 13:27:49 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

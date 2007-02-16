@@ -1,4 +1,3 @@
-/* $Id: main.c,v 1.56 2006/07/18 06:14:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

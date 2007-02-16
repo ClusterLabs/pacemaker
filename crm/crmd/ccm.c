@@ -1,4 +1,3 @@
-/* $Id: ccm.c,v 1.106 2006/07/18 06:17:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

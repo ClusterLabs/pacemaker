@@ -1,4 +1,3 @@
-/* $Id: test.iso8601.c,v 1.3 2005/11/08 17:02:43 davidlee Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 

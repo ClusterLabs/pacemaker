@@ -1,4 +1,3 @@
-/* $Id: crm_attribute.c,v 1.18 2006/06/01 16:05:59 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>

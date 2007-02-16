@@ -1,4 +1,3 @@
-/* $Id: complex.c,v 1.7 2006/08/14 16:32:21 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

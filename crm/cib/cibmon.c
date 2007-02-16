@@ -1,4 +1,3 @@
-/* $Id: cibmon.c,v 1.29 2005/10/25 14:02:15 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>

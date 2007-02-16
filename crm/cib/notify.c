@@ -1,4 +1,3 @@
-/* $Id: notify.c,v 1.39 2006/07/07 20:59:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

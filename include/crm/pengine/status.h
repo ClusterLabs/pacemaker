@@ -1,4 +1,3 @@
-/* $Id: status.h,v 1.3 2006/06/21 14:48:01 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

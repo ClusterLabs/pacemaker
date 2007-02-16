@@ -1,4 +1,3 @@
-/* $Id: crmd_utils.h,v 1.24 2006/04/18 10:59:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

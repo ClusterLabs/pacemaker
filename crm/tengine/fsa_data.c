@@ -1,4 +1,3 @@
-/* $Id: fsa_data.c,v 1.4 2006/03/18 17:23:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

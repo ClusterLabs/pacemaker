@@ -1,4 +1,3 @@
-/* $Id: crm_verify.c,v 1.20 2006/08/20 10:54:57 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>

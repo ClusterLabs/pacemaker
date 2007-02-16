@@ -1,4 +1,3 @@
-/* $Id: ipc.h,v 1.11 2006/07/06 09:30:28 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

@@ -1,4 +1,3 @@
-/* $Id: iso8601_fields.c,v 1.4 2005/08/24 08:48:42 davidlee Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 

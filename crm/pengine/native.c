@@ -1,4 +1,3 @@
-/* $Id: native.c,v 1.161 2006/08/17 07:17:15 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

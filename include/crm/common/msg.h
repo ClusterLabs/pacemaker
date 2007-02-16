@@ -1,4 +1,3 @@
-/* $Id: msg.h,v 1.4 2005/01/26 13:21:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

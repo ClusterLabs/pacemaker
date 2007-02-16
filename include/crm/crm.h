@@ -1,4 +1,3 @@
-/* $Id: crm.h,v 1.98 2006/06/16 10:07:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

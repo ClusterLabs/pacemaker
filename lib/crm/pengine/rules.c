@@ -1,4 +1,3 @@
-/* $Id: rules.c,v 1.3 2006/06/21 14:53:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
