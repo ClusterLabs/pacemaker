@@ -216,9 +216,9 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 
 	CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval),
 		  crm_err("Couldn't parse: %s", ID(event));
-		  return);
-	CRM_CHECK(task != NULL, crm_free(rsc_id); return);
-	CRM_CHECK(rsc_id != NULL, crm_free(task); return);
+		  goto bail);
+	CRM_CHECK(task != NULL, goto bail);
+	CRM_CHECK(rsc_id != NULL, goto bail);
 	
 	if(interval > 0) {
 		attr_name = crm_concat("fail-count", rsc_id, '-');
@@ -231,6 +231,7 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 		crm_free(attr_name);
 	}
 
+  bail:
 	crm_free(rsc_id);
 	crm_free(task);
 }

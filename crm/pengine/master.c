@@ -538,10 +538,6 @@ void master_rsc_colocation_rh(
 	if(rsc_rh->provisional) {
 		return;
 
-	} else if(rsc_rh == NULL) {
-		pe_err("rsc_rh was NULL for %s", constraint->id);
-		return;
-
 	} else if(constraint->role_rh == RSC_ROLE_UNKNOWN) {
 		crm_debug_3("Handling %s as a clone colocation", constraint->id);
 		clone_rsc_colocation_rh(rsc_lh, rsc_rh, constraint);

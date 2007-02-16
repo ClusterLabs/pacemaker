@@ -332,27 +332,18 @@ do_ccm_update_cache(long long action,
 		
 		for(lpc=0; lpc < membership_copy->members_size; lpc++) {
 			oc_node_t *member = NULL;
-			crm_debug_3("Copying member %d", lpc);
-			crm_malloc0(member, sizeof(oc_node_t));
-			
-			if(member == NULL) {
-				continue;
-			}
+			CRM_CHECK(oc->m_array[offset+lpc].node_uname != NULL,
+				  continue);
 
-			member->node_id =
-				oc->m_array[offset+lpc].node_id;
+			crm_malloc0(member, sizeof(oc_node_t));
+
+			member->node_id = oc->m_array[offset+lpc].node_id;
 			
 			member->node_born_on =
 				oc->m_array[offset+lpc].node_born_on;
 			
-			member->node_uname = NULL;
-			if(oc->m_array[offset+lpc].node_uname != NULL) {
-				member->node_uname =
-					crm_strdup(oc->m_array[offset+lpc].node_uname);
-			} else {
-				crm_err("Node %d had a NULL uname",
-					member->node_id);
-			}
+			member->node_uname =
+				crm_strdup(oc->m_array[offset+lpc].node_uname);
 			g_hash_table_insert(
 				members, member->node_uname, member);	
 		}
@@ -374,24 +365,19 @@ do_ccm_update_cache(long long action,
 		
 		for(lpc=0; lpc < membership_copy->new_members_size; lpc++) {
 			oc_node_t *member = NULL;
+			CRM_CHECK(oc->m_array[offset+lpc].node_uname != NULL,
+				  continue);
+
 			crm_malloc0(member, sizeof(oc_node_t));
 
-			if(member == NULL) {
-				continue;
-			}
-			
-			member->node_uname = NULL;
 			member->node_id = oc->m_array[offset+lpc].node_id;
+			
 			member->node_born_on =
 				oc->m_array[offset+lpc].node_born_on;
+			
+			member->node_uname =
+				crm_strdup(oc->m_array[offset+lpc].node_uname);
 
-			if(oc->m_array[offset+lpc].node_uname != NULL) {
-				member->node_uname =
-					crm_strdup(oc->m_array[offset+lpc].node_uname);
-			} else {
-				crm_err("Node %d had a NULL uname",
-					member->node_id);
-			}
 			g_hash_table_insert(
 				members, member->node_uname, member);	
 
@@ -415,23 +401,15 @@ do_ccm_update_cache(long long action,
 
 		for(lpc=0; lpc < membership_copy->dead_members_size; lpc++) {
 			oc_node_t *member = NULL;
+			CRM_CHECK(oc->m_array[offset+lpc].node_uname != NULL,
+				  continue);
+
 			crm_malloc0(member, sizeof(oc_node_t));
 
-			if(member == NULL) {
-				continue;
-			}
-			
 			member->node_id = oc->m_array[offset+lpc].node_id;
 			
 			member->node_born_on =
 				oc->m_array[offset+lpc].node_born_on;
-			
-			member->node_uname = NULL;
-			CRM_DEV_ASSERT(oc->m_array[offset+lpc].node_uname != NULL);
-			
-			if(oc->m_array[offset+lpc].node_uname == NULL) {
-				continue;
-			}
 			
 			member->node_uname =
 				crm_strdup(oc->m_array[offset+lpc].node_uname);

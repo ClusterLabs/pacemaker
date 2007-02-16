@@ -45,6 +45,7 @@ typedef struct clone_variant_data_s {
 } clone_variant_data_t;
 
 #  define get_clone_variant_data(data, rsc)				\
+	CRM_ASSERT(rsc != NULL);					\
 	CRM_ASSERT(rsc->variant == pe_clone || rsc->variant == pe_master); \
 	data = (clone_variant_data_t *)rsc->variant_opaque;
 
@@ -77,6 +78,7 @@ typedef struct native_variant_data_s {
 } native_variant_data_t;
 
 #  define get_native_variant_data(data, rsc)				\
+	CRM_ASSERT(rsc != NULL);					\
 	CRM_ASSERT(rsc->variant == pe_native);				\
 	CRM_ASSERT(rsc->variant_opaque != NULL);			\
 	data = (native_variant_data_t *)rsc->variant_opaque;

@@ -31,11 +31,6 @@ void clone_create_notifications(
 	pe_working_set_t *data_set);
 
 
-#define get_clone_variant_data(data, rsc)				\
-	CRM_ASSERT(rsc->variant == pe_clone || rsc->variant == pe_master); \
-	data = (clone_variant_data_t *)rsc->variant_opaque;
-
-
 static gboolean
 create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set) 
 {

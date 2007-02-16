@@ -1154,33 +1154,38 @@ delete_ccm_data(struct crmd_ccm_data_s *ccm_input)
 {
 	int lpc, offset = 0;
 	oc_node_t *a_node = NULL;
-	oc_ev_membership_t *oc_in = ccm_input->oc;
-	if(oc_in != NULL) {
-		offset = oc_in->m_memb_idx;
+	oc_ev_membership_t *oc_in = NULL;
+	if(ccm_input == NULL) {
+		return;
 	}
+	
+	oc_in = ccm_input->oc;
+	if(oc_in == NULL) {
+		goto bail;
+	}
+	
+	offset = oc_in->m_memb_idx;
 	for(lpc = 0; lpc < oc_in->m_n_member; lpc++) {
 		a_node = &oc_in->m_array[lpc+offset];
 		crm_free(a_node->node_uname);
 		a_node->node_uname = NULL;
 	}
 
-	if(oc_in != NULL) {
-		offset = oc_in->m_in_idx;
-	}
+	offset = oc_in->m_in_idx;
 	for(lpc = 0; lpc < oc_in->m_n_in; lpc++) {
 		a_node = &oc_in->m_array[lpc+offset];
 		crm_free(a_node->node_uname);
 		a_node->node_uname = NULL;
 	}
 
-	if(oc_in != NULL) {
-		offset = oc_in->m_out_idx;
-	}
+	offset = oc_in->m_out_idx;
 	for(lpc = 0; lpc < oc_in->m_n_out; lpc++) {
 		a_node = &oc_in->m_array[lpc+offset];
 		crm_free(a_node->node_uname);
 		a_node->node_uname = NULL;
 	}
+
+  bail:
  	crm_free(ccm_input->oc);
  	crm_free(ccm_input);
 }

@@ -134,8 +134,11 @@ rsc2node_new(const char *id, resource_t *rsc,
 	if(rsc == NULL || id == NULL) {
 		pe_err("Invalid constraint %s for rsc=%p", crm_str(id), rsc);
 		return NULL;
-	}
 
+	} else if(foo_node == NULL) {
+		CRM_CHECK(node_weight == 0, return NULL);
+	}
+	
 	crm_malloc0(new_con, sizeof(rsc_to_node_t));
 	if(new_con != NULL) {
 		new_con->id           = id;
@@ -147,14 +150,11 @@ rsc2node_new(const char *id, resource_t *rsc,
 			node_t *copy = node_copy(foo_node);
 			copy->weight = node_weight;
 			new_con->node_list_rh = g_list_append(NULL, copy);
-		} else {
-			CRM_CHECK(node_weight == 0, return NULL);
 		}
 		
 		data_set->placement_constraints = g_list_append(
 			data_set->placement_constraints, new_con);
-		rsc->rsc_location = g_list_append(
-			rsc->rsc_location, new_con);
+		rsc->rsc_location = g_list_append(rsc->rsc_location, new_con);
 	}
 	
 	return new_con;

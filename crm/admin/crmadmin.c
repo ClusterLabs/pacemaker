@@ -539,13 +539,13 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		if (new_input->xml == NULL) {
 			crm_info("XML in IPC message was not valid... "
 				 "discarding.");
-			continue;
-
+			goto cleanup;
+			
 		} else if (validate_crm_message(
 				   new_input->msg, crm_system_name, admin_uuid,
 				   XML_ATTR_RESPONSE) == FALSE) {
 			crm_debug_2("Message was not a CRM response. Discarding.");
-			continue;
+			goto cleanup;
 		}
 
 		result = cl_get_string(new_input->msg, XML_ATTR_RESULT);
@@ -598,6 +598,8 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 				}
 			}
 		}
+	  cleanup:
+		delete_ha_msg_input(new_input);
 	}
 
 	if (server->ch_status == IPC_DISCONNECT) {

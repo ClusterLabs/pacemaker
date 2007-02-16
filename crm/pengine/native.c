@@ -839,6 +839,7 @@ register_activity(resource_t *rsc, enum action_tasks task, node_t *node, notify_
 			break;
 		default:
 			crm_err("Unsupported notify action: %s", task2text(task));
+			crm_free(entry);
 			break;
 	}
 	
@@ -871,6 +872,7 @@ register_state(resource_t *rsc, node_t *on_node, notify_data_t *n_data)
 			break;
 		default:
 			crm_err("Unsupported notify role");
+			crm_free(entry);
 			break;
 	}
 }

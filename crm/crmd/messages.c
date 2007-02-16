@@ -717,6 +717,7 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 		}
 
 	} else {
+		crm_free(table_key);
 		crm_warn("Rejected client logon request");
 		curr_client->client_channel->ch_status = IPC_DISC_PENDING;
 	}
