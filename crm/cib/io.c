@@ -227,9 +227,14 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	} else {
 		crm_info("Reading cluster configuration from: %s", filename);
 		cib_file = fopen(filename, "r");
-		root = file2xml(cib_file, FALSE);
-		fclose(cib_file);
+		if(cib_file == NULL) {
+			cl_perror("could not open: %s", filename);
 
+		} else {
+			root = file2xml(cib_file, FALSE);
+			fclose(cib_file);
+		}
+		
 		if(root == NULL) {
 			crm_err("%s exists but does NOT contain valid XML. ",
 				filename);
