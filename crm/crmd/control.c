@@ -172,6 +172,7 @@ extern char *max_generation_from;
 extern crm_data_t *max_generation_xml;
 extern GHashTable *meta_hash;
 extern GHashTable *resources;
+extern GHashTable *voted;
 
 void log_connected_client(gpointer key, gpointer value, gpointer user_data);
 
@@ -246,6 +247,9 @@ static void free_mem(fsa_data_t *msg_data)
 	}
 	if(resources) {
 		g_hash_table_destroy(resources);
+	}
+	if(voted) {
+		g_hash_table_destroy(voted);
 	}
 
 	cib_delete(fsa_cib_conn);
