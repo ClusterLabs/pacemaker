@@ -296,6 +296,11 @@ attrd_ha_connection_destroy(gpointer user_data)
 	}
 
 	crm_crit("Lost connection to heartbeat service!");
+	if (mainloop != NULL && g_main_is_running(mainloop)) {
+		g_main_quit(mainloop);
+		return;
+	}
+	exit(LSB_EXIT_OK);	
 }
 
 
