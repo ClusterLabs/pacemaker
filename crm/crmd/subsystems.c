@@ -211,8 +211,7 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	(void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
 	(void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
 	
-	{
-#if WITH_VALGRIND
+	if(getenv("HA_VALGRIND_ENABLED") != NULL) {
 		char *opts[] = { crm_strdup(VALGRIND_BIN),
  				 crm_strdup("--show-reachable=yes"),
 				 crm_strdup("--leak-check=full"),
@@ -224,10 +223,9 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 				 NULL
 		};
 		(void)execvp(VALGRIND_BIN, opts);
-#else
+	} else {
 		char *opts[] = { crm_strdup(the_subsystem->command), NULL };
 		(void)execvp(the_subsystem->command, opts);
-#endif
 	}
 	
 	/* Should not happen */
