@@ -43,6 +43,8 @@ void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 void create_notifications(resource_t *rsc, pe_working_set_t *data_set);
 void Recurring(resource_t *rsc, action_t *start, node_t *node,
 			      pe_working_set_t *data_set);
+void RecurringOp(resource_t *rsc, action_t *start, node_t *node,
+		 crm_data_t *operation, pe_working_set_t *data_set);
 void pe_pre_notify(
 	resource_t *rsc, node_t *node, action_t *op, 
 	notify_data_t *n_data, pe_working_set_t *data_set);
@@ -228,8 +230,8 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 }
 
 void
-Recurring(resource_t *rsc, action_t *start, node_t *node,
-			 pe_working_set_t *data_set) 
+RecurringOp(resource_t *rsc, action_t *start, node_t *node,
+	    crm_data_t *operation, pe_working_set_t *data_set) 
 {
 	char *key = NULL;
 	const char *name = NULL;
@@ -246,114 +248,121 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 	if(node != NULL) {
 		node_uname = node->details->uname;
 	}
+
+	interval = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
+	interval_ms = crm_get_msec(interval);
+	
+	if(interval_ms <= 0) {
+		return;
+	}
+	
+	value = crm_element_value(operation, "disabled");
+	if(crm_is_true(value)) {
+		return;
+	}
+	
+	name = crm_element_value(operation, "name");
+	key = generate_op_key(rsc->id, name, interval_ms);
+	if(start != NULL) {
+		crm_debug_3("Marking %s %s due to %s",
+			    key, start->optional?"optional":"manditory",
+			    start->uuid);
+		is_optional = start->optional;
+	} else {
+		crm_debug_2("Marking %s optional", key);
+		is_optional = TRUE;
+	}
+	
+	/* start a monitor for an already active resource */
+	possible_matches = find_actions_exact(rsc->actions, key, node);
+	if(possible_matches == NULL) {
+		is_optional = FALSE;
+		crm_debug_3("Marking %s manditory: not active", key);
+	}
+	
+	value = crm_element_value(operation, "role");
+	if((rsc->next_role == RSC_ROLE_MASTER && value == NULL)
+	   || (value != NULL && text2role(value) != rsc->next_role)) {
+		int log_level = LOG_DEBUG_2;
+		const char *result = "Ignoring";
+		if(is_optional) {
+			char *local_key = crm_strdup(key);
+			log_level = LOG_INFO;
+			result = "Cancelling";
+			/* its running : cancel it */
+			
+			mon = custom_action(
+				rsc, local_key, CRMD_ACTION_CANCEL, node,
+				FALSE, TRUE, data_set);
+			
+			mon->task = CRMD_ACTION_CANCEL;
+			add_hash_param(mon->meta, XML_LRM_ATTR_INTERVAL, interval);
+			add_hash_param(mon->meta, XML_LRM_ATTR_TASK, name);
+			
+			custom_action_order(
+				rsc, NULL, mon,
+				rsc, promote_key(rsc), NULL,
+				pe_order_optional, data_set);
+			
+			mon = NULL;
+		}
+		
+		do_crm_log(log_level, "%s action %s (%s vs. %s)",
+			   result , key, value?value:role2text(RSC_ROLE_SLAVE),
+			   role2text(rsc->next_role));
+
+		crm_free(key);
+		key = NULL;
+		return;
+	}		
+		
+	mon = custom_action(rsc, key, name, node,
+			    is_optional, TRUE, data_set);
+	key = mon->uuid;
+	if(is_optional) {
+		crm_debug("%s\t   %s (optional)",
+			  crm_str(node_uname), mon->uuid);
+	}
+	
+	if(start == NULL || start->runnable == FALSE) {
+		crm_debug("%s\t   %s (cancelled : start un-runnable)",
+			  crm_str(node_uname), mon->uuid);
+		mon->runnable = FALSE;
+		
+	} else if(node == NULL
+		  || node->details->online == FALSE
+		  || node->details->unclean) {
+		crm_debug("%s\t   %s (cancelled : no node available)",
+			  crm_str(node_uname), mon->uuid);
+		mon->runnable = FALSE;
+		
+	} else if(mon->optional == FALSE) {
+		crm_notice("%s\t   %s", crm_str(node_uname),mon->uuid);
+	}
+	
+	custom_action_order(rsc, start_key(rsc), NULL,
+			    NULL, crm_strdup(key), mon,
+			    pe_order_internal_restart, data_set);
+	
+	if(rsc->next_role == RSC_ROLE_MASTER) {
+		char *running_master = crm_itoa(EXECRA_RUNNING_MASTER);
+		add_hash_param(mon->meta, XML_ATTR_TE_TARGET_RC, running_master);
+		custom_action_order(
+			rsc, promote_key(rsc), NULL,
+			rsc, NULL, mon,
+			pe_order_optional, data_set);
+		crm_free(running_master);
+	}		
+}
+
+void
+Recurring(resource_t *rsc, action_t *start, node_t *node,
+			 pe_working_set_t *data_set) 
+{
 	
 	xml_child_iter_filter(
 		rsc->ops_xml, operation, "op",
-		
-		is_optional = TRUE;
-		name = crm_element_value(operation, "name");
-		interval = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-		interval_ms = crm_get_msec(interval);
-
-		if(interval_ms <= 0) {
-			continue;
-		}
-
-		value = crm_element_value(operation, "disabled");
-		if(crm_is_true(value)) {
-			continue;
-		}
-		
-		key = generate_op_key(rsc->id, name, interval_ms);
-		if(start != NULL) {
-			crm_debug_3("Marking %s %s due to %s",
-				    key, start->optional?"optional":"manditory",
-				    start->uuid);
-			is_optional = start->optional;
-		} else {
-			crm_debug_2("Marking %s optional", key);
-			is_optional = TRUE;
-		}
-		
-		/* start a monitor for an already active resource */
-		possible_matches = find_actions_exact(rsc->actions, key, node);
-		if(possible_matches == NULL) {
-			is_optional = FALSE;
-			crm_debug_3("Marking %s manditory: not active", key);
-		}
-
-		value = crm_element_value(operation, "role");
-		if((rsc->next_role == RSC_ROLE_MASTER && value == NULL)
-		   || (value != NULL && text2role(value) != rsc->next_role)) {
-			int log_level = LOG_DEBUG_2;
-			const char *foo = "Ignoring";
-			if(is_optional) {
-				char *local_key = crm_strdup(key);
-				log_level = LOG_INFO;
-				foo = "Cancelling";
-				/* its running : cancel it */
-
-				mon = custom_action(
-					rsc, local_key, CRMD_ACTION_CANCEL, node,
-					FALSE, TRUE, data_set);
-
-				mon->task = CRMD_ACTION_CANCEL;
-				add_hash_param(mon->meta, XML_LRM_ATTR_INTERVAL, interval);
-				add_hash_param(mon->meta, XML_LRM_ATTR_TASK, name);
-				
-				custom_action_order(
-					rsc, NULL, mon,
-					rsc, promote_key(rsc), NULL,
-					pe_order_optional, data_set);
-
-				mon = NULL;
-			}
-			
-			do_crm_log(log_level, "%s action %s (%s vs. %s)",
-				      foo , key, value?value:role2text(RSC_ROLE_SLAVE),
-				      role2text(rsc->next_role));
-			crm_free(key);
-			key = NULL;
-			continue;
-		}		
-		
-		mon = custom_action(rsc, key, name, node,
-				    is_optional, TRUE, data_set);
-
-		if(is_optional) {
-			crm_debug("%s\t   %s (optional)",
-				  crm_str(node_uname), mon->uuid);
-		}
-		
-		if(start == NULL || start->runnable == FALSE) {
-			crm_debug("%s\t   %s (cancelled : start un-runnable)",
-				  crm_str(node_uname), mon->uuid);
-			mon->runnable = FALSE;
-
-		} else if(node == NULL
-			  || node->details->online == FALSE
-			  || node->details->unclean) {
-			crm_debug("%s\t   %s (cancelled : no node available)",
-				  crm_str(node_uname), mon->uuid);
-			mon->runnable = FALSE;
-		
-		} else if(mon->optional == FALSE) {
-			crm_notice("%s\t   %s", crm_str(node_uname),mon->uuid);
-		}
-
-		custom_action_order(rsc, start_key(rsc), NULL,
-				    NULL, crm_strdup(key), mon,
-				    pe_order_internal_restart, data_set);
-
-		if(rsc->next_role == RSC_ROLE_MASTER) {
-			char *running_master = crm_itoa(EXECRA_RUNNING_MASTER);
-			add_hash_param(mon->meta, XML_ATTR_TE_TARGET_RC, running_master);
-			custom_action_order(
-				rsc, promote_key(rsc), NULL,
-				rsc, NULL, mon,
-				pe_order_optional, data_set);
-			crm_free(running_master);
-		}		
+		RecurringOp(rsc, start, node, operation, data_set);		
 		);	
 }
 
