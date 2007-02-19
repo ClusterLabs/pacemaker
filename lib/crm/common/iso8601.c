@@ -404,14 +404,14 @@ parse_time_duration(char **interval_str)
 {
 	gboolean is_time = FALSE;
 	ha_time_t *diff = NULL;
-	crm_malloc0(diff, sizeof(ha_time_t));
-	crm_malloc0(diff->has, sizeof(ha_has_time_t));
 
 	CRM_CHECK(interval_str != NULL, goto bail);
 	CRM_CHECK(strlen(*interval_str) > 0, goto bail);
-	
 	CRM_CHECK((*interval_str)[0] == 'P', goto bail);
 	(*interval_str)++;
+
+	crm_malloc0(diff, sizeof(ha_time_t));
+	crm_malloc0(diff->has, sizeof(ha_has_time_t));
 	
 	while(isspace((int) (*interval_str)[0]) == FALSE) {
 		int an_int = 0;
@@ -470,8 +470,10 @@ parse_time_duration(char **interval_str)
 	return diff;
 
   bail:
+	if(diff) {
+		crm_free(diff->has);
+	}
 	crm_free(diff);
-	crm_free(diff->has);
 	return NULL;
 }
 
