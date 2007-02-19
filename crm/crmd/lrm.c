@@ -1638,8 +1638,8 @@ process_lrm_event(lrm_op_t *op)
 	}
 
 	/* most likely scenario is that it previously timed out */
-	crm_err("Op %d %s_%s_%d not matched",
-		op->call_id, op->rsc_id, op->op_type, op->interval);
+	crm_debug_2("Op %d %s_%s_%d not matched",
+		    op->call_id, op->rsc_id, op->op_type, op->interval);
 
   out:
 	crm_free(op_id);
