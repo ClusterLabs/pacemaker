@@ -724,7 +724,7 @@ void native_rsc_order_rh(
 			rsc->actions, order->rh_action_task, NULL);
 	}
 
-	if(rh_actions == NULL && lh_action != NULL) {
+	if(rh_actions == NULL) {
 		crm_debug_4("No RH-Side (%s/%s) found for constraint..."
 			    " ignoring", rsc->id,order->rh_action_task);
 		if(lh_action) {
