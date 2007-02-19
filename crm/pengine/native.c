@@ -1076,6 +1076,11 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 		stop = stop_action(rsc, current, FALSE);
 		start = start_action(rsc, next, FALSE);
 
+		if(rsc->role == RSC_ROLE_MASTER) {
+			demote_action(rsc, current, FALSE);
+			promote_action(rsc, next, FALSE);
+		}
+
 		possible_matches = find_recurring_actions(rsc->actions, next);
 		slist_iter(match, action_t, possible_matches, lpc,
 			   if(match->optional == FALSE) {
