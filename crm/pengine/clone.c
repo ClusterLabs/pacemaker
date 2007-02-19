@@ -73,13 +73,18 @@ int clone_num_allowed_nodes(resource_t *rsc)
 static node_t *
 parent_node_instance(const resource_t *rsc, node_t *node)
 {
+	node_t *ret = NULL;
 	clone_variant_data_t *clone_data = NULL;
-	if(node == NULL) {
-		return NULL;
+	if(node != NULL) {
+		get_clone_variant_data(clone_data, rsc->parent);
+		ret = pe_find_node_id(
+/* 			rsc->allowed_nodes, node->details->id); */
+			clone_data->self->allowed_nodes, node->details->id);
+		if(ret == NULL) {
+			crm_err("No node %s found in %s", node->details->uname, rsc->id);
+		}
 	}
-	get_clone_variant_data(clone_data, rsc->parent);
-	return pe_find_node_id(
-		clone_data->self->allowed_nodes, node->details->id);
+	return ret;
 }
 
 gint sort_clone_instance(gconstpointer a, gconstpointer b)
@@ -272,9 +277,11 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 			);
 		
 		slist_iter(child, resource_t, clone_data->child_list, lpc,
-			   if(child->running_on) {
+			   if(child->running_on
+			      && g_list_length(child->running_on) > 0) {
 				   node_t *local_node = parent_node_instance(
 					   child, child->running_on->data);
+				   CRM_CHECK(local_node != NULL, continue);
 				   local_node->count++;
 			   }
 			);
@@ -297,6 +304,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	clone_data->self->allowed_nodes = g_list_sort(
 		clone_data->self->allowed_nodes, sort_node_weight);
 
+	
 	slist_iter(child, resource_t, clone_data->child_list, lpc,
 		   if(allocated >= clone_data->clone_max) {
 			   crm_debug("Child %s not allocated - limit reached", child->id);
