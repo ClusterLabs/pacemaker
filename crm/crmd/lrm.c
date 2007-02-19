@@ -1624,12 +1624,6 @@ process_lrm_event(lrm_op_t *op)
 	
 	if(op->op_status != LRM_OP_CANCELLED) {
 		do_update_resource(op);
-		if(op->interval > 0) {
-			/* dont remove active recurring ops from
-			 * the shutdown list
-			 */
-			return TRUE;
-		}
 		
 	} else if(op->interval == 0) {
 		crm_err("Op %s_%s_%d (call=%d): cancelled!",
