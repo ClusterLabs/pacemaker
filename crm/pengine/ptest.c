@@ -413,7 +413,7 @@ main(int argc, char **argv)
 	dot_write("}");
 
 	transition = unpack_graph(data_set.graph);
-	print_graph(LOG_NOTICE, transition);
+	print_graph(LOG_DEBUG, transition);
 	do {
 		graph_rc = run_graph(transition);
 		
