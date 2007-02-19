@@ -78,11 +78,7 @@ parent_node_instance(const resource_t *rsc, node_t *node)
 	if(node != NULL) {
 		get_clone_variant_data(clone_data, rsc->parent);
 		ret = pe_find_node_id(
-/* 			rsc->allowed_nodes, node->details->id); */
 			clone_data->self->allowed_nodes, node->details->id);
-		if(ret == NULL) {
-			crm_err("No node %s found in %s", node->details->uname, rsc->id);
-		}
 	}
 	return ret;
 }
@@ -277,12 +273,16 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 			);
 		
 		slist_iter(child, resource_t, clone_data->child_list, lpc,
-			   if(child->running_on
-			      && g_list_length(child->running_on) > 0) {
+			   if(g_list_length(child->running_on) > 0) {
+				   node_t *child_node = child->running_on->data;
 				   node_t *local_node = parent_node_instance(
 					   child, child->running_on->data);
-				   CRM_CHECK(local_node != NULL, continue);
-				   local_node->count++;
+				   if(local_node) {
+					   local_node->count++;
+				   } else {
+					   crm_err("%s is running on %s which isn't allowed",
+						   child->id, child_node->details->uname);
+				   }
 			   }
 			);
 
