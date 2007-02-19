@@ -1067,68 +1067,58 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 		return;
 	}
 
-	/* use StartRsc/StopRsc */
-	
-	if(safe_str_neq(current->details->id, next->details->id)) {
-		crm_notice("Move  resource %s\t(%s -> %s)", rsc->id,
-			   current->details->uname, next->details->uname);
-
-		stop = stop_action(rsc, current, FALSE);
-		start = start_action(rsc, next, FALSE);
+	if(rsc->failed || safe_str_neq(current->details->id, next->details->id)) {
+		if(rsc->failed) {
+			crm_notice("Recover resource %s\t(%s)",
+				   rsc->id, next->details->uname);
+		} else {
+			crm_notice("Move  resource %s\t(%s -> %s)", rsc->id,
+				   current->details->uname, next->details->uname);
+		}
 
 		if(rsc->role == RSC_ROLE_MASTER) {
-			demote_action(rsc, current, FALSE);
-			promote_action(rsc, next, FALSE);
+			DemoteRsc(rsc, current, data_set);
+		}
+		StopRsc(rsc, current, data_set);
+		StartRsc(rsc, next, data_set);
+		if(rsc->role == RSC_ROLE_MASTER) {
+			PromoteRsc(rsc, next, data_set);
 		}
 
 		possible_matches = find_recurring_actions(rsc->actions, next);
 		slist_iter(match, action_t, possible_matches, lpc,
 			   if(match->optional == FALSE) {
-				   crm_err("Found bad recurring action: %s",
-					   match->uuid);
+				   crm_debug("Fixing recurring action: %s",
+					     match->uuid);
 				   match->optional = TRUE;
 			   }
 			);
-			
-		if(data_set->remove_after_stop) {
-			DeleteRsc(rsc, current, data_set);
+		
+	} else if(rsc->start_pending) {
+		start = start_action(rsc, next, TRUE);
+		if(start->runnable) {
+			/* wait for StartRsc() to be called */
+			rsc->role = RSC_ROLE_STOPPED;
+		} else {
+			/* wait for StopRsc() to be called */
+			rsc->next_role = RSC_ROLE_STOPPED;
 		}
 		
 	} else {
-		if(rsc->failed) {
-			crm_notice("Recover resource %s\t(%s)",
-				   rsc->id, next->details->uname);
-			stop = stop_action(rsc, current, FALSE);
-			start = start_action(rsc, next, FALSE);
-/* 			/\* make the restart required *\/ */
-/* 			order_stop_start(rsc, rsc, pe_order_implies_left); */
+		stop = stop_action(rsc, current, TRUE);
+		start = start_action(rsc, next, TRUE);
+		stop->optional = start->optional;
+		
+		if(start->runnable == FALSE) {
+			rsc->next_role = RSC_ROLE_STOPPED;
 			
-		} else if(rsc->start_pending) {
-			start = start_action(rsc, next, TRUE);
-			if(start->runnable) {
-				/* wait for StartRsc() to be called */
-				rsc->role = RSC_ROLE_STOPPED;
-			} else {
-				/* wait for StopRsc() to be called */
-				rsc->next_role = RSC_ROLE_STOPPED;
-			}
+		} else if(start->optional) {
+			crm_notice("Leave resource %s\t(%s)",
+				   rsc->id, next->details->uname);
 			
 		} else {
-			stop = stop_action(rsc, current, TRUE);
-			start = start_action(rsc, next, TRUE);
-			stop->optional = start->optional;
-			
-			if(start->runnable == FALSE) {
-				rsc->next_role = RSC_ROLE_STOPPED;
-
-			} else if(start->optional) {
-				crm_notice("Leave resource %s\t(%s)",
-					   rsc->id, next->details->uname);
-
-			} else {
-				crm_notice("Restart resource %s\t(%s)",
-					   rsc->id, next->details->uname);
-			}
+			crm_notice("Restart resource %s\t(%s)",
+				   rsc->id, next->details->uname);
 		}
 	}
 }
@@ -1216,7 +1206,7 @@ DemoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 /* 	CRM_CHECK(rsc->next_role == RSC_ROLE_SLAVE, return FALSE); */
 	slist_iter(
 		current, node_t, rsc->running_on, lpc,
-		crm_notice("%s\tDeomote %s", current->details->uname, rsc->id);
+		crm_notice("%s\tDemote %s", current->details->uname, rsc->id);
 		demote_action(rsc, current, FALSE);
 		);
 	return TRUE;
