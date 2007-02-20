@@ -43,6 +43,7 @@
 
 #include <cibprimatives.h>
 
+#include <crm/dmalloc_wrapper.h>
 
 const char * local_resource_path[] =
 {
@@ -364,7 +365,7 @@ uninitializeCib(void)
 	
 	free_xml(tmp_cib);
 
-	crm_info("The CIB has been deallocated.");
+	crm_debug("The CIB has been deallocated.");
 	
 	return TRUE;
 }
