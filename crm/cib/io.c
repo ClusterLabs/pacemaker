@@ -43,7 +43,6 @@
 
 #include <cibprimatives.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 const char * local_resource_path[] =
 {
