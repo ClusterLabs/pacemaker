@@ -44,6 +44,12 @@ need_abort(crm_data_t *update)
 		return NULL;
 	}
 	
+        xml_prop_iter(update, name, value, 
+                      if(safe_str_eq(name, XML_ATTR_ID) == FALSE) {
+                              return update;
+                      }
+                );
+
 	section = XML_CIB_TAG_NODES;
 	section_xml = get_object_root(section, update);
 	xml_child_iter(section_xml, child, 
