@@ -21,7 +21,7 @@
  * It's a part of Local Resource Manager. Currently it's used by lrmd only.
  */
 
-#include <portability.h>
+#include <lha_internal.h>
 #include <stdio.h>		
 #include <string.h>
 #include <unistd.h>
@@ -36,7 +36,6 @@
 #include <pils/plugin.h>
 #include <dirent.h>
 #include <libgen.h>  /* Add it for compiling on OSX */
-#include <config.h>
 
 #include <lrm/raexec.h>
 

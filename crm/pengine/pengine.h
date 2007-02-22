@@ -33,8 +33,6 @@ typedef struct order_constraint_s order_constraint_t;
 #include <crm/pengine/common.h>
 #include <crm/pengine/status.h>
 
-#include <linux-ha/config.h>
-
 #include <crm/pengine/complex.h>
 
 enum pe_stop_fail {

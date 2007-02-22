@@ -18,31 +18,6 @@
 #ifndef PE_COMMON__H
 #define PE_COMMON__H
 
-/*
- * The man pages for both curses and ncurses suggest inclusion of "curses.h".
- * We believe the following to be acceptable and portable.
- */
-
-#if defined(HAVE_LIBNCURSES) || defined(HAVE_LIBCURSES)
-#if defined(HAVE_NCURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
-#  include <ncurses.h>
-#  define CURSES_ENABLED 1
-#elif defined(HAVE_NCURSES_NCURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
-#  include <ncurses/ncurses.h>
-#  define CURSES_ENABLED 1
-#elif defined(HAVE_CURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
-#  include <curses.h>
-#  define CURSES_ENABLED 1
-#elif defined(HAVE_CURSES_CURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
-#  include <curses/curses.h>
-#  define CURSES_ENABLED 1
-#else
-#  define CURSES_ENABLED 0
-#endif
-#else
-#  define CURSES_ENABLED 0
-#endif
-
 extern gboolean was_processing_error;
 extern gboolean was_processing_warning;
 extern unsigned int pengine_input_loglevel;

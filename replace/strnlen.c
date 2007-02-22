@@ -1,4 +1,4 @@
-#include <portability.h>
+#include <lha_internal.h>
 #include <string.h>
 /*
  * Copyright (C) 2003 Alan Robertson <alanr@unix.sh>

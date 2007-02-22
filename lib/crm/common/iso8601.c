@@ -28,7 +28,7 @@
  *
  */
 
-#include <portability.h>
+#include <lha_internal.h>
 #include <crm/crm.h>
 #include <time.h>
 #include <ctype.h>

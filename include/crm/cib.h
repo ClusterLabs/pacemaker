@@ -18,8 +18,6 @@
 #ifndef CIB__H
 #define CIB__H
 
-#include <portability.h>
-
 #include <clplumbing/ipc.h>
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>

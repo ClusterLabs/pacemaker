@@ -27,7 +27,7 @@
  * 3) Optional and additional actions analysis?
  */
 
-#include <portability.h>
+#include <lha_internal.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>

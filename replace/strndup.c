@@ -1,4 +1,4 @@
-#include <portability.h>
+#include <lha_internal.h>
 #include <stdlib.h>
 #include <string.h>
 /*

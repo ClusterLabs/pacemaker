@@ -65,13 +65,11 @@ libpengine_la_SOURCES	= pengine.c allocate.c utils.c \
 			native.c group.c clone.c master.c graph.c
 
 pengine_SOURCES	= main.c
-pengine_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 pengine_LDADD	= $(COMMONLIBS)	$(top_builddir)/lib/crm/cib/libcib.la
 # libcib for get_object_root()
 #		$(top_builddir)/lib/hbclient/libhbclient.la
 
 ptest_SOURCES	= ptest.c 
-ptest_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 ptest_LDADD	= $(COMMONLIBS)						\
 		$(top_builddir)/lib/crm/cib/libcib.la			\
 		$(top_builddir)/lib/crm/transition/libtransitioner.la

@@ -34,4 +34,4 @@ lib_LTLIBRARIES = libstonithd.la
 libstonithd_la_SOURCES = stonithd_lib.c stonithd_msg.c
 libstonithd_la_LDFLAGS = $(COMMONLIBS)
 
-AM_CFLAGS = $(INCLUDES) -DVAR_LIB_D='"$(havarlibdir)"'
+AM_CFLAGS = $(INCLUDES)

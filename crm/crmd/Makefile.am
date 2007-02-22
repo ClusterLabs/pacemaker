@@ -62,7 +62,6 @@ noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h 	\
 		crmd_lrm.h
 
 atest_SOURCES	= atest.c
-atest_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 atest_LDADD	= $(COMMONLIBS)
 
 
@@ -72,7 +71,6 @@ crmd_SOURCES	= main.c crmd.c 					\
 		cib.c pengine.c tengine.c lrm.c 			\
 		utils.c misc.c
 
-crmd_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 crmd_LDADD	= $(COMMONLIBS) 					\
 		  $(top_builddir)/lib/lrm/liblrm.la			\
 		  $(top_builddir)/membership/ccm/libccmclient.la  

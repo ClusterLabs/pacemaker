@@ -21,7 +21,7 @@
  * It's a part of Local Resource Manager. Currently it's used by lrmd only.
  */
 
-#include <portability.h>
+#include <lha_internal.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>

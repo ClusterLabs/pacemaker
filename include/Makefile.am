@@ -19,16 +19,16 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-MAINTAINERCLEANFILES    = Makefile.in ha_version.h
+MAINTAINERCLEANFILES    = Makefile.in ha_version.h config.h.in
 
 EXTRA_DIST = ha_version.h
 
 includedir=$(base_includedir)/heartbeat
 
 
-noinst_HEADERS	        = hb_api_core.h ha_version.h
+noinst_HEADERS	        = hb_api_core.h config.h lha_internal.h ha_version.h
 include_HEADERS	        = apphb.h apphb_notify.h HBauth.h HBcomm.h	\
-			  ha_msg.h heartbeat.h hb_api.h			\
+			  ha_msg.h heartbeat.h hb_api.h	hb_config.h	\
 			  recoverymgr.h replace_uuid.h compress.h
 
 SUBDIRS                 = clplumbing ocf pils saf 			\

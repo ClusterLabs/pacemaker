@@ -17,7 +17,7 @@
  */
 
 /* put these first so that uuid_t is defined without conflicts */
-#include <portability.h>
+#include <lha_internal.h>
 #include <ocf/oc_event.h>
 #include <ocf/oc_membership.h>
 

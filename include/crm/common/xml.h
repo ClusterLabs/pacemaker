@@ -18,7 +18,6 @@
 #ifndef CRM_COMMON_XML__H
 #define CRM_COMMON_XML__H
 
-#include <portability.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>

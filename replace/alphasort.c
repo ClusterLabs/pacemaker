@@ -28,7 +28,7 @@
  ***************************************************************************
  */
 
-#include <portability.h>
+#include <lha_internal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 

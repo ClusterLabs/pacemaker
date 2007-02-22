@@ -103,7 +103,7 @@
  *
  */
 
-#include <portability.h>
+#include <lha_internal.h>
 #include <sys/types.h>
 #include <dirent.h>
 #include <stdlib.h>

@@ -74,7 +74,7 @@ LDIRECTORD_DIR = ldirectord
 endif
 
 SUBDIRS	= $(LIBLTDL_DIR) debian pkg port replace include lib                 \
-          heartbeat membership telecom linux-ha contrib resources lrm crm    \
+          heartbeat membership telecom contrib resources lrm crm	     \
           fencing logd $(SNMP_SUBAGENT_DIR) tools doc cts $(MGMT_DIR)        \
           $(CIM_PROVIDER_DIR) $(LDIRECTORD_DIR) config $(TSA_PLUGIN_DIR)
 

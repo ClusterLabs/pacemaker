@@ -19,7 +19,6 @@
 #ifndef CIB_IO__H
 #define CIB_IO__H
 
-#include <portability.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>

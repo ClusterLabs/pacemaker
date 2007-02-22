@@ -58,7 +58,6 @@ cl_respawn_LDADD	= $(top_builddir)/lib/clplumbing/libplumb.la	\
 
 
 attrd_SOURCES		= attrd.c
-attrd_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 attrd_LDADD		=  $(CRM_DEBUG_LIBS)				\
 		  $(top_builddir)/lib/clplumbing/libplumb.la		\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
@@ -68,7 +67,6 @@ attrd_LDADD		=  $(CRM_DEBUG_LIBS)				\
 		  $(LIBRT)
 
 pingd_SOURCES		= pingd.c
-pingd_CFLAGS		= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 pingd_LDADD		=  $(CRM_DEBUG_LIBS)				\
 		  $(top_builddir)/lib/clplumbing/libplumb.la		\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
@@ -77,7 +75,6 @@ pingd_LDADD		=  $(CRM_DEBUG_LIBS)				\
 		  $(LIBRT)
 
 attrd_updater_SOURCES	= attrd_updater.c
-attrd_updater_CFLAGS	= -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
 attrd_updater_LDADD	=  $(CRM_DEBUG_LIBS)				\
 		  $(top_builddir)/lib/clplumbing/libplumb.la		\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\

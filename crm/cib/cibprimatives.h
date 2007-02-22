@@ -19,7 +19,6 @@
 #ifndef CIB_PRIMATIVES__H
 #define CIB_PRIMATIVES__H
 
-#include <portability.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>

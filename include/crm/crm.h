@@ -24,14 +24,11 @@
 #undef MAX
 
 #include <string.h>
-#include <portability.h>
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_malloc.h>
 #ifdef MCHECK
 #include <mcheck.h>
 #endif
-
-#include <config.h>
 
 #ifndef CRM_DEV_BUILD
 #  define CRM_DEV_BUILD 0
@@ -261,20 +258,7 @@ extern void crm_log_message_adv(
 
 #define crm_str(x)    (const char*)(x?x:"<null>")
 
-#if CRM_USE_MALLOC
-#  define crm_malloc0(malloc_obj, length) do {				\
-		malloc_obj = malloc(length);				\
-		CRM_ASSERT(malloc_obj != NULL);				\
-		memset(malloc_obj, 0, length);				\
-	} while(0)
-#  define crm_realloc(realloc_obj, length)				\
-	{								\
-		realloc_obj = realloc(realloc_obj, length);			\
-		CRM_ASSERT(realloc_obj != NULL);			\
-	} while(0)
-#  define crm_free(free_obj) if(free_obj) { free(free_obj); free_obj=NULL; }
-#else
-#  if CRM_DEV_BUILD
+#if CRM_DEV_BUILD
 #    define crm_malloc0(malloc_obj, length) do {			\
 		if(malloc_obj) {					\
 			crm_err("Potential memory leak:"		\
@@ -301,7 +285,7 @@ extern void crm_log_message_adv(
 		cl_free(free_obj);				\
 		free_obj=NULL;					\
 	}
-#  else
+#else
 #    define crm_malloc0(malloc_obj, length) do {			\
 		malloc_obj = cl_malloc(length);				\
 		CRM_ASSERT(malloc_obj != NULL);				\
@@ -313,7 +297,6 @@ extern void crm_log_message_adv(
 	} while(0)
 	
 #    define crm_free(free_obj) if(free_obj) { cl_free(free_obj); free_obj=NULL; }
-#  endif
 #endif
 
 #define crm_msg_del(msg) if(msg != NULL) { ha_msg_del(msg); msg = NULL; }
