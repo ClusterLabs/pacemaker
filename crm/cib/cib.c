@@ -1,4 +1,3 @@
-/* $Id: cib.c,v 1.57 2005/06/14 10:37:04 davidlee Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,7 +38,6 @@
 #include <cibio.h>
 #include <cibmessages.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 
 

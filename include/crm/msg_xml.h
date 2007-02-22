@@ -1,4 +1,3 @@
-/* $Id: msg_xml.h,v 1.56 2006/06/23 08:33:53 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

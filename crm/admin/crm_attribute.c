@@ -1,4 +1,3 @@
-/* $Id: crm_attribute.c,v 1.18 2006/06/01 16:05:59 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -49,7 +48,6 @@
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
 #endif
-#include <crm/dmalloc_wrapper.h>
 void usage(const char *cmd, int exit_status);
 
 gboolean BE_QUIET = FALSE;
@@ -209,15 +207,14 @@ main(int argc, char **argv)
 		return rc;
 	}
 	
-	if(safe_str_eq(crm_system_name, "crm_master")
-	   || (dest_uname == NULL && safe_str_eq(crm_system_name, "crm_standby"))) {
+	if(dest_uname == NULL) {
 		struct utsname name;
 		if(uname(&name) != 0) {
 			cl_perror("uname(3) call failed");
 			return 1;
 		}
 		dest_uname = name.nodename;
-		crm_info("Detected: %s", dest_uname);
+		crm_info("Detected uname: %s", dest_uname);
 	}
 
 	if(dest_node == NULL && dest_uname != NULL) {
@@ -260,9 +257,9 @@ main(int argc, char **argv)
 		crm_malloc0(attr_name, len);
 		sprintf(attr_name, "master-%s", rsc_id);
 
-		len = 2 + strlen(attr_name) + strlen(dest_node);
+		len = 3 + strlen(type) + strlen(attr_name) + strlen(dest_node);
 		crm_malloc0(attr_id, len);
-		sprintf(attr_id, "%s-%s", attr_name, dest_node);
+		sprintf(attr_id, "%s-%s-%s", type, attr_name, dest_node);
 
 		len = 8 + strlen(dest_node);
 		crm_malloc0(set_name, len);
@@ -444,7 +441,7 @@ usage(const char *cmd, int exit_status)
 	
 	fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
 		"UUID of the node to change\n", "node-uuid", 'u');
-	fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
+	fprintf(stream, "\t--%s (-%c) <node_uname>\t: "
 		"uname of the node to change\n", "node-uname", 'U');
 
 	if(safe_str_eq(cmd, "crm_failcount")) {

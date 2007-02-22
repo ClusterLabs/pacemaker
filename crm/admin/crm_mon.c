@@ -1,4 +1,3 @@
-/* $Id: crm_mon.c,v 1.30 2006/08/14 15:59:18 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -52,7 +51,6 @@
 #  include <getopt.h>
 #endif
 
-#include <crm/dmalloc_wrapper.h>
 
 /* GMainLoop *mainloop = NULL; */
 const char *crm_system_name = "crm_mon";

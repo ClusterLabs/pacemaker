@@ -1,4 +1,3 @@
-/* $Id: graph.c,v 1.15 2006/05/29 13:22:48 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

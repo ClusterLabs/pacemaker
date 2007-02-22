@@ -1,4 +1,3 @@
-/* $Id: cibmon.c,v 1.29 2005/10/25 14:02:15 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -48,7 +47,6 @@
 #  include <getopt.h>
 #endif
 #include <ha_msg.h> /* someone complaining about _ha_msg_mod not being found */
-#include <crm/dmalloc_wrapper.h>
 
 #define UPDATE_PREFIX "cib.updates:"
 

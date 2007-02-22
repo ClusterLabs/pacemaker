@@ -1,4 +1,3 @@
-/* $Id: ptest.c,v 1.80 2006/07/18 06:15:54 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -312,7 +311,6 @@ main(int argc, char **argv)
 		crm_free(msg_buffer);
 	}
 	
-	crm_zero_mem_stats(NULL);
 #ifdef HA_MALLOC_TRACK
 	cl_malloc_dump_allocated(LOG_DEBUG_2, TRUE);
 #endif
@@ -415,7 +413,7 @@ main(int argc, char **argv)
 	dot_write("}");
 
 	transition = unpack_graph(data_set.graph);
-	print_graph(LOG_NOTICE, transition);
+	print_graph(LOG_DEBUG, transition);
 	do {
 		graph_rc = run_graph(transition);
 		
@@ -429,11 +427,6 @@ main(int argc, char **argv)
 	cleanup_alloc_calculations(&data_set);
 	destroy_graph(transition);
 	
-	crm_mem_stats(NULL);
-#ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(LOG_ERR, TRUE);
-#endif
- 	CRM_CHECK(crm_mem_stats(NULL) == FALSE, all_good = FALSE; crm_err("Memory leak detected"));
 	CRM_CHECK(graph_rc == transition_complete, all_good = FALSE; crm_err("An invalid transition was produced"));
 
 	crm_free(cib_object);	
@@ -442,6 +435,9 @@ main(int argc, char **argv)
 	muntrace();
 #endif
 	
+#ifdef HA_MALLOC_TRACK
+	cl_malloc_dump_allocated(LOG_ERR, TRUE);
+#endif
 
 	/* required for MallocDebug.app */
 	if(inhibit_exit) {

@@ -36,7 +36,6 @@
 #include <fsa_proto.h>
 #include <fsa_matrix.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 longclock_t action_start = 0;
 longclock_t action_stop = 0;
@@ -50,7 +49,7 @@ char	*fsa_our_dc_version = NULL;
 ll_lrm_t	*fsa_lrm_conn;
 ll_cluster_t	*fsa_cluster_conn;
 oc_node_list_t	*fsa_membership_copy;
-const char	*fsa_our_uuid = NULL;
+char		*fsa_our_uuid = NULL;
 const char	*fsa_our_uname = NULL;
 
 fsa_timer_t *wait_timer = NULL;
@@ -638,6 +637,10 @@ do_state_transition(long long actions,
 	if(next_state != S_IDLE) {
 		crm_timer_stop(recheck_timer);
 	}
+
+#ifdef HA_MALLOC_TRACK
+	cl_malloc_dump_allocated(LOG_DEBUG, TRUE);
+#endif
 	
 	switch(next_state) {
 		case S_PENDING:			

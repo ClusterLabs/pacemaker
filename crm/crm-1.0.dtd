@@ -39,6 +39,7 @@ TODO
 
           cib_feature_revision  CDATA   #IMPLIED
           crm_feature_set       CDATA   #IMPLIED
+          remote_access_port    CDATA   #IMPLIED        
 
           dc_uuid        CDATA             #IMPLIED
           ccm_transition CDATA             #IMPLIED

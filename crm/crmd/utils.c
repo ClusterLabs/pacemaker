@@ -36,7 +36,6 @@
 #include <crmd_messages.h>
 #include <crmd_utils.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 void copy_ccm_node(oc_node_t a_node, oc_node_t *a_node_copy);
 
@@ -1135,9 +1134,6 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	
 }
 
-
-
-
 struct crmd_ccm_data_s *
 copy_ccm_data(const struct crmd_ccm_data_s *ccm_input) 
 {
@@ -1151,6 +1147,47 @@ copy_ccm_data(const struct crmd_ccm_data_s *ccm_input)
 	ccm_input_copy->event = ccm_input->event;
 	
 	return ccm_input_copy;
+}
+
+void
+delete_ccm_data(struct crmd_ccm_data_s *ccm_input) 
+{
+	int lpc, offset = 0;
+	oc_node_t *a_node = NULL;
+	oc_ev_membership_t *oc_in = NULL;
+	if(ccm_input == NULL) {
+		return;
+	}
+	
+	oc_in = ccm_input->oc;
+	if(oc_in == NULL) {
+		goto bail;
+	}
+	
+	offset = oc_in->m_memb_idx;
+	for(lpc = 0; lpc < oc_in->m_n_member; lpc++) {
+		a_node = &oc_in->m_array[lpc+offset];
+		crm_free(a_node->node_uname);
+		a_node->node_uname = NULL;
+	}
+
+	offset = oc_in->m_in_idx;
+	for(lpc = 0; lpc < oc_in->m_n_in; lpc++) {
+		a_node = &oc_in->m_array[lpc+offset];
+		crm_free(a_node->node_uname);
+		a_node->node_uname = NULL;
+	}
+
+	offset = oc_in->m_out_idx;
+	for(lpc = 0; lpc < oc_in->m_n_out; lpc++) {
+		a_node = &oc_in->m_array[lpc+offset];
+		crm_free(a_node->node_uname);
+		a_node->node_uname = NULL;
+	}
+
+  bail:
+ 	crm_free(ccm_input->oc);
+ 	crm_free(ccm_input);
 }
 
 oc_ev_membership_t *
@@ -1211,8 +1248,7 @@ copy_ccm_oc_data(const oc_ev_membership_t *oc_in)
 		oc_node_t a_node      = oc_in->m_array[lpc+offset];
 		oc_node_t *a_node_copy = &(oc_copy->m_array[lpc+offset]);
 		crm_debug_3("Copying ccm member node %d", lpc);
-		copy_ccm_node(a_node, a_node_copy);
-		
+		copy_ccm_node(a_node, a_node_copy);		
 	}
 
 	offset = oc_in->m_in_idx;
@@ -1221,7 +1257,6 @@ copy_ccm_oc_data(const oc_ev_membership_t *oc_in)
 		oc_node_t *a_node_copy = &(oc_copy->m_array[lpc+offset]);
 		crm_debug_3("Copying ccm new node %d", lpc);
 		copy_ccm_node(a_node, a_node_copy);
-		
 	}
 
 	offset = oc_in->m_out_idx;
@@ -1243,21 +1278,61 @@ copy_ccm_node(oc_node_t a_node, oc_node_t *a_node_copy)
 		  a_node.node_id, a_node.node_born_on,
 		  a_node.node_uname);
 	
+	if(a_node_copy->node_uname != NULL) {
+		crm_debug_2("%p (%s) already copied", a_node_copy, a_node_copy->node_uname);
+		return;
+	}
+
 	a_node_copy->node_id      = a_node.node_id;
-	a_node_copy->node_born_on = a_node.node_born_on;	
+	a_node_copy->node_born_on = a_node.node_born_on;
 	a_node_copy->node_uname   = NULL;
 	
 	if(a_node.node_uname != NULL) {
-			a_node_copy->node_uname =
-				crm_strdup(a_node.node_uname);
+		a_node_copy->node_uname = crm_strdup(a_node.node_uname);
 	} else {
-		crm_err("Node Id %d had a NULL uname!",
-			a_node.node_id);
+		crm_err("Node Id %d had a NULL uname!", a_node.node_id);
 	}
-	
 	crm_debug_3("Copied ccm node: id=%d, born=%d, uname=%s",
 		  a_node_copy->node_id, a_node_copy->node_born_on,
 		  a_node_copy->node_uname);
+}
+
+static gboolean
+ghash_node_clfree(gpointer key, gpointer value, gpointer user_data)
+{
+	/* value->node_uname is free'd as "key" */
+	if(key != NULL) {
+		crm_free(key);
+	}
+	if(value != NULL) {
+		crm_free(value);
+	}
+	return TRUE;
+}
+
+void
+free_ccm_cache(oc_node_list_t *tmp) 
+{
+	/* Free the old copy */
+	if(tmp == NULL) {
+		return;
+	}
+	
+	if(tmp->members != NULL) {
+		g_hash_table_foreach_remove(
+			tmp->members, ghash_node_clfree, NULL);
+	}
+	if(tmp->new_members != NULL) {
+		g_hash_table_foreach_remove(
+			tmp->new_members, ghash_node_clfree, NULL);
+	}
+	if(tmp->dead_members != NULL) {
+		g_hash_table_foreach_remove(
+			tmp->dead_members, ghash_node_clfree, NULL);
+	}
+	
+	crm_free(tmp);
+	crm_debug_3("Free'd old copies");
 }
 
 crm_data_t*
@@ -1337,6 +1412,7 @@ process_client_disconnect(crmd_client_t *curr_client)
 		
 	if(the_subsystem != NULL) {
 		the_subsystem->ipc = NULL;
+		the_subsystem->client = NULL;		
 		crm_info("Received HUP from %s:[%d]",
 			 the_subsystem->name, the_subsystem->pid);
 		
@@ -1347,9 +1423,11 @@ process_client_disconnect(crmd_client_t *curr_client)
 	
 	if (curr_client->table_key != NULL) {
 		/*
-		 * Key is destroyed below:
+		 * Key is destroyed below as:
 		 *	curr_client->table_key
 		 * Value is cleaned up by:
+		 *      crmd_ipc_connection_destroy
+		 *   which will also call:
 		 *	G_main_del_IPC_Channel
 		 */
 		g_hash_table_remove(ipc_clients, curr_client->table_key);

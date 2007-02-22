@@ -29,6 +29,8 @@ extern void crmd_ccm_msg_callback(
  * Returning FALSE means "we're all done, close the connection"
  */
 
+extern void crmd_ipc_connection_destroy(gpointer user_data);
+
 extern gboolean crmd_ha_msg_dispatch(
 	ll_cluster_t *cluster_conn, gpointer user_data);
 

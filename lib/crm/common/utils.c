@@ -1,4 +1,3 @@
-/* $Id: utils.c,v 1.64 2006/08/14 09:06:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -53,7 +52,6 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
-#include <crm/dmalloc_wrapper.h>
 
 #ifndef MAXLINE
 #    define MAXLINE 512
@@ -407,41 +405,6 @@ generate_hash_value(const char *src_node, const char *src_subsys)
 	return hash_value;
 }
 
-gboolean
-decode_hash_value(gpointer value, char **node, char **subsys)
-{
-	char *char_value = (char*)value;
-	int value_len = strlen(char_value);
-
-	CRM_CHECK(value != NULL,  return FALSE);
-	CRM_CHECK(node != NULL,   return FALSE);
-	CRM_CHECK(subsys != NULL, return FALSE);
-	
-	*node = NULL;
-	*subsys = NULL;
-
-	crm_info("Decoding hash value: (%s:%d)", char_value, value_len);
-    	
-	if (strcasecmp(CRM_SYSTEM_DC, (char*)value) == 0) {
-		*node = NULL;
-		*subsys = (char*)crm_strdup(char_value);
-		CRM_CHECK(*subsys != NULL, return FALSE);
-		crm_info("Decoded value: (%s:%d)", *subsys,
-			 (int)strlen(*subsys));
-		return TRUE;
-		
-	} else if (decodeNVpair(char_value, '_', node, subsys)) {
-		return TRUE;
-	}
-
-	crm_free(*node);
-	crm_free(*subsys);
-	*node = NULL;
-	*subsys = NULL;
-	return FALSE;
-}
-
-
 char *
 crm_itoa(int an_int)
 {
@@ -526,6 +489,7 @@ crm_log_message_adv(int level, const char *prefix, const HA_Message *msg)
 int
 compare_version(const char *version1, const char *version2)
 {
+	int rc = 0;
 	int lpc = 0;
 	char *step1 = NULL, *step2 = NULL;
 	char *rest1 = NULL, *rest2 = NULL;
@@ -540,7 +504,7 @@ compare_version(const char *version1, const char *version2)
 	
 	rest1 = crm_strdup(version1);
 	rest2 = crm_strdup(version2);
-	
+
 	while(1) {
 		int cmp = 0;
 		int step1_i = 0;
@@ -550,6 +514,15 @@ compare_version(const char *version1, const char *version2)
 		decodeNVpair(rest1, '.', &step1, &tmp1);
 		decodeNVpair(rest2, '.', &step2, &tmp2);
 
+		if(step1 == NULL && step2 == NULL) {
+			CRM_CHECK(tmp1 == tmp2 && tmp1 == NULL,
+				  crm_err("Leftover data: %s, %s",
+					  crm_str(tmp1), crm_str(tmp2)));
+			crm_free(tmp1);
+			crm_free(tmp2);
+			break;
+		}
+		
 		if(step1 != NULL) {
 			step1_i = crm_parse_int(step1, NULL);
 		}
@@ -571,27 +544,34 @@ compare_version(const char *version1, const char *version2)
 		crm_free(rest1);
 		crm_free(rest2);
 
-		rest1 = tmp1;
-		rest2 = tmp2;
-
-		if(step1 == NULL && step2 == NULL) {
-			break;
-		}
-
 		crm_free(step1);
 		crm_free(step2);
+
+		rest1 = tmp1;
+		rest2 = tmp2;
 		
 		if(cmp < 0) {
-			crm_debug_3("%s < %s", version1, version2);
-			return -1;
+			rc = -1;
+			break;
 			
 		} else if(cmp > 0) {
-			crm_debug_3("%s > %s", version1, version2);
-			return 1;
+			rc = 1;
+			break;
 		}
 	}
-	crm_debug_3("%s == %s", version1, version2);
-	return 0;
+	
+	crm_free(rest1);
+	crm_free(rest2);
+
+	if(rc == 0) {
+		crm_debug_3("%s == %s", version1, version2);
+	} else if(rc < 0) {
+		crm_debug_3("%s < %s", version1, version2);
+	} else if(rc > 0) {
+		crm_debug_3("%s > %s", version1, version2);
+	}
+	
+	return rc;
 }
 
 gboolean do_stderr = FALSE;
@@ -722,16 +702,29 @@ safe_str_neq(const char *a, const char *b)
 }
 
 char *
-crm_strdup(const char *src)
+crm_strdup_fn(const char *src, const char *file, const char *fn, int line)
 {
 	char *dup = NULL;
 	CRM_CHECK(src != NULL, return NULL);
+#ifdef HA_MALLOC_TRACK
+	dup = cl_malloc_track(strlen(src) + 1, file, fn, line);
+#else
 	crm_malloc0(dup, strlen(src) + 1);
+#endif
 	return strcpy(dup, src);
 }
 
 static GHashTable *crm_uuid_cache = NULL;
 static GHashTable *crm_uname_cache = NULL;
+
+void
+empty_uuid_cache(void)
+{
+	if(crm_uuid_cache != NULL) {
+		g_hash_table_destroy(crm_uuid_cache);
+		crm_uuid_cache = NULL;
+	}
+}
 
 void
 unget_uuid(const char *uname)
@@ -1223,29 +1216,36 @@ decode_transition_magic(
 	char *magic2 = NULL;
 	char *status = NULL;
 
+	gboolean result = TRUE;
+	
 	if(decodeNVpair(magic, ':', &status, &magic2) == FALSE) {
 		crm_err("Couldn't find ':' in: %s", magic);
-		return FALSE;
+		result = FALSE;
+		goto bail;
 	}
 
 	if(decodeNVpair(magic2, ';', &rc, &key) == FALSE) {
 		crm_err("Couldn't find ';' in: %s", magic2);
-		return FALSE;
+		result = FALSE;
+		goto bail;
 	}
 
 	
 	CRM_CHECK(decode_transition_key(key, uuid, transition_id, action_id),
-		  return FALSE);
+		  result = FALSE;
+		  goto bail;
+		);
 	
 	*op_rc = crm_parse_int(rc, NULL);
 	*op_status = crm_parse_int(status, NULL);
 
+  bail:
 	crm_free(rc);
 	crm_free(key);
 	crm_free(magic2);
 	crm_free(status);
 	
-	return TRUE;
+	return result;
 }
 
 char *
@@ -1428,171 +1428,6 @@ filter_reload_parameters(crm_data_t *param_set, const char *restart_string)
 		);
 }
 
-gboolean
-crm_mem_stats(volatile cl_mem_stats_t *mem_stats)
-{
-	volatile cl_mem_stats_t *active_stats = mem_stats;
-	if(active_stats == NULL) {
-		active_stats = cl_malloc_getstats();
-	}
-	CRM_CHECK(active_stats != NULL, ;);
-#ifndef CRM_USE_MALLOC
-	if(active_stats->numalloc > active_stats->numfree) {
-		crm_warn("Potential memory leak detected:"
-			" %lu alloc's vs. %lu free's (%lu)"
-			" (%lu bytes not freed: req=%lu, alloc'd=%lu)",
-			active_stats->numalloc, active_stats->numfree,
-			active_stats->numalloc - active_stats->numfree,
-			active_stats->nbytes_alloc, active_stats->nbytes_req,
-			active_stats->mallocbytes);
-		return TRUE;
-		
-	} else if(active_stats->numalloc < active_stats->numfree) {
-		crm_debug("Process shrank: %lu alloc's vs. %lu free's (%lu)",
-			  active_stats->numalloc, active_stats->numfree,
-			  active_stats->numalloc - active_stats->numfree);
-	}
-#endif
-	return FALSE;
-}
-
-void
-crm_zero_mem_stats(volatile cl_mem_stats_t *stats)
-{
-	if(stats == NULL) {
-		crm_debug("Resetting global memory stats");
-		stats = cl_malloc_getstats();
-	}
-	stats->numalloc = 0;
-	stats->numfree = 0;
-	stats->numrealloc = 0;
-	stats->nbytes_req = 0;
-	stats->nbytes_alloc = 0;
-	stats->mallocbytes = 0;
-	stats->arena = 0;
-}
-
-void
-crm_save_mem_stats(const char *location, cl_mem_stats_t *saved_stats)
-{
-	volatile cl_mem_stats_t *stats = cl_malloc_getstats();
-	if(saved_stats == NULL) {
-		return;
-	}
-	crm_debug_2("Saving memory stats: %s", location);
-	*saved_stats = *stats;
-}
-
-void
-crm_xml_nbytes(crm_data_t *xml, long *bytes, long *allocs, long *frees) 
-{
-	crm_data_t *xml_copy = NULL;
-	volatile cl_mem_stats_t *stats = cl_malloc_getstats();
-
-	if(xml == NULL) {
-		*bytes  = 0;
-		*allocs = 0;
-		*frees  = 0;
-		return;
-	}
-	
-	*bytes  = 0 - stats->nbytes_alloc;
-	*allocs = 0 - stats->numalloc;
-	*frees  = 0 - stats->numfree;
-
-	xml_copy = copy_xml(xml);
-
-	*bytes  += stats->nbytes_alloc;
-	*allocs += stats->numalloc;
-	*frees  += stats->numfree;
-
-	crm_debug_3("XML size: %ld bytes, %ld allocs, %ld frees",
-		    *bytes, *allocs, *frees);
-	
-	free_xml(xml_copy);
-}
-
-void
-crm_adjust_mem_stats(volatile cl_mem_stats_t *stats, long bytes, long allocs, long frees) 
-{	
-	if(bytes == 0&& allocs == 0 && frees == 0) {
-		return;
-	}
-
-	if(stats == NULL) {
-		stats = cl_malloc_getstats();
-	}
-	
-	stats->nbytes_alloc -= bytes;
-	stats->numalloc     -= allocs;
-	stats->numfree      -= frees;
-
-	crm_debug("Adjusted CIB Memory usage by: %10ld bytes, %5ld allocs, %5ld frees",
-		  bytes, allocs, frees);
-}
-
-cl_mem_stats_t *crm_running_stats = NULL;
-
-gboolean
-crm_diff_mem_stats(int log_level_up, int log_level_down, const char *location,
-		   volatile cl_mem_stats_t *stats, volatile cl_mem_stats_t *saved_stats)
-{
-	long delta_allocs = 0;
-	long delta_frees  = 0;
-	long delta_bytes  = 0;
-	long delta_req    = 0;
-
-	gboolean increase = TRUE;
-	gboolean reset_on_change = (log_level_up == LOG_DEBUG);
-
-/* 	long delta_malloc = stats->mallocbytes - saved_stats->mallocbytes; */
-	return FALSE;
-	
-	if(stats == NULL && saved_stats == NULL) {
-		crm_err("Comparision doesnt make sense");
-		return FALSE;
-		
-	} else if(stats == NULL) {
-		stats = cl_malloc_getstats();
-
-	} else if(saved_stats == NULL) {
-		saved_stats = cl_malloc_getstats();
-	}
-
-	delta_allocs = stats->numalloc - saved_stats->numalloc;
-	delta_frees  = stats->numfree - saved_stats->numfree;
-	delta_bytes  = stats->nbytes_alloc - saved_stats->nbytes_alloc;
-	delta_req    = stats->nbytes_req - saved_stats->nbytes_req;
-	
-	if(delta_bytes == 0) {
-		crm_debug_2("Memory usage constant at %s: %ld alloc's %ld free's",
-			    location, delta_allocs, delta_frees);
-		return FALSE;
-	}
-
-	if(delta_bytes < 0) {
-		increase = FALSE;
-		reset_on_change = (log_level_down == LOG_DEBUG);
-	}
-
- 	do_crm_log(increase?log_level_up:log_level_down,
-		      "Memory usage %s detected at %s:\t"
-		      " %10ld alloc's vs. %10ld free's (%5ld change"
-		      " %10ld bytes leaked)",
-		      increase?"increase":"decrease", location,
-		      delta_allocs, delta_frees, delta_allocs - delta_frees,
-		      delta_bytes);
-	
-	if(reset_on_change) {
-		crm_info("Resetting %s stats", location);
-		*stats = *saved_stats;
-		if(crm_running_stats) {
-			crm_adjust_mem_stats(crm_running_stats, delta_bytes, delta_allocs, delta_frees);
-		}
-	}
-	return TRUE;
-}
-
 void
 crm_abort(const char *file, const char *function, int line,
 	  const char *assert_condition, gboolean do_fork)
@@ -1736,21 +1571,20 @@ write_last_sequence(
 	len += strlen(directory);
 	len += strlen(series);
 	crm_malloc0(series_file, len);
-	CRM_CHECK(series_file != NULL, return);
 	sprintf(series_file, "%s/%s.last", directory, series);
 	
 	file_strm = fopen(series_file, "w");
 	if(file_strm == NULL) {
 		crm_err("%s does not exist", series_file);
-		crm_free(series_file);
-		return;
+		goto bail;
 	}
 
 	rc = fprintf(file_strm, "%s", buffer);
 	if(rc < 0) {
 		cl_perror("Cannot write output to %s", series_file);
 	}
-	
+
+  bail:
 	fflush(file_strm);
 	fclose(file_strm);
 

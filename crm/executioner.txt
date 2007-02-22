@@ -9,7 +9,6 @@ And did I say yet that this is still a DRAFT!!!!!! ?
 
 
 Title: The Executioner
-Revision: $Id: executioner.txt,v 1.1 2003/08/08 18:19:47 lars Exp $
 Author: Lars Marowsky-Brée
 Acknowledgements: David Brower, Oracle
 		  Alan Robertson, IBM

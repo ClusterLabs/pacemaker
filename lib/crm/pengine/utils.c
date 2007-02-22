@@ -1,4 +1,3 @@
-/* $Id: utils.c,v 1.11 2006/08/14 09:14:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -616,6 +615,7 @@ unpack_operation(
 		value = "force migration";
 		
 	} else if(safe_str_eq(value, "stop")) {
+		action->on_fail = action_fail_stop;
 		action->fail_role = RSC_ROLE_STOPPED;
 		value = "stop resource";
 		

@@ -249,7 +249,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="18">
+   <synapse id="18" priority="1000000">
      <action_set>
        <pseudo_event id="21" operation="notify" operation_key="ms-drbd0_post_notify_stop_0">
          <attributes crm_feature_set="1.0.8" CRM_meta_timeout="120000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" CRM_meta_notify_operation="stop" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
@@ -326,7 +326,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="24">
+   <synapse id="24" priority="1000000">
      <action_set>
        <pseudo_event id="27" operation="notify" operation_key="ms-drbd0_post_notify_promote_0">
          <attributes crm_feature_set="1.0.8" CRM_meta_timeout="120000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" CRM_meta_notify_operation="promote" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
@@ -409,7 +409,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="30">
+   <synapse id="30" priority="1000000">
      <action_set>
        <pseudo_event id="33" operation="notify" operation_key="ms-drbd0_post_notify_demote_0">
          <attributes crm_feature_set="1.0.8" CRM_meta_timeout="120000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" CRM_meta_notify_operation="demote" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>

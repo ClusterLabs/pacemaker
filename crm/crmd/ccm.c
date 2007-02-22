@@ -1,4 +1,3 @@
-/* $Id: ccm.c,v 1.106 2006/07/18 06:17:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -36,7 +35,6 @@
 #include <fsa_proto.h>
 #include <crmd_callbacks.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
@@ -49,7 +47,6 @@ void crmd_ccm_msg_callback(oc_ed_t event,
 			     size_t size,
 			     const void *data);
 
-gboolean ghash_node_clfree(gpointer key, gpointer value, gpointer user_data);
 void ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data);
 
 #define CCM_EVENT_DETAIL 0
@@ -334,27 +331,18 @@ do_ccm_update_cache(long long action,
 		
 		for(lpc=0; lpc < membership_copy->members_size; lpc++) {
 			oc_node_t *member = NULL;
-			crm_debug_3("Copying member %d", lpc);
-			crm_malloc0(member, sizeof(oc_node_t));
-			
-			if(member == NULL) {
-				continue;
-			}
+			CRM_CHECK(oc->m_array[offset+lpc].node_uname != NULL,
+				  continue);
 
-			member->node_id =
-				oc->m_array[offset+lpc].node_id;
+			crm_malloc0(member, sizeof(oc_node_t));
+
+			member->node_id = oc->m_array[offset+lpc].node_id;
 			
 			member->node_born_on =
 				oc->m_array[offset+lpc].node_born_on;
 			
-			member->node_uname = NULL;
-			if(oc->m_array[offset+lpc].node_uname != NULL) {
-				member->node_uname =
-					crm_strdup(oc->m_array[offset+lpc].node_uname);
-			} else {
-				crm_err("Node %d had a NULL uname",
-					member->node_id);
-			}
+			member->node_uname =
+				crm_strdup(oc->m_array[offset+lpc].node_uname);
 			g_hash_table_insert(
 				members, member->node_uname, member);	
 		}
@@ -376,24 +364,19 @@ do_ccm_update_cache(long long action,
 		
 		for(lpc=0; lpc < membership_copy->new_members_size; lpc++) {
 			oc_node_t *member = NULL;
+			CRM_CHECK(oc->m_array[offset+lpc].node_uname != NULL,
+				  continue);
+
 			crm_malloc0(member, sizeof(oc_node_t));
 
-			if(member == NULL) {
-				continue;
-			}
-			
-			member->node_uname = NULL;
 			member->node_id = oc->m_array[offset+lpc].node_id;
+			
 			member->node_born_on =
 				oc->m_array[offset+lpc].node_born_on;
+			
+			member->node_uname =
+				crm_strdup(oc->m_array[offset+lpc].node_uname);
 
-			if(oc->m_array[offset+lpc].node_uname != NULL) {
-				member->node_uname =
-					crm_strdup(oc->m_array[offset+lpc].node_uname);
-			} else {
-				crm_err("Node %d had a NULL uname",
-					member->node_id);
-			}
 			g_hash_table_insert(
 				members, member->node_uname, member);	
 
@@ -417,23 +400,15 @@ do_ccm_update_cache(long long action,
 
 		for(lpc=0; lpc < membership_copy->dead_members_size; lpc++) {
 			oc_node_t *member = NULL;
+			CRM_CHECK(oc->m_array[offset+lpc].node_uname != NULL,
+				  continue);
+
 			crm_malloc0(member, sizeof(oc_node_t));
 
-			if(member == NULL) {
-				continue;
-			}
-			
 			member->node_id = oc->m_array[offset+lpc].node_id;
 			
 			member->node_born_on =
 				oc->m_array[offset+lpc].node_born_on;
-			
-			member->node_uname = NULL;
-			CRM_DEV_ASSERT(oc->m_array[offset+lpc].node_uname != NULL);
-			
-			if(oc->m_array[offset+lpc].node_uname == NULL) {
-				continue;
-			}
 			
 			member->node_uname =
 				crm_strdup(oc->m_array[offset+lpc].node_uname);
@@ -453,22 +428,9 @@ do_ccm_update_cache(long long action,
 		    g_hash_table_size(fsa_membership_copy->members),
 		    g_hash_table_size(fsa_membership_copy->new_members),
 		    g_hash_table_size(fsa_membership_copy->dead_members));
-	
-	/* Free the old copy */
-	if(tmp != NULL) {
-		if(tmp->members != NULL)
-			g_hash_table_foreach_remove(
-				tmp->members, ghash_node_clfree, NULL);
-		if(tmp->new_members != NULL)
-			g_hash_table_foreach_remove(
-				tmp->new_members, ghash_node_clfree, NULL);
-		if(tmp->dead_members != NULL)
-			g_hash_table_foreach_remove(
-				tmp->dead_members, ghash_node_clfree, NULL);
-		crm_free(tmp);
-	}
-	crm_debug_3("Free'd old copies");
 
+	free_ccm_cache(tmp);
+	
 	set_bit_inplace(fsa_input_register, R_CCM_DATA);
 
 	if(cur_state != S_STOPPING) {
@@ -687,15 +649,4 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	free_xml(tmp1);
 }
 
-gboolean
-ghash_node_clfree(gpointer key, gpointer value, gpointer user_data)
-{
-	/* value->node_uname is free'd as "key" */
-	if(key != NULL) {
-		crm_free(key);
-	}
-	if(value != NULL) {
-		crm_free(value);
-	}
-	return TRUE;
-}
+

@@ -1,4 +1,3 @@
-/* $Id: crm_uuid.c,v 1.3 2006/05/29 11:53:53 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>

@@ -35,7 +35,6 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 GHashTable *crmd_peer_state = NULL;
 
@@ -233,9 +232,8 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 			route_message(C_IPC_MESSAGE, new_input);
 		}
 		delete_ha_msg_input(new_input);
-		
+		new_input = NULL;		
 		msg = NULL;
-		new_input = NULL;
 
 		if(client->ch_status != IPC_CONNECT) {
 			break;
@@ -410,29 +408,40 @@ crmd_client_status_callback(const char * node, const char * client,
 	trigger_fsa(fsa_source);
 }
 
-static void
+void
 crmd_ipc_connection_destroy(gpointer user_data)
 {
+	GCHSource *source = NULL;
 	crmd_client_t *client = user_data;
+
+/* Calling this function on an _active_ connection results in:
+ * crmd_ipc_connection_destroy (callbacks.c:431)
+ * -> G_main_del_IPC_Channel (GSource.c:478)
+ *  -> g_source_unref
+ *   -> G_CH_destroy_int (GSource.c:647)
+ *    -> crmd_ipc_connection_destroy (callbacks.c:437)\
+ *
+ * A better alternative is to call G_main_del_IPC_Channel() directly
+ */
 
 	if(client == NULL) {
 		crm_debug_4("No client to delete");
 		return;
 	}
-	
-	if(client->client_source != NULL) {
-		crm_debug_4("Deleting %s (%p) from mainloop",
-			    client->uuid, client->client_source);
-		G_main_del_IPC_Channel(client->client_source); 
-		client->client_source = NULL;
-	}
 
-	crm_debug_3("Freeing %s client", client->uuid);
+	crm_debug("Disconnecting client %s (%p)", client->table_key, client);
+	source = client->client_source;
+	client->client_source = NULL;
+	if(source != NULL) {
+		crm_debug("Deleting %s (%p) from mainloop",
+			  client->table_key, source);
+		G_main_del_IPC_Channel(source);
+	} 
 	crm_free(client->table_key);
 	crm_free(client->sub_sys);
 	crm_free(client->uuid);
 	crm_free(client);
-
+	
 	return;
 }
 
@@ -450,10 +459,9 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 		crmd_client_t *blank_client = NULL;
 		crm_debug_3("Channel connected");
 		crm_malloc0(blank_client, sizeof(crmd_client_t));
-	
-		if (blank_client == NULL) {
-			return FALSE;
-		}
+		CRM_ASSERT(blank_client != NULL);
+
+		crm_debug_2("Created client: %p", blank_client);
 		
 		client_channel->ops->set_recv_qlen(client_channel, 100);
 		client_channel->ops->set_send_qlen(client_channel, 100);
@@ -611,12 +619,8 @@ crmd_ccm_msg_callback(
 			C_CCM_CALLBACK, I_CCM_EVENT, event_data,
 			trigger_transition?A_TE_CANCEL:A_NOTHING,
 			TRUE, __FUNCTION__);
-		
-		if (event_data->oc) {
-			crm_free(event_data->oc);
-			event_data->oc = NULL;
-		}
-		crm_free(event_data);
+
+		delete_ccm_data(event_data);
 	} 
 	
 	oc_ev_callback_done(cookie);

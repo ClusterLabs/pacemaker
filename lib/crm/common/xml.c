@@ -1,4 +1,3 @@
-/* $Id: xml.c,v 1.104 2006/08/17 07:17:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,7 +40,6 @@
 #if HAVE_BZLIB_H
 #  include <bzlib.h>
 #endif
-#include <crm/dmalloc_wrapper.h>
 
 #define XML_BUFFER_SIZE	4096
 
@@ -2505,13 +2503,13 @@ validate_with_dtd(
 	CRM_CHECK(buffer != NULL, return FALSE);
 
  	doc = xmlParseMemory(buffer, strlen(buffer));
-	CRM_CHECK(doc != NULL, crm_free(buffer); return FALSE);
+	CRM_CHECK(doc != NULL, valid = FALSE; goto cleanup);
 	
 	dtd = xmlParseDTD(NULL, (const xmlChar *)dtd_file);
-	CRM_CHECK(dtd != NULL, crm_free(buffer); return TRUE);
+	CRM_CHECK(dtd != NULL, goto cleanup);
 
 	cvp = xmlNewValidCtxt();
-	CRM_CHECK(cvp != NULL, crm_free(buffer); return TRUE);
+	CRM_CHECK(cvp != NULL, goto cleanup);
 
 	if(to_logs) {
 		cvp->userData = (void *) LOG_ERR;
@@ -2525,15 +2523,16 @@ validate_with_dtd(
 	
 	if (!xmlValidateDtd(cvp, doc, dtd)) {
 		crm_err("CIB does not validate against %s", dtd_file);
-		valid = FALSE;
 		crm_log_xml_debug(xml_blob, "invalid");
+		valid = FALSE;
 	}
-
+	
+  cleanup:
 	xmlFreeValidCtxt(cvp);
 	xmlFreeDtd(dtd);
 	xmlFreeDoc(doc);
-	
 	crm_free(buffer);
+	
 #endif	
 	return valid;
 }

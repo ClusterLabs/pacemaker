@@ -1,4 +1,3 @@
-/* $Id: crm.h,v 1.98 2006/06/16 10:07:16 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -20,7 +19,6 @@
 #define CRM__H
 
 #include <stdlib.h>
-#include <ha_config.h>
 #include <glib.h>
 #undef MIN
 #undef MAX
@@ -179,9 +177,20 @@ extern gboolean crm_assert_failed;
 #define CRMD_ACTION_STATUS		"monitor"
 
 typedef GList* GListPtr;
+#define slist_destroy(child_type, child, parent, a)			\
+	{		 						\
+		GListPtr __crm_iter_head = parent;			\
+		child_type *child = NULL;				\
+		while(__crm_iter_head != NULL) {			\
+			child = __crm_iter_head->data;			\
+			__crm_iter_head = __crm_iter_head->next;	\
+			{ a; }						\
+		}							\
+		g_list_free(parent);					\
+	}
 
 #define slist_iter(child, child_type, parent, counter, a)		\
-	{								\
+	{		 						\
 		GListPtr __crm_iter_head = parent;			\
 		child_type *child = NULL;				\
 		int counter = 0;					\
@@ -200,29 +209,34 @@ typedef GList* GListPtr;
 
 #define LOG_MSG  LOG_DEBUG_3
 
+/*
+ * Throughout the macros below, note the leading, pre-comma, space in the
+ * various ' , ##args' occurences to aid portability across versions of 'gcc'.
+ *	http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html#Variadic-Macros
+ */
 #define do_crm_log(level, fmt, args...) do {				\
 		if(crm_log_level < (level)) {				\
 			continue;					\
 		} else if((level) > LOG_DEBUG) {			\
 			cl_log(LOG_DEBUG, "debug%d: %s: " fmt,		\
-			       level-LOG_INFO, __PRETTY_FUNCTION__, ##args); \
+			       level-LOG_INFO, __PRETTY_FUNCTION__ , ##args); \
 		} else {						\
 			cl_log(level, "%s: " fmt,			\
-			       __PRETTY_FUNCTION__, ##args);		\
+			       __PRETTY_FUNCTION__ , ##args);		\
 		}							\
 	} while(0)
 
-#define crm_crit(fmt, args...)    do_crm_log(LOG_CRIT,    fmt, ##args)
-#define crm_err(fmt, args...)     do_crm_log(LOG_ERR,     fmt, ##args)
-#define crm_warn(fmt, args...)    do_crm_log(LOG_WARNING, fmt, ##args)
-#define crm_notice(fmt, args...)  do_crm_log(LOG_NOTICE,  fmt, ##args)
-#define crm_info(fmt, args...)    do_crm_log(LOG_INFO,    fmt, ##args)
-#define crm_debug(fmt, args...)   do_crm_log(LOG_DEBUG,   fmt, ##args)
-#define crm_debug_2(fmt, args...) do_crm_log(LOG_DEBUG_2, fmt, ##args)
-#define crm_debug_3(fmt, args...) do_crm_log(LOG_DEBUG_3, fmt, ##args)
-#define crm_debug_4(fmt, args...) do_crm_log(LOG_DEBUG_4, fmt, ##args)
-#define crm_debug_5(fmt, args...) do_crm_log(LOG_DEBUG_5, fmt, ##args)
-#define crm_debug_6(fmt, args...) do_crm_log(LOG_DEBUG_6, fmt, ##args)
+#define crm_crit(fmt, args...)    do_crm_log(LOG_CRIT,    fmt , ##args)
+#define crm_err(fmt, args...)     do_crm_log(LOG_ERR,     fmt , ##args)
+#define crm_warn(fmt, args...)    do_crm_log(LOG_WARNING, fmt , ##args)
+#define crm_notice(fmt, args...)  do_crm_log(LOG_NOTICE,  fmt , ##args)
+#define crm_info(fmt, args...)    do_crm_log(LOG_INFO,    fmt , ##args)
+#define crm_debug(fmt, args...)   do_crm_log(LOG_DEBUG,   fmt , ##args)
+#define crm_debug_2(fmt, args...) do_crm_log(LOG_DEBUG_2, fmt , ##args)
+#define crm_debug_3(fmt, args...) do_crm_log(LOG_DEBUG_3, fmt , ##args)
+#define crm_debug_4(fmt, args...) do_crm_log(LOG_DEBUG_4, fmt , ##args)
+#define crm_debug_5(fmt, args...) do_crm_log(LOG_DEBUG_5, fmt , ##args)
+#define crm_debug_6(fmt, args...) do_crm_log(LOG_DEBUG_6, fmt , ##args)
 
 extern void crm_log_message_adv(
 	int level, const char *alt_debugfile, const HA_Message *msg);
@@ -303,5 +317,5 @@ extern void crm_log_message_adv(
 #endif
 
 #define crm_msg_del(msg) if(msg != NULL) { ha_msg_del(msg); msg = NULL; }
-
+#define crm_strdup(str) crm_strdup_fn(str, __FILE__, __PRETTY_FUNCTION__, __LINE__)
 #endif

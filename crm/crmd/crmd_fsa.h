@@ -1,4 +1,3 @@
-/* $Id: crmd_fsa.h,v 1.50 2006/02/20 12:10:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -61,7 +60,8 @@ struct crm_subsystem_s {
 		const char*	path;	  /* Command location */
  		const char*	command;  /* Command with path */
 		const char*	args;     /* Command arguments */
-
+		crmd_client_t*  client;   /* Client connection object */
+		
 		gboolean	sent_kill;
 		IPC_Channel	*ipc;	  /* How can we communicate with it */
 		long long	flag_connected;	  /*  */
@@ -115,7 +115,7 @@ extern ll_lrm_t       *fsa_lrm_conn;
 extern cib_t	      *fsa_cib_conn;
 
 extern const char *fsa_our_uname;
-extern const char *fsa_our_uuid;
+extern char	  *fsa_our_uuid;
 extern char	  *fsa_pe_ref; /* the last invocation of the PE */
 extern char       *fsa_our_dc;
 extern char	  *fsa_our_dc_version;

@@ -1,4 +1,3 @@
-/* $Id: crm_resource.c,v 1.46 2006/08/17 07:17:15 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -50,7 +49,6 @@
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
 #endif
-#include <crm/dmalloc_wrapper.h>
 void usage(const char *cmd, int exit_status);
 
 gboolean do_force = FALSE;
@@ -433,6 +431,7 @@ crmd_msg_callback(IPC_Channel * server, void *private_data)
 	       && server->ops->is_message_pending(server) == TRUE) {
 		if(new_input != NULL) {
 			delete_ha_msg_input(new_input);
+			new_input = NULL;
 		}
 		
 		if (server->ops->recv(server, &msg) != IPC_OK) {
@@ -454,16 +453,9 @@ crmd_msg_callback(IPC_Channel * server, void *private_data)
 			    new_input->msg, crm_system_name, our_pid,
 			    XML_ATTR_RESPONSE) == FALSE) {
 			crm_info("Message was not a CRM response. Discarding.");
-			continue;
 		}
-
-/* 		result = cl_get_string(new_input->msg, XML_ATTR_RESULT); */
-/* 		if(result == NULL || strcasecmp(result, "ok") == 0) { */
-/* 			result = "pass"; */
-/* 		} else { */
-/* 			result = "fail"; */
-/* 		} */
-		
+		delete_ha_msg_input(new_input);
+		new_input = NULL;		
 	}
 
 	if (server->ch_status == IPC_DISCONNECT) {
@@ -566,8 +558,8 @@ migrate_resource(
 		char *life = crm_strdup(migrate_lifetime);
 		char *life_mutable = life;
 		
+		ha_time_t *now = NULL;
 		ha_time_t *later = NULL;
-		ha_time_t *now = new_ha_date(TRUE);
 		ha_time_t *duration = parse_time_duration(&life_mutable);
 		
 		if(duration == NULL) {
@@ -576,8 +568,10 @@ migrate_resource(
 			fprintf(stderr, "Please refer to"
 				" http://en.wikipedia.org/wiki/ISO_8601#Duration"
 				" for examples of valid durations\n");
+			crm_free(life);
 			return cib_invalid_argument;
 		}
+		now = new_ha_date(TRUE);
 		later = add_time(now, duration);
 		log_date(LOG_INFO, "now     ", now, ha_log_date|ha_log_time);
 		log_date(LOG_INFO, "later   ", later, ha_log_date|ha_log_time);
@@ -599,7 +593,7 @@ migrate_resource(
 			rc = cib_ok;
 
 		} else if(rc != cib_ok) {
-			return rc;
+			goto bail;
 		}
 
 	} else {
@@ -665,7 +659,7 @@ migrate_resource(
 			rc = cib_ok;
 
 		} else if(rc != cib_ok) {
-			return rc;
+			goto bail;
 		}
 
 	} else {
@@ -713,10 +707,12 @@ migrate_resource(
 		rc = cib_conn->cmds->update(cib_conn, XML_CIB_TAG_CONSTRAINTS,
 					    fragment, NULL, cib_sync_call);
 	}
-	
+
+  bail:
 	free_xml(fragment);
 	free_xml(dont_run);
 	free_xml(can_run);
+	crm_free(later_s);
 	return rc;
 }
 

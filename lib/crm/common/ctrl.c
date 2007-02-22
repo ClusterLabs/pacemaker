@@ -1,4 +1,3 @@
-/* $Id: ctrl.c,v 1.4 2006/04/07 14:07:12 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -39,7 +38,6 @@
 #include <clplumbing/cl_log.h>
 #include <clplumbing/Gmain_timeout.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 #if 0
 

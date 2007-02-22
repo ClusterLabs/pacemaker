@@ -27,7 +27,6 @@
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 GHashTable *welcomed_nodes   = NULL;
 GHashTable *integrated_nodes = NULL;

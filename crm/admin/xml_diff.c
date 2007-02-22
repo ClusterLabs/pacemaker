@@ -1,4 +1,3 @@
-/* $Id: xml_diff.c,v 1.11 2006/07/18 06:15:54 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -48,7 +47,6 @@
 #endif
 
 #include <ha_msg.h> /* someone complaining about _ha_msg_mod not being found */
-#include <crm/dmalloc_wrapper.h>
 
 const char *crm_system_name = "diff";
 void usage(const char *cmd, int exit_status);
@@ -72,9 +70,6 @@ main(int argc, char **argv)
 	const char *xml_file_1 = NULL;
 	const char *xml_file_2 = NULL;
 
-	long new_bytes = 0, new_allocs = 0, new_frees = 0;
-	long old_bytes = 0, old_allocs = 0, old_frees = 0;
-	
 #ifdef HAVE_GETOPT_H
 	int option_index = 0;
 	static struct option long_options[] = {
@@ -166,8 +161,6 @@ main(int argc, char **argv)
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
 
-	crm_zero_mem_stats(NULL);
-	
 	if(raw_1) {
 		object_1 = string2xml(xml_file_1);
 
@@ -206,8 +199,6 @@ main(int argc, char **argv)
 	CRM_ASSERT(object_1 != NULL);
 	CRM_ASSERT(object_2 != NULL);
 
-	crm_zero_mem_stats(NULL);
-	
 	if(apply) {
 		if(as_cib == FALSE) {
 			apply_xml_diff(object_1, object_2, &output);
@@ -229,16 +220,14 @@ main(int argc, char **argv)
 		crm_free(buffer);
 	}
 
-	crm_xml_nbytes(output, &new_bytes, &new_allocs, &new_frees);
-	crm_adjust_mem_stats(crm_running_stats, new_bytes - old_bytes,
-			     new_allocs - old_allocs, new_frees - old_frees);
-	
-	crm_mem_stats(NULL);
-
 	free_xml(object_1);
 	free_xml(object_2);
 	free_xml(output);
 	
+#ifdef HA_MALLOC_TRACK
+	cl_malloc_dump_allocated(LOG_ERR, FALSE);
+#endif
+
 	if(apply == FALSE && output != NULL) {
 		return 1;
 	}

@@ -1,4 +1,3 @@
-/* $Id: cibmessages.h,v 1.10 2006/02/21 14:39:44 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

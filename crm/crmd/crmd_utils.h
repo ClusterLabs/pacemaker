@@ -1,4 +1,3 @@
-/* $Id: crmd_utils.h,v 1.24 2006/04/18 10:59:46 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -23,6 +22,9 @@
 #include <crm/common/xml.h>
 
 #define CLIENT_EXIT_WAIT 30
+
+extern void free_ccm_cache(oc_node_list_t *tmp);
+extern void delete_ccm_data(struct crmd_ccm_data_s *ccm_input);
 
 extern void process_client_disconnect(crmd_client_t *curr_client);
 

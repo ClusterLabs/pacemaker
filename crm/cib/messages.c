@@ -1,4 +1,3 @@
-/* $Id: messages.c,v 1.88 2006/07/18 06:15:11 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,10 +44,8 @@
 #include <callbacks.h>
 #include <notify.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 #define MAX_DIFF_RETRY 5
-volatile cl_mem_stats_t *active_stats = NULL;
 
 extern const char *cib_our_uname;
 extern gboolean syncd_once;

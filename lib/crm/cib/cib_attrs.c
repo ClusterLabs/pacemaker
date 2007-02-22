@@ -1,4 +1,3 @@
-/* $Id: cib_attrs.c,v 1.24 2006/04/18 11:28:56 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -37,7 +36,6 @@
 #include <crm/common/xml.h>
 #include <crm/cib.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 #define attr_common_setup(section)					\
 	gboolean is_crm_config = FALSE;					\
@@ -101,7 +99,9 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 			NULL, XML_ATTR_ID, node_uuid, FALSE);
 		crm_log_xml_debug_2(set_children, "search by node:");
 		if(matches == 0) {
-			crm_info("No node matching id=%s in %s", node_uuid, TYPE(xml_search));
+			CRM_CHECK(set_children == NULL, crm_err("Memory leak"));
+			crm_info("No node matching id=%s in %s",
+				 node_uuid, TYPE(xml_search));
 			return NULL;
 		}
 	}
@@ -117,6 +117,7 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 		crm_log_xml_debug_2(set_children, "search by set:");
 		if(matches == 0) {
 			crm_info("No set matching id=%s in %s", set_name, TYPE(xml_search));
+			CRM_CHECK(set_children == NULL, crm_err("Memory leak"));
 			return NULL;
 		}
 	}
@@ -143,6 +144,7 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 			       break;
 			);
 		free_xml(nv_children);
+		free_xml(set_children);
 		return single_match;
 		
 	} else if(matches > 1) {
@@ -179,6 +181,7 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 				);
 		}
 	}
+	free_xml(set_children);
 	return NULL;
 }
 
@@ -229,10 +232,18 @@ update_attr(cib_t *the_cib, int call_options,
 	if(attr_id == NULL || xml_obj == NULL) {
 		attr_common_setup(section);	
 		
-		CRM_CHECK(attr_id != NULL, return cib_missing);
-		CRM_CHECK(set_name != NULL, return cib_missing);
+		CRM_CHECK(attr_id != NULL,
+			  crm_free(local_attr_id);
+			  free_xml(xml_obj);
+			  return cib_missing);
+		CRM_CHECK(set_name != NULL,
+			  crm_free(local_attr_id);
+			  free_xml(xml_obj);
+			  return cib_missing);
 		
 		if(attr_value == NULL) {
+			crm_free(local_attr_id);
+			free_xml(xml_obj);
 			return cib_missing_data;
 		}
 		
@@ -267,6 +278,7 @@ update_attr(cib_t *the_cib, int call_options,
 		xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
 		crm_free(local_set_name);
 	} else {
+		free_xml(xml_obj);
 		xml_obj = NULL;
 	}
 

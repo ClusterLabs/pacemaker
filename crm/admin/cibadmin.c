@@ -1,4 +1,3 @@
-/* $Id: cibadmin.c,v 1.56 2006/07/18 06:15:54 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -47,7 +46,6 @@
 #  include <getopt.h>
 #endif
 #include <ha_msg.h> /* someone complaining about _ha_msg_mod not being found */
-#include <crm/dmalloc_wrapper.h>
 
 int exit_code = cib_ok;
 int message_timer_id = -1;

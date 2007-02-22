@@ -1,4 +1,3 @@
-/* $Id: main.c,v 1.32 2006/02/27 09:55:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -40,7 +39,6 @@
 
 #include <tengine.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 #define SYS_NAME     CRM_SYSTEM_TENGINE
 #define OPTARGS      "hVc"
@@ -52,7 +50,7 @@ extern GTRIGSource *transition_trigger;
 extern crm_action_timer_t *transition_timer;
 
 void usage(const char* cmd, int exit_status);
-int init_start(void);
+int te_init(void);
 gboolean tengine_shutdown(int nsig, gpointer unused);
 extern void te_update_confirm(const char *event, HA_Message *msg);
 extern void te_update_diff(const char *event, HA_Message *msg);
@@ -61,9 +59,10 @@ extern crm_graph_functions_t te_graph_fns;
 int
 main(int argc, char ** argv)
 {
-	gboolean allow_cores = TRUE;
-	int argerr = 0;
 	int flag;
+	int rc = 0;
+	int argerr = 0;
+	gboolean allow_cores = TRUE;
 	
 	crm_log_init(crm_system_name);
 	G_main_add_SignalHandler(
@@ -102,16 +101,15 @@ main(int argc, char ** argv)
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
     
-	/* read local config file */
-    
+	/* read local config file */    
 	crm_debug_3("Starting...");
-	return init_start();
-
+	rc = te_init();
+	return rc;
 }
 
 
 int
-init_start(void)
+te_init(void)
 {
 	int init_ok = TRUE;
 	
@@ -215,6 +213,16 @@ init_start(void)
 			 crm_system_name);
 	}
 
+	destroy_graph(transition_graph);
+	crm_free(transition_timer);
+	
+	te_cib_conn->cmds->signoff(te_cib_conn);
+	cib_delete(te_cib_conn);
+	te_cib_conn = NULL;
+
+	stonithd_signoff();
+	
+	crm_free(te_uuid);
 	
 	if(init_ok) {
 		return 0;

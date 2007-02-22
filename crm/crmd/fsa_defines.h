@@ -1,4 +1,3 @@
-/* $Id: fsa_defines.h,v 1.45 2006/02/20 12:10:41 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

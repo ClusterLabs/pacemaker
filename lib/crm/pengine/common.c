@@ -1,4 +1,3 @@
-/* $Id: common.c,v 1.4 2006/08/14 09:06:32 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -117,6 +116,9 @@ fail2text(enum action_fail_response fail)
 			break;
 		case action_fail_migrate:
 			result = "migrate";
+			break;
+		case action_fail_stop:
+			result = "stop";
 			break;
 		case action_migrate_failure:
 			result = "atomic migration recovery";

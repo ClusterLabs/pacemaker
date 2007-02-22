@@ -1,6 +1,5 @@
 #!/bin/env python
 #
-#	$Id: crm_utils.py,v 1.1 2006/08/14 08:37:54 andrew Exp $
 #
 #	pingd OCF Resource Agent
 #	Records (in the CIB) the current number of ping nodes a 

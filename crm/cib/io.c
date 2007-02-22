@@ -1,4 +1,3 @@
-/* $Id: io.c,v 1.81 2006/07/18 06:15:54 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -44,7 +43,6 @@
 
 #include <cibprimatives.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 const char * local_resource_path[] =
 {
@@ -84,7 +82,7 @@ extern enum cib_errors cib_status;
 int set_connected_peers(crm_data_t *xml_obj);
 void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data);
 int write_cib_contents(gpointer p);
-
+extern void cib_cleanup(void);
 
 
 static gboolean
@@ -121,7 +119,8 @@ validate_cib_digest(crm_data_t *local_cib)
 	crm_malloc0(expected, (length+1));
 	read_len = fread(expected, 1, length, expected_strm);
 	CRM_ASSERT(read_len == length);
-
+	fclose(expected_strm);
+	
 	if(expected == NULL) {
 		crm_err("On-disk digest is empty");
 		
@@ -214,7 +213,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	crm_data_t *root = NULL;
 	crm_data_t *status = NULL;
 
-	if(!crm_is_writable(dir, file, HA_CCMUSER, HA_APIGROUP, FALSE)) {
+	if(!crm_is_writable(dir, file, HA_CCMUSER, NULL, FALSE)) {
 		cib_status = cib_bad_permissions;
 		return NULL;
 	}
@@ -227,9 +226,14 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	} else {
 		crm_info("Reading cluster configuration from: %s", filename);
 		cib_file = fopen(filename, "r");
-		root = file2xml(cib_file, FALSE);
-		fclose(cib_file);
+		if(cib_file == NULL) {
+			cl_perror("could not open: %s", filename);
 
+		} else {
+			root = file2xml(cib_file, FALSE);
+			fclose(cib_file);
+		}
+		
 		if(root == NULL) {
 			crm_err("%s exists but does NOT contain valid XML. ",
 				filename);
@@ -245,6 +249,15 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 		}
 	}
 
+	if(getenv("HA_VALGRIND_ENABLED") != NULL) {
+		cib_writes_enabled = FALSE;
+		crm_err("HA_VALGRIND_ENABLED: %s",
+			getenv("HA_VALGRIND_ENABLED"));
+		crm_err("*********************************************************");
+		crm_err("*** Disabling disk writes to avoid confusing Valgrind ***");
+		crm_err("*********************************************************");	
+	}
+	
 	if(root == NULL) {
 		root = createEmptyCib();	
 	} else {
@@ -351,7 +364,7 @@ uninitializeCib(void)
 	
 	free_xml(tmp_cib);
 
-	crm_info("The CIB has been deallocated.");
+	crm_debug("The CIB has been deallocated.");
 	
 	return TRUE;
 }
@@ -576,6 +589,7 @@ int
 write_cib_contents(gpointer p) 
 {
 	int rc = 0;
+	int exit_rc = LSB_EXIT_OK;
 	char *digest = NULL;
 	crm_data_t *cib_status_root = NULL;
 	const char *digest_filename = CIB_FILENAME ".sig";
@@ -590,13 +604,15 @@ write_cib_contents(gpointer p)
 	if(validate_on_disk_cib(CIB_FILENAME, NULL) == FALSE) {
 		crm_err("%s was manually modified while Heartbeat was active!",
 			CIB_FILENAME);
-		exit(LSB_EXIT_GENERIC);
+		exit_rc = LSB_EXIT_GENERIC;
+		goto cleanup;
 	}
 
 	rc = archive_file(CIB_FILENAME, NULL, "last");
 	if(rc != 0) {
 		crm_err("Could not make backup of the existing CIB: %d", rc);
-		exit(LSB_EXIT_GENERIC);
+		exit_rc = LSB_EXIT_GENERIC;
+		goto cleanup;
 	}
 
 	rc = archive_file(digest_filename, NULL, "last");
@@ -626,7 +642,8 @@ write_cib_contents(gpointer p)
 	rc = write_xml_file(the_cib, CIB_FILENAME, FALSE);
 	if(rc <= 0) {
 		crm_err("Changes couldn't be written to disk");
-		exit(LSB_EXIT_GENERIC);
+		exit_rc = LSB_EXIT_GENERIC;
+		goto cleanup;
 	}
 
 	digest = calculate_xml_digest(the_cib, FALSE);
@@ -635,23 +652,33 @@ write_cib_contents(gpointer p)
 		 epoch?epoch:"0", updates?updates:"0", digest);	
 	
 	rc = write_cib_digest(the_cib, digest);
+
 	if(rc <= 0) {
 		crm_err("Digest couldn't be written to disk");
-		exit(LSB_EXIT_GENERIC);
+		exit_rc = LSB_EXIT_GENERIC;
+		goto cleanup;
 	}
 
 #if 0
 	if(validate_on_disk_cib(CIB_FILENAME, NULL) == FALSE) {
 		crm_err("wrote incorrect digest");
-		exit(LSB_EXIT_GENERIC);
+		exit_rc = LSB_EXIT_GENERIC;
+		goto cleanup;
 	}
 #endif
-	if(p == NULL) {
-		exit(LSB_EXIT_OK);
-	}
-	
+
+  cleanup:
 	crm_free(digest);
-	return HA_OK;
+
+	if(p == NULL) {
+		/* fork-and-write mode */
+		uninitializeCib();
+		cib_cleanup();
+		exit(exit_rc);
+	}
+
+	/* stand-alone mode */
+	return exit_rc;
 }
 
 gboolean

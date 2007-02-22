@@ -1,4 +1,3 @@
-/* $Id: ctrl.h,v 1.2 2004/08/30 03:17:40 msoffen Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

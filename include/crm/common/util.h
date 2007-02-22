@@ -1,4 +1,3 @@
-/* $Id: util.h,v 1.39 2006/08/14 09:06:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -44,13 +43,11 @@ extern unsigned int get_crm_log_level(void);
 
 extern char *crm_itoa(int an_int);
 
-extern char *crm_strdup(const char *a);
+extern char *crm_strdup_fn(const char *a, const char *file, const char *fn, int line);
 
 extern char *generate_hash_key(const char *crm_msg_reference, const char *sys);
 
 extern char *generate_hash_value(const char *src_node, const char *src_subsys);
-
-extern gboolean decode_hash_value(gpointer value, char **node, char **subsys);
 
 extern gboolean decodeNVpair(const char *srcstring,
 			     char separator, char **name, char **value);
@@ -64,6 +61,7 @@ extern void alter_debug(int nsig);
 
 extern void g_hash_destroy_str(gpointer data);
 
+extern void empty_uuid_cache(void);
 extern const char *get_uuid(ll_cluster_t *hb, const char *uname);
 extern const char *get_uname(ll_cluster_t *hb, const char *uuid);
 extern void unget_uuid(const char *uname);
@@ -91,21 +89,6 @@ extern gboolean parse_op_key(
 
 extern char *generate_notify_key(
 	const char *rsc_id, const char *notify_type, const char *op_type);
-
-extern gboolean crm_mem_stats(volatile cl_mem_stats_t *mem_stats);
-
-extern void crm_zero_mem_stats(volatile cl_mem_stats_t *stats);
-
-extern void crm_save_mem_stats(const char *location, cl_mem_stats_t *saved_stats);
-
-extern gboolean crm_diff_mem_stats(
-	int log_level_up, int log_level_down, const char *location,
-	volatile cl_mem_stats_t *stats, volatile cl_mem_stats_t *saved_stats);
-
-extern void crm_xml_nbytes(crm_data_t *xml, long *bytes, long *allocs, long *frees);
-
-extern void crm_adjust_mem_stats(
-	volatile cl_mem_stats_t *stats, long bytes, long allocs, long frees);
 
 extern char *generate_transition_magic_v202(
 	const char *transition_key, int op_status);
@@ -151,8 +134,6 @@ extern void write_last_sequence(
 
 extern void crm_make_daemon(
 	const char *name, gboolean daemonize, const char *pidfile);
-
-extern cl_mem_stats_t *crm_running_stats;
 
 typedef struct pe_cluster_option_s {
 	const char *name;

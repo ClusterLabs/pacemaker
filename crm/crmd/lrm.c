@@ -42,7 +42,6 @@
 
 #include <lrm/raexec.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 char *make_stop_id(const char *rsc, int call_id);
 gboolean verify_stopped(gboolean force, int log_level);
@@ -76,6 +75,7 @@ void send_direct_ack(const char *to_host, const char *to_sys,
 
 void free_recurring_op(gpointer value);
 
+GHashTable *meta_hash = NULL;
 
 GHashTable *monitors = NULL;
 GHashTable *resources = NULL;
@@ -109,7 +109,6 @@ do_lrm_control(long long action,
 			fsa_lrm_conn->lrm_ops->signoff(fsa_lrm_conn);
 			crm_info("Disconnected from the LRM");
 			clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
-			fsa_lrm_conn = NULL;
 		}
 		/* TODO: Clean up the hashtable */
 	}
@@ -130,7 +129,6 @@ do_lrm_control(long long action,
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
 		
-		fsa_lrm_conn = ll_lrm_new(XML_CIB_TAG_LRM);	
 		if(NULL == fsa_lrm_conn) {
 			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 			ret = HA_FAIL;
@@ -256,7 +254,6 @@ get_rsc_metadata(const char *type, const char *class, const char *provider)
 	int len = 0;
 	char *key = NULL;
 	char *metadata = NULL;
-	static GHashTable *meta_hash = NULL;
 	if(meta_hash == NULL) {
 		meta_hash = g_hash_table_new_full(
 			g_str_hash, g_str_equal,
@@ -278,7 +275,6 @@ get_rsc_metadata(const char *type, const char *class, const char *provider)
 	metadata = g_hash_table_lookup(meta_hash, key);
 	if(metadata) {
 		crm_debug_2("Returning cached metadata for %s", key);
-		crm_free(key);
 		goto out;
 	}
 
@@ -287,15 +283,21 @@ get_rsc_metadata(const char *type, const char *class, const char *provider)
 		fsa_lrm_conn, class, type, provider);
 
 	if(metadata) {
- 		g_hash_table_insert(meta_hash, key, metadata);
-	}
+		/* copy the metadata because the LRM likes using
+		 *   g_alloc instead of cl_malloc
+		 */
+		char *m_copy = crm_strdup(metadata);
+ 		g_hash_table_insert(meta_hash, key, m_copy);
+		key = NULL; /* prevent it from being free'd */
+		g_free(metadata);
+		metadata = m_copy;
+		
+	} else {
+		crm_warn("No metadata found for %s", key);
+	}		
 
   out:
-	if(metadata == NULL) {
-		crm_warn("No metadata found for %s::%s:%s",
-			 class, type, provider);
-	}
-	
+	crm_free(key);
 	return metadata;
 }
 
@@ -330,7 +332,7 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
 		);
 
 	if(supported == FALSE) {
-		return NULL;
+		goto cleanup;
 	}
 	
 	params = find_xml_node(metadata, "parameters", TRUE);
@@ -344,7 +346,7 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
 				restart_list, crm_strdup(value));
 		}
 		);
-
+  cleanup:
 	free_xml(metadata);
 	return restart_list;
 }
@@ -379,13 +381,13 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 		return;
 	}
 
-	restart = create_xml_node(NULL, "restart");
 	restart_list = get_rsc_restart_list(rsc, op);
 	if(restart_list == NULL) {
-		crm_info("Resource %s does not support reloads", op->rsc_id);
+		crm_debug("Resource %s does not support reloads", op->rsc_id);
 		return;
 	}
 
+	restart = create_xml_node(NULL, "restart");
 	slist_iter(param, const char, restart_list, lpc,
 		   int start = len;
 		   value = g_hash_table_lookup(op->params, param);
@@ -401,6 +403,9 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 	crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
 
 	crm_debug("%s : %s", digest, list);
+	slist_destroy(char, child, restart_list,
+		      crm_free(child);
+		);
 	free_xml(restart);
 	crm_free(digest);
 	crm_free(list);
@@ -786,7 +791,8 @@ do_lrm_query(gboolean is_replace)
 	}
 
 	xml_result = create_cib_fragment(xml_state, XML_CIB_TAG_STATUS);
-
+	free_xml(xml_state);
+	
 	crm_log_xml_debug_3(xml_state, "Current state of the LRM");
 	
 	return xml_result;
@@ -1618,12 +1624,6 @@ process_lrm_event(lrm_op_t *op)
 	
 	if(op->op_status != LRM_OP_CANCELLED) {
 		do_update_resource(op);
-		if(op->interval > 0) {
-			/* dont remove active recurring ops from
-			 * the shutdown list
-			 */
-			return TRUE;
-		}
 		
 	} else if(op->interval == 0) {
 		crm_err("Op %s_%s_%d (call=%d): cancelled!",
@@ -1638,8 +1638,8 @@ process_lrm_event(lrm_op_t *op)
 	}
 
 	/* most likely scenario is that it previously timed out */
-	crm_err("Op %d %s_%s_%d not matched",
-		op->call_id, op->rsc_id, op->op_type, op->interval);
+	crm_debug_2("Op %d %s_%s_%d not matched",
+		    op->call_id, op->rsc_id, op->op_type, op->interval);
 
   out:
 	crm_free(op_id);

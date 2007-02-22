@@ -18,17 +18,49 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in ha_config.h
 
-EXTRA_DIST = ha_config.h.in
+MAINTAINERCLEANFILES    = Makefile.in ha_version.h
+
+EXTRA_DIST = ha_version.h
 
 includedir=$(base_includedir)/heartbeat
 
 
-noinst_HEADERS	        = hb_api_core.h
+noinst_HEADERS	        = hb_api_core.h ha_version.h
 include_HEADERS	        = apphb.h apphb_notify.h HBauth.h HBcomm.h	\
-			  ha_msg.h heartbeat.h hb_api.h ha_config.h	\
+			  ha_msg.h heartbeat.h hb_api.h			\
 			  recoverymgr.h replace_uuid.h compress.h
 
 SUBDIRS                 = clplumbing ocf pils saf 			\
 			  stonith fencing lrm crm mgmt	
+
+## The backtick commands are not executed here,
+## but rather as macro-expansions at use within the rules.
+HG_LIVE_VERSION=`$(HG) -R "$(top_srcdir)" id`
+ARCHIVE_VERSION="$(top_srcdir)/.hg_archival.txt"
+HG_TAR_VERSION=`$(EGREP) node: "$(ARCHIVE_VERSION)"`
+
+ha_version.h: $(ARCHIVE_VERSION)
+	if [ -r ha_version.h -a ! -w ha_version.h ]; then	\
+		hgv="";						\
+		echo "Saved Version";	 			\
+	elif [ -f $(ARCHIVE_VERSION) ]; then			\
+		hgv="$(HG_TAR_VERSION)";			\
+		echo "Hg Archived Version: $${hgv}";		\
+	elif [ -x $(HG) -a -d $(top_srcdir)/.hg ]; then		\
+		hgv="$(HG_LIVE_VERSION)";			\
+		echo "Hg Live Version: $${hgv}";	 	\
+	elif [ -r ha_version.h ]; then				\
+		hgv="";						\
+		echo "Hg Saved Live Version"; 			\
+		cat ha_version.h; 				\
+	else							\
+		hgv="Unknown";					\
+		echo "Unknown Hg Version";			\
+	fi ;							\
+	if [ X"$${hgv}" != "X" ]; then					\
+	  echo "/* $${hgv} */" > ha_version.h; 				\
+	  echo "#define HA_HG_VERSION \"$${hgv}\"" >> ha_version.h; 	\
+	fi
+
+.PHONY: $(ARCHIVE_VERSION)

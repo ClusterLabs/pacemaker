@@ -1,4 +1,3 @@
-/* $Id: main.c,v 1.21 2006/08/14 09:06:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,15 +50,14 @@
 #include <crmd.h>
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
-#include <crm/crmd/version.h>
+#include <ha_version.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 const char* crm_system_name = SYS_NAME;
 #define OPTARGS	"hV"
 
 void usage(const char* cmd, int exit_status);
-int init_start(void);
+int crmd_init(void);
 void crmd_hamsg_callback(const HA_Message * msg, void* private_data);
 gboolean crmd_tickle_apphb(gpointer data);
 extern void init_dotfile(void);
@@ -74,7 +72,7 @@ main(int argc, char ** argv)
 
     crm_log_init(crm_system_name);
 
-    crm_info("CRM Hg Version: %s\n", CRM_HG_VERSION);
+    crm_info("CRM Hg Version: %s\n", HA_HG_VERSION);
     
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -96,7 +94,7 @@ main(int argc, char ** argv)
 	    return 0;
     } else if(argc - optind == 1 && safe_str_eq("version", argv[optind])) {
 	    fprintf(stderr, "CRM Version: ");
-	    fprintf(stdout, "%s (%s)\n", VERSION, CRM_HG_VERSION);
+	    fprintf(stdout, "%s (%s)\n", VERSION, HA_HG_VERSION);
 	    return 0;
     }
     
@@ -122,12 +120,12 @@ main(int argc, char ** argv)
 	    return 100;
     }
     
-    return init_start();
+    return crmd_init();
 }
 
 
 int
-init_start(void)
+crmd_init(void)
 {
     int exit_code = 0;
     enum crmd_fsa_state state;
@@ -169,6 +167,9 @@ init_start(void)
     }
     
     crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
+#ifdef HA_MALLOC_TRACK
+	cl_malloc_dump_allocated(LOG_ERR, FALSE);
+#endif
     return exit_code;
 }
 

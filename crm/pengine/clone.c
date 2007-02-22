@@ -1,4 +1,3 @@
-/* $Id: clone.c,v 1.6 2006/07/18 06:19:33 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -74,13 +73,14 @@ int clone_num_allowed_nodes(resource_t *rsc)
 static node_t *
 parent_node_instance(const resource_t *rsc, node_t *node)
 {
+	node_t *ret = NULL;
 	clone_variant_data_t *clone_data = NULL;
-	if(node == NULL) {
-		return NULL;
+	if(node != NULL) {
+		get_clone_variant_data(clone_data, rsc->parent);
+		ret = pe_find_node_id(
+			clone_data->self->allowed_nodes, node->details->id);
 	}
-	get_clone_variant_data(clone_data, rsc->parent);
-	return pe_find_node_id(
-		clone_data->self->allowed_nodes, node->details->id);
+	return ret;
 }
 
 gint sort_clone_instance(gconstpointer a, gconstpointer b)
@@ -273,10 +273,16 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 			);
 		
 		slist_iter(child, resource_t, clone_data->child_list, lpc,
-			   if(child->running_on) {
+			   if(g_list_length(child->running_on) > 0) {
+				   node_t *child_node = child->running_on->data;
 				   node_t *local_node = parent_node_instance(
 					   child, child->running_on->data);
-				   local_node->count++;
+				   if(local_node) {
+					   local_node->count++;
+				   } else {
+					   crm_err("%s is running on %s which isn't allowed",
+						   child->id, child_node->details->uname);
+				   }
 			   }
 			);
 
@@ -298,6 +304,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	clone_data->self->allowed_nodes = g_list_sort(
 		clone_data->self->allowed_nodes, sort_node_weight);
 
+	
 	slist_iter(child, resource_t, clone_data->child_list, lpc,
 		   if(allocated >= clone_data->clone_max) {
 			   crm_debug("Child %s not allocated - limit reached", child->id);
@@ -397,6 +404,7 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action_complete->pseudo = TRUE;
 	action_complete->runnable = TRUE;
 	action_complete->priority = INFINITY;
+/* 	crm_err("Upgrading priority for %s to INFINITY", action_complete->uuid); */
 	
 	child_starting_constraints(clone_data, pe_order_optional, 
 				   NULL, last_start_rsc, data_set);
@@ -416,6 +424,7 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action_complete->pseudo = TRUE;
 	action_complete->runnable = TRUE;
 	action_complete->priority = INFINITY;
+/* 	crm_err("Upgrading priority for %s to INFINITY", action_complete->uuid); */
 	
 	child_stopping_constraints(clone_data, pe_order_optional,
 				   NULL, last_stop_rsc, data_set);
@@ -540,8 +549,13 @@ clone_create_notifications(
 
 	notify->pseudo = TRUE;
 	notify->runnable = TRUE;
+	notify->priority = INFINITY;
+/* 	crm_err("Upgrading priority for %s to INFINITY", notify->uuid); */
+
 	notify_complete->pseudo = TRUE;
 	notify_complete->runnable = TRUE;
+	notify_complete->priority = INFINITY;
+/* 	crm_err("Upgrading priority for %s to INFINITY", notify_complete->uuid); */
 
 	/* post_notify before post_notify_complete */
 	custom_action_order(

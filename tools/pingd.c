@@ -1,4 +1,3 @@
-/* $Id: pingd.c,v 1.7 2006/07/06 09:30:27 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>

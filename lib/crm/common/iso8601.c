@@ -1,4 +1,3 @@
-/* $Id: iso8601.c,v 1.15 2006/05/29 11:53:53 andrew Exp $ */
 /* 
  * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -212,7 +211,7 @@ parse_time(char **time_str, ha_time_t *a_time, gboolean with_offset)
 	}
 
 	CRM_CHECK(new_time != NULL, return NULL);
-	CRM_CHECK(new_time->has != NULL, return NULL);
+	CRM_CHECK(new_time->has != NULL, free_ha_date(new_time); return NULL);
 
 	crm_debug_4("Get hours...");
 	if(parse_int(time_str, 2, 24, &new_time->hours)) {
@@ -277,12 +276,13 @@ parse_date(char **date_str)
 	gboolean is_done = FALSE;
 	gboolean converted = FALSE;
 	ha_time_t *new_time = NULL;
-	crm_malloc0(new_time, sizeof(ha_time_t));
-	crm_malloc0(new_time->has, sizeof(ha_has_time_t));
 
 	CRM_CHECK(date_str != NULL, return NULL);
 	CRM_CHECK(strlen(*date_str) > 0, return NULL);
 	
+	crm_malloc0(new_time, sizeof(ha_time_t));
+	crm_malloc0(new_time->has, sizeof(ha_has_time_t));
+
 	while(is_done == FALSE) {
 		char ch = (*date_str)[0];
 		crm_debug_5("Switching on ch=%c (len=%d)",
@@ -404,14 +404,14 @@ parse_time_duration(char **interval_str)
 {
 	gboolean is_time = FALSE;
 	ha_time_t *diff = NULL;
+
+	CRM_CHECK(interval_str != NULL, goto bail);
+	CRM_CHECK(strlen(*interval_str) > 0, goto bail);
+	CRM_CHECK((*interval_str)[0] == 'P', goto bail);
+	(*interval_str)++;
+
 	crm_malloc0(diff, sizeof(ha_time_t));
 	crm_malloc0(diff->has, sizeof(ha_has_time_t));
-
-	CRM_CHECK(interval_str != NULL, return NULL);
-	CRM_CHECK(strlen(*interval_str) > 0, return NULL);
-	
-	CRM_CHECK((*interval_str)[0] == 'P', return NULL);
-	(*interval_str)++;
 	
 	while(isspace((int) (*interval_str)[0]) == FALSE) {
 		int an_int = 0;
@@ -468,6 +468,13 @@ parse_time_duration(char **interval_str)
 		}
 	}
 	return diff;
+
+  bail:
+	if(diff) {
+		crm_free(diff->has);
+	}
+	crm_free(diff);
+	return NULL;
 }
 
 ha_time_period_t*
@@ -476,12 +483,12 @@ parse_time_period(char **period_str)
 	gboolean invalid = FALSE;
 	const char *original = *period_str;
 	ha_time_period_t *period = NULL;
-	crm_malloc0(period, sizeof(ha_time_period_t));
 
 	CRM_CHECK(period_str != NULL, return NULL);
 	CRM_CHECK(strlen(*period_str) > 0, return NULL);
 
 	tzset();
+	crm_malloc0(period, sizeof(ha_time_period_t));
 	
 	if((*period_str)[0] == 'P') {
 		period->diff = parse_time_duration(period_str);
@@ -490,7 +497,7 @@ parse_time_period(char **period_str)
 	}
 
 	if((*period_str)[0] != 0) {
-		CRM_CHECK((*period_str)[0] == '/', return NULL);
+		CRM_CHECK((*period_str)[0] == '/', invalid = TRUE; goto bail);
 		(*period_str)++;
 		
 		if((*period_str)[0] == 'P') {
@@ -509,9 +516,11 @@ parse_time_period(char **period_str)
 		
 		ha_set_timet_time(period->start, &now);
 		normalize_time(period->start);
+
 	} else {
-		CRM_CHECK((*period_str)[0] == '/', return NULL);
-		return NULL;
+		invalid = TRUE;
+		CRM_CHECK((*period_str)[0] == '/', goto bail);
+		goto bail;
 	}
 	
 	
@@ -529,6 +538,7 @@ parse_time_period(char **period_str)
 		invalid = TRUE;
 	}
 
+  bail:
 	if(invalid) {
 		crm_free(period->start);
 		crm_free(period->end);

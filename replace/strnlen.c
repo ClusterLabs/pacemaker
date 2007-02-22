@@ -1,4 +1,3 @@
-/* $Id: strnlen.c,v 1.2 2004/02/17 22:12:01 lars Exp $ */
 #include <portability.h>
 #include <string.h>
 /*

@@ -1,4 +1,3 @@
-/* $Id: crmadmin.c,v 1.76 2006/07/06 09:30:27 andrew Exp $ */
 
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
@@ -48,7 +47,6 @@
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
 #endif
-#include <crm/dmalloc_wrapper.h>
 
 int message_timer_id = -1;
 int message_timeout_ms = 30*1000;
@@ -518,6 +516,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 	       && server->ops->is_message_pending(server) == TRUE) {
 		if(new_input != NULL) {
 			delete_ha_msg_input(new_input);
+			new_input = NULL;
 		}
 		
 		if (server->ops->recv(server, &msg) != IPC_OK) {
@@ -539,13 +538,13 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		if (new_input->xml == NULL) {
 			crm_info("XML in IPC message was not valid... "
 				 "discarding.");
-			continue;
-
+			goto cleanup;
+			
 		} else if (validate_crm_message(
 				   new_input->msg, crm_system_name, admin_uuid,
 				   XML_ATTR_RESPONSE) == FALSE) {
 			crm_debug_2("Message was not a CRM response. Discarding.");
-			continue;
+			goto cleanup;
 		}
 
 		result = cl_get_string(new_input->msg, XML_ATTR_RESULT);
@@ -598,6 +597,9 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 				}
 			}
 		}
+	  cleanup:
+		delete_ha_msg_input(new_input);
+		new_input = NULL;
 	}
 
 	if (server->ch_status == IPC_DISCONNECT) {

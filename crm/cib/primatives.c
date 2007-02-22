@@ -1,4 +1,3 @@
-/* $Id: primatives.c,v 1.33 2006/03/16 23:29:31 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -37,7 +36,6 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 
 /*

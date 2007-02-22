@@ -36,7 +36,6 @@
 #include <crmd_messages.h>
 #include <crmd_lrm.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 GListPtr fsa_message_queue = NULL;
 extern void crm_shutdown(int nsig);
@@ -314,9 +313,7 @@ delete_fsa_input(fsa_data_t *fsa_data)
 			case fsa_dt_ccm:
 				ccm_input = (struct crmd_ccm_data_s *)
 					fsa_data->data;
-
-				crm_free(ccm_input->oc);
-				crm_free(ccm_input);
+				delete_ccm_data(ccm_input);
 				break;
 				
 			case fsa_dt_none:
@@ -649,59 +646,52 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 		crm_free(minor_version);
 	}
 
-	if (auth_result == TRUE) {
+	if (strcasecmp(CRM_SYSTEM_PENGINE, client_name) == 0) {
+		the_subsystem = pe_subsystem;
+		
+	} else if (strcasecmp(CRM_SYSTEM_TENGINE, client_name) == 0) {
+		the_subsystem = te_subsystem;
+	}
+	
+	if (auth_result == TRUE && the_subsystem != NULL) {
 		/* if we already have one of those clients
 		 * only applies to te, pe etc.  not admin clients
 		 */
+		crm_debug_3("Checking if %s is required/already connected",
+			    client_name);
 
-		if (strcasecmp(CRM_SYSTEM_PENGINE, client_name) == 0) {
-			the_subsystem = pe_subsystem;
+		table_key = (gpointer)crm_strdup(client_name);
+		
+		if(is_set(fsa_input_register, the_subsystem->flag_connected)) {
+			auth_result = FALSE;
+			crm_free(table_key);
+			table_key = NULL;
+			crm_warn("Bit\t%.16llx set in %.16llx",
+				 the_subsystem->flag_connected,
+				 fsa_input_register);
+			crm_err("Client %s is already connected",
+				client_name);
 			
-		} else if (strcasecmp(CRM_SYSTEM_TENGINE, client_name) == 0) {
-			the_subsystem = te_subsystem;
-		}
-
-		if (the_subsystem != NULL) {
-			/* do we already have one? */
-			crm_debug_3("Checking if %s is required/already connected",
-				  client_name);
+		} else if(FALSE == is_set(fsa_input_register,
+					  the_subsystem->flag_required)) {
+			crm_warn("Bit\t%.16llx not set in %.16llx",
+				 the_subsystem->flag_connected,
+				 fsa_input_register);
+			crm_warn("Client %s joined but we dont need it",
+				 client_name);
+			stop_subsystem(the_subsystem, TRUE);
 			
-			if(is_set(fsa_input_register,
-				  the_subsystem->flag_connected)) {
-				auth_result = FALSE;
-				crm_warn("Bit\t%.16llx set in %.16llx",
-					  the_subsystem->flag_connected,
-					  fsa_input_register);
-				crm_err("Client %s is already connected",
-					client_name);
-
-			} else if(FALSE == is_set(fsa_input_register,
-					 the_subsystem->flag_required)) {
-				auth_result = TRUE;
-				crm_warn("Bit\t%.16llx not set in %.16llx",
-					  the_subsystem->flag_connected,
-					  fsa_input_register);
-				crm_warn("Client %s joined but we dont need it",
-					 client_name);
-				stop_subsystem(the_subsystem, TRUE);
-				
-			} else {
-				the_subsystem->ipc =
-					curr_client->client_channel;
-				set_bit_inplace(fsa_input_register,
-						the_subsystem->flag_connected);
-			}
-
 		} else {
-			table_key = (gpointer)
-				generate_hash_key(client_name, uuid);
+			the_subsystem->ipc = curr_client->client_channel;
+			set_bit_inplace(fsa_input_register,
+					the_subsystem->flag_connected);
 		}
+
+	} else {
+		table_key = (gpointer)generate_hash_key(client_name, uuid);
 	}
 	
 	if (auth_result == TRUE) {
-		if(table_key == NULL) {
-			table_key = (gpointer)crm_strdup(client_name);
-		}
 		crm_debug_2("Accepted client %s", crm_str(table_key));
 
 		curr_client->table_key = table_key;
@@ -720,7 +710,14 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 		crm_debug_3("Triggering FSA: %s", __FUNCTION__);
 		G_main_set_trigger(fsa_source);
 
+		if(the_subsystem != NULL) {
+			CRM_CHECK(the_subsystem->client == NULL,
+				  process_client_disconnect(the_subsystem->client));
+			the_subsystem->client = curr_client;
+		}
+
 	} else {
+		crm_free(table_key);
 		crm_warn("Rejected client logon request");
 		curr_client->client_channel->ch_status = IPC_DISC_PENDING;
 	}
@@ -829,6 +826,7 @@ handle_request(ha_msg_input_t *stored_msg)
 		crm_info("Current ping state: %s", fsa_state2string(fsa_state));
 		
 		msg = create_reply(stored_msg->msg, ping);
+		free_xml(ping);
 		
 		if(relay_message(msg, TRUE) == FALSE) {
 			crm_msg_del(msg);
@@ -1135,8 +1133,7 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 	
 	crm_debug_4("relaying msg to sub_sys=%s via IPC", sys);
 
-	client_channel =
-		(IPC_Channel*)g_hash_table_lookup(ipc_clients, sys);
+	client_channel = (IPC_Channel*)g_hash_table_lookup(ipc_clients, sys);
 
 	if(cl_get_string(msg, F_CRM_HOST_FROM) == NULL) {
 		ha_msg_add(msg, F_CRM_HOST_FROM, fsa_our_uname);

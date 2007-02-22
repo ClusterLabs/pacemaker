@@ -1,4 +1,3 @@
-/* $Id: allocate.h,v 1.2 2006/06/08 13:39:10 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

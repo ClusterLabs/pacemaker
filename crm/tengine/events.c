@@ -1,4 +1,3 @@
-/* $Id: events.c,v 1.23 2006/08/14 09:14:45 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,6 +44,23 @@ need_abort(crm_data_t *update)
 		return NULL;
 	}
 	
+        xml_prop_iter(update, name, value,
+                      if(safe_str_eq(name, XML_ATTR_HAVE_QUORUM)) {
+			      goto do_abort;
+                      } else if(safe_str_eq(name, XML_ATTR_NUMPEERS)) {
+			      goto do_abort;
+                      } else if(safe_str_eq(name, XML_ATTR_GENERATION)) {
+			      goto do_abort;
+                      } else if(safe_str_eq(name, XML_ATTR_GENERATION_ADMIN)) {
+			      goto do_abort;
+		      }
+		      continue;
+	  do_abort:
+		      crm_debug("Aborting on change to %s", name);
+		      crm_log_xml_debug(update, "Abort: CIB Attrs");
+		      return update;
+                );
+
 	section = XML_CIB_TAG_NODES;
 	section_xml = get_object_root(section, update);
 	xml_child_iter(section_xml, child, 
@@ -216,9 +232,9 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 
 	CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval),
 		  crm_err("Couldn't parse: %s", ID(event));
-		  return);
-	CRM_CHECK(task != NULL, crm_free(rsc_id); return);
-	CRM_CHECK(rsc_id != NULL, crm_free(task); return);
+		  goto bail);
+	CRM_CHECK(task != NULL, goto bail);
+	CRM_CHECK(rsc_id != NULL, goto bail);
 	
 	if(interval > 0) {
 		attr_name = crm_concat("fail-count", rsc_id, '-');
@@ -231,6 +247,7 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 		crm_free(attr_name);
 	}
 
+  bail:
 	crm_free(rsc_id);
 	crm_free(task);
 }

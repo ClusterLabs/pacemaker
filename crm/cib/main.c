@@ -1,4 +1,3 @@
-/* $Id: main.c,v 1.56 2006/07/18 06:14:18 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -51,7 +50,11 @@
 #include <cibio.h>
 #include <callbacks.h>
 
-#include <crm/dmalloc_wrapper.h>
+#if HAVE_LIBXML2
+#  include <libxml/parser.h>
+#endif
+
+extern int init_remote_listener(int port);
 
 gboolean cib_shutdown_flag = FALSE;
 gboolean stand_alone = FALSE;
@@ -68,7 +71,7 @@ oc_ev_t *cib_ev_token;
 gboolean cib_writes_enabled = TRUE;
 
 void usage(const char* cmd, int exit_status);
-int init_start(void);
+int cib_init(void);
 gboolean cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name);
 gboolean cib_shutdown(int nsig, gpointer unused);
 void cib_ha_connection_destroy(gpointer user_data);
@@ -76,10 +79,21 @@ gboolean startCib(const char *filename);
 extern gboolean cib_msg_timeout(gpointer data);
 extern int write_cib_contents(gpointer p);
 
+GHashTable *client_list    = NULL;
+GHashTable *ccm_membership = NULL;
+GHashTable *peer_hash = NULL;
+
 ll_cluster_t *hb_conn = NULL;
 GTRIGSource *cib_writer = NULL;
 
+char *channel1 = NULL;
+char *channel2 = NULL;
+char *channel3 = NULL;
+char *channel4 = NULL;
+char *channel5 = NULL;
+
 #define OPTARGS	"hVsf"
+void cib_cleanup(void);
 
 static void
 cib_diskwrite_complete(gpointer userdata, int status, int signo, int exitcode)
@@ -102,6 +116,7 @@ int
 main(int argc, char ** argv)
 {
 	int flag;
+	int rc = 0;
 	int argerr = 0;
 	
 	crm_log_init(crm_system_name);
@@ -116,7 +131,10 @@ main(int argc, char ** argv)
 	set_sigchld_proctrack(G_PRIORITY_HIGH);
 
 	client_list = g_hash_table_new(g_str_hash, g_str_equal);
-	peer_hash = g_hash_table_new(g_str_hash, g_str_equal);
+	ccm_membership = g_hash_table_new_full(
+		g_str_hash, g_str_equal, g_hash_destroy_str, NULL);
+	peer_hash = g_hash_table_new_full(
+		g_str_hash, g_str_equal,g_hash_destroy_str, g_hash_destroy_str);
 	
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -151,7 +169,38 @@ main(int argc, char ** argv)
 	}
     
 	/* read local config file */
-	return init_start();
+	rc = cib_init();
+
+	CRM_CHECK(g_hash_table_size(client_list) == 0, crm_err("Memory leak"));
+	cib_cleanup();
+
+	if(hb_conn) {
+		hb_conn->llc_ops->delete(hb_conn);
+	}
+	
+#ifdef HA_MALLOC_TRACK
+	cl_malloc_dump_allocated(LOG_ERR, FALSE);
+#endif
+	crm_info("Done");
+	return rc;
+}
+
+void
+cib_cleanup(void) 
+{
+	g_hash_table_destroy(ccm_membership);	
+	g_hash_table_destroy(client_list);
+	g_hash_table_destroy(peer_hash);
+	crm_free(ccm_transition_id);
+	crm_free(cib_our_uname);
+#if HAVE_LIBXML2
+	xmlCleanupParser();
+#endif
+	crm_free(channel1);
+	crm_free(channel2);
+	crm_free(channel3);
+	crm_free(channel4);
+	crm_free(channel5);
 }
 
 unsigned long cib_num_ops = 0;
@@ -170,19 +219,6 @@ cib_stats(gpointer data)
 	unsigned int cib_calls_ms = 0;
 	static unsigned long cib_stat_interval_ms = 0;
 
-	cl_mem_stats_t saved_stats;
-	if(crm_running_stats == NULL) {
-		START_stat_free_op();
-		crm_malloc0(crm_running_stats, sizeof(cl_mem_stats_t));
-		END_stat_free_op();
-		crm_zero_mem_stats(crm_running_stats);
-	}
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
-	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, crm_running_stats);
-	*crm_running_stats = saved_stats;		
-	crm_debug_2("Total alloc's %ld for %ld bytes",
-		    crm_running_stats->numalloc, crm_running_stats->nbytes_alloc);
-	
 	if(cib_stat_interval_ms == 0) {
 		cib_stat_interval_ms = crm_get_msec(cib_stat_interval);
 	}
@@ -210,7 +246,7 @@ cib_stats(gpointer data)
 		      cib_num_fail, cib_bad_connects, cib_num_timeouts);
 
 #ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(LOG_ERR, TRUE);
+	cl_malloc_dump_allocated(LOG_DEBUG, TRUE);
 #endif
 
 	last_stat = cib_num_ops;
@@ -219,42 +255,49 @@ cib_stats(gpointer data)
 }
 
 int
-init_start(void)
+cib_init(void)
 {
 	gboolean was_error = FALSE;
-	if(stand_alone == FALSE) {
-	hb_conn = ll_cluster_new("heartbeat");
-	if(cib_register_ha(hb_conn, CRM_SYSTEM_CIB) == FALSE) {
-		crm_crit("Cannot sign in to heartbeat... terminating");
-		exit(1);
-	}
-	}
-
 	if(startCib("cib.xml") == FALSE){
 		crm_crit("Cannot start CIB... terminating");
 		exit(1);
 	}
-	
+
+	if(stand_alone == FALSE) {
+		hb_conn = ll_cluster_new("heartbeat");
+		if(cib_register_ha(hb_conn, CRM_SYSTEM_CIB) == FALSE) {
+			crm_crit("Cannot sign in to heartbeat... terminating");
+			exit(1);
+		}
+	} else {
+		cib_our_uname = crm_strdup("localhost");
+	}
+
+	channel1 = crm_strdup(cib_channel_callback);
 	was_error = init_server_ipc_comms(
-		crm_strdup(cib_channel_callback), cib_client_connect_null,
+		channel1, cib_client_connect_null,
 		default_ipc_connection_destroy);
 
+	channel2 = crm_strdup(cib_channel_ro);
 	was_error = was_error || init_server_ipc_comms(
-		crm_strdup(cib_channel_ro), cib_client_connect_rw_ro,
+		channel2, cib_client_connect_rw_ro,
 		default_ipc_connection_destroy);
 
+	channel3 = crm_strdup(cib_channel_rw);
 	was_error = was_error || init_server_ipc_comms(
-		crm_strdup(cib_channel_rw), cib_client_connect_rw_ro,
+		channel3, cib_client_connect_rw_ro,
 		default_ipc_connection_destroy);
 
+	channel4 = crm_strdup(cib_channel_rw_synchronous);
 	was_error = was_error || init_server_ipc_comms(
-		crm_strdup(cib_channel_rw_synchronous), cib_client_connect_rw_synch,
+		channel4, cib_client_connect_rw_synch,
 		default_ipc_connection_destroy);
 
+	channel5 = crm_strdup(cib_channel_ro_synchronous);
 	was_error = was_error || init_server_ipc_comms(
-		crm_strdup(cib_channel_ro_synchronous), cib_client_connect_ro_synch,
+		channel5, cib_client_connect_ro_synch,
 		default_ipc_connection_destroy);
-	
+
 	if(stand_alone) {
 		if(was_error) {
 			crm_err("Couldnt start");
@@ -445,10 +488,6 @@ cib_ha_connection_destroy(gpointer user_data)
 	}
 		
 	uninitializeCib();
-	crm_free(ccm_transition_id);
-#ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(LOG_ERR, FALSE);
-#endif
 
 	if (mainloop != NULL && g_main_is_running(mainloop)) {
 		g_main_quit(mainloop);
@@ -519,7 +558,11 @@ startCib(const char *filename)
 	CRM_ASSERT(cib != NULL);
 	
 	if(activateCibXml(cib, filename) == 0) {
+		int port = 0;
 		active = TRUE;
+		ha_msg_value_int(cib, "remote_access_port", &port);
+		init_remote_listener(port);
+
 		crm_info("CIB Initialization completed successfully");
 		if(per_action_cib) {
 			uninitializeCib();

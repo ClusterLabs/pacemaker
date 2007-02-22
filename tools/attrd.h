@@ -1,4 +1,3 @@
-/* $Id: attrd.h,v 1.1 2006/04/09 12:50:04 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 

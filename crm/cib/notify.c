@@ -1,4 +1,3 @@
-/* $Id: notify.c,v 1.39 2006/07/07 20:59:30 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -41,7 +40,6 @@
 #include <callbacks.h>
 #include <notify.h>
 
-#include <crm/dmalloc_wrapper.h>
 
 extern GHashTable *client_list;
 int pending_updates = 0;
@@ -71,8 +69,6 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 
 	int qlen = 0;
 	int max_qlen = 0;
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	
 	CRM_DEV_ASSERT(client != NULL);
 	CRM_DEV_ASSERT(update_msg != NULL);
@@ -171,7 +167,6 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 		crm_debug_3("Client %s/%s not interested in %s notifications",
 			    client->name, client->channel_name, type);	
 	}
-	crm_diff_mem_stats(LOG_DEBUG, LOG_DEBUG, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
 
 void
@@ -181,8 +176,6 @@ cib_pre_notify(
 	HA_Message *update_msg = NULL;
 	const char *type = NULL;
 	const char *id = NULL;
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	update_msg = ha_msg_new(6);
 
@@ -226,7 +219,6 @@ cib_pre_notify(
 	}
 		
 	crm_msg_del(update_msg);
-	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
 
 void
@@ -251,8 +243,6 @@ cib_diff_notify(
 	int del_admin_epoch = 0;
 
 	int log_level = LOG_INFO;
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 	
 	if(diff == NULL) {
 		return;
@@ -283,7 +273,6 @@ cib_diff_notify(
 	}
 	
 	do_cib_notify(options, op, update, result, diff, T_CIB_DIFF_NOTIFY);
-	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
 
 void
@@ -294,8 +283,6 @@ do_cib_notify(
 	HA_Message *update_msg = NULL;
 	const char *type = NULL;
 	const char *id = NULL;
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	update_msg = ha_msg_new(8);
 
@@ -363,7 +350,6 @@ do_cib_notify(
 	}
 
 	crm_debug_3("Notify complete");
-	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }
 
 
@@ -393,8 +379,6 @@ cib_replace_notify(crm_data_t *update, enum cib_errors result, crm_data_t *diff)
 	int del_updates = 0;
 	int del_epoch  = 0;
 	int del_admin_epoch = 0;
-	cl_mem_stats_t saved_stats;
-	crm_save_mem_stats(__PRETTY_FUNCTION__, &saved_stats);
 
 	if(diff == NULL) {
 		return;
@@ -426,5 +410,4 @@ cib_replace_notify(crm_data_t *update, enum cib_errors result, crm_data_t *diff)
 	
 	g_hash_table_foreach(client_list, cib_notify_client, replace_msg);
 	crm_msg_del(replace_msg);
-	crm_diff_mem_stats(LOG_ERR, LOG_ERR, __PRETTY_FUNCTION__, NULL, &saved_stats);
 }

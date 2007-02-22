@@ -1,4 +1,3 @@
-/* $Id: master.c,v 1.22 2006/06/07 12:46:58 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -538,10 +537,6 @@ void master_rsc_colocation_rh(
 	if(rsc_rh->provisional) {
 		return;
 
-	} else if(rsc_rh == NULL) {
-		pe_err("rsc_rh was NULL for %s", constraint->id);
-		return;
-
 	} else if(constraint->role_rh == RSC_ROLE_UNKNOWN) {
 		crm_debug_3("Handling %s as a clone colocation", constraint->id);
 		clone_rsc_colocation_rh(rsc_lh, rsc_rh, constraint);
@@ -550,7 +545,7 @@ void master_rsc_colocation_rh(
 	
 	CRM_CHECK(rsc_lh != NULL, return);
 	CRM_CHECK(rsc_lh->variant == pe_native, return);
-	crm_debug_3("Processing constraint %s: %d", constraint->id, constraint->score);
+	crm_info("Processing constraint %s: %d", constraint->id, constraint->score);
 
 	if(constraint->score < INFINITY) {
 		slist_iter(
@@ -565,8 +560,10 @@ void master_rsc_colocation_rh(
 
 		slist_iter(
 			child_rsc, resource_t, clone_data->child_list, lpc,
+			crm_info("Processing: %s", child_rsc->id);
 			if(child_rsc->allocated_to != NULL
 			   && child_rsc->next_role == constraint->role_rh) {
+				crm_info("Applying: %s %s", child_rsc->id, role2text(child_rsc->next_role));
 				rhs = g_list_append(rhs, child_rsc->allocated_to);
 			}
 			);

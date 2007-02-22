@@ -1,4 +1,3 @@
-/* $Id: unpack.c,v 1.7 2006/08/14 09:00:57 andrew Exp $ */
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -107,7 +106,7 @@ unpack_synapse(crm_graph_t *new_graph, crm_data_t *xml_synapse)
 	}
 	
 	new_graph->num_synapses++;
-	CRM_CHECK(new_synapse->id >= 0, return NULL);
+	CRM_CHECK(new_synapse->id >= 0, crm_free(new_synapse); return NULL);
 	
 	crm_debug_3("look for actions in synapse %s",
 		    crm_element_value(xml_synapse, XML_ATTR_ID));
@@ -189,11 +188,11 @@ unpack_graph(crm_data_t *xml_graph)
 
 	if(xml_graph != NULL) {
 		t_id = crm_element_value(xml_graph, "transition_id");
-		CRM_CHECK(t_id != NULL, return NULL);
+		CRM_CHECK(t_id != NULL, crm_free(new_graph); return NULL);
 		new_graph->id = crm_parse_int(t_id, "-1");
 
 		time = crm_element_value(xml_graph, "cluster-delay");
-		CRM_CHECK(time != NULL, return NULL);
+		CRM_CHECK(time != NULL, crm_free(new_graph); return NULL);
 		new_graph->network_delay = crm_get_msec(time);
 		new_graph->transition_timeout = new_graph->network_delay;
 	}
