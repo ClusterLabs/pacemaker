@@ -44,10 +44,21 @@ need_abort(crm_data_t *update)
 		return NULL;
 	}
 	
-        xml_prop_iter(update, name, value, 
-                      if(safe_str_eq(name, XML_ATTR_ID) == FALSE) {
-                              return update;
-                      }
+        xml_prop_iter(update, name, value,
+                      if(safe_str_eq(name, XML_ATTR_HAVE_QUORUM)) {
+			      goto do_abort;
+                      } else if(safe_str_eq(name, XML_ATTR_NUMPEERS)) {
+			      goto do_abort;
+                      } else if(safe_str_eq(name, XML_ATTR_GENERATION)) {
+			      goto do_abort;
+                      } else if(safe_str_eq(name, XML_ATTR_GENERATION_ADMIN)) {
+			      goto do_abort;
+		      }
+		      continue;
+	  do_abort:
+		      crm_debug("Aborting on change to %s", name);
+		      crm_log_xml_debug(update, "Abort: CIB Attrs");
+		      return update;
                 );
 
 	section = XML_CIB_TAG_NODES;
