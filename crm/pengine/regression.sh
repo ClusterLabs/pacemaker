@@ -228,6 +228,7 @@ do_test 797 "OSDL #797"
 do_test 829 "OSDL #829"
 do_test 994 "OSDL #994"
 do_test 1360 "OSDL #1360 - Clone stickiness"
+do_test 1484 "OSDL #1484 - on_fail=stop"
 do_test unrunnable-1 "Unrunnable"
 do_test stonith-0 "Stonith loop"
 
