@@ -182,7 +182,7 @@ cluster_option(GHashTable* options, gboolean(*validate)(const char*),
 
 	if(value == NULL) {
 		crm_notice("Using default value '%s' for cluster option '%s'",
-			   value, name);
+			   def_value, name);
 
 		if(options == NULL) {
 			return def_value;
