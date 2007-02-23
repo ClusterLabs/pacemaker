@@ -361,6 +361,13 @@ main(int argc, char **argv)
 		char *read_value = NULL;
 		rc = read_attr(the_cib, type, dest_node, set_name,
 				 attr_id, attr_name, &read_value);
+
+		if(rc == cib_NOTEXISTS 
+		   && safe_str_eq(crm_system_name, "crm_failcount")) {
+			rc = cib_ok;
+			read_value = crm_strdup("0");
+		}
+		
 		crm_info("Read %s=%s %s%s",
 			 attr_name, crm_str(read_value),
 			 set_name?"in ":"", set_name?set_name:"");
@@ -376,11 +383,7 @@ main(int argc, char **argv)
 		}
 	}
 	the_cib->cmds->signoff(the_cib);
-	if(DO_WRITE == FALSE && rc == cib_NOTEXISTS) {
-		fprintf(stderr, "Error performing operation: %s\n",
-			cib_error2string(rc));
-
-	} else if(rc != cib_ok) {
+	if(rc != cib_ok) {
 		fprintf(stderr, "Error performing operation: %s\n",
 			cib_error2string(rc));
 	}
