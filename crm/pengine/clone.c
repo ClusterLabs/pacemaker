@@ -170,6 +170,15 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 		return 1;
 	}
 
+	if(node1->weight < node2->weight) {
+		do_crm_log(level, "%s < %s: score", resource1->id, resource2->id);
+		return 1;
+
+	} else if(node1->weight > node2->weight) {
+		do_crm_log(level, "%s > %s: score", resource1->id, resource2->id);
+		return -1;
+	}
+	
 	do_crm_log(level, "%s == %s: default", resource1->id, resource2->id);
 	return 0;
 }
