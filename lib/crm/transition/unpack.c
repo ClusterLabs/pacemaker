@@ -68,17 +68,17 @@ unpack_action(synapse_t *parent, crm_data_t *xml_action)
 
 	action->params = xml2list(action_copy);
 
-	value = g_hash_table_lookup(action->params, "timeout");
+	value = g_hash_table_lookup(action->params, "CRM_meta_timeout");
 	if(value != NULL) {
 		action->timeout = crm_parse_int(value, NULL);
 	}
 
-	value = g_hash_table_lookup(action->params, "interval");
+	value = g_hash_table_lookup(action->params, "CRM_meta_interval");
 	if(value != NULL) {
 		action->interval = crm_parse_int(value, NULL);
 	}
 
-	value = g_hash_table_lookup(action->params, "can_fail");
+	value = g_hash_table_lookup(action->params, "CRM_meta_can_fail");
 	if(value != NULL) {	
 		cl_str_to_boolean(value, &(action->can_fail));
 	}
