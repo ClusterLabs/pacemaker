@@ -68,6 +68,7 @@ char rsc_cmd = 'L';
 char *our_pid = NULL;
 IPC_Channel *crmd_channel = NULL;
 char *xml_file = NULL;
+int cib_options = cib_sync_call;
 
 #define OPTARGS	"V?LRQxDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:fX:lmu:"
 
@@ -208,7 +209,6 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 {
 	int rc = cib_ok;
 	int matches = 0;
-	int cib_options = cib_sync_call;
 	
 	char *local_attr_id = NULL;
 	char *local_attr_set = NULL;
@@ -220,11 +220,6 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 
 	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
-	if(do_force) {
-		crm_debug("Forcing...");
-		cib_options |= cib_scope_local|cib_quorum_override;
-	}
-			
 	if(rsc == NULL) {
 		return cib_NOTEXISTS;
 	}
@@ -353,14 +348,8 @@ delete_resource_attr(
 
 	int rc = cib_ok;
 	char *local_attr_id = NULL;
-	int cib_options = cib_sync_call;
 	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
-	if(do_force) {
-		crm_debug("Forcing...");
-		cib_options |= cib_scope_local|cib_quorum_override;
-	}
-			
 	if(rsc == NULL) {
 		return cib_NOTEXISTS;
 	}
@@ -588,7 +577,7 @@ migrate_resource(
 	if(existing_node == NULL) {
 		crm_log_xml_notice(can_run, "Deleting");
 		rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_CONSTRAINTS,
-					    dont_run, NULL, cib_sync_call);
+					    dont_run, NULL, cib_options);
 		if(rc == cib_NOTEXISTS) {
 			rc = cib_ok;
 
@@ -654,7 +643,7 @@ migrate_resource(
 	if(preferred_node == NULL) {
 		crm_log_xml_notice(can_run, "Deleting");
 		rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_CONSTRAINTS,
-					    can_run, NULL, cib_sync_call);
+					    can_run, NULL, cib_options);
 		if(rc == cib_NOTEXISTS) {
 			rc = cib_ok;
 
@@ -705,7 +694,7 @@ migrate_resource(
 	if(preferred_node != NULL || existing_node != NULL) {
 		crm_log_xml_notice(fragment, "CLI Update");
 		rc = cib_conn->cmds->update(cib_conn, XML_CIB_TAG_CONSTRAINTS,
-					    fragment, NULL, cib_sync_call);
+					    fragment, NULL, cib_options);
 	}
 
   bail:
@@ -910,6 +899,11 @@ main(int argc, char **argv)
 		our_pid[10] = '\0';
 	}
 
+	if(do_force) {
+		crm_debug("Forcing...");
+		cib_options |= cib_scope_local|cib_quorum_override;
+	}
+
 	if(rsc_cmd == 'L' || rsc_cmd == 'W' || rsc_cmd == 'D' || rsc_cmd == 'x'
 	   || rsc_cmd == 'M' || rsc_cmd == 'U' || rsc_cmd == 'C' 
 	   || rsc_cmd == 'p' || rsc_cmd == 'd' || rsc_cmd == 'g'
@@ -992,7 +986,7 @@ main(int argc, char **argv)
 			/* force the TE to start a transition */
 			sleep(5); /* wait for the refresh */
 			now_s = crm_itoa(now);
-			update_attr(cib_conn, cib_sync_call,
+			update_attr(cib_conn, cib_options,
 				    XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, "last-lrm-refresh", now_s);
 			crm_free(now_s);
 		}
@@ -1087,7 +1081,7 @@ main(int argc, char **argv)
 		crm_xml_add(msg_data, prop_name, prop_value);
 		
 		rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_RESOURCES,
-					    msg_data, NULL, cib_sync_call);
+					    msg_data, NULL, cib_options);
 		free_xml(msg_data);
 
 	} else if(rsc_cmd == 'g') {
@@ -1121,7 +1115,6 @@ main(int argc, char **argv)
 
 	} else if(rsc_cmd == 'D') {
 		crm_data_t *msg_data = NULL;
-		int cib_options = cib_sync_call;
 		
 		CRM_CHECK(rsc_id != NULL, return cib_NOTEXISTS);
 		if(rsc_type == NULL) {
@@ -1132,9 +1125,6 @@ main(int argc, char **argv)
 			return cib_connection;
 		}
 
-		if(do_force) {
-			cib_options |= cib_scope_local|cib_quorum_override;
-		}
 		msg_data = create_xml_node(NULL, rsc_type);
 		crm_xml_add(msg_data, XML_ATTR_ID, rsc_id);
 
