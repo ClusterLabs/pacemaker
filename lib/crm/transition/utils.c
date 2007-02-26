@@ -232,7 +232,7 @@ update_abort_priority(
 		graph->abort_priority = priority;
 		crm_info("Abort priority upgraded to %d", priority);
 		if(graph->abort_reason != NULL) {
-			crm_info("'%s'-class abort superceeded",
+			crm_info("'%s' abort superceeded",
 				 graph->abort_reason);
 		}
 		graph->abort_reason = abort_reason;
