@@ -545,7 +545,7 @@ te_graph_trigger(gpointer user_data)
 
 	if(transition_graph->complete) {
 		notify_crmd(transition_graph);
-		return TRUE;	
+		return TRUE;
 	}
 
 	graph_rc = run_graph(transition_graph);
@@ -559,7 +559,6 @@ te_graph_trigger(gpointer user_data)
 		return TRUE;		
 
 	} else if(graph_rc == transition_pending) {
-		timeout = transition_timer->timeout;
 		crm_debug_3("Transition not yet complete - no actions fired");
 		return TRUE;		
 	}
