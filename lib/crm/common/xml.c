@@ -632,16 +632,21 @@ write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress)
 
 	/* establish the file with correct permissions */
 	file_output_strm = fopen(filename, "w");
+	if(file_output_strm == NULL) {
+		cl_perror("Cannot open %s for writing", filename);
+		crm_free(buffer);
+		return -1;
+	}
+	
 	fclose(file_output_strm);
 	chmod(filename, cib_mode);
 
 	/* now write it */
 	file_output_strm = fopen(filename, "w");
 	if(file_output_strm == NULL) {
-		crm_free(buffer);
 		cl_perror("Cannot write to %s", filename);
-		return -1;
-		
+		crm_free(buffer);
+		return -1;		
 	} 
 
 	if(compress) {
