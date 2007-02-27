@@ -19,6 +19,7 @@
 #include <lha_internal.h>
 
 #include <crm/pengine/status.h>
+#include <unpack.h>
 #include <utils.h>
 #include <crm/msg_xml.h>
 #include <clplumbing/cl_misc.h>
