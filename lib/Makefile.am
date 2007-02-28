@@ -43,7 +43,7 @@ SUBDIRS			=  	\
 	recoverymgr		\
 	fencing			\
 	plugins 		\
-	crm			\
+	$(CRM_DIR)		\
 	lrm			\
 	$(MGMT_DIR)
 

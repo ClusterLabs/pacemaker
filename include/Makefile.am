@@ -32,7 +32,7 @@ include_HEADERS	        = apphb.h apphb_notify.h HBauth.h HBcomm.h	\
 			  recoverymgr.h replace_uuid.h compress.h
 
 SUBDIRS                 = clplumbing ocf pils saf 			\
-			  stonith fencing lrm crm mgmt	
+			  stonith fencing lrm $(CRM_DIR) mgmt	
 
 ## The backtick commands are not executed here,
 ## but rather as macro-expansions at use within the rules.

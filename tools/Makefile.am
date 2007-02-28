@@ -31,10 +31,13 @@ halibdir		= $(libdir)/@HB_PKG@
 gliblib			= @GLIBLIB@
 
 habin_PROGRAMS		= cl_status cl_respawn 
-sbin_PROGRAMS		= attrd_updater
 halib_SCRIPTS		= haresources2cib.py
-halib_PROGRAMS		= attrd	pingd
 sbin_SCRIPTS		= ocf-tester
+
+if CRM_BUILD
+halib_PROGRAMS		= attrd pingd
+sbin_PROGRAMS		= attrd_updater
+endif
 
 ## SOURCES
 ccdv: 	$(top_srcdir)/tools/ccdv.c
