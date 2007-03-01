@@ -34,11 +34,53 @@
 #include <clplumbing/uids.h>
 #include <clplumbing/Gmain_timeout.h>
 
+#ifdef HAVE_GETOPT_H
+#  include <getopt.h>
+#endif
+
 #define UUID_LEN 16
 #define UUID_FILE HA_VARLIBDIR"/"PACKAGE"/hb_uuid"
+
+#define OPTARGS	"rw:"
+
+int read_hb_uuid(void);
+int write_hb_uuid(const char *buffer);
+
+static void usage(void) 
+{
+	fprintf(stderr, "crm_uuid [-r|-w new_ascii_value]\n");
+	exit(1);
+}
+
 int
 main(int argc, char **argv)
 {
+	int flag;
+	
+	cl_log_enable_stderr(TRUE);
+	while (1) {
+		flag = getopt(argc, argv, OPTARGS);
+		if (flag == -1) {
+			break;
+		}
+		switch(flag) {
+			case 'r':
+				break;
+			case 'w':
+				write_hb_uuid(optarg);
+				break;
+			case '?':
+				usage();
+				break;
+		}
+	}
+	read_hb_uuid();	
+	return 0;
+}
+
+int read_hb_uuid(void) 
+{
+		
 	cl_uuid_t uuid;
 	char *buffer = NULL;
 	long start = 0, read_len = 0;
@@ -72,7 +114,7 @@ main(int argc, char **argv)
 	buffer = cl_malloc(50);
 	read_len = fread(uuid.uuid, 1, UUID_LEN, input);
 	if(read_len != UUID_LEN) {
-		fprintf(stderr, "Calculated and read bytes differ: %d vs. %ld\n",
+		fprintf(stderr, "Expected and read bytes differ: %d vs. %ld\n",
 			UUID_LEN, read_len);
 		return 3;
 		
@@ -86,5 +128,32 @@ main(int argc, char **argv)
 	
 	cl_free(buffer);
 
+	return 0;
+}
+
+int write_hb_uuid(const char *new_value) 
+{
+	int fd;
+	int rc;
+	cl_uuid_t uuid;
+	char *buffer = strdup(new_value);
+	rc = cl_uuid_parse(buffer, &uuid);
+	if(rc != 0) {
+		fprintf(stderr, "Invalid ASCII UUID supplied\n");
+		return 1;
+	}
+	
+	if ((fd = open(UUID_FILE, O_WRONLY|O_SYNC|O_CREAT, 0644)) < 0) {
+		cl_perror("Could not open %s", UUID_FILE);
+		return 1;
+	}
+	
+	if (write(fd, uuid.uuid, UUID_LEN) != UUID_LEN) {
+		cl_perror("Could not write UUID to %s", UUID_FILE);
+	}
+	
+	if (close(fd) < 0) {
+		cl_perror("Could not close %s", UUID_FILE);
+	}
 	return 0;
 }
