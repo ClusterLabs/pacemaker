@@ -65,6 +65,7 @@ main(int argc, char **argv)
 		}
 		switch(flag) {
 			case 'r':
+				read_hb_uuid();	
 				break;
 			case 'w':
 				write_hb_uuid(optarg);
@@ -74,7 +75,6 @@ main(int argc, char **argv)
 				break;
 		}
 	}
-	read_hb_uuid();	
 	return 0;
 }
 
@@ -139,7 +139,8 @@ int write_hb_uuid(const char *new_value)
 	char *buffer = strdup(new_value);
 	rc = cl_uuid_parse(buffer, &uuid);
 	if(rc != 0) {
-		fprintf(stderr, "Invalid ASCII UUID supplied\n");
+		fprintf(stderr, "Invalid ASCII UUID supplied: %s\n", new_value);
+		fprintf(stderr, "ASCII UUIDs must be of the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX and contain only letters and digits\n");
 		return 1;
 	}
 	
