@@ -69,7 +69,7 @@ main(int argc, char **argv)
 			case 'w':
 				write_hb_uuid(optarg);
 				break;
-			case '?':
+			default:
 				usage();
 				break;
 		}
