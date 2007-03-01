@@ -530,12 +530,18 @@ attrd_ha_callback(HA_Message * msg, void* private_data)
 	attr_hash_entry_t *hash_entry = NULL;
 	const char *from = ha_msg_value(msg, F_ORIG);
 	const char *op   = ha_msg_value(msg, F_ATTRD_TASK);
+	const char *value= ha_msg_value(msg, F_ATTRD_VALUE);
 	const char *attr = ha_msg_value(msg, F_ATTRD_ATTRIBUTE);
 
 	crm_info("%s message from %s", op, from);
 	hash_entry = find_hash_entry(msg);
 	stop_attrd_timer(hash_entry);
-	if(hash_entry->value == NULL) {
+
+	if(safe_str_neq(from, attrd_uname)) {
+		value = hash_entry->value;
+	}
+
+	if(value == NULL) {
 		/* delete the attr */
 		rc = delete_attr(cib_conn, cib_none, hash_entry->section, attrd_uuid,
 				 hash_entry->set, NULL, attr, NULL);
@@ -546,8 +552,8 @@ attrd_ha_callback(HA_Message * msg, void* private_data)
 		/* send update */
 		rc = update_attr(cib_conn, cib_none, hash_entry->section,
  				 attrd_uuid, hash_entry->set, NULL,
- 				 hash_entry->id, hash_entry->value);
-		crm_info("Sent update %d: %s=%s", rc, hash_entry->id,hash_entry->value);
+ 				 hash_entry->id, value);
+		crm_info("Sent update %d: %s=%s", rc, hash_entry->id, value);
 	}
 
 	add_cib_op_callback(rc, FALSE, crm_strdup(attr), attrd_cib_callback);
@@ -625,6 +631,7 @@ attrd_timer_callback(void *user_data)
 	ha_msg_add(msg, F_ATTRD_SET, hash_entry->set);
 	ha_msg_add(msg, F_ATTRD_SECTION, hash_entry->section);
 	ha_msg_add(msg, F_ATTRD_DAMPEN, hash_entry->dampen);
+	ha_msg_add(msg, F_ATTRD_VALUE, hash_entry->value);
 	send_ha_message(attrd_cluster_conn, msg, NULL, FALSE);
 	crm_msg_del(msg);
 	
