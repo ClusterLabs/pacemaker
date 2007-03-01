@@ -528,6 +528,12 @@ colocation_match(
 		value = g_hash_table_lookup(
 			rsc_rh->allocated_to->details->attrs, attribute);
 		do_check = TRUE;
+
+	} else if(constraint->score < 0) {
+		/* nothing to do:
+		 *   anti-colocation with something thats not running
+		 */
+		return;
 	}
 	
 	slist_iter(

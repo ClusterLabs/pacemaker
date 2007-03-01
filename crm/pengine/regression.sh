@@ -166,6 +166,7 @@ do_test group9 "Group recovery"
 do_test group10 "Group partial recovery"
 do_test group11 "Group target_role"
 do_test group14 "Group stop (graph terminated)"
+do_test group15 "-ve group colocation"
 
 echo ""
 do_test inc0 "Incarnation start" 
