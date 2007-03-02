@@ -1614,7 +1614,9 @@ class ResourceRecover(CTSTest):
         # fail a resource by calling an action it doesn't support
         self.CM.ResourceOp(self.rid, self.action, node, self.interval, "crmd")
 
-        # Temporary hack until the lrmd does the right thing
+
+        # Temporary hacks until the lrmd does the right thing
+        time.sleep(5)
         self.CM.rsh.remote_py(node, "os", "system",
                               "@sbindir@/crm_resource -R -H %s" % node)
 
