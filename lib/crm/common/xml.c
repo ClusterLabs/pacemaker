@@ -682,12 +682,18 @@ write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress)
 			" bzlib was not available at compile time");		
 #endif
 	}
+	
 	if(is_done == FALSE) {
 		res = fprintf(file_output_strm, "%s", buffer);
 		if(res < 0) {
-			cl_perror("Cannot write output to %s",filename);
+			cl_perror("Cannot write output to %s", filename);
 		}
-		fflush(file_output_strm);
+		
+		if(fflush(file_output_strm) == EOF || fsync(fileno(file_output_strm)) < 0) {
+			cl_perror("fflush or fsync error on %s", filename);
+			fclose(file_output_strm);
+			return -1;
+		}
 	}
 	fclose(file_output_strm);
 	crm_free(buffer);
