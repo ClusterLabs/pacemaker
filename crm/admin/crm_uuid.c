@@ -24,6 +24,9 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
 
 #include <stdlib.h>
 #include <errno.h>
