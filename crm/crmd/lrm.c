@@ -359,6 +359,7 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 	char *digest = NULL;
 	lrm_rsc_t *rsc = NULL;
 	const char *value = NULL;
+	gboolean non_empty = FALSE;
 	crm_data_t *restart = NULL;
 	GListPtr restart_list = NULL;
 
@@ -391,11 +392,14 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 	slist_iter(param, const char, restart_list, lpc,
 		   int start = len;
 		   value = g_hash_table_lookup(op->params, param);
-		   crm_xml_add(restart, param, value);
-		   
-		   len += strlen(param) + 2;
-		   crm_realloc(list, len+1);
-		   sprintf(list+start, " %s ", param);
+		   if(value != NULL) {
+			   non_empty = TRUE;
+			   crm_xml_add(restart, param, value);
+			   
+			   len += strlen(param) + 2;
+			   crm_realloc(list, len+1);
+			   sprintf(list+start, " %s ", param);
+		   }
 		);
 	
 	digest = calculate_xml_digest(restart, TRUE);
@@ -403,6 +407,9 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 	crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
 
 	crm_debug("%s : %s", digest, list);
+	if(non_empty) {
+		crm_log_xml_debug(restart, "restart digest source");
+	}
 	slist_destroy(char, child, restart_list,
 		      crm_free(child);
 		);
