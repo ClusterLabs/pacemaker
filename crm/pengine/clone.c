@@ -275,7 +275,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	rsc->is_allocating = TRUE;
 	crm_debug("Processing %s", rsc->id);
 	
-	if(rsc->stickiness) {
+	if(TRUE/* rsc->stickiness */) {
 		/* count now tracks the number of clones currently allocated */
 		slist_iter(node, node_t, clone_data->self->allowed_nodes, lpc,
 			   node->count = 0;
