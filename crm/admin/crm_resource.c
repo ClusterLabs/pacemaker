@@ -458,23 +458,38 @@ crmd_msg_callback(IPC_Channel * server, void *private_data)
 static int
 delete_lrm_rsc(
 	IPC_Channel *crmd_channel, const char *host_uname,
-	const char *rsc_id, const char *rsc_long_id)
+	const char *rsc_id, pe_working_set_t *data_set)
 {
+	char *key = NULL;
 	int rc = cib_send_failed;
 	HA_Message *cmd = NULL;
-	crm_data_t *msg_data = NULL;
-	crm_data_t *rsc = NULL;
+	crm_data_t *xml_rsc = NULL;
+	const char *value = NULL;
 	HA_Message *params = NULL;
-	char *key = crm_concat(crm_system_name, our_pid, '-');
-	
-	CRM_DEV_ASSERT(rsc_id != NULL);
+	crm_data_t *msg_data = NULL;
+	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+
+	if(rsc == NULL) {
+		fprintf(stderr, "Resource %s not found", rsc_id);
+		return cib_NOTEXISTS;
+	}
+	key = crm_concat("0:0:crm-resource-delete", our_pid, '-');
 	
 	msg_data = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
 	crm_xml_add(msg_data, XML_ATTR_TRANSITION_KEY, key);
 	
-	rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);
-	crm_xml_add(rsc, XML_ATTR_ID, rsc_id);
-	crm_xml_add(rsc, XML_ATTR_ID_LONG, rsc_long_id);
+	xml_rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);
+	crm_xml_add(xml_rsc, XML_ATTR_ID, rsc->id);
+	crm_xml_add(xml_rsc, XML_ATTR_ID_LONG, rsc->long_name);
+
+	value = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+	crm_xml_add(xml_rsc, XML_ATTR_TYPE, value);
+
+	value = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+	crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, value);
+
+	value = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+	crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, value);
 
 	params = create_xml_node(msg_data, XML_TAG_ATTRS);
 	crm_xml_add(params, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
@@ -971,15 +986,12 @@ main(int argc, char **argv)
 		do_find_resource_list(&data_set, TRUE);
 		
 	} else if(rsc_cmd == 'C') {
-		resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
-
-		delete_lrm_rsc(crmd_channel, host_uname,
-			       rsc?rsc->id:rsc_id, rsc?rsc->long_name:NULL);
+		int rc = delete_lrm_rsc(crmd_channel, host_uname, rsc_id, &data_set);
 		
 		sleep(5);
 		refresh_lrm(crmd_channel, host_uname);
 
-		if(rsc != NULL) {
+		if(rc == 0) {
 			char *now_s = NULL;
 			time_t now = time(NULL);
 
@@ -996,14 +1008,24 @@ main(int argc, char **argv)
 			crm_str(rsc_id), cib_error2string(rc));
 		
 	} else if(rsc_cmd == 'W') {
-		CRM_DEV_ASSERT(rsc_id != NULL);
+		if(rsc_id == NULL) {
+			fprintf(stderr, "Must supply a resource id with -r\n");
+			return cib_NOTEXISTS;
+		} 
 		rc = do_find_resource(rsc_id, &data_set);
 		
 	} else if(rsc_cmd == 'x') {
-		CRM_DEV_ASSERT(rsc_id != NULL);
+		if(rsc_id == NULL) {
+			fprintf(stderr, "Must supply a resource id with -r\n");
+			return cib_NOTEXISTS;
+		} 
 		rc = dump_resource(rsc_id, &data_set);
 
 	} else if(rsc_cmd == 'U') {
+		if(rsc_id == NULL) {
+			fprintf(stderr, "Must supply a resource id with -r\n");
+			return cib_NOTEXISTS;
+		} 
 		rc = migrate_resource(rsc_id, NULL, NULL, cib_conn);
 
 	} else if(rsc_cmd == 'M') {
@@ -1058,7 +1080,10 @@ main(int argc, char **argv)
 		}
 		
 	} else if(rsc_cmd == 'G') {
-		CRM_DEV_ASSERT(rsc_id != NULL);
+		if(rsc_id == NULL) {
+			fprintf(stderr, "Must supply a resource id with -r\n");
+			return cib_NOTEXISTS;
+		} 
 		rc = dump_resource_prop(rsc_id, prop_name, &data_set);
 
 	} else if(rsc_cmd == 'S') {
@@ -1071,7 +1096,10 @@ main(int argc, char **argv)
 			return cib_connection;
 		}
 
-		CRM_DEV_ASSERT(rsc_id != NULL);
+		if(rsc_id == NULL) {
+			fprintf(stderr, "Must supply a resource id with -r\n");
+			return cib_NOTEXISTS;
+		} 
 		CRM_DEV_ASSERT(rsc_type != NULL);
 		CRM_DEV_ASSERT(prop_name != NULL);
 		CRM_DEV_ASSERT(prop_value != NULL);
@@ -1085,11 +1113,17 @@ main(int argc, char **argv)
 		free_xml(msg_data);
 
 	} else if(rsc_cmd == 'g') {
-		CRM_DEV_ASSERT(rsc_id != NULL);
+		if(rsc_id == NULL) {
+			fprintf(stderr, "Must supply a resource id with -r\n");
+			return cib_NOTEXISTS;
+		} 
 		rc = dump_resource_attr(rsc_id, prop_name, &data_set);
 
 	} else if(rsc_cmd == 'p') {
-		CRM_DEV_ASSERT(rsc_id != NULL);
+		if(rsc_id == NULL) {
+			fprintf(stderr, "Must supply a resource id with -r\n");
+			return cib_NOTEXISTS;
+		} 
 		if(prop_value == NULL) {
 			fprintf(stderr, "You need to supply a value with the -v option\n");
 			return CIBRES_MISSING_FIELD;
@@ -1098,7 +1132,10 @@ main(int argc, char **argv)
 				       prop_value, cib_conn, &data_set);
 
 	} else if(rsc_cmd == 'd') {
-		CRM_DEV_ASSERT(rsc_id != NULL);
+		if(rsc_id == NULL) {
+			fprintf(stderr, "Must supply a resource id with -r\n");
+			return cib_NOTEXISTS;
+		} 
 		rc = delete_resource_attr(rsc_id, prop_id, prop_set, prop_name,
 					  cib_conn, &data_set);
 
@@ -1116,7 +1153,10 @@ main(int argc, char **argv)
 	} else if(rsc_cmd == 'D') {
 		crm_data_t *msg_data = NULL;
 		
-		CRM_CHECK(rsc_id != NULL, return cib_NOTEXISTS);
+		if(rsc_id == NULL) {
+			fprintf(stderr, "Must supply a resource id with -r\n");
+			return cib_NOTEXISTS;
+		} 
 		if(rsc_type == NULL) {
 			fprintf(stderr, "You need to specify a resource type with -t");
 			return cib_NOTEXISTS;
