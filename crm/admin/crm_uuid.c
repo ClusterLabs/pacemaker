@@ -58,6 +58,13 @@ main(int argc, char **argv)
 	int flag;
 	
 	cl_log_enable_stderr(TRUE);
+
+	if(argc == 1) {
+		/* no arguments specified, default to read */
+		read_hb_uuid();	
+		return 0;
+	}
+	
 	while (1) {
 		flag = getopt(argc, argv, OPTARGS);
 		if (flag == -1) {
