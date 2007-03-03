@@ -388,18 +388,17 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 		return;
 	}
 
-	restart = create_xml_node(NULL, "restart");
+	restart = create_xml_node(NULL, "parameters");
 	slist_iter(param, const char, restart_list, lpc,
 		   int start = len;
 		   value = g_hash_table_lookup(op->params, param);
 		   if(value != NULL) {
 			   non_empty = TRUE;
 			   crm_xml_add(restart, param, value);
-			   
-			   len += strlen(param) + 2;
-			   crm_realloc(list, len+1);
-			   sprintf(list+start, " %s ", param);
 		   }
+		   len += strlen(param) + 2;
+		   crm_realloc(list, len+1);
+		   sprintf(list+start, " %s ", param);
 		);
 	
 	digest = calculate_xml_digest(restart, TRUE);
@@ -411,8 +410,7 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 		crm_log_xml_debug(restart, "restart digest source");
 	}
 	slist_destroy(char, child, restart_list,
-		      crm_free(child);
-		);
+		      crm_free(child));
 	free_xml(restart);
 	crm_free(digest);
 	crm_free(list);
