@@ -75,13 +75,6 @@ crmd_LDADD	= $(COMMONLIBS) 					\
 		  $(top_builddir)/lib/lrm/liblrm.la			\
 		  $(top_builddir)/membership/ccm/libccmclient.la  
 
-# Simple HA client app
-#clnt_SOURCES	= clnt.c
-
-#clnt_CFLAGS	= $(XML_FLAGS) -DHA_VARLIBDIR='"@HA_VARLIBDIR@"'
-#clnt_LDFLAGS	= $(XML_LIBS)
-#clnt_LDADD	= $(COMMONLIBS) 
-
 clean-generic:
 	rm -f *.log *.debug *.xml *~
 
