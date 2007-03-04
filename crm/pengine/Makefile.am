@@ -37,10 +37,7 @@ crmuid		= @HA_CCMUID@
 
 
 COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
-		$(top_builddir)/lib/clplumbing/libplumb.la		\
-		$(top_builddir)/lib/pils/libpils.la			\
-		$(top_builddir)/lib/crm/common/libcrmcommon.la		\
-		$(top_builddir)/lib/crm/pengine/libpe_status.la		\
+		-lplumb	-lcrmcommon -lpe_status				\
 		libpengine.la						\
 		$(GLIBLIB)						\
 		$(CURSESLIBS)						\
@@ -48,6 +45,10 @@ COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 
 LIBRT 		= @LIBRT@
 AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
+AM_LDFLAGS	= -L$(top_builddir)/lib/clplumbing	\
+		  -L$(top_builddir)/lib/crm/common	\
+		  -L$(top_builddir)/lib/crm/pengine	\
+		  @LDFLAGS@
 
 ## libraries
 lib_LTLIBRARIES	= libpengine.la

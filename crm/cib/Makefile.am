@@ -36,16 +36,20 @@ crmuid		= @HA_CCMUID@
 crmreqsocket	= $(havarlibdir)/api/crm.req
 crmressocket	= $(havarlibdir)/api/crm.rsp
 
-COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
-		  $(top_builddir)/lib/clplumbing/libplumb.la		\
-		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
-		  $(top_builddir)/lib/hbclient/libhbclient.la		\
-		  $(top_builddir)/lib/crm/cib/libcib.la			\
-		  $(GLIBLIB)						\
+COMMONLIBS	= $(CRM_DEBUG_LIBS)			\
+		  -lccmclient -lhbclient -lplumb	\
+		  -lcrmcommon -lpe_rules -lcib		\
+		  $(GLIBLIB)				\
 		  $(LIBRT)
 
 LIBRT 		= @LIBRT@
 AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
+AM_LDFLAGS	= -L$(top_builddir)/membership/ccm	\
+		  -L$(top_builddir)/lib/hbclient	\
+		  -L$(top_builddir)/lib/clplumbing	\
+		  -L$(top_builddir)/lib/crm/common	\
+		  -L$(top_builddir)/lib/crm/cib		\
+		  @LDFLAGS@
 
 ## binary progs
 halib_PROGRAMS	= cib cibmon
@@ -57,8 +61,7 @@ noinst_HEADERS		= cibio.h cibmessages.h cibprimatives.h notify.h \
 
 cib_SOURCES		= io.c primatives.c messages.c cib.c notify.c \
 			callbacks.c main.c remote.c
-cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB) \
-			$(top_builddir)/membership/ccm/libccmclient.la
+cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB)
 
 cib_LDFLAGS		= $(GNUTLSLIBS)
 
