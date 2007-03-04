@@ -37,7 +37,7 @@ function assert() {
     target=$1; shift
     msg=$1; shift
     exit_code=$1; shift
-    if [ $rc != $target ]; then
+    if [ $rc -ne $target ]; then
 	num_errors=`expr $num_errors + 1`
 	echo -e "* rc=$rc: $msg"
 	if [ ! -z $exit_code ]; then
@@ -114,7 +114,7 @@ test_command validate-all
 rc=$?
 if [ $rc = 3 ]; then
     assert $rc 0 "Your agent does not support the validate-all action"
-else
+elif [ $rc -ne 0 ]; then
     assert $rc 0 "Validation failed.  Did you supply enough options with -o ?" 1
     usage $rc
 fi
