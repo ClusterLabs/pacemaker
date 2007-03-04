@@ -714,7 +714,7 @@ do_state_transition(long long actions,
 			} else if(g_hash_table_size(confirmed_nodes)
 				  == fsa_membership_copy->members_size) {
 				crm_info("All %u cluster nodes are"
-					 " eligable to run resources.",
+					 " eligible to run resources.",
 					 fsa_membership_copy->members_size);
 				
 			} else if(g_hash_table_size(confirmed_nodes) > fsa_membership_copy->members_size) {
@@ -723,7 +723,7 @@ do_state_transition(long long actions,
 				
 			} else {
 				crm_warn("Only %u of %u cluster "
-					 "nodes are eligable to run resources",
+					 "nodes are eligible to run resources",
 					 g_hash_table_size(confirmed_nodes),
 					 fsa_membership_copy->members_size);
 			}
