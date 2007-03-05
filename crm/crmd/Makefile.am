@@ -34,22 +34,20 @@ crmdir		= $(havarlibdir)/crm
 apigid		= @HA_APIGID@
 crmuid		= @HA_CCMUID@
 
-COMMONLIBS	= $(CRM_DEBUG_LIBS)			\
-		-lccmclient -lhbclient -lplumb		\
-		-lcrmcommon -lpe_rules -lcib		\
-		$(GLIBLIB)				\
+COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
+		$(top_builddir)/lib/clplumbing/libplumb.la		\
+		$(top_builddir)/lib/pils/libpils.la			\
+		$(top_builddir)/lib/crm/common/libcrmcommon.la	\
+		$(top_builddir)/lib/crm/pengine/libpe_rules.la	\
+		$(top_builddir)/lib/crm/cib/libcib.la			\
+		$(top_builddir)/lib/apphb/libapphb.la			\
+		$(top_builddir)/lib/hbclient/libhbclient.la		\
+		$(GLIBLIB)						\
 		$(LIBRT)
 
 LIBRT 		= @LIBRT@
-AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
-AM_LDFLAGS	= -L$(top_builddir)/membership/ccm	\
-		  -L$(top_builddir)/lib/hbclient	\
-		  -L$(top_builddir)/lib/clplumbing	\
-		  -L$(top_builddir)/lib/lrm		\
-		  -L$(top_builddir)/lib/crm/common	\
-		  -L$(top_builddir)/lib/crm/pengine	\
-		  -L$(top_builddir)/lib/crm/cib		\
-		  @LDFLAGS@
+AM_CFLAGS	= @CFLAGS@						\
+		$(CRM_DEBUG_FLAGS)
 
 ## libraries
 lib_LTLIBRARIES	= 
@@ -73,7 +71,9 @@ crmd_SOURCES	= main.c crmd.c 					\
 		cib.c pengine.c tengine.c lrm.c 			\
 		utils.c misc.c
 
-crmd_LDADD	= $(COMMONLIBS) -llrm -lccmclient
+crmd_LDADD	= $(COMMONLIBS) 					\
+		  $(top_builddir)/lib/lrm/liblrm.la			\
+		  $(top_builddir)/membership/ccm/libccmclient.la  
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

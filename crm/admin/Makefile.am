@@ -26,18 +26,16 @@ halibdir	= $(libdir)/@HB_PKG@
 hasbindir	= $(sbindir)
 LIBRT 		= @LIBRT@
 AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
-AM_LDFLAGS	= -L$(top_builddir)/membership/ccm	\
-		  -L$(top_builddir)/lib/hbclient	\
-		  -L$(top_builddir)/lib/clplumbing	\
-		  -L$(top_builddir)/lib/crm/common	\
-		  -L$(top_builddir)/lib/crm/pengine	\
-		  -L$(top_builddir)/lib/crm/cib		\
-		  @LDFLAGS@
 
-COMMONLIBS	= $(CRM_DEBUG_LIBS)			\
-		-lplumb -lhbclient -lcrmcommon -lcib 	\
-		$(GLIBLIB)				\
-		$(CURSESLIBS)				\
+COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
+		$(top_builddir)/lib/clplumbing/libplumb.la		\
+	  	$(top_builddir)/lib/pils/libpils.la			\
+		$(top_builddir)/lib/crm/common/libcrmcommon.la		\
+		$(top_builddir)/lib/crm/cib/libcib.la			\
+		$(top_builddir)/lib/apphb/libapphb.la			\
+		$(top_builddir)/lib/hbclient/libhbclient.la  		\
+		$(GLIBLIB)						\
+		$(CURSESLIBS)						\
 		$(LIBRT)
 
 
@@ -54,26 +52,31 @@ hasbin_SCRIPTS		= crm_sh
 noinst_HEADERS		= 
 
 crmadmin_SOURCES	= crmadmin.c
-crmadmin_LDADD		= $(COMMONLIBS) -lpe_status
+crmadmin_LDADD		= $(COMMONLIBS) \
+			$(top_builddir)/lib/crm/pengine/libpe_status.la
 
 crm_uuid_SOURCES	= crm_uuid.c
-crm_uuid_LDADD		= $(GLIBLIB) -lplumb
+crm_uuid_LDADD		= $(GLIBLIB) $(top_builddir)/lib/clplumbing/libplumb.la
 
 cibadmin_SOURCES	= cibadmin.c
 cibadmin_LDADD		= $(COMMONLIBS)
 
 ccm_tool_SOURCES	= ccm_epoche.c
-ccm_tool_LDADD		= $(COMMONLIBS) -lccmclient
+ccm_tool_LDADD		= $(COMMONLIBS) \
+			  $(top_builddir)/membership/ccm/libccmclient.la
 
 crm_diff_SOURCES	= xml_diff.c
 crm_diff_LDADD		= $(COMMONLIBS)
 
 crm_mon_SOURCES		= crm_mon.c
-crm_mon_LDADD		= $(COMMONLIBS) -lpe_status
+crm_mon_LDADD		= $(COMMONLIBS) \
+			$(top_builddir)/lib/crm/pengine/libpe_status.la
 
 # Arguments could be made that this should live in crm/pengine
 crm_verify_SOURCES	= crm_verify.c
-crm_verify_LDADD	= $(COMMONLIBS) -lpe_status -lpengine
+crm_verify_LDADD	= $(COMMONLIBS) \
+			$(top_builddir)/lib/crm/pengine/libpe_status.la \
+			$(top_builddir)/crm/pengine/libpengine.la
 
 crm_master_SOURCES	= crm_attribute.c
 crm_master_LDADD	= $(COMMONLIBS)
@@ -88,7 +91,8 @@ crm_failcount_SOURCES	= crm_attribute.c
 crm_failcount_LDADD	= $(COMMONLIBS)
 
 crm_resource_SOURCES	= crm_resource.c
-crm_resource_LDADD	= $(COMMONLIBS) -lpe_status
+crm_resource_LDADD	= $(COMMONLIBS) \
+			$(top_builddir)/lib/crm/pengine/libpe_status.la
 
 iso8601_SOURCES		= test.iso8601.c
 iso8601_LDADD		= $(COMMONLIBS) 
