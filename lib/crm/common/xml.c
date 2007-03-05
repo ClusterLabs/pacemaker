@@ -692,6 +692,7 @@ write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress)
 		if(fflush(file_output_strm) == EOF || fsync(fileno(file_output_strm)) < 0) {
 			cl_perror("fflush or fsync error on %s", filename);
 			fclose(file_output_strm);
+			crm_free(buffer);
 			return -1;
 		}
 	}

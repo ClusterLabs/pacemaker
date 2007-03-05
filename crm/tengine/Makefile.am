@@ -32,17 +32,18 @@ havarlibdir	= $(localstatedir)/lib/@HB_PKG@
 crmdir		= $(havarlibdir)/crm
 
 COMMONLIBS	= $(CRM_DEBUG_LIBS) 					\
-		$(top_builddir)/lib/clplumbing/libplumb.la		\
-		$(top_builddir)/lib/pils/libpils.la			\
-		$(top_builddir)/lib/crm/common/libcrmcommon.la 	\
-		$(top_builddir)/lib/crm/cib/libcib.la	 	\
-		$(top_builddir)/lib/apphb/libapphb.la			\
-		$(top_builddir)/lib/hbclient/libhbclient.la		\
+		-lplumb	-lcrmcommon -lcib				\
 		$(GLIBLIB)						\
 		$(LIBRT)
 
 LIBRT 		= @LIBRT@
 AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
+AM_LDFLAGS	= -L$(top_builddir)/lib/clplumbing	\
+		  -L$(top_builddir)/lib/fencing 	\
+		  -L$(top_builddir)/lib/crm/common	\
+		  -L$(top_builddir)/lib/crm/cib		\
+                  -L$(top_builddir)/lib/crm/transition	\
+		  @LDFLAGS@
 
 
 ## binary progs
@@ -52,14 +53,10 @@ halib_PROGRAMS	= tengine ttest
 noinst_HEADERS	= tengine.h te_callbacks.h
 
 tengine_SOURCES	= actions.c events.c utils.c callbacks.c main.c
-tengine_LDADD	= $(COMMONLIBS) \
-                    $(top_builddir)/lib/fencing/libstonithd.la \
-                    $(top_builddir)/lib/crm/transition/libtransitioner.la
+tengine_LDADD	= $(COMMONLIBS) -lstonithd -ltransitioner
 
 ttest_SOURCES	= actions.c events.c utils.c callbacks.c ttest.c
-ttest_LDADD	= $(COMMONLIBS) \
-                    $(top_builddir)/lib/fencing/libstonithd.la \
-                    $(top_builddir)/lib/crm/transition/libtransitioner.la
+ttest_LDADD	= $(COMMONLIBS) -lstonithd -ltransitioner
 
 clean-generic:
 	rm -f *.log *.debug *~
