@@ -35,14 +35,6 @@ crmdir		= $(havarlibdir)/crm
 apigid		= @HA_APIGID@
 crmuid		= @HA_CCMUID@
 
-
-COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
-		$(top_builddir)/lib/clplumbing/libplumb.la		\
-		$(top_builddir)/lib/crm/common/libcrmcommon.la		\
-		$(GLIBLIB)						\
-		$(CURSESLIBS)						\
-		$(LIBRT)
-
 LIBRT 		= @LIBRT@
 AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
 
