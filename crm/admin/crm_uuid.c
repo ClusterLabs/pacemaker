@@ -142,7 +142,7 @@ int read_hb_uuid(void)
 	cl_free(buffer);
 	fclose(input);
 
-	return 0;
+	return rc;
 }
 
 int write_hb_uuid(const char *new_value) 
