@@ -19,6 +19,12 @@
      </action_set>
      <inputs>
        <trigger>
+         <rsc_op id="10" operation="start" operation_key="child_rsc1_start_0" on_node="node1" on_node_uuid="uuid1"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="11" operation="start" operation_key="child_rsc2_start_0" on_node="node1" on_node_uuid="uuid1"/>
+       </trigger>
+       <trigger>
          <rsc_op id="12" operation="start" operation_key="child_rsc3_start_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
