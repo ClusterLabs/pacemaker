@@ -173,8 +173,10 @@ main(int argc, char **argv)
 		if(xml_strm != NULL) {
 			crm_debug("Reading: %s", xml_file_1);
 			object_1 = file2xml(xml_strm, FALSE);
+			fclose(xml_strm);
+
 		} else {
-			cl_perror("File not found: %s", xml_file_1);
+			cl_perror("Couldn't open %s for reading", xml_file_1);
 		}
 	}
 	
@@ -190,8 +192,10 @@ main(int argc, char **argv)
 		if(xml_strm != NULL) {
 			crm_debug("Reading: %s", xml_file_2);
 			object_2 = file2xml(xml_strm, FALSE);
+			fclose(xml_strm);
+
 		} else {
-			cl_perror("File not found: %s", xml_file_2);
+			cl_perror("Couldn't open %s for reading", xml_file_2);
 		}
 		
 	}

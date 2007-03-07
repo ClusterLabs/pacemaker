@@ -470,7 +470,7 @@ delete_lrm_rsc(
 	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
 	if(rsc == NULL) {
-		fprintf(stderr, "Resource %s not found", rsc_id);
+		fprintf(stderr, "Resource %s not found\n", rsc_id);
 		return cib_NOTEXISTS;
 	}
 	key = crm_concat("0:0:crm-resource-delete", our_pid, '-');
@@ -931,6 +931,9 @@ main(int argc, char **argv)
 				cib_xml_copy = file2xml(xml_strm, TRUE);
 			} else {
 				cib_xml_copy = file2xml(xml_strm, FALSE);
+			}
+			if(xml_strm != NULL) {
+				fclose(xml_strm);
 			}
 
 		} else {

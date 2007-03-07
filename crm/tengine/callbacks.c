@@ -248,15 +248,18 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 				transition_graph = unpack_graph(xml_data);
 
 			} else {
+				crm_data_t *graph_data = NULL;
 				FILE *graph_fd = fopen(graph_file, "r");
-				crm_data_t *graph_data = file2xml(graph_fd, FALSE);
 				CRM_CHECK(graph_fd != NULL,
-					  crm_err("Could not open graph filename: %s", graph_file);
+					  cl_perror("Could not open graph file %s", graph_file);
 					  return TRUE);
+
+				graph_data = file2xml(graph_fd, FALSE);
 				transition_graph = unpack_graph(graph_data);
-				fclose(graph_fd);
+
 				free_xml(graph_data);
 				unlink(graph_file);
+				fclose(graph_fd);
 			}
 			
 			start_global_timer(transition_timer,

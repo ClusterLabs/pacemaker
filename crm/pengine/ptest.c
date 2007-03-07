@@ -60,7 +60,6 @@ FILE *dot_strm = NULL;
 #define dot_write(fmt...) if(dot_strm != NULL) {	\
 		fprintf(dot_strm, fmt);			\
 		fprintf(dot_strm, "\n");		\
-		fflush(dot_strm);		\
 	} else {					\
 		crm_debug(DOT_PREFIX""fmt);		\
 	}
@@ -277,10 +276,17 @@ main(int argc, char **argv)
 		
 	} else if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
-		if(strstr(xml_file, ".bz2") != NULL) {
-			cib_object = file2xml(xml_strm, TRUE);
+		if(xml_strm == NULL) {
+			cl_perror("Could not open %s for reading", xml_file);
+			
 		} else {
-			cib_object = file2xml(xml_strm, FALSE);
+			if(strstr(xml_file, ".bz2") != NULL) {
+				cib_object = file2xml(xml_strm, TRUE);
+				
+			} else {
+				cib_object = file2xml(xml_strm, FALSE);
+			}
+			fclose(xml_strm);
 		}
 		
 	} else if(use_stdin) {
@@ -304,11 +310,17 @@ main(int argc, char **argv)
 	
 	if(input_file != NULL) {
 		FILE *input_strm = fopen(input_file, "w");
-		msg_buffer = dump_xml_formatted(cib_object);
-		fprintf(input_strm, "%s\n", msg_buffer);
-		fflush(input_strm);
-		fclose(input_strm);
-		crm_free(msg_buffer);
+		if(input_strm == NULL) {
+			cl_perror("Could not open %s for writing", input_file);
+		} else {
+			msg_buffer = dump_xml_formatted(cib_object);
+			if(fprintf(input_strm, "%s\n", msg_buffer) < 0) {
+				cl_perror("Write to %s failed", graph_file);
+			}
+			fflush(input_strm);
+			fclose(input_strm);
+			crm_free(msg_buffer);
+		}
 	}
 	
 #ifdef HA_MALLOC_TRACK
@@ -328,9 +340,15 @@ main(int argc, char **argv)
 	msg_buffer = dump_xml_formatted(data_set.graph);
 	if(graph_file != NULL) {
 		FILE *graph_strm = fopen(graph_file, "w");
-		fprintf(graph_strm, "%s\n", msg_buffer);
-		fflush(graph_strm);
-		fclose(graph_strm);
+		if(graph_strm == NULL) {
+			cl_perror("Could not open %s for writing", graph_file);
+		} else {
+			if(fprintf(graph_strm, "%s\n", msg_buffer) < 0) {
+				cl_perror("Write to %s failed", graph_file);
+			}
+			fflush(graph_strm);
+			fclose(graph_strm);
+		}
 		
 	} else {
 		fprintf(stdout, "%s\n", msg_buffer);
@@ -339,6 +357,11 @@ main(int argc, char **argv)
 	crm_free(msg_buffer);
 
 	dot_strm = fopen(dot_file, "w");
+	if(dot_strm == NULL) {
+		cl_perror("Could not open %s for writing", dot_file);
+		goto skip_dot;
+	}
+	
 	init_dotfile();
 	slist_iter(
 		action, action_t, data_set.actions, lpc,
@@ -411,7 +434,10 @@ main(int argc, char **argv)
 			);
 		);
 	dot_write("}");
+	fflush(dot_strm);
+	fclose(dot_strm);
 
+  skip_dot:	
 	transition = unpack_graph(data_set.graph);
 	print_graph(LOG_DEBUG, transition);
 	do {

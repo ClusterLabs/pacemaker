@@ -211,6 +211,7 @@ main(int argc, char **argv)
 				"Couldn't parse input file: %s\n", xml_file);
 			return 1;
 		}
+		fclose(xml_strm);
 		
 	} else if(xml_string != NULL) {
 		cib_object = string2xml(xml_string);

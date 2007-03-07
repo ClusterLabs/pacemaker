@@ -1511,7 +1511,7 @@ get_last_sequence(const char *directory, const char *series)
 	
 	file_strm = fopen(series_file, "r");
 	if(file_strm == NULL) {
-		crm_debug("%s does not exist", series_file);
+		crm_debug("Series file %s does not exist", series_file);
 		crm_free(series_file);
 		return 0;
 	}
@@ -1575,13 +1575,13 @@ write_last_sequence(
 	
 	file_strm = fopen(series_file, "w");
 	if(file_strm == NULL) {
-		crm_err("%s does not exist", series_file);
+		crm_err("Cannout open series file %s for writing", series_file);
 		goto bail;
 	}
 
 	rc = fprintf(file_strm, "%s", buffer);
 	if(rc < 0) {
-		cl_perror("Cannot write output to %s", series_file);
+		cl_perror("Cannot write to series file %s", series_file);
 	}
 
   bail:
