@@ -501,7 +501,8 @@ file2xml(FILE *input, gboolean compressed)
 	size_t length = 0, read_len = 0;
 
 	if(input == NULL) {
-		crm_err("No file to read");
+		/* Use perror here as we likely just called fopen() which return NULL */
+		cl_perror("File open failed, cannot read contents");
 		return NULL;
 	}
 
@@ -644,7 +645,7 @@ write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress)
 	/* now write it */
 	file_output_strm = fopen(filename, "w");
 	if(file_output_strm == NULL) {
-		cl_perror("Cannot write to %s", filename);
+		cl_perror("Cannot open %s for writing", filename);
 		crm_free(buffer);
 		return -1;		
 	} 

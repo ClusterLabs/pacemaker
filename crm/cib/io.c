@@ -108,6 +108,11 @@ validate_cib_digest(crm_data_t *local_cib)
 	}
 	
 	expected_strm = fopen(CIB_FILENAME ".sig", "r");
+	if(expected_strm == NULL) {
+		cl_perror("Could not open signature file "CIB_FILENAME ".sig for reading");
+		goto bail;
+	}
+
 	start  = ftell(expected_strm);
 	fseek(expected_strm, 0L, SEEK_END);
 	length = ftell(expected_strm);
@@ -120,7 +125,8 @@ validate_cib_digest(crm_data_t *local_cib)
 	read_len = fread(expected, 1, length, expected_strm);
 	CRM_ASSERT(read_len == length);
 	fclose(expected_strm);
-	
+
+  bail:
 	if(expected == NULL) {
 		crm_err("On-disk digest is empty");
 		
@@ -142,9 +148,12 @@ static int
 write_cib_digest(crm_data_t *local_cib, char *digest)
 {
 	int rc = 0;
-	FILE *digest_strm = fopen(CIB_FILENAME ".sig", "w");
 	char *local_digest = NULL;
-	CRM_ASSERT(digest_strm != NULL);
+	FILE *digest_strm = fopen(CIB_FILENAME ".sig", "w");
+	if(digest_strm == NULL) {
+		cl_perror("Cannot open signature file "CIB_FILENAME ".sig for writing");
+		return -1;
+	}
 
 	if(digest == NULL) {
 		local_digest = calculate_xml_digest(local_cib, FALSE);
@@ -154,7 +163,7 @@ write_cib_digest(crm_data_t *local_cib, char *digest)
 	
 	rc = fprintf(digest_strm, "%s", digest);
 	if(rc < 0) {
-		cl_perror("Cannot write output to %s.sig", CIB_FILENAME);
+		cl_perror("Cannot write to signature file "CIB_FILENAME ".sig");
 	}
 
 	fflush(digest_strm);
@@ -178,6 +187,11 @@ validate_on_disk_cib(const char *filename, crm_data_t **on_disk_cib)
 	
 	if (s_res == 0) {
 		cib_file = fopen(filename, "r");
+		if(cib_file == NULL) {
+			cl_perror("Couldn't open config file %s for reading", filename);
+			return FALSE;
+		}
+
 		crm_debug_2("Reading cluster configuration from: %s", filename);
 		root = file2xml(cib_file, FALSE);
 		fclose(cib_file);
@@ -192,6 +206,7 @@ validate_on_disk_cib(const char *filename, crm_data_t **on_disk_cib)
 	} else {
 		free_xml(root);
 	}
+	
 	return passed;
 }
 
@@ -227,7 +242,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 		crm_info("Reading cluster configuration from: %s", filename);
 		cib_file = fopen(filename, "r");
 		if(cib_file == NULL) {
-			cl_perror("could not open: %s", filename);
+			cl_perror("Could not open config file %s for reading", filename);
 
 		} else {
 			root = file2xml(cib_file, FALSE);

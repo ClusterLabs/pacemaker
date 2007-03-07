@@ -299,6 +299,7 @@ main(int argc, char **argv)
 			fprintf(stderr, "Couldn't parse input file: %s\n", admin_input_file);
 			return 1;
 		}
+		fclose(xml_strm);
 		
 	} else if(admin_input_xml != NULL) {
 		input = string2xml(admin_input_xml);
@@ -306,6 +307,7 @@ main(int argc, char **argv)
 			fprintf(stderr, "Couldn't parse input string: %s\n", admin_input_xml);
 			return 1;
 		}
+
 	} else if(admin_input_stdin) {
 		input = stdin2xml();
 		if(input == NULL) {

@@ -137,8 +137,10 @@ main(int argc, char **argv)
 		FILE *xml_strm = fopen(xml_file, "r");
 		if(xml_strm) {
 			xml_graph = file2xml(xml_strm, FALSE);
+			fclose(xml_strm);
+			
 		} else {
-			crm_err("Could not open %s for reading", xml_file);
+			cl_perror("Could not open %s for reading", xml_file);
 			xml_file = NULL;
 		}
 		

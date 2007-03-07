@@ -90,7 +90,7 @@ main(int argc, char **argv)
 
 int read_hb_uuid(void) 
 {
-		
+	int rc = 0;
 	cl_uuid_t uuid;
 	char *buffer = NULL;
 	long start = 0, read_len = 0;
@@ -98,7 +98,7 @@ int read_hb_uuid(void)
 	FILE *input = fopen(UUID_FILE, "r");
 	
 	if(input == NULL) {
-		fprintf(stderr, "UUID File not found: %s\n", UUID_FILE);
+		cl_perror("Could not open UUID file %s\n", UUID_FILE);
 		return 1;
 	}
 	
@@ -116,7 +116,8 @@ int read_hb_uuid(void)
 	if(start != ftell(input)) {
 		fprintf(stderr, "fseek not behaving: %ld vs. %ld\n",
 			start, ftell(input));
-		return 2;
+		rc = 2;
+		goto bail;
 	}
 
 /* 	fprintf(stderr, "Reading %d bytes from: %s\n", UUID_LEN, UUID_FILE); */
@@ -126,7 +127,8 @@ int read_hb_uuid(void)
 	if(read_len != UUID_LEN) {
 		fprintf(stderr, "Expected and read bytes differ: %d vs. %ld\n",
 			UUID_LEN, read_len);
-		return 3;
+		rc = 3;
+		goto bail;
 		
 	} else if(buffer != NULL) {
 		cl_uuid_unparse(&uuid, buffer);
@@ -135,8 +137,10 @@ int read_hb_uuid(void)
 	} else {
 		fprintf(stderr, "No buffer to unparse\n");
 	}
-	
+
+  bail:	
 	cl_free(buffer);
+	fclose(input);
 
 	return 0;
 }

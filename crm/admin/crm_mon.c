@@ -226,13 +226,17 @@ main(int argc, char **argv)
 	if(one_shot == FALSE) {
 		timer_id = Gmain_timeout_add(
 			interval, mon_timer_popped, NULL);
+
 	} else if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
-		crm_data_t *cib_object = NULL;
+		crm_data_t *cib_object = NULL;			
 		if(strstr(xml_file, ".bz2") != NULL) {
 			cib_object = file2xml(xml_strm, TRUE);
 		} else {
 			cib_object = file2xml(xml_strm, FALSE);
+		}
+		if(xml_strm != NULL) {
+			fclose(xml_strm);
 		}
 		one_shot = TRUE;
 		mon_update(NULL, 0, cib_ok, cib_object, NULL);
@@ -499,9 +503,11 @@ print_html_status(crm_data_t *cib, const char *filename)
 
 	FILE *stream = fopen(filename_tmp, "w");
 	if(stream == NULL) {
+		cl_perror("Cannot open %s for writing", filename_tmp);
 		crm_free(filename_tmp);
 		return -1;
-	}	
+	}
+	
 	updates++;
 	set_working_set_defaults(&data_set);
 	data_set.input = cib;
