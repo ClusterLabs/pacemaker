@@ -246,6 +246,8 @@ fi
 
 if [ $num_errors != 0 ]; then
     echo Tests failed: $agent failed $num_errors tests
+    exit 1
 else 
     echo $agent passed all tests
+    exit 0
 fi
