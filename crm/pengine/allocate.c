@@ -940,19 +940,19 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	rsc_lh = pe_find_resource(data_set->resources, id_rh);
 	rsc_rh = pe_find_resource(data_set->resources, id_lh);
 
+	if(rsc_lh == NULL) {
+		crm_config_err("Constraint %s: no resource found for LHS (%s)", id, id_rh);
+		return FALSE;
+	
+	} else if(rsc_rh == NULL) {
+		crm_config_err("Constraint %s: no resource found for RHS of (%s)", id, id_lh);
+		return FALSE;
+	}
+
 	crm_debug("%s: %s.%s %s %s.%s%s",
 		  id, rsc_lh->id, action, type, rsc_rh->id, action_rh,
 		  symmetrical_bool?" (symmetrical)":"");
 	
-	if(rsc_lh == NULL) {
-		crm_config_err("Constraint %s: no resource found for LHS of %s", id, id_lh);
-		return FALSE;
-	
-	} else if(rsc_rh == NULL) {
-		crm_config_err("Constraint %s: no resource found for RHS of %s", id, id_rh);
-		return FALSE;
-	}
-
 	if(char2score(score) > 0) {
 		/* the name seems weird but the effect is correct */
 		cons_weight = pe_order_internal_restart;
