@@ -282,28 +282,6 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 
 	rsc->provisional = FALSE;
 	
-	if(chosen == NULL) {
-		crm_debug("Could not allocate a node for %s", rsc->id);
-		rsc->next_role = RSC_ROLE_STOPPED;
-		return FALSE;
-
-	} else if(can_run_resources(chosen) == FALSE) {
-		crm_debug("All nodes for resource %s are unavailable"
-			  ", unclean or shutting down", rsc->id);
-		rsc->next_role = RSC_ROLE_STOPPED;
-		return FALSE;
-		
-	} else if(chosen->weight < 0) {
-		crm_debug("Even highest ranked node for %s, had weight %d",
-			  rsc->id, chosen->weight);
-		rsc->next_role = RSC_ROLE_STOPPED;
-		return FALSE;
-	}
-
-	if(rsc->next_role == RSC_ROLE_UNKNOWN) {
-		rsc->next_role = RSC_ROLE_STARTED;
-	}
-	
 	slist_iter(candidate, node_t, nodes, lpc, 
 		   crm_debug("Color %s, Node[%d] %s: %d", rsc->id, lpc,
 			     candidate->details->uname, candidate->weight);
@@ -314,6 +292,22 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 		   }
 		);
 
+	if(chosen == NULL) {
+		crm_debug("Could not allocate a node for %s", rsc->id);
+		rsc->next_role = RSC_ROLE_STOPPED;
+		return FALSE;
+
+	} else if(can_run_resources(chosen) == FALSE || chosen->weight < 0) {
+		crm_debug("All nodes for resource %s are unavailable"
+			  ", unclean or shutting down", rsc->id);
+		rsc->next_role = RSC_ROLE_STOPPED;
+		return FALSE;
+	}
+
+	if(rsc->next_role == RSC_ROLE_UNKNOWN) {
+		rsc->next_role = RSC_ROLE_STARTED;
+	}
+	
 	if(multiple > 1) {
 		int log_level = LOG_INFO;
 		char *score = score2char(chosen->weight);
