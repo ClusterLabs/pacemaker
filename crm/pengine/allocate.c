@@ -279,7 +279,13 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 		op = custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
 		if(start_op && digest_restart) {
 			op->allow_reload_conversion = TRUE;
+
+		} else if(interval > 0) {
+			custom_action_order(rsc, start_key(rsc), NULL,
+					    NULL, crm_strdup(key), op,
+					    pe_order_optional, data_set);
 		}
+		
 	}
 
   cleanup:
