@@ -826,12 +826,14 @@ cancel_monitor(lrm_rsc_t *rsc, const char *key)
 	
 	existing_op = g_hash_table_lookup(monitors, key);
 	if(existing_op != NULL) {
+		int rc = HA_OK;
 		crm_debug("Cancelling previous invocation of %s (%d)",
 			  key, existing_op->call_id);
 		/* cancel it so we can then restart it without conflict */
-		if(rsc->ops->cancel_op(rsc, existing_op->call_id) != HA_OK) {
-			crm_info("Couldn't cancel %s (%d)",
-				 key, existing_op->call_id);
+		rc = rsc->ops->cancel_op(rsc, existing_op->call_id);
+		if(rc != HA_OK) {
+			crm_info("Couldn't cancel %s (%d): %d",
+				 key, existing_op->call_id, rc);
 		} else {
 			g_hash_table_remove(monitors, key);
 		}
