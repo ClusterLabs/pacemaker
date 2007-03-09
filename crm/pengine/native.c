@@ -1483,15 +1483,17 @@ void
 native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 {
 	char *key = NULL;
+	int level = LOG_DEBUG_2;
 	GListPtr action_list = NULL;
 	
-	const char *value = NULL;
 	action_t *stop = NULL;
 	action_t *start = NULL;
 	action_t *other = NULL;
 	action_t *action = NULL;
+	const char *value = NULL;
 
 	if(rsc->variant != pe_native) {
+		do_crm_log(level, "%s: type", rsc->id);
 		return;
 	}
 	
@@ -1500,7 +1502,7 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	   || rsc->start_pending
 	   || rsc->next_role != RSC_ROLE_STARTED		   
 	   || g_list_length(rsc->running_on) != 1) {
-		crm_debug_3("%s: resource", rsc->id);
+		do_crm_log(level, "%s: resource", rsc->id);
 		return;
 	}
 	
@@ -1509,7 +1511,7 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	crm_free(key);
 	
 	if(action_list == NULL) {
-		crm_debug_3("%s: no start action", rsc->id);
+		do_crm_log(level, "%s: no start action", rsc->id);
 		return;
 	}
 	
@@ -1522,7 +1524,7 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	
 	if(rsc->can_migrate == FALSE
 	   && start->allow_reload_conversion == FALSE) {
-		crm_debug_3("%s: no need to continue", rsc->id);
+		do_crm_log(level, "%s: no need to continue", rsc->id);
 		return;
 	}
 	
@@ -1531,7 +1533,7 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	crm_free(key);
 	
 	if(action_list == NULL) {
-		crm_debug_3("%s: no stop action", rsc->id);
+		do_crm_log(level, "%s: no stop action", rsc->id);
 		return;
 	}
 	
@@ -1542,7 +1544,7 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	   || action->optional
 	   || action->node == NULL
 	   || action->runnable == FALSE) {
-		crm_debug_3("Skipping: %s", action->task);
+		do_crm_log(level, "%s: %s", rsc->id, action->task);
 		return;
 	}
 	
@@ -1551,7 +1553,7 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	   || action->optional
 	   || action->node == NULL
 	   || action->runnable == FALSE) {
-		crm_debug_3("Skipping: %s", action->task);
+		do_crm_log(level, "%s: %s", rsc->id, action->task);
 		return;
 	}
 	
@@ -1561,22 +1563,26 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		if(other->optional == FALSE
 		   && other->rsc != NULL
 		   && other->rsc != start->rsc) {
-			crm_debug_2("Skipping: start depends");
+			do_crm_log(level-1, "%s: start depends on %s", rsc->id, other->uuid);
 			return;
 		}
 		);
-	
+#if 0
+	/* After reconsideration, this check is not required
+	 * As long as everything is ready for us on the target
+	 *  (ie. the above check), then we can do the migration
+	 */
 	slist_iter(
-		other_w, action_wrapper_t, stop->actions_after, lpc,
+		other_w, action_wrapper_t, stop->actions_before, lpc,
 		other = other_w->action;
 		if(other->optional == FALSE
 		   && other->rsc != NULL
 		   && other->rsc != stop->rsc) {
-			crm_debug_2("Skipping: stop depends");
+			do_crm_log(level-1, "%s: stop depends on %s", rsc->id, other->uuid);
 			return;
 		}
 		);
-	
+#endif
 	if(rsc->can_migrate && stop->node->details != start->node->details) {
 		crm_info("Migrating %s from %s to %s", rsc->id,
 			 stop->node->details->uname,
@@ -1611,6 +1617,6 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		stop->pseudo = TRUE; /* easier than trying to delete it from the graph */
 		
 	} else {
-		crm_debug_3("%s nothing to do", rsc->id);
+		do_crm_log(level, "%s nothing to do", rsc->id);
 	}
 }

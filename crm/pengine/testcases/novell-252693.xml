@@ -1,0 +1,218 @@
+ <cib generated="true" admin_epoch="0" epoch="1" num_updates="62" have_quorum="true" ignore_dtd="false" num_peers="2" ccm_transition="2" cib_feature_revision="1.3" dc_uuid="997c3f45-7e3f-4c70-8d9a-623ba1678a6e" cib-last-written="Thu Mar  8 17:34:02 2007">
+   <configuration>
+     <crm_config>
+       <cluster_property_set id="cibbootstrap">
+         <attributes>
+           <nvpair id="cibbootstrap-01" name="transition_idle_timeout" value="60"/>
+           <nvpair id="cibbootstrap-04" name="stonith_enabled" value="true"/>
+           <nvpair id="cibbootstrap-05" name="stonith_action" value="reboot"/>
+           <nvpair id="cibbootstrap-06" name="symmetric_cluster" value="true"/>
+           <nvpair id="cibbootstrap-07" name="no_quorum_policy" value="stop"/>
+           <nvpair id="cibbootstrap-08" name="stop_orphan_resources" value="true"/>
+           <nvpair id="cibbootstrap-09" name="stop_orphan_actions" value="true"/>
+           <nvpair id="cibbootstrap-10" name="is_managed_default" value="true"/>
+         </attributes>
+       </cluster_property_set>
+     </crm_config>
+     <nodes>
+       <node id="997c3f45-7e3f-4c70-8d9a-623ba1678a6e" uname="node2" type="normal"/>
+       <node id="3d8227f0-31dd-4801-b0db-987909d4a321" uname="node1" type="normal"/>
+     </nodes>
+     <resources>
+       <clone id="stonithcloneset" globally_unique="false">
+         <instance_attributes id="stonithcloneset">
+           <attributes>
+             <nvpair id="stonithcloneset-01" name="clone_node_max" value="1"/>
+           </attributes>
+         </instance_attributes>
+         <primitive id="stonithclone" class="stonith" type="external/ssh" provider="heartbeat">
+           <operations>
+             <op name="monitor" interval="5s" timeout="20s" prereq="nothing" id="stonithclone-op-01"/>
+             <op name="start" timeout="20s" prereq="nothing" id="stonithclone-op-02"/>
+           </operations>
+           <instance_attributes id="stonithclone">
+             <attributes>
+               <nvpair id="stonithclone-01" name="hostlist" value="node1,node2"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+       </clone>
+       <clone id="evmsdcloneset" notify="false" globally_unique="false">
+         <instance_attributes id="evmsdcloneset">
+           <attributes>
+             <nvpair id="evmsdcloneset-01" name="clone_node_max" value="1"/>
+           </attributes>
+         </instance_attributes>
+         <primitive id="evmsdclone" class="ocf" type="Evmsd" provider="heartbeat">
+           <operations>
+             <op name="monitor" interval="5s" timeout="20s" prereq="nothing" id="evmsdclone-op-01"/>
+           </operations>
+         </primitive>
+       </clone>
+       <clone id="evmscloneset" notify="true" globally_unique="false">
+         <instance_attributes id="evmscloneset">
+           <attributes>
+             <nvpair id="evmscloneset-01" name="clone_node_max" value="1"/>
+           </attributes>
+         </instance_attributes>
+         <primitive id="evmsclone" class="ocf" type="EvmsSCC" provider="heartbeat"/>
+       </clone>
+       <clone id="imagestorecloneset" notify="true" globally_unique="false">
+         <instance_attributes id="imagestorecloneset">
+           <attributes>
+             <nvpair id="imagestorecloneset-01" name="clone_node_max" value="1"/>
+             <nvpair id="imagestorecloneset-02" name="target_role" value="started"/>
+           </attributes>
+         </instance_attributes>
+         <primitive id="imagestoreclone" class="ocf" type="Filesystem" provider="heartbeat">
+           <operations>
+             <op name="monitor" interval="20s" timeout="60s" prereq="nothing" id="imagestoreclone-op-01"/>
+           </operations>
+           <instance_attributes id="imagestoreclone">
+             <attributes>
+               <nvpair id="imagestoreclone-01" name="device" value="/dev/evms/vmsharedclustercontainer/imagestore"/>
+               <nvpair id="imagestoreclone-02" name="directory" value="/var/lib/xen/images"/>
+               <nvpair id="imagestoreclone-03" name="fstype" value="ocfs2"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+       </clone>
+       <clone id="configstorecloneset" notify="true" globally_unique="false">
+         <instance_attributes id="configstorecloneset">
+           <attributes>
+             <nvpair id="configstorecloneset-01" name="clone_node_max" value="1"/>
+             <nvpair id="configstorecloneset-02" name="target_role" value="started"/>
+           </attributes>
+         </instance_attributes>
+         <primitive id="configstoreclone" class="ocf" type="Filesystem" provider="heartbeat">
+           <operations>
+             <op name="monitor" interval="20s" timeout="60s" prereq="nothing" id="configstoreclone-op-01"/>
+           </operations>
+           <instance_attributes id="configstoreclone">
+             <attributes>
+               <nvpair id="configstoreclone-01" name="device" value="/dev/evms/vmsharedclustercontainer/configstore"/>
+               <nvpair id="configstoreclone-02" name="directory" value="/etc/xen/vm"/>
+               <nvpair id="configstoreclone-03" name="fstype" value="ocfs2"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+       </clone>
+       <primitive id="sles10" class="ocf" type="Xen" provider="heartbeat">
+         <operations>
+           <op name="monitor" interval="10s" timeout="60s" prereq="nothing" id="xen-op-01"/>
+           <op name="stop" timeout="60s" id="xen-op-02"/>
+         </operations>
+         <instance_attributes id="sles10_instance">
+           <attributes>
+             <nvpair id="xen-01" name="xmfile" value="/etc/xen/vm/sles10"/>
+           </attributes>
+         </instance_attributes>
+         <meta_attributes id="sles10_meta">
+           <attributes>
+             <nvpair id="xen-02" name="allow_migrate" value="true"/>
+           </attributes>
+         </meta_attributes>
+       </primitive>
+     </resources>
+     <constraints>
+       <rsc_order id="evmsdorderconstraints-01" from="evmscloneset" to="evmsdcloneset"/>
+       <rsc_order id="evmsorderconstraints-02" from="configstorecloneset" to="evmscloneset"/>
+       <rsc_order id="evmsorderconstraints-01" from="imagestorecloneset" to="evmscloneset"/>
+       <rsc_location id="sles10_location" rsc="sles10">
+         <rule id="pref_sles10_location" score="INFINITY">
+           <expression attribute="#uname" operation="eq" value="node1" id="f736636b-8aa1-40b4-9386-ed258bc9aaf6"/>
+         </rule>
+       </rsc_location>
+       <rsc_order id="vm1orderconstraints-02" from="sles10" to="configstorecloneset"/>
+       <rsc_order id="vm1orderconstraints-01" from="sles10" to="imagestorecloneset"/>
+     </constraints>
+   </configuration>
+   <status>
+     <node_state id="997c3f45-7e3f-4c70-8d9a-623ba1678a6e" uname="node2" crmd="online" crm-debug-origin="do_update_resource" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+       <lrm id="997c3f45-7e3f-4c70-8d9a-623ba1678a6e">
+         <lrm_resources>
+           <lrm_resource id="stonithclone:0" type="external/ssh" class="stonith" provider="heartbeat">
+             <lrm_rsc_op id="stonithclone:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="3:4:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:7;3:4:58438087-5470-4bfb-adf5-0264db79301a" call_id="2" crm_feature_set="1.0.8" rc_code="7" op_status="0" interval="0" op_digest="8a8474d1c962554c4cedf5d66aca0808"/>
+             <lrm_rsc_op id="stonithclone:0_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="6:4:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;6:4:58438087-5470-4bfb-adf5-0264db79301a" call_id="3" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="0" op_digest="8a8474d1c962554c4cedf5d66aca0808"/>
+             <lrm_rsc_op id="stonithclone:0_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" transition_key="7:4:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;7:4:58438087-5470-4bfb-adf5-0264db79301a" call_id="4" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="5000" op_digest="8a8474d1c962554c4cedf5d66aca0808"/>
+           </lrm_resource>
+           <lrm_resource id="evmsdclone:0" type="Evmsd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="evmsdclone:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="4:5:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:7;4:5:58438087-5470-4bfb-adf5-0264db79301a" call_id="5" crm_feature_set="1.0.8" rc_code="7" op_status="0" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+             <lrm_rsc_op id="evmsdclone:0_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="16:5:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;16:5:58438087-5470-4bfb-adf5-0264db79301a" call_id="6" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+             <lrm_rsc_op id="evmsdclone:0_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" transition_key="17:5:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;17:5:58438087-5470-4bfb-adf5-0264db79301a" call_id="7" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="5000" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+           </lrm_resource>
+           <lrm_resource id="evmsclone:0" type="EvmsSCC" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="evmsclone:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="7:6:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:7;7:6:58438087-5470-4bfb-adf5-0264db79301a" call_id="8" crm_feature_set="1.0.8" rc_code="7" op_status="0" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+             <lrm_rsc_op id="evmsclone:0_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="26:6:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;26:6:58438087-5470-4bfb-adf5-0264db79301a" call_id="9" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+             <lrm_rsc_op id="evmsclone:0_post_notify_start_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="40:6:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;40:6:58438087-5470-4bfb-adf5-0264db79301a" call_id="10" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+           </lrm_resource>
+           <lrm_resource id="imagestoreclone:0" type="Filesystem" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="imagestoreclone:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="7:7:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;7:7:58438087-5470-4bfb-adf5-0264db79301a" call_id="11" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="0" op_digest="8581c5bac38607422a6cac9f3a48b5a9"/>
+             <lrm_rsc_op id="imagestoreclone:0_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" transition_key="42:8:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;42:8:58438087-5470-4bfb-adf5-0264db79301a" call_id="12" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="20000" op_digest="8581c5bac38607422a6cac9f3a48b5a9"/>
+           </lrm_resource>
+           <lrm_resource id="configstoreclone:0" type="Filesystem" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="configstoreclone:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="9:9:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;9:9:58438087-5470-4bfb-adf5-0264db79301a" call_id="13" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="0" op_digest="2098c97dc977d4458c5375661d720934"/>
+             <lrm_rsc_op id="configstoreclone:0_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" transition_key="60:10:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;60:10:58438087-5470-4bfb-adf5-0264db79301a" call_id="14" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="20000" op_digest="2098c97dc977d4458c5375661d720934"/>
+           </lrm_resource>
+           <lrm_resource id="sles10" type="Xen" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="sles10_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="11:14:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:7;11:14:58438087-5470-4bfb-adf5-0264db79301a" call_id="15" crm_feature_set="1.0.8" rc_code="7" op_status="0" interval="0" op_digest="3c8346271b6a1d45f558b3cf24a01304"/>
+           </lrm_resource>
+         </lrm_resources>
+       </lrm>
+       <transient_attributes id="997c3f45-7e3f-4c70-8d9a-623ba1678a6e">
+         <instance_attributes id="status-997c3f45-7e3f-4c70-8d9a-623ba1678a6e">
+           <attributes>
+             <nvpair id="status-997c3f45-7e3f-4c70-8d9a-623ba1678a6e-probe_complete" name="probe_complete" value="true"/>
+           </attributes>
+         </instance_attributes>
+       </transient_attributes>
+     </node_state>
+     <node_state id="3d8227f0-31dd-4801-b0db-987909d4a321" uname="node1" ha="active" crm-debug-origin="handle_shutdown_request" crmd="online" shutdown="1173371642" in_ccm="true" join="member" expected="down">
+       <lrm id="3d8227f0-31dd-4801-b0db-987909d4a321">
+         <lrm_resources>
+           <lrm_resource id="stonithclone:0" type="external/ssh" class="stonith" provider="heartbeat">
+             <lrm_rsc_op id="stonithclone:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="5:4:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:7;5:4:58438087-5470-4bfb-adf5-0264db79301a" call_id="2" crm_feature_set="1.0.8" rc_code="7" op_status="0" interval="0" op_digest="8a8474d1c962554c4cedf5d66aca0808"/>
+           </lrm_resource>
+           <lrm_resource id="stonithclone:1" type="external/ssh" class="stonith" provider="heartbeat">
+             <lrm_rsc_op id="stonithclone:1_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="8:4:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;8:4:58438087-5470-4bfb-adf5-0264db79301a" call_id="3" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="0" op_digest="8a8474d1c962554c4cedf5d66aca0808"/>
+             <lrm_rsc_op id="stonithclone:1_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" transition_key="11:5:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;11:5:58438087-5470-4bfb-adf5-0264db79301a" call_id="4" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="5000" op_digest="8a8474d1c962554c4cedf5d66aca0808"/>
+           </lrm_resource>
+           <lrm_resource id="evmsdclone:0" type="Evmsd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="evmsdclone:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="6:5:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:7;6:5:58438087-5470-4bfb-adf5-0264db79301a" call_id="5" crm_feature_set="1.0.8" rc_code="7" op_status="0" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+           </lrm_resource>
+           <lrm_resource id="evmsdclone:1" type="Evmsd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="evmsdclone:1_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="18:5:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;18:5:58438087-5470-4bfb-adf5-0264db79301a" call_id="6" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+             <lrm_rsc_op id="evmsdclone:1_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" transition_key="19:5:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;19:5:58438087-5470-4bfb-adf5-0264db79301a" call_id="7" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="5000" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+           </lrm_resource>
+           <lrm_resource id="evmsclone:0" type="EvmsSCC" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="evmsclone:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="9:6:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:7;9:6:58438087-5470-4bfb-adf5-0264db79301a" call_id="8" crm_feature_set="1.0.8" rc_code="7" op_status="0" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+           </lrm_resource>
+           <lrm_resource id="evmsclone:1" type="EvmsSCC" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="evmsclone:1_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="27:6:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;27:6:58438087-5470-4bfb-adf5-0264db79301a" call_id="9" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+             <lrm_rsc_op id="evmsclone:1_post_notify_start_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="41:6:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;41:6:58438087-5470-4bfb-adf5-0264db79301a" call_id="10" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+           </lrm_resource>
+           <lrm_resource id="imagestoreclone:0" type="Filesystem" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="imagestoreclone:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="9:7:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;9:7:58438087-5470-4bfb-adf5-0264db79301a" call_id="11" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="0" op_digest="8581c5bac38607422a6cac9f3a48b5a9"/>
+             <lrm_rsc_op id="imagestoreclone:0_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" transition_key="45:8:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;45:8:58438087-5470-4bfb-adf5-0264db79301a" call_id="12" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="20000" op_digest="8581c5bac38607422a6cac9f3a48b5a9"/>
+           </lrm_resource>
+           <lrm_resource id="configstoreclone:0" type="Filesystem" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="configstoreclone:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="11:9:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;11:9:58438087-5470-4bfb-adf5-0264db79301a" call_id="13" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="0" op_digest="2098c97dc977d4458c5375661d720934"/>
+             <lrm_rsc_op id="configstoreclone:0_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" transition_key="63:10:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;63:10:58438087-5470-4bfb-adf5-0264db79301a" call_id="14" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="20000" op_digest="2098c97dc977d4458c5375661d720934"/>
+           </lrm_resource>
+           <lrm_resource id="sles10" type="Xen" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="sles10_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="13:14:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:7;13:14:58438087-5470-4bfb-adf5-0264db79301a" call_id="15" crm_feature_set="1.0.8" rc_code="7" op_status="0" interval="0" op_digest="3c8346271b6a1d45f558b3cf24a01304"/>
+             <lrm_rsc_op id="sles10_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="78:14:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;78:14:58438087-5470-4bfb-adf5-0264db79301a" call_id="16" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="0" op_digest="3c8346271b6a1d45f558b3cf24a01304"/>
+             <lrm_rsc_op id="sles10_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" transition_key="79:14:58438087-5470-4bfb-adf5-0264db79301a" transition_magic="0:0;79:14:58438087-5470-4bfb-adf5-0264db79301a" call_id="17" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="10000" op_digest="3c8346271b6a1d45f558b3cf24a01304"/>
+           </lrm_resource>
+         </lrm_resources>
+       </lrm>
+       <transient_attributes id="3d8227f0-31dd-4801-b0db-987909d4a321">
+         <instance_attributes id="status-3d8227f0-31dd-4801-b0db-987909d4a321">
+           <attributes>
+             <nvpair id="status-3d8227f0-31dd-4801-b0db-987909d4a321-probe_complete" name="probe_complete" value="true"/>
+           </attributes>
+         </instance_attributes>
+       </transient_attributes>
+     </node_state>
+   </status>
+ </cib>

@@ -149,6 +149,7 @@ do_test migrate-1 "Migrate (migrate)"
 do_test migrate-2 "Migrate (stable)"
 do_test migrate-3 "Migrate (failed migrate_to)"
 do_test migrate-4 "Migrate (failed migrate_from)"
+do_test novell-252693 "Migration in a stack"
 
 #echo ""
 #do_test complex1 "Complex	"
