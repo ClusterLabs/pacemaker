@@ -356,12 +356,13 @@ main(int argc, char **argv)
 	}
 	crm_free(msg_buffer);
 
-	dot_strm = fopen(dot_file, "w");
-	if(dot_strm == NULL) {
-		cl_perror("Could not open %s for writing", dot_file);
-		goto skip_dot;
+	if(dot_file != NULL) {
+		dot_strm = fopen(dot_file, "w");
+		if(dot_strm == NULL) {
+			cl_perror("Could not open %s for writing", dot_file);
+		}
 	}
-	
+
 	init_dotfile();
 	slist_iter(
 		action, action_t, data_set.actions, lpc,
@@ -434,10 +435,11 @@ main(int argc, char **argv)
 			);
 		);
 	dot_write("}");
-	fflush(dot_strm);
-	fclose(dot_strm);
-
-  skip_dot:	
+	if(dot_strm != NULL) {
+		fflush(dot_strm);
+		fclose(dot_strm);
+	}
+	
 	transition = unpack_graph(data_set.graph);
 	print_graph(LOG_DEBUG, transition);
 	do {
