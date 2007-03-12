@@ -59,4 +59,6 @@ extern void order_actions(
 extern void log_action(unsigned int log_level, const char *pre_text,
 		       action_t *action, gboolean details);
 
+extern resource_t *uber_parent(resource_t *rsc);
+
 #endif

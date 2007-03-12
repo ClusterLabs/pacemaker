@@ -20,10 +20,9 @@
 . regression.core.sh
 create_mode="true"
 echo Generating test outputs for these tests...
-echo ""
-
 echo Done.
 echo ""
+
 echo Performing the following tests...
 create_mode="false"
 
@@ -149,7 +148,9 @@ do_test migrate-1 "Migrate (migrate)"
 do_test migrate-2 "Migrate (stable)"
 do_test migrate-3 "Migrate (failed migrate_to)"
 do_test migrate-4 "Migrate (failed migrate_from)"
-do_test novell-252693 "Migration in a stack"
+do_test novell-252693 "Migration in a stopping stack"
+do_test novell-252693-2 "Migration in a starting stack"
+do_test novell-252693-3 "Non-Migration in a starting and stopping stack"
 
 #echo ""
 #do_test complex1 "Complex	"

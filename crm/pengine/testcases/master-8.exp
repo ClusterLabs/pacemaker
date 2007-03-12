@@ -525,7 +525,7 @@
    <synapse id="43">
      <action_set>
        <pseudo_event id="87" operation="start" operation_key="master_rsc_1_start_0">
-         <attributes crm_feature_set="1.0.8" CRM_meta_timeout="20000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes crm_feature_set="1.0.8" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -546,7 +546,7 @@
    <synapse id="44" priority="1000000">
      <action_set>
        <pseudo_event id="88" operation="running" operation_key="master_rsc_1_running_0">
-         <attributes crm_feature_set="1.0.8" CRM_meta_timeout="20000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes crm_feature_set="1.0.8" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -576,7 +576,7 @@
    <synapse id="46" priority="1000000">
      <action_set>
        <pseudo_event id="90" operation="stopped" operation_key="master_rsc_1_stopped_0">
-         <attributes crm_feature_set="1.0.8" CRM_meta_timeout="20000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes crm_feature_set="1.0.8" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -591,7 +591,7 @@
    <synapse id="47">
      <action_set>
        <pseudo_event id="93" operation="demote" operation_key="master_rsc_1_demote_0">
-         <attributes crm_feature_set="1.0.8" CRM_meta_timeout="20000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes crm_feature_set="1.0.8" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -599,7 +599,7 @@
    <synapse id="48" priority="1000000">
      <action_set>
        <pseudo_event id="94" operation="demoted" operation_key="master_rsc_1_demoted_0">
-         <attributes crm_feature_set="1.0.8" CRM_meta_timeout="20000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes crm_feature_set="1.0.8" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
