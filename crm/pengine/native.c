@@ -1492,10 +1492,7 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	action_t *action = NULL;
 	const char *value = NULL;
 
-	if(rsc->variant != pe_native) {
-		do_crm_log(level, "%s: type", rsc->id);
-		return;
-	}
+	CRM_CHECK(rsc->variant == pe_native, return);
 	
 	if(rsc->is_managed == FALSE
 	   || rsc->failed
@@ -1559,30 +1556,70 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	
 	slist_iter(
 		other_w, action_wrapper_t, start->actions_before, lpc,
+		gboolean can_migrate = TRUE;
+		resource_t *parent = NULL;
 		other = other_w->action;
-		if(other->optional == FALSE
-		   && other->rsc != NULL
-		   && other->rsc != start->rsc) {
-			do_crm_log(level-1, "%s: start depends on %s", rsc->id, other->uuid);
+		parent = uber_parent(other->rsc);
+
+		if(other->optional == TRUE
+		   || other->rsc == rsc
+		   || parent == NULL) {
+			continue;
+		}
+
+		if(parent->variant == pe_native
+		   || parent->variant == pe_group) {
+			/* clones are the only ones that can be "moved"
+			 * and still allow resources sitting on top of
+			 * them (ie. us) to be migrated 
+			 */
+			can_migrate = FALSE;
+			
+		} else if(safe_str_eq(other->task, CRMD_ACTION_MIGRATE)
+			  || safe_str_eq(other->task, CRMD_ACTION_MIGRATED)) {
+			/* we depend on something that is already migrating...
+			 * we cant both migrate
+			 */
+			can_migrate = FALSE;
+			
+		} else {
+			/* is the clone also moving moved around?
+			 *
+			 * if so, then we can't yet be completely sure the
+			 *   resource can safely migrate since the node we're
+			 *   moving too may not have the clone instance started
+			 *   yet
+			 *
+			 * in theory we can figure out if the clone instance we
+			 *   will run on is already there, but there that would
+			 *   involve too much knowledge of internal clone code.
+			 *   maybe later...
+			 */
+			do_crm_log(level,
+				   "%s: start depends on clone %s",
+				   rsc->id, parent->id);
+			key = stop_key(parent);
+			action_list = find_actions(parent->actions, key, NULL);
+			crm_free(key);
+			
+			slist_iter(
+				other_stop, action_t, action_list,lpc,
+				if(other_stop && other_stop->optional == FALSE) {
+					do_crm_log(LOG_INFO,
+						   "%s: start depends on %s",
+						   rsc->id, other_stop->uuid);
+					can_migrate = FALSE;
+				}
+				);
+		}
+		
+		if(can_migrate == FALSE) {
+			do_crm_log(LOG_INFO, "%s: start depends on %s",
+				   rsc->id, other->uuid);
 			return;
 		}
 		);
-#if 0
-	/* After reconsideration, this check is not required
-	 * As long as everything is ready for us on the target
-	 *  (ie. the above check), then we can do the migration
-	 */
-	slist_iter(
-		other_w, action_wrapper_t, stop->actions_before, lpc,
-		other = other_w->action;
-		if(other->optional == FALSE
-		   && other->rsc != NULL
-		   && other->rsc != stop->rsc) {
-			do_crm_log(level-1, "%s: stop depends on %s", rsc->id, other->uuid);
-			return;
-		}
-		);
-#endif
+
 	if(rsc->can_migrate && stop->node->details != start->node->details) {
 		crm_info("Migrating %s from %s to %s", rsc->id,
 			 stop->node->details->uname,
@@ -1595,6 +1632,17 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 			       stop->node->details->uname);
 		add_hash_param(stop->meta, "migrate_target",
 			       start->node->details->uname);
+
+
+		slist_iter(
+			other_w, action_wrapper_t, start->actions_before, lpc,
+			other = other_w->action;
+			if(other->optional == FALSE
+			   && other->rsc != NULL
+			   && other->rsc != rsc) {
+				order_actions(other, stop, other_w->type);
+			}
+			);
 		
 		crm_free(start->uuid);
 		start->task = CRMD_ACTION_MIGRATED;

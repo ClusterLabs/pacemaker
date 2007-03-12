@@ -161,7 +161,7 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		add_node_copy(xml_self, xml_tmp);
 	}
 
-	if(common_unpack(xml_self, &self, NULL, data_set)) {
+	if(common_unpack(xml_self, &self, rsc, data_set)) {
 		clone_data->self = self;
 
 	} else {

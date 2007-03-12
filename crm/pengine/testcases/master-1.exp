@@ -176,7 +176,7 @@
    <synapse id="16">
      <action_set>
        <pseudo_event id="20" operation="start" operation_key="rsc1_start_0">
-         <attributes crm_feature_set="1.0.8" CRM_meta_timeout="20000" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_master_max="2" CRM_meta_master_node_max="1"/>
+         <attributes crm_feature_set="1.0.8" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_master_max="2" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -188,7 +188,7 @@
    <synapse id="17" priority="1000000">
      <action_set>
        <pseudo_event id="21" operation="running" operation_key="rsc1_running_0">
-         <attributes crm_feature_set="1.0.8" CRM_meta_timeout="20000" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_master_max="2" CRM_meta_master_node_max="1"/>
+         <attributes crm_feature_set="1.0.8" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_master_max="2" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -212,7 +212,7 @@
    <synapse id="18">
      <action_set>
        <pseudo_event id="24" operation="promote" operation_key="rsc1_promote_0">
-         <attributes crm_feature_set="1.0.8" CRM_meta_timeout="20000" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_master_max="2" CRM_meta_master_node_max="1"/>
+         <attributes crm_feature_set="1.0.8" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_master_max="2" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -227,7 +227,7 @@
    <synapse id="19" priority="1000000">
      <action_set>
        <pseudo_event id="25" operation="promoted" operation_key="rsc1_promoted_0">
-         <attributes crm_feature_set="1.0.8" CRM_meta_timeout="20000" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_master_max="2" CRM_meta_master_node_max="1"/>
+         <attributes crm_feature_set="1.0.8" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_clone_max="5" CRM_meta_clone_node_max="2" CRM_meta_master_max="2" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
