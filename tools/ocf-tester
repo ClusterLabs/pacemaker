@@ -84,7 +84,7 @@ function test_command() {
     fi
     #echo Running: "export $ra_args; bash $agent $action 2>&1 > /dev/null"
     export $ra_args; 
-    if [ $verbose = 0 ]; then
+    if [ $verbose -eq 0 ]; then
 	bash $agent $action >/dev/null 2>&1
     else
     	echo $msg
@@ -104,7 +104,7 @@ fi
 
 test_command meta-data
 rc=$?
-if [ $rc = 3 ]; then
+if [ $rc -eq 3 ]; then
     assert $rc 0 "Your agent does not support the meta-data action"
 else
     assert $rc 0 "The meta-data action cannot fail and must return 0"
@@ -112,7 +112,7 @@ fi
 
 test_command validate-all
 rc=$?
-if [ $rc = 3 ]; then
+if [ $rc -eq 3 ]; then
     assert $rc 0 "Your agent does not support the validate-all action"
 elif [ $rc -ne 0 ]; then
     assert $rc 0 "Validation failed.  Did you supply enough options with -o ?" 1
@@ -121,22 +121,22 @@ fi
 
 test_command monitor "Checking current state"
 rc=$?
-if [ $rc = 3 ]; then
+if [ $rc -eq 3 ]; then
     assert $rc 7 "Your agent does not support the monitor action" 1
 
-elif [ $rc = 1 ]; then
+elif [ $rc -eq 1 ]; then
     assert $rc 7 "Monitoring a stopped resources should return 0"
     echo "Test updated to expect 1 for stopped resources for the remainder of this run"
     stopped_rc=1
 
-elif [ $rc = 8 ]; then
+elif [ $rc -eq 8 ]; then
     test_command demote "Cleanup, demote"
     assert $? 0 "Your agent was a master and could not be demoted" 1
 
     test_command stop "Cleanup, stop"
     assert $? 0 "Your agent was a master and could not be stopped" 1
 
-elif [ $rc != 7 ]; then
+elif [ $rc -ne 7 ]; then
     test_command stop
     assert $? 0 "Your agent was active and could not be stopped" 1
 fi
@@ -152,25 +152,25 @@ assert $? 0 "Monitoring an active resource should return 0"
 
 test_command notify
 rc=$?
-if [ $rc = 3 ]; then
+if [ $rc -eq 3 ]; then
     echo "* Your agent does not support the notify action (optional)"
 else
     assert $rc 0 "The notify action cannot fail and must return 0"
 fi
 
 test_command demote "Checking for demote action"
-if [ $? = 3 ]; then
+if [ $? -eq 3 ]; then
     has_demote=0
     echo "* Your agent does not support the demote action (optional)"
 fi
 
 test_command promote "Checking for promote action"
-if [ $? = 3 ]; then
+if [ $? -eq 3 ]; then
     has_promote=0
     echo "* Your agent does not support the promote action (optional)"
 fi
 
-if [ $has_promote = 1 -a $has_demote = 1 ]; then
+if [ $has_promote -eq 1 -a $has_demote -eq 1 ]; then
     test_command demote "Testing: demotion of started resource"
     assert $? 0 "Demoting a start resource should not fail"
 
@@ -192,7 +192,7 @@ if [ $has_promote = 1 -a $has_demote = 1 ]; then
     test_command demote "Demoting resource"
     assert $? 0 "Demote failed" 1
 
-elif [ $has_promote = 0 -a $has_demote = 0 ]; then
+elif [ $has_promote -eq 0 -a $has_demote -eq 0 ]; then
     echo "* Your agent does not support master/slave (optional)"
 
 else
@@ -232,19 +232,19 @@ assert $? $stopped_rc "Monitoring a stopped resource should return $stopped_rc"
 
 test_command migrate_to "Checking for migrate_to action"
 rc=$?
-if [ $rc != 3 ]; then
+if [ $rc -ne 3 ]; then
     test_command migrate_from "Checking for migrate_from action"
 fi
-if [ $? = 3 ]; then
+if [ $? -eq 3 ]; then
     echo "* Your agent does not support the migrate action (optional)"
 fi
 
 test_command reload "Checking for reload action"
-if [ $? = 3 ]; then
+if [ $? -eq 3 ]; then
     echo "* Your agent does not support the reload action (optional)"
 fi
 
-if [ $num_errors != 0 ]; then
+if [ $num_errors -gt 0 ]; then
     echo Tests failed: $agent failed $num_errors tests
     exit 1
 else 
