@@ -529,6 +529,7 @@ populate_hash(crm_data_t *nvpair_list, GHashTable *hash)
 {
 	const char *name = NULL;
 	const char *value = NULL;
+
 	xml_child_iter_filter(
 		nvpair_list, an_attr, XML_CIB_TAG_NVPAIR,
 		
@@ -539,11 +540,11 @@ populate_hash(crm_data_t *nvpair_list, GHashTable *hash)
 			an_attr, XML_NVPAIR_ATTR_VALUE);
 		
 		if(name == NULL || value == NULL) {
-			return;
+			continue;
 
 		} else if(safe_str_eq(value, "#default")) {
-			return;
-		
+			continue;
+
 		} else if(g_hash_table_lookup(hash, name) == NULL) {
 			g_hash_table_insert(
 				hash, crm_strdup(name), crm_strdup(value));
