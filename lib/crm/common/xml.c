@@ -535,6 +535,7 @@ file2xml(FILE *input, gboolean compressed)
 		if ( rc != BZ_STREAM_END ) {
 			crm_err("Couldnt read compressed xml from file");
 			crm_free(buffer);
+			buffer = NULL;
 		}
 
 		BZ2_bzReadClose (&rc, bz_file);
