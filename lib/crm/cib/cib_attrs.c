@@ -204,7 +204,10 @@ update_attr(cib_t *the_cib, int call_options,
 	CRM_CHECK(section != NULL, return cib_missing);
 	CRM_CHECK(attr_name != NULL || attr_id != NULL, return cib_missing);
 
-	if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
+	if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
+		node_uuid = NULL;
+
+	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
 		CRM_CHECK(node_uuid != NULL, return cib_NOTEXISTS);
 		
 	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
@@ -329,7 +332,10 @@ read_attr(cib_t *the_cib,
 	CRM_CHECK(section != NULL, return cib_missing);
 	CRM_CHECK(attr_name != NULL || attr_id != NULL, return cib_missing);
 
-	if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
+	if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
+		node_uuid = NULL;
+
+	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
 		CRM_CHECK(node_uuid != NULL, return cib_NOTEXISTS);
 		
 	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
@@ -394,7 +400,10 @@ delete_attr(cib_t *the_cib, int options,
 	CRM_CHECK(section != NULL, return cib_missing);
 	CRM_CHECK(attr_name != NULL || attr_id != NULL, return cib_missing);
 
-	if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
+	if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
+		node_uuid = NULL;
+
+	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
 		CRM_CHECK(node_uuid != NULL, return cib_NOTEXISTS);
 		
 	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
