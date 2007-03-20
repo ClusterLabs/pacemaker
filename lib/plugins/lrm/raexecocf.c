@@ -175,7 +175,7 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	switch (errno) {
 		case ENOENT:   /* No such file or directory */
 		case EISDIR:   /* Is a directory */
-			exit_value = EXECRA_NO_RA;
+			exit_value = EXECRA_NOT_INSTALLED;
 			break;
 
 		default:

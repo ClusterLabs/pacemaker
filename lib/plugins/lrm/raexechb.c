@@ -249,7 +249,7 @@ execra( const char * rsc_id, const char * rsc_type, const char * provider,
 	switch (errno) {
 		case ENOENT:   /* No such file or directory */
 		case EISDIR:   /* Is a directory */
-			exit_value = EXECRA_NO_RA;
+			exit_value = EXECRA_NOT_INSTALLED;
 			break;
 		default:
 			exit_value = EXECRA_EXEC_UNKNOWN_ERROR;
@@ -321,6 +321,10 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 		   * running_pattern2 = "*OK*";
 	const char * lower_std_output = NULL;
 
+	if(ret_execra == EXECRA_NOT_INSTALLED) {
+		return ret_execra;
+	}
+	
 	if (	0 == STRNCMP_CONST(op_type, "status")
 	||	0 == STRNCMP_CONST(op_type, "monitor")) {
 		if (std_output == NULL ) {
