@@ -1585,10 +1585,11 @@ write_last_sequence(
 	}
 
   bail:
-	fflush(file_strm);
-	fclose(file_strm);
-
-
+	if(file_strm != NULL) {
+		fflush(file_strm);
+		fclose(file_strm);
+	}
+	
 	crm_free(series_file);
 	crm_free(buffer);
 }
