@@ -207,7 +207,13 @@ main(int argc, char **argv)
 		return rc;
 	}
 	
-	if(dest_uname == NULL) {
+
+	if(safe_str_eq(crm_system_name, "crm_attribute")
+	   && type == NULL && dest_uname == NULL) {
+		/* we're updating cluster options - dont populate dest_node */
+		type = XML_CIB_TAG_CRMCONFIG;
+
+	} else if(dest_uname == NULL) {
 		struct utsname name;
 		if(uname(&name) != 0) {
 			cl_perror("uname(3) call failed");
@@ -321,14 +327,15 @@ main(int argc, char **argv)
 		}
 		is_done = TRUE;
 
-	} else if(type == NULL && dest_node == NULL) {
-		type = XML_CIB_TAG_CRMCONFIG;
-
 	} else if (type == NULL) {
-		fprintf(stderr, "Please specify a value for -t\n");
+		type = XML_CIB_TAG_NODES;
 		return 1;
 	}
 
+	if(safe_str_eq(type, XML_CIB_TAG_CRMCONFIG)) {
+		dest_node = NULL;
+	}
+	
 	if(is_done) {
 			
 	} else if(DO_DELETE) {
