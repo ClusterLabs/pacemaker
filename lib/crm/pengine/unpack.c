@@ -1069,10 +1069,13 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	actual_rc_i = crm_parse_int(actual_rc, NULL);
 
 	if(EXECRA_NOT_INSTALLED == actual_rc_i) {
+		resource_location(rsc, node, -INFINITY, "not-installed", data_set);
 		if(is_probe) {
 			/* treat these like stops */
 			is_stop_action = TRUE;
 			task_status_i = LRM_OP_DONE;
+			actual_rc_i = EXECRA_NOT_RUNNING;
+			
  		} else {
 			task_status_i = LRM_OP_ERROR;
 		}
