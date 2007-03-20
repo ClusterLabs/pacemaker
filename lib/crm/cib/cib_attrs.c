@@ -45,8 +45,9 @@
 		return cib_missing;					\
 									\
 	} else if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {	\
-		tag = NULL;						\
+		node_uuid = NULL;					\
 		is_crm_config = TRUE;					\
+		tag = XML_CIB_TAG_CRMCONFIG;				\
 		if(set_name == NULL) {					\
 			set_name = CIB_OPTIONS_FIRST;			\
 		}							\
