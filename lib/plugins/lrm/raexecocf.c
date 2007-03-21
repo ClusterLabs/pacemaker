@@ -168,7 +168,7 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	}
 
 	/* execute the RA */
-	execl(ra_pathname, ra_pathname, op_type, NULL);
+	execl(ra_pathname, ra_pathname, op_type, (const char *)NULL);
 	cl_perror("(%s:%s:%d) execl failed for %s" 
 		  , __FILE__, __FUNCTION__, __LINE__, ra_pathname);
 
