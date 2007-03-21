@@ -386,8 +386,8 @@ def get_directive_list(config, directive) :
 	return directive_list
 		
 if __name__=="__main__" :
-	resource_file = "@HB_HA_DIR@/haresources"
-	config_file = "@HB_HA_DIR@/ha.cf"
+	resource_file = "@HB_HBCONF_DIR@/haresources"
+	config_file = "@HB_HBCONF_DIR@/ha.cf"
 	target_file = "@HA_VARLIBHBDIR@/crm/cib.xml"
 	to_stdout = False
 	
