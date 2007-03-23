@@ -1093,7 +1093,7 @@ get_tag_name(const char *input, size_t offset, size_t max)
 		}
 	}
 	crm_err("Error parsing token near %.15s: %s", input, crm_str(error));
-	return 0;
+	return -1;
   out:
 	CRM_ASSERT(lpc > offset);
 	return lpc - offset;
@@ -1350,7 +1350,8 @@ crm_data_t*
 parse_xml(const char *input, size_t *offset)
 {
 	char ch = 0;
-	size_t lpc = 0, len = 0, max = 0;
+	int len = 0;
+	size_t lpc = 0, max = 0;
 	char *tag_name = NULL;
 	char *attr_name = NULL;
 	char *attr_value = NULL;
