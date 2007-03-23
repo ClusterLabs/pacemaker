@@ -35,7 +35,6 @@
 #include <hb_api.h>
 #include <clplumbing/cl_malloc.h>
 #include <clplumbing/uids.h>
-#include <clplumbing/Gmain_timeout.h>
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -46,8 +45,8 @@
 
 #define OPTARGS	"rw:"
 
-int read_hb_uuid(void);
-int write_hb_uuid(const char *buffer);
+int read_local_hb_uuid(void);
+int write_local_hb_uuid(const char *buffer);
 
 static void usage(void) 
 {
@@ -59,13 +58,14 @@ int
 main(int argc, char **argv)
 {
 	int flag;
+	int rc = 0;
 	
 	cl_log_enable_stderr(TRUE);
 
 	if(argc == 1) {
 		/* no arguments specified, default to read */
-		read_hb_uuid();	
-		return 0;
+		rc = read_local_hb_uuid();	
+		return rc;
 	}
 	
 	while (1) {
@@ -75,20 +75,21 @@ main(int argc, char **argv)
 		}
 		switch(flag) {
 			case 'r':
-				read_hb_uuid();	
+				rc = read_local_hb_uuid();	
 				break;
 			case 'w':
-				write_hb_uuid(optarg);
+				rc = write_local_hb_uuid(optarg);
 				break;
 			default:
 				usage();
 				break;
 		}
 	}
-	return 0;
+	return rc;
 }
 
-int read_hb_uuid(void) 
+int
+read_local_hb_uuid(void) 
 {
 	int rc = 0;
 	cl_uuid_t uuid;
@@ -136,6 +137,7 @@ int read_hb_uuid(void)
 
 	} else {
 		fprintf(stderr, "No buffer to unparse\n");
+		rc = 4;
 	}
 
   bail:	
@@ -145,30 +147,35 @@ int read_hb_uuid(void)
 	return rc;
 }
 
-int write_hb_uuid(const char *new_value) 
+int
+write_local_hb_uuid(const char *new_value) 
 {
 	int fd;
-	int rc;
+	int rc = 0;
 	cl_uuid_t uuid;
 	char *buffer = strdup(new_value);
 	rc = cl_uuid_parse(buffer, &uuid);
 	if(rc != 0) {
-		fprintf(stderr, "Invalid ASCII UUID supplied: %s\n", new_value);
-		fprintf(stderr, "ASCII UUIDs must be of the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX and contain only letters and digits\n");
-		return 1;
+		fprintf(stderr, "Invalid ASCII UUID supplied: [%s]\n", new_value);
+		fprintf(stderr, "ASCII UUIDs must be of the form"
+		" XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+		" and contain only letters and digits\n");
+		return 5;
 	}
 	
 	if ((fd = open(UUID_FILE, O_WRONLY|O_SYNC|O_CREAT, 0644)) < 0) {
 		cl_perror("Could not open %s", UUID_FILE);
-		return 1;
+		return 6;
 	}
 	
 	if (write(fd, uuid.uuid, UUID_LEN) != UUID_LEN) {
 		cl_perror("Could not write UUID to %s", UUID_FILE);
+		rc=7;
 	}
 	
 	if (close(fd) < 0) {
 		cl_perror("Could not close %s", UUID_FILE);
+		rc=8;
 	}
-	return 0;
+	return rc;
 }
