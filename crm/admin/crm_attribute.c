@@ -251,11 +251,11 @@ main(int argc, char **argv)
 			return 1;
 
 		} else if(dest_node == NULL) {
-			fprintf(stderr, "Could not determin node UUID.\n");
+			fprintf(stderr, "Could not determine node UUID.\n");
 			return 1;
 
 		} else if(rsc_id == NULL) {
-			fprintf(stderr, "Could not determin resource name.\n");
+			fprintf(stderr, "Could not determine resource name.\n");
 			return 1;
 		}
 		
