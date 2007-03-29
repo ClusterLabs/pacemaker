@@ -2543,10 +2543,18 @@ validate_with_dtd(
 	}
 	
   cleanup:
-	xmlFreeValidCtxt(cvp);
-	xmlFreeDtd(dtd);
-	xmlFreeDoc(doc);
-	crm_free(buffer);
+	if(cvp) {
+		xmlFreeValidCtxt(cvp);
+	}
+	if(dtd) {
+		xmlFreeDtd(dtd);
+	}
+	if(doc) {
+		xmlFreeDoc(doc);
+	}
+	if(buffer) {
+		crm_free(buffer);
+	}
 	
 #endif	
 	return valid;
