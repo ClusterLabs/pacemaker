@@ -1469,7 +1469,7 @@ parse_xml(const char *input, size_t *offset)
 				}
 				break;
 			case '>':
-				while(our_input[lpc+1] != '<') {
+				while(lpc < max && our_input[lpc+1] != '<') {
 					lpc++;
 				}
 				break;
