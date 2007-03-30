@@ -134,6 +134,7 @@ class LinuxHAv2(HeartbeatCM):
         if self.Env["DoBSC"]:
             del self["Pat:They_stopped"]
             del self["Pat:Logd_stopped"]
+            self.Env["use_logd"] = 0
 
         self.check_transitions = 0
         self.check_elections = 0

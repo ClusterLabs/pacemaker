@@ -923,6 +923,48 @@ class RestartOnebyOne(CTSTest):
 #     Register StopOnebyOne as a good test to run
 AllTestClasses.append(RestartOnebyOne)
 
+class PartialStart(CTSTest):
+###################################################################
+    '''Start a node - but tell it to stop before it finishes starting up'''
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name="PartialStart"
+        self.startall = SimulStartLite(cm)
+        self.stopall = SimulStopLite(cm)
+
+    def __call__(self, node):
+        '''Perform the 'PartialStart' test. '''
+        self.incr("calls")
+
+        ret = self.stopall(None)
+        if not ret:
+            return self.failure("Setup failed")
+
+        watchpats = []
+        watchpats.append("Starting crmd")
+        watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats,
+                               timeout=self.CM["DeadTime"]+10)
+        watch.setwatch()
+
+        self.CM.StartaCMnoBlock(node)
+        ret = watch.lookforall()
+        if not ret:
+            self.CM.log("Patterns not found: " + repr(watch.unmatched))
+            return self.failure("Setup of %s failed" % node) 
+
+        ret = self.stopall(None)
+        if not ret:
+            return self.failure("%s did not stop in time" % node)
+
+        return self.success()
+
+    def is_applicable(self):
+        '''Partial is always applicable'''
+        return 1
+
+#     Register StopOnebyOne as a good test to run
+AllTestClasses.append(PartialStart)
+
 ###################################################################
 class StandbyTest(CTSTest):
 ###################################################################

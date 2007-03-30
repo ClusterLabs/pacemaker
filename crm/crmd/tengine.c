@@ -138,9 +138,10 @@ do_te_invoke(long long action,
 		crm_info("Waiting for the TE to connect before action %s",
 			fsa_action2string(action));
 
-		if(is_set(fsa_input_register, R_SHUTDOWN)) {
-			CRM_CHECK((action & A_TE_INVOKE) == 0,
-				  crm_warn("A_TE_INVOKE invoked after shutdown of the TE"));
+		if(FALSE == is_set(fsa_input_register, te_subsystem->flag_required)) {
+			crm_info("Ignoring action %s in state: %s"
+				 " - We dont want the TE anymore",
+				 fsa_action2string(action), fsa_state2string(cur_state));
 			return I_NULL;
 		}
 		

@@ -1037,7 +1037,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_POLICY_ENGINE	==> */	A_LOG|A_SHUTDOWN_REQ,
 		/* S_RECOVERY		==> */	A_WARN|A_SHUTDOWN|O_RELEASE,
 		/* S_RELEASE_DC		==> */	A_WARN|A_SHUTDOWN_REQ,
-		/* S_STARTING		==> */	A_ERROR|A_SHUTDOWN_REQ,
+		/* S_STARTING		==> */	A_WARN|A_SHUTDOWN,
 		/* S_PENDING		==> */	A_SHUTDOWN_REQ,
 		/* S_STOPPING		==> */	A_LOG,
 		/* S_TERMINATE		==> */	A_LOG,
