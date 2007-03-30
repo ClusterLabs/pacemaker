@@ -429,12 +429,12 @@ crmd_ipc_connection_destroy(gpointer user_data)
 		return;
 	}
 
-	crm_debug("Disconnecting client %s (%p)", client->table_key, client);
+	crm_debug_2("Disconnecting client %s (%p)", client->table_key, client);
 	source = client->client_source;
 	client->client_source = NULL;
 	if(source != NULL) {
-		crm_debug("Deleting %s (%p) from mainloop",
-			  client->table_key, source);
+		crm_debug_3("Deleting %s (%p) from mainloop",
+			    client->table_key, source);
 		G_main_del_IPC_Channel(source);
 	} 
 	crm_free(client->table_key);

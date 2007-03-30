@@ -1418,7 +1418,7 @@ process_client_disconnect(crmd_client_t *curr_client)
 		
 	} else {
 		/* else that was a transient client */
-		crm_debug("Received HUP from transient client");
+		crm_debug_2("Received HUP from transient client");
 	}
 	
 	if (curr_client->table_key != NULL) {
