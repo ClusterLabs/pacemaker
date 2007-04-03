@@ -44,7 +44,6 @@
 #include <lrm/raexec.h>
 #include <libgen.h>
 
-#include <libxml/xmlstring.h>
 #include <libxml/entities.h>
 
 #define PIL_PLUGINTYPE		RA_EXEC_TYPE
