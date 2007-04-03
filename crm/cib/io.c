@@ -285,7 +285,9 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 		free_xml_from_parent(root, status);
 		status = NULL;
 	}
-	create_xml_node(root, XML_CIB_TAG_STATUS);		
+	if(status == NULL) {
+		create_xml_node(root, XML_CIB_TAG_STATUS);		
+	}
 	
 	/* Do this before DTD validation happens */
 

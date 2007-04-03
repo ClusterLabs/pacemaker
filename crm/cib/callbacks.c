@@ -51,6 +51,7 @@
 extern GMainLoop*  mainloop;
 extern gboolean cib_shutdown_flag;
 extern gboolean stand_alone;
+extern const char* cib_root;
 
 extern enum cib_errors cib_update_counter(
 	crm_data_t *xml_obj, const char *field, gboolean reset);
@@ -1211,7 +1212,7 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 	*cib_diff = NULL;
 	if(per_action_cib) {
 		CRM_CHECK(the_cib == NULL, free_xml(the_cib));
-		the_cib = readCibXmlFile(WORKING_DIR, "cib.xml", FALSE);
+		the_cib = readCibXmlFile(cib_root, "cib.xml", FALSE);
 		CRM_CHECK(the_cib != NULL, return cib_NOOBJECT);
 	}
 	current_cib = the_cib;

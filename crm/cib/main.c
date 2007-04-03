@@ -54,6 +54,10 @@
 #  include <libxml/parser.h>
 #endif
 
+#ifdef HAVE_GETOPT_H
+#  include <getopt.h>
+#endif
+
 extern int init_remote_listener(int port);
 
 gboolean cib_shutdown_flag = FALSE;
@@ -66,8 +70,10 @@ extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
 GMainLoop*  mainloop = NULL;
 const char* crm_system_name = CRM_SYSTEM_CIB;
+const char* cib_root = WORKING_DIR;
 char *cib_our_uname = NULL;
 oc_ev_t *cib_ev_token;
+gboolean preserve_status = FALSE;
 gboolean cib_writes_enabled = TRUE;
 
 void usage(const char* cmd, int exit_status);
@@ -92,7 +98,7 @@ char *channel3 = NULL;
 char *channel4 = NULL;
 char *channel5 = NULL;
 
-#define OPTARGS	"hVsf"
+#define OPTARGS	"aswr:V?"
 void cib_cleanup(void);
 
 static void
@@ -118,6 +124,21 @@ main(int argc, char ** argv)
 	int flag;
 	int rc = 0;
 	int argerr = 0;
+#ifdef HAVE_GETOPT_H
+	int option_index = 0;
+	static struct option long_options[] = {
+		{"per-action-cib", 0, 0, 'a'},
+		{"stand-alone",    0, 0, 's'},
+		{"disk-writes",    0, 0, 'w'},
+
+		{"cib-root",    1, 0, 'r'},
+
+		{"verbose",     0, 0, 'V'},
+		{"help",        0, 0, '?'},
+
+		{0, 0, 0, 0}
+	};
+#endif
 	
 	crm_log_init(crm_system_name);
 	G_main_add_SignalHandler(
@@ -136,20 +157,37 @@ main(int argc, char ** argv)
 	peer_hash = g_hash_table_new_full(
 		g_str_hash, g_str_equal,g_hash_destroy_str, g_hash_destroy_str);
 	
-	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
+	while (1) {
+#ifdef HAVE_GETOPT_H
+		flag = getopt_long(argc, argv, OPTARGS,
+				   long_options, &option_index);
+#else
+		flag = getopt(argc, argv, OPTARGS);
+#endif
+		if (flag == -1)
+			break;
+		
 		switch(flag) {
 			case 'V':
 				alter_debug(DEBUG_INC);
 				break;
 			case 's':
 				stand_alone = TRUE;
+				preserve_status = TRUE;
+				cib_writes_enabled = FALSE;
 				cl_log_enable_stderr(1);
 				break;
-			case 'h':		/* Help message */
+			case '?':		/* Help message */
 				usage(crm_system_name, LSB_EXIT_OK);
 				break;
 			case 'f':
 				per_action_cib = TRUE;
+				break;
+			case 'w':
+				cib_writes_enabled = TRUE;
+				break;
+			case 'r':
+				cib_root = optarg;
 				break;
 			default:
 				++argerr;
@@ -427,13 +465,14 @@ usage(const char* cmd, int exit_status)
 
 	stream = exit_status ? stderr : stdout;
 
-	fprintf(stream, "usage: %s [-srkh]"
-		"[-c configure file]\n", cmd);
-/* 	fprintf(stream, "\t-d\tsets debug level\n"); */
-/* 	fprintf(stream, "\t-s\tgets daemon status\n"); */
-/* 	fprintf(stream, "\t-r\trestarts daemon\n"); */
-/* 	fprintf(stream, "\t-k\tstops daemon\n"); */
-/* 	fprintf(stream, "\t-h\thelp message\n"); */
+	fprintf(stream, "usage: %s [-%s]\n", cmd, OPTARGS);
+	fprintf(stream, "\t--%s (-%c)\t\tTurn on debug info."
+		"  Additional instances increase verbosity\n", "verbose", 'V');
+	fprintf(stream, "\t--%s (-%c)\t\tThis help message\n", "help", '?');
+	fprintf(stream, "\t--%s (-%c)\tAdvanced use only\n", "per-action-cib", 'a');
+	fprintf(stream, "\t--%s (-%c)\tAdvanced use only\n", "stand-alone", 's');
+	fprintf(stream, "\t--%s (-%c)\tAdvanced use only\n", "disk-writes", 'w');
+	fprintf(stream, "\t--%s (-%c)\t\tAdvanced use only\n", "cib-root", 'r');
 	fflush(stream);
 
 	exit(exit_status);
@@ -553,7 +592,7 @@ gboolean
 startCib(const char *filename)
 {
 	gboolean active = FALSE;
-	crm_data_t *cib = readCibXmlFile(WORKING_DIR, filename, TRUE);
+	crm_data_t *cib = readCibXmlFile(cib_root, filename, !preserve_status);
 
 	CRM_ASSERT(cib != NULL);
 	
