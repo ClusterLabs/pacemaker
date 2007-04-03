@@ -56,15 +56,17 @@
 /* GMainLoop *mainloop = NULL; */
 const char *crm_system_name = "crm_mon";
 
-#define OPTARGS	"V?i:nrh:cdp:1X:"
+#define OPTARGS	"V?i:nrh:cdp:s1wX:"
 
 
 void usage(const char *cmd, int exit_status);
 void blank_screen(void);
 int print_status(crm_data_t *cib);
+void print_warn(const char *descr);
+int print_simple_status(crm_data_t *cib);
 /* #define printw_at(line, fmt...) move(line, 0); printw(fmt); line++ */
 void wait_for_refresh(int offset, const char *prefix, int msec);
-int print_html_status(crm_data_t *cib, const char *filename);
+int print_html_status(crm_data_t *cib, const char *filename, gboolean web_cgi);
 void make_daemon(gboolean daemonize, const char *pidfile);
 gboolean mon_timer_popped(gpointer data);
 void mon_update(const HA_Message*, int, int, crm_data_t*,void*);
@@ -73,8 +75,10 @@ char *xml_file = NULL;
 char *as_html_file = NULL;
 char *pid_file = NULL;
 gboolean as_console = FALSE;
+gboolean simple_status = FALSE;
 gboolean group_by_node = FALSE;
 gboolean inactive_resources = FALSE;
+gboolean web_cgi = FALSE;
 int interval = 15000;
 gboolean daemonize = FALSE;
 GMainLoop*  mainloop = NULL;
@@ -82,6 +86,7 @@ guint timer_id = 0;
 cib_t *cib_conn = NULL;
 int failed_connections = 0;
 gboolean one_shot = FALSE;
+gboolean has_warnings = FALSE;
 
 #if CURSES_ENABLED
 #  define print_as(fmt...) if(as_console) {	\
@@ -92,6 +97,7 @@ gboolean one_shot = FALSE;
 #else
 #  define print_as(fmt...) fprintf(stdout, fmt);
 #endif
+
 int
 main(int argc, char **argv)
 {
@@ -108,6 +114,8 @@ main(int argc, char **argv)
 		{"group-by-node", 0, 0, 'n'},
 		{"inactive", 0, 0, 'r'},
 		{"as-html", 1, 0, 'h'},		
+		{"web-cgi", 0, 0, 'w'},
+		{"simple-status", 0, 0, 's'},
 		{"as-console", 0, 0, 'c'},		
 		{"one-shot", 0, 0, '1'},		
 		{"daemonize", 0, 0, 'd'},		
@@ -121,6 +129,11 @@ main(int argc, char **argv)
 	crm_system_name = basename(argv[0]);
 	crm_log_init(crm_system_name);
 	crm_log_level = LOG_ERR -1;
+
+	if (strcmp(crm_system_name, "crm_mon.cgi")==0) {
+		web_cgi = TRUE;
+		one_shot = TRUE;
+	}
 	
 	while (1) {
 #ifdef HAVE_GETOPT_H
@@ -159,6 +172,10 @@ main(int argc, char **argv)
 			case 'h':
 				as_html_file = crm_strdup(optarg);
 				break;
+			case 'w':
+			        web_cgi = TRUE;
+				one_shot = TRUE;
+				break;
 			case 'c':
 #if CURSES_ENABLED
 				as_console = TRUE;
@@ -166,6 +183,10 @@ main(int argc, char **argv)
 				printf("You need to have curses available at compile time to enable console mode\n");
 				argerr++;
 #endif
+				break;
+			case 's':
+			        simple_status = TRUE;
+				one_shot = TRUE;
 				break;
 			case '1':
 				one_shot = TRUE;
@@ -187,7 +208,7 @@ main(int argc, char **argv)
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
 
-	if(as_html_file == NULL) {
+	if(as_html_file == NULL && !web_cgi && !simple_status) {
 #if CURSES_ENABLED
 		as_console = TRUE;
 #else
@@ -302,6 +323,9 @@ mon_timer_popped(gpointer data)
 			   cib_conn, crm_system_name, cib_query)) {
 			failed_connections = 0;
 
+		} else if (simple_status) {
+			fprintf(stdout, "Critical: Unable to connect to the CIB\n");
+			exit(2);
 		} else {
 			failed_connections++;
 			CRM_DEV_ASSERT(cib_conn->cmds->signoff(cib_conn) == cib_ok);
@@ -339,8 +363,13 @@ mon_update(const HA_Message *msg, int call_id, int rc,
 		cib = output;
 		CRM_DEV_ASSERT(safe_str_eq(crm_element_name(cib), XML_TAG_CIB));
 #endif		
-		if(as_html_file) {
-			print_html_status(cib, as_html_file);
+		if(as_html_file || web_cgi) {
+			print_html_status(cib, as_html_file, web_cgi);
+		} else if (simple_status) {
+			print_simple_status(cib);
+			if (has_warnings) {
+				exit(1); 
+			}
 		} else {
 			print_status(cib);
 		}
@@ -349,6 +378,9 @@ mon_update(const HA_Message *msg, int call_id, int rc,
 		}
 		
 			
+	} else if(simple_status) {
+		fprintf(stderr, "Critical: query failed: %s", cib_error2string(rc));
+		exit(2);
 	} else if(one_shot) {
 		fprintf(stderr, "Query failed: %s", cib_error2string(rc));
 		exit(LSB_EXIT_OK);
@@ -389,6 +421,59 @@ wait_for_refresh(int offset, const char *prefix, int msec)
 			sleep(1);
 		}
 	}
+}
+
+#define mon_warn(fmt...) do {			\
+		if (!has_warnings) {			\
+			print_as("Warning:");	\
+		} else {			\
+			print_as(",");		\
+		}				\
+		print_as(fmt);			\
+		has_warnings = TRUE;			\
+	} while(0)
+
+int
+print_simple_status(crm_data_t *cib) 
+{
+	node_t *dc = NULL;
+	int nodes_online = 0;
+	int nodes_standby = 0;
+	pe_working_set_t data_set;
+
+	set_working_set_defaults(&data_set);
+	data_set.input = cib;
+	cluster_status(&data_set);
+
+	dc = data_set.dc_node;
+
+	if(dc == NULL) {
+		mon_warn("No DC ");
+	}
+
+	slist_iter(node, node_t, data_set.nodes, lpc2,
+		   if(node->details->standby) {
+			   nodes_standby++;
+		   } else if(node->details->online) {
+			   nodes_online++;
+		   } else {
+			   mon_warn("offline node: %s", node->details->uname);
+		   }
+	);
+	
+	if (!has_warnings) {
+		print_as("Ok: %d nodes online", nodes_online);
+		if (nodes_standby > 0) {
+			print_as(", %d standby nodes", nodes_standby);
+		}
+		print_as(", %d resources configured",
+			g_list_length(data_set.resources));
+	}
+	
+	print_as("\n");
+	data_set.input = NULL;
+	cleanup_calculations(&data_set);
+	return 0;
 }
 
 int
@@ -494,20 +579,28 @@ print_status(crm_data_t *cib)
 }
 
 int
-print_html_status(crm_data_t *cib, const char *filename) 
+print_html_status(crm_data_t *cib, const char *filename, gboolean web_cgi) 
 {
+	FILE *stream;
+	node_t *dc = NULL;
 	static int updates = 0;
 	pe_working_set_t data_set;
-	node_t *dc = NULL;
-	char *filename_tmp = crm_concat(filename, "tmp", '.');
+	char *filename_tmp = NULL;
 
-	FILE *stream = fopen(filename_tmp, "w");
-	if(stream == NULL) {
+	if (web_cgi) {
+		stream=stdout;
+		fprintf(stream, "Content-type: text/html\n\n");
+
+	} else {
+		filename_tmp = crm_concat(filename, "tmp", '.');
+		stream = fopen(filename_tmp, "w");
 		cl_perror("Cannot open %s for writing", filename_tmp);
-		crm_free(filename_tmp);
-		return -1;
+		if(stream == NULL) {
+			crm_free(filename_tmp);
+			return -1;
+		}	
 	}
-	
+
 	updates++;
 	set_working_set_defaults(&data_set);
 	data_set.input = cib;
@@ -619,11 +712,12 @@ print_html_status(crm_data_t *cib, const char *filename)
 	fflush(stream);
 	fclose(stream);
 
-	if(rename(filename_tmp, filename) != 0) {
-		cl_perror("Unable to rename %s->%s", filename_tmp, filename);
+	if (!web_cgi) {
+		if(rename(filename_tmp, filename) != 0) {
+			cl_perror("Unable to rename %s->%s", filename_tmp, filename);
+		}
+		crm_free(filename_tmp);
 	}
-	crm_free(filename_tmp);
-
 	return 0;
 }
 
@@ -656,9 +750,12 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c) \t:Group resources by node\n", "group-by-node", 'n');
 	fprintf(stream, "\t--%s (-%c) \t:Display inactive resources\n", "inactive", 'r');
 	fprintf(stream, "\t--%s (-%c) \t: Display cluster status on the console\n", "as-console", 'c');
+	fprintf(stream, "\t--%s (-%c) \t: Display the cluster status once as "
+		"a simple one line output (suitable for nagios)\n", "simple-status", 's');
 	fprintf(stream, "\t--%s (-%c) \t: Display the cluster status once on "
 		"the console and exit (doesnt use ncurses)\n", "one-shot", '1');
 	fprintf(stream, "\t--%s (-%c) <filename>\t: Write cluster status to the named file\n", "as-html", 'h');
+	fprintf(stream, "\t--%s (-%c) \t: Web mode with output suitable for cgi\n", "web-cgi", 'w');
 	fprintf(stream, "\t--%s (-%c) \t: Run in the background as a daemon\n", "daemonize", 'd');
 	fprintf(stream, "\t--%s (-%c) <filename>\t: Daemon pid file location\n", "pid-file", 'p');
 
