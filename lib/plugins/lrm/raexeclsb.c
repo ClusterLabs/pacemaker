@@ -44,6 +44,9 @@
 #include <lrm/raexec.h>
 #include <libgen.h>
 
+#include <libxml/xmlstring.h>
+#include <libxml/entities.h>
+
 #define PIL_PLUGINTYPE		RA_EXEC_TYPE
 #define PIL_PLUGIN		lsb
 #define PIL_PLUGINTYPE_S	"RAExec"
@@ -101,18 +104,15 @@
 #define SHORT_DSCR  "# Short-Description:"
 #define DESCRIPTION "# Description:"
 
-#define ZAPGDOBJ(m)				\
+#define ZAPXMLOBJ(m)				\
 		if ( (m) != NULL ) {		\
-			g_free(m);		\
+			xmlFree(m);		\
 			(m) = NULL;		\
 		}
 
 #define RALSB_GET_VALUE(ptr, keyword)	\
 	if ( (ptr == NULL) & (0 == strncasecmp(buffer, keyword, strlen(keyword))) ) { \
-		(ptr) = g_strdup(buffer+strlen(keyword)); \
-		if (*(ptr+strlen(ptr)-1) == '\n') { \
-			*(ptr+strlen(ptr)-1) = ' '; \
-		} \
+		(ptr) = (char *)xmlEncodeEntitiesReentrant(NULL,BAD_CAST buffer+strlen(keyword)); \
 		continue; \
 	}
 /*
@@ -470,7 +470,8 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 	     * shld_stop  = NULL,
 	     * dflt_start = NULL,
 	     * dflt_stop  = NULL,
-	     * s_dscrpt  = NULL;
+	     * s_dscrpt  = NULL,
+	     * xml_l_dscrpt  = NULL;
 	 GString * l_dscrpt = NULL;
 	
 	/* 
@@ -529,12 +530,12 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 		RALSB_GET_VALUE(s_dscrpt,  SHORT_DSCR)
 		
 		/* Long description may cross multiple lines */
-		if ( (l_dscrpt == NULL) & (0 == strncasecmp(buffer, DESCRIPTION
+		if ( (l_dscrpt == NULL) && (0 == strncasecmp(buffer, DESCRIPTION
 			, strlen(DESCRIPTION))) ) {
 			l_dscrpt = g_string_new(buffer+strlen(DESCRIPTION));
 			/* Between # and keyword, more than one space, or a tab
 			 * character, indicates the continuation line.
-			 * 	Extracted from LSB init script standatd
+			 * 	Extracted from LSB init script standard
 			 */
 			while ( NULL != fgets(buffer, BUFLEN, fp) ) {
 				if ( (0 == strncmp(buffer, "#  ", 3))
@@ -548,6 +549,11 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 				}
 			}
 			continue;
+		}
+		if( l_dscrpt ) {
+			xml_l_dscrpt = (char *)xmlEncodeEntitiesReentrant(NULL,
+				BAD_CAST (l_dscrpt->str));
+			g_string_free(l_dscrpt, TRUE);
 		}
 
 		if ( 0 == strncasecmp(buffer, LSB_INITSCRIPT_INFOEND_TAG
@@ -563,7 +569,7 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 	fclose(fp);
 	
 	g_string_sprintf( meta_data, meta_data_template, rsc_type
-			, (l_dscrpt==NULL)? rsc_type : l_dscrpt->str
+			, (xml_l_dscrpt==NULL)? rsc_type : xml_l_dscrpt
 			, (s_dscrpt==NULL)? rsc_type : s_dscrpt
 			, (provides==NULL)? "" : provides
 			, (req_start==NULL)? "" : req_start
@@ -573,18 +579,15 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 			, (dflt_start==NULL)? "" : dflt_start
 			, (dflt_stop==NULL)? "" : dflt_stop );
 
-	if ( l_dscrpt != NULL) {
-		g_string_free(l_dscrpt, TRUE);
-		l_dscrpt = NULL;
-	}
-	ZAPGDOBJ(s_dscrpt);	
-	ZAPGDOBJ(provides);	
-	ZAPGDOBJ(req_start);	
-	ZAPGDOBJ(req_stop);	
-	ZAPGDOBJ(shld_start);	
-	ZAPGDOBJ(shld_stop);	
-	ZAPGDOBJ(dflt_start);	
-	ZAPGDOBJ(dflt_stop);	
+	ZAPXMLOBJ(xml_l_dscrpt);	
+	ZAPXMLOBJ(s_dscrpt);	
+	ZAPXMLOBJ(provides);	
+	ZAPXMLOBJ(req_start);	
+	ZAPXMLOBJ(req_stop);	
+	ZAPXMLOBJ(shld_start);	
+	ZAPXMLOBJ(shld_stop);	
+	ZAPXMLOBJ(dflt_start);	
+	ZAPXMLOBJ(dflt_stop);	
 
 	return meta_data->str;
 }
