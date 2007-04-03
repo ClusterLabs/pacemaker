@@ -550,11 +550,9 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 			}
 			continue;
 		}
-		if( l_dscrpt ) {
+		if( l_dscrpt )
 			xml_l_dscrpt = (char *)xmlEncodeEntitiesReentrant(NULL,
 				BAD_CAST (l_dscrpt->str));
-			g_string_free(l_dscrpt, TRUE);
-		}
 
 		if ( 0 == strncasecmp(buffer, LSB_INITSCRIPT_INFOEND_TAG
 			, strlen(LSB_INITSCRIPT_INFOEND_TAG)) ) {
@@ -589,6 +587,8 @@ get_resource_meta(const char* rsc_type,  const char* provider)
 	ZAPXMLOBJ(dflt_start);	
 	ZAPXMLOBJ(dflt_stop);	
 
+	if( l_dscrpt )
+		g_string_free(l_dscrpt, TRUE);
 	return meta_data->str;
 }
 
