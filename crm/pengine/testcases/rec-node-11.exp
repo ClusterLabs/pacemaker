@@ -168,6 +168,9 @@
        <trigger>
          <rsc_op id="13" operation="stop" operation_key="rsc3_stop_0" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
+       <trigger>
+         <crm_event id="15" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="12">

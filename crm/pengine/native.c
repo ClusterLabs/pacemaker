@@ -1320,6 +1320,7 @@ native_start_constraints(
 	resource_t *rsc,  action_t *stonith_op, gboolean is_stonith,
 	pe_working_set_t *data_set)
 {
+	node_t *target = stonith_op?stonith_op->node:NULL;
 	gboolean is_unprotected = FALSE;
 	gboolean run_unprotected = TRUE;
 
@@ -1333,7 +1334,35 @@ native_start_constraints(
 
 	} else {
 		slist_iter(action, action_t, rsc->actions, lpc2,
-			   if(action->needs != rsc_req_stonith) {
+			   if(target != NULL
+			      && target->details->expected_up
+			      && safe_str_eq(action->task, CRMD_ACTION_START)
+			      && NULL == pe_find_node_id(
+				      rsc->known_on, target->details->id)) {
+				   /* if expected_up == TRUE, then we've seen
+				    *   the node before and it has failed (as
+				    *   opposed to just hasn't started up yet)
+				    *
+				    * if known == NULL, then we dont know if
+				    *   the resource is active on the node
+				    *   we're about to shoot
+				    *
+				    * in this case, regardless of action->needs,
+				    *   the only safe option is to wait until
+				    *   the node is shot before doing anything
+				    *   to with the resource
+				    *
+				    * its analogous to waiting for all the probes
+				    *   for rscX to complete before starting rscX
+				    *
+				    * the most likely explaination is that the
+				    *   DC died and took its status with it
+				    */
+				   
+				   crm_info("Ordering %s after %s recovery",
+					    action->uuid, target->details->uname);
+
+			   } else if(action->needs != rsc_req_stonith) {
 				   crm_debug_3("%s doesnt need to wait for stonith events", action->uuid);
 				   continue;
 			   }
