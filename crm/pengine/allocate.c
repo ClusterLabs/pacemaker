@@ -579,7 +579,7 @@ stage5(pe_working_set_t *data_set)
 
 
 /*
- * Create dependacies for stonith and shutdown operations
+ * Create dependancies for stonith and shutdown operations
  */
 gboolean
 stage6(pe_working_set_t *data_set)
