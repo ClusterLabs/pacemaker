@@ -1122,30 +1122,28 @@ cib_process_request(
 		crm_debug_2("Completed slave update");
 
 	} else if(rc == cib_ok
-	   && result_diff != NULL
-	   && !(call_options & cib_inhibit_bcast)) {
-		CRM_DEV_ASSERT(cib_server_ops[call_type].modifies_cib == FALSE
-			       || result_diff != NULL || rc != cib_ok);
+		  && result_diff != NULL
+		  && !(call_options & cib_inhibit_bcast)) {
 		send_peer_reply(request, result_diff, originator, TRUE);
 		
-	} else if((call_options & cib_discard_reply) == 0) {
-		CRM_DEV_ASSERT(cib_server_ops[call_type].modifies_cib == FALSE
-			       || result_diff != NULL || rc != cib_ok);
-		crm_debug("Directed reply to %s", originator);
+	} else if(call_options & cib_discard_reply) {
+		crm_debug_4("Caller isn't interested in reply");
+		
+	} else if (from_peer) {
+		crm_debug_2("Directing reply to %s", originator);
 		
 		if(call_options & cib_inhibit_bcast) {
-			crm_debug("Request not broadcast: inhibited");
+			crm_debug_3("Request not broadcast: inhibited");
 		}
-		if(cib_server_ops[call_type].modifies_cib == FALSE) {
-			crm_debug_2("Request not broadcast: R/O call");
+		if(cib_server_ops[call_type].modifies_cib == FALSE || result_diff == NULL) {
+			crm_debug_3("Request not broadcast: R/O call");
 		}
 		if(rc != cib_ok) {
-			crm_warn("Request not broadcast: call failed: %s",
-				 cib_error2string(rc));
+			crm_debug_3("Request not broadcast: call failed: %s",
+				    cib_error2string(rc));
 		}
-		if(from_peer) {
-			send_peer_reply(op_reply, result_diff, originator, FALSE);
-		}
+
+		send_peer_reply(op_reply, result_diff, originator, FALSE);
 	}
 	
 	crm_msg_del(op_reply);
@@ -1205,6 +1203,7 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 
 	const char *op = NULL;
 	const char *section = NULL;
+	gboolean config_changed = FALSE;
 	gboolean global_update = crm_is_true(
 		cl_get_string(request, F_CIB_GLOBAL_UPDATE));
 	
@@ -1293,15 +1292,18 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 				crm_debug_2("Skipping update: inhibit broadcast");
 
 			} else {
-				const char *op         = cl_get_string(
+				const char *op = cl_get_string(
 					request, F_CIB_OPERATION);
 				const char *originator = cl_get_string(
 					request, F_ORIG);
 
-				crm_debug_2("Upping counter: %s %s %d %d",
-					  op, originator, call_options,
-					global_update);
-				cib_update_counter(result_cib, XML_ATTR_NUMUPDATES, FALSE);
+				config_changed = cib_config_changed(current_cib, result_cib);
+				if(config_changed) {
+					crm_debug_2("Upping counter: %s %s %d %d",
+						    op, originator, call_options,
+						    global_update);
+					cib_update_counter(result_cib, XML_ATTR_NUMUPDATES, FALSE);
+				}
 			}
 			
 			if(do_id_check(result_cib, NULL, TRUE, FALSE)) {

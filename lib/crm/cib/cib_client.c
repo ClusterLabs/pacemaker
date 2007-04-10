@@ -1077,15 +1077,65 @@ apply_cib_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 	return result;
 }
 
+gboolean
+cib_config_changed(crm_data_t *old_cib, crm_data_t *new_cib)
+{
+	const char *tag = NULL;
+	crm_data_t *diff = NULL;
+	crm_data_t *dest = NULL;
+
+	diff = diff_xml_object(old_cib, new_cib, FALSE);
+	if(diff == NULL) {
+		return FALSE;
+	}
+
+#ifdef DONT_SYNC_STATUS_CHANGES
+	tag = "diff-removed";
+	dest = find_xml_node(diff, tag, FALSE);
+	if(dest) {
+		dest = find_xml_node(dest, "cib", FALSE);
+	}
+	if(dest && crm_element_value(dest, "status") != NULL) {
+		cl_msg_remove(dest, "status");
+	}
+	if(xml_has_children(dest) == FALSE) {
+		cl_msg_remove(diff, tag);
+	}
+	
+	tag = "diff-added";
+	dest = find_xml_node(diff, tag, FALSE);
+	if(dest) {
+		dest = find_xml_node(dest, "cib", FALSE);
+	}
+	if(dest && crm_element_value(dest, "status") != NULL) {
+		cl_msg_remove(dest, "status");
+	}
+	if(xml_has_children(dest) == FALSE) {
+		cl_msg_remove(diff, tag);
+	}
+
+	if(xml_has_children(diff) == FALSE) {
+		free_xml(diff);
+		diff = NULL;
+	}
+
+	if(diff == NULL) {
+		return FALSE;
+	}
+#endif
+
+	return TRUE;
+}
+
 crm_data_t *
 diff_cib_object(crm_data_t *old_cib, crm_data_t *new_cib, gboolean suppress)
 {
-	crm_data_t *diff = diff_xml_object(old_cib, new_cib, suppress);
-
 	crm_data_t *dest = NULL;
 	crm_data_t *src = NULL;
 	const char *name = NULL;
 	const char *value = NULL;
+
+	crm_data_t *diff = diff_xml_object(old_cib, new_cib, suppress);
 	
 	/* add complete version information */
 	src = old_cib;
