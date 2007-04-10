@@ -245,11 +245,16 @@ main(int argc, char **argv)
 	}
 	
 	status = get_object_root(XML_CIB_TAG_STATUS, cib_object);
+	if(status == NULL) {
+		create_xml_node(cib_object, XML_CIB_TAG_STATUS);
+	}
+	
 #if CRM_DEPRECATED_SINCE_2_0_4
 	xml_child_iter_filter(status, node_state, XML_CIB_TAG_STATE,
 		       xml_remove_prop(node_state, XML_CIB_TAG_LRM);
 		);
 #endif
+
 	crm_notice("Required feature set: %s", feature_set(cib_object));
  	if(do_id_check(cib_object, NULL, FALSE, FALSE)) {
 		crm_config_err("ID Check failed");
