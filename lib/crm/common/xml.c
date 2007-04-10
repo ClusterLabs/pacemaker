@@ -970,12 +970,12 @@ dump_data_element(
 gboolean
 xml_has_children(const crm_data_t *xml_root)
 {
-	crm_validate_data(xml_root);
-
-	xml_child_iter(
-		xml_root, a_child, 
-		return TRUE;
-		);
+	if(xml_root != NULL) {
+		xml_child_iter(
+			xml_root, a_child, 
+			return TRUE;
+			);
+	}
 	return FALSE;
 }
 
