@@ -274,7 +274,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	}
 	
 	if(root == NULL) {
-		root = createEmptyCib();	
+		root = createEmptyCib();
 	} else {
 		crm_xml_add(root, "generated", XML_BOOLEAN_FALSE);	
 	}
@@ -295,6 +295,13 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	name = XML_ATTR_GENERATION_ADMIN;
 	value = crm_element_value(root, name);
 	if(value == NULL) {
+		crm_warn("No value for %s was specified in the configuration.",
+			 name);
+		crm_warn("The reccomended course of action is to shutdown,"
+			 " run crm_verify and fix any errors it reports.");
+		crm_warn("We will default to zero and continue but may get"
+			 " confused about which configuration to use if"
+			 " multiple nodes are powered up at the same time.");
 		crm_xml_add_int(root, name, 0);
 	}
 	
