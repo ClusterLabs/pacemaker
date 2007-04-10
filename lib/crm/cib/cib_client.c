@@ -1122,6 +1122,9 @@ cib_config_changed(crm_data_t *old_cib, crm_data_t *new_cib)
 	if(diff == NULL) {
 		return FALSE;
 	}
+#else
+	tag = NULL;
+	dest = NULL;
 #endif
 
 	return TRUE;
