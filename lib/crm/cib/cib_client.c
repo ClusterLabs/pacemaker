@@ -1127,6 +1127,7 @@ cib_config_changed(crm_data_t *old_cib, crm_data_t *new_cib)
 	dest = NULL;
 #endif
 
+	free_xml(diff);
 	return TRUE;
 }
 
