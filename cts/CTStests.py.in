@@ -887,7 +887,7 @@ AllTestClasses.append(StopOnebyOne)
 
 class RestartOnebyOne(CTSTest):
 ###################################################################
-    '''Stop all the nodes in order'''
+    '''Restart all the nodes in order'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
         self.name="RestartOnebyOne"
