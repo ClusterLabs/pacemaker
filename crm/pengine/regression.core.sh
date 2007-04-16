@@ -26,15 +26,18 @@ failed=.regression.failed.diff
 
 num_failed=0
 function ptest() {
-    build_dir=`pwd | sed -e "s/Development/build/"`
-    if [ -x ptest ]; then
-	./ptest $*
-    elif [ -x $build_dir/ptest ]; then
-	$build_dir/ptest $*
+    if [ "x$VALGRIND_CMD" != "x" ]; then
+	ptest_cmd=`which ptest`
+
+    elif [ -x ptest ]; then
+	ptest_cmd=./ptest
+
     else
-	echo No build directory found, using installed version
-	`which ptest` $*
+	echo No ptest executable in current directory using installed version
+	ptest_cmd=`which ptest`
     fi
+    #echo $VALGRIND_CMD $ptest_cmd $*
+    $VALGRIND_CMD $ptest_cmd $*
 }
 
 function do_test {
@@ -89,7 +92,9 @@ function do_test {
 	rm $output
 	return;
     else
-	sort $dot_output > $dot_output.sort
+	echo "digraph \"g\" {" > $dot_output.sort
+	sort $dot_output | grep -v -e ^}$ -e digraph >> $dot_output.sort
+	echo "}" >> $dot_output.sort
 	mv -f $dot_output.sort $dot_output
     fi
 

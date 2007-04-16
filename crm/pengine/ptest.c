@@ -44,6 +44,9 @@
 #include <pengine.h>
 #include <lib/crm/pengine/utils.h>
 #include <allocate.h>
+#if HAVE_LIBXML2
+#  include <libxml/parser.h>
+#endif
 
 gboolean use_stdin = FALSE;
 gboolean inhibit_exit = FALSE;
@@ -204,19 +207,19 @@ main(int argc, char **argv)
 				use_stdin = TRUE;
 				break;
 			case 'X':
-				xml_file = crm_strdup(optarg);
+				xml_file = optarg;
 				break;
 			case 'd':
-				use_date = crm_strdup(optarg);
+				use_date = optarg;
 				break;
 			case 'D':
-				dot_file = crm_strdup(optarg);
+				dot_file = optarg;
 				break;
 			case 'G':
-				graph_file = crm_strdup(optarg);
+				graph_file = optarg;
 				break;
 			case 'I':
-				input_file = crm_strdup(optarg);
+				input_file = optarg;
 				break;
 			case 'V':
 				cl_log_enable_stderr(TRUE);
@@ -296,9 +299,6 @@ main(int argc, char **argv)
 		usage("ptest", 1);
 	}
 
-#ifdef MCHECK
-	mtrace();
-#endif
  	CRM_CHECK(cib_object != NULL, return 4);
 
 	crm_notice("Required feature set: %s", feature_set(cib_object));
@@ -322,10 +322,6 @@ main(int argc, char **argv)
 			crm_free(msg_buffer);
 		}
 	}
-	
-#ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(LOG_DEBUG_2, TRUE);
-#endif
 	
 	if(use_date != NULL) {
 		a_date = parse_date(&use_date);
@@ -451,22 +447,15 @@ main(int argc, char **argv)
 		crm_crit("Transition failed: %s", transition_status(graph_rc));
 		print_graph(LOG_ERR, transition);
 	}
-	data_set.input = NULL;
 	cleanup_alloc_calculations(&data_set);
 	destroy_graph(transition);
 	
 	CRM_CHECK(graph_rc == transition_complete, all_good = FALSE; crm_err("An invalid transition was produced"));
 
-	crm_free(cib_object);	
-
-#ifdef MCHECK
-	muntrace();
+#if HAVE_LIBXML2
+	xmlCleanupParser();
 #endif
 	
-#ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(LOG_ERR, TRUE);
-#endif
-
 	/* required for MallocDebug.app */
 	if(inhibit_exit) {
 		GMainLoop*  mainloop = g_main_new(FALSE);
