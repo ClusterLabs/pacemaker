@@ -282,7 +282,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 
 		} else if(interval > 0) {
 			custom_action_order(rsc, start_key(rsc), NULL,
-					    NULL, crm_strdup(key), op,
+					    NULL, crm_strdup(op->task), op,
 					    pe_order_optional, data_set);
 		}
 		
@@ -686,6 +686,7 @@ stage6(pe_working_set_t *data_set)
 		if(last_stonith && dc_down != last_stonith) {
 			order_actions(last_stonith, dc_down, pe_order_implies_left);
 		}
+		g_list_free(shutdown_matches);
 	}
 
 	return TRUE;
@@ -1306,7 +1307,6 @@ custom_action_order(
 	}
 	
 	crm_malloc0(order, sizeof(order_constraint_t));
-	if(order == NULL) { return FALSE; }
 
 	crm_debug_3("Creating ordering constraint %d",
 		    data_set->order_id);

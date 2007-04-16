@@ -178,12 +178,12 @@ cleanup_calculations(pe_working_set_t *data_set)
 	crm_free(data_set->dc_uuid);
 	crm_free(data_set->transition_idle_timeout);
 	
-	crm_debug_3("deleting actions");
-	pe_free_actions(data_set->actions);
-
 	crm_debug_3("deleting resources");
 	pe_free_resources(data_set->resources); 
 	
+	crm_debug_3("deleting actions");
+	pe_free_actions(data_set->actions);
+
 	crm_debug_3("deleting nodes");
 	pe_free_nodes(data_set->nodes);
 	

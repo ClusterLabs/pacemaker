@@ -295,7 +295,7 @@ void common_free(resource_t *rsc)
 		return;
 	}
 	
-	crm_debug_5("Freeing %s", rsc->id);
+	crm_debug_5("Freeing %s %d", rsc->id, rsc->variant);
 
  	pe_free_shallow(rsc->rsc_cons);
 	if(rsc->parameters != NULL) {
@@ -307,8 +307,14 @@ void common_free(resource_t *rsc)
 	if(rsc->orphan) {
 		free_xml(rsc->xml);
 	}
-	pe_free_shallow_adv(rsc->running_on, FALSE);
-	pe_free_shallow_adv(rsc->known_on, FALSE);
+	if(rsc->running_on) {
+		g_list_free(rsc->running_on);
+		rsc->running_on = NULL;
+	}
+	if(rsc->known_on) {
+		g_list_free(rsc->known_on);
+		rsc->known_on = NULL;
+	}
 	pe_free_shallow_adv(rsc->rsc_location, FALSE);
 	pe_free_shallow_adv(rsc->allowed_nodes, TRUE);
 	crm_free(rsc->id);

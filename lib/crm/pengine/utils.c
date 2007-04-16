@@ -43,6 +43,12 @@ pe_free_shallow_adv(GListPtr alist, gboolean with_data)
 {
 	GListPtr item;
 	GListPtr item_next = alist;
+
+	if(with_data == FALSE && alist != NULL) {
+		g_list_free(alist);
+		return;
+	}
+	
 	while(item_next != NULL) {
 		item = item_next;
 		item_next = item_next->next;
@@ -54,7 +60,7 @@ pe_free_shallow_adv(GListPtr alist, gboolean with_data)
 		
 		item->data = NULL;
 		item->next = NULL;
-		g_list_free(item);
+		g_list_free_1(item);
 	}
 }
 
@@ -354,6 +360,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 		crm_debug_4("Found existing action (%d) %s for %s on %s",
 			  action->id, task, rsc?rsc->id:"<NULL>",
 			  on_node?on_node->details->uname:"<NULL>");
+		g_list_free(possible_matches);
 	}
 
 	if(action == NULL) {

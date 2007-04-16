@@ -278,6 +278,8 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	if(possible_matches == NULL) {
 		is_optional = FALSE;
 		crm_debug_3("Marking %s manditory: not active", key);
+	} else {
+		g_list_free(possible_matches);
 	}
 	
 	value = crm_element_value(operation, "role");
@@ -407,6 +409,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 			action->optional = TRUE;
 /*			action->pseudo = TRUE; */
 			);
+		g_list_free(possible_matches);
 		crm_debug_2("Stopping a stopped resource");
 		crm_free(key);
 		return;
@@ -951,7 +954,7 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 	}
 	
 	crm_free(op_key);
-	pe_free_shallow_adv(possible_matches, FALSE);
+	g_list_free(possible_matches);
 }
 
 
@@ -1099,6 +1102,7 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 				   match->optional = TRUE;
 			   }
 			);
+		g_list_free(possible_matches);
 		
 	} else if(rsc->start_pending) {
 		start = start_action(rsc, next, TRUE);
@@ -1185,6 +1189,8 @@ PromoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 		   }
 		);
 
+	g_list_free(action_list);
+
 	if(runnable) {
 		promote_action(rsc, next, FALSE);
 		crm_notice("%s\tPromote %s", next->details->uname, rsc->id);
@@ -1201,6 +1207,7 @@ PromoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 		   promote->runnable = FALSE;
 		);
 	
+	g_list_free(action_list);
 	return TRUE;
 }
 
@@ -1460,6 +1467,8 @@ native_stop_constraints(
 		}
 		);
 	
+	g_list_free(action_list);
+
 	key = demote_key(rsc);
 	action_list = find_actions(rsc->actions, key, node);
 	crm_free(key);
@@ -1483,6 +1492,7 @@ native_stop_constraints(
 			}
 		}
 		);	
+	g_list_free(action_list);
 }
 
 void
@@ -1542,6 +1552,7 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	}
 	
 	start = action_list->data;
+	g_list_free(action_list);
 	
 	value = g_hash_table_lookup(rsc->meta, "allow_migrate");
 	if(crm_is_true(value)) {
@@ -1564,6 +1575,7 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	}
 	
 	stop = action_list->data;
+	g_list_free(action_list);
 	
 	action = start;
 	if(action->pseudo
@@ -1640,6 +1652,7 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 					can_migrate = FALSE;
 				}
 				);
+			g_list_free(action_list);
 		}
 		
 		if(can_migrate == FALSE) {

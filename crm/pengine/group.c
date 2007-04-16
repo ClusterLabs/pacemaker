@@ -131,6 +131,7 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	op->runnable = TRUE;
 
 	rsc->actions = group_data->self->actions;
+/* 	group_data->self->actions = NULL; */
 }
 
 void

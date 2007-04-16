@@ -1,0 +1,9 @@
+{
+   Glib-leak
+   Memcheck:Leak
+   fun:*
+   fun:g_malloc0
+   obj:/opt/gnome/lib64/libglib-2.0.so.0.1200.4
+   fun:g_slice_alloc
+   fun:g_hash_table_new_full
+}

@@ -37,6 +37,9 @@
 #include <crm/common/ctrl.h>
 #include <crm/pengine/common.h>
 
+#if HAVE_LIBXML2
+#  include <libxml/parser.h>
+#endif
 
 #define SYS_NAME CRM_SYSTEM_PENGINE
 #define OPTARGS	"hVc"
@@ -135,6 +138,10 @@ pe_init(void)
 		g_main_run(mainloop);
 		return_to_orig_privs();
 
+#if HAVE_LIBXML2
+		xmlCleanupParser();
+#endif
+		
 		crm_info("Exiting %s", crm_system_name);
 		return 0;
 	}
