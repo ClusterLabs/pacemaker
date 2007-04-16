@@ -570,26 +570,6 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 		crm_debug_2("Triggering CIB write");
 		G_main_set_trigger(cib_writer);
 	}
-#if CIB_MEM_STATS
-	/* this chews through a bunch of CPU */
-	if(the_cib == new_cib) {
-		long new_bytes, new_allocs, new_frees;
-		long old_bytes, old_allocs, old_frees;
-		crm_xml_nbytes(new_cib, &new_bytes, &new_allocs, &new_frees);
-		crm_xml_nbytes(saved_cib, &old_bytes, &old_allocs, &old_frees);
-
-		if(new_bytes != old_bytes) {
-			crm_info("CIB size is %ld bytes (was %ld)", new_bytes, old_bytes);
-			crm_adjust_mem_stats(NULL, new_bytes - old_bytes,
-					     new_allocs - old_allocs, new_frees - old_frees);
-			if(crm_running_stats != NULL) {
-				crm_adjust_mem_stats(
-					crm_running_stats, new_bytes - old_bytes,
-					new_allocs - old_allocs, new_frees - old_frees);
-			}
-		}
-	}
-#endif
 	
 	if(the_cib != saved_cib && the_cib != new_cib) {
 		CRM_DEV_ASSERT(error_code != cib_ok);
