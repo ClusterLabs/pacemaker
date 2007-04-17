@@ -98,6 +98,8 @@ free_hash_entry(gpointer data)
 void attrd_ha_callback(HA_Message * msg, void* private_data);
 void attrd_local_callback(HA_Message * msg);
 gboolean attrd_timer_callback(void *user_data);
+gboolean attrd_trigger_update(attr_hash_entry_t *hash_entry);
+void attrd_perform_update(attr_hash_entry_t *hash_entry);
 
 static gboolean
 attrd_shutdown(int nsig, gpointer unused)
@@ -478,6 +480,16 @@ attrd_cib_callback(const HA_Message *msg, int call_id, int rc,
 	crm_free(attr);
 }
 
+static void
+log_hash_entry(int level, attr_hash_entry_t *entry, const char *text) 
+{
+	do_crm_log(level, "%s", text);
+	do_crm_log(level, "Set:     %s", entry->section);
+	do_crm_log(level, "Name:    %s", entry->id);
+	do_crm_log(level, "Value:   %s", entry->value);
+	do_crm_log(level, "Timeout: %s", entry->dampen);
+}
+
 static attr_hash_entry_t *
 find_hash_entry(HA_Message * msg) 
 {
@@ -520,43 +532,47 @@ find_hash_entry(HA_Message * msg)
 		crm_debug("\t%s->timeout: %s", attr, value);
 	}
 
+	log_hash_entry(LOG_DEBUG_2, hash_entry, "Found (and updated) entry:");
 	return hash_entry;
 }
 
 void
 attrd_ha_callback(HA_Message * msg, void* private_data)
 {
-	int rc = cib_ok;
 	attr_hash_entry_t *hash_entry = NULL;
-	const char *from = ha_msg_value(msg, F_ORIG);
-	const char *op   = ha_msg_value(msg, F_ATTRD_TASK);
-	const char *value= ha_msg_value(msg, F_ATTRD_VALUE);
-	const char *attr = ha_msg_value(msg, F_ATTRD_ATTRIBUTE);
+	const char *from   = ha_msg_value(msg, F_ORIG);
+	const char *op     = ha_msg_value(msg, F_ATTRD_TASK);
+	const char *ignore = ha_msg_value(msg, F_ATTRD_IGNORE_LOCALLY);
 
-	crm_info("%s message from %s", op, from);
-	hash_entry = find_hash_entry(msg);
-	stop_attrd_timer(hash_entry);
-
-	if(safe_str_neq(from, attrd_uname)) {
-		value = hash_entry->value;
+	if(ignore == NULL || safe_str_neq(from, attrd_uname)) {
+		crm_info("%s message from %s", op, from);
+		hash_entry = find_hash_entry(msg);
+		stop_attrd_timer(hash_entry);
+		attrd_perform_update(hash_entry);
 	}
+}
 
-	if(value == NULL) {
+void
+attrd_perform_update(attr_hash_entry_t *hash_entry)
+{
+	int rc = cib_ok;
+
+	if(hash_entry->value == NULL) {
 		/* delete the attr */
 		rc = delete_attr(cib_conn, cib_none, hash_entry->section, attrd_uuid,
-				 hash_entry->set, NULL, attr, NULL);
+				 hash_entry->set, NULL, hash_entry->id, NULL);
 		crm_info("Sent delete %d: %s %s %s",
-			 rc, attr, hash_entry->set, hash_entry->section);
+			 rc, hash_entry->id, hash_entry->set, hash_entry->section);
 		
 	} else {
 		/* send update */
 		rc = update_attr(cib_conn, cib_none, hash_entry->section,
  				 attrd_uuid, hash_entry->set, NULL,
- 				 hash_entry->id, value);
-		crm_info("Sent update %d: %s=%s", rc, hash_entry->id, value);
+ 				 hash_entry->id, hash_entry->value);
+		crm_info("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
 	}
 
-	add_cib_op_callback(rc, FALSE, crm_strdup(attr), attrd_cib_callback);
+	add_cib_op_callback(rc, FALSE, crm_strdup(hash_entry->id), attrd_cib_callback);
 	
 	return;
 }
@@ -608,7 +624,7 @@ attrd_local_callback(HA_Message * msg)
 		hash_entry->timer_id = Gmain_timeout_add(
 			hash_entry->timeout, attrd_timer_callback, hash_entry);
 	} else {
-		attrd_timer_callback(hash_entry);
+		attrd_trigger_update(hash_entry);
 	}
 	
 	return;
@@ -617,13 +633,21 @@ attrd_local_callback(HA_Message * msg)
 gboolean
 attrd_timer_callback(void *user_data)
 {
+ 	stop_attrd_timer(user_data);
+	attrd_trigger_update(user_data);
+	return TRUE;
+}
+
+gboolean
+attrd_trigger_update(attr_hash_entry_t *hash_entry)
+{
 	HA_Message *msg = NULL;
-	attr_hash_entry_t *hash_entry = user_data;
-	stop_attrd_timer(hash_entry);
 
 	/* send HA message to everyone */
 	crm_info("Sending flush op to all hosts for: %s", hash_entry->id);
-	msg = ha_msg_new(4);
+ 	log_hash_entry(LOG_DEBUG_2, hash_entry, "Sending flush op to all hosts for:");
+
+	msg = ha_msg_new(8);
 	ha_msg_add(msg, F_TYPE, T_ATTRD);
 	ha_msg_add(msg, F_ORIG, attrd_uname);
 	ha_msg_add(msg, F_ATTRD_TASK, "flush");
@@ -632,6 +656,12 @@ attrd_timer_callback(void *user_data)
 	ha_msg_add(msg, F_ATTRD_SECTION, hash_entry->section);
 	ha_msg_add(msg, F_ATTRD_DAMPEN, hash_entry->dampen);
 	ha_msg_add(msg, F_ATTRD_VALUE, hash_entry->value);
+
+	if(hash_entry->timeout <= 0) {
+		ha_msg_add(msg, F_ATTRD_IGNORE_LOCALLY, hash_entry->value);
+		attrd_perform_update(hash_entry);
+	}
+
 	send_ha_message(attrd_cluster_conn, msg, NULL, FALSE);
 	crm_msg_del(msg);
 	
