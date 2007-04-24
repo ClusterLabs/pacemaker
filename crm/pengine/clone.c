@@ -106,7 +106,7 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 	 *  - inactive instances
 	 */	
 
-	do_crm_log(level, "%s ? %s", resource1->id, resource2->id);
+	do_crm_log(level+1, "%s ? %s", resource1->id, resource2->id);
 	if(resource1->running_on && resource2->running_on) {
 		if(g_list_length(resource1->running_on) < g_list_length(resource2->running_on)) {
 			do_crm_log(level, "%s < %s: running_on", resource1->id, resource2->id);
