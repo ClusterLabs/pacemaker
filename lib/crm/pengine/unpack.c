@@ -415,9 +415,10 @@ determine_online_status_fencing(crm_data_t * node_state, node_t *this_node)
 	   && safe_str_eq(crm_state, ONLINESTATUS)) {
 		online = TRUE;
 		if(safe_str_neq(join_state, CRMD_JOINSTATE_MEMBER)) {
-			crm_debug("Node is not ready to run resources: %s", join_state);
+			crm_info("Node %s is not ready to run resources",
+				 this_node->details->uname);
 			this_node->details->standby = TRUE;
-		}			
+		}
 		
 	} else if(crm_is_true(ccm_state) == FALSE
  		  && safe_str_eq(ha_state, DEADSTATUS)
@@ -507,7 +508,8 @@ determine_online_status(
 
 	} else if(this_node->details->online) {
 		crm_info("Node %s is %s", this_node->details->uname,
-			 this_node->details->shutdown?"shutting down":"online");
+			 this_node->details->shutdown?"shutting down":
+			 this_node->details->standby?"standby":"online");
 
 	} else {
 		crm_debug_2("Node %s is offline", this_node->details->uname);
