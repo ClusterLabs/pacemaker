@@ -392,8 +392,11 @@ class CtsLab(UserDict):
                 # I don't think I need the IP address, etc. but this validates
                 # the node name against /etc/hosts and/or DNS, so it's a
                 # GoodThing(tm).
-                self.Nodes[node] = gethostbyname_ex(node)
-            
+                try:
+                    self.Nodes[node] = gethostbyname_ex(node)
+                except:
+                    print node+" not found in DNS... aborting"
+                    raise
         #
         #        Reset Mechanism
         #

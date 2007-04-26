@@ -1070,7 +1070,7 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 	action_t *stop = NULL;
 	GListPtr possible_matches = NULL;
 
-	crm_debug("Executing: %s (role=%s)",rsc->id, role2text(rsc->next_role));
+	crm_debug_2("Executing: %s (role=%s)",rsc->id, role2text(rsc->next_role));
 
 	if(current == NULL || next == NULL) {
 		return;

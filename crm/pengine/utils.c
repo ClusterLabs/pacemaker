@@ -216,6 +216,7 @@ can_run_resources(const node_t *node)
  */
 gint sort_node_weight(gconstpointer a, gconstpointer b)
 {
+	int level = LOG_DEBUG_3;
 	const node_t *node1 = (const node_t*)a;
 	const node_t *node2 = (const node_t*)b;
 
@@ -224,7 +225,7 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	
 	if(a == NULL) { return 1; }
 	if(b == NULL) { return -1; }
-
+	
 	node1_weight = node1->weight;
 	node2_weight = node2->weight;
 	
@@ -236,40 +237,40 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	}
 
 	if(node1_weight > node2_weight) {
-		crm_debug_3("%s (%d) > %s (%d) : weight",
-			    node1->details->uname, node1_weight,
-			    node2->details->uname, node2_weight);
+		do_crm_log(level, "%s (%d) > %s (%d) : weight",
+			   node1->details->uname, node1_weight,
+			   node2->details->uname, node2_weight);
 		return -1;
 	}
 	
 	if(node1_weight < node2_weight) {
-		crm_debug_3("%s (%d) < %s (%d) : weight",
+		do_crm_log(level, "%s (%d) < %s (%d) : weight",
 			    node1->details->uname, node1_weight,
 			    node2->details->uname, node2_weight);
 		return 1;
 	}
 
-	crm_debug_3("%s (%d) == %s (%d) : weight",
+	do_crm_log(level, "%s (%d) == %s (%d) : weight",
 		    node1->details->uname, node1_weight,
 		    node2->details->uname, node2_weight);
 	
 	/* now try to balance resources across the cluster */
 	if(node1->details->num_resources
 	   < node2->details->num_resources) {
-		crm_debug_3("%s (%d) < %s (%d) : resources",
+		do_crm_log(level, "%s (%d) < %s (%d) : resources",
 			    node1->details->uname, node1->details->num_resources,
 			    node2->details->uname, node2->details->num_resources);
 		return -1;
 		
 	} else if(node1->details->num_resources
 		  > node2->details->num_resources) {
-		crm_debug_3("%s (%d) > %s (%d) : resources",
+		do_crm_log(level, "%s (%d) > %s (%d) : resources",
 			    node1->details->uname, node1->details->num_resources,
 			    node2->details->uname, node2->details->num_resources);
 		return 1;
 	}
 	
-	crm_debug_4("%s = %s", node1->details->uname, node2->details->uname);
+	do_crm_log(level, "%s = %s", node1->details->uname, node2->details->uname);
 	return 0;
 }
 
