@@ -480,6 +480,7 @@ unconfirmed_actions(gboolean send_updates)
 			
 			unconfirmed++;
 			task = crm_element_value(action->xml,XML_LRM_ATTR_TASK);
+			crm_info("Action %d unconfirmed from peer", action->id);
 			if(action->type != action_type_rsc) {
 				continue;
 			} else if(send_updates == FALSE) {
@@ -491,12 +492,11 @@ unconfirmed_actions(gboolean send_updates)
 				/* *never* update the CIB with these */
 				continue;
 			}
-			crm_err("Action %d unconfirmed from peer", action->id);
 			cib_action_update(action, LRM_OP_PENDING);
 			);
 		);
 	if(unconfirmed > 0) {
-		crm_info("Waiting on %d unconfirmed actions", unconfirmed);
+		crm_err("Waiting on %d unconfirmed actions", unconfirmed);
 	}
 	return unconfirmed;
 }
