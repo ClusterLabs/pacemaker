@@ -122,12 +122,12 @@ do_cl_join_offer_respond(long long action,
 	} 
 #endif
 
-	crm_debug("Accepting join offer: join-%s",
-		  cl_get_string(input->msg, F_CRM_JOIN_ID));
+	crm_debug_2("Accepting join offer: join-%s",
+		    cl_get_string(input->msg, F_CRM_JOIN_ID));
 	
 	/* we only ever want the last one */
 	if(query_call_id > 0) {
-		crm_debug("Cancelling previous join query: %d", query_call_id);
+		crm_debug_3("Cancelling previous join query: %d", query_call_id);
 		remove_cib_op_callback(query_call_id, FALSE);
 		query_call_id = 0;
 	}
@@ -147,7 +147,7 @@ do_cl_join_offer_respond(long long action,
 	add_cib_op_callback(
 		query_call_id, TRUE,
 		copy_ha_msg_input(input), join_query_callback);
-	crm_debug("Registered join query callback: %d", query_call_id);
+	crm_debug_2("Registered join query callback: %d", query_call_id);
 
 	register_fsa_action(A_DC_TIMER_STOP);
 	return I_NULL;
