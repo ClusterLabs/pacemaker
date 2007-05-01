@@ -113,7 +113,7 @@ static const char * no_parameter_info = "<!-- No parameter segment -->";
 
 #define CHECKMETANULL(ret, which) \
 	if (ret == NULL) { \
-		cl_log(LOG_WARNING, "stonithRA plugin: cannot get %s" \
+		cl_log(LOG_WARNING, "stonithRA plugin: cannot get %s " \
 			"segment of %s's metadata.", which, rsc_type); \
 		ret = no_parameter_info; \
 	}
@@ -323,7 +323,7 @@ get_resource_meta(const char* rsc_type, const char* provider)
 
 	if ( provider != NULL ) {
 		cl_log(LOG_NOTICE, "stonithRA plugin: provider attribution "
-			"isnot needed and will be ignored.");
+			"is not needed and will be ignored.");
 	}
 
 	stonith_obj = stonith_new(rsc_type);
