@@ -1,5 +1,5 @@
  <transition_graph cluster-delay="60" transition_id="0">
-   <synapse id="0" priority="1000000">
+   <synapse id="0">
      <action_set>
        <rsc_op id="9" operation="monitor" operation_key="stonithclone:0_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
          <primitive id="stonithclone:0" long-id="stonithcloneset:stonithclone:0" class="stonith" provider="heartbeat" type="external/ssh"/>
@@ -61,7 +61,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="5" priority="1000000">
+   <synapse id="5">
      <action_set>
        <rsc_op id="10" operation="monitor" operation_key="evmsdclone:0_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
          <primitive id="evmsdclone:0" long-id="evmsdcloneset:evmsdclone:0" class="ocf" provider="heartbeat" type="Evmsd"/>
@@ -123,7 +123,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="10" priority="1000000">
+   <synapse id="10">
      <action_set>
        <rsc_op id="11" operation="monitor" operation_key="evmsclone:0_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
          <primitive id="evmsclone:0" long-id="evmscloneset:evmsclone:0" class="ocf" provider="heartbeat" type="EvmsSCC"/>
@@ -270,7 +270,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="21" priority="1000000">
+   <synapse id="21">
      <action_set>
        <rsc_op id="12" operation="monitor" operation_key="imagestoreclone:0_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
          <primitive id="imagestoreclone:0" long-id="imagestorecloneset:imagestoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -433,7 +433,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="33" priority="1000000">
+   <synapse id="33">
      <action_set>
        <rsc_op id="13" operation="monitor" operation_key="configstoreclone:0_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
          <primitive id="configstoreclone:0" long-id="configstorecloneset:configstoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -596,7 +596,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="45" priority="1000000">
+   <synapse id="45">
      <action_set>
        <rsc_op id="14" operation="monitor" operation_key="sles10_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
          <primitive id="sles10" long-id="sles10" class="ocf" provider="heartbeat" type="Xen"/>

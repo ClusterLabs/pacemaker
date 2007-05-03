@@ -1305,7 +1305,6 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	key = generate_op_key(rsc->id, CRMD_ACTION_STATUS, 0);
 	probe = custom_action(rsc, key, CRMD_ACTION_STATUS, node,
 			      FALSE, TRUE, data_set);
-	probe->priority = INFINITY;
 
 	running = pe_find_node_id(rsc->running_on, node->details->id);
 	if(running == NULL) {

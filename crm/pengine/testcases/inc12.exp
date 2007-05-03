@@ -130,7 +130,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="12" priority="1000000">
+   <synapse id="12">
      <action_set>
        <rsc_op id="27" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee">
          <primitive id="child_DoFencing:1" long-id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>

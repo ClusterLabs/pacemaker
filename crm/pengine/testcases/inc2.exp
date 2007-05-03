@@ -1,5 +1,5 @@
  <transition_graph cluster-delay="60s" transition_id="0">
-   <synapse id="0" priority="1000000">
+   <synapse id="0">
      <action_set>
        <rsc_op id="4" operation="monitor" operation_key="child_rsc1:0_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc1:0" long-id="rsc1:child_rsc1:0" class="heartbeat" type="apache"/>
@@ -8,7 +8,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="1" priority="1000000">
+   <synapse id="1">
      <action_set>
        <rsc_op id="5" operation="monitor" operation_key="child_rsc1:1_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc1:1" long-id="rsc1:child_rsc1:1" class="heartbeat" type="apache"/>
@@ -17,7 +17,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="2" priority="1000000">
+   <synapse id="2">
      <action_set>
        <rsc_op id="6" operation="monitor" operation_key="child_rsc1:2_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc1:2" long-id="rsc1:child_rsc1:2" class="heartbeat" type="apache"/>
@@ -55,7 +55,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="5" priority="1000000">
+   <synapse id="5">
      <action_set>
        <rsc_op id="7" operation="monitor" operation_key="child_rsc1:3_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc1:3" long-id="rsc1:child_rsc1:3" class="heartbeat" type="apache"/>
@@ -93,7 +93,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="8" priority="1000000">
+   <synapse id="8">
      <action_set>
        <rsc_op id="8" operation="monitor" operation_key="child_rsc1:4_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="child_rsc1:4" long-id="rsc1:child_rsc1:4" class="heartbeat" type="apache"/>

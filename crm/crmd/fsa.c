@@ -721,11 +721,18 @@ do_state_transition(long long actions,
 				crm_err("We have more confirmed nodes than our membership does");
 				register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 				
+			} else if(saved_ccm_membership_id != current_ccm_membership_id) {
+				crm_info("Membership changed: %u -> %u - join restart",
+					 saved_ccm_membership_id,
+					 current_ccm_membership_id);
+				register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
+
 			} else {
 				crm_warn("Only %u of %u cluster "
-					 "nodes are eligible to run resources",
+					 "nodes are eligible to run resources - continue %d",
 					 g_hash_table_size(confirmed_nodes),
-					 fsa_membership_copy->members_size);
+					 fsa_membership_copy->members_size,
+					 g_hash_table_size(welcomed_nodes));
 			}
 /* 			initialize_join(FALSE); */
 			break;

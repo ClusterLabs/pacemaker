@@ -395,12 +395,7 @@ crmd_client_status_callback(const char * node, const char * client,
 		free_xml(update);
 
 		if(AM_I_DC && safe_str_eq(status, OFFLINESTATUS)) {
-
-			g_hash_table_remove(confirmed_nodes,  node);
-			g_hash_table_remove(finalized_nodes,  node);
-			g_hash_table_remove(integrated_nodes, node);
-			g_hash_table_remove(welcomed_nodes,   node);
-			
+			erase_node_from_join(node);
 			check_join_state(fsa_state, __FUNCTION__);
 		}
 	}
@@ -521,20 +516,26 @@ crmd_ccm_msg_callback(
 
 	crm_debug_3("Invoked");
 
-	if(data != NULL) {
-		instance = membership->m_instance;
-	}
+	CRM_ASSERT(data != NULL);
+	instance = membership->m_instance;
 	
 	crm_info("Quorum %s after event=%s (id=%d)", 
 		 ccm_have_quorum(event)?"(re)attained":"lost",
-		 ccm_event_name(event), instance);
+		 ccm_event_name(event), membership->m_instance);
 
+	if(current_ccm_membership_id > membership->m_instance) {
+		crm_err("Membership instance ID went backwards! %d->%d",
+			current_ccm_membership_id, instance);
+		CRM_ASSERT(current_ccm_membership_id <= membership->m_instance);
+		return;
+	}
+	
 	/*
-	 * OC_EV_MS_NEW_MEMBERSHIP: membership with quorum
-	 * OC_EV_MS_MS_INVALID: membership without quorum
-	 * OC_EV_MS_NOT_PRIMARY: previous membership no longer valid
+	 * OC_EV_MS_NEW_MEMBERSHIP:   membership with quorum
+	 * OC_EV_MS_MS_INVALID:       membership without quorum
+	 * OC_EV_MS_NOT_PRIMARY:      previous membership no longer valid
 	 * OC_EV_MS_PRIMARY_RESTORED: previous membership restored
-	 * OC_EV_MS_EVICTED: the client is evicted from ccm.
+	 * OC_EV_MS_EVICTED:          the client is evicted from ccm.
 	 */
 	
 	switch(event) {
@@ -554,7 +555,7 @@ crmd_ccm_msg_callback(
 #endif
 			break;
 		case OC_EV_MS_PRIMARY_RESTORED:
-			fsa_membership_copy->id = instance;
+			current_ccm_membership_id = instance;
 			if(AM_I_DC && need_transition(fsa_state)) {
 				trigger_transition = TRUE;
 			}
@@ -594,7 +595,7 @@ crmd_ccm_msg_callback(
 			case OC_EV_MS_NEW_MEMBERSHIP:
 			case OC_EV_MS_INVALID:
 			case OC_EV_MS_PRIMARY_RESTORED:
-				fsa_membership_copy->id = instance;
+				current_ccm_membership_id = instance;
 				break;
 			default:
 				break;

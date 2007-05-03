@@ -151,6 +151,8 @@ gboolean add_cib_op_callback(
 
 #define AM_I_DC is_set(fsa_input_register, R_THE_DC)
 #define AM_I_OPERATIONAL (is_set(fsa_input_register, R_STARTING)==FALSE)
+extern int current_ccm_membership_id;
+extern int saved_ccm_membership_id;
 
 #include <fsa_proto.h>
 #include <crmd_utils.h>

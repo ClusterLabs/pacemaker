@@ -1,5 +1,5 @@
  <transition_graph cluster-delay="3m" transition_id="0">
-   <synapse id="0" priority="1000000">
+   <synapse id="0">
      <action_set>
        <rsc_op id="6" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -17,7 +17,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="2" priority="1000000">
+   <synapse id="2">
      <action_set>
        <rsc_op id="11" operation="monitor" operation_key="rsc_posic041_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="rsc_posic041" long-id="rsc_posic041" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -35,7 +35,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="4" priority="1000000">
+   <synapse id="4">
      <action_set>
        <rsc_op id="12" operation="monitor" operation_key="rsc_posic042_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="rsc_posic042" long-id="rsc_posic042" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -53,7 +53,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="6" priority="1000000">
+   <synapse id="6">
      <action_set>
        <rsc_op id="7" operation="monitor" operation_key="rsc_posic043_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="rsc_posic043" long-id="rsc_posic043" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -71,7 +71,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="8" priority="1000000">
+   <synapse id="8">
      <action_set>
        <rsc_op id="13" operation="monitor" operation_key="rsc_posic044_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="rsc_posic044" long-id="rsc_posic044" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -98,7 +98,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="11" priority="1000000">
+   <synapse id="11">
      <action_set>
        <rsc_op id="14" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="child_DoFencing:1" long-id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
@@ -116,7 +116,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="13" priority="1000000">
+   <synapse id="13">
      <action_set>
        <rsc_op id="8" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
@@ -125,7 +125,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="14" priority="1000000">
+   <synapse id="14">
      <action_set>
        <rsc_op id="9" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="child_DoFencing:3" long-id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>

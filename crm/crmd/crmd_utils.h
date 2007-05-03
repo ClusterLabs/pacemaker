@@ -91,5 +91,6 @@ extern void fsa_dump_inputs(
 
 extern gboolean need_transition(enum crmd_fsa_state state);
 extern void update_dc(HA_Message *msg, gboolean assert_same);
+extern void erase_node_from_join(const char *node);
 
 #endif

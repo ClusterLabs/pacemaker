@@ -1,5 +1,5 @@
  <transition_graph cluster-delay="60s" transition_id="0">
-   <synapse id="0" priority="1000000">
+   <synapse id="0">
      <action_set>
        <rsc_op id="3" operation="monitor" operation_key="rsc1_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc1" long-id="rsc1" class="heartbeat" type="apache"/>
@@ -21,7 +21,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="2" priority="1000000">
+   <synapse id="2">
      <action_set>
        <rsc_op id="4" operation="monitor" operation_key="rsc2_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc2" long-id="rsc2" class="heartbeat" type="apache"/>
@@ -76,7 +76,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="6" priority="1000000">
+   <synapse id="6">
      <action_set>
        <rsc_op id="5" operation="monitor" operation_key="rsc3_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc3" long-id="group1:rsc3" class="heartbeat" type="apache"/>
@@ -98,7 +98,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="8" priority="1000000">
+   <synapse id="8">
      <action_set>
        <rsc_op id="6" operation="monitor" operation_key="rsc4_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc4" long-id="group1:rsc4" class="heartbeat" type="apache"/>
@@ -150,7 +150,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="12" priority="1000000">
+   <synapse id="12">
      <action_set>
        <rsc_op id="7" operation="monitor" operation_key="rsc5_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc5" long-id="group2:rsc5" class="heartbeat" type="apache"/>
@@ -175,7 +175,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="14" priority="1000000">
+   <synapse id="14">
      <action_set>
        <rsc_op id="8" operation="monitor" operation_key="rsc6_monitor_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc6" long-id="group2:rsc6" class="heartbeat" type="apache"/>

@@ -299,7 +299,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="22" priority="1000000">
+   <synapse id="22">
      <action_set>
        <rsc_op id="18" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
@@ -308,7 +308,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="23" priority="1000000">
+   <synapse id="23">
      <action_set>
        <rsc_op id="30" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
@@ -317,7 +317,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="24" priority="1000000">
+   <synapse id="24">
      <action_set>
        <rsc_op id="19" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="child_DoFencing:3" long-id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
@@ -326,7 +326,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="25" priority="1000000">
+   <synapse id="25">
      <action_set>
        <rsc_op id="25" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="child_DoFencing:3" long-id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
@@ -370,7 +370,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="29" priority="1000000">
+   <synapse id="29">
      <action_set>
        <rsc_op id="20" operation="monitor" operation_key="ocf_msdummy:4_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="ocf_msdummy:4" long-id="master_rsc_1:ocf_msdummy:4" class="ocf" provider="heartbeat" type="/usr/lib/heartbeat/cts/OCFMSDummy"/>
@@ -379,7 +379,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="30" priority="1000000">
+   <synapse id="30">
      <action_set>
        <rsc_op id="26" operation="monitor" operation_key="ocf_msdummy:4_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="ocf_msdummy:4" long-id="master_rsc_1:ocf_msdummy:4" class="ocf" provider="heartbeat" type="/usr/lib/heartbeat/cts/OCFMSDummy"/>
@@ -388,7 +388,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="31" priority="1000000">
+   <synapse id="31">
      <action_set>
        <rsc_op id="31" operation="monitor" operation_key="ocf_msdummy:4_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="ocf_msdummy:4" long-id="master_rsc_1:ocf_msdummy:4" class="ocf" provider="heartbeat" type="/usr/lib/heartbeat/cts/OCFMSDummy"/>
@@ -397,7 +397,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="32" priority="1000000">
+   <synapse id="32">
      <action_set>
        <rsc_op id="21" operation="monitor" operation_key="ocf_msdummy:5_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="ocf_msdummy:5" long-id="master_rsc_1:ocf_msdummy:5" class="ocf" provider="heartbeat" type="/usr/lib/heartbeat/cts/OCFMSDummy"/>
@@ -406,7 +406,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="33" priority="1000000">
+   <synapse id="33">
      <action_set>
        <rsc_op id="27" operation="monitor" operation_key="ocf_msdummy:5_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="ocf_msdummy:5" long-id="master_rsc_1:ocf_msdummy:5" class="ocf" provider="heartbeat" type="/usr/lib/heartbeat/cts/OCFMSDummy"/>
@@ -415,7 +415,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="34" priority="1000000">
+   <synapse id="34">
      <action_set>
        <rsc_op id="32" operation="monitor" operation_key="ocf_msdummy:5_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="ocf_msdummy:5" long-id="master_rsc_1:ocf_msdummy:5" class="ocf" provider="heartbeat" type="/usr/lib/heartbeat/cts/OCFMSDummy"/>
@@ -486,7 +486,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="39" priority="1000000">
+   <synapse id="39">
      <action_set>
        <rsc_op id="22" operation="monitor" operation_key="ocf_msdummy:6_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="ocf_msdummy:6" long-id="master_rsc_1:ocf_msdummy:6" class="ocf" provider="heartbeat" type="/usr/lib/heartbeat/cts/OCFMSDummy"/>
@@ -495,7 +495,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="40" priority="1000000">
+   <synapse id="40">
      <action_set>
        <rsc_op id="33" operation="monitor" operation_key="ocf_msdummy:6_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="ocf_msdummy:6" long-id="master_rsc_1:ocf_msdummy:6" class="ocf" provider="heartbeat" type="/usr/lib/heartbeat/cts/OCFMSDummy"/>
@@ -504,7 +504,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="41" priority="1000000">
+   <synapse id="41">
      <action_set>
        <rsc_op id="23" operation="monitor" operation_key="ocf_msdummy:7_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="ocf_msdummy:7" long-id="master_rsc_1:ocf_msdummy:7" class="ocf" provider="heartbeat" type="/usr/lib/heartbeat/cts/OCFMSDummy"/>
@@ -513,7 +513,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="42" priority="1000000">
+   <synapse id="42">
      <action_set>
        <rsc_op id="28" operation="monitor" operation_key="ocf_msdummy:7_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="ocf_msdummy:7" long-id="master_rsc_1:ocf_msdummy:7" class="ocf" provider="heartbeat" type="/usr/lib/heartbeat/cts/OCFMSDummy"/>

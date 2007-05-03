@@ -1,5 +1,5 @@
  <transition_graph cluster-delay="120s" transition_id="0">
-   <synapse id="0" priority="1000000">
+   <synapse id="0">
      <action_set>
        <rsc_op id="8" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
          <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -8,7 +8,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="1" priority="1000000">
+   <synapse id="1">
      <action_set>
        <rsc_op id="17" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
          <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -17,7 +17,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="2" priority="1000000">
+   <synapse id="2">
      <action_set>
        <rsc_op id="27" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -35,7 +35,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="4" priority="1000000">
+   <synapse id="4">
      <action_set>
        <rsc_op id="3" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a">
          <primitive id="rsc_sgi2" long-id="rsc_sgi2" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -44,7 +44,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="5" priority="1000000">
+   <synapse id="5">
      <action_set>
        <rsc_op id="9" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
          <primitive id="rsc_sgi2" long-id="rsc_sgi2" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -53,7 +53,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="6" priority="1000000">
+   <synapse id="6">
      <action_set>
        <rsc_op id="18" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
          <primitive id="rsc_sgi2" long-id="rsc_sgi2" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -62,7 +62,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="7" priority="1000000">
+   <synapse id="7">
      <action_set>
        <rsc_op id="28" operation="monitor" operation_key="rsc_sgi2_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <primitive id="rsc_sgi2" long-id="rsc_sgi2" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -97,7 +97,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="10" priority="1000000">
+   <synapse id="10">
      <action_set>
        <rsc_op id="10" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
          <primitive id="rsc_ibm1" long-id="rsc_ibm1" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -106,7 +106,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="11" priority="1000000">
+   <synapse id="11">
      <action_set>
        <rsc_op id="19" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
          <primitive id="rsc_ibm1" long-id="rsc_ibm1" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -115,7 +115,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="12" priority="1000000">
+   <synapse id="12">
      <action_set>
        <rsc_op id="29" operation="monitor" operation_key="rsc_ibm1_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <primitive id="rsc_ibm1" long-id="rsc_ibm1" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -162,7 +162,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="16" priority="1000000">
+   <synapse id="16">
      <action_set>
        <rsc_op id="4" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a">
          <primitive id="rsc_test02" long-id="rsc_test02" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -171,7 +171,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="17" priority="1000000">
+   <synapse id="17">
      <action_set>
        <rsc_op id="11" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
          <primitive id="rsc_test02" long-id="rsc_test02" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -180,7 +180,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="18" priority="1000000">
+   <synapse id="18">
      <action_set>
        <rsc_op id="20" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
          <primitive id="rsc_test02" long-id="rsc_test02" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -189,7 +189,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="19" priority="1000000">
+   <synapse id="19">
      <action_set>
        <rsc_op id="30" operation="monitor" operation_key="rsc_test02_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <primitive id="rsc_test02" long-id="rsc_test02" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -224,7 +224,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="22" priority="1000000">
+   <synapse id="22">
      <action_set>
        <rsc_op id="12" operation="monitor" operation_key="rsc_test03_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
          <primitive id="rsc_test03" long-id="rsc_test03" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -233,7 +233,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="23" priority="1000000">
+   <synapse id="23">
      <action_set>
        <rsc_op id="21" operation="monitor" operation_key="rsc_test03_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
          <primitive id="rsc_test03" long-id="rsc_test03" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -242,7 +242,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="24" priority="1000000">
+   <synapse id="24">
      <action_set>
        <rsc_op id="31" operation="monitor" operation_key="rsc_test03_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <primitive id="rsc_test03" long-id="rsc_test03" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -260,7 +260,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="26" priority="1000000">
+   <synapse id="26">
      <action_set>
        <rsc_op id="22" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
          <primitive id="child_DoFencing:0" long-id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
@@ -269,7 +269,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="27" priority="1000000">
+   <synapse id="27">
      <action_set>
        <rsc_op id="32" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <primitive id="child_DoFencing:0" long-id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
@@ -304,7 +304,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="30" priority="1000000">
+   <synapse id="30">
      <action_set>
        <rsc_op id="13" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
          <primitive id="child_DoFencing:1" long-id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
@@ -313,7 +313,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="31" priority="1000000">
+   <synapse id="31">
      <action_set>
        <rsc_op id="23" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
          <primitive id="child_DoFencing:1" long-id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
@@ -322,7 +322,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="32" priority="1000000">
+   <synapse id="32">
      <action_set>
        <rsc_op id="33" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <primitive id="child_DoFencing:1" long-id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
@@ -357,7 +357,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="35" priority="1000000">
+   <synapse id="35">
      <action_set>
        <rsc_op id="5" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a">
          <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
@@ -366,7 +366,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="36" priority="1000000">
+   <synapse id="36">
      <action_set>
        <rsc_op id="14" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
          <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
@@ -375,7 +375,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="37" priority="1000000">
+   <synapse id="37">
      <action_set>
        <rsc_op id="24" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
          <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
@@ -384,7 +384,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="38" priority="1000000">
+   <synapse id="38">
      <action_set>
        <rsc_op id="34" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
@@ -419,7 +419,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="41" priority="1000000">
+   <synapse id="41">
      <action_set>
        <rsc_op id="6" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a">
          <primitive id="child_DoFencing:3" long-id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
@@ -428,7 +428,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="42" priority="1000000">
+   <synapse id="42">
      <action_set>
        <rsc_op id="15" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">
          <primitive id="child_DoFencing:3" long-id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
@@ -437,7 +437,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="43" priority="1000000">
+   <synapse id="43">
      <action_set>
        <rsc_op id="25" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="sgi2" on_node_uuid="619e8a37-147a-4782-ac11-46afad7c32b8">
          <primitive id="child_DoFencing:3" long-id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
@@ -446,7 +446,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="44" priority="1000000">
+   <synapse id="44">
      <action_set>
        <rsc_op id="35" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <primitive id="child_DoFencing:3" long-id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>

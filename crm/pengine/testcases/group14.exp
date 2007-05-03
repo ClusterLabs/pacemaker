@@ -83,7 +83,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="7" priority="1000000">
+   <synapse id="7">
      <action_set>
        <rsc_op id="4" operation="monitor" operation_key="child_DoFencing:4_monitor_0" on_node="c001n06" on_node_uuid="169e4673-93fb-4c0a-8082-d3408bae9431">
          <primitive id="child_DoFencing:4" long-id="DoFencing:child_DoFencing:4" class="stonith" type="ssh"/>
@@ -92,7 +92,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="8" priority="1000000">
+   <synapse id="8">
      <action_set>
        <rsc_op id="6" operation="monitor" operation_key="child_DoFencing:4_monitor_0" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c">
          <primitive id="child_DoFencing:4" long-id="DoFencing:child_DoFencing:4" class="stonith" type="ssh"/>
