@@ -392,11 +392,13 @@ cib_replace_notify(crm_data_t *update, enum cib_errors result, crm_data_t *diff)
 	
 	if(add_updates != del_updates) {
 		crm_info("Replaced: %d.%d.%d -> %d.%d.%d from %s",
-			  del_admin_epoch, del_epoch, del_updates,
-			 add_admin_epoch, add_epoch, add_updates, origin);
+			 del_admin_epoch, del_epoch, del_updates,
+			 add_admin_epoch, add_epoch, add_updates,
+			 crm_str(origin));
 	} else if(diff != NULL) {
 		crm_info("Local-only Replace: %d.%d.%d from %s",
-			  add_admin_epoch, add_epoch, add_updates, origin);
+			 add_admin_epoch, add_epoch, add_updates,
+			 crm_str(origin));
 	}
 	
 	replace_msg = ha_msg_new(8);
