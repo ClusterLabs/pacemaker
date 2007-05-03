@@ -1,5 +1,5 @@
  <transition_graph cluster-delay="60s" transition_id="0">
-   <synapse id="0" priority="1000000">
+   <synapse id="0" priority="2">
      <action_set>
        <rsc_op id="3" operation="monitor" operation_key="rsc2_monitor_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc2" long-id="rsc2" class="heartbeat" type="apache"/>

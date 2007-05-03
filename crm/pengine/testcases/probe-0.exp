@@ -1,5 +1,5 @@
  <transition_graph cluster-delay="60" transition_id="0">
-   <synapse id="0" priority="1000000">
+   <synapse id="0">
      <action_set>
        <rsc_op id="5" operation="monitor" operation_key="configstoreclone:0_monitor_0" on_node="32c48" on_node_uuid="ca93fea5-67c9-473d-9ce0-7ed7fb823872">
          <primitive id="configstoreclone:0" long-id="configstorecloneset:configstoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -8,7 +8,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="1" priority="1000000">
+   <synapse id="1">
      <action_set>
        <rsc_op id="7" operation="monitor" operation_key="configstoreclone:0_monitor_0" on_node="32c47" on_node_uuid="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410">
          <primitive id="configstoreclone:0" long-id="configstorecloneset:configstoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
