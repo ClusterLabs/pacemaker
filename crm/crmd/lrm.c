@@ -636,7 +636,7 @@ is_rsc_active(const char *rsc_id)
 
 	the_rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rsc_id);
 
-	crm_debug_2("Processing lrm_rsc_t entry %s", rsc_id);
+	crm_debug_3("Processing lrm_rsc_t entry %s", rsc_id);
 	
 	if(the_rsc == NULL) {
 		crm_err("NULL resource returned from the LRM");
@@ -650,9 +650,9 @@ is_rsc_active(const char *rsc_id)
 	slist_iter(
 		op, lrm_op_t, op_list, llpc,
 		
-		crm_debug("Processing op %s_%d (%d) for %s (status=%d, rc=%d)", 
-			  op->op_type, op->interval, op->call_id, the_rsc->id,
-			  op->op_status, op->rc);
+		crm_debug_2("Processing op %s_%d (%d) for %s (status=%d, rc=%d)", 
+			    op->op_type, op->interval, op->call_id, the_rsc->id,
+			    op->op_status, op->rc);
 		
 		CRM_ASSERT(max_call_id <= op->call_id);			
 		if(op->rc == EXECRA_OK
@@ -709,7 +709,7 @@ build_active_RAs(crm_data_t *rsc_list)
 
 		int max_call_id = -1;
 		
-		crm_debug("Processing lrm_rsc_t entry %s", rid);
+		crm_debug_2("Processing lrm_rsc_t entry %s", rid);
 		
 		if(the_rsc == NULL) {
 			crm_err("NULL resource returned from the LRM");
