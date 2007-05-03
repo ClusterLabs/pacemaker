@@ -415,6 +415,10 @@ route_message(enum crmd_fsa_cause cause, ha_msg_input_t *input)
 			break;
 		case I_ROUTER:
 			break;
+		case I_NODE_JOIN:
+		case I_JOIN_REQUEST:
+		case I_JOIN_RESULT:
+			break;
 		default:
 			crm_debug_4("Defering local processing of message");
 			register_fsa_input_later(cause, result, input);

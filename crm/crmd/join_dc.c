@@ -45,6 +45,7 @@ gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 void finalize_join(const char *caller);
 
 static int current_join_id = 0;
+int saved_ccm_membership_id = 0;
 
 static void
 update_attrd(void) 
@@ -112,6 +113,28 @@ initialize_join(gboolean before)
 		g_hash_destroy_str, g_hash_destroy_str);
 }
 
+void
+erase_node_from_join(const char *uname) 
+{
+	if(uname == NULL) {
+		return;
+	}
+
+	if(welcomed_nodes != NULL) {
+		g_hash_table_remove(welcomed_nodes, uname);
+	}
+	if(integrated_nodes != NULL) {
+		g_hash_table_remove(integrated_nodes, uname);
+	}
+	if(finalized_nodes != NULL) {
+		g_hash_table_remove(finalized_nodes, uname);
+	}
+	if(confirmed_nodes != NULL) {
+		g_hash_table_remove(confirmed_nodes, uname);
+	}
+}
+
+
 static void
 join_make_offer(gpointer key, gpointer value, gpointer user_data)
 {
@@ -128,12 +151,14 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 		return;
 	}
 
-	g_hash_table_remove(confirmed_nodes,  join_to);
-	g_hash_table_remove(finalized_nodes,  join_to);
-	g_hash_table_remove(integrated_nodes, join_to);
-	g_hash_table_remove(welcomed_nodes,   join_to);
-
+	erase_node_from_join(join_to);
 	crm_online = g_hash_table_lookup(crmd_peer_state, join_to);
+
+	if(saved_ccm_membership_id != fsa_membership_copy->id) {
+		saved_ccm_membership_id = fsa_membership_copy->id;
+		crm_info("Making join offers based on membership %d",
+			 fsa_membership_copy->id);
+	}	
 	
 	if(safe_str_eq(crm_online, ONLINESTATUS)) {
 		HA_Message *offer = create_request(
@@ -151,7 +176,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 		g_hash_table_insert(
 			welcomed_nodes, crm_strdup(join_to), join_offered);
 	} else {
-		crm_warn("Peer process on %s is not active", join_to);
+		crm_info("Peer process on %s is not active (yet?)", join_to);
 	}
 	
 }
@@ -589,7 +614,12 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 	crm_debug("Invoked by %s in state: %s",
 		  source, fsa_state2string(cur_state));
 
-	if(cur_state == S_INTEGRATION) {
+	if(saved_ccm_membership_id != current_ccm_membership_id) {
+		crm_info("%s: Membership changed since join started: %u -> %u",
+			 source, saved_ccm_membership_id,
+			 current_ccm_membership_id);
+		
+	} else if(cur_state == S_INTEGRATION) {
 		if(g_hash_table_size(welcomed_nodes) == 0) {
 			crm_debug("join-%d: Integration of %d peers complete: %s",
 				  current_join_id,

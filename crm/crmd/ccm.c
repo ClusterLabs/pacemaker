@@ -53,6 +53,7 @@ void ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data);
 #define CCM_EVENT_DETAIL_PARTIAL 0
 
 oc_ev_t *fsa_ev_token;
+int current_ccm_membership_id = 0;
 int num_ccm_register_fails = 0;
 int max_ccm_register_fails = 30;
 
@@ -195,15 +196,7 @@ check_dead_member(const char *uname, GHashTable *members)
 		return;
 	}
 
-	if(confirmed_nodes != NULL) {
-		g_hash_table_remove(confirmed_nodes, uname);
-	}
-	if(finalized_nodes != NULL) {
-		g_hash_table_remove(finalized_nodes, uname);
-	}
-	if(integrated_nodes != NULL) {
-		g_hash_table_remove(integrated_nodes, uname);
-	}
+	erase_node_from_join(uname);
 	if(voted != NULL) {
 		g_hash_table_remove(voted, uname);
 	}
@@ -251,13 +244,14 @@ do_ccm_update_cache(long long action,
 	event = ccm_data->event;
 	oc = ccm_data->oc;
 
-	if(fsa_membership_copy != NULL
-	   && fsa_membership_copy->id >= oc->m_instance) {
-		crm_debug("Ignoring superceeded CCM event %d (%s).", 
-			  oc->m_instance, ccm_event_name(event));
+	if(current_ccm_membership_id > oc->m_instance) {
+		crm_debug("Ignoring superceeded %s CCM event %d - we had %d", 
+			  ccm_event_name(event), oc->m_instance,
+			  current_ccm_membership_id);
 		return I_NULL;
 	}
-
+	
+	current_ccm_membership_id = oc->m_instance;
 	crm_debug("Updating cache after CCM event %d (%s).", 
 		  oc->m_instance, ccm_event_name(event));
 	
