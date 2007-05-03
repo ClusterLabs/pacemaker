@@ -561,6 +561,7 @@ class StonithTest(CTSTest):
 
         #        Reset (stonith) the node
 
+        self.CM.debug("Resetting: "+node)
         StonithWorked = self._reset(node)
 
         if not StonithWorked:
