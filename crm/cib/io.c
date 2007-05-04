@@ -676,8 +676,6 @@ write_cib_contents(gpointer p)
 
 	if(p == NULL) {
 		/* fork-and-write mode */
-		uninitializeCib();
-		cib_cleanup();
 		exit(exit_rc);
 	}
 
