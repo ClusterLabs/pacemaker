@@ -542,7 +542,7 @@ disconnect_cib_client(gpointer key, gpointer value, gpointer user_data)
 {
 	cib_client_t *a_client = value;
 	crm_debug_2("Processing client %s/%s... send=%d, recv=%d",
-		  a_client->name, a_client->channel_name,
+		  crm_str(a_client->name), crm_str(a_client->channel_name),
 		  (int)a_client->channel->send_queue->current_qlen,
 		  (int)a_client->channel->recv_queue->current_qlen);
 
@@ -551,7 +551,8 @@ disconnect_cib_client(gpointer key, gpointer value, gpointer user_data)
 		if(a_client->channel->send_queue->current_qlen != 0
 		   || a_client->channel->recv_queue->current_qlen != 0) {
 			crm_info("Flushed messages to/from %s/%s... send=%d, recv=%d",
-				a_client->name, a_client->channel_name,
+				crm_str(a_client->name),
+				crm_str(a_client->channel_name),
 				(int)a_client->channel->send_queue->current_qlen,
 				(int)a_client->channel->recv_queue->current_qlen);
 		}
@@ -559,7 +560,8 @@ disconnect_cib_client(gpointer key, gpointer value, gpointer user_data)
 
 	if(a_client->channel->ch_status == IPC_CONNECT) {
 		crm_warn("Disconnecting %s/%s...",
-			 a_client->name, a_client->channel_name);
+			 crm_str(a_client->name),
+			 crm_str(a_client->channel_name));
 		a_client->channel->ops->disconnect(a_client->channel);
 	}
 }
