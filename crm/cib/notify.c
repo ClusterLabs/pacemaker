@@ -242,7 +242,7 @@ cib_diff_notify(
 	int del_epoch  = 0;
 	int del_admin_epoch = 0;
 
-	int log_level = LOG_INFO;
+	int log_level = LOG_DEBUG;
 	
 	if(diff == NULL) {
 		return;
