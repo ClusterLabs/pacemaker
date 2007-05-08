@@ -224,24 +224,29 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 		return cib_NOTEXISTS;
 	}
 
-	/* filter by set name */
-	if(attr_set != NULL) {
-		matches = find_xml_children(
-			&set_children, rsc->xml, 
-			attr_set_type, XML_ATTR_ID, attr_set, TRUE);
-		crm_log_xml_debug(set_children, "search by set:");
-	}
+	/* filter by set and type */
+	matches = find_xml_children(
+		&set_children, rsc->xml, 
+		attr_set_type, XML_ATTR_ID, attr_set, FALSE);
+	crm_log_xml_debug(set_children, "search by set:");
 
-	matches = 0;
-	if(attr_id == NULL) {
+	crm_debug("%d objects matching tag=%s id=%s",
+		  matches, attr_set_type, attr_set?attr_set:"<any>");
+	
+	if(matches == 0) {
+		/* nothing more to search */
+		crm_debug("No objects matching tag=%s id=%s",
+			  attr_set_type, attr_set?attr_set:"<any>");
+		
+	} else if(attr_id == NULL) {
 		matches = find_xml_children(
-			&nv_children, set_children?set_children:rsc->xml,
+			&nv_children, set_children,
 			XML_CIB_TAG_NVPAIR, XML_NVPAIR_ATTR_NAME, attr_name, FALSE);
 		crm_log_xml_debug(nv_children, "search by name:");
 
-	} else if(attr_id != NULL) {
+	} else {
 		matches = find_xml_children(
-			&nv_children, set_children?set_children:rsc->xml,
+			&nv_children, set_children,
 			XML_CIB_TAG_NVPAIR, XML_ATTR_ID, attr_id, FALSE);
 		crm_log_xml_debug(nv_children, "search by id:");
 	}
@@ -297,7 +302,11 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 		
 	} else if(matches == 0) {
 		if(attr_set == NULL) {
-			local_attr_set = crm_strdup(rsc->id);
+			if(safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
+				local_attr_set = crm_concat(rsc->id, "meta-options", '-');
+			} else {
+				local_attr_set = crm_strdup(rsc->id);
+			}
 			attr_set = local_attr_set;
 		}
 		if(attr_id == NULL) {
