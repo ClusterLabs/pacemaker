@@ -57,7 +57,7 @@ struct resource_alloc_functions_s
 		void (*rsc_colocation_lh)(resource_t *, resource_t *, rsc_colocation_t *);
 		void (*rsc_colocation_rh)(resource_t *, resource_t *, rsc_colocation_t *);
 
-		void (*rsc_order_lh)(resource_t *, order_constraint_t *);
+		void (*rsc_order_lh)(resource_t *, order_constraint_t *, pe_working_set_t *);
 		void (*rsc_order_rh)(
 			action_t *, resource_t *, order_constraint_t *);
 
@@ -87,7 +87,7 @@ extern void native_rsc_colocation_lh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void native_rsc_colocation_rh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
-extern void native_rsc_order_lh(resource_t *rsc, order_constraint_t *order);
+extern void native_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_set_t *data_set);
 extern void native_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
 extern void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
@@ -115,7 +115,7 @@ extern void group_rsc_colocation_lh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void group_rsc_colocation_rh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
-extern void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order);
+extern void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_set_t *data_set);
 extern void group_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
 extern void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
@@ -141,7 +141,7 @@ extern void clone_rsc_colocation_lh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void clone_rsc_colocation_rh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
-extern void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order);
+extern void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_set_t *data_set);
 extern void clone_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
 extern void clone_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);

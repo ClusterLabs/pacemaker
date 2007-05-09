@@ -244,7 +244,7 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	gboolean is_optional = TRUE;
 	GListPtr possible_matches = NULL;
 	
-	crm_debug_2("Creating recurring actions for %s", rsc->id);
+	crm_info("Creating recurring actions for %s", rsc->id);
 	if(node != NULL) {
 		node_uname = node->details->uname;
 	}
@@ -304,7 +304,7 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 			custom_action_order(
 				rsc, NULL, mon,
 				rsc, promote_key(rsc), NULL,
-				pe_order_optional, data_set);
+				pe_order_runnable, data_set);
 			
 			mon = NULL;
 		}
@@ -344,7 +344,7 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	
 	custom_action_order(rsc, start_key(rsc), NULL,
 			    NULL, crm_strdup(key), mon,
-			    pe_order_implies_right, data_set);
+			    pe_order_implies_right|pe_order_runnable, data_set);
 	
 	if(rsc->next_role == RSC_ROLE_MASTER) {
 		char *running_master = crm_itoa(EXECRA_RUNNING_MASTER);
@@ -352,7 +352,7 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 		custom_action_order(
 			rsc, promote_key(rsc), NULL,
 			rsc, NULL, mon,
-			pe_order_optional, data_set);
+			pe_order_optional|pe_order_runnable, data_set);
 		crm_free(running_master);
 	}		
 }
@@ -444,15 +444,15 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 	custom_action_order(rsc, start_key(rsc), NULL,
 			    rsc, promote_key(rsc), NULL,
-			    pe_order_optional, data_set);
+			    pe_order_runnable, data_set);
 
 	custom_action_order(
 		rsc, stop_key(rsc), NULL, rsc, delete_key(rsc), NULL, 
-		pe_order_optional, data_set);
+		pe_order_implies_left, data_set);
 
 	custom_action_order(
 		rsc, delete_key(rsc), NULL, rsc, start_key(rsc), NULL, 
-		pe_order_implies_left, data_set);	
+		pe_order_optional, data_set);	
 
 	if(rsc->notify) {
 		char *key1 = NULL;
@@ -628,74 +628,42 @@ node_list_update(GListPtr list1, GListPtr list2, int factor)
 		);	
 }
 
-void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
+void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order, pe_working_set_t *data_set)
 {
 	GListPtr lh_actions = NULL;
 	action_t *lh_action = order->lh_action;
+	resource_t *rh_rsc = order->rh_rsc;
 
 	crm_info("Processing LH of ordering constraint %d", order->id);
-
+	CRM_ASSERT(lh_rsc != NULL);
+	
 	if(lh_action != NULL) {
 		lh_actions = g_list_append(NULL, lh_action);
 
-	} else if(lh_action == NULL && lh_rsc != NULL) {
+	} else if(lh_action == NULL) {
 		lh_actions = find_actions(
 			lh_rsc->actions, order->lh_action_task, NULL);
+	}
 
-		if(lh_actions == NULL) {
-			crm_warn("No LH-Side (%s/%s) found for constraint %d",
-				 lh_rsc->id, order->lh_action_task, order->id);
-
-			if(lh_rsc->next_role == RSC_ROLE_STOPPED) {
-				resource_t *rh_rsc = order->rh_rsc;
-				if(order->rh_action
-				   && (order->type & pe_order_internal_restart)) {
-					crm_info("No LH(%s/%s) found for RH(%s)...",
-						    lh_rsc->id, order->lh_action_task,
-						    order->rh_action->uuid);
-					order->rh_action->runnable = FALSE;
-					return;
-				
-				} else if(rh_rsc != NULL) {
-					crm_debug_3("No LH(%s/%s) found for RH(%s/%s)...",
-						    lh_rsc->id, order->lh_action_task,
-						    rh_rsc->id, order->rh_action_task);
-					rh_rsc->cmds->rsc_order_rh(NULL, rh_rsc, order);
-					return;
-				}
-			}
-			
-			return;
-		}
-
-	} else {
-		pe_warn("No LH-Side (%s) specified for constraint",
-			 order->lh_action_task);
-		if(order->rh_rsc != NULL) {
-			crm_debug_4("RH-Side was: (%s/%s)",
-				  order->rh_rsc->id,
-				  order->rh_action_task);
-				  
-		} else if(order->rh_action != NULL
-			  && order->rh_action->rsc != NULL) {
-			crm_debug_4("RH-Side was: (%s/%s)",
-				  order->rh_action->rsc->id,
-				  order->rh_action_task);
-				  
-		} else if(order->rh_action != NULL) {
-			crm_debug_4("RH-Side was: %s",
-				  order->rh_action_task);
-		} else {
-			crm_debug_4("RH-Side was NULL");
-		}		
+	if(lh_actions == NULL && lh_rsc != rh_rsc) {
+		char *rsc_id = NULL;
+		char *op_type = NULL;
+		int interval = 0;
 		
-		return;
+		crm_warn("No LH-Side (%s/%s) found for constraint %d with %s - creating",
+			 lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
+
+		parse_op_key(order->lh_action_task, &rsc_id, &op_type, &interval);
+		lh_action = custom_action(lh_rsc, crm_strdup(order->lh_action_task), op_type,
+					  NULL, TRUE, TRUE, data_set);
+		lh_action->runnable = FALSE;
+		lh_actions = g_list_append(NULL, lh_action);
+		crm_free(rsc_id);
 	}
 
 	slist_iter(
 		lh_action_iter, action_t, lh_actions, lpc,
 
-		resource_t *rh_rsc = order->rh_rsc;
 		if(rh_rsc == NULL && order->rh_action) {
 			rh_rsc = order->rh_action->rsc;
 		}
@@ -750,8 +718,9 @@ void native_rsc_order_rh(
 		} else if(order->type & pe_order_internal_restart) {
 			rh_action_iter->runnable = FALSE;
 			crm_warn("Unrunnable %s 0x%.4x", rh_action_iter->uuid, order->type);
+		} else {
+			crm_warn("neither %s 0x%.4x", rh_action_iter->uuid, order->type);
 		}
-		crm_warn("neither %s 0x%.4x", rh_action_iter->uuid, order->type);
 		
 		);
 
@@ -1317,7 +1286,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	crm_debug_2("%s: Created probe for %s", node->details->uname, rsc->id);
 	
 	custom_action_order(rsc, NULL, probe, rsc, NULL, complete,
-			    pe_order_implies_left, data_set);
+			    pe_order_optional, data_set);
 
 	return TRUE;
 }
@@ -1378,7 +1347,7 @@ native_start_constraints(
 				   custom_action_order(
 					   NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
 					   rsc, NULL, action,
-					   pe_order_implies_left, data_set);
+					   pe_order_optional, data_set);
 				   
 			   } else if(run_unprotected == FALSE) {
 				   /* mark the start unrunnable */
@@ -1433,7 +1402,7 @@ native_stop_constraints(
 				custom_action_order(
 					NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
 					rsc, start_key(rsc), NULL,
-					pe_order_implies_left, data_set);
+					pe_order_optional, data_set);
 			}
 			
 			/* find the top-most resource */
@@ -1463,7 +1432,7 @@ native_stop_constraints(
 			custom_action_order(
 				rsc, stop_key(rsc), NULL,
 				NULL,crm_strdup(CRM_OP_FENCE),stonith_op,
-				pe_order_implies_left, data_set);
+				pe_order_optional, data_set);
 		}
 		);
 	
@@ -1488,7 +1457,7 @@ native_stop_constraints(
 				custom_action_order(
 					NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
 					rsc, demote_key(rsc), NULL,
-					pe_order_implies_left, data_set);
+					pe_order_optional, data_set);
 			}
 		}
 		);	

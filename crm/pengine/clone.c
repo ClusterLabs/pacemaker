@@ -905,7 +905,7 @@ void clone_rsc_colocation_rh(
 }
 
 
-void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order)
+void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_set_t *data_set)
 {
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
@@ -913,7 +913,7 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order)
 	crm_debug_2("%s->%s", order->lh_action_task, order->rh_action_task);
 
 	convert_non_atomic_task(rsc, order);
-	clone_data->self->cmds->rsc_order_lh(clone_data->self, order);
+	clone_data->self->cmds->rsc_order_lh(clone_data->self, order, data_set);
 }
 
 void clone_rsc_order_rh(

@@ -47,6 +47,7 @@ enum pe_ordering {
 	pe_order_implies_right		= 0x04, /* was: _recover  */
 	pe_order_postnotify		= 0x08,
 	pe_order_optional		= 0x10,  /* pure ordering, nothing implied */
+	pe_order_runnable		= 0x20,  /* needs the other side to be at least runnable */
 	pe_order_test		        = 0x100  /* test marker */
 };
 

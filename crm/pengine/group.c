@@ -301,7 +301,7 @@ void group_rsc_colocation_rh(
 		);
 }
 
-void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order)
+void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_set_t *data_set)
 {
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
@@ -313,7 +313,7 @@ void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order)
 	}
 
 	convert_non_atomic_task(rsc, order);
-	group_data->self->cmds->rsc_order_lh(group_data->self, order);
+	group_data->self->cmds->rsc_order_lh(group_data->self, order, data_set);
 }
 
 void group_rsc_order_rh(

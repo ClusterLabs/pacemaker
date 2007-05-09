@@ -19,6 +19,7 @@
     <constraints>
       <rsc_order id="order1" from="rsc2" action="start" type="after" to="rsc1"/>
       <rsc_order id="order2" from="rsc3" action="start" type="after" to="rsc1" score="100"/>
+      <!-- start rsc1 before rsc3, stop rsc3 before rsc1 -->
       <rsc_order id="order3" from="rscB" action="start" type="after" to="rscA"/>
       <rsc_order id="order4" from="rscC" action="start" type="after" to="rscA" score="100"/>
     </constraints>

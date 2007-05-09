@@ -184,6 +184,9 @@ ordering_type2text(enum pe_ordering type)
 	} else if(type & pe_order_postnotify) {
 		result = "post_notify";
 		
+	} else if(type & pe_order_runnable) {
+		result = "runnable";
+		
 	} else {
 		crm_err("Unknown ordering type: %.3x", type);
 	}
@@ -416,8 +419,8 @@ order_actions(
 	action_wrapper_t *wrapper = NULL;
 	GListPtr list = NULL;
 	
-	crm_info("Ordering Action %s before %s",
-		  lh_action->uuid, rh_action->uuid);
+	crm_debug_2("Ordering Action %s before %s",
+		    lh_action->uuid, rh_action->uuid);
 
 	log_action(LOG_DEBUG_4, "LH (order_actions)", lh_action, FALSE);
 	log_action(LOG_DEBUG_4, "RH (order_actions)", rh_action, FALSE);

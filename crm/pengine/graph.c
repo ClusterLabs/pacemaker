@@ -49,6 +49,7 @@ update_action_states(GListPtr actions)
 gboolean
 update_action(action_t *action)
 {
+	int local_type = 0;
 	int log_level = LOG_INFO;
 	gboolean changed = FALSE;
 
@@ -62,7 +63,12 @@ update_action(action_t *action)
 			   other->action->optional?"optional":"required",
 			   other->type);
 
-		if(other->action->runnable == FALSE) {
+		local_type = other->type;
+/* 		local_type |= pe_order_optional; */
+/* 		local_type ^= pe_order_optional; */
+		
+		if((local_type & (pe_order_implies_left|pe_order_runnable))
+			&& other->action->runnable == FALSE) {
 			if(other->action->pseudo) {
 				do_crm_log(log_level, "Ignoring un-runnable - pseudo");
 
@@ -71,19 +77,11 @@ update_action(action_t *action)
 				
 			} else {
 				action->runnable = FALSE;
-				do_crm_log(log_level-1, "Marking action %s un-runnable"
+				do_crm_log(log_level-1, "   * Marking action %s un-runnable"
 					  " because of %s",
 					  action->uuid, other->action->uuid);
 				changed = TRUE;
 			}
-		}
-		
-		if(other->type & pe_order_internal_restart
-		   && action->rsc->role > RSC_ROLE_STOPPED) {
-			do_crm_log(log_level, "      Upgrading %s constraint to %s",
-				   ordering_type2text(other->type),
-				   ordering_type2text(pe_order_implies_left));
-			other->type = pe_order_implies_left;
 		}
 		
 		if(other->type & pe_order_implies_left) {
@@ -379,6 +377,7 @@ should_dump_action(action_t *action)
 	   || safe_str_eq(action->task,  CRM_OP_FENCE)
 	   || safe_str_eq(action->task,  CRM_OP_SHUTDOWN)) {
 		/* skip the next checks */
+		crm_info("Printing %s", action->uuid);
 		return TRUE;
 	}
 
