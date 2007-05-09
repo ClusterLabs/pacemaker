@@ -416,7 +416,7 @@ order_actions(
 	action_wrapper_t *wrapper = NULL;
 	GListPtr list = NULL;
 	
-	crm_debug_2("Ordering Action %s before %s",
+	crm_info("Ordering Action %s before %s",
 		  lh_action->uuid, rh_action->uuid);
 
 	log_action(LOG_DEBUG_4, "LH (order_actions)", lh_action, FALSE);
@@ -424,29 +424,24 @@ order_actions(
 
 	
 	crm_malloc0(wrapper, sizeof(action_wrapper_t));
-	if(wrapper != NULL) {
-		wrapper->action = rh_action;
-		wrapper->type = order;
-		
-		list = lh_action->actions_after;
-		list = g_list_append(list, wrapper);
-		lh_action->actions_after = list;
-		wrapper = NULL;
-	}
-
-	order |= pe_order_implies_right;
-	order ^= pe_order_implies_right;
+	wrapper->action = rh_action;
+	wrapper->type = order;
 	
-	if(order) {
-		crm_malloc0(wrapper, sizeof(action_wrapper_t));
-		if(wrapper != NULL) {
-			wrapper->action = lh_action;
-			wrapper->type = order;
-			list = rh_action->actions_before;
-			list = g_list_append(list, wrapper);
-			rh_action->actions_before = list;
-		}
-	}
+	list = lh_action->actions_after;
+	list = g_list_append(list, wrapper);
+	lh_action->actions_after = list;
+
+	wrapper = NULL;
+
+/* 	order |= pe_order_implies_right; */
+/* 	order ^= pe_order_implies_right; */
+	
+	crm_malloc0(wrapper, sizeof(action_wrapper_t));
+	wrapper->action = lh_action;
+	wrapper->type = order;
+	list = rh_action->actions_before;
+	list = g_list_append(list, wrapper);
+	rh_action->actions_before = list;
 }
 
 

@@ -46,7 +46,8 @@ enum pe_ordering {
 	pe_order_internal_restart	= 0x02, /* upgrades to: right_implies_left */
 	pe_order_implies_right		= 0x04, /* was: _recover  */
 	pe_order_postnotify		= 0x08,
-	pe_order_optional		= 0x10  /* pure ordering, nothing implied */
+	pe_order_optional		= 0x10,  /* pure ordering, nothing implied */
+	pe_order_test		        = 0x100  /* test marker */
 };
 
 struct rsc_colocation_s { 
@@ -125,7 +126,7 @@ extern gboolean shutdown_constraints(
 extern gboolean stonith_constraints(
 	node_t *node, action_t *stonith_op, pe_working_set_t *data_set);
 
-extern gboolean custom_action_order(
+extern int custom_action_order(
 	resource_t *lh_rsc, char *lh_task, action_t *lh_action,
 	resource_t *rh_rsc, char *rh_task, action_t *rh_action,
 	enum pe_ordering type, pe_working_set_t *data_set);

@@ -201,7 +201,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	
 		custom_action_order(child_rsc, stop_key(child_rsc), NULL,
 				    this_rsc,  stopped_key(this_rsc), NULL,
-				    ordering, data_set);
+				    ordering|pe_order_internal_restart, data_set);
 
 		custom_action_order(child_rsc, start_key(child_rsc), NULL,
 				    this_rsc, started_key(this_rsc), NULL,

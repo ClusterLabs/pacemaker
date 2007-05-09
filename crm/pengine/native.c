@@ -344,7 +344,7 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	
 	custom_action_order(rsc, start_key(rsc), NULL,
 			    NULL, crm_strdup(key), mon,
-			    pe_order_internal_restart, data_set);
+			    pe_order_implies_right, data_set);
 	
 	if(rsc->next_role == RSC_ROLE_MASTER) {
 		char *running_master = crm_itoa(EXECRA_RUNNING_MASTER);
@@ -633,7 +633,7 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 	GListPtr lh_actions = NULL;
 	action_t *lh_action = order->lh_action;
 
-	crm_debug_3("Processing LH of ordering constraint %d", order->id);
+	crm_info("Processing LH of ordering constraint %d", order->id);
 
 	if(lh_action != NULL) {
 		lh_actions = g_list_append(NULL, lh_action);
@@ -643,14 +643,14 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 			lh_rsc->actions, order->lh_action_task, NULL);
 
 		if(lh_actions == NULL) {
-			crm_debug_4("No LH-Side (%s/%s) found for constraint",
-				  lh_rsc->id, order->lh_action_task);
+			crm_warn("No LH-Side (%s/%s) found for constraint %d",
+				 lh_rsc->id, order->lh_action_task, order->id);
 
 			if(lh_rsc->next_role == RSC_ROLE_STOPPED) {
 				resource_t *rh_rsc = order->rh_rsc;
 				if(order->rh_action
 				   && (order->type & pe_order_internal_restart)) {
-					crm_debug_3("No LH(%s/%s) found for RH(%s)...",
+					crm_info("No LH(%s/%s) found for RH(%s)...",
 						    lh_rsc->id, order->lh_action_task,
 						    order->rh_action->uuid);
 					order->rh_action->runnable = FALSE;
@@ -699,7 +699,6 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order)
 		if(rh_rsc == NULL && order->rh_action) {
 			rh_rsc = order->rh_action->rsc;
 		}
-		
 		if(rh_rsc) {
 			rh_rsc->cmds->rsc_order_rh(
 				lh_action_iter, rh_rsc, order);
@@ -747,10 +746,12 @@ void native_rsc_order_rh(
 
 		if(lh_action) {
 			order_actions(lh_action, rh_action_iter, order->type); 
-
+			
 		} else if(order->type & pe_order_internal_restart) {
 			rh_action_iter->runnable = FALSE;
+			crm_warn("Unrunnable %s 0x%.4x", rh_action_iter->uuid, order->type);
 		}
+		crm_warn("neither %s 0x%.4x", rh_action_iter->uuid, order->type);
 		
 		);
 

@@ -49,124 +49,84 @@ update_action_states(GListPtr actions)
 gboolean
 update_action(action_t *action)
 {
-	enum action_tasks task = no_action;
-	
-	crm_debug_2("Processing action %s: %s",
+	int log_level = LOG_INFO;
+	gboolean changed = FALSE;
+
+	do_crm_log(log_level-1, "Processing action %s: %s",
 		    action->uuid, action->optional?"optional":"required");
 
 	slist_iter(
 		other, action_wrapper_t, action->actions_before, lpc,
-		crm_debug_3("\tChecking action %s: %s/%s",
-			    other->action->uuid, ordering_type2text(other->type),
-			    other->action->optional?"optional":"required");
+		do_crm_log(log_level, "   Checking action %s: %s 0x%.4x",
+			   other->action->uuid,
+			   other->action->optional?"optional":"required",
+			   other->type);
 
+		if(other->action->runnable == FALSE) {
+			if(other->action->pseudo) {
+				do_crm_log(log_level, "Ignoring un-runnable - pseudo");
+
+			} else if(action->runnable == FALSE) {
+				do_crm_log(log_level, "Already un-runnable");
+				
+			} else {
+				action->runnable = FALSE;
+				do_crm_log(log_level-1, "Marking action %s un-runnable"
+					  " because of %s",
+					  action->uuid, other->action->uuid);
+				changed = TRUE;
+			}
+		}
+		
 		if(other->type & pe_order_internal_restart
 		   && action->rsc->role > RSC_ROLE_STOPPED) {
-			crm_debug_3("\t  Upgrading %s constraint to %s",
-				    ordering_type2text(other->type),
-				    ordering_type2text(pe_order_implies_left));
+			do_crm_log(log_level, "      Upgrading %s constraint to %s",
+				   ordering_type2text(other->type),
+				   ordering_type2text(pe_order_implies_left));
 			other->type = pe_order_implies_left;
 		}
 		
-		if((other->type & pe_order_implies_left) == 0) {
-			crm_debug_3("\t  Ignoring: %s",
-				    ordering_type2text(other->type));
-			continue;
-			
-		} else if(action->optional || other->action->optional == FALSE){
-			crm_debug_3("\t  Ignoring: %s/%s",
-				    other->action->optional?"-":"they are not optional",
-				    action->optional?"we are optional":"-");
-			continue;
-			
-		} else if(safe_str_eq(other->action->task, CRMD_ACTION_START)) {
-			const char *interval = g_hash_table_lookup(
-				action->meta, XML_LRM_ATTR_INTERVAL);
-			int interval_i = 0;
-			if(interval != NULL) {
-				interval_i = crm_parse_int(interval, NULL);
-				if(interval_i > 0) {
-					crm_debug_3("Ignoring: start + recurring");
-					continue;
-				}
-			}
-		}
-
-		other->action->optional = FALSE;
-		crm_debug_2("* Marking action %s mandatory because of %s",
-			    other->action->uuid, action->uuid);
-		update_action(other->action);
-		);
-
-	slist_iter(
-		other, action_wrapper_t, action->actions_after, lpc,
-		
-		if(action->pseudo == FALSE && action->runnable == FALSE) {
-			if(other->action->runnable == FALSE) {
-				crm_debug_2("Action %s already un-runnable",
-					  other->action->uuid);
+		if(other->type & pe_order_implies_left) {
+			if(other->action->optional == FALSE) {
+				/* nothing to do */
+				do_crm_log(log_level, "      Ignoring implies left - redundant");
+				
 			} else if(action->optional == FALSE) {
-				other->action->runnable = FALSE;
-				crm_debug_2("Marking action %s un-runnable"
-					  " because of %s",
-					  other->action->uuid, action->uuid);
+				other->action->optional = FALSE;
+				do_crm_log(log_level-1,
+					   "   * (implies left) Marking action %s mandatory because of %s",
+					   other->action->uuid, action->uuid);
 				update_action(other->action);
+			} else {
+				do_crm_log(log_level, "      Ignoring implies left");
 			}
-		}
-
-		crm_debug_3("\t(Recover) Checking action %s: %s/%s",
-			    other->action->uuid, ordering_type2text(other->type),
-			    other->action->optional?"optional":"required");
-
-		if(other->action->rsc == NULL) {
-			continue;
-			
-		} else if(other->type & pe_order_internal_restart) {
-		} else if(other->type & pe_order_postnotify) {
-			CRM_CHECK(action->rsc == other->action->rsc, continue);
-
-		} else if(other->type & pe_order_implies_right) {
-			if(other->action->rsc->restart_type != pe_restart_restart) {
-				crm_debug_3("\t  Ignoring: restart type %d",
-					    other->action->rsc->restart_type);
-				continue;
-			}
-			
-		} else {
-			crm_debug_3("\t  Ignoring: ordering %s",
-				    ordering_type2text(other->type));
-			continue;
 		}
 		
-		if(other->action->optional == FALSE || action->optional) {
-			crm_debug_3("\t  Ignoring: %s/%s",
-				    action->optional?"we are optional":"-",
-				    other->action->optional?"-":"they are not optional");
-			continue;
+		if(other->type & pe_order_implies_right) {
+			if(action->optional == FALSE) {
+				/* nothing to do */
+				do_crm_log(log_level, "      Ignoring implies right - redundant");
+			} else if(other->action->optional == FALSE) {
+				action->optional = FALSE;
+				do_crm_log(log_level-1,
+					   "   * (implies right) Marking action %s mandatory because of %s",
+					   action->uuid, other->action->uuid);
+				changed = TRUE;
+				
+			} else {
+				do_crm_log(log_level, "      Ignoring implies right");
+			}
 		}
-
-		task = text2task(action->task);
-		switch(task) {
-			case stop_rsc:
-			case stopped_rsc:
-				crm_debug_3("\t  Ignoring: action %s",
-					    action->uuid);
-				break;
-			case start_rsc:
-			case started_rsc:
-				crm_debug_2("* (Recover) Marking action %s"
-					    " mandatory because of %s",
-					    other->action->uuid, action->uuid);
-				other->action->optional = FALSE; 
-				update_action(other->action);
-				break;
-			default:
-				crm_debug_3("\t  Ignoring: action %s",
-					    action->uuid);
-				break;
-		}
+		
 		);
 
+	if(changed) {
+		slist_iter(
+			other, action_wrapper_t, action->actions_after, lpc,
+			update_action(other->action);
+			);
+	}
+	
 	return FALSE;
 }
 
