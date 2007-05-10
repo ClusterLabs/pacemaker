@@ -120,7 +120,6 @@ extern void group_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
 extern void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void group_expand(resource_t *rsc, pe_working_set_t *data_set);
-extern enum rsc_role_e group_resource_state(resource_t *rsc);
 extern void group_create_notify_element(
 	resource_t *rsc, action_t *op,
 	notify_data_t *n_data,pe_working_set_t *data_set);
@@ -146,7 +145,6 @@ extern void clone_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
 extern void clone_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void clone_expand(resource_t *rsc, pe_working_set_t *data_set);
-extern enum rsc_role_e clone_resource_state(resource_t *rsc);
 extern void clone_create_notify_element(
 	resource_t *rsc, action_t *op,
 	notify_data_t *n_data,pe_working_set_t *data_set);
