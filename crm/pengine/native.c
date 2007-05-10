@@ -651,13 +651,18 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order, pe_worki
 		int interval = 0;
 		
 		crm_warn("No LH-Side (%s/%s) found for constraint %d with %s - creating",
-			 lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
+			 lh_rsc->id, order->lh_action_task,
+			 order->id, order->rh_action_task);
 
-		parse_op_key(order->lh_action_task, &rsc_id, &op_type, &interval);
-		lh_action = custom_action(lh_rsc, crm_strdup(order->lh_action_task), op_type,
-					  NULL, TRUE, TRUE, data_set);
+		parse_op_key(
+			order->lh_action_task, &rsc_id, &op_type, &interval);
+
+		lh_action = custom_action(
+			lh_rsc, crm_strdup(order->lh_action_task), op_type,
+			NULL, TRUE, TRUE, data_set);
 		lh_action->runnable = FALSE;
 		lh_actions = g_list_append(NULL, lh_action);
+
 		crm_free(rsc_id);
 	}
 
@@ -672,7 +677,8 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order, pe_worki
 				lh_action_iter, rh_rsc, order);
 
 		} else if(order->rh_action) {
-			order_actions(lh_action_iter, order->rh_action, order->type); 
+			order_actions(
+				lh_action_iter, order->rh_action, order->type); 
 
 		}
 		);
@@ -1277,7 +1283,6 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 			      FALSE, TRUE, data_set);
 	probe->optional = FALSE;
 	
-	crm_warn("probe %s is %s", probe->uuid, probe->optional?"optional":"required");
 	running = pe_find_node_id(rsc->running_on, node->details->id);
 	if(running == NULL) {
 		target_rc = crm_itoa(EXECRA_NOT_RUNNING);
