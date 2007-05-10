@@ -375,14 +375,12 @@ void native_free(resource_t *rsc)
 
 
 enum rsc_role_e
-native_resource_state(resource_t *rsc)
+native_resource_state(resource_t *rsc, gboolean current)
 {
-	if(rsc->next_role != RSC_ROLE_UNKNOWN) {
-		return rsc->next_role;
+	enum rsc_role_e role = rsc->next_role;
+	if(current) {
+		role = rsc->role;
 	}
-	if(rsc->role != RSC_ROLE_UNKNOWN) {
-		return rsc->role;
-	}
-
-	return RSC_ROLE_STOPPED;
+	crm_warn("%s state: %s", rsc->id, role2text(role));
+	return role;
 }

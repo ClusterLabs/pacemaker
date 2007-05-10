@@ -219,7 +219,7 @@ void group_free(resource_t *rsc)
 }
 
 enum rsc_role_e
-group_resource_state(resource_t *rsc)
+group_resource_state(resource_t *rsc, gboolean current)
 {
 	enum rsc_role_e group_role = RSC_ROLE_UNKNOWN;
 	group_variant_data_t *group_data = NULL;
@@ -227,13 +227,15 @@ group_resource_state(resource_t *rsc)
 
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
-
-		if(child_rsc->next_role > group_role) {
-			group_role = rsc->next_role;
+		enum rsc_role_e role = child_rsc->fns->state(child_rsc, current);
+		if(role > group_role) {
+			group_role = role;
 		}
 		if(child_rsc->failed) {
 			rsc->failed = TRUE;
 		}
 		);
+
+	crm_warn("%s role: %s", rsc->id, role2text(group_role));
 	return group_role;
 }

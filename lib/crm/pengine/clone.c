@@ -295,7 +295,21 @@ void clone_free(resource_t *rsc)
 }
 
 enum rsc_role_e
-clone_resource_state(resource_t *rsc)
+clone_resource_state(resource_t *rsc, gboolean current)
 {
-	return RSC_ROLE_UNKNOWN;
+	enum rsc_role_e clone_role = RSC_ROLE_UNKNOWN;
+
+	clone_variant_data_t *clone_data = NULL;
+	get_clone_variant_data(clone_data, rsc);
+
+	slist_iter(
+		child_rsc, resource_t, clone_data->child_list, lpc,
+		enum rsc_role_e a_role = child_rsc->fns->state(child_rsc, current);
+		if(a_role > clone_role) {
+			clone_role = a_role;
+		}
+		);
+
+	crm_warn("%s role: %s", rsc->id, role2text(clone_role));
+	return clone_role;
 }

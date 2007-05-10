@@ -110,7 +110,7 @@ update_action(action_t *action)
 				
 			} else if(safe_str_eq(other->action->task, CRMD_ACTION_STOP)
 				  && other->action->rsc->fns->state(
-					  other->action->rsc) == RSC_ROLE_STOPPED) {
+					  other->action->rsc, TRUE) == RSC_ROLE_STOPPED) {
 				do_crm_log(log_level-1, "      Ignoring implies left - %s already stopped",
 					other->action->rsc->id);
 

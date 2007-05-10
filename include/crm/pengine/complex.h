@@ -50,7 +50,7 @@ typedef struct resource_object_functions_s
 			pe_working_set_t *);
 		void (*print)(resource_t *, const char *, long, void *);
 		gboolean (*active)(resource_t *,gboolean);
-		enum rsc_role_e (*state)(resource_t *);
+		enum rsc_role_e (*state)(resource_t *, gboolean);
 		void (*free)(resource_t *);
 } resource_object_functions_t;
 
@@ -92,10 +92,10 @@ extern void group_free(resource_t *rsc);
 extern void clone_free(resource_t *rsc);
 extern void master_free(resource_t *rsc);
 
-extern enum rsc_role_e native_resource_state(resource_t *rsc);
-extern enum rsc_role_e group_resource_state(resource_t *rsc);
-extern enum rsc_role_e clone_resource_state(resource_t *rsc);
-extern enum rsc_role_e master_resource_state(resource_t *rsc);
+extern enum rsc_role_e native_resource_state(resource_t *rsc, gboolean current);
+extern enum rsc_role_e group_resource_state(resource_t *rsc, gboolean current);
+extern enum rsc_role_e clone_resource_state(resource_t *rsc, gboolean current);
+extern enum rsc_role_e master_resource_state(resource_t *rsc, gboolean current);
 
 extern resource_object_functions_t resource_class_functions[];
 extern gboolean	common_unpack(crm_data_t * xml_obj, resource_t **rsc,

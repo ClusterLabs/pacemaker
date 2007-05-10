@@ -451,8 +451,8 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			action->runnable = FALSE;
 			
 		} else if(rsc->is_managed == FALSE) {
-			do_crm_log(warn_level, "Action %s %s is for %s (unmanaged)",
-				 action->uuid, task, rsc->id);
+			do_crm_log(warn_level, "Action %s (unmanaged)",
+				 action->uuid);
 			action->optional = TRUE;
 /*   			action->runnable = FALSE; */
 
