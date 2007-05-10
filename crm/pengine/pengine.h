@@ -43,12 +43,16 @@ enum pe_stop_fail {
 
 enum pe_ordering {
 	pe_order_implies_left		= 0x01, /* was: _mandatory */
-	pe_order_internal_restart	= 0x02, /* upgrades to: right_implies_left */
-	pe_order_implies_right		= 0x04, /* was: _recover  */
-	pe_order_postnotify		= 0x08,
-	pe_order_optional		= 0x10,  /* pure ordering, nothing implied */
-	pe_order_runnable		= 0x20,  /* needs the other side to be at least runnable */
-	pe_order_test		        = 0x100  /* test marker */
+	pe_order_implies_right		= 0x02, /* was: _recover  */
+
+	pe_order_runnable_left		= 0x10,  /* needs the LHS side to be runnable */
+	pe_order_runnable_right		= 0x20,  /* needs the RHS side to be runnable */
+
+	pe_order_optional		= 0x100,  /* pure ordering, nothing implied */
+	pe_order_internal_restart	= 0x200, /* upgrades to: right_implies_left */
+	pe_order_postnotify		= 0x400,
+
+	pe_order_test		        = 0x1000  /* test marker */
 };
 
 struct rsc_colocation_s { 

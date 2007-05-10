@@ -52,13 +52,15 @@ update_action(action_t *action)
 	int local_type = 0;
 	int log_level = LOG_INFO;
 	gboolean changed = FALSE;
-
-	do_crm_log(log_level-1, "Processing action %s: %s",
+	
+	do_crm_log(log_level, "Processing action %s: %s",
 		    action->uuid, action->optional?"optional":"required");
 
 	slist_iter(
 		other, action_wrapper_t, action->actions_before, lpc,
-		do_crm_log(log_level, "   Checking action %s: %s 0x%.4x",
+
+		gboolean other_changed = FALSE;
+		do_crm_log(log_level, "   Checking action %s: %s 0x%.6x",
 			   other->action->uuid,
 			   other->action->optional?"optional":"required",
 			   other->type);
@@ -67,7 +69,7 @@ update_action(action_t *action)
 /* 		local_type |= pe_order_optional; */
 /* 		local_type ^= pe_order_optional; */
 		
-		if((local_type & (pe_order_implies_left|pe_order_runnable))
+		if((local_type & (pe_order_implies_left|pe_order_runnable_left))
 			&& other->action->runnable == FALSE) {
 			if(other->action->pseudo) {
 				do_crm_log(log_level, "Ignoring un-runnable - pseudo");
@@ -77,10 +79,27 @@ update_action(action_t *action)
 				
 			} else {
 				action->runnable = FALSE;
-				do_crm_log(log_level-1, "   * Marking action %s un-runnable"
-					  " because of %s",
-					  action->uuid, other->action->uuid);
+				do_crm_log(log_level-1,
+					   "   * Marking action %s un-runnable because of %s",
+					   action->uuid, other->action->uuid);
 				changed = TRUE;
+			}
+		}
+
+		if((local_type & pe_order_runnable_right)
+			&& action->runnable == FALSE) {
+			if(action->pseudo) {
+				do_crm_log(log_level, "Ignoring un-runnable - pseudo");
+
+			} else if(other->action->runnable == FALSE) {
+				do_crm_log(log_level, "Already un-runnable");
+				
+			} else {
+				other->action->runnable = FALSE;
+				do_crm_log(log_level-1,
+					   "   * Marking action %s un-runnable because of %s",
+					   other->action->uuid, action->uuid);
+				other_changed = TRUE;
 			}
 		}
 		
@@ -94,7 +113,8 @@ update_action(action_t *action)
 				do_crm_log(log_level-1,
 					   "   * (implies left) Marking action %s mandatory because of %s",
 					   other->action->uuid, action->uuid);
-				update_action(other->action);
+				other_changed = TRUE;
+				
 			} else {
 				do_crm_log(log_level, "      Ignoring implies left");
 			}
@@ -115,12 +135,24 @@ update_action(action_t *action)
 				do_crm_log(log_level, "      Ignoring implies right");
 			}
 		}
+
+		if(other_changed) {
+			crm_info("%s changed, processing after list", other->action->uuid);
+			update_action(other->action);
+			slist_iter(
+				before_other, action_wrapper_t, other->action->actions_after, lpc2,
+				crm_info("%s changed, processing %s", other->action->uuid, before_other->action->uuid);
+				update_action(before_other->action);
+				);
+		}
 		
 		);
 
 	if(changed) {
+		crm_info("%s changed, processing after list", action->uuid);
 		slist_iter(
 			other, action_wrapper_t, action->actions_after, lpc,
+			crm_info("%s changed, processing %s", action->uuid, other->action->uuid);
 			update_action(other->action);
 			);
 	}
@@ -478,6 +510,13 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 			   crm_debug_2("Input (%d) %s optional",
 				       wrapper->action->id,
 				       wrapper->action->uuid);
+			   continue;
+
+		   } else if(wrapper->action->runnable == FALSE
+			     && wrapper->type == pe_order_optional) {
+			   crm_debug("Input (%d) %s optional (ordering)",
+				     wrapper->action->id,
+				     wrapper->action->uuid);
 			   continue;
 		   }
 

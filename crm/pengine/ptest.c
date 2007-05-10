@@ -418,6 +418,9 @@ main(int argc, char **argv)
 			if(action->dumped && before->action->dumped) {
 			} else if(action->optional || before->action->optional) {
 				optional = TRUE;
+			} else if(before->action->runnable == FALSE
+				  && before->type == pe_order_optional) {
+				optional = TRUE;
 			}
 			before_name = create_action_name(before->action);
 			after_name = create_action_name(action);

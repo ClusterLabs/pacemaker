@@ -165,7 +165,6 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
 	resource_t *this_rsc = NULL;
 	resource_t *last_rsc = NULL;
-	int ordering = pe_order_optional|pe_order_implies_right;
 
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
@@ -176,17 +175,17 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	custom_action_order(
 		group_data->self, stopped_key(group_data->self), NULL,
 		group_data->self, start_key(group_data->self), NULL,
-		pe_order_internal_restart, data_set);
+		pe_order_optional, data_set);
 
 	custom_action_order(
 		group_data->self, stop_key(group_data->self), NULL,
 		group_data->self, stopped_key(group_data->self), NULL,
-		pe_order_optional, data_set);
+		pe_order_runnable_left, data_set);
 
 	custom_action_order(
 		group_data->self, start_key(group_data->self), NULL,
 		group_data->self, started_key(group_data->self), NULL,
-		pe_order_optional, data_set);
+		pe_order_runnable_left, data_set);
 	
 	slist_iter(
 		child_rsc, resource_t, group_data->child_list, lpc,
@@ -198,37 +197,40 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 				"group:internal_colocation", NULL, INFINITY,
 				child_rsc, last_rsc, NULL, NULL);
 		}
-	
+
 		custom_action_order(child_rsc, stop_key(child_rsc), NULL,
 				    this_rsc,  stopped_key(this_rsc), NULL,
-				    ordering|pe_order_internal_restart, data_set);
+				    pe_order_optional, data_set);
 
 		custom_action_order(child_rsc, start_key(child_rsc), NULL,
 				    this_rsc, started_key(this_rsc), NULL,
-				    ordering, data_set);
+				    pe_order_optional, data_set);
 		
  		if(group_data->ordered == FALSE) {
-			order_start_start(
-				group_data->self, child_rsc, pe_order_optional);
-
-			order_stop_stop(
-				group_data->self, child_rsc, pe_order_optional);
+			order_start_start(this_rsc, child_rsc, pe_order_implies_right);
+			order_stop_stop(this_rsc, child_rsc, pe_order_implies_right);
 
 		} else if(last_rsc != NULL) {
-			order_start_start(last_rsc, child_rsc, ordering);
-			order_stop_stop(child_rsc, last_rsc, ordering);
+			order_start_start(last_rsc, child_rsc, pe_order_implies_right|pe_order_runnable_left);
+			order_stop_stop(child_rsc, last_rsc, pe_order_implies_left);
 
 			child_rsc->restart_type = pe_restart_restart;
 
 		} else {
-			order_start_start(this_rsc, child_rsc, ordering);
+			/* If anyone in the group is starting, then
+			 *  pe_order_implies_right will cause _everyone_ in the group
+			 *  to be sent a start action
+			 * But this is safe since starting something that is already
+			 *  started is required to be "safe"
+			 */
+			order_start_start(this_rsc, child_rsc, pe_order_implies_right|pe_order_runnable_right);
 		}
 		
 		last_rsc = child_rsc;
 		);
 
 	if(group_data->ordered && last_rsc != NULL) {
-		order_stop_stop(this_rsc, last_rsc, ordering);
+		order_stop_stop(this_rsc, last_rsc, pe_order_implies_right|pe_order_test);
 	}		
 }
 
@@ -312,6 +314,7 @@ void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 		return;
 	}
 
+	group_data->self->cmds->rsc_order_lh(group_data->self, order, data_set);
 	convert_non_atomic_task(rsc, order);
 	group_data->self->cmds->rsc_order_lh(group_data->self, order, data_set);
 }

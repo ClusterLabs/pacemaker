@@ -284,7 +284,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 		} else if(interval > 0) {
 			custom_action_order(rsc, start_key(rsc), NULL,
 					    NULL, crm_strdup(op->task), op,
-					    pe_order_runnable, data_set);
+					    pe_order_runnable_left, data_set);
 		}
 		
 	}
@@ -709,7 +709,7 @@ stage7(pe_working_set_t *data_set)
 		order, order_constraint_t, data_set->ordering_constraints, lpc,
 
 		resource_t *rsc = order->lh_rsc;
-		crm_info("Applying ordering constraint: %d", order->id);
+		crm_debug_2("Applying ordering constraint: %d", order->id);
 		
 		if(rsc != NULL) {
 			crm_debug_4("rsc_action-to-*");
@@ -966,18 +966,18 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
  		cons_weight |= pe_order_implies_right;
 	}
 
-	if(score_i > 0) {
+	if(score_i < 0) {
 		crm_info("Upgrade : implies left");
  		cons_weight |= pe_order_implies_left;
+
+	} else if(score_i > 0) {
+		crm_info("Upgrade : implies right");
+ 		cons_weight |= pe_order_implies_right;
 		if(safe_str_eq(action, CRMD_ACTION_START)
 		   || safe_str_eq(action, CRMD_ACTION_PROMOTE)) {
 			crm_info("Upgrade : runnable");
-			cons_weight |= pe_order_runnable;
+			cons_weight |= pe_order_runnable_left;
 		}
-
-	} else if(score_i < 0) {
-		crm_info("Upgrade : implies right");
- 		cons_weight |= pe_order_implies_right;
 	}
 	
 	order_id = custom_action_order(
@@ -985,7 +985,7 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
 		cons_weight, data_set);
 
-	crm_info("order-%d (%s): %s_%s %s %s_%s flags=0x%.4x",
+	crm_info("order-%d (%s): %s_%s %s %s_%s flags=0x%.6x",
 		  order_id, id, rsc_lh->id, action, type, rsc_rh->id, action_rh,
 		  cons_weight);
 	
@@ -1004,13 +1004,18 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	}
 	
 	score_i *= -1;
-	if(score_i > 0) {
+	if(score_i < 0) {
 		crm_info("Upgrade : implies left");
  		cons_weight |= pe_order_implies_left;
 		
-	} else if(score_i < 0) {
+	} else if(score_i > 0) {
 		crm_info("Upgrade : implies right");
  		cons_weight |= pe_order_implies_right;
+		if(safe_str_eq(action, CRMD_ACTION_START)
+		   || safe_str_eq(action, CRMD_ACTION_PROMOTE)) {
+			crm_info("Upgrade : runnable");
+			cons_weight |= pe_order_runnable_left;
+		}
 	}
 
 	if(action == NULL || action_rh == NULL) {
@@ -1023,7 +1028,7 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
 		rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
 		cons_weight, data_set);
-	crm_info("order-%d (%s): %s_%s %s %s_%s flags=0x%.4x",
+	crm_info("order-%d (%s): %s_%s %s %s_%s flags=0x%.6x",
 		  order_id, id, rsc_rh->id, action_rh, type, rsc_lh->id, action,
 		  cons_weight);
 	

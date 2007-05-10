@@ -304,7 +304,7 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 			custom_action_order(
 				rsc, NULL, mon,
 				rsc, promote_key(rsc), NULL,
-				pe_order_runnable, data_set);
+				pe_order_runnable_left, data_set);
 			
 			mon = NULL;
 		}
@@ -344,7 +344,7 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	
 	custom_action_order(rsc, start_key(rsc), NULL,
 			    NULL, crm_strdup(key), mon,
-			    pe_order_implies_right|pe_order_runnable, data_set);
+			    pe_order_implies_right|pe_order_runnable_left, data_set);
 	
 	if(rsc->next_role == RSC_ROLE_MASTER) {
 		char *running_master = crm_itoa(EXECRA_RUNNING_MASTER);
@@ -352,7 +352,7 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 		custom_action_order(
 			rsc, promote_key(rsc), NULL,
 			rsc, NULL, mon,
-			pe_order_optional|pe_order_runnable, data_set);
+			pe_order_optional|pe_order_runnable_left, data_set);
 		crm_free(running_master);
 	}		
 }
@@ -444,7 +444,7 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 	custom_action_order(rsc, start_key(rsc), NULL,
 			    rsc, promote_key(rsc), NULL,
-			    pe_order_runnable, data_set);
+			    pe_order_runnable_left, data_set);
 
 	custom_action_order(
 		rsc, stop_key(rsc), NULL, rsc, delete_key(rsc), NULL, 
@@ -634,7 +634,7 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order, pe_worki
 	action_t *lh_action = order->lh_action;
 	resource_t *rh_rsc = order->rh_rsc;
 
-	crm_info("Processing LH of ordering constraint %d", order->id);
+	crm_debug_2("Processing LH of ordering constraint %d", order->id);
 	CRM_ASSERT(lh_rsc != NULL);
 	
 	if(lh_action != NULL) {
@@ -717,9 +717,9 @@ void native_rsc_order_rh(
 			
 		} else if(order->type & pe_order_internal_restart) {
 			rh_action_iter->runnable = FALSE;
-			crm_warn("Unrunnable %s 0x%.4x", rh_action_iter->uuid, order->type);
+			crm_warn("Unrunnable %s 0x%.6x", rh_action_iter->uuid, order->type);
 		} else {
-			crm_warn("neither %s 0x%.4x", rh_action_iter->uuid, order->type);
+			crm_warn("neither %s 0x%.6x", rh_action_iter->uuid, order->type);
 		}
 		
 		);
@@ -1275,7 +1275,9 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	key = generate_op_key(rsc->id, CRMD_ACTION_STATUS, 0);
 	probe = custom_action(rsc, key, CRMD_ACTION_STATUS, node,
 			      FALSE, TRUE, data_set);
-
+	probe->optional = FALSE;
+	
+	crm_warn("probe %s is %s", probe->uuid, probe->optional?"optional":"required");
 	running = pe_find_node_id(rsc->running_on, node->details->id);
 	if(running == NULL) {
 		target_rc = crm_itoa(EXECRA_NOT_RUNNING);
@@ -1286,7 +1288,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	crm_debug_2("%s: Created probe for %s", node->details->uname, rsc->id);
 	
 	custom_action_order(rsc, NULL, probe, rsc, NULL, complete,
-			    pe_order_optional, data_set);
+			    pe_order_implies_right, data_set);
 
 	return TRUE;
 }

@@ -184,7 +184,7 @@ ordering_type2text(enum pe_ordering type)
 	} else if(type & pe_order_postnotify) {
 		result = "post_notify";
 		
-	} else if(type & pe_order_runnable) {
+	} else if(type & pe_order_runnable_left) {
 		result = "runnable";
 		
 	} else {
