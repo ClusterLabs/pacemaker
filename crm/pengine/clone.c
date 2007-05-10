@@ -33,11 +33,11 @@ void clone_create_notifications(
 	pe_working_set_t *data_set);
 
 void child_stopping_constraints(
-	clone_variant_data_t *clone_data, enum pe_ordering type,
+	clone_variant_data_t *clone_data, 
 	resource_t *child, resource_t *last, pe_working_set_t *data_set);
 
 void child_starting_constraints(
-	clone_variant_data_t *clone_data, enum pe_ordering type,
+	clone_variant_data_t *clone_data, 
 	resource_t *child, resource_t *last, pe_working_set_t *data_set);
 
 void clone_set_cmds(resource_t *rsc)
@@ -415,8 +415,7 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action_complete->priority = INFINITY;
 /* 	crm_err("Upgrading priority for %s to INFINITY", action_complete->uuid); */
 	
-	child_starting_constraints(clone_data, pe_order_optional, 
-				   NULL, last_start_rsc, data_set);
+	child_starting_constraints(clone_data, NULL, last_start_rsc, data_set);
 
 	clone_create_notifications(
 		rsc, start, action_complete, data_set);	
@@ -435,8 +434,7 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action_complete->priority = INFINITY;
 /* 	crm_err("Upgrading priority for %s to INFINITY", action_complete->uuid); */
 	
-	child_stopping_constraints(clone_data, pe_order_optional,
-				   NULL, last_stop_rsc, data_set);
+	child_stopping_constraints(clone_data, NULL, last_stop_rsc, data_set);
 
 	
 	clone_create_notifications(rsc, stop, action_complete, data_set);	
@@ -601,92 +599,68 @@ clone_create_notifications(
 
 void
 child_starting_constraints(
-	clone_variant_data_t *clone_data, enum pe_ordering type,
-	resource_t *child, resource_t *last, pe_working_set_t *data_set)
+	clone_variant_data_t *clone_data, resource_t *child,
+	resource_t *last, pe_working_set_t *data_set)
 {
-	if(clone_data->ordered
-	   || clone_data->self->restart_type == pe_restart_restart) {
-		type = pe_order_implies_left;
+	if(child != NULL) {
+		order_start_start(clone_data->self, child, pe_order_optional);
+		
+		custom_action_order(
+			child, start_key(child), NULL,
+			clone_data->self, started_key(clone_data->self), NULL,
+			pe_order_optional, data_set);
 	}
-	if(child == NULL) {
-		if(clone_data->ordered && last != NULL) {
-			crm_debug_4("Ordered version (last node)");
+	
+	if(clone_data->ordered) {
+		if(child == NULL) {
 			/* last child start before global started */
 			custom_action_order(
 				last, start_key(last), NULL,
 				clone_data->self, started_key(clone_data->self), NULL,
-				type, data_set);
-		}
-		
-	} else if(clone_data->ordered) {
-		crm_debug_4("Ordered version");
-		if(last == NULL) {
+				pe_order_runnable_left, data_set);
+
+		} else if(last == NULL) {
 			/* global start before first child start */
-			last = clone_data->self;
+			order_start_start(
+				clone_data->self, child, pe_order_implies_left);
 
-		} /* else: child/child relative start */
-
-		order_start_start(last, child, type);
-
-	} else {
-		crm_debug_4("Un-ordered version");
-		
-		/* child start before global started */
-		custom_action_order(
-			child, start_key(child), NULL,
-			clone_data->self, started_key(clone_data->self), NULL,
-			type, data_set);
-                
-		/* global start before child start */
-/* 		order_start_start(clone_data->self, child, type); */
-		order_start_start(
-			clone_data->self, child, pe_order_implies_left);
+		} else {
+			/* child/child relative start */
+			order_start_start(last, child, pe_order_implies_left);
+		}
 	}
 }
 
 void
 child_stopping_constraints(
-	clone_variant_data_t *clone_data, enum pe_ordering type,
-	resource_t *child, resource_t *last, pe_working_set_t *data_set)
+	clone_variant_data_t *clone_data, resource_t *child,
+	resource_t *last, pe_working_set_t *data_set)
 {
-	if(clone_data->ordered
-	   || clone_data->self->restart_type == pe_restart_restart) {
-		type = pe_order_implies_left;
+	if(child != NULL) {
+		order_stop_stop(clone_data->self, child, pe_order_optional);
+		
+		custom_action_order(
+			child, stop_key(child), NULL,
+			clone_data->self, stopped_key(clone_data->self), NULL,
+			pe_order_optional, data_set);
 	}
 	
-	if(child == NULL) {
-		if(clone_data->ordered && last != NULL) {
-			crm_debug_4("Ordered version (last node)");
-			/* global stop before first child stop */
-			order_stop_stop(clone_data->self, last,
-					pe_order_implies_left);
+	if(clone_data->ordered) {
+		if(last == NULL) {
+			/* first child stop before global stopped */
+			custom_action_order(
+				child, stop_key(child), NULL,
+				clone_data->self, stopped_key(clone_data->self), NULL,
+				pe_order_runnable_left, data_set);
+			
+		} else if(child == NULL) {
+			/* global stop before last child stop */
+			order_stop_stop(
+				clone_data->self, last, pe_order_implies_left);
+		} else {
+			/* child/child relative stop */
+			order_stop_stop(child, last, pe_order_implies_left);
 		}
-		
-	} else if(clone_data->ordered && last != NULL) {
-		crm_debug_4("Ordered version");
-
-		/* child/child relative stop */
-		order_stop_stop(child, last, type);
-
-	} else if(clone_data->ordered) {
-		crm_debug_4("Ordered version (1st node)");
-		/* first child stop before global stopped */
-		custom_action_order(
-			child, stop_key(child), NULL,
-			clone_data->self, stopped_key(clone_data->self), NULL,
-			type, data_set);
-
-	} else {
-		crm_debug_4("Un-ordered version");
-
-		/* child stop before global stopped */
-		custom_action_order(
-			child, stop_key(child), NULL,
-			clone_data->self, stopped_key(clone_data->self), NULL,
-			type, data_set);
-                        
-		/* global stop before child stop */
-		order_stop_stop(clone_data->self, child, type);
 	}
 }
 
@@ -704,13 +678,13 @@ clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	custom_action_order(
 		clone_data->self, stop_key(clone_data->self), NULL,
 		clone_data->self, stopped_key(clone_data->self), NULL,
-		pe_order_optional, data_set);
+		pe_order_runnable_left, data_set);
 
 	/* global start before started */
 	custom_action_order(
 		clone_data->self, start_key(clone_data->self), NULL,
 		clone_data->self, started_key(clone_data->self), NULL,
-		pe_order_optional, data_set);
+		pe_order_runnable_left, data_set);
 	
 	/* global stopped before start */
 	custom_action_order(
@@ -724,24 +698,13 @@ clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc->cmds->internal_constraints(child_rsc, data_set);
 
 		child_starting_constraints(
-			clone_data, pe_order_optional,
-			child_rsc, last_rsc, data_set);
+			clone_data, child_rsc, last_rsc, data_set);
 
 		child_stopping_constraints(
-			clone_data, pe_order_optional,
-			child_rsc, last_rsc, data_set);
+			clone_data, child_rsc, last_rsc, data_set);
 
 		last_rsc = child_rsc;
-		
 		);
-
-	child_starting_constraints(
-		clone_data, pe_order_optional,
-		NULL, last_rsc, data_set);
-	
-	child_stopping_constraints(
-		clone_data, pe_order_optional,
-		NULL, last_rsc, data_set);
 }
 
 static resource_t*
@@ -904,7 +867,6 @@ void clone_rsc_colocation_rh(
 		);
 }
 
-
 void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_set_t *data_set)
 {
 	clone_variant_data_t *clone_data = NULL;
@@ -912,6 +874,17 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 
 	crm_debug_2("%s->%s", order->lh_action_task, order->rh_action_task);
 
+	if(order->type != pe_order_optional) {
+		crm_warn("Upgraded ordering constraint %d - 0x%.6x", order->id, order->type);
+		native_rsc_order_lh(rsc, order, data_set);
+#if 0		
+		clone_data->self->cmds->rsc_order_lh(clone_data->self, order, data_set);
+		slist_iter(
+			child_rsc, resource_t, clone_data->child_list, lpc,
+/* 			child_rsc->cmds->rsc_order_lh(child_rsc, order, data_set); */
+			);
+#endif
+	}
 	convert_non_atomic_task(rsc, order);
 	clone_data->self->cmds->rsc_order_lh(clone_data->self, order, data_set);
 }

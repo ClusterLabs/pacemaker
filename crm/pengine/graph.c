@@ -69,13 +69,13 @@ update_action(action_t *action)
 /* 		local_type |= pe_order_optional; */
 /* 		local_type ^= pe_order_optional; */
 		
-		if((local_type & (pe_order_implies_left|pe_order_runnable_left))
+		if((local_type & pe_order_runnable_left)
 			&& other->action->runnable == FALSE) {
 			if(other->action->pseudo) {
 				do_crm_log(log_level, "Ignoring un-runnable - pseudo");
 
 			} else if(action->runnable == FALSE) {
-				do_crm_log(log_level, "Already un-runnable");
+				do_crm_log(log_level+1, "Already un-runnable");
 				
 			} else {
 				action->runnable = FALSE;
@@ -92,7 +92,7 @@ update_action(action_t *action)
 				do_crm_log(log_level, "Ignoring un-runnable - pseudo");
 
 			} else if(other->action->runnable == FALSE) {
-				do_crm_log(log_level, "Already un-runnable");
+				do_crm_log(log_level+1, "Already un-runnable");
 				
 			} else {
 				other->action->runnable = FALSE;
@@ -106,8 +106,14 @@ update_action(action_t *action)
 		if(other->type & pe_order_implies_left) {
 			if(other->action->optional == FALSE) {
 				/* nothing to do */
-				do_crm_log(log_level, "      Ignoring implies left - redundant");
+				do_crm_log(log_level+1, "      Ignoring implies left - redundant");
 				
+			} else if(safe_str_eq(other->action->task, CRMD_ACTION_STOP)
+				  && other->action->rsc->fns->state(
+					  other->action->rsc) == RSC_ROLE_STOPPED) {
+				do_crm_log(log_level-1, "      Ignoring implies left - %s already stopped",
+					other->action->rsc->id);
+
 			} else if(action->optional == FALSE) {
 				other->action->optional = FALSE;
 				do_crm_log(log_level-1,
@@ -123,7 +129,7 @@ update_action(action_t *action)
 		if(other->type & pe_order_implies_right) {
 			if(action->optional == FALSE) {
 				/* nothing to do */
-				do_crm_log(log_level, "      Ignoring implies right - redundant");
+				do_crm_log(log_level+1, "      Ignoring implies right - redundant");
 			} else if(other->action->optional == FALSE) {
 				action->optional = FALSE;
 				do_crm_log(log_level-1,

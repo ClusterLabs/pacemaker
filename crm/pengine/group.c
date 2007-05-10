@@ -314,7 +314,9 @@ void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 		return;
 	}
 
-	group_data->self->cmds->rsc_order_lh(group_data->self, order, data_set);
+	if(order->type != pe_order_optional) {
+		group_data->self->cmds->rsc_order_lh(group_data->self, order, data_set);
+	}
 	convert_non_atomic_task(rsc, order);
 	group_data->self->cmds->rsc_order_lh(group_data->self, order, data_set);
 }
@@ -446,3 +448,4 @@ group_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc->cmds->migrate_reload(child_rsc, data_set);
 		);
 }
+

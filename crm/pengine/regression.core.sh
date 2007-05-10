@@ -93,7 +93,7 @@ function do_test {
 	return;
     else
 	echo "digraph \"g\" {" > $dot_output.sort
-	sort $dot_output | grep -v -e ^}$ -e digraph >> $dot_output.sort
+	sort -u $dot_output | grep -v -e ^}$ -e digraph >> $dot_output.sort
 	echo "}" >> $dot_output.sort
 	mv -f $dot_output.sort $dot_output
     fi
@@ -109,6 +109,7 @@ function do_test {
     if [ $rc != 0 ]; then
 	echo "	* Failed (PE : dot)";
 	diff $diff_opts $dot_expected $dot_output 2>/dev/null >> $failed
+	echo "" >> $failed
 	num_failed=`expr $num_failed + 1`
     else 
 	rm $dot_output
@@ -119,6 +120,7 @@ function do_test {
     if [ $rc2 != 0 ]; then
 	echo "	* Failed (PE : raw)";
 	diff $diff_opts $expected $output 2>/dev/null >> $failed
+	echo "" >> $failed
 	num_failed=`expr $num_failed + 1`
     else 
 	rm $output
