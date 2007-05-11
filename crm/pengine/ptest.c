@@ -315,7 +315,7 @@ main(int argc, char **argv)
 		} else {
 			msg_buffer = dump_xml_formatted(cib_object);
 			if(fprintf(input_strm, "%s\n", msg_buffer) < 0) {
-				cl_perror("Write to %s failed", graph_file);
+				cl_perror("Write to %s failed", input_file);
 			}
 			fflush(input_strm);
 			fclose(input_strm);
@@ -334,7 +334,10 @@ main(int argc, char **argv)
 	do_calculations(&data_set, cib_object, a_date);
 
 	msg_buffer = dump_xml_formatted(data_set.graph);
-	if(graph_file != NULL) {
+	if(safe_str_eq(graph_file, "-")) {
+		fprintf(stdout, "%s\n", msg_buffer);
+		fflush(stdout);
+	} else if(graph_file != NULL) {
 		FILE *graph_strm = fopen(graph_file, "w");
 		if(graph_strm == NULL) {
 			cl_perror("Could not open %s for writing", graph_file);
@@ -345,10 +348,6 @@ main(int argc, char **argv)
 			fflush(graph_strm);
 			fclose(graph_strm);
 		}
-		
-	} else {
-		fprintf(stdout, "%s\n", msg_buffer);
-		fflush(stdout);
 	}
 	crm_free(msg_buffer);
 
