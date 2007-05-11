@@ -176,7 +176,7 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		return FALSE;
 	}
 	
-	clone_data->notify_confirm = clone_data->self->notify;
+	clone_data->notify_confirm = rsc->notify;
 
 	for(lpc = 0; lpc < clone_data->clone_max; lpc++) {
 		create_child_clone(rsc, lpc, data_set);
@@ -237,11 +237,11 @@ void clone_print(
 
 	if(rsc->variant == pe_master) {
 		status_print("%sMaster/Slave Set: %s",
-			     pre_text?pre_text:"", clone_data->self->id);
+			     pre_text?pre_text:"", rsc->id);
 
 	} else {
 		status_print("%sClone Set: %s",
-			     pre_text?pre_text:"", clone_data->self->id);
+			     pre_text?pre_text:"", rsc->id);
 	}
 	
 	if(options & pe_print_html) {

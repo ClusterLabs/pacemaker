@@ -117,33 +117,9 @@ void native_set_cmds(resource_t *rsc)
 
 int native_num_allowed_nodes(resource_t *rsc)
 {
-	int num_nodes = 0;
-
-	if(rsc->next_role == RSC_ROLE_STOPPED) {
-		return 0;
-	}
-	
-	crm_debug_4("Default case");
-	slist_iter(
-		this_node, node_t, rsc->allowed_nodes, lpc,
-		crm_debug_3("Rsc %s Checking %s: %d",
-			    rsc->id, this_node->details->uname,
-			    this_node->weight);
-		if(this_node->details->shutdown
-		   || this_node->details->online == FALSE) {
-			this_node->weight = -INFINITY;
-		}
-		if(this_node->weight < 0) {				
-			continue;
-/* 			} else if(this_node->details->unclean) { */
-/* 				continue; */
-		}
-		
-		num_nodes++;
-		);
-
-	crm_debug_2("Resource %s can run on %d nodes", rsc->id, num_nodes);
-	return num_nodes;
+	gboolean unimplimented = FALSE;
+	CRM_ASSERT(unimplimented);
+	return 0;
 }
 
 resource_t *
@@ -436,11 +412,19 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
-	order_restart(rsc);
+	int type = pe_order_optional;
+
+	if(rsc->variant == pe_native) {
+		type |= pe_order_implies_right;
+	}
+	
+	custom_action_order(rsc, stop_key(rsc), NULL,
+			    rsc, start_key(rsc), NULL,
+			    type, data_set);
 
 	custom_action_order(rsc, demote_key(rsc), NULL,
 			    rsc, stop_key(rsc), NULL,
-			    pe_order_implies_left, data_set);
+			    pe_order_optional, data_set);
 
 	custom_action_order(rsc, start_key(rsc), NULL,
 			    rsc, promote_key(rsc), NULL,
@@ -646,6 +630,7 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order, pe_worki
 	}
 
 	if(lh_actions == NULL && lh_rsc != rh_rsc) {
+		char *key = NULL;
 		char *rsc_id = NULL;
 		char *op_type = NULL;
 		int interval = 0;
@@ -657,10 +642,11 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order, pe_worki
 		parse_op_key(
 			order->lh_action_task, &rsc_id, &op_type, &interval);
 
-		lh_action = custom_action(
-			lh_rsc, crm_strdup(order->lh_action_task), op_type,
-			NULL, TRUE, TRUE, data_set);
-		lh_action->runnable = FALSE;
+		key = generate_op_key(lh_rsc->id, op_type, interval);
+
+		lh_action = custom_action(lh_rsc, key, op_type,
+					  NULL, TRUE, TRUE, data_set);
+/* 		lh_action->runnable = FALSE; */
 		lh_actions = g_list_append(NULL, lh_action);
 
 		crm_free(rsc_id);

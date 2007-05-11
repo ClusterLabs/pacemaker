@@ -1003,8 +1003,6 @@ void
 resource_location(resource_t *rsc, node_t *node, int score, const char *tag,
 		  pe_working_set_t *data_set) 
 {
-	CRM_CHECK(rsc->variant == pe_native, return);
-	
 	if(node != NULL) {
 		resource_node_score(rsc, node, score, tag);
 

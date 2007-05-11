@@ -14,6 +14,11 @@
     <resources>
       <primitive id="rsc1" class="heartbeat" type="apache" restart_type="restart"/>
       <group id="foo" restart_type="restart">
+	<meta_attributes id="1">
+	  <attributes>
+            <nvpair id="2" name="restart_type" value="restart"/>
+          </attributes>
+	</meta_attributes>
 	<primitive id="rsc2" class="heartbeat" type="apache"/>
       </group>
       <group id="bar">

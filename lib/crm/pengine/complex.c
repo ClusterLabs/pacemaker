@@ -276,7 +276,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	if((*rsc)->is_managed == FALSE) {
 		crm_warn("Resource %s is currently not managed", (*rsc)->id);
 
-	} else if((*rsc)->variant == pe_native && data_set->symmetric_cluster) {
+	} else if(data_set->symmetric_cluster) {
 		resource_location(*rsc, NULL, 0, "symmetric_default", data_set);
 	}
 	

@@ -145,11 +145,6 @@ extern int custom_action_order(
 			    rsc2, stop_key(rsc2) ,NULL,		\
 			    type, data_set)
 
-#define order_restart(rsc1)						\
-	custom_action_order(rsc1, stop_key(rsc1), NULL,		\
-			    rsc1, start_key(rsc1), NULL,	\
-			    pe_order_internal_restart, data_set)
-
 #define order_stop_start(rsc1, rsc2, type)				\
 	custom_action_order(rsc1, stop_key(rsc1), NULL,		\
 			    rsc2, start_key(rsc2) ,NULL,		\
