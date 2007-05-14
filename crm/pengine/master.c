@@ -224,7 +224,7 @@ can_be_master(resource_t *rsc)
 
 	get_clone_variant_data(clone_data, rsc->parent);
 	local_node = pe_find_node_id(
-		rsc->allowed_nodes, node->details->id);
+		rsc->parent->allowed_nodes, node->details->id);
 
 	if(local_node == NULL) {
 		crm_err("%s cannot run on %s: node not allowed",
@@ -500,12 +500,12 @@ master_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		rsc, demote_key(rsc), NULL,
 		rsc, demoted_key(rsc), NULL,
 		pe_order_optional, data_set);
-	
+
 	/* global demoted before promote */
 	custom_action_order(
 		rsc, demoted_key(rsc), NULL,
 		rsc, promote_key(rsc), NULL,
-		pe_order_internal_restart, data_set);
+		pe_order_optional, data_set);
 
 	slist_iter(
 		child_rsc, resource_t, clone_data->child_list, lpc,
@@ -514,7 +514,7 @@ master_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		custom_action_order(
 			child_rsc, demote_key(child_rsc), NULL,
 			child_rsc, promote_key(child_rsc), NULL,
-			pe_order_internal_restart, data_set);
+			pe_order_optional, data_set);
 		
 		child_promoting_constraints(clone_data, pe_order_optional,
 					    rsc, child_rsc, last_rsc, data_set);
