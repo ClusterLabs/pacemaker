@@ -241,6 +241,8 @@ do_test 1484 "OSDL #1484 - on_fail=stop"
 do_test 1494 "OSDL #1494 - Clone stability"
 do_test unrunnable-1 "Unrunnable"
 do_test stonith-0 "Stonith loop"
+do_test bug-1572-1 "Recovery of groups depending on master/slave"
+do_test bug-1572-2 "Recovery of groups depending on master/slave when the master is never re-promoted"
 
 echo ""
 

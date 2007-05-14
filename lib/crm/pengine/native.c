@@ -381,6 +381,6 @@ native_resource_state(resource_t *rsc, gboolean current)
 	if(current) {
 		role = rsc->role;
 	}
-	crm_warn("%s state: %s", rsc->id, role2text(role));
+	crm_debug_2("%s state: %s", rsc->id, role2text(role));
 	return role;
 }

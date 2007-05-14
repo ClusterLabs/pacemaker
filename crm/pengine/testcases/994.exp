@@ -22,6 +22,15 @@
      </action_set>
      <inputs>
        <trigger>
+         <rsc_op id="9" operation="start" operation_key="datadisk_1_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="11" operation="start" operation_key="Filesystem_2_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="13" operation="start" operation_key="IPaddr_5_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
+       </trigger>
+       <trigger>
          <rsc_op id="14" operation="start" operation_key="postfix_9_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
        </trigger>
        <trigger>
@@ -54,6 +63,84 @@
    </synapse>
    <synapse id="4">
      <action_set>
+       <rsc_op id="4" operation="monitor" operation_key="datadisk_1_monitor_120000" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
+         <primitive id="datadisk_1" long-id="group_1:datadisk_1" class="heartbeat" provider="heartbeat" type="datadisk"/>
+         <attributes crm_feature_set="1.0.8" 1="r0" CRM_meta_id="datadisk_1_mon" CRM_meta_timeout="60000" CRM_meta_name="monitor" CRM_meta_interval="120000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="9" operation="start" operation_key="datadisk_1_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="5">
+     <action_set>
+       <rsc_op id="9" operation="start" operation_key="datadisk_1_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
+         <primitive id="datadisk_1" long-id="group_1:datadisk_1" class="heartbeat" provider="heartbeat" type="datadisk"/>
+         <attributes crm_feature_set="1.0.8" 1="r0" CRM_meta_timeout="20000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="15" operation="start" operation_key="group_1_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="6">
+     <action_set>
+       <rsc_op id="1" operation="monitor" operation_key="Filesystem_2_monitor_120000" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
+         <primitive id="Filesystem_2" long-id="group_1:Filesystem_2" class="ocf" provider="heartbeat" type="Filesystem"/>
+         <attributes crm_feature_set="1.0.8" directory="/home" fstype="reiserfs" device="/dev/drbd0" CRM_meta_id="Filesystem_2_mon" CRM_meta_timeout="60000" CRM_meta_name="monitor" CRM_meta_interval="120000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="11" operation="start" operation_key="Filesystem_2_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="7">
+     <action_set>
+       <rsc_op id="11" operation="start" operation_key="Filesystem_2_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
+         <primitive id="Filesystem_2" long-id="group_1:Filesystem_2" class="ocf" provider="heartbeat" type="Filesystem"/>
+         <attributes crm_feature_set="1.0.8" directory="/home" fstype="reiserfs" device="/dev/drbd0" CRM_meta_timeout="20000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="9" operation="start" operation_key="datadisk_1_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="8">
+     <action_set>
+       <rsc_op id="5" operation="monitor" operation_key="IPaddr_5_monitor_5000" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
+         <primitive id="IPaddr_5" long-id="group_1:IPaddr_5" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.8" ip="10.10.10.222" CRM_meta_id="IPaddr_5_mon" CRM_meta_timeout="5000" CRM_meta_name="monitor" CRM_meta_interval="5000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="13" operation="start" operation_key="IPaddr_5_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="9">
+     <action_set>
+       <rsc_op id="13" operation="start" operation_key="IPaddr_5_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
+         <primitive id="IPaddr_5" long-id="group_1:IPaddr_5" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.8" ip="10.10.10.222" CRM_meta_timeout="20000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="11" operation="start" operation_key="Filesystem_2_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="10">
+     <action_set>
        <rsc_op id="2" operation="monitor" operation_key="postfix_9_monitor_120000" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
          <primitive id="postfix_9" long-id="group_1:postfix_9" class="lsb" provider="heartbeat" type="postfix"/>
          <attributes crm_feature_set="1.0.8" CRM_meta_id="postfix_9_mon" CRM_meta_timeout="60000" CRM_meta_name="monitor" CRM_meta_interval="120000"/>
@@ -65,7 +152,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="5">
+   <synapse id="11">
      <action_set>
        <rsc_op id="3" operation="stop" operation_key="postfix_9_stop_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
          <primitive id="postfix_9" long-id="group_1:postfix_9" class="lsb" provider="heartbeat" type="postfix"/>
@@ -78,7 +165,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="6">
+   <synapse id="12">
      <action_set>
        <rsc_op id="14" operation="start" operation_key="postfix_9_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
          <primitive id="postfix_9" long-id="group_1:postfix_9" class="lsb" provider="heartbeat" type="postfix"/>
@@ -88,6 +175,9 @@
      <inputs>
        <trigger>
          <rsc_op id="3" operation="stop" operation_key="postfix_9_stop_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="13" operation="start" operation_key="IPaddr_5_start_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
        </trigger>
      </inputs>
    </synapse>

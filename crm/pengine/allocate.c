@@ -962,20 +962,20 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	score_i = char2score(score);
 	cons_weight = pe_order_optional;
 	if(score == 0 && rsc_rh->restart_type == pe_restart_restart) {
-		crm_info("Upgrade : recovery - implies right");
+		crm_debug_2("Upgrade : recovery - implies right");
  		cons_weight |= pe_order_implies_right;
 	}
 
 	if(score_i < 0) {
-		crm_info("Upgrade : implies left");
+		crm_debug_2("Upgrade : implies left");
  		cons_weight |= pe_order_implies_left;
 
 	} else if(score_i > 0) {
-		crm_info("Upgrade : implies right");
+		crm_debug_2("Upgrade : implies right");
  		cons_weight |= pe_order_implies_right;
 		if(safe_str_eq(action, CRMD_ACTION_START)
 		   || safe_str_eq(action, CRMD_ACTION_PROMOTE)) {
-			crm_info("Upgrade : runnable");
+			crm_debug_2("Upgrade : runnable");
 			cons_weight |= pe_order_runnable_left;
 		}
 	}
@@ -985,7 +985,7 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
 		cons_weight, data_set);
 
-	crm_info("order-%d (%s): %s_%s %s %s_%s flags=0x%.6x",
+	crm_debug("order-%d (%s): %s_%s %s %s_%s flags=0x%.6x",
 		  order_id, id, rsc_lh->id, action, type, rsc_rh->id, action_rh,
 		  cons_weight);
 	
@@ -999,21 +999,21 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 
 	cons_weight = pe_order_optional;
 	if(score == 0 && rsc_rh->restart_type == pe_restart_restart) {
-		crm_info("Upgrade : recovery - implies left");
+		crm_debug_2("Upgrade : recovery - implies left");
  		cons_weight |= pe_order_implies_left;
 	}
 	
 	score_i *= -1;
 	if(score_i < 0) {
-		crm_info("Upgrade : implies left");
+		crm_debug_2("Upgrade : implies left");
  		cons_weight |= pe_order_implies_left;
 		
 	} else if(score_i > 0) {
-		crm_info("Upgrade : implies right");
+		crm_debug_2("Upgrade : implies right");
  		cons_weight |= pe_order_implies_right;
 		if(safe_str_eq(action, CRMD_ACTION_START)
 		   || safe_str_eq(action, CRMD_ACTION_PROMOTE)) {
-			crm_info("Upgrade : runnable");
+			crm_debug_2("Upgrade : runnable");
 			cons_weight |= pe_order_runnable_left;
 		}
 	}
@@ -1028,7 +1028,7 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
 		rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
 		cons_weight, data_set);
-	crm_info("order-%d (%s): %s_%s %s %s_%s flags=0x%.6x",
+	crm_debug("order-%d (%s): %s_%s %s %s_%s flags=0x%.6x",
 		  order_id, id, rsc_rh->id, action_rh, type, rsc_lh->id, action,
 		  cons_weight);
 	

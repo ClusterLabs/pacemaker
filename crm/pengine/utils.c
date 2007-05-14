@@ -169,10 +169,6 @@ ordering_type2text(enum pe_ordering type)
 		/* was: mandatory */
 		result = "right_implies_left";
 
-	} else if(type & pe_order_internal_restart) {
-		/* upgrades to: right_implies_left */
-		result = "internal_restart";
-
 	} else if(type & pe_order_implies_right) {
 		/* was: recover  */
 		result = "left_implies_right";
@@ -180,9 +176,6 @@ ordering_type2text(enum pe_ordering type)
 	} else if(type & pe_order_optional) {
 		/* pure ordering, nothing implied */
 		result = "optional";
-		
-	} else if(type & pe_order_postnotify) {
-		result = "post_notify";
 		
 	} else if(type & pe_order_runnable_left) {
 		result = "runnable";

@@ -50,7 +50,7 @@ gboolean
 update_action(action_t *action)
 {
 	int local_type = 0;
-	int log_level = LOG_INFO;
+	int log_level = LOG_DEBUG_2;
 	gboolean changed = FALSE;
 	
 	do_crm_log(log_level, "Processing action %s: %s",
@@ -143,11 +143,11 @@ update_action(action_t *action)
 		}
 
 		if(other_changed) {
-			crm_info("%s changed, processing after list", other->action->uuid);
+			do_crm_log(log_level, "%s changed, processing after list", other->action->uuid);
 			update_action(other->action);
 			slist_iter(
 				before_other, action_wrapper_t, other->action->actions_after, lpc2,
-				crm_info("%s changed, processing %s", other->action->uuid, before_other->action->uuid);
+				do_crm_log(log_level, "%s changed, processing %s", other->action->uuid, before_other->action->uuid);
 				update_action(before_other->action);
 				);
 		}
@@ -155,10 +155,10 @@ update_action(action_t *action)
 		);
 
 	if(changed) {
-		crm_info("%s changed, processing after list", action->uuid);
+		do_crm_log(log_level, "%s changed, processing after list", action->uuid);
 		slist_iter(
 			other, action_wrapper_t, action->actions_after, lpc,
-			crm_info("%s changed, processing %s", action->uuid, other->action->uuid);
+			do_crm_log(log_level, "%s changed, processing %s", action->uuid, other->action->uuid);
 			update_action(other->action);
 			);
 	}
@@ -415,7 +415,6 @@ should_dump_action(action_t *action)
 	   || safe_str_eq(action->task,  CRM_OP_FENCE)
 	   || safe_str_eq(action->task,  CRM_OP_SHUTDOWN)) {
 		/* skip the next checks */
-		crm_info("Printing %s", action->uuid);
 		return TRUE;
 	}
 
@@ -519,11 +518,12 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 			   continue;
 
 		   } else if(wrapper->action->runnable == FALSE
+			     && wrapper->action->pseudo == FALSE
 			     && wrapper->type == pe_order_optional) {
 			   crm_debug("Input (%d) %s optional (ordering)",
 				     wrapper->action->id,
 				     wrapper->action->uuid);
-			   continue;
+ 			   continue;
 		   }
 
 		   CRM_CHECK(last_action < wrapper->action->id, ;);

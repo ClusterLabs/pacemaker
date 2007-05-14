@@ -52,14 +52,14 @@ void pe_post_notify(
 	resource_t *rsc, node_t *node, action_t *op, 
 	notify_data_t *n_data, pe_working_set_t *data_set);
 
-gboolean DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set);
-void NoRoleChange(resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *data_set);
-gboolean StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set);
-gboolean StartRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set);
-extern gboolean DemoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set);
-gboolean PromoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set);
-gboolean RoleError(resource_t *rsc, node_t *next, pe_working_set_t *data_set);
-gboolean NullOp(resource_t *rsc, node_t *next, pe_working_set_t *data_set);
+void NoRoleChange  (resource_t *rsc, node_t *current, node_t *next, pe_working_set_t *data_set);
+gboolean DeleteRsc (resource_t *rsc, node_t *node, gboolean optional, pe_working_set_t *data_set);
+gboolean StopRsc   (resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set);
+gboolean StartRsc  (resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set);
+gboolean DemoteRsc (resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set);
+gboolean PromoteRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set);
+gboolean RoleError (resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set);
+gboolean NullOp    (resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set);
 
 enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
 /* Current State */	
@@ -71,7 +71,7 @@ enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
 /* Master */	{ RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_UNKNOWN, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
 };
 
-gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,pe_working_set_t*) = {
+gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,gboolean,pe_working_set_t*) = {
 /* Current State */	
 /*    Next State: Unknown	Stopped		Started		Slave		Master */
 /* Unknown */	{ RoleError,	StopRsc,	RoleError,	RoleError,	RoleError,  },
@@ -369,7 +369,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	if(g_list_length(rsc->running_on) > 1) {
  		if(rsc->recovery_type == recovery_stop_start) {
 			pe_proc_err("Attempting recovery of resource %s", rsc->id);
-			StopRsc(rsc, NULL, data_set);
+			StopRsc(rsc, NULL, FALSE, data_set);
 			rsc->role = RSC_ROLE_STOPPED;
 		}
 		
@@ -398,7 +398,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		crm_debug_2("Executing: %s->%s (%s)",
 			  role2text(role), role2text(next_role), rsc->id);
 		if(rsc_action_matrix[role][next_role](
-			   rsc, chosen, data_set) == FALSE) {
+			   rsc, chosen, FALSE, data_set) == FALSE) {
 			break;
 		}
 		role = next_role;
@@ -635,9 +635,9 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order, pe_worki
 		char *op_type = NULL;
 		int interval = 0;
 		
-		crm_warn("No LH-Side (%s/%s) found for constraint %d with %s - creating",
-			 lh_rsc->id, order->lh_action_task,
-			 order->id, order->rh_action_task);
+		crm_debug_2("No LH-Side (%s/%s) found for constraint %d with %s - creating",
+			    lh_rsc->id, order->lh_action_task,
+			    order->id, order->rh_action_task);
 
 		parse_op_key(
 			order->lh_action_task, &rsc_id, &op_type, &interval);
@@ -707,7 +707,7 @@ void native_rsc_order_rh(
 		if(lh_action) {
 			order_actions(lh_action, rh_action_iter, order->type); 
 			
-		} else if(order->type & pe_order_internal_restart) {
+		} else if(order->type & pe_order_implies_right) {
 			rh_action_iter->runnable = FALSE;
 			crm_warn("Unrunnable %s 0x%.6x", rh_action_iter->uuid, order->type);
 		} else {
@@ -1028,8 +1028,8 @@ void
 NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 	     pe_working_set_t *data_set)
 {
-	action_t *start = NULL;
 	action_t *stop = NULL;
+	action_t *start = NULL;		
 	GListPtr possible_matches = NULL;
 
 	crm_debug_2("Executing: %s (role=%s)",rsc->id, role2text(rsc->next_role));
@@ -1048,12 +1048,12 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 		}
 
 		if(rsc->role == RSC_ROLE_MASTER) {
-			DemoteRsc(rsc, current, data_set);
+			DemoteRsc(rsc, current, FALSE, data_set);
 		}
-		StopRsc(rsc, current, data_set);
-		StartRsc(rsc, next, data_set);
+		StopRsc(rsc, current, FALSE, data_set);
+		StartRsc(rsc, next, FALSE, data_set);
 		if(rsc->role == RSC_ROLE_MASTER) {
-			PromoteRsc(rsc, next, data_set);
+			PromoteRsc(rsc, next, FALSE, data_set);
 		}
 
 		possible_matches = find_recurring_actions(rsc->actions, next);
@@ -1067,7 +1067,7 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 		g_list_free(possible_matches);
 		
 	} else if(rsc->start_pending) {
-		start = start_action(rsc, next, TRUE);
+		action_t *start = start_action(rsc, next, TRUE);
 		if(start->runnable) {
 			/* wait for StartRsc() to be called */
 			rsc->role = RSC_ROLE_STOPPED;
@@ -1080,6 +1080,14 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 		stop = stop_action(rsc, current, TRUE);
 		start = start_action(rsc, next, TRUE);
 		stop->optional = start->optional;
+		if(rsc->role == RSC_ROLE_MASTER) {
+			DemoteRsc(rsc, current, start->optional, data_set);
+		}
+		StopRsc(rsc, current, start->optional, data_set);
+		StartRsc(rsc, current, start->optional, data_set);
+		if(rsc->role == RSC_ROLE_MASTER) {
+			PromoteRsc(rsc, next, start->optional, data_set);
+		}
 		
 		if(start->runnable == FALSE) {
 			rsc->next_role = RSC_ROLE_STOPPED;
@@ -1087,7 +1095,6 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 		} else if(start->optional) {
 			crm_notice("Leave resource %s\t(%s)",
 				   rsc->id, next->details->uname);
-			
 		} else {
 			crm_notice("Restart resource %s\t(%s)",
 				   rsc->id, next->details->uname);
@@ -1097,7 +1104,7 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 
 
 gboolean
-StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
+StopRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set)
 {
 	action_t *stop = NULL;
 	
@@ -1106,10 +1113,10 @@ StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 	slist_iter(
 		current, node_t, rsc->running_on, lpc,
 		crm_notice("  %s\tStop %s", current->details->uname, rsc->id);
-		stop = stop_action(rsc, current, FALSE);
+		stop = stop_action(rsc, current, optional);
 
 		if(data_set->remove_after_stop) {
-			DeleteRsc(rsc, current, data_set);
+			DeleteRsc(rsc, current, FALSE, data_set);
 		}
 		);
 	
@@ -1118,13 +1125,13 @@ StopRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 
 
 gboolean
-StartRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
+StartRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set)
 {
 	action_t *start = NULL;
 	
 	crm_debug_2("Executing: %s", rsc->id);
 	start = start_action(rsc, next, TRUE);
-	if(start->runnable) {
+	if(start->runnable && optional == FALSE) {
 		crm_notice(" %s\tStart %s", next->details->uname, rsc->id);
 		start->optional = FALSE;
 	}		
@@ -1132,7 +1139,7 @@ StartRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 }
 
 gboolean
-PromoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
+PromoteRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set)
 {
 	char *key = NULL;
 	gboolean runnable = TRUE;
@@ -1154,8 +1161,10 @@ PromoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 	g_list_free(action_list);
 
 	if(runnable) {
-		promote_action(rsc, next, FALSE);
-		crm_notice("%s\tPromote %s", next->details->uname, rsc->id);
+		promote_action(rsc, next, optional);
+		if(optional == FALSE) {
+			crm_notice("%s\tPromote %s", next->details->uname, rsc->id);
+		}
 		return TRUE;
 	} 
 
@@ -1174,7 +1183,7 @@ PromoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 }
 
 gboolean
-DemoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
+DemoteRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set)
 {
 	crm_debug_2("Executing: %s", rsc->id);
 
@@ -1182,13 +1191,13 @@ DemoteRsc(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 	slist_iter(
 		current, node_t, rsc->running_on, lpc,
 		crm_notice("%s\tDemote %s", current->details->uname, rsc->id);
-		demote_action(rsc, current, FALSE);
+		demote_action(rsc, current, optional);
 		);
 	return TRUE;
 }
 
 gboolean
-RoleError(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
+RoleError(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set)
 {
 	crm_debug("Executing: %s", rsc->id);
 	CRM_CHECK(FALSE, return FALSE);
@@ -1196,14 +1205,14 @@ RoleError(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
 }
 
 gboolean
-NullOp(resource_t *rsc, node_t *next, pe_working_set_t *data_set)
+NullOp(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set)
 {
 	crm_debug("Executing: %s", rsc->id);
 	return FALSE;
 }
 
 gboolean
-DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
+DeleteRsc(resource_t *rsc, node_t *node, gboolean optional, pe_working_set_t *data_set)
 {
 	action_t *delete = NULL;
  	action_t *refresh = NULL;

@@ -49,8 +49,6 @@ enum pe_ordering {
 	pe_order_runnable_right		= 0x20,  /* needs the RHS side to be runnable */
 
 	pe_order_optional		= 0x100,  /* pure ordering, nothing implied */
-	pe_order_internal_restart	= 0x200, /* upgrades to: right_implies_left */
-	pe_order_postnotify		= 0x400,
 
 	pe_order_test		        = 0x1000  /* test marker */
 };

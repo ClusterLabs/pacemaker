@@ -190,8 +190,6 @@ can_run_instance(resource_t *rsc, node_t *node)
 		goto bail;
 
 	} else if(local_node->count < clone_data->clone_node_max) {
-		crm_warn("%s CAN run on %s: %d peers",
-			 rsc->id, node->details->uname, local_node->count);
 		return local_node;
 
 	} else {
@@ -532,7 +530,7 @@ clone_create_notifications(
 	custom_action_order(
 		rsc, NULL, action_complete,
 		rsc, NULL, notify, 
-		pe_order_postnotify, data_set);
+		pe_order_implies_right, data_set);
 	
 	/* create post_notify_complete */
 	notify_key = generate_notify_key(
