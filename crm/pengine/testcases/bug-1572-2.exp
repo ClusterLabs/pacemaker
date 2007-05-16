@@ -463,6 +463,9 @@
        <trigger>
          <rsc_op id="36" operation="stop" operation_key="pgsql_5555_stop_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="40" operation="stop" operation_key="grp_pgsql_mirror_stop_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="32">
@@ -475,6 +478,9 @@
      <inputs>
        <trigger>
          <rsc_op id="37" operation="stop" operation_key="IPaddr_147_81_84_133_stop_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="40" operation="stop" operation_key="grp_pgsql_mirror_stop_0"/>
        </trigger>
      </inputs>
    </synapse>

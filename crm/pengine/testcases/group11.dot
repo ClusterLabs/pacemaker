@@ -1,5 +1,6 @@
  digraph "g" {
 "1_stop_0" -> "1_stopped_0" [ style = bold]
+"1_stop_0" -> "rsc2_stop_0 node1" [ style = bold]
 "1_stop_0" -> "rsc3_stop_0 node1" [ style = bold]
 "1_stop_0" [ style=bold color="green" fontcolor="orange" ]
 "1_stopped_0" [ style=bold color="green" fontcolor="orange" ]

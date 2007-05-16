@@ -75,6 +75,9 @@
        <trigger>
          <rsc_op id="29" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="37" operation="stop" operation_key="app02_stop_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="5">
@@ -116,6 +119,9 @@
      <inputs>
        <trigger>
          <rsc_op id="32" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="37" operation="stop" operation_key="app02_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -278,6 +284,9 @@
        <trigger>
          <rsc_op id="42" operation="stop" operation_key="LVM_22_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="56" operation="stop" operation_key="oracle_stop_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="18">
@@ -319,6 +328,9 @@
      <inputs>
        <trigger>
          <rsc_op id="45" operation="stop" operation_key="Filesystem_23_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="56" operation="stop" operation_key="oracle_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -362,6 +374,9 @@
        <trigger>
          <rsc_op id="48" operation="stop" operation_key="oracle_24_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="56" operation="stop" operation_key="oracle_stop_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="24">
@@ -403,6 +418,9 @@
      <inputs>
        <trigger>
          <rsc_op id="51" operation="stop" operation_key="oralsnr_25_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="56" operation="stop" operation_key="oracle_stop_0"/>
        </trigger>
      </inputs>
    </synapse>

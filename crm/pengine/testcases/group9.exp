@@ -115,6 +115,9 @@
        <trigger>
          <rsc_op id="21" operation="stop" operation_key="rsc5_stop_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="25" operation="stop" operation_key="foo_stop_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="9">
@@ -268,6 +271,9 @@
        <trigger>
          <rsc_op id="2" operation="stop" operation_key="rsc7_stop_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="34" operation="stop" operation_key="bar_stop_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="20">
@@ -296,6 +302,9 @@
      <inputs>
        <trigger>
          <rsc_op id="30" operation="stop" operation_key="rsc8_stop_0" on_node="node1" on_node_uuid="node1"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="34" operation="stop" operation_key="bar_stop_0"/>
        </trigger>
      </inputs>
    </synapse>

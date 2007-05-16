@@ -192,12 +192,9 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 				child_rsc, last_rsc, NULL, NULL);
 		}
 
-#if 0
-		/* enable once everything else works */
 		custom_action_order(rsc, stop_key(rsc), NULL,
 				    child_rsc,  stop_key(child_rsc), NULL,
 				    pe_order_optional, data_set);
-#endif
 		
 		custom_action_order(child_rsc, stop_key(child_rsc), NULL,
 				    rsc,  stopped_key(rsc), NULL,
@@ -224,7 +221,8 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 			 * But this is safe since starting something that is already
 			 *  started is required to be "safe"
 			 */
-			order_start_start(rsc, child_rsc, pe_order_implies_right|pe_order_implies_left|pe_order_runnable_right);
+			order_start_start(rsc, child_rsc,
+					  pe_order_implies_right|pe_order_implies_left|pe_order_runnable_right);
 		}
 		
 		last_rsc = child_rsc;

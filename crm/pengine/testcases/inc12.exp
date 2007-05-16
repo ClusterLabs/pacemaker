@@ -39,6 +39,9 @@
        <trigger>
          <rsc_op id="34" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="38" operation="stop" operation_key="group-1_stop_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="3">
@@ -51,6 +54,9 @@
      <inputs>
        <trigger>
          <rsc_op id="35" operation="stop" operation_key="ocf_192.168.100.183_stop_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="38" operation="stop" operation_key="group-1_stop_0"/>
        </trigger>
      </inputs>
    </synapse>

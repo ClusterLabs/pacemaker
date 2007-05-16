@@ -75,6 +75,9 @@
        <trigger>
          <rsc_op id="23" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="31" operation="stop" operation_key="app02_stop_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="5">
@@ -119,6 +122,9 @@
      <inputs>
        <trigger>
          <rsc_op id="26" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="31" operation="stop" operation_key="app02_stop_0"/>
        </trigger>
      </inputs>
    </synapse>

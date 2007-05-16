@@ -1,0 +1,69 @@
+ <transition_graph cluster-delay="60s" transition_id="0">
+   <synapse id="0">
+     <action_set>
+       <pseudo_event id="11" operation="stop" operation_key="group_11_stop_0">
+         <attributes crm_feature_set="1.0.8" CRM_meta_timeout="15000"/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="1">
+     <action_set>
+       <pseudo_event id="12" operation="stopped" operation_key="group_11_stopped_0">
+         <attributes crm_feature_set="1.0.8" CRM_meta_timeout="15000"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="8" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="xen-b" on_node_uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="11" operation="stop" operation_key="group_11_stop_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="19" operation="stop" operation_key="apache_6_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="2">
+     <action_set>
+       <rsc_op id="8" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="xen-b" on_node_uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2">
+         <primitive id="IPaddr_192_168_1_102" long-id="group_11:IPaddr_192_168_1_102" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="1.0.8" CRM_meta_timeout="15000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="11" operation="stop" operation_key="group_11_stop_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="19" operation="stop" operation_key="apache_6_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="3">
+     <action_set>
+       <pseudo_event id="19" operation="stop" operation_key="apache_6_stop_0">
+         <attributes crm_feature_set="1.0.8" CRM_meta_timeout="15000"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="11" operation="stop" operation_key="group_11_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="4">
+     <action_set>
+       <crm_event id="13" operation="do_shutdown" operation_key="do_shutdown" on_node="xen-b" on_node_uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2">
+         <attributes crm_feature_set="1.0.8" CRM_meta_op_no_wait="true"/>
+       </crm_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="8" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="xen-b" on_node_uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2"/>
+       </trigger>
+     </inputs>
+   </synapse>
+ </transition_graph>
+

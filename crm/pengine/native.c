@@ -646,7 +646,13 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order, pe_worki
 
 		lh_action = custom_action(lh_rsc, key, op_type,
 					  NULL, TRUE, TRUE, data_set);
-/* 		lh_action->runnable = FALSE; */
+
+		if(lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_STOPPED
+		   && safe_str_eq(op_type, CRMD_ACTION_STOP)) {
+			lh_action->pseudo = TRUE;
+			lh_action->runnable = TRUE;
+		}
+		
 		lh_actions = g_list_append(NULL, lh_action);
 
 		crm_free(rsc_id);

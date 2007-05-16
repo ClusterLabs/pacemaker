@@ -50,7 +50,7 @@ gboolean
 update_action(action_t *action)
 {
 	int local_type = 0;
-	int log_level = LOG_DEBUG_2;
+	int log_level = LOG_INFO;
 	gboolean changed = FALSE;
 	
 	do_crm_log(log_level, "Processing action %s: %s",
@@ -523,7 +523,12 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 			   crm_debug("Input (%d) %s optional (ordering)",
 				     wrapper->action->id,
 				     wrapper->action->uuid);
- 			   continue;
+			   continue;
+		   } else {
+			   crm_err("Should input (%d) %s be optional 0x%.6x",
+				   wrapper->action->id,
+				   wrapper->action->uuid,
+				   wrapper->type);
 		   }
 
 		   CRM_CHECK(last_action < wrapper->action->id, ;);

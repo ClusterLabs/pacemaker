@@ -36,6 +36,8 @@
 "do_shutdown c001n07" -> "do_shutdown c001n03" [ style = bold]
 "do_shutdown c001n07" [ style=bold color="green" fontcolor="black" ]
 "group-1_stop_0" -> "group-1_stopped_0" [ style = bold]
+"group-1_stop_0" -> "heartbeat_192.168.100.182_stop_0 c001n02" [ style = bold]
+"group-1_stop_0" -> "ocf_192.168.100.181_stop_0 c001n02" [ style = bold]
 "group-1_stop_0" -> "ocf_192.168.100.183_stop_0 c001n02" [ style = bold]
 "group-1_stop_0" [ style=bold color="green" fontcolor="orange" ]
 "group-1_stopped_0" [ style=bold color="green" fontcolor="orange" ]

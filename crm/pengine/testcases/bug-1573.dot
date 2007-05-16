@@ -1,0 +1,14 @@
+digraph "g" {
+"IPaddr_192_168_1_102_stop_0 xen-b" -> "do_shutdown xen-b" [ style = bold]
+"IPaddr_192_168_1_102_stop_0 xen-b" -> "group_11_stopped_0" [ style = bold]
+"IPaddr_192_168_1_102_stop_0 xen-b" [ style=bold color="green" fontcolor="black"  ]
+"apache_6_stop_0" -> "IPaddr_192_168_1_102_stop_0 xen-b" [ style = bold]
+"apache_6_stop_0" -> "group_11_stopped_0" [ style = bold]
+"apache_6_stop_0" [ style=bold color="green" fontcolor="orange"  ]
+"do_shutdown xen-b" [ style=bold color="green" fontcolor="black"  ]
+"group_11_stop_0" -> "IPaddr_192_168_1_102_stop_0 xen-b" [ style = bold]
+"group_11_stop_0" -> "apache_6_stop_0" [ style = bold]
+"group_11_stop_0" -> "group_11_stopped_0" [ style = bold]
+"group_11_stop_0" [ style=bold color="green" fontcolor="orange"  ]
+"group_11_stopped_0" [ style=bold color="green" fontcolor="orange"  ]
+}
