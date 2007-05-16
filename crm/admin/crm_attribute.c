@@ -215,7 +215,7 @@ main(int argc, char **argv)
 
 	} else if(dest_uname == NULL) {
 		struct utsname name;
-		if(uname(&name) != 0) {
+		if(uname(&name) < 0) {
 			cl_perror("uname(3) call failed");
 			return 1;
 		}
