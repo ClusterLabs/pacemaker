@@ -335,7 +335,7 @@ match_graph_event(int action_id, crm_data_t *event, const char *event_node,
 			break;
 		default:
 			action->failed = TRUE;
-			crm_err("Unsupported action result: %d", crm_str(op_status));
+			crm_err("Unsupported action result: %d", op_status);
 	}
 
 	/* stop this event's timer if it had one */
