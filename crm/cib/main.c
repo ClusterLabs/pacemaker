@@ -209,7 +209,8 @@ main(int argc, char ** argv)
 	/* read local config file */
 	rc = cib_init();
 
-	CRM_CHECK(g_hash_table_size(client_list) == 0, crm_err("Memory leak"));
+	CRM_CHECK(g_hash_table_size(client_list) == 0,
+		  crm_warn("Not all clients gone at exit"));
 	cib_cleanup();
 
 	if(hb_conn) {
