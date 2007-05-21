@@ -524,11 +524,6 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 				     wrapper->action->id,
 				     wrapper->action->uuid);
 			   continue;
-		   } else {
-			   crm_err("Should input (%d) %s be optional 0x%.6x",
-				   wrapper->action->id,
-				   wrapper->action->uuid,
-				   wrapper->type);
 		   }
 
 		   CRM_CHECK(last_action < wrapper->action->id, ;);
