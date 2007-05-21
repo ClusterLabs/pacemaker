@@ -56,7 +56,7 @@ static int crm_lib_init_fn (void *conn);
 
 static int crm_lib_exit_fn (void *conn);
 
-void message_handler_req_exec_crm_test(void *message, unsigned int nodeid);
+static void message_handler_req_exec_crm_test(void *message, unsigned int nodeid);
 
 static void message_handler_req_lib_crm_test(void *conn, void *msg);
 static void message_handler_req_lib_crm_example(void *conn, void *msg);
@@ -182,11 +182,10 @@ static int crm_lib_init_fn (void *conn)
         return (0);
 }
 
-
 /*
  * Executive message handlers
  */
-static void message_handler_req_exec_cfg_test (
+static void message_handler_req_exec_crm_test (
         void *message,
         unsigned int nodeid)
 {
