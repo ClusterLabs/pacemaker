@@ -45,6 +45,15 @@
 
 #include <crm/crm.h>
 
+typedef struct crm_ais_msg_s
+{
+		int   id;
+		int   size;
+		char *data;
+} AIS_Message;
+
+extern totempg_groups_handle openais_group_handle;
+
 static void crm_confchg_fn (
 	enum totem_configuration_type configuration_type,
 	unsigned int *member_list, int member_list_entries,
@@ -70,7 +79,7 @@ static struct openais_lib_handler crm_lib_service[] =
 {
 	{
 		.lib_handler_fn		= message_handler_req_lib_crm_test,
-		.response_size		= sizeof (int),
+		.response_size		= sizeof (AIS_Message),
 		.response_id		= CRM_MESSAGE_TEST_ID,
 		.flow_control		= OPENAIS_FLOW_CONTROL_REQUIRED
 	},
@@ -142,6 +151,31 @@ __attribute__ ((constructor)) static void register_this_component (void) {
 
 /* IMPL */
 
+static int send_cluster_msg(const char *data) 
+{
+	int rc = 0;
+	struct iovec iovec;
+	AIS_Message ais_msg;
+	static int msg_id = 0;
+
+	ENTER("");
+	ais_msg.id = msg_id++;
+	ais_msg.size = 0;
+	ais_msg.data = data;
+	
+	iovec.iov_base = (char *)&ais_msg;
+	iovec.iov_len = sizeof (AIS_Message);
+
+	rc = totempg_groups_mcast_joined (
+		openais_group_handle, &iovec, 1, TOTEMPG_SAFE);
+	
+	CRM_CHECK(rc == 0,
+		  crm_err("Message not sent (%d): %s", rc, crm_str(data)));
+
+	LEAVE("");
+	return rc;	
+}
+
 static int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
 {
 	log_init ("CRM");
@@ -153,6 +187,8 @@ static int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
 	set_crm_log_level(LOG_DEBUG);
 	crm_info("CRM-AIS Plugin: Initialized");
 
+	send_cluster_msg(NULL);
+	
 	LEAVE("");
 	return 0;
 }
@@ -164,6 +200,7 @@ static void crm_confchg_fn (
 	struct memb_ring_id *ring_id)
 {
 	ENTER("");
+	send_cluster_msg(NULL);
 	LEAVE("");
 }
 
