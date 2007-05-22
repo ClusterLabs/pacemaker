@@ -43,6 +43,8 @@
 
 #include <openais/lcr/lcr_comp.h>
 
+#include <crm/crm.h>
+
 static void crm_confchg_fn (
 	enum totem_configuration_type configuration_type,
 	unsigned int *member_list, int member_list_entries,
@@ -62,7 +64,7 @@ static void message_handler_req_lib_crm_test(void *conn, void *msg);
 static void message_handler_req_lib_crm_example(void *conn, void *msg);
 
 #define CRM_MESSAGE_TEST_ID 1
-#define CRM_SERVICE         666
+#define CRM_SERVICE         16
 
 static struct openais_lib_handler crm_lib_service[] =
 {
@@ -143,7 +145,16 @@ __attribute__ ((constructor)) static void register_this_component (void) {
 static int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
 {
 	log_init ("CRM");
-	return (0);
+	ENTER("");
+	log_printf(LOG_INFO, "AIS logging: Initialized\n");
+
+	crm_log_init("crm_plugin");
+	cl_log_enable_stderr(TRUE);
+	set_crm_log_level(LOG_DEBUG);
+	crm_info("CRM-AIS Plugin: Initialized");
+
+	LEAVE("");
+	return 0;
 }
 static void crm_confchg_fn (
 	enum totem_configuration_type configuration_type,
