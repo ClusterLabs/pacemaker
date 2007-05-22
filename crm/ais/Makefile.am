@@ -27,7 +27,7 @@ crm_ais_la_LIBADD	= $(top_builddir)/lib/clplumbing/libplumb.la	\
 			  $(top_builddir)/lib/crm/common/libcrmcommon.la
 
 #CFLAGS that cant be used here: -ansi -Wcast-qual -Wwrite-strings
-CFLAGS			= $(NON_FATAL_CFLAGS)
+CFLAGS			= $(NON_FATAL_CFLAGS:-Wwrite-strings=)
 
 #ifeq (${OPENAIS_COMPAT}, DARWIN)
 #service_cfg.lcrso: cfg.o
