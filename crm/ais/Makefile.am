@@ -20,14 +20,14 @@ MAINTAINERCLEANFILES    = Makefile.in
 ais_LTLIBRARIES	= crm_ais.la
 aisdir		= /opt/local/libexec/lcrso
 
-# Disable various warnings we cant control
-CFLAGS		= -g
-
 crm_ais_la_SOURCES	= plugin.c
 crm_ais_la_LDFLAGS	= -export-dynamic -module -avoid-version 
 # Extra LDFLAGS: -bundle -bundle_loader /opt/local/sbin/aisexec -bind_at_load
 crm_ais_la_LIBADD	= $(top_builddir)/lib/clplumbing/libplumb.la	\
 			  $(top_builddir)/lib/crm/common/libcrmcommon.la
+
+#CFLAGS that cant be used here: -ansi -Wcast-qual -Wwrite-strings
+CFLAGS			= $(NON_FATAL_CFLAGS)
 
 #ifeq (${OPENAIS_COMPAT}, DARWIN)
 #service_cfg.lcrso: cfg.o
@@ -39,3 +39,9 @@ crm_ais_la_LIBADD	= $(top_builddir)/lib/clplumbing/libplumb.la	\
 
 install-exec-local:
 	cd $(aisdir) && sudo ln -sf crm_ais.so crm_ais.lcrso 
+
+
+# Manual version
+ais:	plugin.o
+	echo $(CFLAGS)
+	$(CC) $(LDFLAGS) -bundle $(LDFLAGS) -L/opt/local/lib $(GLIBLIB) -lplumb -lcrmcommon -bundle_loader /opt/local/sbin/aisexec -bind_at_load -bind_at_load plugin.o -o $(aisdir)/crm_ais.so
