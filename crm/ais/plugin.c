@@ -43,6 +43,7 @@
 
 #include <openais/lcr/lcr_comp.h>
 
+#include <lha_internal.h>
 #include <crm/crm.h>
 
 typedef struct crm_ais_msg_s
@@ -91,7 +92,6 @@ static int crm_lib_exit_fn (void *conn);
 static void message_handler_req_exec_crm_test(void *message, unsigned int nodeid);
 
 static void message_handler_req_lib_crm_test(void *conn, void *msg);
-static void message_handler_req_lib_crm_example(void *conn, void *msg);
 
 #define CRM_MESSAGE_TEST_ID 1
 #define CRM_SERVICE         16
@@ -236,7 +236,9 @@ static int send_cluster_msg(int type, const char *host, const char *data)
 	return rc;	
 }
 
-static int send_cluster_xml(int type, const char *host, crm_data_t *xml) 
+int send_cluster_xml(int type, const char *host, crm_data_t *xml);
+
+int send_cluster_xml(int type, const char *host, crm_data_t *xml) 
 {
 	int rc = 0;
 	char *data = dump_xml_unformatted(xml);
@@ -253,7 +255,7 @@ static void crm_deliver_fn (
 	int iov_len,
 	int endian_conversion_required)
 {
-	void *data = NULL;
+	char *data = NULL;
 	AIS_Message *ais_msg;
 
 	ENTER("iov_len: %d", iov_len);
@@ -266,7 +268,7 @@ static void crm_deliver_fn (
 			memcpy (data+pos, iovec[i].iov_base, iovec[i].iov_len);
 			pos += iovec[i].iov_len;
 		}
-		ais_msg = data;
+		ais_msg = (AIS_Message*)data;
 		
 	} else {
 		ais_msg = iovec[0].iov_base;
@@ -279,7 +281,6 @@ static void crm_deliver_fn (
 		ais_msg->size = swab32 (ais_msg->size);
 		ais_msg->host_size = swab32 (ais_msg->host_size);
 	}
-	crm_info("dump");
 
 	crm_info("Msg (id=%d, type=%d, host=%s, size=%d): %s",
 		 ais_msg->id, ais_msg->type,
@@ -312,8 +313,16 @@ static int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
 	return 0;
 }
 
-static void ais_pint_node() 
+static void ais_pint_node(const char *prefix, struct totem_ip_address *host) 
 {
+	int len = 0;
+	char *buffer = NULL;
+	crm_malloc0(buffer, INET6_ADDRSTRLEN+1);
+	
+	inet_ntop(host->family, host->addr, buffer, INET6_ADDRSTRLEN);
+	len = strlen(buffer);
+	crm_info("%s: %.*s", prefix, len, buffer);
+	crm_free(buffer);
 }
 
 static void global_confchg_fn (
@@ -323,7 +332,34 @@ static void global_confchg_fn (
 	unsigned int *joined_list, int joined_list_entries,
 	struct memb_ring_id *ring_id)
 {
+	int lpc = 0;
+	
 	ENTER("");
+	CRM_ASSERT(ring_id != NULL);
+	switch(configuration_type) {
+		case TOTEM_CONFIGURATION_REGULAR:
+			break;
+		case TOTEM_CONFIGURATION_TRANSITIONAL:
+			crm_info("Transitional membership event on ring %lld",
+				 ring_id->seq);
+			return;
+			break;
+	}
+	
+	ais_pint_node("Host", &(ring_id->rep));
+	crm_notice("Membership event on ring %lld: memb=%d, new=%d, lost=%d",
+		   ring_id->seq, member_list_entries,
+		   joined_list_entries, left_list_entries);
+
+	for(lpc = 0; lpc < joined_list_entries; lpc++) {
+		crm_info("NEW[%d]:  %d", lpc, joined_list[lpc]);
+	}
+	for(lpc = 0; lpc < member_list_entries; lpc++) {
+		crm_info("MEMB[%d]: %d", lpc, member_list[lpc]);
+	}
+	for(lpc = 0; lpc < left_list_entries; lpc++) {
+		crm_info("LOST[%d]: %d", lpc, left_list[lpc]);
+	}
 	
 	send_cluster_msg(0, "this_host", "Global config changed");
 	
@@ -352,9 +388,6 @@ int crm_lib_exit_fn (void *conn)
 
 static int crm_lib_init_fn (void *conn)
 {
-	int iface_count = 0;
-	int msg_data = 999;
-	
 	ENTER("");
 /*
 	totempg_ifaces_get (
@@ -389,10 +422,3 @@ static void message_handler_req_lib_crm_test(void *conn, void *msg)
 	LEAVE("");
 }
 
-static void message_handler_req_lib_crm_example(void *conn, void *msg)
-{
-//	struct req_lib_crm_statetrack *req_lib_crm_statetrack = (struct req_lib_crm_statetrack *)message;
-
-	ENTER("");
-	LEAVE("");
-}
