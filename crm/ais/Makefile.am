@@ -26,7 +26,8 @@ CFLAGS		= -g
 crm_ais_la_SOURCES	= plugin.c
 crm_ais_la_LDFLAGS	= -export-dynamic -module -avoid-version 
 # Extra LDFLAGS: -bundle -bundle_loader /opt/local/sbin/aisexec -bind_at_load
-crm_ais_la_LIBADD	= -lplumb -lcrmcommon
+crm_ais_la_LIBADD	= $(top_builddir)/lib/clplumbing/libplumb.la	\
+			  $(top_builddir)/lib/crm/common/libcrmcommon.la
 
 #ifeq (${OPENAIS_COMPAT}, DARWIN)
 #service_cfg.lcrso: cfg.o
