@@ -46,23 +46,24 @@
 #include <lha_internal.h>
 #include <crm/crm.h>
 
+#define MAX_NAME	256
 typedef struct crm_ais_host_s
 {
-		int		id;
-		int		size;
-		const char     *uname;
+		uint32_t	id;
+		uint32_t	size;
+		char      uname[256];
 } AIS_Host;
 
 typedef struct crm_ais_msg_s
 {
-		int		id;
-		int		type;
+		uint32_t	id;
+		uint32_t	type;
 
 		AIS_Host	host;
 		AIS_Host	sender;
 		
-		int		size;
-		const char     *data;
+		uint32_t	size;
+		char      data[256];
 } AIS_Message;
 
 static struct totempg_group crm_group[] = {
@@ -204,20 +205,29 @@ GHashTable *uname_table = NULL;
 
 static char *uname_lookup(uint32_t nodeid) 
 {
+	if(uname_table == NULL) {
+		uname_table = g_hash_table_new_full(
+			g_direct_hash, g_direct_equal, NULL, g_hash_destroy_str);
+	}
 	return g_hash_table_lookup(uname_table, GINT_TO_POINTER(nodeid));
 }
 
 static void maintain_uname_table(const char *uname, uint32_t nodeid) 
 {
+	const char *mapping = NULL;
 	if(uname_table == NULL) {
 		uname_table = g_hash_table_new_full(
 			g_direct_hash, g_direct_equal, NULL, g_hash_destroy_str);
 	}
 
-	if(uname_lookup(nodeid) == NULL) {
+	mapping = uname_lookup(nodeid);
+	if(mapping == NULL) {
 		CRM_ASSERT(uname != NULL);
 		crm_info("Mapping %d -> %s", nodeid, uname);
 		g_hash_table_insert(uname_table, GINT_TO_POINTER(nodeid), crm_strdup(uname));
+
+	} else if(safe_str_neq(mapping, uname)) {
+		crm_err("%s is now claiming to be node %d (current %s)", uname, nodeid, mapping);
 	}
  	
 	return;
@@ -248,6 +258,7 @@ static int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
 	rc = totemip_localhost(AF_INET, &localhost);
 	local_nodeid = localhost.nodeid;
 	crm_info("Local hostname: %s, id=%d", local_uname, local_nodeid);
+	maintain_uname_table(local_uname, local_nodeid);
 
 	LEAVE("");
 	return 0;
@@ -267,27 +278,34 @@ static int send_cluster_msg(int type, const char *host, const char *data)
 	}
 
 	msg_id++;
+	CRM_ASSERT(msg_id != 0 /* wrap-around */);
 	
 	ais_msg.type = type;
 	ais_msg.id = msg_id;
 	
 	ais_msg.size = strlen(data);
-	ais_msg.data = data;
+	memset(ais_msg.data, 0, MAX_NAME);
+	memcpy(ais_msg.data, data, ais_msg.size);
 
 	if(host) {
 		ais_msg.host.size = strlen(host);
-		ais_msg.host.uname = host;
+		memset(ais_msg.host.uname, 0, MAX_NAME);
+		memcpy(ais_msg.host.uname, host, ais_msg.host.size);
 		ais_msg.host.id = 0;
 		
 	} else {
 		ais_msg.host.size = 0;
-		ais_msg.host.uname = NULL;
+		memset(ais_msg.host.uname, 0, MAX_NAME);
+/* 		ais_msg.host.uname = NULL; */
 		ais_msg.host.id = 0;
 	}
 
 	ais_msg.sender.size = local_uname_len;
-	ais_msg.sender.uname = local_uname;
+	memset(ais_msg.sender.uname, 0, MAX_NAME);
+	memcpy(ais_msg.sender.uname, local_uname, ais_msg.sender.size);
 	ais_msg.sender.id = local_nodeid;
+
+	crm_info("[local-%d] Sender uname: %p", msg_id, ais_msg.sender.uname);
 	
 	iovec.iov_base = (char *)&ais_msg;
 	iovec.iov_len = sizeof (AIS_Message);
@@ -348,10 +366,16 @@ static void crm_deliver_fn (
 		ais_msg->id = swab32 (ais_msg->id);
 		ais_msg->type = swab32 (ais_msg->type);
 		ais_msg->size = swab32 (ais_msg->size);
+		ais_msg->host.id = swab32 (ais_msg->host.id);
 		ais_msg->host.size = swab32 (ais_msg->host.size);
+		ais_msg->sender.id = swab32 (ais_msg->sender.id);
 		ais_msg->sender.size = swab32 (ais_msg->sender.size);
 	}
 
+	if(ais_msg->sender.uname != local_uname) {
+		crm_info("[remote message follows]");
+	}
+	
 	maintain_uname_table(ais_msg->sender.uname, ais_msg->sender.id);
 
 	if(ais_msg->host.size == 0) {
@@ -457,17 +481,25 @@ static void global_confchg_fn (
 		   joined_list_entries, left_list_entries);
 
 	for(lpc = 0; lpc < joined_list_entries; lpc++) {
-		char *host = totempg_ifaces_print(joined_list[lpc]);
-		crm_info("NEW:  %s", host);
-		
+		uint32_t nodeid = joined_list[lpc];
+		const char *prefix = "NEW: ";
+		const char *host = totempg_ifaces_print(nodeid);
+		const char *uname = uname_lookup(nodeid);
+		crm_info("%s %s %s %u", prefix, host, uname?uname:"<pending>", nodeid);
 	}
 	for(lpc = 0; lpc < member_list_entries; lpc++) {
-		char *host = totempg_ifaces_print(member_list[lpc]);
-		crm_info("MEMB: %s", host);
+		uint32_t nodeid = member_list[lpc];
+		const char *prefix = "MEMB:";
+		const char *host = totempg_ifaces_print(nodeid);
+		const char *uname = uname_lookup(nodeid);
+		crm_info("%s %s %s %u", prefix, host, uname?uname:"<pending>", nodeid);
 	}
 	for(lpc = 0; lpc < left_list_entries; lpc++) {
-		char *host = totempg_ifaces_print(left_list[lpc]);
-		crm_info("LOST: %s", host);
+		uint32_t nodeid = left_list[lpc];
+		const char *prefix = "LOST:";
+		const char *host = totempg_ifaces_print(nodeid);
+		const char *uname = uname_lookup(nodeid);
+		crm_info("%s %s %s %u", prefix, host, uname?uname:"<pending>", nodeid);
 	}
 	
 	send_cluster_msg(0, "somewhere.else", "Global membership changed");
@@ -502,18 +534,27 @@ static void crm_confchg_fn (
 		   joined_list_entries, left_list_entries);
 
 	for(lpc = 0; lpc < joined_list_entries; lpc++) {
-		char *host = totempg_ifaces_print(joined_list[lpc]);
-		crm_info("NEW:  %s", host);
-		
+		uint32_t nodeid = joined_list[lpc];
+		const char *prefix = "NEW: ";
+		const char *host = totempg_ifaces_print(nodeid);
+		const char *uname = uname_lookup(nodeid);
+		crm_info("%s %s %s %u", prefix, host, uname?uname:"<pending>", nodeid);
 	}
 	for(lpc = 0; lpc < member_list_entries; lpc++) {
-		char *host = totempg_ifaces_print(member_list[lpc]);
-		crm_info("MEMB: %s", host);
+		uint32_t nodeid = member_list[lpc];
+		const char *prefix = "MEMB:";
+		const char *host = totempg_ifaces_print(nodeid);
+		const char *uname = uname_lookup(nodeid);
+		crm_info("%s %s %s %u", prefix, host, uname?uname:"<pending>", nodeid);
 	}
 	for(lpc = 0; lpc < left_list_entries; lpc++) {
-		char *host = totempg_ifaces_print(left_list[lpc]);
-		crm_info("LOST: %s", host);
+		uint32_t nodeid = left_list[lpc];
+		const char *prefix = "LOST:";
+		const char *host = totempg_ifaces_print(nodeid);
+		const char *uname = uname_lookup(nodeid);
+		crm_info("%s %s %s %u", prefix, host, uname?uname:"<pending>", nodeid);
 	}
+
 	send_cluster_msg(0, NULL, "CRM membership changed");
 	LEAVE("");
 }
