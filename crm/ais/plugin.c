@@ -46,14 +46,21 @@
 #include <lha_internal.h>
 #include <crm/crm.h>
 
+typedef struct crm_ais_host_s
+{
+		int		id;
+		int		size;
+		const char     *uname;
+} AIS_Host;
+
 typedef struct crm_ais_msg_s
 {
 		int		id;
 		int		type;
 
-		int		host_size;
-		const char     *host;
-
+		AIS_Host	host;
+		AIS_Host	sender;
+		
 		int		size;
 		const char     *data;
 } AIS_Message;
@@ -174,9 +181,6 @@ static struct lcr_comp crm_comp_ver0 = {
 
 static struct openais_service_handler *crm_get_handler_ver0 (void)
 {
-	ENTER("");
-	crm_err("here");
-	LEAVE("");
 	return (&crm_service_handler);
 }
 
@@ -186,10 +190,65 @@ __attribute__ ((constructor)) static void register_this_component (void) {
 	lcr_component_register (&crm_comp_ver0);
 }
 
+char *local_uname = NULL;
+int local_uname_len = 0;
+uint32_t local_nodeid = 0;
+
+#include <sys/utsname.h>
+#include <sys/socket.h>
+
+
+/* int totemip_localhost(int family, struct totem_ip_address *localhost) */
+
+GHashTable *uname_table = NULL;
+
+static char *uname_lookup(uint32_t nodeid) 
+{
+	return g_hash_table_lookup(uname_table, GINT_TO_POINTER(nodeid));
+}
+
+static void maintain_uname_table(const char *uname, uint32_t nodeid) 
+{
+	if(uname_table == NULL) {
+		uname_table = g_hash_table_new_full(
+			g_direct_hash, g_direct_equal, NULL, g_hash_destroy_str);
+	}
+
+	if(uname_lookup(nodeid) == NULL) {
+		CRM_ASSERT(uname != NULL);
+		crm_info("Mapping %d -> %s", nodeid, uname);
+		g_hash_table_insert(uname_table, GINT_TO_POINTER(nodeid), crm_strdup(uname));
+	}
+ 	
+	return;
+}
+
 /* IMPL */
 static int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
 {
+	int rc = 0;
+	struct utsname us;
+	struct totem_ip_address localhost;
+	
+	log_init ("CRM");
+	log_printf(LOG_INFO, "AIS logging: Initialized\n");
+
 	ENTER("");
+
+	crm_log_init("crm_plugin");
+	cl_log_enable_stderr(TRUE);
+	set_crm_log_level(LOG_DEBUG);
+	crm_info("CRM Logging: Initialized");
+
+	rc = uname(&us);
+	CRM_ASSERT(rc == 0);
+	local_uname = crm_strdup(us.nodename);
+	local_uname_len = strlen(local_uname);
+
+	rc = totemip_localhost(AF_INET, &localhost);
+	local_nodeid = localhost.nodeid;
+	crm_info("Local hostname: %s, id=%d", local_uname, local_nodeid);
+
 	LEAVE("");
 	return 0;
 }
@@ -216,12 +275,19 @@ static int send_cluster_msg(int type, const char *host, const char *data)
 	ais_msg.data = data;
 
 	if(host) {
-		ais_msg.host_size = strlen(host);
-		ais_msg.host = host;
+		ais_msg.host.size = strlen(host);
+		ais_msg.host.uname = host;
+		ais_msg.host.id = 0;
+		
 	} else {
-		ais_msg.host_size = 0;
-		ais_msg.host = NULL;
+		ais_msg.host.size = 0;
+		ais_msg.host.uname = NULL;
+		ais_msg.host.id = 0;
 	}
+
+	ais_msg.sender.size = local_uname_len;
+	ais_msg.sender.uname = local_uname;
+	ais_msg.sender.id = local_nodeid;
 	
 	iovec.iov_base = (char *)&ais_msg;
 	iovec.iov_len = sizeof (AIS_Message);
@@ -249,6 +315,7 @@ int send_cluster_xml(int type, const char *host, crm_data_t *xml)
 	return rc;
 }
 
+
 static void crm_deliver_fn (
 	unsigned int nodeid,
 	struct iovec *iovec,
@@ -257,12 +324,14 @@ static void crm_deliver_fn (
 {
 	char *data = NULL;
 	AIS_Message *ais_msg;
+	gboolean process = TRUE;
+	int log_level = LOG_DEBUG;
 
 	ENTER("iov_len: %d", iov_len);
 	if (iov_len > 1) {
 		int i = 0;
 		int pos = 0;
-		crm_err("Combining multiple iovec entries");
+		crm_err("Combining multiple iovec entries - untested");
 		for (i = 0; i < iov_len; i++) {
 			crm_realloc(data, pos+iovec[i].iov_len+1);
 			memcpy (data+pos, iovec[i].iov_base, iovec[i].iov_len);
@@ -279,29 +348,34 @@ static void crm_deliver_fn (
 		ais_msg->id = swab32 (ais_msg->id);
 		ais_msg->type = swab32 (ais_msg->type);
 		ais_msg->size = swab32 (ais_msg->size);
-		ais_msg->host_size = swab32 (ais_msg->host_size);
+		ais_msg->host.size = swab32 (ais_msg->host.size);
+		ais_msg->sender.size = swab32 (ais_msg->sender.size);
 	}
 
-	crm_info("Msg (id=%d, type=%d, host=%s, size=%d): %s",
-		 ais_msg->id, ais_msg->type,
-		 ais_msg->host?ais_msg->host:"<all>",
-		 ais_msg->size, crm_str(ais_msg->data));
+	maintain_uname_table(ais_msg->sender.uname, ais_msg->sender.id);
 
+	if(ais_msg->host.size == 0) {
+		/* bcast - process */
+
+	} else if(local_uname_len != ais_msg->host.size
+		  || strncmp(local_uname, ais_msg->host.uname, ais_msg->host.size) != 0) {
+		/* ucast - ignore */
+		process = FALSE;
+		log_level++;
+	}
+
+	do_crm_log(log_level, "Msg (id=%d, type=%d, dest=%s, from=%s, size=%d): %s",
+		   ais_msg->id, ais_msg->type,
+		   ais_msg->host.uname?ais_msg->host.uname:"<all>",
+		   ais_msg->sender.uname, ais_msg->size, crm_str(ais_msg->data));
+	
 	crm_free(data);
 	LEAVE("");
 }
 
 static int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
 {
-	log_init ("CRM");
 	ENTER("");
-	log_printf(LOG_INFO, "AIS logging: Initialized\n");
-
-	crm_log_init("crm_plugin");
-	cl_log_enable_stderr(TRUE);
-	set_crm_log_level(LOG_DEBUG);
-	crm_info("CRM-AIS Plugin: Initialized");
-
 	totempg_groups_initialize(
 		&crm_group_handle, crm_deliver_fn, crm_confchg_fn);
 	totempg_groups_join(crm_group_handle, crm_group, 1);
@@ -313,17 +387,48 @@ static int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
 	return 0;
 }
 
-static void ais_pint_node(const char *prefix, struct totem_ip_address *host) 
+static void ais_print_node(const char *prefix, struct totem_ip_address *host) 
 {
 	int len = 0;
 	char *buffer = NULL;
+
 	crm_malloc0(buffer, INET6_ADDRSTRLEN+1);
 	
 	inet_ntop(host->family, host->addr, buffer, INET6_ADDRSTRLEN);
+
 	len = strlen(buffer);
 	crm_info("%s: %.*s", prefix, len, buffer);
 	crm_free(buffer);
 }
+
+
+#if 0
+/* copied here for reference from exec/totempg.c */
+char *totempg_ifaces_print (unsigned int nodeid)
+{
+	static char iface_string[256 * INTERFACE_MAX];
+	char one_iface[64];
+	struct totem_ip_address interfaces[INTERFACE_MAX];
+	char **status;
+	unsigned int iface_count;
+	unsigned int i;
+	int res;
+
+	iface_string[0] = '\0';
+
+	res = totempg_ifaces_get (nodeid, interfaces, &status, &iface_count);
+	if (res == -1) {
+		return ("no interface found for nodeid");
+	}
+
+	for (i = 0; i < iface_count; i++) {
+		sprintf (one_iface, "r(%d) ip(%s) ",
+			i, totemip_print (&interfaces[i]));
+		strcat (iface_string, one_iface);
+	}
+	return (iface_string);
+}
+#endif
 
 static void global_confchg_fn (
 	enum totem_configuration_type configuration_type,
@@ -346,22 +451,26 @@ static void global_confchg_fn (
 			break;
 	}
 	
-	ais_pint_node("Host", &(ring_id->rep));
+	ais_print_node("Host", &(ring_id->rep));
 	crm_notice("Membership event on ring %lld: memb=%d, new=%d, lost=%d",
 		   ring_id->seq, member_list_entries,
 		   joined_list_entries, left_list_entries);
 
 	for(lpc = 0; lpc < joined_list_entries; lpc++) {
-		crm_info("NEW[%d]:  %d", lpc, joined_list[lpc]);
+		char *host = totempg_ifaces_print(joined_list[lpc]);
+		crm_info("NEW:  %s", host);
+		
 	}
 	for(lpc = 0; lpc < member_list_entries; lpc++) {
-		crm_info("MEMB[%d]: %d", lpc, member_list[lpc]);
+		char *host = totempg_ifaces_print(member_list[lpc]);
+		crm_info("MEMB: %s", host);
 	}
 	for(lpc = 0; lpc < left_list_entries; lpc++) {
-		crm_info("LOST[%d]: %d", lpc, left_list[lpc]);
+		char *host = totempg_ifaces_print(left_list[lpc]);
+		crm_info("LOST: %s", host);
 	}
 	
-	send_cluster_msg(0, "this_host", "Global config changed");
+	send_cluster_msg(0, "somewhere.else", "Global membership changed");
 	
 	LEAVE("");
 }
@@ -373,8 +482,39 @@ static void crm_confchg_fn (
 	unsigned int *joined_list, int joined_list_entries,
 	struct memb_ring_id *ring_id)
 {
+	int lpc = 0;
+	
 	ENTER("");
-	send_cluster_msg(0, NULL, "CRM config changed");
+	CRM_ASSERT(ring_id != NULL);
+	switch(configuration_type) {
+		case TOTEM_CONFIGURATION_REGULAR:
+			break;
+		case TOTEM_CONFIGURATION_TRANSITIONAL:
+			crm_info("Transitional membership event on ring %lld",
+				 ring_id->seq);
+			return;
+			break;
+	}
+	
+	ais_print_node("Host", &(ring_id->rep));
+	crm_notice("Membership event on ring %lld: memb=%d, new=%d, lost=%d",
+		   ring_id->seq, member_list_entries,
+		   joined_list_entries, left_list_entries);
+
+	for(lpc = 0; lpc < joined_list_entries; lpc++) {
+		char *host = totempg_ifaces_print(joined_list[lpc]);
+		crm_info("NEW:  %s", host);
+		
+	}
+	for(lpc = 0; lpc < member_list_entries; lpc++) {
+		char *host = totempg_ifaces_print(member_list[lpc]);
+		crm_info("MEMB: %s", host);
+	}
+	for(lpc = 0; lpc < left_list_entries; lpc++) {
+		char *host = totempg_ifaces_print(left_list[lpc]);
+		crm_info("LOST: %s", host);
+	}
+	send_cluster_msg(0, NULL, "CRM membership changed");
 	LEAVE("");
 }
 
