@@ -163,6 +163,7 @@ cib_recv_tls(gnutls_session *session)
 }
 #endif
 
+#define ERROR_SUFFIX "  Shutting down remote listener"
 int
 init_remote_listener(int port) 
 {
@@ -194,7 +195,7 @@ init_remote_listener(int port)
 	/* create server socket */
 	ssock = socket(AF_INET, SOCK_STREAM, 0);
 	if (ssock == -1) {
-		crm_err("Can not create server socket.  Shutting down.");
+		cl_perror("Can not create server socket."ERROR_SUFFIX);
 		return -1;
 	}
 	
@@ -208,11 +209,11 @@ init_remote_listener(int port)
 	saddr.sin_addr.s_addr = INADDR_ANY;
 	saddr.sin_port = htons(port);
 	if (bind(ssock, (struct sockaddr*)&saddr, sizeof(saddr)) == -1) {
-		crm_err("Can not bind server socket.  Shutting down.");
+		cl_perror("Can not bind server socket."ERROR_SUFFIX);
 		return -2;
 	}
 	if (listen(ssock, 10) == -1) {
-		crm_err("Can not start listen.  Shutting down.");
+		cl_perror("Can not start listen."ERROR_SUFFIX);
 		return -3;
 	}
 	
@@ -309,18 +310,20 @@ cib_remote_listen(int ssock, gpointer data)
 	/* convert to xml */
 	login = string2xml(msg);
 
-	crm_log_xml_err(login, "Login: ");
+	crm_log_xml_info(login, "Login: ");
 	if(login == NULL) {
 		goto bail;
 	}
 	
 	tmp = crm_element_name(login);
 	if(safe_str_neq(tmp, "cib_command")) {
+		crm_err("Wrong tag: %s", tmp);
 		goto bail;
 	}
 
 	tmp = crm_element_value(login, "op");
 	if(safe_str_neq(tmp, "authenticate")) {
+		crm_err("Wrong operation: %s", tmp);
 		goto bail;
 	}
 	
@@ -337,8 +340,6 @@ cib_remote_listen(int ssock, gpointer data)
 	}
 
 	/* send ACK */
-	crm_err("Sending '%s' size=%d", WELCOME, (int)sizeof (WELCOME));
-
 	crm_malloc0(new_client, sizeof(cib_client_t));
 	num_clients++;
 	new_client->channel_name = "remote";
