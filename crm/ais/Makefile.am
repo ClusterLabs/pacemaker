@@ -17,13 +17,13 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-ais_LTLIBRARIES	= crm_ais.la
-aisdir		= /opt/local/libexec/lcrso
+aisdir		= $(prefix)/libexec/lcrso
+ais_LTLIBRARIES	= crmais.la
 
-crm_ais_la_SOURCES	= plugin.c
-crm_ais_la_LDFLAGS	= -export-dynamic -module -avoid-version 
+crmais_la_SOURCES	= plugin.c
+crmais_la_LDFLAGS	= -export-dynamic -module -avoid-version 
 # Extra LDFLAGS: -bundle -bundle_loader /opt/local/sbin/aisexec -bind_at_load
-crm_ais_la_LIBADD	= $(top_builddir)/lib/clplumbing/libplumb.la	\
+crmais_la_LIBADD	= $(top_builddir)/lib/clplumbing/libplumb.la	\
 			  $(top_builddir)/lib/crm/common/libcrmcommon.la
 
 #CFLAGS that cant be used here: -ansi -Wcast-qual -Wwrite-strings
@@ -38,10 +38,12 @@ CFLAGS			= $(NON_FATAL_CFLAGS:-Wwrite-strings=)
 #endif
 
 install-exec-local:
-	cd $(aisdir) && sudo ln -sf crm_ais.so crm_ais.lcrso 
+	cd $(aisdir) && sudo ln -sf $(ais_LTLIBRARIES:.la=.so) $(ais_LTLIBRARIES:.la=.lcrso)
 
+clean-generic:
+	rm -f *.log *.debug *~ .gres.* testcases/.gres.*
 
 # Manual version
-ais:	plugin.o
+ais:   plugin.o
 	echo $(CFLAGS)
 	$(CC) $(LDFLAGS) -bundle $(LDFLAGS) -L/opt/local/lib $(GLIBLIB) -lplumb -lcrmcommon -bundle_loader /opt/local/sbin/aisexec -bind_at_load -bind_at_load plugin.o -o $(aisdir)/crm_ais.so
