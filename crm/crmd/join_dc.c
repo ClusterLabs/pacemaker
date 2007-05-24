@@ -618,6 +618,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 		crm_info("%s: Membership changed since join started: %u -> %u",
 			 source, saved_ccm_membership_id,
 			 current_ccm_membership_id);
+		register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
 		
 	} else if(cur_state == S_INTEGRATION) {
 		if(g_hash_table_size(welcomed_nodes) == 0) {
