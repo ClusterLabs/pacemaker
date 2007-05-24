@@ -481,6 +481,7 @@ def usage(arg):
     +  " -v2 |"\
     +  " --crm |"\
     +  " --classic)"\
+    +  " (--populate-resources | -r)" \
     +  " --resource-can-stop" \
     +  " --stonith (1 | 0 | yes | no)" \
     +  " --standby (1 | 0 | yes | no)" \
@@ -557,7 +558,7 @@ if __name__ == '__main__':
        elif args[i] == "-l" or args[i] == "--limit-nodes":
            skipthis=1
            LimitNodes = int(args[i+1])
-       elif args[i] == "-r":
+       elif args[i] == "-r" or args[i] == "--populate-resources":
            CIBResource = 1
        elif args[i] == "-L" or args[i] == "--logfile":
            skipthis=1
