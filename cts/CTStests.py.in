@@ -508,6 +508,7 @@ class StonithTest(CTSTest):
         self.usstart      = self.CM["Pat:We_started"]
         self.themstart    = self.CM["Pat:They_started"]
         self.timeout      = timeout
+        self.ssherror     = False
     
     def _reset(self, node):
         StonithWorked=False
@@ -566,6 +567,9 @@ class StonithTest(CTSTest):
 
         if not StonithWorked:
             return self.failure("Stonith didn't work")
+        if self.ssherror == True:
+            self.CM.log("NOTE: Stonith command reported success but node %s did not restart (atd, reboot or ssh error)" % node)
+            return self.success()
 
         upwatch.setwatch()
 
@@ -647,13 +651,34 @@ class StonithdTest(StonithTest):
             return self.skipped()
 
         StonithWorked = False
+        SshNotWork = 0
         for tries in range(1,5):
+            # For some unknown reason, every now and then the ssh plugin just
+            # can't kill the target_node - everything works fine with stonithd
+            # and the plugin, but atd, reboot or ssh (or maybe something else)
+            # doesn't do its job and target_node remains alive.  So look for
+            # the indicative messages and bubble-up the error via ssherror
+            watchpats = []
+            watchpats.append("Initiating ssh-reset")
+            watchpats.append("CRIT: still able to ping")
+                
+            watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats
+            ,     timeout=self.CM["DeadTime"]+30)
+            watch.setwatch()
+        
             fail_reasons = []
             if self.CM.Env.ResetNode2(self.init_node, target_node, fail_reasons):
                 StonithWorked = True
                 break
+            if watch.lookforall():
+                SshNotWork = SshNotWork + 1
+                continue
             for reason in fail_reasons:
                 self.CM.log(reason)
+
+        if StonithWorked == False and SshNotWork == tries:
+            StonithWorked = True
+            self.ssherror = True
 
         return StonithWorked
 
