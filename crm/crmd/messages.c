@@ -90,6 +90,7 @@ register_fsa_input_adv(
 	fsa_data_t *fsa_data = NULL;
 
 	last_data_id++;
+	CRM_CHECK(raised_from != NULL, raised_from = "<unknown>");
 	
 	crm_debug("%s %s FSA input %d (%s) (cause=%s) %s data",
 		  raised_from, prepend?"prepended":"appended",last_data_id, fsa_input2string(input),

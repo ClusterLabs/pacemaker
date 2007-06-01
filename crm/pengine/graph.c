@@ -50,7 +50,7 @@ gboolean
 update_action(action_t *action)
 {
 	int local_type = 0;
-	int log_level = LOG_INFO;
+	int log_level = LOG_DEBUG_2;
 	gboolean changed = FALSE;
 	
 	do_crm_log(log_level, "Processing action %s: %s",

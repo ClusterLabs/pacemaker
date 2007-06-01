@@ -36,7 +36,7 @@ crmuid		= @HA_CCMUID@
 crmreqsocket	= $(havarlibdir)/api/crm.req
 crmressocket	= $(havarlibdir)/api/crm.rsp
 
-COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
+COMMONLIBS	= 					\
 		  $(top_builddir)/lib/clplumbing/libplumb.la		\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(top_builddir)/lib/hbclient/libhbclient.la		\
