@@ -273,9 +273,6 @@ static void free_mem(fsa_data_t *msg_data)
 
  	crm_free(max_generation_from);
  	free_xml(max_generation_xml);
-#ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(LOG_ERR, FALSE);
-#endif
 }
 
 /*	 A_EXIT_0, A_EXIT_1	*/

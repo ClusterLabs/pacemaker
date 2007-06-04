@@ -228,10 +228,6 @@ main(int argc, char **argv)
 	free_xml(object_2);
 	free_xml(output);
 	
-#ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(LOG_ERR, FALSE);
-#endif
-
 	if(apply == FALSE && output != NULL) {
 		return 1;
 	}

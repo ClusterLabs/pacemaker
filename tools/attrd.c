@@ -458,9 +458,6 @@ main(int argc, char ** argv)
 	crm_free(attrd_uuid);
 	empty_uuid_cache();
 
-#ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(LOG_ERR, FALSE);
-#endif
 	return 0;
 }
 

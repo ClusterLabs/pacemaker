@@ -166,9 +166,6 @@ crmd_init(void)
     }
     
     crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
-#ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(LOG_ERR, FALSE);
-#endif
     return exit_code;
 }
 

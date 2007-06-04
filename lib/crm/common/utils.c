@@ -706,11 +706,7 @@ crm_strdup_fn(const char *src, const char *file, const char *fn, int line)
 {
 	char *dup = NULL;
 	CRM_CHECK(src != NULL, return NULL);
-#ifdef HA_MALLOC_TRACK
-	dup = cl_malloc_track(strlen(src) + 1, file, fn, line);
-#else
 	crm_malloc0(dup, strlen(src) + 1);
-#endif
 	return strcpy(dup, src);
 }
 

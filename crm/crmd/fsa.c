@@ -638,10 +638,6 @@ do_state_transition(long long actions,
 		crm_timer_stop(recheck_timer);
 	}
 
-#ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(LOG_DEBUG, TRUE);
-#endif
-	
 	switch(next_state) {
 		case S_PENDING:			
 			fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);

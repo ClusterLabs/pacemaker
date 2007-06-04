@@ -217,9 +217,6 @@ main(int argc, char ** argv)
 		hb_conn->llc_ops->delete(hb_conn);
 	}
 	
-#ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(LOG_ERR, FALSE);
-#endif
 	crm_info("Done");
 	return rc;
 }
@@ -283,10 +280,6 @@ cib_stats(gpointer data)
 		      " %lu timeouts, %lu bad connects)",
 		      cib_num_ops, cib_calls_ms, cib_num_local, cib_num_updates,
 		      cib_num_fail, cib_bad_connects, cib_num_timeouts);
-
-#ifdef HA_MALLOC_TRACK
-	cl_malloc_dump_allocated(LOG_DEBUG, TRUE);
-#endif
 
 	last_stat = cib_num_ops;
 	cib_call_time = 0;
