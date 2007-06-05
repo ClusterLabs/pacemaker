@@ -185,8 +185,10 @@ log_connected_client(gpointer key, gpointer value, gpointer user_data)
 
 static void free_mem(fsa_data_t *msg_data) 
 {
-	fsa_cluster_conn->llc_ops->delete(fsa_cluster_conn);
-	fsa_cluster_conn = NULL;
+	if(fsa_cluster_conn) {
+		fsa_cluster_conn->llc_ops->delete(fsa_cluster_conn);
+		fsa_cluster_conn = NULL;
+	}
 	
 	slist_destroy(fsa_data_t, fsa_data, fsa_message_queue, 
 		      crm_info("Dropping %s: [ state=%s cause=%s origin=%s ]",
