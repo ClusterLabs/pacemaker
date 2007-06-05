@@ -260,17 +260,19 @@ native_print(
 	if((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {
 		const char *desc = NULL;
 		desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
-		status_print("%s%s\t(%s%s%s:%s)%s%s",
+		status_print("%s%s\t(%s%s%s:%s%s)%s%s",
 			     pre_text?pre_text:"", rsc->id,
 			     prov?prov:"", prov?"::":"",
 			     class, crm_element_value(rsc->xml, XML_ATTR_TYPE),
+			     rsc->orphan?" ORPHANED":"",
 			     desc?": ":"", desc?desc:"");
 
 	} else {
-		status_print("%s%s\t(%s%s%s:%s):\t%s %s%s%s",
+		status_print("%s%s\t(%s%s%s:%s%s):\t%s %s%s%s",
 			     pre_text?pre_text:"", rsc->id,
 			     prov?prov:"", prov?"::":"",
 			     class, crm_element_value(rsc->xml, XML_ATTR_TYPE),
+			     rsc->orphan?" ORPHANED":"",
 			     (rsc->variant!=pe_native)?"":role2text(rsc->role),
 			     (rsc->variant!=pe_native)?"":node!=NULL?node->details->uname:"",
 			     rsc->is_managed?"":" (unmanaged)", rsc->failed?" FAILED":"");
