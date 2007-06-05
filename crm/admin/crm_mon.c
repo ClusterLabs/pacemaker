@@ -484,6 +484,7 @@ print_status(crm_data_t *cib)
 	pe_working_set_t data_set;
 	char *since_epoch = NULL;
 	time_t a_time = time(NULL);
+	int configured_resources = 0;
 	int print_opts = pe_print_ncurses;
 	if(as_console) {
 		blank_screen();
@@ -516,10 +517,15 @@ print_status(crm_data_t *cib)
 		print_as("Current DC: %s (%s)\n",
 			  dc->details->uname, dc->details->id);
 	}
-	print_as("%d Nodes configured.\n",
-		  g_list_length(data_set.nodes));
-	print_as("%d Resources configured.\n",
-		  g_list_length(data_set.resources));
+
+	slist_iter(rsc, resource_t, data_set.resources, lpc,
+		   if(rsc->orphan == FALSE) {
+			   configured_resources++;
+		   }
+		);
+	
+	print_as("%d Nodes configured.\n", g_list_length(data_set.nodes));
+	print_as("%d Resources configured.\n", configured_resources);
 	print_as("============\n\n");
 
 	slist_iter(node, node_t, data_set.nodes, lpc2,
