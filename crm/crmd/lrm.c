@@ -1229,8 +1229,6 @@ send_direct_ack(const char *to_host, const char *to_sys,
 	if(to_sys == NULL) {
 		to_sys = CRM_SYSTEM_TENGINE;
 	}
-	crm_info("ACK'ing resource op: %s for %s", op->op_type, op->rsc_id);
-	
 	update = create_node_state(
 		fsa_our_uname, NULL, NULL, NULL, NULL, NULL, FALSE, __FUNCTION__);
 
@@ -1241,17 +1239,18 @@ send_direct_ack(const char *to_host, const char *to_sys,
 
 	crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 
-	build_operation_update(iter, op, __FUNCTION__, 0);	
+	build_operation_update(iter, op, __FUNCTION__, 0);
 	fragment = create_cib_fragment(update, XML_CIB_TAG_STATUS);
 
 	reply = create_request(CRM_OP_INVOKE_LRM, fragment, to_host,
 			       to_sys, CRM_SYSTEM_LRMD, NULL);
 
-	crm_debug("Sending ACK: %s", cl_get_string(reply, XML_ATTR_REFERENCE));
-
 	crm_log_xml_debug_2(update, "ACK Update");
-	crm_log_message_adv(LOG_DEBUG_3, "ACK Reply", reply);
-	
+
+	crm_info("ACK'ing resource op %s_%s_%d from %s: %s",
+		 op->rsc_id, op->op_type, op->interval, op->user_data,
+		 cl_get_string(reply, XML_ATTR_REFERENCE));
+
 	if(relay_message(reply, TRUE) == FALSE) {
 		crm_log_message_adv(LOG_ERR, "Unable to route reply", reply);
 		crm_msg_del(reply);
@@ -1599,7 +1598,7 @@ process_lrm_event(lrm_op_t *op)
 	CRM_CHECK(op != NULL, return I_NULL);
 	CRM_CHECK(op->rsc_id != NULL, return I_NULL);
 
-	if(op->rc == 8 || op->rc == 7) {
+	if(op->rc == EXECRA_RUNNING_MASTER || op->rc == EXECRA_NOT_RUNNING) {
 		/* Leave it up to the TE/PE to decide if this is an error */ 
 		op->op_status = LRM_OP_DONE;
 	}

@@ -549,7 +549,7 @@ do_dc_join_ack(long long action,
 	g_hash_table_insert(
 		confirmed_nodes, crm_strdup(join_from), crm_strdup(join_id_s));
 
- 	crm_info("join-%d: Updating node state to %s for %s)",
+ 	crm_info("join-%d: Updating node state to %s for %s",
  		 join_id, CRMD_JOINSTATE_MEMBER, join_from);
 
 	/* update CIB with the current LRM status from the node

@@ -220,7 +220,8 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 			  return FALSE);
 
 		crm_log_message_adv(LOG_DEBUG_2, "Processing (N)ACK", msg);
-		crm_debug("Processing (N)ACK from %s", from);
+		crm_info("Processing (N)ACK %s from %s",
+			  cl_get_string(msg, XML_ATTR_REFERENCE), from);
 		extract_event(xml_obj);
 		
 	} else if(safe_str_eq(type, XML_ATTR_RESPONSE)) {

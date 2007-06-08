@@ -320,9 +320,6 @@ crmd_ha_status_callback(
 			cib_inhibit_bcast|cib_scope_local|cib_quorum_override);
 		trigger_fsa(fsa_source);
 		free_xml(update);
-
-	} else {
-		crm_info("Ping node %s is %s", node, status);
 	}
 	
 }
