@@ -1914,8 +1914,8 @@ subtract_xml_object(crm_data_t *left, crm_data_t *right, const char *marker)
 			right, right_child,  
 			value = crm_element_value(right_child, XML_DIFF_MARKER);
 			if(value != NULL && safe_str_eq(value, "removed:top")) {
-				crm_debug("Found the root of the deletion: %s", name);
-				crm_log_xml_debug(right_child, "deletion");
+				crm_debug_3("Found the root of the deletion: %s", name);
+				crm_log_xml_debug_3(right_child, "deletion");
 				differences = TRUE;
 				break;
 			}

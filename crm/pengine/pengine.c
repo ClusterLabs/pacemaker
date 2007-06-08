@@ -92,7 +92,6 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		char *graph_file = NULL;
 		const char *value = NULL;
 		pe_working_set_t data_set;
-		crm_data_t *generation = create_xml_node(NULL, XML_TAG_CIB);
 		crm_data_t *log_input  = copy_xml(xml_data);
 		HA_Message *reply = NULL;
 #if HAVE_BZLIB_H
@@ -100,8 +99,6 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 #else
 		gboolean compress = FALSE;
 #endif
-		copy_in_properties(generation, xml_data);
-		crm_log_xml_info(generation, "[generation]");
 
 		crm_config_error = FALSE;
 		crm_config_warning = FALSE;	
@@ -196,7 +193,6 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 			}
 		}
 		
-		free_xml(generation);
 		crm_free(graph_file);
 		free_xml(log_input);
 		crm_free(filename);

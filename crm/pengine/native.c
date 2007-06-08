@@ -161,8 +161,8 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		crm_debug_3("%s: Pre-Processing %s", rsc->id, constraint->id);
 
 		if(rsc->provisional && constraint->rsc_rh->provisional) {
-			crm_info("Combine scores from %s and %s",
-				 rsc->id, constraint->rsc_rh->id);
+			crm_debug_2("Combine scores from %s and %s",
+				    rsc->id, constraint->rsc_rh->id);
 			node_list_update(constraint->rsc_rh->allowed_nodes,
 					 rsc->allowed_nodes,
 					 constraint->score/INFINITY);
@@ -220,7 +220,7 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	gboolean is_optional = TRUE;
 	GListPtr possible_matches = NULL;
 	
-	crm_info("Creating recurring actions for %s", rsc->id);
+	crm_debug_2("Creating recurring actions for %s", rsc->id);
 	if(node != NULL) {
 		node_uname = node->details->uname;
 	}
@@ -298,8 +298,8 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 			    is_optional, TRUE, data_set);
 	key = mon->uuid;
 	if(is_optional) {
-		crm_debug("%s\t   %s (optional)",
-			  crm_str(node_uname), mon->uuid);
+		crm_debug_2("%s\t   %s (optional)",
+			    crm_str(node_uname), mon->uuid);
 	}
 	
 	if(start == NULL || start->runnable == FALSE) {
@@ -1118,8 +1118,10 @@ StopRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data
 	
 	slist_iter(
 		current, node_t, rsc->running_on, lpc,
-		crm_notice("  %s\tStop %s", current->details->uname, rsc->id);
 		stop = stop_action(rsc, current, optional);
+		if(stop->runnable && stop->optional == FALSE) {
+			crm_notice("  %s\tStop %s", current->details->uname, rsc->id);
+		}
 
 		if(data_set->remove_after_stop) {
 			DeleteRsc(rsc, current, FALSE, data_set);

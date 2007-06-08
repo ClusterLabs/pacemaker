@@ -513,7 +513,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 
 	} else {
 		passed = TRUE;
-		crm_debug("Processed update to %s: %s", id, magic);
+		crm_debug_2("Processed update to %s: %s", id, magic);
 	}
 
 	if(passed == FALSE && rc != EXECRA_OK) {

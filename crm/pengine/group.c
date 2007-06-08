@@ -60,7 +60,7 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 		return rsc->allocated_to;
 	}
 	/* combine the child weights */
-	crm_debug("Processing %s", rsc->id);
+	crm_debug_2("Processing %s", rsc->id);
 	if(rsc->is_allocating) {
 		crm_debug("Dependancy loop detected involving %s", rsc->id);
 		return NULL;
@@ -307,7 +307,7 @@ void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	crm_debug("%s->%s", order->lh_action_task, order->rh_action_task);
+	crm_debug_2("%s->%s", order->lh_action_task, order->rh_action_task);
 
 	if(rsc == order->rh_rsc || rsc == order->rh_rsc->parent) {
 		native_rsc_order_lh(rsc, order, data_set);

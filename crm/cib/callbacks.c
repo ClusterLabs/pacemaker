@@ -319,7 +319,7 @@ cib_ipc_connection_destroy(gpointer user_data)
 	
 	crm_debug_3("Destroying %s (%p)", cib_client->name, user_data);
 	num_clients--;
-	crm_debug("Num unfree'd clients: %d", num_clients);
+	crm_debug_2("Num unfree'd clients: %d", num_clients);
 	crm_free(cib_client->name);
 	crm_free(cib_client->callback_id);
 	crm_free(cib_client->id);
@@ -805,18 +805,18 @@ parse_local_options(
 	}
 	
 	if(host == NULL && (call_options & cib_scope_local)) {
-		crm_debug("Processing locally scoped %s op from %s",
-			  op, cib_client->name);
+		crm_debug_2("Processing locally scoped %s op from %s",
+			    op, cib_client->name);
 		*local_notify = TRUE;
 		
 	} else if(host == NULL && cib_is_master) {
-		crm_debug("Processing master %s op locally from %s",
-			  op, cib_client->name);
+		crm_debug_2("Processing master %s op locally from %s",
+			    op, cib_client->name);
 		*local_notify = TRUE;
 		
 	} else if(safe_str_eq(host, cib_our_uname)) {
-		crm_debug("Processing locally addressed %s op from %s",
-			  op, cib_client->name);
+		crm_debug_2("Processing locally addressed %s op from %s",
+			    op, cib_client->name);
 		*local_notify = TRUE;
 
 	} else if(stand_alone) {
@@ -825,9 +825,9 @@ parse_local_options(
 		*process = TRUE;
 		
 	} else {
-		crm_debug("%s op from %s needs to be forwarded to %s",
-			  op, cib_client->name,
-			  host?host:"the master instance");
+		crm_debug_2("%s op from %s needs to be forwarded to %s",
+			    op, cib_client->name,
+			    host?host:"the master instance");
 		*needs_forward = TRUE;
 		*process = FALSE;
 	}		
@@ -856,8 +856,8 @@ parse_peer_options(
 		return TRUE;
 		
 	} else if(crm_is_true(update) && safe_str_eq(reply_to, cib_our_uname)) {
-		crm_debug("Processing global/peer update from %s"
-			  " that originated from us", originator);
+		crm_debug_2("Processing global/peer update from %s"
+			    " that originated from us", originator);
 		*needs_reply = FALSE;
 		if(cl_get_string(request, F_CIB_CLIENTID) != NULL) {
 			*local_notify = TRUE;
@@ -865,21 +865,21 @@ parse_peer_options(
 		return TRUE;
 		
 	} else if(crm_is_true(update)) {
-		crm_debug("Processing global/peer update from %s", originator);
+		crm_debug_2("Processing global/peer update from %s", originator);
 		*needs_reply = FALSE;
 		return TRUE;
 
 	} else if(host != NULL && safe_str_eq(host, cib_our_uname)) {
-		crm_debug("Processing request sent to us from %s", originator);
+		crm_debug_2("Processing request sent to us from %s", originator);
 		return TRUE;
 
 	} else if(delegated != NULL && cib_is_master == TRUE) {
-		crm_debug("Processing request sent to master instance from %s",
+		crm_debug_2("Processing request sent to master instance from %s",
 			originator);
 		return TRUE;
 
 	} else if(reply_to != NULL && safe_str_eq(reply_to, cib_our_uname)) {
-		crm_debug("Forward reply sent from %s to local clients",
+		crm_debug_2("Forward reply sent from %s to local clients",
 			  originator);
 		*process = FALSE;
 		*needs_reply = FALSE;
@@ -887,15 +887,15 @@ parse_peer_options(
 		return TRUE;
 
 	} else if(delegated != NULL) {
-		crm_debug("Ignoring msg for master instance");
+		crm_debug_2("Ignoring msg for master instance");
 
 	} else if(host != NULL) {
 		/* this is for a specific instance and we're not it */
-		crm_debug("Ignoring msg for instance on %s", crm_str(host));
+		crm_debug_2("Ignoring msg for instance on %s", crm_str(host));
 		
 	} else if(reply_to == NULL && cib_is_master == FALSE) {
 		/* this is for the master instance and we're not it */
-		crm_debug("Ignoring reply to %s", crm_str(reply_to));
+		crm_debug_2("Ignoring reply to %s", crm_str(reply_to));
 		
 	} else {
 		crm_err("Nothing for us to do?");
@@ -1583,7 +1583,7 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 	crm_debug_2("Peer %s message (%s) from %s", op, seq, originator);
 	
 	if(originator == NULL || safe_str_eq(originator, cib_our_uname)) {
- 		crm_debug("Discarding %s message %s from ourselves", op, seq);
+ 		crm_debug_2("Discarding %s message %s from ourselves", op, seq);
 		return;
 
 	} else if(ccm_membership == NULL) {

@@ -131,7 +131,7 @@ validate_cib_digest(crm_data_t *local_cib)
 		crm_err("On-disk digest is empty");
 		
 	} else if(safe_str_eq(expected, digest)) {
-		crm_debug("Digest comparision passed: %s", digest);
+		crm_debug_2("Digest comparision passed: %s", digest);
 		passed = TRUE;
 
 	} else {

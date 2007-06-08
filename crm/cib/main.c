@@ -375,7 +375,6 @@ cib_init(void)
 			crm_debug_3("Registering with CCM");
 			ret = oc_ev_register(&cib_ev_token);
 			if (ret != 0) {
-				crm_warn("CCM registration failed");
 				did_fail = TRUE;
 			}
 			

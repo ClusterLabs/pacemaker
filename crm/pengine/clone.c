@@ -211,7 +211,7 @@ color_instance(resource_t *rsc, pe_working_set_t *data_set)
 	node_t *local_node = NULL;
 	node_t *chosen = NULL;
 
-	crm_info("Processing %s", rsc->id);
+	crm_debug_2("Processing %s", rsc->id);
 
 	if(rsc->provisional == FALSE) {
 		return rsc->allocated_to;
@@ -265,7 +265,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	}
 
 	rsc->is_allocating = TRUE;
-	crm_debug("Processing %s", rsc->id);
+	crm_debug_2("Processing %s", rsc->id);
 	
 	if(TRUE/* rsc->stickiness */) {
 		/* count now tracks the number of clones currently allocated */

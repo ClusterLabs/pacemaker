@@ -108,7 +108,7 @@ te_update_diff(const char *event, HA_Message *msg)
 		&diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates, 
 		&diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
 	
-	crm_info("Processing diff (%s): %d.%d.%d -> %d.%d.%d", op,
+	crm_debug("Processing diff (%s): %d.%d.%d -> %d.%d.%d", op,
 		  diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
 		  diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
 	log_cib_diff(LOG_DEBUG_2, diff, op);
@@ -463,6 +463,7 @@ static int
 unconfirmed_actions(gboolean send_updates)
 {
 	int unconfirmed = 0;
+	const char *key = NULL;
 	const char *task = NULL;
 	crm_debug_2("Unconfirmed actions...");
 	slist_iter(
@@ -480,7 +481,10 @@ unconfirmed_actions(gboolean send_updates)
 			
 			unconfirmed++;
 			task = crm_element_value(action->xml,XML_LRM_ATTR_TASK);
-			crm_info("Action %d unconfirmed from peer", action->id);
+			key = crm_element_value(
+				action->xml,XML_LRM_ATTR_TASK_KEY);
+			crm_info("Action %s %d unconfirmed from peer",
+				 key, action->id);
 			if(action->type != action_type_rsc) {
 				continue;
 			} else if(send_updates == FALSE) {

@@ -754,9 +754,9 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		if(rsc->is_managed && rsc->stickiness != 0) {
 			resource_location(rsc, node, rsc->stickiness,
 					  "stickiness", data_set);
-			crm_debug("Resource %s: preferring current location"
-				  " (node=%s, weight=%d)", rsc->id,
-				  node->details->uname, rsc->stickiness);
+			crm_debug_2("Resource %s: preferring current location"
+				    " (node=%s, weight=%d)", rsc->id,
+				    node->details->uname, rsc->stickiness);
 		}
 	
 		if(on_fail == action_fail_ignore) {
