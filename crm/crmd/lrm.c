@@ -1644,6 +1644,10 @@ process_lrm_event(lrm_op_t *op)
 	} else if(op->interval == 0) {
 		crm_err("Op %s_%s_%d (call=%d): cancelled!",
 			  op->rsc_id, op->op_type, op->interval, op->call_id);
+	} else {
+		/* schedule a re-read of the current lrm data
+		 * so that the cancelled op goes away
+		 */ 
 	}
 
 	op_id = make_stop_id(op->rsc_id, op->call_id);
