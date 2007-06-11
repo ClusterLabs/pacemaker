@@ -28,11 +28,6 @@ extern void delete_ccm_data(struct crmd_ccm_data_s *ccm_input);
 
 extern void process_client_disconnect(crmd_client_t *curr_client);
 
-extern void update_local_cib_adv(
-	crm_data_t *msg_data, gboolean do_now, const char *raised_from);
-
-#define update_local_cib(data) update_local_cib_adv(data, TRUE, __FUNCTION__)
-
 #define fsa_cib_update(section, data, options, call_id)			\
 	if(fsa_cib_conn != NULL) {					\
 		call_id = fsa_cib_conn->cmds->update(			\

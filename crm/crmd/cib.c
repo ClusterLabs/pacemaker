@@ -213,8 +213,7 @@ do_cib_control(long long action,
 			crm_info("CIB connection established");
 			
 			call_id = fsa_cib_conn->cmds->query(
-				fsa_cib_conn, NULL, NULL,
-				cib_scope_local);
+				fsa_cib_conn, NULL, NULL, cib_scope_local);
 			
 			add_cib_op_callback(call_id, FALSE, NULL,
 					    revision_check_callback);
@@ -318,62 +317,5 @@ do_cib_invoke(long long action,
 	}
 	
 	return I_NULL;
-}
-
-/* frees fragment as part of delete_ha_msg_input() */
-void
-update_local_cib_adv(
-	crm_data_t *msg_data, gboolean do_now, const char *raised_from)
-{
-	HA_Message *msg = NULL;
-	ha_msg_input_t *fsa_input = NULL;
-	int call_options = cib_quorum_override|cib_scope_local;
-
-	CRM_DEV_ASSERT(msg_data != NULL);
-	
-	crm_malloc0(fsa_input, sizeof(ha_msg_input_t));
-
-	msg = create_request(CIB_OP_UPDATE, msg_data, NULL,
-			     CRM_SYSTEM_CIB, CRM_SYSTEM_CRMD, NULL);
-
-	ha_msg_add(msg, F_CIB_SECTION,
-		   crm_element_value(msg_data, XML_ATTR_SECTION));
-	ha_msg_add_int(msg, F_CIB_CALLOPTS, call_options);
-	ha_msg_add(msg, "call_origin", raised_from);
-
-	fsa_input->msg = msg;
-	fsa_input->xml = msg_data;
-
-	if(AM_I_DC && crm_assert_failed) {	
-/* 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL); */
-	}
-	
-	if(do_now == FALSE) {
-		crm_debug_3("Registering event with FSA");
-		register_fsa_input_adv(C_FSA_INTERNAL, I_CIB_OP, fsa_input, 0,
-				       FALSE, raised_from);
-	} else {
-		fsa_data_t *op_data = NULL;
-		crm_debug_3("Invoking CIB handler directly");
-		crm_malloc0(op_data, sizeof(fsa_data_t));
-
-		op_data->fsa_cause	= C_FSA_INTERNAL;
-		op_data->fsa_input	= I_CIB_OP;
-		op_data->origin		= raised_from;
-		op_data->data		= fsa_input;
-		op_data->data_type	= fsa_dt_ha_msg;
-
-		do_cib_invoke(A_CIB_INVOKE_LOCAL, C_FSA_INTERNAL, fsa_state,
-			      I_CIB_OP, op_data);
-
-		crm_free(op_data);
-		crm_debug_3("CIB handler completed");
-	}
-	
-	crm_debug_3("deleting input");
- 	crm_msg_del(fsa_input->msg);
-  	free_xml(fsa_input->xml);
-	crm_free(fsa_input);
-	crm_debug_3("deleted input");
 }
 
