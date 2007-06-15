@@ -30,6 +30,7 @@ cts_PYTHON	=				\
 			CTSlab.py		\
 			CTStests.py		\
 			extracttests.py		\
+			getpeinputs.sh		\
 			OCFIPraTest.py		\
 			CIB.py
 
@@ -37,6 +38,7 @@ cts_DATA	=	README
 
 cts_SCRIPTS	=				\
 			CTSproxy.py		\
+			getpeinputs.sh		\
 			LSBDummy
 
 all-local: $(cts_PYTHON)
