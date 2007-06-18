@@ -517,7 +517,7 @@ archive_file(const char *oldname, const char *newname, const char *ext)
  * on failure.
  */
 int
-activateCibXml(crm_data_t *new_cib, const char *ignored)
+activateCibXml(crm_data_t *new_cib, gboolean to_disk)
 {
 	int error_code = cib_ok;
 	crm_data_t *saved_cib = the_cib;
@@ -566,7 +566,7 @@ activateCibXml(crm_data_t *new_cib, const char *ignored)
 		crm_err("Per-action CIB");
 		write_cib_contents(the_cib);
 		
-	} else if(cib_writes_enabled && cib_status == cib_ok) {
+	} else if(cib_writes_enabled && cib_status == cib_ok && to_disk) {
 		crm_debug_2("Triggering CIB write");
 		G_main_set_trigger(cib_writer);
 	}

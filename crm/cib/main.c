@@ -591,7 +591,7 @@ startCib(const char *filename)
 
 	CRM_ASSERT(cib != NULL);
 	
-	if(activateCibXml(cib, filename) == 0) {
+	if(activateCibXml(cib, TRUE) == 0) {
 		int port = 0;
 		active = TRUE;
 		ha_msg_value_int(cib, "remote_access_port", &port);

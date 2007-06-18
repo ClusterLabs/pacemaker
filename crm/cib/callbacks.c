@@ -1321,7 +1321,7 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 		if(rc != cib_ok) {
 			free_xml(result_cib);
 			
-		} else if(activateCibXml(result_cib, CIB_FILENAME) != 0){
+		} else if(activateCibXml(result_cib, config_changed) != 0){
 			crm_warn("Activation failed");
 			rc = cib_ACTIVATION;
 		}
