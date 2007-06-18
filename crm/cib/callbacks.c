@@ -1297,7 +1297,7 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 				const char *originator = cl_get_string(
 					request, F_ORIG);
 
-				config_changed = cib_config_changed(current_cib, result_cib);
+				config_changed = cib_config_changed(current_cib, result_cib, NULL);
 				if(config_changed) {
 					crm_debug_2("Upping counter: %s %s %d %d",
 						    op, originator, call_options,

@@ -1077,58 +1077,74 @@ apply_cib_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 	return result;
 }
 
+#undef DONT_SYNC_STATUS_CHANGES 1
+gboolean xml_has_child(crm_data_t *data, const char *name);
+
 gboolean
-cib_config_changed(crm_data_t *old_cib, crm_data_t *new_cib)
+xml_has_child(crm_data_t *data, const char *name) 
 {
+	xml_child_iter_filter(data, child, name,
+		return TRUE;
+		);
+	return FALSE;
+}
+
+gboolean
+cib_config_changed(crm_data_t *old_cib, crm_data_t *new_cib, crm_data_t **result)
+{
+	gboolean config_changes = FALSE;
 	const char *tag = NULL;
 	crm_data_t *diff = NULL;
 	crm_data_t *dest = NULL;
+
+	if(result) {
+		*result = NULL;
+	}
 
 	diff = diff_xml_object(old_cib, new_cib, FALSE);
 	if(diff == NULL) {
 		return FALSE;
 	}
 
-#ifdef DONT_SYNC_STATUS_CHANGES
+#ifdef DONT_SYNC_STATUS_CHANGES	
 	tag = "diff-removed";
 	dest = find_xml_node(diff, tag, FALSE);
 	if(dest) {
 		dest = find_xml_node(dest, "cib", FALSE);
 	}
-	if(dest && crm_element_value(dest, "status") != NULL) {
+
+	if(dest && xml_has_child(dest, "status")) {
 		cl_msg_remove(dest, "status");
+		if(xml_has_children(dest)) {
+			config_changes = TRUE;
+		}
 	}
-	if(xml_has_children(dest) == FALSE) {
-		cl_msg_remove(diff, tag);
-	}
-	
+
 	tag = "diff-added";
 	dest = find_xml_node(diff, tag, FALSE);
 	if(dest) {
 		dest = find_xml_node(dest, "cib", FALSE);
 	}
-	if(dest && crm_element_value(dest, "status") != NULL) {
+
+	if(dest && xml_has_child(dest, "status")) {
 		cl_msg_remove(dest, "status");
+		if(xml_has_children(dest)) {
+			config_changes = TRUE;
+		}
 	}
-	if(xml_has_children(dest) == FALSE) {
-		cl_msg_remove(diff, tag);
-	}
-
-	if(xml_has_children(diff) == FALSE) {
-		free_xml(diff);
-		diff = NULL;
-	}
-
-	if(diff == NULL) {
-		return FALSE;
-	}
+	
 #else
 	tag = NULL;
 	dest = NULL;
 #endif
-
-	free_xml(diff);
-	return TRUE;
+	
+	if(result) {
+		*result = diff;
+	} else {
+		free_xml(diff);
+	}
+	
+	return config_changes;
 }
 
 crm_data_t *

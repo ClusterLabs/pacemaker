@@ -343,7 +343,7 @@ extern int cib_section2enum(const char *a_section);
 
 #define create_cib_fragment(update,cib_section) create_cib_fragment_adv(update, cib_section, __FUNCTION__)
 
-extern gboolean cib_config_changed(crm_data_t *old_cib, crm_data_t *new_cib);
+extern gboolean cib_config_changed(crm_data_t *old_cib, crm_data_t *new_cib, crm_data_t **result);
 
 extern crm_data_t *diff_cib_object(
 	crm_data_t *old, crm_data_t *new,gboolean suppress);
