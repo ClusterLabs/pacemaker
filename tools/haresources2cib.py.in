@@ -56,7 +56,7 @@ ocf_ra_setting = {
 
 config_defaults = [
 	"symmetric-cluster=true",
-	"no_quorum-policy=stop",
+	"no-quorum-policy=stop",
 	"default-resource-stickiness=0",
 	"default-resource-failure-stickiness=0",
 	"stonith-enabled=false",
