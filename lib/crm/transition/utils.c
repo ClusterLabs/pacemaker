@@ -31,7 +31,7 @@ extern crm_graph_functions_t *graph_fns;
 static gboolean
 pseudo_action_dummy(crm_graph_t *graph, crm_action_t *action) 
 {
-	crm_debug("Dummy event handler: action %d executed", action->id);
+	crm_debug_2("Dummy event handler: action %d executed", action->id);
 	action->confirmed = TRUE;
 	update_graph(graph, action);
 	return TRUE;
