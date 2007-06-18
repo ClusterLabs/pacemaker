@@ -1077,7 +1077,7 @@ apply_cib_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 	return result;
 }
 
-#undef DONT_SYNC_STATUS_CHANGES 1
+#undef DONT_SYNC_STATUS_CHANGES
 gboolean xml_has_child(crm_data_t *data, const char *name);
 
 gboolean
