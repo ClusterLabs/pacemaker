@@ -1097,6 +1097,10 @@ cib_config_changed(crm_data_t *old_cib, crm_data_t *new_cib, crm_data_t **result
 	crm_data_t *diff = NULL;
 	crm_data_t *dest = NULL;
 
+#ifndef DONT_SYNC_STATUS_CHANGES	
+	return TRUE;
+#endif
+
 	if(result) {
 		*result = NULL;
 	}
@@ -1106,7 +1110,6 @@ cib_config_changed(crm_data_t *old_cib, crm_data_t *new_cib, crm_data_t **result
 		return FALSE;
 	}
 
-#ifdef DONT_SYNC_STATUS_CHANGES	
 	tag = "diff-removed";
 	dest = find_xml_node(diff, tag, FALSE);
 	if(dest) {
@@ -1132,11 +1135,6 @@ cib_config_changed(crm_data_t *old_cib, crm_data_t *new_cib, crm_data_t **result
 			config_changes = TRUE;
 		}
 	}
-	
-#else
-	tag = NULL;
-	dest = NULL;
-#endif
 	
 	if(result) {
 		*result = diff;
