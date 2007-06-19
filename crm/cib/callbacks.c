@@ -1292,17 +1292,12 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 				crm_debug_2("Skipping update: inhibit broadcast");
 
 			} else {
-				const char *op = cl_get_string(
-					request, F_CIB_OPERATION);
-				const char *originator = cl_get_string(
-					request, F_ORIG);
+				config_changed = cib_config_changed(
+					current_cib, result_cib, NULL);
 
-				config_changed = cib_config_changed(current_cib, result_cib, NULL);
 				if(config_changed) {
-					crm_debug_2("Upping counter: %s %s %d %d",
-						    op, originator, call_options,
-						    global_update);
-					cib_update_counter(result_cib, XML_ATTR_NUMUPDATES, FALSE);
+					cib_update_counter(
+						result_cib, XML_ATTR_NUMUPDATES, FALSE);
 				}
 			}
 			
