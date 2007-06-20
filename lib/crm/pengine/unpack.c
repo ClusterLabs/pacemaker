@@ -861,6 +861,38 @@ process_recurring(node_t *node, resource_t *rsc,
 		);
 }
 
+void
+calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index) 
+{
+	const char *task = NULL;
+	const char *status = NULL;
+
+	*stop_index = -1;
+	*start_index = -1;
+	
+	slist_iter(
+		rsc_op, crm_data_t, sorted_op_list, lpc,
+
+		task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+		status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
+
+		if(safe_str_eq(task, CRMD_ACTION_STOP)
+		   && safe_str_eq(status, "0")) {
+			*stop_index = lpc;
+			
+		} else if(safe_str_eq(task, CRMD_ACTION_START)) {
+			*start_index = lpc;
+			
+		} else if(*start_index <= *stop_index
+			  && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+			const char *rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
+			if(safe_str_eq(rc, "0") || safe_str_eq(rc, "8")) {
+				*start_index = lpc;
+			}
+		}
+		);
+}
+
 static void
 unpack_lrm_rsc_state(
 	node_t *node, crm_data_t * rsc_entry, pe_working_set_t *data_set)
@@ -870,7 +902,6 @@ unpack_lrm_rsc_state(
 	int max_call_id = -1;
 
 	const char *task = NULL;
-	const char *status = NULL;
 	const char *value = NULL;
 	const char *rsc_id  = crm_element_value(rsc_entry, XML_ATTR_ID);
 
@@ -917,23 +948,9 @@ unpack_lrm_rsc_state(
 	
 	slist_iter(
 		rsc_op, crm_data_t, sorted_op_list, lpc,
+
 		task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
-		status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
-		if(safe_str_eq(task, CRMD_ACTION_STOP)
-		   && safe_str_eq(status, "0")) {
-			stop_index = lpc;
-			
-		} else if(safe_str_eq(task, CRMD_ACTION_START)) {
-			start_index = lpc;
-			
-		} else if(start_index <= stop_index
-			  && safe_str_eq(task, CRMD_ACTION_STATUS)) {
-			const char *rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
-			if(safe_str_eq(rc, "0")
-			   || safe_str_eq(rc, "8")) {
-				start_index = lpc;
-			}
-		} else if(safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+		if(safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
 			migrate_op = rsc_op;
 		}
 		
@@ -942,6 +959,7 @@ unpack_lrm_rsc_state(
 		);
 
 	/* create active recurring operations as optional */ 
+	calculate_active_ops(sorted_op_list, &start_index, &stop_index);
 	process_recurring(node, rsc, start_index, stop_index,
 			  sorted_op_list, data_set);
 	
