@@ -817,38 +817,112 @@ struct recurring_op_s
 		int   call_id;
 };
 
-
 static void
-cancel_monitor(lrm_rsc_t *rsc, const char *key)
+delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id) 
 {
-	struct recurring_op_s *existing_op = NULL;
+	crm_data_t *xml_top = NULL;
+	/*
+	 * Remove the op from the CIB
+	 *
+	 * Avoids refreshing the entire LRM section of this host
+	 */
+	if(op != NULL) {
+		char *magic = NULL;
+		xml_top = create_xml_node(NULL, XML_LRM_TAG_RSC_OP);
+		magic = generate_transition_magic(op->user_data, op->op_status, op->rc);
+		crm_xml_add(xml_top, XML_ATTR_TRANSITION_MAGIC, magic);
+		crm_free(magic);
+		
+		crm_debug("async: Sending delete op for %s_%s_%d (call=%d)",
+			  op->rsc_id, op->op_type, op->interval, op->call_id);
 
+		fsa_cib_conn->cmds->delete(fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top,
+					   NULL, cib_quorum_override);		
+
+	} else if (rsc_id != NULL && key != NULL) {
+		crm_data_t *xml_tmp = NULL;
+
+		xml_top = create_xml_node(NULL, XML_CIB_TAG_STATE);
+		crm_xml_add(xml_top, XML_ATTR_ID, fsa_our_uuid);
+
+		xml_tmp = create_xml_node(xml_top, XML_CIB_TAG_LRM);
+		crm_xml_add(xml_tmp, XML_ATTR_ID, fsa_our_uuid);
+
+		xml_tmp = create_xml_node(xml_tmp, XML_LRM_TAG_RESOURCES);
+
+		xml_tmp = create_xml_node(xml_tmp, XML_LRM_TAG_RESOURCE);
+		crm_xml_add(xml_tmp, XML_ATTR_ID, rsc_id);
+
+		xml_tmp = create_xml_node(xml_tmp, XML_LRM_TAG_RSC_OP);
+		crm_xml_add(xml_tmp, XML_ATTR_ID, key);
+		if(call_id > 0) {
+			crm_xml_add_int(xml_tmp, XML_LRM_ATTR_CALLID, call_id);
+		}
+		
+		crm_debug("sync: Sending delete op for %s (call=%d)", key, call_id);
+		fsa_cib_conn->cmds->delete_absolute(fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top,
+						    NULL, cib_quorum_override);
+		
+	} else {
+		crm_err("Not enough information to delete op entry: rsc=%p key=%p", rsc_id, key);
+		return;
+	}
+
+/* 	crm_log_xml_err(xml_top, "op:cancel"); */
+
+ 	free_xml(xml_top);
+}
+
+static gboolean
+cancel_monitor(lrm_rsc_t *rsc, const char *key, int op, gboolean remove)
+{
+	int call_id = op;
+	gboolean cancelled = FALSE;
+	
 	if(rsc == NULL) {	
 		crm_err("No resource to cancel and operation for");
-		return;
+		return cancelled;
 		
 	} else if(key == NULL) {
 		crm_err("No operation to cancel");
-		return;
+		return cancelled;
 	}
-	
-	existing_op = g_hash_table_lookup(monitors, key);
-	if(existing_op != NULL) {
+
+	if(call_id == 0) {
+		struct recurring_op_s *existing_op = NULL;
+		existing_op = g_hash_table_lookup(monitors, key);
+		if(existing_op != NULL) {
+			call_id = existing_op->call_id;
+		}
+	}
+
+	if(call_id != 0) {
 		int rc = HA_OK;
-		crm_debug("Cancelling previous invocation of %s (%d)",
-			  key, existing_op->call_id);
-		/* cancel it so we can then restart it without conflict */
-		rc = rsc->ops->cancel_op(rsc, existing_op->call_id);
-		if(rc != HA_OK) {
-			crm_info("Couldn't cancel %s (%d): %d",
-				 key, existing_op->call_id, rc);
+		cancelled = TRUE;
+		crm_debug("Cancelling recurring op %d for %s (%s)",
+			  call_id, rsc->id, key);
+
+		rc = rsc->ops->cancel_op(rsc, call_id);
+		
+		/* HA_FAIL: work to be done... wait for the async callback */
+		if(rc == HA_FAIL) {
+			crm_debug("Recurring op %s (%d): Cancel pending", key, call_id);
+			/* eventually everything should be like this
+			 * once it is, then we can ditch stop_recurring_action()
+			 */
+			
 		} else {
-			g_hash_table_remove(monitors, key);
+			delete_op_entry(NULL, rsc->id, key, call_id);
+			if(remove) {
+				g_hash_table_remove(monitors, key);
+			}
 		}
 
 	} else {
-		crm_debug("No previous invocation of %s", key);
+		crm_debug_2("No known %s operation to cancel", key);
 	}
+	
+	return cancelled;
 }
 
 static lrm_rsc_t *
@@ -1053,7 +1127,13 @@ do_lrm_invoke(long long action,
 			op_key = generate_op_key(
 				rsc->id,op_task,crm_parse_int(op_interval,"0"));
 
-			cancel_monitor(rsc, op_key);
+				if(cancel_monitor(rsc, op_key, 0, TRUE) == FALSE) {
+				/* make sure its deleted anyway
+				 * this action was initiated outside of the crm
+				 * more than likely it was an a-sync failure notification
+				 */
+				delete_op_entry(NULL, rsc->id, op_key, 0);
+			}
 			
 			op->op_status = LRM_OP_DONE;
 			op->rc = EXECRA_OK;
@@ -1313,7 +1393,8 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 	op_id = generate_op_key(rsc->id, op->op_type, op->interval);
 
 	if(op->interval > 0) {
-		cancel_monitor(rsc, op_id);
+		/* cancel it so we can then restart it without conflict */
+		cancel_monitor(rsc, op_id, 0, TRUE);
 		op->target_rc = CHANGED;
 
 	} else {
@@ -1364,9 +1445,7 @@ stop_recurring_action(gpointer key, gpointer value, gpointer user_data)
 	
 	if(safe_str_eq(op->rsc_id, rsc->id)) {
 		if(op->call_id > 0) {
-			crm_debug("Stopping recurring op %d for %s (%s)",
-				  op->call_id, rsc->id, (char*)key);
-			rsc->ops->cancel_op(rsc, op->call_id);
+			cancel_monitor(rsc, key, op->call_id, FALSE);
 			
 		} else {
 			crm_err("Invalid call_id %d for %s",
@@ -1643,12 +1722,16 @@ process_lrm_event(lrm_op_t *op)
 		
 	} else if(op->interval == 0) {
 		crm_err("Op %s_%s_%d (call=%d): cancelled!",
-			  op->rsc_id, op->op_type, op->interval, op->call_id);
+			op->rsc_id, op->op_type, op->interval, op->call_id);
+
+	} else if(op->user_data != NULL) {
+ 		delete_op_entry(op, NULL, NULL, 0);
+
 	} else {
-		/* schedule a re-read of the current lrm data
-		 * so that the cancelled op goes away
-		 */ 
+		crm_err("No user_data for %s_%s_%d (call=%d)",
+			op->rsc_id, op->op_type, op->interval, op->call_id);
 	}
+	
 
 	op_id = make_stop_id(op->rsc_id, op->call_id);
 	if(g_hash_table_remove(shutdown_ops, op_id)) {
