@@ -314,6 +314,7 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 	GListPtr sorted_op_list = NULL;
 	const char *rsc_id = ID(rsc_entry);
 	gboolean is_probe = FALSE;
+	int start_index = 0, stop_index = 0;
 	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
 	CRM_CHECK(rsc != NULL, return);
@@ -341,9 +342,19 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 		);
 
 	sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
+	calculate_active_ops(sorted_op_list, &start_index, &stop_index);
+
 	slist_iter(
 		rsc_op, crm_data_t, sorted_op_list, lpc,
 
+		if(start_index < stop_index) {
+			/* stopped */
+			continue;
+		} else if(lpc < start_index) {
+			/* action occurred prior to a start */
+			continue;
+		}
+		
 		id   = ID(rsc_op);
 		is_probe = FALSE;
 		task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
