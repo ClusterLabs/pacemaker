@@ -1642,7 +1642,7 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 		
 		diff_of_diff = diff_xml_object(intermediate, diff, TRUE);
 		if(diff_of_diff != NULL) {
-			crm_err("Diff application failed!");
+			crm_info("Diff application failed!");
 			crm_log_xml_debug(old, "diff:original");
 			crm_log_xml_debug(diff, "diff:input");
 			result = FALSE;
