@@ -481,7 +481,12 @@ delete_lrm_rsc(
 	if(rsc == NULL) {
 		fprintf(stderr, "Resource %s not found\n", rsc_id);
 		return cib_NOTEXISTS;
+
+	} else if(rsc->variant != pe_native) {
+		fprintf(stderr, "We can only clean up primitive resources, not %s\n", rsc_id);
+		return cib_NOTEXISTS;
 	}
+	
 	key = crm_concat("0:0:crm-resource-delete", our_pid, '-');
 	
 	msg_data = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
@@ -493,9 +498,17 @@ delete_lrm_rsc(
 
 	value = crm_element_value(rsc->xml, XML_ATTR_TYPE);
 	crm_xml_add(xml_rsc, XML_ATTR_TYPE, value);
+	if(value) {
+		fprintf(stderr, "%s has no type!  Aborting...\n", rsc_id);
+		return cib_NOTEXISTS;
+	}
 
 	value = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 	crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, value);
+	if(value) {
+		fprintf(stderr, "%s has no class!  Aborting...\n", rsc_id);
+		return cib_NOTEXISTS;
+	}
 
 	value = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
 	crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, value);
