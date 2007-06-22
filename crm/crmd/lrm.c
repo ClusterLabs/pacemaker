@@ -64,9 +64,6 @@ enum crmd_fsa_input do_fake_lrm_op(gpointer data);
 void stop_recurring_action(
 	gpointer key, gpointer value, gpointer user_data);
 
-gboolean remove_recurring_action(
-	gpointer key, gpointer value, gpointer user_data);
-
 lrm_op_t *construct_op(
 	crm_data_t *rsc_op, const char *rsc_id, const char *operation);
 
@@ -903,19 +900,8 @@ cancel_monitor(lrm_rsc_t *rsc, const char *key, int op, gboolean remove)
 			  call_id, rsc->id, key);
 
 		rc = rsc->ops->cancel_op(rsc, call_id);
-		
-		/* HA_FAIL: work to be done... wait for the async callback */
-		if(rc == HA_FAIL) {
-			crm_debug("Recurring op %s (%d): Cancel pending", key, call_id);
-			/* eventually everything should be like this
-			 * once it is, then we can ditch stop_recurring_action()
-			 */
-			
-		} else {
-			delete_op_entry(NULL, rsc->id, key, call_id);
-			if(remove) {
-				g_hash_table_remove(monitors, key);
-			}
+		if(rc != HA_OK) {
+			crm_debug("Recurring op %s (%d): Nothing to cancel", key, call_id);
 		}
 
 	} else {
@@ -1364,8 +1350,6 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 	if(crm_str_eq(operation, CRMD_ACTION_STOP, TRUE)
 	   || crm_str_eq(operation, CRMD_ACTION_MIGRATE, TRUE)) {
 		g_hash_table_foreach(monitors, stop_recurring_action, rsc);
-		g_hash_table_foreach_remove(
-			monitors, remove_recurring_action, rsc);
 	}
 	
 	/* now do the op */
@@ -1449,17 +1433,6 @@ stop_recurring_action(gpointer key, gpointer value, gpointer user_data)
 				op->call_id, rsc->id);
 		}
 	}
-}
-
-gboolean
-remove_recurring_action(gpointer key, gpointer value, gpointer user_data)
-{
-	lrm_rsc_t *rsc = user_data;
-	struct recurring_op_s *op = (struct recurring_op_s*)value;
-	if(safe_str_eq(op->rsc_id, rsc->id)) {
-		return TRUE;
-	}
-	return FALSE;
 }
 
 void
