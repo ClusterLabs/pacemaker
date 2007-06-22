@@ -1066,10 +1066,7 @@ do_lrm_invoke(long long action,
 		/* only the first 16 chars are used by the LRM */
 		params  = find_xml_node(input->xml, XML_TAG_ATTRS, TRUE);
 
-		if(safe_str_eq(operation, CRMD_ACTION_STOP)) {
-			create_rsc = FALSE;
-
-		} else if(safe_str_eq(operation, CRMD_ACTION_DELETE)) {
+		if(safe_str_eq(operation, CRMD_ACTION_DELETE)) {
 			create_rsc = FALSE;
 		}
 		
@@ -1077,13 +1074,13 @@ do_lrm_invoke(long long action,
 
 		if(rsc == NULL && create_rsc) {
 			crm_err("Invalid resource definition");
-			crm_log_xml_warn(input->xml, "Bad command");
+			crm_log_xml_warn(input->msg, "Bad command");
 
 		} else if(rsc == NULL) {
 			lrm_op_t* op = NULL;
-			crm_err("Not creating resource for a stop event: %s",
-				ID(input->xml));
-			crm_log_xml_warn(input->xml, "Bad command");
+			crm_err("Not creating resource for a %s event: %s",
+				operation, ID(input->xml));
+			crm_log_xml_warn(input->msg, "Bad command");
 
 			op = construct_op(input->xml, ID(xml_rsc), operation);
 			op->op_status = LRM_OP_DONE;
