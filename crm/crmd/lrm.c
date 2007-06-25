@@ -996,6 +996,7 @@ do_lrm_invoke(long long action,
 	      enum crmd_fsa_input current_input,
 	      fsa_data_t *msg_data)
 {
+	gboolean create_rsc = TRUE;
 	const char *crm_op = NULL;
 	const char *from_sys = NULL;
 	const char *from_host = NULL;
@@ -1017,11 +1018,15 @@ do_lrm_invoke(long long action,
 	} else if(safe_str_eq(operation, CRM_OP_LRM_REFRESH)) {
 		crm_op = CRM_OP_LRM_REFRESH;
 
+	} else if(safe_str_eq(crm_op, CRM_OP_LRM_FAIL)) {
+		crm_info("Failing resource...");
+		operation = "fail";
+
 	} else if(input->xml != NULL) {
 		operation = crm_element_value(input->xml, XML_LRM_ATTR_TASK);
 	}
 
-	if(crm_op != NULL && safe_str_eq(crm_op, CRM_OP_LRM_REFRESH)) {
+	if(safe_str_eq(crm_op, CRM_OP_LRM_REFRESH)) {
 		enum cib_errors rc = cib_ok;
 		crm_data_t *fragment = do_lrm_query(TRUE);
 		crm_info("Forcing a local LRM refresh");
@@ -1030,7 +1035,7 @@ do_lrm_invoke(long long action,
 			       cib_quorum_override, rc);
 		free_xml(fragment);
 		
-	} else if(crm_op != NULL && safe_str_eq(crm_op, CRM_OP_LRM_QUERY)) {
+	} else if(safe_str_eq(crm_op, CRM_OP_LRM_QUERY)) {
 		crm_data_t *data = do_lrm_query(FALSE);
 		HA_Message *reply = create_reply(input->msg, data);
 
@@ -1054,7 +1059,6 @@ do_lrm_invoke(long long action,
 	} else if(operation != NULL) {
 		lrm_rsc_t *rsc = NULL;
 		crm_data_t *params = NULL;
-		gboolean create_rsc = TRUE;
 		crm_data_t *xml_rsc = find_xml_node(
 			input->xml, XML_CIB_TAG_RESOURCE, TRUE);
 
@@ -1147,17 +1151,14 @@ do_lrm_invoke(long long action,
 			op->rc = EXECRA_OK;
 
 			if(rsc == NULL) {
-				crm_debug("Resource %s was already removed",
-					 rsc->id);
+				crm_debug("Resource %s was already removed", rsc->id);
 
 			} else {
-				crm_info("Removing resource %s from the LRM",
-					 rsc->id);
-				rc = fsa_lrm_conn->lrm_ops->delete_rsc(
-					fsa_lrm_conn, rsc->id);
+				crm_info("Removing resource %s from the LRM", rsc->id);
+				rc = fsa_lrm_conn->lrm_ops->delete_rsc(fsa_lrm_conn, rsc->id);
+
 				if(rc != HA_OK) {
-					crm_err("Failed to remove resource %s",
-						rsc->id);
+					crm_err("Failed to remove resource %s", rsc->id);
 					op->op_status = LRM_OP_ERROR;
 					op->rc = EXECRA_UNKNOWN_ERROR;
 				}
@@ -1172,7 +1173,7 @@ do_lrm_invoke(long long action,
 		}
 		
 		lrm_free_rsc(rsc);
-		
+
 	} else {
 		crm_err("Operation was neither a lrm_query, nor a rsc op.  %s",
 			crm_str(crm_op));
@@ -1379,9 +1380,9 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 	crm_info("Performing op=%s_%s_%d key=%s)",
 		 rsc->id, operation, op->interval, transition);
 
-	if((AM_I_DC == FALSE && fsa_state != S_NOT_DC)
-	   || (AM_I_DC && fsa_state != S_TRANSITION_ENGINE)) {
-		if(safe_str_neq(operation, CRMD_ACTION_STOP)) {
+	if(fsa_state != S_NOT_DC && fsa_state != S_TRANSITION_ENGINE) {
+		if(safe_str_neq(operation, "fail")
+		   && safe_str_neq(operation, CRMD_ACTION_STOP)) {
 			crm_info("Discarding attempt to perform action %s on %s"
 				 " in state %s", operation, rsc->id,
 				 fsa_state2string(fsa_state));

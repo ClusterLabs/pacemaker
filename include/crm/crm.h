@@ -141,6 +141,7 @@ extern gboolean crm_assert_failed;
 #define CRM_OP_LRM_REFRESH	"lrm_refresh"
 #define CRM_OP_LRM_QUERY	"lrm_query"
 #define CRM_OP_LRM_DELETE	"lrm_delete"
+#define CRM_OP_LRM_FAIL		"lrm_fail"
 #define CRM_OP_PROBED		"probe_complete"
 #define CRM_OP_REPROBE		"probe_again"
 
