@@ -859,6 +859,7 @@ handle_request(ha_msg_input_t *stored_msg)
 			  cl_get_string(stored_msg->msg, F_CRM_JOIN_ID));
 
 	} else if(strcasecmp(op, CRM_OP_LRM_DELETE) == 0
+		|| strcasecmp(op, CRM_OP_LRM_FAIL) == 0
 		|| strcasecmp(op, CRM_OP_LRM_REFRESH) == 0
 		|| strcasecmp(op, CRM_OP_REPROBE) == 0) {
 		

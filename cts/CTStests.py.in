@@ -1650,7 +1650,7 @@ class ResourceRecover(CTSTest):
         self.action = "fail"
 
         # make sure the interval is greater than 0 so failcount is updated
-        self.interval = 1
+        self.interval = 60000
 
     def __call__(self, node):
         '''Perform the 'ResourceRecover' test. '''
@@ -1680,13 +1680,8 @@ class ResourceRecover(CTSTest):
         watch.setwatch()
         
         # fail a resource by calling an action it doesn't support
-        self.CM.ResourceOp(self.rid, self.action, node, self.interval, "crmd")
-
-
-        # Temporary hacks until the lrmd does the right thing
-        time.sleep(5)
         self.CM.rsh.remote_py(node, "os", "system",
-                              "@sbindir@/crm_resource -R -H %s &>/dev/null" % node)
+                              "@sbindir@/crm_resource -F -r %s -H %s &>/dev/null" % (self.rid, node))
 
         watch.lookforall()
 
@@ -1726,7 +1721,8 @@ class ResourceRecover(CTSTest):
         return [ """Updating failcount for %s""" % self.rid,
                  """Unknown operation: fail""",
                  """ERROR: sending stonithRA op to stonithd failed.""",
-                 """ERROR: process_graph_event: Action %s_%s_%d initiated outside of a transition""" % (self.rid, self.action, self.interval)
+                 """ERROR: process_lrm_event: LRM operation %s_%s_%d""" % (self.rid, self.action, self.interval),
+                 """ERROR: process_graph_event: Action %s_%s_%d initiated outside of a transition""" % (self.rid, self.action, self.interval),
                  ]
 
 AllTestClasses.append(ResourceRecover)
