@@ -43,6 +43,14 @@
 #include <lrm/raexec.h>
 
 
+struct recurring_op_s 
+{
+		char *rsc_id;
+		char *op_key;
+		int   call_id;
+		int   interval;
+};
+
 char *make_stop_id(const char *rsc, int call_id);
 gboolean verify_stopped(gboolean force, int log_level);
 
@@ -59,11 +67,6 @@ enum crmd_fsa_input do_lrm_rsc_op(
 	lrm_rsc_t *rsc, const char *operation,
 	crm_data_t *msg, HA_Message *request);
 
-enum crmd_fsa_input do_fake_lrm_op(gpointer data);
-
-void stop_recurring_action(
-	gpointer key, gpointer value, gpointer user_data);
-
 lrm_op_t *construct_op(
 	crm_data_t *rsc_op, const char *rsc_id, const char *operation);
 
@@ -74,9 +77,8 @@ void free_recurring_op(gpointer value);
 
 GHashTable *meta_hash = NULL;
 
-GHashTable *monitors = NULL;
 GHashTable *resources = NULL;
-GHashTable *shutdown_ops = NULL;
+GHashTable *pending_ops = NULL;
 GCHSource *lrm_source = NULL;
 
 int num_lrm_register_fails = 0;
@@ -114,15 +116,11 @@ do_lrm_control(long long action,
 	
 		ret = HA_OK;
 		
-		monitors = g_hash_table_new_full(
+		pending_ops = g_hash_table_new_full(
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, free_recurring_op);
 
 		resources = g_hash_table_new_full(
-			g_str_hash, g_str_equal,
-			g_hash_destroy_str, g_hash_destroy_str);
-		
-		shutdown_ops = g_hash_table_new_full(
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
 		
@@ -210,15 +208,15 @@ verify_stopped(gboolean force, int log_level)
 		return TRUE;
 	}
 
-	if(g_hash_table_size(shutdown_ops) > 0) {
+	if(g_hash_table_size(pending_ops) > 0) {
 		do_crm_log(log_level,
 			      "%d pending LRM operations at shutdown%s",
-			      g_hash_table_size(shutdown_ops),
+			      g_hash_table_size(pending_ops),
 			      force?"":"... waiting");
 
 		if(force || !is_set(fsa_input_register, R_SENT_RSC_STOP)) {
 			g_hash_table_foreach(
-				shutdown_ops, ghash_print_pending, &log_level);
+				pending_ops, ghash_print_pending, &log_level);
 		}
 
 		if(force == FALSE) {
@@ -566,9 +564,9 @@ build_operation_update(
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
-			crm_debug("Resource action %s/%s %s: %d",
-				  op->rsc_id, task,
-				  op_status2text(op->op_status), op->rc);
+			crm_debug_2("Resource action %s/%s %s: %d",
+				    op->rsc_id, task,
+				    op_status2text(op->op_status), op->rc);
 			break;
 		case LRM_OP_DONE:
 			break;
@@ -808,12 +806,6 @@ do_lrm_query(gboolean is_replace)
 	return xml_result;
 }
 
-struct recurring_op_s 
-{
-		char *rsc_id;
-		int   call_id;
-};
-
 static void
 delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id) 
 {
@@ -871,44 +863,63 @@ delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id)
 }
 
 static gboolean
-cancel_monitor(lrm_rsc_t *rsc, const char *key, int op, gboolean remove)
+cancel_op(lrm_rsc_t *rsc, const char *key, int op, gboolean remove)
 {
-	int call_id = op;
-	gboolean cancelled = FALSE;
-	
-	if(rsc == NULL) {	
-		crm_err("No resource to cancel and operation for");
-		return cancelled;
-		
-	} else if(key == NULL) {
-		crm_err("No operation to cancel");
-		return cancelled;
-	}
+	int rc = HA_OK;
 
-	if(call_id == 0) {
-		struct recurring_op_s *existing_op = NULL;
-		existing_op = g_hash_table_lookup(monitors, key);
-		if(existing_op != NULL) {
-			call_id = existing_op->call_id;
-		}
-	}
-
-	if(call_id != 0) {
-		int rc = HA_OK;
-		cancelled = TRUE;
-		crm_debug("Cancelling recurring op %d for %s (%s)",
-			  call_id, rsc->id, key);
-
-		rc = rsc->ops->cancel_op(rsc, call_id);
-		if(rc != HA_OK) {
-			crm_debug("Recurring op %s (%d): Nothing to cancel", key, call_id);
-		}
-
-	} else {
-		crm_debug_2("No known %s operation to cancel", key);
+	CRM_CHECK(op != 0, return FALSE);
+	CRM_CHECK(rsc != NULL, return FALSE);
+	if(key == NULL) {
+		key = "unknown";
 	}
 	
-	return cancelled;
+	crm_debug("Cancelling op %d for %s (%s)", op, rsc->id, key);
+
+	rc = rsc->ops->cancel_op(rsc, op);
+	if(rc != HA_OK) {
+		crm_debug("Op %d for %s (%s): Nothing to cancel", op, rsc->id, key);
+		if(key && remove) {
+			delete_op_entry(NULL, rsc->id, key, op);
+		}
+	}
+	
+	return TRUE;
+}
+
+const char *cancel_key = NULL;
+gboolean cancel_done = FALSE;
+lrm_rsc_t *cancel_rsc = NULL;
+
+static void
+cancel_action_by_key(gpointer key, gpointer value, gpointer user_data)
+{
+	struct recurring_op_s *op = (struct recurring_op_s*)value;
+	
+	if(safe_str_eq(op->op_key, cancel_key)) {
+		cancel_done = TRUE;
+		cancel_op(cancel_rsc, key, op->call_id, TRUE);
+	}
+}
+
+static gboolean
+cancel_op_key(lrm_rsc_t *rsc, const char *key, gboolean remove)
+{
+	CRM_CHECK(rsc != NULL, return FALSE);
+	
+	cancel_key = key;
+	cancel_rsc = rsc;
+	cancel_done = FALSE;
+
+	CRM_CHECK(key != NULL, return FALSE);
+	
+	g_hash_table_foreach(pending_ops, cancel_action_by_key, NULL);
+
+	if(cancel_done == FALSE && remove) {
+		crm_err("No known %s operation to cancel", key);
+		delete_op_entry(NULL, rsc->id, key, 0);
+	}
+	
+	return cancel_done;
 }
 
 static lrm_rsc_t *
@@ -1078,6 +1089,8 @@ do_lrm_invoke(long long action,
 		} else if(safe_str_eq(operation, CRMD_ACTION_CANCEL)) {
 			lrm_op_t* op = NULL;
 			char *op_key = NULL;
+			int call = 0;
+			const char *call_id = NULL;
 			const char *op_task = NULL;
 			const char *op_interval = NULL;
 
@@ -1085,8 +1098,9 @@ do_lrm_invoke(long long action,
 				  crm_log_xml_warn(input->xml, "Bad command");
 				  return I_NULL);
 
-			op_task = crm_element_value(params, crm_meta_name(XML_LRM_ATTR_TASK));
 			op_interval = crm_element_value(params, crm_meta_name("interval"));
+			op_task = crm_element_value(params, crm_meta_name(XML_LRM_ATTR_TASK));
+			call_id = crm_element_value(params, crm_meta_name(XML_LRM_ATTR_CALLID));
 #if CRM_DEPRECATED_SINCE_2_0_5
 			if(op_interval == NULL) {
 				op_interval = crm_element_value(params, "interval");
@@ -1110,12 +1124,11 @@ do_lrm_invoke(long long action,
 			op_key = generate_op_key(
 				rsc->id,op_task,crm_parse_int(op_interval,"0"));
 
-				if(cancel_monitor(rsc, op_key, 0, TRUE) == FALSE) {
-				/* make sure its deleted anyway
-				 * this action was initiated outside of the crm
-				 * more than likely it was an a-sync failure notification
-				 */
-				delete_op_entry(NULL, rsc->id, op_key, 0);
+			call = crm_parse_int(call_id, "0");
+			if(call == 0) {
+				cancel_op_key(rsc, op_key, TRUE);
+			} else {
+				cancel_op(rsc, op_key, call, TRUE);
 			}
 			
 			op->op_status = LRM_OP_DONE;
@@ -1322,6 +1335,16 @@ send_direct_ack(const char *to_host, const char *to_sys,
 	free_xml(update);
 }
 
+static void
+stop_recurring_action_by_rsc(gpointer key, gpointer value, gpointer user_data)
+{
+	lrm_rsc_t *rsc = user_data;
+	struct recurring_op_s *op = (struct recurring_op_s*)value;
+	
+	if(op->interval != 0 && safe_str_eq(op->rsc_id, rsc->id)) {
+		cancel_op(rsc, key, op->call_id, FALSE);
+	}
+}
 
 enum crmd_fsa_input
 do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
@@ -1349,7 +1372,7 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 	/* stop the monitor before stopping the resource */
 	if(crm_str_eq(operation, CRMD_ACTION_STOP, TRUE)
 	   || crm_str_eq(operation, CRMD_ACTION_MIGRATE, TRUE)) {
-		g_hash_table_foreach(monitors, stop_recurring_action, rsc);
+		g_hash_table_foreach(pending_ops, stop_recurring_action_by_rsc, rsc);
 	}
 	
 	/* now do the op */
@@ -1375,7 +1398,7 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 
 	if(op->interval > 0) {
 		/* cancel it so we can then restart it without conflict */
-		cancel_monitor(rsc, op_id, 0, TRUE);
+		cancel_op_key(rsc, op_id, FALSE);
 		op->target_rc = CHANGED;
 
 	} else {
@@ -1395,22 +1418,15 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 		 * for them to complete during shutdown
 		 */
 		char *call_id_s = make_stop_id(rsc->id, call_id);
-		g_hash_table_replace(
-			shutdown_ops, call_id_s, crm_strdup(rsc->id));
-		crm_debug_2("Recording pending op: %s/%s %s",
-			    rsc->id, operation, call_id_s);
-
-		if(op->interval > 0) {
-			struct recurring_op_s *op = NULL;
-			crm_malloc0(op, sizeof(struct recurring_op_s));
-			crm_debug_2("Adding recurring %s op for %s (%d)",
-				    op_id, rsc->id, call_id);
-			
-			op->call_id = call_id;
-			op->rsc_id  = crm_strdup(rsc->id);
-			g_hash_table_insert(monitors, op_id, op);
-			op_id = NULL;
-		}
+		struct recurring_op_s *pending = NULL;
+		crm_malloc0(pending, sizeof(struct recurring_op_s));
+		crm_debug("Recording pending op: %d - %s %s", call_id, op_id, call_id_s);
+		
+		pending->call_id  = call_id;
+		pending->interval = op->interval;
+		pending->op_key   = crm_strdup(op_id);
+		pending->rsc_id   = crm_strdup(rsc->id);
+		g_hash_table_replace(pending_ops, call_id_s, pending);
 	}
 
 	crm_free(op_id);
@@ -1419,27 +1435,11 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 }
 
 void
-stop_recurring_action(gpointer key, gpointer value, gpointer user_data)
-{
-	lrm_rsc_t *rsc = user_data;
-	struct recurring_op_s *op = (struct recurring_op_s*)value;
-	
-	if(safe_str_eq(op->rsc_id, rsc->id)) {
-		if(op->call_id > 0) {
-			cancel_monitor(rsc, key, op->call_id, FALSE);
-			
-		} else {
-			crm_err("Invalid call_id %d for %s",
-				op->call_id, rsc->id);
-		}
-	}
-}
-
-void
 free_recurring_op(gpointer value)
 {
 	struct recurring_op_s *op = (struct recurring_op_s*)value;
 	crm_free(op->rsc_id);
+	crm_free(op->op_key);
 	crm_free(op);
 }
 
@@ -1643,6 +1643,7 @@ gboolean
 process_lrm_event(lrm_op_t *op)
 {
 	char *op_id = NULL;
+	char *op_key = NULL;
 	int log_level = LOG_ERR;
 	CRM_CHECK(op != NULL, return I_NULL);
 	CRM_CHECK(op->rsc_id != NULL, return I_NULL);
@@ -1652,23 +1653,24 @@ process_lrm_event(lrm_op_t *op)
 		op->op_status = LRM_OP_DONE;
 	}
 
+	op_key = generate_op_key(op->rsc_id, op->op_type, op->interval);
+	
 	switch(op->op_status) {
 		case LRM_OP_ERROR:
 		case LRM_OP_PENDING:
 		case LRM_OP_NOTSUPPORTED:
 			break;
 		case LRM_OP_CANCELLED:
-			log_level = LOG_WARNING;
+			log_level = LOG_INFO;
 			break;
 		case LRM_OP_DONE:
 			log_level = LOG_INFO;
 			break;
 		case LRM_OP_TIMEOUT:
 			log_level = LOG_DEBUG_3;
-			crm_err("LRM operation %s_%s_%d (%d) %s (timeout=%dms)",
-				crm_str(op->rsc_id), op->op_type, op->interval,
-				op->call_id, op_status2text(op->op_status),
-				op->timeout);
+			crm_err("LRM operation %s (%d) %s (timeout=%dms)",
+				op_key, op->call_id,
+				op_status2text(op->op_status), op->timeout);
 			/* set op->rc because the lrm doesn't bother */
 			op->rc = -1;
 			break;
@@ -1678,9 +1680,8 @@ process_lrm_event(lrm_op_t *op)
 			op->op_status = LRM_OP_ERROR;
 	}
 
-	do_crm_log(log_level, "LRM operation %s_%s_%d (call=%d, rc=%d) %s %s",
-		   crm_str(op->rsc_id), op->op_type, op->interval,
-		   op->call_id, op->rc, op_status2text(op->op_status),
+	do_crm_log(log_level, "LRM operation %s (call=%d, rc=%d) %s %s",
+		   op_key, op->call_id, op->rc, op_status2text(op->op_status),
 		   op->op_status==LRM_OP_ERROR?execra_code2string(op->rc):"");
 
 	if(op->op_status == LRM_OP_ERROR && op->output != NULL) {
@@ -1689,32 +1690,31 @@ process_lrm_event(lrm_op_t *op)
 	
 	if(op->op_status != LRM_OP_CANCELLED) {
 		do_update_resource(op);
+		if(op->interval != 0) {
+			goto out;
+		}
 		
 	} else if(op->interval == 0) {
-		crm_err("Op %s_%s_%d (call=%d): cancelled!",
-			op->rsc_id, op->op_type, op->interval, op->call_id);
+		/* no known valid reason for this to happen */
+		crm_err("Op %s (call=%d): Cancelled", op_key, op->call_id);
 
 	} else if(op->user_data != NULL) {
- 		delete_op_entry(op, NULL, NULL, 0);
-
+		delete_op_entry(op, NULL, NULL, 0);
+		
 	} else {
-		crm_err("No user_data for %s_%s_%d (call=%d)",
-			op->rsc_id, op->op_type, op->interval, op->call_id);
-	}
-	
+		crm_err("Op %s (call=%d): No user data", op_key, op->call_id);
+	}	
 
 	op_id = make_stop_id(op->rsc_id, op->call_id);
-	if(g_hash_table_remove(shutdown_ops, op_id)) {
-		crm_debug("Op %s_%s_%d (call=%d): confirmed",
-			  op->rsc_id, op->op_type, op->interval, op->call_id);
+	if(g_hash_table_remove(pending_ops, op_id)) {
+		crm_debug("Op %s (call=%d): Confirmed", op_key, op->call_id);
 		goto out;
 	}
 
-	/* most likely scenario is that it previously timed out */
-	crm_debug_2("Op %d %s_%s_%d not matched",
-		    op->call_id, op->rsc_id, op->op_type, op->interval);
+	crm_err("Op %s (call=%d): Not matched", op_key, op->call_id);
 
   out:
+	crm_free(op_key);
 	crm_free(op_id);
 	return TRUE;
 }
