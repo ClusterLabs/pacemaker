@@ -210,10 +210,10 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 			add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID,   call_id);
 			add_hash_param(cancel->meta, XML_LRM_ATTR_INTERVAL, interval_s);
 
-			custom_action_order(
-				rsc, NULL, cancel,
+			custom_action_order(	
 				rsc, stop_key(rsc), NULL,
-				pe_order_implies_left, data_set);
+				rsc, NULL, cancel,
+				pe_order_optional, data_set);
 
 		} else if(op_match == NULL) {
 			crm_debug("Orphan action detected: %s on %s",
