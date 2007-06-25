@@ -485,6 +485,11 @@ delete_lrm_rsc(
 	} else if(rsc->variant != pe_native) {
 		fprintf(stderr, "We can only clean up primitive resources, not %s\n", rsc_id);
 		return cib_NOTEXISTS;
+
+	} else if(rsc->failed == FALSE && do_force == FALSE) {
+		fprintf(stderr, "You should only clean up failed resources!\n"
+			"Use --force to ignore this message and continue\n");
+		return cib_invalid_argument;
 	}
 	
 	key = crm_concat("0:0:crm-resource-delete", our_pid, '-');
@@ -741,6 +746,7 @@ migrate_resource(
 	crm_free(later_s);
 	return rc;
 }
+
 
 int
 main(int argc, char **argv)
@@ -1286,7 +1292,7 @@ usage(const char *cmd, int exit_status)
 		" constraint scores total more than INFINITY (Currently 100,000)\n"
 		"\t\tNOTE: This will prevent the resource from running on this"
 		" node until the constraint is removed with -U or the --lifetime duration expires\n",
-		"force-relocation", 'f');
+		"force", 'f');
 	fprintf(stream, "\t-%c <string>\t: (Advanced Use Only) ID of the instance_attributes object to change\n", 's');
 	fprintf(stream, "\t-%c <string>\t: (Advanced Use Only) ID of the nvpair object to change/delete\n", 'i');
 	fflush(stream);
