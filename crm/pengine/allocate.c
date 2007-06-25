@@ -194,6 +194,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 			/* create a cancel action */
 			action_t *cancel = NULL;
 			char *cancel_key = NULL;
+			const char *call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
 			
 			crm_info("Orphan action will be stopped: %s on %s",
 				 key, active_node->details->uname);
@@ -205,17 +206,16 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 				rsc, cancel_key, CRMD_ACTION_CANCEL,
 				active_node, FALSE, TRUE, data_set);
 
-			add_hash_param(cancel->meta, XML_LRM_ATTR_TASK, task);
-			add_hash_param(cancel->meta,
-				       XML_LRM_ATTR_INTERVAL, interval_s);
+			add_hash_param(cancel->meta, XML_LRM_ATTR_TASK,     task);
+			add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID,   call_id);
+			add_hash_param(cancel->meta, XML_LRM_ATTR_INTERVAL, interval_s);
 
 			custom_action_order(
 				rsc, NULL, cancel,
 				rsc, stop_key(rsc), NULL,
 				pe_order_implies_left, data_set);
 
-		}
-		if(op_match == NULL) {
+		} else if(op_match == NULL) {
 			crm_debug("Orphan action detected: %s on %s",
 				  key, active_node->details->uname);
 			crm_free(key); key = NULL;
