@@ -276,9 +276,10 @@ main(int argc, char **argv)
 
 	hb_cluster = do_init();
 	if (hb_cluster != NULL) {
-		int res = do_work(hb_cluster);
-		if(res == 0) {
-		} else if (res > 0) {
+		int res = 0;
+		cl_log_args(argc, argv);
+		res = do_work(hb_cluster);
+		if (res > 0) {
 			/* wait for the reply by creating a mainloop and running it until
 			 * the callbacks are invoked...
 			 */
@@ -292,7 +293,7 @@ main(int argc, char **argv)
 			g_main_run(mainloop);
 			return_to_orig_privs();
 			
-		} else {
+		} else if(res < 0) {
 			crm_err("No message to send");
 			operation_status = -1;
 		}

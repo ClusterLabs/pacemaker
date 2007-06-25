@@ -68,6 +68,8 @@ main(int argc, char **argv)
 		return rc;
 	}
 	
+	cl_log_args(argc, argv);
+
 	while (1) {
 		flag = getopt(argc, argv, OPTARGS);
 		if (flag == -1) {

@@ -207,6 +207,7 @@ main(int argc, char **argv)
 		return rc;
 	}
 	
+	cl_log_args(argc, argv);
 
 	if(safe_str_eq(crm_system_name, "crm_attribute")
 	   && type == NULL && dest_uname == NULL) {

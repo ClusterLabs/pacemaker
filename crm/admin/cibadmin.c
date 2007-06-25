@@ -291,7 +291,7 @@ main(int argc, char **argv)
 	if (argerr) {
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
-
+	
 	if(admin_input_file != NULL) {
 		FILE *xml_strm = fopen(admin_input_file, "r");
 		input = file2xml(xml_strm, FALSE);
@@ -327,6 +327,8 @@ main(int argc, char **argv)
 		return -exit_code;
 	}	
 
+	cl_log_args(argc, argv);
+	
 	exit_code = do_work(input, command_options, &output);
 	if (exit_code > 0) {
 		/* wait for the reply by creating a mainloop and running it until

@@ -111,6 +111,8 @@ main(int argc, char ** argv)
 		return 1;
 	}
 
+	cl_log_args(argc, argv);
+	
 	update = ha_msg_new(4);
 	ha_msg_add(update, F_TYPE, T_ATTRD);
 	ha_msg_add(update, F_ORIG, crm_system_name);

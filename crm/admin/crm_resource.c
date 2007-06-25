@@ -936,6 +936,8 @@ main(int argc, char **argv)
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
 
+	cl_log_args(argc, argv);
+
 	crm_malloc0(our_pid, 11);
 	if(our_pid != NULL) {
 		snprintf(our_pid, 10, "%d", getpid());

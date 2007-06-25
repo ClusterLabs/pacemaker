@@ -1686,7 +1686,7 @@ class ResourceRecover(CTSTest):
         # Temporary hacks until the lrmd does the right thing
         time.sleep(5)
         self.CM.rsh.remote_py(node, "os", "system",
-                              "@sbindir@/crm_resource -R -H %s" % node)
+                              "@sbindir@/crm_resource -R -H %s &>/dev/null" % node)
 
         watch.lookforall()
 
