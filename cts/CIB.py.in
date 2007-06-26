@@ -134,18 +134,17 @@ class CIB:
         <clone id="DoFencing" globally_unique="false">
           <instance_attributes id="fencing">
             <attributes>
-              <nvpair id="DoFencing-1" name="clone_max" value="%d"/>
-              <nvpair id="DoFencing-2" name="clone_node_max" value="1"/>
+              <nvpair id="DoFencing-1" name="clone_node_max" value="1"/>
             </attributes>
           </instance_attributes>
-          <primitive id="child_DoFencing" class="stonith" type="ssh">
+          <primitive id="child_DoFencing" class="stonith" type="%s">
             <operations>
-              <op id="DoFencing-1" name="monitor" interval="20s" prereq="nothing"/>
+              <op id="DoFencing-1" name="monitor" interval="20s" prereq="nothing" timeout="20s"/>
               <op id="DoFencing-2" name="start" prereq="nothing"/>
             </operations>
             <instance_attributes id="fencing-child">
               <attributes>
-                <nvpair id="child_DoFencing-1" name="hostlist" value="%s"/>
+                <nvpair id="child_DoFencing-1" name="%s" value="%s"/>
               </attributes>
             </instance_attributes>
           </primitive>
@@ -233,7 +232,9 @@ class CIB:
 	for node in self.CM.Env["nodes"]:
 	    nodelist += node + " "
 	    len = len + 1
-	stonith_resource = self.stonith_resource_template % (len, nodelist)
+
+        stonith_resource = self.stonith_resource_template % \
+            (self.CM.Env["reset"].stonithtype, self.CM.Env["reset"].configName, self.CM.Env["reset"].configValue)
 	resources += stonith_resource
 	
 	#master slave resource
