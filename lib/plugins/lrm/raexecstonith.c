@@ -322,7 +322,7 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	Stonith * stonith_obj = NULL;	
 
 	if ( provider != NULL ) {
-		cl_log(LOG_NOTICE, "stonithRA plugin: provider attribution "
+		cl_log(LOG_DEBUG, "stonithRA plugin: provider attribute "
 			"is not needed and will be ignored.");
 	}
 
