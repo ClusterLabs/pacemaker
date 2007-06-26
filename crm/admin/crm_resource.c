@@ -486,7 +486,7 @@ send_lrm_rsc_op(IPC_Channel *crmd_channel, const char *op,
 		fprintf(stderr, "We can only process primitive resources, not %s\n", rsc_id);
 		return cib_invalid_argument;
 
-	} else if(host_uname) {
+	} else if(host_uname == NULL) {
 		fprintf(stderr, "Please supply a hostname with -H\n");
 		return cib_invalid_argument;
 
@@ -820,7 +820,7 @@ main(int argc, char **argv)
 
 	crm_system_name = basename(argv[0]);
 	cl_log_set_entity(crm_system_name);
-	cl_log_set_facility(LOG_USER);
+	cl_log_set_facility(LOG_LOCAL7);
 	set_crm_log_level(LOG_ERR);
 	cl_log_enable_stderr(TRUE);
 	
