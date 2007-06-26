@@ -1138,6 +1138,11 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		 *   are supposed to be in master mode
 		 */
 		task_status_i = LRM_OP_ERROR;
+
+	} else if(task_status_i == LRM_OP_DONE && EXECRA_OK != actual_rc_i) {
+		crm_err("Remapping %s (rc=%d) on %s to an ERROR",
+			id, actual_rc_i, node->details->uname);
+		task_status_i = LRM_OP_ERROR;
 	}
 
 	if(task_status_i == LRM_OP_ERROR

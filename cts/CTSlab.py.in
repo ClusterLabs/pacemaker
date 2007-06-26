@@ -49,17 +49,18 @@ class ResetMechanism:
         raise ValueError("Abstract class member (reset)")
 
 class Stonith(ResetMechanism):
-    def __init__(self, sttype="external/ssh", parm=None
+    def __init__(self, sttype="external/ssh", pName=None, pValue=None
         ,        path="@sbindir@/stonith"):
         self.pathname=path
-        self.configstring=parm
+        self.configName=pName
+        self.configValue=pValue
         self.stonithtype=sttype
 
     def reset(self, node):
-        if self.configstring == None :
+        if self.configValue == None :
             config=node
         else:
-            config=self.configstring
+            config=self.configValue
         cmdstring = "%s -t '%s' -p '%s' '%s' 2>/dev/null" % (self.pathname
         ,        self.stonithtype, config, node)
         return (os.system(cmdstring) == 0)
@@ -484,6 +485,8 @@ def usage(arg):
     +  " (--populate-resources | -r)" \
     +  " --resource-can-stop" \
     +  " --stonith (1 | 0 | yes | no)" \
+    +  " --stonith-type type" \
+    +  " --stonith-args name=value" \
     +  " --standby (1 | 0 | yes | no)" \
     +  " --fencing (1 | 0 | yes | no)" \
     +  " --suppress_cib_writes (1 | 0 | yes | no)" \
@@ -527,6 +530,9 @@ if __name__ == '__main__':
     ListTests = 0
     HaveSeed = 0
     oprofile = None
+    StonithType = "ssh"
+    StonithParams = None
+    StonithParams = "hostlist=dynamic".split('=')
 
     #
     # The values of the rest of the parameters are now properly derived from
@@ -583,6 +589,12 @@ if __name__ == '__main__':
                DoStonith=0
            else:
                usage(args[i+1])
+       elif args[i] == "--stonith-type":
+           StonithType = args[i+1]
+           skipthis=1
+       elif args[i] == "--stonith-args":
+           StonithParams = args[i+1].split('=')
+           skipthis=1
        elif args[i] == "--suppress-cib-writes":
            skipthis=1
            if args[i+1] == "1" or args[i+1] == "yes":
@@ -682,6 +694,9 @@ if __name__ == '__main__':
             while len(node_list) > LimitNodes:
                 node_list.pop(len(node_list)-1)
 
+    if StonithParams[0] == "hostlist":
+        StonithParams[1] = string.join(node_list, " ")
+
 #    alt_list = []
 #    for node in node_list:
 #        alt_list.append(string.lower(node))
@@ -718,7 +733,7 @@ if __name__ == '__main__':
     if HaveSeed:
         Environment["RandSeed"] = Seed 
 
-    Environment["reset"] = Stonith(sttype="external/ssh", parm=string.join(node_list, " "))
+    Environment["reset"] = Stonith(sttype=StonithType, pName=StonithParams[0], pValue=StonithParams[1])
 
     if DoBSC:
         Environment["DoBSC"]       = 1

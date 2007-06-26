@@ -534,6 +534,7 @@ void master_rsc_colocation_rh(
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc_rh);
 
+	CRM_CHECK(rsc_rh != NULL, return);
 	if(rsc_rh->provisional) {
 		return;
 
