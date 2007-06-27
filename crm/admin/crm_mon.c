@@ -120,7 +120,7 @@ main(int argc, char **argv)
 		{"one-shot", 0, 0, '1'},		
 		{"daemonize", 0, 0, 'd'},		
 		{"pid-file", 0, 0, 'p'},		
-		{"xml-file", 0, 0, 'X'},		
+		{"xml-file", 1, 0, 'X'},		
 
 		{0, 0, 0, 0}
 	};
