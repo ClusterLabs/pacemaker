@@ -86,7 +86,7 @@ extern void cib_cleanup(void);
 
 
 static gboolean
-validate_cib_digest(crm_data_t *local_cib)
+validate_cib_digest(crm_data_t *local_cib, const char *sigfile)
 {
 	int s_res = -1;
 	struct stat buf;
@@ -96,7 +96,8 @@ validate_cib_digest(crm_data_t *local_cib)
 	FILE *expected_strm = NULL;
 	int start = 0, length = 0, read_len = 0;
 	
-	s_res = stat(CIB_FILENAME ".sig", &buf);
+	CRM_ASSERT(sigfile != NULL);
+	s_res = stat(sigfile, &buf);
 	
 	if (s_res != 0) {
 		crm_warn("No on-disk digest present");
@@ -107,9 +108,9 @@ validate_cib_digest(crm_data_t *local_cib)
 		digest = calculate_xml_digest(local_cib, FALSE);
 	}
 	
-	expected_strm = fopen(CIB_FILENAME ".sig", "r");
+	expected_strm = fopen(sigfile, "r");
 	if(expected_strm == NULL) {
-		cl_perror("Could not open signature file "CIB_FILENAME ".sig for reading");
+		cl_perror("Could not open signature file %s for reading", sigfile);
 		goto bail;
 	}
 
@@ -180,12 +181,12 @@ validate_on_disk_cib(const char *filename, crm_data_t **on_disk_cib)
 	FILE *cib_file = NULL;
 	gboolean passed = TRUE;
 	crm_data_t *root = NULL;
+
+	CRM_ASSERT(filename != NULL);
 	
-	if(filename != NULL) {
-		s_res = stat(filename, &buf);
-	}
-	
+	s_res = stat(filename, &buf);
 	if (s_res == 0) {
+		char *sigfile = NULL;
 		cib_file = fopen(filename, "r");
 		if(cib_file == NULL) {
 			cl_perror("Couldn't open config file %s for reading", filename);
@@ -196,9 +197,12 @@ validate_on_disk_cib(const char *filename, crm_data_t **on_disk_cib)
 		root = file2xml(cib_file, FALSE);
 		fclose(cib_file);
 		
-		if(validate_cib_digest(root) == FALSE) {
+		crm_malloc0(sigfile, strlen(filename) + 5);
+		sprintf(sigfile, "%s.sig", filename);
+		if(validate_cib_digest(root, sigfile) == FALSE) {
 			passed = FALSE;
 		}
+		crm_free(sigfile);
 	}
 	
 	if(on_disk_cib != NULL) {
@@ -219,8 +223,9 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	struct stat buf;
 	FILE *cib_file = NULL;
 	gboolean dtd_ok = TRUE;
+	gboolean using_backup = FALSE;
 
-	char *filename = NULL;
+	char *filename = NULL, *sigfile = NULL;
 	const char *name = NULL;
 	const char *value = NULL;
 	const char *ignore_dtd = NULL;
@@ -234,9 +239,12 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	}
 	
 	filename = crm_concat(dir, file, '/');
+	sigfile  = crm_concat(filename, "sig", '.');
+
+  read_retry:
+	
 	if(stat(filename, &buf) != 0) {
-		crm_warn("Cluster configuration not found: %s."
-			 "  Creating an empty one.", filename);
+		crm_warn("Cluster configuration not found: %s", filename);
 
 	} else {
 		crm_info("Reading cluster configuration from: %s", filename);
@@ -250,21 +258,44 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 		}
 		
 		if(root == NULL) {
-			crm_err("%s exists but does NOT contain valid XML. ",
-				filename);
-			crm_err("Continuing with an empty configuration."
-				"  %s will NOT be overwritten.", filename);
+			crm_err("%s exists but does NOT contain valid XML. ", filename);
+			crm_warn("Continuing but %s will NOT used OR be overwritten.", filename);
 			cib_writes_enabled = FALSE;
 
-		} else if(validate_cib_digest(root) == FALSE) {
-			crm_err("%s has been manually changed! If this was"
-				" intended, remove the digest in %s.sig",
-				filename, filename);
+		} else if(validate_cib_digest(root, sigfile) == FALSE) {
+			crm_err("Checksum of %s failed!  Configuration contents ignored!", filename);
+			crm_err("Usually this is caused by manually changes. If these changes were"
+				" intended, remove the digest file: %s.sig and restart heartbeat", filename);
+			crm_warn("Continuing but %s will NOT used OR overwritten.", filename);
 			cib_status = cib_bad_digest;
+			cib_writes_enabled = FALSE;
+		} else {
+			cib_status = cib_ok;
 		}
 	}
 
-	if(getenv("HA_VALGRIND_ENABLED") != NULL) {
+	if(root == NULL && using_backup) {
+		root = createEmptyCib();
+		crm_warn("Continuing with an empty configuration.");
+		
+	} else if(root == NULL) {
+		char *tmp = filename;
+		filename = crm_concat(tmp, "last", '.');
+		crm_free(tmp);
+
+		tmp = sigfile;
+		sigfile = crm_concat(tmp, "last", '.');
+		crm_free(tmp);
+
+		using_backup = TRUE;
+		crm_warn("Primary configuration corrupt or unusable, trying backup...");
+		goto read_retry;
+		
+	} else {
+		crm_xml_add(root, "generated", XML_BOOLEAN_FALSE);	
+	}
+
+	if(cib_writes_enabled && getenv("HA_VALGRIND_ENABLED") != NULL) {
 		cib_writes_enabled = FALSE;
 		crm_err("HA_VALGRIND_ENABLED: %s",
 			getenv("HA_VALGRIND_ENABLED"));
@@ -273,12 +304,6 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 		crm_err("*********************************************************");	
 	}
 	
-	if(root == NULL) {
-		root = createEmptyCib();
-	} else {
-		crm_xml_add(root, "generated", XML_BOOLEAN_FALSE);	
-	}
-
 	status = find_xml_node(root, XML_CIB_TAG_STATUS, FALSE);
 	if(discard_status && status != NULL) {
 		/* strip out the status section if there is one */
@@ -354,6 +379,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	}
 
 	crm_free(filename);
+	crm_free(sigfile);
 	return root;
 }
 
