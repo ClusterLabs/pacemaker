@@ -1395,11 +1395,19 @@ native_stop_constraints(
 	
 	slist_iter(
 		action, action_t, action_list, lpc2,
-		if(node->details->online == FALSE || rsc->failed) {
+		if(node->details->online == FALSE
+		   || node->details->unclean
+		   || rsc->failed) {
 			resource_t *parent = NULL;
-			crm_warn("Stop of failed resource %s is"
-				 " implicit after %s is fenced",
-				 action->uuid, node->details->uname);
+			if(rsc->failed) {
+				crm_warn("Stop of failed resource %s is"
+					 " implicit after %s is fenced",
+					 rsc->id, node->details->uname);
+			} else {
+				crm_info("%s is implicit after %s is fenced",
+					 action->uuid, node->details->uname);
+			}
+			
 			/* the stop would never complete and is
 			 * now implied by the stonith operation
 			 */
@@ -1411,7 +1419,7 @@ native_stop_constraints(
 			} else {
 				custom_action_order(
 					NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
-					rsc, start_key(rsc), NULL,
+					rsc, stop_key(rsc), NULL,
 					pe_order_optional, data_set);
 			}
 			
@@ -1430,19 +1438,34 @@ native_stop_constraints(
 				CRM_CHECK(action->pseudo, action->pseudo = TRUE);
 				CRM_CHECK(action->runnable, action->runnable = TRUE);
 			}
-			
+/* From Bug #1601...
+   
+   Given group(A, B) running on nodeX and B.stop has failed, 
+   A := stop healthy resource (A.stop)
+   B := stop failed resource (pseudo operation B.stop)
+   C := stonith nodeX
+   A requires B, B requires C, C requires A
+   This loop would prevent the cluster from making progress.
+
+   This block creates the "A requires B" dependancy and therefore must (at least
+   for now) be disabled.
+
+   Instead, run the block above and treat all resources on nodeX as B would be
+   (marked as a pseudo op depending on the STONITH).
+   
 		} else if(is_stonith == FALSE) {
 			crm_info("Moving healthy resource %s"
 				 " off %s before fencing",
 				 rsc->id, node->details->uname);
 			
-			/* stop healthy resources before the
+			 * stop healthy resources before the
 			 * stonith op
-			 */
+			 *
 			custom_action_order(
 				rsc, stop_key(rsc), NULL,
 				NULL,crm_strdup(CRM_OP_FENCE),stonith_op,
 				pe_order_optional, data_set);
+*/
 		}
 		);
 	

@@ -77,6 +77,9 @@
        <trigger>
          <pseudo_event id="11" operation="stop" operation_key="group1_stop_0"/>
        </trigger>
+       <trigger>
+         <crm_event id="15" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="5">
@@ -102,9 +105,6 @@
        <trigger>
          <pseudo_event id="9" operation="start" operation_key="group1_start_0"/>
        </trigger>
-       <trigger>
-         <crm_event id="15" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
-       </trigger>
      </inputs>
    </synapse>
    <synapse id="7">
@@ -126,6 +126,9 @@
        <trigger>
          <pseudo_event id="11" operation="stop" operation_key="group1_stop_0"/>
        </trigger>
+       <trigger>
+         <crm_event id="15" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="9">
@@ -141,9 +144,6 @@
        </trigger>
        <trigger>
          <pseudo_event id="7" operation="stop" operation_key="rsc2_stop_0"/>
-       </trigger>
-       <trigger>
-         <crm_event id="15" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>

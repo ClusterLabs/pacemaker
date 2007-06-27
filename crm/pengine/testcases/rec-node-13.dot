@@ -5,5 +5,6 @@
 "master_rsc_1_stopped_0" [ style=bold color="green" fontcolor="orange" ]
 "ocf_msdummy:6_stop_0 c001n04" -> "master_rsc_1_stopped_0" [ style = bold]
 "ocf_msdummy:6_stop_0 c001n04" [ style=bold color="green" fontcolor="orange" ]
+"stonith c001n04" -> "ocf_msdummy:6_stop_0 c001n04" [ style = bold]
 "stonith c001n04" [ style=bold color="green" fontcolor="black" ]
 }
