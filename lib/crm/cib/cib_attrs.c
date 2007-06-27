@@ -349,7 +349,7 @@ read_attr(cib_t *the_cib,
 		  attr_name, section, crm_str(node_uuid), crm_str(set_name));
 
 	rc = the_cib->cmds->query(
-		the_cib, section, &fragment, cib_sync_call);
+		the_cib, section, &fragment, cib_sync_call|cib_scope_local);
 
 	if(rc != cib_ok) {
 		crm_err("Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
