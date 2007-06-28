@@ -812,6 +812,41 @@ do_lrm_query(gboolean is_replace)
 	return xml_result;
 }
 
+
+static void
+delete_rsc_entry(const char *rsc_id) 
+{
+	crm_data_t *xml_top = NULL;
+	crm_data_t *xml_tmp = NULL;
+
+	/*
+	 * Remove the rsc from the CIB
+	 *
+	 * Avoids refreshing the entire LRM section of this host
+	 */
+	CRM_CHECK(rsc_id != NULL, return);
+	
+	xml_top = create_xml_node(NULL, XML_CIB_TAG_STATE);
+	crm_xml_add(xml_top, XML_ATTR_ID, fsa_our_uuid);
+	
+	xml_tmp = create_xml_node(xml_top, XML_CIB_TAG_LRM);
+	crm_xml_add(xml_tmp, XML_ATTR_ID, fsa_our_uuid);
+	
+	xml_tmp = create_xml_node(xml_tmp, XML_LRM_TAG_RESOURCES);
+	
+	xml_tmp = create_xml_node(xml_tmp, XML_LRM_TAG_RESOURCE);
+	crm_xml_add(xml_tmp, XML_ATTR_ID, rsc_id);
+
+	crm_debug("sync: Sending delete op for %s", rsc_id);
+	fsa_cib_conn->cmds->delete_absolute(fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top,
+					    NULL, cib_quorum_override);
+	
+
+/* 	crm_log_xml_err(xml_top, "op:cancel"); */
+
+ 	free_xml(xml_top);
+}
+
 static void
 delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id) 
 {
@@ -1170,6 +1205,7 @@ do_lrm_invoke(long long action,
 				}
 			}
 
+			delete_rsc_entry(rsc->id);
 			send_direct_ack(from_host, from_sys, op, rsc->id);
 			free_lrm_op(op);			
 			
