@@ -53,7 +53,6 @@ void usage(const char *cmd, int exit_status);
 gboolean BE_QUIET = FALSE;
 gboolean DO_WRITE = TRUE;
 gboolean DO_DELETE = FALSE;
-gboolean inhibit_pe = FALSE;
 
 char *dest_node = NULL;
 char *set_name  = NULL;
@@ -74,6 +73,7 @@ main(int argc, char **argv)
 	cib_t *	the_cib = NULL;
 	enum cib_errors rc = cib_ok;
 	
+	int cib_opts = cib_sync_call;
 	int argerr = 0;
 	int flag;
 
@@ -173,7 +173,8 @@ main(int argc, char **argv)
 				rsc_id = optarg;
 				break;
 			case '!':
-				inhibit_pe = TRUE;
+				crm_warn("Inhibiting notifications for this update");
+				cib_opts |= cib_inhibit_notify;
 				break;
 			default:
 				printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
@@ -335,12 +336,12 @@ main(int argc, char **argv)
 
 	if(safe_str_eq(type, XML_CIB_TAG_CRMCONFIG)) {
 		dest_node = NULL;
-	}
-	
+	}	
+
 	if(is_done) {
 			
 	} else if(DO_DELETE) {
-		rc = delete_attr(the_cib, cib_sync_call, type, dest_node, set_name,
+		rc = delete_attr(the_cib, cib_opts, type, dest_node, set_name,
 				 attr_id, attr_name, attr_value);
 		
 		if(safe_str_eq(crm_system_name, "crm_failcount")) {
@@ -353,15 +354,10 @@ main(int argc, char **argv)
 		}
 			
 	} else if(DO_WRITE) {
-		int cib_opts = cib_sync_call;
 		CRM_DEV_ASSERT(type != NULL);
 		CRM_DEV_ASSERT(attr_name != NULL);
 		CRM_DEV_ASSERT(attr_value != NULL);
 
-		if(inhibit_pe) {
-			crm_warn("Inhibiting notifications for this update");
-			cib_opts |= cib_inhibit_notify;
-		}
 		rc = update_attr(the_cib, cib_opts, type, dest_node, set_name,
 				 attr_id, attr_name, attr_value);
 
