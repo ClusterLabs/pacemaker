@@ -61,7 +61,7 @@
 #undef OCF_ROOT_DIR
 
 /* heartbeat rc script directory */
-#undef HB_RC_DIR
+#undef HA_RC_DIR
 
 /* heartbeat logging socket */
 #undef HA_LOGDAEMON_IPC
