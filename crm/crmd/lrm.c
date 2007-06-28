@@ -315,6 +315,12 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
 	}
 	
 	metadata = string2xml(metadata_str);
+	if(metadata == NULL) {
+		crm_err("Metadata for %s::%s:%s is not valid XML",
+			rsc->provider, rsc->class, rsc->type);
+		return NULL;
+	}
+
 	actions = find_xml_node(metadata, "actions", TRUE);
 	
 	xml_child_iter_filter(
