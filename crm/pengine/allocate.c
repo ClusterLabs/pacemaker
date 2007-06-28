@@ -404,7 +404,9 @@ check_actions(pe_working_set_t *data_set)
 		if(node->details->online || data_set->stonith_enabled) {
 			xml_child_iter_filter(
 				lrm_rscs, rsc_entry, XML_LRM_TAG_RESOURCE,
-				check_actions_for(rsc_entry, node, data_set);
+				if(xml_has_children(rsc_entry)) {
+					check_actions_for(rsc_entry, node, data_set);
+				}
 				);
 		}
 		);
