@@ -37,6 +37,7 @@
 #include <pils/plugin.h>
 #include <dirent.h>
 #include <libgen.h>  /* Add it for compiling on OSX */
+#include <libxml/entities.h>
 
 #include <lrm/raexec.h>
 #include <fencing/stonithd_api.h>
@@ -117,6 +118,15 @@ static const char * no_parameter_info = "<!-- No parameter segment -->";
 			"segment of %s's metadata.", which, rsc_type); \
 		ret = no_parameter_info; \
 	}
+#define xmlize(p) \
+	( p ? (char *)xmlEncodeEntitiesReentrant(NULL, \
+				(const unsigned char *)p) \
+	 	: NULL )
+#define zapxml(p) do { \
+	if( p ) { \
+		xmlFree(p); \
+	} \
+} while(0)
 
 PIL_PLUGIN_BOILERPLATE2("1.0", Debug);
 
@@ -319,6 +329,8 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	const char * meta_param = NULL;
 	const char * meta_longdesc = NULL;
 	const char * meta_shortdesc = NULL;
+	char *xml_meta_longdesc = NULL;
+	char *xml_meta_shortdesc = NULL;
 	Stonith * stonith_obj = NULL;	
 
 	if ( provider != NULL ) {
@@ -329,20 +341,24 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	stonith_obj = stonith_new(rsc_type);
 	meta_longdesc = stonith_get_info(stonith_obj, ST_DEVICEDESCR);
 	CHECKMETANULL(meta_longdesc, "longdesc")
+	xml_meta_longdesc = xmlize(meta_longdesc);
 	meta_shortdesc = stonith_get_info(stonith_obj, ST_DEVICENAME);
 	CHECKMETANULL(meta_shortdesc, "shortdesc") 
+	xml_meta_shortdesc = xmlize(meta_shortdesc);
 	meta_param = stonith_get_info(stonith_obj, ST_CONF_XML);
 	CHECKMETANULL(meta_param, "parameters") 
 
 	
 	bufferlen = STRLEN_CONST(META_TEMPLATE) + strlen(rsc_type)
-			+ strlen(meta_longdesc) + strlen(meta_shortdesc)
+			+ strlen(xml_meta_longdesc) + strlen(xml_meta_shortdesc)
 			+ strlen(meta_param) + 1;
 	buffer = g_new(char, bufferlen);
 	buffer[bufferlen-1] = '\0';
 	snprintf(buffer, bufferlen-1, META_TEMPLATE, rsc_type
-		, meta_longdesc, meta_shortdesc, meta_param);
+		, xml_meta_longdesc, xml_meta_shortdesc, meta_param);
 	stonith_delete(stonith_obj);
+	zapxml(xml_meta_longdesc);
+	zapxml(xml_meta_shortdesc);
 
 	return buffer;
 }
