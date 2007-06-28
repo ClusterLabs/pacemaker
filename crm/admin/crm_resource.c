@@ -1056,18 +1056,6 @@ main(int argc, char **argv)
 	} else if(rsc_cmd == 'C') {
 		rc = delete_lrm_rsc(crmd_channel, host_uname, rsc_id, &data_set);
 		
-		if(rc == 0) {
-			char *now_s = NULL;
-			time_t now = time(NULL);
-
-			/* force the TE to start a transition */
-			sleep(2); /* wait for the refresh */
-			now_s = crm_itoa(now);
-			update_attr(cib_conn, cib_options,
-				    XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, "last-lrm-refresh", now_s);
-			crm_free(now_s);
-		}
-		
 	} else if(rsc_cmd == 'F') {
 		rc = fail_lrm_rsc(crmd_channel, host_uname, rsc_id, &data_set);
 		

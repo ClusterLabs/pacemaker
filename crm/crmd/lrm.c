@@ -1208,6 +1208,20 @@ do_lrm_invoke(long long action,
 			delete_rsc_entry(rsc->id);
 			send_direct_ack(from_host, from_sys, op, rsc->id);
 			free_lrm_op(op);			
+
+			if(safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
+				/* this isn't expected - trigger a new transition */
+				time_t now = time(NULL);
+				char *now_s = crm_itoa(now);
+
+				crm_debug("Triggering a refresh after %s deleted %s from the LRM",
+					  from_sys, rsc->id);
+
+				update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
+					    NULL, NULL, NULL, "last-lrm-refresh", now_s);
+				crm_free(now_s);
+			}
+			
 			
 		} else if(rsc != NULL) {
 			next_input = do_lrm_rsc_op(
