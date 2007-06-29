@@ -18,6 +18,7 @@
  */
 
 #include <lha_internal.h>
+#include <ha_version.h>
 
 #include <sys/param.h>
 
@@ -193,8 +194,8 @@ main(int argc, char **argv)
 */
 
 			case 'v':
-				fprintf(stdout, "HA Version %s, CRM Version %s (CIB feature set %s)\n",
-					VERSION, CRM_FEATURE_SET, CIB_FEATURE_SET);
+				fprintf(stdout, "HA Version %s, CRM Version %s (CIB feature set %s) %s\n",
+					VERSION, CRM_FEATURE_SET, CIB_FEATURE_SET, HA_HG_VERSION);
 				exit(0);
 				break;
 			case 'V':
