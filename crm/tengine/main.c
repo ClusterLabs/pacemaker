@@ -64,7 +64,7 @@ main(int argc, char ** argv)
 	int argerr = 0;
 	gboolean allow_cores = TRUE;
 	
-	crm_log_init(crm_system_name);
+	crm_log_init(crm_system_name, TRUE);
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, tengine_shutdown, NULL, NULL);
 

@@ -144,7 +144,7 @@ main(int argc, char **argv)
 #endif
 
 	crm_system_name = basename(argv[0]);
-	crm_log_init(crm_system_name);
+	crm_log_init(crm_system_name, FALSE);
 
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);

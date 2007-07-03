@@ -69,7 +69,7 @@ main(int argc, char ** argv)
     int flag;
     int	argerr = 0;
 
-    crm_log_init(crm_system_name);
+    crm_log_init(crm_system_name, TRUE);
 
     crm_info("CRM Hg Version: %s\n", HA_HG_VERSION);
     

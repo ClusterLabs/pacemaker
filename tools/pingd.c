@@ -244,7 +244,7 @@ main(int argc, char **argv)
                      g_str_hash, g_str_equal,
 		     g_hash_destroy_str, g_hash_destroy_str);	
 
-	crm_log_init(crm_system_name);
+	crm_log_init(crm_system_name, TRUE);
 	
 	while (1) {
 #ifdef HAVE_GETOPT_H

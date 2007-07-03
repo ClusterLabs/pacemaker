@@ -373,7 +373,7 @@ main(int argc, char ** argv)
 	gboolean was_err = FALSE;
 	char *channel_name = crm_strdup(attrd_channel);
 	
-	crm_log_init(T_ATTRD);
+	crm_log_init(T_ATTRD, TRUE);
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, attrd_shutdown, NULL, NULL);
 	

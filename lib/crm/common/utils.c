@@ -422,7 +422,7 @@ crm_itoa(int an_int)
 extern int LogToLoggingDaemon(int priority, const char * buf, int bstrlen, gboolean use_pri_str);
 
 gboolean
-crm_log_init(const char *entity) 
+crm_log_init(const char *entity, gboolean coredir) 
 {
 /* 	const char *test = "Testing log daemon connection"; */
 	/* Redirect messages from glib functions to our handler */
@@ -440,8 +440,10 @@ crm_log_init(const char *entity)
 	cl_log_set_entity(entity);
 	cl_log_set_facility(LOG_LOCAL7);
 
-	cl_set_corerootdir(HA_COREDIR);	    
-	cl_cdtocoredir();
+	if(coredir) {
+		cl_set_corerootdir(HA_COREDIR);
+		cl_cdtocoredir();
+	}
 	
 	crm_set_env_options();
 

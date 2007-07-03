@@ -101,7 +101,7 @@ main(int argc, char **argv)
 #endif
 
 	crm_system_name = basename(argv[0]);
-	crm_log_init(crm_system_name);
+	crm_log_init(crm_system_name, FALSE);
 	crm_log_level = LOG_ERR;
 	cl_log_enable_stderr(TRUE);
 	

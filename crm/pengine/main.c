@@ -63,7 +63,7 @@ main(int argc, char ** argv)
 	gboolean allow_cores = TRUE;
 	const char *param_name = NULL;
     
-	crm_log_init(crm_system_name);
+	crm_log_init(crm_system_name, TRUE);
  	G_main_add_SignalHandler(
  		G_PRIORITY_HIGH, SIGTERM, pengine_shutdown, NULL, NULL);
 

@@ -127,7 +127,7 @@ main(int argc, char **argv)
 #endif
 	pid_file = crm_strdup("/tmp/ClusterMon.pid");
 	crm_system_name = basename(argv[0]);
-	crm_log_init(crm_system_name);
+	crm_log_init(crm_system_name, FALSE);
 	crm_log_level = LOG_ERR -1;
 
 	if (strcmp(crm_system_name, "crm_mon.cgi")==0) {

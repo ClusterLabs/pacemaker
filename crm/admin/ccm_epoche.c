@@ -60,7 +60,7 @@ main(int argc, char ** argv)
 	fd_set rset;	
 	oc_ev_t *ccm_token = NULL;
 	
-	crm_log_init(crm_system_name);
+	crm_log_init(crm_system_name, FALSE);
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {

@@ -59,7 +59,7 @@ main(int argc, char ** argv)
 	int argerr = 0;
 	int flag;
 	
-	crm_log_init(crm_system_name);
+	crm_log_init(crm_system_name, FALSE);
 	crm_debug_3("Begining option processing");
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
