@@ -73,6 +73,7 @@ typedef struct pe_working_set_s
 		GListPtr ordering_constraints;
 		
 		GListPtr actions;
+		crm_data_t *failed;
 
 		/* stats */
 		int num_synapse;

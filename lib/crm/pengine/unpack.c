@@ -1195,6 +1195,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		case LRM_OP_NOTSUPPORTED:
 			crm_warn("Processing failed op (%s) on %s",
 				 id, node->details->uname);
+			crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
+			add_node_copy(data_set->failed, xml_op);
 
 			if(*on_fail < action->on_fail) {
 				*on_fail = action->on_fail;

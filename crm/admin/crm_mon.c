@@ -574,6 +574,21 @@ print_status(crm_data_t *cib)
 			);
 	}
 
+	if(xml_has_children(data_set.failed)) {
+		print_as("\nFailed actions:\n");
+		xml_child_iter(data_set.failed, xml_op, 
+			       const char *id = ID(xml_op);
+			       const char *rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
+			       const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
+			       const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
+			       const char *status_s = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
+			       int status = crm_parse_int(status_s, "0");
+			       
+			       print_as("    %s (node=%s, call=%s, rc=%s): %s\n",
+					id, node, call, rc, op_status2text(status));
+			);
+	}
+	
 #if CURSES_ENABLED
 	if(as_console) {
 		refresh();

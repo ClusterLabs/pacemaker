@@ -190,6 +190,7 @@ cleanup_calculations(pe_working_set_t *data_set)
 	free_xml(data_set->graph);
 	free_ha_date(data_set->now);
 	free_xml(data_set->input);
+	free_xml(data_set->failed);
 	data_set->stonith_action = NULL;
 
 	CRM_CHECK(data_set->ordering_constraints == NULL, ;);
@@ -203,6 +204,7 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->input = NULL;
 	data_set->now = NULL;
 	data_set->graph = NULL;
+	data_set->failed = create_xml_node(NULL, "failed-ops");
 	
 	data_set->transition_idle_timeout = NULL;
 	data_set->dc_uuid            = NULL;
