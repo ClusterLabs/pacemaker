@@ -43,6 +43,7 @@
 
 #include <cibprimatives.h>
 
+int archive_file(const char *oldname, const char *newname, const char *ext, gboolean preserve);
 
 const char * local_resource_path[] =
 {
@@ -220,6 +221,7 @@ validate_on_disk_cib(const char *filename, crm_data_t **on_disk_cib)
 crm_data_t*
 readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 {
+	int rc = 0;
 	struct stat buf;
 	FILE *cib_file = NULL;
 	gboolean dtd_ok = TRUE;
@@ -242,8 +244,9 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	sigfile  = crm_concat(filename, "sig", '.');
 
   read_retry:
-	
-	if(stat(filename, &buf) != 0) {
+
+	rc = stat(filename, &buf);
+	if(rc != 0) {
 		crm_warn("Cluster configuration not found: %s", filename);
 
 	} else {
@@ -259,27 +262,50 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 		
 		if(root == NULL) {
 			crm_err("%s exists but does NOT contain valid XML. ", filename);
-			crm_warn("Continuing but %s will NOT used OR be overwritten.", filename);
-			cib_writes_enabled = FALSE;
+			crm_warn("Continuing but %s will NOT used.", filename);
 
 		} else if(validate_cib_digest(root, sigfile) == FALSE) {
 			crm_err("Checksum of %s failed!  Configuration contents ignored!", filename);
-			crm_err("Usually this is caused by manually changes. If these changes were"
-				" intended, remove the digest file: %s.sig and restart heartbeat", filename);
-			crm_warn("Continuing but %s will NOT used OR overwritten.", filename);
-			cib_status = cib_bad_digest;
-			cib_writes_enabled = FALSE;
+			crm_err("Usually this is caused by manually changes, "
+				"please refer to http://linux-ha.org/v2/faq/cib_changes_detected");
+			crm_warn("Continuing but %s will NOT used.", filename);
+			free_xml(root);
+			root = NULL;
+			
 		} else {
 			cib_status = cib_ok;
 		}
 	}
 
-	if(root == NULL && using_backup) {
+	if(root == NULL && (using_backup || rc != 0)) {
 		root = createEmptyCib();
 		crm_warn("Continuing with an empty configuration.");
 		
 	} else if(root == NULL) {
 		char *tmp = filename;
+		char *suffix = crm_itoa(getpid());
+
+		crm_err("Archiving corrupt or unusable configuration to %s.%s", filename, suffix);
+		rc = archive_file(filename, NULL, suffix, TRUE);
+		if(rc < 0) {
+			crm_err("Archival of %s failed - Disabling disk writes and continuing", filename);
+			cib_writes_enabled = FALSE;
+		}
+
+		crm_free(suffix);
+
+		rc = unlink(filename);
+		if (rc < 0) {
+			cl_perror("Could not unlink %s - Disabling disk writes and continuing", filename);
+			cib_writes_enabled = FALSE;
+		}
+		
+ 		rc = unlink(sigfile);
+		if (rc < 0) {
+			cl_perror("Could not unlink %s - Disabling disk writes and continuing", sigfile);
+			cib_writes_enabled = FALSE;
+		}
+		
 		filename = crm_concat(tmp, "last", '.');
 		crm_free(tmp);
 
@@ -468,8 +494,8 @@ initializeCib(crm_data_t *new_cib)
 	return TRUE;
 }
 
-static int
-archive_file(const char *oldname, const char *newname, const char *ext)
+int
+archive_file(const char *oldname, const char *newname, const char *ext, gboolean preserve)
 {
 	/* move 'oldname' to 'newname' by creating a hard link to it
 	 *  and then removing the original hard link
@@ -503,12 +529,20 @@ archive_file(const char *oldname, const char *newname, const char *ext)
 	
 	s_res = stat(backup_file, &tmp);
 	
-	/* unlink the old backup */
+	/* move the old backup */
 	if (rc == 0 && s_res >= 0) {
-		res = unlink(backup_file);
-		if (res < 0) {
-			cl_perror("Could not unlink %s", backup_file);
-			rc = -1;
+		if(preserve == FALSE) {
+			res = unlink(backup_file);
+			if (res < 0) {
+				cl_perror("Could not unlink %s", backup_file);
+				rc = -1;
+			}
+		} else {
+			crm_info("Archive file %s exists... backing it up first", backup_file);
+			res = archive_file(backup_file, NULL, NULL, preserve);
+			if (res < 0) {
+				return res;
+			}
 		}
 	}
     
@@ -521,15 +555,9 @@ archive_file(const char *oldname, const char *newname, const char *ext)
 			cl_perror("Could not create backup %s from %s",
 				  backup_file, oldname);
 			rc = -2;
-		}
-	}
 
-	/* unlink the original */
-	if (rc == 0 && s_res >= 0) {
-		res = unlink(oldname);
-		if (res < 0) {
-			cl_perror("Could not unlink %s", oldname);
-			rc = -3;
+		} else if(preserve) {
+			crm_info("%s archived as %s", oldname, backup_file);
 		}
 	}
 
@@ -638,14 +666,14 @@ write_cib_contents(gpointer p)
 		goto cleanup;
 	}
 
-	rc = archive_file(CIB_FILENAME, NULL, "last");
+	rc = archive_file(CIB_FILENAME, NULL, "last", FALSE);
 	if(rc != 0) {
 		crm_err("Could not make backup of the existing CIB: %d", rc);
 		exit_rc = LSB_EXIT_GENERIC;
 		goto cleanup;
 	}
 
-	rc = archive_file(digest_filename, NULL, "last");
+	rc = archive_file(digest_filename, NULL, "last", FALSE);
 	if(rc != 0) {
 		crm_warn("Could not make backup of the existing CIB digest: %d",
 			rc);
