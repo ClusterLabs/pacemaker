@@ -285,6 +285,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 		char *tmp = filename;
 		char *suffix = crm_itoa(getpid());
 
+		/* Archive the original files so the contents are not lost */
 		crm_err("Archiving corrupt or unusable configuration to %s.%s", filename, suffix);
 		rc = archive_file(filename, NULL, suffix, TRUE);
 		if(rc < 0) {
@@ -294,6 +295,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 
 		crm_free(suffix);
 
+		/* Unlink the original files so they dont get in the way later */
 		rc = unlink(filename);
 		if (rc < 0) {
 			cl_perror("Could not unlink %s - Disabling disk writes and continuing", filename);
@@ -305,7 +307,8 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 			cl_perror("Could not unlink %s - Disabling disk writes and continuing", sigfile);
 			cib_writes_enabled = FALSE;
 		}
-		
+
+		/* Try the backups */
 		filename = crm_concat(tmp, "last", '.');
 		crm_free(tmp);
 
