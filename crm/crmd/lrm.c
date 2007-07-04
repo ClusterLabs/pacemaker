@@ -199,13 +199,22 @@ gboolean
 verify_stopped(gboolean force, int log_level)
 {
 	GListPtr lrm_list = NULL;
+	IPC_Channel *lrm_channel = NULL;
 
 	crm_info("Checking for active resources before exit");
-
-	if(fsa_lrm_conn == NULL) {
+	if(fsa_lrm_conn != NULL) {
+		lrm_channel = fsa_lrm_conn->lrm_ops->ipcchan(fsa_lrm_conn);
+	}
+	
+	if(fsa_lrm_conn == NULL
+	   || lrm_channel == NULL
+	   || lrm_channel->ch_status != IPC_CONNECT) {
 		crm_err("Exiting with no LRM connection..."
 			" resources may be active!");
-		return TRUE;
+		force = TRUE;
+
+	} else {
+		lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
 	}
 
 	if(g_hash_table_size(pending_ops) > 0) {
@@ -224,19 +233,16 @@ verify_stopped(gboolean force, int log_level)
 		}
 	}
 	
-	lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
 	slist_iter(
 		rsc_id, char, lrm_list, lpc,
-
 		if(is_rsc_active(rsc_id) == FALSE) {
 			continue;
 		}
-		
 		crm_err("Resource %s was active at shutdown."
 			"  You may ignore this error if it is unmanaged.",
 			rsc_id);
 		);
-
+	
 	set_bit_inplace(fsa_input_register, R_SENT_RSC_STOP);
 	register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 
