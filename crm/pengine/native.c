@@ -272,8 +272,9 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 			mon = custom_action(
 				rsc, local_key, CRMD_ACTION_CANCEL, node,
 				FALSE, TRUE, data_set);
-			
-			mon->task = CRMD_ACTION_CANCEL;
+
+			crm_free(mon->task);
+			mon->task = crm_strdup(CRMD_ACTION_CANCEL);
 			add_hash_param(mon->meta, XML_LRM_ATTR_INTERVAL, interval);
 			add_hash_param(mon->meta, XML_LRM_ATTR_TASK, name);
 			
@@ -655,6 +656,7 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order, pe_worki
 		
 		lh_actions = g_list_append(NULL, lh_action);
 
+		crm_free(op_type);
 		crm_free(rsc_id);
 	}
 
@@ -1438,16 +1440,16 @@ native_stop_constraints(
 				CRM_CHECK(action->pseudo, action->pseudo = TRUE);
 				CRM_CHECK(action->runnable, action->runnable = TRUE);
 			}
-/* From Bug #1601...
-   
-   Given group(A, B) running on nodeX and B.stop has failed, 
+/* From Bug #1601, successful fencing must be an input to a failed resources stop action.
+
+   However given group(A, B) running on nodeX and B.stop has failed, 
    A := stop healthy resource (A.stop)
    B := stop failed resource (pseudo operation B.stop)
    C := stonith nodeX
    A requires B, B requires C, C requires A
    This loop would prevent the cluster from making progress.
 
-   This block creates the "A requires B" dependancy and therefore must (at least
+   This block creates the "C requires A" dependancy and therefore must (at least
    for now) be disabled.
 
    Instead, run the block above and treat all resources on nodeX as B would be
@@ -1670,7 +1672,8 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 			 start->node->details->uname);
 		
 		crm_free(stop->uuid);
-		stop->task = CRMD_ACTION_MIGRATE;
+		crm_free(stop->task);
+		stop->task = crm_strdup(CRMD_ACTION_MIGRATE);
 		stop->uuid = generate_op_key(rsc->id, stop->task, 0);
 		add_hash_param(stop->meta, "migrate_source",
 			       stop->node->details->uname);
@@ -1689,7 +1692,8 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 			);
 		
 		crm_free(start->uuid);
-		start->task = CRMD_ACTION_MIGRATED;
+		crm_free(start->task);
+		start->task = crm_strdup(CRMD_ACTION_MIGRATED);
 		start->uuid = generate_op_key(rsc->id, start->task, 0);
 		add_hash_param(start->meta, "migrate_source_uuid",
 			       stop->node->details->id);
@@ -1703,7 +1707,8 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		crm_info("Rewriting restart of %s on %s as a reload",
 			 rsc->id, start->node->details->uname);
 		crm_free(start->uuid);
-		start->task = "reload";
+		crm_free(start->task);
+		start->task = crm_strdup("reload");
 		start->uuid = generate_op_key(rsc->id, start->task, 0);
 		
 		stop->pseudo = TRUE; /* easier than trying to delete it from the graph */

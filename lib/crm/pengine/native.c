@@ -368,10 +368,6 @@ native_print(
 void native_free(resource_t *rsc)
 {
 	crm_debug_4("Freeing resource action list (not the data)");
-	if(rsc->actions) {
-		g_list_free(rsc->actions);
-		rsc->actions = NULL;
-	}
 	common_free(rsc);
 }
 

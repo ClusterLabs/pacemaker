@@ -171,7 +171,7 @@ struct action_s
 		resource_t *rsc;
 		void       *rsc_opaque;
 		node_t     *node;
-		const char *task;
+		char *task;
 
 		char *uuid;
 		crm_data_t *op_entry;

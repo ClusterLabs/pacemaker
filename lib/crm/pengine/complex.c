@@ -315,6 +315,10 @@ void common_free(resource_t *rsc)
 		g_list_free(rsc->known_on);
 		rsc->known_on = NULL;
 	}
+	if(rsc->actions) {
+		g_list_free(rsc->actions);
+		rsc->actions = NULL;
+	}
 	pe_free_shallow_adv(rsc->rsc_location, FALSE);
 	pe_free_shallow_adv(rsc->allowed_nodes, TRUE);
 	crm_free(rsc->id);

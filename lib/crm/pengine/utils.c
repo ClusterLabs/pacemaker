@@ -371,56 +371,55 @@ custom_action(resource_t *rsc, char *key, const char *task,
 		}
 		
 		crm_malloc0(action, sizeof(action_t));
-		if(action != NULL) {
+		if(save_action) {
+			action->id   = data_set->action_id++;
+		} else {
+			action->id = 0;
+		}
+		action->rsc  = rsc;
+		CRM_ASSERT(task != NULL);
+		action->task = crm_strdup(task);
+		action->node = on_node;
+		action->uuid = key;
+		
+		action->actions_before   = NULL;
+		action->actions_after    = NULL;
+		action->failure_is_fatal = TRUE;
+		
+		action->pseudo     = FALSE;
+		action->dumped     = FALSE;
+		action->runnable   = TRUE;
+		action->processed  = FALSE;
+		action->optional   = optional;
+		action->seen_count = 0;
+		
+		action->extra = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, g_hash_destroy_str);
+		
+		action->meta = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, g_hash_destroy_str);
+		
+		if(save_action) {
+			data_set->actions = g_list_append(
+				data_set->actions, action);
+		}		
+		
+		if(rsc != NULL) {
+			action->op_entry = find_rsc_op_entry(rsc, key);
+			
+			unpack_operation(
+				action, action->op_entry, data_set);
+			
 			if(save_action) {
-				action->id   = data_set->action_id++;
-			} else {
-				action->id = 0;
+				rsc->actions = g_list_append(
+					rsc->actions, action);
 			}
-			action->rsc  = rsc;
-			action->task = task;
-			action->node = on_node;
-			
-			action->actions_before   = NULL;
-			action->actions_after    = NULL;
-			action->failure_is_fatal = TRUE;
-			
-			action->pseudo     = FALSE;
-			action->dumped     = FALSE;
-			action->runnable   = TRUE;
-			action->processed  = FALSE;
-			action->optional   = optional;
-			action->seen_count = 0;
-			
-			action->extra = g_hash_table_new_full(
-				g_str_hash, g_str_equal,
-				g_hash_destroy_str, g_hash_destroy_str);
-
-			action->meta = g_hash_table_new_full(
-				g_str_hash, g_str_equal,
-				g_hash_destroy_str, g_hash_destroy_str);
-
-			if(save_action) {
-				data_set->actions = g_list_append(
-					data_set->actions, action);
-			}
-			
-			action->uuid = key;
-
-			if(rsc != NULL) {
-				action->op_entry = find_rsc_op_entry(rsc, key);
-				
-				unpack_operation(
-					action, action->op_entry, data_set);
-
-				if(save_action) {
-					rsc->actions = g_list_append(
-						rsc->actions, action);
-				}
-			}
-			if(save_action) {
-				crm_debug_4("Action %d created", action->id);
-			}
+		}
+		
+		if(save_action) {
+			crm_debug_4("Action %d created", action->id);
 		}
 	}
 
@@ -840,6 +839,7 @@ pe_free_action(action_t *action)
 	pe_free_shallow(action->actions_after); /* action_warpper_t* */
 	g_hash_table_destroy(action->extra);
 	g_hash_table_destroy(action->meta);
+	crm_free(action->task);
 	crm_free(action->uuid);
 	crm_free(action);
 }
