@@ -1278,6 +1278,8 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 			CRM_DEV_ASSERT(current_cib != result_cib);
 
 			update_counters(__FILE__, __FUNCTION__, result_cib);
+			config_changed = cib_config_changed(
+				current_cib, result_cib, NULL);
 
 			if(global_update) {
 				/* skip */
@@ -1285,16 +1287,13 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 					  crm_err("Call type: %d", call_type);
 					  crm_log_message(LOG_ERR, request));
 				crm_debug_2("Skipping update: global replace");
-
+				
 			} else if(cib_server_ops[call_type].fn == cib_process_change
 				  && (call_options & cib_inhibit_bcast)) {
 				/* skip */
 				crm_debug_2("Skipping update: inhibit broadcast");
 
 			} else {
-				config_changed = cib_config_changed(
-					current_cib, result_cib, NULL);
-
 				cib_update_counter(
 					result_cib, XML_ATTR_NUMUPDATES, FALSE);
 
