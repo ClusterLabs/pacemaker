@@ -1077,7 +1077,6 @@ apply_cib_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 	return result;
 }
 
-#undef DONT_SYNC_STATUS_CHANGES
 gboolean xml_has_child(crm_data_t *data, const char *name);
 
 gboolean
@@ -1096,10 +1095,6 @@ cib_config_changed(crm_data_t *old_cib, crm_data_t *new_cib, crm_data_t **result
 	const char *tag = NULL;
 	crm_data_t *diff = NULL;
 	crm_data_t *dest = NULL;
-
-#ifndef DONT_SYNC_STATUS_CHANGES	
-	return TRUE;
-#endif
 
 	if(result) {
 		*result = NULL;

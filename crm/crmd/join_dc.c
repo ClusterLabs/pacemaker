@@ -458,11 +458,8 @@ finalize_join(const char *caller)
 	
 	fsa_cib_anon_update(NULL, cib, cib_quorum_override);
 	free_xml(cib);
-	
-	crm_debug_3("Bumping the epoch and syncing to %d clients",
-		  g_hash_table_size(finalized_nodes));
-	fsa_cib_conn->cmds->bump_epoch(
-		fsa_cib_conn, cib_scope_local|cib_quorum_override);
+	crm_debug_3("Syncing to %d clients",
+		    g_hash_table_size(finalized_nodes));
 	
 	/* make sure dc_uuid is re-set to us */
 	if(check_join_state(fsa_state, caller) == FALSE) {
