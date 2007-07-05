@@ -93,7 +93,7 @@ function do_test {
 	return;
     else
 	echo "digraph \"g\" {" > $dot_output.sort
-	sort -u $dot_output | grep -v -e ^}$ -e digraph >> $dot_output.sort
+	LC_ALL=POSIX sort -u $dot_output | grep -v -e ^}$ -e digraph >> $dot_output.sort
 	echo "}" >> $dot_output.sort
 	mv -f $dot_output.sort $dot_output
     fi
