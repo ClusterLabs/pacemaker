@@ -139,7 +139,7 @@ class CIB:
           </instance_attributes>
           <primitive id="child_DoFencing" class="stonith" type="%s">
             <operations>
-              <op id="DoFencing-1" name="monitor" interval="20s" prereq="nothing" timeout="20s"/>
+              <op id="DoFencing-1" name="monitor" interval="60s" prereq="nothing" timeout="300s"/>
               <op id="DoFencing-2" name="start" prereq="nothing"/>
             </operations>
             <instance_attributes id="fencing-child">
