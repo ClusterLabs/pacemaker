@@ -1109,10 +1109,13 @@ cib_config_changed(crm_data_t *old_cib, crm_data_t *new_cib, crm_data_t **result
 	dest = find_xml_node(diff, tag, FALSE);
 	if(dest) {
 		dest = find_xml_node(dest, "cib", FALSE);
+		
 	}
 
-	if(dest && xml_has_child(dest, "status")) {
-		cl_msg_remove(dest, "status");
+	if(dest) {
+		if(xml_has_child(dest, "status")) {
+			cl_msg_remove(dest, "status");
+		}
 		if(xml_has_children(dest)) {
 			config_changes = TRUE;
 		}
@@ -1124,12 +1127,16 @@ cib_config_changed(crm_data_t *old_cib, crm_data_t *new_cib, crm_data_t **result
 		dest = find_xml_node(dest, "cib", FALSE);
 	}
 
-	if(dest && xml_has_child(dest, "status")) {
-		cl_msg_remove(dest, "status");
+	if(dest) {
+		if(xml_has_child(dest, "status")) {
+			cl_msg_remove(dest, "status");
+		}
 		if(xml_has_children(dest)) {
 			config_changes = TRUE;
 		}
 	}
+
+	/* TODO: Check cib attributes */
 	
 	if(result) {
 		*result = diff;
