@@ -38,7 +38,6 @@ extern crm_data_t *node_search;
 extern crm_data_t *resource_search;
 extern crm_data_t *constraint_search;
 extern crm_data_t *status_search;
-extern unsigned int cib_diff_loglevel;
 
 extern crm_data_t *get_the_CIB(void);
 
