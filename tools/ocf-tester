@@ -62,8 +62,13 @@ while test "$done" = "0"; do
     esac
 done
 
+if [ "x" = "x$OCF_ROOT" ]; then
+    echo "You must supply the location of OCF_ROOT (common location is /usr/lib/ocf)"
+    usage 1
+fi
+
 if [ "x" = "x$OCF_RESOURCE_INSTANCE" ]; then
-    echo "You must give your resource a name"
+    echo "You must give your resource a name, set OCF_RESOURCE_INSTANCE"
     usage 1
 fi
 
