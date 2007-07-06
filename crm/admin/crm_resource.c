@@ -489,11 +489,6 @@ send_lrm_rsc_op(IPC_Channel *crmd_channel, const char *op,
 	} else if(host_uname == NULL) {
 		fprintf(stderr, "Please supply a hostname with -H\n");
 		return cib_invalid_argument;
-
-	} else if(only_failed && rsc->failed == FALSE && do_force == FALSE) {
-		fprintf(stderr, "You should only clean up failed resources!\n"
-			"Use --force to ignore this message and continue\n");
-		return cib_invalid_argument;
 	}
 	
 	key = crm_concat("0:0:crm-resource", our_pid, '-');
