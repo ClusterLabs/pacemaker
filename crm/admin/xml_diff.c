@@ -172,7 +172,12 @@ main(int argc, char **argv)
 		FILE *xml_strm = fopen(xml_file_1, "r");
 		if(xml_strm != NULL) {
 			crm_debug("Reading: %s", xml_file_1);
-			object_1 = file2xml(xml_strm, FALSE);
+			if(strstr(xml_file_1, ".bz2") != NULL) {
+				object_1 = file2xml(xml_strm, TRUE);
+				
+			} else {
+				object_1 = file2xml(xml_strm, FALSE);
+			}
 			fclose(xml_strm);
 
 		} else {
@@ -191,7 +196,12 @@ main(int argc, char **argv)
 		FILE *xml_strm = fopen(xml_file_2, "r");
 		if(xml_strm != NULL) {
 			crm_debug("Reading: %s", xml_file_2);
-			object_2 = file2xml(xml_strm, FALSE);
+			if(strstr(xml_file_2, ".bz2") != NULL) {
+				object_2 = file2xml(xml_strm, TRUE);
+				
+			} else {
+				object_2 = file2xml(xml_strm, FALSE);
+			}
 			fclose(xml_strm);
 
 		} else {
