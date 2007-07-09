@@ -346,7 +346,7 @@ class CtsLab(UserDict):
         if not self.has_key("CMclass"):
             self["CMclass"] = HeartbeatCM
         if not self.has_key("LogFileName"):
-            self["LogFileName"] = "/var/log/ha-log"
+            self["LogFileName"] = "@HA_VARLOGDIR@/ha-log"
         if not self.has_key("logfacility"):
             LogFacility = "local7"
 
@@ -507,7 +507,7 @@ if __name__ == '__main__':
     import CM_hb
 
     HAdir = "@sysconfdir@/ha.d"
-    LogFile = "/var/log/ha-log-local7"
+    LogFile = "@HA_VARLOGDIR@/ha-log-local7"
     DoStonith = 1
     DoStandby = 1
     DoFencing = 1
