@@ -32,8 +32,8 @@ class CIB:
         <nvpair id="cib-bootstrap-options-default-resource-stickiness"         name="default-resource-stickiness"         value="0"/>
         <nvpair id="cib-bootstrap-options-default-resource-failure-stickiness" name="default-resource-failure-stickiness" value="0"/>
         <nvpair id="cib-bootstrap-options-shutdown-escalation"                 name="shutdown-escalation"                 value="5min"/>
-	<!-- *** For CTS testing only *** _NEVER_ make this the default -->
-	<nvpair id="cib-bootstrap-optionsstartup-fencing" name="startup-fencing" value="false"/>
+        <!-- *** For CTS testing only *** _NEVER_ make this the default -->
+        <nvpair id="cib-bootstrap-optionsstartup-fencing" name="startup-fencing" value="false"/>
        </attributes>
     </cluster_property_set>'''
 
@@ -182,65 +182,65 @@ class CIB:
         constraints = ""
 
         if self.CM.Env["DoBSC"] == 1:
-	    cib_options = cib_options + '''
+            cib_options = cib_options + '''
      <cluster_property_set id="bsc-options">
        <attributes>
-	 <nvpair id="bsc-options-ident-string" name="ident-string" value="Linux-HA TEST configuration file - REMOVEME!!"/>
+         <nvpair id="bsc-options-ident-string" name="ident-string" value="Linux-HA TEST configuration file - REMOVEME!!"/>
        </attributes>
     </cluster_property_set>'''
 
         if self.CM.Env["CIBResource"] != 1:
-	    # generate cib
-	    self.cts_cib = self.cib_template %  (cib_options, resources, constraints)
-	    return
+            # generate cib
+            self.cts_cib = self.cib_template %  (cib_options, resources, constraints)
+            return
 
-	if self.CM.cluster_monitor == 1:
-	    resources += self.clustermon_resource_template
-	    constraints += self.clustermon_location_constraint
-	    
-	ip1=self.NextIP()
-	ip2=self.NextIP()
-	ip3=self.NextIP()
+        if self.CM.cluster_monitor == 1:
+            resources += self.clustermon_resource_template
+            constraints += self.clustermon_location_constraint
+            
+        ip1=self.NextIP()
+        ip2=self.NextIP()
+        ip3=self.NextIP()
         ip1_rsc = self.ipaddr_template % (ip1, ip1, ip1, ip1, ip1)
         ip2_rsc = self.hb_ipaddr_template % (ip2, ip2, ip2, ip2, ip2)
         ip3_rsc = self.ipaddr_template % (ip3, ip3, ip3, ip3, ip3)
-	resources += self.resource_group_template % (ip1_rsc, ip2_rsc, ip3_rsc)
+        resources += self.resource_group_template % (ip1_rsc, ip2_rsc, ip3_rsc)
 
-	# lsb resource
-	resources += self.lsb_resource
+        # lsb resource
+        resources += self.lsb_resource
 
         # Mirgator
         resources += self.dummy_resource_template % \
             ("migrator", "migrator", "migrator", "migrator")
 
-	# per node resource
-	fields = string.split(self.CM.Env["IPBase"], '.')
-	for node in self.CM.Env["nodes"]:
-	    ip = self.NextIP()
-	    per_node_resources = self.ipaddr_template % \
-		("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, ip)    
-	    
-	    per_node_constraint = self.per_node_constraint_template % \
-		("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, node)
-		
-	    resources += per_node_resources
-	    constraints += per_node_constraint
+        # per node resource
+        fields = string.split(self.CM.Env["IPBase"], '.')
+        for node in self.CM.Env["nodes"]:
+            ip = self.NextIP()
+            per_node_resources = self.ipaddr_template % \
+                ("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, ip)    
+            
+            per_node_constraint = self.per_node_constraint_template % \
+                ("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, node)
+                
+            resources += per_node_resources
+            constraints += per_node_constraint
     
-	# fencing resource
-	nodelist = ""
-	len = 0
-	for node in self.CM.Env["nodes"]:
-	    nodelist += node + " "
-	    len = len + 1
+        # fencing resource
+        nodelist = ""
+        len = 0
+        for node in self.CM.Env["nodes"]:
+            nodelist += node + " "
+            len = len + 1
 
         stonith_resource = self.stonith_resource_template % \
             (self.CM.Env["reset"].stonithtype, self.CM.Env["reset"].configName, self.CM.Env["reset"].configValue)
-	resources += stonith_resource
-	
-	#master slave resource
-	resources += self.master_slave_resource % (2*len, 2, len, 1)
+        resources += stonith_resource
+        
+        #master slave resource
+        resources += self.master_slave_resource % (2*len, 2, len, 1)
 
-	# generate cib
+        # generate cib
         self.cts_cib = self.cib_template %  (cib_options, resources, constraints)
 
     def cib(self):

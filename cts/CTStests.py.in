@@ -29,15 +29,15 @@ Add RecourceRecover testcase Zhao Kai <zhaokai@cn.ibm.com>
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #
-#	SPECIAL NOTE:
+#        SPECIAL NOTE:
 #
-#	Tests may NOT implement any cluster-manager-specific code in them.
-#	EXTEND the ClusterManager object to provide the base capabilities
-#	the test needs if you need to do something that the current CM classes
-#	do not.  Otherwise you screw up the whole point of the object structure
-#	in CTS.
+#        Tests may NOT implement any cluster-manager-specific code in them.
+#        EXTEND the ClusterManager object to provide the base capabilities
+#        the test needs if you need to do something that the current CM classes
+#        do not.  Otherwise you screw up the whole point of the object structure
+#        in CTS.
 #
-#		Thank you.
+#                Thank you.
 #
 
 import CTS
@@ -154,8 +154,8 @@ random for the selected number of iterations.
 
         self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
 
-	for node in self.CM.Env["nodes"]:
-	    if node in self.CM.Env["oprofile"]:
+        for node in self.CM.Env["nodes"]:
+            if node in self.CM.Env["oprofile"]:
                 self.CM.log("Enabling oprofile on %s" % node) 
                 self.CM.rsh.remote_py(node, "os", "system", "opcontrol --init")
                 self.CM.rsh.remote_py(node, "os", "system", "opcontrol --start")
@@ -164,7 +164,7 @@ random for the selected number of iterations.
             return None
 
         for node in self.CM.Env["nodes"]:
-	    if node in self.CM.Env["oprofile"]:
+            if node in self.CM.Env["oprofile"]:
                 self.CM.rsh.remote_py(
                     node, "os", "system", "opcontrol --save=cts.setup")
 
@@ -191,8 +191,8 @@ random for the selected number of iterations.
             test.starttime=starttime
             ret=test(nodechoice)
 
-	    for node in self.CM.Env["nodes"]:
-		if node in self.CM.Env["oprofile"]:
+            for node in self.CM.Env["nodes"]:
+                if node in self.CM.Env["oprofile"]:
                     self.CM.rsh.remote_py(
                         node, "os", "system", 
                         "opcontrol --save=cts.%d" % (testcount-1))
@@ -228,8 +228,8 @@ random for the selected number of iterations.
 
         self.Scenario.TearDown(self.CM)
         
-	for node in self.CM.Env["nodes"]:
-	    if node in self.CM.Env["oprofile"]:
+        for node in self.CM.Env["nodes"]:
+            if node in self.CM.Env["oprofile"]:
                 self.CM.log("Disabling oprofile on %s" % node) 
                 self.CM.rsh.remote_py(node, "os", "system", "opcontrol --shutdown")
 
@@ -609,10 +609,10 @@ class StonithTest(CTSTest):
         # wait for the cluster to stabilize
         self.CM.cluster_stable()
 
-	if node in self.CM.Env["oprofile"]:
-	    self.CM.log("Enabling oprofile on %s" % node) 
-	    self.CM.rsh.remote_py(node, "os", "system", "opcontrol --init")
-	    self.CM.rsh.remote_py(node, "os", "system", "opcontrol --start")
+        if node in self.CM.Env["oprofile"]:
+            self.CM.log("Enabling oprofile on %s" % node) 
+            self.CM.rsh.remote_py(node, "os", "system", "opcontrol --init")
+            self.CM.rsh.remote_py(node, "os", "system", "opcontrol --start")
 
         # return case processing
         if rc == 0:

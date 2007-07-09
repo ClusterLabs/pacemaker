@@ -426,7 +426,7 @@ class ClusterManager(UserDict):
     def __init__(self, Environment, randseed=None):
         self.Env = Environment
         self.__InitialConditions()
-	self.clear_cache = 0
+        self.clear_cache = 0
         self.data = {
             "up"             : "up",        # Status meaning up
             "down"           : "down",  # Status meaning down
@@ -501,14 +501,14 @@ class ClusterManager(UserDict):
         return None
 
     def clear_all_caches(self):
-	if self.clear_cache:
-	    for node in self.Env["nodes"]:
-		if self.ShouldBeStatus[node] == self["down"]:
-		    self.debug("Removing cache file on: "+node)
-		    self.rsh.remote_py(node, "os", "system", 
-				       "rm -f @HA_VARLIBDIR@/heartbeat/hostcache")
-		else:
-		    self.debug("NOT Removing cache file on: "+node)
+        if self.clear_cache:
+            for node in self.Env["nodes"]:
+                if self.ShouldBeStatus[node] == self["down"]:
+                    self.debug("Removing cache file on: "+node)
+                    self.rsh.remote_py(node, "os", "system", 
+                                       "rm -f @HA_VARLIBDIR@/heartbeat/hostcache")
+                else:
+                    self.debug("NOT Removing cache file on: "+node)
 
     def StartaCM(self, node):
 

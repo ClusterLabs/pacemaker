@@ -194,23 +194,23 @@ class SysLog(Logger):
     defaultsource="CTS"
     defaultfacility= syslog.LOG_LOCAL7
     map = {
-            "kernel":	syslog.LOG_KERN,
-            "user":	syslog.LOG_USER,
-            "mail":	syslog.LOG_MAIL,
-            "daemon":	syslog.LOG_MAIL,
-            "auth":	syslog.LOG_AUTH,
-            "lpr":	syslog.LOG_LPR,
-            "news":	syslog.LOG_NEWS,
-            "uucp":	syslog.LOG_UUCP,
-            "cron":	syslog.LOG_CRON,
-            "local0":	syslog.LOG_LOCAL0,
-            "local1":	syslog.LOG_LOCAL1,
-            "local2":	syslog.LOG_LOCAL2,
-            "local3":	syslog.LOG_LOCAL3,
-            "local4":	syslog.LOG_LOCAL4,
-            "local5":	syslog.LOG_LOCAL5,
-            "local6":	syslog.LOG_LOCAL6,
-            "local7":	syslog.LOG_LOCAL7,
+            "kernel":   syslog.LOG_KERN,
+            "user":     syslog.LOG_USER,
+            "mail":     syslog.LOG_MAIL,
+            "daemon":   syslog.LOG_MAIL,
+            "auth":     syslog.LOG_AUTH,
+            "lpr":      syslog.LOG_LPR,
+            "news":     syslog.LOG_NEWS,
+            "uucp":     syslog.LOG_UUCP,
+            "cron":     syslog.LOG_CRON,
+            "local0":   syslog.LOG_LOCAL0,
+            "local1":   syslog.LOG_LOCAL1,
+            "local2":   syslog.LOG_LOCAL2,
+            "local3":   syslog.LOG_LOCAL3,
+            "local4":   syslog.LOG_LOCAL4,
+            "local5":   syslog.LOG_LOCAL5,
+            "local6":   syslog.LOG_LOCAL6,
+            "local7":   syslog.LOG_LOCAL7,
     }
     def __init__(self, labinfo):
 
@@ -604,7 +604,7 @@ if __name__ == '__main__':
            else:
                usage(args[i+1])
        elif args[i] == "--bsc":
-	   DoBSC=1
+           DoBSC=1
        elif args[i] == "--standby":
            skipthis=1
            if args[i+1] == "1" or args[i+1] == "yes":
@@ -664,7 +664,7 @@ if __name__ == '__main__':
            NumIter=int(args[i])
      
     if not oprofile:
-	oprofile = []
+        oprofile = []
 
     #
     # This reading of HBconfig here is ugly, and I suppose ought to
@@ -774,12 +774,12 @@ if __name__ == '__main__':
         cm.log("Resource Monitoring is disabled")
     cm.log("Cluster nodes: ")
     for node in config.Parameters["node"]:
-	(rc, lines) = cm.rsh.remote_py(node, "os", "system", 
-				     "@sbindir@/crm_uuid")
+        (rc, lines) = cm.rsh.remote_py(node, "os", "system", 
+                                     "@sbindir@/crm_uuid")
         if not lines:
             cm.log("    * %s: __undefined_uuid__" % node)
         else:
-	    out=lines[0]
+            out=lines[0]
             out = out[:-1]
             cm.log("    * %s: %s" % (node, out))
         
