@@ -2,14 +2,10 @@
 #
 # WARNING: This script is for CTS testing only
 #
+. @HB_RA_DIR@/hto-mapfuncs
 
+OCF_TYPE=Dummy
 OCF_RESOURCE_INSTANCE=LSBDummy
-export OCF_RESOURCE_INSTANCE
+export OCF_TYPE OCF_RESOURCE_INSTANCE
 
-action=$1
-if [ "$action" = "status" ]; then
-    action="monitor"
-fi
-
-@OCF_RA_DIR@/heartbeat/Dummy $action
-exit $?
+ra_execocf $2
