@@ -1305,6 +1305,7 @@ void
 filter_action_parameters(crm_data_t *param_set, const char *version) 
 {
 	const char *timeout = NULL;
+	const char *interval = NULL;
 #if CRM_DEPRECATED_SINCE_2_0_5
 	const char *filter_205[] = {
 		XML_ATTR_TE_TARGET_RC,
@@ -1381,6 +1382,8 @@ filter_action_parameters(crm_data_t *param_set, const char *version)
 	}
 	
 	timeout = crm_element_value(param_set, CRM_META"_timeout");
+	interval = crm_element_value(param_set, CRM_META"_interval");
+
 	xml_prop_iter(param_set, prop_name, prop_value,      
 		      do_delete = FALSE;
 		      if(strncasecmp(prop_name, CRM_META, meta_len) == 0) {
@@ -1395,7 +1398,7 @@ filter_action_parameters(crm_data_t *param_set, const char *version)
 		      }
 		);
 
-	if(compare_version(version, "1.0.8")) {
+	if(crm_get_msec(interval) && compare_version(version, "1.0.8")) {
 		/* Re-instate the operation's timeout value */
 		if(timeout != NULL) {
 			crm_xml_add(param_set, CRM_META"_timeout", timeout);
