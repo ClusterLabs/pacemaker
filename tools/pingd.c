@@ -235,7 +235,7 @@ main(int argc, char **argv)
 	};
 #endif
 	pid_file = crm_strdup("/tmp/pingd.pid");
-	crm_system_name = basename(argv[0]);
+	crm_system_name = "pingd";
 
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, pingd_shutdown, NULL, NULL);
