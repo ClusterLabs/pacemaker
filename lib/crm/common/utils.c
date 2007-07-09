@@ -1304,6 +1304,7 @@ decode_transition_key(
 void
 filter_action_parameters(crm_data_t *param_set, const char *version) 
 {
+	const char *timeout = NULL;
 #if CRM_DEPRECATED_SINCE_2_0_5
 	const char *filter_205[] = {
 		XML_ATTR_TE_TARGET_RC,
@@ -1374,11 +1375,12 @@ filter_action_parameters(crm_data_t *param_set, const char *version)
 		}
 	}
 #endif
-	
+
 	for(lpc = 0; lpc < DIMOF(attr_filter); lpc++) {
 		xml_remove_prop(param_set, attr_filter[lpc]); 
 	}
 	
+	timeout = crm_element_value(param_set, CRM_META"_timeout");
 	xml_prop_iter(param_set, prop_name, prop_value,      
 		      do_delete = FALSE;
 		      if(strncasecmp(prop_name, CRM_META, meta_len) == 0) {
@@ -1392,6 +1394,13 @@ filter_action_parameters(crm_data_t *param_set, const char *version)
 			      __counter--;
 		      }
 		);
+
+	if(compare_version(version, "1.0.8")) {
+		/* Re-instate the operation's timeout value */
+		if(timeout != NULL) {
+			crm_xml_add(param_set, CRM_META"_timeout", timeout);
+		}
+	}
 }
 
 void

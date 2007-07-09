@@ -83,7 +83,7 @@ extern gboolean crm_assert_failed;
 #define CIB_FILENAME	WORKING_DIR"/cib.xml"
 #define CIB_BACKUP	WORKING_DIR"/cib_backup.xml"
 
-#define CRM_FEATURE_SET	"1.0.8"
+#define CRM_FEATURE_SET	"1.0.9"
 
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1
