@@ -1060,8 +1060,8 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 		}
 		StopRsc(rsc, current, FALSE, data_set);
 		StartRsc(rsc, next, FALSE, data_set);
-		if(rsc->role == RSC_ROLE_MASTER) {
-			PromoteRsc(rsc, next, FALSE, data_set);
+		if(rsc->next_role == RSC_ROLE_MASTER) {
+		    PromoteRsc(rsc, next, FALSE, data_set);
 		}
 
 		possible_matches = find_recurring_actions(rsc->actions, next);
@@ -1093,7 +1093,7 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 		}
 		StopRsc(rsc, current, start->optional, data_set);
 		StartRsc(rsc, current, start->optional, data_set);
-		if(rsc->role == RSC_ROLE_MASTER) {
+		if(rsc->next_role == RSC_ROLE_MASTER) {
 			PromoteRsc(rsc, next, start->optional, data_set);
 		}
 		
@@ -1156,7 +1156,9 @@ PromoteRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *d
 	GListPtr action_list = NULL;
 	crm_debug_2("Executing: %s", rsc->id);
 
-	CRM_CHECK(rsc->next_role == RSC_ROLE_MASTER, return FALSE);
+	CRM_CHECK(rsc->next_role == RSC_ROLE_MASTER,
+		  crm_err("Next role: %s", role2text(rsc->next_role));
+		  return FALSE);
 
 	key = start_key(rsc);
 	action_list = find_actions_exact(rsc->actions, key, next);
