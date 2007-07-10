@@ -24,6 +24,7 @@
 
 #include <sys/param.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -1442,7 +1443,9 @@ void
 crm_abort(const char *file, const char *function, int line,
 	  const char *assert_condition, gboolean do_fork)
 {
+	int rc = 0;
 	int pid = 0;
+	int status = 0;
 
 	if(do_fork == FALSE) {
 		do_crm_log(LOG_ERR, 
@@ -1468,6 +1471,14 @@ crm_abort(const char *file, const char *function, int line,
 			do_crm_log(LOG_ERR, 
 				   "%s: Forked child %d to record non-fatal assert at %s:%d : %s",
 				   function, pid, file, line, assert_condition);
+			do {
+			    rc = waitpid(pid, &status, 0);
+			    if(rc < 0 && errno != EINTR) {
+				cl_perror("%s: Cannot wait on forked child %d", function, pid);
+			    }
+			    
+			} while(rc < 0 && errno == EINTR);
+			    
 			return;
 
 		case 0:	/* Child */
