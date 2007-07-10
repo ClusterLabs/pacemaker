@@ -506,7 +506,7 @@ class ClusterManager(UserDict):
                 if self.ShouldBeStatus[node] == self["down"]:
                     self.debug("Removing cache file on: "+node)
                     self.rsh.remote_py(node, "os", "system", 
-                                       "rm -f @HA_VARLIBDIR@/heartbeat/hostcache")
+                                       "rm -f @HA_VARLIBHBDIR@/hostcache")
                 else:
                     self.debug("NOT Removing cache file on: "+node)
 
@@ -544,7 +544,7 @@ class ClusterManager(UserDict):
         if self.clear_cache:
             self.debug("Removing cache file on: "+node)
             self.rsh.remote_py(node, "os", "system", 
-                               "rm -f @HA_VARLIBDIR@/heartbeat/hostcache")
+                               "rm -f @HA_VARLIBHBDIR@/hostcache")
 
         if self.rsh(node, self["StartCmd"]) != 0:
             self.log ("Warn: Start command failed on node %s" %(node))
@@ -578,7 +578,7 @@ class ClusterManager(UserDict):
         if self.clear_cache:
             self.debug("Removing cache file on: "+node)
             self.rsh.remote_py(node, "os", "system", 
-                               "rm -f @HA_VARLIBDIR@/heartbeat/hostcache")
+                               "rm -f @HA_VARLIBHBDIR@/hostcache")
 
         self.rsh.noBlock(node, self["StartCmd"])
         self.ShouldBeStatus[node]=self["up"]
