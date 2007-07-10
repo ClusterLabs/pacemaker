@@ -113,7 +113,22 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 	if(resource2->running_on) {
 		node2 = resource2->running_on->data;
 	}
+
+	if(resource1->priority < resource2->priority) {
+		do_crm_log(level, "%s < %s: score", resource1->id, resource2->id);
+		return 1;
+
+	} else if(resource1->priority > resource2->priority) {
+		do_crm_log(level, "%s > %s: score", resource1->id, resource2->id);
+		return -1;
+	}
 	
+	if(node1 == NULL && node2 == NULL) {
+			do_crm_log(level, "%s == %s: not active",
+					   resource1->id, resource2->id);
+			return 0;
+	}
+
 	if(node1 != node2) {
 		if(node1 == NULL) {
 			do_crm_log(level, "%s > %s: active", resource1->id, resource2->id);
@@ -160,11 +175,11 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 	}
 
 	if(node1->weight < node2->weight) {
-		do_crm_log(level, "%s < %s: score", resource1->id, resource2->id);
+		do_crm_log(level, "%s < %s: node score", resource1->id, resource2->id);
 		return 1;
 
 	} else if(node1->weight > node2->weight) {
-		do_crm_log(level, "%s > %s: score", resource1->id, resource2->id);
+		do_crm_log(level, "%s > %s: node score", resource1->id, resource2->id);
 		return -1;
 	}
 	
@@ -267,29 +282,27 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	rsc->is_allocating = TRUE;
 	crm_debug_2("Processing %s", rsc->id);
 	
-	if(TRUE/* rsc->stickiness */) {
-		/* count now tracks the number of clones currently allocated */
-		slist_iter(node, node_t, rsc->allowed_nodes, lpc,
-			   node->count = 0;
-			);
-		
-		slist_iter(child, resource_t, clone_data->child_list, lpc,
-			   if(g_list_length(child->running_on) > 0) {
-				   node_t *child_node = child->running_on->data;
-				   node_t *local_node = parent_node_instance(
-					   child, child->running_on->data);
-				   if(local_node) {
-					   local_node->count++;
-				   } else {
-					   crm_err("%s is running on %s which isn't allowed",
-						   child->id, child_node->details->uname);
-				   }
+	/* count now tracks the number of clones currently allocated */
+	slist_iter(node, node_t, rsc->allowed_nodes, lpc,
+		   node->count = 0;
+		);
+	
+	slist_iter(child, resource_t, clone_data->child_list, lpc,
+		   if(g_list_length(child->running_on) > 0) {
+			   node_t *child_node = child->running_on->data;
+			   node_t *local_node = parent_node_instance(
+				   child, child->running_on->data);
+			   if(local_node) {
+				   local_node->count++;
+			   } else {
+				   crm_err("%s is running on %s which isn't allowed",
+					   child->id, child_node->details->uname);
 			   }
-			);
-
-		clone_data->child_list = g_list_sort(
-			clone_data->child_list, sort_clone_instance);
-	}
+		   }
+		);
+	
+	clone_data->child_list = g_list_sort(
+		clone_data->child_list, sort_clone_instance);
 
 	/* count now tracks the number of clones we have allocated */
 	slist_iter(node, node_t, rsc->allowed_nodes, lpc,

@@ -34,6 +34,7 @@ typedef struct clone_variant_data_s {
 		
 		gboolean interleave;
 		gboolean ordered;
+		gboolean applied_master_prefs;
 
 		crm_data_t *xml_obj_child;
 		

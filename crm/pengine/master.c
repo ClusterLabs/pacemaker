@@ -34,6 +34,8 @@ extern void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
 	pe_working_set_t *data_set);
 
+extern int master_score(resource_t *rsc, node_t *node, int not_set_value);
+
 static void
 child_promoting_constraints(
 	clone_variant_data_t *clone_data, enum pe_ordering type,
@@ -266,19 +268,102 @@ static gint sort_master_instance(gconstpointer a, gconstpointer b)
 	return sort_clone_instance(a, b);
 }
 
+int
+master_score(resource_t *rsc, node_t *node, int not_set_value)
+{
+	char *attr_name;
+	const char *attr_value;
+	int score = not_set_value, len = 0;
+
+	len = 8 + strlen(rsc->id);
+	crm_malloc0(attr_name, len);
+	sprintf(attr_name, "master-%s", rsc->id);
+	
+	crm_debug_3("looking for %s on %s", attr_name,
+				node->details->uname);
+	attr_value = g_hash_table_lookup(
+		node->details->attrs, attr_name);
+	
+	if(attr_value == NULL) {
+		crm_free(attr_name);
+		len = 8 + strlen(rsc->long_name);
+		crm_malloc0(attr_name, len);
+		sprintf(attr_name, "master-%s", rsc->long_name);
+		crm_debug_3("looking for %s on %s", attr_name,
+					node->details->uname);
+		attr_value = g_hash_table_lookup(
+			node->details->attrs, attr_name);
+	}
+	
+	if(attr_value != NULL) {
+		crm_debug_2("%s[%s] = %s", attr_name,
+					node->details->uname, crm_str(attr_value));
+		score = char2score(attr_value);
+	}
+
+	crm_free(attr_name);
+	return score;
+}
+
+#define max(a, b) a<b?b:a
+
+static void
+apply_master_prefs(resource_t *rsc) 
+{
+    int score, new_score;
+    clone_variant_data_t *clone_data = NULL;
+    get_clone_variant_data(clone_data, rsc);
+    
+    if(clone_data->applied_master_prefs) {
+	/* Make sure we only do this once */
+	return;
+    }
+    
+    clone_data->applied_master_prefs = TRUE;
+    
+    slist_iter(
+	child_rsc, resource_t, clone_data->child_list, lpc,
+	slist_iter(
+	    node, node_t, child_rsc->allowed_nodes, lpc,
+
+	    if(can_run_resources(node) == FALSE) {
+		/* This node will never be promoted to master,
+		 *  so don't apply the master score as that may
+		 *  lead to clone shuffling
+		 */
+		continue;
+	    }
+	    
+	    score = master_score(child_rsc, node, 0);
+	    
+	    new_score = merge_weights(node->weight, score);
+	    if(new_score != node->weight) {
+		crm_debug("\t%s: Updating preference for %s (%d->%d)",
+			  child_rsc->id, node->details->uname, node->weight, new_score);
+		node->weight = new_score;
+	    }
+	    
+	    new_score = max(child_rsc->priority, score);
+	    if(new_score != child_rsc->priority) {
+		crm_debug("\t%s: Updating priority (%d->%d)",
+			  child_rsc->id, child_rsc->priority, new_score);
+		child_rsc->priority = new_score;
+	    }
+	    );
+	);
+}
+
 node_t *
 master_color(resource_t *rsc, pe_working_set_t *data_set)
 {
-	int len = 0;
 	int promoted = 0;
 	node_t *chosen = NULL;
 	node_t *cons_node = NULL;
-
-	char *attr_name = NULL;
-	const char *attr_value = NULL;
 	
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
+
+	apply_master_prefs(rsc);
 
 	clone_color(rsc, data_set);
 	
@@ -310,40 +395,8 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 					break;
 				}
 				
-				child_rsc->priority = -1;
-
 				CRM_CHECK(chosen != NULL, break);
-
-				len = 8 + strlen(child_rsc->id);
-				crm_malloc0(attr_name, len);
-				sprintf(attr_name, "master-%s", child_rsc->id);
-				
-				crm_debug_2("looking for %s on %s", attr_name,
-					    chosen->details->uname);
-				attr_value = g_hash_table_lookup(
-					chosen->details->attrs, attr_name);
-
-				if(attr_value == NULL) {
-					crm_free(attr_name);
-					len = 8 + strlen(child_rsc->long_name);
-					crm_malloc0(attr_name, len);
-					sprintf(attr_name, "master-%s", child_rsc->long_name);
-					crm_debug_2("looking for %s on %s", attr_name,
-						    chosen->details->uname);
-					attr_value = g_hash_table_lookup(
-						chosen->details->attrs, attr_name);
-				}
-				
-				if(attr_value != NULL) {
-					crm_debug("%s=%s for %s", attr_name,
-						  crm_str(attr_value),
-						  chosen->details->uname);
-				
-					child_rsc->priority = char2score(
-						attr_value);
-				}
-
-				crm_free(attr_name);
+				child_rsc->priority = master_score(child_rsc, chosen, -INFINITY);
 				break;
 
 			case RSC_ROLE_SLAVE:

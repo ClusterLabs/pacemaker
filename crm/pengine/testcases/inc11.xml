@@ -18,8 +18,8 @@
       <node id="uuid2" uname="node2" type="member">
         <instance_attributes id="master-uuid2">
           <attributes>
-            <nvpair id="master-child_rsc1:0-uuid2" name="master-child_rsc1:0" value="300"/>
-            <nvpair id="master-child_rsc1:1-uuid2" name="master-child_rsc1:1" value="30"/>
+            <nvpair id="master-child_rsc1:0-uuid2" name="master-child_rsc1:0" value="30"/>
+            <nvpair id="master-child_rsc1:1-uuid2" name="master-child_rsc1:1" value="300"/>
           </attributes>
         </instance_attributes>
       </node>
