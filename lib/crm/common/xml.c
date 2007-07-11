@@ -2059,9 +2059,9 @@ replace_xml_child(crm_data_t *parent, crm_data_t *child, crm_data_t *update, gbo
 	up_id = ID(update);
 	child_id = ID(child);
 	
-	if(child_id == up_id || safe_str_eq(child_id, up_id)) {
+	if(up_id == NULL || safe_str_eq(child_id, up_id)) {
 		can_delete = TRUE;
-	}
+	} 
 	if(safe_str_neq(crm_element_name(update), crm_element_name(child))) {
 		can_delete = FALSE;
 	}
