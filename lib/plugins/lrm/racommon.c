@@ -73,14 +73,20 @@ get_ra_pathname(const char* class_path, const char* type, const char* provider,
  *    Return Value:
  *		     TRUE:  the file is qualified.
  *		     FALSE: the file is unqualified.
- *    Notes: A qalifed file is a regular file with execute bits.
+ *    Notes: A qualifed file is a regular file with execute bits
+ *           which does not start with '.'
  */
 gboolean
 filtered(char * file_name)
 {
 	struct stat buf;
+	char *s;
 
 	if ( stat(file_name, &buf) != 0 ) {
+		return FALSE;
+	}
+	if ( ((s = strrchr(file_name,'/')) && *(s+1) == '.')
+			|| *file_name == '.' ) {
 		return FALSE;
 	}
 
