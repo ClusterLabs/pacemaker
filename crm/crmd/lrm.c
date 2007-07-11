@@ -863,11 +863,9 @@ delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id)
 	 * Avoids refreshing the entire LRM section of this host
 	 */
 	if(op != NULL) {
-		char *magic = NULL;
 		xml_top = create_xml_node(NULL, XML_LRM_TAG_RSC_OP);
-		magic = generate_transition_magic(op->user_data, op->op_status, op->rc);
-		crm_xml_add(xml_top, XML_ATTR_TRANSITION_MAGIC, magic);
-		crm_free(magic);
+		crm_xml_add_int(xml_top, XML_LRM_ATTR_CALLID, op->call_id);
+		crm_xml_add(xml_top, XML_ATTR_TRANSITION_KEY, op->user_data);
 		
 		crm_debug("async: Sending delete op for %s_%s_%d (call=%d)",
 			  op->rsc_id, op->op_type, op->interval, op->call_id);
@@ -904,7 +902,7 @@ delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id)
 		return;
 	}
 
-/* 	crm_log_xml_err(xml_top, "op:cancel"); */
+ 	crm_log_xml_debug(xml_top, "op:cancel");
 
  	free_xml(xml_top);
 }
@@ -1762,7 +1760,7 @@ process_lrm_event(lrm_op_t *op)
 		crm_err("Op %s (call=%d): Cancelled", op_key, op->call_id);
 
 	} else if(op->user_data != NULL) {
-		delete_op_entry(op, NULL, NULL, 0);
+		delete_op_entry(op, NULL, NULL, op->call_id);
 		
 	} else {
 		crm_err("Op %s (call=%d): No user data", op_key, op->call_id);
