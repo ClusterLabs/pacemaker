@@ -587,7 +587,8 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 
 			crm_malloc0(filename, filename_len);
 			if(filename != NULL) {
-				sprintf(filename, "%s-%s_%d.xml",
+				snprintf(filename, filename_len,
+					"%s-%s_%d.xml",
 					result, this_msg_reference,
 					received_responses);
 				

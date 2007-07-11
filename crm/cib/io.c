@@ -188,6 +188,7 @@ validate_on_disk_cib(const char *filename, crm_data_t **on_disk_cib)
 	s_res = stat(filename, &buf);
 	if (s_res == 0) {
 		char *sigfile = NULL;
+		size_t		fnsize;
 		cib_file = fopen(filename, "r");
 		if(cib_file == NULL) {
 			cl_perror("Couldn't open config file %s for reading", filename);
@@ -198,8 +199,9 @@ validate_on_disk_cib(const char *filename, crm_data_t **on_disk_cib)
 		root = file2xml(cib_file, FALSE);
 		fclose(cib_file);
 		
-		crm_malloc0(sigfile, strlen(filename) + 5);
-		sprintf(sigfile, "%s.sig", filename);
+		fnsize =  strlen(filename) + 5;
+		crm_malloc0(sigfile, fnsize);
+		snprintf(sigfile, fnsize, "%s.sig", filename);
 		if(validate_cib_digest(root, sigfile) == FALSE) {
 			passed = FALSE;
 		}

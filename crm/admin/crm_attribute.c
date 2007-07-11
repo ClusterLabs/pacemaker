@@ -263,15 +263,15 @@ main(int argc, char **argv)
 		
 		len = 8 + strlen(rsc_id);
 		crm_malloc0(attr_name, len);
-		sprintf(attr_name, "master-%s", rsc_id);
+		snprintf(attr_name, len, "master-%s", rsc_id);
 
 		len = 3 + strlen(type) + strlen(attr_name) + strlen(dest_node);
 		crm_malloc0(attr_id, len);
-		sprintf(attr_id, "%s-%s-%s", type, attr_name, dest_node);
+		snprintf(attr_id, len, "%s-%s-%s", type, attr_name, dest_node);
 
 		len = 8 + strlen(dest_node);
 		crm_malloc0(set_name, len);
-		sprintf(set_name, "master-%s", dest_node);
+		snprintf(set_name, len, "master-%s", dest_node);
 		
 	} else if(safe_str_eq(crm_system_name, "crm_failcount")) {
 		type = XML_CIB_TAG_STATUS;

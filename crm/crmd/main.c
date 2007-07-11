@@ -194,7 +194,8 @@ crmd_tickle_apphb(gpointer data)
 {
     char	app_instance[APPNAME_LEN];
     int     rc = 0;
-    sprintf(app_instance, "%s_%ld", crm_system_name, (long)getpid());
+    snprintf(app_instance, sizeof(app_instance), "%s_%ld", crm_system_name
+    ,	(long)getpid());
 
     rc = apphb_hb();
     if (rc < 0) {
