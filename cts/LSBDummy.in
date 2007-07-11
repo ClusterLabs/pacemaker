@@ -8,4 +8,4 @@ OCF_TYPE=Dummy
 OCF_RESOURCE_INSTANCE=LSBDummy
 export OCF_TYPE OCF_RESOURCE_INSTANCE
 
-ra_execocf $2
+ra_execocf $1
