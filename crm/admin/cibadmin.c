@@ -142,7 +142,7 @@ main(int argc, char **argv)
 
 	cl_log_set_entity("cibadmin");
 	cl_log_set_facility(LOG_USER);
-	set_crm_log_level(LOG_CRIT-1);
+	set_crm_log_level(LOG_CRIT);
 	
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);

@@ -1504,9 +1504,13 @@ parse_xml(const char *input, size_t *offset)
 		drop_comments(our_input, &lpc, max);
 		drop_whitespace(our_input, &lpc, max);
 		if(lpc < max) {
-			crm_err("Ignoring trailing characters in XML input.");
-			crm_err("Parsed %d characters of a possible %d.  Trailing text was: ...\'%20s\'",
-				(int)lpc, (int)max, our_input+lpc);
+		    if(crm_log_level < LOG_ERR) {
+			fprintf(stderr, "%s: Ignoring trailing characters in XML input.  Supply -V for more details.\n", __PRETTY_FUNCTION__);
+		    } else {
+			cl_log(LOG_ERR, "%s: Ignoring trailing characters in XML input.", __PRETTY_FUNCTION__);
+		    }
+		    cl_log(LOG_ERR, "%s: Parsed %d characters of a possible %d.  Trailing text was: \'%.20s\'...",
+			   __PRETTY_FUNCTION__, (int)lpc, (int)max, our_input+lpc);
 		}
 	}
 	
