@@ -902,7 +902,7 @@ delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id)
 		return;
 	}
 
- 	crm_log_xml_debug(xml_top, "op:cancel");
+ 	crm_log_xml_debug_2(xml_top, "op:cancel");
 
  	free_xml(xml_top);
 }
