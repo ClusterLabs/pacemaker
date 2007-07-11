@@ -445,10 +445,15 @@ rsc_ordering constraints express dependencies between the actions on two resourc
           symmetrical (true|1|false|0)	'true'>
 
 <!--
+
 Specify where a resource should run relative to another resource
 
-NOTE: Currently, only values of + and - INFINITY are permitted for the score.
-This may change in the future.
+Make rsc 'from' run on the same machine as rsc 'to'
+
+If rsc 'to' cannot run anywhere and 'score' is INFINITY, 
+  then rsc 'from' wont be allowed to run anywhere either
+If rsc 'from' cannot run anywhere, then 'to' wont be affected
+
 -->
 <!ELEMENT rsc_colocation (lifetime?)>
 <!ATTLIST rsc_colocation
