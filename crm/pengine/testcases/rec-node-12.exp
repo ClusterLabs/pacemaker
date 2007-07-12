@@ -619,7 +619,19 @@
    </synapse>
    <synapse id="50">
      <action_set>
-       <crm_event id="53" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+       <pseudo_event id="53" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <crm_event id="54" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="51">
+     <action_set>
+       <crm_event id="54" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <attributes crm_feature_set="1.0.9" CRM_meta_on_node="c001n02" CRM_meta_stonith_action="reboot" CRM_meta_on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </crm_event>
      </action_set>
@@ -629,9 +641,9 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="51">
+   <synapse id="52">
      <action_set>
-       <pseudo_event id="59" operation="stonith_up" operation_key="stonith_up">
+       <pseudo_event id="65" operation="stonith_up" operation_key="stonith_up">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>
@@ -641,9 +653,9 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="52">
+   <synapse id="53">
      <action_set>
-       <pseudo_event id="61" operation="stonith_up" operation_key="stonith_up">
+       <pseudo_event id="67" operation="stonith_up" operation_key="stonith_up">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>
@@ -653,27 +665,15 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="53">
+   <synapse id="54">
      <action_set>
-       <pseudo_event id="63" operation="stonith_up" operation_key="stonith_up">
+       <pseudo_event id="69" operation="stonith_up" operation_key="stonith_up">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
          <rsc_op id="46" operation="start" operation_key="child_DoFencing:2_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="54">
-     <action_set>
-       <pseudo_event id="67" operation="all_stopped" operation_key="all_stopped">
-         <attributes crm_feature_set="1.0.9"/>
-       </pseudo_event>
-     </action_set>
-     <inputs>
-       <trigger>
-         <crm_event id="53" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
      </inputs>
    </synapse>

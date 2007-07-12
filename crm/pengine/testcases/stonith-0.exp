@@ -84,10 +84,7 @@
          <pseudo_event id="45" operation="stop" operation_key="group-1_stop_0"/>
        </trigger>
        <trigger>
-         <crm_event id="109" operation="stonith" operation_key="stonith" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
-       </trigger>
-       <trigger>
-         <crm_event id="151" operation="stonith" operation_key="stonith" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+         <crm_event id="110" operation="stonith" operation_key="stonith" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
        </trigger>
      </inputs>
    </synapse>
@@ -105,10 +102,7 @@
          <pseudo_event id="45" operation="stop" operation_key="group-1_stop_0"/>
        </trigger>
        <trigger>
-         <crm_event id="109" operation="stonith" operation_key="stonith" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
-       </trigger>
-       <trigger>
-         <crm_event id="151" operation="stonith" operation_key="stonith" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+         <crm_event id="177" operation="stonith" operation_key="stonith" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
        </trigger>
      </inputs>
    </synapse>
@@ -161,7 +155,7 @@
          <pseudo_event id="45" operation="stop" operation_key="group-1_stop_0"/>
        </trigger>
        <trigger>
-         <crm_event id="109" operation="stonith" operation_key="stonith" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
+         <crm_event id="110" operation="stonith" operation_key="stonith" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
        </trigger>
      </inputs>
    </synapse>
@@ -205,10 +199,7 @@
          <pseudo_event id="45" operation="stop" operation_key="group-1_stop_0"/>
        </trigger>
        <trigger>
-         <crm_event id="109" operation="stonith" operation_key="stonith" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
-       </trigger>
-       <trigger>
-         <crm_event id="151" operation="stonith" operation_key="stonith" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+         <crm_event id="110" operation="stonith" operation_key="stonith" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
        </trigger>
      </inputs>
    </synapse>
@@ -223,10 +214,7 @@
          <pseudo_event id="45" operation="stop" operation_key="group-1_stop_0"/>
        </trigger>
        <trigger>
-         <crm_event id="109" operation="stonith" operation_key="stonith" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
-       </trigger>
-       <trigger>
-         <crm_event id="151" operation="stonith" operation_key="stonith" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+         <crm_event id="177" operation="stonith" operation_key="stonith" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
        </trigger>
      </inputs>
    </synapse>
@@ -270,7 +258,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="151" operation="stonith" operation_key="stonith" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+         <crm_event id="177" operation="stonith" operation_key="stonith" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
        </trigger>
      </inputs>
    </synapse>
@@ -308,7 +296,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="109" operation="stonith" operation_key="stonith" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
+         <crm_event id="110" operation="stonith" operation_key="stonith" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
        </trigger>
      </inputs>
    </synapse>
@@ -357,7 +345,22 @@
    </synapse>
    <synapse id="23">
      <action_set>
-       <crm_event id="109" operation="stonith" operation_key="stonith" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee">
+       <pseudo_event id="109" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <crm_event id="110" operation="stonith" operation_key="stonith" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
+       </trigger>
+       <trigger>
+         <crm_event id="177" operation="stonith" operation_key="stonith" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="24">
+     <action_set>
+       <crm_event id="110" operation="stonith" operation_key="stonith" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee">
          <attributes crm_feature_set="1.0.9" CRM_meta_on_node="c001n03" CRM_meta_stonith_action="reboot" CRM_meta_op_no_wait="true" CRM_meta_on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
        </crm_event>
      </action_set>
@@ -366,13 +369,13 @@
          <pseudo_event id="108" operation="stonith_up" operation_key="stonith_up"/>
        </trigger>
        <trigger>
-         <crm_event id="151" operation="stonith" operation_key="stonith" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+         <crm_event id="177" operation="stonith" operation_key="stonith" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="24">
+   <synapse id="25">
      <action_set>
-       <pseudo_event id="111" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="114" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>
@@ -385,9 +388,9 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="25">
+   <synapse id="26">
      <action_set>
-       <pseudo_event id="112" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="116" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>
@@ -397,9 +400,9 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="26">
+   <synapse id="27">
      <action_set>
-       <pseudo_event id="113" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="118" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>
@@ -412,9 +415,9 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="27">
+   <synapse id="28">
      <action_set>
-       <pseudo_event id="118" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="128" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>
@@ -424,9 +427,9 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="28">
+   <synapse id="29">
      <action_set>
-       <pseudo_event id="120" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="132" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>
@@ -436,29 +439,21 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="29">
-     <action_set>
-       <pseudo_event id="150" operation="stonith_up" operation_key="stonith_up">
-         <attributes crm_feature_set="1.0.9"/>
-       </pseudo_event>
-     </action_set>
-     <inputs/>
-   </synapse>
    <synapse id="30">
      <action_set>
-       <crm_event id="151" operation="stonith" operation_key="stonith" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e">
+       <crm_event id="177" operation="stonith" operation_key="stonith" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e">
          <attributes crm_feature_set="1.0.9" CRM_meta_on_node="c001n05" CRM_meta_stonith_action="reboot" CRM_meta_on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
        </crm_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="150" operation="stonith_up" operation_key="stonith_up"/>
+         <pseudo_event id="108" operation="stonith_up" operation_key="stonith_up"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="31">
      <action_set>
-       <pseudo_event id="153" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="181" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>
@@ -473,7 +468,7 @@
    </synapse>
    <synapse id="32">
      <action_set>
-       <pseudo_event id="154" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="183" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>
@@ -485,7 +480,7 @@
    </synapse>
    <synapse id="33">
      <action_set>
-       <pseudo_event id="155" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="185" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>
@@ -500,7 +495,7 @@
    </synapse>
    <synapse id="34">
      <action_set>
-       <pseudo_event id="160" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="195" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>
@@ -512,25 +507,13 @@
    </synapse>
    <synapse id="35">
      <action_set>
-       <pseudo_event id="162" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="199" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
          <pseudo_event id="5" operation="stop" operation_key="rsc_c001n07_stop_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="36">
-     <action_set>
-       <pseudo_event id="192" operation="all_stopped" operation_key="all_stopped">
-         <attributes crm_feature_set="1.0.9"/>
-       </pseudo_event>
-     </action_set>
-     <inputs>
-       <trigger>
-         <crm_event id="151" operation="stonith" operation_key="stonith" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
        </trigger>
      </inputs>
    </synapse>

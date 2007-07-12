@@ -602,6 +602,8 @@ stage6(pe_working_set_t *data_set)
 	action_t *stonith_op = NULL;
 	action_t *last_stonith = NULL;
 	gboolean integrity_lost = FALSE;
+	action_t *ready = get_pseudo_op(STONITH_UP, data_set);
+	action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
 	
 	crm_debug_3("Processing fencing and shutdown cases");
 	
@@ -612,7 +614,6 @@ stage6(pe_working_set_t *data_set)
 		if(node->details->unclean && data_set->stonith_enabled
 		   && (data_set->have_quorum
 		       || data_set->no_quorum_policy == no_quorum_ignore)) {
-			action_t *ready = get_stonith_up(data_set);
 			pe_warn("Scheduling Node %s for STONITH",
 				 node->details->uname);
 
@@ -634,6 +635,7 @@ stage6(pe_working_set_t *data_set)
 			
 			stonith_constraints(node, stonith_op, data_set);
 			order_actions(ready, stonith_op, pe_order_implies_left);
+			order_actions(stonith_op, all_stopped, pe_order_implies_right);
 
 			if(node->details->is_dc) {
 				dc_down = stonith_op;
@@ -667,12 +669,6 @@ stage6(pe_working_set_t *data_set)
 		}
 		);
 
-
-	if(last_stonith != NULL) {
-	    action_t *all_stopped = get_all_stopped(data_set);
-	    order_actions(last_stonith, all_stopped, pe_order_implies_right);
-	}
-	
 	if(integrity_lost) {
 		if(data_set->have_quorum == FALSE) {
 			crm_notice("Cannot fence unclean nodes until quorum is"

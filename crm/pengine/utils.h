@@ -60,8 +60,8 @@ extern void log_action(unsigned int log_level, const char *pre_text,
 		       action_t *action, gboolean details);
 
 extern resource_t *uber_parent(resource_t *rsc);
-extern action_t *get_all_stopped(pe_working_set_t *data_set);
-extern action_t *get_stonith_up(pe_working_set_t *data_set);
-
+extern action_t *get_pseudo_op(const char *name, pe_working_set_t *data_set);
+#define STONITH_UP "stonith_up"
+#define ALL_STOPPED "all_stopped"
 
 #endif

@@ -78,7 +78,7 @@
          <pseudo_event id="11" operation="stop" operation_key="group1_stop_0"/>
        </trigger>
        <trigger>
-         <crm_event id="16" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
+         <crm_event id="17" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>
@@ -127,7 +127,7 @@
          <pseudo_event id="11" operation="stop" operation_key="group1_stop_0"/>
        </trigger>
        <trigger>
-         <crm_event id="16" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
+         <crm_event id="17" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>
@@ -175,7 +175,7 @@
          <rsc_op id="13" operation="stop" operation_key="rsc3_stop_0" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
        <trigger>
-         <crm_event id="16" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
+         <pseudo_event id="22" operation="all_stopped" operation_key="all_stopped"/>
        </trigger>
      </inputs>
    </synapse>
@@ -216,7 +216,19 @@
    </synapse>
    <synapse id="15">
      <action_set>
-       <crm_event id="16" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1">
+       <pseudo_event id="16" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <crm_event id="17" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="16">
+     <action_set>
+       <crm_event id="17" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1">
          <attributes crm_feature_set="1.0.9" CRM_meta_on_node="node1" CRM_meta_stonith_action="reboot" CRM_meta_on_node_uuid="uuid1"/>
        </crm_event>
      </action_set>
@@ -226,9 +238,9 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="16">
+   <synapse id="17">
      <action_set>
-       <pseudo_event id="17" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="19" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>
@@ -238,9 +250,9 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="17">
+   <synapse id="18">
      <action_set>
-       <pseudo_event id="18" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="21" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>
@@ -250,27 +262,23 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="18">
+   <synapse id="19">
      <action_set>
-       <pseudo_event id="19" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="22" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="20">
+     <action_set>
+       <pseudo_event id="23" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
          <rsc_op id="13" operation="stop" operation_key="rsc3_stop_0" on_node="node2" on_node_uuid="uuid2"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="19">
-     <action_set>
-       <pseudo_event id="20" operation="all_stopped" operation_key="all_stopped">
-         <attributes crm_feature_set="1.0.9"/>
-       </pseudo_event>
-     </action_set>
-     <inputs>
-       <trigger>
-         <crm_event id="16" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>
