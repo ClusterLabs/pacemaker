@@ -125,4 +125,6 @@
 "stonith c001n01" -> "ocf_msdummy:4_stop_0 c001n01" [ style = bold]
 "stonith c001n01" -> "rsc_c001n01_stop_0 c001n01" [ style = bold]
 "stonith c001n01" [ style=bold color="green" fontcolor="black" ]
+"stonith_up" -> "stonith c001n01" [ style = bold]
+"stonith_up" [ style=bold color="green" fontcolor="orange"  ]
 }

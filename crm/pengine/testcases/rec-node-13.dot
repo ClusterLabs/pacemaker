@@ -9,4 +9,6 @@
 "ocf_msdummy:6_stop_0 c001n04" [ style=bold color="green" fontcolor="orange" ]
 "stonith c001n04" -> "ocf_msdummy:6_stop_0 c001n04" [ style = bold]
 "stonith c001n04" [ style=bold color="green" fontcolor="black" ]
+"stonith_up" -> "stonith c001n04" [ style = bold]
+"stonith_up" [ style=bold color="green" fontcolor="orange"  ]
 }

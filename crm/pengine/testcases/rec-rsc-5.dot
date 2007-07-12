@@ -21,4 +21,6 @@
 "stonith node2" -> "rsc1_stop_0 node2" [ style = bold]
 "stonith node2" -> "rsc2_stop_0 node2" [ style = bold]
 "stonith node2" [ style=bold color="green" fontcolor="black" ]
+"stonith_up" -> "stonith node2" [ style = bold]
+"stonith_up" [ style=bold color="green" fontcolor="orange"  ]
 }

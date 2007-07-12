@@ -531,14 +531,24 @@ resource_t *uber_parent(resource_t *rsc)
 }
 
 
+action_t *get_stonith_up(pe_working_set_t *data_set) 
+{
+    action_t *op = NULL;
+    const char *op_s = "stonith_up";
+    op = custom_action(NULL, crm_strdup(op_s), op_s,
+		       NULL, TRUE, TRUE, data_set);
+    op->pseudo = TRUE;
+    op->runnable = TRUE;
+    return op;
+}
+
 action_t *get_all_stopped(pe_working_set_t *data_set) 
 {
-    action_t *all_stopped = NULL;
-    const char *all_stopped_s = "all_stopped";
-    all_stopped = custom_action(
-	NULL, crm_strdup(all_stopped_s), all_stopped_s,
-	NULL, TRUE, TRUE, data_set);
-    all_stopped->pseudo = TRUE;
-    all_stopped->runnable = TRUE;
-    return all_stopped;
+    action_t *op = NULL;
+    const char *op_s = "all_stopped";
+    op = custom_action(NULL, crm_strdup(op_s), op_s,
+		       NULL, TRUE, TRUE, data_set);
+    op->pseudo = TRUE;
+    op->runnable = TRUE;
+    return op;
 }

@@ -1321,11 +1321,12 @@ native_start_constraints(
 
 	if(is_stonith) {
 		char *key = start_key(rsc);
+		action_t *ready = get_stonith_up(data_set);
 		crm_debug_2("Ordering %s action before stonith events", key);
 		custom_action_order(
 			rsc, key, NULL,
-			NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
-			pe_order_optional, data_set);
+			NULL, crm_strdup(ready->task), ready,
+			pe_order_implies_right, data_set);
 
 	} else {
 		slist_iter(action, action_t, rsc->actions, lpc2,

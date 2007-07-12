@@ -58,4 +58,6 @@
 "stonith c001n02" -> "all_stopped" [ style = bold]
 "stonith c001n02" -> "rsc_c001n02_stop_0 c001n02" [ style = bold]
 "stonith c001n02" [ style=bold color="green" fontcolor="black" ]
+"stonith_up" -> "stonith c001n02" [ style = bold]
+"stonith_up" [ style=bold color="green" fontcolor="orange"  ]
 }

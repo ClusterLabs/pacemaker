@@ -6,4 +6,8 @@
 "stonith node3" -> "all_stopped" [ style = bold]
 "stonith node3" -> "stonith node2" [ style = bold]
 "stonith node3" [ style=bold color="green" fontcolor="black" ]
+"stonith_up" -> "stonith node1" [ style = bold]
+"stonith_up" -> "stonith node2" [ style = bold]
+"stonith_up" -> "stonith node3" [ style = bold]
+"stonith_up" [ style=bold color="green" fontcolor="orange"  ]
 }

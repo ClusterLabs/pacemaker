@@ -95,7 +95,7 @@
          <pseudo_event id="29" operation="start" operation_key="app02_start_0"/>
        </trigger>
        <trigger>
-         <crm_event id="47" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <crm_event id="48" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
      </inputs>
    </synapse>
@@ -143,7 +143,7 @@
          <rsc_op id="23" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
        <trigger>
-         <crm_event id="47" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <crm_event id="48" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
      </inputs>
    </synapse>
@@ -188,7 +188,7 @@
          <rsc_op id="26" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
        <trigger>
-         <crm_event id="47" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <crm_event id="48" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
      </inputs>
    </synapse>
@@ -252,7 +252,7 @@
          <pseudo_event id="43" operation="start" operation_key="oracle_start_0"/>
        </trigger>
        <trigger>
-         <crm_event id="47" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <crm_event id="48" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
      </inputs>
    </synapse>
@@ -281,7 +281,7 @@
          <rsc_op id="33" operation="start" operation_key="IPaddr_192_168_1_104_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
        <trigger>
-         <crm_event id="47" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <crm_event id="48" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
      </inputs>
    </synapse>
@@ -310,7 +310,7 @@
          <rsc_op id="35" operation="start" operation_key="LVM_22_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
        <trigger>
-         <crm_event id="47" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <crm_event id="48" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
      </inputs>
    </synapse>
@@ -339,7 +339,7 @@
          <rsc_op id="37" operation="start" operation_key="Filesystem_23_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
        <trigger>
-         <crm_event id="47" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <crm_event id="48" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
      </inputs>
    </synapse>
@@ -368,7 +368,7 @@
          <rsc_op id="39" operation="start" operation_key="oracle_24_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
        <trigger>
-         <crm_event id="47" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <crm_event id="48" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
      </inputs>
    </synapse>
@@ -387,21 +387,21 @@
    </synapse>
    <synapse id="25">
      <action_set>
-       <crm_event id="47" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
-         <attributes crm_feature_set="1.0.9" CRM_meta_on_node="sapcl03" CRM_meta_stonith_action="reboot" CRM_meta_op_no_wait="true" CRM_meta_on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
-       </crm_event>
+       <pseudo_event id="47" operation="stonith_up" operation_key="stonith_up">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="26">
      <action_set>
-       <pseudo_event id="51" operation="all_stopped" operation_key="all_stopped">
-         <attributes crm_feature_set="1.0.9"/>
-       </pseudo_event>
+       <crm_event id="48" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
+         <attributes crm_feature_set="1.0.9" CRM_meta_on_node="sapcl03" CRM_meta_stonith_action="reboot" CRM_meta_op_no_wait="true" CRM_meta_on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+       </crm_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="20" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+         <pseudo_event id="47" operation="stonith_up" operation_key="stonith_up"/>
        </trigger>
      </inputs>
    </synapse>
@@ -413,13 +413,25 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="23" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+         <rsc_op id="20" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="28">
      <action_set>
        <pseudo_event id="53" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="23" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="29">
+     <action_set>
+       <pseudo_event id="54" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>

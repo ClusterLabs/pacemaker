@@ -43,4 +43,6 @@
 "stonith node1" -> "rsc2_start_0 node2" [ style = bold]
 "stonith node1" -> "rsc5_start_0 node2" [ style = bold]
 "stonith node1" [ style=bold color="green" fontcolor="black" ]
+"stonith_up" -> "stonith node1" [ style = bold]
+"stonith_up" [ style=bold color="green" fontcolor="orange"  ]
 }

@@ -612,6 +612,7 @@ stage6(pe_working_set_t *data_set)
 		if(node->details->unclean && data_set->stonith_enabled
 		   && (data_set->have_quorum
 		       || data_set->no_quorum_policy == no_quorum_ignore)) {
+			action_t *ready = get_stonith_up(data_set);
 			pe_warn("Scheduling Node %s for STONITH",
 				 node->details->uname);
 
@@ -632,6 +633,7 @@ stage6(pe_working_set_t *data_set)
 				data_set->stonith_action);
 			
 			stonith_constraints(node, stonith_op, data_set);
+			order_actions(ready, stonith_op, pe_order_implies_left);
 
 			if(node->details->is_dc) {
 				dc_down = stonith_op;

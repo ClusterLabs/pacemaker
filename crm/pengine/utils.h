@@ -61,6 +61,7 @@ extern void log_action(unsigned int log_level, const char *pre_text,
 
 extern resource_t *uber_parent(resource_t *rsc);
 extern action_t *get_all_stopped(pe_working_set_t *data_set);
+extern action_t *get_stonith_up(pe_working_set_t *data_set);
 
 
 #endif
