@@ -437,10 +437,6 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 			    pe_order_runnable_left, data_set);
 
 	custom_action_order(
-		rsc, stop_key(rsc), NULL, rsc, delete_key(rsc), NULL, 
-		pe_order_implies_left, data_set);
-
-	custom_action_order(
 		rsc, delete_key(rsc), NULL, rsc, start_key(rsc), NULL, 
 		pe_order_optional, data_set);	
 
@@ -1131,7 +1127,7 @@ StopRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data
 		}
 
 		if(data_set->remove_after_stop) {
-			DeleteRsc(rsc, current, FALSE, data_set);
+			DeleteRsc(rsc, current, optional, data_set);
 		}
 		);
 	
@@ -1252,8 +1248,12 @@ DeleteRsc(resource_t *rsc, node_t *node, gboolean optional, pe_working_set_t *da
 	crm_notice("Removing %s from %s",
 		 rsc->id, node->details->uname);
 	
-	delete = delete_action(rsc, node);
-
+	delete = delete_action(rsc, node, optional);
+	
+	custom_action_order(
+		rsc, stop_key(rsc), NULL, rsc, delete_key(rsc), NULL, 
+		optional?pe_order_implies_right:pe_order_implies_left, data_set);
+	
 #if DELETE_THEN_REFRESH
 	refresh = custom_action(
 		NULL, crm_strdup(CRM_OP_LRM_REFRESH), CRM_OP_LRM_REFRESH,

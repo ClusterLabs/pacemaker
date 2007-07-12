@@ -301,7 +301,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	return did_change;
 }
 
-extern gboolean DeleteRsc(resource_t *rsc, node_t *node, pe_working_set_t *data_set);
+extern gboolean DeleteRsc(resource_t *rsc, node_t *node, gboolean optional, pe_working_set_t *data_set);
 
 static void
 check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_set)
@@ -333,7 +333,7 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 	crm_debug_3("Processing %s on %s", rsc->id, node->details->uname);
 	
 	if(check_rsc_parameters(rsc, node, rsc_entry, data_set)) {
-		DeleteRsc(rsc, node, data_set);
+	    DeleteRsc(rsc, node, FALSE, data_set);
 	}
 	
 	xml_child_iter_filter(

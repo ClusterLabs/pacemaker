@@ -60,9 +60,9 @@ extern action_t *custom_action(
 	gboolean optional, gboolean foo, pe_working_set_t *data_set);
 
 #define delete_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_DELETE, 0)
-#define delete_action(rsc, node) custom_action(				\
+#define delete_action(rsc, node, optional) custom_action(		\
 		rsc, delete_key(rsc), CRMD_ACTION_DELETE, node,		\
-		FALSE, TRUE, data_set);
+		optional, TRUE, data_set);
 
 #define stopped_key(rsc) generate_op_key(rsc->id, CRMD_ACTION_STOPPED, 0)
 #define stopped_action(rsc, node, optional) custom_action(		\

@@ -599,7 +599,7 @@ void master_rsc_colocation_rh(
 	
 	CRM_CHECK(rsc_lh != NULL, return);
 	CRM_CHECK(rsc_lh->variant == pe_native, return);
-	crm_info("Processing constraint %s: %d", constraint->id, constraint->score);
+	crm_debug_2("Processing constraint %s: %d", constraint->id, constraint->score);
 
 	if(constraint->score < INFINITY) {
 		slist_iter(
@@ -614,10 +614,10 @@ void master_rsc_colocation_rh(
 
 		slist_iter(
 			child_rsc, resource_t, clone_data->child_list, lpc,
-			crm_info("Processing: %s", child_rsc->id);
+			crm_debug_3("Processing: %s", child_rsc->id);
 			if(child_rsc->allocated_to != NULL
 			   && child_rsc->next_role == constraint->role_rh) {
-				crm_info("Applying: %s %s", child_rsc->id, role2text(child_rsc->next_role));
+				crm_debug_3("Applying: %s %s", child_rsc->id, role2text(child_rsc->next_role));
 				rhs = g_list_append(rhs, child_rsc->allocated_to);
 			}
 			);
