@@ -696,9 +696,7 @@ unpack_operation(
 	value = g_hash_table_lookup(action->meta, field);
 	if(value != NULL) {
 		value_i = crm_get_msec(value);
-		if(value_i < 0) {
-			value_i = 0;
-		}
+		CRM_CHECK(value_i < 0, value_i = 0);
 		value_ms = crm_itoa(value_i);
 		g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
 	}
@@ -733,6 +731,7 @@ unpack_operation(
 crm_data_t *
 find_rsc_op_entry(resource_t *rsc, const char *key) 
 {
+	int number = 0;
 	const char *name = NULL;
 	const char *value = NULL;
 	const char *interval = NULL;
@@ -749,9 +748,13 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 			crm_debug_2("%s disabled", ID(operation));
 			continue;
 		}
+
+		number = crm_get_msec(interval);
+		if(number < 0) {
+		    continue;
+		}
 		
-		match_key = generate_op_key(
-			rsc->id, name, crm_get_msec(interval));
+		match_key = generate_op_key(rsc->id, name, number);
 
 		if(safe_str_eq(key, match_key)) {
 			op = operation;

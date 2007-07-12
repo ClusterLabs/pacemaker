@@ -228,9 +228,14 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	interval = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
 	interval_ms = crm_get_msec(interval);
 	
-	if(interval_ms <= 0) {
-		return;
+	if(interval_ms == 0) {
+	    return;
+		
+	} else if(interval_ms < 0) {
+	    crm_config_warn("%s contains an invalid interval: %s", ID(operation), interval);
+	    return;
 	}
+	
 	
 	value = crm_element_value(operation, "disabled");
 	if(crm_is_true(value)) {

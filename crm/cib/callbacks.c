@@ -1307,7 +1307,6 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 					cib_update_counter(
 						result_cib, XML_ATTR_GENERATION, FALSE);
 				}
-				
 			}
 			
 			if(do_id_check(result_cib, NULL, TRUE, FALSE)) {
