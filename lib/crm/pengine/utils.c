@@ -696,7 +696,7 @@ unpack_operation(
 	value = g_hash_table_lookup(action->meta, field);
 	if(value != NULL) {
 		value_i = crm_get_msec(value);
-		CRM_CHECK(value_i < 0, value_i = 0);
+		CRM_CHECK(value_i >= 0, value_i = 0);
 		value_ms = crm_itoa(value_i);
 		g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
 	}
