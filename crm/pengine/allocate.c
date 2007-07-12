@@ -665,6 +665,12 @@ stage6(pe_working_set_t *data_set)
 		}
 		);
 
+
+	if(last_stonith != NULL) {
+	    action_t *all_stopped = get_all_stopped(data_set);
+	    order_actions(last_stonith, all_stopped, pe_order_implies_right);
+	}
+	
 	if(integrity_lost) {
 		if(data_set->have_quorum == FALSE) {
 			crm_notice("Cannot fence unclean nodes until quorum is"

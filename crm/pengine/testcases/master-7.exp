@@ -353,6 +353,9 @@
        <trigger>
          <pseudo_event id="71" operation="stop" operation_key="DoFencing_stop_0"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="109" operation="all_stopped" operation_key="all_stopped"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="27">
@@ -654,6 +657,122 @@
        </crm_event>
      </action_set>
      <inputs/>
+   </synapse>
+   <synapse id="50">
+     <action_set>
+       <pseudo_event id="97" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="34" operation="stop" operation_key="DcIPaddr_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="51">
+     <action_set>
+       <pseudo_event id="98" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="37" operation="stop" operation_key="ocf_192.168.100.181_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="52">
+     <action_set>
+       <pseudo_event id="99" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="40" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="53">
+     <action_set>
+       <pseudo_event id="100" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="43" operation="stop" operation_key="ocf_192.168.100.183_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="54">
+     <action_set>
+       <pseudo_event id="101" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="50" operation="stop" operation_key="lsb_dummy_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="55">
+     <action_set>
+       <pseudo_event id="102" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="53" operation="stop" operation_key="rsc_c001n01_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="56">
+     <action_set>
+       <pseudo_event id="109" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="57">
+     <action_set>
+       <pseudo_event id="110" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="74" operation="stop" operation_key="ocf_msdummy:0_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="58">
+     <action_set>
+       <pseudo_event id="111" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="75" operation="stop" operation_key="ocf_msdummy:4_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="59">
+     <action_set>
+       <pseudo_event id="118" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <crm_event id="96" operation="stonith" operation_key="stonith" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+       </trigger>
+     </inputs>
    </synapse>
  </transition_graph>
 

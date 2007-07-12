@@ -45,5 +45,17 @@
      </action_set>
      <inputs/>
    </synapse>
+   <synapse id="4">
+     <action_set>
+       <pseudo_event id="101" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="2" operation="stop" operation_key="ocf_msdummy:6_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
  </transition_graph>
 

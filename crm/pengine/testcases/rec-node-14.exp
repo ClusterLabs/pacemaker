@@ -31,5 +31,17 @@
        </trigger>
      </inputs>
    </synapse>
+   <synapse id="3">
+     <action_set>
+       <pseudo_event id="4" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <crm_event id="3" operation="stonith" operation_key="stonith" on_node="node3" on_node_uuid="uuid3"/>
+       </trigger>
+     </inputs>
+   </synapse>
  </transition_graph>
 

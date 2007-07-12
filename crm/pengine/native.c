@@ -1393,7 +1393,8 @@ native_stop_constraints(
 	char *key = NULL;
 	GListPtr action_list = NULL;
 	node_t *node = stonith_op->node;
-
+	action_t *all_stopped = get_all_stopped(data_set);
+	
 	key = stop_key(rsc);
 	action_list = find_actions(rsc->actions, key, node);
 	crm_free(key);
@@ -1408,6 +1409,7 @@ native_stop_constraints(
 		   || node->details->unclean
 		   || rsc->failed) {
 			resource_t *parent = NULL;
+
 			if(rsc->failed) {
 				crm_warn("Stop of failed resource %s is"
 					 " implicit after %s is fenced",
@@ -1422,10 +1424,7 @@ native_stop_constraints(
 			 */
 			action->pseudo = TRUE;
 			action->runnable = TRUE;
-			if(is_stonith) {
-				/* do nothing */
-				
-			} else {
+			if(is_stonith == FALSE) {
 				custom_action_order(
 					NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
 					rsc, stop_key(rsc), NULL,
@@ -1503,6 +1502,20 @@ native_stop_constraints(
 			}
 		}
 		);	
+
+	if(is_stonith) {
+	    custom_action_order(
+		NULL, crm_strdup(all_stopped->task), all_stopped,
+		rsc, stop_key(rsc), NULL,
+		pe_order_implies_left, data_set);
+	    
+	} else {
+	    custom_action_order(
+		rsc, stop_key(rsc), NULL,
+		NULL, crm_strdup(all_stopped->task), all_stopped,
+		pe_order_implies_right, data_set);
+	}
+	
 	g_list_free(action_list);
 }
 
