@@ -343,8 +343,15 @@ main(int argc, char **argv)
 	} else if(DO_DELETE) {
 		rc = delete_attr(the_cib, cib_opts, type, dest_node, set_name,
 				 attr_id, attr_name, attr_value);
-		
-		if(safe_str_eq(crm_system_name, "crm_failcount")) {
+
+		if(rc == cib_NOTEXISTS) {
+		    /* Nothing to delete...
+		     * which means its not there...
+		     * which is what the admin wanted
+		     */
+		    rc = cib_ok;
+		    
+		} else if(safe_str_eq(crm_system_name, "crm_failcount")) {
 			char *now_s = NULL;
 			time_t now = time(NULL);
 			now_s = crm_itoa(now);
