@@ -309,7 +309,8 @@ void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 
 	crm_debug_2("%s->%s", order->lh_action_task, order->rh_action_task);
 
-	if(rsc == order->rh_rsc || rsc == order->rh_rsc->parent) {
+	if(order->rh_rsc != NULL
+	   && (rsc == order->rh_rsc || rsc == order->rh_rsc->parent)) {
 		native_rsc_order_lh(rsc, order, data_set);
 		return;
 	}
