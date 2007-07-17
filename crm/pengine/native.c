@@ -419,6 +419,8 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
 	int type = pe_order_optional;
+	const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+	action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
 
 	if(rsc->variant == pe_native) {
 		type |= pe_order_implies_right;
@@ -456,6 +458,25 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 			rsc, key1, NULL, rsc, key2, NULL, 
 			pe_order_optional, data_set);	
 	}
+
+	if(rsc->is_managed == FALSE) {
+		crm_debug_3("Skipping fencing constraints for unmanaged resource: %s", rsc->id);
+		return;
+	} 
+
+	if(safe_str_eq(class, "stonith")) {
+	    custom_action_order(
+		NULL, crm_strdup(all_stopped->task), all_stopped,
+		rsc, stop_key(rsc), NULL,
+		pe_order_implies_left, data_set);
+	    
+	} else {
+	    custom_action_order(
+		rsc, stop_key(rsc), NULL,
+		NULL, crm_strdup(all_stopped->task), all_stopped,
+		pe_order_implies_right, data_set);
+	}
+
 }
 
 void native_rsc_colocation_lh(
@@ -1373,7 +1394,6 @@ native_stop_constraints(
 	char *key = NULL;
 	GListPtr action_list = NULL;
 	node_t *node = stonith_op->node;
-	action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
 	
 	key = stop_key(rsc);
 	action_list = find_actions(rsc->actions, key, node);
@@ -1475,19 +1495,6 @@ native_stop_constraints(
 			}
 		}
 		);	
-
-	if(is_stonith) {
-	    custom_action_order(
-		NULL, crm_strdup(all_stopped->task), all_stopped,
-		rsc, stop_key(rsc), NULL,
-		pe_order_implies_left, data_set);
-	    
-	} else {
-	    custom_action_order(
-		rsc, stop_key(rsc), NULL,
-		NULL, crm_strdup(all_stopped->task), all_stopped,
-		pe_order_implies_right, data_set);
-	}
 	
 	g_list_free(action_list);
 }
