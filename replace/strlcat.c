@@ -21,12 +21,13 @@
  */
 
 size_t
-strlcpy(char *dest, const char * src, size_t maxlen)
+strlcat(char *dest, const char * src, size_t maxlen)
 {
-	size_t	srclen = strlen(src);
-	if (maxlen > 0) {
-		strncpy(dest, src, maxlen);
-		dest[maxlen-1]=EOS;
+	size_t	curlen = strlen(dest);
+	size_t	addlen = strlen(src);
+	size_t	appendlen = (maxlen-1) - curlen;
+	if (appendlen > 0) {
+		strlcpy(dest+curlen, src, maxlen-curlen);
 	}
-	return srclen;
+	return curlen + addlen;
 }
