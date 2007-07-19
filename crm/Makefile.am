@@ -21,7 +21,7 @@ MAINTAINERCLEANFILES    = Makefile.in
 SUBDIRS			=  cib crmd pengine tengine admin
 DIST_SUBDIRS		=  cib crmd pengine tengine admin
 
-dtddir			= $(HA_NOARCHLIBHBDIR)
+dtddir			= $(HA_NOARCHDATAHBDIR)
 crm_varlibdir		= $(HA_VARLIBDIR)/$(HB_PKG)/crm
 crm_varrundir		= $(HA_VARRUNDIR)/$(HB_PKG)/crm
 
