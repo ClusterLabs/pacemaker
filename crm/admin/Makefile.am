@@ -36,6 +36,7 @@ COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 		$(top_builddir)/lib/hbclient/libhbclient.la  		\
 		$(GLIBLIB)						\
 		$(CURSESLIBS)						\
+		$(AISLIBS)						\
 		$(LIBRT)
 
 

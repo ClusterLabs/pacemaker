@@ -18,13 +18,25 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 aisdir		= $(prefix)/libexec/lcrso
-ais_LTLIBRARIES	= crmais.la
+#ais_LTLIBRARIES	= crmais.la
+ais_PROGRAMS	= atest
 
-crmais_la_SOURCES	= plugin.c
+crmais_la_SOURCES	= utils.c plugin.c
 crmais_la_LDFLAGS	= -export-dynamic -module -avoid-version 
 # Extra LDFLAGS: -bundle -bundle_loader /opt/local/sbin/aisexec -bind_at_load
 crmais_la_LIBADD	= $(top_builddir)/lib/clplumbing/libplumb.la	\
 			  $(top_builddir)/lib/crm/common/libcrmcommon.la
+
+COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
+		$(top_builddir)/lib/clplumbing/libplumb.la		\
+		$(top_builddir)/lib/crm/common/libcrmcommon.la		\
+		$(GLIBLIB)						\
+		$(CURSESLIBS)						\
+		$(AISLIBS)						\
+		$(LIBRT)
+
+atest_SOURCES	= test.c
+atest_LDADD	= $(COMMONLIBS)
 
 #CFLAGS that cant be used here: -ansi -Wcast-qual -Wwrite-strings
 CFLAGS			= $(NON_FATAL_CFLAGS:-Wwrite-strings=)
@@ -38,7 +50,7 @@ CFLAGS			= $(NON_FATAL_CFLAGS:-Wwrite-strings=)
 #endif
 
 install-exec-local:
-	cd $(aisdir) && sudo ln -sf $(ais_LTLIBRARIES:.la=.so) $(ais_LTLIBRARIES:.la=.lcrso)
+	cd $(AISPREFIX)/libexec/lcrso && sudo ln -sf $(aisdir)/$(ais_LTLIBRARIES:.la=.so) $(ais_LTLIBRARIES:.la=.lcrso)
 
 clean-generic:
 	rm -f *.log *.debug *~ .gres.* testcases/.gres.*

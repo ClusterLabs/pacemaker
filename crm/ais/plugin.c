@@ -43,44 +43,20 @@
 
 #include <openais/lcr/lcr_comp.h>
 
+#include <glib/ghash.h>
+
 #include <lha_internal.h>
 #include <crm/crm.h>
+#include <crm/ais.h>
+#include <plugin.h>
 
-#define MAX_NAME	256
+#include <sys/utsname.h>
+#include <sys/socket.h>
 
-typedef struct crm_ais_host_s AIS_Host;
-typedef struct crm_ais_msg_s AIS_Message;
-
-enum crm_ais_msg_types {
-	crm_msg_ais,
-	crm_msg_cib,
-	crm_msg_crmd,
-	crm_msg_te,
-	crm_msg_pe,
-	crm_msg_lrmd,
-};
-
-struct crm_ais_host_s
-{
-		uint32_t		id;
-		enum crm_ais_msg_types	type;
-		uint32_t		size;
-		char			uname[256];
-
-} __attribute__((packed));
-
-
-struct crm_ais_msg_s
-{
-		uint32_t		id;
-
-		AIS_Host		host;
-		AIS_Host		sender;
-		
-		uint32_t		size;
-		char			data[0];
-
-} __attribute__((packed));
+char *local_uname = NULL;
+int local_uname_len = 0;
+uint32_t local_nodeid = 0;
+char *ipc_channel_name = NULL;
 
 static struct totempg_group crm_group[] = {
         {
@@ -93,7 +69,6 @@ enum crm_ais_msg_types crm_system_type = crm_msg_ais;
 
 totempg_groups_handle crm_group_handle;
 extern poll_handle aisexec_poll_handle;
-extern struct totem_ip_address *this_ip;
 
 static void crm_confchg_fn (
 	enum totem_configuration_type configuration_type,
@@ -120,6 +95,10 @@ static void message_handler_req_exec_crm_test(void *message, unsigned int nodeid
 
 static void message_handler_req_lib_crm_test(void *conn, void *msg);
 
+/* from exec/ipc.h */
+extern int openais_conn_send_response (void *conn, void *msg, int mlen);
+extern int libais_connection_active (void *conn);
+
 #define CRM_MESSAGE_TEST_ID 1
 #define CRM_SERVICE         16
 
@@ -129,7 +108,7 @@ static struct openais_lib_handler crm_lib_service[] =
 		.lib_handler_fn		= message_handler_req_lib_crm_test,
 		.response_size		= sizeof (AIS_Message),
 		.response_id		= CRM_MESSAGE_TEST_ID,
-		.flow_control		= OPENAIS_FLOW_CONTROL_REQUIRED
+		.flow_control		= OPENAIS_FLOW_CONTROL_NOT_REQUIRED
 	},
 };
 
@@ -210,116 +189,6 @@ __attribute__ ((constructor)) static void register_this_component (void) {
 	lcr_component_register (&crm_comp_ver0);
 }
 
-char *local_uname = NULL;
-int local_uname_len = 0;
-uint32_t local_nodeid = 0;
-
-#include <sys/utsname.h>
-#include <sys/socket.h>
-
-
-/* int totemip_localhost(int family, struct totem_ip_address *localhost) */
-
-GHashTable *uname_table = NULL;
-GHashTable *nodeid_table = NULL;
-
-static enum crm_ais_msg_types text2msg_type(const char *text) 
-{
-	int type = -1;
-
-	CRM_CHECK(text != NULL, return type);
-	if(safe_str_eq(text, "ais")) {
-		type = crm_msg_ais;
-	} else if(safe_str_eq(text, CRM_SYSTEM_CIB)) {
-		type = crm_msg_cib;
-	} else if(safe_str_eq(text, CRM_SYSTEM_CRMD)) {
-		type = crm_msg_crmd;
-	} else if(safe_str_eq(text, CRM_SYSTEM_TENGINE)) {
-		type = crm_msg_te;
-	} else if(safe_str_eq(text, CRM_SYSTEM_PENGINE)) {
-		type = crm_msg_pe;
-	} else if(safe_str_eq(text, CRM_SYSTEM_LRMD)) {
-		type = crm_msg_lrmd;
-	} else {
-		crm_err("Unknown message type: %s", text);
-	}
-	return type;
-}
-
-static const char *msg_type2text(enum crm_ais_msg_types type) 
-{
-	const char *text = "<unknown>";
-	switch(type) {
-		case crm_msg_ais:
-			text = "ais";
-			break;
-		case crm_msg_cib:
-			text = CRM_SYSTEM_CIB;
-			break;
-		case crm_msg_crmd:
-			text = CRM_SYSTEM_CRMD;
-			break;
-		case crm_msg_pe:
-			text = CRM_SYSTEM_PENGINE;
-			break;
-		case crm_msg_te:
-			text = CRM_SYSTEM_TENGINE;
-			break;
-		case crm_msg_lrmd:
-			text = CRM_SYSTEM_LRMD;
-			break;
-		default:
-			crm_err("Unknown message type: %d", type);
-			break;
-	}
-	return text;
-}
-
-static char *uname_lookup(uint32_t nodeid) 
-{
-	if(uname_table == NULL) {
-		uname_table = g_hash_table_new_full(
-			g_direct_hash, g_direct_equal, NULL, g_hash_destroy_str);
-	}
-	return g_hash_table_lookup(uname_table, GUINT_TO_POINTER(nodeid));
-}
-
-static uint32_t nodeid_lookup(const char *uname) 
-{
-	void *rc = 0;
-	if(nodeid_table == NULL) {
-		nodeid_table = g_hash_table_new_full(
-			g_str_hash, g_str_equal, g_hash_destroy_str, NULL);
-	}
-	rc = g_hash_table_lookup(nodeid_table, uname);
-	return GPOINTER_TO_UINT(rc);
-}
-
-static void update_uname_table(const char *uname, uint32_t nodeid) 
-{
-	const char *mapping = NULL;
-	if(uname_table == NULL) {
-		uname_table = g_hash_table_new_full(
-			g_direct_hash, g_direct_equal, NULL, g_hash_destroy_str);
-	}
-	if(nodeid_table == NULL) {
-		nodeid_table = g_hash_table_new_full(
-			g_str_hash, g_str_equal, g_hash_destroy_str, NULL);
-	}
-
-	mapping = uname_lookup(nodeid);
-	if(mapping == NULL) {
-		CRM_ASSERT(uname != NULL);
-		crm_info("Mapping %s <-> %u", uname, nodeid);
-		g_hash_table_insert(uname_table, GINT_TO_POINTER(nodeid), crm_strdup(uname));
-		g_hash_table_insert(nodeid_table, crm_strdup(uname), GINT_TO_POINTER(nodeid));
-		
-	} else if(safe_str_neq(mapping, uname)) {
-		crm_err("%s is now claiming to be node %u (current %s)", uname, nodeid, mapping);
-	}
- 	
-	return;
-}
 
 /* IMPL */
 static int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
@@ -344,9 +213,69 @@ static int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
 	local_uname_len = strlen(local_uname);
 
 	crm_info("Local hostname: %s", local_uname);
+	ipc_channel_name = crm_strdup(AIS_IPC_NAME);
+	ipc_client_list = g_hash_table_new(g_str_hash, g_str_equal);
+	init_server_ipc_comms(ipc_channel_name, ais_client_connect,
+			      default_ipc_connection_destroy);
 
 	LEAVE("");
 	return 0;
+}
+
+
+static int send_ipc_msg(void *conn, enum crm_ais_msg_types type, const char *data) 
+{
+	int rc = 0;
+	int data_len = 0;
+	AIS_Message *ais_msg = NULL;
+	static int msg_id = 0;
+
+	ENTER("");
+	CRM_ASSERT(local_nodeid != 0);
+
+	msg_id++;
+	CRM_ASSERT(msg_id != 0 /* wrap-around */);
+
+	if(data != NULL) {
+		data_len = strlen(data);
+	} 
+	crm_malloc0(ais_msg, sizeof(AIS_Message) + data_len + 1);
+	
+	ais_msg->id = msg_id;
+	
+	ais_msg->size = data_len;
+	memcpy(ais_msg->data, data, ais_msg->size);
+
+	ais_msg->host.type = type;
+	ais_msg->host.size = 0;
+	memset(ais_msg->host.uname, 0, MAX_NAME);
+/* 		ais_msg->host.uname = NULL; */
+	ais_msg->host.id = 0;
+
+	ais_msg->sender.type = crm_system_type;
+	ais_msg->sender.size = local_uname_len;
+	memset(ais_msg->sender.uname, 0, MAX_NAME);
+	memcpy(ais_msg->sender.uname, local_uname, ais_msg->sender.size);
+	ais_msg->sender.id = local_nodeid;
+
+	rc = 1;
+	if (conn == NULL) {
+	    crm_err("No connection");
+	    
+	} else if (!libais_connection_active(conn)) {
+	    crm_err("Connection no longer active");
+	    
+/* 	} else if ((queue->size - 1) == queue->used) { */
+/* 	    crm_err("Connection is throttled: %d", queue->size); */
+
+	} else {
+	    rc = openais_conn_send_response (conn, ais_msg, sizeof (AIS_Message) + ais_msg->size + 1);
+	    CRM_CHECK(rc == 0,
+		      crm_err("Message not sent (%d): %s", rc, crm_str(data)));
+	}
+
+	LEAVE("");
+	return rc;    
 }
 
 static int send_cluster_msg(enum crm_ais_msg_types type, const char *host, const char *data) 
@@ -494,8 +423,7 @@ static void crm_deliver_fn (
 static int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
 {
 	ENTER("");
-	CRM_ASSERT(this_ip);
-	local_nodeid = this_ip->nodeid;
+	local_nodeid = totempg_my_nodeid_get();
 	update_uname_table(local_uname, local_nodeid);
 
 	totempg_groups_initialize(
@@ -613,24 +541,27 @@ static void crm_confchg_fn (
 	struct memb_ring_id *ring_id)
 {
 	int lpc = 0;
-	
+	char *buffer = NULL;
+
 	ENTER("");
 	CRM_ASSERT(ring_id != NULL);
+
+	crm_malloc0(buffer, INET6_ADDRSTRLEN+1);	
+	inet_ntop(ring_id->rep.family, ring_id->rep.addr,
+		  buffer, INET6_ADDRSTRLEN);
+	crm_notice("Membership event on ring %s[%lld]: memb=%d, new=%d, lost=%d",
+		   buffer, ring_id->seq, member_list_entries,
+		   joined_list_entries, left_list_entries);
+	crm_free(buffer);
+
 	switch(configuration_type) {
 		case TOTEM_CONFIGURATION_REGULAR:
 			break;
 		case TOTEM_CONFIGURATION_TRANSITIONAL:
-			crm_info("Transitional membership event on ring %lld",
-				 ring_id->seq);
-			return;
+			crm_info("Transitional membership event");
 			break;
 	}
 	
-	ais_print_node("Host", &(ring_id->rep));
-	crm_notice("Membership event on ring %lld: memb=%d, new=%d, lost=%d",
-		   ring_id->seq, member_list_entries,
-		   joined_list_entries, left_list_entries);
-
 	for(lpc = 0; lpc < joined_list_entries; lpc++) {
 		uint32_t nodeid = joined_list[lpc];
 		const char *prefix = "NEW: ";
@@ -660,6 +591,7 @@ static void crm_confchg_fn (
 int crm_lib_exit_fn (void *conn)
 {
 	ENTER("");
+	crm_err("Here i am!");
 	LEAVE("");
 
 	return (0);
@@ -668,13 +600,7 @@ int crm_lib_exit_fn (void *conn)
 static int crm_lib_init_fn (void *conn)
 {
 	ENTER("");
-/*
-	totempg_ifaces_get (
-		this_ip->nodeid,
-		interfaces,
-		&status,
-		&iface_count);
-*/
+	crm_err("Here i am!");
 	LEAVE("");
 
         return (0);
@@ -688,16 +614,29 @@ static void message_handler_req_exec_crm_test (
         unsigned int nodeid)
 {
 	ENTER("");
-/* 	internal_log_printf (__FUNCTION__, __LINE__, LOG_ERR, "Here I am: %p", message) */
+	crm_err("Here i am!");
 	LEAVE("");
 }
 
 static void message_handler_req_lib_crm_test(void *conn, void *msg)
 {
-//	struct req_lib_crm_statetrack *req_lib_crm_statetrack = (struct req_lib_crm_statetrack *)message;
+    AIS_Message *ais_msg = msg;
+    ENTER("");
+    do_crm_log(LOG_NOTICE, "Msg[%d] (dest=%s:%s, from=%s:%s, remote=%s, size=%d): %s",
+	       ais_msg->id,
+	       ais_msg->host.uname?ais_msg->host.uname:"<all>",
+	       msg_type2text(ais_msg->host.type),
+	       ais_msg->sender.uname, msg_type2text(ais_msg->sender.type),
+	       ais_msg->sender.uname==local_uname?"false":"true",
+	       ais_msg->size, crm_str(ais_msg->data));
 
-	ENTER("");
-/* 	internal_log_printf (__FUNCTION__, __LINE__, LOG_ERR, "Here I am: %p", msg) */
-	LEAVE("");
+    send_ipc_msg(conn, crm_msg_pe, "Hi from openAIS");
+    LEAVE("");
 }
 
+
+/* reply back to a client via IPC....
+
+
+
+ */

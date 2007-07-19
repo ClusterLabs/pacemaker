@@ -44,6 +44,7 @@ COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 		libpengine.la						\
 		$(GLIBLIB)						\
 		$(CURSESLIBS)						\
+		$(AISLIBS)						\
 		$(LIBRT)
 
 LIBRT 		= @LIBRT@

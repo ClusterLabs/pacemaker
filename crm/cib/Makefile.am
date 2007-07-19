@@ -42,6 +42,7 @@ COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 		  $(top_builddir)/lib/hbclient/libhbclient.la		\
 		  $(top_builddir)/lib/crm/cib/libcib.la			\
 		  $(GLIBLIB)						\
+		  $(AISLIBS)						\
 		  $(LIBRT)
 
 LIBRT 		= @LIBRT@
@@ -55,9 +56,9 @@ halib_PROGRAMS	= cib cibmon
 noinst_HEADERS		= cibio.h cibmessages.h cibprimatives.h notify.h \
 			callbacks.h
 
-cib_SOURCES		= io.c primatives.c messages.c cib.c notify.c \
+cib_SOURCES		= io.c primatives.c messages.c cib.c notify.c	\
 			callbacks.c main.c remote.c
-cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB) \
+cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB) 			\
 			$(top_builddir)/membership/ccm/libccmclient.la
 
 cib_LDFLAGS		= $(GNUTLSLIBS)
