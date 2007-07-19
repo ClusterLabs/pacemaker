@@ -492,7 +492,14 @@ find_hash_entry(HA_Message * msg)
 {
 	const char *value = NULL;
 	const char *attr  = ha_msg_value(msg, F_ATTRD_ATTRIBUTE);
-	attr_hash_entry_t *hash_entry = g_hash_table_lookup(attr_hash, attr);
+	attr_hash_entry_t *hash_entry = NULL;
+
+	if(attr == NULL) {
+		crm_info("Ignoring message with no attribute name");
+		return NULL;
+	}
+	
+	hash_entry = g_hash_table_lookup(attr_hash, attr);
 
 	if(hash_entry == NULL) {	
 		/* create one and add it */
@@ -554,7 +561,10 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 {
 	int rc = cib_ok;
 
-	if(hash_entry->value == NULL) {
+	if(hash_entry == NULL) {
+	    return;
+	    
+	} else if(hash_entry->value == NULL) {
 		/* delete the attr */
 		rc = delete_attr(cib_conn, cib_none, hash_entry->section, attrd_uuid,
 				 hash_entry->set, NULL, hash_entry->id, NULL);
