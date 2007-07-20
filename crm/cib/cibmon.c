@@ -95,13 +95,10 @@ main(int argc, char **argv)
 	};
 #endif
 
-	crm_log_init(crm_system_name, TRUE);
+	crm_log_init(crm_system_name, LOG_INFO, FALSE, FALSE, 0, NULL);
 
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, cibmon_shutdown, NULL, NULL);
-
-	cl_set_corerootdir(HA_COREDIR);	    
-	cl_cdtocoredir();
 	
 	while (1) {
 #ifdef HAVE_GETOPT_H
