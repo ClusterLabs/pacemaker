@@ -541,7 +541,8 @@ class PartitionAudit(ClusterAudit):
             return 1
 
         if len(ccm_partitions) > 1:
-            self.CM.log("Warn: %d cluster partitions detected:" %len(ccm_partitions))
+            self.CM.log("ERROR: %d cluster partitions detected:" %len(ccm_partitions))
+            passed = 0
             for partition in ccm_partitions:
                 self.CM.log("\t %s" %partition)
 

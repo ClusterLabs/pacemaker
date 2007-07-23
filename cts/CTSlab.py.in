@@ -347,6 +347,8 @@ class CtsLab(UserDict):
             self["CMclass"] = HeartbeatCM
         if not self.has_key("LogFileName"):
             self["LogFileName"] = "@HA_VARLOGDIR@/ha-log"
+        if not self.has_key("logrestartcmd"):
+            self["logrestartcmd"] = "@INITDIR@/syslog restart"
         if not self.has_key("logfacility"):
             LogFacility = "local7"
 
