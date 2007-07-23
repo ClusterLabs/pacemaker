@@ -19,7 +19,7 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-ctsdir		= @hb_libdir@/cts
+ctsdir		= @HA_NOARCHDATAHBDIR@/cts
 
 cts_PYTHON	=				\
 			CM_fs.py		\
