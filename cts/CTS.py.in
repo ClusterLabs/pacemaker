@@ -427,6 +427,7 @@ class ClusterManager(UserDict):
         self.Env = Environment
         self.__InitialConditions()
         self.clear_cache = 0
+        self.TestLoggingLevel=0
         self.data = {
             "up"             : "up",        # Status meaning up
             "down"           : "down",  # Status meaning down
@@ -514,6 +515,7 @@ class ClusterManager(UserDict):
 
         '''Start up the cluster manager on a given node'''
         self.debug("Starting %s on node %s" %(self["Name"], node))
+        ret = 1
 
         if not self.ShouldBeStatus.has_key(node):
             self.ShouldBeStatus[node] = self["down"]
@@ -547,25 +549,26 @@ class ClusterManager(UserDict):
                                "rm -f @HA_VARLIBHBDIR@/hostcache")
 
         if self.rsh(node, self["StartCmd"]) != 0:
-            self.log ("Warn: Start command failed on node %s" %(node))
+            self.log ("ERROR: Start command failed on node %s" %(node))
             return None
 
         self.ShouldBeStatus[node]=self["up"]
 
         watch_result = watch.lookforall()
         if watch.unmatched:
+            ret = None
             for regex in watch.unmatched:
-                self.log ("Warn: Startup pattern not found: %s" %(regex))
+                self.log ("ERROR: Startup pattern not found: %s" %(regex))
 
         if watch_result:  
             #self.debug("Found match: "+ repr(watch_result))
             self.cluster_stable(self["DeadTime"])
-            return 1
+            return ret
 
         if self.StataCM(node) and self.cluster_stable(self["DeadTime"]):
-            return 1
+            return ret
 
-        self.log ("Warn: Start failed for node %s" %(node))
+        self.log ("ERROR: Start failed for node %s" %(node))
         return None
 
     def StartaCMnoBlock(self, node):
@@ -812,7 +815,21 @@ class ClusterManager(UserDict):
         raise ValueError("Abstract Class member (Components)")
     
     
+    def RestartClusterLogging(self):
+        self.log("WARN: Restarting logging on cluster nodes")
+        for node in self.Env["nodes"]:
+            cmd=self.Env["logrestartcmd"]
+            if self.rsh.noBlock(node, cmd) != 0:
+                self.log ("ERROR: Cannot restart logging on %s [%s failed]" % (node, cmd))
+
     def TestLogging(self):
+        self.TestLoggingLevel=self.TestLoggingLevel+1
+        ret=1
+        if self.TestLoggingLevel > 2:
+            self.log("ERROR: Unable to fix remote logging. Stopping tests.")
+            self.TestLoggingLevel=self.TestLoggingLevel-1
+            return None
+           
         patterns= []
         prefix="Test message from "
         for node in self.Env["nodes"]:
@@ -826,11 +843,16 @@ class ClusterManager(UserDict):
                 self.log ("ERROR: Cannot execute remote command [%s] on %s" % (cmd, node))
         watch_result = watch.lookforall()
         if watch.unmatched:
-            self.log("ERROR: Remote logging is not working.  Please fix before continuing.")
+            self.log("ERROR: Remote logging is not working.")
             for regex in watch.unmatched:
                 self.log ("ERROR: Test message [%s] not found in logs." % (regex))
-            return None
-        return 1
+            self.RestartClusterLogging()
+            time.sleep(30)
+            ret=self.TestLogging()
+            if ret:
+              self.log("NOTE: Cluster logging now working.")
+        self.TestLoggingLevel=self.TestLoggingLevel-1
+        return ret
 
     def CheckDf(self):
         dfcmd="df -k /var/log | tail -1 | tr -s ' ' | cut -d' ' -f2"
@@ -849,7 +871,7 @@ class ClusterManager(UserDict):
                     if idfout == 0:
                         self.log("CRIT: Completely out of log disk space on %s" % node)
                         result=None
-                    elif idfout <= 500:
+                    elif idfout <= 1000:
                         self.log("WARN: Low on log disk space (%d Mbytes) on %s" % (idfout, node))
         return result
 
@@ -925,7 +947,7 @@ class Process(Component):
         
     def kill(self, node):
         if self.CM.rsh(node, self.KillCmd) != 0:
-            self.log ("Warn: Kill %s failed on node %s" %(name,node))
+            self.log ("ERROR: Kill %s failed on node %s" %(name,node))
             return None
         return 1
 

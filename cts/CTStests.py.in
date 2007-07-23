@@ -372,6 +372,7 @@ class StopTest(CTSTest):
 
         # because syslog looses so many messages we can only really fail 
         #  the stop if _none_ of the CCM peers notice the node leave
+        # Note:  Syslog only
         if not watch.unmatched or self.CM.upcount() == 0:
             return self.success()
         elif len(watch.unmatched) >= self.CM.upcount():
@@ -2345,7 +2346,7 @@ class SimulStopLite(CTSTest):
                     + repr(watch.unmatched))
 
         self.CM.clear_all_caches()
-        return self.success()
+        return self.failure("Missing log message: "+repr(watch.unmatched))
 
     def is_applicable(self):
         '''SimulStopLite is a setup test and never applicable'''
@@ -2411,10 +2412,9 @@ class SimulStartLite(CTSTest):
             return self.failure("Unstable cluster nodes exist: " 
                                 + repr(unstable))
 
-        self.CM.log("Warn: All nodes started but CTS didnt detect: " 
+        self.CM.log("ERROR: All nodes started but CTS didnt detect: " 
                     + repr(watch.unmatched))
-
-        return self.success() 
+        return self.failure() 
 
 
     def is_applicable(self):
