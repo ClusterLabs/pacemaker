@@ -549,26 +549,25 @@ class ClusterManager(UserDict):
                                "rm -f @HA_VARLIBHBDIR@/hostcache")
 
         if self.rsh(node, self["StartCmd"]) != 0:
-            self.log ("ERROR: Start command failed on node %s" %(node))
+            self.log ("Warn: Start command failed on node %s" %(node))
             return None
 
         self.ShouldBeStatus[node]=self["up"]
 
         watch_result = watch.lookforall()
         if watch.unmatched:
-            ret = None
             for regex in watch.unmatched:
-                self.log ("ERROR: Startup pattern not found: %s" %(regex))
+                self.log ("Warn: Startup pattern not found: %s" %(regex))
 
         if watch_result:  
             #self.debug("Found match: "+ repr(watch_result))
             self.cluster_stable(self["DeadTime"])
-            return ret
+            return 1
 
         if self.StataCM(node) and self.cluster_stable(self["DeadTime"]):
-            return ret
+            return 1
 
-        self.log ("ERROR: Start failed for node %s" %(node))
+        self.log ("Warn: Start failed for node %s" %(node))
         return None
 
     def StartaCMnoBlock(self, node):
