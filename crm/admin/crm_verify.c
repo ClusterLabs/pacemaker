@@ -51,7 +51,7 @@ const char *crm_system_name = NULL;
 void usage(const char *cmd, int exit_status);
 extern gboolean stage0(pe_working_set_t *data_set);
 void cleanup_alloc_calculations(pe_working_set_t *data_set);
-const char *dtd_file = HA_LIBDIR"/heartbeat/crm.dtd";
+const char *dtd_file = HA_NOARCHDATAHBDIR"/crm.dtd";
 
 int
 main(int argc, char **argv)

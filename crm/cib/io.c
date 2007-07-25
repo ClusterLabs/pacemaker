@@ -382,7 +382,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	}
 	
 	ignore_dtd = crm_element_value(root, "ignore_dtd");
-	dtd_ok = validate_with_dtd(root, TRUE, HA_LIBDIR"/heartbeat/crm.dtd");
+	dtd_ok = validate_with_dtd(root, TRUE, HA_NOARCHDATAHBDIR"/crm.dtd");
 	if(dtd_ok == FALSE) {
 		if(ignore_dtd == NULL
 		   && crm_is_true(ignore_dtd) == FALSE) {
@@ -596,7 +596,7 @@ activateCibXml(crm_data_t *new_cib, gboolean to_disk)
 #endif
 	   crm_is_true(ignore_dtd) == FALSE
 	   && validate_with_dtd(
-		   new_cib, TRUE, HA_LIBDIR"/heartbeat/crm.dtd") == FALSE) {
+		   new_cib, TRUE, HA_NOARCHDATAHBDIR"/crm.dtd") == FALSE) {
  		error_code = cib_dtd_validation;
 		crm_err("Ignoring invalid CIB");
 	}
