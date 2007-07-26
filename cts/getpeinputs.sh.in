@@ -19,8 +19,8 @@ is named after the test number.
 
 Examples:
 
-	python @HA_LIBHBDIR@/cts/extracttests.py /var/log/ha-debug 122 | $0
-	python @HA_LIBHBDIR@/cts/extracttests.py /var/log/ha-debug 122 | tee 122.ha-debug | $0
+	python @HA_NOARCHDATAHBDIR@/cts/extracttests.py /var/log/ha-debug 122 | $0
+	python @HA_NOARCHDATAHBDIR@/cts/extracttests.py /var/log/ha-debug 122 | tee 122.ha-debug | $0
 
 NB: Files are copied using ssh as root. In case you use different
 user for ssh run the program like this:

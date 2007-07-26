@@ -79,10 +79,6 @@ SUBDIRS	= $(LIBLTDL_DIR) debian pkg port replace include lib                 \
           fencing logd $(SNMP_SUBAGENT_DIR) tools doc cts $(MGMT_DIR)        \
           $(CIM_PROVIDER_DIR) $(LDIRECTORD_DIR) config $(TSA_PLUGIN_DIR)
 
-SYMLINKLIST=BasicSanityCheck ResourceManager TestHeartbeatComm crm.dtd		\
-	ha_config ha_propagate hb_addnode hb_delnode hb_setsite hb_setweight	\
-	hb_standby hb_takeover mach_down req_resource ResourceManager
-
 HANDY_DOCS = doc/ChangeLog doc/GettingStarted.html doc/DirectoryMap.txt
 HBDOCS = doc/heartbeat_api.html
 
@@ -111,7 +107,7 @@ install-exec-local:
 	-test -p $(DESTDIR)$(coredir)/$(hauser) || mkdir -p $(DESTDIR)$(coredir)/$(hauser)
 	-chown $(hauser) $(DESTDIR)$(coredir)/$(hauser)
 	-chmod 700 $(DESTDIR)$(coredir)/$(hauser)
-#	-cd $(DESTDIR)@HA_LIBHBDIR@; for file in $(SYMLINKLIST); do rm -f $$file; ln -s $(SHAREDIR)/$$file .; done
+#	-cd $(DESTDIR)@HA_LIBHBDIR@; for file in `ls $(SHAREDIR)`; do rm -f $$file; ln -s $(SHAREDIR)/$$file .; done
 
 # "pkg" format for Solaris etc.
 pkg:
