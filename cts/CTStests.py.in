@@ -837,6 +837,7 @@ class SimulStart(CTSTest):
 #        Register SimulStart as a good test to run
 AllTestClasses.append(SimulStart)
 
+###################################################################
 class SimulStop(CTSTest):
 ###################################################################
     '''Stop all the nodes ~ simultaneously'''
@@ -873,6 +874,7 @@ class SimulStop(CTSTest):
 #     Register SimulStop as a good test to run
 AllTestClasses.append(SimulStop)
 
+###################################################################
 class StopOnebyOne(CTSTest):
 ###################################################################
     '''Stop all the nodes in order'''
@@ -912,6 +914,7 @@ class StopOnebyOne(CTSTest):
 #     Register StopOnebyOne as a good test to run
 AllTestClasses.append(StopOnebyOne)
 
+###################################################################
 class RestartOnebyOne(CTSTest):
 ###################################################################
     '''Restart all the nodes in order'''
@@ -950,6 +953,7 @@ class RestartOnebyOne(CTSTest):
 #     Register StopOnebyOne as a good test to run
 AllTestClasses.append(RestartOnebyOne)
 
+###################################################################
 class PartialStart(CTSTest):
 ###################################################################
     '''Start a node - but tell it to stop before it finishes starting up'''
@@ -967,6 +971,8 @@ class PartialStart(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
+#	FIXME!  This should use the CM class to get the pattern
+#		then it would be applicable in general
         watchpats = []
         watchpats.append("Starting crmd")
         watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats,
@@ -987,7 +993,10 @@ class PartialStart(CTSTest):
 
     def is_applicable(self):
         '''Partial is always applicable'''
-        return 1
+        if self.CM["Name"] == "linux-ha-v2":
+          return 1
+        else:
+          return 0
 
 #     Register StopOnebyOne as a good test to run
 AllTestClasses.append(PartialStart)

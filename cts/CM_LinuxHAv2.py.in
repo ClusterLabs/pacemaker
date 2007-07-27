@@ -79,7 +79,7 @@ class LinuxHAv2(HeartbeatCM):
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -n %s -E %s %s 0 %d EVERYTIME 2>/dev/null",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
             "TmpDir"         : "/tmp",
-            "BreakCommCmd2"  : "@libdir@/heartbeat/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
+            "BreakCommCmd2"  : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
             "IsIPAddrRscRunning"   : "",
 
             "StandbyCmd"   : "@sbindir@/crm_standby -U %s -v %s 2>/dev/null",
