@@ -107,7 +107,7 @@ install-exec-local:
 	-test -p $(DESTDIR)$(coredir)/$(hauser) || mkdir -p $(DESTDIR)$(coredir)/$(hauser)
 	-chown $(hauser) $(DESTDIR)$(coredir)/$(hauser)
 	-chmod 700 $(DESTDIR)$(coredir)/$(hauser)
-	-cd $(DESTDIR)@HA_LIBHBDIR@; for file in `ls $(SHAREDIR)`; do rm -f $$file; ln -s $(SHAREDIR)/$$file .; done
+	-cd $(DESTDIR)@HA_LIBHBDIR@; for file in `ls $(DESTDIR)$(SHAREDIR)`; do rm -f $$file; ln -s $(SHAREDIR)/$$file .; done
 
 # "pkg" format for Solaris etc.
 pkg:
