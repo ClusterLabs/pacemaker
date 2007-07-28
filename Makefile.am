@@ -40,7 +40,8 @@ RPM386=$(DESTDIR)$(RPMDIR)/RPMS/i586/$(PACKAGE)-$(VERSION)-$(RPMREL).i586.rpm
 RPMstonith=$(DESTDIR)$(RPMDIR)/RPMS/i586/$(PACKAGE)-stonith-$(VERSION)-$(RPMREL).i586.rpm
 RPMpils=$(DESTDIR)$(RPMDIR)/RPMS/i586/$(PACKAGE)-pils-$(VERSION)-$(RPMREL).i586.rpm
 RPMldir=$(DESTDIR)$(RPMDIR)/RPMS/i586/$(PACKAGE)-ldirectord-$(VERSION)-$(RPMREL).i586.rpm
-SHAREDIR=@HA_NOARCHDATAHBDIR@
+SHAREDIR=@HA_DATADIR@
+HBSHAREDIR=@HA_NOARCHDATAHBDIR@
 
 ALL_RPMS = $(RPMSRC) $(RPM386) $(RPMstonith) $(RPMldir) $(RPMpils)
 
@@ -107,7 +108,15 @@ install-exec-local:
 	-test -p $(DESTDIR)$(coredir)/$(hauser) || mkdir -p $(DESTDIR)$(coredir)/$(hauser)
 	-chown $(hauser) $(DESTDIR)$(coredir)/$(hauser)
 	-chmod 700 $(DESTDIR)$(coredir)/$(hauser)
-	-cd $(DESTDIR)@HA_LIBHBDIR@; for file in `ls $(DESTDIR)$(SHAREDIR)`; do rm -f $$file; ln -s $(SHAREDIR)/$$file .; done
+if MGMT_BUILD
+	cd $(DESTDIR)@HA_LIBHBDIR@;				\
+	for file in `ls $(DESTDIR)$(HBSHAREDIR)`;			\
+	 do if [  -d $$file ]; then continue; fi;	\
+		rm -f $$file; ln -s $(HBSHAREDIR)/$$file .;	\
+	 done
+	cd $(DESTDIR)@HA_LIBDIR@/heartbeat-gui && rm -f haclient.py && ln -s $(SHAREDIR)/heartbeat-gui/haclient.py .
+	rm -f $(DESTDIR)@bindir@/hb_gui && ln -s $(SHAREDIR)/heartbeat-gui/haclient.py $(DESTDIR)@bindir@/hb_gui 
+endif
 
 # "pkg" format for Solaris etc.
 pkg:
@@ -132,7 +141,5 @@ handy-copy:
 	rm -f $(WEBDIR)/ChangeLog
 	cp $(HANDY_DOCS) $(TARFILE) $(ALL_RPMS) $(WEBDIR)
 	cp $(HBDOCS) $(HBWEBDIR)
-
-
 
 .PHONY: rpm pkg handy handy-copy
