@@ -108,12 +108,12 @@ install-exec-local:
 	-test -p $(DESTDIR)$(coredir)/$(hauser) || mkdir -p $(DESTDIR)$(coredir)/$(hauser)
 	-chown $(hauser) $(DESTDIR)$(coredir)/$(hauser)
 	-chmod 700 $(DESTDIR)$(coredir)/$(hauser)
-if MGMT_BUILD
 	cd $(DESTDIR)@HA_LIBHBDIR@;				\
 	for file in `ls $(DESTDIR)$(HBSHAREDIR)`;			\
-	 do if [  -d $$file ]; then continue; fi;	\
-		rm -f $$file; ln -s $(HBSHAREDIR)/$$file .;	\
-	 done
+	do if [  -d $$file ]; then continue; fi;	\
+		rm -f $$file && ln -s $(HBSHAREDIR)/$$file .;	\
+	done
+if MGMT_BUILD
 	cd $(DESTDIR)@HA_LIBDIR@/heartbeat-gui && rm -f haclient.py && ln -s $(SHAREDIR)/heartbeat-gui/haclient.py .
 	rm -f $(DESTDIR)@bindir@/hb_gui && ln -s $(SHAREDIR)/heartbeat-gui/haclient.py $(DESTDIR)@bindir@/hb_gui 
 endif
