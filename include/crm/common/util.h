@@ -34,7 +34,9 @@ extern gboolean crm_config_warning;
 #define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
 #define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
 
-extern gboolean crm_log_init(const char *entity, gboolean coredir);
+extern gboolean crm_log_init(
+    const char *entity, int level, gboolean coredir, gboolean to_stderr,
+    int argc, char **argv);
 
 /* returns the old value */
 extern unsigned int set_crm_log_level(unsigned int level);

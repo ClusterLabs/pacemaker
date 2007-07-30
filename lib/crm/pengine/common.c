@@ -70,7 +70,7 @@ pe_cluster_option pe_opts[] = {
 	{ "default-action-timeout", "default_action_timeout", "time", NULL, "20s", &check_time, "How long to wait for actions to complete", NULL },
 	{ "stop-orphan-resources", "stop_orphan_resources", "boolean", NULL, "true", &check_boolean, "Should deleted resources be stopped", NULL },
 	{ "stop-orphan-actions", "stop_orphan_actions", "boolean", NULL, "true", &check_boolean, "Should deleted actions be cancelled", NULL },
- 	{ "remove-after-stop", "remove_after_stop", "boolean", NULL, "false", &check_boolean, NULL, NULL },
+ 	{ "remove-after-stop", "remove_after_stop", "boolean", NULL, "false", &check_boolean, "Remove resources from the LRM after they are stopped", "Always set this to false.  Other values are, at best, poorly tested and potentially dangerous." },
 /* 	{ "", "", , "0", "", NULL }, */
 	{ "pe-error-series-max", NULL, "integer", NULL, "-1", &check_number, "The number of PE inputs resulting in ERRORs to save", "Zero to disable, -1 to store unlimited." },
 	{ "pe-warn-series-max",  NULL, "integer", NULL, "-1", &check_number, "The number of PE inputs resulting in WARNINGs to save", "Zero to disable, -1 to store unlimited." },
@@ -172,6 +172,10 @@ text2task(const char *task)
 	} else if(safe_str_eq(task, CRM_OP_LRM_REFRESH)) {
 		return no_action;	
 	} else if(safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+		return no_action;	
+	} else if(safe_str_eq(task, "stonith_up")) {
+		return no_action;	
+	} else if(safe_str_eq(task, "all_stopped")) {
 		return no_action;	
 	} 
 	crm_config_warn("Unsupported action: %s", task);

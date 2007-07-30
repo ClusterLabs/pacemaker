@@ -101,9 +101,7 @@ main(int argc, char **argv)
 #endif
 
 	crm_system_name = basename(argv[0]);
-	crm_log_init(crm_system_name, FALSE);
-	crm_log_level = LOG_ERR;
-	cl_log_enable_stderr(TRUE);
+	crm_log_init(crm_system_name, LOG_ERR, FALSE, FALSE, argc, argv);
 	
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);
@@ -206,9 +204,7 @@ main(int argc, char **argv)
 		fprintf(stderr, "Error signing on to the CIB service: %s\n",
 			cib_error2string(rc));
 		return rc;
-	}
-	
-	cl_log_args(argc, argv);
+	}	
 
 	if(safe_str_eq(crm_system_name, "crm_attribute")
 	   && type == NULL && dest_uname == NULL) {

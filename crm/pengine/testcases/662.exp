@@ -408,7 +408,7 @@
    </synapse>
    <synapse id="34">
      <action_set>
-       <crm_event id="60" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+       <crm_event id="62" operation="do_shutdown" operation_key="do_shutdown" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <attributes crm_feature_set="1.0.9"/>
        </crm_event>
      </action_set>

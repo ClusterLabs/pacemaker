@@ -814,15 +814,13 @@ main(int argc, char **argv)
 #endif
 
 	crm_system_name = basename(argv[0]);
-	cl_log_set_entity(crm_system_name);
-	cl_log_set_facility(LOG_LOCAL7);
-	set_crm_log_level(LOG_ERR);
-	cl_log_enable_stderr(TRUE);
 	
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);
 	}
 	
+	crm_log_init(crm_system_name, LOG_ERR, FALSE, FALSE, argc, argv);
+
 	while (1) {
 #ifdef HAVE_GETOPT_H
 		flag = getopt_long(argc, argv, OPTARGS,
@@ -952,8 +950,6 @@ main(int argc, char **argv)
 	if (argerr) {
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
-
-	cl_log_args(argc, argv);
 
 	crm_malloc0(our_pid, 11);
 	if(our_pid != NULL) {

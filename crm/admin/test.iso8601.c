@@ -50,9 +50,7 @@ main(int argc, char **argv)
 	char *input_s = NULL;
 	char *mutable_s = NULL;
 	
-	crm_log_init("iso8601", FALSE);
-	cl_log_set_facility(LOG_USER);
-	cl_log_enable_stderr(TRUE);
+	crm_log_init("iso8601", LOG_INFO, FALSE, TRUE, 0, NULL);
 	
 	if(argc < 2) {
 		argerr++;

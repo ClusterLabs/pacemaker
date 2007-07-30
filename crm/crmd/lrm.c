@@ -1709,11 +1709,6 @@ process_lrm_event(lrm_op_t *op)
 	CRM_CHECK(op != NULL, return I_NULL);
 	CRM_CHECK(op->rsc_id != NULL, return I_NULL);
 
-	if(op->rc == EXECRA_RUNNING_MASTER || op->rc == EXECRA_NOT_RUNNING) {
-		/* Leave it up to the TE/PE to decide if this is an error */ 
-		op->op_status = LRM_OP_DONE;
-	}
-
 	op_key = generate_op_key(op->rsc_id, op->op_type, op->interval);
 	
 	switch(op->op_status) {
@@ -1739,6 +1734,13 @@ process_lrm_event(lrm_op_t *op)
 			crm_err("Mapping unknown status (%d) to ERROR",
 				op->op_status);
 			op->op_status = LRM_OP_ERROR;
+	}
+
+	if(op->op_status == LRM_OP_ERROR
+	   && (op->rc == EXECRA_RUNNING_MASTER || op->rc == EXECRA_NOT_RUNNING)) {
+		/* Leave it up to the TE/PE to decide if this is an error */ 
+		op->op_status = LRM_OP_DONE;
+		log_level = LOG_INFO;
 	}
 
 	do_crm_log(log_level, "LRM operation %s (call=%d, rc=%d) %s %s",

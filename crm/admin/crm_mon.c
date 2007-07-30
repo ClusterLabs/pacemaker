@@ -127,8 +127,7 @@ main(int argc, char **argv)
 #endif
 	pid_file = crm_strdup("/tmp/ClusterMon.pid");
 	crm_system_name = basename(argv[0]);
-	crm_log_init(crm_system_name, FALSE);
-	crm_log_level = LOG_ERR -1;
+	crm_log_init(crm_system_name, LOG_ERR-1, FALSE, FALSE, 0, NULL);
 
 	if (strcmp(crm_system_name, "crm_mon.cgi")==0) {
 		web_cgi = TRUE;

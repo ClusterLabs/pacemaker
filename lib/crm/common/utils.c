@@ -423,7 +423,9 @@ crm_itoa(int an_int)
 extern int LogToLoggingDaemon(int priority, const char * buf, int bstrlen, gboolean use_pri_str);
 
 gboolean
-crm_log_init(const char *entity, gboolean coredir) 
+crm_log_init(
+    const char *entity, int level, gboolean coredir, gboolean to_stderr,
+    int argc, char **argv)
 {
 /* 	const char *test = "Testing log daemon connection"; */
 	/* Redirect messages from glib functions to our handler */
@@ -446,7 +448,11 @@ crm_log_init(const char *entity, gboolean coredir)
 		cl_cdtocoredir();
 	}
 	
+	set_crm_log_level(level);
 	crm_set_env_options();
+
+	cl_log_args(argc, argv);
+	cl_log_enable_stderr(to_stderr);
 
 	CL_SIGNAL(DEBUG_INC, alter_debug);
 	CL_SIGNAL(DEBUG_DEC, alter_debug);
