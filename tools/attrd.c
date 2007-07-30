@@ -608,6 +608,9 @@ attrd_local_callback(HA_Message * msg)
 
 	crm_debug("%s message from %s: %s=%s", op, from, attr, value);
 	hash_entry = find_hash_entry(msg);
+	if(hash_entry == NULL) {
+	    return;
+	}
 	
 	crm_free(hash_entry->last_value);
 	hash_entry->last_value = hash_entry->value;
