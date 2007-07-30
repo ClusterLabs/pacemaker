@@ -10,14 +10,17 @@
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="47" operation="stop" operation_key="child_DoFencing:1_stop_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
+       <rsc_op id="71" operation="stop" operation_key="child_DoFencing:1_stop_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <primitive id="child_DoFencing:1" long-id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
          <attributes crm_feature_set="1.0.9" CRM_meta_timeout="20000" CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="50" operation="stop" operation_key="DoFencing_stop_0"/>
+         <pseudo_event id="35" operation="all_stopped" operation_key="all_stopped"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="74" operation="stop" operation_key="DoFencing_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -59,7 +62,7 @@
    </synapse>
    <synapse id="6">
      <action_set>
-       <pseudo_event id="50" operation="stop" operation_key="DoFencing_stop_0">
+       <pseudo_event id="74" operation="stop" operation_key="DoFencing_stop_0">
          <attributes crm_feature_set="1.0.9" CRM_meta_timeout="20000" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
        </pseudo_event>
      </action_set>
@@ -67,16 +70,16 @@
    </synapse>
    <synapse id="7" priority="1000000">
      <action_set>
-       <pseudo_event id="51" operation="stopped" operation_key="DoFencing_stopped_0">
+       <pseudo_event id="75" operation="stopped" operation_key="DoFencing_stopped_0">
          <attributes crm_feature_set="1.0.9" CRM_meta_timeout="20000" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="47" operation="stop" operation_key="child_DoFencing:1_stop_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+         <rsc_op id="71" operation="stop" operation_key="child_DoFencing:1_stop_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
        </trigger>
        <trigger>
-         <pseudo_event id="50" operation="stop" operation_key="DoFencing_stop_0"/>
+         <pseudo_event id="74" operation="stop" operation_key="DoFencing_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -274,13 +277,33 @@
    </synapse>
    <synapse id="23">
      <action_set>
-       <crm_event id="66" operation="do_shutdown" operation_key="do_shutdown" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
+       <pseudo_event id="33" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="75" operation="stopped" operation_key="DoFencing_stopped_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="24">
+     <action_set>
+       <pseudo_event id="35" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="25">
+     <action_set>
+       <crm_event id="90" operation="do_shutdown" operation_key="do_shutdown" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <attributes crm_feature_set="1.0.9"/>
        </crm_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="47" operation="stop" operation_key="child_DoFencing:1_stop_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+         <rsc_op id="71" operation="stop" operation_key="child_DoFencing:1_stop_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
        </trigger>
      </inputs>
    </synapse>

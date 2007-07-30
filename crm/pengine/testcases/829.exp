@@ -64,19 +64,19 @@
    </synapse>
    <synapse id="7">
      <action_set>
-       <pseudo_event id="33" operation="stop" operation_key="rsc_c001n02_stop_0">
+       <pseudo_event id="43" operation="stop" operation_key="rsc_c001n02_stop_0">
          <attributes crm_feature_set="1.0.9" CRM_meta_timeout="20000"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="53" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+         <crm_event id="63" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="8">
      <action_set>
-       <rsc_op id="34" operation="start" operation_key="rsc_c001n02_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+       <rsc_op id="44" operation="start" operation_key="rsc_c001n02_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="rsc_c001n02" long-id="rsc_c001n02" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes crm_feature_set="1.0.9" ip="127.0.0.12" CRM_meta_timeout="20000"/>
        </rsc_op>
@@ -86,20 +86,20 @@
          <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <pseudo_event id="33" operation="stop" operation_key="rsc_c001n02_stop_0"/>
+         <pseudo_event id="43" operation="stop" operation_key="rsc_c001n02_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="9">
      <action_set>
-       <rsc_op id="35" operation="monitor" operation_key="rsc_c001n02_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+       <rsc_op id="45" operation="monitor" operation_key="rsc_c001n02_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="rsc_c001n02" long-id="rsc_c001n02" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes crm_feature_set="1.0.9" ip="127.0.0.12" CRM_meta_id="3" CRM_meta_timeout="20000" CRM_meta_name="monitor" CRM_meta_interval="5000"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="34" operation="start" operation_key="rsc_c001n02_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+         <rsc_op id="44" operation="start" operation_key="rsc_c001n02_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
        </trigger>
      </inputs>
    </synapse>
@@ -195,22 +195,22 @@
    </synapse>
    <synapse id="20">
      <action_set>
-       <pseudo_event id="46" operation="stop" operation_key="child_DoFencing:0_stop_0">
+       <pseudo_event id="56" operation="stop" operation_key="child_DoFencing:0_stop_0">
          <attributes crm_feature_set="1.0.9" CRM_meta_timeout="20000" CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="49" operation="stop" operation_key="DoFencing_stop_0"/>
+         <pseudo_event id="35" operation="all_stopped" operation_key="all_stopped"/>
        </trigger>
        <trigger>
-         <pseudo_event id="71" operation="all_stopped" operation_key="all_stopped"/>
+         <pseudo_event id="59" operation="stop" operation_key="DoFencing_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="21">
      <action_set>
-       <pseudo_event id="49" operation="stop" operation_key="DoFencing_stop_0">
+       <pseudo_event id="59" operation="stop" operation_key="DoFencing_stop_0">
          <attributes crm_feature_set="1.0.9" CRM_meta_timeout="20000" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
        </pseudo_event>
      </action_set>
@@ -218,16 +218,16 @@
    </synapse>
    <synapse id="22" priority="1000000">
      <action_set>
-       <pseudo_event id="50" operation="stopped" operation_key="DoFencing_stopped_0">
+       <pseudo_event id="60" operation="stopped" operation_key="DoFencing_stopped_0">
          <attributes crm_feature_set="1.0.9" CRM_meta_timeout="20000" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="46" operation="stop" operation_key="child_DoFencing:0_stop_0"/>
+         <pseudo_event id="56" operation="stop" operation_key="child_DoFencing:0_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="49" operation="stop" operation_key="DoFencing_stop_0"/>
+         <pseudo_event id="59" operation="stop" operation_key="DoFencing_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -329,55 +329,67 @@
    </synapse>
    <synapse id="27">
      <action_set>
-       <pseudo_event id="51" operation="stonith_up" operation_key="stonith_up">
-         <attributes crm_feature_set="1.0.9"/>
-       </pseudo_event>
-     </action_set>
-     <inputs/>
-   </synapse>
-   <synapse id="28">
-     <action_set>
-       <pseudo_event id="52" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="31" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="1.0.9"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="53" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+         <pseudo_event id="43" operation="stop" operation_key="rsc_c001n02_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="28">
+     <action_set>
+       <pseudo_event id="34" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="60" operation="stopped" operation_key="DoFencing_stopped_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="29">
      <action_set>
-       <crm_event id="53" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+       <pseudo_event id="35" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="30">
+     <action_set>
+       <pseudo_event id="61" operation="stonith_up" operation_key="stonith_up">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="31">
+     <action_set>
+       <pseudo_event id="62" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <crm_event id="63" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="32">
+     <action_set>
+       <crm_event id="63" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <attributes crm_feature_set="1.0.9" CRM_meta_on_node="c001n02" CRM_meta_stonith_action="reboot" CRM_meta_on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </crm_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="51" operation="stonith_up" operation_key="stonith_up"/>
+         <pseudo_event id="61" operation="stonith_up" operation_key="stonith_up"/>
        </trigger>
      </inputs>
-   </synapse>
-   <synapse id="30">
-     <action_set>
-       <pseudo_event id="59" operation="all_stopped" operation_key="all_stopped">
-         <attributes crm_feature_set="1.0.9"/>
-       </pseudo_event>
-     </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="33" operation="stop" operation_key="rsc_c001n02_stop_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="31">
-     <action_set>
-       <pseudo_event id="71" operation="all_stopped" operation_key="all_stopped">
-         <attributes crm_feature_set="1.0.9"/>
-       </pseudo_event>
-     </action_set>
-     <inputs/>
    </synapse>
  </transition_graph>
 

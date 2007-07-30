@@ -19,7 +19,7 @@
    </synapse>
    <synapse id="2">
      <action_set>
-       <rsc_op id="7" operation="cancel" operation_key="rsc1_cancel_1" on_node="node1" on_node_uuid="uuid1">
+       <rsc_op id="8" operation="cancel" operation_key="rsc1_cancel_1" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" long-id="rsc1" class="heartbeat" type="apache"/>
          <attributes crm_feature_set="1.0.9" CRM_meta_call_id="2" CRM_meta_timeout="20000" CRM_meta_operation="monitor" CRM_meta_interval="1"/>
        </rsc_op>
@@ -32,7 +32,7 @@
    </synapse>
    <synapse id="3">
      <action_set>
-       <rsc_op id="8" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="uuid1">
+       <rsc_op id="9" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" long-id="rsc1" class="heartbeat" type="apache"/>
          <attributes crm_feature_set="1.0.9" CRM_meta_timeout="20000"/>
        </rsc_op>
@@ -78,6 +78,18 @@
      <inputs>
        <trigger>
          <rsc_op id="6" operation="monitor" operation_key="rsc1_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="7">
+     <action_set>
+       <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="2" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>

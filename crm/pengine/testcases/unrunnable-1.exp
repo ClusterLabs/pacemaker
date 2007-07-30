@@ -152,5 +152,13 @@
        </trigger>
      </inputs>
    </synapse>
+   <synapse id="13">
+     <action_set>
+       <pseudo_event id="26" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
  </transition_graph>
 

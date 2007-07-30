@@ -33,5 +33,20 @@
      </action_set>
      <inputs/>
    </synapse>
+   <synapse id="4">
+     <action_set>
+       <pseudo_event id="6" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="1" operation="stop" operation_key="rsc1_stop_0" on_node="node1" on_node_uuid="uuid1"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="2" operation="stop" operation_key="rsc1_stop_0" on_node="node2" on_node_uuid="uuid2"/>
+       </trigger>
+     </inputs>
+   </synapse>
  </transition_graph>
 

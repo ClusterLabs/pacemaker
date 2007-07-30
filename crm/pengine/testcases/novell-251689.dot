@@ -1,7 +1,9 @@
  digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"  ]
 "sles10_monitor_10000 node2" [ style=filled color="black" fontcolor="black"  fillcolor=red]
 "sles10_start_0 <none>" -> "sles10_monitor_10000 node2" [ style = bold]
 "sles10_start_0 <none>" [ style=filled color="black" fontcolor="black"  fillcolor=red]
+"sles10_stop_0 node2" -> "all_stopped" [ style = bold]
 "sles10_stop_0 node2" -> "sles10_start_0 <none>" [ style = bold]
 "sles10_stop_0 node2" [ style=bold color="green" fontcolor="black"  ]
 }

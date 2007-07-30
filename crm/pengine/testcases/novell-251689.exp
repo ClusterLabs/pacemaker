@@ -1,12 +1,24 @@
  <transition_graph cluster-delay="60" transition_id="0">
    <synapse id="0">
      <action_set>
-       <rsc_op id="78" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="0eb1d4b6-bf02-40f0-b9e1-c386ade8fb61">
+       <rsc_op id="94" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="0eb1d4b6-bf02-40f0-b9e1-c386ade8fb61">
          <primitive id="sles10" long-id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
          <attributes crm_feature_set="1.0.9" CRM_meta_id="xen-op-02" CRM_meta_timeout="60000" CRM_meta_name="stop"/>
        </rsc_op>
      </action_set>
      <inputs/>
+   </synapse>
+   <synapse id="1">
+     <action_set>
+       <pseudo_event id="28" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="1.0.9"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="94" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="0eb1d4b6-bf02-40f0-b9e1-c386ade8fb61"/>
+       </trigger>
+     </inputs>
    </synapse>
  </transition_graph>
 
