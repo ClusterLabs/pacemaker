@@ -83,11 +83,11 @@
        <lrm id="1ce670eb-d670-4f6d-811f-d415ffde76b7">
          <lrm_resources>
            <lrm_resource id="ima_rscid:0" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ima_rscid:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="3:3:4bebe060-ef49-4030-9528-60e8e57310bd" transition_magic="4:7;3:3:4bebe060-ef49-4030-9528-60e8e57310bd" call_id="12" crm_feature_set="1.0.7" rc_code="7" op_status="4" interval="0" op_digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
-             <lrm_rsc_op id="ima_rscid:0_start_0" operation="start" crm-debug-origin="build_active_RAs" transition_key="16:5:4bebe060-ef49-4030-9528-60e8e57310bd" transition_magic="0:0;16:5:4bebe060-ef49-4030-9528-60e8e57310bd" call_id="14" crm_feature_set="1.0.7" rc_code="0" op_status="0" interval="0" op_digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+             <lrm_rsc_op id="ima_rscid:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="3:3:4bebe060-ef49-4030-9528-60e8e57310bd" transition_magic="4:7;3:3:4bebe060-ef49-4030-9528-60e8e57310bd" call_id="12" crm_feature_set="1.0.5" rc_code="7" op_status="4" interval="0" op_digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+             <lrm_rsc_op id="ima_rscid:0_start_0" operation="start" crm-debug-origin="build_active_RAs" transition_key="16:5:4bebe060-ef49-4030-9528-60e8e57310bd" transition_magic="0:0;16:5:4bebe060-ef49-4030-9528-60e8e57310bd" call_id="14" crm_feature_set="1.0.5" rc_code="0" op_status="0" interval="0" op_digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
            </lrm_resource>
            <lrm_resource id="ima_rscid:1" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ima_rscid:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="12:0:4bebe060-ef49-4030-9528-60e8e57310bd" transition_magic="4:7;12:0:4bebe060-ef49-4030-9528-60e8e57310bd" call_id="11" crm_feature_set="1.0.7" rc_code="7" op_status="4" interval="0" op_digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+             <lrm_rsc_op id="ima_rscid:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="12:0:4bebe060-ef49-4030-9528-60e8e57310bd" transition_magic="4:7;12:0:4bebe060-ef49-4030-9528-60e8e57310bd" call_id="11" crm_feature_set="1.0.5" rc_code="7" op_status="4" interval="0" op_digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
            </lrm_resource>
          </lrm_resources>
        </lrm>
@@ -96,11 +96,11 @@
        <lrm id="86ad895f-1387-461e-a9b5-c52ed9537e13">
          <lrm_resources>
            <lrm_resource id="ima_rscid:0" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ima_rscid:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="11:6:4bebe060-ef49-4030-9528-60e8e57310bd" transition_magic="0:7;11:6:4bebe060-ef49-4030-9528-60e8e57310bd" call_id="10" crm_feature_set="1.0.7" rc_code="7" op_status="0" interval="0" op_digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+             <lrm_rsc_op id="ima_rscid:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="11:6:4bebe060-ef49-4030-9528-60e8e57310bd" transition_magic="0:7;11:6:4bebe060-ef49-4030-9528-60e8e57310bd" call_id="10" crm_feature_set="1.0.5" rc_code="7" op_status="0" interval="0" op_digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
            </lrm_resource>
            <lrm_resource id="ima_rscid:1" type="Dummy" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="ima_rscid:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="12:6:4bebe060-ef49-4030-9528-60e8e57310bd" transition_magic="0:7;12:6:4bebe060-ef49-4030-9528-60e8e57310bd" call_id="11" crm_feature_set="1.0.7" rc_code="7" op_status="0" interval="0" op_digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
-             <lrm_rsc_op id="ima_rscid:1_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="30:6:4bebe060-ef49-4030-9528-60e8e57310bd" transition_magic="0:0;30:6:4bebe060-ef49-4030-9528-60e8e57310bd" call_id="12" crm_feature_set="1.0.7" rc_code="0" op_status="0" interval="0" op_digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+             <lrm_rsc_op id="ima_rscid:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="12:6:4bebe060-ef49-4030-9528-60e8e57310bd" transition_magic="0:7;12:6:4bebe060-ef49-4030-9528-60e8e57310bd" call_id="11" crm_feature_set="1.0.5" rc_code="7" op_status="0" interval="0" op_digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
+             <lrm_rsc_op id="ima_rscid:1_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="30:6:4bebe060-ef49-4030-9528-60e8e57310bd" transition_magic="0:0;30:6:4bebe060-ef49-4030-9528-60e8e57310bd" call_id="12" crm_feature_set="1.0.5" rc_code="0" op_status="0" interval="0" op_digest="08b7001b97ccdaa1ca23a9f165256bc1"/>
            </lrm_resource>
          </lrm_resources>
        </lrm>
