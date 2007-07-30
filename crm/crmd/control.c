@@ -521,11 +521,19 @@ do_stop(long long action,
 	enum crmd_fsa_input current_input,
 	fsa_data_t *msg_data)
 {
-	if(verify_stopped(FALSE, LOG_DEBUG) == FALSE) {
-		crmd_fsa_stall(NULL);
-	}
+    gboolean force = FALSE;
+    int log_level = LOG_INFO;
 
-	return I_NULL;
+    if(cur_state == S_TERMINATE) {
+	force = TRUE;
+	log_level = LOG_ERR;
+    }
+    
+    if(verify_stopped(force, log_level) == FALSE) {
+	crmd_fsa_stall(NULL);
+    }
+
+    return I_NULL;
 }
 
 /*	 A_STARTED	*/
