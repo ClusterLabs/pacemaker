@@ -606,7 +606,7 @@ attrd_local_callback(HA_Message * msg)
 		return;
 	}
 
-	crm_debug("%s message from %s: %s=%s", op, from, attr, value);
+	crm_debug("%s message from %s: %s=%s", op, from, attr, crm_str(value));
 	hash_entry = find_hash_entry(msg);
 	if(hash_entry == NULL) {
 	    return;
@@ -615,7 +615,6 @@ attrd_local_callback(HA_Message * msg)
 	crm_free(hash_entry->last_value);
 	hash_entry->last_value = hash_entry->value;
 
-	value = ha_msg_value(msg, F_ATTRD_VALUE);
 	if(value != NULL) {
 		hash_entry->value = crm_strdup(value);
 

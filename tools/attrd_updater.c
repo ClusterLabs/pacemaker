@@ -96,7 +96,11 @@ main(int argc, char ** argv)
 	if (optind > argc) {
 		++argerr;
 	}
-    
+
+	if(attr_name == NULL) {
+		++argerr;
+	}
+	
 	if (argerr) {
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
