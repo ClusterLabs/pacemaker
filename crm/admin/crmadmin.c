@@ -144,11 +144,12 @@ main(int argc, char **argv)
 #endif
 
 	crm_system_name = basename(argv[0]);
-	crm_log_init(crm_system_name, FALSE);
 
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);
 	}
+
+	crm_log_init(crm_system_name, LOG_ERR, FALSE, TRUE, argc, argv);
 	
 	while (1) {
 #ifdef HAVE_GETOPT_H
@@ -278,7 +279,6 @@ main(int argc, char **argv)
 	hb_cluster = do_init();
 	if (hb_cluster != NULL) {
 		int res = 0;
-		cl_log_args(argc, argv);
 		res = do_work(hb_cluster);
 		if (res > 0) {
 			/* wait for the reply by creating a mainloop and running it until

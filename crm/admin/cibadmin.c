@@ -140,9 +140,7 @@ main(int argc, char **argv)
 	};
 #endif
 
-	cl_log_set_entity("cibadmin");
-	cl_log_set_facility(LOG_USER);
-	set_crm_log_level(LOG_CRIT);
+	crm_log_init("cibadmin", LOG_CRIT, FALSE, FALSE, argc, argv);
 	
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);
@@ -327,8 +325,6 @@ main(int argc, char **argv)
 		return -exit_code;
 	}	
 
-	cl_log_args(argc, argv);
-	
 	exit_code = do_work(input, command_options, &output);
 	if (exit_code > 0) {
 		/* wait for the reply by creating a mainloop and running it until

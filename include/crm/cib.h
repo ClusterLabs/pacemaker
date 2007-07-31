@@ -23,7 +23,7 @@
 #include <crm/common/xml.h>
 #include <ha_msg.h>
 
-#define CIB_FEATURE_SET "1.3"
+#define CIB_FEATURE_SET "2.0"
 #define USE_PESKY_FRAGMENTS 1
 
 #define CIB_OPTIONS_FIRST "cib-bootstrap-options"

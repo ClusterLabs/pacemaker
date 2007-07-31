@@ -140,7 +140,7 @@ main(int argc, char ** argv)
 	};
 #endif
 	
-	crm_log_init(crm_system_name, TRUE);
+	crm_log_init(crm_system_name, LOG_INFO, TRUE, FALSE, 0, NULL);
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, cib_shutdown, NULL, NULL);
 	

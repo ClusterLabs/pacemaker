@@ -419,6 +419,8 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
 	int type = pe_order_optional;
+	const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+	action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
 
 	if(rsc->variant == pe_native) {
 		type |= pe_order_implies_right;
@@ -456,6 +458,25 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 			rsc, key1, NULL, rsc, key2, NULL, 
 			pe_order_optional, data_set);	
 	}
+
+	if(rsc->is_managed == FALSE) {
+		crm_debug_3("Skipping fencing constraints for unmanaged resource: %s", rsc->id);
+		return;
+	} 
+
+	if(safe_str_eq(class, "stonith")) {
+	    custom_action_order(
+		NULL, crm_strdup(all_stopped->task), all_stopped,
+		rsc, stop_key(rsc), NULL,
+		pe_order_implies_left, data_set);
+	    
+	} else {
+	    custom_action_order(
+		rsc, stop_key(rsc), NULL,
+		NULL, crm_strdup(all_stopped->task), all_stopped,
+		pe_order_implies_right, data_set);
+	}
+
 }
 
 void native_rsc_colocation_lh(
@@ -1316,20 +1337,23 @@ native_start_constraints(
 	pe_working_set_t *data_set)
 {
 	node_t *target = stonith_op?stonith_op->node:NULL;
-	gboolean is_unprotected = FALSE;
-	gboolean run_unprotected = TRUE;
 
 	if(is_stonith) {
 		char *key = start_key(rsc);
+		action_t *ready = get_pseudo_op(STONITH_UP, data_set);
 		crm_debug_2("Ordering %s action before stonith events", key);
 		custom_action_order(
 			rsc, key, NULL,
-			NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
-			pe_order_optional, data_set);
+			NULL, crm_strdup(ready->task), ready,
+			pe_order_implies_right, data_set);
 
 	} else {
+		action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
 		slist_iter(action, action_t, rsc->actions, lpc2,
-			   if(target != NULL
+			   if(action->needs == rsc_req_stonith) {
+			       order_actions(all_stopped, action, pe_order_implies_left);
+
+			   } else if(target != NULL
 			      && target->details->expected_up
 			      && safe_str_eq(action->task, CRMD_ACTION_START)
 			      && NULL == pe_find_node_id(
@@ -1356,33 +1380,10 @@ native_start_constraints(
 				   
 				   crm_info("Ordering %s after %s recovery",
 					    action->uuid, target->details->uname);
-
-			   } else if(action->needs != rsc_req_stonith) {
-				   crm_debug_3("%s doesnt need to wait for stonith events", action->uuid);
-				   continue;
-			   }
-			   crm_debug_2("Ordering %s after stonith events", action->uuid);
-			   if(stonith_op != NULL) {
-				   custom_action_order(
-					   NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
-					   rsc, NULL, action,
-					   pe_order_optional, data_set);
-				   
-			   } else if(run_unprotected == FALSE) {
-				   /* mark the start unrunnable */
-				   action->runnable = FALSE;
-				   
-			   } else {
-				   is_unprotected = TRUE;
+				   order_actions(all_stopped, action, pe_order_implies_left);
 			   }   
 			);
 	}
-	
-	if(is_unprotected) {
-		pe_err("SHARED RESOURCE %s IS NOT PROTECTED:"
-		       " Stonith disabled", rsc->id);
-	}
-
 }
 
 static void
@@ -1393,7 +1394,7 @@ native_stop_constraints(
 	char *key = NULL;
 	GListPtr action_list = NULL;
 	node_t *node = stonith_op->node;
-
+	
 	key = stop_key(rsc);
 	action_list = find_actions(rsc->actions, key, node);
 	crm_free(key);
@@ -1408,6 +1409,7 @@ native_stop_constraints(
 		   || node->details->unclean
 		   || rsc->failed) {
 			resource_t *parent = NULL;
+
 			if(rsc->failed) {
 				crm_warn("Stop of failed resource %s is"
 					 " implicit after %s is fenced",
@@ -1422,14 +1424,8 @@ native_stop_constraints(
 			 */
 			action->pseudo = TRUE;
 			action->runnable = TRUE;
-			if(is_stonith) {
-				/* do nothing */
-				
-			} else {
-				custom_action_order(
-					NULL, crm_strdup(CRM_OP_FENCE),stonith_op,
-					rsc, stop_key(rsc), NULL,
-					pe_order_optional, data_set);
+			if(is_stonith == FALSE) {
+			    order_actions(stonith_op, action, pe_order_optional);
 			}
 			
 			/* find the top-most resource */
@@ -1439,8 +1435,7 @@ native_stop_constraints(
 			}
 			
 			if(parent) {
-				crm_info("Re-creating actions for %s",
-					 parent->id);
+				crm_info("Re-creating actions for %s", parent->id);
 				parent->cmds->create_actions(parent, data_set);
 
 				/* make sure we dont mess anything up in create_actions */
@@ -1496,13 +1491,11 @@ native_stop_constraints(
 			action->pseudo = TRUE;
 			action->runnable = TRUE;
 			if(is_stonith == FALSE) {
-				custom_action_order(
-					NULL, crm_strdup(CRM_OP_FENCE), stonith_op,
-					rsc, demote_key(rsc), NULL,
-					pe_order_optional, data_set);
+			    order_actions(stonith_op, action, pe_order_optional);
 			}
 		}
 		);	
+	
 	g_list_free(action_list);
 }
 

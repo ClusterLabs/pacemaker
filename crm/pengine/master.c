@@ -297,7 +297,7 @@ master_score(resource_t *rsc, node_t *node, int not_set_value)
 	
 	if(attr_value != NULL) {
 		crm_debug_2("%s[%s] = %s", attr_name,
-					node->details->uname, crm_str(attr_value));
+			    node->details->uname, crm_str(attr_value));
 		score = char2score(attr_value);
 	}
 
@@ -396,7 +396,15 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 				}
 				
 				CRM_CHECK(chosen != NULL, break);
-				child_rsc->priority = master_score(child_rsc, chosen, -INFINITY);
+				/*
+				 * Default to -1 if no value is set
+				 *
+				 * This allows master locations to be specified
+				 * based solely on rsc_location constraints,
+				 * but prevents anyone from being promoted if
+				 * neither a constraint nor a master-score is present
+				 */
+				child_rsc->priority = master_score(child_rsc, chosen, -1);
 				break;
 
 			case RSC_ROLE_SLAVE:
@@ -450,7 +458,8 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 			       role2text(child_rsc->next_role));
 		);
 	
-	crm_info("Promoted %d instances of a possible %d to master", promoted, clone_data->master_max);
+	crm_info("%s: Promoted %d instances of a possible %d to master",
+		 rsc->id, promoted, clone_data->master_max);
 	return NULL;
 }
 

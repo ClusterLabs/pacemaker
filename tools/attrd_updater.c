@@ -59,7 +59,7 @@ main(int argc, char ** argv)
 	int argerr = 0;
 	int flag;
 	
-	crm_log_init(crm_system_name, FALSE);
+	crm_log_init(crm_system_name, LOG_ERR, FALSE, FALSE, argc, argv);
 	crm_debug_3("Begining option processing");
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
@@ -96,7 +96,11 @@ main(int argc, char ** argv)
 	if (optind > argc) {
 		++argerr;
 	}
-    
+
+	if(attr_name == NULL) {
+		++argerr;
+	}
+	
 	if (argerr) {
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
@@ -111,8 +115,6 @@ main(int argc, char ** argv)
 		return 1;
 	}
 
-	cl_log_args(argc, argv);
-	
 	update = ha_msg_new(4);
 	ha_msg_add(update, F_TYPE, T_ATTRD);
 	ha_msg_add(update, F_ORIG, crm_system_name);

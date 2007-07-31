@@ -207,6 +207,7 @@ do_test master-10 "Stopped -> Promotable : notify with monitor"
 do_test master-11 "Stopped -> Promote : colocation"
 do_test novell-239082 "Demote/Promote ordering"
 do_test novell-239087 "Stable master placement"
+do_test master-12 "Promotion based solely on rsc_location constraints"
 
 echo ""
 do_test managed-0 "Managed (reference)"

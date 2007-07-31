@@ -19,7 +19,7 @@
    </synapse>
    <synapse id="2">
      <action_set>
-       <rsc_op id="6" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="uuid1">
+       <rsc_op id="7" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" long-id="rsc1" class="heartbeat" type="apache"/>
          <attributes crm_feature_set="1.0.9" CRM_meta_timeout="20000"/>
        </rsc_op>
@@ -32,14 +32,14 @@
    </synapse>
    <synapse id="3">
      <action_set>
-       <rsc_op id="7" operation="monitor" operation_key="rsc1_monitor_5000" on_node="node1" on_node_uuid="uuid1">
+       <rsc_op id="8" operation="monitor" operation_key="rsc1_monitor_5000" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc1" long-id="rsc1" class="heartbeat" type="apache"/>
          <attributes crm_feature_set="1.0.9" CRM_meta_id="1" CRM_meta_timeout="3000" CRM_meta_name="monitor" CRM_meta_interval="5000"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="6" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="uuid1"/>
+         <rsc_op id="7" operation="start" operation_key="rsc1_start_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>

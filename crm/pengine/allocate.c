@@ -602,6 +602,8 @@ stage6(pe_working_set_t *data_set)
 	action_t *stonith_op = NULL;
 	action_t *last_stonith = NULL;
 	gboolean integrity_lost = FALSE;
+	action_t *ready = get_pseudo_op(STONITH_UP, data_set);
+	action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
 	
 	crm_debug_3("Processing fencing and shutdown cases");
 	
@@ -632,6 +634,8 @@ stage6(pe_working_set_t *data_set)
 				data_set->stonith_action);
 			
 			stonith_constraints(node, stonith_op, data_set);
+			order_actions(ready, stonith_op, pe_order_implies_left);
+			order_actions(stonith_op, all_stopped, pe_order_implies_right);
 
 			if(node->details->is_dc) {
 				dc_down = stonith_op;

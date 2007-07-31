@@ -1,4 +1,5 @@
  digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"  ]
 "configstoreclone:0_monitor_0 node1" -> "probe_complete node1" [ style = bold]
 "configstoreclone:0_monitor_0 node1" [ style=bold color="green" fontcolor="black"  ]
 "configstoreclone:0_post_notify_start_0 node2" -> "configstorecloneset_confirmed-post_notify_start_0" [ style = bold]
@@ -108,6 +109,7 @@
 "probe_complete" [ style=bold color="green" fontcolor="orange"  ]
 "sles10_migrate_from_0 node1" -> "sles10_monitor_10000 node1" [ style = bold]
 "sles10_migrate_from_0 node1" [ style=bold color="green" fontcolor="black"  ]
+"sles10_migrate_to_0 node2" -> "all_stopped" [ style = bold]
 "sles10_migrate_to_0 node2" -> "sles10_migrate_from_0 node1" [ style = bold]
 "sles10_migrate_to_0 node2" [ style=bold color="green" fontcolor="black"  ]
 "sles10_monitor_0 node1" -> "probe_complete node1" [ style = bold]

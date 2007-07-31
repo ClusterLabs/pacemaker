@@ -222,6 +222,7 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 	char *attr_name = NULL;
 	const char *id  = ID(event);
 	const char *on_uuid  = event_node;
+	const char *value = XML_NVPAIR_ATTR_VALUE"++";
 
 	if(rc == 99) {
 		/* this is an internal code for "we're busy, try again" */
@@ -235,6 +236,12 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 		  goto bail);
 	CRM_CHECK(task != NULL, goto bail);
 	CRM_CHECK(rsc_id != NULL, goto bail);
+
+	if(safe_str_eq(task, CRMD_ACTION_START)
+	   || safe_str_eq(task, CRMD_ACTION_STOP)) {
+	    interval = 1;
+	    value = "INFINITY";
+	}
 	
 	if(interval > 0) {
 		attr_name = crm_concat("fail-count", rsc_id, '-');

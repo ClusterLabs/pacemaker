@@ -373,7 +373,7 @@ main(int argc, char ** argv)
 	gboolean was_err = FALSE;
 	char *channel_name = crm_strdup(attrd_channel);
 	
-	crm_log_init(T_ATTRD, TRUE);
+	crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, 0, NULL);
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, attrd_shutdown, NULL, NULL);
 	
@@ -492,7 +492,14 @@ find_hash_entry(HA_Message * msg)
 {
 	const char *value = NULL;
 	const char *attr  = ha_msg_value(msg, F_ATTRD_ATTRIBUTE);
-	attr_hash_entry_t *hash_entry = g_hash_table_lookup(attr_hash, attr);
+	attr_hash_entry_t *hash_entry = NULL;
+
+	if(attr == NULL) {
+		crm_info("Ignoring message with no attribute name");
+		return NULL;
+	}
+	
+	hash_entry = g_hash_table_lookup(attr_hash, attr);
 
 	if(hash_entry == NULL) {	
 		/* create one and add it */
@@ -554,7 +561,10 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 {
 	int rc = cib_ok;
 
-	if(hash_entry->value == NULL) {
+	if(hash_entry == NULL) {
+	    return;
+	    
+	} else if(hash_entry->value == NULL) {
 		/* delete the attr */
 		rc = delete_attr(cib_conn, cib_none, hash_entry->section, attrd_uuid,
 				 hash_entry->set, NULL, hash_entry->id, NULL);
@@ -596,13 +606,15 @@ attrd_local_callback(HA_Message * msg)
 		return;
 	}
 
-	crm_debug("%s message from %s: %s=%s", op, from, attr, value);
+	crm_debug("%s message from %s: %s=%s", op, from, attr, crm_str(value));
 	hash_entry = find_hash_entry(msg);
+	if(hash_entry == NULL) {
+	    return;
+	}
 	
 	crm_free(hash_entry->last_value);
 	hash_entry->last_value = hash_entry->value;
 
-	value = ha_msg_value(msg, F_ATTRD_VALUE);
 	if(value != NULL) {
 		hash_entry->value = crm_strdup(value);
 
