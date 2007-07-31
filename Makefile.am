@@ -118,6 +118,9 @@ if MGMT_BUILD
 	rm -f $(DESTDIR)@bindir@/hb_gui && ln -s $(SHAREDIR)/heartbeat-gui/haclient.py $(DESTDIR)@bindir@/hb_gui 
 endif
 
+distclean-local:
+	rm -f autoconf automake autoheader
+
 # "pkg" format for Solaris etc.
 pkg:
 		(cd pkg && $(MAKE) PWD=`pwd` pkg)
