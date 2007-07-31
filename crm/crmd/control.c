@@ -32,6 +32,7 @@
 #include <fsa_proto.h>
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
+#include <crmd_lrm.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -40,7 +41,6 @@
 char *ipc_server = NULL;
 
 extern void crmd_ha_connection_destroy(gpointer user_data);
-extern gboolean verify_stopped(gboolean force, int log_level);
 
 gboolean crm_shutdown(int nsig, gpointer unused);
 gboolean register_with_ha(ll_cluster_t *hb_cluster, const char *client_name);
@@ -128,7 +128,7 @@ do_shutdown(long long action,
 			continue_shutdown = FALSE;
 		}
 	}
-
+    
 	if(continue_shutdown == FALSE) {
 		crm_info("Waiting for subsystems to exit");
 		crmd_fsa_stall(NULL);
@@ -293,9 +293,9 @@ do_exit(long long action,
 		exit_code = 1;
 		log_level = LOG_ERR;
 		exit_type = "forcefully";
-		verify_stopped(TRUE, LOG_ERR);
 	}
 	
+	verify_stopped(cur_state, LOG_ERR);
 	do_crm_log(log_level, "Performing %s - %s exiting the CRMd",
 		      fsa_action2string(action), exit_type);
 	
@@ -521,18 +521,6 @@ do_stop(long long action,
 	enum crmd_fsa_input current_input,
 	fsa_data_t *msg_data)
 {
-    gboolean force = FALSE;
-    int log_level = LOG_INFO;
-
-    if(cur_state == S_TERMINATE) {
-	force = TRUE;
-	log_level = LOG_ERR;
-    }
-    
-    if(verify_stopped(force, log_level) == FALSE) {
-	crmd_fsa_stall(NULL);
-    }
-
     return I_NULL;
 }
 

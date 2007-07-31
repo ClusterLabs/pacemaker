@@ -52,7 +52,6 @@ struct recurring_op_s
 };
 
 char *make_stop_id(const char *rsc, int call_id);
-gboolean verify_stopped(gboolean force, int log_level);
 
 gboolean build_operation_update(
 	crm_data_t *rsc_list, lrm_op_t *op, const char *src, int lpc);
@@ -95,7 +94,11 @@ do_lrm_control(long long action,
 	int ret = HA_OK;
 
 	if(action & A_LRM_DISCONNECT) {
-		verify_stopped(TRUE, LOG_ERR);
+		if(verify_stopped(cur_state, LOG_INFO) == FALSE) {
+		    crmd_fsa_stall(NULL);
+		    return I_NULL;
+		}
+		
 		if(lrm_source) {
 			crm_debug("Removing LRM connection from MainLoop");
 			if(G_main_del_IPC_Channel(lrm_source) == FALSE) {
@@ -196,57 +199,55 @@ ghash_print_pending(gpointer key, gpointer value, gpointer user_data)
 }
 
 gboolean
-verify_stopped(gboolean force, int log_level)
+verify_stopped(enum crmd_fsa_state cur_state, int log_level)
 {
+	gboolean rc = TRUE;
 	GListPtr lrm_list = NULL;
-	IPC_Channel *lrm_channel = NULL;
 
 	crm_info("Checking for active resources before exit");
-	if(fsa_lrm_conn != NULL) {
-		lrm_channel = fsa_lrm_conn->lrm_ops->ipcchan(fsa_lrm_conn);
-	}
-	
-	if(fsa_lrm_conn == NULL
-	   || lrm_channel == NULL
-	   || lrm_channel->ch_status != IPC_CONNECT) {
-		crm_err("Exiting with no LRM connection..."
-			" resources may be active!");
-		force = TRUE;
 
-	} else {
+	if(cur_state == S_TERMINATE) {
+		log_level = LOG_ERR;
+	}	
+
+	if(g_hash_table_size(pending_ops) > 0) {
+	    rc = FALSE;
+	    do_crm_log(log_level,
+		       "%d pending LRM operations at shutdown%s",
+		       g_hash_table_size(pending_ops),
+		       cur_state == S_TERMINATE?"":"... waiting");
+	    
+	    if(cur_state == S_TERMINATE || !is_set(fsa_input_register, R_SENT_RSC_STOP)) {
+		g_hash_table_foreach(
+		    pending_ops, ghash_print_pending, &log_level);
+	    }
+	    goto bail;
+	}
+
+	if(lrm_source != NULL && fsa_lrm_conn != NULL) {
 		lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
 	}
 
-	if(g_hash_table_size(pending_ops) > 0) {
-		do_crm_log(log_level,
-			      "%d pending LRM operations at shutdown%s",
-			      g_hash_table_size(pending_ops),
-			      force?"":"... waiting");
-
-		if(force || !is_set(fsa_input_register, R_SENT_RSC_STOP)) {
-			g_hash_table_foreach(
-				pending_ops, ghash_print_pending, &log_level);
-		}
-
-		if(force == FALSE) {
-			return FALSE;
-		}
-	}
-	
 	slist_iter(
 		rsc_id, char, lrm_list, lpc,
 		if(is_rsc_active(rsc_id) == FALSE) {
 			continue;
 		}
+		
+		rc = FALSE;
 		crm_err("Resource %s was active at shutdown."
 			"  You may ignore this error if it is unmanaged.",
 			rsc_id);
 		);
 	
+  bail:
 	set_bit_inplace(fsa_input_register, R_SENT_RSC_STOP);
-	register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 
-	return TRUE;
+	if(cur_state == S_TERMINATE) {
+	    rc = TRUE;
+	}
+
+	return rc;
 }
 
 static const char *
