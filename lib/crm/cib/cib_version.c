@@ -42,6 +42,8 @@
 const char * feature_sets[] = {
 	"1.1",
 	"1.2",
+	"1.3",
+	"2.0",
 };
 
 
@@ -53,15 +55,43 @@ typedef struct tag_set_s
 
 
 const char *feature_tags_12[] = { "master_slave", };
+const char *feature_tags_20[] = {
+    "cluster_property_set",
+    "meta_attributes",
+    "transient_attributes",
+};
+
 tag_set_t feature_tags[] = {
 	{ 0, NULL },
 	{ 1, feature_tags_12 },
+	{ 0, NULL },
+	{ 3, feature_tags_20 },
 };
 
 const char *feature_attrs_12[] = { "master_node_max", };
+const char *feature_attrs_20[] = {
+    "start_delay",
+    "disabled",
+    "on_fail",
+    "prereq",
+    "collocated",
+    "globally_unique",
+    "from_role",
+    "to_role",
+    "node_attribute",
+    "score_attribute",
+    "hours",
+    "transition_key",
+    "op_digest",
+    "op_restart_digest",
+    "op_force_restart",
+};
+
 tag_set_t feature_attrs[] = {
 	{ 0, NULL },
 	{ 1, feature_attrs_12 },
+	{ 0, NULL },
+	{ 15, feature_attrs_20 },
 };
 
 static int
@@ -77,7 +107,6 @@ internal_update_feature_set(crm_data_t *xml_obj, int current)
 		  return num_sets-1);
 
 	for(;lpc < num_sets; lpc++) {
-			
 		const char *tag = crm_element_name(xml_obj);
 		crm_debug_3("Checking set %d with %d tags", lpc,
 			  feature_tags[lpc].length);
