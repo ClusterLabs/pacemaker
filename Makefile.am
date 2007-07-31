@@ -29,7 +29,7 @@ EXTRA_DIST              = bootstrap rc.config.heartbeat 	\
 
 RPMREL			= @RPMREL@
 RPM			= @RPM@
-RPMFLAGS		= -ta --nodeps
+RPMFLAGS		= -ta
 TARFILE			= @TARFILE@
 AM_TAR			= tar
 RPMDIR=$(HOME)/rpms
@@ -87,7 +87,7 @@ HBDOCS = doc/heartbeat_api.html
 DISTCHECK_CONFIGURE_FLAGS = --with-initdir=prefix
 
 rpm:		dist
-		$(RPM) --nodeps $(RPMFLAGS) $(TARFILE) </dev/null;
+		$(RPM) $(RPMFLAGS) $(TARFILE) </dev/null;
 
 deb:		dist
 		rm -rf $(distdir)
