@@ -591,24 +591,6 @@ compare_version(const char *version1, const char *version2)
 	    crm_debug_3("%s > %s (%d)", version1, version2, lpc);
 	}
 
-#if 1
-	{
-	    int tmp_rc = borked_compare_11057(version1, version2);
-	    if(rc != tmp_rc) {
-		crm_crit("11057 %s ? %s (%d -> %d)", version1, version2, tmp_rc, rc);
-	    }
-	    
-	    tmp_rc = borked_compare_10102(version1, version2);
-	    if(rc != tmp_rc) {
-		crm_crit("10102: %s ? %s (%d -> %d)", version1, version2, tmp_rc, rc);
-	    }
-
-	    tmp_rc = borked_compare_3032(version1, version2);
-	    if(rc != tmp_rc) {
-		crm_crit("3032: %s ? %s (%d -> %d)", version1, version2, tmp_rc, rc);
-	    }
-	}
-#endif
 	return rc;
 }
 
