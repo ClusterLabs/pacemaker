@@ -1017,6 +1017,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	const char *task_status = NULL;
 	const char *interval_s  = NULL;
 	const char *op_digest   = NULL;
+	const char *op_version  = NULL;
 
 	int interval = 0;
 	int task_id_i = -1;
@@ -1036,6 +1037,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
  	task_id     = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
 	task_status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
 	op_digest   = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
+	op_version  = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
 
 	CRM_CHECK(id != NULL, return FALSE);
 	CRM_CHECK(task != NULL, return FALSE);
@@ -1193,25 +1195,29 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
-			crm_warn("Processing failed op (%s) on %s",
-				 id, node->details->uname);
+			crm_warn("Processing failed op %s on %s: %s",
+				 id, node->details->uname,
+				 op_status2text(task_status_i));
 			crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
 			add_node_copy(data_set->failed, xml_op);
 
 			if(*on_fail < action->on_fail) {
 				*on_fail = action->on_fail;
 			}
-			
-			if(task_status_i == LRM_OP_NOTSUPPORTED
-			   || is_stop_action
-			   || safe_str_eq(task, CRMD_ACTION_START) ) {
-				crm_warn("Handling failed %s for %s on %s",
-					 task, rsc->id, node->details->uname);
-				resource_location(rsc, node, -INFINITY,
-					  "__dont_run__failed_stopstart__",
-					  data_set);
+
+			if(task_status_i == LRM_OP_NOTSUPPORTED) {
+			    resource_location(
+				rsc, node, -INFINITY, "__not_supported__", data_set);
+
+			} else if(compare_version("2.0", op_version)) {			    
+			    if(is_stop_action || safe_str_eq(task, CRMD_ACTION_START)) {
+				crm_warn("Compatability handling for failed op %s on %s",
+					 id, node->details->uname);
+				resource_location(
+				    rsc, node, -INFINITY, "__legacy_stopstart__", data_set);
+			    }
 			}
-			
+
 			if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
 				rsc->role = RSC_ROLE_MASTER;
 
