@@ -439,14 +439,14 @@ crm_log_init(const char *entity, gboolean coredir)
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
 	
 	cl_log_set_entity(entity);
-	cl_log_set_facility(LOG_LOCAL7);
+	cl_log_set_facility(LOG_DAEMON);
 
 	if(coredir) {
 		cl_set_corerootdir(HA_COREDIR);
 		cl_cdtocoredir();
 	}
 	
-	crm_set_env_options();
+	cl_inherit_logging_environment(500);
 
 	CL_SIGNAL(DEBUG_INC, alter_debug);
 	CL_SIGNAL(DEBUG_DEC, alter_debug);
@@ -836,80 +836,7 @@ set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname)
 void
 crm_set_env_options(void) 
 {
-	char *param_val = NULL;
-	const char *param_name = NULL;
-
-	/* apparently we're not allowed to free the result of getenv */
-	
-	param_name = ENV_PREFIX "" KEY_DEBUGLEVEL;
-	param_val = getenv(param_name);
-	if(param_val != NULL) {
-		int debug_level = crm_parse_int(param_val, NULL);
-		if(debug_level > 0 && (debug_level+LOG_INFO) > (int)crm_log_level) {
-			set_crm_log_level(LOG_INFO + debug_level);
-		}
-		crm_debug("%s = %s", param_name, param_val);
-		param_val = NULL;
-	}
-
-	param_name = ENV_PREFIX "" KEY_FACILITY;
-	param_val = getenv(param_name);
-	crm_debug("%s = %s", param_name, param_val);
-	if(param_val != NULL) {
-		int facility = cl_syslogfac_str2int(param_val);
-		if(facility >= 0) {
-			cl_log_set_facility(facility);
-		}
-		param_val = NULL;
-	}
-
-	param_name = ENV_PREFIX "" KEY_LOGFILE;
-	param_val = getenv(param_name);
-	crm_debug("%s = %s", param_name, param_val);
-	if(param_val != NULL) {
-		if(safe_str_eq("/dev/null", param_val)) {
-			param_val = NULL;
-		}
-		cl_log_set_logfile(param_val);
-		param_val = NULL;
-	}
-	
-	param_name = ENV_PREFIX "" KEY_DBGFILE;
-	param_val = getenv(param_name);
-	crm_debug("%s = %s", param_name, param_val);
-	if(param_val != NULL) {
-		if(safe_str_eq("/dev/null", param_val)) {
-			param_val = NULL;
-		}
-		cl_log_set_debugfile(param_val);
-		param_val = NULL;
-	}
-	
-	param_name = ENV_PREFIX "" KEY_LOGDAEMON;
-	param_val = getenv(param_name);
-	crm_debug("%s = %s", param_name, param_val);
-	if(param_val != NULL) {
-		int uselogd;
-		cl_str_to_boolean(param_val, &uselogd);
-		cl_log_set_uselogd(uselogd);
-		if(uselogd) {
-			cl_set_logging_wqueue_maxlen(500);
-			cl_log_set_logd_channel_source(NULL, NULL);
-		}
-		param_val = NULL;
-	}
-
-	param_name = ENV_PREFIX "" KEY_CONNINTVAL;
-	param_val = getenv(param_name);
-	crm_debug("%s = %s", param_name, param_val);
-	if(param_val != NULL) {
-		int logdtime;
-		logdtime = crm_get_msec(param_val);
-		cl_log_set_logdtime(logdtime);
-		param_val = NULL;
-	}
-	
-	inherit_compress();
+	cl_inherit_logging_environment(500);
 }
 
 gboolean
