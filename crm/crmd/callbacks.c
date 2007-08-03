@@ -373,13 +373,14 @@ crmd_client_status_callback(const char * node, const char * client,
 		
 	} else {
 		crm_debug_3("Got client status callback");
-		update = create_node_state(
-			node, NULL, NULL, status, join,
-			NULL, clear_shutdown, __FUNCTION__);
-
-		if(clear_shutdown) {
-			crm_xml_add(update, XML_CIB_ATTR_REPLACE,
-				    XML_TAG_TRANSIENT_NODEATTRS);
+		update = create_node_state(node, NULL, NULL, status, join,
+					   NULL, clear_shutdown, __FUNCTION__);
+	
+		if(safe_str_eq(status, ONLINESTATUS)){
+		    crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM);
+		    
+		} else if(safe_str_eq(status, OFFLINESTATUS)) {
+		    crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_TAG_TRANSIENT_NODEATTRS);
 		}
 		
 		/* it is safe to keep these updates on the local node
