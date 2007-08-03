@@ -275,10 +275,16 @@ class LinuxHAv2(HeartbeatCM):
                 self.rsh.readaline(node, (self["StatusCmd"] %node) )
                 any_up = 1
 
-        if any_up == 0 or idle_watch.look():
+        if any_up == 0:
+            self.debug("Cluster is inactive") 
             return 1
 
-        self.log("Warn: Cluster Master not IDLE") 
+        ret = idle_watch.look()
+        if ret:
+            self.debug(ret) 
+            return 1
+
+        self.log("Warn: Cluster Master not IDLE after %ds" % timeout) 
         return None
 
     def is_node_dc(self, node, status_line=None):
