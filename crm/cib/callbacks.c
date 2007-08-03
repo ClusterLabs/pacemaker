@@ -1756,29 +1756,37 @@ gboolean cib_ccm_dispatch(int fd, gpointer user_data)
 	if(0 == rc) {
 		return TRUE;
 
-	} else {
-		crm_err("CCM connection appears to have failed: rc=%d.", rc);
-		return FALSE;
 	}
+
+	crm_err("CCM connection appears to have failed: rc=%d.", rc);
+
+	/* eventually it might be nice to recover and reconnect... but until then... */
+	crm_err("Exiting to recover from CCM connection failure");
+	exit(2);
+	
+	return FALSE;
 }
 
 void 
 cib_ccm_msg_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data)
 {
-	int instance = -1;
 	gboolean update_id = FALSE;
 	gboolean update_quorum = FALSE;
-	
+	static int current_instance = 0;
 	const oc_ev_membership_t *membership = data;
 
-	if(membership != NULL) {
-		instance = membership->m_instance;
+	CRM_ASSERT(membership != NULL);
+
+	crm_debug("Process CCM event=%s (id=%d)",
+		  ccm_event_name(event), membership->m_instance);
+
+	if(current_instance > membership->m_instance) {
+		crm_err("Membership instance ID went backwards! %d->%d",
+			current_instance, membership->m_instance);
+		CRM_ASSERT(current_instance <= membership->m_instance);
 	}
-
-	crm_debug("Process CCM event=%s (id=%d)", 
-		 ccm_event_name(event), instance);
-
+	
 	switch(event) {
 		case OC_EV_MS_NEW_MEMBERSHIP:
 		case OC_EV_MS_INVALID:
@@ -1807,7 +1815,8 @@ cib_ccm_msg_callback(
 			crm_free(ccm_transition_id);
 			ccm_transition_id = NULL;
 		}
-		ccm_transition_id = crm_itoa(instance);
+		current_instance = membership->m_instance;
+		ccm_transition_id = crm_itoa(membership->m_instance);
 		set_transition(the_cib);
 	}
 	
@@ -1828,7 +1837,7 @@ cib_ccm_msg_callback(
 		
 		crm_debug("Quorum %s after event=%s (id=%d)", 
 			  cib_have_quorum?"(re)attained":"lost",
-			  ccm_event_name(event), instance);
+			  ccm_event_name(event), membership->m_instance);
 		
 		if(membership != NULL && membership->m_n_out != 0) {
 			members = membership->m_n_out;
