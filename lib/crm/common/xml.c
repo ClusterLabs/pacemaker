@@ -2533,8 +2533,6 @@ validate_with_dtd(
 	}
 	
 	if (!xmlValidateDtd(cvp, doc, dtd)) {
-		crm_err("CIB does not validate against %s", dtd_file);
-		crm_log_xml_debug(xml_blob, "invalid");
 		valid = FALSE;
 	}
 	
