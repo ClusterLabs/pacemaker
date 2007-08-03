@@ -2183,7 +2183,7 @@ class NearQuorumPointTest(CTSTest):
         if len(watchpats) == 0:
             return self.skipped()
 
-        watchpats.append(self.CM["Pat:DC_IDLE"] % node)
+        watchpats.append(self.CM["Pat:DC_IDLE"])
         
         watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats
         ,     timeout=self.CM["DeadTime"]+10)
