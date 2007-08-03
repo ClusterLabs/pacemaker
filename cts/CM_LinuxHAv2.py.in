@@ -502,6 +502,7 @@ class LinuxHAv2(HeartbeatCM):
                     "ERROR: MSG: No message to dump",
                     "pending LRM operations at shutdown",
                     "Lost connection to the CIB service",
+                    "Connection to the CIB terminated...",
                     "Sending message to CIB service FAILED",
                     "apply_xml_diff: Diff application failed!",
                     "crmd: .*Action A_RECOVER .* not supported",
@@ -518,7 +519,6 @@ class LinuxHAv2(HeartbeatCM):
         complist.append(Process("ccm", 0, [
                     "Respawning client .*crmd",
                     "Respawning client .*cib",
-                    "crmd: .*I_ERROR.*ccm_dispatch",
                     "CCM connection appears to have failed",
                     "Client .*cib exited with return code 2.",
                     "Client .*crmd exited with return code 2.",
@@ -526,6 +526,7 @@ class LinuxHAv2(HeartbeatCM):
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "Exiting to recover from CCM connection failure",
                     "crmd:.*do_exit: Could not recover from internal error",
+                    "crmd: .*I_ERROR.*(ccm_dispatch|crmd_cib_connection_destroy)",
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
@@ -573,10 +574,8 @@ class LinuxHAv2(HeartbeatCM):
 
         complist.append(Process("tengine", 1, [
                     "Respawning client .*crmd",
-                    "crmd: .*I_ERROR.*crmdManagedChildDied",
                     "Client .*crmd exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
-                    "The tengine subsystem terminated unexpectedly",
                     "crmd:.*do_exit: Could not recover from internal error",
                     ], [], common_ignore, self))
 
