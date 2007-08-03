@@ -1659,7 +1659,7 @@ class ResourceRecover(CTSTest):
         self.action = "fail"
 
         # make sure the interval is greater than 0 so failcount is updated
-        self.interval = 60000
+        self.interval = 0
 
     def __call__(self, node):
         '''Perform the 'ResourceRecover' test. '''
