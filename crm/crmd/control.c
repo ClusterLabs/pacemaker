@@ -132,9 +132,6 @@ do_shutdown(long long action,
 	if(continue_shutdown == FALSE) {
 		crm_info("Waiting for subsystems to exit");
 		crmd_fsa_stall(NULL);
-
-	} else {
-		register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 	}
 	
 	return I_NULL;
@@ -521,6 +518,7 @@ do_stop(long long action,
 	enum crmd_fsa_input current_input,
 	fsa_data_t *msg_data)
 {
+    register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
     return I_NULL;
 }
 
@@ -598,7 +596,7 @@ do_recover(long long action,
 	crm_err("Action %s (%.16llx) not supported",
 	       fsa_action2string(action), action);
 
-	register_fsa_input(C_FSA_INTERNAL, I_STOP, NULL);
+	register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 
 	return I_NULL;
 }
@@ -610,7 +608,7 @@ pe_cluster_option crmd_opts[] = {
 	{ XML_CONFIG_ATTR_ELECTION_FAIL, NULL, "time", NULL, "2min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ XML_CONFIG_ATTR_FORCE_QUIT, NULL, "time", NULL, "20min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-integration-timeout", NULL, "time", NULL, "3min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
-	{ "crmd-finalization-timeout", NULL, "time", NULL, "10min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
+	{ "crmd-finalization-timeout", NULL, "time", NULL, "30min", &check_timer, "*** Advanced Use Only ***.", "If you need to adjust this value, it probably indicates the presence of a bug." },
 };
 
 void

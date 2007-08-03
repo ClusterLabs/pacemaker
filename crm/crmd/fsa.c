@@ -525,16 +525,16 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 			do_fsa_action(fsa_data, A_TE_STOP,		do_te_control);
 		} else if(is_set(fsa_actions, A_SHUTDOWN)) {
 			do_fsa_action(fsa_data, A_SHUTDOWN,		do_shutdown);
-		} else if(is_set(fsa_actions, A_STOP)) {
-			do_fsa_action(fsa_data, A_STOP,			do_stop);
-		} else if(is_set(fsa_actions, A_CCM_DISCONNECT)) {
-			do_fsa_action(fsa_data, A_CCM_DISCONNECT,	do_ccm_control);
 		} else if(is_set(fsa_actions, A_LRM_DISCONNECT)) {
 			do_fsa_action(fsa_data, A_LRM_DISCONNECT,	do_lrm_control);
+		} else if(is_set(fsa_actions, A_CCM_DISCONNECT)) {
+			do_fsa_action(fsa_data, A_CCM_DISCONNECT,	do_ccm_control);
 		} else if(is_set(fsa_actions, A_HA_DISCONNECT)) {
 			do_fsa_action(fsa_data, A_HA_DISCONNECT,	do_ha_control);
 		} else if(is_set(fsa_actions, A_CIB_STOP)) {
 			do_fsa_action(fsa_data, A_CIB_STOP,		do_cib_control);
+		} else if(is_set(fsa_actions, A_STOP)) {
+			do_fsa_action(fsa_data, A_STOP,			do_stop);
 
 			/* exit gracefully */
 		} else if(is_set(fsa_actions, A_EXIT_0)) {
