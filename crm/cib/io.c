@@ -137,7 +137,7 @@ validate_cib_digest(crm_data_t *local_cib, const char *sigfile)
 		passed = TRUE;
 
 	} else {
-		crm_err("Digest comparision failed: %s vs. %s",
+		crm_err("Digest comparision failed: expected %s, calculated %s",
 			expected, digest);
 	}
 
