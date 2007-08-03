@@ -939,9 +939,13 @@ class Component:
         None
         
 class Process(Component):
-    def __init__(self, name, cm):
+    def __init__(self, name, dc_only, pats, dc_pats, badnews_ignore, cm):
         self.name = str(name)
+        self.dc_only = dc_only
+        self.pats = pats
+        self.dc_pats = dc_pats
         self.CM = cm
+        self.badnews_ignore = badnews_ignore
         self.KillCmd = "killall -9 " + self.name
         
     def kill(self, node):
