@@ -93,27 +93,24 @@ class RandomTests:
             errcount=0
             BadNewsDebug=0
             #BadNews.debug=1
+            ignorelist = []                
+            ignorelist.append(" CTS: ")
+            ignorelist.append("BadNews:")
+            ignorelist.extend(self.CM.errorstoignore())
+
+            if test:
+                ignorelist.extend(test.errorstoignore())
+
             while errcount < 1000:
                 if BadNewsDebug: print "Looking for BadNews"
                 match=BadNews.look(0)
                 if match:
                    if BadNewsDebug: print "BadNews found: "+match
                    add_err = 1
-                   ignorelist = []
-                   if test:
-                       ignorelist=test.errorstoignore()
-                   ignorelist.append(" CTS: ")
-                   ignorelist.append("BadNews:")
                    for ignore in ignorelist:
-                       if re.search(ignore, match):
-                           if BadNewsDebug: print "Ignoring:"+match+" (pattern: "+ignore+")"
+                       if add_err == 1 and re.search(ignore, match):
+                           if BadNewsDebug: print "Ignoring based on pattern: ("+ignore+")"
                            add_err = 0
-                   if add_err == 1:
-                       ignorelist=self.CM.errorstoignore()
-                       for ignore in ignorelist:
-                           if re.search(ignore, match):
-                               if BadNewsDebug: print "Ignoring:"+match+" (pattern: "+ignore+")"
-                               add_err = 0
                    if add_err == 1:
                        self.CM.log("BadNews: " + match)
                        self.incr("BadNews")
@@ -362,13 +359,13 @@ class StopTest(CTSTest):
         self.CM.StopaCM(node)
         watch_result = watch.lookforall()
 
-	failreason=None
+        failreason=None
         UnmatchedList = "||"
         if watch.unmatched:
             for regex in watch.unmatched:
                 self.CM.log ("ERROR: Shutdown pattern not found: %s" % (regex))
                 UnmatchedList +=  regex + "||";
-		failreason="Missing shutdown pattern"
+                failreason="Missing shutdown pattern"
 
         self.CM.cluster_stable(self.CM["DeadTime"])
 
