@@ -1642,7 +1642,12 @@ do_update_resource(lrm_op_t* op)
 	crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 		
 	rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, op->rsc_id);
-	
+
+	CRM_CHECK(rsc->type != NULL,
+		  crm_err("Resource %s has no value for type", op->rsc_id));
+	CRM_CHECK(rsc->class != NULL,
+		  crm_err("Resource %s has no value for class", op->rsc_id));
+
 	crm_xml_add(iter, XML_ATTR_TYPE, rsc->type);
 	crm_xml_add(iter, XML_AGENT_ATTR_CLASS, rsc->class);
 	crm_xml_add(iter, XML_AGENT_ATTR_PROVIDER,rsc->provider);
