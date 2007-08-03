@@ -304,7 +304,7 @@ main(int argc, char **argv)
 	crm_notice("Required feature set: %s", feature_set(cib_object));
  	do_id_check(cib_object, NULL, FALSE, FALSE);
 	if(!validate_with_dtd(cib_object,FALSE,HA_NOARCHDATAHBDIR"/crm.dtd")) {
-		crm_crit("%s is not a valid configuration", xml_file?xml_file:"stding");
+		crm_crit("%s does not contain a valid configuration", xml_file?xml_file:"<stdin>");
  		all_good = FALSE;
 	}
 	
