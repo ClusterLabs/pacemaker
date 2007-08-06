@@ -184,6 +184,11 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 			crm_config_err("Must specify type tag in <node>");
 			continue;
 		}
+		if(pe_find_node(data_set->nodes, uname) != NULL) {
+		    crm_config_warn("Detected multiple node entries with uname=%s"
+				    " - this is rarely intended", uname);
+		}
+
 		crm_malloc0(new_node, sizeof(node_t));
 		if(new_node == NULL) {
 			return FALSE;
