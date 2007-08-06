@@ -184,6 +184,9 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 
 	crm_debug_2("Processing %s (%s) message", op, ref);
 	crm_log_message(LOG_DEBUG_3, msg);
+	if(stonith_src == NULL) {
+	    te_connect_stonith();
+	}	
 	
 	if(op == NULL){
 		/* error */
@@ -362,16 +365,18 @@ tengine_stonith_callback(stonith_ops_t * op)
 	return;
 }
 
+
 void
 tengine_stonith_connection_destroy(gpointer user_data)
 {
-#if 0
-	crm_err("Fencing daemon has left us: Shutting down...NOW");
-	/* shutdown properly later */
-	CRM_CHECK(FALSE/* fencing daemon died */);
-#else
 	crm_err("Fencing daemon has left us");
-#endif
+	stonith_src = NULL;
+	if(stonith_src == NULL) {
+	    sleep(2);
+	    if(te_connect_stonith() == FALSE) {
+		crm_err("Fencing daemon is still not connected...");
+	    }
+	}
 	return;
 }
 

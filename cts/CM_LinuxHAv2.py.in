@@ -512,6 +512,8 @@ class LinuxHAv2(HeartbeatCM):
 
         stonith_ignore = [
             "update_failcount: Updating failcount for child_DoFencing",
+            "ERROR: stonithd_signon: to fetch reply failed.",
+            "ERROR: te_connect_stonith: Could not sign in",
             ]
 
         stonith_ignore.extend(common_ignore)
@@ -582,6 +584,7 @@ class LinuxHAv2(HeartbeatCM):
         if self.Env["DoFencing"] == 1 :
             complist.append(Process("stonithd", 0, [], [
                         "tengine_stonith_connection_destroy: Fencing daemon has left us",
+                        "Attempting connection to fencing daemon",
                         ], stonith_ignore, self))
 #            complist.append(Process("heartbeat", 0, [], [], [], self))
         return complist

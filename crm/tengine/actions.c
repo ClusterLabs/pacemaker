@@ -134,6 +134,12 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 		      type, id, target,
 		      transition_graph->transition_timeout / 2);
 
+	/* Block until we can connect... */
+	while(stonith_src == NULL) {
+	    te_connect_stonith();
+	    sleep(1);
+	}
+	
 	crm_malloc0(st_op, sizeof(stonith_ops_t));
 	if(safe_str_eq(type, "poweroff")) {
 		st_op->optype = POWEROFF;

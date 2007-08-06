@@ -107,7 +107,6 @@ main(int argc, char ** argv)
 	return rc;
 }
 
-
 int
 te_init(void)
 {
@@ -150,29 +149,8 @@ te_init(void)
 		}
 	}
 
-	if(init_ok && ST_OK != stonithd_signon(crm_system_name)) {
-		crm_err("Could not sign up to stonithd");
-/*  		init_ok = FALSE;  */
-	}
-
-	if(init_ok && ST_OK != stonithd_set_stonith_ops_callback(
-		   tengine_stonith_callback)) {
-		crm_err("Could not set stonith callback");
-		stonithd_signoff();
-/*  		init_ok = FALSE; */
-	}
-
 	if(init_ok) {
-		IPC_Channel *fence_ch = stonithd_input_IPC_channel();
-
-		if(fence_ch == NULL) {
-		} else if(NULL == G_main_add_IPC_Channel(
-			G_PRIORITY_LOW, fence_ch, FALSE,
-			tengine_stonith_dispatch, NULL,
-			tengine_stonith_connection_destroy)) {
-			crm_err("Failed to add Fencing channel to our mainloop");
-			init_ok = FALSE;
-		}
+	    init_ok = te_connect_stonith();
 	}
 
 	if(init_ok) {
