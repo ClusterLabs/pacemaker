@@ -950,7 +950,7 @@ class Process(Component):
         
     def kill(self, node):
         if self.CM.rsh(node, self.KillCmd) != 0:
-            self.log ("ERROR: Kill %s failed on node %s" %(name,node))
+            self.CM.log ("ERROR: Kill %s failed on node %s" %(name,node))
             return None
         return 1
 
