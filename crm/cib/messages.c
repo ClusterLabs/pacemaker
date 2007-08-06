@@ -420,16 +420,33 @@ cib_process_diff(
 		if(apply_xml_diff(existing_cib, input, result_cib) == FALSE) {
 			log_level = LOG_WARNING;
 			reason = "Failed application of an update diff";
-			if(options & cib_force_diff && cib_is_master == FALSE) {
+
+			if(options & cib_force_diff) {
+			    if(cib_is_master == FALSE) {
 				log_level = LOG_INFO;
 				reason = "Failed application of a global update."
-					"  Requesting full refresh.";
+					 "  Requesting full refresh.";
 				do_resync = TRUE;
 
-			} else if(options & cib_force_diff) {
+			    } else {
 				reason = "Failed application of a global update."
-					"  Not requesting full refresh.";
+					 "  Not requesting full refresh.";
+			    }
 			}
+			
+		} else if((options & cib_force_diff) && !validate_with_dtd(
+			      *result_cib, FALSE, HA_NOARCHDATAHBDIR"/crm.dtd")) {
+
+		    if(cib_is_master == FALSE) {
+			log_level = LOG_INFO;
+			reason = "Failed DTD validation of a global update."
+				 "  Requesting full refresh.";
+			do_resync = TRUE;
+		    } else {
+			log_level = LOG_WARNING;
+			reason = "Failed DTD validation of a global update."
+				 "  Not requesting full refresh.";
+		    }
 		}
 	}
 	
