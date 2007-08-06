@@ -606,7 +606,7 @@ write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress)
 	time_t now;
 	char *buffer = NULL;
 	char *now_str = NULL;
-	gboolean is_done = FALSE;
+	unsigned int in = 0, out = 0;
 	FILE *file_output_strm = NULL;
 	static mode_t cib_mode = S_IRUSR|S_IWUSR;
 	
@@ -619,6 +619,15 @@ write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress)
 		return -1;
 	}
 
+	file_output_strm = fopen(filename, "w");
+	if(file_output_strm == NULL) {
+		cl_perror("Cannot open %s for writing", filename);
+		return -1;
+	} 
+
+	/* establish the correct permissions */
+	fchmod(fileno(file_output_strm), cib_mode);
+	
 	crm_validate_data(xml_node);
 	crm_log_xml_debug_4(xml_node, "Writing out");
 	crm_validate_data(xml_node);
@@ -630,78 +639,62 @@ write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress)
 	crm_validate_data(xml_node);
 	
 	buffer = dump_xml_formatted(xml_node);
-	CRM_CHECK(buffer != NULL && strlen(buffer) > 0, return -1);
-
-	/* establish the file with correct permissions */
-	file_output_strm = fopen(filename, "w");
-	if(file_output_strm == NULL) {
-		cl_perror("Cannot open %s for writing", filename);
-		crm_free(buffer);
-		return -1;
-	}
-	
-	fclose(file_output_strm);
-	chmod(filename, cib_mode);
-
-	/* now write it */
-	file_output_strm = fopen(filename, "w");
-	if(file_output_strm == NULL) {
-		cl_perror("Cannot open %s for writing", filename);
-		crm_free(buffer);
-		return -1;		
-	} 
+	CRM_CHECK(buffer != NULL && strlen(buffer) > 0, goto bail);	
 
 	if(compress) {
 #if HAVE_BZLIB_H
-		int rc = BZ_OK;
-		BZFILE *bz_file = NULL;
-		unsigned int in = 0, out = 0;
-		is_done = TRUE;
-		bz_file = BZ2_bzWriteOpen(&rc, file_output_strm, 5,0,0);
+	    int rc = BZ_OK;
+	    BZFILE *bz_file = NULL;
+	    bz_file = BZ2_bzWriteOpen(&rc, file_output_strm, 5,0,0);
+	    if(rc != BZ_OK) {
+		crm_err("bzWriteOpen failed: %d", rc);
+	    } else {
+		BZ2_bzWrite(&rc,bz_file,buffer,strlen(buffer));
 		if(rc != BZ_OK) {
-			is_done = FALSE;
-			crm_err("bzWriteOpen failed: %d", rc);
+		    crm_err("bzWrite() failed: %d", rc);
 		}
-		if(is_done) {
-			BZ2_bzWrite(&rc,bz_file,buffer,strlen(buffer));
-			if(rc != BZ_OK) {
-				crm_err("bzWrite() failed: %d", rc);
-				is_done = FALSE;
-			}
+	    }
+	    
+	    if(rc == BZ_OK) {
+		BZ2_bzWriteClose(&rc, bz_file, 0, &in, &out);
+		if(rc != BZ_OK) {
+		    crm_err("bzWriteClose() failed: %d",rc);
+		    out = -1;
+		} else {
+		    crm_debug_2("%s: In: %d, out: %d", filename, in, out);
 		}
-		if(is_done) {
-			BZ2_bzWriteClose(&rc, bz_file, 0, &in, &out);
-			if(rc != BZ_OK) {
-				crm_err("bzWriteClose() failed: %d",rc);
-				is_done = FALSE;
-			} else {
-				crm_debug_2("%s: In: %d, out: %d",
-					    filename, in, out);
-			}
-		}
+	    }
 #else
-		crm_err("Cannot write compressed files:"
-			" bzlib was not available at compile time");		
+	    crm_err("Cannot write compressed files:"
+		    " bzlib was not available at compile time");		
 #endif
 	}
 	
-	if(is_done == FALSE) {
-		res = fprintf(file_output_strm, "%s", buffer);
-		if(res < 0) {
-			cl_perror("Cannot write output to %s", filename);
-		}
-		
-		if(fflush(file_output_strm) == EOF || fsync(fileno(file_output_strm)) < 0) {
-			cl_perror("fflush or fsync error on %s", filename);
-			fclose(file_output_strm);
-			crm_free(buffer);
-			return -1;
-		}
+	if(out <= 0) {
+	    res = fprintf(file_output_strm, "%s", buffer);
+	    if(res < 0) {
+		cl_perror("Cannot write output to %s", filename);
+		goto bail;
+	    }		
 	}
+	
+  bail:
+	
+	CRM_ASSERT(file_output_strm != NULL);
+	if(fflush(file_output_strm) != 0) {
+	    cl_perror("fflush for %s failed:", filename);
+	    res = -1;
+	}
+	
+	if(fsync(fileno(file_output_strm)) < 0) {
+	    cl_perror("fsync for %s failed:", filename);
+	    res = -1;
+	}
+	    
 	fclose(file_output_strm);
-	crm_free(buffer);
-
+	
 	crm_debug_3("Saved %d bytes to the Cib as XML", res);
+	crm_free(buffer);
 
 	return res;
 }
