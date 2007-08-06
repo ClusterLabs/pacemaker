@@ -236,6 +236,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	params_all = create_xml_node(NULL, XML_TAG_PARAMS);
 	g_hash_table_foreach(action->extra, hash2field, params_all);
 	g_hash_table_foreach(rsc->parameters, hash2field, params_all);
+	g_hash_table_foreach(action->meta, hash2metafield, params_all);
 	g_hash_table_foreach(local_rsc_params, hash2field, params_all);
 
 	filter_action_parameters(params_all, op_version);
@@ -272,9 +273,9 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 		action_t *op = NULL;
 		did_change = TRUE;
 		crm_log_xml_info(params_all, "params:all");
- 		crm_warn("Parameters to %s on %s changed: recorded %s vs. calculated (all) %s",
+ 		crm_warn("Parameters to %s on %s changed: recorded %s vs. calculated (all) %s (version=%s)",
 			 key, active_node->details->uname,
-			 crm_str(digest_all), digest_all_calc);
+			 crm_str(digest_all), digest_all_calc, op_version);
 		
 		key = generate_op_key(rsc->id, task, interval);
 		op = custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
