@@ -35,7 +35,7 @@
 
 #include <crm/cib.h>
 
-#define OPTARGS	"V?X:D:G:I:Lwxd:a"
+#define OPTARGS	"V?X:D:G:I:Lwxd:aS"
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -49,6 +49,7 @@
 #endif
 
 gboolean use_stdin = FALSE;
+gboolean do_simulation = FALSE;
 gboolean inhibit_exit = FALSE;
 gboolean all_actions = FALSE;
 extern crm_data_t * do_calculations(
@@ -170,6 +171,7 @@ main(int argc, char **argv)
 			{"xml-stream",  0, 0, 'x'},
 			{"xml-file",    1, 0, 'X'},
 
+			{"simulate",    0, 0, 'S'},
 			{"save-graph",  1, 0, 'G'},
 			{"save-dotfile",1, 0, 'D'},
 			{"save-input",  1, 0, 'I'},
@@ -197,6 +199,9 @@ main(int argc, char **argv)
     
 				break;
 #endif
+			case 'S':
+				do_simulation = TRUE;
+				break;
 			case 'a':
 				all_actions = TRUE;
 				break;
@@ -358,6 +363,10 @@ main(int argc, char **argv)
 		}
 	}
 
+	if(dot_strm == NULL) {
+	    goto simulate;
+	}
+	
 	init_dotfile();
 	slist_iter(
 		action, action_t, data_set.actions, lpc,
@@ -438,6 +447,12 @@ main(int argc, char **argv)
 		fflush(dot_strm);
 		fclose(dot_strm);
 	}
+
+  simulate:
+	
+	if(do_simulation == FALSE) {
+	    goto cleanup;
+	}
 	
 	transition = unpack_graph(data_set.graph);
 	print_graph(LOG_DEBUG, transition);
@@ -450,10 +465,12 @@ main(int argc, char **argv)
 		crm_crit("Transition failed: %s", transition_status(graph_rc));
 		print_graph(LOG_ERR, transition);
 	}
-	cleanup_alloc_calculations(&data_set);
 	destroy_graph(transition);
-	
 	CRM_CHECK(graph_rc == transition_complete, all_good = FALSE; crm_err("An invalid transition was produced"));
+
+  cleanup:
+	cleanup_alloc_calculations(&data_set);
+	
 
 #if HAVE_LIBXML2
 	xmlCleanupParser();
