@@ -59,6 +59,7 @@
 #endif
 
 extern int init_remote_listener(int port);
+extern gboolean ccm_connect(void);
 
 gboolean cib_shutdown_flag = FALSE;
 gboolean stand_alone = FALSE;
@@ -286,6 +287,79 @@ cib_stats(gpointer data)
 	return TRUE;
 }
 
+static void
+ccm_connection_destroy(gpointer user_data)
+{
+    crm_err("CCM connection failed... blocking while we reconnect");
+    CRM_ASSERT(ccm_connect());
+    return;
+}
+
+extern int current_instance;
+
+gboolean ccm_connect(void) 
+{
+    gboolean did_fail = TRUE;
+    int num_ccm_fails = 0;
+    int max_ccm_fails = 30;
+    int ret;
+    int cib_ev_fd;
+    
+    while(did_fail) {
+	did_fail = FALSE;
+	crm_info("Registering with CCM...");
+	ret = oc_ev_register(&cib_ev_token);
+	if (ret != 0) {
+	    did_fail = TRUE;
+	}
+	
+	if(did_fail == FALSE) {
+	    crm_debug_3("Setting up CCM callbacks");
+	    ret = oc_ev_set_callback(
+		cib_ev_token, OC_EV_MEMB_CLASS,
+		cib_ccm_msg_callback, NULL);
+	    if (ret != 0) {
+		crm_warn("CCM callback not set");
+		did_fail = TRUE;
+	    }
+	}
+	if(did_fail == FALSE) {
+	    oc_ev_special(cib_ev_token, OC_EV_MEMB_CLASS, 0);
+	    
+	    crm_debug_3("Activating CCM token");
+	    ret = oc_ev_activate(cib_ev_token, &cib_ev_fd);
+	    if (ret != 0){
+		crm_warn("CCM Activation failed");
+		did_fail = TRUE;
+	    }
+	}
+	
+	if(did_fail) {
+	    num_ccm_fails++;
+	    oc_ev_unregister(cib_ev_token);
+	    
+	    if(num_ccm_fails < max_ccm_fails){
+		crm_warn("CCM Connection failed %d times (%d max)",
+			 num_ccm_fails, max_ccm_fails);
+		sleep(1);
+		
+	    } else {
+		crm_err("CCM Activation failed %d (max) times",
+			num_ccm_fails);
+		return FALSE;
+	    }
+	}
+    }
+    
+    current_instance = 0;
+    crm_debug("CCM Activation passed... all set to go!");
+    G_main_add_fd(G_PRIORITY_HIGH, cib_ev_fd, FALSE,
+		  cib_ccm_dispatch, cib_ev_token,
+		  ccm_connection_destroy);
+    
+    return TRUE;    
+}
+
 int
 cib_init(void)
 {
@@ -364,67 +438,7 @@ cib_init(void)
 	}
 
 	if(was_error == FALSE) {
-		gboolean did_fail = TRUE;
-		int num_ccm_fails = 0;
-		int max_ccm_fails = 30;
-		int ret;
-		int cib_ev_fd;
-		
-		while(did_fail && was_error == FALSE) {
-			did_fail = FALSE;
-			crm_debug_3("Registering with CCM");
-			ret = oc_ev_register(&cib_ev_token);
-			if (ret != 0) {
-				did_fail = TRUE;
-			}
-			
-			if(did_fail == FALSE) {
-				crm_debug_3("Setting up CCM callbacks");
-				ret = oc_ev_set_callback(
-					cib_ev_token, OC_EV_MEMB_CLASS,
-					cib_ccm_msg_callback, NULL);
-				if (ret != 0) {
-					crm_warn("CCM callback not set");
-					did_fail = TRUE;
-				}
-			}
-			if(did_fail == FALSE) {
-				oc_ev_special(cib_ev_token, OC_EV_MEMB_CLASS, 0);
-				
-				crm_debug_3("Activating CCM token");
-				ret = oc_ev_activate(cib_ev_token, &cib_ev_fd);
-				if (ret != 0){
-					crm_warn("CCM Activation failed");
-					did_fail = TRUE;
-				}
-			}
-			
-			if(did_fail) {
-				num_ccm_fails++;
-				oc_ev_unregister(cib_ev_token);
-				
-				if(num_ccm_fails < max_ccm_fails){
-					crm_warn("CCM Connection failed"
-						 " %d times (%d max)",
-						 num_ccm_fails, max_ccm_fails);
-					sleep(1);
-					
-				} else {
-					crm_err("CCM Activation failed"
-						" %d (max) times",
-						num_ccm_fails);
-					was_error = TRUE;
-					
-				}
-			}
-		}
-
-		if(was_error == FALSE) {
-			crm_debug_3("CCM Activation passed... all set to go!");
-			G_main_add_fd(G_PRIORITY_HIGH, cib_ev_fd, FALSE,
-				      cib_ccm_dispatch, cib_ev_token,
-				      default_ipc_connection_destroy);
-		}
+	    was_error = (ccm_connect() == FALSE);
 	}
 
 	if(was_error == FALSE) {

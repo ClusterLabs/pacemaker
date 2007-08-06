@@ -1766,13 +1766,13 @@ gboolean cib_ccm_dispatch(int fd, gpointer user_data)
 	return FALSE;
 }
 
+int current_instance = 0;
 void 
 cib_ccm_msg_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data)
 {
 	gboolean update_id = FALSE;
 	gboolean update_quorum = FALSE;
-	static int current_instance = 0;
 	const oc_ev_membership_t *membership = data;
 
 	CRM_ASSERT(membership != NULL);
