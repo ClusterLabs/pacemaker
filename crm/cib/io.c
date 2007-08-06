@@ -168,7 +168,17 @@ write_cib_digest(crm_data_t *local_cib, char *digest)
 		cl_perror("Cannot write to signature file "CIB_FILENAME ".sig");
 	}
 
-	fflush(digest_strm);
+	CRM_ASSERT(digest_strm != NULL);
+	if(fflush(digest_strm) != 0) {
+	    cl_perror("fflush for %s failed:", digest);
+	    rc = -1;
+	}
+	
+	if(fsync(fileno(digest_strm)) < 0) {
+	    cl_perror("fsync for %s failed:", digest);
+	    rc = -1;
+	}
+	
 	fclose(digest_strm);
 	crm_free(local_digest);
 	return rc;
