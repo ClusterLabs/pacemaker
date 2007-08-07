@@ -507,7 +507,9 @@ class LinuxHAv2(HeartbeatCM):
                     "apply_xml_diff: Diff application failed!",
                     "crmd: .*Action A_RECOVER .* not supported",
                     "send_ipc_message: IPC Channel to .* is not connected",
-                    "ERROR: cib_native_msgready: Message pending on command channel",
+                    "unconfirmed_actions: Waiting on .* unconfirmed actions",
+                    "cib_native_msgready: Message pending on command channel",
+                    "verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
             ]
 
         stonith_ignore = [
@@ -519,8 +521,9 @@ class LinuxHAv2(HeartbeatCM):
         stonith_ignore.extend(common_ignore)
 
         complist.append(Process("ccm", 0, [
-                    "Respawning client .*crmd",
+                    "State transition S_IDLE",
                     "Respawning client .*cib",
+                    "Respawning client .*crmd",
                     "CCM connection appears to have failed",
                     "Client .*cib exited with return code 2.",
                     "Client .*crmd exited with return code 2.",
@@ -537,6 +540,7 @@ class LinuxHAv2(HeartbeatCM):
                     ], [], common_ignore, self))
 
         complist.append(Process("cib", 0, [
+                    "State transition S_IDLE",
                     "Respawning client .*crmd",
                     "Lost connection to the CIB service",
                     "Connection to the CIB terminated...",
@@ -548,6 +552,7 @@ class LinuxHAv2(HeartbeatCM):
                     ], [], common_ignore, self))
 
         complist.append(Process("lrmd", 0, [
+                    "State transition S_IDLE",
                     "LRM Connection failed",
                     "Respawning client .*crmd",
                     "crmd: .*I_ERROR.*lrm_dispatch",
@@ -561,6 +566,7 @@ class LinuxHAv2(HeartbeatCM):
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
 #                    "tengine_stonith_callback: .*result=0",
+                    "State transition S_IDLE",
                     "State transition S_STARTING -> S_PENDING",
                     ], [
                     "tengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
@@ -568,6 +574,7 @@ class LinuxHAv2(HeartbeatCM):
                     ], common_ignore, self))
 
         complist.append(Process("pengine", 1, [
+                    "State transition S_IDLE",
                     "Respawning client .*crmd",
                     "Client .*crmd exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
@@ -575,6 +582,7 @@ class LinuxHAv2(HeartbeatCM):
                     ], [], common_ignore, self))
 
         complist.append(Process("tengine", 1, [
+                    "State transition S_IDLE",
                     "Respawning client .*crmd",
                     "Client .*crmd exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",

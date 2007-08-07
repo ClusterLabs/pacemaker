@@ -1767,7 +1767,7 @@ class ComponentFail(CTSTest):
         while chosen.dc_only == 1 and node_is_dc == 0:
             chosen = self.CM.Env.RandomGen.choice(self.complist)
 
-        self.CM.log("  Killing %s (dc=%d)" % (chosen.name, node_is_dc))
+        self.CM.debug("Killing %s (dc=%d)" % (chosen.name, node_is_dc))
         
         self.patterns.extend(chosen.pats)
 
@@ -1781,8 +1781,6 @@ class ComponentFail(CTSTest):
 
         if node_is_dc:
             self.patterns.extend(chosen.dc_pats)
-        else:
-            self.patterns.append("State transition S_IDLE")
 
         # supply a copy so self.patterns doesnt end up empty
         tmpPats = []
@@ -1804,7 +1802,6 @@ class ComponentFail(CTSTest):
             self.CM.log("Patterns not found: " + repr(watch.unmatched))
             self.CM.cluster_stable(self.CM["StartTime"])
             return self.failure("Didn't find all expected patterns")
-
         
         self.CM.debug("Found: "+ repr(matched))
 
