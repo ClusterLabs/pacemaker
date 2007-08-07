@@ -25,10 +25,15 @@
 # Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
 #
 
+LRMD=@libdir@/heartbeat/lrmd
+LRMADMIN=@libdir@/heartbeat/lrmadmin
+
 num_errors=0
 
 function usage() {
-    echo "ocf-tester [-h] -n resource_name [-o name=value]* /full/path/to/resource"
+    echo "ocf-tester [-Lh] -n resource_name [-o name=value]* /full/path/to/resource"
+	echo ""
+	echo "-L: use lrmadmin/lrmd for tests"
     exit $1
 }
 
@@ -52,9 +57,11 @@ ra_args=""
 verbose=0
 while test "$done" = "0"; do
     case "$1" in
-        -n) OCF_RESOURCE_INSTANCE=$2; ra_args="$ra_args OCF_RESOURCE_INSTANCE=$2"; shift; shift;;
-        -o) name=${2%%=*}; value=${2##*=}; 
-	    ra_args="$ra_args OCF_RESKEY_$name=$value"; shift; shift;;
+	-n) OCF_RESOURCE_INSTANCE=$2; ra_args="$ra_args OCF_RESOURCE_INSTANCE=$2"; shift; shift;;
+	-o) name=${2%%=*}; value=${2##*=}; 
+		lrm_ra_args="$lrm_ra_args $2";
+		ra_args="$ra_args OCF_RESKEY_$name=$value"; shift; shift;;
+	-L) use_lrmd=1; shift;;
 	-v) verbose=1; shift;;
 	-?) usage 0;;
 	-*) echo "unknown option: $1"; usage 1;;
@@ -85,11 +92,85 @@ stopped_rc=7
 has_demote=1
 has_promote=1
 
+start_lrmd() {
+	lrmd_timeout=0
+	lrmd_interval=0
+	lrmd_target_rc=EVERYTIME
+	lrmd_started=""
+	$LRMD -s 2>/dev/null
+	rc=$?
+	if [ $rc -eq 3 ]; then
+		lrmd_started=1
+		$LRMD &
+		sleep 1
+		$LRMD -s 2>/dev/null
+	else
+		return $rc
+	fi
+}
+add_resource() {
+	$LRMADMIN -A $OCF_RESOURCE_INSTANCE \
+		ocf \
+		`basename $agent` \
+		$(basename `dirname $agent`) \
+		$lrm_ra_args > /dev/null
+}
+del_resource() {
+	$LRMADMIN -D $OCF_RESOURCE_INSTANCE
+}
+parse_lrmadmin_output() {
+	awk '
+BEGIN{ rc=1; }
+/Waiting for lrmd to callback.../ { n=1; next; }
+n==1 && /----------------operation--------------/ { n++; next; }
+n==2 && /return code:/ { rc=$0; sub("return code: *","",rc); next }
+n==2 && /---------------------------------------/ {
+        n++;
+        next;
+}
+END{
+	if( n!=3 ) exit 1;
+	else exit rc;
+}
+'
+}
+exec_resource() {
+	op="$1"
+	args="$2"
+	$LRMADMIN -E $OCF_RESOURCE_INSTANCE \
+		$op $lrmd_timeout $lrmd_interval \
+		$lrmd_target_rc \
+		$args | parse_lrmadmin_output
+}
+
+if [ "$use_lrmd" = 1 ]; then
+	echo "Using lrmd/lrmadmin for all tests"
+	start_lrmd || {
+		echo "could not start lrmd"
+		exit 1
+	}
+	trap '
+		[ "$lrmd_started" = 1 ] && $LRMD -k
+	' EXIT
+	add_resource || {
+		echo "failed to add resource to lrmd"
+		exit 1
+	}
+fi
+
+lrm_test_command() {
+	action="$1"
+	msg="$2"
+	[ "$verbose" -eq 0 ] || echo "$msg"
+	exec_resource $action "$lrm_ra_args"
+}
+
 function test_command() {
     action=$1; shift
-    msg="Testing: $action"
-    if [ "x$1" != x ]; then
-	msg="$1"
+    msg=${1:-"Testing: $action"}
+    if [ "$use_lrmd" = 1 ]; then
+    	lrm_test_command $action "$msg"
+    	return $?
     fi
     #echo Running: "export $ra_args; bash $agent $action 2>&1 > /dev/null"
     export $ra_args; 
