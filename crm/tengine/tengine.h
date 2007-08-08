@@ -61,8 +61,12 @@ extern void abort_transition_graph(
 #define abort_transition(pri, action, text, reason)			\
 	abort_transition_graph(pri, action, text, reason,__FUNCTION__,__LINE__);
 
-extern gboolean te_connect_stonith(void);
+extern gboolean te_connect_stonith(gpointer user_data);
 extern GCHSource *stonith_src;
+
+extern GTRIGSource *transition_trigger;
+extern GTRIGSource *stonith_reconnect;
+extern crm_action_timer_t *transition_timer;
 
 #endif
 
