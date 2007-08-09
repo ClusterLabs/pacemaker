@@ -184,9 +184,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 
 	crm_debug_2("Processing %s (%s) message", op, ref);
 	crm_log_message(LOG_DEBUG_3, msg);
-	if(stonith_src == NULL) {
-	    te_connect_stonith();
-	}	
+/* 	G_main_set_trigger(stonith_reconnect); */
 	
 	if(op == NULL){
 		/* error */
@@ -372,11 +370,11 @@ tengine_stonith_connection_destroy(gpointer user_data)
 	crm_err("Fencing daemon has left us");
 	stonith_src = NULL;
 	if(stonith_src == NULL) {
-	    sleep(2);
-	    if(te_connect_stonith() == FALSE) {
-		crm_err("Fencing daemon is still not connected...");
-	    }
+	    G_main_set_trigger(stonith_reconnect);
 	}
+
+	/* cbchan will be garbage at this point, arrange for it to be reset */
+	set_stonithd_input_IPC_channel_NULL(); 
 	return;
 }
 

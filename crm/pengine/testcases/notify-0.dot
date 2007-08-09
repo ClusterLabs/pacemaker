@@ -20,6 +20,5 @@
 "rsc2_stop_0" -> "child_rsc2:0_stop_0 node1" [ style = bold]
 "rsc2_stop_0" -> "rsc2_stopped_0" [ style = bold]
 "rsc2_stop_0" [ style=bold color="green" fontcolor="orange" ]
-"rsc2_stopped_0" -> "all_stopped" [ style = bold]
 "rsc2_stopped_0" [ style=bold color="green" fontcolor="orange" ]
 }

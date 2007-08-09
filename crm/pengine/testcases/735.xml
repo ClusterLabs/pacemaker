@@ -150,7 +150,7 @@
             </lrm_resource>
             <lrm_resource id="rsc_hadev2" class="ocf" provider="heartbeat" type="IPaddr">
               <lrm_rsc_op id="rsc_hadev2_start_0" op_digest="d8eeae5f6724dfcab8f57ef54367eb0a" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:1" crm_feature_set="1.0.6" transition_magic="0:0;1:some_key" call_id="2" rc_code="0" op_status="0"/>
-              <lrm_rsc_op id="rsc_hadev2_monitor_5000" op_digest="d8eeae5f6724dfcab8f57ef54367eb0a" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="0:1" crm_feature_set="1.0.6" transition_magic="0:0;1:some_key" call_id="7" rc_code="0" op_status="0">
+              <lrm_rsc_op id="rsc_hadev2_monitor_5000" op_digest="7515405113757a8bc37db755be497fca" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="0:1" crm_feature_set="1.0.6" transition_magic="0:0;1:some_key" call_id="7" rc_code="0" op_status="0">
 	      
             </lrm_rsc_op>
             </lrm_resource>
@@ -171,7 +171,7 @@
             </lrm_resource>
             <lrm_resource id="DcIPaddr" provider="heartbeat" class="ocf" type="IPaddr">
               <lrm_rsc_op id="DcIPaddr_start_0" op_digest="21ccbd2b8e65014ca7b36a2070642a2e" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:0" crm_feature_set="1.0.6" transition_magic="0:0;0:some_key" call_id="18" rc_code="0" op_status="0"/>
-              <lrm_rsc_op id="DcIPaddr_monitor_5000" op_digest="21ccbd2b8e65014ca7b36a2070642a2e" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="0:0" crm_feature_set="1.0.6" transition_magic="0:0;0:some_key" call_id="19" rc_code="0" op_status="0">
+              <lrm_rsc_op id="DcIPaddr_monitor_5000" op_digest="517d7b3575d97d408fbe19f3cfcc69fe" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="0:0" crm_feature_set="1.0.6" transition_magic="0:0;0:some_key" call_id="19" rc_code="0" op_status="0">
 	      
             </lrm_rsc_op>
             </lrm_resource>

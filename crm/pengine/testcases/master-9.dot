@@ -3,7 +3,6 @@
 "DoFencing_stop_0" -> "DoFencing_stopped_0" [ style = bold]
 "DoFencing_stop_0" -> "child_DoFencing:1_stop_0 ibm1" [ style = bold]
 "DoFencing_stop_0" [ style=bold color="green" fontcolor="orange" ]
-"DoFencing_stopped_0" -> "all_stopped" [ style = bold]
 "DoFencing_stopped_0" [ style=bold color="green" fontcolor="orange" ]
 "all_stopped" -> "child_DoFencing:1_stop_0 ibm1" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange"  ]

@@ -82,7 +82,7 @@
    </synapse>
    <synapse id="9">
      <action_set>
-       <rsc_op id="34" operation="monitor" operation_key="rsc_c001n03_monitor_6000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+       <rsc_op id="30" operation="monitor" operation_key="rsc_c001n03_monitor_6000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="rsc_c001n03" long-id="rsc_c001n03" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes crm_feature_set="2.0" ip="127.0.0.13" CRM_meta_id="rsc_c001n03-1" CRM_meta_timeout="20000" CRM_meta_name="monitor" CRM_meta_interval="6000"/>
        </rsc_op>

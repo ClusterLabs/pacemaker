@@ -1768,6 +1768,7 @@ class ComponentFail(CTSTest):
             chosen = self.CM.Env.RandomGen.choice(self.complist)
 
         self.CM.debug("Killing %s (dc=%d)" % (chosen.name, node_is_dc))
+        self.incr(chosen.name)
         
         self.patterns.extend(chosen.pats)
 

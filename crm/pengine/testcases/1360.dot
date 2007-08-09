@@ -14,7 +14,6 @@
 "dolly_stop_0" -> "dolly_start_0" [ style = bold]
 "dolly_stop_0" -> "dolly_stopped_0" [ style = bold]
 "dolly_stop_0" [ style=bold color="green" fontcolor="orange" ]
-"dolly_stopped_0" -> "all_stopped" [ style = bold]
 "dolly_stopped_0" -> "dolly_start_0" [ style = bold]
 "dolly_stopped_0" [ style=bold color="green" fontcolor="orange" ]
 }

@@ -1,5 +1,5 @@
  digraph "g" {
-"all_stopped" [ style=bold color="green" fontcolor="orange"  ]
+"all_stopped" [ style=filled color="black" fontcolor="orange"  fillcolor=red]
 "probe_complete node2" -> "probe_complete" [ style = bold]
 "probe_complete node2" [ style=bold color="green" fontcolor="black" ]
 "probe_complete" -> "rsc1_start_0 node2" [ style = bold]

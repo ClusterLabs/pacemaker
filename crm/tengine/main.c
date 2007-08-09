@@ -46,8 +46,6 @@
 GMainLoop*  mainloop = NULL;
 const char* crm_system_name = SYS_NAME;
 cib_t *te_cib_conn = NULL;
-extern GTRIGSource *transition_trigger;
-extern crm_action_timer_t *transition_timer;
 
 void usage(const char* cmd, int exit_status);
 int te_init(void);
@@ -61,6 +59,7 @@ main(int argc, char ** argv)
 {
 	int flag;
 	int rc = 0;
+	int dummy = 0;
 	int argerr = 0;
 	gboolean allow_cores = TRUE;
 	
@@ -71,6 +70,9 @@ main(int argc, char ** argv)
 	transition_trigger = G_main_add_TriggerHandler(
 		G_PRIORITY_LOW, te_graph_trigger, NULL, NULL);
 
+	stonith_reconnect = G_main_add_TriggerHandler(
+		G_PRIORITY_LOW, te_connect_stonith, &dummy, NULL);
+	
 	crm_debug_3("Begining option processing");
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
@@ -150,7 +152,7 @@ te_init(void)
 	}
 
 	if(init_ok) {
-	    init_ok = te_connect_stonith();
+	    G_main_set_trigger(stonith_reconnect);
 	}
 
 	if(init_ok) {

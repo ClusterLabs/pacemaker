@@ -162,7 +162,7 @@
        <lrm_resources>
          <lrm_resource id="rsc_posic041" class="ocf" provider="heartbeat" type="IPaddr">
            <lrm_rsc_op id="rsc_posic041_start_0" op_digest="fd54394d262d771b8cb48f31f8df7242" operation="start" interval="0" crm-debug-origin="build_active_RAs" crm_feature_set="1.0.6" transition_magic="0:0;0:84055284-2e67-4da2-b337-73d2f66d5c22" call_id="2" rc_code="0" op_status="0"/>
-           <lrm_rsc_op id="rsc_posic041_monitor_5000" op_digest="fd54394d262d771b8cb48f31f8df7242" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="1.0.6" transition_magic="0:0;0:84055284-2e67-4da2-b337-73d2f66d5c22" call_id="4" rc_code="0" op_status="0">
+           <lrm_rsc_op id="rsc_posic041_monitor_5000" op_digest="6d0c707e8887b775eee00abb63b80a67" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="1.0.6" transition_magic="0:0;0:84055284-2e67-4da2-b337-73d2f66d5c22" call_id="4" rc_code="0" op_status="0">
 	      
             </lrm_rsc_op>
          </lrm_resource>
@@ -229,7 +229,7 @@
        <lrm_resources>
          <lrm_resource id="rsc_posic043" class="ocf" provider="heartbeat" type="IPaddr">
            <lrm_rsc_op id="rsc_posic043_start_0" op_digest="6e0f48b04277dfed400d2ffce5b5ae51" operation="start" interval="0" crm-debug-origin="build_active_RAs" crm_feature_set="1.0.6" transition_magic="0:0;1:84055284-2e67-4da2-b337-73d2f66d5c22" call_id="10" rc_code="0" op_status="0"/>
-           <lrm_rsc_op id="rsc_posic043_monitor_5000" op_digest="6e0f48b04277dfed400d2ffce5b5ae51" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="1.0.6" transition_magic="0:0;1:84055284-2e67-4da2-b337-73d2f66d5c22" call_id="11" rc_code="0" op_status="0">
+           <lrm_rsc_op id="rsc_posic043_monitor_5000" op_digest="3b337ce52a3a88fb0a61ff74c5e42f0b" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="1.0.6" transition_magic="0:0;1:84055284-2e67-4da2-b337-73d2f66d5c22" call_id="11" rc_code="0" op_status="0">
 	      
             </lrm_rsc_op>
          </lrm_resource>
@@ -242,7 +242,7 @@
          </lrm_resource>
          <lrm_resource id="DcIPaddr" provider="heartbeat" class="ocf" type="IPaddr">
            <lrm_rsc_op id="DcIPaddr_start_0" op_digest="21ccbd2b8e65014ca7b36a2070642a2e" operation="start" interval="0" crm-debug-origin="build_active_RAs" crm_feature_set="1.0.6" transition_magic="0:0;0:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" call_id="15" rc_code="0" op_status="0"/>
-           <lrm_rsc_op id="DcIPaddr_monitor_5000" op_digest="21ccbd2b8e65014ca7b36a2070642a2e" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="1.0.6" transition_magic="0:0;0:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" call_id="16" rc_code="0" op_status="0">
+           <lrm_rsc_op id="DcIPaddr_monitor_5000" op_digest="517d7b3575d97d408fbe19f3cfcc69fe" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="1.0.6" transition_magic="0:0;0:ed206caf-a46c-4a98-a6d0-3b13dfaa5b11" call_id="16" rc_code="0" op_status="0">
 	      
             </lrm_rsc_op>
          </lrm_resource>

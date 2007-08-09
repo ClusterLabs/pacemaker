@@ -1,10 +1,8 @@
  digraph "g" {
 "all_stopped" [ style=bold color="green" fontcolor="orange"  ]
-"nfs_stop_0" -> "all_stopped" [ style = bold]
 "nfs_stop_0" -> "nfs_stopped_0" [ style = bold]
 "nfs_stop_0" -> "resource_nfs_stop_0 jamesltc" [ style = bold]
 "nfs_stop_0" [ style=bold color="green" fontcolor="orange" ]
-"nfs_stopped_0" -> "all_stopped" [ style = bold]
 "nfs_stopped_0" [ style=bold color="green" fontcolor="orange" ]
 "resource_nfs_stop_0 jamesltc" -> "all_stopped" [ style = bold]
 "resource_nfs_stop_0 jamesltc" -> "nfs_stopped_0" [ style = bold]
