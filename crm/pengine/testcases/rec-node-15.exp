@@ -402,12 +402,6 @@
          <rsc_op id="27" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
        <trigger>
-         <pseudo_event id="32" operation="stop" operation_key="app02_stop_0"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="33" operation="stopped" operation_key="app02_stopped_0"/>
-       </trigger>
-       <trigger>
          <crm_event id="49" operation="stonith" operation_key="stonith" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
      </inputs>

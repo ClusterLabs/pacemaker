@@ -364,12 +364,6 @@
          <pseudo_event id="39" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="46" operation="stop" operation_key="group-1_stop_0"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="47" operation="stopped" operation_key="group-1_stopped_0"/>
-       </trigger>
-       <trigger>
          <crm_event id="110" operation="stonith" operation_key="stonith" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
        </trigger>
        <trigger>

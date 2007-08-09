@@ -281,11 +281,7 @@
          <attributes crm_feature_set="2.0"/>
        </pseudo_event>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="52" operation="stopped" operation_key="DoFencing_stopped_0"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
    <synapse id="24">
      <action_set>

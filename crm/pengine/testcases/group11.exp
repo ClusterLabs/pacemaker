@@ -75,12 +75,6 @@
        <trigger>
          <rsc_op id="7" operation="stop" operation_key="rsc3_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
-       <trigger>
-         <pseudo_event id="10" operation="stop" operation_key="1_stop_0"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="11" operation="stopped" operation_key="1_stopped_0"/>
-       </trigger>
      </inputs>
    </synapse>
  </transition_graph>

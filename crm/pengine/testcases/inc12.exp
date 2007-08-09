@@ -481,12 +481,6 @@
          <rsc_op id="36" operation="stop" operation_key="ocf_192.168.100.183_stop_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
        </trigger>
        <trigger>
-         <pseudo_event id="39" operation="stop" operation_key="group-1_stop_0"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="40" operation="stopped" operation_key="group-1_stopped_0"/>
-       </trigger>
-       <trigger>
          <rsc_op id="41" operation="stop" operation_key="lsb_dummy_stop_0" on_node="c001n04" on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d"/>
        </trigger>
        <trigger>
@@ -506,9 +500,6 @@
        </trigger>
        <trigger>
          <rsc_op id="47" operation="stop" operation_key="rsc_c001n07_stop_0" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="56" operation="stopped" operation_key="DoFencing_stopped_0"/>
        </trigger>
        <trigger>
          <rsc_op id="57" operation="stop" operation_key="ocf_msdummy:10_stop_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
@@ -539,9 +530,6 @@
        </trigger>
        <trigger>
          <rsc_op id="66" operation="stop" operation_key="ocf_msdummy:9_stop_0" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="70" operation="stopped" operation_key="master_rsc_1_stopped_0"/>
        </trigger>
      </inputs>
    </synapse>

@@ -219,18 +219,6 @@
        <trigger>
          <rsc_op id="7" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
-       <trigger>
-         <pseudo_event id="11" operation="stop" operation_key="foo_stop_0"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="12" operation="stopped" operation_key="foo_stopped_0"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="16" operation="stop" operation_key="bar_stop_0"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="17" operation="stopped" operation_key="bar_stopped_0"/>
-       </trigger>
      </inputs>
    </synapse>
  </transition_graph>

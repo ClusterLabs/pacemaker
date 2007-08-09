@@ -767,25 +767,13 @@
          <rsc_op id="47" operation="stop" operation_key="child_rsc2:1_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
-         <pseudo_event id="52" operation="stopped" operation_key="rsc2_stopped_0"/>
-       </trigger>
-       <trigger>
          <rsc_op id="63" operation="stop" operation_key="child_rsc4:1_stop_0" on_node="node1" on_node_uuid="uuid1"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="68" operation="stopped" operation_key="rsc4_stopped_0"/>
        </trigger>
        <trigger>
          <rsc_op id="71" operation="stop" operation_key="child_rsc5:1_stop_0" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
        <trigger>
-         <pseudo_event id="76" operation="stopped" operation_key="rsc5_stopped_0"/>
-       </trigger>
-       <trigger>
          <rsc_op id="87" operation="stop" operation_key="child_rsc7:1_stop_0" on_node="node2" on_node_uuid="uuid2"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="92" operation="stopped" operation_key="rsc7_stopped_0"/>
        </trigger>
      </inputs>
    </synapse>

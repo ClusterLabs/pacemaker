@@ -191,12 +191,6 @@
        <trigger>
          <rsc_op id="3" operation="stop" operation_key="postfix_9_stop_0" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90"/>
        </trigger>
-       <trigger>
-         <pseudo_event id="18" operation="stop" operation_key="group_1_stop_0"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="19" operation="stopped" operation_key="group_1_stopped_0"/>
-       </trigger>
      </inputs>
    </synapse>
  </transition_graph>

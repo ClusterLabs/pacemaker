@@ -419,9 +419,6 @@
        <trigger>
          <rsc_op id="43" operation="stop" operation_key="rsc_c001n02_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
-       <trigger>
-         <pseudo_event id="60" operation="stopped" operation_key="DoFencing_stopped_0"/>
-       </trigger>
      </inputs>
    </synapse>
    <synapse id="35">

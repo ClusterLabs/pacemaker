@@ -232,9 +232,6 @@
        <trigger>
          <rsc_op id="18" operation="stop" operation_key="child_rsc1:4_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
-       <trigger>
-         <pseudo_event id="22" operation="stopped" operation_key="rsc1_stopped_0"/>
-       </trigger>
      </inputs>
    </synapse>
  </transition_graph>

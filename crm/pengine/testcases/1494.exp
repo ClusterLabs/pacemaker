@@ -45,9 +45,6 @@
        <trigger>
          <rsc_op id="7" operation="stop" operation_key="ima_rscid:0_stop_0" on_node="hb1" on_node_uuid="1ce670eb-d670-4f6d-811f-d415ffde76b7"/>
        </trigger>
-       <trigger>
-         <pseudo_event id="11" operation="stopped" operation_key="ima_cloneid_stopped_0"/>
-       </trigger>
      </inputs>
    </synapse>
  </transition_graph>

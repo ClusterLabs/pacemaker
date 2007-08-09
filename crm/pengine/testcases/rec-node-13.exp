@@ -48,9 +48,6 @@
          <pseudo_event id="2" operation="stop" operation_key="ocf_msdummy:6_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="78" operation="stopped" operation_key="master_rsc_1_stopped_0"/>
-       </trigger>
-       <trigger>
          <crm_event id="84" operation="stonith" operation_key="stonith" on_node="c001n04" on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d"/>
        </trigger>
      </inputs>
