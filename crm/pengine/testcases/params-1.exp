@@ -8,7 +8,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="31" operation="start" operation_key="DcIPaddr_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+         <rsc_op id="27" operation="start" operation_key="DcIPaddr_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
      </inputs>
    </synapse>
@@ -41,7 +41,7 @@
    </synapse>
    <synapse id="4">
      <action_set>
-       <rsc_op id="31" operation="start" operation_key="DcIPaddr_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+       <rsc_op id="27" operation="start" operation_key="DcIPaddr_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes crm_feature_set="2.0" ip="127.0.0.20" CRM_meta_timeout="20000"/>
        </rsc_op>
@@ -51,13 +51,13 @@
          <pseudo_event id="6" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <rsc_op id="33" operation="stop" operation_key="DcIPaddr_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+         <rsc_op id="29" operation="stop" operation_key="DcIPaddr_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="5">
      <action_set>
-       <rsc_op id="33" operation="stop" operation_key="DcIPaddr_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+       <rsc_op id="29" operation="stop" operation_key="DcIPaddr_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes crm_feature_set="2.0" CRM_meta_timeout="20000"/>
        </rsc_op>
@@ -129,7 +129,7 @@
    </synapse>
    <synapse id="13">
      <action_set>
-       <rsc_op id="32" operation="cancel" operation_key="rsc_c001n02_cancel_5000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+       <rsc_op id="28" operation="cancel" operation_key="rsc_c001n02_cancel_5000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="rsc_c001n02" long-id="rsc_c001n02" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes crm_feature_set="2.0" ip="127.0.0.12" CRM_meta_call_id="6" CRM_meta_timeout="20000" CRM_meta_operation="monitor" CRM_meta_interval="5000"/>
        </rsc_op>
@@ -138,7 +138,7 @@
    </synapse>
    <synapse id="14">
      <action_set>
-       <rsc_op id="38" operation="monitor" operation_key="rsc_c001n02_monitor_6000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+       <rsc_op id="34" operation="monitor" operation_key="rsc_c001n02_monitor_6000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="rsc_c001n02" long-id="rsc_c001n02" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes crm_feature_set="2.0" ip="127.0.0.12" CRM_meta_id="rsc_c001n02-1" CRM_meta_timeout="20000" CRM_meta_name="monitor" CRM_meta_interval="6000"/>
        </rsc_op>
@@ -309,7 +309,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="33" operation="stop" operation_key="DcIPaddr_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+         <rsc_op id="29" operation="stop" operation_key="DcIPaddr_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
      </inputs>
    </synapse>

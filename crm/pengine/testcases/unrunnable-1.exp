@@ -154,7 +154,7 @@
    </synapse>
    <synapse id="13">
      <action_set>
-       <pseudo_event id="26" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="15" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="2.0"/>
        </pseudo_event>
      </action_set>
