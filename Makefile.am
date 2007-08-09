@@ -118,8 +118,11 @@ if MGMT_BUILD
 	rm -f $(DESTDIR)@bindir@/hb_gui && ln -s $(SHAREDIR)/heartbeat-gui/haclient.py $(DESTDIR)@bindir@/hb_gui 
 endif
 
-distclean-local:
-	rm -f autoconf automake autoheader
+dist-clean-local:
+	rm -f autoconf automake autoheader $(PACKAGE)-*.tar.gz
+
+maintainer-clean-local:
+	rm -f libltdl.tar
 
 # "pkg" format for Solaris etc.
 pkg:
@@ -128,11 +131,6 @@ pkg:
 # "port" format for BSD
 portfile:	dist
 		( cd port && $(MAKE) PWD=`pwd` portfile)
-
-clean-generic: am_config_clean
-
-am_config_clean:
-		rm -fr $(PACKAGE)-*.tar.gz libltdl.tar
 
 drpm:		dist
 		$(RPM) --nodeps $(RPMFLAGS) $(TARFILE) </dev/null;
