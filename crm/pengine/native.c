@@ -474,7 +474,7 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	    custom_action_order(
 		rsc, stop_key(rsc), NULL,
 		NULL, crm_strdup(all_stopped->task), all_stopped,
-		pe_order_implies_right, data_set);
+		pe_order_implies_right|pe_order_runnable_left, data_set);
 	}
 
 }
