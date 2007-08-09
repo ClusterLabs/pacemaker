@@ -535,9 +535,24 @@ action_t *get_pseudo_op(const char *name, pe_working_set_t *data_set)
 {
     action_t *op = NULL;
     const char *op_s = name;
-    op = custom_action(NULL, crm_strdup(op_s), op_s,
-		       NULL, TRUE, TRUE, data_set);
-    op->pseudo = TRUE;
-    op->runnable = TRUE;
+    GListPtr possible_matches = NULL;
+
+    possible_matches = find_actions(data_set->actions, name, NULL);
+    if(possible_matches != NULL) {
+	if(g_list_length(possible_matches) > 1) {
+	    pe_warn("Action %s exists %d times",
+		    name, g_list_length(possible_matches));
+	}
+		
+	op = g_list_nth_data(possible_matches, 0);
+	g_list_free(possible_matches);
+
+    } else {
+	op = custom_action(NULL, crm_strdup(op_s), op_s,
+			   NULL, TRUE, TRUE, data_set);
+	op->pseudo = TRUE;
+	op->runnable = TRUE;
+    }
+
     return op;
 }
