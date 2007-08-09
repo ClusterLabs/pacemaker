@@ -223,7 +223,7 @@
            </lrm_resource>
            <lrm_resource id="child_DoFencing:0" type="ssh" class="stonith">
              <lrm_rsc_op id="child_DoFencing:0_start_0" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="1:7fb79e63-1c8d-49af-bdb1-520272fa268b" crm_feature_set="1.0.6" transition_magic="0:0;1:7fb79e63-1c8d-49af-bdb1-520272fa268b" call_id="15" rc_code="0" op_status="0" op_digest="a1a50db86b9993ad8992ce738aac35fb"/>
-             <lrm_rsc_op id="child_DoFencing:0_monitor_20000" interval="20000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="2:7fb79e63-1c8d-49af-bdb1-520272fa268b" crm_feature_set="1.0.6" transition_magic="0:0;2:7fb79e63-1c8d-49af-bdb1-520272fa268b" call_id="16" rc_code="0" op_status="0" op_digest="a1a50db86b9993ad8992ce738aac35fb"/>
+             <lrm_rsc_op id="child_DoFencing:0_monitor_20000" interval="20000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="2:7fb79e63-1c8d-49af-bdb1-520272fa268b" crm_feature_set="1.0.6" transition_magic="0:0;2:7fb79e63-1c8d-49af-bdb1-520272fa268b" call_id="16" rc_code="0" op_status="0" op_digest="5abf7c4741114d2a26548a46f0a670ea"/>
            </lrm_resource>
            <lrm_resource id="rsc_test02" type="IPaddr" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="rsc_test02_monitor_0" interval="0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="1:7fb79e63-1c8d-49af-bdb1-520272fa268b" crm_feature_set="1.0.6" transition_magic="4:7;1:7fb79e63-1c8d-49af-bdb1-520272fa268b" call_id="10" rc_code="7" op_status="4" op_digest="0e7f0d1c4b199e35628b5c990e21f424"/>
