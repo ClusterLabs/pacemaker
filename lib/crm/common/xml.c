@@ -1424,7 +1424,8 @@ parse_xml(const char *input, size_t *offset)
 					if(len < 0) {
 						error = "couldnt find tag";
 						
-					} else if(strncmp(our_input+lpc, tag_name, len) == 0) {
+					} else if(strlen(tag_name) == len
+						  && strncmp(our_input+lpc, tag_name, len) == 0) {
 						more = FALSE;
 						lpc += len;
 						if(our_input[lpc] != '>') {
