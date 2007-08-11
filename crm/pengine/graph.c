@@ -492,6 +492,13 @@ should_dump_input(int last_action, action_t *action, action_wrapper_t *wrapper)
 		  wrapper->action->id,
 		  wrapper->action->uuid);
 	return FALSE;
+
+    } else if(action->pseudo
+	      && (wrapper->type & pe_order_stonith_stop)) {
+	crm_debug("Input (%d) %s suppressed",
+		  wrapper->action->id,
+		  wrapper->action->uuid);
+	return FALSE;
     }
     return TRUE;
 }

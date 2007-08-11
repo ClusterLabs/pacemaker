@@ -50,6 +50,7 @@ enum pe_ordering {
 	pe_order_runnable_right		= 0x20,  /* needs the RHS side to be runnable */
 
 	pe_order_optional		= 0x100, /* pure ordering, nothing implied */
+	pe_order_stonith_stop		= 0x200, /* only applies if the action is non-pseudo */
 
 	pe_order_test		        = 0x1000 /* test marker */
 };

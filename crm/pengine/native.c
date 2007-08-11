@@ -468,7 +468,7 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	    custom_action_order(
 		NULL, crm_strdup(all_stopped->task), all_stopped,
 		rsc, stop_key(rsc), NULL,
-		pe_order_implies_left, data_set);
+		pe_order_implies_left|pe_order_stonith_stop, data_set);
 	    
 	} else if(rsc->variant == pe_native) {
 	    custom_action_order(
@@ -1380,7 +1380,8 @@ native_start_constraints(
 				   
 				   crm_info("Ordering %s after %s recovery",
 					    action->uuid, target->details->uname);
-				   order_actions(all_stopped, action, pe_order_implies_left);
+				   order_actions(all_stopped, action,
+						 pe_order_implies_left|pe_order_runnable_left);
 			   }   
 			);
 	}
@@ -1404,44 +1405,47 @@ native_stop_constraints(
 	 */
 	
 	slist_iter(
-		action, action_t, action_list, lpc2,
-		if(node->details->online == FALSE
-		   || node->details->unclean
-		   || rsc->failed) {
-			resource_t *parent = NULL;
+	    action, action_t, action_list, lpc2,
 
-			if(rsc->failed) {
-				crm_warn("Stop of failed resource %s is"
-					 " implicit after %s is fenced",
-					 rsc->id, node->details->uname);
-			} else {
-				crm_info("%s is implicit after %s is fenced",
-					 action->uuid, node->details->uname);
-			}
-			
-			/* the stop would never complete and is
-			 * now implied by the stonith operation
-			 */
-			action->pseudo = TRUE;
-			action->runnable = TRUE;
-			if(is_stonith == FALSE) {
-			    order_actions(stonith_op, action, pe_order_optional);
-			}
-			
-			/* find the top-most resource */
-			parent = rsc->parent;
-			while(parent != NULL && parent->parent != NULL) {
-				parent = parent->parent;
-			}
-			
-			if(parent) {
-				crm_info("Re-creating actions for %s", parent->id);
-				parent->cmds->create_actions(parent, data_set);
+	    resource_t *parent = NULL;
+	    if(node->details->online
+	       && node->details->unclean == FALSE
+	       && rsc->failed) {
+		continue;
+	    }
 
-				/* make sure we dont mess anything up in create_actions */
-				CRM_CHECK(action->pseudo, action->pseudo = TRUE);
-				CRM_CHECK(action->runnable, action->runnable = TRUE);
-			}
+	    if(rsc->failed) {
+		crm_warn("Stop of failed resource %s is"
+			 " implicit after %s is fenced",
+			 rsc->id, node->details->uname);
+	    } else {
+		crm_info("%s is implicit after %s is fenced",
+			 action->uuid, node->details->uname);
+	    }
+
+	    /* the stop would never complete and is
+	     * now implied by the stonith operation
+	     */
+	    action->pseudo = TRUE;
+	    action->runnable = TRUE;
+	    if(is_stonith == FALSE) {
+		order_actions(stonith_op, action, pe_order_optional);
+	    }
+	    
+	    /* find the top-most resource */
+	    parent = rsc->parent;
+	    while(parent != NULL && parent->parent != NULL) {
+		parent = parent->parent;
+	    }
+	    
+	    if(parent) {
+		crm_info("Re-creating actions for %s", parent->id);
+		parent->cmds->create_actions(parent, data_set);
+		
+		/* make sure we dont mess anything up in create_actions */
+		CRM_CHECK(action->pseudo, action->pseudo = TRUE);
+		CRM_CHECK(action->runnable, action->runnable = TRUE);
+	    }
 /* From Bug #1601, successful fencing must be an input to a failed resources stop action.
 
    However given group(A, B) running on nodeX and B.stop has failed, 
@@ -1470,8 +1474,7 @@ native_stop_constraints(
 				NULL,crm_strdup(CRM_OP_FENCE),stonith_op,
 				pe_order_optional, data_set);
 */
-		}
-		);
+	    );
 	
 	g_list_free(action_list);
 

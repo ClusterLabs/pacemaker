@@ -423,6 +423,9 @@ main(int argc, char **argv)
 			if(before->state == pe_link_dumped) {
 			    optional = FALSE;
 			    style = "bold";
+			} else if(action->pseudo
+				  && (before->type & pe_order_stonith_stop)) {
+			    continue;
 			} else if(before->state == pe_link_dup) {
 			    continue;
 			} else if(action->dumped && before->action->dumped) {
