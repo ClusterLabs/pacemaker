@@ -382,28 +382,29 @@ main(int argc, char **argv)
 			font = "orange";
 		}
 		
+		style = "dashed";
 		if(action->dumped) {
 			style = "bold";
 			color = "green";
 			
 		} else if(action->rsc != NULL && action->rsc->is_managed == FALSE) {
-			fill = "purple";
+			color = "purple";
 			if(all_actions == FALSE) {
 				goto dont_write;
 			}			
 			
 		} else if(action->optional) {
-			style = "dashed";
 			color = "blue";
 			if(all_actions == FALSE) {
 				goto dont_write;
 			}			
 				
 		} else {
-			fill = "red";
+			color = "red";
 			CRM_CHECK(action->runnable == FALSE, ;);	
 		}
-		
+
+		action->dumped = TRUE;
 		dot_write("\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"  %s%s]",
 			  action_name, style, color, font, fill?"fillcolor=":"", fill?fill:"");
 	  dont_write:
@@ -413,33 +414,29 @@ main(int argc, char **argv)
 
 	slist_iter(
 		action, action_t, data_set.actions, lpc,
-		int last_action = -1;
 		slist_iter(
 			before, action_wrapper_t, action->actions_before, lpc2,
 			char *before_name = NULL;
 			char *after_name = NULL;
-			optional = FALSE;
-			if(last_action == before->action->id) {
-				continue;
+			const char *style = "dashed";
+			optional = TRUE;
+			if(before->state == pe_link_dumped) {
+			    optional = FALSE;
+			    style = "bold";
+			} else if(before->state == pe_link_dup) {
+			    continue;
+			} else if(action->dumped && before->action->dumped) {
+			    optional = FALSE;
 			}
-			last_action = before->action->id;
-			if(action->dumped && before->action->dumped) {
-			} else if(action->optional || before->action->optional) {
-				optional = TRUE;
-			} else if(before->action->runnable == FALSE
- 				  && before->action->pseudo == FALSE
-				  && before->type == pe_order_optional) {
- 				optional = TRUE;
-			}
-			before_name = create_action_name(before->action);
-			after_name = create_action_name(action);
+
 			if(all_actions || optional == FALSE) {
-				dot_write("\"%s\" -> \"%s\" [ style = %s]",
-					  before_name, after_name,
-					  optional?"dashed":"bold");
+			    before_name = create_action_name(before->action);
+			    after_name = create_action_name(action);
+			    dot_write("\"%s\" -> \"%s\" [ style = %s]",
+				      before_name, after_name, style);
+			    crm_free(before_name);
+			    crm_free(after_name);
 			}
-			crm_free(before_name);
-			crm_free(after_name);
 			);
 		);
 	dot_write("}");

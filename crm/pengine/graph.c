@@ -416,7 +416,7 @@ should_dump_action(action_t *action)
 	   || safe_str_eq(action->task,  CRM_OP_SHUTDOWN)) {
 		/* skip the next checks */
 		return TRUE;
-	}
+	}	
 
 	if(action->node == NULL) {
 		pe_err("action %d (%s) was not allocated",
@@ -462,6 +462,40 @@ static gint sort_action_id(gconstpointer a, gconstpointer b)
 	return 0;
 }
 
+static gboolean
+should_dump_input(int last_action, action_t *action, action_wrapper_t *wrapper)
+{
+    wrapper->state = pe_link_not_dumped;	
+    if(last_action == wrapper->action->id) {
+	crm_debug_2("Input (%d) %s duplicated",
+		    wrapper->action->id,
+		    wrapper->action->uuid);
+	wrapper->state = pe_link_dup;
+	return FALSE;
+	
+    } else if(wrapper->type == pe_order_none) {
+	crm_debug_2("Input (%d) %s suppressed",
+		    wrapper->action->id,
+		    wrapper->action->uuid);
+	return FALSE;
+	
+    } else if(wrapper->action->optional == TRUE) {
+	crm_debug_2("Input (%d) %s optional",
+		    wrapper->action->id,
+		    wrapper->action->uuid);
+	return FALSE;
+	
+    } else if(wrapper->action->runnable == FALSE
+	      && wrapper->action->pseudo == FALSE
+	      && wrapper->type == pe_order_optional) {
+	crm_debug("Input (%d) %s optional (ordering)",
+		  wrapper->action->id,
+		  wrapper->action->uuid);
+	return FALSE;
+    }
+    return TRUE;
+}
+		   
 void
 graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 {
@@ -505,27 +539,11 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 	
 	slist_iter(wrapper,action_wrapper_t,action->actions_before,lpc,
 
-		   if(last_action == wrapper->action->id) {
-			   crm_debug_2("Input (%d) %s duplicated",
-				       wrapper->action->id,
-				       wrapper->action->uuid);
-			   continue;
-			   
-		   } else if(wrapper->action->optional == TRUE) {
-			   crm_debug_2("Input (%d) %s optional",
-				       wrapper->action->id,
-				       wrapper->action->uuid);
-			   continue;
-
-		   } else if(wrapper->action->runnable == FALSE
-			     && wrapper->action->pseudo == FALSE
-			     && wrapper->type == pe_order_optional) {
-			   crm_debug("Input (%d) %s optional (ordering)",
-				     wrapper->action->id,
-				     wrapper->action->uuid);
-			   continue;
+		   if(should_dump_input(last_action, action, wrapper) == FALSE) {
+		       continue;
 		   }
 
+		   wrapper->state = pe_link_dumped;	
 		   CRM_CHECK(last_action < wrapper->action->id, ;);
 		   last_action = wrapper->action->id;
 		   input = create_xml_node(in, "trigger");

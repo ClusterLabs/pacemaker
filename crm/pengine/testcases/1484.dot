@@ -1,7 +1,7 @@
  digraph "g" {
 "all_stopped" [ style=bold color="green" fontcolor="orange"  ]
-"the-future-of-vaj_start_0 <none>" [ style=filled color="black" fontcolor="black"  fillcolor=red]
+"the-future-of-vaj_start_0 <none>" [ style=dashed color="red" fontcolor="black"  ]
 "the-future-of-vaj_stop_0 hb2" -> "all_stopped" [ style = bold]
-"the-future-of-vaj_stop_0 hb2" -> "the-future-of-vaj_start_0 <none>" [ style = bold]
+"the-future-of-vaj_stop_0 hb2" -> "the-future-of-vaj_start_0 <none>" [ style = dashed]
 "the-future-of-vaj_stop_0 hb2" [ style=bold color="green" fontcolor="black"  ]
 }
