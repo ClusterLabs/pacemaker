@@ -302,10 +302,6 @@ crmd_ha_status_callback(
 		update = create_node_state(
 			node, status, XML_BOOLEAN_NO, OFFLINESTATUS,
 			CRMD_STATE_INACTIVE, NULL, TRUE, __FUNCTION__);
-		if(update) {
-			crm_xml_add(update, XML_CIB_ATTR_REPLACE,
-				    XML_TAG_TRANSIENT_NODEATTRS);
-		}
 		
 	} else if(safe_str_eq(status, ACTIVESTATUS)) {
 		update = create_node_state(
@@ -377,10 +373,7 @@ crmd_client_status_callback(const char * node, const char * client,
 					   NULL, clear_shutdown, __FUNCTION__);
 	
 		if(safe_str_eq(status, ONLINESTATUS)){
-		    crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM);
-		    
-		} else if(safe_str_eq(status, OFFLINESTATUS)) {
-		    crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_TAG_TRANSIENT_NODEATTRS);
+		    crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM",,"XML_TAG_TRANSIENT_NODEATTRS",");
 		}
 		
 		/* it is safe to keep these updates on the local node
