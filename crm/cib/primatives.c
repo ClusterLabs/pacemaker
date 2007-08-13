@@ -446,16 +446,38 @@ update_cib_object(crm_data_t *parent, crm_data_t *update)
 		    crm_str(object_name), crm_str(object_id));
 	
 	replace = crm_element_value(update, XML_CIB_ATTR_REPLACE);
-	
 	if(replace != NULL) {
-		crm_data_t *remove = find_xml_node(target, replace, FALSE);
-		if(remove != NULL) {
+	    crm_data_t *remove = NULL;
+	    int last = 0, lpc = 0, len = 0;
+
+	    len = strlen(replace);
+	    while(lpc <= len) {
+		if(replace[lpc] == ',' || replace[lpc] == 0) {
+		    char *replace_item = NULL;
+		    if ( last == lpc ) {
+			/* nothing to do */
+			last = lpc+1;
+			goto incr;
+		    }
+
+		    crm_malloc0(replace_item, lpc - last + 1);
+		    strncpy(replace_item, replace+last, lpc-last);
+		    
+		    remove = find_xml_node(target, replace_item, FALSE);
+		    if(remove != NULL) {
 			crm_debug_3("Replacing node <%s> in <%s>",
-				    replace, crm_element_name(target));
+				    replace_item, crm_element_name(target));
 			zap_xml_from_parent(target, remove);
+		    }
+		    crm_free(replace_item);
+		    last = lpc+1;
 		}
-		xml_remove_prop(update, XML_CIB_ATTR_REPLACE);
-		xml_remove_prop(target, XML_CIB_ATTR_REPLACE);
+	      incr:
+		lpc++;
+	    }
+	    xml_remove_prop(update, XML_CIB_ATTR_REPLACE);
+	    xml_remove_prop(target, XML_CIB_ATTR_REPLACE);
+	    crm_debug("done");
 	}
 	
 	copy_in_properties(target, update);
