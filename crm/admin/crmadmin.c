@@ -632,6 +632,7 @@ admin_message_timeout(gpointer data)
 		(int)message_timeout_ms/1000);
 	crm_err("No messages received in %d seconds",
 		(int)message_timeout_ms/1000);
+	operation_status = -3;
 	g_main_quit(mainloop);
 	return FALSE;
 }
