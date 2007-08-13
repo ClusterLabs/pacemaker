@@ -469,6 +469,8 @@ unconfirmed_actions(gboolean send_updates)
 	int unconfirmed = 0;
 	const char *key = NULL;
 	const char *task = NULL;
+	const char *node = NULL;
+	
 	crm_debug_2("Unconfirmed actions...");
 	slist_iter(
 		synapse, synapse_t, transition_graph->synapses, lpc,
@@ -484,11 +486,12 @@ unconfirmed_actions(gboolean send_updates)
 			}
 			
 			unconfirmed++;
-			task = crm_element_value(action->xml,XML_LRM_ATTR_TASK);
-			key = crm_element_value(
-				action->xml,XML_LRM_ATTR_TASK_KEY);
-			crm_info("Action %s %d unconfirmed from peer",
-				 key, action->id);
+			task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+			node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+			key  = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+			
+			crm_info("Action %s %d unconfirmed from %s",
+				 key, action->id, node);
 			if(action->type != action_type_rsc) {
 				continue;
 			} else if(send_updates == FALSE) {
