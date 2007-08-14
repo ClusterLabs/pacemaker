@@ -608,6 +608,11 @@ child_starting_constraints(
 	resource_t *rsc, resource_t *child, resource_t *last,
 	pe_working_set_t *data_set)
 {
+	if(child == NULL && last == NULL) {
+	    crm_debug("%s has no active children", rsc->id);
+	    return;
+	}
+    
 	if(child != NULL) {
 		order_start_start(rsc, child, pe_order_optional);
 		
@@ -643,6 +648,11 @@ child_stopping_constraints(
 	resource_t *rsc, resource_t *child, resource_t *last,
 	pe_working_set_t *data_set)
 {
+	if(child == NULL && last == NULL) {
+	    crm_debug("%s has no active children", rsc->id);
+	    return;
+	}
+
 	if(child != NULL) {
 		order_stop_stop(rsc, child, pe_order_optional);
 		
