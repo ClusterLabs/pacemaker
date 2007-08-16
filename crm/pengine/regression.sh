@@ -246,6 +246,7 @@ do_test stonith-0 "Stonith loop - 1"
 do_test stonith-1 "Stonith loop - 2"
 do_test bug-1572-1 "Recovery of groups depending on master/slave"
 do_test bug-1572-2 "Recovery of groups depending on master/slave when the master is never re-promoted"
+do_test bug-1685 "Depends-on-master ordering"
 
 echo ""
 

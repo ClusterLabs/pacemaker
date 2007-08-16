@@ -937,35 +937,30 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		
 	}
 
-	if(safe_str_eq(type, "before")) {
-		id_lh  = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
-		id_rh  = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
-		action = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
-		action_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TOACTION);
-		
-	} else {
-		type="before";
-		id_rh  = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
-		id_lh  = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
-		action = crm_element_value(xml_obj, XML_CONS_ATTR_TOACTION);
-		action_rh = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
-		if(action == NULL) {
-			action = action_rh;
-		}
+	id_lh  = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
+	id_rh  = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
+	action = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
+	action_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TOACTION);
+	if(action == NULL) {
+	    action = CRMD_ACTION_START;
+	}
+	if(action_rh == NULL) {
+	    action_rh = action;
+	}
+
+	if(safe_str_neq(type, "before")) {
+	    /* normalize the input - swap everything over */
+	    const char *tmp = NULL;
+	    type = "before";
+	    tmp = id_rh; id_rh = id_lh; id_lh = tmp;
+	    tmp = action_rh; action_rh = action; action = tmp;
 	}
 
 	if(id_lh == NULL || id_rh == NULL) {
 		crm_config_err("Constraint %s needs two sides lh: %s rh: %s",
 			      id, crm_str(id_lh), crm_str(id_rh));
 		return FALSE;
-	}
-	
-	if(action == NULL) {
-		action = CRMD_ACTION_START;
-	}
-	if(action_rh == NULL) {
-		action_rh = action;
-	}
+	}	
 	
 	rsc_lh = pe_find_resource(data_set->resources, id_rh);
 	rsc_rh = pe_find_resource(data_set->resources, id_lh);
