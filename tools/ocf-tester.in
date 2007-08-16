@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 #	$Id: ocf-tester,v 1.2 2006/08/14 09:38:20 andrew Exp $
 #
@@ -30,14 +30,14 @@ LRMADMIN=@libdir@/heartbeat/lrmadmin
 
 num_errors=0
 
-function usage() {
+usage() {
     echo "ocf-tester [-Lh] -n resource_name [-o name=value]* /full/path/to/resource"
 	echo ""
 	echo "-L: use lrmadmin/lrmd for tests"
     exit $1
 }
 
-function assert() {
+assert() {
     rc=$1; shift
     target=$1; shift
     msg=$1; shift
@@ -165,7 +165,7 @@ lrm_test_command() {
 	exec_resource $action "$lrm_ra_args"
 }
 
-function test_command() {
+test_command() {
     action=$1; shift
     msg=${1:-"Testing: $action"}
     if [ "$use_lrmd" = 1 ]; then
