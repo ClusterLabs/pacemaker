@@ -456,8 +456,7 @@ do_work(ll_cluster_t * hb_cluster)
 void
 crmd_ipc_connection_destroy(gpointer user_data)
 {
-	crm_info("Connection to CRMd was terminated");
-	exit(1);
+	crm_debug("Connection to CRMd was terminated");
 }
 
 
