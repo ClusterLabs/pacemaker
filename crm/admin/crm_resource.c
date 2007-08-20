@@ -1135,7 +1135,7 @@ main(int argc, char **argv)
 
 	} else if(rsc_cmd == 'S') {
 		crm_data_t *msg_data = NULL;
-		if(prop_value == NULL) {
+		if(prop_value == NULL || strlen(prop_value) == 0) {
 			fprintf(stderr, "You need to supply a value with the -v option\n");
 			return CIBRES_MISSING_FIELD;
 
@@ -1171,7 +1171,7 @@ main(int argc, char **argv)
 			fprintf(stderr, "Must supply a resource id with -r\n");
 			return cib_NOTEXISTS;
 		} 
-		if(prop_value == NULL) {
+		if(prop_value == NULL || strlen(prop_value) == 0) {
 			fprintf(stderr, "You need to supply a value with the -v option\n");
 			return CIBRES_MISSING_FIELD;
 		}
