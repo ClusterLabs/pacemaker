@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <glib.h>
 #include <clplumbing/cl_log.h>
+#include <clplumbing/realtime.h>
 #include <pils/plugin.h>
 #include <dirent.h>
 #include <libgen.h>  /* Add it for compiling on OSX */
@@ -320,7 +321,7 @@ get_resource_meta(const char* rsc_type, const char* provider)
 			g_string_append(g_str_tmp, buff);
 		}
 		else {
-			sleep(1);
+			cl_shortsleep();
 		}
 	}
 	if (0 == g_str_tmp->len) {
