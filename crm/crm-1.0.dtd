@@ -43,8 +43,8 @@ TODO
 
           dc_uuid        CDATA             #IMPLIED
           ccm_transition CDATA             #IMPLIED
-          have_quorum    (true|1|false|0)  'false'
-          ignore_dtd     (true|1|false|0)  #IMPLIED
+          have_quorum    (true|yes|1|false|no|0)  'false'
+          ignore_dtd     (true|yes|1|false|no|0)  #IMPLIED
 
           generated    CDATA    #IMPLIED        
           crm-debug-origin CDATA    #IMPLIED>
@@ -262,7 +262,7 @@ Parameters specific to each operation can be passed using the instance_attribute
           interval      CDATA         #IMPLIED
           timeout       CDATA         #IMPLIED
           start_delay   CDATA         '0'
-          disabled      (true|1|false|0)               'false'
+          disabled      (true|yes|1|false|no|0)        'false'
           role          (Master|Slave|Started|Stopped) 'Started'
           prereq        (nothing|quorum|fencing)       #IMPLIED
           on_fail       (ignore|block|stop|restart|fence)     #IMPLIED>
@@ -287,8 +287,8 @@ NOTE: Do not create empty groups.
           multiple_active       (stop_start|stop_only|block)  'stop_start'
           resource_stickiness   CDATA			      #IMPLIED
 
-          ordered               (true|1|false|0)              'true'
-          collocated            (true|1|false|0)              'true'>
+          ordered               (true|yes|1|false|no|0)       'true'
+          collocated            (true|yes|1|false|no|0)       'true'>
 <!--
 Clones are intended as a mechanism for easily starting a number of resources (such as a web-server) with the same configuration.
 As an added benefit, the number that should be started is an instance parameter and when combined with time-based constraints, allows the administrator to run more instances during peak times and save on resources during idle periods.
@@ -329,10 +329,10 @@ NOTE: Clones must contain exactly one primitive or one group resource.
           multiple_active       (stop_start|stop_only|block)  'stop_start'
           resource_stickiness   CDATA                         #IMPLIED
 
-          notify                (true|1|false|0)              'false'
-          globally_unique       (true|1|false|0)              'true'
-          ordered               (true|1|false|0)              'false'
-          interleave            (true|1|false|0)              'false'>
+          notify                (true|yes|1|false|no|0)       'false'
+          globally_unique       (true|yes|1|false|no|0)       'true'
+          ordered               (true|yes|1|false|no|0)       'false'
+          interleave            (true|yes|1|false|no|0)       'false'>
 <!--
 Master/Slave resources are a superset of Clones in that instances can also be in one of two states.
 The meaning of the states is specific to the resource.
@@ -353,10 +353,10 @@ NOTE: master_slave must contain exactly one primitive resource OR one group reso
           multiple_active       (stop_start|stop_only|block)  'stop_start'
           resource_stickiness   CDATA                         #IMPLIED
 
-          notify                (true|1|false|0)              'false'
-          globally_unique       (true|1|false|0)              'true'
-          ordered               (true|1|false|0)              'false'
-          interleave            (true|1|false|0)              'false'>
+          notify                (true|yes|1|false|no|0)       'false'
+          globally_unique       (true|yes|1|false|no|0)       'true'
+          ordered               (true|yes|1|false|no|0)       'false'
+          interleave            (true|yes|1|false|no|0)       'false'>
 
 <!--
 Most resource options are configured as instance attributes.
@@ -442,7 +442,7 @@ rsc_ordering constraints express dependencies between the actions on two resourc
           to_action CDATA		'start'
           type      (before|after)	'after'
           score     CDATA		'0'
-          symmetrical (true|1|false|0)	'true'>
+          symmetrical (true|yes|1|false|no|0)	'true'>
 
 <!--
 
@@ -774,7 +774,7 @@ Ideally, there should be a node_state entry for every entry in the <nodes> list.
         crmd            (online|offline)        'offline'
         join            (pending|member|down)   'down'
         expected        (pending|member|down)   'down'
-        in_ccm          (true|1|false|0)        'false'
+        in_ccm          (true|yes|1|false|no|0) 'false'
         crm-debug-origin CDATA                  #IMPLIED
         shutdown        CDATA                   #IMPLIED
         clear_shutdown  CDATA                   #IMPLIED>
