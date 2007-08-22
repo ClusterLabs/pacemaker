@@ -17,6 +17,8 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
+INCLUDES        = -I$(AISPREFIX)/include/openais
+
 aisdir		= $(prefix)/libexec/lcrso
 ais_LTLIBRARIES	= service_crm.la
 ais_PROGRAMS	= atest
