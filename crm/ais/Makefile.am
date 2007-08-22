@@ -18,13 +18,13 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 aisdir		= $(prefix)/libexec/lcrso
-#ais_LTLIBRARIES	= crmais.la
+ais_LTLIBRARIES	= service_crm.la
 ais_PROGRAMS	= atest
 
-crmais_la_SOURCES	= utils.c plugin.c
-crmais_la_LDFLAGS	= -export-dynamic -module -avoid-version 
+service_crm_la_SOURCES	= utils.c plugin.c
+service_crm_la_LDFLAGS	= -export-dynamic -module -avoid-version 
 # Extra LDFLAGS: -bundle -bundle_loader /opt/local/sbin/aisexec -bind_at_load
-crmais_la_LIBADD	= $(top_builddir)/lib/clplumbing/libplumb.la	\
+service_crm_la_LIBADD	= $(top_builddir)/lib/clplumbing/libplumb.la	\
 			  $(top_builddir)/lib/crm/common/libcrmcommon.la
 
 COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
@@ -41,12 +41,15 @@ atest_LDADD	= $(COMMONLIBS)
 #CFLAGS that cant be used here: -ansi -Wcast-qual -Wwrite-strings
 CFLAGS			= $(NON_FATAL_CFLAGS:-Wwrite-strings=)
 
+# Manual version
+#ais: plugin.o util.o
+#
 #ifeq (${OPENAIS_COMPAT}, DARWIN)
-#service_cfg.lcrso: cfg.o
-#	$(CC) $(LDFLAGS) -bundle $(LDFLAGS) -bundle_loader ./aisexec -bind_at_load cfg.o -o $@
+#service_crm.lcrso: crm.o
+#	$(CC) $(LDFLAGS) -lcrmcommon -lplumb -bundle $(LDFLAGS) -bundle_loader $(AISPREFIX)/sbin/aisexec -bind_at_load crm.o -o $@
 #else
-#service_cfg.lcrso: cfg.o
-#	$(CC) -shared -Wl,-soname,service_cfg.lcrso cfg.o -o $@
+#service_crm.lcrso: crm.o
+#	$(CC) -lcrmcommon -lplumb  -shared -Wl,-soname,service_crm.lcrso crm.o -o $@
 #endif
 
 install-exec-local:
@@ -54,8 +57,3 @@ install-exec-local:
 
 clean-generic:
 	rm -f *.log *.debug *~ .gres.* testcases/.gres.*
-
-# Manual version
-ais:   plugin.o
-	echo $(CFLAGS)
-	$(CC) $(LDFLAGS) -bundle $(LDFLAGS) -L/opt/local/lib $(GLIBLIB) -lplumb -lcrmcommon -bundle_loader /opt/local/sbin/aisexec -bind_at_load -bind_at_load plugin.o -o $(aisdir)/crm_ais.so
