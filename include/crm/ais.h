@@ -19,7 +19,6 @@
 #ifndef CRM_AIS__H
 #define CRM_AIS__H
 
-#include <lha_internal.h>
 #include <crm/crm.h>
 #include <crm/ais_fake.h>
 #include <openais/saAis.h>
