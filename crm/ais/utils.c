@@ -20,6 +20,11 @@
 GHashTable *uname_table = NULL;
 GHashTable *nodeid_table = NULL;
 
+extern char *uname_lookup(uint32_t nodeid);
+extern uint32_t nodeid_lookup(const char *uname);
+extern void update_uname_table(const char *uname, uint32_t nodeid);
+
+
 char *uname_lookup(uint32_t nodeid) 
 {
 	if(uname_table == NULL) {
