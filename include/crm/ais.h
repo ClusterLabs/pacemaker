@@ -20,7 +20,7 @@
 #define CRM_AIS__H
 
 #include <crm/crm.h>
-#include <crm/ais_fake.h>
+#include <openais/ipc_gen.h>
 #include <openais/saAis.h>
 
 #define MAX_NAME	256
