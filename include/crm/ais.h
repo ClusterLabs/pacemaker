@@ -20,6 +20,7 @@
 #define CRM_AIS__H
 
 #include <crm/crm.h>
+#include <openais/ais_util.h>
 #include <openais/ipc_gen.h>
 #include <openais/saAis.h>
 
