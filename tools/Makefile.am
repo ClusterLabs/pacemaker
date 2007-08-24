@@ -67,6 +67,7 @@ attrd_LDADD		=  				\
 		  $(top_builddir)/lib/hbclient/libhbclient.la		\
 		  $(top_builddir)/lib/crm/cib/libcib.la			\
 		  $(GLIBLIB)						\
+		  $(AISLIBS)						\
 		  $(LIBRT)
 
 pingd_SOURCES		= pingd.c
@@ -75,6 +76,7 @@ pingd_LDADD		=  				\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(top_builddir)/lib/hbclient/libhbclient.la		\
 		  $(GLIBLIB)						\
+		  $(AISLIBS)						\
 		  $(LIBRT)
 
 attrd_updater_SOURCES	= attrd_updater.c
@@ -82,6 +84,7 @@ attrd_updater_LDADD	=  				\
 		  $(top_builddir)/lib/clplumbing/libplumb.la		\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(GLIBLIB)						\
+		  $(AISLIBS)						\
 		  $(LIBRT)
 
 install-data-hook:    # install-exec-hook doesn't work (!)

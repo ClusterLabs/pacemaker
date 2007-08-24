@@ -43,6 +43,7 @@ COMMONLIBS	= 					\
 		$(top_builddir)/lib/apphb/libapphb.la			\
 		$(top_builddir)/lib/hbclient/libhbclient.la		\
 		$(GLIBLIB)						\
+		$(AISLIBS)						\
 		$(LIBRT)
 
 LIBRT 		= @LIBRT@

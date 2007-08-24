@@ -45,6 +45,7 @@ COMMONLIBS	= 					\
 		libpengine.la						\
 		$(GLIBLIB)						\
 		$(CURSESLIBS)						\
+		$(AISLIBS)						\
 		$(LIBRT)
 
 LIBRT 		= @LIBRT@
