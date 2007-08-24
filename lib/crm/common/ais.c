@@ -135,8 +135,8 @@ send_ais_message(crm_data_t *msg, enum crm_ais_msg_types sender,
 
     int rc = SA_AIS_OK;
     AIS_Message *ais_msg = NULL;
-    char *data = dump_xml_unformatted(msg);
-    int data_len = strlen(data);
+    char *data = NULL;
+    int data_len = 0;
 
     if(ais_source == NULL && init_ais_connection() == FALSE) {
 	crm_err("Cannot connect to AIS");
@@ -147,6 +147,13 @@ send_ais_message(crm_data_t *msg, enum crm_ais_msg_types sender,
 	crm_err("Not connected to AIS");
 	return FALSE;
     }
+
+    if(cl_get_string(msg, F_XML_TAGNAME) == NULL) {
+	ha_msg_add(msg, F_XML_TAGNAME, "ais_msg");
+    }
+    
+    data = dump_xml_unformatted(msg);
+    data_len = strlen(data);
     
     crm_malloc0(ais_msg, sizeof(AIS_Message) + data_len + 1);
     

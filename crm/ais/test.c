@@ -63,9 +63,8 @@ main(int argc, char **argv)
     crm_data_t *msg = NULL;
     
     crm_system_name = basename(argv[0]);
-    crm_log_init(crm_system_name);
-    cl_log_enable_stderr(TRUE);
-
+    crm_log_init(crm_system_name, LOG_DEBUG, FALSE, TRUE, 0, NULL);
+    
     msg = create_xml_node(NULL, XML_TAG_OPTIONS);
     crm_xml_add(msg, "hello", "world");
     crm_xml_add(msg, "time", "now");

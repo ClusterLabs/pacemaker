@@ -141,7 +141,7 @@ main(int argc, char ** argv)
 	};
 #endif
 	
-	crm_log_init(crm_system_name, LOG_INFO, TRUE, FALSE, 0, NULL);
+	crm_log_init(crm_system_name, LOG_INFO, TRUE, TRUE, 0, NULL);
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, cib_shutdown, NULL, NULL);
 	
@@ -370,11 +370,17 @@ cib_init(void)
 	}
 
 	if(stand_alone == FALSE) {
+#ifdef WITH_NATIVE_AIS
+	    if(init_ais_connection() == FALSE) {
+		exit(1);
+	    }
+#else
 		hb_conn = ll_cluster_new("heartbeat");
 		if(cib_register_ha(hb_conn, CRM_SYSTEM_CIB) == FALSE) {
 			crm_crit("Cannot sign in to heartbeat... terminating");
 			exit(1);
 		}
+#endif
 	} else {
 		cib_our_uname = crm_strdup("localhost");
 	}
@@ -423,7 +429,10 @@ cib_init(void)
 		return_to_orig_privs();
 		return 0;
 	}	
-	
+
+#ifdef WITH_NATIVE_AIS
+	cib_have_quorum = TRUE;
+#else
 	if(was_error == FALSE) {
 		crm_debug_3("Be informed of CRM Client Status changes");
 		if (HA_OK != hb_conn->llc_ops->set_cstatus_callback(
@@ -440,13 +449,16 @@ cib_init(void)
 	if(was_error == FALSE) {
 	    was_error = (ccm_connect() == FALSE);
 	}
-
+	
 	if(was_error == FALSE) {
 		/* Async get client status information in the cluster */
 		crm_debug_3("Requesting an initial dump of CIB client_status");
 		hb_conn->llc_ops->client_status(
 			hb_conn, NULL, CRM_SYSTEM_CIB, -1);
+	}
+#endif
 
+	if(was_error == FALSE) {
 		/* Create the mainloop and run it... */
 		mainloop = g_main_new(FALSE);
 		crm_info("Starting %s mainloop", crm_system_name);

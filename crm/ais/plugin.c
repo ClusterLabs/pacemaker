@@ -205,9 +205,7 @@ static int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
 
     ENTER("");
 
-    crm_log_init("crm_plugin");
-    cl_log_enable_stderr(TRUE);
-    set_crm_log_level(LOG_DEBUG);
+    crm_log_init("crm_plugin", LOG_DEBUG, FALSE, TRUE, 0, NULL);
     crm_info("CRM Logging: Initialized");
 
     rc = uname(&us);
