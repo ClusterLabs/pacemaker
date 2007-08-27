@@ -15,6 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#include <lha_internal.h>
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/socket.h>
@@ -30,9 +32,9 @@
 #include <string.h>
 
 #define OPENAIS_EXTERNAL_SERVICE insane_ais_header_hack_in__totem_h
-#include <hb_config.h>
 #include <crm/crm.h>
 #include <crm/ais.h>
+#include <clplumbing/cl_signal.h>
 #include "plugin.h"
 
 #include <openais/saAis.h>
@@ -51,6 +53,8 @@
 
 #include <sys/utsname.h>
 #include <sys/socket.h>
+#include <pthread.h>
+#include <sys/wait.h>
 
 char *local_uname = NULL;
 int local_uname_len = 0;
@@ -61,6 +65,20 @@ enum crm_ais_msg_types crm_system_type = crm_msg_ais;
 extern char *uname_lookup(uint32_t nodeid);
 extern uint32_t nodeid_lookup(const char *uname);
 extern void update_uname_table(const char *uname, uint32_t nodeid);
+#define 	SIZEOF(a)   (sizeof(a) / sizeof(a[0]))
+
+typedef struct crm_child_s {
+    int pid;
+    int flag;
+    gboolean respawn;
+    const char *name;
+    const char *command;
+    
+} crm_child_t;
+
+static crm_child_t crm_children[] = {
+    { 0, 0, TRUE, "cib", HA_LIBHBDIR"/cib" },
+};
 
 static struct totempg_group crm_group[] = {
     {
@@ -68,6 +86,9 @@ static struct totempg_group crm_group[] = {
 	.group_len	= 3
     },
 };
+
+gboolean stop_child(crm_child_t child, int signal);
+gboolean spawn_child(crm_child_t child);
 
 totempg_groups_handle crm_group_handle;
 extern poll_handle aisexec_poll_handle;
@@ -134,8 +155,8 @@ static void crm_exec_dump_fn(void)
  */
 struct openais_service_handler crm_service_handler = {
     .name			= "LHA Cluster Manager",
-    .id			= CRM_SERVICE,
-    .private_data_size	= 0,
+    .id				= CRM_SERVICE,
+    .private_data_size		= 0,
     .flow_control		= OPENAIS_FLOW_CONTROL_REQUIRED, 
     .lib_init_fn		= crm_lib_init_fn,
     .lib_exit_fn		= crm_lib_exit_fn,
@@ -145,7 +166,7 @@ struct openais_service_handler crm_service_handler = {
     .exec_service		= crm_exec_service,
     .exec_service_count	= sizeof (crm_exec_service) / sizeof (struct openais_exec_handler),
     .config_init_fn		= crm_config_init_fn,
-    .confchg_fn		= global_confchg_fn,
+    .confchg_fn			= global_confchg_fn,
     .exec_dump_fn		= crm_exec_dump_fn,
 /* 	void (*sync_init) (void); */
 /* 	int (*sync_process) (void); */
@@ -427,8 +448,70 @@ static void crm_deliver_fn (
     LEAVE("");
 }
 
+pthread_t crm_wait_thread;
+gboolean wait_active = TRUE;
+
+static void *crm_wait_dispatch (void *arg)
+{
+    struct timespec waitsleep = {
+	.tv_sec = 0,
+	.tv_nsec = 100000 /* 100 msec */
+    };
+    
+    while(wait_active) {
+	int lpc = 0;
+	for (; lpc < SIZEOF(crm_children); lpc++) {
+	    if(crm_children[lpc].pid > 0) {
+		int status;
+		pid_t pid = wait4(
+		    crm_children[lpc].pid, &status, WNOHANG, NULL);
+
+		if(pid == 0) {
+		    continue;
+		    
+		} else if(pid < 0) {
+		    cl_perror("crm_wait_dispatch: Call to wait4(%s) failed",
+			crm_children[lpc].name);
+		    continue;
+		}
+		
+		crm_children[lpc].pid = -1;
+		if (WIFEXITED(status)) {
+		    int rc = WEXITSTATUS(status);
+		    crm_notice("Child process %s exited (pid=%d, rc=%d)",
+			       crm_children[lpc].name, pid, rc);
+
+		    if(rc == 100) {
+			crm_notice("Child process %s no longer wishes"
+				   " to be respawned", crm_children[lpc].name);
+			crm_children[lpc].respawn = FALSE;
+		    }
+		    
+		} else if(WIFSIGNALED(status)) {
+		    int sig = WTERMSIG(status);
+		    crm_warn("Child process %s terminated with signal %d"
+			       " (pid=%d, core=%s)",
+			       crm_children[lpc].name, sig, pid,
+			       WCOREDUMP(status)?"true":"false");
+		}
+
+		if(crm_children[lpc].respawn) {
+		    crm_info("Respawning failed child process: %s",
+			     crm_children[lpc].name);
+		    spawn_child(crm_children[lpc]);
+		}
+	    }
+	}
+	sched_yield ();
+	nanosleep (&waitsleep, 0);
+    }
+    return 0;
+}
+
 static int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
 {
+    int lpc = 0;
+
     ENTER("");
     local_nodeid = totempg_my_nodeid_get();
     update_uname_table(local_uname, local_nodeid);
@@ -438,8 +521,14 @@ static int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
 	
     crm_info("CRM Group: Initialized");
 
+    for (; lpc < SIZEOF(crm_children); lpc++) {
+	spawn_child(crm_children[lpc]);
+    }
+
     send_cluster_msg(crm_msg_ais, NULL, "I'm alive!");
-	
+
+    pthread_create (&crm_wait_thread, NULL, crm_wait_dispatch, NULL);
+    
     LEAVE("");
     return 0;
 }
@@ -646,3 +735,81 @@ static void message_handler_req_lib_crm_test(void *conn, void *msg)
     send_ipc_msg(conn, crm_msg_pe, "Hi from openAIS");
     LEAVE("");
 }
+
+gboolean spawn_child(crm_child_t child)
+{
+    int lpc = 0;
+    struct rlimit	oflimits;
+    const char 	*devnull = "/dev/null";
+
+    child.pid = fork();
+    CRM_ASSERT(child.pid != -1);
+
+    if(child.pid > 0) {
+	/* parent */
+	return TRUE;
+    }
+    
+    /* Child */
+    crm_debug("Executing \"%s (%s)\" (pid %d)",
+	      child.command, child.name, (int) getpid());
+    
+    /* A precautionary measure */
+    getrlimit(RLIMIT_NOFILE, &oflimits);
+    for (; lpc < oflimits.rlim_cur; lpc++) {
+	close(lpc);
+    }
+
+    (void)open(devnull, O_RDONLY);	/* Stdin:  fd 0 */
+    (void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
+    (void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
+    
+    if(getenv("HA_VALGRIND_ENABLED") != NULL) {
+	char *opts[] = { crm_strdup(VALGRIND_BIN),
+			 crm_strdup("--show-reachable=yes"),
+			 crm_strdup("--leak-check=full"),
+			 crm_strdup("--time-stamp=yes"),
+			 crm_strdup("--suppressions="VALGRIND_SUPP),
+/* 				 crm_strdup("--gen-suppressions=all"), */
+			 crm_strdup(VALGRIND_LOG),
+			 crm_strdup(child.command),
+			 NULL
+	};
+	(void)execvp(VALGRIND_BIN, opts);
+
+    } else {
+	char *opts[] = { crm_strdup(child.command), NULL };
+	(void)execvp(child.command, opts);
+    }
+
+    cl_perror("FATAL: Cannot exec %s", child.command);
+    exit(100);
+    return TRUE; /* never reached */
+}
+
+gboolean
+stop_child(crm_child_t child, int signal)
+{
+    if(signal == 0) {
+	signal = SIGTERM;
+    }
+    
+    crm_debug_2("Stopping CRM child \"%s\"", child.name);
+    
+    if (child.pid <= 0) {
+	crm_debug_2("Client %s not running", child.name);
+	return TRUE;
+    }
+    
+    errno = 0;
+    if(CL_KILL(child.pid, signal) == 0) {
+	crm_info("Sent -%d to %s: [%d]", signal, child.name, child.pid);
+	
+    } else {
+	cl_perror("Sent -%d to %s: [%d]", signal, child.name, child.pid);
+    }
+    
+    return TRUE;
+}
+
+
