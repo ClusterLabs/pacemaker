@@ -39,12 +39,9 @@
 
 #include <tengine.h>
 
-
-#define SYS_NAME     CRM_SYSTEM_TENGINE
 #define OPTARGS      "hVc"
 
 GMainLoop*  mainloop = NULL;
-const char* crm_system_name = SYS_NAME;
 cib_t *te_cib_conn = NULL;
 
 void usage(const char* cmd, int exit_status);
@@ -63,7 +60,7 @@ main(int argc, char ** argv)
 	int argerr = 0;
 	gboolean allow_cores = TRUE;
 	
-	crm_log_init(crm_system_name, LOG_INFO, TRUE, FALSE, 0, NULL);
+	crm_log_init(CRM_SYSTEM_TENGINE, LOG_INFO, TRUE, FALSE, 0, NULL);
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, tengine_shutdown, NULL, NULL);
 
