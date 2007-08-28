@@ -43,6 +43,8 @@ enum crm_ais_msg_types {
 struct crm_ais_host_s
 {
 	uint32_t		id;
+	uint32_t		pid;
+	gboolean		local;
 	enum crm_ais_msg_types	type;
 	uint32_t		size;
 	char			uname[256];
@@ -68,8 +70,18 @@ extern enum crm_ais_msg_types text2msg_type(const char *text);
 extern const char *msg_type2text(enum crm_ais_msg_types type);
 
 extern gboolean send_ais_message(
-    crm_data_t *msg, enum crm_ais_msg_types sender,
-    const char *node, enum crm_ais_msg_types dest);
-extern gboolean init_ais_connection(void);
+    crm_data_t *msg, gboolean local, const char *node, enum crm_ais_msg_types dest);
+
+extern gboolean send_ais_text(
+    const char *data, gboolean local, const char *node, enum crm_ais_msg_types dest);
+
+extern gboolean init_ais_connection(
+    gboolean (*dispatch)(int, gpointer),
+    void (*ais_destroy)(gpointer));
+extern void terminate_ais_connection(void);
+
+extern int ais_fd_in;
+extern int ais_fd_out;
+extern GFDSource *ais_source;
 
 #endif

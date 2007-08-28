@@ -70,7 +70,6 @@ extern char *ccm_transition_id;
 extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
 GMainLoop*  mainloop = NULL;
-const char* crm_system_name = CRM_SYSTEM_CIB;
 const char* cib_root = WORKING_DIR;
 char *cib_our_uname = NULL;
 oc_ev_t *cib_ev_token;
@@ -141,7 +140,7 @@ main(int argc, char ** argv)
 	};
 #endif
 	
-	crm_log_init(crm_system_name, LOG_INFO, TRUE, TRUE, 0, NULL);
+	crm_log_init(CRM_SYSTEM_CIB, LOG_INFO, TRUE, TRUE, 0, NULL);
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, cib_shutdown, NULL, NULL);
 	
@@ -360,6 +359,68 @@ gboolean ccm_connect(void)
     return TRUE;    
 }
 
+#ifdef WITH_NATIVE_AIS	
+static gboolean cib_ais_dispatch(int sender, gpointer user_data)
+{
+    /* Grab the header */
+    char *header = NULL;
+    char *data = NULL;
+    AIS_Message *msg = NULL;
+    SaAisErrorT rc = SA_AIS_OK;
+    static int header_len = sizeof(AIS_Message);
+
+    crm_malloc0(header, header_len);
+    
+    rc = saRecvRetry(sender, header, header_len);
+    if (rc != SA_AIS_OK) {
+	crm_err("Receiving message header failed");
+	goto bail;
+    }
+
+    msg = (void*)header;
+    
+/*     crm_realloc(msg, msg->header.size+10); */
+    crm_malloc0(data, msg->size+1);
+    rc = saRecvRetry(sender, data, msg->size+1);
+    if (rc != SA_AIS_OK) {
+	crm_err("Receiving message body failed");
+	goto bail;
+    }
+
+    crm_notice("Message received: '%.50s'", data);
+    if(safe_str_eq("identify", data)) {
+	int pid = getpid();
+	char *pid_s = crm_itoa(pid);
+	send_ais_text(pid_s, TRUE, NULL, crm_msg_ais);
+	crm_free(pid_s);
+    } else {
+	do_crm_log(LOG_NOTICE,
+		   "Msg[%d] (dest=%s:%s, from=%s:%s, size=%d, total=%d)",
+		   msg->id,
+		   msg->host.uname?msg->host.uname:"<all>",
+		   msg_type2text(msg->host.type),
+		   msg->sender.uname, msg_type2text(msg->sender.type),
+		   msg->size, msg->header.size);
+    }
+
+    crm_free(data);
+    crm_free(msg);
+    return TRUE;
+    
+  bail:
+    crm_err("AIS connection failed");
+    return FALSE;
+}
+
+static void
+cib_ais_destroy(gpointer user_data)
+{
+    crm_err("AIS connection terminated");
+    ais_fd_in = -1;
+    exit(1);
+}
+#endif
+
 int
 cib_init(void)
 {
@@ -371,7 +432,8 @@ cib_init(void)
 
 	if(stand_alone == FALSE) {
 #ifdef WITH_NATIVE_AIS
-	    if(init_ais_connection() == FALSE) {
+	    if(init_ais_connection(
+		   cib_ais_dispatch, cib_ais_destroy) == FALSE) {
 		exit(1);
 	    }
 #else

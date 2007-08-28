@@ -42,7 +42,7 @@ extern crm_data_t *status_search;
 #ifdef WITH_NATIVE_AIS
 #  include <crm/ais.h> 
 #  define send_cluster_msg(node, service, data, ordered) send_ais_message( \
-	data, crm_msg_cib, node, service)
+	data, FALSE, node, service)
 #else
 extern ll_cluster_t *hb_conn;
 #  define send_cluster_msg(node, service, data, ordered) send_ha_message( \

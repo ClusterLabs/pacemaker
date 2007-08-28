@@ -68,37 +68,26 @@ extern void update_uname_table(const char *uname, uint32_t nodeid);
 #define 	SIZEOF(a)   (sizeof(a) / sizeof(a[0]))
 
 typedef struct crm_child_s {
-    int pid;
-    int flag;
-    gboolean respawn;
-    const char *name;
-    const char *command;
+	int pid;
+	int flag;
+	gboolean respawn;
+	const char *name;
+	const char *command;
+	void *conn;
     
 } crm_child_t;
 
 static crm_child_t crm_children[] = {
-    { 0, 0, TRUE, "cib", HA_LIBHBDIR"/cib" },
+    { 0, 0, FALSE, "none", NULL, NULL },
+    { 0, 0, FALSE, "ais",  NULL, NULL },
+    { 0, 0, TRUE,  "cib",  HA_LIBHBDIR"/cib", NULL },
 };
 
-static struct totempg_group crm_group[] = {
-    {
-	.group		= "CRM",
-	.group_len	= 3
-    },
-};
+gboolean stop_child(crm_child_t *child, int signal);
+gboolean spawn_child(crm_child_t *child);
+gboolean route_ais_message(AIS_Message *msg, gboolean local);
 
-gboolean stop_child(crm_child_t child, int signal);
-gboolean spawn_child(crm_child_t child);
-
-totempg_groups_handle crm_group_handle;
-extern poll_handle aisexec_poll_handle;
-
-static void crm_confchg_fn (
-    enum totem_configuration_type configuration_type,
-    unsigned int *member_list, int member_list_entries,
-    unsigned int *left_list, int left_list_entries,
-    unsigned int *joined_list, int joined_list_entries,
-    struct memb_ring_id *ring_id);
+extern totempg_groups_handle openais_group_handle;
 
 static void global_confchg_fn (
     enum totem_configuration_type configuration_type,
@@ -110,13 +99,14 @@ static void global_confchg_fn (
 static int crm_exec_init_fn (struct objdb_iface_ver0 *objdb);
 static int crm_config_init_fn(struct objdb_iface_ver0 *objdb);
 
-static int crm_lib_init_fn (void *conn);
+static int ais_ipc_client_connect_callback (void *conn);
 
-static int crm_lib_exit_fn (void *conn);
+static int ais_ipc_client_exit_callback (void *conn);
 
-static void message_handler_req_exec_crm_test(void *message, unsigned int nodeid);
+static void ais_cluster_message_swab(void *msg);
+static void ais_cluster_message_callback(void *message, unsigned int nodeid);
 
-static void message_handler_req_lib_crm_test(void *conn, void *msg);
+static void ais_ipc_message_callback(void *conn, void *msg);
 
 /* from exec/ipc.h */
 extern int openais_conn_send_response (void *conn, void *msg, int mlen);
@@ -128,7 +118,7 @@ extern int libais_connection_active (void *conn);
 static struct openais_lib_handler crm_lib_service[] =
 {
     {
-	.lib_handler_fn		= message_handler_req_lib_crm_test,
+	.lib_handler_fn		= ais_ipc_message_callback,
 	.response_size		= sizeof (AIS_Message),
 	.response_id		= CRM_MESSAGE_TEST_ID,
 	.flow_control		= OPENAIS_FLOW_CONTROL_NOT_REQUIRED
@@ -138,7 +128,8 @@ static struct openais_lib_handler crm_lib_service[] =
 static struct openais_exec_handler crm_exec_service[] =
 {
     {
-	.exec_handler_fn	= message_handler_req_exec_crm_test
+	.exec_handler_fn	= ais_cluster_message_callback,
+	.exec_endian_convert_fn = ais_cluster_message_swab
     }
 };
 
@@ -157,9 +148,9 @@ struct openais_service_handler crm_service_handler = {
     .name			= "LHA Cluster Manager",
     .id				= CRM_SERVICE,
     .private_data_size		= 0,
-    .flow_control		= OPENAIS_FLOW_CONTROL_REQUIRED, 
-    .lib_init_fn		= crm_lib_init_fn,
-    .lib_exit_fn		= crm_lib_exit_fn,
+    .flow_control		= OPENAIS_FLOW_CONTROL_NOT_REQUIRED, 
+    .lib_init_fn		= ais_ipc_client_connect_callback,
+    .lib_exit_fn		= ais_ipc_client_exit_callback,
     .lib_service		= crm_lib_service,
     .lib_service_count	= sizeof (crm_lib_service) / sizeof (struct openais_lib_handler),
     .exec_init_fn		= crm_exec_init_fn,
@@ -220,7 +211,11 @@ static int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
     int rc = 0;
     struct utsname us;
 /* 	struct totem_ip_address localhost; */
-	
+
+    setenv("HA_debugfile", "/var/log/openais.log", 1);
+    setenv("HA_debug", "1", 1);
+    setenv("HA_logfacility", "local7", 1);
+    
     log_init ("CRM");
     log_printf(LOG_INFO, "AIS logging: Initialized\n");
 
@@ -241,7 +236,7 @@ static int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
 }
 
 
-static int send_ipc_msg(void *conn, enum crm_ais_msg_types type, const char *data) 
+static int send_client_msg(void *conn, enum crm_ais_msg_types type, const char *data) 
 {
     int rc = 0;
     int data_len = 0;
@@ -301,14 +296,11 @@ static int send_ipc_msg(void *conn, enum crm_ais_msg_types type, const char *dat
     return rc;    
 }
 
-static int send_cluster_msg(enum crm_ais_msg_types type, const char *host, const char *data) 
+static int send_cluster_msg_raw(AIS_Message *ais_msg) 
 {
     int rc = 0;
-    int data_len = 0;
     struct iovec iovec;
-    AIS_Message *ais_msg = NULL;
     static int msg_id = 0;
-    int total_size = 1 + sizeof(AIS_Message);
 
     ENTER("");
     CRM_ASSERT(local_nodeid != 0);
@@ -316,17 +308,50 @@ static int send_cluster_msg(enum crm_ais_msg_types type, const char *host, const
     msg_id++;
     CRM_ASSERT(msg_id != 0 /* wrap-around */);
 
+    ais_msg->id = msg_id;
+    CRM_ASSERT(ais_msg->header.size != 0);
+    ais_msg->header.id = SERVICE_ID_MAKE(CRM_SERVICE, 0);	
+
+    ais_msg->sender.size = local_uname_len;
+    memset(ais_msg->sender.uname, 0, MAX_NAME);
+    memcpy(ais_msg->sender.uname, local_uname, ais_msg->sender.size);
+    ais_msg->sender.id = local_nodeid;
+
+    iovec.iov_base = (char *)ais_msg;
+    iovec.iov_len = ais_msg->header.size;
+
+    rc = totempg_groups_mcast_joined (
+	openais_group_handle, &iovec, 1, TOTEMPG_SAFE);
+
+    CRM_CHECK(rc == 0,
+	      crm_err("Message not sent (%d): %s", rc, crm_str(ais_msg->data)));
+
+    LEAVE("");
+    return rc;	
+}
+
+static int send_cluster_msg(enum crm_ais_msg_types type, const char *host, const char *data) 
+{
+    int rc = 0;
+    int data_len = 0;
+    AIS_Message *ais_msg = NULL;
+    int total_size = 1 + sizeof(AIS_Message);
+
+    ENTER("");
+    CRM_ASSERT(local_nodeid != 0);
+
     if(data != NULL) {
 	data_len = strlen(data);
+	total_size += data_len;
     } 
     crm_malloc0(ais_msg, total_size);
 	
-    ais_msg->id = msg_id;
     ais_msg->header.size = total_size;
     ais_msg->header.id = 0;
-	
+    
     ais_msg->size = data_len;
     memcpy(ais_msg->data, data, ais_msg->size);
+    ais_msg->sender.type = text2msg_type(crm_system_name);
 
     ais_msg->host.type = type;
     if(host) {
@@ -342,21 +367,8 @@ static int send_cluster_msg(enum crm_ais_msg_types type, const char *host, const
 /* 		ais_msg->host.uname = NULL; */
 	ais_msg->host.id = 0;
     }
-
-    ais_msg->sender.type = crm_system_type;
-    ais_msg->sender.size = local_uname_len;
-    memset(ais_msg->sender.uname, 0, MAX_NAME);
-    memcpy(ais_msg->sender.uname, local_uname, ais_msg->sender.size);
-    ais_msg->sender.id = local_nodeid;
-
-    iovec.iov_base = (char *)ais_msg;
-    iovec.iov_len = total_size;
-
-    rc = totempg_groups_mcast_joined (
-	crm_group_handle, &iovec, 1, TOTEMPG_SAFE);
-
-    CRM_CHECK(rc == 0,
-	      crm_err("Message not sent (%d): %s", rc, crm_str(data)));
+    
+    rc = send_cluster_msg_raw(ais_msg);
 
     LEAVE("");
     return rc;	
@@ -376,85 +388,13 @@ int send_cluster_xml(enum crm_ais_msg_types type, const char *host, crm_data_t *
 }
 
 
-static void crm_deliver_fn (
-    unsigned int nodeid,
-    struct iovec *iovec,
-    int iov_len,
-    int endian_conversion_required)
-{
-    char *data = NULL;
-    AIS_Message *ais_msg;
-    gboolean process = FALSE;
-    int log_level = LOG_DEBUG_2;
-
-    ENTER("iov_len: %d", iov_len);
-    if (iov_len > 1) {
-	int i = 0;
-	int pos = 0;
-	crm_err("Combining multiple iovec entries - untested");
-	for (i = 0; i < iov_len; i++) {
-	    crm_realloc(data, pos+iovec[i].iov_len+1);
-	    memcpy (data+pos, iovec[i].iov_base, iovec[i].iov_len);
-	    pos += iovec[i].iov_len;
-	}
-	ais_msg = (AIS_Message*)data;
-		
-    } else {
-	ais_msg = iovec[0].iov_base;
-    }
-
-    if (endian_conversion_required) {
-	crm_info("Performing endian conversion...");
-	ais_msg->id = swab32 (ais_msg->id);
-	ais_msg->size = swab32 (ais_msg->size);
-	ais_msg->host.id = swab32 (ais_msg->host.id);
-	ais_msg->host.type = swab32 (ais_msg->host.type);
-	ais_msg->host.size = swab32 (ais_msg->host.size);
-	ais_msg->sender.id = swab32 (ais_msg->sender.id);
-	ais_msg->sender.type = swab32 (ais_msg->sender.type);
-	ais_msg->sender.size = swab32 (ais_msg->sender.size);
-    }
-
-    update_uname_table(ais_msg->sender.uname, ais_msg->sender.id);
-
-    if(ais_msg->host.size == 0 /* mcast */
-       || ais_msg->host.id == local_nodeid /* ucast */) {
-	process = TRUE;
-	log_level--;
-    }
-
-    if(process && ais_msg->host.type == crm_msg_ais) {
-	do_crm_log(log_level,
-		   "Msg[%d] (dest=%s:%s, from=%s:%s, remote=%s, size=%d): %s",
-		   ais_msg->id,
-		   ais_msg->host.size?ais_msg->host.uname:"<all>",
-		   msg_type2text(ais_msg->host.type),
-		   ais_msg->sender.uname, msg_type2text(ais_msg->sender.type),
-		   ais_msg->sender.uname==local_uname?"false":"true",
-		   ais_msg->size, crm_str(ais_msg->data));
-
-    } else if(process) {
-	do_crm_log(log_level,
-		   "Forwarding msg[%d] (dest=%s:%s, from=%s:%s, remote=%s, size=%d): %s",
-		   ais_msg->id,
-		   ais_msg->host.size?ais_msg->host.uname:"<all>",
-		   msg_type2text(ais_msg->host.type),
-		   ais_msg->sender.uname, msg_type2text(ais_msg->sender.type),
-		   ais_msg->sender.uname==local_uname?"false":"true",
-		   ais_msg->size, crm_str(ais_msg->data));
-    }
-	
-    crm_free(data);
-    LEAVE("");
-}
-
 pthread_t crm_wait_thread;
-gboolean wait_active = TRUE;
+gboolean wait_active = FALSE;
 
 static void *crm_wait_dispatch (void *arg)
 {
     struct timespec waitsleep = {
-	.tv_sec = 0,
+	.tv_sec = 5,
 	.tv_nsec = 100000 /* 100 msec */
     };
     
@@ -474,9 +414,19 @@ static void *crm_wait_dispatch (void *arg)
 			crm_children[lpc].name);
 		    continue;
 		}
-		
+
+		/* cleanup */
 		crm_children[lpc].pid = -1;
-		if (WIFEXITED(status)) {
+		crm_children[lpc].conn = NULL;
+
+		if(WIFSIGNALED(status)) {
+		    int sig = WTERMSIG(status);
+		    crm_warn("Child process %s terminated with signal %d"
+			     " (pid=%d, core=%s)",
+			     crm_children[lpc].name, sig, pid,
+			     WCOREDUMP(status)?"true":"false");
+
+		} else if (WIFEXITED(status)) {
 		    int rc = WEXITSTATUS(status);
 		    crm_notice("Child process %s exited (pid=%d, rc=%d)",
 			       crm_children[lpc].name, pid, rc);
@@ -486,19 +436,12 @@ static void *crm_wait_dispatch (void *arg)
 				   " to be respawned", crm_children[lpc].name);
 			crm_children[lpc].respawn = FALSE;
 		    }
-		    
-		} else if(WIFSIGNALED(status)) {
-		    int sig = WTERMSIG(status);
-		    crm_warn("Child process %s terminated with signal %d"
-			       " (pid=%d, core=%s)",
-			       crm_children[lpc].name, sig, pid,
-			       WCOREDUMP(status)?"true":"false");
 		}
 
 		if(crm_children[lpc].respawn) {
 		    crm_info("Respawning failed child process: %s",
 			     crm_children[lpc].name);
-		    spawn_child(crm_children[lpc]);
+		    spawn_child(&(crm_children[lpc]));
 		}
 	    }
 	}
@@ -516,16 +459,13 @@ static int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
     local_nodeid = totempg_my_nodeid_get();
     update_uname_table(local_uname, local_nodeid);
 
-    totempg_groups_initialize(&crm_group_handle, crm_deliver_fn, crm_confchg_fn);
-    totempg_groups_join(crm_group_handle, crm_group, 1);
-	
-    crm_info("CRM Group: Initialized");
+    crm_info("CRM: Initialized");
 
     for (; lpc < SIZEOF(crm_children); lpc++) {
-	spawn_child(crm_children[lpc]);
+	if(crm_children[lpc].command != NULL) {
+	    spawn_child(&(crm_children[lpc]));
+	}
     }
-
-    send_cluster_msg(crm_msg_ais, NULL, "I'm alive!");
 
     pthread_create (&crm_wait_thread, NULL, crm_wait_dispatch, NULL);
     
@@ -624,79 +564,26 @@ static void global_confchg_fn (
 	crm_info("%s %s %s %u", prefix, host, uname?uname:"<pending>", nodeid);
     }
 	
-    send_cluster_msg(crm_msg_ais, "somewhere.else", "Global membership changed");
+/*     send_cluster_msg(crm_msg_ais, "somewhere.else", "Global membership changed"); */
+    send_cluster_msg(crm_msg_ais, NULL, "I'm alive!");
 	
     LEAVE("");
 }
 
-static void crm_confchg_fn (
-    enum totem_configuration_type configuration_type,
-    unsigned int *member_list, int member_list_entries,
-    unsigned int *left_list, int left_list_entries,
-    unsigned int *joined_list, int joined_list_entries,
-    struct memb_ring_id *ring_id)
+int ais_ipc_client_exit_callback (void *conn)
 {
-    int lpc = 0;
-    char *buffer = NULL;
-
-    ENTER("");
-    CRM_ASSERT(ring_id != NULL);
-
-    crm_malloc0(buffer, INET6_ADDRSTRLEN+1);	
-    inet_ntop(ring_id->rep.family, ring_id->rep.addr,
-	      buffer, INET6_ADDRSTRLEN);
-    crm_notice("Membership event on ring %s[%lld]: memb=%d, new=%d, lost=%d",
-	       buffer, ring_id->seq, member_list_entries,
-	       joined_list_entries, left_list_entries);
-    crm_free(buffer);
-
-    switch(configuration_type) {
-	case TOTEM_CONFIGURATION_REGULAR:
-	    break;
-	case TOTEM_CONFIGURATION_TRANSITIONAL:
-	    crm_info("Transitional membership event");
-	    break;
-    }
-	
-    for(lpc = 0; lpc < joined_list_entries; lpc++) {
-	uint32_t nodeid = joined_list[lpc];
-	const char *prefix = "NEW: ";
-	const char *host = totempg_ifaces_print(nodeid);
-	const char *uname = uname_lookup(nodeid);
-	crm_info("%s %s %s %u", prefix, host, uname?uname:"<pending>", nodeid);
-    }
-    for(lpc = 0; lpc < member_list_entries; lpc++) {
-	uint32_t nodeid = member_list[lpc];
-	const char *prefix = "MEMB:";
-	const char *host = totempg_ifaces_print(nodeid);
-	const char *uname = uname_lookup(nodeid);
-	crm_info("%s %s %s %u", prefix, host, uname?uname:"<pending>", nodeid);
-    }
-    for(lpc = 0; lpc < left_list_entries; lpc++) {
-	uint32_t nodeid = left_list[lpc];
-	const char *prefix = "LOST:";
-	const char *host = totempg_ifaces_print(nodeid);
-	const char *uname = uname_lookup(nodeid);
-	crm_info("%s %s %s %u", prefix, host, uname?uname:"<pending>", nodeid);
-    }
-
-    send_cluster_msg(crm_msg_cib, local_uname, "CRM membership changed");
-    LEAVE("");
-}
-
-int crm_lib_exit_fn (void *conn)
-{
-    ENTER("");
+    ENTER("Client=%p", conn);
     crm_notice("Client left");
     LEAVE("");
 
     return (0);
 }
 
-static int crm_lib_init_fn (void *conn)
+static int ais_ipc_client_connect_callback (void *conn)
 {
-    ENTER("");
-    crm_notice("Client joined");
+    ENTER("Client=%p", conn);
+    crm_debug("Client joined");
+    send_client_msg(conn, crm_msg_none, "identify");
     LEAVE("");
 
     return (0);
@@ -705,54 +592,195 @@ static int crm_lib_init_fn (void *conn)
 /*
  * Executive message handlers
  */
-static void message_handler_req_exec_crm_test (
-    void *message, unsigned int nodeid)
-{
-    AIS_Message *ais_msg = message;
-    ENTER("Node=%d", nodeid);
-    do_crm_log(LOG_NOTICE, "Msg[%d] (dest=%s:%s, from=%s:%s, remote=%s, size=%d): %s",
-	       ais_msg->id,
-	       ais_msg->host.uname?ais_msg->host.uname:"<all>",
-	       msg_type2text(ais_msg->host.type),
-	       ais_msg->sender.uname, msg_type2text(ais_msg->sender.type),
-	       ais_msg->sender.uname==local_uname?"false":"true",
-	       ais_msg->size, crm_str(ais_msg->data));
-    LEAVE("");
-}
-
-static void message_handler_req_lib_crm_test(void *conn, void *msg)
+static void ais_cluster_message_swab(void *msg)
 {
     AIS_Message *ais_msg = msg;
     ENTER("");
-    do_crm_log(LOG_NOTICE, "Msg[%d] (dest=%s:%s, from=%s:%s, remote=%s, size=%d): %s",
-	       ais_msg->id,
-	       ais_msg->host.uname?ais_msg->host.uname:"<all>",
-	       msg_type2text(ais_msg->host.type),
-	       ais_msg->sender.uname, msg_type2text(ais_msg->sender.type),
-	       ais_msg->sender.uname==local_uname?"false":"true",
-	       ais_msg->size, crm_str(ais_msg->data));
 
-    send_ipc_msg(conn, crm_msg_pe, "Hi from openAIS");
+    crm_info("Performing endian conversion...");
+    ais_msg->id = swab32 (ais_msg->id);
+    ais_msg->size = swab32 (ais_msg->size);
+    
+    ais_msg->host.id    = swab32 (ais_msg->host.id);
+    ais_msg->host.pid   = swab32 (ais_msg->host.pid);
+    ais_msg->host.type  = swab32 (ais_msg->host.type);
+    ais_msg->host.size  = swab32 (ais_msg->host.size);
+    ais_msg->host.local = swab32 (ais_msg->host.local);
+    
+    ais_msg->sender.id    = swab32 (ais_msg->sender.id);
+    ais_msg->sender.pid   = swab32 (ais_msg->sender.pid);
+    ais_msg->sender.type  = swab32 (ais_msg->sender.type);
+    ais_msg->sender.size  = swab32 (ais_msg->sender.size);
+    ais_msg->sender.local = swab32 (ais_msg->sender.local);
+
     LEAVE("");
 }
 
-gboolean spawn_child(crm_child_t child)
+static void ais_cluster_message_callback (
+    void *message, unsigned int nodeid)
+{
+    AIS_Message *ais_msg = message;
+
+    ENTER("Node=%d", nodeid);
+    crm_debug("Message from node %u", nodeid);
+    update_uname_table(ais_msg->sender.uname, ais_msg->sender.id);
+    if(ais_msg->host.size == 0
+       || safe_str_eq(ais_msg->host.uname, local_uname)) {
+	route_ais_message(ais_msg, FALSE);
+
+    } else {
+	crm_debug("Discarding Msg[%d] (dest=%s:%s, from=%s:%s)",
+		  ais_msg->id,
+		  ais_msg->host.size?ais_msg->host.uname:"<all>",
+		  msg_type2text(ais_msg->host.type),
+		  ais_msg->sender.uname, msg_type2text(ais_msg->sender.type));
+    }
+/*     crm_free(data); */
+    LEAVE("");
+}
+
+static void ais_ipc_message_callback(void *conn, void *msg)
+{
+    AIS_Message *ais_msg = msg;
+    int type = ais_msg->sender.type;
+    ENTER("Client=%p", conn);
+    crm_debug("Message from client %p", conn);
+
+    if(type > 0
+       && ais_msg->host.local
+       && crm_children[type].conn == NULL
+       && ais_msg->host.type == crm_msg_ais
+       && ais_msg->sender.pid == crm_children[type].pid
+       && type < SIZEOF(crm_children)) {
+	crm_info("Recorded connection %p for %s/%d",
+		 conn, crm_children[type].name, crm_children[type].pid);
+	crm_children[type].conn = conn;
+    }
+    
+    route_ais_message(msg, TRUE);
+
+    LEAVE("");
+}
+
+static void swap_sender(AIS_Message *msg) 
+{
+    int tmp = 0;
+    char tmp_s[256];
+    tmp = msg->host.type;
+    msg->host.type = msg->sender.type;
+    msg->sender.type = tmp;
+
+    tmp = msg->host.type;
+    msg->host.size = msg->sender.type;
+    msg->sender.type = tmp;
+
+    memcpy(tmp_s, msg->host.uname, 256);
+    memcpy(msg->host.uname, msg->sender.uname, 256);
+    memcpy(msg->sender.uname, tmp_s, 256);
+}
+
+
+static gboolean process_ais_message(AIS_Message *msg) 
+{
+    do_crm_log(LOG_NOTICE,
+	       "Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %s",
+	       msg->id,
+	       msg->host.size?msg->host.uname:"<all>",
+	       msg_type2text(msg->host.type),
+	       msg->sender.uname, msg_type2text(msg->sender.type),
+	       msg->sender.pid,
+	       msg->sender.uname==local_uname?"false":"true",
+	       msg->size, crm_str(msg->data));
+    
+    return TRUE;
+}
+
+gboolean route_ais_message(AIS_Message *msg, gboolean local_origin) 
+{
+    int rc = 0;
+    
+    crm_debug("Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %.40s",
+	      msg->id,
+	      msg->host.size?msg->host.uname:"<all>",
+	      msg_type2text(msg->host.type),
+	      msg->sender.uname, msg_type2text(msg->sender.type),
+	      msg->sender.pid,
+	      local_origin?"false":"true",
+	      msg->size, crm_str(msg->data));
+    
+    if(local_origin == FALSE) {
+       if(msg->host.uname == NULL
+	  || safe_str_eq(local_uname, msg->host.uname)) {
+	   msg->host.local = TRUE;
+       }
+    }
+
+    if(msg->host.local) {
+	void *conn = NULL;
+
+	if(msg->host.type == crm_msg_ais) {
+	    process_ais_message(msg);
+	    return TRUE;
+	}
+	
+	CRM_CHECK(msg->host.type > 0 && msg->host.type < SIZEOF(crm_children),
+		  crm_err("Invalid destination: %d", msg->host.type);
+		  return FALSE;
+	    );
+
+	conn = crm_children[msg->host.type].conn;
+	rc = 1;
+	if (conn == NULL) {
+	    crm_err("No connection to %s", crm_children[msg->host.type].name);
+	    
+	} else if (!libais_connection_active(conn)) {
+	    crm_err("Connection to %s is no longer active",
+		    crm_children[msg->host.type].name);
+	    
+/* 	} else if ((queue->size - 1) == queue->used) { */
+/* 	    crm_err("Connection is throttled: %d", queue->size); */
+
+	} else {
+	    crm_debug("Delivering locally to %s",
+		      crm_children[msg->host.type].name);
+	    rc = openais_conn_send_response(
+		conn, msg, sizeof (AIS_Message) + msg->size + 1);
+	}
+
+    } else if(local_origin) {
+	/* forward to other hosts */
+	crm_debug("Forwarding to cluster");
+	rc = send_cluster_msg_raw(msg);    
+    }
+
+    if(rc != 0) {
+	crm_debug("Sending message to %s.%s failed (rc=%d): %.60s",
+		  msg->host.local?"local":
+		     msg->host.uname?msg->host.uname:"<all>",
+		  msg_type2text(msg->host.type), rc, msg->data);
+	return FALSE;
+    }
+    return TRUE;
+}
+
+gboolean spawn_child(crm_child_t *child)
 {
     int lpc = 0;
     struct rlimit	oflimits;
     const char 	*devnull = "/dev/null";
 
-    child.pid = fork();
-    CRM_ASSERT(child.pid != -1);
+    child->pid = fork();
+    CRM_ASSERT(child->pid != -1);
 
-    if(child.pid > 0) {
+    if(child->pid > 0) {
 	/* parent */
+	crm_info("Forked child %d for process %s", child->pid, child->name);
 	return TRUE;
     }
     
     /* Child */
     crm_debug("Executing \"%s (%s)\" (pid %d)",
-	      child.command, child.name, (int) getpid());
+	      child->command, child->name, (int) getpid());
     
     /* A precautionary measure */
     getrlimit(RLIMIT_NOFILE, &oflimits);
@@ -772,44 +800,42 @@ gboolean spawn_child(crm_child_t child)
 			 crm_strdup("--suppressions="VALGRIND_SUPP),
 /* 				 crm_strdup("--gen-suppressions=all"), */
 			 crm_strdup(VALGRIND_LOG),
-			 crm_strdup(child.command),
+			 crm_strdup(child->command),
 			 NULL
 	};
 	(void)execvp(VALGRIND_BIN, opts);
 
     } else {
-	char *opts[] = { crm_strdup(child.command), NULL };
-	(void)execvp(child.command, opts);
+	char *opts[] = { crm_strdup(child->command), NULL };
+	(void)execvp(child->command, opts);
     }
 
-    cl_perror("FATAL: Cannot exec %s", child.command);
+    cl_perror("FATAL: Cannot exec %s", child->command);
     exit(100);
     return TRUE; /* never reached */
 }
 
 gboolean
-stop_child(crm_child_t child, int signal)
+stop_child(crm_child_t *child, int signal)
 {
     if(signal == 0) {
 	signal = SIGTERM;
     }
     
-    crm_debug_2("Stopping CRM child \"%s\"", child.name);
+    crm_debug_2("Stopping CRM child \"%s\"", child->name);
     
-    if (child.pid <= 0) {
-	crm_debug_2("Client %s not running", child.name);
+    if (child->pid <= 0) {
+	crm_debug_2("Client %s not running", child->name);
 	return TRUE;
     }
     
     errno = 0;
-    if(CL_KILL(child.pid, signal) == 0) {
-	crm_info("Sent -%d to %s: [%d]", signal, child.name, child.pid);
+    if(CL_KILL(child->pid, signal) == 0) {
+	crm_info("Sent -%d to %s: [%d]", signal, child->name, child->pid);
 	
     } else {
-	cl_perror("Sent -%d to %s: [%d]", signal, child.name, child.pid);
+	cl_perror("Sent -%d to %s: [%d]", signal, child->name, child->pid);
     }
     
     return TRUE;
 }
-
-

@@ -52,34 +52,35 @@ GMainLoop *mainloop = NULL;
 
 void usage(const char *cmd, int exit_status);
 
-const char *crm_system_name = NULL;
-
 #define OPTARGS	"V?K:S:HE:Dd:i:RNqt:Bv"
 
 int
 main(int argc, char **argv)
 {
     int rc = 0;
+    const char *host = NULL;
     crm_data_t *msg = NULL;
     
-    crm_system_name = basename(argv[0]);
-    crm_log_init(crm_system_name, LOG_DEBUG, FALSE, TRUE, 0, NULL);
+    crm_log_init(basename(argv[0]), LOG_DEBUG, FALSE, TRUE, 0, NULL);
     
     msg = create_xml_node(NULL, XML_TAG_OPTIONS);
     crm_xml_add(msg, "hello", "world");
     crm_xml_add(msg, "time", "now");
 
-    rc = send_ais_message(msg, crm_msg_te, "null", crm_msg_ais);
+    if(argc > 1) {
+	host = argv[1];
+    }
+    
+    rc = send_ais_message(msg, FALSE, host, crm_msg_ais);
     if (rc != SA_AIS_OK) {
 	return 1;
     }
-    
+
     mainloop = g_main_new(FALSE);
 /*     message_timer_id = Gmain_timeout_add( */
 /* 	message_timeout_ms, admin_message_timeout, NULL); */
 	
     g_main_run(mainloop);
-    return_to_orig_privs();
 	
     crm_debug_2("%s exiting normally", crm_system_name);
     return 0;

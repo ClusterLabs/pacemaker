@@ -23,13 +23,16 @@
 int ais_fd_in = -1;
 int ais_fd_out = -1;
 GFDSource *ais_source = NULL;
+GFDSource *ais_source_out = NULL;
 
 enum crm_ais_msg_types text2msg_type(const char *text) 
 {
-	int type = -1;
+	int type = crm_msg_none;
 
 	CRM_CHECK(text != NULL, return type);
 	if(safe_str_eq(text, "ais")) {
+		type = crm_msg_ais;
+	} else if(safe_str_eq(text, "crm_plugin")) {
 		type = crm_msg_ais;
 	} else if(safe_str_eq(text, CRM_SYSTEM_CIB)) {
 		type = crm_msg_cib;
@@ -42,15 +45,18 @@ enum crm_ais_msg_types text2msg_type(const char *text)
 	} else if(safe_str_eq(text, CRM_SYSTEM_LRMD)) {
 		type = crm_msg_lrmd;
 	} else {
-		crm_err("Unknown message type: %s", text);
+		crm_debug_2("Unknown message type: %s", text);
 	}
 	return type;
 }
 
 const char *msg_type2text(enum crm_ais_msg_types type) 
 {
-	const char *text = "<unknown>";
+	const char *text = "unknown";
 	switch(type) {
+		case crm_msg_none:
+			text = "unknown";
+			break;
 		case crm_msg_ais:
 			text = "ais";
 			break;
@@ -128,17 +134,77 @@ ais_destroy(gpointer user_data)
 }
 
 gboolean
-send_ais_message(crm_data_t *msg, enum crm_ais_msg_types sender,
-		 const char *node, enum crm_ais_msg_types dest)
+send_ais_text(const char *data,
+	      gboolean local, const char *node, enum crm_ais_msg_types dest)
 {
     static int msg_id = 0;
 
+    int total_size = 0;
+    int data_len = 0;
     int rc = SA_AIS_OK;
     AIS_Message *ais_msg = NULL;
-    char *data = NULL;
-    int data_len = 0;
+    static int local_pid = 0;
+    enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
 
-    if(ais_source == NULL && init_ais_connection() == FALSE) {
+    if(local_pid == 0) {
+	local_pid = getpid();
+    }
+    
+    if(data) {
+	data_len = strlen(data);
+    }
+
+    total_size = sizeof(AIS_Message) + data_len + 1;
+    crm_malloc0(ais_msg, total_size);
+    
+    ais_msg->id = msg_id++;
+    ais_msg->header.size = total_size;
+    ais_msg->header.id = 0;
+    
+    ais_msg->size = data_len;
+    memcpy(ais_msg->data, data, ais_msg->size);
+    
+    ais_msg->host.type = dest;
+    ais_msg->host.local = local;
+    if(node) {
+	ais_msg->host.size = strlen(node);
+	memset(ais_msg->host.uname, 0, MAX_NAME);
+	memcpy(ais_msg->host.uname, node, ais_msg->host.size);
+	ais_msg->host.id = 0;
+	
+    } else {
+	ais_msg->host.size = 0;
+	memset(ais_msg->host.uname, 0, MAX_NAME);
+	ais_msg->host.id = 0;
+    }
+    
+    ais_msg->sender.type = sender;
+    ais_msg->sender.pid = local_pid;
+    ais_msg->sender.size = 0;
+    memset(ais_msg->sender.uname, 0, MAX_NAME);
+    ais_msg->sender.id = 0;
+    
+    crm_notice("Sending message %d (data=%d, total=%d): %.60s",
+	       ais_msg->id, data_len, total_size, ais_msg->data);
+
+    rc = saSendRetry (ais_fd_in, ais_msg, total_size);
+    if(rc != SA_AIS_OK) {    
+	crm_err("Sending message %d: FAILED", ais_msg->id);
+	ais_fd_out = -1;
+    } else {
+	crm_notice("Message %d: sent", ais_msg->id);
+    }
+    
+    return (rc == SA_AIS_OK);
+}
+
+gboolean
+send_ais_message(crm_data_t *msg, 
+		 gboolean local, const char *node, enum crm_ais_msg_types dest)
+{
+    char *data = NULL;
+
+    if(ais_source == NULL && init_ais_connection(NULL, NULL) == FALSE) {
 	crm_err("Cannot connect to AIS");
 	return FALSE;
     }
@@ -153,49 +219,13 @@ send_ais_message(crm_data_t *msg, enum crm_ais_msg_types sender,
     }
     
     data = dump_xml_unformatted(msg);
-    data_len = strlen(data);
-    
-    crm_malloc0(ais_msg, sizeof(AIS_Message) + data_len + 1);
-    
-    ais_msg->id = msg_id++;
-    ais_msg->header.size = sizeof (AIS_Message);
-    ais_msg->header.id = 0;
-    
-    ais_msg->size = data_len;
-    memcpy(ais_msg->data, data, ais_msg->size);
-    
-    ais_msg->host.type = dest;
-    if(node) {
-	ais_msg->host.size = strlen(node);
-	memset(ais_msg->host.uname, 0, MAX_NAME);
-	memcpy(ais_msg->host.uname, node, ais_msg->host.size);
-	ais_msg->host.id = 0;
-	
-    } else {
-	ais_msg->host.size = 0;
-	memset(ais_msg->host.uname, 0, MAX_NAME);
-	ais_msg->host.id = 0;
-    }
-    
-    ais_msg->sender.type = sender;
-    ais_msg->sender.size = 0;
-    memset(ais_msg->sender.uname, 0, MAX_NAME);
-    ais_msg->sender.id = 0;
-    
-    crm_notice("Sending message %d", ais_msg->id);
-
-    rc = saSendRetry (ais_fd_out, ais_msg, sizeof(AIS_Message) + data_len + 1);
-    if(rc != SA_AIS_OK) {    
-	crm_err("Sending message %d: FAILED", ais_msg->id);
-	ais_fd_out = -1;
-    }
-    
-    crm_notice("Message %d: sent", ais_msg->id);
-    return (rc == SA_AIS_OK);
+    return send_ais_text(data, local, node, dest);
 }
 
 
-gboolean init_ais_connection(void) 
+gboolean init_ais_connection(
+    gboolean (*dispatch)(int, gpointer),
+    void (*destroy)(gpointer)) 
 {
     int rc = SA_AIS_OK;
     crm_notice("Creating connection to our AIS plugin");
@@ -207,10 +237,28 @@ gboolean init_ais_connection(void)
 	return FALSE;
     }
 
+    if(destroy == NULL) {
+	crm_info("Using the default destroy handler");
+	destroy = ais_destroy;
+    } 
+    if(dispatch == NULL) {
+	crm_info("Using the default dispatch handler");
+	dispatch = ais_dispatch;
+    }
+   
     crm_notice("AIS connection established");
     ais_source = G_main_add_fd(
-	G_PRIORITY_HIGH, ais_fd_in, FALSE, ais_dispatch, NULL, ais_destroy);
-    ais_source = G_main_add_fd(
-	G_PRIORITY_HIGH, ais_fd_out, FALSE, ais_dispatch, NULL, ais_destroy);
+	G_PRIORITY_HIGH, ais_fd_in, FALSE, dispatch, NULL, destroy);
+    ais_source_out = G_main_add_fd(
+	G_PRIORITY_HIGH, ais_fd_out, FALSE, dispatch, NULL, destroy);
     return TRUE;
+}
+
+void terminate_ais_connection(void) 
+{
+    close(ais_fd_in);
+    close(ais_fd_out);
+    crm_notice("Disconnected from AIS");
+/*     G_main_del_fd(ais_source); */
+/*     G_main_del_fd(ais_source_out);     */
 }
