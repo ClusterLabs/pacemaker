@@ -298,6 +298,7 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	char ra_pathname[RA_MAX_NAME_LENGTH];
 	FILE* file = NULL;
 	GHashTable * tmp_for_setenv;
+	struct timespec short_sleep = {0,200000000L}; /*20ms*/
 
 	get_ra_pathname(RA_PATH, rsc_type, provider, ra_pathname);
 
@@ -315,13 +316,13 @@ get_resource_meta(const char* rsc_type, const char* provider)
 
 	g_str_tmp = g_string_new("");
 	while(!feof(file)) {
-		*buff = '\0';
 		read_len = fread(buff, 1, BUFF_LEN - 1, file);
 		if (0<read_len) {
+			*(buff+read_len) = '\0';
 			g_string_append(g_str_tmp, buff);
 		}
 		else {
-			cl_shortsleep();
+			nanosleep(&short_sleep,NULL);
 		}
 	}
 	if (0 == g_str_tmp->len) {
