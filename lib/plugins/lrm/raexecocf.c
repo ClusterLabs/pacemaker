@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <glib.h>
 #include <clplumbing/cl_log.h>
+#include <clplumbing/realtime.h>
 #include <pils/plugin.h>
 #include <dirent.h>
 #include <libgen.h>  /* Add it for compiling on OSX */
@@ -314,13 +315,13 @@ get_resource_meta(const char* rsc_type, const char* provider)
 
 	g_str_tmp = g_string_new("");
 	while(!feof(file)) {
-		memset(buff, 0, BUFF_LEN);
+		*buff = '\0';
 		read_len = fread(buff, 1, BUFF_LEN - 1, file);
 		if (0<read_len) {
 			g_string_append(g_str_tmp, buff);
 		}
 		else {
-			sleep(1);
+			cl_shortsleep();
 		}
 	}
 	if (0 == g_str_tmp->len) {

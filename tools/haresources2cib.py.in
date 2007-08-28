@@ -32,15 +32,15 @@ using_mon = 1
 enable_stonith = False
 
 ocf_ra_setting = {
-	"apache"    :{"params":["configfile","httpd","port","statusurl","options"],"time":["120s","60s"]},
-	"IPaddr"    :{"params":["ip","netmask","nic","broadcast"],"time":["5s","5s"]},
-	"IPaddr2"   :{"params":["ip","netmask","nic","broadcast"],"time":["5s","5s"]},
-	"db2"       :{"params":["instance"],"time":["120s","60s"]},
-	"oracle"    :{"params":["sid","home","user"],"time":["120s","60s"]},
+	"apache"    :{"params":["configfile","httpd","port","statusurl","options","testregex"],"time":["120s","60s"]},
+	"IPaddr"    :{"params":["ip","nic","cidr_netmask","broadcast","iflabel","lvs_support","local_stop_script","local_start_script","ARP_INTERVAL_MS","ARP_REPEAT","ARP_BACKGROUND","ARP_NETMASK"],"time":["5s","5s"]},
+	"IPaddr2"   :{"params":["ip","nic","cidr_netmask","broadcast","iflabel","lvs_support","mac","clusterip_hash","arp_interval","arp_count","arp_bg","arp_mac"],"time":["5s","5s"]},
+	"db2"       :{"params":["instance","admin"],"time":["120s","60s"]},
+	"oracle"    :{"params":["sid","home","user","ipcrm"],"time":["120s","60s"]},
 	"oralsnr"   :{"params":["sid","home","user","listener"],"time":["120s","60s"]},
 	"AudibleAlarm":{"params":["nodelist"],"time":["120s","60s"]},
-	"Delay"     :{"params":["delay","stopdelay"],"time":["120s","60s"]},
-	"Filesystem":{"params":["device","directory","fstype","options"],"time":["120s","60s"]},
+	"Delay"     :{"params":["startdelay","stopdelay","mondelay"],"time":["120s","60s"]},
+	"Filesystem":{"params":["device","directory","fstype","options","ocfs2_cluster","ocfs2_configfs"],"time":["120s","60s"]},
 	"ICP"       :{"params":["driveid","device"],"time":["120s","60s"]},
 	"IPsrcaddr" :{"params":["ipaddress"],"time":["5s","5s"]},
 	"IPv6addr"  :{"params":["ipv6addr"],"time":["5s","5s"]},
@@ -51,7 +51,31 @@ ocf_ra_setting = {
 	"Raid1"     :{"params":["raidconf","raiddev"],"time":["120s","60s"]},
 	"ServeRAID" :{"params":["serveraid","mergegroup"],"time":["120s","60s"]},
 	"WinPopup"  :{"params":["hostfile"],"time":["120s","60s"]},
-	"Xinetd"    :{"params":["service"],"time":["120s","60s"]}
+	"Xinetd"    :{"params":["service"],"time":["120s","60s"]},
+	"ClusterMon"	:{"params":["user","update","extra_options","pidfile","htmlfile"],"time":["120s","60s"]},
+	"Dummy"	:{"params":["state"],"time":["120s","60s"]},
+	"EvmsSCC"	:{"params":[],"time":["120s","60s"]},
+	"Evmsd"	:{"params":[],"time":["120s","60s"]},
+	"ManageRAID"	:{"params":["raidname"],"time":["120s","60s"]},
+	"ManageVE"	:{"params":["veid"],"time":["120s","60s"]},
+	"Pure-FTPd"	:{"params":["script","conffile"],"time":["120s","60s"]},
+	"SAPDatabase"	:{"params":["SID","DIR_EXECUTABLE","DBTYPE","NETSERVICENAME","DBJ2EE_ONLY","DIR_BOOTSTRAP","DIR_SECSTORE"],"time":["120s","60s"]},
+	"SAPInstance"	:{"params":["InstanceName","DIR_EXECUTABLE","DIR_PROFILE","START_PROFILE"],"time":["120s","60s"]},
+	"SendArp"	:{"params":["ip","nic"],"time":["120s","60s"]},
+	"Stateful"	:{"params":["state"],"time":["120s","60s"]},
+	"SysInfo"	:{"params":["pidfile","delay"],"time":["120s","60s"]},
+	"VIPArip"	:{"params":["ip","nic"],"time":["120s","60s"]},
+	"WAS"	:{"params":["config","port"],"time":["120s","60s"]},
+	"WAS6"	:{"params":["profile"],"time":["120s","60s"]},
+	"Xen"	:{"params":["xmfile"],"time":["120s","60s"]},
+	"drbd"	:{"params":["drbd_resource","drbdconf","clone_overrides_hostname","clone_max","clone_node_max","master_max","master_node_max"],"time":["120s","60s"]},
+	"eDir88"	:{"params":["eDir_config_file","eDir_monitor_ldap","eDir_monitor_idm","eDir_jvm_initial_heap","eDir_jvm_max_heap","eDir_jvm_options"],"time":["120s","60s"]},
+	"ids"	:{"params":["informixdir","informixserver","onconfig","dbname","sqltestquery"],"time":["120s","60s"]},
+	"mysql"	:{"params":["binary","config","datadir","user","group","test_table","test_user","test_passwd","enable_creation"],"time":["120s","60s"]},
+	"o2cb"	:{"params":["netdev","port","ocfs2_cluster"],"time":["120s","60s"]},
+	"pgsql"	:{"params":[],"time":["120s","60s"]},
+	"pingd"	:{"params":["pidfile","user","dampen","set","name","section","multiplier","host_list"],"time":["120s","60s"]},
+	"rsyncd"	:{"params":["binpath","conffile","bwlimit"],"time":["120s","60s"]}
 	}
 
 config_defaults = [
@@ -61,6 +85,7 @@ config_defaults = [
 	"default-resource-failure-stickiness=0",
 	"stonith-enabled=false",
 	"stonith-action=reboot",
+	"startup-fencing=true",
 	"stop-orphan-resources=true",
 	"stop-orphan-actions=true",
 	"remove-after-stop=false",
@@ -68,6 +93,10 @@ config_defaults = [
 	"transition-idle-timeout=5min",
 	"default-action-timeout=15s",
 	"is-managed-default=true",
+	"cluster-delay=60s",
+	"pe-error-series-max=-1",
+	"pe-warn-series-max=-1",
+	"pe-input-series-max=-1",
 ]
 
 def create_cib() :
