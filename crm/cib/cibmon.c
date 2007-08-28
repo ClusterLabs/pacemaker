@@ -54,7 +54,6 @@ int exit_code = cib_ok;
 int got_signal = 0;
 
 GMainLoop *mainloop = NULL;
-const char *crm_system_name = "cibmon";
 void usage(const char *cmd, int exit_status);
 void cib_connection_destroy(gpointer user_data);
 
@@ -95,7 +94,7 @@ main(int argc, char **argv)
 	};
 #endif
 
-	crm_log_init(crm_system_name, LOG_INFO, FALSE, FALSE, 0, NULL);
+	crm_log_init("cibmon", LOG_INFO, FALSE, FALSE, 0, NULL);
 
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, cibmon_shutdown, NULL, NULL);
