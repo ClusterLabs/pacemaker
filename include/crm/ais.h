@@ -78,7 +78,10 @@ extern gboolean send_ais_text(
 extern gboolean init_ais_connection(
     gboolean (*dispatch)(int, gpointer),
     void (*ais_destroy)(gpointer));
+
 extern void terminate_ais_connection(void);
+
+extern const char *ais_dest(struct crm_ais_host_s *host);
 
 extern int ais_fd_in;
 extern int ais_fd_out;

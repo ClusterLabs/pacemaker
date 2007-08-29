@@ -102,10 +102,8 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 
     msg = (void*)header;
     do_crm_log(LOG_NOTICE, "Msg[%d] (dest=%s:%s, from=%s:%s, size=%d, total=%d)",
-	       msg->id,
-	       msg->host.uname?msg->host.uname:"<all>",
-	       msg_type2text(msg->host.type),
-	       msg->sender.uname, msg_type2text(msg->sender.type),
+	       msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
+	       ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
 	       msg->size, msg->header.size);
     
 /*     crm_realloc(msg, msg->header.size+10); */
@@ -131,6 +129,17 @@ ais_destroy(gpointer user_data)
     crm_err("AIS connection terminated");
     ais_fd_in = -1;
     exit(1);
+}
+
+const char *ais_dest(struct crm_ais_host_s *host) 
+{
+    if(host->local) {
+	return "local";
+    } else if(host->size > 0) {
+	return host->uname;
+    } else {
+	return "<all>";
+    }
 }
 
 gboolean
@@ -184,8 +193,9 @@ send_ais_text(const char *data,
     memset(ais_msg->sender.uname, 0, MAX_NAME);
     ais_msg->sender.id = 0;
     
-    crm_notice("Sending message %d (data=%d, total=%d): %.60s",
-	       ais_msg->id, data_len, total_size, ais_msg->data);
+    crm_notice("Sending message %d to %s.%s (data=%d, total=%d): %.60s",
+	       ais_msg->id, ais_dest(&(ais_msg->host)), msg_type2text(dest),
+	       data_len, total_size, ais_msg->data);
 
     rc = saSendRetry (ais_fd_in, ais_msg, total_size);
     if(rc != SA_AIS_OK) {    
