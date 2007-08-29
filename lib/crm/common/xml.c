@@ -721,7 +721,16 @@ get_message_xml(HA_Message *msg, const char *field)
 	crm_validate_data(msg);
 	tmp_node = cl_get_struct(msg, field);
 	if(tmp_node != NULL) {
+	    const char *name = crm_element_name(tmp_node);
+	    if(name == NULL || safe_str_neq(field, name)) {
 		xml_node = copy_xml(tmp_node);
+
+	    } else {
+		xml_child_iter(tmp_node, child,
+			       CRM_ASSERT(xml_node == NULL);
+			       xml_node = copy_xml(child);
+		    );
+	    }
 	}
 	return xml_node;
 }
@@ -731,8 +740,24 @@ add_message_xml(HA_Message *msg, const char *field, const crm_data_t *xml)
 {
 	crm_validate_data(xml);
 	crm_validate_data(msg);
+
 	CRM_CHECK(field != NULL, return FALSE);
+
+#ifdef WITH_NATIVE_AIS
+	{
+	    crm_data_t *holder = NULL;
+	    holder = ha_msg_new(3);
+	    CRM_ASSERT(holder != NULL);
+	    
+	    crm_xml_add(holder, F_XML_TAGNAME, field);
+	    add_node_copy(holder, xml);
+	    
+	    ha_msg_addstruct_compress(msg, field, holder);
+	    free_xml(holder);
+	}
+#else
 	ha_msg_addstruct_compress(msg, field, xml);
+#endif
 	return TRUE;
 }
 
