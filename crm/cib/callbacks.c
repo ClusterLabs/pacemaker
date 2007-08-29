@@ -170,7 +170,7 @@ cib_prepare_none(HA_Message *request, HA_Message **data, const char **section)
 static enum cib_errors
 cib_prepare_data(HA_Message *request, HA_Message **data, const char **section)
 {
-	HA_Message *input_fragment = cl_get_struct(request, F_CIB_CALLDATA);
+	HA_Message *input_fragment = get_message_xml(request, F_CIB_CALLDATA);
 	*section = cl_get_string(request, F_CIB_SECTION);
 	*data = cib_prepare_common(input_fragment, *section);
 	if(verify_section(*section) == FALSE) {
@@ -200,10 +200,10 @@ cib_prepare_diff(HA_Message *request, HA_Message **data, const char **section)
 	*section = NULL;
 
 	if(crm_is_true(update)) {
-		input_fragment = cl_get_struct(request,F_CIB_UPDATE_DIFF);
+		input_fragment = get_message_xml(request,F_CIB_UPDATE_DIFF);
 		
 	} else {
-		input_fragment = cl_get_struct(request, F_CIB_CALLDATA);
+		input_fragment = get_message_xml(request, F_CIB_CALLDATA);
 	}
 
 	CRM_CHECK(input_fragment != NULL,crm_log_message(LOG_WARNING, request));
@@ -751,7 +751,7 @@ do_local_notify(HA_Message *notify_src, const char *client_id, gboolean sync_rep
 	crm_debug_2("Performing notification");
 	
 	client_reply = cib_msg_copy(notify_src, TRUE);
-	
+
 	if(client_id != NULL) {
 		client_obj = g_hash_table_lookup(
 			client_list, client_id);
@@ -1640,6 +1640,7 @@ cib_msg_copy(HA_Message *msg, gboolean with_data)
 	const HA_Message *value_struct = NULL;
 
 	static const char *field_list[] = {
+		F_XML_TAGNAME	,
 		F_TYPE		,
 		F_CIB_CLIENTID  ,
 		F_CIB_CALLOPTS  ,
@@ -1668,14 +1669,8 @@ cib_msg_copy(HA_Message *msg, gboolean with_data)
 		F_CIB_UPDATE_RESULT
 	};
 
-
-	HA_Message *copy = NULL;
-
-	copy = ha_msg_new(10);
-
-	if(copy == NULL) {
-		return copy;
-	}
+	HA_Message *copy = ha_msg_new(10);
+	CRM_ASSERT(copy != NULL);
 	
 	for(lpc = 0; lpc < DIMOF(field_list); lpc++) {
 		field = field_list[lpc];
@@ -1686,11 +1681,12 @@ cib_msg_copy(HA_Message *msg, gboolean with_data)
 	}
 	for(lpc = 0; with_data && lpc < DIMOF(data_list); lpc++) {
 		field = data_list[lpc];
-		value_struct = cl_get_struct(msg, field);
+		value_struct = get_message_xml(msg, field);
 		if(value_struct != NULL) {
 			add_message_xml(copy, field, value_struct);
 		}
 	}
+
 	return copy;
 }
 
