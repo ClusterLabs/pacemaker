@@ -287,7 +287,7 @@ static int send_client_msg(void *conn, enum crm_ais_msg_types type, const char *
 /* 	    crm_err("Connection is throttled: %d", queue->size); */
 
     } else {
-	rc = openais_conn_send_response (conn, ais_msg, sizeof (AIS_Message) + ais_msg->size + 1);
+	rc = openais_conn_send_response (conn, ais_msg, total_size);
 	CRM_CHECK(rc == 0,
 		  crm_err("Message not sent (%d): %s", rc, crm_str(data)));
     }
