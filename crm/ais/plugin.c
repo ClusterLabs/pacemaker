@@ -387,14 +387,13 @@ int send_cluster_xml(enum crm_ais_msg_types type, const char *host, crm_data_t *
     return rc;
 }
 
-
 pthread_t crm_wait_thread;
-gboolean wait_active = FALSE;
+gboolean wait_active = TRUE;
 
 static void *crm_wait_dispatch (void *arg)
 {
     struct timespec waitsleep = {
-	.tv_sec = 5,
+	.tv_sec = 0,
 	.tv_nsec = 100000 /* 100 msec */
     };
     
@@ -621,7 +620,7 @@ static void ais_cluster_message_callback (
 {
     AIS_Message *ais_msg = message;
 
-    ENTER("Node=%d", nodeid);
+    ENTER("Node=%u", nodeid);
     crm_debug("Message from node %u", nodeid);
     update_uname_table(ais_msg->sender.uname, ais_msg->sender.id);
     if(ais_msg->host.size == 0
@@ -630,10 +629,10 @@ static void ais_cluster_message_callback (
 
     } else {
 	crm_debug("Discarding Msg[%d] (dest=%s:%s, from=%s:%s)",
-		  ais_msg->id,
-		  ais_msg->host.size?ais_msg->host.uname:"<all>",
+		  ais_msg->id, ais_dest(&(ais_msg->host)),
 		  msg_type2text(ais_msg->host.type),
-		  ais_msg->sender.uname, msg_type2text(ais_msg->sender.type));
+		  ais_dest(&(ais_msg->sender)),
+		  msg_type2text(ais_msg->sender.type));
     }
 /*     crm_free(data); */
     LEAVE("");
@@ -684,10 +683,8 @@ static gboolean process_ais_message(AIS_Message *msg)
 {
     do_crm_log(LOG_NOTICE,
 	       "Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %s",
-	       msg->id,
-	       msg->host.size?msg->host.uname:"<all>",
-	       msg_type2text(msg->host.type),
-	       msg->sender.uname, msg_type2text(msg->sender.type),
+	       msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
+	       ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
 	       msg->sender.pid,
 	       msg->sender.uname==local_uname?"false":"true",
 	       msg->size, crm_str(msg->data));
@@ -699,17 +696,14 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 {
     int rc = 0;
     
-    crm_debug("Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %.40s",
-	      msg->id,
-	      msg->host.size?msg->host.uname:"<all>",
-	      msg_type2text(msg->host.type),
-	      msg->sender.uname, msg_type2text(msg->sender.type),
-	      msg->sender.pid,
-	      local_origin?"false":"true",
+    crm_debug("Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %.100s",
+	      msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
+	      ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
+	      msg->sender.pid, local_origin?"false":"true",
 	      msg->size, crm_str(msg->data));
     
     if(local_origin == FALSE) {
-       if(msg->host.uname == NULL
+       if(msg->host.size == 0
 	  || safe_str_eq(local_uname, msg->host.uname)) {
 	   msg->host.local = TRUE;
        }
@@ -751,13 +745,15 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 	/* forward to other hosts */
 	crm_debug("Forwarding to cluster");
 	rc = send_cluster_msg_raw(msg);    
+
+    } else {
+	crm_debug("Ignoring...");
     }
 
     if(rc != 0) {
 	crm_debug("Sending message to %s.%s failed (rc=%d): %.60s",
-		  msg->host.local?"local":
-		     msg->host.uname?msg->host.uname:"<all>",
-		  msg_type2text(msg->host.type), rc, msg->data);
+		  ais_dest(&(msg->host)), msg_type2text(msg->host.type),
+		  rc, msg->data);
 	return FALSE;
     }
     return TRUE;
