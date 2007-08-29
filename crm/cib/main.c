@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <sys/utsname.h>
 
 #include <stdlib.h>
 #include <errno.h>
@@ -387,22 +388,23 @@ static gboolean cib_ais_dispatch(int sender, gpointer user_data)
 	goto bail;
     }
 
-    crm_notice("Message received: '%.50s'", data);
     if(safe_str_eq("identify", data)) {
 	int pid = getpid();
 	char *pid_s = crm_itoa(pid);
 	send_ais_text(pid_s, TRUE, NULL, crm_msg_ais);
 	crm_free(pid_s);
     } else {
-	do_crm_log(LOG_NOTICE,
-		   "Msg[%d] (dest=%s:%s, from=%s:%s, size=%d, total=%d)",
-		   msg->id,
-		   msg->host.uname?msg->host.uname:"<all>",
-		   msg_type2text(msg->host.type),
-		   msg->sender.uname, msg_type2text(msg->sender.type),
-		   msg->size, msg->header.size);
+	HA_Message *xml = string2xml(data);
+	if(xml != NULL) {
+	    crm_debug_2("Message received: '%.80s'", data);
+	    ha_msg_add(xml, F_ORIG, msg->sender.uname);
+	    ha_msg_add_int(xml, F_SEQ, msg->id);
+	    cib_peer_callback(xml, NULL);
+	} else {
+	    crm_debug_2("Invalid message: %s", data);
+	}
     }
-
+    
     crm_free(data);
     crm_free(msg);
     return TRUE;
@@ -432,9 +434,18 @@ cib_init(void)
 
 	if(stand_alone == FALSE) {
 #ifdef WITH_NATIVE_AIS
+	    struct utsname name;
+	    if(uname(&name) < 0) {
+		cl_perror("uname(2) call failed");
+		exit(100);
+	    }
+	    
+	    cib_our_uname = crm_strdup(name.nodename);
+	    crm_info("FSA Hostname: %s", cib_our_uname);
+
 	    if(init_ais_connection(
 		   cib_ais_dispatch, cib_ais_destroy) == FALSE) {
-		exit(1);
+		exit(100);
 	    }
 #else
 		hb_conn = ll_cluster_new("heartbeat");
