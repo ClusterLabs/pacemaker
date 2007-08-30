@@ -43,17 +43,6 @@ atest_LDADD	= $(COMMONLIBS)
 #CFLAGS that cant be used here: -ansi -Wcast-qual -Wwrite-strings
 CFLAGS			= $(NON_FATAL_CFLAGS:-Wwrite-strings=)
 
-# Manual version
-#ais: plugin.o util.o
-#
-#ifeq (${OPENAIS_COMPAT}, DARWIN)
-#service_crm.lcrso: crm.o
-#	$(CC) $(LDFLAGS) -lcrmcommon -lplumb -bundle $(LDFLAGS) -bundle_loader $(AISPREFIX)/sbin/aisexec -bind_at_load crm.o -o $@
-#else
-#service_crm.lcrso: crm.o
-#	$(CC) -lcrmcommon -lplumb  -shared -Wl,-soname,service_crm.lcrso crm.o -o $@
-#endif
-
 install-exec-local:
 	cd $(AISPREFIX)/libexec/lcrso && sudo ln -sf $(aisdir)/$(ais_LTLIBRARIES:.la=.so) $(ais_LTLIBRARIES:.la=.lcrso)
 
