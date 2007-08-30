@@ -19,6 +19,7 @@
 #include <lha_internal.h>
 #include <crm/ais.h>
 #include <openais/saAis.h>
+#include <bzlib.h>
 
 int ais_fd_in = -1;
 int ais_fd_out = -1;
@@ -104,11 +105,12 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
     do_crm_log(LOG_NOTICE, "Msg[%d] (dest=%s:%s, from=%s:%s, size=%d, total=%d)",
 	       msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
 	       ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
-	       msg->size, msg->header.size);
+	       ais_data_len(msg), msg->header.size);
     
-/*     crm_realloc(msg, msg->header.size+10); */
-    crm_malloc0(data, msg->size+1);
-    rc = saRecvRetry(sender, data, msg->size+1);
+    CRM_ASSERT(msg->is_compressed == FALSE);
+
+    crm_malloc0(data, ais_data_len(msg));
+    rc = saRecvRetry(sender, data, ais_data_len(msg));
     if (rc != SA_AIS_OK) {
 	crm_err("Receiving message body failed");
 	goto bail;
@@ -160,10 +162,10 @@ send_ais_text(const char *data,
     }
     
     if(data) {
-	data_len = strlen(data);
+	data_len = 1 + strlen(data);
     }
 
-    total_size = sizeof(AIS_Message) + data_len + 1;
+    total_size = sizeof(AIS_Message) + data_len;
     crm_malloc0(ais_msg, total_size);
     
     ais_msg->id = msg_id++;
@@ -171,7 +173,7 @@ send_ais_text(const char *data,
     ais_msg->header.id = 0;
     
     ais_msg->size = data_len;
-    memcpy(ais_msg->data, data, ais_msg->size);
+    memcpy(ais_msg->data, data, data_len);
     
     ais_msg->host.type = dest;
     ais_msg->host.local = local;
@@ -195,9 +197,9 @@ send_ais_text(const char *data,
     
     crm_notice("Sending message %d to %s.%s (data=%d, total=%d): %.60s",
 	       ais_msg->id, ais_dest(&(ais_msg->host)), msg_type2text(dest),
-	       data_len, total_size, ais_msg->data);
+	       data_len, ais_msg->header.size, ais_msg->data);
 
-    rc = saSendRetry (ais_fd_in, ais_msg, total_size);
+    rc = saSendRetry(ais_fd_in, ais_msg, ais_msg->header.size);
     if(rc != SA_AIS_OK) {    
 	crm_err("Sending message %d: FAILED", ais_msg->id);
 	ais_fd_out = -1;
@@ -272,3 +274,28 @@ void terminate_ais_connection(void)
 /*     G_main_del_fd(ais_source); */
 /*     G_main_del_fd(ais_source_out);     */
 }
+
+char *get_ais_data(AIS_Message *msg)
+{
+    int rc = BZ_OK;
+    char *uncompressed = NULL;
+    unsigned int new_size = msg->size;
+    
+    if(msg->is_compressed == FALSE) {
+	crm_debug("Returning uncompressed message data");
+	uncompressed = strdup(msg->data);
+
+    } else {
+	crm_debug("Decompressing message data");
+	crm_malloc0(uncompressed, new_size);
+	
+	rc = BZ2_bzBuffToBuffDecompress(
+	uncompressed, &new_size, msg->data, msg->compressed_size, 1, 0);
+	
+	CRM_ASSERT(rc = BZ_OK);
+	CRM_ASSERT(new_size == msg->size);
+    }
+    
+    return uncompressed;
+}
+

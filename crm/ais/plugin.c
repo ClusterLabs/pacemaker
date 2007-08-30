@@ -55,6 +55,7 @@
 #include <sys/socket.h>
 #include <pthread.h>
 #include <sys/wait.h>
+#include <bzlib.h>
 
 char *local_uname = NULL;
 int local_uname_len = 0;
@@ -221,7 +222,7 @@ static int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
 
     ENTER("");
 
-    crm_log_init("crm_plugin", LOG_DEBUG, FALSE, TRUE, 0, NULL);
+    crm_log_init("crm_plugin", LOG_DEBUG, FALSE, FALSE, 0, NULL);
     crm_info("CRM Logging: Initialized");
 
     rc = uname(&us);
@@ -236,11 +237,12 @@ static int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
 }
 
 
-static int send_client_msg(void *conn, enum crm_ais_msg_types type, const char *data) 
+static int send_client_msg(
+    void *conn, enum crm_ais_msg_types type, const char *data) 
 {
     int rc = 0;
     int data_len = 0;
-    int total_size = 1 + sizeof(AIS_Message);
+    int total_size = sizeof(AIS_Message);
     AIS_Message *ais_msg = NULL;
     static int msg_id = 0;
 
@@ -251,7 +253,7 @@ static int send_client_msg(void *conn, enum crm_ais_msg_types type, const char *
     CRM_ASSERT(msg_id != 0 /* wrap-around */);
 
     if(data != NULL) {
-	data_len = strlen(data);
+	data_len = 1 + strlen(data);
     }
     total_size += data_len;
     
@@ -262,12 +264,12 @@ static int send_client_msg(void *conn, enum crm_ais_msg_types type, const char *
     ais_msg->header.id = 0;
 	
     ais_msg->size = data_len;
-    memcpy(ais_msg->data, data, ais_msg->size);
-
+    memcpy(ais_msg->data, data, data_len);
+    crm_debug("%s -> %s", data, ais_msg->data);
+    
     ais_msg->host.type = type;
     ais_msg->host.size = 0;
     memset(ais_msg->host.uname, 0, MAX_NAME);
-/* 		ais_msg->host.uname = NULL; */
     ais_msg->host.id = 0;
 
     ais_msg->sender.type = crm_system_type;
@@ -292,6 +294,7 @@ static int send_client_msg(void *conn, enum crm_ais_msg_types type, const char *
 		  crm_err("Message not sent (%d): %s", rc, crm_str(data)));
     }
 
+    crm_debug("done");
     LEAVE("");
     return rc;    
 }
@@ -300,48 +303,93 @@ static int send_cluster_msg_raw(AIS_Message *ais_msg)
 {
     int rc = 0;
     struct iovec iovec;
-    static int msg_id = 0;
+    static uint32_t msg_id = 0;
+    AIS_Message *bz2_msg = NULL;
 
     ENTER("");
     CRM_ASSERT(local_nodeid != 0);
 
+    if(ais_msg->header.size != (sizeof(AIS_Message) + ais_data_len(ais_msg))) {
+	crm_err("Repairing size mismatch: %u + %d = %d", sizeof(AIS_Message),
+		ais_data_len(ais_msg), ais_msg->header.size);
+	ais_msg->header.size = sizeof(AIS_Message) + ais_data_len(ais_msg);
+    }
+
     msg_id++;
-    CRM_ASSERT(msg_id != 0 /* wrap-around */);
+    CRM_ASSERT(msg_id != 0 /* detect wrap-around */);
 
     ais_msg->id = msg_id;
-    CRM_ASSERT(ais_msg->header.size != 0);
     ais_msg->header.id = SERVICE_ID_MAKE(CRM_SERVICE, 0);	
 
+    ais_msg->sender.id = local_nodeid;
     ais_msg->sender.size = local_uname_len;
     memset(ais_msg->sender.uname, 0, MAX_NAME);
     memcpy(ais_msg->sender.uname, local_uname, ais_msg->sender.size);
-    ais_msg->sender.id = local_nodeid;
 
     iovec.iov_base = (char *)ais_msg;
     iovec.iov_len = ais_msg->header.size;
+    
+    if(ais_msg->is_compressed == FALSE && ais_msg->size > 1024) {
+	char *compressed = NULL;
+	unsigned int len = (ais_msg->size * 1.1) + 600; /* recomended size */
+	
+	crm_debug("Creating compressed message");
+	crm_malloc0(compressed, len);
+	
+	rc = BZ2_bzBuffToBuffCompress(
+	    compressed, &len, ais_msg->data, ais_msg->size, 3, 0, 30);
+	
+	if(rc != BZ_OK) {
+	    crm_err("Compression failed: %d", rc);
+	    crm_free(compressed);
+	    goto send;  
+	}
 
+	crm_malloc0(bz2_msg, sizeof(AIS_Message) + len + 1);
+	memcpy(bz2_msg, ais_msg, sizeof(AIS_Message));
+	memcpy(bz2_msg->data, compressed, len);
+	crm_free(compressed);
+
+	bz2_msg->is_compressed = TRUE;
+	bz2_msg->compressed_size = len;
+	bz2_msg->header.size = sizeof(AIS_Message) + ais_data_len(bz2_msg);
+
+	crm_debug("Compression details: %d -> %d",
+		  bz2_msg->size, ais_data_len(bz2_msg));
+
+	iovec.iov_base = (char *)bz2_msg;
+	iovec.iov_len = bz2_msg->header.size;
+    }    
+
+  send:
+    crm_debug("Sending message (size=%u)", (unsigned int)iovec.iov_len);
     rc = totempg_groups_mcast_joined (
 	openais_group_handle, &iovec, 1, TOTEMPG_SAFE);
 
-    CRM_CHECK(rc == 0,
-	      crm_err("Message not sent (%d): %s", rc, crm_str(ais_msg->data)));
+    if(rc == 0 && ais_msg->is_compressed == FALSE) {
+	crm_debug("Message sent: %.80s", ais_msg->data);
+    }
+    
+    CRM_CHECK(rc == 0, crm_err("Message not sent (%d)", rc));
 
+    crm_free(bz2_msg);
     LEAVE("");
     return rc;	
 }
 
-static int send_cluster_msg(enum crm_ais_msg_types type, const char *host, const char *data) 
+static int send_cluster_msg(
+    enum crm_ais_msg_types type, const char *host, const char *data) 
 {
     int rc = 0;
     int data_len = 0;
     AIS_Message *ais_msg = NULL;
-    int total_size = 1 + sizeof(AIS_Message);
+    int total_size = sizeof(AIS_Message);
 
     ENTER("");
     CRM_ASSERT(local_nodeid != 0);
 
     if(data != NULL) {
-	data_len = strlen(data);
+	data_len = 1 + strlen(data);
 	total_size += data_len;
     } 
     crm_malloc0(ais_msg, total_size);
@@ -350,7 +398,8 @@ static int send_cluster_msg(enum crm_ais_msg_types type, const char *host, const
     ais_msg->header.id = 0;
     
     ais_msg->size = data_len;
-    memcpy(ais_msg->data, data, ais_msg->size);
+    memcpy(ais_msg->data, data, data_len);
+    crm_debug("%s -> %s", data, ais_msg->data);
     ais_msg->sender.type = text2msg_type(crm_system_name);
 
     ais_msg->host.type = type;
@@ -376,7 +425,8 @@ static int send_cluster_msg(enum crm_ais_msg_types type, const char *host, const
 
 int send_cluster_xml(enum crm_ais_msg_types type, const char *host, crm_data_t *xml);
 
-int send_cluster_xml(enum crm_ais_msg_types type, const char *host, crm_data_t *xml) 
+int send_cluster_xml(
+    enum crm_ais_msg_types type, const char *host, crm_data_t *xml) 
 {
     int rc = 0;
     char *data = dump_xml_unformatted(xml);
@@ -581,7 +631,7 @@ int ais_ipc_client_exit_callback (void *conn)
 static int ais_ipc_client_connect_callback (void *conn)
 {
     ENTER("Client=%p", conn);
-    crm_debug("Client joined");
+    crm_debug("Client %p joined", conn);
     send_client_msg(conn, crm_msg_none, "identify");
     LEAVE("");
 
@@ -597,14 +647,16 @@ static void ais_cluster_message_swab(void *msg)
     ENTER("");
 
     crm_info("Performing endian conversion...");
-    ais_msg->id = swab32 (ais_msg->id);
+    ais_msg->id                = swab32 (ais_msg->id);
+    ais_msg->is_compressed     = swab32 (ais_msg->is_compressed);
+    ais_msg->compressed_size   = swab32 (ais_msg->compressed_size);
     ais_msg->size = swab32 (ais_msg->size);
     
-    ais_msg->host.id    = swab32 (ais_msg->host.id);
-    ais_msg->host.pid   = swab32 (ais_msg->host.pid);
-    ais_msg->host.type  = swab32 (ais_msg->host.type);
-    ais_msg->host.size  = swab32 (ais_msg->host.size);
-    ais_msg->host.local = swab32 (ais_msg->host.local);
+    ais_msg->host.id      = swab32 (ais_msg->host.id);
+    ais_msg->host.pid     = swab32 (ais_msg->host.pid);
+    ais_msg->host.type    = swab32 (ais_msg->host.type);
+    ais_msg->host.size    = swab32 (ais_msg->host.size);
+    ais_msg->host.local   = swab32 (ais_msg->host.local);
     
     ais_msg->sender.id    = swab32 (ais_msg->sender.id);
     ais_msg->sender.pid   = swab32 (ais_msg->sender.pid);
@@ -620,8 +672,9 @@ static void ais_cluster_message_callback (
 {
     AIS_Message *ais_msg = message;
 
-    ENTER("Node=%u", nodeid);
-    crm_debug("Message from node %u", nodeid);
+    ENTER("Node=%u (%s)", nodeid, nodeid==local_nodeid?"local":"remote");
+    crm_debug("Message from node %u (%s)",
+	      nodeid, nodeid==local_nodeid?"local":"remote");
     update_uname_table(ais_msg->sender.uname, ais_msg->sender.id);
     if(ais_msg->host.size == 0
        || safe_str_eq(ais_msg->host.uname, local_uname)) {
@@ -656,6 +709,11 @@ static void ais_ipc_message_callback(void *conn, void *msg)
 	crm_children[type].conn = conn;
     }
     
+    ais_msg->sender.id = local_nodeid;
+    ais_msg->sender.size = local_uname_len;
+    memset(ais_msg->sender.uname, 0, MAX_NAME);
+    memcpy(ais_msg->sender.uname, local_uname, ais_msg->sender.size);
+
     route_ais_message(msg, TRUE);
 
     LEAVE("");
@@ -681,14 +739,15 @@ static void swap_sender(AIS_Message *msg)
 
 static gboolean process_ais_message(AIS_Message *msg) 
 {
+    char *data = get_ais_data(msg);
     do_crm_log(LOG_NOTICE,
 	       "Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %s",
 	       msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
 	       ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
 	       msg->sender.pid,
 	       msg->sender.uname==local_uname?"false":"true",
-	       msg->size, crm_str(msg->data));
-    
+	       ais_data_len(msg), data);
+    crm_free(data);
     return TRUE;
 }
 
@@ -696,11 +755,10 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 {
     int rc = 0;
     
-    crm_debug("Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %.100s",
+    crm_debug("Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d)",
 	      msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
 	      ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
-	      msg->sender.pid, local_origin?"false":"true",
-	      msg->size, crm_str(msg->data));
+	      msg->sender.pid, local_origin?"false":"true", ais_data_len(msg));
     
     if(local_origin == FALSE) {
        if(msg->host.size == 0
@@ -735,10 +793,9 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 /* 	    crm_err("Connection is throttled: %d", queue->size); */
 
 	} else {
-	    crm_debug("Delivering locally to %s",
-		      crm_children[msg->host.type].name);
-	    rc = openais_conn_send_response(
-		conn, msg, sizeof (AIS_Message) + msg->size + 1);
+	    crm_debug("Delivering locally to %s (size=%d)",
+		      crm_children[msg->host.type].name, msg->header.size);
+	    rc = openais_conn_send_response(conn, msg, msg->header.size);
 	}
 
     } else if(local_origin) {
@@ -751,9 +808,8 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
     }
 
     if(rc != 0) {
-	crm_debug("Sending message to %s.%s failed (rc=%d): %.60s",
-		  ais_dest(&(msg->host)), msg_type2text(msg->host.type),
-		  rc, msg->data);
+	crm_debug("Sending message to %s.%s failed (rc=%d)",
+		  ais_dest(&(msg->host)), msg_type2text(msg->host.type), rc);
 	return FALSE;
     }
     return TRUE;

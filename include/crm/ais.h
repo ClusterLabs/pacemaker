@@ -55,11 +55,14 @@ struct crm_ais_msg_s
 {
 	mar_req_header_t	header __attribute__((aligned(8)));
 	uint32_t		id;
+	gboolean		is_compressed;
 	
 	AIS_Host		host;
 	AIS_Host		sender;
 	
 	uint32_t		size;
+	uint32_t		compressed_size;
+	/* 584 bytes */
 	char			data[0];
 	
 } __attribute__((packed));
@@ -86,5 +89,8 @@ extern const char *ais_dest(struct crm_ais_host_s *host);
 extern int ais_fd_in;
 extern int ais_fd_out;
 extern GFDSource *ais_source;
+
+#define ais_data_len(msg) (msg->is_compressed?msg->compressed_size:msg->size)
+extern char *get_ais_data(AIS_Message *msg);
 
 #endif
