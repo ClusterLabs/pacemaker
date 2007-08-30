@@ -1263,6 +1263,7 @@ construct_op(crm_data_t *rsc_op, const char *rsc_id, const char *operation)
 	op->interval = 0;
 	op->timeout  = 0;
 	op->start_delay = 0;
+	op->copyparams = 0;
 	op->app_name = crm_strdup(CRM_SYSTEM_CRMD);
 
 	if(rsc_op == NULL) {
@@ -1342,6 +1343,14 @@ construct_op(crm_data_t *rsc_op, const char *rsc_id, const char *operation)
 		}
 	}
 
+	/* reset the resource's parameters? */
+	if(op->interval == 0) {
+	    if(safe_str_eq(CRMD_ACTION_START, operation)
+	       || safe_str_eq(CRMD_ACTION_STATUS, operation)) {
+		op->copyparams = 1;
+	    }
+	}
+	
 	crm_debug_2("Constructed %s op for %s: interval=%d",
 		    operation, rsc_id, op->interval);	
 	
