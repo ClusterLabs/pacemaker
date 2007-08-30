@@ -149,31 +149,21 @@ send_ais_text(const char *data,
 	      gboolean local, const char *node, enum crm_ais_msg_types dest)
 {
     static int msg_id = 0;
+    static int local_pid = 0;
 
-    int total_size = 0;
-    int data_len = 0;
     int rc = SA_AIS_OK;
     AIS_Message *ais_msg = NULL;
-    static int local_pid = 0;
     enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
 
     if(local_pid == 0) {
 	local_pid = getpid();
     }
-    
-    if(data) {
-	data_len = 1 + strlen(data);
-    }
 
-    total_size = sizeof(AIS_Message) + data_len;
-    crm_malloc0(ais_msg, total_size);
+    CRM_CHECK(data != NULL, return FALSE);
+    crm_malloc0(ais_msg, sizeof(AIS_Message));
     
     ais_msg->id = msg_id++;
-    ais_msg->header.size = total_size;
     ais_msg->header.id = 0;
-    
-    ais_msg->size = data_len;
-    memcpy(ais_msg->data, data, data_len);
     
     ais_msg->host.type = dest;
     ais_msg->host.local = local;
@@ -195,9 +185,49 @@ send_ais_text(const char *data,
     memset(ais_msg->sender.uname, 0, MAX_NAME);
     ais_msg->sender.id = 0;
     
-    crm_notice("Sending message %d to %s.%s (data=%d, total=%d): %.60s",
+    ais_msg->size = 1 + strlen(data);
+
+    if(ais_msg->size < 5120) {
+  failback:
+	crm_realloc(ais_msg, sizeof(AIS_Message) + ais_msg->size);
+	memcpy(ais_msg->data, data, ais_msg->size);
+	
+    } else {
+	char *compressed = NULL;
+	char *uncompressed = crm_strdup(data);
+	unsigned int len = (ais_msg->size * 1.1) + 600; /* recomended size */
+	
+	crm_debug("Compressing message payload");
+	crm_malloc0(compressed, len);
+	
+	rc = BZ2_bzBuffToBuffCompress(
+	    compressed, &len, uncompressed, ais_msg->size, 3, 0, 30);
+
+	crm_free(uncompressed);
+	
+	if(rc != BZ_OK) {
+	    crm_err("Compression failed: %d", rc);
+	    crm_free(compressed);
+	    goto failback;  
+	}
+
+	crm_realloc(ais_msg, sizeof(AIS_Message) + len + 1);
+	memcpy(ais_msg->data, compressed, len);
+	crm_free(compressed);
+
+	ais_msg->is_compressed = TRUE;
+	ais_msg->compressed_size = len;
+
+	crm_debug("Compression details: %d -> %d",
+		  ais_msg->size, ais_data_len(ais_msg));
+    } 
+
+    ais_msg->header.size = sizeof(AIS_Message) + ais_data_len(ais_msg);
+
+    crm_notice("Sending%s message %d to %s.%s (data=%d, total=%d)",
+	       ais_msg->is_compressed?" compressed":"",
 	       ais_msg->id, ais_dest(&(ais_msg->host)), msg_type2text(dest),
-	       data_len, ais_msg->header.size, ais_msg->data);
+	       ais_data_len(ais_msg), ais_msg->header.size);
 
     rc = saSendRetry(ais_fd_in, ais_msg, ais_msg->header.size);
     if(rc != SA_AIS_OK) {    
