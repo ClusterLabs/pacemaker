@@ -471,6 +471,10 @@ int
 cib_init(void)
 {
 	gboolean was_error = FALSE;
+#ifdef WITH_NATIVE_AIS
+	cib_have_quorum = TRUE;
+#endif
+	
 	if(startCib("cib.xml") == FALSE){
 		crm_crit("Cannot start CIB... terminating");
 		exit(1);
@@ -547,9 +551,7 @@ cib_init(void)
 		return 0;
 	}	
 
-#ifdef WITH_NATIVE_AIS
-	cib_have_quorum = TRUE;
-#else
+#ifndef WITH_NATIVE_AIS
 	if(was_error == FALSE) {
 		crm_debug_3("Be informed of CRM Client Status changes");
 		if (HA_OK != hb_conn->llc_ops->set_cstatus_callback(
