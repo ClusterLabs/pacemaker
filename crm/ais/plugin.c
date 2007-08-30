@@ -34,7 +34,6 @@
 #define OPENAIS_EXTERNAL_SERVICE insane_ais_header_hack_in__totem_h
 #include <crm/crm.h>
 #include <crm/ais.h>
-#include <clplumbing/cl_signal.h>
 #include "plugin.h"
 
 #include <openais/saAis.h>
@@ -310,7 +309,8 @@ static int send_cluster_msg_raw(AIS_Message *ais_msg)
     CRM_ASSERT(local_nodeid != 0);
 
     if(ais_msg->header.size != (sizeof(AIS_Message) + ais_data_len(ais_msg))) {
-	crm_err("Repairing size mismatch: %u + %d = %d", sizeof(AIS_Message),
+	crm_err("Repairing size mismatch: %u + %d = %d",
+		(unsigned int)sizeof(AIS_Message),
 		ais_data_len(ais_msg), ais_msg->header.size);
 	ais_msg->header.size = sizeof(AIS_Message) + ais_data_len(ais_msg);
     }
@@ -882,7 +882,7 @@ stop_child(crm_child_t *child, int signal)
     }
     
     errno = 0;
-    if(CL_KILL(child->pid, signal) == 0) {
+    if(kill(child->pid, signal) == 0) {
 	crm_info("Sent -%d to %s: [%d]", signal, child->name, child->pid);
 	
     } else {
