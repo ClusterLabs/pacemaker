@@ -37,6 +37,9 @@
 #include <pils/plugin.h>
 #include <dirent.h>
 #include <libgen.h>  /* Add it for compiling on OSX */
+#ifdef HAVE_TIME_H
+#include <time.h>
+#endif
 
 #include <lrm/raexec.h>
 
