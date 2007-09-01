@@ -42,24 +42,6 @@ void child_starting_constraints(
 	resource_t *self, resource_t *child, resource_t *last,
 	pe_working_set_t *data_set);
 
-void clone_set_cmds(resource_t *rsc)
-{
-	clone_variant_data_t *clone_data = NULL;
-	get_clone_variant_data(clone_data, rsc);
-	clone_data->self->cmds = &resource_class_alloc_functions[clone_data->self->variant];
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		child_rsc->cmds = &resource_class_alloc_functions[child_rsc->variant];
-		child_rsc->cmds->set_cmds(child_rsc);
-		);
-}
-
-int clone_num_allowed_nodes(resource_t *rsc)
-{
-	gboolean unimplimented = FALSE;
-	CRM_ASSERT(unimplimented);
-	return 0;
-}
 
 static node_t *
 parent_node_instance(const resource_t *rsc, node_t *node)
@@ -1223,34 +1205,6 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 }
 
 
-void
-clone_agent_constraints(resource_t *rsc)
-{
-	clone_variant_data_t *clone_data = NULL;
-	get_clone_variant_data(clone_data, rsc);
-
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		
-		child_rsc->cmds->agent_constraints(child_rsc);
-		);
-}
-
-void
-clone_create_notify_element(resource_t *rsc, action_t *op,
-			    notify_data_t *n_data, pe_working_set_t *data_set)
-{
-	clone_variant_data_t *clone_data = NULL;
-	get_clone_variant_data(clone_data, rsc);
-
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		
-		child_rsc->cmds->create_notify_element(
-			child_rsc, op, n_data, data_set);
-		);
-}
-
 static gint sort_rsc_id(gconstpointer a, gconstpointer b)
 {
 	const resource_t *resource1 = (const resource_t*)a;
@@ -1300,32 +1254,4 @@ clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		);
 
 	return any_created;
-}
-
-void
-clone_stonith_ordering(
-	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set)
-{
-	clone_variant_data_t *clone_data = NULL;
-	get_clone_variant_data(clone_data, rsc);
-
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-
-		child_rsc->cmds->stonith_ordering(
-			child_rsc, stonith_op, data_set);
-		);
-}
-
-void
-clone_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
-{
-	clone_variant_data_t *clone_data = NULL;
-	get_clone_variant_data(clone_data, rsc);
-
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		
-		child_rsc->cmds->migrate_reload(child_rsc, data_set);
-		);
 }

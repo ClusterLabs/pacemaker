@@ -45,14 +45,11 @@ typedef struct notify_data_s {
 
 struct resource_alloc_functions_s 
 {
-		void (*set_cmds)(resource_t *);
-		int  (*num_allowed_nodes)(resource_t *);
 		node_t *(*color)(resource_t *, pe_working_set_t *);
 		void (*create_actions)(resource_t *, pe_working_set_t *);
 		gboolean (*create_probe)(
 			resource_t *, node_t *, action_t *, gboolean, pe_working_set_t *);
 		void (*internal_constraints)(resource_t *, pe_working_set_t *);
-		void (*agent_constraints)(resource_t *);
 
 		void (*rsc_colocation_lh)(resource_t *, resource_t *, rsc_colocation_t *);
 		void (*rsc_colocation_rh)(resource_t *, resource_t *, rsc_colocation_t *);
@@ -73,16 +70,11 @@ struct resource_alloc_functions_s
 		
 };
 
-extern void native_set_cmds(resource_t *rsc);
-extern void group_set_cmds(resource_t *rsc);
-extern void clone_set_cmds(resource_t *rsc);
-extern int  native_num_allowed_nodes(resource_t *rsc);
 extern node_t * native_color(resource_t *rsc, pe_working_set_t *data_set);
 extern void native_create_actions(
 	resource_t *rsc, pe_working_set_t *data_set);
 extern void native_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);
-extern void native_agent_constraints(resource_t *rsc);
 extern void native_rsc_colocation_lh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void native_rsc_colocation_rh(
@@ -93,16 +85,16 @@ extern void native_rsc_order_rh(
 extern void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void native_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void native_dump(resource_t *rsc, const char *pre_text, gboolean details);
-extern void native_create_notify_element(
+extern void complex_create_notify_element(
 	resource_t *rsc, action_t *op,
 	notify_data_t *n_data,pe_working_set_t *data_set);
 extern void native_assign_color(resource_t *rsc, node_t *node);
 extern gboolean native_create_probe(
 	resource_t *rsc, node_t *node, action_t *complete, gboolean force, 
 	pe_working_set_t *data_set);
-extern void native_stonith_ordering(
+extern void complex_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
-extern void native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set);
+extern void complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set);
 
 extern int  group_num_allowed_nodes(resource_t *rsc);
 extern node_t *group_color(resource_t *rsc, pe_working_set_t *data_set);
@@ -110,7 +102,6 @@ extern void group_create_actions(
 	resource_t *rsc, pe_working_set_t *data_set);
 extern void group_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);
-extern void group_agent_constraints(resource_t *rsc);
 extern void group_rsc_colocation_lh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void group_rsc_colocation_rh(
@@ -120,22 +111,12 @@ extern void group_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
 extern void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void group_expand(resource_t *rsc, pe_working_set_t *data_set);
-extern void group_create_notify_element(
-	resource_t *rsc, action_t *op,
-	notify_data_t *n_data,pe_working_set_t *data_set);
-extern gboolean group_create_probe(
-	resource_t *rsc, node_t *node, action_t *complete, gboolean force,
-	pe_working_set_t *data_set);
-extern void group_stonith_ordering(
-	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
-extern void group_migrate_reload(resource_t *rsc, pe_working_set_t *data_set);
 
 extern int  clone_num_allowed_nodes(resource_t *rsc);
 extern node_t *clone_color(resource_t *rsc, pe_working_set_t *data_set);
 extern void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set);
 extern void clone_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);
-extern void clone_agent_constraints(resource_t *rsc);
 extern void clone_rsc_colocation_lh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void clone_rsc_colocation_rh(
@@ -145,15 +126,9 @@ extern void clone_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
 extern void clone_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void clone_expand(resource_t *rsc, pe_working_set_t *data_set);
-extern void clone_create_notify_element(
-	resource_t *rsc, action_t *op,
-	notify_data_t *n_data,pe_working_set_t *data_set);
 extern gboolean clone_create_probe(
 	resource_t *rsc, node_t *node, action_t *complete, gboolean force,
 	pe_working_set_t *data_set);
-extern void clone_stonith_ordering(
-	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
-extern void clone_migrate_reload(resource_t *rsc, pe_working_set_t *data_set);
 
 extern gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern node_t *master_color(resource_t *rsc, pe_working_set_t *data_set);
@@ -170,10 +145,6 @@ extern gboolean is_active(rsc_to_node_t *cons);
 
 extern gboolean native_constraint_violated(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint);
-
-extern void common_agent_constraints(
-	GListPtr node_list, lrm_agent_t *agent, const char *id);
-
 
 extern gboolean unpack_rsc_to_attr(crm_data_t *xml_obj, pe_working_set_t *data_set);
 

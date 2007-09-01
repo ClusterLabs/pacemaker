@@ -185,17 +185,6 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	return TRUE;
 }
 
-resource_t *
-clone_find_child(resource_t *rsc, const char *id)
-{
-	return pe_find_resource(rsc->children, id);
-}
-
-GListPtr clone_children(resource_t *rsc)
-{
-	return rsc->children;
-}
-
 gboolean clone_active(resource_t *rsc, gboolean all)
 {
 	clone_variant_data_t *clone_data = NULL;

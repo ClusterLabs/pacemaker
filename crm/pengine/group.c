@@ -28,25 +28,6 @@
 #define VARIANT_GROUP 1
 #include <lib/crm/pengine/variant.h>
 
-void group_set_cmds(resource_t *rsc)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-	group_data->self->cmds = &resource_class_alloc_functions[group_data->self->variant];
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		child_rsc->cmds = &resource_class_alloc_functions[child_rsc->variant];
-		child_rsc->cmds->set_cmds(child_rsc);
-		);
-}
-
-int group_num_allowed_nodes(resource_t *rsc)
-{
-	gboolean unimplimented = FALSE;
-	CRM_ASSERT(unimplimented);
-	return 0;
-}
-
 node_t *
 group_color(resource_t *rsc, pe_working_set_t *data_set)
 {
@@ -363,7 +344,6 @@ void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		);
 }
 
-
 void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 {
 	group_variant_data_t *group_data = NULL;
@@ -381,77 +361,3 @@ void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 		);
 
 }
-
-void
-group_agent_constraints(resource_t *rsc)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		
-		child_rsc->cmds->agent_constraints(child_rsc);
-		);
-}
-
-void
-group_create_notify_element(resource_t *rsc, action_t *op,
-			    notify_data_t *n_data, pe_working_set_t *data_set)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		
-		child_rsc->cmds->create_notify_element(
-			child_rsc, op, n_data, data_set);
-		);
-}
-
-gboolean
-group_create_probe(resource_t *rsc, node_t *node, action_t *complete,
-		    gboolean force, pe_working_set_t *data_set) 
-{
-	gboolean any_created = FALSE;
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		
-		any_created = child_rsc->cmds->create_probe(
-			child_rsc, node, complete, force, data_set) || any_created;
-		);
-	return any_created;
-}
-
-void
-group_stonith_ordering(
-	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		
-		child_rsc->cmds->stonith_ordering(
-			child_rsc, stonith_op, data_set);
-		);
-}
-
-void
-group_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		
-		child_rsc->cmds->migrate_reload(child_rsc, data_set);
-		);
-}
-

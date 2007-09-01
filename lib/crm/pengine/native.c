@@ -114,16 +114,18 @@ gboolean native_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	return TRUE;
 }
 
-		
 resource_t *
 native_find_child(resource_t *rsc, const char *id)
 {
-	return NULL;
+    if(rsc->children) {
+	return pe_find_resource(rsc->children, id);
+    }
+    return NULL;
 }
 
 GListPtr native_children(resource_t *rsc)
 {
-	return NULL;
+	return rsc->children;
 }
 
 static void

@@ -111,17 +111,6 @@ native_choose_node(resource_t *rsc)
 	return native_assign_node(rsc, nodes, chosen);
 }
 
-void native_set_cmds(resource_t *rsc)
-{
-}
-
-int native_num_allowed_nodes(resource_t *rsc)
-{
-	gboolean unimplimented = FALSE;
-	CRM_ASSERT(unimplimented);
-	return 0;
-}
-
 resource_t *
 ultimate_parent(resource_t *rsc)
 {
@@ -792,19 +781,20 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 
 void native_expand(resource_t *rsc, pe_working_set_t *data_set)
 {
+	crm_debug_3("Processing actions from %s", rsc->id);
+
 	slist_iter(
 		action, action_t, rsc->actions, lpc,
 		crm_debug_4("processing action %d for rsc=%s",
 			  action->id, rsc->id);
 		graph_element_from_action(action, data_set);
 		);
-}
 
-
-
-void
-native_agent_constraints(resource_t *rsc)
-{
+	slist_iter(
+	    child_rsc, resource_t, rsc->children, lpc,
+	    
+	    child_rsc->cmds->expand(child_rsc, data_set);
+	    );
 }
 
 void
@@ -882,7 +872,7 @@ register_state(resource_t *rsc, node_t *on_node, notify_data_t *n_data)
 }
 
 void
-native_create_notify_element(resource_t *rsc, action_t *op,
+complex_create_notify_element(resource_t *rsc, action_t *op,
 			     notify_data_t *n_data, pe_working_set_t *data_set)
 {
 	node_t *next_node = NULL;
@@ -890,6 +880,16 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 	char *op_key = NULL;
 	GListPtr possible_matches = NULL;
 	enum action_tasks task = text2task(op->task);
+
+	if(rsc->children) {
+	    slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+		
+		child_rsc->cmds->create_notify_element(
+		    child_rsc, op, n_data, data_set);
+		);
+	    return;
+	}
 	
 	if(op->pre_notify == NULL || op->post_notify == NULL) {
 		/* no notifications required */
@@ -1299,6 +1299,19 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 
 	CRM_CHECK(node != NULL, return FALSE);
 
+	if(rsc->children) {
+	    gboolean any_created = FALSE;
+	    
+	    slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+		
+		any_created = child_rsc->cmds->create_probe(
+		    child_rsc, node, complete, force, data_set) || any_created;
+		);
+
+	    return any_created;
+	}
+
 	if(rsc->orphan) {
 		crm_debug_2("Skipping orphan: %s", rsc->id);
 		return FALSE;
@@ -1503,12 +1516,22 @@ native_stop_constraints(
 }
 
 void
-native_stonith_ordering(
+complex_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set)
 {
 	gboolean is_stonith = FALSE;
 	const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
+	if(rsc->children) {
+	    slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+
+		child_rsc->cmds->stonith_ordering(
+		    child_rsc, stonith_op, data_set);
+		);
+	    return;
+	}
+	
 	if(rsc->is_managed == FALSE) {
 		crm_debug_3("Skipping fencing constraints for unmanaged resource: %s", rsc->id);
 		return;
@@ -1526,7 +1549,7 @@ native_stonith_ordering(
 }
 
 void
-native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
+complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 {
 	char *key = NULL;
 	int level = LOG_DEBUG_2;
@@ -1537,6 +1560,15 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	action_t *other = NULL;
 	action_t *action = NULL;
 	const char *value = NULL;
+
+	if(rsc->children) {
+	    slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+		
+		child_rsc->cmds->migrate_reload(child_rsc, data_set);
+		);
+	    return;
+	}
 
 	CRM_CHECK(rsc->variant == pe_native, return);
 	

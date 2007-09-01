@@ -114,19 +114,6 @@ gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 }
 
 
-resource_t *
-group_find_child(resource_t *rsc, const char *id)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-	return pe_find_resource(rsc->children, id);
-}
-
-GListPtr group_children(resource_t *rsc)
-{
-	return rsc->children;
-}
-
 gboolean group_active(resource_t *rsc, gboolean all)
 {
 	group_variant_data_t *group_data = NULL;
