@@ -161,7 +161,9 @@ struct resource_s {
 		enum rsc_role_e next_role;
 
 		GHashTable *meta;	   
-		GHashTable *parameters;	   
+		GHashTable *parameters;
+
+		GListPtr children;	  /* resource_t* */	
 };
 
 struct action_s 

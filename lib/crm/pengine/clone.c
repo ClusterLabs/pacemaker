@@ -60,8 +60,7 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 /* 	child_rsc->globally_unique = rsc->globally_unique; */
 	
 	crm_debug_3("Setting clone attributes for: %s", child_rsc->id);
-	clone_data->child_list = g_list_append(
-		clone_data->child_list, child_rsc);
+	rsc->children = g_list_append(rsc->children, child_rsc);
 	
 	add_hash_param(child_rsc->meta, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
 	
@@ -115,7 +114,6 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	
 	crm_malloc0(clone_data, sizeof(clone_variant_data_t));
 	rsc->variant_opaque = clone_data;
-	clone_data->child_list  = NULL;
 	clone_data->interleave  = FALSE;
 	clone_data->ordered     = FALSE;
 	
@@ -190,16 +188,12 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 resource_t *
 clone_find_child(resource_t *rsc, const char *id)
 {
-	clone_variant_data_t *clone_data = NULL;
-	get_clone_variant_data(clone_data, rsc);
-	return pe_find_resource(clone_data->child_list, id);
+	return pe_find_resource(rsc->children, id);
 }
 
 GListPtr clone_children(resource_t *rsc)
 {
-	clone_variant_data_t *clone_data = NULL;
-	get_clone_variant_data(clone_data, rsc);
-	return clone_data->child_list;
+	return rsc->children;
 }
 
 gboolean clone_active(resource_t *rsc, gboolean all)
@@ -208,7 +202,7 @@ gboolean clone_active(resource_t *rsc, gboolean all)
 	get_clone_variant_data(clone_data, rsc);
 
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		gboolean child_active = child_rsc->fns->active(child_rsc, all);
 		if(all == FALSE && child_active) {
 			return TRUE;
@@ -252,7 +246,7 @@ void clone_print(
 	}
 	
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		
 		if(options & pe_print_html) {
 			status_print("<li>\n");
@@ -277,7 +271,7 @@ void clone_free(resource_t *rsc)
 	crm_debug_3("Freeing %s", rsc->id);
 
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 
 		crm_debug_3("Freeing child %s", child_rsc->id);
 		free_xml(child_rsc->xml);
@@ -285,7 +279,7 @@ void clone_free(resource_t *rsc)
 		);
 
 	crm_debug_3("Freeing child list");
-	pe_free_shallow_adv(clone_data->child_list, FALSE);
+	pe_free_shallow_adv(rsc->children, FALSE);
 
 	if(clone_data->self) {
 		free_xml(clone_data->self->xml);
@@ -303,7 +297,7 @@ clone_resource_state(resource_t *rsc, gboolean current)
 	get_clone_variant_data(clone_data, rsc);
 
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		enum rsc_role_e a_role = child_rsc->fns->state(child_rsc, current);
 		if(a_role > clone_role) {
 			clone_role = a_role;

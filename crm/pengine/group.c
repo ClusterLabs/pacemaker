@@ -34,7 +34,7 @@ void group_set_cmds(resource_t *rsc)
 	get_group_variant_data(group_data, rsc);
 	group_data->self->cmds = &resource_class_alloc_functions[group_data->self->variant];
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		child_rsc->cmds = &resource_class_alloc_functions[child_rsc->variant];
 		child_rsc->cmds->set_cmds(child_rsc);
 		);
@@ -73,7 +73,7 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 	rsc->rsc_cons = NULL;
 
 	/* process in reverse so that all scores are merged before allocation */
-	child_iter = g_list_last(group_data->child_list);
+	child_iter = g_list_last(rsc->children);
 	for(; child_iter != NULL; ) {
 		child = child_iter->data;
 		child_iter = g_list_previous(child_iter);
@@ -101,7 +101,7 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	crm_debug_2("Creating actions for %s", rsc->id);
 	
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		child_rsc->cmds->create_actions(child_rsc, data_set);
 		group_update_pseudo_status(rsc, child_rsc);
 		);
@@ -182,7 +182,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		pe_order_runnable_left, data_set);
 	
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 
 		child_rsc->cmds->internal_constraints(child_rsc, data_set);
 
@@ -265,7 +265,7 @@ void group_rsc_colocation_lh(
 	} 
 
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc_lh->children, lpc,
 		child_rsc->cmds->rsc_colocation_lh(
 			child_rsc, rsc_rh, constraint); 
 		);
@@ -296,7 +296,7 @@ void group_rsc_colocation_rh(
 	} 
 
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc_rh->children, lpc,
 		child_rsc->cmds->rsc_colocation_rh(
 			rsc_lh, child_rsc, constraint); 
 		);
@@ -352,7 +352,7 @@ void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		  constraint->id, rsc->id);
 
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		child_rsc->cmds->rsc_location(child_rsc, constraint);
 		if(group_data->colocated && reset_scores) {
 			reset_scores = FALSE;
@@ -375,7 +375,7 @@ void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 	native_expand(rsc, data_set);
 	
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 
 		child_rsc->cmds->expand(child_rsc, data_set);
 		);
@@ -389,7 +389,7 @@ group_agent_constraints(resource_t *rsc)
 	get_group_variant_data(group_data, rsc);
 
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		
 		child_rsc->cmds->agent_constraints(child_rsc);
 		);
@@ -403,7 +403,7 @@ group_create_notify_element(resource_t *rsc, action_t *op,
 	get_group_variant_data(group_data, rsc);
 
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		
 		child_rsc->cmds->create_notify_element(
 			child_rsc, op, n_data, data_set);
@@ -419,7 +419,7 @@ group_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	get_group_variant_data(group_data, rsc);
 
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		
 		any_created = child_rsc->cmds->create_probe(
 			child_rsc, node, complete, force, data_set) || any_created;
@@ -435,7 +435,7 @@ group_stonith_ordering(
 	get_group_variant_data(group_data, rsc);
 
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		
 		child_rsc->cmds->stonith_ordering(
 			child_rsc, stonith_op, data_set);
@@ -449,7 +449,7 @@ group_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	get_group_variant_data(group_data, rsc);
 
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		
 		child_rsc->cmds->migrate_reload(child_rsc, data_set);
 		);

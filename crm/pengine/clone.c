@@ -48,7 +48,7 @@ void clone_set_cmds(resource_t *rsc)
 	get_clone_variant_data(clone_data, rsc);
 	clone_data->self->cmds = &resource_class_alloc_functions[clone_data->self->variant];
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		child_rsc->cmds = &resource_class_alloc_functions[child_rsc->variant];
 		child_rsc->cmds->set_cmds(child_rsc);
 		);
@@ -287,7 +287,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		   node->count = 0;
 		);
 	
-	slist_iter(child, resource_t, clone_data->child_list, lpc,
+	slist_iter(child, resource_t, rsc->children, lpc,
 		   if(g_list_length(child->running_on) > 0) {
 			   node_t *child_node = child->running_on->data;
 			   node_t *local_node = parent_node_instance(
@@ -301,8 +301,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		   }
 		);
 	
-	clone_data->child_list = g_list_sort(
-		clone_data->child_list, sort_clone_instance);
+	rsc->children = g_list_sort(rsc->children, sort_clone_instance);
 
 	/* count now tracks the number of clones we have allocated */
 	slist_iter(node, node_t, rsc->allowed_nodes, lpc,
@@ -310,7 +309,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		);
 
 	
-	first_child = clone_data->child_list->data;
+	first_child = rsc->children->data;
 	first_child->rsc_cons = g_list_concat(
 		first_child->rsc_cons, rsc->rsc_cons);
 	rsc->rsc_cons = NULL;
@@ -319,7 +318,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		rsc->allowed_nodes, sort_node_weight);
 
 	
-	slist_iter(child, resource_t, clone_data->child_list, lpc,
+	slist_iter(child, resource_t, rsc->children, lpc,
 		   if(allocated >= clone_data->clone_max) {
 			   crm_debug("Child %s not allocated - limit reached", child->id);
 			   resource_location(child, NULL, -INFINITY, "clone_color:limit_reached", data_set);
@@ -394,7 +393,7 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	crm_debug_2("Creating actions for %s", rsc->id);
 	
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		child_rsc->cmds->create_actions(child_rsc, data_set);
 		clone_update_pseudo_status(
 			child_rsc, &child_stopping, &child_starting);
@@ -710,7 +709,7 @@ clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		pe_order_optional, data_set);
 	
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 
 		child_rsc->cmds->internal_constraints(child_rsc, data_set);
 
@@ -740,7 +739,7 @@ find_compatible_child(resource_t *local_child, resource_t *rsc)
 	}
 	
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		node = child_rsc->allocated_to;
 		if(node->details == local_node->details) {
 			crm_info("Colocating %s with %s on %s",
@@ -795,7 +794,7 @@ void clone_rsc_colocation_lh(
 			lhs = rsc_lh->allowed_nodes;
 			
 			slist_iter(
-				child_rsc, resource_t, clone_data_rh->child_list, lpc,
+				child_rsc, resource_t, rsc_rh->children, lpc,
 				if(child_rsc->allocated_to != NULL) {
 					rhs = g_list_append(rhs, child_rsc->allocated_to);
 				}
@@ -818,7 +817,7 @@ void clone_rsc_colocation_lh(
 	if(do_interleave) {
 		resource_t *rh_child = NULL;
 		
-		slist_iter(lh_child, resource_t, clone_data->child_list, lpc,
+		slist_iter(lh_child, resource_t, rsc->children, lpc,
 
 			   CRM_ASSERT(lh_child != NULL);
 			   rh_child = find_compatible_child(lh_child, rsc_rh);
@@ -832,7 +831,7 @@ void clone_rsc_colocation_lh(
 	}
 	
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		
 		child_rsc->cmds->rsc_colocation_lh(child_rsc, constraint->rsc_rh, constraint);
 		);
@@ -864,7 +863,7 @@ void clone_rsc_colocation_rh(
 		lhs = rsc_lh->allowed_nodes;
 		
 		slist_iter(
-			child_rsc, resource_t, clone_data->child_list, lpc,
+			child_rsc, resource_t, rsc_rh->children, lpc,
 			if(child_rsc->allocated_to != NULL) {
 				rhs = g_list_append(rhs, child_rsc->allocated_to);
 			}
@@ -878,7 +877,7 @@ void clone_rsc_colocation_rh(
 	}
 
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc_rh->children, lpc,
 		
 		child_rsc->cmds->rsc_colocation_rh(rsc_lh, child_rsc, constraint);
 		);
@@ -914,7 +913,7 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 				order->lh_action_task, order->rh_action_task, order->type);
 			/* stop instances on the same nodes as stopping RHS instances */
 			slist_iter(
-				child_rsc, resource_t, clone_data->child_list, lpc,
+				child_rsc, resource_t, rsc->children, lpc,
 				native_rsc_order_lh(child_rsc, order, data_set);
 				);
 		} else {
@@ -922,7 +921,7 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 			crm_err("Clone-to-* ordering: %s -> %s 0x%.6x",
 				order->lh_action_task, order->rh_action_task, order->type);
 			slist_iter(
-				child_rsc, resource_t, clone_data->child_list, lpc,
+				child_rsc, resource_t, rsc->children, lpc,
 				native_rsc_order_lh(child_rsc, order, data_set);
 				);
 		}
@@ -954,7 +953,7 @@ void clone_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 
 	native_rsc_location(rsc, constraint);
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 
 		child_rsc->cmds->rsc_location(child_rsc, constraint);
 		);
@@ -1068,7 +1067,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 	
 	if(rsc->notify) {
 		slist_iter(
-			child_rsc, resource_t, clone_data->child_list, lpc,
+			child_rsc, resource_t, rsc->children, lpc,
 			
 			slist_iter(
 				op, action_t, rsc->actions, lpc2,
@@ -1194,7 +1193,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 	
 	/* yes, we DO need this second loop */
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		
 		child_rsc->cmds->expand(child_rsc, data_set);
 
@@ -1231,7 +1230,7 @@ clone_agent_constraints(resource_t *rsc)
 	get_clone_variant_data(clone_data, rsc);
 
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		
 		child_rsc->cmds->agent_constraints(child_rsc);
 		);
@@ -1245,7 +1244,7 @@ clone_create_notify_element(resource_t *rsc, action_t *op,
 	get_clone_variant_data(clone_data, rsc);
 
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		
 		child_rsc->cmds->create_notify_element(
 			child_rsc, op, n_data, data_set);
@@ -1271,13 +1270,12 @@ clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	clone_data->child_list = g_list_sort(
-		clone_data->child_list, sort_rsc_id);
+	rsc->children = g_list_sort(rsc->children, sort_rsc_id);
 
 	if(rsc->globally_unique == FALSE && clone_data->clone_node_max == 1) {
 		/* only look for one copy */	 
 		slist_iter(	 
-			child_rsc, resource_t, clone_data->child_list, lpc,	 
+			child_rsc, resource_t, rsc->children, lpc,	 
 
 			if(pe_find_node_id(child_rsc->running_on, node->details->id)) {	 
 				return child_rsc->cmds->create_probe(
@@ -1286,7 +1284,7 @@ clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 			);
 	}
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 
 		if(child_rsc->cmds->create_probe(
 			   child_rsc, node, complete, force, data_set)) {
@@ -1312,7 +1310,7 @@ clone_stonith_ordering(
 	get_clone_variant_data(clone_data, rsc);
 
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 
 		child_rsc->cmds->stonith_ordering(
 			child_rsc, stonith_op, data_set);
@@ -1326,7 +1324,7 @@ clone_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	get_clone_variant_data(clone_data, rsc);
 
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		
 		child_rsc->cmds->migrate_reload(child_rsc, data_set);
 		);
