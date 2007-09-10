@@ -91,6 +91,7 @@ echo ""
 do_test coloc-loop "Colocation - loop"
 do_test coloc-many-one "Colocation - many-to-one"
 do_test coloc-list "Colocation - many-to-one with list"
+do_test coloc-group "Colocation - groups"
 
 #echo ""
 #do_test agent1 "version: lt (empty)"
