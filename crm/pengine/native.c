@@ -154,7 +154,7 @@ native_merge_weights(
     slist_iter(
 	constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
 	
-	nodes = native_merge_weights(
+	nodes = constraint->rsc_lh->cmds->merge_weights(
 	    constraint->rsc_lh, rhs, nodes,
 	    constraint->score/INFINITY, allow_rollback);
 	);
@@ -197,7 +197,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 	    constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
 	    
-	    rsc->allowed_nodes = rsc->cmds->merge_weights(
+	    rsc->allowed_nodes = constraint->rsc_lh->cmds->merge_weights(
 		constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
 		constraint->score/INFINITY, TRUE);
 	    );
