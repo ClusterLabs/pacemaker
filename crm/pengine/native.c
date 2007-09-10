@@ -128,8 +128,8 @@ native_merge_weights(
 {
     GListPtr archive = NULL;
 
-    if(rsc->is_allocating) {
-	crm_debug("Breaking dependancy loop with %s at %s", rsc->id, rhs);
+    if(safe_str_eq(rsc->id, rhs)) {
+	crm_debug("%s: Breaking dependancy loop", rhs);
 	return nodes;
 
     } else if(rsc->provisional == FALSE || can_run_any(nodes) == FALSE) {
@@ -142,7 +142,6 @@ native_merge_weights(
  	archive = node_list_dup(nodes, FALSE, FALSE);
     }
 
-    
     node_list_update(nodes, rsc->allowed_nodes, factor);
     if(archive && can_run_any(nodes) == FALSE) {
 	crm_debug("%s: Rolling back scores from %s", rhs, rsc->id);
@@ -156,7 +155,7 @@ native_merge_weights(
 	constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
 	
 	nodes = native_merge_weights(
-	    constraint->rsc_lh, rsc->id, nodes,
+	    constraint->rsc_lh, rhs, nodes,
 	    constraint->score/INFINITY, allow_rollback);
 	);
 
