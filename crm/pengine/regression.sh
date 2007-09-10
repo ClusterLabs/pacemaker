@@ -87,6 +87,11 @@ do_test order5 "Order (move)  "
 do_test order6 "Order (move w/ restart)  "
 do_test order7 "Order (manditory)  "
 
+echo ""
+do_test coloc-loop "Colocation - loop"
+do_test coloc-many-one "Colocation - many-to-one"
+do_test coloc-list "Colocation - many-to-one with list"
+
 #echo ""
 #do_test agent1 "version: lt (empty)"
 #do_test agent2 "version: eq	"

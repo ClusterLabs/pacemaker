@@ -933,6 +933,7 @@ unpack_lrm_rsc_state(
 
 	if(op_list == NULL) {
 		/* if there are no operations, there is nothing to do */
+		process_rsc_state(rsc, node, action_fail_ignore, migrate_op, data_set);
 		return;
 	}
 

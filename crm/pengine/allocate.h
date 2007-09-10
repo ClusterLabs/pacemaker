@@ -45,6 +45,7 @@ typedef struct notify_data_s {
 
 struct resource_alloc_functions_s 
 {
+		GListPtr(*merge_weights)(resource_t*, const char*, GListPtr, int, gboolean);
 		node_t *(*color)(resource_t *, pe_working_set_t *);
 		void (*create_actions)(resource_t *, pe_working_set_t *);
 		gboolean (*create_probe)(
@@ -70,6 +71,8 @@ struct resource_alloc_functions_s
 		
 };
 
+extern GListPtr native_merge_weights(
+    resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback);
 extern node_t * native_color(resource_t *rsc, pe_working_set_t *data_set);
 extern void native_create_actions(
 	resource_t *rsc, pe_working_set_t *data_set);
@@ -96,6 +99,8 @@ extern void complex_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
 extern void complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set);
 
+extern GListPtr group_merge_weights(
+    resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback);
 extern int  group_num_allowed_nodes(resource_t *rsc);
 extern node_t *group_color(resource_t *rsc, pe_working_set_t *data_set);
 extern void group_create_actions(

@@ -121,6 +121,48 @@ ultimate_parent(resource_t *rsc)
 	return parent;
 }
 
+
+GListPtr
+native_merge_weights(
+    resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback) 
+{
+    GListPtr archive = NULL;
+
+    if(rsc->is_allocating) {
+	crm_debug("Breaking dependancy loop with %s at %s", rsc->id, rhs);
+	return nodes;
+
+    } else if(rsc->provisional == FALSE || can_run_any(nodes) == FALSE) {
+	return nodes;
+    }
+
+    crm_debug_2("%s: Combining scores from %s", rhs, rsc->id);
+
+    if(allow_rollback) {
+ 	archive = node_list_dup(nodes, FALSE, FALSE);
+    }
+
+    
+    node_list_update(nodes, rsc->allowed_nodes, factor);
+    if(archive && can_run_any(nodes) == FALSE) {
+	crm_debug("%s: Rolling back scores from %s", rhs, rsc->id);
+  	pe_free_shallow_adv(nodes, TRUE);
+	return archive;
+    }
+
+    pe_free_shallow_adv(archive, TRUE);
+    
+    slist_iter(
+	constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
+	
+	nodes = native_merge_weights(
+	    constraint->rsc_lh, rsc->id, nodes,
+	    constraint->score/INFINITY, allow_rollback);
+	);
+
+    return nodes;
+}
+
 node_t *
 native_color(resource_t *rsc, pe_working_set_t *data_set)
 {
@@ -142,28 +184,26 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	}
 
 	rsc->is_allocating = TRUE;
-	rsc->rsc_cons = g_list_sort(rsc->rsc_cons, sort_cons_strength);
 
 	slist_iter(
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
 
-		crm_debug_3("%s: Pre-Processing %s", rsc->id, constraint->id);
+		resource_t *rsc_rh = constraint->rsc_rh;
+		crm_debug("%s: Pre-Processing %s (%s)",
+			  rsc->id, constraint->id, rsc_rh->id);
+		rsc_rh->cmds->color(rsc_rh, data_set);
+		rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint);	
+	    );	
 
-		if(rsc->provisional && constraint->rsc_rh->provisional) {
-			crm_debug_2("Combine scores from %s and %s",
-				    rsc->id, constraint->rsc_rh->id);
-			node_list_update(constraint->rsc_rh->allowed_nodes,
-					 rsc->allowed_nodes,
-					 constraint->score/INFINITY);
-		}
-		
-		constraint->rsc_rh->cmds->color(
-			constraint->rsc_rh, data_set);
-		rsc->cmds->rsc_colocation_lh(
-			rsc, constraint->rsc_rh, constraint);
-		
-		);
-
+	slist_iter(
+	    constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
+	    
+	    rsc->allowed_nodes = rsc->cmds->merge_weights(
+		constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
+		constraint->score/INFINITY, TRUE);
+	    );
+	
+	
 	print_resource(LOG_DEBUG, "Allocating: ", rsc, FALSE);
 	if(rsc->next_role == RSC_ROLE_STOPPED) {
 		crm_debug_2("Making sure %s doesn't get allocated", rsc->id);

@@ -40,6 +40,7 @@ void migrate_reload_madness(pe_working_set_t *data_set);
 
 resource_alloc_functions_t resource_class_alloc_functions[] = {
 	{
+		native_merge_weights,
 		native_color,
 		native_create_actions,
 		native_create_probe,
@@ -55,6 +56,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		complex_create_notify_element,
 	},
 	{
+		group_merge_weights,
 		group_color,
 		group_create_actions,
 		native_create_probe,
@@ -70,6 +72,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		complex_create_notify_element,
 	},
 	{
+		native_merge_weights,
 		clone_color,
 		clone_create_actions,
 		clone_create_probe,
@@ -85,6 +88,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		complex_create_notify_element,
 	},
 	{
+		native_merge_weights,
 		master_color,
 		master_create_actions,
 		clone_create_probe,
@@ -1246,6 +1250,49 @@ generate_location_rule(
 	return location_rule;
 }
 
+static gint sort_cons_priority_lh(gconstpointer a, gconstpointer b)
+{
+	const rsc_colocation_t *rsc_constraint1 = (const rsc_colocation_t*)a;
+	const rsc_colocation_t *rsc_constraint2 = (const rsc_colocation_t*)b;
+
+	if(a == NULL) { return 1; }
+	if(b == NULL) { return -1; }
+
+	CRM_ASSERT(rsc_constraint1->rsc_lh != NULL);
+	CRM_ASSERT(rsc_constraint1->rsc_rh != NULL);
+	
+	if(rsc_constraint1->rsc_lh->priority > rsc_constraint2->rsc_lh->priority) {
+	    return -1;
+	}
+	
+	if(rsc_constraint1->rsc_lh->priority < rsc_constraint2->rsc_lh->priority) {
+	    return 1;
+	}
+
+	return strcmp(rsc_constraint1->rsc_lh->id, rsc_constraint2->rsc_lh->id);
+}
+
+static gint sort_cons_priority_rh(gconstpointer a, gconstpointer b)
+{
+	const rsc_colocation_t *rsc_constraint1 = (const rsc_colocation_t*)a;
+	const rsc_colocation_t *rsc_constraint2 = (const rsc_colocation_t*)b;
+
+	if(a == NULL) { return 1; }
+	if(b == NULL) { return -1; }
+
+	CRM_ASSERT(rsc_constraint1->rsc_lh != NULL);
+	CRM_ASSERT(rsc_constraint1->rsc_rh != NULL);
+	
+	if(rsc_constraint1->rsc_rh->priority > rsc_constraint2->rsc_rh->priority) {
+	    return -1;
+	}
+	
+	if(rsc_constraint1->rsc_rh->priority < rsc_constraint2->rsc_rh->priority) {
+	    return 1;
+	}
+	return strcmp(rsc_constraint1->rsc_rh->id, rsc_constraint2->rsc_rh->id);
+}
+
 gboolean
 rsc_colocation_new(const char *id, const char *node_attr, int score,
 		   resource_t *rsc_lh, resource_t *rsc_rh,
@@ -1280,7 +1327,7 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
 	new_con->id       = id;
 	new_con->rsc_lh   = rsc_lh;
 	new_con->rsc_rh   = rsc_rh;
-	new_con->score = score;
+	new_con->score   = score;
 	new_con->role_lh = text2role(state_lh);
 	new_con->role_rh = text2role(state_rh);
 	new_con->node_attribute = node_attr;
@@ -1289,8 +1336,11 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
 		  new_con->id, new_con, rsc_lh->id);
 	
 	rsc_lh->rsc_cons = g_list_insert_sorted(
-		rsc_lh->rsc_cons, new_con, sort_cons_strength);
+		rsc_lh->rsc_cons, new_con, sort_cons_priority_rh);
 
+	rsc_rh->rsc_cons_lhs = g_list_insert_sorted(
+		rsc_rh->rsc_cons_lhs, new_con, sort_cons_priority_lh);
+	
 	return TRUE;
 }
 

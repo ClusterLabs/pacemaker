@@ -361,3 +361,24 @@ void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 		);
 
 }
+
+GListPtr
+group_merge_weights(
+    resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback) 
+{
+    if(rsc->is_allocating) {
+	crm_debug("Breaking dependancy loop with %s at %s", rsc->id, rhs);
+	return nodes;
+
+    } else if(rsc->provisional == FALSE || can_run_any(nodes) == FALSE) {
+	return nodes;
+    }
+
+    slist_iter(
+	child_rsc, resource_t, rsc->children, lpc,
+	
+	nodes = child_rsc->cmds->merge_weights(
+	    child_rsc, rhs, nodes, factor, allow_rollback);
+	);
+    return nodes;
+}

@@ -71,12 +71,13 @@ node_copy(node_t *this_node)
 	node_t *new_node  = NULL;
 
 	CRM_CHECK(this_node != NULL, return NULL);
-	crm_malloc0(new_node, sizeof(node_t));
 
-	CRM_CHECK(new_node != NULL, return NULL);
+	crm_malloc0(new_node, sizeof(node_t));
+	CRM_ASSERT(new_node != NULL);
 	
 	crm_debug_5("Copying %p (%s) to %p",
 		  this_node, this_node->details->uname, new_node);
+
 	new_node->weight  = this_node->weight; 
 	new_node->fixed   = this_node->fixed;
 	new_node->details = this_node->details;	

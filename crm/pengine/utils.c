@@ -22,24 +22,6 @@
 #include <utils.h>
 #include <lib/crm/pengine/utils.h>
 
-gint sort_cons_strength(gconstpointer a, gconstpointer b)
-{
-	const rsc_colocation_t *rsc_constraint1 = (const rsc_colocation_t*)a;
-	const rsc_colocation_t *rsc_constraint2 = (const rsc_colocation_t*)b;
-
-	if(a == NULL) { return 1; }
-	if(b == NULL) { return -1; }
-  
-	if(rsc_constraint1->score > rsc_constraint2->score) {
-		return 1;
-	}
-	
-	if(rsc_constraint1->score < rsc_constraint2->score) {
-		return -1;
-	}
-	return 0;
-}
-
 void
 print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)
 { 
@@ -556,3 +538,20 @@ action_t *get_pseudo_op(const char *name, pe_working_set_t *data_set)
 
     return op;
 }
+
+gboolean can_run_any(GListPtr nodes)
+{
+	if(nodes == NULL) {
+	    return FALSE;
+	}
+
+	slist_iter(
+	    node, node_t, nodes, lpc,
+	    if(can_run_resources(node) && node->weight >= 0) {
+		return TRUE;
+	    }
+	    );
+
+	return FALSE;
+}
+
