@@ -366,6 +366,9 @@ GListPtr
 group_merge_weights(
     resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback) 
 {
+    group_variant_data_t *group_data = NULL;
+    get_group_variant_data(group_data, rsc);
+    
     if(rsc->is_allocating) {
 	crm_debug("Breaking dependancy loop with %s at %s", rsc->id, rhs);
 	return nodes;
@@ -374,11 +377,16 @@ group_merge_weights(
 	return nodes;
     }
 
+    nodes = group_data->first_child->cmds->merge_weights(
+	group_data->first_child, rhs, nodes, factor, allow_rollback);
+
     slist_iter(
-	child_rsc, resource_t, rsc->children, lpc,
+	constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
 	
-	nodes = child_rsc->cmds->merge_weights(
-	    child_rsc, rhs, nodes, factor, allow_rollback);
+	nodes = native_merge_weights(
+	    constraint->rsc_lh, rsc->id, nodes,
+	    constraint->score/INFINITY, allow_rollback);
 	);
+
     return nodes;
 }
