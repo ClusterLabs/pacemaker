@@ -31,16 +31,14 @@
 node_t *
 group_color(resource_t *rsc, pe_working_set_t *data_set)
 {
-	resource_t *child = NULL;
+	node_t *node = NULL;
 	node_t *group_node = NULL;
-	GListPtr child_iter = NULL;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
 	if(rsc->provisional == FALSE) {
 		return rsc->allocated_to;
 	}
-	/* combine the child weights */
 	crm_debug_2("Processing %s", rsc->id);
 	if(rsc->is_allocating) {
 		crm_debug("Dependancy loop detected involving %s", rsc->id);
@@ -53,13 +51,13 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 		group_data->first_child->rsc_cons, rsc->rsc_cons);
 	rsc->rsc_cons = NULL;
 
-	/* process in reverse so that all scores are merged before allocation */
-	child_iter = g_list_last(rsc->children);
-	for(; child_iter != NULL; ) {
-		child = child_iter->data;
-		child_iter = g_list_previous(child_iter);
-		group_node = child->cmds->color(child, data_set);
-	}
+	slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+		node = child_rsc->cmds->color(child_rsc, data_set);
+		if(group_node == NULL) {
+		    group_node = node;
+		}
+		);
 
 	rsc->next_role = group_data->first_child->next_role;	
 	rsc->is_allocating = FALSE;
