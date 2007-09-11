@@ -43,6 +43,7 @@ enum pe_stop_fail {
 
 enum pe_ordering {
 	pe_order_none			= 0x0,   /* deleted */
+
 	pe_order_implies_left		= 0x01,  /* was: _mandatory */
 	pe_order_implies_right		= 0x02,  /* was: _recover  */
 
@@ -51,6 +52,7 @@ enum pe_ordering {
 
 	pe_order_optional		= 0x100, /* pure ordering, nothing implied */
 	pe_order_stonith_stop		= 0x200, /* only applies if the action is non-pseudo */
+	pe_order_restart		= 0x400, /* stop-start constraint */
 
 	pe_order_test		        = 0x1000 /* test marker */
 };

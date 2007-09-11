@@ -974,13 +974,19 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		return FALSE;
 	}
 
+#if 0
+	if(score == NULL) {
+	    score = "INFINITY";
+	}
+#endif
+	
 	score_i = char2score(score);
 	cons_weight = pe_order_optional;
-	if(score == 0 && rsc_rh->restart_type == pe_restart_restart) {
+	if(score_i == 0 && rsc_rh->restart_type == pe_restart_restart) {
 		crm_debug_2("Upgrade : recovery - implies right");
  		cons_weight |= pe_order_implies_right;
 	}
-
+	
 	if(score_i < 0) {
 		crm_debug_2("Upgrade : implies left");
  		cons_weight |= pe_order_implies_left;
@@ -1013,7 +1019,7 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	action_rh = invert_action(action_rh);
 
 	cons_weight = pe_order_optional;
-	if(score == 0 && rsc_rh->restart_type == pe_restart_restart) {
+	if(score_i == 0 && rsc_rh->restart_type == pe_restart_restart) {
 		crm_debug_2("Upgrade : recovery - implies left");
  		cons_weight |= pe_order_implies_left;
 	}

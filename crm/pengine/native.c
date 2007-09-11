@@ -453,6 +453,10 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	if(rsc->variant == pe_native) {
 		type |= pe_order_implies_right;
 	}
+
+	if(rsc->parent == NULL) {
+		type |= pe_order_restart;
+	}
 	
 	custom_action_order(rsc, stop_key(rsc), NULL,
 			    rsc, start_key(rsc), NULL,

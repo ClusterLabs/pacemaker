@@ -86,6 +86,8 @@ do_test order4 "Order (multiple)  "
 do_test order5 "Order (move)  "
 do_test order6 "Order (move w/ restart)  "
 do_test order7 "Order (manditory)  "
+do_test order-optional "Order (score=0)  "
+do_test order-required "Order (score=INFINITY)  "
 
 echo ""
 do_test coloc-loop "Colocation - loop"

@@ -60,15 +60,34 @@ update_action(action_t *action)
 		other, action_wrapper_t, action->actions_before, lpc,
 
 		gboolean other_changed = FALSE;
+		node_t *node = other->action->node;
+
 		do_crm_log(log_level, "   Checking action %s: %s 0x%.6x",
 			   other->action->uuid,
 			   other->action->optional?"optional":"required",
 			   other->type);
 
 		local_type = other->type;
-/* 		local_type |= pe_order_optional; */
-/* 		local_type ^= pe_order_optional; */
-		
+
+		if(local_type & pe_order_restart
+		   && other->action->pseudo == FALSE
+		   && node != NULL
+		   && node->details->online) {
+
+		    local_type |= pe_order_implies_left;
+		    do_crm_log(log_level,"Upgrading restart constraint to implies_left");
+
+		    if(other->action->optional
+		       && other->action->runnable
+		       && action->runnable == FALSE) {
+			do_crm_log(log_level-1,
+				   "   * Marking action %s manditory because %s is unrunnable",
+				   other->action->uuid, action->uuid);
+			other->action->optional = FALSE;
+			other_changed = TRUE;
+		    } 
+		}
+
 		if((local_type & pe_order_runnable_left)
 			&& other->action->runnable == FALSE) {
 			if(other->action->pseudo) {
@@ -101,9 +120,9 @@ update_action(action_t *action)
 					   other->action->uuid, action->uuid);
 				other_changed = TRUE;
 			}
-		}
+		}		
 		
-		if(other->type & pe_order_implies_left) {
+		if(local_type & pe_order_implies_left) {
 			if(other->action->optional == FALSE) {
 				/* nothing to do */
 				do_crm_log(log_level+1, "      Ignoring implies left - redundant");
@@ -126,7 +145,7 @@ update_action(action_t *action)
 			}
 		}
 		
-		if(other->type & pe_order_implies_right) {
+		if(local_type & pe_order_implies_right) {
 			if(action->optional == FALSE) {
 				/* nothing to do */
 				do_crm_log(log_level+1, "      Ignoring implies right - redundant");
