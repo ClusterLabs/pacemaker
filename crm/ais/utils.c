@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <crm/ais.h>
+#include <crm/ais_common.h>
 GHashTable *uname_table = NULL;
 GHashTable *nodeid_table = NULL;
 

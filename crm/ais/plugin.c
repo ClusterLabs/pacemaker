@@ -32,8 +32,8 @@
 #include <string.h>
 
 #define OPENAIS_EXTERNAL_SERVICE insane_ais_header_hack_in__totem_h
-#include <crm/crm.h>
-#include <crm/ais.h>
+
+#include <crm/ais_common.h>
 #include "plugin.h"
 
 #include <openais/saAis.h>
@@ -56,33 +56,31 @@
 #include <sys/wait.h>
 #include <bzlib.h>
 
-#define do_ais_log(level, fmt, args...) do {				\
-	if(plugin_log_level < (level)) {				\
-	    continue;							\
-	} else if((level) > LOG_DEBUG) {				\
-	    log_printf(LOG_DEBUG, "debug%d: %s: " fmt,			\
-		       level-LOG_INFO, __PRETTY_FUNCTION__ , ##args);	\
-	} else {							\
-	    log_printf(level, "%s: " fmt,				\
-		       __PRETTY_FUNCTION__ , ##args);			\
-	}								\
-    } while(0)
+static char *
+ais_strdup(const char *src)
+{
+	char *dup = NULL;
+	if(src == NULL) {
+	    return NULL;
+	}
+	ais_malloc0(dup, strlen(src) + 1);
+	return strcpy(dup, src);
+}
 
-#define ais_perror(fmt, args...) log_printf(				\
-	LOG_ERR, "%s: " fmt ": (%d) %s",				\
-	__PRETTY_FUNCTION__ , ##args, errno, strerror(errno))
-
-#define ais_crit(fmt, args...)    do_ais_log(LOG_CRIT,    fmt , ##args)
-#define ais_err(fmt, args...)     do_ais_log(LOG_ERR,     fmt , ##args)
-#define ais_warn(fmt, args...)    do_ais_log(LOG_WARNING, fmt , ##args)
-#define ais_notice(fmt, args...)  do_ais_log(LOG_NOTICE,  fmt , ##args)
-#define ais_info(fmt, args...)    do_ais_log(LOG_INFO,    fmt , ##args)
-#define ais_debug(fmt, args...)   do_ais_log(LOG_DEBUG,   fmt , ##args)
-#define ais_debug_2(fmt, args...) do_ais_log(LOG_DEBUG_2, fmt , ##args)
-#define ais_debug_3(fmt, args...) do_ais_log(LOG_DEBUG_3, fmt , ##args)
-#define ais_debug_4(fmt, args...) do_ais_log(LOG_DEBUG_4, fmt , ##args)
-#define ais_debug_5(fmt, args...) do_ais_log(LOG_DEBUG_5, fmt , ##args)
-#define ais_debug_6(fmt, args...) do_ais_log(LOG_DEBUG_6, fmt , ##args)
+static gboolean
+ais_str_eq(const char *a, const char *b) 
+{
+    if(a == NULL || b == NULL) {
+	return FALSE;
+	
+    } else if(a == b) {
+	return TRUE;
+	
+    } else if(strcasecmp(a, b) == 0) {
+	return TRUE;
+    }
+    return FALSE;
+}
 
 int plugin_log_level = LOG_DEBUG;
 char *local_uname = NULL;
@@ -254,8 +252,8 @@ static int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
     ais_info("CRM Logging: Initialized");
 
     rc = uname(&us);
-    CRM_ASSERT(rc == 0);
-    local_uname = crm_strdup(us.nodename);
+    AIS_ASSERT(rc == 0);
+    local_uname = ais_strdup(us.nodename);
     local_uname_len = strlen(local_uname);
 
     ais_info("Local hostname: %s", local_uname);
@@ -275,17 +273,17 @@ static int send_client_msg(
     static int msg_id = 0;
 
     ENTER("");
-    CRM_ASSERT(local_nodeid != 0);
+    AIS_ASSERT(local_nodeid != 0);
 
     msg_id++;
-    CRM_ASSERT(msg_id != 0 /* wrap-around */);
+    AIS_ASSERT(msg_id != 0 /* wrap-around */);
 
     if(data != NULL) {
 	data_len = 1 + strlen(data);
     }
     total_size += data_len;
     
-    crm_malloc0(ais_msg, total_size);
+    ais_malloc0(ais_msg, total_size);
 	
     ais_msg->id = msg_id;
     ais_msg->header.size = total_size;
@@ -318,8 +316,8 @@ static int send_client_msg(
 
     } else {
 	rc = openais_conn_send_response (conn, ais_msg, total_size);
-	CRM_CHECK(rc == 0,
-		  ais_err("Message not sent (%d): %s", rc, crm_str(data)));
+	AIS_CHECK(rc == 0,
+		  ais_err("Message not sent (%d): %s", rc, data?data:"<null>"));
     }
 
     ais_debug("done");
@@ -335,7 +333,7 @@ static int send_cluster_msg_raw(AIS_Message *ais_msg)
     AIS_Message *bz2_msg = NULL;
 
     ENTER("");
-    CRM_ASSERT(local_nodeid != 0);
+    AIS_ASSERT(local_nodeid != 0);
 
     if(ais_msg->header.size != (sizeof(AIS_Message) + ais_data_len(ais_msg))) {
 	ais_err("Repairing size mismatch: %u + %d = %d",
@@ -345,7 +343,7 @@ static int send_cluster_msg_raw(AIS_Message *ais_msg)
     }
 
     msg_id++;
-    CRM_ASSERT(msg_id != 0 /* detect wrap-around */);
+    AIS_ASSERT(msg_id != 0 /* detect wrap-around */);
 
     ais_msg->id = msg_id;
     ais_msg->header.id = SERVICE_ID_MAKE(CRM_SERVICE, 0);	
@@ -363,21 +361,21 @@ static int send_cluster_msg_raw(AIS_Message *ais_msg)
 	unsigned int len = (ais_msg->size * 1.1) + 600; /* recomended size */
 	
 	ais_debug("Creating compressed message");
-	crm_malloc0(compressed, len);
+	ais_malloc0(compressed, len);
 	
 	rc = BZ2_bzBuffToBuffCompress(
 	    compressed, &len, ais_msg->data, ais_msg->size, 3, 0, 30);
 	
 	if(rc != BZ_OK) {
 	    ais_err("Compression failed: %d", rc);
-	    crm_free(compressed);
+	    ais_free(compressed);
 	    goto send;  
 	}
 
-	crm_malloc0(bz2_msg, sizeof(AIS_Message) + len + 1);
+	ais_malloc0(bz2_msg, sizeof(AIS_Message) + len + 1);
 	memcpy(bz2_msg, ais_msg, sizeof(AIS_Message));
 	memcpy(bz2_msg->data, compressed, len);
-	crm_free(compressed);
+	ais_free(compressed);
 
 	bz2_msg->is_compressed = TRUE;
 	bz2_msg->compressed_size = len;
@@ -399,9 +397,9 @@ static int send_cluster_msg_raw(AIS_Message *ais_msg)
 	ais_debug("Message sent: %.80s", ais_msg->data);
     }
     
-    CRM_CHECK(rc == 0, ais_err("Message not sent (%d)", rc));
+    AIS_CHECK(rc == 0, ais_err("Message not sent (%d)", rc));
 
-    crm_free(bz2_msg);
+    ais_free(bz2_msg);
     LEAVE("");
     return rc;	
 }
@@ -415,20 +413,20 @@ static int send_cluster_msg(
     int total_size = sizeof(AIS_Message);
 
     ENTER("");
-    CRM_ASSERT(local_nodeid != 0);
+    AIS_ASSERT(local_nodeid != 0);
 
     if(data != NULL) {
 	data_len = 1 + strlen(data);
 	total_size += data_len;
     } 
-    crm_malloc0(ais_msg, total_size);
+    ais_malloc0(ais_msg, total_size);
 	
     ais_msg->header.size = total_size;
     ais_msg->header.id = 0;
     
     ais_msg->size = data_len;
     memcpy(ais_msg->data, data, data_len);
-    ais_msg->sender.type = text2msg_type(crm_system_name);
+    ais_msg->sender.type = crm_msg_ais;
 
     ais_msg->host.type = type;
     if(host) {
@@ -448,20 +446,6 @@ static int send_cluster_msg(
 
     LEAVE("");
     return rc;	
-}
-
-int send_cluster_xml(enum crm_ais_msg_types type, const char *host, crm_data_t *xml);
-
-int send_cluster_xml(
-    enum crm_ais_msg_types type, const char *host, crm_data_t *xml) 
-{
-    int rc = 0;
-    char *data = dump_xml_unformatted(xml);
-    CRM_CHECK(data != NULL, return -1);
-	
-    rc = send_cluster_msg(type, host, data);
-    crm_free(data);
-    return rc;
 }
 
 pthread_t crm_wait_thread;
@@ -497,18 +481,18 @@ static void *crm_wait_dispatch (void *arg)
 
 		if(WIFSIGNALED(status)) {
 		    int sig = WTERMSIG(status);
-		    crm_warn("Child process %s terminated with signal %d"
+		    ais_warn("Child process %s terminated with signal %d"
 			     " (pid=%d, core=%s)",
 			     crm_children[lpc].name, sig, pid,
 			     WCOREDUMP(status)?"true":"false");
 
 		} else if (WIFEXITED(status)) {
 		    int rc = WEXITSTATUS(status);
-		    crm_notice("Child process %s exited (pid=%d, rc=%d)",
+		    ais_notice("Child process %s exited (pid=%d, rc=%d)",
 			       crm_children[lpc].name, pid, rc);
 
 		    if(rc == 100) {
-			crm_notice("Child process %s no longer wishes"
+			ais_notice("Child process %s no longer wishes"
 				   " to be respawned", crm_children[lpc].name);
 			crm_children[lpc].respawn = FALSE;
 		    }
@@ -553,13 +537,13 @@ static int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
   int len = 0;
   char *buffer = NULL;
 
-  crm_malloc0(buffer, INET6_ADDRSTRLEN+1);
+  ais_malloc0(buffer, INET6_ADDRSTRLEN+1);
 	
   inet_ntop(host->family, host->addr, buffer, INET6_ADDRSTRLEN);
 
   len = strlen(buffer);
   ais_info("%s: %.*s", prefix, len, buffer);
-  crm_free(buffer);
+  ais_free(buffer);
   }
 */
 
@@ -601,7 +585,7 @@ static void global_confchg_fn (
     int lpc = 0;
 	
     ENTER("");
-    CRM_ASSERT(ring_id != NULL);
+    AIS_ASSERT(ring_id != NULL);
     switch(configuration_type) {
 	case TOTEM_CONFIGURATION_REGULAR:
 	    break;
@@ -612,7 +596,7 @@ static void global_confchg_fn (
 	    break;
     }
 
-    crm_notice("Membership event on ring %lld: memb=%d, new=%d, lost=%d",
+    ais_notice("Membership event on ring %lld: memb=%d, new=%d, lost=%d",
 	       ring_id->seq, member_list_entries,
 	       joined_list_entries, left_list_entries);
 
@@ -647,7 +631,7 @@ static void global_confchg_fn (
 int ais_ipc_client_exit_callback (void *conn)
 {
     ENTER("Client=%p", conn);
-    crm_notice("Client left");
+    ais_notice("Client left");
     LEAVE("");
 
     return (0);
@@ -702,7 +686,7 @@ static void ais_cluster_message_callback (
 	      nodeid, nodeid==local_nodeid?"local":"remote");
     update_uname_table(ais_msg->sender.uname, ais_msg->sender.id);
     if(ais_msg->host.size == 0
-       || safe_str_eq(ais_msg->host.uname, local_uname)) {
+       || ais_str_eq(ais_msg->host.uname, local_uname)) {
 	route_ais_message(ais_msg, FALSE);
 
     } else {
@@ -712,7 +696,6 @@ static void ais_cluster_message_callback (
 		  ais_dest(&(ais_msg->sender)),
 		  msg_type2text(ais_msg->sender.type));
     }
-/*     crm_free(data); */
     LEAVE("");
 }
 
@@ -761,18 +744,39 @@ static void swap_sender(AIS_Message *msg)
     memcpy(msg->sender.uname, tmp_s, 256);
 }
 
+static char *get_ais_data(AIS_Message *msg)
+{
+    int rc = BZ_OK;
+    char *uncompressed = NULL;
+    unsigned int new_size = msg->size;
+    
+    if(msg->is_compressed == FALSE) {
+	uncompressed = strdup(msg->data);
+
+    } else {
+	ais_malloc0(uncompressed, new_size);
+	
+	rc = BZ2_bzBuffToBuffDecompress(
+	    uncompressed, &new_size, msg->data, msg->compressed_size, 1, 0);
+	
+	AIS_ASSERT(rc = BZ_OK);
+	AIS_ASSERT(new_size == msg->size);
+    }
+    
+    return uncompressed;
+}
 
 static gboolean process_ais_message(AIS_Message *msg) 
 {
     char *data = get_ais_data(msg);
-    do_crm_log(LOG_NOTICE,
+    do_ais_log(LOG_NOTICE,
 	       "Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %s",
 	       msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
 	       ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
 	       msg->sender.pid,
 	       msg->sender.uname==local_uname?"false":"true",
 	       ais_data_len(msg), data);
-    crm_free(data);
+    ais_free(data);
     return TRUE;
 }
 
@@ -787,7 +791,7 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
     
     if(local_origin == FALSE) {
        if(msg->host.size == 0
-	  || safe_str_eq(local_uname, msg->host.uname)) {
+	  || ais_str_eq(local_uname, msg->host.uname)) {
 	   msg->host.local = TRUE;
        }
     }
@@ -800,7 +804,7 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 	    return TRUE;
 	}
 	
-	CRM_CHECK(msg->host.type > 0 && msg->host.type < SIZEOF(crm_children),
+	AIS_CHECK(msg->host.type > 0 && msg->host.type < SIZEOF(crm_children),
 		  ais_err("Invalid destination: %d", msg->host.type);
 		  return FALSE;
 	    );
@@ -852,7 +856,7 @@ gboolean spawn_child(crm_child_t *child)
     }
     
     child->pid = fork();
-    CRM_ASSERT(child->pid != -1);
+    AIS_ASSERT(child->pid != -1);
 
     if(child->pid > 0) {
 	/* parent */
@@ -875,20 +879,20 @@ gboolean spawn_child(crm_child_t *child)
     (void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
     
     if(getenv("HA_VALGRIND_ENABLED") != NULL) {
-	char *opts[] = { crm_strdup(VALGRIND_BIN),
-			 crm_strdup("--show-reachable=yes"),
-			 crm_strdup("--leak-check=full"),
-			 crm_strdup("--time-stamp=yes"),
-			 crm_strdup("--suppressions="VALGRIND_SUPP),
-/* 				 crm_strdup("--gen-suppressions=all"), */
-			 crm_strdup(VALGRIND_LOG),
-			 crm_strdup(child->command),
+	char *opts[] = { ais_strdup(VALGRIND_BIN),
+			 ais_strdup("--show-reachable=yes"),
+			 ais_strdup("--leak-check=full"),
+			 ais_strdup("--time-stamp=yes"),
+			 ais_strdup("--suppressions="VALGRIND_SUPP),
+/* 				 ais_strdup("--gen-suppressions=all"), */
+			 ais_strdup(VALGRIND_LOG),
+			 ais_strdup(child->command),
 			 NULL
 	};
 	(void)execvp(VALGRIND_BIN, opts);
 
     } else {
-	char *opts[] = { crm_strdup(child->command), NULL };
+	char *opts[] = { ais_strdup(child->command), NULL };
 	(void)execvp(child->command, opts);
     }
 

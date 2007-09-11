@@ -51,38 +51,6 @@ enum crm_ais_msg_types text2msg_type(const char *text)
 	return type;
 }
 
-const char *msg_type2text(enum crm_ais_msg_types type) 
-{
-	const char *text = "unknown";
-	switch(type) {
-		case crm_msg_none:
-			text = "unknown";
-			break;
-		case crm_msg_ais:
-			text = "ais";
-			break;
-		case crm_msg_cib:
-			text = CRM_SYSTEM_CIB;
-			break;
-		case crm_msg_crmd:
-			text = CRM_SYSTEM_CRMD;
-			break;
-		case crm_msg_pe:
-			text = CRM_SYSTEM_PENGINE;
-			break;
-		case crm_msg_te:
-			text = CRM_SYSTEM_TENGINE;
-			break;
-		case crm_msg_lrmd:
-			text = CRM_SYSTEM_LRMD;
-			break;
-		default:
-			crm_err("Unknown message type: %d", type);
-			break;
-	}
-	return text;
-}
-
 static gboolean ais_dispatch(int sender, gpointer user_data)
 {
     /* Grab the header */
@@ -131,17 +99,6 @@ ais_destroy(gpointer user_data)
     crm_err("AIS connection terminated");
     ais_fd_in = -1;
     exit(1);
-}
-
-const char *ais_dest(struct crm_ais_host_s *host) 
-{
-    if(host->local) {
-	return "local";
-    } else if(host->size > 0) {
-	return host->uname;
-    } else {
-	return "<all>";
-    }
 }
 
 gboolean
@@ -312,15 +269,15 @@ char *get_ais_data(AIS_Message *msg)
     unsigned int new_size = msg->size;
     
     if(msg->is_compressed == FALSE) {
-	crm_debug("Returning uncompressed message data");
+	crm_debug_2("Returning uncompressed message data");
 	uncompressed = strdup(msg->data);
 
     } else {
-	crm_debug("Decompressing message data");
+	crm_debug_2("Decompressing message data");
 	crm_malloc0(uncompressed, new_size);
 	
 	rc = BZ2_bzBuffToBuffDecompress(
-	uncompressed, &new_size, msg->data, msg->compressed_size, 1, 0);
+	    uncompressed, &new_size, msg->data, msg->compressed_size, 1, 0);
 	
 	CRM_ASSERT(rc = BZ_OK);
 	CRM_ASSERT(new_size == msg->size);
