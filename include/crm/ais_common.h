@@ -19,7 +19,6 @@
 #ifndef CRM_AIS_COMMON__H
 #define CRM_AIS_COMMON__H
 
-#include <crm/crm.h>
 #include <glib.h>
 #include <string.h>
 #include <openais/ais_util.h>

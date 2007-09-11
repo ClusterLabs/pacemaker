@@ -16,7 +16,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <stdlib.h>
+#include <glib.h>
 #include <crm/ais_common.h>
+#include "plugin.h"
 GHashTable *uname_table = NULL;
 GHashTable *nodeid_table = NULL;
 
@@ -24,6 +27,10 @@ extern char *uname_lookup(uint32_t nodeid);
 extern uint32_t nodeid_lookup(const char *uname);
 extern void update_uname_table(const char *uname, uint32_t nodeid);
 
+static void g_hash_destroy_str(gpointer data)
+{
+	ais_free(data);
+}
 
 char *uname_lookup(uint32_t nodeid) 
 {
@@ -59,13 +66,16 @@ void update_uname_table(const char *uname, uint32_t nodeid)
 
 	mapping = uname_lookup(nodeid);
 	if(mapping == NULL) {
-		CRM_ASSERT(uname != NULL);
-		crm_info("Mapping %s <-> %u", uname, nodeid);
-		g_hash_table_insert(uname_table, GINT_TO_POINTER(nodeid), crm_strdup(uname));
-		g_hash_table_insert(nodeid_table, crm_strdup(uname), GINT_TO_POINTER(nodeid));
+		AIS_ASSERT(uname != NULL);
+		ais_info("Mapping %s <-> %u", uname, nodeid);
+		g_hash_table_insert(
+		    uname_table, GINT_TO_POINTER(nodeid), ais_strdup(uname));
+		g_hash_table_insert(
+		    nodeid_table, ais_strdup(uname), GINT_TO_POINTER(nodeid));
 		
-	} else if(safe_str_neq(mapping, uname)) {
-		crm_err("%s is now claiming to be node %u (current %s)", uname, nodeid, mapping);
+	} else if(ais_str_eq(mapping, uname) == FALSE) {
+		ais_err("%s is now claiming to be node %u (current %s)",
+			uname, nodeid, mapping);
 	}
  	
 	return;

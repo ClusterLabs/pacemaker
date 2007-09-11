@@ -40,7 +40,6 @@
 #include <openais/service/swab.h>
 #include <openais/totem/totem.h>
 
-#include <openais/service/print.h>
 #include <openais/service/objdb.h>
 #include <openais/service/service.h>
 
@@ -55,32 +54,6 @@
 #include <pthread.h>
 #include <sys/wait.h>
 #include <bzlib.h>
-
-static char *
-ais_strdup(const char *src)
-{
-	char *dup = NULL;
-	if(src == NULL) {
-	    return NULL;
-	}
-	ais_malloc0(dup, strlen(src) + 1);
-	return strcpy(dup, src);
-}
-
-static gboolean
-ais_str_eq(const char *a, const char *b) 
-{
-    if(a == NULL || b == NULL) {
-	return FALSE;
-	
-    } else if(a == b) {
-	return TRUE;
-	
-    } else if(strcasecmp(a, b) == 0) {
-	return TRUE;
-    }
-    return FALSE;
-}
 
 int plugin_log_level = LOG_DEBUG;
 char *local_uname = NULL;
