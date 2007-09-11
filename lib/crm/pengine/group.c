@@ -44,7 +44,6 @@ gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	crm_malloc0(group_data, sizeof(group_variant_data_t));
 	group_data->num_children = 0;
 	group_data->self	 = NULL;
-	group_data->child_list   = NULL;
 	group_data->first_child  = NULL;
 	group_data->last_child   = NULL;
 	rsc->variant_opaque = group_data;
@@ -88,8 +87,7 @@ gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		}
 
 		group_data->num_children++;
-		group_data->child_list = g_list_append(
-			group_data->child_list, new_rsc);
+		rsc->children = g_list_append(rsc->children, new_rsc);
 		
 		if(group_data->first_child == NULL) {
 			group_data->first_child = new_rsc;			
@@ -116,28 +114,13 @@ gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 }
 
 
-resource_t *
-group_find_child(resource_t *rsc, const char *id)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-	return pe_find_resource(group_data->child_list, id);
-}
-
-GListPtr group_children(resource_t *rsc)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-	return group_data->child_list;
-}
-
 gboolean group_active(resource_t *rsc, gboolean all)
 {
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		gboolean child_active = child_rsc->fns->active(child_rsc, all);
 		if(all == FALSE && child_active) {
 			return TRUE;
@@ -175,7 +158,7 @@ void group_print(
 	}
 	
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		
 		if(options & pe_print_html) {
 			status_print("<li>\n");
@@ -201,14 +184,14 @@ void group_free(resource_t *rsc)
 	crm_debug_3("Freeing %s", rsc->id);
 
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 
 		crm_debug_3("Freeing child %s", child_rsc->id);
 		child_rsc->fns->free(child_rsc);
 		);
 
 	crm_debug_3("Freeing child list");
-	pe_free_shallow_adv(group_data->child_list, FALSE);
+	pe_free_shallow_adv(rsc->children, FALSE);
 
 	if(group_data->self != NULL) {
 		free_xml(group_data->self->xml);
@@ -222,11 +205,9 @@ enum rsc_role_e
 group_resource_state(resource_t *rsc, gboolean current)
 {
 	enum rsc_role_e group_role = RSC_ROLE_UNKNOWN;
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
 
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		enum rsc_role_e role = child_rsc->fns->state(child_rsc, current);
 		if(role > group_role) {
 			group_role = role;

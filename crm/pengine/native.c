@@ -111,17 +111,6 @@ native_choose_node(resource_t *rsc)
 	return native_assign_node(rsc, nodes, chosen);
 }
 
-void native_set_cmds(resource_t *rsc)
-{
-}
-
-int native_num_allowed_nodes(resource_t *rsc)
-{
-	gboolean unimplimented = FALSE;
-	CRM_ASSERT(unimplimented);
-	return 0;
-}
-
 resource_t *
 ultimate_parent(resource_t *rsc)
 {
@@ -130,6 +119,47 @@ ultimate_parent(resource_t *rsc)
 		parent = parent->parent;
 	}
 	return parent;
+}
+
+
+GListPtr
+native_merge_weights(
+    resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback) 
+{
+    GListPtr archive = NULL;
+
+    if(safe_str_eq(rsc->id, rhs)) {
+	crm_debug("%s: Breaking dependancy loop", rhs);
+	return nodes;
+
+    } else if(rsc->provisional == FALSE || can_run_any(nodes) == FALSE) {
+	return nodes;
+    }
+
+    crm_debug_2("%s: Combining scores from %s", rhs, rsc->id);
+
+    if(allow_rollback) {
+ 	archive = node_list_dup(nodes, FALSE, FALSE);
+    }
+
+    node_list_update(nodes, rsc->allowed_nodes, factor);
+    if(archive && can_run_any(nodes) == FALSE) {
+	crm_debug("%s: Rolling back scores from %s", rhs, rsc->id);
+  	pe_free_shallow_adv(nodes, TRUE);
+	return archive;
+    }
+
+    pe_free_shallow_adv(archive, TRUE);
+    
+    slist_iter(
+	constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
+	
+	nodes = constraint->rsc_lh->cmds->merge_weights(
+	    constraint->rsc_lh, rhs, nodes,
+	    constraint->score/INFINITY, allow_rollback);
+	);
+
+    return nodes;
 }
 
 node_t *
@@ -153,28 +183,26 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	}
 
 	rsc->is_allocating = TRUE;
-	rsc->rsc_cons = g_list_sort(rsc->rsc_cons, sort_cons_strength);
 
 	slist_iter(
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
 
-		crm_debug_3("%s: Pre-Processing %s", rsc->id, constraint->id);
+		resource_t *rsc_rh = constraint->rsc_rh;
+		crm_debug("%s: Pre-Processing %s (%s)",
+			  rsc->id, constraint->id, rsc_rh->id);
+		rsc_rh->cmds->color(rsc_rh, data_set);
+		rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint);	
+	    );	
 
-		if(rsc->provisional && constraint->rsc_rh->provisional) {
-			crm_debug_2("Combine scores from %s and %s",
-				    rsc->id, constraint->rsc_rh->id);
-			node_list_update(constraint->rsc_rh->allowed_nodes,
-					 rsc->allowed_nodes,
-					 constraint->score/INFINITY);
-		}
-		
-		constraint->rsc_rh->cmds->color(
-			constraint->rsc_rh, data_set);
-		rsc->cmds->rsc_colocation_lh(
-			rsc, constraint->rsc_rh, constraint);
-		
-		);
-
+	slist_iter(
+	    constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
+	    
+	    rsc->allowed_nodes = constraint->rsc_lh->cmds->merge_weights(
+		constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
+		constraint->score/INFINITY, TRUE);
+	    );
+	
+	
 	print_resource(LOG_DEBUG, "Allocating: ", rsc, FALSE);
 	if(rsc->next_role == RSC_ROLE_STOPPED) {
 		crm_debug_2("Making sure %s doesn't get allocated", rsc->id);
@@ -792,19 +820,20 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 
 void native_expand(resource_t *rsc, pe_working_set_t *data_set)
 {
+	crm_debug_3("Processing actions from %s", rsc->id);
+
 	slist_iter(
 		action, action_t, rsc->actions, lpc,
 		crm_debug_4("processing action %d for rsc=%s",
 			  action->id, rsc->id);
 		graph_element_from_action(action, data_set);
 		);
-}
 
-
-
-void
-native_agent_constraints(resource_t *rsc)
-{
+	slist_iter(
+	    child_rsc, resource_t, rsc->children, lpc,
+	    
+	    child_rsc->cmds->expand(child_rsc, data_set);
+	    );
 }
 
 void
@@ -882,7 +911,7 @@ register_state(resource_t *rsc, node_t *on_node, notify_data_t *n_data)
 }
 
 void
-native_create_notify_element(resource_t *rsc, action_t *op,
+complex_create_notify_element(resource_t *rsc, action_t *op,
 			     notify_data_t *n_data, pe_working_set_t *data_set)
 {
 	node_t *next_node = NULL;
@@ -890,6 +919,16 @@ native_create_notify_element(resource_t *rsc, action_t *op,
 	char *op_key = NULL;
 	GListPtr possible_matches = NULL;
 	enum action_tasks task = text2task(op->task);
+
+	if(rsc->children) {
+	    slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+		
+		child_rsc->cmds->create_notify_element(
+		    child_rsc, op, n_data, data_set);
+		);
+	    return;
+	}
 	
 	if(op->pre_notify == NULL || op->post_notify == NULL) {
 		/* no notifications required */
@@ -1299,6 +1338,19 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 
 	CRM_CHECK(node != NULL, return FALSE);
 
+	if(rsc->children) {
+	    gboolean any_created = FALSE;
+	    
+	    slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+		
+		any_created = child_rsc->cmds->create_probe(
+		    child_rsc, node, complete, force, data_set) || any_created;
+		);
+
+	    return any_created;
+	}
+
 	if(rsc->orphan) {
 		crm_debug_2("Skipping orphan: %s", rsc->id);
 		return FALSE;
@@ -1503,12 +1555,22 @@ native_stop_constraints(
 }
 
 void
-native_stonith_ordering(
+complex_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set)
 {
 	gboolean is_stonith = FALSE;
 	const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
+	if(rsc->children) {
+	    slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+
+		child_rsc->cmds->stonith_ordering(
+		    child_rsc, stonith_op, data_set);
+		);
+	    return;
+	}
+	
 	if(rsc->is_managed == FALSE) {
 		crm_debug_3("Skipping fencing constraints for unmanaged resource: %s", rsc->id);
 		return;
@@ -1526,7 +1588,7 @@ native_stonith_ordering(
 }
 
 void
-native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
+complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 {
 	char *key = NULL;
 	int level = LOG_DEBUG_2;
@@ -1537,6 +1599,15 @@ native_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	action_t *other = NULL;
 	action_t *action = NULL;
 	const char *value = NULL;
+
+	if(rsc->children) {
+	    slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+		
+		child_rsc->cmds->migrate_reload(child_rsc, data_set);
+		);
+	    return;
+	}
 
 	CRM_CHECK(rsc->variant == pe_native, return);
 	

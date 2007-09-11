@@ -46,7 +46,6 @@ extern gboolean rsc_colocation_new(
 extern rsc_to_node_t *generate_location_rule(
 	resource_t *rsc, crm_data_t *location_rule, pe_working_set_t *data_set);
 
-extern gint sort_cons_strength(gconstpointer a, gconstpointer b);
 extern gint sort_node_weight(gconstpointer a, gconstpointer b);
 
 extern gboolean can_run_resources(const node_t *node);
@@ -61,6 +60,8 @@ extern void log_action(unsigned int log_level, const char *pre_text,
 
 extern resource_t *uber_parent(resource_t *rsc);
 extern action_t *get_pseudo_op(const char *name, pe_working_set_t *data_set);
+extern gboolean can_run_any(GListPtr nodes);
+
 #define STONITH_UP "stonith_up"
 #define ALL_STOPPED "all_stopped"
 

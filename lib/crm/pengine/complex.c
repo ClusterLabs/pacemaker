@@ -40,8 +40,8 @@ resource_object_functions_t resource_class_functions[] = {
 	},
 	{
 		group_unpack,
-		group_find_child,
-		group_children,
+		native_find_child,
+		native_children,
 		native_parameter,
 		group_print,
 		group_active,
@@ -50,8 +50,8 @@ resource_object_functions_t resource_class_functions[] = {
 	},
 	{
 		clone_unpack,
-		clone_find_child,
-		clone_children,
+		native_find_child,
+		native_children,
 		native_parameter,
 		clone_print,
 		clone_active,
@@ -60,8 +60,8 @@ resource_object_functions_t resource_class_functions[] = {
 	},
 	{
 		master_unpack,
-		clone_find_child,
-		clone_children,
+		native_find_child,
+		native_children,
 		native_parameter,
 		clone_print,
 		clone_active,
@@ -297,7 +297,9 @@ void common_free(resource_t *rsc)
 	
 	crm_debug_5("Freeing %s %d", rsc->id, rsc->variant);
 
- 	pe_free_shallow(rsc->rsc_cons);
+  	pe_free_shallow(rsc->rsc_cons);
+	g_list_free(rsc->rsc_cons_lhs);
+
 	if(rsc->parameters != NULL) {
 		g_hash_table_destroy(rsc->parameters);
 	}

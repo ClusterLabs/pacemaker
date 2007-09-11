@@ -40,76 +40,68 @@ void migrate_reload_madness(pe_working_set_t *data_set);
 
 resource_alloc_functions_t resource_class_alloc_functions[] = {
 	{
-		native_set_cmds,
-		native_num_allowed_nodes,
+		native_merge_weights,
 		native_color,
 		native_create_actions,
 		native_create_probe,
 		native_internal_constraints,
-		native_agent_constraints,
 		native_rsc_colocation_lh,
 		native_rsc_colocation_rh,
 		native_rsc_order_lh,
 		native_rsc_order_rh,
 		native_rsc_location,
 		native_expand,
-		native_migrate_reload,
-		native_stonith_ordering,
-		native_create_notify_element,
+		complex_migrate_reload,
+		complex_stonith_ordering,
+		complex_create_notify_element,
 	},
 	{
- 		group_set_cmds,
-		group_num_allowed_nodes,
+		group_merge_weights,
 		group_color,
 		group_create_actions,
-		group_create_probe,
+		native_create_probe,
 		group_internal_constraints,
-		group_agent_constraints,
 		group_rsc_colocation_lh,
 		group_rsc_colocation_rh,
 		group_rsc_order_lh,
 		group_rsc_order_rh,
 		group_rsc_location,
 		group_expand,
-		group_migrate_reload,
-		group_stonith_ordering,
-		group_create_notify_element,
+		complex_migrate_reload,
+		complex_stonith_ordering,
+		complex_create_notify_element,
 	},
 	{
- 		clone_set_cmds,
-		clone_num_allowed_nodes,
+		native_merge_weights,
 		clone_color,
 		clone_create_actions,
 		clone_create_probe,
 		clone_internal_constraints,
-		clone_agent_constraints,
 		clone_rsc_colocation_lh,
 		clone_rsc_colocation_rh,
 		clone_rsc_order_lh,
 		clone_rsc_order_rh,
 		clone_rsc_location,
 		clone_expand,
-		clone_migrate_reload,
-		clone_stonith_ordering,
-		clone_create_notify_element,
+		complex_migrate_reload,
+		complex_stonith_ordering,
+		complex_create_notify_element,
 	},
 	{
- 		clone_set_cmds,
-		clone_num_allowed_nodes,
+		native_merge_weights,
 		master_color,
 		master_create_actions,
 		clone_create_probe,
 		master_internal_constraints,
-		clone_agent_constraints,
 		clone_rsc_colocation_lh,
 		master_rsc_colocation_rh,
 		clone_rsc_order_lh,
 		clone_rsc_order_rh,
 		clone_rsc_location,
 		clone_expand,
-		clone_migrate_reload,
-		clone_stonith_ordering,
-		clone_create_notify_element,
+		complex_migrate_reload,
+		complex_stonith_ordering,
+		complex_create_notify_element,
 	}
 };
 
@@ -429,13 +421,21 @@ apply_placement_constraints(pe_working_set_t *data_set)
 	
 }
 
+static void complex_set_cmds(resource_t *rsc)
+{
+    rsc->cmds = &resource_class_alloc_functions[rsc->variant];
+    slist_iter(
+	child_rsc, resource_t, rsc->children, lpc,
+	complex_set_cmds(child_rsc);
+	);
+}
+
 void
 set_alloc_actions(pe_working_set_t *data_set) 
 {
 	slist_iter(
 		rsc, resource_t, data_set->resources, lpc,
-		rsc->cmds = &resource_class_alloc_functions[rsc->variant];
-		rsc->cmds->set_cmds(rsc);
+		complex_set_cmds(rsc);
 		);
 }
 
@@ -1250,6 +1250,49 @@ generate_location_rule(
 	return location_rule;
 }
 
+static gint sort_cons_priority_lh(gconstpointer a, gconstpointer b)
+{
+	const rsc_colocation_t *rsc_constraint1 = (const rsc_colocation_t*)a;
+	const rsc_colocation_t *rsc_constraint2 = (const rsc_colocation_t*)b;
+
+	if(a == NULL) { return 1; }
+	if(b == NULL) { return -1; }
+
+	CRM_ASSERT(rsc_constraint1->rsc_lh != NULL);
+	CRM_ASSERT(rsc_constraint1->rsc_rh != NULL);
+	
+	if(rsc_constraint1->rsc_lh->priority > rsc_constraint2->rsc_lh->priority) {
+	    return -1;
+	}
+	
+	if(rsc_constraint1->rsc_lh->priority < rsc_constraint2->rsc_lh->priority) {
+	    return 1;
+	}
+
+	return strcmp(rsc_constraint1->rsc_lh->id, rsc_constraint2->rsc_lh->id);
+}
+
+static gint sort_cons_priority_rh(gconstpointer a, gconstpointer b)
+{
+	const rsc_colocation_t *rsc_constraint1 = (const rsc_colocation_t*)a;
+	const rsc_colocation_t *rsc_constraint2 = (const rsc_colocation_t*)b;
+
+	if(a == NULL) { return 1; }
+	if(b == NULL) { return -1; }
+
+	CRM_ASSERT(rsc_constraint1->rsc_lh != NULL);
+	CRM_ASSERT(rsc_constraint1->rsc_rh != NULL);
+	
+	if(rsc_constraint1->rsc_rh->priority > rsc_constraint2->rsc_rh->priority) {
+	    return -1;
+	}
+	
+	if(rsc_constraint1->rsc_rh->priority < rsc_constraint2->rsc_rh->priority) {
+	    return 1;
+	}
+	return strcmp(rsc_constraint1->rsc_rh->id, rsc_constraint2->rsc_rh->id);
+}
+
 gboolean
 rsc_colocation_new(const char *id, const char *node_attr, int score,
 		   resource_t *rsc_lh, resource_t *rsc_rh,
@@ -1284,7 +1327,7 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
 	new_con->id       = id;
 	new_con->rsc_lh   = rsc_lh;
 	new_con->rsc_rh   = rsc_rh;
-	new_con->score = score;
+	new_con->score   = score;
 	new_con->role_lh = text2role(state_lh);
 	new_con->role_rh = text2role(state_rh);
 	new_con->node_attribute = node_attr;
@@ -1293,8 +1336,11 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
 		  new_con->id, new_con, rsc_lh->id);
 	
 	rsc_lh->rsc_cons = g_list_insert_sorted(
-		rsc_lh->rsc_cons, new_con, sort_cons_strength);
+		rsc_lh->rsc_cons, new_con, sort_cons_priority_rh);
 
+	rsc_rh->rsc_cons_lhs = g_list_insert_sorted(
+		rsc_rh->rsc_cons_lhs, new_con, sort_cons_priority_lh);
+	
 	return TRUE;
 }
 

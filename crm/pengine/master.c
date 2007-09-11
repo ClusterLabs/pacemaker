@@ -322,7 +322,7 @@ apply_master_prefs(resource_t *rsc)
     clone_data->applied_master_prefs = TRUE;
     
     slist_iter(
-	child_rsc, resource_t, clone_data->child_list, lpc,
+	child_rsc, resource_t, rsc->children, lpc,
 	slist_iter(
 	    node, node_t, child_rsc->allowed_nodes, lpc,
 
@@ -376,7 +376,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 	 * assign priority
 	 */
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 
 		crm_debug_2("Assigning priority for %s", child_rsc->id);
 		chosen = child_rsc->allocated_to;
@@ -429,12 +429,11 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 		);
 	
 	/* sort based on the new "promote" priority */
-	clone_data->child_list = g_list_sort(
-		clone_data->child_list, sort_master_instance);
+	rsc->children = g_list_sort(rsc->children, sort_master_instance);
 
 	/* mark the first N as masters */
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 
 		chosen = NULL;
 		crm_debug_2("Processing %s", child_rsc->id);
@@ -481,7 +480,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	clone_create_actions(rsc, data_set);
 
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		gboolean child_promoting = FALSE;
 		gboolean child_demoting = FALSE;
 
@@ -570,7 +569,7 @@ master_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		pe_order_optional, data_set);
 
 	slist_iter(
-		child_rsc, resource_t, clone_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 
 		/* child demote before promote */
 		custom_action_order(
@@ -612,7 +611,7 @@ void master_rsc_colocation_rh(
 
 	if(constraint->score < INFINITY) {
 		slist_iter(
-			child_rsc, resource_t, clone_data->child_list, lpc,
+			child_rsc, resource_t, rsc_rh->children, lpc,
 			
 			child_rsc->cmds->rsc_colocation_rh(rsc_lh, child_rsc, constraint);
 			);
@@ -622,7 +621,7 @@ void master_rsc_colocation_rh(
 		lhs = rsc_lh->allowed_nodes;
 
 		slist_iter(
-			child_rsc, resource_t, clone_data->child_list, lpc,
+			child_rsc, resource_t, rsc_rh->children, lpc,
 			crm_debug_3("Processing: %s", child_rsc->id);
 			if(child_rsc->allocated_to != NULL
 			   && child_rsc->next_role == constraint->role_rh) {

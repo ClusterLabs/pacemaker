@@ -28,38 +28,17 @@
 #define VARIANT_GROUP 1
 #include <lib/crm/pengine/variant.h>
 
-void group_set_cmds(resource_t *rsc)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-	group_data->self->cmds = &resource_class_alloc_functions[group_data->self->variant];
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-		child_rsc->cmds = &resource_class_alloc_functions[child_rsc->variant];
-		child_rsc->cmds->set_cmds(child_rsc);
-		);
-}
-
-int group_num_allowed_nodes(resource_t *rsc)
-{
-	gboolean unimplimented = FALSE;
-	CRM_ASSERT(unimplimented);
-	return 0;
-}
-
 node_t *
 group_color(resource_t *rsc, pe_working_set_t *data_set)
 {
-	resource_t *child = NULL;
+	node_t *node = NULL;
 	node_t *group_node = NULL;
-	GListPtr child_iter = NULL;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
 	if(rsc->provisional == FALSE) {
 		return rsc->allocated_to;
 	}
-	/* combine the child weights */
 	crm_debug_2("Processing %s", rsc->id);
 	if(rsc->is_allocating) {
 		crm_debug("Dependancy loop detected involving %s", rsc->id);
@@ -72,13 +51,13 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 		group_data->first_child->rsc_cons, rsc->rsc_cons);
 	rsc->rsc_cons = NULL;
 
-	/* process in reverse so that all scores are merged before allocation */
-	child_iter = g_list_last(group_data->child_list);
-	for(; child_iter != NULL; ) {
-		child = child_iter->data;
-		child_iter = g_list_previous(child_iter);
-		group_node = child->cmds->color(child, data_set);
-	}
+	slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+		node = child_rsc->cmds->color(child_rsc, data_set);
+		if(group_node == NULL) {
+		    group_node = node;
+		}
+		);
 
 	rsc->next_role = group_data->first_child->next_role;	
 	rsc->is_allocating = FALSE;
@@ -101,7 +80,7 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	crm_debug_2("Creating actions for %s", rsc->id);
 	
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		child_rsc->cmds->create_actions(child_rsc, data_set);
 		group_update_pseudo_status(rsc, child_rsc);
 		);
@@ -182,7 +161,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		pe_order_runnable_left, data_set);
 	
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 
 		child_rsc->cmds->internal_constraints(child_rsc, data_set);
 
@@ -265,7 +244,7 @@ void group_rsc_colocation_lh(
 	} 
 
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc_lh->children, lpc,
 		child_rsc->cmds->rsc_colocation_lh(
 			child_rsc, rsc_rh, constraint); 
 		);
@@ -296,7 +275,7 @@ void group_rsc_colocation_rh(
 	} 
 
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc_rh->children, lpc,
 		child_rsc->cmds->rsc_colocation_rh(
 			rsc_lh, child_rsc, constraint); 
 		);
@@ -352,7 +331,7 @@ void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		  constraint->id, rsc->id);
 
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 		child_rsc->cmds->rsc_location(child_rsc, constraint);
 		if(group_data->colocated && reset_scores) {
 			reset_scores = FALSE;
@@ -362,7 +341,6 @@ void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		}
 		);
 }
-
 
 void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 {
@@ -375,83 +353,38 @@ void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 	native_expand(rsc, data_set);
 	
 	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
+		child_rsc, resource_t, rsc->children, lpc,
 
 		child_rsc->cmds->expand(child_rsc, data_set);
 		);
 
 }
 
-void
-group_agent_constraints(resource_t *rsc)
+GListPtr
+group_merge_weights(
+    resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback) 
 {
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
+    group_variant_data_t *group_data = NULL;
+    get_group_variant_data(group_data, rsc);
+    
+    if(rsc->is_allocating) {
+	crm_debug("Breaking dependancy loop with %s at %s", rsc->id, rhs);
+	return nodes;
 
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-		
-		child_rsc->cmds->agent_constraints(child_rsc);
-		);
+    } else if(rsc->provisional == FALSE || can_run_any(nodes) == FALSE) {
+	return nodes;
+    }
+
+    nodes = group_data->first_child->cmds->merge_weights(
+	group_data->first_child, rhs, nodes, factor, allow_rollback);
+
+    slist_iter(
+	constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
+	
+	nodes = native_merge_weights(
+	    constraint->rsc_lh, rsc->id, nodes,
+	    constraint->score/INFINITY, allow_rollback);
+	);
+
+    return nodes;
 }
-
-void
-group_create_notify_element(resource_t *rsc, action_t *op,
-			    notify_data_t *n_data, pe_working_set_t *data_set)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-		
-		child_rsc->cmds->create_notify_element(
-			child_rsc, op, n_data, data_set);
-		);
-}
-
-gboolean
-group_create_probe(resource_t *rsc, node_t *node, action_t *complete,
-		    gboolean force, pe_working_set_t *data_set) 
-{
-	gboolean any_created = FALSE;
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-		
-		any_created = child_rsc->cmds->create_probe(
-			child_rsc, node, complete, force, data_set) || any_created;
-		);
-	return any_created;
-}
-
-void
-group_stonith_ordering(
-	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-		
-		child_rsc->cmds->stonith_ordering(
-			child_rsc, stonith_op, data_set);
-		);
-}
-
-void
-group_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
-{
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
-
-	slist_iter(
-		child_rsc, resource_t, group_data->child_list, lpc,
-		
-		child_rsc->cmds->migrate_reload(child_rsc, data_set);
-		);
-}
-
