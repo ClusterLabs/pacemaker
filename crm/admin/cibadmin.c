@@ -52,7 +52,6 @@ int message_timer_id = -1;
 int message_timeout_ms = 30*1000;
 
 GMainLoop *mainloop = NULL;
-const char *crm_system_name = "cibadmin";
 IPC_Channel *crmd_channel = NULL;
 
 const char *host = NULL;

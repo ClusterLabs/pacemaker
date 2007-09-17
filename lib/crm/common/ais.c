@@ -1,0 +1,288 @@
+/* 
+ * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+#include <lha_internal.h>
+#include <crm/ais.h>
+#include <openais/saAis.h>
+#include <bzlib.h>
+
+int ais_fd_in = -1;
+int ais_fd_out = -1;
+GFDSource *ais_source = NULL;
+GFDSource *ais_source_out = NULL;
+
+enum crm_ais_msg_types text2msg_type(const char *text) 
+{
+	int type = crm_msg_none;
+
+	CRM_CHECK(text != NULL, return type);
+	if(safe_str_eq(text, "ais")) {
+		type = crm_msg_ais;
+	} else if(safe_str_eq(text, "crm_plugin")) {
+		type = crm_msg_ais;
+	} else if(safe_str_eq(text, CRM_SYSTEM_CIB)) {
+		type = crm_msg_cib;
+	} else if(safe_str_eq(text, CRM_SYSTEM_CRMD)) {
+		type = crm_msg_crmd;
+	} else if(safe_str_eq(text, CRM_SYSTEM_TENGINE)) {
+		type = crm_msg_te;
+	} else if(safe_str_eq(text, CRM_SYSTEM_PENGINE)) {
+		type = crm_msg_pe;
+	} else if(safe_str_eq(text, CRM_SYSTEM_LRMD)) {
+		type = crm_msg_lrmd;
+	} else {
+		crm_debug_2("Unknown message type: %s", text);
+	}
+	return type;
+}
+
+static gboolean ais_dispatch(int sender, gpointer user_data)
+{
+    /* Grab the header */
+    char *header = NULL;
+    char *data = NULL;
+    AIS_Message *msg = NULL;
+    SaAisErrorT rc = SA_AIS_OK;
+    static int header_len = sizeof(AIS_Message);
+
+    crm_err("Got a message: %d", header_len);
+    crm_malloc0(header, header_len);
+    
+    rc = saRecvRetry(sender, header, header_len);
+    if (rc != SA_AIS_OK) {
+	crm_err("Receiving message header failed");
+	goto bail;
+    }
+
+    msg = (void*)header;
+    do_crm_log(LOG_NOTICE, "Msg[%d] (dest=%s:%s, from=%s:%s, size=%d, total=%d)",
+	       msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
+	       ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
+	       ais_data_len(msg), msg->header.size);
+    
+    CRM_ASSERT(msg->is_compressed == FALSE);
+
+    crm_malloc0(data, ais_data_len(msg));
+    rc = saRecvRetry(sender, data, ais_data_len(msg));
+    if (rc != SA_AIS_OK) {
+	crm_err("Receiving message body failed");
+	goto bail;
+    }
+
+    crm_notice("Message received: '%.50s'", data);
+
+    return TRUE;
+    
+  bail:
+    crm_err("AIS connection failed");
+    return FALSE;
+}
+
+static void
+ais_destroy(gpointer user_data)
+{
+    crm_err("AIS connection terminated");
+    ais_fd_in = -1;
+    exit(1);
+}
+
+gboolean
+send_ais_text(const char *data,
+	      gboolean local, const char *node, enum crm_ais_msg_types dest)
+{
+    static int msg_id = 0;
+    static int local_pid = 0;
+
+    int rc = SA_AIS_OK;
+    AIS_Message *ais_msg = NULL;
+    enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
+
+    if(local_pid == 0) {
+	local_pid = getpid();
+    }
+
+    CRM_CHECK(data != NULL, return FALSE);
+    crm_malloc0(ais_msg, sizeof(AIS_Message));
+    
+    ais_msg->id = msg_id++;
+    ais_msg->header.id = 0;
+    
+    ais_msg->host.type = dest;
+    ais_msg->host.local = local;
+    if(node) {
+	ais_msg->host.size = strlen(node);
+	memset(ais_msg->host.uname, 0, MAX_NAME);
+	memcpy(ais_msg->host.uname, node, ais_msg->host.size);
+	ais_msg->host.id = 0;
+	
+    } else {
+	ais_msg->host.size = 0;
+	memset(ais_msg->host.uname, 0, MAX_NAME);
+	ais_msg->host.id = 0;
+    }
+    
+    ais_msg->sender.type = sender;
+    ais_msg->sender.pid = local_pid;
+    ais_msg->sender.size = 0;
+    memset(ais_msg->sender.uname, 0, MAX_NAME);
+    ais_msg->sender.id = 0;
+    
+    ais_msg->size = 1 + strlen(data);
+
+    if(ais_msg->size < 5120) {
+  failback:
+	crm_realloc(ais_msg, sizeof(AIS_Message) + ais_msg->size);
+	memcpy(ais_msg->data, data, ais_msg->size);
+	
+    } else {
+	char *compressed = NULL;
+	char *uncompressed = crm_strdup(data);
+	unsigned int len = (ais_msg->size * 1.1) + 600; /* recomended size */
+	
+	crm_debug("Compressing message payload");
+	crm_malloc0(compressed, len);
+	
+	rc = BZ2_bzBuffToBuffCompress(
+	    compressed, &len, uncompressed, ais_msg->size, 3, 0, 30);
+
+	crm_free(uncompressed);
+	
+	if(rc != BZ_OK) {
+	    crm_err("Compression failed: %d", rc);
+	    crm_free(compressed);
+	    goto failback;  
+	}
+
+	crm_realloc(ais_msg, sizeof(AIS_Message) + len + 1);
+	memcpy(ais_msg->data, compressed, len);
+	crm_free(compressed);
+
+	ais_msg->is_compressed = TRUE;
+	ais_msg->compressed_size = len;
+
+	crm_debug("Compression details: %d -> %d",
+		  ais_msg->size, ais_data_len(ais_msg));
+    } 
+
+    ais_msg->header.size = sizeof(AIS_Message) + ais_data_len(ais_msg);
+
+    crm_notice("Sending%s message %d to %s.%s (data=%d, total=%d)",
+	       ais_msg->is_compressed?" compressed":"",
+	       ais_msg->id, ais_dest(&(ais_msg->host)), msg_type2text(dest),
+	       ais_data_len(ais_msg), ais_msg->header.size);
+
+    rc = saSendRetry(ais_fd_in, ais_msg, ais_msg->header.size);
+    if(rc != SA_AIS_OK) {    
+	crm_err("Sending message %d: FAILED", ais_msg->id);
+	ais_fd_out = -1;
+    } else {
+	crm_notice("Message %d: sent", ais_msg->id);
+    }
+    
+    return (rc == SA_AIS_OK);
+}
+
+gboolean
+send_ais_message(crm_data_t *msg, 
+		 gboolean local, const char *node, enum crm_ais_msg_types dest)
+{
+    char *data = NULL;
+
+    if(ais_source == NULL && init_ais_connection(NULL, NULL) == FALSE) {
+	crm_err("Cannot connect to AIS");
+	return FALSE;
+    }
+    
+    if(ais_fd_out < 0) {
+	crm_err("Not connected to AIS");
+	return FALSE;
+    }
+
+    if(cl_get_string(msg, F_XML_TAGNAME) == NULL) {
+	ha_msg_add(msg, F_XML_TAGNAME, "ais_msg");
+    }
+    
+    data = dump_xml_unformatted(msg);
+    return send_ais_text(data, local, node, dest);
+}
+
+
+gboolean init_ais_connection(
+    gboolean (*dispatch)(int, gpointer),
+    void (*destroy)(gpointer)) 
+{
+    int rc = SA_AIS_OK;
+    crm_notice("Creating connection to our AIS plugin");
+
+    /* 16 := CRM_SERVICE */
+    rc = saServiceConnect (&ais_fd_in, &ais_fd_out, 16);
+    if (rc != SA_AIS_OK) {
+	crm_err("Connection to our AIS plugin failed!");
+	return FALSE;
+    }
+
+    if(destroy == NULL) {
+	crm_info("Using the default destroy handler");
+	destroy = ais_destroy;
+    } 
+    if(dispatch == NULL) {
+	crm_info("Using the default dispatch handler");
+	dispatch = ais_dispatch;
+    }
+   
+    crm_notice("AIS connection established");
+    ais_source = G_main_add_fd(
+	G_PRIORITY_HIGH, ais_fd_in, FALSE, dispatch, NULL, destroy);
+    ais_source_out = G_main_add_fd(
+	G_PRIORITY_HIGH, ais_fd_out, FALSE, dispatch, NULL, destroy);
+    return TRUE;
+}
+
+void terminate_ais_connection(void) 
+{
+    close(ais_fd_in);
+    close(ais_fd_out);
+    crm_notice("Disconnected from AIS");
+/*     G_main_del_fd(ais_source); */
+/*     G_main_del_fd(ais_source_out);     */
+}
+
+char *get_ais_data(AIS_Message *msg)
+{
+    int rc = BZ_OK;
+    char *uncompressed = NULL;
+    unsigned int new_size = msg->size;
+    
+    if(msg->is_compressed == FALSE) {
+	crm_debug_2("Returning uncompressed message data");
+	uncompressed = strdup(msg->data);
+
+    } else {
+	crm_debug_2("Decompressing message data");
+	crm_malloc0(uncompressed, new_size);
+	
+	rc = BZ2_bzBuffToBuffDecompress(
+	    uncompressed, &new_size, msg->data, msg->compressed_size, 1, 0);
+	
+	CRM_ASSERT(rc = BZ_OK);
+	CRM_ASSERT(new_size == msg->size);
+    }
+    
+    return uncompressed;
+}
+

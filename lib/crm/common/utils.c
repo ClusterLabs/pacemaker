@@ -63,6 +63,7 @@ gboolean crm_assert_failed = FALSE;
 unsigned int crm_log_level = LOG_INFO;
 gboolean crm_config_error = FALSE;
 gboolean crm_config_warning = FALSE;
+const char *crm_system_name = "unknown";
 
 void crm_set_env_options(void);
 
@@ -440,6 +441,7 @@ crm_log_init(
 	/* and for good measure... - this enum is a bit field (!) */
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
 	
+	crm_system_name = entity;
 	cl_log_set_entity(entity);
 	cl_log_set_facility(LOG_DAEMON);
 

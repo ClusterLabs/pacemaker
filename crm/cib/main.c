@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <sys/utsname.h>
 
 #include <stdlib.h>
 #include <errno.h>
@@ -58,6 +59,10 @@
 #  include <getopt.h>
 #endif
 
+#if HAVE_BZLIB_H
+#  include <bzlib.h>
+#endif
+
 extern int init_remote_listener(int port);
 extern gboolean ccm_connect(void);
 
@@ -70,7 +75,6 @@ extern char *ccm_transition_id;
 extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
 GMainLoop*  mainloop = NULL;
-const char* crm_system_name = CRM_SYSTEM_CIB;
 const char* cib_root = WORKING_DIR;
 char *cib_our_uname = NULL;
 oc_ev_t *cib_ev_token;
@@ -141,7 +145,7 @@ main(int argc, char ** argv)
 	};
 #endif
 	
-	crm_log_init(crm_system_name, LOG_INFO, TRUE, FALSE, 0, NULL);
+	crm_log_init(CRM_SYSTEM_CIB, LOG_INFO, TRUE, TRUE, 0, NULL);
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, cib_shutdown, NULL, NULL);
 	
@@ -360,21 +364,144 @@ gboolean ccm_connect(void)
     return TRUE;    
 }
 
+#ifdef WITH_NATIVE_AIS	
+static gboolean cib_ais_dispatch(int sender, gpointer user_data)
+{
+    /* Grab the header */
+    char *data = NULL;
+    char *header = NULL;
+    AIS_Message *msg = NULL;
+    SaAisErrorT rc = SA_AIS_OK;
+    static int header_len = sizeof(AIS_Message);
+
+    crm_malloc0(header, header_len);
+    
+    crm_debug("Start");
+    rc = saRecvRetry(sender, header, header_len);
+    if (rc != SA_AIS_OK) {
+	crm_err("Receiving message header failed");
+	goto bail;
+    }
+
+    msg = (void*)header;
+
+    crm_debug("Got new%s message indication (size=%d, %d, %d)",
+	      msg->is_compressed?" compressed":"",
+	      ais_data_len(msg), msg->size, msg->compressed_size);
+
+    if(ais_data_len(msg) == 0) {
+	crm_warn("Msg[%d] (dest=%s:%s, from=%s:%s.%d)",
+		 msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
+		 ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
+		 msg->sender.pid);
+	return TRUE;
+    }
+    
+    crm_malloc0(data, ais_data_len(msg));
+    rc = saRecvRetry(sender, data, ais_data_len(msg));
+    
+    if (rc != SA_AIS_OK) {
+	crm_err("Receiving message body failed: %d", rc);
+	goto bail;
+    }
+    
+    crm_debug("Read data");
+    
+    if(msg->is_compressed) {
+	int rc = BZ_OK;
+	char *uncompressed = NULL;
+	unsigned int new_size = msg->size;
+
+	crm_debug("Decompressing message data");
+	crm_malloc0(uncompressed, new_size);
+	rc = BZ2_bzBuffToBuffDecompress(
+	    uncompressed, &new_size, data, msg->compressed_size, 1, 0);
+
+	if(rc != BZ_OK) {
+	    crm_err("Decompression failed: %d", rc);
+	    crm_free(uncompressed);
+	    goto badmsg;
+	}
+	
+/* 	CRM_ASSERT(rc = BZ_OK); */
+	CRM_ASSERT(new_size == msg->size);
+
+	crm_free(data);
+	data = uncompressed;
+    }
+
+    if(safe_str_eq("identify", data)) {
+	int pid = getpid();
+	char *pid_s = crm_itoa(pid);
+	send_ais_text(pid_s, TRUE, NULL, crm_msg_ais);
+	crm_free(pid_s);
+
+    } else {
+	HA_Message *xml = string2xml(data);
+	if(xml != NULL) {
+	    crm_debug("Message received: '%.120s'", data);
+	    ha_msg_add(xml, F_ORIG, msg->sender.uname);
+	    ha_msg_add_int(xml, F_SEQ, msg->id);
+	    cib_peer_callback(xml, NULL);
+	} else {
+	    crm_err("Invalid message: %s", data);
+	}
+    }
+
+  badmsg:
+    crm_free(data);
+    crm_free(msg);
+    return TRUE;
+    
+  bail:
+    crm_err("AIS connection failed");
+    return FALSE;
+}
+
+static void
+cib_ais_destroy(gpointer user_data)
+{
+    crm_err("AIS connection terminated");
+    ais_fd_in = -1;
+    exit(1);
+}
+#endif
+
 int
 cib_init(void)
 {
 	gboolean was_error = FALSE;
+#ifdef WITH_NATIVE_AIS
+	cib_have_quorum = TRUE;
+#endif
+	
 	if(startCib("cib.xml") == FALSE){
 		crm_crit("Cannot start CIB... terminating");
 		exit(1);
 	}
 
 	if(stand_alone == FALSE) {
+#ifdef WITH_NATIVE_AIS
+	    struct utsname name;
+	    if(uname(&name) < 0) {
+		cl_perror("uname(2) call failed");
+		exit(100);
+	    }
+	    
+	    cib_our_uname = crm_strdup(name.nodename);
+	    crm_info("FSA Hostname: %s", cib_our_uname);
+
+	    if(init_ais_connection(
+		   cib_ais_dispatch, cib_ais_destroy) == FALSE) {
+		exit(100);
+	    }
+#else
 		hb_conn = ll_cluster_new("heartbeat");
 		if(cib_register_ha(hb_conn, CRM_SYSTEM_CIB) == FALSE) {
 			crm_crit("Cannot sign in to heartbeat... terminating");
 			exit(1);
 		}
+#endif
 	} else {
 		cib_our_uname = crm_strdup("localhost");
 	}
@@ -423,7 +550,8 @@ cib_init(void)
 		return_to_orig_privs();
 		return 0;
 	}	
-	
+
+#ifndef WITH_NATIVE_AIS
 	if(was_error == FALSE) {
 		crm_debug_3("Be informed of CRM Client Status changes");
 		if (HA_OK != hb_conn->llc_ops->set_cstatus_callback(
@@ -440,13 +568,16 @@ cib_init(void)
 	if(was_error == FALSE) {
 	    was_error = (ccm_connect() == FALSE);
 	}
-
+	
 	if(was_error == FALSE) {
 		/* Async get client status information in the cluster */
 		crm_debug_3("Requesting an initial dump of CIB client_status");
 		hb_conn->llc_ops->client_status(
 			hb_conn, NULL, CRM_SYSTEM_CIB, -1);
+	}
+#endif
 
+	if(was_error == FALSE) {
 		/* Create the mainloop and run it... */
 		mainloop = g_main_new(FALSE);
 		crm_info("Starting %s mainloop", crm_system_name);

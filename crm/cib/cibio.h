@@ -39,6 +39,19 @@ extern crm_data_t *resource_search;
 extern crm_data_t *constraint_search;
 extern crm_data_t *status_search;
 
+#ifdef WITH_NATIVE_AIS
+#  include <crm/ais.h> 
+#  define send_cluster_msg(node, service, data, ordered) send_ais_message( \
+	data, FALSE, node, service)
+#else
+extern ll_cluster_t *hb_conn;
+#  define send_cluster_msg(node, service, data, ordered) send_ha_message( \
+	hb_conn, data, node, ordered)
+#endif
+#ifdef WITH_NATIVE_AIS
+#else
+#endif
+    
 extern crm_data_t *get_the_CIB(void);
 
 extern int initializeCib(crm_data_t *cib);

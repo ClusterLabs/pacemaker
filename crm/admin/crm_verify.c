@@ -47,7 +47,6 @@
 
 gboolean USE_LIVE_CIB = FALSE;
 char *cib_save = NULL;
-const char *crm_system_name = NULL;
 void usage(const char *cmd, int exit_status);
 extern gboolean stage0(pe_working_set_t *data_set);
 void cleanup_alloc_calculations(pe_working_set_t *data_set);
@@ -69,8 +68,6 @@ main(int argc, char **argv)
 	const char *xml_file = NULL;
 	const char *xml_string = NULL;
 	
-	crm_system_name = basename(argv[0]);
-	
 	g_log_set_handler(NULL,
 			  G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
 			  | G_LOG_LEVEL_WARNING  | G_LOG_LEVEL_MESSAGE
@@ -81,7 +78,7 @@ main(int argc, char **argv)
 	/* and for good measure... - this enum is a bit field (!) */
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
 	
-	cl_log_set_entity(crm_system_name);
+	cl_log_set_entity(basename(argv[0]));
 	cl_log_set_facility(LOG_LOCAL7);
 	cl_log_enable_stderr(TRUE);
 	set_crm_log_level(LOG_ERR);
