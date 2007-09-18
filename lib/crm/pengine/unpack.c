@@ -635,7 +635,7 @@ unpack_find_resource(
 			 *   find another clone instead
 			 */
 		} else {
-			crm_debug_2("find another one");
+			crm_debug_3("find another one");
 			rsc = NULL;
 			is_duped_clone = TRUE;
 			increment_clone(alt_rsc_id);
