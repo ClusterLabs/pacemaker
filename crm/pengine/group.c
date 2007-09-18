@@ -44,6 +44,13 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 		crm_debug("Dependancy loop detected involving %s", rsc->id);
 		return NULL;
 	}
+	
+	if(group_data->first_child == NULL) {
+	    /* nothign to allocate */
+	    rsc->provisional = FALSE;
+	    return NULL;
+	}
+	
 	rsc->is_allocating = TRUE;
 	rsc->role = group_data->first_child->role;
 	
