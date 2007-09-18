@@ -28,7 +28,7 @@ class CIB:
         <nvpair id="cib-bootstrap-options-stonith-enabled"         name="stonith-enabled"        value="%d"/>
         <nvpair id="cib-bootstrap-options-pe-error-series-max"     name="pe-error-series-max"    value="-1"/>
         <nvpair id="cib-bootstrap-options-pe-warn-series-max"      name="pe-warn-series-max"     value="-1"/>
-        <nvpair id="cib-bootstrap-options-pe-input-series-max"     name="pe-input-series-max"    value="-1"/>
+        <nvpair id="cib-bootstrap-options-pe-input-series-max"     name="pe-input-series-max"    value="30000"/>
         <nvpair id="cib-bootstrap-options-default-resource-stickiness"         name="default-resource-stickiness"         value="0"/>
         <nvpair id="cib-bootstrap-options-default-resource-failure-stickiness" name="default-resource-failure-stickiness" value="0"/>
         <nvpair id="cib-bootstrap-options-shutdown-escalation"                 name="shutdown-escalation"                 value="5min"/>
@@ -140,8 +140,8 @@ class CIB:
           <primitive id="child_DoFencing" class="stonith" type="%s">
             <operations>
               <op id="DoFencing-1" name="monitor" interval="60s" prereq="nothing" timeout="300s"/>
-              <op id="DoFencing-2" name="start" prereq="nothing"  timeout="300s"/>
-              <op id="DoFencing-3" name="stop" timeout="300s"/>
+              <op id="DoFencing-2" name="start" prereq="nothing"  timeout="180s"/>
+              <op id="DoFencing-3" name="stop" timeout="180s"/>
             </operations>
             <instance_attributes id="fencing-child">
               <attributes>
