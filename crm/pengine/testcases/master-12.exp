@@ -1,5 +1,5 @@
  <transition_graph cluster-delay="60s" transition_id="0">
-   <synapse id="0" priority="99">
+   <synapse id="0">
      <action_set>
        <rsc_op id="37" operation="promote" operation_key="sf:0_promote_0" on_node="sel3" on_node_uuid="1ee1b756-2292-49bf-aed2-8ff15e8cc503">
          <primitive id="sf:0" long-id="ms-sf:sf:0" class="ocf" provider="heartbeat" type="Stateful"/>

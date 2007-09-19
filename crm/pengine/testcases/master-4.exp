@@ -80,7 +80,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="9" priority="1000">
+   <synapse id="9">
      <action_set>
        <rsc_op id="4" operation="cancel" operation_key="ocf_msdummy:0_monitor_5000" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="ocf_msdummy:0" long-id="master_rsc_1:ocf_msdummy:0" class="ocf" provider="heartbeat" type="/usr/lib/heartbeat/cts/OCFMSDummy"/>
@@ -89,7 +89,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="10" priority="1000">
+   <synapse id="10">
      <action_set>
        <rsc_op id="88" operation="promote" operation_key="ocf_msdummy:0_promote_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="ocf_msdummy:0" long-id="master_rsc_1:ocf_msdummy:0" class="ocf" provider="heartbeat" type="/usr/lib/heartbeat/cts/OCFMSDummy"/>
@@ -105,7 +105,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="11" priority="1000">
+   <synapse id="11">
      <action_set>
        <rsc_op id="89" operation="monitor" operation_key="ocf_msdummy:0_monitor_6000" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="ocf_msdummy:0" long-id="master_rsc_1:ocf_msdummy:0" class="ocf" provider="heartbeat" type="/usr/lib/heartbeat/cts/OCFMSDummy"/>

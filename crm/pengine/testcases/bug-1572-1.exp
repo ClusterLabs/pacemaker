@@ -1,5 +1,5 @@
  <transition_graph cluster-delay="60s" transition_id="0">
-   <synapse id="0" priority="300">
+   <synapse id="0" priority="100">
      <action_set>
        <rsc_op id="7" operation="start" operation_key="rsc_drbd_7788:1_start_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
          <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
@@ -15,7 +15,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="1" priority="300">
+   <synapse id="1" priority="100">
      <action_set>
        <rsc_op id="8" operation="stop" operation_key="rsc_drbd_7788:1_stop_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
          <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
@@ -31,7 +31,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="2" priority="300">
+   <synapse id="2" priority="100">
      <action_set>
        <rsc_op id="9" operation="demote" operation_key="rsc_drbd_7788:1_demote_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
          <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
@@ -44,7 +44,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="3" priority="300">
+   <synapse id="3" priority="100">
      <action_set>
        <rsc_op id="10" operation="promote" operation_key="rsc_drbd_7788:1_promote_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
          <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
@@ -76,7 +76,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="5" priority="300">
+   <synapse id="5" priority="100">
      <action_set>
        <rsc_op id="52" operation="notify" operation_key="rsc_drbd_7788:1_pre_notify_stop_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
          <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
@@ -89,7 +89,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="6" priority="300">
+   <synapse id="6" priority="100">
      <action_set>
        <rsc_op id="53" operation="notify" operation_key="rsc_drbd_7788:1_pre_notify_promote_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
          <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
@@ -115,7 +115,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="8" priority="300">
+   <synapse id="8" priority="100">
      <action_set>
        <rsc_op id="55" operation="notify" operation_key="rsc_drbd_7788:1_pre_notify_demote_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
          <primitive id="rsc_drbd_7788:1" long-id="ms_drbd_7788:rsc_drbd_7788:1" class="ocf" provider="heartbeat" type="drbd"/>
@@ -141,7 +141,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="10" priority="100">
+   <synapse id="10">
      <action_set>
        <rsc_op id="11" operation="stop" operation_key="rsc_drbd_7788:0_stop_0" on_node="arc-dknightlx" on_node_uuid="8c16c69e-f753-49cf-ba89-3ae421940042">
          <primitive id="rsc_drbd_7788:0" long-id="ms_drbd_7788:rsc_drbd_7788:0" class="ocf" provider="heartbeat" type="drbd"/>
@@ -154,7 +154,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="11" priority="100">
+   <synapse id="11">
      <action_set>
        <rsc_op id="57" operation="notify" operation_key="rsc_drbd_7788:0_pre_notify_stop_0" on_node="arc-dknightlx" on_node_uuid="8c16c69e-f753-49cf-ba89-3ae421940042">
          <primitive id="rsc_drbd_7788:0" long-id="ms_drbd_7788:rsc_drbd_7788:0" class="ocf" provider="heartbeat" type="drbd"/>
@@ -167,7 +167,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="12" priority="100">
+   <synapse id="12">
      <action_set>
        <rsc_op id="58" operation="notify" operation_key="rsc_drbd_7788:0_pre_notify_demote_0" on_node="arc-dknightlx" on_node_uuid="8c16c69e-f753-49cf-ba89-3ae421940042">
          <primitive id="rsc_drbd_7788:0" long-id="ms_drbd_7788:rsc_drbd_7788:0" class="ocf" provider="heartbeat" type="drbd"/>

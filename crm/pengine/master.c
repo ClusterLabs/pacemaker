@@ -598,13 +598,11 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 	clone_create_notifications(rsc, action, action_complete, data_set);	
 
-#if 0
 	/* restore the correct priority */ 
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
 		child_rsc->priority = rsc->priority;
 	    );
-#endif
 }
 
 void
