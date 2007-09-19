@@ -130,6 +130,7 @@ struct resource_s {
 
 		int	 priority; 
 		int	 stickiness; 
+		int	 sort_index; 
 		int	 fail_stickiness;
 		int	 effective_priority; 
 
