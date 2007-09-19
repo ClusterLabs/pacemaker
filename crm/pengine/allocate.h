@@ -46,6 +46,7 @@ typedef struct notify_data_s {
 struct resource_alloc_functions_s 
 {
 		GListPtr(*merge_weights)(resource_t*, const char*, GListPtr, int, gboolean);
+		void (*update_score)(resource_t *, const char *, int);
 		node_t *(*color)(resource_t *, pe_working_set_t *);
 		void (*create_actions)(resource_t *, pe_working_set_t *);
 		gboolean (*create_probe)(
@@ -71,6 +72,7 @@ struct resource_alloc_functions_s
 		
 };
 
+extern void native_update_score(resource_t *rsc, const char *id, int score);
 extern GListPtr native_merge_weights(
     resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback);
 extern node_t * native_color(resource_t *rsc, pe_working_set_t *data_set);

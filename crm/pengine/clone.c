@@ -196,7 +196,7 @@ can_run_instance(resource_t *rsc, node_t *node)
 
   bail:
 	if(node) {
-		node->weight = -INFINITY;
+	    rsc->cmds->update_score(rsc, node->details->id, -INFINITY);
 	}
 	return NULL;
 }
@@ -220,9 +220,7 @@ color_instance(resource_t *rsc, pe_working_set_t *data_set)
 
 	if(rsc->allowed_nodes) {
 		slist_iter(try_node, node_t, rsc->allowed_nodes, lpc,
-			   if(can_run_instance(rsc, try_node) == NULL) {
-				   try_node->weight = -INFINITY;
-			   }
+			   can_run_instance(rsc, try_node);
 			);
 	}
 

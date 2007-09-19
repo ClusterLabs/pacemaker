@@ -202,6 +202,7 @@ do_test inc9 "Non-unique clone"
 do_test inc10 "Non-unique clone (stop)"
 do_test inc11 "Primitive colocation with clones" 
 do_test inc12 "Clone shutdown" 
+do_test cloned-group "Make sure only the correct number of cloned groups are started"
 
 echo ""
 do_test master-0 "Stopped -> Slave"

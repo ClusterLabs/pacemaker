@@ -1795,3 +1795,21 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		do_crm_log(level, "%s nothing to do", rsc->id);
 	}
 }
+
+void native_update_score(resource_t *rsc, const char *id, int score) 
+{
+    node_t *node = NULL;
+    node = pe_find_node_id(rsc->allowed_nodes, id);
+    if(node != NULL) {
+	crm_debug_2("Updating score for %s on %s: %d + %d",
+		    rsc->id, id, node->weight, score);
+	node->weight = merge_weights(node->weight, score);
+    }
+
+    if(rsc->children) {
+	slist_iter(
+	    child_rsc, resource_t, rsc->children, lpc,
+	    child_rsc->cmds->update_score(child_rsc, id, score);
+	    );
+    }
+}
