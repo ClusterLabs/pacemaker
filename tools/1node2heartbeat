@@ -1,0 +1,326 @@
+#!/usr/bin/python
+#
+#	Program to determine current list of enabled services for init state 3
+#	and create heartbeat CRM configuration for heartbeat to manage them
+#
+__copyright__='''
+Author: Alan Robertson	<alanr@unix.sh>
+Copyright (C) 2006 International Business Machines
+'''
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+import os,re
+#
+#	Here's the plan:
+#	Find out the default run level
+#	Find out what (additional?) services are enabled in that run level
+#	Figure out which of them start after the network (or heartbeat?)
+#	Ignore heartbeat :-)
+#	Figure out which services supply the $services
+#		Look to see if the SUSE /etc/insserv.conf file exists
+#			If so, then scan it for who provides the $services
+#			defined by the LSB
+#		If we're on Red Hat, then make some Red Hat type assumptions
+#			(whatever those might be)
+#		If we're not, then make some generic assumptions...
+#	Scan the init scripts for their dependencies...
+#	Eliminate anything at or before 'network'.
+#	Create resources corresponding to all active services
+#	Include monitor actions for those services
+#	that can be started after 'network'
+#	Add the start-after dependencies
+#
+#	Things to consider doing in the future:
+#	Constrain them to only run on the local system?
+#	Put them all in a convenience group (no colocation, no ordering)
+#	Add start and stop timeouts
+
+ServiceKeywords = {}
+ServiceMap = {}
+ProvidesMap = {}
+RequiresMap = {}
+SkipMap = {'heartbeat': None,  'random': None}
+NoMonitor = {'microcode': None}
+PreReqs = ['network']
+IgnoreList = []
+sysname = os.uname()[1]
+InitDir = "/etc/init.d"
+
+def service_is_hb_compatible(service):
+  scriptname = os.path.join(InitDir, service)
+  command=scriptname + " status >/dev/null 2>&1";
+  rc = os.system(command)
+  return rc == 0
+
+def find_ordered_services(dir):
+  allscripts = os.listdir(dir)
+  allscripts.sort()
+  services = []
+  for entry in allscripts:
+    matchobj = re.match("S[0-9]+(.*)", entry)
+    if not matchobj:
+      continue
+    service = matchobj.group(1)
+    if SkipMap.has_key(service):
+      continue
+    if service_is_hb_compatible(service):
+      services.append(service)
+    else:
+      IgnoreList.append(service)
+  return services
+
+
+def register_services(initdir, services):
+  for service in services:
+    if not ServiceMap.has_key(service):
+       ServiceMap[service] = os.path.join(initdir, service)
+  for service in services:
+    script_dependency_scan(service, os.path.join(initdir, service), ServiceMap)
+  
+#
+#	From the LSB version 3.1: "Comment Conventions for Init Scripts"
+#
+### BEGIN INIT INFO
+### END INIT INFO
+#
+# The delimiter lines may contain trailing whitespace, which shall be ignored.
+# All lines inside the block shall begin with a hash character '#' in the
+# first column, so the shell interprets them as comment lines which do not
+# affect operation of the script. The lines shall be of the form:
+# {keyword}: arg1 [arg2...]
+# with exactly one space character between the '#' and the keyword, with a
+# single exception. In lines following a line containing the Description
+# keyword, and until the next keyword or block ending delimiter is seen,
+# a line where the '#' is followed by more than one space or a tab
+# character shall be treated as a continuation of the previous line.
+#
+
+# Make this a class to avoid recompiling it for each script we scan.
+class pats:
+  begin=re.compile("###\s+BEGIN\s+INIT\s+INFO")
+  end=re.compile("###\s+END\s+INIT\s+INFO")
+  desc=re.compile("# Description:\s*(.*)", re.IGNORECASE)
+  desc_continue=re.compile("#(  +|\t)\s*(.*)")
+  keyword=re.compile("# ([^\s:]+):\s*(.*)\s*\Z")
+
+def script_keyword_scan(filename, servicename):
+  keywords = {}
+  ST_START=0
+  ST_INITINFO=1
+  ST_DESCRIPTION=1
+  description=""
+  state=ST_START
+
+  try:
+    fd = open(filename)
+  except IOError:
+    return keywords
+
+  while 1:
+    line = fd.readline()
+    if not line:
+      break
+
+    if state == ST_START:
+       if pats.begin.match(line):
+          state = ST_INITINFO
+       continue
+    if pats.end.match(line):
+      break
+
+    if state == ST_DESCRIPTION:
+      match = pats.desc_continue.match(line)
+      if match:
+        description += ("\n" + match.group(2))
+        continue
+      state = ST_INITINFO
+
+    match = pats.desc.match(line)
+    if match:
+      state = ST_DESCRIPTION
+      description = match.group(1)
+      continue
+
+    match = pats.keyword.match(line)
+    if match:
+      keywords[match.group(1)] = match.group(2)
+
+  # Clean up and return
+  fd.close()
+  if description != "":
+    keywords["Description"] = description
+  keywords["_PATHNAME_"] = filename
+  keywords["_RESOURCENAME_"] = "R_" + sysname + "_" + servicename
+  return keywords
+
+def script_dependency_scan(service, script, servicemap):
+  keywords=script_keyword_scan(script, service)
+  ServiceKeywords[service] = keywords
+
+SysServiceGuesses = {
+  '$local_fs':		['boot.localfs'],
+  '$network':		['network'],
+  '$named':		['named'],
+  '$portmap':		['portmap'],
+  '$remote_fs':		['nfs'],
+  '$syslog':		['syslog'],
+  '$netdaemons':	['portmap', 'inetd'],
+  '$time':		['ntp'],
+}
+
+#
+#	For specific versions of Linux, there are often better ways
+#	to do this...
+#
+#	(e.g., for SUSE Linux, one should look at /etc/insserv.conf file)
+#
+def map_sys_services(servicemap):
+  sysservicemap = {}
+  for sysserv in SysServiceGuesses.keys():
+    servlist = SysServiceGuesses[sysserv]
+    result = []
+    for service in servlist:
+      if servicemap.has_key(service):
+        result.append(service)
+
+    sysservicemap[sysserv] = result
+  return sysservicemap
+
+#
+#
+#
+def create_service_dependencies(servicekeywords, systemservicemap):
+  dependencies = {}
+  for service in servicekeywords.keys():
+    if not dependencies.has_key(service):
+      dependencies[service] = {}
+    for key in ('Required-Start', 'Should-Start'):
+      if not servicekeywords[service].has_key(key):
+        continue
+      for depserv in servicekeywords[service][key].split():
+        if systemservicemap.has_key(depserv):
+          sysserv = systemservicemap[depserv]
+          for serv in sysserv:
+            dependencies[service][serv] = None
+        else:
+          if servicekeywords.has_key(depserv):
+            dependencies[service][depserv] = None
+    if len(dependencies[service]) == 0:
+       del dependencies[service]
+  return dependencies
+
+#
+#	Modify the service name map to include all the mappings from
+#	'Provides' services to real service script names...
+#
+def map_script_services(sysservmap, servicekeywords):
+  for service in servicekeywords.keys():
+    if not servicekeywords[service].has_key('Provides'):
+      continue
+    for provided in servicekeywords[service]['Provides'].split():
+      if not sysservmap.has_key(provided):
+        sysservmap[provided] = []
+      sysservmap[provided].append(service)
+  return sysservmap
+
+def create_cib_update(keywords, depmap):
+  services =  keywords.keys()
+  services.sort()
+  result = ""
+  # Create the XML for the resources
+  result += '<cib>\n'
+  result += '<configuration>\n'
+  result += '<crm_config/>\n'
+  result += '<nodes/>\n'
+  result += '<resources>\n'
+  groupname="G_" + sysname + "_localinit"
+  result += ' <group id="'+groupname+'" ordered="0" collocated="0">\n'
+  for service in services:
+    rid = keywords[service]["_RESOURCENAME_"]
+    monid = "OPmon_" + sysname + '_' + service
+    result += \
+        '  <primitive id="' + rid + '" class="lsb" type="'+ service +	\
+        '">\n' + 							\
+        '   <instance_attributes/>\n' +					\
+        '   <operations>\n'
+    if  not NoMonitor.has_key(service):
+      result += \
+        '    <op id="' + monid + '" name="monitor" interval="30s" timeout="30s"/>\n'
+    result += \
+        '   </operations>\n'						\
+        '  </primitive>\n'
+  result += ' </group>\n'
+  result += '</resources>\n'
+  services = depmap.keys()
+  services.sort()
+  result += '<constraints>\n'
+  for service in services:
+    rid = keywords[service]["_RESOURCENAME_"]
+    deps = depmap[service].keys()
+    deps.sort()
+    for dep in deps:
+      if not keywords.has_key(dep):
+        continue
+      depid = keywords[dep]["_RESOURCENAME_"]
+      orderid='O_' + sysname + '_' + service + '_' + dep
+      result += ' <rsc_order id="' + orderid + '" from="' + rid + \
+		'" to="' + depid + '" type="after"/>\n'
+  loc_id="Loc_" + sysname + "_localinit"
+  rule_id="LocRule_" + sysname + "_localinit"
+  expr_id="LocExp_" + sysname + "_localinit"
+
+  result += ' <rsc_location id="' + loc_id + '" rsc="' + groupname + '">\n'
+  result += '  <rule id="' + rule_id + '" score="-INFINITY">\n'
+  result += '   <expression attribute="#uname" id="' + expr_id +	\
+			'" operation="ne" value="' + sysname + '"/>\n'
+  result += '   </rule>\n'
+  result += ' </rsc_location>\n'
+  result += '</constraints>\n'
+  result += '</configuration>\n'
+  result += '<status/>\n'
+  result += '</cib>\n'
+  return result
+
+
+
+def remove_a_prereq(service, servicemap, keywords, deps):
+  if deps.has_key(service):
+    parents = deps[service].keys()
+    del deps[service]
+  else:
+    parents = []
+  if servicemap.has_key(service):
+    del servicemap[service]
+  if keywords.has_key(service):
+    del keywords[service]
+  for parent in parents:
+    if not deps.has_key(parent):
+      continue
+    remove_a_prereq(parent, servicemap, keywords, deps)
+    
+
+def remove_important_prereqs(prereqs, servicemap, keywords, deps):
+  # Find everything these important prereqs need and get rid of them...
+  for service in prereqs:
+    remove_a_prereq(service, servicemap, keywords, deps)
+
+ServiceList = find_ordered_services(os.path.join(InitDir, "rc3.d"))
+register_services(InitDir, ServiceList)
+SysServiceMap = map_sys_services(ServiceMap)
+map_script_services(SysServiceMap, ServiceKeywords)
+ServiceDependencies = create_service_dependencies(ServiceKeywords,SysServiceMap)
+remove_important_prereqs(PreReqs, SysServiceMap, ServiceKeywords, ServiceDependencies)
+
+print create_cib_update(ServiceKeywords, ServiceDependencies)
