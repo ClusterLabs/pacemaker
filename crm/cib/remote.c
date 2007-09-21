@@ -419,6 +419,35 @@ cib_remote_msg(int csock, gpointer data)
 	xml_remove_prop(command, F_CIB_HOST);
 	xml_remove_prop(command, F_CIB_GLOBAL_UPDATE);
 	
+	value = cl_get_string(command, F_CIB_OPERATION);
+	if(safe_str_eq(value, T_CIB_NOTIFY) ) {
+	    /* Update the notify filters for this client */
+	    int on_off = 0;
+	    ha_msg_value_int(command, F_CIB_NOTIFY_ACTIVATE, &on_off);
+	    value = cl_get_string(command, F_CIB_NOTIFY_TYPE);
+	    
+	    crm_info("Setting %s callbacks for %s: %s",
+		     value, client->name, on_off?"on":"off");
+	    
+	    if(safe_str_eq(value, T_CIB_POST_NOTIFY)) {
+		client->post_notify = on_off;
+		
+	    } else if(safe_str_eq(value, T_CIB_PRE_NOTIFY)) {
+		client->pre_notify = on_off;
+		
+	    } else if(safe_str_eq(value, T_CIB_UPDATE_CONFIRM)) {
+		client->confirmations = on_off;
+		
+	    } else if(safe_str_eq(value, T_CIB_DIFF_NOTIFY)) {
+		client->diffs = on_off;
+		
+	    } else if(safe_str_eq(value, T_CIB_REPLACE_NOTIFY)) {
+		client->replace = on_off;
+		
+	    }
+	    goto bail;
+	}
+	
  	cib_process_request(command, TRUE, TRUE, FALSE, client);
 	
   bail:
