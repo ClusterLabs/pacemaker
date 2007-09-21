@@ -196,7 +196,7 @@ can_run_instance(resource_t *rsc, node_t *node)
 
   bail:
 	if(node) {
-	    rsc->cmds->update_score(rsc, node->details->id, -INFINITY);
+	    common_update_score(rsc, node->details->id, -INFINITY);
 	}
 	return NULL;
 }

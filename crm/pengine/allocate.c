@@ -41,7 +41,6 @@ void migrate_reload_madness(pe_working_set_t *data_set);
 resource_alloc_functions_t resource_class_alloc_functions[] = {
 	{
 		native_merge_weights,
-		native_update_score,
 		native_color,
 		native_create_actions,
 		native_create_probe,
@@ -58,7 +57,6 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 	},
 	{
 		group_merge_weights,
-		native_update_score,
 		group_color,
 		group_create_actions,
 		native_create_probe,
@@ -75,7 +73,6 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 	},
 	{
 		native_merge_weights,
-		native_update_score,
 		clone_color,
 		clone_create_actions,
 		clone_create_probe,
@@ -92,7 +89,6 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 	},
 	{
 		native_merge_weights,
-		native_update_score,
 		master_color,
 		master_create_actions,
 		clone_create_probe,

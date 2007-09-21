@@ -687,11 +687,6 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		  crm_data_t *migrate_op,
 		  pe_working_set_t *data_set) 
 {
-	int fail_count = 0;
-	char *fail_attr = NULL;
-	const char *value = NULL;
-	GHashTable *meta_hash = NULL;
-
 	if(on_fail == action_migrate_failure) {
 		node_t *from = NULL;
 		const char *uuid = NULL;
@@ -704,43 +699,6 @@ process_rsc_state(resource_t *rsc, node_t *node,
 	crm_debug_2("Resource %s is %s on %s",
 		    rsc->id, role2text(rsc->role),
 		    node->details->uname);
-
-	meta_hash = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
-		g_hash_destroy_str, g_hash_destroy_str);
-	get_meta_attributes(meta_hash, rsc, node, data_set);
-
-	/* update resource preferences that relate to the current node */
-	value = g_hash_table_lookup(meta_hash, "resource_stickiness");
-	if(value != NULL && safe_str_neq("default", value)) {
-		rsc->stickiness = char2score(value);
-	} else {
-		rsc->stickiness = data_set->default_resource_stickiness;
-	}
-	
-	value = g_hash_table_lookup(meta_hash, XML_RSC_ATTR_FAIL_STICKINESS);
-	if(value != NULL && safe_str_neq("default", value)) {
-		rsc->fail_stickiness = char2score(value);
-	} else {
-		rsc->fail_stickiness = data_set->default_resource_fail_stickiness;
-	}
-
-	/* process failure stickiness */
-	fail_attr = crm_concat("fail-count", rsc->id, '-');
-	value = g_hash_table_lookup(node->details->attrs, fail_attr);
-	if(value != NULL) {
-		crm_debug("%s: %s", fail_attr, value);
-		fail_count = crm_parse_int(value, "0");
-	}
-	crm_free(fail_attr);
-	
-	if(fail_count > 0 && rsc->fail_stickiness != 0) {
-		resource_location(rsc, node, fail_count * rsc->fail_stickiness,
-				  "fail_stickiness", data_set);
-		crm_debug("Setting failure stickiness for %s on %s: %d",
-			  rsc->id, node->details->uname,
-			  fail_count * rsc->fail_stickiness);
-	}
 
 	/* process current state */
 	if(rsc->role != RSC_ROLE_UNKNOWN) { 
@@ -809,7 +767,6 @@ process_rsc_state(resource_t *rsc, node_t *node,
 			);
 		crm_free(key);
 	}
-	g_hash_table_destroy(meta_hash);
 }
 
 /* create active recurring operations as optional */ 
@@ -999,6 +956,11 @@ unpack_lrm_resources(node_t *node, crm_data_t * lrm_rsc_list, pe_working_set_t *
 	CRM_CHECK(node != NULL, return FALSE);
 
 	crm_debug_3("Unpacking resources on %s", node->details->uname);
+
+	slist_iter(
+	    rsc, resource_t, data_set->resources, lpc,
+	    common_apply_stickiness(rsc, node, data_set);
+	    );
 	
 	xml_child_iter_filter(
 		lrm_rsc_list, rsc_entry, XML_LRM_TAG_RESOURCE,
