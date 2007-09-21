@@ -640,7 +640,15 @@ unpack_operation(
 	} else if(safe_str_eq(value, "fence")) {
 		action->on_fail = action_fail_fence;
 		value = "node fencing";
-
+		
+		if(data_set->stonith_enabled == FALSE) {
+		    crm_config_err("Specifying on_fail=fence and"
+				   " stonith-enabled=false makes no sense");
+		    action->on_fail = action_fail_stop;
+		    action->fail_role = RSC_ROLE_STOPPED;
+		    value = "stop resource";
+		}
+		
 	} else if(safe_str_eq(value, "ignore")) {
 		action->on_fail = action_fail_ignore;
 		value = "ignore";
