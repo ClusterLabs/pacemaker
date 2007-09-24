@@ -252,10 +252,10 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 		if(safe_str_neq(digest_restart_calc, digest_restart)) {
 			did_change = TRUE;
 			crm_log_xml_info(params_restart, "params:restart");
-			crm_warn("Parameters to %s on %s changed: recorded %s vs. %s (restart:%s)",
+			crm_warn("Parameters to %s on %s changed: recorded %s vs. %s (restart:%s) %s",
 				 key, active_node->details->uname,
 				 crm_str(digest_restart), digest_restart_calc,
-				 op_version);
+				 op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
 			
 			key = generate_op_key(rsc->id, task, interval);
 			custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
@@ -267,9 +267,10 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 		action_t *op = NULL;
 		did_change = TRUE;
 		crm_log_xml_info(params_all, "params:all");
- 		crm_warn("Parameters to %s on %s changed: recorded %s vs. %s (all:%s)",
+ 		crm_warn("Parameters to %s on %s changed: recorded %s vs. %s (all:%s) %s",
 			 key, active_node->details->uname,
-			 crm_str(digest_all), digest_all_calc, op_version);
+			 crm_str(digest_all), digest_all_calc, op_version,
+			 crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
 		
 		key = generate_op_key(rsc->id, task, interval);
 		op = custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
