@@ -587,9 +587,9 @@ create_fake_resource(const char *rsc_id, crm_data_t *rsc_entry, pe_working_set_t
 {
 	resource_t *rsc = NULL;
 	crm_data_t *xml_rsc  = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
-	crm_log_xml_info(rsc_entry, "Orphan resource");
 	copy_in_properties(xml_rsc, rsc_entry);
 	crm_xml_add(xml_rsc, XML_ATTR_ID, rsc_id);
+	crm_log_xml_info(xml_rsc, "Orphan resource");
 	
 	common_unpack(xml_rsc, &rsc, NULL, data_set);
 	rsc->orphan = TRUE;
