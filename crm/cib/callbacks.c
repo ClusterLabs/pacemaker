@@ -73,6 +73,7 @@ void send_cib_replace(const HA_Message *sync_request, const char *host);
 void cib_process_request(
 	HA_Message *request, gboolean privileged, gboolean force_synchronous,
 	gboolean from_peer, cib_client_t *cib_client);
+HA_Message *cib_construct_reply(HA_Message *request, HA_Message *output, int rc);
 
 gboolean syncd_once = FALSE;
 
@@ -1070,7 +1071,14 @@ cib_process_request(
 		return;
 	}
 
-	if(process) {
+	if(cib_status != cib_ok) {
+	    rc = cib_status;
+	    crm_err("Operation ignored, cluster configuration is invalid."
+		    " Please repair and restart: %s",
+		    cib_error2string(cib_status));
+	    op_reply = cib_construct_reply(request, the_cib, cib_status);
+
+	} else if(process) {
 		cib_num_local++;
 		crm_debug_2("Performing local processing:"
 			    " op=%s origin=%s/%s,%s (update=%s)",
@@ -1152,7 +1160,7 @@ cib_process_request(
 	return;	
 }
 
-static HA_Message *
+HA_Message *
 cib_construct_reply(HA_Message *request, HA_Message *output, int rc) 
 {
 	int lpc = 0;
@@ -1210,6 +1218,8 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 	gboolean global_update = crm_is_true(
 		cl_get_string(request, F_CIB_GLOBAL_UPDATE));
 	
+	CRM_ASSERT(cib_status == cib_ok);
+
 	*reply = NULL;
 	*cib_diff = NULL;
 	if(per_action_cib) {
@@ -1229,14 +1239,6 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 	   && privileged == FALSE) {
 		/* abort */
 		rc = cib_not_authorized;
-	}
-
-	if(cib_status != cib_ok) {
-		*reply = cib_construct_reply(request, the_cib, cib_status);
-		if(per_action_cib) {
-			uninitializeCib();
-		}
-		return cib_status;
 	}
 	
 	if(rc == cib_ok
