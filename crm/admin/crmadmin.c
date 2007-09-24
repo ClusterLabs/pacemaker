@@ -502,6 +502,7 @@ do_init(void)
 gboolean
 admin_msg_callback(IPC_Channel * server, void *private_data)
 {
+	int rc = 0;
 	int lpc = 0;
 	IPC_Message *msg = NULL;
 	ha_msg_input_t *new_input = NULL;
@@ -519,9 +520,10 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			delete_ha_msg_input(new_input);
 			new_input = NULL;
 		}
-		
-		if (server->ops->recv(server, &msg) != IPC_OK) {
-			perror("Receive failure:");
+
+		rc = server->ops->recv(server, &msg);
+		if (rc != IPC_OK) {
+		    cl_perror("Receive failure (%d)", rc);
 			return !hack_return_good;
 		}
 
