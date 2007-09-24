@@ -531,6 +531,7 @@ class LinuxHAv2(HeartbeatCM):
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "Exiting to recover from CCM connection failure",
                     "crmd:.*do_exit: Could not recover from internal error",
+                    "crmd:.*do_exit: Performing A_EXIT_1 - forcefully exiting the CRMd",
                     "crmd: .*I_ERROR.*(ccm_dispatch|crmd_cib_connection_destroy)",
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
