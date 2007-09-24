@@ -300,15 +300,7 @@ do_ccm_update_cache(long long action,
 	}
 #endif
 		
-
 	crm_malloc0(membership_copy, sizeof(oc_node_list_t));
-
-	if(membership_copy == NULL) {
-		crm_crit("Couldnt create membership copy - out of memory");
-		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-		return I_NULL;
-	}
-
 	membership_copy->id = oc->m_instance;
 	membership_copy->last_event = event;
 
