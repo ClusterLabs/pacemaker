@@ -441,7 +441,7 @@ crm_log_init(
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
 	
 	cl_log_set_entity(entity);
-	cl_log_set_facility(LOG_DAEMON);
+	cl_log_set_facility(HA_LOG_FACILITY);
 
 	if(coredir) {
 		cl_set_corerootdir(HA_COREDIR);

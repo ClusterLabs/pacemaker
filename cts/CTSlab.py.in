@@ -35,6 +35,7 @@ from socket import gethostbyname_ex
 tests = None
 cm = None
 old_handler = None
+DefaultFacility = "daemon"
 
 def sig_handler(signum, frame) :
     if cm != None:
@@ -192,7 +193,6 @@ class Logger:
 class SysLog(Logger):
     # http://docs.python.org/lib/module-syslog.html
     defaultsource="CTS"
-    defaultfacility= syslog.LOG_LOCAL7
     map = {
             "kernel":   syslog.LOG_KERN,
             "user":     syslog.LOG_USER,
@@ -221,10 +221,11 @@ class SysLog(Logger):
 
         if labinfo.has_key("SyslogFacility"):
             self.facility=labinfo["SyslogFacility"]
-            if SysLog.map.has_key(self.facility):
-              self.facility=SysLog.map[self.facility]
         else:
-            self.facility=SysLog.defaultfacility
+            self.facility=DefaultFacility
+
+        if SysLog.map.has_key(self.facility):
+            self.facility=SysLog.map[self.facility]
 
         syslog.openlog(self.source, 0, self.facility)
 
@@ -350,7 +351,7 @@ class CtsLab(UserDict):
         if not self.has_key("logrestartcmd"):
             self["logrestartcmd"] = "@INITDIR@/syslog restart"
         if not self.has_key("logfacility"):
-            LogFacility = "local7"
+            LogFacility = DefaultFacility
 
         #
         #  Now set up our random number generator...
@@ -509,7 +510,7 @@ if __name__ == '__main__':
     import CM_hb
 
     HAdir = "@sysconfdir@/ha.d"
-    LogFile = "@HA_VARLOGDIR@/ha-log-local7"
+    LogFile = "@HA_VARLOGDIR@/ha-log-"+DefaultFacility
     DoStonith = 1
     DoStandby = 1
     DoFencing = 1
@@ -687,7 +688,7 @@ if __name__ == '__main__':
         if config.Parameters.has_key("logfacility"): 
             LogFacility = config.Parameters["logfacility"][0]
         else:
-            LogFacility = "local7"
+            LogFacility = DefaultFacility
 
     if LimitNodes > 0:
         if len(node_list) > LimitNodes:

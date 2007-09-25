@@ -463,19 +463,12 @@ crmd_ipc_connection_destroy(gpointer user_data)
 ll_cluster_t *
 do_init(void)
 {
-	int facility;
 	GCHSource *src = NULL;
 	ll_cluster_t *hb_cluster = NULL;
 	
 	/* change the logging facility to the one used by heartbeat daemon */
 	hb_cluster = ll_cluster_new("heartbeat");
 	
-	crm_debug_2("Switching to Heartbeat logger");
-	if (( facility =
-	      hb_cluster->llc_ops->get_logfacility(hb_cluster)) > 0) {
-		cl_log_set_facility(facility);
-	}
-
 	crm_malloc0(admin_uuid, 11);
 	if(admin_uuid != NULL) {
 		snprintf(admin_uuid, 10, "%d", getpid());

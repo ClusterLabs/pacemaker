@@ -82,7 +82,7 @@ main(int argc, char **argv)
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
 	
 	cl_log_set_entity(crm_system_name);
-	cl_log_set_facility(LOG_LOCAL7);
+	cl_log_set_facility(HA_LOG_FACILITY);
 	cl_log_enable_stderr(TRUE);
 	set_crm_log_level(LOG_ERR);
 	
