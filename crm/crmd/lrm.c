@@ -607,12 +607,11 @@ build_operation_update(
 	g_hash_table_foreach(op->params, hash2field, args_xml);
 	filter_action_parameters(args_xml, caller_version);
 	digest = calculate_xml_digest(args_xml, TRUE);
-	if(safe_str_eq(task, CRMD_ACTION_START)) {
-		/* info for now as this area has been problematic to debug */
-		crm_info("Digest for %s (%s) was %s\n", 
-			  crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC),
-			  ID(xml_op), digest);
-		crm_log_xml(LOG_INFO,  "digest:source", args_xml);
+	if(op->interval == 0 && safe_str_neq(task, CRMD_ACTION_STOP)) {
+		crm_debug("Calculated digest %s for %s (%s)\n", 
+			  digest, ID(xml_op),
+			  crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+		crm_log_xml(LOG_DEBUG,  "digest:source", args_xml);
 	}
 	
 	crm_xml_add(xml_op, XML_LRM_ATTR_OP_DIGEST, digest);
