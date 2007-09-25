@@ -374,7 +374,7 @@ group_merge_weights(
     group_variant_data_t *group_data = NULL;
     get_group_variant_data(group_data, rsc);
     
-    if(rsc->is_allocating) {
+    if(rsc->is_merging) {
 	crm_debug("Breaking dependancy loop with %s at %s", rsc->id, rhs);
 	return nodes;
 
@@ -382,6 +382,7 @@ group_merge_weights(
 	return nodes;
     }
 
+    rsc->is_merging = TRUE;
     nodes = group_data->first_child->cmds->merge_weights(
 	group_data->first_child, rhs, nodes, factor, allow_rollback);
 
@@ -393,5 +394,6 @@ group_merge_weights(
 	    constraint->score/INFINITY, allow_rollback);
 	);
 
+    rsc->is_merging = FALSE;
     return nodes;
 }

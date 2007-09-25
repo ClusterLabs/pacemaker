@@ -143,6 +143,7 @@ struct resource_s {
 		gboolean provisional;
 		gboolean globally_unique;
 		gboolean is_allocating;
+		gboolean is_merging;
 		
 		gboolean failed;
 		gboolean start_pending;
