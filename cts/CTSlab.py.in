@@ -197,7 +197,7 @@ class SysLog(Logger):
             "kernel":   syslog.LOG_KERN,
             "user":     syslog.LOG_USER,
             "mail":     syslog.LOG_MAIL,
-            "daemon":   syslog.LOG_MAIL,
+            "daemon":   syslog.LOG_DAEMON,
             "auth":     syslog.LOG_AUTH,
             "lpr":      syslog.LOG_LPR,
             "news":     syslog.LOG_NEWS,
