@@ -34,7 +34,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order id="order1" from="rsc1" type="before" to="rsc2"/>
+      <rsc_order id="order1" from="rsc1" type="before" to="rsc2" score="0"/>
       <rsc_colocation id="order1" from="rsc1" to="rsc2" score="INFINITY"/>
     </constraints>
   </configuration>

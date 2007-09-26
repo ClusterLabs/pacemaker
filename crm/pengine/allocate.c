@@ -975,11 +975,9 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		return FALSE;
 	}
 
-#if 0
 	if(score == NULL) {
 	    score = "INFINITY";
 	}
-#endif
 	
 	score_i = char2score(score);
 	cons_weight = pe_order_optional;

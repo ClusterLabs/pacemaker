@@ -117,16 +117,16 @@
        </primitive>
      </resources>
      <constraints>
-       <rsc_order id="evmsdorderconstraints-01" from="evmscloneset" to="evmsdcloneset"/>
-       <rsc_order id="evmsorderconstraints-02" from="configstorecloneset" to="evmscloneset"/>
-       <rsc_order id="evmsorderconstraints-01" from="imagestorecloneset" to="evmscloneset"/>
+       <rsc_order id="evmsdorderconstraints-01" from="evmscloneset" to="evmsdcloneset" score="0"/>
+       <rsc_order id="evmsorderconstraints-02" from="configstorecloneset" to="evmscloneset" score="0"/>
+       <rsc_order id="evmsorderconstraints-01" from="imagestorecloneset" to="evmscloneset" score="0"/>
        <rsc_location id="sles10_location" rsc="sles10">
          <rule id="pref_sles10_location" score="INFINITY">
            <expression attribute="#uname" operation="eq" value="node1" id="fdef446b-1e3a-4957-861c-bece0b861763"/>
          </rule>
        </rsc_location>
-       <rsc_order id="vm1orderconstraints-01" from="sles10" to="imagestorecloneset"/>
-       <rsc_order id="vm1orderconstraints-02" from="sles10" to="configstorecloneset"/>
+       <rsc_order id="vm1orderconstraints-01" from="sles10" to="imagestorecloneset" score="0"/>
+       <rsc_order id="vm1orderconstraints-02" from="sles10" to="configstorecloneset" score="0"/>
      </constraints>
    </configuration>
    <status>

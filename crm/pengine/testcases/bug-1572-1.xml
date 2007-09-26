@@ -114,7 +114,7 @@
        </group>
      </resources>
      <constraints>
-       <rsc_order id="drbd_before_fs-1" from="grp_pgsql_mirror" type="after" action="start" to="ms_drbd_7788" to_action="promote"/>
+       <rsc_order id="drbd_before_fs-1" from="grp_pgsql_mirror" type="after" action="start" to="ms_drbd_7788" to_action="promote" score="0"/>
        <rsc_location id="locate_drbd" rsc="ms_drbd_7788">
          <rule id="rule_drbd_on_tk" role="Master" score="100">
            <expression id="exp_drbd_on_tk" attribute="#uname" operation="eq" value="arc-tkincaidlx.wsicorp.com"/>

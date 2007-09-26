@@ -84,7 +84,7 @@
            <expression id="connected_rule_zero" attribute="pingd" operation="lte" value="0"/>
          </rule>
        </rsc_location>
-       <rsc_order id="drbd_before_group" from="group" to="ms_drbd" action="start" to_action="promote"/>
+       <rsc_order id="drbd_before_group" from="group" to="ms_drbd" action="start" to_action="promote" score="0"/>
        <rsc_colocation id="group_on_drbd" from="group" to="ms_drbd" to_role="Master" score="INFINITY"/>
      </constraints>
    </configuration>
