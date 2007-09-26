@@ -1,5 +1,5 @@
  <transition_graph cluster-delay="60s" transition_id="0">
-   <synapse id="0" priority="75">
+   <synapse id="0">
      <action_set>
        <rsc_op id="7" operation="promote" operation_key="prim_shared_storage:0_promote_0" on_node="redun2" on_node_uuid="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1">
          <primitive id="prim_shared_storage:0" long-id="shared_storage:prim_shared_storage:0" class="ocf" provider="heartbeat" type="drbd"/>
@@ -12,7 +12,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="1" priority="75">
+   <synapse id="1">
      <action_set>
        <rsc_op id="46" operation="notify" operation_key="prim_shared_storage:0_pre_notify_promote_0" on_node="redun2" on_node_uuid="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1">
          <primitive id="prim_shared_storage:0" long-id="shared_storage:prim_shared_storage:0" class="ocf" provider="heartbeat" type="drbd"/>

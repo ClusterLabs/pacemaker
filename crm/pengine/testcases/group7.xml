@@ -24,7 +24,7 @@
       </group>
     </resources>
     <constraints>
-      <rsc_order id="order2" from="rsc2" type="before" to="rsc3"/>
+      <rsc_order id="order2" from="rsc2" type="before" to="rsc3" score="0"/>
       <rsc_colocation id="coloc1" from="rsc2" to="rsc3" score="INFINITY"/>
     </constraints>
   </configuration>

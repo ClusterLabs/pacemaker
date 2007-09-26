@@ -15,10 +15,10 @@
       <primitive id="rsc3" class="heartbeat" type="apache"/>
     </resources>
     <constraints>
-      <rsc_order id="order1" from="rsc2" type="after"  to="rsc1"/>
-      <rsc_order id="order2" from="rsc2" type="after"  to="rsc1"/>
-      <rsc_order id="order3" from="rsc2" type="before" to="rsc3"/>
-      <rsc_order id="order4" from="rsc2" type="before" to="rsc3"/>
+      <rsc_order id="order1" from="rsc2" type="after"  to="rsc1" score="0"/>
+      <rsc_order id="order2" from="rsc2" type="after"  to="rsc1" score="0"/>
+      <rsc_order id="order3" from="rsc2" type="before" to="rsc3" score="0"/>
+      <rsc_order id="order4" from="rsc2" type="before" to="rsc3" score="0"/>
     </constraints>
   </configuration>
   <status>

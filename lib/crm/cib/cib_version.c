@@ -132,8 +132,8 @@ internal_update_feature_set(crm_data_t *xml_obj, int current)
 			crm_debug_4("Checking for %s", name);
 			value = crm_element_value(xml_obj, name);
 			if(value != NULL) {
-				crm_err("Found feature %s from set %s",
-					name, feature_sets[lpc]);
+				crm_info("Found feature '%s' from set %s",
+					 name, feature_sets[lpc]);
 				current = lpc;
 				break;
 			}

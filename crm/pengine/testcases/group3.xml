@@ -22,7 +22,7 @@
       </group>
     </resources>
     <constraints>
-      <rsc_order id="order1" from="rsc2" type="after"  to="rsc1"/>
+      <rsc_order id="order1" from="rsc2" type="after"  to="rsc1" score="0"/>
     </constraints>
   </configuration>
   <status>

@@ -130,6 +130,7 @@ struct resource_s {
 
 		int	 priority; 
 		int	 stickiness; 
+		int	 sort_index; 
 		int	 fail_stickiness;
 		int	 effective_priority; 
 
@@ -142,6 +143,7 @@ struct resource_s {
 		gboolean provisional;
 		gboolean globally_unique;
 		gboolean is_allocating;
+		gboolean is_merging;
 		
 		gboolean failed;
 		gboolean start_pending;

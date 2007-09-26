@@ -432,6 +432,12 @@ rsc_ordering constraints express dependencies between the actions on two resourc
  * type : Should the action on from occur before or after action on to
  * to : A resource id
  * symmetrical : If TRUE, create the reverse constraint for the other action also.
+
+Read as:
+     to_action to type action from
+eg. 
+     start rsc1 after promote rsc2
+
 -->
 <!ELEMENT rsc_order (lifetime?)>
 <!ATTLIST rsc_order
@@ -441,7 +447,7 @@ rsc_ordering constraints express dependencies between the actions on two resourc
           action    CDATA		'start'
           to_action CDATA		'start'
           type      (before|after)	'after'
-          score     CDATA		'0'
+          score     CDATA		'INFINITY'
           symmetrical (true|yes|1|false|no|0)	'true'>
 
 <!--

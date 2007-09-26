@@ -24,6 +24,9 @@ fi
 . regression.core.sh
 create_mode="true"
 echo Generating test outputs for these tests...
+
+# do_test
+
 echo Done.
 echo ""
 
@@ -199,6 +202,7 @@ do_test inc9 "Non-unique clone"
 do_test inc10 "Non-unique clone (stop)"
 do_test inc11 "Primitive colocation with clones" 
 do_test inc12 "Clone shutdown" 
+do_test cloned-group "Make sure only the correct number of cloned groups are started"
 
 echo ""
 do_test master-0 "Stopped -> Slave"
@@ -216,6 +220,7 @@ do_test master-11 "Stopped -> Promote : colocation"
 do_test novell-239082 "Demote/Promote ordering"
 do_test novell-239087 "Stable master placement"
 do_test master-12 "Promotion based solely on rsc_location constraints"
+do_test master-13 "Include preferences of colocated resources when placing master"
 
 echo ""
 do_test managed-0 "Managed (reference)"

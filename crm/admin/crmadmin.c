@@ -459,19 +459,12 @@ crmd_ipc_connection_destroy(gpointer user_data)
 ll_cluster_t *
 do_init(void)
 {
-	int facility;
 	GCHSource *src = NULL;
 	ll_cluster_t *hb_cluster = NULL;
 	
 	/* change the logging facility to the one used by heartbeat daemon */
 	hb_cluster = ll_cluster_new("heartbeat");
 	
-	crm_debug_2("Switching to Heartbeat logger");
-	if (( facility =
-	      hb_cluster->llc_ops->get_logfacility(hb_cluster)) > 0) {
-		cl_log_set_facility(facility);
-	}
-
 	crm_malloc0(admin_uuid, 11);
 	if(admin_uuid != NULL) {
 		snprintf(admin_uuid, 10, "%d", getpid());
@@ -498,6 +491,7 @@ do_init(void)
 gboolean
 admin_msg_callback(IPC_Channel * server, void *private_data)
 {
+	int rc = 0;
 	int lpc = 0;
 	IPC_Message *msg = NULL;
 	ha_msg_input_t *new_input = NULL;
@@ -515,9 +509,10 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			delete_ha_msg_input(new_input);
 			new_input = NULL;
 		}
-		
-		if (server->ops->recv(server, &msg) != IPC_OK) {
-			perror("Receive failure:");
+
+		rc = server->ops->recv(server, &msg);
+		if (rc != IPC_OK) {
+		    cl_perror("Receive failure (%d)", rc);
 			return !hack_return_good;
 		}
 

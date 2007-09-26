@@ -110,7 +110,7 @@
        </group>
      </resources>
      <constraints>
-       <rsc_order id="drbd_before_fs-1" from="grp_pgsql_mirror" type="after" action="start" to="ms_drbd_7788" to_action="promote"/>
+       <rsc_order id="drbd_before_fs-1" from="grp_pgsql_mirror" type="after" action="start" to="ms_drbd_7788" to_action="promote" score="0"/>
        <rsc_colocation id="fs_on_drbd_master" to="ms_drbd_7788" to_role="Master" from="grp_pgsql_mirror" score="INFINITY"/>
      </constraints>
    </configuration>

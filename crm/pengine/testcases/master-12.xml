@@ -68,8 +68,8 @@
            <expression id="prefered_location_group_1_expr" attribute="#uname" operation="eq" value="sel3"/>
          </rule>
        </rsc_location>
-       <rsc_order id="drbd0_before_fs0" from="fs0" action="start" to="ms-drbd0" to_action="promote"/>
-       <rsc_order id="sf_before_fs0" from="fs0" action="start" to="ms-sf" to_action="promote"/>
+       <rsc_order id="drbd0_before_fs0" from="fs0" action="start" to="ms-drbd0" to_action="promote" score="0"/>
+       <rsc_order id="sf_before_fs0" from="fs0" action="start" to="ms-sf" to_action="promote" score="0"/>
        <rsc_colocation id="fs0_on_drbd0" to="ms-drbd0" to_role="master" from="fs0" score="infinity"/>
      </constraints>
    </configuration>

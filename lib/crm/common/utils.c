@@ -183,8 +183,8 @@ cluster_option(GHashTable* options, gboolean(*validate)(const char*),
 	}
 
 	if(value == NULL) {
-		crm_notice("Using default value '%s' for cluster option '%s'",
-			   def_value, name);
+		crm_debug("Using default value '%s' for cluster option '%s'",
+			  def_value, name);
 
 		if(options == NULL) {
 			return def_value;
@@ -443,7 +443,7 @@ crm_log_init(
 	
 	crm_system_name = entity;
 	cl_log_set_entity(entity);
-	cl_log_set_facility(LOG_DAEMON);
+	cl_log_set_facility(HA_LOG_FACILITY);
 
 	if(coredir) {
 		cl_set_corerootdir(HA_COREDIR);
@@ -855,23 +855,11 @@ set_uuid(ll_cluster_t *hb,crm_data_t *node,const char *attr,const char *uname)
 void
 crm_set_env_options(void) 
 {
-	char *param_val = NULL;
-	const char *param_name = NULL;
-
 	cl_inherit_logging_environment(500);
 	cl_log_set_logd_channel_source(NULL, NULL);
 
-	/* apparently we're not allowed to free the result of getenv */
-	
-	param_name = ENV_PREFIX "" KEY_DEBUGLEVEL;
-	param_val = getenv(param_name);
-	if(param_val != NULL) {
-		int debug_level = crm_parse_int(param_val, NULL);
-		if(debug_level > 0 && (debug_level+LOG_INFO) > (int)crm_log_level) {
-			set_crm_log_level(LOG_INFO + debug_level);
-		}
-		crm_debug("%s = %s", param_name, param_val);
-		param_val = NULL;
+	if(debug_level > 0 && (debug_level+LOG_INFO) > (int)crm_log_level) {
+	    set_crm_log_level(LOG_INFO + debug_level);
 	}
 }
 

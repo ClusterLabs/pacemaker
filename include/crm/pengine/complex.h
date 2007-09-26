@@ -54,6 +54,9 @@ typedef struct resource_object_functions_s
 		void (*free)(resource_t *);
 } resource_object_functions_t;
 
+extern void common_update_score(resource_t *rsc, const char *id, int score);
+extern void common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_set);
+
 extern char *native_parameter(
 	resource_t *rsc, node_t *node, gboolean create, const char *name,
 	pe_working_set_t *data_set);

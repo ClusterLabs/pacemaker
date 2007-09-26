@@ -241,19 +241,20 @@ te_rsc_command(crm_graph_t *graph, crm_action_t *action)
 gboolean
 cib_action_update(crm_action_t *action, int status)
 {
-	char *code = NULL;
+	char *op_id  = NULL;
+	char *code   = NULL;
 	char *digest = NULL;
+	crm_data_t *tmp      = NULL;
 	crm_data_t *params   = NULL;
 	crm_data_t *state    = NULL;
 	crm_data_t *rsc      = NULL;
 	crm_data_t *xml_op   = NULL;
 	crm_data_t *action_rsc = NULL;
-	char *op_id = NULL;
 
 	enum cib_errors rc = cib_ok;
 
-	const char *name = NULL;
-	const char *value = NULL;
+	const char *name   = NULL;
+	const char *value  = NULL;
 	const char *rsc_id = NULL;
 	const char *task   = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 	const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
@@ -337,10 +338,19 @@ cib_action_update(crm_action_t *action, int status)
 	crm_xml_add(xml_op,  XML_ATTR_TRANSITION_MAGIC, code);
 	crm_free(code);
 
-	params = find_xml_node(action->xml, "attributes", TRUE);
-	params = copy_xml(params);
+	tmp = find_xml_node(action->xml, "attributes", TRUE);
+	params = create_xml_node(NULL, XML_TAG_PARAMS);
+	copy_in_properties(params, tmp);
+	
 	filter_action_parameters(params, CRM_FEATURE_SET);
 	digest = calculate_xml_digest(params, TRUE);
+
+	/* info for now as this area has been problematic to debug */
+	crm_debug("Calculated digest %s for %s (%s)\n", 
+		  digest, ID(xml_op),
+		  crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+	crm_log_xml(LOG_DEBUG,  "digest:source", params);
+
 	crm_xml_add(xml_op, XML_LRM_ATTR_OP_DIGEST, digest);
 	crm_free(digest);
 	free_xml(params);
@@ -352,8 +362,8 @@ cib_action_update(crm_action_t *action, int status)
 	rc = te_cib_conn->cmds->update(
 		te_cib_conn, XML_CIB_TAG_STATUS, state, NULL, call_options);
 
-	crm_debug("Updating CIB with %s action %d: %s %s on %s (call_id=%d)",
-		  op_status2text(status), action->id, task_uuid, rsc_id, target, rc);
+	crm_debug("Updating CIB with %s action %d: %s on %s (call_id=%d)",
+		  op_status2text(status), action->id, task_uuid, target, rc);
 
 	add_cib_op_callback(rc, FALSE, NULL, cib_action_updated);
 	free_xml(state);

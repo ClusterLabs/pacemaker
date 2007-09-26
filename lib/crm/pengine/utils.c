@@ -313,6 +313,34 @@ node_list_dup(GListPtr list1, gboolean reset, gboolean filter)
 }
 
 
+void dump_node_scores(int level, const char *comment, GListPtr nodes) 
+{
+    slist_iter(
+	node, node_t, nodes, lpc,
+	do_crm_log(level, "%s: %s = %d", comment, node->details->uname, node->weight);
+	);
+}
+
+gint sort_rsc_index(gconstpointer a, gconstpointer b)
+{
+	const resource_t *resource1 = (const resource_t*)a;
+	const resource_t *resource2 = (const resource_t*)b;
+
+	if(a == NULL && b == NULL) { return 0; }
+	if(a == NULL) { return 1; }
+	if(b == NULL) { return -1; }
+  
+	if(resource1->sort_index > resource2->sort_index) {
+		return -1;
+	}
+	
+	if(resource1->sort_index < resource2->sort_index) {
+		return 1;
+	}
+
+	return 0;
+}
+
 gint sort_rsc_priority(gconstpointer a, gconstpointer b)
 {
 	const resource_t *resource1 = (const resource_t*)a;
@@ -612,7 +640,15 @@ unpack_operation(
 	} else if(safe_str_eq(value, "fence")) {
 		action->on_fail = action_fail_fence;
 		value = "node fencing";
-
+		
+		if(data_set->stonith_enabled == FALSE) {
+		    crm_config_err("Specifying on_fail=fence and"
+				   " stonith-enabled=false makes no sense");
+		    action->on_fail = action_fail_stop;
+		    action->fail_role = RSC_ROLE_STOPPED;
+		    value = "stop resource";
+		}
+		
 	} else if(safe_str_eq(value, "ignore")) {
 		action->on_fail = action_fail_ignore;
 		value = "ignore";

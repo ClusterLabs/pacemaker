@@ -26,8 +26,8 @@
       </group>
     </resources>
     <constraints>
-      <rsc_order id="order_recover" from="rsc1" type="after" to="bar"/>
-      <rsc_order id="order_recover" from="foo" type="after" to="bar"/>
+      <rsc_order id="order_recover" from="rsc1" type="after" to="bar" score="0"/>
+      <rsc_order id="order_recover" from="foo" type="after" to="bar" score="0"/>
     </constraints>
   </configuration>
   <status>

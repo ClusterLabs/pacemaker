@@ -26,7 +26,7 @@
       <primitive id="rsc3" class="heartbeat" type="apache" restart_type="restart"/>
     </resources>
     <constraints>
-      <rsc_order id="order1" from="rsc3" type="after" action="stop" to="group1"/>
+      <rsc_order id="order1" from="rsc3" type="after" action="stop" to="group1" score="0"/>
     </constraints>
   </configuration>
   <status>

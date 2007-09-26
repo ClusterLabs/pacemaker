@@ -128,6 +128,7 @@ class LinuxHAv2(HeartbeatCM):
                 r"Faking parameter digest creation",
                 r"Parameters to .* action changed:",
                 r"apply_xml_diff: Diff application failed!",
+                r"Parameters to .* changed",
             ),
         })
         del self["Standby"]
@@ -508,6 +509,7 @@ class LinuxHAv2(HeartbeatCM):
                     "send_ipc_message: IPC Channel to .* is not connected",
                     "unconfirmed_actions: Waiting on .* unconfirmed actions",
                     "cib_native_msgready: Message pending on command channel",
+                    "crmd:.*do_exit: Performing A_EXIT_1 - forcefully exiting the CRMd",
                     "verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
             ]
 

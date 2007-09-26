@@ -48,6 +48,7 @@ te_connect_stonith(gpointer user_data)
     for(lpc = 0; lpc < 30; lpc++) {
 	crm_info("Attempting connection to fencing daemon...");
 
+	sleep(1);
 	rc = stonithd_signon("tengine");
 	if(rc == ST_OK) {
 	    break;
@@ -60,7 +61,7 @@ te_connect_stonith(gpointer user_data)
 	}
 	
 	crm_err("Sign-in failed: pausing and trying again in 2s...");
-	sleep(2);
+	sleep(1);
     }
 
     CRM_ASSERT(rc == ST_OK); /* If not, we failed 30 times... just get out */

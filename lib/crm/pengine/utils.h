@@ -50,8 +50,11 @@ extern void print_node(
 extern void print_resource(
 	int log_level, const char *pre_text, resource_t *rsc, gboolean details);
 
+extern void dump_node_scores(int level, const char *comment, GListPtr nodes);
+
 /* Sorting functions */
 extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);
+extern gint sort_rsc_index(gconstpointer a, gconstpointer b);
 
 extern crm_data_t *find_rsc_op_entry(resource_t *rsc, const char *key);
 

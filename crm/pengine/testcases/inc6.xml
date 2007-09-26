@@ -92,10 +92,10 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order id="order1" from="rsc1" type="before" to="rsc2"/>
-      <rsc_order id="order2" from="rsc3" type="before" to="rsc4"/>
-      <rsc_order id="order3" from="rsc5" type="before" to="rsc6"/>
-      <rsc_order id="order4" from="rsc7" type="before" to="rsc8"/>
+      <rsc_order id="order1" from="rsc1" type="before" to="rsc2" score="0"/>
+      <rsc_order id="order2" from="rsc3" type="before" to="rsc4" score="0"/>
+      <rsc_order id="order3" from="rsc5" type="before" to="rsc6" score="0"/>
+      <rsc_order id="order4" from="rsc7" type="before" to="rsc8" score="0"/>
     </constraints>
   </configuration>
   <status>

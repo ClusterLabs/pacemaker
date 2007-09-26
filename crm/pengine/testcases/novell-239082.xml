@@ -62,7 +62,7 @@
        </master_slave>
      </resources>
      <constraints>
-       <rsc_order id="drbd_before_fs" from="fs_1" action="start" to="ms-drbd0" to_action="promote"/>
+       <rsc_order id="drbd_before_fs" from="fs_1" action="start" to="ms-drbd0" to_action="promote" score="0"/>
        <rsc_colocation id="fs_on_drbd0" to="ms-drbd0" to_role="master" from="fs_1" score="infinity"/>
      </constraints>
    </configuration>

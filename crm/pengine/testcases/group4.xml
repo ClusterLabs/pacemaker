@@ -20,8 +20,8 @@
       <primitive id="rsc3" class="heartbeat" type="apache"/>
     </resources>
     <constraints>
-      <rsc_order id="order1" from="rsc2" type="after"  to="rsc1"/>
-      <rsc_order id="order2" from="rsc2" type="before" to="rsc3"/>
+      <rsc_order id="order1" from="rsc2" type="after"  to="rsc1" score="0"/>
+      <rsc_order id="order2" from="rsc2" type="before" to="rsc3" score="0"/>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="can1-1" score="1">
 	  <expression attribute="#uname" operation="eq" value="node2"/>
