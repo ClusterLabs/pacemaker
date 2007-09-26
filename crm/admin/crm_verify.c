@@ -77,16 +77,10 @@ main(int argc, char **argv)
 
 	/* and for good measure... - this enum is a bit field (!) */
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
-	
-	cl_log_set_entity(crm_system_name);
-	cl_log_set_facility(HA_LOG_FACILITY);
-	cl_log_set_entity(basename(argv[0]));
-	cl_log_set_facility(LOG_LOCAL7);
-	cl_log_enable_stderr(TRUE);
-	set_crm_log_level(LOG_ERR);
-	
+
+	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, TRUE, 0, NULL);
 	CL_SIGNAL(DEBUG_INC, alter_debug);
-	CL_SIGNAL(DEBUG_DEC, alter_debug);
+	CL_SIGNAL(DEBUG_DEC, alter_debug);	
 	
 	while (1) {
 #ifdef HAVE_GETOPT_H
