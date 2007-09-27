@@ -30,10 +30,12 @@
 extern enum crm_ais_msg_types text2msg_type(const char *text);
 
 extern gboolean send_ais_message(
-    crm_data_t *msg, gboolean local, const char *node, enum crm_ais_msg_types dest);
+    crm_data_t *msg, gboolean local,
+    const char *node, enum crm_ais_msg_types dest);
 
 extern gboolean send_ais_text(
-    const char *data, gboolean local, const char *node, enum crm_ais_msg_types dest);
+    int type, const char *data, gboolean local,
+    const char *node, enum crm_ais_msg_types dest);
 
 extern gboolean init_ais_connection(
     gboolean (*dispatch)(int, gpointer),

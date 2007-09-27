@@ -433,7 +433,7 @@ static gboolean cib_ais_dispatch(int sender, gpointer user_data)
     if(safe_str_eq("identify", data)) {
 	int pid = getpid();
 	char *pid_s = crm_itoa(pid);
-	send_ais_text(pid_s, TRUE, NULL, crm_msg_ais);
+	send_ais_text(0, pid_s, TRUE, NULL, crm_msg_ais);
 	crm_free(pid_s);
 
     } else {

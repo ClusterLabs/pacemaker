@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <openais/service/print.h>
+#include <openais/service/logsys.h>
 
 extern char *local_uname;
 extern int local_uname_len;
@@ -27,6 +27,20 @@ extern char *uname_lookup(uint32_t nodeid);
 extern uint32_t nodeid_lookup(const char *uname);
 extern void update_uname_table(const char *uname, uint32_t nodeid);
 
+LOGSYS_DECLARE_SUBSYS("crm", LOG_LEVEL_DEBUG);
+
+static inline const char *level2char(int level)
+{
+    switch(level) {
+	case LOG_CRIT: return "CRIT";
+	case LOG_ERR: return "ERR";
+	case LOG_WARNING: return "WARN";
+	case LOG_NOTICE: return "notice";
+	case LOG_INFO: return "info";
+    }
+    return "debug";
+}
+
 #define do_ais_log(level, fmt, args...) do {				\
 	if(plugin_log_level < (level)) {				\
 	    continue;							\
@@ -34,7 +48,7 @@ extern void update_uname_table(const char *uname, uint32_t nodeid);
 	    log_printf(LOG_DEBUG, "debug%d: %s: " fmt,			\
 		       level-LOG_INFO, __PRETTY_FUNCTION__ , ##args);	\
 	} else {							\
-	    log_printf(level, "%s: " fmt,				\
+	    log_printf(level, "%s: %s: " fmt, level2char(level),	\
 		       __PRETTY_FUNCTION__ , ##args);			\
 	}								\
     } while(0)

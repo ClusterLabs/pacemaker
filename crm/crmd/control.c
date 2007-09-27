@@ -61,15 +61,18 @@ do_ha_control(long long action,
 	gboolean registered = FALSE;
 	
 	if(action & A_HA_DISCONNECT) {
+#ifndef WITH_NATIVE_AIS
 		if(fsa_cluster_conn != NULL) {
 			set_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
 			fsa_cluster_conn->llc_ops->signoff(
 				fsa_cluster_conn, FALSE);
 		}
+#endif
 		crm_info("Disconnected from Heartbeat");
 	}
 	
 	if(action & A_HA_CONNECT) {
+#ifdef WITH_NATIVE_AIS
 		if(fsa_cluster_conn == NULL) {
 			fsa_cluster_conn = ll_cluster_new("heartbeat");
 		}
@@ -79,7 +82,15 @@ do_ha_control(long long action,
 		
 		registered = register_with_ha(
 			fsa_cluster_conn, crm_system_name);
-		
+#else
+	    registered = init_ais_connection(crm_ais_dispatch, crm_ais_destroy);
+	    fsa_our_uname = crm_strdup(name.nodename);
+	    fsa_our_uuid = crm_strdup(fsa_our_uname);
+	    crm_info("Hostname: %s", fsa_our_uname);
+	    crm_info("UUID: %s", fsa_our_uuid);
+	    set_bit_inplace(fsa_input_register, R_CCM_DATA);
+/* 	    populate_cib_nodes(hb_cluster, with_client_status); */
+#endif
 		if(registered == FALSE) {
 			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 			return I_NULL;

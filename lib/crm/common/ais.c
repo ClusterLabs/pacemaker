@@ -102,7 +102,7 @@ ais_destroy(gpointer user_data)
 }
 
 gboolean
-send_ais_text(const char *data,
+send_ais_text(int type, const char *data,
 	      gboolean local, const char *node, enum crm_ais_msg_types dest)
 {
     static int msg_id = 0;
@@ -120,7 +120,7 @@ send_ais_text(const char *data,
     crm_malloc0(ais_msg, sizeof(AIS_Message));
     
     ais_msg->id = msg_id++;
-    ais_msg->header.id = 0;
+    ais_msg->header.id = type;
     
     ais_msg->host.type = dest;
     ais_msg->host.local = local;
@@ -218,7 +218,7 @@ send_ais_message(crm_data_t *msg,
     }
     
     data = dump_xml_unformatted(msg);
-    return send_ais_text(data, local, node, dest);
+    return send_ais_text(0, data, local, node, dest);
 }
 
 

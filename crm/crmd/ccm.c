@@ -48,15 +48,117 @@ void crmd_ccm_msg_callback(oc_ed_t event,
 			     const void *data);
 
 void ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data);
+void check_dead_member(const char *uname, GHashTable *members);
 
 #define CCM_EVENT_DETAIL 0
 #define CCM_EVENT_DETAIL_PARTIAL 0
 
 oc_ev_t *fsa_ev_token;
-int current_ccm_membership_id = 0;
+int current_ccm_membership_id = -1;
 int num_ccm_register_fails = 0;
 int max_ccm_register_fails = 30;
 
+extern GHashTable *voted;
+
+struct update_data_s
+{
+		const char *state;
+		const char *caller;
+		crm_data_t *updates;
+		gboolean    overwrite_join;
+};
+
+
+void
+check_dead_member(const char *uname, GHashTable *members)
+{
+	CRM_CHECK(uname != NULL, return);
+	if(members != NULL && g_hash_table_lookup(members, uname) != NULL) {
+		crm_err("%s didnt really leave the membership!", uname);
+		return;
+	}
+
+	erase_node_from_join(uname);
+	if(voted != NULL) {
+		g_hash_table_remove(voted, uname);
+	}
+	
+	if(safe_str_eq(fsa_our_uname, uname)) {
+		crm_err("We're not part of the cluster anymore");
+	}
+	
+	if(AM_I_DC == FALSE && safe_str_eq(uname, fsa_our_dc)) {
+		crm_warn("Our DC node (%s) left the cluster", uname);
+		register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+	}
+}
+
+void
+ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
+{
+	crm_data_t *tmp1 = NULL;
+	const char *join = NULL;
+	const char *peer_online = NULL;
+	const char *node_uname = (const char*)key;
+	struct update_data_s* data = (struct update_data_s*)user_data;
+
+	crm_debug_2("Updating %s: %s (overwrite=%s)",
+		    node_uname, data->state,
+		    data->overwrite_join?"true":"false");
+
+	peer_online = g_hash_table_lookup(crmd_peer_state, node_uname);
+	
+	if(data->overwrite_join) {
+		if(safe_str_neq(peer_online, ONLINESTATUS)) {
+			join  = CRMD_JOINSTATE_DOWN;
+			
+		} else {
+			const char *peer_member = g_hash_table_lookup(
+				confirmed_nodes, node_uname);
+			if(peer_member != NULL) {
+				join = CRMD_JOINSTATE_MEMBER;
+			} else {
+				join = CRMD_JOINSTATE_PENDING;
+			}
+		}
+	}
+	
+	tmp1 = create_node_state(node_uname, NULL, data->state, peer_online,
+				 join, NULL, FALSE, data->caller);
+
+	add_node_copy(data->updates, tmp1);
+	free_xml(tmp1);
+}
+
+void
+do_update_cib_nodes(gboolean overwrite, const char *caller)
+{
+    CRM_ASSERT(FALSE);
+}
+
+#ifdef WITH_NATIVE_AIS
+enum crmd_fsa_input do_ccm_control(
+    long long action, enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
+    enum crmd_fsa_input current_input, fsa_data_t *msg_data)
+{
+    return I_NULL;
+}
+
+enum crmd_fsa_input do_ccm_update_cache(
+    long long action, enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
+    enum crmd_fsa_input current_input, fsa_data_t *msg_data)
+{
+    return I_NULL;
+}
+
+enum crmd_fsa_input do_ccm_event(
+    long long action, enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
+    enum crmd_fsa_input current_input, fsa_data_t *msg_data)
+{
+    return I_NULL;
+}
+
+#else
 /*	 A_CCM_CONNECT	*/
 enum crmd_fsa_input
 do_ccm_control(long long action,
@@ -142,8 +244,6 @@ do_ccm_control(long long action,
 	return I_NULL;
 }
 
-extern GHashTable *voted;
-
 /*	 A_CCM_EVENT	*/
 enum crmd_fsa_input
 do_ccm_event(long long action,
@@ -185,30 +285,6 @@ do_ccm_event(long long action,
 	}	
 	
 	return return_input;
-}
-
-static void
-check_dead_member(const char *uname, GHashTable *members)
-{
-	CRM_CHECK(uname != NULL, return);
-	if(members != NULL && g_hash_table_lookup(members, uname) != NULL) {
-		crm_err("%s didnt really leave the membership!", uname);
-		return;
-	}
-
-	erase_node_from_join(uname);
-	if(voted != NULL) {
-		g_hash_table_remove(voted, uname);
-	}
-	
-	if(safe_str_eq(fsa_our_uname, uname)) {
-		crm_err("We're not part of the cluster anymore");
-	}
-	
-	if(AM_I_DC == FALSE && safe_str_eq(uname, fsa_our_dc)) {
-		crm_warn("Our DC node (%s) left the cluster", uname);
-		register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
-	}
 }
 
 /*	 A_CCM_UPDATE_CACHE	*/
@@ -525,14 +601,6 @@ msg_ccm_join(const HA_Message *msg, void *foo)
 	return;
 }
 
-struct update_data_s
-{
-		const char *state;
-		const char *caller;
-		crm_data_t *updates;
-		gboolean    overwrite_join;
-};
-
 static void
 ccm_node_update_complete(const HA_Message *msg, int call_id, int rc,
 			 crm_data_t *output, void *user_data)
@@ -598,41 +666,4 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
 	free_xml(fragment);
 }
 
-void
-ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
-{
-	crm_data_t *tmp1 = NULL;
-	const char *join = NULL;
-	const char *peer_online = NULL;
-	const char *node_uname = (const char*)key;
-	struct update_data_s* data = (struct update_data_s*)user_data;
-
-	crm_debug_2("Updating %s: %s (overwrite=%s)",
-		    node_uname, data->state,
-		    data->overwrite_join?"true":"false");
-
-	peer_online = g_hash_table_lookup(crmd_peer_state, node_uname);
-	
-	if(data->overwrite_join) {
-		if(safe_str_neq(peer_online, ONLINESTATUS)) {
-			join  = CRMD_JOINSTATE_DOWN;
-			
-		} else {
-			const char *peer_member = g_hash_table_lookup(
-				confirmed_nodes, node_uname);
-			if(peer_member != NULL) {
-				join = CRMD_JOINSTATE_MEMBER;
-			} else {
-				join = CRMD_JOINSTATE_PENDING;
-			}
-		}
-	}
-	
-	tmp1 = create_node_state(node_uname, NULL, data->state, peer_online,
-				 join, NULL, FALSE, data->caller);
-
-	add_node_copy(data->updates, tmp1);
-	free_xml(tmp1);
-}
-
-
+#endif
