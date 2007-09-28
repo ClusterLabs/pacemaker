@@ -38,7 +38,7 @@ extern gboolean send_ais_text(
     const char *node, enum crm_ais_msg_types dest);
 
 extern gboolean init_ais_connection(
-    gboolean (*dispatch)(int, gpointer),
+    gboolean (*dispatch)(AIS_Message*,char*,int),
     void (*ais_destroy)(gpointer));
 
 extern void terminate_ais_connection(void);
