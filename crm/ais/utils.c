@@ -23,6 +23,10 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <stdio.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 #include <glib.h>
 #include <bzlib.h>
