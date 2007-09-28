@@ -150,7 +150,7 @@ main(int argc, char ** argv)
 		NULL, NULL, NULL, cib_diskwrite_complete);
 
 	EnableProcLogging();
-	set_sigchld_proctrack(G_PRIORITY_HIGH);
+	set_sigchld_proctrack(G_PRIORITY_HIGH,DEFAULT_MAXDISPATCHTIME);
 
 	client_list = g_hash_table_new(g_str_hash, g_str_equal);
 	ccm_membership = g_hash_table_new_full(
