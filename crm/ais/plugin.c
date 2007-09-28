@@ -60,7 +60,6 @@ char *local_uname = NULL;
 int local_uname_len = 0;
 uint32_t local_nodeid = 0;
 char *ipc_channel_name = NULL;
-enum crm_ais_msg_types crm_system_type = crm_msg_ais;
 
 static int membership_seq = -1;
 
@@ -319,7 +318,7 @@ static int send_client_msg(
     memset(ais_msg->host.uname, 0, MAX_NAME);
     ais_msg->host.id = 0;
 
-    ais_msg->sender.type = crm_system_type;
+    ais_msg->sender.type = crm_msg_ais;
     ais_msg->sender.size = local_uname_len;
     memset(ais_msg->sender.uname, 0, MAX_NAME);
     memcpy(ais_msg->sender.uname, local_uname, ais_msg->sender.size);
@@ -453,7 +452,8 @@ static int send_cluster_msg(
 	ais_msg->host.size = strlen(host);
 	memset(ais_msg->host.uname, 0, MAX_NAME);
 	memcpy(ais_msg->host.uname, host, ais_msg->host.size);
-	ais_msg->host.id = nodeid_lookup(host);
+/* 	ais_msg->host.id = nodeid_lookup(host); */
+	ais_msg->host.id = 0;
 		
     } else {
 	ais_msg->host.type = type;

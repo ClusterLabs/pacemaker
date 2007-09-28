@@ -23,10 +23,6 @@ extern int local_uname_len;
 extern int plugin_log_level;
 extern uint32_t local_nodeid;
 
-extern char *uname_lookup(uint32_t nodeid);
-extern uint32_t nodeid_lookup(const char *uname);
-extern void update_uname_table(const char *uname, uint32_t nodeid);
-
 LOGSYS_DECLARE_SUBSYS("crm", LOG_LEVEL_DEBUG);
 
 static inline const char *level2char(int level)
