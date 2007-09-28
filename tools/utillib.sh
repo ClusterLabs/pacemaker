@@ -75,10 +75,25 @@ uselogd() {
 		return 0  # or none of the log options set
 	false
 }
+findlogdcf() {
+	for f in \
+		`strings $HA_BIN/ha_logd | grep 'logd\.cf'` \
+		`for d; do echo $d/logd.cf $d/ha_logd.cf; done`
+	do
+		if [ -f "$f" ]; then
+			echo $f
+			return 0
+		fi
+	done
+	return 1
+}
 getlogvars() {
 	savecf=$HA_CF
-	uselogd &&
+	if uselogd; then
+		[ -f "$LOGD_CF" ] ||
+			fatal "could not find logd.cf or ha_logd.cf"
 		HA_CF=$LOGD_CF
+	fi
 	HA_LOGFACILITY=`getcfvar logfacility`
 	HA_LOGFILE=`getcfvar logfile`
 	HA_DEBUGFILE=`getcfvar debugfile`

@@ -18,12 +18,12 @@
  #
 
 . @sysconfdir@/ha.d/shellfuncs
-LOGD_CF=/etc/logd.cf
-export LOGD_CF
+. $HA_NOARCHBIN/utillib.sh
 
 PROG=`basename $0`
 
-. $HA_NOARCHBIN/utillib.sh
+LOGD_CF=`findlogdcf @sysconfdir@ $HA_DIR`
+export LOGD_CF
 
 : ${SSH_OPTS="-T -o Batchmode=yes"}
 LOG_PATTERNS="CRIT: ERROR:"
