@@ -38,6 +38,16 @@ extern gboolean send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg,
 
 extern gboolean send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg);
 
+#ifdef WITH_NATIVE_AIS
+#  include <crm/ais.h> 
+#  define send_cluster_message(node, service, data, ordered) send_ais_message( \
+	data, FALSE, node, service)
+#else
+extern ll_cluster_t *hb_conn;
+#  define send_cluster_message(node, service, data, ordered) send_ha_message( \
+	hb_conn, data, node, ordered)
+#endif
+
 extern void default_ipc_connection_destroy(gpointer user_data);
 
 extern int init_server_ipc_comms(

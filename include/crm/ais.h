@@ -39,7 +39,7 @@ extern gboolean send_ais_text(
 
 extern gboolean init_ais_connection(
     gboolean (*dispatch)(AIS_Message*,char*,int),
-    void (*ais_destroy)(gpointer));
+    void (*ais_destroy)(gpointer), char **our_uname);
 
 extern void terminate_ais_connection(void);
 

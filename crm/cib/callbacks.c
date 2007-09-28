@@ -918,11 +918,11 @@ forward_request(HA_Message *request, cib_client_t *cib_client, int call_options)
 	
 	if(host != NULL) {
 		crm_debug_2("Forwarding %s op to %s", op, host);
-		send_cluster_msg(host, crm_msg_cib, forward_msg, FALSE);
+		send_cluster_message(host, crm_msg_cib, forward_msg, FALSE);
 		
 	} else {
 		crm_debug_2("Forwarding %s op to master instance", op);
-		send_cluster_msg(NULL, crm_msg_cib, forward_msg, FALSE);
+		send_cluster_message(NULL, crm_msg_cib, forward_msg, FALSE);
 	}
 	
 	if(call_options & cib_discard_reply) {
@@ -980,13 +980,13 @@ send_peer_reply(
 
  		add_message_xml(reply_copy, F_CIB_UPDATE_DIFF, result_diff);
 		crm_log_message(LOG_DEBUG_3, reply_copy);
-		send_cluster_msg(NULL, crm_msg_cib, reply_copy, TRUE);
+		send_cluster_message(NULL, crm_msg_cib, reply_copy, TRUE);
 		
 	} else if(originator != NULL) {
 		/* send reply via HA to originating node */
 		crm_debug_2("Sending request result to originator only");
 		ha_msg_add(reply_copy, F_CIB_ISREPLY, originator);
-		send_cluster_msg(originator, crm_msg_cib, reply_copy, FALSE);
+		send_cluster_message(originator, crm_msg_cib, reply_copy, FALSE);
 	}
 	
 	crm_msg_del(reply_copy);
@@ -1905,7 +1905,7 @@ initiate_exit(void)
 	ha_msg_add(leaving, F_TYPE, "cib");
 	ha_msg_add(leaving, F_CIB_OPERATION, "cib_shutdown_req");
 	
-	send_cluster_msg(NULL, crm_msg_cib, leaving, TRUE);
+	send_cluster_message(NULL, crm_msg_cib, leaving, TRUE);
 	crm_msg_del(leaving);
 	
 	Gmain_timeout_add(crm_get_msec("5s"), cib_force_exit, NULL);

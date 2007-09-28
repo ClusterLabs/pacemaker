@@ -18,6 +18,8 @@
 #ifndef XML_TAGS__H
 #define XML_TAGS__H
 
+#define CIB_OPTIONS_FIRST "cib-bootstrap-options"
+
 #define F_CRM_TASK			"crm_task"
 #define F_CRM_HOST_TO			"crm_host_to"
 #define F_CRM_MSG_TYPE			F_SUBTYPE

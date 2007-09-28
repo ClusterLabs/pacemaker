@@ -1067,6 +1067,8 @@ handle_shutdown_request(HA_Message *stored_msg)
 }
 
 /* frees msg upon completion */
+ll_cluster_t *hb_conn = NULL;
+
 gboolean
 send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 {
@@ -1078,6 +1080,10 @@ send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 	const char *sys_to   = cl_get_string(msg, F_CRM_SYS_TO);
 	const char *host_to  = cl_get_string(msg, F_CRM_HOST_TO);
 
+	enum crm_ais_msg_types dest = text2msg_type(sys_to);
+	
+	hb_conn = hb_fd;
+	
 	if (msg == NULL) {
 		crm_err("Attempt to send NULL Message via HA failed.");
 		all_is_good = FALSE;
@@ -1101,10 +1107,10 @@ send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 		if (host_to == NULL
 		    || strlen(host_to) == 0
 		    || safe_str_eq(sys_to, CRM_SYSTEM_DC)) {
-			broadcast = TRUE;
-			all_is_good = send_ha_message(hb_fd, msg, NULL, FALSE);
+		    broadcast = TRUE;
+		    all_is_good = send_cluster_message(NULL, dest, msg, FALSE);
 		} else {
-			all_is_good = send_ha_message(hb_fd, msg, host_to, FALSE);
+		    all_is_good = send_cluster_message(host_to, dest, msg, FALSE);
 		}
 	}
 	

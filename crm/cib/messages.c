@@ -477,7 +477,7 @@ cib_process_diff(
 		ha_msg_add(sync_me, F_CIB_OPERATION, CIB_OP_SYNC_ONE);
 		ha_msg_add(sync_me, F_CIB_DELEGATED, cib_our_uname);
 
-		if(send_cluster_msg(NULL, crm_msg_cib, sync_me, FALSE) == FALSE) {
+		if(send_cluster_message(NULL, crm_msg_cib, sync_me, FALSE) == FALSE) {
 			result = cib_not_connected;
 		}
 		ha_msg_del(sync_me);
@@ -917,7 +917,7 @@ sync_our_cib(HA_Message *request, gboolean all)
 	ha_msg_add(replace_request, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
 	add_message_xml(replace_request, F_CIB_CALLDATA, the_cib);
 	
-	if(send_cluster_msg(all?NULL:host, crm_msg_cib, replace_request, FALSE) == FALSE) {
+	if(send_cluster_message(all?NULL:host, crm_msg_cib, replace_request, FALSE) == FALSE) {
 		result = cib_not_connected;
 	}
 	ha_msg_del(replace_request);

@@ -403,25 +403,16 @@ cib_init(void)
 
 	if(stand_alone == FALSE) {
 #ifdef WITH_NATIVE_AIS
-	    struct utsname name;
-	    if(uname(&name) < 0) {
-		cl_perror("uname(2) call failed");
-		exit(100);
-	    }
-	    
-	    cib_our_uname = crm_strdup(name.nodename);
-	    crm_info("FSA Hostname: %s", cib_our_uname);
-
-	    if(init_ais_connection(
-		   cib_ais_dispatch, cib_ais_destroy) == FALSE) {
+	    if(!init_ais_connection(
+		   cib_ais_dispatch, cib_ais_destroy, &cib_our_uname)) {
 		exit(100);
 	    }
 #else
-		hb_conn = ll_cluster_new("heartbeat");
-		if(cib_register_ha(hb_conn, CRM_SYSTEM_CIB) == FALSE) {
-			crm_crit("Cannot sign in to heartbeat... terminating");
-			exit(1);
-		}
+	    hb_conn = ll_cluster_new("heartbeat");
+	    if(cib_register_ha(hb_conn, CRM_SYSTEM_CIB) == FALSE) {
+		crm_crit("Cannot sign in to heartbeat... terminating");
+		exit(1);
+	    }
 #endif
 	} else {
 		cib_our_uname = crm_strdup("localhost");

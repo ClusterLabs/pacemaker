@@ -154,7 +154,7 @@ send_ais_message(crm_data_t *msg,
 {
     char *data = NULL;
 
-    if(ais_source == NULL && init_ais_connection(NULL, NULL) == FALSE) {
+    if(ais_source == NULL && init_ais_connection(NULL, NULL, NULL) == FALSE) {
 	crm_err("Cannot connect to AIS");
 	return FALSE;
     }
@@ -268,12 +268,22 @@ ais_destroy(gpointer user_data)
 
 gboolean init_ais_connection(
     gboolean (*dispatch)(AIS_Message*,char*,int),
-    void (*destroy)(gpointer)) 
+    void (*destroy)(gpointer), char **our_uname) 
 {
     int rc = SA_AIS_OK;
-    crm_notice("Creating connection to our AIS plugin");
+    struct utsname name;
 
+    if(our_uname != NULL) {
+	if(uname(&name) < 0) {
+	    cl_perror("uname(2) call failed");
+	    exit(100);
+	}
+	*our_uname = crm_strdup(name.nodename);
+	crm_notice("Local node name: %s", *our_uname);
+    }
+    
     /* 16 := CRM_SERVICE */
+    crm_info("Creating connection to our AIS plugin");
     rc = saServiceConnect (&ais_fd_in, &ais_fd_out, 16);
     if (rc != SA_AIS_OK) {
 	crm_err("Connection to our AIS plugin failed!");
@@ -281,11 +291,11 @@ gboolean init_ais_connection(
     }
 
     if(destroy == NULL) {
-	crm_info("Using the default destroy handler");
+	crm_debug("Using the default destroy handler");
 	destroy = ais_destroy;
     } 
    
-    crm_notice("AIS connection established");
+    crm_info("AIS connection established");
     ais_source = G_main_add_fd(
 	G_PRIORITY_HIGH, ais_fd_in, FALSE, ais_dispatch, dispatch, destroy);
     ais_source_out = G_main_add_fd(

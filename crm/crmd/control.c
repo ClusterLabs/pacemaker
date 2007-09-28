@@ -83,11 +83,9 @@ do_ha_control(long long action,
 		registered = register_with_ha(
 			fsa_cluster_conn, crm_system_name);
 #else
-	    registered = init_ais_connection(crm_ais_dispatch, crm_ais_destroy);
-	    fsa_our_uname = crm_strdup(name.nodename);
+	    registered = init_ais_connection(
+		crm_ais_dispatch, crm_ais_destroy, &fsa_our_uname);
 	    fsa_our_uuid = crm_strdup(fsa_our_uname);
-	    crm_info("Hostname: %s", fsa_our_uname);
-	    crm_info("UUID: %s", fsa_our_uuid);
 	    set_bit_inplace(fsa_input_register, R_CCM_DATA);
 /* 	    populate_cib_nodes(hb_cluster, with_client_status); */
 #endif
