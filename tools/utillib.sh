@@ -98,6 +98,9 @@ getlogvars() {
 	HA_LOGFACILITY=`getcfvar logfacility`
 	HA_LOGFILE=`getcfvar logfile`
 	HA_DEBUGFILE=`getcfvar debugfile`
+	HA_SYSLOGMSGFMT=""
+	iscfvartrue syslogmsgfmt &&
+		HA_SYSLOGMSGFMT=1
 	HA_CF=$savecf
 }
 findmsg() {
@@ -130,8 +133,15 @@ str2time() {
 	}
 	'
 }
+getstamp() {
+	if [ "$HA_SYSLOGMSGFMT" -o "$HA_LOGFACILITY" ]; then
+		awk '{print $1,$2,$3}'
+	else
+		awk '{print $2}' | sed 's/_/ /'
+	fi
+}
 linetime() {
-	l=`tail -n +$2 $1 | head -1 | awk '{print $1,$2,$3}'`
+	l=`tail -n +$2 $1 | head -1 | getstamp`
 	str2time "$l"
 }
 findln_by_time() {
@@ -142,6 +152,10 @@ findln_by_time() {
 	while [ $first -le $last ]; do
 		mid=$(((last+first)/2))
 		tmid=`linetime $logf $mid`
+		if [ -z "$tmid" ]; then
+			warning "cannot extract time: $logf:$mid"
+			return
+		fi
 		if [ $tmid -gt $tm ]; then
 			last=$((mid-1))
 		elif [ $tmid -lt $tm ]; then
@@ -157,9 +171,17 @@ dumplog() {
 	from_time=$2
 	to_time=$3
 	from_line=`findln_by_time $logf $from_time`
+	if [ -z "$from_line" ]; then
+		warning "couldn't find line for time $from_time; corrupt log file?"
+		return
+	fi
 	tail -n +$from_line $logf |
 		if [ "$to_time" != 0 ]; then
 			to_line=`findln_by_time $logf $to_time`
+			if [ -z "$to_line" ]; then
+				warning "couldn't find line for time $to_time; corrupt log file?"
+				return
+			fi
 			head -$((to_line-from_line+1))
 		else
 			cat
