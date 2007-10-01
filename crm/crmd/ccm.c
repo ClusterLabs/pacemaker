@@ -151,6 +151,7 @@ enum crmd_fsa_input do_ccm_update_cache(
     return I_NULL;
 }
 
+
 enum crmd_fsa_input do_ccm_event(
     long long action, enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
     enum crmd_fsa_input current_input, fsa_data_t *msg_data)
@@ -417,37 +418,8 @@ do_ccm_update_cache(long long action,
 
 	/*--*-- New Member Nodes --*--*/
 	offset = oc->m_in_idx;
-	membership_copy->new_members_size = oc->m_n_in;
-
-	if(membership_copy->new_members_size > 0) {
-		membership_copy->new_members =
-			g_hash_table_new(g_str_hash, g_str_equal);
-		members = membership_copy->new_members;
-		
-		for(lpc=0; lpc < membership_copy->new_members_size; lpc++) {
-			oc_node_t *member = NULL;
-			CRM_CHECK(oc->m_array[offset+lpc].node_uname != NULL,
-				  continue);
-
-			crm_malloc0(member, sizeof(oc_node_t));
-
-			member->node_id = oc->m_array[offset+lpc].node_id;
-			
-			member->node_born_on =
-				oc->m_array[offset+lpc].node_born_on;
-			
-			member->node_uname =
-				crm_strdup(oc->m_array[offset+lpc].node_uname);
-
-			g_hash_table_insert(
-				members, member->node_uname, member);	
-
-			g_hash_table_insert(members, member->node_uname, member);
-		}
-
-	} else {
-		membership_copy->new_members = NULL;
-	}
+	membership_copy->new_members_size = 0;
+	membership_copy->new_members = NULL;
 	
 	crm_debug_3("Copying dead members");
 
@@ -488,7 +460,7 @@ do_ccm_update_cache(long long action,
 	fsa_membership_copy = membership_copy;
 	crm_debug_2("Updated membership cache with %d (%d new, %d lost) members",
 		    g_hash_table_size(fsa_membership_copy->members),
-		    g_hash_table_size(fsa_membership_copy->new_members),
+		    oc->m_n_in,
 		    g_hash_table_size(fsa_membership_copy->dead_members));
 
 	free_ccm_cache(tmp);
