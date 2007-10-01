@@ -77,7 +77,8 @@ uselogd() {
 }
 findlogdcf() {
 	for f in \
-		`strings $HA_BIN/ha_logd | grep 'logd\.cf'` \
+		`which strings > /dev/null &&
+			strings $HA_BIN/ha_logd | grep 'logd\.cf'` \
 		`for d; do echo $d/logd.cf $d/ha_logd.cf; done`
 	do
 		if [ -f "$f" ]; then
