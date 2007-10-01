@@ -40,6 +40,7 @@ GHashTable *crmd_peer_state = NULL;
 
 crm_data_t *find_xml_in_hamessage(const HA_Message * msg);
 void crmd_ha_connection_destroy(gpointer user_data);
+void crmd_ha_msg_filter(HA_Message *msg);
 
 /* From join_dc... */
 extern gboolean check_join_state(
@@ -104,17 +105,53 @@ crmd_ha_connection_destroy(gpointer user_data)
 }
 
 void
+crmd_ha_msg_filter(HA_Message *msg)
+{
+    ha_msg_input_t *new_input = NULL;
+    const char *from = ha_msg_value(msg, F_ORIG);
+    const char *seq  = ha_msg_value(msg, F_SEQ);
+    const char *op   = ha_msg_value(msg, F_CRM_TASK);
+    
+    const char *sys_to   = ha_msg_value(msg, F_CRM_SYS_TO);
+    const char *sys_from = ha_msg_value(msg, F_CRM_SYS_FROM);
+    
+    if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
+	crm_debug_2("Ignoring message for the DC [F_SEQ=%s]", seq);
+	return;
+	
+    } else if(safe_str_eq(sys_from, CRM_SYSTEM_DC)) {
+	if(AM_I_DC && safe_str_neq(from, fsa_our_uname)) {
+	    crm_err("Another DC detected: %s (op=%s)", from, op);
+	    /* make sure the election happens NOW */
+	    if(fsa_state != S_ELECTION) {
+		new_input = new_ha_msg_input(msg);
+		register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION, NULL,
+				       new_input, __FUNCTION__);
+	    }
+	    
+	} else {
+	    crm_debug_2("Processing DC message from %s [F_SEQ=%s]", from, seq);
+	}
+    }
+    
+    if(new_input == NULL) {
+	crm_log_message_adv(LOG_MSG, "HA[inbound]", msg);
+	new_input = new_ha_msg_input(msg);
+	route_message(C_HA_MESSAGE, new_input);
+    }
+    
+    delete_ha_msg_input(new_input);
+    trigger_fsa(fsa_source);
+}
+
+void
 crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 {
 	int level = LOG_DEBUG;
-	ha_msg_input_t *new_input = NULL;
 	oc_node_t *from_node = NULL;
 	
 	const char *from = ha_msg_value(msg, F_ORIG);
-	const char *seq  = ha_msg_value(msg, F_SEQ);
 	const char *op   = ha_msg_value(msg, F_CRM_TASK);
-
-	const char *sys_to   = ha_msg_value(msg, F_CRM_SYS_TO);
 	const char *sys_from = ha_msg_value(msg, F_CRM_SYS_FROM);
 
 	CRM_DEV_ASSERT(from != NULL);
@@ -148,46 +185,9 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 		
 		crm_log_message_adv(LOG_MSG, "HA[inbound]: CCM Discard", msg);
 
-	} else if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
-		crm_debug_2("Ignoring message for the DC [F_SEQ=%s]", seq);
-		return;
-
-	} else if(safe_str_eq(sys_from, CRM_SYSTEM_DC)) {
-		if(AM_I_DC && safe_str_neq(from, fsa_our_uname)) {
-			crm_err("Another DC detected: %s (op=%s)", from, op);
-			/* make sure the election happens NOW */
-			level = LOG_WARNING;
-			if(fsa_state != S_ELECTION) {
-				new_input = new_ha_msg_input(msg);
-				register_fsa_error_adv(
-					C_FSA_INTERNAL, I_ELECTION, NULL,
-					new_input, __FUNCTION__);
-			}
-			
-#if 0
-		/* still thinking about this one...
-		 * could create a timing issue if we dont notice the
-		 * election before a new DC is elected.
-		 */
-		} else if(fsa_our_dc != NULL && safe_str_neq(from,fsa_our_dc)){
-			crm_warn("Ignoring message from wrong DC: %s vs. %s ",
-				 from, fsa_our_dc);
-			return;
-#endif
-		} else {
-			crm_debug_2("Processing DC message from %s [F_SEQ=%s]",
-				    from, seq);
-		}
+	} else {
+	    crmd_ha_msg_filter(msg);
 	}
-
-	if(new_input == NULL) {
-		crm_log_message_adv(LOG_MSG, "HA[inbound]", msg);
-		new_input = new_ha_msg_input(msg);
-		route_message(C_HA_MESSAGE, new_input);
-	}
-
-	delete_ha_msg_input(new_input);
-	trigger_fsa(fsa_source);
 
 	return;
 }
