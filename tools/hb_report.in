@@ -242,6 +242,7 @@ sys_stats() {
 	ps axf
 	ps auxw
 	top -b -n 1
+	netstat -i
 	set +x
 }
 
