@@ -38,4 +38,31 @@ extern ll_cluster_t *hb_conn;
 	hb_conn, data, node, ordered)
 #endif
 
+extern GHashTable *crm_membership_cache;
+extern unsigned long long crm_membership_seq;
+
+typedef struct crm_membership_node_s 
+{
+	uint32_t id;
+	unsigned long long born;
+	char *uname;
+	char *state;
+	char *uuid;
+	char *addr;
+} crm_node_t;
+
+extern void crm_membership_init(void);
+extern void crm_membership_destroy(void);
+
+extern void destroy_crm_node(gpointer data);
+extern crm_node_t *update_ais_node(crm_data_t *member);
+extern crm_node_t *update_ccm_node(
+    ll_cluster_t *cluster, 
+    const oc_ev_membership_t *oc, int offset, const char *state);
+extern gboolean crm_is_member_active(const crm_node_t *node);
+extern guint crm_active_members(void);
+extern guint reap_crm_membership(void);
+extern guint crm_active_members(void);
+
+
 #endif

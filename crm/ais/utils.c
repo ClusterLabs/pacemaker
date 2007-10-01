@@ -150,7 +150,8 @@ void destroy_ais_node(gpointer data)
 }
 
 
-ais_node_t *update_member(uint32_t id, const char *uname, const char *state) 
+ais_node_t *update_member(uint32_t id, unsigned long long born,
+			  const char *uname, const char *state) 
 {
     int updated = 0;
     ais_node_t *node = NULL;
@@ -159,9 +160,10 @@ ais_node_t *update_member(uint32_t id, const char *uname, const char *state)
 
     if(node == NULL) {	
 	ais_malloc0(node, sizeof(ais_node_t));
-	ais_info("Creating entry for node %u", id);
+	ais_info("Creating entry for node %u born on %llu", id, born);
 	node->id = id;
 	node->addr = NULL;
+	node->born = born;
 	node->state = ais_strdup("unknown");
 	
 	g_hash_table_insert(member_list, GUINT_TO_POINTER(id), node);
@@ -173,6 +175,7 @@ ais_node_t *update_member(uint32_t id, const char *uname, const char *state)
 	    ais_free(node->uname);
 	    node->uname = ais_strdup(uname);
 	    ais_info("Node %u now known as %s", id, node->uname);
+	    node->born = born;
 	    updated = TRUE;
 	}
     }
@@ -184,6 +187,11 @@ ais_node_t *update_member(uint32_t id, const char *uname, const char *state)
 	    ais_info("Node %u/%s is now: %s",
 		     id, node->uname?node->uname:"unknown", state);
 	    updated = TRUE;
+	    if(ais_str_eq(state, CRM_NODE_MEMBER)) {
+		node->born = born;
+	    } else {
+		node->born = -1;
+	    }
 	}
     }
 

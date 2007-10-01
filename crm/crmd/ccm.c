@@ -55,7 +55,6 @@ void check_dead_member(const char *uname, GHashTable *members);
 #define CCM_EVENT_DETAIL_PARTIAL 0
 
 oc_ev_t *fsa_ev_token;
-int current_ccm_membership_id = -1;
 int num_ccm_register_fails = 0;
 int max_ccm_register_fails = 30;
 
@@ -100,14 +99,19 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	crm_data_t *tmp1 = NULL;
 	const char *join = NULL;
 	const char *peer_online = NULL;
-	const char *node_uname = (const char*)key;
+	crm_node_t *node = value;
 	struct update_data_s* data = (struct update_data_s*)user_data;
 
+	data->state = XML_BOOLEAN_NO;
+	if(safe_str_eq(node->state, CRM_NODE_ACTIVE)) {
+	    data->state = XML_BOOLEAN_YES;
+	}
+	
 	crm_debug_2("Updating %s: %s (overwrite=%s)",
-		    node_uname, data->state,
+		    node->uname, data->state,
 		    data->overwrite_join?"true":"false");
 
-	peer_online = g_hash_table_lookup(crmd_peer_state, node_uname);
+	peer_online = g_hash_table_lookup(crmd_peer_state, node->uname);
 	
 	if(data->overwrite_join) {
 		if(safe_str_neq(peer_online, ONLINESTATUS)) {
@@ -115,7 +119,7 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 			
 		} else {
 			const char *peer_member = g_hash_table_lookup(
-				confirmed_nodes, node_uname);
+				confirmed_nodes, node->uname);
 			if(peer_member != NULL) {
 				join = CRMD_JOINSTATE_MEMBER;
 			} else {
@@ -124,7 +128,7 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 		}
 	}
 	
-	tmp1 = create_node_state(node_uname, NULL, data->state, peer_online,
+	tmp1 = create_node_state(node->uname, NULL, data->state, peer_online,
 				 join, NULL, FALSE, data->caller);
 
 	add_node_copy(data->updates, tmp1);
@@ -137,30 +141,6 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
     CRM_ASSERT(FALSE);
 }
 
-#ifdef WITH_NATIVE_AIS
-enum crmd_fsa_input do_ccm_control(
-    long long action, enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
-    enum crmd_fsa_input current_input, fsa_data_t *msg_data)
-{
-    return I_NULL;
-}
-
-enum crmd_fsa_input do_ccm_update_cache(
-    long long action, enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
-    enum crmd_fsa_input current_input, fsa_data_t *msg_data)
-{
-    return I_NULL;
-}
-
-
-enum crmd_fsa_input do_ccm_event(
-    long long action, enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
-    enum crmd_fsa_input current_input, fsa_data_t *msg_data)
-{
-    return I_NULL;
-}
-
-#else
 /*	 A_CCM_CONNECT	*/
 enum crmd_fsa_input
 do_ccm_control(long long action,
@@ -168,17 +148,23 @@ do_ccm_control(long long action,
 		enum crmd_fsa_state cur_state,
 		enum crmd_fsa_input current_input,
 		fsa_data_t *msg_data)
-{
-	int      ret;
- 	int	 fsa_ev_fd; 
-	gboolean did_fail = FALSE;
-	
+{	
 	if(action & A_CCM_DISCONNECT){
 		set_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
+		crm_membership_destroy();
+#ifndef WITH_NATIVE_AIS
 		oc_ev_unregister(fsa_ev_token);
+#endif
 	}
 
 	if(action & A_CCM_CONNECT) {
+#ifdef WITH_NATIVE_AIS
+		crm_membership_init();
+#else
+		int      ret;
+		int	 fsa_ev_fd; 
+		gboolean did_fail = FALSE;
+		crm_membership_init();
 		crm_debug_3("Registering with CCM");
 		clear_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
 		ret = oc_ev_register(&fsa_ev_token);
@@ -236,6 +222,7 @@ do_ccm_control(long long action,
 		G_main_add_fd(G_PRIORITY_HIGH, fsa_ev_fd, FALSE, ccm_dispatch,
 			      fsa_ev_token, default_ipc_connection_destroy);
 		
+#endif
 	}
 
 	if(action & ~(A_CCM_CONNECT|A_CCM_DISCONNECT)) {
@@ -245,6 +232,25 @@ do_ccm_control(long long action,
 	
 	return I_NULL;
 }
+
+
+#ifdef WITH_NATIVE_AIS
+enum crmd_fsa_input do_ccm_update_cache(
+    long long action, enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
+    enum crmd_fsa_input current_input, fsa_data_t *msg_data)
+{
+    return I_NULL;
+}
+
+
+enum crmd_fsa_input do_ccm_event(
+    long long action, enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
+    enum crmd_fsa_input current_input, fsa_data_t *msg_data)
+{
+    return I_NULL;
+}
+
+#else
 
 /*	 A_CCM_EVENT	*/
 enum crmd_fsa_input
@@ -289,6 +295,12 @@ do_ccm_event(long long action,
 	return return_input;
 }
 
+static void reap_dead_ccm_nodes(gpointer key, gpointer value, gpointer user_data)
+{
+    crm_node_t *node = value;
+    check_dead_member(node->uname, NULL);
+}
+
 /*	 A_CCM_UPDATE_CACHE	*/
 /*
  * Take the opportunity to update the node status in the CIB as well
@@ -322,150 +334,48 @@ do_ccm_update_cache(long long action,
 	event = ccm_data->event;
 	oc = ccm_data->oc;
 
-	if(current_ccm_membership_id > oc->m_instance) {
+	if(crm_membership_seq > oc->m_instance) {
 		crm_debug("Ignoring superceeded %s CCM event %d - we had %d", 
 			  ccm_event_name(event), oc->m_instance,
-			  current_ccm_membership_id);
+			  crm_membership_seq);
 		return I_NULL;
 	}
 	
-	current_ccm_membership_id = oc->m_instance;
+	crm_membership_seq = oc->m_instance;
 	crm_debug("Updating cache after CCM event %d (%s).", 
 		  oc->m_instance, ccm_event_name(event));
 	
 	crm_debug_2("instance=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
-		  "new_idx=%d, old_idx=%d",
-		  oc->m_instance,
-		  oc->m_n_member,
-		  oc->m_n_in,
-		  oc->m_n_out,
-		  oc->m_memb_idx,
-		  oc->m_in_idx,
-		  oc->m_out_idx);
-#define ALAN_DEBUG 1
-#ifdef ALAN_DEBUG
-	{
-		/*
-		 *	Size	(Size + 2) / 2
-		 *
-		 *	3	(3+2)/2	= 5 / 2 = 2
-		 *	4	(4+2)/2	= 6 / 2 = 3
-		 *	5	(5+2)/2	= 7 / 2 = 3
-		 *	6	(6+2)/2	= 8 / 2 = 4
-		 *	7	(7+2)/2	= 9 / 2 = 4
-		 */
-		unsigned int		clsize = (oc->m_out_idx - oc->m_n_member);
-		unsigned int		plsize = (clsize + 2)/2;
-		gboolean	plurality = (oc->m_n_member >= plsize);
-		gboolean	Q = ccm_have_quorum(event);
-
-		if(clsize == 2) {
-			if (!Q) {
-				crm_err("2 nodes w/o quorum");
-			}
-			
-		} else if(Q && !plurality) {
-			crm_err("Quorum w/o plurality (%d/%d nodes)",
-				oc->m_n_member, clsize);
-		} else if(plurality && !Q) {
-			crm_err("Plurality w/o Quorum (%d/%d nodes)",
-				oc->m_n_member, clsize);
-		} else {
-			crm_debug_2("Quorum(%s) and plurality (%d/%d) agree.",
-				    Q?"true":"false", oc->m_n_member, clsize);
-		}
+		    "new_idx=%d, old_idx=%d",
+		    oc->m_instance,
+		    oc->m_n_member, oc->m_n_in, oc->m_n_out,
+		    oc->m_memb_idx, oc->m_in_idx, oc->m_out_idx);
 		
-	}
-#endif
-		
-	crm_malloc0(membership_copy, sizeof(oc_node_list_t));
-	membership_copy->id = oc->m_instance;
-	membership_copy->last_event = event;
-
-	crm_debug_3("Copying members");
-
-	/*--*-- All Member Nodes --*--*/
-	offset = oc->m_memb_idx;
-	membership_copy->members_size = oc->m_n_member;
-
-	if(membership_copy->members_size > 0) {
-		membership_copy->members =
-			g_hash_table_new(g_str_hash, g_str_equal);
-		members = membership_copy->members;
-		
-		for(lpc=0; lpc < membership_copy->members_size; lpc++) {
-			oc_node_t *member = NULL;
-			CRM_CHECK(oc->m_array[offset+lpc].node_uname != NULL,
-				  continue);
-
-			crm_malloc0(member, sizeof(oc_node_t));
-
-			member->node_id = oc->m_array[offset+lpc].node_id;
-			
-			member->node_born_on =
-				oc->m_array[offset+lpc].node_born_on;
-			
-			member->node_uname =
-				crm_strdup(oc->m_array[offset+lpc].node_uname);
-			g_hash_table_insert(
-				members, member->node_uname, member);	
-		}
-		
-	} else {
-		membership_copy->members = NULL;
-	}
-	
-	crm_debug_3("Copying new members");
-
-	/*--*-- New Member Nodes --*--*/
-	offset = oc->m_in_idx;
-	membership_copy->new_members_size = 0;
-	membership_copy->new_members = NULL;
-	
 	crm_debug_3("Copying dead members");
 
 	/*--*-- Recently Dead Member Nodes --*--*/
 	offset = oc->m_out_idx;
-	membership_copy->dead_members_size = oc->m_n_out;
-	if(membership_copy->dead_members_size > 0) {
-		membership_copy->dead_members =
-			g_hash_table_new(g_str_hash, g_str_equal);
-
-		members = membership_copy->dead_members;
-
-		for(lpc=0; lpc < membership_copy->dead_members_size; lpc++) {
-			oc_node_t *member = NULL;
-			CRM_CHECK(oc->m_array[offset+lpc].node_uname != NULL,
-				  continue);
-
-			crm_malloc0(member, sizeof(oc_node_t));
-
-			member->node_id = oc->m_array[offset+lpc].node_id;
-			
-			member->node_born_on =
-				oc->m_array[offset+lpc].node_born_on;
-			
-			member->node_uname =
-				crm_strdup(oc->m_array[offset+lpc].node_uname);
-
-			g_hash_table_insert(members, member->node_uname, member);
-			check_dead_member(
-				member->node_uname, membership_copy->members);
-			
-		}
-	} else {
-		membership_copy->dead_members = NULL;
+	for(lpc=0; lpc < membership_copy->m_out; lpc++) {
+	    update_ccm_node(fsa_cluster_conn, oc, offset+lpc, CRM_NODE_LOST);
 	}
 
-	tmp = fsa_membership_copy;
-	fsa_membership_copy = membership_copy;
-	crm_debug_2("Updated membership cache with %d (%d new, %d lost) members",
-		    g_hash_table_size(fsa_membership_copy->members),
-		    oc->m_n_in,
-		    g_hash_table_size(fsa_membership_copy->dead_members));
-
-	free_ccm_cache(tmp);
+	crm_debug_3("Copying members");
 	
+	/*--*-- All Member Nodes --*--*/
+	offset = oc->m_memb_idx;
+	for(lpc=0; lpc < membership_copy->m_n_member; lpc++) {
+	    update_ccm_node(fsa_cluster_conn, oc, offset+lpc, CRM_NODE_ACTIVE);
+	}
+
+	if(event == OC_EV_MS_EVICTED) {
+	    update_ccm_node(fsa_cluster_conn, oc, offset+lpc, CRM_NODE_EVICTED);
+	}
+
+	g_hash_table_foreach(crm_membership_cache, reap_dead_ccm_nodes, NULL);
+
+	crm_debug("Updated membership cache with %d (%d new, %d lost) members",
+		  oc->m_n_memb, oc->m_n_in, oc->m_n_out);
+
 	set_bit_inplace(fsa_input_register, R_CCM_DATA);
 
 	if(cur_state != S_STOPPING) {
@@ -599,7 +509,7 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
 	struct update_data_s update_data;
 	crm_data_t *fragment = NULL;
 
-	if(fsa_membership_copy == NULL) {
+	if(crm_membership_cache == NULL) {
 		/* We got a replace notification before being connected to
 		 *   the CCM.
 		 * So there is no need to update the local CIB with our values
@@ -619,23 +529,11 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
 		crm_debug_2("Inhibiting bcast for membership updates");
 	}
 
-	/* dead nodes */
-	update_data.state = XML_BOOLEAN_NO;
-	if(fsa_membership_copy->dead_members != NULL) {
-		g_hash_table_foreach(fsa_membership_copy->dead_members,
-				     ghash_update_cib_node, &update_data);
-	}		
-	
-	/* live nodes */
-	update_data.state = XML_BOOLEAN_YES;
-	if(fsa_membership_copy->members != NULL) {
-		g_hash_table_foreach(fsa_membership_copy->members,
-				     ghash_update_cib_node, &update_data);
-	}
+	g_hash_table_foreach(crm_membership_cache, ghash_update_cib_node, &update_data);
 
 	fsa_cib_update(XML_CIB_TAG_STATUS, fragment, call_options, call_id);
-	
 	add_cib_op_callback(call_id, FALSE, NULL, ccm_node_update_complete);
+
 	free_xml(fragment);
 }
 

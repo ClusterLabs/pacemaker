@@ -29,6 +29,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
+#include <crm/common/cluster.h>
 #include <crm/cib.h>
 
 #include <crmd.h>
@@ -158,7 +159,7 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 
 	crm_debug_2("HA[inbound]: %s from %s", op, from);
 
-	if(fsa_membership_copy == NULL) {
+	if(crm_membership_cache == NULL) {
 		crm_debug("Ignoring HA messages until we are"
 			  " connected to the CCM (%s op from %s)", op, from);
 		crm_log_message_adv(
@@ -166,7 +167,7 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 		return;
 	}
 	
-	from_node = g_hash_table_lookup(fsa_membership_copy->members, from);
+	from_node = g_hash_table_lookup(crm_membership_cache, from);
 
 	if(from_node == NULL) {
 		if(safe_str_eq(op, CRM_OP_VOTE)) {
@@ -181,7 +182,7 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 		do_crm_log(level, 
 			   "Ignoring HA message (op=%s) from %s: not in our"
 			   " membership list (size=%d)", op, from,
-			   g_hash_table_size(fsa_membership_copy->members));
+			   crm_active_members());
 		
 		crm_log_message_adv(LOG_MSG, "HA[inbound]: CCM Discard", msg);
 
@@ -514,10 +515,10 @@ crmd_ccm_msg_callback(
 		 ccm_have_quorum(event)?"(re)attained":"lost",
 		 ccm_event_name(event), membership->m_instance);
 
-	if(current_ccm_membership_id > membership->m_instance) {
-		crm_err("Membership instance ID went backwards! %d->%d",
-			current_ccm_membership_id, instance);
-		CRM_ASSERT(current_ccm_membership_id <= membership->m_instance);
+	if(crm_membership_seq > membership->m_instance) {
+		crm_err("Membership instance ID went backwards! %llu->%d",
+			crm_membership_seq, instance);
+		CRM_ASSERT(crm_membership_seq <= membership->m_instance);
 		return;
 	}
 	
@@ -546,7 +547,7 @@ crmd_ccm_msg_callback(
 #endif
 			break;
 		case OC_EV_MS_PRIMARY_RESTORED:
-			current_ccm_membership_id = instance;
+			crm_membership_seq = instance;
 			if(AM_I_DC && need_transition(fsa_state)) {
 				trigger_transition = TRUE;
 			}
@@ -586,7 +587,7 @@ crmd_ccm_msg_callback(
 			case OC_EV_MS_NEW_MEMBERSHIP:
 			case OC_EV_MS_INVALID:
 			case OC_EV_MS_PRIMARY_RESTORED:
-				current_ccm_membership_id = instance;
+				crm_membership_seq = instance;
 				break;
 			default:
 				break;

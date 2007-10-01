@@ -22,6 +22,7 @@
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/cluster.h>
 #include <crm/crm.h>
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
@@ -135,6 +136,14 @@ struct election_data_s
 };
 
 static void
+log_member_uname(gpointer key, gpointer value, gpointer user_data)
+{
+    if(crm_is_member_active(value)) {
+	crm_err("%s: %s", (char*)user_data, (char*)key);
+    }
+}
+
+static void
 log_node(gpointer key, gpointer value, gpointer user_data)
 {
 	crm_err("%s: %s", (char*)user_data, (char*)key);
@@ -148,7 +157,7 @@ do_election_check(long long action,
 		  fsa_data_t *msg_data)
 {
 	int voted_size = g_hash_table_size(voted);
-	int num_members = g_hash_table_size(fsa_membership_copy->members);
+	int num_members = crm_active_members();
 	
 	/* in the case of #voted > #members, it is better to
 	 *   wait for the timeout and give the cluster time to
@@ -165,8 +174,7 @@ do_election_check(long long action,
 			char *data = NULL;
 			
 			data = crm_strdup("member");
-			g_hash_table_foreach(
-				fsa_membership_copy->members, log_node, data);
+			g_hash_table_foreach(crm_membership_cache, log_member_uname, data);
 			crm_free(data);
 			
 			data = crm_strdup("voted");
@@ -198,7 +206,7 @@ do_election_count_vote(long long action,
 	int election_id = -1;
 	gboolean we_loose = FALSE;
 	enum crmd_fsa_input election_result = I_NULL;
-	oc_node_t *our_node = NULL, *your_node = NULL;
+	crm_node_t *our_node = NULL, *your_node = NULL;
 	ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
 	const char *op            = cl_get_string(vote->msg, F_CRM_TASK);
 	const char *vote_from     = cl_get_string(vote->msg, F_CRM_HOST_FROM);
@@ -208,16 +216,11 @@ do_election_count_vote(long long action,
 	/* if the membership copy is NULL we REALLY shouldnt be voting
 	 * the question is how we managed to get here.
 	 */
-	CRM_CHECK(fsa_membership_copy != NULL, return I_NULL);
-	CRM_CHECK(fsa_membership_copy->members != NULL, return I_NULL);
-
+	CRM_CHECK(crm_membership_cache != NULL, return I_NULL);
 	CRM_CHECK(vote_from != NULL, vote_from = fsa_our_uname);
 	
-	our_node = (oc_node_t*)g_hash_table_lookup(
-		fsa_membership_copy->members, fsa_our_uname);
-
-	your_node = (oc_node_t*)g_hash_table_lookup(
-		fsa_membership_copy->members, vote_from);
+	our_node = g_hash_table_lookup(crm_membership_cache, fsa_our_uname);
+	your_node = g_hash_table_lookup(crm_membership_cache, vote_from);
 	
 	if(your_node == NULL) {
 		crm_debug("Election ignore: The other side doesn't exist in CCM.");
@@ -239,13 +242,13 @@ do_election_count_vote(long long action,
 		if(election_id == current_election_id) {
 			char *uname_copy = NULL;
 			char *op_copy = crm_strdup(op);
-			uname_copy = crm_strdup(your_node->node_uname);
+			uname_copy = crm_strdup(your_node->uname);
 			g_hash_table_replace(voted, uname_copy, op_copy);
 			crm_info("Updated voted hash for %s to %s",
-				 your_node->node_uname, op);
+				 your_node->uname, op);
 		} else {
 			crm_debug("Ignore old '%s' from %s: %d vs. %d",
-				  op, your_node->node_uname,
+				  op, your_node->uname,
 				  election_id, current_election_id);
 			return I_NULL;
 		}
@@ -265,8 +268,7 @@ do_election_count_vote(long long action,
 	}
 
 	crm_info("Election check: %s from %s", op, vote_from);
-	if(our_node == NULL
-		|| fsa_membership_copy->last_event == OC_EV_MS_EVICTED) {
+	if(our_node == NULL || safe_str_neq(our_node->state, CRM_NODE_MEMBER)) {
 		crm_info("Election fail: we don't exist in CCM");
 		we_loose = TRUE;
 
@@ -277,11 +279,11 @@ do_election_count_vote(long long action,
 	} else if(compare_version(your_version, CRM_FEATURE_SET) > 0) {
 		crm_info("Election pass: version");
 		
-	} else if(your_node->node_born_on < our_node->node_born_on) {
+	} else if(your_node->born < our_node->born) {
 		crm_debug("Election fail: born_on");
 		we_loose = TRUE;
 
-	} else if(your_node->node_born_on > our_node->node_born_on) {
+	} else if(your_node->born > our_node->born) {
 		crm_debug("Election pass: born_on");
 		
 	} else if(strcasecmp(fsa_our_uname, vote_from) > 0) {
@@ -290,9 +292,9 @@ do_election_count_vote(long long action,
 
 	} else {
 		CRM_CHECK(strcasecmp(fsa_our_uname, vote_from) != 0, ;);
-		crm_debug("Them: %s (born=%d)  Us: %s (born=%d)",
-			  vote_from, your_node->node_born_on,
-			  fsa_our_uname, our_node->node_born_on);
+		crm_debug("Them: %s (born=%llu)  Us: %s (born=%llu)",
+			  vote_from, your_node->born,
+			  fsa_our_uname, our_node->born);
 /* cant happen...
  *	} else if(strcasecmp(fsa_our_uname, vote_from) == 0) {
  *

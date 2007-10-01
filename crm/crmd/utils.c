@@ -1297,44 +1297,6 @@ copy_ccm_node(oc_node_t a_node, oc_node_t *a_node_copy)
 		  a_node_copy->node_uname);
 }
 
-static gboolean
-ghash_node_clfree(gpointer key, gpointer value, gpointer user_data)
-{
-	/* value->node_uname is free'd as "key" */
-	if(key != NULL) {
-		crm_free(key);
-	}
-	if(value != NULL) {
-		crm_free(value);
-	}
-	return TRUE;
-}
-
-void
-free_ccm_cache(void) 
-{
-	oc_node_list_t *tmp = fsa_membership_copy;
-        fsa_membership_copy = NULL;
-	
-	/* Free the old copy */
-	if(tmp == NULL) {
-		return;
-	}
-	
-	if(tmp->members != NULL) {
-		g_hash_table_foreach_remove(
-			tmp->members, ghash_node_clfree, NULL);
-	}
-	CRM_ASSERT(tmp->new_members == NULL);
-	if(tmp->dead_members != NULL) {
-		g_hash_table_foreach_remove(
-			tmp->dead_members, ghash_node_clfree, NULL);
-	}
-	
-	crm_free(tmp);
-	crm_debug_3("Free'd old copies");
-}
-
 crm_data_t*
 create_node_state(
 	const char *uname, const char *ha_state, const char *ccm_state,

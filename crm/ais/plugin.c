@@ -234,7 +234,7 @@ int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
     ais_info("Local hostname: %s", local_uname);
 
     local_nodeid = totempg_my_nodeid_get();
-    update_member(local_nodeid, local_uname, NULL);
+    update_member(local_nodeid, 0, local_uname, NULL);
     
     LEAVE("");
     return 0;
@@ -391,7 +391,7 @@ void global_confchg_fn (
     for(lpc = 0; lpc < joined_list_entries; lpc++) {
 	const char *prefix = "NEW: ";
 	uint32_t nodeid = joined_list[lpc];
-	ais_node_t *node = update_member(nodeid, NULL, "active");
+	ais_node_t *node = update_member(nodeid, ring_id->seq, NULL, CRM_NODE_MEMBER);
 	ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
 	if(node->addr == NULL) {
 	    const char *addr = totempg_ifaces_print(nodeid);
@@ -403,14 +403,14 @@ void global_confchg_fn (
     for(lpc = 0; lpc < member_list_entries; lpc++) {
 	const char *prefix = "MEMB:";
 	uint32_t nodeid = member_list[lpc];
-	update_member(nodeid, NULL, "active");
+	update_member(nodeid, ring_id->seq, NULL, CRM_NODE_MEMBER);
 	ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
     }
 
     for(lpc = 0; lpc < left_list_entries; lpc++) {
 	const char *prefix = "LOST:";
 	uint32_t nodeid = left_list[lpc];
-	update_member(nodeid, NULL, "lost");
+	update_member(nodeid, ring_id->seq, NULL, CRM_NODE_LOST);
 	ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
     }
 
@@ -475,7 +475,7 @@ void ais_cluster_message_callback (
     ENTER("Node=%u (%s)", nodeid, nodeid==local_nodeid?"local":"remote");
     ais_debug_2("Message from node %u (%s)",
 		nodeid, nodeid==local_nodeid?"local":"remote");
-    update_member(ais_msg->sender.id, ais_msg->sender.uname, NULL);
+    update_member(ais_msg->sender.id, 0, ais_msg->sender.uname, NULL);
     if(ais_msg->host.size == 0
        || ais_str_eq(ais_msg->host.uname, local_uname)) {
 	route_ais_message(ais_msg, FALSE);

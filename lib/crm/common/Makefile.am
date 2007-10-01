@@ -41,7 +41,7 @@ halib_PROGRAMS	=
 noinst_HEADERS  = 
 
 libcrmcommon_la_SOURCES	= ipc.c msg.c utils.c xml.c ctrl.c \
-			iso8601.c iso8601_fields.c
+			iso8601.c iso8601_fields.c membership.c
 if BUILD_NATIVE_AIS
 libcrmcommon_la_SOURCES	+= ais.c
 endif

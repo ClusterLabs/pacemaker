@@ -45,6 +45,7 @@ typedef struct crm_child_s {
 typedef struct ais_node_s 
 {
 	uint32_t id;
+	unsigned long long born;
 	char *addr;
 	char *uname;
 	char *state;
@@ -54,7 +55,7 @@ typedef struct ais_node_s
 extern void destroy_ais_node(gpointer data);
 extern void delete_member(uint32_t id, const char *uname);
 extern ais_node_t *update_member(
-    uint32_t id, const char *uname, const char *state);
+    uint32_t id, unsigned long long born, const char *uname, const char *state);
 extern const char *member_uname(uint32_t id);
 extern char *append_member(char *data, ais_node_t *node);
 extern void member_loop_fn(gpointer key, gpointer value, gpointer user_data);

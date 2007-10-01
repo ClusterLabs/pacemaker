@@ -244,7 +244,7 @@ static void free_mem(fsa_data_t *msg_data)
 	}
 	
 	empty_uuid_cache();
-	free_ccm_cache();
+	crm_membership_destroy();
 	clear_bit_inplace(fsa_input_register, R_CCM_DATA);
 
 	if(te_subsystem->client && te_subsystem->client->client_source) {

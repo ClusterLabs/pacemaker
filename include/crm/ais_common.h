@@ -28,6 +28,13 @@
 #define MAX_NAME	256
 #define AIS_IPC_NAME  "ais-crm-ipc"
 
+#define CRM_NODE_LOST      "lost"
+#define CRM_NODE_MEMBER    "member"
+#define CRM_NODE_ACTIVE    CRM_NODE_MEMBER
+#define CRM_NODE_INACTIVE  CRM_NODE_LOST
+#define CRM_NODE_EVICTED   "evicted"
+
+
 typedef struct crm_ais_host_s AIS_Host;
 typedef struct crm_ais_msg_s AIS_Message;
 

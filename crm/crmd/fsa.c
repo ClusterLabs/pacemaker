@@ -28,6 +28,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
+#include <crm/common/cluster.h>
 
 #include <clplumbing/Gmain_timeout.h>
 
@@ -48,7 +49,6 @@ char	*fsa_our_dc_version = NULL;
 
 ll_lrm_t	*fsa_lrm_conn;
 ll_cluster_t	*fsa_cluster_conn;
-oc_node_list_t	*fsa_membership_copy;
 char		*fsa_our_uuid = NULL;
 char		*fsa_our_uname = NULL;
 
@@ -717,10 +717,9 @@ do_state_transition(long long actions,
 				crm_err("We have more confirmed nodes than our membership does");
 				register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 				
-			} else if(saved_ccm_membership_id != current_ccm_membership_id) {
-				crm_info("Membership changed: %u -> %u - join restart",
-					 saved_ccm_membership_id,
-					 current_ccm_membership_id);
+			} else if(saved_ccm_membership_id != crm_membership_seq) {
+				crm_info("Membership changed: %llu -> %llu - join restart",
+					 saved_ccm_membership_id, crm_membership_seq);
 				register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
 
 			} else {
