@@ -31,6 +31,7 @@
 #include <string.h>
 
 #include <stdlib.h>
+#include <limits.h>
 #include <ctype.h>
 #include <pwd.h>
 #include <grp.h>
@@ -630,10 +631,10 @@ void g_hash_destroy_str(gpointer data)
 	crm_free(data);
 }
 
-int
+long
 crm_int_helper(const char *text, char **end_text)
 {
-	int atoi_result = -1;
+	long atoi_result = -1;
 	char *local_end_text = NULL;
 
 	errno = 0;

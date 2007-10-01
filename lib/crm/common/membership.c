@@ -166,9 +166,16 @@ crm_node_t *update_membership(const char *uuid, const char *uname,
     return node;
 }
 
-crm_node_t *update_ais_node(crm_data_t *member)
+crm_node_t *update_ais_node(crm_data_t *member, long long seq)
 {
-    return NULL;
+    const char *addr = crm_element_value(member, "addr");
+    const char *uname = crm_element_value(member, "uname");
+    const char *state = crm_element_value(member, "state");
+    const char *id_s = crm_element_value(member, "id");
+
+    unsigned long id = crm_int_helper(id_s, NULL);
+
+    return update_membership(uname, uname, id, seq, addr, state);
 }
 
 crm_node_t *update_ccm_node(

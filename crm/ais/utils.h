@@ -45,7 +45,6 @@ typedef struct crm_child_s {
 typedef struct ais_node_s 
 {
 	uint32_t id;
-	unsigned long long born;
 	char *addr;
 	char *uname;
 	char *state;
@@ -71,8 +70,8 @@ extern gboolean process_ais_message(AIS_Message *msg);
 
 extern int send_cluster_msg(
     enum crm_ais_msg_types type, const char *host, const char *data);
-extern int send_client_msg(
-    void *conn, enum crm_ais_msg_types type, const char *data);
+extern int send_client_msg(void *conn, enum crm_ais_msg_class class,
+			   enum crm_ais_msg_types type, const char *data);
 extern void send_member_notification(ais_node_t *node);
 
 extern GHashTable *member_list;

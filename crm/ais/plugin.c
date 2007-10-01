@@ -432,7 +432,7 @@ int ais_ipc_client_connect_callback (void *conn)
 {
     ENTER("Client=%p", conn);
     ais_debug("Client %p joined", conn);
-    send_client_msg(conn, crm_msg_none, "identify");
+    send_client_msg(conn, crm_class_cluster, crm_msg_none, "identify");
     LEAVE("");
 
     return (0);
@@ -569,7 +569,7 @@ int crm_exec_exit_fn (struct objdb_iface_ver0 *objdb)
 
 void ais_quorum_query(void *conn, void *msg)
 {
-    send_client_msg(conn, crm_msg_none, "<quorum quorate=\"true\"/>");
+    send_client_msg(conn, crm_class_quorum, crm_msg_none, "<quorum quorate=\"true\"/>");
 }
 
 struct member_loop_data 
@@ -590,7 +590,9 @@ void ais_node_list_query(void *conn, void *msg)
 {
     int size = 0;
     struct member_loop_data data;
-    data.string = ais_strdup("<nodes>");
+    size = 14 + 32;
+    ais_malloc0(data.string, size);
+    sprintf(data.string, "<nodes id=\"%u\">", membership_seq);
     
     g_hash_table_foreach(member_list, member_loop_fn, &data);
 
@@ -600,7 +602,7 @@ void ais_node_list_query(void *conn, void *msg)
 
     ais_info("members: %s", data.string);
     if(conn) {
-	send_client_msg(conn, crm_msg_none, data.string);
+	send_client_msg(conn, crm_class_members, crm_msg_none, data.string);
     }
     ais_free(data.string);
 }
@@ -645,7 +647,7 @@ void send_member_notification(ais_node_t *node)
 	    ais_info("Sending update to %s for %s/%s",
 		     crm_children[lpc].name, node->uname, node->state);
 	    
- 	    send_client_msg(crm_children[lpc].conn, crm_msg_none, update);
+ 	    send_client_msg(crm_children[lpc].conn, crm_class_members, crm_msg_none, update);
 	}
     }
     ais_free(update);

@@ -163,7 +163,6 @@ ais_node_t *update_member(uint32_t id, unsigned long long born,
 	ais_info("Creating entry for node %u born on %llu", id, born);
 	node->id = id;
 	node->addr = NULL;
-	node->born = born;
 	node->state = ais_strdup("unknown");
 	
 	g_hash_table_insert(member_list, GUINT_TO_POINTER(id), node);
@@ -175,7 +174,6 @@ ais_node_t *update_member(uint32_t id, unsigned long long born,
 	    ais_free(node->uname);
 	    node->uname = ais_strdup(uname);
 	    ais_info("Node %u now known as %s", id, node->uname);
-	    node->born = born;
 	    updated = TRUE;
 	}
     }
@@ -187,11 +185,6 @@ ais_node_t *update_member(uint32_t id, unsigned long long born,
 	    ais_info("Node %u/%s is now: %s",
 		     id, node->uname?node->uname:"unknown", state);
 	    updated = TRUE;
-	    if(ais_str_eq(state, CRM_NODE_MEMBER)) {
-		node->born = born;
-	    } else {
-		node->born = -1;
-	    }
 	}
     }
 
@@ -340,7 +333,7 @@ int send_cluster_msg(
 }
 
 int send_client_msg(
-    void *conn, enum crm_ais_msg_types type, const char *data) 
+    void *conn, enum crm_ais_msg_class class, enum crm_ais_msg_types type, const char *data) 
 {
     int rc = 0;
     int data_len = 0;
@@ -363,7 +356,7 @@ int send_client_msg(
 	
     ais_msg->id = msg_id;
     ais_msg->header.size = total_size;
-    ais_msg->header.id = 0;
+    ais_msg->header.id = class;
 	
     ais_msg->size = data_len;
     memcpy(ais_msg->data, data, data_len);

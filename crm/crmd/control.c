@@ -55,16 +55,38 @@ GTRIGSource  *fsa_source = NULL;
 #ifdef WITH_NATIVE_AIS	
 extern void crmd_ha_msg_filter(HA_Message * msg);
 
+static void update_ais_membership(crm_data_t *xml) 
+{
+    const char *seq_s = crm_element_value(xml, "seq");
+    unsigned long seq = crm_int_helper(seq_s, NULL);
+
+    crm_info("Processing membership %lu", seq);
+    crm_log_xml_debug(xml, __PRETTY_FUNCTION__);
+    set_bit_inplace(fsa_input_register, R_CCM_DATA);
+
+    xml_child_iter(xml, node, update_ais_node(node, seq));
+}
+
 static gboolean crm_ais_dispatch(AIS_Message *header, char *data, int sender) 
 {
-    HA_Message *xml = string2xml(data);
+    crm_data_t *xml = string2xml(data);
     if(xml != NULL) {
 	crm_debug("Message received: '%.120s'", data);
 	ha_msg_add(xml, F_ORIG, header->sender.uname);
 	ha_msg_add_int(xml, F_SEQ, header->id);
 
-	crmd_ha_msg_filter(xml);
-
+	switch(header->id) {
+	    case crm_class_cluster:
+		crmd_ha_msg_filter(xml);
+		break;
+	    case crm_class_members:
+		update_ais_membership(xml);
+		break;
+	    case crm_class_quorum:
+	    case crm_class_notify:
+		break;
+	}
+	
     } else {
 	crm_err("Invalid message: %s", data);
     }
@@ -115,7 +137,6 @@ do_ha_control(long long action,
 	    registered = init_ais_connection(
 		crm_ais_dispatch, crm_ais_destroy, &fsa_our_uname);
 	    fsa_our_uuid = crm_strdup(fsa_our_uname);
-	    set_bit_inplace(fsa_input_register, R_CCM_DATA);
 /* 	    populate_cib_nodes(hb_cluster, with_client_status); */
 #endif
 		if(registered == FALSE) {

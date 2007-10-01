@@ -38,6 +38,13 @@
 typedef struct crm_ais_host_s AIS_Host;
 typedef struct crm_ais_msg_s AIS_Message;
 
+enum crm_ais_msg_class {
+    crm_class_cluster = 0,
+    crm_class_quorum  = 1,
+    crm_class_members = 2,
+    crm_class_notify  = 3,
+};
+
 enum crm_ais_msg_types {
     crm_msg_none,
     crm_msg_ais,
