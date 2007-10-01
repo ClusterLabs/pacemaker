@@ -30,6 +30,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
+#include <crm/common/cluster.h>
 #include <crm/cib.h>
 
 #include <crmd.h>
@@ -763,15 +764,14 @@ handle_message(ha_msg_input_t *stored_msg)
 	return next_input;
 }
 
-#define schedule_pe()							\
-	{								\
+#define schedule_pe() do {						\
 		next_input = I_PE_CALC;					\
 		if(fsa_pe_ref) {					\
 			crm_debug("Cancelling %s...", fsa_pe_ref);	\
 			crm_free(fsa_pe_ref);				\
 			fsa_pe_ref = NULL;				\
 		}							\
-	}
+    } while(0)
 
 enum crmd_fsa_input
 handle_request(ha_msg_input_t *stored_msg)

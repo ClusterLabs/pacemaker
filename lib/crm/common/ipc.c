@@ -41,6 +41,7 @@
 #include <clplumbing/cl_poll.h>
 
 #include <crm/common/ipc.h>
+#include <crm/common/cluster.h>
 #include <crm/msg_xml.h>
 #include <ha_msg.h>
 

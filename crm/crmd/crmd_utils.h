@@ -23,7 +23,7 @@
 
 #define CLIENT_EXIT_WAIT 30
 
-extern void free_ccm_cache(oc_node_list_t *tmp);
+extern void free_ccm_cache(void);
 extern void delete_ccm_data(struct crmd_ccm_data_s *ccm_input);
 
 extern void process_client_disconnect(crmd_client_t *curr_client);
@@ -88,4 +88,11 @@ extern gboolean need_transition(enum crmd_fsa_state state);
 extern void update_dc(HA_Message *msg, gboolean assert_same);
 extern void erase_node_from_join(const char *node);
 
+#ifdef WITH_NATIVE_AIS
+#  define membership_get_id() 0
+#  define membership_get_size() 0
+#else
+#  define membership_get_id() fsa_membership_copy->id
+#  define membership_get_size() fsa_membership_copy->members_size
+#endif
 #endif

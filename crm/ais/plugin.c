@@ -569,7 +569,7 @@ int crm_exec_exit_fn (struct objdb_iface_ver0 *objdb)
 
 void ais_quorum_query(void *conn, void *msg)
 {
-    send_client_msg(conn, crm_msg_none, "true");
+    send_client_msg(conn, crm_msg_none, "<quorum quorate=\"true\"/>");
 }
 
 struct member_loop_data 

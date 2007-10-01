@@ -1311,8 +1311,11 @@ ghash_node_clfree(gpointer key, gpointer value, gpointer user_data)
 }
 
 void
-free_ccm_cache(oc_node_list_t *tmp) 
+free_ccm_cache(void) 
 {
+	oc_node_list_t *tmp = fsa_membership_copy;
+        fsa_membership_copy = NULL;
+	
 	/* Free the old copy */
 	if(tmp == NULL) {
 		return;
@@ -1322,10 +1325,7 @@ free_ccm_cache(oc_node_list_t *tmp)
 		g_hash_table_foreach_remove(
 			tmp->members, ghash_node_clfree, NULL);
 	}
-	if(tmp->new_members != NULL) {
-		g_hash_table_foreach_remove(
-			tmp->new_members, ghash_node_clfree, NULL);
-	}
+	CRM_ASSERT(tmp->new_members == NULL);
 	if(tmp->dead_members != NULL) {
 		g_hash_table_foreach_remove(
 			tmp->dead_members, ghash_node_clfree, NULL);

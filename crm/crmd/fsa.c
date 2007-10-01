@@ -50,7 +50,7 @@ ll_lrm_t	*fsa_lrm_conn;
 ll_cluster_t	*fsa_cluster_conn;
 oc_node_list_t	*fsa_membership_copy;
 char		*fsa_our_uuid = NULL;
-const char	*fsa_our_uname = NULL;
+char		*fsa_our_uname = NULL;
 
 fsa_timer_t *wait_timer = NULL;
 fsa_timer_t *recheck_timer = NULL;
@@ -708,12 +708,12 @@ do_state_transition(long long actions,
 				crm_free(msg);
 				
 			} else if(g_hash_table_size(confirmed_nodes)
-				  == fsa_membership_copy->members_size) {
+				  == membership_get_size()) {
 				crm_info("All %u cluster nodes are"
 					 " eligible to run resources.",
-					 fsa_membership_copy->members_size);
+					 membership_get_size());
 				
-			} else if(g_hash_table_size(confirmed_nodes) > fsa_membership_copy->members_size) {
+			} else if(g_hash_table_size(confirmed_nodes) > membership_get_size()) {
 				crm_err("We have more confirmed nodes than our membership does");
 				register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 				
@@ -727,7 +727,7 @@ do_state_transition(long long actions,
 				crm_warn("Only %u of %u cluster "
 					 "nodes are eligible to run resources - continue %d",
 					 g_hash_table_size(confirmed_nodes),
-					 fsa_membership_copy->members_size,
+					 membership_get_size(),
 					 g_hash_table_size(welcomed_nodes));
 			}
 /* 			initialize_join(FALSE); */

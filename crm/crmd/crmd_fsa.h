@@ -114,7 +114,7 @@ extern ll_cluster_t   *fsa_cluster_conn;
 extern ll_lrm_t       *fsa_lrm_conn;
 extern cib_t	      *fsa_cib_conn;
 
-extern const char *fsa_our_uname;
+extern char	  *fsa_our_uname;
 extern char	  *fsa_our_uuid;
 extern char	  *fsa_pe_ref; /* the last invocation of the PE */
 extern char       *fsa_our_dc;

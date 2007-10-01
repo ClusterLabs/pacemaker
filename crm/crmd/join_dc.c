@@ -154,10 +154,10 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 	erase_node_from_join(join_to);
 	crm_online = g_hash_table_lookup(crmd_peer_state, join_to);
 
-	if(saved_ccm_membership_id != fsa_membership_copy->id) {
-		saved_ccm_membership_id = fsa_membership_copy->id;
+	if(saved_ccm_membership_id != membership_get_id()) {
+		saved_ccm_membership_id = membership_get_id();
 		crm_info("Making join offers based on membership %d",
-			 fsa_membership_copy->id);
+			 membership_get_id());
 	}	
 	
 	if(safe_str_eq(crm_online, ONLINESTATUS)) {

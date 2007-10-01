@@ -26,6 +26,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/ctrl.h>
 #include <crm/pengine/rules.h>
+#include <crm/common/cluster.h>
 
 #include <crmd.h>
 #include <crmd_fsa.h>
@@ -51,6 +52,34 @@ GHashTable   *ipc_clients = NULL;
 GTRIGSource  *fsa_source = NULL;
 
 /*	 A_HA_CONNECT	*/
+#ifdef WITH_NATIVE_AIS	
+extern void crmd_ha_msg_filter(HA_Message * msg);
+
+static gboolean crm_ais_dispatch(AIS_Message *header, char *data, int sender) 
+{
+    HA_Message *xml = string2xml(data);
+    if(xml != NULL) {
+	crm_debug("Message received: '%.120s'", data);
+	ha_msg_add(xml, F_ORIG, header->sender.uname);
+	ha_msg_add_int(xml, F_SEQ, header->id);
+
+	crmd_ha_msg_filter(xml);
+
+    } else {
+	crm_err("Invalid message: %s", data);
+    }
+    return TRUE;
+}
+
+static void
+crm_ais_destroy(gpointer user_data)
+{
+    crm_err("AIS connection terminated");
+    ais_fd_in = -1;
+    exit(1);
+}
+#endif
+
 enum crmd_fsa_input
 do_ha_control(long long action,
 	       enum crmd_fsa_cause cause,
@@ -72,7 +101,7 @@ do_ha_control(long long action,
 	}
 	
 	if(action & A_HA_CONNECT) {
-#ifdef WITH_NATIVE_AIS
+#ifndef WITH_NATIVE_AIS
 		if(fsa_cluster_conn == NULL) {
 			fsa_cluster_conn = ll_cluster_new("heartbeat");
 		}
@@ -215,7 +244,8 @@ static void free_mem(fsa_data_t *msg_data)
 	}
 	
 	empty_uuid_cache();
-	free_ccm_cache(fsa_membership_copy);
+	free_ccm_cache();
+	clear_bit_inplace(fsa_input_register, R_CCM_DATA);
 
 	if(te_subsystem->client && te_subsystem->client->client_source) {
 		crm_debug("Full destroy: TE");
@@ -849,6 +879,7 @@ populate_cib_nodes(ll_cluster_t *hb_cluster, gboolean with_client_status)
 gboolean
 register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 {
+	const char *const_uname = NULL;
 	const char *const_uuid = NULL;
 	crm_debug("Signing in with Heartbeat");
 	if (hb_cluster->llc_ops->signon(hb_cluster, client_name)!= HA_OK) {
@@ -892,11 +923,12 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 		crmd_ha_connection_destroy);
 
 	crm_debug_3("Finding our node name");
-	if ((fsa_our_uname =
+	if ((const_uname =
 	     hb_cluster->llc_ops->get_mynodeid(hb_cluster)) == NULL) {
 		crm_err("get_mynodeid() failed");
 		return FALSE;
 	}
+	fsa_our_uname = crm_strdup(const_uname);
 	crm_info("Hostname: %s", fsa_our_uname);
 
 	crm_debug_3("Finding our node uuid");
@@ -912,5 +944,4 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	populate_cib_nodes(hb_cluster, TRUE);
 	
 	return TRUE;
-    
 }
