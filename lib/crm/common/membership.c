@@ -36,10 +36,6 @@
 GHashTable *crm_membership_cache = NULL;
 unsigned long long crm_membership_seq = 0;
 
-extern crm_node_t *update_membership(const char *uuid, const char *uname,
-				     uint32_t id, unsigned long long born,
-				     const char *addr, const char *state);
-
 gboolean crm_is_member_active(const crm_node_t *node) 
 {
     if(safe_str_eq(node->state, CRM_NODE_MEMBER)) {
@@ -108,9 +104,9 @@ void crm_membership_destroy(void)
     }
 }
 
-crm_node_t *update_membership(const char *uuid, const char *uname,
-			      uint32_t id, unsigned long long born,
-			      const char *addr, const char *state) 
+crm_node_t *crm_update_membership(const char *uuid, const char *uname,
+				  uint32_t id, unsigned long long born,
+				  const char *addr, const char *state) 
 {
     crm_node_t *node = NULL;
     CRM_CHECK(uname != NULL, return NULL);
@@ -175,7 +171,7 @@ crm_node_t *update_ais_node(crm_data_t *member, long long seq)
 
     unsigned long id = crm_int_helper(id_s, NULL);
 
-    return update_membership(uname, uname, id, seq, addr, state);
+    return crm_update_membership(uname, uname, id, seq, addr, state);
 }
 
 crm_node_t *update_ccm_node(
@@ -185,7 +181,7 @@ crm_node_t *update_ccm_node(
     const char *uuid = NULL;
     CRM_CHECK(oc->m_array[offset].node_uname != NULL, return NULL);
     uuid = get_uuid(cluster, oc->m_array[offset].node_uname);
-    return update_membership(uuid,
+    return crm_update_membership(uuid,
 			     oc->m_array[offset].node_uname,
 			     oc->m_array[offset].node_id,
 			     oc->m_array[offset].node_born_on,

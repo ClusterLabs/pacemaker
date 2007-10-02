@@ -498,18 +498,14 @@ void
 crmd_ccm_msg_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data)
 {
-	int instance = -1;
 	gboolean update_cache = FALSE;
-	struct crmd_ccm_data_s *event_data = NULL;
 	const oc_ev_membership_t *membership = data;
 
 	gboolean update_quorum = FALSE;
 	gboolean trigger_transition = FALSE;
 
 	crm_debug_3("Invoked");
-
 	CRM_ASSERT(data != NULL);
-	instance = membership->m_instance;
 	
 	crm_info("Quorum %s after event=%s (id=%d)", 
 		 ccm_have_quorum(event)?"(re)attained":"lost",
@@ -517,7 +513,7 @@ crmd_ccm_msg_callback(
 
 	if(crm_membership_seq > membership->m_instance) {
 		crm_err("Membership instance ID went backwards! %llu->%d",
-			crm_membership_seq, instance);
+			crm_membership_seq, membership->m_instance);
 		CRM_ASSERT(crm_membership_seq <= membership->m_instance);
 		return;
 	}
@@ -537,19 +533,10 @@ crmd_ccm_msg_callback(
 			update_quorum = TRUE;
 			break;
 		case OC_EV_MS_NOT_PRIMARY:
-#if UNTESTED
-			if(AM_I_DC == FALSE) {
-				break;
-			}
-			/* tell the TE to pretend it had completed and stop */
-			/* side effect: we'll end up in S_IDLE */
-			register_fsa_action(A_TE_HALT, TRUE);
-#endif
 			break;
 		case OC_EV_MS_PRIMARY_RESTORED:
-			crm_membership_seq = instance;
 			if(AM_I_DC && need_transition(fsa_state)) {
-				trigger_transition = TRUE;
+			    trigger_transition = TRUE;
 			}
 			break;
 		case OC_EV_MS_EVICTED:
@@ -563,59 +550,28 @@ crmd_ccm_msg_callback(
 	}
 
 	if(update_quorum && ccm_have_quorum(event) == FALSE) {
-		/* did we just loose quorum? */
-		if(fsa_have_quorum && need_transition(fsa_state)) {
-			crm_info("Quorum lost: triggering transition (%s)",
-				 ccm_event_name(event));
-			trigger_transition = TRUE;
-		}
-		fsa_have_quorum = FALSE;
+	    /* did we just loose quorum? */
+	    if(fsa_have_quorum && need_transition(fsa_state)) {
+		crm_info("Quorum lost: triggering transition (%s)",
+			 ccm_event_name(event));
+		trigger_transition = TRUE;
+	    }
+	    fsa_have_quorum = FALSE;
 			
 	} else if(update_quorum)  {
-		crm_debug_2("Updating quorum after event %s",
-			    ccm_event_name(event));
-		fsa_have_quorum = TRUE;
+	    crm_debug_2("Updating quorum after event %s",ccm_event_name(event));
+	    fsa_have_quorum = TRUE;
 	}
 
-	if(trigger_transition) {
-		crm_debug_2("Scheduling transition after event %s",
-			    ccm_event_name(event));
-		/* make sure that when we query the CIB that it has
-		 * the changes that triggered the transition
-		 */
-		switch(event) {
-			case OC_EV_MS_NEW_MEMBERSHIP:
-			case OC_EV_MS_INVALID:
-			case OC_EV_MS_PRIMARY_RESTORED:
-				crm_membership_seq = instance;
-				break;
-			default:
-				break;
-		}
-		if(update_cache == FALSE) {
-			/* a stand-alone transition */
-			register_fsa_action(A_TE_CANCEL);
-		}
-	}
 	if(update_cache) {
-		crm_debug_2("Updating cache after event %s",
-			    ccm_event_name(event));
+	    crm_debug_2("Updating cache after event %s", ccm_event_name(event));
+	    do_ccm_update_cache(C_CCM_CALLBACK, fsa_state, event, data, NULL);
 
-		crm_malloc0(event_data, sizeof(struct crmd_ccm_data_s));
-		if(event_data == NULL) { return; }
-		
-		event_data->event = event;
-		if(data != NULL) {
-			event_data->oc = copy_ccm_oc_data(data);
-		}
-		register_fsa_input_adv(
-			C_CCM_CALLBACK, I_CCM_EVENT, event_data,
-			trigger_transition?A_TE_CANCEL:A_NOTHING,
-			TRUE, __FUNCTION__);
+	} else if(event != OC_EV_MS_NOT_PRIMARY) {
+	    crm_membership_seq = membership->m_instance;
+	    register_fsa_action(A_TE_CANCEL);
+	}
 
-		delete_ccm_data(event_data);
-	} 
-	
 	oc_ev_callback_done(cookie);
 	return;
 }

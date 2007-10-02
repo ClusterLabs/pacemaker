@@ -27,29 +27,6 @@
 #include <crm/cib.h>
 #include <crm/common/xml.h>
 
-struct crmd_ccm_data_s 
-{
-		oc_ev_membership_t *oc;
-		oc_ed_t event;
-};
-
-
-struct oc_node_list_s
-{
-		guint id; /* membership id */
-		oc_ed_t last_event;
-
-		guint members_size;
-		GHashTable *members; /* contents: oc_node_t * */
-
-		guint new_members_size;
-		GHashTable *new_members; /* contents: oc_node_t * */
-
-		guint dead_members_size;
-		GHashTable *dead_members; /* contents: oc_node_t * */
-};
-typedef struct oc_node_list_s oc_node_list_t;
-
 /* copy from struct client_child in heartbeat.h
  *
  * Plus a couple of other things
@@ -83,7 +60,6 @@ enum fsa_data_type {
 	fsa_dt_ha_msg,
 	fsa_dt_xml,
 	fsa_dt_lrm,
-	fsa_dt_ccm
 };
 
 
@@ -109,7 +85,6 @@ extern volatile enum crmd_fsa_state fsa_state;
 extern volatile long long fsa_input_register;
 extern volatile long long fsa_actions;
 
-extern oc_node_list_t *fsa_membership_copy;
 extern ll_cluster_t   *fsa_cluster_conn;
 extern ll_lrm_t       *fsa_lrm_conn;
 extern cib_t	      *fsa_cib_conn;

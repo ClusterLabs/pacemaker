@@ -227,158 +227,7 @@ do_ccm_control(long long action,
 	return I_NULL;
 }
 
-
-#ifdef WITH_NATIVE_AIS
-enum crmd_fsa_input do_ccm_update_cache(
-    long long action, enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
-    enum crmd_fsa_input current_input, fsa_data_t *msg_data)
-{
-    return I_NULL;
-}
-
-
-enum crmd_fsa_input do_ccm_event(
-    long long action, enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
-    enum crmd_fsa_input current_input, fsa_data_t *msg_data)
-{
-    return I_NULL;
-}
-
-#else
-
-/*	 A_CCM_EVENT	*/
-enum crmd_fsa_input
-do_ccm_event(long long action,
-	     enum crmd_fsa_cause cause,
-	     enum crmd_fsa_state cur_state,
-	     enum crmd_fsa_input current_input,
-	     fsa_data_t *msg_data)
-{
-	enum crmd_fsa_input return_input = I_NULL;
-	oc_ed_t event;
-	const oc_ev_membership_t *oc = NULL;
-	struct crmd_ccm_data_s *ccm_data = fsa_typed_data(fsa_dt_ccm);
-	
-	if(ccm_data == NULL) {
-		crm_err("No data provided to FSA function");
-		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		return I_NULL;
-
-	} else if(msg_data->fsa_cause != C_CCM_CALLBACK) {
-		crm_err("FSA function called in response to incorect input");
-		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		return I_NULL;
-	}
-
-	event = ccm_data->event;
-	oc = ccm_data->oc;
-	
-	ccm_event_detail(oc, event);
-
-	if (OC_EV_MS_EVICTED == event) {
-		/* todo: drop back to S_PENDING instead */
-		/* get out... NOW!
-		 *
-		 * go via the error recovery process so that HA will
-		 *    restart us if required
-		 */
-		register_fsa_error(cause, I_ERROR, msg_data->data);
-		return I_NULL;
-	}	
-	
-	return return_input;
-}
-
-/*	 A_CCM_UPDATE_CACHE	*/
-/*
- * Take the opportunity to update the node status in the CIB as well
- */
-enum crmd_fsa_input
-do_ccm_update_cache(long long action,
-		    enum crmd_fsa_cause cause,
-		    enum crmd_fsa_state cur_state,
-		    enum crmd_fsa_input current_input,
-		    fsa_data_t *msg_data)
-{
-	enum crmd_fsa_input next_input = I_NULL;
-	unsigned int	lpc;
-	int		offset;
-	GHashTable *members = NULL;
-	oc_ed_t event;
-	const oc_ev_membership_t *oc = NULL;
-	oc_node_list_t *tmp = NULL, *membership_copy = NULL;
-	struct crmd_ccm_data_s *ccm_data = fsa_typed_data(fsa_dt_ccm);
-	HA_Message *no_op = NULL;
-	
-	if(ccm_data == NULL) {
-		crm_err("No data provided to FSA function");
-		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		return I_NULL;
-	}
-
-	event = ccm_data->event;
-	oc = ccm_data->oc;
-
-	if(crm_membership_seq > oc->m_instance) {
-		crm_debug("Ignoring superceeded %s CCM event %d - we had %d", 
-			  ccm_event_name(event), oc->m_instance,
-			  crm_membership_seq);
-		return I_NULL;
-	}
-	
-	crm_membership_seq = oc->m_instance;
-	crm_debug("Updating cache after CCM event %d (%s).", 
-		  oc->m_instance, ccm_event_name(event));
-	
-	crm_debug_2("instance=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
-		    "new_idx=%d, old_idx=%d",
-		    oc->m_instance,
-		    oc->m_n_member, oc->m_n_in, oc->m_n_out,
-		    oc->m_memb_idx, oc->m_in_idx, oc->m_out_idx);
-		
-	crm_debug_3("Copying dead members");
-
-	/*--*-- Recently Dead Member Nodes --*--*/
-	offset = oc->m_out_idx;
-	for(lpc=0; lpc < membership_copy->m_out; lpc++) {
-	    update_ccm_node(fsa_cluster_conn, oc, offset+lpc, CRM_NODE_LOST);
-	}
-
-	crm_debug_3("Copying members");
-	
-	/*--*-- All Member Nodes --*--*/
-	offset = oc->m_memb_idx;
-	for(lpc=0; lpc < membership_copy->m_n_member; lpc++) {
-	    update_ccm_node(fsa_cluster_conn, oc, offset+lpc, CRM_NODE_ACTIVE);
-	}
-
-	if(event == OC_EV_MS_EVICTED) {
-	    update_ccm_node(fsa_cluster_conn, oc, offset+lpc, CRM_NODE_EVICTED);
-	}
-
-	g_hash_table_foreach(crm_membership_cache, reap_dead_ccm_nodes, NULL);
-
-	crm_debug("Updated membership cache with %d (%d new, %d lost) members",
-		  oc->m_n_memb, oc->m_n_in, oc->m_n_out);
-
-	set_bit_inplace(fsa_input_register, R_CCM_DATA);
-
-	if(cur_state != S_STOPPING) {
-		crm_debug_3("Updating the CIB from CCM cache");
-		do_update_cib_nodes(FALSE, __FUNCTION__);
-	}
-
-	/* Membership changed, remind everyone we're here.
-	 * This will aid detection of duplicate DCs
-	 */
-	no_op = create_request(
-		CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
-		AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
-	send_msg_via_ha(fsa_cluster_conn, no_op);
-
-	return next_input;
-}
-
+#ifndef WITH_NATIVE_AIS
 void
 ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 {
@@ -433,6 +282,96 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 }
 
 #endif
+
+/*	 A_CCM_UPDATE_CACHE	*/
+/*
+ * Take the opportunity to update the node status in the CIB as well
+ */
+void
+do_ccm_update_cache(
+    enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
+    oc_ed_t event, const oc_ev_membership_t *oc, crm_data_t *xml)
+{
+	HA_Message *no_op = NULL;
+	unsigned long long instance = 0;
+	
+#ifdef WITH_NATIVE_AIS	
+	const char *seq_s = crm_element_value(xml, "seq");
+	CRM_ASSERT(xml != NULL);
+	instance = crm_int_helper(seq_s, NULL);
+#else
+	unsigned int lpc = 0;
+	CRM_ASSERT(oc != NULL);
+	instance = oc->m_instance;
+#endif
+
+	CRM_ASSERT(crm_membership_seq < instance);
+
+	switch(cur_state) {
+	    case S_STOPPING:
+	    case S_TERMINATE:
+	    case S_HALT:
+		crm_debug("Ignoring %s CCM event %llu, we're in state %s", 
+			  ccm_event_name(event), instance,
+			  fsa_state2string(cur_state));
+		return;
+	    case S_ELECTION:
+		register_fsa_action(A_ELECTION_CHECK);
+		break;
+	    default:
+		break;
+	}
+	
+	crm_membership_seq = instance;
+	crm_debug("Updating cache after membership event %llu (%s).", 
+		  instance, ccm_event_name(event));
+	
+#ifdef WITH_NATIVE_AIS	
+	crm_log_xml_debug(xml, __PRETTY_FUNCTION__);
+	xml_child_iter(xml, node, update_ais_node(node, instance));
+#else
+	ccm_event_detail(oc, event);
+		
+	/*--*-- Recently Dead Member Nodes --*--*/
+	for(lpc=0; lpc < oc->m_out; lpc++) {
+	    update_ccm_node(
+		fsa_cluster_conn, oc, lpc+oc->m_out_idx, CRM_NODE_LOST);
+	}
+
+	/*--*-- All Member Nodes --*--*/
+	for(lpc=0; lpc < oc->m_n_member; lpc++) {
+	    update_ccm_node(
+		fsa_cluster_conn, oc, lpc+oc->m_memb_idx, CRM_NODE_ACTIVE);
+	}
+#endif
+
+	if(event == OC_EV_MS_EVICTED) {
+	    crm_update_membership(
+		fsa_our_uuid, fsa_our_uname, 0, 0, NULL, CRM_NODE_EVICTED);
+
+	    /* todo: drop back to S_PENDING instead */
+	    /* get out... NOW!
+	     *
+	     * go via the error recovery process so that HA will
+	     *    restart us if required
+	     */
+	    register_fsa_error_adv(cause, I_ERROR, NULL, NULL, __FUNCTION__);
+	}
+
+	g_hash_table_foreach(crm_membership_cache, reap_dead_ccm_nodes, NULL);
+	set_bit_inplace(fsa_input_register, R_CCM_DATA);
+	do_update_cib_nodes(FALSE, __FUNCTION__);
+
+	/* Membership changed, remind everyone we're here.
+	 * This will aid detection of duplicate DCs
+	 */
+	no_op = create_request(
+		CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
+		AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
+	send_msg_via_ha(fsa_cluster_conn, no_op);
+
+	return;
+}
 
 static void
 ccm_node_update_complete(const HA_Message *msg, int call_id, int rc,

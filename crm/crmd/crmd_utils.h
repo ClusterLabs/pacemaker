@@ -23,9 +23,6 @@
 
 #define CLIENT_EXIT_WAIT 30
 
-extern void free_ccm_cache(void);
-extern void delete_ccm_data(struct crmd_ccm_data_s *ccm_input);
-
 extern void process_client_disconnect(crmd_client_t *curr_client);
 
 #define fsa_cib_update(section, data, options, call_id)			\
@@ -76,9 +73,6 @@ extern gboolean start_subsystem(struct crm_subsystem_s *centry);
 
 extern lrm_op_t *copy_lrm_op(const lrm_op_t *op);
 extern lrm_rsc_t *copy_lrm_rsc(const lrm_rsc_t *rsc);
-extern struct crmd_ccm_data_s *copy_ccm_data(
-	const struct crmd_ccm_data_s *ccm_input);
-extern oc_ev_membership_t *copy_ccm_oc_data(const oc_ev_membership_t *oc_in) ;
 
 extern void fsa_dump_actions(long long action, const char *text);
 extern void fsa_dump_inputs(

@@ -55,6 +55,9 @@ extern void crm_membership_init(void);
 extern void crm_membership_destroy(void);
 
 extern void destroy_crm_node(gpointer data);
+extern crm_node_t *crm_update_membership(
+    const char *uuid, const char *uname, uint32_t id, unsigned long long born,
+    const char *addr, const char *state);
 extern crm_node_t *update_ais_node(crm_data_t *member, long long seq);
 extern crm_node_t *update_ccm_node(
     ll_cluster_t *cluster, 

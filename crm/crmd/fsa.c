@@ -459,12 +459,7 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 
 			/*
 			 * High priority actions
-			 * Update the cache first
 			 */
-		} else if(is_set(fsa_actions, A_CCM_UPDATE_CACHE)) {
-			do_fsa_action(fsa_data, A_CCM_UPDATE_CACHE,	do_ccm_update_cache);
-		} else if(is_set(fsa_actions, A_CCM_EVENT)) {
-			do_fsa_action(fsa_data, A_CCM_EVENT,		do_ccm_event);
 		} else if(is_set(fsa_actions, A_STARTED)) {
 			do_fsa_action(fsa_data, A_STARTED,		do_started);
 		} else if(is_set(fsa_actions, A_CL_JOIN_QUERY)) {

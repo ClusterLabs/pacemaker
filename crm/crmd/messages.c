@@ -196,13 +196,6 @@ register_fsa_input_adv(
 				break;
 				
 			case C_CCM_CALLBACK:
-				crm_debug_3("Copying %s data from %s as CCM data",
-					  fsa_cause2string(cause),
-					  raised_from);
-				fsa_data->data = copy_ccm_data(data);
-				fsa_data->data_type = fsa_dt_ccm;
-				break;
-
 			case C_SUBSYSTEM_CONNECT:
 			case C_LRM_MONITOR_CALLBACK:
 			case C_TIMER_POPPED:
@@ -286,7 +279,6 @@ delete_fsa_input(fsa_data_t *fsa_data)
 {
 	lrm_op_t *op = NULL;
 	crm_data_t *foo = NULL;
-	struct crmd_ccm_data_s *ccm_input = NULL;
 
 	if(fsa_data == NULL) {
 		return;
@@ -310,12 +302,6 @@ delete_fsa_input(fsa_data_t *fsa_data)
 
 				free_lrm_op(op);
 
-				break;
-				
-			case fsa_dt_ccm:
-				ccm_input = (struct crmd_ccm_data_s *)
-					fsa_data->data;
-				delete_ccm_data(ccm_input);
 				break;
 				
 			case fsa_dt_none:
