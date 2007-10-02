@@ -57,18 +57,18 @@ int local_uname_len = 0;
 uint32_t local_nodeid = 0;
 char *ipc_channel_name = NULL;
 
-int membership_seq = -1;
+unsigned long long membership_seq = 0;
 pthread_t crm_wait_thread;
 
 gboolean wait_active = TRUE;
-GHashTable *member_list = NULL;
+GHashTable *membership_list = NULL;
 
 static crm_child_t crm_children[] = {
-    { 0, 0, FALSE, "none",  NULL, NULL },
-    { 0, 0, FALSE, "ais",   NULL, NULL },
-    { 0, 0, TRUE,  "cib",   HA_LIBHBDIR"/cib", NULL },
-    { 0, 0, TRUE,  "lrmd",  HA_LIBHBDIR"/lrmd", NULL },
-/*     { 0, 0x1, TRUE,  "crmd",  HA_LIBHBDIR"/crmd", NULL }, */
+    { 0, 0,   FALSE, "none",  NULL, NULL },
+    { 0, 0,   FALSE, "ais",   NULL, NULL },
+    { 0, 0,   TRUE,  "cib",   HA_LIBHBDIR"/cib", NULL },
+    { 0, 0,   TRUE,  "lrmd",  HA_LIBHBDIR"/lrmd", NULL },
+    { 0, 0x1, TRUE,  "crmd",  HA_LIBHBDIR"/crmd", NULL },
 };
 
 int send_cluster_msg_raw(AIS_Message *ais_msg);
@@ -213,7 +213,7 @@ int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
     int rc = 0;
     struct utsname us;
 
-    member_list = g_hash_table_new_full(
+    membership_list = g_hash_table_new_full(
 	g_direct_hash, g_direct_equal, NULL, destroy_ais_node);
 
     setenv("HA_debugfile", "/var/log/lha.log", 1);
@@ -370,7 +370,8 @@ void global_confchg_fn (
     struct memb_ring_id *ring_id)
 {
     int lpc = 0;
-	
+    int changed = 0;
+    
     ENTER("");
     AIS_ASSERT(ring_id != NULL);
     switch(configuration_type) {
@@ -391,8 +392,11 @@ void global_confchg_fn (
     for(lpc = 0; lpc < joined_list_entries; lpc++) {
 	const char *prefix = "NEW: ";
 	uint32_t nodeid = joined_list[lpc];
-	ais_node_t *node = update_member(nodeid, ring_id->seq, NULL, CRM_NODE_MEMBER);
+	ais_node_t *node = NULL;
+	changed += update_member(nodeid, ring_id->seq, NULL, CRM_NODE_MEMBER);
 	ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
+
+	node = g_hash_table_lookup(membership_list, GUINT_TO_POINTER(nodeid));	
 	if(node->addr == NULL) {
 	    const char *addr = totempg_ifaces_print(nodeid);
 	    node->addr = ais_strdup(addr);
@@ -403,18 +407,22 @@ void global_confchg_fn (
     for(lpc = 0; lpc < member_list_entries; lpc++) {
 	const char *prefix = "MEMB:";
 	uint32_t nodeid = member_list[lpc];
-	update_member(nodeid, ring_id->seq, NULL, CRM_NODE_MEMBER);
+	changed += update_member(nodeid, ring_id->seq, NULL, CRM_NODE_MEMBER);
 	ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
     }
 
     for(lpc = 0; lpc < left_list_entries; lpc++) {
 	const char *prefix = "LOST:";
 	uint32_t nodeid = left_list[lpc];
-	update_member(nodeid, ring_id->seq, NULL, CRM_NODE_LOST);
+	changed += update_member(nodeid, ring_id->seq, NULL, CRM_NODE_LOST);
 	ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
     }
 
-    ais_node_list_query(NULL, NULL);
+    ais_info("%d nodes updated", changed);
+    if(changed) {
+	send_member_notification();
+    }
+    
     send_cluster_msg(crm_msg_ais, NULL, "ping");
     LEAVE("");
 }
@@ -586,25 +594,30 @@ void member_loop_fn(gpointer key, gpointer value, gpointer user_data)
     data->string = append_member(data->string, node);
 }
 
-void ais_node_list_query(void *conn, void *msg)
+static char *ais_generate_membership_data(void)
 {
     int size = 0;
     struct member_loop_data data;
-    size = 14 + 32;
+    size = 14 + 32; /* <nodes id=""> + int */
     ais_malloc0(data.string, size);
-    sprintf(data.string, "<nodes id=\"%u\">", membership_seq);
+    sprintf(data.string, "<nodes id=\"%llu\">", membership_seq);
     
-    g_hash_table_foreach(member_list, member_loop_fn, &data);
+    g_hash_table_foreach(membership_list, member_loop_fn, &data);
 
     size = strlen(data.string);
     data.string = realloc(data.string, size + 9) ;/* 9 = </nodes> + nul */
     sprintf(data.string + size, "</nodes>");
+    return data.string;
+}
 
-    ais_info("members: %s", data.string);
+void ais_node_list_query(void *conn, void *msg)
+{
+    char *data = ais_generate_membership_data();
+    ais_info("members: %s", data);
     if(conn) {
-	send_client_msg(conn, crm_class_members, crm_msg_none, data.string);
+	send_client_msg(conn, crm_class_members, crm_msg_none, data);
     }
-    ais_free(data.string);
+    ais_free(data);
 }
 
 void ais_manage_notification(void *conn, void *msg)
@@ -633,21 +646,18 @@ void ais_manage_notification(void *conn, void *msg)
     }
 }
 
-void send_member_notification(ais_node_t *node)
+void send_member_notification(void)
 {
     int lpc = 0;
-    char *update = NULL;
-    if(node->uname == NULL) {
-	return;
-    }
+    char *update = ais_generate_membership_data();
 
-    update = append_member(NULL, node);
     for (; lpc < SIZEOF(crm_children); lpc++) {
 	if(crm_children[lpc].conn && (crm_children[lpc].flags & 0x1)) {
-	    ais_info("Sending update to %s for %s/%s",
-		     crm_children[lpc].name, node->uname, node->state);
+	    ais_info("Sending membership update %llu to %s",
+		     membership_seq, crm_children[lpc].name);
 	    
- 	    send_client_msg(crm_children[lpc].conn, crm_class_members, crm_msg_none, update);
+ 	    send_client_msg(crm_children[lpc].conn,
+			    crm_class_members, crm_msg_none, update);
 	}
     }
     ais_free(update);

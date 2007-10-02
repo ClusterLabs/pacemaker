@@ -53,8 +53,8 @@ typedef struct ais_node_s
 
 extern void destroy_ais_node(gpointer data);
 extern void delete_member(uint32_t id, const char *uname);
-extern ais_node_t *update_member(
-    uint32_t id, unsigned long long born, const char *uname, const char *state);
+extern int update_member(
+    uint32_t id, unsigned long long seq, const char *uname, const char *state);
 extern const char *member_uname(uint32_t id);
 extern char *append_member(char *data, ais_node_t *node);
 extern void member_loop_fn(gpointer key, gpointer value, gpointer user_data);
@@ -72,15 +72,15 @@ extern int send_cluster_msg(
     enum crm_ais_msg_types type, const char *host, const char *data);
 extern int send_client_msg(void *conn, enum crm_ais_msg_class class,
 			   enum crm_ais_msg_types type, const char *data);
-extern void send_member_notification(ais_node_t *node);
+extern void send_member_notification(void);
 
-extern GHashTable *member_list;
+extern GHashTable *membership_list;
 extern pthread_t crm_wait_thread;
 extern int plugin_log_level;
 extern char *local_uname;
 extern int local_uname_len;
 extern uint32_t local_nodeid;
-extern int membership_seq;
+extern unsigned long long membership_seq;
 
 static inline const char *level2char(int level)
 {

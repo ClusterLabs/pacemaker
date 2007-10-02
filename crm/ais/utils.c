@@ -150,23 +150,23 @@ void destroy_ais_node(gpointer data)
 }
 
 
-ais_node_t *update_member(uint32_t id, unsigned long long born,
-			  const char *uname, const char *state) 
+int update_member(uint32_t id, unsigned long long seq,
+		  const char *uname, const char *state) 
 {
-    int updated = 0;
+    int changed = 0;
     ais_node_t *node = NULL;
     
-    node = g_hash_table_lookup(member_list, GUINT_TO_POINTER(id));	
+    node = g_hash_table_lookup(membership_list, GUINT_TO_POINTER(id));	
 
     if(node == NULL) {	
 	ais_malloc0(node, sizeof(ais_node_t));
-	ais_info("Creating entry for node %u born on %llu", id, born);
+	ais_info("Creating entry for node %u born on %llu", id, seq);
 	node->id = id;
 	node->addr = NULL;
 	node->state = ais_strdup("unknown");
 	
-	g_hash_table_insert(member_list, GUINT_TO_POINTER(id), node);
-	node = g_hash_table_lookup(member_list, GUINT_TO_POINTER(id));
+	g_hash_table_insert(membership_list, GUINT_TO_POINTER(id), node);
+	node = g_hash_table_lookup(membership_list, GUINT_TO_POINTER(id));
     }
 
     if(uname != NULL) {
@@ -174,7 +174,7 @@ ais_node_t *update_member(uint32_t id, unsigned long long born,
 	    ais_free(node->uname);
 	    node->uname = ais_strdup(uname);
 	    ais_info("Node %u now known as %s", id, node->uname);
-	    updated = TRUE;
+	    changed = TRUE;
 	}
     }
 
@@ -184,22 +184,18 @@ ais_node_t *update_member(uint32_t id, unsigned long long born,
 	    node->state = ais_strdup(state);
 	    ais_info("Node %u/%s is now: %s",
 		     id, node->uname?node->uname:"unknown", state);
-	    updated = TRUE;
+	    changed = TRUE;
 	}
-    }
-
-    if(updated) {
-	send_member_notification(node);
     }
     
     AIS_ASSERT(node != NULL);
-    return node;
+    return changed;
 }
 
 void delete_member(uint32_t id, const char *uname) 
 {
     if(uname == NULL) {
-	g_hash_table_remove(member_list, GUINT_TO_POINTER(id));
+	g_hash_table_remove(membership_list, GUINT_TO_POINTER(id));
 	return;
     }
     ais_err("Deleting by uname is not yet supported");
@@ -207,7 +203,8 @@ void delete_member(uint32_t id, const char *uname)
 
 const char *member_uname(uint32_t id) 
 {
-     ais_node_t *node = g_hash_table_lookup(member_list, GUINT_TO_POINTER(id));	
+     ais_node_t *node = g_hash_table_lookup(
+	 membership_list, GUINT_TO_POINTER(id));	
      if(node == NULL) {
 	 return ".unknown.";
      }
@@ -241,7 +238,7 @@ char *append_member(char *data, ais_node_t *node)
     }
 
     sprintf(data+offset,
-	    "<node id=\"%u\" uname=\"%s\" state=\"%s\" seq=\"%d\""
+	    "<node id=\"%u\" uname=\"%s\" state=\"%s\" seq=\"%llu\""
 	    " addr=\"%s\"/>",
 	    node->id, node->uname, node->state, membership_seq,
 	    node->addr?node->addr:"");
