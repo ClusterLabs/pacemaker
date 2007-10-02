@@ -39,17 +39,12 @@
 
 void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
-int register_with_ccm(ll_cluster_t *hb_cluster);
-
-void msg_ccm_join(const HA_Message *msg, void *foo);
-
-void crmd_ccm_msg_callback(oc_ed_t event,
-			     void *cookie,
-			     size_t size,
-			     const void *data);
+void crmd_ccm_msg_callback(
+    oc_ed_t event, void *cookie, size_t size, const void *data);
 
 void ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data);
 void check_dead_member(const char *uname, GHashTable *members);
+void reap_dead_ccm_nodes(gpointer key, gpointer value, gpointer user_data);
 
 #define CCM_EVENT_DETAIL 0
 #define CCM_EVENT_DETAIL_PARTIAL 0
@@ -68,6 +63,11 @@ struct update_data_s
 		gboolean    overwrite_join;
 };
 
+void reap_dead_ccm_nodes(gpointer key, gpointer value, gpointer user_data)
+{
+    crm_node_t *node = value;
+    check_dead_member(node->uname, NULL);
+}
 
 void
 check_dead_member(const char *uname, GHashTable *members)
@@ -133,12 +133,6 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 
 	add_node_copy(data->updates, tmp1);
 	free_xml(tmp1);
-}
-
-void
-do_update_cib_nodes(gboolean overwrite, const char *caller)
-{
-    CRM_ASSERT(FALSE);
 }
 
 /*	 A_CCM_CONNECT	*/
@@ -295,12 +289,6 @@ do_ccm_event(long long action,
 	return return_input;
 }
 
-static void reap_dead_ccm_nodes(gpointer key, gpointer value, gpointer user_data)
-{
-    crm_node_t *node = value;
-    check_dead_member(node->uname, NULL);
-}
-
 /*	 A_CCM_UPDATE_CACHE	*/
 /*
  * Take the opportunity to update the node status in the CIB as well
@@ -320,14 +308,11 @@ do_ccm_update_cache(long long action,
 	const oc_ev_membership_t *oc = NULL;
 	oc_node_list_t *tmp = NULL, *membership_copy = NULL;
 	struct crmd_ccm_data_s *ccm_data = fsa_typed_data(fsa_dt_ccm);
-	HA_Message *no_op = create_request(
-		CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
-		AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
+	HA_Message *no_op = NULL;
 	
 	if(ccm_data == NULL) {
 		crm_err("No data provided to FSA function");
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		send_msg_via_ha(fsa_cluster_conn, no_op);
 		return I_NULL;
 	}
 
@@ -386,6 +371,9 @@ do_ccm_update_cache(long long action,
 	/* Membership changed, remind everyone we're here.
 	 * This will aid detection of duplicate DCs
 	 */
+	no_op = create_request(
+		CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
+		AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
 	send_msg_via_ha(fsa_cluster_conn, no_op);
 
 	return next_input;
@@ -444,45 +432,7 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 	
 }
 
-int
-register_with_ccm(ll_cluster_t *hb_cluster)
-{
-	return 0;
-}
-
-void 
-msg_ccm_join(const HA_Message *msg, void *foo)
-{
-	
-	crm_debug_2("###### Received ccm_join message...");
-	if (msg != NULL)
-	{
-		crm_debug_2("[type=%s]",
-			    ha_msg_value(msg, F_TYPE));
-		crm_debug_2("[orig=%s]",
-			    ha_msg_value(msg, F_ORIG));
-		crm_debug_2("[to=%s]",
-			    ha_msg_value(msg, F_TO));
-		crm_debug_2("[status=%s]",
-			    ha_msg_value(msg, F_STATUS));
-		crm_debug_2("[info=%s]",
-			    ha_msg_value(msg, F_COMMENT));
-		crm_debug_2("[rsc_hold=%s]",
-			    ha_msg_value(msg, F_RESOURCES));
-		crm_debug_2("[stable=%s]",
-			    ha_msg_value(msg, F_ISSTABLE));
-		crm_debug_2("[rtype=%s]",
-			    ha_msg_value(msg, F_RTYPE));
-		crm_debug_2("[ts=%s]",
-			    ha_msg_value(msg, F_TIME));
-		crm_debug_2("[seq=%s]",
-			    ha_msg_value(msg, F_SEQ));
-		crm_debug_2("[generation=%s]",
-			    ha_msg_value(msg, F_HBGENERATION));
-		/*      crm_debug_2("[=%s]", ha_msg_value(msg, F_)); */
-	}
-	return;
-}
+#endif
 
 static void
 ccm_node_update_complete(const HA_Message *msg, int call_id, int rc,
@@ -499,7 +449,6 @@ ccm_node_update_complete(const HA_Message *msg, int call_id, int rc,
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
 }
-
 
 void
 do_update_cib_nodes(gboolean overwrite, const char *caller)
@@ -536,5 +485,3 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
 
 	free_xml(fragment);
 }
-
-#endif

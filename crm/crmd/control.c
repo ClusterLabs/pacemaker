@@ -54,17 +54,38 @@ GTRIGSource  *fsa_source = NULL;
 /*	 A_HA_CONNECT	*/
 #ifdef WITH_NATIVE_AIS	
 extern void crmd_ha_msg_filter(HA_Message * msg);
+extern void reap_dead_ccm_nodes(gpointer key, gpointer value, gpointer user_data);
 
 static void update_ais_membership(crm_data_t *xml) 
 {
+    HA_Message *no_op = NULL;
     const char *seq_s = crm_element_value(xml, "seq");
     unsigned long seq = crm_int_helper(seq_s, NULL);
 
     crm_info("Processing membership %lu", seq);
+    CRM_ASSERT(crm_membership_seq < seq);
+
+    crm_membership_seq = seq;
     crm_log_xml_debug(xml, __PRETTY_FUNCTION__);
-    set_bit_inplace(fsa_input_register, R_CCM_DATA);
 
     xml_child_iter(xml, node, update_ais_node(node, seq));
+
+    g_hash_table_foreach(crm_membership_cache, reap_dead_ccm_nodes, NULL);
+    set_bit_inplace(fsa_input_register, R_CCM_DATA);
+
+    if(fsa_state != S_STOPPING) {
+	crm_debug_3("Updating the CIB from CCM cache");
+	do_update_cib_nodes(FALSE, __FUNCTION__);
+    }
+
+    /* Membership changed, remind everyone we're here.
+     * This will aid detection of duplicate DCs
+     */
+    no_op = create_request(
+	CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
+	AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
+    
+    send_msg_via_ha(fsa_cluster_conn, no_op);
 }
 
 static gboolean crm_ais_dispatch(AIS_Message *header, char *data, int sender) 
