@@ -77,7 +77,7 @@ uselogd() {
 }
 findlogdcf() {
 	for f in \
-		`which strings > /dev/null &&
+		`which strings > /dev/null 2>&1 &&
 			strings $HA_BIN/ha_logd | grep 'logd\.cf'` \
 		`for d; do echo $d/logd.cf $d/ha_logd.cf; done`
 	do
@@ -214,7 +214,7 @@ find_files() {
 # coredumps
 #
 findbinary() {
-	random_binary=`which cat` # suppose we are lucky
+	random_binary=`which cat 2>/dev/null` # suppose we are lucky
 	binary=`gdb $random_binary $1 < /dev/null 2>/dev/null |
 		grep 'Core was generated' | awk '{print $5}' |
 		sed "s/^.//;s/[.']*$//"`
@@ -227,7 +227,7 @@ findbinary() {
 	fi
 }
 getbt() {
-	which gdb > /dev/null || {
+	which gdb > /dev/null 2>&1 || {
 		warning "please install gdb to get backtraces"
 		return
 	}
@@ -351,7 +351,7 @@ forall() {
 # get some system info
 #
 distro() {
-	which lsb_release >/dev/null && {
+	which lsb_release >/dev/null 2>&1 && {
 		lsb_release -d
 		return
 	}
@@ -368,12 +368,12 @@ distro() {
 	warning "no lsb_release no /etc/*-release no /etc/debian_version"
 }
 hb_ver() {
-	which dpkg > /dev/null && {
+	which dpkg > /dev/null 2>&1 && {
 		dpkg-query -f '${Version}' -W heartbeat 2>/dev/null ||
 			dpkg-query -f '${Version}' -W heartbeat-2
 		return
 	}
-	which rpm > /dev/null && {
+	which rpm > /dev/null 2>&1 && {
 		rpm -q --qf '%{version}' heartbeat
 		return
 	}

@@ -520,7 +520,8 @@ if [ "$SLAVE" = "" ]; then
 		send_config
 		start_remote_collectors
 	else
-		warning "ssh does not work to all nodes"
+		[ `getnodes | wc -w` -gt 1 ] &&
+			warning "ssh does not work to all nodes"
 	fi
 fi
 
