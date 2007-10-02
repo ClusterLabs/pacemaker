@@ -17,7 +17,7 @@ A few examples:
 1. Last night during the backup there were several warnings
 encountered (logserver is the log host):
 +
-	logserver# /usr/share/heartbeat/hb_report -f 3:00 -t 4:00 /tmp/report
+	logserver# hb_report -f 3:00 -t 4:00 /tmp/report
 +
 collects everything from all nodes from 3am to 4am last night.
 The files are stored in /tmp/report and compressed to a tarball
@@ -29,7 +29,7 @@ The files are stored in /tmp/report and compressed to a tarball
 	node1# /etc/init.d/heartbeat start
 	node1# nasty_command_that_breaks_things
 	node1# sleep 120 : wait for the cluster to settle
-	node1# /usr/share/heartbeat/hb_report -f time /tmp/hb1
+	node1# hb_report -f time /tmp/hb1
 
 Introduction
 ------------

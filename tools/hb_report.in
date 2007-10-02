@@ -21,6 +21,14 @@
 . $HA_NOARCHBIN/utillib.sh
 
 PROG=`basename $0`
+# FIXME: once this is part of the package!
+PROGDIR=`dirname $0`
+echo "$PROGDIR" | grep -qs '^/' || {
+	test -f @sbindir@/$PROG &&
+		PROGDIR=@sbindir@
+	test -f $HA_NOARCHBIN/$PROG &&
+		PROGDIR=$HA_NOARCHBIN
+}
 
 LOGD_CF=`findlogdcf @sysconfdir@ $HA_DIR`
 export LOGD_CF
@@ -174,7 +182,7 @@ send_config() {
 start_remote_collectors() {
 	for node in `getnodes`; do
 		[ "$node" = "$WE" ] && continue
-		ssh $SSH_OPTS $SSH_USER@$node "$HA_NOARCHBIN/hb_report __slave $DESTDIR" |
+		ssh $SSH_OPTS $SSH_USER@$node "$PROGDIR/hb_report __slave $DESTDIR" |
 			(cd $DESTDIR && tar xf -) &
 		SLAVEPIDS="$SLAVEPIDS $!"
 	done
