@@ -198,21 +198,21 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 	ccm_transition_id = crm_parse_int(
 		crm_element_value(local_cib, XML_ATTR_CCM_TRANSITION), "-1");
 
-	if(ccm_transition_id < (int)membership_get_id()) {
+	if(ccm_transition_id < (int)crm_membership_seq) {
 		/* the cib is behind */
 		crm_debug("Re-asking for the CIB until membership/quorum"
 			  " matches: CIB=%d < CRM=%d",
-			  ccm_transition_id, membership_get_id());
+			  ccm_transition_id, crm_membership_seq);
 		
 		mssleep(500);
 		register_fsa_action(A_PE_INVOKE);
 		return;
 
-	} else if(ccm_transition_id > (int)membership_get_id()) {
+	} else if(ccm_transition_id > (int)crm_membership_seq) {
 		/* we are behind */
 		crm_info("Waiting for another CCM event before proceeding:"
 			 " CIB=%d > CRM=%d",
-			 ccm_transition_id, membership_get_id());
+			 ccm_transition_id, crm_membership_seq);
 		return;
 	}
 	

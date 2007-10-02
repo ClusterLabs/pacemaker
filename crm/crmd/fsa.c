@@ -703,12 +703,12 @@ do_state_transition(long long actions,
 				crm_free(msg);
 				
 			} else if(g_hash_table_size(confirmed_nodes)
-				  == membership_get_size()) {
+				  == crm_active_members()) {
 				crm_info("All %u cluster nodes are"
 					 " eligible to run resources.",
-					 membership_get_size());
+					 crm_active_members());
 				
-			} else if(g_hash_table_size(confirmed_nodes) > membership_get_size()) {
+			} else if(g_hash_table_size(confirmed_nodes) > crm_active_members()) {
 				crm_err("We have more confirmed nodes than our membership does");
 				register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 				
@@ -721,7 +721,7 @@ do_state_transition(long long actions,
 				crm_warn("Only %u of %u cluster "
 					 "nodes are eligible to run resources - continue %d",
 					 g_hash_table_size(confirmed_nodes),
-					 membership_get_size(),
+					 crm_active_members(),
 					 g_hash_table_size(welcomed_nodes));
 			}
 /* 			initialize_join(FALSE); */

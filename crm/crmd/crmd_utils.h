@@ -81,12 +81,4 @@ extern void fsa_dump_inputs(
 extern gboolean need_transition(enum crmd_fsa_state state);
 extern void update_dc(HA_Message *msg, gboolean assert_same);
 extern void erase_node_from_join(const char *node);
-
-#ifdef WITH_NATIVE_AIS
-#  define membership_get_id() 0
-#  define membership_get_size() 0
-#else
-#  define membership_get_id() fsa_membership_copy->id
-#  define membership_get_size() fsa_membership_copy->members_size
-#endif
-#endif
+extern void populate_cib_nodes(gboolean with_client_status);

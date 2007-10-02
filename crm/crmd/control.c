@@ -45,7 +45,6 @@ extern void crmd_ha_connection_destroy(gpointer user_data);
 
 gboolean crm_shutdown(int nsig, gpointer unused);
 gboolean register_with_ha(ll_cluster_t *hb_cluster, const char *client_name);
-void populate_cib_nodes(ll_cluster_t *hb_cluster, gboolean with_client_status);
 
 
 GHashTable   *ipc_clients = NULL;
@@ -101,7 +100,9 @@ do_ha_control(long long action,
 	gboolean registered = FALSE;
 	
 	if(action & A_HA_DISCONNECT) {
-#ifndef WITH_NATIVE_AIS
+#ifdef WITH_NATIVE_AIS
+		crm_membership_destroy();
+#else
 		if(fsa_cluster_conn != NULL) {
 			set_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
 			fsa_cluster_conn->llc_ops->signoff(
@@ -123,10 +124,12 @@ do_ha_control(long long action,
 		registered = register_with_ha(
 			fsa_cluster_conn, crm_system_name);
 #else
-	    registered = init_ais_connection(
-		crm_ais_dispatch, crm_ais_destroy, &fsa_our_uname);
-	    fsa_our_uuid = crm_strdup(fsa_our_uname);
-/* 	    populate_cib_nodes(hb_cluster, with_client_status); */
+		crm_membership_init();
+		registered = init_ais_connection(
+		    crm_ais_dispatch, crm_ais_destroy, &fsa_our_uname);
+		fsa_our_uuid = crm_strdup(fsa_our_uname);
+		send_ais_text(
+		    crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
 #endif
 		if(registered == FALSE) {
 			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
@@ -823,8 +826,8 @@ default_cib_update_callback(const HA_Message *msg, int call_id, int rc,
 	}
 }
 
-void
-populate_cib_nodes(ll_cluster_t *hb_cluster, gboolean with_client_status)
+static void
+populate_cib_nodes_ha(gboolean with_client_status)
 {
 	int call_id = 0;
 	const char *ha_node = NULL;
@@ -884,6 +887,48 @@ populate_cib_nodes(ll_cluster_t *hb_cluster, gboolean with_client_status)
 
 	free_xml(cib_node_list);
 	crm_debug_2("Complete");
+}
+
+static void create_cib_node_definition(
+    gpointer key, gpointer value, gpointer user_data)
+{
+    crm_node_t *node = value;
+    crm_data_t *cib_nodes = user_data;
+    crm_data_t *cib_new_node = NULL;
+    
+    crm_notice("Node: %s (uuid: %s)", node->uname, node->uuid);
+    cib_new_node = create_xml_node(cib_nodes, XML_CIB_TAG_NODE);
+    crm_xml_add(cib_new_node, XML_ATTR_ID,    node->uuid);
+    crm_xml_add(cib_new_node, XML_ATTR_UNAME, node->uname);
+    crm_xml_add(cib_new_node, XML_ATTR_TYPE,  NORMALNODE);
+}
+
+void
+populate_cib_nodes(gboolean with_client_status)
+{
+    int call_id = 0;
+    crm_data_t *cib_node_list = NULL;
+    if(fsa_cluster_conn) {
+	populate_cib_nodes_ha(with_client_status);
+	return;
+    }
+
+    if(with_client_status) {
+	crm_info("Requesting the list of configured nodes");
+	send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
+    }
+    
+    cib_node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
+    g_hash_table_foreach(
+	crm_membership_cache, create_cib_node_definition, cib_node_list);    
+    
+    fsa_cib_update(
+	XML_CIB_TAG_NODES, cib_node_list,
+	cib_scope_local|cib_quorum_override|cib_inhibit_bcast, call_id);
+    add_cib_op_callback(call_id, FALSE, NULL, default_cib_update_callback);
+    
+    free_xml(cib_node_list);
+    crm_debug_2("Complete");
 }
 
 gboolean
@@ -951,7 +996,7 @@ register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
 	fsa_our_uuid = crm_strdup(const_uuid);
 	crm_info("UUID: %s", fsa_our_uuid);
 		
-	populate_cib_nodes(hb_cluster, TRUE);
+	populate_cib_nodes(TRUE);
 	
 	return TRUE;
 }

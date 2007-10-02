@@ -53,7 +53,7 @@ enum crm_ais_msg_types text2msg_type(const char *text)
 }
 
 gboolean
-send_ais_text(int type, const char *data,
+send_ais_text(int class, const char *data,
 	      gboolean local, const char *node, enum crm_ais_msg_types dest)
 {
     static int msg_id = 0;
@@ -71,7 +71,7 @@ send_ais_text(int type, const char *data,
     crm_malloc0(ais_msg, sizeof(AIS_Message));
     
     ais_msg->id = msg_id++;
-    ais_msg->header.id = type;
+    ais_msg->header.id = class;
     
     ais_msg->host.type = dest;
     ais_msg->host.local = local;

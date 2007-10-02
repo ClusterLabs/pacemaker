@@ -143,18 +143,13 @@ do_ccm_control(long long action,
 		enum crmd_fsa_input current_input,
 		fsa_data_t *msg_data)
 {	
+#ifndef WITH_NATIVE_AIS
 	if(action & A_CCM_DISCONNECT){
 		set_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
-		crm_membership_destroy();
-#ifndef WITH_NATIVE_AIS
 		oc_ev_unregister(fsa_ev_token);
-#endif
 	}
 
 	if(action & A_CCM_CONNECT) {
-#ifdef WITH_NATIVE_AIS
-		crm_membership_init();
-#else
 		int      ret;
 		int	 fsa_ev_fd; 
 		gboolean did_fail = FALSE;
@@ -216,8 +211,8 @@ do_ccm_control(long long action,
 		G_main_add_fd(G_PRIORITY_HIGH, fsa_ev_fd, FALSE, ccm_dispatch,
 			      fsa_ev_token, default_ipc_connection_destroy);
 		
-#endif
 	}
+#endif
 
 	if(action & ~(A_CCM_CONNECT|A_CCM_DISCONNECT)) {
 		crm_err("Unexpected action %s in %s",
@@ -358,7 +353,11 @@ do_ccm_update_cache(
 	    register_fsa_error_adv(cause, I_ERROR, NULL, NULL, __FUNCTION__);
 	}
 
-	g_hash_table_foreach(crm_membership_cache, reap_dead_ccm_nodes, NULL);
+	if((fsa_input_register & R_CCM_DATA) == 0) {
+	    populate_cib_nodes(FALSE);
+	}
+	
+	g_hash_table_foreach(crm_membership_cache, reap_dead_ccm_nodes, NULL);	
 	set_bit_inplace(fsa_input_register, R_CCM_DATA);
 	do_update_cib_nodes(FALSE, __FUNCTION__);
 
