@@ -354,7 +354,7 @@ int send_client_msg(
     ais_msg->id = msg_id;
     ais_msg->header.size = total_size;
     ais_msg->header.id = class;
-	
+    
     ais_msg->size = data_len;
     memcpy(ais_msg->data, data, data_len);
     
@@ -385,6 +385,7 @@ int send_client_msg(
 		  ais_err("Message not sent (%d): %s", rc, data?data:"<null>"));
     }
 
+    ais_debug("Sent %d:%s", class, data);
     LEAVE("");
     return rc;    
 }

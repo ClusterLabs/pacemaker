@@ -79,12 +79,10 @@ HA_Message *cib_construct_reply(HA_Message *request, HA_Message *output, int rc)
 gboolean syncd_once = FALSE;
 
 extern GHashTable *client_list;
-extern GHashTable *ccm_membership;
 extern GHashTable *peer_hash;
 
 int        next_client_id  = 0;
 gboolean   cib_is_master   = FALSE;
-gboolean   cib_have_quorum = FALSE;
 char *     ccm_transition_id = NULL;
 extern const char *cib_our_uname;
 extern unsigned long cib_num_ops, cib_num_local, cib_num_updates, cib_num_fail;
@@ -1599,22 +1597,27 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 
 	crm_log_message_adv(LOG_MSG, "Peer[inbound]", msg);
 	crm_debug_2("Peer %s message (%s) from %s", op, seq, originator);
-	
+
 	if(originator == NULL || safe_str_eq(originator, cib_our_uname)) {
- 		crm_debug_2("Discarding %s message %s from ourselves", op, seq);
-		return;
+	    crm_debug_2("Discarding %s message %s from ourselves", op, seq);
+	    return;
+	}
+
 #ifndef WITH_NATIVE_AIS
-	} else if(ccm_membership == NULL) {
- 		crm_info("Discarding %s message (%s) from %s:"
-			 " membership not established", op, seq, originator);
-		return;
-		
-	} else if(g_hash_table_lookup(ccm_membership, originator) == NULL) {
+	if(crm_membership_cache == NULL) {
+	    crm_info("Discarding %s message (%s) from %s:"
+		     " membership not established", op, seq, originator);
+	    return;
+	}
+	node = g_hash_table_lookup(crm_membership_cache, originator);
+	if(node == NULL || crm_is_member_active(node) == FALSE) {
  		crm_warn("Discarding %s message (%s) from %s:"
 			 " not in our membership", op, seq, originator);
 		return;
+	}
 #endif
-	} else if(cib_get_operation_id(msg, &call_type) != cib_ok) {
+
+	if(cib_get_operation_id(msg, &call_type) != cib_ok) {
  		crm_debug("Discarding %s message (%s) from %s:"
 			  " Invalid operation", op, seq, originator);
 		return;
@@ -1770,13 +1773,12 @@ cib_ccm_msg_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data)
 {
 	gboolean update_id = FALSE;
-	gboolean update_quorum = FALSE;
 	const oc_ev_membership_t *membership = data;
 
 	CRM_ASSERT(membership != NULL);
 
-	crm_debug("Process CCM event=%s (id=%d)",
-		  ccm_event_name(event), membership->m_instance);
+	crm_info("Processing CCM event=%s (id=%d)",
+		 ccm_event_name(event), membership->m_instance);
 
 	if(current_instance > membership->m_instance) {
 		crm_err("Membership instance ID went backwards! %d->%d",
@@ -1788,24 +1790,23 @@ cib_ccm_msg_callback(
 		case OC_EV_MS_NEW_MEMBERSHIP:
 		case OC_EV_MS_INVALID:
 			update_id = TRUE;
-			update_quorum = TRUE;
 			break;
 		case OC_EV_MS_PRIMARY_RESTORED:
 			update_id = TRUE;
 			break;
 		case OC_EV_MS_NOT_PRIMARY:
 			crm_debug_2("Ignoring transitional CCM event: %s",
-				  ccm_event_name(event));
+				    ccm_event_name(event));
 			break;
 		case OC_EV_MS_EVICTED:
 			crm_err("Evicted from CCM: %s", ccm_event_name(event));
-			update_quorum = TRUE;
 			break;
 		default:
 			crm_err("Unknown CCM event: %d", event);
 	}
 	
 	if(update_id) {
+		unsigned int lpc = 0;
 		CRM_CHECK(membership != NULL, return);
 	
 		if(ccm_transition_id != NULL) {
@@ -1815,48 +1816,15 @@ cib_ccm_msg_callback(
 		current_instance = membership->m_instance;
 		ccm_transition_id = crm_itoa(membership->m_instance);
 		set_transition(the_cib);
-	}
-	
-	if(update_quorum) {
-		unsigned int members = 0;
-		int offset = 0;
-		unsigned int lpc = 0;
 
-		cib_have_quorum = ccm_have_quorum(event);
-
-		if(cib_have_quorum) {
- 			crm_xml_add(
-				the_cib,XML_ATTR_HAVE_QUORUM,XML_BOOLEAN_TRUE);
-		} else {
- 			crm_xml_add(
-				the_cib,XML_ATTR_HAVE_QUORUM,XML_BOOLEAN_FALSE);
+		for(lpc=0; lpc < membership->m_n_out; lpc++) {
+		    update_ccm_node(NULL, membership,
+				    lpc+membership->m_out_idx, CRM_NODE_LOST);
 		}
 		
-		crm_debug("Quorum %s after event=%s (id=%d)", 
-			  cib_have_quorum?"(re)attained":"lost",
-			  ccm_event_name(event), membership->m_instance);
-		
-		if(membership != NULL && membership->m_n_out != 0) {
-			members = membership->m_n_out;
-			offset = membership->m_out_idx;
-			for(lpc = 0; lpc < members; lpc++) {
-				oc_node_t a_node = membership->m_array[lpc+offset];
-				crm_info("LOST: %s", a_node.node_uname);
-				g_hash_table_remove(
-					ccm_membership, a_node.node_uname);	
-			}
-		}
-		
-		if(membership != NULL && membership->m_n_member != 0) {
-			members = membership->m_n_member;
-			offset = membership->m_memb_idx;
-			for(lpc = 0; lpc < members; lpc++) {
-				oc_node_t a_node = membership->m_array[lpc+offset];
-				char *uname = crm_strdup(a_node.node_uname);
-				crm_info("PEER: %s", uname);
-				g_hash_table_replace(
-					ccm_membership, uname, uname);	
-			}
+		for(lpc=0; lpc < membership->m_n_member; lpc++) {
+		    update_ccm_node(NULL, membership,
+				    lpc+membership->m_memb_idx, CRM_NODE_ACTIVE);
 		}
 	}
 	
@@ -1870,14 +1838,7 @@ cib_ccm_msg_callback(
 gboolean
 can_write(int flags)
 {
-	if(cib_have_quorum) {
-		return TRUE;
-
-	} else if((flags & cib_quorum_override) != 0) {
-		return TRUE;
-	}
-
-	return FALSE;
+	return TRUE;
 }
 
 static gboolean

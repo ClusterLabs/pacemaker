@@ -74,9 +74,7 @@ crm_data_t *status_search = NULL;
 
 extern gboolean cib_writes_enabled;
 extern char *ccm_transition_id;
-extern gboolean cib_have_quorum;
 extern GHashTable *peer_hash;
-extern GHashTable *ccm_membership;
 extern GTRIGSource *cib_writer;
 extern enum cib_errors cib_status;
 
@@ -827,34 +825,10 @@ set_connected_peers(crm_data_t *xml_obj)
 }
 
 gboolean
-update_quorum(crm_data_t *xml_obj) 
-{
-	const char *quorum_value = XML_BOOLEAN_FALSE;
-	const char *current = NULL;
-	if(xml_obj == NULL) {
-		return FALSE;
-	}
-	
-	current = crm_element_value(xml_obj, XML_ATTR_HAVE_QUORUM);
-	if(cib_have_quorum) {
-		quorum_value = XML_BOOLEAN_TRUE;
-	}
-	if(safe_str_neq(current, quorum_value)) {
-		crm_debug("CCM quorum: old=%s, new=%s",
-			  current, quorum_value);
-		crm_xml_add(xml_obj, XML_ATTR_HAVE_QUORUM, quorum_value);
-		return TRUE;
-	}
-	return FALSE;
-}
-
-
-gboolean
 update_counters(const char *file, const char *fn, crm_data_t *xml_obj) 
 {
 	gboolean did_update = FALSE;
 
-	did_update = did_update || update_quorum(xml_obj);
 	did_update = did_update || set_transition(xml_obj);
 	did_update = did_update || set_connected_peers(xml_obj);
 	

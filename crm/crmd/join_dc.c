@@ -159,7 +159,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 
 	if(saved_ccm_membership_id != crm_membership_seq) {
 		saved_ccm_membership_id = crm_membership_seq;
-		crm_info("Making join offers based on membership %d",
+		crm_info("Making join offers based on membership %llu",
 			 crm_membership_seq);
 	}	
 	

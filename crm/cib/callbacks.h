@@ -32,7 +32,6 @@
 #include <crm/common/xml.h>
 
 extern gboolean   cib_is_master;
-extern gboolean   cib_have_quorum;
 extern GHashTable *client_list;
 extern GHashTable *peer_hash;
 

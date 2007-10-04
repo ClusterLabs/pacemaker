@@ -774,20 +774,19 @@ get_uuid(ll_cluster_t *hb, const char *uname)
 		return uuid_calc;
 	}
 	
+	if(hb == NULL) {
+	    crm_warn("No connection to heartbeat, using uuid=uname");
+	    uuid_calc = crm_strdup(uname);
+	    goto fallback;
+	}
 	
 	if(hb->llc_ops->get_uuid_by_name(hb, uname, &uuid_raw) == HA_FAIL) {
 		crm_err("get_uuid_by_name() call failed for host %s", uname);
 		crm_free(uuid_calc);
-		return NULL;
-		
+		return NULL;	
 	} 
 
 	crm_malloc0(uuid_calc, 50);
-	
-	if(uuid_calc == NULL) {
-		return NULL;
-	}
-
 	cl_uuid_unparse(&uuid_raw, uuid_calc);
 
 	if(safe_str_eq(uuid_calc, unknown)) {
@@ -796,6 +795,7 @@ get_uuid(ll_cluster_t *hb, const char *uname)
 		return NULL;
 	}
 	
+  fallback:
 	g_hash_table_insert(crm_uuid_cache, crm_strdup(uname), uuid_calc);
 	uuid_calc = g_hash_table_lookup(crm_uuid_cache, uname);
 
@@ -821,7 +821,7 @@ get_uname(ll_cluster_t *hb, const char *uuid)
 		return uname;
 	}
 	
-	if(uuid != NULL) {
+	if(hb != NULL && uuid != NULL) {
 		cl_uuid_t uuid_raw;
 		char *uuid_copy = crm_strdup(uuid);
 		cl_uuid_parse(uuid_copy, &uuid_raw);

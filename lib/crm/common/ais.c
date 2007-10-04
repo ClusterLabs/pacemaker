@@ -17,9 +17,10 @@
  */
 
 #include <lha_internal.h>
+#include <bzlib.h>
 #include <crm/ais.h>
 #include <openais/saAis.h>
-#include <bzlib.h>
+#include <sys/utsname.h>
 
 int ais_fd_in = -1;
 int ais_fd_out = -1;

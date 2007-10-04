@@ -92,7 +92,6 @@ extern gboolean cib_msg_timeout(gpointer data);
 extern int write_cib_contents(gpointer p);
 
 GHashTable *client_list    = NULL;
-GHashTable *ccm_membership = NULL;
 GHashTable *peer_hash = NULL;
 
 ll_cluster_t *hb_conn = NULL;
@@ -157,9 +156,8 @@ main(int argc, char ** argv)
 	EnableProcLogging();
 	set_sigchld_proctrack(G_PRIORITY_HIGH);
 
+	crm_membership_init();
 	client_list = g_hash_table_new(g_str_hash, g_str_equal);
-	ccm_membership = g_hash_table_new_full(
-		g_str_hash, g_str_equal, g_hash_destroy_str, NULL);
 	peer_hash = g_hash_table_new_full(
 		g_str_hash, g_str_equal,g_hash_destroy_str, g_hash_destroy_str);
 	
@@ -230,7 +228,7 @@ main(int argc, char ** argv)
 void
 cib_cleanup(void) 
 {
-	g_hash_table_destroy(ccm_membership);	
+	crm_membership_destroy();	
 	g_hash_table_destroy(client_list);
 	g_hash_table_destroy(peer_hash);
 	crm_free(ccm_transition_id);
@@ -365,19 +363,51 @@ gboolean ccm_connect(void)
     return TRUE;    
 }
 
-#ifdef WITH_NATIVE_AIS	
-static gboolean cib_ais_dispatch(AIS_Message *header, char *data, int sender) 
+static void cib_ais_membership(crm_data_t *xml) 
 {
-    HA_Message *xml = string2xml(data);
-    if(xml != NULL) {
-	crm_debug("Message received: '%.120s'", data);
-	ha_msg_add(xml, F_ORIG, header->sender.uname);
-	ha_msg_add_int(xml, F_SEQ, header->id);
-	cib_peer_callback(xml, NULL);
-    } else {
-	crm_err("Invalid message: %s", data);
+    const char *seq_s = crm_element_value(xml, "seq");
+    crm_info("Processing membership id=%s", seq_s);
+    
+    crm_log_xml_debug(xml, __PRETTY_FUNCTION__);
+    current_instance = crm_int_helper(seq_s, NULL);
+    ccm_transition_id = crm_itoa(current_instance);
+    xml_child_iter(xml, node, update_ais_node(node, current_instance));
+}
+
+
+#ifdef WITH_NATIVE_AIS	
+static gboolean cib_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
+{
+    crm_data_t *xml = NULL;
+
+    crm_debug_2("Message received: '%.80s'", data);
+    
+    switch(wrapper->header.id) {
+	case crm_class_cluster:
+	    xml = string2xml(data);
+	    if(xml == NULL) {
+		goto bail;
+	    }
+	    ha_msg_add(xml, F_ORIG, wrapper->sender.uname);
+	    ha_msg_add_int(xml, F_SEQ, wrapper->id);
+	    cib_peer_callback(xml, NULL);
+	    break;
+	case crm_class_members:
+	    xml = string2xml(data);
+	    cib_ais_membership(xml);
+	    break;
+	case crm_class_quorum:
+	case crm_class_notify:
+	    break;
     }
+
+    free_xml(xml);
     return TRUE;
+
+  bail:
+    crm_err("Invalid XML: '%.120s'", data);
+    return TRUE;
+
 }
 
 static void
@@ -393,9 +423,6 @@ int
 cib_init(void)
 {
 	gboolean was_error = FALSE;
-#ifdef WITH_NATIVE_AIS
-	cib_have_quorum = TRUE;
-#endif
 	
 	if(startCib("cib.xml") == FALSE){
 		crm_crit("Cannot start CIB... terminating");
@@ -464,7 +491,10 @@ cib_init(void)
 		return 0;
 	}	
 
-#ifndef WITH_NATIVE_AIS
+#ifdef WITH_NATIVE_AIS
+	crm_info("Requesting the list of configured nodes");
+	send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
+#else	
 	if(was_error == FALSE) {
 		crm_debug_3("Be informed of CRM Client Status changes");
 		if (HA_OK != hb_conn->llc_ops->set_cstatus_callback(

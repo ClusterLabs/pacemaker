@@ -46,7 +46,7 @@ extern void crmd_ha_connection_destroy(gpointer user_data);
 gboolean crm_shutdown(int nsig, gpointer unused);
 gboolean register_with_ha(ll_cluster_t *hb_cluster, const char *client_name);
 
-
+gboolean      fsa_has_quorum = FALSE;
 GHashTable   *ipc_clients = NULL;
 GTRIGSource  *fsa_source = NULL;
 
@@ -54,15 +54,24 @@ GTRIGSource  *fsa_source = NULL;
 #ifdef WITH_NATIVE_AIS	
 extern void crmd_ha_msg_filter(HA_Message * msg);
 
-static gboolean crm_ais_dispatch(AIS_Message *header, char *data, int sender) 
+static void crm_update_ais_quorum(crm_data_t *xml) 
+{
+    gboolean bool = FALSE;
+    const char *bool_s = crm_element_value(xml, "quorate");
+    crm_info("%s", bool_s);
+    bool = crm_is_true(bool_s);
+    crm_update_quorum(bool);
+}
+
+static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
 {
     crm_data_t *xml = string2xml(data);
     if(xml != NULL) {
-	crm_debug("Message received: '%.120s'", data);
-	ha_msg_add(xml, F_ORIG, header->sender.uname);
-	ha_msg_add_int(xml, F_SEQ, header->id);
+	crm_debug("Message received: %d:'%.120s'", wrapper->header.id, data);
+	ha_msg_add(xml, F_ORIG, wrapper->sender.uname);
+	ha_msg_add_int(xml, F_SEQ, wrapper->id);
 
-	switch(header->id) {
+	switch(wrapper->header.id) {
 	    case crm_class_cluster:
 		crmd_ha_msg_filter(xml);
 		break;
@@ -71,6 +80,8 @@ static gboolean crm_ais_dispatch(AIS_Message *header, char *data, int sender)
 		    C_HA_MESSAGE, fsa_state, OC_EV_MS_NEW_MEMBERSHIP, NULL, xml);
 		break;
 	    case crm_class_quorum:
+		crm_update_ais_quorum(xml);
+		break;
 	    case crm_class_notify:
 		break;
 	}
@@ -113,7 +124,16 @@ do_ha_control(long long action,
 	}
 	
 	if(action & A_HA_CONNECT) {
-#ifndef WITH_NATIVE_AIS
+#ifdef WITH_NATIVE_AIS
+		crm_membership_init();
+		registered = init_ais_connection(
+		    crm_ais_dispatch, crm_ais_destroy, &fsa_our_uname);
+		fsa_our_uuid = crm_strdup(fsa_our_uname);
+
+		crm_info("Requesting the list of configured nodes");
+		send_ais_text(
+		    crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
+#else
 		if(fsa_cluster_conn == NULL) {
 			fsa_cluster_conn = ll_cluster_new("heartbeat");
 		}
@@ -123,13 +143,6 @@ do_ha_control(long long action,
 		
 		registered = register_with_ha(
 			fsa_cluster_conn, crm_system_name);
-#else
-		crm_membership_init();
-		registered = init_ais_connection(
-		    crm_ais_dispatch, crm_ais_destroy, &fsa_our_uname);
-		fsa_our_uuid = crm_strdup(fsa_our_uname);
-		send_ais_text(
-		    crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
 #endif
 		if(registered == FALSE) {
 			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
@@ -618,13 +631,15 @@ do_started(long long action,
 			 R_PEER_DATA);
 
 		crm_debug_3("Looking for a HA message");
+#ifndef WITH_NATIVE_AIS
 		msg = fsa_cluster_conn->llc_ops->readmsg(fsa_cluster_conn, 0);
+#endif
 		if(msg != NULL) {
 			crm_debug_3("There was a HA message");
  			crm_msg_del(msg);
 		}
-		
-		crm_timer_start(wait_timer);
+		/* this should no longer be required */
+/* 		crm_timer_start(wait_timer); */
 		crmd_fsa_stall(NULL);
 		return I_NULL;
 	}

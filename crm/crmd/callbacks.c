@@ -556,11 +556,11 @@ crmd_ccm_msg_callback(
 			 ccm_event_name(event));
 		trigger_transition = TRUE;
 	    }
-	    fsa_have_quorum = FALSE;
+	    crm_update_quorum(FALSE);
 			
 	} else if(update_quorum)  {
 	    crm_debug_2("Updating quorum after event %s",ccm_event_name(event));
-	    fsa_have_quorum = TRUE;
+	    crm_update_quorum(TRUE);
 	}
 
 	if(update_cache) {

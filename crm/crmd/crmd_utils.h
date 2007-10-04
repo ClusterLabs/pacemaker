@@ -48,6 +48,8 @@ extern long long toggle_bit   (long long  action_list, long long action);
 extern long long clear_bit    (long long  action_list, long long action);
 extern long long set_bit      (long long  action_list, long long action);
 
+extern gboolean fsa_has_quorum;
+
 #define set_bit_inplace(word, bit)    word = set_bit(word, bit)
 #define clear_bit_inplace(word, bit)  word = clear_bit(word, bit)
 #define toggle_bit_inplace(word, bit) word = toggle_bit(word, bit)
@@ -82,3 +84,6 @@ extern gboolean need_transition(enum crmd_fsa_state state);
 extern void update_dc(HA_Message *msg, gboolean assert_same);
 extern void erase_node_from_join(const char *node);
 extern void populate_cib_nodes(gboolean with_client_status);
+extern void crm_update_quorum(gboolean bool);
+
+#endif

@@ -66,7 +66,9 @@ struct update_data_s
 void reap_dead_ccm_nodes(gpointer key, gpointer value, gpointer user_data)
 {
     crm_node_t *node = value;
-    check_dead_member(node->uname, NULL);
+    if(crm_is_member_active(node) == FALSE) {
+	check_dead_member(node->uname, NULL);
+    }
 }
 
 void
@@ -77,7 +79,6 @@ check_dead_member(const char *uname, GHashTable *members)
 		crm_err("%s didnt really leave the membership!", uname);
 		return;
 	}
-
 	erase_node_from_join(uname);
 	if(voted != NULL) {
 		g_hash_table_remove(voted, uname);
@@ -328,7 +329,7 @@ do_ccm_update_cache(
 	ccm_event_detail(oc, event);
 		
 	/*--*-- Recently Dead Member Nodes --*--*/
-	for(lpc=0; lpc < oc->m_out; lpc++) {
+	for(lpc=0; lpc < oc->m_n_out; lpc++) {
 	    update_ccm_node(
 		fsa_cluster_conn, oc, lpc+oc->m_out_idx, CRM_NODE_LOST);
 	}
@@ -423,3 +424,33 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
 
 	free_xml(fragment);
 }
+
+static void cib_quorum_update_complete(
+    const HA_Message *msg, int call_id, int rc, crm_data_t *output, void *user_data)
+{
+	fsa_data_t *msg_data = NULL;
+	
+	if(rc == cib_ok) {
+		crm_debug("Quorum update %d complete", call_id);
+
+	} else {
+		crm_err("Quorum update %d failed", call_id);
+		crm_log_message(LOG_DEBUG, msg);
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+	}
+}
+
+void crm_update_quorum(gboolean bool) 
+{
+    int call_id = 0;
+    crm_data_t *update = NULL;
+    int call_options = cib_scope_local|cib_quorum_override;
+    
+    fsa_has_quorum = bool;
+    update = create_xml_node(NULL, XML_TAG_CIB);
+    crm_xml_add_int(update, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
+
+    fsa_cib_update(XML_TAG_CIB, update, call_options, call_id);
+    add_cib_op_callback(call_id, FALSE, NULL, cib_quorum_update_complete);
+}
+
