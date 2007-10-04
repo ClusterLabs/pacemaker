@@ -74,14 +74,14 @@ static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 	ha_msg_add_int(xml, F_SEQ, wrapper->id);
 
 	switch(wrapper->header.id) {
-	    case crm_class_cluster:
-		crmd_ha_msg_filter(xml);
+	    case crm_class_notify:
 		break;
 	    case crm_class_members:
 		do_ccm_update_cache(
 		    C_HA_MESSAGE, fsa_state, OC_EV_MS_NEW_MEMBERSHIP, NULL, xml);
 		break;
-	    case crm_class_notify:
+	    default:
+		crmd_ha_msg_filter(xml);
 		break;
 	}
 	

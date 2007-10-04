@@ -361,7 +361,10 @@ static gboolean cib_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
     crm_debug_2("Message received: '%.80s'", data);
     
     switch(wrapper->header.id) {
-	case crm_class_cluster:
+	case crm_class_members:
+	case crm_class_notify:
+	    break;
+	default:
 	    xml = string2xml(data);
 	    if(xml == NULL) {
 		goto bail;
@@ -369,9 +372,6 @@ static gboolean cib_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 	    ha_msg_add(xml, F_ORIG, wrapper->sender.uname);
 	    ha_msg_add_int(xml, F_SEQ, wrapper->id);
 	    cib_peer_callback(xml, NULL);
-	    break;
-	case crm_class_members:
-	case crm_class_notify:
 	    break;
     }
 
