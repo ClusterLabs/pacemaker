@@ -73,7 +73,6 @@ crm_data_t *constraint_search = NULL;
 crm_data_t *status_search = NULL;
 
 extern gboolean cib_writes_enabled;
-extern char *ccm_transition_id;
 extern GHashTable *peer_hash;
 extern GTRIGSource *cib_writer;
 extern enum cib_errors cib_status;
@@ -783,24 +782,6 @@ write_cib_contents(gpointer p)
 }
 
 gboolean
-set_transition(crm_data_t *xml_obj)
-{
-	const char *current = NULL;
-	if(xml_obj == NULL) {
-		return FALSE;
-	}
-
-	current = crm_element_value(xml_obj, XML_ATTR_CCM_TRANSITION);
-	if(safe_str_neq(current, ccm_transition_id)) {
-		crm_debug("CCM transition: old=%s, new=%s",
-			  current, ccm_transition_id);
-		crm_xml_add(xml_obj, XML_ATTR_CCM_TRANSITION,ccm_transition_id);
-		return TRUE;
-	}
-	return FALSE;
-}
-
-gboolean
 set_connected_peers(crm_data_t *xml_obj)
 {
 	int active = 0;
@@ -829,7 +810,6 @@ update_counters(const char *file, const char *fn, crm_data_t *xml_obj)
 {
 	gboolean did_update = FALSE;
 
-	did_update = did_update || set_transition(xml_obj);
 	did_update = did_update || set_connected_peers(xml_obj);
 	
 	if(did_update) {

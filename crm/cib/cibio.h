@@ -52,7 +52,6 @@ extern int activateCibBuffer(char *buffer, const char *filename);
 extern int activateCibXml(crm_data_t *doc, gboolean to_disk);
 
 extern gboolean update_quorum(crm_data_t *xml_obj);
-extern gboolean set_transition(crm_data_t *xml_obj);
 extern gboolean set_connected_peers(crm_data_t *xml_obj);
 extern gboolean update_counters(
 	const char *file, const char *fn, crm_data_t *xml_obj);

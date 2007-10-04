@@ -72,7 +72,6 @@ gboolean stand_alone = FALSE;
 gboolean per_action_cib = FALSE;
 enum cib_errors cib_status = cib_ok;
 
-extern char *ccm_transition_id;
 extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
 GMainLoop*  mainloop = NULL;
@@ -231,7 +230,6 @@ cib_cleanup(void)
 	crm_membership_destroy();	
 	g_hash_table_destroy(client_list);
 	g_hash_table_destroy(peer_hash);
-	crm_free(ccm_transition_id);
 	crm_free(cib_our_uname);
 #if HAVE_LIBXML2
 	xmlCleanupParser();
@@ -298,8 +296,6 @@ ccm_connection_destroy(gpointer user_data)
     return;
 }
 
-extern int current_instance;
-
 gboolean ccm_connect(void) 
 {
     gboolean did_fail = TRUE;
@@ -354,7 +350,6 @@ gboolean ccm_connect(void)
 	}
     }
     
-    current_instance = 0;
     crm_debug("CCM Activation passed... all set to go!");
     G_main_add_fd(G_PRIORITY_HIGH, cib_ev_fd, FALSE,
 		  cib_ccm_dispatch, cib_ev_token,
@@ -365,13 +360,13 @@ gboolean ccm_connect(void)
 
 static void cib_ais_membership(crm_data_t *xml) 
 {
+    int seq = 0;
     const char *seq_s = crm_element_value(xml, "seq");
     crm_info("Processing membership id=%s", seq_s);
     
     crm_log_xml_debug(xml, __PRETTY_FUNCTION__);
-    current_instance = crm_int_helper(seq_s, NULL);
-    ccm_transition_id = crm_itoa(current_instance);
-    xml_child_iter(xml, node, update_ais_node(node, current_instance));
+    seq = crm_int_helper(seq_s, NULL);
+    xml_child_iter(xml, node, update_ais_node(node, seq));
 }
 
 

@@ -83,7 +83,6 @@ extern GHashTable *peer_hash;
 
 int        next_client_id  = 0;
 gboolean   cib_is_master   = FALSE;
-char *     ccm_transition_id = NULL;
 extern const char *cib_our_uname;
 extern unsigned long cib_num_ops, cib_num_local, cib_num_updates, cib_num_fail;
 extern unsigned long cib_bad_connects, cib_num_timeouts;
@@ -1809,13 +1808,7 @@ cib_ccm_msg_callback(
 		unsigned int lpc = 0;
 		CRM_CHECK(membership != NULL, return);
 	
-		if(ccm_transition_id != NULL) {
-			crm_free(ccm_transition_id);
-			ccm_transition_id = NULL;
-		}
 		current_instance = membership->m_instance;
-		ccm_transition_id = crm_itoa(membership->m_instance);
-		set_transition(the_cib);
 
 		for(lpc=0; lpc < membership->m_n_out; lpc++) {
 		    update_ccm_node(NULL, membership,
