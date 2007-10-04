@@ -181,20 +181,23 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 			  fsa_state2string(fsa_state));
 		return;
 
-	} else if(fsa_state != S_POLICY_ENGINE) {
-		crm_err("Invoking PE in state: %s",fsa_state2string(fsa_state));
-	}
-	
+	} else if(last_peer_update != 0) {
+	    crm_debug("Re-asking for the CIB: peer update %d still pending",
+		      last_peer_update);
+	    
+	    mssleep(500);
+	    register_fsa_action(A_PE_INVOKE);
+	    return;
 
-	crm_debug_2("Invoking %s with %p", CRM_SYSTEM_PENGINE, local_cib);
+	} else if(fsa_state != S_POLICY_ENGINE) {
+	    crm_err("Invoking PE in state: %s", fsa_state2string(fsa_state));
+	}
 
 	CRM_DEV_ASSERT(local_cib != NULL);
 	CRM_DEV_ASSERT(crm_element_value(local_cib, XML_ATTR_DC_UUID) != NULL);
 
 	crm_xml_add_int(local_cib, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
 	crm_xml_add_int(local_cib, XML_ATTR_CCM_TRANSITION, crm_membership_seq);
-
-	crm_err("TODO: Check for any pending membership updates");
 	
 	if(fsa_pe_ref) {
 		crm_free(fsa_pe_ref);

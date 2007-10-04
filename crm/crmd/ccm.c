@@ -52,6 +52,7 @@ void reap_dead_ccm_nodes(gpointer key, gpointer value, gpointer user_data);
 oc_ev_t *fsa_ev_token;
 int num_ccm_register_fails = 0;
 int max_ccm_register_fails = 30;
+int last_peer_update = 0;
 
 extern GHashTable *voted;
 
@@ -378,6 +379,7 @@ ccm_node_update_complete(const HA_Message *msg, int call_id, int rc,
 			 crm_data_t *output, void *user_data)
 {
 	fsa_data_t *msg_data = NULL;
+	last_peer_update = 0;
 	
 	if(rc == cib_ok) {
 		crm_debug("Node update %d complete", call_id);
@@ -421,7 +423,8 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
 
 	fsa_cib_update(XML_CIB_TAG_STATUS, fragment, call_options, call_id);
 	add_cib_op_callback(call_id, FALSE, NULL, ccm_node_update_complete);
-
+	last_peer_update = call_id;
+	
 	free_xml(fragment);
 }
 
