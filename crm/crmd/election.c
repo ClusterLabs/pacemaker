@@ -293,8 +293,8 @@ do_election_count_vote(long long action,
 	} else {
 		CRM_CHECK(strcasecmp(fsa_our_uname, vote_from) != 0, ;);
 		crm_debug("Them: %s (born=%llu)  Us: %s (born=%llu)",
-			  vote_from, your_node->born,
-			  fsa_our_uname, our_node->born);
+			  vote_from, (unsigned long long)your_node->born,
+			  fsa_our_uname, (unsigned long long)our_node->born);
 /* cant happen...
  *	} else if(strcasecmp(fsa_our_uname, vote_from) == 0) {
  *

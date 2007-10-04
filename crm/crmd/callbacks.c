@@ -37,8 +37,6 @@
 #include <crmd_callbacks.h>
 
 
-GHashTable *crmd_peer_state = NULL;
-
 crm_data_t *find_xml_in_hamessage(const HA_Message * msg);
 void crmd_ha_connection_destroy(gpointer user_data);
 void crmd_ha_msg_filter(HA_Message *msg);
@@ -292,19 +290,20 @@ lrm_op_callback(lrm_op_t* op)
 }
 
 void
-crmd_ha_status_callback(
-	const char *node, const char * status,	void* private_data)
+crmd_ha_status_callback(const char *node, const char *status, void *private)
 {
 	crm_data_t *update = NULL;
 	crm_notice("Status update: Node %s now has status [%s]",node,status);
 
 	if(safe_str_eq(status, DEADSTATUS)) {
 		/* this node is taost */
+		crm_update_peer_proc(node, crm_proc_ais, OFFLINESTATUS);
 		update = create_node_state(
 			node, status, XML_BOOLEAN_NO, OFFLINESTATUS,
 			CRMD_STATE_INACTIVE, NULL, TRUE, __FUNCTION__);
 		
 	} else if(safe_str_eq(status, ACTIVESTATUS)) {
+		crm_update_peer_proc(node, crm_proc_ais, ONLINESTATUS);
 		update = create_node_state(
 			node, status, NULL, NULL, NULL, NULL,
 			FALSE, __FUNCTION__);
@@ -345,22 +344,22 @@ crmd_client_status_callback(const char * node, const char * client,
 	}
 	
 	set_bit_inplace(fsa_input_register, R_PEER_DATA);
-	g_hash_table_replace(
-		crmd_peer_state, crm_strdup(node), crm_strdup(status));
+
+	crm_notice("Status update: Client %s/%s now has status [%s]",
+		   node, client, status);
+
+	crm_update_peer_proc(node, crm_proc_crmd, status);
+
+	if(safe_str_eq(status, ONLINESTATUS)) {
+	    /* remove the cached value in case it changed */
+	    crm_debug_2("Uncaching UUID for %s", node);
+	    unget_uuid(node);
+	}
 
 	if(is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
 		return;
 	} else if(fsa_state == S_STOPPING) {
 		return;
-	}
-
-	crm_notice("Status update: Client %s/%s now has status [%s]",
-		   node, client, status);
-
-	if(safe_str_eq(status, ONLINESTATUS)) {
-		/* remove the cached value in case it changed */
-		crm_debug_2("Uncaching UUID for %s", node);
-		unget_uuid(node);
 	}
 	
 	if(safe_str_eq(node, fsa_our_dc) && safe_str_eq(status, OFFLINESTATUS)){

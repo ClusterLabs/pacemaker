@@ -47,6 +47,7 @@
 #include <cibmessages.h>
 #include <cibprimatives.h>
 #include <notify.h>
+#include <heartbeat.h>
 
 
 extern GMainLoop*  mainloop;
@@ -79,7 +80,6 @@ HA_Message *cib_construct_reply(HA_Message *request, HA_Message *output, int rc)
 gboolean syncd_once = FALSE;
 
 extern GHashTable *client_list;
-extern GHashTable *peer_hash;
 
 int        next_client_id  = 0;
 gboolean   cib_is_master   = FALSE;
@@ -1721,7 +1721,15 @@ cib_client_status_callback(const char * node, const char * client,
 	if(safe_str_eq(client, CRM_SYSTEM_CIB)) {
 		crm_info("Status update: Client %s/%s now has status [%s]",
 			 node, client, status);
-		g_hash_table_replace(peer_hash, crm_strdup(node), crm_strdup(status));
+
+		if(safe_str_eq(status, JOINSTATUS)){
+		    status = ONLINESTATUS;
+		    
+		} else if(safe_str_eq(status, LEAVESTATUS)){
+		    status = OFFLINESTATUS;
+		}
+
+		crm_update_peer_proc(node, crm_proc_crmd, status);
 		set_connected_peers(the_cib);
 	}
 	return;
@@ -1811,13 +1819,15 @@ cib_ccm_msg_callback(
 		current_instance = membership->m_instance;
 
 		for(lpc=0; lpc < membership->m_n_out; lpc++) {
-		    update_ccm_node(NULL, membership,
-				    lpc+membership->m_out_idx, CRM_NODE_LOST);
+		    crm_update_ccm_node(
+			NULL, membership, lpc+membership->m_out_idx,
+			CRM_NODE_LOST);
 		}
 		
 		for(lpc=0; lpc < membership->m_n_member; lpc++) {
-		    update_ccm_node(NULL, membership,
-				    lpc+membership->m_memb_idx, CRM_NODE_ACTIVE);
+		    crm_update_ccm_node(
+			NULL, membership, lpc+membership->m_memb_idx,
+			CRM_NODE_ACTIVE);
 		}
 	}
 	
@@ -1848,7 +1858,7 @@ initiate_exit(void)
 	int active = 0;
 	HA_Message *leaving = NULL;
 
-	g_hash_table_foreach(peer_hash, GHFunc_count_peers, &active);
+	active = crm_active_peers(crm_proc_cib);
 	if(active < 2) {
 		terminate_ha_connection(__FUNCTION__);
 		return;

@@ -95,48 +95,6 @@ check_dead_member(const char *uname, GHashTable *members)
 	}
 }
 
-void
-ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
-{
-	crm_data_t *tmp1 = NULL;
-	const char *join = NULL;
-	const char *peer_online = NULL;
-	crm_node_t *node = value;
-	struct update_data_s* data = (struct update_data_s*)user_data;
-
-	data->state = XML_BOOLEAN_NO;
-	if(safe_str_eq(node->state, CRM_NODE_ACTIVE)) {
-	    data->state = XML_BOOLEAN_YES;
-	}
-	
-	crm_debug_2("Updating %s: %s (overwrite=%s)",
-		    node->uname, data->state,
-		    data->overwrite_join?"true":"false");
-
-	peer_online = g_hash_table_lookup(crmd_peer_state, node->uname);
-	
-	if(data->overwrite_join) {
-		if(safe_str_neq(peer_online, ONLINESTATUS)) {
-			join  = CRMD_JOINSTATE_DOWN;
-			
-		} else {
-			const char *peer_member = g_hash_table_lookup(
-				confirmed_nodes, node->uname);
-			if(peer_member != NULL) {
-				join = CRMD_JOINSTATE_MEMBER;
-			} else {
-				join = CRMD_JOINSTATE_PENDING;
-			}
-		}
-	}
-	
-	tmp1 = create_node_state(node->uname, NULL, data->state, peer_online,
-				 join, NULL, FALSE, data->caller);
-
-	add_node_copy(data->updates, tmp1);
-	free_xml(tmp1);
-}
-
 /*	 A_CCM_CONNECT	*/
 enum crmd_fsa_input
 do_ccm_control(long long action,
@@ -324,8 +282,7 @@ do_ccm_update_cache(
 		  instance, ccm_event_name(event));
 	
 #ifdef WITH_NATIVE_AIS	
-	crm_log_xml_debug(xml, __PRETTY_FUNCTION__);
-	xml_child_iter(xml, node, update_ais_node(node, instance));
+	set_bit_inplace(fsa_input_register, R_PEER_DATA);
 #else
 	ccm_event_detail(oc, event);
 		
@@ -343,8 +300,9 @@ do_ccm_update_cache(
 #endif
 
 	if(event == OC_EV_MS_EVICTED) {
-	    crm_update_membership(
-		fsa_our_uuid, fsa_our_uname, 0, 0, NULL, CRM_NODE_EVICTED);
+	    crm_update_peer(
+		0, 0, 1, 0,
+		fsa_our_uuid, fsa_our_uname, NULL, CRM_NODE_EVICTED);
 
 	    /* todo: drop back to S_PENDING instead */
 	    /* get out... NOW!
@@ -392,40 +350,80 @@ ccm_node_update_complete(const HA_Message *msg, int call_id, int rc,
 }
 
 void
+ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
+{
+    crm_data_t *tmp1 = NULL;
+    const char *join = NULL;
+    crm_node_t *node = value;
+    struct update_data_s* data = (struct update_data_s*)user_data;
+
+    data->state = XML_BOOLEAN_NO;
+    if(safe_str_eq(node->state, CRM_NODE_ACTIVE)) {
+	data->state = XML_BOOLEAN_YES;
+    }
+    
+    crm_debug_2("Updating %s: %s (overwrite=%s)",
+		node->uname, data->state, data->overwrite_join?"true":"false");
+    
+    if(data->overwrite_join) {
+	if((node->processes & crm_proc_crmd) == FALSE) {
+	    join = CRMD_JOINSTATE_DOWN;
+	    
+	} else {
+	    const char *peer_member = g_hash_table_lookup(
+		confirmed_nodes, node->uname);
+	    if(peer_member != NULL) {
+		join = CRMD_JOINSTATE_MEMBER;
+	    } else {
+		join = CRMD_JOINSTATE_PENDING;
+	    }
+	}
+    }
+    
+    tmp1 = create_node_state(
+	node->uname, NULL, data->state,
+	(node->processes&crm_proc_crmd)?ONLINESTATUS:OFFLINESTATUS,
+	join, NULL, FALSE, data->caller);
+    
+    add_node_copy(data->updates, tmp1);
+    free_xml(tmp1);
+}
+
+void
 do_update_cib_nodes(gboolean overwrite, const char *caller)
 {
-	int call_id = 0;
-	int call_options = cib_scope_local|cib_quorum_override;
-	struct update_data_s update_data;
-	crm_data_t *fragment = NULL;
-
-	if(crm_peer_cache == NULL) {
-		/* We got a replace notification before being connected to
-		 *   the CCM.
-		 * So there is no need to update the local CIB with our values
-		 *   - since we have none.
-		 */
-		return;
-	}
-	
-	fragment = create_xml_node(NULL, XML_CIB_TAG_STATUS);
-
-	update_data.caller = caller;
-	update_data.updates = fragment;
-	update_data.overwrite_join = overwrite;
-
-	if(overwrite == FALSE) {
-		call_options = call_options|cib_inhibit_bcast;
-		crm_debug_2("Inhibiting bcast for membership updates");
-	}
-
-	g_hash_table_foreach(crm_peer_cache, ghash_update_cib_node, &update_data);
-
-	fsa_cib_update(XML_CIB_TAG_STATUS, fragment, call_options, call_id);
-	add_cib_op_callback(call_id, FALSE, NULL, ccm_node_update_complete);
-	last_peer_update = call_id;
-	
-	free_xml(fragment);
+    int call_id = 0;
+    int call_options = cib_scope_local|cib_quorum_override;
+    struct update_data_s update_data;
+    crm_data_t *fragment = NULL;
+    
+    if(crm_peer_cache == NULL) {
+	/* We got a replace notification before being connected to
+	 *   the CCM.
+	 * So there is no need to update the local CIB with our values
+	 *   - since we have none.
+	 */
+	return;
+    }
+    
+    fragment = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    
+    update_data.caller = caller;
+    update_data.updates = fragment;
+    update_data.overwrite_join = overwrite;
+    
+    if(overwrite == FALSE) {
+	call_options = call_options|cib_inhibit_bcast;
+	crm_debug_2("Inhibiting bcast for membership updates");
+    }
+    
+    g_hash_table_foreach(crm_peer_cache, ghash_update_cib_node, &update_data);
+    
+    fsa_cib_update(XML_CIB_TAG_STATUS, fragment, call_options, call_id);
+    add_cib_op_callback(call_id, FALSE, NULL, ccm_node_update_complete);
+    last_peer_update = call_id;
+    
+    free_xml(fragment);
 }
 
 static void cib_quorum_update_complete(

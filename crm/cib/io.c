@@ -38,6 +38,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
+#include <crm/common/cluster.h>
 #include <clplumbing/cl_misc.h>
 #include <clplumbing/lsb_exitcodes.h>
 
@@ -73,7 +74,6 @@ crm_data_t *constraint_search = NULL;
 crm_data_t *status_search = NULL;
 
 extern gboolean cib_writes_enabled;
-extern GHashTable *peer_hash;
 extern GTRIGSource *cib_writer;
 extern enum cib_errors cib_status;
 
@@ -784,23 +784,25 @@ write_cib_contents(gpointer p)
 gboolean
 set_connected_peers(crm_data_t *xml_obj)
 {
-	int active = 0;
+	guint active = 0;
 	int current = 0;
 	char *peers_s = NULL;
 	const char *current_s = NULL;
 	if(xml_obj == NULL) {
 		return FALSE;
 	}
-	
+
 	current_s = crm_element_value(xml_obj, XML_ATTR_NUMPEERS);
-	g_hash_table_foreach(peer_hash, GHFunc_count_peers, &active);
 	current = crm_parse_int(current_s, "0");
+	active = crm_active_peers(crm_proc_cib);
+
 	if(current != active) {
-		peers_s = crm_itoa(active);
-		crm_xml_add(xml_obj, XML_ATTR_NUMPEERS, peers_s);
-		crm_debug("We now have %s active peers", peers_s);
-		crm_free(peers_s);
-		return TRUE;
+	    crm_malloc0(peers_s, 32);
+	    snprintf(peers_s, 32, "%u", active);
+	    crm_xml_add(xml_obj, XML_ATTR_NUMPEERS, peers_s);
+	    crm_debug("We now have %s (%u) active peers", peers_s, active);
+	    crm_free(peers_s);
+	    return TRUE;
 	}
 	return FALSE;
 }

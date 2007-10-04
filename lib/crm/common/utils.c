@@ -631,6 +631,10 @@ void g_hash_destroy_str(gpointer data)
 	crm_free(data);
 }
 
+#include <sys/types.h>
+#include <stdlib.h>
+#include <limits.h>
+
 long
 crm_int_helper(const char *text, char **end_text)
 {
@@ -641,9 +645,9 @@ crm_int_helper(const char *text, char **end_text)
 	
 	if(text != NULL) {
 		if(end_text != NULL) {
-			atoi_result = (int)strtol(text, end_text, 10);
+			atoi_result = strtoul(text, end_text, 10);
 		} else {
-			atoi_result = (int)strtol(text, &local_end_text, 10);
+			atoi_result = strtoul(text, &local_end_text, 10);
 		}
 		
 /* 		CRM_CHECK(errno != EINVAL); */
@@ -653,7 +657,8 @@ crm_int_helper(const char *text, char **end_text)
 			
 		} else {
 			if(errno == ERANGE) {
-				crm_err("Conversion of %s was clipped", text);
+				crm_err("Conversion of %s was clipped: %ld",
+					text, atoi_result);
 			}
 			if(end_text == NULL && local_end_text[0] != '\0') {
 				crm_err("Characters left over after parsing "
@@ -1680,4 +1685,52 @@ crm_is_writable(const char *dir, const char *file,
   out:
 	crm_free(full_file);
 	return pass;
+}
+
+long long
+toggle_bit(long long action_list, long long action)
+{
+	crm_debug_5("Toggling bit %.16llx", action);
+	action_list ^= action;
+	crm_debug_5("Result %.16llx", action_list & action);
+	return action_list;
+}
+
+long long
+clear_bit(long long action_list, long long action)
+{
+	unsigned int	level = LOG_DEBUG_5;
+	do_crm_log(level, "Clearing bit\t%.16llx", action);
+	
+	/* ensure its set */
+	action_list |= action;
+
+	/* then toggle */
+	action_list = action_list ^ action;
+
+	return action_list;
+}
+
+long long
+set_bit(long long action_list, long long action)
+{
+	unsigned int	level = LOG_DEBUG_5;
+	do_crm_log(level, "Setting bit\t%.16llx", action);
+	action_list |= action;
+	return action_list;
+}
+
+
+gboolean
+is_set(long long action_list, long long action)
+{
+	crm_debug_5("Checking bit\t%.16llx in %.16llx", action, action_list);
+	return ((action_list & action) == action);
+}
+
+gboolean
+is_set_any(long long action_list, long long action)
+{
+	crm_debug_5("Checking bit\t%.16llx in %.16llx", action, action_list);
+	return ((action_list & action) != 0);
 }

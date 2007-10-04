@@ -36,6 +36,19 @@
 
 extern int send_cluster_msg_raw(AIS_Message *ais_msg);
 
+void log_ais_message(int level, AIS_Message *msg) 
+{
+    char *data = get_ais_data(msg);
+    do_ais_log(level,
+	       "Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %s",
+	       msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
+	       ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
+	       msg->sender.pid,
+	       msg->sender.uname==local_uname?"false":"true",
+	       ais_data_len(msg), data);
+    ais_free(data);
+}
+
 gboolean process_ais_message(AIS_Message *msg) 
 {
     char *data = get_ais_data(msg);
@@ -49,7 +62,6 @@ gboolean process_ais_message(AIS_Message *msg)
     ais_free(data);
     return TRUE;
 }
-
 
 gboolean spawn_child(crm_child_t *child)
 {
@@ -140,7 +152,7 @@ stop_child(crm_child_t *child, int signal)
 
 void destroy_ais_node(gpointer data) 
 {
-    ais_node_t *node = data;
+    crm_node_t *node = data;
     ais_info("Destroying entry for node %u", node->id);
 
     ais_free(node->addr);
@@ -149,17 +161,16 @@ void destroy_ais_node(gpointer data)
     ais_free(node);
 }
 
-
-int update_member(uint32_t id, unsigned long long seq,
-		  const char *uname, const char *state) 
+int update_member(unsigned int id, unsigned long long seq, int32_t votes,
+		  uint32_t procs, const char *uname, const char *state) 
 {
     int changed = 0;
-    ais_node_t *node = NULL;
+    crm_node_t *node = NULL;
     
     node = g_hash_table_lookup(membership_list, GUINT_TO_POINTER(id));	
 
     if(node == NULL) {	
-	ais_malloc0(node, sizeof(ais_node_t));
+	ais_malloc0(node, sizeof(crm_node_t));
 	ais_info("Creating entry for node %u born on %llu", id, seq);
 	node->id = id;
 	node->addr = NULL;
@@ -168,16 +179,30 @@ int update_member(uint32_t id, unsigned long long seq,
 	g_hash_table_insert(membership_list, GUINT_TO_POINTER(id), node);
 	node = g_hash_table_lookup(membership_list, GUINT_TO_POINTER(id));
     }
-
+    
     if(uname != NULL) {
 	if(node->uname || ais_str_eq(node->uname, uname) == FALSE) {
+	    ais_info("Node %u now known as %s", id, uname);
 	    ais_free(node->uname);
 	    node->uname = ais_strdup(uname);
-	    ais_info("Node %u now known as %s", id, node->uname);
 	    changed = TRUE;
 	}
     }
 
+    if(procs != 0 && procs != node->processes) {
+	ais_info("Node %s now has process list: %.32x (%u)",
+		 node->uname, procs, procs);
+	node->processes = procs;
+	changed = TRUE;
+    }
+
+    if(votes >= 0 && votes != node->votes) {
+	ais_info("Node %s now has %d quorum votes (was %d)",
+		 node->uname, votes, node->votes);
+	node->votes = votes;
+	changed = TRUE;
+    }
+    
     if(state != NULL) {
 	if(node->state == NULL || ais_str_eq(node->state, state) == FALSE) {
 	    ais_free(node->state);
@@ -203,7 +228,7 @@ void delete_member(uint32_t id, const char *uname)
 
 const char *member_uname(uint32_t id) 
 {
-     ais_node_t *node = g_hash_table_lookup(
+     crm_node_t *node = g_hash_table_lookup(
 	 membership_list, GUINT_TO_POINTER(id));	
      if(node == NULL) {
 	 return ".unknown.";
@@ -214,9 +239,11 @@ const char *member_uname(uint32_t id)
      return node->uname;
 }
 
-char *append_member(char *data, ais_node_t *node)
+#define MEMBER_FORMAT "<node id=\"%u\" uname=\"%s\" state=\"%s\" seq=\"%llu\" votes=\"%d\" processes=\"%u\" addr=\"%s\"/>"
+
+char *append_member(char *data, crm_node_t *node)
 {
-    int size = 0;
+    int size = 1; /* nul */
     int offset = 0;
 
     if(node->uname == NULL) {
@@ -228,7 +255,7 @@ char *append_member(char *data, ais_node_t *node)
     }
     offset = size;
 
-    size += 50; /* xml + nul */
+    size += strlen(MEMBER_FORMAT);
     size += 32; /* node->id */
     size += strlen(node->uname);
     size += strlen(node->state);
@@ -237,11 +264,9 @@ char *append_member(char *data, ais_node_t *node)
 	size += strlen(node->addr);
     }
 
-    sprintf(data+offset,
-	    "<node id=\"%u\" uname=\"%s\" state=\"%s\" seq=\"%llu\""
-	    " addr=\"%s\"/>",
+    sprintf(data+offset, MEMBER_FORMAT,
 	    node->id, node->uname, node->state, membership_seq,
-	    node->addr?node->addr:"");
+	    node->votes, node->processes, node->addr?node->addr:"");
 
     return data;
 }
@@ -385,7 +410,7 @@ int send_client_msg(
 		  ais_err("Message not sent (%d): %s", rc, data?data:"<null>"));
     }
 
-    ais_debug("Sent %d:%s", class, data);
+    ais_debug_5("Sent %d:%s", class, data);
     LEAVE("");
     return rc;    
 }

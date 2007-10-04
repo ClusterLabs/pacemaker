@@ -33,6 +33,7 @@ LOGSYS_DECLARE_SUBSYS("crm", LOG_LEVEL_DEBUG);
 
 typedef struct crm_child_s {
 	int pid;
+	long flag;
 	long flags;
 	gboolean respawn;
 	const char *name;
@@ -41,22 +42,13 @@ typedef struct crm_child_s {
     
 } crm_child_t;
 
-
-typedef struct ais_node_s 
-{
-	uint32_t id;
-	char *addr;
-	char *uname;
-	char *state;
-	
-} ais_node_t;
-
 extern void destroy_ais_node(gpointer data);
 extern void delete_member(uint32_t id, const char *uname);
-extern int update_member(
-    uint32_t id, unsigned long long seq, const char *uname, const char *state);
+extern int update_member(unsigned int id, unsigned long long seq, int32_t votes,
+			 uint32_t procs, const char *uname, const char *state);
+
 extern const char *member_uname(uint32_t id);
-extern char *append_member(char *data, ais_node_t *node);
+extern char *append_member(char *data, crm_node_t *node);
 extern void member_loop_fn(gpointer key, gpointer value, gpointer user_data);
 
 extern gboolean stop_child(crm_child_t *child, int signal);
@@ -73,20 +65,21 @@ extern int send_cluster_msg(
 extern int send_client_msg(void *conn, enum crm_ais_msg_class class,
 			   enum crm_ais_msg_types type, const char *data);
 extern void send_member_notification(void);
+extern void log_ais_message(int level, AIS_Message *msg);
 
 extern GHashTable *membership_list;
 extern pthread_t crm_wait_thread;
 extern int plugin_log_level;
 extern char *local_uname;
 extern int local_uname_len;
-extern uint32_t local_nodeid;
+extern unsigned int local_nodeid;
 extern unsigned long long membership_seq;
 
 static inline const char *level2char(int level)
 {
     switch(level) {
 	case LOG_CRIT: return "CRIT";
-	case LOG_ERR: return "ERR";
+	case LOG_ERR: return "ERROR";
 	case LOG_WARNING: return "WARN";
 	case LOG_NOTICE: return "notice";
 	case LOG_INFO: return "info";

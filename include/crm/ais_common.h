@@ -40,20 +40,45 @@ typedef struct crm_ais_msg_s AIS_Message;
 
 enum crm_ais_msg_class {
     crm_class_cluster = 0,
-    crm_class_quorum  = 1,
-    crm_class_members = 2,
-    crm_class_notify  = 3,
+    crm_class_members = 1,
+    crm_class_notify  = 2,
 };
 
+/* order here matters - its used to index into the crm_children array */
 enum crm_ais_msg_types {
-    crm_msg_none,
-    crm_msg_ais,
-    crm_msg_cib,
-    crm_msg_crmd,
-    crm_msg_te,
-    crm_msg_pe,
-    crm_msg_lrmd,
+    crm_msg_none = 0,
+    crm_msg_ais  = 1,
+    crm_msg_cib  = 2,
+    crm_msg_lrmd = 3,
+    crm_msg_crmd = 4,
+    crm_msg_te   = 5,
+    crm_msg_pe   = 6,
 };
+
+enum crm_proc_flag {
+    crm_proc_none    = 0x00000000,
+    crm_proc_ais     = 0x00000001,
+    crm_proc_lrmd    = 0x00000010,
+    crm_proc_stontih = 0x00000020,
+    crm_proc_cib     = 0x00000100,
+    crm_proc_crmd    = 0x00000200,
+    crm_proc_pe      = 0x00001000,
+    crm_proc_te      = 0x00002000,
+};
+
+typedef struct crm_peer_node_s 
+{
+	unsigned int id;
+	unsigned long long born;
+
+	int32_t votes;
+	uint32_t processes;
+
+	char *uname;
+	char *state;
+	char *uuid;
+	char *addr;
+} crm_node_t;
 
 struct crm_ais_host_s
 {

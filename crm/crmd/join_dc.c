@@ -140,7 +140,6 @@ static void
 join_make_offer(gpointer key, gpointer value, gpointer user_data)
 {
 	const char *join_to = NULL;
-	const char *crm_online = NULL;
 	const crm_node_t *member = value;
 
 	CRM_ASSERT(member != NULL);
@@ -155,7 +154,6 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 	}
 
 	erase_node_from_join(join_to);
-	crm_online = g_hash_table_lookup(crmd_peer_state, join_to);
 
 	if(saved_ccm_membership_id != crm_peer_seq) {
 		saved_ccm_membership_id = crm_peer_seq;
@@ -163,7 +161,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 			 crm_peer_seq);
 	}	
 	
-	if(safe_str_eq(crm_online, ONLINESTATUS)) {
+	if(member->processes & crm_proc_crmd) {
 		HA_Message *offer = create_request(
 			CRM_OP_JOIN_OFFER, NULL, join_to,
 			CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);

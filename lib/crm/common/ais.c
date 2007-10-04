@@ -19,6 +19,7 @@
 #include <lha_internal.h>
 #include <bzlib.h>
 #include <crm/ais.h>
+#include <crm/common/cluster.h>
 #include <openais/saAis.h>
 #include <sys/utsname.h>
 
@@ -40,6 +41,8 @@ enum crm_ais_msg_types text2msg_type(const char *text)
 	} else if(safe_str_eq(text, CRM_SYSTEM_CIB)) {
 		type = crm_msg_cib;
 	} else if(safe_str_eq(text, CRM_SYSTEM_CRMD)) {
+		type = crm_msg_crmd;
+	} else if(safe_str_eq(text, CRM_SYSTEM_DC)) {
 		type = crm_msg_crmd;
 	} else if(safe_str_eq(text, CRM_SYSTEM_TENGINE)) {
 		type = crm_msg_te;
@@ -106,7 +109,7 @@ send_ais_text(int class, const char *data,
 	char *uncompressed = crm_strdup(data);
 	unsigned int len = (ais_msg->size * 1.1) + 600; /* recomended size */
 	
-	crm_debug("Compressing message payload");
+	crm_debug_5("Compressing message payload");
 	crm_malloc0(compressed, len);
 	
 	rc = BZ2_bzBuffToBuffCompress(
@@ -133,17 +136,17 @@ send_ais_text(int class, const char *data,
 
     ais_msg->header.size = sizeof(AIS_Message) + ais_data_len(ais_msg);
 
-    crm_notice("Sending%s message %d to %s.%s (data=%d, total=%d)",
-	       ais_msg->is_compressed?" compressed":"",
-	       ais_msg->id, ais_dest(&(ais_msg->host)), msg_type2text(dest),
-	       ais_data_len(ais_msg), ais_msg->header.size);
+    crm_debug_3("Sending%s message %d to %s.%s (data=%d, total=%d)",
+		ais_msg->is_compressed?" compressed":"",
+		ais_msg->id, ais_dest(&(ais_msg->host)), msg_type2text(dest),
+		ais_data_len(ais_msg), ais_msg->header.size);
 
     rc = saSendRetry(ais_fd_in, ais_msg, ais_msg->header.size);
     if(rc != SA_AIS_OK) {    
 	crm_err("Sending message %d: FAILED", ais_msg->id);
 	ais_fd_out = -1;
     } else {
-	crm_notice("Message %d: sent", ais_msg->id);
+	crm_debug_4("Message %d: sent", ais_msg->id);
     }
     
     return (rc == SA_AIS_OK);
@@ -181,10 +184,11 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     AIS_Message *msg = NULL;
     SaAisErrorT rc = SA_AIS_OK;
     static int header_len = sizeof(AIS_Message);
+    gboolean (*dispatch)(AIS_Message*,char*,int) = user_data;
 
     crm_malloc0(header, header_len);
     
-    crm_debug("Start");
+    crm_debug_5("Start");
     rc = saRecvRetry(sender, header, header_len);
     if (rc != SA_AIS_OK) {
 	crm_err("Receiving message header failed");
@@ -193,10 +197,10 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 
     msg = (void*)header;
 
-    crm_debug("Got new%s message indication (size=%d, %d, %d)",
-	      msg->is_compressed?" compressed":"",
-	      ais_data_len(msg), msg->size, msg->compressed_size);
-
+    crm_debug_3("Got new%s message indication (size=%d, %d, %d)",
+		msg->is_compressed?" compressed":"",
+		ais_data_len(msg), msg->size, msg->compressed_size);
+    
     if(ais_data_len(msg) == 0) {
 	crm_warn("Msg[%d] (dest=%s:%s, from=%s:%s.%d)",
 		 msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
@@ -213,14 +217,14 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 	goto bail;
     }
     
-    crm_debug("Read data");
+    crm_debug_5("Read data");
     
     if(msg->is_compressed) {
 	int rc = BZ_OK;
 	char *uncompressed = NULL;
 	unsigned int new_size = msg->size;
 
-	crm_debug("Decompressing message data");
+	crm_debug_5("Decompressing message data");
 	crm_malloc0(uncompressed, new_size);
 	rc = BZ2_bzBuffToBuffDecompress(
 	    uncompressed, &new_size, data, msg->compressed_size, 1, 0);
@@ -244,8 +248,26 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 	send_ais_text(0, pid_s, TRUE, NULL, crm_msg_ais);
 	crm_free(pid_s);
 
-    } else if(user_data) {
-	gboolean (*dispatch)(AIS_Message*,char*,int) = user_data;
+    } else if(msg->header.id == crm_class_members) {
+	crm_data_t *xml = string2xml(data);
+
+	if(xml != NULL) {
+	    const char *seq_s = crm_element_value(xml, "id");
+	    unsigned long seq = crm_int_helper(seq_s, NULL);
+	    crm_info("Processing membership %ld/%s", seq, seq_s);
+	    crm_log_xml_debug(xml, __PRETTY_FUNCTION__);
+	    xml_child_iter(xml, node, crm_update_ais_node(node, seq));
+
+	} else {
+	    crm_warn("Invalid peer update: %s", data);
+	}
+
+	free_xml(xml);
+	if(dispatch != NULL) {
+	    dispatch(msg, data, sender);
+	}	
+
+    } else if(dispatch != NULL) {
 	dispatch(msg, data, sender);
     }
 

@@ -54,7 +54,9 @@ GTRIGSource  *fsa_source = NULL;
 #ifdef WITH_NATIVE_AIS	
 extern void crmd_ha_msg_filter(HA_Message * msg);
 
-static void crm_update_ais_quorum(crm_data_t *xml) 
+void crm_update_ais_quorum(crm_data_t *xml);
+
+void crm_update_ais_quorum(crm_data_t *xml) 
 {
     gboolean bool = FALSE;
     const char *bool_s = crm_element_value(xml, "quorate");
@@ -67,7 +69,7 @@ static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 {
     crm_data_t *xml = string2xml(data);
     if(xml != NULL) {
-	crm_debug("Message received: %d:'%.120s'", wrapper->header.id, data);
+	crm_debug_2("Message received: %d:'%.120s'", wrapper->header.id, data);
 	ha_msg_add(xml, F_ORIG, wrapper->sender.uname);
 	ha_msg_add_int(xml, F_SEQ, wrapper->id);
 
@@ -78,9 +80,6 @@ static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 	    case crm_class_members:
 		do_ccm_update_cache(
 		    C_HA_MESSAGE, fsa_state, OC_EV_MS_NEW_MEMBERSHIP, NULL, xml);
-		break;
-	    case crm_class_quorum:
-		crm_update_ais_quorum(xml);
 		break;
 	    case crm_class_notify:
 		break;
@@ -145,7 +144,8 @@ do_ha_control(long long action,
 			fsa_cluster_conn, crm_system_name);
 #endif
 		if(registered == FALSE) {
-			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+			set_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
+			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 			return I_NULL;
 		}
 		clear_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
@@ -301,9 +301,6 @@ static void free_mem(fsa_data_t *msg_data)
 	}
 	if(confirmed_nodes) {
 		g_hash_table_destroy(confirmed_nodes);
-	}
-	if(crmd_peer_state) {
-		g_hash_table_destroy(crmd_peer_state);
 	}
 	if(meta_hash) {
 		g_hash_table_destroy(meta_hash);
@@ -566,9 +563,6 @@ do_startup(long long action,
 	confirmed_nodes = g_hash_table_new_full(
 		g_str_hash, g_str_equal,
 		g_hash_destroy_str, g_hash_destroy_str);
-	crmd_peer_state = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
-		g_hash_destroy_str, g_hash_destroy_str);
 
 	set_sigchld_proctrack(G_PRIORITY_HIGH);
 	
@@ -595,7 +589,11 @@ do_started(long long action,
 	   enum crmd_fsa_input current_input,
 	   fsa_data_t *msg_data)
 {
-	if(is_set(fsa_input_register, R_CCM_DATA) == FALSE) {
+	if(cur_state != S_STARTING) {
+	    crm_err("Start cancelled...");
+	    return I_NULL;
+	    
+	} else if(is_set(fsa_input_register, R_CCM_DATA) == FALSE) {
 		crm_info("Delaying start, CCM (%.16llx) not connected",
 			 R_CCM_DATA);
 

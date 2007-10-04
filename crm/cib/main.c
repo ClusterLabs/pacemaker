@@ -90,11 +90,9 @@ gboolean startCib(const char *filename);
 extern gboolean cib_msg_timeout(gpointer data);
 extern int write_cib_contents(gpointer p);
 
-GHashTable *client_list    = NULL;
-GHashTable *peer_hash = NULL;
-
-ll_cluster_t *hb_conn = NULL;
+ll_cluster_t *hb_conn   = NULL;
 GTRIGSource *cib_writer = NULL;
+GHashTable *client_list = NULL;
 
 char *channel1 = NULL;
 char *channel2 = NULL;
@@ -157,8 +155,6 @@ main(int argc, char ** argv)
 
 	crm_peer_init();
 	client_list = g_hash_table_new(g_str_hash, g_str_equal);
-	peer_hash = g_hash_table_new_full(
-		g_str_hash, g_str_equal,g_hash_destroy_str, g_hash_destroy_str);
 	
 	while (1) {
 #ifdef HAVE_GETOPT_H
@@ -229,7 +225,6 @@ cib_cleanup(void)
 {
 	crm_peer_destroy();	
 	g_hash_table_destroy(client_list);
-	g_hash_table_destroy(peer_hash);
 	crm_free(cib_our_uname);
 #if HAVE_LIBXML2
 	xmlCleanupParser();
@@ -358,18 +353,6 @@ gboolean ccm_connect(void)
     return TRUE;    
 }
 
-static void cib_ais_membership(crm_data_t *xml) 
-{
-    int seq = 0;
-    const char *seq_s = crm_element_value(xml, "seq");
-    crm_info("Processing membership id=%s", seq_s);
-    
-    crm_log_xml_debug(xml, __PRETTY_FUNCTION__);
-    seq = crm_int_helper(seq_s, NULL);
-    xml_child_iter(xml, node, update_ais_node(node, seq));
-}
-
-
 #ifdef WITH_NATIVE_AIS	
 static gboolean cib_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
 {
@@ -388,10 +371,6 @@ static gboolean cib_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 	    cib_peer_callback(xml, NULL);
 	    break;
 	case crm_class_members:
-	    xml = string2xml(data);
-	    cib_ais_membership(xml);
-	    break;
-	case crm_class_quorum:
 	case crm_class_notify:
 	    break;
     }
