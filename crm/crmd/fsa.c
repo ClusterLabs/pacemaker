@@ -712,9 +712,9 @@ do_state_transition(long long actions,
 				crm_err("We have more confirmed nodes than our membership does");
 				register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 				
-			} else if(saved_ccm_membership_id != crm_membership_seq) {
+			} else if(saved_ccm_membership_id != crm_peer_seq) {
 				crm_info("Membership changed: %llu -> %llu - join restart",
-					 saved_ccm_membership_id, crm_membership_seq);
+					 saved_ccm_membership_id, crm_peer_seq);
 				register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
 
 			} else {

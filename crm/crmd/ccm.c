@@ -155,7 +155,7 @@ do_ccm_control(long long action,
 		int      ret;
 		int	 fsa_ev_fd; 
 		gboolean did_fail = FALSE;
-		crm_membership_init();
+		crm_peer_init();
 		crm_debug_3("Registering with CCM");
 		clear_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
 		ret = oc_ev_register(&fsa_ev_token);
@@ -302,7 +302,7 @@ do_ccm_update_cache(
 	instance = oc->m_instance;
 #endif
 
-	CRM_ASSERT(crm_membership_seq < instance);
+	CRM_ASSERT(crm_peer_seq < instance);
 
 	switch(cur_state) {
 	    case S_STOPPING:
@@ -319,7 +319,7 @@ do_ccm_update_cache(
 		break;
 	}
 	
-	crm_membership_seq = instance;
+	crm_peer_seq = instance;
 	crm_debug("Updating cache after membership event %llu (%s).", 
 		  instance, ccm_event_name(event));
 	
@@ -359,7 +359,7 @@ do_ccm_update_cache(
 	    populate_cib_nodes(FALSE);
 	}
 	
-	g_hash_table_foreach(crm_membership_cache, reap_dead_ccm_nodes, NULL);	
+	g_hash_table_foreach(crm_peer_cache, reap_dead_ccm_nodes, NULL);	
 	set_bit_inplace(fsa_input_register, R_CCM_DATA);
 	do_update_cib_nodes(FALSE, __FUNCTION__);
 
@@ -399,7 +399,7 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
 	struct update_data_s update_data;
 	crm_data_t *fragment = NULL;
 
-	if(crm_membership_cache == NULL) {
+	if(crm_peer_cache == NULL) {
 		/* We got a replace notification before being connected to
 		 *   the CCM.
 		 * So there is no need to update the local CIB with our values
@@ -419,7 +419,7 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
 		crm_debug_2("Inhibiting bcast for membership updates");
 	}
 
-	g_hash_table_foreach(crm_membership_cache, ghash_update_cib_node, &update_data);
+	g_hash_table_foreach(crm_peer_cache, ghash_update_cib_node, &update_data);
 
 	fsa_cib_update(XML_CIB_TAG_STATUS, fragment, call_options, call_id);
 	add_cib_op_callback(call_id, FALSE, NULL, ccm_node_update_complete);

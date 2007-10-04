@@ -155,7 +155,7 @@ main(int argc, char ** argv)
 	EnableProcLogging();
 	set_sigchld_proctrack(G_PRIORITY_HIGH);
 
-	crm_membership_init();
+	crm_peer_init();
 	client_list = g_hash_table_new(g_str_hash, g_str_equal);
 	peer_hash = g_hash_table_new_full(
 		g_str_hash, g_str_equal,g_hash_destroy_str, g_hash_destroy_str);
@@ -227,7 +227,7 @@ main(int argc, char ** argv)
 void
 cib_cleanup(void) 
 {
-	crm_membership_destroy();	
+	crm_peer_destroy();	
 	g_hash_table_destroy(client_list);
 	g_hash_table_destroy(peer_hash);
 	crm_free(cib_our_uname);

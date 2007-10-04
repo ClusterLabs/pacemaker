@@ -1603,12 +1603,12 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 	}
 
 #ifndef WITH_NATIVE_AIS
-	if(crm_membership_cache == NULL) {
+	if(crm_peer_cache == NULL) {
 	    crm_info("Discarding %s message (%s) from %s:"
 		     " membership not established", op, seq, originator);
 	    return;
 	}
-	node = g_hash_table_lookup(crm_membership_cache, originator);
+	node = g_hash_table_lookup(crm_peer_cache, originator);
 	if(node == NULL || crm_is_member_active(node) == FALSE) {
  		crm_warn("Discarding %s message (%s) from %s:"
 			 " not in our membership", op, seq, originator);

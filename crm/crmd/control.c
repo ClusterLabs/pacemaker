@@ -112,7 +112,7 @@ do_ha_control(long long action,
 	
 	if(action & A_HA_DISCONNECT) {
 #ifdef WITH_NATIVE_AIS
-		crm_membership_destroy();
+		crm_peer_destroy();
 #else
 		if(fsa_cluster_conn != NULL) {
 			set_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
@@ -125,7 +125,7 @@ do_ha_control(long long action,
 	
 	if(action & A_HA_CONNECT) {
 #ifdef WITH_NATIVE_AIS
-		crm_membership_init();
+		crm_peer_init();
 		registered = init_ais_connection(
 		    crm_ais_dispatch, crm_ais_destroy, &fsa_our_uname);
 		fsa_our_uuid = crm_strdup(fsa_our_uname);
@@ -270,7 +270,7 @@ static void free_mem(fsa_data_t *msg_data)
 	}
 	
 	empty_uuid_cache();
-	crm_membership_destroy();
+	crm_peer_destroy();
 	clear_bit_inplace(fsa_input_register, R_CCM_DATA);
 
 	if(te_subsystem->client && te_subsystem->client->client_source) {
@@ -935,7 +935,7 @@ populate_cib_nodes(gboolean with_client_status)
     
     cib_node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
     g_hash_table_foreach(
-	crm_membership_cache, create_cib_node_definition, cib_node_list);    
+	crm_peer_cache, create_cib_node_definition, cib_node_list);    
     
     fsa_cib_update(
 	XML_CIB_TAG_NODES, cib_node_list,

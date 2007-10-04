@@ -33,8 +33,8 @@
 #  include <crm/ais.h> 
 #endif
 
-GHashTable *crm_membership_cache = NULL;
-unsigned long long crm_membership_seq = 0;
+GHashTable *crm_peer_cache = NULL;
+unsigned long long crm_peer_seq = 0;
 
 gboolean crm_is_member_active(const crm_node_t *node) 
 {
@@ -57,7 +57,7 @@ guint reap_crm_membership(void)
 {
     /* remove all dead members */
     return g_hash_table_foreach_remove(
-	crm_membership_cache, crm_reap_dead_member, NULL);
+	crm_peer_cache, crm_reap_dead_member, NULL);
 }
 
 static void crm_count_member(
@@ -72,7 +72,7 @@ static void crm_count_member(
 guint crm_active_members(void) 
 {
     guint count = 0;
-    g_hash_table_foreach(crm_membership_cache, crm_count_member, &count);
+    g_hash_table_foreach(crm_peer_cache, crm_count_member, &count);
     return count;
 }
 
@@ -87,20 +87,20 @@ void destroy_crm_node(gpointer data)
     crm_free(node);
 }
 
-void crm_membership_init(void)
+void crm_peer_init(void)
 {
-    crm_membership_destroy();
-    if(crm_membership_cache == NULL) {
-	crm_membership_cache = g_hash_table_new_full(
+    crm_peer_destroy();
+    if(crm_peer_cache == NULL) {
+	crm_peer_cache = g_hash_table_new_full(
 	    g_str_hash, g_str_equal, NULL, destroy_crm_node);
     }
 }
 
-void crm_membership_destroy(void)
+void crm_peer_destroy(void)
 {
-    if(crm_membership_cache != NULL) {
-	g_hash_table_destroy(crm_membership_cache);
-	crm_membership_cache = NULL;
+    if(crm_peer_cache != NULL) {
+	g_hash_table_destroy(crm_peer_cache);
+	crm_peer_cache = NULL;
     }
 }
 
@@ -110,9 +110,9 @@ crm_node_t *crm_update_membership(const char *uuid, const char *uname,
 {
     crm_node_t *node = NULL;
     CRM_CHECK(uname != NULL, return NULL);
-    CRM_ASSERT(crm_membership_cache != NULL);
+    CRM_ASSERT(crm_peer_cache != NULL);
 
-    node = g_hash_table_lookup(crm_membership_cache, uname);	
+    node = g_hash_table_lookup(crm_peer_cache, uname);	
 
     if(node == NULL) {	
 	crm_info("Creating entry for node %s/%u/%llu", uname, id, born);
@@ -128,8 +128,8 @@ crm_node_t *crm_update_membership(const char *uuid, const char *uname,
 	node->addr = NULL;
 	node->state = crm_strdup("unknown");
 	
-	g_hash_table_insert(crm_membership_cache, node->uname, node);
-	node = g_hash_table_lookup(crm_membership_cache, uname);
+	g_hash_table_insert(crm_peer_cache, node->uname, node);
+	node = g_hash_table_lookup(crm_peer_cache, uname);
 	CRM_ASSERT(node != NULL);
     }
 

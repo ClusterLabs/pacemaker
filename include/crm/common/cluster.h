@@ -38,10 +38,10 @@ extern ll_cluster_t *hb_conn;
 	hb_conn, data, node, ordered)
 #endif
 
-extern GHashTable *crm_membership_cache;
-extern unsigned long long crm_membership_seq;
+extern GHashTable *crm_peer_cache;
+extern unsigned long long crm_peer_seq;
 
-typedef struct crm_membership_node_s 
+typedef struct crm_peer_node_s 
 {
 	uint32_t id;
 	unsigned long long born;
@@ -51,8 +51,8 @@ typedef struct crm_membership_node_s
 	char *addr;
 } crm_node_t;
 
-extern void crm_membership_init(void);
-extern void crm_membership_destroy(void);
+extern void crm_peer_init(void);
+extern void crm_peer_destroy(void);
 
 extern void destroy_crm_node(gpointer data);
 extern crm_node_t *crm_update_membership(

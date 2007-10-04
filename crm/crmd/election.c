@@ -174,7 +174,7 @@ do_election_check(long long action,
 			char *data = NULL;
 			
 			data = crm_strdup("member");
-			g_hash_table_foreach(crm_membership_cache, log_member_uname, data);
+			g_hash_table_foreach(crm_peer_cache, log_member_uname, data);
 			crm_free(data);
 			
 			data = crm_strdup("voted");
@@ -216,11 +216,11 @@ do_election_count_vote(long long action,
 	/* if the membership copy is NULL we REALLY shouldnt be voting
 	 * the question is how we managed to get here.
 	 */
-	CRM_CHECK(crm_membership_cache != NULL, return I_NULL);
+	CRM_CHECK(crm_peer_cache != NULL, return I_NULL);
 	CRM_CHECK(vote_from != NULL, vote_from = fsa_our_uname);
 	
-	our_node = g_hash_table_lookup(crm_membership_cache, fsa_our_uname);
-	your_node = g_hash_table_lookup(crm_membership_cache, vote_from);
+	our_node = g_hash_table_lookup(crm_peer_cache, fsa_our_uname);
+	your_node = g_hash_table_lookup(crm_peer_cache, vote_from);
 	
 	if(your_node == NULL) {
 		crm_debug("Election ignore: The other side doesn't exist in CCM.");

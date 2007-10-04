@@ -157,10 +157,10 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 	erase_node_from_join(join_to);
 	crm_online = g_hash_table_lookup(crmd_peer_state, join_to);
 
-	if(saved_ccm_membership_id != crm_membership_seq) {
-		saved_ccm_membership_id = crm_membership_seq;
+	if(saved_ccm_membership_id != crm_peer_seq) {
+		saved_ccm_membership_id = crm_peer_seq;
 		crm_info("Making join offers based on membership %llu",
-			 crm_membership_seq);
+			 crm_peer_seq);
 	}	
 	
 	if(safe_str_eq(crm_online, ONLINESTATUS)) {
@@ -202,7 +202,7 @@ do_dc_join_offer_all(long long action,
 /* 	do_update_cib_nodes(TRUE, __FUNCTION__); */
 
 	update_dc(NULL, FALSE);	
-	g_hash_table_foreach(crm_membership_cache, join_make_offer, NULL);
+	g_hash_table_foreach(crm_peer_cache, join_make_offer, NULL);
 	
 	/* dont waste time by invoking the PE yet; */
 	crm_info("join-%d: Waiting on %d outstanding join acks",
@@ -288,7 +288,7 @@ do_dc_join_filter_offer(long long action,
 	const char *ref       = cl_get_string(join_ack->msg,XML_ATTR_REFERENCE);
 	
 	gpointer join_node = g_hash_table_lookup(
-	    crm_membership_cache, join_from);
+	    crm_peer_cache, join_from);
 
 	crm_debug("Processing req from %s", join_from);
 	
@@ -612,10 +612,10 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 	crm_debug("Invoked by %s in state: %s",
 		  source, fsa_state2string(cur_state));
 
-	if(saved_ccm_membership_id != crm_membership_seq) {
+	if(saved_ccm_membership_id != crm_peer_seq) {
 		crm_info("%s: Membership changed since join started: %llu -> %llu",
 			 source, saved_ccm_membership_id,
-			 crm_membership_seq);
+			 crm_peer_seq);
 		register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
 		
 	} else if(cur_state == S_INTEGRATION) {

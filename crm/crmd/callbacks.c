@@ -159,7 +159,7 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 
 	crm_debug_2("HA[inbound]: %s from %s", op, from);
 
-	if(crm_membership_cache == NULL) {
+	if(crm_peer_cache == NULL) {
 		crm_debug("Ignoring HA messages until we are"
 			  " connected to the CCM (%s op from %s)", op, from);
 		crm_log_message_adv(
@@ -167,7 +167,7 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 		return;
 	}
 	
-	from_node = g_hash_table_lookup(crm_membership_cache, from);
+	from_node = g_hash_table_lookup(crm_peer_cache, from);
 
 	if(from_node == NULL) {
 		if(safe_str_eq(op, CRM_OP_VOTE)) {
@@ -511,10 +511,10 @@ crmd_ccm_msg_callback(
 		 ccm_have_quorum(event)?"(re)attained":"lost",
 		 ccm_event_name(event), membership->m_instance);
 
-	if(crm_membership_seq > membership->m_instance) {
+	if(crm_peer_seq > membership->m_instance) {
 		crm_err("Membership instance ID went backwards! %llu->%d",
-			crm_membership_seq, membership->m_instance);
-		CRM_ASSERT(crm_membership_seq <= membership->m_instance);
+			crm_peer_seq, membership->m_instance);
+		CRM_ASSERT(crm_peer_seq <= membership->m_instance);
 		return;
 	}
 	
@@ -568,7 +568,7 @@ crmd_ccm_msg_callback(
 	    do_ccm_update_cache(C_CCM_CALLBACK, fsa_state, event, data, NULL);
 
 	} else if(event != OC_EV_MS_NOT_PRIMARY) {
-	    crm_membership_seq = membership->m_instance;
+	    crm_peer_seq = membership->m_instance;
 	    register_fsa_action(A_TE_CANCEL);
 	}
 
