@@ -38,6 +38,7 @@ extern ll_cluster_t *hb_conn;
 	hb_conn, data, node, ordered)
 #endif
 
+extern gboolean crm_have_quorum;
 extern GHashTable *crm_peer_cache;
 extern unsigned long long crm_peer_seq;
 
@@ -61,5 +62,6 @@ extern guint crm_active_members(void);
 extern guint reap_crm_membership(void);
 extern guint crm_active_members(void);
 extern guint crm_active_peers(uint32_t peer);
+extern gboolean crm_calculate_quorum(void);
 
 #endif

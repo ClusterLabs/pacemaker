@@ -54,17 +54,6 @@ GTRIGSource  *fsa_source = NULL;
 #ifdef WITH_NATIVE_AIS	
 extern void crmd_ha_msg_filter(HA_Message * msg);
 
-void crm_update_ais_quorum(crm_data_t *xml);
-
-void crm_update_ais_quorum(crm_data_t *xml) 
-{
-    gboolean bool = FALSE;
-    const char *bool_s = crm_element_value(xml, "quorate");
-    crm_info("%s", bool_s);
-    bool = crm_is_true(bool_s);
-    crm_update_quorum(bool);
-}
-
 static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
 {
     crm_data_t *xml = string2xml(data);
@@ -79,6 +68,7 @@ static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 	    case crm_class_members:
 		do_ccm_update_cache(
 		    C_HA_MESSAGE, fsa_state, OC_EV_MS_NEW_MEMBERSHIP, NULL, xml);
+		crm_update_quorum(crm_have_quorum);
 		break;
 	    default:
 		crmd_ha_msg_filter(xml);

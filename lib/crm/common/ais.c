@@ -257,7 +257,8 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 	    crm_info("Processing membership %ld/%s", seq, seq_s);
 	    crm_log_xml_debug(xml, __PRETTY_FUNCTION__);
 	    xml_child_iter(xml, node, crm_update_ais_node(node, seq));
-
+	    crm_calculate_quorum();
+	    
 	} else {
 	    crm_warn("Invalid peer update: %s", data);
 	}

@@ -208,5 +208,6 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 			     CRM_SYSTEM_PENGINE, CRM_SYSTEM_DC, NULL);
 
 	send_request(cmd, &fsa_pe_ref);
-	crm_debug("Invoking the PE: %s", fsa_pe_ref);
+	crm_debug("Invoking the PE: ref=%s, seq=%llu, quorate=%d",
+		  fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
 }

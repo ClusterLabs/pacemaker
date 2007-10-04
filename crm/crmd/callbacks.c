@@ -548,20 +548,20 @@ crmd_ccm_msg_callback(
 			crm_err("Unknown CCM event: %d", event);
 	}
 
-	if(update_quorum && ccm_have_quorum(event) == FALSE) {
-	    /* did we just loose quorum? */
-	    if(fsa_have_quorum && need_transition(fsa_state)) {
-		crm_info("Quorum lost: triggering transition (%s)",
-			 ccm_event_name(event));
-		trigger_transition = TRUE;
-	    }
-	    crm_update_quorum(FALSE);
-			
-	} else if(update_quorum)  {
-	    crm_debug_2("Updating quorum after event %s",ccm_event_name(event));
-	    crm_update_quorum(TRUE);
-	}
+	if(update_quorum) {
+	    crm_have_quorum = ccm_have_quorum(event);
+	    crm_update_quorum(crm_have_quorum);
 
+	    if(crm_have_quorum == FALSE) {
+		/* did we just loose quorum? */
+		if(fsa_have_quorum && need_transition(fsa_state)) {
+		    crm_info("Quorum lost: triggering transition (%s)",
+			     ccm_event_name(event));
+		    trigger_transition = TRUE;
+		}
+	    }
+	}
+	
 	if(update_cache) {
 	    crm_debug_2("Updating cache after event %s", ccm_event_name(event));
 	    do_ccm_update_cache(C_CCM_CALLBACK, fsa_state, event, data, NULL);

@@ -34,9 +34,20 @@
 #  include <crm/ais.h> 
 #endif
 
+struct quorum_count_s 
+{
+	guint votes_max;
+	guint votes_active;
+	guint votes_total;
+	guint nodes_max;
+	guint nodes_total;
+};
+
 GHashTable *crm_peer_cache = NULL;
 unsigned long long crm_peer_seq = 0;
 unsigned long long crm_max_peers = 0;
+struct quorum_count_s quorum_stats;
+gboolean crm_have_quorum = FALSE;
 
 gboolean crm_is_member_active(const crm_node_t *node) 
 {
@@ -116,6 +127,14 @@ void destroy_crm_node(gpointer data)
 
 void crm_peer_init(void)
 {
+    crm_err("Set these options via openais.conf");
+    
+    quorum_stats.votes_max    = 2;
+    quorum_stats.votes_active = 0;
+    quorum_stats.votes_total  = 0;
+    quorum_stats.nodes_max    = 1;
+    quorum_stats.nodes_total  = 0;
+
     crm_peer_destroy();
     if(crm_peer_cache == NULL) {
 	crm_peer_cache = g_hash_table_new_full(
@@ -239,6 +258,70 @@ void crm_update_peer_proc(const char *uname, uint32_t flag, const char *status)
     } else {
 	clear_bit_inplace(node->processes, flag);
     }
+}
+
+static void crm_count_quorum(
+    gpointer key, gpointer value, gpointer user_data)
+{
+    crm_node_t *node = value;
+    quorum_stats.nodes_total += 1;
+    quorum_stats.votes_total += node->votes;
+    if(crm_is_member_active(node)) {
+	quorum_stats.votes_active = quorum_stats.votes_active + node->votes;
+    }
+}
+
+gboolean crm_calculate_quorum(void) 
+{
+    unsigned int limit = 0;
+    gboolean quorate = TRUE;
+    quorum_stats.votes_total = 0;
+    quorum_stats.nodes_total = 0;
+    quorum_stats.votes_active = 0;
+
+    g_hash_table_foreach(crm_peer_cache, crm_count_quorum, NULL);
+
+    if(quorum_stats.votes_total > quorum_stats.votes_max) {
+	crm_info("Known quorum votes: %u -> %u",
+		 quorum_stats.votes_max, quorum_stats.votes_total);
+	quorum_stats.votes_max = quorum_stats.votes_total;
+    }
+
+    if(quorum_stats.nodes_total > quorum_stats.nodes_max) {
+	crm_info("Known quorum nodes: %u -> %u",
+		 quorum_stats.nodes_max, quorum_stats.nodes_total);
+	quorum_stats.nodes_max = quorum_stats.nodes_total;
+    }
+
+    if(quorum_stats.nodes_max < 3 && quorum_stats.votes_max < 3) {
+	/* 2-node clusters always have quorum :-/
+	 * unless there are more than two votes anyway...
+	 */
+	goto done;
+    }
+    
+    limit = (quorum_stats.votes_max + 2) / 2;
+    if(quorum_stats.votes_active < limit) {
+	quorate = FALSE;
+    }
+
+    crm_debug("known: %u, available: %u, limit: %u, active: %u: %s",
+	      quorum_stats.votes_max, quorum_stats.votes_total,
+	      limit, quorum_stats.votes_active, quorate?"true":"false");
+
+  done:
+    
+    if(quorate != crm_have_quorum) {
+	crm_notice("Membership %llu: quorum %s",
+		   crm_peer_seq, quorate?"attained":"lost");
+
+    } else {
+	crm_debug("Membership %llu: quorum %s",
+		  crm_peer_seq, quorate?"retained":"lost");
+    }
+
+    crm_have_quorum = quorate;
+    return quorate;
 }
 
 /* Code appropriated (with permission) from cman/daemon/commands.c under GPLv2 */
