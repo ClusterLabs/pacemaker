@@ -537,6 +537,7 @@ void ais_cluster_id_swab(void *msg)
 
 void ais_cluster_id_callback (void *message, unsigned int nodeid)
 {
+    int changed = 0;
     struct crm_identify_msg_s *msg = message;
     if(nodeid != msg->id) {
 	ais_err("Invalid message: Node %u claimed to be node %d",
@@ -544,8 +545,12 @@ void ais_cluster_id_callback (void *message, unsigned int nodeid)
 	return;
     }
     ais_debug("Node update");
-    update_member(
-	nodeid, membership_seq, msg->votes, msg->processes, NULL, NULL);
+    changed = update_member(
+	nodeid, membership_seq, msg->votes, msg->processes, msg->uname, NULL);
+
+    if(changed) {
+	send_member_notification();
+    }
 }
 
 /* local callbacks */
