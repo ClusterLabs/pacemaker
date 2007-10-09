@@ -377,6 +377,20 @@ char *totempg_ifaces_print (unsigned int nodeid)
 }
 #endif
 
+static void ais_mark_unseen_peer_dead(
+    gpointer key, gpointer value, gpointer user_data)
+{
+    int *changed = user_data;
+    crm_node_t *node = value;
+    if(node->last_seen != membership_seq) {
+	ais_info("Node %s was not seen in the previous transition",
+		 node->uname);
+	*changed += update_member(node->id, membership_seq, node->votes,
+				 node->processes, node->uname, CRM_NODE_LOST);
+	ais_info("Node %s marked dead", node->uname);
+    }
+}
+
 void global_confchg_fn (
     enum totem_configuration_type configuration_type,
     unsigned int *member_list, int member_list_entries,
@@ -434,9 +448,12 @@ void global_confchg_fn (
 	changed += update_member(
 	    nodeid, membership_seq, -1, 0, NULL, CRM_NODE_LOST);
 	ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
-    }
-
-    ais_info("%d nodes updated", changed);
+    }    
+    
+    ais_debug("Reaping unseen nodes...");
+    g_hash_table_foreach(membership_list, ais_mark_unseen_peer_dead, &changed);
+    
+    ais_info("%d nodes changed", changed);
     if(changed) {
 	send_member_notification();
     }

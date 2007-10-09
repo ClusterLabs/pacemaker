@@ -180,6 +180,10 @@ int update_member(unsigned int id, unsigned long long seq, int32_t votes,
 	node = g_hash_table_lookup(membership_list, GUINT_TO_POINTER(id));
     }
 
+    if(seq != 0) {
+	node->last_seen = seq;
+    }
+    
     if(uname != NULL) {
 	if(node->uname == NULL || ais_str_eq(node->uname, uname) == FALSE) {
 	    ais_info("%p Node %u now known as %s (was: %s)",

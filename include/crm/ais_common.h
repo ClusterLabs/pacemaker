@@ -70,6 +70,7 @@ typedef struct crm_peer_node_s
 {
 	unsigned int id;
 	unsigned long long born;
+	unsigned long long last_seen;
 
 	int32_t votes;
 	uint32_t processes;
