@@ -132,7 +132,7 @@ stop_child(crm_child_t *child, int signal)
 	return TRUE;
     }
     
-    ais_debug_2("Stopping CRM child \"%s\"", child->name);
+    ais_debug("Stopping CRM child \"%s\"", child->name);
     
     if (child->pid <= 0) {
 	ais_debug_2("Client %s not running", child->name);
@@ -179,10 +179,11 @@ int update_member(unsigned int id, unsigned long long seq, int32_t votes,
 	g_hash_table_insert(membership_list, GUINT_TO_POINTER(id), node);
 	node = g_hash_table_lookup(membership_list, GUINT_TO_POINTER(id));
     }
-    
+
     if(uname != NULL) {
-	if(node->uname || ais_str_eq(node->uname, uname) == FALSE) {
-	    ais_info("Node %u now known as %s", id, uname);
+	if(node->uname == NULL || ais_str_eq(node->uname, uname) == FALSE) {
+	    ais_info("%p Node %u now known as %s (was: %s)",
+		     node, id, uname, node->uname);
 	    ais_free(node->uname);
 	    node->uname = ais_strdup(uname);
 	    changed = TRUE;
