@@ -293,13 +293,6 @@ gboolean crm_calculate_quorum(void)
 	quorum_stats.nodes_max = quorum_stats.nodes_total;
     }
 
-    if(quorum_stats.nodes_max < 3 && quorum_stats.votes_max < 3) {
-	/* 2-node clusters always have quorum :-/
-	 * unless there are more than two votes anyway...
-	 */
-	goto done;
-    }
-    
     limit = (quorum_stats.votes_max + 2) / 2;
     if(quorum_stats.votes_active < limit) {
 	quorate = FALSE;
