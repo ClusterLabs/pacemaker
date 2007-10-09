@@ -598,7 +598,7 @@ int crm_exec_exit_fn (struct objdb_iface_ver0 *objdb)
     for (lpc = SIZEOF(crm_children) - 1; lpc > 0; lpc--) {
 	crm_children[lpc].respawn = FALSE;
 	stop_child(&(crm_children[lpc]), SIGTERM);
-	while(crm_children[lpc].command) {
+	while(crm_children[lpc].command && crm_children[lpc].pid) {
 	    int status;
 	    pid_t pid = 0;
 
@@ -643,7 +643,7 @@ void member_loop_fn(gpointer key, gpointer value, gpointer user_data)
     crm_node_t *node = value;
     struct member_loop_data *data = user_data;    
 
-    ais_info("Dumping node %u", node->id);
+    ais_debug_2("Dumping node %u", node->id);
     data->string = append_member(data->string, node);
 }
 
