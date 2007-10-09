@@ -76,7 +76,7 @@ gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,gb
 /*    Next State: Unknown	Stopped		Started		Slave		Master */
 /* Unknown */	{ RoleError,	StopRsc,	RoleError,	RoleError,	RoleError,  },
 /* Stopped */	{ RoleError,	NullOp,		StartRsc,	StartRsc,	RoleError,  },
-/* Started */	{ RoleError,	StopRsc,	NullOp,		NullOp,	        PromoteRsc,  },
+/* Started */	{ RoleError,	StopRsc,	NullOp,		NullOp,		PromoteRsc, },
 /* Slave */	{ RoleError,	StopRsc,	RoleError,	NullOp,		PromoteRsc, },
 /* Master */	{ RoleError,	RoleError,	RoleError,	DemoteRsc,	NullOp,     },
 };
@@ -862,9 +862,16 @@ static void
 register_activity(resource_t *rsc, enum action_tasks task, node_t *node, notify_data_t *n_data)
 {
 	notify_entry_t *entry = NULL;
+
+	CRM_CHECK(node != NULL,
+		  crm_err("%s has no node for required action %s",
+			  rsc->id, task2text(task));
+		  return);
+
 	crm_malloc0(entry, sizeof(notify_entry_t));
 	entry->rsc = rsc;
 	entry->node = node;
+
 	switch(task) {
 		case start_rsc:
 			n_data->start = g_list_append(n_data->start, entry);
@@ -1124,6 +1131,13 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 				   current->details->uname, next->details->uname);
 		}
 
+		if(rsc->next_role > RSC_ROLE_STARTED) {
+		    gboolean optional = TRUE;
+		    if(rsc->role == RSC_ROLE_MASTER) {
+			optional = FALSE;
+		    }
+		    DemoteRsc(rsc, current, optional, data_set);
+		}
 		if(rsc->role == RSC_ROLE_MASTER) {
 			DemoteRsc(rsc, current, FALSE, data_set);
 		}
@@ -1157,8 +1171,8 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 		stop = stop_action(rsc, current, TRUE);
 		start = start_action(rsc, next, TRUE);
 		stop->optional = start->optional;
-		if(rsc->role == RSC_ROLE_MASTER) {
-			DemoteRsc(rsc, current, start->optional, data_set);
+		if(rsc->next_role > RSC_ROLE_STARTED) {
+		    DemoteRsc(rsc, current, start->optional, data_set);
 		}
 		StopRsc(rsc, current, start->optional, data_set);
 		StartRsc(rsc, current, start->optional, data_set);

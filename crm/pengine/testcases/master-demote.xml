@@ -1,0 +1,424 @@
+ <cib generated="true" admin_epoch="0" have_quorum="true" ignore_dtd="false" num_peers="2" cib_feature_revision="1.3" epoch="253" num_updates="247" cib-last-written="Mon Oct  8 17:30:24 2007" ccm_transition="4" dc_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2">
+   <configuration>
+     <crm_config>
+       <cluster_property_set id="crm_config">
+         <attributes>
+           <nvpair id="crm_config_stonith_enabled" name="stonith-enabled" value="false"/>
+         </attributes>
+       </cluster_property_set>
+     </crm_config>
+     <nodes>
+       <node id="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2" uname="cxa1" type="normal"/>
+       <node id="97c99ee5-0f0e-4519-845c-14871d0ba045" uname="cxb1" type="normal"/>
+     </nodes>
+     <resources>
+       <primitive id="cyrus_address" class="ocf" type="IPaddr2" provider="heartbeat">
+         <instance_attributes id="cyrus_address_attr">
+           <attributes>
+             <nvpair name="ip" value="192.168.2.210" id="cyrus_address_attr_ip"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive id="cyrus_master" class="ocf" type="cyrus-imap" provider="heartbeat">
+         <instance_attributes id="cyrus_master_attr">
+           <attributes>
+             <nvpair id="cyrus_master_binpath" name="binpath" value="/usr/local/sbin/cyrus_master"/>
+             <nvpair id="cyrus_master_pidfile" name="pidfile" value="/opt/cyrus/var/run/master.pid"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive id="cyrus_syslogd" class="ocf" type="syslogd" provider="heartbeat">
+         <instance_attributes id="cyrus_syslogd_attr">
+           <attributes>
+             <nvpair id="cyrus_syslogd_binpath" name="binpath" value="/usr/local/sbin/cyrus_syslogd"/>
+             <nvpair id="cyrus_syslogd_pidfile" name="pidfile" value="/opt/cyrus/var/run/syslogd.pid"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive id="cyrus_filesys" class="ocf" type="Filesystem" provider="heartbeat">
+         <instance_attributes id="cyrus_filesys_attr">
+           <attributes>
+             <nvpair id="cyrus_filesys_attr_device" name="device" value="/dev/vg3/lv3"/>
+             <nvpair id="cyrus_filesys_attr_directory" name="directory" value="/opt/cyrus/var"/>
+             <nvpair id="cyrus_filesys_attr_fstype" name="fstype" value="xfs"/>
+             <nvpair id="cyrus_filesys_attr_options" name="options" value="nobarrier"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive id="cyrus_volgroup" class="ocf" type="VolGroup" provider="heartbeat">
+         <instance_attributes id="cyrus_volgroup_attr">
+           <attributes>
+             <nvpair id="cyrus_volgroup_attr_name" name="volgrpname" value="vg3"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <master_slave id="cyrus_drbd">
+         <meta_attributes id="cyrus_drbd_meta">
+           <attributes>
+             <nvpair id="cyrus_drbd_meta_clone_max" name="clone_max" value="2"/>
+             <nvpair id="cyrus_drbd_meta_clone_node_max" name="clone_node_max" value="1"/>
+             <nvpair id="cyrus_drbd_meta_master_max" name="master_max" value="1"/>
+             <nvpair id="cyrus_drbd_meta_master_node_max" name="master_node_max" value="1"/>
+             <nvpair id="cyrus_drbd_meta_notify" name="notify" value="yes"/>
+             <nvpair id="cyrus_drbd_meta_globally_unique" name="globally_unique" value="false"/>
+           </attributes>
+         </meta_attributes>
+         <primitive class="ocf" provider="heartbeat" type="drbd" id="cyrus_drbd_node">
+           <instance_attributes id="cyrus_drbd_node:attr">
+             <attributes>
+               <nvpair id="cyrus_drbd_node_attr_drbd_resource" name="drbd_resource" value="drbd3"/>
+             </attributes>
+           </instance_attributes>
+           <operations>
+             <op id="cyrus_drbd_mon_master" name="monitor" interval="10s" timeout="5s" role="Master"/>
+           </operations>
+         </primitive>
+       </master_slave>
+       <primitive id="named_address" class="ocf" type="IPaddr2" provider="heartbeat">
+         <instance_attributes id="named_address_attr">
+           <attributes>
+             <nvpair name="ip" value="192.168.1.188" id="named_address_attr_ip"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive id="named_filesys" class="ocf" type="Filesystem" provider="heartbeat">
+         <instance_attributes id="named_filesys_attr">
+           <attributes>
+             <nvpair id="named_filesys_attr_device" name="device" value="/dev/vg4/lv4"/>
+             <nvpair id="named_filesys_attr_directory" name="directory" value="/opt/recursor/var"/>
+             <nvpair id="named_filesys_attr_fstype" name="fstype" value="xfs"/>
+             <nvpair id="named_filesys_attr_options" name="options" value="nobarrier"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive id="named_volgroup" class="ocf" type="VolGroup" provider="heartbeat">
+         <instance_attributes id="named_volgroup_attr">
+           <attributes>
+             <nvpair id="named_volgroup_attr_name" name="volgrpname" value="vg4"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive id="named_daemon" class="ocf" type="recursor" provider="heartbeat">
+         <instance_attributes id="named_daemon_attr">
+           <attributes>
+             <nvpair id="named_daemon_binpath" name="binpath" value="/usr/local/sbin/recursor_daemon"/>
+             <nvpair id="named_daemon_pidfile" name="pidfile" value="/opt/recursor/var/run/pdns_recursor.pid"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive id="named_syslogd" class="ocf" type="syslogd" provider="heartbeat">
+         <instance_attributes id="named_syslogd_attr">
+           <attributes>
+             <nvpair id="named_syslogd_binpath" name="binpath" value="/usr/local/sbin/recursor_syslogd"/>
+             <nvpair id="named_syslogd_pidfile" name="pidfile" value="/opt/recursor/var/run/syslogd.pid"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <master_slave id="named_drbd">
+         <meta_attributes id="named_drbd_meta">
+           <attributes>
+             <nvpair id="named_drbd_meta_clone_max" name="clone_max" value="2"/>
+             <nvpair id="named_drbd_meta_clone_node_max" name="clone_node_max" value="1"/>
+             <nvpair id="named_drbd_meta_master_max" name="master_max" value="1"/>
+             <nvpair id="named_drbd_meta_master_node_max" name="master_node_max" value="1"/>
+             <nvpair id="named_drbd_meta_notify" name="notify" value="yes"/>
+             <nvpair id="named_drbd_meta_globally_unique" name="globally_unique" value="false"/>
+           </attributes>
+         </meta_attributes>
+         <primitive class="ocf" provider="heartbeat" type="drbd" id="named_drbd_node">
+           <instance_attributes id="named_drbd_node:attr">
+             <attributes>
+               <nvpair id="named_drbd_node_attr_drbd_resource" name="drbd_resource" value="drbd4"/>
+             </attributes>
+           </instance_attributes>
+           <operations>
+             <op id="named_drbd_mon_master" name="monitor" interval="10s" timeout="5s" role="Master"/>
+           </operations>
+         </primitive>
+       </master_slave>
+       <clone id="pingd_clone">
+         <instance_attributes id="pingd_attr">
+           <attributes>
+             <nvpair id="pingd_addr_clone_node_max" name="clone_node_max" value="1"/>
+             <nvpair id="pingd_addr_clone_globally_unique" name="globally_unique" value="false"/>
+           </attributes>
+         </instance_attributes>
+         <primitive id="pingd_node" provider="heartbeat" class="ocf" type="pingd">
+           <operations>
+             <op id="pingd_node_monitor" name="monitor" interval="20s" timeout="40s" prereq="nothing"/>
+           </operations>
+           <instance_attributes id="pingd_node_attr">
+             <attributes>
+               <nvpair id="pingd_node_attr_pidfile" name="pidfile" value="/var/run/pingd.pid"/>
+               <nvpair id="pingd_node_attr_dampen" name="dampen" value="5s"/>
+               <nvpair id="pingd_node_addr_multiplier" name="multiplier" value="100"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+       </clone>
+       <clone id="fence_clone">
+         <instance_attributes id="fence_attr">
+           <attributes>
+             <nvpair name="fence_attr_clone_node_max" value="1" id="888dbff4-9ff2-4f73-9230-7477597d393b"/>
+           </attributes>
+         </instance_attributes>
+         <primitive id="fence_node" class="stonith" type="baytech" provider="heartbeat">
+           <operations>
+             <op id="fence_node_monitor" name="monitor" interval="300s" timeout="20s"/>
+             <op id="fence_node_start" name="start" timeout="20s"/>
+           </operations>
+           <instance_attributes id="fence_node_attr">
+             <attributes>
+               <nvpair id="fence_node_attr_ipaddr" name="ipaddr" value="192.168.1.190"/>
+               <nvpair id="fence_node_attr_login" name="login" value="admin"/>
+               <nvpair id="fence_node_attr_password" name="password" value="xxxxxxxx"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+       </clone>
+     </resources>
+     <constraints>
+       <rsc_location id="cyrus_address_location" rsc="cyrus_address">
+         <rule id="cyrus_address_ping_rule" score_attribute="pingd">
+           <expression id="cyrus_address_ping_defined" attribute="pingd" operation="defined"/>
+         </rule>
+         <rule id="cyrus_address_node_rule" score="10">
+           <expression id="cyrus_address_node_eq" attribute="#uname" operation="eq" value="cxa1"/>
+         </rule>
+       </rsc_location>
+       <rsc_location id="named_address_location" rsc="named_address">
+         <rule id="named_address_ping_rule" score_attribute="pingd">
+           <expression id="named_address_ping_defined" attribute="pingd" operation="defined"/>
+         </rule>
+         <rule id="named_address_node_rule" score="10">
+           <expression id="named_address_node_eq" attribute="#uname" operation="eq" value="cxb1"/>
+         </rule>
+       </rsc_location>
+       <rsc_colocation from="cyrus_drbd" to="cyrus_address" id="cyrus_drbd_with_address" to_role="started" score="infinity"/>
+       <rsc_colocation id="cyrus_volgroup_with_drbd" from="cyrus_volgroup" to="cyrus_drbd" to_role="master" score="infinity"/>
+       <rsc_colocation id="cyrus_filesys_with_volgroup" from="cyrus_filesys" to="cyrus_volgroup" to_role="started" score="infinity"/>
+       <rsc_colocation id="cyrus_syslogd_with_filesys" from="cyrus_syslogd" to="cyrus_filesys" to_role="started" score="infinity"/>
+       <rsc_colocation id="cyrus_master_with_syslogd" from="cyrus_master" to="cyrus_syslogd" to_role="started" score="infinity"/>
+       <rsc_colocation id="named_drbd_with_address" from="named_drbd" to="named_address" to_role="started" score="infinity"/>
+       <rsc_colocation id="named_volgroup_with_drbd" from="named_volgroup" to="named_drbd" to_role="started" score="infinity"/>
+       <rsc_colocation id="named_filesys_with_volgroup" from="named_filesys" to="named_volgroup" to_role="started" score="infinity"/>
+       <rsc_colocation id="named_syslogd_with_filesys" from="named_syslogd" to="named_filesys" to_role="started" score="infinity"/>
+       <rsc_colocation id="named_daemon_with_syslogd" from="named_daemon" to="named_syslogd" to_role="started" score="infinity"/>
+       <rsc_order id="cyrus_drbd_after_address" from="cyrus_drbd" action="promote" type="after" to="cyrus_address" to_action="start"/>
+       <rsc_order id="cyrus_volgroup_after_drbd" from="cyrus_volgroup" action="start" type="after" to="cyrus_drbd" to_action="promote"/>
+       <rsc_order id="cyrus_filesys_after_volgroup" from="cyrus_filesys" action="start" type="after" to="cyrus_volgroup" to_action="start"/>
+       <rsc_order id="cyrus_syslogd_after_filesys" from="cyrus_syslogd" action="start" type="after" to="cyrus_filesys" to_action="start"/>
+       <rsc_order id="cyrus_master_after_syslogd" from="cyrus_master" action="start" type="after" to="cyrus_syslogd" to_action="start"/>
+       <rsc_order id="named_drbd_after_address" from="named_drbd" action="promote" type="after" to="named_address" to_action="start"/>
+       <rsc_order id="named_volgroup_after_drbd" from="named_volgroup" action="start" type="after" to="named_drbd" to_action="promote"/>
+       <rsc_order id="named_filesys_after_volgroup" from="named_filesys" action="start" type="after" to="named_volgroup" to_action="start"/>
+       <rsc_order id="named_syslogd_after_filesys" from="named_syslogd" action="start" type="after" to="named_filesys" to_action="start"/>
+       <rsc_order id="named_daemon_after_syslogd" from="named_daemon" action="start" type="after" to="named_syslogd" to_action="start"/>
+     </constraints>
+   </configuration>
+   <status>
+     <node_state id="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2" uname="cxa1" crmd="online" crm-debug-origin="do_update_resource" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+       <transient_attributes id="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2">
+         <instance_attributes id="status-c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2">
+           <attributes>
+             <nvpair id="status-c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2-probe_complete" name="probe_complete" value="true"/>
+             <nvpair id="status-c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2-pingd" name="pingd" value="200"/>
+             <nvpair id="status-c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2-fail-count-named_drbd_node:0" name="fail-count-named_drbd_node:0" value="2"/>
+             <nvpair id="status-c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2-fail-count-cyrus_drbd_node:0" name="fail-count-cyrus_drbd_node:0" value="2"/>
+           </attributes>
+         </instance_attributes>
+         <instance_attributes id="master-c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2">
+           <attributes>
+             <nvpair id="status-master-named_drbd_node:0-c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2" name="master-named_drbd_node:0" value="75"/>
+             <nvpair id="status-master-cyrus_drbd_node:0-c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2" name="master-cyrus_drbd_node:0" value="75"/>
+             <nvpair id="status-master-named_drbd_node:1-c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2" name="master-named_drbd_node:1" value="75"/>
+           </attributes>
+         </instance_attributes>
+       </transient_attributes>
+       <lrm id="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2">
+         <lrm_resources>
+           <lrm_resource id="cyrus_drbd_node:1" type="drbd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="cyrus_drbd_node:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="3:1:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="4:7;3:1:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="16" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+           </lrm_resource>
+           <lrm_resource id="cyrus_volgroup" type="VolGroup" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="cyrus_volgroup_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="7:0:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="4:5;7:0:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="6" crm_feature_set="2.0" rc_code="5" op_status="4" interval="0" op_digest="e7d37ed7ac1e397495c90e6f34d9a0f5"/>
+           </lrm_resource>
+           <lrm_resource id="named_syslogd" type="syslogd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="named_syslogd_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="13:0:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="4:7;13:0:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="12" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="f57181d8bc98e287736cf74c65215c4a"/>
+           </lrm_resource>
+           <lrm_resource id="named_drbd_node:0" type="drbd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="named_drbd_node:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="14:0:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="4:7;14:0:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="13" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:0_demote_0" operation="demote" crm-debug-origin="do_update_resource" transition_key="49:19:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;49:19:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="107" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" transition_key="50:19:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;50:19:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="110" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:0_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="42:17:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;42:17:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="95" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:0_promote_0" operation="promote" crm-debug-origin="do_update_resource" transition_key="44:18:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;44:18:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="100" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:0_post_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="131:18:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;131:18:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="103" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:0_pre_notify_demote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="137:19:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;137:19:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="106" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:0_post_notify_demote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="138:19:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;138:19:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="108" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:0_pre_notify_stop_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="134:19:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;134:19:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="109" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:0_post_notify_start_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="119:17:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;119:17:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="96" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:0_pre_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="130:18:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;130:18:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="99" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+           </lrm_resource>
+           <lrm_resource id="cyrus_syslogd" type="syslogd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="cyrus_syslogd_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="5:0:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="4:7;5:0:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="4" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="c6d6ef29c0b55c3542962c98a0d73db7"/>
+           </lrm_resource>
+           <lrm_resource id="named_drbd_node:1" type="drbd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="named_drbd_node:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="4:1:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="4:7;4:1:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="17" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:1_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="46:19:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;46:19:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="111" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:1_promote_0" operation="promote" crm-debug-origin="build_active_RAs" transition_key="45:12:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;45:12:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="69" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:1_demote_0" operation="demote" crm-debug-origin="build_active_RAs" transition_key="46:13:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;46:13:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="74" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:1_pre_notify_stop_0" operation="notify" crm-debug-origin="build_active_RAs" transition_key="124:13:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;124:13:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="76" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:1_stop_0" operation="stop" crm-debug-origin="build_active_RAs" transition_key="47:13:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;47:13:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="77" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:1_post_notify_start_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="127:19:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;127:19:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="112" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:1_pre_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="139:20:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;139:20:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="113" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:1_post_notify_demote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="142:20:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;142:20:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="114" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+           </lrm_resource>
+           <lrm_resource id="cyrus_master" type="cyrus-imap" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="cyrus_master_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="4:0:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="4:7;4:0:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="3" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="b3d7ba794cce071a0a4d579fedafda13"/>
+           </lrm_resource>
+           <lrm_resource id="named_address" type="IPaddr2" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="named_address_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="9:0:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;9:0:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="8" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="dcd0796235584f0320d42eef0159e0ec"/>
+           </lrm_resource>
+           <lrm_resource id="cyrus_address" type="IPaddr2" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="cyrus_address_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="3:0:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;3:0:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="2" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="9864d2dbb7694bd096a1a0776d45af3f"/>
+           </lrm_resource>
+           <lrm_resource id="fence_node:0" type="baytech" class="stonith" provider="heartbeat">
+             <lrm_rsc_op id="fence_node:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="16:0:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="4:7;16:0:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="15" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="b71ff8f27fe290c13a13f3a7a7ced393"/>
+             <lrm_rsc_op id="fence_node:0_start_0" operation="start" crm-debug-origin="build_active_RAs" transition_key="66:1:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;66:1:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="19" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="b71ff8f27fe290c13a13f3a7a7ced393"/>
+             <lrm_rsc_op id="fence_node:0_monitor_300000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="73:2:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;73:2:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="25" crm_feature_set="2.0" rc_code="0" op_status="0" interval="300000" op_digest="bbfc3b36f24ea9591b4b7e6b0b252764"/>
+           </lrm_resource>
+           <lrm_resource id="named_filesys" type="Filesystem" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="named_filesys_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="10:0:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="4:7;10:0:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="9" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="437b30efe63b9abe7bde265dd5901493"/>
+           </lrm_resource>
+           <lrm_resource id="pingd_node:0" type="pingd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="pingd_node:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="15:0:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="4:7;15:0:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="14" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="c9cfd317187a3468b5c159418e0a3e91"/>
+             <lrm_rsc_op id="pingd_node:0_start_0" operation="start" crm-debug-origin="build_active_RAs" transition_key="60:1:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;60:1:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="18" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="c9cfd317187a3468b5c159418e0a3e91"/>
+             <lrm_rsc_op id="pingd_node:0_monitor_20000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="61:1:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;61:1:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="20" crm_feature_set="2.0" rc_code="0" op_status="0" interval="20000" op_digest="7f287e30c38dc6473e21e2fd59c396f3"/>
+           </lrm_resource>
+           <lrm_resource id="fence_node:1" type="baytech" class="stonith" provider="heartbeat">
+             <lrm_rsc_op id="fence_node:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="7:7:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="4:7;7:7:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="34" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="b71ff8f27fe290c13a13f3a7a7ced393"/>
+           </lrm_resource>
+           <lrm_resource id="cyrus_filesys" type="Filesystem" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="cyrus_filesys_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="6:0:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="4:7;6:0:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="5" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="939941ab2cae992dd0716bc308f8f021"/>
+           </lrm_resource>
+           <lrm_resource id="named_daemon" type="recursor" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="named_daemon_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="12:0:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="4:7;12:0:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="11" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="07876411143c62190db9a2a65b7b3d7d"/>
+           </lrm_resource>
+           <lrm_resource id="cyrus_drbd_node:0" type="drbd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="cyrus_drbd_node:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="8:0:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="4:7;8:0:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="7" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+             <lrm_rsc_op id="cyrus_drbd_node:0_demote_0" operation="demote" crm-debug-origin="do_update_resource" transition_key="26:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;26:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="87" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+             <lrm_rsc_op id="cyrus_drbd_node:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" transition_key="27:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;27:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="93" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+             <lrm_rsc_op id="cyrus_drbd_node:0_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="12:17:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;12:17:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="94" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+             <lrm_rsc_op id="cyrus_drbd_node:0_promote_0" operation="promote" crm-debug-origin="do_update_resource" transition_key="12:18:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;12:18:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="101" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+             <lrm_rsc_op id="cyrus_drbd_node:0_post_notify_stop_0" operation="notify" crm-debug-origin="build_active_RAs" transition_key="115:12:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;115:12:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="72" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+             <lrm_rsc_op id="cyrus_drbd_node:0_pre_notify_demote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="131:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;131:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="84" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+             <lrm_rsc_op id="cyrus_drbd_node:0_post_notify_demote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="132:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;132:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="88" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+             <lrm_rsc_op id="cyrus_drbd_node:0_pre_notify_stop_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="128:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;128:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="90" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+             <lrm_rsc_op id="cyrus_drbd_node:0_post_notify_start_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="113:17:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;113:17:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="97" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+             <lrm_rsc_op id="cyrus_drbd_node:0_pre_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="114:18:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;114:18:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="98" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+             <lrm_rsc_op id="cyrus_drbd_node:0_post_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="115:18:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;115:18:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="102" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+             <lrm_rsc_op id="cyrus_drbd_node:0_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" transition_key="13:18:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:8;13:18:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="104" crm_feature_set="2.0" rc_code="8" op_status="0" interval="10000" op_digest="87f393a33fedf77854916b2e76f3ce43"/>
+           </lrm_resource>
+           <lrm_resource id="named_volgroup" type="VolGroup" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="named_volgroup_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="11:0:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="4:5;11:0:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="10" crm_feature_set="2.0" rc_code="5" op_status="4" interval="0" op_digest="42cb540c0d21749cae8b867ee233f3b2"/>
+           </lrm_resource>
+         </lrm_resources>
+       </lrm>
+     </node_state>
+     <node_state id="97c99ee5-0f0e-4519-845c-14871d0ba045" uname="cxb1" ha="active" crm-debug-origin="do_update_resource" crmd="online" shutdown="0" in_ccm="true" join="member" expected="member">
+       <lrm id="97c99ee5-0f0e-4519-845c-14871d0ba045">
+         <lrm_resources>
+           <lrm_resource id="cyrus_syslogd" type="syslogd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="cyrus_syslogd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="10:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:7;10:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="4" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="c6d6ef29c0b55c3542962c98a0d73db7"/>
+           </lrm_resource>
+           <lrm_resource id="cyrus_master" type="cyrus-imap" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="cyrus_master_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="9:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:7;9:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="3" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="b3d7ba794cce071a0a4d579fedafda13"/>
+           </lrm_resource>
+           <lrm_resource id="cyrus_address" type="IPaddr2" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="cyrus_address_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="8:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:7;8:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="2" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="9864d2dbb7694bd096a1a0776d45af3f"/>
+           </lrm_resource>
+           <lrm_resource id="cyrus_filesys" type="Filesystem" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="cyrus_filesys_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="11:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:7;11:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="5" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="939941ab2cae992dd0716bc308f8f021"/>
+           </lrm_resource>
+           <lrm_resource id="cyrus_volgroup" type="VolGroup" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="cyrus_volgroup_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="12:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="4:5;12:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="6" crm_feature_set="2.0" rc_code="5" op_status="4" interval="0" op_digest="e7d37ed7ac1e397495c90e6f34d9a0f5"/>
+           </lrm_resource>
+           <lrm_resource id="named_volgroup" type="VolGroup" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="named_volgroup_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="16:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="4:5;16:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="10" crm_feature_set="2.0" rc_code="5" op_status="4" interval="0" op_digest="42cb540c0d21749cae8b867ee233f3b2"/>
+           </lrm_resource>
+           <lrm_resource id="named_filesys" type="Filesystem" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="named_filesys_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="15:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:7;15:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="9" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="437b30efe63b9abe7bde265dd5901493"/>
+           </lrm_resource>
+           <lrm_resource id="named_address" type="IPaddr2" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="named_address_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="14:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:7;14:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="8" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="dcd0796235584f0320d42eef0159e0ec"/>
+           </lrm_resource>
+           <lrm_resource id="cyrus_drbd_node:0" type="drbd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="cyrus_drbd_node:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="13:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:7;13:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="7" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+           </lrm_resource>
+           <lrm_resource id="pingd_node:0" type="pingd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="pingd_node:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="8:17:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:7;8:17:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="19" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="c9cfd317187a3468b5c159418e0a3e91"/>
+           </lrm_resource>
+           <lrm_resource id="named_syslogd" type="syslogd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="named_syslogd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="18:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:7;18:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="12" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="f57181d8bc98e287736cf74c65215c4a"/>
+           </lrm_resource>
+           <lrm_resource id="named_daemon" type="recursor" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="named_daemon_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="17:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:7;17:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="11" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="07876411143c62190db9a2a65b7b3d7d"/>
+           </lrm_resource>
+           <lrm_resource id="named_drbd_node:0" type="drbd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="named_drbd_node:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="19:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:7;19:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="13" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:0_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="51:19:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;51:19:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="36" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:0_post_notify_start_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="133:19:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;133:19:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="37" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:0_pre_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="131:20:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;131:20:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="38" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:0_post_notify_demote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="134:20:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;134:20:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="39" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+           </lrm_resource>
+           <lrm_resource id="fence_node:0" type="baytech" class="stonith" provider="heartbeat">
+             <lrm_rsc_op id="fence_node:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="21:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:7;21:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="15" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="b71ff8f27fe290c13a13f3a7a7ced393"/>
+           </lrm_resource>
+           <lrm_resource id="fence_node:1" type="baytech" class="stonith" provider="heartbeat">
+             <lrm_rsc_op id="fence_node:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="22:16:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:7;22:16:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="16" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="b71ff8f27fe290c13a13f3a7a7ced393"/>
+             <lrm_rsc_op id="fence_node:1_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="80:17:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;80:17:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="20" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="b71ff8f27fe290c13a13f3a7a7ced393"/>
+             <lrm_rsc_op id="fence_node:1_monitor_300000" operation="monitor" crm-debug-origin="do_update_resource" transition_key="81:17:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;81:17:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="24" crm_feature_set="2.0" rc_code="0" op_status="0" interval="300000" op_digest="bbfc3b36f24ea9591b4b7e6b0b252764"/>
+           </lrm_resource>
+           <lrm_resource id="named_drbd_node:1" type="drbd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="named_drbd_node:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="7:17:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:7;7:17:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="18" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:1_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="45:17:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;45:17:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="22" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:1_post_notify_start_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="122:17:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;122:17:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="25" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:1_pre_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="138:18:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;138:18:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="29" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:1_post_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="139:18:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;139:18:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="31" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:1_pre_notify_demote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="131:19:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;131:19:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="32" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:1_post_notify_demote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="132:19:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;132:19:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="33" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:1_pre_notify_stop_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="128:19:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;128:19:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="34" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+             <lrm_rsc_op id="named_drbd_node:1_stop_0" operation="stop" crm-debug-origin="do_update_resource" transition_key="45:19:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;45:19:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="35" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="431f740353011ac034ddfeb1e66d8f41"/>
+           </lrm_resource>
+           <lrm_resource id="cyrus_drbd_node:1" type="drbd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="cyrus_drbd_node:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="6:17:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:7;6:17:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="17" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+             <lrm_rsc_op id="cyrus_drbd_node:1_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="15:17:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;15:17:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="21" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+             <lrm_rsc_op id="cyrus_drbd_node:1_post_notify_start_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="116:17:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;116:17:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="26" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+             <lrm_rsc_op id="cyrus_drbd_node:1_pre_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="122:18:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;122:18:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="28" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+             <lrm_rsc_op id="cyrus_drbd_node:1_post_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" transition_key="123:18:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;123:18:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="30" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="38c3c67ecf5a130029bf89c17c72bf14"/>
+           </lrm_resource>
+           <lrm_resource id="pingd_node:1" type="pingd" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="pingd_node:1_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="72:17:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;72:17:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="23" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="c9cfd317187a3468b5c159418e0a3e91"/>
+             <lrm_rsc_op id="pingd_node:1_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" transition_key="76:18:a7083891-b6ee-4270-a350-c7b829b64b59" transition_magic="0:0;76:18:a7083891-b6ee-4270-a350-c7b829b64b59" call_id="27" crm_feature_set="2.0" rc_code="0" op_status="0" interval="20000" op_digest="7f287e30c38dc6473e21e2fd59c396f3"/>
+           </lrm_resource>
+         </lrm_resources>
+       </lrm>
+       <transient_attributes id="97c99ee5-0f0e-4519-845c-14871d0ba045">
+         <instance_attributes id="status-97c99ee5-0f0e-4519-845c-14871d0ba045">
+           <attributes>
+             <nvpair id="status-97c99ee5-0f0e-4519-845c-14871d0ba045-probe_complete" name="probe_complete" value="true"/>
+             <nvpair id="status-97c99ee5-0f0e-4519-845c-14871d0ba045-pingd" name="pingd" value="200"/>
+           </attributes>
+         </instance_attributes>
+         <instance_attributes id="master-97c99ee5-0f0e-4519-845c-14871d0ba045">
+           <attributes>
+             <nvpair id="status-master-cyrus_drbd_node:1-97c99ee5-0f0e-4519-845c-14871d0ba045" name="master-cyrus_drbd_node:1" value="75"/>
+             <nvpair id="status-master-named_drbd_node:1-97c99ee5-0f0e-4519-845c-14871d0ba045" name="master-named_drbd_node:1" value="75"/>
+             <nvpair id="status-master-named_drbd_node:0-97c99ee5-0f0e-4519-845c-14871d0ba045" name="master-named_drbd_node:0" value="75"/>
+           </attributes>
+         </instance_attributes>
+       </transient_attributes>
+     </node_state>
+   </status>
+ </cib>
+
