@@ -889,7 +889,7 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 	
 	if(order->type & pe_order_implies_left) {
 		if(rsc->variant == order->rh_rsc->variant) {
-			crm_err("Clone-to-clone ordering: %s -> %s 0x%.6x",
+			crm_debug_2("Clone-to-clone ordering: %s -> %s 0x%.6x",
 				order->lh_action_task, order->rh_action_task, order->type);
 			/* stop instances on the same nodes as stopping RHS instances */
 			slist_iter(
@@ -898,7 +898,7 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 				);
 		} else {
 			/* stop everything */
-			crm_err("Clone-to-* ordering: %s -> %s 0x%.6x",
+			crm_debug_2("Clone-to-* ordering: %s -> %s 0x%.6x",
 				order->lh_action_task, order->rh_action_task, order->type);
 			slist_iter(
 				child_rsc, resource_t, rsc->children, lpc,
@@ -985,13 +985,14 @@ expand_list(GListPtr list, int clones,
 	slist_iter(entry, notify_entry_t, list, lpc,
 
 		   CRM_CHECK(entry != NULL, continue);
+		   CRM_CHECK(entry->rsc != NULL, continue);
+		   CRM_CHECK(entry->node != NULL, continue);
+
 		   rsc_id = entry->rsc->id;
-		   CRM_CHECK(rsc_id != NULL, rsc_id = "__none__");
-		   uname = NULL;
-		   if(entry->node) {
-			   uname = entry->node->details->uname;
-		   }
-		   CRM_CHECK(uname != NULL, uname = "__none__");
+		   uname = entry->node->details->uname;
+
+		   CRM_ASSERT(uname != NULL);
+		   CRM_ASSERT(rsc_id != NULL);
 
 		   /* filter dups */
 		   if(safe_str_eq(rsc_id, last_rsc_id)) {
