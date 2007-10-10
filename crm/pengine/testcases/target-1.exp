@@ -127,7 +127,7 @@
    </synapse>
    <synapse id="14">
      <action_set>
-       <rsc_op id="34" operation="promote" operation_key="rsc_c001n03_promote_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+       <rsc_op id="36" operation="promote" operation_key="rsc_c001n03_promote_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="rsc_c001n03" long-id="rsc_c001n03" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes crm_feature_set="2.0" target_role="Master" ip="127.0.0.13" CRM_meta_timeout="20000"/>
        </rsc_op>

@@ -7,7 +7,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="98" operation="stonith" operation_key="stonith" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+         <crm_event id="104" operation="stonith" operation_key="stonith" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
      </inputs>
    </synapse>
@@ -277,7 +277,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="98" operation="stonith" operation_key="stonith" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+         <crm_event id="104" operation="stonith" operation_key="stonith" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
      </inputs>
    </synapse>
@@ -386,10 +386,10 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="95" operation="demote" operation_key="master_rsc_1_demote_0"/>
+         <pseudo_event id="101" operation="demote" operation_key="master_rsc_1_demote_0"/>
        </trigger>
        <trigger>
-         <crm_event id="98" operation="stonith" operation_key="stonith" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+         <crm_event id="104" operation="stonith" operation_key="stonith" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
      </inputs>
    </synapse>
@@ -404,10 +404,10 @@
          <pseudo_event id="74" operation="demote" operation_key="ocf_msdummy:0_demote_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="91" operation="stop" operation_key="master_rsc_1_stop_0"/>
+         <pseudo_event id="97" operation="stop" operation_key="master_rsc_1_stop_0"/>
        </trigger>
        <trigger>
-         <crm_event id="98" operation="stonith" operation_key="stonith" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+         <crm_event id="104" operation="stonith" operation_key="stonith" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
      </inputs>
    </synapse>
@@ -446,10 +446,10 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="91" operation="stop" operation_key="master_rsc_1_stop_0"/>
+         <pseudo_event id="97" operation="stop" operation_key="master_rsc_1_stop_0"/>
        </trigger>
        <trigger>
-         <crm_event id="98" operation="stonith" operation_key="stonith" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+         <crm_event id="104" operation="stonith" operation_key="stonith" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
      </inputs>
    </synapse>
@@ -509,22 +509,22 @@
    </synapse>
    <synapse id="41">
      <action_set>
-       <pseudo_event id="91" operation="stop" operation_key="master_rsc_1_stop_0">
+       <pseudo_event id="97" operation="stop" operation_key="master_rsc_1_stop_0">
          <attributes crm_feature_set="2.0" CRM_meta_timeout="20000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="95" operation="demote" operation_key="master_rsc_1_demote_0"/>
+         <pseudo_event id="101" operation="demote" operation_key="master_rsc_1_demote_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="96" operation="demoted" operation_key="master_rsc_1_demoted_0"/>
+         <pseudo_event id="102" operation="demoted" operation_key="master_rsc_1_demoted_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="42" priority="1000000">
      <action_set>
-       <pseudo_event id="92" operation="stopped" operation_key="master_rsc_1_stopped_0">
+       <pseudo_event id="98" operation="stopped" operation_key="master_rsc_1_stopped_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
@@ -536,13 +536,13 @@
          <pseudo_event id="76" operation="stop" operation_key="ocf_msdummy:4_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="91" operation="stop" operation_key="master_rsc_1_stop_0"/>
+         <pseudo_event id="97" operation="stop" operation_key="master_rsc_1_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="43">
      <action_set>
-       <pseudo_event id="95" operation="demote" operation_key="master_rsc_1_demote_0">
+       <pseudo_event id="101" operation="demote" operation_key="master_rsc_1_demote_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
@@ -550,7 +550,7 @@
    </synapse>
    <synapse id="44" priority="1000000">
      <action_set>
-       <pseudo_event id="96" operation="demoted" operation_key="master_rsc_1_demoted_0">
+       <pseudo_event id="102" operation="demoted" operation_key="master_rsc_1_demoted_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
@@ -559,7 +559,7 @@
          <pseudo_event id="74" operation="demote" operation_key="ocf_msdummy:0_demote_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="95" operation="demote" operation_key="master_rsc_1_demote_0"/>
+         <pseudo_event id="101" operation="demote" operation_key="master_rsc_1_demote_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -679,13 +679,13 @@
          <pseudo_event id="76" operation="stop" operation_key="ocf_msdummy:4_stop_0"/>
        </trigger>
        <trigger>
-         <crm_event id="98" operation="stonith" operation_key="stonith" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+         <crm_event id="104" operation="stonith" operation_key="stonith" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="50">
      <action_set>
-       <pseudo_event id="97" operation="stonith_up" operation_key="stonith_up">
+       <pseudo_event id="103" operation="stonith_up" operation_key="stonith_up">
          <attributes crm_feature_set="2.0"/>
        </pseudo_event>
      </action_set>
@@ -693,13 +693,13 @@
    </synapse>
    <synapse id="51">
      <action_set>
-       <crm_event id="98" operation="stonith" operation_key="stonith" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
+       <crm_event id="104" operation="stonith" operation_key="stonith" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
          <attributes crm_feature_set="2.0" CRM_meta_on_node="c001n01" CRM_meta_stonith_action="reboot" CRM_meta_on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </crm_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="97" operation="stonith_up" operation_key="stonith_up"/>
+         <pseudo_event id="103" operation="stonith_up" operation_key="stonith_up"/>
        </trigger>
      </inputs>
    </synapse>

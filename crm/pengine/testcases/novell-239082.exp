@@ -20,20 +20,20 @@
          <rsc_op id="5" operation="stop" operation_key="fs_1_stop_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
        </trigger>
        <trigger>
-         <pseudo_event id="29" operation="notified" operation_key="ms-drbd0_confirmed-post_notify_promote_0"/>
+         <pseudo_event id="30" operation="notified" operation_key="ms-drbd0_confirmed-post_notify_promote_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="2">
      <action_set>
-       <rsc_op id="9" operation="promote" operation_key="drbd0:0_promote_0" on_node="xen-2" on_node_uuid="b292356d-d8af-4360-bcd3-423b3ec7f1be">
+       <rsc_op id="10" operation="promote" operation_key="drbd0:0_promote_0" on_node="xen-2" on_node_uuid="b292356d-d8af-4360-bcd3-423b3ec7f1be">
          <primitive id="drbd0:0" long-id="ms-drbd0:drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
          <attributes crm_feature_set="2.0" clone_overrides_hostname="no" CRM_meta_role="Master" drbd_resource="r0" CRM_meta_stateful="true" CRM_meta_notify_demote_uname="xen-1 " CRM_meta_notify_stop_uname="xen-1 " CRM_meta_timeout="120000" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_stop_resource="drbd0:1 " CRM_meta_notify_promote_uname="xen-2 " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_globally_unique="false" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="24" operation="promote" operation_key="ms-drbd0_promote_0"/>
+         <pseudo_event id="25" operation="promote" operation_key="ms-drbd0_promote_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -46,7 +46,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="20" operation="notify" operation_key="ms-drbd0_pre_notify_stop_0"/>
+         <pseudo_event id="21" operation="notify" operation_key="ms-drbd0_pre_notify_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -59,7 +59,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="22" operation="notify" operation_key="ms-drbd0_post_notify_stop_0"/>
+         <pseudo_event id="23" operation="notify" operation_key="ms-drbd0_post_notify_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -72,7 +72,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="26" operation="notify" operation_key="ms-drbd0_pre_notify_promote_0"/>
+         <pseudo_event id="27" operation="notify" operation_key="ms-drbd0_pre_notify_promote_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -85,7 +85,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="28" operation="notify" operation_key="ms-drbd0_post_notify_promote_0"/>
+         <pseudo_event id="29" operation="notify" operation_key="ms-drbd0_post_notify_promote_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -98,7 +98,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="32" operation="notify" operation_key="ms-drbd0_pre_notify_demote_0"/>
+         <pseudo_event id="33" operation="notify" operation_key="ms-drbd0_pre_notify_demote_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -111,36 +111,36 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="34" operation="notify" operation_key="ms-drbd0_post_notify_demote_0"/>
+         <pseudo_event id="35" operation="notify" operation_key="ms-drbd0_post_notify_demote_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="9">
      <action_set>
-       <rsc_op id="10" operation="demote" operation_key="drbd0:1_demote_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9">
+       <rsc_op id="11" operation="demote" operation_key="drbd0:1_demote_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9">
          <primitive id="drbd0:1" long-id="ms-drbd0:drbd0:1" class="ocf" provider="heartbeat" type="drbd"/>
          <attributes crm_feature_set="2.0" clone_overrides_hostname="no" drbd_resource="r0" CRM_meta_stateful="true" CRM_meta_notify_demote_uname="xen-1 " CRM_meta_notify_stop_uname="xen-1 " CRM_meta_timeout="120000" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_stop_resource="drbd0:1 " CRM_meta_notify_promote_uname="xen-2 " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_globally_unique="false" CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="30" operation="demote" operation_key="ms-drbd0_demote_0"/>
+         <pseudo_event id="31" operation="demote" operation_key="ms-drbd0_demote_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="10">
      <action_set>
-       <rsc_op id="11" operation="stop" operation_key="drbd0:1_stop_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9">
+       <rsc_op id="12" operation="stop" operation_key="drbd0:1_stop_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9">
          <primitive id="drbd0:1" long-id="ms-drbd0:drbd0:1" class="ocf" provider="heartbeat" type="drbd"/>
          <attributes crm_feature_set="2.0" CRM_meta_notify_demote_uname="xen-1 " CRM_meta_notify_stop_uname="xen-1 " CRM_meta_timeout="120000" CRM_meta_notify_promote_resource="drbd0:0 " CRM_meta_notify_stop_resource="drbd0:1 " CRM_meta_notify_promote_uname="xen-2 " CRM_meta_notify_demote_resource="drbd0:1 " CRM_meta_globally_unique="false" CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="10" operation="demote" operation_key="drbd0:1_demote_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
+         <rsc_op id="11" operation="demote" operation_key="drbd0:1_demote_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
        </trigger>
        <trigger>
-         <pseudo_event id="18" operation="stop" operation_key="ms-drbd0_stop_0"/>
+         <pseudo_event id="19" operation="stop" operation_key="ms-drbd0_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -153,7 +153,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="20" operation="notify" operation_key="ms-drbd0_pre_notify_stop_0"/>
+         <pseudo_event id="21" operation="notify" operation_key="ms-drbd0_pre_notify_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -166,7 +166,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="32" operation="notify" operation_key="ms-drbd0_pre_notify_demote_0"/>
+         <pseudo_event id="33" operation="notify" operation_key="ms-drbd0_pre_notify_demote_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -179,67 +179,67 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="34" operation="notify" operation_key="ms-drbd0_post_notify_demote_0"/>
+         <pseudo_event id="35" operation="notify" operation_key="ms-drbd0_post_notify_demote_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="14">
      <action_set>
-       <pseudo_event id="18" operation="stop" operation_key="ms-drbd0_stop_0">
+       <pseudo_event id="19" operation="stop" operation_key="ms-drbd0_stop_0">
          <attributes crm_feature_set="2.0" CRM_meta_timeout="120000" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="21" operation="notified" operation_key="ms-drbd0_confirmed-pre_notify_stop_0"/>
+         <pseudo_event id="22" operation="notified" operation_key="ms-drbd0_confirmed-pre_notify_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="30" operation="demote" operation_key="ms-drbd0_demote_0"/>
+         <pseudo_event id="31" operation="demote" operation_key="ms-drbd0_demote_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="31" operation="demoted" operation_key="ms-drbd0_demoted_0"/>
+         <pseudo_event id="32" operation="demoted" operation_key="ms-drbd0_demoted_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="35" operation="notified" operation_key="ms-drbd0_confirmed-post_notify_demote_0"/>
+         <pseudo_event id="36" operation="notified" operation_key="ms-drbd0_confirmed-post_notify_demote_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="15" priority="1000000">
      <action_set>
-       <pseudo_event id="19" operation="stopped" operation_key="ms-drbd0_stopped_0">
+       <pseudo_event id="20" operation="stopped" operation_key="ms-drbd0_stopped_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="11" operation="stop" operation_key="drbd0:1_stop_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
+         <rsc_op id="12" operation="stop" operation_key="drbd0:1_stop_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
        </trigger>
        <trigger>
-         <pseudo_event id="18" operation="stop" operation_key="ms-drbd0_stop_0"/>
+         <pseudo_event id="19" operation="stop" operation_key="ms-drbd0_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="16">
      <action_set>
-       <pseudo_event id="20" operation="notify" operation_key="ms-drbd0_pre_notify_stop_0">
+       <pseudo_event id="21" operation="notify" operation_key="ms-drbd0_pre_notify_stop_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="pre" CRM_meta_notify_operation="stop" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="35" operation="notified" operation_key="ms-drbd0_confirmed-post_notify_demote_0"/>
+         <pseudo_event id="36" operation="notified" operation_key="ms-drbd0_confirmed-post_notify_demote_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="17">
      <action_set>
-       <pseudo_event id="21" operation="notified" operation_key="ms-drbd0_confirmed-pre_notify_stop_0">
+       <pseudo_event id="22" operation="notified" operation_key="ms-drbd0_confirmed-pre_notify_stop_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_notify_type="pre" CRM_meta_notify_operation="stop" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="20" operation="notify" operation_key="ms-drbd0_pre_notify_stop_0"/>
+         <pseudo_event id="21" operation="notify" operation_key="ms-drbd0_pre_notify_stop_0"/>
        </trigger>
        <trigger>
          <rsc_op id="43" operation="notify" operation_key="drbd0:0_pre_notify_stop_0" on_node="xen-2" on_node_uuid="b292356d-d8af-4360-bcd3-423b3ec7f1be"/>
@@ -251,25 +251,25 @@
    </synapse>
    <synapse id="18" priority="1000000">
      <action_set>
-       <pseudo_event id="22" operation="notify" operation_key="ms-drbd0_post_notify_stop_0">
+       <pseudo_event id="23" operation="notify" operation_key="ms-drbd0_post_notify_stop_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" CRM_meta_notify_operation="stop" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="19" operation="stopped" operation_key="ms-drbd0_stopped_0"/>
+         <pseudo_event id="20" operation="stopped" operation_key="ms-drbd0_stopped_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="19" priority="1000000">
      <action_set>
-       <pseudo_event id="23" operation="notified" operation_key="ms-drbd0_confirmed-post_notify_stop_0">
+       <pseudo_event id="24" operation="notified" operation_key="ms-drbd0_confirmed-post_notify_stop_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_notify_type="pre" CRM_meta_notify_operation="stop" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="22" operation="notify" operation_key="ms-drbd0_post_notify_stop_0"/>
+         <pseudo_event id="23" operation="notify" operation_key="ms-drbd0_post_notify_stop_0"/>
        </trigger>
        <trigger>
          <rsc_op id="44" operation="notify" operation_key="drbd0:0_post_notify_stop_0" on_node="xen-2" on_node_uuid="b292356d-d8af-4360-bcd3-423b3ec7f1be"/>
@@ -278,34 +278,34 @@
    </synapse>
    <synapse id="20">
      <action_set>
-       <pseudo_event id="24" operation="promote" operation_key="ms-drbd0_promote_0">
+       <pseudo_event id="25" operation="promote" operation_key="ms-drbd0_promote_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="27" operation="notified" operation_key="ms-drbd0_confirmed-pre_notify_promote_0"/>
+         <pseudo_event id="28" operation="notified" operation_key="ms-drbd0_confirmed-pre_notify_promote_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="31" operation="demoted" operation_key="ms-drbd0_demoted_0"/>
+         <pseudo_event id="32" operation="demoted" operation_key="ms-drbd0_demoted_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="21" priority="1000000">
      <action_set>
-       <pseudo_event id="25" operation="promoted" operation_key="ms-drbd0_promoted_0">
+       <pseudo_event id="26" operation="promoted" operation_key="ms-drbd0_promoted_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="9" operation="promote" operation_key="drbd0:0_promote_0" on_node="xen-2" on_node_uuid="b292356d-d8af-4360-bcd3-423b3ec7f1be"/>
+         <rsc_op id="10" operation="promote" operation_key="drbd0:0_promote_0" on_node="xen-2" on_node_uuid="b292356d-d8af-4360-bcd3-423b3ec7f1be"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="22">
      <action_set>
-       <pseudo_event id="26" operation="notify" operation_key="ms-drbd0_pre_notify_promote_0">
+       <pseudo_event id="27" operation="notify" operation_key="ms-drbd0_pre_notify_promote_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="pre" CRM_meta_notify_operation="promote" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
@@ -313,13 +313,13 @@
    </synapse>
    <synapse id="23">
      <action_set>
-       <pseudo_event id="27" operation="notified" operation_key="ms-drbd0_confirmed-pre_notify_promote_0">
+       <pseudo_event id="28" operation="notified" operation_key="ms-drbd0_confirmed-pre_notify_promote_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_notify_type="pre" CRM_meta_notify_operation="promote" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="26" operation="notify" operation_key="ms-drbd0_pre_notify_promote_0"/>
+         <pseudo_event id="27" operation="notify" operation_key="ms-drbd0_pre_notify_promote_0"/>
        </trigger>
        <trigger>
          <rsc_op id="45" operation="notify" operation_key="drbd0:0_pre_notify_promote_0" on_node="xen-2" on_node_uuid="b292356d-d8af-4360-bcd3-423b3ec7f1be"/>
@@ -328,25 +328,25 @@
    </synapse>
    <synapse id="24" priority="1000000">
      <action_set>
-       <pseudo_event id="28" operation="notify" operation_key="ms-drbd0_post_notify_promote_0">
+       <pseudo_event id="29" operation="notify" operation_key="ms-drbd0_post_notify_promote_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" CRM_meta_notify_operation="promote" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="25" operation="promoted" operation_key="ms-drbd0_promoted_0"/>
+         <pseudo_event id="26" operation="promoted" operation_key="ms-drbd0_promoted_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="25" priority="1000000">
      <action_set>
-       <pseudo_event id="29" operation="notified" operation_key="ms-drbd0_confirmed-post_notify_promote_0">
+       <pseudo_event id="30" operation="notified" operation_key="ms-drbd0_confirmed-post_notify_promote_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_notify_type="pre" CRM_meta_notify_operation="promote" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="28" operation="notify" operation_key="ms-drbd0_post_notify_promote_0"/>
+         <pseudo_event id="29" operation="notify" operation_key="ms-drbd0_post_notify_promote_0"/>
        </trigger>
        <trigger>
          <rsc_op id="46" operation="notify" operation_key="drbd0:0_post_notify_promote_0" on_node="xen-2" on_node_uuid="b292356d-d8af-4360-bcd3-423b3ec7f1be"/>
@@ -355,7 +355,7 @@
    </synapse>
    <synapse id="26">
      <action_set>
-       <pseudo_event id="30" operation="demote" operation_key="ms-drbd0_demote_0">
+       <pseudo_event id="31" operation="demote" operation_key="ms-drbd0_demote_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
@@ -364,28 +364,28 @@
          <rsc_op id="5" operation="stop" operation_key="fs_1_stop_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
        </trigger>
        <trigger>
-         <pseudo_event id="33" operation="notified" operation_key="ms-drbd0_confirmed-pre_notify_demote_0"/>
+         <pseudo_event id="34" operation="notified" operation_key="ms-drbd0_confirmed-pre_notify_demote_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="27" priority="1000000">
      <action_set>
-       <pseudo_event id="31" operation="demoted" operation_key="ms-drbd0_demoted_0">
+       <pseudo_event id="32" operation="demoted" operation_key="ms-drbd0_demoted_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="10" operation="demote" operation_key="drbd0:1_demote_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
+         <rsc_op id="11" operation="demote" operation_key="drbd0:1_demote_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
        </trigger>
        <trigger>
-         <pseudo_event id="30" operation="demote" operation_key="ms-drbd0_demote_0"/>
+         <pseudo_event id="31" operation="demote" operation_key="ms-drbd0_demote_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="28">
      <action_set>
-       <pseudo_event id="32" operation="notify" operation_key="ms-drbd0_pre_notify_demote_0">
+       <pseudo_event id="33" operation="notify" operation_key="ms-drbd0_pre_notify_demote_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="pre" CRM_meta_notify_operation="demote" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
@@ -393,13 +393,13 @@
    </synapse>
    <synapse id="29">
      <action_set>
-       <pseudo_event id="33" operation="notified" operation_key="ms-drbd0_confirmed-pre_notify_demote_0">
+       <pseudo_event id="34" operation="notified" operation_key="ms-drbd0_confirmed-pre_notify_demote_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_notify_type="pre" CRM_meta_notify_operation="demote" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="32" operation="notify" operation_key="ms-drbd0_pre_notify_demote_0"/>
+         <pseudo_event id="33" operation="notify" operation_key="ms-drbd0_pre_notify_demote_0"/>
        </trigger>
        <trigger>
          <rsc_op id="47" operation="notify" operation_key="drbd0:0_pre_notify_demote_0" on_node="xen-2" on_node_uuid="b292356d-d8af-4360-bcd3-423b3ec7f1be"/>
@@ -411,25 +411,25 @@
    </synapse>
    <synapse id="30" priority="1000000">
      <action_set>
-       <pseudo_event id="34" operation="notify" operation_key="ms-drbd0_post_notify_demote_0">
+       <pseudo_event id="35" operation="notify" operation_key="ms-drbd0_post_notify_demote_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" CRM_meta_notify_operation="demote" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="31" operation="demoted" operation_key="ms-drbd0_demoted_0"/>
+         <pseudo_event id="32" operation="demoted" operation_key="ms-drbd0_demoted_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="31" priority="1000000">
      <action_set>
-       <pseudo_event id="35" operation="notified" operation_key="ms-drbd0_confirmed-post_notify_demote_0">
+       <pseudo_event id="36" operation="notified" operation_key="ms-drbd0_confirmed-post_notify_demote_0">
          <attributes crm_feature_set="2.0" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_notify_type="pre" CRM_meta_notify_operation="demote" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="34" operation="notify" operation_key="ms-drbd0_post_notify_demote_0"/>
+         <pseudo_event id="35" operation="notify" operation_key="ms-drbd0_post_notify_demote_0"/>
        </trigger>
        <trigger>
          <rsc_op id="48" operation="notify" operation_key="drbd0:0_post_notify_demote_0" on_node="xen-2" on_node_uuid="b292356d-d8af-4360-bcd3-423b3ec7f1be"/>
@@ -450,13 +450,13 @@
          <rsc_op id="5" operation="stop" operation_key="fs_1_stop_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
        </trigger>
        <trigger>
-         <rsc_op id="11" operation="stop" operation_key="drbd0:1_stop_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
+         <rsc_op id="12" operation="stop" operation_key="drbd0:1_stop_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="33">
      <action_set>
-       <crm_event id="37" operation="do_shutdown" operation_key="do_shutdown" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9">
+       <crm_event id="38" operation="do_shutdown" operation_key="do_shutdown" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9">
          <attributes crm_feature_set="2.0"/>
        </crm_event>
      </action_set>
@@ -465,7 +465,7 @@
          <rsc_op id="5" operation="stop" operation_key="fs_1_stop_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
        </trigger>
        <trigger>
-         <rsc_op id="11" operation="stop" operation_key="drbd0:1_stop_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
+         <rsc_op id="12" operation="stop" operation_key="drbd0:1_stop_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
        </trigger>
      </inputs>
    </synapse>
