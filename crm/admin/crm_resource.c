@@ -71,6 +71,10 @@ char *xml_file = NULL;
 int cib_options = cib_sync_call;
 
 #define OPTARGS	"V?LRQxDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:fX:lmu:F"
+#define CMD_ERR(fmt, args...) do {		\
+	crm_warn(fmt, ##args);			\
+	fprintf(stderr, fmt, ##args);		\
+    } while(0)
 
 static int
 do_find_resource(const char *rsc, pe_working_set_t *data_set)
@@ -182,7 +186,7 @@ dump_resource_attr(
 		current = the_rsc->running_on->data;
 
 	} else if(g_list_length(the_rsc->running_on) > 1) {
-		fprintf(stderr, "%s is active on more than one node,"
+		CMD_ERR("%s is active on more than one node,"
 			" returning the default value for %s\n",
 			the_rsc->id, crm_str(value));
 	} 
@@ -253,7 +257,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	
 	
 	if(matches > 1) {
-		fprintf(stderr, "Multiple attributes match name=%s for the resource %s:\n",
+		CMD_ERR("Multiple attributes match name=%s for the resource %s:\n",
 			attr_name, rsc->id);
 
 		if(set_children == NULL) {
@@ -287,15 +291,15 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 		}
 		
 		if(BE_QUIET == FALSE) {
-			fprintf(stderr, "\nThe following text can be suppressed with the -Q option:\n");
+			CMD_ERR("\nThe following text can be suppressed with the -Q option:\n");
 			if(attr_set == NULL) {
-				fprintf(stderr, "  * To choose an existing entry to change, please supply one of the set names above using the -s option.\n");
+				CMD_ERR("  * To choose an existing entry to change, please supply one of the set names above using the -s option.\n");
 			} else {
-				fprintf(stderr, "  * To choose an existing entry to change, please supply one of the IDs above using the -i option.\n");			
+				CMD_ERR("  * To choose an existing entry to change, please supply one of the IDs above using the -i option.\n");			
 			}
-			fprintf(stderr, "  * To create a new value with a default ID, please supply a different set name using the -s option.\n");
+			CMD_ERR("  * To create a new value with a default ID, please supply a different set name using the -s option.\n");
 			
-			fprintf(stderr, "You can also use --query-xml to display the complete resource definition.\n");
+			CMD_ERR("You can also use --query-xml to display the complete resource definition.\n");
 		}
 		
 		return cib_unknown;
@@ -479,15 +483,15 @@ send_lrm_rsc_op(IPC_Channel *crmd_channel, const char *op,
 	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
 	if(rsc == NULL) {
-		fprintf(stderr, "Resource %s not found\n", rsc_id);
+		CMD_ERR("Resource %s not found\n", rsc_id);
 		return cib_NOTEXISTS;
 
 	} else if(rsc->variant != pe_native) {
-		fprintf(stderr, "We can only process primitive resources, not %s\n", rsc_id);
+		CMD_ERR("We can only process primitive resources, not %s\n", rsc_id);
 		return cib_invalid_argument;
 
 	} else if(host_uname == NULL) {
-		fprintf(stderr, "Please supply a hostname with -H\n");
+		CMD_ERR("Please supply a hostname with -H\n");
 		return cib_invalid_argument;
 	}
 	
@@ -503,14 +507,14 @@ send_lrm_rsc_op(IPC_Channel *crmd_channel, const char *op,
 	value = crm_element_value(rsc->xml, XML_ATTR_TYPE);
 	crm_xml_add(xml_rsc, XML_ATTR_TYPE, value);
 	if(value == NULL) {
-		fprintf(stderr, "%s has no type!  Aborting...\n", rsc_id);
+		CMD_ERR("%s has no type!  Aborting...\n", rsc_id);
 		return cib_NOTEXISTS;
 	}
 
 	value = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 	crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, value);
 	if(value == NULL) {
-		fprintf(stderr, "%s has no class!  Aborting...\n", rsc_id);
+		CMD_ERR("%s has no class!  Aborting...\n", rsc_id);
 		return cib_NOTEXISTS;
 	}
 
@@ -546,7 +550,8 @@ static int
 fail_lrm_rsc(IPC_Channel *crmd_channel, const char *host_uname,
 	     const char *rsc_id, pe_working_set_t *data_set)
 {
-	return send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_FAIL, host_uname, rsc_id, FALSE, data_set); 
+    crm_warn("Failing: %s", rsc_id);
+    return send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_FAIL, host_uname, rsc_id, FALSE, data_set); 
 }
 
 static int
@@ -609,9 +614,9 @@ migrate_resource(
 		ha_time_t *duration = parse_time_duration(&life_mutable);
 		
 		if(duration == NULL) {
-			fprintf(stderr, "Invalid duration specified: %s\n",
+			CMD_ERR("Invalid duration specified: %s\n",
 				migrate_lifetime);
-			fprintf(stderr, "Please refer to"
+			CMD_ERR("Please refer to"
 				" http://en.wikipedia.org/wiki/ISO_8601#Duration"
 				" for examples of valid durations\n");
 			crm_free(life);
@@ -649,13 +654,13 @@ migrate_resource(
 				" with a score of -INFINITY for resource %s"
 				" on %s.\n",
 				ID(dont_run), rsc_id, existing_node);
-			fprintf(stderr, "\tThis will prevent %s from running"
+			CMD_ERR("\tThis will prevent %s from running"
 				" on %s until the constraint is removed using"
 				" the 'crm_resource -U' command or manually"
 				" with cibadmin\n", rsc_id, existing_node);
-			fprintf(stderr, "\tThis will be the case even if %s is"
+			CMD_ERR("\tThis will be the case even if %s is"
 				" the last node in the cluster\n", existing_node);
-			fprintf(stderr, "\tThis messgae can be disabled with -Q\n");
+			CMD_ERR("\tThis messgae can be disabled with -Q\n");
 		}
 		
 		crm_xml_add(dont_run, "rsc", rsc_id);
@@ -929,18 +934,18 @@ main(int argc, char **argv)
 				break;
 				
 			default:
-				fprintf(stderr, "Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
+				CMD_ERR("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
 				++argerr;
 				break;
 		}
 	}
 
 	if (optind < argc) {
-		fprintf(stderr, "non-option ARGV-elements: ");
+		CMD_ERR("non-option ARGV-elements: ");
 		while (optind < argc) {
-			fprintf(stderr, "%s ", argv[optind++]);
+			CMD_ERR("%s ", argv[optind++]);
 		}
-		fprintf(stderr, "\n");
+		CMD_ERR("\n");
 	}
 
 	if (optind > argc) {
@@ -993,7 +998,7 @@ main(int argc, char **argv)
 			rc = cib_conn->cmds->signon(
 				cib_conn, crm_system_name, cib_command_synchronous);
 			if(rc != cib_ok) {
-				fprintf(stderr, "Error signing on to the CIB service: %s\n",
+				CMD_ERR("Error signing on to the CIB service: %s\n",
 					cib_error2string(rc));
 				return rc;
 			}
@@ -1013,7 +1018,6 @@ main(int argc, char **argv)
 		} else {
 			rc = cib_NOTEXISTS;
 		}
-		
 	}
 
 	if(rsc_cmd == 'R'
@@ -1025,8 +1029,7 @@ main(int argc, char **argv)
 				      NULL, &crmd_channel);
 
 		if(src == NULL) {
-			fprintf(stderr,
-				"Error signing on to the CRMd service\n");
+			CMD_ERR("Error signing on to the CRMd service\n");
 			return 1;
 		}
 		
@@ -1036,6 +1039,7 @@ main(int argc, char **argv)
 		set_IPC_Channel_dnotify(src, resource_ipc_connection_destroy);
 	}
 
+	crm_warn("here i am - 3");
 	if(rsc_cmd == 'L') {
 		rc = cib_ok;
 		do_find_resource_list(&data_set, FALSE);
@@ -1051,26 +1055,26 @@ main(int argc, char **argv)
 		rc = fail_lrm_rsc(crmd_channel, host_uname, rsc_id, &data_set);
 		
 	} else if(rc == cib_NOTEXISTS) {
-		fprintf(stderr, "Resource %s not found: %s\n",
+		CMD_ERR("Resource %s not found: %s\n",
 			crm_str(rsc_id), cib_error2string(rc));
 		
 	} else if(rsc_cmd == 'W') {
 		if(rsc_id == NULL) {
-			fprintf(stderr, "Must supply a resource id with -r\n");
+			CMD_ERR("Must supply a resource id with -r\n");
 			return cib_NOTEXISTS;
 		} 
 		rc = do_find_resource(rsc_id, &data_set);
 		
 	} else if(rsc_cmd == 'x') {
 		if(rsc_id == NULL) {
-			fprintf(stderr, "Must supply a resource id with -r\n");
+			CMD_ERR("Must supply a resource id with -r\n");
 			return cib_NOTEXISTS;
 		} 
 		rc = dump_resource(rsc_id, &data_set);
 
 	} else if(rsc_cmd == 'U') {
 		if(rsc_id == NULL) {
-			fprintf(stderr, "Must supply a resource id with -r\n");
+			CMD_ERR("Must supply a resource id with -r\n");
 			return cib_NOTEXISTS;
 		} 
 		rc = migrate_resource(rsc_id, NULL, NULL, cib_conn);
@@ -1092,21 +1096,21 @@ main(int argc, char **argv)
 		}
 		
 		if(rsc == NULL) {
-			fprintf(stderr, "Resource %s not migrated:"
+			CMD_ERR("Resource %s not migrated:"
 				" not found\n", rsc_id);
 
 		} else if(rsc->variant == pe_native
 			  && g_list_length(rsc->running_on) > 1) {
-			fprintf(stderr, "Resource %s not migrated:"
+			CMD_ERR("Resource %s not migrated:"
 				" active on multiple nodes\n", rsc_id);
 			
 		} else if(host_uname != NULL && dest == NULL) {
-			fprintf(stderr, "Error performing operation: "
+			CMD_ERR("Error performing operation: "
 				"%s is not a known node\n", host_uname);
 
 		} else if(host_uname != NULL
 			  && safe_str_eq(current_uname, host_uname)) {
-			fprintf(stderr, "Error performing operation: "
+			CMD_ERR("Error performing operation: "
 				"%s is already active on %s\n",
 				rsc_id, host_uname);
 
@@ -1121,14 +1125,14 @@ main(int argc, char **argv)
 				rsc_id, NULL, host_uname, cib_conn);
 
 		} else {
-			fprintf(stderr, "Resource %s not migrated: "
+			CMD_ERR("Resource %s not migrated: "
 				"not-active and no prefered location"
 				" specified.\n", rsc_id);
 		}
 		
 	} else if(rsc_cmd == 'G') {
 		if(rsc_id == NULL) {
-			fprintf(stderr, "Must supply a resource id with -r\n");
+			CMD_ERR("Must supply a resource id with -r\n");
 			return cib_NOTEXISTS;
 		} 
 		rc = dump_resource_prop(rsc_id, prop_name, &data_set);
@@ -1136,7 +1140,7 @@ main(int argc, char **argv)
 	} else if(rsc_cmd == 'S') {
 		crm_data_t *msg_data = NULL;
 		if(prop_value == NULL || strlen(prop_value) == 0) {
-			fprintf(stderr, "You need to supply a value with the -v option\n");
+			CMD_ERR("You need to supply a value with the -v option\n");
 			return CIBRES_MISSING_FIELD;
 
 		} else if(cib_conn == NULL) {
@@ -1144,7 +1148,7 @@ main(int argc, char **argv)
 		}
 
 		if(rsc_id == NULL) {
-			fprintf(stderr, "Must supply a resource id with -r\n");
+			CMD_ERR("Must supply a resource id with -r\n");
 			return cib_NOTEXISTS;
 		} 
 		CRM_DEV_ASSERT(rsc_type != NULL);
@@ -1161,18 +1165,18 @@ main(int argc, char **argv)
 
 	} else if(rsc_cmd == 'g') {
 		if(rsc_id == NULL) {
-			fprintf(stderr, "Must supply a resource id with -r\n");
+			CMD_ERR("Must supply a resource id with -r\n");
 			return cib_NOTEXISTS;
 		} 
 		rc = dump_resource_attr(rsc_id, prop_name, &data_set);
 
 	} else if(rsc_cmd == 'p') {
 		if(rsc_id == NULL) {
-			fprintf(stderr, "Must supply a resource id with -r\n");
+			CMD_ERR("Must supply a resource id with -r\n");
 			return cib_NOTEXISTS;
 		} 
 		if(prop_value == NULL || strlen(prop_value) == 0) {
-			fprintf(stderr, "You need to supply a value with the -v option\n");
+			CMD_ERR("You need to supply a value with the -v option\n");
 			return CIBRES_MISSING_FIELD;
 		}
 		rc = set_resource_attr(rsc_id, prop_set, prop_id, prop_name,
@@ -1180,7 +1184,7 @@ main(int argc, char **argv)
 
 	} else if(rsc_cmd == 'd') {
 		if(rsc_id == NULL) {
-			fprintf(stderr, "Must supply a resource id with -r\n");
+			CMD_ERR("Must supply a resource id with -r\n");
 			return cib_NOTEXISTS;
 		} 
 		rc = delete_resource_attr(rsc_id, prop_id, prop_set, prop_name,
@@ -1201,11 +1205,11 @@ main(int argc, char **argv)
 		crm_data_t *msg_data = NULL;
 		
 		if(rsc_id == NULL) {
-			fprintf(stderr, "Must supply a resource id with -r\n");
+			CMD_ERR("Must supply a resource id with -r\n");
 			return cib_NOTEXISTS;
 		} 
 		if(rsc_type == NULL) {
-			fprintf(stderr, "You need to specify a resource type with -t");
+			CMD_ERR("You need to specify a resource type with -t");
 			return cib_NOTEXISTS;
 
 		} else if(cib_conn == NULL) {
@@ -1220,7 +1224,7 @@ main(int argc, char **argv)
 		free_xml(msg_data);
 
 	} else {
-		fprintf(stderr, "Unknown command: %c\n", rsc_cmd);
+		CMD_ERR("Unknown command: %c\n", rsc_cmd);
 	}
 
 	if(cib_conn != NULL) {
@@ -1228,12 +1232,12 @@ main(int argc, char **argv)
 		cib_conn->cmds->signoff(cib_conn);
 	}
 	if(rc == cib_no_quorum) {
-		fprintf(stderr, "Error performing operation: %s\n",
+		CMD_ERR("Error performing operation: %s\n",
 			cib_error2string(rc));
-		fprintf(stderr, "Try using -f\n");
+		CMD_ERR("Try using -f\n");
 
 	} else if(rc != cib_ok) {
-		fprintf(stderr, "Error performing operation: %s\n",
+		CMD_ERR("Error performing operation: %s\n",
 			cib_error2string(rc));
 	}
 	
