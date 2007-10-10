@@ -31,7 +31,10 @@ typedef struct clone_variant_data_s {
 
 		int active_clones;
 		int max_nodes;
-		
+
+		int masters_active;
+		int masters_allocated;
+	
 		gboolean interleave;
 		gboolean ordered;
 		gboolean applied_master_prefs;

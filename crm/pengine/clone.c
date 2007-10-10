@@ -541,12 +541,12 @@ clone_create_notifications(
 	notify->pseudo = TRUE;
 	notify->runnable = TRUE;
 	notify->priority = INFINITY;
-/* 	crm_err("Upgrading priority for %s to INFINITY", notify->uuid); */
+	notify->runnable = action_complete->runnable;
 
 	notify_complete->pseudo = TRUE;
 	notify_complete->runnable = TRUE;
 	notify_complete->priority = INFINITY;
-/* 	crm_err("Upgrading priority for %s to INFINITY", notify_complete->uuid); */
+ 	notify_complete->runnable = action_complete->runnable;
 
 	/* post_notify before post_notify_complete */
 	custom_action_order(
@@ -593,7 +593,7 @@ child_starting_constraints(
 	}
     
 	if(child != NULL) {
-		order_start_start(rsc, child, pe_order_optional);
+		order_start_start(rsc, child, pe_order_runnable_left);
 		
 		custom_action_order(
 			child, start_key(child), NULL,

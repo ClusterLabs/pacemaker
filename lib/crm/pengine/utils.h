@@ -50,7 +50,7 @@ extern void print_node(
 extern void print_resource(
 	int log_level, const char *pre_text, resource_t *rsc, gboolean details);
 
-extern void dump_node_scores(int level, const char *comment, GListPtr nodes);
+extern void dump_node_scores(int level, resource_t *rsc, const char *comment, GListPtr nodes);
 
 /* Sorting functions */
 extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);

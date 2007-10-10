@@ -90,8 +90,8 @@ update_action(action_t *action)
 
 		if((local_type & pe_order_runnable_left)
 			&& other->action->runnable == FALSE) {
-			if(other->action->pseudo) {
-				do_crm_log(log_level, "Ignoring un-runnable - pseudo");
+			if(other->action->implied_by_stonith) {
+				do_crm_log(log_level, "Ignoring un-runnable - implied_by_stonith");
 
 			} else if(action->runnable == FALSE) {
 				do_crm_log(log_level+1, "Already un-runnable");

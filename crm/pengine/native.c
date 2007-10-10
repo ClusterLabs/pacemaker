@@ -121,7 +121,6 @@ ultimate_parent(resource_t *rsc)
 	return parent;
 }
 
-
 GListPtr
 native_merge_weights(
     resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback) 
@@ -169,6 +168,7 @@ native_merge_weights(
 node_t *
 native_color(resource_t *rsc, pe_working_set_t *data_set)
 {
+        int alloc_details = LOG_DEBUG_2;
 	if(rsc->parent && rsc->parent->is_allocating == FALSE) {
 		/* never allocate children on their own */
 		crm_debug("Escalating allocation of %s to its parent: %s",
@@ -176,7 +176,6 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		rsc->parent->cmds->color(rsc->parent, data_set);
 	}
 	
-	print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);
 	if(rsc->provisional == FALSE) {
 		return rsc->allocated_to;
 	}
@@ -187,6 +186,8 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	}
 
 	rsc->is_allocating = TRUE;
+	print_resource(alloc_details, "Allocating: ", rsc, FALSE);
+	dump_node_scores(alloc_details, rsc, "Pre-allloc", rsc->allowed_nodes);
 
 	slist_iter(
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
@@ -198,6 +199,8 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint);	
 	    );	
 
+	dump_node_scores(alloc_details, rsc, "Post-coloc", rsc->allowed_nodes);
+
 	slist_iter(
 	    constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
 	    
@@ -206,6 +209,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		constraint->score/INFINITY, TRUE);
 	    );
 	
+	dump_node_scores(alloc_details, rsc, "Post-merge", rsc->allowed_nodes);
 	
 	print_resource(LOG_DEBUG, "Allocating: ", rsc, FALSE);
 	if(rsc->next_role == RSC_ROLE_STOPPED) {
@@ -1027,14 +1031,17 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	CRM_CHECK(node != NULL, return NULL);
 
 	if(node->details->online == FALSE) {
-		crm_info("Skipping notification for %s", rsc->id);
+		crm_info("Skipping notification for %s: node offline", rsc->id);
+		return NULL;
+	} else if(op->runnable == FALSE) {
+		crm_info("Skipping notification for %s: not runnable", op->uuid);
 		return NULL;
 	}
 	
 	value = g_hash_table_lookup(op->meta, "notify_type");
 	task = g_hash_table_lookup(op->meta, "notify_operation");
 
-	crm_debug_2("Creating actions for %s: %s (%s-%s)",
+	crm_info("Creating notify actions for %s: %s (%s-%s)",
 		    op->uuid, rsc->id, value, task);
 	
 	key = generate_notify_key(rsc->id, value, task);
@@ -1502,6 +1509,8 @@ native_stop_constraints(
 	     */
 	    action->pseudo = TRUE;
 	    action->runnable = TRUE;
+	    action->implied_by_stonith = TRUE;
+	    
 	    if(is_stonith == FALSE) {
 		order_actions(stonith_op, action, pe_order_optional);
 	    }

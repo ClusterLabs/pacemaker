@@ -191,7 +191,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 				    pe_order_optional, data_set);
 		
  		if(group_data->ordered == FALSE) {
-			order_start_start(rsc, child_rsc, pe_order_implies_right);
+			order_start_start(rsc, child_rsc, pe_order_implies_right|pe_order_runnable_left);
 			order_stop_stop(rsc, child_rsc, pe_order_implies_right);
 
 		} else if(last_rsc != NULL) {
@@ -208,7 +208,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 			 *  started is required to be "safe"
 			 */
 			order_start_start(rsc, child_rsc,
-					  pe_order_implies_right|pe_order_implies_left|pe_order_runnable_right);
+					  pe_order_implies_right|pe_order_implies_left|pe_order_runnable_right|pe_order_runnable_left);
 		}
 		
 		last_rsc = child_rsc;
