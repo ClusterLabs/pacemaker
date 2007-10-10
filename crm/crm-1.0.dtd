@@ -434,7 +434,7 @@ rsc_ordering constraints express dependencies between the actions on two resourc
  * symmetrical : If TRUE, create the reverse constraint for the other action also.
 
 Read as:
-     to_action to type action from
+     action from type to_action to
 eg. 
      start rsc1 after promote rsc2
 
