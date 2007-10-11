@@ -247,7 +247,6 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 	char *commpath = NULL;
 	int local_socket_len = 2; /* 2 = '/' + '\0' */
 
-	
 	local_socket_len += strlen(channel_name);
 	local_socket_len += strlen(CRM_SOCK_DIR);
 
@@ -276,9 +275,9 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 		return NULL;
 	}
 
-	ch->ops->set_recv_qlen(ch, 100);
-	ch->ops->set_send_qlen(ch, 100);
-/* 	ch->should_send_block = TRUE; */
+	ch->ops->set_recv_qlen(ch, 512);
+	ch->ops->set_send_qlen(ch, 512);
+ 	ch->should_send_block = TRUE;
 
 	crm_debug_3("Processing of %s complete", commpath);
 

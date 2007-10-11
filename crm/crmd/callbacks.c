@@ -449,8 +449,8 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 
 		crm_debug_2("Created client: %p", blank_client);
 		
-		client_channel->ops->set_recv_qlen(client_channel, 100);
-		client_channel->ops->set_send_qlen(client_channel, 100);
+		client_channel->ops->set_recv_qlen(client_channel, 1024);
+		client_channel->ops->set_send_qlen(client_channel, 1024);
 	
 		blank_client->client_channel = client_channel;
 		blank_client->sub_sys   = NULL;

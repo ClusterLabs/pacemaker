@@ -368,8 +368,8 @@ cib_client_connect_common(
 		crm_debug_3("Created channel %p for channel %s",
 			  new_client, new_client->channel_name);
 
-		channel->ops->set_recv_qlen(channel, 100);
-		channel->ops->set_send_qlen(channel, 400);
+		channel->ops->set_recv_qlen(channel, 1024);
+		channel->ops->set_send_qlen(channel, 1024);
 
 		if(callback != NULL) {
 			new_client->source = G_main_add_IPC_Channel(
