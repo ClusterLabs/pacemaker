@@ -185,6 +185,7 @@ struct action_s
 		gboolean runnable;
 		gboolean optional;
 		gboolean failure_is_fatal;
+		gboolean implied_by_stonith;
 		gboolean allow_reload_conversion;
 
 		enum rsc_start_requirement needs;
