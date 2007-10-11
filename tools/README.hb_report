@@ -207,7 +207,7 @@ if the syslog files are in a non-standard directory. We look in
 /var/log/cluster. In case we can't find the logs, please supply
 their location:
 
-# hb_report -f 5pm -l /var/log/cluster1/ha-log -S /tmp/report_node1
+	# hb_report -f 5pm -l /var/log/cluster1/ha-log -S /tmp/report_node1
 
 If you have different log locations on different nodes, well,
 perhaps you'd like to make them the same. Or read about the
