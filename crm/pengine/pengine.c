@@ -216,7 +216,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 crm_data_t *
 do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now)
 {
-	int rsc_log_level = LOG_INFO;
+	int rsc_log_level = LOG_NOTICE;
 /*	pe_debug_on(); */
 	set_working_set_defaults(data_set);
 	data_set->input = xml_input;
