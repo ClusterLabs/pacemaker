@@ -623,6 +623,18 @@ master_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 	clone_internal_constraints(rsc, data_set);
 	
+	/* global stopped before start */
+	custom_action_order(
+		rsc, stopped_key(rsc), NULL,
+		rsc, start_key(rsc), NULL,
+		pe_order_optional, data_set);
+
+	/* global stopped before promote */
+	custom_action_order(
+		rsc, stopped_key(rsc), NULL,
+		rsc, promote_key(rsc), NULL,
+		pe_order_optional, data_set);
+
 	/* global demoted before start */
 	custom_action_order(
 		rsc, demoted_key(rsc), NULL,
