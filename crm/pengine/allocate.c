@@ -206,6 +206,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 				rsc, stop_key(rsc), NULL,
 				rsc, NULL, cancel,
 				pe_order_optional, data_set);
+			crm_free(key); key = NULL;
 			return TRUE;
 
 		} else if(op_match == NULL) {
