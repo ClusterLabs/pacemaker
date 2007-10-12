@@ -53,8 +53,11 @@ update_action(action_t *action)
 	int log_level = LOG_DEBUG_2;
 	gboolean changed = FALSE;
 	
-	do_crm_log(log_level, "Processing action %s: %s",
-		    action->uuid, action->optional?"optional":"required");
+	do_crm_log(log_level, "Processing action %s: %s %s %s",
+		   action->uuid,
+		   action->optional?"optional":"required",
+		   action->runnable?"runnable":"unrunnable",
+		   action->pseudo?"pseudo":action->task);
 
 	slist_iter(
 		other, action_wrapper_t, action->actions_before, lpc,
@@ -62,13 +65,15 @@ update_action(action_t *action)
 		gboolean other_changed = FALSE;
 		node_t *node = other->action->node;
 
-		do_crm_log(log_level, "   Checking action %s: %s 0x%.6x",
+		do_crm_log(log_level, "   Checking action %s: %s %s %s (flags=0x%.6x)",
 			   other->action->uuid,
 			   other->action->optional?"optional":"required",
+			   other->action->runnable?"runnable":"unrunnable",
+			   other->action->pseudo?"pseudo":other->action->task,
 			   other->type);
 
 		local_type = other->type;
-
+		
 		if(local_type & pe_order_restart
 		   && other->action->pseudo == FALSE
 		   && node != NULL
@@ -519,6 +524,14 @@ should_dump_input(int last_action, action_t *action, action_wrapper_t *wrapper)
 		  wrapper->action->uuid);
 	return FALSE;
     }
+    crm_debug_3("Input (%d) %s n=%p p=%d r=%d f=0x%.6x dumped for %s",
+		wrapper->action->id,
+		wrapper->action->uuid,
+		wrapper->action->node,
+		wrapper->action->pseudo,
+		wrapper->action->runnable,      
+		wrapper->type,      
+		action->uuid);
     return TRUE;
 }
 		   
