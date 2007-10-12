@@ -557,8 +557,7 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 	}
 	
 	xml_action = action2xml(action, FALSE);
-	add_node_copy(set, xml_action);
-	free_xml(xml_action);
+	add_node_nocopy(set, crm_element_name(xml_action), xml_action);
 
 	action->actions_before = g_list_sort(
 		action->actions_before, sort_action_id);
@@ -575,9 +574,7 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 		   input = create_xml_node(in, "trigger");
 		   
 		   xml_action = action2xml(wrapper->action, TRUE);
-		   add_node_copy(input, xml_action);
-		   free_xml(xml_action);
-		   
+		   add_node_nocopy(input, crm_element_name(xml_action), xml_action);
 		);
 }
 
