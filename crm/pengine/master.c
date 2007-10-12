@@ -449,12 +449,14 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc, resource_t, rsc->children, lpc,
 
 		crm_debug_2("Assigning priority for %s", child_rsc->id);
+		if(child_rsc->role == RSC_ROLE_STARTED) {
+		    child_rsc->role = RSC_ROLE_SLAVE;
+		}
+
 		chosen = child_rsc->allocated_to;
+
 		if(chosen == NULL) {
 			continue;
-			
-		} else if(child_rsc->role == RSC_ROLE_STARTED) {
-			child_rsc->role = RSC_ROLE_SLAVE;
 		}
 		
 		switch(child_rsc->next_role) {
@@ -492,6 +494,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 		apply_master_colocation(rsc->rsc_cons);
 		apply_master_colocation(child_rsc->rsc_cons);
 		child_rsc->sort_index = child_rsc->priority;
+		crm_debug_2("Assigning priority for %s: %d", child_rsc->id, child_rsc->priority);
 
 		if(child_rsc->next_role == RSC_ROLE_MASTER) {
 		    child_rsc->sort_index = INFINITY;
