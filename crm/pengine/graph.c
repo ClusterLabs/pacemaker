@@ -73,6 +73,15 @@ update_action(action_t *action)
 			   other->type);
 
 		local_type = other->type;
+
+		if(local_type & pe_order_demote
+		   && other->action->pseudo == FALSE
+		   && other->action->rsc->role > RSC_ROLE_SLAVE
+		   && node != NULL
+		   && node->details->online) {
+		    local_type |= pe_order_runnable_left;
+		    do_crm_log(log_level,"Upgrading restart constraint to runnable_left");
+		}
 		
 		if(local_type & pe_order_restart
 		   && other->action->pseudo == FALSE
@@ -138,6 +147,11 @@ update_action(action_t *action)
 				do_crm_log(log_level-1, "      Ignoring implies left - %s already stopped",
 					other->action->rsc->id);
 
+			} else if((local_type & pe_order_demote)
+				  && other->action->rsc->role < RSC_ROLE_MASTER) {
+			    do_crm_log(log_level-1, "      Ignoring implies left - %s already demoted",
+				       other->action->rsc->id);
+			    
 			} else if(action->optional == FALSE) {
 				other->action->optional = FALSE;
 				do_crm_log(log_level-1,

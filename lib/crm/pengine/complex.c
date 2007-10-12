@@ -369,7 +369,7 @@ void common_free(resource_t *rsc)
 	
 	crm_debug_5("Freeing %s %d", rsc->id, rsc->variant);
 
-  	pe_free_shallow(rsc->rsc_cons);
+	g_list_free(rsc->rsc_cons);
 	g_list_free(rsc->rsc_cons_lhs);
 
 	if(rsc->parameters != NULL) {

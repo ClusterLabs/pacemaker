@@ -194,7 +194,7 @@
            <expression id="named_address_node_eq" attribute="#uname" operation="eq" value="cxb1"/>
          </rule>
        </rsc_location>
-       <rsc_colocation from="cyrus_drbd" to="cyrus_address" id="cyrus_drbd_with_address" to_role="started" score="infinity"/>
+       <rsc_colocation to="cyrus_drbd" from="cyrus_address" id="cyrus_drbd_with_address" to_role="started" score="infinity"/>
        <rsc_colocation id="cyrus_volgroup_with_drbd" from="cyrus_volgroup" to="cyrus_drbd" to_role="master" score="infinity"/>
        <rsc_colocation id="cyrus_filesys_with_volgroup" from="cyrus_filesys" to="cyrus_volgroup" to_role="started" score="infinity"/>
        <rsc_colocation id="cyrus_syslogd_with_filesys" from="cyrus_syslogd" to="cyrus_filesys" to_role="started" score="infinity"/>

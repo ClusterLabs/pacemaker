@@ -71,6 +71,7 @@ typedef struct pe_working_set_s
 		GListPtr resources;
 		GListPtr placement_constraints;
 		GListPtr ordering_constraints;
+		GListPtr colocation_constraints;
 		
 		GListPtr actions;
 		crm_data_t *failed;

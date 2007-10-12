@@ -53,6 +53,7 @@ enum pe_ordering {
 	pe_order_optional		= 0x100, /* pure ordering, nothing implied */
 	pe_order_stonith_stop		= 0x200, /* only applies if the action is non-pseudo */
 	pe_order_restart		= 0x400, /* stop-start constraint */
+	pe_order_demote			= 0x800, /* stop-start constraint */
 
 	pe_order_test		        = 0x1000 /* test marker */
 };

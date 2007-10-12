@@ -175,7 +175,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		if(group_data->colocated && last_rsc != NULL) {
 			rsc_colocation_new(
 				"group:internal_colocation", NULL, INFINITY,
-				child_rsc, last_rsc, NULL, NULL);
+				child_rsc, last_rsc, NULL, NULL, data_set);
 		}
 
 		custom_action_order(rsc, stop_key(rsc), NULL,

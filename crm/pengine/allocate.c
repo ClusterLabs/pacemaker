@@ -826,6 +826,10 @@ cleanup_alloc_calculations(pe_working_set_t *data_set)
 	crm_debug_3("deleting node cons: %p", data_set->placement_constraints);
 	pe_free_rsc_to_node(data_set->placement_constraints);
 	data_set->placement_constraints = NULL;
+
+	crm_debug_3("deleting inter-resource cons: %p", data_set->colocation_constraints);
+  	pe_free_shallow(data_set->colocation_constraints);
+	data_set->colocation_constraints = NULL;
 	
 	cleanup_calculations(data_set);
 }
@@ -1028,6 +1032,10 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	if(score_i < 0) {
 		crm_debug_2("Upgrade : implies left");
  		cons_weight |= pe_order_implies_left;
+		if(safe_str_eq(action_rh, CRMD_ACTION_DEMOTE)) {
+			crm_debug_2("Upgrade : demote");
+			cons_weight |= pe_order_demote;
+		}
 		
 	} else if(score_i > 0) {
 		crm_debug_2("Upgrade : implies right");
@@ -1302,7 +1310,8 @@ static gint sort_cons_priority_rh(gconstpointer a, gconstpointer b)
 gboolean
 rsc_colocation_new(const char *id, const char *node_attr, int score,
 		   resource_t *rsc_lh, resource_t *rsc_rh,
-		   const char *state_lh, const char *state_rh)
+		   const char *state_lh, const char *state_rh,
+		   pe_working_set_t *data_set)
 {
 	rsc_colocation_t *new_con      = NULL;
 
@@ -1346,6 +1355,9 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
 
 	rsc_rh->rsc_cons_lhs = g_list_insert_sorted(
 		rsc_rh->rsc_cons_lhs, new_con, sort_cons_priority_lh);
+
+	data_set->colocation_constraints = g_list_append(
+		data_set->colocation_constraints, new_con);
 	
 	return TRUE;
 }
@@ -1454,11 +1466,11 @@ unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	}
 
 	rsc_colocation_new(
-		id, attr, score_i, rsc_lh, rsc_rh, state_lh, state_rh);
+	    id, attr, score_i, rsc_lh, rsc_rh, state_lh, state_rh, data_set);
 	
 	if(crm_is_true(symmetrical)) {
 		rsc_colocation_new(
-			id, attr, score_i, rsc_rh, rsc_lh, state_rh, state_lh);
+			id, attr, score_i, rsc_rh, rsc_lh, state_rh, state_lh, data_set);
 	}
 	return TRUE;
 }

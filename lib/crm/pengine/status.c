@@ -225,6 +225,7 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->resources   = NULL;
 	data_set->ordering_constraints  = NULL;
 	data_set->placement_constraints = NULL;
+	data_set->colocation_constraints = NULL;
 
 	data_set->actions  = NULL;	
 

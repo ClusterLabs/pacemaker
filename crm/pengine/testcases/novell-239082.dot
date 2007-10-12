@@ -83,5 +83,6 @@
 "ms-drbd0_stop_0" -> "ms-drbd0_stopped_0" [ style = bold]
 "ms-drbd0_stop_0" [ style=bold color="green" fontcolor="orange"  ]
 "ms-drbd0_stopped_0" -> "ms-drbd0_post_notify_stop_0" [ style = bold]
+"ms-drbd0_stopped_0" -> "ms-drbd0_promote_0" [ style = bold]
 "ms-drbd0_stopped_0" [ style=bold color="green" fontcolor="orange"  ]
 }
