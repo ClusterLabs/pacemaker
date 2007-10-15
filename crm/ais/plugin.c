@@ -752,6 +752,7 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 
     if(msg->host.local) {
 	void *conn = NULL;
+	const char *lookup = NULL;
 
 	if(dest == crm_msg_ais) {
 	    process_ais_message(msg);
@@ -768,11 +769,13 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 		  return FALSE;
 	    );
 
+	lookup = msg_type2text(dest);
+	AIS_ASSERT(ais_str_eq(lookup, crm_children[dest].name));
+	
 	conn = crm_children[dest].conn;
 	rc = 1;
 	if (conn == NULL) {
-	    ais_warn("No connection to %s",
-		     crm_children[dest].name);
+	    ais_warn("No connection to %s", crm_children[dest].name);
 	    
 	} else if (!libais_connection_active(conn)) {
 	    ais_warn("Connection to %s is no longer active",

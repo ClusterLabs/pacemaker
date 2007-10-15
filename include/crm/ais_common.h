@@ -48,8 +48,8 @@ enum crm_ais_msg_class {
 enum crm_ais_msg_types {
     crm_msg_none = 0,
     crm_msg_ais  = 1,
-    crm_msg_cib  = 2,
-    crm_msg_lrmd = 3,
+    crm_msg_lrmd = 2,
+    crm_msg_cib  = 3,
     crm_msg_crmd = 4,
     crm_msg_te   = 5,
     crm_msg_pe   = 6,
