@@ -1400,11 +1400,17 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	running = pe_find_node_id(rsc->running_on, node->details->id);
 	if(running == NULL) {
 		target_rc = crm_itoa(EXECRA_NOT_RUNNING);
+
+	} else if(rsc->role == RSC_ROLE_MASTER) {
+		target_rc = crm_itoa(EXECRA_RUNNING_MASTER);
+	}
+
+	if(target_rc != NULL) {
 		add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, target_rc);
 		crm_free(target_rc);
 	}
 	
-	crm_debug_2("Probing %s on %s", rsc->id, node->details->uname);
+	crm_debug_2("Probing %s on %s (%s)", rsc->id, node->details->uname, role2text(rsc->role));
 	
 	custom_action_order(rsc, NULL, probe, rsc, NULL, complete,
 			    pe_order_implies_right, data_set);
