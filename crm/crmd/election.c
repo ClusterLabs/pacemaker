@@ -238,7 +238,7 @@ do_election_count_vote(long long action,
 	crm_debug("Election %d, owner: %s", election_id, election_owner);
 	
 	/* update the list of nodes that have voted */
-	if(crm_str_eq(fsa_our_uuid, election_owner, TRUE)) {
+	if(crm_str_eq(fsa_our_uname, election_owner, TRUE)) {
 		if(election_id == current_election_id) {
 			char *uname_copy = NULL;
 			char *op_copy = crm_strdup(op);
@@ -305,25 +305,15 @@ do_election_count_vote(long long action,
 	}
 
 	if(we_loose) {
-		cl_uuid_t vote_uuid_s;
 		gboolean vote_sent = FALSE;
-		char vote_uuid[UU_UNPARSE_SIZEOF];
 		HA_Message *novote = create_request(
 			CRM_OP_NOVOTE, NULL, vote_from,
 			CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
 		update_dc(NULL, FALSE);
 		
-		if(cl_get_uuid(vote->msg, F_ORIGUUID, &vote_uuid_s) == HA_OK) {
-			cl_uuid_unparse(&vote_uuid_s, vote_uuid);
-
-		} else {
-			cl_log_message(LOG_ERR, vote->msg);
-		}
-		
 		crm_timer_stop(election_timeout);
-		crm_debug("Election lost to %s (%s/%d)",
-			  vote_from, vote_uuid, election_id);
+		crm_debug("Election lost to %s (%d)", vote_from, election_id);
 		if(fsa_input_register & R_THE_DC) {
 			crm_debug_3("Give up the DC to %s", vote_from);
 			election_result = I_RELEASE_DC;
@@ -334,7 +324,7 @@ do_election_count_vote(long long action,
 			
 		}
 
-		ha_msg_add(novote, F_CRM_ELECTION_OWNER, vote_uuid);
+		ha_msg_add(novote, F_CRM_ELECTION_OWNER, vote_from);
 		ha_msg_add_int(novote, F_CRM_ELECTION_ID, election_id);
 		
 		vote_sent = send_request(novote, NULL);
