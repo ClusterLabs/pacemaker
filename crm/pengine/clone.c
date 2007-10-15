@@ -233,7 +233,6 @@ color_instance(resource_t *rsc, pe_working_set_t *data_set)
 			crm_err("%s not found in %s (list=%d)",
 				chosen->details->id, rsc->parent->id,
 				g_list_length(rsc->parent->allowed_nodes));
-			exit(1);
 		}
 		CRM_ASSERT(local_node);
 		local_node->count++;
