@@ -127,7 +127,7 @@ void destroy_crm_node(gpointer data)
 
 void crm_peer_init(void)
 {
-    crm_err("Set these options via openais.conf");
+    crm_warn("Set these options via openais.conf");
     
     quorum_stats.votes_max    = 2;
     quorum_stats.votes_active = 0;
@@ -302,8 +302,6 @@ gboolean crm_calculate_quorum(void)
 	      quorum_stats.votes_max, quorum_stats.votes_total,
 	      limit, quorum_stats.votes_active, quorate?"true":"false");
 
-  done:
-    
     if(quorate != crm_have_quorum) {
 	crm_notice("Membership %llu: quorum %s",
 		   crm_peer_seq, quorate?"attained":"lost");
