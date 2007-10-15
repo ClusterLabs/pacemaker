@@ -76,11 +76,11 @@ struct crm_identify_msg_s
 } __attribute__((packed));
 
 static crm_child_t crm_children[] = {
-    { 0, crm_proc_none, 0x00000000, FALSE, "none",  NULL, NULL },
-    { 0, crm_proc_ais,  0x00000000, FALSE, "ais",   NULL, NULL },
-    { 0, crm_proc_cib,  0x00000001, TRUE,  "cib",   HA_LIBHBDIR"/cib", NULL },
-    { 0, crm_proc_lrmd, 0x00000000, TRUE,  "lrmd",  HA_LIBHBDIR"/lrmd", NULL },
-    { 0, crm_proc_crmd, 0x00000001, TRUE,  "crmd",  HA_LIBHBDIR"/crmd", NULL },
+    { 0, crm_proc_none, 0x00000000, FALSE, "none",  0, NULL, NULL },
+    { 0, crm_proc_ais,  0x00000000, FALSE, "ais",   0, NULL, NULL },
+    { 0, crm_proc_lrmd, 0x00000000, TRUE,  "lrmd",  0, HA_LIBHBDIR"/lrmd", NULL },
+    { 0, crm_proc_cib,  0x00000001, TRUE,  "cib",   HA_CCMUID, HA_LIBHBDIR"/cib", NULL },
+    { 0, crm_proc_crmd, 0x00000001, TRUE,  "crmd",  HA_CCMUID, HA_LIBHBDIR"/crmd", NULL },
 };
 
 void send_cluster_id(void);

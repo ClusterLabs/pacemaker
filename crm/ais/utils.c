@@ -65,6 +65,7 @@ gboolean process_ais_message(AIS_Message *msg)
 
 gboolean spawn_child(crm_child_t *child)
 {
+    int rc = 0;
     int lpc = 0;
     struct rlimit	oflimits;
     const char 	*devnull = "/dev/null";
@@ -86,6 +87,13 @@ gboolean spawn_child(crm_child_t *child)
     /* Child */
     ais_debug("Executing \"%s (%s)\" (pid %d)",
 	      child->command, child->name, (int) getpid());
+
+    if(child->uid > 0) {
+ 	rc = setuid(child->uid);
+	if(rc < 0) {
+	    ais_perror("Could not set user to %d", child->uid);
+	}
+    }
     
     /* A precautionary measure */
     getrlimit(RLIMIT_NOFILE, &oflimits);
@@ -404,7 +412,7 @@ int send_client_msg(
 	ais_err("No connection");
 	    
     } else if (!libais_connection_active(conn)) {
-	ais_err("Connection no longer active");
+	ais_warn("Connection no longer active");
 	    
 /* 	} else if ((queue->size - 1) == queue->used) { */
 /* 	    ais_err("Connection is throttled: %d", queue->size); */
