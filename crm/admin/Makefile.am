@@ -34,6 +34,7 @@ COMMONLIBS	= 					\
 		$(top_builddir)/lib/hbclient/libhbclient.la  		\
 		$(GLIBLIB)						\
 		$(CURSESLIBS)						\
+		$(AISLIBS)						\
 		$(LIBRT)
 
 

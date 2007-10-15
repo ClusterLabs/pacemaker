@@ -31,6 +31,7 @@
 #include <string.h>
 
 #include <stdlib.h>
+#include <limits.h>
 #include <ctype.h>
 #include <pwd.h>
 #include <grp.h>
@@ -63,6 +64,7 @@ gboolean crm_assert_failed = FALSE;
 unsigned int crm_log_level = LOG_INFO;
 gboolean crm_config_error = FALSE;
 gboolean crm_config_warning = FALSE;
+const char *crm_system_name = "unknown";
 
 void crm_set_env_options(void);
 
@@ -440,6 +442,7 @@ crm_log_init(
 	/* and for good measure... - this enum is a bit field (!) */
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
 	
+	crm_system_name = entity;
 	cl_log_set_entity(entity);
 	cl_log_set_facility(HA_LOG_FACILITY);
 
@@ -628,19 +631,23 @@ void g_hash_destroy_str(gpointer data)
 	crm_free(data);
 }
 
-int
+#include <sys/types.h>
+#include <stdlib.h>
+#include <limits.h>
+
+long
 crm_int_helper(const char *text, char **end_text)
 {
-	int atoi_result = -1;
+	long atoi_result = -1;
 	char *local_end_text = NULL;
 
 	errno = 0;
 	
 	if(text != NULL) {
 		if(end_text != NULL) {
-			atoi_result = (int)strtol(text, end_text, 10);
+			atoi_result = strtoul(text, end_text, 10);
 		} else {
-			atoi_result = (int)strtol(text, &local_end_text, 10);
+			atoi_result = strtoul(text, &local_end_text, 10);
 		}
 		
 /* 		CRM_CHECK(errno != EINVAL); */
@@ -650,7 +657,8 @@ crm_int_helper(const char *text, char **end_text)
 			
 		} else {
 			if(errno == ERANGE) {
-				crm_err("Conversion of %s was clipped", text);
+				crm_err("Conversion of %s was clipped: %ld",
+					text, atoi_result);
 			}
 			if(end_text == NULL && local_end_text[0] != '\0') {
 				crm_err("Characters left over after parsing "
@@ -771,20 +779,19 @@ get_uuid(ll_cluster_t *hb, const char *uname)
 		return uuid_calc;
 	}
 	
+	if(hb == NULL) {
+	    crm_warn("No connection to heartbeat, using uuid=uname");
+	    uuid_calc = crm_strdup(uname);
+	    goto fallback;
+	}
 	
 	if(hb->llc_ops->get_uuid_by_name(hb, uname, &uuid_raw) == HA_FAIL) {
 		crm_err("get_uuid_by_name() call failed for host %s", uname);
 		crm_free(uuid_calc);
-		return NULL;
-		
+		return NULL;	
 	} 
 
 	crm_malloc0(uuid_calc, 50);
-	
-	if(uuid_calc == NULL) {
-		return NULL;
-	}
-
 	cl_uuid_unparse(&uuid_raw, uuid_calc);
 
 	if(safe_str_eq(uuid_calc, unknown)) {
@@ -793,6 +800,7 @@ get_uuid(ll_cluster_t *hb, const char *uname)
 		return NULL;
 	}
 	
+  fallback:
 	g_hash_table_insert(crm_uuid_cache, crm_strdup(uname), uuid_calc);
 	uuid_calc = g_hash_table_lookup(crm_uuid_cache, uname);
 
@@ -818,7 +826,7 @@ get_uname(ll_cluster_t *hb, const char *uuid)
 		return uname;
 	}
 	
-	if(uuid != NULL) {
+	if(hb != NULL && uuid != NULL) {
 		cl_uuid_t uuid_raw;
 		char *uuid_copy = crm_strdup(uuid);
 		cl_uuid_parse(uuid_copy, &uuid_raw);
@@ -1677,4 +1685,52 @@ crm_is_writable(const char *dir, const char *file,
   out:
 	crm_free(full_file);
 	return pass;
+}
+
+long long
+toggle_bit(long long action_list, long long action)
+{
+	crm_debug_5("Toggling bit %.16llx", action);
+	action_list ^= action;
+	crm_debug_5("Result %.16llx", action_list & action);
+	return action_list;
+}
+
+long long
+clear_bit(long long action_list, long long action)
+{
+	unsigned int	level = LOG_DEBUG_5;
+	do_crm_log(level, "Clearing bit\t%.16llx", action);
+	
+	/* ensure its set */
+	action_list |= action;
+
+	/* then toggle */
+	action_list = action_list ^ action;
+
+	return action_list;
+}
+
+long long
+set_bit(long long action_list, long long action)
+{
+	unsigned int	level = LOG_DEBUG_5;
+	do_crm_log(level, "Setting bit\t%.16llx", action);
+	action_list |= action;
+	return action_list;
+}
+
+
+gboolean
+is_set(long long action_list, long long action)
+{
+	crm_debug_5("Checking bit\t%.16llx in %.16llx", action, action_list);
+	return ((action_list & action) == action);
+}
+
+gboolean
+is_set_any(long long action_list, long long action)
+{
+	crm_debug_5("Checking bit\t%.16llx in %.16llx", action, action_list);
+	return ((action_list & action) != 0);
 }

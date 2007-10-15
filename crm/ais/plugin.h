@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
  * This program is free software; you can redistribute it and/or
@@ -15,19 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef CRMD__H
-#define CRMD__H
 
-#include <ha_msg.h>
-
-#define SYS_NAME     CRM_SYSTEM_CRMD
-#define PID_FILE     WORKING_DIR "/"SYS_NAME".pid"
-#define DAEMON_LOG   DEVEL_DIR"/"SYS_NAME".log"
-#define DAEMON_DEBUG DEVEL_DIR"/"SYS_NAME".debug"
-
-extern GMainLoop  *crmd_mainloop;
-extern GHashTable *ipc_clients;
-
-extern void crmd_metadata(void);
+#ifndef AIS_CRM_PLUGIN__H
+#define AIS_CRM_PLUGIN__H
 
 #endif

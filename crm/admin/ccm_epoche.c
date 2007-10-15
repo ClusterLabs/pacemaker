@@ -37,7 +37,6 @@
 #include <crm/crm.h>
 
 
-const char* crm_system_name = "ccm_tool";
 oc_ev_t *ccm_token = NULL;
 int command = 0;
 
@@ -60,7 +59,7 @@ main(int argc, char ** argv)
 	fd_set rset;	
 	oc_ev_t *ccm_token = NULL;
 	
-	crm_log_init(crm_system_name, LOG_INFO, FALSE, FALSE, 0, NULL);
+	crm_log_init("ccm_tool", LOG_INFO, FALSE, FALSE, 0, NULL);
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {

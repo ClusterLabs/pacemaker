@@ -17,8 +17,6 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-
-
 INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 		-I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl 	\
 		-I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha	\
@@ -35,6 +33,9 @@ COMMONLIBS	=  					\
 		$(top_builddir)/lib/clplumbing/libplumb.la		\
 		$(top_builddir)/lib/crm/common/libcrmcommon.la 	\
 		$(top_builddir)/lib/crm/cib/libcib.la	 	\
+		$(top_builddir)/lib/apphb/libapphb.la			\
+		$(top_builddir)/lib/hbclient/libhbclient.la		\
+		$(AISLIBS)						\
 		$(GLIBLIB)						\
 		$(LIBRT)
 
