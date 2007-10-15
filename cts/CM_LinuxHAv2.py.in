@@ -526,8 +526,8 @@ class LinuxHAv2(HeartbeatCM):
                     "Respawning client .*cib",
                     "Respawning client .*crmd",
                     "CCM connection appears to have failed",
-                    ".*cib exited with return code 2.",
-                    ".*crmd exited with return code 2.",
+                    ".*cib .*returned rc 2.",
+                    ".*crmd .*returned rc 2.",
                     "crmd: .*Action A_RECOVER .* not supported",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "Exiting to recover from CCM connection failure",
@@ -545,7 +545,7 @@ class LinuxHAv2(HeartbeatCM):
                     "Respawning client .*crmd",
                     "Lost connection to the CIB service",
                     "Connection to the CIB terminated...",
-                    ".*crmd exited with return code 2.",
+                    ".*crmd .*returned rc 2.",
                     "State transition S_STARTING -> S_PENDING",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
@@ -558,7 +558,7 @@ class LinuxHAv2(HeartbeatCM):
                     "Respawning client .*crmd",
                     "crmd: .*I_ERROR.*lrm_dispatch",
                     "State transition S_STARTING -> S_PENDING",
-                    ".*crmd exited with return code 2.",
+                    ".*crmd .*returned rc 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
                     ], [], common_ignore, self))
@@ -577,7 +577,7 @@ class LinuxHAv2(HeartbeatCM):
         complist.append(Process("pengine", 1, [
                     "State transition S_IDLE",
                     "Respawning client .*crmd",
-                    ".*crmd exited with return code 2.",
+                    ".*crmd .*returned rc 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
                     ], [], common_ignore, self))
@@ -585,7 +585,7 @@ class LinuxHAv2(HeartbeatCM):
         complist.append(Process("tengine", 1, [
                     "State transition S_IDLE",
                     "Respawning client .*crmd",
-                    ".*crmd exited with return code 2.",
+                    ".*crmd .*returned rc 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
                     ], [], common_ignore, self))
