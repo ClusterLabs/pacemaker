@@ -381,7 +381,8 @@ static void ais_mark_unseen_peer_dead(
 {
     int *changed = user_data;
     crm_node_t *node = value;
-    if(node->last_seen != membership_seq) {
+    if(node->last_seen != membership_seq
+	&& ais_str_eq(CRM_NODE_LOST, node->state) == FALSE) {
 	ais_info("Node %s was not seen in the previous transition",
 		 node->uname);
 	*changed += update_member(node->id, membership_seq, node->votes,
