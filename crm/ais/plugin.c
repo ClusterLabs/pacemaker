@@ -774,7 +774,7 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 		     crm_children[dest].name);
 	    
 	} else if (!libais_connection_active(conn)) {
-	    ais_err("Connection to %s is no longer active",
+	    ais_warn("Connection to %s is no longer active",
 		    crm_children[dest].name);
 	    
 /* 	} else if ((queue->size - 1) == queue->used) { */
