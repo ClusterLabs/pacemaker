@@ -23,16 +23,18 @@ INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include \
   			  -I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
   			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl
 
-EXTRA_DIST		= ccdv.c attrd.h ocf-tester
+EXTRA_DIST		= ccdv.c attrd.h $(hanoarch_DATA) $(sbin_SCRIPTS)
 
 apigid			= @HA_APIGID@
 habindir		= @bindir@
 halibdir		= $(libdir)/@HB_PKG@
+hanoarchdir		= @HA_NOARCHDATAHBDIR@
 gliblib			= @GLIBLIB@
 
 habin_PROGRAMS		= cl_status cl_respawn 
 halib_SCRIPTS		= haresources2cib.py
-sbin_SCRIPTS		= ocf-tester
+hanoarch_DATA		= utillib.sh README.hb_report
+sbin_SCRIPTS		= ocf-tester hb_report
 
 if CRM_BUILD
 halib_PROGRAMS		= attrd pingd

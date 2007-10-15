@@ -267,7 +267,8 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 	 * actual mapping except validating, which ensure the return code
 	 * will be in the range 0 to 7. Too strict?
 	 */
-	if (ret_execra < 0 || ret_execra > 7) {
+	if (ret_execra < EXECRA_EXEC_UNKNOWN_ERROR ||
+		ret_execra > EXECRA_STATUS_UNKNOWN) {
 		cl_log(LOG_WARNING, "mapped the invalid return code %d."
 			, ret_execra);
 		ret_execra = EXECRA_UNKNOWN_ERROR;
