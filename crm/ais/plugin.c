@@ -229,7 +229,6 @@ int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
     membership_list = g_hash_table_new_full(
 	g_direct_hash, g_direct_equal, NULL, destroy_ais_node);
 
-    setenv("HA_debugfile", "/var/log/lha.log", 1);
     setenv("HA_debug", "1", 1);
     setenv("HA_logfacility", "daemon", 1);
     
