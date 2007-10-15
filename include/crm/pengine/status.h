@@ -57,6 +57,8 @@ typedef struct pe_working_set_s
 		gboolean symmetric_cluster;
 		gboolean is_managed_default;
 
+		gboolean start_failure_fatal;
+	
 		gboolean remove_after_stop;
 		gboolean stop_rsc_orphans;
 		gboolean stop_action_orphans;

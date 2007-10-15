@@ -147,6 +147,11 @@ unpack_config(crm_data_t *config, pe_working_set_t *data_set)
 	crm_debug_2("By default resources are %smanaged",
 		    data_set->is_managed_default?"":"not ");
 
+	value = pe_pref(data_set->config_hash, "start-failure-is-fatal");
+	cl_str_to_boolean(value, &data_set->start_failure_fatal);
+	crm_debug_2("Start failures are %s",
+		    data_set->start_failure_fatal?"always fatal":"handled by failcount");
+	
 	return TRUE;
 }
 
@@ -1177,7 +1182,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			    resource_location(
 				rsc, node, -INFINITY, "__not_supported__", data_set);
 
-			} else if(compare_version("2.0", op_version)) {			    
+			} else if(data_set->start_failure_fatal
+				  || compare_version("2.0", op_version)) {			    
 			    if(is_stop_action || safe_str_eq(task, CRMD_ACTION_START)) {
 				crm_warn("Compatability handling for failed op %s on %s",
 					 id, node->details->uname);
