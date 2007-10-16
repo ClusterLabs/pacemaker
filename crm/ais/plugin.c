@@ -464,8 +464,19 @@ void global_confchg_fn (
 
 int ais_ipc_client_exit_callback (void *conn)
 {
+    int lpc = 0;
+    const char *client = NULL;
+    
     ENTER("Client=%p", conn);
-    ais_notice("Client left");
+    for (; lpc < SIZEOF(crm_children); lpc++) {
+	if(crm_children[lpc].conn == conn) {
+	    crm_children[lpc].conn = NULL;
+	    client = crm_children[lpc].name;
+	    break;
+	}
+    }
+    
+    ais_info("Client %p/%s left", conn, client?client:"unknown-transient");
     LEAVE("");
 
     return (0);
