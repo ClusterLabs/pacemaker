@@ -243,31 +243,33 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 				INFINITY, tg_restart, "Transition Active", NULL);
 
 		}  else {
-			destroy_graph(transition_graph);
+			crm_data_t *graph_data = xml_data;
 			crm_debug("Processing graph derived from %s", graph_input);
 
-			if(graph_file == NULL) {
-				transition_graph = unpack_graph(xml_data);
-
-			} else {
-				crm_data_t *graph_data = NULL;
+			if(graph_file != NULL) {
 				FILE *graph_fd = fopen(graph_file, "r");
+
 				CRM_CHECK(graph_fd != NULL,
 					  cl_perror("Could not open graph file %s", graph_file);
 					  return TRUE);
 
 				graph_data = file2xml(graph_fd, FALSE);
-				transition_graph = unpack_graph(graph_data);
 
-				free_xml(graph_data);
 				unlink(graph_file);
 				fclose(graph_fd);
 			}
-			
+
+			destroy_graph(transition_graph);
+			transition_graph = unpack_graph(graph_data);				
 			start_global_timer(transition_timer,
 					   transition_graph->transition_timeout);
+
 			trigger_graph();
 			print_graph(LOG_DEBUG_2, transition_graph);
+
+			if(graph_data != xml_data) {
+			    free_xml(graph_data);
+			}
 		}
 		
 	} else if(strcasecmp(op, CRM_OP_TE_HALT) == 0) {
