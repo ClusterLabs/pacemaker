@@ -232,6 +232,7 @@ color_instance(resource_t *rsc, pe_working_set_t *data_set)
 		if(local_node) {
 		    local_node->count++;
 		} else if(rsc->is_managed) {
+		    /* what to do? we can't enforce per-node limits in this case */
 		    crm_config_err("%s not found in %s (list=%d)",
 				   chosen->details->id, rsc->parent->id,
 				   g_list_length(rsc->parent->allowed_nodes));
