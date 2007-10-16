@@ -34,6 +34,7 @@
 #include <crm/ais_common.h>
 #include "./utils.h"
 
+int in_shutdown = FALSE;
 extern int send_cluster_msg_raw(AIS_Message *ais_msg);
 
 void log_ais_message(int level, AIS_Message *msg) 
@@ -315,8 +316,10 @@ char *get_ais_data(AIS_Message *msg)
 	
 	rc = BZ2_bzBuffToBuffDecompress(
 	    uncompressed, &new_size, msg->data, msg->compressed_size, 1, 0);
-	
-	AIS_ASSERT(rc = BZ_OK);
+	if(rc != BZ_OK) {
+	    ais_info("rc=%d, new=%u expected=%u", rc, new_size, msg->size);
+	}
+	AIS_ASSERT(rc == BZ_OK);
 	AIS_ASSERT(new_size == msg->size);
     }
     

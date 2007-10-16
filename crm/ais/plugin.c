@@ -620,7 +620,8 @@ int crm_exec_exit_fn (struct objdb_iface_ver0 *objdb)
 
     ENTER("");
     ais_notice("Begining shutdown");
-    
+
+    in_shutdown = TRUE;
     wait_active = FALSE; /* stop the wait loop */
     
     for (lpc = SIZEOF(crm_children) - 1; lpc > 0; lpc--) {
