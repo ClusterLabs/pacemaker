@@ -63,6 +63,10 @@ pthread_t crm_wait_thread;
 gboolean wait_active = TRUE;
 GHashTable *membership_list = NULL;
 
+
+#define crm_flag_none		0x00000000
+#define crm_flag_members	0x00000001
+
 struct crm_identify_msg_s
 {
 	mar_req_header_t	header __attribute__((aligned(8)));
@@ -76,11 +80,11 @@ struct crm_identify_msg_s
 } __attribute__((packed));
 
 static crm_child_t crm_children[] = {
-    { 0, crm_proc_none, 0x00000000, FALSE, "none",  0, NULL, NULL },
-    { 0, crm_proc_ais,  0x00000000, FALSE, "ais",   0, NULL, NULL },
-    { 0, crm_proc_lrmd, 0x00000000, TRUE,  "lrmd",  0, HA_LIBHBDIR"/lrmd", NULL },
-    { 0, crm_proc_cib,  0x00000001, TRUE,  "cib",   HA_CCMUID, HA_LIBHBDIR"/cib", NULL },
-    { 0, crm_proc_crmd, 0x00000001, TRUE,  "crmd",  HA_CCMUID, HA_LIBHBDIR"/crmd", NULL },
+    { 0, crm_proc_none, crm_flag_none,    FALSE, "none",  0, NULL, NULL },
+    { 0, crm_proc_ais,  crm_flag_none,    FALSE, "ais",   0, NULL, NULL },
+    { 0, crm_proc_lrmd, crm_flag_none,    TRUE,  "lrmd",  0, HA_LIBHBDIR"/lrmd",         NULL },
+    { 0, crm_proc_cib,  crm_flag_members, TRUE,  "cib",   HA_CCMUID, HA_LIBHBDIR"/cib",  NULL },
+    { 0, crm_proc_crmd, crm_flag_members, TRUE,  "crmd",  HA_CCMUID, HA_LIBHBDIR"/crmd", NULL },
 };
 
 void send_cluster_id(void);
@@ -231,9 +235,9 @@ int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
 
     setenv("HA_debug", "1", 1);
     setenv("HA_logfacility", "daemon", 1);
+    setenv("HA_cluster_type", "openais", 1);
     
     plugin_log_level = LOG_DEBUG;
-    
     
     ais_info("CRM: Initialized");
     log_printf(LOG_INFO, "Logging: Initialized %s\n", __PRETTY_FUNCTION__);
@@ -718,10 +722,10 @@ void ais_manage_notification(void *conn, void *msg)
 	    ais_info("%s node notifications for %s",
 		     enable?"Enabling":"Disabling", crm_children[lpc].name);
 	    if(enable) {
-		crm_children[lpc].flags |= 0x1;
+		crm_children[lpc].flags |= crm_flag_members;
 	    } else {
-		crm_children[lpc].flags |= 0x1;
-		crm_children[lpc].flags ^= 0x1;
+		crm_children[lpc].flags |= crm_flag_members;
+		crm_children[lpc].flags ^= crm_flag_members;
 	    }
 	    break;
 	}
@@ -734,7 +738,7 @@ void send_member_notification(void)
     char *update = ais_generate_membership_data();
 
     for (; lpc < SIZEOF(crm_children); lpc++) {
-	if(crm_children[lpc].conn && (crm_children[lpc].flags & 0x1)) {
+	if(crm_children[lpc].conn && (crm_children[lpc].flags & crm_flag_members)) {
 	    ais_info("Sending membership update %llu to %s",
 		     membership_seq, crm_children[lpc].name);
 	    
@@ -748,8 +752,9 @@ void send_member_notification(void)
 gboolean route_ais_message(AIS_Message *msg, gboolean local_origin) 
 {
     int rc = 0;
+    int level = LOG_WARNING;
     int dest = msg->host.type;
-    
+
     ais_debug_3("Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d)",
 		msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
 		ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
@@ -774,6 +779,10 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 	    /* lrmd messages are routed via the crm */
 	    dest = crm_msg_crmd;
 	}
+
+	if(in_shutdown) {
+	    level = LOG_INFO;
+	}
 	
 	AIS_CHECK(dest > 0 && dest < SIZEOF(crm_children),
 		  ais_err("Invalid destination: %d", dest);
@@ -781,22 +790,25 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 		  return FALSE;
 	    );
 
+	rc = 1;
 	lookup = msg_type2text(dest);
+	conn = crm_children[dest].conn;
+
+	/* the cluster fails in weird and wonderfully obscure ways when this is not true */
 	AIS_ASSERT(ais_str_eq(lookup, crm_children[dest].name));
 	
-	conn = crm_children[dest].conn;
-	rc = 1;
 	if (conn == NULL) {
-	    ais_warn("No connection to %s", crm_children[dest].name);
+	    do_ais_log(level, "No connection to %s", crm_children[dest].name);
 	    
 	} else if (!libais_connection_active(conn)) {
-	    ais_warn("Connection to %s is no longer active",
-		    crm_children[dest].name);
+	    do_ais_log(level, "Connection to %s is no longer active",
+		       crm_children[dest].name);
 	    
 /* 	} else if ((queue->size - 1) == queue->used) { */
 /* 	    ais_err("Connection is throttled: %d", queue->size); */
 
 	} else {
+	    level = LOG_ERR;
 	    ais_debug_3("Delivering locally to %s (size=%d)",
 			crm_children[dest].name, msg->header.size);
 	    rc = openais_conn_send_response(conn, msg, msg->header.size);
@@ -812,9 +824,9 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
     }
 
     if(rc != 0) {
-	ais_warn("Sending message to %s.%s failed (rc=%d)",
-		 ais_dest(&(msg->host)), msg_type2text(dest), rc);
-	log_ais_message(LOG_WARNING, msg);
+	do_ais_log(level, "Sending message to %s.%s failed (rc=%d)",
+		   ais_dest(&(msg->host)), msg_type2text(dest), rc);
+	log_ais_message(level, msg);
 	return FALSE;
     }
     return TRUE;
