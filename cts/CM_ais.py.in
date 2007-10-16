@@ -97,7 +97,6 @@ class crm_ais(LinuxHAv2):
                 r":global_timer_callback",
                 r"Faking parameter digest creation",
                 r"Parameters to .* action changed:",
-                r"apply_xml_diff: Diff application failed!",
                 r"Parameters to .* changed",
             ),
         })
