@@ -229,13 +229,13 @@ color_instance(resource_t *rsc, pe_working_set_t *data_set)
 		local_node = pe_find_node_id(
 			rsc->parent->allowed_nodes, chosen->details->id);
 
-		if(local_node == NULL) {
-			crm_err("%s not found in %s (list=%d)",
-				chosen->details->id, rsc->parent->id,
-				g_list_length(rsc->parent->allowed_nodes));
+		if(local_node) {
+		    local_node->count++;
+		} else if(rsc->is_managed) {
+		    crm_config_err("%s not found in %s (list=%d)",
+				   chosen->details->id, rsc->parent->id,
+				   g_list_length(rsc->parent->allowed_nodes));
 		}
-		CRM_ASSERT(local_node);
-		local_node->count++;
 	}
 
 	return chosen;
