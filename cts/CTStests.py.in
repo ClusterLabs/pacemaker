@@ -1778,7 +1778,7 @@ class ComponentFail(CTSTest):
             self.patterns.append("%s crmd:.*The %s subsystem terminated unexpectedly" %(node, chosen.name))
         else:
             self.patterns.append("%s heartbeat.*Respawning client.*%s" %(node, chosen.name))
-            self.patterns.append("%s heartbeat.*Client.*%s.*killed by signal 9" %(node, chosen.name))
+            self.patterns.append("%s heartbeat.*%s.*killed by signal 9" %(node, chosen.name))
 
         if node_is_dc:
             self.patterns.extend(chosen.dc_pats)
