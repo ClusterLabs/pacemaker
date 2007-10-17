@@ -1033,6 +1033,20 @@ get_lrm_resource(crm_data_t *resource, crm_data_t *op_msg, gboolean do_create)
 	return rsc;
 }
 
+static gboolean lrm_remove_deleted_op(
+    gpointer key, gpointer value, gpointer user_data)
+{
+    const char *rsc = user_data;
+    struct recurring_op_s *pending = value;
+    if(safe_str_eq(rsc, pending->rsc_id)) {
+	crm_info("Removing op %s:%d for deleted resource %s",
+		 pending->op_key, pending->call_id, rsc);
+	return TRUE;
+    }
+    return FALSE;
+}
+
+
 /*	 A_LRM_INVOKE	*/
 enum crmd_fsa_input
 do_lrm_invoke(long long action,
@@ -1190,29 +1204,27 @@ do_lrm_invoke(long long action,
 			int rc = HA_OK;
 			lrm_op_t* op = NULL;
 
+			CRM_ASSERT(rsc != NULL);
 			op = construct_op(input->xml, rsc->id, operation);
 			CRM_ASSERT(op != NULL);
 			op->op_status = LRM_OP_DONE;
 			op->rc = EXECRA_OK;
 
-			if(rsc == NULL) {
-				crm_debug("Resource %s was already removed", rsc->id);
-
-			} else {
-				crm_info("Removing resource %s from the LRM", rsc->id);
-				rc = fsa_lrm_conn->lrm_ops->delete_rsc(fsa_lrm_conn, rsc->id);
-
-				if(rc != HA_OK) {
-					crm_err("Failed to remove resource %s", rsc->id);
-					op->op_status = LRM_OP_ERROR;
-					op->rc = EXECRA_UNKNOWN_ERROR;
-				}
+			crm_info("Removing resource %s from the LRM", rsc->id);
+			rc = fsa_lrm_conn->lrm_ops->delete_rsc(fsa_lrm_conn, rsc->id);
+			
+			if(rc != HA_OK) {
+			    crm_err("Failed to remove resource %s", rsc->id);
+			    op->op_status = LRM_OP_ERROR;
+			    op->rc = EXECRA_UNKNOWN_ERROR;
 			}
 
 			delete_rsc_entry(rsc->id);
 			send_direct_ack(from_host, from_sys, op, rsc->id);
 			free_lrm_op(op);			
 
+			g_hash_table_foreach_remove(pending_ops, lrm_remove_deleted_op, rsc->id);
+			
 			if(safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
 				/* this isn't expected - trigger a new transition */
 				time_t now = time(NULL);
