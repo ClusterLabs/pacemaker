@@ -454,11 +454,11 @@ void global_confchg_fn (
 	ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
     }    
     
-    ais_debug("Reaping unseen nodes...");
+    ais_debug_2("Reaping unseen nodes...");
     g_hash_table_foreach(membership_list, ais_mark_unseen_peer_dead, &changed);
     
-    ais_info("%d nodes changed", changed);
     if(changed) {
+	ais_debug("%d nodes changed", changed);
 	send_member_notification();
     }
     
