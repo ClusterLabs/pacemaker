@@ -204,7 +204,7 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
 	gboolean rc = TRUE;
 	GListPtr lrm_list = NULL;
 
-	crm_info("Checking for active resources before exit");
+	crm_debug("Checking for active resources before exit");
 
 	if(cur_state == S_TERMINATE) {
 		log_level = LOG_ERR;
