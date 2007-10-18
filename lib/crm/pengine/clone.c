@@ -95,11 +95,13 @@ gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set)
 gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
 	int lpc = 0;
+	const char *type = NULL;
+	resource_t *self = NULL;
+	int num_xml_children = 0;	
 	crm_data_t *xml_tmp = NULL;
 	crm_data_t *xml_self = NULL;
 	crm_data_t *xml_obj = rsc->xml;
 	clone_variant_data_t *clone_data = NULL;
-	resource_t *self = NULL;
 
 	const char *ordered = g_hash_table_lookup(
 		rsc->meta, XML_RSC_ATTR_ORDERED);
@@ -141,13 +143,23 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		xml_obj, XML_CIB_TAG_GROUP, FALSE);
 
 	if(clone_data->xml_obj_child == NULL) {
-		clone_data->xml_obj_child = find_xml_node(
-			xml_obj, XML_CIB_TAG_RESOURCE, TRUE);
+	    clone_data->xml_obj_child = find_xml_node(
+		xml_obj, XML_CIB_TAG_RESOURCE, TRUE);
+	} else {
+	    xml_child_iter_filter(xml_obj, a_child, XML_CIB_TAG_RESOURCE, num_xml_children++);
 	}
 
 	if(clone_data->xml_obj_child == NULL) {
 		crm_config_err("%s has nothing to clone", rsc->id);
 		return FALSE;
+	}
+
+	type = crm_element_name(clone_data->xml_obj_child);
+	xml_child_iter_filter(xml_obj, a_child, type, num_xml_children++);
+
+	if(num_xml_children > 1) {
+	    crm_config_err("%s has too many children.  Only the first (%s) will be cloned.",
+			   rsc->id, ID(clone_data->xml_obj_child));
 	}
 	
 	xml_self = copy_xml(rsc->xml);
