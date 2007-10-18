@@ -71,7 +71,7 @@ done
 
 if [ "x" = "x$OCF_ROOT" ]; then
     if [ -d /usr/lib/ocf ]; then
-	OCF_ROOT=/usr/lib/ocf
+	export OCF_ROOT=/usr/lib/ocf
     else
 	echo "You must supply the location of OCF_ROOT (common location is /usr/lib/ocf)"
 	usage 1
