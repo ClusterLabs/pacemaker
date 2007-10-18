@@ -36,23 +36,6 @@ getnodes() {
 }
 
 #
-# ssh
-#
-checksshuser() {
-	ssh -o Batchmode=yes $2@$1 true 2>/dev/null
-}
-trysshusers() {
-	n=$1
-	shift 1
-	for u; do
-		if checksshuser $n $u; then
-			echo $u
-			break
-		fi
-	done
-}
-
-#
 # logging
 #
 syslogmsg() {
@@ -254,13 +237,16 @@ dumpstate() {
 	ccm_tool -p > $1/ccm_tool.txt 2>&1
 }
 getconfig() {
-	cp -p $HA_CF $1/
+	[ -f $HA_CF ] &&
+		cp -p $HA_CF $1/
 	[ -f $LOGD_CF ] &&
 		cp -p $LOGD_CF $1/
 	if iscrmrunning; then
 		dumpstate $1
+		touch $1/RUNNING
 	else
 		cp -p $HA_VARLIB/crm/cib.xml $1/ 2>/dev/null
+		touch $1/STOPPED
 	fi
 	[ -f "$1/cib.xml" ] &&
 		crm_verify -V -x $1/cib.xml >$1/crm_verify.txt 2>&1
@@ -312,14 +298,14 @@ sanitize_one() {
 # keep the user posted
 #
 fatal() {
-	echo "ERROR: $*" >&2
+	echo "`uname -n`: ERROR: $*" >&2
 	exit 1
 }
 warning() {
-	echo "WARN: $*" >&2
+	echo "`uname -n`: WARN: $*" >&2
 }
 info() {
-	echo "INFO: $*" >&2
+	echo "`uname -n`: INFO: $*" >&2
 }
 pickfirst() {
 	for x; do
@@ -329,22 +315,6 @@ pickfirst() {
 		}
 	done
 	return 1
-}
-
-#
-# run a command everywhere
-#
-forall() {
-	c="$*"
-	for n in `getnodes`; do
-		if [ "$n" = "`uname -n`" ]; then
-			$c
-		else
-			if [ "$SSH_USER" ]; then
-				echo $c | ssh $SSH_OPTS $SSH_USER@$n
-			fi
-		fi
-	done
 }
 
 #

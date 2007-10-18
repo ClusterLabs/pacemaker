@@ -44,10 +44,10 @@ On security
 -----------
 
 `hb_report` is a fairly complex program. As some of you are
-probably going to run it as root let us state a few important
+probably going to run it as `root` let us state a few important
 things you should keep in mind:
 
-1. Don't run `hb_report` as root! It is fairly simple to setup
+1. Don't run `hb_report` as `root`! It is fairly simple to setup
 things in such a way that root access is not needed. I won't go
 into details, just to stress that all information collected
 should be readable by accounts belonging the haclient group.
@@ -59,14 +59,15 @@ should be readable by accounts belonging the haclient group.
 disturb processes, or touch or remove files out of the given
 destination directory. If you (by mistake) specify an existing
 directory, `hb_report` will bail out soon. If you specify a
-relative path, it won't work either. The final product of
-`hb_report` is a tarball. However, the destination directory is
-not removed on any node, unless the user specifies `-C`. If you're
-too lazy to cleanup the previous run, do yourself a favour and
-just supply a new destination directory. You've been warned. If
-you worry about the space used, just put all your directories
-under /tmp and setup a cronjob to remove those directories once a
-week:
+relative path, it won't work either.
+
+The final product of `hb_report` is a tarball. However, the
+destination directory is not removed on any node, unless the user
+specifies `-C`. If you're too lazy to cleanup the previous run,
+do yourself a favour and just supply a new destination directory.
+You've been warned. If you worry about the space used, just put
+all your directories under `/tmp` and setup a cronjob to remove
+those directories once a week:
 ..........
 	for d in /tmp/*; do
 		test -d $d ||
@@ -91,7 +92,7 @@ automated, we should sometimes run the procedure on the log host
 too. Actually, if there is a log host, then the best way is to
 run `hb_report` there.
 
-We use ssh for the remote program invocation. Even though it is
+We use `ssh` for the remote program invocation. Even though it is
 possible to run `hb_report` without ssh by doing a more menial job,
 the overall user experience is much better if ssh works. Anyway,
 how else do you manage your cluster?
@@ -112,13 +113,19 @@ you a lot of time. If you can't have it, for example because your
 security policy does not allow such a thing, or you just prefer
 menial work, then you will have to resort to the semi-manual
 semi-automated report generation. See below for instructions.
++
+If you need to supply a password for your passphrase/login, then
+please use the `-u` option.
 
 2. Times
 +
 In order to find files and messages in the given period and to
 parse the `-f` and `-t` options, `hb_report` uses perl and one of the
 `Date::Parse` or `Date::Manip` perl modules. Note that you need
-only one of these.
+only one of these. Furthermore, on nodes which have no logs and
+where you don't run `hb_report` directly, no date parsing is
+necessary. In other words, if you run this on a loghost then you
+don't need these perl modules on the cluster nodes.
 +
 On rpm based distributions, you can find `Date::Parse` in
 `perl-TimeDate` and on Debian and its derivatives in
@@ -126,7 +133,7 @@ On rpm based distributions, you can find `Date::Parse` in
 
 3. Core dumps
 +
-To backtrace core dumps gdb is needed and the Heartbeat packages
+To backtrace core dumps `gdb` is needed and the Heartbeat packages
 with the debugging info. The debug info packages may be installed
 at the time the report is created. Let's hope that you will need
 this really seldom.
@@ -143,7 +150,7 @@ What is in the report
 - heartbeat logs (if any)
 2. System related
 - general platform information (`uname`, `arch`, `distribution`)
-- system statistics (`uptime`, `top`, `ps`)
+- system statistics (`uptime`, `top`, `ps`, `netstat -i`, `arp`)
 3. User created :)
 - problem description (template to be edited)
 4. Generated
@@ -210,8 +217,8 @@ their location:
 	# hb_report -f 5pm -l /var/log/cluster1/ha-log -S /tmp/report_node1
 
 If you have different log locations on different nodes, well,
-perhaps you'd like to make them the same. Or read about the
-manual report collection. 
+perhaps you'd like to make them the same and make life easier for
+everybody.
 
 The log files are collected from all hosts where found. In case
 your syslog is configured to log to both the log server and local
@@ -294,4 +301,5 @@ The goods
 - sysstats.txt (dynamic info)
 - backtraces.txt (if coredumps found)
 - DC (well...)
+- RUNNING or STOPPED
 
