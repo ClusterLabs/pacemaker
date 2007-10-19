@@ -99,29 +99,6 @@ do_pe_invoke(long long action,
 	     fsa_data_t *msg_data)
 {
 	if(is_set(fsa_input_register, R_PE_CONNECTED) == FALSE){
-		if(pe_subsystem->pid > 0) {
-			int pid_status = -1;
-			int rc = waitpid(
-				pe_subsystem->pid, &pid_status, WNOHANG);
-
-			if(rc > 0 && WIFEXITED(pid_status)) {
-				clear_bit_inplace(fsa_input_register,
-						  pe_subsystem->flag_connected);
-	
-				if(is_set(fsa_input_register,
-					  pe_subsystem->flag_required)) {
-					/* this wasnt supposed to happen */
-					crm_err("%s[%d] terminated during start",
-						pe_subsystem->name,
-						pe_subsystem->pid);
-					register_fsa_error(
-						C_FSA_INTERNAL, I_ERROR, NULL);
-				}
-				pe_subsystem->pid = -1;
-				return I_NULL;
-			}
-		} 
-		
 		crm_info("Waiting for the PE to connect");
 		crmd_fsa_stall(NULL);
 		return I_NULL;		

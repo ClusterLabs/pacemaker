@@ -78,7 +78,7 @@ crmdManagedChildDied(
 		crm_err("The %s subsystem terminated unexpectedly",
 			the_subsystem->name);
 		
-		register_fsa_input_before(C_IPC_MESSAGE, I_ERROR, NULL);
+		register_fsa_input_before(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
 
 	p->privatedata = NULL;

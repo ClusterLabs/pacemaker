@@ -134,6 +134,7 @@ do_shutdown(long long action,
 		crmd_fsa_stall(NULL);
 	}
 	
+	crm_info("All subsystems stopped, continuing");
 	return I_NULL;
 }
 
