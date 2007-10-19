@@ -515,6 +515,7 @@ class LinuxHAv2(HeartbeatCM):
 
         stonith_ignore = [
             "ERROR: stonithd_signon: ",
+            "ERROR: stonithd_op_result_ready: not signed on",
             "update_failcount: Updating failcount for child_DoFencing",
             "ERROR: te_connect_stonith: Sign-in failed: triggered a retry",
             ]
