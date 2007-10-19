@@ -1144,7 +1144,7 @@ do_lrm_invoke(long long action,
 
 			op = construct_op(input->xml, ID(xml_rsc), operation);
 			op->op_status = LRM_OP_DONE;
-			op->rc = 0;
+			op->rc = EXECRA_OK;
 			CRM_ASSERT(op != NULL);
 			send_direct_ack(from_host, from_sys, op, ID(xml_rsc));
 			free_lrm_op(op);			
