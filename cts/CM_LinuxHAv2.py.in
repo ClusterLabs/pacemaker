@@ -538,7 +538,7 @@ class LinuxHAv2(HeartbeatCM):
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
 #                    "tengine_stonith_callback: .*result=0",
-                    "State transition S_IDLE -> S_INTEGRATION.*input=I_NODE_JOIN"
+                    "State transition S_IDLE -> S_INTEGRATION.*input=I_NODE_JOIN",
                     "State transition S_STARTING -> S_PENDING",
                     ], [], common_ignore, self))
 
