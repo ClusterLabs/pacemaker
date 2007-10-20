@@ -33,7 +33,7 @@ echo "$PROGDIR" | grep -qs '^/' || {
 LOGD_CF=`findlogdcf @sysconfdir@ $HA_DIR`
 export LOGD_CF
 
-: ${SSH_OPTS="-T -o Batchmode=yes"}
+: ${SSH_OPTS="-T"}
 LOG_PATTERNS="CRIT: ERROR:"
 
 #
@@ -60,7 +60,7 @@ usage: hb_report -f time [-t time] [-u user] [-l file] [-p patt] [-L patt]
 
 	-f time: time to start from
 	-t time: time to finish at (dflt: now)
-	-u user: ssh user to access other nodes (dftl: hacluster)
+	-u user: ssh user to access other nodes (dflt: empty, hacluster, root)
 	-l file: log file
 	-p patt: regular expression to match variables to be removed;
 	         this option is additive (dflt: "passw.*")
@@ -118,7 +118,7 @@ setvarsanddefaults() {
 	# used only by the master
 	NO_SSH=""
 	SSH_USER=""
-	TRY_SSH="hacluster"
+	TRY_SSH="hacluster root"
 	SLAVEPIDS=""
 	NO_DESCRIPTION=""
 }
@@ -148,7 +148,16 @@ time2str() {
 #
 logmarks() {
 	sev=$1 msg=$2
-	forall "logger -p $HA_LOGFACILITY.$sev $msg"
+	c="logger -p $HA_LOGFACILITY.$sev $msg"
+
+	for n in `getnodes`; do
+		if [ "$n" = "`uname -n`" ]; then
+			$c
+		else
+			[ "$ssh_good" ] &&
+				echo $c | ssh $ssh_opts $n
+		fi
+	done
 }
 findlog() {
 	if [ "$HA_LOGFACILITY" ]; then
@@ -176,13 +185,13 @@ send_config() {
 	for node in `getnodes`; do
 		[ "$node" = "$WE" ] && continue
 		dumpenv |
-		ssh $SSH_OPTS $SSH_USER@$node "mkdir -p $DESTDIR; cat > $DESTDIR/.env"
+		ssh $ssh_opts $node "mkdir -p $DESTDIR; cat > $DESTDIR/.env"
 	done
 }
 start_remote_collectors() {
 	for node in `getnodes`; do
 		[ "$node" = "$WE" ] && continue
-		ssh $SSH_OPTS $SSH_USER@$node "$PROGDIR/hb_report __slave $DESTDIR" |
+		ssh $ssh_opts $node "$PROGDIR/hb_report __slave $DESTDIR" |
 			(cd $DESTDIR && tar xf -) &
 		SLAVEPIDS="$SLAVEPIDS $!"
 	done
@@ -191,18 +200,29 @@ start_remote_collectors() {
 #
 # does ssh work?
 #
-findsshuser() {
-	for n in `getnodes`; do
-		[ "$node" = "$WE" ] && continue
-		trysshusers $n $TRY_SSH && break
-	done
+testsshuser() {
+	if [ "$2" ]; then
+		ssh -T -o Batchmode=yes $2@$1 true 2>/dev/null
+	else
+		ssh -T -o Batchmode=yes $1 true 2>/dev/null
+	fi
 }
-checkssh() {
-	for n in `getnodes`; do
-		[ "$node" = "$WE" ] && continue
-		checksshuser $n $SSH_USER || return 1
+findsshuser() {
+	for u in "" $TRY_SSH; do
+		rc=0
+		for n in `getnodes`; do
+			[ "$node" = "$WE" ] && continue
+			testsshuser $n $u || {
+				rc=1
+				break
+			}
+		done
+		if [ $rc -eq 0 ]; then
+			echo $u
+			return 0
+		fi
 	done
-	return 0
+	return 1
 }
 
 #
@@ -251,6 +271,7 @@ sys_stats() {
 	ps auxw
 	top -b -n 1
 	netstat -i
+	arp -an
 	set +x
 }
 
@@ -318,12 +339,27 @@ checklogs() {
 # check if files have same content in the cluster
 #
 cibdiff() {
-	crm_diff -c -n $1 -o $2
+	d1=`dirname $1`
+	d2=`dirname $2`
+	if [ -f $d1/RUNNING -a -f $d2/RUNNING ] ||
+		[ -f $d1/STOPPED -a -f $d2/STOPPED ]; then
+		crm_diff -c -n $1 -o $2
+	else
+		echo "can't compare cibs from running and stopped systems"
+	fi
 }
 txtdiff() {
 	diff $1 $2
 }
 diffcheck() {
+	[ -f "$1" ] || {
+		echo "$1 does not exist"
+		return 1
+	}
+	[ -f "$2" ] || {
+		echo "$2 does not exist"
+		return 1
+	}
 	case `basename $1` in
 	ccm_tool.txt)
 		txtdiff $1 $2;; # worddiff?
@@ -385,24 +421,26 @@ Date: `date`
 By: $PROG $userargs
 Subject: [short problem description]
 Severity: [choose one] enhancement minor normal major critical blocking
-Component: [choose one] CRM LRM CCM RA fencing comm GUI other
+Component: [choose one] CRM LRM CCM RA fencing heartbeat comm GUI tools other
 
 Detailed description:
 ---
 [...]
 ---
 
-$(
-if [ -f $DESTDIR/sysinfo.txt ]; then
-	cat $DESTDIR/sysinfo.txt
-else
-	for n in `getnodes`; do
-		[ -f $DESTDIR/$n/sysinfo.txt ] &&
-			echo "Info $n:"; sed 's/^/	/' $DESTDIR/$n/sysinfo.txt
-	done
-fi
-)
 EOF
+
+	if [ -f $DESTDIR/sysinfo.txt ]; then
+		echo "Common system info found:"
+		cat $DESTDIR/sysinfo.txt
+	else
+		for n in `getnodes`; do
+			if [ -f $DESTDIR/$n/sysinfo.txt ]; then
+				echo "System info $n:"
+				sed 's/^/	/' $DESTDIR/$n/sysinfo.txt
+			fi
+		done
+	fi
 }
 edittemplate() {
 	if ec=`pickfirst $EDITOR vim vi emacs nano`; then
@@ -430,10 +468,15 @@ EOF
 
 [ $# -eq 0 ] && usage
 
-# check for the major prereq
+# check for the major prereq for a) parameter parsing and b)
+# parsing logs
+#
+NO_str2time=""
 t=`str2time "12:00"`
 if [ "$t" = "" ]; then
-	fatal "please install the perl Date::Parse module"
+	NO_str2time=1
+	[ "$SLAVE" ] ||
+		fatal "please install the perl Date::Parse module"
 fi
 
 WE=`uname -n`  # who am i?
@@ -484,18 +527,25 @@ if [ "$SLAVE" = "" ]; then
 # part 2: ssh business
 #
 	# find out if ssh works
-	if [ "$NO_SSH" = "" ]; then
+	ssh_good=""
+	if [ -z "$NO_SSH" ]; then
 		[ "$SSH_USER" ] ||
 			SSH_USER=`findsshuser`
-		[ "$SSH_USER" ] && checkssh || # check if it works on _all_ nodes
-			SSH_USER=""
+		if [ $? -eq 0 ]; then
+			ssh_good=1
+			if [ "$SSH_USER" ]; then
+				ssh_opts="-l $SSH_USER $SSH_OPTS"
+			else
+				ssh_opts="$SSH_OPTS"
+			fi
+		fi
 	fi
 # final check: don't run if the destination directory exists
 	[ -d $DESTDIR ] && msgcleanup
-	[ "$SSH_USER" ] &&
+	[ "$ssh_good" ] &&
 		for node in `getnodes`; do
 			[ "$node" = "$WE" ] && continue
-			ssh $SSH_OPTS $SSH_USER@$node "test -d $DESTDIR" &&
+			ssh $ssh_opts $node "test -d $DESTDIR" &&
 				msgcleanup
 		done
 fi
@@ -524,7 +574,7 @@ if [ "$SLAVE" = "" ]; then
 #
 # part 4: start this program on other nodes
 #
-	if [ "$SSH_USER" ]; then
+	if [ "$ssh_good" ]; then
 		send_config
 		start_remote_collectors
 	else
@@ -558,11 +608,16 @@ if [ "$cnt" ] && [ $cnt -eq $nodecnt ]; then
 fi
 
 if [ -f "$HA_LOG" ]; then
-	dumplog $HA_LOG $FROM_TIME $TO_TIME |
-	if [ "$THIS_IS_NODE" ]; then
-		cat > $DESTDIR/$WE/ha-log
+	if [ "$NO_str2time" ]; then
+		warning "a log found; but we cannot slice it"
+		warning "please install the perl Date::Parse module"
 	else
-		cat > $DESTDIR/ha-log # we are log server, probably
+		dumplog $HA_LOG $FROM_TIME $TO_TIME |
+		if [ "$THIS_IS_NODE" ]; then
+			cat > $DESTDIR/$WE/ha-log
+		else
+			cat > $DESTDIR/ha-log # we are log server, probably
+		fi
 	fi
 else
 	warning "could not find the log file on $WE"
@@ -599,7 +654,7 @@ else
 		edittemplate $DESTDIR/description.txt
 	}
 	cd $DESTDIR/..
-	tar czf $DESTDIR.tar.gz $DESTDIR/
+	tar czf $DESTDIR.tar.gz `basename $DESTDIR`
 	finalword
 	checksize
 fi
