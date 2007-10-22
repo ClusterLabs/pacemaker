@@ -506,6 +506,7 @@ class LinuxHAv2(HeartbeatCM):
                     "Sending message to CIB service FAILED",
                     "apply_xml_diff: Diff application failed!",
                     "crmd: .*Action A_RECOVER .* not supported",
+                    "ERROR: stonithd_op_result_ready: not signed on",
                     "send_ipc_message: IPC Channel to .* is not connected",
                     "unconfirmed_actions: Waiting on .* unconfirmed actions",
                     "cib_native_msgready: Message pending on command channel",
@@ -515,7 +516,6 @@ class LinuxHAv2(HeartbeatCM):
 
         stonith_ignore = [
             "ERROR: stonithd_signon: ",
-            "ERROR: stonithd_op_result_ready: not signed on",
             "update_failcount: Updating failcount for child_DoFencing",
             "ERROR: te_connect_stonith: Sign-in failed: triggered a retry",
             ]
@@ -574,6 +574,7 @@ class LinuxHAv2(HeartbeatCM):
                     ], [
                     "tengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
                     "pengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
+                    "heartbeat: .*ERROR: Client /usr/lib/heartbeat/crmd exited with return code 2.",
                     ], common_ignore, self))
 
         complist.append(Process("pengine", 1, [
