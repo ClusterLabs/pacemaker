@@ -1753,8 +1753,6 @@ process_lrm_event(lrm_op_t *op)
 			crm_err("LRM operation %s (%d) %s (timeout=%dms)",
 				op_key, op->call_id,
 				op_status2text(op->op_status), op->timeout);
-			/* set op->rc because the lrm doesn't bother */
-			op->rc = -1;
 			break;
 		default:
 			crm_err("Mapping unknown status (%d) to ERROR",
