@@ -343,7 +343,7 @@ cib_action_update(crm_action_t *action, int status)
 	copy_in_properties(params, tmp);
 	
 	filter_action_parameters(params, CRM_FEATURE_SET);
-	digest = calculate_xml_digest(params, TRUE);
+	digest = calculate_xml_digest(params, TRUE, FALSE);
 
 	/* info for now as this area has been problematic to debug */
 	crm_debug("Calculated digest %s for %s (%s)\n", 

@@ -409,7 +409,7 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 		   sprintf(list+start, " %s ", param);
 		);
 	
-	digest = calculate_xml_digest(restart, TRUE);
+	digest = calculate_xml_digest(restart, TRUE, FALSE);
 	crm_xml_add(update, XML_LRM_ATTR_OP_RESTART, list);
 	crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
 
@@ -606,7 +606,7 @@ build_operation_update(
 	args_xml = create_xml_node(args_parent, XML_TAG_PARAMS);
 	g_hash_table_foreach(op->params, hash2field, args_xml);
 	filter_action_parameters(args_xml, caller_version);
-	digest = calculate_xml_digest(args_xml, TRUE);
+	digest = calculate_xml_digest(args_xml, TRUE, FALSE);
 	if(op->interval == 0 && safe_str_neq(task, CRMD_ACTION_STOP)) {
 		crm_debug("Calculated digest %s for %s (%s)\n", 
 			  digest, ID(xml_op),
@@ -1625,11 +1625,11 @@ static void
 cib_rsc_callback(const HA_Message *msg, int call_id, int rc,
 		 crm_data_t *output, void *user_data)
 {
-	if(rc != cib_ok) {
+	if(rc != cib_ok && rc != cib_diff_resync) {
 		crm_err("Resource update %d failed: %s",
 			call_id, cib_error2string(rc));	
 	} else {
-		crm_debug("Resource update %d complete", call_id);	
+		crm_debug("Resource update %d complete: rc=%d", call_id, rc);
 	}
 }
 

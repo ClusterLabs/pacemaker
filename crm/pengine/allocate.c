@@ -234,7 +234,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	g_hash_table_foreach(local_rsc_params, hash2field, params_all);
 
 	filter_action_parameters(params_all, op_version);
-	digest_all_calc = calculate_xml_digest(params_all, TRUE);
+	digest_all_calc = calculate_xml_digest(params_all, TRUE, FALSE);
 	digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
 	digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 	restart_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
@@ -249,7 +249,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 			filter_reload_parameters(params_restart, restart_list);
 		}
 
-		digest_restart_calc = calculate_xml_digest(params_restart, TRUE);
+		digest_restart_calc = calculate_xml_digest(params_restart, TRUE, FALSE);
 		if(safe_str_neq(digest_restart_calc, digest_restart)) {
 			did_change = TRUE;
 			crm_log_xml_info(params_restart, "params:restart");

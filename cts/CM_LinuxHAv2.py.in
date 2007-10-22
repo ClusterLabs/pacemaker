@@ -127,8 +127,9 @@ class LinuxHAv2(HeartbeatCM):
                 r":global_timer_callback",
                 r"Faking parameter digest creation",
                 r"Parameters to .* action changed:",
-                r"apply_xml_diff: Diff application failed!",
                 r"Parameters to .* changed",
+                r"apply_xml_diff: Diff application failed!",
+                r"apply_xml_diff: Digest mis-match: expected"
             ),
         })
         del self["Standby"]
