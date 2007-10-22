@@ -270,7 +270,7 @@ void group_rsc_colocation_rh(
 	if(rsc_rh->provisional) {
 		return;
 	
-	} else if(group_data->colocated) {
+	} else if(group_data->colocated && group_data->first_child) {
 		group_data->first_child->cmds->rsc_colocation_rh(
 			rsc_lh, group_data->first_child, constraint); 
 		return;
