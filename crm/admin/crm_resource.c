@@ -528,12 +528,19 @@ send_lrm_rsc_op(IPC_Channel *crmd_channel, const char *op,
 	cmd = create_request(op, msg_data, host_uname,
 			     CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 
+/* 	crm_log_xml_warn(cmd, "send_lrm_rsc_op"); */	
 	free_xml(msg_data);
 	crm_free(key);
 
 	if(send_ipc_message(crmd_channel, cmd)) {
-		rc = 0;
+	    rc = 0;
+	    sleep(1); /* dont exit striaght away, give the crmd time
+		       * to process our request
+		       */
+	} else {
+	    CMD_ERR("Could not send %s op to the crmd", op);
 	}
+	
 	crm_msg_del(cmd);
 	return rc;
 }
@@ -824,7 +831,7 @@ main(int argc, char **argv)
 		usage(crm_system_name, LSB_EXIT_EINVAL);
 	}
 	
-	crm_log_init(crm_system_name, LOG_ERR, FALSE, FALSE, argc, argv);
+	crm_log_init(crm_system_name, LOG_WARNING, FALSE, FALSE, argc, argv);
 
 	while (1) {
 #ifdef HAVE_GETOPT_H
