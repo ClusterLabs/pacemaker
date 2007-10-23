@@ -35,6 +35,7 @@ export LOGD_CF
 
 : ${SSH_OPTS="-T"}
 LOG_PATTERNS="CRIT: ERROR:"
+PEINPUTS_PATT="peng.*PEngine Input stored"
 
 #
 # the instance where user runs hb_report is the master
@@ -234,10 +235,17 @@ getbacktraces() {
 		getbt $flist > $3
 }
 getpeinputs() {
-	n=`basename $3`
+	if [ "$HA_LOGFACILITY" ]; then
+		n=`basename $3`
+		patt=" $n $PEINPUTS_PATT"
+	else
+		patt="$PEINPUTS_PATT"
+	fi
 	flist=$(
 	if [ -f $3/ha-log ]; then
-		grep " $n peng.*PEngine Input stored" $3/ha-log | awk '{print $NF}'
+		grep "$patt" $3/ha-log | awk '{print $NF}'
+	elif [ -f $3/../ha-log ]; then # central log
+		grep "$patt" $3/../ha-log | awk '{print $NF}'
 	else
 		find_files $HA_VARLIB/pengine $1 $2
 	fi | sed "s,$HA_VARLIB/,,g"
