@@ -965,6 +965,8 @@ send_peer_reply(
 		int diff_del_updates = 0;
 		int diff_del_epoch   = 0;
 		int diff_del_admin_epoch = 0;
+
+		char *digest = NULL;
 		
 		cib_diff_version_details(
 			result_diff,
@@ -979,6 +981,11 @@ send_peer_reply(
 		ha_msg_add(reply_copy, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
 		ha_msg_mod(reply_copy, F_CIB_OPERATION, CIB_OP_APPLY_DIFF);
 
+		digest = calculate_xml_digest(the_cib, FALSE, TRUE);
+		ha_msg_mod(result_diff, XML_ATTR_DIGEST, digest);
+/* 		crm_log_xml_debug(the_cib, digest); */
+		crm_free(digest);
+		
  		add_message_xml(reply_copy, F_CIB_UPDATE_DIFF, result_diff);
 		crm_log_message(LOG_DEBUG_3, reply_copy);
   		send_ha_message(hb_conn, reply_copy, NULL, TRUE);

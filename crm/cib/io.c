@@ -106,7 +106,7 @@ validate_cib_digest(crm_data_t *local_cib, const char *sigfile)
 	}
 
 	if(local_cib != NULL) {
-		digest = calculate_xml_digest(local_cib, FALSE);
+	    digest = calculate_xml_digest(local_cib, FALSE, FALSE);
 	}
 	
 	expected_strm = fopen(sigfile, "r");
@@ -158,7 +158,7 @@ write_cib_digest(crm_data_t *local_cib, char *digest)
 	}
 
 	if(digest == NULL) {
-		local_digest = calculate_xml_digest(local_cib, FALSE);
+		local_digest = calculate_xml_digest(local_cib, FALSE, FALSE);
 		CRM_ASSERT(digest != NULL);
 		digest = local_digest;
 	}
@@ -751,7 +751,7 @@ write_cib_contents(gpointer p)
 		goto cleanup;
 	}
 
-	digest = calculate_xml_digest(the_cib, FALSE);
+	digest = calculate_xml_digest(the_cib, FALSE, FALSE);
 	crm_info("Wrote version %s.%s.%s of the CIB to disk (digest: %s)",
 		 admin_epoch?admin_epoch:"0",
 		 epoch?epoch:"0", updates?updates:"0", digest);	

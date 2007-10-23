@@ -330,7 +330,7 @@ main(int argc, char **argv)
 		exit(1);
 	    }
 	    
-	    digest = calculate_xml_digest(input, FALSE);
+	    digest = calculate_xml_digest(input, FALSE, FALSE);
 	    fprintf(stderr, "Digest: ");
 	    fprintf(stdout, "%s\n", crm_str(digest));
 	    crm_free(digest);
