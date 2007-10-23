@@ -575,7 +575,6 @@ class LinuxHAv2(HeartbeatCM):
                     ], [
                     "tengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
                     "pengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
-                    "heartbeat: .*ERROR: Client /usr/lib/heartbeat/crmd exited with return code 2.",
                     ], common_ignore, self))
 
         complist.append(Process("pengine", 1, [
