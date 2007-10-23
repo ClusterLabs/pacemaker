@@ -477,7 +477,6 @@ update_cib_object(crm_data_t *parent, crm_data_t *update)
 	    }
 	    xml_remove_prop(update, XML_CIB_ATTR_REPLACE);
 	    xml_remove_prop(target, XML_CIB_ATTR_REPLACE);
-	    crm_debug("done");
 	}
 	
 	copy_in_properties(target, update);
