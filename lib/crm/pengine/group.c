@@ -217,6 +217,6 @@ group_resource_state(resource_t *rsc, gboolean current)
 		}
 		);
 
-	crm_warn("%s role: %s", rsc->id, role2text(group_role));
+	crm_debug_3("%s role: %s", rsc->id, role2text(group_role));
 	return group_role;
 }

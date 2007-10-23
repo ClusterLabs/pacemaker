@@ -305,6 +305,6 @@ clone_resource_state(resource_t *rsc, gboolean current)
 		}
 		);
 
-	crm_warn("%s role: %s", rsc->id, role2text(clone_role));
+	crm_debug_3("%s role: %s", rsc->id, role2text(clone_role));
 	return clone_role;
 }
