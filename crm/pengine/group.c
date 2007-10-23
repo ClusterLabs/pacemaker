@@ -146,11 +146,15 @@ group_update_pseudo_status(resource_t *parent, resource_t *child)
 void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
 	resource_t *last_rsc = NULL;
-
+	int stopstop = pe_order_shutdown;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
 	native_internal_constraints(rsc, data_set);
+
+	if(group_data->ordered == FALSE) {
+	    stopstop |= pe_order_implies_right;
+	}
 	
 	custom_action_order(
 		rsc, stopped_key(rsc), NULL,
@@ -178,9 +182,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 				child_rsc, last_rsc, NULL, NULL, data_set);
 		}
 
-		custom_action_order(rsc, stop_key(rsc), NULL,
-				    child_rsc,  stop_key(child_rsc), NULL,
-				    pe_order_optional, data_set);
+		order_stop_stop(rsc, child_rsc, stopstop);
 		
 		custom_action_order(child_rsc, stop_key(child_rsc), NULL,
 				    rsc,  stopped_key(rsc), NULL,
@@ -188,11 +190,10 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 		custom_action_order(child_rsc, start_key(child_rsc), NULL,
 				    rsc, started_key(rsc), NULL,
-				    pe_order_optional, data_set);
+				    pe_order_runnable_left, data_set);
 		
  		if(group_data->ordered == FALSE) {
 			order_start_start(rsc, child_rsc, pe_order_implies_right|pe_order_runnable_left);
-			order_stop_stop(rsc, child_rsc, pe_order_implies_right);
 
 		} else if(last_rsc != NULL) {
 			order_start_start(last_rsc, child_rsc, pe_order_implies_right|pe_order_runnable_left);

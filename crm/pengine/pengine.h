@@ -55,7 +55,9 @@ enum pe_ordering {
 	pe_order_restart		= 0x400, /* stop-start constraint */
 	pe_order_demote			= 0x800, /* stop-start constraint */
 
-	pe_order_test		        = 0x1000 /* test marker */
+	pe_order_shutdown		= 0x1000, /* combines with pe_order_restart to make a complex resource shut down */
+	
+	pe_order_test		        = 0x10000 /* test marker */
 };
 
 struct rsc_colocation_s { 

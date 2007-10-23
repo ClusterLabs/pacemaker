@@ -64,7 +64,13 @@ update_action(action_t *action)
 
 		gboolean other_changed = FALSE;
 		node_t *node = other->action->node;
+		resource_t *other_rsc = other->action->rsc;
+		enum rsc_role_e other_role = RSC_ROLE_UNKNOWN;
 
+		if(other_rsc) {
+		    other_role = other_rsc->fns->state(other_rsc, TRUE);
+		}
+		
 		do_crm_log(log_level, "   Checking action %s: %s %s %s (flags=0x%.6x)",
 			   other->action->uuid,
 			   other->action->optional?"optional":"required",
@@ -74,23 +80,33 @@ update_action(action_t *action)
 
 		local_type = other->type;
 
-		if(local_type & pe_order_demote
+		if((local_type & pe_order_demote)
 		   && other->action->pseudo == FALSE
-		   && other->action->rsc->role > RSC_ROLE_SLAVE
+		   && other_role > RSC_ROLE_SLAVE
 		   && node != NULL
 		   && node->details->online) {
 		    local_type |= pe_order_runnable_left;
 		    do_crm_log(log_level,"Upgrading restart constraint to runnable_left");
 		}
+
+		if((local_type & pe_order_shutdown)
+		   && other->action->optional == FALSE
+		   && other_rsc->shutdown) {
+		    action->optional = FALSE;
+		    changed = TRUE;
+		    do_crm_log(log_level-1,
+			       "   * Marking action %s manditory because of %s (complex)",
+			       action->uuid, other->action->uuid);
+		}
 		
-		if(local_type & pe_order_restart
-		   && other->action->pseudo == FALSE
-		   && node != NULL
-		   && node->details->online) {
+		if((local_type & pe_order_restart)
+		   && other_role > RSC_ROLE_STOPPED) {
 
-		    local_type |= pe_order_implies_left;
-		    do_crm_log(log_level,"Upgrading restart constraint to implies_left");
-
+		    if(other_rsc->variant == pe_native) {
+			local_type |= pe_order_implies_left;
+			do_crm_log(log_level,"Upgrading restart constraint to implies_left");
+		    }
+		    
 		    if(other->action->optional
 		       && other->action->runnable
 		       && action->runnable == FALSE) {
@@ -98,6 +114,7 @@ update_action(action_t *action)
 				   "   * Marking action %s manditory because %s is unrunnable",
 				   other->action->uuid, action->uuid);
 			other->action->optional = FALSE;
+			other_rsc->shutdown = TRUE;
 			other_changed = TRUE;
 		    } 
 		}
@@ -142,15 +159,14 @@ update_action(action_t *action)
 				do_crm_log(log_level+1, "      Ignoring implies left - redundant");
 				
 			} else if(safe_str_eq(other->action->task, CRMD_ACTION_STOP)
-				  && other->action->rsc->fns->state(
-					  other->action->rsc, TRUE) == RSC_ROLE_STOPPED) {
+				  && other_role == RSC_ROLE_STOPPED) {
 				do_crm_log(log_level-1, "      Ignoring implies left - %s already stopped",
-					other->action->rsc->id);
+					other_rsc->id);
 
 			} else if((local_type & pe_order_demote)
-				  && other->action->rsc->role < RSC_ROLE_MASTER) {
+				  && other_rsc->role < RSC_ROLE_MASTER) {
 			    do_crm_log(log_level-1, "      Ignoring implies left - %s already demoted",
-				       other->action->rsc->id);
+				       other_rsc->id);
 			    
 			} else if(action->optional == FALSE) {
 				other->action->optional = FALSE;

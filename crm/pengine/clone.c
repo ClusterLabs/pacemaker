@@ -649,7 +649,7 @@ child_stopping_constraints(
 	}
 
 	if(child != NULL) {
-		order_stop_stop(rsc, child, pe_order_optional);
+		order_stop_stop(rsc, child, pe_order_shutdown);
 		
 		custom_action_order(
 			child, stop_key(child), NULL,

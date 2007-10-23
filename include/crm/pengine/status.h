@@ -150,6 +150,7 @@ struct resource_s {
 		
 		gboolean failed;
 		gboolean start_pending;
+		gboolean shutdown;
 		
 		gboolean orphan;
 		
