@@ -128,8 +128,6 @@ class LinuxHAv2(HeartbeatCM):
                 r"Faking parameter digest creation",
                 r"Parameters to .* action changed:",
                 r"Parameters to .* changed",
-                r"apply_xml_diff: Diff application failed!",
-                r"apply_xml_diff: Digest mis-match: expected"
             ),
         })
         del self["Standby"]
@@ -505,7 +503,6 @@ class LinuxHAv2(HeartbeatCM):
                     "Lost connection to the CIB service",
                     "Connection to the CIB terminated...",
                     "Sending message to CIB service FAILED",
-                    "apply_xml_diff: Diff application failed!",
                     "crmd: .*Action A_RECOVER .* not supported",
                     "ERROR: stonithd_op_result_ready: not signed on",
                     "send_ipc_message: IPC Channel to .* is not connected",
