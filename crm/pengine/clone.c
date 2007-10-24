@@ -210,10 +210,10 @@ color_instance(resource_t *rsc, pe_working_set_t *data_set)
 
 	crm_debug_2("Processing %s", rsc->id);
 
-	if(rsc->provisional == FALSE) {
+	if(is_not_set(rsc->flags, pe_rsc_provisional)) {
 		return rsc->allocated_to;
 
-	} else if(rsc->is_allocating) {
+	} else if(is_set(rsc->flags, pe_rsc_allocating)) {
 		crm_debug("Dependancy loop detected involving %s", rsc->id);
 		return NULL;
 	}
@@ -231,7 +231,7 @@ color_instance(resource_t *rsc, pe_working_set_t *data_set)
 
 		if(local_node) {
 		    local_node->count++;
-		} else if(rsc->is_managed) {
+		} else if(is_set(rsc->flags, pe_rsc_managed)) {
 		    /* what to do? we can't enforce per-node limits in this case */
 		    crm_config_err("%s not found in %s (list=%d)",
 				   chosen->details->id, rsc->parent->id,
@@ -257,15 +257,15 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	if(rsc->provisional == FALSE) {
+	if(is_not_set(rsc->flags, pe_rsc_provisional)) {
 		return NULL;
 
-	} else if(rsc->is_allocating) {
+	} else if(is_set(rsc->flags, pe_rsc_allocating)) {
 		crm_debug("Dependancy loop detected involving %s", rsc->id);
 		return NULL;
 	}
 
-	rsc->is_allocating = TRUE;
+	set_bit(rsc->flags, pe_rsc_allocating);
 	crm_debug_2("Processing %s", rsc->id);
 
 	/* this information is used by sort_clone_instance() when deciding in which 
@@ -327,8 +327,8 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	crm_debug("Allocated %d %s instances of a possible %d",
 		  allocated, rsc->id, clone_data->clone_max);
 
-	rsc->provisional = FALSE;
-	rsc->is_allocating = FALSE;
+	clear_bit(rsc->flags, pe_rsc_provisional);
+	clear_bit(rsc->flags, pe_rsc_allocating);
 	
 	return NULL;
 }
@@ -394,10 +394,10 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		clone_update_pseudo_status(
 			child_rsc, &child_stopping, &child_starting);
 		
-		if(child_rsc->starting) {
+		if(is_set(child_rsc->flags, pe_rsc_starting)) {
 			last_start_rsc = child_rsc;
 		}
-		if(child_rsc->stopping) {
+		if(is_set(child_rsc->flags, pe_rsc_stopping)) {
 			last_stop_rsc = child_rsc;
 		}
 		);
@@ -466,7 +466,7 @@ clone_create_notifications(
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 	
-	if(rsc->notify == FALSE) {
+	if(is_not_set(rsc->flags, pe_rsc_notify)) {
 		return;
 	}
 	
@@ -848,7 +848,7 @@ void clone_rsc_colocation_rh(
 		pe_err("rsc_rh was NULL for %s", constraint->id);
 		return;
 		
-	} else if(rsc_rh->provisional) {
+	} else if(is_set(rsc_rh->flags, pe_rsc_provisional)) {
 		crm_debug_3("%s is still provisional", rsc_rh->id);
 		return;
 		
@@ -1060,7 +1060,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 	crm_debug_2("Processing actions from %s", rsc->id);
 
 	
-	if(rsc->notify) {
+	if(is_set(rsc->flags, pe_rsc_notify)) {
 		slist_iter(
 			child_rsc, resource_t, rsc->children, lpc,
 			
@@ -1074,7 +1074,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 	}
 	
 	/* expand the notify data */		
-	if(rsc->notify && n_data->stop) {
+	if(is_set(rsc->flags, pe_rsc_notify) && n_data->stop) {
 		n_data->stop = g_list_sort(
 			n_data->stop, sort_notify_entries);
 		rsc_list = NULL; node_list = NULL;
@@ -1088,7 +1088,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 			crm_strdup("notify_stop_uname"), node_list);
 	}
 
-	if(rsc->notify && n_data->start) {
+	if(is_set(rsc->flags, pe_rsc_notify) && n_data->start) {
 		n_data->start = g_list_sort(
 			n_data->start, sort_notify_entries);
 		rsc_list = NULL; node_list = NULL; 
@@ -1102,7 +1102,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 			crm_strdup("notify_start_uname"), node_list);
 	}
 	
-	if(rsc->notify && n_data->demote) {
+	if(is_set(rsc->flags, pe_rsc_notify) && n_data->demote) {
 		n_data->demote = g_list_sort(
 			n_data->demote, sort_notify_entries);
 		rsc_list = NULL; node_list = NULL;
@@ -1116,7 +1116,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 			crm_strdup("notify_demote_uname"), node_list);
 	}
 	
-	if(rsc->notify && n_data->promote) {
+	if(is_set(rsc->flags, pe_rsc_notify) && n_data->promote) {
 		n_data->promote = g_list_sort(
 			n_data->promote, sort_notify_entries);
 		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
@@ -1130,7 +1130,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 			crm_strdup("notify_promote_uname"), node_list);
 	}
 	
-	if(rsc->notify && n_data->active) {
+	if(is_set(rsc->flags, pe_rsc_notify) && n_data->active) {
 		n_data->active = g_list_sort(
 			n_data->active, sort_notify_entries);
 		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
@@ -1144,7 +1144,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 			crm_strdup("notify_active_uname"), node_list);
 	}
 
-	if(rsc->notify && n_data->slave) {
+	if(is_set(rsc->flags, pe_rsc_notify) && n_data->slave) {
 		n_data->slave = g_list_sort(
 			n_data->slave, sort_notify_entries);
 		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
@@ -1158,7 +1158,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 			crm_strdup("notify_slave_uname"), node_list);
 	}
 
-	if(rsc->notify && n_data->master) {
+	if(is_set(rsc->flags, pe_rsc_notify) && n_data->master) {
 		n_data->master = g_list_sort(
 			n_data->master, sort_notify_entries);
 		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
@@ -1172,7 +1172,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 			crm_strdup("notify_master_uname"), node_list);
 	}
 
-	if(rsc->notify && n_data->inactive) {
+	if(is_set(rsc->flags, pe_rsc_notify) && n_data->inactive) {
 		n_data->inactive = g_list_sort(
 			n_data->inactive, sort_notify_entries);
 		rsc_list = NULL; node_list = NULL; uuid_list = NULL;
@@ -1239,7 +1239,8 @@ clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 
 	rsc->children = g_list_sort(rsc->children, sort_rsc_id);
 
-	if(rsc->globally_unique == FALSE && clone_data->clone_node_max == 1) {
+	if(is_not_set(rsc->flags, pe_rsc_unique)
+	   && clone_data->clone_node_max == 1) {
 		/* only look for one copy */	 
 		slist_iter(	 
 			child_rsc, resource_t, rsc->children, lpc,	 
@@ -1259,7 +1260,7 @@ clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		}
 		
 		if(any_created
-		   && rsc->globally_unique == FALSE
+		   && is_not_set(rsc->flags, pe_rsc_unique)
 		   && clone_data->clone_node_max == 1) {
 			/* only look for one copy (clone :0) */	 
 			break;

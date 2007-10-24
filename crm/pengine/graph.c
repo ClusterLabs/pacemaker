@@ -91,7 +91,7 @@ update_action(action_t *action)
 
 		if((local_type & pe_order_shutdown)
 		   && other->action->optional == FALSE
-		   && other_rsc->shutdown) {
+		   && is_set(other_rsc->flags, pe_rsc_shutdown)) {
 		    action->optional = FALSE;
 		    changed = TRUE;
 		    do_crm_log(log_level-1,
@@ -114,7 +114,7 @@ update_action(action_t *action)
 				   "   * Marking action %s manditory because %s is unrunnable",
 				   other->action->uuid, action->uuid);
 			other->action->optional = FALSE;
-			other_rsc->shutdown = TRUE;
+			set_bit(other_rsc->flags, pe_rsc_shutdown);
 			other_changed = TRUE;
 		    } 
 		}
@@ -231,7 +231,7 @@ shutdown_constraints(
 	slist_iter(
 		rsc, resource_t, node->details->running_rsc, lpc,
 
-		if(rsc->is_managed == FALSE) {
+		if(is_not_set(rsc->flags, pe_rsc_managed)) {
 			continue;
 		}
 		
@@ -449,7 +449,7 @@ should_dump_action(action_t *action)
 		return FALSE;
 
 	} else if(action->rsc != NULL
-		  && action->rsc->is_managed == FALSE) {
+		  && is_not_set(action->rsc->flags, pe_rsc_managed)) {
 
 		/* make sure probes go through */
 		if(safe_str_neq(action->task, CRMD_ACTION_STATUS)) {

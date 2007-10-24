@@ -186,19 +186,18 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 			parent->parameters, dup_attr, (*rsc)->parameters);
 	}
 
-	(*rsc)->runnable	   = TRUE; 
-	(*rsc)->provisional	   = TRUE; 
-	(*rsc)->starting	   = FALSE; 
-	(*rsc)->stopping	   = FALSE; 
+	(*rsc)->flags = 0;
+	set_bit((*rsc)->flags, pe_rsc_runnable); 
+	set_bit((*rsc)->flags, pe_rsc_provisional); 
+
+	if(data_set->is_managed_default) {
+	    set_bit((*rsc)->flags, pe_rsc_managed); 
+	}
 
 	(*rsc)->rsc_cons	   = NULL; 
 	(*rsc)->actions            = NULL;
-	(*rsc)->failed		   = FALSE;
-	(*rsc)->start_pending	   = FALSE;	
-	(*rsc)->globally_unique    = TRUE;
 	(*rsc)->role		   = RSC_ROLE_STOPPED;
 	(*rsc)->next_role	   = RSC_ROLE_UNKNOWN;
-	(*rsc)->is_managed	   = data_set->is_managed_default;
 
 	(*rsc)->recovery_type      = recovery_stop_start;
 	(*rsc)->stickiness         = data_set->default_resource_stickiness;
@@ -209,17 +208,23 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	(*rsc)->effective_priority = (*rsc)->priority;
 
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_NOTIFY);
-	(*rsc)->notify		   = crm_is_true(value); 
+	if(crm_is_true(value)) {
+	    set_bit((*rsc)->flags, pe_rsc_notify); 
+	}
 	
 	value = g_hash_table_lookup((*rsc)->meta, "is_managed");
 	if(value != NULL && safe_str_neq("default", value)) {
-		cl_str_to_boolean(value, &((*rsc)->is_managed));
+	    gboolean bool_value = TRUE;
+	    cl_str_to_boolean(value, &bool_value);
+	    if(bool_value == FALSE) {
+		clear_bit((*rsc)->flags, pe_rsc_managed); 
+	    } 
 	}
 
 	crm_debug_2("Options for %s", (*rsc)->id);
 	value = g_hash_table_lookup((*rsc)->meta, "globally_unique");
-	if(value != NULL) {
-		cl_str_to_boolean(value, &((*rsc)->globally_unique));
+	if(value == NULL || crm_is_true(value)) {
+	    set_bit((*rsc)->flags, pe_rsc_unique); 
 	}
 	
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_RESTART);
@@ -273,7 +278,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		return FALSE;
 	}
 	
-	if((*rsc)->is_managed == FALSE) {
+	if(is_not_set((*rsc)->flags, pe_rsc_managed)) {
 		crm_warn("Resource %s is currently not managed", (*rsc)->id);
 
 	} else if(data_set->symmetric_cluster) {
@@ -281,7 +286,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	}
 	
 	crm_debug_2("\tAction notification: %s",
-		    (*rsc)->notify?"required":"not required");
+		    is_set((*rsc)->flags, pe_rsc_notify)?"required":"not required");
 	
 /* 	data_set->resources = g_list_append(data_set->resources, (*rsc)); */
 	return TRUE;
@@ -378,7 +383,7 @@ void common_free(resource_t *rsc)
 	if(rsc->meta != NULL) {
 		g_hash_table_destroy(rsc->meta);
 	}
-	if(rsc->orphan) {
+	if(is_set(rsc->flags, pe_rsc_orphan)) {
 		free_xml(rsc->xml);
 	}
 	if(rsc->running_on) {

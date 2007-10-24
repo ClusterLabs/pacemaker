@@ -46,18 +46,6 @@ extern void process_client_disconnect(crmd_client_t *curr_client);
 		crm_err("No CIB connection available");			\
 	}
 
-
-extern long long toggle_bit   (long long  action_list, long long action);
-extern long long clear_bit    (long long  action_list, long long action);
-extern long long set_bit      (long long  action_list, long long action);
-
-#define set_bit_inplace(word, bit)    word = set_bit(word, bit)
-#define clear_bit_inplace(word, bit)  word = clear_bit(word, bit)
-#define toggle_bit_inplace(word, bit) word = toggle_bit(word, bit)
-
-extern gboolean is_set(long long action_list, long long action);
-extern gboolean is_set_any(long long action_list, long long action);
-
 extern gboolean crm_timer_stop (fsa_timer_t *timer);
 extern gboolean crm_timer_start(fsa_timer_t *timer);
 extern gboolean crm_timer_popped(gpointer data);

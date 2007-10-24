@@ -597,7 +597,7 @@ create_fake_resource(const char *rsc_id, crm_data_t *rsc_entry, pe_working_set_t
 	crm_log_xml_info(xml_rsc, "Orphan resource");
 	
 	common_unpack(xml_rsc, &rsc, NULL, data_set);
-	rsc->orphan = TRUE;
+	set_bit(rsc->flags, pe_rsc_orphan);
 	
 	data_set->resources = g_list_append(data_set->resources, rsc);
 	return rsc;
@@ -632,7 +632,7 @@ unpack_find_resource(
 			break;
 			
 			/* always unique */
-		} else if(rsc->globally_unique) {
+		} else if(is_set(rsc->flags, pe_rsc_unique)) {
 			crm_debug_3("unique");
 			break;
 			
@@ -673,7 +673,7 @@ process_orphan_resource(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *d
 	rsc = create_fake_resource(rsc_id, rsc_entry, data_set);
 	
 	if(data_set->stop_rsc_orphans == FALSE) {
-		rsc->is_managed = FALSE;
+	    clear_bit(rsc->flags, pe_rsc_managed);
 		
 	} else {
 		crm_info("Making sure orphan %s is stopped", rsc_id);
@@ -713,13 +713,13 @@ process_rsc_state(resource_t *rsc, node_t *node,
 	if(rsc->role != RSC_ROLE_STOPPED
 		&& rsc->role != RSC_ROLE_UNKNOWN) { 
 		if(on_fail != action_fail_ignore) {
-			rsc->failed = TRUE;
-			crm_debug_2("Force stop");
+		    set_bit(rsc->flags, pe_rsc_failed);
+		    crm_debug_2("Force stop");
 		}
 
 		native_add_running(rsc, node, data_set);
 
-		if(rsc->is_managed && rsc->stickiness != 0) {
+		if(is_set(rsc->flags, pe_rsc_managed) && rsc->stickiness != 0) {
 			resource_location(rsc, node, rsc->stickiness,
 					  "stickiness", data_set);
 			crm_debug_2("Resource %s: preferring current location"
@@ -743,7 +743,7 @@ process_rsc_state(resource_t *rsc, node_t *node,
 			/* is_managed == FALSE will prevent any
 			 * actions being sent for the resource
 			 */
-			rsc->is_managed = FALSE;
+		    clear_bit(rsc->flags, pe_rsc_managed);
 				
 		} else if(on_fail == action_fail_migrate) {
 			stop_action(rsc, node, FALSE);
@@ -1132,7 +1132,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	switch(task_status_i) {
 		case LRM_OP_PENDING:
 			if(safe_str_eq(task, CRMD_ACTION_START)) {
-				rsc->start_pending = TRUE;
+				set_bit(rsc->flags, pe_rsc_start_pending);
 				rsc->role = RSC_ROLE_STARTED;
 				
 			} else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {

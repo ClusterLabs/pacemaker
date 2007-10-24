@@ -1678,3 +1678,54 @@ crm_is_writable(const char *dir, const char *file,
 	crm_free(full_file);
 	return pass;
 }
+
+static unsigned long long crm_bit_filter = 0; /* 0x00000002ULL; */
+static unsigned int bit_log_level = LOG_DEBUG_5;
+
+long long
+crm_clear_bit(const char *function, long long word, long long bit)
+{
+	unsigned int level = bit_log_level;
+	if(bit & crm_bit_filter) {
+	    level = LOG_ERR;
+	}
+
+	do_crm_log(level, "Bit 0x%.16llx cleared by %s", bit, function);
+	word &= ~bit;
+
+	return word;
+}
+
+long long
+crm_set_bit(const char *function, long long word, long long bit)
+{
+	unsigned int level = bit_log_level;
+	if(bit & crm_bit_filter) {
+	    level = LOG_ERR;
+	}
+
+	do_crm_log(level, "Bit 0x%.16llx set by %s", bit, function);
+	word |= bit;
+	return word;
+}
+
+gboolean
+is_not_set(long long word, long long bit)
+{
+	crm_debug_5("Checking bit\t%.16llx in %.16llx", bit, word);
+	return ((word & bit) == 0);
+}
+
+gboolean
+is_set(long long word, long long bit)
+{
+	crm_debug_5("Checking bit\t%.16llx in %.16llx", bit, word);
+	return ((word & bit) == bit);
+}
+
+gboolean
+is_set_any(long long word, long long bit)
+{
+	crm_debug_5("Checking bit\t%.16llx in %.16llx", bit, word);
+	return ((word & bit) != 0);
+}

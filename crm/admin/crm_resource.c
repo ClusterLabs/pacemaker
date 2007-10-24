@@ -134,7 +134,8 @@ do_find_resource_list(pe_working_set_t *data_set, gboolean raw)
 			print_raw_rsc(rsc, 0);
 			continue;
 			
-		} else if(rsc->orphan && rsc->fns->active(rsc, TRUE) == FALSE) {
+		} else if(is_set(rsc->flags, pe_rsc_orphan)
+			  && rsc->fns->active(rsc, TRUE) == FALSE) {
 			continue;
 		}
 		rsc->fns->print(

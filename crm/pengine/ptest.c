@@ -387,7 +387,8 @@ main(int argc, char **argv)
 			style = "bold";
 			color = "green";
 			
-		} else if(action->rsc != NULL && action->rsc->is_managed == FALSE) {
+		} else if(action->rsc != NULL
+			  && is_not_set(action->rsc->flags, pe_rsc_managed)) {
 			color = "purple";
 			if(all_actions == FALSE) {
 				goto dont_write;

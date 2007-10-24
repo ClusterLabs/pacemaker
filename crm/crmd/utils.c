@@ -217,55 +217,6 @@ crm_timer_stop(fsa_timer_t *timer)
 	return TRUE;
 }
 
-
-long long
-toggle_bit(long long action_list, long long action)
-{
-	crm_debug_5("Toggling bit %.16llx", action);
-	action_list ^= action;
-	crm_debug_5("Result %.16llx", action_list & action);
-	return action_list;
-}
-
-long long
-clear_bit(long long action_list, long long action)
-{
-	unsigned int	level = LOG_DEBUG_5;
-	do_crm_log(level, "Clearing bit\t%.16llx", action);
-	
-	/* ensure its set */
-	action_list |= action;
-
-	/* then toggle */
-	action_list = action_list ^ action;
-
-	return action_list;
-}
-
-long long
-set_bit(long long action_list, long long action)
-{
-	unsigned int	level = LOG_DEBUG_5;
-	do_crm_log(level, "Setting bit\t%.16llx", action);
-	action_list |= action;
-	return action_list;
-}
-
-
-gboolean
-is_set(long long action_list, long long action)
-{
-	crm_debug_5("Checking bit\t%.16llx in %.16llx", action, action_list);
-	return ((action_list & action) == action);
-}
-
-gboolean
-is_set_any(long long action_list, long long action)
-{
-	crm_debug_5("Checking bit\t%.16llx in %.16llx", action, action_list);
-	return ((action_list & action) != 0);
-}
-
 const char *
 fsa_input2string(enum crmd_fsa_input input)
 {

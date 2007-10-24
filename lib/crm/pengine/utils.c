@@ -482,7 +482,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 		} else if(action->node == NULL) {
 			action->runnable = FALSE;
 			
-		} else if(rsc->is_managed == FALSE) {
+		} else if(is_not_set(rsc->flags, pe_rsc_managed)) {
 			do_crm_log(warn_level, "Action %s (unmanaged)",
 				 action->uuid);
 			action->optional = TRUE;
@@ -492,7 +492,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			action->runnable = FALSE;
 			do_crm_log(warn_level, "Action %s on %s is unrunnable (offline)",
 				 action->uuid, action->node->details->uname);
-			if(action->rsc->is_managed
+			if(is_set(action->rsc->flags, pe_rsc_managed)
 			   && save_action
 			   && a_task == stop_rsc) {
 				do_crm_log(warn_level, "Marking node %s unclean",
@@ -538,14 +538,14 @@ custom_action(resource_t *rsc, char *key, const char *task,
 		if(save_action) {
 			switch(a_task) {
 				case stop_rsc:
-					rsc->stopping = TRUE;
-					break;
+				    set_bit(rsc->flags, pe_rsc_stopping);
+				    break;
 				case start_rsc:
-					rsc->starting = FALSE;
-					if(action->runnable) {
-					rsc->starting = TRUE;
-					}
-					break;
+				    clear_bit(rsc->flags, pe_rsc_starting);
+				    if(action->runnable) {
+					set_bit(rsc->flags, pe_rsc_starting);
+				    }
+				    break;
 				default:
 					break;
 			}

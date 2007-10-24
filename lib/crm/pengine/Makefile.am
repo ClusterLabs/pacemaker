@@ -47,10 +47,10 @@ noinst_HEADERS	= unpack.h utils.h variant.h
 rule_files = rules.c common.c
 status_files = status.c unpack.c utils.c complex.c native.c group.c clone.c
 
-libpe_rules_la_LDFLAGS	= -version-info 1:0:0
+libpe_rules_la_LDFLAGS	= -version-info 2:0:0
 libpe_rules_la_SOURCES	= $(rule_files)
 
-libpe_status_la_LDFLAGS	= -version-info 1:0:0
+libpe_status_la_LDFLAGS	= -version-info 2:0:0
 libpe_status_la_SOURCES	=  $(rule_files) $(status_files)
 
 clean-generic:

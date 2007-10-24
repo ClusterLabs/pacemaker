@@ -259,7 +259,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 	int multiple = 0;
 	CRM_ASSERT(rsc->variant == pe_native);
 
-	rsc->provisional = FALSE;
+	clear_bit(rsc->flags, pe_rsc_provisional);
 	
 	slist_iter(candidate, node_t, nodes, lpc, 
 		   crm_debug("Color %s, Node[%d] %s: %d", rsc->id, lpc,
@@ -369,7 +369,7 @@ convert_non_atomic_task(resource_t *rsc, order_constraint_t *order)
 	}
 	
 	if(task != no_action) {
-		if(rsc->notify) {
+		if(is_set(rsc->flags, pe_rsc_notify)) {
 			order->lh_action_task = generate_notify_key(
 				rsc->id, "confirmed-post",
 				task2text(task));

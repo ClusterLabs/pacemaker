@@ -137,7 +137,7 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	crm_debug_2("Options for %s", rsc->id);
 	crm_debug_2("\tClone max: %d", clone_data->clone_max);
 	crm_debug_2("\tClone node max: %d", clone_data->clone_node_max);
-	crm_debug_2("\tClone is unique: %s", rsc->globally_unique?"true":"false");
+	crm_debug_2("\tClone is unique: %s", is_set(rsc->flags, pe_rsc_unique)?"true":"false");
 	
 	clone_data->xml_obj_child = find_xml_node(
 		xml_obj, XML_CIB_TAG_GROUP, FALSE);
@@ -186,7 +186,7 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		return FALSE;
 	}
 	
-	clone_data->notify_confirm = rsc->notify;
+	clone_data->notify_confirm = is_set(rsc->flags, pe_rsc_notify);
 
 	for(lpc = 0; lpc < clone_data->clone_max; lpc++) {
 		create_child_clone(rsc, lpc, data_set);

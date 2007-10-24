@@ -165,7 +165,7 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 		do_time_check = FALSE;
 	}
 	
-	fsa_actions = clear_bit(fsa_actions, an_action);
+	fsa_actions &= ~an_action;
 	crm_debug_3("Invoking action %s (%.16llx)",
 		    fsa_action2string(an_action), an_action);
 	if(do_time_check) {
@@ -757,9 +757,9 @@ do_state_transition(long long actions,
 	}
 
 	if(clear_recovery_bit && next_state != S_PENDING) {
-		tmp = clear_bit(tmp, A_RECOVER);
+		tmp &= ~A_RECOVER;
 	} else if(clear_recovery_bit == FALSE) {
-		tmp = set_bit(tmp, A_RECOVER);
+		tmp |=  A_RECOVER;
 	}
 	
 	if(tmp != actions) {

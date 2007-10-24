@@ -518,7 +518,7 @@ print_status(crm_data_t *cib)
 	}
 
 	slist_iter(rsc, resource_t, data_set.resources, lpc,
-		   if(rsc->orphan == FALSE) {
+		   if(is_not_set(rsc->flags, pe_rsc_orphan)) {
 			   configured_resources++;
 		   }
 		);
@@ -559,7 +559,7 @@ print_status(crm_data_t *cib)
 		slist_iter(rsc, resource_t, data_set.resources, lpc2,
 			   gboolean is_active = rsc->fns->active(rsc, TRUE);
 			   gboolean partially_active = rsc->fns->active(rsc, FALSE);
-			   if(rsc->orphan && is_active == FALSE) {
+			   if(is_set(rsc->flags, pe_rsc_orphan) && is_active == FALSE) {
 				   continue;
 				   
 			   } else if(group_by_node == FALSE) {

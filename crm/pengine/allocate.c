@@ -137,7 +137,7 @@ check_rsc_parameters(resource_t *rsc, node_t *node, crm_data_t *rsc_entry,
 	if(force_restart) {
 		/* make sure the restart happens */
 		stop_action(rsc, node, FALSE);
-		rsc->start_pending = TRUE;
+		set_bit(rsc->flags, pe_rsc_start_pending);
 		delete_resource = TRUE;
 	}
 	return delete_resource;
@@ -317,7 +317,7 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 	CRM_CHECK(rsc != NULL, return);
 	CRM_CHECK(node != NULL, return);
 	CRM_CHECK(rsc_id != NULL, return);
-	if(rsc->orphan) {
+	if(is_set(rsc->flags, pe_rsc_orphan)) {
 		crm_debug_2("Skipping param check for %s: orphan", rsc->id);
 		return;
 		
@@ -1077,7 +1077,7 @@ unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		crm_config_warn("No resource (con=%s, rsc=%s)", id, id_lh);
 		return FALSE;
 
-	} else if(rsc_lh->is_managed == FALSE) {
+	} else if(is_not_set(rsc_lh->flags, pe_rsc_managed)) {
 		crm_debug_2("Ignoring constraint %s: resource %s not managed",
 			    id, id_lh);
 		return FALSE;
