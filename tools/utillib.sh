@@ -229,7 +229,19 @@ getbt() {
 # heartbeat configuration/status
 #
 iscrmrunning() {
-	crmadmin -D >/dev/null 2>&1
+	crmadmin -D >/dev/null 2>&1 &
+	pid=$!
+	maxwait=10
+	while kill -0 $pid 2>/dev/null && [ $maxwait -gt 0 ]; do
+		sleep 1
+		maxwait=$((maxwait-1))
+	done
+	if kill -0 $pid 2>/dev/null; then
+		kill $pid
+		false
+	else
+		wait $pid
+	fi
 }
 dumpstate() {
 	crm_mon -1 | grep -v '^Last upd' > $1/crm_mon.txt
