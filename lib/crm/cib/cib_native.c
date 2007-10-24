@@ -279,6 +279,7 @@ cib_native_signoff(cib_t* cib)
 			native->callback_channel);
 #endif
 		native->callback_channel = NULL;
+		native->callback_source = NULL;
 	}
 	cib->state = cib_disconnected;
 	cib->type  = cib_none;
@@ -787,6 +788,7 @@ cib_native_dispatch(IPC_Channel *channel, gpointer user_data)
 		crm_crit("Lost connection to the CIB service [%d/callback].",
 			channel->farside_pid);
 		G_main_del_IPC_Channel(native->callback_source);
+		native->callback_source = NULL;
 		return FALSE;
 
 	} else if(native->command_channel
