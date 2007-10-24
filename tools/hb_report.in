@@ -111,6 +111,7 @@ setvarsanddefaults() {
 	# used by all
 	DESTDIR=""
 	FROM_TIME=""
+	CTS=""
 	TO_TIME=0
 	HA_LOG=""
 	UNIQUE_MSG="Mark:HB_REPORT:$now"
@@ -169,13 +170,56 @@ findlog() {
 }
 
 #
+# find log slices
+#
+findlogseg() {
+	logf=$1
+	from_time=$2
+	to_time=$3
+
+	FROM_LINE=`findln_by_time $logf $from_time`
+	if [ -z "$FROM_LINE" ]; then
+		warning "couldn't find line for time $from_time; corrupt log file?"
+		return
+	fi
+
+	TO_LINE=""
+	if [ "$to_time" != 0 ]; then
+		TO_LINE=`findln_by_time $logf $to_time`
+		if [ -z "$TO_LINE" ]; then
+			warning "couldn't find line for time $to_time; corrupt log file?"
+			return
+		fi
+	fi
+}
+
+cts_findlogseg() {
+	logf=$1
+	testnum=$2
+
+	FROM_LINE=`grep -n "Running test.*\[$testnum\]" $logf | sed 's/:.*//'`
+	if [ -z "$FROM_LINE" ]; then
+		warning "couldn't find line for CTS test $testnum; corrupt log file?"
+		return
+	else
+		FROM_TIME=`linetime $logf $FROM_LINE`
+	fi
+	TO_LINE=`grep -n "Running test.*\[$((testnum+1))\]" $logf | sed 's/:.*//'`
+	[ "$TO_LINE" ] ||
+		TO_LINE=`wc -l < $logf`
+	TO_TIME=`linetime $logf $TO_LINE`
+}
+
+#
 # this is how we pass environment to other hosts
 #
 dumpenv() {
 	cat<<EOF
 FROM_TIME=$FROM_TIME
+CTS=$CTS
 TO_TIME=$TO_TIME
 HA_LOG=$HA_LOG
+MASTER_IS_HOSTLOG=$MASTER_IS_HOSTLOG
 DESTDIR=$DESTDIR
 UNIQUE_MSG=$UNIQUE_MSG
 SANITIZE="$SANITIZE"
@@ -506,12 +550,20 @@ if [ "$SLAVE" = "" ]; then
 	while [ x"$1" != x ]; do
 		case "$1" in
 			-h) usage;;
-			-f) FROM_TIME=`str2time "$2"`
-			    chktime "$FROM_TIME" "$2"
-				shift 2;;
+			-f)
+				if echo "$2" | grep -qs '^cts:'; then
+					FROM_TIME=0 # to be calculated later
+					CTS=`echo "$2" | sed 's/cts://'`
+				else
+					FROM_TIME=`str2time "$2"`
+					chktime "$FROM_TIME" "$2"
+				fi
+				shift 2
+			;;
 			-t) TO_TIME=`str2time "$2"`
 			    chktime "$TO_TIME" "$2"
-				shift 2;;
+				shift 2
+			;;
 			-u) SSH_USER="$2"; shift 2;;
 			-l) HA_LOG="$2"; shift 2;;
 			-e) EDITOR="$2"; shift 2;;
@@ -580,23 +632,13 @@ if [ "$SLAVE" = "" ]; then
 			sev="debug"
 		logmarks $sev $UNIQUE_MSG
 	fi
-#
-# part 4: start this program on other nodes
-#
-	if [ "$ssh_good" ]; then
-		send_config
-		start_remote_collectors
-	else
-		[ `getnodes | wc -w` -gt 1 ] &&
-			warning "ssh does not work to all nodes"
-	fi
 fi
 
 # only cluster nodes need their own directories
 [ "$THIS_IS_NODE" ] && mkdir -p $DESTDIR/$WE
 
 #
-# part 5: find the logs and cut out the segment for the period
+# part 4: find the logs and cut out the segment for the period
 #
 if [ "$HA_LOG" ]; then  # log provided by the user?
 	[ -f "$HA_LOG" ] || {  # not present
@@ -612,8 +654,8 @@ if [ "$HA_LOG" = "" ]; then
 fi
 nodecnt=`getnodes | wc -w`
 if [ "$cnt" ] && [ $cnt -eq $nodecnt ]; then
+	MASTER_IS_HOSTLOG=1
 	info "found the central log!"
-	info "you can ignore warnings about missing logs"
 fi
 
 if [ -f "$HA_LOG" ]; then
@@ -621,7 +663,12 @@ if [ -f "$HA_LOG" ]; then
 		warning "a log found; but we cannot slice it"
 		warning "please install the perl Date::Parse module"
 	else
-		dumplog $HA_LOG $FROM_TIME $TO_TIME |
+		if [ "$CTS" ]; then
+			cts_findlogseg $HA_LOG $CTS
+		else
+			findlogseg $HA_LOG $FROM_TIME $TO_TIME
+		fi
+		dumplog $HA_LOG $FROM_LINE $TO_LINE |
 		if [ "$THIS_IS_NODE" ]; then
 			cat > $DESTDIR/$WE/ha-log
 		else
@@ -629,7 +676,21 @@ if [ -f "$HA_LOG" ]; then
 		fi
 	fi
 else
-	warning "could not find the log file on $WE"
+	[ "$MASTER_IS_HOSTLOG" ] ||
+		warning "could not find the log file on $WE"
+fi
+
+#
+# part 5: start this program on other nodes
+#
+if [ ! "$SLAVE" ]; then
+	if [ "$ssh_good" ]; then
+		send_config
+		start_remote_collectors
+	else
+		[ `getnodes | wc -w` -gt 1 ] &&
+			warning "ssh does not work to all nodes"
+	fi
 fi
 
 #

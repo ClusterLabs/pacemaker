@@ -149,22 +149,15 @@ findln_by_time() {
 	done
 	echo $mid
 }
+
 dumplog() {
 	logf=$1
-	from_time=$2
-	to_time=$3
-	from_line=`findln_by_time $logf $from_time`
-	if [ -z "$from_line" ]; then
-		warning "couldn't find line for time $from_time; corrupt log file?"
+	from_line=$2
+	to_line=$3
+	[ "$from_line" ] ||
 		return
-	fi
 	tail -n +$from_line $logf |
-		if [ "$to_time" != 0 ]; then
-			to_line=`findln_by_time $logf $to_time`
-			if [ -z "$to_line" ]; then
-				warning "couldn't find line for time $to_time; corrupt log file?"
-				return
-			fi
+		if [ "$to_line" ]; then
 			head -$((to_line-from_line+1))
 		else
 			cat
@@ -174,6 +167,9 @@ dumplog() {
 #
 # find files newer than a and older than b
 #
+isnumber() {
+	echo "$1" | grep -qs '^[0-9][0-9]*$'
+}
 touchfile() {
 	t=`maketempfile` &&
 	perl -e "\$file=\"$t\"; \$tm=$1;" -e 'utime $tm, $tm, $file;' &&
@@ -183,9 +179,13 @@ find_files() {
 	dir=$1
 	from_time=$2
 	to_time=$3
+	isnumber "$from_time" && [ "$from_time" -gt 0 ] || {
+		warning "sorry, can't find files based on time if you don't supply time"
+		return
+	}
 	from_stamp=`touchfile $from_time`
 	findexp="-newer $from_stamp"
-	if [ "$to_time" -a "$to_time" -gt 0 ]; then
+	if isnumber "$to_time" && [ "$to_time" -gt 0 ]; then
 		to_stamp=`touchfile $to_time`
 		findexp="$findexp ! -newer $to_stamp"
 	fi
