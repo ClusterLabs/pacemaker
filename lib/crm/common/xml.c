@@ -1617,7 +1617,7 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 	} else if(result && digest) {
 	    char *new_digest = calculate_xml_digest(*new, FALSE, TRUE);
 	    if(safe_str_neq(new_digest, digest)) {
-		crm_warn("Digest mis-match: expected %s, calculated %s",
+		crm_info("Digest mis-match: expected %s, calculated %s",
 			 digest, new_digest);
  		result = FALSE;
 	    } else {
