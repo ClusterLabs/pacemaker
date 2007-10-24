@@ -393,7 +393,8 @@ analyze_one() {
 	return $rc
 }
 analyze() {
-	flist="ccm_tool.txt cib.xml crm_mon.txt ha.cf logd.cf sysinfo.txt"
+#	flist="ccm_tool.txt cib.xml crm_mon.txt ha.cf logd.cf sysinfo.txt"
+	flist="ccm_tool.txt crm_mon.txt ha.cf logd.cf sysinfo.txt"
 	for f in $flist; do
 		perl -e "printf \"Diff $f... \""
 		ls $1/*/$f >/dev/null 2>&1 || continue
