@@ -1617,9 +1617,12 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 	} else if(result && digest) {
 	    char *new_digest = calculate_xml_digest(*new, FALSE, TRUE);
 	    if(safe_str_neq(new_digest, digest)) {
-		crm_info("Digest mis-match: expected %s, calculated %s",
-			digest, new_digest);
+		crm_warn("Digest mis-match: expected %s, calculated %s",
+			 digest, new_digest);
  		result = FALSE;
+	    } else {
+		crm_debug_2("Digest matched: expected %s, calculated %s",
+			    digest, new_digest);
 	    }
 	    
 	} else if(result) {
@@ -2426,7 +2429,7 @@ free_pair(gpointer data, gpointer user_data)
 }
 
 static crm_data_t *
-sorted_xml(const crm_data_t *input)
+sorted_xml(const crm_data_t *input, crm_data_t *parent, gboolean recursive)
 {
 	GListPtr sorted = NULL;
 	GListPtr unsorted = NULL;
@@ -2439,7 +2442,7 @@ sorted_xml(const crm_data_t *input)
 	name = crm_element_name(input);
 	CRM_CHECK(name != NULL, return NULL);
 
-	result = create_xml_node(NULL, name);
+	result = create_xml_node(parent, name);
 	
 	xml_prop_iter(input, p_name, p_value,
 		      crm_malloc0(pair, sizeof(name_value_t));
@@ -2453,6 +2456,13 @@ sorted_xml(const crm_data_t *input)
 	g_list_foreach(sorted, dump_pair, result);
 	g_list_foreach(sorted, free_pair, NULL);
 	g_list_free(sorted);
+
+	if(recursive) {
+	    xml_child_iter(input, child, sorted_xml(child, result, recursive));
+	} else {
+	    xml_child_iter(input, child, add_node_copy(result, child));
+	}
+	
 	return result;
 }
 
@@ -2485,9 +2495,9 @@ calculate_xml_digest(crm_data_t *input, gboolean sort, gboolean do_filter)
 	size_t buffer_len = 0;
 
 	if(sort || do_filter) {
-		sorted = sorted_xml(input);
+	    sorted = sorted_xml(input, NULL, TRUE);
 	} else {
-		sorted = copy_xml(input);
+	    sorted = copy_xml(input);
 	}
 
 	if(do_filter) {
