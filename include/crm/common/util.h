@@ -179,15 +179,18 @@ extern gboolean crm_is_writable(
 	const char *dir, const char *file,
 	const char *user, const char *group, gboolean need_both);
 
-extern long long toggle_bit   (long long  action_list, long long action);
-extern long long clear_bit    (long long  action_list, long long action);
-extern long long set_bit      (long long  action_list, long long action);
+extern long long crm_set_bit(const char *function, long long word, long long bit);
+extern long long crm_clear_bit(const char *function, long long word, long long bit);
 
-#define set_bit_inplace(word, bit)    word = set_bit(word, bit)
-#define clear_bit_inplace(word, bit)  word = clear_bit(word, bit)
-#define toggle_bit_inplace(word, bit) word = toggle_bit(word, bit)
+
+#define set_bit(word, bit) word = crm_set_bit(__PRETTY_FUNCTION__, word, bit) 
+#define clear_bit(word, bit) word = crm_clear_bit(__PRETTY_FUNCTION__, word, bit) 
+
+#define set_bit_inplace(word, bit) word |= bit 
+#define clear_bit_inplace(word, bit) word &= ~bit 
 
 extern gboolean is_set(long long action_list, long long action);
+extern gboolean is_not_set(long long action_list, long long action);
 extern gboolean is_set_any(long long action_list, long long action);
 
 #endif

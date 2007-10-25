@@ -212,11 +212,11 @@ group_resource_state(resource_t *rsc, gboolean current)
 		if(role > group_role) {
 			group_role = role;
 		}
-		if(child_rsc->failed) {
-			rsc->failed = TRUE;
+		if(is_set(child_rsc->flags, pe_rsc_failed)) {
+		    set_bit(rsc->flags, pe_rsc_failed);
 		}
 		);
 
-	crm_warn("%s role: %s", rsc->id, role2text(group_role));
+	crm_debug_3("%s role: %s", rsc->id, role2text(group_role));
 	return group_role;
 }

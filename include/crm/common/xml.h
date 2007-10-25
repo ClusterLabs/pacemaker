@@ -239,7 +239,7 @@ extern void xml_validate(const crm_data_t *root);
 
 extern gboolean xml_has_children(const crm_data_t *root);	 		
 
-extern char *calculate_xml_digest(crm_data_t *local_cib, gboolean sort);
+extern char *calculate_xml_digest(crm_data_t *local_cib, gboolean sort, gboolean do_filter);
 
 extern gboolean validate_with_dtd(
 	crm_data_t *xml_blob, gboolean to_logs, const char *dtd_file);

@@ -94,7 +94,7 @@ native_choose_node(resource_t *rsc)
 	GListPtr nodes = NULL;
 	node_t *chosen = NULL;
 
-	if(rsc->provisional == FALSE) {
+	if(is_not_set(rsc->flags, pe_rsc_provisional)) {
 		return rsc->allocated_to?TRUE:FALSE;
 	}
 	
@@ -127,15 +127,16 @@ native_merge_weights(
 {
     GListPtr archive = NULL;
 
-    if(rsc->is_merging) {
+    if(is_set(rsc->flags, pe_rsc_merging)) {
 	crm_debug("%s: Breaking dependancy loop", rhs);
 	return nodes;
 
-    } else if(rsc->provisional == FALSE || can_run_any(nodes) == FALSE) {
+    } else if(is_not_set(rsc->flags, pe_rsc_provisional)
+	      || can_run_any(nodes) == FALSE) {
 	return nodes;
     }
 
-    rsc->is_merging = TRUE;
+    set_bit(rsc->flags, pe_rsc_merging);
     crm_debug_2("%s: Combining scores from %s", rhs, rsc->id);
 
     if(allow_rollback) {
@@ -161,7 +162,7 @@ native_merge_weights(
 	);
 
   bail:
-    rsc->is_merging = FALSE;
+    clear_bit(rsc->flags, pe_rsc_merging);
     return nodes;
 }
 
@@ -169,23 +170,23 @@ node_t *
 native_color(resource_t *rsc, pe_working_set_t *data_set)
 {
         int alloc_details = LOG_DEBUG_2;
-	if(rsc->parent && rsc->parent->is_allocating == FALSE) {
+	if(rsc->parent && is_not_set(rsc->parent->flags, pe_rsc_allocating)) {
 		/* never allocate children on their own */
 		crm_debug("Escalating allocation of %s to its parent: %s",
 			  rsc->id, rsc->parent->id);
 		rsc->parent->cmds->color(rsc->parent, data_set);
 	}
 	
-	if(rsc->provisional == FALSE) {
+	if(is_not_set(rsc->flags, pe_rsc_provisional)) {
 		return rsc->allocated_to;
 	}
 
-	if(rsc->is_allocating) {
+	if(is_set(rsc->flags, pe_rsc_allocating)) {
 		crm_debug("Dependancy loop detected involving %s", rsc->id);
 		return NULL;
 	}
 
-	rsc->is_allocating = TRUE;
+	set_bit(rsc->flags, pe_rsc_allocating);
 	print_resource(alloc_details, "Allocating: ", rsc, FALSE);
 	dump_node_scores(alloc_details, rsc, "Pre-allloc", rsc->allowed_nodes);
 
@@ -219,12 +220,13 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 			rsc, NULL, -INFINITY, "target_role", data_set);
 	}
 	
-	if(rsc->provisional && native_choose_node(rsc) ) {
+	if(is_set(rsc->flags, pe_rsc_provisional)
+	   && native_choose_node(rsc) ) {
 		crm_debug_3("Allocated resource %s to %s",
 			    rsc->id, rsc->allocated_to->details->uname);
 
 	} else if(rsc->allocated_to == NULL) {
-		if(rsc->orphan == FALSE) {
+		if(is_not_set(rsc->flags, pe_rsc_orphan)) {
 			pe_warn("Resource %s cannot run anywhere", rsc->id);
 		} else {
 			crm_info("Stopping orphan resource %s", rsc->id);
@@ -235,7 +237,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 			  rsc->id, rsc->allocated_to->details->uname);
 	}
 	
-	rsc->is_allocating = FALSE;
+	clear_bit(rsc->flags, pe_rsc_allocating);
 	print_resource(LOG_DEBUG_3, "Allocated ", rsc, TRUE);
 
 	return rsc->allocated_to;
@@ -446,7 +448,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		role = next_role;
 	}
 
-	if(rsc->next_role != RSC_ROLE_STOPPED && rsc->is_managed) {
+	if(rsc->next_role != RSC_ROLE_STOPPED && is_set(rsc->flags, pe_rsc_managed)) {
 		start = start_action(rsc, chosen, TRUE);
 		Recurring(rsc, start, chosen, data_set);
 	}
@@ -482,7 +484,7 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		rsc, delete_key(rsc), NULL, rsc, start_key(rsc), NULL, 
 		pe_order_optional, data_set);	
 
-	if(rsc->notify) {
+	if(is_set(rsc->flags, pe_rsc_notify)) {
 		char *key1 = NULL;
 		char *key2 = NULL;
 
@@ -499,7 +501,7 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 			pe_order_optional, data_set);	
 	}
 
-	if(rsc->is_managed == FALSE) {
+	if(is_not_set(rsc->flags, pe_rsc_managed)) {
 		crm_debug_3("Skipping fencing constraints for unmanaged resource: %s", rsc->id);
 		return;
 	} 
@@ -615,10 +617,10 @@ void native_rsc_colocation_rh(
 		return;
 	}
 	
-	if(rsc_rh->provisional) {
+	if(is_set(rsc_rh->flags, pe_rsc_provisional)) {
 		return;
 
-	} else if(rsc_lh->provisional == FALSE) {
+	} else if(is_not_set(rsc_lh->flags, pe_rsc_provisional)) {
 		/* error check */
 		struct node_shared_s *details_lh;
 		struct node_shared_s *details_rh;
@@ -851,15 +853,6 @@ void native_expand(resource_t *rsc, pe_working_set_t *data_set)
 void
 create_notifications(resource_t *rsc, pe_working_set_t *data_set)
 {
-	if(rsc->notify == FALSE) {
-		return;
-	}
-	
-/* 	slist_iter( */
-/* 		action, action_t, rsc->actions, lpc, */
-		
-/* 		); */
-
 }
 
 static void
@@ -1129,8 +1122,9 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 		return;
 	}
 
-	if(rsc->failed || safe_str_neq(current->details->id, next->details->id)) {
-		if(rsc->failed) {
+	if(is_set(rsc->flags, pe_rsc_failed)
+	   || safe_str_neq(current->details->id, next->details->id)) {
+		if(is_set(rsc->flags, pe_rsc_failed)) {
 			crm_notice("Recover resource %s\t(%s)",
 				   rsc->id, next->details->uname);
 		} else {
@@ -1164,7 +1158,7 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 			);
 		g_list_free(possible_matches);
 		
-	} else if(rsc->start_pending) {
+	} else if(is_set(rsc->flags, pe_rsc_start_pending)) {
 		action_t *start = start_action(rsc, next, TRUE);
 		if(start->runnable) {
 			/* wait for StartRsc() to be called */
@@ -1319,7 +1313,7 @@ DeleteRsc(resource_t *rsc, node_t *node, gboolean optional, pe_working_set_t *da
 	action_t *delete = NULL;
  	action_t *refresh = NULL;
 
-	if(rsc->failed) {
+	if(is_set(rsc->flags, pe_rsc_failed)) {
 		crm_debug_2("Resource %s not deleted from %s: failed",
 			    rsc->id, node->details->uname);
 		return FALSE;
@@ -1380,7 +1374,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	    return any_created;
 	}
 
-	if(rsc->orphan) {
+	if(is_set(rsc->flags, pe_rsc_orphan)) {
 		crm_debug_2("Skipping orphan: %s", rsc->id);
 		return FALSE;
 	}
@@ -1497,11 +1491,11 @@ native_stop_constraints(
 	    resource_t *parent = NULL;
 	    if(node->details->online
 	       && node->details->unclean == FALSE
-	       && rsc->failed) {
+	       && is_set(rsc->flags, pe_rsc_failed)) {
 		continue;
 	    }
 
-	    if(rsc->failed) {
+	    if(is_set(rsc->flags, pe_rsc_failed)) {
 		crm_warn("Stop of failed resource %s is"
 			 " implicit after %s is fenced",
 			 rsc->id, node->details->uname);
@@ -1573,7 +1567,7 @@ native_stop_constraints(
 	
 	slist_iter(
 		action, action_t, action_list, lpc2,
-		if(node->details->online == FALSE || rsc->failed) {
+		if(node->details->online == FALSE || is_set(rsc->flags, pe_rsc_failed)) {
 			crm_info("Demote of failed resource %s is"
 				 " implict after %s is fenced",
 				 rsc->id, node->details->uname);
@@ -1608,7 +1602,7 @@ complex_stonith_ordering(
 	    return;
 	}
 	
-	if(rsc->is_managed == FALSE) {
+	if(is_not_set(rsc->flags, pe_rsc_managed)) {
 		crm_debug_3("Skipping fencing constraints for unmanaged resource: %s", rsc->id);
 		return;
 	} 
@@ -1648,9 +1642,9 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 
 	CRM_CHECK(rsc->variant == pe_native, return);
 	
-	if(rsc->is_managed == FALSE
-	   || rsc->failed
-	   || rsc->start_pending
+	if(is_not_set(rsc->flags, pe_rsc_managed)
+	   || is_set(rsc->flags, pe_rsc_failed)
+	   || is_set(rsc->flags, pe_rsc_start_pending)
 	   || rsc->next_role != RSC_ROLE_STARTED		   
 	   || g_list_length(rsc->running_on) != 1) {
 		do_crm_log(level, "%s: resource", rsc->id);
@@ -1671,10 +1665,10 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	
 	value = g_hash_table_lookup(rsc->meta, "allow_migrate");
 	if(crm_is_true(value)) {
-		rsc->can_migrate = TRUE;	
+	    set_bit(rsc->flags, pe_rsc_can_migrate);	
 	}
 	
-	if(rsc->can_migrate == FALSE
+	if(is_not_set(rsc->flags, pe_rsc_can_migrate)
 	   && start->allow_reload_conversion == FALSE) {
 		do_crm_log(level, "%s: no need to continue", rsc->id);
 		return;
@@ -1777,7 +1771,8 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		}
 		);
 
-	if(rsc->can_migrate && stop->node->details != start->node->details) {
+	if(is_set(rsc->flags, pe_rsc_can_migrate)
+	   && stop->node->details != start->node->details) {
 		crm_info("Migrating %s from %s to %s", rsc->id,
 			 stop->node->details->uname,
 			 start->node->details->uname);

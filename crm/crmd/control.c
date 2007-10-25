@@ -188,6 +188,7 @@ do_shutdown(long long action,
 		crmd_fsa_stall(NULL);
 	}
 	
+	crm_info("All subsystems stopped, continuing");
 	return I_NULL;
 }
 
@@ -475,7 +476,7 @@ do_startup(long long action,
 	
 	if(wait_timer != NULL) {
 		wait_timer->source_id = 0;
-		wait_timer->period_ms = 500;
+		wait_timer->period_ms = 2000;
 		wait_timer->fsa_input = I_NULL;
 		wait_timer->callback = crm_timer_popped;
 		wait_timer->repeat = FALSE;

@@ -187,6 +187,7 @@ do_test group11 "Group target_role"
 do_test group14 "Group stop (graph terminated)"
 do_test group15 "-ve group colocation"
 do_test bug-1573 "Partial stop of a group with two children"
+do_test bug-1718 "Mandatory group ordering - Stop group_FUN"
 
 echo ""
 do_test inc0 "Incarnation start" 

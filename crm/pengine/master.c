@@ -693,7 +693,7 @@ void master_rsc_colocation_rh(
 	get_clone_variant_data(clone_data, rsc_rh);
 
 	CRM_CHECK(rsc_rh != NULL, return);
-	if(rsc_rh->provisional) {
+	if(is_set(rsc_rh->flags, pe_rsc_provisional)) {
 		return;
 
 	} else if(constraint->role_rh == RSC_ROLE_UNKNOWN) {

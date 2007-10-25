@@ -43,6 +43,12 @@
 
 #define XML_BUFFER_SIZE	4096
 
+static const char *filter[] = {
+    XML_ATTR_ORIGIN,
+    XML_DIFF_MARKER,
+    XML_CIB_ATTR_WRITTEN,		
+};
+
 int is_comment_start(const char *input, size_t offset, size_t max);
 int is_comment_end(const char *input, size_t offset, size_t max);
 gboolean drop_comments(const char *input, size_t *offset, size_t max);
@@ -1591,6 +1597,7 @@ gboolean
 apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 {
 	gboolean result = TRUE;
+	const char *digest = crm_element_value(diff, XML_ATTR_DIGEST);
 	crm_data_t *added = find_xml_node(diff, "diff-added", FALSE);
 	crm_data_t *removed = find_xml_node(diff, "diff-removed", FALSE);
 
@@ -1632,6 +1639,17 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 			" saw %d", root_nodes_seen);
 		result = FALSE;
 
+	} else if(result && digest) {
+	    char *new_digest = calculate_xml_digest(*new, FALSE, TRUE);
+	    if(safe_str_neq(new_digest, digest)) {
+		crm_info("Digest mis-match: expected %s, calculated %s",
+			 digest, new_digest);
+ 		result = FALSE;
+	    } else {
+		crm_debug_2("Digest matched: expected %s, calculated %s",
+			    digest, new_digest);
+	    }
+	    
 	} else if(result) {
 		int lpc = 0;
 		crm_data_t *intermediate = NULL;
@@ -1646,7 +1664,7 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 			XML_ATTR_GENERATION,
 			XML_ATTR_GENERATION_ADMIN
 		};
-		
+
 		crm_debug_2("Verification Phase");
 		intermediate = diff_xml_object(old, *new, FALSE);
 		calc_added = find_xml_node(intermediate, "diff-added", FALSE);
@@ -1662,7 +1680,7 @@ apply_xml_diff(crm_data_t *old, crm_data_t *diff, crm_data_t **new)
 			value = crm_element_value(removed, name);
 			crm_xml_add(calc_removed, name, value);	
 		}
-		
+
 		diff_of_diff = diff_xml_object(intermediate, diff, TRUE);
 		if(diff_of_diff != NULL) {
 			crm_info("Diff application failed!");
@@ -1832,11 +1850,6 @@ subtract_xml_object(crm_data_t *left, crm_data_t *right, const char *marker)
 	const char *right_val = NULL;
 
 	int lpc = 0;
-	const char *filter[] = {
-		XML_ATTR_ORIGIN,
-		XML_DIFF_MARKER,
-		XML_CIB_ATTR_WRITTEN,		
-	};
 	static int filter_len = DIMOF(filter);
 	
 	crm_log_xml(LOG_DEBUG_5, "left:",  left);
@@ -2441,7 +2454,7 @@ free_pair(gpointer data, gpointer user_data)
 }
 
 static crm_data_t *
-sorted_xml(const crm_data_t *input)
+sorted_xml(const crm_data_t *input, crm_data_t *parent, gboolean recursive)
 {
 	GListPtr sorted = NULL;
 	GListPtr unsorted = NULL;
@@ -2454,7 +2467,7 @@ sorted_xml(const crm_data_t *input)
 	name = crm_element_name(input);
 	CRM_CHECK(name != NULL, return NULL);
 
-	result = create_xml_node(NULL, name);
+	result = create_xml_node(parent, name);
 	
 	xml_prop_iter(input, p_name, p_value,
 		      crm_malloc0(pair, sizeof(name_value_t));
@@ -2468,12 +2481,35 @@ sorted_xml(const crm_data_t *input)
 	g_list_foreach(sorted, dump_pair, result);
 	g_list_foreach(sorted, free_pair, NULL);
 	g_list_free(sorted);
+
+	if(recursive) {
+	    xml_child_iter(input, child, sorted_xml(child, result, recursive));
+	} else {
+	    xml_child_iter(input, child, add_node_copy(result, child));
+	}
+	
 	return result;
+}
+
+static void
+filter_xml(crm_data_t *data, const char **filter, int filter_len, gboolean recursive) 
+{
+    int lpc = 0;
+    
+    for(lpc = 0; lpc < filter_len; lpc++) {
+	xml_remove_prop(data, filter[lpc]);
+    }
+
+    if(recursive == FALSE) {
+	return;
+    }
+    
+    xml_child_iter(data, child, filter_xml(child, filter, filter_len, recursive));
 }
 
 /* "c048eae664dba840e1d2060f00299e9d" */
 char *
-calculate_xml_digest(crm_data_t *input, gboolean sort)
+calculate_xml_digest(crm_data_t *input, gboolean sort, gboolean do_filter)
 {
 	int i = 0;
 	int digest_len = 16;
@@ -2483,11 +2519,16 @@ calculate_xml_digest(crm_data_t *input, gboolean sort)
 	char *buffer = NULL;
 	size_t buffer_len = 0;
 
-	if(sort) {
-		sorted = sorted_xml(input);
+	if(sort || do_filter) {
+	    sorted = sorted_xml(input, NULL, TRUE);
 	} else {
-		sorted = copy_xml(input);
+	    sorted = copy_xml(input);
 	}
+
+	if(do_filter) {
+	    filter_xml(sorted, filter, DIMOF(filter), TRUE);
+	}
+	
 	buffer = dump_xml_formatted(sorted);
 	buffer_len = strlen(buffer);
 	

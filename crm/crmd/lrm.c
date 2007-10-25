@@ -204,7 +204,7 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
 	gboolean rc = TRUE;
 	GListPtr lrm_list = NULL;
 
-	crm_info("Checking for active resources before exit");
+	crm_debug("Checking for active resources before exit");
 
 	if(cur_state == S_TERMINATE) {
 		log_level = LOG_ERR;
@@ -409,7 +409,7 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 		   sprintf(list+start, " %s ", param);
 		);
 	
-	digest = calculate_xml_digest(restart, TRUE);
+	digest = calculate_xml_digest(restart, TRUE, FALSE);
 	crm_xml_add(update, XML_LRM_ATTR_OP_RESTART, list);
 	crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
 
@@ -606,7 +606,7 @@ build_operation_update(
 	args_xml = create_xml_node(args_parent, XML_TAG_PARAMS);
 	g_hash_table_foreach(op->params, hash2field, args_xml);
 	filter_action_parameters(args_xml, caller_version);
-	digest = calculate_xml_digest(args_xml, TRUE);
+	digest = calculate_xml_digest(args_xml, TRUE, FALSE);
 	if(op->interval == 0 && safe_str_neq(task, CRMD_ACTION_STOP)) {
 		crm_debug("Calculated digest %s for %s (%s)\n", 
 			  digest, ID(xml_op),
@@ -1144,7 +1144,7 @@ do_lrm_invoke(long long action,
 
 			op = construct_op(input->xml, ID(xml_rsc), operation);
 			op->op_status = LRM_OP_DONE;
-			op->rc = 0;
+			op->rc = EXECRA_OK;
 			CRM_ASSERT(op != NULL);
 			send_direct_ack(from_host, from_sys, op, ID(xml_rsc));
 			free_lrm_op(op);			
@@ -1625,11 +1625,11 @@ static void
 cib_rsc_callback(const HA_Message *msg, int call_id, int rc,
 		 crm_data_t *output, void *user_data)
 {
-	if(rc != cib_ok) {
+	if(rc != cib_ok && rc != cib_diff_resync) {
 		crm_err("Resource update %d failed: %s",
 			call_id, cib_error2string(rc));	
 	} else {
-		crm_debug("Resource update %d complete", call_id);	
+		crm_debug("Resource update %d complete: rc=%d", call_id, rc);
 	}
 }
 
@@ -1753,8 +1753,6 @@ process_lrm_event(lrm_op_t *op)
 			crm_err("LRM operation %s (%d) %s (timeout=%dms)",
 				op_key, op->call_id,
 				op_status2text(op->op_status), op->timeout);
-			/* set op->rc because the lrm doesn't bother */
-			op->rc = -1;
 			break;
 		default:
 			crm_err("Mapping unknown status (%d) to ERROR",

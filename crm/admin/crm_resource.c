@@ -133,7 +133,8 @@ do_find_resource_list(pe_working_set_t *data_set, gboolean raw)
 			print_raw_rsc(rsc, 0);
 			continue;
 			
-		} else if(rsc->orphan && rsc->fns->active(rsc, TRUE) == FALSE) {
+		} else if(is_set(rsc->flags, pe_rsc_orphan)
+			  && rsc->fns->active(rsc, TRUE) == FALSE) {
 			continue;
 		}
 		rsc->fns->print(
@@ -527,12 +528,19 @@ send_lrm_rsc_op(IPC_Channel *crmd_channel, const char *op,
 	cmd = create_request(op, msg_data, host_uname,
 			     CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 
+/* 	crm_log_xml_warn(cmd, "send_lrm_rsc_op"); */	
 	free_xml(msg_data);
 	crm_free(key);
 
 	if(send_ipc_message(crmd_channel, cmd)) {
-		rc = 0;
+	    rc = 0;
+	    sleep(1); /* dont exit striaght away, give the crmd time
+		       * to process our request
+		       */
+	} else {
+	    CMD_ERR("Could not send %s op to the crmd", op);
 	}
+	
 	crm_msg_del(cmd);
 	return rc;
 }

@@ -43,3 +43,6 @@ cts_SCRIPTS	=				\
 			LSBDummy
 
 all-local: $(cts_PYTHON)
+
+clean-local:
+	rm -f $(cts_PYTHON) $(cts_SCRIPTS)

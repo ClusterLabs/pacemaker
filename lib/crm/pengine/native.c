@@ -51,7 +51,7 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 			node->details->running_rsc, rsc);
 	}
 
-	if(rsc->is_managed == FALSE) {
+	if(is_not_set(rsc->flags, pe_rsc_managed)) {
 		crm_info("resource %s isnt managed", rsc->id);
 		resource_location(rsc, node, INFINITY,
 				  "not_managed_default", data_set);
@@ -84,7 +84,7 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 				);
 			
 		} else if(rsc->recovery_type == recovery_block) {
-			rsc->is_managed = FALSE;
+		    clear_bit(rsc->flags, pe_rsc_managed);
 		}
 		
 	} else {
@@ -241,10 +241,10 @@ native_print(
 	}
 	
 	if(options & pe_print_html) {
-		if(rsc->is_managed == FALSE) {
+		if(is_not_set(rsc->flags, pe_rsc_managed)) {
 			status_print("<font color=\"yellow\">");
 
-		} else if(rsc->failed) {
+		} else if(is_set(rsc->flags, pe_rsc_failed)) {
 			status_print("<font color=\"red\">");
 			
 		} else if(rsc->variant == pe_native
@@ -266,7 +266,7 @@ native_print(
 			     pre_text?pre_text:"", rsc->id,
 			     prov?prov:"", prov?"::":"",
 			     class, crm_element_value(rsc->xml, XML_ATTR_TYPE),
-			     rsc->orphan?" ORPHANED":"",
+			     is_set(rsc->flags, pe_rsc_orphan)?" ORPHANED":"",
 			     desc?": ":"", desc?desc:"");
 
 	} else {
@@ -274,10 +274,11 @@ native_print(
 			     pre_text?pre_text:"", rsc->id,
 			     prov?prov:"", prov?"::":"",
 			     class, crm_element_value(rsc->xml, XML_ATTR_TYPE),
-			     rsc->orphan?" ORPHANED":"",
+			     is_set(rsc->flags, pe_rsc_orphan)?" ORPHANED":"",
 			     (rsc->variant!=pe_native)?"":role2text(rsc->role),
 			     (rsc->variant!=pe_native)?"":node!=NULL?node->details->uname:"",
-			     rsc->is_managed?"":" (unmanaged)", rsc->failed?" FAILED":"");
+			     is_set(rsc->flags, pe_rsc_managed)?"":" (unmanaged)",
+			     is_set(rsc->flags, pe_rsc_failed)?" FAILED":"");
 		
 #if CURSES_ENABLED
 		if(options & pe_print_ncurses) {
@@ -344,9 +345,9 @@ native_print(
 	}
 
 	if(options & pe_print_dev) {
-		status_print("%s\t(%s%svariant=%s, priority=%f)",
-			     pre_text, rsc->provisional?"provisional, ":"",
-			     rsc->runnable?"":"non-startable, ",
+		status_print("%s\t(%s%svariant=%s, priority=%f)", pre_text,
+			     is_set(rsc->flags, pe_rsc_provisional)?"provisional, ":"",
+			     is_set(rsc->flags, pe_rsc_runnable)?"":"non-startable, ",
 			     crm_element_name(rsc->xml),
 			     (double)rsc->priority);
 		status_print("%s\tAllowed Nodes", pre_text);

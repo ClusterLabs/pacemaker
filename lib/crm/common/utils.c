@@ -1687,50 +1687,53 @@ crm_is_writable(const char *dir, const char *file,
 	return pass;
 }
 
+static unsigned long long crm_bit_filter = 0; /* 0x00000002ULL; */
+static unsigned int bit_log_level = LOG_DEBUG_5;
+
 long long
-toggle_bit(long long action_list, long long action)
+crm_clear_bit(const char *function, long long word, long long bit)
 {
-	crm_debug_5("Toggling bit %.16llx", action);
-	action_list ^= action;
-	crm_debug_5("Result %.16llx", action_list & action);
-	return action_list;
+	unsigned int level = bit_log_level;
+	if(bit & crm_bit_filter) {
+	    level = LOG_ERR;
+	}
+
+	do_crm_log(level, "Bit 0x%.16llx cleared by %s", bit, function);
+	word &= ~bit;
+
+	return word;
 }
 
 long long
-clear_bit(long long action_list, long long action)
+crm_set_bit(const char *function, long long word, long long bit)
 {
-	unsigned int	level = LOG_DEBUG_5;
-	do_crm_log(level, "Clearing bit\t%.16llx", action);
-	
-	/* ensure its set */
-	action_list |= action;
+	unsigned int level = bit_log_level;
+	if(bit & crm_bit_filter) {
+	    level = LOG_ERR;
+	}
 
-	/* then toggle */
-	action_list = action_list ^ action;
-
-	return action_list;
-}
-
-long long
-set_bit(long long action_list, long long action)
-{
-	unsigned int	level = LOG_DEBUG_5;
-	do_crm_log(level, "Setting bit\t%.16llx", action);
-	action_list |= action;
-	return action_list;
-}
-
-
-gboolean
-is_set(long long action_list, long long action)
-{
-	crm_debug_5("Checking bit\t%.16llx in %.16llx", action, action_list);
-	return ((action_list & action) == action);
+	do_crm_log(level, "Bit 0x%.16llx set by %s", bit, function);
+	word |= bit;
+	return word;
 }
 
 gboolean
-is_set_any(long long action_list, long long action)
+is_not_set(long long word, long long bit)
 {
-	crm_debug_5("Checking bit\t%.16llx in %.16llx", action, action_list);
-	return ((action_list & action) != 0);
+	crm_debug_5("Checking bit\t%.16llx in %.16llx", bit, word);
+	return ((word & bit) == 0);
+}
+
+gboolean
+is_set(long long word, long long bit)
+{
+	crm_debug_5("Checking bit\t%.16llx in %.16llx", bit, word);
+	return ((word & bit) == bit);
+}
+
+gboolean
+is_set_any(long long word, long long bit)
+{
+	crm_debug_5("Checking bit\t%.16llx in %.16llx", bit, word);
+	return ((word & bit) != 0);
 }

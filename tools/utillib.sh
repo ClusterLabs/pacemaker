@@ -36,23 +36,6 @@ getnodes() {
 }
 
 #
-# ssh
-#
-checksshuser() {
-	ssh -o Batchmode=yes $2@$1 true 2>/dev/null
-}
-trysshusers() {
-	n=$1
-	shift 1
-	for u; do
-		if checksshuser $n $u; then
-			echo $u
-			break
-		fi
-	done
-}
-
-#
 # logging
 #
 syslogmsg() {
@@ -166,22 +149,15 @@ findln_by_time() {
 	done
 	echo $mid
 }
+
 dumplog() {
 	logf=$1
-	from_time=$2
-	to_time=$3
-	from_line=`findln_by_time $logf $from_time`
-	if [ -z "$from_line" ]; then
-		warning "couldn't find line for time $from_time; corrupt log file?"
+	from_line=$2
+	to_line=$3
+	[ "$from_line" ] ||
 		return
-	fi
 	tail -n +$from_line $logf |
-		if [ "$to_time" != 0 ]; then
-			to_line=`findln_by_time $logf $to_time`
-			if [ -z "$to_line" ]; then
-				warning "couldn't find line for time $to_time; corrupt log file?"
-				return
-			fi
+		if [ "$to_line" ]; then
 			head -$((to_line-from_line+1))
 		else
 			cat
@@ -191,6 +167,9 @@ dumplog() {
 #
 # find files newer than a and older than b
 #
+isnumber() {
+	echo "$1" | grep -qs '^[0-9][0-9]*$'
+}
 touchfile() {
 	t=`maketempfile` &&
 	perl -e "\$file=\"$t\"; \$tm=$1;" -e 'utime $tm, $tm, $file;' &&
@@ -200,9 +179,13 @@ find_files() {
 	dir=$1
 	from_time=$2
 	to_time=$3
+	isnumber "$from_time" && [ "$from_time" -gt 0 ] || {
+		warning "sorry, can't find files based on time if you don't supply time"
+		return
+	}
 	from_stamp=`touchfile $from_time`
 	findexp="-newer $from_stamp"
-	if [ "$to_time" -a "$to_time" -gt 0 ]; then
+	if isnumber "$to_time" && [ "$to_time" -gt 0 ]; then
 		to_stamp=`touchfile $to_time`
 		findexp="$findexp ! -newer $to_stamp"
 	fi
@@ -246,7 +229,19 @@ getbt() {
 # heartbeat configuration/status
 #
 iscrmrunning() {
-	crmadmin -D >/dev/null 2>&1
+	crmadmin -D >/dev/null 2>&1 &
+	pid=$!
+	maxwait=10
+	while kill -0 $pid 2>/dev/null && [ $maxwait -gt 0 ]; do
+		sleep 1
+		maxwait=$((maxwait-1))
+	done
+	if kill -0 $pid 2>/dev/null; then
+		kill $pid
+		false
+	else
+		wait $pid
+	fi
 }
 dumpstate() {
 	crm_mon -1 | grep -v '^Last upd' > $1/crm_mon.txt
@@ -254,13 +249,16 @@ dumpstate() {
 	ccm_tool -p > $1/ccm_tool.txt 2>&1
 }
 getconfig() {
-	cp -p $HA_CF $1/
+	[ -f $HA_CF ] &&
+		cp -p $HA_CF $1/
 	[ -f $LOGD_CF ] &&
 		cp -p $LOGD_CF $1/
 	if iscrmrunning; then
 		dumpstate $1
+		touch $1/RUNNING
 	else
 		cp -p $HA_VARLIB/crm/cib.xml $1/ 2>/dev/null
+		touch $1/STOPPED
 	fi
 	[ -f "$1/cib.xml" ] &&
 		crm_verify -V -x $1/cib.xml >$1/crm_verify.txt 2>&1
@@ -312,14 +310,14 @@ sanitize_one() {
 # keep the user posted
 #
 fatal() {
-	echo "ERROR: $*" >&2
+	echo "`uname -n`: ERROR: $*" >&2
 	exit 1
 }
 warning() {
-	echo "WARN: $*" >&2
+	echo "`uname -n`: WARN: $*" >&2
 }
 info() {
-	echo "INFO: $*" >&2
+	echo "`uname -n`: INFO: $*" >&2
 }
 pickfirst() {
 	for x; do
@@ -329,22 +327,6 @@ pickfirst() {
 		}
 	done
 	return 1
-}
-
-#
-# run a command everywhere
-#
-forall() {
-	c="$*"
-	for n in `getnodes`; do
-		if [ "$n" = "`uname -n`" ]; then
-			$c
-		else
-			if [ "$SSH_USER" ]; then
-				echo $c | ssh $SSH_OPTS $SSH_USER@$n
-			fi
-		fi
-	done
 }
 
 #

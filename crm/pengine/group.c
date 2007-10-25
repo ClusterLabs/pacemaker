@@ -36,22 +36,22 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	if(rsc->provisional == FALSE) {
+	if(is_not_set(rsc->flags, pe_rsc_provisional)) {
 		return rsc->allocated_to;
 	}
 	crm_debug_2("Processing %s", rsc->id);
-	if(rsc->is_allocating) {
+	if(is_set(rsc->flags, pe_rsc_allocating)) {
 		crm_debug("Dependancy loop detected involving %s", rsc->id);
 		return NULL;
 	}
 	
 	if(group_data->first_child == NULL) {
 	    /* nothign to allocate */
-	    rsc->provisional = FALSE;
+	    clear_bit(rsc->flags, pe_rsc_provisional);
 	    return NULL;
 	}
 	
-	rsc->is_allocating = TRUE;
+	set_bit(rsc->flags, pe_rsc_allocating);
 	rsc->role = group_data->first_child->role;
 	
 	group_data->first_child->rsc_cons = g_list_concat(
@@ -67,8 +67,8 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 		);
 
 	rsc->next_role = group_data->first_child->next_role;	
-	rsc->is_allocating = FALSE;
-	rsc->provisional = FALSE;
+	clear_bit(rsc->flags, pe_rsc_allocating);
+	clear_bit(rsc->flags, pe_rsc_provisional);
 
 	if(group_data->colocated) {
 		return group_node;
@@ -146,11 +146,15 @@ group_update_pseudo_status(resource_t *parent, resource_t *child)
 void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
 	resource_t *last_rsc = NULL;
-
+	int stopstop = pe_order_shutdown;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
 	native_internal_constraints(rsc, data_set);
+
+	if(group_data->ordered == FALSE) {
+	    stopstop |= pe_order_implies_right;
+	}
 	
 	custom_action_order(
 		rsc, stopped_key(rsc), NULL,
@@ -178,9 +182,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 				child_rsc, last_rsc, NULL, NULL, data_set);
 		}
 
-		custom_action_order(rsc, stop_key(rsc), NULL,
-				    child_rsc,  stop_key(child_rsc), NULL,
-				    pe_order_optional, data_set);
+		order_stop_stop(rsc, child_rsc, stopstop);
 		
 		custom_action_order(child_rsc, stop_key(child_rsc), NULL,
 				    rsc,  stopped_key(rsc), NULL,
@@ -188,11 +190,10 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 		custom_action_order(child_rsc, start_key(child_rsc), NULL,
 				    rsc, started_key(rsc), NULL,
-				    pe_order_optional, data_set);
+				    pe_order_runnable_left, data_set);
 		
  		if(group_data->ordered == FALSE) {
 			order_start_start(rsc, child_rsc, pe_order_implies_right|pe_order_runnable_left);
-			order_stop_stop(rsc, child_rsc, pe_order_implies_right);
 
 		} else if(last_rsc != NULL) {
 			order_start_start(last_rsc, child_rsc, pe_order_implies_right|pe_order_runnable_left);
@@ -267,10 +268,10 @@ void group_rsc_colocation_rh(
 	crm_debug_3("Processing RH of constraint %s", constraint->id);
 	print_resource(LOG_DEBUG_3, "LHS", rsc_lh, TRUE);
 
-	if(rsc_rh->provisional) {
+	if(is_set(rsc_rh->flags, pe_rsc_provisional)) {
 		return;
 	
-	} else if(group_data->colocated) {
+	} else if(group_data->colocated && group_data->first_child) {
 		group_data->first_child->cmds->rsc_colocation_rh(
 			rsc_lh, group_data->first_child, constraint); 
 		return;
@@ -374,15 +375,15 @@ group_merge_weights(
     group_variant_data_t *group_data = NULL;
     get_group_variant_data(group_data, rsc);
     
-    if(rsc->is_merging) {
+    if(is_set(rsc->flags, pe_rsc_merging)) {
 	crm_debug("Breaking dependancy loop with %s at %s", rsc->id, rhs);
 	return nodes;
 
-    } else if(rsc->provisional == FALSE || can_run_any(nodes) == FALSE) {
+    } else if(is_not_set(rsc->flags, pe_rsc_provisional) || can_run_any(nodes) == FALSE) {
 	return nodes;
     }
 
-    rsc->is_merging = TRUE;
+    set_bit(rsc->flags, pe_rsc_merging);
     nodes = group_data->first_child->cmds->merge_weights(
 	group_data->first_child, rhs, nodes, factor, allow_rollback);
 
@@ -394,6 +395,6 @@ group_merge_weights(
 	    constraint->score/INFINITY, allow_rollback);
 	);
 
-    rsc->is_merging = FALSE;
+    clear_bit(rsc->flags, pe_rsc_merging);
     return nodes;
 }
