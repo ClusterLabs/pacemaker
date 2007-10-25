@@ -162,6 +162,8 @@ class LinuxHAv2(HeartbeatCM):
             self.CIBsync[node] = 1
             self.rsh.remote_py(node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
             self.rsh.remote_py(node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig")
+            self.rsh.remote_py(node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml.last")
+            self.rsh.remote_py(node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig.last")
 
             # Only install the CIB on the first node, all the other ones will pick it up from there
             if self.cib_installed == 1:
