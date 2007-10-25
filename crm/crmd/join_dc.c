@@ -376,6 +376,10 @@ do_dc_join_finalize(long long action,
 	 */
 	crm_debug("Finializing join-%d for %d clients",
 		  current_join_id, g_hash_table_size(integrated_nodes));
+	if(g_hash_table_size(integrated_nodes) == 0) {
+	    return I_NULL;
+	}
+	
 	clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
 	if(max_generation_from == NULL
 	   || safe_str_eq(max_generation_from, fsa_our_uname)){
@@ -605,6 +609,8 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	return TRUE;
 }
 
+void ghash_print_node(gpointer key, gpointer value, gpointer user_data);
+
 gboolean
 check_join_state(enum crmd_fsa_state cur_state, const char *source)
 {
@@ -642,11 +648,19 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 			
 		} else if(g_hash_table_size(integrated_nodes) != 0
 			  && g_hash_table_size(finalized_nodes) != 0) {
+			char *msg = NULL;
 			crm_err("join-%d: Waiting on %d integrated nodes"
-				" AND %d confirmations",
+				" AND %d finalized nodes",
 				current_join_id,
 				g_hash_table_size(integrated_nodes),
 				g_hash_table_size(finalized_nodes));
+			msg = crm_strdup("Integrated node");
+			g_hash_table_foreach(integrated_nodes, ghash_print_node, msg);
+			crm_free(msg);
+			
+			msg = crm_strdup("Finalized node");
+			g_hash_table_foreach(finalized_nodes, ghash_print_node, msg);
+			crm_free(msg);
 
 		} else if(g_hash_table_size(integrated_nodes) != 0) {
 			crm_debug("join-%d: Still waiting on %d integrated nodes",
@@ -654,7 +668,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 				  g_hash_table_size(integrated_nodes));
 			
 		} else if(g_hash_table_size(finalized_nodes) != 0) {
-			crm_debug("join-%d: Still waiting on %d confirmations",
+			crm_debug("join-%d: Still waiting on %d finalized nodes",
 				  current_join_id,
 				  g_hash_table_size(finalized_nodes));
 		}
