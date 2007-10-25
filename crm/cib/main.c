@@ -341,7 +341,7 @@ gboolean ccm_connect(void)
 	    if(num_ccm_fails < max_ccm_fails){
 		crm_warn("CCM Connection failed %d times (%d max)",
 			 num_ccm_fails, max_ccm_fails);
-		sleep(1);
+		sleep(3);
 		
 	    } else {
 		crm_err("CCM Activation failed %d (max) times",
