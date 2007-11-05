@@ -16,7 +16,7 @@ class CIB:
     cib_option_template = '''
     <cluster_property_set id="cib-bootstrap-options">
        <attributes>
-        <nvpair id="cib-bootstrap-options-default-action-timeout"  name="default-action-timeout" value="10s"/>
+        <nvpair id="cib-bootstrap-options-default-action-timeout"  name="default-action-timeout" value="30s"/>
         <nvpair id="cib-bootstrap-options-cluster-delay"           name="cluster-delay"          value="60s"/>
         <nvpair id="cib-bootstrap-options-symmetric-cluster"       name="symmetric-cluster"      value="true"/>
         <nvpair id="cib-bootstrap-options-start-failure-is-fatal"  name="start-failure-is-fatal" value="false"/>
