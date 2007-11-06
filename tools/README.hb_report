@@ -186,6 +186,9 @@ for good measure.
 Note that `-f` is not an optional option. And don't forget to quote
 dates when they contain spaces.
 
+It is also possible to extract a CTS test. Just prefix the test
+number with `cts:` in the `-f` option.
+
 Should I send all this to the rest of Internet?
 -----------------------------------------------
 
