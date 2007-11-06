@@ -359,12 +359,16 @@ distro() {
 }
 hb_ver() {
 	which dpkg > /dev/null 2>&1 && {
-		dpkg-query -f '${Version}' -W heartbeat 2>/dev/null ||
-			dpkg-query -f '${Version}' -W heartbeat-2
+		for pkg in heartbeat heartbeat-2; do
+			dpkg-query -f '${Version}' -W $pkg
+		done
+		[ $? -eq 0 ] &&
+			debsums -s $pkg
 		return
 	}
 	which rpm > /dev/null 2>&1 && {
-		rpm -q --qf '%{version}' heartbeat
+		rpm -q --qf '%{version}' heartbeat &&
+		rpm --verify heartbeat
 		return
 	}
 	# more packagers?
