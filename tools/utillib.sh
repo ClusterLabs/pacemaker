@@ -360,7 +360,7 @@ distro() {
 hb_ver() {
 	which dpkg > /dev/null 2>&1 && {
 		for pkg in heartbeat heartbeat-2; do
-			dpkg-query -f '${Version}' -W $pkg
+			dpkg-query -f '${Version}' -W $pkg 2>/dev/null && break
 		done
 		[ $? -eq 0 ] &&
 			debsums -s $pkg
