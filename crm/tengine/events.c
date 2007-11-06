@@ -501,6 +501,10 @@ process_graph_event(crm_data_t *event, const char *event_node)
 		  abort_transition(INFINITY, tg_restart,"Bad event", event);
 		);
 
+	if(status == LRM_OP_PENDING) {
+	    goto bail;
+	}
+	
 	if(transition_num == -1) {
 		crm_err("Action %s initiated outside of a transition", id);
 		abort_transition(INFINITY, tg_restart,"Unexpected event",event);
@@ -532,6 +536,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 		update_failcount(event, event_node, rc);
 	}
 
+  bail:
 	crm_free(update_te_uuid);
 	return;
 }
