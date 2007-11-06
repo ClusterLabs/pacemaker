@@ -79,6 +79,7 @@ getlogvars() {
 		HA_CF=$LOGD_CF
 	fi
 	HA_LOGFACILITY=`getcfvar logfacility`
+	[ none = "$HA_LOGFACILITY" ] && HA_LOGFACILITY=""
 	HA_LOGFILE=`getcfvar logfile`
 	HA_DEBUGFILE=`getcfvar debugfile`
 	HA_SYSLOGMSGFMT=""
@@ -134,9 +135,16 @@ findln_by_time() {
 	last=`wc -l < $logf`
 	while [ $first -le $last ]; do
 		mid=$(((last+first)/2))
-		tmid=`linetime $logf $mid`
+		trycnt=10
+		while [ $trycnt -gt 0 ]; do
+			tmid=`linetime $logf $mid`
+			[ "$tmid" ] && break
+			warning "cannot extract time: $logf:$mid; will try the next one"
+			trycnt=$((trycnt-1))
+			mid=$((mid+1))
+		done
 		if [ -z "$tmid" ]; then
-			warning "cannot extract time: $logf:$mid"
+			warning "giving up on log..."
 			return
 		fi
 		if [ $tmid -gt $tm ]; then
@@ -168,7 +176,7 @@ dumplog() {
 # find files newer than a and older than b
 #
 isnumber() {
-	echo "$1" | grep -qs '^[0-9][0-9]*$'
+	echo "$*" | grep -qs '^[0-9][0-9]*$'
 }
 touchfile() {
 	t=`maketempfile` &&

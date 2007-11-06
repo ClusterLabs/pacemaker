@@ -578,7 +578,7 @@ if [ "$SLAVE" = "" ]; then
 		esac
 	done
 	[ $# -ne 1 ] && usage short
-	DESTDIR=$1
+	DESTDIR=`echo $1 | sed 's,/*$,,'`
 	chkdirname $DESTDIR
 	[ "$FROM_TIME" ] || usage short
 fi
@@ -629,7 +629,8 @@ if [ "$SLAVE" = "" ]; then
 	if [ "$HA_LOGFACILITY" ]; then
 		sev="info"
 		cfdebug=`getcfvar debug` # prefer debuglog if set
-		[ "$cfdebug" -a "$cfdebug" -gt 0 ] &&
+		isnumber $cfdebug || cfdebug=""
+		[ "$cfdebug" -a $cfdebug -gt 0 ] &&
 			sev="debug"
 		logmarks $sev $UNIQUE_MSG
 	fi
@@ -689,7 +690,7 @@ if [ ! "$SLAVE" ]; then
 		send_config
 		start_remote_collectors
 	else
-		[ `getnodes | wc -w` -gt 1 ] &&
+		[ -z "$NO_SSH" -a `getnodes | wc -w` -gt 1 ] &&
 			warning "ssh does not work to all nodes"
 	fi
 fi
