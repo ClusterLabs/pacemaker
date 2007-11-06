@@ -224,6 +224,7 @@ do_test master-12 "Promotion based solely on rsc_location constraints"
 do_test master-13 "Include preferences of colocated resources when placing master"
 do_test master-demote "Ordering when actions depends on demoting a slave resource" 
 do_test master-ordering "Prevent resources from starting that need a master"
+do_test bug-1765 "Master-Master Colocation (dont stop the slaves)"
 
 echo ""
 do_test managed-0 "Managed (reference)"

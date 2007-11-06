@@ -27,6 +27,8 @@
 #include <lib/crm/pengine/variant.h>
 
 gint sort_clone_instance(gconstpointer a, gconstpointer b);
+resource_t *find_compatible_child(
+    resource_t *local_child, resource_t *rsc, enum rsc_role_e filter);
 
 void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
@@ -719,8 +721,9 @@ clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		);
 }
 
-static resource_t*
-find_compatible_child(resource_t *local_child, resource_t *rsc)
+resource_t*
+find_compatible_child(
+    resource_t *local_child, resource_t *rsc, enum rsc_role_e filter)
 {
 	node_t *local_node = NULL;
 	node_t *node = NULL;
@@ -737,6 +740,13 @@ find_compatible_child(resource_t *local_child, resource_t *rsc)
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
 		node = child_rsc->allocated_to;
+
+		if(filter != RSC_ROLE_UNKNOWN
+		   && child_rsc->next_role != filter) {
+		    crm_debug_2("Filtered %s", child_rsc->id);
+		    continue;
+		}
+		
 		if(node->details == local_node->details) {
 			crm_info("Colocating %s with %s on %s",
 				 local_child->id, child_rsc->id, node->details->uname);
@@ -770,7 +780,8 @@ void clone_rsc_colocation_lh(
 	
 	get_clone_variant_data(clone_data, rsc);
 
-	if(constraint->rsc_rh->variant == pe_clone) {
+	if(constraint->rsc_rh->variant == pe_clone
+	    || constraint->rsc_rh->variant == pe_master) {
 		get_clone_variant_data(
 			clone_data_rh, constraint->rsc_rh);
 		if(clone_data->clone_node_max
@@ -816,7 +827,8 @@ void clone_rsc_colocation_lh(
 		slist_iter(lh_child, resource_t, rsc->children, lpc,
 
 			   CRM_ASSERT(lh_child != NULL);
-			   rh_child = find_compatible_child(lh_child, rsc_rh);
+			   rh_child = find_compatible_child(
+			       lh_child, rsc_rh, RSC_ROLE_UNKNOWN);
 			   if(rh_child == NULL) {
 				   continue;
 			   }

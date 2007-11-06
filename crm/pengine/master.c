@@ -183,23 +183,6 @@ master_update_pseudo_status(
 		}							\
 		);
 
-#define apply_master_colocation(list)					\
-	slist_iter(							\
-		cons, rsc_colocation_t, list, lpc2,			\
-		cons_node = cons->rsc_lh->allocated_to;			\
-		if(cons->role_lh == RSC_ROLE_MASTER			\
-		   && cons_node != NULL					\
-		   && chosen->details == cons_node->details) {		\
-			int new_priority = merge_weights(		\
-				child_rsc->priority, cons->score);	\
-			crm_debug("Applying %s to %s",			\
-				  cons->id, child_rsc->id);		\
-			crm_debug("\t%s: %d->%d", child_rsc->id,	\
-				  child_rsc->priority, new_priority);	\
-			child_rsc->priority = new_priority;		\
-		}							\
-		);
-
 static node_t *
 can_be_master(resource_t *rsc)
 {
@@ -491,8 +474,11 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 
 		apply_master_location(child_rsc->rsc_location);
 		apply_master_location(rsc->rsc_location);
-		apply_master_colocation(rsc->rsc_cons);
-		apply_master_colocation(child_rsc->rsc_cons);
+		slist_iter(
+		    cons, rsc_colocation_t, child_rsc->rsc_cons, lpc2,
+		    child_rsc->cmds->rsc_colocation_lh(child_rsc, cons->rsc_rh, cons);
+		    );
+		
 		child_rsc->sort_index = child_rsc->priority;
 		crm_debug_2("Assigning priority for %s: %d", child_rsc->id, child_rsc->priority);
 
@@ -686,8 +672,26 @@ master_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	
 }
 
+extern resource_t *find_compatible_child(resource_t *local_child, resource_t *rsc, enum rsc_role_e filter);
+static void node_list_update_one(GListPtr list1, node_t *other, int score)
+{
+    node_t *node = NULL;
+    
+    if(other == NULL) {
+	return;
+    }
+    
+    node = (node_t*)pe_find_node_id(list1, other->details->id);
+    
+    if(node != NULL) {
+	crm_debug_2("%s: %d + %d",
+		    node->details->uname, node->weight, other->weight);
+	node->weight = merge_weights(node->weight, score);
+    }	
+}
+
 void master_rsc_colocation_rh(
-	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
+    resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc_rh);
@@ -713,24 +717,45 @@ void master_rsc_colocation_rh(
 			child_rsc->cmds->rsc_colocation_rh(rsc_lh, child_rsc, constraint);
 			);
 
-	} else {
+	} else if(is_set(rsc_lh->flags, pe_rsc_provisional)) {
 		GListPtr lhs = NULL, rhs = NULL;
 		lhs = rsc_lh->allowed_nodes;
-
+		
 		slist_iter(
 			child_rsc, resource_t, rsc_rh->children, lpc,
 			crm_debug_3("Processing: %s", child_rsc->id);
 			if(child_rsc->allocated_to != NULL
 			   && child_rsc->next_role == constraint->role_rh) {
-				crm_debug_3("Applying: %s %s", child_rsc->id, role2text(child_rsc->next_role));
-				rhs = g_list_append(rhs, child_rsc->allocated_to);
+			    crm_debug_3("Applying: %s %s", child_rsc->id,
+					role2text(child_rsc->next_role));
+			    node_list_update_one(rsc_lh->allowed_nodes, child_rsc->allocated_to, constraint->score);
+			    rhs = g_list_append(rhs, child_rsc->allocated_to);
 			}
 			);
-	
-		rsc_lh->allowed_nodes = node_list_and(lhs, rhs, FALSE);
+
+		/* Only do this if its not a master-master colocation
+		 * Doing this unconditionally would prevent the slaves from being started
+		 */
+		if(constraint->role_lh != RSC_ROLE_MASTER
+		    || constraint->role_rh != RSC_ROLE_MASTER) {
+		    rsc_lh->allowed_nodes = node_list_and(lhs, rhs, FALSE);
+		    pe_free_shallow(lhs);
+		}
 		
 		pe_free_shallow_adv(rhs, FALSE);
-		pe_free_shallow(lhs);
+
+	} else if(constraint->role_lh == RSC_ROLE_MASTER) {
+	    resource_t *rh_child = find_compatible_child(rsc_lh, rsc_rh, constraint->role_rh);
+	    if(rh_child == NULL && constraint->score >= INFINITY) {
+		crm_debug_2("%s can't be promoted %s", rsc_lh->id, constraint->id);
+		rsc_lh->priority = -INFINITY;
+		
+	    } else if(rh_child != NULL) {
+		int new_priority = merge_weights(rsc_lh->priority, constraint->score);
+		crm_debug("Applying %s to %s", constraint->id, rsc_lh->id);
+		crm_debug("\t%s: %d->%d", rsc_lh->id, rsc_lh->priority, new_priority);
+		rsc_lh->priority = new_priority;
+	    }
 	}
 
 	return;
