@@ -545,38 +545,33 @@ getlogvars
 if [ "$SLAVE" = "" ]; then
 	setvarsanddefaults
 	userargs="$@"
-	args=`getopt -o f:t:l:u:p:L:e:SDCh -- "$@"`
-	[ $? -ne 0 ] && usage
-	eval set -- "$args"
-	while [ x"$1" != x ]; do
-		case "$1" in
-			-h) usage;;
-			-f)
-				if echo "$2" | grep -qs '^cts:'; then
+	while getopts f:t:l:u:p:L:e:SDCh o; do
+		case "$o" in
+			h) usage;;
+			f)
+				if echo "$OPTARG" | grep -qs '^cts:'; then
 					FROM_TIME=0 # to be calculated later
-					CTS=`echo "$2" | sed 's/cts://'`
+					CTS=`echo "$OPTARG" | sed 's/cts://'`
 				else
-					FROM_TIME=`str2time "$2"`
-					chktime "$FROM_TIME" "$2"
+					FROM_TIME=`str2time "$OPTARG"`
+					chktime "$FROM_TIME" "$OPTARG"
 				fi
-				shift 2
 			;;
-			-t) TO_TIME=`str2time "$2"`
-			    chktime "$TO_TIME" "$2"
-				shift 2
+			t) TO_TIME=`str2time "$OPTARG"`
+			    chktime "$TO_TIME" "$OPTARG"
 			;;
-			-u) SSH_USER="$2"; shift 2;;
-			-l) HA_LOG="$2"; shift 2;;
-			-e) EDITOR="$2"; shift 2;;
-			-p) SANITIZE="$SANITIZE $2"; shift 2;;
-			-L) LOG_PATTERNS="$LOG_PATTERNS $2"; shift 2;;
-			-S) NO_SSH=1; shift 1;;
-			-D) NO_DESCRIPTION=1; shift 1;;
-			-C) REMOVE_DEST=1; shift 1;;
-			--) shift 1; break;;
-			*) usage short;;
+			u) SSH_USER="$OPTARG";;
+			l) HA_LOG="$OPTARG";;
+			e) EDITOR="$OPTARG";;
+			p) SANITIZE="$SANITIZE $OPTARG";;
+			L) LOG_PATTERNS="$LOG_PATTERNS $OPTARG";;
+			S) NO_SSH=1;;
+			D) NO_DESCRIPTION=1;;
+			C) REMOVE_DEST=1;;
+			[?]) usage short;;
 		esac
 	done
+	shift $((OPTIND-1))
 	[ $# -ne 1 ] && usage short
 	DESTDIR=`echo $1 | sed 's,/*$,,'`
 	chkdirname $DESTDIR
