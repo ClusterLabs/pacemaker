@@ -530,23 +530,26 @@ determine_online_status(
 	return online;
 }
 
-#define set_char(x) last_rsc_id[len] = x; complete = TRUE;
+#define set_char(x) last_rsc_id[lpc] = x; complete = TRUE;
 
-static void
+static char *
 increment_clone(char *last_rsc_id)
 {
-	gboolean complete = FALSE;
+	int lpc = 0;
 	int len = 0;
+	char *tmp = NULL;
+	gboolean complete = FALSE;
 
-	CRM_CHECK(last_rsc_id != NULL, return);
+	CRM_CHECK(last_rsc_id != NULL, return NULL);
 	if(last_rsc_id != NULL) {
 		len = strlen(last_rsc_id);
 	}
-	len--;
-	while(complete == FALSE && len > 0) {
-		switch (last_rsc_id[len]) {
+	
+	lpc = len-1;
+	while(complete == FALSE && lpc > 0) {
+		switch (last_rsc_id[lpc]) {
 			case 0:
-				len--;
+				lpc--;
 				break;
 			case '0':
 				set_char('1');
@@ -576,15 +579,26 @@ increment_clone(char *last_rsc_id)
 				set_char('9');
 				break;
 			case '9':
+				last_rsc_id[lpc] = '0';
+				lpc--;
+				break;
+			case ':':
+				tmp = last_rsc_id;
+				crm_malloc0(last_rsc_id, len + 2);
+				memcpy(last_rsc_id, tmp, len);
+				last_rsc_id[++lpc] = '1';
 				last_rsc_id[len] = '0';
-				len--;
+				last_rsc_id[len+1] = 0;
+				complete = TRUE;
+				crm_free(tmp);
 				break;
 			default:
 				crm_err("Unexpected char: %c (%d)",
-					last_rsc_id[len], len);
+					last_rsc_id[lpc], lpc);
 				break;
 		}
 	}
+	return last_rsc_id;
 }
 
 static resource_t *
@@ -643,7 +657,7 @@ unpack_find_resource(
 			crm_debug_3("find another one");
 			rsc = NULL;
 			is_duped_clone = TRUE;
-			increment_clone(alt_rsc_id);
+			alt_rsc_id = increment_clone(alt_rsc_id);
 		}
 	}
 	crm_free(alt_rsc_id);
