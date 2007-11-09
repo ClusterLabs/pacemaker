@@ -519,17 +519,6 @@ build_operation_update(
 		op_id = generate_op_key(op->rsc_id, task, op->interval);
 	}
 
-	/* Handle recurring ops - infer last op_status */
-	if(op->op_status == LRM_OP_PENDING && op->interval > 0) {
-		if(op->rc == 0) {
-			crm_debug("Mapping pending operation to DONE");
-			op->op_status = LRM_OP_DONE;
-		} else {
-			crm_debug("Mapping pending operation to ERROR");
-			op->op_status = LRM_OP_ERROR;
-		}
-	}
-
 	xml_op = find_entity(xml_rsc, XML_LRM_TAG_RSC_OP, op_id);
 	if(xml_op != NULL) {
 		crm_log_xml(LOG_DEBUG, "Replacing existing entry", xml_op);
