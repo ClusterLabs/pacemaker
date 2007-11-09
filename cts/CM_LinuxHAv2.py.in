@@ -524,11 +524,7 @@ class LinuxHAv2(HeartbeatCM):
 
         complist.append(Process("ccm", 0, [
                     "State transition S_IDLE",
-                    "Respawning client .*cib",
-                    "Respawning client .*crmd",
                     "CCM connection appears to have failed",
-                    ".*cib .*exited with return code 2.",
-                    ".*crmd .*exited with return code 2.",
                     "crmd: .*Action A_RECOVER .* not supported",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "Exiting to recover from CCM connection failure",
@@ -540,30 +536,27 @@ class LinuxHAv2(HeartbeatCM):
 #                    "tengine_stonith_callback: .*result=0",
                     "State transition S_.* -> S_INTEGRATION.*input=I_NODE_JOIN",
                     "State transition S_STARTING -> S_PENDING",
-                    ], [], common_ignore, self))
+                    ], [], common_ignore, 1, self))
 
         complist.append(Process("cib", 0, [
                     "State transition S_IDLE",
-                    "Respawning client .*crmd",
                     "Lost connection to the CIB service",
                     "Connection to the CIB terminated...",
-                    ".*crmd .*exited with return code 2.",
-                    "State transition S_STARTING -> S_PENDING",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], common_ignore, self))
+                    ], [], common_ignore, 1, self))
 
         complist.append(Process("lrmd", 0, [
                     "State transition S_IDLE",
                     "LRM Connection failed",
-                    "Respawning client .*crmd",
                     "crmd: .*I_ERROR.*lrm_dispatch",
                     "State transition S_STARTING -> S_PENDING",
                     ".*crmd .*exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], common_ignore, self))
+                    ], [], common_ignore, 1, self))
+
         complist.append(Process("crmd", 0, [
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
@@ -574,42 +567,40 @@ class LinuxHAv2(HeartbeatCM):
                     ], [
                     "tengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
                     "pengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
-                    ], common_ignore, self))
+                    ], common_ignore, 1, self))
 
         complist.append(Process("pengine", 1, [
                     "State transition S_IDLE",
-                    "Respawning client .*crmd",
                     ".*crmd .*exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], common_ignore, self))
+                    ], [], common_ignore, 1, self))
 
         complist.append(Process("tengine", 1, [
                     "State transition S_IDLE",
-                    "Respawning client .*crmd",
                     ".*crmd .*exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], common_ignore, self))
+                    ], [], common_ignore, 1, self))
 
         if self.Env["DoFencing"] == 1 :
             complist.append(Process("stonithd", 0, [], [
                         "tengine_stonith_connection_destroy: Fencing daemon has left us",
                         "Attempting connection to fencing daemon",
                         "te_connect_stonith: Connected",
-                        ], stonith_ignore, self))
-#            complist.append(Process("heartbeat", 0, [], [], [], self))
+                        ], stonith_ignore, None, self))
+#            complist.append(Process("heartbeat", 0, [], [], [], None, self))
         return complist
-    
+
     def NodeUUID(self, node):
         lines = self.rsh.readlines(node, self["UUIDQueryCmd"])
         for line in lines:
-            self.debug("UUIDLine:"+ line) 
+            self.debug("UUIDLine:"+ line)
             m = re.search(r'%s.+\((.+)\)' % node, line)
-            if m:   
+            if m:
                 return m.group(1)
-        return ""       
-                            
+        return ""
+
     def StandbyStatus(self, node):
         out=self.rsh.readaline(node, self["StandbyQueryCmd"]%node)
         if not out:
