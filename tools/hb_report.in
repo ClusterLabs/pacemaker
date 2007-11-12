@@ -625,7 +625,7 @@ if [ "$SLAVE" = "" ]; then
 		sev="info"
 		cfdebug=`getcfvar debug` # prefer debuglog if set
 		isnumber $cfdebug || cfdebug=""
-		[ "$cfdebug" -a $cfdebug -gt 0 ] &&
+		[ "$cfdebug" ] && [ $cfdebug -gt 0 ] &&
 			sev="debug"
 		logmarks $sev $UNIQUE_MSG
 	fi
