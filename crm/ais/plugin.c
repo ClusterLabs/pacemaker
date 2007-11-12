@@ -795,6 +795,10 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 	} else if(dest == crm_msg_lrmd) {
 	    /* lrmd messages are routed via the crm */
 	    dest = crm_msg_crmd;
+
+	} else if(dest == crm_msg_te) {
+	    /* te messages are routed via the crm - for now */
+	    dest = crm_msg_crmd;
 	}
 
 	if(in_shutdown) {
