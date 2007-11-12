@@ -35,11 +35,13 @@
 #include "plugin.h"
 #include "utils.h"
 
+#include <openais/service/objdb.h>
+
 #define OPENAIS_EXTERNAL_SERVICE insane_ais_header_hack_in__totem_h
 #include <openais/saAis.h>
 #include <openais/service/swab.h>
-#include <openais/service/service.h>
 #include <openais/totem/totempg.h>
+#include <openais/service/service.h>
 
 #include <openais/lcr/lcr_comp.h>
 
@@ -89,6 +91,7 @@ static crm_child_t crm_children[] = {
 
 void send_cluster_id(void);
 int send_cluster_msg_raw(AIS_Message *ais_msg);
+char *ais_generate_membership_data(void);
 
 extern totempg_groups_handle openais_group_handle;
 
@@ -602,6 +605,15 @@ void ais_ipc_message_callback(void *conn, void *msg)
 	ais_info("Recorded connection %p for %s/%d",
 		 conn, crm_children[type].name, crm_children[type].pid);
 	crm_children[type].conn = conn;
+
+	/* Make sure they have the latest membership */
+	if(crm_children[type].flags & crm_flag_members) {
+	    char *update = ais_generate_membership_data();
+	    ais_info("Sending membership update %llu to %s",
+		     membership_seq, crm_children[type].name);
+ 	    send_client_msg(conn, crm_class_members, crm_msg_none, update);
+	}
+	
     }
     
     ais_msg->sender.id = local_nodeid;
@@ -680,7 +692,7 @@ void member_loop_fn(gpointer key, gpointer value, gpointer user_data)
     data->string = append_member(data->string, node);
 }
 
-static char *ais_generate_membership_data(void)
+char *ais_generate_membership_data(void)
 {
     int size = 0;
     struct member_loop_data data;
@@ -738,7 +750,12 @@ void send_member_notification(void)
     char *update = ais_generate_membership_data();
 
     for (; lpc < SIZEOF(crm_children); lpc++) {
-	if(crm_children[lpc].conn && (crm_children[lpc].flags & crm_flag_members)) {
+	if(crm_children[lpc].flags & crm_flag_members) {
+
+	    if(crm_children[lpc].conn == NULL) {
+		continue;
+	    }
+	    
 	    ais_info("Sending membership update %llu to %s",
 		     membership_seq, crm_children[lpc].name);
 	    
