@@ -227,17 +227,12 @@ SANITIZE="$SANITIZE"
 REMOVE_DEST="$REMOVE_DEST"
 EOF
 }
-send_config() {
-	for node in `getnodes`; do
-		[ "$node" = "$WE" ] && continue
-		dumpenv |
-		ssh $ssh_opts $node "mkdir -p $DESTDIR; cat > $DESTDIR/.env"
-	done
-}
 start_remote_collectors() {
 	for node in `getnodes`; do
 		[ "$node" = "$WE" ] && continue
-		ssh $ssh_opts $node "$PROGDIR/hb_report __slave $DESTDIR" |
+		dumpenv |
+		ssh $ssh_opts $node "mkdir -p $DESTDIR && cat > $DESTDIR/.env &&
+			$PROGDIR/hb_report __slave $DESTDIR" |
 			(cd $DESTDIR && tar xf -) &
 		SLAVEPIDS="$SLAVEPIDS $!"
 	done
@@ -682,11 +677,12 @@ fi
 #
 if [ ! "$SLAVE" ]; then
 	if [ "$ssh_good" ]; then
-		send_config
 		start_remote_collectors
 	else
-		[ -z "$NO_SSH" -a `getnodes | wc -w` -gt 1 ] &&
+		if [ -z "$NO_SSH" -a `getnodes | wc -w` -gt 1 ]; then
 			warning "ssh does not work to all nodes"
+			warning "please use the -u option if you want to supply a password"
+		fi
 	fi
 fi
 
