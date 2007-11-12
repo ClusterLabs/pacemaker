@@ -19,9 +19,10 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 INCLUDES        = -I$(AISPREFIX)/include/openais
 
-aisdir		= $(prefix)/libexec/lcrso
-ais_LTLIBRARIES	= service_crm.la
-ais_PROGRAMS	= atest
+plugindir		= $(libdir)
+plugin_LTLIBRARIES	= service_crm.la
+
+#ais_PROGRAMS	= atest
 
 service_crm_la_SOURCES	= utils.c plugin.c
 service_crm_la_LDFLAGS	= -export-dynamic -module -avoid-version 
@@ -36,14 +37,15 @@ COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 		$(AISLIBS)						\
 		$(LIBRT)
 
-atest_SOURCES	= test.c
-atest_LDADD	= $(COMMONLIBS)
+#atest_SOURCES	= test.c
+#atest_LDADD	= $(COMMONLIBS)
 
 #CFLAGS that cant be used here: -ansi -Wcast-qual -Wwrite-strings
 CFLAGS			= $(NON_FATAL_CFLAGS:-Wwrite-strings=)
 
+#POST_INSTALL = ls -al $(plugindir)
 install-exec-local:
-	cd $(AISPREFIX)/libexec/lcrso && sudo ln -sf $(aisdir)/$(ais_LTLIBRARIES:.la=.so) $(ais_LTLIBRARIES:.la=.lcrso)
+	echo Ensure $(plugindir)/$(lib_LTLIBRARIES:.la=.so) is later linked/copied to $(LCRSODIR)/$(lib_LTLIBRARIES:.la=.lcrso)
 
 clean-generic:
 	rm -f *.log *.debug *~ .gres.* testcases/.gres.*
