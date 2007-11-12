@@ -184,7 +184,6 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 
 	crm_debug_2("Processing %s (%s) message", op, ref);
 	crm_log_message(LOG_DEBUG_3, msg);
-/* 	G_main_set_trigger(stonith_reconnect); */
 	
 	if(op == NULL){
 		/* error */
