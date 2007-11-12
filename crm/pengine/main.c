@@ -41,12 +41,9 @@
 #  include <libxml/parser.h>
 #endif
 
-#define SYS_NAME CRM_SYSTEM_PENGINE
 #define OPTARGS	"hVc"
 
-
 GMainLoop*  mainloop = NULL;
-const char* crm_system_name = SYS_NAME;
 
 void usage(const char* cmd, int exit_status);
 int pe_init(void);
@@ -63,7 +60,7 @@ main(int argc, char ** argv)
 	gboolean allow_cores = TRUE;
 	const char *param_name = NULL;
     
-	crm_log_init(crm_system_name, LOG_INFO, TRUE, FALSE, 0, NULL);
+	crm_log_init(CRM_SYSTEM_PENGINE, LOG_INFO, TRUE, FALSE, 0, NULL);
  	G_main_add_SignalHandler(
  		G_PRIORITY_HIGH, SIGTERM, pengine_shutdown, NULL, NULL);
 

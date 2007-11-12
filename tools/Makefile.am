@@ -19,9 +19,10 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in ccdv
 
-INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include \
+INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include   \
 			  -I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
-			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl
+			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl   \
+			  -I$(AISPREFIX)/include/openais
 
 EXTRA_DIST		= ccdv.c attrd.h $(hanoarch_DATA) $(sbin_SCRIPTS)
 
@@ -67,6 +68,7 @@ attrd_LDADD		=  				\
 		  $(top_builddir)/lib/hbclient/libhbclient.la		\
 		  $(top_builddir)/lib/crm/cib/libcib.la			\
 		  $(GLIBLIB)						\
+		  $(AISLIBS)						\
 		  $(LIBRT)
 
 pingd_SOURCES		= pingd.c
@@ -75,6 +77,7 @@ pingd_LDADD		=  				\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(top_builddir)/lib/hbclient/libhbclient.la		\
 		  $(GLIBLIB)						\
+		  $(AISLIBS)						\
 		  $(LIBRT)
 
 attrd_updater_SOURCES	= attrd_updater.c
@@ -82,6 +85,7 @@ attrd_updater_LDADD	=  				\
 		  $(top_builddir)/lib/clplumbing/libplumb.la		\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(GLIBLIB)						\
+		  $(AISLIBS)						\
 		  $(LIBRT)
 
 install-data-hook:    # install-exec-hook doesn't work (!)

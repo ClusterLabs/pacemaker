@@ -54,8 +54,6 @@
 
 
 /* GMainLoop *mainloop = NULL; */
-const char *crm_system_name = "crm_mon";
-
 #define OPTARGS	"V?i:nrh:cdp:s1wX:"
 
 
@@ -126,8 +124,7 @@ main(int argc, char **argv)
 	};
 #endif
 	pid_file = crm_strdup("/tmp/ClusterMon.pid");
-	crm_system_name = basename(argv[0]);
-	crm_log_init(crm_system_name, LOG_ERR-1, FALSE, FALSE, 0, NULL);
+	crm_log_init(basename(argv[0]), LOG_ERR-1, FALSE, FALSE, 0, NULL);
 
 	if (strcmp(crm_system_name, "crm_mon.cgi")==0) {
 		web_cgi = TRUE;

@@ -20,7 +20,9 @@ MAINTAINERCLEANFILES    = Makefile.in
 INCLUDES       	= -I$(top_builddir)/include  -I$(top_srcdir)/include   \
 		  -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl   \
 		  -I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha  \
-		  -I$(top_builddir)          -I$(top_srcdir)
+		  -I$(top_builddir)          -I$(top_srcdir)		\
+		  -I$(AISPREFIX)/include/openais
+
 
 AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
 
@@ -39,7 +41,11 @@ halib_PROGRAMS	=
 noinst_HEADERS  = 
 
 libcrmcommon_la_SOURCES	= ipc.c msg.c utils.c xml.c ctrl.c \
-			iso8601.c iso8601_fields.c
+			iso8601.c iso8601_fields.c membership.c
+if BUILD_NATIVE_AIS
+libcrmcommon_la_SOURCES	+= ais.c
+endif
+
 libcrmcommon_la_LDFLAGS	= -version-info 1:1:0
 
 clean-generic:

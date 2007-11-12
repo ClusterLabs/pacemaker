@@ -23,7 +23,6 @@
 #include <crm/common/util.h>
 #include <clplumbing/ipc.h>
 
-
 extern HA_Message *validate_crm_message(HA_Message *msg,
 				       const char *sys,
 				       const char *uuid,

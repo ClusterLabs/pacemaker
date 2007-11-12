@@ -26,9 +26,6 @@
 #define DAEMON_DEBUG DEVEL_DIR"/"SYS_NAME".debug"
 
 extern GMainLoop  *crmd_mainloop;
-
-extern const char *crm_system_name;
-
 extern GHashTable *ipc_clients;
 
 extern void crmd_metadata(void);

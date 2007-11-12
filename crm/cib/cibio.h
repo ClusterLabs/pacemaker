@@ -38,7 +38,7 @@ extern crm_data_t *node_search;
 extern crm_data_t *resource_search;
 extern crm_data_t *constraint_search;
 extern crm_data_t *status_search;
-
+    
 extern crm_data_t *get_the_CIB(void);
 
 extern int initializeCib(crm_data_t *cib);
@@ -52,7 +52,6 @@ extern int activateCibBuffer(char *buffer, const char *filename);
 extern int activateCibXml(crm_data_t *doc, gboolean to_disk);
 
 extern gboolean update_quorum(crm_data_t *xml_obj);
-extern gboolean set_transition(crm_data_t *xml_obj);
 extern gboolean set_connected_peers(crm_data_t *xml_obj);
 extern gboolean update_counters(
 	const char *file, const char *fn, crm_data_t *xml_obj);

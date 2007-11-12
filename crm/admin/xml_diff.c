@@ -48,7 +48,6 @@
 
 #include <ha_msg.h> /* someone complaining about _ha_msg_mod not being found */
 
-const char *crm_system_name = "diff";
 void usage(const char *cmd, int exit_status);
 
 #define OPTARGS	"V?o:n:p:scfO:N:"
@@ -87,9 +86,7 @@ main(int argc, char **argv)
 	};
 #endif
 
-	cl_log_set_entity(crm_system_name);
-	cl_log_set_facility(LOG_USER);
-	set_crm_log_level(LOG_CRIT-1);
+	crm_log_init("diff", LOG_CRIT-1, FALSE, FALSE, 0, NULL);
 	
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);

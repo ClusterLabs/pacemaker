@@ -24,6 +24,10 @@
 #include <ocf/oc_event.h>
 #include <lrm/lrm_api.h>
 
+#include <sys/types.h>
+#include <stdlib.h>
+#include <limits.h>
+
 #define DEBUG_INC SIGUSR1
 #define DEBUG_DEC SIGUSR2
 
@@ -120,7 +124,7 @@ extern void filter_reload_parameters(crm_data_t *param_set, const char *restart_
 extern gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
 extern gboolean safe_str_neq(const char *a, const char *b);
 extern int crm_parse_int(const char *text, const char *default_text);
-extern int crm_int_helper(const char *text, char **end_text);
+extern long crm_int_helper(const char *text, char **end_text);
 #define crm_atoi(text, default_text) crm_parse_int(text, default_text)
 
 extern void crm_abort(const char *file, const char *function, int line,
