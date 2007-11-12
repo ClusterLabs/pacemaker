@@ -100,7 +100,7 @@ static void crm_count_peer(
 {
     crm_node_t *node = value;
     struct peer_count_s *search = user_data;
-    if(node->processes & search->peer) {
+    if(crm_is_member_active(node) && (node->processes & search->peer)) {
 	search->count = search->count + 1;
     }
 }
