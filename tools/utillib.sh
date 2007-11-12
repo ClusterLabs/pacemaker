@@ -358,18 +358,29 @@ distro() {
 	warning "no lsb_release no /etc/*-release no /etc/debian_version"
 }
 hb_ver() {
+	# for Linux .deb based systems
 	which dpkg > /dev/null 2>&1 && {
 		for pkg in heartbeat heartbeat-2; do
 			dpkg-query -f '${Version}' -W $pkg 2>/dev/null && break
 		done
 		[ $? -eq 0 ] &&
-			debsums -s $pkg
+			debsums -s $pkg 2>/dev/null
 		return
 	}
+	# for Linux .rpm based systems
 	which rpm > /dev/null 2>&1 && {
 		rpm -q --qf '%{version}' heartbeat &&
 		rpm --verify heartbeat
 		return
+	}
+	# for OpenBSD
+	which pkg_info > /dev/null 2>&1 && {
+		pkg_info | grep heartbeat | cut -d "-" -f 2- | cut -d " " -f 1
+		return
+	}
+	# for Solaris
+	which pkginfo > /dev/null 2>&1 && {
+		pkginfo | awk '{print $3}'
 	}
 	# more packagers?
 }
