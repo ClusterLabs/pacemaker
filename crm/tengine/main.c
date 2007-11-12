@@ -148,9 +148,11 @@ te_init(void)
 		}
 	}
 
+#ifndef WITH_NATIVE_AIS
 	if(init_ok) {
 	    G_main_set_trigger(stonith_reconnect);
 	}
+#endif
 
 	if(init_ok) {
                 cl_uuid_t new_uuid;
