@@ -194,7 +194,6 @@ do_election_check(long long action,
 	return I_NULL;
 }
 
-
 /*	A_ELECTION_COUNT	*/
 enum crmd_fsa_input
 do_election_count_vote(long long action,
@@ -205,6 +204,7 @@ do_election_count_vote(long long action,
 {
 	int election_id = -1;
 	gboolean we_loose = FALSE;
+	static time_t last_election_loss = 0;
 	enum crmd_fsa_input election_result = I_NULL;
 	crm_node_t *our_node = NULL, *your_node = NULL;
 	ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
@@ -223,8 +223,8 @@ do_election_count_vote(long long action,
 	your_node = g_hash_table_lookup(crm_peer_cache, vote_from);
 	
 	if(your_node == NULL) {
-		crm_debug("Election ignore: The other side doesn't exist in CCM.");
-		return I_NULL;
+	    crm_debug("Election ignore: The other side doesn't exist in CCM: %s", vote_from);
+	    return I_NULL;
 	}	
 	
  	if(voted == NULL) {
@@ -331,17 +331,19 @@ do_election_count_vote(long long action,
 		CRM_DEV_ASSERT(vote_sent);
 
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
-		
+
+		last_election_loss = time(NULL);
+
 	} else {
-		if(cur_state == S_PENDING) {
-			crm_debug("Election ignore: We already lost the election");
+		int dampen = 2;
+		time_t tm_now = time(NULL);
+		if(tm_now - last_election_loss < (time_t)dampen) {
+			crm_debug("Election ignore: We already lost an election less than %ds ago", dampen);
 			return I_NULL;
-			
-		} else {
-			crm_info("Election won over %s", vote_from);
-			election_result = I_ELECTION;
 		}
-		crm_debug("Destroying voted hash");
+		last_election_loss = 0;
+		election_result = I_ELECTION;
+		crm_info("Election won over %s", vote_from);
  		g_hash_table_destroy(voted);
 		voted = NULL;
 	}
