@@ -118,10 +118,6 @@ do_ha_control(long long action,
 		registered = init_ais_connection(
 		    crm_ais_dispatch, crm_ais_destroy, &fsa_our_uname);
 		fsa_our_uuid = crm_strdup(fsa_our_uname);
-
-		crm_info("Requesting the list of configured nodes");
-		send_ais_text(
-		    crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
 #else
 		if(fsa_cluster_conn == NULL) {
 			fsa_cluster_conn = ll_cluster_new("heartbeat");
