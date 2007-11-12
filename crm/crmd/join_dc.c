@@ -508,7 +508,7 @@ do_dc_join_ack(long long action,
 	const char *join_from  = cl_get_string(join_ack->msg, F_CRM_HOST_FROM);
 
 	if(safe_str_neq(op, CRM_OP_JOIN_CONFIRM)) {
-		crm_debug("Ignoring op=%s message", op);
+		crm_debug("Ignoring op=%s message from %s", op, join_from);
 		return I_NULL;
 	} 
 
