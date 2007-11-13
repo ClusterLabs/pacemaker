@@ -50,7 +50,9 @@ char *cib_save = NULL;
 const char *crm_system_name = NULL;
 void usage(const char *cmd, int exit_status);
 extern gboolean stage0(pe_working_set_t *data_set);
-void cleanup_alloc_calculations(pe_working_set_t *data_set);
+extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
+extern crm_data_t * do_calculations(
+	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
 const char *dtd_file = HA_NOARCHDATAHBDIR"/crm.dtd";
 
 int
@@ -259,10 +261,17 @@ main(int argc, char **argv)
 	if(validate_with_dtd(cib_object, FALSE, dtd_file) == FALSE) {
 		crm_config_err("CIB did not pass DTD validation");
 	}
-	set_working_set_defaults(&data_set);
-	data_set.input = cib_object;
-	data_set.now = new_ha_date(TRUE);
-	stage0(&data_set);
+
+	if(USE_LIVE_CIB) {
+	    /* we will always have a status section and can do a full simulation */
+	    do_calculations(&data_set, cib_object, NULL);
+
+	} else {
+	    set_working_set_defaults(&data_set);
+	    data_set.now = new_ha_date(TRUE);
+	    data_set.input = cib_object;
+	    stage0(&data_set);
+	}
 	
 	cleanup_alloc_calculations(&data_set);
 
