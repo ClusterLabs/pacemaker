@@ -365,6 +365,21 @@ register_with_ha(void)
 	return TRUE;
 }
 
+static void
+attrd_cib_connection_destroy(gpointer user_data)
+{
+	if(need_shutdown) {
+	    crm_info("Connection to the CIB terminated...");
+
+	} else {
+	    /* eventually this will trigger a reconnect, not a shutdown */ 
+	    crm_err("Connection to the CIB terminated...");
+	    exit(1);
+	}
+	
+	return;
+}
+
 int
 main(int argc, char ** argv)
 {
@@ -421,6 +436,15 @@ main(int argc, char ** argv)
 				cib_error2string(rc));
 			was_err = TRUE;
 		}
+	}
+
+	if(was_err == FALSE) {
+	    enum cib_errors rc = cib_conn->cmds->set_connection_dnotify(
+		cib_conn, attrd_cib_connection_destroy);
+	    if(rc != cib_ok) {
+		crm_err("Could not set dnotify callback");
+		was_err = TRUE;
+	    }
 	}
 	
 	if(was_err == FALSE) {
