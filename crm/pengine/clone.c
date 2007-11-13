@@ -166,7 +166,18 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 		do_crm_log(level, "%s > %s: node score", resource1->id, resource2->id);
 		return -1;
 	}
-	
+
+	can1 = is_set(resource1->flags, pe_rsc_failed);
+	can2 = is_set(resource2->flags, pe_rsc_failed);
+	if(can1 != can2) {
+	    if(can1) {
+		do_crm_log(level, "%s > %s: failed", resource1->id, resource2->id);
+		return 1;
+	    }
+	    do_crm_log(level, "%s < %s: failed", resource1->id, resource2->id);
+	    return -1;
+	}
+
 	do_crm_log(level, "%s == %s: default %d", resource1->id, resource2->id, node2->weight);
 	return 0;
 }
