@@ -1393,25 +1393,25 @@ filter_reload_parameters(crm_data_t *param_set, const char *restart_string)
 
 void
 crm_abort(const char *file, const char *function, int line,
-	  const char *assert_condition, gboolean do_fork)
+	  const char *assert_condition, gboolean do_core, gboolean do_fork)
 {
 	int rc = 0;
 	int pid = 0;
 	int status = 0;
 
-	if(do_fork == FALSE) {
-		do_crm_log(LOG_ERR, 
-			   "%s: Triggered fatal assert at %s:%d : %s",
-			   function, file, line, assert_condition);
+	if(do_core == FALSE) {
+	    do_crm_log(LOG_ERR, "%s: Triggered assert at %s:%d : %s",
+		       function, file, line, assert_condition);
+	    return;
 
-	} else if(crm_log_level < LOG_DEBUG) {
-		do_crm_log(LOG_ERR, 
-			   "%s: Triggered non-fatal assert at %s:%d : %s",
-			   function, file, line, assert_condition);
-		return;
+	} else if(do_fork) {
+	    do_crm_log(LOG_ERR, "%s: Triggered non-fatal assert at %s:%d : %s",
+		       function, file, line, assert_condition);
+	    pid=fork();
 
 	} else {
-		pid=fork();
+	    do_crm_log(LOG_ERR, "%s: Triggered non-fatal assert at %s:%d : %s",
+		       function, file, line, assert_condition);
 	}
 	
 	switch(pid) {

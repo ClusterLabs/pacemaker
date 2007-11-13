@@ -56,8 +56,8 @@
 #include <crm/common/util.h>
 
 #define CRM_ASSERT(expr) if((expr) == FALSE) {				\
-	crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, FALSE); \
-}
+	crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
+    }
 
 extern gboolean crm_assert_failed;
 
@@ -65,13 +65,18 @@ extern gboolean crm_assert_failed;
 	crm_assert_failed = FALSE;					\
 	if((expr) == FALSE) {						\
 		crm_assert_failed = TRUE;				\
-		crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, TRUE); \
+		crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
 	}
 
 #define CRM_CHECK(expr, failure_action) if((expr) == FALSE) {		\
-		crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, TRUE); \
-		failure_action;						\
-	}
+	crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
+	failure_action;							\
+    }
+
+#define CRM_CHECK_AND_STORE(expr, failure_action) if((expr) == FALSE) {	\
+	crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, TRUE, TRUE); \
+	failure_action;							\
+    }
 
 /* Clean these up at some point, some probably should be runtime options */
 #define WORKING_DIR	HA_VARLIBDIR"/heartbeat/crm"

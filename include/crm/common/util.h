@@ -124,7 +124,7 @@ extern int crm_int_helper(const char *text, char **end_text);
 #define crm_atoi(text, default_text) crm_parse_int(text, default_text)
 
 extern void crm_abort(const char *file, const char *function, int line,
-		      const char *condition, gboolean do_fork);
+		      const char *condition, gboolean do_core, gboolean do_fork);
 
 extern char *generate_series_filename(
 	const char *directory, const char *series, int sequence, gboolean bzip);
