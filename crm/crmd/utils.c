@@ -1387,6 +1387,7 @@ process_client_disconnect(crmd_client_t *curr_client)
 
 void update_dc(HA_Message *msg, gboolean assert_same)
 {
+	char *last_dc = fsa_our_dc;
 	const char *dc_version = NULL;
 	const char *welcome_from = NULL;
 
@@ -1406,11 +1407,10 @@ void update_dc(HA_Message *msg, gboolean assert_same)
 		}
 		
 	}
-	
-	crm_free(fsa_our_dc);
+
 	crm_free(fsa_our_dc_version);
-	fsa_our_dc = NULL;
 	fsa_our_dc_version = NULL;
+	fsa_our_dc = NULL;
 
 	if(welcome_from != NULL) {
 		fsa_our_dc = crm_strdup(welcome_from);
@@ -1419,6 +1419,13 @@ void update_dc(HA_Message *msg, gboolean assert_same)
 		fsa_our_dc_version = crm_strdup(dc_version);
 	}
 
-	crm_info("Set DC to %s (%s)",
-		 crm_str(fsa_our_dc), crm_str(fsa_our_dc_version));
+	if(fsa_our_dc != NULL) {
+	    crm_info("Set DC to %s (%s)",
+		     crm_str(fsa_our_dc), crm_str(fsa_our_dc_version));
+
+	} else if(last_dc != NULL) {
+	    crm_info("Unset DC %s", crm_str(last_dc));
+	}
+	
+	crm_free(last_dc);
 }
