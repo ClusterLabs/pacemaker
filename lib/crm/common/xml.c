@@ -311,7 +311,10 @@ add_node_nocopy(crm_data_t *parent, const char *name, crm_data_t *child)
 	if(name == NULL) {
 		name = crm_element_name(child);
 	}
-	CRM_ASSERT(name != NULL && name[0] != 0);
+	if(name == NULL || name[0] == 0) {
+	    crm_err("Cannot add object with no name");
+	    return HA_FAIL;
+	}
 	
 	if (parent->nfields >= parent->nalloc
 		&& ha_msg_expand(parent) != HA_OK ){
@@ -686,7 +689,6 @@ write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress)
 	
   bail:
 	
-	CRM_ASSERT(file_output_strm != NULL);
 	if(fflush(file_output_strm) != 0) {
 	    cl_perror("fflush for %s failed:", filename);
 	    res = -1;
@@ -848,10 +850,8 @@ log_data_element(
 	xml_prop_iter(
 		data, prop_name, prop_value,
 
-		if(prop_name == NULL) {
-			CRM_ASSERT(prop_name != NULL);
-			
-		} else if(safe_str_eq(F_XML_TAGNAME, prop_name)) {
+		if(prop_name == NULL
+		   || safe_str_eq(F_XML_TAGNAME, prop_name)) {
 			continue;
 
 		} else if(hidden != NULL
@@ -913,14 +913,20 @@ dump_data_element(
 	int has_children = 0;
 	const char *name = NULL;
 
-	CRM_ASSERT(data != NULL);
+	if(data == NULL) {
+	    return 0;
+	}
+	
 	CRM_ASSERT(buffer != NULL && *buffer != NULL);
 
 	name = crm_element_name(data);
 	if(name == NULL && depth == 0) {
 		name = "__fake__";
+
+	} else if(name == NULL) {
+	    return 0;
 	}
-	CRM_ASSERT(name != NULL);
+	
 	crm_debug_5("Dumping %s...", name);
 
 	if(formatted) {
