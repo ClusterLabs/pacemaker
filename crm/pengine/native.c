@@ -25,7 +25,7 @@
 #include <allocate.h>
 #include <utils.h>
 
-#define DELETE_THEN_REFRESH 1
+#define DELETE_THEN_REFRESH 1 /* The crmd will remove the resource from the CIB itself, making this redundant */
 
 #define VARIANT_NATIVE 1
 #include <lib/crm/pengine/variant.h>
@@ -1311,8 +1311,9 @@ gboolean
 DeleteRsc(resource_t *rsc, node_t *node, gboolean optional, pe_working_set_t *data_set)
 {
 	action_t *delete = NULL;
+#if DELETE_THEN_REFRESH
  	action_t *refresh = NULL;
-
+#endif
 	if(is_set(rsc->flags, pe_rsc_failed)) {
 		crm_debug_2("Resource %s not deleted from %s: failed",
 			    rsc->id, node->details->uname);
