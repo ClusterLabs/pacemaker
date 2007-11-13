@@ -150,6 +150,7 @@ main(int argc, char **argv)
 	gboolean optional = FALSE;
 	pe_working_set_t data_set;
 	
+	const char *source = NULL;
 	const char *xml_file = NULL;
 	const char *dot_file = NULL;
 	const char *graph_file = NULL;
@@ -264,6 +265,7 @@ main(int argc, char **argv)
 
 	if(USE_LIVE_CIB) {
 		int rc = cib_ok;
+		source = "live cib";
 		cib_conn = cib_new();
 		rc = cib_conn->cmds->signon(
 			cib_conn, "ptest", cib_command_synchronous);
@@ -284,6 +286,7 @@ main(int argc, char **argv)
 		
 	} else if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
+		source = xml_file;
 		if(xml_strm == NULL) {
 			cl_perror("Could not open %s for reading", xml_file);
 			
@@ -298,14 +301,19 @@ main(int argc, char **argv)
 		}
 		
 	} else if(use_stdin) {
+		source = "stdin";
 		cib_object = stdin2xml();
-
-	} else {
-		usage("ptest", 1);
 	}
 
- 	CRM_CHECK(cib_object != NULL, return 4);
+ 	if(cib_object == NULL && source) {
+	    fprintf(stderr, "Could not parse configuration input from: %s\n", source);
+	    return 4;
 
+ 	} else if(cib_object == NULL) {
+	    fprintf(stderr, "Not configuration specified\n");
+	    usage("ptest", 1);
+	}
+	
 	crm_notice("Required feature set: %s", feature_set(cib_object));
  	do_id_check(cib_object, NULL, FALSE, FALSE);
 	if(!validate_with_dtd(cib_object,FALSE,HA_NOARCHDATAHBDIR"/crm.dtd")) {
