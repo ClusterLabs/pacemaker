@@ -79,6 +79,7 @@ getlogvars() {
 		HA_CF=$LOGD_CF
 	fi
 	HA_LOGFACILITY=`getcfvar logfacility`
+	[ none = "$HA_LOGFACILITY" ] && HA_LOGFACILITY=""
 	HA_LOGFILE=`getcfvar logfile`
 	HA_DEBUGFILE=`getcfvar debugfile`
 	HA_SYSLOGMSGFMT=""
@@ -134,9 +135,16 @@ findln_by_time() {
 	last=`wc -l < $logf`
 	while [ $first -le $last ]; do
 		mid=$(((last+first)/2))
-		tmid=`linetime $logf $mid`
+		trycnt=10
+		while [ $trycnt -gt 0 ]; do
+			tmid=`linetime $logf $mid`
+			[ "$tmid" ] && break
+			warning "cannot extract time: $logf:$mid; will try the next one"
+			trycnt=$((trycnt-1))
+			mid=$((mid+1))
+		done
 		if [ -z "$tmid" ]; then
-			warning "cannot extract time: $logf:$mid"
+			warning "giving up on log..."
 			return
 		fi
 		if [ $tmid -gt $tm ]; then
@@ -168,7 +176,7 @@ dumplog() {
 # find files newer than a and older than b
 #
 isnumber() {
-	echo "$1" | grep -qs '^[0-9][0-9]*$'
+	echo "$*" | grep -qs '^[0-9][0-9]*$'
 }
 touchfile() {
 	t=`maketempfile` &&
@@ -350,14 +358,29 @@ distro() {
 	warning "no lsb_release no /etc/*-release no /etc/debian_version"
 }
 hb_ver() {
+	# for Linux .deb based systems
 	which dpkg > /dev/null 2>&1 && {
-		dpkg-query -f '${Version}' -W heartbeat 2>/dev/null ||
-			dpkg-query -f '${Version}' -W heartbeat-2
+		for pkg in heartbeat heartbeat-2; do
+			dpkg-query -f '${Version}' -W $pkg 2>/dev/null && break
+		done
+		[ $? -eq 0 ] &&
+			debsums -s $pkg 2>/dev/null
 		return
 	}
+	# for Linux .rpm based systems
 	which rpm > /dev/null 2>&1 && {
-		rpm -q --qf '%{version}' heartbeat
+		rpm -q --qf '%{version}' heartbeat &&
+		rpm --verify heartbeat
 		return
+	}
+	# for OpenBSD
+	which pkg_info > /dev/null 2>&1 && {
+		pkg_info | grep heartbeat | cut -d "-" -f 2- | cut -d " " -f 1
+		return
+	}
+	# for Solaris
+	which pkginfo > /dev/null 2>&1 && {
+		pkginfo | awk '{print $3}'
 	}
 	# more packagers?
 }
