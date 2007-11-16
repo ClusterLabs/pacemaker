@@ -331,6 +331,8 @@ void group_rsc_order_rh(
 
 void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 {
+	GListPtr saved = constraint->node_list_rh;
+	GListPtr zero = node_list_dup(constraint->node_list_rh, TRUE, FALSE);
 	gboolean reset_scores = TRUE;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
@@ -343,11 +345,12 @@ void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		child_rsc->cmds->rsc_location(child_rsc, constraint);
 		if(group_data->colocated && reset_scores) {
 			reset_scores = FALSE;
-			slist_iter(node, node_t, constraint->node_list_rh, lpc2,
-				   node->weight = 0;
-				);
+			constraint->node_list_rh = zero;
 		}
 		);
+
+	constraint->node_list_rh = saved;
+	pe_free_shallow_adv(zero, TRUE);
 }
 
 void group_expand(resource_t *rsc, pe_working_set_t *data_set)
