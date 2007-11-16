@@ -36,6 +36,7 @@ resource_object_functions_t resource_class_functions[] = {
 		native_print,
 		native_active,
 		native_resource_state,
+		native_location,
 		native_free
 	},
 	{
@@ -46,6 +47,7 @@ resource_object_functions_t resource_class_functions[] = {
 		group_print,
 		group_active,
 		group_resource_state,
+		native_location,
 		group_free
 	},
 	{
@@ -56,6 +58,7 @@ resource_object_functions_t resource_class_functions[] = {
 		clone_print,
 		clone_active,
 		clone_resource_state,
+		native_location,
 		clone_free
 	},
 	{
@@ -66,6 +69,7 @@ resource_object_functions_t resource_class_functions[] = {
 		clone_print,
 		clone_active,
 		clone_resource_state,
+		native_location,
 		clone_free
 	}
 };

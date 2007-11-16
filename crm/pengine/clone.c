@@ -218,13 +218,13 @@ can_run_instance(resource_t *rsc, node_t *node)
 static node_t *
 color_instance(resource_t *rsc, pe_working_set_t *data_set) 
 {
-	node_t *local_node = NULL;
 	node_t *chosen = NULL;
+	node_t *local_node = NULL;
 
 	crm_debug_2("Processing %s", rsc->id);
 
 	if(is_not_set(rsc->flags, pe_rsc_provisional)) {
-		return rsc->allocated_to;
+		return rsc->fns->location(rsc, NULL, FALSE);
 
 	} else if(is_set(rsc->flags, pe_rsc_allocating)) {
 		crm_debug("Dependancy loop detected involving %s", rsc->id);
@@ -741,7 +741,7 @@ find_compatible_child(
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 	
-	local_node = local_child->allocated_to;
+	local_node = local_child->fns->location(local_child, NULL, FALSE);
 	if(local_node == NULL) {
 		crm_debug("Can't colocate unrunnable child %s with %s",
 			 local_child->id, rsc->id);
@@ -750,7 +750,7 @@ find_compatible_child(
 	
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
-		node = child_rsc->allocated_to;
+		node = child_rsc->fns->location(child_rsc, NULL, FALSE);
 
 		if(filter != RSC_ROLE_UNKNOWN
 		   && child_rsc->next_role != filter) {
@@ -813,8 +813,9 @@ void clone_rsc_colocation_lh(
 			
 			slist_iter(
 				child_rsc, resource_t, rsc_rh->children, lpc,
-				if(child_rsc->allocated_to != NULL) {
-					rhs = g_list_append(rhs, child_rsc->allocated_to);
+				node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
+				if(chosen != NULL) {
+					rhs = g_list_append(rhs, chosen);
 				}
 				);
 			
@@ -881,8 +882,9 @@ void clone_rsc_colocation_rh(
 		
 		slist_iter(
 			child_rsc, resource_t, rsc_rh->children, lpc,
-			if(child_rsc->allocated_to != NULL) {
-				rhs = g_list_append(rhs, child_rsc->allocated_to);
+			node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
+			if(chosen != NULL) {
+				rhs = g_list_append(rhs, chosen);
 			}
 			);
 
