@@ -915,6 +915,8 @@ cancel_op(lrm_rsc_t *rsc, const char *key, int op, gboolean remove)
 		if(key && remove) {
 			delete_op_entry(NULL, rsc->id, key, op);
 		}
+		/* not doing this will block the node from shutting down */
+		g_hash_table_remove(pending_ops, key);
 	}
 	
 	return TRUE;
