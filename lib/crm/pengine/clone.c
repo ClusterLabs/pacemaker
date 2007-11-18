@@ -290,7 +290,7 @@ void clone_free(resource_t *rsc)
 }
 
 enum rsc_role_e
-clone_resource_state(resource_t *rsc, gboolean current)
+clone_resource_state(const resource_t *rsc, gboolean current)
 {
 	enum rsc_role_e clone_role = RSC_ROLE_UNKNOWN;
 

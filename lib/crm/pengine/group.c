@@ -202,7 +202,7 @@ void group_free(resource_t *rsc)
 }
 
 enum rsc_role_e
-group_resource_state(resource_t *rsc, gboolean current)
+group_resource_state(const resource_t *rsc, gboolean current)
 {
 	enum rsc_role_e group_role = RSC_ROLE_UNKNOWN;
 
@@ -212,10 +212,7 @@ group_resource_state(resource_t *rsc, gboolean current)
 		if(role > group_role) {
 			group_role = role;
 		}
-		if(is_set(child_rsc->flags, pe_rsc_failed)) {
-		    set_bit(rsc->flags, pe_rsc_failed);
-		}
-		);
+	    );
 
 	crm_debug_3("%s role: %s", rsc->id, role2text(group_role));
 	return group_role;

@@ -56,6 +56,22 @@ parent_node_instance(const resource_t *rsc, node_t *node)
 	return ret;
 }
 
+static gboolean did_fail(const resource_t *rsc)
+{
+    if(is_set(rsc->flags, pe_rsc_failed)) {
+	return TRUE;
+    }
+
+    slist_iter(
+	child_rsc, resource_t, rsc->children, lpc,
+	if(did_fail(child_rsc)) {
+	    return TRUE;
+	}
+	);
+    return FALSE;
+}
+
+
 gint sort_clone_instance(gconstpointer a, gconstpointer b)
 {
 	int level = LOG_DEBUG_3;
@@ -167,8 +183,8 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 		return -1;
 	}
 
-	can1 = is_set(resource1->flags, pe_rsc_failed);
-	can2 = is_set(resource2->flags, pe_rsc_failed);
+	can1 = did_fail(resource1);
+	can2 = did_fail(resource2);
 	if(can1 != can2) {
 	    if(can1) {
 		do_crm_log(level, "%s > %s: failed", resource1->id, resource2->id);
@@ -750,10 +766,11 @@ find_compatible_child(
 	
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
+
+		enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, FALSE);
 		node = child_rsc->fns->location(child_rsc, NULL, FALSE);
 
-		if(filter != RSC_ROLE_UNKNOWN
-		   && child_rsc->next_role != filter) {
+		if(filter != RSC_ROLE_UNKNOWN && next_role != filter) {
 		    crm_debug_2("Filtered %s", child_rsc->id);
 		    continue;
 		}

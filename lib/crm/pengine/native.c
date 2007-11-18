@@ -376,7 +376,7 @@ void native_free(resource_t *rsc)
 
 
 enum rsc_role_e
-native_resource_state(resource_t *rsc, gboolean current)
+native_resource_state(const resource_t *rsc, gboolean current)
 {
 	enum rsc_role_e role = rsc->next_role;
 	if(current) {

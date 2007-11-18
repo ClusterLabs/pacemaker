@@ -50,7 +50,7 @@ typedef struct resource_object_functions_s
 			pe_working_set_t *);
 		void (*print)(resource_t *, const char *, long, void *);
 		gboolean (*active)(resource_t *,gboolean);
-		enum rsc_role_e (*state)(resource_t *, gboolean);
+		enum rsc_role_e (*state)(const resource_t *, gboolean);
 		node_t *(*location)(resource_t *, GListPtr*, gboolean);
 		void (*free)(resource_t *);
 } resource_object_functions_t;
@@ -96,10 +96,10 @@ extern void group_free(resource_t *rsc);
 extern void clone_free(resource_t *rsc);
 extern void master_free(resource_t *rsc);
 
-extern enum rsc_role_e native_resource_state(resource_t *rsc, gboolean current);
-extern enum rsc_role_e group_resource_state(resource_t *rsc, gboolean current);
-extern enum rsc_role_e clone_resource_state(resource_t *rsc, gboolean current);
-extern enum rsc_role_e master_resource_state(resource_t *rsc, gboolean current);
+extern enum rsc_role_e native_resource_state(const resource_t *rsc, gboolean current);
+extern enum rsc_role_e group_resource_state(const resource_t *rsc, gboolean current);
+extern enum rsc_role_e clone_resource_state(const resource_t *rsc, gboolean current);
+extern enum rsc_role_e master_resource_state(const resource_t *rsc, gboolean current);
 
 extern node_t *native_location(resource_t *rsc, GListPtr *list, gboolean current);
 
