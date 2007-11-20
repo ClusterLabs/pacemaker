@@ -195,6 +195,11 @@ unpack_graph(crm_data_t *xml_graph)
 		CRM_CHECK(time != NULL, crm_free(new_graph); return NULL);
 		new_graph->network_delay = crm_get_msec(time);
 		new_graph->transition_timeout = new_graph->network_delay;
+
+		t_id = crm_element_value(xml_graph, "batch-limit");
+		new_graph->batch_limit = crm_parse_int(t_id, "0");
+
+
 	}
 	
 	xml_child_iter_filter(

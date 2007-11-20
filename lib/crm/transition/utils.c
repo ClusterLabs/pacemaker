@@ -192,7 +192,12 @@ print_graph(unsigned int log_level, crm_graph_t *graph)
 		}
 		return;
 	}
-
+		
+	do_crm_log(log_level, "Graph %d (%d actions in %d synapses):"
+		   " batch-limit=%d jobs, network-delay=%dms",
+		   graph->id, graph->num_actions, graph->num_synapses,
+		   graph->batch_limit, graph->network_delay);
+	
 	slist_iter(
 		synapse, synapse_t, graph->synapses, lpc,
 

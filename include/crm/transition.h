@@ -99,6 +99,7 @@ typedef struct crm_graph_s
 		int num_actions;
 		int num_synapses;
 
+		int batch_limit;
 		int network_delay;
 		int transition_timeout;
 
