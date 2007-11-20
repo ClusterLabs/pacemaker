@@ -35,7 +35,7 @@ uint highest_born_on = -1;
 static int current_election_id = 1;
 
 /*	A_ELECTION_VOTE	*/
-enum crmd_fsa_input
+void
 do_election_vote(long long action,
 		 enum crmd_fsa_cause cause,
 		 enum crmd_fsa_state cur_state,
@@ -71,7 +71,7 @@ do_election_vote(long long action,
 		} else {
 			register_fsa_input(C_FSA_INTERNAL, I_PENDING, NULL);
 		}
-		return I_NULL;
+		return;
 	}
 	
 	vote = create_request(
@@ -95,7 +95,7 @@ do_election_vote(long long action,
 			fsa_state2string(cur_state));
 	}
 	
-	return I_NULL;
+	return;
 }
 
 char *dc_hb_msg = NULL;
@@ -140,7 +140,7 @@ log_node(gpointer key, gpointer value, gpointer user_data)
 	crm_err("%s: %s", (char*)user_data, (char*)key);
 }
 
-enum crmd_fsa_input
+void
 do_election_check(long long action,
 		       enum crmd_fsa_cause cause,
 		       enum crmd_fsa_state cur_state,
@@ -183,12 +183,12 @@ do_election_check(long long action,
 			 num_members - voted_size, num_members);
 	}
 
-	return I_NULL;
+	return;
 }
 
 
 /*	A_ELECTION_COUNT	*/
-enum crmd_fsa_input
+void
 do_election_count_vote(long long action,
 		       enum crmd_fsa_cause cause,
 		       enum crmd_fsa_state cur_state,
@@ -208,8 +208,8 @@ do_election_count_vote(long long action,
 	/* if the membership copy is NULL we REALLY shouldnt be voting
 	 * the question is how we managed to get here.
 	 */
-	CRM_CHECK(fsa_membership_copy != NULL, return I_NULL);
-	CRM_CHECK(fsa_membership_copy->members != NULL, return I_NULL);
+	CRM_CHECK(fsa_membership_copy != NULL, return);
+	CRM_CHECK(fsa_membership_copy->members != NULL, return);
 
 	CRM_CHECK(vote_from != NULL, vote_from = fsa_our_uname);
 	
@@ -221,7 +221,7 @@ do_election_count_vote(long long action,
 	
 	if(your_node == NULL) {
 		crm_debug("Election ignore: The other side doesn't exist in CCM.");
-		return I_NULL;
+		return;
 	}	
 	
  	if(voted == NULL) {
@@ -247,21 +247,21 @@ do_election_count_vote(long long action,
 			crm_debug("Ignore old '%s' from %s: %d vs. %d",
 				  op, your_node->node_uname,
 				  election_id, current_election_id);
-			return I_NULL;
+			return;
 		}
 			
 	} else {
-		CRM_CHECK(safe_str_neq(op, CRM_OP_NOVOTE), return I_NULL);
+		CRM_CHECK(safe_str_neq(op, CRM_OP_NOVOTE), return);
 	}
 	
 	if(vote_from == NULL || crm_str_eq(vote_from, fsa_our_uname, TRUE)) {
 		/* don't count our own vote */
 		crm_info("Election ignore: our %s (%s)", op,crm_str(vote_from));
-		return I_NULL;
+		return;
 
 	} else if(crm_str_eq(op, CRM_OP_NOVOTE, TRUE)) {
 		crm_info("Election ignore: no-vote from %s", vote_from);
-		return I_NULL;
+		return;
 	}
 
 	crm_info("Election check: %s from %s", op, vote_from);
@@ -343,7 +343,7 @@ do_election_count_vote(long long action,
 	} else {
 		if(cur_state == S_PENDING) {
 			crm_debug("Election ignore: We already lost the election");
-			return I_NULL;
+			return;
 			
 		} else {
 			crm_info("Election won over %s", vote_from);
@@ -355,19 +355,17 @@ do_election_count_vote(long long action,
 	}
 	
 	register_fsa_input(C_FSA_INTERNAL, election_result, NULL);
-	return I_NULL;
 }
 
 /*	A_ELECT_TIMER_START, A_ELECTION_TIMEOUT 	*/
 /* we won */
-enum crmd_fsa_input
+void
 do_election_timer_ctrl(long long action,
 		    enum crmd_fsa_cause cause,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_input current_input,
 		    fsa_data_t *msg_data)
 {
-	return I_NULL;
 }
 
 
@@ -382,7 +380,7 @@ feature_update_callback(const HA_Message *msg, int call_id, int rc,
 }
 
 /*	 A_DC_TAKEOVER	*/
-enum crmd_fsa_input
+void
 do_dc_takeover(long long action,
 	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
@@ -417,20 +415,17 @@ do_dc_takeover(long long action,
 		    NULL, NULL, NULL, "dc-version", VERSION"-"HA_HG_VERSION);
 
 	free_xml(cib);
-	return I_NULL;
 }
 
 
 /*	 A_DC_RELEASE	*/
-enum crmd_fsa_input
+void
 do_dc_release(long long action,
 	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
 	      enum crmd_fsa_input current_input,
 	      fsa_data_t *msg_data)
 {
-	enum crmd_fsa_input result = I_NULL;
-	
 	if(action & A_DC_RELEASE) {
 		crm_debug("Releasing the role of DC");
 		clear_bit_inplace(fsa_input_register, R_THE_DC);
@@ -452,6 +447,5 @@ do_dc_release(long long action,
 
 	crm_debug_2("Am I still the DC? %s", AM_I_DC?XML_BOOLEAN_YES:XML_BOOLEAN_NO);
 
-	return result;
 }
 

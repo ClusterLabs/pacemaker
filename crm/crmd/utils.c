@@ -43,7 +43,7 @@ void copy_ccm_node(oc_node_t a_node, oc_node_t *a_node_copy);
  *	A_FINALIZE_TIMER_STOP, A_FINALIZE_TIMER_START
  *	A_INTEGRATE_TIMER_STOP, A_INTEGRATE_TIMER_START
  */
-enum crmd_fsa_input
+void
 do_timer_control(long long action,
 		   enum crmd_fsa_cause cause,
 		   enum crmd_fsa_state cur_state,
@@ -51,7 +51,6 @@ do_timer_control(long long action,
 		   fsa_data_t *msg_data)
 {
 	gboolean timer_op_ok = TRUE;
-	enum crmd_fsa_input result = I_NULL;
 	
 	if(action & A_DC_TIMER_STOP) {
 		timer_op_ok = crm_timer_stop(election_trigger);
@@ -70,8 +69,8 @@ do_timer_control(long long action,
 	if(action & A_DC_TIMER_START && timer_op_ok) {
 		crm_timer_start(election_trigger);
 		if(AM_I_DC) {
-			/* there can be only one */
-			result = I_ELECTION;
+		    /* there can be only one */
+		    register_fsa_input(cause, I_ELECTION, NULL);
 		}
 		
 	} else if(action & A_FINALIZE_TIMER_START) {
@@ -83,8 +82,6 @@ do_timer_control(long long action,
 /* 	} else if(action & A_ELECTION_TIMEOUT_START) { */
 /* 		crm_timer_start(election_timeout); */
 	}
-	
-	return I_NULL;
 }
 
 static const char *

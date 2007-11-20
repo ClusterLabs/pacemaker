@@ -51,14 +51,13 @@
 struct crm_subsystem_s *te_subsystem  = NULL;
 
 /*	 A_TE_START, A_TE_STOP, A_TE_RESTART	*/
-enum crmd_fsa_input
+void
 do_te_control(long long action,
 	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
 	      enum crmd_fsa_input current_input,
 	      fsa_data_t *msg_data)
 {
-	enum crmd_fsa_input result = I_NULL;
 	struct crm_subsystem_s *this_subsys = te_subsystem;
 	
 	long long stop_actions = A_TE_STOP;
@@ -84,38 +83,35 @@ do_te_control(long long action,
 				 this_subsys->name);
 		}
 	}
-
-	return result;
 }
 
 /*	 A_TE_INVOKE, A_TE_CANCEL	*/
-enum crmd_fsa_input
+void
 do_te_invoke(long long action,
 	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input current_input,
 	     fsa_data_t *msg_data)
 {
-	enum crmd_fsa_input ret = I_NULL;
 	HA_Message *cmd = NULL;
 	
 	
 	if(AM_I_DC == FALSE) {
 		crm_debug("Not DC: No need to invoke the TE (anymore): %s",
 			  fsa_action2string(action));
-		return I_NULL;
+		return;
 		
 	} else if(fsa_state != S_TRANSITION_ENGINE && (action & A_TE_INVOKE)) {
 		crm_debug("No need to invoke the TE (%s) in state %s",
 			  fsa_action2string(action),
 			  fsa_state2string(fsa_state));
-		return I_NULL;
+		return;
 
 	} else if(!is_set(fsa_input_register, te_subsystem->flag_required)) {
 		crm_err("Ignoring action %s in state: %s"
 			" - We dont want the TE anymore",
 			fsa_action2string(action), fsa_state2string(cur_state));
-		return I_NULL;
+		return;
 		
 	} else if(is_set(fsa_input_register, R_TE_CONNECTED) == FALSE) {
 		crm_info("Waiting for the TE to connect before action %s",
@@ -128,7 +124,7 @@ do_te_invoke(long long action,
 		}
 
 		crmd_fsa_stall(NULL);
-		return I_NULL;
+		return;
 	}
 
 	if(action & A_TE_INVOKE) {
@@ -170,8 +166,6 @@ do_te_invoke(long long action,
 		
 		send_request(cmd, NULL);
 	}
-
-	return ret;
 }
 
 

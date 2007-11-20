@@ -58,7 +58,7 @@ int num_ccm_register_fails = 0;
 int max_ccm_register_fails = 30;
 
 /*	 A_CCM_CONNECT	*/
-enum crmd_fsa_input
+void
 do_ccm_control(long long action,
 		enum crmd_fsa_cause cause,
 		enum crmd_fsa_state cur_state,
@@ -115,13 +115,13 @@ do_ccm_control(long long action,
 				
 				crm_timer_start(wait_timer);
 				crmd_fsa_stall(NULL);
-				return I_NULL;
+				return;
 				
 			} else {
 				crm_err("CCM Activation failed %d (max) times",
 					num_ccm_register_fails);
 				register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-				return I_NULL;
+				return;
 			}
 		}
 		
@@ -138,21 +138,18 @@ do_ccm_control(long long action,
 		crm_err("Unexpected action %s in %s",
 		       fsa_action2string(action), __FUNCTION__);
 	}
-	
-	return I_NULL;
 }
 
 extern GHashTable *voted;
 
 /*	 A_CCM_EVENT	*/
-enum crmd_fsa_input
+void
 do_ccm_event(long long action,
 	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
 	     enum crmd_fsa_input current_input,
 	     fsa_data_t *msg_data)
 {
-	enum crmd_fsa_input return_input = I_NULL;
 	oc_ed_t event;
 	const oc_ev_membership_t *oc = NULL;
 	struct crmd_ccm_data_s *ccm_data = fsa_typed_data(fsa_dt_ccm);
@@ -160,12 +157,12 @@ do_ccm_event(long long action,
 	if(ccm_data == NULL) {
 		crm_err("No data provided to FSA function");
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		return I_NULL;
+		return;
 
 	} else if(msg_data->fsa_cause != C_CCM_CALLBACK) {
 		crm_err("FSA function called in response to incorect input");
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		return I_NULL;
+		return;
 	}
 
 	event = ccm_data->event;
@@ -181,10 +178,8 @@ do_ccm_event(long long action,
 		 *    restart us if required
 		 */
 		register_fsa_error(cause, I_ERROR, msg_data->data);
-		return I_NULL;
+		return;
 	}	
-	
-	return return_input;
 }
 
 static void
@@ -215,14 +210,13 @@ check_dead_member(const char *uname, GHashTable *members)
 /*
  * Take the opportunity to update the node status in the CIB as well
  */
-enum crmd_fsa_input
+void
 do_ccm_update_cache(long long action,
 		    enum crmd_fsa_cause cause,
 		    enum crmd_fsa_state cur_state,
 		    enum crmd_fsa_input current_input,
 		    fsa_data_t *msg_data)
 {
-	enum crmd_fsa_input next_input = I_NULL;
 	unsigned int	lpc;
 	int		offset;
 	GHashTable *members = NULL;
@@ -238,7 +232,7 @@ do_ccm_update_cache(long long action,
 		crm_err("No data provided to FSA function");
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 		send_msg_via_ha(fsa_cluster_conn, no_op);
-		return I_NULL;
+		return;
 	}
 
 	event = ccm_data->event;
@@ -248,7 +242,7 @@ do_ccm_update_cache(long long action,
 		crm_debug("Ignoring superceeded %s CCM event %d - we had %d", 
 			  ccm_event_name(event), oc->m_instance,
 			  current_ccm_membership_id);
-		return I_NULL;
+		return;
 	}
 	
 	current_ccm_membership_id = oc->m_instance;
@@ -428,8 +422,6 @@ do_ccm_update_cache(long long action,
 	 * This will aid detection of duplicate DCs
 	 */
 	send_msg_via_ha(fsa_cluster_conn, no_op);
-
-	return next_input;
 }
 
 void

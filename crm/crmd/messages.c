@@ -377,7 +377,7 @@ fsa_typed_data_adv(
 
 
 /*	A_MSG_ROUTE	*/
-enum crmd_fsa_input
+void
 do_msg_route(long long action,
 	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
@@ -386,7 +386,6 @@ do_msg_route(long long action,
 {
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 	route_message(msg_data->fsa_cause, input);
-	return I_NULL;
 }
 
 void
@@ -1135,7 +1134,6 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 {
 	gboolean send_ok = TRUE;
 	IPC_Channel *client_channel;
-	enum crmd_fsa_input next_input;
 	
 	crm_debug_4("relaying msg to sub_sys=%s via IPC", sys);
 
@@ -1172,19 +1170,11 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 			    fsa_action2string(A_LRM_INVOKE),
 			    A_LRM_INVOKE);
 #endif
-		next_input = do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE,
+		do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE,
 					   fsa_state, I_MESSAGE, fsa_data);
 
 		delete_ha_msg_input(msg_copy);
 		crm_free(fsa_data);
-		
-		/* todo: feed this back in for anything != I_NULL */
-		
-#ifdef FSA_TRACE
-		crm_debug_2("Result of action %s was %s",
-			    fsa_action2string(A_LRM_INVOKE),
-			    fsa_input2string(next_input));
-#endif
 		
 	} else {
 		crm_err("Unknown Sub-system (%s)... discarding message.",

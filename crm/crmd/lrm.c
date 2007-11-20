@@ -62,9 +62,8 @@ gboolean is_rsc_active(const char *rsc_id);
 void do_update_resource(lrm_op_t *op);
 gboolean process_lrm_event(lrm_op_t *op);
 
-enum crmd_fsa_input do_lrm_rsc_op(
-	lrm_rsc_t *rsc, const char *operation,
-	crm_data_t *msg, HA_Message *request);
+void do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
+		   crm_data_t *msg, HA_Message *request);
 
 lrm_op_t *construct_op(
 	crm_data_t *rsc_op, const char *rsc_id, const char *operation);
@@ -84,7 +83,7 @@ int num_lrm_register_fails = 0;
 int max_lrm_register_fails = 30;
 
 /*	 A_LRM_CONNECT	*/
-enum crmd_fsa_input
+void
 do_lrm_control(long long action,
 	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
@@ -96,7 +95,7 @@ do_lrm_control(long long action,
 	if(action & A_LRM_DISCONNECT) {
 		if(verify_stopped(cur_state, LOG_INFO) == FALSE) {
 		    crmd_fsa_stall(NULL);
-		    return I_NULL;
+		    return;
 		}
 		
 		if(lrm_source) {
@@ -147,7 +146,7 @@ do_lrm_control(long long action,
 				
 				crm_timer_start(wait_timer);
 				crmd_fsa_stall(NULL);
-				return I_NULL;
+				return;
 			}
 		}
 
@@ -164,7 +163,7 @@ do_lrm_control(long long action,
 			crm_err("Failed to sign on to the LRM %d"
 				" (max) times", num_lrm_register_fails);
 			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-			return I_NULL;
+			return;
 		}
 
 		/* TODO: create a destroy handler that causes
@@ -185,9 +184,6 @@ do_lrm_control(long long action,
 		crm_err("Unexpected action %s in %s",
 		       fsa_action2string(action), __FUNCTION__);
 	}
-		
-	
-	return I_NULL;
 }
 
 static void
@@ -1039,7 +1035,7 @@ static gboolean lrm_remove_deleted_op(
 
 
 /*	 A_LRM_INVOKE	*/
-enum crmd_fsa_input
+void
 do_lrm_invoke(long long action,
 	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
@@ -1051,7 +1047,6 @@ do_lrm_invoke(long long action,
 	const char *from_sys = NULL;
 	const char *from_host = NULL;
 	const char *operation = NULL;
-	enum crmd_fsa_input next_input = I_NULL;
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 
 	crm_op    = cl_get_string(input->msg, F_CRM_TASK);
@@ -1112,7 +1107,7 @@ do_lrm_invoke(long long action,
 		crm_data_t *xml_rsc = find_xml_node(
 			input->xml, XML_CIB_TAG_RESOURCE, TRUE);
 
-		CRM_CHECK(xml_rsc != NULL, return I_NULL);
+		CRM_CHECK(xml_rsc != NULL, return);
 		
 		/* only the first 16 chars are used by the LRM */
 		params  = find_xml_node(input->xml, XML_TAG_ATTRS, TRUE);
@@ -1150,7 +1145,7 @@ do_lrm_invoke(long long action,
 
 			CRM_CHECK(params != NULL,
 				  crm_log_xml_warn(input->xml, "Bad command");
-				  return I_NULL);
+				  return);
 
 			op_interval = crm_element_value(params, crm_meta_name("interval"));
 			op_task = crm_element_value(params, crm_meta_name(XML_LRM_ATTR_TASK));
@@ -1168,10 +1163,10 @@ do_lrm_invoke(long long action,
 #endif
 			CRM_CHECK(op_task != NULL,
 				  crm_log_xml_warn(input->xml, "Bad command");
-				  return I_NULL);
+				  return);
 			CRM_CHECK(op_interval != NULL,
 				  crm_log_xml_warn(input->xml, "Bad command");
-				  return I_NULL);
+				  return);
 
 			op = construct_op(input->xml, rsc->id, op_task);
 			CRM_ASSERT(op != NULL);
@@ -1231,8 +1226,7 @@ do_lrm_invoke(long long action,
 			
 			
 		} else if(rsc != NULL) {
-			next_input = do_lrm_rsc_op(
-				rsc, operation, input->xml, input->msg);
+		    do_lrm_rsc_op(rsc, operation, input->xml, input->msg);
 		}
 		
 		lrm_free_rsc(rsc);
@@ -1242,8 +1236,6 @@ do_lrm_invoke(long long action,
 			crm_str(crm_op));
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
-
-	return next_input;
 }
 
 lrm_op_t *
@@ -1419,7 +1411,7 @@ stop_recurring_action_by_rsc(gpointer key, gpointer value, gpointer user_data)
 	}
 }
 
-enum crmd_fsa_input
+void
 do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 	      crm_data_t *msg, HA_Message *request)
 {
@@ -1430,7 +1422,7 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 	fsa_data_t *msg_data = NULL;
 	const char *transition = NULL;	
 
-	CRM_CHECK(rsc != NULL, return I_NULL);
+	CRM_CHECK(rsc != NULL, return);
 	
 	if(msg != NULL) {
 		transition = crm_element_value(msg, XML_ATTR_TRANSITION_KEY);
@@ -1463,7 +1455,7 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 			send_direct_ack(NULL, NULL, op, rsc->id);
 			free_lrm_op(op);
 			crm_free(op_id);
-			return I_NULL;
+			return;
 		}
 	}
 
@@ -1504,7 +1496,7 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 
 	crm_free(op_id);
 	free_lrm_op(op);		
-	return I_NULL;
+	return;
 }
 
 void
@@ -1699,7 +1691,7 @@ do_update_resource(lrm_op_t* op)
 	free_xml(update);
 }
 
-enum crmd_fsa_input
+void
 do_lrm_event(long long action,
 	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
@@ -1708,12 +1700,10 @@ do_lrm_event(long long action,
 {
 	lrm_op_t *op = NULL;
 	
-	CRM_CHECK(msg_data->fsa_cause == C_LRM_OP_CALLBACK, return I_NULL);
+	CRM_CHECK(msg_data->fsa_cause == C_LRM_OP_CALLBACK, return);
 
 	op = fsa_typed_data(fsa_dt_lrm);
 	process_lrm_event(op);
-
-	return I_NULL;
 }
 
 
@@ -1723,8 +1713,8 @@ process_lrm_event(lrm_op_t *op)
 	char *op_id = NULL;
 	char *op_key = NULL;
 	int log_level = LOG_ERR;
-	CRM_CHECK(op != NULL, return I_NULL);
-	CRM_CHECK(op->rsc_id != NULL, return I_NULL);
+	CRM_CHECK(op != NULL, return FALSE);
+	CRM_CHECK(op->rsc_id != NULL, return FALSE);
 
 	op_key = generate_op_key(op->rsc_id, op->op_type, op->interval);
 	

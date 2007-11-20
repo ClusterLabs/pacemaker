@@ -182,7 +182,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 }
 
 /*	 A_DC_JOIN_OFFER_ALL	*/
-enum crmd_fsa_input
+void
 do_dc_join_offer_all(long long action,
 		     enum crmd_fsa_cause cause,
 		     enum crmd_fsa_state cur_state,
@@ -206,12 +206,10 @@ do_dc_join_offer_all(long long action,
 	/* dont waste time by invoking the PE yet; */
 	crm_info("join-%d: Waiting on %d outstanding join acks",
 		 current_join_id, g_hash_table_size(welcomed_nodes));
-
-	return I_NULL;
 }
 
 /*	 A_DC_JOIN_OFFER_ONE	*/
-enum crmd_fsa_input
+void
 do_dc_join_offer_one(long long action,
 		     enum crmd_fsa_cause cause,
 		     enum crmd_fsa_state cur_state,
@@ -225,7 +223,7 @@ do_dc_join_offer_one(long long action,
 	if(welcome == NULL) {
 		crm_err("Attempt to send welcome message "
 			"without a message to reply to!");
-		return I_NULL;
+		return;
 	}
 	
 	join_to = cl_get_string(welcome->msg, F_CRM_HOST_FROM);
@@ -263,12 +261,10 @@ do_dc_join_offer_one(long long action,
 	/* dont waste time by invoking the pe yet; */
 	crm_debug("Waiting on %d outstanding join acks for join-%d",
 		  g_hash_table_size(welcomed_nodes), current_join_id);
-	
-	return I_NULL;
 }
 
 /*	 A_DC_JOIN_PROCESS_REQ	*/
-enum crmd_fsa_input
+void
 do_dc_join_filter_offer(long long action,
 	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
@@ -310,7 +306,7 @@ do_dc_join_filter_offer(long long action,
 		crm_debug("Invalid response from %s: join-%d vs. join-%d",
 			  join_from, join_id, current_join_id);
 		check_join_state(cur_state, __FUNCTION__);
-		return I_NULL;
+		return;
 		
 	} else if(max_generation_xml == NULL) {
 		max_generation_xml = copy_xml(generation);
@@ -357,12 +353,11 @@ do_dc_join_filter_offer(long long action,
 		crm_debug("join-%d: Still waiting on %d outstanding offers",
 			  join_id, g_hash_table_size(welcomed_nodes));
 	}
-	return I_NULL;
 }
 
 
 /*	A_DC_JOIN_FINALIZE	*/
-enum crmd_fsa_input
+void
 do_dc_join_finalize(long long action,
 		    enum crmd_fsa_cause cause,
 		    enum crmd_fsa_state cur_state,
@@ -377,7 +372,7 @@ do_dc_join_finalize(long long action,
 	crm_debug("Finializing join-%d for %d clients",
 		  current_join_id, g_hash_table_size(integrated_nodes));
 	if(g_hash_table_size(integrated_nodes) == 0) {
-	    return I_NULL;
+	    return;
 	}
 	
 	clear_bit_inplace(fsa_input_register, R_HAVE_CIB);
@@ -390,7 +385,7 @@ do_dc_join_finalize(long long action,
 		crm_warn("join-%d: We are still in a transition."
 			 "  Delaying until the TE completes.", current_join_id);
 		crmd_fsa_stall(NULL);
-		return I_NULL;
+		return;
 	}
 	
 	if(is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
@@ -408,7 +403,7 @@ do_dc_join_finalize(long long action,
 		fsa_cib_conn->call_timeout = 0; /* back to the default */
 		add_cib_op_callback(rc, FALSE, crm_strdup(max_generation_from),
 				    finalize_sync_callback);
-		return I_NULL;
+		return;
 	} else {
 		/* Send _our_ CIB out to everyone */
 		fsa_cib_conn->cmds->sync_from(
@@ -417,8 +412,6 @@ do_dc_join_finalize(long long action,
 	}
 
 	finalize_join(__FUNCTION__);
-
-	return I_NULL;
 }
 
 void
@@ -492,7 +485,7 @@ join_update_complete_callback(const HA_Message *msg, int call_id, int rc,
 }
 
 /*	A_DC_JOIN_PROCESS_ACK	*/
-enum crmd_fsa_input
+void
 do_dc_join_ack(long long action,
 	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
@@ -510,7 +503,7 @@ do_dc_join_ack(long long action,
 
 	if(safe_str_neq(op, CRM_OP_JOIN_CONFIRM)) {
 		crm_debug("Ignoring op=%s message", op);
-		return I_NULL;
+		return;
 	} 
 
 	ha_msg_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id);
@@ -526,18 +519,18 @@ do_dc_join_ack(long long action,
 	if(join_state == NULL) {
 		crm_err("Join not in progress: ignoring join-%d from %s",
 			join_id, join_from);
-		return I_NULL;
+		return;
 		
 	} else if(safe_str_neq(join_state, CRMD_JOINSTATE_MEMBER)) {
 		crm_err("Node %s wasnt invited to join the cluster",join_from);
 		g_hash_table_remove(finalized_nodes, join_from);
-		return I_NULL;
+		return;
 		
 	} else if(join_id != current_join_id) {
 		crm_err("Invalid response from %s: join-%d vs. join-%d",
 			join_from, join_id, current_join_id);
 		g_hash_table_remove(finalized_nodes, join_from);
-		return I_NULL;
+		return;
 	}
 
 	g_hash_table_remove(finalized_nodes, join_from);
@@ -563,8 +556,6 @@ do_dc_join_ack(long long action,
 		call_id, FALSE, NULL, join_update_complete_callback);
  	crm_debug("join-%d: Registered callback for LRM update %d",
 		  join_id, call_id);
-
-	return I_NULL;	
 }
 
 gboolean

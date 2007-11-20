@@ -56,14 +56,13 @@ void do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 			   crm_data_t *output, void *user_data);
 
 /*	 A_PE_START, A_PE_STOP, A_TE_RESTART	*/
-enum crmd_fsa_input
+void
 do_pe_control(long long action,
 	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
 	      enum crmd_fsa_input current_input,
 	      fsa_data_t *msg_data)
 {
-	enum crmd_fsa_input result = I_NULL;
 	struct crm_subsystem_s *this_subsys = pe_subsystem;
 
 	long long stop_actions = A_PE_STOP;
@@ -83,15 +82,13 @@ do_pe_control(long long action,
 			       this_subsys->name);
 		}
 	}
-	
-	return result;
 }
 
 int fsa_pe_query = 0;
 char *fsa_pe_ref = NULL;
 
 /*	 A_PE_INVOKE	*/
-enum crmd_fsa_input
+void
 do_pe_invoke(long long action,
 	     enum crmd_fsa_cause cause,
 	     enum crmd_fsa_state cur_state,
@@ -101,7 +98,7 @@ do_pe_invoke(long long action,
 	if(is_set(fsa_input_register, R_PE_CONNECTED) == FALSE){
 		crm_info("Waiting for the PE to connect");
 		crmd_fsa_stall(NULL);
-		return I_NULL;		
+		return;		
 	}
 
 	if(is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
@@ -110,7 +107,7 @@ do_pe_invoke(long long action,
 
 		/* start the join from scratch */
 		register_fsa_input_before(C_FSA_INTERNAL, I_ELECTION, NULL);
-		return I_NULL;		
+		return;		
 	}
 	
 	crm_debug("Requesting the current CIB: %s",fsa_state2string(fsa_state));
@@ -122,8 +119,6 @@ do_pe_invoke(long long action,
 			pe_subsystem->name);
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
-	
-	return I_NULL;		
 }
 
 void

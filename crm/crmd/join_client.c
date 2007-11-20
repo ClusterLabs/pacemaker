@@ -36,7 +36,7 @@ extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t *orig);
 
 /*	A_CL_JOIN_QUERY		*/
 /* is there a DC out there? */
-enum crmd_fsa_input
+void
 do_cl_join_query(long long action,
 	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
@@ -49,8 +49,6 @@ do_cl_join_query(long long action,
 	sleep(1);  /* give the CCM time to propogate to the DC */
 	crm_debug("Querying for a DC");
 	send_msg_via_ha(fsa_cluster_conn, req);
-	
-	return I_NULL;
 }
 
 
@@ -59,7 +57,7 @@ do_cl_join_query(long long action,
 /* this is kind of a workaround for the fact that we may not be around
  * or are otherwise unable to reply when the DC sends out A_WELCOME_ALL
  */
-enum crmd_fsa_input
+void
 do_cl_join_announce(long long action,
 	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
@@ -76,7 +74,7 @@ do_cl_join_announce(long long action,
 	if(cur_state != S_PENDING) {
 		crm_warn("Do not announce ourselves in state %s",
 			 fsa_state2string(cur_state));
-		return I_NULL;
+		return;
 	}
 
 	if(AM_I_OPERATIONAL) {
@@ -92,10 +90,8 @@ do_cl_join_announce(long long action,
 	} else {
 		/* Delay announce until we have finished local startup */
 		crm_warn("Delaying announce until local startup is complete");
-		return I_NULL;
+		return;
 	}
-	
-	return I_NULL;
 }
 
 
@@ -103,7 +99,7 @@ static int query_call_id = 0;
 
 /*	 A_CL_JOIN_REQUEST	*/
 /* aka. accept the welcome offer */
-enum crmd_fsa_input
+void
 do_cl_join_offer_respond(long long action,
 	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
@@ -118,7 +114,7 @@ do_cl_join_offer_respond(long long action,
 		log error ;
 
 		/* save the request for later? */
-		return I_NULL;
+		return;
 	} 
 #endif
 
@@ -138,7 +134,7 @@ do_cl_join_offer_respond(long long action,
 		crm_err("Expected a welcome from %s, but %s replied",
 			fsa_our_dc, welcome_from);
 
-		return I_NULL;
+		return;
 	}
 
 	CRM_DEV_ASSERT(input != NULL);
@@ -150,7 +146,6 @@ do_cl_join_offer_respond(long long action,
 	crm_debug_2("Registered join query callback: %d", query_call_id);
 
 	register_fsa_action(A_DC_TIMER_STOP);
-	return I_NULL;
 }
 
 void
@@ -208,7 +203,7 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 
 /*	A_CL_JOIN_RESULT	*/
 /* aka. this is notification that we have (or have not) been accepted */
-enum crmd_fsa_input
+void
 do_cl_join_finalize_respond(long long action,
 	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
@@ -226,7 +221,7 @@ do_cl_join_finalize_respond(long long action,
 	
 	if(safe_str_neq(op, CRM_OP_JOIN_ACKNAK)) {
 		crm_debug_2("Ignoring op=%s message", op);
-		return I_NULL;
+		return;
 	}
 	
 	/* calculate if it was an ack or a nack */
@@ -240,12 +235,12 @@ do_cl_join_finalize_respond(long long action,
 		crm_err("Join join-%d with %s failed.  NACK'd",
 			join_id, welcome_from);
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-		return I_NULL;
+		return;
 	}
 
 	if(AM_I_DC == FALSE && safe_str_eq(welcome_from, fsa_our_uname)) {
 		crm_warn("Discarding our own welcome - we're no longer the DC");
-		return I_NULL;
+		return;
 	} 	
 
 	update_dc(input->msg, TRUE);
@@ -274,6 +269,4 @@ do_cl_join_finalize_respond(long long action,
 		crm_err("Could send our LRM state to the DC");
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 	}
-
-	return I_NULL;
 }

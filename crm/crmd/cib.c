@@ -127,14 +127,13 @@ do_cib_replaced(const char *event, HA_Message *msg)
 }
 
 /*	 A_CIB_STOP, A_CIB_START, A_CIB_RESTART,	*/
-enum crmd_fsa_input
+void
 do_cib_control(long long action,
 	       enum crmd_fsa_cause cause,
 	       enum crmd_fsa_state cur_state,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
-	enum crmd_fsa_input result = I_NULL;
 	struct crm_subsystem_s *this_subsys = cib_subsystem;
 	
 	long long stop_actions = A_CIB_STOP;
@@ -159,7 +158,7 @@ do_cib_control(long long action,
 		if(cur_state == S_STOPPING) {
 			crm_err("Ignoring request to start %s after shutdown",
 				this_subsys->name);
-			return I_NULL;
+			return;
 		}
 
 		rc = fsa_cib_conn->cmds->signon(
@@ -220,12 +219,10 @@ do_cib_control(long long action,
 			cib_retries = 0;
 		}
 	}
-	
-	return result;
 }
 
 /*	 A_CIB_INVOKE, A_CIB_BUMPGEN, A_UPDATE_NODESTATUS	*/
-enum crmd_fsa_input
+void
 do_cib_invoke(long long action,
 	      enum crmd_fsa_cause cause,
 	      enum crmd_fsa_state cur_state,
@@ -233,7 +230,6 @@ do_cib_invoke(long long action,
 	      fsa_data_t *msg_data)
 {
 	HA_Message *answer = NULL;
-	enum crmd_fsa_input result = I_NULL;
 	ha_msg_input_t *cib_msg = fsa_typed_data(fsa_dt_ha_msg);
 	const char *sys_from = cl_get_string(cib_msg->msg, F_CRM_SYS_FROM);
 
@@ -241,11 +237,11 @@ do_cib_invoke(long long action,
 		if(cur_state != S_STOPPING) {
 			crm_err("CIB is disconnected");
 			crm_log_message_adv(LOG_WARNING, "CIB Input", cib_msg->msg);
-			return I_NULL;
+			return;
 		}
 		crm_info("CIB is disconnected");
 		crm_log_message_adv(LOG_DEBUG, "CIB Input", cib_msg->msg);
-		return I_NULL;
+		return;
 		
 	}
 	
@@ -275,7 +271,7 @@ do_cib_invoke(long long action,
 		if(op == NULL) {
 			crm_err("Invalid CIB Message");
 			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-			return I_NULL;
+			return;
 		}
 
 		cib_frag = NULL;
@@ -293,7 +289,8 @@ do_cib_invoke(long long action,
 				crm_err("Confused what to do with cib result");
 				crm_log_message(LOG_ERR, answer);
 				crm_msg_del(answer);
-				result = I_ERROR;
+				register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
+				return;
 			}
 
 		} else if(rc < cib_ok) {
@@ -308,14 +305,10 @@ do_cib_invoke(long long action,
 			crm_msg_del(answer);
 			delete_ha_msg_input(input);
 		}
-		
-		return result;
 
 	} else {
 		crm_err("Unexpected action %s in %s",
 			fsa_action2string(action), __FUNCTION__);
 	}
-	
-	return I_NULL;
 }
 

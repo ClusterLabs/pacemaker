@@ -27,7 +27,7 @@
 #include <crmd_messages.h>
 
 /*	A_LOG, A_WARN, A_ERROR	*/
-enum crmd_fsa_input
+void
 do_log(long long action,
        enum crmd_fsa_cause cause,
        enum crmd_fsa_state cur_state,
@@ -79,8 +79,5 @@ do_log(long long action,
 			   "Received \"%s\" event from the CCM.",
 			   ccm_event_name(event));
 	}
-	
-	
-	return I_NULL;
 }
 

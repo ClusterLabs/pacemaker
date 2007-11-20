@@ -142,15 +142,14 @@ init_dotfile(void)
 
 static void
 do_fsa_action(fsa_data_t *fsa_data, long long an_action,
-	      enum crmd_fsa_input (*function)(long long action,
-					      enum crmd_fsa_cause cause,
-					      enum crmd_fsa_state cur_state,
-					      enum crmd_fsa_input cur_input,
-					      fsa_data_t *msg_data)) 
+	      void (*function)(long long action,
+			       enum crmd_fsa_cause cause,
+			       enum crmd_fsa_state cur_state,
+			       enum crmd_fsa_input cur_input,
+			       fsa_data_t *msg_data)) 
 {
 	int action_log_level = LOG_DEBUG;
 	gboolean do_time_check = TRUE;
-	enum crmd_fsa_input result = I_NULL;
 
 	if(is_set(fsa_actions, an_action) == FALSE) {
 		crm_err("Action %s (%.16llx) was not requestsed",
@@ -174,10 +173,8 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 
 	do_crm_log(action_log_level,
 		   DOT_PREFIX"\t// %s", fsa_action2string(an_action));
-	result = function(an_action, fsa_data->fsa_cause, fsa_state,
+	function(an_action, fsa_data->fsa_cause, fsa_state,
 			  fsa_data->fsa_input, fsa_data);
-
-	CRM_DEV_ASSERT(result == I_NULL);
 	crm_debug_3("Action complete: %s (%.16llx)",
 		    fsa_action2string(an_action), an_action);
 
