@@ -1394,15 +1394,17 @@ void update_dc(HA_Message *msg, gboolean assert_same)
 		
 		CRM_CHECK(dc_version != NULL, return);
 		CRM_CHECK(welcome_from != NULL, return);
-		if(AM_I_DC) {
-			CRM_CHECK(safe_str_eq(welcome_from, fsa_our_uname),
-				  return);
+
+		if(AM_I_DC && safe_str_neq(welcome_from, fsa_our_uname)) {
+		    crm_warn("Not updating DC to %s (%s): we are also a DC",
+			     welcome_from, dc_version);
+		    return;
 		}
+
 		if(assert_same) {
 			CRM_CHECK(fsa_our_dc != NULL, ;);
 			CRM_CHECK(safe_str_eq(fsa_our_dc, welcome_from), ;);
 		}
-		
 	}
 
 	crm_free(fsa_our_dc_version);
