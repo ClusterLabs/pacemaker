@@ -320,6 +320,9 @@ main(int argc, char **argv)
 				
 			} else if(read_value != NULL) {
 				fprintf(stdout, "%s\n", read_value);
+			} else if(rc == cib_NOTEXISTS) {
+				fprintf(stdout, "off\n");
+				rc = cib_ok;
 			}
 			crm_free(scope);
 		}
