@@ -81,20 +81,21 @@ main(int argc, char **argv)
 	int option_index = 0;
 	static struct option long_options[] = {
 		/* Top-level Options */
-		{"verbose", 0, 0, 'V'},
-		{"help", 0, 0, '?'},
-		{"quiet", 0, 0, 'Q'},
-		{"get-value", 0, 0, 'G'},
+		{"verbose",     0, 0, 'V'},
+		{"help",        0, 0, '?'},
+		{"quiet",       0, 0, 'Q'},
+		{"get-value",   0, 0, 'G'},
 		{"delete-attr", 0, 0, 'D'},
-		{"node-uname", 1, 0,  'U'},
-		{"node-uuid", 1, 0,  'u'},
-		{"set-name", 1, 0,   's'},
-		{"attr-name", 1, 0,  'n'},
-		{"attr-value", 1, 0, 'v'},
+		{"node-uname",  1, 0, 'U'},
+		{"node-uuid",   1, 0, 'u'},
+		{"set-name",    1, 0, 's'},
+		{"attr-id",     1, 0, 'i'},
+		{"attr-name",   1, 0, 'n'},
+		{"attr-value",  1, 0, 'v'},
 		{"resource-id", 1, 0, 'r'},
-		{"lifetime", 1, 0, 'l'},
+		{"lifetime",    1, 0, 'l'},
+		{"type",        1, 0, 't'},
 		{"inhibit-policy-engine", 0, 0, '!'},
-		{"type", 1, 0, 't'},
 
 		{0, 0, 0, 0}
 	};
@@ -341,7 +342,7 @@ main(int argc, char **argv)
 			
 	} else if(DO_DELETE) {
 		rc = delete_attr(the_cib, cib_opts, type, dest_node, set_name,
-				 attr_id, attr_name, attr_value);
+				 attr_id, attr_name, attr_value, TRUE);
 
 		if(rc == cib_NOTEXISTS) {
 		    /* Nothing to delete...
@@ -349,13 +350,14 @@ main(int argc, char **argv)
 		     * which is what the admin wanted
 		     */
 		    rc = cib_ok;
-		    
-		} else if(safe_str_eq(crm_system_name, "crm_failcount")) {
+		} else if(rc != cib_missing_data
+			  && safe_str_eq(crm_system_name, "crm_failcount")) {
 			char *now_s = NULL;
 			time_t now = time(NULL);
 			now_s = crm_itoa(now);
 			update_attr(the_cib, cib_sync_call,
-				    XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, "last-lrm-refresh", now_s);
+				    XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL,
+				    "last-lrm-refresh", now_s, TRUE);
 			crm_free(now_s);
 		}
 			
@@ -365,12 +367,12 @@ main(int argc, char **argv)
 		CRM_DEV_ASSERT(attr_value != NULL);
 
 		rc = update_attr(the_cib, cib_opts, type, dest_node, set_name,
-				 attr_id, attr_name, attr_value);
+				 attr_id, attr_name, attr_value, TRUE);
 
 	} else {
 		char *read_value = NULL;
 		rc = read_attr(the_cib, type, dest_node, set_name,
-				 attr_id, attr_name, &read_value);
+			       attr_id, attr_name, &read_value, TRUE);
 
 		if(rc == cib_NOTEXISTS 
 		   && safe_str_eq(crm_system_name, "crm_failcount")) {
@@ -382,7 +384,10 @@ main(int argc, char **argv)
 			 attr_name, crm_str(read_value),
 			 set_name?"in ":"", set_name?set_name:"");
 
-		if(BE_QUIET == FALSE) {
+		if(rc == cib_missing_data) {
+		    rc = cib_ok;
+		    
+		} else if(BE_QUIET == FALSE) {
 			fprintf(stdout, "%s%s %s%s value=%s\n",
 				attr_id?"id=":"", attr_id?attr_id:"",
 				attr_name?"name=":"", attr_name?attr_name:"",
@@ -393,7 +398,9 @@ main(int argc, char **argv)
 		}
 	}
 	the_cib->cmds->signoff(the_cib);
-	if(rc != cib_ok) {
+	if(rc == cib_missing_data) {
+		    printf("Please choose from one of the matches above and suppy the 'id' with --attr-id\n");
+	} else if(rc != cib_ok) {
 		fprintf(stderr, "Error performing operation: %s\n",
 			cib_error2string(rc));
 	}
@@ -434,6 +441,8 @@ usage(const char *cmd, int exit_status)
 		"Delete rather than set the attribute\n", "delete-attr", 'D');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
 		"Value to use (ignored with -G)\n", "attr-value", 'v');
+	fprintf(stream, "\t--%s (-%c) <string>\t: "
+		"The 'id' of the attribute. Advanced use only.\n", "attr-id", 'i');
 
 	if(safe_str_eq(cmd, "crm_master")) {
 		fprintf(stream, "\t--%s (-%c) <string>\t: "

@@ -368,11 +368,15 @@ delete_resource_attr(
 		return cib_NOTEXISTS;
 	}
 
- 	xml_match = find_attr_details(
-		rsc->xml, NULL, attr_set, attr_id, attr_name);
+ 	rc = find_attr_details(
+	    rsc->xml, NULL, attr_set, attr_id, attr_name, &xml_match, TRUE);
 
-	if(xml_match == NULL) {
-		return cib_missing_data;
+	if(rc == cib_NOTEXISTS) {
+	    return cib_ok;
+	}
+	
+	if(rc != cib_ok) {
+	    return rc;
 	}
 	
 	if(attr_id == NULL) {

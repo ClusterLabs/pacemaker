@@ -363,21 +363,22 @@ extern gboolean cib_version_details(
 extern enum cib_errors update_attr(
 	cib_t *the_cib, int call_options,
 	const char *section, const char *node_uuid, const char *set_name,
-	const char *attr_id, const char *attr_name, const char *attr_value);
+	const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console);
 
-extern crm_data_t *find_attr_details(crm_data_t *xml_search, const char *node_uuid,
-				     const char *set_name, const char *attr_id, const char *attr_name);
-
+extern enum cib_errors find_attr_details(
+	crm_data_t *xml_search, const char *node_uuid,
+	const char *set_name, const char *attr_id, const char *attr_name,
+	crm_data_t **xml_obj, gboolean to_console);
 
 extern enum cib_errors read_attr(
 	cib_t *the_cib,
 	const char *section, const char *node_uuid, const char *set_name,
-	const char *attr_id, const char *attr_name, char **attr_value);
+	const char *attr_id, const char *attr_name, char **attr_value, gboolean to_console);
 
 extern enum cib_errors delete_attr(
 	cib_t *the_cib, int options, 
 	const char *section, const char *node_uuid, const char *set_name,
-	const char *attr_id, const char *attr_name, const char *attr_value);
+	const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console);
 
 extern enum cib_errors query_node_uuid(
 	cib_t *the_cib, const char *uname, char **uuid);
