@@ -272,6 +272,8 @@ unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	const char *id_lh   = crm_element_value(xml_obj, "rsc");
 	const char *id      = crm_element_value(xml_obj, XML_ATTR_ID);
 	resource_t *rsc_lh  = pe_find_resource(data_set->resources, id_lh);
+	const char *node    = crm_element_value(xml_obj, "node");
+	const char *score   = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
 	
 	if(rsc_lh == NULL) {
 		/* only a warn as BSC adds the constraint then the resource */
@@ -284,6 +286,18 @@ unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		return FALSE;
 	}
 
+	if(node != NULL && score != NULL) {
+	    int score_i = char2score(score);
+	    node_t *match = pe_find_node(data_set->nodes, node);
+
+	    if(match) {
+		rsc2node_new(id, rsc_lh, score_i, match, data_set);
+		return TRUE;
+	    } else {
+		return FALSE;
+	    }
+	}
+	
 	xml_child_iter_filter(
 		xml_obj, rule_xml, XML_TAG_RULE,
 		empty = FALSE;

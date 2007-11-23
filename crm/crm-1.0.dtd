@@ -489,7 +489,9 @@ The rsc field is, surprisingly, a resource id.
 <!ATTLIST rsc_location
           id          CDATA #REQUIRED
           description CDATA #IMPLIED
-          rsc         CDATA #REQUIRED>
+          rsc         CDATA #REQUIRED
+          node        CDATA #IMPLIED
+          score       CDATA #IMPLIED>
 <!ELEMENT lifetime (rule+)>
 <!ATTLIST lifetime id  CDATA     #REQUIRED>
 
