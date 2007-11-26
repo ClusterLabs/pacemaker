@@ -724,13 +724,66 @@ print_xml_formatted(int log_level, const char *function,
 crm_data_t *
 get_message_xml(HA_Message *msg, const char *field) 
 {
+	int type = 0;
 	crm_data_t *xml_node = NULL;
-	crm_data_t *tmp_node = NULL;
-	crm_validate_data(msg);
-	tmp_node = cl_get_struct(msg, field);
-	if(tmp_node != NULL) {
-		xml_node = copy_xml(tmp_node);
+	
+	type = cl_get_type(msg, field);
+	if(type > FT_STRING) {
+	    HA_Message *tmp_node = NULL;
+	    crm_validate_data(msg);
+	    tmp_node = cl_get_struct(msg, field);
+	    if(tmp_node != NULL) {
+		const char *name = crm_element_name(tmp_node);
+		if(name == NULL || safe_str_neq(field, name)) {
+		    /* Deprecated */
+		    xml_node = copy_xml(tmp_node);
+		    
+		} else {
+		    /* Valid XML */
+		    xml_child_iter(tmp_node, child, return copy_xml(child));
+		}
+	    }
+
+	} else if(type == FT_STRING) {
+	    /* Future proof */
+	    const char *xml_text = cl_get_string(msg, field);
+
+	    if(xml_text != NULL && xml_text[0] == '<') {
+		xml_node = string2xml(xml_text);
+
+	    } else if(xml_text != NULL) {
+		/* Maybe they compressed it */
+		int rc = BZ_OK;
+		unsigned int used = 0;
+		unsigned int size = 512;
+		unsigned int orig_len = strlen(xml_text);
+
+		char *uncompressed = NULL;
+		char *compressed = crm_strdup(xml_text);
+
+	      retry:
+		crm_realloc(uncompressed, size);
+		memset(uncompressed, 0, size);
+
+		rc = BZ2_bzBuffToBuffDecompress(
+		    uncompressed, &used, compressed, orig_len, 1, 0);
+
+		if(rc == BZ_OUTBUFF_FULL) {
+		    size = size * 4;
+		    goto retry;
+		    
+		} if(rc != BZ_OK) {
+		    crm_err("Decompression failed: %d", rc);
+
+		} else {
+		    xml_node = string2xml(uncompressed);
+		}
+		
+		crm_free(compressed);		
+		crm_free(uncompressed);		
+	    }
 	}
+	
 	return xml_node;
 }
 
