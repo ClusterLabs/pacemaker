@@ -591,7 +591,7 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 	} else if(hash_entry->value == NULL) {
 		/* delete the attr */
 		rc = delete_attr(cib_conn, cib_none, hash_entry->section, attrd_uuid,
-				 hash_entry->set, NULL, hash_entry->id, NULL);
+				 hash_entry->set, NULL, hash_entry->id, NULL, FALSE);
 		crm_info("Sent delete %d: %s %s %s",
 			 rc, hash_entry->id, hash_entry->set, hash_entry->section);
 		
@@ -599,7 +599,7 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 		/* send update */
 		rc = update_attr(cib_conn, cib_none, hash_entry->section,
  				 attrd_uuid, hash_entry->set, NULL,
- 				 hash_entry->id, hash_entry->value);
+ 				 hash_entry->id, hash_entry->value, FALSE);
 		crm_info("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
 	}
 

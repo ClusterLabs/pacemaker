@@ -509,7 +509,7 @@ unconfirmed_actions(gboolean send_updates)
 			);
 		);
 	if(unconfirmed > 0) {
-		crm_err("Waiting on %d unconfirmed actions", unconfirmed);
+	    crm_warn("Waiting on %d unconfirmed actions", unconfirmed);
 	}
 	return unconfirmed;
 }

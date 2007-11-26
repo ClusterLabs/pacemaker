@@ -250,7 +250,7 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 	
 		update_attr(te_cib_conn, cib_none, XML_CIB_TAG_STATUS,
 			    on_uuid, NULL,NULL, attr_name,
-			    XML_NVPAIR_ATTR_VALUE"++");
+			    XML_NVPAIR_ATTR_VALUE"++", FALSE);
 		crm_free(attr_name);
 	}
 

@@ -1099,7 +1099,7 @@ do_lrm_invoke(long long action,
 		}
 		
 		update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_STATUS,
-			    fsa_our_uuid, NULL, NULL, CRM_OP_PROBED, probed);
+			    fsa_our_uuid, NULL, NULL, CRM_OP_PROBED, probed, FALSE);
 
 	} else if(operation != NULL) {
 		lrm_rsc_t *rsc = NULL;
@@ -1220,7 +1220,7 @@ do_lrm_invoke(long long action,
 					  from_sys, rsc->id);
 
 				update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-					    NULL, NULL, NULL, "last-lrm-refresh", now_s);
+					    NULL, NULL, NULL, "last-lrm-refresh", now_s, FALSE);
 				crm_free(now_s);
 			}
 			

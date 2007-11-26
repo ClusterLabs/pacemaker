@@ -412,7 +412,7 @@ do_dc_takeover(long long action,
 	add_cib_op_callback(rc, FALSE, NULL, feature_update_callback);
 
 	update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-		    NULL, NULL, NULL, "dc-version", VERSION"-"HA_HG_VERSION);
+		    NULL, NULL, NULL, "dc-version", VERSION"-"HA_HG_VERSION, FALSE);
 
 	free_xml(cib);
 }

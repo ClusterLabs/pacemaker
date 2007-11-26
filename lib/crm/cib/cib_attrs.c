@@ -82,16 +82,31 @@
 		attr_name = attr_id;					\
 	}								\
 
-crm_data_t *
+#define attr_msg(level, fmt, args...) do {	\
+	if(to_console) {			\
+	    printf(fmt"\n", ##args);		\
+	} else {				\
+	    do_crm_log(level, fmt , ##args);	\
+	}					\
+} while(0)
+
+enum cib_errors
 find_attr_details(crm_data_t *xml_search, const char *node_uuid,
-		  const char *set_name, const char *attr_id, const char *attr_name)
+		  const char *set_name, const char *attr_id, const char *attr_name,
+		  crm_data_t **xml_obj, gboolean to_console)
 {
 	int matches = 0;
 	crm_data_t *nv_children = NULL;
 	crm_data_t *set_children = NULL;
 	const char *set_type = XML_TAG_ATTR_SETS;
+	const char *tag = crm_element_name(xml_search);
 
-	if(node_uuid != NULL) {
+	CRM_CHECK(xml_obj != NULL, return cib_output_ptr);
+	*xml_obj = NULL;
+	
+	CRM_CHECK(xml_search != NULL, return cib_NOTEXISTS);
+	
+	if(node_uuid != NULL || safe_str_eq(tag, XML_CIB_TAG_CRMCONFIG)) {
 		set_type = XML_CIB_TAG_PROPSET;
 
 		/* filter by node */
@@ -101,9 +116,9 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 		crm_log_xml_debug_2(set_children, "search by node:");
 		if(matches == 0) {
 			CRM_CHECK(set_children == NULL, crm_err("Memory leak"));
-			crm_info("No node matching id=%s in %s",
+			attr_msg(LOG_INFO, "No node matching id=%s in %s",
 				 node_uuid, TYPE(xml_search));
-			return NULL;
+			return cib_NOTEXISTS;
 		}
 	}
 
@@ -112,14 +127,14 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 		crm_data_t *tmp = NULL;
 		matches = find_xml_children(
 			&tmp, set_children?set_children:xml_search, 
-			XML_TAG_ATTR_SETS, XML_ATTR_ID, set_name, FALSE);
+			set_type, XML_ATTR_ID, set_name, FALSE);
 		free_xml(set_children);
 		set_children = tmp;
 		crm_log_xml_debug_2(set_children, "search by set:");
 		if(matches == 0) {
-			crm_info("No set matching id=%s in %s", set_name, TYPE(xml_search));
+			attr_msg(LOG_INFO, "No set matching id=%s in %s", set_name, TYPE(xml_search));
 			CRM_CHECK(set_children == NULL, crm_err("Memory leak"));
-			return NULL;
+			return cib_NOTEXISTS;
 		}
 	}
 
@@ -146,51 +161,62 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 			);
 		free_xml(nv_children);
 		free_xml(set_children);
-		return single_match;
-		
-	} else if(matches > 1) {
-		crm_err("Multiple attributes match name=%s in %s:\n",
-			 attr_name, TYPE(xml_search));
+		*xml_obj = single_match;
+		return cib_ok;
 
-		if(set_children == NULL) {
-			free_xml(set_children);
-			set_children = NULL;
-			find_xml_children(
-				&set_children, xml_search, 
-				XML_TAG_ATTR_SETS, NULL, NULL, FALSE);
-			xml_child_iter(
-				set_children, set,
-				free_xml(nv_children);
-				nv_children = NULL;
-				find_xml_children(
-					&nv_children, set,
-					XML_CIB_TAG_NVPAIR, XML_NVPAIR_ATTR_NAME, attr_name, FALSE);
-				xml_child_iter(
-					nv_children, child,
-					crm_info("  Set: %s,\tValue: %s,\tID: %s\n",
-						ID(set),
-						crm_element_value(child, XML_NVPAIR_ATTR_VALUE),
-						ID(child));
-					);
-				);
-			
-		} else {
-			xml_child_iter(
-				nv_children, child,
-				crm_info("  ID: %s, Value: %s\n", ID(child),
-					crm_element_value(child, XML_NVPAIR_ATTR_VALUE));
-				);
-		}
+	} else if(matches == 0) {
+	    free_xml(set_children);
+	    return cib_NOTEXISTS;
 	}
+
+	attr_msg(LOG_WARNING, "Multiple attributes match name=%s in %s:",
+		 attr_name, TYPE(xml_search));
+	
+	if(set_name != NULL) {
+ 	    xml_child_iter(
+		nv_children, child,
+		attr_msg(LOG_INFO, "  Value: %s \t(set=%s, id=%s)", 
+			 crm_element_value(child, XML_NVPAIR_ATTR_VALUE), set_name, ID(child));
+		);
+	    
+ 	} else {
+	    free_xml(set_children);
+	    set_children = NULL;
+
+	    find_xml_children(
+		&set_children, xml_search, 
+		set_type, NULL, NULL, FALSE);
+
+	    xml_child_iter(
+		set_children, set,
+		const char *set_id = ID(set);
+
+		free_xml(nv_children);
+		nv_children = NULL;
+
+		find_xml_children(
+		    &nv_children, set,
+		    XML_CIB_TAG_NVPAIR, XML_NVPAIR_ATTR_NAME, attr_name, FALSE);
+
+		xml_child_iter(
+		    nv_children, child,
+		    attr_msg(LOG_INFO, "  Value: %s \t(set=%s, id=%s)",
+			     crm_element_value(child, XML_NVPAIR_ATTR_VALUE),
+			     set_id, ID(child));
+		    );
+		);
+ 	}
+	
+	free_xml(nv_children);
 	free_xml(set_children);
-	return NULL;
+	return cib_missing_data;
 }
 
 
 enum cib_errors 
 update_attr(cib_t *the_cib, int call_options,
 	    const char *section, const char *node_uuid, const char *set_name,
-	    const char *attr_id, const char *attr_name, const char *attr_value)
+	    const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console)
 {
 	const char *tag = NULL;
 	
@@ -218,16 +244,20 @@ update_attr(cib_t *the_cib, int call_options,
 				  cib_sync_call|cib_scope_local);
 	
 	if(rc != cib_ok) {
-		crm_err("Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
+		attr_msg(LOG_ERR, "Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
 			attr_name, section, crm_str(set_name), crm_str(node_uuid),
 			cib_error2string(rc));
 		return rc;
 	}
 		
-	xml_obj = find_attr_details(
-		xml_search, node_uuid, set_name, attr_id, attr_name);
+	rc = find_attr_details(
+	    xml_search, node_uuid, set_name, attr_id, attr_name, &xml_obj, to_console);
 	free_xml(xml_search);
 
+	if(rc == cib_missing_data) {
+	    return rc;
+	}
+	
 	if(xml_obj != NULL) {
 		local_attr_id = crm_strdup(ID(xml_obj));
 		attr_id = local_attr_id;
@@ -306,7 +336,7 @@ update_attr(cib_t *the_cib, int call_options,
 	}
 
 	if(rc < cib_ok) {
-		crm_err("Error setting %s=%s (section=%s, set=%s): %s",
+		attr_msg(LOG_ERR, "Error setting %s=%s (section=%s, set=%s): %s",
 			attr_name, attr_value, section, crm_str(set_name),
 			cib_error2string(rc));
 		crm_log_xml_info(xml_top, "Update");
@@ -321,7 +351,7 @@ update_attr(cib_t *the_cib, int call_options,
 enum cib_errors 
 read_attr(cib_t *the_cib,
 	  const char *section, const char *node_uuid, const char *set_name,
-	  const char *attr_id, const char *attr_name, char **attr_value)
+	  const char *attr_id, const char *attr_name, char **attr_value, gboolean to_console)
 {
 	enum cib_errors rc = cib_ok;
 
@@ -352,7 +382,7 @@ read_attr(cib_t *the_cib,
 		the_cib, section, &fragment, cib_sync_call|cib_scope_local);
 
 	if(rc != cib_ok) {
-		crm_err("Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
+		attr_msg(LOG_ERR, "Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
 			attr_name, section, crm_str(set_name), crm_str(node_uuid),
 			cib_error2string(rc));
 		return rc;
@@ -374,14 +404,18 @@ read_attr(cib_t *the_cib,
 	CRM_ASSERT(xml_obj != NULL);
 	crm_log_xml_debug_2(xml_obj, "Result section");
 	
-	xml_next = find_attr_details(
-		xml_obj, node_uuid, set_name, attr_id, attr_name);
+	rc = find_attr_details(
+	    xml_obj, node_uuid, set_name, attr_id, attr_name, &xml_next, to_console);
+	free_xml(fragment);
 
+	if(rc == cib_missing_data) {
+	    return rc;
+	}
+	
 	if(xml_next != NULL) {
 		*attr_value = crm_element_value_copy(
 			xml_next, XML_NVPAIR_ATTR_VALUE);
 	}
-	free_xml(fragment);
 
 	return xml_next == NULL?cib_NOTEXISTS:cib_ok;
 }
@@ -390,7 +424,7 @@ read_attr(cib_t *the_cib,
 enum cib_errors 
 delete_attr(cib_t *the_cib, int options, 
 	    const char *section, const char *node_uuid, const char *set_name,
-	    const char *attr_id, const char *attr_name, const char *attr_value)
+	    const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console)
 {
 	enum cib_errors rc = cib_ok;
 	crm_data_t *xml_obj = NULL;
@@ -415,15 +449,19 @@ delete_attr(cib_t *the_cib, int options,
 					  cib_sync_call|cib_scope_local);
 
 		if(rc != cib_ok) {
-			crm_err("Query failed for section=%s of the CIB: %s",
+			attr_msg(LOG_ERR, "Query failed for section=%s of the CIB: %s",
 				section, cib_error2string(rc));
 			return rc;
 		}
 		
-		xml_obj = find_attr_details(
-			xml_search, node_uuid, set_name, attr_id, attr_name);
+		rc = find_attr_details(
+		    xml_search, node_uuid, set_name, attr_id, attr_name, &xml_obj, to_console);
 		free_xml(xml_search);
 
+		if(rc == cib_missing_data) {
+		    return rc;
+		}
+		
 		if(xml_obj != NULL) {
 			if(attr_value != NULL) {
 				const char *current = crm_element_value(xml_obj, XML_NVPAIR_ATTR_VALUE);
@@ -592,7 +630,7 @@ query_standby(cib_t *the_cib, const char *uuid,
 		const char *type = *scope;
 		standby_common;
 		rc = read_attr(the_cib, type, uuid, set_name,
-			       attr_id, attr_name, standby_value);
+			       attr_id, attr_name, standby_value, TRUE);
 		crm_free(attr_id);
 		crm_free(set_name);
 
@@ -622,7 +660,7 @@ set_standby(cib_t *the_cib, const char *uuid, const char *scope,
 		const char *type = scope;
 		standby_common;
 		rc = update_attr(the_cib, cib_sync_call, type, uuid, set_name,
-				 attr_id, attr_name, standby_value);
+				 attr_id, attr_name, standby_value, TRUE);
 		crm_free(attr_id);
 		crm_free(set_name);
 
@@ -642,7 +680,7 @@ delete_standby(cib_t *the_cib, const char *uuid, const char *scope,
 		const char *type = scope;
 		standby_common;
 		rc = delete_attr(the_cib, cib_sync_call, type, uuid, set_name,
-				 attr_id, attr_name, standby_value);
+				 attr_id, attr_name, standby_value, TRUE);
 		crm_free(attr_id);
 		crm_free(set_name);
 
