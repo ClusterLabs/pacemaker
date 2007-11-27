@@ -26,7 +26,6 @@
 #define CIB_FEATURE_SET "2.0"
 #define USE_PESKY_FRAGMENTS 1
 
-#define CIB_OPTIONS_FIRST "cib-bootstrap-options"
 /* use compare_version() for doing comparisons */
 
 enum cib_variant {

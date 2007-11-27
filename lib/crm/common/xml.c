@@ -654,7 +654,7 @@ write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress)
 #if HAVE_BZLIB_H
 	    int rc = BZ_OK;
 	    BZFILE *bz_file = NULL;
-	    bz_file = BZ2_bzWriteOpen(&rc, file_output_strm, 5,0,0);
+	    bz_file = BZ2_bzWriteOpen(&rc, file_output_strm, 5, 0, 30);
 	    if(rc != BZ_OK) {
 		crm_err("bzWriteOpen failed: %d", rc);
 	    } else {
@@ -792,8 +792,24 @@ add_message_xml(HA_Message *msg, const char *field, const crm_data_t *xml)
 {
 	crm_validate_data(xml);
 	crm_validate_data(msg);
+
 	CRM_CHECK(field != NULL, return FALSE);
+
+#ifdef WITH_NATIVE_AIS
+	{
+	    crm_data_t *holder = NULL;
+	    holder = ha_msg_new(3);
+	    CRM_ASSERT(holder != NULL);
+	    
+	    crm_xml_add(holder, F_XML_TAGNAME, field);
+	    add_node_copy(holder, xml);
+	    
+	    ha_msg_addstruct_compress(msg, field, holder);
+	    free_xml(holder);
+	}
+#else
 	ha_msg_addstruct_compress(msg, field, xml);
+#endif
 	return TRUE;
 }
 

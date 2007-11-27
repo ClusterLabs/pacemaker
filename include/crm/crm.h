@@ -78,6 +78,8 @@ extern gboolean crm_assert_failed;
 	failure_action;							\
     }
 
+extern const char *crm_system_name;
+
 /* Clean these up at some point, some probably should be runtime options */
 #define WORKING_DIR	HA_VARLIBDIR"/heartbeat/crm"
 #define CRM_SOCK_DIR	HA_VARRUNDIR"/heartbeat/crm"

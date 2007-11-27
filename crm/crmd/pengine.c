@@ -42,6 +42,7 @@
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/cluster.h>
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 
@@ -126,8 +127,6 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 		      crm_data_t *output, void *user_data)
 {
 	HA_Message *cmd = NULL;
-	int ccm_transition_id = -1;
-	gboolean cib_has_quorum = FALSE;
 	crm_data_t *local_cib = NULL;
 	
 #if CRM_DEPRECATED_SINCE_2_0_4
@@ -154,49 +153,33 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 			  fsa_state2string(fsa_state));
 		return;
 
-	} else if(fsa_state != S_POLICY_ENGINE) {
-		crm_err("Invoking PE in state: %s",fsa_state2string(fsa_state));
-	}
-	
+	} else if(last_peer_update != 0) {
+	    crm_debug("Re-asking for the CIB: peer update %d still pending",
+		      last_peer_update);
+	    
+	    mssleep(500);
+	    register_fsa_action(A_PE_INVOKE);
+	    return;
 
-	crm_debug_2("Invoking %s with %p", CRM_SYSTEM_PENGINE, local_cib);
+	} else if(fsa_state != S_POLICY_ENGINE) {
+	    crm_err("Invoking PE in state: %s", fsa_state2string(fsa_state));
+	}
 
 	CRM_DEV_ASSERT(local_cib != NULL);
 	CRM_DEV_ASSERT(crm_element_value(local_cib, XML_ATTR_DC_UUID) != NULL);
 
-	cib_has_quorum = crm_is_true(
-		crm_element_value(local_cib, XML_ATTR_HAVE_QUORUM));
-
-	ccm_transition_id = crm_parse_int(
-		crm_element_value(local_cib, XML_ATTR_CCM_TRANSITION), "-1");
-
-	if(ccm_transition_id < (int)fsa_membership_copy->id) {
-		/* the cib is behind */
-		crm_debug("Re-asking for the CIB until membership/quorum"
-			  " matches: CIB=%d < CRM=%d",
-			  ccm_transition_id, fsa_membership_copy->id);
-		
-		mssleep(500);
-		register_fsa_action(A_PE_INVOKE);
-		return;
-
-	} else if(ccm_transition_id > (int)fsa_membership_copy->id) {
-		/* we are behind */
-		crm_info("Waiting for another CCM event before proceeding:"
-			 " CIB=%d > CRM=%d",
-			 ccm_transition_id, fsa_membership_copy->id);
-		return;
-	}
+	crm_xml_add_int(local_cib, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
+	crm_xml_add_int(local_cib, XML_ATTR_CCM_TRANSITION, crm_peer_seq);
 	
 	if(fsa_pe_ref) {
 		crm_free(fsa_pe_ref);
 		fsa_pe_ref = NULL;
 	}
 
-	cmd = create_request(
-		CRM_OP_PECALC, local_cib, NULL,
-		CRM_SYSTEM_PENGINE, CRM_SYSTEM_DC, NULL);
+	cmd = create_request(CRM_OP_PECALC, local_cib, NULL,
+			     CRM_SYSTEM_PENGINE, CRM_SYSTEM_DC, NULL);
 
 	send_request(cmd, &fsa_pe_ref);
-	crm_debug("Invoking the PE: %s", fsa_pe_ref);
+	crm_debug("Invoking the PE: ref=%s, seq=%llu, quorate=%d",
+		  fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
 }

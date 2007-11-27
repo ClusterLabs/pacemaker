@@ -37,8 +37,6 @@
 #include <crmd_utils.h>
 
 
-void copy_ccm_node(oc_node_t a_node, oc_node_t *a_node_copy);
-
 /*	A_DC_TIMER_STOP, A_DC_TIMER_START,
  *	A_FINALIZE_TIMER_STOP, A_FINALIZE_TIMER_START
  *	A_INTEGRATE_TIMER_STOP, A_INTEGRATE_TIMER_START
@@ -222,9 +220,6 @@ fsa_input2string(enum crmd_fsa_input input)
 	switch(input){
 		case I_NULL:
 			inputAsText = "I_NULL";
-			break;
-		case I_CCM_EVENT:
-			inputAsText = "I_CCM_EVENT";
 			break;
 		case I_CIB_OP:
 			inputAsText = "I_CIB_OP";
@@ -592,12 +587,6 @@ fsa_action2string(long long action)
 			break;
 		case A_CCM_DISCONNECT:
 			actionAsText = "A_CCM_DISCONNECT";
-			break;
-		case A_CCM_EVENT:
-			actionAsText = "A_CCM_EVENT";
-			break;
-		case A_CCM_UPDATE_CACHE:
-			actionAsText = "A_CCM_UPDATE_CACHE";
 			break;
 		case A_CIB_BUMPGEN:
 			actionAsText = "A_CIB_BUMPGEN";
@@ -971,16 +960,6 @@ fsa_dump_actions(long long action, const char *text)
 			   "Action %.16llx (A_CCM_DISCONNECT) %s",
 			  A_CCM_DISCONNECT, text);
 	}
-	if(is_set(action, A_CCM_EVENT)) {
-		do_crm_log(log_level, 
-			   "Action %.16llx (A_CCM_EVENT) %s",
-			  A_CCM_EVENT, text);
-	}
-	if(is_set(action, A_CCM_UPDATE_CACHE)) {
-		do_crm_log(log_level, 
-			   "Action %.16llx (A_CCM_UPDATE_CACHE) %s",
-			  A_CCM_UPDATE_CACHE, text);
-	}
 	if(is_set(action, A_CIB_BUMPGEN)) {
 		do_crm_log(log_level, 
 			   "Action %.16llx (A_CIB_BUMPGEN) %s",
@@ -1082,207 +1061,6 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	
 }
 
-struct crmd_ccm_data_s *
-copy_ccm_data(const struct crmd_ccm_data_s *ccm_input) 
-{
-	const oc_ev_membership_t *oc_in =
-		(const oc_ev_membership_t *)ccm_input->oc;
-	struct crmd_ccm_data_s *ccm_input_copy = NULL;
-
-	crm_malloc0(ccm_input_copy, sizeof(struct crmd_ccm_data_s));
-
-	ccm_input_copy->oc = copy_ccm_oc_data(oc_in);
-	ccm_input_copy->event = ccm_input->event;
-	
-	return ccm_input_copy;
-}
-
-void
-delete_ccm_data(struct crmd_ccm_data_s *ccm_input) 
-{
-	int lpc, offset = 0;
-	oc_node_t *a_node = NULL;
-	oc_ev_membership_t *oc_in = NULL;
-	if(ccm_input == NULL) {
-		return;
-	}
-	
-	oc_in = ccm_input->oc;
-	if(oc_in == NULL) {
-		goto bail;
-	}
-	
-	offset = oc_in->m_memb_idx;
-	for(lpc = 0; lpc < oc_in->m_n_member; lpc++) {
-		a_node = &oc_in->m_array[lpc+offset];
-		crm_free(a_node->node_uname);
-		a_node->node_uname = NULL;
-	}
-
-	offset = oc_in->m_in_idx;
-	for(lpc = 0; lpc < oc_in->m_n_in; lpc++) {
-		a_node = &oc_in->m_array[lpc+offset];
-		crm_free(a_node->node_uname);
-		a_node->node_uname = NULL;
-	}
-
-	offset = oc_in->m_out_idx;
-	for(lpc = 0; lpc < oc_in->m_n_out; lpc++) {
-		a_node = &oc_in->m_array[lpc+offset];
-		crm_free(a_node->node_uname);
-		a_node->node_uname = NULL;
-	}
-
-  bail:
- 	crm_free(ccm_input->oc);
- 	crm_free(ccm_input);
-}
-
-oc_ev_membership_t *
-copy_ccm_oc_data(const oc_ev_membership_t *oc_in) 
-{
-	unsigned lpc = 0;
-	int size = 0;
-	int offset = 0;
-	unsigned num_nodes = 0;
-	oc_ev_membership_t *oc_copy = NULL;
-
-	if(oc_in->m_n_member > 0
-	   && num_nodes < oc_in->m_n_member + oc_in->m_memb_idx) {
-		num_nodes = oc_in->m_n_member + oc_in->m_memb_idx;
-		crm_debug_3("Updated ccm nodes to %d - 1", num_nodes);
-	}
-	if(oc_in->m_n_in > 0
-	   && num_nodes < oc_in->m_n_in + oc_in->m_in_idx) {
-		num_nodes = oc_in->m_n_in + oc_in->m_in_idx;
-		crm_debug_3("Updated ccm nodes to %d - 2", num_nodes);
-	}
-	if(oc_in->m_n_out > 0
-	   && num_nodes < oc_in->m_n_out + oc_in->m_out_idx) {
-		num_nodes = oc_in->m_n_out + oc_in->m_out_idx;
-		crm_debug_3("Updated ccm nodes to %d - 3", num_nodes);
-	}
-
-	/* why 2*??
-	 * ccm code does it like this so i guess its right...
-	 */
-	size = sizeof(oc_ev_membership_t)
-		+ sizeof(int)
-		+ 2*num_nodes*sizeof(oc_node_t);
-
-	crm_debug_3("Copying %d ccm nodes", num_nodes);
-	
-	crm_malloc0(oc_copy, size);
-
-	oc_copy->m_instance = oc_in->m_instance;
-	oc_copy->m_n_member = oc_in->m_n_member;
-	oc_copy->m_memb_idx = oc_in->m_memb_idx;
-	oc_copy->m_n_out    = oc_in->m_n_out;
-	oc_copy->m_out_idx  = oc_in->m_out_idx;
-	oc_copy->m_n_in     = oc_in->m_n_in;
-	oc_copy->m_in_idx   = oc_in->m_in_idx;
-
-	crm_debug_3("instance=%d, nodes=%d (idx=%d), new=%d (idx=%d), lost=%d (idx=%d)",
-		  oc_in->m_instance,
-		  oc_in->m_n_member,
-		  oc_in->m_memb_idx,
-		  oc_in->m_n_in,
-		  oc_in->m_in_idx,
-		  oc_in->m_n_out,
-		  oc_in->m_out_idx);
-
-	offset = oc_in->m_memb_idx;
-	for(lpc = 0; lpc < oc_in->m_n_member; lpc++) {
-		oc_node_t a_node      = oc_in->m_array[lpc+offset];
-		oc_node_t *a_node_copy = &(oc_copy->m_array[lpc+offset]);
-		crm_debug_3("Copying ccm member node %d", lpc);
-		copy_ccm_node(a_node, a_node_copy);		
-	}
-
-	offset = oc_in->m_in_idx;
-	for(lpc = 0; lpc < oc_in->m_n_in; lpc++) {
-		oc_node_t a_node      = oc_in->m_array[lpc+offset];
-		oc_node_t *a_node_copy = &(oc_copy->m_array[lpc+offset]);
-		crm_debug_3("Copying ccm new node %d", lpc);
-		copy_ccm_node(a_node, a_node_copy);
-	}
-
-	offset = oc_in->m_out_idx;
-	for(lpc = 0; lpc < oc_in->m_n_out; lpc++) {
-		oc_node_t a_node      = oc_in->m_array[lpc+offset];
-		oc_node_t *a_node_copy = &(oc_copy->m_array[lpc+offset]);
-		crm_debug_3("Copying ccm lost node %d", lpc);
-		copy_ccm_node(a_node, a_node_copy);
-	}
-	
-	return oc_copy;
-}
-
-
-void
-copy_ccm_node(oc_node_t a_node, oc_node_t *a_node_copy)
-{
-	crm_debug_3("Copying ccm node: id=%d, born=%d, uname=%s",
-		  a_node.node_id, a_node.node_born_on,
-		  a_node.node_uname);
-	
-	if(a_node_copy->node_uname != NULL) {
-		crm_debug_2("%p (%s) already copied", a_node_copy, a_node_copy->node_uname);
-		return;
-	}
-
-	a_node_copy->node_id      = a_node.node_id;
-	a_node_copy->node_born_on = a_node.node_born_on;
-	a_node_copy->node_uname   = NULL;
-	
-	if(a_node.node_uname != NULL) {
-		a_node_copy->node_uname = crm_strdup(a_node.node_uname);
-	} else {
-		crm_err("Node Id %d had a NULL uname!", a_node.node_id);
-	}
-	crm_debug_3("Copied ccm node: id=%d, born=%d, uname=%s",
-		  a_node_copy->node_id, a_node_copy->node_born_on,
-		  a_node_copy->node_uname);
-}
-
-static gboolean
-ghash_node_clfree(gpointer key, gpointer value, gpointer user_data)
-{
-	/* value->node_uname is free'd as "key" */
-	if(key != NULL) {
-		crm_free(key);
-	}
-	if(value != NULL) {
-		crm_free(value);
-	}
-	return TRUE;
-}
-
-void
-free_ccm_cache(oc_node_list_t *tmp) 
-{
-	/* Free the old copy */
-	if(tmp == NULL) {
-		return;
-	}
-	
-	if(tmp->members != NULL) {
-		g_hash_table_foreach_remove(
-			tmp->members, ghash_node_clfree, NULL);
-	}
-	if(tmp->new_members != NULL) {
-		g_hash_table_foreach_remove(
-			tmp->new_members, ghash_node_clfree, NULL);
-	}
-	if(tmp->dead_members != NULL) {
-		g_hash_table_foreach_remove(
-			tmp->dead_members, ghash_node_clfree, NULL);
-	}
-	
-	crm_free(tmp);
-	crm_debug_3("Free'd old copies");
-}
-
 crm_data_t*
 create_node_state(
 	const char *uname, const char *ha_state, const char *ccm_state,
@@ -1294,7 +1072,7 @@ create_node_state(
 	crm_debug_2("%s Creating node state entry for %s", src, uname);
 	set_uuid(fsa_cluster_conn, node_state, XML_ATTR_UUID, uname);
 
-	if(ID(node_state) == NULL) {
+	if(crm_element_value(node_state, XML_ATTR_UUID) == NULL) {
 		crm_debug("Node %s is not a cluster member", uname);
 		free_xml(node_state);
 		return NULL;

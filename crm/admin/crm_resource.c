@@ -57,7 +57,6 @@ const char *attr_set_type = XML_TAG_ATTR_SETS;
 char *host_id = NULL;
 const char *rsc_id = NULL;
 const char *host_uname = NULL;
-const char *crm_system_name = NULL;
 const char *prop_name = NULL;
 const char *prop_value = NULL;
 const char *rsc_type = NULL;
@@ -830,13 +829,10 @@ main(int argc, char **argv)
 	};
 #endif
 
-	crm_system_name = basename(argv[0]);
-	
+	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, argc, argv);
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);
 	}
-	
-	crm_log_init(crm_system_name, LOG_WARNING, FALSE, FALSE, argc, argv);
 
 	while (1) {
 #ifdef HAVE_GETOPT_H

@@ -32,8 +32,6 @@
 
 #define OPTARGS      "hVn:v:d:s:S:"
 
-const char* crm_system_name = "attrd_updater";
-
 const char *attr_name = NULL;
 const char *attr_value = NULL;
 const char *attr_set = NULL;
@@ -59,7 +57,7 @@ main(int argc, char ** argv)
 	int argerr = 0;
 	int flag;
 	
-	crm_log_init(crm_system_name, LOG_ERR, FALSE, FALSE, argc, argv);
+	crm_log_init("attrd_updater", LOG_ERR, FALSE, FALSE, argc, argv);
 	crm_debug_3("Begining option processing");
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {

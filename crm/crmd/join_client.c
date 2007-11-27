@@ -256,8 +256,9 @@ do_cl_join_finalize_respond(long long action,
 			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 		ha_msg_add_int(reply, F_CRM_JOIN_ID, join_id);
 		
-		crm_debug("join-%d: Join complete.  Sending local LRM status.",
-			join_id);
+		crm_debug("join-%d: Join complete."
+			  "  Sending local LRM status to %s",
+			  join_id, fsa_our_dc);
 		send_msg_via_ha(fsa_cluster_conn, reply);
 		if(AM_I_DC == FALSE) {
  			register_fsa_input_adv(cause, I_NOT_DC, NULL,

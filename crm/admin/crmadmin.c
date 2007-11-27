@@ -102,7 +102,6 @@ char *crm_option = NULL;
 
 int operation_status = 0;
 const char *sys_to = NULL;
-const char *crm_system_name = NULL;
 
 #define OPTARGS	"V?K:S:HE:Dd:i:RNqt:Bv"
 
@@ -143,13 +142,10 @@ main(int argc, char **argv)
 	};
 #endif
 
-	crm_system_name = basename(argv[0]);
-
+	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, TRUE, argc, argv);
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);
 	}
-
-	crm_log_init(crm_system_name, LOG_ERR, FALSE, TRUE, argc, argv);
 	
 	while (1) {
 #ifdef HAVE_GETOPT_H

@@ -111,14 +111,11 @@ revision_check_callback(const HA_Message *msg, int call_id, int rc,
 	}
 }
 
-extern void populate_cib_nodes(
-	ll_cluster_t *hb_cluster, gboolean with_client_status);
-
 static void
 do_cib_replaced(const char *event, HA_Message *msg)
 {
 	crm_debug("Updating the CIB after a replace");
- 	populate_cib_nodes(fsa_cluster_conn, FALSE);
+ 	populate_cib_nodes(FALSE);
 	do_update_cib_nodes(AM_I_DC, __FUNCTION__);
 	if(AM_I_DC) {
 		/* start the join process again so we get everyone's LRM status */

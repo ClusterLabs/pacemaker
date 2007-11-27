@@ -52,7 +52,6 @@
 #include <ha_version.h>
 
 
-const char* crm_system_name = SYS_NAME;
 #define OPTARGS	"hV"
 
 void usage(const char* cmd, int exit_status);
@@ -68,7 +67,7 @@ main(int argc, char ** argv)
     int flag;
     int	argerr = 0;
 
-    crm_log_init(crm_system_name, LOG_INFO, TRUE, FALSE, 0, NULL);
+    crm_log_init(CRM_SYSTEM_CRMD, LOG_INFO, TRUE, FALSE, 0, NULL);
 
     crm_info("CRM Hg Version: %s\n", HA_HG_VERSION);
     

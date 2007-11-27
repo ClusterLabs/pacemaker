@@ -362,6 +362,10 @@ class StopTest(CTSTest):
         failreason=None
         UnmatchedList = "||"
         if watch.unmatched:
+            (rc, output) = self.CM.rsh.remote_py(node, "os", "system", "/bin/ps axf")
+            for line in output:
+                self.CM.debug(line)
+                
             for regex in watch.unmatched:
                 self.CM.log ("ERROR: Shutdown pattern not found: %s" % (regex))
                 UnmatchedList +=  regex + "||";
@@ -371,7 +375,8 @@ class StopTest(CTSTest):
 
         if not watch.unmatched or self.CM.upcount() == 0:
             return self.success()
-        elif len(watch.unmatched) >= self.CM.upcount():
+
+        if len(watch.unmatched) >= self.CM.upcount():
             return self.failure("no match against (%s)" % UnmatchedList)
 
         if failreason == None:

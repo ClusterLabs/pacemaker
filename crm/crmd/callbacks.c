@@ -29,6 +29,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
+#include <crm/common/cluster.h>
 #include <crm/cib.h>
 
 #include <crmd.h>
@@ -36,10 +37,9 @@
 #include <crmd_callbacks.h>
 
 
-GHashTable *crmd_peer_state = NULL;
-
 crm_data_t *find_xml_in_hamessage(const HA_Message * msg);
 void crmd_ha_connection_destroy(gpointer user_data);
+void crmd_ha_msg_filter(HA_Message *msg);
 
 /* From join_dc... */
 extern gboolean check_join_state(
@@ -104,24 +104,60 @@ crmd_ha_connection_destroy(gpointer user_data)
 }
 
 void
+crmd_ha_msg_filter(HA_Message *msg)
+{
+    ha_msg_input_t *new_input = NULL;
+    const char *from = ha_msg_value(msg, F_ORIG);
+    const char *seq  = ha_msg_value(msg, F_SEQ);
+    const char *op   = ha_msg_value(msg, F_CRM_TASK);
+    
+    const char *sys_to   = ha_msg_value(msg, F_CRM_SYS_TO);
+    const char *sys_from = ha_msg_value(msg, F_CRM_SYS_FROM);
+    
+    if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
+	crm_debug_2("Ignoring message for the DC [F_SEQ=%s]", seq);
+	return;
+	
+    } else if(safe_str_eq(sys_from, CRM_SYSTEM_DC)) {
+	if(AM_I_DC && safe_str_neq(from, fsa_our_uname)) {
+	    crm_err("Another DC detected: %s (op=%s)", from, op);
+	    /* make sure the election happens NOW */
+	    if(fsa_state != S_ELECTION) {
+		new_input = new_ha_msg_input(msg);
+		register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION, NULL,
+				       new_input, __FUNCTION__);
+	    }
+	    
+	} else {
+	    crm_debug_2("Processing DC message from %s [F_SEQ=%s]", from, seq);
+	}
+    }
+    
+    if(new_input == NULL) {
+	crm_log_message_adv(LOG_MSG, "HA[inbound]", msg);
+	new_input = new_ha_msg_input(msg);
+	route_message(C_HA_MESSAGE, new_input);
+    }
+    
+    delete_ha_msg_input(new_input);
+    trigger_fsa(fsa_source);
+}
+
+void
 crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 {
 	int level = LOG_DEBUG;
-	ha_msg_input_t *new_input = NULL;
 	oc_node_t *from_node = NULL;
 	
 	const char *from = ha_msg_value(msg, F_ORIG);
-	const char *seq  = ha_msg_value(msg, F_SEQ);
 	const char *op   = ha_msg_value(msg, F_CRM_TASK);
-
-	const char *sys_to   = ha_msg_value(msg, F_CRM_SYS_TO);
 	const char *sys_from = ha_msg_value(msg, F_CRM_SYS_FROM);
 
 	CRM_DEV_ASSERT(from != NULL);
 
 	crm_debug_2("HA[inbound]: %s from %s", op, from);
 
-	if(fsa_membership_copy == NULL) {
+	if(crm_peer_cache == NULL) {
 		crm_debug("Ignoring HA messages until we are"
 			  " connected to the CCM (%s op from %s)", op, from);
 		crm_log_message_adv(
@@ -129,7 +165,7 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 		return;
 	}
 	
-	from_node = g_hash_table_lookup(fsa_membership_copy->members, from);
+	from_node = g_hash_table_lookup(crm_peer_cache, from);
 
 	if(from_node == NULL) {
 		if(safe_str_eq(op, CRM_OP_VOTE)) {
@@ -144,50 +180,13 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 		do_crm_log(level, 
 			   "Ignoring HA message (op=%s) from %s: not in our"
 			   " membership list (size=%d)", op, from,
-			   g_hash_table_size(fsa_membership_copy->members));
+			   crm_active_members());
 		
 		crm_log_message_adv(LOG_MSG, "HA[inbound]: CCM Discard", msg);
 
-	} else if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
-		crm_debug_2("Ignoring message for the DC [F_SEQ=%s]", seq);
-		return;
-
-	} else if(safe_str_eq(sys_from, CRM_SYSTEM_DC)) {
-		if(AM_I_DC && safe_str_neq(from, fsa_our_uname)) {
-			crm_err("Another DC detected: %s (op=%s)", from, op);
-			/* make sure the election happens NOW */
-			level = LOG_WARNING;
-			if(fsa_state != S_ELECTION) {
-				new_input = new_ha_msg_input(msg);
-				register_fsa_error_adv(
-					C_FSA_INTERNAL, I_ELECTION, NULL,
-					new_input, __FUNCTION__);
-			}
-			
-#if 0
-		/* still thinking about this one...
-		 * could create a timing issue if we dont notice the
-		 * election before a new DC is elected.
-		 */
-		} else if(fsa_our_dc != NULL && safe_str_neq(from,fsa_our_dc)){
-			crm_warn("Ignoring message from wrong DC: %s vs. %s ",
-				 from, fsa_our_dc);
-			return;
-#endif
-		} else {
-			crm_debug_2("Processing DC message from %s [F_SEQ=%s]",
-				    from, seq);
-		}
+	} else {
+	    crmd_ha_msg_filter(msg);
 	}
-
-	if(new_input == NULL) {
-		crm_log_message_adv(LOG_MSG, "HA[inbound]", msg);
-		new_input = new_ha_msg_input(msg);
-		route_message(C_HA_MESSAGE, new_input);
-	}
-
-	delete_ha_msg_input(new_input);
-	trigger_fsa(fsa_source);
 
 	return;
 }
@@ -291,19 +290,20 @@ lrm_op_callback(lrm_op_t* op)
 }
 
 void
-crmd_ha_status_callback(
-	const char *node, const char * status,	void* private_data)
+crmd_ha_status_callback(const char *node, const char *status, void *private)
 {
 	crm_data_t *update = NULL;
 	crm_notice("Status update: Node %s now has status [%s]",node,status);
 
 	if(safe_str_eq(status, DEADSTATUS)) {
 		/* this node is taost */
+		crm_update_peer_proc(node, crm_proc_ais, OFFLINESTATUS);
 		update = create_node_state(
 			node, status, XML_BOOLEAN_NO, OFFLINESTATUS,
 			CRMD_STATE_INACTIVE, NULL, TRUE, __FUNCTION__);
 		
 	} else if(safe_str_eq(status, ACTIVESTATUS)) {
+		crm_update_peer_proc(node, crm_proc_ais, ONLINESTATUS);
 		update = create_node_state(
 			node, status, NULL, NULL, NULL, NULL,
 			FALSE, __FUNCTION__);
@@ -344,22 +344,22 @@ crmd_client_status_callback(const char * node, const char * client,
 	}
 	
 	set_bit_inplace(fsa_input_register, R_PEER_DATA);
-	g_hash_table_replace(
-		crmd_peer_state, crm_strdup(node), crm_strdup(status));
+
+	crm_notice("Status update: Client %s/%s now has status [%s]",
+		   node, client, status);
+
+	crm_update_peer_proc(node, crm_proc_crmd, status);
+
+	if(safe_str_eq(status, ONLINESTATUS)) {
+	    /* remove the cached value in case it changed */
+	    crm_debug_2("Uncaching UUID for %s", node);
+	    unget_uuid(node);
+	}
 
 	if(is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
 		return;
 	} else if(fsa_state == S_STOPPING) {
 		return;
-	}
-
-	crm_notice("Status update: Client %s/%s now has status [%s]",
-		   node, client, status);
-
-	if(safe_str_eq(status, ONLINESTATUS)) {
-		/* remove the cached value in case it changed */
-		crm_debug_2("Uncaching UUID for %s", node);
-		unget_uuid(node);
 	}
 	
 	if(safe_str_eq(node, fsa_our_dc) && safe_str_eq(status, OFFLINESTATUS)){
@@ -497,27 +497,23 @@ void
 crmd_ccm_msg_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data)
 {
-	int instance = -1;
 	gboolean update_cache = FALSE;
-	struct crmd_ccm_data_s *event_data = NULL;
 	const oc_ev_membership_t *membership = data;
 
 	gboolean update_quorum = FALSE;
 	gboolean trigger_transition = FALSE;
 
 	crm_debug_3("Invoked");
-
 	CRM_ASSERT(data != NULL);
-	instance = membership->m_instance;
 	
 	crm_info("Quorum %s after event=%s (id=%d)", 
 		 ccm_have_quorum(event)?"(re)attained":"lost",
 		 ccm_event_name(event), membership->m_instance);
 
-	if(current_ccm_membership_id > membership->m_instance) {
-		crm_err("Membership instance ID went backwards! %d->%d",
-			current_ccm_membership_id, instance);
-		CRM_ASSERT(current_ccm_membership_id <= membership->m_instance);
+	if(crm_peer_seq > membership->m_instance) {
+		crm_err("Membership instance ID went backwards! %llu->%d",
+			crm_peer_seq, membership->m_instance);
+		CRM_ASSERT(crm_peer_seq <= membership->m_instance);
 		return;
 	}
 	
@@ -536,20 +532,12 @@ crmd_ccm_msg_callback(
 			update_quorum = TRUE;
 			break;
 		case OC_EV_MS_NOT_PRIMARY:
-#if UNTESTED
-			if(AM_I_DC == FALSE) {
-				break;
-			}
-			/* tell the TE to pretend it had completed and stop */
-			/* side effect: we'll end up in S_IDLE */
-			register_fsa_action(A_TE_HALT, TRUE);
-#endif
 			break;
 		case OC_EV_MS_PRIMARY_RESTORED:
 			update_cache = TRUE;
-			current_ccm_membership_id = instance;
+			crm_peer_seq = membership->m_instance;
 			if(AM_I_DC && need_transition(fsa_state)) {
-				trigger_transition = TRUE;
+			    trigger_transition = TRUE;
 			}
 			break;
 		case OC_EV_MS_EVICTED:
@@ -562,60 +550,29 @@ crmd_ccm_msg_callback(
 			crm_err("Unknown CCM event: %d", event);
 	}
 
-	if(update_quorum && ccm_have_quorum(event) == FALSE) {
+	if(update_quorum) {
+	    crm_have_quorum = ccm_have_quorum(event);
+	    crm_update_quorum(crm_have_quorum);
+
+	    if(crm_have_quorum == FALSE) {
 		/* did we just loose quorum? */
 		if(fsa_have_quorum && need_transition(fsa_state)) {
-			crm_info("Quorum lost: triggering transition (%s)",
-				 ccm_event_name(event));
-			trigger_transition = TRUE;
+		    crm_info("Quorum lost: triggering transition (%s)",
+			     ccm_event_name(event));
+		    trigger_transition = TRUE;
 		}
-		fsa_have_quorum = FALSE;
-			
-	} else if(update_quorum)  {
-		crm_debug_2("Updating quorum after event %s",
-			    ccm_event_name(event));
-		fsa_have_quorum = TRUE;
+	    }
 	}
-
-	if(trigger_transition) {
-		crm_debug_2("Scheduling transition after event %s",
-			    ccm_event_name(event));
-		/* make sure that when we query the CIB that it has
-		 * the changes that triggered the transition
-		 */
-		switch(event) {
-			case OC_EV_MS_NEW_MEMBERSHIP:
-			case OC_EV_MS_INVALID:
-			case OC_EV_MS_PRIMARY_RESTORED:
-				current_ccm_membership_id = instance;
-				break;
-			default:
-				break;
-		}
-		if(update_cache == FALSE) {
-			/* a stand-alone transition */
-			register_fsa_action(A_TE_CANCEL);
-		}
-	}
-	if(update_cache) {
-		crm_debug_2("Updating cache after event %s",
-			    ccm_event_name(event));
-
-		crm_malloc0(event_data, sizeof(struct crmd_ccm_data_s));
-		if(event_data == NULL) { return; }
-		
-		event_data->event = event;
-		if(data != NULL) {
-			event_data->oc = copy_ccm_oc_data(data);
-		}
-		register_fsa_input_adv(
-			C_CCM_CALLBACK, I_CCM_EVENT, event_data,
-			trigger_transition?A_TE_CANCEL:A_NOTHING,
-			TRUE, __FUNCTION__);
-
-		delete_ccm_data(event_data);
-	} 
 	
+	if(update_cache) {
+	    crm_debug_2("Updating cache after event %s", ccm_event_name(event));
+	    do_ccm_update_cache(C_CCM_CALLBACK, fsa_state, event, data, NULL);
+
+	} else if(event != OC_EV_MS_NOT_PRIMARY) {
+	    crm_peer_seq = membership->m_instance;
+	    register_fsa_action(A_TE_CANCEL);
+	}
+
 	oc_ev_callback_done(cookie);
 	return;
 }

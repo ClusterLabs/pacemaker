@@ -23,6 +23,7 @@
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/cluster.h>
 
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
@@ -45,7 +46,7 @@ gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 void finalize_join(const char *caller);
 
 static int current_join_id = 0;
-int saved_ccm_membership_id = 0;
+unsigned long long saved_ccm_membership_id = 0;
 
 static void
 update_attrd(void) 
@@ -139,28 +140,28 @@ static void
 join_make_offer(gpointer key, gpointer value, gpointer user_data)
 {
 	const char *join_to = NULL;
-	const char *crm_online = NULL;
-	const oc_node_t *member = (const oc_node_t*)value;
+	const crm_node_t *member = value;
 
-	if(member != NULL) {
-		join_to = member->node_uname;
+	CRM_ASSERT(member != NULL);
+	if(crm_is_member_active(member) == FALSE) {
+	    return;
 	}
 
+	join_to = member->uname;
 	if(join_to == NULL) {
 		crm_err("No recipient for welcome message");
 		return;
 	}
 
 	erase_node_from_join(join_to);
-	crm_online = g_hash_table_lookup(crmd_peer_state, join_to);
 
-	if(saved_ccm_membership_id != fsa_membership_copy->id) {
-		saved_ccm_membership_id = fsa_membership_copy->id;
-		crm_info("Making join offers based on membership %d",
-			 fsa_membership_copy->id);
+	if(saved_ccm_membership_id != crm_peer_seq) {
+		saved_ccm_membership_id = crm_peer_seq;
+		crm_info("Making join offers based on membership %llu",
+			 crm_peer_seq);
 	}	
 	
-	if(safe_str_eq(crm_online, ONLINESTATUS)) {
+	if(member->processes & crm_proc_crmd) {
 		HA_Message *offer = create_request(
 			CRM_OP_JOIN_OFFER, NULL, join_to,
 			CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);
@@ -199,9 +200,7 @@ do_dc_join_offer_all(long long action,
 /* 	do_update_cib_nodes(TRUE, __FUNCTION__); */
 
 	update_dc(NULL, FALSE);	
-	
-	g_hash_table_foreach(
-		fsa_membership_copy->members, join_make_offer, NULL);
+	g_hash_table_foreach(crm_peer_cache, join_make_offer, NULL);
 	
 	/* dont waste time by invoking the PE yet; */
 	crm_info("join-%d: Waiting on %d outstanding join acks",
@@ -282,8 +281,8 @@ do_dc_join_filter_offer(long long action,
 	const char *join_from = cl_get_string(join_ack->msg,F_CRM_HOST_FROM);
 	const char *ref       = cl_get_string(join_ack->msg,XML_ATTR_REFERENCE);
 	
-	gpointer join_node =
-		g_hash_table_lookup(fsa_membership_copy->members, join_from);
+	gpointer join_node = g_hash_table_lookup(
+	    crm_peer_cache, join_from);
 
 	crm_debug("Processing req from %s", join_from);
 	
@@ -502,7 +501,7 @@ do_dc_join_ack(long long action,
 	const char *join_from  = cl_get_string(join_ack->msg, F_CRM_HOST_FROM);
 
 	if(safe_str_neq(op, CRM_OP_JOIN_CONFIRM)) {
-		crm_debug("Ignoring op=%s message", op);
+		crm_debug("Ignoring op=%s message from %s", op, join_from);
 		return;
 	} 
 
@@ -608,10 +607,10 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 	crm_debug("Invoked by %s in state: %s",
 		  source, fsa_state2string(cur_state));
 
-	if(saved_ccm_membership_id != current_ccm_membership_id) {
-		crm_info("%s: Membership changed since join started: %u -> %u",
+	if(saved_ccm_membership_id != crm_peer_seq) {
+		crm_info("%s: Membership changed since join started: %llu -> %llu",
 			 source, saved_ccm_membership_id,
-			 current_ccm_membership_id);
+			 crm_peer_seq);
 		register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
 		
 	} else if(cur_state == S_INTEGRATION) {

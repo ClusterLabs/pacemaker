@@ -30,6 +30,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
+#include <crm/common/cluster.h>
 #include <crm/cib.h>
 
 #include <crmd.h>
@@ -195,13 +196,6 @@ register_fsa_input_adv(
 				break;
 				
 			case C_CCM_CALLBACK:
-				crm_debug_3("Copying %s data from %s as CCM data",
-					  fsa_cause2string(cause),
-					  raised_from);
-				fsa_data->data = copy_ccm_data(data);
-				fsa_data->data_type = fsa_dt_ccm;
-				break;
-
 			case C_SUBSYSTEM_CONNECT:
 			case C_LRM_MONITOR_CALLBACK:
 			case C_TIMER_POPPED:
@@ -285,7 +279,6 @@ delete_fsa_input(fsa_data_t *fsa_data)
 {
 	lrm_op_t *op = NULL;
 	crm_data_t *foo = NULL;
-	struct crmd_ccm_data_s *ccm_input = NULL;
 
 	if(fsa_data == NULL) {
 		return;
@@ -309,12 +302,6 @@ delete_fsa_input(fsa_data_t *fsa_data)
 
 				free_lrm_op(op);
 
-				break;
-				
-			case fsa_dt_ccm:
-				ccm_input = (struct crmd_ccm_data_s *)
-					fsa_data->data;
-				delete_ccm_data(ccm_input);
 				break;
 				
 			case fsa_dt_none:
@@ -762,15 +749,14 @@ handle_message(ha_msg_input_t *stored_msg)
 	return next_input;
 }
 
-#define schedule_pe()							\
-	{								\
+#define schedule_pe() do {						\
 		next_input = I_PE_CALC;					\
 		if(fsa_pe_ref) {					\
 			crm_debug("Cancelling %s...", fsa_pe_ref);	\
 			crm_free(fsa_pe_ref);				\
 			fsa_pe_ref = NULL;				\
 		}							\
-	}
+    } while(0)
 
 enum crmd_fsa_input
 handle_request(ha_msg_input_t *stored_msg)
@@ -1066,6 +1052,8 @@ handle_shutdown_request(HA_Message *stored_msg)
 }
 
 /* frees msg upon completion */
+ll_cluster_t *hb_conn = NULL;
+
 gboolean
 send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 {
@@ -1077,6 +1065,10 @@ send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 	const char *sys_to   = cl_get_string(msg, F_CRM_SYS_TO);
 	const char *host_to  = cl_get_string(msg, F_CRM_HOST_TO);
 
+	enum crm_ais_msg_types dest = text2msg_type(sys_to);
+	
+	hb_conn = hb_fd;
+	
 	if (msg == NULL) {
 		crm_err("Attempt to send NULL Message via HA failed.");
 		all_is_good = FALSE;
@@ -1100,10 +1092,10 @@ send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 		if (host_to == NULL
 		    || strlen(host_to) == 0
 		    || safe_str_eq(sys_to, CRM_SYSTEM_DC)) {
-			broadcast = TRUE;
-			all_is_good = send_ha_message(hb_fd, msg, NULL, FALSE);
+		    broadcast = TRUE;
+		    all_is_good = send_cluster_message(NULL, dest, msg, FALSE);
 		} else {
-			all_is_good = send_ha_message(hb_fd, msg, host_to, FALSE);
+		    all_is_good = send_cluster_message(host_to, dest, msg, FALSE);
 		}
 	}
 	
