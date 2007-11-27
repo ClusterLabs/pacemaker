@@ -66,9 +66,9 @@ class crm_ais(LinuxHAv2):
             "ParitionCmd"    : "@sbindir@/ccm_tool -p",
             "BreakCommCmd2"  : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
 
-            "Pat:We_stopped"   : "%s.*openais.*Unloading openais component: openais_evs v0",
+            "Pat:We_stopped"   : "%s.*openais.*lha_crm was unlinked",
             "Pat:They_stopped" : "%s crmd:.*Node %s is now: lost",
-            "Pat:All_stopped"  : "%s.*openais.*Unloading openais component: openais_evs v0",
+            "Pat:All_stopped"  : "%s.*openais.*lha_crm was unlinked",
             "Pat:They_dead"    : "openais:.*Node %s is now: lost",
             
             # Bad news Regexes.  Should never occur.
