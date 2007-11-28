@@ -728,12 +728,21 @@ get_message_xml(HA_Message *msg, const char *field)
 	crm_data_t *xml_node = NULL;
 	
 	type = cl_get_type(msg, field);
-	if(type > FT_STRING) {
+	if(type < 0) {
+	    /* not found */
+	    return NULL;
+	    
+	} else if(type == FT_STRING) {
+	    /* Future proof */
+	    const char *xml_text = cl_get_string(msg, field);
+	    xml_node = string2xml(xml_text);
+
+	} else if(type > FT_BINARY) {
 	    HA_Message *tmp_node = NULL;
 	    crm_validate_data(msg);
 	    tmp_node = cl_get_struct(msg, field);
 	    if(tmp_node != NULL) {
-		const char *name = crm_element_name(tmp_node);
+		const char *name = cl_get_string(tmp_node, F_XML_TAGNAME);
 		if(name == NULL || safe_str_neq(field, name)) {
 		    /* Deprecated */
 		    xml_node = copy_xml(tmp_node);
@@ -744,44 +753,49 @@ get_message_xml(HA_Message *msg, const char *field)
 		}
 	    }
 
-	} else if(type == FT_STRING) {
+	} else if(type == FT_BINARY) {
 	    /* Future proof */
-	    const char *xml_text = cl_get_string(msg, field);
+	    int rc = BZ_OK;
+	    size_t orig_len = 0;
+	    unsigned int used = 0;
+	    char *uncompressed = NULL;
+	    const char *const_value = cl_get_binary(msg, field, &orig_len);
+	    char *compressed = NULL;
+	    int size = orig_len * 10;
 
-	    if(xml_text != NULL && xml_text[0] == '<') {
-		xml_node = string2xml(xml_text);
-
-	    } else if(xml_text != NULL) {
-		/* Maybe they compressed it */
-		int rc = BZ_OK;
-		unsigned int used = 0;
-		unsigned int size = 512;
-		unsigned int orig_len = strlen(xml_text);
-
-		char *uncompressed = NULL;
-		char *compressed = crm_strdup(xml_text);
-
-	      retry:
-		crm_realloc(uncompressed, size);
-		memset(uncompressed, 0, size);
-
-		rc = BZ2_bzBuffToBuffDecompress(
-		    uncompressed, &used, compressed, orig_len, 1, 0);
-
-		if(rc == BZ_OUTBUFF_FULL) {
-		    size = size * 4;
-		    goto retry;
-		    
-		} if(rc != BZ_OK) {
-		    crm_err("Decompression failed: %d", rc);
-
-		} else {
-		    xml_node = string2xml(uncompressed);
-		}
-		
-		crm_free(compressed);		
-		crm_free(uncompressed);		
+	    if(orig_len < 1) {
+		crm_err("Invalid binary field: %s", field);
+		return NULL;
 	    }
+	    crm_malloc0(compressed, orig_len);
+	    memcpy(compressed, const_value, orig_len);
+	    
+	    crm_debug_2("Trying to decompress %d bytes", (int)orig_len);
+	  retry:
+	    crm_realloc(uncompressed, size);
+	    memset(uncompressed, 0, size);
+	    used = size;
+	    
+	    rc = BZ2_bzBuffToBuffDecompress(
+		uncompressed, &used, compressed, orig_len, 1, 0);
+	    
+	    if(rc == BZ_OUTBUFF_FULL) {
+		size = size * 2;
+		/* dont try to allocate more memory than we have */
+		if(size > 0) {
+		    goto retry;
+		}
+	    }
+	    
+	    if(rc != BZ_OK) {
+		crm_err("Decompression of %d bytes into %d failed: %d", (int)orig_len, size, rc);
+		
+	    } else {
+		xml_node = string2xml(uncompressed);
+	    }
+	    
+	    crm_free(compressed);		
+	    crm_free(uncompressed);
 	}
 	
 	return xml_node;
