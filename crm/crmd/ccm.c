@@ -450,6 +450,7 @@ void crm_update_quorum(gboolean bool)
     crm_xml_add_int(update, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
 
     fsa_cib_update(XML_TAG_CIB, update, call_options, call_id);
+    crm_info("Updating quorum status to %s (call=%d)", bool?"true":"false", call_id);
     add_cib_op_callback(call_id, FALSE, NULL, cib_quorum_update_complete);
 }
 
