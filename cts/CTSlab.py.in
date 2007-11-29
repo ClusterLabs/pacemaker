@@ -737,9 +737,10 @@ if __name__ == '__main__':
 
     if Version == 3:
         from CM_ais import crm_ais
-        Environment['CMclass']=crm_ais
-        Environment["DoStonith"]=0
-        Environment["DoFencing"]=0
+        Environment['CMclass']   = crm_ais
+        Environment["DoStonith"] = 0
+        Environment["DoFencing"] = 0
+        Environment["use_logd"]  = 0
 
     if HaveSeed:
         Environment["RandSeed"] = Seed 
