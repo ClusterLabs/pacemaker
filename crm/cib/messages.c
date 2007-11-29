@@ -684,6 +684,9 @@ cib_process_change(
 	
 	if(safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
 		section = NULL;
+
+	} else if(safe_str_eq(XML_TAG_CIB, section)) {
+		section = NULL;
 	}
 
 	if(input == NULL) {
@@ -718,9 +721,11 @@ cib_process_change(
 			if(result == cib_ok) {
 				crm_debug_2("Processing section=%s", type);
 				sub_input = get_object_root(type, input);
-				result = updateList(
+				if(sub_input) {
+				    result = updateList(
 					*result_cib, sub_input, failed,
 					cib_update_op, type);
+				}
 			}
 		}
 
