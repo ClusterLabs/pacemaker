@@ -194,14 +194,16 @@ class crm_ais(LinuxHAv2):
         complist.append(Process("cib", 0, [
                     "State transition S_IDLE",
                     "Respawning client .*crmd",
+                    "Respawning client .*attrd",
                     "Lost connection to the CIB service",
                     "Connection to the CIB terminated...",
                     "Client .*crmd exited with return code 2.",
+                    "Client .*attrd exited with return code 2.",
                     "State transition S_STARTING -> S_PENDING",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], common_ignore, self))
+                    ], [], common_ignore, 0, self))
 
         complist.append(Process("lrmd", 0, [
                     "State transition S_IDLE",
@@ -212,7 +214,7 @@ class crm_ais(LinuxHAv2):
                     "Client .*crmd exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], common_ignore, self))
+                    ], [], common_ignore, 0, self))
         complist.append(Process("crmd", 0, [
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
@@ -223,7 +225,7 @@ class crm_ais(LinuxHAv2):
                     ], [
                     "tengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
                     "pengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
-                    ], common_ignore, self))
+                    ], common_ignore, 0, self))
 
         complist.append(Process("pengine", 1, [
                     "State transition S_IDLE",
@@ -231,7 +233,7 @@ class crm_ais(LinuxHAv2):
                     "Client .*crmd exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], common_ignore, self))
+                    ], [], common_ignore, 0, self))
 
         complist.append(Process("tengine", 1, [
                     "State transition S_IDLE",
@@ -239,14 +241,14 @@ class crm_ais(LinuxHAv2):
                     "Client .*crmd exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], common_ignore, self))
+                    ], [], common_ignore, 0, self))
 
         if self.Env["DoFencing"] == 1 :
             complist.append(Process("stonithd", 0, [], [
                         "tengine_stonith_connection_destroy: Fencing daemon has left us",
                         "Attempting connection to fencing daemon",
                         "te_connect_stonith: Connected",
-                        ], stonith_ignore, self))
+                        ], stonith_ignore, 0, self))
 #            complist.append(Process("heartbeat", 0, [], [], [], self))
         return complist
     
