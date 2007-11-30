@@ -148,7 +148,8 @@ send_ais_text(int class, const char *data,
     } else {
 	crm_debug_4("Message %d: sent", ais_msg->id);
     }
-    
+
+    crm_free(ais_msg);
     return (rc == SA_AIS_OK);
 }
 
@@ -156,6 +157,7 @@ gboolean
 send_ais_message(crm_data_t *msg, 
 		 gboolean local, const char *node, enum crm_ais_msg_types dest)
 {
+    gboolean rc = TRUE;
     char *data = NULL;
 
     if(ais_source == NULL && init_ais_connection(NULL, NULL, NULL) == FALSE) {
@@ -173,7 +175,9 @@ send_ais_message(crm_data_t *msg,
     }
     
     data = dump_xml_unformatted(msg);
-    return send_ais_text(0, data, local, node, dest);
+    rc = send_ais_text(0, data, local, node, dest);
+    crm_free(data);
+    return rc;
 }
 
 gboolean ais_dispatch(int sender, gpointer user_data)
