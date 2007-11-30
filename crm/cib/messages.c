@@ -484,7 +484,7 @@ cib_process_diff(
 		ha_msg_del(sync_me);
 		
 	} else if(do_resync) {
-		crm_err("Not resyncing in master mode");
+		crm_warn("Not resyncing in master mode");
 	}
 	
 	
