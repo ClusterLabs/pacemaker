@@ -64,13 +64,31 @@ gboolean process_ais_message(AIS_Message *msg)
     return TRUE;
 }
 
+static int
+ais_string_to_boolean(const char * s)
+{
+    int rc = 0;
+    if(s == NULL) {
+	return rc;
+    }
+    
+    if(strcasecmp(s, "true") == 0
+       || strcasecmp(s, "on") == 0
+       || strcasecmp(s, "yes") == 0
+       || strcasecmp(s, "y") == 0
+       || strcasecmp(s, "1") == 0) {
+	rc = 1;
+    }
+    return rc;
+}
+
 gboolean spawn_child(crm_child_t *child)
 {
     int rc = 0;
     int lpc = 0;
     struct rlimit oflimits;
     const char *devnull = "/dev/null";
-    const char *valgrind = getenv("HA_VALGRIND_ENABLED");
+    const char *use_valgrind = getenv("HA_VALGRIND_ENABLED");
 
     if(child->command == NULL) {
 	ais_info("Nothing to do for child \"%s\"", child->name);
@@ -107,7 +125,7 @@ gboolean spawn_child(crm_child_t *child)
     (void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
     (void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
 
-    if(crm_is_true(valgrind)) {
+    if(ais_string_to_boolean(use_valgrind)) {
 	char *opts[] = {
 	    ais_strdup(VALGRIND_BIN),
 	    ais_strdup(child->command),
