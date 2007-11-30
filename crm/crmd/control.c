@@ -74,6 +74,7 @@ static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 		crmd_ha_msg_filter(xml);
 		break;
 	}
+	free_xml(xml);
 	
     } else {
 	crm_err("Invalid message: %s", data);
