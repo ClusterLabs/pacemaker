@@ -77,8 +77,12 @@ int in_upper_context(int depth, int context, crm_data_t *xml_node);
 crm_data_t *
 find_xml_node(crm_data_t *root, const char * search_path, gboolean must_find)
 {
+	const char *name = "NULL";
 	if(must_find || root != NULL) {
 		crm_validate_data(root);
+	}
+	if(root != NULL) {
+	    name = crm_element_name(root);
 	}
 	
 	if(search_path == NULL) {
@@ -96,9 +100,9 @@ find_xml_node(crm_data_t *root, const char * search_path, gboolean must_find)
 		);
 
 	if(must_find) {
-		crm_warn("Could not find %s in %s.", search_path, crm_element_name(root));
+		crm_warn("Could not find %s in %s.", search_path, name);
 	} else if(root != NULL) {
-		crm_debug_3("Could not find %s in %s.", search_path, crm_element_name(root));
+		crm_debug_3("Could not find %s in %s.", search_path, name);
 	} else {
 		crm_debug_3("Could not find %s in <NULL>.", search_path);
 	}
@@ -1207,7 +1211,8 @@ get_attr_name(const char *input, size_t offset, size_t max)
  				break;
 		}
 	}
-	crm_err("Error parsing token near %.15s: %s", input, crm_str(error));
+	crm_err("Error parsing token near %.40s: (lpc=%d, ch='%c') %s",
+		input+offset, (int)(lpc-offset), ch, crm_str(error));
 	return -1;
 }
 
@@ -1239,7 +1244,7 @@ get_attr_value(const char *input, size_t offset, size_t max)
  				break;
 		}
 	}
-	crm_err("Error parsing token near %.15s: %s", input, crm_str(error));
+	crm_err("Error parsing token near %.40s: %s", input+offset, crm_str(error));
 	return -1;
 }
 
@@ -1571,7 +1576,9 @@ parse_xml(const char *input, size_t *offset)
 	
 	if(error) {
 		crm_err("Error parsing token: %s", error);
-		crm_err("Error at or before: %.20s", our_input+lpc-3);
+		crm_err("Error at or before: %.40s", our_input+lpc-3);
+		crm_free(tag_name);
+		free_xml(new_obj);
 		return NULL;
 	}
 	
@@ -1584,7 +1591,7 @@ parse_xml(const char *input, size_t *offset)
 		    } else {
 			cl_log(LOG_ERR, "%s: Ignoring trailing characters in XML input.", __PRETTY_FUNCTION__);
 		    }
-		    cl_log(LOG_ERR, "%s: Parsed %d characters of a possible %d.  Trailing text was: \'%.20s\'...",
+		    cl_log(LOG_ERR, "%s: Parsed %d characters of a possible %d.  Trailing text was: \'%.40s\'...",
 			   __PRETTY_FUNCTION__, (int)lpc, (int)max, our_input+lpc);
 		}
 	}
