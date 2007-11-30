@@ -145,9 +145,10 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	pid_t       pid;
 	struct stat buf;
 	int         s_res;
-	unsigned int	j;
-	struct rlimit	oflimits;
-	const char 	*devnull = "/dev/null";
+	unsigned int  j;
+	struct rlimit oflimits;
+	const char    *devnull = "/dev/null";
+	const char    *valgrind = getenv("HA_VALGRIND_ENABLED");
 
 	crm_info("Starting sub-system \"%s\"", the_subsystem->name);
 	set_bit_inplace(fsa_input_register, the_subsystem->flag_required);
@@ -210,15 +211,9 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	(void)open(devnull, O_RDONLY);	/* Stdin:  fd 0 */
 	(void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
 	(void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
-	
-	if(getenv("HA_VALGRIND_ENABLED") != NULL) {
+
+	if(crm_is_true(valgrind)) {
 		char *opts[] = { crm_strdup(VALGRIND_BIN),
- 				 crm_strdup("--show-reachable=yes"),
-				 crm_strdup("--leak-check=full"),
-				 crm_strdup("--time-stamp=yes"),
-				 crm_strdup("--suppressions="VALGRIND_SUPP),
-/* 				 crm_strdup("--gen-suppressions=all"), */
-				 crm_strdup(VALGRIND_LOG),
 				 crm_strdup(the_subsystem->command),
 				 NULL
 		};

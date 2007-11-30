@@ -68,8 +68,9 @@ gboolean spawn_child(crm_child_t *child)
 {
     int rc = 0;
     int lpc = 0;
-    struct rlimit	oflimits;
-    const char 	*devnull = "/dev/null";
+    struct rlimit oflimits;
+    const char *devnull = "/dev/null";
+    const char *valgrind = getenv("HA_VALGRIND_ENABLED");
 
     if(child->command == NULL) {
 	ais_info("Nothing to do for child \"%s\"", child->name);
@@ -105,17 +106,12 @@ gboolean spawn_child(crm_child_t *child)
     (void)open(devnull, O_RDONLY);	/* Stdin:  fd 0 */
     (void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
     (void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
-    
-    if(getenv("HA_VALGRIND_ENABLED") != NULL) {
-	char *opts[] = { ais_strdup(VALGRIND_BIN),
-			 ais_strdup("--show-reachable=yes"),
-			 ais_strdup("--leak-check=full"),
-			 ais_strdup("--time-stamp=yes"),
-			 ais_strdup("--suppressions="VALGRIND_SUPP),
-/* 				 ais_strdup("--gen-suppressions=all"), */
-			 ais_strdup(VALGRIND_LOG),
-			 ais_strdup(child->command),
-			 NULL
+
+    if(crm_is_true(valgrind)) {
+	char *opts[] = {
+	    ais_strdup(VALGRIND_BIN),
+	    ais_strdup(child->command),
+	    NULL
 	};
 	(void)execvp(VALGRIND_BIN, opts);
 
