@@ -379,7 +379,8 @@ int send_cluster_msg(
     }
     
     rc = send_cluster_msg_raw(ais_msg);
-
+    ais_free(ais_msg);
+    
     LEAVE("");
     return rc;	
 }
@@ -441,6 +442,7 @@ int send_client_msg(
     }
 
     ais_debug_5("Sent %d:%s", class, data);
+    ais_free(ais_msg);
     LEAVE("");
     return rc;    
 }
