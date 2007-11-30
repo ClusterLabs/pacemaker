@@ -310,6 +310,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	const char *name = NULL;
 	const char *value = NULL;
 	const char *ignore_dtd = NULL;
+	const char *use_valgrind = getenv("HA_VALGRIND_ENABLED");
 	
 	crm_data_t *root = NULL;
 	crm_data_t *status = NULL;
@@ -347,7 +348,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	    crm_xml_add(root, "generated", XML_BOOLEAN_FALSE);	
 	}	
 
-	if(cib_writes_enabled && getenv("HA_VALGRIND_ENABLED") != NULL) {
+	if(cib_writes_enabled && crm_is_true(use_valgrind)) {
 		cib_writes_enabled = FALSE;
 		crm_err("HA_VALGRIND_ENABLED: %s",
 			getenv("HA_VALGRIND_ENABLED"));
