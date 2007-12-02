@@ -35,6 +35,7 @@ typedef struct crm_child_s {
 	int pid;
 	long flag;
 	long flags;
+	int respawn_count;
 	gboolean respawn;
 	const char *name;
 	int uid;

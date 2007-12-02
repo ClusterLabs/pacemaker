@@ -65,7 +65,7 @@ pthread_t crm_wait_thread;
 gboolean wait_active = TRUE;
 GHashTable *membership_list = NULL;
 
-
+#define MAX_RESPAWN		100
 #define crm_flag_none		0x00000000
 #define crm_flag_members	0x00000001
 
@@ -82,11 +82,11 @@ struct crm_identify_msg_s
 } __attribute__((packed));
 
 static crm_child_t crm_children[] = {
-    { 0, crm_proc_none, crm_flag_none,    FALSE, "none",  0, NULL, NULL },
-    { 0, crm_proc_ais,  crm_flag_none,    FALSE, "ais",   0, NULL, NULL },
-    { 0, crm_proc_lrmd, crm_flag_none,    TRUE,  "lrmd",  0, HA_LIBHBDIR"/lrmd",         NULL },
-    { 0, crm_proc_cib,  crm_flag_members, TRUE,  "cib",   HA_CCMUID, HA_LIBHBDIR"/cib",  NULL },
-    { 0, crm_proc_crmd, crm_flag_members, TRUE,  "crmd",  HA_CCMUID, HA_LIBHBDIR"/crmd", NULL },
+    { 0, crm_proc_none, crm_flag_none,    0, FALSE, "none",  0, NULL, NULL },
+    { 0, crm_proc_ais,  crm_flag_none,    0, FALSE, "ais",   0, NULL, NULL },
+    { 0, crm_proc_lrmd, crm_flag_none,    0, TRUE,  "lrmd",  0, HA_LIBHBDIR"/lrmd",         NULL },
+    { 0, crm_proc_cib,  crm_flag_members, 0, TRUE,  "cib",   HA_CCMUID, HA_LIBHBDIR"/cib",  NULL },
+    { 0, crm_proc_crmd, crm_flag_members, 0, TRUE,  "crmd",  HA_CCMUID, HA_LIBHBDIR"/crmd", NULL },
 };
 
 void send_cluster_id(void);
@@ -306,6 +306,12 @@ static void *crm_wait_dispatch (void *arg)
 		    }
 		}
 
+		crm_children[lpc].respawn_count += 1;
+		if(crm_children[lpc].respawn_count > MAX_RESPAWN) {
+		    ais_notice("Child respawn count exceeded by %s",
+			       crm_children[lpc].name);
+		    crm_children[lpc].respawn = FALSE;
+		}
 		if(crm_children[lpc].respawn) {
 		    ais_info("Respawning failed child process: %s",
 			     crm_children[lpc].name);
