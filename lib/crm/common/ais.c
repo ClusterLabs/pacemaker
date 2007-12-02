@@ -195,7 +195,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     crm_debug_5("Start");
     rc = saRecvRetry(sender, header, header_len);
     if (rc != SA_AIS_OK) {
-	crm_err("Receiving message header failed");
+	crm_warn("Receiving message header failed");
 	goto bail;
     }
 
@@ -244,6 +244,17 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 
 	crm_free(data);
 	data = uncompressed;
+
+    } else {
+	int check = strlen(data);
+	if(msg->size != (check + 1)) {
+	    CRM_CHECK(msg->size == (check + 1), ;);
+	    crm_err("Invalid message payload (id=%d, from=%s): %.120s",
+		    msg->id, ais_dest(&(msg->sender)), data);
+	    crm_err("min=%d, total=%d, data=%d, actual=%d",
+		    sizeof(AIS_Message), msg->header.size, msg->size, check);
+	    goto badmsg;
+	}
     }
 
     if(safe_str_eq("identify", data)) {
