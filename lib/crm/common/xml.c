@@ -615,7 +615,7 @@ write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress)
 	time_t now;
 	char *buffer = NULL;
 	char *now_str = NULL;
-	unsigned int in = 0, out = 0;
+	unsigned int out = 0;
 	FILE *file_output_strm = NULL;
 	static mode_t cib_mode = S_IRUSR|S_IWUSR;
 	
@@ -653,6 +653,7 @@ write_xml_file(crm_data_t *xml_node, const char *filename, gboolean compress)
 	if(compress) {
 #if HAVE_BZLIB_H
 	    int rc = BZ_OK;
+	    unsigned int in = 0;
 	    BZFILE *bz_file = NULL;
 	    bz_file = BZ2_bzWriteOpen(&rc, file_output_strm, 5,0,0);
 	    if(rc != BZ_OK) {
