@@ -1419,7 +1419,7 @@ crm_abort(const char *file, const char *function, int line,
 	    pid=fork();
 
 	} else {
-	    do_crm_log(LOG_ERR, "%s: Triggered non-fatal assert at %s:%d : %s",
+	    do_crm_log(LOG_ERR, "%s: Triggered fatal assert at %s:%d : %s",
 		       function, file, line, assert_condition);
 	}
 	
