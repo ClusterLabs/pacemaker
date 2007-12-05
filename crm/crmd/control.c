@@ -57,28 +57,29 @@ extern void crmd_ha_msg_filter(HA_Message * msg);
 static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
 {
     crm_data_t *xml = string2xml(data);
-    if(xml != NULL) {
-	crm_debug_2("Message received: %d:'%.120s'", wrapper->header.id, data);
-	ha_msg_add(xml, F_ORIG, wrapper->sender.uname);
-	ha_msg_add_int(xml, F_SEQ, wrapper->id);
-
-	switch(wrapper->header.id) {
-	    case crm_class_notify:
-		break;
-	    case crm_class_members:
-		do_ccm_update_cache(
-		    C_HA_MESSAGE, fsa_state, OC_EV_MS_NEW_MEMBERSHIP, NULL, xml);
-		crm_update_quorum(crm_have_quorum);
-		break;
-	    default:
-		crmd_ha_msg_filter(xml);
-		break;
-	}
-	free_xml(xml);
-	
-    } else {
-	crm_err("Invalid message: %s", data);
+    if(xml == NULL) {
+	crm_err("Message received: %d:'%.120s'", wrapper->id, data);
+	return TRUE;
     }
+    
+    crm_debug_2("Message received: %d:'%.120s'", wrapper->id, data);
+    ha_msg_add(xml, F_ORIG, wrapper->sender.uname);
+    ha_msg_add_int(xml, F_SEQ, wrapper->id);
+    
+    switch(wrapper->header.id) {
+	case crm_class_notify:
+	    break;
+	case crm_class_members:
+	    do_ccm_update_cache(
+		C_HA_MESSAGE, fsa_state, OC_EV_MS_NEW_MEMBERSHIP, NULL, xml);
+	    crm_update_quorum(crm_have_quorum);
+	    break;
+	default:
+	    crmd_ha_msg_filter(xml);
+	    break;
+    }
+    
+    free_xml(xml);    
     return TRUE;
 }
 
