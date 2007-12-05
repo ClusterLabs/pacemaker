@@ -274,7 +274,10 @@ extern void crm_log_message_adv(
 				#malloc_obj, __FILE__, __LINE__);	\
 		}							\
 		malloc_obj = cl_malloc(length);				\
-		CRM_ASSERT(malloc_obj != NULL);				\
+		if(malloc_obj == NULL) {				\
+		    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
+		    CRM_ASSERT(malloc_obj != NULL);			\
+		}							\
 		memset(malloc_obj, 0, length);				\
 	} while(0)
 /* it's not a memory leak to already have an object to realloc, that's
@@ -296,7 +299,10 @@ extern void crm_log_message_adv(
 #else
 #    define crm_malloc0(malloc_obj, length) do {			\
 		malloc_obj = cl_malloc(length);				\
-		CRM_ASSERT(malloc_obj != NULL);				\
+		if(malloc_obj == NULL) {				\
+		    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
+		    CRM_ASSERT(malloc_obj != NULL);			\
+		}							\
 		memset(malloc_obj, 0, length);				\
 	} while(0)
 #    define crm_realloc(realloc_obj, length) do {			\
