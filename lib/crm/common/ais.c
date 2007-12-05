@@ -136,7 +136,7 @@ send_ais_text(int class, const char *data,
 
     ais_msg->header.size = sizeof(AIS_Message) + ais_data_len(ais_msg);
 
-    crm_debug_3("Sending%s message %d to %s.%s (data=%d, total=%d)",
+    crm_debug("Sending%s message %d to %s.%s (data=%d, total=%d)",
 		ais_msg->is_compressed?" compressed":"",
 		ais_msg->id, ais_dest(&(ais_msg->host)), msg_type2text(dest),
 		ais_data_len(ais_msg), ais_msg->header.size);
@@ -180,9 +180,81 @@ send_ais_message(crm_data_t *msg,
     return rc;
 }
 
+static gboolean check_message_sanity(AIS_Message *msg, char *data) 
+{
+    gboolean sane = TRUE;
+    gboolean repaired = FALSE;
+    int dest = msg->host.type;
+    int tmp_size = msg->header.size - sizeof(AIS_Message);
+
+    if(sane && msg->header.size == 0) {
+	crm_err("Message with no size");
+	sane = FALSE;
+    }
+
+    if(sane && ais_data_len(msg) != tmp_size) {
+	int cur_size = ais_data_len(msg);
+
+	repaired = TRUE;
+	if(msg->is_compressed) {
+	    msg->compressed_size = tmp_size;
+	    
+	} else {
+	    msg->size = tmp_size;
+	}
+	
+	crm_err("Repaired message payload size %d -> %d", cur_size, tmp_size);
+    }
+
+    if(sane && ais_data_len(msg) == 0) {
+	crm_err("Message with no payload");
+	sane = FALSE;
+    }
+
+    if(sane && data && msg->is_compressed == FALSE) {
+	int str_size = strlen(data) + 1;
+	if(ais_data_len(msg) != str_size) {
+	    int lpc = 0;
+	    crm_err("Message payload is corrupted: expected %d bytes, got %d",
+		    ais_data_len(msg), str_size);
+	    sane = FALSE;
+	    for(lpc = (str_size - 10); lpc < msg->size; lpc++) {
+		if(lpc < 0) {
+		    lpc = 0;
+		}
+		crm_warn("bad_data[%d]: %d / '%c'", lpc, data[lpc], data[lpc]);
+	    }
+	}
+    }
+    
+    if(sane == FALSE) {
+	crm_err("Invalid message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
+		msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
+		ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
+		msg->sender.pid, msg->is_compressed, ais_data_len(msg),
+		msg->header.size);
+	
+    } else if(repaired) {
+	crm_err("Repaired message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
+		msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
+		ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
+		msg->sender.pid, msg->is_compressed, ais_data_len(msg),
+		msg->header.size);
+    } else {
+	crm_debug_3("Verfied message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
+		    msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
+		    ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
+		    msg->sender.pid, msg->is_compressed, ais_data_len(msg),
+		    msg->header.size);
+    }
+    
+    return sane;
+}
+
 gboolean ais_dispatch(int sender, gpointer user_data)
 {
     /* Grab the header */
+    int data_len = 0;
     char *data = NULL;
     char *header = NULL;
     AIS_Message *msg = NULL;
@@ -204,17 +276,23 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     crm_debug_3("Got new%s message indication (size=%d, %d, %d)",
 		msg->is_compressed?" compressed":"",
 		ais_data_len(msg), msg->size, msg->compressed_size);
-    
-    if(ais_data_len(msg) == 0) {
-	crm_warn("Msg[%d] (dest=%s:%s, from=%s:%s.%d)",
-		 msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
-		 ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
-		 msg->sender.pid);
-	return TRUE;
+
+    if(check_message_sanity(msg, NULL) == FALSE) {
+	goto badmsg;
     }
     
-    crm_malloc0(data, ais_data_len(msg));
-    rc = saRecvRetry(sender, data, ais_data_len(msg));
+    data_len = ais_data_len(msg);
+
+#if 0
+    crm_malloc0(data, data_len);
+#else    
+    data = cl_malloc(data_len);
+    CRM_CHECK(data != NULL,
+	      crm_err("Failed allocation of %d bytes", data_len);
+	      goto badmsg);
+    memset(data, 0, data_len);
+#endif
+    rc = saRecvRetry(sender, data, data_len);
     
     if (rc != SA_AIS_OK) {
 	crm_err("Receiving message body failed: %d", rc);
@@ -245,16 +323,8 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 	crm_free(data);
 	data = uncompressed;
 
-    } else {
-	int check = strlen(data);
-	if(msg->size != (check + 1)) {
-	    CRM_CHECK(msg->size == (check + 1), ;);
-	    crm_err("Invalid message payload (id=%d, from=%s): %.120s",
-		    msg->id, ais_dest(&(msg->sender)), data);
-	    crm_err("min=%d, total=%d, data=%d, actual=%d",
-		    sizeof(AIS_Message), msg->header.size, msg->size, check);
-	    goto badmsg;
-	}
+    } else if(check_message_sanity(msg, data) == FALSE) {
+	goto badmsg;
     }
 
     if(safe_str_eq("identify", data)) {
@@ -286,8 +356,17 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     } else if(dispatch != NULL) {
 	dispatch(msg, data, sender);
     }
+    crm_free(data);
+    crm_free(msg);
+    return TRUE;
 
   badmsg:
+    crm_err("Invalid message (id=%d, dest=%s:%s, from=%s:%s.%d):"
+	    " min=%d, total=%d, size=%d, bz2_size=%d",
+	    msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
+	    ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
+	    msg->sender.pid, (int)sizeof(AIS_Message),
+	    msg->header.size, msg->size, msg->compressed_size);
     crm_free(data);
     crm_free(msg);
     return TRUE;

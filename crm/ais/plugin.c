@@ -237,8 +237,9 @@ int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
 	g_direct_hash, g_direct_equal, NULL, destroy_ais_node);
 
     setenv("HA_debug", "1", 1);
-    setenv("HA_logfacility", "daemon", 1);
+    setenv("HA_logfacility",  "daemon", 1);
     setenv("HA_cluster_type", "openais", 1);
+    setenv("HA_COMPRESSION",  "bz2", 1);
     
     plugin_log_level = LOG_DEBUG;
     
@@ -772,6 +773,77 @@ void send_member_notification(void)
     ais_free(update);
 }
 
+static gboolean check_message_sanity(AIS_Message *msg, char *data) 
+{
+    gboolean sane = TRUE;
+    gboolean repaired = FALSE;
+    int dest = msg->host.type;
+    int tmp_size = msg->header.size - sizeof(AIS_Message);
+
+    if(sane && msg->header.size == 0) {
+	ais_err("Message with no size");
+	sane = FALSE;
+    }
+
+    if(sane && ais_data_len(msg) != tmp_size) {
+	int cur_size = ais_data_len(msg);
+
+	repaired = TRUE;
+	if(msg->is_compressed) {
+	    msg->compressed_size = tmp_size;
+	    
+	} else {
+	    msg->size = tmp_size;
+	}
+	
+	ais_err("Repaired message payload size %d -> %d", cur_size, tmp_size);
+    }
+
+    if(sane && ais_data_len(msg) == 0) {
+	ais_err("Message with no payload");
+	sane = FALSE;
+    }
+
+    if(sane && data && msg->is_compressed == FALSE) {
+	int str_size = strlen(data) + 1;
+	if(ais_data_len(msg) != str_size) {
+	    int lpc = 0;
+	    ais_err("Message payload is corrupted: expected %d bytes, got %d",
+		    ais_data_len(msg), str_size);
+	    sane = FALSE;
+	    for(lpc = (str_size - 10); lpc < msg->size; lpc++) {
+		if(lpc < 0) {
+		    lpc = 0;
+		}
+		ais_warn("bad_data[%d]: %d / '%c'", lpc, data[lpc], data[lpc]);
+	    }
+	}
+    }
+    
+    if(sane == FALSE) {
+	ais_err("Invalid message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
+		msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
+		ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
+		msg->sender.pid, msg->is_compressed, ais_data_len(msg),
+		msg->header.size);
+	
+    } else if(repaired) {
+	ais_err("Repaired message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
+		msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
+		ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
+		msg->sender.pid, msg->is_compressed, ais_data_len(msg),
+		msg->header.size);
+    } else {
+	ais_debug("Verified message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
+		  msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
+		  ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
+		  msg->sender.pid, msg->is_compressed, ais_data_len(msg),
+		  msg->header.size);
+    }
+    
+    return sane;
+}
+
 gboolean route_ais_message(AIS_Message *msg, gboolean local_origin) 
 {
     int rc = 0;
@@ -790,6 +862,11 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
        }
     }
 
+    if(check_message_sanity(msg, msg->data) == FALSE) {
+	/* Dont send this message to anyone */
+	return FALSE;
+    }
+    
     if(msg->host.local) {
 	void *conn = NULL;
 	const char *lookup = NULL;
@@ -876,10 +953,13 @@ int send_cluster_msg_raw(AIS_Message *ais_msg)
 	ais_msg->header.size = sizeof(AIS_Message) + ais_data_len(ais_msg);
     }
 
-    msg_id++;
-    AIS_ASSERT(msg_id != 0 /* detect wrap-around */);
-
-    ais_msg->id = msg_id;
+    if(ais_msg->id == 0) {
+	msg_id++;
+	AIS_CHECK(msg_id != 0 /* detect wrap-around */,
+		  msg_id++; ais_err("Message ID wrapped around"));
+	ais_msg->id = msg_id;
+    }
+    
     ais_msg->header.id = SERVICE_ID_MAKE(CRM_SERVICE, 0);	
 
     ais_msg->sender.id = local_nodeid;
@@ -889,7 +969,8 @@ int send_cluster_msg_raw(AIS_Message *ais_msg)
 
     iovec.iov_base = (char *)ais_msg;
     iovec.iov_len = ais_msg->header.size;
-    
+
+#if 0
     if(ais_msg->is_compressed == FALSE && ais_msg->size > 1024) {
 	char *compressed = NULL;
 	unsigned int len = (ais_msg->size * 1.1) + 600; /* recomended size */
@@ -923,6 +1004,7 @@ int send_cluster_msg_raw(AIS_Message *ais_msg)
     }    
 
   send:
+#endif
     ais_debug_3("Sending message (size=%u)", (unsigned int)iovec.iov_len);
     rc = totempg_groups_mcast_joined (
 	openais_group_handle, &iovec, 1, TOTEMPG_SAFE);
