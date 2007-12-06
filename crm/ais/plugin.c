@@ -42,6 +42,7 @@
 #include <openais/service/swab.h>
 #include <openais/totem/totempg.h>
 #include <openais/service/service.h>
+#include <openais/service/ipc.h>
 
 #include <openais/lcr/lcr_comp.h>
 
@@ -287,6 +288,7 @@ static void *crm_wait_dispatch (void *arg)
 		/* cleanup */
 		crm_children[lpc].pid = 0;
 		crm_children[lpc].conn = NULL;
+		crm_children[lpc].async_conn = NULL;
 
 		if(WIFSIGNALED(status)) {
 		    int sig = WTERMSIG(status);
@@ -485,6 +487,7 @@ int ais_ipc_client_exit_callback (void *conn)
     for (; lpc < SIZEOF(crm_children); lpc++) {
 	if(crm_children[lpc].conn == conn) {
 	    crm_children[lpc].conn = NULL;
+	    crm_children[lpc].async_conn = NULL;
 	    client = crm_children[lpc].name;
 	    break;
 	}
@@ -600,6 +603,7 @@ void ais_ipc_message_callback(void *conn, void *msg)
 {
     AIS_Message *ais_msg = msg;
     int type = ais_msg->sender.type;
+    void *async_conn = openais_conn_partner_get(conn);
     ENTER("Client=%p", conn);
     ais_debug_2("Message from client %p", conn);
 
@@ -612,6 +616,7 @@ void ais_ipc_message_callback(void *conn, void *msg)
 	ais_info("Recorded connection %p for %s/%d",
 		 conn, crm_children[type].name, crm_children[type].pid);
 	crm_children[type].conn = conn;
+	crm_children[type].async_conn = async_conn;
 
 	/* Make sure they have the latest membership */
 	if(crm_children[type].flags & crm_flag_members) {
@@ -673,6 +678,7 @@ int crm_exec_exit_fn (struct objdb_iface_ver0 *objdb)
 	    /* cleanup */
 	    crm_children[lpc].pid = 0;
 	    crm_children[lpc].conn = NULL;
+	    crm_children[lpc].async_conn = NULL;
 	    break;
 	}
     }
@@ -759,14 +765,14 @@ void send_member_notification(void)
     for (; lpc < SIZEOF(crm_children); lpc++) {
 	if(crm_children[lpc].flags & crm_flag_members) {
 
-	    if(crm_children[lpc].conn == NULL) {
+	    if(crm_children[lpc].async_conn == NULL) {
 		continue;
 	    }
 	    
 	    ais_info("Sending membership update %llu to %s",
 		     membership_seq, crm_children[lpc].name);
 	    
- 	    send_client_msg(crm_children[lpc].conn,
+ 	    send_client_msg(crm_children[lpc].async_conn,
 			    crm_class_members, crm_msg_none, update);
 	}
     }
@@ -896,7 +902,7 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 
 	rc = 1;
 	lookup = msg_type2text(dest);
-	conn = crm_children[dest].conn;
+	conn = crm_children[dest].async_conn;
 
 	/* the cluster fails in weird and wonderfully obscure ways when this is not true */
 	AIS_ASSERT(ais_str_eq(lookup, crm_children[dest].name));

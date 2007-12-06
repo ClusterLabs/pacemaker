@@ -43,8 +43,7 @@ extern gboolean init_ais_connection(
 
 extern void terminate_ais_connection(void);
 
-extern int ais_fd_in;
-extern int ais_fd_out;
+extern int ais_fd_sync;
 extern GFDSource *ais_source;
 extern enum crm_ais_msg_types crm_system_type;
 

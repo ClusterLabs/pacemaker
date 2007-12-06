@@ -41,6 +41,7 @@ typedef struct crm_child_s {
 	int uid;
 	const char *command;
 	void *conn;
+	void *async_conn;
     
 } crm_child_t;
 

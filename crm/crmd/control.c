@@ -87,7 +87,7 @@ static void
 crm_ais_destroy(gpointer user_data)
 {
     crm_err("AIS connection terminated");
-    ais_fd_in = -1;
+    ais_fd_sync = -1;
     exit(1);
 }
 #endif

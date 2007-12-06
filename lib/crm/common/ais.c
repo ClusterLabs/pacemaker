@@ -23,8 +23,8 @@
 #include <openais/saAis.h>
 #include <sys/utsname.h>
 
-int ais_fd_in = -1;
-int ais_fd_out = -1;
+int ais_fd_sync = -1;
+static int ais_fd_async = -1; /* never send messages via this channel */
 GFDSource *ais_source = NULL;
 GFDSource *ais_source_out = NULL;
 gboolean ais_dispatch(int sender, gpointer user_data);
@@ -141,10 +141,10 @@ send_ais_text(int class, const char *data,
 		ais_msg->id, ais_dest(&(ais_msg->host)), msg_type2text(dest),
 		ais_data_len(ais_msg), ais_msg->header.size);
 
-    rc = saSendRetry(ais_fd_in, ais_msg, ais_msg->header.size);
+    rc = saSendRetry(ais_fd_sync, ais_msg, ais_msg->header.size);
     if(rc != SA_AIS_OK) {    
 	crm_err("Sending message %d: FAILED", ais_msg->id);
-	ais_fd_out = -1;
+	ais_fd_async = -1;
     } else {
 	crm_debug_4("Message %d: sent", ais_msg->id);
     }
@@ -165,7 +165,7 @@ send_ais_message(crm_data_t *msg,
 	return FALSE;
     }
     
-    if(ais_fd_out < 0) {
+    if(ais_fd_async < 0) {
 	crm_err("Not connected to AIS");
 	return FALSE;
     }
@@ -380,7 +380,7 @@ static void
 ais_destroy(gpointer user_data)
 {
     crm_err("AIS connection terminated");
-    ais_fd_in = -1;
+    ais_fd_sync = -1;
     exit(1);
 }
 
@@ -402,7 +402,7 @@ gboolean init_ais_connection(
     
     /* 16 := CRM_SERVICE */
     crm_info("Creating connection to our AIS plugin");
-    rc = saServiceConnect (&ais_fd_in, &ais_fd_out, 16);
+    rc = saServiceConnect (&ais_fd_sync, &ais_fd_async, 16);
     if (rc != SA_AIS_OK) {
 	crm_err("Connection to our AIS plugin failed!");
 	return FALSE;
@@ -415,16 +415,16 @@ gboolean init_ais_connection(
    
     crm_info("AIS connection established");
     ais_source = G_main_add_fd(
-	G_PRIORITY_HIGH, ais_fd_in, FALSE, ais_dispatch, dispatch, destroy);
+	G_PRIORITY_HIGH, ais_fd_sync, FALSE, ais_dispatch, dispatch, destroy);
     ais_source_out = G_main_add_fd(
-	G_PRIORITY_HIGH, ais_fd_out, FALSE, ais_dispatch, dispatch, destroy);
+ 	G_PRIORITY_HIGH, ais_fd_async, FALSE, ais_dispatch, dispatch, destroy);
     return TRUE;
 }
 
 void terminate_ais_connection(void) 
 {
-    close(ais_fd_in);
-    close(ais_fd_out);
+    close(ais_fd_sync);
+    close(ais_fd_async);
     crm_notice("Disconnected from AIS");
 /*     G_main_del_fd(ais_source); */
 /*     G_main_del_fd(ais_source_out);     */
