@@ -124,6 +124,7 @@ main(int argc, char **argv)
 		{"md5-sum",	 0, 0, '5'},
 		
 		{"force-quorum",0, 0, 'f'},
+		{"force",	0, 0, 'f'},
 		{"local",	0, 0, 'l'},
 		{"sync-call",	0, 0, 's'},
 		{"no-bcast",	0, 0, 'b'},
