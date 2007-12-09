@@ -75,10 +75,7 @@ if LDIRECTORD_BUILD
 LDIRECTORD_DIR = ldirectord
 endif
 
-SUBDIRS	= $(LIBLTDL_DIR) debian pkg port replace include lib            \
-          heartbeat membership telecom resources lrm $(CRM_DIR)		\
-          fencing logd $(SNMP_SUBAGENT_DIR) tools doc cts $(MGMT_DIR)   \
-          $(CIM_PROVIDER_DIR) $(LDIRECTORD_DIR) config $(TSA_PLUGIN_DIR) contrib 
+SUBDIRS	= debian pkg port replace include lib crm tools doc cts
 
 HANDY_DOCS = doc/ChangeLog doc/GettingStarted.html doc/DirectoryMap.txt
 HBDOCS = doc/heartbeat_api.html

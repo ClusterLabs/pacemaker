@@ -38,16 +38,15 @@ OTHER_DOCS              = AUTHORS COPYING COPYING.LGPL ChangeLog \
                                 README authkeys ha.cf startstop haresources \
 				DirectoryMap.txt apphbd.cf logd.cf
 
-doc_DATA		= $(OTHER_DOCS) $(txtfiles) $(htmlfiles) 
+#doc_DATA		= $(OTHER_DOCS) $(txtfiles) $(htmlfiles) 
 
-man_MANS		= heartbeat.8 apphbd.8 cl_status.1 ha_logd.8 ha_logger.1 \
-			 hb_standby.1 hb_takeover.1 hb_addnode.1 hb_delnode.1
+man_MANS		= 
 
 if CRM_BUILD
 man_MANS		+= cibadmin.8 crm_resource.8
 endif
 
-EXTRA_DIST = $(txtfiles) $(htmlfiles) $(man_MANS) $(OTHER_DOCS)
+EXTRA_DIST = $(man_MANS)
 
 ChangeLog: $(SPECSRC)
 	rm -fr ChangeLog

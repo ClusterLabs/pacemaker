@@ -26,13 +26,11 @@ EXTRA_DIST = ha_version.h
 includedir=$(base_includedir)/heartbeat
 
 
-noinst_HEADERS	        = hb_api_core.h config.h lha_internal.h ha_version.h
-include_HEADERS	        = apphb.h apphb_notify.h HBauth.h HBcomm.h	\
-			  ha_msg.h heartbeat.h hb_api.h	hb_config.h	\
-			  recoverymgr.h replace_uuid.h compress.h
+noinst_HEADERS	        = config.h lha_internal.h ha_version.h
+include_HEADERS	        = crm_config.h
+ 
 
-SUBDIRS                 = clplumbing ocf pils saf 			\
-			  stonith fencing lrm $(CRM_DIR) mgmt	
+SUBDIRS                 =  crm
 
 ## The backtick commands are not executed here,
 ## but rather as macro-expansions at use within the rules.

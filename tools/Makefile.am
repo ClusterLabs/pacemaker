@@ -31,10 +31,9 @@ halibdir		= $(libdir)/@HB_PKG@
 hanoarchdir		= @HA_NOARCHDATAHBDIR@
 gliblib			= @GLIBLIB@
 
-habin_PROGRAMS		= cl_status cl_respawn 
 halib_SCRIPTS		= haresources2cib.py
 hanoarch_DATA		= utillib.sh README.hb_report
-sbin_SCRIPTS		= ciblint hb_report ocf-tester
+sbin_SCRIPTS		= hb_report ocf-tester
 
 if CRM_BUILD
 halib_PROGRAMS		= attrd pingd
@@ -45,47 +44,29 @@ endif
 ccdv: 	$(top_srcdir)/tools/ccdv.c
 	gcc $(AM_CFLAGS) $(CFLAGS) -o ccdv $(top_srcdir)/tools/ccdv.c
 
-cl_status_SOURCES	= cl_status.c
 # A little trick. Now ccdv can be auto-built but not auto-cleaned.
-cl_status_DEPENDENCIES  = ccdv
-cl_status_LDADD		= $(top_builddir)/lib/hbclient/libhbclient.la	\
-			  $(top_builddir)/lib/clplumbing/libplumb.la	\
-			  $(gliblib)					\
-			  $(top_builddir)/replace/libreplace.la
-
-cl_respawn_SOURCES	= cl_respawn.c
-cl_respawn_LDADD	= $(top_builddir)/lib/clplumbing/libplumb.la	\
-			  $(top_builddir)/lib/apphb/libapphb.la 	\
-			  $(gliblib)					\
-			  $(top_builddir)/replace/libreplace.la
-
-
+attrd_DEPENDENCIES	= ccdv
 attrd_SOURCES		= attrd.c
-attrd_LDADD		=  				\
-		  $(top_builddir)/lib/clplumbing/libplumb.la		\
+attrd_LDADD		=  						\
+		  -lhbclient						\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
-		  $(top_builddir)/lib/hbclient/libhbclient.la		\
 		  $(top_builddir)/lib/crm/cib/libcib.la			\
 		  $(GLIBLIB)						\
 		  $(LIBRT)
 
 pingd_SOURCES		= pingd.c
-pingd_LDADD		=  				\
-		  $(top_builddir)/lib/clplumbing/libplumb.la		\
+pingd_LDADD		=  						\
+		  -lhbclient						\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
-		  $(top_builddir)/lib/hbclient/libhbclient.la		\
 		  $(GLIBLIB)						\
 		  $(LIBRT)
 
 attrd_updater_SOURCES	= attrd_updater.c
-attrd_updater_LDADD	=  				\
+attrd_updater_LDADD	=  						\
+		  -lhbclient						\
 		  $(top_builddir)/lib/clplumbing/libplumb.la		\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(GLIBLIB)						\
 		  $(LIBRT)
-
-install-data-hook:    # install-exec-hook doesn't work (!)
-	-chgrp $(apigid) $(DESTDIR)/$(habindir)/cl_status
-	-chmod g+s,a-w $(DESTDIR)/$(habindir)/cl_status
 
 .PHONY: install-exec-hook
