@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <lha_internal.h>
+#include <hb_config.h>
 
 #include <sys/param.h>
 #include <stdio.h>
@@ -35,7 +35,7 @@
 #include <clplumbing/coredumps.h>
 #include <clplumbing/Gmain_timeout.h>
 
-/* #include <lha_internal.h> */
+/* #include <hb_config.h> */
 #include <ocf/oc_event.h>
 /* #include <ocf/oc_membership.h> */
 

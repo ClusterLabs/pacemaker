@@ -29,10 +29,6 @@ MAINTAINERCLEANFILES    = Makefile.in
 #
 #
 
-if MGMT_BUILD
-MGMT_DIR = mgmt
-endif
-
 ## Subdirectories...
 SUBDIRS	= crm
 

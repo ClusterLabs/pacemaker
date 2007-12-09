@@ -33,8 +33,6 @@ RPMFLAGS		= -ta
 TARFILE			= @TARFILE@
 AM_TAR			= tar
 RPMDIR=$(HOME)/rpms
-WEBDIR=/home/alanr/ha-web/download
-HBWEBDIR=/home/alanr/ha-web/heartbeat
 RPMSRC=$(DESTDIR)$(RPMDIR)/SRPMS/$(PACKAGE)-$(VERSION)-$(RPMREL).src.rpm
 RPM386=$(DESTDIR)$(RPMDIR)/RPMS/i586/$(PACKAGE)-$(VERSION)-$(RPMREL).i586.rpm
 RPMstonith=$(DESTDIR)$(RPMDIR)/RPMS/i586/$(PACKAGE)-stonith-$(VERSION)-$(RPMREL).i586.rpm
@@ -59,20 +57,8 @@ if SNMP_SUBAGENT_BUILD
 SNMP_SUBAGENT_DIR = snmp_subagent
 endif
 
-if MGMT_BUILD
-MGMT_DIR = mgmt
-endif
-
 if CIM_PROVIDER_BUILD
 CIM_PROVIDER_DIR = cim
-endif
-
-if TSA_PLUGIN_BUILD
-TSA_PLUGIN_DIR = tsa_plugin
-endif
-
-if LDIRECTORD_BUILD
-LDIRECTORD_DIR = ldirectord
 endif
 
 SUBDIRS	= debian pkg port replace include lib crm tools doc cts
@@ -110,10 +96,6 @@ install-exec-local:
 	do if [  -d $$file ]; then continue; fi;	\
 		rm -f $$file && ln -s $(HBSHAREDIR)/$$file .;	\
 	done
-if MGMT_BUILD
-	cd $(DESTDIR)@HA_LIBDIR@/heartbeat-gui && rm -f haclient.py && ln -s $(SHAREDIR)/heartbeat-gui/haclient.py .
-	rm -f $(DESTDIR)@bindir@/hb_gui && ln -s $(SHAREDIR)/heartbeat-gui/haclient.py $(DESTDIR)@bindir@/hb_gui 
-endif
 
 dist-clean-local:
 	rm -f autoconf automake autoheader $(PACKAGE)-*.tar.gz
@@ -131,13 +113,5 @@ portfile:	dist
 
 drpm:		dist
 		$(RPM) --nodeps $(RPMFLAGS) $(TARFILE) </dev/null;
-handy: drpm handy-copy
-	$HOME/bin/linuxhasums $VERSION
-
-handy-copy:
-	cd doc; $(MAKE)
-	rm -f $(WEBDIR)/ChangeLog
-	cp $(HANDY_DOCS) $(TARFILE) $(ALL_RPMS) $(WEBDIR)
-	cp $(HBDOCS) $(HBWEBDIR)
 
 .PHONY: rpm pkg handy handy-copy

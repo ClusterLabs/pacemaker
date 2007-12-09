@@ -103,7 +103,7 @@
  *
  */
 
-#include <lha_internal.h>
+#include <hb_config.h>
 #include <sys/types.h>
 #include <dirent.h>
 #include <stdlib.h>

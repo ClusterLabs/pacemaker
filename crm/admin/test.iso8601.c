@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <lha_internal.h>
+#include <hb_config.h>
 #include <crm/common/iso8601.h>
 
 #define OPTARGS	"V?d:p:D:WOLn"

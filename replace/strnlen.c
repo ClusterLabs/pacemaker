@@ -1,4 +1,4 @@
-#include <lha_internal.h>
+#include <hb_config.h>
 #include <string.h>
 /*
  * Copyright (C) 2003 Alan Robertson <alanr@unix.sh>

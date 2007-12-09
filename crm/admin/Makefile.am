@@ -28,10 +28,9 @@ LIBRT 		= @LIBRT@
 AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
 
 COMMONLIBS	= 					\
-		$(top_builddir)/lib/clplumbing/libplumb.la		\
 		$(top_builddir)/lib/crm/common/libcrmcommon.la		\
 		$(top_builddir)/lib/crm/cib/libcib.la			\
-		$(top_builddir)/lib/hbclient/libhbclient.la  		\
+		-lplumb					  		\
 		$(GLIBLIB)						\
 		$(CURSESLIBS)						\
 		$(LIBRT)
@@ -50,18 +49,17 @@ hasbin_SCRIPTS		= crm_sh
 noinst_HEADERS		= 
 
 crmadmin_SOURCES	= crmadmin.c
-crmadmin_LDADD		= $(COMMONLIBS) \
+crmadmin_LDADD		= $(COMMONLIBS) -lhbclient \
 			$(top_builddir)/lib/crm/pengine/libpe_status.la
 
 crm_uuid_SOURCES	= crm_uuid.c
-crm_uuid_LDADD		= $(GLIBLIB) $(top_builddir)/lib/clplumbing/libplumb.la
+crm_uuid_LDADD		= $(GLIBLIB)
 
 cibadmin_SOURCES	= cibadmin.c
 cibadmin_LDADD		= $(COMMONLIBS)
 
 ccm_tool_SOURCES	= ccm_epoche.c
-ccm_tool_LDADD		= $(COMMONLIBS) \
-			  $(top_builddir)/membership/ccm/libccmclient.la
+ccm_tool_LDADD		= $(COMMONLIBS) -lccmclient
 
 crm_diff_SOURCES	= xml_diff.c
 crm_diff_LDADD		= $(COMMONLIBS)

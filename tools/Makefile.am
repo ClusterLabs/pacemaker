@@ -64,7 +64,6 @@ pingd_LDADD		=  						\
 attrd_updater_SOURCES	= attrd_updater.c
 attrd_updater_LDADD	=  						\
 		  -lhbclient						\
-		  $(top_builddir)/lib/clplumbing/libplumb.la		\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(GLIBLIB)						\
 		  $(LIBRT)

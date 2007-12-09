@@ -22,7 +22,7 @@
  * newer.
  */
 
-#include <lha_internal.h>
+#include <hb_config.h>
 
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>

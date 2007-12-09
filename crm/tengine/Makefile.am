@@ -32,7 +32,6 @@ havarlibdir	= $(localstatedir)/lib/@HB_PKG@
 crmdir		= $(havarlibdir)/crm
 
 COMMONLIBS	=  					\
-		$(top_builddir)/lib/clplumbing/libplumb.la		\
 		$(top_builddir)/lib/crm/common/libcrmcommon.la 	\
 		$(top_builddir)/lib/crm/cib/libcib.la	 	\
 		$(GLIBLIB)						\
@@ -50,12 +49,12 @@ noinst_HEADERS	= tengine.h te_callbacks.h
 
 tengine_SOURCES	= actions.c events.c utils.c callbacks.c main.c
 tengine_LDADD	= $(COMMONLIBS) \
-                    $(top_builddir)/lib/fencing/libstonithd.la \
+                    -lstonithd	\
                     $(top_builddir)/lib/crm/transition/libtransitioner.la
 
 ttest_SOURCES	= actions.c events.c utils.c callbacks.c ttest.c
 ttest_LDADD	= $(COMMONLIBS) \
-                    $(top_builddir)/lib/fencing/libstonithd.la \
+                    -lstonithd  \
                     $(top_builddir)/lib/crm/transition/libtransitioner.la
 
 clean-generic:

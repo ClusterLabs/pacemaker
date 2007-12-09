@@ -38,7 +38,6 @@ crmuid		= @HA_CCMUID@
 
 
 COMMONLIBS	= 					\
-		$(top_builddir)/lib/clplumbing/libplumb.la		\
 		$(top_builddir)/lib/crm/common/libcrmcommon.la		\
 		$(top_builddir)/lib/crm/pengine/libpe_status.la		\
 		libpengine.la						\

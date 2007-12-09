@@ -35,11 +35,10 @@ apigid		= @HA_APIGID@
 crmuid		= @HA_CCMUID@
 
 COMMONLIBS	= 					\
-		$(top_builddir)/lib/clplumbing/libplumb.la		\
 		$(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		$(top_builddir)/lib/crm/pengine/libpe_rules.la	\
 		$(top_builddir)/lib/crm/cib/libcib.la			\
-		$(top_builddir)/lib/hbclient/libhbclient.la		\
+		-lplumb							\
 		$(GLIBLIB)						\
 		$(LIBRT)
 
@@ -69,9 +68,7 @@ crmd_SOURCES	= main.c crmd.c 					\
 		cib.c pengine.c tengine.c lrm.c 			\
 		utils.c misc.c
 
-crmd_LDADD	= $(COMMONLIBS) 					\
-		  $(top_builddir)/lib/lrm/liblrm.la			\
-		  $(top_builddir)/membership/ccm/libccmclient.la  
+crmd_LDADD	= $(COMMONLIBS) -lhbclient -llrm -lccmclient
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

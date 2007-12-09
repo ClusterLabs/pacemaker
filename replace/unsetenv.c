@@ -19,7 +19,7 @@
  *
  */
 
-#include <lha_internal.h>
+#include <hb_config.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>

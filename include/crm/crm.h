@@ -18,6 +18,7 @@
 #ifndef CRM__H
 #define CRM__H
 
+#include <config.h>
 #include <stdlib.h>
 #include <glib.h>
 #undef MIN
@@ -29,6 +30,10 @@
 #ifdef MCHECK
 #include <mcheck.h>
 #endif
+
+#define EOS		'\0'
+#define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
+#define	HAURL(url)	HA_URLBASE url
 
 #ifndef CRM_DEV_BUILD
 #  define CRM_DEV_BUILD 0
