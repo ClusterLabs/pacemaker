@@ -278,7 +278,7 @@ do_election_count_vote(long long action,
 		
 	} else if(compare_version(your_version, CRM_FEATURE_SET) > 0) {
 		crm_info("Election pass: version");
-#ifndef WITH_NATIVE_AIS
+#if !SUPPORT_AIS
 	} else if(your_node->born < our_node->born) {
 		crm_debug("Election fail: born_on");
 		we_loose = TRUE;

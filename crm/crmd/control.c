@@ -51,7 +51,7 @@ GHashTable   *ipc_clients = NULL;
 GTRIGSource  *fsa_source = NULL;
 
 /*	 A_HA_CONNECT	*/
-#ifdef WITH_NATIVE_AIS	
+#if SUPPORT_AIS	
 extern void crmd_ha_msg_filter(HA_Message * msg);
 
 static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
@@ -102,7 +102,7 @@ do_ha_control(long long action,
 	gboolean registered = FALSE;
 	
 	if(action & A_HA_DISCONNECT) {
-#ifdef WITH_NATIVE_AIS
+#if SUPPORT_AIS
 		crm_peer_destroy();
 #else
 		if(fsa_cluster_conn != NULL) {
@@ -115,7 +115,7 @@ do_ha_control(long long action,
 	}
 	
 	if(action & A_HA_CONNECT) {
-#ifdef WITH_NATIVE_AIS
+#if SUPPORT_AIS
 		crm_peer_init();
 		registered = init_ais_connection(
 		    crm_ais_dispatch, crm_ais_destroy, &fsa_our_uname);
@@ -607,7 +607,7 @@ do_started(long long action,
 			 R_PEER_DATA);
 
 		crm_debug_3("Looking for a HA message");
-#ifndef WITH_NATIVE_AIS
+#if !SUPPORT_AIS
 		msg = fsa_cluster_conn->llc_ops->readmsg(fsa_cluster_conn, 0);
 #endif
 		if(msg != NULL) {
@@ -898,10 +898,12 @@ populate_cib_nodes(gboolean with_client_status)
 	return;
     }
 
+#if SUPPORT_AIS
     if(with_client_status) {
 	crm_info("Requesting the list of configured nodes");
 	send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
     }
+#endif
     
     cib_node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
     g_hash_table_foreach(

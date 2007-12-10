@@ -23,12 +23,12 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
-#include <crm/ais.h>
+#include <crm/ais_common.h>
 
 extern gboolean send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg,
 				const char *node, gboolean force_ordered);
 
-#ifdef WITH_NATIVE_AIS
+#if SUPPORT_AIS
 #  include <crm/ais.h> 
 #  define send_cluster_message(node, service, data, ordered) send_ais_message( \
 	data, FALSE, node, service)

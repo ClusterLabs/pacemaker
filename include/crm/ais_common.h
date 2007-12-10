@@ -21,9 +21,16 @@
 
 #include <glib.h>
 #include <string.h>
+#if SUPPORT_AIS
 #include <openais/ais_util.h>
 #include <openais/ipc_gen.h>
 #include <openais/saAis.h>
+#else
+typedef struct {
+	int size __attribute__((aligned(8)));
+	int id __attribute__((aligned(8)));
+} mar_req_header_t __attribute__((aligned(8)));
+#endif
 
 #define MAX_NAME	256
 #define AIS_IPC_NAME  "ais-crm-ipc"
@@ -147,7 +154,6 @@ static inline const char *ais_dest(struct crm_ais_host_s *host)
 	return "<all>";
     }
 }
-
 
 #define ais_data_len(msg) (msg->is_compressed?msg->compressed_size:msg->size)
 

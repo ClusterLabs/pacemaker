@@ -40,17 +40,17 @@
 #include <clplumbing/GSource.h>
 #include <clplumbing/cl_poll.h>
 
+#include <ha_msg.h>
+#include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/cluster.h>
-#include <crm/msg_xml.h>
-#include <ha_msg.h>
 
 gboolean 
 send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboolean force_ordered)
 {
     gboolean all_is_good = TRUE;
     
-#ifdef WITH_NATIVE_AIS
+#if SUPPORT_AIS
 /*     return send_ha_message_via_ais(msg, 0, node, 0); */
 #endif
 

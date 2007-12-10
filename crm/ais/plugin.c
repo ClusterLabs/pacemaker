@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <lha_internal.h>
+#include <crm_internal.h>
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/socket.h>

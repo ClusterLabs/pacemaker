@@ -103,7 +103,7 @@ do_ccm_control(long long action,
 		enum crmd_fsa_input current_input,
 		fsa_data_t *msg_data)
 {	
-#ifndef WITH_NATIVE_AIS
+#if !SUPPORT_AIS
 	if(action & A_CCM_DISCONNECT){
 		set_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
 		oc_ev_unregister(fsa_ev_token);
@@ -180,7 +180,7 @@ do_ccm_control(long long action,
 	}
 }
 
-#ifndef WITH_NATIVE_AIS
+#if !SUPPORT_AIS
 void
 ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 {
@@ -248,7 +248,7 @@ do_ccm_update_cache(
 	HA_Message *no_op = NULL;
 	unsigned long long instance = 0;
 	
-#ifdef WITH_NATIVE_AIS	
+#if SUPPORT_AIS	
 	const char *seq_s = crm_element_value(xml, "seq");
 	CRM_ASSERT(xml != NULL);
 	instance = crm_int_helper(seq_s, NULL);
@@ -279,20 +279,20 @@ do_ccm_update_cache(
 	crm_debug("Updating cache after membership event %llu (%s).", 
 		  instance, ccm_event_name(event));
 	
-#ifdef WITH_NATIVE_AIS	
+#if SUPPORT_AIS	
 	set_bit_inplace(fsa_input_register, R_PEER_DATA);
 #else
 	ccm_event_detail(oc, event);
 		
 	/*--*-- Recently Dead Member Nodes --*--*/
 	for(lpc=0; lpc < oc->m_n_out; lpc++) {
-	    update_ccm_node(
+	    crm_update_ccm_node(
 		fsa_cluster_conn, oc, lpc+oc->m_out_idx, CRM_NODE_LOST);
 	}
 
 	/*--*-- All Member Nodes --*--*/
 	for(lpc=0; lpc < oc->m_n_member; lpc++) {
-	    update_ccm_node(
+	    crm_update_ccm_node(
 		fsa_cluster_conn, oc, lpc+oc->m_memb_idx, CRM_NODE_ACTIVE);
 	}
 #endif

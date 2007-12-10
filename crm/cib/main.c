@@ -353,7 +353,7 @@ gboolean ccm_connect(void)
     return TRUE;    
 }
 
-#ifdef WITH_NATIVE_AIS	
+#if SUPPORT_AIS	
 static gboolean cib_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
 {
     crm_data_t *xml = NULL;
@@ -405,7 +405,7 @@ cib_init(void)
 	}
 
 	if(stand_alone == FALSE) {
-#ifdef WITH_NATIVE_AIS
+#if SUPPORT_AIS
 	    if(!init_ais_connection(
 		   cib_ais_dispatch, cib_ais_destroy, &cib_our_uname)) {
 		exit(100);
@@ -466,7 +466,7 @@ cib_init(void)
 		return 0;
 	}	
 
-#ifdef WITH_NATIVE_AIS
+#if SUPPORT_AIS
 	crm_info("Requesting the list of configured nodes");
 	send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
 #else	

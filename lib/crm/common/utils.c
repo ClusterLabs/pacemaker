@@ -1738,3 +1738,4 @@ is_set_any(long long word, long long bit)
 	crm_debug_5("Checking bit\t%.16llx in %.16llx", bit, word);
 	return ((word & bit) != 0);
 }
+

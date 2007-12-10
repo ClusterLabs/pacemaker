@@ -814,7 +814,7 @@ add_message_xml(HA_Message *msg, const char *field, const crm_data_t *xml)
 
 	CRM_CHECK(field != NULL, return FALSE);
 
-#ifdef WITH_NATIVE_AIS
+#if SUPPORT_AIS
 	{
 	    crm_data_t *holder = NULL;
 	    holder = ha_msg_new(3);

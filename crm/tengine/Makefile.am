@@ -32,8 +32,6 @@ crmdir		= $(havarlibdir)/crm
 COMMONLIBS	=  					\
 		$(top_builddir)/lib/crm/common/libcrmcommon.la 	\
 		$(top_builddir)/lib/crm/cib/libcib.la	 	\
-		$(top_builddir)/lib/apphb/libapphb.la			\
-		$(top_builddir)/lib/hbclient/libhbclient.la		\
 		$(AISLIBS)						\
 		$(GLIBLIB)						\
 		$(LIBRT)

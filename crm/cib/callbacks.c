@@ -1609,7 +1609,10 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 	const char *originator = cl_get_string(msg, F_ORIG);
 	const char *seq        = cl_get_string(msg, F_SEQ);
 	const char *op         = cl_get_string(msg, F_CIB_OPERATION);
-
+#if !SUPPORT_AIS
+	crm_node_t *node = NULL;
+#endif
+	
 	crm_log_message_adv(LOG_MSG, "Peer[inbound]", msg);
 	crm_debug_2("Peer %s message (%s) from %s", op, seq, originator);
 
@@ -1618,7 +1621,7 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 	    return;
 	}
 
-#ifndef WITH_NATIVE_AIS
+#if !SUPPORT_AIS
 	if(crm_peer_cache == NULL) {
 	    crm_info("Discarding %s message (%s) from %s:"
 		     " membership not established", op, seq, originator);
@@ -1898,7 +1901,7 @@ extern void cib_ha_connection_destroy(gpointer user_data);
 void
 terminate_ha_connection(const char *caller) 
 {
-#ifdef WITH_NATIVE_AIS	
+#if SUPPORT_AIS	
 	cib_ha_connection_destroy(NULL);
 #else
 	if(hb_conn != NULL) {

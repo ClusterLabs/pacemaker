@@ -148,7 +148,7 @@ te_init(void)
 		}
 	}
 
-#ifndef WITH_NATIVE_AIS
+#if !SUPPORT_AIS
 	if(init_ok) {
 	    G_main_set_trigger(stonith_reconnect);
 	}

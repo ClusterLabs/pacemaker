@@ -35,7 +35,9 @@
 #include <ocf/oc_membership.h>
 
 #include <crm/crm.h>
+#if SUPPORT_AIS
 #include <crm/ais.h>
+#endif
 #include <crm/common/cluster.h>
 
 
@@ -91,6 +93,7 @@ main(int argc, char ** argv)
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
 
+#if SUPPORT_AIS
 	if(init_ais_connection(
 	       ais_membership_dispatch, ais_membership_destroy, NULL)) {
 
@@ -102,7 +105,9 @@ main(int argc, char ** argv)
 	    amainloop = g_main_new(FALSE);
 	    g_main_run(amainloop);
 
-	} else if(ccm_age_connect(&ccm_fd)) {
+	} else
+#endif
+	    if(ccm_age_connect(&ccm_fd)) {
 		int rc = 0;
 		int lpc = 0;
 		fd_set rset;	
@@ -259,6 +264,7 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 	exit(0);
 }
 
+#if SUPPORT_AIS
 void
 ais_membership_destroy(gpointer user_data)
 {
@@ -266,6 +272,7 @@ ais_membership_destroy(gpointer user_data)
     ais_fd_sync = -1;
     exit(1);
 }
+#endif
 
 static void crm_print_member(
     gpointer key, gpointer value, gpointer user_data)

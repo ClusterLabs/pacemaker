@@ -29,7 +29,7 @@
 #include <signal.h>
 #include <string.h>
 
-#include <lha_internal.h>
+#include <crm_internal.h>
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
 #include <glib/ghash.h>

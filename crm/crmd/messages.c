@@ -1065,7 +1065,9 @@ send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 	const char *sys_to   = cl_get_string(msg, F_CRM_SYS_TO);
 	const char *host_to  = cl_get_string(msg, F_CRM_HOST_TO);
 
+#if SUPPORT_AIS
 	enum crm_ais_msg_types dest = text2msg_type(sys_to);
+#endif
 	
 	hb_conn = hb_fd;
 	
