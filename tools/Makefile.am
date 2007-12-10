@@ -19,8 +19,10 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in ccdv
 
-INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include \
-			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl
+INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include   \
+			  -I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
+			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl   \
+			  -I$(AISPREFIX)/include/openais
 
 EXTRA_DIST		= ccdv.c attrd.h $(hanoarch_DATA) $(sbin_SCRIPTS)
 
@@ -51,6 +53,7 @@ attrd_LDADD		=  						\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(top_builddir)/lib/crm/cib/libcib.la			\
 		  $(GLIBLIB)						\
+		  $(AISLIBS)						\
 		  $(LIBRT)
 
 pingd_SOURCES		= pingd.c
@@ -58,6 +61,7 @@ pingd_LDADD		=  						\
 		  -lhbclient						\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(GLIBLIB)						\
+		  $(AISLIBS)						\
 		  $(LIBRT)
 
 attrd_updater_SOURCES	= attrd_updater.c
@@ -65,6 +69,7 @@ attrd_updater_LDADD	=  						\
 		  -lhbclient						\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(GLIBLIB)						\
+		  $(AISLIBS)						\
 		  $(LIBRT)
 
 .PHONY: install-exec-hook

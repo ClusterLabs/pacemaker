@@ -174,12 +174,9 @@ do_timer_control(long long action,
 		    fsa_data_t *msg_data);
 
 /*	A_CCM_UPDATE_CACHE	*/
-void
-do_ccm_update_cache(long long action,
-		    enum crmd_fsa_cause cause,
-		    enum crmd_fsa_state cur_state,
-		    enum crmd_fsa_input cur_input,
-		    fsa_data_t *msg_data);
+void do_ccm_update_cache(
+    enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
+    oc_ed_t event, const oc_ev_membership_t *oc, crm_data_t *xml);
 
 /*	A_CCM_EVENT	*/
 void

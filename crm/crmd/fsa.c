@@ -28,6 +28,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
+#include <crm/common/cluster.h>
 
 #include <clplumbing/Gmain_timeout.h>
 
@@ -48,9 +49,8 @@ char	*fsa_our_dc_version = NULL;
 
 ll_lrm_t	*fsa_lrm_conn;
 ll_cluster_t	*fsa_cluster_conn;
-oc_node_list_t	*fsa_membership_copy;
 char		*fsa_our_uuid = NULL;
-const char	*fsa_our_uname = NULL;
+char		*fsa_our_uname = NULL;
 
 fsa_timer_t *wait_timer = NULL;
 fsa_timer_t *recheck_timer = NULL;
@@ -456,12 +456,7 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 
 			/*
 			 * High priority actions
-			 * Update the cache first
 			 */
-		} else if(is_set(fsa_actions, A_CCM_UPDATE_CACHE)) {
-			do_fsa_action(fsa_data, A_CCM_UPDATE_CACHE,	do_ccm_update_cache);
-		} else if(is_set(fsa_actions, A_CCM_EVENT)) {
-			do_fsa_action(fsa_data, A_CCM_EVENT,		do_ccm_event);
 		} else if(is_set(fsa_actions, A_STARTED)) {
 			do_fsa_action(fsa_data, A_STARTED,		do_started);
 		} else if(is_set(fsa_actions, A_CL_JOIN_QUERY)) {
@@ -705,26 +700,25 @@ do_state_transition(long long actions,
 				crm_free(msg);
 				
 			} else if(g_hash_table_size(confirmed_nodes)
-				  == fsa_membership_copy->members_size) {
+				  == crm_active_members()) {
 				crm_info("All %u cluster nodes are"
 					 " eligible to run resources.",
-					 fsa_membership_copy->members_size);
+					 crm_active_members());
 				
-			} else if(g_hash_table_size(confirmed_nodes) > fsa_membership_copy->members_size) {
+			} else if(g_hash_table_size(confirmed_nodes) > crm_active_members()) {
 				crm_err("We have more confirmed nodes than our membership does");
 				register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 				
-			} else if(saved_ccm_membership_id != current_ccm_membership_id) {
-				crm_info("Membership changed: %u -> %u - join restart",
-					 saved_ccm_membership_id,
-					 current_ccm_membership_id);
+			} else if(saved_ccm_membership_id != crm_peer_seq) {
+				crm_info("Membership changed: %llu -> %llu - join restart",
+					 saved_ccm_membership_id, crm_peer_seq);
 				register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
 
 			} else {
 				crm_warn("Only %u of %u cluster "
 					 "nodes are eligible to run resources - continue %d",
 					 g_hash_table_size(confirmed_nodes),
-					 fsa_membership_copy->members_size,
+					 crm_active_members(),
 					 g_hash_table_size(welcomed_nodes));
 			}
 /* 			initialize_join(FALSE); */

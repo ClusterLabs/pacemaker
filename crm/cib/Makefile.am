@@ -20,7 +20,9 @@ MAINTAINERCLEANFILES    = Makefile.in
 INCLUDES        = -I$(top_builddir)/include  -I$(top_srcdir)/include  \
 		  -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl  \
 		  -I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
-		  -I$(top_builddir)          -I$(top_srcdir)
+		  -I$(top_builddir)          -I$(top_srcdir)	      \
+		  -I$(AISPREFIX)/include/openais
+
 
 EXTRA_DIST	= cib.pam
 
@@ -41,6 +43,7 @@ COMMONLIBS	= 					\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(top_builddir)/lib/crm/cib/libcib.la			\
 		  $(GLIBLIB)						\
+		  $(AISLIBS)						\
 		  $(LIBRT)
 
 LIBRT 		= @LIBRT@
@@ -54,7 +57,7 @@ halib_PROGRAMS	= cib cibmon
 noinst_HEADERS		= cibio.h cibmessages.h cibprimatives.h notify.h \
 			callbacks.h
 
-cib_SOURCES		= io.c primatives.c messages.c cib.c notify.c \
+cib_SOURCES		= io.c primatives.c messages.c cib.c notify.c	\
 			callbacks.c main.c remote.c
 cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB) -lccmclient
 

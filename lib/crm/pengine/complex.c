@@ -18,7 +18,6 @@
 
 #include <crm_internal.h>
 
-#include <crm/cib.h>
 #include <utils.h>
 #include <crm/pengine/rules.h>
 #include <crm/msg_xml.h>

@@ -108,6 +108,7 @@ do_cl_join_offer_respond(long long action,
 {
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 	const char *welcome_from = cl_get_string(input->msg, F_CRM_HOST_FROM);
+	const char *join_id = ha_msg_value(input->msg, F_CRM_JOIN_ID);
 	
 #if 0
 	if(we are sick) {
@@ -141,8 +142,7 @@ do_cl_join_offer_respond(long long action,
 	query_call_id = fsa_cib_conn->cmds->query(
 		fsa_cib_conn, NULL, NULL, cib_scope_local);
 	add_cib_op_callback(
-		query_call_id, TRUE,
-		copy_ha_msg_input(input), join_query_callback);
+	    query_call_id, FALSE, crm_strdup(join_id), join_query_callback);
 	crm_debug_2("Registered join query callback: %d", query_call_id);
 
 	register_fsa_action(A_DC_TIMER_STOP);
@@ -153,11 +153,11 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 		    crm_data_t *output, void *user_data)
 {
 	crm_data_t *local_cib = NULL;
-	ha_msg_input_t *input = user_data;
+	char *join_id = user_data;
 	crm_data_t *generation = create_xml_node(
 		NULL, XML_CIB_TAG_GENERATION_TUPPLE);
 
-	CRM_DEV_ASSERT(input != NULL);
+	CRM_DEV_ASSERT(join_id != NULL);
 
 	query_call_id = 0;
 	
@@ -176,10 +176,8 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 	
 	if(local_cib != NULL) {
 		HA_Message *reply = NULL;
-		const char *join_id = ha_msg_value(input->msg, F_CRM_JOIN_ID);
 		crm_debug("Respond to join offer join-%s", join_id);
-		crm_debug("Acknowledging %s as our DC",
-			  cl_get_string(input->msg, F_CRM_HOST_FROM));
+		crm_debug("Acknowledging %s as our DC", fsa_our_dc);
 		copy_in_properties(generation, local_cib);
 
 		reply = create_request(
@@ -197,7 +195,7 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 			C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
 	}
 	
-	delete_ha_msg_input(input);
+	crm_free(join_id);
 	free_xml(generation);
 }
 
@@ -256,8 +254,9 @@ do_cl_join_finalize_respond(long long action,
 			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 		ha_msg_add_int(reply, F_CRM_JOIN_ID, join_id);
 		
-		crm_debug("join-%d: Join complete.  Sending local LRM status.",
-			join_id);
+		crm_debug("join-%d: Join complete."
+			  "  Sending local LRM status to %s",
+			  join_id, fsa_our_dc);
 		send_msg_via_ha(fsa_cluster_conn, reply);
 		if(AM_I_DC == FALSE) {
  			register_fsa_input_adv(cause, I_NOT_DC, NULL,

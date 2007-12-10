@@ -628,6 +628,8 @@ if __name__ == '__main__':
            SuppressMonitoring = 1
        elif args[i] == "--resource-can-stop":
            ResCanStop = 1
+       elif args[i] == "-3" or args[i] == "--ais":
+           Version = 3
        elif args[i] == "-2" or args[i] == "--crm":
            Version = 2
        elif args[i] == "-1" or args[i] == "--classic":
@@ -733,6 +735,13 @@ if __name__ == '__main__':
         from CM_LinuxHAv2 import LinuxHAv2
         Environment['CMclass']=LinuxHAv2
 
+    if Version == 3:
+        from CM_ais import crm_ais
+        Environment['CMclass']   = crm_ais
+        Environment["DoStonith"] = 0
+        Environment["DoFencing"] = 0
+        Environment["use_logd"]  = 0
+
     if HaveSeed:
         Environment["RandSeed"] = Seed 
 
@@ -766,6 +775,7 @@ if __name__ == '__main__':
             lf.close()
 
     cm.log(">>>>>>>>>>>>>>>> BEGINNING " + repr(NumIter) + " TESTS ")
+    cm.log("Version:   %d" % Version)
     cm.log("HA configuration directory: " + Environment["HAdir"])
     cm.log("System log files: " + Environment["LogFileName"])
     cm.log("Enable Stonith:   %d" % Environment["DoStonith"])

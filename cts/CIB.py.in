@@ -16,25 +16,12 @@ class CIB:
     cib_option_template = '''
     <cluster_property_set id="cib-bootstrap-options">
        <attributes>
-        <nvpair id="cib-bootstrap-options-default-action-timeout"  name="default-action-timeout" value="30s"/>
-        <nvpair id="cib-bootstrap-options-cluster-delay"           name="cluster-delay"          value="60s"/>
-        <nvpair id="cib-bootstrap-options-symmetric-cluster"       name="symmetric-cluster"      value="true"/>
-        <nvpair id="cib-bootstrap-options-start-failure-is-fatal"  name="start-failure-is-fatal" value="false"/>
-        <nvpair id="cib-bootstrap-options-stop-orphan-resources"   name="stop-orphan-resources"  value="true"/>
-        <nvpair id="cib-bootstrap-options-stop-orphan-actions"     name="stop-orphan-actions"    value="true"/>
-        <nvpair id="cib-bootstrap-options-remove-after-stop"       name="remove-after-stop"      value="false"/>
-        <nvpair id="cib-bootstrap-options-is-managed-default"      name="is-managed-default"     value="true"/>
-        <nvpair id="cib-bootstrap-options-no-quorum-policy"        name="no-quorum-policy"       value="stop"/>
-        <nvpair id="cib-bootstrap-options-stonith-action"          name="stonith-action"         value="reboot"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled"         name="stonith-enabled"        value="%d"/>
-        <nvpair id="cib-bootstrap-options-pe-error-series-max"     name="pe-error-series-max"    value="-1"/>
-        <nvpair id="cib-bootstrap-options-pe-warn-series-max"      name="pe-warn-series-max"     value="-1"/>
-        <nvpair id="cib-bootstrap-options-pe-input-series-max"     name="pe-input-series-max"    value="30000"/>
-        <nvpair id="cib-bootstrap-options-default-resource-stickiness"         name="default-resource-stickiness"         value="0"/>
-        <nvpair id="cib-bootstrap-options-default-resource-failure-stickiness" name="default-resource-failure-stickiness" value="0"/>
-        <nvpair id="cib-bootstrap-options-shutdown-escalation"                 name="shutdown-escalation"                 value="5min"/>
+        <nvpair id="cib-bootstrap-1" name="start-failure-is-fatal" value="false"/>
+        <nvpair id="cib-bootstrap-2" name="stonith-enabled"      value="%d"/>
+        <nvpair id="cib-bootstrap-3" name="pe-input-series-max"  value="30000"/>
+        <nvpair id="cib-bootstrap-4" name="shutdown-escalation"  value="5min"/>
         <!-- *** For CTS testing only *** _NEVER_ make this the default -->
-        <nvpair id="cib-bootstrap-optionsstartup-fencing" name="startup-fencing" value="false"/>
+        <nvpair id="cib-bootstrap-5" name="startup-fencing"      value="false"/>
        </attributes>
     </cluster_property_set>'''
 
@@ -235,9 +222,10 @@ class CIB:
             nodelist += node + " "
             len = len + 1
 
-        stonith_resource = self.stonith_resource_template % \
-            (self.CM.Env["reset"].stonithtype, self.CM.Env["reset"].configName, self.CM.Env["reset"].configValue)
-        resources += stonith_resource
+        if CM.Env["DoFencing"]:
+            stonith_resource = self.stonith_resource_template % \
+                (self.CM.Env["reset"].stonithtype, self.CM.Env["reset"].configName, self.CM.Env["reset"].configValue)
+            resources += stonith_resource
         
         #master slave resource
         resources += self.master_slave_resource % (2*len, 2, len, 1)

@@ -46,8 +46,6 @@
 #endif
 
 /* GMainLoop *mainloop = NULL; */
-const char *crm_system_name = "pingd";
-
 #define OPTARGS	"V?p:a:d:s:S:h:Dm:"
 
 IPC_Channel *attrd = NULL;
@@ -235,7 +233,6 @@ main(int argc, char **argv)
 	};
 #endif
 	pid_file = crm_strdup("/tmp/pingd.pid");
-	crm_system_name = basename(argv[0]);
 
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, pingd_shutdown, NULL, NULL);

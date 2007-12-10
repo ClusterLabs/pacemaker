@@ -17,6 +17,7 @@
  */
 #ifndef PE_COMMON__H
 #define PE_COMMON__H
+#include <glib.h>
 
 extern gboolean was_processing_error;
 extern gboolean was_processing_warning;
@@ -107,7 +108,7 @@ extern void add_hash_param(GHashTable *hash, const char *name, const char *value
 extern void pe_metadata(void);
 extern void verify_pe_options(GHashTable *options);
 extern const char *pe_pref(GHashTable *options, const char *name);
-extern void calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index);
+extern void calculate_active_ops(GList* sorted_op_list, int *start_index, int *stop_index);
 
 /* Helper macros to avoid NULL pointers */
 #define safe_val3(def, t,u,v)       (t?t->u?t->u->v:def:def)

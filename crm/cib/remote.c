@@ -547,7 +547,7 @@ cib_send_plaintext(int sock, HA_Message *msg)
 		int len = strlen(xml_text);
 		len++; /* null char */
 		crm_debug_3("Message size: %d", len);
-		write (sock, xml_text, len);
+		rc = write (sock, xml_text, len);
 		CRM_CHECK(len == rc,
 			  crm_warn("Wrote %d of %d bytes", rc, len));
 	}

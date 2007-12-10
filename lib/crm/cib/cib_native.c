@@ -573,14 +573,9 @@ cib_native_msgready(cib_t* cib)
 		HA_Message *cmd_msg = NULL;
 		while(cmd_ch->ch_status != IPC_DISCONNECT
 		      && cmd_ch->ops->is_message_pending(cmd_ch)) {
-			/* we're not supposed to receive anything on
-			 *   this channel
-			 */
-			crm_err("Message pending on command channel [%d]",
-				cmd_ch->farside_pid);
-			cmd_msg = msgfromIPC_noauth(cmd_ch);
-			crm_log_message_adv(LOG_ERR, "cib:cmd", cmd_msg);
-			crm_msg_del(cmd_msg);
+		    /* this will happen when the CIB exited from beneath us */
+		    cmd_msg = msgfromIPC_noauth(cmd_ch);
+		    crm_msg_del(cmd_msg);
 		}
 
 	} else {

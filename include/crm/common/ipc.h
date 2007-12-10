@@ -33,9 +33,6 @@ typedef struct crmd_client_s
 		GCHSource *client_source;
 } crmd_client_t;
 
-extern gboolean send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg,
-				const char *node, gboolean force_ordered);
-
 extern gboolean send_ipc_message(IPC_Channel *ipc_client, HA_Message *msg);
 
 extern void default_ipc_connection_destroy(gpointer user_data);

@@ -70,14 +70,6 @@ do_log(long long action,
 			   "  New status if rc=0: %s",
 			   input->rsc_id, input->call_id, input->rc,
 			   input->op_status, (char*)input->user_data);
-		
-	} else if(msg_data->data_type == fsa_dt_ccm) {
-		struct crmd_ccm_data_s *input = fsa_typed_data(
-			msg_data->data_type);
-		int event = input->event;
-		do_crm_log(log_type,
-			   "Received \"%s\" event from the CCM.",
-			   ccm_event_name(event));
 	}
 }
 

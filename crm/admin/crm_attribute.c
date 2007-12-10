@@ -62,7 +62,6 @@ const char *type       = NULL;
 const char *rsc_id     = NULL;
 const char *dest_uname = NULL;
 const char *attr_value = NULL;
-const char *crm_system_name = "crm_master";
 
 #define OPTARGS	"V?GDQU:u:s:n:v:l:t:i:!r:"
 
@@ -101,8 +100,7 @@ main(int argc, char **argv)
 	};
 #endif
 
-	crm_system_name = basename(argv[0]);
-	crm_log_init(crm_system_name, LOG_ERR, FALSE, FALSE, argc, argv);
+	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, argc, argv);
 	
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);
