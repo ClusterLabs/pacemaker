@@ -278,14 +278,14 @@ do_election_count_vote(long long action,
 		
 	} else if(compare_version(your_version, CRM_FEATURE_SET) > 0) {
 		crm_info("Election pass: version");
-#if !SUPPORT_AIS
-	} else if(your_node->born < our_node->born) {
+		
+	} else if(is_heartbeat_cluster() && your_node->born < our_node->born) {
 		crm_debug("Election fail: born_on");
 		we_loose = TRUE;
-
-	} else if(your_node->born > our_node->born) {
+		
+	} else if(is_heartbeat_cluster() && your_node->born > our_node->born) {
 		crm_debug("Election pass: born_on");
-#endif
+
 	} else if(strcasecmp(fsa_our_uname, vote_from) > 0) {
 		crm_debug("Election fail: uname");
 		we_loose = TRUE;

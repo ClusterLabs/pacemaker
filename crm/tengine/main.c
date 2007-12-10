@@ -148,11 +148,9 @@ te_init(void)
 		}
 	}
 
-#if !SUPPORT_AIS
-	if(init_ok) {
+	if(is_heartbeat_cluster() && init_ok) {
 	    G_main_set_trigger(stonith_reconnect);
 	}
-#endif
 
 	if(init_ok) {
                 cl_uuid_t new_uuid;

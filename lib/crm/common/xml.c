@@ -814,8 +814,7 @@ add_message_xml(HA_Message *msg, const char *field, const crm_data_t *xml)
 
 	CRM_CHECK(field != NULL, return FALSE);
 
-#if SUPPORT_AIS
-	{
+	if(is_openais_cluster()) {
 	    crm_data_t *holder = NULL;
 	    holder = ha_msg_new(3);
 	    CRM_ASSERT(holder != NULL);
@@ -825,10 +824,11 @@ add_message_xml(HA_Message *msg, const char *field, const crm_data_t *xml)
 	    
 	    ha_msg_addstruct_compress(msg, field, holder);
 	    free_xml(holder);
+
+	} else {
+	    ha_msg_addstruct_compress(msg, field, xml);
 	}
-#else
-	ha_msg_addstruct_compress(msg, field, xml);
-#endif
+	
 	return TRUE;
 }
 

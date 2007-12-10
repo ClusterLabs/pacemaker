@@ -193,4 +193,7 @@ extern gboolean is_set(long long action_list, long long action);
 extern gboolean is_not_set(long long action_list, long long action);
 extern gboolean is_set_any(long long action_list, long long action);
 
+extern gboolean is_openais_cluster(void);
+extern gboolean is_heartbeat_cluster(void);
+
 #endif

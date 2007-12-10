@@ -35,9 +35,7 @@
 #include <ocf/oc_membership.h>
 
 #include <crm/crm.h>
-#if SUPPORT_AIS
 #include <crm/ais.h>
-#endif
 #include <crm/common/cluster.h>
 
 

@@ -1739,3 +1739,31 @@ is_set_any(long long word, long long bit)
 	return ((word & bit) != 0);
 }
 
+gboolean is_openais_cluster(void)
+{
+    static const char *cluster_type = NULL;
+
+    if(cluster_type == NULL) {
+	cluster_type = getenv("HA_cluster_type");
+    }
+    
+    if(safe_str_eq("openais", cluster_type)) {
+#if SUPPORT_AIS
+	return TRUE;
+#else
+	CRM_ASSERT(safe_str_eq("openais", cluster_type) == FALSE);
+#endif
+    }
+    return FALSE;
+}
+
+gboolean is_heartbeat_cluster(void)
+{
+#if SUPPORT_HEARTBEAT
+    return !is_openais_cluster();
+#else
+    CRM_ASSERT(is_openais_cluster());
+    return FALSE;
+#endif
+}
+

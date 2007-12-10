@@ -103,7 +103,7 @@ do_ccm_control(long long action,
 		enum crmd_fsa_input current_input,
 		fsa_data_t *msg_data)
 {	
-#if !SUPPORT_AIS
+    if(is_heartbeat_cluster()) {
 	if(action & A_CCM_DISCONNECT){
 		set_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
 		oc_ev_unregister(fsa_ev_token);
@@ -172,15 +172,15 @@ do_ccm_control(long long action,
 			      fsa_ev_token, default_ipc_connection_destroy);
 		
 	}
-#endif
+    }
 
-	if(action & ~(A_CCM_CONNECT|A_CCM_DISCONNECT)) {
-		crm_err("Unexpected action %s in %s",
-		       fsa_action2string(action), __FUNCTION__);
-	}
+    if(action & ~(A_CCM_CONNECT|A_CCM_DISCONNECT)) {
+	crm_err("Unexpected action %s in %s",
+		fsa_action2string(action), __FUNCTION__);
+    }
 }
 
-#if !SUPPORT_AIS
+#if SUPPORT_HEARTBEAT
 void
 ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 {
@@ -247,17 +247,21 @@ do_ccm_update_cache(
 {
 	HA_Message *no_op = NULL;
 	unsigned long long instance = 0;
-	
-#if SUPPORT_AIS	
-	const char *seq_s = crm_element_value(xml, "seq");
-	CRM_ASSERT(xml != NULL);
-	instance = crm_int_helper(seq_s, NULL);
-#else
+#if SUPPORT_HEARTBEAT
 	unsigned int lpc = 0;
-	CRM_ASSERT(oc != NULL);
-	instance = oc->m_instance;
 #endif
+	
+	if(is_openais_cluster()) {
+	    const char *seq_s = crm_element_value(xml, "seq");
+	    CRM_ASSERT(xml != NULL);
+	    instance = crm_int_helper(seq_s, NULL);
+	    set_bit_inplace(fsa_input_register, R_PEER_DATA);
 
+	} else {
+	    CRM_ASSERT(oc != NULL);
+	    instance = oc->m_instance;
+	}
+	
 	CRM_ASSERT(crm_peer_seq < instance);
 
 	switch(cur_state) {
@@ -278,24 +282,23 @@ do_ccm_update_cache(
 	crm_peer_seq = instance;
 	crm_debug("Updating cache after membership event %llu (%s).", 
 		  instance, ccm_event_name(event));
-	
-#if SUPPORT_AIS	
-	set_bit_inplace(fsa_input_register, R_PEER_DATA);
-#else
-	ccm_event_detail(oc, event);
-		
-	/*--*-- Recently Dead Member Nodes --*--*/
-	for(lpc=0; lpc < oc->m_n_out; lpc++) {
-	    crm_update_ccm_node(
-		fsa_cluster_conn, oc, lpc+oc->m_out_idx, CRM_NODE_LOST);
-	}
 
-	/*--*-- All Member Nodes --*--*/
-	for(lpc=0; lpc < oc->m_n_member; lpc++) {
-	    crm_update_ccm_node(
-		fsa_cluster_conn, oc, lpc+oc->m_memb_idx, CRM_NODE_ACTIVE);
+	if(is_heartbeat_cluster()) {
+	    ccm_event_detail(oc, event);
+	    
+	/*--*-- Recently Dead Member Nodes --*--*/
+	    for(lpc=0; lpc < oc->m_n_out; lpc++) {
+		crm_update_ccm_node(
+		    fsa_cluster_conn, oc, lpc+oc->m_out_idx, CRM_NODE_LOST);
+	    }
+	    
+	    /*--*-- All Member Nodes --*--*/
+	    for(lpc=0; lpc < oc->m_n_member; lpc++) {
+		crm_update_ccm_node(
+		    fsa_cluster_conn, oc, lpc+oc->m_memb_idx, CRM_NODE_ACTIVE);
+	    }
 	}
-#endif
+	
 
 	if(event == OC_EV_MS_EVICTED) {
 	    crm_update_peer(

@@ -1609,9 +1609,7 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 	const char *originator = cl_get_string(msg, F_ORIG);
 	const char *seq        = cl_get_string(msg, F_SEQ);
 	const char *op         = cl_get_string(msg, F_CIB_OPERATION);
-#if !SUPPORT_AIS
 	crm_node_t *node = NULL;
-#endif
 	
 	crm_log_message_adv(LOG_MSG, "Peer[inbound]", msg);
 	crm_debug_2("Peer %s message (%s) from %s", op, seq, originator);
@@ -1621,7 +1619,6 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 	    return;
 	}
 
-#if !SUPPORT_AIS
 	if(crm_peer_cache == NULL) {
 	    crm_info("Discarding %s message (%s) from %s:"
 		     " membership not established", op, seq, originator);
@@ -1633,7 +1630,6 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 			 " not in our membership", op, seq, originator);
 		return;
 	}
-#endif
 
 	if(cib_get_operation_id(msg, &call_type) != cib_ok) {
  		crm_debug("Discarding %s message (%s) from %s:"
@@ -1901,16 +1897,20 @@ extern void cib_ha_connection_destroy(gpointer user_data);
 void
 terminate_ha_connection(const char *caller) 
 {
-#if SUPPORT_AIS	
+#if SUPPORT_AIS
+    if(is_openais_cluster()) {
 	cib_ha_connection_destroy(NULL);
-#else
-	if(hb_conn != NULL) {
-		crm_info("%s: Disconnecting heartbeat", caller);
-		hb_conn->llc_ops->signoff(hb_conn, FALSE);
-		
-	} else {
-		crm_err("%s: No heartbeat connection", caller);
-		exit(LSB_EXIT_OK);
-	}
+	return;
+    } 
+#endif
+#if SUPPORT_HEARTBEAT
+    if(hb_conn != NULL) {
+	crm_info("%s: Disconnecting heartbeat", caller);
+	hb_conn->llc_ops->signoff(hb_conn, FALSE);
+	
+    } else {
+	crm_err("%s: No heartbeat connection", caller);
+	exit(LSB_EXIT_OK);
+    }
 #endif
 }

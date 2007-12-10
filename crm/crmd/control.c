@@ -102,25 +102,25 @@ do_ha_control(long long action,
 	gboolean registered = FALSE;
 	
 	if(action & A_HA_DISCONNECT) {
-#if SUPPORT_AIS
+	    if(is_openais_cluster()) {
 		crm_peer_destroy();
-#else
-		if(fsa_cluster_conn != NULL) {
-			set_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
-			fsa_cluster_conn->llc_ops->signoff(
-				fsa_cluster_conn, FALSE);
-		}
-#endif
+		crm_info("Disconnected from OpenAIS");
+	    } else if(fsa_cluster_conn != NULL) {
+		set_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
+		fsa_cluster_conn->llc_ops->signoff(fsa_cluster_conn, FALSE);
 		crm_info("Disconnected from Heartbeat");
+	    }
 	}
 	
 	if(action & A_HA_CONNECT) {
-#if SUPPORT_AIS
+	    if(is_openais_cluster()) {
 		crm_peer_init();
+#if SUPPORT_AIS
 		registered = init_ais_connection(
 		    crm_ais_dispatch, crm_ais_destroy, &fsa_our_uname);
 		fsa_our_uuid = crm_strdup(fsa_our_uname);
-#else
+#endif
+	    } else {
 		if(fsa_cluster_conn == NULL) {
 			fsa_cluster_conn = ll_cluster_new("heartbeat");
 		}
@@ -130,7 +130,8 @@ do_ha_control(long long action,
 		
 		registered = register_with_ha(
 			fsa_cluster_conn, crm_system_name);
-#endif
+	    }
+	    
 		if(registered == FALSE) {
 			set_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
 			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
@@ -600,16 +601,17 @@ do_started(long long action,
 		return;
 
 	} else if(is_set(fsa_input_register, R_PEER_DATA) == FALSE) {
-		HA_Message *	msg = NULL;
+		HA_Message *msg = NULL;
 
 		/* try reading from HA */
 		crm_info("Delaying start, Peer data (%.16llx) not recieved",
 			 R_PEER_DATA);
 
 		crm_debug_3("Looking for a HA message");
-#if !SUPPORT_AIS
-		msg = fsa_cluster_conn->llc_ops->readmsg(fsa_cluster_conn, 0);
-#endif
+		if(is_heartbeat_cluster()) {
+		    msg = fsa_cluster_conn->llc_ops->readmsg(fsa_cluster_conn, 0);
+		}
+		
 		if(msg != NULL) {
 			crm_debug_3("There was a HA message");
  			crm_msg_del(msg);
@@ -898,12 +900,12 @@ populate_cib_nodes(gboolean with_client_status)
 	return;
     }
 
-#if SUPPORT_AIS
-    if(with_client_status) {
+    if(is_openais_cluster() && with_client_status) {
 	crm_info("Requesting the list of configured nodes");
+#if SUPPORT_AIS
 	send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
-    }
 #endif
+    }
     
     cib_node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
     g_hash_table_foreach(

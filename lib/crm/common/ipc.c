@@ -50,10 +50,6 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboole
 {
     gboolean all_is_good = TRUE;
     
-#if SUPPORT_AIS
-/*     return send_ha_message_via_ais(msg, 0, node, 0); */
-#endif
-
 	if (msg == NULL) {
 		crm_err("cant send NULL message");
 		all_is_good = FALSE;

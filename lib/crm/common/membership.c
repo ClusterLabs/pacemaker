@@ -29,10 +29,7 @@
 #include <glib.h> 
 #include <crm/common/cluster.h>
 #include <heartbeat.h>
-
-#if SUPPORT_AIS
-#  include <crm/ais.h> 
-#endif
+#include <crm/ais.h> 
 
 struct quorum_count_s 
 {

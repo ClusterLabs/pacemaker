@@ -406,15 +406,20 @@ cib_init(void)
 
 	if(stand_alone == FALSE) {
 #if SUPPORT_AIS
-	    if(!init_ais_connection(
-		   cib_ais_dispatch, cib_ais_destroy, &cib_our_uname)) {
-		exit(100);
+	    if(is_openais_cluster()) {
+		if(!init_ais_connection(
+		       cib_ais_dispatch, cib_ais_destroy, &cib_our_uname)) {
+		    exit(100);
+		}
 	    }
-#else
-	    hb_conn = ll_cluster_new("heartbeat");
-	    if(cib_register_ha(hb_conn, CRM_SYSTEM_CIB) == FALSE) {
-		crm_crit("Cannot sign in to heartbeat... terminating");
-		exit(1);
+#endif
+#if SUPPORT_HEARTBEAT
+	    if(is_heartbeat_cluster()) {
+		hb_conn = ll_cluster_new("heartbeat");
+		if(cib_register_ha(hb_conn, CRM_SYSTEM_CIB) == FALSE) {
+		    crm_crit("Cannot sign in to heartbeat... terminating");
+		    exit(1);
+		}
 	    }
 #endif
 	} else {
@@ -467,10 +472,14 @@ cib_init(void)
 	}	
 
 #if SUPPORT_AIS
-	crm_info("Requesting the list of configured nodes");
-	send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
-#else	
-	if(was_error == FALSE) {
+	if(is_openais_cluster()) {
+	    crm_info("Requesting the list of configured nodes");
+	    send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
+	}
+#endif
+#if SUPPORT_HEARTBEAT
+	if(is_heartbeat_cluster()) {
+	    if(was_error == FALSE) {
 		crm_debug_3("Be informed of CRM Client Status changes");
 		if (HA_OK != hb_conn->llc_ops->set_cstatus_callback(
 			    hb_conn, cib_client_status_callback, hb_conn)) {
@@ -481,17 +490,18 @@ cib_init(void)
 		} else {
 			crm_debug_3("Client Status callback set");
 		}
-	}
+	    }
 
-	if(was_error == FALSE) {
-	    was_error = (ccm_connect() == FALSE);
-	}
-	
-	if(was_error == FALSE) {
+	    if(was_error == FALSE) {
+		was_error = (ccm_connect() == FALSE);
+	    }
+	    
+	    if(was_error == FALSE) {
 		/* Async get client status information in the cluster */
 		crm_debug_3("Requesting an initial dump of CIB client_status");
 		hb_conn->llc_ops->client_status(
-			hb_conn, NULL, CRM_SYSTEM_CIB, -1);
+		    hb_conn, NULL, CRM_SYSTEM_CIB, -1);
+	    }
 	}
 #endif
 
