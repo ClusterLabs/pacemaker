@@ -17,7 +17,7 @@
  */
 
 /* put these first so that uuid_t is defined without conflicts */
-#include <hb_config.h>
+#include <crm_internal.h>
 #include <ocf/oc_event.h>
 #include <ocf/oc_membership.h>
 

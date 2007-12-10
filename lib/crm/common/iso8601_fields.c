@@ -21,7 +21,7 @@
  *
  */
 
-#include <hb_config.h>
+#include <crm_internal.h>
 #include <crm/crm.h>
 #include <time.h>
 #include <ctype.h>

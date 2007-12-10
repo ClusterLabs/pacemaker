@@ -19,7 +19,7 @@
  *
  */
 
-#include <hb_config.h>
+#include <crm_internal.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>

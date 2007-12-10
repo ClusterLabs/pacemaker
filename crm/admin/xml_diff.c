@@ -17,7 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <hb_config.h>
+#include <crm_internal.h>
 
 #include <sys/param.h>
 

@@ -18,7 +18,7 @@
  */
 
 #include <config.h>
-#include <hb_config.h>
+#include <crm_internal.h>
 
 #include <sys/param.h>
 

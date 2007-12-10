@@ -1,4 +1,4 @@
-#include <hb_config.h>
+#include <crm_internal.h>
 #include <string.h>
 /*
  * Copyright (C) 2003 Alan Robertson <alanr@unix.sh>

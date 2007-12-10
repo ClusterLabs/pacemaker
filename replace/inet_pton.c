@@ -22,7 +22,7 @@
  * newer.
  */
 
-#include <hb_config.h>
+#include <crm_internal.h>
 
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>

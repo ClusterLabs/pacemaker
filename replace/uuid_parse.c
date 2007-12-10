@@ -22,7 +22,7 @@
  *
  */
 
-#include <hb_config.h>
+#include <crm_internal.h>
 #include <stdio.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

@@ -28,7 +28,7 @@
  ***************************************************************************
  */
 
-#include <hb_config.h>
+#include <crm_internal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 

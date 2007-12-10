@@ -26,7 +26,7 @@ EXTRA_DIST = ha_version.h
 includedir=$(base_includedir)/heartbeat
 
 
-noinst_HEADERS	        = config.h ha_version.h
+noinst_HEADERS	        = portability.h config.h ha_version.h
 include_HEADERS	        = crm_config.h
  
 
