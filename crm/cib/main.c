@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <sys/utsname.h>
 
 #include <stdlib.h>
 #include <errno.h>
@@ -43,6 +44,7 @@
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
+#include <crm/common/cluster.h>
 #include <crm/common/ctrl.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
@@ -58,6 +60,10 @@
 #  include <getopt.h>
 #endif
 
+#if HAVE_BZLIB_H
+#  include <bzlib.h>
+#endif
+
 extern int init_remote_listener(int port);
 extern gboolean ccm_connect(void);
 
@@ -66,11 +72,9 @@ gboolean stand_alone = FALSE;
 gboolean per_action_cib = FALSE;
 enum cib_errors cib_status = cib_ok;
 
-extern char *ccm_transition_id;
 extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
 GMainLoop*  mainloop = NULL;
-const char* crm_system_name = CRM_SYSTEM_CIB;
 const char* cib_root = WORKING_DIR;
 char *cib_our_uname = NULL;
 oc_ev_t *cib_ev_token;
@@ -86,12 +90,9 @@ gboolean startCib(const char *filename);
 extern gboolean cib_msg_timeout(gpointer data);
 extern int write_cib_contents(gpointer p);
 
-GHashTable *client_list    = NULL;
-GHashTable *ccm_membership = NULL;
-GHashTable *peer_hash = NULL;
-
-ll_cluster_t *hb_conn = NULL;
+ll_cluster_t *hb_conn   = NULL;
 GTRIGSource *cib_writer = NULL;
+GHashTable *client_list = NULL;
 
 char *channel1 = NULL;
 char *channel2 = NULL;
@@ -141,7 +142,7 @@ main(int argc, char ** argv)
 	};
 #endif
 	
-	crm_log_init(crm_system_name, LOG_INFO, TRUE, FALSE, 0, NULL);
+	crm_log_init(CRM_SYSTEM_CIB, LOG_INFO, TRUE, TRUE, 0, NULL);
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, cib_shutdown, NULL, NULL);
 	
@@ -152,11 +153,8 @@ main(int argc, char ** argv)
 	EnableProcLogging();
 	set_sigchld_proctrack(G_PRIORITY_HIGH,DEFAULT_MAXDISPATCHTIME);
 
+	crm_peer_init();
 	client_list = g_hash_table_new(g_str_hash, g_str_equal);
-	ccm_membership = g_hash_table_new_full(
-		g_str_hash, g_str_equal, g_hash_destroy_str, NULL);
-	peer_hash = g_hash_table_new_full(
-		g_str_hash, g_str_equal,g_hash_destroy_str, g_hash_destroy_str);
 	
 	while (1) {
 #ifdef HAVE_GETOPT_H
@@ -225,10 +223,8 @@ main(int argc, char ** argv)
 void
 cib_cleanup(void) 
 {
-	g_hash_table_destroy(ccm_membership);	
+	crm_peer_destroy();	
 	g_hash_table_destroy(client_list);
-	g_hash_table_destroy(peer_hash);
-	crm_free(ccm_transition_id);
 	crm_free(cib_our_uname);
 #if HAVE_LIBXML2
 	xmlCleanupParser();
@@ -295,8 +291,6 @@ ccm_connection_destroy(gpointer user_data)
     return;
 }
 
-extern int current_instance;
-
 gboolean ccm_connect(void) 
 {
     gboolean did_fail = TRUE;
@@ -351,7 +345,6 @@ gboolean ccm_connect(void)
 	}
     }
     
-    current_instance = 0;
     crm_debug("CCM Activation passed... all set to go!");
     G_main_add_fd(G_PRIORITY_HIGH, cib_ev_fd, FALSE,
 		  cib_ccm_dispatch, cib_ev_token,
@@ -360,21 +353,70 @@ gboolean ccm_connect(void)
     return TRUE;    
 }
 
+#ifdef WITH_NATIVE_AIS	
+static gboolean cib_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
+{
+    crm_data_t *xml = NULL;
+
+    crm_debug_2("Message received: '%.80s'", data);
+    
+    switch(wrapper->header.id) {
+	case crm_class_members:
+	case crm_class_notify:
+	    update_counters(__FILE__, __PRETTY_FUNCTION__, the_cib);
+	    break;
+	default:
+	    xml = string2xml(data);
+	    if(xml == NULL) {
+		goto bail;
+	    }
+	    ha_msg_add(xml, F_ORIG, wrapper->sender.uname);
+	    ha_msg_add_int(xml, F_SEQ, wrapper->id);
+	    cib_peer_callback(xml, NULL);
+	    break;
+    }
+
+    free_xml(xml);
+    return TRUE;
+
+  bail:
+    crm_err("Invalid XML: '%.120s'", data);
+    return TRUE;
+
+}
+
+static void
+cib_ais_destroy(gpointer user_data)
+{
+    crm_err("AIS connection terminated");
+    ais_fd_sync = -1;
+    exit(1);
+}
+#endif
+
 int
 cib_init(void)
 {
 	gboolean was_error = FALSE;
+	
 	if(startCib("cib.xml") == FALSE){
 		crm_crit("Cannot start CIB... terminating");
 		exit(1);
 	}
 
 	if(stand_alone == FALSE) {
-		hb_conn = ll_cluster_new("heartbeat");
-		if(cib_register_ha(hb_conn, CRM_SYSTEM_CIB) == FALSE) {
-			crm_crit("Cannot sign in to heartbeat... terminating");
-			exit(1);
-		}
+#ifdef WITH_NATIVE_AIS
+	    if(!init_ais_connection(
+		   cib_ais_dispatch, cib_ais_destroy, &cib_our_uname)) {
+		exit(100);
+	    }
+#else
+	    hb_conn = ll_cluster_new("heartbeat");
+	    if(cib_register_ha(hb_conn, CRM_SYSTEM_CIB) == FALSE) {
+		crm_crit("Cannot sign in to heartbeat... terminating");
+		exit(1);
+	    }
+#endif
 	} else {
 		cib_our_uname = crm_strdup("localhost");
 	}
@@ -423,7 +465,11 @@ cib_init(void)
 		return_to_orig_privs();
 		return 0;
 	}	
-	
+
+#ifdef WITH_NATIVE_AIS
+	crm_info("Requesting the list of configured nodes");
+	send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
+#else	
 	if(was_error == FALSE) {
 		crm_debug_3("Be informed of CRM Client Status changes");
 		if (HA_OK != hb_conn->llc_ops->set_cstatus_callback(
@@ -440,13 +486,16 @@ cib_init(void)
 	if(was_error == FALSE) {
 	    was_error = (ccm_connect() == FALSE);
 	}
-
+	
 	if(was_error == FALSE) {
 		/* Async get client status information in the cluster */
 		crm_debug_3("Requesting an initial dump of CIB client_status");
 		hb_conn->llc_ops->client_status(
 			hb_conn, NULL, CRM_SYSTEM_CIB, -1);
+	}
+#endif
 
+	if(was_error == FALSE) {
 		/* Create the mainloop and run it... */
 		mainloop = g_main_new(FALSE);
 		crm_info("Starting %s mainloop", crm_system_name);

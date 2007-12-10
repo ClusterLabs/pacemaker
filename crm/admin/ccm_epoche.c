@@ -35,9 +35,10 @@
 #include <ocf/oc_membership.h>
 
 #include <crm/crm.h>
+#include <crm/ais.h>
+#include <crm/common/cluster.h>
 
 
-const char* crm_system_name = "ccm_tool";
 oc_ev_t *ccm_token = NULL;
 int command = 0;
 
@@ -45,11 +46,14 @@ int command = 0;
 
 void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
-static void ccm_age_callback(
-	oc_ed_t event, void *cookie, size_t size, const void *data);
+void ccm_age_callback(
+    oc_ed_t event, void *cookie, size_t size, const void *data);
 gboolean ccm_age_connect(int *ccm_fd);
 void usage(const char* cmd, int exit_status);
 char *lookup_host = NULL;
+
+void ais_membership_destroy(gpointer user_data);
+gboolean ais_membership_dispatch(AIS_Message *wrapper, char *data, int sender);
 
 int
 main(int argc, char ** argv)
@@ -57,10 +61,7 @@ main(int argc, char ** argv)
 	int flag;
 	int argerr = 0;
 	int ccm_fd = 0;
-	fd_set rset;	
-	oc_ev_t *ccm_token = NULL;
-	
-	crm_log_init(crm_system_name, LOG_INFO, FALSE, FALSE, 0, NULL);
+	crm_log_init("ccm_tool", LOG_WARNING, FALSE, FALSE, 0, NULL);
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -90,9 +91,22 @@ main(int argc, char ** argv)
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
 
-	if(ccm_age_connect(&ccm_fd)) {
+	if(init_ais_connection(
+	       ais_membership_dispatch, ais_membership_destroy, NULL)) {
+
+	    GMainLoop*  amainloop = NULL;
+	    crm_info("Requesting the list of configured nodes");
+	    crm_peer_init();
+	    send_ais_text(
+		crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
+	    amainloop = g_main_new(FALSE);
+	    g_main_run(amainloop);
+
+	} else if(ccm_age_connect(&ccm_fd)) {
 		int rc = 0;
 		int lpc = 0;
+		fd_set rset;	
+		oc_ev_t *ccm_token = NULL;
 		for (;;lpc++) {
 
 			FD_ZERO(&rset);
@@ -112,6 +126,7 @@ main(int argc, char ** argv)
 			return(1);
 		}
 	}
+	
 	return(1);    
 }
 
@@ -169,7 +184,7 @@ ccm_age_connect(int *ccm_fd)
 }
 
 
-static void 
+void 
 ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 {
 	int lpc;
@@ -243,3 +258,56 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 	fflush(stdout);
 	exit(0);
 }
+
+void
+ais_membership_destroy(gpointer user_data)
+{
+    crm_err("AIS connection terminated");
+    ais_fd_sync = -1;
+    exit(1);
+}
+
+static void crm_print_member(
+    gpointer key, gpointer value, gpointer user_data)
+{
+    crm_node_t *node = value;
+    if(crm_is_member_active(node)) {
+	fprintf(stdout, "%s ", node->uname);
+    }
+}
+
+gboolean
+ais_membership_dispatch(AIS_Message *wrapper, char *data, int sender) 
+{
+    crm_info("Message received");
+    switch(wrapper->header.id) {
+	case crm_class_members:
+	case crm_class_notify:
+	    break;
+	default:
+	    return TRUE;
+	    
+	    break;
+    }
+
+    if(command == 'q') {
+	if(crm_have_quorum) {
+	    fprintf(stdout, "1\n");
+	} else {
+	    fprintf(stdout, "0\n");
+	}
+		
+    } else if(command == 'e') {
+	/* Age makes no sense (yet) in an AIS cluster */
+	fprintf(stdout, "1\n");
+
+    } else if(command == 'p') {
+	g_hash_table_foreach(crm_peer_cache, crm_print_member, NULL);
+	fprintf(stdout, "\n");
+    }
+
+    exit(0);
+    
+    return TRUE;
+}
+

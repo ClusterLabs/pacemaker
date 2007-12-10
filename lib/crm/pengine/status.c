@@ -21,7 +21,6 @@
 #include <sys/param.h>
 
 #include <crm/crm.h>
-#include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
@@ -37,6 +36,9 @@ crm_data_t * do_calculations(
 	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
 
 unsigned int pengine_input_loglevel = LOG_INFO;
+
+extern crm_data_t*get_object_root(
+    const char *object_type, crm_data_t *the_root);
 
 #define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
 

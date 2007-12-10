@@ -38,6 +38,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
+#include <crm/common/cluster.h>
 #include <clplumbing/cl_misc.h>
 #include <clplumbing/lsb_exitcodes.h>
 
@@ -73,10 +74,6 @@ crm_data_t *constraint_search = NULL;
 crm_data_t *status_search = NULL;
 
 extern gboolean cib_writes_enabled;
-extern char *ccm_transition_id;
-extern gboolean cib_have_quorum;
-extern GHashTable *peer_hash;
-extern GHashTable *ccm_membership;
 extern GTRIGSource *cib_writer;
 extern enum cib_errors cib_status;
 
@@ -313,6 +310,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	const char *name = NULL;
 	const char *value = NULL;
 	const char *ignore_dtd = NULL;
+	const char *use_valgrind = getenv("HA_VALGRIND_ENABLED");
 	
 	crm_data_t *root = NULL;
 	crm_data_t *status = NULL;
@@ -350,7 +348,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	    crm_xml_add(root, "generated", XML_BOOLEAN_FALSE);	
 	}	
 
-	if(cib_writes_enabled && getenv("HA_VALGRIND_ENABLED") != NULL) {
+	if(cib_writes_enabled && crm_is_true(use_valgrind)) {
 		cib_writes_enabled = FALSE;
 		crm_err("HA_VALGRIND_ENABLED: %s",
 			getenv("HA_VALGRIND_ENABLED"));
@@ -785,77 +783,36 @@ write_cib_contents(gpointer p)
 }
 
 gboolean
-set_transition(crm_data_t *xml_obj)
-{
-	const char *current = NULL;
-	if(xml_obj == NULL) {
-		return FALSE;
-	}
-
-	current = crm_element_value(xml_obj, XML_ATTR_CCM_TRANSITION);
-	if(safe_str_neq(current, ccm_transition_id)) {
-		crm_debug("CCM transition: old=%s, new=%s",
-			  current, ccm_transition_id);
-		crm_xml_add(xml_obj, XML_ATTR_CCM_TRANSITION,ccm_transition_id);
-		return TRUE;
-	}
-	return FALSE;
-}
-
-gboolean
 set_connected_peers(crm_data_t *xml_obj)
 {
-	int active = 0;
+	guint active = 0;
 	int current = 0;
 	char *peers_s = NULL;
 	const char *current_s = NULL;
 	if(xml_obj == NULL) {
 		return FALSE;
 	}
-	
+
 	current_s = crm_element_value(xml_obj, XML_ATTR_NUMPEERS);
-	g_hash_table_foreach(peer_hash, GHFunc_count_peers, &active);
 	current = crm_parse_int(current_s, "0");
+	active = crm_active_peers(crm_proc_cib);
+
 	if(current != active) {
-		peers_s = crm_itoa(active);
-		crm_xml_add(xml_obj, XML_ATTR_NUMPEERS, peers_s);
-		crm_debug("We now have %s active peers", peers_s);
-		crm_free(peers_s);
-		return TRUE;
+	    crm_malloc0(peers_s, 32);
+	    snprintf(peers_s, 32, "%u", active);
+	    crm_xml_add(xml_obj, XML_ATTR_NUMPEERS, peers_s);
+	    crm_debug("We now have %s (%u) active peers", peers_s, active);
+	    crm_free(peers_s);
+	    return TRUE;
 	}
 	return FALSE;
 }
-
-gboolean
-update_quorum(crm_data_t *xml_obj) 
-{
-	const char *quorum_value = XML_BOOLEAN_FALSE;
-	const char *current = NULL;
-	if(xml_obj == NULL) {
-		return FALSE;
-	}
-	
-	current = crm_element_value(xml_obj, XML_ATTR_HAVE_QUORUM);
-	if(cib_have_quorum) {
-		quorum_value = XML_BOOLEAN_TRUE;
-	}
-	if(safe_str_neq(current, quorum_value)) {
-		crm_debug("CCM quorum: old=%s, new=%s",
-			  current, quorum_value);
-		crm_xml_add(xml_obj, XML_ATTR_HAVE_QUORUM, quorum_value);
-		return TRUE;
-	}
-	return FALSE;
-}
-
 
 gboolean
 update_counters(const char *file, const char *fn, crm_data_t *xml_obj) 
 {
 	gboolean did_update = FALSE;
 
-	did_update = did_update || update_quorum(xml_obj);
-	did_update = did_update || set_transition(xml_obj);
 	did_update = did_update || set_connected_peers(xml_obj);
 	
 	if(did_update) {

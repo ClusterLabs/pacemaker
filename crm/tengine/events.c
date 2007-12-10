@@ -46,7 +46,7 @@ need_abort(crm_data_t *update)
 	
         xml_prop_iter(update, name, value,
                       if(safe_str_eq(name, XML_ATTR_HAVE_QUORUM)) {
-			      goto do_abort;
+			      goto do_abort; /* possibly not required */
                       } else if(safe_str_eq(name, XML_ATTR_NUMPEERS)) {
 			      goto do_abort;
                       } else if(safe_str_eq(name, XML_ATTR_GENERATION)) {

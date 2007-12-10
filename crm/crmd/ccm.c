@@ -30,6 +30,7 @@
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/cluster.h>
 #include <crmd_messages.h>
 #include <crmd_fsa.h>
 #include <fsa_proto.h>
@@ -38,24 +39,61 @@
 
 void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
-int register_with_ccm(ll_cluster_t *hb_cluster);
-
-void msg_ccm_join(const HA_Message *msg, void *foo);
-
-void crmd_ccm_msg_callback(oc_ed_t event,
-			     void *cookie,
-			     size_t size,
-			     const void *data);
+void crmd_ccm_msg_callback(
+    oc_ed_t event, void *cookie, size_t size, const void *data);
 
 void ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data);
+void check_dead_member(const char *uname, GHashTable *members);
+void reap_dead_ccm_nodes(gpointer key, gpointer value, gpointer user_data);
 
 #define CCM_EVENT_DETAIL 0
 #define CCM_EVENT_DETAIL_PARTIAL 0
 
 oc_ev_t *fsa_ev_token;
-int current_ccm_membership_id = 0;
 int num_ccm_register_fails = 0;
 int max_ccm_register_fails = 30;
+int last_peer_update = 0;
+
+extern GHashTable *voted;
+
+struct update_data_s
+{
+		const char *state;
+		const char *caller;
+		crm_data_t *updates;
+		gboolean    overwrite_join;
+};
+
+void reap_dead_ccm_nodes(gpointer key, gpointer value, gpointer user_data)
+{
+    crm_node_t *node = value;
+    if(crm_is_member_active(node) == FALSE) {
+	check_dead_member(node->uname, NULL);
+    }
+}
+
+void
+check_dead_member(const char *uname, GHashTable *members)
+{
+	CRM_CHECK(uname != NULL, return);
+	if(members != NULL && g_hash_table_lookup(members, uname) != NULL) {
+		crm_err("%s didnt really leave the membership!", uname);
+		return;
+	}
+	erase_node_from_join(uname);
+	if(voted != NULL) {
+		g_hash_table_remove(voted, uname);
+	}
+	
+	if(safe_str_eq(fsa_our_uname, uname)) {
+		crm_err("We're not part of the cluster anymore");
+	}
+	
+	if(AM_I_DC == FALSE && safe_str_eq(uname, fsa_our_dc)) {
+		crm_warn("Our DC node (%s) left the cluster", uname);
+		register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+	}
+}
 
 /*	 A_CCM_CONNECT	*/
 void
@@ -64,17 +102,18 @@ do_ccm_control(long long action,
 		enum crmd_fsa_state cur_state,
 		enum crmd_fsa_input current_input,
 		fsa_data_t *msg_data)
-{
-	int      ret;
- 	int	 fsa_ev_fd; 
-	gboolean did_fail = FALSE;
-	
+{	
+#ifndef WITH_NATIVE_AIS
 	if(action & A_CCM_DISCONNECT){
 		set_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
 		oc_ev_unregister(fsa_ev_token);
 	}
 
 	if(action & A_CCM_CONNECT) {
+		int      ret;
+		int	 fsa_ev_fd; 
+		gboolean did_fail = FALSE;
+		crm_peer_init();
 		crm_debug_3("Registering with CCM");
 		clear_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
 		ret = oc_ev_register(&fsa_ev_token);
@@ -133,6 +172,7 @@ do_ccm_control(long long action,
 			      fsa_ev_token, default_ipc_connection_destroy);
 		
 	}
+#endif
 
 	if(action & ~(A_CCM_CONNECT|A_CCM_DISCONNECT)) {
 		crm_err("Unexpected action %s in %s",
@@ -140,290 +180,7 @@ do_ccm_control(long long action,
 	}
 }
 
-extern GHashTable *voted;
-
-/*	 A_CCM_EVENT	*/
-void
-do_ccm_event(long long action,
-	     enum crmd_fsa_cause cause,
-	     enum crmd_fsa_state cur_state,
-	     enum crmd_fsa_input current_input,
-	     fsa_data_t *msg_data)
-{
-	oc_ed_t event;
-	const oc_ev_membership_t *oc = NULL;
-	struct crmd_ccm_data_s *ccm_data = fsa_typed_data(fsa_dt_ccm);
-	
-	if(ccm_data == NULL) {
-		crm_err("No data provided to FSA function");
-		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		return;
-
-	} else if(msg_data->fsa_cause != C_CCM_CALLBACK) {
-		crm_err("FSA function called in response to incorect input");
-		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		return;
-	}
-
-	event = ccm_data->event;
-	oc = ccm_data->oc;
-	
-	ccm_event_detail(oc, event);
-
-	if (OC_EV_MS_EVICTED == event) {
-		/* todo: drop back to S_PENDING instead */
-		/* get out... NOW!
-		 *
-		 * go via the error recovery process so that HA will
-		 *    restart us if required
-		 */
-		register_fsa_error(cause, I_ERROR, msg_data->data);
-		return;
-	}	
-}
-
-static void
-check_dead_member(const char *uname, GHashTable *members)
-{
-	CRM_CHECK(uname != NULL, return);
-	if(members != NULL && g_hash_table_lookup(members, uname) != NULL) {
-		crm_err("%s didnt really leave the membership!", uname);
-		return;
-	}
-
-	erase_node_from_join(uname);
-	if(voted != NULL) {
-		g_hash_table_remove(voted, uname);
-	}
-	
-	if(safe_str_eq(fsa_our_uname, uname)) {
-		crm_err("We're not part of the cluster anymore");
-	}
-	
-	if(AM_I_DC == FALSE && safe_str_eq(uname, fsa_our_dc)) {
-		crm_warn("Our DC node (%s) left the cluster", uname);
-		register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
-	}
-}
-
-/*	 A_CCM_UPDATE_CACHE	*/
-/*
- * Take the opportunity to update the node status in the CIB as well
- */
-void
-do_ccm_update_cache(long long action,
-		    enum crmd_fsa_cause cause,
-		    enum crmd_fsa_state cur_state,
-		    enum crmd_fsa_input current_input,
-		    fsa_data_t *msg_data)
-{
-	unsigned int	lpc;
-	int		offset;
-	GHashTable *members = NULL;
-	oc_ed_t event;
-	const oc_ev_membership_t *oc = NULL;
-	oc_node_list_t *tmp = NULL, *membership_copy = NULL;
-	struct crmd_ccm_data_s *ccm_data = fsa_typed_data(fsa_dt_ccm);
-	HA_Message *no_op = create_request(
-		CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
-		AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
-	
-	if(ccm_data == NULL) {
-		crm_err("No data provided to FSA function");
-		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-		send_msg_via_ha(fsa_cluster_conn, no_op);
-		return;
-	}
-
-	event = ccm_data->event;
-	oc = ccm_data->oc;
-
-	if(current_ccm_membership_id > oc->m_instance) {
-		crm_debug("Ignoring superceeded %s CCM event %d - we had %d", 
-			  ccm_event_name(event), oc->m_instance,
-			  current_ccm_membership_id);
-		return;
-	}
-	
-	current_ccm_membership_id = oc->m_instance;
-	crm_debug("Updating cache after CCM event %d (%s).", 
-		  oc->m_instance, ccm_event_name(event));
-	
-	crm_debug_2("instance=%d, nodes=%d, new=%d, lost=%d n_idx=%d, "
-		  "new_idx=%d, old_idx=%d",
-		  oc->m_instance,
-		  oc->m_n_member,
-		  oc->m_n_in,
-		  oc->m_n_out,
-		  oc->m_memb_idx,
-		  oc->m_in_idx,
-		  oc->m_out_idx);
-#define ALAN_DEBUG 1
-#ifdef ALAN_DEBUG
-	{
-		/*
-		 *	Size	(Size + 2) / 2
-		 *
-		 *	3	(3+2)/2	= 5 / 2 = 2
-		 *	4	(4+2)/2	= 6 / 2 = 3
-		 *	5	(5+2)/2	= 7 / 2 = 3
-		 *	6	(6+2)/2	= 8 / 2 = 4
-		 *	7	(7+2)/2	= 9 / 2 = 4
-		 */
-		unsigned int		clsize = (oc->m_out_idx - oc->m_n_member);
-		unsigned int		plsize = (clsize + 2)/2;
-		gboolean	plurality = (oc->m_n_member >= plsize);
-		gboolean	Q = ccm_have_quorum(event);
-
-		if(clsize == 2) {
-			if (!Q) {
-				crm_err("2 nodes w/o quorum");
-			}
-			
-		} else if(Q && !plurality) {
-			crm_err("Quorum w/o plurality (%d/%d nodes)",
-				oc->m_n_member, clsize);
-		} else if(plurality && !Q) {
-			crm_err("Plurality w/o Quorum (%d/%d nodes)",
-				oc->m_n_member, clsize);
-		} else {
-			crm_debug_2("Quorum(%s) and plurality (%d/%d) agree.",
-				    Q?"true":"false", oc->m_n_member, clsize);
-		}
-		
-	}
-#endif
-		
-	crm_malloc0(membership_copy, sizeof(oc_node_list_t));
-	membership_copy->id = oc->m_instance;
-	membership_copy->last_event = event;
-
-	crm_debug_3("Copying members");
-
-	/*--*-- All Member Nodes --*--*/
-	offset = oc->m_memb_idx;
-	membership_copy->members_size = oc->m_n_member;
-
-	if(membership_copy->members_size > 0) {
-		membership_copy->members =
-			g_hash_table_new(g_str_hash, g_str_equal);
-		members = membership_copy->members;
-		
-		for(lpc=0; lpc < membership_copy->members_size; lpc++) {
-			oc_node_t *member = NULL;
-			CRM_CHECK(oc->m_array[offset+lpc].node_uname != NULL,
-				  continue);
-
-			crm_malloc0(member, sizeof(oc_node_t));
-
-			member->node_id = oc->m_array[offset+lpc].node_id;
-			
-			member->node_born_on =
-				oc->m_array[offset+lpc].node_born_on;
-			
-			member->node_uname =
-				crm_strdup(oc->m_array[offset+lpc].node_uname);
-			g_hash_table_insert(
-				members, member->node_uname, member);	
-		}
-		
-	} else {
-		membership_copy->members = NULL;
-	}
-	
-	crm_debug_3("Copying new members");
-
-	/*--*-- New Member Nodes --*--*/
-	offset = oc->m_in_idx;
-	membership_copy->new_members_size = oc->m_n_in;
-
-	if(membership_copy->new_members_size > 0) {
-		membership_copy->new_members =
-			g_hash_table_new(g_str_hash, g_str_equal);
-		members = membership_copy->new_members;
-		
-		for(lpc=0; lpc < membership_copy->new_members_size; lpc++) {
-			oc_node_t *member = NULL;
-			CRM_CHECK(oc->m_array[offset+lpc].node_uname != NULL,
-				  continue);
-
-			crm_malloc0(member, sizeof(oc_node_t));
-
-			member->node_id = oc->m_array[offset+lpc].node_id;
-			
-			member->node_born_on =
-				oc->m_array[offset+lpc].node_born_on;
-			
-			member->node_uname =
-				crm_strdup(oc->m_array[offset+lpc].node_uname);
-
-			g_hash_table_insert(
-				members, member->node_uname, member);	
-
-			g_hash_table_insert(members, member->node_uname, member);
-		}
-
-	} else {
-		membership_copy->new_members = NULL;
-	}
-	
-	crm_debug_3("Copying dead members");
-
-	/*--*-- Recently Dead Member Nodes --*--*/
-	offset = oc->m_out_idx;
-	membership_copy->dead_members_size = oc->m_n_out;
-	if(membership_copy->dead_members_size > 0) {
-		membership_copy->dead_members =
-			g_hash_table_new(g_str_hash, g_str_equal);
-
-		members = membership_copy->dead_members;
-
-		for(lpc=0; lpc < membership_copy->dead_members_size; lpc++) {
-			oc_node_t *member = NULL;
-			CRM_CHECK(oc->m_array[offset+lpc].node_uname != NULL,
-				  continue);
-
-			crm_malloc0(member, sizeof(oc_node_t));
-
-			member->node_id = oc->m_array[offset+lpc].node_id;
-			
-			member->node_born_on =
-				oc->m_array[offset+lpc].node_born_on;
-			
-			member->node_uname =
-				crm_strdup(oc->m_array[offset+lpc].node_uname);
-
-			g_hash_table_insert(members, member->node_uname, member);
-			check_dead_member(
-				member->node_uname, membership_copy->members);
-			
-		}
-	} else {
-		membership_copy->dead_members = NULL;
-	}
-
-	tmp = fsa_membership_copy;
-	fsa_membership_copy = membership_copy;
-	crm_debug_2("Updated membership cache with %d (%d new, %d lost) members",
-		    g_hash_table_size(fsa_membership_copy->members),
-		    g_hash_table_size(fsa_membership_copy->new_members),
-		    g_hash_table_size(fsa_membership_copy->dead_members));
-
-	free_ccm_cache(tmp);
-	
-	set_bit_inplace(fsa_input_register, R_CCM_DATA);
-
-	if(cur_state != S_STOPPING) {
-		crm_debug_3("Updating the CIB from CCM cache");
-		do_update_cib_nodes(FALSE, __FUNCTION__);
-	}
-
-	/* Membership changed, remind everyone we're here.
-	 * This will aid detection of duplicate DCs
-	 */
-	send_msg_via_ha(fsa_cluster_conn, no_op);
-}
-
+#ifndef WITH_NATIVE_AIS
 void
 ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 {
@@ -477,59 +234,108 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 	
 }
 
-int
-register_with_ccm(ll_cluster_t *hb_cluster)
-{
-	return 0;
-}
+#endif
 
-void 
-msg_ccm_join(const HA_Message *msg, void *foo)
+/*	 A_CCM_UPDATE_CACHE	*/
+/*
+ * Take the opportunity to update the node status in the CIB as well
+ */
+void
+do_ccm_update_cache(
+    enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
+    oc_ed_t event, const oc_ev_membership_t *oc, crm_data_t *xml)
 {
+	HA_Message *no_op = NULL;
+	unsigned long long instance = 0;
 	
-	crm_debug_2("###### Received ccm_join message...");
-	if (msg != NULL)
-	{
-		crm_debug_2("[type=%s]",
-			    ha_msg_value(msg, F_TYPE));
-		crm_debug_2("[orig=%s]",
-			    ha_msg_value(msg, F_ORIG));
-		crm_debug_2("[to=%s]",
-			    ha_msg_value(msg, F_TO));
-		crm_debug_2("[status=%s]",
-			    ha_msg_value(msg, F_STATUS));
-		crm_debug_2("[info=%s]",
-			    ha_msg_value(msg, F_COMMENT));
-		crm_debug_2("[rsc_hold=%s]",
-			    ha_msg_value(msg, F_RESOURCES));
-		crm_debug_2("[stable=%s]",
-			    ha_msg_value(msg, F_ISSTABLE));
-		crm_debug_2("[rtype=%s]",
-			    ha_msg_value(msg, F_RTYPE));
-		crm_debug_2("[ts=%s]",
-			    ha_msg_value(msg, F_TIME));
-		crm_debug_2("[seq=%s]",
-			    ha_msg_value(msg, F_SEQ));
-		crm_debug_2("[generation=%s]",
-			    ha_msg_value(msg, F_HBGENERATION));
-		/*      crm_debug_2("[=%s]", ha_msg_value(msg, F_)); */
+#ifdef WITH_NATIVE_AIS	
+	const char *seq_s = crm_element_value(xml, "seq");
+	CRM_ASSERT(xml != NULL);
+	instance = crm_int_helper(seq_s, NULL);
+#else
+	unsigned int lpc = 0;
+	CRM_ASSERT(oc != NULL);
+	instance = oc->m_instance;
+#endif
+
+	CRM_ASSERT(crm_peer_seq < instance);
+
+	switch(cur_state) {
+	    case S_STOPPING:
+	    case S_TERMINATE:
+	    case S_HALT:
+		crm_debug("Ignoring %s CCM event %llu, we're in state %s", 
+			  ccm_event_name(event), instance,
+			  fsa_state2string(cur_state));
+		return;
+	    case S_ELECTION:
+		register_fsa_action(A_ELECTION_CHECK);
+		break;
+	    default:
+		break;
 	}
+	
+	crm_peer_seq = instance;
+	crm_debug("Updating cache after membership event %llu (%s).", 
+		  instance, ccm_event_name(event));
+	
+#ifdef WITH_NATIVE_AIS	
+	set_bit_inplace(fsa_input_register, R_PEER_DATA);
+#else
+	ccm_event_detail(oc, event);
+		
+	/*--*-- Recently Dead Member Nodes --*--*/
+	for(lpc=0; lpc < oc->m_n_out; lpc++) {
+	    update_ccm_node(
+		fsa_cluster_conn, oc, lpc+oc->m_out_idx, CRM_NODE_LOST);
+	}
+
+	/*--*-- All Member Nodes --*--*/
+	for(lpc=0; lpc < oc->m_n_member; lpc++) {
+	    update_ccm_node(
+		fsa_cluster_conn, oc, lpc+oc->m_memb_idx, CRM_NODE_ACTIVE);
+	}
+#endif
+
+	if(event == OC_EV_MS_EVICTED) {
+	    crm_update_peer(
+		0, 0, 1, 0,
+		fsa_our_uuid, fsa_our_uname, NULL, CRM_NODE_EVICTED);
+
+	    /* todo: drop back to S_PENDING instead */
+	    /* get out... NOW!
+	     *
+	     * go via the error recovery process so that HA will
+	     *    restart us if required
+	     */
+	    register_fsa_error_adv(cause, I_ERROR, NULL, NULL, __FUNCTION__);
+	}
+
+	if((fsa_input_register & R_CCM_DATA) == 0) {
+	    populate_cib_nodes(FALSE);
+	}
+	
+	g_hash_table_foreach(crm_peer_cache, reap_dead_ccm_nodes, NULL);	
+	set_bit_inplace(fsa_input_register, R_CCM_DATA);
+	do_update_cib_nodes(FALSE, __FUNCTION__);
+
+	/* Membership changed, remind everyone we're here.
+	 * This will aid detection of duplicate DCs
+	 */
+	no_op = create_request(
+		CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
+		AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
+	send_msg_via_ha(fsa_cluster_conn, no_op);
+
 	return;
 }
-
-struct update_data_s
-{
-		const char *state;
-		const char *caller;
-		crm_data_t *updates;
-		gboolean    overwrite_join;
-};
 
 static void
 ccm_node_update_complete(const HA_Message *msg, int call_id, int rc,
 			 crm_data_t *output, void *user_data)
 {
 	fsa_data_t *msg_data = NULL;
+	last_peer_update = 0;
 	
 	if(rc == cib_ok) {
 		crm_debug("Node update %d complete", call_id);
@@ -541,90 +347,111 @@ ccm_node_update_complete(const HA_Message *msg, int call_id, int rc,
 	}
 }
 
+void
+ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
+{
+    crm_data_t *tmp1 = NULL;
+    const char *join = NULL;
+    crm_node_t *node = value;
+    struct update_data_s* data = (struct update_data_s*)user_data;
+
+    data->state = XML_BOOLEAN_NO;
+    if(safe_str_eq(node->state, CRM_NODE_ACTIVE)) {
+	data->state = XML_BOOLEAN_YES;
+    }
+    
+    crm_debug_2("Updating %s: %s (overwrite=%s)",
+		node->uname, data->state, data->overwrite_join?"true":"false");
+    
+    if(data->overwrite_join) {
+	if((node->processes & crm_proc_crmd) == FALSE) {
+	    join = CRMD_JOINSTATE_DOWN;
+	    
+	} else {
+	    const char *peer_member = g_hash_table_lookup(
+		confirmed_nodes, node->uname);
+	    if(peer_member != NULL) {
+		join = CRMD_JOINSTATE_MEMBER;
+	    } else {
+		join = CRMD_JOINSTATE_PENDING;
+	    }
+	}
+    }
+    
+    tmp1 = create_node_state(
+	node->uname, NULL, data->state,
+	(node->processes&crm_proc_crmd)?ONLINESTATUS:OFFLINESTATUS,
+	join, NULL, FALSE, data->caller);
+    
+    add_node_copy(data->updates, tmp1);
+    free_xml(tmp1);
+}
 
 void
 do_update_cib_nodes(gboolean overwrite, const char *caller)
 {
-	int call_id = 0;
-	int call_options = cib_scope_local|cib_quorum_override;
-	struct update_data_s update_data;
-	crm_data_t *fragment = NULL;
-
-	if(fsa_membership_copy == NULL) {
-		/* We got a replace notification before being connected to
-		 *   the CCM.
-		 * So there is no need to update the local CIB with our values
-		 *   - since we have none.
-		 */
-		return;
-	}
-	
-	fragment = create_xml_node(NULL, XML_CIB_TAG_STATUS);
-
-	update_data.caller = caller;
-	update_data.updates = fragment;
-	update_data.overwrite_join = overwrite;
-
-	if(overwrite == FALSE) {
-		call_options = call_options|cib_inhibit_bcast;
-		crm_debug_2("Inhibiting bcast for membership updates");
-	}
-
-	/* dead nodes */
-	update_data.state = XML_BOOLEAN_NO;
-	if(fsa_membership_copy->dead_members != NULL) {
-		g_hash_table_foreach(fsa_membership_copy->dead_members,
-				     ghash_update_cib_node, &update_data);
-	}		
-	
-	/* live nodes */
-	update_data.state = XML_BOOLEAN_YES;
-	if(fsa_membership_copy->members != NULL) {
-		g_hash_table_foreach(fsa_membership_copy->members,
-				     ghash_update_cib_node, &update_data);
-	}
-
-	fsa_cib_update(XML_CIB_TAG_STATUS, fragment, call_options, call_id);
-	
-	add_cib_op_callback(call_id, FALSE, NULL, ccm_node_update_complete);
-	free_xml(fragment);
+    int call_id = 0;
+    int call_options = cib_scope_local|cib_quorum_override;
+    struct update_data_s update_data;
+    crm_data_t *fragment = NULL;
+    
+    if(crm_peer_cache == NULL) {
+	/* We got a replace notification before being connected to
+	 *   the CCM.
+	 * So there is no need to update the local CIB with our values
+	 *   - since we have none.
+	 */
+	return;
+    }
+    
+    fragment = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    
+    update_data.caller = caller;
+    update_data.updates = fragment;
+    update_data.overwrite_join = overwrite;
+    
+    if(overwrite == FALSE) {
+	call_options = call_options|cib_inhibit_bcast;
+	crm_debug_2("Inhibiting bcast for membership updates");
+    }
+    
+    g_hash_table_foreach(crm_peer_cache, ghash_update_cib_node, &update_data);
+    
+    fsa_cib_update(XML_CIB_TAG_STATUS, fragment, call_options, call_id);
+    add_cib_op_callback(call_id, FALSE, NULL, ccm_node_update_complete);
+    last_peer_update = call_id;
+    
+    free_xml(fragment);
 }
 
-void
-ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
+static void cib_quorum_update_complete(
+    const HA_Message *msg, int call_id, int rc, crm_data_t *output, void *user_data)
 {
-	crm_data_t *tmp1 = NULL;
-	const char *join = NULL;
-	const char *peer_online = NULL;
-	const char *node_uname = (const char*)key;
-	struct update_data_s* data = (struct update_data_s*)user_data;
-
-	crm_debug_2("Updating %s: %s (overwrite=%s)",
-		    node_uname, data->state,
-		    data->overwrite_join?"true":"false");
-
-	peer_online = g_hash_table_lookup(crmd_peer_state, node_uname);
+	fsa_data_t *msg_data = NULL;
 	
-	if(data->overwrite_join) {
-		if(safe_str_neq(peer_online, ONLINESTATUS)) {
-			join  = CRMD_JOINSTATE_DOWN;
-			
-		} else {
-			const char *peer_member = g_hash_table_lookup(
-				confirmed_nodes, node_uname);
-			if(peer_member != NULL) {
-				join = CRMD_JOINSTATE_MEMBER;
-			} else {
-				join = CRMD_JOINSTATE_PENDING;
-			}
-		}
+	if(rc == cib_ok) {
+		crm_debug("Quorum update %d complete", call_id);
+
+	} else {
+		crm_err("Quorum update %d failed", call_id);
+		crm_log_message(LOG_DEBUG, msg);
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
-	
-	tmp1 = create_node_state(node_uname, NULL, data->state, peer_online,
-				 join, NULL, FALSE, data->caller);
-
-	add_node_copy(data->updates, tmp1);
-	free_xml(tmp1);
 }
 
+void crm_update_quorum(gboolean bool) 
+{
+    int call_id = 0;
+    crm_data_t *update = NULL;
+    int call_options = cib_scope_local|cib_quorum_override;
+    
+    fsa_has_quorum = bool;
+    update = create_xml_node(NULL, XML_TAG_CIB);
+    crm_xml_add_int(update, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
+
+    fsa_cib_update(XML_TAG_CIB, update, call_options, call_id);
+    crm_info("Updating quorum status to %s (call=%d)", bool?"true":"false", call_id);
+    add_cib_op_callback(call_id, FALSE, NULL, cib_quorum_update_complete);
+    free_xml(update);
+}
 

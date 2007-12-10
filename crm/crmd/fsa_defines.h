@@ -160,7 +160,6 @@ enum crmd_fsa_input {
 /* 0 */
 	I_NULL,		/* Nothing happened */
 /* 1 */
-	I_CCM_EVENT,
 	
 	I_CIB_OP,	/* An update to the CIB occurred */
 	I_CIB_UPDATE,	/* An update to the CIB occurred */
@@ -178,7 +177,7 @@ enum crmd_fsa_input {
 			 * being performed.  For example, we may have lost
 			 * our connection to the CIB.
 			 */
-/* 10 */
+/* 9 */
 	I_FAIL,		/* The action failed to complete successfully */
 	I_INTEGRATED, 
 	I_FINALIZED, 
@@ -335,12 +334,6 @@ enum crmd_fsa_input {
 /* -- CCM actions -- */
 #define	A_CCM_CONNECT		0x0000001000000000ULL
 #define	A_CCM_DISCONNECT	0x0000002000000000ULL
-	/* Process whatever it is the CCM is trying to tell us.
-	 * This will generate inputs such as I_NODE_JOIN,
-	 * I_NODE_LEAVE, I_SHUTDOWN, I_DC_RELEASE, I_DC_TAKEOVER
-	 */
-#define	A_CCM_EVENT		0x0000004000000000ULL
-#define	A_CCM_UPDATE_CACHE	0x0000008000000000ULL
 
 /* -- CBI actions -- */
 #define	A_CIB_INVOKE		0x0000010000000000ULL

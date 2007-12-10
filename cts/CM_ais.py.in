@@ -1,0 +1,266 @@
+#!@PYTHON@
+
+'''CTS: Cluster Testing System: AIS dependent modules...
+'''
+
+__copyright__='''
+Copyright (C) 2007 Andrew Beekhof <andrew@suse.de>
+
+'''
+
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+import os,sys,CTS,CTSaudits,CTStests, warnings
+from CTS import *
+from CM_hb import HeartbeatCM
+from CM_LinuxHAv2 import LinuxHAv2
+from CTSaudits import ClusterAudit
+from CTStests import *
+from CIB import *
+try:
+    from xml.dom.minidom import *
+except ImportError:
+    sys.__stdout__.write("Python module xml.dom.minidom not found\n")
+    sys.__stdout__.write("Please install python-xml or similar before continuing\n")
+    sys.__stdout__.flush()
+    sys.exit(1)
+
+#######################################################################
+#
+#  LinuxHA v2 dependent modules
+#
+#######################################################################
+
+
+class crm_ais(LinuxHAv2):
+    '''
+    The crm version 3 cluster manager class.
+    It implements the things we need to talk to and manipulate
+    crm clusters running on top of openais
+    '''
+    def __init__(self, Environment, randseed=None):
+        LinuxHAv2.__init__(self, Environment, randseed=randseed)
+
+        self.update({
+            "Name"           : "crm-ais",
+            "StartCmd"       : "@INITDIR@/ais start > /dev/null 2>&1",
+            "StopCmd"        : "@INITDIR@/ais stop > /dev/null 2>&1",
+            "IsIPAddrRscRunning"   : "",
+
+            "UUIDQueryCmd"   : "@sbindir@/crmadmin -N",
+            "EpocheCmd"      : "@sbindir@/ccm_tool -e",
+            "QuorumCmd"      : "@sbindir@/ccm_tool -q",
+            "ParitionCmd"    : "@sbindir@/ccm_tool -p",
+            "BreakCommCmd2"  : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
+
+            "Pat:We_stopped"   : "%s.*openais.*lha_crm was unlinked",
+            "Pat:They_stopped" : "%s crmd:.*Node %s is now: lost",
+            "Pat:All_stopped"  : "%s.*openais.*lha_crm was unlinked",
+            "Pat:They_dead"    : "openais:.*Node %s is now: lost",
+            
+            # Bad news Regexes.  Should never occur.
+            "BadRegexes"   : (
+                r"ERROR:",
+                r"CRIT:",
+                r"Shutting down\.",
+                r"Forcing shutdown\.",
+                r"Timer I_TERMINATE just popped",
+                r"input=I_ERROR",
+                r"input=I_FAIL",
+                r"input=I_INTEGRATED cause=C_TIMER_POPPED",
+                r"input=I_FINALIZED cause=C_TIMER_POPPED",
+                r"input=I_ERROR",
+                r", exiting\.",
+                r"WARN.*Ignoring HA message.*vote.*not in our membership list",
+                r"pengine.*Attempting recovery of resource",
+                r"tengine.*is taking more than 2x its timeout",
+                r"Confirm not received from",
+                r"Welcome reply not received from",
+                r"Attempting to schedule .* after a stop",
+                r"Resource .* was active at shutdown",
+                r"duplicate entries for call_id",
+                r"Search terminated:",
+                r"No need to invoke the TE",
+                r":global_timer_callback",
+                r"Faking parameter digest creation",
+                r"Parameters to .* action changed:",
+                r"Parameters to .* changed",
+            ),
+        })
+
+    def errorstoignore(self):
+        # At some point implement a more elegant solution that 
+        #   also produces a report at the end
+        '''Return list of errors which are known and very noisey should be ignored'''
+        if 1:
+            return [ 
+                "crmadmin:",
+                "ERROR: Message hist queue is filling up"
+                ]
+        return []
+
+    def isolate_node(self, node, allowlist):
+        '''isolate the communication between the nodes'''
+        rc = self.rsh(node, self["BreakCommCmd2"]%allowlist)
+        if rc == 0:
+            return 1
+        else:
+            self.log("Could not break the communication from node: %s",node)
+        return None
+
+    def find_partitions(self):
+        ccm_partitions = []
+
+        for node in self.Env["nodes"]:
+            self.debug("Retrieving partition details for %s" %node)
+            if self.ShouldBeStatus[node] == self["up"]:
+                partition = self.rsh.readaline(node, self["ParitionCmd"])
+
+                if not partition:
+                    self.log("no partition details for %s" %node)
+                elif len(partition) > 2:
+                    partition = partition[:-1]
+                    found=0
+                    for a_partition in ccm_partitions:
+                        if partition == a_partition:
+                            found = 1
+                    if found == 0:
+                        self.debug("Adding partition from %s: %s" %(node, partition))
+                        ccm_partitions.append(partition)
+                else:
+                    self.log("bad partition details for %s" %node)
+
+        return ccm_partitions
+
+    def HasQuorum(self, node_list):
+        # If we are auditing a partition, then one side will
+        #   have quorum and the other not.
+        # So the caller needs to tell us which we are checking
+        # If no value for node_list is specified... assume all nodes  
+        if not node_list:
+            node_list = self.Env["nodes"]
+
+        for node in node_list:
+            if self.ShouldBeStatus[node] == self["up"]:
+                quorum = self.rsh.readaline(node, self["QuorumCmd"])
+                if string.find(quorum, "1") != -1:
+                    return 1
+                elif string.find(quorum, "0") != -1:
+                    return 0
+                else:
+                    self.log("WARN: Unexpected quorum test result from "+ node +":"+ quorum)
+
+        return 0
+    def Components(self):    
+        complist = []
+        common_ignore = [
+                    "Pending action:",
+                    "ERROR: crm_log_message_adv:",
+                    "ERROR: MSG: No message to dump",
+                    "pending LRM operations at shutdown",
+                    "Lost connection to the CIB service",
+                    "Connection to the CIB terminated...",
+                    "Sending message to CIB service FAILED",
+                    "apply_xml_diff: Diff application failed!",
+                    "crmd: .*Action A_RECOVER .* not supported",
+                    "send_ipc_message: IPC Channel to .* is not connected",
+                    "unconfirmed_actions: Waiting on .* unconfirmed actions",
+                    "cib_native_msgready: Message pending on command channel",
+                    "crmd:.*do_exit: Performing A_EXIT_1 - forcefully exiting the CRMd",
+                    "verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
+            ]
+
+        stonith_ignore = [
+            "ERROR: stonithd_signon: ",
+            "update_failcount: Updating failcount for child_DoFencing",
+            "ERROR: te_connect_stonith: Sign-in failed: triggered a retry",
+            ]
+
+        stonith_ignore.extend(common_ignore)
+
+        complist.append(Process("cib", 0, [
+                    "State transition S_IDLE",
+                    "Respawning client .*crmd",
+                    "Respawning client .*attrd",
+                    "Lost connection to the CIB service",
+                    "Connection to the CIB terminated...",
+                    "Client .*crmd exited with return code 2.",
+                    "Client .*attrd exited with return code 2.",
+                    "State transition S_STARTING -> S_PENDING",
+                    "crmd: .*Input I_TERMINATE from do_recover",
+                    "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
+                    "crmd:.*do_exit: Could not recover from internal error",
+                    ], [], common_ignore, 0, self))
+
+        complist.append(Process("lrmd", 0, [
+                    "State transition S_IDLE",
+                    "LRM Connection failed",
+                    "Respawning client .*crmd",
+                    "crmd: .*I_ERROR.*lrm_dispatch",
+                    "State transition S_STARTING -> S_PENDING",
+                    "Client .*crmd exited with return code 2.",
+                    "crmd: .*Input I_TERMINATE from do_recover",
+                    "crmd:.*do_exit: Could not recover from internal error",
+                    ], [], common_ignore, 0, self))
+        complist.append(Process("crmd", 0, [
+#                    "WARN: determine_online_status: Node .* is unclean",
+#                    "Scheduling Node .* for STONITH",
+#                    "Executing .* fencing operation",
+#                    "tengine_stonith_callback: .*result=0",
+                    "State transition S_IDLE",
+                    "State transition S_STARTING -> S_PENDING",
+                    ], [
+                    "tengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
+                    "pengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
+                    ], common_ignore, 0, self))
+
+        complist.append(Process("pengine", 1, [
+                    "State transition S_IDLE",
+                    "Respawning client .*crmd",
+                    "Client .*crmd exited with return code 2.",
+                    "crmd: .*Input I_TERMINATE from do_recover",
+                    "crmd:.*do_exit: Could not recover from internal error",
+                    ], [], common_ignore, 0, self))
+
+        complist.append(Process("tengine", 1, [
+                    "State transition S_IDLE",
+                    "Respawning client .*crmd",
+                    "Client .*crmd exited with return code 2.",
+                    "crmd: .*Input I_TERMINATE from do_recover",
+                    "crmd:.*do_exit: Could not recover from internal error",
+                    ], [], common_ignore, 0, self))
+
+        if self.Env["DoFencing"] == 1 :
+            complist.append(Process("stonithd", 0, [], [
+                        "tengine_stonith_connection_destroy: Fencing daemon has left us",
+                        "Attempting connection to fencing daemon",
+                        "te_connect_stonith: Connected",
+                        ], stonith_ignore, 0, self))
+#            complist.append(Process("heartbeat", 0, [], [], [], self))
+        return complist
+    
+    def NodeUUID(self, node):
+        return node
+
+#######################################################################
+#
+#   A little test code...
+#
+#   Which you are advised to completely ignore...
+#
+#######################################################################
+if __name__ == '__main__': 
+    pass
