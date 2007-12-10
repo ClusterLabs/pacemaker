@@ -48,7 +48,7 @@ ocf_ra_setting = {
 	"LVM"       :{"params":["volgrpname"],"time":["120s","60s"]},
 	"MailTo"    :{"params":["email","subject"],"time":["120s","60s"]},
 	"portblock" :{"params":["protocol","portno","action"],"time":["120s","60s"]},
-	"Raid1"     :{"params":["raidconf","raiddev"],"time":["120s","60s"]},
+	"Raid1"     :{"params":["raidconf","raiddev","homehost"],"time":["120s","60s"]},
 	"ServeRAID" :{"params":["serveraid","mergegroup"],"time":["120s","60s"]},
 	"WinPopup"  :{"params":["hostfile"],"time":["120s","60s"]},
 	"Xinetd"    :{"params":["service"],"time":["120s","60s"]},
@@ -58,7 +58,7 @@ ocf_ra_setting = {
 	"Evmsd"	:{"params":[],"time":["120s","60s"]},
 	"ManageRAID"	:{"params":["raidname"],"time":["120s","60s"]},
 	"ManageVE"	:{"params":["veid"],"time":["120s","60s"]},
-	"Pure-FTPd"	:{"params":["script","conffile"],"time":["120s","60s"]},
+	"Pure-FTPd"	:{"params":["script","conffile","daemon_type","pidfile"],"time":["120s","60s"]},
 	"SAPDatabase"	:{"params":["SID","DIR_EXECUTABLE","DBTYPE","NETSERVICENAME","DBJ2EE_ONLY","DIR_BOOTSTRAP","DIR_SECSTORE"],"time":["120s","60s"]},
 	"SAPInstance"	:{"params":["InstanceName","DIR_EXECUTABLE","DIR_PROFILE","START_PROFILE"],"time":["120s","60s"]},
 	"SendArp"	:{"params":["ip","nic"],"time":["120s","60s"]},
@@ -71,11 +71,13 @@ ocf_ra_setting = {
 	"drbd"	:{"params":["drbd_resource","drbdconf","clone_overrides_hostname","clone_max","clone_node_max","master_max","master_node_max"],"time":["120s","60s"]},
 	"eDir88"	:{"params":["eDir_config_file","eDir_monitor_ldap","eDir_monitor_idm","eDir_jvm_initial_heap","eDir_jvm_max_heap","eDir_jvm_options"],"time":["120s","60s"]},
 	"ids"	:{"params":["informixdir","informixserver","onconfig","dbname","sqltestquery"],"time":["120s","60s"]},
-	"mysql"	:{"params":["binary","config","datadir","user","group","test_table","test_user","test_passwd","enable_creation"],"time":["120s","60s"]},
+	"iscsi"	:{"params":["portal","target","discovery_type","iscsiadm"],"time":["120s","60s"]},
+	"mysql"	:{"params":["binary","config","datadir","user","group","log","pid","socket","test_table","test_user","test_passwd","enable_creation","additional_parameters"],"time":["120s","60s"]},
 	"o2cb"	:{"params":["netdev","port","ocfs2_cluster"],"time":["120s","60s"]},
-	"pgsql"	:{"params":[],"time":["120s","60s"]},
+	"pgsql"	:{"params":["pgctl","start_opt","ctl_opt","psql","pgdata","pgdba","pghost","pgport","pgdb","logfile","stop_escalate"],"time":["120s","60s"]},
 	"pingd"	:{"params":["pidfile","user","dampen","set","name","section","multiplier","host_list"],"time":["120s","60s"]},
-	"rsyncd"	:{"params":["binpath","conffile","bwlimit"],"time":["120s","60s"]}
+	"rsyncd"	:{"params":["binpath","conffile","bwlimit"],"time":["120s","60s"]},
+	"tomcat"	:{"params":["tomcat_name","script_log","tomcat_stop_timeout","tomcat_suspend_trialcount","tomcat_user","statusurl","java_home","catalina_home","catalina_pid"],"time":["120s","60s"]}
 	}
 
 config_defaults = [
