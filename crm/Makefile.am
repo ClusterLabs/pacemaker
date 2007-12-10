@@ -18,8 +18,8 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 ## Subdirectories
-SUBDIRS			=  cib crmd pengine tengine admin
-DIST_SUBDIRS		=  cib crmd pengine tengine admin ais
+SUBDIRS			=  admin
+DIST_SUBDIRS		=  admin ais
 
 if BUILD_NATIVE_AIS
 SUBDIRS			+= ais

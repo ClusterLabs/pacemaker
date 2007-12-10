@@ -61,7 +61,7 @@ if CIM_PROVIDER_BUILD
 CIM_PROVIDER_DIR = cim
 endif
 
-SUBDIRS	= debian pkg port replace include lib crm tools doc cts
+SUBDIRS	= debian pkg port replace include lib cib crmd pengine transitioner crm tools doc cts
 
 HANDY_DOCS = doc/ChangeLog doc/GettingStarted.html doc/DirectoryMap.txt
 HBDOCS = doc/heartbeat_api.html

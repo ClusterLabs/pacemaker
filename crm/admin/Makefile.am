@@ -73,7 +73,7 @@ crm_mon_LDADD		= $(COMMONLIBS) \
 crm_verify_SOURCES	= crm_verify.c
 crm_verify_LDADD	= $(COMMONLIBS) \
 			$(top_builddir)/lib/crm/pengine/libpe_status.la \
-			$(top_builddir)/crm/pengine/libpengine.la
+			$(top_builddir)/pengine/libpengine.la
 
 crm_master_SOURCES	= crm_attribute.c
 crm_master_LDADD	= $(COMMONLIBS)
