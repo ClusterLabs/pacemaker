@@ -19,12 +19,14 @@
 #ifndef CRM_AIS_COMMON__H
 #define CRM_AIS_COMMON__H
 
+#include <crm_internal.h>
+
 #include <glib.h>
 #include <string.h>
 #if SUPPORT_AIS
-#include <openais/ais_util.h>
-#include <openais/ipc_gen.h>
-#include <openais/saAis.h>
+#  include <openais/ais_util.h>
+#  include <openais/ipc_gen.h>
+#  include <openais/saAis.h>
 #else
 typedef struct {
 	int size __attribute__((aligned(8)));

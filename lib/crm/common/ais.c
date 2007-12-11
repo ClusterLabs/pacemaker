@@ -22,12 +22,7 @@
 #include <crm/common/cluster.h>
 #include <openais/saAis.h>
 #include <sys/utsname.h>
-
-int ais_fd_sync = -1;
-static int ais_fd_async = -1; /* never send messages via this channel */
-GFDSource *ais_source = NULL;
-GFDSource *ais_source_out = NULL;
-gboolean ais_dispatch(int sender, gpointer user_data);
+#include "stack.h"
 
 enum crm_ais_msg_types text2msg_type(const char *text) 
 {
@@ -55,6 +50,37 @@ enum crm_ais_msg_types text2msg_type(const char *text)
 	}
 	return type;
 }
+
+char *get_ais_data(AIS_Message *msg)
+{
+    int rc = BZ_OK;
+    char *uncompressed = NULL;
+    unsigned int new_size = msg->size;
+    
+    if(msg->is_compressed == FALSE) {
+	crm_debug_2("Returning uncompressed message data");
+	uncompressed = strdup(msg->data);
+
+    } else {
+	crm_debug_2("Decompressing message data");
+	crm_malloc0(uncompressed, new_size);
+	
+	rc = BZ2_bzBuffToBuffDecompress(
+	    uncompressed, &new_size, msg->data, msg->compressed_size, 1, 0);
+	
+	CRM_ASSERT(rc = BZ_OK);
+	CRM_ASSERT(new_size == msg->size);
+    }
+    
+    return uncompressed;
+}
+
+
+#if SUPPORT_AIS
+int ais_fd_sync = -1;
+static int ais_fd_async = -1; /* never send messages via this channel */
+GFDSource *ais_source = NULL;
+GFDSource *ais_source_out = NULL;
 
 gboolean
 send_ais_text(int class, const char *data,
@@ -160,12 +186,7 @@ send_ais_message(crm_data_t *msg,
     gboolean rc = TRUE;
     char *data = NULL;
 
-    if(ais_source == NULL && init_ais_connection(NULL, NULL, NULL) == FALSE) {
-	crm_err("Cannot connect to AIS");
-	return FALSE;
-    }
-    
-    if(ais_fd_async < 0) {
+    if(ais_fd_async < 0 || ais_source == NULL) {
 	crm_err("Not connected to AIS");
 	return FALSE;
     }
@@ -180,78 +201,16 @@ send_ais_message(crm_data_t *msg,
     return rc;
 }
 
-static gboolean check_message_sanity(AIS_Message *msg, char *data) 
+void terminate_ais_connection(void) 
 {
-    gboolean sane = TRUE;
-    gboolean repaired = FALSE;
-    int dest = msg->host.type;
-    int tmp_size = msg->header.size - sizeof(AIS_Message);
-
-    if(sane && msg->header.size == 0) {
-	crm_err("Message with no size");
-	sane = FALSE;
-    }
-
-    if(sane && ais_data_len(msg) != tmp_size) {
-	int cur_size = ais_data_len(msg);
-
-	repaired = TRUE;
-	if(msg->is_compressed) {
-	    msg->compressed_size = tmp_size;
-	    
-	} else {
-	    msg->size = tmp_size;
-	}
-	
-	crm_err("Repaired message payload size %d -> %d", cur_size, tmp_size);
-    }
-
-    if(sane && ais_data_len(msg) == 0) {
-	crm_err("Message with no payload");
-	sane = FALSE;
-    }
-
-    if(sane && data && msg->is_compressed == FALSE) {
-	int str_size = strlen(data) + 1;
-	if(ais_data_len(msg) != str_size) {
-	    int lpc = 0;
-	    crm_err("Message payload is corrupted: expected %d bytes, got %d",
-		    ais_data_len(msg), str_size);
-	    sane = FALSE;
-	    for(lpc = (str_size - 10); lpc < msg->size; lpc++) {
-		if(lpc < 0) {
-		    lpc = 0;
-		}
-		crm_warn("bad_data[%d]: %d / '%c'", lpc, data[lpc], data[lpc]);
-	    }
-	}
-    }
-    
-    if(sane == FALSE) {
-	crm_err("Invalid message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
-		msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
-		ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
-		msg->sender.pid, msg->is_compressed, ais_data_len(msg),
-		msg->header.size);
-	
-    } else if(repaired) {
-	crm_err("Repaired message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
-		msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
-		ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
-		msg->sender.pid, msg->is_compressed, ais_data_len(msg),
-		msg->header.size);
-    } else {
-	crm_debug_3("Verfied message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
-		    msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
-		    ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
-		    msg->sender.pid, msg->is_compressed, ais_data_len(msg),
-		    msg->header.size);
-    }
-    
-    return sane;
+    close(ais_fd_sync);
+    close(ais_fd_async);
+    crm_notice("Disconnected from AIS");
+/*     G_main_del_fd(ais_source); */
+/*     G_main_del_fd(ais_source_out);     */
 }
 
-gboolean ais_dispatch(int sender, gpointer user_data)
+static gboolean ais_dispatch(int sender, gpointer user_data)
 {
     /* Grab the header */
     int data_len = 0;
@@ -422,36 +381,75 @@ gboolean init_ais_connection(
     return TRUE;
 }
 
-void terminate_ais_connection(void) 
+gboolean check_message_sanity(AIS_Message *msg, char *data) 
 {
-    close(ais_fd_sync);
-    close(ais_fd_async);
-    crm_notice("Disconnected from AIS");
-/*     G_main_del_fd(ais_source); */
-/*     G_main_del_fd(ais_source_out);     */
-}
+    gboolean sane = TRUE;
+    gboolean repaired = FALSE;
+    int dest = msg->host.type;
+    int tmp_size = msg->header.size - sizeof(AIS_Message);
 
-char *get_ais_data(AIS_Message *msg)
-{
-    int rc = BZ_OK;
-    char *uncompressed = NULL;
-    unsigned int new_size = msg->size;
-    
-    if(msg->is_compressed == FALSE) {
-	crm_debug_2("Returning uncompressed message data");
-	uncompressed = strdup(msg->data);
+    if(sane && msg->header.size == 0) {
+	crm_err("Message with no size");
+	sane = FALSE;
+    }
 
-    } else {
-	crm_debug_2("Decompressing message data");
-	crm_malloc0(uncompressed, new_size);
+    if(sane && ais_data_len(msg) != tmp_size) {
+	int cur_size = ais_data_len(msg);
+
+	repaired = TRUE;
+	if(msg->is_compressed) {
+	    msg->compressed_size = tmp_size;
+	    
+	} else {
+	    msg->size = tmp_size;
+	}
 	
-	rc = BZ2_bzBuffToBuffDecompress(
-	    uncompressed, &new_size, msg->data, msg->compressed_size, 1, 0);
-	
-	CRM_ASSERT(rc = BZ_OK);
-	CRM_ASSERT(new_size == msg->size);
+	crm_err("Repaired message payload size %d -> %d", cur_size, tmp_size);
+    }
+
+    if(sane && ais_data_len(msg) == 0) {
+	crm_err("Message with no payload");
+	sane = FALSE;
+    }
+
+    if(sane && data && msg->is_compressed == FALSE) {
+	int str_size = strlen(data) + 1;
+	if(ais_data_len(msg) != str_size) {
+	    int lpc = 0;
+	    crm_err("Message payload is corrupted: expected %d bytes, got %d",
+		    ais_data_len(msg), str_size);
+	    sane = FALSE;
+	    for(lpc = (str_size - 10); lpc < msg->size; lpc++) {
+		if(lpc < 0) {
+		    lpc = 0;
+		}
+		crm_warn("bad_data[%d]: %d / '%c'", lpc, data[lpc], data[lpc]);
+	    }
+	}
     }
     
-    return uncompressed;
+    if(sane == FALSE) {
+	crm_err("Invalid message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
+		msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
+		ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
+		msg->sender.pid, msg->is_compressed, ais_data_len(msg),
+		msg->header.size);
+	
+    } else if(repaired) {
+	crm_err("Repaired message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
+		msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
+		ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
+		msg->sender.pid, msg->is_compressed, ais_data_len(msg),
+		msg->header.size);
+    } else {
+	crm_debug_3("Verfied message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
+		    msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
+		    ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
+		    msg->sender.pid, msg->is_compressed, ais_data_len(msg),
+		    msg->header.size);
+    }
+    
+    return sane;
 }
+#endif
 

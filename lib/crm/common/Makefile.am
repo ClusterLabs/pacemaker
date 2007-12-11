@@ -30,7 +30,7 @@ hadir		= $(sysconfdir)/ha.d
 halibdir	= $(libdir)/@HB_PKG@
 
 ## libraries
-lib_LTLIBRARIES	= libcrmcommon.la
+lib_LTLIBRARIES	= libcrmcommon.la libcrmcluster.la
 
 
 ## binary progs
@@ -40,11 +40,11 @@ halib_PROGRAMS	=
 
 noinst_HEADERS  = 
 
-libcrmcommon_la_SOURCES	= ipc.c msg.c utils.c xml.c ctrl.c \
+libcrmcluster_la_SOURCES = cluster.c heartbeat.c ais.c
+libcrmcluster_la_LDFLAGS = -version-info 1:0:0
+
+libcrmcommon_la_SOURCES	= ipc.c utils.c xml.c ctrl.c \
 			iso8601.c iso8601_fields.c membership.c
-if BUILD_NATIVE_AIS
-libcrmcommon_la_SOURCES	+= ais.c
-endif
 
 libcrmcommon_la_LDFLAGS	= -version-info 1:1:0
 

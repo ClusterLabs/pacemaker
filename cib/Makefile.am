@@ -59,7 +59,8 @@ noinst_HEADERS		= cibio.h cibmessages.h cibprimatives.h notify.h \
 
 cib_SOURCES		= io.c primatives.c messages.c cib.c notify.c	\
 			callbacks.c main.c remote.c
-cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB) -lccmclient
+cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB) -lccmclient	\
+			$(top_builddir)/lib/crm/common/libcrmcluster.la
 
 cib_LDFLAGS		= $(GNUTLSLIBS)
 

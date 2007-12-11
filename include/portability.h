@@ -90,10 +90,6 @@ inet_pton(int af, const char *src, void *dst);
 #	define USE_GNU
 #endif
 
-#ifndef HA_HAVE_NFDS_T 
-	typedef unsigned int nfds_t;
-#endif
-
 #ifdef HAVE_STRUCT_UCRED_DARWIN
 #	include <sys/utsname.h>
 #	ifndef SYS_NMLN

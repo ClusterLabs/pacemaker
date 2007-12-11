@@ -31,24 +31,9 @@
 
 extern enum crm_ais_msg_types text2msg_type(const char *text);
 
-extern gboolean send_ais_message(
-    crm_data_t *msg, gboolean local,
-    const char *node, enum crm_ais_msg_types dest);
-
-extern gboolean send_ais_text(
-    int type, const char *data, gboolean local,
-    const char *node, enum crm_ais_msg_types dest);
-
-extern gboolean init_ais_connection(
-    gboolean (*dispatch)(AIS_Message*,char*,int),
-    void (*ais_destroy)(gpointer), char **our_uname);
-
-extern void terminate_ais_connection(void);
-
-extern int ais_fd_sync;
-extern GFDSource *ais_source;
 extern enum crm_ais_msg_types crm_system_type;
 
 extern char *get_ais_data(AIS_Message *msg);
+extern gboolean check_message_sanity(AIS_Message *msg, char *data);
 
 #endif

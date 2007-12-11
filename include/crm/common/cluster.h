@@ -58,4 +58,13 @@ extern guint crm_active_members(void);
 extern guint crm_active_peers(uint32_t peer);
 extern gboolean crm_calculate_quorum(void);
 
+#if SUPPORT_AIS
+extern int ais_fd_sync;
+extern GFDSource *ais_source;
+extern gboolean send_ais_text(
+    int class, const char *data, gboolean local,
+    const char *node, enum crm_ais_msg_types dest);
+#endif
+enum crm_ais_msg_types text2msg_type(const char *text);
+
 #endif
