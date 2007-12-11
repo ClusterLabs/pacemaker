@@ -356,15 +356,18 @@ gboolean init_ais_connection(
 	    exit(100);
 	}
 	*our_uname = crm_strdup(name.nodename);
-	*our_uuid = crm_strdup(name.nodename);
 	crm_notice("Local node name: %s", *our_uname);
     }
     
+    if(our_uuid != NULL) {
+	*our_uuid = crm_strdup(name.nodename);
+    }
+
     /* 16 := CRM_SERVICE */
     crm_info("Creating connection to our AIS plugin");
     rc = saServiceConnect (&ais_fd_sync, &ais_fd_async, 16);
     if (rc != SA_AIS_OK) {
-	crm_err("Connection to our AIS plugin failed!");
+	crm_info("Connection to our AIS plugin failed");
 	return FALSE;
     }
 
