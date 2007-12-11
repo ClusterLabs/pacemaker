@@ -40,11 +40,7 @@ OTHER_DOCS              = AUTHORS COPYING COPYING.LGPL ChangeLog \
 
 #doc_DATA		= $(OTHER_DOCS) $(txtfiles) $(htmlfiles) 
 
-man_MANS		= 
-
-if CRM_BUILD
-man_MANS		+= cibadmin.8 crm_resource.8
-endif
+man_MANS		= cibadmin.8 crm_resource.8
 
 EXTRA_DIST = $(man_MANS)
 
