@@ -25,25 +25,19 @@
 #include <crm/common/msg.h>
 #include <crm/ais_common.h>
 
-extern gboolean send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg,
-				const char *node, gboolean force_ordered);
-
-#if SUPPORT_AIS
-#  include <crm/ais.h> 
-#  define send_cluster_message(node, service, data, ordered) send_ais_message( \
-	data, FALSE, node, service)
-#else
-extern ll_cluster_t *hb_conn;
-#  define send_cluster_message(node, service, data, ordered) send_ha_message( \
-	hb_conn, data, node, ordered)
-#endif
-
 extern gboolean crm_have_quorum;
 extern GHashTable *crm_peer_cache;
 extern unsigned long long crm_peer_seq;
 
 extern void crm_peer_init(void);
 extern void crm_peer_destroy(void);
+
+extern gboolean crm_cluster_connect(
+    char **our_uname, char **our_uuid,
+    void *dispatch, void *destroy, ll_cluster_t **hb_conn);
+
+extern gboolean send_cluster_message(
+    const char *node, enum crm_ais_msg_types service, HA_Message *data, gboolean ordered);
 
 extern void destroy_crm_node(gpointer data);
 

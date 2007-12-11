@@ -386,7 +386,7 @@ ais_destroy(gpointer user_data)
 
 gboolean init_ais_connection(
     gboolean (*dispatch)(AIS_Message*,char*,int),
-    void (*destroy)(gpointer), char **our_uname) 
+    void (*destroy)(gpointer), char **our_uuid, char **our_uname)
 {
     int rc = SA_AIS_OK;
     struct utsname name;
@@ -397,6 +397,7 @@ gboolean init_ais_connection(
 	    exit(100);
 	}
 	*our_uname = crm_strdup(name.nodename);
+	*our_uuid = crm_strdup(name.nodename);
 	crm_notice("Local node name: %s", *our_uname);
     }
     

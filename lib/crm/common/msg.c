@@ -35,11 +35,201 @@
 #include <crm/msg_xml.h>
 #include <crm/common/msg.h>
 #include <crm/common/ipc.h>
+#include <crm/common/cluster.h>
 
 
 HA_Message *create_common_message(
 	HA_Message *original_request, crm_data_t *xml_response_data);
 
+extern ll_cluster_t *hb_conn;
+
+extern gboolean send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg,
+				const char *node, gboolean force_ordered);
+
+static ll_cluster_t *heartbeat_cluster = NULL;
+
+#if SUPPORT_HEARTBEAT
+static gboolean
+ha_msg_dispatch(ll_cluster_t *cluster_conn, gpointer user_data)
+{
+    IPC_Channel *channel = NULL;
+    crm_debug_3("Invoked");
+    
+    if(cluster_conn != NULL) {
+	channel = cluster_conn->llc_ops->ipcchan(cluster_conn);
+    }
+    
+    CRM_CHECK(cluster_conn != NULL, return FALSE);
+    CRM_CHECK(channel != NULL, return FALSE);
+    
+    if(channel != NULL && IPC_ISRCONN(channel)) {
+	if(cluster_conn->llc_ops->msgready(cluster_conn) == 0) {
+	    crm_debug_2("no message ready yet");
+	}
+	/* invoke the callbacks but dont block */
+	cluster_conn->llc_ops->rcvmsg(cluster_conn, 0);
+    }
+    
+    if (channel == NULL || channel->ch_status != IPC_CONNECT) {
+	crm_info("Lost connection to heartbeat service.");
+	return FALSE;
+    }
+    
+    return TRUE;
+}
+
+static gboolean
+register_heartbeat_conn(
+    ll_cluster_t *hb_cluster, char **uuid, char **uname,
+    void (*hb_message)(HA_Message * msg, void* private_data),
+    void (*hb_destroy)(gpointer user_data))
+{
+    const char *const_uuid = NULL;
+    const char *const_uname = NULL;
+    
+    crm_debug("Signing in with Heartbeat");
+    if (hb_cluster->llc_ops->signon(hb_cluster, crm_system_name) != HA_OK) {
+	crm_err("Cannot sign on with heartbeat: %s",
+		hb_cluster->llc_ops->errmsg(hb_cluster));
+	return FALSE;
+    }
+    
+    if (HA_OK != hb_cluster->llc_ops->set_msg_callback(
+	    hb_cluster, crm_system_name, hb_message, hb_cluster)){
+	
+	crm_err("Cannot set msg callback: %s",
+		hb_cluster->llc_ops->errmsg(hb_cluster));
+	return FALSE;
+    }
+    
+    G_main_add_ll_cluster(G_PRIORITY_HIGH, hb_cluster,
+			  FALSE, ha_msg_dispatch, hb_cluster, hb_destroy);
+    
+    const_uname = hb_cluster->llc_ops->get_mynodeid(hb_cluster);
+    CRM_CHECK(const_uname != NULL, return FALSE);
+    
+    const_uuid = get_uuid(hb_cluster, const_uname);
+    CRM_CHECK(const_uuid != NULL, return FALSE);
+
+    crm_info("Hostname: %s", const_uname);
+    crm_info("UUID: %s", const_uuid);
+
+    if(*uname) {
+	*uname = crm_strdup(const_uname);
+    }
+    if(*uuid) {
+	*uuid = crm_strdup(const_uuid);
+    }
+    
+    return TRUE;
+}
+#endif
+
+gboolean crm_cluster_connect(
+    char **our_uname, char **our_uuid,
+    void *dispatch, void *destroy, ll_cluster_t **hb_conn) {
+    if(hb_conn != NULL) {
+	*hb_conn = NULL;
+    }
+    
+#if SUPPORT_AIS
+    if(is_openais_cluster()) {
+	crm_peer_init();
+	return init_ais_connection(dispatch, destroy, our_uuid, our_uname);
+    }
+#endif
+    
+#if SUPPORT_HEARTBEAT
+    if(is_heartbeat_cluster()) {	
+	CRM_ASSERT(hb_conn != NULL);
+
+	if(*hb_conn == NULL) {
+	    *hb_conn = ll_cluster_new("heartbeat");
+	}
+	heartbeat_cluster = *hb_conn;
+
+	/* make sure we are disconnected first */
+	heartbeat_cluster->llc_ops->signoff(heartbeat_cluster, FALSE);
+
+	return register_heartbeat_conn(
+	    heartbeat_cluster, our_uuid, our_uname, dispatch, destroy);
+    }
+#endif
+    return FALSE;
+}
+
+gboolean send_cluster_message(
+    const char *node, enum crm_ais_msg_types service, HA_Message *data, gboolean ordered) {
+
+#if SUPPORT_AIS
+    if(is_openais_cluster()) {
+	return send_ais_message(data, FALSE, node, service);
+    }
+#endif
+#if SUPPORT_HEARTBEAT
+    if(is_heartbeat_cluster()) {
+	return send_ha_message(heartbeat_cluster, data, node, ordered);
+    }
+#endif
+    return FALSE;
+}
+
+gboolean 
+send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboolean force_ordered)
+{
+    gboolean all_is_good = TRUE;
+    
+	if (msg == NULL) {
+		crm_err("cant send NULL message");
+		all_is_good = FALSE;
+
+	} else if(hb_conn == NULL) {
+		crm_err("No heartbeat connection specified");
+		all_is_good = FALSE;
+
+	} else if(hb_conn->llc_ops->chan_is_connected(hb_conn) == FALSE) {
+		crm_err("Not connected to Heartbeat");
+		all_is_good = FALSE;
+		
+	} else if(node != NULL) {
+		if(hb_conn->llc_ops->send_ordered_nodemsg(
+			   hb_conn, msg, node) != HA_OK) {
+			all_is_good = FALSE;
+			crm_err("Send failed");
+		}
+
+	} else if(force_ordered) {
+		if(hb_conn->llc_ops->send_ordered_clustermsg(hb_conn, msg) != HA_OK) {
+			all_is_good = FALSE;
+			crm_err("Broadcast Send failed");
+		}
+
+	} else {
+		if(hb_conn->llc_ops->sendclustermsg(hb_conn, msg) != HA_OK) {
+			all_is_good = FALSE;
+			crm_err("Broadcast Send failed");
+		}
+	}
+
+	if(all_is_good == FALSE && hb_conn != NULL) {
+		IPC_Channel *ipc = NULL;
+		IPC_Queue *send_q = NULL;
+		
+		if(hb_conn->llc_ops->chan_is_connected(hb_conn) != HA_OK) {
+			ipc = hb_conn->llc_ops->ipcchan(hb_conn);
+		}
+		if(ipc != NULL) {
+/* 			ipc->ops->resume_io(ipc); */
+			send_q = ipc->send_queue;
+		}
+		if(send_q != NULL) {
+			CRM_CHECK(send_q->current_qlen < send_q->max_qlen, ;);
+		}
+	}
+	
+	crm_log_message_adv(all_is_good?LOG_MSG:LOG_WARNING,"HA[outbound]",msg);
+	return all_is_good;
+}
 
 crm_data_t*
 createPingAnswerFragment(const char *from, const char *status)
@@ -311,26 +501,6 @@ create_reply_adv(HA_Message *original_request,
 	}
 
 	return reply;
-}
-
-
-/*
- * This method adds a copy of xml_response_data
- */
-gboolean
-send_ipc_reply(IPC_Channel *ipc_channel,
-	       HA_Message *request, crm_data_t *xml_response_data)
-{
-	gboolean was_sent = FALSE;
-	HA_Message *reply = NULL;
-
-	reply = create_reply(request, xml_response_data);
-
-	if (reply != NULL) {
-		was_sent = send_ipc_message(ipc_channel, reply);
-		crm_msg_del(reply);
-	}
-	return was_sent;
 }
 
 ha_msg_input_t *

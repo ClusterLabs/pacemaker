@@ -405,23 +405,54 @@ cib_init(void)
 	}
 
 	if(stand_alone == FALSE) {
-#if SUPPORT_AIS
+	    void *dispatch = cib_peer_callback;
+	    void *destroy = cib_ha_connection_destroy;
+	    
 	    if(is_openais_cluster()) {
-		if(!init_ais_connection(
-		       cib_ais_dispatch, cib_ais_destroy, &cib_our_uname)) {
-		    exit(100);
-		}
+#if SUPPORT_AIS
+		destroy = cib_ais_destroy;
+		dispatch = cib_ais_dispatch;
+#endif
+	    }
+	    
+	    if(crm_cluster_connect(
+		   &cib_our_uname, NULL, dispatch, destroy, &hb_conn) == FALSE){
+		crm_crit("Cannot sign in to the cluster... terminating");
+		exit(100);
+	    }
+#if 0
+	    if(is_openais_cluster()) {
+		crm_info("Requesting the list of configured nodes");
+		send_ais_text(
+		    crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
 	    }
 #endif
 #if SUPPORT_HEARTBEAT
 	    if(is_heartbeat_cluster()) {
-		hb_conn = ll_cluster_new("heartbeat");
-		if(cib_register_ha(hb_conn, CRM_SYSTEM_CIB) == FALSE) {
-		    crm_crit("Cannot sign in to heartbeat... terminating");
-		    exit(1);
+
+		if(was_error == FALSE) {
+		    if (HA_OK != hb_conn->llc_ops->set_cstatus_callback(
+			    hb_conn, cib_client_status_callback, hb_conn)) {
+			
+			crm_err("Cannot set cstatus callback: %s",
+				hb_conn->llc_ops->errmsg(hb_conn));
+			was_error = TRUE;
+		    }
+		}
+		
+		if(was_error == FALSE) {
+		    was_error = (ccm_connect() == FALSE);
+		}
+		
+		if(was_error == FALSE) {
+		    /* Async get client status information in the cluster */
+		    crm_info("Requesting the list of configured nodes");
+		    hb_conn->llc_ops->client_status(
+			hb_conn, NULL, CRM_SYSTEM_CIB, -1);
 		}
 	    }
 #endif
+	
 	} else {
 		cib_our_uname = crm_strdup("localhost");
 	}
@@ -469,41 +500,7 @@ cib_init(void)
 		g_main_run(mainloop);
 		return_to_orig_privs();
 		return 0;
-	}	
-
-#if SUPPORT_AIS
-	if(is_openais_cluster()) {
-	    crm_info("Requesting the list of configured nodes");
-	    send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
 	}
-#endif
-#if SUPPORT_HEARTBEAT
-	if(is_heartbeat_cluster()) {
-	    if(was_error == FALSE) {
-		crm_debug_3("Be informed of CRM Client Status changes");
-		if (HA_OK != hb_conn->llc_ops->set_cstatus_callback(
-			    hb_conn, cib_client_status_callback, hb_conn)) {
-			
-			crm_err("Cannot set cstatus callback: %s",
-				hb_conn->llc_ops->errmsg(hb_conn));
-			was_error = TRUE;
-		} else {
-			crm_debug_3("Client Status callback set");
-		}
-	    }
-
-	    if(was_error == FALSE) {
-		was_error = (ccm_connect() == FALSE);
-	    }
-	    
-	    if(was_error == FALSE) {
-		/* Async get client status information in the cluster */
-		crm_debug_3("Requesting an initial dump of CIB client_status");
-		hb_conn->llc_ops->client_status(
-		    hb_conn, NULL, CRM_SYSTEM_CIB, -1);
-	    }
-	}
-#endif
 
 	if(was_error == FALSE) {
 		/* Create the mainloop and run it... */
@@ -542,45 +539,6 @@ usage(const char* cmd, int exit_status)
 	fflush(stream);
 
 	exit(exit_status);
-}
-
-gboolean
-cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name)
-{
-	const char *uname = NULL;
-	
-	crm_info("Signing in with Heartbeat");
-	if (hb_cluster->llc_ops->signon(hb_cluster, client_name)!= HA_OK) {
-		crm_err("Cannot sign on with heartbeat: %s",
-			hb_cluster->llc_ops->errmsg(hb_cluster));
-		return FALSE;
-	}
-
-	crm_debug_3("Be informed of CIB messages");
-	if (HA_OK != hb_cluster->llc_ops->set_msg_callback(
-		    hb_cluster, T_CIB, cib_peer_callback, hb_cluster)){
-		
-		crm_err("Cannot set msg callback: %s",
-			hb_cluster->llc_ops->errmsg(hb_cluster));
-		return FALSE;
-	}
-
-	crm_debug_3("Finding our node name");
-	if ((uname = hb_cluster->llc_ops->get_mynodeid(hb_cluster)) == NULL) {
-		crm_err("get_mynodeid() failed");
-		return FALSE;
-	}
-	
-	cib_our_uname = crm_strdup(uname);
-	crm_info("FSA Hostname: %s", cib_our_uname);
-
-	crm_debug_3("Adding channel to mainloop");
-	G_main_add_IPC_Channel(
-		G_PRIORITY_DEFAULT, hb_cluster->llc_ops->ipcchan(hb_cluster),
-		FALSE, cib_ha_dispatch, hb_cluster /* userdata  */,  
-		cib_ha_connection_destroy);
-
-	return TRUE;
 }
 
 void

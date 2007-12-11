@@ -113,32 +113,53 @@ do_ha_control(long long action,
 	}
 	
 	if(action & A_HA_CONNECT) {
+	    void *dispatch = crmd_ha_msg_callback;
+	    void *destroy = crmd_ha_connection_destroy;
+	    
 	    if(is_openais_cluster()) {
-		crm_peer_init();
 #if SUPPORT_AIS
-		registered = init_ais_connection(
-		    crm_ais_dispatch, crm_ais_destroy, &fsa_our_uname);
-		fsa_our_uuid = crm_strdup(fsa_our_uname);
+		destroy = crm_ais_destroy;
+		dispatch = crm_ais_dispatch;
 #endif
-	    } else {
-		if(fsa_cluster_conn == NULL) {
-			fsa_cluster_conn = ll_cluster_new("heartbeat");
-		}
-		
-		/* make sure we are disconnected first */
-		fsa_cluster_conn->llc_ops->signoff(fsa_cluster_conn, FALSE);
-		
-		registered = register_with_ha(
-			fsa_cluster_conn, crm_system_name);
 	    }
 	    
-		if(registered == FALSE) {
-			set_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
-			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-			return;
+	    registered = crm_cluster_connect(
+		&fsa_our_uname, &fsa_our_uuid,
+		dispatch, destroy, &fsa_cluster_conn);
+	    
+#if SUPPORT_HEARTBEAT
+	    if(is_heartbeat_cluster()) {	
+		crm_debug_3("Be informed of Node Status changes");
+		if (registered &&
+		    fsa_cluster_conn->llc_ops->set_nstatus_callback(
+			fsa_cluster_conn, crmd_ha_status_callback,
+			fsa_cluster_conn) != HA_OK){
+		    
+		    crm_err("Cannot set nstatus callback: %s",
+			    fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
+		    registered = FALSE;
 		}
-		clear_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
-		crm_info("Connected to Heartbeat");
+		
+		crm_debug_3("Be informed of CRM Client Status changes");
+		if (registered &&
+		    fsa_cluster_conn->llc_ops->set_cstatus_callback(
+			fsa_cluster_conn, crmd_client_status_callback,
+			fsa_cluster_conn) != HA_OK) {
+		    
+		    crm_err("Cannot set cstatus callback: %s",
+			    fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
+		    registered = FALSE;
+		}
+	    }
+#endif
+
+	    if(registered == FALSE) {
+		set_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
+		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+		return;
+	    }
+	    clear_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
+	    crm_info("Connected to Heartbeat");
 	} 
 	
 	if(action & ~(A_HA_CONNECT|A_HA_DISCONNECT)) {
@@ -918,74 +939,4 @@ populate_cib_nodes(gboolean with_client_status)
     
     free_xml(cib_node_list);
     crm_debug_2("Complete");
-}
-
-gboolean
-register_with_ha(ll_cluster_t *hb_cluster, const char *client_name)
-{
-	const char *const_uname = NULL;
-	const char *const_uuid = NULL;
-	crm_debug("Signing in with Heartbeat");
-	if (hb_cluster->llc_ops->signon(hb_cluster, client_name)!= HA_OK) {
-
-		crm_err("Cannot sign on with heartbeat: %s",
-			hb_cluster->llc_ops->errmsg(hb_cluster));
-		return FALSE;
-	}
-
-	crm_debug_3("Be informed of CRM messages");
-	if (HA_OK != hb_cluster->llc_ops->set_msg_callback(
-		    hb_cluster, T_CRM, crmd_ha_msg_callback, hb_cluster)){
-		
-		crm_err("Cannot set msg callback: %s",
-			hb_cluster->llc_ops->errmsg(hb_cluster));
-		return FALSE;
-	}
-
-	crm_debug_3("Be informed of Node Status changes");
-	if (HA_OK != hb_cluster->llc_ops->set_nstatus_callback(
-		    hb_cluster, crmd_ha_status_callback, hb_cluster)){
-		
-		crm_err("Cannot set nstatus callback: %s",
-			hb_cluster->llc_ops->errmsg(hb_cluster));
-		return FALSE;
-	}
-	
-	crm_debug_3("Be informed of CRM Client Status changes");
-	if (HA_OK != hb_cluster->llc_ops->set_cstatus_callback(
-		    hb_cluster, crmd_client_status_callback, hb_cluster)) {
-
-		crm_err("Cannot set cstatus callback: %s",
-			hb_cluster->llc_ops->errmsg(hb_cluster));
-		return FALSE;
-	}
-
-	crm_debug_3("Adding channel to mainloop");
-	G_main_add_ll_cluster(
-		G_PRIORITY_HIGH, hb_cluster,
-		FALSE, crmd_ha_msg_dispatch, hb_cluster /* userdata  */,  
-		crmd_ha_connection_destroy);
-
-	crm_debug_3("Finding our node name");
-	if ((const_uname =
-	     hb_cluster->llc_ops->get_mynodeid(hb_cluster)) == NULL) {
-		crm_err("get_mynodeid() failed");
-		return FALSE;
-	}
-	fsa_our_uname = crm_strdup(const_uname);
-	crm_info("Hostname: %s", fsa_our_uname);
-
-	crm_debug_3("Finding our node uuid");
-	const_uuid = get_uuid(fsa_cluster_conn, fsa_our_uname);
-	if(const_uuid == NULL) {
-		crm_err("get_uuid_by_name() failed");
-		return FALSE;
-	}
-	/* copy it so that unget_uuid() doesn't trash the value on us */
-	fsa_our_uuid = crm_strdup(const_uuid);
-	crm_info("UUID: %s", fsa_our_uuid);
-		
-	populate_cib_nodes(TRUE);
-	
-	return TRUE;
 }

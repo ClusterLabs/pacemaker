@@ -1584,23 +1584,6 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 	return FALSE;
 }
 
-gboolean
-cib_ha_dispatch(IPC_Channel *channel, gpointer user_data)
-{
-	ll_cluster_t *hb_cluster = (ll_cluster_t*)user_data;
-
-	crm_debug_3("Invoked");
-	if(IPC_ISRCONN(channel)) {
-		if(hb_cluster->llc_ops->msgready(hb_cluster) == 0) {
-			crm_debug_2("no message ready yet");
-		}
-		/* invoke the callbacks but dont block */
-		hb_cluster->llc_ops->rcvmsg(hb_cluster, 0);
-	}
-	
-	return (channel->ch_status == IPC_CONNECT);
-}
-
 void
 cib_peer_callback(HA_Message * msg, void* private_data)
 {
@@ -1892,6 +1875,7 @@ initiate_exit(void)
 	Gmain_timeout_add(crm_get_msec("5s"), cib_force_exit, NULL);
 }
 
+extern ll_cluster_t *hb_conn;
 extern void cib_ha_connection_destroy(gpointer user_data);
 
 void

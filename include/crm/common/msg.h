@@ -46,9 +46,6 @@ extern gboolean process_hello_message(crm_data_t *hello,
 				      char **major_version,
 				      char **minor_version);
 
-extern gboolean send_ipc_reply(
-	IPC_Channel *ipc_channel, HA_Message *request, crm_data_t *xml_response_data);
-
 #define create_reply(request, xml_response_data) create_reply_adv(request, xml_response_data, __FUNCTION__);
 extern HA_Message *create_reply_adv(HA_Message *request, crm_data_t *xml_response_data, const char *origin);
 
