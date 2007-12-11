@@ -60,7 +60,8 @@ cibadmin_SOURCES	= cibadmin.c
 cibadmin_LDADD		= $(COMMONLIBS)
 
 ccm_tool_SOURCES	= ccm_epoche.c
-ccm_tool_LDADD		= $(COMMONLIBS) -lccmclient
+ccm_tool_LDADD		= $(COMMONLIBS) -lccmclient -lhbclient \
+			$(top_builddir)/lib/crm/common/libcrmcluster.la
 
 crm_diff_SOURCES	= xml_diff.c
 crm_diff_LDADD		= $(COMMONLIBS)
