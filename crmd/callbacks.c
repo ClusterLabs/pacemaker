@@ -325,6 +325,7 @@ crmd_client_status_callback(const char * node, const char * client,
 			    const char * status, void * private)
 {
 	const char *join = NULL;
+	crm_node_t *member = NULL;
 	crm_data_t *update = NULL;
 	gboolean clear_shutdown = FALSE;
 	
@@ -348,14 +349,21 @@ crmd_client_status_callback(const char * node, const char * client,
 	crm_notice("Status update: Client %s/%s now has status [%s]",
 		   node, client, status);
 
-	crm_update_peer_proc(node, crm_proc_crmd, status);
-
 	if(safe_str_eq(status, ONLINESTATUS)) {
 	    /* remove the cached value in case it changed */
 	    crm_debug_2("Uncaching UUID for %s", node);
 	    unget_uuid(node);
 	}
 
+	member = g_hash_table_lookup(crm_peer_cache, node);
+	if(member == NULL) {
+	    /* Make sure it gets created */
+	    const char *uuid = get_uuid(fsa_cluster_conn, node);
+	    member = crm_update_peer(1, 0, -1, -1, uuid, node, NULL, NULL);
+	}
+
+	crm_update_peer_proc(node, crm_proc_crmd, status);
+	
 	if(is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
 		return;
 	} else if(fsa_state == S_STOPPING) {

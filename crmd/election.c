@@ -80,7 +80,7 @@ do_election_vote(long long action,
 		CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
 	current_election_id++;
-	ha_msg_add(vote, F_CRM_ELECTION_OWNER, fsa_our_uuid);
+	ha_msg_add(vote, F_CRM_ELECTION_OWNER, fsa_our_uname);
 	ha_msg_add_int(vote, F_CRM_ELECTION_ID, current_election_id);
 
 	send_request(vote, NULL);

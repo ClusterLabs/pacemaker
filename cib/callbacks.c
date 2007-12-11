@@ -54,6 +54,8 @@ extern GMainLoop*  mainloop;
 extern gboolean cib_shutdown_flag;
 extern gboolean stand_alone;
 extern const char* cib_root;
+extern ll_cluster_t *hb_conn;
+extern void cib_ha_connection_destroy(gpointer user_data);
 
 extern enum cib_errors cib_update_counter(
 	crm_data_t *xml_obj, const char *field, gboolean reset);
@@ -1717,21 +1719,29 @@ void
 cib_client_status_callback(const char * node, const char * client,
 			   const char * status, void * private)
 {
-	if(safe_str_eq(client, CRM_SYSTEM_CIB)) {
-		crm_info("Status update: Client %s/%s now has status [%s]",
-			 node, client, status);
-
-		if(safe_str_eq(status, JOINSTATUS)){
+    crm_node_t *member = NULL;
+    if(safe_str_eq(client, CRM_SYSTEM_CIB)) {
+	crm_info("Status update: Client %s/%s now has status [%s]",
+		 node, client, status);
+	
+	if(safe_str_eq(status, JOINSTATUS)){
 		    status = ONLINESTATUS;
 		    
-		} else if(safe_str_eq(status, LEAVESTATUS)){
-		    status = OFFLINESTATUS;
-		}
-
-		crm_update_peer_proc(node, crm_proc_crmd, status);
-		set_connected_peers(the_cib);
+	} else if(safe_str_eq(status, LEAVESTATUS)){
+	    status = OFFLINESTATUS;
 	}
-	return;
+
+	member = g_hash_table_lookup(crm_peer_cache, node);
+	if(member == NULL) {
+	    /* Make sure it gets created */
+	    const char *uuid = get_uuid(hb_conn, node);
+	    member = crm_update_peer(1, 0, -1, -1, uuid, node, NULL, NULL);
+	}
+	
+	crm_update_peer_proc(node, crm_proc_crmd, status);
+	set_connected_peers(the_cib);
+    }
+    return;
 }
 
 extern oc_ev_t *cib_ev_token;
@@ -1875,9 +1885,6 @@ initiate_exit(void)
 	Gmain_timeout_add(crm_get_msec("5s"), cib_force_exit, NULL);
 }
 
-extern ll_cluster_t *hb_conn;
-extern void cib_ha_connection_destroy(gpointer user_data);
-
 void
 terminate_ha_connection(const char *caller) 
 {
@@ -1891,6 +1898,14 @@ terminate_ha_connection(const char *caller)
     if(hb_conn != NULL) {
 	crm_info("%s: Disconnecting heartbeat", caller);
 	hb_conn->llc_ops->signoff(hb_conn, FALSE);
+	uninitializeCib();
+
+	if (mainloop != NULL && g_main_is_running(mainloop)) {
+		g_main_quit(mainloop);
+		
+	} else {
+		exit(LSB_EXIT_OK);
+	}
 	
     } else {
 	crm_err("%s: No heartbeat connection", caller);

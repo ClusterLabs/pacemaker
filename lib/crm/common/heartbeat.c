@@ -168,10 +168,10 @@ register_heartbeat_conn(
     crm_info("Hostname: %s", const_uname);
     crm_info("UUID: %s", const_uuid);
 
-    if(*uname) {
+    if(uname) {
 	*uname = crm_strdup(const_uname);
     }
-    if(*uuid) {
+    if(uuid) {
 	*uuid = crm_strdup(const_uuid);
     }
     

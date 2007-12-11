@@ -177,7 +177,9 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 		g_hash_table_insert(
 			welcomed_nodes, crm_strdup(join_to), join_offered);
 	} else {
-		crm_info("Peer process on %s is not active (yet?)", join_to);
+		crm_info("Peer process on %s is not active (yet?): %.8lx %d",
+			 join_to, (long)member->processes,
+			 g_hash_table_size(crm_peer_cache));
 	}
 	
 }

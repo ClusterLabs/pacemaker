@@ -182,7 +182,7 @@ crm_node_t *crm_update_peer(
 	crm_info("Node %s now has id %u", node->uname, id);
     }
 
-    if(children != node->processes) {
+    if(children >= 0 && children != node->processes) {
 	crm_info("Node %s now has children: %.32x (%u)",
 		 node->uname, children, children);
 	node->processes = children;
@@ -237,7 +237,7 @@ crm_node_t *crm_update_ccm_node(
     uuid = get_uuid(cluster, oc->m_array[offset].node_uname);
     return crm_update_peer(oc->m_array[offset].node_id,
 			   oc->m_array[offset].node_born_on,
-			   -1, 0,
+			   -1, -1,
 			   uuid, oc->m_array[offset].node_uname, NULL, state);
 }
 

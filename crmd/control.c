@@ -158,6 +158,7 @@ do_ha_control(long long action,
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 		return;
 	    }
+
 	    clear_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
 	    crm_info("Connected to Heartbeat");
 	} 
