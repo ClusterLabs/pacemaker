@@ -293,8 +293,16 @@ void
 crmd_ha_status_callback(const char *node, const char *status, void *private)
 {
 	crm_data_t *update = NULL;
+	crm_node_t *member = NULL;
 	crm_notice("Status update: Node %s now has status [%s]",node,status);
 
+	member = g_hash_table_lookup(crm_peer_cache, node);
+	if(member == NULL) {
+	    /* Make sure it is created so crm_update_peer_proc() succeeds */
+	    const char *uuid = get_uuid(fsa_cluster_conn, node);
+	    member = crm_update_peer(0, 0, -1, -1, uuid, node, NULL, NULL);
+	}
+	
 	if(safe_str_eq(status, DEADSTATUS)) {
 		/* this node is taost */
 		crm_update_peer_proc(node, crm_proc_ais, OFFLINESTATUS);
@@ -357,9 +365,9 @@ crmd_client_status_callback(const char * node, const char * client,
 
 	member = g_hash_table_lookup(crm_peer_cache, node);
 	if(member == NULL) {
-	    /* Make sure it gets created */
+	    /* Make sure it is created so crm_update_peer_proc() succeeds */
 	    const char *uuid = get_uuid(fsa_cluster_conn, node);
-	    member = crm_update_peer(1, 0, -1, -1, uuid, node, NULL, NULL);
+	    member = crm_update_peer(0, 0, -1, -1, uuid, node, NULL, NULL);
 	}
 
 	crm_update_peer_proc(node, crm_proc_crmd, status);
