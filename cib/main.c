@@ -552,6 +552,7 @@ cib_ha_connection_destroy(gpointer user_data)
 		
 	uninitializeCib();
 
+	crm_info("Exiting...");
 	if (mainloop != NULL && g_main_is_running(mainloop)) {
 		g_main_quit(mainloop);
 		
