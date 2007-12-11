@@ -66,7 +66,7 @@ extern enum cib_errors revision_check(
 	crm_data_t *cib_update, crm_data_t *cib_copy, int flags);
 
 void initiate_exit(void);
-void terminate_ha_connection(const char *caller);
+void terminate_cib(const char *caller);
 gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
 gboolean cib_msg_timeout(gpointer data);
 void cib_GHFunc(gpointer key, gpointer value, gpointer user_data);
@@ -1735,7 +1735,7 @@ cib_client_status_callback(const char * node, const char * client,
 	if(member == NULL) {
 	    /* Make sure it gets created */
 	    const char *uuid = get_uuid(hb_conn, node);
-	    member = crm_update_peer(1, 0, -1, -1, uuid, node, NULL, NULL);
+	    member = crm_update_peer(0, 0, -1, -1, uuid, node, NULL, NULL);
 	}
 	
 	crm_update_peer_proc(node, crm_proc_crmd, status);
@@ -1857,7 +1857,7 @@ static gboolean
 cib_force_exit(gpointer data)
 {
 	crm_notice("Forcing exit!");
-	terminate_ha_connection(__FUNCTION__);
+	terminate_cib(__FUNCTION__);
 	return FALSE;
 }
 
@@ -1869,7 +1869,7 @@ initiate_exit(void)
 
 	active = crm_active_peers(crm_proc_cib);
 	if(active < 2) {
-		terminate_ha_connection(__FUNCTION__);
+		terminate_cib(__FUNCTION__);
 		return;
 	} 
 
@@ -1886,7 +1886,7 @@ initiate_exit(void)
 }
 
 void
-terminate_ha_connection(const char *caller) 
+terminate_cib(const char *caller) 
 {
 #if SUPPORT_AIS
     if(is_openais_cluster()) {
@@ -1898,18 +1898,21 @@ terminate_ha_connection(const char *caller)
     if(hb_conn != NULL) {
 	crm_info("%s: Disconnecting heartbeat", caller);
 	hb_conn->llc_ops->signoff(hb_conn, FALSE);
-	uninitializeCib();
 
-	if (mainloop != NULL && g_main_is_running(mainloop)) {
-		g_main_quit(mainloop);
-		
-	} else {
-		exit(LSB_EXIT_OK);
-	}
-	
     } else {
 	crm_err("%s: No heartbeat connection", caller);
-	exit(LSB_EXIT_OK);
     }
 #endif
+		
+    uninitializeCib();
+     
+    crm_info("Exiting...");
+    
+    if (mainloop != NULL && g_main_is_running(mainloop)) {
+	g_main_quit(mainloop);
+	
+    } else {
+	exit(LSB_EXIT_OK);
+    }
+
 }

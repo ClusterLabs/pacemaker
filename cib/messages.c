@@ -69,7 +69,7 @@ enum cib_errors sync_our_cib(HA_Message *request, gboolean all);
 
 extern HA_Message *cib_msg_copy(const HA_Message *msg, gboolean with_data);
 extern gboolean cib_shutdown_flag;
-extern void terminate_ha_connection(const char *caller);
+extern void terminate_cib(const char *caller);
 
 enum cib_errors 
 cib_process_shutdown_req(
@@ -87,7 +87,7 @@ cib_process_shutdown_req(
 
 	} else if(cib_shutdown_flag) {
 		crm_info("Shutdown ACK from %s", host);
-		terminate_ha_connection(__FUNCTION__);
+		terminate_cib(__FUNCTION__);
 		return cib_ok;
 
 	} else {
