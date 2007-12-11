@@ -36,10 +36,8 @@ halib_SCRIPTS		= haresources2cib.py
 hanoarch_DATA		= utillib.sh README.hb_report
 sbin_SCRIPTS		= hb_report ocf-tester
 
-if CRM_BUILD
 halib_PROGRAMS		= attrd pingd
 sbin_PROGRAMS		= attrd_updater
-endif
 
 ## SOURCES
 ccdv: 	$(top_srcdir)/tools/ccdv.c
@@ -51,6 +49,7 @@ attrd_SOURCES		= attrd.c
 attrd_LDADD		=  						\
 		  -lhbclient						\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
+		  $(top_builddir)/lib/crm/common/libcrmcluster.la	\
 		  $(top_builddir)/lib/crm/cib/libcib.la			\
 		  $(GLIBLIB)						\
 		  $(AISLIBS)						\

@@ -52,7 +52,7 @@
 #define OPTARGS	"hV"
 
 GMainLoop*  mainloop = NULL;
-const char *attrd_uname = NULL;
+char *attrd_uname = NULL;
 char *attrd_uuid = NULL;
 ll_cluster_t	*attrd_cluster_conn;
 gboolean need_shutdown = FALSE;
@@ -260,34 +260,6 @@ attrd_connect(IPC_Channel *channel, gpointer user_data)
 	return TRUE;
 }
 
-static gboolean
-attrd_ha_dispatch(IPC_Channel *channel, gpointer user_data)
-{
-	gboolean stay_connected = TRUE;
-
-	crm_debug_2("Invoked");
-
-	while(attrd_cluster_conn != NULL && IPC_ISRCONN(channel)) {
-		if(attrd_cluster_conn->llc_ops->msgready(attrd_cluster_conn) == 0) {
-			crm_debug_2("no message ready yet");
-			break;
-		}
-		/* invoke the callbacks but dont block */
-		attrd_cluster_conn->llc_ops->rcvmsg(attrd_cluster_conn, 0);
-	}
-	
-	if (attrd_cluster_conn == NULL || channel->ch_status != IPC_CONNECT) {
-		if(need_shutdown == FALSE) {
-			crm_crit("Lost connection to heartbeat service.");
-		} else {
-			crm_info("Lost connection to heartbeat service.");
-		}
-		stay_connected = FALSE;
-	}
-    
-	return stay_connected;
-}
-
 static void
 attrd_ha_connection_destroy(gpointer user_data)
 {
@@ -310,60 +282,18 @@ attrd_ha_connection_destroy(gpointer user_data)
 static gboolean
 register_with_ha(void) 
 {
-	const char *const_attrd_uuid = NULL;
-	if(attrd_cluster_conn == NULL) {
-		attrd_cluster_conn = ll_cluster_new("heartbeat");
-	}
-	if(attrd_cluster_conn == NULL) {
-		crm_err("Cannot create heartbeat object");
-		return FALSE;
-	}
-	
-	crm_debug("Signing in with Heartbeat");
-	if (attrd_cluster_conn->llc_ops->signon(attrd_cluster_conn, T_ATTRD)!= HA_OK) {
-
-		crm_err("Cannot sign on with heartbeat: %s",
-			attrd_cluster_conn->llc_ops->errmsg(attrd_cluster_conn));
-		return FALSE;
-	}
-
-	crm_debug_3("Be informed of CRM messages");
-	if (HA_OK != attrd_cluster_conn->llc_ops->set_msg_callback(
-		    attrd_cluster_conn, T_ATTRD, attrd_ha_callback,
-		    attrd_cluster_conn)) {
-		
-		crm_err("Cannot set msg callback: %s",
-			attrd_cluster_conn->llc_ops->errmsg(attrd_cluster_conn));
-		return FALSE;
-	}
-
-	crm_debug_3("Adding channel to mainloop");
-	G_main_add_IPC_Channel(
-		G_PRIORITY_HIGH, attrd_cluster_conn->llc_ops->ipcchan(
-			attrd_cluster_conn),
-		FALSE, attrd_ha_dispatch, attrd_cluster_conn /* userdata  */,  
-		attrd_ha_connection_destroy);
-
-	crm_debug_3("Finding our node name");
-	attrd_uname = attrd_cluster_conn->llc_ops->get_mynodeid(
-		attrd_cluster_conn);
-	if (attrd_uname == NULL) {
-		crm_err("get_mynodeid() failed");
-		return FALSE;
-	}
-	crm_info("Hostname: %s", attrd_uname);
-
-	crm_debug_3("Finding our node uuid");
-	const_attrd_uuid = get_uuid(attrd_cluster_conn, attrd_uname);
-	if(const_attrd_uuid == NULL) {
-		crm_err("get_uuid_by_name() failed");
-		return FALSE;
-	}
-	/* copy it so that unget_uuid() doesn't trash the value on us */
-	attrd_uuid = crm_strdup(const_attrd_uuid);
-	crm_info("UUID: %s", attrd_uuid);
-
-	return TRUE;
+    void *dispatch = attrd_ha_callback;
+    void *destroy = attrd_ha_connection_destroy;
+    
+    if(is_openais_cluster()) {
+#if SUPPORT_AIS
+	destroy = NULL;
+	dispatch = NULL;
+#endif
+    }
+    
+    return crm_cluster_connect(
+	&attrd_uname, &attrd_uuid, dispatch, destroy, &attrd_cluster_conn);
 }
 
 static void
@@ -416,6 +346,7 @@ main(int argc, char ** argv)
 		usage(T_ATTRD, LSB_EXIT_GENERIC);
 	}
 
+	crm_info("Starting up....");
 	if(register_with_ha() == FALSE) {
 		crm_err("HA Signon failed");
 		was_err = TRUE;
@@ -696,7 +627,7 @@ attrd_trigger_update(attr_hash_entry_t *hash_entry)
 		attrd_perform_update(hash_entry);
 	}
 
-	send_ha_message(attrd_cluster_conn, msg, NULL, FALSE);
+	send_cluster_message(NULL, crm_proc_attrd, msg, FALSE);
 	crm_msg_del(msg);
 	
 	return TRUE;

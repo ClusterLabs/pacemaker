@@ -62,6 +62,7 @@ enum crm_ais_msg_types {
     crm_msg_crmd = 4,
     crm_msg_te   = 5,
     crm_msg_pe   = 6,
+    crm_msg_attrd = 7,
 };
 
 enum crm_proc_flag {
@@ -73,6 +74,7 @@ enum crm_proc_flag {
     crm_proc_crmd    = 0x00000200,
     crm_proc_pe      = 0x00001000,
     crm_proc_te      = 0x00002000,
+    crm_proc_attrd   = 0x00004000,
 };
 
 typedef struct crm_peer_node_s 
@@ -141,6 +143,9 @@ static inline const char *msg_type2text(enum crm_ais_msg_types type)
 			break;
 		case crm_msg_lrmd:
 			text = "lrmd";
+			break;
+		case crm_msg_attrd:
+			text = "attrd";
 			break;
 	}
 	return text;
