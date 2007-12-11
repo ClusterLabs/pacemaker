@@ -91,11 +91,6 @@ install-exec-local:
 	mkdir -p $(DESTDIR)$(coredir)/$(hauser)
 	-chown $(hauser) $(DESTDIR)$(coredir)/$(hauser)
 	chmod 700 $(DESTDIR)$(coredir)/$(hauser)
-	cd $(DESTDIR)@HA_LIBHBDIR@;				\
-	for file in `ls $(DESTDIR)$(HBSHAREDIR)`;			\
-	do if [  -d $$file ]; then continue; fi;	\
-		rm -f $$file && ln -s $(HBSHAREDIR)/$$file .;	\
-	done
 
 dist-clean-local:
 	rm -f autoconf automake autoheader $(PACKAGE)-*.tar.gz
