@@ -159,7 +159,7 @@ crm_node_t *crm_update_peer(
 
     if(node == NULL) {	
 	crm_info("Creating entry for node %s/%u/%llu", uname, id, born);
-	CRM_CHECK(id > 0, return NULL);
+	CRM_CHECK(id >= 0, return NULL);
 	CRM_CHECK(uuid != NULL, return NULL);
 
 	crm_malloc0(node, sizeof(crm_node_t));
