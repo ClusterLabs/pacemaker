@@ -17,7 +17,7 @@
 #
 MAINTAINERCLEANFILES	= Makefile.in
 
-headerdir=$(includedir)/@PKG_NAME@
+headerdir=$(includedir)/@PKG_NAME@/crm
 
 header_HEADERS		= crm.h cib.h msg_xml.h transition.h ais.h
 

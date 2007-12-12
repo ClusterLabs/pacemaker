@@ -18,6 +18,6 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-headerdir=$(includedir)/@PKG_NAME@/common
+headerdir=$(includedir)/@PKG_NAME@/crm/common
 
 header_HEADERS = xml.h ipc.h msg.h ctrl.h util.h iso8601.h
