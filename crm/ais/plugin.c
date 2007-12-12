@@ -913,6 +913,7 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 	} else if (!libais_connection_active(conn)) {
 	    do_ais_log(level, "Connection to %s is no longer active",
 		       crm_children[dest].name);
+	    crm_children[dest].async_conn = NULL;
 	    
 /* 	} else if ((queue->size - 1) == queue->used) { */
 /* 	    ais_err("Connection is throttled: %d", queue->size); */
