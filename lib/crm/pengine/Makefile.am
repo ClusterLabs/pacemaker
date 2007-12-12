@@ -18,23 +18,7 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
-		-I$(top_builddir)/libltdl   -I$(top_srcdir)/libltdl	\
-		-I$(top_builddir)/linux-ha  -I$(top_srcdir)/linux-ha 	\
-		-I$(top_builddir)           -I$(top_srcdir)
-
-hadir		= $(sysconfdir)/ha.d
-halibdir	= $(libdir)/@HB_PKG@
-commmoddir	= $(halibdir)/modules/comm
-havarlibdir	= $(localstatedir)/lib/@HB_PKG@
-pe_varlibdir	= $(HA_VARLIBDIR)/$(HB_PKG)/pengine
-
-# sockets with path
-crmdir		= $(havarlibdir)/crm
-apigid		= @HA_APIGID@
-crmuid		= @HA_CCMUID@
-
-LIBRT 		= @LIBRT@
-AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
+		-I$(top_builddir)/libltdl   -I$(top_srcdir)/libltdl
 
 ## libraries
 lib_LTLIBRARIES	= libpe_rules.la libpe_status.la

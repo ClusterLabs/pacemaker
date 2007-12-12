@@ -21,15 +21,7 @@ INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 		-I$(top_builddir)/libltdl   -I$(top_srcdir)/libltdl	\
 		-I$(AISPREFIX)/include/openais
 
-EXTRA_DIST	= 
-
-hadir		= $(sysconfdir)/ha.d
 halibdir	= $(libdir)/@HB_PKG@
-commmoddir	= $(halibdir)/modules/comm
-havarlibdir	= $(localstatedir)/lib/@HB_PKG@
-
-# sockets with path
-crmdir		= $(havarlibdir)/crm
 
 COMMONLIBS	= 					\
 		$(top_builddir)/lib/crm/common/libcrmcommon.la	\
@@ -39,13 +31,6 @@ COMMONLIBS	= 					\
 		$(GLIBLIB)						\
 		$(AISLIBS)						\
 		$(LIBRT)
-
-LIBRT 		= @LIBRT@
-AM_CFLAGS	= @CFLAGS@						\
-		$(CRM_DEBUG_FLAGS)
-
-## libraries
-lib_LTLIBRARIES	= 
 
 ## binary progs
 halib_PROGRAMS	= crmd atest

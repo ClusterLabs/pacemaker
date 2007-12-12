@@ -42,9 +42,6 @@ COMMONLIBS	= 					\
 		  $(AISLIBS)						\
 		  $(LIBRT)
 
-LIBRT 		= @LIBRT@
-AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
-
 ## binary progs
 halib_PROGRAMS	= cib cibmon
 

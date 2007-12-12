@@ -20,23 +20,14 @@ MAINTAINERCLEANFILES    = Makefile.in
 INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 		-I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl
 
-hadir		= $(sysconfdir)/ha.d
 halibdir	= $(libdir)/@HB_PKG@
-commmoddir	= $(halibdir)/modules/comm
-havarlibdir	= $(localstatedir)/lib/@HB_PKG@
 
-crmdir		= $(havarlibdir)/crm
-
-COMMONLIBS	=  					\
-		$(top_builddir)/lib/crm/common/libcrmcommon.la 	\
-		$(top_builddir)/lib/crm/cib/libcib.la	 	\
+COMMONLIBS	=  							\
+		$(top_builddir)/lib/crm/common/libcrmcommon.la 		\
+		$(top_builddir)/lib/crm/cib/libcib.la	 		\
 		$(AISLIBS)						\
 		$(GLIBLIB)						\
 		$(LIBRT)
-
-LIBRT 		= @LIBRT@
-AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
-
 
 ## binary progs
 halib_PROGRAMS	= tengine ttest

@@ -21,15 +21,8 @@ INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 		-I$(top_builddir)           -I$(top_srcdir)		\
 		-I$(top_builddir)/libltdl   -I$(top_srcdir)/libltdl
 
-hadir		= $(sysconfdir)/ha.d
-hasbindir	= $(sbindir)
 halibdir	= $(libdir)/@HB_PKG@
-commmoddir	= $(halibdir)/modules/comm
-havarlibdir	= $(localstatedir)/lib/@HB_PKG@
 pe_varlibdir	= $(HA_VARLIBDIR)/$(HB_PKG)/pengine
-
-# sockets with path
-crmdir		= $(havarlibdir)/crm
 
 COMMONLIBS	= 					\
 		$(top_builddir)/lib/crm/common/libcrmcommon.la		\
@@ -40,15 +33,12 @@ COMMONLIBS	= 					\
 		$(AISLIBS)						\
 		$(LIBRT)
 
-LIBRT 		= @LIBRT@
-AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
-
 ## libraries
 lib_LTLIBRARIES	= libpengine.la
 
 ## binary progs
 halib_PROGRAMS	= pengine
-hasbin_PROGRAMS	= ptest
+sbin_PROGRAMS	= ptest
 
 ## SOURCES
 noinst_HEADERS	= allocate.h utils.h pengine.h

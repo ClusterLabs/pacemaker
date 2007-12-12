@@ -23,9 +23,6 @@ INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 		-I$(AISPREFIX)/include/openais
 
 halibdir	= $(libdir)/@HB_PKG@
-hasbindir	= $(sbindir)
-LIBRT 		= @LIBRT@
-AM_CFLAGS	= @CFLAGS@ $(CRM_DEBUG_FLAGS)
 
 COMMONLIBS	= 					\
 		$(top_builddir)/lib/crm/common/libcrmcommon.la		\
@@ -38,11 +35,11 @@ COMMONLIBS	= 					\
 
 
 halib_PYTHON		= crm_primitive.py crm_utils.py crm_commands.py
-hasbin_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 \
+sbin_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 \
 			crm_master crm_standby crm_failcount crm_attribute \
 			crm_resource crm_verify crm_uuid 
 
-hasbin_SCRIPTS		= crm_sh
+sbin_SCRIPTS		= crm_sh
 
 ## SOURCES
 
