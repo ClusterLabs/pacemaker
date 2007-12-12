@@ -25,7 +25,7 @@
 #include <clplumbing/cl_misc.h>
 
 #define VARIANT_GROUP 1
-#include <lib/crm/pengine/variant.h>
+#include "./variant.h"
 
 gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {

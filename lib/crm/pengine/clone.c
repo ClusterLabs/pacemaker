@@ -24,7 +24,7 @@
 #include <crm/msg_xml.h>
 
 #define VARIANT_CLONE 1
-#include <lib/crm/pengine/variant.h>
+#include "./variant.h"
 
 void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,

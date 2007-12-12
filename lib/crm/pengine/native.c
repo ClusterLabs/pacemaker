@@ -28,7 +28,7 @@
 #define DELETE_THEN_REFRESH 1
 
 #define VARIANT_NATIVE 1
-#include <lib/crm/pengine/variant.h>
+#include "./variant.h"
 
 void
 native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
