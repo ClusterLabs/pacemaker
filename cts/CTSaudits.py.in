@@ -594,6 +594,7 @@ class PartitionAudit(ClusterAudit):
             self.NodeQuorum[node] = self.CM.rsh.readaline(
                 node, self.CM["QuorumCmd"])
             
+            self.CM.debug("Node %s: %s - %s - %s." %(node, self.NodeState[node], self.NodeEpoche[node], self.NodeQuorum[node]))
             self.NodeState[node]  = self.trim_string(self.NodeState[node])
             self.NodeEpoche[node] = self.trim2int(self.NodeEpoche[node])
             self.NodeQuorum[node] = self.trim_string(self.NodeQuorum[node])
