@@ -17,8 +17,7 @@
 
 MAINTAINERCLEANFILES	= Makefile.in
 
-INCLUDES	= -I$(top_srcdir)/include -I$(top_builddir)/include \
-		-I$(top_srcdir)/linux-ha -I$(top_builddir)/linux-ha
+INCLUDES	= -I$(top_srcdir)/include -I$(top_builddir)/include
 
 QUIET_LIBTOOL_OPTS	= @QUIET_LIBTOOL_OPTS@
 LIBTOOL		= @LIBTOOL@ @QUIET_LIBTOOL_OPTS@

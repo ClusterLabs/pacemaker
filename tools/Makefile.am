@@ -20,8 +20,6 @@
 MAINTAINERCLEANFILES    = Makefile.in ccdv
 
 INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include   \
-			  -I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
-			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl   \
 			  -I$(AISPREFIX)/include/openais
 
 EXTRA_DIST		= ccdv.c attrd.h

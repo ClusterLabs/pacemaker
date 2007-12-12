@@ -23,21 +23,13 @@
 ##                        $(auxdir)/mkinstalldirs
 ##AUX_DIST_EXTRA          = $(auxdir)/readline.m4 $(auxdir)/sys_errlist.m4 \
 ##                        $(auxdir)/sys_siglist.m4
-EXTRA_DIST              = bootstrap rc.config.heartbeat 	\
-			heartbeat.spec.in heartbeat.spec	\
-			ConfigureMe README.in libltdl.tar
+EXTRA_DIST              = bootstrap ConfigureMe README.in libltdl.tar
 
 RPMREL			= @RPMREL@
 RPM			= @RPM@
 RPMFLAGS		= -ta
 TARFILE			= @TARFILE@
 AM_TAR			= tar
-RPMDIR=$(HOME)/rpms
-RPMSRC=$(DESTDIR)$(RPMDIR)/SRPMS/$(PACKAGE)-$(VERSION)-$(RPMREL).src.rpm
-RPM386=$(DESTDIR)$(RPMDIR)/RPMS/i586/$(PACKAGE)-$(VERSION)-$(RPMREL).i586.rpm
-RPMstonith=$(DESTDIR)$(RPMDIR)/RPMS/i586/$(PACKAGE)-stonith-$(VERSION)-$(RPMREL).i586.rpm
-RPMpils=$(DESTDIR)$(RPMDIR)/RPMS/i586/$(PACKAGE)-pils-$(VERSION)-$(RPMREL).i586.rpm
-RPMldir=$(DESTDIR)$(RPMDIR)/RPMS/i586/$(PACKAGE)-ldirectord-$(VERSION)-$(RPMREL).i586.rpm
 SHAREDIR=@HA_DATADIR@
 HBSHAREDIR=@HA_NOARCHDATAHBDIR@
 
@@ -100,11 +92,11 @@ maintainer-clean-local:
 
 # "pkg" format for Solaris etc.
 pkg:
-		(cd pkg && $(MAKE) PWD=`pwd` pkg)
+		(cd build/pkg && $(MAKE) PWD=`pwd` pkg)
 
 # "port" format for BSD
 portfile:	dist
-		( cd port && $(MAKE) PWD=`pwd` portfile)
+		( cd build/port && $(MAKE) PWD=`pwd` portfile)
 
 drpm:		dist
 		$(RPM) --nodeps $(RPMFLAGS) $(TARFILE) </dev/null;
