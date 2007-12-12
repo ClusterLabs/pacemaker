@@ -23,11 +23,11 @@ MAINTAINERCLEANFILES    = Makefile.in ha_version.h config.h.in
 
 EXTRA_DIST = ha_version.h
 
-includedir=$(base_includedir)/heartbeat
+headerdir=$(includedir)/@PKG_NAME@
 
 
 noinst_HEADERS	        = portability.h config.h ha_version.h
-include_HEADERS	        = crm_config.h
+header_HEADERS	        = crm_config.h
  
 
 SUBDIRS                 =  crm

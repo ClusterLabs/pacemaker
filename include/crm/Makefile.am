@@ -17,8 +17,8 @@
 #
 MAINTAINERCLEANFILES	= Makefile.in
 
-includedir=$(base_includedir)/heartbeat/crm
+headerdir=$(includedir)/@PKG_NAME@
 
-include_HEADERS		= crm.h cib.h msg_xml.h transition.h ais.h
+header_HEADERS		= crm.h cib.h msg_xml.h transition.h ais.h
 
 SUBDIRS                 = common pengine

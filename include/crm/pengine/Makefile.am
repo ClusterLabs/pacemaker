@@ -17,6 +17,6 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-includedir=$(base_includedir)/heartbeat/crm/pengine
+headerdir=$(includedir)/@PKG_NAME@/pengine
 
-include_HEADERS		= common.h complex.h rules.h status.h
+header_HEADERS		= common.h complex.h rules.h status.h
