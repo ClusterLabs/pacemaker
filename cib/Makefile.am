@@ -33,8 +33,6 @@ havarlibdir	= $(localstatedir)/lib/@HB_PKG@
 
 # sockets with path
 crmdir		= $(havarlibdir)/crm
-apigid		= @HA_APIGID@
-crmuid		= @HA_CCMUID@
 crmreqsocket	= $(havarlibdir)/api/crm.req
 crmressocket	= $(havarlibdir)/api/crm.rsp
 

@@ -31,9 +31,6 @@ pe_varlibdir	= $(HA_VARLIBDIR)/$(HB_PKG)/pengine
 
 # sockets with path
 crmdir		= $(havarlibdir)/crm
-apigid		= @HA_APIGID@
-crmuid		= @HA_CCMUID@
-
 
 COMMONLIBS	= 					\
 		$(top_builddir)/lib/crm/common/libcrmcommon.la		\

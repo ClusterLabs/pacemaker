@@ -24,19 +24,12 @@ INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include   \
 			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl   \
 			  -I$(AISPREFIX)/include/openais
 
-EXTRA_DIST		= ccdv.c attrd.h $(hanoarch_DATA) $(sbin_SCRIPTS)
+EXTRA_DIST		= ccdv.c attrd.h
 
-apigid			= @HA_APIGID@
-habindir		= @bindir@
 halibdir		= $(libdir)/@HB_PKG@
-hanoarchdir		= @HA_NOARCHDATAHBDIR@
-gliblib			= @GLIBLIB@
-
 halib_SCRIPTS		= haresources2cib.py
-hanoarch_DATA		= utillib.sh README.hb_report
-sbin_SCRIPTS		= hb_report ocf-tester
-
 halib_PROGRAMS		= attrd pingd
+
 sbin_PROGRAMS		= attrd_updater
 
 ## SOURCES
