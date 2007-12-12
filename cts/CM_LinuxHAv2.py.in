@@ -588,7 +588,7 @@ class LinuxHAv2(HeartbeatCM):
                         "tengine_stonith_connection_destroy: Fencing daemon has left us",
                         "Attempting connection to fencing daemon",
                         "te_connect_stonith: Connected",
-                        ], stonith_ignore, 1, self))
+                        ], stonith_ignore, 0, self))
 #            complist.append(Process("heartbeat", 0, [], [], [], None, self))
         return complist
 
