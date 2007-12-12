@@ -591,7 +591,7 @@ do_started(long long action,
 	   fsa_data_t *msg_data)
 {
 	if(cur_state != S_STARTING) {
-	    crm_err("Start cancelled...");
+	    crm_err("Start cancelled... %s", fsa_state2string(cur_state));
 	    return;
 	    
 	} else if(is_set(fsa_input_register, R_CCM_DATA) == FALSE) {
