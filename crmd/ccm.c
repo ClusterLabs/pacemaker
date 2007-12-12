@@ -262,7 +262,7 @@ do_ccm_update_cache(
 	    instance = oc->m_instance;
 	}
 	
-	CRM_ASSERT(crm_peer_seq < instance);
+	CRM_ASSERT(crm_peer_seq <= instance);
 
 	switch(cur_state) {
 	    case S_STOPPING:
