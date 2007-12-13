@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 
-#include <libnet.h>
+#include <netinet/ip.h>
 
 #include <stdlib.h>
 #include <errno.h>
