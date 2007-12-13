@@ -34,12 +34,9 @@ crmdir		= $(havarlibdir)/crm
 crmreqsocket	= $(havarlibdir)/api/crm.req
 crmressocket	= $(havarlibdir)/api/crm.rsp
 
-COMMONLIBS	= 					\
-		  -lhbclient						\
-		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
+COMMONLIBS	= $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(top_builddir)/lib/crm/cib/libcib.la			\
 		  $(GLIBLIB)						\
-		  $(AISLIBS)						\
 		  $(LIBRT)
 
 ## binary progs
@@ -52,7 +49,7 @@ noinst_HEADERS		= cibio.h cibmessages.h cibprimatives.h notify.h \
 
 cib_SOURCES		= io.c primatives.c messages.c cib.c notify.c	\
 			callbacks.c main.c remote.c
-cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB) -lccmclient	\
+cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB) $(CLUSTERLIBS)	\
 			$(top_builddir)/lib/crm/common/libcrmcluster.la
 
 cib_LDFLAGS		= $(GNUTLSLIBS)

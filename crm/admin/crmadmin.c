@@ -57,8 +57,8 @@ IPC_Channel *crmd_channel = NULL;
 char *admin_uuid = NULL;
 
 void usage(const char *cmd, int exit_status);
-ll_cluster_t *do_init(void);
-int do_work(ll_cluster_t * hb_cluster);
+gboolean do_init(void);
+int do_work(void);
 void crmd_ipc_connection_destroy(gpointer user_data);
 
 gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
@@ -110,7 +110,6 @@ main(int argc, char **argv)
 {
 	int argerr = 0;
 	int flag;
-	ll_cluster_t *hb_cluster = NULL;
 
 #ifdef HAVE_GETOPT_H
 	int option_index = 0;
@@ -272,10 +271,9 @@ main(int argc, char **argv)
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
 
-	hb_cluster = do_init();
-	if (hb_cluster != NULL) {
+	if (do_init()) {
 		int res = 0;
-		res = do_work(hb_cluster);
+		res = do_work();
 		if (res > 0) {
 			/* wait for the reply by creating a mainloop and running it until
 			 * the callbacks are invoked...
@@ -306,7 +304,7 @@ main(int argc, char **argv)
 
 
 int
-do_work(ll_cluster_t * hb_cluster)
+do_work(void)
 {
 	int ret = 1;
 	/* construct the request */
@@ -456,14 +454,10 @@ crmd_ipc_connection_destroy(gpointer user_data)
 }
 
 
-ll_cluster_t *
+gboolean
 do_init(void)
 {
 	GCHSource *src = NULL;
-	ll_cluster_t *hb_cluster = NULL;
-	
-	/* change the logging facility to the one used by heartbeat daemon */
-	hb_cluster = ll_cluster_new("heartbeat");
 	
 	crm_malloc0(admin_uuid, 11);
 	if(admin_uuid != NULL) {
@@ -475,7 +469,7 @@ do_init(void)
 		CRM_SYSTEM_CRMD, admin_msg_callback, NULL, &crmd_channel);
 
 	if(DO_RESOURCE || DO_RESOURCE_LIST || DO_NODE_LIST) {
-		return hb_cluster;
+		return TRUE;
 		
 	} else if(crmd_channel != NULL) {
 		send_hello_message(
@@ -483,9 +477,9 @@ do_init(void)
 
 		set_IPC_Channel_dnotify(src, crmd_ipc_connection_destroy);
 		
-		return hb_cluster;
+		return TRUE;
 	} 
-	return NULL;
+	return FALSE;
 }
 
 gboolean

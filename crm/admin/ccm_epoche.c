@@ -66,7 +66,9 @@ main(int argc, char ** argv)
 {
 	int flag;
 	int argerr = 0;
+#if SUPPORT_HEARTBEAT
 	int ccm_fd = 0;
+#endif
 	crm_log_init("ccm_tool", LOG_WARNING, FALSE, FALSE, 0, NULL);
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
@@ -111,6 +113,7 @@ main(int argc, char ** argv)
 
 	} else
 #endif
+#if SUPPORT_HEARTBEAT
 	    if(ccm_age_connect(&ccm_fd)) {
 		int rc = 0;
 		int lpc = 0;
@@ -135,7 +138,7 @@ main(int argc, char ** argv)
 			return(1);
 		}
 	}
-	
+#endif	
 	return(1);    
 }
 
@@ -156,6 +159,7 @@ usage(const char* cmd, int exit_status)
 	exit(exit_status);
 }
 
+#if SUPPORT_HEARTBEAT
 gboolean
 ccm_age_connect(int *ccm_fd) 
 {
@@ -267,6 +271,7 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 	fflush(stdout);
 	exit(0);
 }
+#endif
 
 #if SUPPORT_AIS
 void

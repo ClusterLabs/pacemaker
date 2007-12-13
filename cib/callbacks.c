@@ -72,7 +72,6 @@ gboolean cib_msg_timeout(gpointer data);
 void cib_GHFunc(gpointer key, gpointer value, gpointer user_data);
 gboolean can_write(int flags);
 HA_Message *cib_msg_copy(HA_Message *msg, gboolean with_data);
-gboolean ccm_manual_check(gpointer data);
 void send_cib_replace(const HA_Message *sync_request, const char *host);
 void cib_process_request(
 	HA_Message *request, gboolean privileged, gboolean force_synchronous,
@@ -1744,24 +1743,8 @@ cib_client_status_callback(const char * node, const char * client,
     return;
 }
 
+#if SUPPORT_HEARTBEAT
 extern oc_ev_t *cib_ev_token;
-
-gboolean
-ccm_manual_check(gpointer data)
-{
-	int rc = 0;
-	oc_ev_t *ccm_token = cib_ev_token;
-	
-	crm_debug("manual check");	
-	rc = oc_ev_handle_event(ccm_token);
-	if(0 == rc) {
-		return TRUE;
-
-	} else {
-		crm_err("CCM connection appears to have failed: rc=%d.", rc);
-		return FALSE;
-	}
-}
 
 gboolean cib_ccm_dispatch(int fd, gpointer user_data)
 {
@@ -1845,7 +1828,7 @@ cib_ccm_msg_callback(
 	
 	return;
 }
-
+#endif
 
 gboolean
 can_write(int flags)

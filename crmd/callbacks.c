@@ -484,6 +484,9 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 }
 
 
+#if SUPPORT_HEARTBEAT
+static gboolean fsa_have_quorum = FALSE;
+
 gboolean ccm_dispatch(int fd, gpointer user_data)
 {
 	int rc = 0;
@@ -506,8 +509,6 @@ gboolean ccm_dispatch(int fd, gpointer user_data)
 	trigger_fsa(fsa_source);
 	return !was_error;
 }
-
-static gboolean fsa_have_quorum = FALSE;
 
 void 
 crmd_ccm_msg_callback(
@@ -592,6 +593,7 @@ crmd_ccm_msg_callback(
 	oc_ev_callback_done(cookie);
 	return;
 }
+#endif
 
 void
 crmd_cib_connection_destroy(gpointer user_data)

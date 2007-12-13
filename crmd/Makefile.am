@@ -29,7 +29,6 @@ COMMONLIBS	= 					\
 		$(top_builddir)/lib/crm/cib/libcib.la			\
 		-lplumb							\
 		$(GLIBLIB)						\
-		$(AISLIBS)						\
 		$(LIBRT)
 
 ## binary progs
@@ -51,8 +50,9 @@ crmd_SOURCES	= main.c crmd.c 					\
 		cib.c pengine.c tengine.c lrm.c 			\
 		utils.c misc.c
 
-crmd_LDADD	= $(COMMONLIBS) $(top_builddir)/lib/crm/common/libcrmcluster.la\
-		-lhbclient -llrm -lccmclient
+crmd_LDADD	= $(COMMONLIBS) $(CLUSTERLIBS) -llrm \
+		$(top_builddir)/lib/crm/common/libcrmcluster.la
+
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

@@ -30,7 +30,7 @@ COMMONLIBS	= 					\
 		-lplumb					  		\
 		$(GLIBLIB)						\
 		$(CURSESLIBS)						\
-		$(AISLIBS)						\
+		$(CLUSTERLIBS)						\
 		$(LIBRT)
 
 
@@ -47,7 +47,7 @@ sbin_SCRIPTS		= crm_sh
 noinst_HEADERS		= 
 
 crmadmin_SOURCES	= crmadmin.c
-crmadmin_LDADD		= $(COMMONLIBS) -lhbclient \
+crmadmin_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
 			$(top_builddir)/lib/crm/pengine/libpe_status.la
 
 crm_uuid_SOURCES	= crm_uuid.c
@@ -57,7 +57,7 @@ cibadmin_SOURCES	= cibadmin.c
 cibadmin_LDADD		= $(COMMONLIBS)
 
 ccm_tool_SOURCES	= ccm_epoche.c
-ccm_tool_LDADD		= $(COMMONLIBS) -lccmclient -lhbclient \
+ccm_tool_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
 			$(top_builddir)/lib/crm/common/libcrmcluster.la
 
 crm_diff_SOURCES	= xml_diff.c

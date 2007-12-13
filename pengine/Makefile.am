@@ -30,7 +30,7 @@ COMMONLIBS	= 					\
 		libpengine.la						\
 		$(GLIBLIB)						\
 		$(CURSESLIBS)						\
-		$(AISLIBS)						\
+		$(CLUSTERLIBS)						\
 		$(LIBRT)
 
 ## libraries

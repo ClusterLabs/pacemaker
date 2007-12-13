@@ -21,7 +21,7 @@ MAINTAINERCLEANFILES    = Makefile.in
 SUBDIRS			=  admin
 DIST_SUBDIRS		=  admin ais
 
-if BUILD_NATIVE_AIS
+if BUILD_AIS_SUPPORT
 SUBDIRS			+= ais
 endif
 

@@ -103,6 +103,7 @@ do_ccm_control(long long action,
 		enum crmd_fsa_input current_input,
 		fsa_data_t *msg_data)
 {	
+#if SUPPORT_HEARTBEAT
     if(is_heartbeat_cluster()) {
 	if(action & A_CCM_DISCONNECT){
 		set_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
@@ -173,7 +174,8 @@ do_ccm_control(long long action,
 		
 	}
     }
-
+#endif
+    
     if(action & ~(A_CCM_CONNECT|A_CCM_DISCONNECT)) {
 	crm_err("Unexpected action %s in %s",
 		fsa_action2string(action), __FUNCTION__);
@@ -283,6 +285,7 @@ do_ccm_update_cache(
 	crm_debug("Updating cache after membership event %llu (%s).", 
 		  instance, ccm_event_name(event));
 
+#if SUPPORT_HEARTBEAT
 	if(is_heartbeat_cluster()) {
 	    ccm_event_detail(oc, event);
 	    
@@ -298,7 +301,7 @@ do_ccm_update_cache(
 		    fsa_cluster_conn, oc, lpc+oc->m_memb_idx, CRM_NODE_ACTIVE);
 	    }
 	}
-	
+#endif	
 
 	if(event == OC_EV_MS_EVICTED) {
 	    crm_update_peer(

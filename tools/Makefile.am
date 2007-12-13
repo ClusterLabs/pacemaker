@@ -38,28 +38,25 @@ ccdv: 	$(top_srcdir)/tools/ccdv.c
 attrd_DEPENDENCIES	= ccdv
 attrd_SOURCES		= attrd.c
 attrd_LDADD		=  						\
-		  -lhbclient						\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(top_builddir)/lib/crm/common/libcrmcluster.la	\
 		  $(top_builddir)/lib/crm/cib/libcib.la			\
 		  $(GLIBLIB)						\
-		  $(AISLIBS)						\
+		  $(CLUSTERLIBS)					\
 		  $(LIBRT)
 
 pingd_SOURCES		= pingd.c
 pingd_LDADD		=  						\
-		  -lhbclient						\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(GLIBLIB)						\
-		  $(AISLIBS)						\
+		  $(CLUSTERLIBS)					\
 		  $(LIBRT)
 
 attrd_updater_SOURCES	= attrd_updater.c
 attrd_updater_LDADD	=  						\
-		  -lhbclient						\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(GLIBLIB)						\
-		  $(AISLIBS)						\
+		  $(CLUSTERLIBS)					\
 		  $(LIBRT)
 
 .PHONY: install-exec-hook

@@ -112,7 +112,7 @@ usage(const char *cmd, int exit_status)
 	exit(exit_status);
 }
 
-
+#if SUPPORT_HEARTBEAT
 static gboolean
 pingd_ha_dispatch(IPC_Channel *channel, gpointer user_data)
 {
@@ -204,6 +204,7 @@ register_with_ha(void)
 
 	return TRUE;
 }
+#endif
 
 int
 main(int argc, char **argv)
@@ -324,12 +325,13 @@ main(int argc, char **argv)
 		exit(LSB_EXIT_GENERIC);
 	}
 	
+#if SUPPORT_HEARTBEAT
 	if(register_with_ha() == FALSE) {
 		crm_err("HA registration failed");
 		cl_flush_logs();
 		exit(LSB_EXIT_GENERIC);
 	}
-	
+#endif	
 	crm_info("Starting %s", crm_system_name);
 	mainloop = g_main_new(FALSE);
 	g_main_run(mainloop);

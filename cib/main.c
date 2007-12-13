@@ -65,7 +65,6 @@
 #endif
 
 extern int init_remote_listener(int port);
-extern gboolean ccm_connect(void);
 
 gboolean cib_shutdown_flag = FALSE;
 gboolean stand_alone = FALSE;
@@ -283,15 +282,15 @@ cib_stats(gpointer data)
 	return TRUE;
 }
 
-static void
-ccm_connection_destroy(gpointer user_data)
+#if SUPPORT_HEARTBEAT
+static void ccm_connection_destroy(gpointer user_data)
 {
     crm_err("CCM connection failed... blocking while we reconnect");
     CRM_ASSERT(ccm_connect());
     return;
 }
 
-gboolean ccm_connect(void) 
+static gboolean ccm_connect(void) 
 {
     gboolean did_fail = TRUE;
     int num_ccm_fails = 0;
@@ -352,6 +351,7 @@ gboolean ccm_connect(void)
     
     return TRUE;    
 }
+#endif
 
 #if SUPPORT_AIS	
 static gboolean cib_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 

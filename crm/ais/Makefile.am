@@ -34,7 +34,7 @@ COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
 		$(top_builddir)/lib/crm/common/libcrmcommon.la		\
 		$(GLIBLIB)						\
 		$(CURSESLIBS)						\
-		$(AISLIBS)						\
+		$(CLUSTERLIBS)						\
 		$(LIBRT)
 
 #atest_SOURCES	= test.c
