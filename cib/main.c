@@ -283,6 +283,8 @@ cib_stats(gpointer data)
 }
 
 #if SUPPORT_HEARTBEAT
+gboolean ccm_connect(void);
+
 static void ccm_connection_destroy(gpointer user_data)
 {
     crm_err("CCM connection failed... blocking while we reconnect");
@@ -290,7 +292,7 @@ static void ccm_connection_destroy(gpointer user_data)
     return;
 }
 
-static gboolean ccm_connect(void) 
+gboolean ccm_connect(void) 
 {
     gboolean did_fail = TRUE;
     int num_ccm_fails = 0;
