@@ -319,7 +319,7 @@ mon_timer_popped(gpointer data)
 			   cib_conn, crm_system_name, cib_query)) {
 			failed_connections = 0;
 
-		} else if (simple_status) {
+		} else if (simple_status || one_shot) {
 			fprintf(stdout, "Critical: Unable to connect to the CIB\n");
 			exit(2);
 		} else {
