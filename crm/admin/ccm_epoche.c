@@ -35,6 +35,10 @@
 #  include <ocf/oc_event.h>
 #  include <ocf/oc_membership.h>
 oc_ev_t *ccm_token = NULL;
+void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
+void ccm_age_callback(
+    oc_ed_t event, void *cookie, size_t size, const void *data);
+gboolean ccm_age_connect(int *ccm_fd);
 #endif
 
 #include <crm/crm.h>
@@ -45,11 +49,6 @@ int command = 0;
 
 #define OPTARGS	"hVqep"
 
-void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
-
-void ccm_age_callback(
-    oc_ed_t event, void *cookie, size_t size, const void *data);
-gboolean ccm_age_connect(int *ccm_fd);
 void usage(const char* cmd, int exit_status);
 char *lookup_host = NULL;
 
