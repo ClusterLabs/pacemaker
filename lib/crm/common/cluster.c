@@ -139,6 +139,7 @@ get_uuid(const char *uname)
 #if SUPPORT_AIS
     if(is_openais_cluster()) {
 	uuid_calc = crm_strdup(uname);
+	goto fallback;
     }
 #endif
 #if SUPPORT_HEARTBEAT
@@ -197,7 +198,7 @@ get_uname(const char *uuid)
     }
     
 #if SUPPORT_AIS
-    if(is_ais_cluster()) {
+    if(is_openais_cluster()) {
 	g_hash_table_insert(crm_uuid_cache, crm_strdup(uuid), crm_strdup(uuid));
     }
 #endif

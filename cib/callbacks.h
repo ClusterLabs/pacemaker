@@ -20,12 +20,13 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <hb_api.h>
 #include <clplumbing/ipc.h>
 #include <clplumbing/GSource.h>
 
-#include <ocf/oc_event.h>
-/* #include <ocf/oc_membership.h> */
+#if SUPPORT_HEARTBEAT
+#  include <hb_api.h>
+#  include <ocf/oc_event.h>
+#endif
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -82,7 +83,6 @@ extern gboolean cib_client_connect_ro_synch(
 extern gboolean cib_null_callback (IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_rw_callback   (IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_ro_callback   (IPC_Channel *channel, gpointer user_data);
-extern gboolean cib_ha_dispatch   (IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_rw_synchronous_callback(
 	IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_ro_synchronous_callback(
@@ -92,7 +92,9 @@ extern void cib_peer_callback(HA_Message * msg, void* private_data);
 extern void cib_client_status_callback(const char * node, const char * client,
 				       const char * status, void * private);
 
+#if SUPPORT_HEARTBEAT
 extern gboolean cib_ccm_dispatch(int fd, gpointer user_data);
 
 extern void cib_ccm_msg_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data);
+#endif
