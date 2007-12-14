@@ -36,11 +36,14 @@
 #include <fsa_proto.h>
 #include <crmd_callbacks.h>
 
+void post_cache_update(int instance);
 
+#if SUPPORT_HEARTBEAT
 void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
 void crmd_ccm_msg_callback(
     oc_ed_t event, void *cookie, size_t size, const void *data);
+#endif
 
 void ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data);
 void check_dead_member(const char *uname, GHashTable *members);
@@ -238,28 +241,49 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 
 #endif
 
+void
+post_cache_update(int instance) 
+{
+    HA_Message *no_op = NULL;
+    
+    if(is_openais_cluster()) {
+    }
+
+    crm_peer_seq = instance;
+    crm_debug("Updated cache after membership event %d.", instance);
+
+    if((fsa_input_register & R_CCM_DATA) == 0) {
+	populate_cib_nodes(FALSE);
+    }
+    
+    g_hash_table_foreach(crm_peer_cache, reap_dead_ccm_nodes, NULL);	
+    set_bit_inplace(fsa_input_register, R_CCM_DATA);
+    do_update_cib_nodes(FALSE, __FUNCTION__);
+    
+    /* Membership changed, remind everyone we're here.
+     * This will aid detection of duplicate DCs
+     */
+    no_op = create_request(
+	CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
+	AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
+    send_msg_via_ha(no_op);
+}
+
+
 /*	 A_CCM_UPDATE_CACHE	*/
 /*
  * Take the opportunity to update the node status in the CIB as well
  */
+#if SUPPORT_HEARTBEAT
 void
 do_ccm_update_cache(
     enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
     oc_ed_t event, const oc_ev_membership_t *oc, crm_data_t *xml)
 {
-	HA_Message *no_op = NULL;
 	unsigned long long instance = 0;
-#if SUPPORT_HEARTBEAT
 	unsigned int lpc = 0;
-#endif
 	
-	if(is_openais_cluster()) {
-	    const char *seq_s = crm_element_value(xml, "seq");
-	    CRM_ASSERT(xml != NULL);
-	    instance = crm_int_helper(seq_s, NULL);
-	    set_bit_inplace(fsa_input_register, R_PEER_DATA);
-
-	} else {
+	if(is_heartbeat_cluster()) {
 	    CRM_ASSERT(oc != NULL);
 	    instance = oc->m_instance;
 	}
@@ -281,11 +305,6 @@ do_ccm_update_cache(
 		break;
 	}
 	
-	crm_peer_seq = instance;
-	crm_debug("Updating cache after membership event %llu (%s).", 
-		  instance, ccm_event_name(event));
-
-#if SUPPORT_HEARTBEAT
 	if(is_heartbeat_cluster()) {
 	    ccm_event_detail(oc, event);
 	    
@@ -299,7 +318,6 @@ do_ccm_update_cache(
 		crm_update_ccm_node(oc, lpc+oc->m_memb_idx, CRM_NODE_ACTIVE);
 	    }
 	}
-#endif	
 
 	if(event == OC_EV_MS_EVICTED) {
 	    crm_update_peer(
@@ -315,24 +333,10 @@ do_ccm_update_cache(
 	    register_fsa_error_adv(cause, I_ERROR, NULL, NULL, __FUNCTION__);
 	}
 
-	if((fsa_input_register & R_CCM_DATA) == 0) {
-	    populate_cib_nodes(FALSE);
-	}
-	
-	g_hash_table_foreach(crm_peer_cache, reap_dead_ccm_nodes, NULL);	
-	set_bit_inplace(fsa_input_register, R_CCM_DATA);
-	do_update_cib_nodes(FALSE, __FUNCTION__);
-
-	/* Membership changed, remind everyone we're here.
-	 * This will aid detection of duplicate DCs
-	 */
-	no_op = create_request(
-		CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
-		AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
-	send_msg_via_ha(no_op);
-
+	post_cache_update(instance);
 	return;
 }
+#endif
 
 static void
 ccm_node_update_complete(const HA_Message *msg, int call_id, int rc,

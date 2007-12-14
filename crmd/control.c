@@ -41,10 +41,10 @@
 
 char *ipc_server = NULL;
 
+extern void post_cache_update(int seq);
 extern void crmd_ha_connection_destroy(gpointer user_data);
 
 gboolean crm_shutdown(int nsig, gpointer unused);
-gboolean register_with_ha(ll_cluster_t *hb_cluster, const char *client_name);
 
 gboolean      fsa_has_quorum = FALSE;
 GHashTable   *ipc_clients = NULL;
@@ -56,6 +56,8 @@ extern void crmd_ha_msg_filter(HA_Message * msg);
 
 static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
 {
+    int seq = 0;
+    const char *seq_s = NULL;
     crm_data_t *xml = string2xml(data);
     if(xml == NULL) {
 	crm_err("Message received: %d:'%.120s'", wrapper->id, data);
@@ -70,8 +72,12 @@ static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 	case crm_class_notify:
 	    break;
 	case crm_class_members:
-	    do_ccm_update_cache(
-		C_HA_MESSAGE, fsa_state, OC_EV_MS_NEW_MEMBERSHIP, NULL, xml);
+	    seq_s = crm_element_value(xml, "seq");
+	    CRM_ASSERT(xml != NULL);
+	    seq = crm_int_helper(seq_s, NULL);
+	    set_bit_inplace(fsa_input_register, R_PEER_DATA);
+
+	    post_cache_update(seq);
 	    crm_update_quorum(crm_have_quorum);
 	    break;
 	default:

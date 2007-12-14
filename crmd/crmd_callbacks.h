@@ -19,11 +19,12 @@
 #include <hb_api.h>
 #include <clplumbing/ipc.h>
 
+#if SUPPORT_HEARTBEAT
 extern void ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event);
 extern gboolean ccm_dispatch(int fd, gpointer user_data);
 extern void crmd_ccm_msg_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data);
-
+#endif
 /*
  * Apparently returning TRUE means "stay connected, keep doing stuff".
  * Returning FALSE means "we're all done, close the connection"
