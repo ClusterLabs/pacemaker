@@ -20,7 +20,10 @@
 
 #include <crm/transition.h>
 #include <clplumbing/ipc.h>
-#include <fencing/stonithd_api.h>
+#if SUPPORT_HEARTBEAT
+#  include <fencing/stonithd_api.h>
+extern void send_stonith_update(stonith_ops_t * op);
+#endif
 
 extern IPC_Channel *crm_ch;
 extern GMainLoop*  mainloop;
@@ -28,7 +31,6 @@ extern GMainLoop*  mainloop;
 /* tengine */
 extern crm_action_t *match_down_event(
 	int rc, const char *target, const char *filter);
-extern void send_stonith_update(stonith_ops_t * op);
 
 extern gboolean cib_action_update(crm_action_t *action, int status);
 

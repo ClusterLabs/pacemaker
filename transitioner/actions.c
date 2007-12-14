@@ -61,6 +61,7 @@ te_pseudo_action(crm_graph_t *graph, crm_action_t *pseudo)
 	return TRUE;
 }
 
+#if SUPPORT_HEARTBEAT
 void
 send_stonith_update(stonith_ops_t * op)
 {
@@ -101,6 +102,7 @@ send_stonith_update(stonith_ops_t * op)
 	free_xml(node_state);
 	return;
 }
+#endif
 
 static gboolean
 te_fence_node(crm_graph_t *graph, crm_action_t *action)
