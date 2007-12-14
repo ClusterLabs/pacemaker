@@ -109,10 +109,6 @@ extern gboolean send_request(HA_Message *msg, char **msg_reference);
 
 extern enum crmd_fsa_input handle_message(ha_msg_input_t *stored_msg);
 
-extern gboolean send_ha_reply(ll_cluster_t *hb_cluster,
-			      crm_data_t *xml_request,
-			      crm_data_t *xml_response_data);
-
 extern void lrm_op_callback(lrm_op_t* op);
 
 extern void msg_queue_helper(void);
