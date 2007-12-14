@@ -33,8 +33,13 @@ extern void crm_peer_init(void);
 extern void crm_peer_destroy(void);
 
 extern gboolean crm_cluster_connect(
-    char **our_uname, char **our_uuid,
-    void *dispatch, void *destroy, ll_cluster_t **hb_conn);
+    char **our_uname, char **our_uuid, void *dispatch, void *destroy,
+#if SUPPORT_HEARTBEAT
+    ll_cluster_t **hb_conn
+#else
+    void **unused
+#endif
+    );
 
 extern gboolean send_cluster_message(
     const char *node, enum crm_ais_msg_types service, HA_Message *data, gboolean ordered);
@@ -56,6 +61,11 @@ extern guint reap_crm_membership(void);
 extern guint crm_active_members(void);
 extern guint crm_active_peers(uint32_t peer);
 extern gboolean crm_calculate_quorum(void);
+
+#if SUPPORT_HEARTBEAT
+extern gboolean ccm_have_quorum(oc_ed_t event);
+extern const char *ccm_event_name(oc_ed_t event);
+#endif
 
 #if SUPPORT_AIS
 extern int ais_fd_sync;

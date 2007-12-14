@@ -177,4 +177,39 @@ register_heartbeat_conn(
     
     return TRUE;
 }
+
+gboolean
+ccm_have_quorum(oc_ed_t event)
+{
+	if(event==OC_EV_MS_NEW_MEMBERSHIP
+	    || event==OC_EV_MS_PRIMARY_RESTORED) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+const char *
+ccm_event_name(oc_ed_t event)
+{
+
+	if(event==OC_EV_MS_NEW_MEMBERSHIP) {
+		return "NEW MEMBERSHIP";
+
+	} else if(event==OC_EV_MS_NOT_PRIMARY) {
+		return "NOT PRIMARY";
+
+	} else if(event==OC_EV_MS_PRIMARY_RESTORED) {
+		return "PRIMARY RESTORED";
+		
+	} else if(event==OC_EV_MS_EVICTED) {
+		return "EVICTED";
+
+	} else if(event==OC_EV_MS_INVALID) {
+		return "INVALID";
+	}
+
+	return "NO QUORUM MEMBERSHIP";
+	
+}
+
 #endif

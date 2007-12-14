@@ -43,8 +43,13 @@ HA_Message *create_common_message(
 	HA_Message *original_request, crm_data_t *xml_response_data);
 
 gboolean crm_cluster_connect(
-    char **our_uname, char **our_uuid,
-    void *dispatch, void *destroy, ll_cluster_t **hb_conn) {
+    char **our_uname, char **our_uuid, void *dispatch, void *destroy,
+#if SUPPORT_HEARTBEAT
+    ll_cluster_t **hb_conn
+#else
+    void **unused
+#endif
+    ) {
     if(hb_conn != NULL) {
 	*hb_conn = NULL;
     }

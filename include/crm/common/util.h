@@ -77,10 +77,6 @@ extern int crm_str_to_boolean(const char * s, int * ret);
 
 extern long crm_get_msec(const char * input);
 
-extern gboolean ccm_have_quorum(uint32_t event);
-
-extern const char *ccm_event_name(uint32_t event);
-
 extern const char *op_status2text(op_status_t status);
 
 extern char *generate_op_key(
