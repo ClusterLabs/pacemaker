@@ -33,8 +33,6 @@
 #include <fcntl.h>
 #include <libgen.h>
 
-#include <heartbeat.h>
-#include <hb_api.h>
 #include <clplumbing/Gmain_timeout.h>
 #include <clplumbing/lsb_exitcodes.h>
 
@@ -45,6 +43,11 @@
 #  include <getopt.h>
 #endif
 
+#if SUPPORT_HEARTBEAT
+#  include <hb_api.h>
+ll_cluster_t *pingd_cluster = NULL;
+#endif
+
 /* GMainLoop *mainloop = NULL; */
 #define OPTARGS	"V?p:a:d:s:S:h:Dm:"
 
@@ -53,7 +56,6 @@ GMainLoop*  mainloop = NULL;
 GHashTable *ping_nodes = NULL;
 const char *pingd_attr = "pingd";
 gboolean do_filter = FALSE;
-ll_cluster_t *pingd_cluster = NULL;
 gboolean need_shutdown = FALSE;
 
 const char *attr_set = NULL;
@@ -204,6 +206,58 @@ register_with_ha(void)
 
 	return TRUE;
 }
+
+void
+do_node_walk(ll_cluster_t *hb_cluster)
+{
+	const char *ha_node = NULL;
+
+	/* Async get client status information in the cluster */
+	crm_debug_2("Invoked");
+	crm_debug_3("Requesting an initial dump of CRMD client_status");
+	hb_cluster->llc_ops->client_status(
+		hb_cluster, NULL, CRM_SYSTEM_CRMD, -1);
+	
+	crm_info("Requesting the list of configured nodes");
+	hb_cluster->llc_ops->init_nodewalk(hb_cluster);
+
+	do {
+		const char *ha_node_type = NULL;
+		const char *ha_node_status = NULL;
+
+		ha_node = hb_cluster->llc_ops->nextnode(hb_cluster);
+		if(ha_node == NULL) {
+			continue;
+		}
+		
+		ha_node_type = hb_cluster->llc_ops->node_type(
+			hb_cluster, ha_node);
+		if(safe_str_neq("ping", ha_node_type)) {
+			crm_debug("Node %s: skipping '%s'",
+				  ha_node, ha_node_type);
+			continue;
+		}
+
+		if(do_filter
+		   && g_hash_table_lookup(ping_nodes, ha_node) == NULL) {
+			crm_debug("Filtering: %s", ha_node);
+			continue;
+		}
+		
+		ha_node_status = hb_cluster->llc_ops->node_status(
+			hb_cluster, ha_node);
+
+		crm_debug("Adding: %s=%s", ha_node, ha_node_status);
+		g_hash_table_replace(ping_nodes, crm_strdup(ha_node),
+				     crm_strdup(ha_node_status));
+
+	} while(ha_node != NULL);
+
+	hb_cluster->llc_ops->end_nodewalk(hb_cluster);
+	crm_debug_2("Complete");
+	send_update();
+}
+
 #endif
 
 int
@@ -350,9 +404,9 @@ static void count_ping_nodes(gpointer key, gpointer value, gpointer user_data)
 		return;
 	}
 	
-	if(safe_str_eq(value, PINGSTATUS)) {
+	if(safe_str_eq(value, "ping")) {
 		(*num_active)++;
-	} else if(safe_str_eq(value, LINKUP)) {
+	} else if(safe_str_eq(value, "up")) {
 		(*num_active)++;
 	}
 }
@@ -412,53 +466,3 @@ pingd_lstatus_callback(const char *node, const char *lnk, const char *status,
 	pingd_nstatus_callback(node, status, private);
 }
 
-void
-do_node_walk(ll_cluster_t *hb_cluster)
-{
-	const char *ha_node = NULL;
-
-	/* Async get client status information in the cluster */
-	crm_debug_2("Invoked");
-	crm_debug_3("Requesting an initial dump of CRMD client_status");
-	hb_cluster->llc_ops->client_status(
-		hb_cluster, NULL, CRM_SYSTEM_CRMD, -1);
-	
-	crm_info("Requesting the list of configured nodes");
-	hb_cluster->llc_ops->init_nodewalk(hb_cluster);
-
-	do {
-		const char *ha_node_type = NULL;
-		const char *ha_node_status = NULL;
-
-		ha_node = hb_cluster->llc_ops->nextnode(hb_cluster);
-		if(ha_node == NULL) {
-			continue;
-		}
-		
-		ha_node_type = hb_cluster->llc_ops->node_type(
-			hb_cluster, ha_node);
-		if(safe_str_neq(PINGNODE, ha_node_type)) {
-			crm_debug("Node %s: skipping '%s'",
-				  ha_node, ha_node_type);
-			continue;
-		}
-
-		if(do_filter
-		   && g_hash_table_lookup(ping_nodes, ha_node) == NULL) {
-			crm_debug("Filtering: %s", ha_node);
-			continue;
-		}
-		
-		ha_node_status = hb_cluster->llc_ops->node_status(
-			hb_cluster, ha_node);
-
-		crm_debug("Adding: %s=%s", ha_node, ha_node_status);
-		g_hash_table_replace(ping_nodes, crm_strdup(ha_node),
-				     crm_strdup(ha_node_status));
-
-	} while(ha_node != NULL);
-
-	hb_cluster->llc_ops->end_nodewalk(hb_cluster);
-	crm_debug_2("Complete");
-	send_update();
-}
