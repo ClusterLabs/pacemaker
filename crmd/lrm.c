@@ -1608,13 +1608,16 @@ static void
 cib_rsc_callback(const HA_Message *msg, int call_id, int rc,
 		 crm_data_t *output, void *user_data)
 {
-	if(rc == cib_ok
-	   || rc == cib_diff_resync
-	   || rc == cib_diff_failed) {
-		crm_debug("Resource update %d complete: rc=%d", call_id, rc);
-		return;
-	}
-	crm_err("Resource update %d failed: %s",call_id, cib_error2string(rc));	
+    switch(rc) {
+	case cib_ok:
+	case cib_diff_failed:
+	case cib_diff_resync:
+	    crm_debug("Resource update %d complete: rc=%d", call_id, rc);
+	    break;
+	default:
+	    crm_err("Resource update %d failed: (rc=%d) %s",
+		    call_id, rc, cib_error2string(rc));	
+    }
 }
 
 
