@@ -33,10 +33,6 @@
 #include <clplumbing/coredumps.h>
 #include <clplumbing/Gmain_timeout.h>
 
-/* #include <crm_internal.h> */
-#include <ocf/oc_event.h>
-/* #include <ocf/oc_membership.h> */
-
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
@@ -48,11 +44,13 @@
 #include <attrd.h>
 
 #define OPTARGS	"hV"
+#if SUPPORT_HEARTBEAT
+ll_cluster_t	*attrd_cluster_conn;
+#endif
 
 GMainLoop*  mainloop = NULL;
 char *attrd_uname = NULL;
 char *attrd_uuid = NULL;
-ll_cluster_t	*attrd_cluster_conn;
 gboolean need_shutdown = FALSE;
 
 GHashTable *attr_hash = NULL;
@@ -290,8 +288,13 @@ register_with_ha(void)
 #endif
     }
     
-    return crm_cluster_connect(
-	&attrd_uname, &attrd_uuid, dispatch, destroy, &attrd_cluster_conn);
+    return crm_cluster_connect(&attrd_uname, &attrd_uuid, dispatch, destroy,
+#if SUPPORT_HEARTBEAT
+			       &attrd_cluster_conn
+#else
+			       NULL
+#endif
+	);
 }
 
 static void
@@ -401,9 +404,10 @@ main(int argc, char ** argv)
 	g_main_run(mainloop);
 	crm_info("Exiting...");
 
+#if SUPPORT_HEARTBEAT
 	attrd_cluster_conn->llc_ops->signoff(attrd_cluster_conn, TRUE);
 	attrd_cluster_conn->llc_ops->delete(attrd_cluster_conn);
-	
+#endif	
 	cib_conn->cmds->signoff(cib_conn);
 	cib_delete(cib_conn);
 
