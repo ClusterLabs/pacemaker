@@ -25,7 +25,6 @@
 
 #include <heartbeat.h>
 
-#include <hb_api.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
@@ -51,7 +50,7 @@ extern gboolean check_join_state(
 
 #define trigger_fsa(source) crm_debug_3("Triggering FSA: %s", __FUNCTION__); \
 	G_main_set_trigger(source);
-
+#if SUPPORT_HEARTBEAT
 gboolean
 crmd_ha_msg_dispatch(ll_cluster_t *cluster_conn, gpointer user_data)
 {
@@ -87,6 +86,7 @@ crmd_ha_msg_dispatch(ll_cluster_t *cluster_conn, gpointer user_data)
     
 	return stay_connected;
 }
+#endif
 
 void
 crmd_ha_connection_destroy(gpointer user_data)
@@ -143,6 +143,7 @@ crmd_ha_msg_filter(HA_Message *msg)
     trigger_fsa(fsa_source);
 }
 
+#if SUPPORT_HEARTBEAT
 void
 crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 {
@@ -190,7 +191,7 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 
 	return;
 }
-
+#endif
 
 
 /*
