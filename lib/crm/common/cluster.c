@@ -137,7 +137,7 @@ get_uuid(const char *uname)
     }
     
 #if SUPPORT_AIS
-    if(is_ais_cluster()) {
+    if(is_openais_cluster()) {
 	uuid_calc = crm_strdup(uname);
     }
 #endif
