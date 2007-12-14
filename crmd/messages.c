@@ -1187,6 +1187,7 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 void
 msg_queue_helper(void) 
 {
+#if SUPPORT_HEARTBEAT
 	IPC_Channel *ipc = NULL;
 	if(fsa_cluster_conn != NULL) {
 		ipc = fsa_cluster_conn->llc_ops->ipcchan(
@@ -1196,6 +1197,7 @@ msg_queue_helper(void)
 		ipc->ops->resume_io(ipc);
 	}
 /*  	g_hash_table_foreach_remove(ipc_clients, ipc_queue_helper, NULL); */
+#endif
 }
 
 

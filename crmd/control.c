@@ -105,27 +105,39 @@ do_ha_control(long long action,
 	    if(is_openais_cluster()) {
 		crm_peer_destroy();
 		crm_info("Disconnected from OpenAIS");
+#if SUPPORT_HEARTBEAT
 	    } else if(fsa_cluster_conn != NULL) {
 		set_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
 		fsa_cluster_conn->llc_ops->signoff(fsa_cluster_conn, FALSE);
 		crm_info("Disconnected from Heartbeat");
+#endif
 	    }
 	}
 	
 	if(action & A_HA_CONNECT) {
-	    void *dispatch = crmd_ha_msg_callback;
-	    void *destroy = crmd_ha_connection_destroy;
+	    void *dispatch = NULL;
+	    void *destroy = NULL;
 	    
 	    if(is_openais_cluster()) {
 #if SUPPORT_AIS
 		destroy = crm_ais_destroy;
 		dispatch = crm_ais_dispatch;
 #endif
+	    } else if(is_heartbeat_cluster()) {
+#if SUPPORT_HEARTBEAT
+		destroy = crmd_ha_msg_callback;
+		dispatch = crmd_ha_connection_destroy;
+#endif
 	    }
 	    
 	    registered = crm_cluster_connect(
-		&fsa_our_uname, &fsa_our_uuid,
-		dispatch, destroy, &fsa_cluster_conn);
+		&fsa_our_uname, &fsa_our_uuid, dispatch, destroy,
+#if SUPPORT_HEARTBEAT
+		&fsa_cluster_conn
+#else
+		NULL
+#endif
+		);
 	    
 #if SUPPORT_HEARTBEAT
 	    if(is_heartbeat_cluster()) {	
@@ -252,11 +264,12 @@ log_connected_client(gpointer key, gpointer value, gpointer user_data)
 
 static void free_mem(fsa_data_t *msg_data) 
 {
+#if SUPPORT_HEARTBEAT
 	if(fsa_cluster_conn) {
 		fsa_cluster_conn->llc_ops->delete(fsa_cluster_conn);
 		fsa_cluster_conn = NULL;
 	}
-	
+#endif	
 	slist_destroy(fsa_data_t, fsa_data, fsa_message_queue, 
 		      crm_info("Dropping %s: [ state=%s cause=%s origin=%s ]",
 			       fsa_input2string(fsa_data->fsa_input),
@@ -630,10 +643,11 @@ do_started(long long action,
 			 R_PEER_DATA);
 
 		crm_debug_3("Looking for a HA message");
+#if SUPPORT_HEARTBEAT
 		if(is_heartbeat_cluster()) {
 		    msg = fsa_cluster_conn->llc_ops->readmsg(fsa_cluster_conn, 0);
 		}
-		
+#endif		
 		if(msg != NULL) {
 			crm_debug_3("There was a HA message");
  			crm_msg_del(msg);
@@ -835,12 +849,18 @@ default_cib_update_callback(const HA_Message *msg, int call_id, int rc,
 	}
 }
 
+#if SUPPORT_HEARTBEAT
 static void
 populate_cib_nodes_ha(gboolean with_client_status)
 {
 	int call_id = 0;
 	const char *ha_node = NULL;
 	crm_data_t *cib_node_list = NULL;
+
+	if(fsa_cluster_conn) {
+	    crm_debug("Not connected");
+	    return;
+	}
 	
 	/* Async get client status information in the cluster */
 	crm_debug_2("Invoked");
@@ -849,7 +869,7 @@ populate_cib_nodes_ha(gboolean with_client_status)
 		fsa_cluster_conn->llc_ops->client_status(
 			fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
 	}
-	
+
 	crm_info("Requesting the list of configured nodes");
 	fsa_cluster_conn->llc_ops->init_nodewalk(fsa_cluster_conn);
 
@@ -898,6 +918,8 @@ populate_cib_nodes_ha(gboolean with_client_status)
 	crm_debug_2("Complete");
 }
 
+#endif
+
 static void create_cib_node_definition(
     gpointer key, gpointer value, gpointer user_data)
 {
@@ -917,10 +939,12 @@ populate_cib_nodes(gboolean with_client_status)
 {
     int call_id = 0;
     crm_data_t *cib_node_list = NULL;
-    if(fsa_cluster_conn) {
+#if SUPPORT_HEARTBEAT
+    if(is_heartbeat_cluster()) {
 	populate_cib_nodes_ha(with_client_status);
 	return;
     }
+#endif	
 
     if(is_openais_cluster() && with_client_status) {
 	crm_info("Requesting the list of configured nodes");

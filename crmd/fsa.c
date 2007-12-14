@@ -48,9 +48,12 @@ cib_t	*fsa_cib_conn = NULL;
 char	*fsa_our_dc_version = NULL;
 
 ll_lrm_t	*fsa_lrm_conn;
-ll_cluster_t	*fsa_cluster_conn;
 char		*fsa_our_uuid = NULL;
 char		*fsa_our_uname = NULL;
+
+#if SUPPORT_HEARTBEAT
+ll_cluster_t	*fsa_cluster_conn;
+#endif
 
 fsa_timer_t *wait_timer = NULL;
 fsa_timer_t *recheck_timer = NULL;
@@ -331,29 +334,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 				register_copy ^ same);
 	}
 
-#if 0
-	if(fsa_state != S_STARTING
-	   && g_list_length(fsa_message_queue)
-	   && is_ipc_empty(te_subsystem->ipc)
-	   && is_ipc_empty(pe_subsystem->ipc)
-	   && is_ipc_empty(fsa_cib_conn->cmds->channel(fsa_cib_conn)
-	   && is_ipc_empty(fsa_cluster_conn->llc_ops->ipcchan(fsa_cluster_conn))
-		){
-		static gboolean mem_needs_init = TRUE;
-		if(mem_needs_init) {
-			crm_debug("Reached a stable point:"
-				  " reseting memory usage stats to zero");
-			crm_zero_mem_stats(NULL);
-			mem_needs_init = FALSE;
-
-		} else {
-			crm_debug("Reached a stable point:"
-				  " checking memory usage");
-			crm_mem_stats(NULL);
-		}
-	}
-#endif
-	
 	fsa_dump_queue(LOG_DEBUG);
 	
 	return fsa_state;
