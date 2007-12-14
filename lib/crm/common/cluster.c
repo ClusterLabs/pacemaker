@@ -47,7 +47,7 @@ gboolean crm_cluster_connect(
 #if SUPPORT_HEARTBEAT
     ll_cluster_t **hb_conn
 #else
-    void **unused
+    void **hb_conn
 #endif
     ) {
     if(hb_conn != NULL) {
@@ -98,7 +98,6 @@ gboolean send_cluster_message(
 
 static GHashTable *crm_uuid_cache = NULL;
 static GHashTable *crm_uname_cache = NULL;
-extern ll_cluster_t *heartbeat_cluster;
 
 void
 empty_uuid_cache(void)
