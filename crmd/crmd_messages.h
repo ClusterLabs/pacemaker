@@ -94,7 +94,7 @@ extern gboolean crm_dc_process_message(crm_data_t *whole_message,
 				       const char *op,
 				       gboolean dc_mode);
 
-extern gboolean send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg);
+extern gboolean send_msg_via_ha(HA_Message *msg);
 extern gboolean send_msg_via_ipc(HA_Message *msg, const char *sys);
 
 extern gboolean add_pending_outgoing_reply(const char *originating_node_name,

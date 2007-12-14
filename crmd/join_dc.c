@@ -172,7 +172,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 		crm_debug("join-%d: Sending offer to %s",
 			  current_join_id, join_to);
 
-		send_msg_via_ha(fsa_cluster_conn, offer);
+		send_msg_via_ha(offer);
 
 		g_hash_table_insert(
 			welcomed_nodes, crm_strdup(join_to), join_offered);
@@ -597,7 +597,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 		ha_msg_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_FALSE);
 	}
 	
-	send_msg_via_ha(fsa_cluster_conn, acknak);
+	send_msg_via_ha(acknak);
 	return TRUE;
 }
 

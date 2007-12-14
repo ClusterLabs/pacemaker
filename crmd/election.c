@@ -118,7 +118,7 @@ do_dc_heartbeat(gpointer data)
 	ha_msg_add_int(msg, "dc_beat_seq", beat_num);
 	beat_num++;
 
-	if(send_msg_via_ha(fsa_cluster_conn, msg) == FALSE) {
+	if(send_msg_via_ha(msg) == FALSE) {
 		/* this is bad */
 		crm_timer_stop(timer); /* make it not go off again */
 

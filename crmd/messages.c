@@ -538,7 +538,7 @@ relay_message(HA_Message *relay_message, gboolean originated_locally)
 			 */
 			
 			ROUTER_RESULT("Message result: External relay to DC");
-			send_msg_via_ha(fsa_cluster_conn, relay_message);
+			send_msg_via_ha(relay_message);
 				
 		} else {
 			/* discard */
@@ -556,7 +556,7 @@ relay_message(HA_Message *relay_message, gboolean originated_locally)
 			
 	} else {
 		ROUTER_RESULT("Message result: External relay");
-		send_msg_via_ha(fsa_cluster_conn, relay_message);
+		send_msg_via_ha(relay_message);
 	}
 	
 	return processing_complete;
@@ -1055,7 +1055,7 @@ handle_shutdown_request(HA_Message *stored_msg)
 ll_cluster_t *hb_conn = NULL;
 
 gboolean
-send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
+send_msg_via_ha(HA_Message *msg)
 {
 	int log_level        = LOG_DEBUG_3;
 	gboolean broadcast   = FALSE;
@@ -1072,8 +1072,6 @@ send_msg_via_ha(ll_cluster_t *hb_fd, HA_Message *msg)
 	    dest = text2msg_type(sys_to);
 #endif
 	}
-	
-	hb_conn = hb_fd;
 	
 	if (msg == NULL) {
 		crm_err("Attempt to send NULL Message via HA failed.");

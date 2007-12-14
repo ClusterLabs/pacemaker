@@ -329,7 +329,7 @@ do_ccm_update_cache(
 	no_op = create_request(
 		CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
 		AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
-	send_msg_via_ha(fsa_cluster_conn, no_op);
+	send_msg_via_ha(no_op);
 
 	return;
 }

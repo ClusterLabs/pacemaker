@@ -19,9 +19,14 @@
 #define CRMD_FSA__H
 
 #include <fsa_defines.h>
-#include <ocf/oc_event.h>
+
+#if SUPPORT_HEARTBEAT
+#  include <hb_api.h>
+#  include <ocf/oc_event.h>
+extern ll_cluster_t   *fsa_cluster_conn;
+#endif
+
 #include <clplumbing/ipc.h>
-#include <hb_api.h>
 #include <lrm/lrm_api.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -85,7 +90,6 @@ extern volatile enum crmd_fsa_state fsa_state;
 extern volatile long long fsa_input_register;
 extern volatile long long fsa_actions;
 
-extern ll_cluster_t   *fsa_cluster_conn;
 extern ll_lrm_t       *fsa_lrm_conn;
 extern cib_t	      *fsa_cib_conn;
 

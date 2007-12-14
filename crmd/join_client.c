@@ -48,7 +48,7 @@ do_cl_join_query(long long action,
 
 	sleep(1);  /* give the CCM time to propogate to the DC */
 	crm_debug("Querying for a DC");
-	send_msg_via_ha(fsa_cluster_conn, req);
+	send_msg_via_ha(req);
 }
 
 
@@ -85,7 +85,7 @@ do_cl_join_announce(long long action,
 
 		crm_debug("Announcing availability");
 		update_dc(NULL, FALSE);
-		send_msg_via_ha(fsa_cluster_conn, req);
+		send_msg_via_ha(req);
 	
 	} else {
 		/* Delay announce until we have finished local startup */
@@ -186,7 +186,7 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 
 		ha_msg_add(reply, F_CRM_JOIN_ID, join_id);
 
-		send_msg_via_ha(fsa_cluster_conn, reply);
+		send_msg_via_ha(reply);
 
 	} else {
 		crm_err("Could not retrieve Generation to attach to our"
@@ -257,7 +257,7 @@ do_cl_join_finalize_respond(long long action,
 		crm_debug("join-%d: Join complete."
 			  "  Sending local LRM status to %s",
 			  join_id, fsa_our_dc);
-		send_msg_via_ha(fsa_cluster_conn, reply);
+		send_msg_via_ha(reply);
 		if(AM_I_DC == FALSE) {
  			register_fsa_input_adv(cause, I_NOT_DC, NULL,
  					       A_NOTHING, TRUE, __FUNCTION__);
