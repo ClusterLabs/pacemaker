@@ -32,8 +32,6 @@
 #include <fcntl.h>
 #include <libgen.h>
 
-#include <heartbeat.h>
-#include <hb_api.h>
 #include <clplumbing/uids.h>
 #include <clplumbing/Gmain_timeout.h>
 

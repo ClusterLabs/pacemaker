@@ -28,8 +28,6 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <hb_api.h>
-#include <heartbeat.h>
 #include <clplumbing/cl_misc.h>
 #include <clplumbing/uids.h>
 #include <clplumbing/coredumps.h>

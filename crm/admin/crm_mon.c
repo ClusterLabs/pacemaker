@@ -33,8 +33,6 @@
 #include <fcntl.h>
 #include <libgen.h>
 
-#include <heartbeat.h>
-#include <hb_api.h>
 #include <clplumbing/uids.h>
 #include <clplumbing/cl_pidfile.h>
 #include <clplumbing/Gmain_timeout.h>
@@ -809,10 +807,10 @@ make_daemon(gboolean daemonize, const char *pidfile)
 	}
 	
 	umask(022);
-	close(FD_STDIN);
+	close(0);
+	close(1);
+	close(2);
 	(void)open(devnull, O_RDONLY);		/* Stdin:  fd 0 */
-	close(FD_STDOUT);
 	(void)open(devnull, O_WRONLY);		/* Stdout: fd 1 */
-	close(FD_STDERR);
 	(void)open(devnull, O_WRONLY);		/* Stderr: fd 2 */
 }

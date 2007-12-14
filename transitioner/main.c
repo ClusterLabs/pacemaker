@@ -30,7 +30,6 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <hb_api.h>
 #include <clplumbing/uids.h>
 #include <clplumbing/coredumps.h>
 

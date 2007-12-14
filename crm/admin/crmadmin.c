@@ -33,8 +33,6 @@
 #include <fcntl.h>
 #include <libgen.h>
 
-#include <heartbeat.h>
-#include <hb_api.h>
 #include <clplumbing/uids.h>
 #include <clplumbing/Gmain_timeout.h>
 
@@ -633,9 +631,9 @@ is_node_online(crm_data_t *node_state)
 	const char *ccm_state  = crm_element_value(node_state,XML_CIB_ATTR_INCCM);
 
 	if(safe_str_neq(join_state, CRMD_JOINSTATE_DOWN)
-	   && (ha_state == NULL || safe_str_eq(ha_state, ACTIVESTATUS))
+	   && (ha_state == NULL || safe_str_eq(ha_state, "active"))
 	   && crm_is_true(ccm_state)
-	   && safe_str_eq(crm_state, ONLINESTATUS)) {
+	   && safe_str_eq(crm_state, "online")) {
 		crm_debug_3("Node %s is online", uname);
 		return TRUE;
 	}

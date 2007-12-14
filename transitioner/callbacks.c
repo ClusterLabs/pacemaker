@@ -20,8 +20,6 @@
 
 #include <sys/stat.h>
 
-#include <hb_api.h>
-
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/msg_xml.h>

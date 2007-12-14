@@ -33,8 +33,9 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <hb_api.h>
+#include <clplumbing/cl_log.h>
 #include <clplumbing/cl_malloc.h>
+#include <clplumbing/cl_uuid.h>
 #include <clplumbing/uids.h>
 
 #ifdef HAVE_GETOPT_H
