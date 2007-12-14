@@ -217,7 +217,7 @@ do_dc_join_offer_one(long long action,
 		     enum crmd_fsa_input current_input,
 		     fsa_data_t *msg_data)
 {
-	oc_node_t member;
+	crm_node_t *member;
 	ha_msg_input_t *welcome = fsa_typed_data(fsa_dt_ha_msg);
 	const char *join_to = NULL;
 
@@ -244,13 +244,11 @@ do_dc_join_offer_one(long long action,
 	/* always offer to the DC (ourselves)
 	 * this ensures the correct value for max_generation_from
 	 */
-	member.node_uname = crm_strdup(fsa_our_uname);
-	join_make_offer(NULL, &member, NULL);
-	crm_free(member.node_uname);
+	member = g_hash_table_lookup(crm_peer_cache, fsa_our_uname);
+	join_make_offer(NULL, member, NULL);
 	
-	member.node_uname = crm_strdup(join_to);
-	join_make_offer(NULL, &member, NULL);
-	crm_free(member.node_uname);
+	member = g_hash_table_lookup(crm_peer_cache, join_to);
+	join_make_offer(NULL, member, NULL);
 	
 	/* this was a genuine join request, cancel any existing
 	 * transition and invoke the PE
