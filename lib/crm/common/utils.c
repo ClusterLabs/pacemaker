@@ -850,7 +850,7 @@ crm_get_msec(const char * input)
 }
 
 gboolean
-ccm_have_quorum(oc_ed_t event)
+ccm_have_quorum(uint32_t event)
 {
 	if(event==OC_EV_MS_NEW_MEMBERSHIP
 	    || event==OC_EV_MS_PRIMARY_RESTORED) {
@@ -861,7 +861,7 @@ ccm_have_quorum(oc_ed_t event)
 
 
 const char *
-ccm_event_name(oc_ed_t event)
+ccm_event_name(uint32_t event)
 {
 
 	if(event==OC_EV_MS_NEW_MEMBERSHIP) {
