@@ -16,14 +16,16 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <hb_api.h>
 #include <clplumbing/ipc.h>
 
 #if SUPPORT_HEARTBEAT
+#include <hb_api.h>
 extern void ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event);
 extern gboolean ccm_dispatch(int fd, gpointer user_data);
 extern void crmd_ccm_msg_callback(
 	oc_ed_t event, void *cookie, size_t size, const void *data);
+extern gboolean crmd_ha_msg_dispatch(
+	ll_cluster_t *cluster_conn, gpointer user_data);
 #endif
 /*
  * Apparently returning TRUE means "stay connected, keep doing stuff".
@@ -31,10 +33,7 @@ extern void crmd_ccm_msg_callback(
  */
 
 extern void crmd_ipc_connection_destroy(gpointer user_data);
-
-extern gboolean crmd_ha_msg_dispatch(
-	ll_cluster_t *cluster_conn, gpointer user_data);
-
+ 
 extern void crmd_ha_msg_callback(
 	HA_Message * msg, void* private_data);
 

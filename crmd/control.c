@@ -748,7 +748,7 @@ config_query_callback(const HA_Message *msg, int call_id, int rc,
 	value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
 	if(value == NULL) {
 		/* apparently we're not allowed to free the result of getenv */
-		char *param_val = getenv(ENV_PREFIX "" KEY_INITDEAD);
+		char *param_val = getenv(ENV_PREFIX "initdead");
 
 		value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
 		if(param_val != NULL) {
