@@ -31,15 +31,16 @@
 #include <clplumbing/cl_signal.h>
 #include <clplumbing/lsb_exitcodes.h>
 
-#include <ocf/oc_event.h>
-#include <ocf/oc_membership.h>
+#if SUPPORT_HEARTBEAT
+#  include <ocf/oc_event.h>
+#  include <ocf/oc_membership.h>
+oc_ev_t *ccm_token = NULL;
+#endif
 
 #include <crm/crm.h>
 #include <crm/ais.h>
 #include <crm/common/cluster.h>
 
-
-oc_ev_t *ccm_token = NULL;
 int command = 0;
 
 #define OPTARGS	"hVqep"
