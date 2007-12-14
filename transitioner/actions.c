@@ -160,8 +160,9 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 			target);
 	}
 	return TRUE;
+    }
 #endif
-	return FALSE;
+    return FALSE;
 }
 
 static gboolean
