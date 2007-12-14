@@ -24,7 +24,6 @@
 #include <time.h>
 #include <crmd_fsa.h>
 
-#include <hb_api.h>
 #include <lrm/lrm_api.h>
 
 #include <crm/msg_xml.h>
@@ -1052,8 +1051,6 @@ handle_shutdown_request(HA_Message *stored_msg)
 }
 
 /* frees msg upon completion */
-ll_cluster_t *hb_conn = NULL;
-
 gboolean
 send_msg_via_ha(HA_Message *msg)
 {
