@@ -37,49 +37,54 @@ GTRIGSource *stonith_reconnect = NULL;
 gboolean
 te_connect_stonith(gpointer user_data)
 {
-    int lpc = 0;
-    int rc = ST_OK;
-    IPC_Channel *fence_ch = NULL;
-    if(stonith_src != NULL) {
-	crm_debug("Still connected");
-	return TRUE;
-    }
-
-    for(lpc = 0; lpc < 30; lpc++) {
-	crm_info("Attempting connection to fencing daemon...");
-
-	sleep(1);
-	rc = stonithd_signon("tengine");
-	if(rc == ST_OK) {
-	    break;
-	}
-	
-	if(user_data != NULL) {
-	    crm_err("Sign-in failed: triggered a retry");
-	    G_main_set_trigger(stonith_reconnect);
+#if SUPPORT_HEARTBEAT
+    if(is_heartbeat_cluster()) {
+	int lpc = 0;
+	int rc = ST_OK;
+	IPC_Channel *fence_ch = NULL;
+	if(stonith_src != NULL) {
+	    crm_debug("Still connected");
 	    return TRUE;
 	}
 	
-	crm_err("Sign-in failed: pausing and trying again in 2s...");
-	sleep(1);
+	for(lpc = 0; lpc < 30; lpc++) {
+	    crm_info("Attempting connection to fencing daemon...");
+	    
+	    sleep(1);
+	    rc = stonithd_signon("tengine");
+	    if(rc == ST_OK) {
+		break;
+	    }
+	    
+	    if(user_data != NULL) {
+		crm_err("Sign-in failed: triggered a retry");
+		G_main_set_trigger(stonith_reconnect);
+		return TRUE;
+	    }
+	    
+	    crm_err("Sign-in failed: pausing and trying again in 2s...");
+	    sleep(1);
+	}
+	
+	CRM_ASSERT(rc == ST_OK); /* If not, we failed 30 times... just get out */
+	CRM_ASSERT(stonithd_set_stonith_ops_callback(
+		       tengine_stonith_callback) == ST_OK);
+	
+	crm_debug_2("Grabbing IPC channel");
+	fence_ch = stonithd_input_IPC_channel();
+	CRM_ASSERT(fence_ch != NULL);
+	
+	crm_debug_2("Attaching to mainloop");
+	stonith_src = G_main_add_IPC_Channel(
+	    G_PRIORITY_LOW, fence_ch, FALSE, tengine_stonith_dispatch, NULL,
+	    tengine_stonith_connection_destroy);
+	
+	CRM_ASSERT(stonith_src != NULL);
+	crm_info("Connected");
+	return TRUE;
     }
-
-    CRM_ASSERT(rc == ST_OK); /* If not, we failed 30 times... just get out */
-    CRM_ASSERT(stonithd_set_stonith_ops_callback(
-		   tengine_stonith_callback) == ST_OK);
-
-    crm_debug_2("Grabbing IPC channel");
-    fence_ch = stonithd_input_IPC_channel();
-    CRM_ASSERT(fence_ch != NULL);
-
-    crm_debug_2("Attaching to mainloop");
-    stonith_src = G_main_add_IPC_Channel(
-	G_PRIORITY_LOW, fence_ch, FALSE, tengine_stonith_dispatch, NULL,
-	tengine_stonith_connection_destroy);
-
-    CRM_ASSERT(stonith_src != NULL);
-    crm_info("Connected");
-    return TRUE;
+#endif
+    return FALSE;
 }
 
 gboolean

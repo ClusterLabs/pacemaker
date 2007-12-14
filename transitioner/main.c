@@ -197,8 +197,11 @@ te_init(void)
 	cib_delete(te_cib_conn);
 	te_cib_conn = NULL;
 
-	stonithd_signoff();
-	
+#if SUPPORT_HEARTBEAT
+	if(is_heartbeat_cluster()) {
+	    stonithd_signoff();
+	}
+#endif	
 	crm_free(te_uuid);
 	
 	if(init_ok) {

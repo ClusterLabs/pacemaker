@@ -36,13 +36,11 @@ halib_PROGRAMS	= tengine ttest
 noinst_HEADERS	= tengine.h te_callbacks.h
 
 tengine_SOURCES	= actions.c events.c utils.c callbacks.c main.c
-tengine_LDADD	= $(COMMONLIBS) \
-                    -lstonithd	\
+tengine_LDADD	= $(COMMONLIBS) $(CLUSTERLIBS) \
                     $(top_builddir)/lib/crm/transition/libtransitioner.la
 
 ttest_SOURCES	= actions.c events.c utils.c callbacks.c ttest.c
-ttest_LDADD	= $(COMMONLIBS) \
-                    -lstonithd  \
+ttest_LDADD	= $(COMMONLIBS) $(CLUSTERLIBS) \
                     $(top_builddir)/lib/crm/transition/libtransitioner.la
 
 clean-generic:
