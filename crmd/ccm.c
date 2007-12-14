@@ -18,8 +18,11 @@
 
 /* put these first so that uuid_t is defined without conflicts */
 #include <crm_internal.h>
+
+#if SUPPORT_HEARTBEAT
 #include <ocf/oc_event.h>
 #include <ocf/oc_membership.h>
+#endif
 
 #include <clplumbing/GSource.h>
 #include <string.h>
@@ -39,6 +42,7 @@
 void post_cache_update(int instance);
 
 #if SUPPORT_HEARTBEAT
+oc_ev_t *fsa_ev_token;
 void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
 void crmd_ccm_msg_callback(
@@ -52,7 +56,6 @@ void reap_dead_ccm_nodes(gpointer key, gpointer value, gpointer user_data);
 #define CCM_EVENT_DETAIL 0
 #define CCM_EVENT_DETAIL_PARTIAL 0
 
-oc_ev_t *fsa_ev_token;
 int num_ccm_register_fails = 0;
 int max_ccm_register_fails = 30;
 int last_peer_update = 0;
