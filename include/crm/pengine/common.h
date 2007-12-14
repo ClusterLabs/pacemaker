@@ -21,7 +21,6 @@
 
 extern gboolean was_processing_error;
 extern gboolean was_processing_warning;
-extern unsigned int pengine_input_loglevel;
 
 /* order is significant here
  * items listed in order of accending severeness

@@ -49,16 +49,13 @@ void usage(const char* cmd, int exit_status);
 int pe_init(void);
 gboolean pengine_shutdown(int nsig, gpointer unused);
 extern gboolean process_pe_message(crm_data_t * msg, IPC_Channel *sender);
-extern unsigned int pengine_input_loglevel;
 
 int
 main(int argc, char ** argv)
 {
 	int flag;
 	int argerr = 0;
-	char *param_val = NULL;
 	gboolean allow_cores = TRUE;
-	const char *param_name = NULL;
     
 	crm_log_init(CRM_SYSTEM_PENGINE, LOG_INFO, TRUE, FALSE, 0, NULL);
  	G_main_add_SignalHandler(
@@ -94,19 +91,6 @@ main(int argc, char ** argv)
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
 
-	param_name = ENV_PREFIX "" KEY_LOG_PENGINE_INPUTS;
-	param_val = getenv(param_name);
-	crm_debug("%s = %s", param_name, param_val);
-	pengine_input_loglevel = crm_log_level;
-	if(param_val != NULL) {
-		int do_log = 0;
-		cl_str_to_boolean(param_val, &do_log);
-		if(do_log == FALSE) {
-			pengine_input_loglevel = crm_log_level + 1;
-		}
-		param_val = NULL;
-	}
-	
 	/* read local config file */
 	crm_debug_4("do start");
 	return pe_init();
