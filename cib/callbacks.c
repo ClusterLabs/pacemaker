@@ -27,7 +27,6 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <hb_api.h>
 #include <clplumbing/uids.h>
 #include <clplumbing/cl_uuid.h>
 #include <clplumbing/cl_malloc.h>
@@ -54,7 +53,10 @@ extern GMainLoop*  mainloop;
 extern gboolean cib_shutdown_flag;
 extern gboolean stand_alone;
 extern const char* cib_root;
+#if SUPPORT_HEARTBEAT
 extern ll_cluster_t *hb_conn;
+#endif
+
 extern void cib_ha_connection_destroy(gpointer user_data);
 
 extern enum cib_errors cib_update_counter(
