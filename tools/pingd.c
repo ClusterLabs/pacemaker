@@ -46,6 +46,7 @@
 #if SUPPORT_HEARTBEAT
 #  include <hb_api.h>
 ll_cluster_t *pingd_cluster = NULL;
+void do_node_walk(ll_cluster_t *hb_cluster);
 #endif
 
 /* GMainLoop *mainloop = NULL; */
@@ -68,7 +69,6 @@ void pingd_nstatus_callback(
 void pingd_lstatus_callback(
 	const char *node, const char *link, const char *status,
 	void *private_data);
-void do_node_walk(ll_cluster_t *hb_cluster);
 void send_update(void);
 
 static gboolean
