@@ -291,14 +291,12 @@ do_ccm_update_cache(
 	    
 	/*--*-- Recently Dead Member Nodes --*--*/
 	    for(lpc=0; lpc < oc->m_n_out; lpc++) {
-		crm_update_ccm_node(
-		    fsa_cluster_conn, oc, lpc+oc->m_out_idx, CRM_NODE_LOST);
+		crm_update_ccm_node(oc, lpc+oc->m_out_idx, CRM_NODE_LOST);
 	    }
 	    
 	    /*--*-- All Member Nodes --*--*/
 	    for(lpc=0; lpc < oc->m_n_member; lpc++) {
-		crm_update_ccm_node(
-		    fsa_cluster_conn, oc, lpc+oc->m_memb_idx, CRM_NODE_ACTIVE);
+		crm_update_ccm_node(oc, lpc+oc->m_memb_idx, CRM_NODE_ACTIVE);
 	    }
 	}
 #endif	

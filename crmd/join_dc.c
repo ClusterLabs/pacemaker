@@ -450,7 +450,7 @@ finalize_join(const char *caller)
 	set_bit_inplace(fsa_input_register, R_HAVE_CIB);
 	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
 
-	set_uuid(fsa_cluster_conn, cib, XML_ATTR_DC_UUID, fsa_our_uname);
+	set_uuid(cib, XML_ATTR_DC_UUID, fsa_our_uname);
 	crm_debug_3("Update %s in the CIB to our uuid: %s",
 		    XML_ATTR_DC_UUID, crm_element_value(cib, XML_ATTR_DC_UUID));
 	

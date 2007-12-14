@@ -35,6 +35,7 @@
 #include <crm/common/msg.h>
 #include <crmd_messages.h>
 #include <crmd_utils.h>
+#include <crm/common/cluster.h>
 
 
 /*	A_DC_TIMER_STOP, A_DC_TIMER_START,
@@ -1049,7 +1050,7 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	crm_data_t *tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
 
 	crm_debug_3("Creating node entry for %s", uname);
-	set_uuid(fsa_cluster_conn, tmp1, XML_ATTR_UUID, uname);
+	set_uuid(tmp1, XML_ATTR_UUID, uname);
 	
 	crm_xml_add(tmp1, XML_ATTR_UNAME, uname);
 	crm_xml_add(tmp1, XML_ATTR_TYPE, type);
@@ -1070,7 +1071,7 @@ create_node_state(
 	crm_data_t *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
 	crm_debug_2("%s Creating node state entry for %s", src, uname);
-	set_uuid(fsa_cluster_conn, node_state, XML_ATTR_UUID, uname);
+	set_uuid(node_state, XML_ATTR_UUID, uname);
 
 	if(crm_element_value(node_state, XML_ATTR_UUID) == NULL) {
 		crm_debug("Node %s is not a cluster member", uname);

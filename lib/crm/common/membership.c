@@ -229,12 +229,11 @@ crm_node_t *crm_update_ais_node(crm_data_t *member, long long seq)
 }
 
 crm_node_t *crm_update_ccm_node(
-    ll_cluster_t *cluster, 
     const oc_ev_membership_t *oc, int offset, const char *state)
 {
     const char *uuid = NULL;
     CRM_CHECK(oc->m_array[offset].node_uname != NULL, return NULL);
-    uuid = get_uuid(cluster, oc->m_array[offset].node_uname);
+    uuid = get_uuid(oc->m_array[offset].node_uname);
     return crm_update_peer(oc->m_array[offset].node_id,
 			   oc->m_array[offset].node_born_on,
 			   -1, -1,

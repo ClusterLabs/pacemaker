@@ -20,8 +20,12 @@
 
 #include <signal.h>
 #include <crm/common/xml.h>
-#include <hb_api.h>
-#include <ocf/oc_event.h>
+
+#if SUPPORT_HEARTBEAT
+#  include <hb_api.h>
+#  include <ocf/oc_event.h>
+#endif
+
 #include <lrm/lrm_api.h>
 
 #include <sys/types.h>
@@ -66,14 +70,6 @@ extern char *generateReference(const char *custom1, const char *custom2);
 extern void alter_debug(int nsig);
 
 extern void g_hash_destroy_str(gpointer data);
-
-extern void empty_uuid_cache(void);
-extern const char *get_uuid(ll_cluster_t *hb, const char *uname);
-extern const char *get_uname(ll_cluster_t *hb, const char *uuid);
-extern void unget_uuid(const char *uname);
-
-extern void set_uuid(
-	ll_cluster_t* hb, crm_data_t *node, const char *attr, const char *uname);
 
 extern gboolean crm_is_true(const char * s);
 

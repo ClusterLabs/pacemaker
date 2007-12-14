@@ -162,7 +162,7 @@ register_heartbeat_conn(
     const_uname = hb_cluster->llc_ops->get_mynodeid(hb_cluster);
     CRM_CHECK(const_uname != NULL, return FALSE);
     
-    const_uuid = get_uuid(hb_cluster, const_uname);
+    const_uuid = get_uuid(const_uname);
     CRM_CHECK(const_uuid != NULL, return FALSE);
 
     crm_info("Hostname: %s", const_uname);

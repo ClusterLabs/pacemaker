@@ -872,7 +872,7 @@ populate_cib_nodes_ha(gboolean with_client_status)
 			continue;
 		}
 
-		ha_node_uuid = get_uuid(fsa_cluster_conn, ha_node);
+		ha_node_uuid = get_uuid(ha_node);
 		if(ha_node_uuid == NULL) {
 			crm_warn("Node %s: no uuid found", ha_node);
 			continue;	

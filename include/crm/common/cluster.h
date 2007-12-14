@@ -45,7 +45,6 @@ extern crm_node_t *crm_update_ais_node(crm_data_t *member, long long seq);
 extern void crm_update_peer_proc(
     const char *uname, uint32_t flag, const char *status);
 extern crm_node_t *crm_update_ccm_node(
-    ll_cluster_t *cluster, 
     const oc_ev_membership_t *oc, int offset, const char *state);
 extern crm_node_t *crm_update_peer(
     unsigned int id, unsigned long long born, int32_t votes, uint32_t children,
@@ -65,6 +64,13 @@ extern gboolean send_ais_text(
     int class, const char *data, gboolean local,
     const char *node, enum crm_ais_msg_types dest);
 #endif
+
+extern void empty_uuid_cache(void);
+extern const char *get_uuid(const char *uname);
+extern const char *get_uname(const char *uuid);
+extern void set_uuid(crm_data_t *node, const char *attr, const char *uname);
+extern void unget_uuid(const char *uname);
+
 enum crm_ais_msg_types text2msg_type(const char *text);
 
 #endif

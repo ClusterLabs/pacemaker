@@ -1733,7 +1733,7 @@ cib_client_status_callback(const char * node, const char * client,
 	member = g_hash_table_lookup(crm_peer_cache, node);
 	if(member == NULL) {
 	    /* Make sure it gets created */
-	    const char *uuid = get_uuid(hb_conn, node);
+	    const char *uuid = get_uuid(node);
 	    member = crm_update_peer(0, 0, -1, -1, uuid, node, NULL, NULL);
 	}
 	
@@ -1812,14 +1812,12 @@ cib_ccm_msg_callback(
 
 		for(lpc=0; lpc < membership->m_n_out; lpc++) {
 		    crm_update_ccm_node(
-			NULL, membership, lpc+membership->m_out_idx,
-			CRM_NODE_LOST);
+			membership, lpc+membership->m_out_idx, CRM_NODE_LOST);
 		}
 		
 		for(lpc=0; lpc < membership->m_n_member; lpc++) {
 		    crm_update_ccm_node(
-			NULL, membership, lpc+membership->m_memb_idx,
-			CRM_NODE_ACTIVE);
+			membership, lpc+membership->m_memb_idx,CRM_NODE_ACTIVE);
 		}
 	}
 	
