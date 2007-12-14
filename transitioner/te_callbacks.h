@@ -29,11 +29,10 @@ extern gboolean action_timer_callback(gpointer data);
 
 extern gboolean te_graph_trigger(gpointer user_data);
 
-extern void tengine_stonith_callback(stonith_ops_t * op);
-
 extern void tengine_stonith_connection_destroy(gpointer user_data);
 
 #if SUPPORT_HEARTBEAT
+extern void tengine_stonith_callback(stonith_ops_t * op);
 extern gboolean tengine_stonith_dispatch(IPC_Channel *sender, void *user_data);
 #endif
 
