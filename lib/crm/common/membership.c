@@ -228,6 +228,7 @@ crm_node_t *crm_update_ais_node(crm_data_t *member, long long seq)
     return crm_update_peer(id, seq, votes, procs, uname, uname, addr, state);
 }
 
+#if SUPPORT_HEARTBEAT
 crm_node_t *crm_update_ccm_node(
     const oc_ev_membership_t *oc, int offset, const char *state)
 {
@@ -239,6 +240,7 @@ crm_node_t *crm_update_ccm_node(
 			   -1, -1,
 			   uuid, oc->m_array[offset].node_uname, NULL, state);
 }
+#endif
 
 void crm_update_peer_proc(const char *uname, uint32_t flag, const char *status) 
 {
