@@ -29,16 +29,11 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <hb_api.h>
 #include <heartbeat.h>
 #include <clplumbing/cl_misc.h>
 #include <clplumbing/uids.h>
 #include <clplumbing/coredumps.h>
 #include <clplumbing/Gmain_timeout.h>
-
-/* #include <crm_internal.h> */
-#include <ocf/oc_event.h>
-/* #include <ocf/oc_membership.h> */
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -71,25 +66,27 @@ gboolean stand_alone = FALSE;
 gboolean per_action_cib = FALSE;
 enum cib_errors cib_status = cib_ok;
 
+#if SUPPORT_HEARTBEAT
+oc_ev_t *cib_ev_token;
+ll_cluster_t *hb_conn = NULL;
 extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
+gboolean cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name);
+#endif
 
 GMainLoop*  mainloop = NULL;
 const char* cib_root = WORKING_DIR;
 char *cib_our_uname = NULL;
-oc_ev_t *cib_ev_token;
 gboolean preserve_status = FALSE;
 gboolean cib_writes_enabled = TRUE;
 
 void usage(const char* cmd, int exit_status);
 int cib_init(void);
-gboolean cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name);
 gboolean cib_shutdown(int nsig, gpointer unused);
 void cib_ha_connection_destroy(gpointer user_data);
 gboolean startCib(const char *filename);
 extern gboolean cib_msg_timeout(gpointer data);
 extern int write_cib_contents(gpointer p);
 
-ll_cluster_t *hb_conn   = NULL;
 GTRIGSource *cib_writer = NULL;
 GHashTable *client_list = NULL;
 
@@ -211,9 +208,11 @@ main(int argc, char ** argv)
 		  crm_warn("Not all clients gone at exit"));
 	cib_cleanup();
 
+#if SUPPORT_HEARTBEAT
 	if(hb_conn) {
 		hb_conn->llc_ops->delete(hb_conn);
 	}
+#endif
 	
 	crm_info("Done");
 	return rc;
@@ -417,8 +416,13 @@ cib_init(void)
 #endif
 	    }
 	    
-	    if(crm_cluster_connect(
-		   &cib_our_uname, NULL, dispatch, destroy, &hb_conn) == FALSE){
+	    if(crm_cluster_connect(&cib_our_uname, NULL, dispatch, destroy,
+#if SUPPORT_HEARTBEAT
+				   &hb_conn
+#else
+				   NULL
+#endif
+		   ) == FALSE){
 		crm_crit("Cannot sign in to the cluster... terminating");
 		exit(100);
 	    }
