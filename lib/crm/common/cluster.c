@@ -116,6 +116,7 @@ unget_uuid(const char *uname)
 	}
 	g_hash_table_remove(crm_uuid_cache, uname);
 }
+
 const char *
 get_uuid(const char *uname) 
 {
