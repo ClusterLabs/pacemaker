@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <time.h>
 
 #include <clplumbing/uids.h>
 #include <clplumbing/Gmain_timeout.h>
