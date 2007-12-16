@@ -31,6 +31,7 @@
 #include <signal.h>
 #include <string.h>
 
+#include <config.h>
 #include <crm/ais_common.h>
 #include "plugin.h"
 #include "utils.h"
@@ -75,10 +76,10 @@ struct crm_identify_msg_s
 	mar_req_header_t	header __attribute__((aligned(8)));
 	uint32_t		id;
 	uint32_t		pid;
-	uint32_t		size;
 	 int32_t		votes;
 	uint32_t		processes;
 	char			uname[256];
+	char			version[256];
 
 } __attribute__((packed));
 
@@ -88,6 +89,7 @@ static crm_child_t crm_children[] = {
     { 0, crm_proc_lrmd, crm_flag_none,    0, TRUE,  "lrmd",  0, HA_LIBHBDIR"/lrmd",         NULL },
     { 0, crm_proc_cib,  crm_flag_members, 0, TRUE,  "cib",   HA_CCMUID, HA_LIBHBDIR"/cib",  NULL },
     { 0, crm_proc_crmd, crm_flag_members, 0, TRUE,  "crmd",  HA_CCMUID, HA_LIBHBDIR"/crmd", NULL },
+    { 0, crm_proc_attrd,crm_flag_none,    0, TRUE,  "attrd", HA_CCMUID, HA_LIBHBDIR"/attrd", NULL },
 };
 
 void send_cluster_id(void);
@@ -573,7 +575,6 @@ void ais_cluster_id_swab(void *msg)
     ais_debug_3("Performing endian conversion...");
     ais_msg->id        = swab32 (ais_msg->id);
     ais_msg->pid       = swab32 (ais_msg->pid);
-    ais_msg->size      = swab32 (ais_msg->size);
     ais_msg->votes     = swab32 (ais_msg->votes);
     ais_msg->processes = swab32 (ais_msg->processes);
 
@@ -589,7 +590,7 @@ void ais_cluster_id_callback (void *message, unsigned int nodeid)
 		nodeid, msg->id);
 	return;
     }
-    ais_debug("Node update");
+    ais_debug("Node update: %s (%s)", msg->uname, msg->version);
     changed = update_member(
 	nodeid, membership_seq, msg->votes, msg->processes, msg->uname, NULL);
 
@@ -1027,10 +1028,13 @@ int send_cluster_msg_raw(AIS_Message *ais_msg)
     return rc;	
 }
 
+#define min(x,y) (x)<(y)?(x):(y)
+
 void send_cluster_id(void) 
 {
     int rc = 0;
     int lpc = 0;
+    int len = 0;
     struct iovec iovec;
     struct crm_identify_msg_s *msg = NULL;
     
@@ -1043,10 +1047,14 @@ void send_cluster_id(void)
     msg->id = local_nodeid;
     msg->header.id = SERVICE_ID_MAKE(CRM_SERVICE, 1);	
 
-    msg->size = local_uname_len;
+    len = min(local_uname_len, MAX_NAME-1);
     memset(msg->uname, 0, MAX_NAME);
-    memcpy(msg->uname, local_uname, msg->size);
+    memcpy(msg->uname, local_uname, len);
 
+    len = min(strlen(VERSION), MAX_NAME-1);
+    memset(msg->version, 0, MAX_NAME);
+    memcpy(msg->version, VERSION, len);
+    
     msg->votes = 1;
     msg->pid = getpid();
     msg->processes = crm_proc_ais;

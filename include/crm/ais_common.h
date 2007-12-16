@@ -90,6 +90,7 @@ typedef struct crm_peer_node_s
 	char *state;
 	char *uuid;
 	char *addr;
+	char *version;
 } crm_node_t;
 
 struct crm_ais_host_s
