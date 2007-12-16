@@ -131,8 +131,8 @@ do_ha_control(long long action,
 #endif
 	    } else if(is_heartbeat_cluster()) {
 #if SUPPORT_HEARTBEAT
-		destroy = crmd_ha_msg_callback;
-		dispatch = crmd_ha_connection_destroy;
+		dispatch = crmd_ha_msg_callback;
+		destroy = crmd_ha_connection_destroy;
 #endif
 	    }
 	    
