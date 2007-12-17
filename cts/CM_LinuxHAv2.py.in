@@ -57,6 +57,7 @@ class LinuxHAv2(HeartbeatCM):
     def __init__(self, Environment, randseed=None):
         HeartbeatCM.__init__(self, Environment, randseed=randseed)
 
+        self.fastfail = 0
         self.clear_cache = 0
         self.cib_installed = 0
         self.config = None
@@ -522,7 +523,7 @@ class LinuxHAv2(HeartbeatCM):
 
         stonith_ignore.extend(common_ignore)
 
-        complist.append(Process("ccm", 0, [
+        ccm = Process("ccm", 0, [
                     "State transition S_IDLE",
                     "CCM connection appears to have failed",
                     "crmd: .*Action A_RECOVER .* not supported",
@@ -536,18 +537,19 @@ class LinuxHAv2(HeartbeatCM):
 #                    "tengine_stonith_callback: .*result=0",
                     "State transition S_.* -> S_INTEGRATION.*input=I_NODE_JOIN",
                     "State transition S_STARTING -> S_PENDING",
-                    ], [], common_ignore, 1, self))
+                    ], [], common_ignore, self.fastfail, self)
 
-        complist.append(Process("cib", 0, [
+
+        cib = Process("cib", 0, [
                     "State transition S_IDLE",
                     "Lost connection to the CIB service",
                     "Connection to the CIB terminated...",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], common_ignore, 1, self))
+                    ], [], common_ignore, self.fastfail, self)
 
-        complist.append(Process("lrmd", 0, [
+        lrmd = Process("lrmd", 0, [
                     "State transition S_IDLE",
                     "LRM Connection failed",
                     "crmd: .*I_ERROR.*lrm_dispatch",
@@ -555,9 +557,9 @@ class LinuxHAv2(HeartbeatCM):
                     ".*crmd .*exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], common_ignore, 1, self))
+                    ], [], common_ignore, self.fastfail, self)
 
-        complist.append(Process("crmd", 0, [
+        crmd = Process("crmd", 0, [
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
@@ -567,21 +569,21 @@ class LinuxHAv2(HeartbeatCM):
                     ], [
                     "tengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
                     "pengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
-                    ], common_ignore, 1, self))
+                    ], common_ignore, self.fastfail, self)
 
-        complist.append(Process("pengine", 1, [
+        pengine = Process("pengine", 1, [
                     "State transition S_IDLE",
                     ".*crmd .*exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], common_ignore, 1, self))
+                    ], [], common_ignore, self.fastfail, self)
 
-        complist.append(Process("tengine", 1, [
+        tengine = Process("tengine", 1, [
                     "State transition S_IDLE",
                     ".*crmd .*exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], common_ignore, 1, self))
+                    ], [], common_ignore, self.fastfail, self)
 
         if self.Env["DoFencing"] == 1 :
             complist.append(Process("stonithd", 0, [], [
@@ -590,6 +592,43 @@ class LinuxHAv2(HeartbeatCM):
                         "te_connect_stonith: Connected",
                         ], stonith_ignore, 0, self))
 #            complist.append(Process("heartbeat", 0, [], [], [], None, self))
+
+
+        if self.fastfail == 0:
+            ccm.pats.extend([
+                "ERROR: Client .*attrd exited with return code 1",
+                "ERROR: Respawning client .*attrd",
+                "ERROR: Client .*cib exited with return code 2",
+                "ERROR: Respawning client .*cib",
+                "ERROR: Client .*crmd exited with return code 2",
+                "ERROR: Respawning client .*crmd" 
+                ])
+            cib.pats.extend([
+                "ERROR: Client .*attrd exited with return code 1",
+                "ERROR: Respawning client .*attrd",
+                "ERROR: Client .*crmd exited with return code 2",
+                "ERROR: Respawning client .*crmd" 
+                ])
+            lrmd.pats.extend([
+                "ERROR: Client .*crmd exited with return code 2",
+                "ERROR: Respawning client .*crmd" 
+                ])
+            pengine.pats.extend([
+                "ERROR: Client .*crmd exited with return code 2",
+                "ERROR: Respawning client .*crmd" 
+                ])
+            tengine.pats.extend([
+                "ERROR: Client .*crmd exited with return code 2",
+                "ERROR: Respawning client .*crmd" 
+                ])
+
+        complist.append(ccm)
+        complist.append(cib)
+        complist.append(lrmd)
+        complist.append(crmd)
+        complist.append(pengine)
+        complist.append(tengine)
+
         return complist
 
     def NodeUUID(self, node):
