@@ -532,7 +532,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 		crm_debug_2("Processed update to %s: %s", id, magic);
 	}
 
-	if(passed == FALSE && rc > EXECRA_OK) {
+	if(passed == FALSE && rc != EXECRA_OK) {
 		update_failcount(event, event_node, rc);
 	}
 
