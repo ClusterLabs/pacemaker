@@ -946,10 +946,11 @@ main(int argc, char **argv)
 		}
 	}
 
-	if (optind < argc) {
+	if (optind < argc && argv[optind] != NULL) {
 		CMD_ERR("non-option ARGV-elements: ");
-		while (optind < argc) {
+		while (optind < argc && argv[optind] != NULL) {
 			CMD_ERR("%s ", argv[optind++]);
+			++argerr;
 		}
 		CMD_ERR("\n");
 	}
