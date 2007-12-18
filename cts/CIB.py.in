@@ -120,14 +120,15 @@ class CIB:
 
     stonith_resource_template = """ 
         <clone id="DoFencing" globally_unique="false">
-          <instance_attributes id="fencing">
+          <meta_attributes id="fencing">
             <attributes>
-              <nvpair id="DoFencing-1" name="clone_node_max" value="1"/>
+              <!-- Make start failures fatal for fencing resources -->
+              <nvpair id="DoFencing-1" name="resource_failure_stickiness" value="-1"/>
             </attributes>
-          </instance_attributes>
+          </meta_attributes>
           <primitive id="child_DoFencing" class="stonith" type="%s">
             <operations>
-              <op id="DoFencing-1" name="monitor" interval="60s" prereq="nothing" timeout="300s"/>
+              <op id="DoFencing-1" name="monitor" interval="120s" prereq="nothing" timeout="300s"/>
               <op id="DoFencing-2" name="start" prereq="nothing"  timeout="180s"/>
               <op id="DoFencing-3" name="stop" timeout="180s"/>
             </operations>
