@@ -186,11 +186,10 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 	local_socket_len += strlen(CRM_SOCK_DIR);
 
 	crm_malloc0(commpath, local_socket_len);
-	if(commpath != NULL) {
-		sprintf(commpath, CRM_SOCK_DIR "/%s", channel_name);
-		commpath[local_socket_len - 1] = '\0';
-		crm_debug_3("Attempting to talk on: %s", commpath);
-	}
+
+	sprintf(commpath, CRM_SOCK_DIR "/%s", channel_name);
+	commpath[local_socket_len - 1] = '\0';
+	crm_debug("Attempting to talk on: %s", commpath);
 	
 	attrs = g_hash_table_new(g_str_hash,g_str_equal);
 	g_hash_table_insert(attrs, path, commpath);
