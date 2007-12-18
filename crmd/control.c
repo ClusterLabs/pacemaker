@@ -168,6 +168,7 @@ do_ha_control(long long action,
 			    fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
 		    registered = FALSE;
 		}
+		populate_cib_nodes(TRUE);
 	    }
 #endif
 
@@ -863,7 +864,7 @@ populate_cib_nodes_ha(gboolean with_client_status)
 	const char *ha_node = NULL;
 	crm_data_t *cib_node_list = NULL;
 
-	if(fsa_cluster_conn) {
+	if(fsa_cluster_conn == NULL) {
 	    crm_debug("Not connected");
 	    return;
 	}

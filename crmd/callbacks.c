@@ -301,7 +301,7 @@ crmd_ha_status_callback(const char *node, const char *status, void *private)
 	if(member == NULL) {
 	    /* Make sure it is created so crm_update_peer_proc() succeeds */
 	    const char *uuid = get_uuid(node);
-	    member = crm_update_peer(0, 0, -1, -1, uuid, node, NULL, NULL);
+	    member = crm_update_peer(0, 0, -1, 0, uuid, node, NULL, NULL);
 	}
 	
 	if(safe_str_eq(status, DEADSTATUS)) {
@@ -368,7 +368,7 @@ crmd_client_status_callback(const char * node, const char * client,
 	if(member == NULL) {
 	    /* Make sure it is created so crm_update_peer_proc() succeeds */
 	    const char *uuid = get_uuid(node);
-	    member = crm_update_peer(0, 0, -1, -1, uuid, node, NULL, NULL);
+	    member = crm_update_peer(0, 0, -1, 0, uuid, node, NULL, NULL);
 	}
 
 	crm_update_peer_proc(node, crm_proc_crmd, status);

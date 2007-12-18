@@ -165,6 +165,7 @@ crm_node_t *crm_update_peer(
 	crm_malloc0(node, sizeof(crm_node_t));
 	node->id = id;
 	node->born = 0;
+	node->processes = 0;
 	node->uuid = crm_strdup(uuid);
 	node->uname = crm_strdup(uname);
 	node->votes = votes;
@@ -177,12 +178,17 @@ crm_node_t *crm_update_peer(
 	CRM_ASSERT(node != NULL);
     }
 
+    if(votes > 0 && node->votes != votes) {
+	node->votes = votes;
+	crm_info("Node %s now has %d votes", node->uname, votes);
+    }
+    
     if(id > 0 && id != node->id) {
 	node->id = id;
 	crm_info("Node %s now has id %u", node->uname, id);
     }
 
-    if(children >= 0 && children != node->processes) {
+    if(children > 0 && children != node->processes) {
 	crm_info("Node %s now has children: %.32x (%u)",
 		 node->uname, children, children);
 	node->processes = children;
@@ -236,8 +242,7 @@ crm_node_t *crm_update_ccm_node(
     CRM_CHECK(oc->m_array[offset].node_uname != NULL, return NULL);
     uuid = get_uuid(oc->m_array[offset].node_uname);
     return crm_update_peer(oc->m_array[offset].node_id,
-			   oc->m_array[offset].node_born_on,
-			   -1, -1,
+			   oc->m_array[offset].node_born_on, -1, 0,
 			   uuid, oc->m_array[offset].node_uname, NULL, state);
 }
 #endif
@@ -245,6 +250,7 @@ crm_node_t *crm_update_ccm_node(
 void crm_update_peer_proc(const char *uname, uint32_t flag, const char *status) 
 {
     crm_node_t *node = NULL;
+    gboolean changed = FALSE;
     CRM_ASSERT(crm_peer_cache != NULL);
 
     CRM_CHECK(uname != NULL, return);
@@ -252,9 +258,18 @@ void crm_update_peer_proc(const char *uname, uint32_t flag, const char *status)
     CRM_CHECK(node != NULL, return);
 
     if(safe_str_eq(status, ONLINESTATUS)) {
-	set_bit_inplace(node->processes, flag);
-    } else {
+	if((node->processes & flag) == 0) {
+	    set_bit_inplace(node->processes, flag);
+	    changed = TRUE;
+	}
+	
+    } else if(node->processes & flag) {
 	clear_bit_inplace(node->processes, flag);
+	changed = TRUE;
+    }
+
+    if(changed) {
+	crm_info("%s.%s is now %s", uname, peer2text(flag), status);
     }
 }
 

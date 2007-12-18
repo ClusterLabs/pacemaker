@@ -1736,10 +1736,10 @@ cib_client_status_callback(const char * node, const char * client,
 	if(member == NULL) {
 	    /* Make sure it gets created */
 	    const char *uuid = get_uuid(node);
-	    member = crm_update_peer(0, 0, -1, -1, uuid, node, NULL, NULL);
+	    member = crm_update_peer(0, 0, -1, 0, uuid, node, NULL, NULL);
 	}
 	
-	crm_update_peer_proc(node, crm_proc_crmd, status);
+	crm_update_peer_proc(node, crm_proc_cib, status);
 	set_connected_peers(the_cib);
     }
     return;

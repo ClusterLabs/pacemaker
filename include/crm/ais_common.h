@@ -66,15 +66,15 @@ enum crm_ais_msg_types {
 };
 
 enum crm_proc_flag {
-    crm_proc_none    = 0x00000000,
-    crm_proc_ais     = 0x00000001,
+    crm_proc_none    = 0x00000001,
+    crm_proc_ais     = 0x00000002,
     crm_proc_lrmd    = 0x00000010,
-    crm_proc_stontih = 0x00000020,
+    crm_proc_stonith = 0x00000020,
     crm_proc_cib     = 0x00000100,
     crm_proc_crmd    = 0x00000200,
     crm_proc_pe      = 0x00001000,
     crm_proc_te      = 0x00002000,
-    crm_proc_attrd   = 0x00004000,
+    crm_proc_attrd   = 0x00010000,
 };
 
 typedef struct crm_peer_node_s 
@@ -147,6 +147,41 @@ static inline const char *msg_type2text(enum crm_ais_msg_types type)
 			break;
 		case crm_msg_attrd:
 			text = "attrd";
+			break;
+	}
+	return text;
+}
+
+static inline const char *peer2text(enum crm_proc_flag proc) 
+{
+	const char *text = "unknown";
+	switch(proc) {
+		case crm_proc_none:
+			text = "unknown";
+			break;
+		case crm_proc_ais:
+			text = "ais";
+			break;
+		case crm_proc_cib:
+			text = "cib";
+			break;
+		case crm_proc_crmd:
+			text = "crmd";
+			break;
+		case crm_proc_pe:
+			text = "pengine";
+			break;
+		case crm_proc_te:
+			text = "tengine";
+			break;
+		case crm_proc_lrmd:
+			text = "lrmd";
+			break;
+		case crm_proc_attrd:
+			text = "attrd";
+			break;	
+		case crm_proc_stonith:
+			text = "stonith";
 			break;
 	}
 	return text;
