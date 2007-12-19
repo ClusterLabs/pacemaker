@@ -390,8 +390,8 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
     }
     
     tmp1 = create_node_state(
-	node->uname, NULL, data->state,
-	(node->processes&crm_proc_crmd)?ONLINESTATUS:OFFLINESTATUS,
+	node->uname, (node->processes&crm_proc_ais)?ACTIVESTATUS:DEADSTATUS,
+	data->state, (node->processes&crm_proc_crmd)?ONLINESTATUS:OFFLINESTATUS,
 	join, NULL, FALSE, data->caller);
     
     add_node_copy(data->updates, tmp1);
