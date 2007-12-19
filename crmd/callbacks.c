@@ -158,7 +158,7 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 
 	crm_debug_2("HA[inbound]: %s from %s", op, from);
 
-	if(crm_peer_cache == NULL) {
+	if(crm_peer_cache == NULL || g_hash_table_size(crm_peer_cache) == 0) {
 		crm_debug("Ignoring HA messages until we are"
 			  " connected to the CCM (%s op from %s)", op, from);
 		crm_log_message_adv(
@@ -304,17 +304,21 @@ crmd_ha_status_callback(const char *node, const char *status, void *private)
 	    member = crm_update_peer(0, 0, -1, 0, uuid, node, NULL, NULL);
 	}
 	
+	if(safe_str_eq(status, PINGSTATUS)) {
+	    return;
+	}
+	
 	if(safe_str_eq(status, DEADSTATUS)) {
-		/* this node is taost */
+		/* this node is toast */
 		crm_update_peer_proc(node, crm_proc_ais, OFFLINESTATUS);
 		update = create_node_state(
-			node, status, XML_BOOLEAN_NO, OFFLINESTATUS,
+			node, DEADSTATUS, XML_BOOLEAN_NO, OFFLINESTATUS,
 			CRMD_STATE_INACTIVE, NULL, TRUE, __FUNCTION__);
 		
-	} else if(safe_str_eq(status, ACTIVESTATUS)) {
+	} else {
 		crm_update_peer_proc(node, crm_proc_ais, ONLINESTATUS);
 		update = create_node_state(
-			node, status, NULL, NULL, NULL, NULL,
+			node, ACTIVESTATUS, NULL, NULL, NULL, NULL,
 			FALSE, __FUNCTION__);
 	}
 		
