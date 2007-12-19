@@ -238,12 +238,19 @@ crm_node_t *crm_update_ais_node(crm_data_t *member, long long seq)
 crm_node_t *crm_update_ccm_node(
     const oc_ev_membership_t *oc, int offset, const char *state)
 {
+    crm_node_t *node = NULL;
     const char *uuid = NULL;
     CRM_CHECK(oc->m_array[offset].node_uname != NULL, return NULL);
     uuid = get_uuid(oc->m_array[offset].node_uname);
-    return crm_update_peer(oc->m_array[offset].node_id,
+    node = crm_update_peer(oc->m_array[offset].node_id,
 			   oc->m_array[offset].node_born_on, -1, 0,
 			   uuid, oc->m_array[offset].node_uname, NULL, state);
+
+    if(safe_str_eq(CRM_NODE_ACTIVE, state)) {
+	crm_update_peer_proc(
+	    oc->m_array[offset].node_uname, crm_proc_ais, ONLINESTATUS);
+    }
+    return node;
 }
 #endif
 
