@@ -367,6 +367,8 @@ cron_range_satisfied(ha_time_t *now, crm_data_t *cron_spec)
 	int value_low_i = 0;
 	int value_high_i = 0;
 
+	CRM_CHECK(now != NULL, return FALSE);
+	
 	cron_check("seconds",	now->seconds);
 	cron_check("minutes",	now->minutes);
 	cron_check("hours",	now->hours);
