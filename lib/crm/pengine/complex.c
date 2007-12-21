@@ -355,7 +355,7 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 	value = g_hash_table_lookup(node->details->attrs, fail_attr);
 	if(value != NULL) {
 		crm_debug("%s: %s", fail_attr, value);
-		fail_count = crm_parse_int(value, "0");
+		fail_count = char2score(value);
 	}
 	crm_free(fail_attr);
 	
