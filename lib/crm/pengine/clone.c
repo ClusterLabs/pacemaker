@@ -133,7 +133,7 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	if(crm_is_true(ordered)) {
 		clone_data->ordered = TRUE;
 	}
-	if((rsc->flag & pe_rsc_unique) == 0 && clone_data->clone_node_max > 1) {
+	if((rsc->flags & pe_rsc_unique) == 0 && clone_data->clone_node_max > 1) {
 	    crm_config_err("Anonymous clones (%s) may only support one copy"
 			   " per node", rsc->id);
 	    clone_data->clone_node_max = 1;
