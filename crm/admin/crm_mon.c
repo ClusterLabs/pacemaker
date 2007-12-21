@@ -524,10 +524,14 @@ print_status(crm_data_t *cib)
 
 	slist_iter(node, node_t, data_set.nodes, lpc2,
 		   const char *node_mode = "OFFLINE";
-		   if(node->details->standby) {
-			   node_mode = "standby";
+		   if(node->details->standby && node->details->online) {
+		       node_mode = "standby";
+
+		   } else if(node->details->standby) {
+		       node_mode = "OFFLINE(standby)";
+
 		   } else if(node->details->online) {
-			   node_mode = "online";
+		       node_mode = "online";
 		   }
 		   
 		   print_as("Node: %s (%s): %s\n",
