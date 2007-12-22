@@ -722,6 +722,7 @@ config_query_callback(const HA_Message *msg, int call_id, int rc,
 {
 	const char *value = NULL;
 	GHashTable *config_hash = NULL;
+	ha_time_t *now = new_ha_date(TRUE);
 
 	if(rc != cib_ok) {
 		fsa_data_t *msg_data = NULL;
@@ -744,7 +745,7 @@ config_query_callback(const HA_Message *msg, int call_id, int rc,
 
 	unpack_instance_attributes(
 		output, XML_CIB_TAG_PROPSET, NULL, config_hash,
-		CIB_OPTIONS_FIRST, NULL);
+		CIB_OPTIONS_FIRST, now);
 	
 	value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
 	if(value == NULL) {
