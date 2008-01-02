@@ -1193,15 +1193,17 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			if(task_status_i == LRM_OP_NOTSUPPORTED) {
 			    resource_location(
 				rsc, node, -INFINITY, "__not_supported__", data_set);
-
-			} else if(data_set->start_failure_fatal
-				  || compare_version("2.0", op_version)) {			    
-			    if(is_stop_action || safe_str_eq(task, CRMD_ACTION_START)) {
-				crm_warn("Compatability handling for failed op %s on %s",
-					 id, node->details->uname);
-				resource_location(
-				    rsc, node, -INFINITY, "__legacy_stopstart__", data_set);
-			    }
+			} else if(is_stop_action) {
+			    resource_location(
+				rsc, node, -INFINITY, "__stop_fail__", data_set);
+			    
+			} else if((data_set->start_failure_fatal
+				   || compare_version("2.0", op_version))
+				  && safe_str_eq(task, CRMD_ACTION_START)) {
+			    crm_warn("Compatability handling for failed op %s on %s",
+				     id, node->details->uname);
+			    resource_location(
+				rsc, node, -INFINITY, "__legacy_start__", data_set);
 			}
 
 			if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
