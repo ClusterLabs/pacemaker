@@ -57,7 +57,7 @@ char *admin_uuid = NULL;
 void usage(const char *cmd, int exit_status);
 gboolean do_init(void);
 int do_work(void);
-void crmd_ipc_connection_destroy(gpointer user_data);
+void crmadmin_ipc_connection_destroy(gpointer user_data);
 
 gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
 char *pluralSection(const char *a_section);
@@ -139,7 +139,7 @@ main(int argc, char **argv)
 	};
 #endif
 
-	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, TRUE, argc, argv);
+	crm_log_init(basename(argv[0]), LOG_INFO, FALSE, TRUE, argc, argv);
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);
 	}
@@ -157,11 +157,6 @@ main(int argc, char **argv)
 		switch(flag) {
 #ifdef HAVE_GETOPT_H
 			case 0:
-				printf("option %s", long_options[option_index].name);
-				if (optarg)
-					printf(" with arg %s", optarg);
-				printf("\n");
-			
 				if (strcasecmp("reference",
 					   long_options[option_index].name) == 0) {
 					this_msg_reference =
@@ -446,9 +441,14 @@ do_work(void)
 }
 
 void
-crmd_ipc_connection_destroy(gpointer user_data)
+crmadmin_ipc_connection_destroy(gpointer user_data)
 {
-	crm_debug("Connection to CRMd was terminated");
+    crm_err("Connection to CRMd was terminated");
+    if(mainloop) {
+	g_main_quit(mainloop);
+    } else {
+	exit(1);
+    }
 }
 
 
@@ -473,7 +473,7 @@ do_init(void)
 		send_hello_message(
 			crmd_channel, admin_uuid, crm_system_name,"0", "1");
 
-		set_IPC_Channel_dnotify(src, crmd_ipc_connection_destroy);
+		set_IPC_Channel_dnotify(src, crmadmin_ipc_connection_destroy);
 		
 		return TRUE;
 	} 
