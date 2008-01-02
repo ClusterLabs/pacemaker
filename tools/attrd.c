@@ -405,8 +405,10 @@ main(int argc, char ** argv)
 	crm_info("Exiting...");
 
 #if SUPPORT_HEARTBEAT
-	attrd_cluster_conn->llc_ops->signoff(attrd_cluster_conn, TRUE);
-	attrd_cluster_conn->llc_ops->delete(attrd_cluster_conn);
+	if(is_heartbeat_cluster()) {
+	    attrd_cluster_conn->llc_ops->signoff(attrd_cluster_conn, TRUE);
+	    attrd_cluster_conn->llc_ops->delete(attrd_cluster_conn);
+	}
 #endif	
 	cib_conn->cmds->signoff(cib_conn);
 	cib_delete(cib_conn);
