@@ -158,7 +158,7 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 
 	crm_debug_2("HA[inbound]: %s from %s", op, from);
 
-	if(crm_peer_cache == NULL || g_hash_table_size(crm_peer_cache) == 0) {
+	if(crm_peer_cache == NULL || crm_active_members() == 0) {
 		crm_debug("Ignoring HA messages until we are"
 			  " connected to the CCM (%s op from %s)", op, from);
 		crm_log_message_adv(
