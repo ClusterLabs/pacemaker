@@ -871,9 +871,6 @@ cib_op2string(enum cib_update_op operation)
 	return operation_msg;
 }
 
-
-
-
 int
 cib_section2enum(const char *a_section) 
 {
