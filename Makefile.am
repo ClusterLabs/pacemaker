@@ -37,10 +37,6 @@ if SNMP_SUBAGENT_BUILD
 SNMP_SUBAGENT_DIR = snmp_subagent
 endif
 
-if CIM_PROVIDER_BUILD
-CIM_PROVIDER_DIR = cim
-endif
-
 SUBDIRS	= debian build replace include lib cib crmd pengine transitioner crm tools doc cts
 
 HANDY_DOCS = doc/ChangeLog doc/GettingStarted.html doc/DirectoryMap.txt

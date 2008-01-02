@@ -825,7 +825,7 @@ cib_error2string(enum cib_errors return_code)
 			error_msg = "Update was older than existing configuration";
 			break;
 		case cib_dtd_validation:
-			error_msg = "Update does not conform to the DTD in "HA_NOARCHDATAHBDIR"/crm.dtd";
+			error_msg = "Update does not conform to the DTD in "DTD_DIRECTORY"/crm.dtd";
 			break;
 		case cib_invalid_argument:
 			error_msg = "Invalid argument";

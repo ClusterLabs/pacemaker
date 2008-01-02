@@ -435,7 +435,7 @@ cib_process_diff(
 			}
 			
 		} else if((options & cib_force_diff) && !validate_with_dtd(
-			      *result_cib, FALSE, HA_NOARCHDATAHBDIR"/crm.dtd")) {
+			      *result_cib, FALSE, DTD_DIRECTORY"/crm.dtd")) {
 
 		    if(cib_is_master == FALSE) {
 			log_level = LOG_INFO;

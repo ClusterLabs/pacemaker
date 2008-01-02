@@ -27,12 +27,6 @@ EXTRA_DIST	= cib.pam
 hadir		= $(sysconfdir)/ha.d
 halibdir	= $(libdir)/@HB_PKG@
 commmoddir	= $(halibdir)/modules/comm
-havarlibdir	= $(localstatedir)/lib/@HB_PKG@
-
-# sockets with path
-crmdir		= $(havarlibdir)/crm
-crmreqsocket	= $(havarlibdir)/api/crm.req
-crmressocket	= $(havarlibdir)/api/crm.rsp
 
 COMMONLIBS	= $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(top_builddir)/lib/crm/cib/libcib.la			\

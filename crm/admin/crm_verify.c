@@ -52,7 +52,7 @@ extern gboolean stage0(pe_working_set_t *data_set);
 extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
 extern crm_data_t * do_calculations(
 	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
-const char *dtd_file = HA_NOARCHDATAHBDIR"/crm.dtd";
+const char *dtd_file = DTD_DIRECTORY"/crm.dtd";
 
 int
 main(int argc, char **argv)

@@ -404,9 +404,9 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	}
 	
 	ignore_dtd = crm_element_value(root, "ignore_dtd");
-	dtd_ok = validate_with_dtd(root, TRUE, HA_NOARCHDATAHBDIR"/crm.dtd");
+	dtd_ok = validate_with_dtd(root, TRUE, DTD_DIRECTORY"/crm.dtd");
 	if(dtd_ok == FALSE) {
-		crm_err("CIB does not validate against "HA_NOARCHDATAHBDIR"/crm.dtd");
+		crm_err("CIB does not validate against "DTD_DIRECTORY"/crm.dtd");
 		if(ignore_dtd == NULL
 		   && crm_is_true(ignore_dtd) == FALSE) {
 			cib_status = cib_dtd_validation;
@@ -621,8 +621,8 @@ activateCibXml(crm_data_t *new_cib, gboolean to_disk)
 #endif
 	   crm_is_true(ignore_dtd) == FALSE
 	   && validate_with_dtd(
-		   new_cib, TRUE, HA_NOARCHDATAHBDIR"/crm.dtd") == FALSE) {
-		crm_err("Updated CIB does not validate against "HA_NOARCHDATAHBDIR"/crm.dtd... ignoring");
+		   new_cib, TRUE, DTD_DIRECTORY"/crm.dtd") == FALSE) {
+		crm_err("Updated CIB does not validate against "DTD_DIRECTORY"/crm.dtd... ignoring");
  		error_code = cib_dtd_validation;
 	}
 
