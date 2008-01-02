@@ -636,10 +636,11 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 		crm_free(minor_version);
 	}
 
-	if (strcasecmp(CRM_SYSTEM_PENGINE, client_name) == 0) {
+	
+	if (safe_str_eq(CRM_SYSTEM_PENGINE, client_name)) {
 		the_subsystem = pe_subsystem;
 		
-	} else if (strcasecmp(CRM_SYSTEM_TENGINE, client_name) == 0) {
+	} else if (safe_str_eq(CRM_SYSTEM_TENGINE, client_name)) {
 		the_subsystem = te_subsystem;
 	}
 	

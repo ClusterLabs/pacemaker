@@ -287,7 +287,8 @@ do_election_count_vote(long long action,
 	} else if(is_heartbeat_cluster() && your_node->born > our_node->born) {
 		crm_debug("Election pass: born_on");
 
-	} else if(strcasecmp(fsa_our_uname, vote_from) > 0) {
+	} else if(fsa_our_uname == NULL
+		  || strcasecmp(fsa_our_uname, vote_from) > 0) {
 		crm_debug("Election fail: uname");
 		we_loose = TRUE;
 
