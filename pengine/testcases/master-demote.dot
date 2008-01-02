@@ -1,6 +1,4 @@
 digraph "g" {
-"all_stopped" -> "fence_node:0_stop_0 cxa1" [ style = bold]
-"all_stopped" -> "fence_node:1_stop_0 cxb1" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange"  ]
 "cyrus_address_monitor_0 <none>" [ style=dashed color="red" fontcolor="black"  ]
 "fence_clone_running_0" [ style=bold color="green" fontcolor="orange"  ]

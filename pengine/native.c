@@ -506,13 +506,7 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		return;
 	} 
 
-	if(safe_str_eq(class, "stonith")) {
-	    custom_action_order(
-		NULL, crm_strdup(all_stopped->task), all_stopped,
-		rsc, stop_key(rsc), NULL,
-		pe_order_implies_left|pe_order_stonith_stop, data_set);
-	    
-	} else if(rsc->variant == pe_native) {
+	if(rsc->variant == pe_native && safe_str_neq(class, "stonith")) {
 	    custom_action_order(
 		rsc, stop_key(rsc), NULL,
 		NULL, crm_strdup(all_stopped->task), all_stopped,
@@ -1199,16 +1193,28 @@ gboolean
 StopRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set)
 {
 	action_t *stop = NULL;
-	
+	const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+
 	crm_debug_2("Executing: %s", rsc->id);
+
+	if(rsc->next_role == RSC_ROLE_STOPPED
+	   && rsc->variant == pe_native
+	   && safe_str_eq(class, "stonith")) {
+	    action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
+	    custom_action_order(
+		NULL, crm_strdup(all_stopped->task), all_stopped,
+		rsc, stop_key(rsc), NULL,
+		pe_order_implies_left|pe_order_stonith_stop, data_set);
+	}
 	
 	slist_iter(
 		current, node_t, rsc->running_on, lpc,
 		stop = stop_action(rsc, current, optional);
-		if(stop->runnable && stop->optional == FALSE) {
-			crm_notice("  %s\tStop %s", current->details->uname, rsc->id);
-		}
 
+		if(stop->runnable && stop->optional == FALSE) {
+		    crm_notice("  %s\tStop %s",current->details->uname,rsc->id);
+		}
+		
 		if(data_set->remove_after_stop) {
 			DeleteRsc(rsc, current, optional, data_set);
 		}

@@ -329,9 +329,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="9" operation="all_stopped" operation_key="all_stopped"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="91" operation="stop" operation_key="fence_clone_stop_0"/>
        </trigger>
      </inputs>
@@ -373,9 +370,6 @@
        </rsc_op>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="9" operation="all_stopped" operation_key="all_stopped"/>
-       </trigger>
        <trigger>
          <pseudo_event id="91" operation="stop" operation_key="fence_clone_stop_0"/>
        </trigger>
