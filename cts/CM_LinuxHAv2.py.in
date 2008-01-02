@@ -150,7 +150,10 @@ class LinuxHAv2(HeartbeatCM):
         if 1:
             return [ 
                 "crmadmin:",
-                "ERROR: Message hist queue is filling up"
+                "ERROR: Message hist queue is filling up",
+                "stonithd: .*CRIT: external_hostlist: 'vmware gethosts' returned an empty hostlist",
+                "stonithd: .*ERROR: Could not list nodes for stonith RA external/vmware.",
+
                 ]
         return []
 
