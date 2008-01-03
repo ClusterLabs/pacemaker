@@ -139,7 +139,7 @@ main(int argc, char **argv)
 	};
 #endif
 
-	crm_log_init(basename(argv[0]), LOG_INFO, FALSE, TRUE, argc, argv);
+	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, TRUE, argc, argv);
 	if(argc < 2) {
 		usage(crm_system_name, LSB_EXIT_EINVAL);
 	}
@@ -596,8 +596,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		crm_debug_2(
 		       "Recieved expected number (%d) of messages from Heartbeat."
 		       "  Exiting normally.", expected_responses);
-		g_main_quit(mainloop);
-		return !hack_return_good;
+		exit(0);
 	}
 
 	message_timer_id = Gmain_timeout_add(
