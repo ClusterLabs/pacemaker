@@ -43,7 +43,7 @@
 #endif
 
 #define UUID_LEN 16
-#define UUID_FILE HA_VARLIBDIR"/"PACKAGE"/hb_uuid"
+#define UUID_FILE HA_VARLIBDIR"/heartbeat/hb_uuid"
 
 #define OPTARGS	"rw:"
 
