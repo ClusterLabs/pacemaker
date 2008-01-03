@@ -28,6 +28,7 @@
 /* #include <lrm/lrm_api.h> */
 #include <sys/stat.h>
 #include <clplumbing/cl_misc.h>
+#include <clplumbing/Gmain_timeout.h>
 
 static crm_action_t*
 unpack_action(synapse_t *parent, crm_data_t *xml_action) 
@@ -220,9 +221,10 @@ unpack_graph(crm_data_t *xml_graph)
 static void
 destroy_action(crm_action_t *action)
 {
-	if(action->timer) {
-		CRM_CHECK(action->timer->source_id == 0, ;);
-/*  		Gmain_timeout_remove(action->timer->source_id); */
+	if(action->timer && action->timer->source_id != 0) {
+	    crm_warn("Cancelling timer for action %d (src=%d)",
+		     action->id, action->timer->source_id);
+	    Gmain_timeout_remove(action->timer->source_id);
 	}
 	g_hash_table_destroy(action->params);
 	free_xml(action->xml);
