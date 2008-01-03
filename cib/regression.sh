@@ -43,27 +43,23 @@ printf " %-9s %-16s %s\n" Result App Test
 cibadmin $cib_opts -Q > /tmp/$$.existing.xml
 assert $? 0 cibadmin "Query CIB"
 
-# Create a combined backup
+for section in crm_config nodes resources constraints status; do
+    cibadmin $cib_opts -Q -o $section > /tmp/$$.$section.xml
+    assert $? 0 cibadmin "Query CIB for $section"
+done
 
+# Create a combined backup
 echo '<cib>' > /tmp/$$.combined.xml
 echo '<configuration>' >> /tmp/$$.combined.xml
 
-cibadmin $cib_opts -Q -o crm_config >> /tmp/$$.combined.xml
-assert $? 0 cibadmin "Query CIB for config options"
-
-cibadmin $cib_opts -Q -o nodes >> /tmp/$$.combined.xml
-assert $? 0 cibadmin "Query CIB for nodes"
-
-cibadmin $cib_opts -Q -o resources >> /tmp/$$.combined.xml
-assert $? 0 cibadmin "Query CIB for resources"
-
-cibadmin $cib_opts -Q -o constraints >> /tmp/$$.combined.xml
-assert $? 0 cibadmin "Query CIB for constraints"
+cat /tmp/$$.crm_config.xml >> /tmp/$$.combined.xml
+cat /tmp/$$.nodes.xml >> /tmp/$$.combined.xml
+cat /tmp/$$.resources.xml >> /tmp/$$.combined.xml
+cat /tmp/$$.constraints.xml >> /tmp/$$.combined.xml
 
 echo '</configuration>' >> /tmp/$$.combined.xml
 
-cibadmin $cib_opts -Q -o status >> /tmp/$$.combined.xml
-assert $? 0 cibadmin "Query CIB for status"
+cat /tmp/$$.status.xml >> /tmp/$$.combined.xml
 
 echo '</cib>' >> /tmp/$$.combined.xml
 
@@ -108,7 +104,7 @@ assert $? 0 crm_attribute "Set cluster option with -s"
 crm_attribute -n cluster-delay -D -i cib-bootstrap-options-cluster-delay
 assert $? 0 crm_attribute "Delete cluster option with -i"
 
-cibadmin -C -o nodes -X '<node id="i-dont-exist-UUID" uname="i-dont-exist-UNAME">'
+cibadmin -C -o nodes -X '<node id="i-dont-exist-UUID" uname="i-dont-exist-UNAME" type="member">'
 assert $? 0 cibadmin "Create node entry"
 
 crm_attribute -n ram -v 1024M -U i-dont-exist-UNAME -t nodes
@@ -125,13 +121,32 @@ cibadmin $cib_opts -R -x /tmp/$$.existing.xml > /dev/null 2>&1
 assert $? 45 cibadmin "Replace operation should fail with: -45, Update was older than existing configuration"
 
 # Restore the existing config
-cibadmin $cib_opts -R -x /tmp/$$.combined.xml
-assert $? 0 cibadmin "Version-less replace operation"
+cibadmin $cib_opts -U -x /tmp/$$.combined.xml
+assert $? 0 cibadmin "Update complete CIB"
+#cibadmin $cib_opts -Q
+
+cibadmin $cib_opts -Q >> /tmp/$$.all.xml
+assert $? 0 cibadmin "Query complete CIB"
+
+cibadmin $cib_opts -R -x /tmp/$$.all.xml > /dev/null 2>&1
+assert $? 0 cibadmin "Replace complete CIB"
+
+for section in crm_config nodes resources constraints status; do
+    cibadmin $cib_opts -R -o $section -x /tmp/$$.$section.xml > /dev/null 2>&1
+    assert $? 0 cibadmin "Replace $section options"
+done
+
+# Cleanup 
 
 set +x
 
 rm /tmp/$$.opt.xml
+rm /tmp/$$.all.xml
+rm /tmp/$$.combined.xml
 rm /tmp/$$.existing.xml
+for section in crm_config nodes resources constraints status; do
+    rm /tmp/$$.$section.xml
+done
 
 if [ $num_errors -gt 0 ]; then
     echo Tests failed: $agent failed $num_errors tests
