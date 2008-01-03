@@ -149,7 +149,6 @@ class LinuxHAv2(HeartbeatCM):
         '''Return list of errors which are known and very noisey should be ignored'''
         if 1:
             return [ 
-                "crmadmin:",
                 "ERROR: Message hist queue is filling up",
                 "stonithd: .*CRIT: external_hostlist: 'vmware gethosts' returned an empty hostlist",
                 "stonithd: .*ERROR: Could not list nodes for stonith RA external/vmware.",
@@ -210,10 +209,9 @@ class LinuxHAv2(HeartbeatCM):
         idle_watch.setwatch()
 
         out=self.rsh.readaline(node, self["StatusCmd"]%node)
-        ret= (string.find(out, 'ok') != -1)
-        self.debug("Node %s status: %s" %(node, out))            
+        self.debug("Node %s status: '%s'" %(node, out))            
 
-        if not ret:
+        if not out or string.find(out, 'ok') < 0:
             if self.ShouldBeStatus[node] == self["up"]:
                 self.log(
                     "Node status for %s is %s but we think it should be %s"
