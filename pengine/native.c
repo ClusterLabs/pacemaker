@@ -243,6 +243,41 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	return rsc->allocated_to;
 }
 
+static gboolean is_op_dup(
+    resource_t *rsc, const char *name, const char *interval) 
+{
+    gboolean dup = FALSE;
+    const char *id = NULL;
+    const char *value = NULL;
+    xml_child_iter_filter(
+	rsc->ops_xml, operation, "op",
+	value = crm_element_value(operation, "name");
+	if(safe_str_neq(value, name)) {
+	    continue;
+	}
+	
+	value = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
+	if(value == NULL) {
+	    value = "0";
+	}
+	
+	if(safe_str_neq(value, interval)) {
+	    continue;
+	}
+
+	if(id == NULL) {
+	    id = ID(operation);
+	    
+	} else {
+	    crm_config_err("Operation %s is a duplicate of %s", ID(operation), id);
+	    crm_config_err("Do not use the same (name, interval) combination more than once per resource");
+	    dup = TRUE;
+	}
+	);
+    
+    return dup;
+}
+
 void
 RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	    crm_data_t *operation, pe_working_set_t *data_set) 
@@ -258,7 +293,9 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	gboolean is_optional = TRUE;
 	GListPtr possible_matches = NULL;
 	
-	crm_debug_2("Creating recurring actions for %s", rsc->id);
+	crm_debug_2("Creating recurring action %s for %s",
+		    ID(operation), rsc->id);
+	
 	if(node != NULL) {
 		node_uname = node->details->uname;
 	}
@@ -281,6 +318,10 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	}
 	
 	name = crm_element_value(operation, "name");
+	if(is_op_dup(rsc, name, interval)) {
+	    return;
+	}
+
 	key = generate_op_key(rsc->id, name, interval_ms);
 	if(start != NULL) {
 		crm_debug_3("Marking %s %s due to %s",
@@ -291,7 +332,7 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 		crm_debug_2("Marking %s optional", key);
 		is_optional = TRUE;
 	}
-	
+
 	/* start a monitor for an already active resource */
 	possible_matches = find_actions_exact(rsc->actions, key, node);
 	if(possible_matches == NULL) {
