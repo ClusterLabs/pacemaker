@@ -280,8 +280,16 @@ parse_date(char **date_str)
 	CRM_CHECK(date_str != NULL, return NULL);
 	CRM_CHECK(strlen(*date_str) > 0, return NULL);
 	
-	crm_malloc0(new_time, sizeof(ha_time_t));
-	crm_malloc0(new_time->has, sizeof(ha_has_time_t));
+	if((*date_str)[0] == 'T' || (*date_str)[2] == ':') {
+	    /* Just a time supplied - Infer current date */
+	    new_time = new_ha_date(TRUE);
+	    parse_time(date_str, new_time, TRUE);
+	    is_done = TRUE;
+
+	} else {
+	    crm_malloc0(new_time, sizeof(ha_time_t));
+	    crm_malloc0(new_time->has, sizeof(ha_has_time_t));
+	}
 
 	while(is_done == FALSE) {
 		char ch = (*date_str)[0];
