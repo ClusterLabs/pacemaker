@@ -19,6 +19,8 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
+CLEANFILES      = $(cts_PYTHON) $(cts_SCRIPTS)
+
 ctsdir		= $(datadir)/@PKG_NAME@/cts
 
 cts_PYTHON	=				\
@@ -43,6 +45,3 @@ cts_SCRIPTS	=				\
 			LSBDummy
 
 all-local: $(cts_PYTHON)
-
-clean-local:
-	rm -f $(cts_PYTHON) $(cts_SCRIPTS)
