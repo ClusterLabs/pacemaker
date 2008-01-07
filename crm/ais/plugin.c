@@ -235,16 +235,40 @@ int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
 {
     int rc = 0;
     struct utsname us;
+    char *value = NULL;
+    unsigned int object_service_handle;
 
     membership_list = g_hash_table_new_full(
 	g_direct_hash, g_direct_equal, NULL, destroy_ais_node);
 
-    setenv("HA_debug", "1", 1);
-    setenv("HA_logfacility",  "daemon", 1);
-    setenv("HA_cluster_type", "openais", 1);
     setenv("HA_COMPRESSION",  "bz2", 1);
+    setenv("HA_cluster_type", "openais", 1);
     
-    plugin_log_level = LOG_DEBUG;
+    objdb->object_find_reset (OBJECT_PARENT_HANDLE);
+    
+    if (objdb->object_find (
+	    OBJECT_PARENT_HANDLE, "pacemaker", strlen ("pacemaker"),
+	    &object_service_handle) != 0) {
+	object_service_handle = 0;
+	ais_info("No configuration suplpied for pacemaker");
+    }
+    
+    objdb_get_string(
+	objdb, object_service_handle, "logfacility", &value, "daemon");
+    setenv("HA_logfacility",  value, 1);
+    
+    objdb_get_string(objdb, object_service_handle, "initdead", &value, "20");
+    setenv("HA_initdead",  value, 1);
+    
+    objdb_get_string(objdb, object_service_handle, "debug", &value, "1");
+    setenv("HA_debug",  value, 1);
+
+    rc = atoi(value);
+    plugin_log_level = LOG_INFO+rc;
+
+    if(system("echo 1 > /proc/sys/kernel/core_uses_pid") != 0) {
+	ais_perror("Could not enable /proc/sys/kernel/core_uses_pid");
+    }
     
     ais_info("CRM: Initialized");
     log_printf(LOG_INFO, "Logging: Initialized %s\n", __PRETTY_FUNCTION__);
