@@ -32,6 +32,12 @@ typedef struct {
 	int size __attribute__((aligned(8)));
 	int id __attribute__((aligned(8)));
 } mar_req_header_t __attribute__((aligned(8)));
+
+typedef struct {
+	int size; __attribute__((aligned(8))) 
+	int id __attribute__((aligned(8)));
+	int error __attribute__((aligned(8)));
+} mar_res_header_t __attribute__((aligned(8)));
 #endif
 
 #define MAX_NAME	256
@@ -106,7 +112,7 @@ struct crm_ais_host_s
 
 struct crm_ais_msg_s
 {
-	mar_req_header_t	header __attribute__((aligned(8)));
+	mar_res_header_t	header __attribute__((aligned(8)));
 	uint32_t		id;
 	gboolean		is_compressed;
 	

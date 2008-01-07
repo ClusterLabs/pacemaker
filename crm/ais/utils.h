@@ -23,12 +23,13 @@
 extern int openais_conn_send_response (void *conn, void *msg, int mlen);
 extern int libais_connection_active (void *conn);
 
+#include <openais/service/objdb.h>
 #include <openais/service/logsys.h>
 LOGSYS_DECLARE_SUBSYS("crm", LOG_LEVEL_DEBUG);
 
 /* #include "plugin.h" */
 #define 	SIZEOF(a)   (sizeof(a) / sizeof(a[0]))
-#define CRM_MESSAGE_TEST_ID 1
+#define CRM_MESSAGE_IPC_ACK 1
 #define CRM_SERVICE         16
 
 typedef struct crm_child_s {
@@ -69,6 +70,14 @@ extern int send_client_msg(void *conn, enum crm_ais_msg_class class,
 			   enum crm_ais_msg_types type, const char *data);
 extern void send_member_notification(void);
 extern void log_ais_message(int level, AIS_Message *msg);
+
+extern int objdb_get_int(
+    struct objdb_iface_ver0 *objdb, unsigned int object_service_handle,
+    char *key, unsigned int *int_value, const char *fallback);
+
+extern int objdb_get_string(
+    struct objdb_iface_ver0 *objdb, unsigned int object_service_handle,
+    char *key, char **value, const char *fallback);
 
 extern GHashTable *membership_list;
 extern pthread_t crm_wait_thread;

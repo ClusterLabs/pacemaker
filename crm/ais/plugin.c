@@ -128,20 +128,20 @@ static struct openais_lib_handler crm_lib_service[] =
 {
     { /* 0 */
 	.lib_handler_fn		= ais_ipc_message_callback,
-	.response_size		= sizeof (AIS_Message),
-	.response_id		= CRM_MESSAGE_TEST_ID,
+	.response_size		= sizeof (mar_res_header_t),
+	.response_id		= CRM_MESSAGE_IPC_ACK,
 	.flow_control		= OPENAIS_FLOW_CONTROL_NOT_REQUIRED
     },
     { /* 1 */
 	.lib_handler_fn		= ais_node_list_query,
-	.response_size		= sizeof (AIS_Message),
-	.response_id		= CRM_MESSAGE_TEST_ID,
+	.response_size		= sizeof (mar_res_header_t),
+	.response_id		= CRM_MESSAGE_IPC_ACK,
 	.flow_control		= OPENAIS_FLOW_CONTROL_NOT_REQUIRED
     },
     { /* 2 */
 	.lib_handler_fn		= ais_manage_notification,
-	.response_size		= sizeof (AIS_Message),
-	.response_id		= CRM_MESSAGE_TEST_ID,
+	.response_size		= sizeof (mar_res_header_t),
+	.response_id		= CRM_MESSAGE_IPC_ACK,
 	.flow_control		= OPENAIS_FLOW_CONTROL_NOT_REQUIRED
     },
 };
@@ -418,30 +418,49 @@ void global_confchg_fn (
 {
     int lpc = 0;
     int changed = 0;
+    int do_update = 0;
     
     ENTER("");
     AIS_ASSERT(ring_id != NULL);
     switch(configuration_type) {
 	case TOTEM_CONFIGURATION_REGULAR:
+	    do_update = 1;
 	    break;
 	case TOTEM_CONFIGURATION_TRANSITIONAL:
-	    ais_info("Transitional membership event on ring %lld",
-		     ring_id->seq);
-	    return;
 	    break;
     }
 
     membership_seq = ring_id->seq;
-    ais_notice("Membership event on ring %lld: memb=%d, new=%d, lost=%d",
-	       ring_id->seq, member_list_entries,
+    ais_notice("%s membership event on ring %lld: memb=%d, new=%d, lost=%d",
+	       do_update?"Stable":"Transitional", ring_id->seq, member_list_entries,
 	       joined_list_entries, left_list_entries);
 
+    if(do_update == 0) {
+	for(lpc = 0; lpc < joined_list_entries; lpc++) {
+	    const char *prefix = "new: ";
+	    uint32_t nodeid = joined_list[lpc];
+	    ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
+	}
+	for(lpc = 0; lpc < member_list_entries; lpc++) {
+	    const char *prefix = "memb:";
+	    uint32_t nodeid = member_list[lpc];
+	    ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
+	}
+	for(lpc = 0; lpc < left_list_entries; lpc++) {
+	    const char *prefix = "lost:";
+	    uint32_t nodeid = left_list[lpc];
+	    ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
+	}
+	return;
+    }
+    
     for(lpc = 0; lpc < joined_list_entries; lpc++) {
 	const char *prefix = "NEW: ";
 	uint32_t nodeid = joined_list[lpc];
 	crm_node_t *node = NULL;
 	changed += update_member(
 	    nodeid, membership_seq, -1, 0, NULL, CRM_NODE_MEMBER);
+
 	ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
 
 	node = g_hash_table_lookup(membership_list, GUINT_TO_POINTER(nodeid));	
@@ -457,6 +476,7 @@ void global_confchg_fn (
 	uint32_t nodeid = member_list[lpc];
 	changed += update_member(
 	    nodeid, membership_seq, -1, 0, NULL, CRM_NODE_MEMBER);
+
 	ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
     }
 
@@ -468,8 +488,11 @@ void global_confchg_fn (
 	ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
     }    
     
-    ais_debug_2("Reaping unseen nodes...");
-    g_hash_table_foreach(membership_list, ais_mark_unseen_peer_dead, &changed);
+    if(do_update) {
+	ais_debug_2("Reaping unseen nodes...");
+	g_hash_table_foreach(
+	    membership_list, ais_mark_unseen_peer_dead, &changed);
+    }
     
     if(changed) {
 	ais_debug("%d nodes changed", changed);
@@ -503,9 +526,14 @@ int ais_ipc_client_exit_callback (void *conn)
 
 int ais_ipc_client_connect_callback (void *conn)
 {
+    void *async_conn = openais_conn_partner_get(conn);
     ENTER("Client=%p", conn);
-    ais_debug("Client %p joined", conn);
-    send_client_msg(conn, crm_class_cluster, crm_msg_none, "identify");
+    ais_debug("Client %p/%p joined", conn, async_conn);
+    if(async_conn) {
+	send_client_msg(async_conn, crm_class_cluster, crm_msg_none, "identify");
+    } else {
+	ais_err("No async connection");
+    }
     LEAVE("");
 
     return (0);
@@ -599,6 +627,26 @@ void ais_cluster_id_callback (void *message, unsigned int nodeid)
     }
 }
 
+struct res_overlay {
+	mar_res_header_t header __attribute((aligned(8)));
+	char buf[4096];
+};
+
+struct res_overlay *res_overlay = NULL;
+
+static void send_ipc_ack(void *conn, int class)
+{
+    if(res_overlay == NULL) {
+	ais_malloc0(res_overlay, sizeof(struct res_overlay));
+    }
+    
+    res_overlay->header.size = crm_lib_service[class].response_size;
+    res_overlay->header.id = crm_lib_service[class].response_id;
+    res_overlay->header.error = 0;
+    openais_conn_send_response (conn, res_overlay, res_overlay->header.size);
+}
+
+
 /* local callbacks */
 void ais_ipc_message_callback(void *conn, void *msg)
 {
@@ -624,9 +672,8 @@ void ais_ipc_message_callback(void *conn, void *msg)
 	    char *update = ais_generate_membership_data();
 	    ais_info("Sending membership update %llu to %s",
 		     membership_seq, crm_children[type].name);
- 	    send_client_msg(conn, crm_class_members, crm_msg_none, update);
-	}
-	
+ 	    send_client_msg(async_conn, crm_class_members, crm_msg_none,update);
+	}	
     }
     
     ais_msg->sender.id = local_nodeid;
@@ -635,7 +682,8 @@ void ais_ipc_message_callback(void *conn, void *msg)
     memcpy(ais_msg->sender.uname, local_uname, ais_msg->sender.size);
 
     route_ais_message(msg, TRUE);
-
+    send_ipc_ack(conn, 0);
+    
     LEAVE("");
 }
 
@@ -725,11 +773,13 @@ char *ais_generate_membership_data(void)
 void ais_node_list_query(void *conn, void *msg)
 {
     char *data = ais_generate_membership_data();
+    void *async_conn = openais_conn_partner_get(conn);
     ais_debug_4("members: %s", data);
-    if(conn) {
-	send_client_msg(conn, crm_class_members, crm_msg_none, data);
+    if(async_conn) {
+	send_client_msg(async_conn, crm_class_members, crm_msg_none, data);
     }
     ais_free(data);
+    send_ipc_ack(conn, 1);
 }
 
 void ais_manage_notification(void *conn, void *msg)
@@ -756,6 +806,7 @@ void ais_manage_notification(void *conn, void *msg)
 	    break;
 	}
     }
+    send_ipc_ack(conn, 2);
 }
 
 void send_member_notification(void)
@@ -789,6 +840,11 @@ static gboolean check_message_sanity(AIS_Message *msg, char *data)
 
     if(sane && msg->header.size == 0) {
 	ais_err("Message with no size");
+	sane = FALSE;
+    }
+
+    if(sane && msg->header.error != 0) {
+	ais_err("Message header contains an error: %d", msg->header.error);
 	sane = FALSE;
     }
 

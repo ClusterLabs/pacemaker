@@ -446,3 +446,36 @@ int send_client_msg(
     LEAVE("");
     return rc;    
 }
+
+int objdb_get_string(
+    struct objdb_iface_ver0 *objdb, unsigned int object_service_handle,
+    char *key, char **value, const char *fallback)
+{
+    *value = NULL;
+    if(object_service_handle > 0) {
+	objdb->object_key_get(
+	    object_service_handle, key, strlen(key), (void**)value, NULL);
+    }
+    
+    if (*value) {
+	ais_info("Found '%s' for option %s", *value, key);
+	return 0;
+    }
+
+    ais_info("Defaulting to '%s' for option %s", fallback, key);
+    *value = ais_strdup(fallback);
+    return -1;
+}
+
+int objdb_get_int(
+    struct objdb_iface_ver0 *objdb, unsigned int object_service_handle,
+    char *key, unsigned int *int_value, const char *fallback)
+{
+    char *value = NULL;
+    objdb_get_string(objdb, object_service_handle, key, &value, fallback);
+    if (value) {
+	*int_value = atoi(value);
+	return 0;
+    }
+    return -1;
+}
