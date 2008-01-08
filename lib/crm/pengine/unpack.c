@@ -993,7 +993,7 @@ gboolean
 unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	      int *max_call_id, enum action_fail_response *on_fail,
 	      pe_working_set_t *data_set) 
-{
+{    
 	const char *id          = NULL;
 	const char *task        = NULL;
  	const char *task_id     = NULL;
@@ -1010,8 +1010,11 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	int actual_rc_i = 0;
 	
 	action_t *action = NULL;
+	node_t *effective_node = NULL;
+
 	gboolean is_probe = FALSE;
 	gboolean is_stop_action = FALSE;
+
 	
 	CRM_CHECK(rsc    != NULL, return FALSE);
 	CRM_CHECK(node   != NULL, return FALSE);
@@ -1075,19 +1078,12 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	CRM_CHECK(actual_rc != NULL, return FALSE);	
 	actual_rc_i = crm_parse_int(actual_rc, NULL);
 
-	if(EXECRA_NOT_INSTALLED == actual_rc_i) {
-		resource_location(rsc, node, -INFINITY, "not-installed", data_set);
-		if(is_probe) {
-			/* treat these like stops */
-			is_stop_action = TRUE;
-			task_status_i = LRM_OP_DONE;
-			actual_rc_i = EXECRA_NOT_RUNNING;
-			
- 		} else {
-			task_status_i = LRM_OP_ERROR;
-		}
-		
-	} else if(EXECRA_NOT_RUNNING == actual_rc_i) {
+	if(task_status_i == LRM_OP_NOTSUPPORTED) {
+	    actual_rc_i = EXECRA_UNIMPLEMENT_FEATURE;
+	}
+	
+	switch(actual_rc_i) {
+	    case EXECRA_NOT_RUNNING:
 		if(is_probe) {
 			/* treat these like stops */
 			is_stop_action = TRUE;
@@ -1097,8 +1093,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
  		} else {
 			task_status_i = LRM_OP_ERROR;
 		}
+		break;
 		
-	} else if(EXECRA_RUNNING_MASTER == actual_rc_i) {
+	    case EXECRA_RUNNING_MASTER:
 		if(is_probe
 		   || (rsc->role == RSC_ROLE_MASTER
 		       && safe_str_eq(task, CRMD_ACTION_STATUS))) {
@@ -1113,25 +1110,63 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 			}
 		}
 		rsc->role = RSC_ROLE_MASTER;
-
-	} else if(EXECRA_FAILED_MASTER == actual_rc_i) {
+		break;
+		
+	    case EXECRA_FAILED_MASTER:
 		rsc->role = RSC_ROLE_MASTER;
 		task_status_i = LRM_OP_ERROR;
+		break;
 
-	} else if(EXECRA_OK == actual_rc_i
-		  && interval > 0
-		  && rsc->role == RSC_ROLE_MASTER) {
-		/* catch status ops that return 0 instead of 8 while they
-		 *   are supposed to be in master mode
-		 */
-		task_status_i = LRM_OP_ERROR;
+	    case EXECRA_UNIMPLEMENT_FEATURE:
+		if(interval > 0) {
+		    task_status_i = LRM_OP_ERROR;
+		    break;
+		}
+		/* else: fall through */
+	    case EXECRA_INSUFFICIENT_PRIV:
+	    case EXECRA_NOT_INSTALLED:
+		effective_node = node;
+		/* fall through */
+	    case EXECRA_NOT_CONFIGURED:
+	    case EXECRA_INVALID_PARAM:
+		crm_err("Hard error: %s failed with rc=%d.", id, actual_rc_i);
+		if(effective_node) {
+		    crm_err("  Preventing %s from re-starting on %s",
+			    rsc->id, effective_node->details->uname);
+		} else {
+		    crm_err("  Preventing %s from re-starting anywhere in the cluster",
+			    rsc->id);
+		}
 
-	} else if(task_status_i == LRM_OP_DONE && EXECRA_OK != actual_rc_i) {
-		crm_err("Remapping %s (rc=%d) on %s to an ERROR",
-			id, actual_rc_i, node->details->uname);
-		task_status_i = LRM_OP_ERROR;
+		resource_location(rsc, effective_node, -INFINITY, "hard-error", data_set);
+		if(is_probe) {
+			/* treat these like stops */
+			is_stop_action = TRUE;
+			task_status_i = LRM_OP_DONE;
+			actual_rc_i = EXECRA_NOT_RUNNING;
+			
+ 		} else {
+			task_status_i = LRM_OP_ERROR;
+		}
+		break;
+
+	    case EXECRA_OK:
+		if(interval > 0 && rsc->role == RSC_ROLE_MASTER) {
+		    /* catch status ops that return 0 instead of 8 while they
+		     *   are supposed to be in master mode
+		     */
+		    task_status_i = LRM_OP_ERROR;
+		}
+		break;
+		
+	    default:
+		if(task_status_i == LRM_OP_DONE) {
+		    crm_err("Remapping %s (rc=%d) on %s to an ERROR",
+			    id, actual_rc_i, node->details->uname);
+		    task_status_i = LRM_OP_ERROR;
+		}
 	}
-
+	
 	if(task_status_i == LRM_OP_ERROR
 	   || task_status_i == LRM_OP_TIMEOUT
 	   || task_status_i == LRM_OP_NOTSUPPORTED) {
@@ -1190,10 +1225,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				*on_fail = action->on_fail;
 			}
 
-			if(task_status_i == LRM_OP_NOTSUPPORTED) {
-			    resource_location(
-				rsc, node, -INFINITY, "__not_supported__", data_set);
-			} else if(is_stop_action) {
+			if(is_stop_action) {
 			    resource_location(
 				rsc, node, -INFINITY, "__stop_fail__", data_set);
 			    
