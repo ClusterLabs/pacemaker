@@ -37,7 +37,7 @@
            </lrm_resource>
            <lrm_resource id="resource_fs" type="Filesystem" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="resource_fs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition_magic="4:7;0:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call_id="3" crm_feature_set="1.0.6" rc_code="7" op_status="4" interval="0" op_digest="018dec0f53e0e4d161c44af3eed91747"/>
-             <lrm_rsc_op id="resource_fs_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="251:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition_magic="4:2;251:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call_id="504" crm_feature_set="1.0.6" rc_code="2" op_status="4" interval="0" op_digest="018dec0f53e0e4d161c44af3eed91747"/>
+             <lrm_rsc_op id="resource_fs_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="251:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition_magic="4:2;251:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call_id="504" crm_feature_set="1.0.6" rc_code="1" op_status="4" interval="0" op_digest="018dec0f53e0e4d161c44af3eed91747"/>
              <lrm_rsc_op id="resource_fs_stop_0" operation="stop" crm-debug-origin="do_update_resource" transition_key="253:ccf2e30a-94d8-4f46-b338-9ca597fb8127" transition_magic="0:0;253:ccf2e30a-94d8-4f46-b338-9ca597fb8127" call_id="505" crm_feature_set="1.0.6" rc_code="0" op_status="0" interval="0" op_digest="018dec0f53e0e4d161c44af3eed91747"/>
            </lrm_resource>
          </lrm_resources>

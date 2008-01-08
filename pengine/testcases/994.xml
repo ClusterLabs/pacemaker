@@ -67,7 +67,7 @@
            </lrm_rsc_op>
          </lrm_resource>
          <lrm_resource id="group_1:postfix_9" type="postfix" class="lsb" provider="heartbeat">
-           <lrm_rsc_op id="group_1:postfix_9_monitor_0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" operation="monitor"  transition_key="0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="4:3;0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" call_id="5" rc_code="3" op_status="4">
+           <lrm_rsc_op id="group_1:postfix_9_monitor_0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" operation="monitor"  transition_key="0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="4:3;0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" call_id="5" rc_code="1" op_status="4">
              
            </lrm_rsc_op>
            <lrm_rsc_op id="group_1:postfix_9_stop_0" operation="stop" interval="0"  transition_key="1:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="0:0;1:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" call_id="7" rc_code="0" op_status="0"/>

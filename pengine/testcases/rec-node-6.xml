@@ -29,7 +29,7 @@
       <lrm>
         <lrm_resources>
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc1_stop_0" operation="stop" interval="0" op_status="4" rc_code="6" call_id="1" op_digest="e84efa5734680badc7f0316955c76514" crm_feature_set="1.0.6" transition_magic=""/>
+            <lrm_rsc_op id="rsc1_stop_0" operation="stop" interval="0" op_status="4" rc_code="1" call_id="1" op_digest="e84efa5734680badc7f0316955c76514" crm_feature_set="1.0.6" transition_magic=""/>
 	  </lrm_resource>
           <lrm_resource id="rsc2" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc2_start_0" operation="start" interval="0" op_status="0" rc_code="0" call_id="1" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition_magic=""/>
