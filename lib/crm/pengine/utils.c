@@ -653,7 +653,8 @@ unpack_operation(
 		    value = "stop resource";
 		}
 		
-	} else if(safe_str_eq(value, "ignore")) {
+	} else if(safe_str_eq(value, "ignore")
+		|| safe_str_eq(value, "nothing")) {
 		action->on_fail = action_fail_ignore;
 		value = "ignore";
 
@@ -666,8 +667,7 @@ unpack_operation(
 		action->fail_role = RSC_ROLE_STOPPED;
 		value = "stop resource";
 		
-	} else if(safe_str_eq(value, "restart")
-		|| safe_str_eq(value, "nothing")) {
+	} else if(safe_str_eq(value, "restart")) {
 		action->on_fail = action_fail_recover;
 		value = "restart (and possibly migrate)";
 		
