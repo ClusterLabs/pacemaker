@@ -823,6 +823,11 @@ transition_magic contains an identifier containing call_id, rc_code, and {{trans
 
 As the name suggests, it is a piece of magic that allows the TE to always identify the action from the stream of xml-diffs it subscribes to from the CIB.
 
+last_run       ::= when did the op run (as age)
+last_rc_change ::= last rc change (as age)
+exec_time      ::= time it took the op to run
+queue_time     ::= time spent in queue
+
 op_status is supplied by the LRM and conforms to this enum:
 
 typedef enum {
@@ -849,5 +854,11 @@ The parameters section allows us to detect when a resource's definition has chan
           op_digest             CDATA #IMPLIED
           op_restart_digest     CDATA #IMPLIED
           op_force_restart      CDATA #IMPLIED
+
+          last_run              CDATA #IMPLIED
+          last_rc_change        CDATA #IMPLIED
+          exec_time             CDATA #IMPLIED
+          queue_time            CDATA #IMPLIED
+
           interval              CDATA #REQUIRED
           transition_magic      CDATA #REQUIRED>

@@ -577,6 +577,19 @@ build_operation_update(
 	crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op->rc);
 	crm_xml_add_int(xml_op, XML_LRM_ATTR_OPSTATUS, op->op_status);
 	crm_xml_add_int(xml_op, XML_LRM_ATTR_INTERVAL, op->interval);
+
+	if(compare_version("2.1", caller_version) <= 0) {
+	    if(op->t_run || op->t_rcchange || op->exec_time || op->queue_time) {
+		crm_debug("Timing data (%s_%s_%d): last=%lu change=%lu exec=%lu queue=%lu",
+			  op->rsc_id, op->op_type, op->interval,
+			  op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
+	
+		crm_xml_add_int(xml_op, "last_run",       op->t_run);
+		crm_xml_add_int(xml_op, "last_rc_change", op->t_rcchange);
+		crm_xml_add_int(xml_op, "exec_time",      op->exec_time);
+		crm_xml_add_int(xml_op, "queue_time",     op->queue_time);
+	    }
+	}
 	
 	/* this will enable us to later determin that the
 	 *   resource's parameters have changed and we should force
@@ -1702,12 +1715,7 @@ do_lrm_event(long long action,
 	     enum crmd_fsa_input cur_input,
 	     fsa_data_t *msg_data)
 {
-	lrm_op_t *op = NULL;
-	
-	CRM_CHECK(msg_data->fsa_cause == C_LRM_OP_CALLBACK, return);
-
-	op = fsa_typed_data(fsa_dt_lrm);
-	process_lrm_event(op);
+    CRM_CHECK(FALSE, return);
 }
 
 

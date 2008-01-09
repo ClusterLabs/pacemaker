@@ -95,7 +95,7 @@ extern const char *crm_system_name;
 #define CIB_FILENAME	WORKING_DIR"/cib.xml"
 #define CIB_BACKUP	WORKING_DIR"/cib_backup.xml"
 
-#define CRM_FEATURE_SET	"2.0"
+#define CRM_FEATURE_SET	"2.1"
 
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1
