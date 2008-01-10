@@ -582,19 +582,38 @@ filter_colocation_constraint(
 		return FALSE;
 	}
 
-	if(constraint->role_lh != RSC_ROLE_UNKNOWN
+	if(constraint->score > 0
+	   && constraint->role_lh != RSC_ROLE_UNKNOWN
 	   && constraint->role_lh != rsc_lh->next_role) {
-		crm_debug_4("RH: Skipping constraint: \"%s\" state filter",
+		crm_debug_4("LH: Skipping constraint: \"%s\" state filter",
 			    role2text(constraint->role_rh));
 		return FALSE;
 	}
 	
-	if(constraint->role_rh != RSC_ROLE_UNKNOWN
+	if(constraint->score > 0
+	   && constraint->role_rh != RSC_ROLE_UNKNOWN
 	   && constraint->role_rh != rsc_rh->next_role) {
 		crm_debug_4("RH: Skipping constraint: \"%s\" state filter",
 			    role2text(constraint->role_rh));
 		return FALSE;
 	}
+
+	if(constraint->score < 0
+	   && constraint->role_lh != RSC_ROLE_UNKNOWN
+	   && constraint->role_lh == rsc_lh->next_role) {
+		crm_debug_4("LH: Skipping -ve constraint: \"%s\" state filter",
+			    role2text(constraint->role_rh));
+		return FALSE;
+	}
+	
+	if(constraint->score < 0
+	   && constraint->role_rh != RSC_ROLE_UNKNOWN
+	   && constraint->role_rh == rsc_rh->next_role) {
+		crm_debug_4("RH: Skipping -ve constraint: \"%s\" state filter",
+			    role2text(constraint->role_rh));
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
