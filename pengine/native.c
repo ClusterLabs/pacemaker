@@ -1310,6 +1310,8 @@ PromoteRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *d
 		  crm_err("Next role: %s", role2text(rsc->next_role));
 		  return FALSE);
 
+	CRM_CHECK(next != NULL, return FALSE);
+
 	key = start_key(rsc);
 	action_list = find_actions_exact(rsc->actions, key, next);
 	crm_free(key);
