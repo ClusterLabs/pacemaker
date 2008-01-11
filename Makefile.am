@@ -24,6 +24,7 @@ RPM			= @RPM@
 RPMFLAGS		= -ta
 TARFILE			= pacemaker.tar.gz
 AM_TAR			= tar
+LAST_RELEASE		= obs-2.1.2-24
 
 AUTOMAKE_OPTIONS	= foreign
 ##ACLOCAL                 = aclocal -I $(auxdir)
@@ -39,16 +40,26 @@ endif
 
 SUBDIRS	= debian build replace include lib cib crmd pengine transitioner crm tools doc cts
 
-HANDY_DOCS = doc/ChangeLog doc/GettingStarted.html doc/DirectoryMap.txt
-HBDOCS = doc/heartbeat_api.html
-
-# Pass these to configure when running "make distcheck"
-DISTCHECK_CONFIGURE_FLAGS = --with-initdir=prefix
-
 tgz:
 	rm -f $(TARFILE)
 	hg archive -t tgz $(TARFILE)
 	echo Rebuilt $(TARFILE) on `date`
+
+changes:
+	printf "  * Update source tarball to revision: `hg id`\n"
+	printf "  * Statistics:\n"
+	printf "      Changesets: `hg log -M --template "{desc|firstline|strip}\n" | wc -l`\n"
+	printf "      Diff:         "
+	hg diff -r $(LAST_RELEASE):tip | diffstat | tail -n 1
+	printf "\n  * Testing Notes:\n"
+	printf "\n  + Test hardware:\n"
+	printf "\n  + All testing was performed with STONITH enabled\n"
+	printf "\n  + Pending bugs encountered during testing:\n"
+	printf "\n  * Changes since $(LAST_RELEASE)\n"
+	hg log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v Low: | sort -uf 
+
+obs:	tgz
+	scp $(TARFILE) vmhost.beekhof.net:Development/obs/home:beekhof/pacemaker/
 
 rpm:	tgz
 	$(RPM) $(RPMFLAGS) $(TARFILE) </dev/null;
