@@ -36,7 +36,6 @@
 #include <pwd.h>
 #include <grp.h>
 
-#include <heartbeat.h>
 #include <ha_msg.h>
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_signal.h>
@@ -1452,11 +1451,11 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
 	}
 	
 	umask(022);
-	close(FD_STDIN);
+	close(STDIN_FILENO);
 	(void)open(devnull, O_RDONLY);		/* Stdin:  fd 0 */
-	close(FD_STDOUT);
+	close(STDOUT_FILENO);
 	(void)open(devnull, O_WRONLY);		/* Stdout: fd 1 */
-	close(FD_STDERR);
+	close(STDERR_FILENO);
 	(void)open(devnull, O_WRONLY);		/* Stderr: fd 2 */
 }
 
