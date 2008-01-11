@@ -126,6 +126,97 @@ struct crm_ais_msg_s
 	
 } __attribute__((packed));
 
+#if SUPPORT_AIS
+static inline const char *ais_error2text(SaAisErrorT error) 
+{
+	const char *text = "unknown";
+	switch(error) {
+	    case SA_AIS_OK:
+		text = "None";
+		break;
+	    case SA_AIS_ERR_LIBRARY:
+		text = "Library error";
+		break;
+	    case SA_AIS_ERR_VERSION:
+		text = "Version error";
+		break;
+	    case SA_AIS_ERR_INIT:
+		text = "Initialization error";
+		break;
+	    case SA_AIS_ERR_TIMEOUT:
+		text = "Timeout";
+		break;
+	    case SA_AIS_ERR_TRY_AGAIN:
+		text = "Try again";
+		break;
+	    case SA_AIS_ERR_INVALID_PARAM:
+		text = "Invalid parameter";
+		break;
+	    case SA_AIS_ERR_NO_MEMORY:
+		text = "No memory";
+		break;
+	    case SA_AIS_ERR_BAD_HANDLE:
+		text = "Bad handle";
+		break;
+	    case SA_AIS_ERR_BUSY:
+		text = "Busy";
+		break;
+	    case SA_AIS_ERR_ACCESS:
+		text = "Access error";
+		break;
+	    case SA_AIS_ERR_NOT_EXIST:
+		text = "Doesn't exist";
+		break;
+	    case SA_AIS_ERR_NAME_TOO_LONG:
+		text = "Name too long";
+		break;
+	    case SA_AIS_ERR_EXIST:
+		text = "Exists";
+		break;
+	    case SA_AIS_ERR_NO_SPACE:
+		text = "No space";
+		break;
+	    case SA_AIS_ERR_INTERRUPT:
+		text = "Interrupt";
+		break;
+	    case SA_AIS_ERR_NAME_NOT_FOUND:
+		text = "Name not found";
+		break;
+	    case SA_AIS_ERR_NO_RESOURCES:
+		text = "No resources";
+		break;
+	    case SA_AIS_ERR_NOT_SUPPORTED:
+		text = "Not supported";
+		break;
+	    case SA_AIS_ERR_BAD_OPERATION:
+		text = "Bad operation";
+		break;
+	    case SA_AIS_ERR_FAILED_OPERATION:
+		text = "Failed operation";
+		break;
+	    case SA_AIS_ERR_MESSAGE_ERROR:
+		text = "Message error";
+		break;
+	    case SA_AIS_ERR_QUEUE_FULL:
+		text = "Queue full";
+		break;
+	    case SA_AIS_ERR_QUEUE_NOT_AVAILABLE:
+		text = "Queue not available";
+		break;
+	    case SA_AIS_ERR_BAD_FLAGS:
+		text = "Bad flags";
+		break;
+	    case SA_AIS_ERR_TOO_BIG:
+		text = "To big";
+		break;
+	    case SA_AIS_ERR_NO_SECTIONS:
+		text = "No sections";
+		break;
+	}
+	return text;
+}
+#endif
+
 static inline const char *msg_type2text(enum crm_ais_msg_types type) 
 {
 	const char *text = "unknown";

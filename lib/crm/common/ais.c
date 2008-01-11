@@ -176,13 +176,14 @@ send_ais_text(int class, const char *data,
 		ais_data_len(ais_msg), ais_msg->header.size);
 
   retry:
+    errno = 0;
     rc = saSendReceiveReply(ais_fd_sync, ais_msg, ais_msg->header.size,
 			    &header, sizeof (mar_res_header_t));
     if(rc == SA_AIS_OK) {
 	CRM_CHECK(header.error == 0, rc = header.error);
     }
 
-    if(header.error == SA_AIS_ERR_TRY_AGAIN && retries < 20) {
+    if(rc == SA_AIS_ERR_TRY_AGAIN && retries < 20) {
 	retries++;
 	crm_info("Peer overloaded: Re-sending message (Attempt %d of 20)", retries);
 	mssleep(retries * 100); /* Proportional back off */
@@ -190,7 +191,8 @@ send_ais_text(int class, const char *data,
     }
 
     if(rc != SA_AIS_OK) {    
-	crm_err("Sending message %d: FAILED (rc=%d)", ais_msg->id, rc);
+	cl_perror("Sending message %d: FAILED (rc=%d): %s",
+		  ais_msg->id, rc, ais_error2text(rc));
 	ais_fd_async = -1;
     } else {
 	crm_debug_4("Message %d: sent", ais_msg->id);
@@ -244,10 +246,10 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 
     crm_malloc0(header, header_len);
     
-    crm_debug_5("Start");
+    errno = 0;
     rc = saRecvRetry(sender, header, header_len);
     if (rc != SA_AIS_OK) {
-	crm_err("Receiving message header failed: %d", rc);
+	cl_perror("Receiving message header failed: (%d) %s", rc, ais_error2text(rc));
 	goto bail;
 
     } else if(header->size == header_len) {
@@ -270,11 +272,12 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
     /* Use a char* so we can store the remainder into an offset */
     data = (char*)header;
 
+    errno = 0;
     rc = saRecvRetry(sender, data+header_len, header->size - header_len);
     msg = (AIS_Message*)data;
 
     if (rc != SA_AIS_OK) {
-	crm_err("Receiving message body failed: %d", rc);
+	cl_perror("Receiving message body failed: (%d) %s", rc, ais_error2text(rc));
 	goto bail;
     }
     
@@ -420,12 +423,12 @@ gboolean check_message_sanity(AIS_Message *msg, char *data)
     int tmp_size = msg->header.size - sizeof(AIS_Message);
 
     if(sane && msg->header.size == 0) {
-	crm_err("Message with no size");
+	crm_warn("Message with no size");
 	sane = FALSE;
     }
 
     if(sane && msg->header.error != 0) {
-	crm_err("Message header contains an error: %d", msg->header.error);
+	crm_warn("Message header contains an error: %d", msg->header.error);
 	sane = FALSE;
     }
 
@@ -440,11 +443,11 @@ gboolean check_message_sanity(AIS_Message *msg, char *data)
 	    msg->size = tmp_size;
 	}
 	
-	crm_err("Repaired message payload size %d -> %d", cur_size, tmp_size);
+	crm_warn("Repaired message payload size %d -> %d", cur_size, tmp_size);
     }
 
     if(sane && ais_data_len(msg) == 0) {
-	crm_err("Message with no payload");
+	crm_warn("Message with no payload");
 	sane = FALSE;
     }
 
@@ -452,14 +455,14 @@ gboolean check_message_sanity(AIS_Message *msg, char *data)
 	int str_size = strlen(data) + 1;
 	if(ais_data_len(msg) != str_size) {
 	    int lpc = 0;
-	    crm_err("Message payload is corrupted: expected %d bytes, got %d",
+	    crm_warn("Message payload is corrupted: expected %d bytes, got %d",
 		    ais_data_len(msg), str_size);
 	    sane = FALSE;
 	    for(lpc = (str_size - 10); lpc < msg->size; lpc++) {
 		if(lpc < 0) {
 		    lpc = 0;
 		}
-		crm_warn("bad_data[%d]: %d / '%c'", lpc, data[lpc], data[lpc]);
+		crm_debug("bad_data[%d]: %d / '%c'", lpc, data[lpc], data[lpc]);
 	    }
 	}
     }

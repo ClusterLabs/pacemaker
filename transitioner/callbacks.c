@@ -448,7 +448,7 @@ action_timer_callback(gpointer data)
 	CRM_CHECK(timer->action != NULL, return FALSE);
 
 	if(transition_graph->complete) {
-		crm_err("Ignoring timeout while not in transition");
+		crm_warn("Ignoring timeout while not in transition");
 		
 	} else if(timer->reason == timeout_action_warn) {
 		print_action(
