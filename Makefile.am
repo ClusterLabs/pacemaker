@@ -32,8 +32,6 @@ AUTOMAKE_OPTIONS	= foreign
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar
 
-## proc-ha is left out from SUBDIRS (completely obsolete)
-
 if SNMP_SUBAGENT_BUILD
 SNMP_SUBAGENT_DIR = snmp_subagent
 endif
@@ -48,7 +46,7 @@ tgz:
 changes:
 	printf "  * Update source tarball to revision: `hg id`\n"
 	printf "  * Statistics:\n"
-	printf "      Changesets: `hg log -M --template "{desc|firstline|strip}\n" | wc -l`\n"
+	printf "      Changesets: `hg log -M --template "{desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | wc -l`\n"
 	printf "      Diff:         "
 	hg diff -r $(LAST_RELEASE):tip | diffstat | tail -n 1
 	printf "\n  * Testing Notes:\n"
