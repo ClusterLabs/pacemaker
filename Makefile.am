@@ -44,6 +44,7 @@ tgz:
 	echo Rebuilt $(TARFILE) on `date`
 
 changes:
+	printf "$(PACKAGE) $(VERSION)-1 stable; urgency=medium\n"
 	printf "  * Update source tarball to revision: `hg id`\n"
 	printf "  * Statistics:\n"
 	printf "      Changesets: `hg log -M --template "{desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | wc -l`\n"
@@ -55,6 +56,7 @@ changes:
 	printf "\n  + Pending bugs encountered during testing:\n"
 	printf "\n  * Changes since $(LAST_RELEASE)\n"
 	hg log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v Low: | sort -uf 
+	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date`\n"
 
 obs:	tgz
 	scp $(TARFILE) vmhost.beekhof.net:Development/obs/home:beekhof/pacemaker/
