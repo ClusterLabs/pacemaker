@@ -260,7 +260,7 @@ extern gboolean validate_with_dtd(
 			   && parent->types[__counter] != FT_UNCOMPRESS) { \
 				continue;				\
 			}						\
-			child = parent->values[__counter];		\
+			child = (crm_data_t*)parent->values[__counter]; \
 			if(child == NULL) {				\
 				crm_debug_4("Skipping %s == NULL",	\
 					  parent->names[__counter]);	\
@@ -282,7 +282,7 @@ extern gboolean validate_with_dtd(
 			   && parent->types[__counter] != FT_UNCOMPRESS) { \
 				continue;				\
 			}						\
-			child = parent->values[__counter];		\
+			child = (crm_data_t*)parent->values[__counter]; \
 			if(child == NULL) {				\
 				crm_debug_4("Skipping %s == NULL",	\
 					  parent->names[__counter]);	\
@@ -306,14 +306,14 @@ extern gboolean validate_with_dtd(
 		crm_debug_5("Searching %d fields", parent->nfields);	\
 		for (__counter = 0; __counter < parent->nfields; __counter++) { \
 			crm_debug_5("Searching field %d", __counter);	\
-			prop_name = parent->names[__counter];		\
+			prop_name = (const char*)parent->names[__counter]; \
 			if(parent->types[__counter] != FT_STRING) {	\
 				continue;				\
 			} else if(prop_name[0] == '_'			\
 				  && prop_name[1] == '_') {		\
 				continue;				\
 			}						\
-			prop_value = parent->values[__counter];		\
+			prop_value = (const char*)parent->values[__counter]; \
 			code;						\
 		}							\
 	} else {							\

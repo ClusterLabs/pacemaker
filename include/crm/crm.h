@@ -192,7 +192,7 @@ typedef GList* GListPtr;
 		GListPtr __crm_iter_head = parent;			\
 		child_type *child = NULL;				\
 		while(__crm_iter_head != NULL) {			\
-			child = __crm_iter_head->data;			\
+			child = (child_type *) __crm_iter_head->data;	\
 			__crm_iter_head = __crm_iter_head->next;	\
 			{ a; }						\
 		}							\
@@ -205,7 +205,7 @@ typedef GList* GListPtr;
 		child_type *child = NULL;				\
 		int counter = 0;					\
 		for(; __crm_iter_head != NULL; counter++) {		\
-			child = __crm_iter_head->data;			\
+			child = (child_type *) __crm_iter_head->data;	\
 			__crm_iter_head = __crm_iter_head->next;	\
 			{ a; }						\
 		}							\
