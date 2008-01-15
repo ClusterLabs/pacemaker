@@ -71,6 +71,11 @@ deb:	tgz
 	rm -rf $(distdir)
 
 install-exec-local:
+if BUILD_AIS_SUPPORT
+	mkdir -p $(DESTDIR)$(LCRSODIR)
+	rm -f $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso $(DESTDIR)$(LCRSODIR)/service_crm.so
+	cp $(DESTDIR)$(libdir)/service_crm.so $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso
+endif
 
 dist-clean-local:
 	rm -f autoconf automake autoheader $(TARFILE)
