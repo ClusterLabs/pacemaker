@@ -24,7 +24,6 @@ fi
 . regression.core.sh
 create_mode="true"
 echo Generating test outputs for these tests...
-
 # do_test
 
 echo Done.
@@ -266,6 +265,7 @@ do_test stonith-2 "Stonith loop - 3"
 do_test bug-1572-1 "Recovery of groups depending on master/slave"
 do_test bug-1572-2 "Recovery of groups depending on master/slave when the master is never re-promoted"
 do_test bug-1685 "Depends-on-master ordering"
+do_test bug-1822 "Dont promote partially active groups"
 
 echo ""
 
