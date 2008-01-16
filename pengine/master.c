@@ -183,13 +183,40 @@ master_update_pseudo_status(
 		}							\
 		);
 
+static resource_t *
+ultimate_parent(resource_t *rsc)
+{
+	resource_t *parent = rsc;
+	while(parent->parent) {
+		parent = parent->parent;
+	}
+	return parent;
+}
+
+
 static node_t *
 can_be_master(resource_t *rsc)
 {
 	node_t *node = NULL;
 	node_t *local_node = NULL;
+	resource_t *parent = ultimate_parent(rsc);
 	clone_variant_data_t *clone_data = NULL;
 	int level = LOG_DEBUG_2;
+#if 0
+	enum rsc_role_e role = RSC_ROLE_UNKNOWN;
+	role = rsc->fns->state(rsc, FALSE);
+	crm_info("%s role: %s", rsc->id, role2text(role));
+#endif
+	
+	if(rsc->children) {
+	    slist_iter(
+		child, resource_t, rsc->children, lpc,
+		if(can_be_master(child) == NULL) {
+		    do_crm_log(level, "Child %s of %s can't be promoted", child->id, rsc->id);
+		    return NULL;
+		}
+		);
+	}
 	
 	node = rsc->fns->location(rsc, NULL, FALSE);
 	if(rsc->priority < 0) {
@@ -205,10 +232,10 @@ can_be_master(resource_t *rsc)
 			    node->details->uname);
 		return NULL;
 	}
-
-	get_clone_variant_data(clone_data, rsc->parent);
+	
+	get_clone_variant_data(clone_data, parent);
 	local_node = pe_find_node_id(
-		rsc->parent->allowed_nodes, node->details->id);
+		parent->allowed_nodes, node->details->id);
 
 	if(local_node == NULL) {
 		crm_err("%s cannot run on %s: node not allowed",

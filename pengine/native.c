@@ -30,8 +30,6 @@
 #define VARIANT_NATIVE 1
 #include <lib/crm/pengine/variant.h>
 
-resource_t *ultimate_parent(resource_t *rsc);
-
 void node_list_update(GListPtr list1, GListPtr list2, int factor);
 
 void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
@@ -109,16 +107,6 @@ native_choose_node(resource_t *rsc)
 	}
 	
 	return native_assign_node(rsc, nodes, chosen);
-}
-
-resource_t *
-ultimate_parent(resource_t *rsc)
-{
-	resource_t *parent = rsc;
-	while(parent->parent) {
-		parent = parent->parent;
-	}
-	return parent;
 }
 
 GListPtr
