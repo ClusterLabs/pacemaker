@@ -332,7 +332,7 @@ convert_non_atomic_task(resource_t *rsc, order_constraint_t *order)
 	int task = no_action;
 	char *old_uuid = order->lh_action_task;
 
-	crm_debug("Processing %s", old_uuid);
+	crm_debug_3("Processing %s", old_uuid);
 	
 	if(order->lh_action_task == NULL
 	   || strstr(order->lh_action_task, "notify") != NULL) {
@@ -377,7 +377,7 @@ convert_non_atomic_task(resource_t *rsc, order_constraint_t *order)
 			order->lh_action_task = generate_op_key(
 				rsc->id, task2text(task+1), 0);
 		}
-		crm_debug("Converted %s -> %s",
+		crm_debug_2("Converted %s -> %s",
 			  old_uuid, order->lh_action_task);
 		crm_free(old_uuid);
 	}
