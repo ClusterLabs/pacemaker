@@ -197,8 +197,6 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 %pre
 %preun
 
-###########################################################
-
 # Use the following if more commands need to be executed
 # %post
 # /sbin/ldconfig
@@ -207,9 +205,6 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
-
-###########################################################
-
 
 %files
 ###########################################################
