@@ -701,6 +701,11 @@ cib_native_callback(cib_t *cib, struct ha_msg *msg)
 	}
 
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
+	if(rc == cib_diff_resync) {
+	    /* This is anare internal value that clients do not and should not care about */
+	    rc = cib_ok;
+	}
+
 	output = get_message_xml(msg, F_CIB_CALLDATA);
 	
 	if(local_blob.callback != NULL
