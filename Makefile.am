@@ -21,10 +21,10 @@
 EXTRA_DIST              = bootstrap ConfigureMe README.in libltdl.tar
 
 RPM			= @RPM@
-RPMFLAGS		= -ta
+RPMFLAGS		= -ba
 TARFILE			= pacemaker.tar.gz
 AM_TAR			= tar
-LAST_RELEASE		= obs-2.1.2-24
+LAST_RELEASE		= Pacemaker-0.6.0
 
 AUTOMAKE_OPTIONS	= foreign
 ##ACLOCAL                 = aclocal -I $(auxdir)
@@ -61,8 +61,23 @@ changes:
 obs:	tgz
 	scp $(TARFILE) vmhost.beekhof.net:Development/obs/server:ha-clustering/pacemaker/
 
-rpm:	tgz
-	$(RPM) $(RPMFLAGS) $(TARFILE) </dev/null;
+global:
+	gtags
+	htags -sanhIT
+
+global-www: global
+	rsync -avzxlSD --progress HTML/ root@clusterlabs.org:/var/lib/global/pacemaker
+
+rpmtgz: tgz
+	echo "Installing $(TARFILE) into /usr/src/packages/SOURCES for rpm"
+	cp $(TARFILE) /usr/src/packages/SOURCES/
+
+rpm:	rpmtgz
+	$(RPM) $(RPMFLAGS) $(top_srcdir)/pacemaker.spec </dev/null;
+
+drpm:	rpmtgz
+	$(RPM) --nodeps $(RPMFLAGS) $(top_srcdir)/pacemaker.spec </dev/null;
+
 
 deb:	tgz
 	rm -rf $(distdir)
@@ -90,8 +105,5 @@ pkg:
 # "port" format for BSD
 portfile:	dist
 		( cd build/port && $(MAKE) PWD=`pwd` portfile)
-
-drpm:		dist
-		$(RPM) --nodeps $(RPMFLAGS) $(TARFILE) </dev/null;
 
 .PHONY: rpm pkg handy handy-copy
