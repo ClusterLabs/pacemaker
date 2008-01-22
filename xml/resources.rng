@@ -91,16 +91,16 @@
   </define>
 
   <define name="element-resource-extra">
-    <optional>
-      <element name="meta_attributes">
-	<externalRef href="nvset.rng"/>
-      </element>
-    </optional>
-    <optional>
-      <element name="instance_attributes">
-	<externalRef href="nvset.rng"/>
-      </element>
-    </optional>
+      <zeroOrMore>
+	<choice>
+	  <element name="meta_attributes">
+	    <externalRef href="nvset.rng"/>
+	  </element>
+	  <element name="instance_attributes">
+	    <externalRef href="nvset.rng"/>
+	  </element>
+	</choice>
+      </zeroOrMore>
   </define>
  
   <define name="element-operations">
