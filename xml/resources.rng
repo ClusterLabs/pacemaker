@@ -18,25 +18,25 @@
 
   <define name="element-primitive">
     <element name="primitive">
-      <attribute name="id"><data type="ID"/></attribute>
-      <choice>
-	<group>
-	  <attribute name="class"><value>ocf</value></attribute>
-	  <attribute name="provider"><text/></attribute>
-	</group>
-	<attribute name="class">
-	  <choice>
-	    <value>lsb</value>
-	    <value>heartbeat</value>
-	    <value>stonith</value>
-	  </choice>
-	</attribute>
-      </choice>
-      <attribute name="type"><text/></attribute>
-      <optional>
-	<attribute name="description"><text/></attribute>
-      </optional>
       <interleave>
+	<attribute name="id"><data type="ID"/></attribute>
+	<choice>
+	  <group>
+	    <attribute name="class"><value>ocf</value></attribute>
+	    <attribute name="provider"><text/></attribute>
+	  </group>
+	  <attribute name="class">
+	    <choice>
+	      <value>lsb</value>
+	      <value>heartbeat</value>
+	      <value>stonith</value>
+	    </choice>
+	  </attribute>
+	</choice>
+	<attribute name="type"><text/></attribute>
+	<optional>
+	  <attribute name="description"><text/></attribute>
+	</optional>
 	<ref name="element-resource-extra"/>
 	<ref name="element-operations"/>
       </interleave>
@@ -109,34 +109,46 @@
 	<zeroOrMore>
 	  <element name="op">
 	    <attribute name="id"><data type="ID"/></attribute>
-	    <attribute name="description"><text/></attribute>
 	    <attribute name="name"><text/></attribute>
-	    <attribute name="interval"><data type="integer"/></attribute>
-	    <attribute name="timeout"><data type="integer"/></attribute>
-	    <attribute name="enabled"><data type="boolean"/></attribute>
-	    <attribute name="role">
-	      <choice>
-		<value>Started</value>
-		<value>Slave</value>
-		<value>Master</value>
-	      </choice>
-	    </attribute>
-	    <attribute name="requires">
-	      <choice>
-		<value>nothing</value>
-		<value>quorum</value>
-		<value>fencing</value>
-	      </choice>
-	    </attribute>
-	    <attribute name="on-fail">
-	      <choice>
-		<value>ignore</value>
-		<value>block</value>
-		<value>stop</value>
-		<value>restart</value>
-		<value>fence</value>
-	      </choice>
-	    </attribute>
+	    <attribute name="interval"><text/></attribute>
+	    <optional>
+	      <attribute name="description"><text/></attribute>
+	    </optional>
+	    <optional>
+	      <attribute name="timeout"><text/></attribute>
+	    </optional>
+	    <optional>
+	      <attribute name="enabled"><data type="boolean"/></attribute>
+	    </optional>
+	    <optional>
+	      <attribute name="role">
+		<choice>
+		  <value>Started</value>
+		  <value>Slave</value>
+		  <value>Master</value>
+		</choice>
+	      </attribute>
+	    </optional>
+	    <optional>
+	      <attribute name="requires">
+		<choice>
+		  <value>nothing</value>
+		  <value>quorum</value>
+		  <value>fencing</value>
+		</choice>
+	      </attribute>
+	    </optional>
+	    <optional>
+	      <attribute name="on-fail">
+		<choice>
+		  <value>ignore</value>
+		  <value>block</value>
+		  <value>stop</value>
+		  <value>restart</value>
+		  <value>fence</value>
+		</choice>
+	      </attribute>
+	    </optional>
 	    <ref name="element-resource-extra"/>
 	  </element>
 	</zeroOrMore>
