@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <grammar xmlns="http://relaxng.org/ns/structure/1.0" 
-	 xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0"
+	 xmlns:ann="http://relaxng.org/ns/compatibility/annotations/1.0"
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
   <start>
       <ref name="element-rule"/>
@@ -13,12 +13,14 @@
 	<externalRef href="score.rng"/>
 	<attribute name="score_attribute"><data type="IDREF"/></attribute>
       </choice>
-      <attribute name="boolean-op">
-	<choice>
-	  <value>or</value>
-	  <value>and</value>
-	</choice>
-      </attribute>
+      <optional>
+	<attribute name="boolean-op">
+	  <choice>
+	    <value>or</value>
+	    <value>and</value>
+	  </choice>
+	</attribute>
+      </optional>
       <optional>
 	<attribute name="role"><text/></attribute>
       </optional>
@@ -43,7 +45,7 @@
 	      <attribute name="value"><text/></attribute>
 	    </optional>
 	    <optional>
-	      <attribute name="type" a:defaultValue="string">
+	      <attribute name="type" ann:defaultValue="string">
 		<choice>
 		  <value>string</value>
 		  <value>number</value>
