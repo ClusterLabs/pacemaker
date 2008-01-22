@@ -46,7 +46,9 @@
   <define name="element-group">
     <element name="group">
       <attribute name="id"><data type="ID"/></attribute>
-      <attribute name="description"><text/></attribute>
+      <optional>
+	<attribute name="description"><text/></attribute>
+      </optional>
       <interleave>
 	<ref name="element-resource-extra"/>
 	<oneOrMore>
