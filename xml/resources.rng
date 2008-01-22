@@ -61,7 +61,9 @@
   <define name="element-clone">
     <element name="clone">
       <attribute name="id"><data type="ID"/></attribute>
-      <attribute name="description"><text/></attribute>
+      <optional>
+	<attribute name="description"><text/></attribute>
+      </optional>
       <interleave>
 	<ref name="element-resource-extra"/>
 	<choice>
@@ -75,7 +77,9 @@
   <define name="element-master">
     <element name="master">
       <attribute name="id"><data type="ID"/></attribute>
-      <attribute name="description"><text/></attribute>
+      <optional>
+	<attribute name="description"><text/></attribute>
+      </optional>
       <interleave>
 	<ref name="element-resource-extra"/>
 	<choice>
