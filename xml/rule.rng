@@ -11,7 +11,7 @@
       <attribute name="id"><data type="ID"/></attribute>
       <choice>
 	<externalRef href="score.rng"/>
-	<attribute name="score_attribute"><data type="IDREF"/></attribute>
+	<attribute name="score_attribute"><text/></attribute>
       </choice>
       <optional>
 	<attribute name="boolean-op">
@@ -58,22 +58,31 @@
 	    <attribute name="id"><data type="ID"/></attribute>
 	    <choice>
 	      <group>
-		<attribute name="operation">
-		  <choice>
-		    <value>in_range</value>
-		    <value>gt</value>
-		    <value>lt</value>
-		  </choice>
-		</attribute>
-		<attribute name="start"><data type="dateTime"/></attribute>
-		<optional>
-		  <attribute name="end"><data type="dateTime"/></attribute>
-		</optional>
-		<optional>
-		  <element name="duration">
-		    <ref name="date-common"/>
-		  </element> 
-		</optional>
+		<attribute name="operation"><value>in_range</value></attribute>
+		<choice>
+		  <group>
+		    <optional>
+		      <attribute name="start"><text/></attribute>
+		    </optional>
+		    <attribute name="end"><text/></attribute>
+		  </group>
+		  <group>
+		    <attribute name="start"><text/></attribute>
+		    <element name="duration">
+		      <ref name="date-common"/>
+		    </element>
+		  </group>
+		</choice>
+	      </group>
+	      <group>
+		<attribute name="operation"><value>gt</value></attribute>
+		<attribute name="start"><text/></attribute>
+	      </group>
+	      <group>
+		<attribute name="operation"><value>lt</value></attribute>
+		<choice>
+		  <attribute name="end"><text/></attribute>
+		</choice>
 	      </group>
 	      <group>
 		<attribute name="operation"><value>date_spec</value></attribute>
