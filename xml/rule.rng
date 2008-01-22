@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+	 xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+      <ref name="element-rule"/>
+  </start>
+
+  <define name="element-rule">
+    <element name="rule">
+      <attribute name="id"><data type="ID"/></attribute>
+      <choice>
+	<externalRef href="score.rng"/>
+	<attribute name="score_attribute"><data type="IDREF"/></attribute>
+      </choice>
+      <attribute name="boolean-op">
+	<choice>
+	  <value>or</value>
+	  <value>and</value>
+	</choice>
+      </attribute>
+      <optional>
+	<attribute name="role"><text/></attribute>
+      </optional>
+      <oneOrMore>
+	<choice>
+          <element name="expression">
+	    <attribute name="id"><data type="ID"/></attribute>
+	    <attribute name="attribute"><text/></attribute>
+	    <attribute name="operation">
+	      <choice>
+		<value>lt</value>
+		<value>gt</value>
+		<value>lte</value>
+		<value>gte</value>
+		<value>eq</value>
+		<value>ne</value>
+		<value>defined</value>
+		<value>not_defined</value>
+	      </choice>
+	    </attribute>
+	    <optional>
+	      <attribute name="value"><text/></attribute>
+	    </optional>
+	    <optional>
+	      <attribute name="type" a:defaultValue="string">
+		<choice>
+		  <value>string</value>
+		  <value>number</value>
+		  <value>version</value>
+		</choice>
+	      </attribute>
+	    </optional>
+	  </element>
+          <element name="date_expression">
+	    <attribute name="id"><data type="ID"/></attribute>
+	    <choice>
+	      <group>
+		<attribute name="operation">
+		  <choice>
+		    <value>in_range</value>
+		    <value>gt</value>
+		    <value>lt</value>
+		  </choice>
+		</attribute>
+		<attribute name="start"><data type="dateTime"/></attribute>
+		<optional>
+		  <attribute name="end"><data type="dateTime"/></attribute>
+		</optional>
+		<optional>
+		  <element name="duration">
+		    <ref name="date-common"/>
+		  </element> 
+		</optional>
+	      </group>
+	      <group>
+		<attribute name="operation"><value>date_spec</value></attribute>
+		<element name="date_spec">
+		  <ref name="date-common"/>
+		</element> 
+	      </group>
+	    </choice>
+	  </element> 
+	  <ref name="element-rule"/>
+	</choice>
+      </oneOrMore>
+    </element>
+  </define>
+
+  <define name="date-common">
+    <attribute name="id"><data type="ID"/></attribute>
+    <oneOrMore>
+      <optional>
+	<attribute name="hours"><text/></attribute>
+      </optional>
+      <optional>
+	<attribute name="monthdays"><text/></attribute>
+      </optional>
+      <optional>
+	<attribute name="weekdays"><text/></attribute>
+      </optional>
+      <optional>
+	<attribute name="yearsdays"><text/></attribute>
+      </optional>
+      <optional>
+	<attribute name="months"><text/></attribute>
+      </optional>
+      <optional>
+	<attribute name="weeks"><text/></attribute>
+      </optional>
+      <optional>
+	<attribute name="years"><text/></attribute>
+      </optional>
+      <optional>
+	<attribute name="weekyears"><text/></attribute>
+      </optional>
+      <optional>
+	<attribute name="moon"><text/></attribute>
+      </optional>
+    </oneOrMore>
+  </define>
+
+</grammar>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+      <ref name="element-constraints"/>
+  </start>
+
+  <define name="element-constraints">
+      <zeroOrMore>
+	<choice>
+	  <ref name="element-location"/>
+	  <ref name="element-colocation"/>
+	  <ref name="element-order"/>
+	</choice>
+      </zeroOrMore>
+  </define>
+
+  <define name="element-location">
+    <element name="rsc_location">
+      <attribute name="id"><data type="ID"/></attribute>
+      <attribute name="rsc"><data type="IDREF"/></attribute>
+      <choice>
+	<group>
+	  <externalRef href="score.rng"/>
+	  <attribute name="node"><data type="IDREF"/></attribute>
+	</group>
+	<externalRef href="rule.rng"/>
+      </choice>
+      <optional>
+	<ref name="element-lifetime"/>
+      </optional>
+    </element>
+  </define>
+
+  <define name="element-colocation">
+    <element name="rsc_colocation">
+      <attribute name="id"><data type="ID"/></attribute>
+      <attribute name="from"><data type="IDREF"/></attribute>
+      <attribute name="to"><data type="IDREF"/></attribute>
+      <externalRef href="score.rng"/>
+      <optional>
+	<ref name="element-lifetime"/>
+      </optional>
+      <optional>
+	<attribute name="from_role">
+	  <ref name="attribute-roles"/>
+	</attribute>
+      </optional>
+      <optional>
+	<attribute name="to_role">
+	  <ref name="attribute-roles"/>
+	</attribute>
+      </optional>
+    </element>
+  </define>
+
+  <define name="element-order">
+    <element name="rsc_order">
+      <attribute name="id"><data type="ID"/></attribute>
+      <attribute name="from"><data type="IDREF"/></attribute>
+      <attribute name="to"><data type="IDREF"/></attribute>
+      <externalRef href="score.rng"/>
+      <optional>
+	<ref name="element-lifetime"/>
+      </optional>
+      <optional>
+	<attribute name="symmetrical"><data type="boolean"/></attribute>
+      </optional>
+      <optional>
+	<attribute name="action">
+	  <ref name="attribute-actions"/>
+	</attribute>
+      </optional>
+      <optional>
+	<attribute name="to_action">
+	  <ref name="attribute-actions"/>
+	</attribute>
+      </optional>
+    </element>
+  </define>
+ 
+  <define name="attribute-actions">
+    <choice>
+      <value>start</value>
+      <value>promote</value>
+      <value>demote</value>
+      <value>stop</value>
+    </choice>
+  </define>
+      
+  <define name="attribute-roles">
+    <choice>
+      <value>Stopped</value>
+      <value>Started</value>
+      <value>Master</value>
+      <value>Slave</value>
+    </choice>
+  </define>
+
+  <define name="element-lifetime">
+    <element name="lifetime">
+      <oneOrMore>
+	<externalRef href="rule.rng"/>
+      </oneOrMore>
+    </element>
+  </define>
+  
+</grammar>
