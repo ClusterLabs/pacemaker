@@ -24,7 +24,9 @@
 	  <externalRef href="score.rng"/>
 	  <attribute name="node"><data type="IDREF"/></attribute>
 	</group>
-	<externalRef href="rule.rng"/>
+	<oneOrMore>
+	  <externalRef href="rule.rng"/>
+	</oneOrMore>
       </choice>
       <optional>
 	<ref name="element-lifetime"/>
