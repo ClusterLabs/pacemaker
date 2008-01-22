@@ -4,20 +4,8 @@
 <xsl:output method='xml' version='1.0' encoding='UTF-8' indent='yes'/>
 <xsl:template match="status"/>
 
-<xsl:template match="@admin_epoch">
-  <xsl:attribute name="admin-epoch">
-    <xsl:value-of select="."/>
-  </xsl:attribute>
-</xsl:template>
-
-<xsl:template match="@num_updates">
-  <xsl:attribute name="num-updates">
-    <xsl:value-of select="."/>
-  </xsl:attribute>
-</xsl:template>
-
-<xsl:template match="@boolean_op">
-  <xsl:attribute name="boolean-op">
+<xsl:template match="@admin_epoch|@num_updates|@boolean_op">
+  <xsl:attribute name="{translate(name(),'_','-')}">
     <xsl:value-of select="."/>
   </xsl:attribute>
 </xsl:template>
@@ -27,7 +15,6 @@
     <xsl:value-of select="."/>
   </xsl:attribute>
 </xsl:template>
-
 
 <xsl:template match="cib">
   <xsl:element name="{name()}">
@@ -44,7 +31,7 @@
   <!--xsl:apply-templates/-->
 </xsl:template>
 
-<xsl:template match="configuration|nodes|crm_config|resources|constraints|attributes">
+<xsl:template match="configuration|nodes|node|crm_config|resources|constraints|attributes">
   <xsl:element name="{name()}">
     <xsl:apply-templates select="@*"/>
     <xsl:apply-templates select="node()" />
