@@ -10,6 +10,12 @@
   </xsl:attribute>
 </xsl:template>
 
+<xsl:template match="@score">
+  <xsl:attribute name="{name()}">
+    <xsl:value-of select="substring-before(.,'.')"/>
+  </xsl:attribute>
+</xsl:template>
+
 <xsl:template match="@*">
   <xsl:attribute name="{name()}">
     <xsl:value-of select="."/>
@@ -42,7 +48,7 @@
   <xsl:element name="{name()}">
     <xsl:attribute name="id">
       <xsl:value-of select="name()"/>
-      <xsl:text>-auto-</xsl:text>
+      <xsl:text>.auto-</xsl:text>
       <xsl:number level="any" from="cib"/>
     </xsl:attribute>
     <xsl:apply-templates select="@*"/>
