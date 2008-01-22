@@ -7,6 +7,7 @@
   </start>
 
   <define name="element-nvset">
+    <attribute name="id"><data type="ID"/></attribute>
     <interleave>
       <optional>
 	<externalRef href="rule.rng"/>
@@ -22,7 +23,6 @@
 	  </element>
 	</zeroOrMore>
       </element>
-      <attribute name="id"><data type="ID"/></attribute>
       <optional>
 	<externalRef href="score.rng"/>
       </optional>
