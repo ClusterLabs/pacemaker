@@ -70,10 +70,7 @@
     <element name="nodes">
       <zeroOrMore>
 	<element name="node">
-	  <choice>
-	    <attribute name="id"><data type="ID"/></attribute>
-	    <attribute name="id"><data type="IDREF"/></attribute>
-	  </choice>
+	  <attribute name="id"><text/></attribute>
 	  <attribute name="uname"><data type="ID"/></attribute>
 	  <attribute name="type">
 	    <choice>
