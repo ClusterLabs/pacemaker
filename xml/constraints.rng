@@ -37,8 +37,8 @@
   <define name="element-colocation">
     <element name="rsc_colocation">
       <attribute name="id"><data type="ID"/></attribute>
-      <attribute name="from"><text/></attribute>
-      <attribute name="to"><text/></attribute>
+      <attribute name="rsc"><text/></attribute>
+      <attribute name="with"><text/></attribute>
       <!-- Ideally these would be IDREFs, but that excludes colocation with individual clones
 	   <attribute name="from"><data type="IDREF"/></attribute>
 	   <attribute name="to"><data type="IDREF"/></attribute>
@@ -48,12 +48,12 @@
 	<ref name="element-lifetime"/>
       </optional>
       <optional>
-	<attribute name="from_role">
+	<attribute name="rsc-role">
 	  <ref name="attribute-roles"/>
 	</attribute>
       </optional>
       <optional>
-	<attribute name="to_role">
+	<attribute name="with-rsc-role">
 	  <ref name="attribute-roles"/>
 	</attribute>
       </optional>
@@ -63,8 +63,8 @@
   <define name="element-order">
     <element name="rsc_order">
       <attribute name="id"><data type="ID"/></attribute>
-      <attribute name="from"><data type="IDREF"/></attribute>
-      <attribute name="to"><data type="IDREF"/></attribute>
+      <attribute name="rsc"><data type="IDREF"/></attribute>
+      <attribute name="before"><data type="IDREF"/></attribute>
       <optional>
 	<externalRef href="score.rng"/>
       </optional>
@@ -75,12 +75,12 @@
 	<attribute name="symmetrical"><data type="boolean"/></attribute>
       </optional>
       <optional>
-	<attribute name="action">
+	<attribute name="rsc-action">
 	  <ref name="attribute-actions"/>
 	</attribute>
       </optional>
       <optional>
-	<attribute name="to_action">
+	<attribute name="before-rsc-action">
 	  <ref name="attribute-actions"/>
 	</attribute>
       </optional>

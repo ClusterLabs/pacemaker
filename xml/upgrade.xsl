@@ -64,8 +64,36 @@
   </xsl:if>
 </xsl:template>
 
-<xsl:template match="@to_role|@role|@from_role">
+<xsl:template match="@action">
+  <xsl:attribute name="rsc-action">
+    <xsl:value-of select="."/>
+  </xsl:attribute>
+</xsl:template>
+
+<xsl:template match="@to_action">
+  <xsl:attribute name="before-rsc-action">
+    <xsl:value-of select="."/>
+  </xsl:attribute>
+</xsl:template>
+
+<xsl:template match="@role">
   <xsl:attribute name="{name()}">
+    <xsl:call-template name="camel-case-value">
+      <xsl:with-param name="value"><xsl:value-of select="."/></xsl:with-param>
+    </xsl:call-template>
+  </xsl:attribute>
+</xsl:template>
+
+<xsl:template match="@from_role">
+  <xsl:attribute name="rsc-role">
+    <xsl:call-template name="camel-case-value">
+      <xsl:with-param name="value"><xsl:value-of select="."/></xsl:with-param>
+    </xsl:call-template>
+  </xsl:attribute>
+</xsl:template>
+
+<xsl:template match="@to_role">
+  <xsl:attribute name="with-rsc-role">
     <xsl:call-template name="camel-case-value">
       <xsl:with-param name="value"><xsl:value-of select="."/></xsl:with-param>
     </xsl:call-template>
@@ -322,40 +350,98 @@
   </xsl:element>
 </xsl:template>
 
+<xsl:template match="rsc_colocation">
+  <xsl:element name="{name()}">
+
+    <!-- set a automatic ID -->
+    <xsl:call-template name="auto-id"/>
+    
+    <xsl:attribute name="rsc">
+      <xsl:value-of select="@from"/>
+    </xsl:attribute>
+    <xsl:attribute name="with">
+      <xsl:value-of select="@to"/>
+    </xsl:attribute>
+    
+    <xsl:for-each select="@*"> 
+      <xsl:choose>
+	<xsl:when test="starts-with(name(), 'to')"/>
+	<xsl:when test="starts-with(name(), 'from')"/>
+	<xsl:otherwise>
+	  <xsl:apply-templates select="."/>
+	</xsl:otherwise>
+      </xsl:choose>
+    </xsl:for-each>
+    <xsl:apply-templates select="node()" />
+
+  </xsl:element>
+</xsl:template>
+
 <xsl:template match="rsc_order">
   <xsl:element name="{name()}">
 
     <!-- set a automatic ID -->
     <xsl:call-template name="auto-id"/>
 
+    <!-- normalize ordering  -->
+    <xsl:choose>
+      <xsl:when test="not(contains(@type, 'before'))">
+	<xsl:choose>
+	  <xsl:when test="@to_action">
+	    <xsl:attribute name="rsc-action">
+	      <xsl:value-of select="@to_action"/>
+	    </xsl:attribute>
+	  </xsl:when>
+	  <xsl:when test="@action">
+	    <xsl:attribute name="rsc-action">
+	      <xsl:value-of select="@action"/>
+	    </xsl:attribute>
+	</xsl:when>
+	</xsl:choose>
+	<xsl:attribute name="rsc">
+	  <xsl:value-of select="@to"/>
+	</xsl:attribute>
+	<xsl:attribute name="before">
+	  <xsl:value-of select="@from"/>
+	</xsl:attribute>
+	<xsl:if test="@action">
+	  <xsl:attribute name="before-rsc-action">
+	  <xsl:value-of select="@action"/>
+	  </xsl:attribute>
+	</xsl:if>
+      </xsl:when>
+      <xsl:otherwise>
+	<xsl:if test="@action">
+	  <xsl:attribute name="rsc-action">
+	  <xsl:value-of select="@action"/>
+	  </xsl:attribute>
+	</xsl:if>
+	<xsl:attribute name="rsc">
+	  <xsl:value-of select="@from"/>
+	</xsl:attribute>
+	<xsl:attribute name="before">
+	  <xsl:value-of select="@to"/>
+	</xsl:attribute>
+	<xsl:if test="@to_action">
+	  <xsl:attribute name="before-rsc-action">
+	    <xsl:value-of select="@to_action"/>
+	  </xsl:attribute>
+	</xsl:if>
+      </xsl:otherwise>
+    </xsl:choose>
+
     <xsl:for-each select="@*"> 
       <xsl:choose>
-	<xsl:when test="not(contains(name(), 'type'))">
+	<xsl:when test="starts-with(name(), 'to')"/>
+	<xsl:when test="starts-with(name(), 'from')"/>
+	<xsl:when test="contains(name(), 'action')"/>
+	<xsl:when test="starts-with(name(), 'type')"/>
+	<xsl:otherwise>
 	  <xsl:apply-templates select="."/>
-	</xsl:when>
+	</xsl:otherwise>
       </xsl:choose>
     </xsl:for-each>
     <xsl:apply-templates select="node()" />
-
-    <!-- normalize ordering  -->
-    <xsl:if test="contains(@type, 'before')">
-      <xsl:attribute name="from">
-	<xsl:value-of select="@to"/>
-      </xsl:attribute>
-      <xsl:attribute name="to">
-	<xsl:value-of select="@from"/>
-      </xsl:attribute>
-      <xsl:if test="@to_role">
-	  <xsl:attribute name="from_role">
-	    <xsl:value-of select="@to_role"/>
-	  </xsl:attribute>
-      </xsl:if>
-      <xsl:if test="@from_role">
-	<xsl:attribute name="to_role">
-	  <xsl:value-of select="@from_role"/>
-	</xsl:attribute>
-      </xsl:if>
-    </xsl:if>
 
   </xsl:element>
   <!--xsl:apply-templates/-->
