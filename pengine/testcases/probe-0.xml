@@ -34,7 +34,7 @@
            </operations>
            <instance_attributes id="stonithclone">
              <attributes>
-               <nvpair id="stonithclone-01" name="hostlist" value="x32c47,x32c48"/>
+               <nvpair id="stonithclone-01" name="hostlist" value="32c47,32c48"/>
              </attributes>
            </instance_attributes>
          </primitive>
