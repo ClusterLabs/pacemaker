@@ -17,8 +17,8 @@
        </cluster_property_set>
      </crm_config>
      <nodes>
-       <node id="ca93fea5-67c9-473d-9ce0-7ed7fb823872" uname="32c48" type="normal"/>
-       <node id="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410" uname="32c47" type="normal"/>
+       <node id="ca93fea5-67c9-473d-9ce0-7ed7fb823872" uname="x32c48" type="normal"/>
+       <node id="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410" uname="x32c47" type="normal"/>
      </nodes>
      <resources>
        <clone id="stonithcloneset" globally_unique="false">
@@ -34,7 +34,7 @@
            </operations>
            <instance_attributes id="stonithclone">
              <attributes>
-               <nvpair id="stonithclone-01" name="hostlist" value="32c47,32c48"/>
+               <nvpair id="stonithclone-01" name="hostlist" value="x32c47,x32c48"/>
              </attributes>
            </instance_attributes>
          </primitive>
@@ -77,7 +77,7 @@
      <constraints/>
    </configuration>
    <status>
-     <node_state id="ca93fea5-67c9-473d-9ce0-7ed7fb823872" uname="32c48" crmd="online"  shutdown="0" in_ccm="true" join="member" ha="active" expected="member">
+     <node_state id="ca93fea5-67c9-473d-9ce0-7ed7fb823872" uname="x32c48" crmd="online"  shutdown="0" in_ccm="true" join="member" ha="active" expected="member">
        <lrm id="ca93fea5-67c9-473d-9ce0-7ed7fb823872">
          <lrm_resources>
            <lrm_resource id="stonithclone:0" type="null" class="stonith" provider="heartbeat">
@@ -100,7 +100,7 @@
          </instance_attributes>
        </transient_attributes>
      </node_state>
-     <node_state id="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410" uname="32c47" crmd="online"  shutdown="0" in_ccm="true" join="member" ha="active" expected="member">
+     <node_state id="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410" uname="x32c47" crmd="online"  shutdown="0" in_ccm="true" join="member" ha="active" expected="member">
        <transient_attributes id="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410">
          <instance_attributes id="status-a1dbc8cc-4d33-41e7-a75a-cd4f93b26410">
            <attributes>
