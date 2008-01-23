@@ -447,7 +447,7 @@ test_date_expression(crm_data_t *time_expr, ha_time_t *now)
 		crm_free(value_copy_start);
 	}
 
-	if(start != NULL && end == NULL) {
+	if(start != NULL && end == NULL && duration_spec != NULL) {
  		end = parse_xml_duration(start, duration_spec);
 	}
 	if(op == NULL) {
