@@ -61,7 +61,9 @@
       <attribute name="id"><data type="ID"/></attribute>
       <attribute name="from"><data type="IDREF"/></attribute>
       <attribute name="to"><data type="IDREF"/></attribute>
-      <externalRef href="score.rng"/>
+      <optional>
+	<externalRef href="score.rng"/>
+      </optional>
       <optional>
 	<ref name="element-lifetime"/>
       </optional>
