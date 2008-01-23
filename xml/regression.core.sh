@@ -59,13 +59,13 @@ function do_test {
 	return;
     fi
 
-    xmllint --relaxng pacemaker-1.0.rng $output > /dev/null
+    xmllint --relaxng pacemaker-1.0.rng $output > /dev/null 2>&1
 
     if [ $? != 0 ]; then
 	echo "	* Failed (xml : xmllint)";
 	num_failed=`expr $num_failed + 1`
+	xmllint --relaxng pacemaker-1.0.rng $output > /dev/null
 	cat -n $output
-	exit
     fi
 
     rm -f $output
