@@ -37,8 +37,12 @@
   <define name="element-colocation">
     <element name="rsc_colocation">
       <attribute name="id"><data type="ID"/></attribute>
-      <attribute name="from"><data type="IDREF"/></attribute>
-      <attribute name="to"><data type="IDREF"/></attribute>
+      <attribute name="from"><text/></attribute>
+      <attribute name="to"><text/></attribute>
+      <!-- Ideally these would be IDREFs, but that excludes colocation with individual clones
+	   <attribute name="from"><data type="IDREF"/></attribute>
+	   <attribute name="to"><data type="IDREF"/></attribute>
+	  -->
       <externalRef href="score.rng"/>
       <optional>
 	<ref name="element-lifetime"/>
