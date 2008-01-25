@@ -191,6 +191,8 @@ text2task(const char *task)
 		return no_action;
 	} else if(safe_str_eq(task, CRM_OP_LRM_REFRESH)) {
 		return no_action;	
+	} else if(safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
+		return no_action;    
 	} else if(safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
 		return no_action;	
 	} else if(safe_str_eq(task, "fail")) {
