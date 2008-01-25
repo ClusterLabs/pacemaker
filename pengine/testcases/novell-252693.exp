@@ -543,6 +543,9 @@
        <trigger>
          <rsc_op id="73" operation="migrate_to" operation_key="sles10_migrate_to_0" on_node="node1" on_node_uuid="3d8227f0-31dd-4801-b0db-987909d4a321"/>
        </trigger>
+       <trigger>
+         <rsc_op id="74" operation="migrate_from" operation_key="sles10_migrate_from_0" on_node="node2" on_node_uuid="997c3f45-7e3f-4c70-8d9a-623ba1678a6e"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="40">
@@ -569,6 +572,9 @@
        </trigger>
        <trigger>
          <rsc_op id="73" operation="migrate_to" operation_key="sles10_migrate_to_0" on_node="node1" on_node_uuid="3d8227f0-31dd-4801-b0db-987909d4a321"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="74" operation="migrate_from" operation_key="sles10_migrate_from_0" on_node="node2" on_node_uuid="997c3f45-7e3f-4c70-8d9a-623ba1678a6e"/>
        </trigger>
      </inputs>
    </synapse>

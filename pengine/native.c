@@ -1675,11 +1675,108 @@ complex_stonith_ordering(
 	native_stop_constraints(rsc,  stonith_op, is_stonith, data_set);
 }
 
+#define ALLOW_WEAK_MIGRATION 0
+
+static gboolean
+at_stack_bottom(resource_t *rsc, pe_working_set_t *data_set) 
+{
+    char *key = NULL;
+    action_t *start = NULL;
+    action_t *other = NULL;
+    int level = LOG_DEBUG;
+    GListPtr action_list = NULL;
+    
+    key = start_key(rsc);
+    action_list = find_actions(rsc->actions, key, NULL);
+    crm_free(key);
+    
+    do_crm_log(level, "%s: processing", rsc->id);
+    CRM_CHECK(action_list != NULL,
+	      do_crm_log(level, "%s: no start action", rsc->id);
+	      return FALSE);
+    
+    start = action_list->data;
+    g_list_free(action_list);
+    
+    slist_iter(
+	other_w, action_wrapper_t, start->actions_before, lpc,
+	other = other_w->action;
+
+	if(other->optional) {
+	    crm_debug_2("%s: depends on %s (optional)",
+			rsc->id, other->uuid);
+	    continue;
+
+#if ALLOW_WEAK_MIGRATION
+	} else if((other_w->type & pe_order_implies_right) == 0) {
+	    crm_debug_2("%s: depends on %s (optional ordering)",
+			rsc->id, other->uuid);
+	    continue;
+#endif    
+	
+	} else if(other->rsc == NULL || other->rsc == rsc) {
+	    continue;
+	}
+	
+	if(other->rsc->variant == pe_native) {
+	    do_crm_log(level, "%s: depends on %s (mid-stack)",
+		       rsc->id, other->uuid);
+	    return FALSE;
+	    
+	} else if(other->rsc->variant == pe_group) {
+	    if(at_stack_bottom(other->rsc, data_set) == FALSE) {
+		do_crm_log(level, "%s: depends on group %s (mid-stack)",
+			   rsc->id, other->uuid);
+		return FALSE;
+	    }
+	    continue;
+	}
+	
+	/* is the clone also moving moved around?
+	 *
+	 * if so, then we can't yet be completely sure the
+	 *   resource can safely migrate since the node we're
+	 *   moving too may not have the clone instance started
+	 *   yet
+	 *
+	 * in theory we can figure out if the clone instance we
+	 *   will run on is already there, but there that would
+	 *   involve too much knowledge of internal clone code.
+	 *   maybe later...
+	 */
+
+	do_crm_log(level+1,"%s: start depends on clone %s",
+		   rsc->id, other->uuid);
+	key = stop_key(other->rsc);
+	action_list = find_actions(other->rsc->actions, key, NULL);
+	crm_free(key);
+	
+	slist_iter(
+	    other_stop, action_t, action_list,lpc,
+	    if(other_stop && other_stop->optional == FALSE) {
+		do_crm_log(level, "%s: start depends on %s",
+			   rsc->id, other_stop->uuid);
+
+		g_list_free(action_list);
+		return FALSE;
+	    }
+	    );
+	g_list_free(action_list);
+	);
+#if 0    
+    if(rsc->parent && at_stack_bottom(rsc->parent, data_set) == FALSE) {
+	return FALSE;
+    }
+#endif
+    
+    return TRUE;
+}
+
 void
 complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 {
 	char *key = NULL;
-	int level = LOG_DEBUG_2;
+	int level = LOG_DEBUG;
 	GListPtr action_list = NULL;
 	
 	action_t *stop = NULL;
@@ -1694,17 +1791,19 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		
 		child_rsc->cmds->migrate_reload(child_rsc, data_set);
 		);
+	    other = NULL;
 	    return;
 	}
 
+	do_crm_log(level+1, "Processing %s", rsc->id);
 	CRM_CHECK(rsc->variant == pe_native, return);
 	
 	if(is_not_set(rsc->flags, pe_rsc_managed)
 	   || is_set(rsc->flags, pe_rsc_failed)
 	   || is_set(rsc->flags, pe_rsc_start_pending)
-	   || rsc->next_role != RSC_ROLE_STARTED		   
+	   || rsc->next_role != RSC_ROLE_STARTED
 	   || g_list_length(rsc->running_on) != 1) {
-		do_crm_log(level, "%s: resource", rsc->id);
+		do_crm_log(level+1, "%s: general resource state", rsc->id);
 		return;
 	}
 	
@@ -1719,15 +1818,15 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	
 	start = action_list->data;
 	g_list_free(action_list);
-	
+
 	value = g_hash_table_lookup(rsc->meta, "allow_migrate");
 	if(crm_is_true(value)) {
 	    set_bit(rsc->flags, pe_rsc_can_migrate);	
-	}
-	
+	}	
+
 	if(is_not_set(rsc->flags, pe_rsc_can_migrate)
 	   && start->allow_reload_conversion == FALSE) {
-		do_crm_log(level, "%s: no need to continue", rsc->id);
+		do_crm_log(level+1, "%s: no need to continue", rsc->id);
 		return;
 	}
 	
@@ -1761,76 +1860,23 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		return;
 	}
 	
-	slist_iter(
-		other_w, action_wrapper_t, start->actions_before, lpc,
-		gboolean can_migrate = TRUE;
-		resource_t *parent = NULL;
-		other = other_w->action;
-		parent = uber_parent(other->rsc);
+	if(is_set(rsc->flags, pe_rsc_can_migrate)) {
+	    if(start->node == NULL
+	       || stop->node == NULL
+	       || stop->node->details == start->node->details) {
+		clear_bit(rsc->flags, pe_rsc_can_migrate);
 
-		if(other->optional == TRUE
-		   || other->rsc == rsc
-		   || parent == NULL) {
-			continue;
-		}
+	    } else if(at_stack_bottom(rsc, data_set) == FALSE) {
+		crm_notice("Cannot migrate %s from %s to %s"
+			   " - %s is not at the bottom of the resource stack",
+			   rsc->id, stop->node->details->uname,
+			   start->node->details->uname, rsc->id);
+		clear_bit(rsc->flags, pe_rsc_can_migrate);
+	    }
+	}
 
-		if(parent->variant == pe_native
-		   || parent->variant == pe_group) {
-			/* clones are the only ones that can be "moved"
-			 * and still allow resources sitting on top of
-			 * them (ie. us) to be migrated 
-			 */
-			can_migrate = FALSE;
-			
-		} else if(safe_str_eq(other->task, CRMD_ACTION_MIGRATE)
-			  || safe_str_eq(other->task, CRMD_ACTION_MIGRATED)) {
-			/* we depend on something that is already migrating...
-			 * we cant both migrate
-			 */
-			can_migrate = FALSE;
-			
-		} else {
-			/* is the clone also moving moved around?
-			 *
-			 * if so, then we can't yet be completely sure the
-			 *   resource can safely migrate since the node we're
-			 *   moving too may not have the clone instance started
-			 *   yet
-			 *
-			 * in theory we can figure out if the clone instance we
-			 *   will run on is already there, but there that would
-			 *   involve too much knowledge of internal clone code.
-			 *   maybe later...
-			 */
-			do_crm_log(level,
-				   "%s: start depends on clone %s",
-				   rsc->id, parent->id);
-			key = stop_key(parent);
-			action_list = find_actions(parent->actions, key, NULL);
-			crm_free(key);
-			
-			slist_iter(
-				other_stop, action_t, action_list,lpc,
-				if(other_stop && other_stop->optional == FALSE) {
-					do_crm_log(LOG_INFO,
-						   "%s: start depends on %s",
-						   rsc->id, other_stop->uuid);
-					can_migrate = FALSE;
-				}
-				);
-			g_list_free(action_list);
-		}
-		
-		if(can_migrate == FALSE) {
-			do_crm_log(LOG_INFO, "%s: start depends on %s",
-				   rsc->id, other->uuid);
-			return;
-		}
-		);
-
-	if(is_set(rsc->flags, pe_rsc_can_migrate)
-	   && stop->node->details != start->node->details) {
-		crm_info("Migrating %s from %s to %s", rsc->id,
+	if(is_set(rsc->flags, pe_rsc_can_migrate)) {
+		crm_notice("Migrating %s from %s to %s", rsc->id,
 			 stop->node->details->uname,
 			 start->node->details->uname);
 		
@@ -1843,17 +1889,33 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		add_hash_param(stop->meta, "migrate_target",
 			       start->node->details->uname);
 
+		/* Hook up to the all_stopped and shutdown actions */
+		slist_iter(
+			other_w, action_wrapper_t, stop->actions_after, lpc,
+			other = other_w->action;
+			if(other->optional == FALSE
+			   && other->rsc == NULL) {
+				order_actions(start, other, other_w->type);
+			}
+			);
 
 		slist_iter(
 			other_w, action_wrapper_t, start->actions_before, lpc,
 			other = other_w->action;
 			if(other->optional == FALSE
+#if ALLOW_WEAK_MIGRATION
+			   && (other_w->type & pe_order_implies_right)
+#endif
 			   && other->rsc != NULL
+			   && other->rsc != rsc->parent
 			   && other->rsc != rsc) {
+				do_crm_log(level, "Ordering %s before %s",
+					   other->uuid, stop->uuid);
+			    
 				order_actions(other, stop, other_w->type);
 			}
 			);
-		
+
 		crm_free(start->uuid);
 		crm_free(start->task);
 		start->task = crm_strdup(CRMD_ACTION_MIGRATED);
@@ -1877,6 +1939,6 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		stop->pseudo = TRUE; /* easier than trying to delete it from the graph */
 		
 	} else {
-		do_crm_log(level, "%s nothing to do", rsc->id);
+		do_crm_log(level+1, "%s nothing to do", rsc->id);
 	}
 }

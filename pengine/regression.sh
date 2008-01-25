@@ -166,6 +166,7 @@ do_test migrate-4 "Migrate (failed migrate_from)"
 do_test novell-252693 "Migration in a stopping stack"
 do_test novell-252693-2 "Migration in a starting stack"
 do_test novell-252693-3 "Non-Migration in a starting and stopping stack"
+do_test bug-1820 "Migration in a group"
 
 #echo ""
 #do_test complex1 "Complex	"
