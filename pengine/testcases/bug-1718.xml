@@ -17,7 +17,6 @@
        </node>
        <node id="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57" uname="heartbeat.ds9" type="normal"/>
        <node id="1e550a7a-16a2-453a-81c3-8d6e04919dad" uname="ops.ds9" type="normal"/>
-       <node id="ed7370db-6624-4d23-a723-9fafcd031f21" uname="defiant.ds9" type="normal"/>
        <node id="de2a634c-e405-42bb-9df2-292e36ad5970" uname="biggame.ds9" type="normal"/>
        <node id="674234bf-84a9-4059-8d48-28e273cc280e" uname="warbird.ds9" type="normal"/>
      </nodes>
