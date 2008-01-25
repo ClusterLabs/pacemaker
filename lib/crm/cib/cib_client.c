@@ -1128,12 +1128,14 @@ cib_config_changed(crm_data_t *old_cib, crm_data_t *new_cib, crm_data_t **result
 		if(xml_has_child(dest, "status")) {
 			cl_msg_remove(dest, "status");
 		}
+
+		xml_prop_iter(dest, name, value, config_changes = TRUE);
+		
 		if(xml_has_children(dest)) {
 			config_changes = TRUE;
 		}
 	}
 
-	/* TODO: Check cib attributes */
 	
 	if(result) {
 		*result = diff;
