@@ -561,9 +561,8 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
 	new_con->role_lh = text2role(state_lh);
 	new_con->role_rh = text2role(state_rh);
 	new_con->node_attribute = node_attr;
-	
-	crm_debug_4("Adding constraint %s (%p) to %s",
-		  new_con->id, new_con, rsc_lh->id);
+
+	crm_debug_4("%s ==> %s (%d)", rsc_lh->id, rsc_rh->id, score);
 	
 	rsc_lh->rsc_cons = g_list_insert_sorted(
 		rsc_lh->rsc_cons, new_con, sort_cons_priority_rh);

@@ -30,6 +30,8 @@
 #define VARIANT_NATIVE 1
 #include <lib/crm/pengine/variant.h>
 
+gboolean at_stack_bottom(resource_t *rsc);
+
 void node_list_update(GListPtr list1, GListPtr list2, int factor);
 
 void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
@@ -1678,97 +1680,113 @@ complex_stonith_ordering(
 #define ALLOW_WEAK_MIGRATION 0
 
 static gboolean
-at_stack_bottom(resource_t *rsc, pe_working_set_t *data_set) 
+check_stack_element(resource_t *rsc, resource_t *other_rsc, const char *type) 
+{
+    char *key = NULL;
+    int level = LOG_DEBUG;
+    GListPtr action_list = NULL;
+
+    if(other_rsc == NULL || other_rsc == rsc) {
+	return TRUE;
+    }
+
+    do_crm_log(level+1, "%s: processing %s (%s)", rsc->id, other_rsc->id, type);
+    
+    if(other_rsc->variant == pe_native) {
+	do_crm_log(level, "%s: depends on %s (mid-stack) %s",
+		   rsc->id, other_rsc->id, type);
+	return FALSE;
+	
+    } else if(other_rsc->variant == pe_group) {
+	if(at_stack_bottom(other_rsc) == FALSE) {
+	    do_crm_log(level, "%s: depends on group %s (mid-stack) %s",
+		       rsc->id, other_rsc->id, type);
+	    return FALSE;
+	}
+	return TRUE;
+    }
+    
+    /* is the clone also moving moved around?
+     *
+     * if so, then we can't yet be completely sure the
+     *   resource can safely migrate since the node we're
+     *   moving too may not have the clone instance started
+     *   yet
+     *
+     * in theory we can figure out if the clone instance we
+     *   will run on is already there, but there that would
+     *   involve too much knowledge of internal clone code.
+     *   maybe later...
+     */
+    
+    do_crm_log(level+1,"%s: start depends on clone %s",
+	       rsc->id, other_rsc->id);
+    key = stop_key(other_rsc);
+    action_list = find_actions(other_rsc->actions, key, NULL);
+    crm_free(key);
+    
+    slist_iter(
+	other_stop, action_t, action_list,lpc,
+	if(other_stop && other_stop->optional == FALSE) {
+	    do_crm_log(level, "%s: start depends on %s",
+		       rsc->id, other_stop->uuid);
+	    
+	    g_list_free(action_list);
+	    return FALSE;
+	}
+	);
+    g_list_free(action_list);
+    return TRUE;
+}
+
+gboolean
+at_stack_bottom(resource_t *rsc) 
 {
     char *key = NULL;
     action_t *start = NULL;
     action_t *other = NULL;
-    int level = LOG_DEBUG;
     GListPtr action_list = NULL;
     
     key = start_key(rsc);
     action_list = find_actions(rsc->actions, key, NULL);
     crm_free(key);
     
-    do_crm_log(level, "%s: processing", rsc->id);
-    CRM_CHECK(action_list != NULL,
-	      do_crm_log(level, "%s: no start action", rsc->id);
-	      return FALSE);
+    crm_debug_3("%s: processing", rsc->id);
+    CRM_CHECK(action_list != NULL, return FALSE);
     
     start = action_list->data;
     g_list_free(action_list);
-    
+
+    slist_iter(
+	constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
+
+	resource_t *target = constraint->rsc_rh;
+	crm_debug_4("%s == %s (%d)", rsc->id, target->id, constraint->score);
+	if(constraint->score > 0
+	   && check_stack_element(rsc, target, "coloc") == FALSE) {
+	    return FALSE;
+	}
+	);
+
     slist_iter(
 	other_w, action_wrapper_t, start->actions_before, lpc,
 	other = other_w->action;
 
-	if(other->optional) {
-	    crm_debug_2("%s: depends on %s (optional)",
-			rsc->id, other->uuid);
-	    continue;
-
 #if ALLOW_WEAK_MIGRATION
-	} else if((other_w->type & pe_order_implies_right) == 0) {
-	    crm_debug_2("%s: depends on %s (optional ordering)",
+	if((other_w->type & pe_order_implies_right) == 0) {
+	    crm_debug_3("%s: depends on %s (optional ordering)",
 			rsc->id, other->uuid);
 	    continue;
-#endif    
-	
-	} else if(other->rsc == NULL || other->rsc == rsc) {
-	    continue;
-	}
-	
-	if(other->rsc->variant == pe_native) {
-	    do_crm_log(level, "%s: depends on %s (mid-stack)",
-		       rsc->id, other->uuid);
+	}	
+#endif 
+
+	if(other->optional == FALSE
+	   && check_stack_element(rsc, other->rsc, "order") == FALSE) {
 	    return FALSE;
-	    
-	} else if(other->rsc->variant == pe_group) {
-	    if(at_stack_bottom(other->rsc, data_set) == FALSE) {
-		do_crm_log(level, "%s: depends on group %s (mid-stack)",
-			   rsc->id, other->uuid);
-		return FALSE;
-	    }
-	    continue;
 	}
 	
-	/* is the clone also moving moved around?
-	 *
-	 * if so, then we can't yet be completely sure the
-	 *   resource can safely migrate since the node we're
-	 *   moving too may not have the clone instance started
-	 *   yet
-	 *
-	 * in theory we can figure out if the clone instance we
-	 *   will run on is already there, but there that would
-	 *   involve too much knowledge of internal clone code.
-	 *   maybe later...
-	 */
-
-	do_crm_log(level+1,"%s: start depends on clone %s",
-		   rsc->id, other->uuid);
-	key = stop_key(other->rsc);
-	action_list = find_actions(other->rsc->actions, key, NULL);
-	crm_free(key);
-	
-	slist_iter(
-	    other_stop, action_t, action_list,lpc,
-	    if(other_stop && other_stop->optional == FALSE) {
-		do_crm_log(level, "%s: start depends on %s",
-			   rsc->id, other_stop->uuid);
-
-		g_list_free(action_list);
-		return FALSE;
-	    }
-	    );
-	g_list_free(action_list);
 	);
-#if 0    
-    if(rsc->parent && at_stack_bottom(rsc->parent, data_set) == FALSE) {
-	return FALSE;
-    }
-#endif
-    
+
     return TRUE;
 }
 
@@ -1866,7 +1884,7 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	       || stop->node->details == start->node->details) {
 		clear_bit(rsc->flags, pe_rsc_can_migrate);
 
-	    } else if(at_stack_bottom(rsc, data_set) == FALSE) {
+	    } else if(at_stack_bottom(rsc) == FALSE) {
 		crm_notice("Cannot migrate %s from %s to %s"
 			   " - %s is not at the bottom of the resource stack",
 			   rsc->id, stop->node->details->uname,
