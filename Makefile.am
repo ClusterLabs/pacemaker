@@ -70,7 +70,8 @@ global-www: global
 
 rpmtgz: tgz
 	echo "Installing $(TARFILE) into /usr/src/packages/SOURCES for rpm"
-	cp $(TARFILE) /usr/src/packages/SOURCES/
+	-test -d /usr/src/packages/SOURCES && cp $(TARFILE) /usr/src/packages/SOURCES/
+	-test -d /usr/src/redhat/SOURCES && cp $(TARFILE) /usr/src/redhat/SOURCES/
 
 rpm:	rpmtgz
 	$(RPM) $(RPMFLAGS) $(top_srcdir)/pacemaker.spec </dev/null;
