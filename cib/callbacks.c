@@ -1302,6 +1302,8 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 	    rc = cib_server_ops[call_type].fn(
 		op, call_options, section, input,
 		current_cib, &result_cib, &output);
+
+	    fix_plus_plus_recursive(result_cib);
 	}
 		
 	if(rc == cib_ok) {

@@ -232,10 +232,6 @@ find_entity(crm_data_t *parent, const char *node_name, const char *id)
 void
 copy_in_properties(crm_data_t* target, const crm_data_t *src)
 {
-	int value_len = 0;
-	char *incr_value = NULL;
-	char *new_value = NULL;
-	
 	crm_validate_data(src);
 	crm_validate_data(target);
 
@@ -248,37 +244,58 @@ copy_in_properties(crm_data_t* target, const crm_data_t *src)
 	} else {
 		xml_prop_iter(
 			src, local_prop_name, local_prop_value,
-
-			/* if the value is name followed by "++" we need
-			 *   to increment the existing value
-			 */
-			new_value = NULL;
-			incr_value = NULL;
-
-			if(strstr(local_prop_value, "++") > local_prop_value) {
-				int old_int = 0;
-				const char *old_value = NULL;
-				value_len = strlen(local_prop_value);
-				crm_malloc0(incr_value, value_len+2);
-				sprintf(incr_value, "%s++", local_prop_name);
-
-				if(safe_str_eq(local_prop_value, incr_value)) {
-					old_value = crm_element_value(
-						target, local_prop_name);
-					old_int = crm_parse_int(old_value, "0");
-					new_value = crm_itoa(old_int + 1);
-					local_prop_value = new_value;
-				}
-			}
-
-			crm_xml_add(target, local_prop_name, local_prop_value);
-			crm_free(incr_value);
-			crm_free(new_value);
+			expand_plus_plus(target, local_prop_name, local_prop_value)
 			);
 		crm_validate_data(target);
 	}
 	
 	return;
+}
+
+void fix_plus_plus_recursive(crm_data_t* target)
+{
+    xml_prop_iter(target, name, value, expand_plus_plus(target, name, value));
+    xml_child_iter(target, child, fix_plus_plus_recursive(child));
+}
+
+
+void
+expand_plus_plus(crm_data_t* target, const char *name, const char *value)
+{
+    int int_value = 0;
+    int value_len = 0;
+    char *incr_value = NULL;
+    const char *old_value = crm_element_value(target, name);
+    
+    /* if no previous value, set unexpanded */
+    if(old_value == NULL
+       || strstr(value, "++") <= value) {
+	crm_xml_add(target, name, value);
+	return;
+    }
+    
+    value_len = strlen(value);
+    crm_malloc0(incr_value, value_len+2);
+    sprintf(incr_value, "%s++", name);
+    
+    /* if the value is name followed by "++" we need
+     *   to increment the existing value
+     */
+    if(safe_str_eq(value, incr_value)) {
+	if(safe_str_eq(value, old_value)) {
+	    int_value = 0;
+
+	} else {
+	    int_value = crm_parse_int(old_value, "0");
+	}
+	crm_xml_add_int(target, name, int_value+1);
+	
+    } else {
+	crm_xml_add(target, name, value);
+    }
+    
+    crm_free(incr_value);
+    return;
 }
 
 crm_data_t*

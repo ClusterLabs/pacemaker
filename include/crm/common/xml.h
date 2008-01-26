@@ -67,6 +67,8 @@ extern gboolean do_id_check(crm_data_t *xml_obj, GHashTable *id_hash,
  *
  */
 extern void copy_in_properties(crm_data_t *target, const crm_data_t *src);
+extern void expand_plus_plus(crm_data_t* target, const char *name, const char *value);
+extern void fix_plus_plus_recursive(crm_data_t* target);
 
 /*
  * Find a child named search_path[i] at level i in the XML fragment where i=0
