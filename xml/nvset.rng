@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- types: http://www.w3.org/TR/xmlschema-2/#dateTime -->
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <ref name="element-nvset"/>
+  </start>
+
+  <define name="element-nvset">
+    <attribute name="id"><data type="ID"/></attribute>
+    <interleave>
+      <optional>
+	<externalRef href="rule.rng"/>
+      </optional>
+      <element name="attributes">
+	<zeroOrMore>
+	  <element name="nvpair">
+	    <attribute name="id"><data type="ID"/></attribute>
+	    <attribute name="name"><text/></attribute>
+	    <optional>
+	      <attribute name="value"><text/></attribute>
+	    </optional>
+	  </element>
+	</zeroOrMore>
+      </element>
+      <optional>
+	<externalRef href="score.rng"/>
+      </optional>
+    </interleave>
+  </define>
+
+</grammar>

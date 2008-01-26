@@ -61,11 +61,6 @@
              <expression id="dc_ip_expr" attribute="#is_dc" operation="eq" value="false"/>
            </rule>
          </rsc_location>
-         <rsc_location id="run_rsc_c001n08" rsc="rsc_c001n08">
-           <rule id="pref_run_rsc_c001n08" score="100" boolean_op="and">
-             <expression id="rsc_c001n08_loc_expr" attribute="#uname" operation="eq" value="c001n08"/>
-           </rule>
-         </rsc_location>
          <rsc_location id="run_rsc_c001n02" rsc="rsc_c001n02">
            <rule id="pref_run_rsc_c001n02" score="100" boolean_op="and">
              <expression id="rsc_c001n02_loc_expr" attribute="#uname" operation="eq" value="c001n02"/>
