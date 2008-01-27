@@ -511,7 +511,12 @@ stdin2xml(void)
  		read_chars = fread(xml_buffer + data_length, 1, XML_BUFFER_SIZE, stdin);
  		data_length += read_chars;
  	} while (read_chars > 0);
-  	
+
+	if(data_length == 0) {
+	    crm_warn("No XML supplied on stdin");
+	    return NULL;
+	}
+
  	xml_buffer[data_length] = '\0';
 
 	xml_obj = string2xml(xml_buffer);
