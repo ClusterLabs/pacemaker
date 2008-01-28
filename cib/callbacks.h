@@ -70,8 +70,6 @@ typedef struct cib_operation_s
 			crm_data_t*, crm_data_t*, crm_data_t**, crm_data_t**);
 } cib_operation_t;
 
-extern cib_operation_t cib_server_ops[];
-
 extern gboolean cib_client_connect_null(
 	IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_client_connect_rw_ro(

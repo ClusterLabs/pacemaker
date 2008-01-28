@@ -67,7 +67,6 @@ const char * constraint_path[] =
 };
 
 gboolean initialized = FALSE;
-crm_data_t *the_cib = NULL;
 crm_data_t *node_search = NULL;
 crm_data_t *resource_search = NULL;
 crm_data_t *constraint_search = NULL;
@@ -607,7 +606,10 @@ activateCibXml(crm_data_t *new_cib, gboolean to_disk)
 	crm_data_t *saved_cib = the_cib;
 	const char *ignore_dtd = NULL;
 
+	crm_debug("Activating new CIB");
+	
 	crm_log_xml_debug_4(new_cib, "Attempting to activate CIB");
+	update_counters(__FILE__, __FUNCTION__, new_cib);
 
 	CRM_ASSERT(new_cib != saved_cib);
 	if(saved_cib != NULL) {
@@ -651,8 +653,10 @@ activateCibXml(crm_data_t *new_cib, gboolean to_disk)
 		write_cib_contents(the_cib);
 		
 	} else if(cib_writes_enabled && cib_status == cib_ok && to_disk) {
-		crm_debug_2("Triggering CIB write");
+		crm_debug("Triggering CIB write");
 		G_main_set_trigger(cib_writer);
+	} else {
+	    crm_debug("disk: %d, writes: %d", to_disk, cib_writes_enabled);
 	}
 	
 	if(the_cib != saved_cib && the_cib != new_cib) {

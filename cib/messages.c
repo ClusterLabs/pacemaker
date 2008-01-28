@@ -43,13 +43,18 @@
 #include <cibmessages.h>
 #include <cibprimatives.h>
 #include <callbacks.h>
-#include <notify.h>
-
 
 #define MAX_DIFF_RETRY 5
 
+#ifdef CIBPIPE
+gboolean cib_is_master = TRUE;
+#else
+gboolean cib_is_master = FALSE;
+#endif
+
+gboolean syncd_once = FALSE;
+crm_data_t *the_cib = NULL;
 extern const char *cib_our_uname;
-extern gboolean syncd_once;
 enum cib_errors revision_check(crm_data_t *cib_update, crm_data_t *cib_copy, int flags);
 int get_revision(crm_data_t *xml_obj, int cur_revision);
 
@@ -76,6 +81,9 @@ cib_process_shutdown_req(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
+#ifdef CIBPIPE
+    return cib_invalid_argument;
+#else
 	enum cib_errors result = cib_ok;
 	const char *host = cl_get_string(input, F_ORIG);
 	
@@ -96,6 +104,7 @@ cib_process_shutdown_req(
 	}
 	
 	return result;
+#endif
 }
 
 enum cib_errors 
@@ -139,6 +148,9 @@ cib_process_readwrite(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
+#ifdef CIBPIPE
+    return cib_invalid_argument;
+#else
 	enum cib_errors result = cib_ok;
 	crm_debug_2("Processing \"%s\" event", op);
 
@@ -167,6 +179,7 @@ cib_process_readwrite(
 	}
 
 	return result;
+#endif
 }
 
 enum cib_errors 
@@ -174,10 +187,14 @@ cib_process_ping(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
+#ifdef CIBPIPE
+    return cib_invalid_argument;
+#else
 	enum cib_errors result = cib_ok;
 	crm_debug_2("Processing \"%s\" event", op);
 	*answer = createPingAnswerFragment(CRM_SYSTEM_CIB, "ok");
 	return result;
+#endif
 }
 
 
@@ -221,7 +238,6 @@ cib_process_erase(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
-	crm_data_t *local_diff = NULL;
 	enum cib_errors result = cib_ok;
 
 	crm_debug_2("Processing \"%s\" event", op);
@@ -231,10 +247,6 @@ cib_process_erase(
 
 	copy_in_properties(*result_cib, existing_cib);	
 	cib_update_counter(*result_cib, XML_ATTR_GENERATION, FALSE);
-	
-	local_diff = diff_cib_object(existing_cib, *result_cib, FALSE);
-	cib_replace_notify(*result_cib, result, local_diff);
-	free_xml(local_diff);
 	
 	return result;
 }
@@ -260,7 +272,11 @@ cib_process_sync(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
-	return sync_our_cib(input, TRUE);
+#ifdef CIBPIPE
+    return cib_invalid_argument;
+#else
+    return sync_our_cib(input, TRUE);
+#endif
 }
 
 enum cib_errors 
@@ -268,7 +284,11 @@ cib_process_sync_one(
 	const char *op, int options, const char *section, crm_data_t *input,
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
-	return sync_our_cib(input, FALSE);
+#ifdef CIBPIPE
+    return cib_invalid_argument;
+#else
+    return sync_our_cib(input, FALSE);
+#endif
 }
 
 enum cib_errors 
@@ -465,7 +485,9 @@ cib_process_diff(
 			    diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
 			    diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
 	}
-
+#ifdef CIBPIPE
+	do_resync = FALSE;
+#else
 	if(do_resync && cib_is_master == FALSE) {
 		HA_Message *sync_me = ha_msg_new(3);
 		free_xml(*result_cib);
@@ -486,8 +508,7 @@ cib_process_diff(
 	} else if(do_resync) {
 		crm_warn("Not resyncing in master mode");
 	}
-	
-	
+#endif
 	return result;
 }
 
@@ -497,7 +518,6 @@ cib_process_replace(
 	crm_data_t *existing_cib, crm_data_t **result_cib, crm_data_t **answer)
 {
 	const char *tag = NULL;
-	gboolean send_notify   = FALSE;
 	gboolean verbose       = FALSE;
 	enum cib_errors result = cib_ok;
 	
@@ -563,7 +583,6 @@ cib_process_replace(
 		sync_in_progress = 0;
 		free_xml(*result_cib);
 		*result_cib = copy_xml(input);
-		send_notify = TRUE;
 		
 	} else {
 		crm_data_t *obj_root = NULL;
@@ -573,27 +592,8 @@ cib_process_replace(
 		if(ok == FALSE) {
 			crm_debug_2("No matching object to replace");
 			result = cib_NOTEXISTS;
-
-		} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
-			send_notify = TRUE;
-			
-		} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
-			send_notify = TRUE;
-
-		} else if(safe_str_eq(tag, XML_CIB_TAG_STATUS)) {
-			send_notify = TRUE;
-
-		} else if(safe_str_eq(tag, XML_CIB_TAG_NODES)) {
-			send_notify = TRUE;
 		}
 	}
-	
-	if(send_notify) {
-		crm_data_t *local_diff = NULL;
-		local_diff = diff_cib_object(existing_cib, *result_cib, FALSE);
-		cib_replace_notify(*result_cib, result, local_diff);
-		free_xml(local_diff);
-	}	
 
 	return result;
 }
@@ -890,7 +890,7 @@ revision_check(crm_data_t *cib_update, crm_data_t *cib_copy, int flags)
 	return rc;
 }
 
-
+#ifndef CIBPIPE
 enum cib_errors
 sync_our_cib(HA_Message *request, gboolean all) 
 {
@@ -929,3 +929,4 @@ sync_our_cib(HA_Message *request, gboolean all)
 	ha_msg_del(replace_request);
 	return result;
 }
+#endif
