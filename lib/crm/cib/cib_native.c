@@ -33,6 +33,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <cib_private.h>
+#include <clplumbing/Gmain_timeout.h>
 
 typedef struct cib_native_opaque_s 
 {
@@ -366,11 +367,7 @@ cib_create_op(
 			  (long)call_options, call_options);
 		rc = ha_msg_add_int(op_msg, F_CIB_CALLOPTS, call_options);
 	}
-#if 0
-	if(rc == HA_OK && cib->call_timeout > 0) {
-		rc = ha_msg_add_int(op_msg, F_CIB_TIMEOUT, cib->call_timeout);
-	}
-#endif
+
 	if(rc == HA_OK && data != NULL) {
 #if 0		
 		const char *tag = crm_element_name(data);
@@ -405,6 +402,20 @@ cib_create_op(
 	return op_msg;
 }
 
+static gboolean timer_expired = FALSE;
+static struct timer_rec_s *sync_timer = NULL;
+static gboolean cib_timeout_handler(gpointer data)
+{
+    struct timer_rec_s *timer = data;
+    timer_expired = TRUE;
+    crm_err("Call %d timed out after %ds", timer->call_id, timer->timeout);
+
+    /* Always return TRUE, never remove the handler
+     * We do that after the while-loop in cib_native_perform_op()
+     */
+    return TRUE;
+}
+
 int
 cib_native_perform_op(
 	cib_t *cib, const char *op, const char *host, const char *section,
@@ -416,7 +427,10 @@ cib_native_perform_op(
 	struct ha_msg *op_reply = NULL;
 
  	cib_native_opaque_t *native = cib->variant_opaque;
-
+	if(sync_timer == NULL) {
+	    crm_malloc0(sync_timer, sizeof(struct timer_rec_s));
+	}
+	
 	if(cib->state == cib_disconnected) {
 		return cib_not_connected;
 	}
@@ -464,21 +478,49 @@ cib_native_perform_op(
 	} else if(!(call_options & cib_sync_call)) {
 		crm_debug_3("Async call, returning");
 		CRM_CHECK(cib->call_id != 0, return cib_reply_failed);
+
 		return cib->call_id;
 	}
-
+	
 	rc = IPC_OK;
 	crm_debug_3("Waiting for a syncronous reply");
-	while(IPC_ISRCONN(native->command_channel)) {
+
+	if(cib->call_timeout > 0) {
+	    /* We need this, even with msgfromIPC_timeout(), because we might
+	     * get other/older replies that don't match the active request
+	     */
+	    timer_expired = FALSE;
+	    sync_timer->call_id = cib->call_id;
+	    sync_timer->timeout = cib->call_timeout*1000;
+	    sync_timer->ref = Gmain_timeout_add(
+		sync_timer->timeout, cib_timeout_handler, sync_timer);
+	}
+
+	while(timer_expired == FALSE && IPC_ISRCONN(native->command_channel)) {
 		int reply_id = -1;
 		int msg_id = cib->call_id;
 
+#if HAVE_MSGFROMIPC_TIMEOUT
+		int ipc_rc = 0;
+
+		op_reply = msgfromIPC_timeout(
+		    native->command_channel, MSG_ALLOWINTR,
+		    cib->call_timeout, &ipc_rc);
+
+		if(ipc_rc == IPC_TIMEOUT) {
+		    timer_expired = TRUE;
+		    break;
+		}		
+#else		
 		op_reply = msgfromIPC(native->command_channel, MSG_ALLOWINTR);
+#endif
+
 		if(op_reply == NULL) {
 			break;
 		}
+
 		CRM_CHECK(ha_msg_value_int(
-				  op_reply, F_CIB_CALLID, &reply_id) == HA_OK,
+			      op_reply, F_CIB_CALLID, &reply_id) == HA_OK,
 			  crm_msg_del(op_reply);
 			  return cib_reply_failed);
 
@@ -504,6 +546,12 @@ cib_native_perform_op(
 		crm_msg_del(op_reply);
 		op_reply = NULL;
 	}
+	
+	g_source_remove(sync_timer->ref);
+
+	if(timer_expired) {
+	    return cib_remote_timeout;
+	}
 
 	if(op_reply == NULL) {
 		if(IPC_ISRCONN(native->command_channel) == FALSE) {
@@ -511,7 +559,7 @@ cib_native_perform_op(
 				native->command_channel->ch_status);
 			cib->state = cib_disconnected;
 			return cib_not_connected;
-		}
+		}		
 		crm_err("No reply message - empty - %d", rc);
 		return cib_reply_failed;
 	}
@@ -693,8 +741,8 @@ cib_native_callback(cib_t *cib, struct ha_msg *msg)
 		local_blob = *blob;
 		blob = NULL;
 		
-		g_hash_table_remove(
-			cib_op_callback_table, GINT_TO_POINTER(call_id));
+		remove_cib_op_callback(call_id, FALSE);
+
 	} else {
 		crm_debug_3("No callback found for call %d", call_id);
 		local_blob.callback = NULL;

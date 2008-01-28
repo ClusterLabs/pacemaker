@@ -458,7 +458,6 @@ class LinuxHAv2(HeartbeatCM):
         ccm_partitions = []
 
         for node in self.Env["nodes"]:
-            self.debug("Retrieving partition details for %s" %node)
             if self.ShouldBeStatus[node] == self["up"]:
                 partition = self.rsh.readaline(node, self["ParitionCmd"])
 

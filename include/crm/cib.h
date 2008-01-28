@@ -301,13 +301,21 @@ typedef struct cib_notify_client_s
 	
 } cib_notify_client_t;
 
+struct timer_rec_s 
+{
+	int call_id;
+	int timeout;
+	guint ref;	
+};
+
 typedef struct cib_callback_client_s 
 {
 		void (*callback)(
 			const HA_Message*, int, int, crm_data_t*, void*);
 		void *user_data;
 		gboolean only_success;
-		
+		struct timer_rec_s *timer;
+	
 } cib_callback_client_t;
 
 /* Core functions */
@@ -318,6 +326,9 @@ extern gboolean   startCib(const char *filename);
 extern crm_data_t *get_cib_copy(cib_t *cib);
 extern crm_data_t *cib_get_generation(cib_t *cib);
 extern int cib_compare_generation(crm_data_t *left, crm_data_t *right);
+extern gboolean add_cib_op_callback_timeout(
+    int call_id, int timeout, gboolean only_success, void *user_data,
+    void (*callback)(const HA_Message*, int, int, crm_data_t*,void*));
 extern gboolean add_cib_op_callback(
 	int call_id, gboolean only_success, void *user_data,
 	void (*callback)(const HA_Message*, int, int, crm_data_t*,void*));

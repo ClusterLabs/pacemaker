@@ -48,7 +48,7 @@
 
 int exit_code = cib_ok;
 int message_timer_id = -1;
-int message_timeout_ms = 30*1000;
+int message_timeout_ms = 30;
 
 GMainLoop *mainloop = NULL;
 IPC_Channel *crmd_channel = NULL;
@@ -179,7 +179,7 @@ main(int argc, char **argv)
 			case 't':
 				message_timeout_ms = atoi(optarg);
 				if(message_timeout_ms < 1) {
-					message_timeout_ms = 30*1000;
+					message_timeout_ms = 30;
 				}
 				break;
 				
@@ -363,16 +363,10 @@ main(int argc, char **argv)
 		 */
 		request_id = exit_code;
 
-		add_cib_op_callback(
-			request_id, FALSE, NULL, cibadmin_op_callback);
+		add_cib_op_callback_timeout(
+		    request_id, message_timeout_ms, FALSE, NULL, cibadmin_op_callback);
 
 		mainloop = g_main_new(FALSE);
-
-		crm_debug("Setting operation timeout to %dms for call %d",
-			  message_timeout_ms, request_id);
-
-		message_timer_id = Gmain_timeout_add(
-			message_timeout_ms, admin_message_timeout, NULL);
 
 		crm_debug_3("%s waiting for reply from the local CIB",
 			 crm_system_name);
@@ -402,6 +396,8 @@ int
 do_work(crm_data_t *input, int call_options, crm_data_t **output) 
 {
 	/* construct the request */
+	the_cib->call_timeout = message_timeout_ms;
+
 	if (strcasecmp(CIB_OP_SYNC, cib_action) == 0) {
 		crm_debug_4("Performing %s op...", cib_action);
 		return the_cib->cmds->sync_from(
@@ -512,27 +508,6 @@ usage(const char *cmd, int exit_status)
 	fflush(stream);
 
 	exit(exit_status);
-}
-
-
-gboolean
-admin_message_timeout(gpointer data)
-{
-	if(safe_str_eq(cib_action, CIB_OP_SLAVE)) {
-		exit_code = cib_ok;
-		fprintf(stdout, "CIB service(s) are in slave mode.\n");
-		
-	} else {
-		exit_code = cib_reply_failed;
-		fprintf(stderr,
-			"No messages received in %d seconds.. aborting\n",
-			(int)message_timeout_ms/1000);
-		crm_err("No messages received in %d seconds",
-			(int)message_timeout_ms/1000);
-	}
-	
-	g_main_quit(mainloop);
-	return FALSE;
 }
 
 

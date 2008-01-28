@@ -395,14 +395,15 @@ do_dc_join_finalize(long long action,
 		
 		set_bit_inplace(fsa_input_register, R_CIB_ASKED);
 
-		fsa_cib_conn->call_timeout = 10;
 		rc = fsa_cib_conn->cmds->sync_from(
 			fsa_cib_conn, max_generation_from, NULL,
 			cib_quorum_override);
-		fsa_cib_conn->call_timeout = 0; /* back to the default */
-		add_cib_op_callback(rc, FALSE, crm_strdup(max_generation_from),
-				    finalize_sync_callback);
+
+		add_cib_op_callback_timeout(
+		    rc, 60, FALSE, crm_strdup(max_generation_from),
+		    finalize_sync_callback);
 		return;
+
 	} else {
 		/* Send _our_ CIB out to everyone */
 		fsa_cib_conn->cmds->sync_from(

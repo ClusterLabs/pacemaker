@@ -32,6 +32,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <cib_private.h>
+#include <clplumbing/Gmain_timeout.h>
 
 /* short term hack to reduce callback messages */
 typedef struct cib_native_opaque_s 
@@ -98,6 +99,14 @@ extern cib_t *cib_native_new(cib_t *cib);
 extern void cib_native_delete(cib_t *cib);
 
 static enum cib_variant configured_variant = cib_native;
+static void cib_destroy_op_callback(gpointer data)
+{
+    cib_callback_client_t *blob = data;
+    if(blob->timer && blob->timer->ref > 0) {
+	g_source_remove(blob->timer->ref);
+    }
+    crm_free(blob);
+}
 
 /* define of the api functions*/
 cib_t*
@@ -117,7 +126,7 @@ cib_new(void)
 	if(cib_op_callback_table == NULL) {
 		cib_op_callback_table = g_hash_table_new_full(
 			g_direct_hash, g_direct_equal,
-			NULL, g_hash_destroy_str);
+			NULL, cib_destroy_op_callback);
 	}
 
 	crm_malloc0(new_cib, sizeof(cib_t));
@@ -556,11 +565,42 @@ gint ciblib_GCompareFunc(gconstpointer a, gconstpointer b)
 }
 
 
+static gboolean cib_async_timeout_handler(gpointer data)
+{
+    struct timer_rec_s *timer = data;
+    int call_id = timer->call_id;
+    cib_callback_client_t *blob = NULL;
+
+    crm_err("Async call %d timed out after %ds", call_id, timer->timeout);
+
+    /* Send an async reply with rc=cib_remote_timeout */
+    blob = g_hash_table_lookup(cib_op_callback_table, GINT_TO_POINTER(call_id));
+
+    if(blob != NULL && blob->callback != NULL) {
+	crm_debug_3("Callback found for call %d", call_id);
+	blob->callback(NULL, call_id, cib_remote_timeout, NULL, blob->user_data);
+    }
+    
+    remove_cib_op_callback(timer->call_id, FALSE);
+    
+    /* Always return TRUE, never remove the handler
+     * We do that in remove_cib_op_callback()
+     */
+    return TRUE;
+}
 
 gboolean
 add_cib_op_callback(
 	int call_id, gboolean only_success, void *user_data,
 	void (*callback)(const HA_Message*, int, int, crm_data_t*,void*)) 
+{
+    return add_cib_op_callback_timeout(call_id, 1, only_success, user_data, callback);
+}
+
+gboolean
+add_cib_op_callback_timeout(
+    int call_id, int timeout, gboolean only_success, void *user_data,
+    void (*callback)(const HA_Message*, int, int, crm_data_t*,void*)) 
 {
 	cib_callback_client_t *blob = NULL;
 
@@ -576,9 +616,21 @@ add_cib_op_callback(
 	blob->only_success = only_success;
 	blob->user_data = user_data;
 	blob->callback = callback;
+
+	if(timeout > 0) {
+	    struct timer_rec_s *async_timer = NULL;
+	    
+	    crm_malloc0(async_timer, sizeof(struct timer_rec_s));
+	    blob->timer = async_timer;
+
+	    async_timer->call_id = call_id;
+	    async_timer->timeout = timeout*1000;
+	    async_timer->ref = Gmain_timeout_add(
+		async_timer->timeout, cib_async_timeout_handler, async_timer);
+	}
 	
-	g_hash_table_insert(
-		cib_op_callback_table, GINT_TO_POINTER(call_id), blob);
+	g_hash_table_insert(cib_op_callback_table, GINT_TO_POINTER(call_id), blob);
+	
 	return TRUE;
 }
 
@@ -591,7 +643,7 @@ remove_cib_op_callback(int call_id, gboolean all_callbacks)
 		}
 		cib_op_callback_table = g_hash_table_new_full(
 			g_direct_hash, g_direct_equal,
-			NULL, g_hash_destroy_str);
+			NULL, cib_destroy_op_callback);
 	} else {
 		g_hash_table_remove(
 			cib_op_callback_table,
