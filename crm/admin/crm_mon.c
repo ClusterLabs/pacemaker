@@ -38,6 +38,7 @@
 #include <clplumbing/Gmain_timeout.h>
 
 #include <crm/msg_xml.h>
+#include <crm/common/util.h>
 #include <crm/common/xml.h>
 #include <crm/common/ctrl.h>
 #include <crm/common/ipc.h>
@@ -578,12 +579,21 @@ print_status(crm_data_t *cib)
 			       const char *id = ID(xml_op);
 			       const char *rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
 			       const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
+			       const char *last = crm_element_value(xml_op, "last_run");
 			       const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
 			       const char *status_s = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
 			       int status = crm_parse_int(status_s, "0");
 			       
-			       print_as("    %s (node=%s, call=%s, rc=%s): %s\n",
-					id, node, call, rc, op_status2text(status));
+			       print_as("    %s (node=%s, call=%s, rc=%s",
+					id, node, call, rc);
+			       if(last) {
+				   time_t run_at = crm_parse_int(last, "0");
+				   print_as(", last-run=%s, queued=%sms, exec=%sms\n",
+					    ctime(&run_at),
+					    crm_element_value(xml_op, "exec_time"),
+					    crm_element_value(xml_op, "queue_time"));
+			       }
+			       print_as("): %s\n", op_status2text(status));
 			);
 	}
 	
