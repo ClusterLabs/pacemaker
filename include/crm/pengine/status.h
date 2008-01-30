@@ -224,5 +224,7 @@ extern void cleanup_calculations(pe_working_set_t *data_set);
 extern resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
 extern node_t *pe_find_node(GListPtr node_list, const char *uname);
 extern node_t *pe_find_node_id(GListPtr node_list, const char *id);
+extern GListPtr find_operations(
+    const char *rsc, const char *node, gboolean active_filter, pe_working_set_t *data_set);
 
 #endif

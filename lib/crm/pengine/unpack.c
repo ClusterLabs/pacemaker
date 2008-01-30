@@ -1316,3 +1316,102 @@ add_node_attrs(crm_data_t *xml_obj, node_t *node, pe_working_set_t *data_set)
 	return TRUE;
 }
 
+static GListPtr
+extract_operations(const char *node, const char *rsc, crm_data_t *rsc_entry, gboolean active_filter)
+{	
+    int stop_index = -1;
+    int start_index = -1;
+    
+    GListPtr op_list = NULL;
+    GListPtr sorted_op_list = NULL;
+
+    /* extract operations */
+    op_list = NULL;
+    sorted_op_list = NULL;
+    
+    xml_child_iter_filter(
+	rsc_entry, rsc_op, XML_LRM_TAG_RSC_OP,
+	crm_xml_add(rsc_op, "resource", rsc);
+	crm_xml_add(rsc_op, XML_ATTR_UNAME, node);
+	op_list = g_list_append(op_list, rsc_op);
+	);
+    
+    if(op_list == NULL) {
+	/* if there are no operations, there is nothing to do */
+	return NULL;
+    }
+    
+    sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
+    
+    /* create active recurring operations as optional */ 
+    if(active_filter == FALSE) {
+	return sorted_op_list;
+    }
+    
+    op_list = NULL;
+    
+    calculate_active_ops(sorted_op_list, &start_index, &stop_index);	
+    slist_iter(rsc_op, crm_data_t, sorted_op_list, lpc,
+	       if(start_index < stop_index) {
+		   crm_debug_4("Skipping %s: not active", ID(rsc_entry));
+		   break;
+		   
+	       } else if(lpc < start_index) {
+		   crm_debug_4("Skipping %s: old", ID(rsc_op));
+		   continue;
+	       }
+	       op_list = g_list_append(op_list, rsc_op);
+	);
+    
+    g_list_free(sorted_op_list);
+    return op_list;
+}
+
+GListPtr find_operations(
+    const char *rsc, const char *node, gboolean active_filter, pe_working_set_t *data_set) 
+{
+    GListPtr output = NULL;
+    GListPtr intermediate = NULL;
+
+    crm_data_t *tmp = NULL;
+    crm_data_t *status = find_xml_node(data_set->input, XML_CIB_TAG_STATUS, TRUE);
+
+    const char *uname = NULL;
+    node_t *this_node = NULL;
+    
+    xml_child_iter_filter(
+	status, node_state, XML_CIB_TAG_STATE,
+	
+	uname = crm_element_value(node_state, XML_ATTR_UNAME);
+	if(node != NULL && safe_str_neq(uname, node)) {
+	    continue;
+	}
+
+	this_node = pe_find_node(data_set->nodes, uname);
+	CRM_CHECK(this_node != NULL, continue);
+	
+	determine_online_status(node_state, this_node, data_set);
+	
+	if(this_node->details->online || data_set->stonith_enabled) {
+	    /* offline nodes run no resources...
+	     * unless stonith is enabled in which case we need to
+	     *   make sure rsc start events happen after the stonith
+	     */
+	    tmp = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+	    tmp = find_xml_node(tmp, XML_LRM_TAG_RESOURCES, FALSE);
+
+	    xml_child_iter_filter(
+		tmp, lrm_rsc, XML_LRM_TAG_RESOURCE,
+		const char *rsc_id  = crm_element_value(lrm_rsc, XML_ATTR_ID);
+		if(rsc != NULL && safe_str_neq(rsc_id, rsc)) {
+		    continue;
+		}
+
+		intermediate = extract_operations(uname, rsc_id, lrm_rsc, active_filter);
+		output = g_list_concat(output, intermediate);
+		);
+	}
+	);
+
+    return output;
+}
