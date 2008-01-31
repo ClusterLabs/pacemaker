@@ -522,6 +522,10 @@ cib_native_perform_op(
 		CRM_CHECK(ha_msg_value_int(
 			      op_reply, F_CIB_CALLID, &reply_id) == HA_OK,
 			  crm_msg_del(op_reply);
+			  if(sync_timer->ref > 0) {
+			      g_source_remove(sync_timer->ref);
+			      sync_timer->ref = 0;
+			  }
 			  return cib_reply_failed);
 
 		if(reply_id == msg_id) {
@@ -546,9 +550,12 @@ cib_native_perform_op(
 		crm_msg_del(op_reply);
 		op_reply = NULL;
 	}
-	
-	g_source_remove(sync_timer->ref);
 
+	if(sync_timer->ref > 0) {
+	    g_source_remove(sync_timer->ref);
+	    sync_timer->ref = 0;
+	}
+	
 	if(timer_expired) {
 	    return cib_remote_timeout;
 	}
