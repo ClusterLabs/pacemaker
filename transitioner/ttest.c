@@ -76,7 +76,7 @@ main(int argc, char **argv)
 	int flag;
 	int argerr = 0;
 	const char *xml_file = NULL;
-	crm_data_t *xml_graph = NULL;
+	xmlNode *xml_graph = NULL;
   
 	set_crm_log_level(0);
 /* 	crm_log_init("ttest"); */

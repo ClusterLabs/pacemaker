@@ -56,13 +56,13 @@ IPC_Channel *crmd_channel = NULL;
 const char *host = NULL;
 void usage(const char *cmd, int exit_status);
 enum cib_errors do_init(void);
-int do_work(crm_data_t *input, int command_options, crm_data_t **output);
+int do_work(xmlNode *input, int command_options, xmlNode **output);
 
 gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
 gboolean admin_message_timeout(gpointer data);
 void cib_connection_destroy(gpointer user_data);
-void cibadmin_op_callback(const HA_Message *msg, int call_id, int rc,
-			  crm_data_t *output, void *user_data);
+void cibadmin_op_callback(xmlNode *msg, int call_id, int rc,
+			  xmlNode *output, void *user_data);
 
 int command_options = 0;
 const char *cib_action = NULL;
@@ -98,8 +98,8 @@ main(int argc, char **argv)
 	char *admin_input_file = NULL;
 	gboolean dangerous_cmd = FALSE;
 	gboolean admin_input_stdin = FALSE;
-	crm_data_t *output = NULL;
-	crm_data_t *input = NULL;
+	xmlNode *output = NULL;
+	xmlNode *input = NULL;
 	
 #ifdef HAVE_GETOPT_H
 	int option_index = 0;
@@ -393,7 +393,7 @@ main(int argc, char **argv)
 }
 
 int
-do_work(crm_data_t *input, int call_options, crm_data_t **output) 
+do_work(xmlNode *input, int call_options, xmlNode **output) 
 {
 	/* construct the request */
 	the_cib->call_timeout = message_timeout_ms;
@@ -520,13 +520,11 @@ cib_connection_destroy(gpointer user_data)
 }
 
 void
-cibadmin_op_callback(const HA_Message *msg, int call_id, int rc,
-		     crm_data_t *output, void *user_data)
+cibadmin_op_callback(xmlNode *msg, int call_id, int rc,
+		     xmlNode *output, void *user_data)
 {
 	char *admin_input_xml = NULL;
 	
-	crm_info("our callback was invoked");
-	crm_log_message(LOG_MSG, msg);
 	exit_code = rc;
 
 	if(output != NULL) {
@@ -554,7 +552,7 @@ cibadmin_op_callback(const HA_Message *msg, int call_id, int rc,
 
 	} else if(safe_str_eq(cib_action, CIB_OP_QUERY) && output==NULL) {
 		crm_err("Output expected in query response");
-		crm_log_message(LOG_ERR, msg);
+		crm_log_xml(LOG_ERR, "no output", msg);
 
 	} else if(output == NULL) {
 		crm_info("Call passed");

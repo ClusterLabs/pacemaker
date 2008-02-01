@@ -16,15 +16,24 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-extern HA_Message *cib_msg_copy(HA_Message *msg, gboolean with_data);
-extern HA_Message *cib_construct_reply(HA_Message *request, HA_Message *output, int rc);
-extern enum cib_errors revision_check(crm_data_t *cib_update, crm_data_t *cib_copy, int flags);
+extern xmlNode *cib_msg_copy(xmlNode *msg, gboolean with_data);
+extern xmlNode *cib_construct_reply(xmlNode *request, xmlNode *output, int rc);
+extern enum cib_errors revision_check(xmlNode *cib_update, xmlNode *cib_copy, int flags);
 extern enum cib_errors cib_get_operation_id(const char *op, int *operation);
 
 extern enum cib_errors cib_perform_op(
-    const char *op, int call_options, const char *section, crm_data_t *input,
+    const char *op, int call_options, const char *section, xmlNode *req, xmlNode *input,
     gboolean manage_counters, gboolean *config_changed,
-    crm_data_t *current_cib, crm_data_t **result_cib, crm_data_t **output);
+    xmlNode *current_cib, xmlNode **result_cib, xmlNode **output);
 
 extern enum cib_errors cib_update_counter(
-    crm_data_t *xml_obj, const char *field, gboolean reset);
+    xmlNode *xml_obj, const char *field, gboolean reset);
+
+extern gboolean cib_op_modifies(int call_type);
+extern int cib_op_prepare(
+    int call_type, xmlNode *request, xmlNode **input, const char **section);
+extern int cib_op_cleanup(
+    int call_type, const char *op, xmlNode **input, xmlNode **output);
+extern int cib_op_can_run(
+    int call_type, int call_options, gboolean privileged, gboolean global_update);
+

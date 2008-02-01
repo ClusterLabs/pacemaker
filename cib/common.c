@@ -49,17 +49,17 @@
 
 extern gboolean cib_is_master;
 extern const char* cib_root;
-extern gboolean stand_alone;
+gboolean stand_alone = FALSE;
 extern enum cib_errors cib_status;
 extern gboolean can_write(int flags);
 extern enum cib_errors cib_perform_command(
-    HA_Message *request, HA_Message **reply, crm_data_t **cib_diff, gboolean privileged);
+    xmlNode *request, xmlNode **reply, xmlNode **cib_diff, gboolean privileged);
 
 
-static HA_Message *
-cib_prepare_common(HA_Message *root, const char *section)
+static xmlNode *
+cib_prepare_common(xmlNode *root, const char *section)
 {
-    HA_Message *data = NULL;
+    xmlNode *data = NULL;
 	
     /* extract the CIB from the fragment */
     if(root == NULL) {
@@ -122,10 +122,10 @@ verify_section(const char *section)
 
 
 static enum cib_errors
-cib_prepare_none(HA_Message *request, HA_Message **data, const char **section)
+cib_prepare_none(xmlNode *request, xmlNode **data, const char **section)
 {
     *data = NULL;
-    *section = cl_get_string(request, F_CIB_SECTION);
+    *section = crm_element_value(request, F_CIB_SECTION);
     if(verify_section(*section) == FALSE) {
 	return cib_bad_section;
     }
@@ -133,11 +133,12 @@ cib_prepare_none(HA_Message *request, HA_Message **data, const char **section)
 }
 
 static enum cib_errors
-cib_prepare_data(HA_Message *request, HA_Message **data, const char **section)
+cib_prepare_data(xmlNode *request, xmlNode **data, const char **section)
 {
-    HA_Message *input_fragment = get_message_xml(request, F_CIB_CALLDATA);
-    *section = cl_get_string(request, F_CIB_SECTION);
+    xmlNode *input_fragment = get_message_xml(request, F_CIB_CALLDATA);
+    *section = crm_element_value(request, F_CIB_SECTION);
     *data = cib_prepare_common(input_fragment, *section);
+    crm_log_xml_debug(*data, "data");
     free_xml(input_fragment);
     if(verify_section(*section) == FALSE) {
 	return cib_bad_section;
@@ -146,10 +147,10 @@ cib_prepare_data(HA_Message *request, HA_Message **data, const char **section)
 }
 
 static enum cib_errors
-cib_prepare_sync(HA_Message *request, HA_Message **data, const char **section)
+cib_prepare_sync(xmlNode *request, xmlNode **data, const char **section)
 {
-    *section = cl_get_string(request, F_CIB_SECTION);
-    *data = request;
+    *section = crm_element_value(request, F_CIB_SECTION);
+    *data = NULL;
     if(verify_section(*section) == FALSE) {
 	return cib_bad_section;
     }
@@ -157,10 +158,10 @@ cib_prepare_sync(HA_Message *request, HA_Message **data, const char **section)
 }
 
 static enum cib_errors
-cib_prepare_diff(HA_Message *request, HA_Message **data, const char **section)
+cib_prepare_diff(xmlNode *request, xmlNode **data, const char **section)
 {
-    HA_Message *input_fragment = NULL;
-    const char *update     = cl_get_string(request, F_CIB_GLOBAL_UPDATE);
+    xmlNode *input_fragment = NULL;
+    const char *update     = crm_element_value(request, F_CIB_GLOBAL_UPDATE);
 
     *data = NULL;
     *section = NULL;
@@ -172,21 +173,21 @@ cib_prepare_diff(HA_Message *request, HA_Message **data, const char **section)
 	input_fragment = get_message_xml(request, F_CIB_CALLDATA);
     }
 
-    CRM_CHECK(input_fragment != NULL,crm_log_message(LOG_WARNING, request));
+    CRM_CHECK(input_fragment != NULL,crm_log_xml(LOG_WARNING, "no input", request));
     *data = cib_prepare_common(input_fragment, NULL);
     free_xml(input_fragment);
     return cib_ok;
 }
 
 static enum cib_errors
-cib_cleanup_query(const char *op, HA_Message **data, HA_Message **output) 
+cib_cleanup_query(const char *op, xmlNode **data, xmlNode **output) 
 {
     CRM_DEV_ASSERT(*data == NULL);
     return cib_ok;
 }
 
 static enum cib_errors
-cib_cleanup_data(const char *op, HA_Message **data, HA_Message **output) 
+cib_cleanup_data(const char *op, xmlNode **data, xmlNode **output) 
 {
     free_xml(*output);
     free_xml(*data);
@@ -194,14 +195,14 @@ cib_cleanup_data(const char *op, HA_Message **data, HA_Message **output)
 }
 
 static enum cib_errors
-cib_cleanup_output(const char *op, HA_Message **data, HA_Message **output) 
+cib_cleanup_output(const char *op, xmlNode **data, xmlNode **output) 
 {
     free_xml(*output);
     return cib_ok;
 }
 
 static enum cib_errors
-cib_cleanup_none(const char *op, HA_Message **data, HA_Message **output) 
+cib_cleanup_none(const char *op, xmlNode **data, xmlNode **output) 
 {
     CRM_DEV_ASSERT(*data == NULL);
     CRM_DEV_ASSERT(*output == NULL);
@@ -209,9 +210,10 @@ cib_cleanup_none(const char *op, HA_Message **data, HA_Message **output)
 }
 
 static enum cib_errors
-cib_cleanup_sync(const char *op, HA_Message **data, HA_Message **output) 
+cib_cleanup_sync(const char *op, xmlNode **data, xmlNode **output) 
 {
     /* data is non-NULL but doesnt need to be free'd */
+    CRM_DEV_ASSERT(*data == NULL);
     CRM_DEV_ASSERT(*output == NULL);
     return cib_ok;
 }
@@ -223,11 +225,11 @@ cib_cleanup_sync(const char *op, HA_Message **data, HA_Message **output)
   gboolean	modifies_cib;
   gboolean	needs_privileges;
   gboolean	needs_quorum;
-  enum cib_errors (*prepare)(HA_Message *, crm_data_t**, const char **);
-  enum cib_errors (*cleanup)(crm_data_t**, crm_data_t**);
+  enum cib_errors (*prepare)(xmlNode *, xmlNode**, const char **);
+  enum cib_errors (*cleanup)(xmlNode**, xmlNode**);
   enum cib_errors (*fn)(
   const char *, int, const char *,
-  crm_data_t*, crm_data_t*, crm_data_t**, crm_data_t**);
+  xmlNode*, xmlNode*, xmlNode**, xmlNode**);
   } cib_operation_t;
 */
 /* technically bump does modify the cib...
@@ -274,13 +276,13 @@ cib_get_operation_id(const char *op, int *operation)
     return cib_operation;
 }
 
-HA_Message *
-cib_msg_copy(HA_Message *msg, gboolean with_data) 
+xmlNode *
+cib_msg_copy(xmlNode *msg, gboolean with_data) 
 {
 	int lpc = 0;
 	const char *field = NULL;
 	const char *value = NULL;
-	HA_Message *value_struct = NULL;
+	xmlNode *value_struct = NULL;
 
 	static const char *field_list[] = {
 		F_XML_TAGNAME	,
@@ -312,14 +314,14 @@ cib_msg_copy(HA_Message *msg, gboolean with_data)
 		F_CIB_UPDATE_RESULT
 	};
 
-	HA_Message *copy = ha_msg_new(10);
+	xmlNode *copy = create_xml_node(NULL, "copy");
 	CRM_ASSERT(copy != NULL);
 	
 	for(lpc = 0; lpc < DIMOF(field_list); lpc++) {
 		field = field_list[lpc];
-		value = cl_get_string(msg, field);
+		value = crm_element_value(msg, field);
 		if(value != NULL) {
-			ha_msg_add(copy, field, value);
+			crm_xml_add(copy, field, value);
 		}
 	}
 	for(lpc = 0; with_data && lpc < DIMOF(data_list); lpc++) {
@@ -336,13 +338,13 @@ cib_msg_copy(HA_Message *msg, gboolean with_data)
 
 enum cib_errors
 cib_perform_op(
-    const char *op, int call_options, const char *section, crm_data_t *input,
+    const char *op, int call_options, const char *section, xmlNode *req, xmlNode *input,
     gboolean manage_counters, gboolean *config_changed,
-    crm_data_t *current_cib, crm_data_t **result_cib, crm_data_t **output)
+    xmlNode *current_cib, xmlNode **result_cib, xmlNode **output)
 {
     int rc = cib_ok;
     int call_type = 0;
-    crm_data_t *scratch = NULL;
+    xmlNode *scratch = NULL;
 
     CRM_CHECK(output != NULL && result_cib != NULL && config_changed != NULL,
 	      return cib_output_data);
@@ -357,14 +359,18 @@ cib_perform_op(
     }
     
     if(cib_server_ops[call_type].modifies_cib == FALSE) {
-	return cib_server_ops[call_type].fn(
-	    op, call_options, section, input, current_cib, result_cib, output);
+	rc = cib_server_ops[call_type].fn(
+	    op, call_options, section, req, input, current_cib, result_cib, output);
+	/* FIXME: Free scratch */
+	return rc;
     }
     
     scratch = copy_xml(current_cib);
     rc = cib_server_ops[call_type].fn(
-	op, call_options, section, input, current_cib, &scratch, output);    
+	op, call_options, section, req, input, current_cib, &scratch, output);    
 
+    crm_log_xml_debug(*output, "output");
+    
     CRM_CHECK(current_cib != scratch, return cib_unknown);
     
     if(rc == cib_ok) {
@@ -394,3 +400,44 @@ cib_perform_op(
     *result_cib = scratch;
     return rc;
 }
+
+gboolean cib_op_modifies(int call_type) 
+{
+    return cib_server_ops[call_type].modifies_cib;
+}
+
+int cib_op_can_run(
+    int call_type, int call_options, gboolean privileged, gboolean global_update)
+{
+    int rc = cib_ok;
+    
+    if(rc == cib_ok &&
+       cib_server_ops[call_type].needs_privileges
+       && privileged == FALSE) {
+	/* abort */
+	return cib_not_authorized;
+    }
+	
+    if(rc == cib_ok
+       && stand_alone == FALSE
+       && global_update == FALSE
+       && (call_options & cib_quorum_override) == 0
+       && cib_server_ops[call_type].needs_quorum) {
+	return cib_no_quorum;
+    }
+    return cib_ok;
+}
+
+
+int cib_op_prepare(
+    int call_type, xmlNode *request, xmlNode **input, const char **section) 
+{
+    return cib_server_ops[call_type].prepare(request, input, section);
+}
+
+int cib_op_cleanup(
+    int call_type, const char *op, xmlNode **input, xmlNode **output) 
+{
+    return cib_server_ops[call_type].cleanup(op, input, output);
+}
+

@@ -31,11 +31,9 @@
 
 #include <clplumbing/Gmain_timeout.h>
 
-void te_update_confirm(const char *event, HA_Message *msg);
-void te_update_diff(const char *event, HA_Message *msg);
-crm_data_t *need_abort(crm_data_t *update);
-void cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
-			 crm_data_t *output, void *user_data);
+void te_update_confirm(const char *event, xmlNode *msg);
+void te_update_diff(const char *event, xmlNode *msg);
+xmlNode *need_abort(xmlNode *update);
 
 extern char *te_uuid;
 gboolean shuttingdown = FALSE;
@@ -69,12 +67,12 @@ start_global_timer(crm_action_timer_t *timer, int timeout)
 }
 
 void
-te_update_diff(const char *event, HA_Message *msg)
+te_update_diff(const char *event, xmlNode *msg)
 {
 	int rc = -1;
 	const char *op = NULL;
-	crm_data_t *diff = NULL;
-	crm_data_t *aborted = NULL;
+	xmlNode *diff = NULL;
+	xmlNode *aborted = NULL;
 	const char *set_name = NULL;
 
 	int diff_add_updates = 0;
@@ -90,8 +88,8 @@ te_update_diff(const char *event, HA_Message *msg)
 		return;
 	}		
 
-	ha_msg_value_int(msg, F_CIB_RC, &rc);	
-	op = cl_get_string(msg, F_CIB_OPERATION);
+	crm_element_value_int(msg, F_CIB_RC, &rc);	
+	op = crm_element_value(msg, F_CIB_OPERATION);
 
 	if(rc < cib_ok) {
 		crm_debug_2("Ignoring failed %s operation: %s",
@@ -113,8 +111,8 @@ te_update_diff(const char *event, HA_Message *msg)
 
 	set_name = "diff-added";
 	if(diff != NULL) {
-		crm_data_t *section = NULL;
-		crm_data_t *change_set = find_xml_node(diff, set_name, FALSE);
+		xmlNode *section = NULL;
+		xmlNode *change_set = find_xml_node(diff, set_name, FALSE);
 		change_set = find_xml_node(change_set, XML_TAG_CIB, FALSE);
 
 		if(change_set != NULL) {
@@ -131,9 +129,9 @@ te_update_diff(const char *event, HA_Message *msg)
 	
 	set_name = "diff-removed";
 	if(diff != NULL && aborted == NULL) {
-		crm_data_t *attrs = NULL;
-		crm_data_t *status = NULL;
-		crm_data_t *change_set = find_xml_node(diff, set_name, FALSE);
+		xmlNode *attrs = NULL;
+		xmlNode *status = NULL;
+		xmlNode *change_set = find_xml_node(diff, set_name, FALSE);
 		change_set = find_xml_node(change_set, XML_TAG_CIB, FALSE);
 
 		crm_debug_2("Checking change set: %s", set_name);
@@ -169,19 +167,19 @@ te_update_diff(const char *event, HA_Message *msg)
 
 
 gboolean
-process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
+process_te_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 {
-	crm_data_t *xml_obj = NULL;
+	xmlNode *xml_obj = NULL;
 	
-	const char *from     = cl_get_string(msg, F_ORIG);
-	const char *sys_to   = cl_get_string(msg, F_CRM_SYS_TO);
-	const char *sys_from = cl_get_string(msg, F_CRM_SYS_FROM);
-	const char *ref      = cl_get_string(msg, XML_ATTR_REFERENCE);
-	const char *op       = cl_get_string(msg, F_CRM_TASK);
-	const char *type     = cl_get_string(msg, F_CRM_MSG_TYPE);
+	const char *from     = crm_element_value(msg, F_ORIG);
+	const char *sys_to   = crm_element_value(msg, F_CRM_SYS_TO);
+	const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
+	const char *ref      = crm_element_value(msg, XML_ATTR_REFERENCE);
+	const char *op       = crm_element_value(msg, F_CRM_TASK);
+	const char *type     = crm_element_value(msg, F_CRM_MSG_TYPE);
 
 	crm_debug_2("Processing %s (%s) message", op, ref);
-	crm_log_message(LOG_DEBUG_3, msg);
+	crm_log_xml(LOG_DEBUG_3, "ipc", msg);
 	
 	if(op == NULL){
 		/* error */
@@ -205,21 +203,21 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 #else
 		xml_obj = xml_data;
 		CRM_CHECK(xml_obj != NULL,
-			  crm_log_message_adv(LOG_ERR, "Invalid (N)ACK", msg);
+			  crm_log_xml(LOG_ERR, "Invalid (N)ACK", msg);
 			  return FALSE);
 #endif
 		CRM_CHECK(xml_obj != NULL,
-			  crm_log_message_adv(LOG_ERR, "Invalid (N)ACK", msg);
+			  crm_log_xml(LOG_ERR, "Invalid (N)ACK", msg);
 			  return FALSE);
 		xml_obj = get_object_root(XML_CIB_TAG_STATUS, xml_obj);
 
 		CRM_CHECK(xml_obj != NULL,
-			  crm_log_message_adv(LOG_ERR, "Invalid (N)ACK", msg);
+			  crm_log_xml(LOG_ERR, "Invalid (N)ACK", msg);
 			  return FALSE);
 
-		crm_log_message_adv(LOG_DEBUG_2, "Processing (N)ACK", msg);
+		crm_log_xml(LOG_DEBUG_2, "Processing (N)ACK", msg);
 		crm_info("Processing (N)ACK %s from %s",
-			  cl_get_string(msg, XML_ATTR_REFERENCE), from);
+			  crm_element_value(msg, XML_ATTR_REFERENCE), from);
 		extract_event(xml_obj);
 		
 	} else if(safe_str_eq(type, XML_ATTR_RESPONSE)) {
@@ -227,11 +225,11 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		return TRUE;
 
 	} else if(strcasecmp(op, CRM_OP_TRANSITION) == 0) {
-		const char *graph_file = cl_get_string(msg, F_CRM_TGRAPH);
- 		const char *graph_input = cl_get_string(msg, F_CRM_TGRAPH_INPUT);
+		const char *graph_file = crm_element_value(msg, F_CRM_TGRAPH);
+ 		const char *graph_input = crm_element_value(msg, F_CRM_TGRAPH_INPUT);
 		CRM_CHECK(graph_file != NULL || xml_data != NULL,
 			  crm_err("No graph provided");
-			  crm_log_message(LOG_WARNING, msg);
+			  crm_log_xml(LOG_WARNING, "no graph", msg);
 			  return TRUE);
 
 		if(transition_graph->complete == FALSE) {
@@ -240,7 +238,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 				INFINITY, tg_restart, "Transition Active", NULL);
 
 		}  else {
-			crm_data_t *graph_data = xml_data;
+			xmlNode *graph_data = xml_data;
 			crm_debug("Processing graph derived from %s", graph_input);
 
 			if(graph_file != NULL) {
@@ -405,20 +403,20 @@ tengine_stonith_dispatch(IPC_Channel *sender, void *user_data)
 #endif
 
 void
-cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
-		    crm_data_t *output, void *user_data)
+cib_fencing_updated(xmlNode *msg, int call_id, int rc,
+		    xmlNode *output, void *user_data)
 {
 	trigger_graph();
 
 	if(rc < cib_ok) {
 		crm_err("CIB update failed: %s", cib_error2string(rc));
-		crm_log_xml_warn(msg, "[Failed Update]");
+		crm_log_xml_warn(msg, "Failed update");
 	}
 }
 
 void
-cib_action_updated(const HA_Message *msg, int call_id, int rc,
-		   crm_data_t *output, void *user_data)
+cib_action_updated(xmlNode *msg, int call_id, int rc,
+		   xmlNode *output, void *user_data)
 {
 	trigger_graph();
 

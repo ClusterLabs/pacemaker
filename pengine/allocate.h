@@ -151,15 +151,15 @@ extern gboolean is_active(rsc_to_node_t *cons);
 extern gboolean native_constraint_violated(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint);
 
-extern gboolean unpack_rsc_to_attr(crm_data_t *xml_obj, pe_working_set_t *data_set);
+extern gboolean unpack_rsc_to_attr(xmlNode *xml_obj, pe_working_set_t *data_set);
 
-extern gboolean unpack_rsc_to_node(crm_data_t *xml_obj, pe_working_set_t *data_set);
+extern gboolean unpack_rsc_to_node(xmlNode *xml_obj, pe_working_set_t *data_set);
 
-extern gboolean unpack_rsc_order(crm_data_t *xml_obj, pe_working_set_t *data_set);
+extern gboolean unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set);
 
-extern gboolean unpack_rsc_colocation(crm_data_t *xml_obj, pe_working_set_t *data_set);
+extern gboolean unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
 
-extern gboolean unpack_rsc_location(crm_data_t *xml_obj, pe_working_set_t *data_set);
+extern gboolean unpack_rsc_location(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
 

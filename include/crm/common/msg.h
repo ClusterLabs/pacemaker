@@ -23,11 +23,11 @@
 #include <crm/common/util.h>
 #include <clplumbing/ipc.h>
 
-extern crm_data_t *createPingAnswerFragment(const char *from,
+extern xmlNode *createPingAnswerFragment(const char *from,
 					   const char *status);
 
 
-extern gboolean process_hello_message(crm_data_t *hello,
+extern gboolean process_hello_message(xmlNode *hello,
 				      char **uuid,
 				      char **client_name,
 				      char **major_version,

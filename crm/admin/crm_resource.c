@@ -215,10 +215,10 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	char *local_attr_id = NULL;
 	char *local_attr_set = NULL;
 	
-	crm_data_t *xml_top = NULL;
-	crm_data_t *xml_obj = NULL;
-	crm_data_t *nv_children = NULL;
-	crm_data_t *set_children = NULL;
+	xmlNode *xml_top = NULL;
+	xmlNode *xml_obj = NULL;
+	xmlNode *nv_children = NULL;
+	xmlNode *set_children = NULL;
 
 	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
@@ -354,8 +354,8 @@ delete_resource_attr(
 	const char *rsc_id, const char *attr_set, const char *attr_id,
 	const char *attr_name, cib_t *cib, pe_working_set_t *data_set)
 {
-	crm_data_t *xml_obj = NULL;
-	crm_data_t *xml_match = NULL;
+	xmlNode *xml_obj = NULL;
+	xmlNode *xml_match = NULL;
 
 	int rc = cib_ok;
 	char *local_attr_id = NULL;
@@ -428,16 +428,10 @@ crmd_msg_callback(IPC_Channel * server, void *private_data)
 {
 	int lpc = 0;
 	IPC_Message *msg = NULL;
-	ha_msg_input_t *new_input = NULL;
 	gboolean hack_return_good = TRUE;
 
 	while (server->ch_status != IPC_DISCONNECT
 	       && server->ops->is_message_pending(server) == TRUE) {
-		if(new_input != NULL) {
-			delete_ha_msg_input(new_input);
-			new_input = NULL;
-		}
-		
 		if (server->ops->recv(server, &msg) != IPC_OK) {
 			perror("Receive failure:");
 			return !hack_return_good;
@@ -449,17 +443,7 @@ crmd_msg_callback(IPC_Channel * server, void *private_data)
 		}
 
 		lpc++;
-		new_input = new_ipc_msg_input(msg);
-		crm_log_message(LOG_MSG, new_input->msg);
-		msg->msg_done(msg);
-		
-		if (validate_crm_message(
-			    new_input->msg, crm_system_name, our_pid,
-			    XML_ATTR_RESPONSE) == FALSE) {
-			crm_info("Message was not a CRM response. Discarding.");
-		}
-		delete_ha_msg_input(new_input);
-		new_input = NULL;		
+		msg->msg_done(msg);		
 	}
 
 	if (server->ch_status == IPC_DISCONNECT) {
@@ -477,11 +461,11 @@ send_lrm_rsc_op(IPC_Channel *crmd_channel, const char *op,
 {
 	char *key = NULL;
 	int rc = cib_send_failed;
-	HA_Message *cmd = NULL;
-	crm_data_t *xml_rsc = NULL;
+	xmlNode *cmd = NULL;
+	xmlNode *xml_rsc = NULL;
 	const char *value = NULL;
-	HA_Message *params = NULL;
-	crm_data_t *msg_data = NULL;
+	xmlNode *params = NULL;
+	xmlNode *msg_data = NULL;
 	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
 	if(rsc == NULL) {
@@ -543,7 +527,7 @@ send_lrm_rsc_op(IPC_Channel *crmd_channel, const char *op,
 	    CMD_ERR("Could not send %s op to the crmd", op);
 	}
 	
-	crm_msg_del(cmd);
+	free_xml(cmd);
 	return rc;
 }
 
@@ -566,7 +550,7 @@ fail_lrm_rsc(IPC_Channel *crmd_channel, const char *host_uname,
 static int
 refresh_lrm(IPC_Channel *crmd_channel, const char *host_uname)  
 {
-	HA_Message *cmd = NULL;
+	xmlNode *cmd = NULL;
 	int rc = cib_send_failed;
 	
 	cmd = create_request(CRM_OP_LRM_REFRESH, NULL, host_uname,
@@ -575,7 +559,7 @@ refresh_lrm(IPC_Channel *crmd_channel, const char *host_uname)
 	if(send_ipc_message(crmd_channel, cmd)) {
 		rc = 0;
 	}
-	crm_msg_del(cmd);
+	free_xml(cmd);
 	return rc;
 }
 
@@ -588,15 +572,15 @@ migrate_resource(
 	char *later_s = NULL;
 	enum cib_errors rc = cib_ok;
 	char *id = NULL;
-	crm_data_t *cib = NULL;
-	crm_data_t *rule = NULL;
-	crm_data_t *expr = NULL;
-	crm_data_t *constraints = NULL;
-	crm_data_t *fragment = NULL;
-	crm_data_t *lifetime = NULL;
+	xmlNode *cib = NULL;
+	xmlNode *rule = NULL;
+	xmlNode *expr = NULL;
+	xmlNode *constraints = NULL;
+	xmlNode *fragment = NULL;
+	xmlNode *lifetime = NULL;
 	
-	crm_data_t *can_run = NULL;
-	crm_data_t *dont_run = NULL;
+	xmlNode *can_run = NULL;
+	xmlNode *dont_run = NULL;
 
 	fragment = create_cib_fragment(NULL, NULL);
 	cib = fragment;
@@ -782,7 +766,7 @@ list_resource_operations(const char *rsc_id, const char *host_uname, gboolean ac
     resource_t *rsc = NULL;
     int opts = pe_print_printf|pe_print_rsconly|pe_print_suppres_nl;
     GListPtr ops = find_operations(rsc_id, host_uname, active, data_set);
-    slist_iter(xml_op, crm_data_t, ops, lpc,
+    slist_iter(xml_op, xmlNode, ops, lpc,
 	       const char *op_rsc = crm_element_value(xml_op, "resource");
 	       const char *last = crm_element_value(xml_op, "last_run");
 	       const char *status_s = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
@@ -812,7 +796,7 @@ int
 main(int argc, char **argv)
 {
 	pe_working_set_t data_set;
-	crm_data_t *cib_xml_copy = NULL;
+	xmlNode *cib_xml_copy = NULL;
 
 	cib_t *	cib_conn = NULL;
 	enum cib_errors rc = cib_ok;
@@ -1192,7 +1176,7 @@ main(int argc, char **argv)
 		rc = dump_resource_prop(rsc_id, prop_name, &data_set);
 
 	} else if(rsc_cmd == 'S') {
-		crm_data_t *msg_data = NULL;
+		xmlNode *msg_data = NULL;
 		if(prop_value == NULL || strlen(prop_value) == 0) {
 			CMD_ERR("You need to supply a value with the -v option\n");
 			return CIBRES_MISSING_FIELD;
@@ -1245,18 +1229,18 @@ main(int argc, char **argv)
 					  cib_conn, &data_set);
 
 	} else if(rsc_cmd == 'P') {
-		HA_Message *cmd = NULL;
+		xmlNode *cmd = NULL;
 		
 		cmd = create_request(CRM_OP_REPROBE, NULL, host_uname,
 				     CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 		send_ipc_message(crmd_channel, cmd);
-		crm_msg_del(cmd);
+		free_xml(cmd);
 
 	} else if(rsc_cmd == 'R') {
 		refresh_lrm(crmd_channel, host_uname);
 
 	} else if(rsc_cmd == 'D') {
-		crm_data_t *msg_data = NULL;
+		xmlNode *msg_data = NULL;
 		
 		if(rsc_id == NULL) {
 			CMD_ERR("Must supply a resource id with -r\n");

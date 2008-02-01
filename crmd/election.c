@@ -44,7 +44,7 @@ do_election_vote(long long action,
 		 fsa_data_t *msg_data)
 {
 	gboolean not_voting = FALSE;
-	HA_Message *vote = NULL;
+	xmlNode *vote = NULL;
 	
 	/* don't vote if we're in one of these states or wanting to shut down */
 	switch(cur_state) {
@@ -80,8 +80,8 @@ do_election_vote(long long action,
 		CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
 	current_election_id++;
-	ha_msg_add(vote, F_CRM_ELECTION_OWNER, fsa_our_uuid);
-	ha_msg_add_int(vote, F_CRM_ELECTION_ID, current_election_id);
+	crm_xml_add(vote, F_CRM_ELECTION_OWNER, fsa_our_uuid);
+	crm_xml_add_int(vote, F_CRM_ELECTION_ID, current_election_id);
 
 	send_request(vote, NULL);
 	crm_debug("Destroying voted hash");
@@ -109,13 +109,13 @@ do_dc_heartbeat(gpointer data)
 	fsa_timer_t *timer = (fsa_timer_t *)data;
 
 	crm_debug_3("Sending DC Heartbeat %d", beat_num);
-	HA_Message *msg = ha_msg_new(5); 
-	ha_msg_add(msg, F_TYPE,		T_CRM);
-	ha_msg_add(msg, F_SUBTYPE,	XML_ATTR_REQUEST);
-	ha_msg_add(msg, F_CRM_SYS_TO,   CRM_SYSTEM_CRMD);
-	ha_msg_add(msg, F_CRM_SYS_FROM, CRM_SYSTEM_DC);
-	ha_msg_add(msg, F_CRM_TASK,	CRM_OP_HBEAT);
-	ha_msg_add_int(msg, "dc_beat_seq", beat_num);
+	xmlNode *msg = ha_msg_new(5); 
+	crm_xml_add(msg, F_TYPE,		T_CRM);
+	crm_xml_add(msg, F_SUBTYPE,	XML_ATTR_REQUEST);
+	crm_xml_add(msg, F_CRM_SYS_TO,   CRM_SYSTEM_CRMD);
+	crm_xml_add(msg, F_CRM_SYS_FROM, CRM_SYSTEM_DC);
+	crm_xml_add(msg, F_CRM_TASK,	CRM_OP_HBEAT);
+	crm_xml_add_int(msg, "dc_beat_seq", beat_num);
 	beat_num++;
 
 	if(send_msg_via_ha(msg) == FALSE) {
@@ -208,10 +208,10 @@ do_election_count_vote(long long action,
 	enum crmd_fsa_input election_result = I_NULL;
 	crm_node_t *our_node = NULL, *your_node = NULL;
 	ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
-	const char *op            = cl_get_string(vote->msg, F_CRM_TASK);
-	const char *vote_from     = cl_get_string(vote->msg, F_CRM_HOST_FROM);
-	const char *your_version  = cl_get_string(vote->msg, F_CRM_VERSION);
-	const char *election_owner= cl_get_string(vote->msg, F_CRM_ELECTION_OWNER);
+	const char *op            = crm_element_value(vote->msg, F_CRM_TASK);
+	const char *vote_from     = crm_element_value(vote->msg, F_CRM_HOST_FROM);
+	const char *your_version  = crm_element_value(vote->msg, F_CRM_VERSION);
+	const char *election_owner= crm_element_value(vote->msg, F_CRM_ELECTION_OWNER);
 	
 	/* if the membership copy is NULL we REALLY shouldnt be voting
 	 * the question is how we managed to get here.
@@ -234,7 +234,7 @@ do_election_count_vote(long long action,
 			g_hash_destroy_str, g_hash_destroy_str);
  	}
 
-	ha_msg_value_int(vote->msg, F_CRM_ELECTION_ID, &election_id);
+	crm_element_value_int(vote->msg, F_CRM_ELECTION_ID, &election_id);
 	crm_debug("Election %d, owner: %s", election_id, election_owner);
 
 	/* update the list of nodes that have voted */
@@ -308,7 +308,7 @@ do_election_count_vote(long long action,
 
 	if(we_loose) {
 		gboolean vote_sent = FALSE;
-		HA_Message *novote = create_request(
+		xmlNode *novote = create_request(
 			CRM_OP_NOVOTE, NULL, vote_from,
 			CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
@@ -326,8 +326,8 @@ do_election_count_vote(long long action,
 			
 		}
 
-		ha_msg_add(novote, F_CRM_ELECTION_OWNER, election_owner);
-		ha_msg_add_int(novote, F_CRM_ELECTION_ID, election_id);
+		crm_xml_add(novote, F_CRM_ELECTION_OWNER, election_owner);
+		crm_xml_add_int(novote, F_CRM_ELECTION_ID, election_id);
 		
 		vote_sent = send_request(novote, NULL);
 		CRM_DEV_ASSERT(vote_sent);
@@ -366,8 +366,8 @@ do_election_timer_ctrl(long long action,
 
 
 static void
-feature_update_callback(const HA_Message *msg, int call_id, int rc,
-			crm_data_t *output, void *user_data)
+feature_update_callback(xmlNode *msg, int call_id, int rc,
+			xmlNode *output, void *user_data)
 {
 	if(rc != cib_ok) {
 		fsa_data_t *msg_data = NULL;
@@ -384,7 +384,7 @@ do_dc_takeover(long long action,
 	       fsa_data_t *msg_data)
 {
 	int rc = cib_ok;
-	crm_data_t *cib = NULL;
+	xmlNode *cib = NULL;
 	
 	crm_info("Taking over DC status for this partition");
 	set_bit_inplace(fsa_input_register, R_THE_DC);

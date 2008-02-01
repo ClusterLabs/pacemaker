@@ -61,10 +61,10 @@ main(int argc, char ** argv)
     const char *output_file = NULL;
     const char *cib_action = NULL;
 	
-    crm_data_t *input = NULL;
-    crm_data_t *output = NULL;
-    crm_data_t *result_cib = NULL;
-    crm_data_t *current_cib = NULL;
+    xmlNode *input = NULL;
+    xmlNode *output = NULL;
+    xmlNode *result_cib = NULL;
+    xmlNode *current_cib = NULL;
 
 #ifdef HAVE_GETOPT_H
     int option_index = 0;
@@ -239,7 +239,7 @@ main(int argc, char ** argv)
     
     /* read local config file */
     rc = cib_perform_op(
-	cib_action, command_options, section, input, TRUE, &changed,
+	cib_action, command_options, section, NULL, input, TRUE, &changed,
 	current_cib, &result_cib, &output);
 
     if(rc != cib_ok) {

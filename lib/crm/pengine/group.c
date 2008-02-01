@@ -30,8 +30,8 @@
 gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
 	resource_t *self = NULL;
-	crm_data_t *xml_obj = rsc->xml;
-	crm_data_t *xml_self = copy_xml(rsc->xml);
+	xmlNode *xml_obj = rsc->xml;
+	xmlNode *xml_self = copy_xml(rsc->xml);
 	group_variant_data_t *group_data = NULL;
 	const char *group_ordered = g_hash_table_lookup(
 		rsc->meta, XML_RSC_ATTR_ORDERED);
@@ -59,8 +59,7 @@ gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	}
 	
 	/* this is a bit of a hack - but simplifies everything else */
-	ha_msg_mod(xml_self, F_XML_TAGNAME, XML_CIB_TAG_RESOURCE);
-
+	xml_self->name = xmlCharStrdup(XML_CIB_TAG_RESOURCE);
 	if(common_unpack(xml_self, &self, NULL,  data_set)) {
 		group_data->self = self;
 		self->restart_type = pe_restart_restart;

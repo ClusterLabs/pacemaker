@@ -218,7 +218,7 @@ crm_node_t *crm_update_peer(
     return node;
 }
 
-crm_node_t *crm_update_ais_node(crm_data_t *member, long long seq)
+crm_node_t *crm_update_ais_node(xmlNode *member, long long seq)
 {
     const char *addr = crm_element_value(member, "addr");
     const char *uname = crm_element_value(member, "uname");

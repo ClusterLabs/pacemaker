@@ -30,13 +30,114 @@
 
 #include <crm/crm.h>
 
-#define OPTARGS	"V?f:"
+#define OPTARGS	"V?X:I:"
+
+#ifdef HAVE_GETOPT_H
+#  include <getopt.h>
+#endif
 int
 main(int argc, char ** argv)
 {
-	if(crm_get_msec("0") < 0) {
-		fprintf(stderr, "error\n");
+    int flag;
+    char *buffer = NULL;
+    xmlNode *xml = NULL;
+    HA_Message *ha = NULL;
+    const char *xml_file = NULL;
+    const char *input_file = NULL;
+    
+    crm_log_init("atest", LOG_DEBUG, FALSE, TRUE, argc, argv);
+    while (1) {
+#ifdef HAVE_GETOPT_H
+	int option_index = 0;
+	static struct option long_options[] = {
+	    /* Top-level Options */
+	    {"help",        0, 0, '?'},
+	    {"verbose",     0, 0, 'V'},			
+	    
+	    {"xml-file",    1, 0, 'X'},
+	    {"save-input",  1, 0, 'I'},
+
+	    {0, 0, 0, 0}
+	};
+#endif
+    
+#ifdef HAVE_GETOPT_H
+	flag = getopt_long(argc, argv, OPTARGS,
+			   long_options, &option_index);
+#else
+	flag = getopt(argc, argv, OPTARGS);
+#endif
+	if (flag == -1)
+	    break;
+	
+	switch(flag) {
+#ifdef HAVE_GETOPT_H
+	    case 0:
+		printf("option %s", long_options[option_index].name);
+		if (optarg)
+		    printf(" with arg %s", optarg);
+		printf("\n");
+		
+		break;
+#endif
+	    case 'X':
+		xml_file = optarg;
+		break;
+	    case 'I':
+		input_file = optarg;
+		break;
+	    case '?':
+		/* usage("ptest", 0); */
+		break;
+	    default:
+		printf("?? getopt returned character code 0%o ??\n", flag);
+		break;
 	}
-	return 0;
+    }
+
+    if(xml_file != NULL) {
+	FILE *xml_strm = fopen(xml_file, "r");
+	if(xml_strm == NULL) {
+	    cl_perror("Could not open %s for reading", xml_file);
+	    
+	} else {
+	    if(strstr(xml_file, ".bz2") != NULL) {
+		xml = file2xml(xml_strm, TRUE);
+		
+	    } else {
+		xml = file2xml(xml_strm, FALSE);
+	    }
+	    fclose(xml_strm);
+	}
+    }
+
+    crm_log_xml_info(xml, "read");
+
+    ha = convert_xml_message(xml);
+    crm_log_message_adv(LOG_INFO, "ha", ha);
+
+    xml = convert_ha_message(NULL, ha, "foo");
+    
+    crm_log_xml_info(xml, "write");
+    
+    if(input_file != NULL) {
+	FILE *input_strm = fopen(input_file, "w");
+	if(input_strm == NULL) {
+	    cl_perror("Could not open %s for writing", input_file);
+	} else {
+	    buffer = dump_xml_formatted(xml);
+	    if(fprintf(input_strm, "%s\n", buffer) < 0) {
+		cl_perror("Write to %s failed", input_file);
+	    }
+	    fflush(input_strm);
+	    fclose(input_strm);
+	    crm_free(buffer);
+	}
+    }
+
+    if(crm_get_msec("0") < 0) {
+	fprintf(stderr, "error\n");
+    }
+    return 0;
 }
 

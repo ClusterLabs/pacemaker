@@ -34,44 +34,44 @@
 #define IS_DAEMON
 #define IPC_COMMS
 
-typedef crm_data_t cibStatus;
-typedef crm_data_t cibResource;
-typedef crm_data_t cibConstraint;
-typedef crm_data_t cibHaNode;
+typedef xmlNode cibStatus;
+typedef xmlNode cibResource;
+typedef xmlNode cibConstraint;
+typedef xmlNode cibHaNode;
 
 
 /* extern gboolean initialized; */
-/* extern crm_data_t *the_cib; */
-/* extern crm_data_t *node_search; */
-/* extern crm_data_t *resource_search; */
-/* extern crm_data_t *constraint_search; */
-/* extern crm_data_t *status_search; */
+/* extern xmlNode *the_cib; */
+/* extern xmlNode *node_search; */
+/* extern xmlNode *resource_search; */
+/* extern xmlNode *constraint_search; */
+/* extern xmlNode *status_search; */
 /* extern const char* crm_system_name; */
 
-extern crm_data_t *get_the_CIB(void);
+extern xmlNode *get_the_CIB(void);
 
-extern int addResource  (crm_data_t *cib, crm_data_t *anXmlNode);
-extern int addConstraint(crm_data_t *cib, crm_data_t *anXmlNode);
-extern int addHaNode    (crm_data_t *cib, crm_data_t *anXmlNode);
-extern int addStatus    (crm_data_t *cib, crm_data_t *anXmlNode);
+extern int addResource  (xmlNode *cib, xmlNode *anXmlNode);
+extern int addConstraint(xmlNode *cib, xmlNode *anXmlNode);
+extern int addHaNode    (xmlNode *cib, xmlNode *anXmlNode);
+extern int addStatus    (xmlNode *cib, xmlNode *anXmlNode);
 
-extern crm_data_t *findResource  (crm_data_t *cib, const char *id);
-extern crm_data_t *findConstraint(crm_data_t *cib, const char *id);
-extern crm_data_t *findHaNode    (crm_data_t *cib, const char *id);
-extern crm_data_t *findStatus    (crm_data_t *cib, const char *id);
+extern xmlNode *findResource  (xmlNode *cib, const char *id);
+extern xmlNode *findConstraint(xmlNode *cib, const char *id);
+extern xmlNode *findHaNode    (xmlNode *cib, const char *id);
+extern xmlNode *findStatus    (xmlNode *cib, const char *id);
 
-extern int updateResource  (crm_data_t *cib, crm_data_t *anXmlNode);
-extern int updateConstraint(crm_data_t *cib, crm_data_t *anXmlNode);
-extern int updateHaNode    (crm_data_t *cib, crm_data_t *anXmlNode);
-extern int updateStatus    (crm_data_t *cib, crm_data_t *anXmlNode);
+extern int updateResource  (xmlNode *cib, xmlNode *anXmlNode);
+extern int updateConstraint(xmlNode *cib, xmlNode *anXmlNode);
+extern int updateHaNode    (xmlNode *cib, xmlNode *anXmlNode);
+extern int updateStatus    (xmlNode *cib, xmlNode *anXmlNode);
 
-extern int delResource  (crm_data_t *cib, crm_data_t *delete_spec);
-extern int delConstraint(crm_data_t *cib, crm_data_t *delete_spec);
-extern int delHaNode    (crm_data_t *cib, crm_data_t *delete_spec);
-extern int delStatus    (crm_data_t *cib, crm_data_t *delete_spec);
+extern int delResource  (xmlNode *cib, xmlNode *delete_spec);
+extern int delConstraint(xmlNode *cib, xmlNode *delete_spec);
+extern int delHaNode    (xmlNode *cib, xmlNode *delete_spec);
+extern int delStatus    (xmlNode *cib, xmlNode *delete_spec);
 
-extern int add_cib_object   (crm_data_t *parent, crm_data_t *new_obj);
-extern int delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec);
-extern int update_cib_object(crm_data_t *parent, crm_data_t *new_obj);
+extern int add_cib_object   (xmlNode *parent, xmlNode *new_obj);
+extern int delete_cib_object(xmlNode *parent, xmlNode *delete_spec);
+extern int update_cib_object(xmlNode *parent, xmlNode *new_obj);
 
 #endif

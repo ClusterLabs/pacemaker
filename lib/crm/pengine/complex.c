@@ -23,7 +23,7 @@
 #include <crm/msg_xml.h>
 #include <clplumbing/cl_misc.h>
 
-void populate_hash(crm_data_t *nvpair_list, GHashTable *hash,
+void populate_hash(xmlNode *nvpair_list, GHashTable *hash,
 		   const char **attrs, int attrs_length);
 
 resource_object_functions_t resource_class_functions[] = {
@@ -125,7 +125,7 @@ get_meta_attributes(GHashTable *meta_hash, resource_t *rsc,
 }
 
 gboolean	
-common_unpack(crm_data_t * xml_obj, resource_t **rsc,
+common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	      resource_t *parent, pe_working_set_t *data_set)
 {
 	const char *value = NULL;

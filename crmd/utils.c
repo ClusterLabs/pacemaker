@@ -1047,7 +1047,7 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	 *   join process (with itself).  We can include a special case
 	 *   later if desired.
 	 */
-	crm_data_t *tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
+	xmlNode *tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
 
 	crm_debug_3("Creating node entry for %s", uname);
 	set_uuid(tmp1, XML_ATTR_UUID, uname);
@@ -1062,13 +1062,13 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	
 }
 
-crm_data_t*
+xmlNode*
 create_node_state(
 	const char *uname, const char *ha_state, const char *ccm_state,
 	const char *crmd_state, const char *join_state, const char *exp_state,
 	gboolean clear_shutdown, const char *src)
 {
-	crm_data_t *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+	xmlNode *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
 	crm_debug_2("%s Creating node state entry for %s", src, uname);
 	set_uuid(node_state, XML_ATTR_UUID, uname);
@@ -1161,15 +1161,15 @@ process_client_disconnect(crmd_client_t *curr_client)
 	}
 }
 
-void update_dc(HA_Message *msg, gboolean assert_same)
+void update_dc(xmlNode *msg, gboolean assert_same)
 {
 	char *last_dc = fsa_our_dc;
 	const char *dc_version = NULL;
 	const char *welcome_from = NULL;
 
 	if(msg != NULL) {
-		dc_version = cl_get_string(msg, F_CRM_VERSION);
-		welcome_from = cl_get_string(msg, F_CRM_HOST_FROM);
+		dc_version = crm_element_value(msg, F_CRM_VERSION);
+		welcome_from = crm_element_value(msg, F_CRM_HOST_FROM);
 		
 		CRM_CHECK(dc_version != NULL, return);
 		CRM_CHECK(welcome_from != NULL, return);

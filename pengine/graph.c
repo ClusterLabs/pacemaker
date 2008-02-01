@@ -273,12 +273,12 @@ static void dup_attr(gpointer key, gpointer value, gpointer user_data)
 	g_hash_table_replace(user_data, crm_strdup(key), crm_strdup(value));
 }
 
-crm_data_t *
+xmlNode *
 action2xml(action_t *action, gboolean as_input)
 {
 	gboolean needs_node_info = TRUE;
-	crm_data_t * action_xml = NULL;
-	crm_data_t * args_xml = NULL;
+	xmlNode * action_xml = NULL;
+	xmlNode * args_xml = NULL;
 	char *action_id_s = NULL;
 	
 	if(action == NULL) {
@@ -362,7 +362,7 @@ action2xml(action_t *action, gboolean as_input)
 	if(action->rsc != NULL && action->pseudo == FALSE) {
 		int lpc = 0;
 		
-		crm_data_t *rsc_xml = create_xml_node(
+		xmlNode *rsc_xml = create_xml_node(
 			action_xml, crm_element_name(action->rsc->xml));
 
 		const char *attr_list[] = {
@@ -570,11 +570,11 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 {
 	int last_action = -1;
 	int synapse_priority = 0;
-	crm_data_t * syn = NULL;
-	crm_data_t * set = NULL;
-	crm_data_t * in  = NULL;
-	crm_data_t * input = NULL;
-	crm_data_t * xml_action = NULL;
+	xmlNode * syn = NULL;
+	xmlNode * set = NULL;
+	xmlNode * in  = NULL;
+	xmlNode * input = NULL;
+	xmlNode * xml_action = NULL;
 
 	if(should_dump_action(action) == FALSE) {
 		return;

@@ -199,8 +199,8 @@ typedef struct cib_api_operations_s
 {
 		int (*variant_op)(
 			cib_t *cib, const char *op, const char *host,
-			const char *section, crm_data_t *data,
-			crm_data_t **output_data, int call_options);
+			const char *section, xmlNode *data,
+			xmlNode **output_data, int call_options);
 		
 		int (*signon) (
 			cib_t *cib, const char *name, enum cib_conn_type type);
@@ -209,16 +209,16 @@ typedef struct cib_api_operations_s
 
 		int (*set_op_callback)(
 			cib_t *cib, void (*callback)(
-				const HA_Message *msg, int callid ,
-				int rc, crm_data_t *output));
+				const xmlNode *msg, int callid ,
+				int rc, xmlNode *output));
 
 		int (*add_notify_callback)(
 			cib_t *cib, const char *event, void (*callback)(
-				const char *event, HA_Message *msg));
+				const char *event, xmlNode *msg));
 
 		int (*del_notify_callback)(
 			cib_t *cib, const char *event, void (*callback)(
-				const char *event, HA_Message *msg));
+				const char *event, xmlNode *msg));
 
 		int (*set_connection_dnotify)(
 			cib_t *cib, void (*dnotify)(gpointer user_data));
@@ -228,13 +228,13 @@ typedef struct cib_api_operations_s
 
 		int (*noop)(cib_t *cib, int call_options);
 		int (*ping)(
-			cib_t *cib, crm_data_t **output_data, int call_options);
+			cib_t *cib, xmlNode **output_data, int call_options);
 
 		int (*query)(cib_t *cib, const char *section,
-			     crm_data_t **output_data, int call_options);
+			     xmlNode **output_data, int call_options);
 		int (*query_from)(
 			cib_t *cib, const char *host, const char *section,
-			crm_data_t **output_data, int call_options);
+			xmlNode **output_data, int call_options);
 
 		int (*is_master) (cib_t *cib);
 		int (*set_master)(cib_t *cib, int call_options);
@@ -248,21 +248,21 @@ typedef struct cib_api_operations_s
 
 		int (*bump_epoch)(cib_t *cib, int call_options);
 		
-		int (*create)(cib_t *cib, const char *section, crm_data_t *data,
-			   crm_data_t **output_data, int call_options);
-		int (*modify)(cib_t *cib, const char *section, crm_data_t *data,
-			   crm_data_t **output_data, int call_options);
-		int (*update)(cib_t *cib, const char *section, crm_data_t *data,
-			   crm_data_t **output_data, int call_options);
-		int (*replace)(cib_t *cib, const char *section, crm_data_t *data,
-			   crm_data_t **output_data, int call_options);
-		int (*delete)(cib_t *cib, const char *section, crm_data_t *data,
-			   crm_data_t **output_data, int call_options);
+		int (*create)(cib_t *cib, const char *section, xmlNode *data,
+			   xmlNode **output_data, int call_options);
+		int (*modify)(cib_t *cib, const char *section, xmlNode *data,
+			   xmlNode **output_data, int call_options);
+		int (*update)(cib_t *cib, const char *section, xmlNode *data,
+			   xmlNode **output_data, int call_options);
+		int (*replace)(cib_t *cib, const char *section, xmlNode *data,
+			   xmlNode **output_data, int call_options);
+		int (*delete)(cib_t *cib, const char *section, xmlNode *data,
+			   xmlNode **output_data, int call_options);
 		int (*delete_absolute)(
-			cib_t *cib, const char *section, crm_data_t *data,
-			crm_data_t **output_data, int call_options);
+			cib_t *cib, const char *section, xmlNode *data,
+			xmlNode **output_data, int call_options);
 		int (*erase)(
-			cib_t *cib, crm_data_t **output_data, int call_options);
+			cib_t *cib, xmlNode **output_data, int call_options);
 
 		int (*quit)(cib_t *cib,   int call_options);
 		
@@ -285,8 +285,8 @@ struct cib_s
 		void  *variant_opaque;
 
 		GList *notify_list;
-		void (*op_callback)(const HA_Message *msg, int call_id,
-				    int rc, crm_data_t *output);
+		void (*op_callback)(const xmlNode *msg, int call_id,
+				    int rc, xmlNode *output);
 
 		cib_api_operations_t *cmds;
 };
@@ -297,7 +297,7 @@ typedef struct cib_notify_client_s
 	const char *obj_id;   /* implement one day */
 	const char *obj_type; /* implement one day */
 	void (*callback)(
-		const char *event, HA_Message *msg);
+		const char *event, xmlNode *msg);
 	
 } cib_notify_client_t;
 
@@ -310,8 +310,7 @@ struct timer_rec_s
 
 typedef struct cib_callback_client_s 
 {
-		void (*callback)(
-			const HA_Message*, int, int, crm_data_t*, void*);
+		void (*callback)(xmlNode*, int, int, xmlNode*, void*);
 		void *user_data;
 		gboolean only_success;
 		struct timer_rec_s *timer;
@@ -323,52 +322,52 @@ extern cib_t *cib_new(void);
 extern void cib_delete(cib_t *cib);
 
 extern gboolean   startCib(const char *filename);
-extern crm_data_t *get_cib_copy(cib_t *cib);
-extern crm_data_t *cib_get_generation(cib_t *cib);
-extern int cib_compare_generation(crm_data_t *left, crm_data_t *right);
+extern xmlNode *get_cib_copy(cib_t *cib);
+extern xmlNode *cib_get_generation(cib_t *cib);
+extern int cib_compare_generation(xmlNode *left, xmlNode *right);
 extern gboolean add_cib_op_callback_timeout(
     int call_id, int timeout, gboolean only_success, void *user_data,
-    void (*callback)(const HA_Message*, int, int, crm_data_t*,void*));
+    void (*callback)(xmlNode*, int, int, xmlNode*,void*));
 extern gboolean add_cib_op_callback(
 	int call_id, gboolean only_success, void *user_data,
-	void (*callback)(const HA_Message*, int, int, crm_data_t*,void*));
+	void (*callback)(xmlNode*, int, int, xmlNode*,void*));
 extern void remove_cib_op_callback(int call_id, gboolean all_callbacks);
 extern int num_cib_op_callbacks(void);
 
 /* Utility functions */
-extern crm_data_t *get_object_root(const char *object_type,crm_data_t *the_root);
-extern crm_data_t *create_cib_fragment_adv(
-			crm_data_t *update, const char *section, const char *source);
+extern xmlNode *get_object_root(const char *object_type,xmlNode *the_root);
+extern xmlNode *create_cib_fragment_adv(
+			xmlNode *update, const char *section, const char *source);
 extern char *cib_pluralSection(const char *a_section);
 extern const char *get_crm_option(
-	crm_data_t *cib, const char *name, gboolean do_warn);
+	xmlNode *cib, const char *name, gboolean do_warn);
 
 /* Error Interpretation*/
 extern const char *cib_error2string(enum cib_errors);
 extern const char *cib_op2string(enum cib_update_op);
 
-extern crm_data_t *createEmptyCib(void);
-extern gboolean verifyCibXml(crm_data_t *cib);
+extern xmlNode *createEmptyCib(void);
+extern gboolean verifyCibXml(xmlNode *cib);
 extern int cib_section2enum(const char *a_section);
 
 #define create_cib_fragment(update,cib_section) create_cib_fragment_adv(update, cib_section, __FUNCTION__)
 
-extern gboolean cib_config_changed(crm_data_t *old_cib, crm_data_t *new_cib, crm_data_t **result);
+extern gboolean cib_config_changed(xmlNode *old_cib, xmlNode *new_cib, xmlNode **result);
 
-extern crm_data_t *diff_cib_object(
-	crm_data_t *old, crm_data_t *new,gboolean suppress);
+extern xmlNode *diff_cib_object(
+	xmlNode *old, xmlNode *new,gboolean suppress);
 
 extern gboolean apply_cib_diff(
-	crm_data_t *old, crm_data_t *diff, crm_data_t **new);
+	xmlNode *old, xmlNode *diff, xmlNode **new);
 
-extern void log_cib_diff(int log_level, crm_data_t *diff, const char *function);
+extern void log_cib_diff(int log_level, xmlNode *diff, const char *function);
 
 extern gboolean cib_diff_version_details(
-	crm_data_t *diff, int *admin_epoch, int *epoch, int *updates, 
+	xmlNode *diff, int *admin_epoch, int *epoch, int *updates, 
 	int *_admin_epoch, int *_epoch, int *_updates);
 
 extern gboolean cib_version_details(
-	crm_data_t *cib, int *admin_epoch, int *epoch, int *updates);
+	xmlNode *cib, int *admin_epoch, int *epoch, int *updates);
 
 extern enum cib_errors update_attr(
 	cib_t *the_cib, int call_options,
@@ -376,9 +375,9 @@ extern enum cib_errors update_attr(
 	const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console);
 
 extern enum cib_errors find_attr_details(
-	crm_data_t *xml_search, const char *node_uuid,
+	xmlNode *xml_search, const char *node_uuid,
 	const char *set_name, const char *attr_id, const char *attr_name,
-	crm_data_t **xml_obj, gboolean to_console);
+	xmlNode **xml_obj, gboolean to_console);
 
 extern enum cib_errors read_attr(
 	cib_t *the_cib,
@@ -407,7 +406,7 @@ enum cib_errors delete_standby(
 	cib_t *the_cib,
 	const char *uuid, const char *scope, const char *standby_value);
 
-extern const char *feature_set(crm_data_t *xml_obj);
+extern const char *feature_set(xmlNode *xml_obj);
 
 #endif
 

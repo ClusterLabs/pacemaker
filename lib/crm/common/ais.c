@@ -203,7 +203,7 @@ send_ais_text(int class, const char *data,
 }
 
 gboolean
-send_ais_message(crm_data_t *msg, 
+send_ais_message(xmlNode *msg, 
 		 gboolean local, const char *node, enum crm_ais_msg_types dest)
 {
     gboolean rc = TRUE;
@@ -214,10 +214,6 @@ send_ais_message(crm_data_t *msg,
 	return FALSE;
     }
 
-    if(cl_get_string(msg, F_XML_TAGNAME) == NULL) {
-	ha_msg_add(msg, F_XML_TAGNAME, "ais_msg");
-    }
-    
     data = dump_xml_unformatted(msg);
     rc = send_ais_text(0, data, local, node, dest);
     crm_free(data);
@@ -322,7 +318,7 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
     }
 
     if(msg->header.id == crm_class_members) {
-	crm_data_t *xml = string2xml(data);
+	xmlNode *xml = string2xml(data);
 
 	if(xml != NULL) {
 	    const char *seq_s = crm_element_value(xml, "id");

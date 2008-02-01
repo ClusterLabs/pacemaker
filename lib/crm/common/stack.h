@@ -21,13 +21,13 @@
 
 #if SUPPORT_HEARTBEAT
 extern ll_cluster_t *heartbeat_cluster;
-extern gboolean send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg,
+extern gboolean send_ha_message(ll_cluster_t *hb_conn, xmlNode *msg,
 				const char *node, gboolean force_ordered);
 extern gboolean ha_msg_dispatch(ll_cluster_t *cluster_conn, gpointer user_data);
 
 extern gboolean register_heartbeat_conn(
     ll_cluster_t *hb_cluster, char **uuid, char **uname,
-    void (*hb_message)(HA_Message * msg, void* private_data),
+    void (*hb_message)(HA_Message *msg, void* private_data),
     void (*hb_destroy)(gpointer user_data));
 
 #endif
@@ -35,7 +35,7 @@ extern gboolean register_heartbeat_conn(
 #if SUPPORT_AIS
 
 extern gboolean send_ais_message(
-    crm_data_t *msg, gboolean local,
+    xmlNode *msg, gboolean local,
     const char *node, enum crm_ais_msg_types dest);
 
 extern void terminate_ais_connection(void);

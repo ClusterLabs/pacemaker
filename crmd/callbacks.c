@@ -36,9 +36,9 @@
 #include <crmd_callbacks.h>
 
 
-crm_data_t *find_xml_in_hamessage(const HA_Message * msg);
+xmlNode *find_xml_in_hamessage(const xmlNode * msg);
 void crmd_ha_connection_destroy(gpointer user_data);
-void crmd_ha_msg_filter(HA_Message *msg);
+void crmd_ha_msg_filter(xmlNode *msg);
 
 /* From join_dc... */
 extern gboolean check_join_state(
@@ -104,15 +104,15 @@ crmd_ha_connection_destroy(gpointer user_data)
 }
 
 void
-crmd_ha_msg_filter(HA_Message *msg)
+crmd_ha_msg_filter(xmlNode *msg)
 {
     ha_msg_input_t *new_input = NULL;
-    const char *from = ha_msg_value(msg, F_ORIG);
-    const char *seq  = ha_msg_value(msg, F_SEQ);
-    const char *op   = ha_msg_value(msg, F_CRM_TASK);
+    const char *from = crm_element_value(msg, F_ORIG);
+    const char *seq  = crm_element_value(msg, F_SEQ);
+    const char *op   = crm_element_value(msg, F_CRM_TASK);
     
-    const char *sys_to   = ha_msg_value(msg, F_CRM_SYS_TO);
-    const char *sys_from = ha_msg_value(msg, F_CRM_SYS_FROM);
+    const char *sys_to   = crm_element_value(msg, F_CRM_SYS_TO);
+    const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
     
     if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
 	crm_debug_2("Ignoring message for the DC [F_SEQ=%s]", seq);
@@ -134,7 +134,7 @@ crmd_ha_msg_filter(HA_Message *msg)
     }
     
     if(new_input == NULL) {
-	crm_log_message_adv(LOG_MSG, "HA[inbound]", msg);
+	crm_log_xml(LOG_MSG, "HA[inbound]", msg);
 	new_input = new_ha_msg_input(msg);
 	route_message(C_HA_MESSAGE, new_input);
     }
@@ -145,23 +145,24 @@ crmd_ha_msg_filter(HA_Message *msg)
 
 #if SUPPORT_HEARTBEAT
 void
-crmd_ha_msg_callback(HA_Message * msg, void* private_data)
+crmd_ha_msg_callback(HA_Message *hamsg, void* private_data)
 {
 	int level = LOG_DEBUG;
 	oc_node_t *from_node = NULL;
 	
-	const char *from = ha_msg_value(msg, F_ORIG);
-	const char *op   = ha_msg_value(msg, F_CRM_TASK);
-	const char *sys_from = ha_msg_value(msg, F_CRM_SYS_FROM);
+	xmlNode *msg = convert_ha_message(NULL, hamsg, __FUNCTION__);
+	const char *from = crm_element_value(msg, F_ORIG);
+	const char *op   = crm_element_value(msg, F_CRM_TASK);
+	const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
 
-	CRM_DEV_ASSERT(from != NULL);
+	CRM_CHECK(from != NULL, crm_log_xml_err(msg, "anon"); return);
 
 	crm_debug_2("HA[inbound]: %s from %s", op, from);
 
 	if(crm_peer_cache == NULL || crm_active_members() == 0) {
 		crm_debug("Ignoring HA messages until we are"
 			  " connected to the CCM (%s op from %s)", op, from);
-		crm_log_message_adv(
+		crm_log_xml(
 			LOG_MSG, "HA[inbound]: Ignore (No CCM)", msg);
 		return;
 	}
@@ -183,7 +184,7 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 			   " membership list (size=%d)", op, from,
 			   crm_active_members());
 		
-		crm_log_message_adv(LOG_MSG, "HA[inbound]: CCM Discard", msg);
+		crm_log_xml(LOG_MSG, "HA[inbound]: CCM Discard", msg);
 
 	} else {
 	    crmd_ha_msg_filter(msg);
@@ -202,7 +203,7 @@ gboolean
 crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 {
 	int lpc = 0;
-	HA_Message *msg = NULL;
+	xmlNode *msg = NULL;
 	ha_msg_input_t *new_input = NULL;
 	crmd_client_t *curr_client = (crmd_client_t*)user_data;
 	gboolean stay_connected = TRUE;
@@ -215,7 +216,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 			break;
 		}
 
-		msg = msgfromIPC_noauth(client);
+		msg = xmlfromIPC(client, 0);
 		if (msg == NULL) {
 			crm_info("%s: no message this time",
 				curr_client->table_key);
@@ -224,10 +225,10 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 
 		lpc++;
 		new_input = new_ha_msg_input(msg);
-		crm_msg_del(msg);
+		free_xml(msg);
 		
 		crm_debug_2("Processing msg from %s", curr_client->table_key);
-		crm_log_message_adv(LOG_DEBUG_2, "CRMd[inbound]", new_input->msg);
+		crm_log_xml(LOG_DEBUG_2, "CRMd[inbound]", new_input->msg);
 		if(crmd_authorize_message(new_input, curr_client)) {
 			route_message(C_IPC_MESSAGE, new_input);
 		}
@@ -293,7 +294,7 @@ lrm_op_callback(lrm_op_t* op)
 void
 crmd_ha_status_callback(const char *node, const char *status, void *private)
 {
-	crm_data_t *update = NULL;
+	xmlNode *update = NULL;
 	crm_node_t *member = NULL;
 	crm_notice("Status update: Node %s now has status [%s]",node,status);
 
@@ -339,7 +340,7 @@ crmd_client_status_callback(const char * node, const char * client,
 {
 	const char *join = NULL;
 	crm_node_t *member = NULL;
-	crm_data_t *update = NULL;
+	xmlNode *update = NULL;
 	gboolean clear_shutdown = FALSE;
 	
 	crm_debug_3("Invoked");

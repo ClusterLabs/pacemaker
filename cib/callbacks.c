@@ -49,7 +49,6 @@
 #include <heartbeat.h>
 #include "common.h"
 
-
 extern GMainLoop*  mainloop;
 extern gboolean cib_shutdown_flag;
 extern gboolean stand_alone;
@@ -61,12 +60,12 @@ extern ll_cluster_t *hb_conn;
 extern void cib_ha_connection_destroy(gpointer user_data);
 
 extern enum cib_errors cib_update_counter(
-	crm_data_t *xml_obj, const char *field, gboolean reset);
+	xmlNode *xml_obj, const char *field, gboolean reset);
 
 extern void GHFunc_count_peers(
 	gpointer key, gpointer value, gpointer user_data);
 extern enum cib_errors revision_check(
-	crm_data_t *cib_update, crm_data_t *cib_copy, int flags);
+	xmlNode *cib_update, xmlNode *cib_copy, int flags);
 
 void initiate_exit(void);
 void terminate_cib(const char *caller);
@@ -74,11 +73,10 @@ gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
 gboolean cib_msg_timeout(gpointer data);
 void cib_GHFunc(gpointer key, gpointer value, gpointer user_data);
 gboolean can_write(int flags);
-void send_cib_replace(const HA_Message *sync_request, const char *host);
+void send_cib_replace(const xmlNode *sync_request, const char *host);
 void cib_process_request(
-	HA_Message *request, gboolean privileged, gboolean force_synchronous,
+	xmlNode *request, gboolean privileged, gboolean force_synchronous,
 	gboolean from_peer, cib_client_t *cib_client);
-HA_Message *cib_construct_reply(HA_Message *request, HA_Message *output, int rc);
 
 extern GHashTable *client_list;
 
@@ -89,213 +87,12 @@ extern unsigned long cib_bad_connects, cib_num_timeouts;
 extern longclock_t cib_call_time;
 extern enum cib_errors cib_status;
 
-static HA_Message *
-cib_prepare_common(HA_Message *root, const char *section)
-{
-	HA_Message *data = NULL;
-	
-	/* extract the CIB from the fragment */
-	if(root == NULL) {
-		return NULL;
 
-	} else if(safe_str_eq(crm_element_name(root), XML_TAG_FRAGMENT)
-		|| safe_str_eq(crm_element_name(root), F_CIB_CALLDATA)) {
-		data = find_xml_node(root, XML_TAG_CIB, TRUE);
-		if(data != NULL) {
-			crm_debug_3("Extracted CIB from %s", TYPE(root));
-		} else {
-			crm_log_xml_debug_4(root, "No CIB");
-		}
-		
-	} else {
-		data = root;
-	}
-
-	/* grab the section specified for the command */
-	if(section != NULL
-	   && data != NULL
-	   && safe_str_eq(crm_element_name(data), XML_TAG_CIB)){
-		int rc = revision_check(data, the_cib, 0/* call_options */);
-		if(rc == cib_ok) {
-			data = get_object_root(section, data);
-			if(data != NULL) {
-				crm_debug_3("Extracted %s from CIB", section);
-			} else {
-				crm_log_xml_debug_4(root, "No Section");
-			}
-		} else {
-			crm_debug_2("Revision check failed");
-		}
-		
-	}
-
-	crm_log_xml_debug_4(root, "cib:input");
-	return copy_xml(data);
-}
-
-static gboolean
-verify_section(const char *section)
-{
-	if(section == NULL) {
-		return TRUE;
-	} else if(safe_str_eq(section, XML_TAG_CIB)) {
-		return TRUE;
-	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
-		return TRUE;
-	} else if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
-		return TRUE;
-	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
-		return TRUE;
-	} else if(safe_str_eq(section, XML_CIB_TAG_RESOURCES)) {
-		return TRUE;
-	} else if(safe_str_eq(section, XML_CIB_TAG_CONSTRAINTS)) {
-		return TRUE;
-	}
-	return FALSE;
-}
-
-
-static enum cib_errors
-cib_prepare_none(HA_Message *request, HA_Message **data, const char **section)
-{
-	*data = NULL;
-	*section = cl_get_string(request, F_CIB_SECTION);
-	if(verify_section(*section) == FALSE) {
-		return cib_bad_section;
-	}
-	return cib_ok;
-}
-
-static enum cib_errors
-cib_prepare_data(HA_Message *request, HA_Message **data, const char **section)
-{
-	HA_Message *input_fragment = get_message_xml(request, F_CIB_CALLDATA);
-	*section = cl_get_string(request, F_CIB_SECTION);
-	*data = cib_prepare_common(input_fragment, *section);
- 	free_xml(input_fragment);
-	if(verify_section(*section) == FALSE) {
-		return cib_bad_section;
-	}
-	return cib_ok;
-}
-
-static enum cib_errors
-cib_prepare_sync(HA_Message *request, HA_Message **data, const char **section)
-{
-	*section = cl_get_string(request, F_CIB_SECTION);
-	*data = request;
-	if(verify_section(*section) == FALSE) {
-		return cib_bad_section;
-	}
-	return cib_ok;
-}
-
-static enum cib_errors
-cib_prepare_diff(HA_Message *request, HA_Message **data, const char **section)
-{
-	HA_Message *input_fragment = NULL;
-	const char *update     = cl_get_string(request, F_CIB_GLOBAL_UPDATE);
-
-	*data = NULL;
-	*section = NULL;
-
-	if(crm_is_true(update)) {
-		input_fragment = get_message_xml(request,F_CIB_UPDATE_DIFF);
-		
-	} else {
-		input_fragment = get_message_xml(request, F_CIB_CALLDATA);
-	}
-
-	CRM_CHECK(input_fragment != NULL,crm_log_message(LOG_WARNING, request));
-	*data = cib_prepare_common(input_fragment, NULL);
- 	free_xml(input_fragment);
-	return cib_ok;
-}
-
-static enum cib_errors
-cib_cleanup_query(const char *op, HA_Message **data, HA_Message **output) 
-{
-	CRM_DEV_ASSERT(*data == NULL);
-	return cib_ok;
-}
-
-static enum cib_errors
-cib_cleanup_data(const char *op, HA_Message **data, HA_Message **output) 
-{
-	free_xml(*output);
-	free_xml(*data);
-	return cib_ok;
-}
-
-static enum cib_errors
-cib_cleanup_output(const char *op, HA_Message **data, HA_Message **output) 
-{
-	free_xml(*output);
-	return cib_ok;
-}
-
-static enum cib_errors
-cib_cleanup_none(const char *op, HA_Message **data, HA_Message **output) 
-{
-	CRM_DEV_ASSERT(*data == NULL);
-	CRM_DEV_ASSERT(*output == NULL);
-	return cib_ok;
-}
-
-static enum cib_errors
-cib_cleanup_sync(const char *op, HA_Message **data, HA_Message **output) 
-{
-	/* data is non-NULL but doesnt need to be free'd */
- 	CRM_DEV_ASSERT(*output == NULL);
-	return cib_ok;
-}
-
-/*
-typedef struct cib_operation_s
-{
-	const char* 	operation;
-	gboolean	modifies_cib;
-	gboolean	needs_privileges;
-	gboolean	needs_quorum;
-	enum cib_errors (*prepare)(HA_Message *, crm_data_t**, const char **);
-	enum cib_errors (*cleanup)(crm_data_t**, crm_data_t**);
-	enum cib_errors (*fn)(
-		const char *, int, const char *,
-		crm_data_t*, crm_data_t*, crm_data_t**, crm_data_t**);
-} cib_operation_t;
-*/
-/* technically bump does modify the cib...
- * but we want to split the "bump" from the "sync"
- */
-cib_operation_t cib_server_ops[] = {
-	{NULL,		   FALSE, FALSE, FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_default},
-	{CIB_OP_QUERY,     FALSE, FALSE, FALSE, cib_prepare_none, cib_cleanup_query,  cib_process_query},
-	{CIB_OP_MODIFY,    TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_data,   cib_process_modify},
-	{CIB_OP_UPDATE,    TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_data,   cib_process_change},
-	{CIB_OP_APPLY_DIFF,TRUE,  TRUE,  TRUE,  cib_prepare_diff, cib_cleanup_data,   cib_process_diff},
-	{CIB_OP_SLAVE,     FALSE, TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
-	{CIB_OP_SLAVEALL,  FALSE, TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
-	{CIB_OP_SYNC_ONE,  FALSE, TRUE,  FALSE, cib_prepare_sync, cib_cleanup_sync,   cib_process_sync_one},
-	{CIB_OP_MASTER,    FALSE, TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
-	{CIB_OP_ISMASTER,  FALSE, TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
-	{CIB_OP_BUMP,      TRUE,  TRUE,  TRUE,  cib_prepare_none, cib_cleanup_output, cib_process_bump},
-	{CIB_OP_REPLACE,   TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_data,   cib_process_replace},
-	{CIB_OP_CREATE,    TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_data,   cib_process_change},
-	{CIB_OP_DELETE,    TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_data,   cib_process_delete},
-	{CIB_OP_DELETE_ALT,TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_data,   cib_process_change},
-	{CIB_OP_SYNC,      FALSE, TRUE,  FALSE, cib_prepare_sync, cib_cleanup_sync,   cib_process_sync},
-	{CRM_OP_QUIT,	   FALSE, TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_quit},
-	{CRM_OP_PING,	   FALSE, FALSE, FALSE, cib_prepare_none, cib_cleanup_output, cib_process_ping},
-	{CIB_OP_ERASE,     TRUE,  TRUE,  TRUE,  cib_prepare_none, cib_cleanup_output, cib_process_erase},
-	{CRM_OP_NOOP,	   FALSE, FALSE, FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_default},
-	{"cib_shutdown_req",FALSE, TRUE, FALSE, cib_prepare_sync, cib_cleanup_sync,   cib_process_shutdown_req},
-};
-
-int send_via_callback_channel(HA_Message *msg, const char *token);
+int send_via_callback_channel(xmlNode *msg, const char *token);
 
 enum cib_errors cib_process_command(
-	HA_Message *request, HA_Message **reply,
-	crm_data_t **cib_diff, gboolean privileged);
+	xmlNode *request, xmlNode **reply,
+	xmlNode **cib_diff, gboolean privileged);
 
 gboolean cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 			     gboolean force_synchronous, gboolean privileged);
@@ -418,7 +215,7 @@ gboolean
 cib_client_connect_rw_ro(IPC_Channel *channel, gpointer user_data)
 {
 	cl_uuid_t client_id;
-	HA_Message *reg_msg = NULL;
+	xmlNode *reg_msg = NULL;
 	cib_client_t *new_client = NULL;
 	char uuid_str[UU_UNPARSE_SIZEOF];
 	gboolean (*callback)(IPC_Channel *channel, gpointer user_data);
@@ -454,14 +251,13 @@ cib_client_connect_rw_ro(IPC_Channel *channel, gpointer user_data)
 	 */
 	g_hash_table_insert(client_list, new_client->id, new_client);
 	
-	reg_msg = ha_msg_new(3);
-	ha_msg_add(reg_msg, F_CIB_OPERATION, CRM_OP_REGISTER);
-	ha_msg_add(reg_msg, F_CIB_CLIENTID,  new_client->id);
-	ha_msg_add(
-		reg_msg, F_CIB_CALLBACK_TOKEN, new_client->callback_id);
+	reg_msg = create_xml_node(NULL, "callback");
+	crm_xml_add(reg_msg, F_CIB_OPERATION, CRM_OP_REGISTER);
+	crm_xml_add(reg_msg, F_CIB_CLIENTID,  new_client->id);
+	crm_xml_add(reg_msg, F_CIB_CALLBACK_TOKEN, new_client->callback_id);
 	
 	send_ipc_message(channel, reg_msg);		
-	crm_msg_del(reg_msg);
+	free_xml(reg_msg);
 	
 	return TRUE;
 }
@@ -516,8 +312,8 @@ gboolean
 cib_null_callback(IPC_Channel *channel, gpointer user_data)
 {
 	gboolean keep_connection = TRUE;
-	HA_Message *op_request = NULL;
-	HA_Message *registered = NULL;
+	xmlNode *op_request = NULL;
+	xmlNode *registered = NULL;
 	cib_client_t *cib_client = user_data;
 	cib_client_t *hash_client = NULL;
 	const char *type = NULL;
@@ -532,24 +328,24 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 	}
 	
 	while(IPC_ISRCONN(channel)) {
-		crm_msg_del(op_request);
+		free_xml(op_request); op_request = NULL;
 
 		if(channel->ops->is_message_pending(channel) == 0) {
 			break;
 		}
 
-		op_request = msgfromIPC_noauth(channel);
+		op_request = xmlfromIPC(channel, 0);
 		if(op_request == NULL) {
 			break;
 		}
 		
-		type = cl_get_string(op_request, F_CIB_OPERATION);
+		type = crm_element_value(op_request, F_CIB_OPERATION);
 		if(safe_str_eq(type, T_CIB_NOTIFY) ) {
 			/* Update the notify filters for this client */
 			int on_off = 0;
-			ha_msg_value_int(
+			crm_element_value_int(
 				op_request, F_CIB_NOTIFY_ACTIVATE, &on_off);
-			type = cl_get_string(op_request, F_CIB_NOTIFY_TYPE);
+			type = crm_element_value(op_request, F_CIB_NOTIFY_TYPE);
 
 			crm_info("Setting %s callbacks for %s: %s",
 				 type, cib_client->name, on_off?"on":"off");
@@ -578,8 +374,8 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 			continue;
 		}
 
-		uuid_ticket = cl_get_string(op_request, F_CIB_CALLBACK_TOKEN);
-		client_name = cl_get_string(op_request, F_CIB_CLIENTNAME);
+		uuid_ticket = crm_element_value(op_request, F_CIB_CALLBACK_TOKEN);
+		client_name = crm_element_value(op_request, F_CIB_CLIENTNAME);
 
 		CRM_DEV_ASSERT(uuid_ticket != NULL);
 		if(crm_assert_failed) {
@@ -602,7 +398,7 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 		
 		if(register_failed) {
 			crm_err("Registration request failed... disconnecting");
-			crm_msg_del(op_request);
+			free_xml(op_request);
 			return FALSE;
 		}
 
@@ -622,18 +418,18 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 			cib_client->diffs = TRUE;
 		}		
 
-		registered = ha_msg_new(2);
-		ha_msg_add(registered, F_CIB_OPERATION, CRM_OP_REGISTER);
-		ha_msg_add(registered, F_CIB_CLIENTID,  cib_client->id);
+		registered = create_xml_node(NULL, "registered");
+		crm_xml_add(registered, F_CIB_OPERATION, CRM_OP_REGISTER);
+		crm_xml_add(registered, F_CIB_CLIENTID,  cib_client->id);
 		
 		send_ipc_message(channel, registered);
-		crm_msg_del(registered);
+		free_xml(registered);
 
 		if(channel->ch_status == IPC_CONNECT) {
 			break;
 		}
 	}
-	crm_msg_del(op_request);
+	free_xml(op_request);
 
 	if(channel->ch_status != IPC_CONNECT) {
 		crm_debug_2("Client disconnected");
@@ -644,11 +440,11 @@ cib_null_callback(IPC_Channel *channel, gpointer user_data)
 }
 
 void
-cib_common_callback_worker(HA_Message *op_request, cib_client_t *cib_client,
+cib_common_callback_worker(xmlNode *op_request, cib_client_t *cib_client,
 			   gboolean force_synchronous, gboolean privileged);
 
 void
-cib_common_callback_worker(HA_Message *op_request, cib_client_t *cib_client,
+cib_common_callback_worker(xmlNode *op_request, cib_client_t *cib_client,
 			   gboolean force_synchronous, gboolean privileged)
 {
 	int rc = cib_ok;
@@ -660,7 +456,7 @@ cib_common_callback_worker(HA_Message *op_request, cib_client_t *cib_client,
 	
 	call_start = time_longclock();
 	cib_client->num_calls++;
-	op = cl_get_string(op_request, F_CIB_OPERATION);
+	op = crm_element_value(op_request, F_CIB_OPERATION);
 
 	rc = cib_get_operation_id(op, &call_type);
 	if(rc != cib_ok) {
@@ -687,7 +483,7 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 		    gboolean force_synchronous, gboolean privileged)
 {
 	int lpc = 0;
-	HA_Message *op_request = NULL;
+	xmlNode *op_request = NULL;
 	gboolean keep_channel = TRUE;
 
 	if(cib_client == NULL) {
@@ -711,7 +507,7 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 			break;
 		}
 
-		op_request = msgfromIPC_noauth(channel);
+		op_request = xmlfromIPC(channel, 0);
 		if (op_request == NULL) {
 			perror("Receive failure:");
 			break;
@@ -720,14 +516,14 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 		lpc++;
 		crm_assert_failed = FALSE;
 
-		crm_log_message_adv(LOG_MSG, "Client[inbound]", op_request);
-		ha_msg_add(op_request, F_CIB_CLIENTID, cib_client->id);
-		ha_msg_add(op_request, F_CIB_CLIENTNAME, cib_client->name);
+		crm_log_xml(LOG_MSG, "Client[inbound]", op_request);
+		crm_xml_add(op_request, F_CIB_CLIENTID, cib_client->id);
+		crm_xml_add(op_request, F_CIB_CLIENTNAME, cib_client->name);
 		
 		cib_common_callback_worker(
 			op_request, cib_client, force_synchronous, privileged);
 
-		crm_msg_del(op_request);
+		free_xml(op_request);
 
 		if(channel->ch_status == IPC_CONNECT) {
 			break;
@@ -744,18 +540,18 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 	return keep_channel;
 }
 
-extern void cib_send_remote_msg(void *session, HA_Message *msg);
+extern void cib_send_remote_msg(void *session, xmlNode *msg);
 
 static void
-do_local_notify(HA_Message *notify_src, const char *client_id, gboolean sync_reply, gboolean from_peer) 
+do_local_notify(xmlNode *notify_src, const char *client_id,
+		gboolean sync_reply, gboolean from_peer) 
 {
 	/* send callback to originating child */
 	cib_client_t *client_obj = NULL;
-	HA_Message *client_reply = NULL;
+	xmlNode *client_reply = NULL;
 	enum cib_errors local_rc = cib_ok;
 
 	crm_debug_2("Performing notification");
-	
 	client_reply = cib_msg_copy(notify_src, TRUE);
 
 	if(client_id != NULL) {
@@ -793,7 +589,7 @@ do_local_notify(HA_Message *notify_src, const char *client_id, gboolean sync_rep
 			 client_obj?client_obj->name:"<unknown>", cib_error2string(local_rc));
 	}
 
-	ha_msg_del(client_reply);
+	free_xml(client_reply);
 }
 
 static void
@@ -801,7 +597,7 @@ parse_local_options(
 	cib_client_t *cib_client, int call_type, int call_options, const char *host, const char *op, 
 	gboolean *local_notify, gboolean *needs_reply, gboolean *process, gboolean *needs_forward) 
 {
-	if(cib_server_ops[call_type].modifies_cib
+	if(cib_op_modifies(call_type)
 	   && !(call_options & cib_inhibit_bcast)) {
 		/* we need to send an update anyway */
 		*needs_reply = TRUE;
@@ -840,15 +636,15 @@ parse_local_options(
 
 static gboolean
 parse_peer_options(
-	int call_type, HA_Message *request, 
+	int call_type, xmlNode *request, 
 	gboolean *local_notify, gboolean *needs_reply, gboolean *process, gboolean *needs_forward) 
 {
-	const char *op         = cl_get_string(request, F_CIB_OPERATION);
-	const char *originator = cl_get_string(request, F_ORIG);
-	const char *host       = cl_get_string(request, F_CIB_HOST);
-	const char *reply_to   = cl_get_string(request, F_CIB_ISREPLY);
-	const char *update     = cl_get_string(request, F_CIB_GLOBAL_UPDATE);
-	const char *delegated  = cl_get_string(request, F_CIB_DELEGATED);
+	const char *op         = crm_element_value(request, F_CIB_OPERATION);
+	const char *originator = crm_element_value(request, F_ORIG);
+	const char *host       = crm_element_value(request, F_CIB_HOST);
+	const char *reply_to   = crm_element_value(request, F_CIB_ISREPLY);
+	const char *update     = crm_element_value(request, F_CIB_GLOBAL_UPDATE);
+	const char *delegated  = crm_element_value(request, F_CIB_DELEGATED);
 
 	if(safe_str_eq(op, "cib_shutdown_req")) {
 		if(reply_to != NULL) {
@@ -864,7 +660,7 @@ parse_peer_options(
 		crm_debug_2("Processing global/peer update from %s"
 			    " that originated from us", originator);
 		*needs_reply = FALSE;
-		if(cl_get_string(request, F_CIB_CLIENTID) != NULL) {
+		if(crm_element_value(request, F_CIB_CLIENTID) != NULL) {
 			*local_notify = TRUE;
 		}
 		return TRUE;
@@ -904,7 +700,7 @@ parse_peer_options(
 		
 	} else {
 		crm_err("Nothing for us to do?");
-		crm_log_message_adv(LOG_ERR, "Peer[inbound]", request);
+		crm_log_xml(LOG_ERR, "Peer[inbound]", request);
 	}
 
 	return FALSE;
@@ -912,14 +708,14 @@ parse_peer_options(
 
 		
 static void
-forward_request(HA_Message *request, cib_client_t *cib_client, int call_options)
+forward_request(xmlNode *request, cib_client_t *cib_client, int call_options)
 {
-	HA_Message *forward_msg = NULL;
-	const char *op         = cl_get_string(request, F_CIB_OPERATION);
-	const char *host       = cl_get_string(request, F_CIB_HOST);
+	xmlNode *forward_msg = NULL;
+	const char *op         = crm_element_value(request, F_CIB_OPERATION);
+	const char *host       = crm_element_value(request, F_CIB_HOST);
 
 	forward_msg = cib_msg_copy(request, TRUE);
-	ha_msg_add(forward_msg, F_CIB_DELEGATED, cib_our_uname);
+	crm_xml_add(forward_msg, F_CIB_DELEGATED, cib_our_uname);
 	
 	if(host != NULL) {
 		crm_debug_2("Forwarding %s op to %s", op, host);
@@ -944,14 +740,14 @@ forward_request(HA_Message *request, cib_client_t *cib_client, int call_options)
 		forward_msg = NULL;
 		
 	} 
-	crm_msg_del(forward_msg);
+	free_xml(forward_msg);
 }
 
 static void
 send_peer_reply(
-	HA_Message *msg, crm_data_t *result_diff, const char *originator, gboolean broadcast)
+	xmlNode *msg, xmlNode *result_diff, const char *originator, gboolean broadcast)
 {
-	HA_Message *reply_copy = NULL;
+	xmlNode *reply_copy = NULL;
 
 	CRM_ASSERT(msg != NULL);
 
@@ -981,32 +777,32 @@ send_peer_reply(
 			    diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
 			    diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
 
-		ha_msg_add(reply_copy, F_CIB_ISREPLY, originator);
-		ha_msg_add(reply_copy, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
-		ha_msg_mod(reply_copy, F_CIB_OPERATION, CIB_OP_APPLY_DIFF);
+		crm_xml_add(reply_copy, F_CIB_ISREPLY, originator);
+		crm_xml_add(reply_copy, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
+		crm_xml_add(reply_copy, F_CIB_OPERATION, CIB_OP_APPLY_DIFF);
 
 		digest = calculate_xml_digest(the_cib, FALSE, TRUE);
-		ha_msg_mod(result_diff, XML_ATTR_DIGEST, digest);
+		crm_xml_add(result_diff, XML_ATTR_DIGEST, digest);
 /* 		crm_log_xml_debug(the_cib, digest); */
 		crm_free(digest);
 		
  		add_message_xml(reply_copy, F_CIB_UPDATE_DIFF, result_diff);
-		crm_log_message(LOG_DEBUG_3, reply_copy);
+		crm_log_xml(LOG_DEBUG_3, "copy", reply_copy);
 		send_cluster_message(NULL, crm_msg_cib, reply_copy, TRUE);
 		
 	} else if(originator != NULL) {
 		/* send reply via HA to originating node */
 		crm_debug_2("Sending request result to originator only");
-		ha_msg_add(reply_copy, F_CIB_ISREPLY, originator);
+		crm_xml_add(reply_copy, F_CIB_ISREPLY, originator);
 		send_cluster_message(originator, crm_msg_cib, reply_copy, FALSE);
 	}
 	
-	crm_msg_del(reply_copy);
+	free_xml(reply_copy);
 }
 	
 void
 cib_process_request(
-	HA_Message *request, gboolean force_synchronous, gboolean privileged,
+	xmlNode *request, gboolean force_synchronous, gboolean privileged,
 	gboolean from_peer, cib_client_t *cib_client) 
 {
 	int call_type    = 0;
@@ -1016,18 +812,18 @@ cib_process_request(
 	gboolean needs_reply = TRUE;
 	gboolean local_notify = FALSE;
 	gboolean needs_forward = FALSE;
-	crm_data_t *result_diff = NULL;
+	xmlNode *result_diff = NULL;
 	
 	enum cib_errors rc = cib_ok;
-	HA_Message *op_reply = NULL;
+	xmlNode *op_reply = NULL;
 	
-	const char *op         = cl_get_string(request, F_CIB_OPERATION);
-	const char *originator = cl_get_string(request, F_ORIG);
-	const char *host       = cl_get_string(request, F_CIB_HOST);
-	const char *update     = cl_get_string(request, F_CIB_GLOBAL_UPDATE);
+	const char *op         = crm_element_value(request, F_CIB_OPERATION);
+	const char *originator = crm_element_value(request, F_ORIG);
+	const char *host       = crm_element_value(request, F_CIB_HOST);
+	const char *update     = crm_element_value(request, F_CIB_GLOBAL_UPDATE);
 
 	crm_debug_4("%s Processing msg %s",
-		  cib_our_uname, cl_get_string(request, F_SEQ));
+		  cib_our_uname, crm_element_value(request, F_SEQ));
 
 	cib_num_ops++;
 	if(cib_num_ops == 0) {
@@ -1041,7 +837,7 @@ cib_process_request(
 		host = NULL;
 	}	
 
-	ha_msg_value_int(request, F_CIB_CALLOPTS, &call_options);
+	crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
 	crm_debug_4("Retrieved call options: %d", call_options);
 	if(force_synchronous) {
 		call_options |= cib_sync_call;
@@ -1053,7 +849,7 @@ cib_process_request(
 
 	rc = cib_get_operation_id(op, &call_type);
 
-	if(cib_server_ops[call_type].modifies_cib) {
+	if(cib_op_modifies(call_type)) {
 		cib_num_updates++;
 	}
 	
@@ -1073,7 +869,7 @@ cib_process_request(
 	crm_debug_3("Finished determining processing actions");
 
 	if(call_options & cib_discard_reply) {
-		needs_reply = cib_server_ops[call_type].modifies_cib;
+		needs_reply = cib_op_modifies(call_type);
 		local_notify = FALSE;
 	}
 	
@@ -1093,9 +889,9 @@ cib_process_request(
 		cib_num_local++;
 		crm_debug_2("Performing local processing:"
 			    " op=%s origin=%s/%s,%s (update=%s)",
-			    cl_get_string(request, F_CIB_OPERATION), originator,
-			    cl_get_string(request, F_CIB_CLIENTID),
-			    cl_get_string(request, F_CIB_CALLID), update);
+			    crm_element_value(request, F_CIB_OPERATION), originator,
+			    crm_element_value(request, F_CIB_CLIENTID),
+			    crm_element_value(request, F_CIB_CALLID), update);
 		
 		rc = cib_process_command(
 			request, &op_reply, &result_diff, privileged);
@@ -1111,21 +907,22 @@ cib_process_request(
 			cib_num_fail++;
 			crm_err("%s operation failed: %s",
 				crm_str(op), cib_error2string(rc));
-			crm_log_message_adv(LOG_DEBUG, "CIB[output]", op_reply);
-			crm_log_message_adv(LOG_INFO, "Input message", request);
+			crm_log_xml(LOG_DEBUG, "CIB[output]", op_reply);
+			crm_log_xml(LOG_INFO, "Input message", request);
 		}
 
 		if(op_reply == NULL && (needs_reply || local_notify)) {
 			crm_err("Unexpected NULL reply to message");
-			crm_log_message(LOG_ERR, request);
+			crm_log_xml(LOG_ERR, "null reply", request);
 			needs_reply = FALSE;
 			local_notify = FALSE;
 		}		
 	}
 	crm_debug_3("processing response cases");
-
+	crm_debug("Notify: %d", local_notify);
+	
 	if(local_notify) {
-		const char *client_id = cl_get_string(request, F_CIB_CLIENTID);
+		const char *client_id = crm_element_value(request, F_CIB_CLIENTID);
 		if(process == FALSE) {
 			do_local_notify(request, client_id, call_options & cib_sync_call, from_peer);
 		} else {
@@ -1154,7 +951,7 @@ cib_process_request(
 		if(call_options & cib_inhibit_bcast) {
 			crm_debug_3("Request not broadcast: inhibited");
 		}
-		if(cib_server_ops[call_type].modifies_cib == FALSE || result_diff == NULL) {
+		if(cib_op_modifies(call_type) == FALSE || result_diff == NULL) {
 			crm_debug_3("Request not broadcast: R/O call");
 		}
 		if(rc != cib_ok) {
@@ -1165,17 +962,17 @@ cib_process_request(
 		send_peer_reply(op_reply, result_diff, originator, FALSE);
 	}
 	
-	crm_msg_del(op_reply);
+	free_xml(op_reply);
 	free_xml(result_diff);
 
 	return;	
 }
 
-HA_Message *
-cib_construct_reply(HA_Message *request, HA_Message *output, int rc) 
+xmlNode *
+cib_construct_reply(xmlNode *request, xmlNode *output, int rc) 
 {
 	int lpc = 0;
-	HA_Message *reply = NULL;
+	xmlNode *reply = NULL;
 	
 	const char *name = NULL;
 	const char *value = NULL;
@@ -1187,16 +984,16 @@ cib_construct_reply(HA_Message *request, HA_Message *output, int rc)
 	};
 
 	crm_debug_4("Creating a basic reply");
-	reply = ha_msg_new(8);
-	ha_msg_add(reply, F_TYPE, T_CIB);
+	reply = create_xml_node(NULL, "cib-reply");
+	crm_xml_add(reply, F_TYPE, T_CIB);
 
 	for(lpc = 0; lpc < DIMOF(names); lpc++) {
 		name = names[lpc];
-		value = cl_get_string(request, name);
-		ha_msg_add(reply, name, value);
+		value = crm_element_value(request, name);
+		crm_xml_add(reply, name, value);
 	}
 
-	ha_msg_add_int(reply, F_CIB_RC, rc);
+	crm_xml_add_int(reply, F_CIB_RC, rc);
 
 	if(output != NULL) {
 		crm_debug_4("Attaching reply output");
@@ -1206,15 +1003,15 @@ cib_construct_reply(HA_Message *request, HA_Message *output, int rc)
 }
 
 enum cib_errors
-cib_process_command(HA_Message *request, HA_Message **reply,
-		    crm_data_t **cib_diff, gboolean privileged)
+cib_process_command(xmlNode *request, xmlNode **reply,
+		    xmlNode **cib_diff, gboolean privileged)
 {
     gboolean send_r_notify = FALSE;
-    crm_data_t *output   = NULL;
-    crm_data_t *input    = NULL;
+    xmlNode *output   = NULL;
+    xmlNode *input    = NULL;
 
-    crm_data_t *current_cib = NULL;
-    crm_data_t *result_cib  = NULL;
+    xmlNode *current_cib = NULL;
+    xmlNode *result_cib  = NULL;
 	
     int call_type      = 0;
     int call_options   = 0;
@@ -1222,12 +1019,12 @@ cib_process_command(HA_Message *request, HA_Message **reply,
     enum cib_errors rc2 = cib_ok;
 
     int log_level = LOG_DEBUG_3;
-    crm_data_t *filtered = NULL;
+    xmlNode *filtered = NULL;
 	
     const char *op = NULL;
     const char *section = NULL;
     gboolean config_changed = FALSE;
-    gboolean global_update = crm_is_true(cl_get_string(request, F_CIB_GLOBAL_UPDATE));
+    gboolean global_update = crm_is_true(crm_element_value(request, F_CIB_GLOBAL_UPDATE));
 	
     CRM_ASSERT(cib_status == cib_ok);
 
@@ -1241,32 +1038,21 @@ cib_process_command(HA_Message *request, HA_Message **reply,
     current_cib = the_cib;
 	
     /* Start processing the request... */
-    op = cl_get_string(request, F_CIB_OPERATION);
-    ha_msg_value_int(request, F_CIB_CALLOPTS, &call_options);
+    op = crm_element_value(request, F_CIB_OPERATION);
+    crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
     rc = cib_get_operation_id(op, &call_type);
 	
-    if(rc == cib_ok &&
-       cib_server_ops[call_type].needs_privileges
-       && privileged == FALSE) {
-	/* abort */
-	rc = cib_not_authorized;
+    if(rc == cib_ok) {
+	rc = cib_op_can_run(call_type, call_options, privileged, global_update);
     }
 	
-    if(rc == cib_ok
-       && stand_alone == FALSE
-       && global_update == FALSE
-       && cib_server_ops[call_type].needs_quorum
-       && can_write(call_options) == FALSE) {
-	rc = cib_no_quorum;
-    }
-
     /* prevent NUMUPDATES from being incrimented - apply the change as-is */
     if(global_update) {
 	call_options |= cib_inhibit_bcast;
 	call_options |= cib_force_diff;		
     }
 
-    rc2 = cib_server_ops[call_type].prepare(request, &input, &section);
+    rc2 = cib_op_prepare(call_type, request, &input, &section);
     if(rc == cib_ok) {
 	rc = rc2;
     }
@@ -1275,8 +1061,8 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 	crm_debug_2("Call setup failed: %s", cib_error2string(rc));
 	goto done;
 		
-    } else if(cib_server_ops[call_type].modifies_cib == FALSE) {
-	rc = cib_perform_op(op, call_options, section, input, FALSE, &config_changed,
+    } else if(cib_op_modifies(call_type) == FALSE) {
+	rc = cib_perform_op(op, call_options, section, request, input, FALSE, &config_changed,
 			    current_cib, &result_cib, &output);
 
 	CRM_CHECK(result_cib == NULL, free_xml(result_cib));
@@ -1297,19 +1083,18 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 	    /* skip */
 	    CRM_CHECK(call_type == 4 || call_type == 11,
 		      crm_err("Call type: %d", call_type);
-		      crm_log_message(LOG_ERR, request));
+		      crm_log_xml(LOG_ERR, "bad op", request));
 	    crm_debug_2("Skipping update: global replace");
 	    manage_counters = FALSE;
 		
-	} else if(cib_server_ops[call_type].fn == cib_process_change
-		  && (call_options & cib_inhibit_bcast)) {
+	} else if(call_options & cib_inhibit_bcast) {
 	    /* skip */
 	    crm_debug_2("Skipping update: inhibit broadcast");
 	    manage_counters = FALSE;
 	}	
 	    
 	rc = cib_perform_op(
-	    op, call_options, section, input, manage_counters, &config_changed,
+	    op, call_options, section, request, input, manage_counters, &config_changed,
 	    current_cib, &result_cib, &output);
 	*cib_diff = diff_cib_object(current_cib, result_cib, FALSE);
     }
@@ -1325,8 +1110,8 @@ cib_process_command(HA_Message *request, HA_Message **reply,
     }
 	
     if((call_options & cib_inhibit_notify) == 0) {
-	const char *call_id = cl_get_string(request, F_CIB_CALLID);
-	const char *client = cl_get_string(request, F_CIB_CLIENTNAME);
+	const char *call_id = crm_element_value(request, F_CIB_CALLID);
+	const char *client = crm_element_value(request, F_CIB_CLIENTNAME);
 
 	cib_post_notify(call_options, op, input, rc, the_cib);
 	cib_diff_notify(call_options, client, call_id, op,
@@ -1378,10 +1163,11 @@ cib_process_command(HA_Message *request, HA_Message **reply,
   done:
     if((call_options & cib_discard_reply) == 0) {
 	*reply = cib_construct_reply(request, output, rc);
+	crm_log_xml_info(*reply, "cib:reply");
     }
 
     if(call_type >= 0) {
-	cib_server_ops[call_type].cleanup(op, &input, &output);
+	cib_op_cleanup(call_type, op, &input, &output);
     }
     if(per_action_cib) {
 	uninitializeCib();
@@ -1390,7 +1176,7 @@ cib_process_command(HA_Message *request, HA_Message **reply,
 }
 
 int
-send_via_callback_channel(HA_Message *msg, const char *token) 
+send_via_callback_channel(xmlNode *msg, const char *token) 
 {
 	cib_client_t *hash_client = NULL;
 	GList *list_item = NULL;
@@ -1438,12 +1224,12 @@ send_via_callback_channel(HA_Message *msg, const char *token)
 	
 	if(list_item != NULL) {
 		/* remove it - no need to time it out */
-		HA_Message *orig_msg = list_item->data;
+		xmlNode *orig_msg = list_item->data;
 		crm_debug_3("Removing msg from delegated list");
 		hash_client->delegated_calls = g_list_remove(
 			hash_client->delegated_calls, orig_msg);
 		CRM_DEV_ASSERT(orig_msg != msg);
-		crm_msg_del(orig_msg);
+		free_xml(orig_msg);
 	}
 	
 	if(rc == cib_ok) {
@@ -1460,14 +1246,18 @@ send_via_callback_channel(HA_Message *msg, const char *token)
 
 gint cib_GCompareFunc(gconstpointer a, gconstpointer b)
 {
-	const HA_Message *a_msg = a;
-	const HA_Message *b_msg = b;
+	const xmlNode *a_msg = a;
+	const xmlNode *b_msg = b;
 
 	int msg_a_id = 0;
 	int msg_b_id = 0;
+	const char *value = NULL;
 	
-	ha_msg_value_int(a_msg, F_CIB_CALLID, &msg_a_id);
-	ha_msg_value_int(b_msg, F_CIB_CALLID, &msg_b_id);
+	value = crm_element_value_const(a_msg, F_CIB_CALLID);
+	msg_a_id = crm_parse_int(value, NULL);
+
+	value = crm_element_value_const(b_msg, F_CIB_CALLID);
+	msg_b_id = crm_parse_int(value, NULL);
 	
 	if(msg_a_id == msg_b_id) {
 		return 0;
@@ -1491,8 +1281,8 @@ void
 cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 {
 	int timeout = 0; /* 1 iteration == 10 seconds */
-	HA_Message *msg = NULL;
-	HA_Message *reply = NULL;
+	xmlNode *msg = NULL;
+	xmlNode *reply = NULL;
 	const char *host_to = NULL;
 	cib_client_t *client = value;
 	GListPtr list = client->delegated_calls;
@@ -1500,7 +1290,7 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 	while(list != NULL) {
 		
 		msg = list->data;
-		ha_msg_value_int(msg, F_CIB_TIMEOUT, &timeout);
+		crm_element_value_int(msg, F_CIB_TIMEOUT, &timeout);
 		
 		if(timeout <= 0) {
 			list = list->next;
@@ -1508,33 +1298,33 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 
 		} else {
 			int seen = 0;
-			ha_msg_value_int(msg, F_CIB_SEENCOUNT, &seen);
+			crm_element_value_int(msg, F_CIB_SEENCOUNT, &seen);
 			crm_debug_4("Timeout %d, seen %d", timeout, seen);
 			if(seen < timeout) {
 				crm_debug_4("Updating seen count for msg from client %s",
 					    client->id);
 				seen += 10;
-				ha_msg_mod_int(msg, F_CIB_SEENCOUNT, seen);
+				crm_xml_add_int(msg, F_CIB_SEENCOUNT, seen);
 				list = list->next;
 				continue;
 			}
 		}
 		
 		cib_num_timeouts++;
-		host_to = cl_get_string(msg, F_CIB_HOST);
+		host_to = crm_element_value(msg, F_CIB_HOST);
 		crm_warn("Sending operation timeout msg to client %s",
 			 client->id);
 		
-		reply = ha_msg_new(4);
-		ha_msg_add(reply, F_TYPE, T_CIB);
-		ha_msg_add(reply, F_CIB_OPERATION,
-			   cl_get_string(msg, F_CIB_OPERATION));
-		ha_msg_add(reply, F_CIB_CALLID,
-			   cl_get_string(msg, F_CIB_CALLID));
+		reply = create_xml_node(NULL, "cib-reply");
+		crm_xml_add(reply, F_TYPE, T_CIB);
+		crm_xml_add(reply, F_CIB_OPERATION,
+			   crm_element_value(msg, F_CIB_OPERATION));
+		crm_xml_add(reply, F_CIB_CALLID,
+			   crm_element_value(msg, F_CIB_CALLID));
 		if(host_to == NULL) {
-			ha_msg_add_int(reply, F_CIB_RC, cib_master_timeout);
+			crm_xml_add_int(reply, F_CIB_RC, cib_master_timeout);
 		} else {
-			ha_msg_add_int(reply, F_CIB_RC, cib_remote_timeout);
+			crm_xml_add_int(reply, F_CIB_RC, cib_remote_timeout);
 		}
 		
 		send_ipc_message(client->channel, reply);
@@ -1543,8 +1333,8 @@ cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 		client->delegated_calls = g_list_remove(
 			client->delegated_calls, msg);
 
-		crm_msg_del(msg);
-		crm_msg_del(reply);
+		free_xml(msg);
+		free_xml(reply);
 	}
 }
 
@@ -1581,16 +1371,16 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 }
 
 void
-cib_peer_callback(HA_Message * msg, void* private_data)
+cib_peer_callback(xmlNode * msg, void* private_data)
 {
 	int call_type = 0;
 	int call_options = 0;
-	const char *originator = cl_get_string(msg, F_ORIG);
-	const char *seq        = cl_get_string(msg, F_SEQ);
-	const char *op         = cl_get_string(msg, F_CIB_OPERATION);
+	const char *originator = crm_element_value(msg, F_ORIG);
+	const char *seq        = crm_element_value(msg, F_SEQ);
+	const char *op         = crm_element_value(msg, F_CIB_OPERATION);
 	crm_node_t *node = NULL;
 	
-	crm_log_message_adv(LOG_MSG, "Peer[inbound]", msg);
+	crm_log_xml(LOG_MSG, "Peer[inbound]", msg);
 	crm_debug_2("Peer %s message (%s) from %s", op, seq, originator);
 
 	if(originator == NULL || safe_str_eq(originator, cib_our_uname)) {
@@ -1618,11 +1408,11 @@ cib_peer_callback(HA_Message * msg, void* private_data)
 
 	crm_debug_2("Processing %s msg (%s) from %s",op, seq, originator);
 
-	ha_msg_value_int(msg, F_CIB_CALLOPTS, &call_options);
+	crm_element_value_int(msg, F_CIB_CALLOPTS, &call_options);
 	crm_debug_4("Retrieved call options: %d", call_options);
 
-	if(cl_get_string(msg, F_CIB_CLIENTNAME) == NULL) {
- 		ha_msg_add(msg, F_CIB_CLIENTNAME, originator);
+	if(crm_element_value(msg, F_CIB_CLIENTNAME) == NULL) {
+ 		crm_xml_add(msg, F_CIB_CLIENTNAME, originator);
 	}
 	
 	cib_process_request(msg, FALSE, TRUE, TRUE, NULL);
@@ -1762,7 +1552,7 @@ void
 initiate_exit(void)
 {
 	int active = 0;
-	HA_Message *leaving = NULL;
+	xmlNode *leaving = NULL;
 
 	active = crm_active_peers(crm_proc_cib);
 	if(active < 2) {
@@ -1772,12 +1562,12 @@ initiate_exit(void)
 
 	crm_info("Sending disconnect notification to %d peers...", active);
 
-	leaving = ha_msg_new(3);	
-	ha_msg_add(leaving, F_TYPE, "cib");
-	ha_msg_add(leaving, F_CIB_OPERATION, "cib_shutdown_req");
+	leaving = create_xml_node(NULL, "exit-notification");	
+	crm_xml_add(leaving, F_TYPE, "cib");
+	crm_xml_add(leaving, F_CIB_OPERATION, "cib_shutdown_req");
 	
 	send_cluster_message(NULL, crm_msg_cib, leaving, TRUE);
-	crm_msg_del(leaving);
+	free_xml(leaving);
 	
 	Gmain_timeout_add(crm_get_msec("5s"), cib_force_exit, NULL);
 }

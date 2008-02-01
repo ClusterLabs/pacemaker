@@ -60,7 +60,7 @@ typedef struct crm_action_s {
 		gboolean failed;
 		gboolean can_fail;
 		
-		crm_data_t *xml;
+		xmlNode *xml;
 		
 } crm_action_t;
 
@@ -128,7 +128,7 @@ enum transition_status {
 
 extern void set_default_graph_functions(void);
 extern void set_graph_functions(crm_graph_functions_t *fns);
-extern crm_graph_t *unpack_graph(crm_data_t *xml_graph);
+extern crm_graph_t *unpack_graph(xmlNode *xml_graph);
 extern int run_graph(crm_graph_t *graph);
 extern gboolean update_graph(crm_graph_t *graph, crm_action_t *action);
 extern void destroy_graph(crm_graph_t *graph);
