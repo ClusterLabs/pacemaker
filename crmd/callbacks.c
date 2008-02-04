@@ -162,9 +162,8 @@ crmd_ha_msg_callback(HA_Message *hamsg, void* private_data)
 	if(crm_peer_cache == NULL || crm_active_members() == 0) {
 		crm_debug("Ignoring HA messages until we are"
 			  " connected to the CCM (%s op from %s)", op, from);
-		crm_log_xml(
-			LOG_MSG, "HA[inbound]: Ignore (No CCM)", msg);
-		return;
+		crm_log_xml(LOG_MSG, "HA[inbound]: Ignore (No CCM)", msg);
+		goto bail;
 	}
 	
 	from_node = g_hash_table_lookup(crm_peer_cache, from);
@@ -190,6 +189,8 @@ crmd_ha_msg_callback(HA_Message *hamsg, void* private_data)
 	    crmd_ha_msg_filter(msg);
 	}
 
+  bail:
+	free_xml(msg);
 	return;
 }
 #endif
