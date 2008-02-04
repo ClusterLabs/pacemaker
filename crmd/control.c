@@ -354,6 +354,7 @@ static void free_mem(fsa_data_t *msg_data)
 	crm_free(recheck_timer);
 
 	crm_free(fsa_our_dc_version);
+	crm_free(fsa_our_uname);
 	crm_free(fsa_our_uuid);
 	crm_free(fsa_our_dc);
 	crm_free(ipc_server);
@@ -736,7 +737,7 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 			crm_err("The cluster is mis-configured - shutting down and staying down");
 			set_bit_inplace(fsa_input_register, R_STAYDOWN);
 		}
-		return;
+		goto bail;
 	}
 
 	crm_debug("Call %d : Parsing CIB options", call_id);
@@ -789,6 +790,8 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 	G_main_set_trigger(fsa_source);
 	
 	g_hash_table_destroy(config_hash);
+  bail:
+	free_ha_date(now);
 }
 
 /*	 A_READCONFIG	*/
