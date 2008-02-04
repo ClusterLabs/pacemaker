@@ -275,7 +275,7 @@ extern gboolean validate_with_dtd(
 	    const char *prop_value = NULL;				\
 	    while(prop_iter != NULL) {					\
 		prop_name = (const char *)prop_iter->name;		\
-		prop_value = (const char *)xmlGetProp(parent, prop_iter->name); \
+		prop_value = crm_element_value(parent, prop_name);\
 		prop_iter = prop_iter->next;				\
 		if(prop_name) {						\
 		    code;						\
