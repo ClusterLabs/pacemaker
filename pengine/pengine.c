@@ -191,12 +191,12 @@ process_pe_message(xmlNode *msg, xmlNode * xml_data, IPC_Channel *sender)
 			if(send_ipc_message(sender, reply) == FALSE) {
 				crm_err("Answer could not be sent");
 			}
+			free_xml(reply);
 		}
 		
 		crm_free(graph_file);
 		free_xml(log_input);
 		crm_free(filename);
-		free_xml(reply);
 		
 	} else if(strcasecmp(op, CRM_OP_QUIT) == 0) {
 		crm_warn("Received quit message, terminating");
