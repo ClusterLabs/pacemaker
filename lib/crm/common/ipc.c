@@ -50,7 +50,7 @@ xmlNode *xmlfromIPC(IPC_Channel *ch, int timeout)
 {
     xmlNode *xml = NULL;
     HA_Message *msg = NULL;
-
+    
 #if HAVE_MSGFROMIPC_TIMEOUT
     int ipc_rc = 0;
 
@@ -61,8 +61,11 @@ xmlNode *xmlfromIPC(IPC_Channel *ch, int timeout)
 	return NULL;
     }		
 #else
-    if(timeout) {
-	crm_warn("Timeouts are not supported");
+    static gboolean do_show_error = TRUE;
+
+    if(timeout && do_show_error) {
+	crm_err("Timeouts are not supported by the current heartbeat libraries");
+	do_show_error = FALSE;
     }
     msg = msgfromIPC_noauth(ch);
 #endif
@@ -314,10 +317,12 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 {
 	int lpc = 0;
 	xmlNode *msg = NULL;
-	ha_msg_input_t *new_input = NULL;
+	xmlNode *data = NULL;
 	gboolean all_is_well = TRUE;
 	const char *sys_to;
 	const char *task;
+	gboolean (*process_function)
+	    (xmlNode *msg, xmlNode *data, IPC_Channel *sender) = NULL;
 
 	while(IPC_ISRCONN(sender)) {
 		gboolean process = FALSE;
@@ -333,14 +338,10 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 		}
 
 		lpc++;
-		new_input = new_ha_msg_input(msg);
-		free_xml(msg);
-		msg = NULL;
-		
-		crm_log_xml(LOG_MSG, "ipc", new_input->msg);
+		crm_log_xml(LOG_MSG, __FUNCTION__, msg);
 
-		sys_to = crm_element_value(new_input->msg, F_CRM_SYS_TO);
-		task   = crm_element_value(new_input->msg, F_CRM_TASK);
+		sys_to = crm_element_value(msg, F_CRM_SYS_TO);
+		task   = crm_element_value(msg, F_CRM_TASK);
 
 		if(safe_str_eq(task, CRM_OP_HELLO)) {
 			process = TRUE;
@@ -355,46 +356,37 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 			process = TRUE;
 		}
 
-		if(process){
-			gboolean (*process_function)
-				(xmlNode *msg, xmlNode *data, IPC_Channel *sender) = NULL;
-			process_function = user_data;
-#ifdef MSG_LOG
-			crm_log_xml(
-				LOG_MSG, __FUNCTION__, new_input->msg);
-#endif
-			if(ipc_call_diff_max_ms > 0) {
-				ipc_call_start = time_longclock();
-			}
-			if(FALSE == process_function(
-				   new_input->msg, new_input->xml, sender)) {
-				crm_warn("Received a message destined for %s"
-					 " by mistake", sys_to);
-			}
-			if(ipc_call_diff_max_ms > 0) {
-				unsigned int ipc_call_diff_ms = 0;
-				ipc_call_stop = time_longclock();
-				ipc_call_diff = sub_longclock(
-					ipc_call_stop, ipc_call_start);
-				ipc_call_diff_ms = longclockto_ms(
-					ipc_call_diff);
-				if(ipc_call_diff_ms > ipc_call_diff_max_ms) {
-					crm_err("%s took %dms to complete",
-						sys_to, ipc_call_diff_ms);
-				}
-			}
-		} else {
-#ifdef MSG_LOG
-			crm_log_xml(
-				LOG_ERR, NULL, new_input->msg);
-#endif
+		if(process == FALSE) {
+		    free_xml(msg); msg = NULL;
+		    continue;
 		}
 		
-		delete_ha_msg_input(new_input);
-		new_input = NULL;
-
+		data = get_message_xml(msg, F_CRM_DATA);		
+		process_function = user_data;
+		if(ipc_call_diff_max_ms > 0) {
+		    ipc_call_start = time_longclock();
+		}
+		if(FALSE == process_function(msg, data, sender)) {
+		    crm_warn("Received a message destined for %s"
+			     " by mistake", sys_to);
+		}
+		if(ipc_call_diff_max_ms > 0) {
+		    unsigned int ipc_call_diff_ms = 0;
+		    ipc_call_stop = time_longclock();
+		    ipc_call_diff = sub_longclock(
+			ipc_call_stop, ipc_call_start);
+		    ipc_call_diff_ms = longclockto_ms(ipc_call_diff);
+		    if(ipc_call_diff_ms > ipc_call_diff_max_ms) {
+			crm_err("%s took %dms to complete",
+				sys_to, ipc_call_diff_ms);
+		    }
+		}
+	
+		free_xml(data); data = NULL;
+		free_xml(msg); msg = NULL;
+		
 		if(sender->ch_status == IPC_CONNECT) {
-			break;
+		    break;
 		}
 	}
 
