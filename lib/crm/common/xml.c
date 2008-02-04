@@ -356,50 +356,32 @@ add_node_nocopy(xmlNode *parent, const char *name, xmlNode *child)
 const char *
 crm_xml_add(xmlNode* node, const char *name, const char *value)
 {
-    const char *parent_name = NULL;
-    
-    if(node != NULL) {
-	parent_name = crm_element_name(node);
-    }
-    
-    CRM_CHECK(name != NULL && name[0] != 0, return NULL);
+    xmlAttr *attr = NULL;
     CRM_CHECK(node != NULL, return NULL);
-    CRM_CHECK(parent_name != NULL, return NULL);
+    CRM_CHECK(name != NULL && name[0] != 0, return NULL);
+    /* CRM_CHECK(value != NULL && value[0] != 0, return NULL); */
     /* CRM_CHECK(strcasecmp(name, F_XML_TAGNAME) != 0, return NULL); */
 
+#if 1
     if (value == NULL || value[0] == 0) {
+	crm_err("Unsetting %s with crm_xml_add()", name);
 	xml_remove_prop(node, name);
 	return NULL;
-
-    } else {
-	xmlChar *xml_name = xmlCharStrdup(name);
-	xmlChar *xml_value = xmlCharStrdup(value);
-	xmlSetProp(node, xml_name, xml_value);
     }
+#endif
 
-    return crm_element_value(node, name);
+    attr = xmlSetProp(node, (const xmlChar*)name, (const xmlChar*)value);
+    CRM_CHECK(attr && attr->children && attr->children->content, return NULL);
+    return (char *)attr->children->content;
 }
 
 const char *
 crm_xml_add_int(xmlNode* node, const char *name, int value)
 {
-    const char *parent_name = NULL;
-    
-    if(node != NULL) {
-	parent_name = crm_element_name(node);
-    }
-    
-    CRM_CHECK(name != NULL && name[0] != 0, return NULL);
-    CRM_CHECK(node != NULL, return NULL);
-    CRM_CHECK(parent_name != NULL, return NULL);
-    CRM_CHECK(strcasecmp(name, F_XML_TAGNAME) != 0, return NULL);
-    
-    {
-	xmlChar *new_name = xmlCharStrdup(name);
-	xmlChar *number = (xmlChar*)crm_itoa(value);
-	xmlSetProp(node, new_name, number);
-    }
-    return crm_element_value(node, name);
+    char *number = crm_itoa(value);
+    const char *added = crm_xml_add(node, name, number);
+    crm_free(number);
+    return added;
 }
 
 xmlNode*
@@ -409,13 +391,10 @@ create_xml_node(xmlNode *parent, const char *name)
 
 	if (name == NULL || name[0] == 0) {
 		ret_value = NULL;
-	} else {
-	    if(parent == NULL) {
+	} else if(parent == NULL) {
 		ret_value = xmlNewNode(NULL, (const xmlChar*)name);
-	    } else {
-		xmlChar *local_name = xmlCharStrdup(name);
-		ret_value = xmlNewChild(parent, NULL, local_name, NULL);
-	    }
+	} else {
+		ret_value = xmlNewChild(parent, NULL, (const xmlChar*)name, NULL);
 	}
 	return ret_value;
 }
@@ -771,7 +750,7 @@ convert_xml_child(HA_Message *msg, xmlNode *xml)
 	crm_err("Compression failed: %d", rc);
 	crm_free(compressed);
 	convert_xml_message_struct(msg, xml, name);
-	return;
+	goto done;
     }
     
     crm_free(buffer);
@@ -867,10 +846,16 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 	    value = cl_get_binary(msg, name, &orig_len);
 	    size = orig_len * 10;
 
-	    if(orig_len < 1) {
-		crm_err("Invalid binary field: %s", name);
+	    if(orig_len < 3
+	       || value[0] != 'B'
+	       || value[1] != 'Z'
+	       || value[2] != 'h') {
+		if(strstr(name, "uuid") == NULL) {
+		    crm_err("Skipping non-bzip binary field: %s", name);
+		}
 		return;
 	    }
+
 	    crm_malloc0(compressed, orig_len);
 	    memcpy(compressed, value, orig_len);
 	    
@@ -891,8 +876,9 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 		}
 	    }
 	    
-	    if(rc != BZ_OK) {
-		crm_err("Decompression of %d bytes into %d failed: %d", (int)orig_len, size, rc);
+	    if(rc != BZ_OK) { 
+		crm_err("Decompression of %s (%d bytes) into %d failed: %d",
+			name, (int)orig_len, size, rc);
 		
 	    } else {
 		xml = string2xml(uncompressed);
@@ -915,7 +901,7 @@ convert_ha_message(xmlNode *parent, HA_Message *msg, const char *field)
     xmlNode *child = NULL;
     const char *tag = NULL;
     
-    CRM_CHECK(msg != NULL, return parent);
+    CRM_CHECK(msg != NULL, crm_err("Empty message for %s", field); return parent);
     
     tag = cl_get_string(msg, F_XML_TAGNAME);
     if(tag == NULL) {
@@ -1220,19 +1206,22 @@ crm_element_value_int(xmlNode *data, const char *name, int *dest)
 const char *
 crm_element_value(xmlNode *data, const char *name)
 {
+    xmlAttr *attr = NULL;
+    
     CRM_CHECK(data != NULL, return NULL);
     CRM_CHECK(name != NULL, return NULL);
     
-    return (const char*)xmlGetProp(data, (const xmlChar*)name);
+    attr = xmlHasProp(data, (const xmlChar*)name);
+    if(attr && attr->children) {
+	return (const char*)attr->children->content;
+    }
+    return NULL;
 }
 
 const char *
 crm_element_value_const(const xmlNode *data, const char *name)
 {
-    CRM_CHECK(data != NULL, return NULL);
-    CRM_CHECK(name != NULL, return NULL);
-    
-    return (const char*)xmlGetProp(data, (const xmlChar*)name);
+    return crm_element_value(data, name);
 }
 
 char *
