@@ -594,7 +594,7 @@ add_cib_op_callback(
 	int call_id, gboolean only_success, void *user_data,
 	void (*callback)(xmlNode*, int, int, xmlNode*,void*)) 
 {
-    return add_cib_op_callback_timeout(call_id, 1, only_success, user_data, callback);
+    return add_cib_op_callback_timeout(call_id, 0, only_success, user_data, callback);
 }
 
 gboolean
