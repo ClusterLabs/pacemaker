@@ -513,7 +513,7 @@ relay_message(HA_Message *relay_message, gboolean originated_locally)
 			is_local = 1;
 		}
 			
-	} else if(strcasecmp(fsa_our_uname, host_to) == 0) {
+	} else if(safe_str_eq(fsa_our_uname, host_to)) {
 		is_local=1;
 	}
 
