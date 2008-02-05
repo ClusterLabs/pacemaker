@@ -424,14 +424,6 @@ do_startup(long long action,
 	fsa_cib_conn = cib_new();
 	fsa_lrm_conn = ll_lrm_new(XML_CIB_TAG_LRM);	
 	
-	crm_debug("Init server comms");
-	if(ipc_server == NULL) {
-		ipc_server = crm_strdup(CRM_SYSTEM_CRMD);
-	}
-
-	was_error = init_server_ipc_comms(ipc_server, crmd_client_connect,
-					  default_ipc_connection_destroy);
-
 	/* set up the timers */
 	crm_malloc0(integration_timer, sizeof(fsa_timer_t));
 	crm_malloc0(finalization_timer, sizeof(fsa_timer_t));
@@ -663,6 +655,17 @@ do_started(long long action,
 /* 		crm_timer_start(wait_timer); */
 		crmd_fsa_stall(NULL);
 		return;
+	}
+
+	crm_debug("Init server comms");
+	if(ipc_server == NULL) {
+		ipc_server = crm_strdup(CRM_SYSTEM_CRMD);
+	}
+
+	if(init_server_ipc_comms(ipc_server, crmd_client_connect,
+				 default_ipc_connection_destroy)) {
+	    crm_err("Couldn't start IPC server");
+	    register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
 
 	crm_info("The local CRM is operational");
