@@ -1,7 +1,7 @@
 #
-# linux-ha: Linux-HA code
+# Pacemaker code
 #
-# Copyright (C) 2002 Alan Robertson
+# Copyright (C) 2004 Andrew Beekhof
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -61,7 +61,7 @@ changes:
 obs:	tgz
 	scp $(TARFILE) vmhost.beekhof.net:Development/obs/server:ha-clustering/pacemaker/
 
-global:
+global: clean-generic
 	gtags
 	htags -sanhIT
 
@@ -92,6 +92,10 @@ if BUILD_AIS_SUPPORT
 	rm -f $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso $(DESTDIR)$(LCRSODIR)/service_crm.so
 	cp $(DESTDIR)$(libdir)/service_crm.so $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso
 endif
+
+clean-generic:
+	find . -name ".gres.*" -exec rm \{\} \;
+	find . -name "*~" -exec rm \{\} \;
 
 dist-clean-local:
 	rm -f autoconf automake autoheader $(TARFILE)
