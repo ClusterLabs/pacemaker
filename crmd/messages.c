@@ -441,7 +441,6 @@ send_request(xmlNode *msg, char **msg_reference)
 		ha_msg_input_t *fsa_input = new_ha_msg_input(msg);
 		register_fsa_input(C_IPC_MESSAGE, I_ROUTER, fsa_input);
 		delete_ha_msg_input(fsa_input);
-		free_xml(msg);
 	}
 	
 	return was_sent;

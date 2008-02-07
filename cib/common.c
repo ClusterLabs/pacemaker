@@ -139,7 +139,6 @@ cib_prepare_data(xmlNode *request, xmlNode **data, const char **section)
     *section = crm_element_value(request, F_CIB_SECTION);
     *data = cib_prepare_common(input_fragment, *section);
     crm_log_xml_debug(*data, "data");
-    free_xml(input_fragment);
     if(verify_section(*section) == FALSE) {
 	return cib_bad_section;
     }
@@ -175,7 +174,6 @@ cib_prepare_diff(xmlNode *request, xmlNode **data, const char **section)
 
     CRM_CHECK(input_fragment != NULL,crm_log_xml(LOG_WARNING, "no input", request));
     *data = cib_prepare_common(input_fragment, NULL);
-    free_xml(input_fragment);
     return cib_ok;
 }
 
@@ -330,7 +328,6 @@ cib_msg_copy(xmlNode *msg, gboolean with_data)
 		if(value_struct != NULL) {
 			add_message_xml(copy, field, value_struct);
 		}
-		free_xml(value_struct);
 	}
 
 	return copy;

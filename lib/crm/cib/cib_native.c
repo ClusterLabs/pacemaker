@@ -571,10 +571,12 @@ cib_native_perform_op(
 		/* do nothing more */
 		
 	} else if(!(call_options & cib_discard_reply)) {
-		*output_data = get_message_xml(op_reply, F_CIB_CALLDATA);
-		if(*output_data == NULL) {
+		xmlNode *tmp = *output_data = get_message_xml(op_reply, F_CIB_CALLDATA);
+		if(tmp == NULL) {
 			crm_debug_3("No output in reply to \"%s\" command %d",
 				  op, cib->call_id - 1);
+		} else {
+		    *output_data = copy_xml(tmp);
 		}
 	}
 	
@@ -750,8 +752,6 @@ cib_native_callback(cib_t *cib, xmlNode *msg)
 	} else {
 		cib->op_callback(msg, call_id, rc, output);
 	}
-	free_xml(output);
-	
 	crm_debug_4("OP callback activated.");
 }
 

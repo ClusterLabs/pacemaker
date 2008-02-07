@@ -160,7 +160,6 @@ te_update_diff(const char *event, xmlNode *msg)
 			INFINITY, tg_restart, "Non-status change", NULL);
 	}
 	
-	free_xml(diff);
 	return;
 }
 

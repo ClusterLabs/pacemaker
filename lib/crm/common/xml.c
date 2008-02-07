@@ -935,9 +935,7 @@ xmlNode *
 get_message_xml(xmlNode *msg, const char *field) 
 {
     xmlNode *tmp = first_named_child(msg, field);
-    /* FIXME: stop doing this copying */
-    tmp = first_named_child(tmp, NULL);
-    return copy_xml(tmp);
+    return first_named_child(tmp, NULL);
 }
 
 gboolean

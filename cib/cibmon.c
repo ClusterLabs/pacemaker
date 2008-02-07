@@ -336,9 +336,6 @@ cibmon_pre_notify(const char *event, xmlNode *msg)
 
 	print_xml_formatted(LOG_DEBUG_3,  UPDATE_PREFIX,
 			    pre_update, "Existing Object");
-
-	free_xml(update);
-	free_xml(pre_update);
 }
 
 
@@ -408,10 +405,6 @@ cibmon_update_confirm(const char *event, xmlNode *msg)
 			rc==cib_ok?LOG_DEBUG:LOG_WARNING, UPDATE_PREFIX,
 			generation, "CIB Generation");
 	}
-
-	free_xml(update);
-	free_xml(output);
-	free_xml(generation);
 }
 
 
@@ -446,11 +439,8 @@ cibmon_diff(const char *event, xmlNode *msg)
 
 	log_cib_diff(log_level, diff, op);
 	if(update != NULL) {
-		print_xml_formatted(
-			log_level+2, "raw_update", update, NULL);
+		print_xml_formatted(log_level+2, "raw_update", update, NULL);
 	}
-	free_xml(diff);
-	free_xml(update);
 }
 
 gboolean

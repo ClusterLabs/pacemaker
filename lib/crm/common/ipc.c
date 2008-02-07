@@ -382,7 +382,6 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 		    }
 		}
 	
-		free_xml(data); data = NULL;
 		free_xml(msg); msg = NULL;
 		
 		if(sender->ch_status == IPC_CONNECT) {
@@ -581,7 +580,6 @@ delete_ha_msg_input(ha_msg_input_t *orig)
 		return;
 	}
  	free_xml(orig->msg);
-	free_xml(orig->xml);
 	crm_free(orig);
 }
 
