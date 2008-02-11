@@ -54,8 +54,8 @@ class FailSafeCM(ClusterManager):
             "TestConfigDir"    : None, # Fix me!
             "LogFileName"      : None, # Fix me!
 
-            "Pat:We_started"   : None, # Fix me!
-            "Pat:They_started" : None, # Fix me!
+            "Pat:Master_started"   : None, # Fix me!
+            "Pat:Slave_started" : None, # Fix me!
             "Pat:We_stopped"   : None, # Fix me!
             "Pat:They_stopped" : None, # Fix me!
 

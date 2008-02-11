@@ -451,8 +451,8 @@ class ClusterManager(UserDict):
             "TestConfigDir"  : None,
             "LogFileName"    : None,
 
-            "Pat:We_started"   : None,
-            "Pat:They_started" : None,
+            "Pat:Master_started"   : None,
+            "Pat:Slave_started" : None,
             "Pat:We_stopped"   : None,
             "Pat:They_stopped" : None,
 
@@ -525,10 +525,11 @@ class ClusterManager(UserDict):
 
         patterns = []
         # Technically we should always be able to notice ourselves starting
+        patterns.append(self["Pat:Local_started"] % node)
         if self.upcount() == 0:
-            patterns.append(self["Pat:We_started"] % node)
+            patterns.append(self["Pat:Master_started"] % node)
         else:
-            patterns.append(self["Pat:They_started"] % node)
+            patterns.append(self["Pat:Slave_started"] % node)
 
         watch = LogWatcher(
             self["LogFileName"], patterns, timeout=self["StartTime"]+10)

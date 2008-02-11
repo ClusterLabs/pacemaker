@@ -321,8 +321,6 @@ class StopTest(CTSTest):
     def __init__(self, cm):
         CTSTest.__init__(self, cm)
         self.name="Stop"
-        self.uspat   = self.CM["Pat:We_stopped"]
-        self.thempat = self.CM["Pat:They_stopped"]
 
     def __call__(self, node):
         '''Perform the 'stop' test. '''
@@ -396,8 +394,6 @@ class StartTest(CTSTest):
         CTSTest.__init__(self,cm)
         self.name="start"
         self.debug = debug
-        self.uspat   = self.CM["Pat:We_started"]
-        self.thempat = self.CM["Pat:They_started"]
 
     def __call__(self, node):
         '''Perform the 'start' test. '''
@@ -510,8 +506,8 @@ class StonithTest(CTSTest):
         self.name="Stonith"
         self.theystopped  = self.CM["Pat:They_dead"]
         self.allstopped   = self.CM["Pat:All_stopped"]
-        self.usstart      = self.CM["Pat:We_started"]
-        self.themstart    = self.CM["Pat:They_started"]
+        self.usstart      = self.CM["Pat:Master_started"]
+        self.themstart    = self.CM["Pat:Slave_started"]
         self.timeout      = timeout
         self.ssherror     = False
     
@@ -1601,7 +1597,7 @@ class Split_brainTest(CTSTest):
         watchpartitionpats = [ ]
         partitionpat = self.CM["Pat:Return_partition"]
         watchstartpats = [ ]
-        startpat = self.CM["Pat:We_started"]
+        startpat = self.CM["Pat:Master_started"]
 
         for member in self.CM.Env["nodes"]:
             thispat = (partitionpat % member)
@@ -1783,7 +1779,8 @@ class ComponentFail(CTSTest):
           for other in self.CM.Env["nodes"]:
               if other != node:
                   self.patterns.append(self.CM["Pat:They_stopped"] %(other, node))
-          self.patterns.append(self.CM["Pat:They_started"] % node)
+          self.patterns.append(self.CM["Pat:Slave_started"] % node)
+          self.patterns.append(self.CM["Pat:Local_started"] % node)
 
         # In an ideal world, this next stuff should be in the "chosen" object as a member function
         if chosen.dc_only:
@@ -2205,7 +2202,8 @@ class NearQuorumPointTest(CTSTest):
                 
         for node in startset:
             if self.CM.ShouldBeStatus[node] == self.CM["down"]:
-                watchpats.append(self.CM["Pat:They_started"] % node)
+                #watchpats.append(self.CM["Pat:Slave_started"] % node)
+                watchpats.append(self.CM["Pat:Local_started"] % node)
                 
         if len(watchpats) == 0:
             return self.skipped()
@@ -2434,13 +2432,19 @@ class SimulStartLite(CTSTest):
         #        We ignore the "node" parameter...
         watchpats = [ ]
 
+        uppat = self.CM["Pat:Slave_started"]
+        if self.CM.upcount() == 0:
+            uppat = self.CM["Pat:Local_started"]
+
         for node in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == self.CM["down"]:
                 self.incr("WasStopped")
-                watchpats.append(self.CM["Pat:They_started"] % node)
+                watchpats.append(uppat % node)
         
         if len(watchpats) == 0:
             return self.skipped()
+
+        watchpats.append(self.CM["Pat:DC_IDLE"])
         
         #        Start all the nodes - at about the same time...
         watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats

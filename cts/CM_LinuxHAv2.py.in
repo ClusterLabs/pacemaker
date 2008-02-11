@@ -91,9 +91,9 @@ class LinuxHAv2(HeartbeatCM):
             "Pat:DC_IDLE"      : "crmd.*State transition.*-> S_IDLE",
             
             # This wont work if we have multiple partitions
-            # Use: "Pat:They_started" : "%s crmd:.*State transition.*-> S_NOT_DC",
-            "Pat:They_started" : "Updating node state to member for %s",
-            "Pat:We_started"   : "%s crmd:.* State transition.*-> S_IDLE",
+            "Pat:Local_started" : "%s crmd:.*The local CRM is operational",
+            "Pat:Slave_started" : "%s crmd:.*State transition.*-> S_NOT_DC",
+            "Pat:Master_started"   : "%s crmd:.* State transition.*-> S_IDLE",
             "Pat:We_stopped"   : "heartbeat.*%s.*Heartbeat shutdown complete",
             "Pat:Logd_stopped" : "%s logd:.*Exiting write process",
             "Pat:They_stopped" : "%s crmd:.*LOST:.* %s ",
@@ -152,7 +152,7 @@ class LinuxHAv2(HeartbeatCM):
                 "ERROR: Message hist queue is filling up",
                 "stonithd: .*CRIT: external_hostlist: 'vmware gethosts' returned an empty hostlist",
                 "stonithd: .*ERROR: Could not list nodes for stonith RA external/vmware.",
-
+                "pengine: Preventing .* from re-starting",
                 ]
         return []
 
@@ -204,7 +204,7 @@ class LinuxHAv2(HeartbeatCM):
 
         watchpats = [ ]
         watchpats.append("Current ping state: (S_IDLE|S_NOT_DC)")
-        watchpats.append(self["Pat:They_started"]%node)
+        watchpats.append(self["Pat:Slave_started"]%node)
         idle_watch = CTS.LogWatcher(self["LogFileName"], watchpats)
         idle_watch.setwatch()
 
@@ -264,6 +264,7 @@ class LinuxHAv2(HeartbeatCM):
         watchpats = [ ]
         watchpats.append("Current ping state: S_IDLE")
         watchpats.append(self["Pat:DC_IDLE"])
+        self.debug("Waiting for cluster stability...") 
 
         if timeout == None:
             timeout = self["DeadTime"]
@@ -536,7 +537,9 @@ class LinuxHAv2(HeartbeatCM):
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
 #                    "tengine_stonith_callback: .*result=0",
-                    "State transition S_.* -> S_INTEGRATION.*input=I_NODE_JOIN",
+                    "A new node joined the cluster",
+#                    "Processing I_NODE_JOIN:.* cause=C_HA_MESSAGE",
+#                    "State transition S_.* -> S_INTEGRATION.*input=I_NODE_JOIN",
                     "State transition S_STARTING -> S_PENDING",
                     ], [], common_ignore, self.fastfail, self)
 
