@@ -145,7 +145,7 @@ def create_cib() :
 def get_ra_class(type) :
 	if os.path.exists("@HB_RA_DIR@"+"/"+type) :
 		return "heartbeat"
-	if os.path.exists("@LSB_RA_DIR@"+"/"+type) :
+	if os.path.exists("@INITDIR@"+"/"+type) :
 		return "lsb"
 	sys.stderr.write(type+" is an unknown Resource Agent. " \
 			"Please refer to http://www.linux-ha.org/ResourceAgent\n")
@@ -417,7 +417,7 @@ def get_directive_list(config, directive) :
 if __name__=="__main__" :
 	resource_file = "@HA_HBCONF_DIR@/haresources"
 	config_file = "@HA_HBCONF_DIR@/ha.cf"
-	target_file = "@HA_VARLIBHBDIR@/crm/cib.xml"
+	target_file = "@HA_VARLIBDIR@/heartbeat/crm/cib.xml"
 	to_stdout = False
 	
 	# Process arguments...
@@ -508,7 +508,7 @@ if __name__=="__main__" :
 	if to_stdout :		
 		print cib[0].toprettyxml()
 	elif os.access(target_file, os.F_OK) or os.access(target_file+".sig", os.F_OK) :
-		sys.stderr.write("cib.xml or cib.xml.sig exist in @HA_VARLIBHBDIR@/crm/\n")
+		sys.stderr.write("cib.xml or cib.xml.sig exist in @HA_VARLIBDIR@/heartbeat/crm/\n")
 		sys.stderr.write("please remove them before generating new cib.xml\n")
 	else :
 		cib_file = open(target_file, "w")
