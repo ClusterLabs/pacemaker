@@ -15,6 +15,7 @@
 %define without_fatal_warnings 	1
 %define with_ais_support        1
 %define with_heartbeat_support  1
+%define with_snmp_support	1
 
 %define pkg_group Productivity/Clustering/HA
 
@@ -172,6 +173,11 @@ export CFLAGS
 	--with-group-name=%{gname} --with-ccmuser-name=%{uname} \
 	--with-hapkgversion=%{version} 				\
 	--enable-glib-malloc 					\
+%if %with_snmp_support == 1
+	--enable-snmp-subagent					\
+%else
+	--disable-snmp-subagent					\
+%endif
 	--with-ais-prefix=%{_prefix}      			\
 %if %with_ais_support == 0
 	--without-ais-support 					\
@@ -237,7 +243,7 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 
 %{_prefix}/share/pacemaker
 %{_prefix}/share/heartbeat
-%{_libdir}/heartbeat
+%{_libdir}/heartbeat/*
 
 %dir %{_var}/lib/heartbeat
 
@@ -272,6 +278,9 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 %dir %attr (750, %{uname}, %{gname}) %{_var}/run/heartbeat/crm
 %if %with_ais_support
 %{_libexecdir}/lcrso/pacemaker.lcrso
+%endif
+%if %with_snmp_support == 1
+/usr/share/snmp/mibs/LINUX-HA-MIB.mib
 %endif
 
 %files devel
