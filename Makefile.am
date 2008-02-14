@@ -36,7 +36,7 @@ if SNMP_SUBAGENT_BUILD
 SNMP_SUBAGENT_DIR = snmp_subagent
 endif
 
-SUBDIRS	= debian build replace include lib cib crmd pengine transitioner crm tools doc cts
+SUBDIRS	= debian build replace include lib cib crmd pengine transitioner crm tools doc cts $(SNMP_SUBAGENT_DIR)
 
 tgz:
 	rm -f $(TARFILE)
