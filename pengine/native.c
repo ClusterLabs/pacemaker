@@ -568,6 +568,7 @@ static gboolean
 filter_colocation_constraint(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
+	int level = LOG_DEBUG_4;
 	if(constraint->score == 0){
 		return FALSE;
 	}
@@ -575,7 +576,7 @@ filter_colocation_constraint(
 	if(constraint->score > 0
 	   && constraint->role_lh != RSC_ROLE_UNKNOWN
 	   && constraint->role_lh != rsc_lh->next_role) {
-		crm_debug_4("LH: Skipping constraint: \"%s\" state filter",
+		do_crm_log(level, "LH: Skipping constraint: \"%s\" state filter",
 			    role2text(constraint->role_rh));
 		return FALSE;
 	}
@@ -583,7 +584,7 @@ filter_colocation_constraint(
 	if(constraint->score > 0
 	   && constraint->role_rh != RSC_ROLE_UNKNOWN
 	   && constraint->role_rh != rsc_rh->next_role) {
-		crm_debug_4("RH: Skipping constraint: \"%s\" state filter",
+		do_crm_log(level, "RH: Skipping constraint: \"%s\" state filter",
 			    role2text(constraint->role_rh));
 		return FALSE;
 	}
@@ -591,7 +592,7 @@ filter_colocation_constraint(
 	if(constraint->score < 0
 	   && constraint->role_lh != RSC_ROLE_UNKNOWN
 	   && constraint->role_lh == rsc_lh->next_role) {
-		crm_debug_4("LH: Skipping -ve constraint: \"%s\" state filter",
+		do_crm_log(level, "LH: Skipping -ve constraint: \"%s\" state filter",
 			    role2text(constraint->role_rh));
 		return FALSE;
 	}
@@ -599,7 +600,7 @@ filter_colocation_constraint(
 	if(constraint->score < 0
 	   && constraint->role_rh != RSC_ROLE_UNKNOWN
 	   && constraint->role_rh == rsc_rh->next_role) {
-		crm_debug_4("RH: Skipping -ve constraint: \"%s\" state filter",
+		do_crm_log(level, "RH: Skipping -ve constraint: \"%s\" state filter",
 			    role2text(constraint->role_rh));
 		return FALSE;
 	}
