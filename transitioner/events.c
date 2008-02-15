@@ -505,11 +505,13 @@ process_graph_event(crm_data_t *event, const char *event_node)
 	}
 	
 	if(transition_num == -1) {
-		crm_err("Action %s initiated outside of a transition", id);
+		crm_err("Action %s (%s) initiated outside of a transition",
+			id, magic);
 		abort_transition(INFINITY, tg_restart,"Unexpected event",event);
 
 	} else if(action < 0 || safe_str_neq(update_te_uuid, te_uuid)) {
-		crm_info("Action %s initiated by a different transitioner", id);
+		crm_info("Action %s (%s) initiated by a different transitioner",
+			 id, magic);
 		abort_transition(INFINITY, tg_restart,"Foreign event", event);
 		
 	} else if(transition_graph->id != transition_num) {
