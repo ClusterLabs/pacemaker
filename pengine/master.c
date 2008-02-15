@@ -767,7 +767,7 @@ void master_rsc_colocation_rh(
 	CRM_CHECK(rsc_lh->variant == pe_native, return);
 	crm_debug_2("Processing constraint %s: %d", constraint->id, constraint->score);
 
-	if(constraint->score < INFINITY) {
+	if(constraint->role_rh == RSC_ROLE_UNKNOWN) {
 		slist_iter(
 			child_rsc, resource_t, rsc_rh->children, lpc,
 			
@@ -795,12 +795,12 @@ void master_rsc_colocation_rh(
 		/* Only do this if its not a master-master colocation
 		 * Doing this unconditionally would prevent the slaves from being started
 		 */
-		if(constraint->role_lh != RSC_ROLE_MASTER
-		    || constraint->role_rh != RSC_ROLE_MASTER) {
+		if(constraint->score > 0
+		   && (constraint->role_lh != RSC_ROLE_MASTER
+		       || constraint->role_rh != RSC_ROLE_MASTER)) {
 		    rsc_lh->allowed_nodes = node_list_and(lhs, rhs, FALSE);
 		    pe_free_shallow(lhs);
 		}
-		
 		pe_free_shallow_adv(rhs, FALSE);
 
 	} else if(constraint->role_lh == RSC_ROLE_MASTER) {
