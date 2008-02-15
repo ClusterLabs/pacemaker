@@ -17,6 +17,7 @@ assert() {
 	    echo "Aborting tests"
 	    exit $exit_code
 	fi
+	exit 1
     else
 	printf "* Passed: %-14s - %s\n" $app "$msg"
 	num_passed=`expr $num_passed + 1`

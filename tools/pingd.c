@@ -415,32 +415,32 @@ void
 send_update(void) 
 {
 	int num_active = 0;
-	HA_Message *update = ha_msg_new(4);
-	ha_msg_add(update, F_TYPE, T_ATTRD);
-	ha_msg_add(update, F_ORIG, crm_system_name);
-	ha_msg_add(update, F_ATTRD_TASK, "update");
-	ha_msg_add(update, F_ATTRD_ATTRIBUTE, pingd_attr);
+	xmlNode *update = create_xml_node(NULL, __FUNCTION__);
+	crm_xml_add(update, F_TYPE, T_ATTRD);
+	crm_xml_add(update, F_ORIG, crm_system_name);
+	crm_xml_add(update, F_ATTRD_TASK, "update");
+	crm_xml_add(update, F_ATTRD_ATTRIBUTE, pingd_attr);
 
 	g_hash_table_foreach(ping_nodes, count_ping_nodes, &num_active);
 	crm_info("%d active ping nodes", num_active);
 
-	ha_msg_add_int(update, F_ATTRD_VALUE, attr_multiplier*num_active);
+	crm_xml_add_int(update, F_ATTRD_VALUE, attr_multiplier*num_active);
 	
 	if(attr_set != NULL) {
-		ha_msg_add(update, F_ATTRD_SET,     attr_set);
+		crm_xml_add(update, F_ATTRD_SET,     attr_set);
 	}
 	if(attr_section != NULL) {
-		ha_msg_add(update, F_ATTRD_SECTION, attr_section);
+		crm_xml_add(update, F_ATTRD_SECTION, attr_section);
 	}
 	if(attr_dampen != NULL) {
-		ha_msg_add(update, F_ATTRD_DAMPEN,  attr_dampen);
+		crm_xml_add(update, F_ATTRD_DAMPEN,  attr_dampen);
 	}
 
 	if(send_ipc_message(attrd, update) == FALSE) {
 		crm_err("Could not send update");
 		exit(1);
 	}
-	crm_msg_del(update);
+	free_xml(update);
 }
 
 void

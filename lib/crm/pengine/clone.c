@@ -38,7 +38,7 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 	char *inc_num = NULL;
 	char *inc_max = NULL;
 	resource_t *child_rsc = NULL;
-	crm_data_t * child_copy = NULL;
+	xmlNode * child_copy = NULL;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
@@ -98,9 +98,9 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	const char *type = NULL;
 	resource_t *self = NULL;
 	int num_xml_children = 0;	
-	crm_data_t *xml_tmp = NULL;
-	crm_data_t *xml_self = NULL;
-	crm_data_t *xml_obj = rsc->xml;
+	xmlNode *xml_tmp = NULL;
+	xmlNode *xml_self = NULL;
+	xmlNode *xml_obj = rsc->xml;
 	clone_variant_data_t *clone_data = NULL;
 
 	const char *ordered = g_hash_table_lookup(
@@ -169,7 +169,7 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	
 	xml_self = copy_xml(rsc->xml);
 	/* this is a bit of a hack - but simplifies everything else */
-	ha_msg_mod(xml_self, F_XML_TAGNAME, XML_CIB_TAG_RESOURCE);
+	xml_self->name = xmlCharStrdup(XML_CIB_TAG_RESOURCE);
 /* 	set_id(xml_self, "self", -1); */
 	xml_tmp = find_xml_node(xml_obj, "operations", FALSE);
 	if(xml_tmp != NULL) {

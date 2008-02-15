@@ -95,7 +95,7 @@ tag_set_t feature_attrs[] = {
 };
 
 static int
-internal_update_feature_set(crm_data_t *xml_obj, int current)
+internal_update_feature_set(xmlNode *xml_obj, int current)
 {
 	int lpc = current;
 	int lpc_nested = 0;
@@ -154,7 +154,7 @@ internal_update_feature_set(crm_data_t *xml_obj, int current)
 }
 
 const char *
-feature_set(crm_data_t *xml_obj)
+feature_set(xmlNode *xml_obj)
 {
 	int set = internal_update_feature_set(xml_obj, 0);
 	CRM_ASSERT(set < DIMOF(feature_sets));

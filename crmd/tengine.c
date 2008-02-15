@@ -93,7 +93,7 @@ do_te_invoke(long long action,
 	     enum crmd_fsa_input current_input,
 	     fsa_data_t *msg_data)
 {
-	HA_Message *cmd = NULL;
+	xmlNode *cmd = NULL;
 	
 	
 	if(AM_I_DC == FALSE) {
@@ -129,8 +129,8 @@ do_te_invoke(long long action,
 
 	if(action & A_TE_INVOKE) {
 		ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
-		const char *graph_file = cl_get_string(input->msg, F_CRM_TGRAPH);
-		const char *graph_input = cl_get_string(input->msg, F_CRM_TGRAPH_INPUT);
+		const char *graph_file = crm_element_value(input->msg, F_CRM_TGRAPH);
+		const char *graph_input = crm_element_value(input->msg, F_CRM_TGRAPH_INPUT);
 
 		if(graph_file != NULL || input->xml != NULL) {			
 			crm_debug("Starting a transition");
@@ -140,9 +140,9 @@ do_te_invoke(long long action,
 				CRM_OP_TRANSITION, input->xml, NULL,
 				CRM_SYSTEM_TENGINE, CRM_SYSTEM_DC, NULL);
 
-			ha_msg_add(cmd, F_CRM_TGRAPH_INPUT, graph_input);
+			crm_xml_add(cmd, F_CRM_TGRAPH_INPUT, graph_input);
 			if(graph_file) {
-				ha_msg_add(cmd, F_CRM_TGRAPH, graph_file);
+				crm_xml_add(cmd, F_CRM_TGRAPH, graph_file);
 			}
 			
 			send_request(cmd, NULL);

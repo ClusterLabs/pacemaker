@@ -51,7 +51,7 @@ extern gboolean crm_timer_stop (fsa_timer_t *timer);
 extern gboolean crm_timer_start(fsa_timer_t *timer);
 extern gboolean crm_timer_popped(gpointer data);
 
-extern crm_data_t *create_node_state(
+extern xmlNode *create_node_state(
 	const char *uname, const char *ha_state, const char *ccm_state,
 	const char *crmd_state, const char *join_state, const char *exp_state,
 	gboolean clear_shutdown, const char *src);
@@ -71,7 +71,7 @@ extern void fsa_dump_inputs(
 	int log_level, const char *text, long long input_register);
 
 extern gboolean need_transition(enum crmd_fsa_state state);
-extern void update_dc(HA_Message *msg, gboolean assert_same);
+extern void update_dc(xmlNode *msg, gboolean assert_same);
 extern void erase_node_from_join(const char *node);
 extern void populate_cib_nodes(gboolean with_client_status);
 extern void crm_update_quorum(gboolean bool);

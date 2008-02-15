@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+      <ref name="attribute-score"/>
+  </start>
+
+  <define name="attribute-score">
+    <attribute name="score">
+      <choice>
+	<data type="integer"/>
+	<value>INFINITY</value>
+	<value>+INFINITY</value>
+	<value>-INFINITY</value>
+      </choice>
+    </attribute>
+  </define>
+</grammar>

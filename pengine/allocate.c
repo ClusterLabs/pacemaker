@@ -106,7 +106,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 };
 
 static gboolean
-check_rsc_parameters(resource_t *rsc, node_t *node, crm_data_t *rsc_entry,
+check_rsc_parameters(resource_t *rsc, node_t *node, xmlNode *rsc_entry,
 		     pe_working_set_t *data_set) 
 {
 	int attr_lpc = 0;
@@ -144,7 +144,7 @@ check_rsc_parameters(resource_t *rsc, node_t *node, crm_data_t *rsc_entry,
 }
 
 static gboolean
-check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op,
+check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 			pe_working_set_t *data_set)
 {
 	char *key = NULL;
@@ -154,8 +154,8 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	gboolean did_change = FALSE;
 	gboolean start_op = FALSE;
 
-	crm_data_t *params_all = NULL;
-	crm_data_t *params_restart = NULL;
+	xmlNode *params_all = NULL;
+	xmlNode *params_restart = NULL;
 	GHashTable *local_rsc_params = NULL;
 	
 	char *digest_all_calc = NULL;
@@ -177,7 +177,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	key = generate_op_key(rsc->id, task, interval);
 
 	if(interval > 0) {
-		crm_data_t *op_match = NULL;
+		xmlNode *op_match = NULL;
 
 		crm_debug_2("Checking parameters for %s", key);
 		op_match = find_rsc_op_entry(rsc, key);
@@ -301,7 +301,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 extern gboolean DeleteRsc(resource_t *rsc, node_t *node, gboolean optional, pe_working_set_t *data_set);
 
 static void
-check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_set)
+check_actions_for(xmlNode *rsc_entry, node_t *node, pe_working_set_t *data_set)
 {
 	const char *id = NULL;
 	const char *task = NULL;
@@ -342,7 +342,7 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 	calculate_active_ops(sorted_op_list, &start_index, &stop_index);
 
 	slist_iter(
-		rsc_op, crm_data_t, sorted_op_list, lpc,
+		rsc_op, xmlNode, sorted_op_list, lpc,
 
 		if(start_index < stop_index) {
 			/* stopped */
@@ -377,8 +377,8 @@ check_actions(pe_working_set_t *data_set)
 {
 	const char *id = NULL;
 	node_t *node = NULL;
-	crm_data_t *lrm_rscs = NULL;
-	crm_data_t *status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
+	xmlNode *lrm_rscs = NULL;
+	xmlNode *status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
 
 	xml_child_iter_filter(
 		status, node_state, XML_CIB_TAG_STATE,
@@ -444,7 +444,7 @@ set_alloc_actions(pe_working_set_t *data_set)
 gboolean
 stage0(pe_working_set_t *data_set)
 {
-	crm_data_t * cib_constraints = get_object_root(
+	xmlNode * cib_constraints = get_object_root(
 		XML_CIB_TAG_CONSTRAINTS, data_set->input);
 
 	if(data_set->input == NULL) {

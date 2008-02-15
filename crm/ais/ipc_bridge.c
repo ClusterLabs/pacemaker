@@ -118,7 +118,7 @@ static gboolean
 ais_ipc_callback(IPC_Channel *channel, gpointer user_data)
 {
 	int lpc = 0;
-	HA_Message *op_request = NULL;
+	xmlNode *op_request = NULL;
 	gboolean keep_channel = TRUE;
 	ais_client_t *ais_client = user_data;
 	
@@ -154,7 +154,7 @@ ais_ipc_callback(IPC_Channel *channel, gpointer user_data)
 
 		ha_msg_add(op_request, "client-id", ais_client->id);
 		ha_msg_add(op_request, "client-name", ais_client->name);
-		crm_log_message_adv(LOG_ERR, "Client[inbound]", op_request);
+		crm_log_xml(LOG_ERR, "Client[inbound]", op_request);
 		
 /* 		cib_common_callback_worker( */
 /* 			op_request, cib_client, force_synchronous, privileged); */

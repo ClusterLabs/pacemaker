@@ -27,14 +27,14 @@
 extern FILE *msg_cib_strm;
 
 extern void cib_pre_notify(
-	int options, const char *op, crm_data_t *existing, crm_data_t *update);
+	int options, const char *op, xmlNode *existing, xmlNode *update);
 
-extern void cib_post_notify(int options, const char *op, crm_data_t *update,
-			    enum cib_errors result, crm_data_t *new_obj);
+extern void cib_post_notify(int options, const char *op, xmlNode *update,
+			    enum cib_errors result, xmlNode *new_obj);
 
 
 extern void cib_diff_notify(
 	int options, const char *client, const char *call_id, const char *op,
-	crm_data_t *update, enum cib_errors result, crm_data_t *old_cib);
+	xmlNode *update, enum cib_errors result, xmlNode *old_cib);
 
-extern void cib_replace_notify(crm_data_t *update, enum cib_errors result, crm_data_t *diff);
+extern void cib_replace_notify(xmlNode *update, enum cib_errors result, xmlNode *diff);

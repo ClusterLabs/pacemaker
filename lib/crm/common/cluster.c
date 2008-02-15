@@ -39,8 +39,8 @@
 #include "stack.h"
 
 
-HA_Message *create_common_message(
-	HA_Message *original_request, crm_data_t *xml_response_data);
+xmlNode *create_common_message(
+	xmlNode *original_request, xmlNode *xml_response_data);
 
 gboolean crm_cluster_connect(
     char **our_uname, char **our_uuid, void *dispatch, void *destroy,
@@ -81,7 +81,7 @@ gboolean crm_cluster_connect(
 }
 
 gboolean send_cluster_message(
-    const char *node, enum crm_ais_msg_types service, HA_Message *data, gboolean ordered) {
+    const char *node, enum crm_ais_msg_types service, xmlNode *data, gboolean ordered) {
 
 #if SUPPORT_AIS
     if(is_openais_cluster()) {
@@ -225,17 +225,17 @@ get_uname(const char *uuid)
 }
 
 void
-set_uuid(crm_data_t *node,const char *attr,const char *uname) 
+set_uuid(xmlNode *node,const char *attr,const char *uname) 
 {
 	const char *uuid_calc = get_uuid(uname);
 	crm_xml_add(node, attr, uuid_calc);
 	return;
 }
 
-crm_data_t*
+xmlNode*
 createPingAnswerFragment(const char *from, const char *status)
 {
-	crm_data_t *ping = NULL;
+	xmlNode *ping = NULL;
 	
 	
 	ping = create_xml_node(NULL, XML_CRM_TAG_PING);

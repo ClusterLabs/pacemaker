@@ -25,17 +25,17 @@
 
 #include <crm/pengine/rules.h>
 
-ha_time_t *parse_xml_duration(ha_time_t *start, crm_data_t *duration_spec);
+ha_time_t *parse_xml_duration(ha_time_t *start, xmlNode *duration_spec);
 
-gboolean test_date_expression(crm_data_t *time_expr, ha_time_t *now);
-gboolean cron_range_satisfied(ha_time_t *now, crm_data_t *cron_spec);
+gboolean test_date_expression(xmlNode *time_expr, ha_time_t *now);
+gboolean cron_range_satisfied(ha_time_t *now, xmlNode *cron_spec);
 gboolean test_attr_expression(
-	crm_data_t *expr, GHashTable *hash, ha_time_t *now);
+	xmlNode *expr, GHashTable *hash, ha_time_t *now);
 gboolean test_role_expression(
-	crm_data_t *expr, enum rsc_role_e role, ha_time_t *now);
+	xmlNode *expr, enum rsc_role_e role, ha_time_t *now);
 
 gboolean
-test_ruleset(crm_data_t *ruleset, GHashTable *node_hash, ha_time_t *now) 
+test_ruleset(xmlNode *ruleset, GHashTable *node_hash, ha_time_t *now) 
 {
 	gboolean ruleset_default = TRUE;
 	xml_child_iter_filter(
@@ -51,7 +51,7 @@ test_ruleset(crm_data_t *ruleset, GHashTable *node_hash, ha_time_t *now)
 }
 
 gboolean
-test_rule(crm_data_t *rule, GHashTable *node_hash, enum rsc_role_e role,
+test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
 	  ha_time_t *now) 
 {
 	gboolean test = TRUE;
@@ -92,7 +92,7 @@ test_rule(crm_data_t *rule, GHashTable *node_hash, enum rsc_role_e role,
 }
 
 gboolean
-test_expression(crm_data_t *expr, GHashTable *node_hash, enum rsc_role_e role,
+test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
 		ha_time_t *now)
 {
 	gboolean accept = FALSE;
@@ -135,7 +135,7 @@ test_expression(crm_data_t *expr, GHashTable *node_hash, enum rsc_role_e role,
 }
 
 enum expression_type
-find_expression_type(crm_data_t *expr) 
+find_expression_type(xmlNode *expr) 
 {
 	const char *tag = NULL;
 	const char *attr  = NULL;
@@ -163,7 +163,7 @@ find_expression_type(crm_data_t *expr)
 
 gboolean
 test_role_expression(
-	crm_data_t *expr, enum rsc_role_e role, ha_time_t *now)
+	xmlNode *expr, enum rsc_role_e role, ha_time_t *now)
 {
 	gboolean accept = FALSE;
 	const char *op      = NULL;
@@ -204,7 +204,7 @@ test_role_expression(
 }
 
 gboolean
-test_attr_expression(crm_data_t *expr, GHashTable *hash, ha_time_t *now)
+test_attr_expression(xmlNode *expr, GHashTable *hash, ha_time_t *now)
 {
 	gboolean accept = FALSE;
 	int cmp = 0;
@@ -358,7 +358,7 @@ phase_of_the_moon(ha_time_t *now)
 	}
 
 gboolean
-cron_range_satisfied(ha_time_t *now, crm_data_t *cron_spec) 
+cron_range_satisfied(ha_time_t *now, xmlNode *cron_spec) 
 {
 	const char *value = NULL;
 	char *value_low = NULL;
@@ -392,7 +392,7 @@ cron_range_satisfied(ha_time_t *now, crm_data_t *cron_spec)
 	}
 
 ha_time_t *
-parse_xml_duration(ha_time_t *start, crm_data_t *duration_spec) 
+parse_xml_duration(ha_time_t *start, xmlNode *duration_spec) 
 {
 	ha_time_t *end = NULL;
 	const char *value = NULL;
@@ -413,7 +413,7 @@ parse_xml_duration(ha_time_t *start, crm_data_t *duration_spec)
 
 	
 gboolean
-test_date_expression(crm_data_t *time_expr, ha_time_t *now)
+test_date_expression(xmlNode *time_expr, ha_time_t *now)
 {
 	ha_time_t *start = NULL;
 	ha_time_t *end = NULL;
@@ -422,15 +422,15 @@ test_date_expression(crm_data_t *time_expr, ha_time_t *now)
 	char *value_copy_start = NULL;
 	const char *op = crm_element_value(time_expr, "operation");
 
-	crm_data_t *duration_spec = NULL;
-	crm_data_t *date_spec = NULL;
+	xmlNode *duration_spec = NULL;
+	xmlNode *date_spec = NULL;
 
 	gboolean passed = FALSE;
 
 	crm_debug_2("Testing expression: %s", ID(time_expr));
 	
-	duration_spec = cl_get_struct(time_expr, "duration");
-	date_spec = cl_get_struct(time_expr, "date_spec");
+	duration_spec = first_named_child(time_expr, "duration");
+	date_spec = first_named_child(time_expr, "date_spec");
 	
 	value = crm_element_value(time_expr, "start");
 	if(value != NULL) {
@@ -447,7 +447,7 @@ test_date_expression(crm_data_t *time_expr, ha_time_t *now)
 		crm_free(value_copy_start);
 	}
 
-	if(start != NULL && end == NULL) {
+	if(start != NULL && end == NULL && duration_spec != NULL) {
  		end = parse_xml_duration(start, duration_spec);
 	}
 	if(op == NULL) {
@@ -490,7 +490,7 @@ typedef struct sorted_set_s
 		const char *name;
 		const char *special_name;
 		int score;
-		crm_data_t *attr_set;
+		xmlNode *attr_set;
 		GHashTable *node_hash;
 		GHashTable *hash;
 		ha_time_t *now;		
@@ -527,7 +527,7 @@ sort_pairs(gconstpointer a, gconstpointer b)
 
 
 static void
-populate_hash(crm_data_t *nvpair_list, GHashTable *hash) 
+populate_hash(xmlNode *nvpair_list, GHashTable *hash) 
 {
 	const char *name = NULL;
 	const char *value = NULL;
@@ -559,7 +559,7 @@ unpack_attr_set(gpointer data, gpointer user_data)
 {
 	sorted_set_t *pair = data;
 	sorted_set_t *unpack_data = user_data;
-	crm_data_t *attributes = NULL;
+	xmlNode *attributes = NULL;
 	
 	if(test_ruleset(pair->attr_set,
 			unpack_data->node_hash, unpack_data->now) == FALSE) {
@@ -567,7 +567,7 @@ unpack_attr_set(gpointer data, gpointer user_data)
 	}
 	
 	crm_debug_3("Adding attributes from %s", pair->name);
-	attributes = cl_get_struct(pair->attr_set, XML_TAG_ATTRS);
+	attributes = first_named_child(pair->attr_set, XML_TAG_ATTRS);
 	populate_hash(attributes, unpack_data->hash);
 }
 
@@ -580,7 +580,7 @@ free_pair(gpointer data, gpointer user_data)
 
 void
 unpack_instance_attributes(
-	crm_data_t *xml_obj, const char *set_name, GHashTable *node_hash, 
+	xmlNode *xml_obj, const char *set_name, GHashTable *node_hash, 
 	GHashTable *hash, const char *always_first, ha_time_t *now)
 {
 	GListPtr sorted = NULL;

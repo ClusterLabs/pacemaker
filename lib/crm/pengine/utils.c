@@ -29,7 +29,7 @@
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 void unpack_operation(
-	action_t *action, crm_data_t *xml_obj, pe_working_set_t* data_set);
+	action_t *action, xmlNode *xml_obj, pe_working_set_t* data_set);
 
 void
 pe_free_shallow(GListPtr alist)
@@ -555,7 +555,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 
 void
 unpack_operation(
-	action_t *action, crm_data_t *xml_obj, pe_working_set_t* data_set)
+	action_t *action, xmlNode *xml_obj, pe_working_set_t* data_set)
 {
 	int value_i = 0;
 	int start_delay = 0;
@@ -769,7 +769,7 @@ unpack_operation(
 	g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
 }
 
-crm_data_t *
+xmlNode *
 find_rsc_op_entry(resource_t *rsc, const char *key) 
 {
 	int number = 0;
@@ -777,7 +777,7 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 	const char *value = NULL;
 	const char *interval = NULL;
 	char *match_key = NULL;
-	crm_data_t *op = NULL;
+	xmlNode *op = NULL;
 	
 	xml_child_iter_filter(
 		rsc->ops_xml, operation, "op",
@@ -985,7 +985,7 @@ find_actions_exact(GListPtr input, const char *key, node_t *on_node)
 }
 
 void
-set_id(crm_data_t * xml_obj, const char *prefix, int child) 
+set_id(xmlNode * xml_obj, const char *prefix, int child) 
 {
 	int id_len = 0;
 	gboolean use_prefix = TRUE;
@@ -1078,14 +1078,17 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 {
 	char *a_uuid = NULL;
 	char *b_uuid = NULL;
- 	const char *a_task_id = cl_get_string(a, XML_LRM_ATTR_CALLID);
- 	const char *b_task_id = cl_get_string(b, XML_LRM_ATTR_CALLID);
+	const xmlNode *xml_a = a;
+	const xmlNode *xml_b = b;
+	
+ 	const char *a_xml_id = crm_element_value_const(xml_a, XML_ATTR_ID);
+ 	const char *b_xml_id = crm_element_value_const(xml_b, XML_ATTR_ID);
 
-	const char *a_key = cl_get_string(a, XML_ATTR_TRANSITION_MAGIC);
- 	const char *b_key = cl_get_string(b, XML_ATTR_TRANSITION_MAGIC);
+ 	const char *a_task_id = crm_element_value_const(xml_a, XML_LRM_ATTR_CALLID);
+ 	const char *b_task_id = crm_element_value_const(xml_b, XML_LRM_ATTR_CALLID);
 
-	const char *a_xml_id = ID(a);
-	const char *b_xml_id = ID(b);
+	const char *a_key = crm_element_value_const(xml_a, XML_ATTR_TRANSITION_MAGIC);
+ 	const char *b_key = crm_element_value_const(xml_b, XML_ATTR_TRANSITION_MAGIC);
 
 	int dummy = -1;
 	
@@ -1123,17 +1126,17 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
 	} else if(a_call_id >= 0 && a_call_id < b_call_id) {
 		crm_debug_4("%s (%d) < %s (%d) : call id",
-			    ID(a), a_call_id, ID(b), b_call_id);
+			    a_xml_id, a_call_id, b_xml_id, b_call_id);
 		sort_return(-1);
 
 	} else if(b_call_id >= 0 && a_call_id > b_call_id) {
 		crm_debug_4("%s (%d) > %s (%d) : call id",
-			    ID(a), a_call_id, ID(b), b_call_id);
+			    a_xml_id, a_call_id, b_xml_id, b_call_id);
 		sort_return(1);
 	}
 
 	crm_debug_5("%s (%d) == %s (%d) : continuing",
-		    ID(a), a_call_id, ID(b), b_call_id);
+		    a_xml_id, a_call_id, b_xml_id, b_call_id);
 	
 	/* now process pending ops */
 	CRM_CHECK(a_key != NULL && b_key != NULL, sort_return(0));
@@ -1165,29 +1168,29 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
 		if(b_call_id == -1) {
 			crm_debug_2("%s (%d) < %s (%d) : transition + call id",
-				    ID(a), a_call_id, ID(b), b_call_id);
+				    a_xml_id, a_call_id, b_xml_id, b_call_id);
 			sort_return(-1);
 		}
 
 		if(a_call_id == -1) {
 			crm_debug_2("%s (%d) > %s (%d) : transition + call id",
-				    ID(a), a_call_id, ID(b), b_call_id);
+				    a_xml_id, a_call_id, b_xml_id, b_call_id);
 			sort_return(1);
 		}
 		
 	} else if((a_id >= 0 && a_id < b_id) || b_id == -1) {
 		crm_debug_3("%s (%d) < %s (%d) : transition",
-			    ID(a), a_id, ID(b), b_id);
+			    a_xml_id, a_id, b_xml_id, b_id);
 		sort_return(-1);
 
 	} else if((b_id >= 0 && a_id > b_id) || a_id == -1) {
 		crm_debug_3("%s (%d) > %s (%d) : transition",
-			    ID(a), a_id, ID(b), b_id);
+			    a_xml_id, a_id, b_xml_id, b_id);
 		sort_return(1);
 	}
 
 	/* we should never end up here */
 	crm_err("%s (%d:%d:%s) ?? %s (%d:%d:%s) : default",
-		ID(a), a_call_id, a_id, a_uuid, ID(b), b_call_id, b_id, b_uuid);
+		a_xml_id, a_call_id, a_id, a_uuid, b_xml_id, b_call_id, b_id, b_uuid);
 	CRM_CHECK(FALSE, sort_return(0)); 
 }

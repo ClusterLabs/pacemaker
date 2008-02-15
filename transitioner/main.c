@@ -46,8 +46,8 @@ cib_t *te_cib_conn = NULL;
 void usage(const char* cmd, int exit_status);
 int te_init(void);
 gboolean tengine_shutdown(int nsig, gpointer unused);
-extern void te_update_confirm(const char *event, HA_Message *msg);
-extern void te_update_diff(const char *event, HA_Message *msg);
+extern void te_update_confirm(const char *event, xmlNode *msg);
+extern void te_update_diff(const char *event, xmlNode *msg);
 extern crm_graph_functions_t te_graph_fns;
 
 int

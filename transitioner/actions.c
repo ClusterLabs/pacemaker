@@ -70,7 +70,7 @@ send_stonith_update(stonith_ops_t * op)
 	const char *uuid   = op->node_uuid;
 	
 	/* zero out the node-status & remove all LRM status info */
-	crm_data_t *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+	xmlNode *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	
 	CRM_CHECK(op->node_name != NULL, return);
 	CRM_CHECK(op->node_uuid != NULL, return);
@@ -172,7 +172,7 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 {
 	char *value = NULL;
 	char *counter = NULL;
-	HA_Message *cmd = NULL;		
+	xmlNode *cmd = NULL;		
 
 	const char *id = NULL;
 	const char *task = NULL;
@@ -200,7 +200,7 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
 	ret = send_ipc_message(crm_ch, cmd);
 	crm_free(counter);
-	crm_msg_del(cmd);
+	free_xml(cmd);
 	
 	value = g_hash_table_lookup(action->params, crm_meta_name(XML_ATTR_TE_NOWAIT));
 	if(ret == FALSE) {
@@ -251,12 +251,12 @@ cib_action_update(crm_action_t *action, int status)
 	char *op_id  = NULL;
 	char *code   = NULL;
 	char *digest = NULL;
-	crm_data_t *tmp      = NULL;
-	crm_data_t *params   = NULL;
-	crm_data_t *state    = NULL;
-	crm_data_t *rsc      = NULL;
-	crm_data_t *xml_op   = NULL;
-	crm_data_t *action_rsc = NULL;
+	xmlNode *tmp      = NULL;
+	xmlNode *params   = NULL;
+	xmlNode *state    = NULL;
+	xmlNode *rsc      = NULL;
+	xmlNode *xml_op   = NULL;
+	xmlNode *action_rsc = NULL;
 
 	enum cib_errors rc = cib_ok;
 
@@ -387,8 +387,8 @@ cib_action_update(crm_action_t *action, int status)
 void
 send_rsc_command(crm_action_t *action) 
 {
-	HA_Message *cmd = NULL;
-	crm_data_t *rsc_op  = NULL;
+	xmlNode *cmd = NULL;
+	xmlNode *rsc_op  = NULL;
 	char *counter = NULL;
 
 	const char *task    = NULL;
@@ -428,7 +428,7 @@ send_rsc_command(crm_action_t *action)
 		send_ipc_message(crm_ch, cmd);
 	}
 #endif
-	crm_msg_del(cmd);
+	free_xml(cmd);
 	
 	action->executed = TRUE;
 	value = g_hash_table_lookup(action->params, crm_meta_name(XML_ATTR_TE_NOWAIT));
@@ -464,7 +464,7 @@ extern GMainLoop*  mainloop;
 void
 notify_crmd(crm_graph_t *graph)
 {	
-	HA_Message *cmd = NULL;
+	xmlNode *cmd = NULL;
 	int log_level = LOG_DEBUG;
 	const char *op = CRM_OP_TEABORT;
 	int pending_callbacks = num_cib_op_callbacks();
@@ -508,11 +508,11 @@ notify_crmd(crm_graph_t *graph)
 		op, NULL, NULL, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, NULL);
 
 	if(graph->abort_reason != NULL) {
-		ha_msg_add(cmd, "message", graph->abort_reason);
+		crm_xml_add(cmd, "message", graph->abort_reason);
 	}
 
 	send_ipc_message(crm_ch, cmd);
-	crm_msg_del(cmd);
+	free_xml(cmd);
 
 	graph->abort_reason = NULL;
 	graph->completion_action = tg_restart;	

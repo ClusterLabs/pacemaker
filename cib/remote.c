@@ -40,7 +40,7 @@
 
 int init_remote_listener(int port);
 char *cib_recv_remote_msg(void *session);
-void cib_send_remote_msg(void *session, HA_Message *msg);
+void cib_send_remote_msg(void *session, xmlNode *msg);
 
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
@@ -54,7 +54,7 @@ const int tls_kx_order[] = {
 };
 gnutls_dh_params dh_params;
 gnutls_anon_server_credentials anon_cred;
-char *cib_send_tls(gnutls_session *session, HA_Message *msg);
+char *cib_send_tls(gnutls_session *session, xmlNode *msg);
 char *cib_recv_tls(gnutls_session *session);
 #endif
 
@@ -62,11 +62,11 @@ extern int num_clients;
 int authenticate_user(const char* user, const char* passwd);
 gboolean cib_remote_listen(int ssock, gpointer data);
 gboolean cib_remote_msg(int csock, gpointer data);
-char *cib_send_plaintext(int sock, HA_Message *msg);
+char *cib_send_plaintext(int sock, xmlNode *msg);
 char *cib_recv_plaintext(int sock);
 
 extern void cib_process_request(
-	HA_Message *request, gboolean privileged, gboolean force_synchronous,
+	xmlNode *request, gboolean privileged, gboolean force_synchronous,
 	gboolean from_peer, cib_client_t *cib_client);
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
@@ -102,11 +102,10 @@ create_tls_session(int csock)
 }
 
 char*
-cib_send_tls(gnutls_session *session, HA_Message *msg)
+cib_send_tls(gnutls_session *session, xmlNode *msg)
 {
 	char *xml_text = NULL;
-	ha_msg_mod(msg, F_XML_TAGNAME, "cib_result");
-	crm_log_xml(LOG_DEBUG_2, "Result: ", msg);
+	msg->name = xmlCharStrdup("cib_result");
 	xml_text = dump_xml_unformatted(msg);
 	if(xml_text != NULL) {
 		int len = strlen(xml_text);
@@ -267,7 +266,7 @@ cib_remote_listen(int ssock, gpointer data)
 #endif
 	cib_client_t *new_client = NULL;
 
-	crm_data_t *login = NULL;
+	xmlNode *login = NULL;
 	const char *user = NULL;
 	const char *pass = NULL;
 	const char *tmp = NULL;
@@ -381,7 +380,7 @@ cib_remote_msg(int csock, gpointer data)
 	cl_uuid_t call_id;
 	char call_uuid[UU_UNPARSE_SIZEOF];
 	const char *value = NULL;
-	crm_data_t *command = NULL;
+	xmlNode *command = NULL;
 	cib_client_t *client = data;
 	char* msg = cib_recv_remote_msg(client->channel);
 	if(msg == NULL) {
@@ -419,12 +418,13 @@ cib_remote_msg(int csock, gpointer data)
 	xml_remove_prop(command, F_CIB_HOST);
 	xml_remove_prop(command, F_CIB_GLOBAL_UPDATE);
 	
-	value = cl_get_string(command, F_CIB_OPERATION);
+	value = crm_element_value(command, F_CIB_OPERATION);
 	if(safe_str_eq(value, T_CIB_NOTIFY) ) {
 	    /* Update the notify filters for this client */
 	    int on_off = 0;
-	    ha_msg_value_int(command, F_CIB_NOTIFY_ACTIVATE, &on_off);
-	    value = cl_get_string(command, F_CIB_NOTIFY_TYPE);
+	    const char *on_off_s = crm_element_value(command, F_CIB_NOTIFY_ACTIVATE);
+	    value = crm_element_value(command, F_CIB_NOTIFY_TYPE);
+	    on_off = crm_parse_int(on_off_s, "0");
 	    
 	    crm_info("Setting %s callbacks for %s: %s",
 		     value, client->name, on_off?"on":"off");
@@ -447,9 +447,8 @@ cib_remote_msg(int csock, gpointer data)
 	    }
 	    goto bail;
 	}
-	
+
  	cib_process_request(command, TRUE, TRUE, FALSE, client);
-	
   bail:
 	free_xml(command);
 	crm_free(msg);
@@ -536,11 +535,10 @@ authenticate_user(const char* user, const char* passwd)
 }
 
 char*
-cib_send_plaintext(int sock, HA_Message *msg)
+cib_send_plaintext(int sock, xmlNode *msg)
 {
 	char *xml_text = NULL;
-	ha_msg_mod(msg, F_XML_TAGNAME, "cib_result");
-	crm_log_xml(LOG_DEBUG_2, "Result: ", msg);
+	msg->name = xmlCharStrdup("cib_result");
 	xml_text = dump_xml_unformatted(msg);
 	if(xml_text != NULL) {
 		int rc = 0;
@@ -594,7 +592,7 @@ cib_recv_plaintext(int sock)
 }
 
 void
-cib_send_remote_msg(void *session, HA_Message *msg)
+cib_send_remote_msg(void *session, xmlNode *msg)
 {
 #ifdef HAVE_GNUTLS_GNUTLS_H
 	cib_send_tls(session, msg);
