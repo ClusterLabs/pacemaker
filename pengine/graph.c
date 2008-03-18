@@ -90,6 +90,7 @@ update_action(action_t *action)
 		}
 
 		if((local_type & pe_order_shutdown)
+		   && action->optional
 		   && other->action->optional == FALSE
 		   && is_set(other_rsc->flags, pe_rsc_shutdown)) {
 		    action->optional = FALSE;
@@ -204,6 +205,11 @@ update_action(action_t *action)
 				do_crm_log(log_level, "%s changed, processing %s", other->action->uuid, before_other->action->uuid);
 				update_action(before_other->action);
 				);
+			slist_iter(
+				before_other, action_wrapper_t, other->action->actions_before, lpc2,
+				do_crm_log(log_level, "%s changed, processing %s", other->action->uuid, before_other->action->uuid);
+				update_action(before_other->action);
+				);
 		}
 		
 		);
@@ -212,6 +218,12 @@ update_action(action_t *action)
 		do_crm_log(log_level, "%s changed, processing after list", action->uuid);
 		slist_iter(
 			other, action_wrapper_t, action->actions_after, lpc,
+			do_crm_log(log_level, "%s changed, processing %s", action->uuid, other->action->uuid);
+			update_action(other->action);
+			);
+		do_crm_log(log_level, "%s changed, processing before list", action->uuid);
+		slist_iter(
+			other, action_wrapper_t, action->actions_before, lpc,
 			do_crm_log(log_level, "%s changed, processing %s", action->uuid, other->action->uuid);
 			update_action(other->action);
 			);
