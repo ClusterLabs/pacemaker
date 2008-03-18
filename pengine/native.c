@@ -505,7 +505,7 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 	custom_action_order(rsc, demote_key(rsc), NULL,
 			    rsc, stop_key(rsc), NULL,
-			    pe_order_optional, data_set);
+			    pe_order_demote_stop, data_set);
 
 	custom_action_order(rsc, start_key(rsc), NULL,
 			    rsc, promote_key(rsc), NULL,
@@ -1214,6 +1214,7 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 		}
 		
 	} else {
+	    
 		stop = stop_action(rsc, current, TRUE);
 		start = start_action(rsc, next, TRUE);
 		stop->optional = start->optional;

@@ -56,6 +56,7 @@ enum pe_ordering {
 	pe_order_demote			= 0x800, /* stop-start constraint */
 
 	pe_order_shutdown		= 0x1000, /* combines with pe_order_restart to make a complex resource shut down */
+	pe_order_demote_stop		= 0x2000, /* upgrades to implies_left if the resource is a master */
 	
 	pe_order_test		        = 0x10000 /* test marker */
 };

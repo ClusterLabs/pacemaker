@@ -80,6 +80,15 @@ update_action(action_t *action)
 
 		local_type = other->type;
 
+		if((local_type & pe_order_demote_stop)
+		   && other->action->pseudo == FALSE
+		   && other_role > RSC_ROLE_SLAVE
+		   && node != NULL
+		   && node->details->online) {
+		    local_type |= pe_order_implies_left;
+		    do_crm_log(log_level,"Upgrading demote->stop constraint to implies_left");
+		}
+
 		if((local_type & pe_order_demote)
 		   && other->action->pseudo == FALSE
 		   && other_role > RSC_ROLE_SLAVE
