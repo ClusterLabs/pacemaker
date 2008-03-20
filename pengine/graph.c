@@ -52,13 +52,13 @@ update_action(action_t *action)
 	int local_type = 0;
 	int log_level = LOG_DEBUG_2;
 	gboolean changed = FALSE;
-	
+
 	do_crm_log(log_level, "Processing action %s: %s %s %s",
 		   action->uuid,
 		   action->optional?"optional":"required",
 		   action->runnable?"runnable":"unrunnable",
 		   action->pseudo?"pseudo":action->task);
-
+	
 	slist_iter(
 		other, action_wrapper_t, action->actions_before, lpc,
 
@@ -70,7 +70,18 @@ update_action(action_t *action)
 		if(other_rsc) {
 		    other_role = other_rsc->fns->state(other_rsc, TRUE);
 		}
-		
+
+		if(other->type & pe_order_test) {
+		    log_level = LOG_NOTICE;
+		    do_crm_log(log_level, "Processing action %s: %s %s %s",
+			       action->uuid,
+			       action->optional?"optional":"required",
+			       action->runnable?"runnable":"unrunnable",
+			       action->pseudo?"pseudo":action->task);
+		} else {
+		    log_level = LOG_DEBUG_2;
+		}
+
 		do_crm_log(log_level, "   Checking action %s: %s %s %s (flags=0x%.6x)",
 			   other->action->uuid,
 			   other->action->optional?"optional":"required",
@@ -98,6 +109,20 @@ update_action(action_t *action)
 		    do_crm_log(log_level,"Upgrading restart constraint to runnable_left");
 		}
 
+		if((local_type & pe_order_complex_right)
+		   && action->optional
+		   && other->action->optional == FALSE) {
+		    local_type |= pe_order_implies_right;
+		    do_crm_log(log_level,"Upgrading complex constraint to implies_right");
+		}
+
+		if((local_type & pe_order_complex_left)
+		   && action->optional == FALSE
+		   && other->action->optional) {
+		    local_type |= pe_order_implies_left;
+		    do_crm_log(log_level,"Upgrading complex constraint to implies_left");
+		}
+		
 		if((local_type & pe_order_shutdown)
 		   && action->optional
 		   && other->action->optional == FALSE
@@ -194,6 +219,7 @@ update_action(action_t *action)
 			if(action->optional == FALSE) {
 				/* nothing to do */
 				do_crm_log(log_level+1, "      Ignoring implies right - redundant");
+
 			} else if(other->action->optional == FALSE) {
 				action->optional = FALSE;
 				do_crm_log(log_level-1,

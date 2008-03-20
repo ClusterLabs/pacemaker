@@ -480,12 +480,6 @@
          <pseudo_event id="33" operation="notified" operation_key="ms_drbd_7788_confirmed-pre_notify_demote_0"/>
        </trigger>
        <trigger>
-         <rsc_op id="36" operation="stop" operation_key="fs_mirror_stop_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="44" operation="stop" operation_key="grp_pgsql_mirror_stop_0"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="45" operation="stopped" operation_key="grp_pgsql_mirror_stopped_0"/>
        </trigger>
      </inputs>
@@ -581,13 +575,34 @@
    </synapse>
    <synapse id="39">
      <action_set>
+       <pseudo_event id="43" operation="running" operation_key="grp_pgsql_mirror_running_0">
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="120000"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="37" operation="start" operation_key="fs_mirror_start_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="39" operation="start" operation_key="pgsql_5555_start_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="41" operation="start" operation_key="IPaddr_147_81_84_133_start_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="42" operation="start" operation_key="grp_pgsql_mirror_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="40">
+     <action_set>
        <pseudo_event id="44" operation="stop" operation_key="grp_pgsql_mirror_stop_0">
          <attributes crm_feature_set="2.1" CRM_meta_timeout="120000"/>
        </pseudo_event>
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="40">
+   <synapse id="41">
      <action_set>
        <pseudo_event id="45" operation="stopped" operation_key="grp_pgsql_mirror_stopped_0">
          <attributes crm_feature_set="2.1" CRM_meta_timeout="120000"/>
@@ -608,7 +623,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="41">
+   <synapse id="42">
      <action_set>
        <rsc_op id="36" operation="stop" operation_key="fs_mirror_stop_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
          <primitive id="fs_mirror" long-id="grp_pgsql_mirror:fs_mirror" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -624,7 +639,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="42">
+   <synapse id="43">
      <action_set>
        <rsc_op id="37" operation="start" operation_key="fs_mirror_start_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
          <primitive id="fs_mirror" long-id="grp_pgsql_mirror:fs_mirror" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -640,7 +655,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="43">
+   <synapse id="44">
      <action_set>
        <rsc_op id="2" operation="monitor" operation_key="pgsql_5555_monitor_30000" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
          <primitive id="pgsql_5555" long-id="grp_pgsql_mirror:pgsql_5555" class="ocf" provider="heartbeat" type="pgsql"/>
@@ -653,7 +668,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="44">
+   <synapse id="45">
      <action_set>
        <rsc_op id="38" operation="stop" operation_key="pgsql_5555_stop_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
          <primitive id="pgsql_5555" long-id="grp_pgsql_mirror:pgsql_5555" class="ocf" provider="heartbeat" type="pgsql"/>
@@ -669,7 +684,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="45">
+   <synapse id="46">
      <action_set>
        <rsc_op id="39" operation="start" operation_key="pgsql_5555_start_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
          <primitive id="pgsql_5555" long-id="grp_pgsql_mirror:pgsql_5555" class="ocf" provider="heartbeat" type="pgsql"/>
@@ -685,7 +700,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="46">
+   <synapse id="47">
      <action_set>
        <rsc_op id="1" operation="monitor" operation_key="IPaddr_147_81_84_133_monitor_25000" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
          <primitive id="IPaddr_147_81_84_133" long-id="grp_pgsql_mirror:IPaddr_147_81_84_133" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -698,7 +713,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="47">
+   <synapse id="48">
      <action_set>
        <rsc_op id="40" operation="stop" operation_key="IPaddr_147_81_84_133_stop_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
          <primitive id="IPaddr_147_81_84_133" long-id="grp_pgsql_mirror:IPaddr_147_81_84_133" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -711,7 +726,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="48">
+   <synapse id="49">
      <action_set>
        <rsc_op id="41" operation="start" operation_key="IPaddr_147_81_84_133_start_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
          <primitive id="IPaddr_147_81_84_133" long-id="grp_pgsql_mirror:IPaddr_147_81_84_133" class="ocf" provider="heartbeat" type="IPaddr"/>
@@ -727,7 +742,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="49">
+   <synapse id="50">
      <action_set>
        <pseudo_event id="6" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="2.1"/>
@@ -751,7 +766,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="50">
+   <synapse id="51">
      <action_set>
        <crm_event id="47" operation="do_shutdown" operation_key="do_shutdown" on_node="arc-dknightlx" on_node_uuid="8c16c69e-f753-49cf-ba89-3ae421940042">
          <attributes crm_feature_set="2.1"/>

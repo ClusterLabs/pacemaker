@@ -103,6 +103,9 @@
          <pseudo_event id="1" operation="stop" operation_key="rsc1_stop_0"/>
        </trigger>
        <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="10" operation="start" operation_key="group1_start_0"/>
        </trigger>
      </inputs>
@@ -140,6 +143,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <rsc_op id="7" operation="start" operation_key="rsc1_start_0" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
        <trigger>
@@ -155,9 +161,6 @@
        </rsc_op>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="12" operation="stop" operation_key="group1_stop_0"/>
-       </trigger>
        <trigger>
          <pseudo_event id="13" operation="stopped" operation_key="group1_stopped_0"/>
        </trigger>

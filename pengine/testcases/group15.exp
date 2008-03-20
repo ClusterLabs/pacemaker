@@ -113,6 +113,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="24" operation="start" operation_key="bar_start_0"/>
        </trigger>
      </inputs>
@@ -144,6 +147,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <rsc_op id="21" operation="start" operation_key="rsc6_start_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
      </inputs>
@@ -174,6 +180,9 @@
        </rsc_op>
      </action_set>
      <inputs>
+       <trigger>
+         <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
        <trigger>
          <rsc_op id="22" operation="start" operation_key="rsc7_start_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>

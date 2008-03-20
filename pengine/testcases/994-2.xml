@@ -48,8 +48,11 @@
            </operations>
          </primitive>
        </group>
+       <primitive class="lsb" id="depends" provider="heartbeat" type="postfix"/>
      </resources>
-     <constraints/>
+     <constraints>
+       <rsc_order id="o-1" from="depends" to="group_1" score="INFINITY"/>
+     </constraints>
    </configuration>
  <status>
    <node_state id="6d3906ef-d88f-4363-afac-609884ddbb90" uname="paul" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
@@ -76,6 +79,10 @@
            </lrm_rsc_op>
            <lrm_rsc_op id="group_1:postfix_9_monitor_120000" op_digest="873ed4f07792aa8ff18f3254244675ea" interval="120000" operation="monitor"  transition_key="2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="4:3;2:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" call_id="15" rc_code="3" op_status="4">
              
+           </lrm_rsc_op>
+         </lrm_resource>
+         <lrm_resource id="depends" type="postfix" class="lsb" provider="heartbeat">
+           <lrm_rsc_op id="depends_monitor_0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" operation="monitor"  transition_key="0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="1.0.6" transition_magic="4:3;0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" call_id="5" rc_code="0" op_status="0">
            </lrm_rsc_op>
          </lrm_resource>
          <lrm_resource id="group_1:datadisk_1" type="datadisk" class="heartbeat" provider="heartbeat">

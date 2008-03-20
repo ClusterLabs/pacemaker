@@ -92,23 +92,23 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		group_update_pseudo_status(rsc, child_rsc);
 		);
 
-	op = start_action(rsc, NULL, !group_data->child_starting);
+	op = start_action(rsc, NULL, TRUE/* !group_data->child_starting */);
 	op->pseudo = TRUE;
 	op->runnable = TRUE;
 
 	op = custom_action(rsc, started_key(rsc),
 			   CRMD_ACTION_STARTED, NULL,
-			   !group_data->child_starting, TRUE, data_set);
+			   TRUE/* !group_data->child_starting */, TRUE, data_set);
 	op->pseudo = TRUE;
 	op->runnable = TRUE;
 
-	op = stop_action(rsc, NULL, !group_data->child_stopping);
+	op = stop_action(rsc, NULL, TRUE/* !group_data->child_stopping */);
 	op->pseudo = TRUE;
 	op->runnable = TRUE;
 	
 	op = custom_action(rsc, stopped_key(rsc),
 			   CRMD_ACTION_STOPPED, NULL,
-			   !group_data->child_stopping, TRUE, data_set);
+			   TRUE/* !group_data->child_stopping */, TRUE, data_set);
 	op->pseudo = TRUE;
 	op->runnable = TRUE;
 
@@ -146,16 +146,11 @@ group_update_pseudo_status(resource_t *parent, resource_t *child)
 void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
 	resource_t *last_rsc = NULL;
-	int stopstop = pe_order_shutdown;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
 	native_internal_constraints(rsc, data_set);
 
-	if(group_data->ordered == FALSE) {
-	    stopstop |= pe_order_implies_right;
-	}
-	
 	custom_action_order(
 		rsc, stopped_key(rsc), NULL,
 		rsc, start_key(rsc), NULL,
@@ -164,7 +159,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	custom_action_order(
 		rsc, stop_key(rsc), NULL,
 		rsc, stopped_key(rsc), NULL,
-		pe_order_runnable_left, data_set);
+		pe_order_runnable_left|pe_order_implies_right|pe_order_implies_left, data_set);
 
 	custom_action_order(
 		rsc, start_key(rsc), NULL,
@@ -173,31 +168,36 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
-
+		int stop = pe_order_shutdown|pe_order_implies_right;
+		int stopped = pe_order_optional;
 		child_rsc->cmds->internal_constraints(child_rsc, data_set);
 
-		if(group_data->colocated && last_rsc != NULL) {
+		if(last_rsc == NULL) {
+		    stop |= pe_order_implies_left;
+		    stopped = pe_order_implies_right;
+		    
+		} else if(group_data->colocated) {
 			rsc_colocation_new(
 				"group:internal_colocation", NULL, INFINITY,
 				child_rsc, last_rsc, NULL, NULL, data_set);
 		}
 
-		order_stop_stop(rsc, child_rsc, stopstop);
+		order_stop_stop(rsc, child_rsc, stop);
 		
 		custom_action_order(child_rsc, stop_key(child_rsc), NULL,
 				    rsc,  stopped_key(rsc), NULL,
-				    pe_order_optional, data_set);
+				    stopped, data_set);
 
 		custom_action_order(child_rsc, start_key(child_rsc), NULL,
 				    rsc, started_key(rsc), NULL,
-				    pe_order_runnable_left, data_set);
+				    pe_order_runnable_left|pe_order_implies_right, data_set);
 		
  		if(group_data->ordered == FALSE) {
 			order_start_start(rsc, child_rsc, pe_order_implies_right|pe_order_runnable_left);
 
 		} else if(last_rsc != NULL) {
 			order_start_start(last_rsc, child_rsc, pe_order_implies_right|pe_order_runnable_left);
-			order_stop_stop(child_rsc, last_rsc, pe_order_implies_left);
+			order_stop_stop(child_rsc, last_rsc, pe_order_implies_left|pe_order_test);
 
 			child_rsc->restart_type = pe_restart_restart;
 
@@ -209,7 +209,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 			 *  started is required to be "safe"
 			 */
 			order_start_start(rsc, child_rsc,
-					  pe_order_implies_right|pe_order_implies_left|pe_order_runnable_right|pe_order_runnable_left);
+					  pe_order_implies_left|pe_order_implies_right|pe_order_runnable_right|pe_order_runnable_left);
 		}
 		
 		last_rsc = child_rsc;
@@ -217,6 +217,9 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 	if(group_data->ordered && last_rsc != NULL) {
 		order_stop_stop(rsc, last_rsc, pe_order_implies_right);
+		custom_action_order(last_rsc, stop_key(last_rsc), NULL,
+				    rsc,  stopped_key(rsc), NULL,
+				    pe_order_implies_left, data_set);
 	}		
 }
 
@@ -301,7 +304,7 @@ void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 		native_rsc_order_lh(rsc, order, data_set);
 		return;
 	}
-
+#if 0
 	if(order->type != pe_order_optional) {
 		native_rsc_order_lh(rsc, order, data_set);
 	}
@@ -309,6 +312,7 @@ void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 	if(order->type & pe_order_implies_left) {
  		native_rsc_order_lh(group_data->first_child, order, data_set);
 	}
+#endif
 
 	convert_non_atomic_task(rsc, order);
 	native_rsc_order_lh(rsc, order, data_set);
@@ -326,6 +330,54 @@ void group_rsc_order_rh(
 		return;
 	}
 
+	if(safe_str_eq(CRM_OP_PROBED, lh_action->uuid)) {
+	    slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+		child_rsc->cmds->rsc_order_rh(lh_action, child_rsc, order);
+		);
+
+	    if(rsc->fns->state(rsc, TRUE) < RSC_ROLE_STARTED
+		&& rsc->fns->state(rsc, FALSE) > RSC_ROLE_STOPPED) {
+		order->type |= pe_order_implies_right;
+	    }
+	    
+	} else if(lh_action->rsc != NULL
+	   && lh_action->rsc != rsc
+	   && lh_action->rsc != rsc->parent
+	   && lh_action->rsc->parent != rsc) {
+	    char *tmp = NULL;
+	    char *task_s = NULL;
+	    int interval = 0;
+	    enum action_tasks task = 0;
+	    
+	    parse_op_key(order->lh_action_task, &tmp, &task_s, &interval);
+	    task = text2task(task_s);
+	    crm_free(task_s);
+	    crm_free(tmp);
+	    
+	    switch(task) {
+		case no_action:
+		case monitor_rsc:
+		case action_notify:
+		case action_notified:
+		case shutdown_crm:
+		case stonith_node:
+		    break;
+		case stop_rsc:
+		case stopped_rsc:
+		case action_demote:
+		case action_demoted:
+		    order->type |= pe_order_complex_left;
+		    break;
+		case start_rsc:
+		case started_rsc:
+		case action_promote:
+		case action_promoted:
+		    order->type |= pe_order_complex_right;
+		    break;
+	    }
+	}
+	
 	native_rsc_order_rh(lh_action, rsc, order);
 }
 

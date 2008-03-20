@@ -69,6 +69,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="17" operation="start" operation_key="group1_start_0"/>
        </trigger>
      </inputs>

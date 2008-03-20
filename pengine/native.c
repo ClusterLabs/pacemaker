@@ -722,6 +722,31 @@ node_list_update(GListPtr list1, GListPtr list2, int factor)
 		);	
 }
 
+GListPtr find_actions_by_task(GListPtr actions, resource_t *rsc, const char *original_key);
+GListPtr find_actions_by_task(GListPtr actions, resource_t *rsc, const char *original_key)
+{
+    GListPtr list = NULL;
+
+    list = find_actions(actions, original_key, NULL);
+    if(list == NULL) {
+	/* we're potentially searching a child of the original resource */
+	char *key = NULL;
+	char *tmp = NULL;
+	char *task = NULL;
+	int interval = 0;
+	parse_op_key(original_key, &tmp, &task, &interval);
+	
+	key = generate_op_key(rsc->id, task, interval);
+	list = find_actions(actions, key, NULL);
+
+	crm_free(key);
+	crm_free(tmp);
+	crm_free(task);
+    }
+
+    return list;
+}
+
 void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order, pe_working_set_t *data_set)
 {
 	GListPtr lh_actions = NULL;
@@ -735,8 +760,8 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order, pe_worki
 		lh_actions = g_list_append(NULL, lh_action);
 
 	} else if(lh_action == NULL) {
-		lh_actions = find_actions(
-			lh_rsc->actions, order->lh_action_task, NULL);
+		lh_actions = find_actions_by_task(
+		    lh_rsc->actions, lh_rsc, order->lh_action_task);
 	}
 
 	if(lh_actions == NULL && lh_rsc != rh_rsc) {
@@ -805,8 +830,8 @@ void native_rsc_order_rh(
 		rh_actions = g_list_append(NULL, rh_action);
 
 	} else if(rsc != NULL) {
-		rh_actions = find_actions(
-			rsc->actions, order->rh_action_task, NULL);
+		rh_actions = find_actions_by_task(
+		    rsc->actions, rsc, order->rh_action_task);
 	}
 
 	if(rh_actions == NULL) {
@@ -1467,7 +1492,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	
 	crm_debug_2("Probing %s on %s (%s)", rsc->id, node->details->uname, role2text(rsc->role));
 	
-	custom_action_order(rsc, NULL, probe, rsc, NULL, complete,
+	custom_action_order(rsc, NULL, probe, NULL, NULL, complete,
 			    pe_order_implies_right, data_set);
 
 	return TRUE;

@@ -18,10 +18,5 @@ digraph "g" {
 "ms-sf_group:1_stop_0" -> "master_slave_procdctl:1_stop_0 process1a" [ style = bold]
 "ms-sf_group:1_stop_0" -> "ms-sf_group:1_stopped_0" [ style = bold]
 "ms-sf_group:1_stop_0" [ style=bold color="green" fontcolor="orange"  ]
-"ms-sf_group:1_stopped_0" -> "ms-sf_stopped_0" [ style = bold]
 "ms-sf_group:1_stopped_0" [ style=bold color="green" fontcolor="orange"  ]
-"ms-sf_stop_0" -> "ms-sf_group:1_stop_0" [ style = bold]
-"ms-sf_stop_0" -> "ms-sf_stopped_0" [ style = bold]
-"ms-sf_stop_0" [ style=bold color="green" fontcolor="orange"  ]
-"ms-sf_stopped_0" [ style=bold color="green" fontcolor="orange"  ]
 }
