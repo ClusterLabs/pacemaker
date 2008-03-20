@@ -221,7 +221,9 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	    cl_str_to_boolean(value, &bool_value);
 	    if(bool_value == FALSE) {
 		clear_bit((*rsc)->flags, pe_rsc_managed); 
-	    } 
+	    } else {
+		set_bit((*rsc)->flags, pe_rsc_managed); 
+	    }
 	}
 
 	crm_debug_2("Options for %s", (*rsc)->id);
