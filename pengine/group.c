@@ -197,7 +197,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 		} else if(last_rsc != NULL) {
 			order_start_start(last_rsc, child_rsc, pe_order_implies_right|pe_order_runnable_left);
-			order_stop_stop(child_rsc, last_rsc, pe_order_implies_left|pe_order_test);
+			order_stop_stop(child_rsc, last_rsc, pe_order_implies_left);
 
 			child_rsc->restart_type = pe_restart_restart;
 
