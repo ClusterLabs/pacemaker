@@ -722,8 +722,7 @@ node_list_update(GListPtr list1, GListPtr list2, int factor)
 		);	
 }
 
-GListPtr find_actions_by_task(GListPtr actions, resource_t *rsc, const char *original_key);
-GListPtr find_actions_by_task(GListPtr actions, resource_t *rsc, const char *original_key)
+static GListPtr find_actions_by_task(GListPtr actions, resource_t *rsc, const char *original_key)
 {
     GListPtr list = NULL;
 
@@ -1521,15 +1520,10 @@ native_start_constraints(
 			       order_actions(all_stopped, action, pe_order_implies_left);
 
 			   } else if(target != NULL
-			      && target->details->expected_up
 			      && safe_str_eq(action->task, CRMD_ACTION_START)
 			      && NULL == pe_find_node_id(
 				      rsc->known_on, target->details->id)) {
-				   /* if expected_up == TRUE, then we've seen
-				    *   the node before and it has failed (as
-				    *   opposed to just hasn't started up yet)
-				    *
-				    * if known == NULL, then we dont know if
+				   /* if known == NULL, then we dont know if
 				    *   the resource is active on the node
 				    *   we're about to shoot
 				    *
@@ -1549,7 +1543,8 @@ native_start_constraints(
 					    action->uuid, target->details->uname);
 				   order_actions(all_stopped, action,
 						 pe_order_implies_left|pe_order_runnable_left);
-			   }   
+			   }
+			   
 			);
 	}
 }

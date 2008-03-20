@@ -37,6 +37,9 @@
        <trigger>
          <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="32" operation="all_stopped" operation_key="all_stopped"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="4">
@@ -89,6 +92,9 @@
      <inputs>
        <trigger>
          <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="32" operation="all_stopped" operation_key="all_stopped"/>
        </trigger>
      </inputs>
    </synapse>
@@ -143,6 +149,9 @@
        <trigger>
          <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="32" operation="all_stopped" operation_key="all_stopped"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="14">
@@ -196,6 +205,9 @@
        <trigger>
          <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="32" operation="all_stopped" operation_key="all_stopped"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="19">
@@ -248,6 +260,9 @@
      <inputs>
        <trigger>
          <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="32" operation="all_stopped" operation_key="all_stopped"/>
        </trigger>
      </inputs>
    </synapse>
