@@ -189,14 +189,42 @@ do_lrm_control(long long action,
 static void
 ghash_print_pending(gpointer key, gpointer value, gpointer user_data) 
 {
-	const char *action = key;
+	const char *stop_id = key;
 	int *log_level = user_data;
-	do_crm_log(*log_level, "Pending action: %s", action);
+	struct recurring_op_s *pending = value;
+	do_crm_log(*log_level, "Pending action: %s (%s)", stop_id, pending->op_key);
+}
+
+static void
+ghash_print_pending_for_rsc(gpointer key, gpointer value, gpointer user_data) 
+{
+	const char *stop_id = key;
+	char *rsc = user_data;
+	struct recurring_op_s *pending = value;
+	if(safe_str_eq(rsc, pending->rsc_id)) {
+	    do_crm_log(LOG_NOTICE, "%sction %s (%s) incomplete at shutdown",
+		       pending->interval==0?"A":"Recurring a", stop_id, pending->op_key);
+	}
+}
+
+static void
+ghash_count_pending(gpointer key, gpointer value, gpointer user_data) 
+{
+	int *counter = user_data;
+	struct recurring_op_s *pending = value;
+
+	if(pending->interval > 0) {
+	    /* Ignore recurring actions in the shutdown calculations */
+	    return;
+	}
+
+	(*counter)++;
 }
 
 gboolean
 verify_stopped(enum crmd_fsa_state cur_state, int log_level)
 {
+	int counter = 0;
 	gboolean rc = TRUE;
 	GListPtr lrm_list = NULL;
 
@@ -206,7 +234,9 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
 		log_level = LOG_ERR;
 	}	
 
-	if(g_hash_table_size(pending_ops) > 0) {
+	g_hash_table_foreach(pending_ops, ghash_count_pending, &counter);
+
+	if(counter > 0) {
 	    rc = FALSE;
 	    do_crm_log(log_level,
 		       "%d pending LRM operations at shutdown%s",
@@ -230,11 +260,13 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
 			continue;
 		}
 		
-		rc = FALSE;
 		crm_err("Resource %s was active at shutdown."
 			"  You may ignore this error if it is unmanaged.",
 			rsc_id);
-		);
+
+		g_hash_table_foreach(
+		    pending_ops, ghash_print_pending_for_rsc, rsc_id);
+	    );
 	
   bail:
 	set_bit_inplace(fsa_input_register, R_SENT_RSC_STOP);
