@@ -264,16 +264,16 @@ native_print(
 		desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
 		status_print("%s%s\t(%s%s%s:%s%s)%s%s",
 			     pre_text?pre_text:"", rsc->id,
-			     prov?prov:"", prov?"::":"",
-			     class, crm_element_value(rsc->xml, XML_ATTR_TYPE),
+			     class, prov?"::":"", prov?prov:"", 
+			     crm_element_value(rsc->xml, XML_ATTR_TYPE),
 			     is_set(rsc->flags, pe_rsc_orphan)?" ORPHANED":"",
 			     desc?": ":"", desc?desc:"");
 
 	} else {
 		status_print("%s%s\t(%s%s%s:%s%s):\t%s %s%s%s",
 			     pre_text?pre_text:"", rsc->id,
-			     prov?prov:"", prov?"::":"",
-			     class, crm_element_value(rsc->xml, XML_ATTR_TYPE),
+			     class, prov?"::":"", prov?prov:"", 
+			     crm_element_value(rsc->xml, XML_ATTR_TYPE),
 			     is_set(rsc->flags, pe_rsc_orphan)?" ORPHANED":"",
 			     (rsc->variant!=pe_native)?"":role2text(rsc->role),
 			     (rsc->variant!=pe_native)?"":node!=NULL?node->details->uname:"",
