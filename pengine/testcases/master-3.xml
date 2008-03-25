@@ -7,26 +7,8 @@
     </attributes></cluster_property_set></crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member">
-        <instance_attributes id="master-uuid1">
-          <attributes>
-            <nvpair id="master-child_rsc1:0-uuid1" name="master-child_rsc1:0" value="300"/>
-            <nvpair id="master-child_rsc1:1-uuid1" name="master-child_rsc1:1" value="100"/>
-            <nvpair id="master-child_rsc1:2-uuid1" name="master-child_rsc1:2" value="400"/>
-            <nvpair id="master-child_rsc1:3-uuid1" name="master-child_rsc1:3" value="40"/>
-            <nvpair id="master-child_rsc1:4-uuid1" name="master-child_rsc1:4" value="50"/>
-          </attributes>
-        </instance_attributes>
       </node>
       <node id="uuid2" uname="node2" type="member">
-        <instance_attributes id="master-uuid2">
-          <attributes>
-            <nvpair id="master-child_rsc1:0-uuid2" name="master-child_rsc1:0" value="10"/>
-            <nvpair id="master-child_rsc1:1-uuid2" name="master-child_rsc1:1" value="30"/>
-            <nvpair id="master-child_rsc1:2-uuid2" name="master-child_rsc1:2" value="20"/>
-            <nvpair id="master-child_rsc1:3-uuid2" name="master-child_rsc1:3" value="200"/>
-            <nvpair id="master-child_rsc1:4-uuid2" name="master-child_rsc1:4" value="60"/>
-          </attributes>
-        </instance_attributes>
       </node>
     </nodes>
     <resources>

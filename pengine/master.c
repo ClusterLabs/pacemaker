@@ -358,12 +358,23 @@ int
 master_score(resource_t *rsc, node_t *node, int not_set_value)
 {
 	char *attr_name;
+	char *name = rsc->id;
 	const char *attr_value;
 	int score = not_set_value, len = 0;
 
-	len = 8 + strlen(rsc->id);
+	if(rsc->fns->state(rsc, TRUE) < RSC_ROLE_STARTED) {
+	    return score;
+	}
+
+#if 0
+	if(rsc->clone_name) {
+	    name = rsc->clone_name;
+	    crm_err("%s ::= %s", rsc->id, rsc->clone_name);
+	}
+#endif
+	len = 8 + strlen(name);
 	crm_malloc0(attr_name, len);
-	sprintf(attr_name, "master-%s", rsc->id);
+	sprintf(attr_name, "master-%s", name);
 	
 	crm_debug_3("looking for %s on %s", attr_name,
 				node->details->uname);
@@ -753,6 +764,7 @@ void master_rsc_colocation_rh(
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc_rh);
 
+	
 	CRM_CHECK(rsc_rh != NULL, return);
 	if(is_set(rsc_rh->flags, pe_rsc_provisional)) {
 		return;

@@ -40,7 +40,12 @@
       </master_slave>
     </resources>
     <constraints>
-      <rsc_colocation id="simple-with-master" from="simple-rsc" to="rsc1" score="INFINITY"/>
+      <rsc_colocation id="simple-with-master" from="simple-rsc" to="rsc1" to_role="Master" score="INFINITY"/>
+      <rsc_location id="master-cons" rsc="rsc1">
+	<rule id="master-rule" score="100" role="Master">
+	  <expression id="master-exp" attribute="#uname" operation="eq" value="node2"/>
+	</rule>
+      </rsc_location>
       <rsc_location id="simple-node0" rsc="simple-rsc">
 	<rule id="simple-rule-node0" score="99999">
 	  <expression id="simple-exp" attribute="#uname" operation="eq" value="node0"/>

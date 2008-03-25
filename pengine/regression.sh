@@ -25,7 +25,6 @@ fi
 create_mode="true"
 echo Generating test outputs for these tests...
 # do_test
-
 echo Done.
 echo ""
 
@@ -230,6 +229,7 @@ do_test master-demote "Ordering when actions depends on demoting a slave resourc
 do_test master-ordering "Prevent resources from starting that need a master"
 do_test bug-1765 "Master-Master Colocation (dont stop the slaves)"
 do_test master-group "Promotion of cloned groups"
+do_test bug-lf-1852 "Don't shuffle master/slave instances unnecessarily"
 
 echo ""
 do_test managed-0 "Managed (reference)"
