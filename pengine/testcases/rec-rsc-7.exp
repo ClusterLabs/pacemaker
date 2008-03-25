@@ -17,25 +17,9 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="2" priority="1000000">
+   <synapse id="2">
      <action_set>
-       <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
-         <attributes crm_feature_set="2.1" CRM_meta_op_no_wait="true"/>
-       </rsc_op>
-     </action_set>
-     <inputs/>
-   </synapse>
-   <synapse id="3" priority="1000000">
-     <action_set>
-       <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="uuid2">
-         <attributes crm_feature_set="2.1" CRM_meta_op_no_wait="true"/>
-       </rsc_op>
-     </action_set>
-     <inputs/>
-   </synapse>
-   <synapse id="4">
-     <action_set>
-       <pseudo_event id="4" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="2.1"/>
        </pseudo_event>
      </action_set>
@@ -47,6 +31,22 @@
          <rsc_op id="6" operation="stop" operation_key="rsc1_stop_0" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
      </inputs>
+   </synapse>
+   <synapse id="3" priority="1000000">
+     <action_set>
+       <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
+         <attributes crm_feature_set="2.1" CRM_meta_op_no_wait="true"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="4" priority="1000000">
+     <action_set>
+       <rsc_op id="4" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="uuid2">
+         <attributes crm_feature_set="2.1" CRM_meta_op_no_wait="true"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
    </synapse>
  </transition_graph>
 

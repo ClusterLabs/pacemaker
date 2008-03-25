@@ -120,7 +120,7 @@ struct action_wrapper_s
 };
 
 extern gboolean stage0(pe_working_set_t *data_set);
-extern gboolean stage1(pe_working_set_t *data_set);
+extern gboolean probe_resources(pe_working_set_t *data_set);
 extern gboolean stage2(pe_working_set_t *data_set);
 extern gboolean stage3(pe_working_set_t *data_set);
 extern gboolean stage4(pe_working_set_t *data_set);

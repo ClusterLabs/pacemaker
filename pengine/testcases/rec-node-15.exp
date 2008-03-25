@@ -89,7 +89,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped"/>
+         <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped"/>
        </trigger>
        <trigger>
          <rsc_op id="21" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
@@ -137,7 +137,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped"/>
+         <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped"/>
        </trigger>
        <trigger>
          <rsc_op id="22" operation="start" operation_key="IPaddr_192_168_1_102_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
@@ -182,7 +182,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped"/>
+         <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped"/>
        </trigger>
        <trigger>
          <rsc_op id="25" operation="start" operation_key="LVM_12_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
@@ -249,7 +249,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped"/>
+         <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped"/>
        </trigger>
        <trigger>
          <pseudo_event id="44" operation="start" operation_key="oracle_start_0"/>
@@ -278,7 +278,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped"/>
+         <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped"/>
        </trigger>
        <trigger>
          <rsc_op id="34" operation="start" operation_key="IPaddr_192_168_1_104_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
@@ -307,7 +307,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped"/>
+         <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped"/>
        </trigger>
        <trigger>
          <rsc_op id="36" operation="start" operation_key="LVM_22_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
@@ -336,7 +336,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped"/>
+         <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped"/>
        </trigger>
        <trigger>
          <rsc_op id="38" operation="start" operation_key="Filesystem_23_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
@@ -365,7 +365,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped"/>
+         <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped"/>
        </trigger>
        <trigger>
          <rsc_op id="40" operation="start" operation_key="oracle_24_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
@@ -387,7 +387,7 @@
    </synapse>
    <synapse id="25">
      <action_set>
-       <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="2.1"/>
        </pseudo_event>
      </action_set>

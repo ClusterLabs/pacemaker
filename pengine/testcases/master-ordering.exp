@@ -1,7 +1,7 @@
  <transition_graph cluster-delay="60s" batch-limit="30" transition_id="0">
    <synapse id="0">
      <action_set>
-       <rsc_op id="3" operation="monitor" operation_key="extip_1_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+       <rsc_op id="4" operation="monitor" operation_key="extip_1_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="extip_1" long-id="extip_1" class="ocf" provider="heartbeat" type="IPaddr2"/>
          <attributes crm_feature_set="2.1" target_role="started" ip="85.125.191.221" netmask="28" nic="eth0" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7"/>
        </rsc_op>
@@ -17,7 +17,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
      </inputs>
    </synapse>
@@ -36,7 +36,7 @@
    </synapse>
    <synapse id="3">
      <action_set>
-       <rsc_op id="4" operation="monitor" operation_key="extip_2_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+       <rsc_op id="5" operation="monitor" operation_key="extip_2_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="extip_2" long-id="extip_2" class="ocf" provider="heartbeat" type="IPaddr2"/>
          <attributes crm_feature_set="2.1" target_role="started" ip="85.125.191.222" netmask="28" nic="eth0" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7"/>
        </rsc_op>
@@ -52,7 +52,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
      </inputs>
    </synapse>
@@ -71,7 +71,7 @@
    </synapse>
    <synapse id="6">
      <action_set>
-       <rsc_op id="5" operation="monitor" operation_key="intip_0_main_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+       <rsc_op id="6" operation="monitor" operation_key="intip_0_main_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="intip_0_main" long-id="group_main:intip_0_main" class="ocf" provider="heartbeat" type="IPaddr2"/>
          <attributes crm_feature_set="2.1" target_role="started" ip="192.168.100.200" netmask="24" nic="eth1" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7"/>
        </rsc_op>
@@ -80,7 +80,7 @@
    </synapse>
    <synapse id="7">
      <action_set>
-       <rsc_op id="6" operation="monitor" operation_key="intip_1_master_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+       <rsc_op id="7" operation="monitor" operation_key="intip_1_master_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="intip_1_master" long-id="intip_1_master" class="ocf" provider="heartbeat" type="IPaddr2"/>
          <attributes crm_feature_set="2.1" target_role="started" ip="192.168.100.201" netmask="24" nic="eth1" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7"/>
        </rsc_op>
@@ -96,7 +96,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
      </inputs>
    </synapse>
@@ -115,7 +115,7 @@
    </synapse>
    <synapse id="10">
      <action_set>
-       <rsc_op id="7" operation="monitor" operation_key="intip_2_slave_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+       <rsc_op id="8" operation="monitor" operation_key="intip_2_slave_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="intip_2_slave" long-id="intip_2_slave" class="ocf" provider="heartbeat" type="IPaddr2"/>
          <attributes crm_feature_set="2.1" target_role="started" ip="192.168.100.202" netmask="24" nic="eth1" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7"/>
        </rsc_op>
@@ -131,7 +131,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
      </inputs>
    </synapse>
@@ -150,7 +150,7 @@
    </synapse>
    <synapse id="13">
      <action_set>
-       <rsc_op id="8" operation="monitor" operation_key="drbd_www:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+       <rsc_op id="9" operation="monitor" operation_key="drbd_www:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="drbd_www:0" long-id="ms_drbd_www:drbd_www:0" class="ocf" provider="heartbeat" type="drbd"/>
          <attributes crm_feature_set="2.1" clone_overrides_hostname="yes" target_role="started" drbd_resource="www" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7" CRM_meta_globally_unique="false" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="2" CRM_meta_master_node_max="1"/>
        </rsc_op>
@@ -191,7 +191,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
          <rsc_op id="27" operation="start" operation_key="intip_1_master_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
@@ -268,7 +268,7 @@
    </synapse>
    <synapse id="22">
      <action_set>
-       <rsc_op id="9" operation="monitor" operation_key="ocfs2_www:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+       <rsc_op id="10" operation="monitor" operation_key="ocfs2_www:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="ocfs2_www:0" long-id="clone_ocfs2_www:ocfs2_www:0" class="ocf" provider="heartbeat" type="Filesystem"/>
          <attributes crm_feature_set="2.1" directory="/data/www" fstype="ocfs2" device="/dev/drbd0" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
        </rsc_op>
@@ -277,7 +277,7 @@
    </synapse>
    <synapse id="23">
      <action_set>
-       <rsc_op id="10" operation="monitor" operation_key="ocfs2_www:1_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+       <rsc_op id="11" operation="monitor" operation_key="ocfs2_www:1_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="ocfs2_www:1" long-id="clone_ocfs2_www:ocfs2_www:1" class="ocf" provider="heartbeat" type="Filesystem"/>
          <attributes crm_feature_set="2.1" directory="/data/www" fstype="ocfs2" device="/dev/drbd0" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7" CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
        </rsc_op>
@@ -286,7 +286,7 @@
    </synapse>
    <synapse id="24">
      <action_set>
-       <rsc_op id="11" operation="monitor" operation_key="apache2:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+       <rsc_op id="12" operation="monitor" operation_key="apache2:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="apache2:0" long-id="clone_webservice:group_webservice:0:apache2:0" class="ocf" provider="heartbeat" type="apache"/>
          <attributes crm_feature_set="2.1" target_role="started" httpd="/usr/sbin/apache2" options="-k start" configfile="/etc/apache2/apache2.conf" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
        </rsc_op>
@@ -295,7 +295,7 @@
    </synapse>
    <synapse id="25">
      <action_set>
-       <rsc_op id="12" operation="monitor" operation_key="mysql-proxy:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+       <rsc_op id="13" operation="monitor" operation_key="mysql-proxy:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="mysql-proxy:0" long-id="clone_webservice:group_webservice:0:mysql-proxy:0" class="lsb" provider="heartbeat" type="mysql-proxy"/>
          <attributes crm_feature_set="2.1" target_role="started" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
        </rsc_op>
@@ -304,7 +304,7 @@
    </synapse>
    <synapse id="26">
      <action_set>
-       <rsc_op id="13" operation="monitor" operation_key="apache2:1_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+       <rsc_op id="14" operation="monitor" operation_key="apache2:1_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="apache2:1" long-id="clone_webservice:group_webservice:1:apache2:1" class="ocf" provider="heartbeat" type="apache"/>
          <attributes crm_feature_set="2.1" target_role="started" httpd="/usr/sbin/apache2" options="-k start" configfile="/etc/apache2/apache2.conf" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7" CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
        </rsc_op>
@@ -313,7 +313,7 @@
    </synapse>
    <synapse id="27">
      <action_set>
-       <rsc_op id="14" operation="monitor" operation_key="mysql-proxy:1_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+       <rsc_op id="15" operation="monitor" operation_key="mysql-proxy:1_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="mysql-proxy:1" long-id="clone_webservice:group_webservice:1:mysql-proxy:1" class="lsb" provider="heartbeat" type="mysql-proxy"/>
          <attributes crm_feature_set="2.1" target_role="started" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7" CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
        </rsc_op>
@@ -322,7 +322,7 @@
    </synapse>
    <synapse id="28">
      <action_set>
-       <rsc_op id="15" operation="monitor" operation_key="drbd_mysql:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+       <rsc_op id="16" operation="monitor" operation_key="drbd_mysql:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="drbd_mysql:0" long-id="ms_drbd_mysql:drbd_mysql:0" class="ocf" provider="heartbeat" type="drbd"/>
          <attributes crm_feature_set="2.1" clone_overrides_hostname="yes" target_role="started" drbd_resource="mysql1" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7" CRM_meta_globally_unique="false" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
        </rsc_op>
@@ -363,7 +363,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete"/>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
          <rsc_op id="27" operation="start" operation_key="intip_1_master_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
@@ -440,7 +440,7 @@
    </synapse>
    <synapse id="37">
      <action_set>
-       <rsc_op id="16" operation="monitor" operation_key="fs_mysql_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+       <rsc_op id="17" operation="monitor" operation_key="fs_mysql_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="fs_mysql" long-id="fs_mysql" class="ocf" provider="heartbeat" type="Filesystem"/>
          <attributes crm_feature_set="2.1" directory="/data/mysql" fstype="ext3" device="/dev/drbd1" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7"/>
        </rsc_op>
@@ -449,7 +449,7 @@
    </synapse>
    <synapse id="38">
      <action_set>
-       <rsc_op id="17" operation="monitor" operation_key="mysql-server_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+       <rsc_op id="18" operation="monitor" operation_key="mysql-server_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="mysql-server" long-id="mysql-server" class="ocf" provider="heartbeat" type="mysql"/>
          <attributes crm_feature_set="2.1" target_role="started" socket="/var/run/mysqld/mysqld.sock" binary="/usr/sbin/mysqld" additional_parameters="--basedir=/usr --skip-external-locking --port=42006" pid="/var/run/mysqld/mysqld.pid" config="/etc/mysql/my.cnf" datadir="/data/mysql/" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7"/>
        </rsc_op>
@@ -458,67 +458,67 @@
    </synapse>
    <synapse id="39">
      <action_set>
-       <pseudo_event id="1" operation="probe_complete" operation_key="probe_complete">
+       <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
          <attributes crm_feature_set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="40" priority="1000000">
      <action_set>
-       <rsc_op id="2" operation="probe_complete" operation_key="probe_complete" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+       <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <attributes crm_feature_set="2.1" CRM_meta_op_no_wait="true"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="3" operation="monitor" operation_key="extip_1_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="4" operation="monitor" operation_key="extip_1_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>
-         <rsc_op id="4" operation="monitor" operation_key="extip_2_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="5" operation="monitor" operation_key="extip_2_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>
-         <rsc_op id="5" operation="monitor" operation_key="intip_0_main_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="6" operation="monitor" operation_key="intip_0_main_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>
-         <rsc_op id="6" operation="monitor" operation_key="intip_1_master_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="7" operation="monitor" operation_key="intip_1_master_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>
-         <rsc_op id="7" operation="monitor" operation_key="intip_2_slave_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="8" operation="monitor" operation_key="intip_2_slave_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>
-         <rsc_op id="8" operation="monitor" operation_key="drbd_www:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="9" operation="monitor" operation_key="drbd_www:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>
-         <rsc_op id="9" operation="monitor" operation_key="ocfs2_www:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="10" operation="monitor" operation_key="ocfs2_www:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>
-         <rsc_op id="10" operation="monitor" operation_key="ocfs2_www:1_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="11" operation="monitor" operation_key="ocfs2_www:1_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>
-         <rsc_op id="11" operation="monitor" operation_key="apache2:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="12" operation="monitor" operation_key="apache2:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>
-         <rsc_op id="12" operation="monitor" operation_key="mysql-proxy:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="13" operation="monitor" operation_key="mysql-proxy:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>
-         <rsc_op id="13" operation="monitor" operation_key="apache2:1_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="14" operation="monitor" operation_key="apache2:1_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>
-         <rsc_op id="14" operation="monitor" operation_key="mysql-proxy:1_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="15" operation="monitor" operation_key="mysql-proxy:1_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>
-         <rsc_op id="15" operation="monitor" operation_key="drbd_mysql:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="16" operation="monitor" operation_key="drbd_mysql:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>
-         <rsc_op id="16" operation="monitor" operation_key="fs_mysql_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="17" operation="monitor" operation_key="fs_mysql_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>
-         <rsc_op id="17" operation="monitor" operation_key="mysql-server_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="18" operation="monitor" operation_key="mysql-server_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
      </inputs>
    </synapse>

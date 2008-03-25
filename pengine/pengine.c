@@ -244,8 +244,6 @@ do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *no
 		   rsc->fns->print(rsc, NULL, pe_print_log, &rsc_log_level);
 		);
 
-	crm_debug_5("apply placement constraints");
-	stage1(data_set);
 	
 #if MEMCHECK_STAGE_1
 	check_and_exit(1);
@@ -278,7 +276,7 @@ do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *no
 #if MEMCHECK_STAGE_5
 	check_and_exit(5);
 #endif
-
+	
 	crm_debug_5("processing fencing and shutdown cases");
 	stage6(data_set);
 	

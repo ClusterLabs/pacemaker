@@ -8,7 +8,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="32" operation="all_stopped" operation_key="all_stopped"/>
+         <pseudo_event id="26" operation="all_stopped" operation_key="all_stopped"/>
        </trigger>
      </inputs>
    </synapse>
@@ -170,7 +170,7 @@
    </synapse>
    <synapse id="12">
      <action_set>
-       <pseudo_event id="32" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="26" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="2.1"/>
        </pseudo_event>
      </action_set>

@@ -1271,6 +1271,19 @@ static gint sort_rsc_id(gconstpointer a, gconstpointer b)
 	return strcmp(resource1->id, resource2->id);
 }
 
+static resource_t *find_instance_on(resource_t *rsc, node_t *node)
+{
+    slist_iter(child, resource_t, rsc->children, lpc,
+
+	       slist_iter(known ,node_t, child->known_on, lpc2,
+			  if(node->details == known->details) {
+			      return child;
+			  }
+		   );
+	);
+    return NULL;
+}
+
 gboolean
 clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		    gboolean force, pe_working_set_t *data_set) 
@@ -1280,18 +1293,39 @@ clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	get_clone_variant_data(clone_data, rsc);
 
 	rsc->children = g_list_sort(rsc->children, sort_rsc_id);
-
+	
 	if(is_not_set(rsc->flags, pe_rsc_unique)
 	   && clone_data->clone_node_max == 1) {
 		/* only look for one copy */	 
+		resource_t *child = NULL;
+
+		/* Try whoever we probed last time */
+		child = find_instance_on(rsc, node);
+		if(child) {
+		    return child->cmds->create_probe(
+			child, node, complete, force, data_set);
+		}
+
+		/* Try whoever we plan on starting there */
 		slist_iter(	 
 			child_rsc, resource_t, rsc->children, lpc,	 
 
-			if(pe_find_node_id(child_rsc->running_on, node->details->id)) {	 
-				return child_rsc->cmds->create_probe(
-					child_rsc, node, complete, force, data_set);
+			node_t *local_node = child_rsc->fns->location(child_rsc, NULL, FALSE);
+			if(local_node == NULL) {
+			    continue;
 			}
-			);
+			
+			if(local_node->details == node->details) {
+			    return child_rsc->cmds->create_probe(
+				child_rsc, node, complete, force, data_set);
+			}
+		    );
+
+		/* Fall back to the first clone instance */
+		crm_crit("Fall through");
+		child = rsc->children->data;
+		return child->cmds->create_probe(child, node, complete, force, data_set);
+		
 	}
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,

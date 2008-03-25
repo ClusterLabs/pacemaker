@@ -192,6 +192,8 @@ do_test bug-1573 "Partial stop of a group with two children"
 do_test bug-1718 "Mandatory group ordering - Stop group_FUN"
 
 echo ""
+do_test clone-anon-probe-1 "Probe the correct (anonymous) clone instance for each node"
+do_test clone-anon-probe-2 "Avoid needless re-probing of anonymous clones"
 do_test inc0 "Incarnation start" 
 do_test inc1 "Incarnation start order" 
 do_test inc2 "Incarnation silent restart, stop, move"

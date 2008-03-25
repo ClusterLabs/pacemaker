@@ -22,7 +22,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="9" operation="start" operation_key="apache2:0_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="7" operation="start" operation_key="apache2:0_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>
          <rsc_op id="12" operation="start" operation_key="mysql-proxy:0_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
@@ -67,13 +67,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="9" operation="start" operation_key="apache2:0_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="7" operation="start" operation_key="apache2:0_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="5">
      <action_set>
-       <rsc_op id="9" operation="start" operation_key="apache2:0_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+       <rsc_op id="7" operation="start" operation_key="apache2:0_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="apache2:0" long-id="apache2_clone:grrr:0:apache2:0" class="ocf" provider="heartbeat" type="apache"/>
          <attributes crm_feature_set="2.1" target_role="started" httpd="/usr/sbin/apache2" options="-k start" configfile="/etc/apache2/apache2.conf" CRM_meta_timeout="20000" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
        </rsc_op>
@@ -138,7 +138,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="9" operation="start" operation_key="apache2:0_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+         <rsc_op id="7" operation="start" operation_key="apache2:0_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
        <trigger>
          <rsc_op id="11" operation="stop" operation_key="mysql-proxy:0_stop_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
@@ -202,7 +202,7 @@
    </synapse>
    <synapse id="14">
      <action_set>
-       <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="5" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="2.1"/>
        </pseudo_event>
      </action_set>
