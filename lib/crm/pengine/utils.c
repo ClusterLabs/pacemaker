@@ -314,8 +314,21 @@ node_list_dup(GListPtr list1, gboolean reset, gboolean filter)
 
 void dump_node_scores(int level, resource_t *rsc, const char *comment, GListPtr nodes) 
 {
+    GListPtr list = nodes;
+    if(rsc && rsc->children) {
+	slist_iter(
+	    child, resource_t, rsc->children, lpc,
+	    dump_node_scores(level, child, comment, nodes);
+	    );
+	return;
+    }
+
+    if(rsc) {
+	list = rsc->allowed_nodes;
+    }
+    
     slist_iter(
-	node, node_t, nodes, lpc,
+	node, node_t, list, lpc,
 	if(rsc) {
 	    do_crm_log(level, "%s: %s.%s = %d", comment, rsc->id, node->details->uname, node->weight);
 	} else {
@@ -1032,6 +1045,14 @@ static void
 resource_node_score(resource_t *rsc, node_t *node, int score, const char *tag) 
 {
 	node_t *match = NULL;
+
+	if(rsc->children) {
+	    slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+		resource_node_score(child_rsc, node, score, tag);
+		);
+	}
+	
 	crm_debug_2("Setting %s for %s on %s: %d",
 		    tag, rsc->id, node->details->uname, score);
 	match = pe_find_node_id(rsc->allowed_nodes, node->details->id);
