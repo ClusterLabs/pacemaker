@@ -183,23 +183,12 @@ master_update_pseudo_status(
 		}							\
 		);
 
-static resource_t *
-ultimate_parent(resource_t *rsc)
-{
-	resource_t *parent = rsc;
-	while(parent->parent) {
-		parent = parent->parent;
-	}
-	return parent;
-}
-
-
 static node_t *
 can_be_master(resource_t *rsc)
 {
 	node_t *node = NULL;
 	node_t *local_node = NULL;
-	resource_t *parent = ultimate_parent(rsc);
+	resource_t *parent = uber_parent(rsc);
 	clone_variant_data_t *clone_data = NULL;
 	int level = LOG_DEBUG_2;
 #if 0
