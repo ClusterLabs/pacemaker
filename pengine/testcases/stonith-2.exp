@@ -27,183 +27,33 @@
    </synapse>
    <synapse id="2">
      <action_set>
-       <rsc_op id="63" operation="stop" operation_key="child_DoFencing:2_stop_0" on_node="sles-3" on_node_uuid="d38d7afa-de9e-4ef2-b4a0-fd58a7c67700">
-         <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" type="external/vmware"/>
-         <attributes crm_feature_set="2.1" CRM_meta_id="DoFencing-3" CRM_meta_timeout="180000" CRM_meta_name="stop" CRM_meta_globally_unique="false" CRM_meta_clone="2" CRM_meta_clone_max="6"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="73" operation="stop" operation_key="DoFencing_stop_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="3">
-     <action_set>
-       <rsc_op id="64" operation="start" operation_key="child_DoFencing:2_start_0" on_node="sles-4" on_node_uuid="6b218012-be71-4249-a8ad-332247f79065">
-         <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" type="external/vmware"/>
-         <attributes crm_feature_set="2.1" device_host="vmhost" CRM_meta_id="DoFencing-2" CRM_meta_timeout="180000" CRM_meta_name="start" CRM_meta_prereq="nothing" CRM_meta_globally_unique="false" CRM_meta_clone="2" CRM_meta_clone_max="6"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="63" operation="stop" operation_key="child_DoFencing:2_stop_0" on_node="sles-3" on_node_uuid="d38d7afa-de9e-4ef2-b4a0-fd58a7c67700"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="71" operation="start" operation_key="DoFencing_start_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="4">
-     <action_set>
-       <rsc_op id="65" operation="monitor" operation_key="child_DoFencing:2_monitor_120000" on_node="sles-4" on_node_uuid="6b218012-be71-4249-a8ad-332247f79065">
-         <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" type="external/vmware"/>
-         <attributes crm_feature_set="2.1" device_host="vmhost" CRM_meta_id="DoFencing-1" CRM_meta_timeout="300000" CRM_meta_name="monitor" CRM_meta_interval="120000" CRM_meta_prereq="nothing" CRM_meta_globally_unique="false" CRM_meta_clone="2" CRM_meta_clone_max="6"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="64" operation="start" operation_key="child_DoFencing:2_start_0" on_node="sles-4" on_node_uuid="6b218012-be71-4249-a8ad-332247f79065"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="5">
-     <action_set>
-       <rsc_op id="66" operation="stop" operation_key="child_DoFencing:3_stop_0" on_node="sles-4" on_node_uuid="6b218012-be71-4249-a8ad-332247f79065">
-         <primitive id="child_DoFencing:3" long-id="DoFencing:child_DoFencing:3" class="stonith" type="external/vmware"/>
-         <attributes crm_feature_set="2.1" CRM_meta_id="DoFencing-3" CRM_meta_timeout="180000" CRM_meta_name="stop" CRM_meta_globally_unique="false" CRM_meta_clone="3" CRM_meta_clone_max="6"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="73" operation="stop" operation_key="DoFencing_stop_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="6">
-     <action_set>
-       <rsc_op id="67" operation="start" operation_key="child_DoFencing:3_start_0" on_node="sles-3" on_node_uuid="d38d7afa-de9e-4ef2-b4a0-fd58a7c67700">
-         <primitive id="child_DoFencing:3" long-id="DoFencing:child_DoFencing:3" class="stonith" type="external/vmware"/>
-         <attributes crm_feature_set="2.1" device_host="vmhost" CRM_meta_id="DoFencing-2" CRM_meta_timeout="180000" CRM_meta_name="start" CRM_meta_prereq="nothing" CRM_meta_globally_unique="false" CRM_meta_clone="3" CRM_meta_clone_max="6"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="66" operation="stop" operation_key="child_DoFencing:3_stop_0" on_node="sles-4" on_node_uuid="6b218012-be71-4249-a8ad-332247f79065"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="71" operation="start" operation_key="DoFencing_start_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="7">
-     <action_set>
-       <rsc_op id="68" operation="monitor" operation_key="child_DoFencing:3_monitor_120000" on_node="sles-3" on_node_uuid="d38d7afa-de9e-4ef2-b4a0-fd58a7c67700">
-         <primitive id="child_DoFencing:3" long-id="DoFencing:child_DoFencing:3" class="stonith" type="external/vmware"/>
-         <attributes crm_feature_set="2.1" device_host="vmhost" CRM_meta_id="DoFencing-1" CRM_meta_timeout="300000" CRM_meta_name="monitor" CRM_meta_interval="120000" CRM_meta_prereq="nothing" CRM_meta_globally_unique="false" CRM_meta_clone="3" CRM_meta_clone_max="6"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="67" operation="start" operation_key="child_DoFencing:3_start_0" on_node="sles-3" on_node_uuid="d38d7afa-de9e-4ef2-b4a0-fd58a7c67700"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="8">
-     <action_set>
-       <pseudo_event id="71" operation="start" operation_key="DoFencing_start_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000" CRM_meta_globally_unique="false"/>
-       </pseudo_event>
-     </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="73" operation="stop" operation_key="DoFencing_stop_0"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="74" operation="stopped" operation_key="DoFencing_stopped_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="9" priority="1000000">
-     <action_set>
-       <pseudo_event id="72" operation="running" operation_key="DoFencing_running_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000" CRM_meta_globally_unique="false"/>
-       </pseudo_event>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="64" operation="start" operation_key="child_DoFencing:2_start_0" on_node="sles-4" on_node_uuid="6b218012-be71-4249-a8ad-332247f79065"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="67" operation="start" operation_key="child_DoFencing:3_start_0" on_node="sles-3" on_node_uuid="d38d7afa-de9e-4ef2-b4a0-fd58a7c67700"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="71" operation="start" operation_key="DoFencing_start_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="10">
-     <action_set>
-       <pseudo_event id="73" operation="stop" operation_key="DoFencing_stop_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000" CRM_meta_globally_unique="false"/>
-       </pseudo_event>
-     </action_set>
-     <inputs/>
-   </synapse>
-   <synapse id="11" priority="1000000">
-     <action_set>
-       <pseudo_event id="74" operation="stopped" operation_key="DoFencing_stopped_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000" CRM_meta_globally_unique="false"/>
-       </pseudo_event>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="63" operation="stop" operation_key="child_DoFencing:2_stop_0" on_node="sles-3" on_node_uuid="d38d7afa-de9e-4ef2-b4a0-fd58a7c67700"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="66" operation="stop" operation_key="child_DoFencing:3_stop_0" on_node="sles-4" on_node_uuid="6b218012-be71-4249-a8ad-332247f79065"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="73" operation="stop" operation_key="DoFencing_stop_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="12">
-     <action_set>
        <pseudo_event id="26" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="114" operation="stonith" operation_key="stonith" on_node="sles-5" on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a"/>
+         <crm_event id="112" operation="stonith" operation_key="stonith" on_node="sles-5" on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a"/>
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="13">
+   <synapse id="3">
      <action_set>
-       <pseudo_event id="113" operation="stonith_up" operation_key="stonith_up">
+       <pseudo_event id="111" operation="stonith_up" operation_key="stonith_up">
          <attributes crm_feature_set="2.1"/>
        </pseudo_event>
      </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="64" operation="start" operation_key="child_DoFencing:2_start_0" on_node="sles-4" on_node_uuid="6b218012-be71-4249-a8ad-332247f79065"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="67" operation="start" operation_key="child_DoFencing:3_start_0" on_node="sles-3" on_node_uuid="d38d7afa-de9e-4ef2-b4a0-fd58a7c67700"/>
-       </trigger>
-     </inputs>
+     <inputs/>
    </synapse>
-   <synapse id="14">
+   <synapse id="4">
      <action_set>
-       <crm_event id="114" operation="stonith" operation_key="stonith" on_node="sles-5" on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a">
+       <crm_event id="112" operation="stonith" operation_key="stonith" on_node="sles-5" on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a">
          <attributes crm_feature_set="2.1" CRM_meta_on_node="sles-5" CRM_meta_stonith_action="reboot" CRM_meta_on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a"/>
        </crm_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="113" operation="stonith_up" operation_key="stonith_up"/>
+         <pseudo_event id="111" operation="stonith_up" operation_key="stonith_up"/>
        </trigger>
      </inputs>
    </synapse>
