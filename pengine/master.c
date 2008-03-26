@@ -355,6 +355,15 @@ master_score(resource_t *rsc, node_t *node, int not_set_value)
 	    return score;
 	}
 
+	if(rsc->running_on) {
+	    node_t *match = pe_find_node_id(rsc->allowed_nodes, node->details->id);
+	    if(match->weight < 0) {
+		crm_debug_2("%s on %s has score: %d - ignoring master pref",
+			    rsc->id, match->details->uname, match->weight);
+		return score;
+	    }
+	}
+	    
 #if 0
 	if(rsc->clone_name) {
 	    name = rsc->clone_name;

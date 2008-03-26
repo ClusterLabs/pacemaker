@@ -114,12 +114,39 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 		node2 = resource2->running_on->data;
 	}
 
+	if(node1) {
+	    node_t *match = pe_find_node_id(resource1->allowed_nodes, node1->details->id);
+	    if(match->weight < 0) {
+		do_crm_log(level, "%s: current location is unavailable", resource1->id);
+		node1 = NULL;
+		can1 = FALSE;
+	    }
+	}
+
+	if(node2) {
+	    node_t *match = pe_find_node_id(resource2->allowed_nodes, node2->details->id);
+	    if(match->weight < 0) {
+		do_crm_log(level, "%s: current location is unavailable", resource2->id);
+		node2 = NULL;
+		can2 = FALSE;
+	    }
+	}
+
+	if(can1 != can2) {
+		if(can1) {
+			do_crm_log(level, "%s < %s: availability of current location", resource1->id, resource2->id);
+			return -1;
+		}
+		do_crm_log(level, "%s > %s: availability of current location", resource1->id, resource2->id);
+		return 1;
+	}
+	
 	if(resource1->priority < resource2->priority) {
-		do_crm_log(level, "%s < %s: score", resource1->id, resource2->id);
+		do_crm_log(level, "%s < %s: priority", resource1->id, resource2->id);
 		return 1;
 
 	} else if(resource1->priority > resource2->priority) {
-		do_crm_log(level, "%s > %s: score", resource1->id, resource2->id);
+		do_crm_log(level, "%s > %s: priority", resource1->id, resource2->id);
 		return -1;
 	}
 	
