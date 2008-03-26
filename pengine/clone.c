@@ -1322,7 +1322,6 @@ clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		    );
 
 		/* Fall back to the first clone instance */
-		crm_crit("Fall through");
 		child = rsc->children->data;
 		return child->cmds->create_probe(child, node, complete, force, data_set);
 		
