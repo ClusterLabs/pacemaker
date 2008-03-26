@@ -50,7 +50,8 @@ gboolean
 update_action(action_t *action)
 {
 	int local_type = 0;
-	int log_level = LOG_DEBUG_2;
+	int default_log_level = LOG_DEBUG_3;
+	int log_level = default_log_level;
 	gboolean changed = FALSE;
 
 	do_crm_log(log_level, "Processing action %s: %s %s %s",
@@ -79,7 +80,7 @@ update_action(action_t *action)
 			       action->runnable?"runnable":"unrunnable",
 			       action->pseudo?"pseudo":action->task);
 		} else {
-		    log_level = LOG_DEBUG_2;
+		    log_level = default_log_level;
 		}
 
 		do_crm_log(log_level, "   Checking action %s: %s %s %s (flags=0x%.6x)",
@@ -250,6 +251,7 @@ update_action(action_t *action)
 		);
 
 	if(changed) {
+		update_action(action);
 		do_crm_log(log_level, "%s changed, processing after list", action->uuid);
 		slist_iter(
 			other, action_wrapper_t, action->actions_after, lpc,
