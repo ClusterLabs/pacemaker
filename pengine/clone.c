@@ -1153,6 +1153,45 @@ expand_list(GListPtr list, int clones,
 		   );
 }
 
+static void mark_notifications_required(resource_t *rsc, enum action_tasks task, gboolean top) 
+{
+    char *key = NULL;
+    char *key_complete = NULL;
+    const char *task_s = task2text(task);
+
+    if(top) {
+	key = generate_op_key(rsc->id, task_s, 0);
+	key_complete = generate_op_key(rsc->id, task2text(task+1), 0);
+    }
+    
+    slist_iter(action, action_t, rsc->actions, lpc,
+	       
+	       if(action->optional == FALSE) {
+		   continue;
+	       }
+	       
+	       if(safe_str_eq(action->uuid, key)
+		  || safe_str_eq(action->uuid, key_complete)) {
+		   crm_debug_3("Marking top-level action %s as required", action->uuid);
+		   action->optional = FALSE;
+	       }
+	       
+	       if(strstr(action->uuid, task_s)) {
+		   if(safe_str_eq(CRMD_ACTION_NOTIFIED, action->task)
+		      || safe_str_eq(CRMD_ACTION_NOTIFY, action->task)) {
+		       crm_debug_3("Marking %s as required", action->uuid);
+		       action->optional = FALSE;
+		   }   
+	       }
+	);
+
+    slist_iter(
+	child, resource_t, rsc->children, lpc,
+	mark_notifications_required(child, task, FALSE);
+	);
+    
+}
+
 void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 {
 	char *rsc_list = NULL;
@@ -1197,6 +1236,9 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_table_insert(
 			n_data->keys,
 			crm_strdup("notify_stop_uname"), node_list);
+		if(rsc_list != NULL) {
+		    mark_notifications_required(rsc, stop_rsc, TRUE);
+		}
 	}
 
 	if(is_set(rsc->flags, pe_rsc_notify) && n_data->start) {
@@ -1211,6 +1253,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_table_insert(
 			n_data->keys,
 			crm_strdup("notify_start_uname"), node_list);
+		mark_notifications_required(rsc, start_rsc, TRUE);
 	}
 	
 	if(is_set(rsc->flags, pe_rsc_notify) && n_data->demote) {
@@ -1225,6 +1268,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_table_insert(
 			n_data->keys,
 			crm_strdup("notify_demote_uname"), node_list);
+		mark_notifications_required(rsc, action_demote, TRUE);
 	}
 	
 	if(is_set(rsc->flags, pe_rsc_notify) && n_data->promote) {
@@ -1239,6 +1283,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_table_insert(
 			n_data->keys,
 			crm_strdup("notify_promote_uname"), node_list);
+		mark_notifications_required(rsc, action_promote, TRUE);
 	}
 	
 	if(is_set(rsc->flags, pe_rsc_notify) && n_data->active) {
