@@ -738,7 +738,6 @@ master_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	
 }
 
-extern resource_t *find_compatible_child(resource_t *local_child, resource_t *rsc, enum rsc_role_e filter);
 static void node_list_update_one(GListPtr list1, node_t *other, int score)
 {
     node_t *node = NULL;
@@ -814,7 +813,7 @@ void master_rsc_colocation_rh(
 		pe_free_shallow_adv(rhs, FALSE);
 
 	} else if(constraint->role_lh == RSC_ROLE_MASTER) {
-	    resource_t *rh_child = find_compatible_child(rsc_lh, rsc_rh, constraint->role_rh);
+	    resource_t *rh_child = find_compatible_child(rsc_lh, rsc_rh, constraint->role_rh, FALSE);
 	    if(rh_child == NULL && constraint->score >= INFINITY) {
 		crm_debug_2("%s can't be promoted %s", rsc_lh->id, constraint->id);
 		rsc_lh->priority = -INFINITY;

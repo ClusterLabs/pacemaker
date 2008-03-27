@@ -314,6 +314,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <rsc_op id="41" operation="start" operation_key="child_rsc1:1_start_0" on_node="node2" on_node_uuid="uuid2"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="54" operation="start" operation_key="rsc2_start_0"/>
        </trigger>
      </inputs>
@@ -353,6 +356,9 @@
        </rsc_op>
      </action_set>
      <inputs>
+       <trigger>
+         <rsc_op id="42" operation="start" operation_key="child_rsc1:2_start_0" on_node="node3" on_node_uuid="uuid3"/>
+       </trigger>
        <trigger>
          <pseudo_event id="54" operation="start" operation_key="rsc2_start_0"/>
        </trigger>
@@ -394,6 +400,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <rsc_op id="40" operation="start" operation_key="child_rsc1:0_start_0" on_node="node1" on_node_uuid="uuid1"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="54" operation="start" operation_key="rsc2_start_0"/>
        </trigger>
      </inputs>
@@ -433,6 +442,9 @@
        </rsc_op>
      </action_set>
      <inputs>
+       <trigger>
+         <rsc_op id="41" operation="start" operation_key="child_rsc1:1_start_0" on_node="node2" on_node_uuid="uuid2"/>
+       </trigger>
        <trigger>
          <pseudo_event id="54" operation="start" operation_key="rsc2_start_0"/>
        </trigger>
@@ -474,6 +486,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <rsc_op id="42" operation="start" operation_key="child_rsc1:2_start_0" on_node="node3" on_node_uuid="uuid3"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="54" operation="start" operation_key="rsc2_start_0"/>
        </trigger>
      </inputs>
@@ -487,9 +502,6 @@
      <inputs>
        <trigger>
          <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="46" operation="running" operation_key="rsc1_running_0"/>
        </trigger>
      </inputs>
    </synapse>

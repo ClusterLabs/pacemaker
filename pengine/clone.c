@@ -27,8 +27,6 @@
 #include <lib/crm/pengine/variant.h>
 
 gint sort_clone_instance(gconstpointer a, gconstpointer b);
-resource_t *find_compatible_child(
-    resource_t *local_child, resource_t *rsc, enum rsc_role_e filter);
 
 void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
@@ -777,14 +775,14 @@ clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 resource_t*
 find_compatible_child(
-    resource_t *local_child, resource_t *rsc, enum rsc_role_e filter)
+    resource_t *local_child, resource_t *rsc, enum rsc_role_e filter, gboolean current)
 {
 	node_t *local_node = NULL;
 	node_t *node = NULL;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 	
-	local_node = local_child->fns->location(local_child, NULL, FALSE);
+	local_node = local_child->fns->location(local_child, NULL, current);
 	if(local_node == NULL) {
 		crm_debug("Can't colocate unrunnable child %s with %s",
 			 local_child->id, rsc->id);
@@ -794,15 +792,15 @@ find_compatible_child(
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
 
-		enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, FALSE);
-		node = child_rsc->fns->location(child_rsc, NULL, FALSE);
+		enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, current);
+		node = child_rsc->fns->location(child_rsc, NULL, current);
 
 		if(filter != RSC_ROLE_UNKNOWN && next_role != filter) {
 		    crm_debug_2("Filtered %s", child_rsc->id);
 		    continue;
 		}
 		
-		if(node->details == local_node->details) {
+		if(node && local_node && node->details == local_node->details) {
 			crm_info("Colocating %s with %s on %s",
 				 local_child->id, child_rsc->id, node->details->uname);
 			return child_rsc;
@@ -884,10 +882,12 @@ void clone_rsc_colocation_lh(
 
 			   CRM_ASSERT(lh_child != NULL);
 			   rh_child = find_compatible_child(
-			       lh_child, rsc_rh, RSC_ROLE_UNKNOWN);
+			       lh_child, rsc_rh, RSC_ROLE_UNKNOWN, FALSE);
 			   if(rh_child == NULL) {
-				   continue;
+			       crm_debug_2("No match found for %s", lh_child->id);
+			       continue;
 			   }
+			   crm_debug("Interleaving %s with %s", lh_child->id, rh_child->id);
 			   lh_child->cmds->rsc_colocation_lh(
 				   lh_child, rh_child, constraint);
 			);
@@ -950,6 +950,7 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 {
 	resource_t *r1 = NULL;
 	resource_t *r2 = NULL;	
+	gboolean do_interleave = FALSE;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
@@ -963,6 +964,47 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 		return;
 	}
 
+	if(order->rh_rsc->variant == pe_clone
+	    || order->rh_rsc->variant == pe_master) {
+	    clone_variant_data_t *clone_data_rh = NULL;
+	    get_clone_variant_data(clone_data_rh, order->rh_rsc);
+	    if(clone_data->clone_node_max != clone_data_rh->clone_node_max) {
+		crm_config_err("Cannot interleave "XML_CIB_TAG_INCARNATION
+			       " %s and %s because they do not support the same"
+			       " number of resources per node",
+			       rsc->id, order->rh_rsc->id);
+		
+		/* only the LHS side needs to be labeled as interleave */
+	    } else if(clone_data->interleave) {
+		do_interleave = TRUE;
+	    }
+	}
+
+	if(do_interleave && order->rh_rsc) {
+	    resource_t *lh_child = NULL;
+	    resource_t *rh_saved = order->rh_rsc;
+	    gboolean current = FALSE;
+	    if(strstr(order->lh_action_task, "_stop_0") || strstr(order->lh_action_task, "_demote_0")) {
+		current = TRUE;
+	    }
+	    
+	    slist_iter(
+		rh_child, resource_t, rh_saved->children, lpc,
+		       
+		CRM_ASSERT(rh_child != NULL);
+		lh_child = find_compatible_child(rh_child, rsc, RSC_ROLE_UNKNOWN, current);
+		if(lh_child == NULL) {
+		    crm_debug_2("No match found for %s", rh_child->id);
+		    continue;
+		}
+		crm_debug("Interleaving %s with %s", lh_child->id, rh_child->id);
+		order->rh_rsc = rh_child;
+		lh_child->cmds->rsc_order_lh(lh_child, order, data_set);
+		order->rh_rsc = rh_saved;
+		);
+	    return;
+	}
+	
 #if 0
 	if(order->type != pe_order_optional) {
 		crm_debug("Upgraded ordering constraint %d - 0x%.6x", order->id, order->type);
