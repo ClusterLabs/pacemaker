@@ -59,6 +59,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="38" operation="stopped" operation_key="evmscloneset_stopped_0"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="42" operation="notified" operation_key="evmscloneset_confirmed-post_notify_stop_0"/>
        </trigger>
      </inputs>
@@ -141,7 +144,13 @@
          <pseudo_event id="40" operation="notified" operation_key="evmscloneset_confirmed-pre_notify_stop_0"/>
        </trigger>
        <trigger>
+         <pseudo_event id="53" operation="stopped" operation_key="imagestorecloneset_stopped_0"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="57" operation="notified" operation_key="imagestorecloneset_confirmed-post_notify_stop_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="68" operation="stopped" operation_key="configstorecloneset_stopped_0"/>
        </trigger>
        <trigger>
          <pseudo_event id="72" operation="notified" operation_key="configstorecloneset_confirmed-post_notify_stop_0"/>

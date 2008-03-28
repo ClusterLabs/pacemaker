@@ -990,7 +990,7 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 	    
 	    slist_iter(
 		rh_child, resource_t, rh_saved->children, lpc,
-		       
+		
 		CRM_ASSERT(rh_child != NULL);
 		lh_child = find_compatible_child(rh_child, rsc, RSC_ROLE_UNKNOWN, current);
 		if(lh_child == NULL) {
@@ -1002,17 +1002,17 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 		lh_child->cmds->rsc_order_lh(lh_child, order, data_set);
 		order->rh_rsc = rh_saved;
 		);
-	    return;
-	}
-	
+	    
+	} else {
+	    
 #if 0
-	if(order->type != pe_order_optional) {
+	    if(order->type != pe_order_optional) {
 		crm_debug("Upgraded ordering constraint %d - 0x%.6x", order->id, order->type);
 		native_rsc_order_lh(rsc, order, data_set);
-	}
+	    }
 #endif
-	
-	if(order->type & pe_order_implies_left) {
+	    
+	    if(order->type & pe_order_implies_left) {
 		if(rsc->variant == order->rh_rsc->variant) {
 			crm_debug_2("Clone-to-clone ordering: %s -> %s 0x%.6x",
 				order->lh_action_task, order->rh_action_task, order->type);
@@ -1030,10 +1030,16 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 				native_rsc_order_lh(child_rsc, order, data_set);
 				);
 		}
-	}
+	    }
+	    convert_non_atomic_task(rsc, order, FALSE);
+	    native_rsc_order_lh(rsc, order, data_set);
+	}	
 
-	convert_non_atomic_task(rsc, order);
-	native_rsc_order_lh(rsc, order, data_set);
+	if(is_set(rsc->flags, pe_rsc_notify)) {
+	    order->type = pe_order_optional;
+	    convert_non_atomic_task(rsc, order, TRUE);
+	    native_rsc_order_lh(rsc, order, data_set);
+	}
 }
 
 void clone_rsc_order_rh(

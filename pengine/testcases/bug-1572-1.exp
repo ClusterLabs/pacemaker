@@ -563,6 +563,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="25" operation="promoted" operation_key="ms_drbd_7788_promoted_0"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="29" operation="notified" operation_key="ms_drbd_7788_confirmed-post_notify_promote_0"/>
        </trigger>
        <trigger>

@@ -403,6 +403,9 @@
          <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
+         <pseudo_event id="36" operation="running" operation_key="evmscloneset_running_0"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="40" operation="notified" operation_key="evmscloneset_confirmed-post_notify_start_0"/>
        </trigger>
        <trigger>
@@ -656,6 +659,9 @@
          <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
+         <pseudo_event id="36" operation="running" operation_key="evmscloneset_running_0"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="40" operation="notified" operation_key="evmscloneset_confirmed-post_notify_start_0"/>
        </trigger>
        <trigger>
@@ -761,7 +767,13 @@
          <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
+         <pseudo_event id="53" operation="running" operation_key="imagestorecloneset_running_0"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="57" operation="notified" operation_key="imagestorecloneset_confirmed-post_notify_start_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="69" operation="running" operation_key="configstorecloneset_running_0"/>
        </trigger>
        <trigger>
          <pseudo_event id="73" operation="notified" operation_key="configstorecloneset_confirmed-post_notify_start_0"/>

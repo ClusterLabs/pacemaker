@@ -166,6 +166,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="26" operation="promoted" operation_key="shared_storage_promoted_0"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="30" operation="notified" operation_key="shared_storage_confirmed-post_notify_promote_0"/>
        </trigger>
      </inputs>

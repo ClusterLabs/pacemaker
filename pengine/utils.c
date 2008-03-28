@@ -324,7 +324,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 }
 
 void
-convert_non_atomic_task(resource_t *rsc, order_constraint_t *order)
+convert_non_atomic_task(resource_t *rsc, order_constraint_t *order, gboolean with_notify)
 {
 	int interval = 0;
 	char *rid = NULL;
@@ -369,7 +369,7 @@ convert_non_atomic_task(resource_t *rsc, order_constraint_t *order)
 	}
 	
 	if(task != no_action) {
-		if(is_set(rsc->flags, pe_rsc_notify)) {
+		if(with_notify && is_set(rsc->flags, pe_rsc_notify)) {
 			order->lh_action_task = generate_notify_key(
 				rsc->id, "confirmed-post",
 				task2text(task));

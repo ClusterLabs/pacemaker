@@ -314,7 +314,7 @@ void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 	}
 #endif
 
-	convert_non_atomic_task(rsc, order);
+	convert_non_atomic_task(rsc, order, TRUE);
 	native_rsc_order_lh(rsc, order, data_set);
 }
 

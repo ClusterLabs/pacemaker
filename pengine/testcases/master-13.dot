@@ -71,6 +71,7 @@ digraph "g" {
 "ms_drbd_pre_notify_promote_0" [ style=bold color="green" fontcolor="orange"  ]
 "ms_drbd_promote_0" -> "drbd0:1_promote_0 odin" [ style = bold]
 "ms_drbd_promote_0" [ style=bold color="green" fontcolor="orange"  ]
+"ms_drbd_promoted_0" -> "group_start_0" [ style = bold]
 "ms_drbd_promoted_0" -> "ms_drbd_post_notify_promote_0" [ style = bold]
 "ms_drbd_promoted_0" [ style=bold color="green" fontcolor="orange"  ]
 }
