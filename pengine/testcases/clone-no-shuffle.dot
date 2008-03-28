@@ -72,6 +72,7 @@ digraph "g" {
 "ms-drbd1_stopped_0" [ style=bold color="green" fontcolor="orange"  ]
 "probe_complete dktest1sles10" -> "probe_complete" [ style = bold]
 "probe_complete dktest1sles10" [ style=bold color="green" fontcolor="black"  ]
+"probe_complete" -> "drbd1:1_start_0 dktest1sles10" [ style = bold]
 "probe_complete" -> "ms-drbd1_start_0" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange"  ]
 "testip_monitor_0 dktest1sles10" -> "probe_complete dktest1sles10" [ style = bold]

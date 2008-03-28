@@ -166,6 +166,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="32" operation="start" operation_key="ms_drbd_www_start_0"/>
        </trigger>
      </inputs>
@@ -337,6 +340,9 @@
        </rsc_op>
      </action_set>
      <inputs>
+       <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
        <trigger>
          <pseudo_event id="73" operation="start" operation_key="ms_drbd_mysql_start_0"/>
        </trigger>

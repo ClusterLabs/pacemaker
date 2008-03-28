@@ -26,5 +26,6 @@
 "probe_complete hadev2" -> "probe_complete" [ style = bold]
 "probe_complete hadev2" [ style=bold color="green" fontcolor="black" ]
 "probe_complete" -> "DoFencing_start_0" [ style = bold]
+"probe_complete" -> "child_DoFencing:0_start_0 hadev2" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange" ]
 }

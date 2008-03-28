@@ -277,6 +277,7 @@ do_test bug-1572-1 "Recovery of groups depending on master/slave"
 do_test bug-1572-2 "Recovery of groups depending on master/slave when the master is never re-promoted"
 do_test bug-1685 "Depends-on-master ordering"
 do_test bug-1822 "Dont promote partially active groups"
+do_test bug-pm-11 "New resource added to a m/s group"
 do_test bug-pm-12 "Recover only the failed portion of a cloned group"
 
 echo ""

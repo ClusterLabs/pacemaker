@@ -30,6 +30,8 @@
 "probe_complete 32c47" [ style=bold color="green" fontcolor="black" ]
 "probe_complete 32c48" -> "probe_complete" [ style = bold]
 "probe_complete 32c48" [ style=bold color="green" fontcolor="black" ]
+"probe_complete" -> "configstoreclone:0_start_0 32c48" [ style = bold]
+"probe_complete" -> "configstoreclone:1_start_0 32c47" [ style = bold]
 "probe_complete" -> "configstorecloneset_start_0" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange" ]
 }

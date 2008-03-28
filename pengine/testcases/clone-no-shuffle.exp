@@ -85,6 +85,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="13" operation="start" operation_key="ms-drbd1_start_0"/>
        </trigger>
      </inputs>

@@ -192,6 +192,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="13" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <rsc_op id="43" operation="stop" operation_key="child_DoFencing:1_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
        <trigger>

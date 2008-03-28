@@ -1049,7 +1049,17 @@ void clone_rsc_order_rh(
 	get_clone_variant_data(clone_data, rsc);
 
 	crm_debug_2("%s->%s", lh_action->uuid, order->rh_action_task);
+	if(safe_str_eq(CRM_OP_PROBED, lh_action->uuid)) {
+	    slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+		child_rsc->cmds->rsc_order_rh(lh_action, child_rsc, order);
+		);
 
+	    if(rsc->fns->state(rsc, TRUE) < RSC_ROLE_STARTED
+		&& rsc->fns->state(rsc, FALSE) > RSC_ROLE_STOPPED) {
+		order->type |= pe_order_implies_right;
+	    }
+	}
  	native_rsc_order_rh(lh_action, rsc, order);
 
 }

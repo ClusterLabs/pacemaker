@@ -11,6 +11,7 @@
 "child_rsc2:1_monitor_0 node1" [ style=bold color="green" fontcolor="black" ]
 "probe_complete node1" -> "probe_complete" [ style = bold]
 "probe_complete node1" [ style=bold color="green" fontcolor="black" ]
+"probe_complete" -> "child_rsc1:1_start_0 node1" [ style = bold]
 "probe_complete" -> "rsc1_start_0" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange" ]
 "rsc1_running_0" [ style=bold color="green" fontcolor="orange" ]

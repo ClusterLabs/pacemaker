@@ -420,6 +420,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="17" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="75" operation="stop" operation_key="ocf_msdummy:0_stop_0"/>
        </trigger>
        <trigger>

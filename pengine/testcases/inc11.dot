@@ -24,6 +24,8 @@
 "probe_complete node1" [ style=bold color="green" fontcolor="black" ]
 "probe_complete node2" -> "probe_complete" [ style = bold]
 "probe_complete node2" [ style=bold color="green" fontcolor="black" ]
+"probe_complete" -> "child_rsc1:0_start_0 node1" [ style = bold]
+"probe_complete" -> "child_rsc1:1_start_0 node2" [ style = bold]
 "probe_complete" -> "rsc1_start_0" [ style = bold]
 "probe_complete" -> "simple-rsc_start_0 node2" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange" ]

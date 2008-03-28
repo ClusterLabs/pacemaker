@@ -57,6 +57,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="15" operation="start" operation_key="rsc1_start_0"/>
        </trigger>
      </inputs>
@@ -87,6 +90,9 @@
        </rsc_op>
      </action_set>
      <inputs>
+       <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
        <trigger>
          <pseudo_event id="15" operation="start" operation_key="rsc1_start_0"/>
        </trigger>

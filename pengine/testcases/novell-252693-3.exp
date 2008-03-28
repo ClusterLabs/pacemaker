@@ -17,6 +17,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="20" operation="start" operation_key="stonithcloneset_start_0"/>
        </trigger>
      </inputs>
@@ -78,6 +81,9 @@
        </rsc_op>
      </action_set>
      <inputs>
+       <trigger>
+         <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
        <trigger>
          <pseudo_event id="28" operation="start" operation_key="evmsdcloneset_start_0"/>
        </trigger>
@@ -166,6 +172,9 @@
        </rsc_op>
      </action_set>
      <inputs>
+       <trigger>
+         <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
        <trigger>
          <pseudo_event id="35" operation="start" operation_key="evmscloneset_start_0"/>
        </trigger>
@@ -301,6 +310,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <rsc_op id="47" operation="stop" operation_key="imagestoreclone:0_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
        </trigger>
        <trigger>
@@ -358,6 +370,9 @@
        </rsc_op>
      </action_set>
      <inputs>
+       <trigger>
+         <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
        <trigger>
          <pseudo_event id="52" operation="start" operation_key="imagestorecloneset_start_0"/>
        </trigger>
@@ -614,6 +629,9 @@
        </rsc_op>
      </action_set>
      <inputs>
+       <trigger>
+         <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
        <trigger>
          <pseudo_event id="68" operation="start" operation_key="configstorecloneset_start_0"/>
        </trigger>
