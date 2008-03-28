@@ -563,13 +563,13 @@ clone_create_notifications(
 	custom_action_order(
 		rsc, NULL, notify,
 		rsc, NULL, notify_complete,
-		pe_order_implies_left, data_set);
+		pe_order_optional, data_set);
 	
 	/* pre_notify_complete before action */
 	custom_action_order(
 		rsc, NULL, notify_complete,
 		rsc, NULL, action,
-		pe_order_implies_left, data_set);
+		pe_order_optional, data_set);
 
 	action->pre_notify = notify;
 	action->pre_notified = notify_complete;
@@ -592,7 +592,7 @@ clone_create_notifications(
 	custom_action_order(
 		rsc, NULL, action_complete,
 		rsc, NULL, notify, 
-		pe_order_implies_right, data_set);
+		pe_order_optional, data_set);
 	
 	/* create post_notify_complete */
 	notify_key = generate_notify_key(
@@ -622,7 +622,7 @@ clone_create_notifications(
 	custom_action_order(
 		rsc, NULL, notify,
 		rsc, NULL, notify_complete,
-		pe_order_implies_left, data_set);
+		pe_order_optional, data_set);
 
 	action->post_notify = notify;
 	action->post_notified = notify_complete;
