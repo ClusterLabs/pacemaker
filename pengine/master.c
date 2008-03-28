@@ -451,11 +451,17 @@ apply_master_prefs(resource_t *rsc)
 static void set_role(resource_t *rsc, enum rsc_role_e role, gboolean current) 
 {
     if(current) {
-	rsc->role = role;
+	if(rsc->role != role) {
+	    crm_debug_5("Set %s.role = %s (was %s)", rsc->id, role2text(role), role2text(rsc->role));
+	    rsc->role = role;
+	}
     } else {
-	rsc->next_role = role;
-	if(role == RSC_ROLE_MASTER) {
-	    add_hash_param(rsc->parameters, crm_meta_name("role"), role2text(role));
+	if(rsc->next_role != role) {
+	    crm_debug_5("Set %s.next_role = %s (was %s)", rsc->id, role2text(role), role2text(rsc->next_role));
+	    rsc->next_role = role;
+	    if(role == RSC_ROLE_MASTER) {
+		add_hash_param(rsc->parameters, crm_meta_name("role"), role2text(role));
+	    }
 	}
     }
     
