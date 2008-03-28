@@ -464,7 +464,14 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		crm_debug_2("Stopping a stopped resource");
 		crm_free(key);
 		return;
-	} 
+	} else if(rsc->role != RSC_ROLE_STOPPED) {
+	    /* A cheap trick to account for the fact that Master/Slave groups may not be
+	     * completely running when we set their role to Slave
+	     */
+	    crm_debug_2("Resetting %s.role = %s (was %s)",
+			rsc->id, role2text(RSC_ROLE_STOPPED), role2text(rsc->role));
+	    rsc->role = RSC_ROLE_STOPPED;
+	}
 
 	role = rsc->role;
 
