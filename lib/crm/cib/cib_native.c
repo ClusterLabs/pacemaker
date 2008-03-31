@@ -530,6 +530,11 @@ cib_native_perform_op(
 		rc = cib_return_code;
 	}	
 
+	if(rc == cib_diff_resync) {
+	    /* This is an internal value that clients do not and should not care about */
+	    rc = cib_ok;
+	}
+	
 	if(rc == cib_ok || rc == cib_not_master || rc == cib_master_timeout) {
 		crm_log_message(LOG_MSG, op_reply);
 
@@ -702,7 +707,7 @@ cib_native_callback(cib_t *cib, struct ha_msg *msg)
 
 	ha_msg_value_int(msg, F_CIB_RC, &rc);
 	if(rc == cib_diff_resync) {
-	    /* This is anare internal value that clients do not and should not care about */
+	    /* This is an internal value that clients do not and should not care about */
 	    rc = cib_ok;
 	}
 
