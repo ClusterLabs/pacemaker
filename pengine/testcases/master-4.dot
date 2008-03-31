@@ -1,4 +1,6 @@
  digraph "g" {
+"Cancel ocf_msdummy:0_monitor_5000 c001n08" -> "ocf_msdummy:0_promote_0 c001n08" [ style = bold]
+"Cancel ocf_msdummy:0_monitor_5000 c001n08" [ style=bold color="green" fontcolor="black"  ]
 "child_DoFencing:1_monitor_0 c001n01" -> "probe_complete c001n01" [ style = bold]
 "child_DoFencing:1_monitor_0 c001n01" [ style=bold color="green" fontcolor="black" ]
 "child_DoFencing:1_monitor_0 c001n02" -> "probe_complete c001n02" [ style = bold]
@@ -20,8 +22,6 @@
 "master_rsc_1_promote_0" -> "ocf_msdummy:0_promote_0 c001n08" [ style = bold]
 "master_rsc_1_promote_0" [ style=bold color="green" fontcolor="orange" ]
 "master_rsc_1_promoted_0" [ style=bold color="green" fontcolor="orange" ]
-"ocf_msdummy:0_monitor_5000 c001n08" -> "ocf_msdummy:0_promote_0 c001n08" [ style = bold]
-"ocf_msdummy:0_monitor_5000 c001n08" [ style=bold color="green" fontcolor="black" ]
 "ocf_msdummy:0_monitor_6000 c001n08" [ style=bold color="green" fontcolor="black" ]
 "ocf_msdummy:0_promote_0 c001n08" -> "master_rsc_1_promoted_0" [ style = bold]
 "ocf_msdummy:0_promote_0 c001n08" -> "ocf_msdummy:0_monitor_6000 c001n08" [ style = bold]
