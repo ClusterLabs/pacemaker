@@ -528,7 +528,7 @@ print_status(crm_data_t *cib)
 		       node_mode = "standby";
 
 		   } else if(node->details->standby) {
-		       node_mode = "OFFLINE(standby)";
+		       node_mode = "OFFLINE (standby)";
 
 		   } else if(node->details->online) {
 		       node_mode = "online";
