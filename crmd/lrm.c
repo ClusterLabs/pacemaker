@@ -1218,6 +1218,7 @@ do_lrm_invoke(long long action,
 			op_key = generate_op_key(
 				rsc->id,op_task,crm_parse_int(op_interval,"0"));
 
+			crm_debug("PE requested op %s be cancelled", op_key);
 			call = crm_parse_int(call_id, "0");
 			if(call == 0) {
 				cancel_op_key(rsc, op_key, TRUE);
