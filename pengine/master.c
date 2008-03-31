@@ -452,7 +452,7 @@ static void set_role(resource_t *rsc, enum rsc_role_e role, gboolean current)
 {
     if(current) {
 	if(rsc->variant == pe_native && rsc->running_on != NULL && role > RSC_ROLE_STOPPED) {
-	    crm_err("Filtering change %s.role = %s (was %s)", rsc->id, role2text(role), role2text(rsc->role));
+	    crm_debug_6("Filtering change %s.role = %s (was %s)", rsc->id, role2text(role), role2text(rsc->role));
 
 	} else if(rsc->role != role) {
 	    crm_debug_5("Set %s.role = %s (was %s)", rsc->id, role2text(role), role2text(rsc->role));
