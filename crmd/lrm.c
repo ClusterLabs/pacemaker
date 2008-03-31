@@ -1482,6 +1482,8 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 
 	/* stop the monitor before stopping the resource */
 	if(crm_str_eq(operation, CRMD_ACTION_STOP, TRUE)
+	   || crm_str_eq(operation, CRMD_ACTION_DEMOTE, TRUE)
+	   || crm_str_eq(operation, CRMD_ACTION_PROMOTE, TRUE)
 	   || crm_str_eq(operation, CRMD_ACTION_MIGRATE, TRUE)) {
 		g_hash_table_foreach(pending_ops, stop_recurring_action_by_rsc, rsc);
 	}
