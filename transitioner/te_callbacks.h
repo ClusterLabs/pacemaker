@@ -24,6 +24,9 @@ extern void cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
 extern void cib_action_updated(const HA_Message *msg, int call_id, int rc,
 			       crm_data_t *output, void *user_data);
 
+extern void cib_failcount_updated(const HA_Message *msg, int call_id, int rc,
+			       crm_data_t *output, void *user_data);
+
 extern gboolean global_timer_callback(gpointer data);
 extern gboolean action_timer_callback(gpointer data);
 

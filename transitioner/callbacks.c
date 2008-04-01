@@ -427,6 +427,16 @@ cib_action_updated(const HA_Message *msg, int call_id, int rc,
 	}
 }
 
+void
+cib_failcount_updated(const HA_Message *msg, int call_id, int rc,
+		   crm_data_t *output, void *user_data)
+{
+	trigger_graph();
+
+	if(rc < cib_ok) {
+		crm_err("Update %d FAILED: %s", call_id, cib_error2string(rc));
+	}
+}
 
 gboolean
 action_timer_callback(gpointer data)
