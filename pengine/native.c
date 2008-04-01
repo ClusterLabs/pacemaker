@@ -159,7 +159,7 @@ native_merge_weights(
 node_t *
 native_color(resource_t *rsc, pe_working_set_t *data_set)
 {
-        int alloc_details = LOG_DEBUG_2;
+        int alloc_details = scores_log_level+1;
 	if(rsc->parent && is_not_set(rsc->parent->flags, pe_rsc_allocating)) {
 		/* never allocate children on their own */
 		crm_debug("Escalating allocation of %s to its parent: %s",
@@ -200,7 +200,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		constraint->score/INFINITY, TRUE);
 	    );
 	
-	dump_node_scores(alloc_details, rsc, "Post-merge", rsc->allowed_nodes);
+	dump_node_scores(alloc_details-1, rsc, __PRETTY_FUNCTION__, rsc->allowed_nodes);
 	
 	print_resource(LOG_DEBUG, "Allocating: ", rsc, FALSE);
 	if(rsc->next_role == RSC_ROLE_STOPPED) {

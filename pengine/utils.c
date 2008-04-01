@@ -262,8 +262,6 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 	clear_bit(rsc->flags, pe_rsc_provisional);
 	
 	slist_iter(candidate, node_t, nodes, lpc, 
-		   crm_debug("Color %s, Node[%d] %s: %d", rsc->id, lpc,
-			     candidate->details->uname, candidate->weight);
 		   if(chosen->weight > 0
 		      && candidate->details->unclean == FALSE
 		      && candidate->weight == chosen->weight) {

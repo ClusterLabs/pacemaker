@@ -39,7 +39,7 @@ crm_data_t * do_calculations(
 
 #define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
 
-
+int scores_log_level = LOG_DEBUG_2;
 extern int transition_id;
 
 #define get_series() 	was_processing_error?1:was_processing_warning?2:3

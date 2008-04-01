@@ -35,7 +35,7 @@
 
 #include <crm/cib.h>
 
-#define OPTARGS	"V?X:D:G:I:Lwxd:aS"
+#define OPTARGS	"V?X:D:G:I:Lwxd:aSs"
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -104,6 +104,7 @@ usage(const char *cli, int exitcode)
 	fprintf(out, "    --%s (-%c): Increase verbosity (can be supplied multiple times)\n\n", "verbose", 'V');
 	fprintf(out, "    --%s (-%c): Connect to the CIB and use the current contents as input\n", "live-check", 'L');
 	fprintf(out, "    --%s (-%c): Look for xml on stdin\n", "xml-stream", 'x');
+	fprintf(out, "    --%s (-%c): Display resource allocation scores\n", "show-scores", 's');
 	fprintf(out, "    --%s (-%c)\t<filename> : Look for xml in the named file\n\n", "xml-file", 'X');
 
 	fprintf(out, "    --%s (-%c)\t<filename> : Save the transition graph to the named file\n", "save-graph",   'G');
@@ -143,6 +144,7 @@ int
 main(int argc, char **argv)
 {
 	gboolean all_good = TRUE;
+	gboolean show_scores = FALSE;
 	enum transition_status graph_rc = -1;
 	crm_graph_t *transition = NULL;
 	ha_time_t *a_date = NULL;
@@ -176,6 +178,7 @@ main(int argc, char **argv)
 
 			{"live-check",  0, 0, 'L'},
 			{"xml-stream",  0, 0, 'x'},
+			{"show-scores", 0, 0, 's'},
 			{"xml-file",    1, 0, 'X'},
 
 			{"simulate",    0, 0, 'S'},
@@ -218,6 +221,10 @@ main(int argc, char **argv)
 			case 'x':
 				use_stdin = TRUE;
 				break;
+			case 's':
+				show_scores = TRUE;
+				scores_log_level = crm_log_level;
+				break;
 			case 'X':
 				xml_file = optarg;
 				break;
@@ -236,6 +243,9 @@ main(int argc, char **argv)
 			case 'V':
 				cl_log_enable_stderr(TRUE);
 				alter_debug(DEBUG_INC);
+				if(show_scores) {
+				    scores_log_level = crm_log_level;
+				}
 				break;
 			case 'L':
 				USE_LIVE_CIB = TRUE;

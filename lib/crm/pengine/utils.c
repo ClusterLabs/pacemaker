@@ -315,13 +315,6 @@ node_list_dup(GListPtr list1, gboolean reset, gboolean filter)
 void dump_node_scores(int level, resource_t *rsc, const char *comment, GListPtr nodes) 
 {
     GListPtr list = nodes;
-    if(rsc && rsc->children) {
-	slist_iter(
-	    child, resource_t, rsc->children, lpc,
-	    dump_node_scores(level, child, comment, nodes);
-	    );
-    }
-
     if(rsc) {
 	list = rsc->allowed_nodes;
     }
@@ -334,6 +327,13 @@ void dump_node_scores(int level, resource_t *rsc, const char *comment, GListPtr 
 	    do_crm_log(level, "%s: %s = %d", comment, node->details->uname, node->weight);
 	}
 	);
+
+    if(rsc && rsc->children) {
+	slist_iter(
+	    child, resource_t, rsc->children, lpc,
+	    dump_node_scores(level, child, comment, nodes);
+	    );
+    }
 }
 
 gint sort_rsc_index(gconstpointer a, gconstpointer b)

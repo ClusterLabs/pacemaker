@@ -58,6 +58,8 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 		group_data->first_child->rsc_cons, rsc->rsc_cons);
 	rsc->rsc_cons = NULL;
 
+	dump_node_scores(scores_log_level, rsc, __PRETTY_FUNCTION__, rsc->allowed_nodes);
+	
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
 		node = child_rsc->cmds->color(child_rsc, data_set);

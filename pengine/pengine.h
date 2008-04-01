@@ -174,6 +174,7 @@ extern int custom_action_order(
 extern void graph_element_from_action(
 	action_t *action, pe_working_set_t *data_set);
 
+extern int scores_log_level;
 extern const char* transition_idle_timeout;
 
 #endif
