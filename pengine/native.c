@@ -184,8 +184,8 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
 
 		resource_t *rsc_rh = constraint->rsc_rh;
-		crm_debug("%s: Pre-Processing %s (%s)",
-			  rsc->id, constraint->id, rsc_rh->id);
+		crm_debug_2("%s: Pre-Processing %s (%s)",
+			    rsc->id, constraint->id, rsc_rh->id);
 		rsc_rh->cmds->color(rsc_rh, data_set);
 		rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint);	
 	    );	
@@ -202,7 +202,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	
 	dump_node_scores(alloc_details-1, rsc, __PRETTY_FUNCTION__, rsc->allowed_nodes);
 	
-	print_resource(LOG_DEBUG, "Allocating: ", rsc, FALSE);
+	print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);
 	if(rsc->next_role == RSC_ROLE_STOPPED) {
 		crm_debug_2("Making sure %s doesn't get allocated", rsc->id);
 		/* make sure it doesnt come up again */
@@ -1110,7 +1110,7 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	value = g_hash_table_lookup(op->meta, "notify_type");
 	task = g_hash_table_lookup(op->meta, "notify_operation");
 
-	crm_debug("Creating notify actions for %s: %s (%s-%s)",
+	crm_debug_2("Creating notify actions for %s: %s (%s-%s)",
 		    op->uuid, rsc->id, value, task);
 	
 	key = generate_notify_key(rsc->id, value, task);
@@ -1394,7 +1394,7 @@ RoleError(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *da
 gboolean
 NullOp(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set)
 {
-	crm_debug("Executing: %s", rsc->id);
+	crm_debug_2("Executing: %s", rsc->id);
 	return FALSE;
 }
 

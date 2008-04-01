@@ -283,7 +283,7 @@ static void master_promotion_order(resource_t *rsc)
 	return;
     }
     clone_data->merged_master_weights = TRUE;
-    crm_info("Merging weights for %s", rsc->id);
+    crm_debug_2("Merging weights for %s", rsc->id);
     slist_iter(
 	child, resource_t, rsc->children, lpc,
 	crm_debug_2("%s: %d", child->id, child->sort_index);
@@ -433,14 +433,14 @@ apply_master_prefs(resource_t *rsc)
 	    
 	    new_score = merge_weights(node->weight, score);
 	    if(new_score != node->weight) {
-		crm_debug("\t%s: Updating preference for %s (%d->%d)",
+		crm_debug_2("\t%s: Updating preference for %s (%d->%d)",
 			  child_rsc->id, node->details->uname, node->weight, new_score);
 		node->weight = new_score;
 	    }
 	    
 	    new_score = max(child_rsc->priority, score);
 	    if(new_score != child_rsc->priority) {
-		crm_debug("\t%s: Updating priority (%d->%d)",
+		crm_debug_2("\t%s: Updating priority (%d->%d)",
 			  child_rsc->id, child_rsc->priority, new_score);
 		child_rsc->priority = new_score;
 	    }

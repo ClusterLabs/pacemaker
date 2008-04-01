@@ -211,9 +211,9 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
 		cons_weight, data_set);
 
-	crm_debug("order-%d (%s): %s_%s %s %s_%s flags=0x%.6x",
-		  order_id, id, rsc_lh->id, action, type, rsc_rh->id, action_rh,
-		  cons_weight);
+	crm_debug_2("order-%d (%s): %s_%s %s %s_%s flags=0x%.6x",
+		    order_id, id, rsc_lh->id, action, type, rsc_rh->id, action_rh,
+		    cons_weight);
 	
 	
 	if(symmetrical_bool == FALSE) {
@@ -258,9 +258,9 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
 		rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
 		cons_weight, data_set);
-	crm_debug("order-%d (%s): %s_%s %s %s_%s flags=0x%.6x",
-		  order_id, id, rsc_rh->id, action_rh, type, rsc_lh->id, action,
-		  cons_weight);
+	crm_debug_2("order-%d (%s): %s_%s %s %s_%s flags=0x%.6x",
+		    order_id, id, rsc_rh->id, action_rh, type, rsc_lh->id, action,
+		    cons_weight);
 	
 	return TRUE;
 }
