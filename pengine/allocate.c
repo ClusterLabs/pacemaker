@@ -463,7 +463,7 @@ stage0(pe_working_set_t *data_set)
  * Check nodes for resources started outside of the LRM
  */
 gboolean
-stage1(pe_working_set_t *data_set)
+probe_resources(pe_working_set_t *data_set)
 {
 	action_t *probe_complete = NULL;
 	action_t *probe_node_complete = NULL;
@@ -482,13 +482,7 @@ stage1(pe_working_set_t *data_set)
 			continue;
 
 		} else if(probe_complete == NULL) {
-			probe_complete = custom_action(
-				NULL, crm_strdup(CRM_OP_PROBED),
-				CRM_OP_PROBED, NULL, FALSE, TRUE,
-				data_set);
-
-			probe_complete->pseudo = TRUE;
-			probe_complete->optional = TRUE;
+			probe_complete = get_pseudo_op(CRM_OP_PROBED, data_set);
 		}
 
 		if(probed != NULL && crm_is_true(probed) == FALSE) {
@@ -516,6 +510,7 @@ stage1(pe_working_set_t *data_set)
 
 				probe_complete->optional = FALSE;
 				probe_node_complete->optional = FALSE;
+
 				custom_action_order(
 					NULL, NULL, probe_complete,
 					rsc, start_key(rsc), NULL,
@@ -590,9 +585,15 @@ stage5(pe_working_set_t *data_set)
 	slist_iter(
 		rsc, resource_t, data_set->resources, lpc,
 		rsc->cmds->color(rsc, data_set);
+		);
+
+	probe_resources(data_set);
+	
+	slist_iter(
+		rsc, resource_t, data_set->resources, lpc,
 		rsc->cmds->create_actions(rsc, data_set);	
 		);
-	
+
 	return TRUE;
 }
 

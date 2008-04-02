@@ -300,13 +300,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="12" operation="start" operation_key="fence_node:0_start_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2"/>
+         <rsc_op id="9" operation="start" operation_key="fence_node:0_start_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="23">
      <action_set>
-       <rsc_op id="12" operation="start" operation_key="fence_node:0_start_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2">
+       <rsc_op id="9" operation="start" operation_key="fence_node:0_start_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2">
          <primitive id="fence_node:0" long-id="fence_clone:fence_node:0" class="stonith" provider="heartbeat" type="baytech"/>
          <attributes crm_feature_set="2.1" ipaddr="192.168.1.190" password="xxxxxxxx" login="admin" CRM_meta_id="fence_node_start" CRM_meta_timeout="20000" CRM_meta_name="start" CRM_meta_clone="0" CRM_meta_clone_max="2"/>
        </rsc_op>
@@ -342,13 +342,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="13" operation="start" operation_key="fence_node:1_start_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
+         <rsc_op id="10" operation="start" operation_key="fence_node:1_start_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="26">
      <action_set>
-       <rsc_op id="13" operation="start" operation_key="fence_node:1_start_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045">
+       <rsc_op id="10" operation="start" operation_key="fence_node:1_start_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045">
          <primitive id="fence_node:1" long-id="fence_clone:fence_node:1" class="stonith" provider="heartbeat" type="baytech"/>
          <attributes crm_feature_set="2.1" ipaddr="192.168.1.190" password="xxxxxxxx" login="admin" CRM_meta_id="fence_node_start" CRM_meta_timeout="20000" CRM_meta_name="start" CRM_meta_clone="1" CRM_meta_clone_max="2"/>
        </rsc_op>
@@ -398,10 +398,10 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="12" operation="start" operation_key="fence_node:0_start_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2"/>
+         <rsc_op id="9" operation="start" operation_key="fence_node:0_start_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2"/>
        </trigger>
        <trigger>
-         <rsc_op id="13" operation="start" operation_key="fence_node:1_start_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
+         <rsc_op id="10" operation="start" operation_key="fence_node:1_start_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
        </trigger>
        <trigger>
          <pseudo_event id="89" operation="start" operation_key="fence_clone_start_0"/>
@@ -436,7 +436,7 @@
    </synapse>
    <synapse id="32">
      <action_set>
-       <pseudo_event id="9" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="6" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="2.1"/>
        </pseudo_event>
      </action_set>

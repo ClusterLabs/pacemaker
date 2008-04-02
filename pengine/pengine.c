@@ -39,7 +39,7 @@ xmlNode * do_calculations(
 
 #define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
 
-
+int scores_log_level = LOG_DEBUG_2;
 extern int transition_id;
 
 #define get_series() 	was_processing_error?1:was_processing_warning?2:3
@@ -244,8 +244,6 @@ do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 		   rsc->fns->print(rsc, NULL, pe_print_log, &rsc_log_level);
 		);
 
-	crm_debug_5("apply placement constraints");
-	stage1(data_set);
 	
 #if MEMCHECK_STAGE_1
 	check_and_exit(1);
@@ -278,7 +276,7 @@ do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 #if MEMCHECK_STAGE_5
 	check_and_exit(5);
 #endif
-
+	
 	crm_debug_5("processing fencing and shutdown cases");
 	stage6(data_set);
 	

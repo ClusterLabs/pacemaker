@@ -56,6 +56,7 @@
 "probe_complete c001n03" [ style=bold color="green" fontcolor="black" ]
 "probe_complete" -> "DcIPaddr_start_0 c001n03" [ style = dashed]
 "probe_complete" -> "DoFencing_start_0" [ style = bold]
+"probe_complete" -> "child_DoFencing:1_start_0 c001n01" [ style = bold]
 "probe_complete" -> "rsc_c001n01_start_0 c001n01" [ style = dashed]
 "probe_complete" -> "rsc_c001n02_start_0 c001n01" [ style = dashed]
 "probe_complete" -> "rsc_c001n03_start_0 c001n03" [ style = dashed]

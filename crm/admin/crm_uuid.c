@@ -37,6 +37,7 @@
 #include <clplumbing/cl_malloc.h>
 #include <clplumbing/cl_uuid.h>
 #include <clplumbing/uids.h>
+#include <clplumbing/lsb_exitcodes.h>
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -45,15 +46,16 @@
 #define UUID_LEN 16
 #define UUID_FILE HA_VARLIBDIR"/heartbeat/hb_uuid"
 
-#define OPTARGS	"rw:"
+#define OPTARGS	"?rw:"
 
 int read_local_hb_uuid(void);
 int write_local_hb_uuid(const char *buffer);
 
-static void usage(void) 
+static void usage(int rc) 
 {
-	fprintf(stderr, "crm_uuid [-r|-w new_ascii_value]\n");
-	exit(1);
+	FILE *stream = rc != 0 ? stderr : stdout;
+	fprintf(stream, "crm_uuid [-r|-w new_ascii_value]\n");
+	exit(rc);
 }
 
 int
@@ -84,8 +86,11 @@ main(int argc, char **argv)
 			case 'w':
 				rc = write_local_hb_uuid(optarg);
 				break;
+			case '?':
+				usage(LSB_EXIT_OK);
+				break;
 			default:
-				usage();
+				usage(LSB_EXIT_GENERIC);
 				break;
 		}
 	}

@@ -133,6 +133,9 @@ main(int argc, char **argv)
 				cl_log_enable_stderr(TRUE);
 				alter_debug(DEBUG_INC);
 				break;				
+			case '?':
+				usage(crm_system_name, LSB_EXIT_OK);
+				break;
 			default:
 				printf("Argument code 0%o (%c)"
 				       " is not (?yet?) supported\n",

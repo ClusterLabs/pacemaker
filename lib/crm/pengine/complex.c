@@ -221,7 +221,9 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	    cl_str_to_boolean(value, &bool_value);
 	    if(bool_value == FALSE) {
 		clear_bit((*rsc)->flags, pe_rsc_managed); 
-	    } 
+	    } else {
+		set_bit((*rsc)->flags, pe_rsc_managed); 
+	    }
 	}
 
 	crm_debug_2("Options for %s", (*rsc)->id);
@@ -314,6 +316,15 @@ void common_update_score(resource_t *rsc, const char *id, int score)
     }
 }
 
+resource_t *uber_parent(resource_t *rsc) 
+{
+	resource_t *parent = rsc;
+	while(parent != NULL && parent->parent != NULL) {
+		parent = parent->parent;
+	}
+	return parent;
+}
+
 void
 common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_set) 
 {
@@ -360,10 +371,14 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 	crm_free(fail_attr);
 	
 	if(fail_count > 0 && rsc->fail_stickiness != 0) {
-		resource_location(rsc, node, fail_count * rsc->fail_stickiness,
+		resource_t *failed = rsc;
+		if(is_not_set(rsc->flags, pe_rsc_unique)) {
+		    failed = uber_parent(rsc);
+		}
+		resource_location(failed, node, fail_count * rsc->fail_stickiness,
 				  "fail_stickiness", data_set);
 		crm_info("Setting failure stickiness for %s on %s: %d",
-			  rsc->id, node->details->uname,
+			  failed->id, node->details->uname,
 			  fail_count * rsc->fail_stickiness);
 	}
 	g_hash_table_destroy(meta_hash);

@@ -27,8 +27,6 @@
 #include <lib/crm/pengine/variant.h>
 
 gint sort_clone_instance(gconstpointer a, gconstpointer b);
-resource_t *find_compatible_child(
-    resource_t *local_child, resource_t *rsc, enum rsc_role_e filter);
 
 void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
@@ -114,12 +112,39 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 		node2 = resource2->running_on->data;
 	}
 
+	if(node1) {
+	    node_t *match = pe_find_node_id(resource1->allowed_nodes, node1->details->id);
+	    if(match->weight < 0) {
+		do_crm_log(level, "%s: current location is unavailable", resource1->id);
+		node1 = NULL;
+		can1 = FALSE;
+	    }
+	}
+
+	if(node2) {
+	    node_t *match = pe_find_node_id(resource2->allowed_nodes, node2->details->id);
+	    if(match->weight < 0) {
+		do_crm_log(level, "%s: current location is unavailable", resource2->id);
+		node2 = NULL;
+		can2 = FALSE;
+	    }
+	}
+
+	if(can1 != can2) {
+		if(can1) {
+			do_crm_log(level, "%s < %s: availability of current location", resource1->id, resource2->id);
+			return -1;
+		}
+		do_crm_log(level, "%s > %s: availability of current location", resource1->id, resource2->id);
+		return 1;
+	}
+	
 	if(resource1->priority < resource2->priority) {
-		do_crm_log(level, "%s < %s: score", resource1->id, resource2->id);
+		do_crm_log(level, "%s < %s: priority", resource1->id, resource2->id);
 		return 1;
 
 	} else if(resource1->priority > resource2->priority) {
-		do_crm_log(level, "%s > %s: score", resource1->id, resource2->id);
+		do_crm_log(level, "%s > %s: priority", resource1->id, resource2->id);
 		return -1;
 	}
 	
@@ -308,7 +333,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		constraint->score/INFINITY, TRUE);
 	    );
 	
-	dump_node_scores(LOG_DEBUG_2, rsc, __FUNCTION__, rsc->allowed_nodes);
+	dump_node_scores(scores_log_level, rsc, __FUNCTION__, rsc->allowed_nodes);
 	
 	/* count now tracks the number of clones currently allocated */
 	slist_iter(node, node_t, rsc->allowed_nodes, lpc,
@@ -538,13 +563,13 @@ clone_create_notifications(
 	custom_action_order(
 		rsc, NULL, notify,
 		rsc, NULL, notify_complete,
-		pe_order_implies_left, data_set);
+		pe_order_optional, data_set);
 	
 	/* pre_notify_complete before action */
 	custom_action_order(
 		rsc, NULL, notify_complete,
 		rsc, NULL, action,
-		pe_order_implies_left, data_set);
+		pe_order_optional, data_set);
 
 	action->pre_notify = notify;
 	action->pre_notified = notify_complete;
@@ -567,7 +592,7 @@ clone_create_notifications(
 	custom_action_order(
 		rsc, NULL, action_complete,
 		rsc, NULL, notify, 
-		pe_order_implies_right, data_set);
+		pe_order_optional, data_set);
 	
 	/* create post_notify_complete */
 	notify_key = generate_notify_key(
@@ -597,7 +622,7 @@ clone_create_notifications(
 	custom_action_order(
 		rsc, NULL, notify,
 		rsc, NULL, notify_complete,
-		pe_order_implies_left, data_set);
+		pe_order_optional, data_set);
 
 	action->post_notify = notify;
 	action->post_notified = notify_complete;
@@ -750,14 +775,14 @@ clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 resource_t*
 find_compatible_child(
-    resource_t *local_child, resource_t *rsc, enum rsc_role_e filter)
+    resource_t *local_child, resource_t *rsc, enum rsc_role_e filter, gboolean current)
 {
 	node_t *local_node = NULL;
 	node_t *node = NULL;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 	
-	local_node = local_child->fns->location(local_child, NULL, FALSE);
+	local_node = local_child->fns->location(local_child, NULL, current);
 	if(local_node == NULL) {
 		crm_debug("Can't colocate unrunnable child %s with %s",
 			 local_child->id, rsc->id);
@@ -767,15 +792,15 @@ find_compatible_child(
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
 
-		enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, FALSE);
-		node = child_rsc->fns->location(child_rsc, NULL, FALSE);
+		enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, current);
+		node = child_rsc->fns->location(child_rsc, NULL, current);
 
 		if(filter != RSC_ROLE_UNKNOWN && next_role != filter) {
 		    crm_debug_2("Filtered %s", child_rsc->id);
 		    continue;
 		}
 		
-		if(node->details == local_node->details) {
+		if(node && local_node && node->details == local_node->details) {
 			crm_info("Colocating %s with %s on %s",
 				 local_child->id, child_rsc->id, node->details->uname);
 			return child_rsc;
@@ -857,10 +882,12 @@ void clone_rsc_colocation_lh(
 
 			   CRM_ASSERT(lh_child != NULL);
 			   rh_child = find_compatible_child(
-			       lh_child, rsc_rh, RSC_ROLE_UNKNOWN);
+			       lh_child, rsc_rh, RSC_ROLE_UNKNOWN, FALSE);
 			   if(rh_child == NULL) {
-				   continue;
+			       crm_debug_2("No match found for %s", lh_child->id);
+			       continue;
 			   }
+			   crm_debug("Interleaving %s with %s", lh_child->id, rh_child->id);
 			   lh_child->cmds->rsc_colocation_lh(
 				   lh_child, rh_child, constraint);
 			);
@@ -923,6 +950,7 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 {
 	resource_t *r1 = NULL;
 	resource_t *r2 = NULL;	
+	gboolean do_interleave = FALSE;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
@@ -936,14 +964,55 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 		return;
 	}
 
+	if(order->rh_rsc->variant == pe_clone
+	    || order->rh_rsc->variant == pe_master) {
+	    clone_variant_data_t *clone_data_rh = NULL;
+	    get_clone_variant_data(clone_data_rh, order->rh_rsc);
+	    if(clone_data->clone_node_max != clone_data_rh->clone_node_max) {
+		crm_config_err("Cannot interleave "XML_CIB_TAG_INCARNATION
+			       " %s and %s because they do not support the same"
+			       " number of resources per node",
+			       rsc->id, order->rh_rsc->id);
+		
+		/* only the LHS side needs to be labeled as interleave */
+	    } else if(clone_data->interleave) {
+		do_interleave = TRUE;
+	    }
+	}
+
+	if(do_interleave && order->rh_rsc) {
+	    resource_t *lh_child = NULL;
+	    resource_t *rh_saved = order->rh_rsc;
+	    gboolean current = FALSE;
+	    if(strstr(order->lh_action_task, "_stop_0") || strstr(order->lh_action_task, "_demote_0")) {
+		current = TRUE;
+	    }
+	    
+	    slist_iter(
+		rh_child, resource_t, rh_saved->children, lpc,
+		
+		CRM_ASSERT(rh_child != NULL);
+		lh_child = find_compatible_child(rh_child, rsc, RSC_ROLE_UNKNOWN, current);
+		if(lh_child == NULL) {
+		    crm_debug_2("No match found for %s", rh_child->id);
+		    continue;
+		}
+		crm_debug("Interleaving %s with %s", lh_child->id, rh_child->id);
+		order->rh_rsc = rh_child;
+		lh_child->cmds->rsc_order_lh(lh_child, order, data_set);
+		order->rh_rsc = rh_saved;
+		);
+	    
+	} else {
+	    
 #if 0
-	if(order->type != pe_order_optional) {
+	    if(order->type != pe_order_optional) {
 		crm_debug("Upgraded ordering constraint %d - 0x%.6x", order->id, order->type);
 		native_rsc_order_lh(rsc, order, data_set);
-	}
+	    }
 #endif
-	
-	if(order->type & pe_order_implies_left) {
+	    
+	    if(order->type & pe_order_implies_left) {
 		if(rsc->variant == order->rh_rsc->variant) {
 			crm_debug_2("Clone-to-clone ordering: %s -> %s 0x%.6x",
 				order->lh_action_task, order->rh_action_task, order->type);
@@ -961,10 +1030,16 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 				native_rsc_order_lh(child_rsc, order, data_set);
 				);
 		}
-	}
+	    }
+	    convert_non_atomic_task(rsc, order, FALSE);
+	    native_rsc_order_lh(rsc, order, data_set);
+	}	
 
-	convert_non_atomic_task(rsc, order);
-	native_rsc_order_lh(rsc, order, data_set);
+	if(is_set(rsc->flags, pe_rsc_notify)) {
+	    order->type = pe_order_optional;
+	    convert_non_atomic_task(rsc, order, TRUE);
+	    native_rsc_order_lh(rsc, order, data_set);
+	}
 }
 
 void clone_rsc_order_rh(
@@ -974,7 +1049,17 @@ void clone_rsc_order_rh(
 	get_clone_variant_data(clone_data, rsc);
 
 	crm_debug_2("%s->%s", lh_action->uuid, order->rh_action_task);
+	if(safe_str_eq(CRM_OP_PROBED, lh_action->uuid)) {
+	    slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+		child_rsc->cmds->rsc_order_rh(lh_action, child_rsc, order);
+		);
 
+	    if(rsc->fns->state(rsc, TRUE) < RSC_ROLE_STARTED
+		&& rsc->fns->state(rsc, FALSE) > RSC_ROLE_STOPPED) {
+		order->type |= pe_order_implies_right;
+	    }
+	}
  	native_rsc_order_rh(lh_action, rsc, order);
 
 }
@@ -1084,6 +1169,45 @@ expand_list(GListPtr list, int clones,
 		   );
 }
 
+static void mark_notifications_required(resource_t *rsc, enum action_tasks task, gboolean top) 
+{
+    char *key = NULL;
+    char *key_complete = NULL;
+    const char *task_s = task2text(task);
+
+    if(top) {
+	key = generate_op_key(rsc->id, task_s, 0);
+	key_complete = generate_op_key(rsc->id, task2text(task+1), 0);
+    }
+    
+    slist_iter(action, action_t, rsc->actions, lpc,
+	       
+	       if(action->optional == FALSE) {
+		   continue;
+	       }
+	       
+	       if(safe_str_eq(action->uuid, key)
+		  || safe_str_eq(action->uuid, key_complete)) {
+		   crm_debug_3("Marking top-level action %s as required", action->uuid);
+		   action->optional = FALSE;
+	       }
+	       
+	       if(strstr(action->uuid, task_s)) {
+		   if(safe_str_eq(CRMD_ACTION_NOTIFIED, action->task)
+		      || safe_str_eq(CRMD_ACTION_NOTIFY, action->task)) {
+		       crm_debug_3("Marking %s as required", action->uuid);
+		       action->optional = FALSE;
+		   }   
+	       }
+	);
+
+    slist_iter(
+	child, resource_t, rsc->children, lpc,
+	mark_notifications_required(child, task, FALSE);
+	);
+    
+}
+
 void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 {
 	char *rsc_list = NULL;
@@ -1128,6 +1252,9 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_table_insert(
 			n_data->keys,
 			crm_strdup("notify_stop_uname"), node_list);
+		if(rsc_list != NULL) {
+		    mark_notifications_required(rsc, stop_rsc, TRUE);
+		}
 	}
 
 	if(is_set(rsc->flags, pe_rsc_notify) && n_data->start) {
@@ -1142,6 +1269,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_table_insert(
 			n_data->keys,
 			crm_strdup("notify_start_uname"), node_list);
+		mark_notifications_required(rsc, start_rsc, TRUE);
 	}
 	
 	if(is_set(rsc->flags, pe_rsc_notify) && n_data->demote) {
@@ -1156,6 +1284,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_table_insert(
 			n_data->keys,
 			crm_strdup("notify_demote_uname"), node_list);
+		mark_notifications_required(rsc, action_demote, TRUE);
 	}
 	
 	if(is_set(rsc->flags, pe_rsc_notify) && n_data->promote) {
@@ -1170,6 +1299,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_table_insert(
 			n_data->keys,
 			crm_strdup("notify_promote_uname"), node_list);
+		mark_notifications_required(rsc, action_promote, TRUE);
 	}
 	
 	if(is_set(rsc->flags, pe_rsc_notify) && n_data->active) {
@@ -1271,6 +1401,19 @@ static gint sort_rsc_id(gconstpointer a, gconstpointer b)
 	return strcmp(resource1->id, resource2->id);
 }
 
+static resource_t *find_instance_on(resource_t *rsc, node_t *node)
+{
+    slist_iter(child, resource_t, rsc->children, lpc,
+
+	       slist_iter(known ,node_t, child->known_on, lpc2,
+			  if(node->details == known->details) {
+			      return child;
+			  }
+		   );
+	);
+    return NULL;
+}
+
 gboolean
 clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		    gboolean force, pe_working_set_t *data_set) 
@@ -1280,18 +1423,38 @@ clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	get_clone_variant_data(clone_data, rsc);
 
 	rsc->children = g_list_sort(rsc->children, sort_rsc_id);
-
+	
 	if(is_not_set(rsc->flags, pe_rsc_unique)
 	   && clone_data->clone_node_max == 1) {
 		/* only look for one copy */	 
+		resource_t *child = NULL;
+
+		/* Try whoever we probed last time */
+		child = find_instance_on(rsc, node);
+		if(child) {
+		    return child->cmds->create_probe(
+			child, node, complete, force, data_set);
+		}
+
+		/* Try whoever we plan on starting there */
 		slist_iter(	 
 			child_rsc, resource_t, rsc->children, lpc,	 
 
-			if(pe_find_node_id(child_rsc->running_on, node->details->id)) {	 
-				return child_rsc->cmds->create_probe(
-					child_rsc, node, complete, force, data_set);
+			node_t *local_node = child_rsc->fns->location(child_rsc, NULL, FALSE);
+			if(local_node == NULL) {
+			    continue;
 			}
-			);
+			
+			if(local_node->details == node->details) {
+			    return child_rsc->cmds->create_probe(
+				child_rsc, node, complete, force, data_set);
+			}
+		    );
+
+		/* Fall back to the first clone instance */
+		child = rsc->children->data;
+		return child->cmds->create_probe(child, node, complete, force, data_set);
+		
 	}
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,

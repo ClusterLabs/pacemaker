@@ -77,6 +77,7 @@
 "ms-drbd0_pre_notify_stop_0" [ style=bold color="green" fontcolor="orange"  ]
 "ms-drbd0_promote_0" -> "drbd0:0_promote_0 xen-2" [ style = bold]
 "ms-drbd0_promote_0" [ style=bold color="green" fontcolor="orange"  ]
+"ms-drbd0_promoted_0" -> "fs_1_start_0 xen-2" [ style = bold]
 "ms-drbd0_promoted_0" -> "ms-drbd0_post_notify_promote_0" [ style = bold]
 "ms-drbd0_promoted_0" [ style=bold color="green" fontcolor="orange"  ]
 "ms-drbd0_stop_0" -> "drbd0:1_stop_0 xen-1" [ style = bold]

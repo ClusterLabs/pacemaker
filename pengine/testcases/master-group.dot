@@ -1,6 +1,6 @@
 digraph "g" {
-"master_slave_Stateful:1_monitor_5000 rh44-1" -> "master_slave_Stateful:1_promote_0 rh44-1" [ style = bold]
-"master_slave_Stateful:1_monitor_5000 rh44-1" [ style=bold color="green" fontcolor="black"  ]
+"Cancel master_slave_Stateful:1_monitor_5000 rh44-1" -> "master_slave_Stateful:1_promote_0 rh44-1" [ style = bold]
+"Cancel master_slave_Stateful:1_monitor_5000 rh44-1" [ style=bold color="green" fontcolor="black"  ]
 "master_slave_Stateful:1_monitor_6000 rh44-1" [ style=bold color="green" fontcolor="black"  ]
 "master_slave_Stateful:1_promote_0 rh44-1" -> "master_slave_Stateful:1_monitor_6000 rh44-1" [ style = bold]
 "master_slave_Stateful:1_promote_0 rh44-1" [ style=bold color="green" fontcolor="black"  ]

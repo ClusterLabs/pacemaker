@@ -649,13 +649,14 @@ convert_from_ordinal(ha_time_t *a_date)
 
 gboolean ordinal_to_gregorian(ha_time_t *a_date) 
 {
+	/* Day of the year this month ends on */
+	int m_end = 0;
+
 	CRM_CHECK(a_date->has->years, return FALSE);
 	CRM_CHECK(a_date->has->yeardays, return FALSE);
 
 	CRM_CHECK(a_date->yeardays > 0, return FALSE);
 	
-	a_date->days = a_date->yeardays;
-	a_date->months = 11;
 	if(is_leap_year(a_date->years) && a_date->yeardays > 366) {
 		crm_err("Year %.4d only has 366 days (supplied %.3d)",
 			a_date->years, a_date->yeardays);
@@ -667,27 +668,21 @@ gboolean ordinal_to_gregorian(ha_time_t *a_date)
 		a_date->yeardays = 365;
 	}
 	
-	while(a_date->months > 0
-	      && a_date->yeardays <= month2days[a_date->months]) {
-		crm_debug_6("month %d: %d vs. %d",
-			    a_date->months, a_date->yeardays,
-			    month2days[a_date->months]);
-		(a_date->months)--;
-	}
-
-	a_date->days -= month2days[a_date->months];
-	(a_date->months)++;
+	a_date->days = a_date->yeardays;
+	a_date->months = 0;
+	do {
+		a_date->months++;
+		m_end += days_per_month(a_date->months, a_date->years);
+		a_date->days -= days_per_month(a_date->months-1, a_date->years);
 	
-	CRM_CHECK(a_date->months > 0, return FALSE);
+		crm_debug_6("month %d: %d vs. %d - current day: %d",
+			    a_date->months, a_date->yeardays,
+			    m_end, a_date->days);
+	} while (a_date->months < 12 && m_end < a_date->yeardays);
 
-	if(is_leap_year(a_date->years) && a_date->months > 2) {
-		(a_date->days)--;
-	}
-	if(a_date->days == 0) {
-		/* annoying underflow */
-		a_date->days = days_per_month(a_date->months, a_date->years);
-		(a_date->months)--;
-	}
+	CRM_CHECK(a_date->months > 0, return FALSE);
+	CRM_CHECK(a_date->days <= days_per_month(a_date->months, a_date->years), 
+			return FALSE);
 
 	a_date->has->days = TRUE;
 	a_date->has->months = TRUE;

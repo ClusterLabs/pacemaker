@@ -7,26 +7,8 @@
     </attributes></cluster_property_set></crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member">
-        <instance_attributes id="master-uuid1">
-          <attributes>
-            <nvpair id="master-child_rsc1:0-uuid1" name="master-child_rsc1:0" value="10"/>
-            <nvpair id="master-child_rsc1:1-uuid1" name="master-child_rsc1:1" value="500"/>
-            <nvpair id="master-child_rsc1:2-uuid1" name="master-child_rsc1:2" value="2000"/>
-            <nvpair id="master-child_rsc1:3-uuid1" name="master-child_rsc1:3" value="200"/>
-            <nvpair id="master-child_rsc1:4-uuid1" name="master-child_rsc1:4" value="100"/>
-          </attributes>
-        </instance_attributes>
       </node>
       <node id="uuid2" uname="node2" type="member">
-        <instance_attributes id="master-uuid2">
-          <attributes>
-            <nvpair id="master-child_rsc1:0-uuid2" name="master-child_rsc1:0" value="300"/>
-            <nvpair id="master-child_rsc1:1-uuid2" name="master-child_rsc1:1" value="600"/>
-            <nvpair id="master-child_rsc1:2-uuid2" name="master-child_rsc1:2" value="400"/>
-            <nvpair id="master-child_rsc1:3-uuid2" name="master-child_rsc1:3" value="4000"/>
-            <nvpair id="master-child_rsc1:4-uuid2" name="master-child_rsc1:4" value="30"/>
-          </attributes>
-        </instance_attributes>
       </node>
     </nodes>
     <resources>
@@ -44,6 +26,11 @@
       </master_slave>
     </resources>
     <constraints>
+      <rsc_location id="master-node2" rsc="rsc1">
+	<rule id="master-rule-node2" score="100" role="Master">
+	  <expression id="exp-1" attribute="#uname" operation="eq" value="node2"/>
+	</rule>
+      </rsc_location>
     </constraints>
   </configuration>
   <status>

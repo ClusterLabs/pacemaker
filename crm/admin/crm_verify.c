@@ -147,7 +147,7 @@ main(int argc, char **argv)
 				USE_LIVE_CIB = TRUE;
 				break;
 			case '?':
-				usage(crm_system_name, LSB_EXIT_GENERIC);
+				usage(crm_system_name, LSB_EXIT_OK);
 				break;
 			default:
 				printf("?? getopt returned character code 0%o ??\n", flag);

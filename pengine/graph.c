@@ -50,15 +50,16 @@ gboolean
 update_action(action_t *action)
 {
 	int local_type = 0;
-	int log_level = LOG_DEBUG_2;
+	int default_log_level = LOG_DEBUG_3;
+	int log_level = default_log_level;
 	gboolean changed = FALSE;
-	
+
 	do_crm_log(log_level, "Processing action %s: %s %s %s",
 		   action->uuid,
 		   action->optional?"optional":"required",
 		   action->runnable?"runnable":"unrunnable",
 		   action->pseudo?"pseudo":action->task);
-
+	
 	slist_iter(
 		other, action_wrapper_t, action->actions_before, lpc,
 
@@ -70,7 +71,18 @@ update_action(action_t *action)
 		if(other_rsc) {
 		    other_role = other_rsc->fns->state(other_rsc, TRUE);
 		}
-		
+
+		if(other->type & pe_order_test) {
+		    log_level = LOG_NOTICE;
+		    do_crm_log(log_level, "Processing action %s: %s %s %s",
+			       action->uuid,
+			       action->optional?"optional":"required",
+			       action->runnable?"runnable":"unrunnable",
+			       action->pseudo?"pseudo":action->task);
+		} else {
+		    log_level = default_log_level;
+		}
+
 		do_crm_log(log_level, "   Checking action %s: %s %s %s (flags=0x%.6x)",
 			   other->action->uuid,
 			   other->action->optional?"optional":"required",
@@ -79,6 +91,15 @@ update_action(action_t *action)
 			   other->type);
 
 		local_type = other->type;
+
+		if((local_type & pe_order_demote_stop)
+		   && other->action->pseudo == FALSE
+		   && other_role > RSC_ROLE_SLAVE
+		   && node != NULL
+		   && node->details->online) {
+		    local_type |= pe_order_implies_left;
+		    do_crm_log(log_level,"Upgrading demote->stop constraint to implies_left");
+		}
 
 		if((local_type & pe_order_demote)
 		   && other->action->pseudo == FALSE
@@ -89,7 +110,22 @@ update_action(action_t *action)
 		    do_crm_log(log_level,"Upgrading restart constraint to runnable_left");
 		}
 
+		if((local_type & pe_order_complex_right)
+		   && action->optional
+		   && other->action->optional == FALSE) {
+		    local_type |= pe_order_implies_right;
+		    do_crm_log(log_level,"Upgrading complex constraint to implies_right");
+		}
+
+		if((local_type & pe_order_complex_left)
+		   && action->optional == FALSE
+		   && other->action->optional) {
+		    local_type |= pe_order_implies_left;
+		    do_crm_log(log_level,"Upgrading complex constraint to implies_left");
+		}
+		
 		if((local_type & pe_order_shutdown)
+		   && action->optional
 		   && other->action->optional == FALSE
 		   && is_set(other_rsc->flags, pe_rsc_shutdown)) {
 		    action->optional = FALSE;
@@ -184,6 +220,7 @@ update_action(action_t *action)
 			if(action->optional == FALSE) {
 				/* nothing to do */
 				do_crm_log(log_level+1, "      Ignoring implies right - redundant");
+
 			} else if(other->action->optional == FALSE) {
 				action->optional = FALSE;
 				do_crm_log(log_level-1,
@@ -204,14 +241,26 @@ update_action(action_t *action)
 				do_crm_log(log_level, "%s changed, processing %s", other->action->uuid, before_other->action->uuid);
 				update_action(before_other->action);
 				);
+			slist_iter(
+				before_other, action_wrapper_t, other->action->actions_before, lpc2,
+				do_crm_log(log_level, "%s changed, processing %s", other->action->uuid, before_other->action->uuid);
+				update_action(before_other->action);
+				);
 		}
 		
 		);
 
 	if(changed) {
+		update_action(action);
 		do_crm_log(log_level, "%s changed, processing after list", action->uuid);
 		slist_iter(
 			other, action_wrapper_t, action->actions_after, lpc,
+			do_crm_log(log_level, "%s changed, processing %s", action->uuid, other->action->uuid);
+			update_action(other->action);
+			);
+		do_crm_log(log_level, "%s changed, processing before list", action->uuid);
+		slist_iter(
+			other, action_wrapper_t, action->actions_before, lpc,
 			do_crm_log(log_level, "%s changed, processing %s", action->uuid, other->action->uuid);
 			update_action(other->action);
 			);

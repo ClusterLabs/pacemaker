@@ -38,6 +38,11 @@
       </master_slave>
     </resources>
     <constraints>
+      <rsc_location id="master-node2" rsc="rsc1">
+	<rule id="master-rule-node2" score="100" role="Master">
+	  <expression id="exp-1" attribute="#uname" operation="eq" value="node1"/>
+	</rule>
+      </rsc_location>
     </constraints>
   </configuration>
   <status>

@@ -262,8 +262,6 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 	clear_bit(rsc->flags, pe_rsc_provisional);
 	
 	slist_iter(candidate, node_t, nodes, lpc, 
-		   crm_debug("Color %s, Node[%d] %s: %d", rsc->id, lpc,
-			     candidate->details->uname, candidate->weight);
 		   if(chosen->weight > 0
 		      && candidate->details->unclean == FALSE
 		      && candidate->weight == chosen->weight) {
@@ -324,7 +322,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 }
 
 void
-convert_non_atomic_task(resource_t *rsc, order_constraint_t *order)
+convert_non_atomic_task(resource_t *rsc, order_constraint_t *order, gboolean with_notify)
 {
 	int interval = 0;
 	char *rid = NULL;
@@ -369,7 +367,7 @@ convert_non_atomic_task(resource_t *rsc, order_constraint_t *order)
 	}
 	
 	if(task != no_action) {
-		if(is_set(rsc->flags, pe_rsc_notify)) {
+		if(with_notify && is_set(rsc->flags, pe_rsc_notify)) {
 			order->lh_action_task = generate_notify_key(
 				rsc->id, "confirmed-post",
 				task2text(task));
@@ -502,16 +500,6 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 			      g_list_length(action->actions_after));
 	}
 }
-
-resource_t *uber_parent(resource_t *rsc) 
-{
-	resource_t *parent = rsc;
-	while(parent != NULL && parent->parent != NULL) {
-		parent = parent->parent;
-	}
-	return parent;
-}
-
 
 action_t *get_pseudo_op(const char *name, pe_working_set_t *data_set) 
 {

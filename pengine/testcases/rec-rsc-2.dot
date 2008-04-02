@@ -1,4 +1,5 @@
  digraph "g" {
+"Cancel rsc1_cancel_1 node1" [ style=bold color="green" fontcolor="black"  ]
 "all_stopped" [ style=bold color="green" fontcolor="orange"  ]
 "probe_complete node1" -> "probe_complete" [ style = bold]
 "probe_complete node1" [ style=bold color="green" fontcolor="black" ]
@@ -6,12 +7,11 @@
 "probe_complete node2" [ style=bold color="green" fontcolor="black" ]
 "probe_complete" -> "rsc1_start_0 node1" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange" ]
-"rsc1_cancel_1 node1" [ style=bold color="green" fontcolor="black" ]
 "rsc1_monitor_0 node2" -> "probe_complete node2" [ style = bold]
 "rsc1_monitor_0 node2" [ style=bold color="green" fontcolor="black" ]
 "rsc1_start_0 node1" [ style=bold color="green" fontcolor="black" ]
+"rsc1_stop_0 node1" -> "Cancel rsc1_cancel_1 node1" [ style = bold]
 "rsc1_stop_0 node1" -> "all_stopped" [ style = bold]
-"rsc1_stop_0 node1" -> "rsc1_cancel_1 node1" [ style = bold]
 "rsc1_stop_0 node1" -> "rsc1_start_0 node1" [ style = bold]
 "rsc1_stop_0 node1" [ style=bold color="green" fontcolor="black" ]
 }

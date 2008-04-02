@@ -159,7 +159,7 @@ native_merge_weights(
 node_t *
 native_color(resource_t *rsc, pe_working_set_t *data_set)
 {
-        int alloc_details = LOG_DEBUG_2;
+        int alloc_details = scores_log_level+1;
 	if(rsc->parent && is_not_set(rsc->parent->flags, pe_rsc_allocating)) {
 		/* never allocate children on their own */
 		crm_debug("Escalating allocation of %s to its parent: %s",
@@ -184,8 +184,8 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
 
 		resource_t *rsc_rh = constraint->rsc_rh;
-		crm_debug("%s: Pre-Processing %s (%s)",
-			  rsc->id, constraint->id, rsc_rh->id);
+		crm_debug_2("%s: Pre-Processing %s (%s)",
+			    rsc->id, constraint->id, rsc_rh->id);
 		rsc_rh->cmds->color(rsc_rh, data_set);
 		rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint);	
 	    );	
@@ -200,9 +200,9 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		constraint->score/INFINITY, TRUE);
 	    );
 	
-	dump_node_scores(alloc_details, rsc, "Post-merge", rsc->allowed_nodes);
+	dump_node_scores(alloc_details-1, rsc, __PRETTY_FUNCTION__, rsc->allowed_nodes);
 	
-	print_resource(LOG_DEBUG, "Allocating: ", rsc, FALSE);
+	print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);
 	if(rsc->next_role == RSC_ROLE_STOPPED) {
 		crm_debug_2("Making sure %s doesn't get allocated", rsc->id);
 		/* make sure it doesnt come up again */
@@ -218,7 +218,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	} else if(rsc->allocated_to == NULL) {
 		if(is_not_set(rsc->flags, pe_rsc_orphan)) {
 			pe_warn("Resource %s cannot run anywhere", rsc->id);
-		} else {
+		} else if(rsc->running_on != NULL) {
 			crm_info("Stopping orphan resource %s", rsc->id);
 		}
 		
@@ -464,7 +464,14 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		crm_debug_2("Stopping a stopped resource");
 		crm_free(key);
 		return;
-	} 
+	} else if(rsc->role != RSC_ROLE_STOPPED) {
+	    /* A cheap trick to account for the fact that Master/Slave groups may not be
+	     * completely running when we set their role to Slave
+	     */
+	    crm_debug_2("Resetting %s.role = %s (was %s)",
+			rsc->id, role2text(RSC_ROLE_STOPPED), role2text(rsc->role));
+	    rsc->role = RSC_ROLE_STOPPED;
+	}
 
 	role = rsc->role;
 
@@ -505,7 +512,7 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 	custom_action_order(rsc, demote_key(rsc), NULL,
 			    rsc, stop_key(rsc), NULL,
-			    pe_order_optional, data_set);
+			    pe_order_demote_stop, data_set);
 
 	custom_action_order(rsc, start_key(rsc), NULL,
 			    rsc, promote_key(rsc), NULL,
@@ -722,6 +729,30 @@ node_list_update(GListPtr list1, GListPtr list2, int factor)
 		);	
 }
 
+static GListPtr find_actions_by_task(GListPtr actions, resource_t *rsc, const char *original_key)
+{
+    GListPtr list = NULL;
+
+    list = find_actions(actions, original_key, NULL);
+    if(list == NULL) {
+	/* we're potentially searching a child of the original resource */
+	char *key = NULL;
+	char *tmp = NULL;
+	char *task = NULL;
+	int interval = 0;
+	parse_op_key(original_key, &tmp, &task, &interval);
+	
+	key = generate_op_key(rsc->id, task, interval);
+	list = find_actions(actions, key, NULL);
+
+	crm_free(key);
+	crm_free(tmp);
+	crm_free(task);
+    }
+
+    return list;
+}
+
 void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order, pe_working_set_t *data_set)
 {
 	GListPtr lh_actions = NULL;
@@ -735,8 +766,8 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order, pe_worki
 		lh_actions = g_list_append(NULL, lh_action);
 
 	} else if(lh_action == NULL) {
-		lh_actions = find_actions(
-			lh_rsc->actions, order->lh_action_task, NULL);
+		lh_actions = find_actions_by_task(
+		    lh_rsc->actions, lh_rsc, order->lh_action_task);
 	}
 
 	if(lh_actions == NULL && lh_rsc != rh_rsc) {
@@ -805,8 +836,8 @@ void native_rsc_order_rh(
 		rh_actions = g_list_append(NULL, rh_action);
 
 	} else if(rsc != NULL) {
-		rh_actions = find_actions(
-			rsc->actions, order->rh_action_task, NULL);
+		rh_actions = find_actions_by_task(
+		    rsc->actions, rsc, order->rh_action_task);
 	}
 
 	if(rh_actions == NULL) {
@@ -1079,7 +1110,7 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	value = g_hash_table_lookup(op->meta, "notify_type");
 	task = g_hash_table_lookup(op->meta, "notify_operation");
 
-	crm_debug("Creating notify actions for %s: %s (%s-%s)",
+	crm_debug_2("Creating notify actions for %s: %s (%s-%s)",
 		    op->uuid, rsc->id, value, task);
 	
 	key = generate_notify_key(rsc->id, value, task);
@@ -1214,6 +1245,7 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 		}
 		
 	} else {
+	    
 		stop = stop_action(rsc, current, TRUE);
 		start = start_action(rsc, next, TRUE);
 		stop->optional = start->optional;
@@ -1362,7 +1394,7 @@ RoleError(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *da
 gboolean
 NullOp(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set)
 {
-	crm_debug("Executing: %s", rsc->id);
+	crm_debug_2("Executing: %s", rsc->id);
 	return FALSE;
 }
 
@@ -1466,7 +1498,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	
 	crm_debug_2("Probing %s on %s (%s)", rsc->id, node->details->uname, role2text(rsc->role));
 	
-	custom_action_order(rsc, NULL, probe, rsc, NULL, complete,
+	custom_action_order(rsc, NULL, probe, NULL, NULL, complete,
 			    pe_order_implies_right, data_set);
 
 	return TRUE;
@@ -1495,15 +1527,10 @@ native_start_constraints(
 			       order_actions(all_stopped, action, pe_order_implies_left);
 
 			   } else if(target != NULL
-			      && target->details->expected_up
 			      && safe_str_eq(action->task, CRMD_ACTION_START)
 			      && NULL == pe_find_node_id(
 				      rsc->known_on, target->details->id)) {
-				   /* if expected_up == TRUE, then we've seen
-				    *   the node before and it has failed (as
-				    *   opposed to just hasn't started up yet)
-				    *
-				    * if known == NULL, then we dont know if
+				   /* if known == NULL, then we dont know if
 				    *   the resource is active on the node
 				    *   we're about to shoot
 				    *
@@ -1523,7 +1550,8 @@ native_start_constraints(
 					    action->uuid, target->details->uname);
 				   order_actions(all_stopped, action,
 						 pe_order_implies_left|pe_order_runnable_left);
-			   }   
+			   }
+			   
 			);
 	}
 }

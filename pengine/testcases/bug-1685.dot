@@ -28,6 +28,7 @@ digraph "g" {
 "shared_storage_pre_notify_promote_0" [ style=bold color="green" fontcolor="orange"  ]
 "shared_storage_promote_0" -> "prim_shared_storage:0_promote_0 redun2" [ style = bold]
 "shared_storage_promote_0" [ style=bold color="green" fontcolor="orange"  ]
+"shared_storage_promoted_0" -> "shared_filesystem_start_0 redun2" [ style = bold]
 "shared_storage_promoted_0" -> "shared_storage_post_notify_promote_0" [ style = bold]
 "shared_storage_promoted_0" [ style=bold color="green" fontcolor="orange"  ]
 }
