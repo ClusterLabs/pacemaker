@@ -819,6 +819,7 @@ main(int argc, char **argv)
 		{"property-value",  1, 0, 'v'},
 		{"get-property",    1, 0, 'G'},
 		{"set-property",    1, 0, 'S'},
+		{"set-name",        1, 0, 's'},
 		{"resource-type",   1, 0, 't'},
 
 		{"xml-file", 0, 0, 'X'},		
@@ -1194,7 +1195,7 @@ main(int argc, char **argv)
 			CMD_ERR("Must supply a resource id with -r\n");
 			return cib_NOTEXISTS;
 		} 
-		rc = delete_resource_attr(rsc_id, prop_id, prop_set, prop_name,
+		rc = delete_resource_attr(rsc_id, prop_set, prop_id, prop_name,
 					  cib_conn, &data_set);
 
 	} else if(rsc_cmd == 'P') {
