@@ -122,6 +122,9 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 		}
 	}
 
+	crm_debug_2("Looking for (type=%s, set=%s, id=%s, name=%s) in %s",
+		    set_type, set_name, attr_id, attr_name, tag);
+
 	/* filter by set name */
 	if(set_name != NULL) {
 		crm_data_t *tmp = NULL;
