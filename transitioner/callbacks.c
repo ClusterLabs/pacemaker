@@ -425,8 +425,8 @@ cib_action_updated(xmlNode *msg, int call_id, int rc,
 }
 
 void
-cib_failcount_updated(const HA_Message *msg, int call_id, int rc,
-		   crm_data_t *output, void *user_data)
+cib_failcount_updated(xmlNode *msg, int call_id, int rc,
+		      xmlNode *output, void *user_data)
 {
 	trigger_graph();
 
