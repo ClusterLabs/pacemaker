@@ -152,7 +152,7 @@ static struct addrinfo *get_ipv6_host(char *target, struct sockaddr_in6 *dst)
 
 	ret_ga = getaddrinfo(target, NULL, &hints, &res);
 	if (ret_ga) {
-		fprintf(stderr, "ping6: %s\n", gai_strerror(ret_ga));
+		fprintf(stderr, "ping6: %s", gai_strerror(ret_ga));
 		exit(1);
 	}
 	if (res->ai_canonname)
@@ -176,7 +176,6 @@ static gboolean ping_open(ping_node *node)
 
 	struct addrinfo *res = get_ipv6_host(node->host, &(node->addr.v6));
 	
-	printf("%d %d %d\n", res->ai_family, res->ai_socktype, res->ai_protocol);
 	node->fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 
 	/* set recv buf for broadcast pings */
@@ -221,16 +220,6 @@ static gboolean ping_close(ping_node *node)
     return (tmp_fd == -1);
 }
 
-#define PING_MAX 1024
-char ping_pkt[PING_MAX];
-static int get_header_len(ping_node *node) 
-{
-    if(node->type == AF_INET6) {
-	return sizeof(struct icmp6_hdr);
-    }
-    return sizeof(struct icmp);
-}
-
 #define MAXPACKETLEN	131072
 #define ICMP6ECHOLEN	8	/* icmp echo header len excluding time */
 #define ICMP6ECHOTMLEN  20
@@ -238,61 +227,63 @@ static int get_header_len(ping_node *node)
 #define	EXTRA		256	/* for AH and various other headers. weird. */
 #define	IP6LEN		40
 
-static const char *
+const char *get_addr_text(struct sockaddr *addr, int addrlen);
+
+const char *
 get_addr_text(struct sockaddr *addr, int addrlen)
 {
 	static char buf[1024];
-	int flag = 0;
-
-	if (getnameinfo(addr, addrlen, buf, sizeof(buf), NULL, 0, flag) == 0)
+	if (getnameinfo(addr, addrlen, buf, sizeof(buf), NULL, 0, NI_NUMERICHOST | NI_NUMERICSERV) == 0)
 		return (buf);
 	else
 		return "?";
 }
 
 static void
-dump_v6_echo(u_char *buf, int cc, struct msghdr *mhdr)
+dump_v6_echo(ping_node *node, u_char *buf, int cc, struct msghdr *mhdr)
 {
+	int fromlen;
+	const char *dest = node->host;
 	struct icmp6_hdr *icp;
 	struct sockaddr *from;
-	int fromlen;
-	u_int16_t seq;
 
 	if (!mhdr || !mhdr->msg_name ||
 	    mhdr->msg_namelen != sizeof(struct sockaddr_in6) ||
 	    ((struct sockaddr *)mhdr->msg_name)->sa_family != AF_INET6) {
-	    crm_warn("invalid peername\n");
+	    crm_warn("invalid peername");
 	    return;
 	}
 
 	from = (struct sockaddr *)mhdr->msg_name;
 	fromlen = mhdr->msg_namelen;
+	/* dest = get_addr_text(from, fromlen); */
+	
 	if (cc < (int)sizeof(struct icmp6_hdr)) {
-	    crm_warn("packet too short (%d bytes) from %s\n", cc, get_addr_text(from, fromlen));
+	    crm_warn("packet too short (%d bytes) from %s", cc, dest);
 	    return;
 	}
 	icp = (struct icmp6_hdr *)buf;
 
 	if (icp->icmp6_type == ICMP6_ECHO_REPLY /* && myechoreply(icp) */) {
-	    seq = ntohs(icp->icmp6_seq);
-	    
-	    crm_debug("Code=%d, seq=%d, id=%d, check=%d\n",
-		   icp->icmp6_code, ntohs(icp->icmp6_seq), icp->icmp6_id, icp->icmp6_cksum);
-	    
-	    crm_debug("%d bytes from %s, icmp_seq=%u: %s", cc,
-		   get_addr_text(from, fromlen), seq, (char*)(buf + ICMP6ECHOLEN));
+	    u_int16_t seq = ntohs(icp->icmp6_seq);
+	    crm_debug("%d bytes from %s, icmp_seq=%u: %s", cc, dest, seq, (char*)(buf + ICMP6ECHOLEN));
+
+	} else {
+	    crm_warn("Bad echo type: %d, code=%d, seq=%d, id=%d, check=%d", icp->icmp6_type,
+		     icp->icmp6_code, ntohs(icp->icmp6_seq), icp->icmp6_id, icp->icmp6_cksum);
 	}
+	
 }
 
 static void
-dump_v4_echo(u_char *buf, int cc, struct msghdr *mhdr)
+dump_v4_echo(ping_node *node, u_char *buf, int cc, struct msghdr *mhdr)
 {
-	char *dest;
 	int iplen, fromlen;
+	const char *dest = node->host;
 
 	struct ip *ip;
 	struct icmp *icp;
-	struct sockaddr_in *from;
+	struct sockaddr *from;
 
 	if (!mhdr || !mhdr->msg_name ||
 	    mhdr->msg_namelen != sizeof(struct sockaddr_in) ||
@@ -302,9 +293,9 @@ dump_v4_echo(u_char *buf, int cc, struct msghdr *mhdr)
 	}
 
 	fromlen = mhdr->msg_namelen;
-	from = (struct sockaddr_in *)mhdr->msg_name;
-	/* inet_ntoa(from->sin_family, &from->sin_addr, dest, sizeof(dest)); */
-	dest = inet_ntoa(from->sin_addr);
+	from = (struct sockaddr *)mhdr->msg_name;
+	/* dest = get_addr_text(from, fromlen); */
+	/* inet_ntop(AF_INET, &(from->sin_addr), dest, sizeof(dest)); */
 
 	ip = (struct ip*)buf;
 	iplen = ip->ip_hl * 4;
@@ -363,15 +354,15 @@ ping_read(ping_node *node, int *lenp)
     m.msg_control = (caddr_t)buf;
     m.msg_controllen = sizeof(buf);
 
-    crm_debug("reading...");
+    crm_debug_2("reading...");
     cc = recvmsg(node->fd, &m, 0);
-    crm_debug("Got %d bytes", cc);
+    crm_debug_2("Got %d bytes", cc);
     
     if (cc > 0) {
 	if(node->type == AF_INET6) {
-	    dump_v6_echo(packet, cc, &m);
+	    dump_v6_echo(node, packet, cc, &m);
 	} else {
-	    dump_v4_echo(packet, cc, &m);
+	    dump_v4_echo(node, packet, cc, &m);
 	}
 	
     } else if(cc < 0) {
@@ -420,7 +411,7 @@ ping_write(ping_node *node, const char *data, size_t size)
 	} else {
 	    struct icmp *icp;
 	    namelen = sizeof(struct sockaddr_in);
-	    cc = get_header_len(node) + 11;
+	    cc = sizeof(struct icmp) + 11;
 
 	    icp = (struct icmp *)outpack;
 	    memset(icp, 0, sizeof(*icp));
@@ -451,7 +442,7 @@ ping_write(ping_node *node, const char *data, size_t size)
 	    if (i < 0) {
 		cl_perror("sendmsg");
 	    }
-	    crm_err("Wrote only %d of %d chars\n", i, cc);
+	    crm_err("Wrote only %d of %d chars", i, cc);
 
 	} else {
 	    char dest[256];
