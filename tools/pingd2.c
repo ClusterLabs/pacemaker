@@ -109,13 +109,13 @@ in_cksum (u_short *addr, size_t len)
 	return answer;
 }
 
-static ping_node *ping_new(const char *host, gboolean ipv6)
+static ping_node *ping_new(const char *host)
 {
     ping_node *node;
     
     crm_malloc0(node, sizeof(ping_node));
 
-    if(ipv6) {
+    if(strstr(host, ":")) {
 	node->type = AF_INET6;
     } else {
 	node->type = AF_INET;
@@ -478,11 +478,7 @@ main(int argc, char ** argv)
 				break;
 			case 'h':
 				host = crm_strdup(optarg);
-				if(strstr(host, ":")) {
-				    p = ping_new(host, TRUE);
-				} else {
-				    p = ping_new(host, FALSE);
-				}
+				p = ping_new(host);
 				ping_list = g_list_append(ping_list, p);
 				break;
 			case '?':		/* Help message */
