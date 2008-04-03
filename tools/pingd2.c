@@ -68,7 +68,6 @@ typedef struct ping_node_s {
 		struct sockaddr_in6 v6;   	/* ipv6 ping addr */
 	} addr;
 	char			*host;
-	struct protoent		*proto;
 } ping_node;
 
 /*
@@ -111,23 +110,13 @@ in_cksum (u_short *addr, size_t len)
 static ping_node *ping_new(const char *host, gboolean ipv6)
 {
     ping_node *node;
-    const char *protocol = NULL;
     
     crm_malloc0(node, sizeof(ping_node));
 
     if(ipv6) {
 	node->type = AF_INET6;
-	protocol = "ipv6-icmp";
     } else {
 	node->type = AF_INET;
-	protocol = "icmp";
-    }
-    
-    node->proto = getprotobyname(protocol);
-    if(node->proto == NULL) {
-	cl_perror("Unknown protocol %s", protocol);
-	crm_free(node);
-	return NULL;
     }
     
     node->host = crm_strdup(host);
@@ -136,69 +125,59 @@ static ping_node *ping_new(const char *host, gboolean ipv6)
     return node;
 }
 
-static struct addrinfo *get_ipv6_host(char *target, struct sockaddr_in6 *dst) 
-{
-	int ret_ga;
-	char *hostname;
-	struct addrinfo *res;
-	struct addrinfo hints;
-
-	/* getaddrinfo */
-	bzero(&hints, sizeof(struct addrinfo));
-	/* hints.ai_flags = AI_CANONNAME; */
-	hints.ai_family = AF_INET6;
-	hints.ai_socktype = SOCK_RAW;
-	hints.ai_protocol = IPPROTO_ICMPV6;
-
-	ret_ga = getaddrinfo(target, NULL, &hints, &res);
-	if (ret_ga) {
-		fprintf(stderr, "ping6: %s", gai_strerror(ret_ga));
-		exit(1);
-	}
-	if (res->ai_canonname)
-		hostname = res->ai_canonname;
-	else
-		hostname = target;
-
-	if (!res->ai_addr) {
-	    fprintf(stderr, "getaddrinfo failed");
-	    exit(1);
-	}
-	
-	memcpy(dst, res->ai_addr, res->ai_addrlen);
-	return res;
-}
-
 static gboolean ping_open(ping_node *node) 
 {
+    int ret_ga;
+    char *hostname;
+    struct addrinfo *res;
+    struct addrinfo hints;
+
+    /* getaddrinfo */
+    bzero(&hints, sizeof(struct addrinfo));
+    hints.ai_flags = AI_CANONNAME;
+    hints.ai_family = node->type;
+    hints.ai_socktype = SOCK_RAW;
+
+    if(node->type == AF_INET6) {
+	hints.ai_protocol = IPPROTO_ICMPV6;
+    } else {
+	hints.ai_protocol = IPPROTO_ICMP;
+    }
+	
+    ret_ga = getaddrinfo(node->host, NULL, &hints, &res);
+    if (ret_ga) {
+	crm_err("getaddrinfo: %s", gai_strerror(ret_ga));
+	return -1;
+    }
+	
+    if (res->ai_canonname)
+	hostname = res->ai_canonname;
+    else
+	hostname = node->host;
+
+    crm_debug("Got address %s for %s", hostname, node->host);
+    
+    if (!res->ai_addr) {
+	fprintf(stderr, "getaddrinfo failed");
+	exit(1);
+    }
+	
+    memcpy(&(node->addr.raw), res->ai_addr, res->ai_addrlen);
+    node->fd = socket(hints.ai_family, hints.ai_socktype, hints.ai_protocol);
+    /* node->fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol); */
+
+    if(node->fd < 0) {
+	cl_perror("Can't open socket to %s", hostname);
+	return FALSE;
+    }
+
     if(node->type == AF_INET6) {
 	int sockopt;
-
-	struct addrinfo *res = get_ipv6_host(node->host, &(node->addr.v6));
-	
-	node->fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 
 	/* set recv buf for broadcast pings */
 	sockopt = 48 * 1024;
 	setsockopt(node->fd, SOL_SOCKET, SO_RCVBUF, (char *) &sockopt, sizeof(sockopt));
-
-    } else {
-	struct hostent *hent = gethostbyname2(node->host, node->type);
-	if (hent == NULL) {
-	    cl_perror("Unknown host %s", node->host);
-	    return FALSE;
-	}
-
-    	node->addr.v4.sin_family = node->type;
-	memcpy(&node->addr.v4.sin_addr, hent->h_addr, hent->h_length);
-	
-	node->fd = socket(node->type, SOCK_RAW, node->proto->p_proto);	
     }    
-
-    if(node->fd < 0) {
-	cl_perror("Can't open socket");
-	return FALSE;
-    }
 
     return TRUE;
 }
@@ -227,23 +206,24 @@ static gboolean ping_close(ping_node *node)
 #define	EXTRA		256	/* for AH and various other headers. weird. */
 #define	IP6LEN		40
 
-const char *get_addr_text(struct sockaddr *addr, int addrlen);
+char *get_addr_text(struct sockaddr *addr, int addrlen);
 
-const char *
+char *
 get_addr_text(struct sockaddr *addr, int addrlen)
 {
-	static char buf[1024];
-	if (getnameinfo(addr, addrlen, buf, sizeof(buf), NULL, 0, NI_NUMERICHOST | NI_NUMERICSERV) == 0)
-		return (buf);
-	else
-		return "?";
+    char *name = NULL;
+    crm_malloc0(name, 1024);
+    if (getnameinfo(addr, addrlen, name, 1024, NULL, 0, NI_NUMERICHOST | NI_NUMERICSERV) == 0)
+	return (name);
+
+    return crm_strdup("?");
 }
 
 static void
-dump_v6_echo(ping_node *node, u_char *buf, int cc, struct msghdr *mhdr)
+dump_v6_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *mhdr)
 {
 	int fromlen;
-	const char *dest = node->host;
+	char *dest = node->host;
 	struct icmp6_hdr *icp;
 	struct sockaddr *from;
 
@@ -254,29 +234,30 @@ dump_v6_echo(ping_node *node, u_char *buf, int cc, struct msghdr *mhdr)
 	    return;
 	}
 
-	from = (struct sockaddr *)mhdr->msg_name;
 	fromlen = mhdr->msg_namelen;
+	from = (struct sockaddr *)mhdr->msg_name;
 	/* dest = get_addr_text(from, fromlen); */
 	
-	if (cc < (int)sizeof(struct icmp6_hdr)) {
-	    crm_warn("packet too short (%d bytes) from %s", cc, dest);
+	if (bytes < (int)sizeof(struct icmp6_hdr)) {
+	    crm_warn("packet too short (%d bytes) from %s", bytes, dest);
+	    crm_free(dest);
 	    return;
 	}
 	icp = (struct icmp6_hdr *)buf;
 
 	if (icp->icmp6_type == ICMP6_ECHO_REPLY /* && myechoreply(icp) */) {
 	    u_int16_t seq = ntohs(icp->icmp6_seq);
-	    crm_debug("%d bytes from %s, icmp_seq=%u: %s", cc, dest, seq, (char*)(buf + ICMP6ECHOLEN));
+	    crm_debug("%d bytes from %s, icmp_seq=%u: %s", bytes, dest, seq, (char*)(buf + ICMP6ECHOLEN));
 
 	} else {
 	    crm_warn("Bad echo type: %d, code=%d, seq=%d, id=%d, check=%d", icp->icmp6_type,
 		     icp->icmp6_code, ntohs(icp->icmp6_seq), icp->icmp6_id, icp->icmp6_cksum);
 	}
-	
+	/* crm_free(dest); */
 }
 
 static void
-dump_v4_echo(ping_node *node, u_char *buf, int cc, struct msghdr *mhdr)
+dump_v4_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *mhdr)
 {
 	int iplen, fromlen;
 	const char *dest = node->host;
@@ -300,8 +281,8 @@ dump_v4_echo(ping_node *node, u_char *buf, int cc, struct msghdr *mhdr)
 	ip = (struct ip*)buf;
 	iplen = ip->ip_hl * 4;
 	
-	if (cc < (iplen + sizeof(struct icmp))) {
-	    crm_warn("packet too short (%d bytes) from %s\n", cc, dest);
+	if (bytes < (iplen + sizeof(struct icmp))) {
+	    crm_warn("packet too short (%d bytes) from %s\n", bytes, dest);
 	    return;
 	}
 
@@ -309,7 +290,7 @@ dump_v4_echo(ping_node *node, u_char *buf, int cc, struct msghdr *mhdr)
 	icp = (struct icmp*)(buf + iplen);
 
 	if (icp->icmp_type == ICMP_ECHOREPLY /* && myechoreply(icp) */) {
-	    crm_debug("%d bytes from %s, icmp_seq=%u: %s", cc,
+	    crm_debug("%d bytes from %s, icmp_seq=%u: %s", bytes,
 		      dest, ntohs(icp->icmp_seq), icp->icmp_data);
 	} else {
 	    crm_warn("Bad echo type: %d, code=%d, seq=%d, id=%d, check=%d", icp->icmp_type,
@@ -320,7 +301,7 @@ dump_v4_echo(ping_node *node, u_char *buf, int cc, struct msghdr *mhdr)
 static void
 ping_read(ping_node *node, int *lenp)
 {
-    int cc;
+    int bytes;
     int fromlen;
     union {
 	    struct sockaddr_in6 v6;
@@ -355,17 +336,17 @@ ping_read(ping_node *node, int *lenp)
     m.msg_controllen = sizeof(buf);
 
     crm_debug_2("reading...");
-    cc = recvmsg(node->fd, &m, 0);
-    crm_debug_2("Got %d bytes", cc);
+    bytes = recvmsg(node->fd, &m, 0);
+    crm_debug_2("Got %d bytes", bytes);
     
-    if (cc > 0) {
+    if (bytes > 0) {
 	if(node->type == AF_INET6) {
-	    dump_v6_echo(node, packet, cc, &m);
+	    dump_v6_echo(node, packet, bytes, &m);
 	} else {
-	    dump_v4_echo(node, packet, cc, &m);
+	    dump_v4_echo(node, packet, bytes, &m);
 	}
 	
-    } else if(cc < 0) {
+    } else if(bytes < 0) {
 	cl_perror("recvmsg failed");
 
     } else {
@@ -377,7 +358,7 @@ static int
 ping_write(ping_node *node, const char *data, size_t size)
 {
 	struct iovec iov[2];
-	int i, cc, namelen;
+	int i, bytes, namelen;
 	static int ntransmitted = 5;
 	struct msghdr smsghdr;
 	u_char outpack[MAXPACKETLEN];
@@ -395,7 +376,7 @@ ping_write(ping_node *node, const char *data, size_t size)
 	if(node->type == AF_INET6) {
 	    struct icmp6_hdr *icp;
 	    namelen = sizeof(struct sockaddr_in6);
-	    cc = ICMP6ECHOLEN + DEFDATALEN;
+	    bytes = ICMP6ECHOLEN + DEFDATALEN;
 
 	    icp = (struct icmp6_hdr *)outpack;
 	    memset(icp, 0, sizeof(*icp));
@@ -411,7 +392,7 @@ ping_write(ping_node *node, const char *data, size_t size)
 	} else {
 	    struct icmp *icp;
 	    namelen = sizeof(struct sockaddr_in);
-	    cc = sizeof(struct icmp) + 11;
+	    bytes = sizeof(struct icmp) + 11;
 
 	    icp = (struct icmp *)outpack;
 	    memset(icp, 0, sizeof(*icp));
@@ -423,7 +404,7 @@ ping_write(ping_node *node, const char *data, size_t size)
 	    icp->icmp_seq = ntohs(node->iseq);
 
 	    memcpy(icp->icmp_data, "beekhof-v4", 10);
-	    icp->icmp_cksum = in_cksum((u_short *)icp, cc);
+	    icp->icmp_cksum = in_cksum((u_short *)icp, bytes);
 	}
 
 	
@@ -432,17 +413,17 @@ ping_write(ping_node *node, const char *data, size_t size)
 	smsghdr.msg_namelen = namelen;
 	memset(&iov, 0, sizeof(iov));
 	iov[0].iov_base = (caddr_t)outpack;
-	iov[0].iov_len = cc;
+	iov[0].iov_len = bytes;
 	smsghdr.msg_iov = iov;
 	smsghdr.msg_iovlen = 1;
 
 	i = sendmsg(node->fd, &smsghdr, 0);
 
-	if (i < 0 || i != cc)  {
+	if (i < 0 || i != bytes)  {
 	    if (i < 0) {
 		cl_perror("sendmsg");
 	    }
-	    crm_err("Wrote only %d of %d chars", i, cc);
+	    crm_err("Wrote only %d of %d chars", i, bytes);
 
 	} else {
 	    char dest[256];
