@@ -257,7 +257,7 @@ get_addr_text(struct sockaddr *addr, int addrlen)
 }
 
 static void
-dump_echo(u_char *buf, int cc, struct msghdr *mhdr)
+dump_v6_echo(u_char *buf, int cc, struct msghdr *mhdr)
 {
 	struct icmp6_hdr *icp;
 	struct sockaddr *from;
@@ -282,24 +282,65 @@ dump_echo(u_char *buf, int cc, struct msghdr *mhdr)
 	if (icp->icmp6_type == ICMP6_ECHO_REPLY /* && myechoreply(icp) */) {
 	    seq = ntohs(icp->icmp6_seq);
 	    
-	    printf("Code=%d, seq=%d, id=%d, check=%d\n",
+	    crm_debug("Code=%d, seq=%d, id=%d, check=%d\n",
 		   icp->icmp6_code, ntohs(icp->icmp6_seq), icp->icmp6_id, icp->icmp6_cksum);
 	    
-	    printf("%d bytes from %s, icmp_seq=%u: %s", cc,
+	    crm_debug("%d bytes from %s, icmp_seq=%u: %s", cc,
 		   get_addr_text(from, fromlen), seq, (char*)(buf + ICMP6ECHOLEN));
 	}
-
-	putchar('\n');
-	fflush(stdout);
 }
 
-static void get_ping(int s) 
+static void
+dump_v4_echo(u_char *buf, int cc, struct msghdr *mhdr)
+{
+	char *dest;
+	int iplen, fromlen;
+
+	struct ip *ip;
+	struct icmp *icp;
+	struct sockaddr_in *from;
+
+	if (!mhdr || !mhdr->msg_name ||
+	    mhdr->msg_namelen != sizeof(struct sockaddr_in) ||
+	    ((struct sockaddr *)mhdr->msg_name)->sa_family != AF_INET) {
+	    crm_warn("invalid peername\n");
+	    return;
+	}
+
+	fromlen = mhdr->msg_namelen;
+	from = (struct sockaddr_in *)mhdr->msg_name;
+	/* inet_ntoa(from->sin_family, &from->sin_addr, dest, sizeof(dest)); */
+	dest = inet_ntoa(from->sin_addr);
+
+	ip = (struct ip*)buf;
+	iplen = ip->ip_hl * 4;
+	
+	if (cc < (iplen + sizeof(struct icmp))) {
+	    crm_warn("packet too short (%d bytes) from %s\n", cc, dest);
+	    return;
+	}
+
+	/* Check the IP header */
+	icp = (struct icmp*)(buf + iplen);
+
+	if (icp->icmp_type == ICMP_ECHOREPLY /* && myechoreply(icp) */) {
+	    crm_debug("%d bytes from %s, icmp_seq=%u: %s", cc,
+		      dest, ntohs(icp->icmp_seq), icp->icmp_data);
+	} else {
+	    crm_warn("Bad echo type: %d, code=%d, seq=%d, id=%d, check=%d", icp->icmp_type,
+		     icp->icmp_code, ntohs(icp->icmp_seq), icp->icmp_id, icp->icmp_cksum);
+	}
+}
+
+static void get_ping(ping_node *node) 
 {
     int cc;
     int fromlen;
-    struct sockaddr_in6 from;
+    union {
+	    struct sockaddr_in6 v6;
+	    struct sockaddr_in  v4;
+    } from;
     
-
     struct msghdr m;
     struct cmsghdr *cm;
     u_char buf[1024];
@@ -308,37 +349,16 @@ static void get_ping(int s)
     int packlen;
     u_char *packet;
     packlen = DEFDATALEN + IP6LEN + ICMP6ECHOLEN + EXTRA;
-    
-    if (!(packet = (u_char *)malloc((u_int)packlen))) {
-	crm_err("Unable to allocate packet");
-	return;
+
+    crm_malloc0(packet, packlen);
+    if(node->type == AF_INET6) {
+	fromlen = sizeof(from.v6);
+    } else {
+	fromlen = sizeof(from.v4);
     }
     
-#if 0
-
-    fd_set *fdmaskp;
-    int fdmasks;
-    fdmasks = howmany(s + 1, NFDBITS) * sizeof(fd_mask);
-    if ((fdmaskp = malloc(fdmasks)) == NULL)
-	err(1, "malloc");
-    
-    
-    memset(fdmaskp, 0, fdmasks);
-    FD_SET(s, fdmaskp);
-    cc = select(s + 1, fdmaskp, NULL, NULL, NULL);
-    if (cc < 0) {
-	if (errno != EINTR) {
-	    warn("select");
-	    sleep(1);
-	}
-	return;
-
-    } else if (cc == 0)
-	return;
-#endif
-    fromlen = sizeof(from);
     m.msg_name = (caddr_t)&from;
-    m.msg_namelen = sizeof(from);
+    m.msg_namelen = sizeof(fromlen);
     memset(&iov, 0, sizeof(iov));
     iov[0].iov_base = (caddr_t)packet;
     iov[0].iov_len = packlen;
@@ -348,26 +368,24 @@ static void get_ping(int s)
     m.msg_control = (caddr_t)buf;
     m.msg_controllen = sizeof(buf);
 
-    cc = recvmsg(s, &m, 0);
-    if (cc < 0) {
-	if (errno != EINTR) {
-	    crm_warn("recvmsg");
-	    sleep(1);
+    crm_debug("reading...");
+    cc = recvmsg(node->fd, &m, 0);
+    crm_debug("Got %d bytes", cc);
+    
+    if (cc > 0) {
+	if(node->type == AF_INET6) {
+	    dump_v6_echo(packet, cc, &m);
+	} else {
+	    dump_v4_echo(packet, cc, &m);
 	}
-	return;
-    } else if (cc == 0) {
-	/*
-	 * receive control messages only. Process the
-	 * exceptions (currently the only possiblity is
-	 * a path MTU notification.)
-	 */
-	return;
+	
+    } else if(cc < 0) {
+	cl_perror("recvmsg failed");
+
     } else {
-	/*
-	 * an ICMPv6 message (probably an echoreply) arrived.
-	 */
-	dump_echo(packet, cc, &m);
+	crm_err("Unexpected reply");
     }
+    
 }
 
 static void *
@@ -392,10 +410,12 @@ ping_read(ping_node *node, int *lenp)
 	
 	if(node->type == AF_INET6) {
 	    /* inet_ntop(node->type, &node->addr.v6.sin6_addr, dest, 256); */
-	    get_ping(node->fd);
+	    get_ping(node);
 	    return NULL;
 
 	} else {
+	    get_ping(node);
+	    return NULL;
 	    inet_ntop(node->type, &node->addr.v4.sin_addr, dest, 256);
 	}
 		
@@ -450,54 +470,86 @@ ping_read(ping_node *node, int *lenp)
 }
 
 static int
-pinger(int s, struct sockaddr_in6 *dst, int ident)
+pinger(ping_node *node)
 {
-	struct icmp6_hdr *icp;
 	struct iovec iov[2];
-	int i, cc;
-	struct icmp6_nodeinfo *nip;
+	int i, cc, namelen;
 	static int ntransmitted = 5;
-	int seq;
 	struct msghdr smsghdr;
 	u_char outpack[MAXPACKETLEN];
 
 	 /* optional */
+#if 0
 	u_char *datap;
 	datap = &outpack[ICMP6ECHOLEN + ICMP6ECHOTMLEN];
 	for (i = ICMP6ECHOLEN; i < MAXPACKETLEN; ++i)
 	    *datap++ = i;
+#endif
 	
-	icp = (struct icmp6_hdr *)outpack;
-	nip = (struct icmp6_nodeinfo *)outpack;
-	memset(icp, 0, sizeof(*icp));
-	icp->icmp6_cksum = 0;
-	seq = ntransmitted++;
+	node->iseq = ntransmitted++;
 
-	icp->icmp6_type = ICMP6_ECHO_REQUEST;
-	icp->icmp6_code = 0;
-	icp->icmp6_id = htons(ident);
-	icp->icmp6_seq = ntohs(seq);
-	memcpy(&outpack[ICMP6ECHOLEN], "beekhof", 7);
-	cc = ICMP6ECHOLEN + DEFDATALEN;
+	if(node->type == AF_INET6) {
+	    struct icmp6_hdr *icp;
+	    namelen = sizeof(struct sockaddr_in6);
+	    cc = ICMP6ECHOLEN + DEFDATALEN;
+
+	    icp = (struct icmp6_hdr *)outpack;
+	    memset(icp, 0, sizeof(*icp));
+	    
+	    icp->icmp6_code = 0;
+	    icp->icmp6_cksum = 0;
+	    icp->icmp6_type = ICMP6_ECHO_REQUEST;
+	    icp->icmp6_id = htons(node->ident);
+	    icp->icmp6_seq = ntohs(node->iseq);
+
+	    memcpy(&outpack[ICMP6ECHOLEN], "beekhof-v6", 10);
+	    
+	} else {
+	    struct icmp *icp;
+	    namelen = sizeof(struct sockaddr_in);
+	    cc = get_header_len(node) + 11;
+
+	    icp = (struct icmp *)outpack;
+	    memset(icp, 0, sizeof(*icp));
+
+	    icp->icmp_code = 0;
+	    icp->icmp_cksum = 0;
+	    icp->icmp_type = ICMP_ECHO;
+	    icp->icmp_id = htons(node->ident);
+	    icp->icmp_seq = ntohs(node->iseq);
+
+	    memcpy(icp->icmp_data, "beekhof-v4", 10);
+	    icp->icmp_cksum = in_cksum((u_short *)icp, cc);
+	}
+
 	
 	memset(&smsghdr, 0, sizeof(smsghdr));
-	smsghdr.msg_name = (caddr_t)dst;
-	smsghdr.msg_namelen = sizeof(struct sockaddr_in6);
+	smsghdr.msg_name = (caddr_t)&(node->addr);
+	smsghdr.msg_namelen = namelen;
 	memset(&iov, 0, sizeof(iov));
 	iov[0].iov_base = (caddr_t)outpack;
 	iov[0].iov_len = cc;
 	smsghdr.msg_iov = iov;
 	smsghdr.msg_iovlen = 1;
 
-	i = sendmsg(s, &smsghdr, 0);
+	i = sendmsg(node->fd, &smsghdr, 0);
 
 	if (i < 0 || i != cc)  {
 	    if (i < 0) {
-		crm_warn("sendmsg");
+		cl_perror("sendmsg");
 	    }
-	    crm_err("ping6: wrote %d chars, ret=%d\n", cc, i);
-	}
+	    crm_err("Wrote only %d of %d chars\n", i, cc);
 
+	} else {
+	    char dest[256];
+	    if(node->type == AF_INET6) {
+		inet_ntop(node->type, &node->addr.v6.sin6_addr, dest, 256);
+	    } else {
+		inet_ntop(node->type, &node->addr.v4.sin_addr, dest, 256);
+	    }
+	    crm_debug("Sent %d bytes to %s", i, dest);
+	}
+	
 	return(0);
 }
 
@@ -519,11 +571,14 @@ ping_write(ping_node *node, const char *data, size_t size)
 
 	if(node->type == AF_INET6) {
 	    crm_debug("Sending ipv6 ping");
-	    pinger(node->fd, &(node->addr.v6), node->ident);
-	    goto out;
+	    pinger(node);
+	    return TRUE;;
 
 	} else {
 	    crm_debug("Sending ipv4 ping");
+	    pinger(node);
+	    return TRUE;;
+
 	    hdr->v4.icmp_type = ICMP_ECHO;
 	    hdr->v4.icmp_code = 0;
 	    hdr->v4.icmp_id = node->ident;
@@ -542,7 +597,6 @@ ping_write(ping_node *node, const char *data, size_t size)
 		return FALSE;
 	}
 
-  out:
 	if(node->type == AF_INET6) {
 	    inet_ntop(node->type, &node->addr.v6.sin6_addr, dest, 256);
 	} else {
