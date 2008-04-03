@@ -200,12 +200,6 @@ static gboolean ping_open(ping_node *node)
 	cl_perror("Can't open socket");
 	return FALSE;
     }
-    
-#if 0
-    if (fcntl(node->fd, F_SETFD, FD_CLOEXEC)) {
-	cl_perror("Error setting the close-on-exec flag");
-    }
-#endif
 
     return TRUE;
 }
@@ -332,7 +326,8 @@ dump_v4_echo(u_char *buf, int cc, struct msghdr *mhdr)
 	}
 }
 
-static void get_ping(ping_node *node) 
+static void
+ping_read(ping_node *node, int *lenp)
 {
     int cc;
     int fromlen;
@@ -385,92 +380,10 @@ static void get_ping(ping_node *node)
     } else {
 	crm_err("Unexpected reply");
     }
-    
-}
-
-static void *
-ping_read(ping_node *node, int *lenp)
-{
-    char		dest[PING_MAX];
-	union {
-		char		cbuf[PING_MAX];
-		struct ip	ip;
-		struct icmp	v4;
-		
-	} hdr;
-	char *			msgstart;
-	socklen_t		addr_len = sizeof(struct sockaddr);
-   	struct sockaddr_in	their_addr; /* connector's addr information */
-	struct ip *		ip;
-	struct icmp		icp;
-	int			numbytes;
-	int			hlen;
-	int			pktlen;
-	int cmp_header_len = get_header_len(node);
-	
-	if(node->type == AF_INET6) {
-	    /* inet_ntop(node->type, &node->addr.v6.sin6_addr, dest, 256); */
-	    get_ping(node);
-	    return NULL;
-
-	} else {
-	    get_ping(node);
-	    return NULL;
-	    inet_ntop(node->type, &node->addr.v4.sin_addr, dest, 256);
-	}
-		
-  ReRead:	/* We recv lots of packets that aren't ours */
-
-	memset(&hdr, 0, PING_MAX);
-	
-	numbytes=recvfrom(node->fd, &hdr.cbuf, sizeof(hdr.cbuf)-1, 0, (struct sockaddr *)&their_addr, &addr_len);
-	if (numbytes < 0) {
-		if (errno != EINTR) {
-		    cl_perror("Error receiving from socket");
-		}
-		return NULL;
-	}
-	
-	
-	crm_debug("got %d byte packet from %s", numbytes, dest);
-	
-	/* Avoid potential buffer overruns */
-	hdr.cbuf[numbytes] = EOS;
-	/* Check the IP header */
-	ip = &hdr.ip;
-	hlen = ip->ip_hl * 4;
-	
-	if (numbytes < hlen + cmp_header_len) {
-	    crm_warn("ping packet too short (%d bytes) from %s, hlen=%d",
-		     numbytes, inet_ntoa(*(struct in_addr *) & their_addr.sin_addr.s_addr), hlen);
-	    return NULL;
-	}
-	
-	/* Now the ICMP part */	/* (there may be a better way...) */
-	memcpy(&icp, (hdr.cbuf + hlen), sizeof(icp));
-	
-	if (icp.icmp_type != ICMP_ECHOREPLY || icp.icmp_id != node->ident) {
-	    goto ReRead;	/* Not one of ours */
-	}
-	
-	crm_debug("got %d byte packet from %s", numbytes, get_addr_text((struct sockaddr *)&their_addr, addr_len));
-
-	msgstart = (hdr.cbuf + hlen + cmp_header_len);
-
-	if (numbytes > 0) {
-	    crm_debug("%s", msgstart);
-	}
-	
-	pktlen = numbytes - hlen - cmp_header_len;
-
-	memcpy(ping_pkt, hdr.cbuf + hlen + cmp_header_len, pktlen);
-	ping_pkt[pktlen] = 0;
-	*lenp = pktlen + 1;
-	return (ping_pkt);
 }
 
 static int
-pinger(ping_node *node)
+ping_write(ping_node *node, const char *data, size_t size)
 {
 	struct iovec iov[2];
 	int i, cc, namelen;
@@ -551,61 +464,6 @@ pinger(ping_node *node)
 	}
 	
 	return(0);
-}
-
-static int
-ping_write(ping_node *node, const char *data, size_t size)
-{
-	int			rc;
-	union {
-		char*			buf;
-		struct icmp		v4;
-		struct icmp6_hdr        v6;
-	} *hdr;
-	size_t			pktsize;
-	char dest[256];
-	
-	pktsize = size + get_header_len(node);
-
-	crm_malloc0(hdr, pktsize);
-
-	if(node->type == AF_INET6) {
-	    crm_debug("Sending ipv6 ping");
-	    pinger(node);
-	    return TRUE;;
-
-	} else {
-	    crm_debug("Sending ipv4 ping");
-	    pinger(node);
-	    return TRUE;;
-
-	    hdr->v4.icmp_type = ICMP_ECHO;
-	    hdr->v4.icmp_code = 0;
-	    hdr->v4.icmp_id = node->ident;
-	    hdr->v4.icmp_seq = htons(node->iseq);
-	    memcpy(hdr->v4.icmp_data, data, size);
-
-	    hdr->v4.icmp_cksum = in_cksum((u_short *)&hdr->v4, pktsize);
-	    (node->iseq)++;
-
-	}
-
-	rc = sendto(node->fd, hdr, pktsize, MSG_DONTWAIT, &(node->addr.raw), sizeof(struct sockaddr));
-	if (rc != (ssize_t) pktsize) {
-		cl_perror("Error sending packet");
-		crm_free(hdr);
-		return FALSE;
-	}
-
-	if(node->type == AF_INET6) {
-	    inet_ntop(node->type, &node->addr.v6.sin6_addr, dest, 256);
-	} else {
-	    inet_ntop(node->type, &node->addr.v4.sin_addr, dest, 256);
-	}
-	
-	crm_debug("sent %d bytes to %s: %s", rc, dest, data);
-	crm_free(hdr);
-	return TRUE;
 }
 
 static void
