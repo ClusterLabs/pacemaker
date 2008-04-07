@@ -1,4 +1,4 @@
- <transition_graph cluster-delay="120s" batch-limit="30" transition_id="0">
+ <transition_graph cluster-delay="120s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
    <synapse id="0">
      <action_set>
        <rsc_op id="9" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="test02" on_node_uuid="f75e684a-be1e-4036-89e5-a14f8dcdc947">

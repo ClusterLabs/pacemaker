@@ -1,4 +1,4 @@
- <transition_graph cluster-delay="60s" batch-limit="30" transition_id="0">
+ <transition_graph cluster-delay="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
    <synapse id="0">
      <action_set>
        <rsc_op id="11" operation="stop" operation_key="dollies:0_stop_0" on_node="ssgtest1a" on_node_uuid="94ef659b-5fd8-4d6b-b0ed-3b40339f8132">

@@ -240,6 +240,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 				INFINITY, tg_restart, "Transition Active", NULL);
 
 		}  else {
+			const char *value = NULL;
 			crm_data_t *graph_data = xml_data;
 			crm_debug("Processing graph derived from %s", graph_input);
 
@@ -261,6 +262,16 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 			start_global_timer(transition_timer,
 					   transition_graph->transition_timeout);
 
+			value = crm_element_value(graph_data, "failed-stop-offset");
+			if(value) {
+			    failed_stop_offset = crm_strdup(value);
+			}
+			
+			value = crm_element_value(graph_data, "failed-start-offset");
+			if(value) {
+			    failed_start_offset = crm_strdup(value);
+			}
+			
 			trigger_graph();
 			print_graph(LOG_DEBUG_2, transition_graph);
 

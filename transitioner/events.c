@@ -29,6 +29,9 @@
 #include <clplumbing/Gmain_timeout.h>
 #include <lrm/lrm_api.h>
 
+char *failed_stop_offset = NULL;
+char *failed_start_offset = NULL;
+
 crm_data_t *need_abort(crm_data_t *update);
 void process_graph_event(crm_data_t *event, const char *event_node);
 int match_graph_event(int action_id, crm_data_t *event, const char *event_node,
@@ -229,6 +232,14 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 		return;
 	}
 
+	if(failed_stop_offset == NULL) {
+	    failed_stop_offset = crm_strdup("INFINITY");
+	}
+
+	if(failed_start_offset == NULL) {
+	    failed_start_offset = crm_strdup("INFINITY");
+	}
+	
 	CRM_CHECK(on_uuid != NULL, return);
 
 	CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval),
@@ -237,10 +248,13 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 	CRM_CHECK(task != NULL, goto bail);
 	CRM_CHECK(rsc_id != NULL, goto bail);
 
-	if(safe_str_eq(task, CRMD_ACTION_START)
-	   || safe_str_eq(task, CRMD_ACTION_STOP)) {
+	if(safe_str_eq(task, CRMD_ACTION_START)) {
 	    interval = 1;
-	    value = "INFINITY";
+	    value = failed_stop_offset;
+
+	} else if(safe_str_eq(task, CRMD_ACTION_STOP)) {
+	    interval = 1;
+	    value = failed_stop_offset;
 	}
 	
 	if(interval > 0) {

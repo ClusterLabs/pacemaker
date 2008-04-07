@@ -782,6 +782,15 @@ stage8(pe_working_set_t *data_set)
 	value = pe_pref(data_set->config_hash, "cluster-delay");
 	crm_xml_add(data_set->graph, "cluster-delay", value);
 
+	crm_xml_add(data_set->graph, "failed-stop-offset", "INFINITY");
+
+	value = pe_pref(data_set->config_hash, "start-failure-is-fatal");
+	if(crm_is_true(value)) {
+	    crm_xml_add(data_set->graph, "failed-start-offset", "INFINITY");
+	} else {
+	    crm_xml_add(data_set->graph, "failed-start-offset", "1");
+	}
+	
 	value = pe_pref(data_set->config_hash, "batch-limit");
 	crm_xml_add(data_set->graph, "batch-limit", value);
 
