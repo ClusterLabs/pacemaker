@@ -564,14 +564,10 @@ global_timer_callback(gpointer data)
 gboolean
 te_graph_trigger(gpointer user_data) 
 {
-	int timeout = 0;
-	enum transition_status graph_rc = -1;
+    int timeout = 0;
+    enum transition_status graph_rc = -1;
 
-	if(transition_graph->complete) {
-		notify_crmd(transition_graph);
-		return TRUE;
-	}
-
+    if(transition_graph->complete == FALSE) {
 	graph_rc = run_graph(transition_graph);
 	timeout = transition_graph->transition_timeout;
 	print_graph(LOG_DEBUG_3, transition_graph);
@@ -591,11 +587,12 @@ te_graph_trigger(gpointer user_data)
 		crm_err("Transition failed: %s", transition_status(graph_rc));
 		print_graph(LOG_WARNING, transition_graph);
 	}
-	
-	transition_graph->complete = TRUE;
-	notify_crmd(transition_graph);
-
-	return TRUE;	
+    }
+    
+    transition_graph->complete = TRUE;
+    notify_crmd(transition_graph);
+    
+    return TRUE;	
 }
 
 
