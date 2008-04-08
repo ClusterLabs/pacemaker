@@ -146,10 +146,5 @@ abort_transition_graph(
 		}
 	}
 	
-	if(transition_graph->complete) {
-		notify_crmd(transition_graph);
-		
-	} else {
-		G_main_set_trigger(transition_trigger);
-	}
+	G_main_set_trigger(transition_trigger);
 }
