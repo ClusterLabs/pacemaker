@@ -263,7 +263,7 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 		crm_warn("Updating failcount for %s on %s after failed %s: rc=%d",
 			 rsc_id, on_uuid, task, rc);
 
-		call_id = update_attr(te_cib_conn, cib_none, XML_CIB_TAG_STATUS,
+		call_id = update_attr(te_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
 			    on_uuid, NULL,NULL, attr_name, value, FALSE);
 
 		/* don't let notificatios of these updates cause new transitions */
