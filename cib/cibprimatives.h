@@ -49,27 +49,6 @@ typedef xmlNode cibHaNode;
 /* extern const char* crm_system_name; */
 
 extern xmlNode *get_the_CIB(void);
-
-extern int addResource  (xmlNode *cib, xmlNode *anXmlNode);
-extern int addConstraint(xmlNode *cib, xmlNode *anXmlNode);
-extern int addHaNode    (xmlNode *cib, xmlNode *anXmlNode);
-extern int addStatus    (xmlNode *cib, xmlNode *anXmlNode);
-
-extern xmlNode *findResource  (xmlNode *cib, const char *id);
-extern xmlNode *findConstraint(xmlNode *cib, const char *id);
-extern xmlNode *findHaNode    (xmlNode *cib, const char *id);
-extern xmlNode *findStatus    (xmlNode *cib, const char *id);
-
-extern int updateResource  (xmlNode *cib, xmlNode *anXmlNode);
-extern int updateConstraint(xmlNode *cib, xmlNode *anXmlNode);
-extern int updateHaNode    (xmlNode *cib, xmlNode *anXmlNode);
-extern int updateStatus    (xmlNode *cib, xmlNode *anXmlNode);
-
-extern int delResource  (xmlNode *cib, xmlNode *delete_spec);
-extern int delConstraint(xmlNode *cib, xmlNode *delete_spec);
-extern int delHaNode    (xmlNode *cib, xmlNode *delete_spec);
-extern int delStatus    (xmlNode *cib, xmlNode *delete_spec);
-
 extern int add_cib_object   (xmlNode *parent, xmlNode *new_obj);
 extern int delete_cib_object(xmlNode *parent, xmlNode *delete_spec);
 extern int update_cib_object(xmlNode *parent, xmlNode *new_obj);
