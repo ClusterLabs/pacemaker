@@ -225,7 +225,7 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 	char *attr_name = NULL;
 	const char *id  = ID(event);
 	const char *on_uuid  = event_node;
-	const char *value = XML_NVPAIR_ATTR_VALUE"++";
+	const char *value = NULL;
 
 	if(rc == 99) {
 		/* this is an internal code for "we're busy, try again" */
@@ -233,11 +233,11 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 	}
 
 	if(failed_stop_offset == NULL) {
-	    failed_stop_offset = crm_strdup("INFINITY");
+	    failed_stop_offset = crm_strdup(INFINITY_S);
 	}
 
 	if(failed_start_offset == NULL) {
-	    failed_start_offset = crm_strdup("INFINITY");
+	    failed_start_offset = crm_strdup(INFINITY_S);
 	}
 	
 	CRM_CHECK(on_uuid != NULL, return);
@@ -256,7 +256,11 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 	    interval = 1;
 	    value = failed_stop_offset;
 	}
-	
+
+	if(value == NULL || safe_str_neq(value, INFINITY_S)) {
+	    value = XML_NVPAIR_ATTR_VALUE"++";
+	}
+
 	if(interval > 0) {
 		int call_id = 0;
 		attr_name = crm_concat("fail-count", rsc_id, '-');
