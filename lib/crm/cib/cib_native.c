@@ -47,24 +47,21 @@ int cib_native_perform_op(
 	cib_t *cib, const char *op, const char *host, const char *section,
 	xmlNode *data, xmlNode **output_data, int call_options);
 
-int cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type);
-int cib_native_signoff(cib_t* cib);
 int cib_native_free(cib_t* cib);
+int cib_native_signoff(cib_t* cib);
+int cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type);
 
 IPC_Channel *cib_native_channel(cib_t* cib);
+gboolean     cib_native_msgready(cib_t* cib);
+gboolean     cib_native_dispatch(IPC_Channel *channel, gpointer user_data);
+
 int cib_native_inputfd(cib_t* cib);
-
-gboolean cib_native_msgready(cib_t* cib);
 int cib_native_rcvmsg(cib_t* cib, int blocking);
-gboolean cib_native_dispatch(IPC_Channel *channel, gpointer user_data);
-int cib_native_set_connection_dnotify(
-	cib_t *cib, void (*dnotify)(gpointer user_data));
-
-void cib_native_notify(gpointer data, gpointer user_data);
+int cib_native_set_connection_dnotify(cib_t *cib, void (*dnotify)(gpointer user_data));
 
 void cib_native_callback(cib_t *cib, xmlNode *msg);
-
-int cib_native_register_callback(cib_t* cib, const char *callback, int enabled);
+void cib_native_notify(gpointer data, gpointer user_data);
+int  cib_native_register_callback(cib_t* cib, const char *callback, int enabled);
 
 cib_t*
 cib_native_new (void)
