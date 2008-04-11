@@ -357,6 +357,7 @@ const char *
 crm_xml_add(xmlNode* node, const char *name, const char *value)
 {
     xmlAttr *attr = NULL;
+    const char *old_value = NULL;
     CRM_CHECK(node != NULL, return NULL);
     CRM_CHECK(name != NULL && name[0] != 0, return NULL);
     /* CRM_CHECK(value != NULL && value[0] != 0, return NULL); */
@@ -370,6 +371,11 @@ crm_xml_add(xmlNode* node, const char *name, const char *value)
     }
 #endif
 
+    old_value = crm_element_value(node, name);
+    if(old_value == value) {
+	return value;
+    }
+    
     attr = xmlSetProp(node, (const xmlChar*)name, (const xmlChar*)value);
     CRM_CHECK(attr && attr->children && attr->children->content, return NULL);
     return (char *)attr->children->content;
