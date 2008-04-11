@@ -57,7 +57,6 @@ int cib_native_inputfd(cib_t* cib);
 gboolean cib_native_msgready(cib_t* cib);
 int cib_native_rcvmsg(cib_t* cib, int blocking);
 gboolean cib_native_dispatch(IPC_Channel *channel, gpointer user_data);
-cib_t *cib_native_new (cib_t *cib);
 int cib_native_set_connection_dnotify(
 	cib_t *cib, void (*dnotify)(gpointer user_data));
 
@@ -68,15 +67,18 @@ void cib_native_callback(cib_t *cib, xmlNode *msg);
 int cib_native_register_callback(cib_t* cib, const char *callback, int enabled);
 
 cib_t*
-cib_native_new (cib_t *cib)
+cib_native_new (void)
 {
 	cib_native_opaque_t *native = NULL;
+	cib_t *cib = cib_new_variant();
+	
 	crm_malloc0(native, sizeof(cib_native_opaque_t));
+	
+	cib->variant = cib_native;
+	cib->variant_opaque = native;
 
 	native->command_channel   = NULL;
 	native->callback_channel  = NULL;
-
-	cib->variant_opaque = native;
 	
 	/* assign variant specific ops*/
 	cib->cmds->variant_op = cib_native_perform_op;

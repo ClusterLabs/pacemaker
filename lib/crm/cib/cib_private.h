@@ -49,6 +49,8 @@ struct timer_rec_s
 typedef enum cib_errors (*cib_op_t)(const char *, int, const char *, xmlNode *,
 				    xmlNode*, xmlNode*, xmlNode**, xmlNode**);
 
+extern cib_t *cib_new_variant(void);
+
 enum cib_errors
 cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query,
 	       const char *section, xmlNode *req, xmlNode *input,

@@ -68,14 +68,15 @@ static int cib_file_register_callback(cib_t* cib, const char *callback, int enab
     return cib_NOTSUPPORTED;
 }
 
-cib_t *cib_file_new (cib_t *cib, const char *cib_location);
-
 cib_t*
-cib_file_new (cib_t *cib, const char *cib_location)
+cib_file_new (const char *cib_location)
 {
     cib_file_opaque_t *private = NULL;
+    cib_t *cib = cib_new_variant();
+
     crm_malloc0(private, sizeof(cib_file_opaque_t));
 
+    cib->variant = cib_file;
     cib->variant_opaque = private;
 
     if(cib_location == NULL) {
@@ -99,6 +100,7 @@ cib_file_new (cib_t *cib, const char *cib_location)
 
     return cib;
 }
+
 static xmlNode *in_mem_cib = NULL;
 static int load_file_cib(const char *filename) 
 {

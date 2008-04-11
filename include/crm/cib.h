@@ -29,6 +29,7 @@
 /* use compare_version() for doing comparisons */
 
 enum cib_variant {
+	cib_undefined,
 	cib_native,
 	cib_file,
 	cib_remote,
@@ -296,7 +297,8 @@ struct cib_s
 
 /* Core functions */
 extern cib_t *cib_new(void);
-extern cib_t *cib_new_variant(enum cib_variant variant);
+extern cib_t *cib_native_new(void);
+extern cib_t *cib_file_new(const char *filename);
 
 extern void cib_delete(cib_t *cib);
 

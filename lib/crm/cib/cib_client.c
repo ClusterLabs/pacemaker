@@ -50,9 +50,6 @@ int cib_client_del_notify_callback(
 
 gint ciblib_GCompareFunc(gconstpointer a, gconstpointer b);
 
-extern cib_t *cib_native_new(cib_t *cib);
-extern cib_t *cib_file_new(cib_t *cib, const char *filename);
-
 #define op_common(cib)							\
     if(cib == NULL) {							\
 	return cib_missing;						\
@@ -219,11 +216,12 @@ static void cib_destroy_op_callback(gpointer data)
 cib_t*
 cib_new(void) 
 {
-    if(getenv("CIB_file")) {
-	return cib_new_variant(cib_file);
+    const char *file = getenv("CIB_file");
+    if(file) {
+	return cib_file_new(file);
     }
 
-    return cib_new_variant(cib_native);
+    return cib_native_new();
 }
 
 /* this is backwards...
@@ -231,7 +229,7 @@ cib_new(void)
  */
 
 cib_t*
-cib_new_variant(enum cib_variant variant)
+cib_new_variant(void)
 {
 	cib_t* new_cib = NULL;
 	crm_malloc0(new_cib, sizeof(cib_t));
@@ -247,10 +245,10 @@ cib_new_variant(enum cib_variant variant)
 	}
 
 	new_cib->call_id = 1;
+	new_cib->variant = cib_undefined;
 
 	new_cib->type  = cib_none;
 	new_cib->state = cib_disconnected;
-	new_cib->variant = variant;
 
 	new_cib->op_callback	= NULL;
 	new_cib->variant_opaque = NULL;
@@ -288,20 +286,6 @@ cib_new_variant(enum cib_variant variant)
 
 	new_cib->cmds->delete_absolute  = cib_client_delete_absolute;
 	
-	switch(variant) {
-	    case cib_native:
-		cib_native_new(new_cib);
-		break;
-		
-	    case cib_file:
-		cib_file_new(new_cib, NULL);
-		break;
-	    default:
-		crm_err("Only the native CIB type is currently implemented");
-		crm_free(new_cib);
-		return NULL;
-	}
-
 	return new_cib;
 }
 
