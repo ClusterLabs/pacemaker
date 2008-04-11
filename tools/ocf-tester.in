@@ -173,7 +173,6 @@ test_command() {
     	return $?
     fi
     #echo Running: "export $ra_args; bash $agent $action 2>&1 > /dev/null"
-    export $ra_args; 
     if [ $verbose -eq 0 ]; then
 	bash $agent $action >/dev/null 2>&1
     else
@@ -199,6 +198,8 @@ if [ $rc -eq 3 ]; then
 else
     assert $rc 0 "The meta-data action cannot fail and must return 0"
 fi
+
+export $ra_args;
 
 test_command validate-all
 rc=$?
