@@ -250,7 +250,7 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 
 	if(safe_str_eq(task, CRMD_ACTION_START)) {
 	    interval = 1;
-	    value = failed_stop_offset;
+	    value = failed_start_offset;
 
 	} else if(safe_str_eq(task, CRMD_ACTION_STOP)) {
 	    interval = 1;
@@ -264,8 +264,8 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 	if(interval > 0) {
 		int call_id = 0;
 		attr_name = crm_concat("fail-count", rsc_id, '-');
-		crm_warn("Updating failcount for %s on %s after failed %s: rc=%d",
-			 rsc_id, on_uuid, task, rc);
+		crm_warn("Updating failcount (%s) for %s on %s after failed %s: rc=%d",
+			 value, rsc_id, on_uuid, task, rc);
 
 		call_id = update_attr(te_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
 			    on_uuid, NULL,NULL, attr_name, value, FALSE);
