@@ -406,8 +406,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	dtd_ok = validate_with_dtd(root, TRUE, DTD_DIRECTORY"/crm.dtd");
 	if(dtd_ok == FALSE) {
 		crm_err("CIB does not validate against "DTD_DIRECTORY"/crm.dtd");
-		if(ignore_dtd == NULL
-		   && crm_is_true(ignore_dtd) == FALSE) {
+		if(ignore_dtd != NULL && crm_is_true(ignore_dtd) == FALSE) {
 			cib_status = cib_dtd_validation;
 		}
 		
@@ -422,13 +421,6 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 			" ID check failed",
 			 filename);
 		cib_status = cib_id_check;
-	}
-
-	if (verifyCibXml(root) == FALSE) {
-		crm_err("%s does not contain a vaild configuration:"
-			" structure test failed",
-			 filename);
-		cib_status = cib_bad_config;
 	}
 
 	crm_free(filename);
@@ -620,7 +612,6 @@ activateCibXml(xmlNode *new_cib, gboolean to_disk)
 {
 	int error_code = cib_ok;
 	xmlNode *saved_cib = the_cib;
-	const char *ignore_dtd = NULL;
 
 	crm_debug("Activating new CIB");
 	
@@ -632,19 +623,7 @@ activateCibXml(xmlNode *new_cib, gboolean to_disk)
 		crm_validate_data(saved_cib);
 	}
 
-	ignore_dtd = crm_element_value(new_cib, "ignore_dtd");
-	if(
-#if CRM_DEPRECATED_SINCE_2_0_4
-	   ignore_dtd != NULL &&
-#endif
-	   crm_is_true(ignore_dtd) == FALSE
-	   && validate_with_dtd(
-		   new_cib, TRUE, DTD_DIRECTORY"/crm.dtd") == FALSE) {
-		crm_err("Updated CIB does not validate against "DTD_DIRECTORY"/crm.dtd... ignoring");
- 		error_code = cib_dtd_validation;
-	}
-
-	if(error_code == cib_ok && initializeCib(new_cib) == FALSE) {
+	if(initializeCib(new_cib) == FALSE) {
 		error_code = cib_ACTIVATION;
 		crm_err("Ignoring invalid or NULL CIB");
 	}

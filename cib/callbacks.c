@@ -1062,7 +1062,8 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	goto done;
 		
     } else if(cib_op_modifies(call_type) == FALSE) {
-	rc = cib_perform_op(op, call_options, section, request, input, FALSE, &config_changed,
+	rc = cib_perform_op(op, call_options, cib_op_func(call_type), FALSE,
+			    section, request, input, FALSE, &config_changed,
 			    current_cib, &result_cib, &output);
 
 	CRM_CHECK(result_cib == NULL, free_xml(result_cib));
@@ -1093,9 +1094,9 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	    manage_counters = FALSE;
 	}	
 	    
-	rc = cib_perform_op(
-	    op, call_options, section, request, input, manage_counters, &config_changed,
-	    current_cib, &result_cib, &output);
+	rc = cib_perform_op(op, call_options, cib_op_func(call_type), FALSE,
+			    section, request, input, manage_counters, &config_changed,
+			    current_cib, &result_cib, &output);
 	*cib_diff = diff_cib_object(current_cib, result_cib, FALSE);
     }
     

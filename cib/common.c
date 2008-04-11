@@ -238,7 +238,7 @@ static cib_operation_t cib_server_ops[] = {
     {CIB_OP_QUERY,     FALSE, FALSE, FALSE, cib_prepare_none, cib_cleanup_query,  cib_process_query},
     {CIB_OP_MODIFY,    TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_data,   cib_process_modify},
     {CIB_OP_UPDATE,    TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_data,   cib_process_change},
-    {CIB_OP_APPLY_DIFF,TRUE,  TRUE,  TRUE,  cib_prepare_diff, cib_cleanup_data,   cib_process_diff},
+    {CIB_OP_APPLY_DIFF,TRUE,  TRUE,  TRUE,  cib_prepare_diff, cib_cleanup_data,   cib_server_process_diff},
     {CIB_OP_SLAVE,     FALSE, TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
     {CIB_OP_SLAVEALL,  FALSE, TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
     {CIB_OP_SYNC_ONE,  FALSE, TRUE,  FALSE, cib_prepare_sync, cib_cleanup_sync,   cib_process_sync_one},
@@ -333,69 +333,9 @@ cib_msg_copy(xmlNode *msg, gboolean with_data)
 	return copy;
 }
 
-enum cib_errors
-cib_perform_op(
-    const char *op, int call_options, const char *section, xmlNode *req, xmlNode *input,
-    gboolean manage_counters, gboolean *config_changed,
-    xmlNode *current_cib, xmlNode **result_cib, xmlNode **output)
+cib_op_t *cib_op_func(int call_type) 
 {
-    int rc = cib_ok;
-    int call_type = 0;
-    xmlNode *scratch = NULL;
-
-    CRM_CHECK(output != NULL && result_cib != NULL && config_changed != NULL,
-	      return cib_output_data);
-    
-    *output = NULL;
-    *result_cib = NULL;
-    rc = cib_get_operation_id(op, &call_type);
-    *config_changed = FALSE;
-
-    if(rc != cib_ok) {
-	return rc;
-    }
-    
-    if(cib_server_ops[call_type].modifies_cib == FALSE) {
-	rc = cib_server_ops[call_type].fn(
-	    op, call_options, section, req, input, current_cib, result_cib, output);
-	/* FIXME: Free scratch */
-	return rc;
-    }
-    
-    scratch = copy_xml(current_cib);
-    rc = cib_server_ops[call_type].fn(
-	op, call_options, section, req, input, current_cib, &scratch, output);    
-
-    crm_log_xml_debug(*output, "output");
-    
-    CRM_CHECK(current_cib != scratch, return cib_unknown);
-    
-    if(rc == cib_ok) {
-
-	CRM_CHECK(scratch != NULL, return cib_unknown);
-	
-	if(do_id_check(scratch, NULL, TRUE, FALSE)) {
-	    rc = cib_id_check;
-	    if(call_options & cib_force_diff) {
-		crm_err("Global update introduces id collision!");
-	    }
-	}
-	
-	if(rc == cib_ok) {
-	    fix_plus_plus_recursive(scratch);
-	    *config_changed = cib_config_changed(current_cib, scratch, NULL);
-	    
-	    if(manage_counters && *config_changed) {
-		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);
-		cib_update_counter(scratch, XML_ATTR_GENERATION, FALSE);
-	    } else if(manage_counters) {
-		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
-	    }	
-	}
-    }
-
-    *result_cib = scratch;
-    return rc;
+    return &(cib_server_ops[call_type].fn);
 }
 
 gboolean cib_op_modifies(int call_type) 

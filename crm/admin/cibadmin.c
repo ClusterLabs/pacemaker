@@ -87,7 +87,8 @@ int operation_status = 0;
 cib_t *the_cib = NULL;
 
 gboolean force_flag = FALSE;
-#define OPTARGS	"V?o:QDUCEX:t:Srwlsh:MmBfbdRx:pP5"
+#define OPTARGS	"V?o:QDUCEX:t:Srwlsh:MmBfbRx:pP5"
+
 
 int
 main(int argc, char **argv)
@@ -113,7 +114,6 @@ main(int argc, char **argv)
 		{CIB_OP_MODIFY,  0, 0, 'M'},
 		{"patch",	 0, 0, 'P'},
 		{CIB_OP_DELETE,  0, 0, 'D'},
-		{CIB_OP_DELETE_ALT,  0, 0, 'd'},
 		{CIB_OP_BUMP,    0, 0, 'B'},
 		{CIB_OP_SYNC,    0, 0, 'S'},
 		{CIB_OP_SLAVE,   0, 0, 'r'},
@@ -121,6 +121,8 @@ main(int argc, char **argv)
 		{CIB_OP_ISMASTER,0, 0, 'm'},
 		{"md5-sum",	 0, 0, '5'},
 		
+		{"file-mode",	1, 0, 0},
+
 		{"force-quorum",0, 0, 'f'},
 		{"force",	0, 0, 'f'},
 		{"local",	0, 0, 'l'},
@@ -161,13 +163,11 @@ main(int argc, char **argv)
 		switch(flag) {
 #ifdef HAVE_GETOPT_H
 			case 0:
-				printf("option %s",
-				       long_options[option_index].name);
-				if (optarg)
-					printf(" with arg %s", optarg);
-				printf("\n");
 	if (safe_str_eq("reference", long_options[option_index].name)) {
 		this_msg_reference = crm_strdup(optarg);
+
+	} else if (safe_str_eq("file-mode", long_options[option_index].name)) {
+	    setenv("CIB_file", optarg, 1);
 
 	} else {
 		printf("Long option (--%s) is not (yet?) properly supported\n",
@@ -211,9 +211,6 @@ main(int argc, char **argv)
 				break;
 			case '5':
 				cib_action = "md5-sum";
-				break;
-			case 'd':
-				cib_action = CIB_OP_DELETE_ALT;
 				break;
 			case 'm':
 				cib_action = CIB_OP_ISMASTER;
@@ -387,6 +384,8 @@ main(int argc, char **argv)
 		fprintf(stdout, "%s", crm_str(buffer));
 		crm_free(buffer);
 	}
+
+	the_cib->cmds->signoff(the_cib);
 	
 	crm_debug_3("%s exiting normally", crm_system_name);
 	return -exit_code;
@@ -436,7 +435,7 @@ enum cib_errors
 do_init(void)
 {
 	enum cib_errors rc = cib_ok;
-	
+
 	the_cib = cib_new();
 	rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 	if(rc != cib_ok) {
@@ -482,11 +481,6 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t\t\tEg. <op id=\"rsc1_op1\" name=\"monitor\"/>\n");
 	fprintf(stream, "\t\t\tThe tagname and all attributes must match in order for the element to be deleted\n");
 	
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_DELETE_ALT, 'd');
-	fprintf(stream, "\t\t\tDelete the object at specified fully qualified location\n");
-	fprintf(stream, "\t\t\tEg. <resource id=\"rsc1\"><operations><op id=\"rsc1_op1\"/>...\n");
-	fprintf(stream, "\t\t\tRequires -o\n");
-
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_BUMP,   'B');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ISMASTER,'m');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_SYNC,   'S');

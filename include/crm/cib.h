@@ -30,6 +30,8 @@
 
 enum cib_variant {
 	cib_native,
+	cib_file,
+	cib_remote,
 	cib_database,
 	cib_edir
 };
@@ -279,6 +281,7 @@ struct cib_s
 {
 		enum cib_state	   state;
 		enum cib_conn_type type;
+		enum cib_variant   variant;
 
 		int   call_id;
 		int   call_timeout;
@@ -291,122 +294,22 @@ struct cib_s
 		cib_api_operations_t *cmds;
 };
 
-typedef struct cib_notify_client_s 
-{
-	const char *event;
-	const char *obj_id;   /* implement one day */
-	const char *obj_type; /* implement one day */
-	void (*callback)(
-		const char *event, xmlNode *msg);
-	
-} cib_notify_client_t;
-
-struct timer_rec_s 
-{
-	int call_id;
-	int timeout;
-	guint ref;	
-};
-
-typedef struct cib_callback_client_s 
-{
-		void (*callback)(xmlNode*, int, int, xmlNode*, void*);
-		void *user_data;
-		gboolean only_success;
-		struct timer_rec_s *timer;
-	
-} cib_callback_client_t;
-
 /* Core functions */
 extern cib_t *cib_new(void);
+extern cib_t *cib_new_variant(enum cib_variant variant);
+
 extern void cib_delete(cib_t *cib);
 
-extern gboolean   startCib(const char *filename);
-extern xmlNode *get_cib_copy(cib_t *cib);
-extern xmlNode *cib_get_generation(cib_t *cib);
-extern int cib_compare_generation(xmlNode *left, xmlNode *right);
+extern int num_cib_op_callbacks(void);
+extern void remove_cib_op_callback(int call_id, gboolean all_callbacks);
 extern gboolean add_cib_op_callback_timeout(
     int call_id, int timeout, gboolean only_success, void *user_data,
     void (*callback)(xmlNode*, int, int, xmlNode*,void*));
-extern gboolean add_cib_op_callback(
-	int call_id, gboolean only_success, void *user_data,
-	void (*callback)(xmlNode*, int, int, xmlNode*,void*));
-extern void remove_cib_op_callback(int call_id, gboolean all_callbacks);
-extern int num_cib_op_callbacks(void);
 
-/* Utility functions */
-extern xmlNode *get_object_root(const char *object_type,xmlNode *the_root);
-extern xmlNode *create_cib_fragment_adv(
-			xmlNode *update, const char *section, const char *source);
-extern char *cib_pluralSection(const char *a_section);
-extern const char *get_crm_option(
-	xmlNode *cib, const char *name, gboolean do_warn);
+#define add_cib_op_callback(id, flag, data, fn) add_cib_op_callback_timeout(id, 0, flag, data, fn)
 
-/* Error Interpretation*/
-extern const char *cib_error2string(enum cib_errors);
-extern const char *cib_op2string(enum cib_update_op);
-
-extern xmlNode *createEmptyCib(void);
-extern gboolean verifyCibXml(xmlNode *cib);
-extern int cib_section2enum(const char *a_section);
-
-#define create_cib_fragment(update,cib_section) create_cib_fragment_adv(update, cib_section, __FUNCTION__)
-
-extern gboolean cib_config_changed(xmlNode *old_cib, xmlNode *new_cib, xmlNode **result);
-
-extern xmlNode *diff_cib_object(
-	xmlNode *old, xmlNode *new,gboolean suppress);
-
-extern gboolean apply_cib_diff(
-	xmlNode *old, xmlNode *diff, xmlNode **new);
-
-extern void log_cib_diff(int log_level, xmlNode *diff, const char *function);
-
-extern gboolean cib_diff_version_details(
-	xmlNode *diff, int *admin_epoch, int *epoch, int *updates, 
-	int *_admin_epoch, int *_epoch, int *_updates);
-
-extern gboolean cib_version_details(
-	xmlNode *cib, int *admin_epoch, int *epoch, int *updates);
-
-extern enum cib_errors update_attr(
-	cib_t *the_cib, int call_options,
-	const char *section, const char *node_uuid, const char *set_name,
-	const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console);
-
-extern enum cib_errors find_attr_details(
-	xmlNode *xml_search, const char *node_uuid,
-	const char *set_name, const char *attr_id, const char *attr_name,
-	xmlNode **xml_obj, gboolean to_console);
-
-extern enum cib_errors read_attr(
-	cib_t *the_cib,
-	const char *section, const char *node_uuid, const char *set_name,
-	const char *attr_id, const char *attr_name, char **attr_value, gboolean to_console);
-
-extern enum cib_errors delete_attr(
-	cib_t *the_cib, int options, 
-	const char *section, const char *node_uuid, const char *set_name,
-	const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console);
-
-extern enum cib_errors query_node_uuid(
-	cib_t *the_cib, const char *uname, char **uuid);
-
-extern enum cib_errors query_node_uname(
-	cib_t *the_cib, const char *uuid, char **uname);
-
-extern enum cib_errors query_standby(cib_t *the_cib, const char *uuid,
-				     char **scope, char **standby_value);
-
-extern enum cib_errors set_standby(
-	cib_t *the_cib,
-	const char *uuid, const char *scope, const char *standby_value);
-
-enum cib_errors delete_standby(
-	cib_t *the_cib,
-	const char *uuid, const char *scope, const char *standby_value);
-
-extern const char *feature_set(xmlNode *xml_obj);
+#include <crm/cib_util.h>
+#include <crm/cib_ops.h>
 
 #endif
 

@@ -53,7 +53,7 @@ cib_LDFLAGS		= $(GNUTLSLIBS)
 cibmon_SOURCES		= cibmon.c
 cibmon_LDADD		= $(COMMONLIBS)
 
-cibpipe_SOURCES		= primatives.c messages.c common.c cibpipe.c
+cibpipe_SOURCES		= primatives.c cibpipe.c
 
 cibpipe_LDADD		= $(COMMONLIBS) $(CRYPTOLIB)
 cibpipe_CFLAGS		= -DCIBPIPE=1

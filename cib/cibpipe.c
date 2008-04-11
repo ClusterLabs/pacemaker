@@ -40,14 +40,35 @@
 
 void usage(const char* cmd, int exit_status);
 
+struct cib_func_entry 
+{
+	const char *op;
+	gboolean    read_only;
+	cib_op_t    fn;
+};
+
+static struct cib_func_entry cib_pipe_ops[] = {
+    {CIB_OP_QUERY,      TRUE,  cib_process_query},
+    {CIB_OP_MODIFY,     FALSE, cib_process_modify},
+    /* {CIB_OP_UPDATE,     FALSE, cib_process_change}, */
+    {CIB_OP_APPLY_DIFF, FALSE, cib_process_diff},
+    {CIB_OP_BUMP,       FALSE, cib_process_bump},
+    {CIB_OP_REPLACE,    FALSE, cib_process_replace},
+    /* {CIB_OP_CREATE,     FALSE, cib_process_change}, */
+    {CIB_OP_DELETE,     FALSE, cib_process_delete},
+    {CIB_OP_ERASE,      FALSE, cib_process_erase},
+};
+
 #define OPTARGS	"V?o:QDUCEX:t:MBfRx:P5S"
 
 int
 main(int argc, char ** argv)
 {
+    int lpc;
     int flag;
     int rc = 0;
     int argerr = 0;
+    int max_msg_types = DIMOF(cib_pipe_ops);
 
     int command_options = 0;
     gboolean changed = FALSE;
@@ -66,6 +87,9 @@ main(int argc, char ** argv)
     xmlNode *result_cib = NULL;
     xmlNode *current_cib = NULL;
 
+    gboolean query = FALSE;
+    cib_op_t *fn = NULL;
+    
 #ifdef HAVE_GETOPT_H
     int option_index = 0;
     static struct option long_options[] = {
@@ -238,9 +262,26 @@ main(int argc, char ** argv)
 
     
     /* read local config file */
-    rc = cib_perform_op(
-	cib_action, command_options, section, NULL, input, TRUE, &changed,
-	current_cib, &result_cib, &output);
+    if(cib_action == NULL) {
+	crm_err("No operation specified");
+	return cib_operation;
+    }
+
+    for (lpc = 0; lpc < max_msg_types; lpc++) {
+	if (safe_str_eq(cib_action, cib_pipe_ops[lpc].op)) {
+	    fn = &(cib_pipe_ops[lpc].fn);
+	    query = cib_pipe_ops[lpc].read_only;
+	    break;
+	}
+    }
+    
+    if(fn == NULL) {
+	rc = cib_NOTSUPPORTED;
+    } else {
+	rc = cib_perform_op(cib_action, command_options, fn, query,
+			    section, NULL, input, TRUE, &changed,
+			    current_cib, &result_cib, &output);
+    }
 
     if(rc != cib_ok) {
 	fprintf(stderr, "Call failed: %s\n", cib_error2string(rc));

@@ -1,0 +1,318 @@
+/*
+ * Copyright (c) 2004 International Business Machines
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+#include <crm_internal.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+
+#include <glib.h>
+#include <heartbeat.h>
+#include <clplumbing/ipc.h>
+#include <ha_msg.h>
+
+#include <crm/crm.h>
+#include <crm/cib.h>
+#include <crm/msg_xml.h>
+#include <crm/common/ipc.h>
+#include <cib_private.h>
+#include <clplumbing/Gmain_timeout.h>
+
+typedef struct cib_file_opaque_s 
+{
+	int flags;
+	char *filename;
+	
+} cib_file_opaque_t;
+
+int cib_file_perform_op(
+    cib_t *cib, const char *op, const char *host, const char *section,
+    xmlNode *data, xmlNode **output_data, int call_options);
+
+int cib_file_signon(cib_t* cib, const char *name, enum cib_conn_type type);
+int cib_file_signoff(cib_t* cib);
+int cib_file_free(cib_t* cib);
+
+static gboolean cib_file_msgready(cib_t* cib) { return FALSE; }
+static IPC_Channel *cib_file_channel(cib_t* cib) { return NULL; }
+static int cib_file_inputfd(cib_t* cib) { return cib_NOTSUPPORTED; }
+static int cib_file_rcvmsg(cib_t* cib, int blocking) { return cib_NOTSUPPORTED; }
+static gboolean cib_file_dispatch(IPC_Channel *channel, gpointer user_data) { return FALSE; }
+
+static int cib_file_set_connection_dnotify(
+    cib_t *cib, void (*dnotify)(gpointer user_data))
+{
+    return cib_NOTSUPPORTED;
+}
+
+
+static int cib_file_register_callback(cib_t* cib, const char *callback, int enabled) 
+{
+    return cib_NOTSUPPORTED;
+}
+
+cib_t *cib_file_new (cib_t *cib, const char *cib_location);
+
+cib_t*
+cib_file_new (cib_t *cib, const char *cib_location)
+{
+    cib_file_opaque_t *private = NULL;
+    crm_malloc0(private, sizeof(cib_file_opaque_t));
+
+    cib->variant_opaque = private;
+
+    if(cib_location == NULL) {
+	cib_location = getenv("CIB_file");
+    }
+    private->filename = crm_strdup(cib_location);
+
+    /* assign variant specific ops*/
+    cib->cmds->variant_op = cib_file_perform_op;
+    cib->cmds->signon     = cib_file_signon;
+    cib->cmds->signoff    = cib_file_signoff;
+    cib->cmds->free       = cib_file_free;
+    cib->cmds->channel    = cib_file_channel;
+    cib->cmds->inputfd    = cib_file_inputfd;
+    cib->cmds->msgready   = cib_file_msgready;
+    cib->cmds->rcvmsg     = cib_file_rcvmsg;
+    cib->cmds->dispatch   = cib_file_dispatch;
+
+    cib->cmds->register_callback = cib_file_register_callback;
+    cib->cmds->set_connection_dnotify = cib_file_set_connection_dnotify;
+
+    return cib;
+}
+static xmlNode *in_mem_cib = NULL;
+static int load_file_cib(const char *filename) 
+{
+    int rc = cib_ok;
+    struct stat buf;
+    xmlNode *root = NULL;
+    FILE *cib_file = NULL;
+    gboolean dtd_ok = TRUE;
+    const char *ignore_dtd = NULL;
+    xmlNode *status = NULL;
+    
+
+    rc = stat(filename, &buf);
+    if (rc == 0) {
+	cib_file = fopen(filename, "r");
+	if(cib_file == NULL) {
+	    cl_perror("Could not open config file %s for reading", filename);
+	    return cib_not_authorized;
+	    
+	} else {
+	    root = file2xml(cib_file, FALSE);
+	    fclose(cib_file);
+	}
+    }
+
+    rc = 0;
+    if(root == NULL) {
+	crm_warn("Continuing with an empty configuration.");
+	root = createEmptyCib();
+    }
+    
+    status = find_xml_node(root, XML_CIB_TAG_STATUS, FALSE);
+    if(status == NULL) {
+	create_xml_node(root, XML_CIB_TAG_STATUS);		
+    }
+
+    ignore_dtd = crm_element_value(root, "ignore_dtd");
+    dtd_ok = validate_with_dtd(root, TRUE, DTD_DIRECTORY"/crm.dtd");
+    if(dtd_ok == FALSE) {
+	crm_err("CIB does not validate against "DTD_DIRECTORY"/crm.dtd");
+	if(ignore_dtd != NULL && crm_is_true(ignore_dtd) == FALSE) {
+	    rc = cib_dtd_validation;
+	    goto bail;
+	}
+    }	
+    
+    if(do_id_check(root, NULL, TRUE, FALSE)) {
+	crm_err("%s does not contain a vaild configuration:"
+		" ID check failed",
+		filename);
+	rc = cib_id_check;
+	goto bail;
+    }
+    
+    in_mem_cib = root;
+    return rc;
+
+  bail:
+    free_xml(root);
+    root = NULL;
+    return rc;
+}
+
+int
+cib_file_signon(cib_t* cib, const char *name, enum cib_conn_type type)
+{
+    int rc = cib_ok;
+    cib_file_opaque_t *private = cib->variant_opaque;
+
+    if(private->filename == FALSE) {
+	rc = cib_missing;
+    } else {
+	rc = load_file_cib(private->filename);
+    }
+    
+    if(rc == cib_ok) {
+	fprintf(stderr, "%s: Opened connection to local file '%s'\n", name, private->filename);
+	cib->state = cib_connected_command;
+	cib->type  = cib_command;
+
+    } else {
+	fprintf(stderr, "%s: Connection to local file '%s' failed: %s\n",
+		name, private->filename, cib_error2string(rc));
+    }
+    
+    return rc;
+}
+	
+int
+cib_file_signoff(cib_t* cib)
+{
+    int rc = cib_ok;
+    cib_file_opaque_t *private = cib->variant_opaque;
+
+    crm_debug("Signing out of the CIB Service");
+    
+    rc = write_xml_file(in_mem_cib, private->filename, FALSE);
+    if(rc > 0) {
+	crm_info("Wrote CIB to %s", private->filename);
+    } else {
+	crm_err("Could not write CIB to %s", private->filename);
+    }
+    crm_free(in_mem_cib);
+    
+    cib->state = cib_disconnected;
+    cib->type  = cib_none;
+    
+    return rc;
+}
+
+int
+cib_file_free (cib_t* cib)
+{
+    int rc = cib_ok;
+
+    crm_warn("Freeing CIB");
+    if(cib->state != cib_disconnected) {
+	rc = cib_file_signoff(cib);
+	if(rc == cib_ok) {
+	    cib_file_opaque_t *private = cib->variant_opaque;
+	    crm_free(private->filename);
+	    crm_free(cib->cmds);
+	    crm_free(private);
+	    crm_free(cib);
+	}
+    }
+	
+    return rc;
+}
+
+struct cib_func_entry 
+{
+	const char *op;
+	gboolean    read_only;
+	cib_op_t    fn;
+};
+
+static struct cib_func_entry cib_file_ops[] = {
+    {CIB_OP_QUERY,      TRUE,  cib_process_query},
+    {CIB_OP_MODIFY,     FALSE, cib_process_modify},
+    /* {CIB_OP_UPDATE,     FALSE, cib_process_change}, */
+    {CIB_OP_APPLY_DIFF, FALSE, cib_process_diff},
+    {CIB_OP_BUMP,       FALSE, cib_process_bump},
+    {CIB_OP_REPLACE,    FALSE, cib_process_replace},
+    /* {CIB_OP_CREATE,     FALSE, cib_process_change}, */
+    {CIB_OP_DELETE,     FALSE, cib_process_delete},
+    {CIB_OP_ERASE,      FALSE, cib_process_erase},
+};
+
+
+int
+cib_file_perform_op(
+    cib_t *cib, const char *op, const char *host, const char *section,
+    xmlNode *data, xmlNode **output_data, int call_options) 
+{
+    int rc = cib_ok;
+    gboolean query = FALSE;
+    gboolean changed = FALSE;
+    xmlNode *output = NULL;
+    xmlNode *result_cib = NULL;
+    cib_op_t *fn = NULL;
+    int lpc = 0;
+    static int max_msg_types = DIMOF(cib_file_ops);
+
+    crm_info("%s on %s", op, section);
+    
+    if(cib->state == cib_disconnected) {
+	return cib_not_connected;
+    }
+
+    if(output_data != NULL) {
+	*output_data = NULL;
+    }
+	
+    if(op == NULL) {
+	crm_err("No operation specified");
+	return cib_operation;
+    }
+
+    for (lpc = 0; lpc < max_msg_types; lpc++) {
+	if (safe_str_eq(op, cib_file_ops[lpc].op)) {
+	    fn = &(cib_file_ops[lpc].fn);
+	    query = cib_file_ops[lpc].read_only;
+	    break;
+	}
+    }
+    
+    if(fn == NULL) {
+	return cib_NOTSUPPORTED;
+    }
+
+    cib->call_id++;
+    rc = cib_perform_op(op, call_options, fn, query,
+    			section, NULL, data, TRUE, &changed, in_mem_cib, &result_cib, &output);
+    
+    if(rc != cib_ok) {
+	crm_err("Call failed: %s", cib_error2string(rc));
+	crm_log_xml(LOG_WARNING, "failed", output);
+	free_xml(result_cib);
+	    
+    } else if(query == FALSE) {
+	free_xml(in_mem_cib);
+	in_mem_cib = result_cib;
+    }
+	    
+    if(output_data && output) {
+	*output_data = copy_xml(output);
+    }
+	
+    if(cib->op_callback != NULL) {
+	cib->op_callback(NULL, cib->call_id, rc, output);
+    }
+	
+    return rc;
+}
+
+

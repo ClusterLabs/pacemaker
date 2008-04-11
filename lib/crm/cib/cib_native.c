@@ -58,7 +58,6 @@ gboolean cib_native_msgready(cib_t* cib);
 int cib_native_rcvmsg(cib_t* cib, int blocking);
 gboolean cib_native_dispatch(IPC_Channel *channel, gpointer user_data);
 cib_t *cib_native_new (cib_t *cib);
-void cib_native_delete(cib_t *cib);
 int cib_native_set_connection_dnotify(
 	cib_t *cib, void (*dnotify)(gpointer user_data));
 
@@ -72,12 +71,13 @@ cib_t*
 cib_native_new (cib_t *cib)
 {
 	cib_native_opaque_t *native = NULL;
-	crm_malloc0(cib->variant_opaque, sizeof(cib_native_opaque_t));
-	
-	native = cib->variant_opaque;
+	crm_malloc0(native, sizeof(cib_native_opaque_t));
+
 	native->command_channel   = NULL;
 	native->callback_channel  = NULL;
 
+	cib->variant_opaque = native;
+	
 	/* assign variant specific ops*/
 	cib->cmds->variant_op = cib_native_perform_op;
 	cib->cmds->signon     = cib_native_signon;
@@ -91,14 +91,8 @@ cib_native_new (cib_t *cib)
 
 	cib->cmds->register_callback = cib_native_register_callback;
 	cib->cmds->set_connection_dnotify = cib_native_set_connection_dnotify;
-	
-	return cib;
-}
 
-void
-cib_native_delete(cib_t *cib)
-{
-	crm_free(cib->variant_opaque);
+	return cib;
 }
 
 int
@@ -302,6 +296,8 @@ cib_native_free (cib_t* cib)
 	if(cib->state != cib_disconnected) {
 		rc = cib_native_signoff(cib);
 		if(rc == cib_ok) {
+			crm_free(cib->variant_opaque);
+			crm_free(cib->cmds);
 			crm_free(cib);
 		}
 	}
@@ -576,7 +572,7 @@ cib_native_perform_op(
 		/* do nothing more */
 		
 	} else if(!(call_options & cib_discard_reply)) {
-		xmlNode *tmp = *output_data = get_message_xml(op_reply, F_CIB_CALLDATA);
+		xmlNode *tmp = get_message_xml(op_reply, F_CIB_CALLDATA);
 		if(tmp == NULL) {
 			crm_debug_3("No output in reply to \"%s\" command %d",
 				  op, cib->call_id - 1);

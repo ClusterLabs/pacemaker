@@ -15,49 +15,69 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef CIB_MESSAGES__H
-#define CIB_MESSAGES__H
+#ifndef CIB_OPS__H
+#define CIB_OPS__H
 
-#include <crm/cib_ops.h>
-extern xmlNode *createCibRequest(
-	gboolean isLocal, const char *operation, const char *section,
-	const char *verbose, xmlNode *data);
+#include <crm_internal.h>
 
-extern enum cib_errors 
-cib_process_shutdown_req(
+#include <sys/param.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <stdlib.h>
+#include <errno.h>
+#include <fcntl.h>
+
+#include <heartbeat.h>
+#include <clplumbing/cl_log.h>
+
+#include <time.h>
+
+#include <crm/crm.h>
+#include <crm/cib.h>
+#include <crm/msg_xml.h>
+#include <crm/common/msg.h>
+#include <crm/common/xml.h>
+
+enum cib_errors 
+cib_process_query(
 	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
 	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer);
 
-extern enum cib_errors cib_process_default(
+enum cib_errors 
+cib_process_erase(
 	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
 	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer);
 
-extern enum cib_errors cib_process_quit(
+enum cib_errors 
+cib_process_bump(
 	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
 	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer);
 
-extern enum cib_errors cib_process_ping(
+enum cib_errors 
+cib_process_replace(
 	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
 	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer);
 
-extern enum cib_errors cib_process_readwrite(
+enum cib_errors 
+cib_process_modify(
 	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
 	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer);
 
-extern enum cib_errors cib_server_process_diff(
+enum cib_errors 
+cib_process_delete(
 	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
 	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer);
 
-extern enum cib_errors cib_process_sync(
+enum cib_errors 
+cib_process_diff(
 	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
 	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer);
 
-extern enum cib_errors cib_process_sync_one(
-	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
-	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer);
-
-extern enum cib_errors cib_process_change(
-	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
-	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer);
+enum cib_errors cib_update_counter(xmlNode *xml_obj, const char *field, gboolean reset);
+xmlNode *diff_cib_object(xmlNode *old_cib, xmlNode *new_cib, gboolean suppress);
+gboolean apply_cib_diff(xmlNode *old, xmlNode *diff, xmlNode **new);
+gboolean cib_config_changed(xmlNode *old_cib, xmlNode *new_cib, xmlNode **result);
 
 #endif
