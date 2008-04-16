@@ -32,6 +32,7 @@ class CIB:
           </operations>
           <instance_attributes id="%s">
             <attributes>
+              <nvpair id="%s-netmask" name="cidr_netmask" value="32"/>
               <nvpair id="%s-ip" name="ip" value="%s"/>
             </attributes>
           </instance_attributes>
@@ -44,7 +45,7 @@ class CIB:
           </operations>
           <instance_attributes id="%s">
             <attributes>
-              <nvpair id="%s-ip" name="1" value="%s"/>
+              <nvpair id="%s-ip" name="1" value="%s/32"/>
             </attributes>
           </instance_attributes>
         </primitive> '''
@@ -191,9 +192,9 @@ class CIB:
         ip1=self.NextIP()
         ip2=self.NextIP()
         ip3=self.NextIP()
-        ip1_rsc = self.ipaddr_template % (ip1, ip1, ip1, ip1, ip1)
+        ip1_rsc = self.ipaddr_template % (ip1, ip1, ip1, ip1, ip1, ip1)
         ip2_rsc = self.hb_ipaddr_template % (ip2, ip2, ip2, ip2, ip2)
-        ip3_rsc = self.ipaddr_template % (ip3, ip3, ip3, ip3, ip3)
+        ip3_rsc = self.ipaddr_template % (ip3, ip3, ip3, ip3, ip3, ip3)
         resources += self.resource_group_template % (ip1_rsc, ip2_rsc, ip3_rsc)
 
         # lsb resource
@@ -208,7 +209,7 @@ class CIB:
         for node in self.CM.Env["nodes"]:
             ip = self.NextIP()
             per_node_resources = self.ipaddr_template % \
-                ("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, ip)    
+                ("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, ip)    
             
             per_node_constraint = self.per_node_constraint_template % \
                 ("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, node)
