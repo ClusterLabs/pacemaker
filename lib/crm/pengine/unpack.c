@@ -1161,8 +1161,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		
 	    default:
 		if(task_status_i == LRM_OP_DONE) {
-		    crm_err("Remapping %s (rc=%d) on %s to an ERROR",
-			    id, actual_rc_i, node->details->uname);
+		    crm_info("Remapping %s (rc=%d) on %s to an ERROR",
+			     id, actual_rc_i, node->details->uname);
 		    task_status_i = LRM_OP_ERROR;
 		}
 	}
@@ -1230,7 +1230,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				rsc, node, -INFINITY, "__stop_fail__", data_set);
 			    
 			} else if((data_set->start_failure_fatal
-				   || compare_version("2.0", op_version))
+				   || compare_version("2.0", op_version) > 0)
 				  && safe_str_eq(task, CRMD_ACTION_START)) {
 			    crm_warn("Compatability handling for failed op %s on %s",
 				     id, node->details->uname);
