@@ -517,6 +517,11 @@ crm_version_helper(const char *text, char **end_text)
 }
 
 
+/*
+ * version1 < version2 : -1
+ * version1 = version2 :  0
+ * version1 > version2 :  1
+ */
 int
 compare_version(const char *version1, const char *version2)
 {
