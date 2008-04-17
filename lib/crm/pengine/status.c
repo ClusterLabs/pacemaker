@@ -286,31 +286,23 @@ pe_find_resource(GListPtr rsc_list, const char *id)
 node_t *
 pe_find_node_id(GListPtr nodes, const char *id)
 {
-	unsigned lpc = 0;
-	node_t *node = NULL;
-  
-	for(lpc = 0; lpc < g_list_length(nodes); lpc++) {
-		node = g_list_nth_data(nodes, lpc);
-		if(safe_str_eq(node->details->id, id)) {
-			return node;
-		}
-	}
-	/* error */
-	return NULL;
+    slist_iter(node, node_t, nodes, lpc,
+	       if(node && safe_str_eq(node->details->id, id)) {
+		   return node;
+	       }
+	);
+    /* error */
+    return NULL;
 }
 
 node_t *
 pe_find_node(GListPtr nodes, const char *uname)
 {
-	unsigned lpc = 0;
-	node_t *node = NULL;
-  
-	for(lpc = 0; lpc < g_list_length(nodes); lpc++) {
-		node = g_list_nth_data(nodes, lpc);
-		if(safe_str_eq(node->details->uname, uname)) {
-			return node;
-		}
-	}
-	/* error */
-	return NULL;
+    slist_iter(node, node_t, nodes, lpc,
+	       if(node && safe_str_eq(node->details->uname, uname)) {
+		   return node;
+	       }
+	);
+    /* error */
+    return NULL;
 }
