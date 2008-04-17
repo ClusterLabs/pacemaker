@@ -169,7 +169,7 @@ master_update_pseudo_status(
 		cons, rsc_to_node_t, list, lpc2,			\
 		cons_node = NULL;					\
 		if(cons->role_filter == RSC_ROLE_MASTER) {		\
-			crm_debug("Applying %s to %s",			\
+			crm_debug_2("Applying %s to %s",			\
 				  cons->id, child_rsc->id);		\
 			cons_node = pe_find_node_id(			\
 				cons->node_list_rh, chosen->details->id); \
@@ -177,7 +177,7 @@ master_update_pseudo_status(
 		if(cons_node != NULL) {					\
 			int new_priority = merge_weights(		\
 				child_rsc->priority, cons_node->weight); \
-			crm_debug("\t%s: %d->%d (%d)", child_rsc->id,	\
+			crm_debug_2("\t%s: %d->%d (%d)", child_rsc->id,	\
 				child_rsc->priority, new_priority, cons_node->weight);	\
 			child_rsc->priority = new_priority;		\
 		}							\
