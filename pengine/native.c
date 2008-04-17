@@ -716,8 +716,7 @@ node_list_update(GListPtr list1, GListPtr list2, int factor)
 			continue;
 		}
 
-		other_node = (node_t*)pe_find_node_id(
-			list2, node->details->id);
+		other_node = (node_t*)pe_find_node_id(list2, node->details->id);
 
 		if(other_node != NULL) {
 			crm_debug_2("%s: %d + %d",
