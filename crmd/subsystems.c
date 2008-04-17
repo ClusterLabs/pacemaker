@@ -47,7 +47,7 @@
 
 #include <crm/cib.h>
 #include <crmd.h>
-
+#include <crm/common/util.h>
 
 static void
 crmdManagedChildRegistered(ProcTrack* p)
@@ -56,12 +56,35 @@ crmdManagedChildRegistered(ProcTrack* p)
 	the_subsystem->pid = p->pid;
 }
 
+#define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
+
+static void
+save_cib_contents(const HA_Message *msg, int call_id, int rc, crm_data_t *output, void *user_data) 
+{
+    char *pid = user_data;
+    
+    if(rc == cib_ok) {
+	char *filename = NULL;
+	filename = generate_series_filename(PE_WORKING_DIR, "pe-core", crm_atoi(pid, 0), TRUE);
+
+	if(write_xml_file(output, filename, TRUE) < 0) {
+	    crm_err("Could not save CIB contents after PE crash to %s", filename);
+	} else {
+	    crm_notice("Saved CIB contents after PE crash to %s", filename);
+	}
+
+	crm_free(filename);
+    }
+    
+    crm_free(pid);
+}
 
 static void
 crmdManagedChildDied(
 	ProcTrack* p, int status, int signo, int exitcode, int waslogged)
 {
 	struct crm_subsystem_s *the_subsystem = p->privatedata;
+	pid_t local_pid = the_subsystem->pid;
 	
 	crm_info("Process %s:[%d] exited (signal=%d, exitcode=%d)",
 		 the_subsystem->name, the_subsystem->pid, signo, exitcode);
@@ -77,6 +100,19 @@ crmdManagedChildDied(
 		/* this wasnt supposed to happen */
 		crm_err("The %s subsystem terminated unexpectedly",
 			the_subsystem->name);
+
+		if(the_subsystem->flag_connected == R_PE_CONNECTED) {
+		    int rc = cib_ok;
+		    char *pid = crm_itoa(local_pid);
+		    
+		    /* the PE died...
+		     * save the current CIB so that we have a chance of
+		     * figuring out what killed it
+		     */
+		    rc = fsa_cib_conn->cmds->query(
+			fsa_cib_conn, NULL, NULL, cib_scope_local);
+		    add_cib_op_callback(rc, TRUE, pid, save_cib_contents);
+		}
 		
 		register_fsa_input_before(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
