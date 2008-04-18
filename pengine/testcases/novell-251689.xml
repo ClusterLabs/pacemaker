@@ -154,8 +154,8 @@
            </lrm_resource>
            <lrm_resource id="sles10" type="Xen" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="sles10_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="11:11:6bf55abe-9f28-45ab-a69a-bfdf98b3e1ec" transition_magic="0:7;11:11:6bf55abe-9f28-45ab-a69a-bfdf98b3e1ec" call_id="19" crm_feature_set="1.0.8" rc_code="7" op_status="0" interval="0" op_digest="3c8346271b6a1d45f558b3cf24a01304"/>
-             <lrm_rsc_op id="sles10_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="78:11:6bf55abe-9f28-45ab-a69a-bfdf98b3e1ec" transition_magic="0:0;78:11:6bf55abe-9f28-45ab-a69a-bfdf98b3e1ec" call_id="20" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="0" op_digest="3c8346271b6a1d45f558b3cf24a01304"/>
-             <lrm_rsc_op id="sles10_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" transition_key="79:11:6bf55abe-9f28-45ab-a69a-bfdf98b3e1ec" transition_magic="0:0;79:11:6bf55abe-9f28-45ab-a69a-bfdf98b3e1ec" call_id="21" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="10000" op_digest="3c8346271b6a1d45f558b3cf24a01304"/>
+             <lrm_rsc_op id="sles10_start_0" operation="start" crm-debug-origin="do_update_resource" transition_key="78:11:6bf55abe-9f28-45ab-a69a-bfdf98b3e1ec" transition_magic="0:0;78:11:6bf55abe-9f28-45ab-a69a-bfdf98b3e1ec" call_id="20" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="0" op_digest="11ac76fa612deae58c5cf56b47bad762"/>
+             <lrm_rsc_op id="sles10_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" transition_key="79:11:6bf55abe-9f28-45ab-a69a-bfdf98b3e1ec" transition_magic="0:0;79:11:6bf55abe-9f28-45ab-a69a-bfdf98b3e1ec" call_id="21" crm_feature_set="1.0.8" rc_code="0" op_status="0" interval="10000" op_digest="11ac76fa612deae58c5cf56b47bad762"/>
            </lrm_resource>
          </lrm_resources>
        </lrm>
