@@ -50,7 +50,7 @@ gboolean
 update_action(action_t *action)
 {
 	int local_type = 0;
-	int default_log_level = LOG_INFO;
+	int default_log_level = LOG_DEBUG_3;
 	int log_level = default_log_level;
 	gboolean changed = FALSE;
 
@@ -223,7 +223,7 @@ update_action(action_t *action)
 			   || (other->action->pseudo && action->print_always)) {
 			    other_changed = TRUE;
 			    other->action->print_always = TRUE;
-			    do_crm_log(LOG_CRIT/*log_level-1*/,
+			    do_crm_log(log_level-1,
 				       "   * (implies left) Ensuring action %s is included because of %s",
 				       other->action->uuid, action->uuid);
 			}
@@ -254,7 +254,7 @@ update_action(action_t *action)
 			   || (action->pseudo && other->action->print_always)) {
 			    changed = TRUE;
 			    action->print_always = TRUE;
-			    do_crm_log(LOG_CRIT/*log_level-1*/,
+			    do_crm_log(log_level-1,
 				       "   * (implies right) Ensuring action %s is included because of %s",
 				       action->uuid, other->action->uuid);
 			}
