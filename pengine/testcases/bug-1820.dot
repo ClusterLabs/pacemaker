@@ -4,6 +4,7 @@ digraph "g" {
 "gr1_running_0" [ style=bold color="green" fontcolor="orange"  ]
 "gr1_start_0" -> "gr1_running_0" [ style = bold]
 "gr1_start_0" -> "test1_migrate_from_0 world" [ style = bold]
+"gr1_start_0" -> "test2_start_0 world" [ style = bold]
 "gr1_start_0" [ style=bold color="green" fontcolor="orange"  ]
 "gr1_stop_0" -> "gr1_start_0" [ style = bold]
 "gr1_stop_0" -> "gr1_stopped_0" [ style = bold]

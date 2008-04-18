@@ -2,6 +2,8 @@
 "bar_running_0" [ style=bold color="green" fontcolor="orange"  ]
 "bar_start_0" -> "bar_running_0" [ style = bold]
 "bar_start_0" -> "rsc6_start_0 node1" [ style = bold]
+"bar_start_0" -> "rsc7_start_0 node1" [ style = bold]
+"bar_start_0" -> "rsc8_start_0 node1" [ style = bold]
 "bar_start_0" [ style=bold color="green" fontcolor="orange"  ]
 "probe_complete node1" -> "probe_complete" [ style = bold]
 "probe_complete node1" [ style=bold color="green" fontcolor="black"  ]

@@ -3,6 +3,7 @@ digraph "g" {
 "group_fUN_running_0" [ style=dashed color="red" fontcolor="orange"  ]
 "group_fUN_start_0" -> "group_fUN_running_0" [ style = dashed]
 "group_fUN_start_0" -> "resource_IP3_start_0 ops.ds9" [ style = dashed]
+"group_fUN_start_0" -> "resource_dummy_start_0 ops.ds9" [ style = dashed]
 "group_fUN_start_0" [ style=dashed color="red" fontcolor="orange"  ]
 "group_fUN_stop_0" -> "group_fUN_start_0" [ style = dashed]
 "group_fUN_stop_0" -> "group_fUN_stopped_0" [ style = bold]

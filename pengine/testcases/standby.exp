@@ -139,6 +139,9 @@
        <trigger>
          <rsc_op id="30" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="36" operation="start" operation_key="app02_start_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="9">
@@ -180,6 +183,9 @@
        </trigger>
        <trigger>
          <rsc_op id="33" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="36" operation="start" operation_key="app02_start_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -348,6 +354,9 @@
        <trigger>
          <rsc_op id="43" operation="stop" operation_key="LVM_22_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="55" operation="start" operation_key="oracle_start_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="22">
@@ -392,6 +401,9 @@
        </trigger>
        <trigger>
          <rsc_op id="46" operation="stop" operation_key="Filesystem_23_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="55" operation="start" operation_key="oracle_start_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -438,6 +450,9 @@
        <trigger>
          <rsc_op id="49" operation="stop" operation_key="oracle_24_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="55" operation="start" operation_key="oracle_start_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="28">
@@ -479,6 +494,9 @@
        </trigger>
        <trigger>
          <rsc_op id="52" operation="stop" operation_key="oralsnr_25_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="55" operation="start" operation_key="oracle_start_0"/>
        </trigger>
      </inputs>
    </synapse>

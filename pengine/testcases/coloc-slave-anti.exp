@@ -65,6 +65,9 @@
        <trigger>
          <rsc_op id="50" operation="start" operation_key="fs-1_start_0" on_node="pollux" on_node_uuid="26cfbecf-dc25-42e1-84de-325ca9e457b5"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="56" operation="start" operation_key="group-1_start_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="5">
@@ -90,6 +93,9 @@
      <inputs>
        <trigger>
          <rsc_op id="52" operation="start" operation_key="ip-198_start_0" on_node="pollux" on_node_uuid="26cfbecf-dc25-42e1-84de-325ca9e457b5"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="56" operation="start" operation_key="group-1_start_0"/>
        </trigger>
      </inputs>
    </synapse>

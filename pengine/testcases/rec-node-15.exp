@@ -145,6 +145,9 @@
        <trigger>
          <rsc_op id="24" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="30" operation="start" operation_key="app02_start_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="9">
@@ -189,6 +192,9 @@
        </trigger>
        <trigger>
          <rsc_op id="27" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="30" operation="start" operation_key="app02_start_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -283,6 +289,9 @@
        <trigger>
          <rsc_op id="34" operation="start" operation_key="IPaddr_192_168_1_104_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="44" operation="start" operation_key="oracle_start_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="18">
@@ -311,6 +320,9 @@
        </trigger>
        <trigger>
          <rsc_op id="36" operation="start" operation_key="LVM_22_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="44" operation="start" operation_key="oracle_start_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -341,6 +353,9 @@
        <trigger>
          <rsc_op id="38" operation="start" operation_key="Filesystem_23_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="44" operation="start" operation_key="oracle_start_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="22">
@@ -369,6 +384,9 @@
        </trigger>
        <trigger>
          <rsc_op id="40" operation="start" operation_key="oracle_24_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="44" operation="start" operation_key="oracle_start_0"/>
        </trigger>
      </inputs>
    </synapse>

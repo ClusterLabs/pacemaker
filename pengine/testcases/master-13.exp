@@ -421,6 +421,9 @@
        <trigger>
          <rsc_op id="40" operation="start" operation_key="IPaddr0_start_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="43" operation="start" operation_key="group_start_0"/>
+       </trigger>
      </inputs>
    </synapse>
  </transition_graph>

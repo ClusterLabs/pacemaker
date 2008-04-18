@@ -42,6 +42,8 @@
 "child_DoFencing:1_start_0 c001n07" [ style=bold color="green" fontcolor="black" ]
 "group-1_running_0" [ style=dashed color="red" fontcolor="orange"  ]
 "group-1_start_0" -> "192.168.100.181_start_0 c001n07" [ style = dashed]
+"group-1_start_0" -> "192.168.100.182_start_0 c001n07" [ style = dashed]
+"group-1_start_0" -> "192.168.100.183_start_0 c001n07" [ style = dashed]
 "group-1_start_0" -> "group-1_running_0" [ style = dashed]
 "group-1_start_0" [ style=dashed color="red" fontcolor="orange"  ]
 "group-1_stop_0" -> "192.168.100.181_stop_0 c001n06" [ style = bold]

@@ -152,6 +152,9 @@
        <trigger>
          <rsc_op id="32" operation="stop" operation_key="child_192.168.100.182_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="36" operation="start" operation_key="group-1_start_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="10">
@@ -193,6 +196,9 @@
        </trigger>
        <trigger>
          <rsc_op id="34" operation="stop" operation_key="child_192.168.100.183_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="36" operation="start" operation_key="group-1_start_0"/>
        </trigger>
      </inputs>
    </synapse>

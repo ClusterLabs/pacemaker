@@ -150,6 +150,9 @@
        <trigger>
          <rsc_op id="11" operation="stop" operation_key="mysql-proxy:0_stop_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="13" operation="start" operation_key="grrr:0_start_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="10">

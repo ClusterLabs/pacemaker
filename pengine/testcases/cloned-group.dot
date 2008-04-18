@@ -34,6 +34,7 @@ digraph "g" {
 "grrr:0_running_0" [ style=bold color="green" fontcolor="orange"  ]
 "grrr:0_start_0" -> "apache2:0_start_0 webcluster01" [ style = bold]
 "grrr:0_start_0" -> "grrr:0_running_0" [ style = bold]
+"grrr:0_start_0" -> "mysql-proxy:0_start_0 webcluster01" [ style = bold]
 "grrr:0_start_0" [ style=bold color="green" fontcolor="orange"  ]
 "grrr:0_stop_0" -> "apache2:0_stop_0 webcluster01" [ style = bold]
 "grrr:0_stop_0" -> "grrr:0_start_0" [ style = bold]

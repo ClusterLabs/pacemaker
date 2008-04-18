@@ -130,6 +130,9 @@
        <trigger>
          <rsc_op id="10" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="13" operation="start" operation_key="gr1_start_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="9">

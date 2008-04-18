@@ -34,6 +34,7 @@ digraph "g" {
 "drbd0:1_promote_0 odin" [ style=bold color="green" fontcolor="black"  ]
 "group_running_0" [ style=bold color="green" fontcolor="orange"  ]
 "group_start_0" -> "IPaddr0_start_0 odin" [ style = bold]
+"group_start_0" -> "MailTo_start_0 odin" [ style = bold]
 "group_start_0" -> "group_running_0" [ style = bold]
 "group_start_0" [ style=bold color="green" fontcolor="orange"  ]
 "ms_drbd_confirmed-post_notify_demote_0" -> "drbd0:0_monitor_12000 frigg" [ style = bold]

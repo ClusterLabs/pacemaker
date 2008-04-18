@@ -151,6 +151,9 @@
        <trigger>
          <pseudo_event id="8" operation="stop" operation_key="rsc2_stop_0"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="10" operation="start" operation_key="group1_start_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="10">

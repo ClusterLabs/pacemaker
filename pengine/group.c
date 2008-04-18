@@ -231,6 +231,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 		}
 		
+		order_start_start(rsc, child_rsc, pe_order_implies_left_printed);
 		order_stop_stop(rsc, child_rsc, stop|pe_order_implies_left_printed);
 		
 		custom_action_order(child_rsc, stop_key(child_rsc), NULL,

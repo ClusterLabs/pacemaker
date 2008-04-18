@@ -156,6 +156,9 @@
        <trigger>
          <rsc_op id="28" operation="start" operation_key="child_rsc1_start_0" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="31" operation="start" operation_key="rsc2_start_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="14">
@@ -198,6 +201,9 @@
        </trigger>
        <trigger>
          <rsc_op id="29" operation="start" operation_key="child_rsc2_start_0" on_node="node2" on_node_uuid="uuid2"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="31" operation="start" operation_key="rsc2_start_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -321,6 +327,9 @@
        <trigger>
          <rsc_op id="35" operation="start" operation_key="child_rsc4_start_0" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="38" operation="start" operation_key="rsc3_start_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="28">
@@ -363,6 +372,9 @@
        </trigger>
        <trigger>
          <rsc_op id="36" operation="start" operation_key="child_rsc5_start_0" on_node="node2" on_node_uuid="uuid2"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="38" operation="start" operation_key="rsc3_start_0"/>
        </trigger>
      </inputs>
    </synapse>
