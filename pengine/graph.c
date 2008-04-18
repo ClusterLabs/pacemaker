@@ -599,6 +599,7 @@ should_dump_input(int last_action, action_t *action, action_wrapper_t *wrapper)
     int type = wrapper->type;
     type &= ~pe_order_implies_left_printed;
     type &= ~pe_order_implies_right_printed;
+    type &= ~pe_order_optional;
     
     wrapper->state = pe_link_not_dumped;	
     if(last_action == wrapper->action->id) {
@@ -615,7 +616,7 @@ should_dump_input(int last_action, action_t *action, action_wrapper_t *wrapper)
 	return FALSE;
 
     } else if(wrapper->action->runnable == FALSE
-	      && type == pe_order_optional) {
+	      && type == pe_order_none) {
 	crm_debug_2("Input (%d) %s optional (ordering)",
 		  wrapper->action->id,
 		  wrapper->action->uuid);
