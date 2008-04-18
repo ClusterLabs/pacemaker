@@ -1242,7 +1242,14 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 				rsc->role = RSC_ROLE_MASTER;
 
 			} else if(safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
-				rsc->role = RSC_ROLE_MASTER;
+			    /*
+			     * staying in role=master ends up putting the PE/TE into a loop
+			     * setting role=slave is not dangerous because no master will be
+			     * promoted until the failed resource has been fully stopped
+			     */
+			    crm_warn("Forcing %s to stop after a failed demote action", rsc->id);
+			    rsc->next_role = RSC_ROLE_STOPPED;
+			    rsc->role = RSC_ROLE_SLAVE;
 				
 			} else if(rsc->role < RSC_ROLE_STARTED) {
 				rsc->role = RSC_ROLE_STARTED;

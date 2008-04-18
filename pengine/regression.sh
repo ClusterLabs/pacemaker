@@ -232,6 +232,7 @@ do_test master-ordering "Prevent resources from starting that need a master"
 do_test bug-1765 "Master-Master Colocation (dont stop the slaves)"
 do_test master-group "Promotion of cloned groups"
 do_test bug-lf-1852 "Don't shuffle master/slave instances unnecessarily"
+do_test master-failed-demote "Dont retry failed demote actions"
 
 echo ""
 do_test managed-0 "Managed (reference)"
