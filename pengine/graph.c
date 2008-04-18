@@ -50,7 +50,7 @@ gboolean
 update_action(action_t *action)
 {
 	int local_type = 0;
-	int default_log_level = LOG_DEBUG_3;
+	int default_log_level = LOG_INFO;
 	int log_level = default_log_level;
 	gboolean changed = FALSE;
 
@@ -188,7 +188,7 @@ update_action(action_t *action)
 				other_changed = TRUE;
 			}
 		}		
-		
+
 		if(local_type & pe_order_implies_left) {
 			if(other->action->optional == FALSE) {
 				/* nothing to do */
@@ -216,6 +216,20 @@ update_action(action_t *action)
 			}
 		}
 		
+		if(local_type & pe_order_implies_left_printed) {
+		    if(other->action->optional == TRUE
+		       && other->action->print_always == FALSE) {
+			if(action->optional == FALSE
+			   || (other->action->pseudo && action->print_always)) {
+			    other_changed = TRUE;
+			    other->action->print_always = TRUE;
+			    do_crm_log(LOG_CRIT/*log_level-1*/,
+				       "   * (implies left) Ensuring action %s is included because of %s",
+				       other->action->uuid, action->uuid);
+			}
+		    }
+		}
+
 		if(local_type & pe_order_implies_right) {
 			if(action->optional == FALSE) {
 				/* nothing to do */
@@ -231,6 +245,20 @@ update_action(action_t *action)
 			} else {
 				do_crm_log(log_level, "      Ignoring implies right");
 			}
+		}
+
+		if(local_type & pe_order_implies_right_printed) {
+		    if(action->optional == TRUE
+		       && action->print_always == FALSE) {
+			if(other->action->optional == FALSE
+			   || (action->pseudo && other->action->print_always)) {
+			    changed = TRUE;
+			    action->print_always = TRUE;
+			    do_crm_log(LOG_CRIT/*log_level-1*/,
+				       "   * (implies right) Ensuring action %s is included because of %s",
+				       action->uuid, other->action->uuid);
+			}
+		    }
 		}
 
 		if(other_changed) {
@@ -482,7 +510,7 @@ should_dump_action(action_t *action)
 	CRM_CHECK(action != NULL, return FALSE);
 
 	interval = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
-	if(action->optional) {
+	if(action->optional && action->print_always == FALSE) {
 		crm_debug_5("action %d (%s) was optional",
 			    action->id, action->uuid);
 		return FALSE;
@@ -568,6 +596,10 @@ static gint sort_action_id(gconstpointer a, gconstpointer b)
 static gboolean
 should_dump_input(int last_action, action_t *action, action_wrapper_t *wrapper)
 {
+    int type = wrapper->type;
+    type &= ~pe_order_implies_left_printed;
+    type &= ~pe_order_implies_right_printed;
+    
     wrapper->state = pe_link_not_dumped;	
     if(last_action == wrapper->action->id) {
 	crm_debug_2("Input (%d) %s duplicated",
@@ -581,28 +613,38 @@ should_dump_input(int last_action, action_t *action, action_wrapper_t *wrapper)
 		    wrapper->action->id,
 		    wrapper->action->uuid);
 	return FALSE;
-	
-    } else if(wrapper->action->optional == TRUE) {
-	crm_debug_2("Input (%d) %s optional",
-		    wrapper->action->id,
-		    wrapper->action->uuid);
-	return FALSE;
-	
+
     } else if(wrapper->action->runnable == FALSE
-	      && wrapper->action->pseudo == FALSE
-	      && wrapper->type == pe_order_optional) {
-	crm_debug("Input (%d) %s optional (ordering)",
+	      && type == pe_order_optional) {
+	crm_debug_2("Input (%d) %s optional (ordering)",
 		  wrapper->action->id,
 		  wrapper->action->uuid);
 	return FALSE;
 
     } else if(action->pseudo
 	      && (wrapper->type & pe_order_stonith_stop)) {
-	crm_debug("Input (%d) %s suppressed",
+	crm_debug_2("Input (%d) %s suppressed",
 		  wrapper->action->id,
 		  wrapper->action->uuid);
 	return FALSE;
-    }
+
+    } else if(wrapper->action->optional
+	       && wrapper->action->print_always
+	       && wrapper->action->runnable) {
+	crm_debug_2("Input (%d) %s printable",
+		    wrapper->action->id,
+		    wrapper->action->uuid);
+	/* return TRUE */
+	
+    } else if(wrapper->action->optional == TRUE) {
+	crm_debug_2("Input (%d) %s optional",
+		    wrapper->action->id,
+		    wrapper->action->uuid);
+	return FALSE;
+    } 
+	
+
+    
     crm_debug_3("Input (%d) %s n=%p p=%d r=%d f=0x%.6x dumped for %s",
 		wrapper->action->id,
 		wrapper->action->uuid,

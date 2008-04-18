@@ -60,6 +60,9 @@ enum pe_ordering {
 
 	pe_order_complex_left		= 0x10000, /* upgrades to implies left */
 	pe_order_complex_right		= 0x20000, /* upgrades to implies right */
+
+	pe_order_implies_left_printed	= 0x40000, /* Like implies left but only ensures the action is printed, not manditory */
+	pe_order_implies_right_printed	= 0x80000, /* Like implies right but only ensures the action is printed, not manditory */
 	
 	pe_order_test		        = 0x100000 /* test marker */
 };

@@ -192,6 +192,7 @@ struct action_s
 		gboolean pseudo;
 		gboolean runnable;
 		gboolean optional;
+		gboolean print_always;
 		gboolean failure_is_fatal;
 		gboolean implied_by_stonith;
 		gboolean allow_reload_conversion;

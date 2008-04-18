@@ -12,6 +12,9 @@
        <trigger>
          <pseudo_event id="16" operation="stopped" operation_key="grrr:0_stopped_0"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="23" operation="start" operation_key="apache2_clone_start_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="1">
@@ -38,7 +41,11 @@
          <attributes crm_feature_set="2.1" CRM_meta_timeout="20000" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
        </pseudo_event>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <pseudo_event id="25" operation="stop" operation_key="apache2_clone_stop_0"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="3">
      <action_set>
@@ -151,7 +158,11 @@
          <attributes crm_feature_set="2.1" CRM_meta_timeout="20000" CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
        </pseudo_event>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <pseudo_event id="25" operation="stop" operation_key="apache2_clone_stop_0"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="11">
      <action_set>
@@ -201,6 +212,62 @@
      </inputs>
    </synapse>
    <synapse id="14">
+     <action_set>
+       <pseudo_event id="23" operation="start" operation_key="apache2_clone_start_0">
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="25" operation="stop" operation_key="apache2_clone_stop_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="26" operation="stopped" operation_key="apache2_clone_stopped_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="15" priority="1000000">
+     <action_set>
+       <pseudo_event id="24" operation="running" operation_key="apache2_clone_running_0">
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="14" operation="running" operation_key="grrr:0_running_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="23" operation="start" operation_key="apache2_clone_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="16">
+     <action_set>
+       <pseudo_event id="25" operation="stop" operation_key="apache2_clone_stop_0">
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="17" priority="1000000">
+     <action_set>
+       <pseudo_event id="26" operation="stopped" operation_key="apache2_clone_stopped_0">
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="16" operation="stopped" operation_key="grrr:0_stopped_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="22" operation="stopped" operation_key="grrr:1_stopped_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="25" operation="stop" operation_key="apache2_clone_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="18">
      <action_set>
        <pseudo_event id="5" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="2.1"/>

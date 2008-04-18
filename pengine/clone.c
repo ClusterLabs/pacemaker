@@ -389,13 +389,20 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 
 static void
 clone_update_pseudo_status(
-	resource_t *child, gboolean *stopping, gboolean *starting) 
+	resource_t *rsc, gboolean *stopping, gboolean *starting) 
 {
+	if(rsc->children) {
+	    slist_iter(child, resource_t, rsc->children, lpc,
+		       clone_update_pseudo_status(child, stopping, starting)
+		);
+	    return;
+	}
+    
 	CRM_ASSERT(stopping != NULL);
 	CRM_ASSERT(starting != NULL);
 
 	slist_iter(
-		action, action_t, child->actions, lpc,
+		action, action_t, rsc->actions, lpc,
 
 		if(*starting && *stopping) {
 			return;

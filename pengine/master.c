@@ -140,13 +140,20 @@ child_demoting_constraints(
 
 static void
 master_update_pseudo_status(
-	resource_t *child, gboolean *demoting, gboolean *promoting) 
-{
+	resource_t *rsc, gboolean *demoting, gboolean *promoting) 
+{	
+	if(rsc->children) {
+	    slist_iter(child, resource_t, rsc->children, lpc,
+		       master_update_pseudo_status(child, demoting, promoting)
+		);
+	    return;
+	}
+    
 	CRM_ASSERT(demoting != NULL);
 	CRM_ASSERT(promoting != NULL);
 
 	slist_iter(
-		action, action_t, child->actions, lpc,
+		action, action_t, rsc->actions, lpc,
 
 		if(*promoting && *demoting) {
 			return;
@@ -626,6 +633,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 		any_demoting = any_demoting || child_demoting;
 		any_promoting = any_promoting || child_promoting;
+		crm_err("Created actions for %s: %d %d", child_rsc->id, child_promoting, child_demoting);
 		);
 	
 	/* promote */
@@ -694,7 +702,7 @@ master_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	custom_action_order(
 		rsc, stopped_key(rsc), NULL,
 		rsc, promote_key(rsc), NULL,
-		pe_order_optional, data_set);
+		pe_order_optional|pe_order_test, data_set);
 
 	/* global demoted before start */
 	custom_action_order(
