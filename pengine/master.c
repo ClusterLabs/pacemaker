@@ -39,10 +39,6 @@ child_promoting_constraints(
 	clone_variant_data_t *clone_data, enum pe_ordering type,
 	resource_t *rsc, resource_t *child, resource_t *last, pe_working_set_t *data_set)
 {
-/* 	if(clone_data->ordered */
-/* 	   || clone_data->self->restart_type == pe_restart_restart) { */
-/* 		type = pe_order_implies_left; */
-/* 	} */
 	if(child == NULL) {
 		if(clone_data->ordered && last != NULL) {
 			crm_debug_4("Ordered version (last node)");
@@ -52,8 +48,22 @@ child_promoting_constraints(
 				rsc, promoted_key(rsc), NULL,
 				type, data_set);
 		}
-		
-	} else if(clone_data->ordered) {
+		return;
+	}
+
+	/* child promote before global promoted */
+	custom_action_order(
+	    child, promote_key(child), NULL,
+	    rsc, promoted_key(rsc), NULL,
+	    type, data_set);
+	
+	/* global promote before child promote */
+	custom_action_order(
+	    rsc, promote_key(rsc), NULL,
+	    child, promote_key(child), NULL,
+	    type, data_set);
+
+	if(clone_data->ordered) {
 		crm_debug_4("Ordered version");
 		if(last == NULL) {
 			/* global promote before first child promote */
@@ -69,19 +79,6 @@ child_promoting_constraints(
 
 	} else {
 		crm_debug_4("Un-ordered version");
-		
-		/* child promote before global promoted */
-		custom_action_order(
-			child, promote_key(child), NULL,
-			rsc, promoted_key(rsc), NULL,
-			type, data_set);
-                
-		/* global promote before child promote */
-		custom_action_order(
-			rsc, promote_key(rsc), NULL,
-			child, promote_key(child), NULL,
-			type, data_set);
-
 	}
 }
 
@@ -90,11 +87,6 @@ child_demoting_constraints(
 	clone_variant_data_t *clone_data, enum pe_ordering type,
 	resource_t *rsc, resource_t *child, resource_t *last, pe_working_set_t *data_set)
 {
-/* 	if(clone_data->ordered */
-/* 	   || clone_data->self->restart_type == pe_restart_restart) { */
-/* 		type = pe_order_implies_left; */
-/* 	} */
-	
 	if(child == NULL) {
 		if(clone_data->ordered && last != NULL) {
 			crm_debug_4("Ordered version (last node)");
@@ -104,8 +96,22 @@ child_demoting_constraints(
 				last, demote_key(last), NULL,
 				pe_order_implies_left, data_set);
 		}
-		
-	} else if(clone_data->ordered && last != NULL) {
+		return;
+	}
+	
+	/* child demote before global demoted */
+	custom_action_order(
+	    child, demote_key(child), NULL,
+	    rsc, demoted_key(rsc), NULL,
+	    pe_order_implies_right_printed, data_set);
+	
+	/* global demote before child demote */
+	custom_action_order(
+	    rsc, demote_key(rsc), NULL,
+	    child, demote_key(child), NULL,
+	    pe_order_implies_left_printed, data_set);
+	
+	if(clone_data->ordered && last != NULL) {
 		crm_debug_4("Ordered version");
 
 		/* child/child relative demote */
@@ -123,18 +129,6 @@ child_demoting_constraints(
 
 	} else {
 		crm_debug_4("Un-ordered version");
-
-		/* child demote before global demoted */
-		custom_action_order(
-			child, demote_key(child), NULL,
-			rsc, demoted_key(rsc), NULL,
-			type, data_set);
-                        
-		/* global demote before child demote */
-		custom_action_order(
-			rsc, demote_key(rsc), NULL,
-			child, demote_key(child), NULL,
-			type, data_set);
 	}
 }
 
