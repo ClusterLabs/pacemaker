@@ -935,10 +935,10 @@ register_activity(resource_t *rsc, enum action_tasks task, node_t *node, notify_
 {
 	notify_entry_t *entry = NULL;
 
-	CRM_CHECK(node != NULL,
-		  crm_err("%s has no node for required action %s",
-			  rsc->id, task2text(task));
-		  return);
+	if(node == NULL) {
+	    pe_proc_warn("%s has no node for required action %s", rsc->id, task2text(task));
+	    return;
+	}
 
 	crm_malloc0(entry, sizeof(notify_entry_t));
 	entry->rsc = rsc;
