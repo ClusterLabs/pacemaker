@@ -201,12 +201,6 @@ random for the selected number of iterations.
                 self.CM.log("Test %s (%s) \t[FAILED]" %(test.name,nodechoice))
                 # Better get the current info from the cluster...
                 self.CM.statall()
-                # Make sure logging is working and we have enough disk space...
-                if not self.CM.Env["DoBSC"]:
-                    if not self.CM.TestLogging():
-                        sys.exit(1)
-                    if not self.CM.CheckDf():
-                        sys.exit(1)
             stoptime=time.time()
             elapsed_time = stoptime - starttime
             test_time = stoptime - test.starttime
@@ -2490,31 +2484,3 @@ class SimulStartLite(CTSTest):
     def is_applicable(self):
         '''SimulStartLite is a setup test and never applicable'''
         return 0
-
-###################################################################
-class LoggingTest(CTSTest):
-###################################################################
-    def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name="Logging"
-
-    def __call__(self, dummy):
-        '''Perform the 'Logging' test. '''
-        self.incr("calls")
-        
-        # Make sure logging is working and we have enough disk space...
-        if not self.CM.TestLogging():
-            sys.exit(1)
-        if not self.CM.CheckDf():
-            sys.exit(1)
-
-    def is_applicable(self):
-        '''ResourceRecover is applicable only when there are resources running
-         on our cluster and environment is linux-ha-v2'''
-        return self.CM.Env["DoBSC"]
-
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
-        return []
-
-#AllTestClasses.append(LoggingTest)

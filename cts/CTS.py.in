@@ -814,67 +814,6 @@ class ClusterManager(UserDict):
     def Components(self):
         raise ValueError("Abstract Class member (Components)")
     
-    
-    def RestartClusterLogging(self):
-        self.log("WARN: Restarting logging on cluster nodes")
-        for node in self.Env["nodes"]:
-            cmd=self.Env["logrestartcmd"]
-            if self.rsh.noBlock(node, cmd) != 0:
-                self.log ("ERROR: Cannot restart logging on %s [%s failed]" % (node, cmd))
-
-    def TestLogging(self):
-        self.TestLoggingLevel=self.TestLoggingLevel+1
-        ret=1
-        if self.TestLoggingLevel > 3:
-            self.log("ERROR: Unable to fix remote logging. Stopping tests.")
-            self.TestLoggingLevel=self.TestLoggingLevel-1
-            return None
-           
-        patterns= []
-        prefix="Test message from "
-        for node in self.Env["nodes"]:
-            patterns.append(prefix +  node)
-        watch = LogWatcher(self["LogFileName"], patterns, 30 + len(self.Env["nodes"]))
-        watch.setwatch()
-        logpri = self.Env["logfacility"] + ".info"
-        for node in self.Env["nodes"]:
-            cmd="logger -p %s %s%s" % (logpri, prefix, node)
-            if self.rsh.noBlock(node, cmd) != 0:
-                self.log ("ERROR: Cannot execute remote command [%s] on %s" % (cmd, node))
-        watch_result = watch.lookforall()
-        if watch.unmatched:
-            self.log("ERROR: Remote logging is not working.")
-            for regex in watch.unmatched:
-                self.log ("ERROR: Test message [%s] not found in logs." % (regex))
-            self.RestartClusterLogging()
-            time.sleep(30*self.TestLoggingLevel)
-            ret=self.TestLogging()
-            if ret:
-              self.log("NOTE: Cluster logging now working.")
-        self.TestLoggingLevel=self.TestLoggingLevel-1
-        return ret
-
-    def CheckDf(self):
-        dfcmd="df -k /var/log | tail -1 | tr -s ' ' | cut -d' ' -f2"
-        dfmin=500000
-        result=1
-        for node in self.Env["nodes"]:
-            dfout=self.rsh.readaline(node, dfcmd)
-            if not dfout:
-                self.log ("ERROR: Cannot execute remote df command [%s] on %s" % (dfcmd, node))
-            else:
-                try:
-                    idfout = int(dfout)
-                except (ValueError, TypeError):
-                    self.log("Warning: df output from %s was invalid [%s]" % (node, dfout))
-                else:
-                    if idfout == 0:
-                        self.log("CRIT: Completely out of log disk space on %s" % node)
-                        result=None
-                    elif idfout <= 1000:
-                        self.log("WARN: Low on log disk space (%d Mbytes) on %s" % (idfout, node))
-        return result
-
 class Resource:
     '''
     This is an HA resource (not a resource group).
@@ -952,7 +891,7 @@ class Process(Component):
         
     def kill(self, node):
         if self.CM.rsh(node, self.KillCmd) != 0:
-            self.CM.log ("ERROR: Kill %s failed on node %s" %(name,node))
+            self.CM.log ("ERROR: Kill %s failed on node %s" %(self.name,node))
             return None
         return 1
 

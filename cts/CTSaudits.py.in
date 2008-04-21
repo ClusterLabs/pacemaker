@@ -50,6 +50,99 @@ AllAuditClasses = [ ]
 class ResourceAudit(ClusterAudit):
 
     def name(self):
+        return "LogAudit"
+
+    def __init__(self, cm):
+        self.CM = cm
+
+    def RestartClusterLogging(self):
+        self.CM.log("WARN: Restarting logging on cluster nodes")
+        for node in self.CM.Env["nodes"]:
+            cmd=self.CM.Env["logrestartcmd"]
+            if self.CM.rsh.noBlock(node, cmd) != 0:
+                self.CM.log ("ERROR: Cannot restart logging on %s [%s failed]" % (node, cmd))
+
+    def TestLogging(self):
+        patterns= []
+        prefix="Test message from "
+        for node in self.CM.Env["nodes"]:
+            patterns.append(prefix +  node)
+        watch = LogWatcher(self["LogFileName"], patterns, 30 + len(self.CM.Env["nodes"]))
+        watch.setwatch()
+        for node in self.CM.Env["nodes"]:
+            cmd="logger -p %s.info %s%s" % (self.CM.Env["logfacility"], prefix, node)
+            if self.CM.rsh.noBlock(node, cmd) != 0:
+                self.CM.log ("ERROR: Cannot execute remote command [%s] on %s" % (cmd, node))
+
+        watch_result = watch.lookforall()
+
+        if watch.unmatched:
+            self.CM.log("ERROR: Remote logging is not working.")
+            for regex in watch.unmatched:
+                self.CM.log ("ERROR: Test message [%s] not found in logs." % (regex))
+            return 0
+
+        return 1
+
+    def __call__(self):
+        max=3
+        attempt=0
+        while attempt <= max and self.TestLogging() == 0:
+            attempt = attempt + 1
+            self.RestartClusterLogging()
+            time.sleep(60*attempt)
+
+        if attempt > max:
+            self.CM.log("Cluster logging unrecoverable.")
+            return 0
+
+        if attempt > 0:
+            self.CM.log("NOTE: Cluster logging now working.")
+
+        return 1
+    
+    def is_applicable(self):
+        if self.CM.Env["DoBSC"]:
+            return 0
+        return 1
+
+class DiskAudit(ClusterAudit):
+
+    def name(self):
+        return "DiskspaceAudit"
+
+    def __init__(self, cm):
+        self.CM = cm
+
+    def __call__(self):
+        result=1
+        dfcmd="df -k /var/log | tail -1 | tr -s ' ' | cut -d' ' -f2"
+        for node in self.CM.Env["nodes"]:
+            dfout=self.CM.rsh.readaline(node, dfcmd)
+            if not dfout:
+                self.CM.log ("ERROR: Cannot execute remote df command [%s] on %s" % (dfcmd, node))
+            else:
+                try:
+                    idfout = int(dfout)
+                except (ValueError, TypeError):
+                    self.CM.log("Warning: df output from %s was invalid [%s]" % (node, dfout))
+                else:
+                    if idfout == 0:
+                        self.CM.log("CRIT: Completely out of log disk space on %s" % node)
+                        result=None
+                    elif idfout <= 1000:
+                        self.CM.log("WARN: Low on log disk space (%d Mbytes) on %s" % (idfout, node))
+        return result
+    
+    def is_applicable(self):
+        if self.CM.Env["DoBSC"]:
+            return 0
+        return 1
+
+
+class ResourceAudit(ClusterAudit):
+
+    def name(self):
         return "ResourceAudit"
 
     def _doauditRsc(self, resource):
@@ -669,6 +762,8 @@ class PartitionAudit(ClusterAudit):
             return 1
         return 0
 
+AllAuditClasses.append(DiskAudit)
+AllAuditClasses.append(LoggingAudit)
 AllAuditClasses.append(CrmdStateAudit)
 AllAuditClasses.append(PartitionAudit)
 AllAuditClasses.append(ResourceAudit)
