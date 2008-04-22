@@ -93,7 +93,7 @@ class CIB:
         </rsc_location> '''
 
     master_slave_resource = ''' 
-        <master_slave id="master_rsc_1">
+        <master_slave id="master-1">
           <instance_attributes id="master_rsc">
             <attributes>
               <nvpair id="clone_max_1" name="clone_max" value="%d"/>
@@ -203,6 +203,9 @@ class CIB:
         # Mirgator
         resources += self.dummy_resource_template % \
             ("migrator", "migrator", "migrator", "migrator")
+
+        constraints += """<rsc_colocation id="group-with-master" from="group-1" to="master-1" to_role="Master" score="INFINITY"/>"""
+        constraints += """<rsc_colocation id="lsb-with-group" from="lsb_dummy" to="group-1" score="INFINITY"/>"""
 
         # per node resource
         fields = string.split(self.CM.Env["IPBase"], '.')
