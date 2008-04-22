@@ -956,47 +956,63 @@ cancel_op(lrm_rsc_t *rsc, const char *key, int op, gboolean remove)
 		if(key && remove) {
 			delete_op_entry(NULL, rsc->id, key, op);
 		}
-		/* not doing this will block the node from shutting down */
-		g_hash_table_remove(pending_ops, key);
+		/* The caller needs to make sure the entry is
+		 * removed from the pending_ops list
+		 *
+		 * Usually by returning TRUE inside the worker function
+		 * supplied to g_hash_table_foreach_remove()
+		 *
+		 * Not removing the entry from pending_ops will block
+		 * the node from shutting down
+		 */
+		return FALSE;
 	}
 	
 	return TRUE;
 }
 
-const char *cancel_key = NULL;
-gboolean cancel_done = FALSE;
-lrm_rsc_t *cancel_rsc = NULL;
+struct cancel_data 
+{
+	gboolean done;
+	const char *key;
+	lrm_rsc_t *rsc;
+};
 
-static void
+static gboolean
 cancel_action_by_key(gpointer key, gpointer value, gpointer user_data)
 {
+	struct cancel_data *data = user_data;
 	struct recurring_op_s *op = (struct recurring_op_s*)value;
 	
-	if(safe_str_eq(op->op_key, cancel_key)) {
-		cancel_done = TRUE;
-		cancel_op(cancel_rsc, key, op->call_id, TRUE);
+	if(safe_str_eq(op->op_key, data->key)) {
+	    data->done = TRUE;
+	    if (cancel_op(data->rsc, key, op->call_id, TRUE) == FALSE) {
+		return TRUE;
+	    }
 	}
+	return FALSE;
 }
 
 static gboolean
 cancel_op_key(lrm_rsc_t *rsc, const char *key, gboolean remove)
 {
+	struct cancel_data data;
+
 	CRM_CHECK(rsc != NULL, return FALSE);
-	
-	cancel_key = key;
-	cancel_rsc = rsc;
-	cancel_done = FALSE;
-
 	CRM_CHECK(key != NULL, return FALSE);
-	
-	g_hash_table_foreach(pending_ops, cancel_action_by_key, NULL);
 
-	if(cancel_done == FALSE && remove) {
+	data.key = key;
+	data.rsc = rsc;
+	data.done = FALSE;
+	
+	g_hash_table_foreach_remove(pending_ops, cancel_action_by_key, &data);
+
+	if(data.done == FALSE && remove) {
 		crm_err("No known %s operation to cancel", key);
 		delete_op_entry(NULL, rsc->id, key, 0);
 	}
 	
-	return cancel_done;
+	return data.done;
 }
 
 static lrm_rsc_t *
@@ -1224,6 +1240,7 @@ do_lrm_invoke(long long action,
 				cancel_op_key(rsc, op_key, TRUE);
 			} else {
 				cancel_op(rsc, op_key, call, TRUE);
+				g_hash_table_remove(pending_ops, op_key);
 			}
 			
 			op->op_status = LRM_OP_DONE;
@@ -1446,15 +1463,19 @@ send_direct_ack(const char *to_host, const char *to_sys,
 	free_xml(update);
 }
 
-static void
+static gboolean
 stop_recurring_action_by_rsc(gpointer key, gpointer value, gpointer user_data)
 {
 	lrm_rsc_t *rsc = user_data;
 	struct recurring_op_s *op = (struct recurring_op_s*)value;
 	
 	if(op->interval != 0 && safe_str_eq(op->rsc_id, rsc->id)) {
-		cancel_op(rsc, key, op->call_id, FALSE);
+		if (cancel_op(rsc, key, op->call_id, FALSE) == FALSE) {
+			return TRUE;
+		}
 	}
+
+	return FALSE;
 }
 
 void
@@ -1485,7 +1506,7 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 	   || crm_str_eq(operation, CRMD_ACTION_DEMOTE, TRUE)
 	   || crm_str_eq(operation, CRMD_ACTION_PROMOTE, TRUE)
 	   || crm_str_eq(operation, CRMD_ACTION_MIGRATE, TRUE)) {
-		g_hash_table_foreach(pending_ops, stop_recurring_action_by_rsc, rsc);
+		g_hash_table_foreach_remove(pending_ops, stop_recurring_action_by_rsc, rsc);
 	}
 	
 	/* now do the op */
