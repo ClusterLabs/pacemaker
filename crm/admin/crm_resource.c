@@ -67,7 +67,7 @@ IPC_Channel *crmd_channel = NULL;
 char *xml_file = NULL;
 int cib_options = cib_sync_call;
 
-#define OPTARGS	"V?LRQxDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:fX:lmu:F"
+#define OPTARGS	"V?LRQxDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:fX:lmu:Fc"
 #define CMD_ERR(fmt, args...) do {		\
 	crm_warn(fmt, ##args);			\
 	fprintf(stderr, fmt, ##args);		\
@@ -103,18 +103,81 @@ do_find_resource(const char *rsc, pe_working_set_t *data_set)
 	return 0;
 }
 
+#define cons_string(x) x?x:"NA"
 static void
-print_raw_rsc(resource_t *rsc, int level) 
+print_cts_constraints(pe_working_set_t *data_set) 
 {
-	int lpc = 0;
-	GListPtr children = NULL;
-	for(; lpc < level; lpc++) {
-		printf("  ");
+    crm_data_t *lifetime = NULL;
+    crm_data_t * cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
+    xml_child_iter(cib_constraints, xml_obj, 
+
+		   const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
+		   if(id == NULL) {
+		       continue;
+		   }
+		   
+		   lifetime = cl_get_struct(xml_obj, "lifetime");
+		   
+		   if(test_ruleset(lifetime, NULL, data_set->now) == FALSE) {
+		       continue;
+		   }
+		   
+		   if(safe_str_eq(XML_CONS_TAG_RSC_DEPEND, crm_element_name(xml_obj))) {
+		       printf("Constraint %s %s %s %s %s %s %s\n",
+			      crm_element_name(xml_obj),
+			      cons_string(crm_element_value(xml_obj, XML_ATTR_ID)),
+			      cons_string(crm_element_value(xml_obj, XML_CONS_ATTR_FROM)),
+			      cons_string(crm_element_value(xml_obj, XML_CONS_ATTR_TO)),
+			      cons_string(crm_element_value(xml_obj, XML_RULE_ATTR_SCORE)),
+			      cons_string(crm_element_value(xml_obj, XML_RULE_ATTR_FROMSTATE)),
+			      cons_string(crm_element_value(xml_obj, XML_RULE_ATTR_TOSTATE)));
+		       
+		   } else if(safe_str_eq(XML_CONS_TAG_RSC_LOCATION, crm_element_name(xml_obj))) {
+		       /* unpack_rsc_location(xml_obj, data_set); */
+		   }
+	);
+}
+
+static void
+print_cts_rsc(resource_t *rsc) 
+{
+    gboolean needs_quorum = TRUE;
+    const char *p_id = "NA";
+    if(rsc->parent) {
+	p_id = rsc->parent->id;
+    }
+
+    xml_child_iter_filter(rsc->ops_xml, op, "op",
+			  const char *name = crm_element_value(op, "name");
+			  if(safe_str_neq(name, CRMD_ACTION_START)) {
+			      const char *value = crm_element_value(op, "prereq");
+			      if(safe_str_eq(value, "nothing")) {
+				  needs_quorum = FALSE;
+			      }
+			      break;
+			  }
+	);
+    
+    printf("Resource: %s %s %s %d %d\n", crm_element_name(rsc->xml), rsc->id, p_id,
+	   is_set(rsc->flags, pe_rsc_managed), needs_quorum);
+
+    slist_iter(child, resource_t, rsc->children, lpc,
+	       print_cts_rsc(child);
+	);
+}
+
+
+static void
+print_raw_rsc(resource_t *rsc) 
+{
+	GListPtr children = rsc->fns->children(rsc);
+
+	if(children == NULL) {
+	    printf("%s\n", rsc->id);
 	}
-	printf(" * %s\n", rsc->id);
-	children = rsc->fns->children(rsc);
+	
 	slist_iter(child, resource_t, children, lpc,
-		   print_raw_rsc(child, level+1);
+		   print_raw_rsc(child);
 		);
 }
 
@@ -126,13 +189,8 @@ do_find_resource_list(pe_working_set_t *data_set, gboolean raw)
 	
 	slist_iter(
 		rsc, resource_t, data_set->resources, lpc,
-		if(raw) {
-			found++;
-			print_raw_rsc(rsc, 0);
-			continue;
-			
-		} else if(is_set(rsc->flags, pe_rsc_orphan)
-			  && rsc->fns->active(rsc, TRUE) == FALSE) {
+		if(is_set(rsc->flags, pe_rsc_orphan)
+		   && rsc->fns->active(rsc, TRUE) == FALSE) {
 			continue;
 		}
 		rsc->fns->print(
@@ -798,6 +856,7 @@ main(int argc, char **argv)
 		{"quiet",      0, 0, 'Q'},
 		{"list",       0, 0, 'L'},
 		{"list-raw",   0, 0, 'l'},
+		{"list-cts",   0, 0, 'c'},
 		{"refresh",    0, 0, 'R'},
 		{"reprobe",    0, 0, 'P'},
 		{"query-xml",  0, 0, 'x'},
@@ -862,6 +921,7 @@ main(int argc, char **argv)
 				break;
 				
 			case 'L':
+			case 'c':
 			case 'l':
 			case 'R':
 			case 'x':
@@ -988,6 +1048,7 @@ main(int argc, char **argv)
 	   || rsc_cmd == 'g'
 	   || rsc_cmd == 'G'
 	   || rsc_cmd == 'S'
+	   || rsc_cmd == 'c'
 	   || rsc_cmd == 'l') {
 		resource_t *rsc = NULL;
 		if(xml_file != NULL) {
@@ -1053,8 +1114,28 @@ main(int argc, char **argv)
 		do_find_resource_list(&data_set, FALSE);
 		
 	} else if(rsc_cmd == 'l') {
-		rc = cib_ok;
-		do_find_resource_list(&data_set, TRUE);
+	    int found = 0;
+	    rc = cib_ok;
+	    slist_iter(
+		rsc, resource_t, data_set.resources, lpc,
+		found++;
+		print_raw_rsc(rsc);
+		);
+	    
+	    if(found == 0) {
+		printf("NO resources configured\n");
+		return cib_NOTEXISTS;
+	    }
+		
+	} else if(rsc_cmd == 'c') {
+	    int found = 0;
+	    rc = cib_ok;
+	    slist_iter(
+		rsc, resource_t, data_set.resources, lpc,
+		found++;
+		print_cts_rsc(rsc);
+		);
+	    print_cts_constraints(&data_set);
 		
 	} else if(rsc_cmd == 'C') {
 		rc = delete_lrm_rsc(crmd_channel, host_uname, rsc_id, &data_set);

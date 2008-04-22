@@ -87,6 +87,7 @@ crm_failcount_LDADD	= $(COMMONLIBS)
 
 crm_resource_SOURCES	= crm_resource.c
 crm_resource_LDADD	= $(COMMONLIBS) \
+			$(top_builddir)/lib/crm/pengine/libpe_rules.la \
 			$(top_builddir)/lib/crm/pengine/libpe_status.la
 
 iso8601_SOURCES		= test.iso8601.c
