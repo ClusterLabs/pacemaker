@@ -76,8 +76,7 @@ class LinuxHAv2(HeartbeatCM):
             "QuorumCmd"      : "@sbindir@/ccm_tool -q",
             "CibQuery"       : "@sbindir@/cibadmin -Ql",
             "ParitionCmd"    : "@sbindir@/ccm_tool -p",
-            "IsRscRunning"   : "@libdir@/heartbeat/lrmadmin -E %s monitor 0 0 EVERYTIME 2>/dev/null|grep return",
-            "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -n %s -E %s %s 0 %d EVERYTIME 2>/dev/null",
+            "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -n %s -E %s %s 0 %d EVERYTIME",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
             "TmpDir"         : "/tmp",
             "BreakCommCmd2"  : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
@@ -335,8 +334,8 @@ class LinuxHAv2(HeartbeatCM):
         (rc, lines) = self.rsh.remote_py(node, "os", "system", cmd)
 
         self.debug("RscOp '%s' on %s: %d" % (cmd, node, rc))
-        for line in lines:
-            self.log("RscOp: "+line)
+        #for line in lines:
+        #    self.debug("RscOp: "+line)
 
         return rc
 
@@ -345,12 +344,19 @@ class LinuxHAv2(HeartbeatCM):
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == self["up"]:
                 rc = self.ResourceOp(rid, "monitor", node)
-                if rc < 0 or rc > 10:
-                    # not active on this node
-                    self.debug("%s is not present on %s: %d" % (rid, node, rc))
-
-                elif rc != 7:
+                # Strange error codes from remote_py
+                # 2048 == 8
+                # 1792 == 7
+                # 0    == 0
+                if rc == 0 or rc == 2048 or rc == 8:
                     ResourceNodes.append(node)
+
+                elif rc == 7 or rc == 1792:
+                    self.debug("%s is not running on %s: %d" % (rid, node, rc))
+
+                else:
+                    # not active on this node?
+                    self.debug("Unknown rc code for %s on %s: %d" % (rid, node, rc))
 
         return ResourceNodes
 
