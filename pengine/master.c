@@ -627,7 +627,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 		any_demoting = any_demoting || child_demoting;
 		any_promoting = any_promoting || child_promoting;
-		crm_err("Created actions for %s: %d %d", child_rsc->id, child_promoting, child_demoting);
+		crm_debug_2("Created actions for %s: %d %d", child_rsc->id, child_promoting, child_demoting);
 		);
 	
 	/* promote */
