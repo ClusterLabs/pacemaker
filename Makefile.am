@@ -24,7 +24,7 @@ RPM			= @RPM@
 RPMFLAGS		= -ba
 TARFILE			= pacemaker.tar.gz
 AM_TAR			= tar
-LAST_RELEASE		= Pacemaker-0.6.1
+LAST_RELEASE		= Pacemaker-0.6.2
 
 AUTOMAKE_OPTIONS	= foreign
 ##ACLOCAL                 = aclocal -I $(auxdir)
@@ -60,6 +60,9 @@ changes:
 
 obs:	tgz
 	scp $(TARFILE) vmhost.beekhof.net:Development/obs/server:ha-clustering/pacemaker/
+
+test:	tgz
+	scp $(TARFILE) vmhost.beekhof.net:Development/obs/home:beekhof/pacemaker-test/
 
 global:
 	gtags
