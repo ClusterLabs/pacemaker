@@ -233,7 +233,7 @@ class CIB:
             resources += stonith_resource
         
         #master slave resource
-        resources += self.master_slave_resource % (len, 1, len, 1)
+        resources += self.master_slave_resource % (len, 1, 1, 1)
 
         # generate cib
         self.cts_cib = self.cib_template %  (cib_options, resources, constraints)
