@@ -329,9 +329,14 @@ class LinuxHAv2(HeartbeatCM):
         '''
         Execute an operation on a resource
         '''
-        self.rsh.readaline(node, self["ExecuteRscOp"] 
-                           % (app, resource, op, interval))
-        return self.rsh.lastrc
+        cmd = self["ExecuteRscOp"] % (app, resource, op, interval)
+        (rc, lines) = self.rsh.remote_py(node, "os", "system", cmd)
+
+        self.debug("RscOp '%s' on %s: %d" % (cmd, node, rc))
+        #for line in lines:
+        #    self.log(line)
+
+        return rc
 
     def ResourceLocation(self, rid):
         ResourceNodes = []
@@ -444,14 +449,13 @@ class LinuxHAv2(HeartbeatCM):
         #read dependency in cib
         configuration=self.Configuration()
         constraints=configuration.getElementsByTagName('constraints')[0]
-        rsc_to_rscs=configuration.getElementsByTagName('rsc_to_rsc')
+        rsc_to_rscs=configuration.getElementsByTagName('rsc_colocation')
         for node in rsc_to_rscs:
             dependency = {}
             dependency["id"]=node.getAttribute('id')
             dependency["from"]=node.getAttribute('from')
             dependency["to"]=node.getAttribute('to')
-            dependency["type"]=node.getAttribute('type')
-            dependency["strength"]=node.getAttribute('strength')
+            dependency["strength"]=node.getAttribute('score')
             DependencyList.append(dependency)
         return DependencyList
 
