@@ -143,14 +143,31 @@ class AuditResource:
     def __init__(self, cm, line):
         fields = line.split()
         self.CM = cm
-        self.type = fields[0]
-        self.id = fields[1]
-        if fields[2] == "NA":
+        self.type = fields[1]
+        self.id = fields[2]
+        self.parent = fields[3]
+        self.managed = fields[4]
+        self.needs_quorum = fields[5]
+
+        if self.parent == "NA":
             self.parent = None
-        else:
-            self.parent = fields[2]
-        self.managed = fields[3]
-        self.needs_quorum = fields[4]
+
+class AuditConstraint:
+    def __init__(self, cm, line):
+        fields = line.split()
+        self.CM = cm
+        self.type = fields[1]
+        self.id = fields[2]
+        self.rsc = fields[3]
+        self.target = fields[4]
+        self.score = fields[5]
+        self.rsc_role = fields[6]
+        self.target_role = fields[7]
+
+        if self.rsc_role == "NA":
+            self.rsc_role = None
+        if self.target_role == "NA":
+            self.target_role = None
 
 class PrimitiveAudit(ClusterAudit):
     def name(self):
@@ -184,7 +201,7 @@ class PrimitiveAudit(ClusterAudit):
         else:
             self.CM.debug("Resource %s not served anywhere (Inactive nodes: %s)" 
                           % (resource.id, repr(self.inactive_nodes)))
-                
+
         if resource.managed == "0":
             self.CM.log("Resource %s not managed: faking success" % resource.id)
             rc = 1
@@ -194,8 +211,12 @@ class PrimitiveAudit(ClusterAudit):
     def setup(self):
         self.target = None
         self.resources = []
+        self.constraints = []
         self.active_nodes = []
         self.inactive_nodes = []
+
+        self.CM.debug("Do Audit %s"%self.name())
+
         for node in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == self.CM["up"]:
                 self.active_nodes.append(node)
@@ -207,13 +228,20 @@ class PrimitiveAudit(ClusterAudit):
                 self.target = node
 
         if not self.target:
-            self.CM.log("No nodes active - skipping resource audit")
+            # TODO: In Pacemaker 1.0 clusters we'll be able to run crm_resource 
+            # with CIB_file=/path/to/cib.xml even when the cluster isn't running
+            self.CM.debug("No nodes active - skipping %s" % self.name())
             return 0
 
         (rc, lines) = self.CM.rsh.remote_py(self.target, "os", "system", "@sbindir@/crm_resource -c")
 
         for line in lines:
-            self.resources.append(AuditResource(self.CM, line))
+            if re.search("^Resource", line):
+                self.resources.append(AuditResource(self.CM, line))
+            elif re.search("^Constraint", line):
+                self.constraints.append(AuditConstraint(self.CM, line))
+            else:
+                self.CM.log("Unknown entry: %s" % line);
 
         return 1
 
@@ -228,7 +256,7 @@ class PrimitiveAudit(ClusterAudit):
                 if self.doResourceAudit(resource) == 0:
                     rc = 0
         return rc
-    
+
     def is_applicable(self):
         if self.CM["Name"] == "linux-ha-v2" and self.CM.Env["ResCanStop"] == 0:
             return 1
@@ -296,6 +324,44 @@ class CloneAudit(PrimitiveAudit):
                         # Obtain with:
                         #    crm_resource -g clone_max --meta -r child.id
                         #    crm_resource -g clone_node_max --meta -r child.id
+
+        return rc
+    
+class ColocationAudit(PrimitiveAudit):
+    def name(self):
+        return "ColocationAudit"
+
+    def crm_location(self, resource):
+        (rc, lines) = self.CM.rsh.remote_py(
+            self.target, "os", "system", "@sbindir@/crm_resource -W -r %s -Q"%resource)
+        hosts = []
+        if rc == 0:
+            for line in lines:
+                fields = line.split()
+                hosts.append(fields[0])
+
+        return hosts
+
+    def __call__(self):
+        rc = 1
+        if not self.setup():
+            return 1
+
+        for coloc in self.constraints:
+            if coloc.type == "rsc_colocation":
+                source = self.crm_location(coloc.rsc)
+                target = self.crm_location(coloc.target)
+                if len(source) == 0:
+                    self.CM.debug("Colocation audit (%s): %s not running" % (coloc.id, coloc.rsc))
+                else:
+                    for node in source:
+                        if not node in target:
+                            rc = 0
+                            self.CM.log("Colocation audit (%s): %s running on %s (not in %s)" 
+                                        % (coloc.id, coloc.rsc, node, repr(target)))
+                        else:
+                            self.CM.debug("Colocation audit (%s): %s running on %s (in %s)" 
+                                          % (coloc.id, coloc.rsc, node, repr(target)))
 
         return rc
     
@@ -782,10 +848,10 @@ AllAuditClasses.append(LogAudit)
 AllAuditClasses.append(CrmdStateAudit)
 AllAuditClasses.append(PartitionAudit)
 AllAuditClasses.append(ResourceAudit)
-#AllAuditClasses.append(HAResourceAudit)
 AllAuditClasses.append(PrimitiveAudit)
 AllAuditClasses.append(GroupAudit)
 AllAuditClasses.append(CloneAudit)
+AllAuditClasses.append(ColocationAudit)
 AllAuditClasses.append(CIBAudit)
 
 def AuditList(cm):
