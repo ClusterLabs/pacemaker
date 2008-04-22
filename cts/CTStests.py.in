@@ -157,6 +157,21 @@ random for the selected number of iterations.
                 self.CM.rsh.remote_py(node, "os", "system", "opcontrol --init")
                 self.CM.rsh.remote_py(node, "os", "system", "opcontrol --start")
 
+        if not self.CM.Env["DoBSC"]:
+            audit = LogAudit(self.CM)
+            if not audit():
+                self.CM.log("Audit " + audit.name() + " FAILED.")
+                return None
+            else:
+                self.CM.log("Audit " + audit.name() + " passed.")
+
+            audit = DiskAudit(self.CM)
+            if not audit():
+                self.CM.log("Audit " + audit.name() + " FAILED.")
+                return None
+            else:
+                self.CM.log("Audit " + audit.name() + " passed.")
+
         if not self.Scenario.SetUp(self.CM):
             return None
 
