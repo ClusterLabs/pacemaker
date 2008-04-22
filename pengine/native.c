@@ -1609,7 +1609,7 @@ native_stop_constraints(
 	    }
 	    
 	    if(parent) {
-		crm_crit("Re-creating actions for %s", parent->id);
+		crm_debug_2("Re-creating actions for %s", parent->id);
 		parent->cmds->create_actions(parent, data_set);
 		
 		/* make sure we dont mess anything up in create_actions */
