@@ -291,7 +291,6 @@ static void master_promotion_order(resource_t *rsc)
 	);
     dump_node_scores(LOG_DEBUG_3, rsc, "Before", rsc->allowed_nodes);
 
-#if 1
     slist_iter(
 	child, resource_t, rsc->children, lpc,
 
@@ -304,15 +303,17 @@ static void master_promotion_order(resource_t *rsc)
 	node = (node_t*)pe_find_node_id(
 	    rsc->allowed_nodes, chosen->details->id);
 	CRM_ASSERT(node != NULL);
+	/* adds in master preferences and rsc_location.role=Master */
 	node->weight = merge_weights(child->sort_index, node->weight);
 	);
     
     dump_node_scores(LOG_DEBUG_3, rsc, "Middle", rsc->allowed_nodes);
-#endif
     
     slist_iter(
 	constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
-	
+	/* (re-)adds location preferences of resource that wish to be
+	 * colocated with the master instance
+	 */
 	if(constraint->role_rh == RSC_ROLE_MASTER) {
 	    rsc->allowed_nodes = constraint->rsc_lh->cmds->merge_weights(
 		constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
@@ -564,7 +565,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 
 	    );
 
-	master_promotion_order(rsc);	
+	master_promotion_order(rsc);
 
 	/* mark the first N as masters */
 	slist_iter(
@@ -572,6 +573,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 
 		chosen = NULL;
 		crm_debug_2("Processing %s", child_rsc->id);
+		do_crm_log(scores_log_level, "%s promotion score: %d", child_rsc->id, child_rsc->sort_index);
 		if(promoted < clone_data->master_max) {
 			chosen = can_be_master(child_rsc);
 		}
