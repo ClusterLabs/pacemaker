@@ -316,8 +316,10 @@ class LinuxHAv2(HeartbeatCM):
         return rc
 
     def active_resources(self, node):
+        # [SM].* {node} matches Started, Slave, Master
+        # Stopped wont be matched as it wont include {node}
         (rc, output) = self.rsh.remote_py(
-            node, "os", "system", """@sbindir@/crm_mon -1 | grep "Started %s" """ % node)
+            node, "os", "system", """@sbindir@/crm_mon -1 | grep -e "[SM].* %s" """ % node)
 
         resources = []
         for line in output:
@@ -333,8 +335,8 @@ class LinuxHAv2(HeartbeatCM):
         (rc, lines) = self.rsh.remote_py(node, "os", "system", cmd)
 
         self.debug("RscOp '%s' on %s: %d" % (cmd, node, rc))
-        #for line in lines:
-        #    self.log(line)
+        for line in lines:
+            self.log("RscOp: "+line)
 
         return rc
 
@@ -342,8 +344,14 @@ class LinuxHAv2(HeartbeatCM):
         ResourceNodes = []
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == self["up"]:
-                if self.ResourceOp(rid, "monitor", node) == 0:
+                rc = self.ResourceOp(rid, "monitor", node)
+                if rc < 0 or rc > 10:
+                    # not active on this node
+                    self.debug("%s is not present on %s: %d" % (rid, node, rc))
+
+                elif rc != 7:
                     ResourceNodes.append(node)
+
         return ResourceNodes
 
     def isolate_node(self, node, allowlist):
@@ -354,110 +362,6 @@ class LinuxHAv2(HeartbeatCM):
         else:
             self.log("Could not break the communication from node: %s",node)
         return None
-        
-    def Configuration(self):
-        if self.config:
-            return self.config.getElementsByTagName('configuration')[0]
-
-        warnings.filterwarnings("ignore")
-        cib_file=os.tmpnam()
-        warnings.resetwarnings()
-        
-        os.system("rm -f "+cib_file)
-
-        if self.Env["ClobberCIB"] == 1:
-            if self.Env["CIBfilename"] == None:
-                self.debug("Creating new CIB in: " + cib_file)
-                os.system("echo \'"+ self.default_cts_cib +"\' > "+ cib_file)
-            else:
-                os.system("cp "+self.Env["CIBfilename"]+" "+cib_file)
-        else:            
-            if 0 != self.rsh.echo_cp(
-                self.Env["nodes"][0], "@HA_VARLIBDIR@/heartbeat/crm/cib.xml", None, cib_file):
-                raise ValueError("Can not copy file to %s, maybe permission denied"%cib_file)
-
-        self.config = parse(cib_file)
-        os.remove(cib_file)
-
-        return self.config.getElementsByTagName('configuration')[0]
-    
-    def Resources(self):
-        ResourceList = []
-        #read resources in cib
-        configuration = self.Configuration()
-        resources = configuration.getElementsByTagName('resources')[0]
-        rscs = configuration.getElementsByTagName('primitive')
-        incs = configuration.getElementsByTagName('clone')
-        groups = configuration.getElementsByTagName('group')
-        
-        for rsc in rscs:
-            if rsc in resources.childNodes:
-                ResourceList.append(HAResource(self,rsc))
-                
-        for grp in groups:
-            for rsc in rscs:
-                if rsc in grp.childNodes:
-                    if self.use_short_names:
-                        resource = HAResource(self,rsc)
-                    else:
-                        resource = HAResource(self,rsc,grp.getAttribute('id'))
-                    ResourceList.append(resource)
-        
-        for inc in incs:
-            max = 0
-            inc_name = inc.getAttribute("id")
-            instance_attributes = inc.getElementsByTagName('instance_attributes')[0]
-            attributes = instance_attributes.getElementsByTagName('attributes')[0]
-            nvpairs = attributes.getElementsByTagName('nvpair')
-            for nvpair in nvpairs:
-                if nvpair.getAttribute("name") == "clone_max":
-                    max = int(nvpair.getAttribute("value"))
-            inc_rsc = inc.getElementsByTagName('primitive')[0]
-            for i in range(0,max):
-                rsc = HAResource(self,inc_rsc)
-                rsc.inc_no = i
-                rsc.inc_name = inc_name
-                rsc.inc_max = max
-                if self.use_short_names:
-                    rsc.rid = rsc.rid + ":%d"%i
-                else:
-                    rsc.rid = inc_name+":"+rsc.rid + ":%d"%i
-                rsc.Instance = rsc.rid
-                ResourceList.append(rsc)
-        return ResourceList
-    
-    def ResourceGroups(self):
-        GroupList = []
-        #read resources in cib
-        configuration = self.Configuration()
-        groups = configuration.getElementsByTagName('group')
-        rscs = configuration.getElementsByTagName('primitive')
-        for grp in groups:
-            group = []
-            GroupList.append(group)
-            for rsc in rscs:
-                if rsc in grp.childNodes:
-                    if self.use_short_names:
-                        resource = HAResource(self,rsc)
-                    else:
-                        resource = HAResource(self,rsc,grp.getAttribute('id'))
-                    group.append(resource)
-        return GroupList
-        
-    def Dependencies(self):
-        DependencyList = []
-        #read dependency in cib
-        configuration=self.Configuration()
-        constraints=configuration.getElementsByTagName('constraints')[0]
-        rsc_to_rscs=configuration.getElementsByTagName('rsc_colocation')
-        for node in rsc_to_rscs:
-            dependency = {}
-            dependency["id"]=node.getAttribute('id')
-            dependency["from"]=node.getAttribute('from')
-            dependency["to"]=node.getAttribute('to')
-            dependency["strength"]=node.getAttribute('score')
-            DependencyList.append(dependency)
-        return DependencyList
 
     def find_partitions(self):
         ccm_partitions = []
@@ -713,9 +617,6 @@ class HAResource(Resource):
         rc = self.CM.ResourceOp(self.rid, "monitor", nodename)
         return (rc == 0)
         
-    def RunningNodes(self):
-        return self.CM.ResourceLocation(self.rid)
-
     def Start(self, nodename):
         '''
         This member function starts or activates the resource.
