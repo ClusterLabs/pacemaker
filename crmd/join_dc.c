@@ -117,22 +117,27 @@ initialize_join(gboolean before)
 void
 erase_node_from_join(const char *uname) 
 {
+	gboolean w = FALSE, i = FALSE, f = FALSE, c = FALSE;
+    
 	if(uname == NULL) {
 		return;
 	}
 
 	if(welcomed_nodes != NULL) {
-		g_hash_table_remove(welcomed_nodes, uname);
+	    w = g_hash_table_remove(welcomed_nodes, uname);
 	}
 	if(integrated_nodes != NULL) {
-		g_hash_table_remove(integrated_nodes, uname);
+	    i = g_hash_table_remove(integrated_nodes, uname);
 	}
 	if(finalized_nodes != NULL) {
-		g_hash_table_remove(finalized_nodes, uname);
+	    f = g_hash_table_remove(finalized_nodes, uname);
 	}
 	if(confirmed_nodes != NULL) {
-		g_hash_table_remove(confirmed_nodes, uname);
+	    c = g_hash_table_remove(confirmed_nodes, uname);
 	}
+	crm_info("Removed dead node %s from join calculations:"
+		 " welcomed=%d itegrated=%d finalized=%d confirmed=%d",
+		 uname, w, i, f, c);
 }
 
 
