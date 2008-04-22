@@ -1131,10 +1131,7 @@ class StandbyTest2(CTSTest):
             return self.failure("standby status of %s is [%s] but we expect [off]" % (node, status))
 
         self.CM.debug("Getting resources running on node %s" % node)
-        rsc_on_node = []
-        for rsc in self.CM.Resources():
-            if rsc.IsRunningOn(node):
-                rsc_on_node.append(rsc)
+        rsc_on_node = self.CM.active_resources(node)
 
         self.CM.debug("Setting node %s to standby mode" % node) 
         if not self.CM.SetStandbyMode(node, "on"):
@@ -1148,9 +1145,9 @@ class StandbyTest2(CTSTest):
             return self.failure("standby status of %s is [%s] but we expect [on]" % (node, status))
 
         self.CM.debug("Checking resources")
-        for rsc in self.CM.Resources():
-            if rsc.IsRunningOn(node):
-                return self.failure("%s set to standby, %s is still running on it" % (node, rsc.rid))
+        bad_run = self.CM.active_resources(node)
+        if len(bad_run) > 0:
+            return self.failure("%s set to standby, %s is still running on it" % (node, repr(bad_run)))
 
         self.CM.debug("Setting node %s to active mode" % node) 
         if not self.CM.SetStandbyMode(node, "off"):
@@ -1164,10 +1161,15 @@ class StandbyTest2(CTSTest):
             return self.failure("standby status of %s is [%s] but we expect [off]" % (node, status))
 
         self.CM.debug("Checking resources")
+        failed = 0
         for rsc in rsc_on_node:
-            if not rsc.IsRunningOn(node):
-                return self.failure("%s set to active but %s is NOT back" % (node, rsc.rid))
-
+            rc = self.CM.ResourceOp(rsc, "monitor", node)
+            if rc != 7 or rc != 8:
+                failed = failed + 1
+                self.CM.log("%s set to active but %s is NOT back" % (node, rsc))
+                
+        if failed > 0:
+            return self.failure("%s set to active but %d resources didn't return" % (node, failed))
 
         return self.success()
 
@@ -1548,10 +1550,10 @@ class DRBDTest(CTSTest):
     def is_applicable(self):
         '''DRBD is applicable when there are drbd devices'''
 
-        for group in self.CM.ResourceGroups():
-            for resource in group:
-                if resource.Type() == "datadisk":
-                    return 1
+        #for group in self.CM.ResourceGroups():
+        #    for resource in group:
+        #        if resource.Type() == "datadisk":
+        #            return 1
         return None
 
 AllTestClasses.append(DRBDTest)
@@ -1727,12 +1729,7 @@ class ResourceRecover(CTSTest):
         '''ResourceRecover is applicable only when there are resources running
          on our cluster and environment is linux-ha-v2'''
         if self.CM["Name"] == "linux-ha-v2":
-            resourcelist=self.CM.Resources()
-            if len(resourcelist)==0:
-                self.CM.log("No resources on this cluster")
-                return 0
-            else:
-                return 1
+            return 1
         return 0
     
     def errorstoignore(self):
