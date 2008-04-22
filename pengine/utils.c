@@ -293,8 +293,8 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 		}
 		
 		do_crm_log(log_level, "%d nodes with equal score (%s) for"
-			      " running the listed resources (chose %s):",
-			      multiple, score, chosen->details->uname);
+			   " running %s resources (chose %s):",
+			   multiple, score, rsc->id, chosen->details->uname);
 		crm_free(score);
 	}
 	
