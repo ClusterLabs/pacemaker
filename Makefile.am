@@ -61,7 +61,7 @@ changes:
 obs:	tgz
 	scp $(TARFILE) vmhost.beekhof.net:Development/obs/server:ha-clustering/pacemaker/
 
-test:	tgz
+home:	tgz
 	scp $(TARFILE) vmhost.beekhof.net:Development/obs/home:beekhof/pacemaker-test/
 
 global:
