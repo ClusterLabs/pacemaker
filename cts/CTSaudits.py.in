@@ -47,7 +47,7 @@ class ClusterAudit:
 
 AllAuditClasses = [ ]
 
-class ResourceAudit(ClusterAudit):
+class LogAudit(ClusterAudit):
 
     def name(self):
         return "LogAudit"
@@ -67,7 +67,7 @@ class ResourceAudit(ClusterAudit):
         prefix="Test message from "
         for node in self.CM.Env["nodes"]:
             patterns.append(prefix +  node)
-        watch = LogWatcher(self["LogFileName"], patterns, 30 + len(self.CM.Env["nodes"]))
+        watch = CTS.LogWatcher(self.CM.Env["LogFileName"], patterns, 30 + len(self.CM.Env["nodes"]))
         watch.setwatch()
         for node in self.CM.Env["nodes"]:
             cmd="logger -p %s.info %s%s" % (self.CM.Env["logfacility"], prefix, node)
@@ -139,7 +139,166 @@ class DiskAudit(ClusterAudit):
             return 0
         return 1
 
+class AuditResource:
+    def __init__(self, cm, line):
+        fields = line.split()
+        self.CM = cm
+        self.type = fields[0]
+        self.id = fields[1]
+        if fields[2] == "NA":
+            self.parent = None
+        else:
+            self.parent = fields[2]
+        self.managed = fields[3]
+        self.needs_quorum = fields[4]
 
+class PrimitiveAudit(ClusterAudit):
+    def name(self):
+        return "PrimitiveAudit"
+
+    def __init__(self, cm):
+        self.CM = cm
+
+    def doResourceAudit(self, resource):
+        rc=1
+        active = self.CM.ResourceLocation(resource.id)
+
+        if len(active) > 1:
+            rc=0
+            self.CM.log("Resource %s is active multiple times: %s" 
+                        % (resource.id, repr(active)))
+            
+        elif len(active) == 1:
+            if self.CM.HasQuorum(None):
+                self.CM.debug("Resource %s active on %s" % (resource.id, repr(active)))
+                
+            elif resource.needs_quorum:
+                rc=0
+                self.CM.log("Resource %s active without quorum: " 
+                            % (resource.id, repr(active)))
+
+        elif self.CM.HasQuorum(None) or not resource.needs_quorum:
+            self.CM.log("WARN: Resource %s not served anywhere (Inactive nodes: %s)" 
+                        % (resource.id, repr(self.inactive_nodes)))
+
+        else:
+            self.CM.debug("Resource %s not served anywhere (Inactive nodes: %s)" 
+                          % (resource.id, repr(self.inactive_nodes)))
+                
+        if resource.managed == "0":
+            self.CM.log("Resource %s not managed: faking success" % resource.id)
+            rc = 1
+
+        return rc
+
+    def setup(self):
+        self.target = None
+        self.resources = []
+        self.active_nodes = []
+        self.inactive_nodes = []
+        for node in self.CM.Env["nodes"]:
+            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                self.active_nodes.append(node)
+            else:
+                self.inactive_nodes.append(node)
+
+        for node in self.CM.Env["nodes"]:
+            if self.target == None and self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                self.target = node
+
+        if not self.target:
+            self.CM.log("No nodes active - skipping resource audit")
+            return 0
+
+        (rc, lines) = self.CM.rsh.remote_py(self.target, "os", "system", "@sbindir@/crm_resource -c")
+
+        for line in lines:
+            self.resources.append(AuditResource(self.CM, line))
+
+        return 1
+
+    def __call__(self):
+        rc = 1
+                
+        if not self.setup():
+            return 1
+
+        for resource in self.resources:
+            if resource.type == "primitive":
+                if self.doResourceAudit(resource) == 0:
+                    rc = 0
+        return rc
+    
+    def is_applicable(self):
+        if self.CM["Name"] == "linux-ha-v2" and self.CM.Env["ResCanStop"] == 0:
+            return 1
+        if self.CM["Name"] == "crm-ais" and self.CM.Env["ResCanStop"] == 0:
+            return 1
+        return 0
+
+class GroupAudit(PrimitiveAudit):
+    def name(self):
+        return "GroupAudit"
+
+    def __call__(self):
+        rc = 1
+        if not self.setup():
+            return 1
+
+        for group in self.resources:
+            if group.type == "group":
+                first_match = 1
+                group_location = None
+                for child in self.resources:
+                    if child.parent == group.id:
+                        nodes = self.CM.ResourceLocation(child.id)
+
+                        if first_match and len(nodes) > 0:
+                            group_location = nodes[0]
+
+                        first_match = 0
+
+                        if len(nodes) > 1:
+                            rc = 0
+                            self.CM.log("Child %s of %s is active more than once: %s" 
+                                        % (child.id, group.id, repr(nodes)))
+
+                        elif len(nodes) == 0:
+                            # Groups are allowed to be partially active
+                            # However we do need to make sure later children aren't running
+                            group_location = None
+                            self.CM.debug("Child %s of %s is stopped" % (child.id, group.id))
+
+                        elif nodes[0] != group_location:  
+                            rc = 0
+                            self.CM.log("Child %s of %s is active on the wrong node (%s) expected %s" 
+                                        % (child.id, group.id, nodes[0], group_location))
+                        else:
+                            self.CM.debug("Child %s of %s is active on %s" % (child.id, group.id, nodes[0]))
+
+        return rc
+    
+class CloneAudit(PrimitiveAudit):
+    def name(self):
+        return "CloneAudit"
+
+    def __call__(self):
+        rc = 1
+        if not self.setup():
+            return 1
+
+        for clone in self.resources:
+            if clone.type == "clone":
+                for child in self.resources:
+                    if child.parent == clone.id and child.type == "primitive":
+                        self.CM.debug("Checking child %s of %s..." % (child.id, clone.id))
+                        # Check max and node_max
+                        # Obtain with:
+                        #    crm_resource -g clone_max --meta -r child.id
+                        #    crm_resource -g clone_node_max --meta -r child.id
+
+        return rc
+    
 class ResourceAudit(ClusterAudit):
 
     def name(self):
@@ -300,134 +459,6 @@ class ResourceAudit(ClusterAudit):
         if self.CM["Name"] == "heartbeat":
             return 1
         return 0
-
-class HAResourceAudit(ClusterAudit):
-    def __init__(self, cm):
-        self.CM = cm
-    
-    def _RscRunningNodes(self, resource):
-        ResourceNodes = []
-        for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-                if resource.IsRunningOn(node):
-                    ResourceNodes.append(node)
-        return ResourceNodes
-
-    def __call__(self):
-        passed = 1
-        NodeofRsc = {}
-        NumofInc = {}
-        MaxofInc = {}
-        self.CM.debug("Do Audit HAResourceAudit")        
-        
-        #Calculate the count of active nodes
-        up_count = 0;
-        for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-                up_count += 1
-                
-        #Make sure the resouces are running on one and only one node
-        Resources = self.CM.Resources()
-        for resource in Resources :
-            RunningNodes = self._RscRunningNodes(resource)
-            NodeofRsc[resource.rid]=RunningNodes
-            if resource.inc_name == None:
-                #Is the resource served without quorum present?
-                if not self.CM.HasQuorum(None) and len(RunningNodes) != 0 and resource.needs_quorum:
-                    self.CM.log("Resource " + repr(resource)
-                    +        " active without Quorum: "
-                    +        repr(RunningNodes))
-                    passed = 0
-                #Is the resource served at all?
-                elif len(RunningNodes) == 0 and self.CM.HasQuorum(None):
-                    self.CM.log("Resource " + repr(resource)
-                    +        " not served anywhere.")
-                    passed = 0
-                # Is the resource served too many times?
-                elif len(RunningNodes) > 1:
-                    self.CM.log("Resource " + repr(resource)
-                    +        " served too many times: "
-                    +        repr(RunningNodes))
-                    passed = 0
-            else:
-                if not NumofInc.has_key(resource.inc_name):
-                    NumofInc[resource.inc_name]=0
-                    MaxofInc[resource.inc_name]=resource.inc_max
-                running = 1
-                #Is the resource served without quorum present?
-                if not self.CM.HasQuorum(None) and len(RunningNodes) != 0 and resource.needs_quorum == 1:
-                    self.CM.log("Resource " + repr(resource)
-                    +        " active without Quorum: "
-                    +        repr(RunningNodes))
-                    passed = 0
-                #Is the resource served at all?
-                elif len(RunningNodes) == 0 :
-                    running = 0
-                # Is the resource served too many times?
-                elif len(RunningNodes) > 1:
-                    self.CM.log("Resource " + repr(resource)
-                    +        " served too many times: "
-                    +        repr(RunningNodes))
-                    passed = 0
-                
-                if running:
-                    NumofInc[resource.inc_name] += 1
-
-        if self.CM.HasQuorum(None):
-            for inc_name in NumofInc.keys():
-                if NumofInc[inc_name] != min(up_count, MaxofInc[inc_name]):
-                    passed = 0
-                    self.CM.log("Cloned resource "+ str(inc_name)
-                                +" has "+ str(NumofInc[inc_name])
-                                +" active instances (max: "
-                                + str(MaxofInc[inc_name])
-                                +", active nodes: "+ str(up_count) + ")")
-                    
-        Groups = self.CM.ResourceGroups()
-        for group in Groups :
-            group_printed = 0
-            first_rsc = group[0].rid
-            RunningNodes = NodeofRsc[first_rsc]
-            for rsc in group :
-                if RunningNodes != NodeofRsc[rsc.rid]:
-                    passed = 0 
-
-                    if group_printed == 0:
-                        group_printed = 1
-                        self.CM.log("Group audit failed for: %s" % repr(group))
-                        if not NodeofRsc[first_rsc] or len(NodeofRsc[first_rsc]) == 0:
-                            self.CM.log("* %s not running" % first_rsc)
-                        else:
-                            self.CM.log("* %s running on %s"
-                                        %(first_rsc, repr(NodeofRsc[first_rsc])))
-
-                    if not NodeofRsc[rsc.rid] or len(NodeofRsc[rsc.rid]) == 0:
-                        self.CM.log("* %s not running" % rsc.rid)
-                    else:
-                        self.CM.log("* %s running on %s"
-                                    %(rsc.rid, repr(NodeofRsc[rsc.rid])))
-                                
-        # Make sure the resouces with "must","placement" constraint
-        #   are running on the same node
-        Dependancies = self.CM.Dependencies()
-        for dependency in Dependancies:
-            if dependency["type"] == "placement" and dependency["strength"] == "must":
-                if NodeofRsc[dependency["from"]] != NodeofRsc[dependency["to"]]:
-                    print dependency["from"] + " and " + dependency["to"] + " should be run on same node"
-                    passed = 0
-                  
-        return passed
-    
-    def is_applicable(self):
-        if self.CM["Name"] == "linux-ha-v2" and self.CM.Env["ResCanStop"] == 0:
-            return 1
-        if self.CM["Name"] == "crm-ais" and self.CM.Env["ResCanStop"] == 0:
-            return 1
-        return 0
-
-    def name(self):
-        return "HAResourceAudit"
-    
 
 class CrmdStateAudit(ClusterAudit):
     def __init__(self, cm):
@@ -663,7 +694,6 @@ class PartitionAudit(ClusterAudit):
             return None
         if len(avalue) > 1:
             return int(avalue[:-1])
-            
 
     def audit_partition(self, partition):
         passed = 1
@@ -728,21 +758,6 @@ class PartitionAudit(ClusterAudit):
                         %(len(dc_found), str(dc_found), str(node_list)))
             passed = 0
 
-        elif self.CM.Env["CIBResource"] == 1 and self.NodeQuorum[dc_found[0]] == "1":
-            self.CM.debug("%s: %s" % (dc_found[0], self.NodeQuorum[dc_found[0]]))
-            Resources = self.CM.Resources()
-            for node in node_list:
-                if self.CM.ShouldBeStatus[node] == self.CM["up"]:
-                    for resource in Resources:
-                        if resource.rid == "rsc_"+node:
-                            if resource.IsRunningOn(node) == 0:
-                                self.CM.log("Node %s is not running its own resource" %(node))
-                                passed = 0
-
-        elif self.CM.Env["CIBResource"] == 1:
-            # no quorum means no resource management
-            self.CM.debug("Not auditing resources - no quorum")
-
         if passed == 0:
             for node in node_list:
                 if self.CM.ShouldBeStatus[node] == self.CM["up"]:
@@ -763,11 +778,14 @@ class PartitionAudit(ClusterAudit):
         return 0
 
 AllAuditClasses.append(DiskAudit)
-AllAuditClasses.append(LoggingAudit)
+AllAuditClasses.append(LogAudit)
 AllAuditClasses.append(CrmdStateAudit)
 AllAuditClasses.append(PartitionAudit)
 AllAuditClasses.append(ResourceAudit)
-AllAuditClasses.append(HAResourceAudit)
+#AllAuditClasses.append(HAResourceAudit)
+AllAuditClasses.append(PrimitiveAudit)
+AllAuditClasses.append(GroupAudit)
+AllAuditClasses.append(CloneAudit)
 AllAuditClasses.append(CIBAudit)
 
 def AuditList(cm):
