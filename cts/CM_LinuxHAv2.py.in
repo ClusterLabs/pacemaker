@@ -76,7 +76,7 @@ class LinuxHAv2(HeartbeatCM):
             "QuorumCmd"      : "@sbindir@/ccm_tool -q",
             "CibQuery"       : "@sbindir@/cibadmin -Ql",
             "ParitionCmd"    : "@sbindir@/ccm_tool -p",
-            "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -n %s -E %s %s 0 %d EVERYTIME",
+            "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -n %s -E %s %s 0 %d EVERYTIME 2>&1",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
             "TmpDir"         : "/tmp",
             "BreakCommCmd2"  : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
@@ -345,9 +345,13 @@ class LinuxHAv2(HeartbeatCM):
             if self.ShouldBeStatus[node] == self["up"]:
                 rc = self.ResourceOp(rid, "monitor", node)
                 # Strange error codes from remote_py
+                # 65024 == not install
                 # 2048 == 8
                 # 1792 == 7
                 # 0    == 0
+                if rc == 65024:
+                    self.debug("%s is not installed on %s: %d" % (rid, node, rc))
+
                 if rc == 0 or rc == 2048 or rc == 8:
                     ResourceNodes.append(node)
 
@@ -573,71 +577,6 @@ class LinuxHAv2(HeartbeatCM):
         cmd = self["StandbyCmd"] % (node, status)
         ret = self.rsh(node, cmd)
         return True
-
-class HAResource(Resource):
-    def __init__(self, cm, node, group=None):
-        '''
-        Get information from xml node
-        '''
-        if group == None :
-            self.rid     = str(node.getAttribute('id'))
-        else :
-            self.rid     = group + ":" + str(node.getAttribute('id'))
-        self.rclass  = str(node.getAttribute('class'))
-        self.rtype   = str(node.getAttribute('type'))
-        self.inc_name = None
-        self.inc_no = -1
-        self.inc_max = -1
-        self.rparameters = {}
-        nvpairs = [] 
- 
-        list = node.getElementsByTagName('instance_attributes')
-        if len(list) > 0:
-            attributes = list[0]
-            list = attributes.getElementsByTagName('attributes')
-        if len(list) > 0:
-            parameters = list[0]
-            nvpairs     = parameters.getElementsByTagName('nvpair')
-
-        for nvpair in nvpairs:
-            name=nvpair.getAttribute('name')
-            value=nvpair.getAttribute('value')
-            self.rparameters[name]=value
-
-        # This should normally be called first... FIXME!
-        Resource.__init__(self, cm, self.rtype, self.rid)
-        
-        # resources that dont need quorum will have:
-        #        <op name="start" prereq="nothing"/>
-        ops = node.getElementsByTagName('op')
-        for op in ops:
-            if op.getAttribute('name') == "start" and op.getAttribute('prereq') == "nothing":
-                self.needs_quorum = 0
-
-    def IsRunningOn(self, nodename):
-        '''
-        This member function returns true if our resource is running
-        on the given node in the cluster.
-        We call the status operation for the resource script.
-        '''
-        rc = self.CM.ResourceOp(self.rid, "monitor", nodename)
-        return (rc == 0)
-        
-    def Start(self, nodename):
-        '''
-        This member function starts or activates the resource.
-        '''
-        return self.CM.ResourceOp(self.rid, "start", nodename)
-
-    def Stop(self, nodename):
-        '''
-        This member function stops or deactivates the resource.
-        '''
-        return self.CM.ResourceOp(self.rid, "stop", nodename)
-
-    def IsWorkingCorrectly(self, nodename):
-        return self.IsRunningOn(nodename)
-
 
 #######################################################################
 #
