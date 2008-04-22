@@ -1160,17 +1160,6 @@ class StandbyTest2(CTSTest):
         if status != "off":
             return self.failure("standby status of %s is [%s] but we expect [off]" % (node, status))
 
-        self.CM.debug("Checking resources")
-        failed = 0
-        for rsc in rsc_on_node:
-            rc = self.CM.ResourceOp(rsc, "monitor", node)
-            if rc != 7 or rc != 8:
-                failed = failed + 1
-                self.CM.log("%s set to active but %s is NOT back" % (node, rsc))
-                
-        if failed > 0:
-            return self.failure("%s set to active but %d resources didn't return" % (node, failed))
-
         return self.success()
 
     def is_applicable(self):
