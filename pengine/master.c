@@ -573,7 +573,9 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 
 		chosen = NULL;
 		crm_debug_2("Processing %s", child_rsc->id);
-		do_crm_log(scores_log_level, "%s promotion score: %d", child_rsc->id, child_rsc->sort_index);
+		chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
+		do_crm_log(scores_log_level, "%s promotion score on %s: %d",
+			   child_rsc->id, chosen?chosen->details->uname:"none", child_rsc->sort_index);
 		if(promoted < clone_data->master_max) {
 			chosen = can_be_master(child_rsc);
 		}
