@@ -322,7 +322,8 @@ void dump_node_scores(int level, resource_t *rsc, const char *comment, GListPtr 
     slist_iter(
 	node, node_t, list, lpc,
 	if(rsc) {
-	    do_crm_log(level, "%s: %s.%s = %d", comment, rsc->id, node->details->uname, node->weight);
+	    do_crm_log(level, "%s: %s allocation score on %s: %d",
+		       comment, rsc->id, node->details->uname, node->weight);
 	} else {
 	    do_crm_log(level, "%s: %s = %d", comment, node->details->uname, node->weight);
 	}
