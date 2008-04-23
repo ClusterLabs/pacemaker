@@ -392,8 +392,13 @@ class LinuxHAv2(HeartbeatCM):
                     if found == 0:
                         self.debug("Adding partition from %s: %s" %(node, partition))
                         ccm_partitions.append(partition)
+                    else:
+                        self.debug("Partition '%s' is consistent with existing entries" %(partition))
+
                 else:
                     self.log("bad partition details for %s" %node)
+            else:
+                self.debug("Node %s is down... skipping" %node)
 
         return ccm_partitions
 
