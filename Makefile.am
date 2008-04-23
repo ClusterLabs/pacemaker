@@ -56,13 +56,14 @@ changes:
 	printf "\n  + Pending bugs encountered during testing:\n"
 	printf "\n  * Changes since $(LAST_RELEASE)\n"
 	hg log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v Low: | sort -uf 
-	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date`\n"
+	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
 
 obs:	tgz
-	scp $(TARFILE) vmhost.beekhof.net:Development/obs/server:ha-clustering/pacemaker/
+	make changes > .changes
+	scp .changes $(TARFILE) vmhost.beekhof.net:Development/obs/server:ha-clustering/pacemaker/
 
 home:	tgz
-	scp $(TARFILE) vmhost.beekhof.net:Development/obs/home:beekhof/pacemaker-test/
+	scp .changes $(TARFILE) vmhost.beekhof.net:Development/obs/home:beekhof/pacemaker-test/
 
 global:
 	gtags
