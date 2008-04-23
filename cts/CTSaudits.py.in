@@ -191,7 +191,7 @@ class PrimitiveAudit(ClusterAudit):
                 
             elif resource.needs_quorum:
                 rc=0
-                self.CM.log("Resource %s active without quorum: " 
+                self.CM.log("Resource %s active without quorum: %s" 
                             % (resource.id, repr(active)))
 
         elif self.CM.HasQuorum(None) or not resource.needs_quorum:
