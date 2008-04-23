@@ -48,7 +48,7 @@ changes:
 	printf "  * Update source tarball to revision: `hg id`\n"
 	printf "  * Statistics:\n"
 	printf "      Changesets: `hg log -M --template "{desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | wc -l`\n"
-	printf "      Diff:         "
+	printf "      Diff:           "
 	hg diff -r $(LAST_RELEASE):tip | diffstat | tail -n 1
 	printf "\n  * Testing Notes:\n"
 	printf "\n  + Test hardware:\n"
