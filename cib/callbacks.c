@@ -70,7 +70,6 @@ extern enum cib_errors revision_check(
 void initiate_exit(void);
 void terminate_cib(const char *caller);
 gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
-gboolean cib_msg_timeout(gpointer data);
 void cib_GHFunc(gpointer key, gpointer value, gpointer user_data);
 gboolean can_write(int flags);
 void send_cib_replace(const xmlNode *sync_request, const char *host);
@@ -1062,7 +1061,7 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	goto done;
 		
     } else if(cib_op_modifies(call_type) == FALSE) {
-	rc = cib_perform_op(op, call_options, cib_op_func(call_type), FALSE,
+	rc = cib_perform_op(op, call_options, cib_op_func(call_type), TRUE,
 			    section, request, input, FALSE, &config_changed,
 			    current_cib, &result_cib, &output);
 
@@ -1164,7 +1163,7 @@ cib_process_command(xmlNode *request, xmlNode **reply,
   done:
     if((call_options & cib_discard_reply) == 0) {
 	*reply = cib_construct_reply(request, output, rc);
-	crm_log_xml_info(*reply, "cib:reply");
+	/* crm_log_xml_info(*reply, "cib:reply"); */
     }
 
     if(call_type >= 0) {
@@ -1269,15 +1268,6 @@ gint cib_GCompareFunc(gconstpointer a, gconstpointer b)
 }
 
 
-gboolean
-cib_msg_timeout(gpointer data)
-{
-	crm_debug_4("Checking if any clients have timed out messages");
-/* 	g_hash_table_foreach(client_list, cib_GHFunc, NULL); */
-	return TRUE;
-}
-
-
 void
 cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
 {
@@ -1369,6 +1359,13 @@ cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 	}
 	
 	return FALSE;
+}
+
+void
+cib_ha_peer_callback(HA_Message * msg, void* private_data)
+{
+    xmlNode *xml = convert_ha_message(NULL, msg, __FUNCTION__);
+    cib_peer_callback(xml, private_data);
 }
 
 void

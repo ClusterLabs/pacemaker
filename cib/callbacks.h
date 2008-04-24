@@ -86,6 +86,7 @@ extern gboolean cib_rw_synchronous_callback(
 extern gboolean cib_ro_synchronous_callback(
 	IPC_Channel *channel, gpointer user_data);
 
+extern void cib_ha_peer_callback(HA_Message * msg, void* private_data);
 extern void cib_peer_callback(xmlNode * msg, void* private_data);
 extern void cib_client_status_callback(const char * node, const char * client,
 				       const char * status, void * private);

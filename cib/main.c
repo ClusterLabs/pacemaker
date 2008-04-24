@@ -84,7 +84,6 @@ int cib_init(void);
 gboolean cib_shutdown(int nsig, gpointer unused);
 void cib_ha_connection_destroy(gpointer user_data);
 gboolean startCib(const char *filename);
-extern gboolean cib_msg_timeout(gpointer data);
 extern int write_cib_contents(gpointer p);
 
 GTRIGSource *cib_writer = NULL;
@@ -406,7 +405,7 @@ cib_init(void)
 	}
 
 	if(stand_alone == FALSE) {
-	    void *dispatch = cib_peer_callback;
+	    void *dispatch = cib_ha_peer_callback;
 	    void *destroy = cib_ha_connection_destroy;
 	    
 	    if(is_openais_cluster()) {
@@ -499,10 +498,6 @@ cib_init(void)
 		mainloop = g_main_new(FALSE);
 		crm_info("Starting %s mainloop", crm_system_name);
 
-/* 		Gmain_timeout_add(crm_get_msec("10s"), cib_msg_timeout, NULL); */
-/* 		Gmain_timeout_add( */
-/* 			crm_get_msec(cib_stat_interval), cib_stats, NULL);  */
-		
 		g_main_run(mainloop);
 		return_to_orig_privs();
 		return 0;
@@ -513,7 +508,6 @@ cib_init(void)
 		mainloop = g_main_new(FALSE);
 		crm_info("Starting %s mainloop", crm_system_name);
 
-		Gmain_timeout_add(crm_get_msec("10s"), cib_msg_timeout, NULL);
 		Gmain_timeout_add(
 			crm_get_msec(cib_stat_interval), cib_stats, NULL); 
 		
