@@ -204,7 +204,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 
 	(*rsc)->recovery_type      = recovery_stop_start;
 	(*rsc)->stickiness         = data_set->default_resource_stickiness;
-	(*rsc)->fail_stickiness    = data_set->default_resource_fail_stickiness;
+	(*rsc)->migration_threshold    = data_set->default_migration_threshold;
 
 	value = g_hash_table_lookup((*rsc)->meta, XML_CIB_ATTR_PRIORITY);
 	(*rsc)->priority	   = crm_parse_int(value, "0"); 
@@ -263,7 +263,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_STICKINESS);
 	if(value != NULL) {
-		(*rsc)->fail_stickiness = char2score(value);
+		(*rsc)->migration_threshold = char2score(value);
 	}
 	
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_TARGET_ROLE);
@@ -356,31 +356,37 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 
 	value = g_hash_table_lookup(meta_hash, XML_RSC_ATTR_FAIL_STICKINESS);
 	if(value != NULL && safe_str_neq("default", value)) {
-		rsc->fail_stickiness = char2score(value);
+		rsc->migration_threshold = char2score(value);
 	} else {
-		rsc->fail_stickiness = data_set->default_resource_fail_stickiness;
+		rsc->migration_threshold = data_set->default_migration_threshold;
 	}
 
 	/* process failure stickiness */
 	fail_attr = crm_concat("fail-count", rsc->id, '-');
 	value = g_hash_table_lookup(node->details->attrs, fail_attr);
 	if(value != NULL) {
-		crm_debug("%s: %s", fail_attr, value);
-		fail_count = char2score(value);
+	    fail_count = char2score(value);
+	    crm_info("%s has failed %d on %s",
+		     rsc->id, fail_count, node->details->uname);
 	}
 	crm_free(fail_attr);
 	
-	if(fail_count > 0 && rsc->fail_stickiness != 0) {
-		resource_t *failed = rsc;
-		if(is_not_set(rsc->flags, pe_rsc_unique)) {
-		    failed = uber_parent(rsc);
-		}
-		resource_location(failed, node, fail_count * rsc->fail_stickiness,
-				  "fail_stickiness", data_set);
-		crm_info("Setting failure stickiness for %s on %s: %d",
-			  failed->id, node->details->uname,
-			  fail_count * rsc->fail_stickiness);
+	if(fail_count > 0 && rsc->migration_threshold != 0) {
+	    resource_t *failed = rsc;
+	    if(is_not_set(rsc->flags, pe_rsc_unique)) {
+		failed = uber_parent(rsc);
+	    }
+	    
+	    if(rsc->migration_threshold <= fail_count) {
+		resource_location(failed, node, -INFINITY, "__fail_limit__", data_set);
+		crm_warn("Forcing %s away from %s after %d failures (max=%d)",
+			 failed->id, node->details->uname, fail_count, rsc->migration_threshold);
+	    } else {
+		crm_notice("%s can fail %d more times on %s before being forced off",
+			   failed->id, rsc->migration_threshold - fail_count, node->details->uname);
+	    }
 	}
+	
 	g_hash_table_destroy(meta_hash);
 }
 

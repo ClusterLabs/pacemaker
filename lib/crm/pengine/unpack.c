@@ -83,10 +83,10 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 	crm_debug("Default stickiness: %d",
 		 data_set->default_resource_stickiness);
 
-	value = pe_pref(data_set->config_hash, "default-resource-failure-stickiness");
-	data_set->default_resource_fail_stickiness = char2score(value);
-	crm_debug("Default failure stickiness: %d",
-		 data_set->default_resource_fail_stickiness);
+	value = pe_pref(data_set->config_hash, "default-migration-threshold");
+	data_set->default_migration_threshold = char2score(value);
+	crm_debug("Default migration threshold: %d",
+		 data_set->default_migration_threshold);
 	
 	value = pe_pref(data_set->config_hash, "stonith-enabled");
 	cl_str_to_boolean(value, &data_set->stonith_enabled);

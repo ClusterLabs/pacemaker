@@ -12,7 +12,7 @@
            <nvpair id="stop-orphan-resources" name="stop-orphan-resources" value="true"/>
            <nvpair id="stop-orphan-actions" name="stop-orphan-actions" value="true"/>
            <nvpair id="remove-after-stop" name="remove-after-stop" value="false"/>
-           <nvpair id="default-resource-failure-stickiness" name="default-resource-failure-stickiness" value="-INFINITY"/>
+           <nvpair id="default-migration-threshold" name="default-migration-threshold" value="1"/>
            <nvpair id="stonith-action" name="stonith-action" value="reboot"/>
            <nvpair id="default-action-timeout" name="default-action-timeout" value="120s"/>
            <nvpair id="dc-deadtime" name="dc-deadtime" value="10s"/>

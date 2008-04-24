@@ -63,8 +63,8 @@ typedef struct pe_working_set_s
 		gboolean stop_rsc_orphans;
 		gboolean stop_action_orphans;
 
+		int default_migration_threshold;
 		int default_resource_stickiness;
-		int default_resource_fail_stickiness;
 		no_quorum_policy_t no_quorum_policy;
 
 		GHashTable *config_hash;
@@ -153,8 +153,8 @@ struct resource_s {
 		int	 priority; 
 		int	 stickiness; 
 		int	 sort_index; 
-		int	 fail_stickiness;
 		int	 effective_priority; 
+		int	 migration_threshold;
 
 		unsigned long long flags;
 	

@@ -9,7 +9,7 @@
            <nvpair name="stonith-enabled" value="true" id="stonith-enabled"/>
            <nvpair name="stonith-action" value="reboot" id="stonith-action"/>
            <nvpair name="default-resource-stickiness" value="0" id="default-resource-stickiness"/>
-           <nvpair name="default-resource-failure-stickiness" value="-100" id="default-resource-failure-stickiness"/>
+           <nvpair name="default-migration-threshold" value="1" id="default-migration-threshold"/>
            <nvpair name="is-managed-default" value="true" id="is-managed-default"/>
            <nvpair name="default-action-timeout" value="20s" id="default-action-timeout"/>
            <nvpair name="stop-orphan-resources" value="true" id="stop-orphan-resources"/>

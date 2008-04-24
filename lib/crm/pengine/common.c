@@ -67,7 +67,7 @@ pe_cluster_option pe_opts[] = {
 	{ "stonith-action", "stonith_action", "enum", "reboot, poweroff", "reboot", &check_stonith_action,
 	  "Action to send to STONITH device", NULL },
 	{ "default-resource-stickiness", "default_resource_stickiness", "integer", NULL, "0", &check_number, "", NULL },
-	{ "default-resource-failure-stickiness", "default_resource_failure_stickiness", "integer", NULL, "0", &check_number, "", NULL },
+	{ "default-migration-threshold", NULL, "integer", NULL, "0", &check_number, "Maximum times a resource can fail before it is moved.  Zero means no limit.", NULL },
 	{ "is-managed-default", "is_managed_default", "boolean", NULL, "true", &check_boolean,
 	  "Should the cluster start/stop resources as required", NULL },
 	{ "cluster-delay", "transition_idle_timeout", "time", NULL, "60s", &check_time,
