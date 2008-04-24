@@ -369,16 +369,16 @@ crm_xml_add(xmlNode* node, const char *name, const char *value)
     CRM_CHECK(name != NULL && name[0] != 0, return NULL);
     /* CRM_CHECK(value != NULL && value[0] != 0, return NULL); */
     /* CRM_CHECK(strcasecmp(name, F_XML_TAGNAME) != 0, return NULL); */
+    old_value = crm_element_value(node, name);
 
 #if 1
-    if (value == NULL || value[0] == 0) {
+    if (old_value != NULL && (value == NULL || value[0] == 0)) {
 	crm_err("Unsetting %s with crm_xml_add()", name);
 	xml_remove_prop(node, name);
 	return NULL;
     }
 #endif
 
-    old_value = crm_element_value(node, name);
     if(old_value == value) {
 	return value;
     }
@@ -768,7 +768,7 @@ convert_xml_child(HA_Message *msg, xmlNode *xml)
     
     crm_free(buffer);
     buffer = compressed;
-    crm_debug("Compression details: %d -> %d", orig, len);
+    crm_debug_2("Compression details: %d -> %d", orig, len);
     ha_msg_addbin(msg, name, buffer, len);
   done:
     crm_free(buffer);
