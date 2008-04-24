@@ -138,7 +138,7 @@ cib_prepare_data(xmlNode *request, xmlNode **data, const char **section)
     xmlNode *input_fragment = get_message_xml(request, F_CIB_CALLDATA);
     *section = crm_element_value(request, F_CIB_SECTION);
     *data = cib_prepare_common(input_fragment, *section);
-    crm_log_xml_debug(*data, "data");
+    /* crm_log_xml_debug(*data, "data"); */
     if(verify_section(*section) == FALSE) {
 	return cib_bad_section;
     }
@@ -245,7 +245,7 @@ static cib_operation_t cib_server_ops[] = {
     {CIB_OP_MASTER,    FALSE, TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
     {CIB_OP_ISMASTER,  FALSE, TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
     {CIB_OP_BUMP,      TRUE,  TRUE,  TRUE,  cib_prepare_none, cib_cleanup_output, cib_process_bump},
-    {CIB_OP_REPLACE,   TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_data,   cib_process_replace},
+    {CIB_OP_REPLACE,   TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_data,   cib_process_replace_svr},
     {CIB_OP_CREATE,    TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_data,   cib_process_change},
     {CIB_OP_DELETE,    TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_data,   cib_process_delete},
     {CIB_OP_DELETE_ALT,TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_data,   cib_process_change},

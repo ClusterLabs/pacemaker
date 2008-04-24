@@ -44,6 +44,10 @@ extern enum cib_errors cib_process_readwrite(
 	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
 	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer);
 
+extern enum cib_errors cib_process_replace_svr(
+	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
+	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer);
+
 extern enum cib_errors cib_server_process_diff(
 	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
 	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer);

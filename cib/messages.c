@@ -294,6 +294,20 @@ cib_server_process_diff(
 }
 
 enum cib_errors 
+cib_process_replace_svr(
+	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
+	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer)
+{
+    const char *tag = crm_element_name(input);
+    enum cib_errors rc = cib_process_replace(
+	op, options, section, req, input, existing_cib, result_cib, answer);
+    if(rc == cib_ok && safe_str_eq(tag, XML_TAG_CIB)) {
+	sync_in_progress = 0;
+    }
+    return rc;
+}
+
+enum cib_errors 
 cib_process_change(
 	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
 	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer)
