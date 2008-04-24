@@ -69,6 +69,11 @@ xmlNode *xmlfromIPC(IPC_Channel *ch, int timeout)
     }
     msg = msgfromIPC_noauth(ch);
 #endif
+
+    if(msg == NULL) {
+	crm_err("Empty reply from msgfromIPC");
+	return NULL;
+    }
     
     xml = convert_ha_message(NULL, msg, __FUNCTION__);
     crm_msg_del(msg);
