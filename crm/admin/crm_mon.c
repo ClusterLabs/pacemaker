@@ -616,8 +616,8 @@ print_html_status(crm_data_t *cib, const char *filename, gboolean web_cgi)
 	} else {
 		filename_tmp = crm_concat(filename, "tmp", '.');
 		stream = fopen(filename_tmp, "w");
-		cl_perror("Cannot open %s for writing", filename_tmp);
 		if(stream == NULL) {
+			cl_perror("Cannot open %s for writing", filename_tmp);
 			crm_free(filename_tmp);
 			return -1;
 		}	
