@@ -205,9 +205,6 @@ cib_process_replace(
 			result = cib_old_data;
 		}
 
-		/* sync_in_progress = 0; */
-		crm_err("Set sync_in_progress=0");
-		
 		free_xml(*result_cib);
 		*result_cib = copy_xml(input);
 		
