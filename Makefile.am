@@ -32,11 +32,7 @@ AUTOMAKE_OPTIONS	= foreign
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar
 
-if SNMP_SUBAGENT_BUILD
-SNMP_SUBAGENT_DIR = snmp_subagent
-endif
-
-SUBDIRS	= debian build replace include lib cib crmd pengine transitioner crm tools doc cts $(SNMP_SUBAGENT_DIR)
+SUBDIRS	= debian build replace include lib cib crmd pengine transitioner crm tools doc cts
 
 tgz:
 	rm -f $(TARFILE)
