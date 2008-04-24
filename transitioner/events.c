@@ -315,8 +315,8 @@ status_from_rc(crm_action_t *action, int orig_status, int rc)
 		const char *task, *uname;
 		task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 		uname  = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-		crm_warn("Action %s on %s failed (target: %s vs. rc: %d): %s",
-			 task, uname, crm_str(target_rc_s), rc, op_status2text(status));
+		crm_warn("Action %d (%s) on %s failed (target: %s vs. rc: %d): %s",
+			 action->id, task, uname, crm_str(target_rc_s), rc, op_status2text(status));
 	}
 
 	return status;

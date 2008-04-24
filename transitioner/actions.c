@@ -407,8 +407,8 @@ send_rsc_command(crm_action_t *action)
 		transition_graph->id, action->id, te_uuid);
 	crm_xml_add(rsc_op, XML_ATTR_TRANSITION_KEY, counter);
 
-	crm_info("Initiating action %d: %s on %s",
-		 action->id, task_uuid, on_node);
+	crm_info("Initiating action %d: %s %s on %s",
+		 action->id, task, task_uuid, on_node);
 
 	crm_free(counter);
 	
