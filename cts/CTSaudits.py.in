@@ -189,7 +189,7 @@ class PrimitiveAudit(ClusterAudit):
             if self.CM.HasQuorum(None):
                 self.CM.debug("Resource %s active on %s" % (resource.id, repr(active)))
                 
-            elif resource.needs_quorum:
+            elif resource.needs_quorum == 1:
                 rc=0
                 self.CM.log("Resource %s active without quorum: %s" 
                             % (resource.id, repr(active)))
