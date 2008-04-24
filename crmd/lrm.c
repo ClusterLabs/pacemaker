@@ -54,19 +54,19 @@ struct recurring_op_s
 char *make_stop_id(const char *rsc, int call_id);
 
 gboolean build_operation_update(
-	crm_data_t *rsc_list, lrm_op_t *op, const char *src, int lpc);
+	xmlNode *rsc_list, lrm_op_t *op, const char *src, int lpc);
 
-gboolean build_active_RAs(crm_data_t *rsc_list);
+gboolean build_active_RAs(xmlNode *rsc_list);
 gboolean is_rsc_active(const char *rsc_id);
 
 void do_update_resource(lrm_op_t *op);
 gboolean process_lrm_event(lrm_op_t *op);
 
 void do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
-		   crm_data_t *msg, HA_Message *request);
+		   xmlNode *msg, xmlNode *request);
 
 lrm_op_t *construct_op(
-	crm_data_t *rsc_op, const char *rsc_id, const char *operation);
+	xmlNode *rsc_op, const char *rsc_id, const char *operation);
 
 void send_direct_ack(const char *to_host, const char *to_sys,
 		     lrm_op_t* op, const char *rsc_id);
@@ -341,9 +341,9 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
 	const char *metadata_str = get_rsc_metadata(
 		rsc->type, rsc->class, rsc->provider);
 
-	crm_data_t *params = NULL;
-	crm_data_t *actions = NULL;
-	crm_data_t *metadata = NULL;
+	xmlNode *params = NULL;
+	xmlNode *actions = NULL;
+	xmlNode *metadata = NULL;
 
 	if(metadata_str == NULL) {
 		return NULL;
@@ -388,7 +388,7 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
 }
 
 static void
-append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version) 
+append_restart_list(xmlNode *update, lrm_op_t *op, const char *version) 
 {
 	int len = 0;
 	char *list = NULL;
@@ -396,7 +396,7 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 	lrm_rsc_t *rsc = NULL;
 	const char *value = NULL;
 	gboolean non_empty = FALSE;
-	crm_data_t *restart = NULL;
+	xmlNode *restart = NULL;
 	GListPtr restart_list = NULL;
 
 	if(op->interval > 0) {
@@ -454,17 +454,17 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 
 gboolean
 build_operation_update(
-	crm_data_t *xml_rsc, lrm_op_t *op, const char *src, int lpc)
+	xmlNode *xml_rsc, lrm_op_t *op, const char *src, int lpc)
 {
 	char *magic = NULL;
 	const char *task = NULL;
-	crm_data_t *xml_op = NULL;
+	xmlNode *xml_op = NULL;
 	char *op_id = NULL;
 	char *local_user_data = NULL;
 	const char *caller_version = NULL;	
 	char *digest = NULL;
-	crm_data_t *args_xml = NULL;
-	crm_data_t *args_parent = NULL;
+	xmlNode *args_xml = NULL;
+	xmlNode *args_parent = NULL;
 
 	CRM_DEV_ASSERT(op != NULL);
 	if(crm_assert_failed) {
@@ -730,7 +730,7 @@ is_rsc_active(const char *rsc_id)
 
 
 gboolean
-build_active_RAs(crm_data_t *rsc_list)
+build_active_RAs(xmlNode *rsc_list)
 {
 	GList *op_list  = NULL;
 	GList *lrm_list = NULL;
@@ -749,7 +749,7 @@ build_active_RAs(crm_data_t *rsc_list)
 		lrm_rsc_t *the_rsc =
 			fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
 
-		crm_data_t *xml_rsc = create_xml_node(
+		xmlNode *xml_rsc = create_xml_node(
 			rsc_list, XML_LRM_TAG_RESOURCE);
 
 		int max_call_id = -1;
@@ -809,14 +809,14 @@ build_active_RAs(crm_data_t *rsc_list)
 	return TRUE;
 }
 
-crm_data_t*
+xmlNode*
 do_lrm_query(gboolean is_replace)
 {
 	gboolean shut_down = FALSE;
-	crm_data_t *xml_result= NULL;
-	crm_data_t *xml_state = NULL;
-	crm_data_t *xml_data  = NULL;
-	crm_data_t *rsc_list  = NULL;
+	xmlNode *xml_result= NULL;
+	xmlNode *xml_state = NULL;
+	xmlNode *xml_data  = NULL;
+	xmlNode *rsc_list  = NULL;
 	const char *exp_state = CRMD_JOINSTATE_MEMBER;
 
 	if(is_set(fsa_input_register, R_SHUTDOWN)) {
@@ -852,8 +852,8 @@ do_lrm_query(gboolean is_replace)
 static void
 delete_rsc_entry(const char *rsc_id) 
 {
-	crm_data_t *xml_top = NULL;
-	crm_data_t *xml_tmp = NULL;
+	xmlNode *xml_top = NULL;
+	xmlNode *xml_tmp = NULL;
 
 	/*
 	 * Remove the rsc from the CIB
@@ -886,7 +886,7 @@ delete_rsc_entry(const char *rsc_id)
 static void
 delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id) 
 {
-	crm_data_t *xml_top = NULL;
+	xmlNode *xml_top = NULL;
 	/*
 	 * Remove the op from the CIB
 	 *
@@ -904,7 +904,7 @@ delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id)
 					   NULL, cib_quorum_override);		
 
 	} else if (rsc_id != NULL && key != NULL) {
-		crm_data_t *xml_tmp = NULL;
+		xmlNode *xml_tmp = NULL;
 
 		xml_top = create_xml_node(NULL, XML_CIB_TAG_STATE);
 		crm_xml_add(xml_top, XML_ATTR_ID, fsa_our_uuid);
@@ -1016,7 +1016,7 @@ cancel_op_key(lrm_rsc_t *rsc, const char *key, gboolean remove)
 }
 
 static lrm_rsc_t *
-get_lrm_resource(crm_data_t *resource, crm_data_t *op_msg, gboolean do_create)
+get_lrm_resource(xmlNode *resource, xmlNode *op_msg, gboolean do_create)
 {
 	char rid[64];
 	lrm_rsc_t *rsc = NULL;
@@ -1110,10 +1110,10 @@ do_lrm_invoke(long long action,
 	const char *operation = NULL;
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 
-	crm_op    = cl_get_string(input->msg, F_CRM_TASK);
-	from_sys  = cl_get_string(input->msg, F_CRM_SYS_FROM);
+	crm_op    = crm_element_value(input->msg, F_CRM_TASK);
+	from_sys  = crm_element_value(input->msg, F_CRM_SYS_FROM);
 	if(safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
-		from_host = cl_get_string(input->msg, F_CRM_HOST_FROM);
+		from_host = crm_element_value(input->msg, F_CRM_HOST_FROM);
 	}
 	
 	crm_debug_2("LRM command from: %s", from_sys);
@@ -1134,7 +1134,7 @@ do_lrm_invoke(long long action,
 
 	if(safe_str_eq(crm_op, CRM_OP_LRM_REFRESH)) {
 		enum cib_errors rc = cib_ok;
-		crm_data_t *fragment = do_lrm_query(TRUE);
+		xmlNode *fragment = do_lrm_query(TRUE);
 		crm_info("Forcing a local LRM refresh");
 
 		fsa_cib_update(XML_CIB_TAG_STATUS, fragment,
@@ -1142,13 +1142,13 @@ do_lrm_invoke(long long action,
 		free_xml(fragment);
 		
 	} else if(safe_str_eq(crm_op, CRM_OP_LRM_QUERY)) {
-		crm_data_t *data = do_lrm_query(FALSE);
-		HA_Message *reply = create_reply(input->msg, data);
+		xmlNode *data = do_lrm_query(FALSE);
+		xmlNode *reply = create_reply(input->msg, data);
 
 		if(relay_message(reply, TRUE) == FALSE) {
 			crm_err("Unable to route reply");
-			crm_log_message(LOG_ERR, reply);
-			crm_msg_del(reply);
+			crm_log_xml(LOG_ERR, "reply", reply);
+			free_xml(reply);
 		}
 		free_xml(data);
 
@@ -1164,8 +1164,8 @@ do_lrm_invoke(long long action,
 
 	} else if(operation != NULL) {
 		lrm_rsc_t *rsc = NULL;
-		crm_data_t *params = NULL;
-		crm_data_t *xml_rsc = find_xml_node(
+		xmlNode *params = NULL;
+		xmlNode *xml_rsc = find_xml_node(
 			input->xml, XML_CIB_TAG_RESOURCE, TRUE);
 
 		CRM_CHECK(xml_rsc != NULL, return);
@@ -1181,13 +1181,13 @@ do_lrm_invoke(long long action,
 
 		if(rsc == NULL && create_rsc) {
 			crm_err("Invalid resource definition");
-			crm_log_xml_warn(input->msg, "Bad command");
+			crm_log_xml_warn(input->msg, "bad input");
 
 		} else if(rsc == NULL) {
 			lrm_op_t* op = NULL;
 			crm_err("Not creating resource for a %s event: %s",
 				operation, ID(input->xml));
-			crm_log_xml_warn(input->msg, "Bad command");
+			crm_log_xml_warn(input->msg, "bad input");
 
 			op = construct_op(input->xml, ID(xml_rsc), operation);
 			op->op_status = LRM_OP_DONE;
@@ -1302,7 +1302,7 @@ do_lrm_invoke(long long action,
 }
 
 lrm_op_t *
-construct_op(crm_data_t *rsc_op, const char *rsc_id, const char *operation)
+construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 {
 	lrm_op_t *op = NULL;
 	const char *op_delay = NULL;
@@ -1418,9 +1418,9 @@ void
 send_direct_ack(const char *to_host, const char *to_sys,
 		lrm_op_t* op, const char *rsc_id)
 {
-	HA_Message *reply = NULL;
-	crm_data_t *update, *iter;
-	crm_data_t *fragment;
+	xmlNode *reply = NULL;
+	xmlNode *update, *iter;
+	xmlNode *fragment;
 	
 	CRM_DEV_ASSERT(op != NULL);
 	if(crm_assert_failed) {
@@ -1453,11 +1453,11 @@ send_direct_ack(const char *to_host, const char *to_sys,
 
 	crm_info("ACK'ing resource op %s_%s_%d from %s: %s",
 		 op->rsc_id, op->op_type, op->interval, op->user_data,
-		 cl_get_string(reply, XML_ATTR_REFERENCE));
+		 crm_element_value(reply, XML_ATTR_REFERENCE));
 
 	if(relay_message(reply, TRUE) == FALSE) {
-		crm_log_message_adv(LOG_ERR, "Unable to route reply", reply);
-		crm_msg_del(reply);
+		crm_log_xml(LOG_ERR, "Unable to route reply", reply);
+		free_xml(reply);
 	}
 	free_xml(fragment);
 	free_xml(update);
@@ -1480,7 +1480,7 @@ stop_recurring_action_by_rsc(gpointer key, gpointer value, gpointer user_data)
 
 void
 do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
-	      crm_data_t *msg, HA_Message *request)
+	      xmlNode *msg, xmlNode *request)
 {
 	int call_id  = 0;
 	char *op_id  = NULL;
@@ -1494,8 +1494,7 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 	if(msg != NULL) {
 		transition = crm_element_value(msg, XML_ATTR_TRANSITION_KEY);
 		if(transition == NULL) {
-			crm_err("Missing transition");
-			crm_log_message(LOG_ERR, msg);
+			crm_log_xml_err(msg, "Missing transition number");
 		}
 	}
 
@@ -1674,8 +1673,8 @@ copy_lrm_rsc(const lrm_rsc_t *rsc)
 }
 
 static void
-cib_rsc_callback(const HA_Message *msg, int call_id, int rc,
-		 crm_data_t *output, void *user_data)
+cib_rsc_callback(xmlNode *msg, int call_id, int rc,
+		 xmlNode *output, void *user_data)
 {
     switch(rc) {
 	case cib_ok:
@@ -1703,7 +1702,7 @@ do_update_resource(lrm_op_t* op)
 */
 	int rc = cib_ok;
 	lrm_rsc_t *rsc = NULL;
-	crm_data_t *update, *iter;
+	xmlNode *update, *iter;
 	
 	CRM_CHECK(op != NULL, return);
 

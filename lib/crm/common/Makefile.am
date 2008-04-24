@@ -34,9 +34,14 @@ endif
 if BUILD_HEARTBEAT_SUPPORT
 libcrmcluster_la_SOURCES += heartbeat.c
 endif
-
-
 libcrmcluster_la_LDFLAGS = -version-info 1:0:0
+
+# Must use non-fatal CFLAGS because glib insists on pretending things are const  
+# when they're not and thus we need the crm_element_value_const() hack
+#libcrmcommon_la_CFLAGS = -Wno-discard-qual
+
+# Must use non-fatal CFLAGS because glib insists on pretending things are const when they're not
+CFLAGS		= $(NON_FATAL_CFLAGS)
 
 libcrmcommon_la_SOURCES	= ipc.c utils.c xml.c ctrl.c iso8601.c \
 			iso8601_fields.c

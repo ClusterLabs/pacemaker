@@ -52,21 +52,21 @@ GTRIGSource  *fsa_source = NULL;
 
 /*	 A_HA_CONNECT	*/
 #if SUPPORT_AIS	
-extern void crmd_ha_msg_filter(HA_Message * msg);
+extern void crmd_ha_msg_filter(xmlNode * msg);
 
 static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
 {
     int seq = 0;
     const char *seq_s = NULL;
-    crm_data_t *xml = string2xml(data);
+    xmlNode *xml = string2xml(data);
     if(xml == NULL) {
 	crm_err("Message received: %d:'%.120s'", wrapper->id, data);
 	return TRUE;
     }
     
     crm_debug_2("Message received: %d:'%.120s'", wrapper->id, data);
-    ha_msg_add(xml, F_ORIG, wrapper->sender.uname);
-    ha_msg_add_int(xml, F_SEQ, wrapper->id);
+    crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
+    crm_xml_add_int(xml, F_SEQ, wrapper->id);
     
     switch(wrapper->header.id) {
 	case crm_class_notify:
@@ -236,7 +236,7 @@ do_shutdown_req(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
-	HA_Message *msg = NULL;
+	xmlNode *msg = NULL;
 	
 	crm_info("Sending shutdown request to DC: %s", crm_str(fsa_our_dc));
 	msg = create_request(
@@ -254,7 +254,7 @@ do_shutdown_req(long long action,
 }
 
 extern char *max_generation_from;
-extern crm_data_t *max_generation_xml;
+extern xmlNode *max_generation_xml;
 extern GHashTable *meta_hash;
 extern GHashTable *resources;
 extern GHashTable *voted;
@@ -354,6 +354,7 @@ static void free_mem(fsa_data_t *msg_data)
 	crm_free(recheck_timer);
 
 	crm_free(fsa_our_dc_version);
+	crm_free(fsa_our_uname);
 	crm_free(fsa_our_uuid);
 	crm_free(fsa_our_dc);
 	crm_free(ipc_server);
@@ -720,8 +721,8 @@ crmd_pref(GHashTable *options, const char *name)
 }
 
 static void
-config_query_callback(const HA_Message *msg, int call_id, int rc,
-		      crm_data_t *output, void *user_data) 
+config_query_callback(xmlNode *msg, int call_id, int rc,
+		      xmlNode *output, void *user_data) 
 {
 	const char *value = NULL;
 	GHashTable *config_hash = NULL;
@@ -739,7 +740,7 @@ config_query_callback(const HA_Message *msg, int call_id, int rc,
 			crm_err("The cluster is mis-configured - shutting down and staying down");
 			set_bit_inplace(fsa_input_register, R_STAYDOWN);
 		}
-		return;
+		goto bail;
 	}
 
 	crm_debug("Call %d : Parsing CIB options", call_id);
@@ -792,6 +793,8 @@ config_query_callback(const HA_Message *msg, int call_id, int rc,
 	G_main_set_trigger(fsa_source);
 	
 	g_hash_table_destroy(config_hash);
+  bail:
+	free_ha_date(now);
 }
 
 /*	 A_READCONFIG	*/
@@ -848,8 +851,8 @@ crm_shutdown(int nsig, gpointer unused)
 }
 
 static void
-default_cib_update_callback(const HA_Message *msg, int call_id, int rc,
-		     crm_data_t *output, void *user_data) 
+default_cib_update_callback(xmlNode *msg, int call_id, int rc,
+			    xmlNode *output, void *user_data) 
 {
 	if(rc != cib_ok) {
 		fsa_data_t *msg_data = NULL;
@@ -866,7 +869,7 @@ populate_cib_nodes_ha(gboolean with_client_status)
 {
 	int call_id = 0;
 	const char *ha_node = NULL;
-	crm_data_t *cib_node_list = NULL;
+	xmlNode *cib_node_list = NULL;
 
 	if(fsa_cluster_conn == NULL) {
 	    crm_debug("Not connected");
@@ -888,7 +891,7 @@ populate_cib_nodes_ha(gboolean with_client_status)
 	do {
 		const char *ha_node_type = NULL;
 		const char *ha_node_uuid = NULL;
-		crm_data_t *cib_new_node = NULL;
+		xmlNode *cib_new_node = NULL;
 
 		ha_node = fsa_cluster_conn->llc_ops->nextnode(fsa_cluster_conn);
 		if(ha_node == NULL) {
@@ -935,8 +938,8 @@ static void create_cib_node_definition(
     gpointer key, gpointer value, gpointer user_data)
 {
     crm_node_t *node = value;
-    crm_data_t *cib_nodes = user_data;
-    crm_data_t *cib_new_node = NULL;
+    xmlNode *cib_nodes = user_data;
+    xmlNode *cib_new_node = NULL;
     
     crm_notice("Node: %s (uuid: %s)", node->uname, node->uuid);
     cib_new_node = create_xml_node(cib_nodes, XML_CIB_TAG_NODE);
@@ -949,7 +952,7 @@ void
 populate_cib_nodes(gboolean with_client_status)
 {
     int call_id = 0;
-    crm_data_t *cib_node_list = NULL;
+    xmlNode *cib_node_list = NULL;
 #if SUPPORT_HEARTBEAT
     if(is_heartbeat_cluster()) {
 	populate_cib_nodes_ha(with_client_status);

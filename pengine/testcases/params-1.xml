@@ -26,7 +26,7 @@
          <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat" is_managed="1">
            <operations>
              <op id="rsc_c001n08-1" name="monitor" interval="5s" timeout="21s">
-               <instance_attributes ="foo">
+               <instance_attributes id="foo">
 		 <attributes>
 		   <nvpair id="new-attr" name="new_attr" value="some_value"/>
 		 </attributes>

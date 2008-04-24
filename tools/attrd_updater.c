@@ -42,17 +42,17 @@ void usage(const char* cmd, int exit_status);
 
 static gboolean
 process_attrd_message(
-	HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
+	xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 {
 	crm_err("Why did we get a message?");
-	crm_log_message_adv(LOG_WARNING, "attrd:msg", msg);
+	crm_log_xml(LOG_WARNING, "attrd:msg", msg);
 	return TRUE;
 }
 
 int
 main(int argc, char ** argv)
 {
-	HA_Message *update = NULL;
+	xmlNode *update = NULL;
 	IPC_Channel *attrd = NULL;
 	int argerr = 0;
 	int flag;
@@ -113,30 +113,30 @@ main(int argc, char ** argv)
 		return 1;
 	}
 
-	update = ha_msg_new(4);
-	ha_msg_add(update, F_TYPE, T_ATTRD);
-	ha_msg_add(update, F_ORIG, crm_system_name);
-	ha_msg_add(update, F_ATTRD_TASK, "update");
-	ha_msg_add(update, F_ATTRD_ATTRIBUTE, attr_name);
+	update = create_xml_node(NULL, __FUNCTION__);
+	crm_xml_add(update, F_TYPE, T_ATTRD);
+	crm_xml_add(update, F_ORIG, crm_system_name);
+	crm_xml_add(update, F_ATTRD_TASK, "update");
+	crm_xml_add(update, F_ATTRD_ATTRIBUTE, attr_name);
 	if(attr_value != NULL) {
-		ha_msg_add(update, F_ATTRD_VALUE,   attr_value);
+		crm_xml_add(update, F_ATTRD_VALUE,   attr_value);
 	}
 	if(attr_set != NULL) {
-		ha_msg_add(update, F_ATTRD_SET,     attr_set);
+		crm_xml_add(update, F_ATTRD_SET,     attr_set);
 	}
 	if(attr_section != NULL) {
-		ha_msg_add(update, F_ATTRD_SECTION, attr_section);
+		crm_xml_add(update, F_ATTRD_SECTION, attr_section);
 	}
 	if(attr_dampen != NULL) {
-		ha_msg_add(update, F_ATTRD_DAMPEN, attr_dampen);
+		crm_xml_add(update, F_ATTRD_DAMPEN, attr_dampen);
 	}
 	
 	if(send_ipc_message(attrd, update) == FALSE) {
 		fprintf(stderr, "Could not send update\n");
-		crm_msg_del(update);
+		free_xml(update);
 		return 1;
 	}
-	crm_msg_del(update);
+	free_xml(update);
 	return 0;
 }
 

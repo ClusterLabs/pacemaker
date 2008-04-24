@@ -68,6 +68,7 @@ char *xml_file = NULL;
 int cib_options = cib_sync_call;
 
 #define OPTARGS	"V?LRQxDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:fX:lmu:Fc"
+#define OPTARGS	"V?LRQxDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:fX:lmu:FOo"
 #define CMD_ERR(fmt, args...) do {		\
 	crm_warn(fmt, ##args);			\
 	fprintf(stderr, fmt, ##args);		\
@@ -273,10 +274,10 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	char *local_attr_id = NULL;
 	char *local_attr_set = NULL;
 	
-	crm_data_t *xml_top = NULL;
-	crm_data_t *xml_obj = NULL;
-	crm_data_t *nv_children = NULL;
-	crm_data_t *set_children = NULL;
+	xmlNode *xml_top = NULL;
+	xmlNode *xml_obj = NULL;
+	xmlNode *nv_children = NULL;
+	xmlNode *set_children = NULL;
 
 	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
@@ -412,8 +413,8 @@ delete_resource_attr(
 	const char *rsc_id, const char *attr_set, const char *attr_id,
 	const char *attr_name, cib_t *cib, pe_working_set_t *data_set)
 {
-	crm_data_t *xml_obj = NULL;
-	crm_data_t *xml_match = NULL;
+	xmlNode *xml_obj = NULL;
+	xmlNode *xml_match = NULL;
 
 	int rc = cib_ok;
 	char *local_attr_id = NULL;
@@ -486,16 +487,10 @@ crmd_msg_callback(IPC_Channel * server, void *private_data)
 {
 	int lpc = 0;
 	IPC_Message *msg = NULL;
-	ha_msg_input_t *new_input = NULL;
 	gboolean hack_return_good = TRUE;
 
 	while (server->ch_status != IPC_DISCONNECT
 	       && server->ops->is_message_pending(server) == TRUE) {
-		if(new_input != NULL) {
-			delete_ha_msg_input(new_input);
-			new_input = NULL;
-		}
-		
 		if (server->ops->recv(server, &msg) != IPC_OK) {
 			perror("Receive failure:");
 			return !hack_return_good;
@@ -507,17 +502,7 @@ crmd_msg_callback(IPC_Channel * server, void *private_data)
 		}
 
 		lpc++;
-		new_input = new_ipc_msg_input(msg);
-		crm_log_message(LOG_MSG, new_input->msg);
-		msg->msg_done(msg);
-		
-		if (validate_crm_message(
-			    new_input->msg, crm_system_name, our_pid,
-			    XML_ATTR_RESPONSE) == FALSE) {
-			crm_info("Message was not a CRM response. Discarding.");
-		}
-		delete_ha_msg_input(new_input);
-		new_input = NULL;		
+		msg->msg_done(msg);		
 	}
 
 	if (server->ch_status == IPC_DISCONNECT) {
@@ -535,11 +520,11 @@ send_lrm_rsc_op(IPC_Channel *crmd_channel, const char *op,
 {
 	char *key = NULL;
 	int rc = cib_send_failed;
-	HA_Message *cmd = NULL;
-	crm_data_t *xml_rsc = NULL;
+	xmlNode *cmd = NULL;
+	xmlNode *xml_rsc = NULL;
 	const char *value = NULL;
-	HA_Message *params = NULL;
-	crm_data_t *msg_data = NULL;
+	xmlNode *params = NULL;
+	xmlNode *msg_data = NULL;
 	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
 	if(rsc == NULL) {
@@ -601,7 +586,7 @@ send_lrm_rsc_op(IPC_Channel *crmd_channel, const char *op,
 	    CMD_ERR("Could not send %s op to the crmd", op);
 	}
 	
-	crm_msg_del(cmd);
+	free_xml(cmd);
 	return rc;
 }
 
@@ -624,7 +609,7 @@ fail_lrm_rsc(IPC_Channel *crmd_channel, const char *host_uname,
 static int
 refresh_lrm(IPC_Channel *crmd_channel, const char *host_uname)  
 {
-	HA_Message *cmd = NULL;
+	xmlNode *cmd = NULL;
 	int rc = cib_send_failed;
 	
 	cmd = create_request(CRM_OP_LRM_REFRESH, NULL, host_uname,
@@ -633,7 +618,7 @@ refresh_lrm(IPC_Channel *crmd_channel, const char *host_uname)
 	if(send_ipc_message(crmd_channel, cmd)) {
 		rc = 0;
 	}
-	crm_msg_del(cmd);
+	free_xml(cmd);
 	return rc;
 }
 
@@ -646,15 +631,15 @@ migrate_resource(
 	char *later_s = NULL;
 	enum cib_errors rc = cib_ok;
 	char *id = NULL;
-	crm_data_t *cib = NULL;
-	crm_data_t *rule = NULL;
-	crm_data_t *expr = NULL;
-	crm_data_t *constraints = NULL;
-	crm_data_t *fragment = NULL;
-	crm_data_t *lifetime = NULL;
+	xmlNode *cib = NULL;
+	xmlNode *rule = NULL;
+	xmlNode *expr = NULL;
+	xmlNode *constraints = NULL;
+	xmlNode *fragment = NULL;
+	xmlNode *lifetime = NULL;
 	
-	crm_data_t *can_run = NULL;
-	crm_data_t *dont_run = NULL;
+	xmlNode *can_run = NULL;
+	xmlNode *dont_run = NULL;
 
 	fragment = create_cib_fragment(NULL, NULL);
 	cib = fragment;
@@ -834,12 +819,43 @@ migrate_resource(
 	return rc;
 }
 
+static int
+list_resource_operations(const char *rsc_id, const char *host_uname, gboolean active, pe_working_set_t *data_set) 
+{
+    resource_t *rsc = NULL;
+    int opts = pe_print_printf|pe_print_rsconly|pe_print_suppres_nl;
+    GListPtr ops = find_operations(rsc_id, host_uname, active, data_set);
+    slist_iter(xml_op, xmlNode, ops, lpc,
+	       const char *op_rsc = crm_element_value(xml_op, "resource");
+	       const char *last = crm_element_value(xml_op, "last_run");
+	       const char *status_s = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
+	       int status = crm_parse_int(status_s, "0");
+
+	       rsc = pe_find_resource(data_set->resources, op_rsc);
+	       
+	       rsc->fns->print(rsc, "", opts, stdout);
+		       
+	       
+	       fprintf(stdout, ": %s (node=%s, call=%s, rc=%s",
+		       ID(xml_op),
+		       crm_element_value(xml_op, XML_ATTR_UNAME),
+		       crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
+		       crm_element_value(xml_op, XML_LRM_ATTR_RC));
+	       if(last) {
+		   time_t run_at = crm_parse_int(last, "0");
+		   fprintf(stdout, ", last-run=%s, exec=%sms\n",
+			    ctime(&run_at), crm_element_value(xml_op, "exec_time"));
+	       }
+	       fprintf(stdout, "): %s\n", op_status2text(status));
+	);
+    return cib_ok;
+}
 
 int
 main(int argc, char **argv)
 {
 	pe_working_set_t data_set;
-	crm_data_t *cib_xml_copy = NULL;
+	xmlNode *cib_xml_copy = NULL;
 
 	cib_t *	cib_conn = NULL;
 	enum cib_errors rc = cib_ok;
@@ -871,6 +887,8 @@ main(int argc, char **argv)
 		{"fail",       0, 0, 'F'},
 		{"force",      0, 0, 'f'},
 		{"meta",       0, 0, 'm'},
+		{"list-operations", 0, 0, 'O'},
+		{"list-all-operations", 0, 0, 'o'},
 
 		{"set-parameter",   1, 0, 'p'},
 		{"get-parameter",   1, 0, 'g'},
@@ -963,6 +981,12 @@ main(int argc, char **argv)
 				rsc_cmd = flag;
 				break;
 
+			case 'O':
+			case 'o':
+				crm_debug_2("Option %c => %s", flag, optarg);
+				rsc_cmd = flag;
+				break;
+
 			case 'G':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				prop_name = optarg;
@@ -1036,6 +1060,8 @@ main(int argc, char **argv)
 	}
 
 	if(rsc_cmd == 'L'
+	   || rsc_cmd == 'O'
+	   || rsc_cmd == 'o'
 	   || rsc_cmd == 'W'
 	   || rsc_cmd == 'D'
 	   || rsc_cmd == 'x'
@@ -1143,10 +1169,16 @@ main(int argc, char **argv)
 	} else if(rsc_cmd == 'F') {
 		rc = fail_lrm_rsc(crmd_channel, host_uname, rsc_id, &data_set);
 		
+	} else if(rsc_cmd == 'O') {
+	    rc = list_resource_operations(rsc_id, host_uname, TRUE, &data_set);
+	    
+	} else if(rsc_cmd == 'o') {
+	    rc = list_resource_operations(rsc_id, host_uname, FALSE, &data_set);
+	    
 	} else if(rc == cib_NOTEXISTS) {
 		CMD_ERR("Resource %s not found: %s\n",
 			crm_str(rsc_id), cib_error2string(rc));
-		
+
 	} else if(rsc_cmd == 'W') {
 		if(rsc_id == NULL) {
 			CMD_ERR("Must supply a resource id with -r\n");
@@ -1227,7 +1259,7 @@ main(int argc, char **argv)
 		rc = dump_resource_prop(rsc_id, prop_name, &data_set);
 
 	} else if(rsc_cmd == 'S') {
-		crm_data_t *msg_data = NULL;
+		xmlNode *msg_data = NULL;
 		if(prop_value == NULL || strlen(prop_value) == 0) {
 			CMD_ERR("You need to supply a value with the -v option\n");
 			return CIBRES_MISSING_FIELD;
@@ -1280,18 +1312,18 @@ main(int argc, char **argv)
 					  cib_conn, &data_set);
 
 	} else if(rsc_cmd == 'P') {
-		HA_Message *cmd = NULL;
+		xmlNode *cmd = NULL;
 		
 		cmd = create_request(CRM_OP_REPROBE, NULL, host_uname,
 				     CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 		send_ipc_message(crmd_channel, cmd);
-		crm_msg_del(cmd);
+		free_xml(cmd);
 
 	} else if(rsc_cmd == 'R') {
 		refresh_lrm(crmd_channel, host_uname);
 
 	} else if(rsc_cmd == 'D') {
-		crm_data_t *msg_data = NULL;
+		xmlNode *msg_data = NULL;
 		
 		if(rsc_id == NULL) {
 			CMD_ERR("Must supply a resource id with -r\n");
@@ -1380,6 +1412,12 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c) <string>: "
 		"Delete the named parameter for a resource\n"
 		"\t\t\t  Requires: -r.  Optional: -i, --meta\n", "delete-parameter", 'd');
+	fprintf(stream, "\t--%s (-%c) <string>: "
+		"List the active resource operations.  Optionally filtered by resource and/or node.\n"
+		"\t\t\t  Optional: -H, -r\n", "list-operations", 'O');
+	fprintf(stream, "\t--%s (-%c) <string>: "
+		"List all resource operations.  Optionally filtered by resource and/or node.\n"
+		"\t\t\t  Optional: -H, -r\n", "list-all-operations", 'o');
 	fprintf(stream, "\nOptions\n");
 	fprintf(stream, "\t--%s (-%c) <string>\t: Resource ID\n", "resource", 'r');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "

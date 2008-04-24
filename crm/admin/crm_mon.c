@@ -38,6 +38,7 @@
 #include <clplumbing/Gmain_timeout.h>
 
 #include <crm/msg_xml.h>
+#include <crm/common/util.h>
 #include <crm/common/xml.h>
 #include <crm/common/ctrl.h>
 #include <crm/common/ipc.h>
@@ -57,15 +58,15 @@
 
 void usage(const char *cmd, int exit_status);
 void blank_screen(void);
-int print_status(crm_data_t *cib);
+int print_status(xmlNode *cib);
 void print_warn(const char *descr);
-int print_simple_status(crm_data_t *cib);
+int print_simple_status(xmlNode *cib);
 /* #define printw_at(line, fmt...) move(line, 0); printw(fmt); line++ */
 void wait_for_refresh(int offset, const char *prefix, int msec);
-int print_html_status(crm_data_t *cib, const char *filename, gboolean web_cgi);
+int print_html_status(xmlNode *cib, const char *filename, gboolean web_cgi);
 void make_daemon(gboolean daemonize, const char *pidfile);
 gboolean mon_timer_popped(gpointer data);
-void mon_update(const HA_Message*, int, int, crm_data_t*,void*);
+void mon_update(xmlNode*, int, int, xmlNode*,void*);
 
 char *xml_file = NULL;
 char *as_html_file = NULL;
@@ -247,7 +248,7 @@ main(int argc, char **argv)
 
 	} else if(xml_file != NULL) {
 		FILE *xml_strm = fopen(xml_file, "r");
-		crm_data_t *cib_object = NULL;			
+		xmlNode *cib_object = NULL;			
 		if(strstr(xml_file, ".bz2") != NULL) {
 			cib_object = file2xml(xml_strm, TRUE);
 		} else {
@@ -344,12 +345,12 @@ mon_timer_popped(gpointer data)
 }
 
 void
-mon_update(const HA_Message *msg, int call_id, int rc,
-	   crm_data_t *output, void*user_data) 
+mon_update(xmlNode *msg, int call_id, int rc,
+	   xmlNode *output, void*user_data) 
 {
 	const char *prefix = NULL;
 	if(rc == cib_ok) {
-		crm_data_t *cib = NULL;
+		xmlNode *cib = NULL;
 #if CRM_DEPRECATED_SINCE_2_0_4
 		if( safe_str_eq(crm_element_name(output), XML_TAG_CIB) ) {
 			cib = output;
@@ -431,7 +432,7 @@ wait_for_refresh(int offset, const char *prefix, int msec)
 	} while(0)
 
 int
-print_simple_status(crm_data_t *cib) 
+print_simple_status(xmlNode *cib) 
 {
 	node_t *dc = NULL;
 	int nodes_online = 0;
@@ -474,7 +475,7 @@ print_simple_status(crm_data_t *cib)
 }
 
 int
-print_status(crm_data_t *cib) 
+print_status(xmlNode *cib) 
 {
 	node_t *dc = NULL;
 	static int updates = 0;
@@ -581,12 +582,21 @@ print_status(crm_data_t *cib)
 			       const char *id = ID(xml_op);
 			       const char *rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
 			       const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
+			       const char *last = crm_element_value(xml_op, "last_run");
 			       const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
 			       const char *status_s = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
 			       int status = crm_parse_int(status_s, "0");
 			       
-			       print_as("    %s (node=%s, call=%s, rc=%s): %s\n",
-					id, node, call, rc, op_status2text(status));
+			       print_as("    %s (node=%s, call=%s, rc=%s",
+					id, node, call, rc);
+			       if(last) {
+				   time_t run_at = crm_parse_int(last, "0");
+				   print_as(", last-run=%s, queued=%sms, exec=%sms\n",
+					    ctime(&run_at),
+					    crm_element_value(xml_op, "exec_time"),
+					    crm_element_value(xml_op, "queue_time"));
+			       }
+			       print_as("): %s\n", op_status2text(status));
 			);
 	}
 	
@@ -601,7 +611,7 @@ print_status(crm_data_t *cib)
 }
 
 int
-print_html_status(crm_data_t *cib, const char *filename, gboolean web_cgi) 
+print_html_status(xmlNode *cib, const char *filename, gboolean web_cgi) 
 {
 	FILE *stream;
 	node_t *dc = NULL;

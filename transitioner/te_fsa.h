@@ -48,13 +48,13 @@ struct te_input_s
 };
 
 struct te_data_command_s {
-		HA_Message *msg;
-		crm_data_t *xml;
+		xmlNode *msg;
+		xmlNode *xml;
 };
 
 struct te_data_cib_s {
-		HA_Message *msg;
-		crm_data_t *xml;
+		xmlNode *msg;
+		xmlNode *xml;
 		int call_id;
 		int rc;
 		void *user_data; /* not copied or free'd */
@@ -62,7 +62,7 @@ struct te_data_cib_s {
 
 struct te_data_complete_s {
 		const char *text;
-		crm_data_t *xml;
+		xmlNode *xml;
 		te_reason_t reason;		
 };
 
@@ -70,12 +70,12 @@ extern void te_input_free(te_input_t *fsa_data);
 extern te_input_t* te_input_copy(te_input_t *fsa_data);
 extern te_input_t* te_input_new(enum te_data_type type, void *data);
 
-extern te_input_t *new_input_command(HA_Message *msg, crm_data_t *xml);
+extern te_input_t *new_input_command(xmlNode *msg, xmlNode *xml);
 
-extern te_input_t *new_input_complete(const char *text, crm_data_t *xml,
+extern te_input_t *new_input_complete(const char *text, xmlNode *xml,
 				      te_reason_t reason, te_fsa_input_t input);
 
-extern te_input_t *new_input_cib(HA_Message *msg, crm_data_t *xml,
+extern te_input_t *new_input_cib(xmlNode *msg, xmlNode *xml,
 				 int call_id, int rc, void *user_data);
 
 extern te_input_t *new_input_null(void);

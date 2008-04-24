@@ -137,10 +137,10 @@ extern gboolean summary(GListPtr resources);
 extern gboolean pe_msg_dispatch(IPC_Channel *sender, void *user_data);
 
 extern gboolean process_pe_message(
-	HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender);
+	xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender);
 
 extern gboolean unpack_constraints(
-	crm_data_t *xml_constraints, pe_working_set_t *data_set);
+	xmlNode *xml_constraints, pe_working_set_t *data_set);
 
 extern gboolean update_action_states(GListPtr actions);
 

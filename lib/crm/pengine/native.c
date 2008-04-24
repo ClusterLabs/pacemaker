@@ -333,6 +333,8 @@ native_print(
 
 	if(options & pe_print_html) {
 		status_print("<br/>\n");
+	} else if(options & pe_print_suppres_nl) {
+	    /* nothing */
 	} else if((options & pe_print_printf) || (options & pe_print_ncurses)) {
 		status_print("\n");
 	}

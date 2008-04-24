@@ -67,7 +67,7 @@ struct update_data_s
 {
 		const char *state;
 		const char *caller;
-		crm_data_t *updates;
+		xmlNode *updates;
 		gboolean    overwrite_join;
 };
 
@@ -249,7 +249,7 @@ void
 post_cache_update(int instance) 
 {
     static int last_size = 0;
-    HA_Message *no_op = NULL;
+    xmlNode *no_op = NULL;
     
     if(is_openais_cluster()) {
 	int new_size = crm_active_members();
@@ -291,7 +291,7 @@ post_cache_update(int instance)
 void
 do_ccm_update_cache(
     enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
-    oc_ed_t event, const oc_ev_membership_t *oc, crm_data_t *xml)
+    oc_ed_t event, const oc_ev_membership_t *oc, xmlNode *xml)
 {
 	unsigned long long instance = 0;
 	unsigned int lpc = 0;
@@ -352,8 +352,8 @@ do_ccm_update_cache(
 #endif
 
 static void
-ccm_node_update_complete(const HA_Message *msg, int call_id, int rc,
-			 crm_data_t *output, void *user_data)
+ccm_node_update_complete(xmlNode *msg, int call_id, int rc,
+			 xmlNode *output, void *user_data)
 {
 	fsa_data_t *msg_data = NULL;
 	last_peer_update = 0;
@@ -363,7 +363,7 @@ ccm_node_update_complete(const HA_Message *msg, int call_id, int rc,
 
 	} else {
 		crm_err("Node update %d failed", call_id);
-		crm_log_message(LOG_DEBUG, msg);
+		crm_log_xml(LOG_DEBUG, "failed", msg);
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
 }
@@ -371,7 +371,7 @@ ccm_node_update_complete(const HA_Message *msg, int call_id, int rc,
 void
 ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 {
-    crm_data_t *tmp1 = NULL;
+    xmlNode *tmp1 = NULL;
     const char *join = NULL;
     crm_node_t *node = value;
     struct update_data_s* data = (struct update_data_s*)user_data;
@@ -414,7 +414,7 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
     int call_id = 0;
     int call_options = cib_scope_local|cib_quorum_override;
     struct update_data_s update_data;
-    crm_data_t *fragment = NULL;
+    xmlNode *fragment = NULL;
     
     if(crm_peer_cache == NULL) {
 	/* We got a replace notification before being connected to
@@ -446,7 +446,7 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
 }
 
 static void cib_quorum_update_complete(
-    const HA_Message *msg, int call_id, int rc, crm_data_t *output, void *user_data)
+    xmlNode *msg, int call_id, int rc, xmlNode *output, void *user_data)
 {
 	fsa_data_t *msg_data = NULL;
 	
@@ -455,7 +455,7 @@ static void cib_quorum_update_complete(
 
 	} else {
 		crm_err("Quorum update %d failed", call_id);
-		crm_log_message(LOG_DEBUG, msg);
+		crm_log_xml(LOG_DEBUG, "failed", msg);
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
 }
@@ -463,7 +463,7 @@ static void cib_quorum_update_complete(
 void crm_update_quorum(gboolean bool) 
 {
     int call_id = 0;
-    crm_data_t *update = NULL;
+    xmlNode *update = NULL;
     int call_options = cib_scope_local|cib_quorum_override;
     
     fsa_has_quorum = bool;

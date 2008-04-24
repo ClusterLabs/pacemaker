@@ -61,10 +61,10 @@ void crmadmin_ipc_connection_destroy(gpointer user_data);
 
 gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
 char *pluralSection(const char *a_section);
-crm_data_t *handleCibMod(void);
-int do_find_node_list(crm_data_t *xml_node);
+xmlNode *handleCibMod(void);
+int do_find_node_list(xmlNode *xml_node);
 gboolean admin_message_timeout(gpointer data);
-gboolean is_node_online(crm_data_t *node_state);
+gboolean is_node_online(xmlNode *node_state);
 
 enum debug {
 	debug_none,
@@ -87,7 +87,7 @@ gboolean DO_RESOURCE_LIST = FALSE;
 enum debug DO_DEBUG       = debug_none;
 const char *crmd_operation = NULL;
 
-crm_data_t *msg_options = NULL;
+xmlNode *msg_options = NULL;
 
 const char *standby_on_off = "on";
 const char *admin_verbose = XML_BOOLEAN_FALSE;
@@ -301,7 +301,7 @@ do_work(void)
 {
 	int ret = 1;
 	/* construct the request */
-	crm_data_t *msg_data = NULL;
+	xmlNode *msg_data = NULL;
 	gboolean all_is_good = TRUE;
 	
 	msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
@@ -351,7 +351,7 @@ do_work(void)
 	} else if(DO_NODE_LIST) {
 
 		cib_t *	the_cib = cib_new();
-		crm_data_t *output = NULL;
+		xmlNode *output = NULL;
 		
 		enum cib_errors rc = the_cib->cmds->signon(
 			the_cib, crm_system_name, cib_command_synchronous);
@@ -426,15 +426,15 @@ do_work(void)
 	}
 	
 	{
-		HA_Message *cmd = create_request(
+		xmlNode *cmd = create_request(
 			crmd_operation, msg_data, dest_node, sys_to,
 			crm_system_name, admin_uuid);
 
 		if(this_msg_reference != NULL) {
-			ha_msg_mod(cmd, XML_ATTR_REFERENCE, this_msg_reference);
+			crm_xml_add(cmd, XML_ATTR_REFERENCE, this_msg_reference);
 		}
 		send_ipc_message(crmd_channel, cmd);
-		crm_msg_del(cmd);
+		free_xml(cmd);
 	}
 	
 	return ret;
@@ -485,6 +485,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 {
 	int rc = 0;
 	int lpc = 0;
+	xmlNode *xml = NULL;
 	IPC_Message *msg = NULL;
 	ha_msg_input_t *new_input = NULL;
 	gboolean hack_return_good = TRUE;
@@ -515,8 +516,12 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 
 		lpc++;
 		received_responses++;
-		new_input = new_ipc_msg_input(msg);
-		crm_log_message(LOG_MSG, new_input->msg);
+
+		xml = convert_ipc_message(msg, __FUNCTION__);
+		new_input = new_ipc_msg_input(xml);
+		free_xml(xml);
+		
+		crm_log_xml(LOG_MSG, "ipc", new_input->msg);
 		msg->msg_done(msg);
 		
 		if (new_input->xml == NULL) {
@@ -531,7 +536,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			goto cleanup;
 		}
 
-		result = cl_get_string(new_input->msg, XML_ATTR_RESULT);
+		result = crm_element_value(new_input->msg, XML_ATTR_RESULT);
 		if(result == NULL || strcasecmp(result, "ok") == 0) {
 			result = "pass";
 		} else {
@@ -544,7 +549,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 
 			printf("Status of %s@%s: %s (%s)\n",
 			       crm_element_value(new_input->xml,XML_PING_ATTR_SYSFROM),
-			       cl_get_string(new_input->msg, F_CRM_HOST_FROM),
+			       crm_element_value(new_input->msg, F_CRM_HOST_FROM),
 			       state,
 			       crm_element_value(new_input->xml,XML_PING_ATTR_STATUS));
 			
@@ -553,7 +558,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			}
 			
 		} else if(DO_WHOIS_DC) {
-			const char *dc = cl_get_string(
+			const char *dc = crm_element_value(
 				new_input->msg, F_CRM_HOST_FROM);
 			
 			printf("Designated Controller is: %s\n", dc);
@@ -620,7 +625,7 @@ admin_message_timeout(gpointer data)
 
 
 gboolean
-is_node_online(crm_data_t *node_state) 
+is_node_online(xmlNode *node_state) 
 {
 	const char *uname      = crm_element_value(node_state,XML_ATTR_UNAME);
 	const char *join_state = crm_element_value(node_state,XML_CIB_ATTR_JOINSTATE);
@@ -645,10 +650,10 @@ is_node_online(crm_data_t *node_state)
 }
 
 int
-do_find_node_list(crm_data_t *xml_node)
+do_find_node_list(xmlNode *xml_node)
 {
 	int found = 0;
-	crm_data_t *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
+	xmlNode *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
 
 	xml_child_iter_filter(
 		nodes, node, XML_CIB_TAG_NODE,	

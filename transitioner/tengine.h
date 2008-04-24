@@ -40,9 +40,9 @@ extern gboolean stop_te_timer(crm_action_timer_t *timer);
 extern const char *get_rsc_state(const char *task, op_status_t status);
 
 /* unpack */
-extern gboolean extract_event(crm_data_t *msg);
+extern gboolean extract_event(xmlNode *msg);
 extern gboolean process_te_message(
-	HA_Message * msg, crm_data_t *xml_data, IPC_Channel *sender);
+	xmlNode * msg, xmlNode *xml_data, IPC_Channel *sender);
 
 extern crm_graph_t *transition_graph;
 extern GTRIGSource *transition_trigger;
@@ -57,7 +57,7 @@ extern void notify_crmd(crm_graph_t *graph);
 extern void trigger_graph_processing(const char *fn, int line);
 extern void abort_transition_graph(
 	int abort_priority, enum transition_action abort_action,
-	const char *abort_text, crm_data_t *reason, const char *fn, int line);
+	const char *abort_text, xmlNode *reason, const char *fn, int line);
 
 #define trigger_graph()	trigger_graph_processing(__FUNCTION__, __LINE__)
 #define abort_transition(pri, action, text, reason)			\
