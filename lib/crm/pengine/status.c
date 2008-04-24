@@ -32,11 +32,11 @@
 #include <utils.h>
 #include <unpack.h>
 
-crm_data_t * do_calculations(
-	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
+xmlNode * do_calculations(
+	pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now);
 
-extern crm_data_t*get_object_root(
-    const char *object_type, crm_data_t *the_root);
+extern xmlNode*get_object_root(
+    const char *object_type, xmlNode *the_root);
 
 #define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
 
@@ -62,13 +62,13 @@ extern crm_data_t*get_object_root(
 gboolean
 cluster_status(pe_working_set_t *data_set)
 {
-	crm_data_t * config          = get_object_root(
+	xmlNode * config          = get_object_root(
 		XML_CIB_TAG_CRMCONFIG,   data_set->input);
-	crm_data_t * cib_nodes       = get_object_root(
+	xmlNode * cib_nodes       = get_object_root(
 		XML_CIB_TAG_NODES,       data_set->input);
-	crm_data_t * cib_resources   = get_object_root(
+	xmlNode * cib_resources   = get_object_root(
 		XML_CIB_TAG_RESOURCES,   data_set->input);
-	crm_data_t * cib_status      = get_object_root(
+	xmlNode * cib_status      = get_object_root(
 		XML_CIB_TAG_STATUS,      data_set->input);
  	const char *value = crm_element_value(
 		data_set->input, XML_ATTR_HAVE_QUORUM);

@@ -59,7 +59,7 @@ main(int argc, char **argv)
 {
     int rc = 0;
     const char *host = NULL;
-    crm_data_t *msg = NULL;
+    xmlNode *msg = NULL;
     
     crm_log_init(basename(argv[0]), LOG_DEBUG, FALSE, TRUE, 0, NULL);
     

@@ -34,7 +34,7 @@
 #include <unpack.h>
 
 gboolean
-unpack_config(crm_data_t *config, pe_working_set_t *data_set)
+unpack_config(xmlNode *config, pe_working_set_t *data_set)
 {
 	const char *name = NULL;
 	const char *value = NULL;
@@ -155,7 +155,7 @@ unpack_config(crm_data_t *config, pe_working_set_t *data_set)
 }
 
 gboolean
-unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
+unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set)
 {
 	node_t *new_node   = NULL;
 	const char *id     = NULL;
@@ -261,7 +261,7 @@ unpack_nodes(crm_data_t * xml_nodes, pe_working_set_t *data_set)
 }
 
 gboolean 
-unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
+unpack_resources(xmlNode * xml_resources, pe_working_set_t *data_set)
 {
 	xml_child_iter(
 		xml_resources, xml_obj, 
@@ -296,13 +296,13 @@ unpack_resources(crm_data_t * xml_resources, pe_working_set_t *data_set)
 /* create +ve rsc_to_node constraints between resources and the nodes they are running on */
 /* anything else? */
 gboolean
-unpack_status(crm_data_t * status, pe_working_set_t *data_set)
+unpack_status(xmlNode * status, pe_working_set_t *data_set)
 {
 	const char *id    = NULL;
 	const char *uname = NULL;
 
-	crm_data_t * lrm_rsc    = NULL;
-	crm_data_t * attrs      = NULL;
+	xmlNode * lrm_rsc    = NULL;
+	xmlNode * attrs      = NULL;
 	node_t    *this_node  = NULL;
 	
 	crm_debug_3("Begining unpack");
@@ -356,7 +356,7 @@ unpack_status(crm_data_t * status, pe_working_set_t *data_set)
 }
 
 static gboolean
-determine_online_status_no_fencing(crm_data_t * node_state, node_t *this_node)
+determine_online_status_no_fencing(xmlNode * node_state, node_t *this_node)
 {
 	gboolean online = FALSE;
 	const char *join_state = crm_element_value(node_state, XML_CIB_ATTR_JOINSTATE);
@@ -406,7 +406,7 @@ determine_online_status_no_fencing(crm_data_t * node_state, node_t *this_node)
 }
 
 static gboolean
-determine_online_status_fencing(crm_data_t * node_state, node_t *this_node)
+determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 {
 	gboolean online = FALSE;
 	const char *join_state = crm_element_value(node_state, XML_CIB_ATTR_JOINSTATE);
@@ -463,19 +463,18 @@ determine_online_status_fencing(crm_data_t * node_state, node_t *this_node)
 
 gboolean
 determine_online_status(
-	crm_data_t * node_state, node_t *this_node, pe_working_set_t *data_set)
+	xmlNode * node_state, node_t *this_node, pe_working_set_t *data_set)
 {
-	int shutdown = 0;
 	gboolean online = FALSE;
-	const char *exp_state  =
-		crm_element_value(node_state, XML_CIB_ATTR_EXPSTATE);
+	const char *shutdown  = crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
+	const char *exp_state = crm_element_value(node_state, XML_CIB_ATTR_EXPSTATE);
 	
 	if(this_node == NULL) {
 		crm_config_err("No node to check");
 		return online;
 	}
 
-	ha_msg_value_int(node_state, XML_CIB_ATTR_SHUTDOWN, &shutdown);
+	shutdown = crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
 	
 	this_node->details->expected_up = FALSE;
 	if(safe_str_eq(exp_state, CRMD_JOINSTATE_MEMBER)) {
@@ -483,7 +482,7 @@ determine_online_status(
 	}
 
 	this_node->details->shutdown = FALSE;
-	if(shutdown != 0) {
+	if(shutdown != NULL && safe_str_neq("0", shutdown)) {
 		this_node->details->shutdown = TRUE;
 		this_node->details->expected_up = FALSE;
 	}
@@ -601,10 +600,10 @@ increment_clone(char *last_rsc_id)
 }
 
 static resource_t *
-create_fake_resource(const char *rsc_id, crm_data_t *rsc_entry, pe_working_set_t *data_set) 
+create_fake_resource(const char *rsc_id, xmlNode *rsc_entry, pe_working_set_t *data_set) 
 {
 	resource_t *rsc = NULL;
-	crm_data_t *xml_rsc  = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
+	xmlNode *xml_rsc  = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
 	copy_in_properties(xml_rsc, rsc_entry);
 	crm_xml_add(xml_rsc, XML_ATTR_ID, rsc_id);
 	crm_log_xml_info(xml_rsc, "Orphan resource");
@@ -618,7 +617,7 @@ create_fake_resource(const char *rsc_id, crm_data_t *rsc_entry, pe_working_set_t
 
 static resource_t *
 unpack_find_resource(
-	pe_working_set_t *data_set, node_t *node, const char *rsc_id, crm_data_t *rsc_entry)
+	pe_working_set_t *data_set, node_t *node, const char *rsc_id, xmlNode *rsc_entry)
 {
 	resource_t *rsc = NULL;
 	gboolean is_duped_clone = FALSE;
@@ -675,7 +674,7 @@ unpack_find_resource(
 }
 
 static resource_t *
-process_orphan_resource(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_set) 
+process_orphan_resource(xmlNode *rsc_entry, node_t *node, pe_working_set_t *data_set) 
 {
 	resource_t *rsc = NULL;
 	const char *rsc_id   = crm_element_value(rsc_entry, XML_ATTR_ID);
@@ -702,7 +701,7 @@ process_orphan_resource(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *d
 static void
 process_rsc_state(resource_t *rsc, node_t *node,
 		  enum action_fail_response on_fail,
-		  crm_data_t *migrate_op,
+		  xmlNode *migrate_op,
 		  pe_working_set_t *data_set) 
 {
 	if(on_fail == action_migrate_failure) {
@@ -798,7 +797,7 @@ process_recurring(node_t *node, resource_t *rsc,
 	
 	crm_debug_3("%s: Start index %d, stop index = %d",
 		    rsc->id, start_index, stop_index);
-	slist_iter(rsc_op, crm_data_t, sorted_op_list, lpc,
+	slist_iter(rsc_op, xmlNode, sorted_op_list, lpc,
 		   int interval = 0;
 		   char *key = NULL;
 		   const char *id = ID(rsc_op);
@@ -851,7 +850,7 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
 	*start_index = -1;
 	
 	slist_iter(
-		rsc_op, crm_data_t, sorted_op_list, lpc,
+		rsc_op, xmlNode, sorted_op_list, lpc,
 
 		task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 		status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
@@ -875,7 +874,7 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
 
 static void
 unpack_lrm_rsc_state(
-	node_t *node, crm_data_t * rsc_entry, pe_working_set_t *data_set)
+	node_t *node, xmlNode * rsc_entry, pe_working_set_t *data_set)
 {	
 	int stop_index = -1;
 	int start_index = -1;
@@ -889,7 +888,7 @@ unpack_lrm_rsc_state(
 	GListPtr op_list = NULL;
 	GListPtr sorted_op_list = NULL;
 
-	crm_data_t *migrate_op = NULL;
+	xmlNode *migrate_op = NULL;
 	
 	enum action_fail_response on_fail = FALSE;
 	enum rsc_role_e saved_role = RSC_ROLE_UNKNOWN;
@@ -927,7 +926,7 @@ unpack_lrm_rsc_state(
 	sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
 	
 	slist_iter(
-		rsc_op, crm_data_t, sorted_op_list, lpc,
+		rsc_op, xmlNode, sorted_op_list, lpc,
 
 		task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 		if(safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
@@ -968,7 +967,7 @@ unpack_lrm_rsc_state(
 }
 
 gboolean
-unpack_lrm_resources(node_t *node, crm_data_t * lrm_rsc_list, pe_working_set_t *data_set)
+unpack_lrm_resources(node_t *node, xmlNode * lrm_rsc_list, pe_working_set_t *data_set)
 {
 	CRM_CHECK(node != NULL, return FALSE);
 
@@ -990,7 +989,7 @@ unpack_lrm_resources(node_t *node, crm_data_t * lrm_rsc_list, pe_working_set_t *
 
 
 gboolean
-unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
+unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	      int *max_call_id, enum action_fail_response *on_fail,
 	      pe_working_set_t *data_set) 
 {    
@@ -1296,7 +1295,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 }
 
 gboolean
-add_node_attrs(crm_data_t *xml_obj, node_t *node, pe_working_set_t *data_set)
+add_node_attrs(xmlNode *xml_obj, node_t *node, pe_working_set_t *data_set)
 {
  	g_hash_table_insert(node->details->attrs,
 			    crm_strdup("#"XML_ATTR_UNAME),
@@ -1323,3 +1322,102 @@ add_node_attrs(crm_data_t *xml_obj, node_t *node, pe_working_set_t *data_set)
 	return TRUE;
 }
 
+static GListPtr
+extract_operations(const char *node, const char *rsc, xmlNode *rsc_entry, gboolean active_filter)
+{	
+    int stop_index = -1;
+    int start_index = -1;
+    
+    GListPtr op_list = NULL;
+    GListPtr sorted_op_list = NULL;
+
+    /* extract operations */
+    op_list = NULL;
+    sorted_op_list = NULL;
+    
+    xml_child_iter_filter(
+	rsc_entry, rsc_op, XML_LRM_TAG_RSC_OP,
+	crm_xml_add(rsc_op, "resource", rsc);
+	crm_xml_add(rsc_op, XML_ATTR_UNAME, node);
+	op_list = g_list_append(op_list, rsc_op);
+	);
+    
+    if(op_list == NULL) {
+	/* if there are no operations, there is nothing to do */
+	return NULL;
+    }
+    
+    sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
+    
+    /* create active recurring operations as optional */ 
+    if(active_filter == FALSE) {
+	return sorted_op_list;
+    }
+    
+    op_list = NULL;
+    
+    calculate_active_ops(sorted_op_list, &start_index, &stop_index);	
+    slist_iter(rsc_op, xmlNode, sorted_op_list, lpc,
+	       if(start_index < stop_index) {
+		   crm_debug_4("Skipping %s: not active", ID(rsc_entry));
+		   break;
+		   
+	       } else if(lpc < start_index) {
+		   crm_debug_4("Skipping %s: old", ID(rsc_op));
+		   continue;
+	       }
+	       op_list = g_list_append(op_list, rsc_op);
+	);
+    
+    g_list_free(sorted_op_list);
+    return op_list;
+}
+
+GListPtr find_operations(
+    const char *rsc, const char *node, gboolean active_filter, pe_working_set_t *data_set) 
+{
+    GListPtr output = NULL;
+    GListPtr intermediate = NULL;
+
+    xmlNode *tmp = NULL;
+    xmlNode *status = find_xml_node(data_set->input, XML_CIB_TAG_STATUS, TRUE);
+
+    const char *uname = NULL;
+    node_t *this_node = NULL;
+    
+    xml_child_iter_filter(
+	status, node_state, XML_CIB_TAG_STATE,
+	
+	uname = crm_element_value(node_state, XML_ATTR_UNAME);
+	if(node != NULL && safe_str_neq(uname, node)) {
+	    continue;
+	}
+
+	this_node = pe_find_node(data_set->nodes, uname);
+	CRM_CHECK(this_node != NULL, continue);
+	
+	determine_online_status(node_state, this_node, data_set);
+	
+	if(this_node->details->online || data_set->stonith_enabled) {
+	    /* offline nodes run no resources...
+	     * unless stonith is enabled in which case we need to
+	     *   make sure rsc start events happen after the stonith
+	     */
+	    tmp = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+	    tmp = find_xml_node(tmp, XML_LRM_TAG_RESOURCES, FALSE);
+
+	    xml_child_iter_filter(
+		tmp, lrm_rsc, XML_LRM_TAG_RESOURCE,
+		const char *rsc_id  = crm_element_value(lrm_rsc, XML_ATTR_ID);
+		if(rsc != NULL && safe_str_neq(rsc_id, rsc)) {
+		    continue;
+		}
+
+		intermediate = extract_operations(uname, rsc_id, lrm_rsc, active_filter);
+		output = g_list_concat(output, intermediate);
+		);
+	}
+	);
+
+    return output;
+}

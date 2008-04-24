@@ -59,7 +59,7 @@ crmdManagedChildRegistered(ProcTrack* p)
 #define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
 
 static void
-save_cib_contents(const HA_Message *msg, int call_id, int rc, crm_data_t *output, void *user_data) 
+save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output, void *user_data) 
 {
     char *pid = user_data;
     

@@ -56,7 +56,7 @@
 
 void usage(const char* cmd, int exit_status);
 int crmd_init(void);
-void crmd_hamsg_callback(const HA_Message * msg, void* private_data);
+void crmd_hamsg_callback(const xmlNode * msg, void* private_data);
 extern void init_dotfile(void);
 
 GMainLoop*  crmd_mainloop = NULL;

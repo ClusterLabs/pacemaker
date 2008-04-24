@@ -24,12 +24,12 @@ extern void te_input_free(te_input_t *fsa_data);
 extern te_input_t* te_input_copy(te_input_t *fsa_data);
 extern te_input_t* te_input_new(enum te_data_type type, void *data);
 
-extern te_input_t *new_input_command(HA_Message *msg, crm_data_t *xml);
+extern te_input_t *new_input_command(xmlNode *msg, xmlNode *xml);
 
-extern te_input_t *new_input_complete(const char *text, crm_data_t *xml,
+extern te_input_t *new_input_complete(const char *text, xmlNode *xml,
 				      te_reason_t reason, te_fsa_input_t input);
 
-extern te_input_t *new_input_cib(HA_Message *msg, crm_data_t *xml,
+extern te_input_t *new_input_cib(xmlNode *msg, xmlNode *xml,
 				 int call_id, int rc, void *user_data);
 
 extern te_input_t *new_input_null(void);
@@ -242,7 +242,7 @@ void te_data_complete_copy(te_input_t *a_copy, te_input_t *fsa_data)
 }
 
 te_input_t *
-new_input_command(HA_Message *msg, crm_data_t *xml)
+new_input_command(xmlNode *msg, xmlNode *xml)
 {
 	struct te_data_cib_s *copy_data = NULL;
 	crm_malloc0(a_copy->data, sizeof(struct te_data_cib_s));
@@ -254,7 +254,7 @@ new_input_command(HA_Message *msg, crm_data_t *xml)
 }
 
 te_input_t *
-new_input_complete(const char *text, crm_data_t *xml,
+new_input_complete(const char *text, xmlNode *xml,
 		   te_reason_t reason)
 {
 	struct te_data_complete_s *copy_data = NULL;
@@ -268,7 +268,7 @@ new_input_complete(const char *text, crm_data_t *xml,
 }
 
 te_input_t *
-new_input_cib(HA_Message *msg, crm_data_t *xml,
+new_input_cib(xmlNode *msg, xmlNode *xml,
 	      int call_id, int rc, void *user_data)
 {
 	struct te_data_cib_s *copy_data = NULL;

@@ -34,8 +34,8 @@
 #include <lib/crm/pengine/utils.h>
 #include <utils.h>
 
-crm_data_t * do_calculations(
-	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
+xmlNode * do_calculations(
+	pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now);
 
 #define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
 
@@ -61,12 +61,12 @@ series_t series[] = {
 
 
 gboolean
-process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
+process_pe_message(xmlNode *msg, xmlNode * xml_data, IPC_Channel *sender)
 {
 	gboolean send_via_disk = FALSE;
-	const char *sys_to = cl_get_string(msg, F_CRM_SYS_TO);
-	const char *op = cl_get_string(msg, F_CRM_TASK);
-	const char *ref = cl_get_string(msg, XML_ATTR_REFERENCE);
+	const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
+	const char *op = crm_element_value(msg, F_CRM_TASK);
+	const char *ref = crm_element_value(msg, XML_ATTR_REFERENCE);
 
 	crm_debug_3("Processing %s op (ref=%s)...", op, ref);
 	
@@ -76,7 +76,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	} else if(strcasecmp(op, CRM_OP_HELLO) == 0) {
 		/* ignore */
 		
-	} else if(safe_str_eq(cl_get_string(msg, F_CRM_MSG_TYPE),
+	} else if(safe_str_eq(crm_element_value(msg, F_CRM_MSG_TYPE),
 			      XML_ATTR_RESPONSE)) {
 		/* ignore */
 		
@@ -92,8 +92,8 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		char *graph_file = NULL;
 		const char *value = NULL;
 		pe_working_set_t data_set;
-		crm_data_t *log_input  = copy_xml(xml_data);
-		HA_Message *reply = NULL;
+		xmlNode *log_input  = copy_xml(xml_data);
+		xmlNode *reply = NULL;
 #if HAVE_BZLIB_H
 		gboolean compress = TRUE;
 #else
@@ -135,7 +135,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 		filename = generate_series_filename(
 			PE_WORKING_DIR, series[series_id].name, seq, compress);
-		ha_msg_add(reply, F_CRM_TGRAPH_INPUT, filename);
+		crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
 		crm_free(filename); filename = NULL;
 
 		if(send_ipc_message(sender, reply) == FALSE) {
@@ -146,7 +146,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 				crm_err("TE graph could not be written to disk");
 			}
 		}
-		crm_msg_del(reply);
+		free_xml(reply);
 		
 		cleanup_alloc_calculations(&data_set);
 
@@ -185,18 +185,18 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 		if(send_via_disk) {
 			reply = create_reply(msg, NULL);
-			ha_msg_add(reply, F_CRM_TGRAPH, graph_file);
-			ha_msg_add(reply, F_CRM_TGRAPH_INPUT, filename);
+			crm_xml_add(reply, F_CRM_TGRAPH, graph_file);
+			crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
 			CRM_ASSERT(reply != NULL);
 			if(send_ipc_message(sender, reply) == FALSE) {
 				crm_err("Answer could not be sent");
 			}
+			free_xml(reply);
 		}
 		
 		crm_free(graph_file);
 		free_xml(log_input);
 		crm_free(filename);
-		crm_msg_del(reply);
 		
 	} else if(strcasecmp(op, CRM_OP_QUIT) == 0) {
 		crm_warn("Received quit message, terminating");
@@ -213,8 +213,8 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	crm_err("Exiting: stage %d", stage);				\
 	exit(1);
 
-crm_data_t *
-do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now)
+xmlNode *
+do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 {
 	int rsc_log_level = LOG_NOTICE;
 /*	pe_debug_on(); */

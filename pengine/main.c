@@ -47,7 +47,7 @@ GMainLoop*  mainloop = NULL;
 void usage(const char* cmd, int exit_status);
 int pe_init(void);
 gboolean pengine_shutdown(int nsig, gpointer unused);
-extern gboolean process_pe_message(crm_data_t * msg, IPC_Channel *sender);
+extern gboolean process_pe_message(xmlNode * msg, IPC_Channel *sender);
 
 int
 main(int argc, char ** argv)

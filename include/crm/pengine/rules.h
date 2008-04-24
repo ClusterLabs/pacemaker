@@ -31,19 +31,19 @@ enum expression_type {
 	time_expr
 };
 
-extern enum expression_type find_expression_type(crm_data_t *expr);
+extern enum expression_type find_expression_type(xmlNode *expr);
 
 extern gboolean test_ruleset(
-	crm_data_t *ruleset, GHashTable *node_hash, ha_time_t *now);
+	xmlNode *ruleset, GHashTable *node_hash, ha_time_t *now);
 
-extern gboolean test_rule(crm_data_t *rule, GHashTable *node_hash,
+extern gboolean test_rule(xmlNode *rule, GHashTable *node_hash,
 			  enum rsc_role_e role, ha_time_t *now);
 
-extern gboolean test_expression(crm_data_t *expr, GHashTable *node_hash,
+extern gboolean test_expression(xmlNode *expr, GHashTable *node_hash,
 				enum rsc_role_e role, ha_time_t *now);
 
 extern void unpack_instance_attributes(
-	crm_data_t *xml_obj, const char *set_name, GHashTable *node_hash,
+	xmlNode *xml_obj, const char *set_name, GHashTable *node_hash,
 	GHashTable *hash, const char *always_first, ha_time_t *now);
 
 #endif

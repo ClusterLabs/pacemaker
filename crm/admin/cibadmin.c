@@ -48,7 +48,7 @@
 
 int exit_code = cib_ok;
 int message_timer_id = -1;
-int message_timeout_ms = 30*1000;
+int message_timeout_ms = 30;
 
 GMainLoop *mainloop = NULL;
 IPC_Channel *crmd_channel = NULL;
@@ -56,13 +56,13 @@ IPC_Channel *crmd_channel = NULL;
 const char *host = NULL;
 void usage(const char *cmd, int exit_status);
 enum cib_errors do_init(void);
-int do_work(crm_data_t *input, int command_options, crm_data_t **output);
+int do_work(xmlNode *input, int command_options, xmlNode **output);
 
 gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
 gboolean admin_message_timeout(gpointer data);
 void cib_connection_destroy(gpointer user_data);
-void cibadmin_op_callback(const HA_Message *msg, int call_id, int rc,
-			  crm_data_t *output, void *user_data);
+void cibadmin_op_callback(xmlNode *msg, int call_id, int rc,
+			  xmlNode *output, void *user_data);
 
 int command_options = 0;
 const char *cib_action = NULL;
@@ -87,7 +87,8 @@ int operation_status = 0;
 cib_t *the_cib = NULL;
 
 gboolean force_flag = FALSE;
-#define OPTARGS	"V?o:QDUCEX:t:Srwlsh:MmBfbdRx:pP5"
+#define OPTARGS	"V?o:QDUCEX:t:Srwlsh:MmBfbRx:pP5"
+
 
 int
 main(int argc, char **argv)
@@ -98,8 +99,8 @@ main(int argc, char **argv)
 	char *admin_input_file = NULL;
 	gboolean dangerous_cmd = FALSE;
 	gboolean admin_input_stdin = FALSE;
-	crm_data_t *output = NULL;
-	crm_data_t *input = NULL;
+	xmlNode *output = NULL;
+	xmlNode *input = NULL;
 	
 #ifdef HAVE_GETOPT_H
 	int option_index = 0;
@@ -113,7 +114,6 @@ main(int argc, char **argv)
 		{CIB_OP_MODIFY,  0, 0, 'M'},
 		{"patch",	 0, 0, 'P'},
 		{CIB_OP_DELETE,  0, 0, 'D'},
-		{CIB_OP_DELETE_ALT,  0, 0, 'd'},
 		{CIB_OP_BUMP,    0, 0, 'B'},
 		{CIB_OP_SYNC,    0, 0, 'S'},
 		{CIB_OP_SLAVE,   0, 0, 'r'},
@@ -121,6 +121,8 @@ main(int argc, char **argv)
 		{CIB_OP_ISMASTER,0, 0, 'm'},
 		{"md5-sum",	 0, 0, '5'},
 		
+		{"file-mode",	1, 0, 0},
+
 		{"force-quorum",0, 0, 'f'},
 		{"force",	0, 0, 'f'},
 		{"local",	0, 0, 'l'},
@@ -161,13 +163,11 @@ main(int argc, char **argv)
 		switch(flag) {
 #ifdef HAVE_GETOPT_H
 			case 0:
-				printf("option %s",
-				       long_options[option_index].name);
-				if (optarg)
-					printf(" with arg %s", optarg);
-				printf("\n");
 	if (safe_str_eq("reference", long_options[option_index].name)) {
 		this_msg_reference = crm_strdup(optarg);
+
+	} else if (safe_str_eq("file-mode", long_options[option_index].name)) {
+	    setenv("CIB_file", optarg, 1);
 
 	} else {
 		printf("Long option (--%s) is not (yet?) properly supported\n",
@@ -179,7 +179,7 @@ main(int argc, char **argv)
 			case 't':
 				message_timeout_ms = atoi(optarg);
 				if(message_timeout_ms < 1) {
-					message_timeout_ms = 30*1000;
+					message_timeout_ms = 30;
 				}
 				break;
 				
@@ -211,9 +211,6 @@ main(int argc, char **argv)
 				break;
 			case '5':
 				cib_action = "md5-sum";
-				break;
-			case 'd':
-				cib_action = CIB_OP_DELETE_ALT;
 				break;
 			case 'm':
 				cib_action = CIB_OP_ISMASTER;
@@ -363,16 +360,10 @@ main(int argc, char **argv)
 		 */
 		request_id = exit_code;
 
-		add_cib_op_callback(
-			request_id, FALSE, NULL, cibadmin_op_callback);
+		add_cib_op_callback_timeout(
+		    request_id, message_timeout_ms, FALSE, NULL, cibadmin_op_callback);
 
 		mainloop = g_main_new(FALSE);
-
-		crm_debug("Setting operation timeout to %dms for call %d",
-			  message_timeout_ms, request_id);
-
-		message_timer_id = Gmain_timeout_add(
-			message_timeout_ms, admin_message_timeout, NULL);
 
 		crm_debug_3("%s waiting for reply from the local CIB",
 			 crm_system_name);
@@ -393,15 +384,19 @@ main(int argc, char **argv)
 		fprintf(stdout, "%s", crm_str(buffer));
 		crm_free(buffer);
 	}
+
+	the_cib->cmds->signoff(the_cib);
 	
 	crm_debug_3("%s exiting normally", crm_system_name);
 	return -exit_code;
 }
 
 int
-do_work(crm_data_t *input, int call_options, crm_data_t **output) 
+do_work(xmlNode *input, int call_options, xmlNode **output) 
 {
 	/* construct the request */
+	the_cib->call_timeout = message_timeout_ms;
+
 	if (strcasecmp(CIB_OP_SYNC, cib_action) == 0) {
 		crm_debug_4("Performing %s op...", cib_action);
 		return the_cib->cmds->sync_from(
@@ -440,7 +435,7 @@ enum cib_errors
 do_init(void)
 {
 	enum cib_errors rc = cib_ok;
-	
+
 	the_cib = cib_new();
 	rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 	if(rc != cib_ok) {
@@ -486,11 +481,6 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t\t\tEg. <op id=\"rsc1_op1\" name=\"monitor\"/>\n");
 	fprintf(stream, "\t\t\tThe tagname and all attributes must match in order for the element to be deleted\n");
 	
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_DELETE_ALT, 'd');
-	fprintf(stream, "\t\t\tDelete the object at specified fully qualified location\n");
-	fprintf(stream, "\t\t\tEg. <resource id=\"rsc1\"><operations><op id=\"rsc1_op1\"/>...\n");
-	fprintf(stream, "\t\t\tRequires -o\n");
-
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_BUMP,   'B');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ISMASTER,'m');
 	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_SYNC,   'S');
@@ -515,27 +505,6 @@ usage(const char *cmd, int exit_status)
 }
 
 
-gboolean
-admin_message_timeout(gpointer data)
-{
-	if(safe_str_eq(cib_action, CIB_OP_SLAVE)) {
-		exit_code = cib_ok;
-		fprintf(stdout, "CIB service(s) are in slave mode.\n");
-		
-	} else {
-		exit_code = cib_reply_failed;
-		fprintf(stderr,
-			"No messages received in %d seconds.. aborting\n",
-			(int)message_timeout_ms/1000);
-		crm_err("No messages received in %d seconds",
-			(int)message_timeout_ms/1000);
-	}
-	
-	g_main_quit(mainloop);
-	return FALSE;
-}
-
-
 void
 cib_connection_destroy(gpointer user_data)
 {
@@ -545,13 +514,11 @@ cib_connection_destroy(gpointer user_data)
 }
 
 void
-cibadmin_op_callback(const HA_Message *msg, int call_id, int rc,
-		     crm_data_t *output, void *user_data)
+cibadmin_op_callback(xmlNode *msg, int call_id, int rc,
+		     xmlNode *output, void *user_data)
 {
 	char *admin_input_xml = NULL;
 	
-	crm_info("our callback was invoked");
-	crm_log_message(LOG_MSG, msg);
 	exit_code = rc;
 
 	if(output != NULL) {
@@ -579,7 +546,7 @@ cibadmin_op_callback(const HA_Message *msg, int call_id, int rc,
 
 	} else if(safe_str_eq(cib_action, CIB_OP_QUERY) && output==NULL) {
 		crm_err("Output expected in query response");
-		crm_log_message(LOG_ERR, msg);
+		crm_log_xml(LOG_ERR, "no output", msg);
 
 	} else if(output == NULL) {
 		crm_info("Call passed");

@@ -573,9 +573,9 @@ void ais_cluster_message_swab(void *msg)
 
     ais_debug_3("Performing endian conversion...");
     ais_msg->id                = swab32 (ais_msg->id);
+    ais_msg->size              = swab32 (ais_msg->size);
     ais_msg->is_compressed     = swab32 (ais_msg->is_compressed);
     ais_msg->compressed_size   = swab32 (ais_msg->compressed_size);
-    ais_msg->size = swab32 (ais_msg->size);
     
     ais_msg->host.id      = swab32 (ais_msg->host.id);
     ais_msg->host.pid     = swab32 (ais_msg->host.pid);

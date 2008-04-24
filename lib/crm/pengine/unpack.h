@@ -19,31 +19,31 @@
 #define PENGINE_UNPACK__H
 
 extern gboolean unpack_resources(
-	crm_data_t *xml_resources, pe_working_set_t *data_set);
+	xmlNode *xml_resources, pe_working_set_t *data_set);
 
-extern gboolean unpack_config(crm_data_t *config, pe_working_set_t *data_set);
+extern gboolean unpack_config(xmlNode *config, pe_working_set_t *data_set);
 
-extern gboolean unpack_nodes(crm_data_t *xml_nodes, pe_working_set_t *data_set);
+extern gboolean unpack_nodes(xmlNode *xml_nodes, pe_working_set_t *data_set);
 
-extern gboolean unpack_status(crm_data_t *status, pe_working_set_t *data_set);
+extern gboolean unpack_status(xmlNode *status, pe_working_set_t *data_set);
 
 extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 
 extern gboolean unpack_lrm_resources(
-	node_t *node, crm_data_t * lrm_state, pe_working_set_t *data_set);
+	node_t *node, xmlNode * lrm_state, pe_working_set_t *data_set);
 
 extern gboolean add_node_attrs(
-	crm_data_t * attrs, node_t *node, pe_working_set_t *data_set);
+	xmlNode * attrs, node_t *node, pe_working_set_t *data_set);
 
 extern gboolean unpack_rsc_op(
-	resource_t *rsc, node_t *node, crm_data_t *xml_op,
+	resource_t *rsc, node_t *node, xmlNode *xml_op,
 	int *max_call_id, enum action_fail_response *failed, pe_working_set_t *data_set);
 
 extern gboolean determine_online_status(
-	crm_data_t * node_state, node_t *this_node, pe_working_set_t *data_set);
+	xmlNode * node_state, node_t *this_node, pe_working_set_t *data_set);
 
 extern const char *param_value(
-	GHashTable *hash, crm_data_t * parent, const char *name);
+	GHashTable *hash, xmlNode * parent, const char *name);
 
 
 /*

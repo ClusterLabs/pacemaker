@@ -121,7 +121,7 @@ trigger_graph_processing(const char *fn, int line)
 void
 abort_transition_graph(
 	int abort_priority, enum transition_action abort_action,
-	const char *abort_text, crm_data_t *reason, const char *fn, int line) 
+	const char *abort_text, xmlNode *reason, const char *fn, int line) 
 {
 	int log_level = LOG_DEBUG;
 /*

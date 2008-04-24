@@ -44,7 +44,7 @@ enum pe_restart {
 
 typedef struct pe_working_set_s 
 {
-		crm_data_t *input;
+		xmlNode *input;
 		ha_time_t *now;
 
 		/* options extracted from the input */
@@ -76,7 +76,7 @@ typedef struct pe_working_set_s
 		GListPtr colocation_constraints;
 		
 		GListPtr actions;
-		crm_data_t *failed;
+		xmlNode *failed;
 
 		/* stats */
 		int num_synapse;
@@ -85,7 +85,7 @@ typedef struct pe_working_set_s
 		int action_id;
 
 		/* final output */
-		crm_data_t *graph;
+		xmlNode *graph;
 
 } pe_working_set_t;
 
@@ -138,8 +138,8 @@ struct resource_s {
 		char *id; 
 		char *clone_name; 
 		char *long_name; 
-		crm_data_t *xml; 
-		crm_data_t *ops_xml; 
+		xmlNode *xml; 
+		xmlNode *ops_xml; 
 
 		resource_t *parent;
 		void *variant_opaque;
@@ -187,7 +187,7 @@ struct action_s
 		char *task;
 
 		char *uuid;
-		crm_data_t *op_entry;
+		xmlNode *op_entry;
 		
 		gboolean pseudo;
 		gboolean runnable;
@@ -225,5 +225,7 @@ extern void cleanup_calculations(pe_working_set_t *data_set);
 extern resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
 extern node_t *pe_find_node(GListPtr node_list, const char *uname);
 extern node_t *pe_find_node_id(GListPtr node_list, const char *id);
+extern GListPtr find_operations(
+    const char *rsc, const char *node, gboolean active_filter, pe_working_set_t *data_set);
 
 #endif
