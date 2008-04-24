@@ -396,7 +396,7 @@ crmd_client_status_callback(const char * node, const char * client,
 					   NULL, clear_shutdown, __FUNCTION__);
 	
 		if(safe_str_eq(status, ONLINESTATUS)){
-		    crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM",,"XML_TAG_TRANSIENT_NODEATTRS",");
+		    crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM","XML_TAG_TRANSIENT_NODEATTRS",");
 		}
 		
 		/* it is safe to keep these updates on the local node
