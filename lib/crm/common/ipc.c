@@ -59,7 +59,11 @@ xmlNode *xmlfromIPC(IPC_Channel *ch, int timeout)
     if(ipc_rc == IPC_TIMEOUT) {
 	crm_err("No message received in the required interval (%ds)", timeout);
 	return NULL;
-    }		
+
+    } else if(msg == NULL) {
+	crm_err("Empty reply from msgfromIPC_timeout");
+	return NULL;
+    }
 #else
     static gboolean do_show_error = TRUE;
 
@@ -67,14 +71,14 @@ xmlNode *xmlfromIPC(IPC_Channel *ch, int timeout)
 	crm_err("Timeouts are not supported by the current heartbeat libraries");
 	do_show_error = FALSE;
     }
-    msg = msgfromIPC_noauth(ch);
-#endif
 
+    msg = msgfromIPC_noauth(ch);
     if(msg == NULL) {
-	crm_err("Empty reply from msgfromIPC");
+	crm_err("Empty reply from msgfromIPC_noauth");
 	return NULL;
     }
-    
+#endif
+
     xml = convert_ha_message(NULL, msg, __FUNCTION__);
     crm_msg_del(msg);
     
