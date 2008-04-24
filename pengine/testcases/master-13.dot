@@ -9,6 +9,7 @@ digraph "g" {
 "IPaddr0_start_0 odin" [ style=bold color="green" fontcolor="black"  ]
 "MailTo_start_0 odin" -> "group_running_0" [ style = bold]
 "MailTo_start_0 odin" [ style=bold color="green" fontcolor="black"  ]
+"drbd0:0_demote_0 frigg" -> "drbd0:0_monitor_12000 frigg" [ style = bold]
 "drbd0:0_demote_0 frigg" -> "ms_drbd_demoted_0" [ style = bold]
 "drbd0:0_demote_0 frigg" [ style=bold color="green" fontcolor="black"  ]
 "drbd0:0_monitor_12000 frigg" [ style=bold color="green" fontcolor="black"  ]

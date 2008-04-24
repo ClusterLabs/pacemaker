@@ -445,6 +445,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="74" operation="demote" operation_key="ocf_msdummy:0_demote_0"/>
+       </trigger>
+       <trigger>
          <rsc_op id="76" operation="start" operation_key="ocf_msdummy:0_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
        </trigger>
      </inputs>

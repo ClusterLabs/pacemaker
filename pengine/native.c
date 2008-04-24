@@ -405,7 +405,13 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 			rsc, NULL, mon,
 			pe_order_optional|pe_order_runnable_left, data_set);
 		crm_free(running_master);
-	}		
+
+	} else if(rsc->role == RSC_ROLE_MASTER) {
+		custom_action_order(
+			rsc, demote_key(rsc), NULL,
+			rsc, NULL, mon,
+			pe_order_optional|pe_order_runnable_left, data_set);
+	}
 }
 
 void
