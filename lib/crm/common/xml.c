@@ -279,38 +279,45 @@ void
 expand_plus_plus(xmlNode* target, const char *name, const char *value)
 {
     int int_value = 0;
-    int value_len = 0;
-    char *incr_value = NULL;
     const char *old_value = crm_element_value(target, name);
+    int name_len = strlen(name);
+    int value_len = strlen(value);
     
     /* if no previous value, set unexpanded */
     if(old_value == NULL
-       || strstr(value, "++") <= value) {
+       || value_len < (name_len + 2)
+       || value[name_len] != '+'
+       || (value[name_len+1] != '+' && value[name_len+1] != '=')
+       || strstr(value, name) != value) {
 	crm_xml_add(target, name, value);
 	return;
     }
-    
-    value_len = strlen(value);
-    crm_malloc0(incr_value, value_len+2);
-    sprintf(incr_value, "%s++", name);
-    
-    /* if the value is name followed by "++" we need
-     *   to increment the existing value
-     */
-    if(safe_str_eq(value, incr_value)) {
-	if(safe_str_eq(value, old_value)) {
-	    int_value = 0;
 
-	} else {
-	    int_value = crm_parse_int(old_value, "0");
-	}
-	crm_xml_add_int(target, name, int_value+1);
+    if(safe_str_eq(value, old_value)) {
+	int_value = 0;
 	
     } else {
-	crm_xml_add(target, name, value);
+	int_value = char2score(old_value);
     }
     
-    crm_free(incr_value);
+    if(value[name_len+1] == '+') {
+	/* if the value is name followed by "++" we need
+	 *   to increment the existing value
+	 */
+	int_value++;
+	
+    } else {
+	const char *offset_s = value+(name_len+2);
+	int offset = char2score(offset_s);
+	int_value += offset;
+    }
+
+    if(int_value > INFINITY) {
+	int_value = INFINITY;
+    }
+    
+    crm_xml_add_int(target, name, int_value);
+    
     return;
 }
 
