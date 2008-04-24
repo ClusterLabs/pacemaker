@@ -34,11 +34,8 @@
 void te_update_confirm(const char *event, xmlNode *msg);
 void te_update_diff(const char *event, xmlNode *msg);
 xmlNode *need_abort(xmlNode *update);
-void te_update_confirm(const char *event, HA_Message *msg);
-void te_update_diff(const char *event, HA_Message *msg);
-crm_data_t *need_abort(crm_data_t *update);
-void cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
-			 crm_data_t *output, void *user_data);
+void cib_fencing_updated(xmlNode *msg, int call_id, int rc,
+			 xmlNode *output, void *user_data);
 
 extern char *te_uuid;
 gboolean shuttingdown = FALSE;
@@ -242,6 +239,7 @@ process_te_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 				INFINITY, tg_restart, "Transition Active", NULL);
 
 		}  else {
+			const char *value = NULL;
 			xmlNode *graph_data = xml_data;
 			crm_debug("Processing graph derived from %s", graph_input);
 

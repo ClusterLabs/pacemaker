@@ -67,8 +67,7 @@ IPC_Channel *crmd_channel = NULL;
 char *xml_file = NULL;
 int cib_options = cib_sync_call;
 
-#define OPTARGS	"V?LRQxDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:fX:lmu:Fc"
-#define OPTARGS	"V?LRQxDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:fX:lmu:FOo"
+#define OPTARGS	"V?LRQxDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:fX:lmu:FOoc"
 #define CMD_ERR(fmt, args...) do {		\
 	crm_warn(fmt, ##args);			\
 	fprintf(stderr, fmt, ##args);		\
@@ -108,8 +107,8 @@ do_find_resource(const char *rsc, pe_working_set_t *data_set)
 static void
 print_cts_constraints(pe_working_set_t *data_set) 
 {
-    crm_data_t *lifetime = NULL;
-    crm_data_t * cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
+    xmlNode *lifetime = NULL;
+    xmlNode * cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
     xml_child_iter(cib_constraints, xml_obj, 
 
 		   const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
@@ -117,7 +116,7 @@ print_cts_constraints(pe_working_set_t *data_set)
 		       continue;
 		   }
 		   
-		   lifetime = cl_get_struct(xml_obj, "lifetime");
+		   lifetime = first_named_child(xml_obj, "lifetime");
 		   
 		   if(test_ruleset(lifetime, NULL, data_set->now) == FALSE) {
 		       continue;
