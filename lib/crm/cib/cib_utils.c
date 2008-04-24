@@ -630,11 +630,11 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
     
     scratch = copy_xml(current_cib);
     rc = (*fn)(op, call_options, section, req, input, current_cib, &scratch, output);    
-
+/*
     crm_log_xml_debug(current_cib, "old");
     crm_log_xml_debug(scratch, "new");
     crm_log_xml_debug(*output, "output");
-    
+*/  
     CRM_CHECK(current_cib != scratch, return cib_unknown);
     
     if(rc == cib_ok) {
@@ -653,10 +653,10 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	    const char *ignore_dtd;
 	    
 	    fix_plus_plus_recursive(scratch);
-	    crm_log_xml_debug(scratch, "newer");
+	    /* crm_log_xml_debug(scratch, "newer"); */
 	    *config_changed = cib_config_changed(current_cib, scratch, NULL);
 
-	    crm_log_xml_debug(scratch, "newest");
+	    /* crm_log_xml_debug(scratch, "newest"); */
 	    
 	    if(manage_counters && *config_changed) {
 		crm_debug("Config changed");
