@@ -1,0 +1,8 @@
+digraph "g" {
+"drbd0:1_start_0 mysql-01" -> "ms-drbd0_running_0" [ style = bold]
+"drbd0:1_start_0 mysql-01" [ style=bold color="green" fontcolor="black"  ]
+"ms-drbd0_running_0" [ style=bold color="green" fontcolor="orange"  ]
+"ms-drbd0_start_0" -> "drbd0:1_start_0 mysql-01" [ style = bold]
+"ms-drbd0_start_0" -> "ms-drbd0_running_0" [ style = bold]
+"ms-drbd0_start_0" [ style=bold color="green" fontcolor="orange"  ]
+}
