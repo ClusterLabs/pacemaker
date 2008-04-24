@@ -267,7 +267,10 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	}
 	
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_TARGET_ROLE);
-	if(value != NULL && safe_str_neq("default", value)) {
+	if(data_set->stop_everything) {
+	    (*rsc)->next_role = RSC_ROLE_STOPPED;
+
+	} else if(value != NULL && safe_str_neq("default", value)) {
 		(*rsc)->next_role = text2role(value);
 		if((*rsc)->next_role == RSC_ROLE_UNKNOWN) {
 			crm_config_err("%s: Unknown value for "
@@ -275,6 +278,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 				       (*rsc)->id, value);
 		}
 	}
+	
 
 	crm_debug_2("\tDesired next state: %s",
 		    (*rsc)->next_role!=RSC_ROLE_UNKNOWN?role2text((*rsc)->next_role):"default");

@@ -76,6 +76,8 @@ pe_cluster_option pe_opts[] = {
 	{ "batch-limit", NULL, "integer", NULL, "30", &check_number,
 	  "The number of jobs that the TE is allowed to execute in parallel",
 	  "The \"correct\" value will depend on the speed and load of your network and cluster nodes." },
+	{ "stop-all-resources", NULL, "boolean", NULL, "false", &check_boolean,
+	  "Should the cluster stop all active resources", NULL },
 	{ "default-action-timeout", "default_action_timeout", "time", NULL, "20s", &check_time,
 	  "How long to wait for actions to complete", NULL },
 	{ "stop-orphan-resources", "stop_orphan_resources", "boolean", NULL, "true", &check_boolean,

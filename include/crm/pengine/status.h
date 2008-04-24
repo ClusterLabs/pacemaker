@@ -62,6 +62,7 @@ typedef struct pe_working_set_s
 		gboolean remove_after_stop;
 		gboolean stop_rsc_orphans;
 		gboolean stop_action_orphans;
+		gboolean stop_everything;
 
 		int default_migration_threshold;
 		int default_resource_stickiness;

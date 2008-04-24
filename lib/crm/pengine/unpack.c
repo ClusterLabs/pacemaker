@@ -83,6 +83,11 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 	crm_debug("Default stickiness: %d",
 		 data_set->default_resource_stickiness);
 
+	value = pe_pref(data_set->config_hash, "stop-all-resources");
+	data_set->stop_everything = crm_is_true(value);
+	crm_debug("Stop all active resources: %s",
+		  data_set->stop_everything?"true":"false");
+	
 	value = pe_pref(data_set->config_hash, "default-migration-threshold");
 	data_set->default_migration_threshold = char2score(value);
 	crm_debug("Default migration threshold: %d",
