@@ -1,4 +1,5 @@
 digraph "g" {
+"Cancel drbd0:0_monitor_10000 frigg" -> "drbd0:0_demote_0 frigg" [ style = bold]
 "Cancel drbd0:0_monitor_10000 frigg" [ style=bold color="green" fontcolor="black"  ]
 "Cancel drbd0:1_monitor_12000 odin" -> "drbd0:1_promote_0 odin" [ style = bold]
 "Cancel drbd0:1_monitor_12000 odin" [ style=bold color="green" fontcolor="black"  ]

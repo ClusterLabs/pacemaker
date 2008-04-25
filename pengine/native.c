@@ -351,11 +351,28 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 			mon->task = crm_strdup(CRMD_ACTION_CANCEL);
 			add_hash_param(mon->meta, XML_LRM_ATTR_INTERVAL, interval);
 			add_hash_param(mon->meta, XML_LRM_ATTR_TASK, name);
-			
-			custom_action_order(
-				rsc, NULL, mon,
-				rsc, promote_key(rsc), NULL,
-				pe_order_runnable_left, data_set);
+
+			switch(rsc->role) {
+			    case RSC_ROLE_SLAVE:
+			    case RSC_ROLE_STARTED:
+				if(rsc->next_role == RSC_ROLE_MASTER) {
+				    local_key = promote_key(rsc);
+
+				} else if(rsc->next_role == RSC_ROLE_STOPPED) {
+				    local_key = stop_key(rsc);
+				}
+				break;
+			    case RSC_ROLE_MASTER:
+				local_key = demote_key(rsc);
+				break;
+			    default:
+				local_key = NULL;
+			}
+
+			if(local_key) {
+			    custom_action_order(rsc, NULL, mon, rsc, local_key, NULL,
+						pe_order_runnable_left, data_set);
+			}
 			
 			mon = NULL;
 		}
