@@ -165,8 +165,7 @@ attrd_ipc_callback(IPC_Channel *client, gpointer user_data)
 		
 		msg = xmlfromIPC(client, 0);
 		if (msg == NULL) {
-			crm_debug("%s: no message this time", curr_client->id);
-			continue;
+		    break;
 		}
 
 		lpc++;

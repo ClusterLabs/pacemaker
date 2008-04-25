@@ -508,7 +508,6 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 
 		op_request = xmlfromIPC(channel, 0);
 		if (op_request == NULL) {
-			perror("Receive failure:");
 			break;
 		}
 
