@@ -372,14 +372,19 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 	
 	if(fail_count > 0 && rsc->fail_stickiness != 0) {
 		resource_t *failed = rsc;
+		int score = fail_count * rsc->fail_stickiness;
 		if(is_not_set(rsc->flags, pe_rsc_unique)) {
 		    failed = uber_parent(rsc);
 		}
-		resource_location(failed, node, fail_count * rsc->fail_stickiness,
-				  "fail_stickiness", data_set);
+
+		/* detect and prevent score underflows */
+		if(rsc->fail_stickiness < 0 && (score > 0 || score < -INFINITY)) {
+		    score = -INFINITY;
+		}
+
+		resource_location(failed, node, score, "fail_stickiness", data_set);
 		crm_info("Setting failure stickiness for %s on %s: %d",
-			  failed->id, node->details->uname,
-			  fail_count * rsc->fail_stickiness);
+			  failed->id, node->details->uname, score);
 	}
 	g_hash_table_destroy(meta_hash);
 }
