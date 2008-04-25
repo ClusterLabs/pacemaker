@@ -265,7 +265,7 @@ post_cache_update(int instance)
     crm_peer_seq = instance;
     crm_debug("Updated cache after membership event %d.", instance);
 
-    if((fsa_input_register & R_CCM_DATA) == 0) {
+    if(AM_I_DC) {
 	populate_cib_nodes(FALSE);
     }
     
@@ -381,8 +381,9 @@ ghash_update_cib_node(gpointer key, gpointer value, gpointer user_data)
 	data->state = XML_BOOLEAN_YES;
     }
     
-    crm_debug_2("Updating %s: %s (overwrite=%s)",
-		node->uname, data->state, data->overwrite_join?"true":"false");
+    crm_debug("Updating %s: %s (overwrite=%s) hash_size=%d",
+	      node->uname, data->state, data->overwrite_join?"true":"false",
+	      g_hash_table_size(confirmed_nodes));
     
     if(data->overwrite_join) {
 	if((node->processes & crm_proc_crmd) == FALSE) {
@@ -423,6 +424,10 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
 	 *   - since we have none.
 	 */
 	return;
+	
+    } else if(AM_I_DC == FALSE) {
+	crm_info("Non-DCs dont update node status - they get it from the DC");
+	return;
     }
     
     fragment = create_xml_node(NULL, XML_CIB_TAG_STATUS);
@@ -430,11 +435,6 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
     update_data.caller = caller;
     update_data.updates = fragment;
     update_data.overwrite_join = overwrite;
-    
-    if(overwrite == FALSE) {
-	call_options = call_options|cib_inhibit_bcast;
-	crm_debug_2("Inhibiting bcast for membership updates");
-    }
     
     g_hash_table_foreach(crm_peer_cache, ghash_update_cib_node, &update_data);
     

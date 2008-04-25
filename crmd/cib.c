@@ -114,13 +114,13 @@ revision_check_callback(xmlNode *msg, int call_id, int rc,
 static void
 do_cib_replaced(const char *event, xmlNode *msg)
 {
-	crm_debug("Updating the CIB after a replace");
- 	populate_cib_nodes(FALSE);
-	do_update_cib_nodes(AM_I_DC, __FUNCTION__);
-	if(AM_I_DC) {
-		/* start the join process again so we get everyone's LRM status */
-		register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
-	}
+    crm_debug("Updating the CIB after a replace: DC=%s", AM_I_DC?"true":"false");
+    if(AM_I_DC) {
+	/* start the join process again so we get everyone's LRM status */
+	populate_cib_nodes(FALSE);
+	do_update_cib_nodes(TRUE, __FUNCTION__);
+	register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+    }
 }
 
 /*	 A_CIB_STOP, A_CIB_START, A_CIB_RESTART,	*/

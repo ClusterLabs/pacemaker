@@ -817,7 +817,7 @@ do_lrm_query(gboolean is_replace)
 	xmlNode *xml_state = NULL;
 	xmlNode *xml_data  = NULL;
 	xmlNode *rsc_list  = NULL;
-	const char *exp_state = CRMD_JOINSTATE_MEMBER;
+	const char *exp_state = CRMD_STATE_ACTIVE;
 
 	if(is_set(fsa_input_register, R_SHUTDOWN)) {
 		exp_state = CRMD_STATE_INACTIVE;

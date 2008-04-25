@@ -609,6 +609,11 @@ do_state_transition(long long actions,
 		crm_timer_stop(recheck_timer);
 	}
 
+	if(cur_state == S_FINALIZE_JOIN && next_state == S_POLICY_ENGINE) {
+	    populate_cib_nodes(FALSE);
+	    do_update_cib_nodes(TRUE, __FUNCTION__);
+	}
+	
 	switch(next_state) {
 		case S_PENDING:			
 			fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);

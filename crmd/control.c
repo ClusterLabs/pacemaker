@@ -168,7 +168,12 @@ do_ha_control(long long action,
 			    fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
 		    registered = FALSE;
 		}
-		populate_cib_nodes(TRUE);
+
+		if(registered) {
+		    crm_debug_3("Requesting an initial dump of CRMD client_status");
+		    fsa_cluster_conn->llc_ops->client_status(
+			fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
+		}
 	    }
 #endif
 
@@ -878,12 +883,6 @@ populate_cib_nodes_ha(gboolean with_client_status)
 	
 	/* Async get client status information in the cluster */
 	crm_debug_2("Invoked");
-	if(with_client_status) {
-		crm_debug_3("Requesting an initial dump of CRMD client_status");
-		fsa_cluster_conn->llc_ops->client_status(
-			fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD, -1);
-	}
-
 	crm_info("Requesting the list of configured nodes");
 	fsa_cluster_conn->llc_ops->init_nodewalk(fsa_cluster_conn);
 
@@ -925,7 +924,7 @@ populate_cib_nodes_ha(gboolean with_client_status)
 	/* Now update the CIB with the list of nodes */
 	fsa_cib_update(
 		XML_CIB_TAG_NODES, cib_node_list,
-		cib_scope_local|cib_quorum_override|cib_inhibit_bcast, call_id);
+		cib_scope_local|cib_quorum_override, call_id);
 	add_cib_op_callback(call_id, FALSE, NULL, default_cib_update_callback);
 
 	free_xml(cib_node_list);
@@ -960,20 +959,12 @@ populate_cib_nodes(gboolean with_client_status)
     }
 #endif	
 
-    if(is_openais_cluster() && with_client_status) {
-	crm_info("Requesting the list of configured nodes");
-#if SUPPORT_AIS
-	send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
-#endif
-    }
-    
     cib_node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
     g_hash_table_foreach(
 	crm_peer_cache, create_cib_node_definition, cib_node_list);    
     
     fsa_cib_update(
-	XML_CIB_TAG_NODES, cib_node_list,
-	cib_scope_local|cib_quorum_override|cib_inhibit_bcast, call_id);
+	XML_CIB_TAG_NODES, cib_node_list, cib_scope_local|cib_quorum_override, call_id);
     add_cib_op_callback(call_id, FALSE, NULL, default_cib_update_callback);
     
     free_xml(cib_node_list);
