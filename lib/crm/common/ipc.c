@@ -57,7 +57,15 @@ xmlNode *xmlfromIPC(IPC_Channel *ch, int timeout)
     msg = msgfromIPC_timeout(ch, MSG_ALLOWINTR, timeout, &ipc_rc);
     
     if(ipc_rc == IPC_TIMEOUT) {
-	crm_err("No message received in the required interval (%ds)", timeout);
+	crm_warn("No message received in the required interval (%ds)", timeout);
+	return NULL;
+	
+    } else if(ipc_rc == IPC_BROKEN) {
+	crm_debug("Peer disconnected");
+	return NULL;
+	
+    } else if(ipc_rc != IPC_OK) {
+	crm_err("msgfromIPC_timeout failed: rc=%d", ipc_rc);
 	return NULL;
 
     } else if(msg == NULL) {
@@ -341,9 +349,7 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 
 		msg = xmlfromIPC(sender, 0);
 		if (msg == NULL) {
-			crm_err("No message from %d this time",
-				sender->farside_pid);
-			continue;
+		    break;
 		}
 
 		lpc++;
