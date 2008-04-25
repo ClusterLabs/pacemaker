@@ -17,6 +17,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <rsc_op id="2" operation="cancel" operation_key="drbd0:0_monitor_10000" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="34" operation="demote" operation_key="ms_drbd_demote_0"/>
        </trigger>
      </inputs>
