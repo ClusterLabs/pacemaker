@@ -25,6 +25,7 @@ RPMFLAGS		= -ba
 TARFILE			= pacemaker.tar.gz
 AM_TAR			= tar
 LAST_RELEASE		= Pacemaker-0.6.2
+STABLE_SERIES		= ../stable-0.6
 
 AUTOMAKE_OPTIONS	= foreign
 ##ACLOCAL                 = aclocal -I $(auxdir)
@@ -52,6 +53,15 @@ changes:
 	printf "\n  + Pending bugs encountered during testing:\n"
 	printf "\n  * Changes since $(LAST_RELEASE)\n"
 	hg log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v Low: | sort -uf 
+	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
+
+features:
+	printf "$(PACKAGE) ($(VERSION)-1) stable; urgency=medium\n"
+	printf "  * Update source tarball to revision: `hg id`\n"
+	printf "  * Statistics:\n"
+	printf "      Changesets: `hg out -M --template "{desc|firstline|strip}\n" $(STABLE_SERIES) | wc -l`\n"
+	printf "\n  * Changes added since $(STABLE_SERIES)\n"
+	hg out -M --template "  + {desc|firstline|strip}\n" $(STABLE_SERIES) | grep -v Low: | sort -uf 
 	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
 
 obs:	tgz
