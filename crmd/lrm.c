@@ -49,6 +49,8 @@ struct recurring_op_s
 		char *op_key;
 		int   call_id;
 		int   interval;
+		gboolean remove;
+		gboolean cancelled;
 };
 
 char *make_stop_id(const char *rsc, int call_id);
@@ -892,6 +894,7 @@ delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id)
 	 *
 	 * Avoids refreshing the entire LRM section of this host
 	 */
+
 	if(op != NULL) {
 		xml_top = create_xml_node(NULL, XML_LRM_TAG_RSC_OP);
 		crm_xml_add_int(xml_top, XML_LRM_ATTR_CALLID, op->call_id);
@@ -933,7 +936,6 @@ delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id)
 	}
 
  	crm_log_xml_debug_2(xml_top, "op:cancel");
-
  	free_xml(xml_top);
 }
 
@@ -941,21 +943,34 @@ static gboolean
 cancel_op(lrm_rsc_t *rsc, const char *key, int op, gboolean remove)
 {
 	int rc = HA_OK;
+	struct recurring_op_s *pending = NULL;
 
 	CRM_CHECK(op != 0, return FALSE);
 	CRM_CHECK(rsc != NULL, return FALSE);
 	if(key == NULL) {
-		key = "unknown";
+	    key = make_stop_id(rsc->id, op);
 	}
-	
+	pending = g_hash_table_lookup(pending_ops, key);
+
+	if(pending) {
+	    if(remove && pending->remove == FALSE) {
+		pending->remove = TRUE;
+		crm_debug("Scheduling %s for removal", key);
+	    }
+	    
+	    if(pending->cancelled) {
+		crm_debug("Operation %s already cancelled", key);
+		return TRUE;
+	    }
+
+	    pending->cancelled = TRUE;
+	}
+
 	crm_debug("Cancelling op %d for %s (%s)", op, rsc->id, key);
 
 	rc = rsc->ops->cancel_op(rsc, op);
 	if(rc != HA_OK) {
 		crm_debug("Op %d for %s (%s): Nothing to cancel", op, rsc->id, key);
-		if(key && remove) {
-			delete_op_entry(NULL, rsc->id, key, op);
-		}
 		/* The caller needs to make sure the entry is
 		 * removed from the pending_ops list
 		 *
@@ -974,6 +989,7 @@ cancel_op(lrm_rsc_t *rsc, const char *key, int op, gboolean remove)
 struct cancel_data 
 {
 	gboolean done;
+	gboolean remove;
 	const char *key;
 	lrm_rsc_t *rsc;
 };
@@ -986,7 +1002,7 @@ cancel_action_by_key(gpointer key, gpointer value, gpointer user_data)
 	
 	if(safe_str_eq(op->op_key, data->key)) {
 	    data->done = TRUE;
-	    if (cancel_op(data->rsc, key, op->call_id, TRUE) == FALSE) {
+	    if (cancel_op(data->rsc, key, op->call_id, data->remove) == FALSE) {
 		return TRUE;
 	    }
 	}
@@ -1004,14 +1020,9 @@ cancel_op_key(lrm_rsc_t *rsc, const char *key, gboolean remove)
 	data.key = key;
 	data.rsc = rsc;
 	data.done = FALSE;
+	data.remove = remove;
 	
 	g_hash_table_foreach_remove(pending_ops, cancel_action_by_key, &data);
-
-	if(data.done == FALSE && remove) {
-		crm_err("No known %s operation to cancel", key);
-		delete_op_entry(NULL, rsc->id, key, 0);
-	}
-	
 	return data.done;
 }
 
@@ -1103,6 +1114,7 @@ do_lrm_invoke(long long action,
 	      enum crmd_fsa_input current_input,
 	      fsa_data_t *msg_data)
 {
+	gboolean done = FALSE;
 	gboolean create_rsc = TRUE;
 	const char *crm_op = NULL;
 	const char *from_sys = NULL;
@@ -1234,14 +1246,28 @@ do_lrm_invoke(long long action,
 			op_key = generate_op_key(
 				rsc->id,op_task,crm_parse_int(op_interval,"0"));
 
-			crm_debug("PE requested op %s be cancelled", op_key);
+			crm_debug("PE requested op %s (call=%s) be cancelled",
+				  op_key, call_id?call_id:"NA");
 			call = crm_parse_int(call_id, "0");
 			if(call == 0) {
-				cancel_op_key(rsc, op_key, TRUE);
+			    /* the normal case when the PE cancels a recurring op */
+			    done = cancel_op_key(rsc, op_key, TRUE);
+
 			} else {
-				cancel_op(rsc, op_key, call, TRUE);
-				g_hash_table_remove(pending_ops, op_key);
+			    /* the normal case when the PE cancels an orphan op */
+			    done = cancel_op(rsc, op_key, call, TRUE);
 			}
+
+			if(done == FALSE) {
+			    crm_debug("Nothing known about operation %d for %s", call, op_key);
+			    delete_op_entry(NULL, rsc->id, op_key, call);
+
+			    /* needed?? surely not otherwise the cancel_op_(_key) wouldn't
+			     * have failed in the first place
+			     */
+			    g_hash_table_remove(pending_ops, op_key);
+			}
+			
 			
 			op->op_status = LRM_OP_DONE;
 			op->rc = EXECRA_OK;
@@ -1781,6 +1807,7 @@ process_lrm_event(lrm_op_t *op)
 	char *op_id = NULL;
 	char *op_key = NULL;
 	int log_level = LOG_ERR;
+	struct recurring_op_s *pending = NULL;
 	CRM_CHECK(op != NULL, return FALSE);
 	CRM_CHECK(op->rsc_id != NULL, return FALSE);
 
@@ -1824,6 +1851,9 @@ process_lrm_event(lrm_op_t *op)
 		crm_info("Result: %s", op->output);
 	}
 	
+	op_id = make_stop_id(op->rsc_id, op->call_id);
+	pending = g_hash_table_lookup(pending_ops, op_id);
+
 	if(op->op_status != LRM_OP_CANCELLED) {
 		do_update_resource(op);
 		if(op->interval != 0) {
@@ -1834,20 +1864,20 @@ process_lrm_event(lrm_op_t *op)
 		/* no known valid reason for this to happen */
 		crm_err("Op %s (call=%d): Cancelled", op_key, op->call_id);
 
-	} else if(op->user_data != NULL) {
-		delete_op_entry(op, NULL, NULL, op->call_id);
-		
-	} else {
+	} else if(pending == NULL) {
+		crm_err("Op %s (call=%d): No 'pending' entry",
+			op_key, op->call_id);
+
+	} else if(op->user_data == NULL) {
 		crm_err("Op %s (call=%d): No user data", op_key, op->call_id);
+	    
+	} else if(pending->remove) {
+		delete_op_entry(op, op->rsc_id, op_key, op->call_id);
 	}	
 
-	op_id = make_stop_id(op->rsc_id, op->call_id);
 	if(g_hash_table_remove(pending_ops, op_id)) {
 		crm_debug("Op %s (call=%d): Confirmed", op_key, op->call_id);
-		goto out;
 	}
-
-	crm_err("Op %s (call=%d): Not matched", op_key, op->call_id);
 
   out:
 	crm_free(op_key);
