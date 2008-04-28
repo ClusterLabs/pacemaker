@@ -705,7 +705,7 @@ master_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	custom_action_order(
 		rsc, stopped_key(rsc), NULL,
 		rsc, promote_key(rsc), NULL,
-		pe_order_optional|pe_order_test, data_set);
+		pe_order_optional, data_set);
 
 	/* global demoted before start */
 	custom_action_order(
