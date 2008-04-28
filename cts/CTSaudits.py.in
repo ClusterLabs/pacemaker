@@ -143,6 +143,7 @@ class AuditResource:
     def __init__(self, cm, line):
         fields = line.split()
         self.CM = cm
+        self.line = line
         self.type = fields[1]
         self.id = fields[2]
         self.parent = fields[3]
@@ -156,6 +157,7 @@ class AuditConstraint:
     def __init__(self, cm, line):
         fields = line.split()
         self.CM = cm
+        self.line = line
         self.type = fields[1]
         self.id = fields[2]
         self.rsc = fields[3]
@@ -191,8 +193,8 @@ class PrimitiveAudit(ClusterAudit):
                 
             elif resource.needs_quorum == 1:
                 rc=0
-                self.CM.log("Resource %s active without quorum: %s" 
-                            % (resource.id, repr(active)))
+                self.CM.log("Resource %s active without quorum: %s (%s)" 
+                            % (resource.id, repr(active), resource.line))
 
         elif self.CM.HasQuorum(None) or not resource.needs_quorum:
             self.CM.log("WARN: Resource %s not served anywhere (Inactive nodes: %s)" 
