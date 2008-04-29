@@ -1171,7 +1171,7 @@ do_lrm_invoke(long long action,
 			probed = XML_BOOLEAN_FALSE;
 		}
 		
-		update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_STATUS,
+		update_attr(fsa_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
 			    fsa_our_uuid, NULL, NULL, CRM_OP_PROBED, probed, FALSE);
 
 	} else if(operation != NULL) {
