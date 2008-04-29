@@ -552,7 +552,7 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, gboolean overwrite)
 		
 		if(safe_str_eq(value, "#default")) {
 		    if(old_value) {
-			crm_crit("Removing value for %s (%s)", name, value);
+			crm_debug_2("Removing value for %s (%s)", name, value);
 			g_hash_table_remove(hash, name);
 		    }
 		    continue;
@@ -561,7 +561,7 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, gboolean overwrite)
 			g_hash_table_insert(hash, crm_strdup(name), crm_strdup(value));
 
 		} else if(overwrite) {
-		    crm_crit("Overwriting value of %s: %s -> %s", name, old_value, value);
+		    crm_debug("Overwriting value of %s: %s -> %s", name, old_value, value);
 		    g_hash_table_replace(hash, crm_strdup(name), crm_strdup(value));
 		}
 		
