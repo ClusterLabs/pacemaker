@@ -252,15 +252,6 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set)
 		}
 
 		add_node_attrs(xml_obj, new_node, FALSE, data_set);
-
-		if(crm_is_true(g_hash_table_lookup(
-				       new_node->details->attrs, "standby"))) {
-			crm_info("Node %s is in standby-mode",
-				 new_node->details->uname);
-			new_node->weight = -INFINITY;
-			new_node->details->standby = TRUE;
-		}
-		
 		data_set->nodes = g_list_append(data_set->nodes, new_node);    
 		crm_debug_3("Done with node %s",
 			    crm_element_value(xml_obj, XML_ATTR_UNAME));
@@ -347,6 +338,12 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 		crm_debug_3("Adding runtime node attrs");
 		add_node_attrs(attrs, this_node, TRUE, data_set);
 
+		if(crm_is_true(g_hash_table_lookup(this_node->details->attrs, "standby"))) {
+			crm_info("Node %s is in standby-mode",
+				 this_node->details->uname);
+			this_node->details->standby = TRUE;
+		}
+		
 		crm_debug_3("determining node state");
 		determine_online_status(node_state, this_node, data_set);
 
