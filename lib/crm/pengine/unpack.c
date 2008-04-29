@@ -88,6 +88,10 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 	crm_debug("Stop all active resources: %s",
 		  data_set->stop_everything?"true":"false");
 	
+	value = pe_pref(data_set->config_hash, "default-failure-timeout");
+	data_set->default_failure_timeout = (crm_get_msec(value) / 1000);
+	crm_debug("Default failure timeout: %d", data_set->default_failure_timeout);
+	
 	value = pe_pref(data_set->config_hash, "default-migration-threshold");
 	data_set->default_migration_threshold = char2score(value);
 	crm_debug("Default migration threshold: %d",
