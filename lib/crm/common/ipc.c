@@ -52,7 +52,7 @@ xmlNode *xmlfromIPC(IPC_Channel *ch, int timeout)
     HA_Message *msg = NULL;
     
 #if HAVE_MSGFROMIPC_TIMEOUT
-    int ipc_rc = 0;
+    int ipc_rc = IPC_OK;
 
     msg = msgfromIPC_timeout(ch, MSG_ALLOWINTR, timeout, &ipc_rc);
     
@@ -82,7 +82,7 @@ xmlNode *xmlfromIPC(IPC_Channel *ch, int timeout)
 
     msg = msgfromIPC_noauth(ch);
     if(msg == NULL) {
-	crm_err("Empty reply from msgfromIPC_noauth");
+	crm_debug("Empty reply from msgfromIPC_noauth");
 	return NULL;
     }
 #endif
