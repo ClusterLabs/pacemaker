@@ -205,6 +205,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	(*rsc)->recovery_type      = recovery_stop_start;
 	(*rsc)->stickiness         = data_set->default_resource_stickiness;
 	(*rsc)->migration_threshold    = data_set->default_migration_threshold;
+	(*rsc)->failure_timeout    = data_set->default_failure_timeout;
 
 	value = g_hash_table_lookup((*rsc)->meta, XML_CIB_ATTR_PRIORITY);
 	(*rsc)->priority	   = crm_parse_int(value, "0"); 
@@ -264,6 +265,12 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_STICKINESS);
 	if(value != NULL) {
 		(*rsc)->migration_threshold = char2score(value);
+	}
+	
+	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_TIMEOUT);
+	if(value != NULL) {
+	    /* call crm_get_msec() and convert back to seconds */
+	    (*rsc)->failure_timeout = (crm_get_msec(value) / 1000);
 	}
 	
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_TARGET_ROLE);

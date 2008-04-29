@@ -238,7 +238,8 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->order_id        = 1;
 	data_set->action_id       = 1;
 
-	data_set->default_migration_threshold = 0;	
+	data_set->default_failure_timeout = 0;
+	data_set->default_migration_threshold = 0;
 	data_set->default_resource_stickiness = 0;
 }
 

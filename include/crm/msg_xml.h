@@ -150,6 +150,7 @@
 #define XML_RSC_ATTR_NOTIFY		"notify"
 #define XML_RSC_ATTR_STICKINESS		"resource_stickiness"
 #define XML_RSC_ATTR_FAIL_STICKINESS	"migration-threshold"
+#define XML_RSC_ATTR_FAIL_TIMEOUT	"failure-timeout"
 #define XML_RSC_ATTR_MULTIPLE		"multiple_active"
 #define XML_RSC_ATTR_START		"start_prereq"
 #define XML_RSC_ATTR_PRIORITY		"priority"

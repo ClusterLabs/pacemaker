@@ -1000,6 +1000,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 {    
 	const char *id          = NULL;
 	const char *task        = NULL;
+	const char *magic       = NULL;
  	const char *task_id     = NULL;
  	const char *actual_rc   = NULL;
 /* 	const char *target_rc   = NULL;	 */
@@ -1016,6 +1017,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	action_t *action = NULL;
 	node_t *effective_node = NULL;
 
+	gboolean expired = FALSE;
 	gboolean is_probe = FALSE;
 	gboolean is_stop_action = FALSE;
 
@@ -1030,6 +1032,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	task_status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
 	op_digest   = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
 	op_version  = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+	magic	    = crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC);
 
 	CRM_CHECK(id != NULL, return FALSE);
 	CRM_CHECK(task != NULL, return FALSE);
@@ -1045,6 +1048,17 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		return TRUE;
 	}
 
+	if(rsc->failure_timeout > 0) {
+	    time_t now = time(NULL);
+	    int last_run = now;
+	    int rc = crm_element_value_int(xml_op, "last_run", &last_run);
+	    
+/* int last_change = crm_element_value_int(xml_op, "last_rc_change"); */
+	    if(rc == 0 && now > (last_run + rsc->failure_timeout)) {
+		expired = TRUE;
+	    }
+	}
+	
 	crm_debug_2("Unpacking task %s/%s (call_id=%s, status=%s) on %s (role=%s)",
 		    id, task, task_id, task_status, node->details->uname,
 		    role2text(rsc->role));
@@ -1085,6 +1099,15 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	if(task_status_i == LRM_OP_NOTSUPPORTED) {
 	    actual_rc_i = EXECRA_UNIMPLEMENT_FEATURE;
 	}
+
+	if(expired
+	   && actual_rc_i != EXECRA_NOT_RUNNING
+	   && actual_rc_i != EXECRA_RUNNING_MASTER
+	   && actual_rc_i != EXECRA_OK) {
+	    crm_notice("Ignoring expired failure %s (rc=%d, magic=%s) on %s",
+		       id, actual_rc_i, magic, node->details->uname);
+	    goto done;
+	}
 	
 	switch(actual_rc_i) {
 	    case EXECRA_NOT_RUNNING:
@@ -1117,8 +1140,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			     * successful demote)
 			     */
 			    crm_warn("%s reported %s in master mode on %s",
-					id, rsc->id,
-					node->details->uname);
+				     id, rsc->id, node->details->uname);
 			}
 		}
 		rsc->role = RSC_ROLE_MASTER;
@@ -1182,13 +1204,17 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	if(task_status_i == LRM_OP_ERROR
 	   || task_status_i == LRM_OP_TIMEOUT
 	   || task_status_i == LRM_OP_NOTSUPPORTED) {
-		action = custom_action(rsc, crm_strdup(id), task, NULL,
-				       TRUE, FALSE, data_set);
-		if(action->on_fail == action_fail_ignore) {
-		    crm_warn("Remapping %s (rc=%d) on %s to DONE",
-			     id, actual_rc_i, node->details->uname);
-			task_status_i = LRM_OP_DONE;
-		}
+	    action = custom_action(rsc, crm_strdup(id), task, NULL, TRUE, FALSE, data_set);
+	    if(expired) {
+		crm_notice("Ignoring expired failure (calculated) %s (rc=%d, magic=%s) on %s",
+			   id, actual_rc_i, magic, node->details->uname);
+		goto done;
+
+	    } else if(action->on_fail == action_fail_ignore) {
+		crm_warn("Remapping %s (rc=%d) on %s to DONE: ignore",
+			 id, actual_rc_i, node->details->uname);
+		task_status_i = LRM_OP_DONE;
+	    } 
 	}
 	
 	switch(task_status_i) {
@@ -1301,6 +1327,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			break;
 	}
 
+  done:
 	crm_debug_3("Resource %s after %s: role=%s",
 		    rsc->id, task, role2text(rsc->role));
 

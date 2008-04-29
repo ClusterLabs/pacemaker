@@ -64,6 +64,7 @@ typedef struct pe_working_set_s
 		gboolean stop_action_orphans;
 		gboolean stop_everything;
 
+		int default_failure_timeout;
 		int default_migration_threshold;
 		int default_resource_stickiness;
 		no_quorum_policy_t no_quorum_policy;
@@ -154,6 +155,7 @@ struct resource_s {
 		int	 priority; 
 		int	 stickiness; 
 		int	 sort_index; 
+		int	 failure_timeout;
 		int	 effective_priority; 
 		int	 migration_threshold;
 
