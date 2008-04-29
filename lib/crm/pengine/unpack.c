@@ -1108,7 +1108,15 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		} else {
 			task_status_i = LRM_OP_ERROR;
 			if(rsc->role != RSC_ROLE_MASTER) {
-				crm_err("%s reported %s in master mode on %s",
+			    /* this wil happen normally if the PE is invoked after
+			     * a resource is demoted and re-promoted but before the
+			     * 'master' monitor has been re-initiated
+			     *
+			     * The monitor will occur before the promote and appear
+			     * to be an error (the error status is be cleared by a
+			     * successful demote)
+			     */
+			    crm_warn("%s reported %s in master mode on %s",
 					id, rsc->id,
 					node->details->uname);
 			}
@@ -1177,6 +1185,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		action = custom_action(rsc, crm_strdup(id), task, NULL,
 				       TRUE, FALSE, data_set);
 		if(action->on_fail == action_fail_ignore) {
+		    crm_warn("Remapping %s (rc=%d) on %s to DONE",
+			     id, actual_rc_i, node->details->uname);
 			task_status_i = LRM_OP_DONE;
 		}
 	}
