@@ -754,7 +754,7 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 
 	unpack_instance_attributes(
 		output, XML_CIB_TAG_PROPSET, NULL, config_hash,
-		CIB_OPTIONS_FIRST, now);
+		CIB_OPTIONS_FIRST, FALSE, now);
 	
 	value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
 	if(value == NULL) {

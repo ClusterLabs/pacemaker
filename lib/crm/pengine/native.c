@@ -170,7 +170,7 @@ native_parameter(
 		unpack_instance_attributes(
 			rsc->xml, XML_TAG_ATTR_SETS,
 			node?node->details->attrs:NULL,
-			local_hash, NULL, data_set->now);
+			local_hash, NULL, FALSE, data_set->now);
 
 		hash = local_hash;
 	}

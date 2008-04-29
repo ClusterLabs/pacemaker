@@ -45,7 +45,7 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 
 	unpack_instance_attributes(
 		config, XML_CIB_TAG_PROPSET, NULL, config_hash,
-		CIB_OPTIONS_FIRST, data_set->now);
+		CIB_OPTIONS_FIRST, FALSE, data_set->now);
 
 #if CRM_DEPRECATED_SINCE_2_0_1
 	xml_child_iter_filter(
@@ -251,7 +251,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set)
 			new_node->details->type = node_member;
 		}
 
-		add_node_attrs(xml_obj, new_node, data_set);
+		add_node_attrs(xml_obj, new_node, FALSE, data_set);
 
 		if(crm_is_true(g_hash_table_lookup(
 				       new_node->details->attrs, "standby"))) {
@@ -345,7 +345,7 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 		this_node->details->unclean = FALSE;
 		
 		crm_debug_3("Adding runtime node attrs");
-		add_node_attrs(attrs, this_node, data_set);
+		add_node_attrs(attrs, this_node, TRUE, data_set);
 
 		crm_debug_3("determining node state");
 		determine_online_status(node_state, this_node, data_set);
@@ -1341,7 +1341,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 }
 
 gboolean
-add_node_attrs(xmlNode *xml_obj, node_t *node, pe_working_set_t *data_set)
+add_node_attrs(xmlNode *xml_obj, node_t *node, gboolean overwrite, pe_working_set_t *data_set)
 {
  	g_hash_table_insert(node->details->attrs,
 			    crm_strdup("#"XML_ATTR_UNAME),
@@ -1363,7 +1363,7 @@ add_node_attrs(xmlNode *xml_obj, node_t *node, pe_working_set_t *data_set)
 	
 	unpack_instance_attributes(
 		xml_obj, XML_TAG_ATTR_SETS, NULL,
-		node->details->attrs, NULL, data_set->now);
+		node->details->attrs, NULL, overwrite, data_set->now);
 
 	return TRUE;
 }

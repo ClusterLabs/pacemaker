@@ -228,7 +228,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 	
 	unpack_instance_attributes(
 		rsc->xml, XML_TAG_ATTR_SETS, active_node->details->attrs,
-		local_rsc_params, NULL, data_set->now);
+		local_rsc_params, NULL, FALSE, data_set->now);
 	
 	params_all = create_xml_node(NULL, XML_TAG_PARAMS);
 	g_hash_table_foreach(action->extra, hash2field, params_all);

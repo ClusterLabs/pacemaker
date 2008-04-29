@@ -44,6 +44,6 @@ extern gboolean test_expression(xmlNode *expr, GHashTable *node_hash,
 
 extern void unpack_instance_attributes(
 	xmlNode *xml_obj, const char *set_name, GHashTable *node_hash,
-	GHashTable *hash, const char *always_first, ha_time_t *now);
+	GHashTable *hash, const char *always_first, gboolean overwrite, ha_time_t *now);
 
 #endif

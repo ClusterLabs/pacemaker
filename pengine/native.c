@@ -459,7 +459,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	unpack_instance_attributes(
 		rsc->xml, XML_TAG_ATTR_SETS,
 		chosen?chosen->details->attrs:NULL,
-		rsc->parameters, NULL, data_set->now);
+		rsc->parameters, NULL, FALSE, data_set->now);
 
 	crm_debug_2("%s: %s->%s", rsc->id,
 		    role2text(rsc->role), role2text(rsc->next_role));

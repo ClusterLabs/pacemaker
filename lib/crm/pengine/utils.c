@@ -485,7 +485,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			unpack_instance_attributes(
 				action->op_entry, XML_TAG_ATTR_SETS,
 				action->node->details->attrs,
-				action->extra, NULL, data_set->now);
+				action->extra, NULL, FALSE, data_set->now);
 		}
 
 		if(action->pseudo) {
@@ -740,10 +740,10 @@ unpack_operation(
 			);
 
 		unpack_instance_attributes(xml_obj, XML_TAG_META_SETS,
-					   NULL, action->meta, NULL, data_set->now);
+					   NULL, action->meta, NULL, FALSE, data_set->now);
 		
 		unpack_instance_attributes(xml_obj, XML_TAG_ATTR_SETS,
-					   NULL, action->meta, NULL, data_set->now);
+					   NULL, action->meta, NULL, FALSE, data_set->now);
 	}
 
 	field = XML_LRM_ATTR_INTERVAL;

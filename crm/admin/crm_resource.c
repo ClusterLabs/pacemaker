@@ -249,7 +249,7 @@ dump_resource_attr(
 	
 	unpack_instance_attributes(
 		the_rsc->xml, attr_set_type, current?current->details->attrs:NULL,
-		the_rsc->parameters, NULL, data_set->now);
+		the_rsc->parameters, NULL, FALSE, data_set->now);
 
 	if(the_rsc->parameters != NULL) {
 		crm_debug("Looking up %s in %s", attr, the_rsc->id);

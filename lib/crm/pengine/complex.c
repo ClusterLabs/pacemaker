@@ -110,13 +110,13 @@ get_meta_attributes(GHashTable *meta_hash, resource_t *rsc,
 		);
 
 	unpack_instance_attributes(rsc->xml, XML_TAG_META_SETS, node_hash,
-				   meta_hash, NULL, data_set->now);
+				   meta_hash, NULL, FALSE, data_set->now);
 
 	/* populate from the regular attributes until the GUI can create
 	 * meta attributes
 	 */
 	unpack_instance_attributes(rsc->xml, XML_TAG_ATTR_SETS, node_hash,
-				   meta_hash, NULL, data_set->now);
+				   meta_hash, NULL, FALSE, data_set->now);
 
 	/* set anything else based on the parent */
 	if(rsc->parent != NULL) {

@@ -33,7 +33,7 @@ extern gboolean unpack_lrm_resources(
 	node_t *node, xmlNode * lrm_state, pe_working_set_t *data_set);
 
 extern gboolean add_node_attrs(
-	xmlNode * attrs, node_t *node, pe_working_set_t *data_set);
+    xmlNode * attrs, node_t *node, gboolean overwrite, pe_working_set_t *data_set);
 
 extern gboolean unpack_rsc_op(
 	resource_t *rsc, node_t *node, xmlNode *xml_op,

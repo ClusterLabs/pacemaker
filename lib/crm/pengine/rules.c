@@ -491,6 +491,7 @@ typedef struct sorted_set_s
 		const char *special_name;
 		int score;
 		xmlNode *attr_set;
+		gboolean overwrite;
 		GHashTable *node_hash;
 		GHashTable *hash;
 		ha_time_t *now;		
@@ -527,10 +528,11 @@ sort_pairs(gconstpointer a, gconstpointer b)
 
 
 static void
-populate_hash(xmlNode *nvpair_list, GHashTable *hash) 
+populate_hash(xmlNode *nvpair_list, GHashTable *hash, gboolean overwrite) 
 {
 	const char *name = NULL;
 	const char *value = NULL;
+	const char *old_value = NULL;
 
 	xml_child_iter_filter(
 		nvpair_list, an_attr, XML_CIB_TAG_NVPAIR,
@@ -544,13 +546,25 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash)
 		if(name == NULL || value == NULL) {
 			continue;
 
-		} else if(safe_str_eq(value, "#default")) {
-			continue;
-
-		} else if(g_hash_table_lookup(hash, name) == NULL) {
-			g_hash_table_insert(
-				hash, crm_strdup(name), crm_strdup(value));
 		}
+
+		old_value = g_hash_table_lookup(hash, name);
+		
+		if(safe_str_eq(value, "#default")) {
+		    if(old_value) {
+			crm_crit("Removing value for %s (%s)", name, value);
+			g_hash_table_remove(hash, name);
+		    }
+		    continue;
+
+		} else if(old_value == NULL) {
+			g_hash_table_insert(hash, crm_strdup(name), crm_strdup(value));
+
+		} else if(overwrite) {
+		    crm_crit("Overwriting value of %s: %s -> %s", name, old_value, value);
+		    g_hash_table_replace(hash, crm_strdup(name), crm_strdup(value));
+		}
+		
 		);
 }
 
@@ -568,7 +582,7 @@ unpack_attr_set(gpointer data, gpointer user_data)
 	
 	crm_debug_3("Adding attributes from %s", pair->name);
 	attributes = first_named_child(pair->attr_set, XML_TAG_ATTRS);
-	populate_hash(attributes, unpack_data->hash);
+	populate_hash(attributes, unpack_data->hash, unpack_data->overwrite);
 }
 
 static void
@@ -581,7 +595,7 @@ free_pair(gpointer data, gpointer user_data)
 void
 unpack_instance_attributes(
 	xmlNode *xml_obj, const char *set_name, GHashTable *node_hash, 
-	GHashTable *hash, const char *always_first, ha_time_t *now)
+	GHashTable *hash, const char *always_first, gboolean overwrite, ha_time_t *now)
 {
 	GListPtr sorted = NULL;
 	const char *score = NULL;
@@ -612,6 +626,7 @@ unpack_instance_attributes(
 		pair->hash = hash;
 		pair->node_hash = node_hash;
 		pair->now = now;
+		pair->overwrite = overwrite;
 	}
 	
 	sorted = g_list_sort(sorted, sort_pairs);
