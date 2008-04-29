@@ -579,8 +579,6 @@ stage4(pe_working_set_t *data_set)
 	return TRUE;
 }
 
-
-
 gboolean
 stage5(pe_working_set_t *data_set)
 {
@@ -600,6 +598,32 @@ stage5(pe_working_set_t *data_set)
 	return TRUE;
 }
 
+static gboolean is_managed(const resource_t *rsc)
+{
+    if(is_set(rsc->flags, pe_rsc_managed)) {
+	return TRUE;
+    }
+    
+    slist_iter(
+	child_rsc, resource_t, rsc->children, lpc,
+	if(is_managed(child_rsc)) {
+	    return TRUE;
+	}
+	);
+    
+    return FALSE;
+}
+
+static gboolean any_managed_resouces(pe_working_set_t *data_set)
+{
+    slist_iter(
+	rsc, resource_t, data_set->resources, lpc,
+	if(is_managed(rsc)) {
+	    return TRUE;
+	}
+	);
+    return FALSE;
+}
 
 /*
  * Create dependancies for stonith and shutdown operations
@@ -613,16 +637,26 @@ stage6(pe_working_set_t *data_set)
 	gboolean integrity_lost = FALSE;
 	action_t *ready = get_pseudo_op(STONITH_UP, data_set);
 	action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
+	gboolean need_stonith = FALSE;
 	
 	crm_debug_3("Processing fencing and shutdown cases");
+
+	if(data_set->stonith_enabled
+	   && (data_set->have_quorum
+	       || data_set->no_quorum_policy == no_quorum_ignore)) {
+	    need_stonith = TRUE;
+	}
+	
+	if(need_stonith && any_managed_resouces(data_set) == FALSE) {
+	    crm_crit("Delaying fencing operations until there are resources to manage");
+	    need_stonith = FALSE;
+	}
 	
 	slist_iter(
 		node, node_t, data_set->nodes, lpc,
 
 		stonith_op = NULL;
-		if(node->details->unclean && data_set->stonith_enabled
-		   && (data_set->have_quorum
-		       || data_set->no_quorum_policy == no_quorum_ignore)) {
+		if(node->details->unclean && need_stonith) {
 			pe_warn("Scheduling Node %s for STONITH",
 				 node->details->uname);
 
