@@ -1163,7 +1163,23 @@ main(int argc, char **argv)
 	    print_cts_constraints(&data_set);
 		
 	} else if(rsc_cmd == 'C') {
-		rc = delete_lrm_rsc(crmd_channel, host_uname, rsc_id, &data_set);
+	    rc = delete_lrm_rsc(crmd_channel, host_uname, rsc_id, &data_set);
+
+	    if(rc == cib_ok) {
+		char *host_uuid = NULL;
+		char *attr_name = crm_concat("fail-count", rsc_id, '-');
+		rc = query_node_uuid(cib_conn, host_uname, &host_uuid);
+
+		if(rc != cib_ok) {
+		    fprintf(stderr,"Could not map uname=%s to a UUID: %s\n",
+			    host_uname, cib_error2string(rc));
+
+		} else {
+		    crm_info("Mapped %s to %s", host_uname, crm_str(host_uuid));
+		    rc = delete_attr(cib_conn, cib_sync_call, XML_CIB_TAG_STATUS, host_uuid, NULL,
+				     NULL, attr_name, NULL, TRUE);
+		}
+	    }
 		
 	} else if(rsc_cmd == 'F') {
 		rc = fail_lrm_rsc(crmd_channel, host_uname, rsc_id, &data_set);
