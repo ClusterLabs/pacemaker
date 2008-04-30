@@ -32,15 +32,15 @@
 char *failed_stop_offset = NULL;
 char *failed_start_offset = NULL;
 
-crm_data_t *need_abort(crm_data_t *update);
-void process_graph_event(crm_data_t *event, const char *event_node);
-int match_graph_event(int action_id, crm_data_t *event, const char *event_node,
-		      int op_status, int op_rc);
+xmlNode *need_abort(xmlNode *update);
+void process_graph_event(xmlNode *event, const char *event_node);
+int match_graph_event(int action_id, xmlNode *event, const char *event_node,
+		      int op_status, int op_rc, int target_rc);
 
-crm_data_t *
-need_abort(crm_data_t *update)
+xmlNode *
+need_abort(xmlNode *update)
 {
-	crm_data_t *section_xml = NULL;
+	xmlNode *section_xml = NULL;
 	const char *section = NULL;
 
 	if(update == NULL) {
@@ -94,7 +94,7 @@ static gboolean
 fail_incompletable_actions(crm_graph_t *graph, const char *down_node) 
 {
 	const char *target = NULL;
-	crm_data_t *last_action = NULL;
+	xmlNode *last_action = NULL;
 
 	slist_iter(
 		synapse, synapse_t, graph->synapses, lpc,
@@ -131,9 +131,10 @@ fail_incompletable_actions(crm_graph_t *graph, const char *down_node)
 }
 
 gboolean
-extract_event(crm_data_t *msg)
+extract_event(xmlNode *msg)
 {
 	int shutdown = 0;
+	const char *shutdown_s = NULL;
 	const char *event_node = NULL;
 
 /*
@@ -149,8 +150,8 @@ extract_event(crm_data_t *msg)
 	xml_child_iter_filter(
 		msg, node_state, XML_CIB_TAG_STATE,
 
-		crm_data_t *attrs = NULL;
-		crm_data_t *resources = NULL;
+		xmlNode *attrs = NULL;
+		xmlNode *resources = NULL;
 
 		const char *ccm_state  = crm_element_value(
 			node_state, XML_CIB_ATTR_INCCM);
@@ -205,9 +206,11 @@ extract_event(crm_data_t *msg)
 			fail_incompletable_actions(transition_graph, event_node);
 		}
 
-		shutdown = 0;
-		ha_msg_value_int(node_state, XML_CIB_ATTR_SHUTDOWN, &shutdown);
-		if(shutdown != 0) {
+		shutdown_s = crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
+		if(shutdown_s) {
+		    shutdown = crm_parse_int(shutdown_s, NULL);
+		}
+		if(shutdown_s && shutdown > 0) {
 			crm_info("Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute for %s", event_node);
 			abort_transition(INFINITY, tg_restart, "Shutdown request", node_state);
 		}
@@ -217,7 +220,7 @@ extract_event(crm_data_t *msg)
 }
 
 static void
-update_failcount(crm_data_t *event, const char *event_node, int rc) 
+update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc) 
 {
 	int interval = 0;
 	char *task = NULL;
@@ -230,6 +233,9 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 	if(rc == 99) {
 		/* this is an internal code for "we're busy, try again" */
 		return;
+
+	} else if(rc == target_rc) {
+	    return;
 	}
 
 	if(failed_stop_offset == NULL) {
@@ -263,16 +269,29 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 
 	if(interval > 0) {
 		int call_id = 0;
+		char *now = crm_itoa(time(NULL));
+		
 		attr_name = crm_concat("fail-count", rsc_id, '-');
-		crm_warn("Updating failcount for %s on %s after failed %s: rc=%d (update=%s)",
-			 rsc_id, on_uuid, task, rc, value);
-
-		call_id = update_attr(te_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
-			    on_uuid, NULL,NULL, attr_name, value, FALSE);
+		crm_warn("Updating failcount for %s on %s after failed %s:"
+			 " rc=%d (update=%s, time=%s)", rsc_id, on_uuid, task, rc, value, now);
 
 		/* don't let notificatios of these updates cause new transitions */
+		call_id = update_attr(te_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
+				      on_uuid, NULL,NULL, attr_name, value, FALSE);
+
 		add_cib_op_callback(call_id, FALSE, NULL, cib_failcount_updated);
 		crm_free(attr_name);
+
+		attr_name = crm_concat("last-failure", rsc_id, '-');
+
+		/* don't let notificatios of these updates cause new transitions */
+		call_id = update_attr(te_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
+				      on_uuid, NULL,NULL, attr_name, value, FALSE);
+
+		add_cib_op_callback(call_id, FALSE, NULL, cib_failcount_updated);
+		crm_free(attr_name);
+
+		crm_free(now);
 	}
 
   bail:
@@ -281,18 +300,9 @@ update_failcount(crm_data_t *event, const char *event_node, int rc)
 }
 
 static int
-status_from_rc(crm_action_t *action, int orig_status, int rc)
+status_from_rc(crm_action_t *action, int orig_status, int rc, int target_rc)
 {
-	int target_rc = 0;
 	int status = orig_status;
-	const char *target_rc_s = g_hash_table_lookup(
-		action->params, crm_meta_name(XML_ATTR_TE_TARGET_RC));
-
-	if(target_rc_s != NULL) {
-		crm_debug_2("Target rc: %s vs. %d", target_rc_s, rc);
-		target_rc = crm_parse_int(target_rc_s, NULL);
-	}
-
 	if(target_rc == rc) {
 	    crm_debug_2("Target rc: == %d", rc);
 	    if(status != LRM_OP_DONE) {
@@ -315,8 +325,8 @@ status_from_rc(crm_action_t *action, int orig_status, int rc)
 		const char *task, *uname;
 		task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 		uname  = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-		crm_warn("Action %d (%s) on %s failed (target: %s vs. rc: %d): %s",
-			 action->id, task, uname, crm_str(target_rc_s), rc, op_status2text(status));
+		crm_warn("Action %d (%s) on %s failed (target: %d vs. rc: %d): %s",
+			 action->id, task, uname, target_rc, rc, op_status2text(status));
 	}
 
 	return status;
@@ -329,8 +339,8 @@ status_from_rc(crm_action_t *action, int orig_status, int rc)
  *            not allowed to)
  */
 int
-match_graph_event(int action_id, crm_data_t *event, const char *event_node,
-		  int op_status, int op_rc)
+match_graph_event(int action_id, xmlNode *event, const char *event_node,
+		  int op_status, int op_rc, int target_rc)
 {
 	const char *target = NULL;
 	const char *allow_fail = NULL;
@@ -342,9 +352,9 @@ match_graph_event(int action_id, crm_data_t *event, const char *event_node,
 		return -1;
 	}
 	
-	op_status = status_from_rc(action, op_status, op_rc);
+	op_status = status_from_rc(action, op_status, op_rc, target_rc);
 	if(op_status != LRM_OP_DONE) {
-		update_failcount(event, event_node, op_rc);
+	    update_failcount(event, event_node, op_rc, target_rc);
 	}
 	
 	/* Process OP status */
@@ -492,12 +502,13 @@ match_down_event(int id, const char *target, const char *filter)
 
 
 void
-process_graph_event(crm_data_t *event, const char *event_node)
+process_graph_event(xmlNode *event, const char *event_node)
 {
 	int rc = -1;
 	int status = -1;
 
 	int action = -1;
+	int target_rc = -1;
 	int transition_num = -1;
 	char *update_te_uuid = NULL;
 
@@ -517,7 +528,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 	
 	CRM_CHECK(decode_transition_magic(
 			  magic, &update_te_uuid, &transition_num, &action,
-			  &status, &rc),
+			  &status, &rc, &target_rc),
 		  crm_err("Invalid event %s detected", id);
 		  abort_transition(INFINITY, tg_restart,"Bad event", event);
 		);
@@ -546,7 +557,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 		abort_transition(INFINITY, tg_restart, "Inactive graph", event);
 
 	} else if(match_graph_event(
-			  action, event, event_node, status, rc) < 0) {
+		      action, event, event_node, status, rc, target_rc) < 0) {
 		crm_err("Unknown graph action %s", id);
 		abort_transition(INFINITY, tg_restart, "Unknown event", event);
 
@@ -556,7 +567,7 @@ process_graph_event(crm_data_t *event, const char *event_node)
 	}
 
 	if(passed == FALSE && rc != EXECRA_OK) {
-		update_failcount(event, event_node, rc);
+	    update_failcount(event, event_node, rc, target_rc);
 	}
 
   bail:

@@ -33,29 +33,29 @@
 
 extern gboolean initialized;
 extern gboolean per_action_cib;
-extern crm_data_t *the_cib;
-extern crm_data_t *node_search;
-extern crm_data_t *resource_search;
-extern crm_data_t *constraint_search;
-extern crm_data_t *status_search;
+extern xmlNode *the_cib;
+extern xmlNode *node_search;
+extern xmlNode *resource_search;
+extern xmlNode *constraint_search;
+extern xmlNode *status_search;
     
-extern crm_data_t *get_the_CIB(void);
+extern xmlNode *get_the_CIB(void);
 
-extern int initializeCib(crm_data_t *cib);
+extern int initializeCib(xmlNode *cib);
 extern gboolean uninitializeCib(void);
-extern crm_data_t *createEmptyCib(void);
-extern gboolean verifyCibXml(crm_data_t *cib);
-extern crm_data_t *readCibXml(char *buffer);
-extern crm_data_t *readCibXmlFile(
+extern xmlNode *createEmptyCib(void);
+extern gboolean verifyCibXml(xmlNode *cib);
+extern xmlNode *readCibXml(char *buffer);
+extern xmlNode *readCibXmlFile(
 	const char *dir, const char *file, gboolean discard_status);
 extern int activateCibBuffer(char *buffer, const char *filename);
-extern int activateCibXml(crm_data_t *doc, gboolean to_disk);
+extern int activateCibXml(xmlNode *doc, gboolean to_disk);
 
-extern gboolean update_quorum(crm_data_t *xml_obj);
-extern gboolean set_connected_peers(crm_data_t *xml_obj);
+extern gboolean update_quorum(xmlNode *xml_obj);
+extern gboolean set_connected_peers(xmlNode *xml_obj);
 extern gboolean update_counters(
-	const char *file, const char *fn, crm_data_t *xml_obj);
+	const char *file, const char *fn, xmlNode *xml_obj);
 
-/* extern crm_data_t *server_get_cib_copy(void); */
+/* extern xmlNode *server_get_cib_copy(void); */
 
 #endif

@@ -67,24 +67,23 @@ const char * constraint_path[] =
 };
 
 gboolean initialized = FALSE;
-crm_data_t *the_cib = NULL;
-crm_data_t *node_search = NULL;
-crm_data_t *resource_search = NULL;
-crm_data_t *constraint_search = NULL;
-crm_data_t *status_search = NULL;
+xmlNode *node_search = NULL;
+xmlNode *resource_search = NULL;
+xmlNode *constraint_search = NULL;
+xmlNode *status_search = NULL;
 
 extern gboolean cib_writes_enabled;
 extern GTRIGSource *cib_writer;
 extern enum cib_errors cib_status;
 
-int set_connected_peers(crm_data_t *xml_obj);
+int set_connected_peers(xmlNode *xml_obj);
 void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data);
 int write_cib_contents(gpointer p);
 extern void cib_cleanup(void);
 
 
 static gboolean
-validate_cib_digest(crm_data_t *local_cib, const char *sigfile)
+validate_cib_digest(xmlNode *local_cib, const char *sigfile)
 {
 	int s_res = -1;
 	struct stat buf;
@@ -144,7 +143,7 @@ validate_cib_digest(crm_data_t *local_cib, const char *sigfile)
 }
 
 static int
-write_cib_digest(crm_data_t *local_cib, char *digest)
+write_cib_digest(xmlNode *local_cib, char *digest)
 {
 	int rc = 0;
 	char *local_digest = NULL;
@@ -182,13 +181,13 @@ write_cib_digest(crm_data_t *local_cib, char *digest)
 }
 
 static gboolean
-validate_on_disk_cib(const char *filename, crm_data_t **on_disk_cib)
+validate_on_disk_cib(const char *filename, xmlNode **on_disk_cib)
 {
 	int s_res = -1;
 	struct stat buf;
 	FILE *cib_file = NULL;
 	gboolean passed = TRUE;
-	crm_data_t *root = NULL;
+	xmlNode *root = NULL;
 
 	CRM_ASSERT(filename != NULL);
 	
@@ -239,12 +238,12 @@ cib_unlink(const char *file)
  * It is the callers responsibility to free the output of this function
  */
 
-static crm_data_t*
+static xmlNode*
 retrieveCib(const char *filename, const char *sigfile, gboolean archive_invalid)
 {
     struct stat buf;
     FILE *cib_file = NULL;
-    crm_data_t *root = NULL;
+    xmlNode *root = NULL;
     crm_info("Reading cluster configuration from: %s (digest: %s)",
 	     filename, sigfile);
 
@@ -301,7 +300,7 @@ retrieveCib(const char *filename, const char *sigfile, gboolean archive_invalid)
     return root;
 }
 
-crm_data_t*
+xmlNode*
 readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 {
 	gboolean dtd_ok = TRUE;
@@ -312,8 +311,8 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	const char *ignore_dtd = NULL;
 	const char *use_valgrind = getenv("HA_VALGRIND_ENABLED");
 	
-	crm_data_t *root = NULL;
-	crm_data_t *status = NULL;
+	xmlNode *root = NULL;
+	xmlNode *status = NULL;
 
 	if(!crm_is_writable(dir, file, HA_CCMUSER, NULL, FALSE)) {
 		cib_status = cib_bad_permissions;
@@ -407,8 +406,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	dtd_ok = validate_with_dtd(root, TRUE, DTD_DIRECTORY"/crm.dtd");
 	if(dtd_ok == FALSE) {
 		crm_err("CIB does not validate against "DTD_DIRECTORY"/crm.dtd");
-		if(ignore_dtd == NULL
-		   && crm_is_true(ignore_dtd) == FALSE) {
+		if(ignore_dtd != NULL && crm_is_true(ignore_dtd) == FALSE) {
 			cib_status = cib_dtd_validation;
 		}
 		
@@ -425,13 +423,6 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 		cib_status = cib_id_check;
 	}
 
-	if (verifyCibXml(root) == FALSE) {
-		crm_err("%s does not contain a vaild configuration:"
-			" structure test failed",
-			 filename);
-		cib_status = cib_bad_config;
-	}
-
 	crm_free(filename);
 	crm_free(sigfile);
 	return root;
@@ -440,7 +431,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 /*
  * The caller should never free the return value
  */
-crm_data_t*
+xmlNode*
 get_the_CIB(void)
 {
 	return the_cib;
@@ -449,7 +440,7 @@ get_the_CIB(void)
 gboolean
 uninitializeCib(void)
 {
-	crm_data_t *tmp_cib = the_cib;
+	xmlNode *tmp_cib = the_cib;
 	
 	
 	if(tmp_cib == NULL) {
@@ -482,10 +473,10 @@ uninitializeCib(void)
  *   and to free the old/bad one depending on what is appropriate.
  */
 gboolean
-initializeCib(crm_data_t *new_cib)
+initializeCib(xmlNode *new_cib)
 {
 	gboolean is_valid = TRUE;
-	crm_data_t *tmp_node = NULL;
+	xmlNode *tmp_node = NULL;
 
 	if(new_cib == NULL) {
 		return FALSE;
@@ -617,32 +608,22 @@ archive_file(const char *oldname, const char *newname, const char *ext, gboolean
  * on failure.
  */
 int
-activateCibXml(crm_data_t *new_cib, gboolean to_disk)
+activateCibXml(xmlNode *new_cib, gboolean to_disk)
 {
 	int error_code = cib_ok;
-	crm_data_t *saved_cib = the_cib;
-	const char *ignore_dtd = NULL;
+	xmlNode *saved_cib = the_cib;
 
+	crm_debug("Activating new CIB");
+	
 	crm_log_xml_debug_4(new_cib, "Attempting to activate CIB");
+	update_counters(__FILE__, __FUNCTION__, new_cib);
 
 	CRM_ASSERT(new_cib != saved_cib);
 	if(saved_cib != NULL) {
 		crm_validate_data(saved_cib);
 	}
 
-	ignore_dtd = crm_element_value(new_cib, "ignore_dtd");
-	if(
-#if CRM_DEPRECATED_SINCE_2_0_4
-	   ignore_dtd != NULL &&
-#endif
-	   crm_is_true(ignore_dtd) == FALSE
-	   && validate_with_dtd(
-		   new_cib, TRUE, DTD_DIRECTORY"/crm.dtd") == FALSE) {
-		crm_err("Updated CIB does not validate against "DTD_DIRECTORY"/crm.dtd... ignoring");
- 		error_code = cib_dtd_validation;
-	}
-
-	if(error_code == cib_ok && initializeCib(new_cib) == FALSE) {
+	if(initializeCib(new_cib) == FALSE) {
 		error_code = cib_ACTIVATION;
 		crm_err("Ignoring invalid or NULL CIB");
 	}
@@ -667,8 +648,10 @@ activateCibXml(crm_data_t *new_cib, gboolean to_disk)
 		write_cib_contents(the_cib);
 		
 	} else if(cib_writes_enabled && cib_status == cib_ok && to_disk) {
-		crm_debug_2("Triggering CIB write");
+		crm_debug("Triggering CIB write");
 		G_main_set_trigger(cib_writer);
+	} else {
+	    crm_debug("disk: %d, writes: %d", to_disk, cib_writes_enabled);
 	}
 	
 	if(the_cib != saved_cib && the_cib != new_cib) {
@@ -697,7 +680,7 @@ write_cib_contents(gpointer p)
 	struct stat buf;
 	char *digest = NULL;
 	int exit_rc = LSB_EXIT_OK;
-	crm_data_t *cib_status_root = NULL;
+	xmlNode *cib_status_root = NULL;
 
 	/* we can scribble on "the_cib" here and not affect the parent */
 	const char *epoch = crm_element_value(the_cib, XML_ATTR_GENERATION);
@@ -800,7 +783,7 @@ write_cib_contents(gpointer p)
 }
 
 gboolean
-set_connected_peers(crm_data_t *xml_obj)
+set_connected_peers(xmlNode *xml_obj)
 {
 	guint active = 0;
 	int current = 0;
@@ -826,7 +809,7 @@ set_connected_peers(crm_data_t *xml_obj)
 }
 
 gboolean
-update_counters(const char *file, const char *fn, crm_data_t *xml_obj) 
+update_counters(const char *file, const char *fn, xmlNode *xml_obj) 
 {
 	gboolean did_update = FALSE;
 

@@ -31,6 +31,8 @@
 #include <mcheck.h>
 #endif
 
+#include <libxml/tree.h> 
+
 #define EOS		'\0'
 #define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
 #define	HAURL(url)	HA_URLBASE url
@@ -250,10 +252,6 @@ typedef GList* GListPtr;
 
 extern void crm_log_message_adv(
 	int level, const char *alt_debugfile, const HA_Message *msg);
-
-#define crm_log_message(level, msg) if(crm_log_level >= (level)) {	\
-		crm_log_message_adv(level, NULL, msg);			\
-	}
 
 #define crm_log_xml(level, text, xml)   if(crm_log_level >= (level)) {	\
 		print_xml_formatted(level,  __PRETTY_FUNCTION__, xml, text); \

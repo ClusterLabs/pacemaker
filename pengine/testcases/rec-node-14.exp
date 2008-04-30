@@ -1,15 +1,7 @@
  <transition_graph cluster-delay="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
    <synapse id="0">
      <action_set>
-       <pseudo_event id="1" operation="stonith_up" operation_key="stonith_up">
-         <attributes crm_feature_set="2.1"/>
-       </pseudo_event>
-     </action_set>
-     <inputs/>
-   </synapse>
-   <synapse id="1">
-     <action_set>
-       <pseudo_event id="2" operation="all_stopped" operation_key="all_stopped">
+       <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="2.1"/>
        </pseudo_event>
      </action_set>
@@ -25,6 +17,14 @@
        </trigger>
      </inputs>
    </synapse>
+   <synapse id="1">
+     <action_set>
+       <pseudo_event id="2" operation="stonith_up" operation_key="stonith_up">
+         <attributes crm_feature_set="2.1"/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
    <synapse id="2">
      <action_set>
        <crm_event id="3" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1">
@@ -33,7 +33,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="1" operation="stonith_up" operation_key="stonith_up"/>
+         <pseudo_event id="2" operation="stonith_up" operation_key="stonith_up"/>
        </trigger>
      </inputs>
    </synapse>
@@ -45,7 +45,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="1" operation="stonith_up" operation_key="stonith_up"/>
+         <pseudo_event id="2" operation="stonith_up" operation_key="stonith_up"/>
        </trigger>
        <trigger>
          <crm_event id="5" operation="stonith" operation_key="stonith" on_node="node3" on_node_uuid="uuid3"/>
@@ -60,7 +60,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="1" operation="stonith_up" operation_key="stonith_up"/>
+         <pseudo_event id="2" operation="stonith_up" operation_key="stonith_up"/>
        </trigger>
        <trigger>
          <crm_event id="3" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>

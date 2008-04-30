@@ -44,7 +44,7 @@ void create_notifications(resource_t *rsc, pe_working_set_t *data_set);
 void Recurring(resource_t *rsc, action_t *start, node_t *node,
 			      pe_working_set_t *data_set);
 void RecurringOp(resource_t *rsc, action_t *start, node_t *node,
-		 crm_data_t *operation, pe_working_set_t *data_set);
+		 xmlNode *operation, pe_working_set_t *data_set);
 void pe_pre_notify(
 	resource_t *rsc, node_t *node, action_t *op, 
 	notify_data_t *n_data, pe_working_set_t *data_set);
@@ -270,7 +270,7 @@ static gboolean is_op_dup(
 
 void
 RecurringOp(resource_t *rsc, action_t *start, node_t *node,
-	    crm_data_t *operation, pe_working_set_t *data_set) 
+	    xmlNode *operation, pe_working_set_t *data_set) 
 {
 	char *key = NULL;
 	const char *name = NULL;
@@ -459,7 +459,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	unpack_instance_attributes(
 		rsc->xml, XML_TAG_ATTR_SETS,
 		chosen?chosen->details->attrs:NULL,
-		rsc->parameters, NULL, data_set->now);
+		rsc->parameters, NULL, FALSE, data_set->now);
 
 	crm_debug_2("%s: %s->%s", rsc->id,
 		    role2text(rsc->role), role2text(rsc->next_role));

@@ -52,8 +52,8 @@ gboolean use_stdin = FALSE;
 gboolean do_simulation = FALSE;
 gboolean inhibit_exit = FALSE;
 gboolean all_actions = FALSE;
-extern crm_data_t * do_calculations(
-	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
+extern xmlNode * do_calculations(
+	pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now);
 extern void cleanup_calculations(pe_working_set_t *data_set);
 char *use_date = NULL;
 
@@ -150,7 +150,7 @@ main(int argc, char **argv)
 	ha_time_t *a_date = NULL;
 	cib_t *	cib_conn = NULL;
 	
-	crm_data_t * cib_object = NULL;
+	xmlNode * cib_object = NULL;
 	int argerr = 0;
 	int flag;
 		

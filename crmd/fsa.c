@@ -90,8 +90,8 @@ long long clear_flags(long long actions,
 			     enum crmd_fsa_input cur_input);
 
 void dump_rsc_info(void);
-void dump_rsc_info_callback(const HA_Message *msg, int call_id, int rc,
-			    crm_data_t *output, void *user_data);
+void dump_rsc_info_callback(const xmlNode *msg, int call_id, int rc,
+			    xmlNode *output, void *user_data);
 
 void ghash_print_node(gpointer key, gpointer value, gpointer user_data);
 
@@ -544,8 +544,7 @@ void log_fsa_input(fsa_data_t *stored_msg)
 		
 		crm_debug_3("FSA processing XML message from %s",
 			    stored_msg->origin);
-		crm_log_message(LOG_MSG, ha_input->msg);
-		crm_log_xml_debug_3(ha_input->xml, "FSA message data");
+		crm_log_xml(LOG_MSG, "FSA message data", ha_input->xml);
 	}
 }
 
@@ -610,6 +609,11 @@ do_state_transition(long long actions,
 		crm_timer_stop(recheck_timer);
 	}
 
+	if(cur_state == S_FINALIZE_JOIN && next_state == S_POLICY_ENGINE) {
+	    populate_cib_nodes(FALSE);
+	    do_update_cib_nodes(TRUE, __FUNCTION__);
+	}
+	
 	switch(next_state) {
 		case S_PENDING:			
 			fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);

@@ -42,7 +42,7 @@ extern void crm_shutdown(int nsig);
 
 enum crmd_fsa_input handle_request(ha_msg_input_t *stored_msg);
 enum crmd_fsa_input handle_response(ha_msg_input_t *stored_msg);
-enum crmd_fsa_input handle_shutdown_request(HA_Message *stored_msg);
+enum crmd_fsa_input handle_shutdown_request(xmlNode *stored_msg);
 
 ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t *orig);
 gboolean ipc_queue_helper(gpointer key, gpointer value, gpointer user_data);
@@ -50,7 +50,7 @@ gboolean ipc_queue_helper(gpointer key, gpointer value, gpointer user_data);
 
 #ifdef MSG_LOG
 #    define ROUTER_RESULT(x)	crm_debug_3("Router result: %s", x);	\
-	crm_log_message_adv(LOG_MSG, "router.log", relay_message);
+	crm_log_xml(LOG_MSG, "router.log", relay_message);
 #else
 #    define ROUTER_RESULT(x)	crm_debug_3("Router result: %s", x)
 #endif
@@ -128,7 +128,7 @@ register_fsa_input_adv(
 
 #if 0
 	} else if(last_was_vote && cause == C_HA_MESSAGE && input == I_ROUTER) {
-		const char *op = cl_get_string(
+		const char *op = crm_element_value(
 			((ha_msg_input_t*)data)->msg, F_CRM_TASK);
 		if(safe_str_eq(op, CRM_OP_VOTE)) {
 			/* It is always safe to treat N successive votes as
@@ -149,7 +149,7 @@ register_fsa_input_adv(
 		}
 #endif
 	} else if (cause == C_HA_MESSAGE && input == I_ROUTER) {
-		const char *op = cl_get_string(
+		const char *op = crm_element_value(
 			((ha_msg_input_t*)data)->msg, F_CRM_TASK);
 		if(safe_str_eq(op, CRM_OP_VOTE)) {
 			last_was_vote = TRUE;
@@ -261,7 +261,7 @@ copy_ha_msg_input(ha_msg_input_t *orig)
 
 	if(orig != NULL) {
 		crm_debug_4("Copy msg");
-		input_copy->msg = ha_msg_copy(orig->msg);
+		input_copy->msg = copy_xml(orig->msg);
 		if(orig->xml != NULL) {
 			crm_debug_4("Copy xml");
 			input_copy->xml = copy_xml(orig->xml);
@@ -277,7 +277,7 @@ void
 delete_fsa_input(fsa_data_t *fsa_data) 
 {
 	lrm_op_t *op = NULL;
-	crm_data_t *foo = NULL;
+	xmlNode *foo = NULL;
 
 	if(fsa_data == NULL) {
 		return;
@@ -424,7 +424,7 @@ route_message(enum crmd_fsa_cause cause, ha_msg_input_t *input)
  * This method frees msg
  */
 gboolean
-send_request(HA_Message *msg, char **msg_reference)
+send_request(xmlNode *msg, char **msg_reference)
 {
 	gboolean was_sent = FALSE;
 
@@ -432,7 +432,7 @@ send_request(HA_Message *msg, char **msg_reference)
 
 	if(msg_reference != NULL) {
 		*msg_reference = crm_strdup(
-			cl_get_string(msg, XML_ATTR_REFERENCE));
+			crm_element_value(msg, XML_ATTR_REFERENCE));
 	}
 	
 	was_sent = relay_message(msg, TRUE);
@@ -441,7 +441,6 @@ send_request(HA_Message *msg, char **msg_reference)
 		ha_msg_input_t *fsa_input = new_ha_msg_input(msg);
 		register_fsa_input(C_IPC_MESSAGE, I_ROUTER, fsa_input);
 		delete_ha_msg_input(fsa_input);
-		crm_msg_del(msg);
 	}
 	
 	return was_sent;
@@ -449,7 +448,7 @@ send_request(HA_Message *msg, char **msg_reference)
 
 /* unless more processing is required, relay_message is freed */
 gboolean
-relay_message(HA_Message *relay_message, gboolean originated_locally)
+relay_message(xmlNode *relay_message, gboolean originated_locally)
 {
 	int is_for_dc	= 0;
 	int is_for_dcib	= 0;
@@ -458,20 +457,20 @@ relay_message(HA_Message *relay_message, gboolean originated_locally)
 	int is_for_cib	= 0;
 	int is_local    = 0;
 	gboolean processing_complete = FALSE;
-	const char *host_to = cl_get_string(relay_message, F_CRM_HOST_TO);
-	const char *sys_to  = cl_get_string(relay_message, F_CRM_SYS_TO);
-	const char *sys_from= cl_get_string(relay_message, F_CRM_SYS_FROM);
-	const char *type    = cl_get_string(relay_message, F_TYPE);
+	const char *host_to = crm_element_value(relay_message, F_CRM_HOST_TO);
+	const char *sys_to  = crm_element_value(relay_message, F_CRM_SYS_TO);
+	const char *sys_from= crm_element_value(relay_message, F_CRM_SYS_FROM);
+	const char *type    = crm_element_value(relay_message, F_TYPE);
 	const char *msg_error = NULL;
 
 	crm_debug_3("Routing message %s",
-		  cl_get_string(relay_message, XML_ATTR_REFERENCE));
+		  crm_element_value(relay_message, XML_ATTR_REFERENCE));
 
 	if(relay_message == NULL) {
 		msg_error = "Cannot route empty message";
 
 	} else if(safe_str_eq(CRM_OP_HELLO,
-			      cl_get_string(relay_message, F_CRM_TASK))){
+			      crm_element_value(relay_message, F_CRM_TASK))){
 		/* quietly ignore */
 		processing_complete = TRUE;
 
@@ -485,11 +484,11 @@ relay_message(HA_Message *relay_message, gboolean originated_locally)
 	if(msg_error != NULL) {
 		processing_complete = TRUE;
 		crm_err("%s", msg_error);
-		crm_log_message(LOG_WARNING, relay_message);
+		crm_log_xml(LOG_WARNING, "bad msg", relay_message);
 	}
 
 	if(processing_complete) {
-		crm_msg_del(relay_message);
+		free_xml(relay_message);
 		return TRUE;
 	}
 	
@@ -542,7 +541,7 @@ relay_message(HA_Message *relay_message, gboolean originated_locally)
 		} else {
 			/* discard */
 			ROUTER_RESULT("Message result: Discard, not DC");
-			crm_msg_del(relay_message);
+			free_xml(relay_message);
 		}
 			
 	} else if(is_local && (is_for_crm || is_for_cib)) {
@@ -565,7 +564,7 @@ gboolean
 crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 {
 	/* check the best case first */
-	const char *sys_from = cl_get_string(client_msg->msg, F_CRM_SYS_FROM);
+	const char *sys_from = crm_element_value(client_msg->msg, F_CRM_SYS_FROM);
 	char *uuid = NULL;
 	char *client_name = NULL;
 	char *major_version = NULL;
@@ -576,13 +575,13 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 	struct crm_subsystem_s *the_subsystem = NULL;
 	gboolean can_reply = FALSE; /* no-one has registered with this id */
 
-	const char *op = cl_get_string(client_msg->msg, F_CRM_TASK);
+	const char *op = crm_element_value(client_msg->msg, F_CRM_TASK);
 
 	if (safe_str_neq(CRM_OP_HELLO, op)) {	
 
 		if(sys_from == NULL) {
 			crm_warn("Message [%s] was had no value for %s... discarding",
-				 cl_get_string(client_msg->msg, XML_ATTR_REFERENCE),
+				 crm_element_value(client_msg->msg, XML_ATTR_REFERENCE),
 				 F_CRM_SYS_FROM);
 			return FALSE;
 		}
@@ -602,14 +601,14 @@ crmd_authorize_message(ha_msg_input_t *client_msg, crmd_client_t *curr_client)
 
 		if(can_reply == FALSE) {
 			crm_warn("Message [%s] not authorized",
-				 cl_get_string(client_msg->msg, XML_ATTR_REFERENCE));
+				 crm_element_value(client_msg->msg, XML_ATTR_REFERENCE));
 		}
 		
 		return can_reply;
 	}
 	
 	crm_debug_3("received client join msg");
-	crm_log_message(LOG_MSG, client_msg->msg);
+	crm_log_xml(LOG_MSG, "join", client_msg->msg);
 	auth_result = process_hello_message(
 		client_msg->xml, &uuid, &client_name,
 		&major_version, &minor_version);
@@ -731,7 +730,7 @@ handle_message(ha_msg_input_t *stored_msg)
 		crm_err("No message to handle");
 		return I_NULL;
 	}
-	type = cl_get_string(stored_msg->msg, F_CRM_MSG_TYPE);
+	type = crm_element_value(stored_msg->msg, F_CRM_MSG_TYPE);
 
 	if(safe_str_eq(type, XML_ATTR_REQUEST)) {
 		next_input = handle_request(stored_msg);
@@ -761,19 +760,18 @@ handle_message(ha_msg_input_t *stored_msg)
 enum crmd_fsa_input
 handle_request(ha_msg_input_t *stored_msg)
 {
-	HA_Message *msg = NULL;
+	xmlNode *msg = NULL;
 	enum crmd_fsa_input next_input = I_NULL;
 
-	const char *op        = cl_get_string(stored_msg->msg, F_CRM_TASK);
-	const char *sys_to    = cl_get_string(stored_msg->msg, F_CRM_SYS_TO);
-	const char *host_from = cl_get_string(stored_msg->msg, F_CRM_HOST_FROM);
+	const char *op        = crm_element_value(stored_msg->msg, F_CRM_TASK);
+	const char *sys_to    = crm_element_value(stored_msg->msg, F_CRM_SYS_TO);
+	const char *host_from = crm_element_value(stored_msg->msg, F_CRM_HOST_FROM);
 
 	crm_debug_2("Received %s "XML_ATTR_REQUEST" from %s in state %s",
 		    op, host_from, fsa_state2string(fsa_state));
 	
 	if(op == NULL) {
-		crm_err("Bad message");
-		crm_log_message(LOG_ERR, stored_msg->msg);
+		crm_log_xml(LOG_ERR, "Bad message", stored_msg->msg);
 
 		/*========== common actions ==========*/
 	} else if(strcasecmp(op, CRM_OP_NOOP) == 0) {
@@ -809,7 +807,7 @@ handle_request(ha_msg_input_t *stored_msg)
 		/* eventually do some stuff to figure out
 		 * if we /are/ ok
 		 */
-		crm_data_t *ping = createPingAnswerFragment(sys_to, "ok");
+		xmlNode *ping = createPingAnswerFragment(sys_to, "ok");
 
 		crm_xml_add(ping, "crmd_state", fsa_state2string(fsa_state));
 
@@ -819,7 +817,7 @@ handle_request(ha_msg_input_t *stored_msg)
 		free_xml(ping);
 		
 		if(relay_message(msg, TRUE) == FALSE) {
-			crm_msg_del(msg);
+			free_xml(msg);
 		}
 		
 		/* probably better to do this via signals on the
@@ -836,19 +834,19 @@ handle_request(ha_msg_input_t *stored_msg)
 	} else if(strcasecmp(op, CRM_OP_JOIN_OFFER) == 0) {
 		next_input = I_JOIN_OFFER;
 		crm_debug("Raising I_JOIN_OFFER: join-%s",
-			  cl_get_string(stored_msg->msg, F_CRM_JOIN_ID));
+			  crm_element_value(stored_msg->msg, F_CRM_JOIN_ID));
 				
 	} else if(strcasecmp(op, CRM_OP_JOIN_ACKNAK) == 0) {
 		next_input = I_JOIN_RESULT;
 		crm_debug("Raising I_JOIN_RESULT: join-%s",
-			  cl_get_string(stored_msg->msg, F_CRM_JOIN_ID));
+			  crm_element_value(stored_msg->msg, F_CRM_JOIN_ID));
 
 	} else if(strcasecmp(op, CRM_OP_LRM_DELETE) == 0
 		|| strcasecmp(op, CRM_OP_LRM_FAIL) == 0
 		|| strcasecmp(op, CRM_OP_LRM_REFRESH) == 0
 		|| strcasecmp(op, CRM_OP_REPROBE) == 0) {
 		
-		cl_msg_modstring(stored_msg->msg, F_CRM_SYS_TO, CRM_SYSTEM_LRMD);
+		crm_xml_add(stored_msg->msg, F_CRM_SYS_TO, CRM_SYSTEM_LRMD);
 		next_input = I_ROUTER;
 		
 		/* this functionality should only be enabled
@@ -875,15 +873,14 @@ handle_request(ha_msg_input_t *stored_msg)
 					" (DC: %s, from: %s)",
 					op, crm_str(fsa_our_dc), host_from);
 
-				crm_warn("Ignored Request");
-				crm_log_message(LOG_WARNING, stored_msg->msg);
+				crm_log_xml(LOG_WARNING, "Ignored Request", stored_msg->msg);
 				
 			} else if(strcasecmp(op, CRM_OP_SHUTDOWN) == 0) {
 				next_input = I_STOP;
 				
 			} else {
 				crm_err("CRMd didnt expect request: %s", op);
-				crm_log_message(LOG_ERR, stored_msg->msg);
+				crm_log_xml(LOG_ERR, "bad request", stored_msg->msg);
 			}
 			
 		} else {
@@ -892,7 +889,8 @@ handle_request(ha_msg_input_t *stored_msg)
 
 		/*========== DC-Only Actions ==========*/
 	} else if(AM_I_DC) {
-		const char *message = ha_msg_value(stored_msg->msg, "message");
+		const char *message = crm_element_value(
+		    stored_msg->msg, "message");
 
 		/* setting "fsa_pe_ref = NULL" makes sure we ignore any
 		 *  PE reply that might be pending or in the queue while
@@ -953,7 +951,7 @@ handle_request(ha_msg_input_t *stored_msg)
 			
 		} else {
 			crm_err("Unexpected request (%s) sent to the DC", op);
-			crm_log_message(LOG_ERR, stored_msg->msg);
+			crm_log_xml(LOG_ERR, "Unexpected", stored_msg->msg);
 		}		
 	}
 	return next_input;
@@ -964,17 +962,16 @@ handle_response(ha_msg_input_t *stored_msg)
 {
 	enum crmd_fsa_input next_input = I_NULL;
 
-	const char *op        = cl_get_string(stored_msg->msg, F_CRM_TASK);
-	const char *sys_from  = cl_get_string(stored_msg->msg, F_CRM_SYS_FROM);
-	const char *host_from = cl_get_string(stored_msg->msg, F_CRM_HOST_FROM);
-	const char *msg_ref   = cl_get_string(stored_msg->msg, XML_ATTR_REFERENCE);
+	const char *op        = crm_element_value(stored_msg->msg, F_CRM_TASK);
+	const char *sys_from  = crm_element_value(stored_msg->msg, F_CRM_SYS_FROM);
+	const char *host_from = crm_element_value(stored_msg->msg, F_CRM_HOST_FROM);
+	const char *msg_ref   = crm_element_value(stored_msg->msg, XML_ATTR_REFERENCE);
 
 	crm_debug_2("Received %s "XML_ATTR_RESPONSE" from %s in state %s",
 		    op, host_from, fsa_state2string(fsa_state));
 	
 	if(op == NULL) {
-		crm_err("Bad message");
-		crm_log_message(LOG_ERR, stored_msg->msg);
+		crm_log_xml(LOG_ERR, "Bad message", stored_msg->msg);
 
  	} else if(AM_I_DC && strcasecmp(op, CRM_OP_PECALC) == 0) {
 
@@ -1011,7 +1008,7 @@ handle_response(ha_msg_input_t *stored_msg)
 }
 
 enum crmd_fsa_input
-handle_shutdown_request(HA_Message *stored_msg)
+handle_shutdown_request(xmlNode *stored_msg)
 {
 	/* handle here to avoid potential version issues
 	 *   where the shutdown message/proceedure may have
@@ -1021,8 +1018,8 @@ handle_shutdown_request(HA_Message *stored_msg)
 	 */
 	
 	time_t now = time(NULL);
-	crm_data_t *node_state = NULL;
-	const char *host_from = cl_get_string(stored_msg, F_CRM_HOST_FROM);
+	xmlNode *node_state = NULL;
+	const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
 
 	if(host_from == NULL) {
 		/* we're shutting down and the DC */
@@ -1031,7 +1028,7 @@ handle_shutdown_request(HA_Message *stored_msg)
 	
 	crm_info("Creating shutdown request for %s",host_from);
 
-	crm_log_message(LOG_MSG, stored_msg);
+	crm_log_xml(LOG_MSG, "message", stored_msg);
 
 	node_state = create_node_state(
 		host_from, NULL, NULL, NULL, NULL,
@@ -1053,15 +1050,15 @@ handle_shutdown_request(HA_Message *stored_msg)
 
 /* frees msg upon completion */
 gboolean
-send_msg_via_ha(HA_Message *msg)
+send_msg_via_ha(xmlNode *msg)
 {
 	int log_level        = LOG_DEBUG_3;
 	gboolean broadcast   = FALSE;
 	gboolean all_is_good = TRUE;
 
-	const char *op       = cl_get_string(msg, F_CRM_TASK);
-	const char *sys_to   = cl_get_string(msg, F_CRM_SYS_TO);
-	const char *host_to  = cl_get_string(msg, F_CRM_HOST_TO);
+	const char *op       = crm_element_value(msg, F_CRM_TASK);
+	const char *sys_to   = crm_element_value(msg, F_CRM_SYS_TO);
+	const char *host_to  = crm_element_value(msg, F_CRM_HOST_TO);
 	enum crm_ais_msg_types dest = 0;
 
 	if(is_openais_cluster()) {
@@ -1110,12 +1107,12 @@ send_msg_via_ha(HA_Message *msg)
 		do_crm_log(log_level,
 			   "Sending %sHA message (ref=%s) to %s@%s %s.",
 			   broadcast?"broadcast ":"directed ",
-			   cl_get_string(msg, XML_ATTR_REFERENCE),
+			   crm_element_value(msg, XML_ATTR_REFERENCE),
 			   crm_str(sys_to), host_to==NULL?"<all>":host_to,
 			   all_is_good?"succeeded":"failed");
 	}
 	
-	crm_msg_del(msg);
+	free_xml(msg);
 	
 	return all_is_good;
 }
@@ -1124,7 +1121,7 @@ send_msg_via_ha(HA_Message *msg)
 /* msg is deleted by the time this returns */
 
 gboolean
-send_msg_via_ipc(HA_Message *msg, const char *sys)
+send_msg_via_ipc(xmlNode *msg, const char *sys)
 {
 	gboolean send_ok = TRUE;
 	IPC_Channel *client_channel;
@@ -1133,8 +1130,8 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 
 	client_channel = (IPC_Channel*)g_hash_table_lookup(ipc_clients, sys);
 
-	if(cl_get_string(msg, F_CRM_HOST_FROM) == NULL) {
-		ha_msg_add(msg, F_CRM_HOST_FROM, fsa_our_uname);
+	if(crm_element_value(msg, F_CRM_HOST_FROM) == NULL) {
+		crm_xml_add(msg, F_CRM_HOST_FROM, fsa_our_uname);
 	}
 	
 	if (client_channel != NULL) {
@@ -1145,7 +1142,7 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 		crm_err("Sub-system (%s) has been incorporated into the CRMd.",
 			sys);
 		crm_err("Change the way we handle this CIB message");
-		crm_log_message(LOG_ERR, msg);
+		crm_log_xml(LOG_ERR, "cib op", msg);
 		send_ok = FALSE;
 		
 	} else if(sys != NULL && strcasecmp(sys, CRM_SYSTEM_LRMD) == 0) {
@@ -1176,7 +1173,7 @@ send_msg_via_ipc(HA_Message *msg, const char *sys)
 		send_ok = FALSE;
 	}    
 
-	crm_msg_del(msg);
+	free_xml(msg);
 
 	return send_ok;
 }	

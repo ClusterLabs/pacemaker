@@ -77,25 +77,23 @@ gboolean is_message(void);
 gboolean have_wait_message(void);
 
 extern gboolean relay_message(
-	HA_Message *relay_message, gboolean originated_locally);
-
-extern void crmd_ha_msg_callback(HA_Message * msg, void* private_data);
+	xmlNode *relay_message, gboolean originated_locally);
 
 extern gboolean crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data);
 
 extern void process_message(
-	HA_Message *msg, gboolean originated_locally,const char *src_node_name);
+	xmlNode *msg, gboolean originated_locally,const char *src_node_name);
 
-extern gboolean crm_dc_process_message(crm_data_t *whole_message,
-				       crm_data_t *action,
+extern gboolean crm_dc_process_message(xmlNode *whole_message,
+				       xmlNode *action,
 				       const char *host_from,
 				       const char *sys_from,
 				       const char *sys_to,
 				       const char *op,
 				       gboolean dc_mode);
 
-extern gboolean send_msg_via_ha(HA_Message *msg);
-extern gboolean send_msg_via_ipc(HA_Message *msg, const char *sys);
+extern gboolean send_msg_via_ha(xmlNode *msg);
+extern gboolean send_msg_via_ipc(xmlNode *msg, const char *sys);
 
 extern gboolean add_pending_outgoing_reply(const char *originating_node_name,
 					   const char *crm_msg_reference,
@@ -105,7 +103,7 @@ extern gboolean add_pending_outgoing_reply(const char *originating_node_name,
 extern gboolean crmd_authorize_message(
 	ha_msg_input_t *client_msg, crmd_client_t *curr_client);
 
-extern gboolean send_request(HA_Message *msg, char **msg_reference);
+extern gboolean send_request(xmlNode *msg, char **msg_reference);
 
 extern enum crmd_fsa_input handle_message(ha_msg_input_t *stored_msg);
 

@@ -92,8 +92,8 @@ free_hash_entry(gpointer data)
 	crm_free(entry);
 }
 
-void attrd_ha_callback(HA_Message * msg, void* private_data);
-void attrd_local_callback(HA_Message * msg);
+void attrd_ha_callback(xmlNode * msg, void* private_data);
+void attrd_local_callback(xmlNode * msg);
 gboolean attrd_timer_callback(void *user_data);
 gboolean attrd_trigger_update(attr_hash_entry_t *hash_entry);
 void attrd_perform_update(attr_hash_entry_t *hash_entry);
@@ -152,7 +152,7 @@ static gboolean
 attrd_ipc_callback(IPC_Channel *client, gpointer user_data)
 {
 	int lpc = 0;
-	HA_Message *msg = NULL;
+	xmlNode *msg = NULL;
 	attrd_client_t *curr_client = (attrd_client_t*)user_data;
 	gboolean stay_connected = TRUE;
 	
@@ -163,20 +163,19 @@ attrd_ipc_callback(IPC_Channel *client, gpointer user_data)
 			break;
 		}
 		
-		msg = msgfromIPC_noauth(client);
+		msg = xmlfromIPC(client, 0);
 		if (msg == NULL) {
-			crm_debug("%s: no message this time", curr_client->id);
-			continue;
+		    break;
 		}
 
 		lpc++;
 		
 		crm_debug_2("Processing msg from %s", curr_client->id);
-		crm_log_message_adv(LOG_DEBUG_3, __PRETTY_FUNCTION__, msg);
+		crm_log_xml(LOG_DEBUG_3, __PRETTY_FUNCTION__, msg);
 		
 		attrd_local_callback(msg);
 
-		crm_msg_del(msg);
+		free_xml(msg);
 		msg = NULL;
 
 		if(client->ch_status != IPC_CONNECT) {
@@ -422,8 +421,8 @@ main(int argc, char ** argv)
 }
 
 static void
-attrd_cib_callback(const HA_Message *msg, int call_id, int rc,
-		   crm_data_t *output, void *user_data)
+attrd_cib_callback(xmlNode *msg, int call_id, int rc,
+		   xmlNode *output, void *user_data)
 {
 	char *attr = user_data;
 	if(rc == cib_NOTEXISTS) {
@@ -448,10 +447,10 @@ log_hash_entry(int level, attr_hash_entry_t *entry, const char *text)
 }
 
 static attr_hash_entry_t *
-find_hash_entry(HA_Message * msg) 
+find_hash_entry(xmlNode * msg) 
 {
 	const char *value = NULL;
-	const char *attr  = ha_msg_value(msg, F_ATTRD_ATTRIBUTE);
+	const char *attr  = crm_element_value(msg, F_ATTRD_ATTRIBUTE);
 	attr_hash_entry_t *hash_entry = NULL;
 
 	if(attr == NULL) {
@@ -472,14 +471,14 @@ find_hash_entry(HA_Message * msg)
 		CRM_CHECK(hash_entry != NULL, return NULL);
 	}
 
-	value = ha_msg_value(msg, F_ATTRD_SET);
+	value = crm_element_value(msg, F_ATTRD_SET);
 	if(value != NULL) {
 		crm_free(hash_entry->set);
 		hash_entry->set = crm_strdup(value);
 		crm_debug("\t%s->set: %s", attr, value);
 	}
 	
-	value = ha_msg_value(msg, F_ATTRD_SECTION);
+	value = crm_element_value(msg, F_ATTRD_SECTION);
 	if(value == NULL) {
 		value = XML_CIB_TAG_STATUS;
 	}
@@ -487,7 +486,7 @@ find_hash_entry(HA_Message * msg)
 	hash_entry->section = crm_strdup(value);
 	crm_debug("\t%s->section: %s", attr, value);
 	
-	value = ha_msg_value(msg, F_ATTRD_DAMPEN);
+	value = crm_element_value(msg, F_ATTRD_DAMPEN);
 	if(value != NULL) {
 		crm_free(hash_entry->dampen);
 		hash_entry->dampen = crm_strdup(value);
@@ -501,12 +500,12 @@ find_hash_entry(HA_Message * msg)
 }
 
 void
-attrd_ha_callback(HA_Message * msg, void* private_data)
+attrd_ha_callback(xmlNode * msg, void* private_data)
 {
 	attr_hash_entry_t *hash_entry = NULL;
-	const char *from   = ha_msg_value(msg, F_ORIG);
-	const char *op     = ha_msg_value(msg, F_ATTRD_TASK);
-	const char *ignore = ha_msg_value(msg, F_ATTRD_IGNORE_LOCALLY);
+	const char *from   = crm_element_value(msg, F_ORIG);
+	const char *op     = crm_element_value(msg, F_ATTRD_TASK);
+	const char *ignore = crm_element_value(msg, F_ATTRD_IGNORE_LOCALLY);
 
 	if(ignore == NULL || safe_str_neq(from, attrd_uname)) {
 		crm_info("%s message from %s", op, from);
@@ -552,13 +551,13 @@ update_for_hash_entry(gpointer key, gpointer value, gpointer user_data)
 
 
 void
-attrd_local_callback(HA_Message * msg)
+attrd_local_callback(xmlNode * msg)
 {
 	attr_hash_entry_t *hash_entry = NULL;
-	const char *from  = ha_msg_value(msg, F_ORIG);
-	const char *op    = ha_msg_value(msg, F_ATTRD_TASK);
-	const char *attr  = ha_msg_value(msg, F_ATTRD_ATTRIBUTE);
-	const char *value = ha_msg_value(msg, F_ATTRD_VALUE);
+	const char *from  = crm_element_value(msg, F_ORIG);
+	const char *op    = crm_element_value(msg, F_ATTRD_TASK);
+	const char *attr  = crm_element_value(msg, F_ATTRD_ATTRIBUTE);
+	const char *value = crm_element_value(msg, F_ATTRD_VALUE);
 
 	if(safe_str_eq(op, "refresh")) {
 		crm_info("Sending full refresh");
@@ -610,29 +609,29 @@ attrd_timer_callback(void *user_data)
 gboolean
 attrd_trigger_update(attr_hash_entry_t *hash_entry)
 {
-	HA_Message *msg = NULL;
+	xmlNode *msg = NULL;
 
 	/* send HA message to everyone */
 	crm_info("Sending flush op to all hosts for: %s", hash_entry->id);
  	log_hash_entry(LOG_DEBUG_2, hash_entry, "Sending flush op to all hosts for:");
 
-	msg = ha_msg_new(8);
-	ha_msg_add(msg, F_TYPE, T_ATTRD);
-	ha_msg_add(msg, F_ORIG, attrd_uname);
-	ha_msg_add(msg, F_ATTRD_TASK, "flush");
-	ha_msg_add(msg, F_ATTRD_ATTRIBUTE, hash_entry->id);
-	ha_msg_add(msg, F_ATTRD_SET, hash_entry->set);
-	ha_msg_add(msg, F_ATTRD_SECTION, hash_entry->section);
-	ha_msg_add(msg, F_ATTRD_DAMPEN, hash_entry->dampen);
-	ha_msg_add(msg, F_ATTRD_VALUE, hash_entry->value);
+	msg = create_xml_node(NULL, __FUNCTION__);
+	crm_xml_add(msg, F_TYPE, T_ATTRD);
+	crm_xml_add(msg, F_ORIG, attrd_uname);
+	crm_xml_add(msg, F_ATTRD_TASK, "flush");
+	crm_xml_add(msg, F_ATTRD_ATTRIBUTE, hash_entry->id);
+	crm_xml_add(msg, F_ATTRD_SET, hash_entry->set);
+	crm_xml_add(msg, F_ATTRD_SECTION, hash_entry->section);
+	crm_xml_add(msg, F_ATTRD_DAMPEN, hash_entry->dampen);
+	crm_xml_add(msg, F_ATTRD_VALUE, hash_entry->value);
 
 	if(hash_entry->timeout <= 0) {
-		ha_msg_add(msg, F_ATTRD_IGNORE_LOCALLY, hash_entry->value);
+		crm_xml_add(msg, F_ATTRD_IGNORE_LOCALLY, hash_entry->value);
 		attrd_perform_update(hash_entry);
 	}
 
 	send_cluster_message(NULL, crm_proc_attrd, msg, FALSE);
-	crm_msg_del(msg);
+	free_xml(msg);
 	
 	return TRUE;
 }

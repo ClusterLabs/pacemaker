@@ -36,9 +36,9 @@
 #include <crmd_callbacks.h>
 
 
-crm_data_t *find_xml_in_hamessage(const HA_Message * msg);
+xmlNode *find_xml_in_hamessage(const xmlNode * msg);
 void crmd_ha_connection_destroy(gpointer user_data);
-void crmd_ha_msg_filter(HA_Message *msg);
+void crmd_ha_msg_filter(xmlNode *msg);
 
 /* From join_dc... */
 extern gboolean check_join_state(
@@ -104,15 +104,15 @@ crmd_ha_connection_destroy(gpointer user_data)
 }
 
 void
-crmd_ha_msg_filter(HA_Message *msg)
+crmd_ha_msg_filter(xmlNode *msg)
 {
     ha_msg_input_t *new_input = NULL;
-    const char *from = ha_msg_value(msg, F_ORIG);
-    const char *seq  = ha_msg_value(msg, F_SEQ);
-    const char *op   = ha_msg_value(msg, F_CRM_TASK);
+    const char *from = crm_element_value(msg, F_ORIG);
+    const char *seq  = crm_element_value(msg, F_SEQ);
+    const char *op   = crm_element_value(msg, F_CRM_TASK);
     
-    const char *sys_to   = ha_msg_value(msg, F_CRM_SYS_TO);
-    const char *sys_from = ha_msg_value(msg, F_CRM_SYS_FROM);
+    const char *sys_to   = crm_element_value(msg, F_CRM_SYS_TO);
+    const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
     
     if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
 	crm_debug_2("Ignoring message for the DC [F_SEQ=%s]", seq);
@@ -134,7 +134,7 @@ crmd_ha_msg_filter(HA_Message *msg)
     }
     
     if(new_input == NULL) {
-	crm_log_message_adv(LOG_MSG, "HA[inbound]", msg);
+	crm_log_xml(LOG_MSG, "HA[inbound]", msg);
 	new_input = new_ha_msg_input(msg);
 	route_message(C_HA_MESSAGE, new_input);
     }
@@ -145,25 +145,25 @@ crmd_ha_msg_filter(HA_Message *msg)
 
 #if SUPPORT_HEARTBEAT
 void
-crmd_ha_msg_callback(HA_Message * msg, void* private_data)
+crmd_ha_msg_callback(HA_Message *hamsg, void* private_data)
 {
 	int level = LOG_DEBUG;
 	oc_node_t *from_node = NULL;
 	
-	const char *from = ha_msg_value(msg, F_ORIG);
-	const char *op   = ha_msg_value(msg, F_CRM_TASK);
-	const char *sys_from = ha_msg_value(msg, F_CRM_SYS_FROM);
+	xmlNode *msg = convert_ha_message(NULL, hamsg, __FUNCTION__);
+	const char *from = crm_element_value(msg, F_ORIG);
+	const char *op   = crm_element_value(msg, F_CRM_TASK);
+	const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
 
-	CRM_DEV_ASSERT(from != NULL);
+	CRM_CHECK(from != NULL, crm_log_xml_err(msg, "anon"); return);
 
 	crm_debug_2("HA[inbound]: %s from %s", op, from);
 
 	if(crm_peer_cache == NULL || crm_active_members() == 0) {
 		crm_debug("Ignoring HA messages until we are"
 			  " connected to the CCM (%s op from %s)", op, from);
-		crm_log_message_adv(
-			LOG_MSG, "HA[inbound]: Ignore (No CCM)", msg);
-		return;
+		crm_log_xml(LOG_MSG, "HA[inbound]: Ignore (No CCM)", msg);
+		goto bail;
 	}
 	
 	from_node = g_hash_table_lookup(crm_peer_cache, from);
@@ -183,12 +183,14 @@ crmd_ha_msg_callback(HA_Message * msg, void* private_data)
 			   " membership list (size=%d)", op, from,
 			   crm_active_members());
 		
-		crm_log_message_adv(LOG_MSG, "HA[inbound]: CCM Discard", msg);
+		crm_log_xml(LOG_MSG, "HA[inbound]: CCM Discard", msg);
 
 	} else {
 	    crmd_ha_msg_filter(msg);
 	}
 
+  bail:
+	free_xml(msg);
 	return;
 }
 #endif
@@ -202,7 +204,7 @@ gboolean
 crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 {
 	int lpc = 0;
-	HA_Message *msg = NULL;
+	xmlNode *msg = NULL;
 	ha_msg_input_t *new_input = NULL;
 	crmd_client_t *curr_client = (crmd_client_t*)user_data;
 	gboolean stay_connected = TRUE;
@@ -215,19 +217,17 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 			break;
 		}
 
-		msg = msgfromIPC_noauth(client);
+		msg = xmlfromIPC(client, 0);
 		if (msg == NULL) {
-			crm_info("%s: no message this time",
-				curr_client->table_key);
-			continue;
+		    break;
 		}
 
 		lpc++;
 		new_input = new_ha_msg_input(msg);
-		crm_msg_del(msg);
+		free_xml(msg);
 		
 		crm_debug_2("Processing msg from %s", curr_client->table_key);
-		crm_log_message_adv(LOG_DEBUG_2, "CRMd[inbound]", new_input->msg);
+		crm_log_xml(LOG_DEBUG_2, "CRMd[inbound]", new_input->msg);
 		if(crmd_authorize_message(new_input, curr_client)) {
 			route_message(C_IPC_MESSAGE, new_input);
 		}
@@ -293,9 +293,10 @@ lrm_op_callback(lrm_op_t* op)
 void
 crmd_ha_status_callback(const char *node, const char *status, void *private)
 {
-	crm_data_t *update = NULL;
+	xmlNode *update = NULL;
 	crm_node_t *member = NULL;
-	crm_notice("Status update: Node %s now has status [%s]",node,status);
+	crm_notice("Status update: Node %s now has status [%s] (DC=%s)",
+		   node, status, AM_I_DC?"true":"false");
 
 	member = g_hash_table_lookup(crm_peer_cache, node);
 	if(member == NULL) {
@@ -303,34 +304,36 @@ crmd_ha_status_callback(const char *node, const char *status, void *private)
 	    const char *uuid = get_uuid(node);
 	    member = crm_update_peer(0, 0, -1, 0, uuid, node, NULL, NULL);
 	}
-	
+
 	if(safe_str_eq(status, PINGSTATUS)) {
 	    return;
 	}
 	
 	if(safe_str_eq(status, DEADSTATUS)) {
-		/* this node is toast */
-		crm_update_peer_proc(node, crm_proc_ais, OFFLINESTATUS);
+	    /* this node is toast */
+	    crm_update_peer_proc(node, crm_proc_ais, OFFLINESTATUS);
+	    if(AM_I_DC) {
 		update = create_node_state(
 			node, DEADSTATUS, XML_BOOLEAN_NO, OFFLINESTATUS,
-			CRMD_STATE_INACTIVE, NULL, TRUE, __FUNCTION__);
-		
+			CRMD_JOINSTATE_DOWN, NULL, TRUE, __FUNCTION__);
+	    }
+	    
 	} else {
-		crm_update_peer_proc(node, crm_proc_ais, ONLINESTATUS);
+	    crm_update_peer_proc(node, crm_proc_ais, ONLINESTATUS);
+	    if(AM_I_DC) {
 		update = create_node_state(
 			node, ACTIVESTATUS, NULL, NULL, NULL, NULL,
 			FALSE, __FUNCTION__);
+	    }
 	}
 		
+	trigger_fsa(fsa_source);
+
 	if(update != NULL) {
-		/* this change should not be broadcast */
-		fsa_cib_anon_update(
-			XML_CIB_TAG_STATUS, update,
-			cib_inhibit_bcast|cib_scope_local|cib_quorum_override);
-		trigger_fsa(fsa_source);
-		free_xml(update);
+	    fsa_cib_anon_update(
+		XML_CIB_TAG_STATUS, update, cib_scope_local|cib_quorum_override);
+	    free_xml(update);
 	}
-	
 }
 
 void
@@ -339,7 +342,7 @@ crmd_client_status_callback(const char * node, const char * client,
 {
 	const char *join = NULL;
 	crm_node_t *member = NULL;
-	crm_data_t *update = NULL;
+	xmlNode *update = NULL;
 	gboolean clear_shutdown = FALSE;
 	
 	crm_debug_3("Invoked");
@@ -353,14 +356,14 @@ crmd_client_status_callback(const char * node, const char * client,
 
 	} else if(safe_str_eq(status, LEAVESTATUS)){
 		status = OFFLINESTATUS;
-		join   = CRMD_STATE_INACTIVE;
+		join   = CRMD_JOINSTATE_DOWN;
 /* 		clear_shutdown = TRUE; */
 	}
 	
 	set_bit_inplace(fsa_input_register, R_PEER_DATA);
 
-	crm_notice("Status update: Client %s/%s now has status [%s]",
-		   node, client, status);
+	crm_notice("Status update: Client %s/%s now has status [%s] (DC=%s)",
+		   node, client, status, AM_I_DC?"true":"false");
 
 	if(safe_str_eq(status, ONLINESTATUS)) {
 	    /* remove the cached value in case it changed */
@@ -388,25 +391,23 @@ crmd_client_status_callback(const char * node, const char * client,
 		crm_info("Got client status callback - our DC is dead");
 		register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
 		
+	} else if(AM_I_DC == FALSE) {
+		crm_info("Not the DC");
+
 	} else {
 		crm_debug_3("Got client status callback");
 		update = create_node_state(node, NULL, NULL, status, join,
 					   NULL, clear_shutdown, __FUNCTION__);
 	
 		if(safe_str_eq(status, ONLINESTATUS)){
-		    crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM",,"XML_TAG_TRANSIENT_NODEATTRS",");
+		    crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM","XML_TAG_TRANSIENT_NODEATTRS",");
 		}
 		
-		/* it is safe to keep these updates on the local node
-		 * each node updates their own CIB
-		 */
 		fsa_cib_anon_update(
-			XML_CIB_TAG_STATUS, update,
-			cib_inhibit_bcast|cib_scope_local|cib_quorum_override);
-
+		    XML_CIB_TAG_STATUS, update, cib_scope_local|cib_quorum_override);
 		free_xml(update);
 
-		if(AM_I_DC && safe_str_eq(status, OFFLINESTATUS)) {
+		if(safe_str_eq(status, OFFLINESTATUS)) {
 			erase_node_from_join(node);
 			check_join_state(fsa_state, __FUNCTION__);
 		}

@@ -91,13 +91,13 @@
 } while(0)
 
 enum cib_errors
-find_attr_details(crm_data_t *xml_search, const char *node_uuid,
+find_attr_details(xmlNode *xml_search, const char *node_uuid,
 		  const char *set_name, const char *attr_id, const char *attr_name,
-		  crm_data_t **xml_obj, gboolean to_console)
+		  xmlNode **xml_obj, gboolean to_console)
 {
 	int matches = 0;
-	crm_data_t *nv_children = NULL;
-	crm_data_t *set_children = NULL;
+	xmlNode *nv_children = NULL;
+	xmlNode *set_children = NULL;
 	const char *set_type = XML_TAG_ATTR_SETS;
 	const char *tag = crm_element_name(xml_search);
 
@@ -127,7 +127,7 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 
 	/* filter by set name */
 	if(set_name != NULL) {
-		crm_data_t *tmp = NULL;
+		xmlNode *tmp = NULL;
 		matches = find_xml_children(
 			&tmp, set_children?set_children:xml_search, 
 			set_type, XML_ATTR_ID, set_name, FALSE);
@@ -157,7 +157,7 @@ find_attr_details(crm_data_t *xml_search, const char *node_uuid,
 	
 		
 	if(matches == 1) {
-		crm_data_t *single_match = NULL;
+		xmlNode *single_match = NULL;
 		xml_child_iter(nv_children, child,
 			       single_match = copy_xml(child);
 			       break;
@@ -224,9 +224,9 @@ update_attr(cib_t *the_cib, int call_options,
 	const char *tag = NULL;
 	
 	enum cib_errors rc = cib_ok;
-	crm_data_t *xml_top = NULL;
-	crm_data_t *xml_obj = NULL;
-	crm_data_t *xml_search = NULL;
+	xmlNode *xml_top = NULL;
+	xmlNode *xml_obj = NULL;
+	xmlNode *xml_search = NULL;
 
 	char *local_attr_id = NULL;
 	
@@ -358,9 +358,9 @@ read_attr(cib_t *the_cib,
 {
 	enum cib_errors rc = cib_ok;
 
-	crm_data_t *xml_obj = NULL;
-	crm_data_t *xml_next = NULL;
-	crm_data_t *fragment = NULL;
+	xmlNode *xml_obj = NULL;
+	xmlNode *xml_next = NULL;
+	xmlNode *fragment = NULL;
 
 	CRM_CHECK(section != NULL, return cib_missing);
 	CRM_CHECK(attr_name != NULL || attr_id != NULL, return cib_missing);
@@ -395,7 +395,7 @@ read_attr(cib_t *the_cib,
 	if(safe_str_eq(crm_element_name(fragment), section)) {
 		xml_obj = fragment;
 	} else {
-		crm_data_t *a_node = NULL;
+		xmlNode *a_node = NULL;
 		a_node = find_xml_node(fragment, XML_TAG_CIB, TRUE);
 		xml_obj = get_object_root(section, a_node);
 	}
@@ -430,8 +430,8 @@ delete_attr(cib_t *the_cib, int options,
 	    const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console)
 {
 	enum cib_errors rc = cib_ok;
-	crm_data_t *xml_obj = NULL;
-	crm_data_t *xml_search = NULL;
+	xmlNode *xml_obj = NULL;
+	xmlNode *xml_search = NULL;
 	char *local_attr_id = NULL;
 
 	CRM_CHECK(section != NULL, return cib_missing);
@@ -500,8 +500,8 @@ enum cib_errors
 query_node_uuid(cib_t *the_cib, const char *uname, char **uuid)
 {
 	enum cib_errors rc = cib_ok;
-	crm_data_t *xml_obj = NULL;
-	crm_data_t *fragment = NULL;
+	xmlNode *xml_obj = NULL;
+	xmlNode *fragment = NULL;
 	const char *child_name = NULL;
 
 	CRM_ASSERT(uname != NULL);
@@ -552,8 +552,8 @@ enum cib_errors
 query_node_uname(cib_t *the_cib, const char *uuid, char **uname)
 {
 	enum cib_errors rc = cib_ok;
-	crm_data_t *xml_obj = NULL;
-	crm_data_t *fragment = NULL;
+	xmlNode *xml_obj = NULL;
+	xmlNode *fragment = NULL;
 	const char *child_name = NULL;
 
 	CRM_ASSERT(uname != NULL);

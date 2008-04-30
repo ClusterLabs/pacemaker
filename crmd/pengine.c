@@ -53,8 +53,8 @@
 #define CLIENT_EXIT_WAIT 30
 
 struct crm_subsystem_s *pe_subsystem  = NULL;
-void do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
-			   crm_data_t *output, void *user_data);
+void do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
+			   xmlNode *output, void *user_data);
 
 /*	 A_PE_START, A_PE_STOP, A_TE_RESTART	*/
 void
@@ -123,11 +123,11 @@ do_pe_invoke(long long action,
 }
 
 void
-do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
-		      crm_data_t *output, void *user_data)
+do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
+		      xmlNode *output, void *user_data)
 {
-	HA_Message *cmd = NULL;
-	crm_data_t *local_cib = NULL;
+	xmlNode *cmd = NULL;
+	xmlNode *local_cib = NULL;
 	
 #if CRM_DEPRECATED_SINCE_2_0_4
 	if(safe_str_eq(crm_element_name(output), XML_TAG_CIB)) {

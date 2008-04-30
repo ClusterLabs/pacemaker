@@ -33,12 +33,13 @@
 #include <pengine.h>
 #include <allocate.h>
 #include <utils.h>
+#include <crm/pengine/rules.h>
 #include <lib/crm/pengine/utils.h>
 
 gboolean 
-unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
+unpack_constraints(xmlNode * xml_constraints, pe_working_set_t *data_set)
 {
-	crm_data_t *lifetime = NULL;
+	xmlNode *lifetime = NULL;
 	xml_child_iter(
 		xml_constraints, xml_obj, 
 
@@ -52,7 +53,7 @@ unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
 		crm_debug_3("Processing constraint %s %s",
 			    crm_element_name(xml_obj),id);
 
-		lifetime = cl_get_struct(xml_obj, "lifetime");
+		lifetime = first_named_child(xml_obj, "lifetime");
 
 		if(test_ruleset(lifetime, NULL, data_set->now) == FALSE) {
 			crm_info("Constraint %s %s is not active",
@@ -111,7 +112,7 @@ invert_action(const char *action)
 }
 
 gboolean
-unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
+unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 {
 	int score_i = 0;
 	int order_id = 0;
@@ -266,7 +267,7 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 }
 
 gboolean
-unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
+unpack_rsc_location(xmlNode * xml_obj, pe_working_set_t *data_set)
 {
 	gboolean empty = TRUE;
 	const char *id_lh   = crm_element_value(xml_obj, "rsc");
@@ -343,7 +344,7 @@ get_node_score(const char *rule, const char *score, gboolean raw, node_t *node)
 
 rsc_to_node_t *
 generate_location_rule(
-	resource_t *rsc, crm_data_t *rule_xml, pe_working_set_t *data_set)
+	resource_t *rsc, xmlNode *rule_xml, pe_working_set_t *data_set)
 {	
 	const char *rule_id = NULL;
 	const char *score   = NULL;
@@ -650,7 +651,7 @@ custom_action_order(
 }
 
 gboolean
-unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
+unpack_rsc_colocation(xmlNode * xml_obj, pe_working_set_t *data_set)
 {
 	int score_i = 0;
 	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);

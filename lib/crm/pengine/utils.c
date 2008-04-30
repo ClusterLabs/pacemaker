@@ -29,7 +29,7 @@
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 void unpack_operation(
-	action_t *action, crm_data_t *xml_obj, pe_working_set_t* data_set);
+	action_t *action, xmlNode *xml_obj, pe_working_set_t* data_set);
 
 void
 pe_free_shallow(GListPtr alist)
@@ -485,7 +485,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			unpack_instance_attributes(
 				action->op_entry, XML_TAG_ATTR_SETS,
 				action->node->details->attrs,
-				action->extra, NULL, data_set->now);
+				action->extra, NULL, FALSE, data_set->now);
 		}
 
 		if(action->pseudo) {
@@ -568,7 +568,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 
 void
 unpack_operation(
-	action_t *action, crm_data_t *xml_obj, pe_working_set_t* data_set)
+	action_t *action, xmlNode *xml_obj, pe_working_set_t* data_set)
 {
 	int value_i = 0;
 	int start_delay = 0;
@@ -740,10 +740,10 @@ unpack_operation(
 			);
 
 		unpack_instance_attributes(xml_obj, XML_TAG_META_SETS,
-					   NULL, action->meta, NULL, data_set->now);
+					   NULL, action->meta, NULL, FALSE, data_set->now);
 		
 		unpack_instance_attributes(xml_obj, XML_TAG_ATTR_SETS,
-					   NULL, action->meta, NULL, data_set->now);
+					   NULL, action->meta, NULL, FALSE, data_set->now);
 	}
 
 	field = XML_LRM_ATTR_INTERVAL;
@@ -782,7 +782,7 @@ unpack_operation(
 	g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
 }
 
-crm_data_t *
+xmlNode *
 find_rsc_op_entry(resource_t *rsc, const char *key) 
 {
 	int number = 0;
@@ -790,7 +790,7 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 	const char *value = NULL;
 	const char *interval = NULL;
 	char *match_key = NULL;
-	crm_data_t *op = NULL;
+	xmlNode *op = NULL;
 	
 	xml_child_iter_filter(
 		rsc->ops_xml, operation, "op",
@@ -998,7 +998,7 @@ find_actions_exact(GListPtr input, const char *key, node_t *on_node)
 }
 
 void
-set_id(crm_data_t * xml_obj, const char *prefix, int child) 
+set_id(xmlNode * xml_obj, const char *prefix, int child) 
 {
 	int id_len = 0;
 	gboolean use_prefix = TRUE;
@@ -1099,14 +1099,17 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 {
 	char *a_uuid = NULL;
 	char *b_uuid = NULL;
- 	const char *a_task_id = cl_get_string(a, XML_LRM_ATTR_CALLID);
- 	const char *b_task_id = cl_get_string(b, XML_LRM_ATTR_CALLID);
+	const xmlNode *xml_a = a;
+	const xmlNode *xml_b = b;
+	
+ 	const char *a_xml_id = crm_element_value_const(xml_a, XML_ATTR_ID);
+ 	const char *b_xml_id = crm_element_value_const(xml_b, XML_ATTR_ID);
 
-	const char *a_key = cl_get_string(a, XML_ATTR_TRANSITION_MAGIC);
- 	const char *b_key = cl_get_string(b, XML_ATTR_TRANSITION_MAGIC);
+ 	const char *a_task_id = crm_element_value_const(xml_a, XML_LRM_ATTR_CALLID);
+ 	const char *b_task_id = crm_element_value_const(xml_b, XML_LRM_ATTR_CALLID);
 
-	const char *a_xml_id = ID(a);
-	const char *b_xml_id = ID(b);
+	const char *a_key = crm_element_value_const(xml_a, XML_ATTR_TRANSITION_MAGIC);
+ 	const char *b_key = crm_element_value_const(xml_b, XML_ATTR_TRANSITION_MAGIC);
 
 	int dummy = -1;
 	
@@ -1144,25 +1147,25 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
 	} else if(a_call_id >= 0 && a_call_id < b_call_id) {
 		crm_debug_4("%s (%d) < %s (%d) : call id",
-			    ID(a), a_call_id, ID(b), b_call_id);
+			    a_xml_id, a_call_id, b_xml_id, b_call_id);
 		sort_return(-1);
 
 	} else if(b_call_id >= 0 && a_call_id > b_call_id) {
 		crm_debug_4("%s (%d) > %s (%d) : call id",
-			    ID(a), a_call_id, ID(b), b_call_id);
+			    a_xml_id, a_call_id, b_xml_id, b_call_id);
 		sort_return(1);
 	}
 
 	crm_debug_5("%s (%d) == %s (%d) : continuing",
-		    ID(a), a_call_id, ID(b), b_call_id);
+		    a_xml_id, a_call_id, b_xml_id, b_call_id);
 	
 	/* now process pending ops */
 	CRM_CHECK(a_key != NULL && b_key != NULL, sort_return(0));
 	CRM_CHECK(decode_transition_magic(
-			  a_key, &a_uuid, &a_id, &dummy, &a_status, &a_rc),
+		      a_key, &a_uuid, &a_id, &dummy, &a_status, &a_rc, &dummy),
 		  sort_return(0));
 	CRM_CHECK(decode_transition_magic(
-			  b_key, &b_uuid, &b_id, &dummy, &b_status, &b_rc),
+		      b_key, &b_uuid, &b_id, &dummy, &b_status, &b_rc, &dummy),
 		  sort_return(0));
 
 	/* try and determin the relative age of the operation...
@@ -1186,29 +1189,90 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
 		if(b_call_id == -1) {
 			crm_debug_2("%s (%d) < %s (%d) : transition + call id",
-				    ID(a), a_call_id, ID(b), b_call_id);
+				    a_xml_id, a_call_id, b_xml_id, b_call_id);
 			sort_return(-1);
 		}
 
 		if(a_call_id == -1) {
 			crm_debug_2("%s (%d) > %s (%d) : transition + call id",
-				    ID(a), a_call_id, ID(b), b_call_id);
+				    a_xml_id, a_call_id, b_xml_id, b_call_id);
 			sort_return(1);
 		}
 		
 	} else if((a_id >= 0 && a_id < b_id) || b_id == -1) {
 		crm_debug_3("%s (%d) < %s (%d) : transition",
-			    ID(a), a_id, ID(b), b_id);
+			    a_xml_id, a_id, b_xml_id, b_id);
 		sort_return(-1);
 
 	} else if((b_id >= 0 && a_id > b_id) || a_id == -1) {
 		crm_debug_3("%s (%d) > %s (%d) : transition",
-			    ID(a), a_id, ID(b), b_id);
+			    a_xml_id, a_id, b_xml_id, b_id);
 		sort_return(1);
 	}
 
 	/* we should never end up here */
 	crm_err("%s (%d:%d:%s) ?? %s (%d:%d:%s) : default",
-		ID(a), a_call_id, a_id, a_uuid, ID(b), b_call_id, b_id, b_uuid);
+		a_xml_id, a_call_id, a_id, a_uuid, b_xml_id, b_call_id, b_id, b_uuid);
 	CRM_CHECK(FALSE, sort_return(0)); 
+}
+
+time_t get_timet_now(pe_working_set_t *data_set) 
+{
+    time_t now = 0;
+    if(data_set && data_set->now) {
+	now = data_set->now->tm_now;
+    }
+    
+    if(now == 0) {
+	/* eventually we should convert data_set->now into time_tm
+	 * for now, its only triggered by PE regression tests
+	 */
+	now = time(NULL);
+	crm_crit("Defaulting to 'now'");
+	if(data_set && data_set->now) {
+	    data_set->now->tm_now = now;
+	}
+    }
+    return now;
+}
+
+
+int get_failcount(node_t *node, resource_t *rsc, int *last_failure, pe_working_set_t *data_set) 
+{
+    int last = 0;
+    int fail_count = 0;
+    resource_t *failed = rsc;
+    char *fail_attr = crm_concat("fail-count", rsc->id, '-');
+    const char *value = g_hash_table_lookup(node->details->attrs, fail_attr);
+
+    if(is_not_set(rsc->flags, pe_rsc_unique)) {
+	failed = uber_parent(rsc);
+    }
+    
+    if(value != NULL) {
+	fail_count = char2score(value);
+	crm_info("%s has failed %d on %s",
+		 rsc->id, fail_count, node->details->uname);
+    }
+    crm_free(fail_attr);
+    
+    fail_attr = crm_concat("last-failure", rsc->id, '-');
+    value = g_hash_table_lookup(node->details->attrs, fail_attr);
+    if(value != NULL && rsc->failure_timeout) {
+	last = crm_parse_int(value, NULL);
+	if(last_failure) {
+	    *last_failure = last;
+	}
+	if(last > 0) {
+	    time_t now = get_timet_now(data_set);		
+	    if(now > (last + rsc->failure_timeout)) {
+		crm_notice("Failcount for %s on %s has expired (limit was %ds)",
+			   failed->id, node->details->uname, rsc->failure_timeout);
+		fail_count = 0;
+	    }
+	}
+    }
+    
+    crm_free(fail_attr);
+    return fail_count;
 }

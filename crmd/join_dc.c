@@ -35,12 +35,12 @@ GHashTable *finalized_nodes  = NULL;
 GHashTable *confirmed_nodes  = NULL;
 char *max_epoch = NULL;
 char *max_generation_from = NULL;
-crm_data_t *max_generation_xml = NULL;
+xmlNode *max_generation_xml = NULL;
 
 void initialize_join(gboolean before);
 gboolean finalize_join_for(gpointer key, gpointer value, gpointer user_data);
-void finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
-			    crm_data_t *output, void *user_data);
+void finalize_sync_callback(xmlNode *msg, int call_id, int rc,
+			    xmlNode *output, void *user_data);
 gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
 void finalize_join(const char *caller);
@@ -58,17 +58,17 @@ update_attrd(void)
 	}
 	
 	if(attrd != NULL) {
-		HA_Message *update = ha_msg_new(3);
-		ha_msg_add(update, F_TYPE, T_ATTRD);
-		ha_msg_add(update, F_ORIG, "crmd");
-		ha_msg_add(update, "task", "refresh");
+		xmlNode *update = create_xml_node(NULL, __FUNCTION__);
+		crm_xml_add(update, F_TYPE, T_ATTRD);
+		crm_xml_add(update, F_ORIG, "crmd");
+		crm_xml_add(update, "task", "refresh");
 		if(send_ipc_message(attrd, update) == FALSE) {
 			crm_err("attrd refresh failed");
 			attrd = NULL;
 		} else {
 			crm_debug("sent attrd refresh");
 		}
-		crm_msg_del(update);
+		free_xml(update);
 		
 	} else {
 		crm_info("Couldn't connect to attrd this time");
@@ -167,12 +167,12 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 	}	
 	
 	if(member->processes & crm_proc_crmd) {
-		HA_Message *offer = create_request(
+		xmlNode *offer = create_request(
 			CRM_OP_JOIN_OFFER, NULL, join_to,
 			CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);
 		char *join_offered = crm_itoa(current_join_id);
 		
-		ha_msg_add_int(offer, F_CRM_JOIN_ID, current_join_id);
+		crm_xml_add_int(offer, F_CRM_JOIN_ID, current_join_id);
 		/* send the welcome */
 		crm_debug("join-%d: Sending offer to %s",
 			  current_join_id, join_to);
@@ -235,7 +235,7 @@ do_dc_join_offer_one(long long action,
 		return;
 	}
 	
-	join_to = cl_get_string(welcome->msg, F_CRM_HOST_FROM);
+	join_to = crm_element_value(welcome->msg, F_CRM_HOST_FROM);
 	if(join_to != NULL
 	   && (cur_state == S_INTEGRATION || cur_state == S_FINALIZE_JOIN)) {
 		/* note: it _is_ possible that a node will have been
@@ -278,7 +278,7 @@ do_dc_join_filter_offer(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
-	crm_data_t *generation = NULL;
+	xmlNode *generation = NULL;
 
 	int cmp = 0;
 	int join_id = -1;
@@ -286,8 +286,8 @@ do_dc_join_filter_offer(long long action,
 	const char *ack_nack = CRMD_JOINSTATE_MEMBER;
 	ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 
-	const char *join_from = cl_get_string(join_ack->msg,F_CRM_HOST_FROM);
-	const char *ref       = cl_get_string(join_ack->msg,XML_ATTR_REFERENCE);
+	const char *join_from = crm_element_value(join_ack->msg,F_CRM_HOST_FROM);
+	const char *ref       = crm_element_value(join_ack->msg,XML_ATTR_REFERENCE);
 	
 	gpointer join_node = g_hash_table_lookup(
 	    crm_peer_cache, join_from);
@@ -295,7 +295,7 @@ do_dc_join_filter_offer(long long action,
 	crm_debug("Processing req from %s", join_from);
 	
 	generation = join_ack->xml;
-	ha_msg_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id);
+	crm_element_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id);
 
 	if(max_generation_xml != NULL && generation != NULL) {
 		cmp = cib_compare_generation(max_generation_xml, generation);
@@ -338,7 +338,7 @@ do_dc_join_filter_offer(long long action,
 	
 	if(ack_nack_bool == FALSE) {
 		/* NACK this client */
-		ack_nack = CRMD_STATE_INACTIVE;
+		ack_nack = CRMD_JOINSTATE_DOWN;
 		crm_err("join-%d: NACK'ing node %s (ref %s)",
 			join_id, join_from, ref);
 	} else {
@@ -403,14 +403,15 @@ do_dc_join_finalize(long long action,
 		
 		set_bit_inplace(fsa_input_register, R_CIB_ASKED);
 
-		fsa_cib_conn->call_timeout = 10;
 		rc = fsa_cib_conn->cmds->sync_from(
 			fsa_cib_conn, max_generation_from, NULL,
 			cib_quorum_override);
-		fsa_cib_conn->call_timeout = 0; /* back to the default */
-		add_cib_op_callback(rc, FALSE, crm_strdup(max_generation_from),
-				    finalize_sync_callback);
+
+		add_cib_op_callback_timeout(
+		    rc, 60, FALSE, crm_strdup(max_generation_from),
+		    finalize_sync_callback);
 		return;
+
 	} else {
 		/* Send _our_ CIB out to everyone */
 		fsa_cib_conn->cmds->sync_from(
@@ -422,8 +423,8 @@ do_dc_join_finalize(long long action,
 }
 
 void
-finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
-		       crm_data_t *output, void *user_data) 
+finalize_sync_callback(xmlNode *msg, int call_id, int rc,
+		       xmlNode *output, void *user_data) 
 {
 	CRM_DEV_ASSERT(cib_not_master != rc);
 	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
@@ -451,7 +452,7 @@ finalize_sync_callback(const HA_Message *msg, int call_id, int rc,
 void
 finalize_join(const char *caller)
 {
-	crm_data_t *cib = createEmptyCib();
+	xmlNode *cib = createEmptyCib();
 	
 	set_bit_inplace(fsa_input_register, R_HAVE_CIB);
 	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
@@ -475,8 +476,8 @@ finalize_join(const char *caller)
 }
 
 static void
-join_update_complete_callback(const HA_Message *msg, int call_id, int rc,
-			      crm_data_t *output, void *user_data)
+join_update_complete_callback(xmlNode *msg, int call_id, int rc,
+			      xmlNode *output, void *user_data)
 {
 	fsa_data_t *msg_data = NULL;
 	
@@ -486,7 +487,7 @@ join_update_complete_callback(const HA_Message *msg, int call_id, int rc,
 
 	} else {
 		crm_err("Join update %d failed", call_id);
-		crm_log_message(LOG_DEBUG, msg);
+		crm_log_xml(LOG_DEBUG, "failed", msg);
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
 }
@@ -505,16 +506,16 @@ do_dc_join_ack(long long action,
 
 	const char *join_id_s  = NULL;
 	const char *join_state = NULL;
-	const char *op         = cl_get_string(join_ack->msg, F_CRM_TASK);
-	const char *join_from  = cl_get_string(join_ack->msg, F_CRM_HOST_FROM);
+	const char *op         = crm_element_value(join_ack->msg, F_CRM_TASK);
+	const char *join_from  = crm_element_value(join_ack->msg, F_CRM_HOST_FROM);
 
 	if(safe_str_neq(op, CRM_OP_JOIN_CONFIRM)) {
 		crm_debug("Ignoring op=%s message from %s", op, join_from);
 		return;
 	} 
 
-	ha_msg_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id);
-	join_id_s = ha_msg_value(join_ack->msg, F_CRM_JOIN_ID);
+	crm_element_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id);
+	join_id_s = crm_element_value(join_ack->msg, F_CRM_JOIN_ID);
 
 	/* now update them to "member" */
 	
@@ -570,7 +571,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 {
 	const char *join_to = NULL;
 	const char *join_state = NULL;
-	HA_Message *acknak = NULL;
+	xmlNode *acknak = NULL;
 	
 	if(key == NULL || value == NULL) {
 		return TRUE;
@@ -586,13 +587,13 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	acknak = create_request(
 		CRM_OP_JOIN_ACKNAK, NULL, join_to,
 		CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL);
-	ha_msg_add_int(acknak, F_CRM_JOIN_ID, current_join_id);
+	crm_xml_add_int(acknak, F_CRM_JOIN_ID, current_join_id);
 	
 	/* set the ack/nack */
 	if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
 		crm_debug("join-%d: ACK'ing join request from %s, state %s",
 			  current_join_id, join_to, join_state);
-		ha_msg_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_TRUE);
+		crm_xml_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_TRUE);
 		g_hash_table_insert(
 			finalized_nodes,
 			crm_strdup(join_to), crm_strdup(CRMD_JOINSTATE_MEMBER));
@@ -600,7 +601,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 		crm_warn("join-%d: NACK'ing join request from %s, state %s",
 			 current_join_id, join_to, join_state);
 		
-		ha_msg_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_FALSE);
+		crm_xml_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_FALSE);
 	}
 	
 	send_msg_via_ha(acknak);
