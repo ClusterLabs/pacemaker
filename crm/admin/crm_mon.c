@@ -507,18 +507,18 @@ static void print_rsc_summary(pe_working_set_t *data_set, node_t *node, resource
 
     if(all || failcount || last_failure > 0) {
 	printed = TRUE;
-	print_as("   %s: migration-threshold=%d ",
+	print_as("   %s: migration-threshold=%d",
 		 rsc->id, rsc->migration_threshold);
     }
     
     if(failcount > 0) {
 	printed = TRUE;
-	print_as("fail-count=%d", failcount);
+	print_as(" fail-count=%d", failcount);
     }
     
     if(last_failure > 0) {
 	printed = TRUE;
-	print_as("last-failure=");
+	print_as(" last-failure=");
 	print_date(last_failure);
     }
 
@@ -567,40 +567,40 @@ static void print_rsc_history(pe_working_set_t *data_set, node_t *node, xmlNode 
 		   print_rsc_summary(data_set, node, rsc, TRUE);
 	       }
 	       
-	       print_as("    + %s: ", task);
+	       print_as("    + %s:", task);
 	       if(safe_str_neq(interval, "0")) {
-		   print_as("interval=%sms ", interval);
+		   print_as(" interval=%sms", interval);
 	       }
 
 	       value = crm_element_value(xml_op, "last_rc_change");
 	       if(value) {
 		   int int_value = crm_parse_int(value, NULL);
-		   print_as("last-rc-change=");
+		   print_as(" last-rc-change=");
 		   print_date(int_value);
 	       }
 
 	       value = crm_element_value(xml_op, "last_run");
 	       if(value) {
 		   int int_value = crm_parse_int(value, NULL);
-		   print_as("last-run=");
+		   print_as(" last-run=");
 		   print_date(int_value);
 	       }
 
 	       value = crm_element_value(xml_op, "exec_time");
 	       if(value) {
 		   int int_value = crm_parse_int(value, NULL);
-		   print_as("exec-time=");
+		   print_as(" exec-time=");
 		   print_date(int_value);
 	       }
 
 	       value = crm_element_value(xml_op, "queue_time");
 	       if(value) {
 		   int int_value = crm_parse_int(value, NULL);
-		   print_as("queue-time=");
+		   print_as(" queue-time=");
 		   print_date(int_value);
 	       }
 	       
-	       print_as("rc=%s (%s)\n", op_rc, execra_code2string(rc));
+	       print_as(" rc=%s (%s)\n", op_rc, execra_code2string(rc));
 	       
 	);
     
