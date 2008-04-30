@@ -486,7 +486,20 @@ print_simple_status(xmlNode *cib)
 
 extern int get_failcount(node_t *node, resource_t *rsc, int *last_failure, pe_working_set_t *data_set);
 
-static void print_rsc_local(pe_working_set_t *data_set, node_t *node, resource_t *rsc, gboolean all)
+static void print_date(time_t time) 
+{
+    int lpc = 0;
+    char date_str[26];
+    asctime_r(localtime(&time), date_str);
+    for(; lpc < 26; lpc++) {
+	if(date_str[lpc] == '\n') {
+	    date_str[lpc] = 0;
+	}
+    }
+    print_as("'%s'", date_str);
+}
+
+static void print_rsc_summary(pe_working_set_t *data_set, node_t *node, resource_t *rsc, gboolean all)
 {
     gboolean printed = FALSE;
     time_t last_failure = 0;
@@ -504,16 +517,18 @@ static void print_rsc_local(pe_working_set_t *data_set, node_t *node, resource_t
     }
     
     if(last_failure > 0) {
-	char date_str[26];
-	asctime_r(localtime(&last_failure), date_str);
-	print_as("last-failure=%s", date_str);
-    } else if(printed) {
+	printed = TRUE;
+	print_as("last-failure=");
+	print_date(last_failure);
+    }
+
+    if(printed) {
 	print_as("\n");
     }
 }
 
-static void print_rsc_summary(
-    pe_working_set_t *data_set, node_t *node, xmlNode *rsc_entry, gboolean operations)
+
+static void print_rsc_history(pe_working_set_t *data_set, node_t *node, xmlNode *rsc_entry)
 {
     GListPtr op_list = NULL;
     gboolean print_name = TRUE;
@@ -521,11 +536,6 @@ static void print_rsc_summary(
     const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
     resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
-    if(operations == FALSE) {
-	print_rsc_local(data_set, node, rsc, FALSE);
-	return;
-    }
-    
     xml_child_iter_filter(
 	rsc_entry, rsc_op, XML_LRM_TAG_RSC_OP,
 	op_list = g_list_append(op_list, rsc_op);
@@ -534,6 +544,7 @@ static void print_rsc_summary(
     sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
     
     slist_iter(xml_op, xmlNode, sorted_op_list, lpc,
+	       const char *value = NULL;
 	       const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
 	       const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
 	       const char *interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
@@ -553,13 +564,42 @@ static void print_rsc_summary(
 	       
 	       if(print_name) {
 		   print_name = FALSE;
-		   print_rsc_local(data_set, node, rsc, TRUE);
+		   print_rsc_summary(data_set, node, rsc, TRUE);
 	       }
 	       
 	       print_as("    + %s: ", task);
 	       if(safe_str_neq(interval, "0")) {
 		   print_as("interval=%sms ", interval);
 	       }
+
+	       value = crm_element_value(xml_op, "last_rc_change");
+	       if(value) {
+		   int int_value = crm_parse_int(value, NULL);
+		   print_as("last-rc-change=");
+		   print_date(int_value);
+	       }
+
+	       value = crm_element_value(xml_op, "last_run");
+	       if(value) {
+		   int int_value = crm_parse_int(value, NULL);
+		   print_as("last-run=");
+		   print_date(int_value);
+	       }
+
+	       value = crm_element_value(xml_op, "exec_time");
+	       if(value) {
+		   int int_value = crm_parse_int(value, NULL);
+		   print_as("exec-time=");
+		   print_date(int_value);
+	       }
+
+	       value = crm_element_value(xml_op, "queue_time");
+	       if(value) {
+		   int int_value = crm_parse_int(value, NULL);
+		   print_as("queue-time=");
+		   print_date(int_value);
+	       }
+	       
 	       print_as("rc=%s (%s)\n", op_rc, execra_code2string(rc));
 	       
 	);
@@ -590,8 +630,14 @@ static void print_node_summary(pe_working_set_t *data_set, gboolean operations)
 	xml_child_iter_filter(
 	    lrm_rsc, rsc_entry, XML_LRM_TAG_RESOURCE,
 
-	    print_rsc_summary(data_set, node, rsc_entry, operations);
-	    
+	    if(operations) {
+		print_rsc_history(data_set, node, rsc_entry);
+
+	    } else {
+		const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
+		resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+		print_rsc_summary(data_set, node, rsc, FALSE);
+	    }
 	    );
 	);
 }
