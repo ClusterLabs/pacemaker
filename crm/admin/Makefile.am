@@ -64,7 +64,7 @@ crm_diff_SOURCES	= xml_diff.c
 crm_diff_LDADD		= $(COMMONLIBS)
 
 crm_mon_SOURCES		= crm_mon.c
-crm_mon_LDADD		= $(COMMONLIBS) \
+crm_mon_LDADD		= $(COMMONLIBS) -llrm \
 			$(top_builddir)/lib/crm/pengine/libpe_status.la
 
 # Arguments could be made that this should live in crm/pengine

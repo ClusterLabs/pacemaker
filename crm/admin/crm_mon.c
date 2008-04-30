@@ -53,7 +53,7 @@
 
 
 /* GMainLoop *mainloop = NULL; */
-#define OPTARGS	"V?i:nrh:cdp:s1wX:"
+#define OPTARGS	"V?i:nrh:cdp:s1wX:of"
 
 
 void usage(const char *cmd, int exit_status);
@@ -84,6 +84,8 @@ cib_t *cib_conn = NULL;
 int failed_connections = 0;
 gboolean one_shot = FALSE;
 gboolean has_warnings = FALSE;
+gboolean print_failcount = FALSE;
+gboolean print_operations = FALSE;
 
 #if CURSES_ENABLED
 #  define print_as(fmt...) if(as_console) {	\
@@ -110,6 +112,8 @@ main(int argc, char **argv)
 		{"interval", 1, 0, 'i'},
 		{"group-by-node", 0, 0, 'n'},
 		{"inactive", 0, 0, 'r'},
+		{"failcounts", 0, 0, 'f'},		
+		{"operations", 0, 0, 'o'},		
 		{"as-html", 1, 0, 'h'},		
 		{"web-cgi", 0, 0, 'w'},
 		{"simple-status", 0, 0, 's'},
@@ -156,6 +160,12 @@ main(int argc, char **argv)
 				break;
 			case 'd':
 				daemonize = TRUE;
+				break;
+			case 'o':
+				print_operations = TRUE;
+				break;
+			case 'f':
+				print_failcount = TRUE;
 				break;
 			case 'p':
 				pid_file = crm_strdup(optarg);
@@ -474,6 +484,118 @@ print_simple_status(xmlNode *cib)
 	return 0;
 }
 
+extern int get_failcount(node_t *node, resource_t *rsc, int *last_failure, pe_working_set_t *data_set);
+
+static void print_rsc_local(pe_working_set_t *data_set, node_t *node, resource_t *rsc, gboolean all)
+{
+    gboolean printed = FALSE;
+    time_t last_failure = 0;
+    int failcount = get_failcount(node, rsc, (int*)&last_failure, data_set);	
+
+    if(all || failcount || last_failure > 0) {
+	printed = TRUE;
+	print_as("   %s: migration-threshold=%d ",
+		 rsc->id, rsc->migration_threshold);
+    }
+    
+    if(failcount > 0) {
+	printed = TRUE;
+	print_as("fail-count=%d", failcount);
+    }
+    
+    if(last_failure > 0) {
+	char date_str[26];
+	asctime_r(localtime(&last_failure), date_str);
+	print_as("last-failure=%s", date_str);
+    } else if(printed) {
+	print_as("\n");
+    }
+}
+
+static void print_rsc_summary(
+    pe_working_set_t *data_set, node_t *node, xmlNode *rsc_entry, gboolean operations)
+{
+    GListPtr op_list = NULL;
+    gboolean print_name = TRUE;
+    GListPtr sorted_op_list = NULL;
+    const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
+    resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+
+    if(operations == FALSE) {
+	print_rsc_local(data_set, node, rsc, FALSE);
+	return;
+    }
+    
+    xml_child_iter_filter(
+	rsc_entry, rsc_op, XML_LRM_TAG_RSC_OP,
+	op_list = g_list_append(op_list, rsc_op);
+	);
+    
+    sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
+    
+    slist_iter(xml_op, xmlNode, sorted_op_list, lpc,
+	       const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+	       const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
+	       const char *interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+	       int rc = crm_parse_int(op_rc, "0");
+	       
+	       if(safe_str_eq(task, CRMD_ACTION_STATUS)
+		  && safe_str_eq(interval, "0")) {
+		   task = "probe";
+	       }
+	       
+	       if(rc == 7 && safe_str_eq(task, "probe")) {
+		   continue;
+		   
+	       } else if(safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
+		   continue;
+	       }
+	       
+	       if(print_name) {
+		   print_name = FALSE;
+		   print_rsc_local(data_set, node, rsc, TRUE);
+	       }
+	       
+	       print_as("    + %s: ", task);
+	       if(safe_str_neq(interval, "0")) {
+		   print_as("interval=%sms ", interval);
+	       }
+	       print_as("rc=%s (%s)\n", op_rc, execra_code2string(rc));
+	       
+	);
+    
+    /* no need to free the contents */
+    g_list_free(sorted_op_list);
+}
+
+static void print_node_summary(pe_working_set_t *data_set, gboolean operations)
+{
+    xmlNode *lrm_rsc = NULL;
+    xmlNode *cib_status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
+
+    if(operations) {
+	print_as("\nOperations:\n");
+    } else {
+	print_as("\nMigration summary::\n");
+    }
+    
+    xml_child_iter_filter(
+	cib_status, node_state, XML_CIB_TAG_STATE,
+	node_t *node = pe_find_node_id(data_set->nodes, ID(node_state));
+	print_as("* Node %s:\n", crm_element_value(node_state, XML_ATTR_UNAME));
+	
+	lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+	lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
+	
+	xml_child_iter_filter(
+	    lrm_rsc, rsc_entry, XML_LRM_TAG_RESOURCE,
+
+	    print_rsc_summary(data_set, node, rsc_entry, operations);
+	    
+	    );
+	);
+}
+
 int
 print_status(xmlNode *cib) 
 {
@@ -576,6 +698,10 @@ print_status(xmlNode *cib)
 			);
 	}
 
+	if(print_operations || print_failcount) {
+	    print_node_summary(&data_set, print_operations);
+	}
+	
 	if(xml_has_children(data_set.failed)) {
 		print_as("\nFailed actions:\n");
 		xml_child_iter(data_set.failed, xml_op, 
@@ -779,8 +905,10 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c) \t: This text\n", "help", '?');
 	fprintf(stream, "\t--%s (-%c) \t: Increase the debug output\n", "verbose", 'V');
 	fprintf(stream, "\t--%s (-%c) <seconds>\t: Update frequency\n", "interval", 'i');
-	fprintf(stream, "\t--%s (-%c) \t:Group resources by node\n", "group-by-node", 'n');
-	fprintf(stream, "\t--%s (-%c) \t:Display inactive resources\n", "inactive", 'r');
+	fprintf(stream, "\t--%s (-%c) \t: Group resources by node\n", "group-by-node", 'n');
+	fprintf(stream, "\t--%s (-%c) \t: Display inactive resources\n", "inactive", 'r');
+	fprintf(stream, "\t--%s (-%c) \t: Display resource fail counts\n", "failcount", 'f');
+	fprintf(stream, "\t--%s (-%c) \t: Display resource operation history\n", "operations", 'o');
 	fprintf(stream, "\t--%s (-%c) \t: Display cluster status on the console\n", "as-console", 'c');
 	fprintf(stream, "\t--%s (-%c) \t: Display the cluster status once as "
 		"a simple one line output (suitable for nagios)\n", "simple-status", 's');
