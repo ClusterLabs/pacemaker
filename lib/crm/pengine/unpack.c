@@ -979,11 +979,6 @@ unpack_lrm_resources(node_t *node, xmlNode * lrm_rsc_list, pe_working_set_t *dat
 
 	crm_debug_3("Unpacking resources on %s", node->details->uname);
 
-	slist_iter(
-	    rsc, resource_t, data_set->resources, lpc,
-	    common_apply_stickiness(rsc, node, data_set);
-	    );
-	
 	xml_child_iter_filter(
 		lrm_rsc_list, rsc_entry, XML_LRM_TAG_RESOURCE,
 		unpack_lrm_rsc_state(node, rsc_entry, data_set);

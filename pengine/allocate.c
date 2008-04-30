@@ -426,6 +426,71 @@ apply_placement_constraints(pe_working_set_t *data_set)
 	
 }
 
+static void
+common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_set) 
+{
+	int fail_count = 0;
+	char *fail_attr = NULL;
+	const char *value = NULL;
+	GHashTable *meta_hash = NULL;
+
+	if(rsc->children) {
+	    slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+		common_apply_stickiness(child_rsc, node, data_set);
+		);
+	    return;
+	}
+	
+	meta_hash = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+	get_meta_attributes(meta_hash, rsc, node, data_set);
+
+	/* update resource preferences that relate to the current node */	    
+	value = g_hash_table_lookup(meta_hash, "resource_stickiness");
+	if(value != NULL && safe_str_neq("default", value)) {
+		rsc->stickiness = char2score(value);
+	} else {
+		rsc->stickiness = data_set->default_resource_stickiness;
+	}
+
+	value = g_hash_table_lookup(meta_hash, XML_RSC_ATTR_FAIL_STICKINESS);
+	if(value != NULL && safe_str_neq("default", value)) {
+		rsc->migration_threshold = char2score(value);
+	} else {
+		rsc->migration_threshold = data_set->default_migration_threshold;
+	}
+
+	/* process failure stickiness */
+	fail_attr = crm_concat("fail-count", rsc->id, '-');
+	value = g_hash_table_lookup(node->details->attrs, fail_attr);
+	if(value != NULL) {
+	    fail_count = char2score(value);
+	    crm_info("%s has failed %d on %s",
+		     rsc->id, fail_count, node->details->uname);
+	}
+	crm_free(fail_attr);
+	
+	if(fail_count > 0 && rsc->migration_threshold != 0) {
+	    resource_t *failed = rsc;
+	    if(is_not_set(rsc->flags, pe_rsc_unique)) {
+		failed = uber_parent(rsc);
+	    }
+	    
+	    if(rsc->migration_threshold <= fail_count) {
+		resource_location(failed, node, -INFINITY, "__fail_limit__", data_set);
+		crm_warn("Forcing %s away from %s after %d failures (max=%d)",
+			 failed->id, node->details->uname, fail_count, rsc->migration_threshold);
+	    } else {
+		crm_notice("%s can fail %d more times on %s before being forced off",
+			   failed->id, rsc->migration_threshold - fail_count, node->details->uname);
+	    }
+	}
+	
+	g_hash_table_destroy(meta_hash);
+}
+
 static void complex_set_cmds(resource_t *rsc)
 {
     rsc->cmds = &resource_class_alloc_functions[rsc->variant];
@@ -458,6 +523,13 @@ stage0(pe_working_set_t *data_set)
 	
 	set_alloc_actions(data_set);
 
+	slist_iter(node, node_t, data_set->nodes, lpc,
+		   slist_iter(
+		       rsc, resource_t, data_set->resources, lpc2,
+		       common_apply_stickiness(rsc, node, data_set);
+		       );
+	    );
+	
 	unpack_constraints(cib_constraints, data_set);
 	return TRUE;
 }
