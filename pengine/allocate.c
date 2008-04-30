@@ -432,6 +432,7 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 	int fail_count = 0;
 	char *fail_attr = NULL;
 	const char *value = NULL;
+	resource_t *failed = rsc;
 	GHashTable *meta_hash = NULL;
 
 	if(rsc->children) {
@@ -441,7 +442,7 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 		);
 	    return;
 	}
-	
+
 	meta_hash = g_hash_table_new_full(
 		g_str_hash, g_str_equal,
 		g_hash_destroy_str, g_hash_destroy_str);
@@ -471,13 +472,27 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 		     rsc->id, fail_count, node->details->uname);
 	}
 	crm_free(fail_attr);
-	
-	if(fail_count > 0 && rsc->migration_threshold != 0) {
-	    resource_t *failed = rsc;
-	    if(is_not_set(rsc->flags, pe_rsc_unique)) {
-		failed = uber_parent(rsc);
-	    }
+
+	if(is_not_set(rsc->flags, pe_rsc_unique)) {
+	    failed = uber_parent(rsc);
+	}
 	    
+	fail_attr = crm_concat("last-failure", rsc->id, '-');
+	value = g_hash_table_lookup(node->details->attrs, fail_attr);
+	if(value != NULL && rsc->failure_timeout) {
+	    int last_failure = crm_parse_int(value, NULL);
+	    if(last_failure > 0) {
+		time_t now = get_timet_now(data_set);		
+		if(now > (last_failure + rsc->failure_timeout)) {
+		    crm_notice("Failcount for %s on %s has expired (limit was %ds)",
+			       failed->id, node->details->uname, rsc->failure_timeout);
+		    fail_count = 0;
+		}
+	    }
+	}
+	crm_free(fail_attr);
+
+	if(fail_count > 0 && rsc->migration_threshold != 0) {
 	    if(rsc->migration_threshold <= fail_count) {
 		resource_location(failed, node, -INFINITY, "__fail_limit__", data_set);
 		crm_warn("Forcing %s away from %s after %d failures (max=%d)",

@@ -266,16 +266,29 @@ update_failcount(xmlNode *event, const char *event_node, int rc)
 
 	if(interval > 0) {
 		int call_id = 0;
+		char *now = crm_itoa(time(NULL));
+		
 		attr_name = crm_concat("fail-count", rsc_id, '-');
-		crm_warn("Updating failcount for %s on %s after failed %s: rc=%d (update=%s)",
-			 rsc_id, on_uuid, task, rc, value);
-
-		call_id = update_attr(te_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
-			    on_uuid, NULL,NULL, attr_name, value, FALSE);
+		crm_warn("Updating failcount for %s on %s after failed %s:"
+			 " rc=%d (update=%s, time=%s)", rsc_id, on_uuid, task, rc, value, now);
 
 		/* don't let notificatios of these updates cause new transitions */
+		call_id = update_attr(te_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
+				      on_uuid, NULL,NULL, attr_name, value, FALSE);
+
 		add_cib_op_callback(call_id, FALSE, NULL, cib_failcount_updated);
 		crm_free(attr_name);
+
+		attr_name = crm_concat("last-failure", rsc_id, '-');
+
+		/* don't let notificatios of these updates cause new transitions */
+		call_id = update_attr(te_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
+				      on_uuid, NULL,NULL, attr_name, value, FALSE);
+
+		add_cib_op_callback(call_id, FALSE, NULL, cib_failcount_updated);
+		crm_free(attr_name);
+
+		crm_free(now);
 	}
 
   bail:
