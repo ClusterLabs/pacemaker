@@ -96,12 +96,12 @@ extern char *generate_transition_magic(
 
 extern gboolean decode_transition_magic(
 	const char *magic, char **uuid,
-	int *transition_id, int *action_id, int *op_status, int *op_rc);
+	int *transition_id, int *action_id, int *op_status, int *op_rc, int *target_rc);
 
-extern char *generate_transition_key(int action, int transition_id, const char *node);
+extern char *generate_transition_key(int action, int transition_id, int target_rc, const char *node);
 
 extern gboolean decode_transition_key(
-	const char *key, char **uuid, int *action, int *transition_id);
+    const char *key, char **uuid, int *action, int *transition_id, int *target_rc);
 
 extern char *crm_concat(const char *prefix, const char *suffix, char join);
 

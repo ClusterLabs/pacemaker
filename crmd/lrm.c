@@ -569,7 +569,7 @@ build_operation_update(
 			  " %s_%s_%d %d from %s",
 			  op->rsc_id, op->op_type, op->interval, op->call_id,
 			  op->app_name);
-		local_user_data = generate_transition_key(-1, 0, id);
+		local_user_data = generate_transition_key(-1, 0, 0, id);
 		op->user_data = local_user_data;
 		crm_free(id);
 	}
