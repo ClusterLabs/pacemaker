@@ -23,7 +23,7 @@
 
 extern node_t *node_copy(node_t *this_node) ;
 extern time_t get_timet_now(pe_working_set_t *data_set);
-
+extern int get_failcount(node_t *node, resource_t *rsc, int *last_failure, pe_working_set_t *data_set);
 
 /* Binary like operators for lists of nodes */
 extern GListPtr node_list_dup(GListPtr list1, gboolean reset, gboolean filter);

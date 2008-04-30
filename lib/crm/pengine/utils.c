@@ -1235,3 +1235,44 @@ time_t get_timet_now(pe_working_set_t *data_set)
     }
     return now;
 }
+
+
+int get_failcount(node_t *node, resource_t *rsc, int *last_failure, pe_working_set_t *data_set) 
+{
+    int last = 0;
+    int fail_count = 0;
+    resource_t *failed = rsc;
+    char *fail_attr = crm_concat("fail-count", rsc->id, '-');
+    const char *value = g_hash_table_lookup(node->details->attrs, fail_attr);
+
+    if(is_not_set(rsc->flags, pe_rsc_unique)) {
+	failed = uber_parent(rsc);
+    }
+    
+    if(value != NULL) {
+	fail_count = char2score(value);
+	crm_info("%s has failed %d on %s",
+		 rsc->id, fail_count, node->details->uname);
+    }
+    crm_free(fail_attr);
+    
+    fail_attr = crm_concat("last-failure", rsc->id, '-');
+    value = g_hash_table_lookup(node->details->attrs, fail_attr);
+    if(value != NULL && rsc->failure_timeout) {
+	last = crm_parse_int(value, NULL);
+	if(last_failure) {
+	    *last_failure = last;
+	}
+	if(last > 0) {
+	    time_t now = get_timet_now(data_set);		
+	    if(now > (last + rsc->failure_timeout)) {
+		crm_notice("Failcount for %s on %s has expired (limit was %ds)",
+			   failed->id, node->details->uname, rsc->failure_timeout);
+		fail_count = 0;
+	    }
+	}
+    }
+    
+    crm_free(fail_attr);
+    return fail_count;
+}
