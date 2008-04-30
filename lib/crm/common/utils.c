@@ -1017,47 +1017,35 @@ generate_transition_magic(const char *transition_key, int op_status, int op_rc)
 gboolean
 decode_transition_magic(
 	const char *magic, char **uuid, int *transition_id, int *action_id,
-	int *op_status, int *op_rc)
+	int *op_status, int *op_rc, int *target_rc)
 {
-	char *rc = NULL;
-	char *key = NULL;
-	char *magic2 = NULL;
-	char *status = NULL;
+    int res = 0;
+    char *key = NULL;
+    gboolean result = TRUE;
 
-	gboolean result = TRUE;
-	
-	if(decodeNVpair(magic, ':', &status, &magic2) == FALSE) {
-		crm_err("Couldn't find ':' in: %s", magic);
-		result = FALSE;
-		goto bail;
-	}
-
-	if(decodeNVpair(magic2, ';', &rc, &key) == FALSE) {
-		crm_err("Couldn't find ';' in: %s", magic2);
-		result = FALSE;
-		goto bail;
-	}
-
-	
-	CRM_CHECK(decode_transition_key(key, uuid, transition_id, action_id),
-		  result = FALSE;
-		  goto bail;
-		);
-	
-	*op_rc = crm_parse_int(rc, NULL);
-	*op_status = crm_parse_int(status, NULL);
-
+    CRM_CHECK(magic != NULL, return FALSE);
+    CRM_CHECK(op_rc != NULL, return FALSE);
+    CRM_CHECK(op_status != NULL, return FALSE);
+    
+    crm_malloc0(key, strlen(magic));
+    res = sscanf(magic, "%d:%d;%s", op_status, op_rc, key);
+    if(res != 3) {
+	crm_crit("Only found %d items in: %s", res, magic);
+	return FALSE;
+    }
+    
+    CRM_CHECK(decode_transition_key(key, uuid, transition_id, action_id, target_rc),
+	      result = FALSE;
+	      goto bail;
+	);
+    
   bail:
-	crm_free(rc);
-	crm_free(key);
-	crm_free(magic2);
-	crm_free(status);
-	
-	return result;
+    crm_free(key);
+    return result;
 }
 
 char *
-generate_transition_key(int transition_id, int action_id, const char *node)
+generate_transition_key(int transition_id, int action_id, int target_rc, const char *node)
 {
 	int len = 40;
 	char *fail_state = NULL;
@@ -1068,8 +1056,8 @@ generate_transition_key(int transition_id, int action_id, const char *node)
 	
 	crm_malloc0(fail_state, len);
 	if(fail_state != NULL) {
-		snprintf(fail_state, len, "%d:%d:%s",
-			 action_id, transition_id, node);
+		snprintf(fail_state, len, "%d:%d:%d:%s",
+			 action_id, transition_id, target_rc, node);
 	}
 	return fail_state;
 }
@@ -1077,38 +1065,48 @@ generate_transition_key(int transition_id, int action_id, const char *node)
 
 gboolean
 decode_transition_key(
-	const char *key, char **uuid, int *transition_id, int *action_id)
+	const char *key, char **uuid, int *transition_id, int *action_id, int *target_rc)
 {
-	char *tmp = NULL;
-	char *action = NULL;
-	char *transition = NULL;
+	int res = 0;
+	gboolean done = TRUE;
 
-	*uuid = NULL;
-	*action_id = -1;
-	*transition_id = -1;
+	CRM_CHECK(uuid != NULL, return FALSE);
+	CRM_CHECK(target_rc != NULL, return FALSE);
+	CRM_CHECK(action_id != NULL, return FALSE);
+	CRM_CHECK(transition_id != NULL, return FALSE);
 	
-	if(decodeNVpair(key, ':', &action, &tmp) == FALSE) {
-		crm_err("Couldn't find ':' in: %s", key);
-		return FALSE;
-	}
-
-	*action_id = crm_parse_int(action, NULL);
-	crm_free(action);
-
-	if(decodeNVpair(tmp, ':', &transition, uuid) == FALSE) {
-		/* this would be an error but some versions dont
-		 * have the action
-		 */
-		*transition_id = *action_id;
+	crm_malloc0(*uuid, strlen(key));
+	res = sscanf(key, "%d:%d:%d:%s", transition_id, action_id, target_rc, *uuid);
+	switch(res) {
+	    case 4:
+		/* Post Pacemaker 0.6 */
+		break;
+	    case 2:
+		/* Until Pacemaker 0.6 */
+		*target_rc = -1;
+		res = sscanf(key, "%d:%d:%s", transition_id, action_id, *uuid);
+		CRM_CHECK(res == 3, done = FALSE);
+		break;
+	    case 1:
+		/* Prior to Heartbeat 2.0.8 */
 		*action_id = -1;
-		*uuid = tmp;
-
-	} else {
-		*transition_id = crm_parse_int(transition, NULL);
-		crm_free(transition);
-		crm_free(tmp);
+		*target_rc = -1;
+		res = sscanf(key, "%d:%s", transition_id, *uuid);
+		CRM_CHECK(res == 2, done = FALSE);
+		break;
 	}
-	return TRUE;
+
+	if(done == FALSE) {
+	    crm_err("Cannot decode '%s'", key);
+	    
+	    crm_free(*uuid);
+	    *uuid = NULL;
+	    *target_rc = -1;
+	    *action_id = -1;
+	    *transition_id = -1;
+	}
+	
+	return done;
 }
 
 void

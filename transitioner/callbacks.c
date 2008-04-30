@@ -299,6 +299,7 @@ void
 tengine_stonith_callback(stonith_ops_t * op)
 {
 	const char *allow_fail  = NULL;
+	int target_rc = -1;
 	int stonith_id = -1;
 	int transition_id = -1;
 	char *uuid = NULL;
@@ -319,7 +320,7 @@ tengine_stonith_callback(stonith_ops_t * op)
 	/* filter out old STONITH actions */
 
 	CRM_CHECK(decode_transition_key(
-			  op->private_data, &uuid, &transition_id, &stonith_id),
+		      op->private_data, &uuid, &transition_id, &stonith_id, &target_rc),
 		  crm_err("Invalid event detected");
 		  goto bail;
 		);
