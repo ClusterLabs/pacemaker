@@ -1076,7 +1076,7 @@ decode_transition_key(
 	CRM_CHECK(transition_id != NULL, return FALSE);
 	
 	crm_malloc0(*uuid, strlen(key));
-	res = sscanf(key, "%d:%d:%d:%s", transition_id, action_id, target_rc, *uuid);
+	res = sscanf(key, "%d:%d:%d:%s", action_id, transition_id, target_rc, *uuid);
 	switch(res) {
 	    case 4:
 		/* Post Pacemaker 0.6 */
@@ -1084,7 +1084,7 @@ decode_transition_key(
 	    case 2:
 		/* Until Pacemaker 0.6 */
 		*target_rc = -1;
-		res = sscanf(key, "%d:%d:%s", transition_id, action_id, *uuid);
+		res = sscanf(key, "%d:%d:%s", action_id, transition_id, *uuid);
 		CRM_CHECK(res == 3, done = FALSE);
 		break;
 	    case 1:
