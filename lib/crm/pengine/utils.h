@@ -22,6 +22,7 @@
 
 
 extern node_t *node_copy(node_t *this_node) ;
+extern time_t get_timet_now(pe_working_set_t *data_set);
 
 
 /* Binary like operators for lists of nodes */

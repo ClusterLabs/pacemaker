@@ -987,8 +987,6 @@ unpack_lrm_resources(node_t *node, xmlNode * lrm_rsc_list, pe_working_set_t *dat
 	return TRUE;
 }
 
-
-
 gboolean
 unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	      int *max_call_id, enum action_fail_response *on_fail,
@@ -1017,7 +1015,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	gboolean is_probe = FALSE;
 	gboolean is_stop_action = FALSE;
 
-	
 	CRM_CHECK(rsc    != NULL, return FALSE);
 	CRM_CHECK(node   != NULL, return FALSE);
 	CRM_CHECK(xml_op != NULL, return FALSE);
@@ -1045,13 +1042,14 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	}
 
 	if(rsc->failure_timeout > 0) {
-	    time_t now = time(NULL);
-	    int last_run = now;
-	    int rc = crm_element_value_int(xml_op, "last_run", &last_run);
-	    
+	    int last_run = 0;
+
+	    if(crm_element_value_int(xml_op, "last_run", &last_run) == 0) {
 /* int last_change = crm_element_value_int(xml_op, "last_rc_change"); */
-	    if(rc == 0 && now > (last_run + rsc->failure_timeout)) {
-		expired = TRUE;
+		time_t now = get_timet_now(data_set);
+		if(now > (last_run + rsc->failure_timeout)) {
+		    expired = TRUE;
+		}
 	    }
 	}
 	

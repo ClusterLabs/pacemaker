@@ -1215,3 +1215,23 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 		a_xml_id, a_call_id, a_id, a_uuid, b_xml_id, b_call_id, b_id, b_uuid);
 	CRM_CHECK(FALSE, sort_return(0)); 
 }
+
+time_t get_timet_now(pe_working_set_t *data_set) 
+{
+    time_t now = 0;
+    if(data_set && data_set->now) {
+	now = data_set->now->tm_now;
+    }
+    
+    if(now == 0) {
+	/* eventually we should convert data_set->now into time_tm
+	 * for now, its only triggered by PE regression tests
+	 */
+	now = time(NULL);
+	crm_crit("Defaulting to 'now'");
+	if(data_set && data_set->now) {
+	    data_set->now->tm_now = now;
+	}
+    }
+    return now;
+}
