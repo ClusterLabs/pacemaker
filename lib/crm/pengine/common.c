@@ -66,7 +66,7 @@ pe_cluster_option pe_opts[] = {
 	  "Failed nodes are STONITH'd", NULL },
 	{ "stonith-action", "stonith_action", "enum", "reboot, poweroff", "reboot", &check_stonith_action,
 	  "Action to send to STONITH device", NULL },
-	{ "default-failure-timeout", NULL, "time", NULL, "0", &check_time, "Time in seconds after which a failure expires", "Set to zero to disable" },
+	{ "default-failure-timeout", NULL, "time", NULL, "0", &check_timer, "Time in seconds after which a failure expires", "Set to zero to disable" },
 	{ "default-resource-stickiness", "default_resource_stickiness", "integer", NULL, "0", &check_number, "", NULL },
 	{ "default-migration-threshold", NULL, "integer", NULL, "0", &check_number, "Maximum times a resource can fail before it is moved.  Zero means no limit.", NULL },
 	{ "is-managed-default", "is_managed_default", "boolean", NULL, "true", &check_boolean,
