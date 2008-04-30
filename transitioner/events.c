@@ -109,7 +109,7 @@ fail_incompletable_actions(crm_graph_t *graph, const char *down_node)
 				continue;
 			}
 			
-			target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+			target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 			if(safe_str_eq(target, down_node)) {
 				action->failed = TRUE;
 				last_action = action->xml;
