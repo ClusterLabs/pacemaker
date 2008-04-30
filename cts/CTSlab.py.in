@@ -533,6 +533,7 @@ if __name__ == '__main__':
     ListTests = 0
     HaveSeed = 0
     oprofile = None
+    warn_inactive = 1
     StonithType = "ssh"
     StonithParams = None
     StonithParams = "hostlist=dynamic".split('=')
@@ -665,6 +666,8 @@ if __name__ == '__main__':
            skipthis=1
            Seed=args[i+1]
            HaveSeed = 1
+       elif args[i] == "--no-inactive":
+           warn_inactive = 0
        else:
            NumIter=int(args[i])
      
@@ -727,6 +730,7 @@ if __name__ == '__main__':
     Environment["use_logd"] = 0
     Environment["logfacility"] = LogFacility
     Environment["oprofile"] = oprofile
+    Environment["warn-inactive"] = warn_inactive
 
     if config.Parameters.has_key("use_logd"):
         Environment["use_logd"] = 1

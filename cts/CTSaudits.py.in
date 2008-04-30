@@ -196,13 +196,13 @@ class PrimitiveAudit(ClusterAudit):
                 self.CM.log("Resource %s active without quorum: %s (%s)" 
                             % (resource.id, repr(active), resource.line))
 
-        elif self.CM.HasQuorum(None) or not resource.needs_quorum:
-            self.CM.log("WARN: Resource %s not served anywhere (Inactive nodes: %s)" 
-                        % (resource.id, repr(self.inactive_nodes)))
-
-        else:
-            self.CM.debug("Resource %s not served anywhere (Inactive nodes: %s)" 
-                          % (resource.id, repr(self.inactive_nodes)))
+        elif self.CM.Env["warn-inactive"] == 1:
+            if self.CM.HasQuorum(None) or not resource.needs_quorum:
+                self.CM.log("WARN: Resource %s not served anywhere (Inactive nodes: %s)" 
+                            % (resource.id, repr(self.inactive_nodes)))
+            else:
+                self.CM.debug("Resource %s not served anywhere (Inactive nodes: %s)" 
+                              % (resource.id, repr(self.inactive_nodes)))
 
         if resource.managed == "0":
             self.CM.log("Resource %s not managed: faking success" % resource.id)
