@@ -352,6 +352,8 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 			add_hash_param(mon->meta, XML_LRM_ATTR_INTERVAL, interval);
 			add_hash_param(mon->meta, XML_LRM_ATTR_TASK, name);
 
+			local_key = NULL;
+
 			switch(rsc->role) {
 			    case RSC_ROLE_SLAVE:
 			    case RSC_ROLE_STARTED:
@@ -361,12 +363,13 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 				} else if(rsc->next_role == RSC_ROLE_STOPPED) {
 				    local_key = stop_key(rsc);
 				}
+				
 				break;
 			    case RSC_ROLE_MASTER:
 				local_key = demote_key(rsc);
 				break;
 			    default:
-				local_key = NULL;
+				break;
 			}
 
 			if(local_key) {
@@ -762,7 +765,8 @@ static GListPtr find_actions_by_task(GListPtr actions, resource_t *rsc, const ch
 	char *tmp = NULL;
 	char *task = NULL;
 	int interval = 0;
-	parse_op_key(original_key, &tmp, &task, &interval);
+	CRM_CHECK(parse_op_key(original_key, &tmp, &task, &interval),
+		  crm_err("search key: %s", original_key); return NULL);
 	
 	key = generate_op_key(rsc->id, task, interval);
 	list = find_actions(actions, key, NULL);
