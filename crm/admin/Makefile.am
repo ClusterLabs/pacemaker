@@ -31,7 +31,7 @@ COMMONLIBS	= 					\
 		$(GLIBLIB)						\
 		$(CURSESLIBS)						\
 		$(CLUSTERLIBS)						\
-		$(LIBRT)
+		$(LIBRT) $(GNUTLSLIBS)
 
 
 halib_PYTHON		= crm_primitive.py crm_utils.py crm_commands.py
@@ -54,7 +54,7 @@ crm_uuid_SOURCES	= crm_uuid.c
 crm_uuid_LDADD		= $(GLIBLIB)
 
 cibadmin_SOURCES	= cibadmin.c
-cibadmin_LDADD		= $(COMMONLIBS)
+cibadmin_LDADD		= $(COMMONLIBS) 
 
 ccm_tool_SOURCES	= ccm_epoche.c
 ccm_tool_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \

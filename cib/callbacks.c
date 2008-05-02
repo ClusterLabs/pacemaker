@@ -917,7 +917,6 @@ cib_process_request(
 		}		
 	}
 	crm_debug_3("processing response cases");
-	crm_debug("Notify: %d", local_notify);
 	
 	if(local_notify) {
 		const char *client_id = crm_element_value(request, F_CIB_CLIENTID);

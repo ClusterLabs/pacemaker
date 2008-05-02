@@ -188,4 +188,7 @@ extern gboolean is_set_any(long long action_list, long long action);
 extern gboolean is_openais_cluster(void);
 extern gboolean is_heartbeat_cluster(void);
 
+extern char *cib_recv_remote_msg(void *session);
+extern void cib_send_remote_msg(void *session, xmlNode *msg);
+
 #endif

@@ -31,7 +31,7 @@ COMMONLIBS	= 					\
 		$(GLIBLIB)						\
 		$(CURSESLIBS)						\
 		$(CLUSTERLIBS)						\
-		$(LIBRT)
+		$(LIBRT) $(GNUTLSLIBS)
 
 ## libraries
 lib_LTLIBRARIES	= libpengine.la

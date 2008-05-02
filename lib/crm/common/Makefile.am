@@ -44,7 +44,7 @@ libcrmcluster_la_LDFLAGS = -version-info 1:0:0
 CFLAGS		= $(NON_FATAL_CFLAGS)
 
 libcrmcommon_la_SOURCES	= ipc.c utils.c xml.c ctrl.c iso8601.c \
-			iso8601_fields.c
+			iso8601_fields.c remote.c
 
 libcrmcommon_la_LDFLAGS	= -version-info 2:0:0
 

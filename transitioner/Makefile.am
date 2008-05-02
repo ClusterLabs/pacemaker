@@ -25,9 +25,7 @@ halibdir	= $(libdir)/@HB_PKG@
 COMMONLIBS	=  							\
 		$(top_builddir)/lib/crm/common/libcrmcommon.la 		\
 		$(top_builddir)/lib/crm/cib/libcib.la	 		\
-		$(CLUSTERLIBS)						\
-		$(GLIBLIB)						\
-		$(LIBRT)
+		$(CLUSTERLIBS) $(GLIBLIB) $(LIBRT) $(GNUTLSLIBS)
 
 ## binary progs
 halib_PROGRAMS	= tengine ttest

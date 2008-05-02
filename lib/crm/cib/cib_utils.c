@@ -659,11 +659,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	    /* crm_log_xml_debug(scratch, "newest"); */
 	    
 	    if(manage_counters && *config_changed) {
-		crm_debug("Config changed");
 		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);
 		cib_update_counter(scratch, XML_ATTR_GENERATION, FALSE);
 	    } else if(manage_counters) {
-		crm_debug("Status changed");
 		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
 	    }
 

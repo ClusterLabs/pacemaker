@@ -39,128 +39,28 @@
 #endif
 
 int init_remote_listener(int port);
-char *cib_recv_remote_msg(void *session);
-void cib_send_remote_msg(void *session, xmlNode *msg);
-
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  define DH_BITS 1024
-const int tls_kx_order[] = {
-	  GNUTLS_KX_ANON_DH,
-	  GNUTLS_KX_DHE_RSA,
-	  GNUTLS_KX_DHE_DSS,
-	  GNUTLS_KX_RSA,
-	0
-};
 gnutls_dh_params dh_params;
-gnutls_anon_server_credentials anon_cred;
-char *cib_send_tls(gnutls_session *session, xmlNode *msg);
-char *cib_recv_tls(gnutls_session *session);
+extern gnutls_anon_server_credentials anon_cred_s;
+static void debug_log(int level, const char *str)
+{
+	fputs (str, stderr);
+}
+extern gnutls_session *create_tls_session(int csock, int type);
+
 #endif
 
 extern int num_clients;
 int authenticate_user(const char* user, const char* passwd);
 gboolean cib_remote_listen(int ssock, gpointer data);
 gboolean cib_remote_msg(int csock, gpointer data);
-char *cib_send_plaintext(int sock, xmlNode *msg);
-char *cib_recv_plaintext(int sock);
 
 extern void cib_process_request(
 	xmlNode *request, gboolean privileged, gboolean force_synchronous,
 	gboolean from_peer, cib_client_t *cib_client);
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
-static void debug_log(int level, const char *str)
-{
-	fputs (str, stderr);
-}
-
-static gnutls_session *
-create_tls_session(int csock)
-{
-	int rc = 0;
-	gnutls_session                 *session;
-	session = (gnutls_session*)gnutls_malloc(sizeof(gnutls_session));
-
-	gnutls_init(session, GNUTLS_SERVER);
-	gnutls_set_default_priority(*session);
- 	gnutls_kx_set_priority (*session, tls_kx_order);
-	gnutls_credentials_set(*session, GNUTLS_CRD_ANON, anon_cred);
-	gnutls_transport_set_ptr(*session,
-				 (gnutls_transport_ptr) GINT_TO_POINTER(csock));
-	do {
-		rc = gnutls_handshake (*session);
-	} while (rc == GNUTLS_E_INTERRUPTED || rc == GNUTLS_E_AGAIN);
-
-	if (rc < 0) {
-		crm_err("Handshake failed: %s", gnutls_strerror(rc));
-		gnutls_deinit(*session);
- 		gnutls_free(session);
-		return NULL;
-	}
-	return session;
-}
-
-char*
-cib_send_tls(gnutls_session *session, xmlNode *msg)
-{
-	char *xml_text = NULL;
-	msg->name = xmlCharStrdup("cib_result");
-	xml_text = dump_xml_unformatted(msg);
-	if(xml_text != NULL) {
-		int len = strlen(xml_text);
-		len++; /* null char */
-		crm_debug_3("Message size: %d", len);
-		gnutls_record_send (*session, xml_text, len);
-	}
-	crm_free(xml_text);
-	return NULL;
-	
-}
-
-char*
-cib_recv_tls(gnutls_session *session)
-{
-	int len = 0;
-	char* buf = NULL;
-	int chunk_size = 512;
-
-	if (session == NULL) {
-		return NULL;
-	}
-
-	crm_malloc0(buf, chunk_size);
-	
-	while(1) {
-		int rc = gnutls_record_recv(*session, buf+len, chunk_size);
-		if (rc == 0) {
-			if(len == 0) {
-				goto bail;
-			}
-			return buf;
-
-		} else if(rc > 0 && rc < chunk_size) {
-			return buf;
-
-		} else if(rc == chunk_size) {
-			len += chunk_size;
-			crm_realloc(buf, len);
-			CRM_ASSERT(buf != NULL);
-		}
-
-		if(rc < 0
-		   && rc != GNUTLS_E_INTERRUPTED
-		   && rc != GNUTLS_E_AGAIN) {
-			cl_perror("Error receiving message: %d", rc);
-			goto bail;
-		}
-	}
-  bail:
-	crm_free(buf);
-	return NULL;
-	
-}
-#endif
 
 #define ERROR_SUFFIX "  Shutting down remote listener"
 int
@@ -182,8 +82,8 @@ init_remote_listener(int port)
 	gnutls_global_set_log_function (debug_log);
 	gnutls_dh_params_init(&dh_params);
 	gnutls_dh_params_generate2(dh_params, DH_BITS);
-	gnutls_anon_allocate_server_credentials (&anon_cred);
-	gnutls_anon_set_server_dh_params (anon_cred, dh_params);
+	gnutls_anon_allocate_server_credentials (&anon_cred_s);
+	gnutls_anon_set_server_dh_params (anon_cred_s, dh_params);
 #else
 	crm_warn("Starting a _plain_text_ listener on port %d.", port);	
 #endif
@@ -287,7 +187,7 @@ cib_remote_listen(int ssock, gpointer data)
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 	/* create gnutls session for the server socket */
-	session = create_tls_session(csock);
+	session = create_tls_session(csock, GNUTLS_SERVER);
 	if (session == NULL) {
 		crm_err("TLS session creation failed");
 		close(csock);
@@ -479,9 +379,13 @@ construct_pam_passwd(int n, const struct pam_message **msg,
 			case PAM_PROMPT_ECHO_ON:
 				reply[i].resp = passwd;
 				break;
-			default:
-/* 			case PAM_ERROR_MSG: */
-/* 			case PAM_TEXT_INFO: */
+ 			case PAM_ERROR_MSG:
+			    crm_err("PAM error: %s", msg[i]->msg);
+			    break;
+ 			case PAM_TEXT_INFO:
+			    crm_info("PAM info: %s", msg[i]->msg);
+			    break;
+		    default:
 				crm_err("Unhandled message type: %d",
 					msg[i]->msg_style);
 				goto bail;
@@ -532,82 +436,5 @@ authenticate_user(const char* user, const char* passwd)
 	rc = pam_end (handle, rc);
 #endif
 	return pass;
-}
-
-char*
-cib_send_plaintext(int sock, xmlNode *msg)
-{
-	char *xml_text = NULL;
-	msg->name = xmlCharStrdup("cib_result");
-	xml_text = dump_xml_unformatted(msg);
-	if(xml_text != NULL) {
-		int rc = 0;
-		int len = strlen(xml_text);
-		len++; /* null char */
-		crm_debug_3("Message size: %d", len);
-		rc = write (sock, xml_text, len);
-		CRM_CHECK(len == rc,
-			  crm_warn("Wrote %d of %d bytes", rc, len));
-	}
-	crm_free(xml_text);
-	return NULL;
-	
-}
-
-char*
-cib_recv_plaintext(int sock)
-{
-	int len = 0;
-	char* buf = NULL;
-	int chunk_size = 512;
-
-	crm_malloc0(buf, chunk_size);
-	
-	while(1) {
-		int rc = recv(sock, buf+len, chunk_size, 0);
-		if (rc == 0) {
-			if(len == 0) {
-				goto bail;
-			}
-			return buf;
-
-		} else if(rc > 0 && rc < chunk_size) {
-			return buf;
-
-		} else if(rc == chunk_size) {
-			len += chunk_size;
-			crm_realloc(buf, len);
-			CRM_ASSERT(buf != NULL);
-		}
-
-		if(rc < 0 && errno != EINTR) {
-			cl_perror("Error receiving message: %d", rc);
-			goto bail;
-		}
-	}
-  bail:
-	crm_free(buf);
-	return NULL;
-	
-}
-
-void
-cib_send_remote_msg(void *session, xmlNode *msg)
-{
-#ifdef HAVE_GNUTLS_GNUTLS_H
-	cib_send_tls(session, msg);
-#else
-	cib_send_plaintext(GPOINTER_TO_INT(session), msg);
-#endif
-}
-
-char *
-cib_recv_remote_msg(void *session)
-{
-#ifdef HAVE_GNUTLS_GNUTLS_H
-	return cib_recv_tls(session);
-#else
-	return cib_recv_plaintext(GPOINTER_TO_INT(session));
-#endif
 }
 

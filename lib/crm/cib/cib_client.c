@@ -221,6 +221,30 @@ cib_new(void)
 	return cib_file_new(file);
     }
 
+    if(getenv("CIB_port")) {
+	const char *server = getenv("CIB_server");
+	const char *user = getenv("CIB_user");
+	const char *pass = getenv("CIB_passwd");
+	const char *port_s = getenv("CIB_port");
+	int port = crm_parse_int(port_s, NULL);
+
+	if(user == NULL) {
+	    user = getenv("USER");
+	    crm_info("Defaulting to current user: %s", user);
+	}
+
+	if(server == NULL) {
+	    server = "localhost";;
+	    crm_info("Defaulting to localhost");
+	}
+
+	if(pass == NULL) {
+	    crm_err("TODO: Read this from stdin (with no local echo)");
+	}
+
+	return cib_remote_new(server, user, pass, port);
+    }
+    
     return cib_native_new();
 }
 

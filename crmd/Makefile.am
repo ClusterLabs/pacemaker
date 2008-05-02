@@ -28,8 +28,7 @@ COMMONLIBS	= 					\
 		$(top_builddir)/lib/crm/pengine/libpe_rules.la	\
 		$(top_builddir)/lib/crm/cib/libcib.la			\
 		-lplumb							\
-		$(GLIBLIB)						\
-		$(LIBRT)
+		$(GLIBLIB) $(LIBRT) $(GNUTLSLIBS)
 
 ## binary progs
 halib_PROGRAMS	= crmd atest

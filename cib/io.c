@@ -613,7 +613,7 @@ activateCibXml(xmlNode *new_cib, gboolean to_disk)
 	int error_code = cib_ok;
 	xmlNode *saved_cib = the_cib;
 
-	crm_debug("Activating new CIB");
+	crm_debug_2("Activating new CIB");
 	
 	crm_log_xml_debug_4(new_cib, "Attempting to activate CIB");
 	update_counters(__FILE__, __FUNCTION__, new_cib);
@@ -651,7 +651,7 @@ activateCibXml(xmlNode *new_cib, gboolean to_disk)
 		crm_debug("Triggering CIB write");
 		G_main_set_trigger(cib_writer);
 	} else {
-	    crm_debug("disk: %d, writes: %d", to_disk, cib_writes_enabled);
+	    crm_debug_3("disk: %d, writes: %d", to_disk, cib_writes_enabled);
 	}
 	
 	if(the_cib != saved_cib && the_cib != new_cib) {
