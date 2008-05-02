@@ -330,13 +330,13 @@ cib_native_inputfd(cib_t* cib)
 	return ch->ops->get_recv_select_fd(ch);
 }
 
-static xmlNode *
+xmlNode *
 cib_create_op(
 	int call_id, const char *op, const char *host, const char *section,
 	xmlNode *data, int call_options) 
 {
 	int  rc = HA_OK;
-	xmlNode *op_msg = create_xml_node(NULL, "cib-op");
+	xmlNode *op_msg = create_xml_node(NULL, "cib_command");
 	CRM_CHECK(op_msg != NULL, return NULL);
 
 	crm_xml_add(op_msg, F_XML_TAGNAME, "cib_command");
@@ -528,21 +528,15 @@ cib_native_perform_op(
 	    return cib_remote_timeout;
 	}
 
-	if(op_reply == NULL) {
-		if(IPC_ISRCONN(native->command_channel) == FALSE) {
-			crm_err("No reply message - disconnected - %d",
-				native->command_channel->ch_status);
-			cib->state = cib_disconnected;
-			return cib_not_connected;
-		}		
-		crm_err("No reply message - empty - %d", rc);
-		return cib_reply_failed;
-	}
-	
 	if(IPC_ISRCONN(native->command_channel) == FALSE) {
 		crm_err("CIB disconnected: %d", 
 			native->command_channel->ch_status);
 		cib->state = cib_disconnected;
+	}
+	
+	if(op_reply == NULL) {
+		crm_err("No reply message - empty - %d", rc);
+		return cib_reply_failed;
 	}
 	
 	crm_debug_3("Syncronous reply recieved");

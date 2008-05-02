@@ -57,5 +57,8 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	       gboolean manage_counters, gboolean *config_changed,
 	       xmlNode *current_cib, xmlNode **result_cib, xmlNode **output);
 
+extern xmlNode *cib_create_op(
+    int call_id, const char *op, const char *host, const char *section,
+    xmlNode *data, int call_options);
 
 #endif

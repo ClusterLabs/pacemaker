@@ -159,7 +159,6 @@ cib_remote_listen(int ssock, gpointer data)
 	int lpc = 0;
 	int csock;
 	unsigned laddr;
-	char *msg = NULL;
 	struct sockaddr_in addr;
 #ifdef HAVE_GNUTLS_GNUTLS_H
 	gnutls_session *session = NULL;
@@ -198,17 +197,14 @@ cib_remote_listen(int ssock, gpointer data)
 	do {
 		crm_debug_2("Iter: %d", lpc++);
 #ifdef HAVE_GNUTLS_GNUTLS_H
-		msg = cib_recv_remote_msg(session);
+		login = cib_recv_remote_msg(session);
 #else
-		msg = cib_recv_remote_msg(GINT_TO_POINTER(csock));
+		login = cib_recv_remote_msg(GINT_TO_POINTER(csock));
 #endif
 		sleep(1);
 		
-	} while(msg == NULL && lpc < 10);
+	} while(login == NULL && lpc < 10);
 	
-	/* convert to xml */
-	login = string2xml(msg);
-
 	crm_log_xml_info(login, "Login: ");
 	if(login == NULL) {
 		goto bail;
@@ -282,15 +278,10 @@ cib_remote_msg(int csock, gpointer data)
 	const char *value = NULL;
 	xmlNode *command = NULL;
 	cib_client_t *client = data;
-	char* msg = cib_recv_remote_msg(client->channel);
-	if(msg == NULL) {
-		return FALSE;
-	}
-
-	command = string2xml(msg);
+	command = cib_recv_remote_msg(client->channel);
 	if(command == NULL) {
-		crm_info("Could not parse command: %s", msg);
-		goto bail;
+	    crm_info("Could not parse command");
+	    return FALSE;
 	}
 	
 	crm_log_xml(LOG_MSG+1, "Command: ", command);
@@ -351,7 +342,6 @@ cib_remote_msg(int csock, gpointer data)
  	cib_process_request(command, TRUE, TRUE, FALSE, client);
   bail:
 	free_xml(command);
-	crm_free(msg);
 	return TRUE;
 }
 
