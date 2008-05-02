@@ -41,6 +41,7 @@
 #endif
 
 #include <arpa/inet.h>
+#include <sgtty.h>
 
 #define DH_BITS 1024
 extern gnutls_anon_client_credentials anon_cred_c;
@@ -111,6 +112,24 @@ cib_remote_new (const char *server, const char *user, const char *passwd, int po
 
     if(passwd) {
 	private->passwd = crm_strdup(passwd);
+
+    } else {
+	struct termios settings;
+	int rc;
+	
+	rc = tcgetattr (0, &settings);
+	settings.c_lflag &= ~ECHO;
+	rc = tcsetattr (0, TCSANOW, &settings);
+
+	
+	fprintf(stdout, "Password: ");
+	crm_malloc0(private->passwd, 1024);
+	scanf("%s", private->passwd);
+	fprintf(stdout, "\n");
+	/* fprintf(stderr, "entered: '%s'\n", buffer); */
+
+	settings.c_lflag |= ECHO;
+	rc = tcsetattr (0, TCSANOW, &settings);
     }
     
     private->port = port;

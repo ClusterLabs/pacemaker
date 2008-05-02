@@ -238,10 +238,6 @@ cib_new(void)
 	    crm_info("Defaulting to localhost");
 	}
 
-	if(pass == NULL) {
-	    crm_err("TODO: Read this from stdin (with no local echo)");
-	}
-
 	return cib_remote_new(server, user, pass, port);
     }
     
