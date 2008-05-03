@@ -96,18 +96,35 @@ static char*
 cib_send_tls(gnutls_session *session, xmlNode *msg)
 {
 	char *xml_text = NULL;
-	const char *name = crm_element_name(msg);
 #if 0
+	const char *name = crm_element_name(msg);
 	if(safe_str_neq(name, "cib_command")) {
 	    msg->name = xmlCharStrdup("cib_result");
 	}
 #endif
 	xml_text = dump_xml_unformatted(msg);
 	if(xml_text != NULL) {
-		int len = strlen(xml_text);
-		len++; /* null char */
-		crm_debug_3("Message size: %d", len);
-		gnutls_record_send (*session, xml_text, len);
+	    char *unsent = xml_text;
+	    int len = strlen(xml_text);
+	    int rc = 0;
+	    
+	    len++; /* null char */
+	    crm_debug_3("Message size: %d", len);
+
+	  retry:
+		rc = gnutls_record_send (*session, unsent, len);
+		crm_debug("Sent %d bytes", rc);
+		if(rc == GNUTLS_E_INTERRUPTED || rc == GNUTLS_E_AGAIN) {
+		    crm_debug("Retry");
+		    goto retry;
+
+		} else if(rc < len) {
+		    crm_debug("Only sent %d of %d bytes", rc, len);
+		    len -= rc;
+		    unsent += rc;
+		    goto retry;
+		}
+		
 	}
 	crm_free(xml_text);
 	return NULL;
