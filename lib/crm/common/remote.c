@@ -147,7 +147,6 @@ cib_recv_tls(gnutls_session *session)
 	crm_malloc0(tls_buf, chunk_size);
 	
 	while(1) {
-	    crm_debug("Creating more space: %d += %d: %.60s", len, chunk_size, tls_buf);
 		rc = gnutls_record_recv(*session, tls_buf+last, chunk_size);
 		if (rc == 0) {
 			if(len == 0) {
@@ -159,7 +158,7 @@ cib_recv_tls(gnutls_session *session)
 			return tls_buf;
 
 		} else if(rc == chunk_size) {
-		    crm_debug("Creating more space: %d += %d: %.60s", len, chunk_size, tls_buf);
+			crm_debug("Creating more space: %d += %d: %.60s", len, chunk_size, tls_buf);
 			last = len;
 			len += chunk_size;
 			crm_realloc(tls_buf, len);
@@ -261,7 +260,6 @@ cib_recv_remote_msg(void *session)
 #else
     reply = cib_recv_plaintext(GPOINTER_TO_INT(session));
 #endif
-    crm_debug("Got: '%.120s'", reply);
     if(reply == NULL || strlen(reply) == 0) {
 	crm_err("Empty reply");
     } else {
