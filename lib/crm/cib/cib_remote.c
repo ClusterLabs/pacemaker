@@ -99,7 +99,7 @@ cib_remote_new (const char *server, const char *user, const char *passwd, int po
 
     crm_malloc0(private, sizeof(cib_remote_opaque_t));
 
-    cib->variant = cib_file;
+    cib->variant = cib_remote;
     cib->variant_opaque = private;
 
     if(server) {
@@ -112,24 +112,6 @@ cib_remote_new (const char *server, const char *user, const char *passwd, int po
 
     if(passwd) {
 	private->passwd = crm_strdup(passwd);
-
-    } else {
-	struct termios settings;
-	int rc;
-	
-	rc = tcgetattr (0, &settings);
-	settings.c_lflag &= ~ECHO;
-	rc = tcsetattr (0, TCSANOW, &settings);
-
-	
-	fprintf(stdout, "Password: ");
-	crm_malloc0(private->passwd, 1024);
-	scanf("%s", private->passwd);
-	fprintf(stdout, "\n");
-	/* fprintf(stderr, "entered: '%s'\n", buffer); */
-
-	settings.c_lflag |= ECHO;
-	rc = tcsetattr (0, TCSANOW, &settings);
     }
     
     private->port = port;
@@ -286,6 +268,25 @@ cib_remote_signon(cib_t* cib, const char *name, enum cib_conn_type type)
     int rc = cib_ok;
     cib_remote_opaque_t *private = cib->variant_opaque;
 
+    if(private->passwd == NULL) {
+	struct termios settings;
+	int rc;
+	
+	rc = tcgetattr (0, &settings);
+	settings.c_lflag &= ~ECHO;
+	rc = tcsetattr (0, TCSANOW, &settings);
+
+	
+	fprintf(stdout, "Password: ");
+	crm_malloc0(private->passwd, 1024);
+	scanf("%s", private->passwd);
+	fprintf(stdout, "\n");
+	/* fprintf(stderr, "entered: '%s'\n", buffer); */
+
+	settings.c_lflag |= ECHO;
+	rc = tcsetattr (0, TCSANOW, &settings);
+    }
+    
     if(private->server == NULL || private->user == NULL) {
 	rc = cib_missing;
     } else {
@@ -505,7 +506,7 @@ cib_remote_perform_op(
 	}
 	
 	if(rc == cib_ok || rc == cib_not_master || rc == cib_master_timeout) {
-	    crm_log_xml(LOG_ERR, "passed", op_reply);
+	    crm_log_xml(LOG_DEBUG, "passed", op_reply);
 
 	} else {
 /* 	} else if(rc == cib_remote_timeout) { */
