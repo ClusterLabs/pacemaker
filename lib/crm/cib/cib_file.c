@@ -50,11 +50,7 @@ int cib_file_signon(cib_t* cib, const char *name, enum cib_conn_type type);
 int cib_file_signoff(cib_t* cib);
 int cib_file_free(cib_t* cib);
 
-static gboolean cib_file_msgready(cib_t* cib) { return FALSE; }
-static IPC_Channel *cib_file_channel(cib_t* cib) { return NULL; }
 static int cib_file_inputfd(cib_t* cib) { return cib_NOTSUPPORTED; }
-static int cib_file_rcvmsg(cib_t* cib, int blocking) { return cib_NOTSUPPORTED; }
-static gboolean cib_file_dispatch(IPC_Channel *channel, gpointer user_data) { return FALSE; }
 
 static int cib_file_set_connection_dnotify(
     cib_t *cib, void (*dnotify)(gpointer user_data))
@@ -89,11 +85,7 @@ cib_file_new (const char *cib_location)
     cib->cmds->signon     = cib_file_signon;
     cib->cmds->signoff    = cib_file_signoff;
     cib->cmds->free       = cib_file_free;
-    cib->cmds->channel    = cib_file_channel;
     cib->cmds->inputfd    = cib_file_inputfd;
-    cib->cmds->msgready   = cib_file_msgready;
-    cib->cmds->rcvmsg     = cib_file_rcvmsg;
-    cib->cmds->dispatch   = cib_file_dispatch;
 
     cib->cmds->register_callback = cib_file_register_callback;
     cib->cmds->set_connection_dnotify = cib_file_set_connection_dnotify;

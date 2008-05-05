@@ -57,9 +57,9 @@ int authenticate_user(const char* user, const char* passwd);
 gboolean cib_remote_listen(int ssock, gpointer data);
 gboolean cib_remote_msg(int csock, gpointer data);
 
-extern void cib_process_request(
-	xmlNode *request, gboolean privileged, gboolean force_synchronous,
-	gboolean from_peer, cib_client_t *cib_client);
+extern void cib_common_callback_worker(
+    xmlNode *op_request, cib_client_t *cib_client, gboolean force_synchronous, gboolean privileged);
+
 
 
 #define ERROR_SUFFIX "  Shutting down remote listener"
@@ -151,8 +151,6 @@ check_group_membership(const char* usr, const char* grp)
 	return FALSE;
 }
 
-#define WELCOME "<cib_result cib_op=\"welecome\"/>"
-
 gboolean
 cib_remote_listen(int ssock, gpointer data)
 {
@@ -234,11 +232,13 @@ cib_remote_listen(int ssock, gpointer data)
 		goto bail;
 	}
 
+	
 	/* send ACK */
 	crm_malloc0(new_client, sizeof(cib_client_t));
 	num_clients++;
 	new_client->channel_name = "remote";
-
+	new_client->name = crm_element_value_copy(login, "name");
+	
 	cl_uuid_generate(&client_id);
 	cl_uuid_unparse(&client_id, uuid_str);
 
@@ -248,16 +248,22 @@ cib_remote_listen(int ssock, gpointer data)
 	new_client->callback_id = NULL;
 #ifdef HAVE_GNUTLS_GNUTLS_H
 	new_client->channel = (void*)session;
-	gnutls_record_send (*session, WELCOME, sizeof (WELCOME));
 #else
 	new_client->channel = GINT_TO_POINTER(csock);
-	write(csock, WELCOME, sizeof (WELCOME));
 #endif
 	new_client->source = (void*)G_main_add_fd(
 		G_PRIORITY_HIGH, csock, FALSE, cib_remote_msg, new_client,
 		default_ipc_connection_destroy);
 
 	g_hash_table_insert(client_list, new_client->id, new_client);
+
+	free_xml(login);
+	login = create_xml_node(NULL, "cib_result");
+	crm_xml_add(login, F_CIB_OPERATION, CRM_OP_REGISTER);
+	crm_xml_add(login, F_CIB_CLIENTID,  new_client->id);
+	cib_send_remote_msg(new_client->channel, login);
+	free_xml(login);
+	
 	return TRUE;
 
   bail:
@@ -267,14 +273,13 @@ cib_remote_listen(int ssock, gpointer data)
 	gnutls_free(session);
 #endif
 	close(csock);
+	free_xml(login);
 	return TRUE;
 }
 
 gboolean
 cib_remote_msg(int csock, gpointer data)
 {
-	cl_uuid_t call_id;
-	char call_uuid[UU_UNPARSE_SIZEOF];
 	const char *value = NULL;
 	xmlNode *command = NULL;
 	cib_client_t *client = data;
@@ -284,62 +289,60 @@ cib_remote_msg(int csock, gpointer data)
 	    return FALSE;
 	}
 	
-	crm_log_xml(LOG_MSG+1, "Command: ", command);
+	crm_log_xml(LOG_MSG+1, "Raw command: ", command);
 
 	value = crm_element_name(command);
 	if(safe_str_neq(value, "cib_command")) {
 		goto bail;
 	}
 
-	cl_uuid_generate(&call_id);
-	cl_uuid_unparse(&call_id, call_uuid);
-
-	crm_xml_add(command, F_TYPE, T_CIB);
-	crm_xml_add(command, F_CIB_CLIENTID, client->id);
-	crm_xml_add(command, F_CIB_CLIENTNAME, client->name);
-	crm_xml_add(command, F_CIB_CALLID, call_uuid);
-	if(crm_element_value(command, F_CIB_CALLOPTS) == NULL) {
-		crm_xml_add_int(command, F_CIB_CALLOPTS, 0);
+	if(client->name == NULL) {
+	    value = crm_element_value(command, F_CLIENTNAME);
+	    if(value == NULL) {
+		client->name = crm_strdup(client->id);
+	    } else {
+		client->name = crm_strdup(value);
+	    }
 	}
-	
-	crm_log_xml(LOG_MSG, "Fixed Command: ", command);
 
+	if(client->callback_id == NULL) {
+	    value = crm_element_value(command, F_CIB_CALLBACK_TOKEN);
+	    if(value != NULL) {
+		client->callback_id = crm_strdup(value);
+		crm_debug_2("Callback channel for %s is %s",
+			    client->id, client->callback_id);
+		
+	    } else {
+		client->callback_id = crm_strdup(client->id);			
+	    }
+	}
+
+	
 	/* unset dangerous options */
 	xml_remove_prop(command, F_ORIG);
 	xml_remove_prop(command, F_CIB_HOST);
 	xml_remove_prop(command, F_CIB_GLOBAL_UPDATE);
+
+	crm_xml_add(command, F_TYPE, T_CIB);
+	crm_xml_add(command, F_CIB_CLIENTID, client->id);
+	crm_xml_add(command, F_CIB_CLIENTNAME, client->name);
 	
-	value = crm_element_value(command, F_CIB_OPERATION);
-	if(safe_str_eq(value, T_CIB_NOTIFY) ) {
-	    /* Update the notify filters for this client */
-	    int on_off = 0;
-	    const char *on_off_s = crm_element_value(command, F_CIB_NOTIFY_ACTIVATE);
-	    value = crm_element_value(command, F_CIB_NOTIFY_TYPE);
-	    on_off = crm_parse_int(on_off_s, "0");
-	    
-	    crm_info("Setting %s callbacks for %s: %s",
-		     value, client->name, on_off?"on":"off");
-	    
-	    if(safe_str_eq(value, T_CIB_POST_NOTIFY)) {
-		client->post_notify = on_off;
-		
-	    } else if(safe_str_eq(value, T_CIB_PRE_NOTIFY)) {
-		client->pre_notify = on_off;
-		
-	    } else if(safe_str_eq(value, T_CIB_UPDATE_CONFIRM)) {
-		client->confirmations = on_off;
-		
-	    } else if(safe_str_eq(value, T_CIB_DIFF_NOTIFY)) {
-		client->diffs = on_off;
-		
-	    } else if(safe_str_eq(value, T_CIB_REPLACE_NOTIFY)) {
-		client->replace = on_off;
-		
-	    }
-	    goto bail;
+	if(crm_element_value(command, F_CIB_CALLID) == NULL) {
+	    cl_uuid_t call_id;
+	    char call_uuid[UU_UNPARSE_SIZEOF];
+
+	    /* fix the command */
+	    cl_uuid_generate(&call_id);
+	    cl_uuid_unparse(&call_id, call_uuid);
+	    crm_xml_add(command, F_CIB_CALLID, call_uuid);
+	}
+	
+	if(crm_element_value(command, F_CIB_CALLOPTS) == NULL) {
+		crm_xml_add_int(command, F_CIB_CALLOPTS, 0);
 	}
 
- 	cib_process_request(command, TRUE, TRUE, FALSE, client);
+	crm_log_xml(LOG_MSG, "Remote command: ", command);
+	cib_common_callback_worker(command, client, FALSE, TRUE);
   bail:
 	free_xml(command);
 	return TRUE;

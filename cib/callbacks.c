@@ -400,10 +400,6 @@ do_local_notify(xmlNode *notify_src, const char *client_id,
 	if(client_obj == NULL) {
 		local_rc = cib_reply_failed;
 		
-	} else if (crm_str_eq(client_obj->channel_name, "remote", FALSE)) {
-		crm_debug("Send message over TLS connection");
-		cib_send_remote_msg(client_obj->channel, client_reply);
-		
 	} else {
 		const char *client_id = client_obj->callback_id;
 		crm_debug_2("Sending %ssync response to %s %s",
@@ -1033,6 +1029,9 @@ send_via_callback_channel(xmlNode *msg, const char *token)
 			crm_warn("Cannot find client for token %s", token);
 			rc = cib_client_gone;
 			
+		} else if (crm_str_eq(hash_client->channel_name, "remote", FALSE)) {
+		    /* just hope it's alive */
+		    
 		} else if(hash_client->channel == NULL) {
 			crm_err("Cannot find channel for client %s", token);
 			rc = cib_client_corrupt;
@@ -1067,12 +1066,16 @@ send_via_callback_channel(xmlNode *msg, const char *token)
 	}
 	
 	if(rc == cib_ok) {
-		crm_debug_3("Delivering reply to client %s", token);
-		if(send_ipc_message(hash_client->channel, msg) == FALSE) {
-			crm_warn("Delivery of reply to client %s/%s failed",
-				hash_client->name, token);
-			rc = cib_reply_failed;
-		}
+	    crm_debug_3("Delivering reply to client %s (%s)",
+			token, hash_client->channel_name);
+	    if (crm_str_eq(hash_client->channel_name, "remote", FALSE)) {
+		cib_send_remote_msg(hash_client->channel, msg);
+		
+	    } else if(send_ipc_message(hash_client->channel, msg) == FALSE) {
+		crm_warn("Delivery of reply to client %s/%s failed",
+			 hash_client->name, token);
+		rc = cib_reply_failed;
+	    }
 	}
 	
 	return rc;

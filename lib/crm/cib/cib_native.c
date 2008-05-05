@@ -60,10 +60,6 @@ int cib_native_inputfd(cib_t* cib);
 int cib_native_rcvmsg(cib_t* cib, int blocking);
 int cib_native_set_connection_dnotify(cib_t *cib, void (*dnotify)(gpointer user_data));
 
-void cib_native_callback(cib_t *cib, xmlNode *msg);
-void cib_native_notify(gpointer data, gpointer user_data);
-int  cib_native_register_callback(cib_t* cib, const char *callback, int enabled);
-
 cib_t*
 cib_native_new (void)
 {
@@ -83,11 +79,7 @@ cib_native_new (void)
 	cib->cmds->signon     = cib_native_signon;
 	cib->cmds->signoff    = cib_native_signoff;
 	cib->cmds->free       = cib_native_free;
-	cib->cmds->channel    = cib_native_channel;
 	cib->cmds->inputfd    = cib_native_inputfd;
-	cib->cmds->msgready   = cib_native_msgready;
-	cib->cmds->rcvmsg     = cib_native_rcvmsg;
-	cib->cmds->dispatch   = cib_native_dispatch;
 
 	cib->cmds->register_callback = cib_native_register_callback;
 	cib->cmds->set_connection_dnotify = cib_native_set_connection_dnotify;
@@ -580,103 +572,6 @@ cib_native_rcvmsg(cib_t* cib, int blocking)
 	return 1;
 }
 
-void
-cib_native_callback(cib_t *cib, xmlNode *msg)
-{
-	int rc = 0;
-	int call_id = 0;
-	xmlNode *output = NULL;
-
-	cib_callback_client_t *blob = NULL;
-
-	cib_callback_client_t local_blob;
-
-	/* gcc4 had a point... make sure (at least) local_blob.callback
-	 *   is initialized before use
-	 */
-	local_blob.callback = NULL;
-	local_blob.user_data = NULL;
-	local_blob.only_success = FALSE;
-
-	crm_element_value_int(msg, F_CIB_CALLID, &call_id);
-	blob = g_hash_table_lookup(
-		cib_op_callback_table, GINT_TO_POINTER(call_id));
-	
-	if(blob != NULL) {
-		crm_debug_3("Callback found for call %d", call_id);
-/* 		local_blob.callback = blob->callback; */
-/* 		local_blob.user_data = blob->user_data; */
-/* 		local_blob.only_success = blob->only_success; */
-		local_blob = *blob;
-		blob = NULL;
-		
-		remove_cib_op_callback(call_id, FALSE);
-
-	} else {
-		crm_debug_3("No callback found for call %d", call_id);
-		local_blob.callback = NULL;
-	}
-
-	crm_element_value_int(msg, F_CIB_RC, &rc);
-	if(rc == cib_diff_resync) {
-	    /* This is an internal value that clients do not and should not care about */
-	    rc = cib_ok;
-	}
-
-	output = get_message_xml(msg, F_CIB_CALLDATA);
-	
-	if(local_blob.callback != NULL
-	   && (rc == cib_ok || local_blob.only_success == FALSE)) {
-		local_blob.callback(
-			msg, call_id, rc, output, local_blob.user_data);
-		
-	} else if(cib->op_callback == NULL && rc != cib_ok) {
-		crm_warn("CIB command failed: %s", cib_error2string(rc));
-		crm_log_xml(LOG_DEBUG, "Failed CIB Update", msg);
-	}
-	
-	if(cib->op_callback == NULL) {
-		crm_debug_3("No OP callback set, ignoring reply");
-	} else {
-		cib->op_callback(msg, call_id, rc, output);
-	}
-	crm_debug_4("OP callback activated.");
-}
-
-
-void
-cib_native_notify(gpointer data, gpointer user_data)
-{
-	xmlNode *msg = user_data;
-	cib_notify_client_t *entry = data;
-	const char *event = NULL;
-
-	if(msg == NULL) {
-		crm_warn("Skipping callback - NULL message");
-		return;
-	}
-
-	event = crm_element_value(msg, F_SUBTYPE);
-	
-	if(entry == NULL) {
-		crm_warn("Skipping callback - NULL callback client");
-		return;
-
-	} else if(entry->callback == NULL) {
-		crm_warn("Skipping callback - NULL callback");
-		return;
-
-	} else if(safe_str_neq(entry->event, event)) {
-		crm_debug_4("Skipping callback - event mismatch %p/%s vs. %s",
-			  entry, entry->event, event);
-		return;
-	}
-	
-	crm_debug_4("Invoking callback for %p/%s event...", entry, event);
-	entry->callback(event, msg);
-	crm_debug_4("Callback invoked...");
-}
-
 gboolean
 cib_native_dispatch(IPC_Channel *channel, gpointer user_data)
 {
@@ -750,14 +645,12 @@ int cib_native_set_connection_dnotify(
 	return cib_ok;
 }
 
-
 int
 cib_native_register_callback(cib_t* cib, const char *callback, int enabled) 
 {
 	xmlNode *notify_msg = create_xml_node(NULL, "cib-callback");
 	cib_native_opaque_t *native = cib->variant_opaque;
 
-	/* short term hack - should make this generic somehow */
 	crm_xml_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
 	crm_xml_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
 	crm_xml_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
