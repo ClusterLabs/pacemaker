@@ -226,7 +226,6 @@ typedef struct cib_api_operations_s
 		int (*set_connection_dnotify)(
 			cib_t *cib, void (*dnotify)(gpointer user_data));
 		
-		IPC_Channel *(*channel)(cib_t* cib);
 		int (*inputfd)(cib_t* cib);
 
 		int (*noop)(cib_t *cib, int call_options);
@@ -269,10 +268,6 @@ typedef struct cib_api_operations_s
 
 		int (*quit)(cib_t *cib,   int call_options);
 		
-		gboolean (*msgready)(cib_t* cib);
-		int (*rcvmsg)(cib_t* cib, int blocking);
-		gboolean (*dispatch)(IPC_Channel *channel, gpointer user_data);
-
 		int (*register_callback)(
 			cib_t* cib, const char *callback, int enabled);
 
