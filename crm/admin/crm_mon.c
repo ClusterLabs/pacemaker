@@ -299,16 +299,23 @@ gboolean
 mon_timer_popped(gpointer data)
 {
 	int rc = cib_ok;
-	int options = cib_scope_local;
-
+	int options = cib_scope_local|cib_sync_call;
+	xmlNode *output = NULL;
+	
 	if(timer_id > 0) {
 		Gmain_timeout_remove(timer_id);
 	}
 	
+	if(cib_conn == NULL) {
+		crm_debug_4("Creating CIB connection");
+		cib_conn = cib_new();
+		CRM_CHECK(cib_conn != NULL, return FALSE);
+	}
+
 	if(as_console) {
 #if CURSES_ENABLED
 		move(0, 0);
-		printw("Updating...\n");
+		printw("Updating... %d\n", cib_conn->variant);
 		clrtoeol();
 		refresh();
 #endif
@@ -317,16 +324,7 @@ mon_timer_popped(gpointer data)
 		crm_notice("Updating...");
 	}
 	
-	if(cib_conn == NULL) {
-		crm_debug_4("Creating CIB connection");
-		cib_conn = cib_new();
-	}
-
-	CRM_DEV_ASSERT(cib_conn != NULL);
-	if(crm_assert_failed) {
-		return FALSE;
-		
-	} else if(cib_conn->state != cib_connected_query){
+	if(cib_conn->state != cib_connected_query){
 		crm_debug_4("Connecting to the CIB");
 #if CURSES_ENABLED
 		if(as_console) {
@@ -335,6 +333,11 @@ mon_timer_popped(gpointer data)
 			refresh();
 		}
 #endif
+		
+		if(cib_conn->variant == cib_remote) {
+		    print_as("Password:");
+		}
+
 		if(cib_ok == cib_conn->cmds->signon(
 			   cib_conn, crm_system_name, cib_query)) {
 			failed_connections = 0;
@@ -350,6 +353,7 @@ mon_timer_popped(gpointer data)
 		}
 #if CURSES_ENABLED
 		if(as_console) {
+			move(0, 0);
 			printw("Querying...\n");
 			clrtoeol();
 			refresh();
@@ -357,8 +361,10 @@ mon_timer_popped(gpointer data)
 #endif
 	}
 	if(as_console) { blank_screen(); }
-	rc = cib_conn->cmds->query(cib_conn, NULL, NULL, options);
-	add_cib_op_callback(rc, FALSE, NULL, mon_update);
+	rc = cib_conn->cmds->query(cib_conn, NULL, &output, options);
+	mon_update(NULL, 0, rc, output, NULL);
+	free_xml(output);
+	/* add_cib_op_callback(rc, FALSE, NULL, mon_update); */
 	return FALSE;
 }
 
