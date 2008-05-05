@@ -320,7 +320,8 @@ mon_timer_popped(gpointer data)
 	    crm_notice("Updating...");
 	}
 	
-	if(cib_conn->state != cib_connected_query) {
+	if(cib_conn->state != cib_connected_query
+	    && cib_conn->state != cib_connected_command) {
 		crm_debug_4("Connecting to the CIB");
 		if(as_console) {
 			print_as("Signing on...\n");
