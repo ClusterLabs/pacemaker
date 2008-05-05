@@ -464,27 +464,17 @@ cib_init(void)
 
 	channel1 = crm_strdup(cib_channel_callback);
 	was_error = init_server_ipc_comms(
-		channel1, cib_client_connect_null,
+		channel1, cib_client_connect,
 		default_ipc_connection_destroy);
 
 	channel2 = crm_strdup(cib_channel_ro);
 	was_error = was_error || init_server_ipc_comms(
-		channel2, cib_client_connect_rw_ro,
+		channel2, cib_client_connect,
 		default_ipc_connection_destroy);
 
 	channel3 = crm_strdup(cib_channel_rw);
 	was_error = was_error || init_server_ipc_comms(
-		channel3, cib_client_connect_rw_ro,
-		default_ipc_connection_destroy);
-
-	channel4 = crm_strdup(cib_channel_rw_synchronous);
-	was_error = was_error || init_server_ipc_comms(
-		channel4, cib_client_connect_rw_synch,
-		default_ipc_connection_destroy);
-
-	channel5 = crm_strdup(cib_channel_ro_synchronous);
-	was_error = was_error || init_server_ipc_comms(
-		channel5, cib_client_connect_ro_synch,
+		channel3, cib_client_connect,
 		default_ipc_connection_destroy);
 
 	if(stand_alone) {

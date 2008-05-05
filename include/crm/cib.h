@@ -173,7 +173,7 @@ enum cib_section {
 #define F_CIB_SEENCOUNT	"cib_seen"
 #define F_CIB_TIMEOUT	"cib_timeout"
 #define F_CIB_UPDATE	"cib_update"
-#define F_CIB_CALLBACK_TOKEN	"cib_callback_token"
+#define F_CIB_CALLBACK_TOKEN	"cib_async_id"
 #define F_CIB_GLOBAL_UPDATE	"cib_update"
 #define F_CIB_UPDATE_RESULT	"cib_update_result"
 #define F_CIB_CLIENTNAME	"cib_clientname"

@@ -682,3 +682,102 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
     *result_cib = scratch;
     return rc;
 }
+
+int get_channel_token(IPC_Channel *ch, char **token) 
+{
+    int rc = cib_ok;
+    xmlNode *reg_msg = NULL;
+    const char *msg_type = NULL;
+    const char *tmp_ticket = NULL;
+    
+    CRM_CHECK(ch != NULL, return cib_missing);
+    CRM_CHECK(token != NULL, return cib_output_ptr);
+    
+    crm_debug_4("Waiting for msg on command channel");
+    
+    reg_msg = xmlfromIPC(ch, 0);
+    
+    if(ch->ops->get_chan_status(ch) != IPC_CONNECT) {
+	crm_err("No reply message - disconnected");
+	free_xml(reg_msg);
+	return cib_not_connected;
+	
+    } else if(reg_msg == NULL) {
+	crm_err("No reply message - empty");
+	return cib_reply_failed;
+    }
+    
+    msg_type = crm_element_value(reg_msg, F_CIB_OPERATION);
+    tmp_ticket = crm_element_value(reg_msg, F_CIB_CLIENTID);
+    
+    if(safe_str_neq(msg_type, CRM_OP_REGISTER) ) {
+	crm_err("Invalid registration message: %s", msg_type);
+	rc = cib_registration_msg;
+	
+    } else if(tmp_ticket == NULL) {
+	rc = cib_callback_token;
+
+    } else {
+	*token = crm_strdup(tmp_ticket);
+    }
+
+    free_xml(reg_msg);
+    return cib_ok;
+}
+
+
+xmlNode *
+cib_create_op(
+    int call_id, const char *token, const char *op, const char *host, const char *section,
+    xmlNode *data, int call_options) 
+{
+	int  rc = HA_OK;
+	xmlNode *op_msg = create_xml_node(NULL, "cib_command");
+	CRM_CHECK(op_msg != NULL, return NULL);
+	CRM_CHECK(token != NULL, return NULL);
+
+	crm_xml_add(op_msg, F_XML_TAGNAME, "cib_command");
+	
+	crm_xml_add(op_msg, F_TYPE, T_CIB);
+	crm_xml_add(op_msg, F_CIB_CALLBACK_TOKEN, token);
+	crm_xml_add(op_msg, F_CIB_OPERATION, op);
+	crm_xml_add(op_msg, F_CIB_HOST, host);
+	crm_xml_add(op_msg, F_CIB_SECTION, section);
+	crm_xml_add_int(op_msg, F_CIB_CALLID, call_id);
+	crm_debug_4("Sending call options: %.8lx, %d",
+		    (long)call_options, call_options);
+	crm_xml_add_int(op_msg, F_CIB_CALLOPTS, call_options);
+
+	if(data != NULL) {
+#if 0		
+		const char *tag = crm_element_name(data);
+		xmlNode *cib = data;
+		if(safe_str_neq(tag, XML_TAG_CIB)) {
+			cib = find_xml_node(data, XML_TAG_CIB, FALSE);
+			if(cib != NULL) {
+				tag = XML_TAG_CIB;
+			}
+		}
+		if(safe_str_eq(tag, XML_TAG_CIB)) {
+			const char *version = feature_set(cib);
+			crm_xml_add(cib, XML_ATTR_CIB_REVISION, version);
+		} else {
+			crm_info("Skipping feature check for %s tag", tag);
+		}
+#endif
+
+		add_message_xml(op_msg, F_CIB_CALLDATA, data);
+	}
+	
+	if (rc != HA_OK) {
+		crm_err("Failed to create CIB operation message");
+		crm_log_xml(LOG_ERR, "op", op_msg);
+		free_xml(op_msg);
+		return NULL;
+	}
+
+	if(call_options & cib_inhibit_bcast) {
+		CRM_CHECK((call_options & cib_scope_local), return NULL);
+	}
+	return op_msg;
+}

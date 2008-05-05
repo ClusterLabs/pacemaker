@@ -62,6 +62,7 @@ typedef struct cib_remote_opaque_s
 	char *user;
 	char *passwd;
 	gnutls_session* session;
+	char *token;
 	
 } cib_remote_opaque_t;
 
@@ -292,7 +293,7 @@ cib_remote_signon(cib_t* cib, const char *name, enum cib_conn_type type)
     } else {
 	rc = cib_tls_signon(cib);
     }
-    
+
     if(rc == cib_ok) {
 	fprintf(stderr, "%s: Opened connection to %s:%d\n", name, private->server, private->port);
 	cib->state = cib_connected_command;
@@ -395,7 +396,7 @@ cib_remote_perform_op(
 	}
 	
 	op_msg = cib_create_op(
-		cib->call_id, op, host, section, data, call_options);
+	    cib->call_id, private->token, op, host, section, data, call_options);
 	if(op_msg == NULL) {
 		return cib_create_msg;
 	}
