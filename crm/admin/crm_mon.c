@@ -53,7 +53,7 @@
 
 
 /* GMainLoop *mainloop = NULL; */
-#define OPTARGS	"V?i:nrh:cdp:s1wX:of"
+#define OPTARGS	"V?i:nrh:cdp:s1wX:oft"
 
 
 void usage(const char *cmd, int exit_status);
@@ -86,10 +86,13 @@ gboolean one_shot = FALSE;
 gboolean has_warnings = FALSE;
 gboolean print_failcount = FALSE;
 gboolean print_operations = FALSE;
+gboolean print_timing = FALSE;
 
 #if CURSES_ENABLED
 #  define print_as(fmt...) if(as_console) {	\
 		printw(fmt);			\
+		clrtoeol();			\
+		refresh();			\
 	} else {				\
 		fprintf(stdout, fmt);		\
 	}
@@ -114,6 +117,7 @@ main(int argc, char **argv)
 		{"inactive", 0, 0, 'r'},
 		{"failcounts", 0, 0, 'f'},		
 		{"operations", 0, 0, 'o'},		
+		{"timing-details", 0, 0, 't'},		
 		{"as-html", 1, 0, 'h'},		
 		{"web-cgi", 0, 0, 'w'},
 		{"simple-status", 0, 0, 's'},
@@ -160,6 +164,10 @@ main(int argc, char **argv)
 				break;
 			case 'd':
 				daemonize = TRUE;
+				break;
+			case 't':
+				print_timing = TRUE;
+				print_operations = TRUE;
 				break;
 			case 'o':
 				print_operations = TRUE;
@@ -387,15 +395,16 @@ mon_update(xmlNode *msg, int call_id, int rc,
 		
 			
 	} else if(simple_status) {
-		fprintf(stderr, "Critical: query failed: %s", cib_error2string(rc));
-		exit(2);
+	    fprintf(stderr, "Critical: query failed: %s", cib_error2string(rc));
+	    exit(LSB_EXIT_GENERIC);
+
 	} else if(one_shot) {
-		fprintf(stderr, "Query failed: %s", cib_error2string(rc));
-		exit(LSB_EXIT_OK);
+	    fprintf(stderr, "Query failed: %s", cib_error2string(rc));
+	    exit(LSB_EXIT_GENERIC);
 
 	} else {
 		CRM_DEV_ASSERT(cib_conn->cmds->signoff(cib_conn) == cib_ok);
-		crm_err("Query failed: %s", cib_error2string(rc));
+		print_as("Query failed: %s", cib_error2string(rc));
 		prefix = "Query failed! ";
 		
 	}
@@ -572,32 +581,35 @@ static void print_rsc_history(pe_working_set_t *data_set, node_t *node, xmlNode 
 		   print_as(" interval=%sms", interval);
 	       }
 
-	       value = crm_element_value(xml_op, "last_rc_change");
-	       if(value) {
-		   int int_value = crm_parse_int(value, NULL);
-		   print_as(" last-rc-change=");
-		   print_date(int_value);
-	       }
-
-	       value = crm_element_value(xml_op, "last_run");
-	       if(value) {
-		   int int_value = crm_parse_int(value, NULL);
-		   print_as(" last-run=");
-		   print_date(int_value);
-	       }
-
-	       value = crm_element_value(xml_op, "exec_time");
-	       if(value) {
-		   int int_value = crm_parse_int(value, NULL);
-		   print_as(" exec-time=");
-		   print_date(int_value);
-	       }
-
-	       value = crm_element_value(xml_op, "queue_time");
-	       if(value) {
-		   int int_value = crm_parse_int(value, NULL);
-		   print_as(" queue-time=");
-		   print_date(int_value);
+	       if(print_timing) {
+		   int int_value;
+		   value = crm_element_value(xml_op, "last_rc_change");
+		   if(value) {
+		       int_value = crm_parse_int(value, NULL);
+		       print_as(" last-rc-change=");
+		       print_date(int_value);
+		   }
+		   
+		   value = crm_element_value(xml_op, "last_run");
+		   if(value) {
+		       int_value = crm_parse_int(value, NULL);
+		       print_as(" last-run=");
+		       print_date(int_value);
+		   }
+		   
+		   value = crm_element_value(xml_op, "exec_time");
+		   if(value) {
+		       int_value = crm_parse_int(value, NULL);
+		       print_as(" exec-time=");
+		       print_date(int_value);
+		   }
+		   
+		   value = crm_element_value(xml_op, "queue_time");
+		   if(value) {
+		       int_value = crm_parse_int(value, NULL);
+		       print_as(" queue-time=");
+		       print_date(int_value);
+		   }
 	       }
 	       
 	       print_as(" rc=%s (%s)\n", op_rc, execra_code2string(rc));
