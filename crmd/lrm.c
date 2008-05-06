@@ -426,7 +426,7 @@ append_restart_list(crm_data_t *update, lrm_op_t *op, const char *version)
 		return;
 	}
 
-	restart = create_xml_node(NULL, "parameters");
+	restart = create_xml_node(NULL, XML_TAG_PARAMS);
 	slist_iter(param, const char, restart_list, lpc,
 		   int start = len;
 		   value = g_hash_table_lookup(op->params, param);
