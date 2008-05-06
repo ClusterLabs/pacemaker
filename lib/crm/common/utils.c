@@ -1181,7 +1181,7 @@ filter_action_parameters(crm_data_t *param_set, const char *version)
 	}
 
 #if CRM_DEPRECATED_SINCE_2_0_5
- 	if(version == NULL || compare_version("1.0.5", version)) {
+ 	if(version == NULL || compare_version("1.0.5", version) > 0) {
 		for(lpc = 0; lpc < DIMOF(filter_205); lpc++) {
 			xml_remove_prop(param_set, filter_205[lpc]); 
 		}
@@ -1209,7 +1209,7 @@ filter_action_parameters(crm_data_t *param_set, const char *version)
 		      }
 		);
 
-	if(crm_get_msec(interval) && compare_version(version, "1.0.8")) {
+	if(crm_get_msec(interval) && compare_version(version, "1.0.8") > 0) {
 		/* Re-instate the operation's timeout value */
 		if(timeout != NULL) {
 			crm_xml_add(param_set, CRM_META"_timeout", timeout);
