@@ -130,7 +130,8 @@ main(int argc, char **argv)
 		{"no-bcast",	0, 0, 'b'},
 		{"host",	0, 0, 'h'}, /* legacy */
 		{"node",	0, 0, 'N'},
-		{F_CRM_DATA,    1, 0, 'X'},
+		{F_CRM_DATA,    1, 0, 'X'}, /* legacy */
+		{"xml-text",    1, 0, 'X'},
 		{"xml-file",    1, 0, 'x'},
 		{"xml-pipe",    0, 0, 'p'},
 		{"verbose",     0, 0, 'V'},

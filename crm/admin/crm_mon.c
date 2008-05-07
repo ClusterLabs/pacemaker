@@ -110,22 +110,22 @@ main(int argc, char **argv)
 	int option_index = 0;
 	static struct option long_options[] = {
 		/* Top-level Options */
-		{"verbose", 0, 0, 'V'},
-		{"help", 0, 0, '?'},
-		{"interval", 1, 0, 'i'},
-		{"group-by-node", 0, 0, 'n'},
-		{"inactive", 0, 0, 'r'},
-		{"failcounts", 0, 0, 'f'},		
-		{"operations", 0, 0, 'o'},		
+		{"verbose",        0, 0, 'V'},
+		{"help",           0, 0, '?'},
+		{"interval",       1, 0, 'i'},
+		{"group-by-node",  0, 0, 'n'},
+		{"inactive",       0, 0, 'r'},
+		{"failcounts",     0, 0, 'f'},		
+		{"operations",     0, 0, 'o'},		
 		{"timing-details", 0, 0, 't'},		
-		{"as-html", 1, 0, 'h'},		
-		{"web-cgi", 0, 0, 'w'},
-		{"simple-status", 0, 0, 's'},
-		{"as-console", 0, 0, 'c'},		
-		{"one-shot", 0, 0, '1'},		
-		{"daemonize", 0, 0, 'd'},		
-		{"pid-file", 0, 0, 'p'},		
-		{"xml-file", 1, 0, 'X'},		
+		{"as-html",        1, 0, 'h'},		
+		{"web-cgi",        0, 0, 'w'},
+		{"simple-status",  0, 0, 's'},
+		{"as-console",     0, 0, 'c'},		
+		{"one-shot",       0, 0, '1'},		
+		{"daemonize",      0, 0, 'd'},		
+		{"pid-file",       0, 0, 'p'},		
+		{"xml-file",       1, 0, 'x'},
 
 		{0, 0, 0, 0}
 	};

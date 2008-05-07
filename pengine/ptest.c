@@ -177,9 +177,10 @@ main(int argc, char **argv)
 			{"verbose",     0, 0, 'V'},			
 
 			{"live-check",  0, 0, 'L'},
-			{"xml-stream",  0, 0, 'x'},
 			{"show-scores", 0, 0, 's'},
-			{"xml-file",    1, 0, 'X'},
+			{"xml-text",    0, 0, 'X'},
+			{"xml-file",    1, 0, 'x'},
+			{"xml-pipe",    1, 0, 'p'},
 
 			{"simulate",    0, 0, 'S'},
 			{"save-graph",  1, 0, 'G'},

@@ -67,7 +67,7 @@ IPC_Channel *crmd_channel = NULL;
 char *xml_file = NULL;
 int cib_options = cib_sync_call;
 
-#define OPTARGS	"V?LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fX:lmu:FOoc"
+#define OPTARGS	"V?LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fX:lmu:FOocq"
 #define CMD_ERR(fmt, args...) do {		\
 	crm_warn(fmt, ##args);			\
 	fprintf(stderr, fmt, ##args);		\
@@ -874,7 +874,7 @@ main(int argc, char **argv)
 		{"list-cts",   0, 0, 'c'},
 		{"refresh",    0, 0, 'R'},
 		{"reprobe",    0, 0, 'P'},
-		{"query-xml",  0, 0, 'x'},
+		{"query-xml",  0, 0, 'q'},
 		{"delete",     0, 0, 'D'},
 		{"cleanup",    0, 0, 'C'},
 		{"locate",     0, 0, 'W'},
@@ -899,7 +899,7 @@ main(int argc, char **argv)
 		{"set-name",        1, 0, 's'},
 		{"resource-type",   1, 0, 't'},
 
-		{"xml-file", 0, 0, 'X'},		
+		{"xml-file", 0, 0, 'x'},		
 		
 		{0, 0, 0, 0}
 	};
@@ -942,7 +942,7 @@ main(int argc, char **argv)
 			case 'c':
 			case 'l':
 			case 'R':
-			case 'x':
+			case 'q':
 			case 'D':
 			case 'F':
 			case 'C':
@@ -1065,7 +1065,7 @@ main(int argc, char **argv)
 	   || rsc_cmd == 'o'
 	   || rsc_cmd == 'W'
 	   || rsc_cmd == 'D'
-	   || rsc_cmd == 'x'
+	   || rsc_cmd == 'q'
 	   || rsc_cmd == 'M'
 	   || rsc_cmd == 'U'
 	   || rsc_cmd == 'C' 
@@ -1203,7 +1203,7 @@ main(int argc, char **argv)
 		} 
 		rc = do_find_resource(rsc_id, &data_set);
 		
-	} else if(rsc_cmd == 'x') {
+	} else if(rsc_cmd == 'q') {
 		if(rsc_id == NULL) {
 			CMD_ERR("Must supply a resource id with -r\n");
 			return cib_NOTEXISTS;
@@ -1400,7 +1400,7 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\nCommands\n");
 	fprintf(stream, "\t--%s (-%c)\t: List all resources\n", "list", 'L');
 	fprintf(stream, "\t--%s (-%c)\t: Query a resource\n"
-		"\t\t\t  Requires: -r\n", "query-xml", 'x');
+		"\t\t\t  Requires: -r\n", "query-xml", 'q');
 	fprintf(stream, "\t--%s (-%c)\t: Locate a resource\n"
 		"\t\t\t  Requires: -r\n", "locate", 'W');
 	fprintf(stream, "\t--%s (-%c)\t: Migrate a resource from it current"

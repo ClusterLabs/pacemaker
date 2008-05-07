@@ -89,8 +89,9 @@ main(int argc, char **argv)
 		int option_index = 0;
 		static struct option long_options[] = {
 			/* Top-level Options */
-			{F_CRM_DATA,    1, 0, 'X'},
 			{"dtd-file",    1, 0, 'D'},
+			{F_CRM_DATA,    1, 0, 'X'}, /* legacy */
+			{"xml-text",    1, 0, 'X'},
 			{"xml-file",    1, 0, 'x'},
 			{"xml-pipe",    0, 0, 'p'},
 			{"save-xml",    1, 0, 'S'},
