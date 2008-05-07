@@ -35,7 +35,7 @@
 
 #include <crm/cib.h>
 
-#define OPTARGS	"V?X:D:G:I:Lwxd:aSs"
+#define OPTARGS	"V?XD:G:I:Lwx:d:aSs"
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -219,14 +219,14 @@ main(int argc, char **argv)
 			case 'w':
 				inhibit_exit = TRUE;
 				break;
-			case 'x':
+			case 'X':
 				use_stdin = TRUE;
 				break;
 			case 's':
 				show_scores = TRUE;
 				scores_log_level = crm_log_level;
 				break;
-			case 'X':
+			case 'x':
 				xml_file = optarg;
 				break;
 			case 'd':
