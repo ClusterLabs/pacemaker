@@ -75,7 +75,7 @@ void do_node_walk(ll_cluster_t *hb_cluster);
 #endif
 
 /* GMainLoop *mainloop = NULL; */
-#define OPTARGS	"V?p:a:d:s:S:h:Dm:"
+#define OPTARGS	"V?p:a:d:s:S:h:Dm:N:"
 
 GListPtr ping_list = NULL;
 IPC_Channel *attrd = NULL;
@@ -501,7 +501,7 @@ usage(const char *cmd, int exit_status)
 		"\t\t\t\t\t* Default=cib-bootstrap-options\n", "attr-set", 's');
 	fprintf(stream, "\t--%s (-%c) <string>\tWhich part of the CIB to put the attribute in\n"
 		"\t\t\t\t\t* Default=status\n", "attr-section", 'S');
-	fprintf(stream, "\t--%s (-%c) <single_host_name>\tMonitor a subset of the ping nodes listed in ha.cf (can be specified multiple times)\n", "ping-host", 'h');
+	fprintf(stream, "\t--%s (-%c) <single_host_name>\tMonitor a subset of the ping nodes listed in ha.cf (can be specified multiple times)\n", "node", 'N');
 	fprintf(stream, "\t--%s (-%c) <integer>\t\tHow long to wait for no further changes to occur before updating the CIB with a changed attribute\n", "attr-dampen", 'd');
 	fprintf(stream, "\t--%s (-%c) <integer>\tFor every connected node, add <integer> to the value set in the CIB\n"
 		"\t\t\t\t\t\t* Default=1\n", "value-multiplier", 'm');
@@ -705,10 +705,11 @@ main(int argc, char **argv)
 	int option_index = 0;
 	static struct option long_options[] = {
 		/* Top-level Options */
-		{"verbose", 0, 0, 'V'},
-		{"help", 0, 0, '?'},
+		{"verbose",   0, 0, 'V'},
+		{"help",      0, 0, '?'},
 		{"pid-file",  1, 0, 'p'},		
-		{"ping-host", 1, 0, 'h'},		
+		{"node",      1, 0, 'N'},		
+		{"ping-host", 1, 0, 'h'}, /* legacy */
 		{"attr-name", 1, 0, 'a'},		
 		{"attr-set",  1, 0, 's'},		
 		{"daemonize", 0, 0, 'D'},		
@@ -751,6 +752,7 @@ main(int argc, char **argv)
 			case 'a':
 				pingd_attr = crm_strdup(optarg);
 				break;
+			case 'N':
 			case 'h':
 				stand_alone = TRUE;
 				crm_debug("Adding ping host %s", optarg);

@@ -87,7 +87,7 @@ int operation_status = 0;
 cib_t *the_cib = NULL;
 
 gboolean force_flag = FALSE;
-#define OPTARGS	"V?o:QDUCEX:t:Srwlsh:MmBfbRx:pP5"
+#define OPTARGS	"V?o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:"
 
 
 int
@@ -128,7 +128,8 @@ main(int argc, char **argv)
 		{"local",	0, 0, 'l'},
 		{"sync-call",	0, 0, 's'},
 		{"no-bcast",	0, 0, 'b'},
-		{"host",	0, 0, 'h'},
+		{"host",	0, 0, 'h'}, /* legacy */
+		{"node",	0, 0, 'N'},
 		{F_CRM_DATA,    1, 0, 'X'},
 		{"xml-file",    1, 0, 'x'},
 		{"xml-pipe",    0, 0, 'p'},

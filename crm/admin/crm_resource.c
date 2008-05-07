@@ -67,7 +67,7 @@ IPC_Channel *crmd_channel = NULL;
 char *xml_file = NULL;
 int cib_options = cib_sync_call;
 
-#define OPTARGS	"V?LRQxDCPp:WMUr:H:v:t:p:g:d:i:s:G:S:fX:lmu:FOoc"
+#define OPTARGS	"V?LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fX:lmu:FOoc"
 #define CMD_ERR(fmt, args...) do {		\
 	crm_warn(fmt, ##args);			\
 	fprintf(stderr, fmt, ##args);		\
@@ -881,7 +881,8 @@ main(int argc, char **argv)
 		{"migrate",    0, 0, 'M'},
 		{"un-migrate", 0, 0, 'U'},
 		{"resource",   1, 0, 'r'},
-		{"host-uname", 1, 0, 'H'},
+		{"host-uname", 1, 0, 'H'}, /* legacy */
+		{"node",       1, 0, 'N'},
 		{"lifetime",   1, 0, 'u'},
 		{"fail",       0, 0, 'F'},
 		{"force",      0, 0, 'f'},
@@ -1018,6 +1019,7 @@ main(int argc, char **argv)
 				rsc_type = optarg;
 				break;
 
+			case 'h':
 			case 'H':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				host_uname = optarg;
@@ -1432,7 +1434,7 @@ usage(const char *cmd, int exit_status)
 		"\t\t\t  Optional: -H, -r\n", "list-operations", 'O');
 	fprintf(stream, "\t--%s (-%c) <string>: "
 		"List all resource operations.  Optionally filtered by resource and/or node.\n"
-		"\t\t\t  Optional: -H, -r\n", "list-all-operations", 'o');
+		"\t\t\t  Optional: -N, -r\n", "list-all-operations", 'o');
 	fprintf(stream, "\nOptions\n");
 	fprintf(stream, "\t--%s (-%c) <string>\t: Resource ID\n", "resource", 'r');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
@@ -1441,8 +1443,7 @@ usage(const char *cmd, int exit_status)
 
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
 		"Property value\n", "property-value", 'v');
-	fprintf(stream, "\t--%s (-%c) <string>\t: "
-		"Host name\n", "host-uname", 'H');
+	fprintf(stream, "\t--%s (-%c) <string>\t: Host uname\n", "node", 'N');
 	fprintf(stream, "\t--%s\t: Modify a resource's configuration option rather than one which is passed to the resource agent script."
 		"\n\t\tFor use with -p, -g, -d\n", "meta");
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
