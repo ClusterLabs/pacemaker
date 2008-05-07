@@ -692,7 +692,9 @@ static enum pe_ordering get_flags(
 
 
 static gboolean
-unpack_order_set(xmlNode *set, int score, action_t **begin, action_t **end, pe_working_set_t *data_set) 
+unpack_order_set(xmlNode *set, int score,
+		 action_t **begin, action_t **end,
+		 action_t **inv_begin, action_t **inv_end, const char *symmetrical, pe_working_set_t *data_set) 
 {
     resource_t *last = NULL;
     resource_t *resource = NULL;
@@ -707,9 +709,9 @@ unpack_order_set(xmlNode *set, int score, action_t **begin, action_t **end, pe_w
     const char *sequential_s = crm_element_value(set, "sequential");
     const char *score_s = crm_element_value(set, XML_RULE_ATTR_SCORE);
 
-    const char *pseudo_id = crm_concat(id, action, '-');
-    const char *end_id    = crm_concat(pseudo_id, "end", '-');
-    const char *begin_id  = crm_concat(pseudo_id, "begin", '-');
+    char *pseudo_id = crm_concat(id, action, '-');
+    char *end_id    = crm_concat(pseudo_id, "end", '-');
+    char *begin_id  = crm_concat(pseudo_id, "begin", '-');
 
     *end = get_pseudo_op(end_id, data_set);
     *begin = get_pseudo_op(begin_id, data_set);
@@ -742,7 +744,47 @@ unpack_order_set(xmlNode *set, int score, action_t **begin, action_t **end, pe_w
 	}
 
 	);
+
+    if(crm_is_true(symmetrical) == FALSE) {
+	goto done;
+    }
+
+    local_score *= -1;
+    action = invert_action(action);
     
+    pseudo_id = crm_concat(id, action, '-');
+    end_id    = crm_concat(pseudo_id, "end", '-');
+    begin_id  = crm_concat(pseudo_id, "begin", '-');
+
+    *inv_end = get_pseudo_op(end_id, data_set);
+    *inv_begin = get_pseudo_op(begin_id, data_set);
+
+    flags = get_flags(id, local_score, action, action);
+    
+    xml_child_iter_filter(
+	set, xml_rsc, XML_TAG_RESOURCE_REF,
+
+	resource = pe_find_resource(data_set->resources, ID(xml_rsc));
+
+	key = generate_op_key(resource->id, action, 0);
+	custom_action_order(NULL, NULL, *inv_begin, resource, key, NULL,
+			    flags|pe_order_implies_left_printed, data_set);
+
+	key = generate_op_key(resource->id, action, 0);
+	custom_action_order(resource, key, NULL, NULL, NULL, *inv_end,
+			    flags|pe_order_implies_right_printed, data_set);
+	
+	if(sequential) {
+	    if(last != NULL) {
+		new_rsc_order(resource, action, last, action, flags, data_set);
+	    }
+	    last = resource;
+	}
+
+	);
+
+  done:
+    crm_free(pseudo_id);
     return TRUE;
 }
 
@@ -820,13 +862,23 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 	action_t *set_end = NULL;
 	action_t *set_begin = NULL;
 
+	action_t *set_inv_end = NULL;
+	action_t *set_inv_begin = NULL;
+	
 	xmlNode *last = NULL;
 	action_t *last_end = NULL;
 	action_t *last_begin = NULL;
+	action_t *last_inv_end = NULL;
+	action_t *last_inv_begin = NULL;
 	
 	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+	const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 
+	if(invert == NULL) {
+	    invert = "true";
+	}
+    
 	if(score == NULL) {
 	    score = "INFINITY";
 	}
@@ -837,7 +889,8 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 	    xml_obj, set, "resource_set",
 
 	    any_sets = TRUE;
-	    if(unpack_order_set(set, score_i, &set_begin, &set_end, data_set) == FALSE) {
+	    if(unpack_order_set(set, score_i, &set_begin, &set_end,
+				&set_inv_begin, &set_inv_end, invert, data_set) == FALSE) {
 		return FALSE;
 
 	    } else if(last) {
@@ -846,6 +899,15 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 		enum pe_ordering flags = get_flags(id, score_i, last_action, set_action);
 		order_actions(last_end, set_begin, flags);
 
+		if(crm_is_true(invert)) {
+		    set_action = invert_action(set_action);
+		    last_action = invert_action(last_action);
+		    score_i *= -1;
+		    
+		    flags = get_flags(id, score_i, last_action, set_action);
+		    order_actions(last_inv_begin, set_inv_end, flags);
+		}
+		
 	    } else if(/* never called */last && order_rsc_sets(id, last, set, score_i, data_set) == FALSE) {
 		return FALSE;
 
@@ -853,6 +915,8 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 	    last = set;
 	    last_end = set_end;
 	    last_begin = set_begin;
+	    last_inv_end = set_inv_end;
+	    last_inv_begin = set_inv_begin;
 	    );
 
 	if(any_sets == FALSE) {
