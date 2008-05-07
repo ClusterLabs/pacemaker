@@ -34,6 +34,12 @@
 GHashTable *voted = NULL;
 uint highest_born_on = -1;
 static int current_election_id = 1;
+const char *get_hg_version(void);
+const char *get_hg_version(void) 
+{
+    /* limit this #define's use to a single file to avoid rebuilding more than necessary */
+    return HA_HG_VERSION;
+}
 
 /*	A_ELECTION_VOTE	*/
 void

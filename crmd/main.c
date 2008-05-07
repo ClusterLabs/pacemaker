@@ -49,7 +49,6 @@
 #include <crmd.h>
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
-#include <ha_version.h>
 
 
 #define OPTARGS	"hV"
@@ -60,6 +59,7 @@ void crmd_hamsg_callback(const xmlNode * msg, void* private_data);
 extern void init_dotfile(void);
 
 GMainLoop*  crmd_mainloop = NULL;
+extern const char *get_hg_version(void);
 
 int
 main(int argc, char ** argv)
@@ -69,7 +69,7 @@ main(int argc, char ** argv)
 
     crm_log_init(CRM_SYSTEM_CRMD, LOG_INFO, TRUE, FALSE, 0, NULL);
 
-    crm_info("CRM Hg Version: %s\n", HA_HG_VERSION);
+    crm_info("CRM Hg Version: %s\n", get_hg_version());
     
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -91,7 +91,7 @@ main(int argc, char ** argv)
 	    return 0;
     } else if(argc - optind == 1 && safe_str_eq("version", argv[optind])) {
 	    fprintf(stderr, "CRM Version: ");
-	    fprintf(stdout, "%s (%s)\n", VERSION, HA_HG_VERSION);
+	    fprintf(stdout, "%s (%s)\n", VERSION, get_hg_version());
 	    return 0;
     }
     
