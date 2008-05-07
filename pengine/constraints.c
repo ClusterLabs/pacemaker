@@ -692,35 +692,53 @@ static enum pe_ordering get_flags(
 
 
 static gboolean
-unpack_order_set(xmlNode *set, int score, pe_working_set_t *data_set) 
+unpack_order_set(xmlNode *set, int score, action_t **begin, action_t **end, pe_working_set_t *data_set) 
 {
     resource_t *last = NULL;
     resource_t *resource = NULL;
-    const char *action = crm_element_value(set, "action");
-    const char *sequential = crm_element_value(set, "sequential");
-    const char *score_s = crm_element_value(set, XML_RULE_ATTR_SCORE);
+
     int local_score = score;
+    gboolean sequential = FALSE;
     enum pe_ordering flags = pe_order_optional;
     
+    char *key = NULL;
+    const char *id = ID(set);
+    const char *end_id = crm_concat(id, "done", '-');
+    const char *action = crm_element_value(set, "action");
+    const char *sequential_s = crm_element_value(set, "sequential");
+    const char *score_s = crm_element_value(set, XML_RULE_ATTR_SCORE);
 
+    *begin = get_pseudo_op(id, data_set);
+    *end = get_pseudo_op(end_id, data_set);
+    
     if(score_s) {
 	local_score = char2score(score_s);
     }
 
-    flags = get_flags(ID(set), local_score, action, action);
+    sequential = crm_is_true(sequential_s);
+    flags = get_flags(id, local_score, action, action);
     
-    if(crm_is_true(sequential) == FALSE) {
-	xml_child_iter_filter(
-	    set, xml_rsc, "resource",
-	    
-	    resource = pe_find_resource(data_set->resources, ID(xml_rsc));
+    xml_child_iter_filter(
+	set, xml_rsc, XML_TAG_RESOURCE_REF,
+
+	resource = pe_find_resource(data_set->resources, ID(xml_rsc));
+
+	key = generate_op_key(resource->id, action, 0);
+	custom_action_order(NULL, NULL, *begin, resource, key, NULL,
+			    flags|pe_order_implies_left_printed, data_set);
+
+	key = generate_op_key(resource->id, action, 0);
+	custom_action_order(resource, key, NULL, NULL, NULL, *end,
+			    flags|pe_order_implies_right_printed, data_set);
+	
+	if(sequential) {
 	    if(last != NULL) {
 		new_rsc_order(last, action, resource, action, flags, data_set);
 	    }
-
 	    last = resource;
-	    );
-    }
+	}
+
+	);
     
     return TRUE;
 }
@@ -742,7 +760,7 @@ static gboolean order_rsc_sets(
     if(crm_is_true(sequential_1)) {
 	/* get the first one */
 	xml_child_iter_filter(
-	    set1, xml_rsc, "resource",
+	    set1, xml_rsc, XML_TAG_RESOURCE_REF,
 	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
 	    break;
 	    );
@@ -752,7 +770,7 @@ static gboolean order_rsc_sets(
 	/* get the last one */
 	const char *rid = NULL;
 	xml_child_iter_filter(
-	    set2, xml_rsc, "resource",
+	    set2, xml_rsc, XML_TAG_RESOURCE_REF,
 	    rid = ID(xml_rsc);
 	    );
 	rsc_2 = pe_find_resource(data_set->resources, rid);
@@ -763,25 +781,25 @@ static gboolean order_rsc_sets(
 
     } else if(rsc_1 != NULL) {
 	xml_child_iter_filter(
-	    set2, xml_rsc, "resource",
+	    set2, xml_rsc, XML_TAG_RESOURCE_REF,
 	    rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc));
 	    new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
 	    );
 
     } else if(rsc_2 != NULL) {
 	xml_child_iter_filter(
-	    set1, xml_rsc, "resource",
+	    set1, xml_rsc, XML_TAG_RESOURCE_REF,
 	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
 	    new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
 	    );
 
     } else {
 	xml_child_iter_filter(
-	    set1, xml_rsc, "resource",
+	    set1, xml_rsc, XML_TAG_RESOURCE_REF,
 	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
 
 	    xml_child_iter_filter(
-		set2, xml_rsc_2, "resource",
+		set2, xml_rsc_2, XML_TAG_RESOURCE_REF,
 		rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc_2));
 		new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
 		);
@@ -794,9 +812,15 @@ gboolean
 unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
 	int score_i = 0;
-	xmlNode *last = NULL;
 	gboolean any_sets = FALSE;
 
+	action_t *set_end = NULL;
+	action_t *set_begin = NULL;
+
+	xmlNode *last = NULL;
+	action_t *last_end = NULL;
+	action_t *last_begin = NULL;
+	
 	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
 
@@ -810,13 +834,22 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 	    xml_obj, set, "resource_set",
 
 	    any_sets = TRUE;
-	    if(unpack_order_set(set, score_i, data_set) == FALSE) {
+	    if(unpack_order_set(set, score_i, &set_begin, &set_end, data_set) == FALSE) {
 		return FALSE;
 
-	    } else if(last && order_rsc_sets(id, last, set, score_i, data_set) == FALSE) {
+	    } else if(last) {
+		const char *set_action = crm_element_value(set, "action");
+		const char *last_action = crm_element_value(last, "action");
+		enum pe_ordering flags = get_flags(id, score_i, last_action, set_action);
+		order_actions(last_end, set_begin, flags);
+
+	    } else if(/* never called */last && order_rsc_sets(id, last, set, score_i, data_set) == FALSE) {
 		return FALSE;
+
 	    }
 	    last = set;
+	    last_end = set_end;
+	    last_begin = set_begin;
 	    );
 
 	if(any_sets == FALSE) {
@@ -843,7 +876,7 @@ unpack_colocation_set(xmlNode *set, int score, pe_working_set_t *data_set)
     
     if(crm_is_true(sequential) == FALSE) {
 	xml_child_iter_filter(
-	    set, xml_rsc, "resource",
+	    set, xml_rsc, XML_TAG_RESOURCE_REF,
 	    
 	    resource = pe_find_resource(data_set->resources, ID(xml_rsc));
 	    if(with != NULL) {
@@ -874,7 +907,7 @@ static gboolean colocate_rsc_sets(
     if(crm_is_true(sequential_1)) {
 	/* get the first one */
 	xml_child_iter_filter(
-	    set1, xml_rsc, "resource",
+	    set1, xml_rsc, XML_TAG_RESOURCE_REF,
 	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
 	    break;
 	    );
@@ -884,7 +917,7 @@ static gboolean colocate_rsc_sets(
 	/* get the last one */
 	const char *rid = NULL;
 	xml_child_iter_filter(
-	    set2, xml_rsc, "resource",
+	    set2, xml_rsc, XML_TAG_RESOURCE_REF,
 	    rid = ID(xml_rsc);
 	    );
 	rsc_2 = pe_find_resource(data_set->resources, rid);
@@ -895,25 +928,25 @@ static gboolean colocate_rsc_sets(
 
     } else if(rsc_1 != NULL) {
 	xml_child_iter_filter(
-	    set2, xml_rsc, "resource",
+	    set2, xml_rsc, XML_TAG_RESOURCE_REF,
 	    rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc));
 	    rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
 	    );
 
     } else if(rsc_2 != NULL) {
 	xml_child_iter_filter(
-	    set1, xml_rsc, "resource",
+	    set1, xml_rsc, XML_TAG_RESOURCE_REF,
 	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
 	    rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
 	    );
 
     } else {
 	xml_child_iter_filter(
-	    set1, xml_rsc, "resource",
+	    set1, xml_rsc, XML_TAG_RESOURCE_REF,
 	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
 
 	    xml_child_iter_filter(
-		set2, xml_rsc_2, "resource",
+		set2, xml_rsc_2, XML_TAG_RESOURCE_REF,
 		rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc_2));
 		rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
 		);

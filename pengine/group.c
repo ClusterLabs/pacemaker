@@ -274,7 +274,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		    new_rsc_order(rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE, stop_stop_flags, data_set);
 		    new_rsc_order(last_rsc, RSC_DEMOTE, rsc, RSC_DEMOTED, stop_stopped_flags, data_set);
 		}
-	}		
+	}
 }
 
 

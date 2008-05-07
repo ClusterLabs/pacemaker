@@ -127,6 +127,7 @@
 #define XML_TAG_ATTRS			"attributes"
 #define XML_TAG_PARAMS			"parameters"
 
+#define XML_TAG_RESOURCE_REF		"resource_ref"
 #define XML_CIB_TAG_RESOURCE	  	"primitive"
 #define XML_CIB_TAG_GROUP	  	"group"
 #define XML_CIB_TAG_INCARNATION		"clone"
