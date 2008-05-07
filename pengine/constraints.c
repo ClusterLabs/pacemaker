@@ -703,13 +703,16 @@ unpack_order_set(xmlNode *set, int score, action_t **begin, action_t **end, pe_w
     
     char *key = NULL;
     const char *id = ID(set);
-    const char *end_id = crm_concat(id, "done", '-');
     const char *action = crm_element_value(set, "action");
     const char *sequential_s = crm_element_value(set, "sequential");
     const char *score_s = crm_element_value(set, XML_RULE_ATTR_SCORE);
 
-    *begin = get_pseudo_op(id, data_set);
+    const char *pseudo_id = crm_concat(id, action, '-');
+    const char *end_id    = crm_concat(pseudo_id, "end", '-');
+    const char *begin_id  = crm_concat(pseudo_id, "begin", '-');
+
     *end = get_pseudo_op(end_id, data_set);
+    *begin = get_pseudo_op(begin_id, data_set);
     
     if(score_s) {
 	local_score = char2score(score_s);
