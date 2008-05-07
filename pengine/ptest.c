@@ -129,7 +129,7 @@ create_action_name(action_t *action)
 		action_host = "<none>";
 		action_name = crm_concat(action->uuid, action_host, ' ');
 	}
-	if(safe_str_eq(action->task, CRMD_ACTION_CANCEL)) {
+	if(safe_str_eq(action->task, RSC_CANCEL)) {
 	    char *tmp_action_name = action_name;
 	    action_name = crm_concat("Cancel", tmp_action_name, ' ');
 	    crm_free(tmp_action_name);

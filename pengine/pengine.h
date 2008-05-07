@@ -155,24 +155,14 @@ extern int custom_action_order(
 	resource_t *rh_rsc, char *rh_task, action_t *rh_action,
 	enum pe_ordering type, pe_working_set_t *data_set);
 
+extern int new_rsc_order(resource_t *lh_rsc, const char *lh_task,
+			 resource_t *rh_rsc, const char *rh_task,
+			 enum pe_ordering type, pe_working_set_t *data_set);
+
 #define order_start_start(rsc1,rsc2, type)				\
-	custom_action_order(rsc1, start_key(rsc1), NULL,		\
-			    rsc2, start_key(rsc2) ,NULL,		\
-			    type, data_set)
+    new_rsc_order(rsc1, CRMD_ACTION_START, rsc2, CRMD_ACTION_START, type, data_set)
 #define order_stop_stop(rsc1, rsc2, type)				\
-	custom_action_order(rsc1, stop_key(rsc1), NULL,		\
-			    rsc2, stop_key(rsc2) ,NULL,		\
-			    type, data_set)
-
-#define order_stop_start(rsc1, rsc2, type)				\
-	custom_action_order(rsc1, stop_key(rsc1), NULL,		\
-			    rsc2, start_key(rsc2) ,NULL,		\
-			    type, data_set)
-
-#define order_start_stop(rsc1, rsc2, type)				\
-	custom_action_order(rsc1, start_key(rsc1), NULL,		\
-			    rsc2, stop_key(rsc2) ,NULL,		\
-			    type, data_set)
+    new_rsc_order(rsc1, CRMD_ACTION_STOP, rsc2, CRMD_ACTION_STOP, type, data_set)
 
 extern void graph_element_from_action(
 	action_t *action, pe_working_set_t *data_set);

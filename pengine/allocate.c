@@ -192,14 +192,14 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 				 key, active_node->details->uname);
 
 			/* cancel_key = generate_op_key( */
-			/* 	rsc->id, CRMD_ACTION_CANCEL, interval); */
+			/* 	rsc->id, RSC_CANCEL, interval); */
 
 			cancel = custom_action(
-				rsc, cancel_key, CRMD_ACTION_CANCEL,
+				rsc, cancel_key, RSC_CANCEL,
 				active_node, FALSE, TRUE, data_set);
 
 			crm_free(cancel->task);
-			cancel->task = crm_strdup(CRMD_ACTION_CANCEL);
+			cancel->task = crm_strdup(RSC_CANCEL);
 			
 			add_hash_param(cancel->meta, XML_LRM_ATTR_TASK,     task);
 			add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID,   call_id);
@@ -242,7 +242,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 	digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 	restart_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
 
-	if(crm_str_eq(task, CRMD_ACTION_START, TRUE)) {
+	if(crm_str_eq(task, RSC_START, TRUE)) {
 		start_op = TRUE;
 	}
 	
@@ -362,11 +362,11 @@ check_actions_for(xmlNode *rsc_entry, node_t *node, pe_working_set_t *data_set)
 		interval_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL);
 		interval = crm_parse_int(interval_s, "0");
 		
-		if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+		if(interval == 0 && safe_str_eq(task, RSC_STATUS)) {
 			is_probe = TRUE;
 		}
 		
-		if(is_probe || safe_str_eq(task, CRMD_ACTION_START) || interval > 0) {
+		if(is_probe || safe_str_eq(task, RSC_START) || interval > 0) {
 			check_action_definition(rsc, node, rsc_op, data_set);
 		}
 		);
@@ -563,9 +563,7 @@ probe_resources(pe_working_set_t *data_set)
 		add_hash_param(probe_node_complete->meta,
 			       XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
 		
-		custom_action_order(NULL, NULL, probe_node_complete,
-				    NULL, NULL, probe_complete,
-				    pe_order_optional, data_set);
+		order_actions(probe_node_complete, probe_complete, pe_order_optional);
 		
 		slist_iter(
 			rsc, resource_t, data_set->resources, lpc2,

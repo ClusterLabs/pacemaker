@@ -194,7 +194,7 @@ update_action(action_t *action)
 				/* nothing to do */
 				do_crm_log(log_level+1, "      Ignoring implies left - redundant");
 				
-			} else if(safe_str_eq(other->action->task, CRMD_ACTION_STOP)
+			} else if(safe_str_eq(other->action->task, RSC_STOP)
 				  && other_role == RSC_ROLE_STOPPED) {
 				do_crm_log(log_level-1, "      Ignoring implies left - %s already stopped",
 					other_rsc->id);
@@ -373,7 +373,7 @@ action2xml(action_t *action, gboolean as_input)
 	} else if(safe_str_eq(action->task, CRM_OP_LRM_REFRESH)) {
 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 
-/* 	} else if(safe_str_eq(action->task, CRMD_ACTION_PROBED)) { */
+/* 	} else if(safe_str_eq(action->task, RSC_PROBED)) { */
 /* 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT); */
 
 	} else if(action->pseudo) {
@@ -394,7 +394,7 @@ action2xml(action_t *action, gboolean as_input)
 		const char *interval_s = g_hash_table_lookup(action->meta, "interval");
 		int interval = crm_parse_int(interval_s, "0");
 
-		if(safe_str_eq(action->task, CRMD_ACTION_NOTIFY)) {			
+		if(safe_str_eq(action->task, RSC_NOTIFY)) {			
 			const char *n_type = g_hash_table_lookup(
 				action->extra, crm_meta_name("notify_type"));
 			const char *n_task = g_hash_table_lookup(
@@ -468,7 +468,7 @@ action2xml(action_t *action, gboolean as_input)
 	crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 
 	g_hash_table_foreach(action->extra, hash2field, args_xml);
-	if(action->rsc != NULL && safe_str_neq(action->task, CRMD_ACTION_STOP)) {
+	if(action->rsc != NULL && safe_str_neq(action->task, RSC_STOP)) {
 		g_hash_table_foreach(action->rsc->parameters, hash2field, args_xml);
 	}
 
@@ -530,7 +530,7 @@ should_dump_action(action_t *action)
 		interval = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
 
 		/* make sure probes go through */
-		if(safe_str_neq(action->task, CRMD_ACTION_STATUS)) {
+		if(safe_str_neq(action->task, RSC_STATUS)) {
 			pe_warn("action %d (%s) was for an unmanaged resource (%s)",
 				action->id, action->uuid, action->rsc->id);
 			return FALSE;
