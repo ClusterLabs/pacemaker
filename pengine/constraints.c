@@ -725,106 +725,104 @@ unpack_order_set(xmlNode *set, int score, pe_working_set_t *data_set)
     return TRUE;
 }
 
+static gboolean order_rsc_sets(
+    const char *id, xmlNode *set1, xmlNode *set2, int score, pe_working_set_t *data_set) {
+		
+    resource_t *rsc_1 = NULL;
+    resource_t *rsc_2 = NULL;
+	    
+    const char *action_1 = crm_element_value(set1, "action");
+    const char *action_2 = crm_element_value(set2, "action");
+
+    const char *sequential_1 = crm_element_value(set1, "sequential");
+    const char *sequential_2 = crm_element_value(set2, "sequential");
+
+    enum pe_ordering flags = get_flags(id, score, action_1, action_2);
+	    
+    if(crm_is_true(sequential_1)) {
+	/* get the first one */
+	xml_child_iter_filter(
+	    set1, xml_rsc, "resource",
+	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+	    break;
+	    );
+    }
+
+    if(crm_is_true(sequential_2)) {
+	/* get the last one */
+	const char *rid = NULL;
+	xml_child_iter_filter(
+	    set2, xml_rsc, "resource",
+	    rid = ID(xml_rsc);
+	    );
+	rsc_2 = pe_find_resource(data_set->resources, rid);
+    }
+
+    if(rsc_1 != NULL && rsc_2 != NULL) {
+	new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
+
+    } else if(rsc_1 != NULL) {
+	xml_child_iter_filter(
+	    set2, xml_rsc, "resource",
+	    rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc));
+	    new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
+	    );
+
+    } else if(rsc_2 != NULL) {
+	xml_child_iter_filter(
+	    set1, xml_rsc, "resource",
+	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+	    new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
+	    );
+
+    } else {
+	xml_child_iter_filter(
+	    set1, xml_rsc, "resource",
+	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+
+	    xml_child_iter_filter(
+		set2, xml_rsc_2, "resource",
+		rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc_2));
+		new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
+		);
+	    );
+    }
+    return TRUE;
+}
+
 gboolean
 unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
 	int score_i = 0;
-	xmlNode *set1 = NULL;
-	xmlNode *set2 = NULL;
+	xmlNode *last = NULL;
+	gboolean any_sets = FALSE;
 
 	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-
-	xml_child_iter_filter(
-	    xml_obj, set, "resource_set",
-	    if(set1 == NULL) {
-		set1 = set;
-	    } else if(set2 == NULL) {
-		set2 = set;
-	    } else {
-		crm_config_err("A maximum of two resource sets are allowed in constraint %s", id);
-	    }
-	    );
-
-	if(set1 == NULL) {
-	    return unpack_simple_rsc_order(xml_obj, data_set);
-	}
 
 	if(score == NULL) {
 	    score = "INFINITY";
 	}
 	
 	score_i = char2score(score);
-	if(unpack_order_set(set1, score_i, data_set) == FALSE) {
-	    return FALSE;
-	}
-	
-	if(set2 != NULL) {
-	    resource_t *rsc_1 = NULL;
-	    resource_t *rsc_2 = NULL;
-	    
-	    const char *action_1 = crm_element_value(set1, "action");
-	    const char *action_2 = crm_element_value(set2, "action");
 
-	    const char *sequential_1 = crm_element_value(set1, "sequential");
-	    const char *sequential_2 = crm_element_value(set2, "sequential");
+	xml_child_iter_filter(
+	    xml_obj, set, "resource_set",
 
-	    enum pe_ordering flags = get_flags(ID(xml_obj), score_i, action_1, action_2);
-	    
-	    if(unpack_order_set(set2, score_i, data_set) == FALSE) {
+	    any_sets = TRUE;
+	    if(unpack_order_set(set, score_i, data_set) == FALSE) {
+		return FALSE;
+
+	    } else if(last && order_rsc_sets(id, last, set, score_i, data_set) == FALSE) {
 		return FALSE;
 	    }
+	    last = set;
+	    );
 
-	    if(crm_is_true(sequential_1)) {
-		/* get the first one */
-		xml_child_iter_filter(
-		    set1, xml_rsc, "resource",
-		    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
-		    break;
-		    );
-	    }
-
-	    if(crm_is_true(sequential_2)) {
-		/* get the last one */
-		const char *rid = NULL;
-		xml_child_iter_filter(
-		    set2, xml_rsc, "resource",
-		    rid = ID(xml_rsc);
-		    );
-		rsc_2 = pe_find_resource(data_set->resources, rid);
-	    }
-
-	    if(rsc_1 != NULL && rsc_2 != NULL) {
-		new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
-
-	    } else if(rsc_1 != NULL) {
-		xml_child_iter_filter(
-		    set2, xml_rsc, "resource",
-		    rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc));
-		    new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
-		    );
-
-	    } else if(rsc_2 != NULL) {
-		xml_child_iter_filter(
-		    set1, xml_rsc, "resource",
-		    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
-		    new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
-		    );
-
-	    } else {
-		xml_child_iter_filter(
-		    set1, xml_rsc, "resource",
-		    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
-
-		    xml_child_iter_filter(
-			set2, xml_rsc_2, "resource",
-			rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc_2));
-			new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
-			);
-		    );
-	    }
+	if(any_sets == FALSE) {
+	    return unpack_simple_rsc_order(xml_obj, data_set);
 	}
-	
+
 	return TRUE;
 }
 
@@ -859,131 +857,144 @@ unpack_colocation_set(xmlNode *set, int score, pe_working_set_t *data_set)
     return TRUE;
 }
 
+	    
+
+static gboolean colocate_rsc_sets(
+    const char *id, xmlNode *set1, xmlNode *set2, int score, pe_working_set_t *data_set)
+{
+    resource_t *rsc_1 = NULL;
+    resource_t *rsc_2 = NULL;
+	    
+    const char *role_1 = crm_element_value(set1, "role");
+    const char *role_2 = crm_element_value(set2, "role");
+
+    const char *sequential_1 = crm_element_value(set1, "sequential");
+    const char *sequential_2 = crm_element_value(set2, "sequential");
+
+    if(crm_is_true(sequential_1)) {
+	/* get the first one */
+	xml_child_iter_filter(
+	    set1, xml_rsc, "resource",
+	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+	    break;
+	    );
+    }
+
+    if(crm_is_true(sequential_2)) {
+	/* get the last one */
+	const char *rid = NULL;
+	xml_child_iter_filter(
+	    set2, xml_rsc, "resource",
+	    rid = ID(xml_rsc);
+	    );
+	rsc_2 = pe_find_resource(data_set->resources, rid);
+    }
+
+    if(rsc_1 != NULL && rsc_2 != NULL) {
+	rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+
+    } else if(rsc_1 != NULL) {
+	xml_child_iter_filter(
+	    set2, xml_rsc, "resource",
+	    rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc));
+	    rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+	    );
+
+    } else if(rsc_2 != NULL) {
+	xml_child_iter_filter(
+	    set1, xml_rsc, "resource",
+	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+	    rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+	    );
+
+    } else {
+	xml_child_iter_filter(
+	    set1, xml_rsc, "resource",
+	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+
+	    xml_child_iter_filter(
+		set2, xml_rsc_2, "resource",
+		rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc_2));
+		rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+		);
+	    );
+    }
+
+    return TRUE;
+}
+
+static gboolean unpack_simple_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
+{
+    int score_i = 0;
+
+    const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+    const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
+    
+    const char *id_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
+    const char *id_lh = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
+    const char *state_lh = crm_element_value(xml_obj, XML_RULE_ATTR_FROMSTATE);
+    const char *state_rh = crm_element_value(xml_obj, XML_RULE_ATTR_TOSTATE);
+    const char *attr = crm_element_value(xml_obj, "node_attribute");
+    
+    
+    resource_t *rsc_lh = pe_find_resource(data_set->resources, id_lh);
+    resource_t *rsc_rh = pe_find_resource(data_set->resources, id_rh);
+    
+    if(rsc_lh == NULL) {
+	crm_config_err("No resource (con=%s, rsc=%s)", id, id_lh);
+	return FALSE;
+	
+    } else if(rsc_rh == NULL) {
+	crm_config_err("No resource (con=%s, rsc=%s)", id, id_rh);
+	return FALSE;
+    }
+
+    if(score) {
+	score_i = char2score(score);
+    }
+    
+    rsc_colocation_new(id, attr, score_i, rsc_lh, rsc_rh, state_lh, state_rh, data_set);
+    
+    if(crm_is_true(symmetrical)) {
+	rsc_colocation_new(id, attr, score_i, rsc_rh, rsc_lh, state_rh, state_lh, data_set);
+    }
+    
+    return TRUE;
+}
+
 gboolean
 unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
 	int score_i = 0;
-	xmlNode *set1 = NULL;
-	xmlNode *set2 = NULL;
+	xmlNode *last = NULL;
+	gboolean any_sets = FALSE;
 
 	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-	const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
-
-	xml_child_iter_filter(
-	    xml_obj, set, "resource_set",
-	    if(set1 == NULL) {
-		set1 = set;
-	    } else if(set2 == NULL) {
-		set2 = set;
-	    } else {
-		crm_config_err("A maximum of two resource sets are allowed in constraint %s", id);
-	    }
-	    );
 
 	if(score) {
 	    score_i = char2score(score);
 	}
 	
-	if(set1 == NULL) {
-	    const char *id_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
-	    const char *id_lh = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
-	    const char *state_lh = crm_element_value(xml_obj, XML_RULE_ATTR_FROMSTATE);
-	    const char *state_rh = crm_element_value(xml_obj, XML_RULE_ATTR_TOSTATE);
-	    const char *attr = crm_element_value(xml_obj, "node_attribute");
-	    
-	    resource_t *rsc_lh = pe_find_resource(data_set->resources, id_lh);
-	    resource_t *rsc_rh = pe_find_resource(data_set->resources, id_rh);
-	    
-	    if(rsc_lh == NULL) {
-		crm_config_err("No resource (con=%s, rsc=%s)", id, id_lh);
+	xml_child_iter_filter(
+	    xml_obj, set, "resource_set",
+
+	    any_sets = TRUE;
+	    if(unpack_colocation_set(set, score_i, data_set) == FALSE) {
 		return FALSE;
-		
-	    } else if(rsc_rh == NULL) {
-		crm_config_err("No resource (con=%s, rsc=%s)", id, id_rh);
+
+	    } else if(last && colocate_rsc_sets(id, last, set, score_i, data_set) == FALSE) {
 		return FALSE;
 	    }
+	    last = set;
+	    );
 
-	    rsc_colocation_new(
-		id, attr, score_i, rsc_lh, rsc_rh, state_lh, state_rh, data_set);
 	
-	    if(crm_is_true(symmetrical)) {
-		rsc_colocation_new(
-			id, attr, score_i, rsc_rh, rsc_lh, state_rh, state_lh, data_set);
-	    }
-	    return TRUE;
+	if(any_sets == FALSE) {
+	    return unpack_simple_colocation(xml_obj, data_set);
 	}
 
-	if(set1 != NULL) {
-	    if(unpack_colocation_set(set1, score_i, data_set) == FALSE) {
-		return FALSE;
-	    }
-	}
-
-	if(set2 != NULL) {
-	    resource_t *rsc_1 = NULL;
-	    resource_t *rsc_2 = NULL;
-	    
-	    const char *role_1 = crm_element_value(set1, "role");
-	    const char *role_2 = crm_element_value(set2, "role");
-
-	    const char *sequential_1 = crm_element_value(set1, "sequential");
-	    const char *sequential_2 = crm_element_value(set2, "sequential");
-
-	    if(unpack_colocation_set(set2, score_i, data_set) == FALSE) {
-		return FALSE;
-	    }
-
-	    if(crm_is_true(sequential_1)) {
-		/* get the first one */
-		xml_child_iter_filter(
-		    set1, xml_rsc, "resource",
-		    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
-		    break;
-		    );
-	    }
-
-	    if(crm_is_true(sequential_2)) {
-		/* get the last one */
-		const char *rid = NULL;
-		xml_child_iter_filter(
-		    set2, xml_rsc, "resource",
-		    rid = ID(xml_rsc);
-		    );
-		rsc_2 = pe_find_resource(data_set->resources, rid);
-	    }
-
-	    if(rsc_1 != NULL && rsc_2 != NULL) {
-		rsc_colocation_new(id, NULL, score_i, rsc_1, rsc_2, role_1, role_2, data_set);
-
-	    } else if(rsc_1 != NULL) {
-		xml_child_iter_filter(
-		    set2, xml_rsc, "resource",
-		    rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc));
-		    rsc_colocation_new(id, NULL, score_i, rsc_1, rsc_2, role_1, role_2, data_set);
-		    );
-
-	    } else if(rsc_2 != NULL) {
-		xml_child_iter_filter(
-		    set1, xml_rsc, "resource",
-		    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
-		    rsc_colocation_new(id, NULL, score_i, rsc_1, rsc_2, role_1, role_2, data_set);
-		    );
-
-	    } else {
-		xml_child_iter_filter(
-		    set1, xml_rsc, "resource",
-		    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
-
-		    xml_child_iter_filter(
-			set2, xml_rsc_2, "resource",
-			rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc_2));
-			rsc_colocation_new(id, NULL, score_i, rsc_1, rsc_2, role_1, role_2, data_set);
-			);
-		    );
-	    }
-	}
-	
 	return TRUE;
 }
 
