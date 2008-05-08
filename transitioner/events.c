@@ -286,7 +286,7 @@ update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc)
 
 		/* don't let notificatios of these updates cause new transitions */
 		call_id = update_attr(te_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
-				      on_uuid, NULL,NULL, attr_name, value, FALSE);
+				      on_uuid, NULL,NULL, attr_name, now, FALSE);
 
 		add_cib_op_callback(call_id, FALSE, NULL, cib_failcount_updated);
 		crm_free(attr_name);
