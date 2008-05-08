@@ -281,6 +281,7 @@ do_test bug-1685 "Depends-on-master ordering"
 do_test bug-1822 "Dont promote partially active groups"
 do_test bug-pm-11 "New resource added to a m/s group"
 do_test bug-pm-12 "Recover only the failed portion of a cloned group"
+do_test bug-n-387749 "Don't shuffle clone instances"
 
 echo ""
 

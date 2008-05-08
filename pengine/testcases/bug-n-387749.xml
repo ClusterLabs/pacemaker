@@ -1,0 +1,145 @@
+ <cib generated="true" admin_epoch="0" have_quorum="true" ignore_dtd="false" num_peers="2" cib_feature_revision="2.0" crm_feature_set="2.0" epoch="570" num_updates="44" cib-last-written="Wed May  7 15:37:54 2008" ccm_transition="4" dc_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10">
+   <configuration>
+     <crm_config>
+       <cluster_property_set id="cib-bootstrap-options">
+         <attributes>
+           <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.1.3-node: a3184d5240c6e7032aef9cce6e5b7752ded544b3"/>
+           <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+           <nvpair name="last-lrm-refresh" id="cib-bootstrap-options-last-lrm-refresh" value="1210070991"/>
+           <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+           <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="1000"/>
+           <nvpair id="cib-bootstrap-options-default-action-timeout" name="default-action-timeout" value="20s"/>
+         </attributes>
+       </cluster_property_set>
+     </crm_config>
+     <nodes>
+       <node uname="power720-1" type="normal" id="ac446085-4c9d-4d4a-a94d-5e63b6e421e3">
+         <instance_attributes id="nodes-ac446085-4c9d-4d4a-a94d-5e63b6e421e3">
+           <attributes>
+             <nvpair name="standby" id="standby-ac446085-4c9d-4d4a-a94d-5e63b6e421e3" value="false"/>
+           </attributes>
+         </instance_attributes>
+       </node>
+       <node id="1a1ecd04-01a0-43bf-9392-11b89f7d6f10" uname="power720-2" type="normal">
+         <instance_attributes id="nodes-1a1ecd04-01a0-43bf-9392-11b89f7d6f10">
+           <attributes>
+             <nvpair id="standby-1a1ecd04-01a0-43bf-9392-11b89f7d6f10" name="standby" value="false"/>
+           </attributes>
+         </instance_attributes>
+       </node>
+       <node id="5df3fddd-936b-4577-81b9-ed9c8949fac8" uname="power720-4" type="normal">
+         <instance_attributes id="nodes-5df3fddd-936b-4577-81b9-ed9c8949fac8">
+           <attributes>
+             <nvpair id="standby-5df3fddd-936b-4577-81b9-ed9c8949fac8" name="standby" value="off"/>
+           </attributes>
+         </instance_attributes>
+       </node>
+     </nodes>
+     <resources>
+       <clone notify="true" globally_unique="true" id="export_home_ocfs2_clone_set">
+         <instance_attributes id="export_home_ocfs2_clone_set">
+           <attributes>
+             <nvpair id="export_home_ocfs2_clone_set-01" name="clone_node_max" value="1"/>
+             <nvpair id="export_home_ocfs2_clone_set-02" name="target_role" value="started"/>
+           </attributes>
+         </instance_attributes>
+         <primitive class="ocf" type="Filesystem" provider="heartbeat" id="export_home_ocfs2">
+           <operations/>
+           <instance_attributes id="export_home_ocfs2">
+             <attributes>
+               <nvpair id="export_home_ocfs2_clone-01" name="device" value="/dev/sda"/>
+               <nvpair id="export_home_ocfs2_clone-02" name="directory" value="/mnt"/>
+               <nvpair id="export_home_ocfs2_clone-03" name="fstype" value="ocfs2"/>
+               <nvpair name="options" id="83288eba-d050-4b90-ba74-f274a6098ef9" value="rw,sync"/>
+             </attributes>
+           </instance_attributes>
+         </primitive>
+         <meta_attributes id="export_home_ocfs2_clone_set_meta_attrs">
+           <attributes>
+             <nvpair id="export_home_ocfs2_clone_set_metaattr_globally_unique" name="globally_unique" value="true"/>
+             <nvpair id="export_home_ocfs2_clone_set_metaattr_notify" name="notify" value="true"/>
+           </attributes>
+         </meta_attributes>
+       </clone>
+       <group id="group_nfs">
+         <instance_attributes id="group_nfs_instance_attrs">
+           <attributes/>
+         </instance_attributes>
+         <primitive id="resource_ipaddr1_single" class="ocf" type="IPaddr" provider="heartbeat">
+           <instance_attributes id="resource_ipaddr1_single_instance_attrs">
+             <attributes>
+               <nvpair id="resource_ipaddr1_single_target_role" name="target_role" value="started"/>
+               <nvpair id="resource_ipaddr1_single_ip" name="ip" value="192.168.2.6"/>
+               <nvpair id="resource_ipaddr1_single_nic" name="nic" value="eth1"/>
+               <nvpair id="resource_ipaddr1_single_cidr" name="cidr_netmask" value="24"/>
+             </attributes>
+           </instance_attributes>
+           <operations>
+             <op id="c4685e11-27e2-4ea7-8893-94c3fce7c1ac" name="monitor" interval="5s" timeout="20s" start_delay="1s" on_fail="restart"/>
+           </operations>
+         </primitive>
+         <primitive class="lsb" type="nfsserver" provider="heartbeat" id="resource_nfsserver_single">
+           <instance_attributes id="resource_nfsserver_single_instance_attrs">
+             <attributes/>
+           </instance_attributes>
+           <operations>
+             <op id="0879256d-9baa-4969-80e9-67871bd3ecb8" name="monitor" interval="15" timeout="15" start_delay="15" on_fail="stop" disabled="false" role="Started"/>
+           </operations>
+         </primitive>
+         <meta_attributes id="group_nfs_meta_attrs">
+           <attributes/>
+         </meta_attributes>
+       </group>
+     </resources>
+     <constraints>
+       <rsc_order id="order_ocfs_home_before_nfs" from="group_nfs" to="export_home_ocfs2_clone_set" type="after"/>
+       <rsc_location id="location_" rsc="group_nfs">
+         <rule id="prefered_location_" score="INFINITY">
+           <expression attribute="#uname" id="2a7414db-83f6-4ebb-99ed-effe71162554" operation="eq" value="power720-1"/>
+         </rule>
+       </rsc_location>
+       <rsc_colocation id="colocation_rolf" from="group_nfs" to="export_home_ocfs2_clone_set" score="INFINITY"/>
+     </constraints>
+   </configuration>
+   <status>
+     <node_state id="1a1ecd04-01a0-43bf-9392-11b89f7d6f10" uname="power720-2" crmd="online" crm-debug-origin="do_lrm_query" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+       <transient_attributes id="1a1ecd04-01a0-43bf-9392-11b89f7d6f10">
+         <instance_attributes id="status-1a1ecd04-01a0-43bf-9392-11b89f7d6f10">
+           <attributes>
+             <nvpair id="status-1a1ecd04-01a0-43bf-9392-11b89f7d6f10-probe_complete" name="probe_complete" value="true"/>
+           </attributes>
+         </instance_attributes>
+       </transient_attributes>
+       <lrm id="1a1ecd04-01a0-43bf-9392-11b89f7d6f10">
+         <lrm_resources>
+           <lrm_resource id="resource_ipaddr1_single" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="resource_ipaddr1_single_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="13:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition_magic="0:7;13:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" call_id="5" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="bb94f885c21ceec5e315606403dfaa0f"/>
+             <lrm_rsc_op id="resource_ipaddr1_single_start_0" operation="start" crm-debug-origin="build_active_RAs" transition_key="23:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition_magic="0:0;23:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" call_id="10" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="0c75e99e5cd5902da1e1fdcb20f8700d"/>
+             <lrm_rsc_op id="resource_ipaddr1_single_monitor_5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="24:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition_magic="0:0;24:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" call_id="11" crm_feature_set="2.0" rc_code="0" op_status="0" interval="5000" op_digest="4768dd77f3e05ed2c4dfb01236551fbb"/>
+           </lrm_resource>
+           <lrm_resource id="export_home_ocfs2:0" type="Filesystem" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="export_home_ocfs2:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="10:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition_magic="0:7;10:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" call_id="2" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="76083682f012c0a85c98413b2238f387"/>
+           </lrm_resource>
+           <lrm_resource id="export_home_ocfs2:1" type="Filesystem" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="export_home_ocfs2:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="11:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition_magic="0:7;11:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" call_id="3" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="76083682f012c0a85c98413b2238f387"/>
+             <lrm_rsc_op id="export_home_ocfs2:1_start_0" operation="start" crm-debug-origin="build_active_RAs" transition_key="6:1:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition_magic="0:0;6:1:619fe4bb-a705-4c3c-81cb-653a70839fb6" call_id="7" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="76083682f012c0a85c98413b2238f387"/>
+             <lrm_rsc_op id="export_home_ocfs2:1_post_notify_stop_0" operation="notify" crm-debug-origin="build_active_RAs" transition_key="41:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition_magic="0:0;41:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" call_id="14" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="76083682f012c0a85c98413b2238f387"/>
+           </lrm_resource>
+           <lrm_resource id="export_home_ocfs2:2" type="Filesystem" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="export_home_ocfs2:2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="12:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition_magic="0:7;12:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" call_id="4" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="76083682f012c0a85c98413b2238f387"/>
+           </lrm_resource>
+           <lrm_resource id="resource_nfsserver_single" type="nfsserver" class="lsb" provider="heartbeat">
+             <lrm_rsc_op id="resource_nfsserver_single_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="14:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition_magic="0:7;14:0:619fe4bb-a705-4c3c-81cb-653a70839fb6" call_id="6" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+             <lrm_rsc_op id="resource_nfsserver_single_start_0" operation="start" crm-debug-origin="build_active_RAs" transition_key="26:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition_magic="0:0;26:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" call_id="12" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+             <lrm_rsc_op id="resource_nfsserver_single_monitor_15000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="27:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" transition_magic="0:0;27:3:619fe4bb-a705-4c3c-81cb-653a70839fb6" call_id="13" crm_feature_set="2.0" rc_code="0" op_status="0" interval="15000" op_digest="02a5bcf940fc8d3239701acb11438d6a"/>
+           </lrm_resource>
+         </lrm_resources>
+       </lrm>
+     </node_state>
+     <node_state id="ac446085-4c9d-4d4a-a94d-5e63b6e421e3" uname="power720-1" crmd="online" crm-debug-origin="do_lrm_query" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
+       <lrm id="ac446085-4c9d-4d4a-a94d-5e63b6e421e3">
+         <lrm_resources/>
+       </lrm>
+     </node_state>
+   </status>
+ </cib>
