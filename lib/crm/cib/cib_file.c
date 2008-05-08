@@ -104,25 +104,25 @@ static int load_file_cib(const char *filename)
     const char *ignore_dtd = NULL;
     xmlNode *status = NULL;
     
-
     rc = stat(filename, &buf);
     if (rc == 0) {
 	cib_file = fopen(filename, "r");
 	if(cib_file == NULL) {
 	    cl_perror("Could not open config file %s for reading", filename);
-	    return cib_not_authorized;
-	    
-	} else {
-	    root = file2xml(cib_file, FALSE);
-	    fclose(cib_file);
+	    return cib_not_authorized;   
 	}
+
+	root = file2xml(cib_file, FALSE);
+	fclose(cib_file);
+	if(root == NULL) {
+	    return cib_dtd_validation;
+	}
+
+    } else {
+	return cib_NOTEXISTS;
     }
 
     rc = 0;
-    if(root == NULL) {
-	crm_warn("Continuing with an empty configuration.");
-	root = createEmptyCib();
-    }
     
     status = find_xml_node(root, XML_CIB_TAG_STATUS, FALSE);
     if(status == NULL) {
