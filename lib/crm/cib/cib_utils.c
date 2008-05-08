@@ -666,7 +666,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	    }
 
 	    ignore_dtd = crm_element_value(scratch, "ignore_dtd");
-	    dtd_ok = validate_with_dtd(scratch, TRUE, DTD_DIRECTORY"/crm.dtd");
+	    dtd_ok = validate_xml(scratch, NULL, TRUE);
 	    
 	    if(
 #if CRM_DEPRECATED_SINCE_2_0_4

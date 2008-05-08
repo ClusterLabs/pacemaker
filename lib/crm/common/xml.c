@@ -43,6 +43,20 @@
 
 #define XML_BUFFER_SIZE	4096
 
+struct schema_s 
+{
+	int type;
+	const char *name;
+	const char *location;
+};
+
+struct schema_s known_schemas[] = {
+    { 0, "none", NULL },
+    { 1, "crm.dtd",  DTD_DIRECTORY"/crm.dtd"},
+    { 2, "pacemaker-0.7.rng", "../xml/pacemaker-1.0.rng" },
+    { 2, LATEST_SCHEMA_VERSION, DTD_DIRECTORY"/"LATEST_SCHEMA_VERSION }
+};
+
 static const char *filter[] = {
     XML_ATTR_ORIGIN,
     XML_DIFF_MARKER,
@@ -2746,7 +2760,7 @@ calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
 #  include <libxml/relaxng.h>
 #endif
 
-gboolean
+static gboolean
 validate_with_dtd(
 	xmlNode *xml_blob, gboolean to_logs, const char *dtd_file) 
 {
@@ -2805,7 +2819,7 @@ xmlNode *first_named_child(xmlNode *parent, const char *name)
     return NULL;
 }
 
-gboolean
+static gboolean
 validate_with_relaxng(crm_data_t *xml_blob, gboolean to_logs, const char *relaxng_file) 
 {
     gboolean valid = TRUE;
@@ -2868,8 +2882,6 @@ validate_with_relaxng(crm_data_t *xml_blob, gboolean to_logs, const char *relaxn
 
     } else if (rc < 0) {
 	crm_err("Internal libxml error during validation\n");
-    } else {
-	crm_info("The XML is valid");
     }
 
   cleanup:
@@ -2891,4 +2903,96 @@ validate_with_relaxng(crm_data_t *xml_blob, gboolean to_logs, const char *relaxn
 
 #endif	
     return valid;
+}
+
+static gboolean validate_with(xmlNode *xml, int type, const char *file, gboolean to_logs) 
+{
+    switch(type) {
+	case 0:
+	    return TRUE;
+	case 1:
+	    return validate_with_dtd(xml, to_logs, file);
+	case 2:
+	    return validate_with_relaxng(xml, to_logs, file);
+	default:
+	    crm_err("Unknown validator type: %d", type);
+	    break;
+    }
+    return FALSE;
+}
+
+gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
+{
+    int lpc = 0;
+    static int max = DIMOF(known_schemas);
+
+    if(validation == NULL) {
+	validation = crm_element_value(xml_blob, "validation");
+    }
+
+    if(validation == NULL) {
+	/* Compatibility for 0.6 */
+	const char *value = crm_element_value(xml_blob, "ignore_dtd");
+	if(value != NULL && crm_is_true(value) == FALSE) {
+	    validation = "crm.dtd";
+	}
+    }
+
+    if(validation == NULL || safe_str_eq(validation, "none")) {
+	return TRUE;
+    }
+
+    for(; lpc < max; lpc++) {
+	if(safe_str_eq(validation, known_schemas[lpc].name)) {
+	    if(to_logs) {
+		crm_info("Validating configuration with %s: %s",
+			 known_schemas[lpc].name, known_schemas[lpc].location);
+	    return validate_with(xml_blob, known_schemas[lpc].type, known_schemas[lpc].location, to_logs);
+	}
+    }
+
+    crm_err("Unknown validator: %s", validation);
+    return FALSE;
+}
+
+/* set which validation to use */
+void update_validation(xmlNode *xml_blob) 
+{
+    int lpc = 0, match = 0;
+    static int max = DIMOF(known_schemas);
+    const char *value = crm_element_value(xml_blob, "validation");
+
+    if(safe_str_eq(value, "none")) {
+	/* they dont want any */
+	return;
+
+    } else if(safe_str_eq(value, LATEST_SCHEMA_VERSION)) {
+	return;
+    }
+
+    if(value != NULL) {
+	for(; lpc < max; lpc++) {
+	    if(safe_str_eq(value, known_schemas[lpc].name)) {
+		match = lpc;
+		lpc++;
+		break;
+	    }
+	}
+    }
+    
+    for(; lpc < max; lpc++) {
+	gboolean valid = TRUE;
+	crm_debug("Testing '%s' validation", known_schemas[lpc].name);
+	valid = validate_with(xml_blob, known_schemas[lpc].type, known_schemas[lpc].location, FALSE);
+	
+	if(valid == FALSE) {
+	    lpc--;
+	    break;
+	}
+    }
+    
+    if(lpc > match) {
+	crm_notice("Upgrading from %s to %s validation", value?value:"<none>", known_schemas[lpc].name);
+	crm_xml_add(xml_blob, "validation", known_schemas[lpc].name);
+    }    
 }

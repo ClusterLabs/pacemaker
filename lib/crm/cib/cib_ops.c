@@ -377,8 +377,8 @@ cib_process_diff(
 			result = cib_diff_resync;
 		    }
 			
-		} else if((options & cib_force_diff) && !validate_with_dtd(
-			      *result_cib, FALSE, DTD_DIRECTORY"/crm.dtd")) {
+		} else if((options & cib_force_diff)
+			  && !validate_xml(*result_cib, NULL, FALSE)) {
 
 		    log_level = LOG_NOTICE;
 		    result = cib_diff_resync;

@@ -57,6 +57,7 @@ const char *dtd_file = DTD_DIRECTORY"/crm.dtd";
 int
 main(int argc, char **argv)
 {
+	const char *schema = NULL;
 	xmlNode *cib_object = NULL;
 	xmlNode *status = NULL;
 	int argerr = 0;
@@ -252,7 +253,12 @@ main(int argc, char **argv)
 		crm_config_err("ID Check failed");
 	}
 
-	if(validate_with_dtd(cib_object, FALSE, dtd_file) == FALSE) {
+	schema = crm_element_value(cib_object, "validation");
+	if(schema == NULL) {
+	    schema = LATEST_SCHEMA_VERSION;
+	}
+	
+	if(validate_xml(cib_object, schema, FALSE) == FALSE) {
 		crm_config_err("CIB did not pass DTD validation");
 	}
 

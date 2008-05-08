@@ -403,9 +403,9 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	}
 	
 	ignore_dtd = crm_element_value(root, "ignore_dtd");
-	dtd_ok = validate_with_dtd(root, TRUE, DTD_DIRECTORY"/crm.dtd");
+	dtd_ok = validate_xml(root, NULL, TRUE);
 	if(dtd_ok == FALSE) {
-		crm_err("CIB does not validate against "DTD_DIRECTORY"/crm.dtd");
+		crm_err("CIB does not validate");
 		if(ignore_dtd != NULL && crm_is_true(ignore_dtd) == FALSE) {
 			cib_status = cib_dtd_validation;
 		}

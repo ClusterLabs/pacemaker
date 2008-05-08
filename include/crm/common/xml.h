@@ -32,6 +32,7 @@
 #define USE_LIBXML 1
 #include <libxml/tree.h> 
 typedef xmlNode crm_data_t;
+#define LATEST_SCHEMA_VERSION "pacemaker-1.0.rng"
 
 extern gboolean add_message_xml(
 	xmlNode *msg, const char *field, xmlNode *xml);
@@ -224,11 +225,8 @@ extern gboolean xml_has_children(const xmlNode *root);
 
 extern char *calculate_xml_digest(xmlNode *local_cib, gboolean sort, gboolean do_filter);
 
-extern gboolean validate_with_dtd(
-	xmlNode *xml_blob, gboolean to_logs, const char *dtd_file);
-
-extern gboolean validate_with_relaxng(
-    crm_data_t *xml_blob, gboolean to_logs, const char *relaxng_file);
+extern gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs);
+extern void update_validation(xmlNode *xml_blob) ;
 
 #if XML_PARANOIA_CHECKS
 #  define crm_validate_data(obj) xml_validate(obj)
