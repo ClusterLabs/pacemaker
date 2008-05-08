@@ -213,20 +213,52 @@ static void cib_destroy_op_callback(gpointer data)
     crm_free(blob);
 }
 
+char *get_shadow_file(const char *name) 
+{
+    return crm_concat(WORKING_DIR"/shadow", name, '.');
+}
+
+
+cib_t*
+cib_shadow_new(const char *shadow) 
+{
+    cib_t *new_cib = NULL;
+    char *shadow_file = NULL;
+    CRM_CHECK(shadow != NULL, return NULL);
+    
+    shadow_file = get_shadow_file(shadow);
+    new_cib = cib_file_new(shadow_file);
+    crm_free(shadow_file);
+    
+    return new_cib;
+}
+
+cib_t *cib_new_no_shadow(void) 
+{
+    unsetenv("CIB_shadow");
+    return cib_new();
+}
+
+
 cib_t*
 cib_new(void) 
 {
-    const char *file = getenv("CIB_file");
-    if(file) {
-	return cib_file_new(file);
+    const char *value = getenv("CIB_shadow");
+    if(value) {
+	return cib_shadow_new(value);
     }
 
-    if(getenv("CIB_port")) {
+    value = getenv("CIB_file");
+    if(value) {
+	return cib_file_new(value);
+    }
+
+    value = getenv("CIB_port");
+    if(value) {
+	int port = crm_parse_int(value, NULL);
 	const char *server = getenv("CIB_server");
 	const char *user = getenv("CIB_user");
 	const char *pass = getenv("CIB_passwd");
-	const char *port_s = getenv("CIB_port");
-	int port = crm_parse_int(port_s, NULL);
 
 	if(user == NULL) {
 	    user = getenv("USER");
@@ -234,7 +266,7 @@ cib_new(void)
 	}
 
 	if(server == NULL) {
-	    server = "localhost";;
+	    server = "localhost";
 	    crm_info("Defaulting to localhost");
 	}
 

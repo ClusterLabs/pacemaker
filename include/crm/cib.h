@@ -296,6 +296,10 @@ extern cib_t *cib_native_new(void);
 extern cib_t *cib_file_new(const char *filename);
 extern cib_t *cib_remote_new(const char *server, const char *user, const char *passwd, int port);
 
+extern cib_t *cib_new_no_shadow(void);
+extern char *get_shadow_file(const char *name);
+extern cib_t *cib_shadow_new(const char *name);
+
 extern void cib_delete(cib_t *cib);
 
 extern int num_cib_op_callbacks(void);
