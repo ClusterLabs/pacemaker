@@ -242,7 +242,7 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 		}  else {
 			const char *value = NULL;
 			crm_data_t *graph_data = xml_data;
-			crm_debug("Processing graph derived from %s", graph_input);
+			crm_info("Processing graph derived from %s", graph_input);
 
 			if(graph_file != NULL) {
 				FILE *graph_fd = fopen(graph_file, "r");
