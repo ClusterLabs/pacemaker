@@ -2806,9 +2806,6 @@ validate_with_dtd(
 	if(dtd) {
 		xmlFreeDtd(dtd);
 	}
-	if(doc) {
-		xmlFreeDoc(doc);
-	}
 	
 	return valid;
 }
@@ -2895,10 +2892,6 @@ validate_with_relaxng(crm_data_t *xml_blob, gboolean to_logs, const char *relaxn
     
     if (rng != NULL) {
 	xmlRelaxNGFree(rng);    
-    }
-
-    if(doc) {
-	xmlFreeDoc(doc);
     }
 
 #endif	
