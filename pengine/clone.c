@@ -296,18 +296,25 @@ color_instance(resource_t *rsc, pe_working_set_t *data_set)
 	return chosen;
 }
 
-static void append_parent_colocation(resource_t *rsc, resource_t *child) 
+static void append_parent_colocation(resource_t *rsc, resource_t *child, gboolean all) 
 {
     slist_iter(cons, rsc_colocation_t, rsc->rsc_cons, lpc,
-	       child->rsc_cons = g_list_append(child->rsc_cons, cons));
+	       if(all || cons->score < 0) {
+		   child->rsc_cons = g_list_append(child->rsc_cons, cons);
+	       }
+	);
     slist_iter(cons, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
-	       child->rsc_cons_lhs = g_list_append(child->rsc_cons_lhs, cons));
+	       if(all || cons->score < 0) {
+		   child->rsc_cons_lhs = g_list_append(child->rsc_cons_lhs, cons);
+	       }
+	);
 }
 
 node_t *
 clone_color(resource_t *rsc, pe_working_set_t *data_set)
 {
 	int allocated = 0;
+	int available_nodes = 0;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
@@ -364,13 +371,26 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	rsc->allowed_nodes = g_list_sort(
 		rsc->allowed_nodes, sort_node_weight);
 
+
+	slist_iter(node, node_t, rsc->allowed_nodes, lpc,
+		   if(can_run_resources(node) == FALSE) {
+		       available_nodes++;
+		   }
+	    );
 	
 	slist_iter(child, resource_t, rsc->children, lpc,
 		   if(allocated >= clone_data->clone_max) {
 			   crm_debug("Child %s not allocated - limit reached", child->id);
 			   resource_location(child, NULL, -INFINITY, "clone_color:limit_reached", data_set);
+
+		   } else if (clone_data->clone_max < available_nodes) {
+		       /* Only include positive colocation preferences of dependant resources
+			* if not every node will get a copy of the clone
+			*/
+		       append_parent_colocation(rsc, child, TRUE);
+
 		   } else {
-		       append_parent_colocation(rsc, child);		       
+		       append_parent_colocation(rsc, child, FALSE);
 		   }
 		   
 		   if(color_instance(child, data_set)) {
