@@ -1227,7 +1227,7 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 
 	} else if(next == NULL) {
 	    crm_notice("Stop resource %s\t(%s %s)",
-		       rsc->id, role2text(rsc->role), next->details->uname);
+		       rsc->id, role2text(rsc->role), current->details->uname);
 	    return;
 
 	} else if(current == NULL && rsc->next_role > RSC_ROLE_SLAVE) {
