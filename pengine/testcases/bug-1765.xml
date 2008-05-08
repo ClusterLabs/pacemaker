@@ -157,9 +157,9 @@
          </instance_attributes>
          <instance_attributes id="master-aa584ceb-0d17-48ed-97c2-250b062e7407">
            <attributes>
-             <nvpair name="master-drbd0:0" id="status-master-drbd0:0-aa584ceb-0d17-48ed-97c2-250b062e7407" value="10"/>
+             <nvpair name="master-drbd0:0" id="status-master-drbd0:0-aa584ceb-0d17-48ed-97c2-250b062e7407" value="75"/>
              <nvpair name="master-drbd1:0" id="status-master-drbd1:0-aa584ceb-0d17-48ed-97c2-250b062e7407" value="75"/>
-             <nvpair name="master-drbd0:1" id="status-master-drbd0:1-aa584ceb-0d17-48ed-97c2-250b062e7407" value="75"/>
+             <nvpair name="master-drbd0:1" id="status-master-drbd0:1-aa584ceb-0d17-48ed-97c2-250b062e7407" value="10"/>
              <nvpair id="status-master-drbd1:1-aa584ceb-0d17-48ed-97c2-250b062e7407" name="master-drbd1:1" value="10"/>
            </attributes>
          </instance_attributes>

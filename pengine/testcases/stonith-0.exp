@@ -25,7 +25,7 @@
          <rsc_op id="37" operation="start" operation_key="ocf_192.168.100.181_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
        </trigger>
        <trigger>
-         <rsc_op id="40" operation="start" operation_key="heartbeat_192.168.100.182_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
+         <rsc_op id="39" operation="start" operation_key="heartbeat_192.168.100.182_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
        </trigger>
        <trigger>
          <rsc_op id="42" operation="start" operation_key="ocf_192.168.100.183_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
@@ -63,7 +63,7 @@
          <pseudo_event id="36" operation="stop" operation_key="ocf_192.168.100.181_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="39" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0"/>
+         <pseudo_event id="40" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0"/>
        </trigger>
        <trigger>
          <pseudo_event id="46" operation="stop" operation_key="group-1_stop_0"/>
@@ -78,7 +78,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="39" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0"/>
+         <pseudo_event id="40" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0"/>
        </trigger>
        <trigger>
          <pseudo_event id="46" operation="stop" operation_key="group-1_stop_0"/>
@@ -96,7 +96,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="39" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0"/>
+         <pseudo_event id="40" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0"/>
        </trigger>
        <trigger>
          <pseudo_event id="46" operation="stop" operation_key="group-1_stop_0"/>
@@ -140,7 +140,26 @@
    </synapse>
    <synapse id="8">
      <action_set>
-       <pseudo_event id="39" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0">
+       <rsc_op id="39" operation="start" operation_key="heartbeat_192.168.100.182_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
+         <primitive id="heartbeat_192.168.100.182" long-id="group-1:heartbeat_192.168.100.182" class="heartbeat" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="2.1" 1="192.168.100.182" CRM_meta_timeout="20000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="37" operation="start" operation_key="ocf_192.168.100.181_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="40" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="44" operation="start" operation_key="group-1_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="9">
+     <action_set>
+       <pseudo_event id="40" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0">
          <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
        </pseudo_event>
      </action_set>
@@ -159,25 +178,6 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="9">
-     <action_set>
-       <rsc_op id="40" operation="start" operation_key="heartbeat_192.168.100.182_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
-         <primitive id="heartbeat_192.168.100.182" long-id="group-1:heartbeat_192.168.100.182" class="heartbeat" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="2.1" 1="192.168.100.182" CRM_meta_timeout="20000"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="37" operation="start" operation_key="ocf_192.168.100.181_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="39" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="44" operation="start" operation_key="group-1_start_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
    <synapse id="10">
      <action_set>
        <rsc_op id="41" operation="monitor" operation_key="heartbeat_192.168.100.182_monitor_5000" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
@@ -187,7 +187,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="40" operation="start" operation_key="heartbeat_192.168.100.182_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
+         <rsc_op id="39" operation="start" operation_key="heartbeat_192.168.100.182_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
        </trigger>
      </inputs>
    </synapse>
@@ -236,7 +236,7 @@
          <pseudo_event id="15" operation="stop" operation_key="ocf_192.168.100.183_stop_0"/>
        </trigger>
        <trigger>
-         <rsc_op id="40" operation="start" operation_key="heartbeat_192.168.100.182_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
+         <rsc_op id="39" operation="start" operation_key="heartbeat_192.168.100.182_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
        </trigger>
        <trigger>
          <pseudo_event id="44" operation="start" operation_key="group-1_start_0"/>
@@ -367,7 +367,7 @@
          <pseudo_event id="36" operation="stop" operation_key="ocf_192.168.100.181_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="39" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0"/>
+         <pseudo_event id="40" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0"/>
        </trigger>
        <trigger>
          <crm_event id="119" operation="stonith" operation_key="stonith" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>

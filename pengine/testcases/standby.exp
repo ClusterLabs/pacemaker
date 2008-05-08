@@ -22,13 +22,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="28" operation="start" operation_key="IPaddr_192_168_1_102_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="27" operation="start" operation_key="IPaddr_192_168_1_102_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
        <trigger>
-         <rsc_op id="31" operation="start" operation_key="LVM_12_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="30" operation="start" operation_key="LVM_12_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
        <trigger>
-         <rsc_op id="34" operation="start" operation_key="Filesystem_13_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="33" operation="start" operation_key="Filesystem_13_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
        <trigger>
          <pseudo_event id="36" operation="start" operation_key="app02_start_0"/>
@@ -51,13 +51,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="27" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+         <rsc_op id="28" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
        <trigger>
-         <rsc_op id="30" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+         <rsc_op id="31" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
        <trigger>
-         <rsc_op id="33" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+         <rsc_op id="34" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
        <trigger>
          <pseudo_event id="38" operation="stop" operation_key="app02_stop_0"/>
@@ -66,33 +66,33 @@
    </synapse>
    <synapse id="4">
      <action_set>
-       <rsc_op id="27" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181">
-         <primitive id="IPaddr_192_168_1_102" long-id="app02:IPaddr_192_168_1_102" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="30" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="38" operation="stop" operation_key="app02_stop_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="5">
-     <action_set>
-       <rsc_op id="28" operation="start" operation_key="IPaddr_192_168_1_102_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
+       <rsc_op id="27" operation="start" operation_key="IPaddr_192_168_1_102_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
          <primitive id="IPaddr_192_168_1_102" long-id="app02:IPaddr_192_168_1_102" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes crm_feature_set="2.1" ip="192.168.1.102" CRM_meta_timeout="20000"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="27" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+         <rsc_op id="28" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
        <trigger>
          <pseudo_event id="36" operation="start" operation_key="app02_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="5">
+     <action_set>
+       <rsc_op id="28" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181">
+         <primitive id="IPaddr_192_168_1_102" long-id="app02:IPaddr_192_168_1_102" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="31" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="38" operation="stop" operation_key="app02_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -105,42 +105,42 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="28" operation="start" operation_key="IPaddr_192_168_1_102_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="27" operation="start" operation_key="IPaddr_192_168_1_102_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="7">
      <action_set>
-       <rsc_op id="30" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181">
-         <primitive id="LVM_12" long-id="app02:LVM_12" class="ocf" provider="heartbeat" type="LVM"/>
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="33" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="38" operation="stop" operation_key="app02_stop_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="8">
-     <action_set>
-       <rsc_op id="31" operation="start" operation_key="LVM_12_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
+       <rsc_op id="30" operation="start" operation_key="LVM_12_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
          <primitive id="LVM_12" long-id="app02:LVM_12" class="ocf" provider="heartbeat" type="LVM"/>
          <attributes crm_feature_set="2.1" volgrpname="data02vg" CRM_meta_timeout="20000"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="28" operation="start" operation_key="IPaddr_192_168_1_102_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="27" operation="start" operation_key="IPaddr_192_168_1_102_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
        <trigger>
-         <rsc_op id="30" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+         <rsc_op id="31" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
        <trigger>
          <pseudo_event id="36" operation="start" operation_key="app02_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="8">
+     <action_set>
+       <rsc_op id="31" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181">
+         <primitive id="LVM_12" long-id="app02:LVM_12" class="ocf" provider="heartbeat" type="LVM"/>
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="34" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="38" operation="stop" operation_key="app02_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -153,13 +153,32 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="31" operation="start" operation_key="LVM_12_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="30" operation="start" operation_key="LVM_12_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="10">
      <action_set>
-       <rsc_op id="33" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181">
+       <rsc_op id="33" operation="start" operation_key="Filesystem_13_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
+         <primitive id="Filesystem_13" long-id="app02:Filesystem_13" class="ocf" provider="heartbeat" type="Filesystem"/>
+         <attributes crm_feature_set="2.1" directory="/data/d2" fstype="ext3" device="/dev/data02vg/v0" CRM_meta_timeout="20000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="30" operation="start" operation_key="LVM_12_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="34" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="36" operation="start" operation_key="app02_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="11">
+     <action_set>
+       <rsc_op id="34" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181">
          <primitive id="Filesystem_13" long-id="app02:Filesystem_13" class="ocf" provider="heartbeat" type="Filesystem"/>
          <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
        </rsc_op>
@@ -167,25 +186,6 @@
      <inputs>
        <trigger>
          <pseudo_event id="38" operation="stop" operation_key="app02_stop_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="11">
-     <action_set>
-       <rsc_op id="34" operation="start" operation_key="Filesystem_13_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
-         <primitive id="Filesystem_13" long-id="app02:Filesystem_13" class="ocf" provider="heartbeat" type="Filesystem"/>
-         <attributes crm_feature_set="2.1" directory="/data/d2" fstype="ext3" device="/dev/data02vg/v0" CRM_meta_timeout="20000"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="31" operation="start" operation_key="LVM_12_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="33" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="36" operation="start" operation_key="app02_start_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -198,7 +198,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="34" operation="start" operation_key="Filesystem_13_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="33" operation="start" operation_key="Filesystem_13_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
      </inputs>
    </synapse>
@@ -225,19 +225,19 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="41" operation="start" operation_key="IPaddr_192_168_1_104_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="40" operation="start" operation_key="IPaddr_192_168_1_104_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
        <trigger>
-         <rsc_op id="44" operation="start" operation_key="LVM_22_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="43" operation="start" operation_key="LVM_22_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
        <trigger>
-         <rsc_op id="47" operation="start" operation_key="Filesystem_23_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="46" operation="start" operation_key="Filesystem_23_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
        <trigger>
-         <rsc_op id="50" operation="start" operation_key="oracle_24_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="49" operation="start" operation_key="oracle_24_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
        <trigger>
-         <rsc_op id="53" operation="start" operation_key="oralsnr_25_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="52" operation="start" operation_key="oralsnr_25_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
        <trigger>
          <pseudo_event id="55" operation="start" operation_key="oracle_start_0"/>
@@ -260,19 +260,19 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="40" operation="stop" operation_key="IPaddr_192_168_1_104_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <rsc_op id="41" operation="stop" operation_key="IPaddr_192_168_1_104_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
        <trigger>
-         <rsc_op id="43" operation="stop" operation_key="LVM_22_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <rsc_op id="44" operation="stop" operation_key="LVM_22_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
        <trigger>
-         <rsc_op id="46" operation="stop" operation_key="Filesystem_23_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <rsc_op id="47" operation="stop" operation_key="Filesystem_23_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
        <trigger>
-         <rsc_op id="49" operation="stop" operation_key="oracle_24_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <rsc_op id="50" operation="stop" operation_key="oracle_24_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
        <trigger>
-         <rsc_op id="52" operation="stop" operation_key="oralsnr_25_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <rsc_op id="53" operation="stop" operation_key="oralsnr_25_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
        <trigger>
          <pseudo_event id="57" operation="stop" operation_key="oracle_stop_0"/>
@@ -281,33 +281,33 @@
    </synapse>
    <synapse id="17">
      <action_set>
-       <rsc_op id="40" operation="stop" operation_key="IPaddr_192_168_1_104_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
-         <primitive id="IPaddr_192_168_1_104" long-id="oracle:IPaddr_192_168_1_104" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="43" operation="stop" operation_key="LVM_22_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="57" operation="stop" operation_key="oracle_stop_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="18">
-     <action_set>
-       <rsc_op id="41" operation="start" operation_key="IPaddr_192_168_1_104_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
+       <rsc_op id="40" operation="start" operation_key="IPaddr_192_168_1_104_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
          <primitive id="IPaddr_192_168_1_104" long-id="oracle:IPaddr_192_168_1_104" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes crm_feature_set="2.1" ip="192.168.1.104" CRM_meta_timeout="20000"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="40" operation="stop" operation_key="IPaddr_192_168_1_104_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <rsc_op id="41" operation="stop" operation_key="IPaddr_192_168_1_104_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
        <trigger>
          <pseudo_event id="55" operation="start" operation_key="oracle_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="18">
+     <action_set>
+       <rsc_op id="41" operation="stop" operation_key="IPaddr_192_168_1_104_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
+         <primitive id="IPaddr_192_168_1_104" long-id="oracle:IPaddr_192_168_1_104" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="44" operation="stop" operation_key="LVM_22_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="57" operation="stop" operation_key="oracle_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -320,42 +320,42 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="41" operation="start" operation_key="IPaddr_192_168_1_104_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="40" operation="start" operation_key="IPaddr_192_168_1_104_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="20">
      <action_set>
-       <rsc_op id="43" operation="stop" operation_key="LVM_22_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
-         <primitive id="LVM_22" long-id="oracle:LVM_22" class="ocf" provider="heartbeat" type="LVM"/>
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="46" operation="stop" operation_key="Filesystem_23_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="57" operation="stop" operation_key="oracle_stop_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="21">
-     <action_set>
-       <rsc_op id="44" operation="start" operation_key="LVM_22_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
+       <rsc_op id="43" operation="start" operation_key="LVM_22_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
          <primitive id="LVM_22" long-id="oracle:LVM_22" class="ocf" provider="heartbeat" type="LVM"/>
          <attributes crm_feature_set="2.1" volgrpname="data03vg" CRM_meta_timeout="20000"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="41" operation="start" operation_key="IPaddr_192_168_1_104_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="40" operation="start" operation_key="IPaddr_192_168_1_104_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
        <trigger>
-         <rsc_op id="43" operation="stop" operation_key="LVM_22_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <rsc_op id="44" operation="stop" operation_key="LVM_22_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
        <trigger>
          <pseudo_event id="55" operation="start" operation_key="oracle_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="21">
+     <action_set>
+       <rsc_op id="44" operation="stop" operation_key="LVM_22_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
+         <primitive id="LVM_22" long-id="oracle:LVM_22" class="ocf" provider="heartbeat" type="LVM"/>
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="47" operation="stop" operation_key="Filesystem_23_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="57" operation="stop" operation_key="oracle_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -368,42 +368,42 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="44" operation="start" operation_key="LVM_22_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="43" operation="start" operation_key="LVM_22_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="23">
      <action_set>
-       <rsc_op id="46" operation="stop" operation_key="Filesystem_23_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
-         <primitive id="Filesystem_23" long-id="oracle:Filesystem_23" class="ocf" provider="heartbeat" type="Filesystem"/>
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="49" operation="stop" operation_key="oracle_24_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="57" operation="stop" operation_key="oracle_stop_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="24">
-     <action_set>
-       <rsc_op id="47" operation="start" operation_key="Filesystem_23_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
+       <rsc_op id="46" operation="start" operation_key="Filesystem_23_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
          <primitive id="Filesystem_23" long-id="oracle:Filesystem_23" class="ocf" provider="heartbeat" type="Filesystem"/>
          <attributes crm_feature_set="2.1" directory="/data/d3" fstype="xfs" device="/dev/data03vg/v0" CRM_meta_timeout="20000"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="44" operation="start" operation_key="LVM_22_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="43" operation="start" operation_key="LVM_22_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
        <trigger>
-         <rsc_op id="46" operation="stop" operation_key="Filesystem_23_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <rsc_op id="47" operation="stop" operation_key="Filesystem_23_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
        <trigger>
          <pseudo_event id="55" operation="start" operation_key="oracle_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="24">
+     <action_set>
+       <rsc_op id="47" operation="stop" operation_key="Filesystem_23_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
+         <primitive id="Filesystem_23" long-id="oracle:Filesystem_23" class="ocf" provider="heartbeat" type="Filesystem"/>
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="50" operation="stop" operation_key="oracle_24_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="57" operation="stop" operation_key="oracle_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -416,42 +416,42 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="47" operation="start" operation_key="Filesystem_23_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="46" operation="start" operation_key="Filesystem_23_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="26">
      <action_set>
-       <rsc_op id="49" operation="stop" operation_key="oracle_24_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
-         <primitive id="oracle_24" long-id="oracle:oracle_24" class="ocf" provider="heartbeat" type="oracle"/>
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="52" operation="stop" operation_key="oralsnr_25_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="57" operation="stop" operation_key="oracle_stop_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="27">
-     <action_set>
-       <rsc_op id="50" operation="start" operation_key="oracle_24_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
+       <rsc_op id="49" operation="start" operation_key="oracle_24_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
          <primitive id="oracle_24" long-id="oracle:oracle_24" class="ocf" provider="heartbeat" type="oracle"/>
          <attributes crm_feature_set="2.1" sid="testdb" CRM_meta_timeout="20000"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="47" operation="start" operation_key="Filesystem_23_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="46" operation="start" operation_key="Filesystem_23_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
        <trigger>
-         <rsc_op id="49" operation="stop" operation_key="oracle_24_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <rsc_op id="50" operation="stop" operation_key="oracle_24_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
        <trigger>
          <pseudo_event id="55" operation="start" operation_key="oracle_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="27">
+     <action_set>
+       <rsc_op id="50" operation="stop" operation_key="oracle_24_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
+         <primitive id="oracle_24" long-id="oracle:oracle_24" class="ocf" provider="heartbeat" type="oracle"/>
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="53" operation="stop" operation_key="oralsnr_25_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="57" operation="stop" operation_key="oracle_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -464,13 +464,32 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="50" operation="start" operation_key="oracle_24_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="49" operation="start" operation_key="oracle_24_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="29">
      <action_set>
-       <rsc_op id="52" operation="stop" operation_key="oralsnr_25_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
+       <rsc_op id="52" operation="start" operation_key="oralsnr_25_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
+         <primitive id="oralsnr_25" long-id="oracle:oralsnr_25" class="ocf" provider="heartbeat" type="oralsnr"/>
+         <attributes crm_feature_set="2.1" sid="testdb" CRM_meta_timeout="20000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="49" operation="start" operation_key="oracle_24_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="53" operation="stop" operation_key="oralsnr_25_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="55" operation="start" operation_key="oracle_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="30">
+     <action_set>
+       <rsc_op id="53" operation="stop" operation_key="oralsnr_25_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
          <primitive id="oralsnr_25" long-id="oracle:oralsnr_25" class="ocf" provider="heartbeat" type="oralsnr"/>
          <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
        </rsc_op>
@@ -478,25 +497,6 @@
      <inputs>
        <trigger>
          <pseudo_event id="57" operation="stop" operation_key="oracle_stop_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="30">
-     <action_set>
-       <rsc_op id="53" operation="start" operation_key="oralsnr_25_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d">
-         <primitive id="oralsnr_25" long-id="oracle:oralsnr_25" class="ocf" provider="heartbeat" type="oralsnr"/>
-         <attributes crm_feature_set="2.1" sid="testdb" CRM_meta_timeout="20000"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="50" operation="start" operation_key="oracle_24_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="52" operation="stop" operation_key="oralsnr_25_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="55" operation="start" operation_key="oracle_start_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -509,7 +509,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="53" operation="start" operation_key="oralsnr_25_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
+         <rsc_op id="52" operation="start" operation_key="oralsnr_25_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
        </trigger>
      </inputs>
    </synapse>
@@ -521,28 +521,28 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="27" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+         <rsc_op id="28" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
        <trigger>
-         <rsc_op id="30" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+         <rsc_op id="31" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
        <trigger>
-         <rsc_op id="33" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
+         <rsc_op id="34" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
        <trigger>
-         <rsc_op id="40" operation="stop" operation_key="IPaddr_192_168_1_104_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <rsc_op id="41" operation="stop" operation_key="IPaddr_192_168_1_104_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
        <trigger>
-         <rsc_op id="43" operation="stop" operation_key="LVM_22_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <rsc_op id="44" operation="stop" operation_key="LVM_22_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
        <trigger>
-         <rsc_op id="46" operation="stop" operation_key="Filesystem_23_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <rsc_op id="47" operation="stop" operation_key="Filesystem_23_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
        <trigger>
-         <rsc_op id="49" operation="stop" operation_key="oracle_24_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <rsc_op id="50" operation="stop" operation_key="oracle_24_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
        <trigger>
-         <rsc_op id="52" operation="stop" operation_key="oralsnr_25_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+         <rsc_op id="53" operation="stop" operation_key="oralsnr_25_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
        </trigger>
      </inputs>
    </synapse>

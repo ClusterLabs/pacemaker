@@ -290,20 +290,7 @@
    </synapse>
    <synapse id="22">
      <action_set>
-       <rsc_op id="47" operation="stop" operation_key="imagestoreclone:0_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
-         <primitive id="imagestoreclone:0" long-id="imagestorecloneset:imagestoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-         <attributes crm_feature_set="2.1" CRM_meta_id="imagestoreclone-op-02" CRM_meta_notify_active_resource="imagestoreclone:0 " CRM_meta_notify_stop_uname="node2 " CRM_meta_timeout="600000" CRM_meta_name="stop" CRM_meta_notify_stop_resource="imagestoreclone:0 " CRM_meta_notify_start_uname="node1 node2 " CRM_meta_notify_start_resource="imagestoreclone:0 imagestoreclone:1 " CRM_meta_notify_active_uname="node1 " CRM_meta_globally_unique="false" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="58" operation="stop" operation_key="imagestorecloneset_stop_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="23">
-     <action_set>
-       <rsc_op id="48" operation="start" operation_key="imagestoreclone:0_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
+       <rsc_op id="47" operation="start" operation_key="imagestoreclone:0_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
          <primitive id="imagestoreclone:0" long-id="imagestorecloneset:imagestoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
          <attributes crm_feature_set="2.1" directory="/var/lib/xen/images" fstype="ocfs2" device="/dev/evms/vmsharedclustercontainer/imagestore" CRM_meta_notify_active_resource="imagestoreclone:0 " CRM_meta_notify_stop_uname="node2 " CRM_meta_timeout="20000" CRM_meta_notify_stop_resource="imagestoreclone:0 " CRM_meta_notify_start_uname="node1 node2 " CRM_meta_notify_start_resource="imagestoreclone:0 imagestoreclone:1 " CRM_meta_notify_active_uname="node1 " CRM_meta_globally_unique="false" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
        </rsc_op>
@@ -313,10 +300,23 @@
          <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <rsc_op id="47" operation="stop" operation_key="imagestoreclone:0_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
+         <rsc_op id="48" operation="stop" operation_key="imagestoreclone:0_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
        </trigger>
        <trigger>
          <pseudo_event id="52" operation="start" operation_key="imagestorecloneset_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="23">
+     <action_set>
+       <rsc_op id="48" operation="stop" operation_key="imagestoreclone:0_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
+         <primitive id="imagestoreclone:0" long-id="imagestorecloneset:imagestoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
+         <attributes crm_feature_set="2.1" CRM_meta_id="imagestoreclone-op-02" CRM_meta_notify_active_resource="imagestoreclone:0 " CRM_meta_notify_stop_uname="node2 " CRM_meta_timeout="600000" CRM_meta_name="stop" CRM_meta_notify_stop_resource="imagestoreclone:0 " CRM_meta_notify_start_uname="node1 node2 " CRM_meta_notify_start_resource="imagestoreclone:0 imagestoreclone:1 " CRM_meta_notify_active_uname="node1 " CRM_meta_globally_unique="false" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="58" operation="stop" operation_key="imagestorecloneset_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -329,7 +329,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="48" operation="start" operation_key="imagestoreclone:0_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+         <rsc_op id="47" operation="start" operation_key="imagestoreclone:0_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
        </trigger>
        <trigger>
          <pseudo_event id="57" operation="notified" operation_key="imagestorecloneset_confirmed-post_notify_start_0"/>
@@ -445,7 +445,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="48" operation="start" operation_key="imagestoreclone:0_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+         <rsc_op id="47" operation="start" operation_key="imagestoreclone:0_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
        </trigger>
        <trigger>
          <rsc_op id="50" operation="start" operation_key="imagestoreclone:1_start_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
@@ -520,7 +520,7 @@
          <pseudo_event id="61" operation="notified" operation_key="imagestorecloneset_confirmed-pre_notify_stop_0"/>
        </trigger>
        <trigger>
-         <rsc_op id="80" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
+         <rsc_op id="81" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
        </trigger>
      </inputs>
    </synapse>
@@ -532,7 +532,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="47" operation="stop" operation_key="imagestoreclone:0_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
+         <rsc_op id="48" operation="stop" operation_key="imagestoreclone:0_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
        </trigger>
        <trigger>
          <pseudo_event id="58" operation="stop" operation_key="imagestorecloneset_stop_0"/>
@@ -766,16 +766,7 @@
    </synapse>
    <synapse id="55">
      <action_set>
-       <rsc_op id="80" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
-         <primitive id="sles10" long-id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
-         <attributes crm_feature_set="2.1" CRM_meta_id="xen-op-02" CRM_meta_timeout="60000" CRM_meta_name="stop"/>
-       </rsc_op>
-     </action_set>
-     <inputs/>
-   </synapse>
-   <synapse id="56">
-     <action_set>
-       <rsc_op id="81" operation="start" operation_key="sles10_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
+       <rsc_op id="80" operation="start" operation_key="sles10_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
          <primitive id="sles10" long-id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
          <attributes crm_feature_set="2.1" xmfile="/etc/xen/vm/sles10" CRM_meta_timeout="20000"/>
        </rsc_op>
@@ -797,9 +788,18 @@
          <pseudo_event id="73" operation="notified" operation_key="configstorecloneset_confirmed-post_notify_start_0"/>
        </trigger>
        <trigger>
-         <rsc_op id="80" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
+         <rsc_op id="81" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
        </trigger>
      </inputs>
+   </synapse>
+   <synapse id="56">
+     <action_set>
+       <rsc_op id="81" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
+         <primitive id="sles10" long-id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
+         <attributes crm_feature_set="2.1" CRM_meta_id="xen-op-02" CRM_meta_timeout="60000" CRM_meta_name="stop"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
    </synapse>
    <synapse id="57">
      <action_set>
@@ -810,7 +810,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="81" operation="start" operation_key="sles10_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+         <rsc_op id="80" operation="start" operation_key="sles10_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
        </trigger>
      </inputs>
    </synapse>
@@ -822,10 +822,10 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="47" operation="stop" operation_key="imagestoreclone:0_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
+         <rsc_op id="48" operation="stop" operation_key="imagestoreclone:0_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
        </trigger>
        <trigger>
-         <rsc_op id="80" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
+         <rsc_op id="81" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
        </trigger>
      </inputs>
    </synapse>

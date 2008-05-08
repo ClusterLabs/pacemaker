@@ -41,16 +41,7 @@
    </synapse>
    <synapse id="4" priority="2">
      <action_set>
-       <rsc_op id="12" operation="stop" operation_key="rsc4_stop_0" on_node="node1" on_node_uuid="node1">
-         <primitive id="rsc4" long-id="rsc4" class="heartbeat" type="apache"/>
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
-       </rsc_op>
-     </action_set>
-     <inputs/>
-   </synapse>
-   <synapse id="5" priority="2">
-     <action_set>
-       <rsc_op id="13" operation="start" operation_key="rsc4_start_0" on_node="node2" on_node_uuid="node2">
+       <rsc_op id="12" operation="start" operation_key="rsc4_start_0" on_node="node2" on_node_uuid="node2">
          <primitive id="rsc4" long-id="rsc4" class="heartbeat" type="apache"/>
          <attributes crm_feature_set="2.1" priority="2.0" CRM_meta_timeout="20000"/>
        </rsc_op>
@@ -60,9 +51,18 @@
          <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <rsc_op id="12" operation="stop" operation_key="rsc4_stop_0" on_node="node1" on_node_uuid="node1"/>
+         <rsc_op id="13" operation="stop" operation_key="rsc4_stop_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
      </inputs>
+   </synapse>
+   <synapse id="5" priority="2">
+     <action_set>
+       <rsc_op id="13" operation="stop" operation_key="rsc4_stop_0" on_node="node1" on_node_uuid="node1">
+         <primitive id="rsc4" long-id="rsc4" class="heartbeat" type="apache"/>
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
    </synapse>
    <synapse id="6" priority="1">
      <action_set>
@@ -112,7 +112,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="12" operation="stop" operation_key="rsc4_stop_0" on_node="node1" on_node_uuid="node1"/>
+         <rsc_op id="13" operation="stop" operation_key="rsc4_stop_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
      </inputs>
    </synapse>

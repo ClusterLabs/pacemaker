@@ -126,16 +126,7 @@
    </synapse>
    <synapse id="13">
      <action_set>
-       <rsc_op id="42" operation="stop" operation_key="rsc_ibm1_stop_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a">
-         <primitive id="rsc_ibm1" long-id="rsc_ibm1" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
-       </rsc_op>
-     </action_set>
-     <inputs/>
-   </synapse>
-   <synapse id="14">
-     <action_set>
-       <rsc_op id="43" operation="start" operation_key="rsc_ibm1_start_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
+       <rsc_op id="42" operation="start" operation_key="rsc_ibm1_start_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <primitive id="rsc_ibm1" long-id="rsc_ibm1" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes crm_feature_set="2.1" ip="127.0.0.12" CRM_meta_timeout="20000"/>
        </rsc_op>
@@ -145,9 +136,18 @@
          <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <rsc_op id="42" operation="stop" operation_key="rsc_ibm1_stop_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
+         <rsc_op id="43" operation="stop" operation_key="rsc_ibm1_stop_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
        </trigger>
      </inputs>
+   </synapse>
+   <synapse id="14">
+     <action_set>
+       <rsc_op id="43" operation="stop" operation_key="rsc_ibm1_stop_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a">
+         <primitive id="rsc_ibm1" long-id="rsc_ibm1" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
    </synapse>
    <synapse id="15">
      <action_set>
@@ -158,7 +158,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="43" operation="start" operation_key="rsc_ibm1_start_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
+         <rsc_op id="42" operation="start" operation_key="rsc_ibm1_start_0" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638"/>
        </trigger>
      </inputs>
    </synapse>
@@ -537,7 +537,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="42" operation="stop" operation_key="rsc_ibm1_stop_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
+         <rsc_op id="43" operation="stop" operation_key="rsc_ibm1_stop_0" on_node="test03" on_node_uuid="f9c593eb-ca0d-4ab3-ba88-fde12c02334a"/>
        </trigger>
      </inputs>
    </synapse>

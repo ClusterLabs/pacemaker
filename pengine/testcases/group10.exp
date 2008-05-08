@@ -25,10 +25,10 @@
          <rsc_op id="31" operation="start" operation_key="child_192.168.100.181_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
        <trigger>
-         <rsc_op id="33" operation="start" operation_key="child_192.168.100.182_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+         <rsc_op id="32" operation="start" operation_key="child_192.168.100.182_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
        <trigger>
-         <rsc_op id="35" operation="start" operation_key="child_192.168.100.183_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+         <rsc_op id="34" operation="start" operation_key="child_192.168.100.183_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
        <trigger>
          <pseudo_event id="36" operation="start" operation_key="group-1_start_0"/>
@@ -54,10 +54,10 @@
          <rsc_op id="13" operation="stop" operation_key="child_192.168.100.181_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
        <trigger>
-         <rsc_op id="32" operation="stop" operation_key="child_192.168.100.182_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+         <rsc_op id="33" operation="stop" operation_key="child_192.168.100.182_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
        <trigger>
-         <rsc_op id="34" operation="stop" operation_key="child_192.168.100.183_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+         <rsc_op id="35" operation="stop" operation_key="child_192.168.100.183_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
        <trigger>
          <pseudo_event id="38" operation="stop" operation_key="group-1_stop_0"/>
@@ -86,7 +86,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="32" operation="stop" operation_key="child_192.168.100.182_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+         <rsc_op id="33" operation="stop" operation_key="child_192.168.100.182_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
        <trigger>
          <pseudo_event id="38" operation="stop" operation_key="group-1_stop_0"/>
@@ -118,29 +118,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="33" operation="start" operation_key="child_192.168.100.182_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+         <rsc_op id="32" operation="start" operation_key="child_192.168.100.182_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="8">
      <action_set>
-       <rsc_op id="32" operation="stop" operation_key="child_192.168.100.182_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
-         <primitive id="child_192.168.100.182" long-id="group-1:child_192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="34" operation="stop" operation_key="child_192.168.100.183_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="38" operation="stop" operation_key="group-1_stop_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="9">
-     <action_set>
-       <rsc_op id="33" operation="start" operation_key="child_192.168.100.182_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
+       <rsc_op id="32" operation="start" operation_key="child_192.168.100.182_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
          <primitive id="child_192.168.100.182" long-id="group-1:child_192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes crm_feature_set="2.1" ip="192.168.100.182" CRM_meta_timeout="20000"/>
        </rsc_op>
@@ -150,10 +134,26 @@
          <rsc_op id="31" operation="start" operation_key="child_192.168.100.181_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
        <trigger>
-         <rsc_op id="32" operation="stop" operation_key="child_192.168.100.182_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+         <rsc_op id="33" operation="stop" operation_key="child_192.168.100.182_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
        <trigger>
          <pseudo_event id="36" operation="start" operation_key="group-1_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="9">
+     <action_set>
+       <rsc_op id="33" operation="stop" operation_key="child_192.168.100.182_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
+         <primitive id="child_192.168.100.182" long-id="group-1:child_192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="35" operation="stop" operation_key="child_192.168.100.183_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="38" operation="stop" operation_key="group-1_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -166,13 +166,32 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="35" operation="start" operation_key="child_192.168.100.183_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+         <rsc_op id="34" operation="start" operation_key="child_192.168.100.183_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="11">
      <action_set>
-       <rsc_op id="34" operation="stop" operation_key="child_192.168.100.183_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
+       <rsc_op id="34" operation="start" operation_key="child_192.168.100.183_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
+         <primitive id="child_192.168.100.183" long-id="group-1:child_192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="2.1" ip="192.168.100.183" CRM_meta_timeout="20000"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="32" operation="start" operation_key="child_192.168.100.182_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="35" operation="stop" operation_key="child_192.168.100.183_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="36" operation="start" operation_key="group-1_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="12">
+     <action_set>
+       <rsc_op id="35" operation="stop" operation_key="child_192.168.100.183_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
          <primitive id="child_192.168.100.183" long-id="group-1:child_192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
        </rsc_op>
@@ -180,25 +199,6 @@
      <inputs>
        <trigger>
          <pseudo_event id="38" operation="stop" operation_key="group-1_stop_0"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="12">
-     <action_set>
-       <rsc_op id="35" operation="start" operation_key="child_192.168.100.183_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
-         <primitive id="child_192.168.100.183" long-id="group-1:child_192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="2.1" ip="192.168.100.183" CRM_meta_timeout="20000"/>
-       </rsc_op>
-     </action_set>
-     <inputs>
-       <trigger>
-         <rsc_op id="33" operation="start" operation_key="child_192.168.100.182_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="34" operation="stop" operation_key="child_192.168.100.183_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="36" operation="start" operation_key="group-1_start_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -294,10 +294,10 @@
          <rsc_op id="13" operation="stop" operation_key="child_192.168.100.181_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
        <trigger>
-         <rsc_op id="32" operation="stop" operation_key="child_192.168.100.182_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+         <rsc_op id="33" operation="stop" operation_key="child_192.168.100.182_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
        <trigger>
-         <rsc_op id="34" operation="stop" operation_key="child_192.168.100.183_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+         <rsc_op id="35" operation="stop" operation_key="child_192.168.100.183_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
        </trigger>
      </inputs>
    </synapse>
