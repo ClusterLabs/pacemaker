@@ -410,7 +410,7 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 		mon->runnable = FALSE;
 		
 	} else if(mon->optional == FALSE) {
-		crm_notice("%s\t   %s", crm_str(node_uname),mon->uuid);
+	    crm_notice(" Start recurring %s (%ds) for %s on %s", mon->task, interval_ms/1000, rsc->id, crm_str(node_uname));
 	}
 	
 	custom_action_order(rsc, start_key(rsc), NULL,
@@ -1218,21 +1218,64 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 	action_t *start = NULL;		
 	GListPtr possible_matches = NULL;
 
-	crm_debug_2("Executing: %s (role=%s)",rsc->id, role2text(rsc->next_role));
+	crm_debug_2("Executing: %s (role=%s)", rsc->id, role2text(rsc->next_role));
 
-	if(current == NULL || next == NULL) {
-		return;
+	if(current == NULL && next == NULL) {
+	    crm_notice("Leave resource %s\t(%s)",
+		       rsc->id, role2text(rsc->role));
+	    return;
+
+	} else if(next == NULL) {
+	    crm_notice("Stop resource %s\t(%s %s)",
+		       rsc->id, role2text(rsc->role), next->details->uname);
+	    return;
+
+	} else if(current == NULL && rsc->next_role > RSC_ROLE_SLAVE) {
+	    crm_notice("Promote %s\t(%s -> %s %s)", rsc->id,
+		       role2text(rsc->role), role2text(rsc->next_role),
+		       next->details->uname);
+	    return;
+
+	} else if(current == NULL) {
+	    crm_notice("Start %s\t(%s -> %s %s)", rsc->id,
+		       role2text(rsc->role), role2text(rsc->next_role),
+		       next->details->uname);
+	    return;
 	}
 
+	if(rsc->role == rsc->next_role) {
+	    start = start_action(rsc, next, TRUE);
+	    if(start->optional) {
+		crm_notice("Leave resource %s\t(%s %s)",
+			   rsc->id, role2text(rsc->role), next->details->uname);
+
+	    } else if(safe_str_eq(current->details->id, next->details->id)) {
+		if(is_set(rsc->flags, pe_rsc_failed)) {
+		    crm_notice("Recover resource %s\t(%s %s)",
+			       rsc->id, role2text(rsc->role), next->details->uname);
+		} else {
+		    crm_notice("Restart resource %s\t(%s %s)",
+			       rsc->id, role2text(rsc->role), next->details->uname);
+		}
+		
+	    } else {
+		crm_notice("Move resource %s\t(%s %s -> %s)",
+			   rsc->id, role2text(rsc->role), current->details->uname, next->details->uname);
+	    }
+
+	} else if(rsc->role < rsc->next_role) {
+	    crm_notice("Promote %s\t(%s -> %s %s)", rsc->id,
+		       role2text(rsc->role), role2text(rsc->next_role),
+		       next->details->uname);
+	    
+	} else if(rsc->role > rsc->next_role) {
+	    crm_notice("Demote %s\t(%s -> %s %s)", rsc->id,
+		       role2text(rsc->role), role2text(rsc->next_role),
+		       next->details->uname);
+	}
+	
 	if(is_set(rsc->flags, pe_rsc_failed)
 	   || safe_str_neq(current->details->id, next->details->id)) {
-		if(is_set(rsc->flags, pe_rsc_failed)) {
-			crm_notice("Recover resource %s\t(%s)",
-				   rsc->id, next->details->uname);
-		} else {
-			crm_notice("Move  resource %s\t(%s -> %s)", rsc->id,
-				   current->details->uname, next->details->uname);
-		}
 
 		if(rsc->next_role > RSC_ROLE_STARTED) {
 		    gboolean optional = TRUE;
@@ -1261,7 +1304,7 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 		g_list_free(possible_matches);
 		
 	} else if(is_set(rsc->flags, pe_rsc_start_pending)) {
-		action_t *start = start_action(rsc, next, TRUE);
+		start = start_action(rsc, next, TRUE);
 		if(start->runnable) {
 			/* wait for StartRsc() to be called */
 			rsc->role = RSC_ROLE_STOPPED;
@@ -1286,13 +1329,6 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 		
 		if(start->runnable == FALSE) {
 			rsc->next_role = RSC_ROLE_STOPPED;
-			
-		} else if(start->optional) {
-			crm_notice("Leave resource %s\t(%s)",
-				   rsc->id, next->details->uname);
-		} else {
-			crm_notice("Restart resource %s\t(%s)",
-				   rsc->id, next->details->uname);
 		}
 	}
 }
@@ -1376,7 +1412,7 @@ PromoteRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *d
 	if(runnable) {
 		promote_action(rsc, next, optional);
 		if(optional == FALSE) {
-			crm_notice("%s\tPromote %s", next->details->uname, rsc->id);
+			crm_debug("%s\tPromote %s", next->details->uname, rsc->id);
 		}
 		return TRUE;
 	} 
@@ -1403,7 +1439,7 @@ DemoteRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *da
 /* 	CRM_CHECK(rsc->next_role == RSC_ROLE_SLAVE, return FALSE); */
 	slist_iter(
 		current, node_t, rsc->running_on, lpc,
-		crm_notice("%s\tDemote %s", current->details->uname, rsc->id);
+		do_crm_log(optional?LOG_DEBUG:LOG_NOTICE, "%s\tDemote %s", current->details->uname, rsc->id);
 		demote_action(rsc, current, optional);
 		);
 	return TRUE;
