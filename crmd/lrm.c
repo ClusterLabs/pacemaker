@@ -964,6 +964,9 @@ cancel_op(lrm_rsc_t *rsc, const char *key, int op, gboolean remove)
 	    }
 
 	    pending->cancelled = TRUE;
+
+	} else {
+	    crm_info("No pending op found for %s", key);
 	}
 
 	crm_debug("Cancelling op %d for %s (%s)", op, rsc->id, key);
@@ -1255,7 +1258,7 @@ do_lrm_invoke(long long action,
 
 			} else {
 			    /* the normal case when the PE cancels an orphan op */
-			    done = cancel_op(rsc, op_key, call, TRUE);
+			    done = cancel_op(rsc, NULL, call, TRUE);
 			}
 
 			if(done == FALSE) {
@@ -1266,12 +1269,12 @@ do_lrm_invoke(long long action,
 			     * have failed in the first place
 			     */
 			    g_hash_table_remove(pending_ops, op_key);
+
+			    op->op_status = LRM_OP_DONE;
+			    op->rc = EXECRA_OK;
+			    send_direct_ack(from_host, from_sys, op, rsc->id);
 			}
-			
-			
-			op->op_status = LRM_OP_DONE;
-			op->rc = EXECRA_OK;
-			send_direct_ack(from_host, from_sys, op, rsc->id);
+
 			crm_free(op_key);
 			free_lrm_op(op);			
 			
@@ -1873,10 +1876,13 @@ process_lrm_event(lrm_op_t *op)
 	    
 	} else if(pending->remove) {
 		delete_op_entry(op, op->rsc_id, op_key, op->call_id);
-	}	
+
+	} else {
+		crm_debug("Op %s (call=%d): no delete event required", op_key, op->call_id);
+	}
 
 	if(g_hash_table_remove(pending_ops, op_id)) {
-		crm_debug("Op %s (call=%d): Confirmed", op_key, op->call_id);
+	    crm_debug("Op %s (call=%d, stop_id=%s): Confirmed", op_key, op->call_id, op_id);
 	}
 
   out:
