@@ -81,14 +81,14 @@
        <lrm id="ca93fea5-67c9-473d-9ce0-7ed7fb823872">
          <lrm_resources>
            <lrm_resource id="stonithclone:0" type="null" class="stonith" provider="heartbeat">
-             <lrm_rsc_op id="stonithclone:0_monitor_0" operation="monitor"  transition_key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="4:7;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="2" crm_feature_set="1.0.6" rc_code="7" op_status="4" interval="0" op_digest="0af514b911859ca1eec9ff95b4ab6806"/>
-             <lrm_rsc_op id="stonithclone:0_start_0" operation="start"  transition_key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="0:0;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="3" crm_feature_set="1.0.6" rc_code="0" op_status="0" interval="0" op_digest="0af514b911859ca1eec9ff95b4ab6806"/>
-             <lrm_rsc_op id="stonithclone:0_monitor_5000" operation="monitor"  transition_key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="0:0;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="4" crm_feature_set="1.0.6" rc_code="0" op_status="0" interval="5000" op_digest="c5d5d41e45569401b71e10d2aabf7c78"/>
+             <lrm_rsc_op id="stonithclone:0_monitor_0" operation="monitor"  transition_key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="4:7;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="2" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="0af514b911859ca1eec9ff95b4ab6806"/>
+             <lrm_rsc_op id="stonithclone:0_start_0" operation="start"  transition_key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="0:0;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="3" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="0af514b911859ca1eec9ff95b4ab6806"/>
+             <lrm_rsc_op id="stonithclone:0_monitor_5000" operation="monitor"  transition_key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="0:0;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="4" crm_feature_set="2.0" rc_code="0" op_status="0" interval="5000" op_digest="c5d5d41e45569401b71e10d2aabf7c78"/>
            </lrm_resource>
            <lrm_resource id="imagestoreclone:0" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="imagestoreclone:0_monitor_0" operation="monitor"  transition_key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="4:7;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="5" crm_feature_set="1.0.6" rc_code="7" op_status="4" interval="0" op_digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
-             <lrm_rsc_op id="imagestoreclone:0_start_0" operation="start"  transition_key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="0:0;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="6" crm_feature_set="1.0.6" rc_code="0" op_status="0" interval="0" op_digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
-             <lrm_rsc_op id="imagestoreclone:0_post_notify_start_0" operation="notify"  transition_key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="0:0;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="7" crm_feature_set="1.0.6" rc_code="0" op_status="0" interval="0" op_digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
+             <lrm_rsc_op id="imagestoreclone:0_monitor_0" operation="monitor"  transition_key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="4:7;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="5" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
+             <lrm_rsc_op id="imagestoreclone:0_start_0" operation="start"  transition_key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="0:0;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="6" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
+             <lrm_rsc_op id="imagestoreclone:0_post_notify_start_0" operation="notify"  transition_key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="0:0;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="7" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
            </lrm_resource>
          </lrm_resources>
        </lrm>
@@ -111,18 +111,18 @@
        <lrm id="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410">
          <lrm_resources>
            <lrm_resource id="stonithclone:0" type="null" class="stonith" provider="heartbeat">
-             <lrm_rsc_op id="stonithclone:0_monitor_0" operation="monitor"  transition_key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="4:7;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="5" crm_feature_set="1.0.6" rc_code="7" op_status="4" interval="0" op_digest="0af514b911859ca1eec9ff95b4ab6806"/>
+             <lrm_rsc_op id="stonithclone:0_monitor_0" operation="monitor"  transition_key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="4:7;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="5" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="0af514b911859ca1eec9ff95b4ab6806"/>
            </lrm_resource>
            <lrm_resource id="stonithclone:1" type="null" class="stonith" provider="heartbeat">
-             <lrm_rsc_op id="stonithclone:1_start_0" operation="start"  transition_key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="0:0;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="3" crm_feature_set="1.0.6" rc_code="0" op_status="0" interval="0" op_digest="0af514b911859ca1eec9ff95b4ab6806"/>
-             <lrm_rsc_op id="stonithclone:1_monitor_5000" operation="monitor"  transition_key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="0:0;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="4" crm_feature_set="1.0.6" rc_code="0" op_status="0" interval="5000" op_digest="c5d5d41e45569401b71e10d2aabf7c78"/>
+             <lrm_rsc_op id="stonithclone:1_start_0" operation="start"  transition_key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="0:0;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="3" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="0af514b911859ca1eec9ff95b4ab6806"/>
+             <lrm_rsc_op id="stonithclone:1_monitor_5000" operation="monitor"  transition_key="4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="0:0;4:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="4" crm_feature_set="2.0" rc_code="0" op_status="0" interval="5000" op_digest="c5d5d41e45569401b71e10d2aabf7c78"/>
            </lrm_resource>
            <lrm_resource id="imagestoreclone:0" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="imagestoreclone:0_monitor_0" operation="monitor"  transition_key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="4:7;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="6" crm_feature_set="1.0.6" rc_code="7" op_status="4" interval="0" op_digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
+             <lrm_rsc_op id="imagestoreclone:0_monitor_0" operation="monitor"  transition_key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="4:7;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="6" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
            </lrm_resource>
            <lrm_resource id="imagestoreclone:1" type="Filesystem" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="imagestoreclone:1_start_0" operation="start"  transition_key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="0:0;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="7" crm_feature_set="1.0.6" rc_code="0" op_status="0" interval="0" op_digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
-             <lrm_rsc_op id="imagestoreclone:1_post_notify_start_0" operation="notify"  transition_key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="0:0;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="8" crm_feature_set="1.0.6" rc_code="0" op_status="0" interval="0" op_digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
+             <lrm_rsc_op id="imagestoreclone:1_start_0" operation="start"  transition_key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="0:0;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="7" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
+             <lrm_rsc_op id="imagestoreclone:1_post_notify_start_0" operation="notify"  transition_key="5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" transition_magic="0:0;5:0ae2f1a7-a9be-4c18-9209-4ee0a38922cf" call_id="8" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="d0452ebeb3ce4e39ab085e3e06b2accc"/>
            </lrm_resource>
          </lrm_resources>
        </lrm>
