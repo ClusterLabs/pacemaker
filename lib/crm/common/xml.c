@@ -2743,6 +2743,7 @@ calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
 #if HAVE_LIBXML2
 #  include <libxml/parser.h>
 #  include <libxml/tree.h>
+#  include <libxml/relaxng.h>
 #endif
 
 gboolean
@@ -2750,7 +2751,6 @@ validate_with_dtd(
 	xmlNode *xml_blob, gboolean to_logs, const char *dtd_file) 
 {
 	gboolean valid = TRUE;
-	char *buffer = NULL;
 
  	xmlDocPtr doc = NULL;
 	xmlDtdPtr dtd = NULL;
@@ -2759,11 +2759,11 @@ validate_with_dtd(
 	CRM_CHECK(xml_blob != NULL, return FALSE);
 	CRM_CHECK(dtd_file != NULL, return FALSE);
 
-	buffer = dump_xml_formatted(xml_blob);
-	CRM_CHECK(buffer != NULL, return FALSE);
-
- 	doc = xmlParseMemory(buffer, strlen(buffer));
-	CRM_CHECK(doc != NULL, valid = FALSE; goto cleanup);
+	doc = xml_blob->doc;
+	if(doc == NULL) {
+	    doc = xmlNewDoc((const xmlChar *)"1.0");
+	    xmlDocSetRootElement(doc, xml_blob);
+	}
 	
 	dtd = xmlParseDTD(NULL, (const xmlChar *)dtd_file);
 	CRM_CHECK(dtd != NULL, goto cleanup);
@@ -2795,9 +2795,6 @@ validate_with_dtd(
 	if(doc) {
 		xmlFreeDoc(doc);
 	}
-	if(buffer) {
-		crm_free(buffer);
-	}
 	
 	return valid;
 }
@@ -2806,4 +2803,92 @@ xmlNode *first_named_child(xmlNode *parent, const char *name)
 {
     xml_child_iter_filter(parent, match, name, return match);
     return NULL;
+}
+
+gboolean
+validate_with_relaxng(crm_data_t *xml_blob, gboolean to_logs, const char *relaxng_file) 
+{
+    gboolean valid = TRUE;
+#if HAVE_LIBXML2
+    int rc = 0;
+    xmlDocPtr doc = NULL;
+
+    xmlRelaxNGParserCtxtPtr parser_ctx;
+    xmlRelaxNGValidCtxtPtr valid_ctx;
+    xmlRelaxNGPtr rng = NULL;
+    
+    CRM_CHECK(xml_blob != NULL, return FALSE);
+    CRM_CHECK(relaxng_file != NULL, return FALSE);
+
+    doc = xml_blob->doc;
+    if(doc == NULL) {
+	doc = xmlNewDoc((const xmlChar *)"1.0");
+	xmlDocSetRootElement(doc, xml_blob);
+    }
+    
+    parser_ctx = xmlRelaxNGNewParserCtxt(relaxng_file);
+    CRM_CHECK(parser_ctx != NULL, goto cleanup);
+
+    if(to_logs) {
+	xmlRelaxNGSetParserErrors(parser_ctx,
+				  (xmlRelaxNGValidityErrorFunc) cl_log,
+				  (xmlRelaxNGValidityWarningFunc) cl_log,
+				  LOG_ERR);
+    } else {
+	xmlRelaxNGSetParserErrors(parser_ctx,
+				  (xmlRelaxNGValidityErrorFunc) fprintf,
+				  (xmlRelaxNGValidityWarningFunc) fprintf,
+				  stderr);
+    }
+
+    rng = xmlRelaxNGParse(parser_ctx);
+    CRM_CHECK(rng != NULL, goto cleanup);
+
+    valid_ctx = xmlRelaxNGNewValidCtxt(rng);
+    CRM_CHECK(valid_ctx != NULL, goto cleanup);
+
+    if(to_logs) {
+	xmlRelaxNGSetValidErrors(valid_ctx,
+				 (xmlRelaxNGValidityErrorFunc) cl_log,
+				 (xmlRelaxNGValidityWarningFunc) cl_log,
+				 LOG_ERR);
+    } else {
+	xmlRelaxNGSetValidErrors(valid_ctx,
+				 (xmlRelaxNGValidityErrorFunc) fprintf,
+				 (xmlRelaxNGValidityWarningFunc) fprintf,
+				 stderr);
+    }
+
+    /* xmlLineNumbersDefault(1); */
+    rc = xmlRelaxNGValidateDoc(valid_ctx, doc);
+    if (rc > 0) {
+	valid = FALSE;
+	/* crm_err("Failed to validate valid instance line %ld\n", */
+	/* 	xmlGetLineNo(xmlDocGetRootElement(doc))); */
+
+    } else if (rc < 0) {
+	crm_err("Internal libxml error during validation\n");
+    } else {
+	crm_info("The XML is valid");
+    }
+
+  cleanup:
+    if(parser_ctx != NULL) {
+	xmlRelaxNGFreeParserCtxt(parser_ctx);
+    }
+
+    if(valid_ctx != NULL) {
+	xmlRelaxNGFreeValidCtxt(valid_ctx);
+    }
+    
+    if (rng != NULL) {
+	xmlRelaxNGFree(rng);    
+    }
+
+    if(doc) {
+	xmlFreeDoc(doc);
+    }
+
+#endif	
+    return valid;
 }

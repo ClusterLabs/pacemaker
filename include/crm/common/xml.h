@@ -227,6 +227,9 @@ extern char *calculate_xml_digest(xmlNode *local_cib, gboolean sort, gboolean do
 extern gboolean validate_with_dtd(
 	xmlNode *xml_blob, gboolean to_logs, const char *dtd_file);
 
+extern gboolean validate_with_relaxng(
+    crm_data_t *xml_blob, gboolean to_logs, const char *relaxng_file);
+
 #if XML_PARANOIA_CHECKS
 #  define crm_validate_data(obj) xml_validate(obj)
 #else
