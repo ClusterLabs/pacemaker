@@ -453,15 +453,15 @@ apply_master_prefs(resource_t *rsc)
 static void set_role(resource_t *rsc, enum rsc_role_e role, gboolean current) 
 {
     if(current) {
-	if(rsc->variant == pe_native && rsc->running_on != NULL && role > RSC_ROLE_STOPPED) {
+	if(rsc->variant == pe_native && rsc->running_on != NULL && rsc->role > role) {
 	    crm_debug_6("Filtering change %s.role = %s (was %s)", rsc->id, role2text(role), role2text(rsc->role));
 
-	} else if(rsc->role != role) {
+	} else if(rsc->role < role) {
 	    crm_debug_5("Set %s.role = %s (was %s)", rsc->id, role2text(role), role2text(rsc->role));
 	    rsc->role = role;
 	}
     } else {
-	if(rsc->next_role != role) {
+	if(rsc->next_role < role) {
 	    crm_debug_5("Set %s.next_role = %s (was %s)", rsc->id, role2text(role), role2text(rsc->next_role));
 	    rsc->next_role = role;
 	    if(role == RSC_ROLE_MASTER) {
@@ -596,7 +596,8 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 		}
 
 		chosen->count++;
-		crm_info("Promoting %s", child_rsc->id);
+		crm_info("Promoting %s (%s %s)",
+			 child_rsc->id, role2text(child_rsc->role), chosen->details->uname);
 		set_role(child_rsc, RSC_ROLE_MASTER, FALSE);
 		clone_data->masters_allocated++;
 		promoted++;		
