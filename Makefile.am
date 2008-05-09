@@ -56,7 +56,7 @@ changes:
 	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
 
 features:
-	printf "$(PACKAGE) ($(VERSION)-1) stable; urgency=medium\n"
+	printf "$(PACKAGE) ($(VERSION)-1) unstable; urgency=medium\n"
 	printf "  * Update source tarball to revision: `hg id`\n"
 	printf "  * Statistics:\n"
 	printf "      Changesets: `hg out -M --template "{desc|firstline|strip}\n" ../$(STABLE_SERIES) | wc -l`\n"
