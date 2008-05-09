@@ -178,6 +178,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 			  current_join_id, join_to);
 
 		send_msg_via_ha(offer);
+		free_xml(offer);
 
 		g_hash_table_insert(
 			welcomed_nodes, crm_strdup(join_to), join_offered);
@@ -605,6 +606,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	}
 	
 	send_msg_via_ha(acknak);
+	free_xml(acknak);
 	return TRUE;
 }
 

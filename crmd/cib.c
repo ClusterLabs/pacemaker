@@ -284,10 +284,9 @@ do_cib_invoke(long long action,
 			if(relay_message(answer, TRUE) == FALSE) {
 				crm_err("Confused what to do with cib result");
 				crm_log_xml(LOG_ERR, "reply", answer);
-				free_xml(answer);
 				register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-				return;
 			}
+			free_xml(answer);
 
 		} else if(rc < cib_ok) {
 			ha_msg_input_t *input = NULL;

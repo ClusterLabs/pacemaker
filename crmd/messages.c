@@ -50,7 +50,7 @@ gboolean ipc_queue_helper(gpointer key, gpointer value, gpointer user_data);
 
 #ifdef MSG_LOG
 #    define ROUTER_RESULT(x)	crm_debug_3("Router result: %s", x);	\
-	crm_log_xml(LOG_MSG, "router.log", relay_message);
+	crm_log_xml(LOG_MSG, "router.log", msg);
 #else
 #    define ROUTER_RESULT(x)	crm_debug_3("Router result: %s", x)
 #endif
@@ -419,41 +419,28 @@ route_message(enum crmd_fsa_cause cause, xmlNode *input)
 		/* add to the front of the queue */
 		register_fsa_input(cause, result, &fsa_input);
 	}
-
-	free_xml(input);
 }
 
-
-/*
- * This method frees msg
- */
 gboolean
 send_request(xmlNode *msg, char **msg_reference)
 {
-	gboolean was_sent = FALSE;
-
-/*	crm_log_xml_debug_3(request, "Final request..."); */
-
 	if(msg_reference != NULL) {
 		*msg_reference = crm_strdup(
 			crm_element_value(msg, XML_ATTR_REFERENCE));
 	}
 	
-	was_sent = relay_message(msg, TRUE);
-
-	if(was_sent == FALSE) {
-		ha_msg_input_t *fsa_input = new_ha_msg_input(msg);
-		register_fsa_input(C_IPC_MESSAGE, I_ROUTER, fsa_input);
-		crm_free(fsa_input);
-		free_xml(msg);
+	if(relay_message(msg, TRUE) == FALSE) {
+	    ha_msg_input_t fsa_input;
+	    fsa_input.msg = msg;
+	    register_fsa_input(C_IPC_MESSAGE, I_ROUTER, &fsa_input);
+	    return FALSE;
 	}
 	
-	return was_sent;
+	return TRUE;
 }
 
-/* unless more processing is required, relay_message is freed */
 gboolean
-relay_message(xmlNode *relay_message, gboolean originated_locally)
+relay_message(xmlNode *msg, gboolean originated_locally)
 {
 	int is_for_dc	= 0;
 	int is_for_dcib	= 0;
@@ -462,20 +449,20 @@ relay_message(xmlNode *relay_message, gboolean originated_locally)
 	int is_for_cib	= 0;
 	int is_local    = 0;
 	gboolean processing_complete = FALSE;
-	const char *host_to = crm_element_value(relay_message, F_CRM_HOST_TO);
-	const char *sys_to  = crm_element_value(relay_message, F_CRM_SYS_TO);
-	const char *sys_from= crm_element_value(relay_message, F_CRM_SYS_FROM);
-	const char *type    = crm_element_value(relay_message, F_TYPE);
+	const char *host_to = crm_element_value(msg, F_CRM_HOST_TO);
+	const char *sys_to  = crm_element_value(msg, F_CRM_SYS_TO);
+	const char *sys_from= crm_element_value(msg, F_CRM_SYS_FROM);
+	const char *type    = crm_element_value(msg, F_TYPE);
 	const char *msg_error = NULL;
 
 	crm_debug_3("Routing message %s",
-		  crm_element_value(relay_message, XML_ATTR_REFERENCE));
+		  crm_element_value(msg, XML_ATTR_REFERENCE));
 
-	if(relay_message == NULL) {
+	if(msg == NULL) {
 		msg_error = "Cannot route empty message";
 
 	} else if(safe_str_eq(CRM_OP_HELLO,
-			      crm_element_value(relay_message, F_CRM_TASK))){
+			      crm_element_value(msg, F_CRM_TASK))){
 		/* quietly ignore */
 		processing_complete = TRUE;
 
@@ -489,11 +476,10 @@ relay_message(xmlNode *relay_message, gboolean originated_locally)
 	if(msg_error != NULL) {
 		processing_complete = TRUE;
 		crm_err("%s", msg_error);
-		crm_log_xml(LOG_WARNING, "bad msg", relay_message);
+		crm_log_xml(LOG_WARNING, "bad msg", msg);
 	}
 
 	if(processing_complete) {
-		free_xml(relay_message);
 		return TRUE;
 	}
 	
@@ -524,7 +510,7 @@ relay_message(xmlNode *relay_message, gboolean originated_locally)
 	if(is_for_dc || is_for_dcib || is_for_te) {
 		if(AM_I_DC && is_for_te) {
 			ROUTER_RESULT("Message result: Local relay");
-			send_msg_via_ipc(relay_message, sys_to);
+			send_msg_via_ipc(msg, sys_to);
 				
 		} else if(AM_I_DC) {
 			ROUTER_RESULT("Message result: DC/CRMd process");
@@ -541,12 +527,11 @@ relay_message(xmlNode *relay_message, gboolean originated_locally)
 			 */
 			
 			ROUTER_RESULT("Message result: External relay to DC");
-			send_msg_via_ha(relay_message);
+			send_msg_via_ha(msg);
 				
 		} else {
 			/* discard */
 			ROUTER_RESULT("Message result: Discard, not DC");
-			free_xml(relay_message);
 		}
 			
 	} else if(is_local && (is_for_crm || is_for_cib)) {
@@ -555,11 +540,11 @@ relay_message(xmlNode *relay_message, gboolean originated_locally)
 			
 	} else if(is_local) {
 		ROUTER_RESULT("Message result: Local relay");
-		send_msg_via_ipc(relay_message, sys_to);
+		send_msg_via_ipc(msg, sys_to);
 			
 	} else {
 		ROUTER_RESULT("Message result: External relay");
-		send_msg_via_ha(relay_message);
+		send_msg_via_ha(msg);
 	}
 	
 	return processing_complete;
@@ -824,11 +809,10 @@ handle_request(xmlNode *stored_msg)
 		crm_info("Current ping state: %s", fsa_state2string(fsa_state));
 		
 		msg = create_reply(stored_msg, ping);
+		relay_message(msg, TRUE);
+
 		free_xml(ping);
-		
-		if(relay_message(msg, TRUE) == FALSE) {
-			free_xml(msg);
-		}
+		free_xml(msg);
 		
 		/* probably better to do this via signals on the
 		 * local node
@@ -1122,8 +1106,6 @@ send_msg_via_ha(xmlNode *msg)
 			   all_is_good?"succeeded":"failed");
 	}
 	
-	free_xml(msg);
-	
 	return all_is_good;
 }
 
@@ -1181,8 +1163,6 @@ send_msg_via_ipc(xmlNode *msg, const char *sys)
 			crm_str(sys));
 		send_ok = FALSE;
 	}    
-
-	free_xml(msg);
 
 	return send_ok;
 }	

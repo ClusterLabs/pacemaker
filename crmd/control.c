@@ -256,6 +256,7 @@ do_shutdown_req(long long action,
 			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 		}
 	}
+	free_xml(msg);
 }
 
 extern char *max_generation_from;

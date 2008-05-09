@@ -106,17 +106,18 @@ crmd_ha_connection_destroy(gpointer user_data)
 void
 crmd_ha_msg_filter(xmlNode *msg)
 {
-    ha_msg_input_t *new_input = NULL;
+    ha_msg_input_t new_input;
     const char *from = crm_element_value(msg, F_ORIG);
     const char *seq  = crm_element_value(msg, F_SEQ);
     const char *op   = crm_element_value(msg, F_CRM_TASK);
     
     const char *sys_to   = crm_element_value(msg, F_CRM_SYS_TO);
     const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
+
+    new_input.msg = NULL;
     
     if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
 	crm_debug_2("Ignoring message for the DC [F_SEQ=%s]", seq);
-	free_xml(msg);
 	return;
 	
     } else if(safe_str_eq(sys_from, CRM_SYSTEM_DC)) {
@@ -124,9 +125,9 @@ crmd_ha_msg_filter(xmlNode *msg)
 	    crm_err("Another DC detected: %s (op=%s)", from, op);
 	    /* make sure the election happens NOW */
 	    if(fsa_state != S_ELECTION) {
-		new_input = new_ha_msg_input(msg);
-		register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION, NULL,
-				       new_input, __FUNCTION__);
+		new_input.msg = msg;
+		register_fsa_error_adv(
+		    C_FSA_INTERNAL, I_ELECTION, NULL, &new_input, __FUNCTION__);
 	    }
 	    
 	} else {
@@ -134,13 +135,9 @@ crmd_ha_msg_filter(xmlNode *msg)
 	}
     }
     
-    if(new_input == NULL) {
+    if(new_input.msg == NULL) {
 	crm_log_xml(LOG_MSG, "HA[inbound]", msg);
 	route_message(C_HA_MESSAGE, msg);
-
-    } else {
-	free_xml(msg);
-	crm_free(new_input);
     }
     
     trigger_fsa(fsa_source);
@@ -230,11 +227,10 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		crm_log_xml(LOG_DEBUG_2, "CRMd[inbound]", msg);
 
 		if(crmd_authorize_message(msg, curr_client)) {
-			route_message(C_IPC_MESSAGE, msg);
-		} else {
-		    free_xml(msg);
-		}
+		    route_message(C_IPC_MESSAGE, msg);
+		} 
 
+		free_xml(msg);
 		msg = NULL;
 
 		if(client->ch_status != IPC_CONNECT) {

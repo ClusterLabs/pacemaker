@@ -92,6 +92,7 @@ do_election_vote(long long action,
 	send_request(vote, NULL);
 	crm_debug("Destroying voted hash");
 	g_hash_table_destroy(voted);
+	free_xml(vote);
 	voted = NULL;
 	
 	if(cur_state == S_ELECTION || cur_state == S_RELEASE_DC) {
@@ -111,27 +112,6 @@ int beat_num = 0;
 gboolean
 do_dc_heartbeat(gpointer data)
 {
-#if 0
-	fsa_timer_t *timer = (fsa_timer_t *)data;
-
-	crm_debug_3("Sending DC Heartbeat %d", beat_num);
-	xmlNode *msg = ha_msg_new(5); 
-	crm_xml_add(msg, F_TYPE,		T_CRM);
-	crm_xml_add(msg, F_SUBTYPE,	XML_ATTR_REQUEST);
-	crm_xml_add(msg, F_CRM_SYS_TO,   CRM_SYSTEM_CRMD);
-	crm_xml_add(msg, F_CRM_SYS_FROM, CRM_SYSTEM_DC);
-	crm_xml_add(msg, F_CRM_TASK,	CRM_OP_HBEAT);
-	crm_xml_add_int(msg, "dc_beat_seq", beat_num);
-	beat_num++;
-
-	if(send_msg_via_ha(msg) == FALSE) {
-		/* this is bad */
-		crm_timer_stop(timer); /* make it not go off again */
-
-		register_fsa_input(C_HEARTBEAT_FAILED, I_SHUTDOWN, NULL);
-		return FALSE;
-	}
-#endif
 	return TRUE;
 }
 
@@ -339,6 +319,7 @@ do_election_count_vote(long long action,
 		
 		vote_sent = send_request(novote, NULL);
 		CRM_DEV_ASSERT(vote_sent);
+		free_xml(novote);
 
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 

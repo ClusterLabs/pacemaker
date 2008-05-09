@@ -280,6 +280,7 @@ post_cache_update(int instance)
 	CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
 	AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
     send_msg_via_ha(no_op);
+    free_xml(no_op);
 }
 
 

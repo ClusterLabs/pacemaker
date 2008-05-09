@@ -1160,8 +1160,8 @@ do_lrm_invoke(long long action,
 		if(relay_message(reply, TRUE) == FALSE) {
 			crm_err("Unable to route reply");
 			crm_log_xml(LOG_ERR, "reply", reply);
-			free_xml(reply);
 		}
+		free_xml(reply);
 		free_xml(data);
 
 	} else if(safe_str_eq(operation, CRM_OP_PROBED)
@@ -1483,10 +1483,11 @@ send_direct_ack(const char *to_host, const char *to_sys,
 
 	if(relay_message(reply, TRUE) == FALSE) {
 		crm_log_xml(LOG_ERR, "Unable to route reply", reply);
-		free_xml(reply);
 	}
+
 	free_xml(fragment);
 	free_xml(update);
+	free_xml(reply);
 }
 
 static gboolean

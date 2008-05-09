@@ -182,4 +182,5 @@ do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 	send_request(cmd, &fsa_pe_ref);
 	crm_debug("Invoking the PE: ref=%s, seq=%llu, quorate=%d",
 		  fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
+	free_xml(cmd);
 }

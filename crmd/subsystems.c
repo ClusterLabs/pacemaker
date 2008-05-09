@@ -185,7 +185,8 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	struct rlimit	oflimits;
 	const char 	*devnull = "/dev/null";
 	const char    *use_valgrind = getenv("HA_VALGRIND_ENABLED");
-
+	use_valgrind = NULL;
+	
 	crm_info("Starting sub-system \"%s\"", the_subsystem->name);
 	set_bit_inplace(fsa_input_register, the_subsystem->flag_required);
 

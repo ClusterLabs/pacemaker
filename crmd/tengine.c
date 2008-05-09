@@ -95,7 +95,6 @@ do_te_invoke(long long action,
 {
 	xmlNode *cmd = NULL;
 	
-	
 	if(AM_I_DC == FALSE) {
 		crm_debug("Not DC: No need to invoke the TE (anymore): %s",
 			  fsa_action2string(action));
@@ -166,6 +165,8 @@ do_te_invoke(long long action,
 		
 		send_request(cmd, NULL);
 	}
+
+	free_xml(cmd);
 }
 
 
