@@ -110,7 +110,7 @@ main(int argc, char ** argv)
 	}
     }
 
-    xml = update_validation(xml, TRUE, FALSE);
+    update_validation(&xml, TRUE, FALSE);
     crm_log_xml_info(xml, "fixed");
     
     return 0;

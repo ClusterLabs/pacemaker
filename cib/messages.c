@@ -168,7 +168,7 @@ cib_process_readwrite(
 			crm_info("We are now in R/W mode");
 			cib_is_master = TRUE;
 			syncd_once = TRUE;
-			*result_cib = update_validation(*result_cib, TRUE, TRUE);
+			update_validation(result_cib, TRUE, FALSE);
 			
 		} else {
 			crm_debug("We are still in R/W mode");

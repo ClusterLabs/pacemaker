@@ -1234,8 +1234,8 @@ crm_element_value(xmlNode *data, const char *name)
 {
     xmlAttr *attr = NULL;
     
-    CRM_CHECK(data != NULL, return NULL);
-    CRM_CHECK(name != NULL, return NULL);
+    CRM_CHECK(data != NULL, crm_err("Couldn't find %s in NULL", crm_str(name)); return NULL);
+    CRM_CHECK(name != NULL, crm_err("Couldn't find NULL in %s", crm_element_name(data)); return NULL);
     
     attr = xmlHasProp(data, (const xmlChar*)name);
     if(attr && attr->children) {
@@ -2861,7 +2861,7 @@ validate_with_relaxng(
 	xmlRelaxNGSetParserErrors(parser_ctx,
 				  (xmlRelaxNGValidityErrorFunc) cl_log,
 				  (xmlRelaxNGValidityWarningFunc) cl_log,
-				  LOG_ERR);
+				  GUINT_TO_POINTER(LOG_ERR));
     } else {
 	xmlRelaxNGSetParserErrors(parser_ctx,
 				  (xmlRelaxNGValidityErrorFunc) fprintf,
@@ -2879,7 +2879,7 @@ validate_with_relaxng(
 	xmlRelaxNGSetValidErrors(valid_ctx,
 				 (xmlRelaxNGValidityErrorFunc) cl_log,
 				 (xmlRelaxNGValidityWarningFunc) cl_log,
-				 LOG_ERR);
+				 GUINT_TO_POINTER(LOG_ERR));
     } else {
 	xmlRelaxNGSetValidErrors(valid_ctx,
 				 (xmlRelaxNGValidityErrorFunc) fprintf,
@@ -2915,6 +2915,8 @@ validate_with_relaxng(
 #endif	
     return valid;
 }
+
+static int max_schemas = DIMOF(known_schemas);
 
 static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs) 
 {
@@ -2953,7 +2955,6 @@ static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs)
 gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
 {
     int lpc = 0;
-    static int max = DIMOF(known_schemas);
     
     if(validation == NULL) {
 	validation = crm_element_value(xml_blob, XML_ATTR_VALIDATION);
@@ -2963,7 +2964,7 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_log
 	/* Compatibility for 0.6 */
 	const char *value = crm_element_value(xml_blob, "ignore_dtd");
 	if(value != NULL && crm_is_true(value) == FALSE) {
-	    validation = "crm.dtd";
+	    validation = "pacemaker-0.6";
 	}
     }
     
@@ -2971,7 +2972,7 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_log
 	return TRUE;
     }
     
-    for(; lpc < max; lpc++) {
+    for(; lpc < max_schemas; lpc++) {
 	if(safe_str_eq(validation, known_schemas[lpc].name)) {
 	    if(to_logs) {
 		crm_info("Validating configuration with %s: %s",
@@ -3021,36 +3022,58 @@ static xmlNode *apply_transformation(xmlNode *xml, const char *transform)
     return out;
 }
 
-/* set which validation to use */
-xmlNode *update_validation(
-    xmlNode *xml_blob, gboolean transform, gboolean to_logs) 
+const char *get_schema_name(int version)
 {
-    int lpc = 0, match = 0, best = 0;
-    static int max = DIMOF(known_schemas);
-    const char *value = crm_element_value(xml_blob, XML_ATTR_VALIDATION);
-
-    if(safe_str_eq(value, "none")) {
-	/* they dont want any */
-	return xml_blob;
-
-    } else if(safe_str_eq(value, LATEST_SCHEMA_VERSION)) {
-	return xml_blob;
+    if(version < 0 || version >= max_schemas) {
+	return "unknown";
     }
+    return known_schemas[version].name;
+}
 
-    if(value != NULL) {
-	for(; lpc < max; lpc++) {
-	    if(safe_str_eq(value, known_schemas[lpc].name)) {
-		match = lpc;
-		lpc++;
-		break;
-	    }
+
+int get_schema_version(const char *name) 
+{
+    int lpc = 0;
+    for(; lpc < max_schemas; lpc++) {
+	if(safe_str_eq(name, known_schemas[lpc].name)) {
+	    return lpc;
 	}
     }
+    return -1;
+}
+
+/* set which validation to use */
+int update_validation(
+    xmlNode **xml_blob, gboolean transform, gboolean to_logs) 
+{
+    xmlNode *xml = NULL;
+    const char *value = NULL;
+    int lpc = 0, match = -1, best = 0;
+
+    CRM_CHECK(xml_blob != NULL, return -1);
+    CRM_CHECK(*xml_blob != NULL, return -1);
     
-    for(; lpc < max; lpc++) {
+    xml = *xml_blob;
+    value = crm_element_value(xml, XML_ATTR_VALIDATION);
+
+    if(value != NULL) {
+	match = get_schema_version(value);
+	lpc = match + 1;
+    }
+
+    if(match == (max_schemas - 1)) {
+	/* nothing to do */
+	return match;
+
+    } else if(match == 0) {
+	/* they dont want any */
+	return match;	
+    }
+    
+    for(; lpc < max_schemas; lpc++) {
 	gboolean valid = TRUE;
 	crm_debug("Testing '%s' validation", known_schemas[lpc].name);
-	valid = validate_with(xml_blob, lpc, to_logs);
+	valid = validate_with(xml, lpc, to_logs);
 	
 	if(valid) {
 	    best = lpc;
@@ -3060,14 +3083,14 @@ xmlNode *update_validation(
 	    xmlNode *upgrade = NULL;
 	    crm_notice("Upgrading %s-style configuration to %s with %s",
 		       known_schemas[lpc].name, known_schemas[lpc+1].name, known_schemas[lpc].transform);
-	    upgrade = apply_transformation(xml_blob, known_schemas[lpc].transform);
+	    upgrade = apply_transformation(xml, known_schemas[lpc].transform);
 	    if(upgrade == NULL) {
 		crm_err("Transformation %s failed", known_schemas[lpc].transform);
 		
 	    } else if(validate_with(upgrade, lpc+1, to_logs)) {
 		crm_info("Transformation %s successful", known_schemas[lpc].transform);
-		free_xml(xml_blob);
-		xml_blob = upgrade;
+		free_xml(xml);
+		xml = upgrade;
 		
 	    } else {
 		crm_err("Transformation %s did not produce a valid configuration", known_schemas[lpc].transform);
@@ -3079,9 +3102,11 @@ xmlNode *update_validation(
     
     if(best > match) {
 	crm_notice("Upgrading from %s to %s validation", value?value:"<none>", known_schemas[best].name);
-	crm_xml_add(xml_blob, XML_ATTR_VALIDATION, known_schemas[best].name);
+	crm_xml_add(xml, XML_ATTR_VALIDATION, known_schemas[best].name);
+	match = best;
     }
 
-    return xml_blob;
+    *xml_blob = xml;
+    return match;
 }
 

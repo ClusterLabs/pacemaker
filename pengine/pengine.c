@@ -92,7 +92,9 @@ process_pe_message(xmlNode *msg, xmlNode * xml_data, IPC_Channel *sender)
 		char *graph_file = NULL;
 		const char *value = NULL;
 		pe_working_set_t data_set;
+		xmlNode *converted = NULL;
 		xmlNode *reply = NULL;
+		gboolean process = TRUE;
 #if HAVE_BZLIB_H
 		gboolean compress = TRUE;
 #else
@@ -108,8 +110,41 @@ process_pe_message(xmlNode *msg, xmlNode * xml_data, IPC_Channel *sender)
 		graph_file = crm_strdup(WORKING_DIR"/graph.XXXXXX");
 		graph_file = mktemp(graph_file);
 
-		do_calculations(&data_set, xml_data, NULL);
+		value = crm_element_value(xml_data, XML_ATTR_VALIDATION);
+		if(safe_str_neq(value, LATEST_SCHEMA_VERSION)) {
+		    int schema_version = 0;
+		    int max_version = get_schema_version(LATEST_SCHEMA_VERSION);
+		    int min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
 
+		    crm_config_warn("Your current configuration only conforms to %s", value);
+		    crm_config_warn("Please use XXX to upgrade %s", LATEST_SCHEMA_VERSION);
+		    
+		    converted = copy_xml(xml_data);
+		    schema_version = update_validation(&converted, FALSE, FALSE);
+
+		    value = crm_element_value(xml_data, XML_ATTR_VALIDATION);
+		    if(schema_version < min_version) {
+			crm_config_err("Your current configuration could only be upgraded to %s... "
+				       "the minimum requirement is %s.", value, MINIMUM_SCHEMA_VERSION);
+
+			data_set.graph = create_xml_node(NULL, XML_TAG_GRAPH);
+			crm_xml_add_int(data_set.graph, "transition_id", 0);
+			process = FALSE;
+
+		    } else if(schema_version < max_version) {
+			crm_config_warn("Your configuration was internally updated to %s... "
+					"which is acceptable but not the most recent", value);
+		    } else {
+			crm_config_warn("Your configuration was internally updated to %s", value);
+		    }
+
+		    xml_data = converted;
+		}
+
+		if(process) {
+		    do_calculations(&data_set, xml_data, NULL);
+		}
+		
 		series_id = get_series();
 		series_wrap = series[series_id].wrap;
 		value = pe_pref(data_set.config_hash, series[series_id].param);
@@ -192,7 +227,8 @@ process_pe_message(xmlNode *msg, xmlNode * xml_data, IPC_Channel *sender)
 			}
 			free_xml(reply);
 		}
-		
+
+		free_xml(converted);
 		crm_free(graph_file);
 		crm_free(filename);
 		
