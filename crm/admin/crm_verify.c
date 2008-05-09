@@ -253,7 +253,7 @@ main(int argc, char **argv)
 		crm_config_err("ID Check failed");
 	}
 
-	schema = crm_element_value(cib_object, "validation");
+	schema = crm_element_value(cib_object, XML_ATTR_VALIDATION);
 	if(schema == NULL) {
 	    schema = LATEST_SCHEMA_VERSION;
 	}

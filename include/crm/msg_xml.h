@@ -43,6 +43,7 @@
 
 #define XML_ATTR_CRM_VERSION		"crm_feature_set"
 #define XML_ATTR_DIGEST			"digest"
+#define XML_ATTR_VALIDATION		"validate-with"
 
 #define XML_ATTR_NUMPEERS		"num_peers"
 #define XML_ATTR_HAVE_QUORUM		"have_quorum"

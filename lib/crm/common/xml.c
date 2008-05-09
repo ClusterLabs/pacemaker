@@ -2816,8 +2816,35 @@ xmlNode *first_named_child(xmlNode *parent, const char *name)
     return NULL;
 }
 
+#if 0
+static void relaxng_invalid_stderr(void * userData, xmlErrorPtr error)
+{
+    /*
+Structure xmlError
+struct _xmlError {
+    int	domain	: What part of the library raised this er
+    int	code	: The error code, e.g. an xmlParserError
+    char *	message	: human-readable informative error messag
+    xmlErrorLevel	level	: how consequent is the error
+    char *	file	: the filename
+    int	line	: the line number if available
+    char *	str1	: extra string information
+    char *	str2	: extra string information
+    char *	str3	: extra string information
+    int	int1	: extra number information
+    int	int2	: column number of the error or 0 if N/A
+    void *	ctxt	: the parser context if available
+    void *	node	: the node in the tree
+}
+     */
+    crm_err("Structured error: line=%d, level=%d %s",
+	    error->line, error->level, error->message);
+}
+#endif
+
 static gboolean
-validate_with_relaxng(crm_data_t *xml_blob, gboolean to_logs, const char *relaxng_file) 
+validate_with_relaxng(
+    crm_data_t *xml_blob, gboolean to_logs, const char *relaxng_file) 
 {
     gboolean valid = TRUE;
 #if HAVE_LIBXML2
@@ -2870,12 +2897,15 @@ validate_with_relaxng(crm_data_t *xml_blob, gboolean to_logs, const char *relaxn
 				 stderr);
     }
 
-    /* xmlLineNumbersDefault(1); */
+    /* xmlRelaxNGSetValidStructuredErrors( */
+    /* 	valid_ctx, relaxng_invalid_stderr, valid_ctx); */
+    
+    xmlLineNumbersDefault(1);
     rc = xmlRelaxNGValidateDoc(valid_ctx, doc);
     if (rc > 0) {
 	valid = FALSE;
-	/* crm_err("Failed to validate valid instance line %ld\n", */
-	/* 	xmlGetLineNo(xmlDocGetRootElement(doc))); */
+	crm_err("Failed to validate valid instance line %ld\n",
+	 	xmlGetLineNo(xml_blob));
 
     } else if (rc < 0) {
 	crm_err("Internal libxml error during validation\n");
@@ -2920,7 +2950,7 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_log
     static int max = DIMOF(known_schemas);
     
     if(validation == NULL) {
-	validation = crm_element_value(xml_blob, "validation");
+	validation = crm_element_value(xml_blob, XML_ATTR_VALIDATION);
     }
 
     if(validation == NULL) {
@@ -2952,9 +2982,9 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_log
 /* set which validation to use */
 void update_validation(xmlNode *xml_blob) 
 {
-    int lpc = 0, match = 0;
+    int lpc = 0, match = 0, best = 0;
     static int max = DIMOF(known_schemas);
-    const char *value = crm_element_value(xml_blob, "validation");
+    const char *value = crm_element_value(xml_blob, XML_ATTR_VALIDATION);
 
     if(safe_str_eq(value, "none")) {
 	/* they dont want any */
@@ -2979,14 +3009,13 @@ void update_validation(xmlNode *xml_blob)
 	crm_debug("Testing '%s' validation", known_schemas[lpc].name);
 	valid = validate_with(xml_blob, known_schemas[lpc].type, known_schemas[lpc].location, FALSE);
 	
-	if(valid == FALSE) {
-	    lpc--;
-	    break;
+	if(valid) {
+	    best = lpc;
 	}
     }
     
-    if(lpc > match) {
-	crm_notice("Upgrading from %s to %s validation", value?value:"<none>", known_schemas[lpc].name);
-	crm_xml_add(xml_blob, "validation", known_schemas[lpc].name);
+    if(best > match) {
+	crm_notice("Upgrading from %s to %s validation", value?value:"<none>", known_schemas[best].name);
+	crm_xml_add(xml_blob, XML_ATTR_VALIDATION, known_schemas[best].name);
     }    
 }
