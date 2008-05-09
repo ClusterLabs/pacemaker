@@ -34,56 +34,95 @@
     </element>
   </define>
 
-  <define name="element-colocation">
-    <element name="rsc_colocation">
+  <define name="element-resource-set">
+    <element name="resource_set">
       <attribute name="id"><data type="ID"/></attribute>
-      <attribute name="rsc"><text/></attribute>
-      <attribute name="with"><text/></attribute>
-      <!-- Ideally these would be IDREFs, but that excludes colocation with individual clones
-	   <attribute name="from"><data type="IDREF"/></attribute>
-	   <attribute name="to"><data type="IDREF"/></attribute>
-	  -->
-      <externalRef href="score.rng"/>
       <optional>
-	<ref name="element-lifetime"/>
+	<attribute name="sequential"><data type="boolean"/></attribute>
       </optional>
       <optional>
-	<attribute name="rsc-role">
+	<attribute name="action">
+	  <ref name="attribute-actions"/>
+	</attribute>
+      </optional>
+      <optional>
+	<attribute name="role">
 	  <ref name="attribute-roles"/>
 	</attribute>
       </optional>
       <optional>
-	<attribute name="with-rsc-role">
-	  <ref name="attribute-roles"/>
-	</attribute>
+	<externalRef href="score.rng"/>
       </optional>
+      <oneOrMore>
+	<element name="resource_ref">
+	  <attribute name="id"><data type="IDREF"/></attribute>
+	</element>
+      </oneOrMore>
     </element>
   </define>
 
-  <define name="element-order">
-    <element name="rsc_order">
+  <define name="element-colocation">
+    <element name="rsc_colocation">
       <attribute name="id"><data type="ID"/></attribute>
-      <attribute name="rsc"><data type="IDREF"/></attribute>
-      <attribute name="before"><data type="IDREF"/></attribute>
       <optional>
 	<externalRef href="score.rng"/>
       </optional>
       <optional>
 	<ref name="element-lifetime"/>
       </optional>
+      <choice>
+	<oneOrMore>
+	  <ref name="element-resource-set"/>
+	</oneOrMore>
+	<group>
+	  <attribute name="rsc"><data type="IDREF"/></attribute>
+	  <attribute name="with"><data type="IDREF"/></attribute>
+	  <optional>
+	    <attribute name="rsc-role">
+	      <ref name="attribute-roles"/>
+	    </attribute>
+	  </optional>
+	  <optional>
+	    <attribute name="with-rsc-role">
+	      <ref name="attribute-roles"/>
+	    </attribute>
+	  </optional>
+	</group>
+      <choice>
+    </element>
+  </define>
+
+  <define name="element-order">
+    <element name="rsc_order">
+      <attribute name="id"><data type="ID"/></attribute>
+      <optional>
+	<ref name="element-lifetime"/>
+      </optional>
       <optional>
 	<attribute name="symmetrical"><data type="boolean"/></attribute>
       </optional>
-      <optional>
-	<attribute name="rsc-action">
-	  <ref name="attribute-actions"/>
-	</attribute>
-      </optional>
-      <optional>
-	<attribute name="before-rsc-action">
-	  <ref name="attribute-actions"/>
-	</attribute>
-      </optional>
+      <choice>
+	<oneOrMore>
+	  <ref name="element-resource-set"/>
+	</oneOrMore>
+	<group>
+	  <attribute name="rsc"><data type="IDREF"/></attribute>
+	  <attribute name="before"><data type="IDREF"/></attribute>
+	  <optional>
+	    <externalRef href="score.rng"/>
+	  </optional>
+	  <optional>
+	    <attribute name="rsc-action">
+	      <ref name="attribute-actions"/>
+	    </attribute>
+	  </optional>
+	  <optional>
+	    <attribute name="before-rsc-action">
+	      <ref name="attribute-actions"/>
+	    </attribute>
+	  </optional>
+	</group>
+      </choice>
     </element>
   </define>
  
