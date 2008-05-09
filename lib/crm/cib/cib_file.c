@@ -298,12 +298,15 @@ cib_file_perform_op(
 	in_mem_cib = result_cib;
     }
 	    
-    if(output_data && output) {
-	*output_data = copy_xml(output);
-    }
-	
     if(cib->op_callback != NULL) {
 	cib->op_callback(NULL, cib->call_id, rc, output);
+    }
+	
+    if(output_data && output) {
+	*output_data = output;
+
+    } else {
+	free_xml(output);
     }
 	
     return rc;

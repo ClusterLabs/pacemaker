@@ -337,9 +337,6 @@ xmlNode*
 get_cib_copy(cib_t *cib)
 {
 	xmlNode *xml_cib;
-#if CRM_DEPRECATED_SINCE_2_0_4
-	xmlNode *xml_cib_copy;
-#endif
 	int options = cib_scope_local|cib_sync_call;
 	if(cib->cmds->query(cib, NULL, &xml_cib, options) != cib_ok) {
 		crm_err("Couldnt retrieve the CIB");
@@ -351,14 +348,6 @@ get_cib_copy(cib_t *cib)
 
 	if(safe_str_eq(crm_element_name(xml_cib), XML_TAG_CIB)) {
 		return xml_cib;
-		
-#if CRM_DEPRECATED_SINCE_2_0_4
-	} else {
-		xml_cib_copy = copy_xml(
-			find_xml_node(xml_cib, XML_TAG_CIB, TRUE));
-		free_xml(xml_cib);
-		return xml_cib_copy;
-#endif
 	}
 	free_xml(xml_cib);
 	return NULL;
