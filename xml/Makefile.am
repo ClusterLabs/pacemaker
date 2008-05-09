@@ -23,7 +23,7 @@ RNG_FILES		= pacemaker.rng constraints.rng nvset.rng resources.rng rule.rng
 VERSIONED_RNG_FILES	= $(RNG_FILES:%.rng=%-$(DTD_VERSION).rng)
 
 EXTRA_DIST		= crm-1.0.dtd pacemaker.rng.in $(RNG_FILES)
-dtd_SCRIPTS		= crm.dtd pacemaker.rng $(VERSIONED_RNG_FILES) score.rng
+dtd_SCRIPTS		= crm.dtd pacemaker.rng $(VERSIONED_RNG_FILES) score.rng upgrade.xsl
 
 crm.dtd: crm-1.0.dtd
 	cp $(top_srcdir)/xml/crm-1.0.dtd crm.dtd
