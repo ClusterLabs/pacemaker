@@ -2918,7 +2918,6 @@ validate_with_relaxng(
 
 static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs) 
 {
-    xmlNode *top = NULL;
     xmlDocPtr doc = NULL;
     gboolean valid = FALSE;
     int type = known_schemas[method].type;
@@ -2988,16 +2987,17 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_log
 
 static xmlNode *apply_transformation(xmlNode *xml, const char *transform) 
 {
-    xmlNode *top = NULL;
     xmlNode *out = NULL;
     xmlDocPtr res = NULL;
     xmlDocPtr doc = NULL;
     xsltStylesheet *xslt = NULL;
 
     CRM_CHECK(xml != NULL, return FALSE);
-    doc = xmlNewDoc((const xmlChar *)"1.0");
-    top = xmlDocCopyNode(xml, doc, 1);
-    xmlDocSetRootElement(doc, top);
+    doc = xml->doc;
+    if(xml->doc == NULL) {
+	doc = xmlNewDoc((const xmlChar *)"1.0");
+	xmlDocSetRootElement(doc, xml);
+    }
 
     xmlLoadExtDtdDefaultValue = 1;
     xmlSubstituteEntitiesDefault(1);
@@ -3015,10 +3015,6 @@ static xmlNode *apply_transformation(xmlNode *xml, const char *transform)
 	xsltFreeStylesheet(xslt);
     }
 
-    if(doc) {
-	xmlFreeDoc(doc);
-    }
-    
     xsltCleanupGlobals();
     xmlCleanupParser();
     
@@ -3028,7 +3024,6 @@ static xmlNode *apply_transformation(xmlNode *xml, const char *transform)
 /* set which validation to use */
 xmlNode *update_validation(xmlNode *xml_blob, gboolean transform, gboolean to_logs) 
 {
-    
     int lpc = 0, match = 0, best = 0;
     static int max = DIMOF(known_schemas);
     const char *value = crm_element_value(xml_blob, XML_ATTR_VALIDATION);
