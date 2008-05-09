@@ -10,7 +10,7 @@
     <attribute name="id"><data type="ID"/></attribute>
     <interleave>
       <optional>
-	<externalRef href="rule.rng"/>
+	<externalRef href="rule-@DTD_VERSION@.rng"/>
       </optional>
       <element name="attributes">
 	<zeroOrMore>

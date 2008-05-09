@@ -52,9 +52,9 @@ struct schema_s
 
 struct schema_s known_schemas[] = {
     { 0, "none", NULL },
-    { 1, "crm.dtd",  DTD_DIRECTORY"/crm.dtd"},
-    { 2, "pacemaker-0.7.rng", "../xml/pacemaker-1.0.rng" },
-    { 2, LATEST_SCHEMA_VERSION, DTD_DIRECTORY"/"LATEST_SCHEMA_VERSION }
+    { 1, "crm",  DTD_DIRECTORY"/crm.dtd"},
+    { 2, "pacemaker-0.7", DTD_DIRECTORY"/pacemaker-0.7.rng" },
+    { 2, LATEST_SCHEMA_VERSION, DTD_DIRECTORY"/"LATEST_SCHEMA_VERSION".rng" }, /* Just in case I forget */
 };
 
 static const char *filter[] = {
@@ -65,7 +65,7 @@ static const char *filter[] = {
 
 static void add_ha_nocopy(HA_Message *parent, HA_Message *child, const char *field) 
 {
-    int next  = parent->nfields;
+    int next = parent->nfields;
     if (parent->nfields >= parent->nalloc && ha_msg_expand(parent) != HA_OK ) {
 	crm_err("Parent expansion failed");
 	return;
@@ -2918,7 +2918,7 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_log
 {
     int lpc = 0;
     static int max = DIMOF(known_schemas);
-
+    
     if(validation == NULL) {
 	validation = crm_element_value(xml_blob, "validation");
     }
@@ -2930,16 +2930,17 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_log
 	    validation = "crm.dtd";
 	}
     }
-
+    
     if(validation == NULL || safe_str_eq(validation, "none")) {
 	return TRUE;
     }
-
+    
     for(; lpc < max; lpc++) {
 	if(safe_str_eq(validation, known_schemas[lpc].name)) {
 	    if(to_logs) {
 		crm_info("Validating configuration with %s: %s",
 			 known_schemas[lpc].name, known_schemas[lpc].location);
+	    }
 	    return validate_with(xml_blob, known_schemas[lpc].type, known_schemas[lpc].location, to_logs);
 	}
     }

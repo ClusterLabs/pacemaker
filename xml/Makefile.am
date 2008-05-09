@@ -17,23 +17,19 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-## Subdirectories
-SUBDIRS			=  admin
-DIST_SUBDIRS		=  admin ais
+dtddir			= $(DTD_DIRECTORY)
 
-if BUILD_AIS_SUPPORT
-SUBDIRS			+= ais
-endif
+RNG_FILES		= pacemaker.rng constraints.rng nvset.rng resources.rng rule.rng 
+VERSIONED_RNG_FILES	= $(RNG_FILES:%.rng=%-$(DTD_VERSION).rng)
 
-crm_varlibdir		= $(HA_VARLIBDIR)/$(HB_PKG)/crm
-crm_varrundir		= $(HA_VARRUNDIR)/$(HB_PKG)/crm
+EXTRA_DIST		= crm-1.0.dtd pacemaker.rng.in $(RNG_FILES)
+dtd_SCRIPTS		= crm.dtd pacemaker.rng $(VERSIONED_RNG_FILES) score.rng
 
-install-exec-local:
-	$(mkinstalldirs) $(DESTDIR)/$(crm_varlibdir)
-	-chown $(HA_CCMUSER) $(DESTDIR)/$(crm_varlibdir)
-	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(crm_varlibdir)
-	-chmod 750 $(DESTDIR)/$(crm_varlibdir)
-	$(mkinstalldirs) $(DESTDIR)/$(crm_varrundir)
-	-chown $(HA_CCMUSER) $(DESTDIR)/$(crm_varrundir)
-	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(crm_varrundir)
-	-chmod 750 $(DESTDIR)/$(crm_varrundir)
+crm.dtd: crm-1.0.dtd
+	cp $(top_srcdir)/xml/crm-1.0.dtd crm.dtd
+
+%-$(DTD_VERSION).rng: %.rng
+	cp $(top_srcdir)/xml/$< $@
+
+clean:
+	rm -f crm.dtd $(VERSIONED_RNG_FILES)

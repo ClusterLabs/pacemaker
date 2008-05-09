@@ -32,7 +32,7 @@
 #define USE_LIBXML 1
 #include <libxml/tree.h> 
 typedef xmlNode crm_data_t;
-#define LATEST_SCHEMA_VERSION "crm.dtd"
+#define LATEST_SCHEMA_VERSION "pacemaker-"DTD_VERSION
 
 extern gboolean add_message_xml(
 	xmlNode *msg, const char *field, xmlNode *xml);

@@ -94,10 +94,10 @@
       <zeroOrMore>
 	<choice>
 	  <element name="meta_attributes">
-	    <externalRef href="nvset.rng"/>
+	    <externalRef href="nvset-@DTD_VERSION@.rng"/>
 	  </element>
 	  <element name="instance_attributes">
-	    <externalRef href="nvset.rng"/>
+	    <externalRef href="nvset-@DTD_VERSION@.rng"/>
 	  </element>
 	</choice>
       </zeroOrMore>

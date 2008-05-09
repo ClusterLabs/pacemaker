@@ -15,16 +15,16 @@
 	<element name="crm_config">
 	  <zeroOrMore>
 	    <element name="cluster_property_set">
-	      <externalRef href="nvset.rng"/>
+	      <externalRef href="nvset-@DTD_VERSION@.rng"/>
 	    </element>
 	  </zeroOrMore>
 	</element>
 	<ref name="element-nodes"/>
 	<element name="resources">
-	  <externalRef href="resources.rng"/>
+	  <externalRef href="resources-@DTD_VERSION@.rng"/>
 	</element>
 	<element name="constraints">
-	  <externalRef href="constraints.rng"/>
+	  <externalRef href="constraints-@DTD_VERSION@.rng"/>
 	</element>
       </interleave>
     </element>
@@ -84,7 +84,7 @@
 	  </optional>
 	  <zeroOrMore>
 	    <element name="instance_attributes">
-	      <externalRef href="nvset.rng"/>
+	      <externalRef href="nvset-@DTD_VERSION@.rng"/>
 	    </element>
 	  </zeroOrMore>
 	</element>
