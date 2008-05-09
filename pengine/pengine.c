@@ -92,7 +92,6 @@ process_pe_message(xmlNode *msg, xmlNode * xml_data, IPC_Channel *sender)
 		char *graph_file = NULL;
 		const char *value = NULL;
 		pe_working_set_t data_set;
-		xmlNode *log_input  = copy_xml(xml_data);
 		xmlNode *reply = NULL;
 #if HAVE_BZLIB_H
 		gboolean compress = TRUE;
@@ -153,7 +152,7 @@ process_pe_message(xmlNode *msg, xmlNode * xml_data, IPC_Channel *sender)
 		filename = generate_series_filename(
 			PE_WORKING_DIR, series[series_id].name, seq, compress);
 
-		write_xml_file(log_input, filename, compress);
+		write_xml_file(xml_data, filename, compress);
 		write_last_sequence(PE_WORKING_DIR, series[series_id].name,
 				    seq+1, series_wrap);
 		
@@ -195,7 +194,6 @@ process_pe_message(xmlNode *msg, xmlNode * xml_data, IPC_Channel *sender)
 		}
 		
 		crm_free(graph_file);
-		free_xml(log_input);
 		crm_free(filename);
 		
 	} else if(strcasecmp(op, CRM_OP_QUIT) == 0) {
