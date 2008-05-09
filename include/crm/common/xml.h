@@ -226,7 +226,7 @@ extern gboolean xml_has_children(const xmlNode *root);
 extern char *calculate_xml_digest(xmlNode *local_cib, gboolean sort, gboolean do_filter);
 
 extern gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs);
-extern void update_validation(xmlNode *xml_blob) ;
+extern xmlNode *update_validation(xmlNode *xml_blob, gboolean transform, gboolean to_logs);
 
 #if XML_PARANOIA_CHECKS
 #  define crm_validate_data(obj) xml_validate(obj)
