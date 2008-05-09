@@ -497,11 +497,6 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 
 	while (server->ch_status != IPC_DISCONNECT
 	       && server->ops->is_message_pending(server) == TRUE) {
-		if(xml) {
-		    free_xml(xml);
-		}
-		xml = NULL;
-	    
 		rc = server->ops->recv(server, &msg);
 		if (rc != IPC_OK) {
 		    cl_perror("Receive failure (%d)", rc);
@@ -584,6 +579,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		}
 	  cleanup:
 		free_xml(xml);
+		xml = NULL;		
 	}
 
 	if (server->ch_status == IPC_DISCONNECT) {
