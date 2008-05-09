@@ -174,14 +174,17 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 	}
 	
   do_register:
-	hello = cib_create_op(0, native->token, CRM_OP_REGISTER, NULL, NULL, NULL, 0);
-	crm_xml_add(hello, F_CIB_CLIENTNAME, name);
+	if(rc == cib_ok) {
+	    CRM_CHECK(native->token != NULL, ;);
+	    hello = cib_create_op(0, native->token, CRM_OP_REGISTER, NULL, NULL, NULL, 0);
+	    crm_xml_add(hello, F_CIB_CLIENTNAME, name);
+	    
+	    if(send_ipc_message(native->command_channel, hello) == FALSE) {
+		rc = cib_callback_register;
+	    }
 
-	if(send_ipc_message(native->command_channel, hello) == FALSE) {
-	    rc = cib_callback_register;
+	    free_xml(hello);
 	}
-	
-	free_xml(hello);
 	
 	if(rc == cib_ok) {
 		crm_debug("Connection to CIB successful");
@@ -321,6 +324,7 @@ cib_native_perform_op(
 		cib->call_id = 1;
 	}
 	
+	CRM_CHECK(native->token != NULL, ;);
 	op_msg = cib_create_op(
 	    cib->call_id, native->token, op, host, section, data, call_options);
 	if(op_msg == NULL) {
