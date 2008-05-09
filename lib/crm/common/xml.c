@@ -2926,9 +2926,11 @@ static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs)
     
 
     CRM_CHECK(xml != NULL, return FALSE);
-    doc = xmlNewDoc((const xmlChar *)"1.0");
-    top = xmlDocCopyNode(xml, doc, 1);
-    xmlDocSetRootElement(doc, top);
+    doc = xml->doc;
+    if(xml->doc == NULL) {
+	doc = xmlNewDoc((const xmlChar *)"1.0");
+	xmlDocSetRootElement(doc, xml);
+    }
     
     crm_info("Validating %p with: %s (type=%d)", xml, crm_str(file), type);
     switch(type) {
@@ -2946,10 +2948,6 @@ static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs)
 	    break;
     }
 
-    if(doc) {
-	xmlFreeDoc(doc);
-    }
-    
     return valid;
 }
 
@@ -3001,8 +2999,6 @@ static xmlNode *apply_transformation(xmlNode *xml, const char *transform)
     top = xmlDocCopyNode(xml, doc, 1);
     xmlDocSetRootElement(doc, top);
 
-    crm_err("%p vs. %p", xml, top);
-    
     xmlLoadExtDtdDefaultValue = 1;
     xmlSubstituteEntitiesDefault(1);
     
@@ -3079,6 +3075,7 @@ xmlNode *update_validation(xmlNode *xml_blob, gboolean transform, gboolean to_lo
 		
 	    } else {
 		crm_err("Transformation %s did not produce a valid configuration", known_schemas[lpc].transform);
+		crm_log_xml_debug(upgrade, "transform:bad");
 		free_xml(upgrade);
 	    }
 	}
