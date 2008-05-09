@@ -869,10 +869,8 @@ gboolean
 stage8(pe_working_set_t *data_set)
 {
 	const char *value = NULL;
-	char *transition_id_s = NULL;
 
 	transition_id++;
-	transition_id_s = crm_itoa(transition_id);
 	crm_debug_2("Creating transition graph %d.", transition_id);
 	
 	data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
@@ -892,8 +890,7 @@ stage8(pe_working_set_t *data_set)
 	value = pe_pref(data_set->config_hash, "batch-limit");
 	crm_xml_add(data_set->graph, "batch-limit", value);
 
-	crm_xml_add(data_set->graph, "transition_id", transition_id_s);
-	crm_free(transition_id_s);
+	crm_xml_add_int(data_set->graph, "transition_id", transition_id);
 	
 /* errors...
 	slist_iter(action, action_t, action_list, lpc,
