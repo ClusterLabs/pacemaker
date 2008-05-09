@@ -48,13 +48,14 @@ struct schema_s
 	int type;
 	const char *name;
 	const char *location;
+	const char *transform;
 };
 
 struct schema_s known_schemas[] = {
-    { 0, "none", NULL },
-    { 1, "crm",  DTD_DIRECTORY"/crm.dtd"},
-    { 2, "pacemaker-0.7", DTD_DIRECTORY"/pacemaker-0.7.rng" },
-    { 2, LATEST_SCHEMA_VERSION, DTD_DIRECTORY"/"LATEST_SCHEMA_VERSION".rng" }, /* Just in case I forget */
+    { 0, "none", NULL, NULL },
+    { 1, "pacemaker-0.6", DTD_DIRECTORY"/crm.dtd", DTD_DIRECTORY"/upgrade.xsl" },
+    { 2, "pacemaker-0.7", DTD_DIRECTORY"/pacemaker-0.7.rng", NULL },
+    { 2, LATEST_SCHEMA_VERSION, DTD_DIRECTORY"/"LATEST_SCHEMA_VERSION".rng", NULL }, /* Just in case I forget */
 };
 
 static const char *filter[] = {
@@ -2758,27 +2759,22 @@ calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
 #  include <libxml/parser.h>
 #  include <libxml/tree.h>
 #  include <libxml/relaxng.h>
+#  include <libxslt/xslt.h>
+#  include <libxslt/transform.h>
 #endif
 
 static gboolean
 validate_with_dtd(
-	xmlNode *xml_blob, gboolean to_logs, const char *dtd_file) 
+	xmlDocPtr doc, gboolean to_logs, const char *dtd_file) 
 {
 	gboolean valid = TRUE;
 
- 	xmlDocPtr doc = NULL;
 	xmlDtdPtr dtd = NULL;
 	xmlValidCtxtPtr cvp = NULL;
 	
-	CRM_CHECK(xml_blob != NULL, return FALSE);
+	CRM_CHECK(doc != NULL, return FALSE);
 	CRM_CHECK(dtd_file != NULL, return FALSE);
 
-	doc = xml_blob->doc;
-	if(doc == NULL) {
-	    doc = xmlNewDoc((const xmlChar *)"1.0");
-	    xmlDocSetRootElement(doc, xml_blob);
-	}
-	
 	dtd = xmlParseDTD(NULL, (const xmlChar *)dtd_file);
 	CRM_CHECK(dtd != NULL, goto cleanup);
 
@@ -2844,26 +2840,20 @@ struct _xmlError {
 
 static gboolean
 validate_with_relaxng(
-    crm_data_t *xml_blob, gboolean to_logs, const char *relaxng_file) 
+    xmlDocPtr doc, gboolean to_logs, const char *relaxng_file) 
 {
     gboolean valid = TRUE;
 #if HAVE_LIBXML2
     int rc = 0;
-    xmlDocPtr doc = NULL;
 
-    xmlRelaxNGParserCtxtPtr parser_ctx;
-    xmlRelaxNGValidCtxtPtr valid_ctx;
     xmlRelaxNGPtr rng = NULL;
+    xmlRelaxNGValidCtxtPtr valid_ctx = NULL;
+    xmlRelaxNGParserCtxtPtr parser_ctx = NULL;
     
-    CRM_CHECK(xml_blob != NULL, return FALSE);
+    CRM_CHECK(doc != NULL, return FALSE);
     CRM_CHECK(relaxng_file != NULL, return FALSE);
 
-    doc = xml_blob->doc;
-    if(doc == NULL) {
-	doc = xmlNewDoc((const xmlChar *)"1.0");
-	xmlDocSetRootElement(doc, xml_blob);
-    }
-    
+    xmlLoadExtDtdDefaultValue = 1;
     parser_ctx = xmlRelaxNGNewParserCtxt(relaxng_file);
     CRM_CHECK(parser_ctx != NULL, goto cleanup);
 
@@ -2904,8 +2894,6 @@ validate_with_relaxng(
     rc = xmlRelaxNGValidateDoc(valid_ctx, doc);
     if (rc > 0) {
 	valid = FALSE;
-	crm_err("Failed to validate valid instance line %ld\n",
-	 	xmlGetLineNo(xml_blob));
 
     } else if (rc < 0) {
 	crm_err("Internal libxml error during validation\n");
@@ -2928,20 +2916,41 @@ validate_with_relaxng(
     return valid;
 }
 
-static gboolean validate_with(xmlNode *xml, int type, const char *file, gboolean to_logs) 
+static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs) 
 {
+    xmlNode *top = NULL;
+    xmlDocPtr doc = NULL;
+    gboolean valid = FALSE;
+    int type = known_schemas[method].type;
+    const char *file = known_schemas[method].location;
+    
+
+    CRM_CHECK(xml != NULL, return FALSE);
+    doc = xmlNewDoc((const xmlChar *)"1.0");
+    top = xmlDocCopyNode(xml, doc, 1);
+    xmlDocSetRootElement(doc, top);
+    
+    crm_info("Validating %p with: %s (type=%d)", xml, crm_str(file), type);
     switch(type) {
 	case 0:
-	    return TRUE;
+	    valid = TRUE;
+	    break;
 	case 1:
-	    return validate_with_dtd(xml, to_logs, file);
+	    valid = validate_with_dtd(doc, to_logs, file);
+	    break;
 	case 2:
-	    return validate_with_relaxng(xml, to_logs, file);
+	    valid = validate_with_relaxng(doc, to_logs, file);
+	    break;
 	default:
 	    crm_err("Unknown validator type: %d", type);
 	    break;
     }
-    return FALSE;
+
+    if(doc) {
+	xmlFreeDoc(doc);
+    }
+    
+    return valid;
 }
 
 gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
@@ -2971,7 +2980,7 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_log
 		crm_info("Validating configuration with %s: %s",
 			 known_schemas[lpc].name, known_schemas[lpc].location);
 	    }
-	    return validate_with(xml_blob, known_schemas[lpc].type, known_schemas[lpc].location, to_logs);
+	    return validate_with(xml_blob, lpc, to_logs);
 	}
     }
 
@@ -2979,19 +2988,61 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_log
     return FALSE;
 }
 
-/* set which validation to use */
-void update_validation(xmlNode *xml_blob) 
+static xmlNode *apply_transformation(xmlNode *xml, const char *transform) 
 {
+    xmlNode *top = NULL;
+    xmlNode *out = NULL;
+    xmlDocPtr res = NULL;
+    xmlDocPtr doc = NULL;
+    xsltStylesheet *xslt = NULL;
+
+    CRM_CHECK(xml != NULL, return FALSE);
+    doc = xmlNewDoc((const xmlChar *)"1.0");
+    top = xmlDocCopyNode(xml, doc, 1);
+    xmlDocSetRootElement(doc, top);
+
+    crm_err("%p vs. %p", xml, top);
+    
+    xmlLoadExtDtdDefaultValue = 1;
+    xmlSubstituteEntitiesDefault(1);
+    
+    xslt = xsltParseStylesheetFile((const xmlChar *)transform);
+    CRM_CHECK(xslt != NULL, goto cleanup);
+    
+    res = xsltApplyStylesheet(xslt, doc, NULL);
+    CRM_CHECK(res != NULL, goto cleanup);
+
+    out = xmlDocGetRootElement(res);
+    
+  cleanup:
+    if(xslt) {
+	xsltFreeStylesheet(xslt);
+    }
+
+    if(doc) {
+	xmlFreeDoc(doc);
+    }
+    
+    xsltCleanupGlobals();
+    xmlCleanupParser();
+    
+    return out;
+}
+
+/* set which validation to use */
+xmlNode *update_validation(xmlNode *xml_blob, gboolean transform, gboolean to_logs) 
+{
+    
     int lpc = 0, match = 0, best = 0;
     static int max = DIMOF(known_schemas);
     const char *value = crm_element_value(xml_blob, XML_ATTR_VALIDATION);
 
     if(safe_str_eq(value, "none")) {
 	/* they dont want any */
-	return;
+	return xml_blob;
 
     } else if(safe_str_eq(value, LATEST_SCHEMA_VERSION)) {
-	return;
+	return xml_blob;
     }
 
     if(value != NULL) {
@@ -3007,15 +3058,37 @@ void update_validation(xmlNode *xml_blob)
     for(; lpc < max; lpc++) {
 	gboolean valid = TRUE;
 	crm_debug("Testing '%s' validation", known_schemas[lpc].name);
-	valid = validate_with(xml_blob, known_schemas[lpc].type, known_schemas[lpc].location, FALSE);
+	valid = validate_with(xml_blob, lpc, to_logs);
 	
 	if(valid) {
 	    best = lpc;
+	}
+	
+	if(valid && transform && known_schemas[lpc].transform != NULL) {
+	    xmlNode *upgrade = NULL;
+	    crm_notice("Upgrading %s-style configuration to %s with %s",
+		       known_schemas[lpc].name, known_schemas[lpc+1].name, known_schemas[lpc].transform);
+	    upgrade = apply_transformation(xml_blob, known_schemas[lpc].transform);
+	    if(upgrade == NULL) {
+		crm_err("Transformation %s failed", known_schemas[lpc].transform);
+		
+	    } else if(validate_with(upgrade, lpc+1, to_logs)) {
+		crm_info("Transformation %s successful", known_schemas[lpc].transform);
+		free_xml(xml_blob);
+		xml_blob = upgrade;
+		
+	    } else {
+		crm_err("Transformation %s did not produce a valid configuration", known_schemas[lpc].transform);
+		free_xml(upgrade);
+	    }
 	}
     }
     
     if(best > match) {
 	crm_notice("Upgrading from %s to %s validation", value?value:"<none>", known_schemas[best].name);
 	crm_xml_add(xml_blob, XML_ATTR_VALIDATION, known_schemas[best].name);
-    }    
+    }
+
+    return xml_blob;
 }
+
