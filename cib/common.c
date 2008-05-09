@@ -96,7 +96,7 @@ cib_prepare_common(xmlNode *root, const char *section)
     }
 
     crm_log_xml_debug_4(root, "cib:input");
-    return copy_xml(data);
+    return data;
 }
 
 static gboolean
@@ -188,7 +188,7 @@ static enum cib_errors
 cib_cleanup_data(const char *op, xmlNode **data, xmlNode **output) 
 {
     free_xml(*output);
-    free_xml(*data);
+    *data = NULL;
     return cib_ok;
 }
 
