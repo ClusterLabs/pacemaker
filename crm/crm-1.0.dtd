@@ -611,9 +611,6 @@ monthdays="1" (Matches the first day of every month) and hours="09-17" (Matches 
 weekdays="1,2" and weekdays="1-2,5-6" are NOT valid ranges.
 This may change in a future release.
 
- * seconds : Value range 0-59
- * minutes : Value range 0-59
- * hours : Value range 0-23
  * monthdays : Value range 0-31 (depending on current month and year)
  * weekdays : Value range 1-7 (1=Monday, 7=Sunday)
  * yeardays : Value range 1-366 (depending on current year)
