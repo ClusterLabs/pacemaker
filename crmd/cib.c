@@ -299,7 +299,7 @@ do_cib_invoke(long long action,
 			input = new_ha_msg_input(answer);
 			register_fsa_input(C_FSA_INTERNAL, I_ERROR, input);
 			free_xml(answer);
-			delete_ha_msg_input(input);
+			crm_free(input);
 		}
 
 	} else {

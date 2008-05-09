@@ -139,7 +139,7 @@ crmd_ha_msg_filter(xmlNode *msg)
 	route_message(C_HA_MESSAGE, new_input);
     }
     
-    delete_ha_msg_input(new_input);
+    crm_free(new_input);
     trigger_fsa(fsa_source);
 }
 
@@ -224,14 +224,15 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 
 		lpc++;
 		new_input = new_ha_msg_input(msg);
-		free_xml(msg);
 		
 		crm_debug_2("Processing msg from %s", curr_client->table_key);
 		crm_log_xml(LOG_DEBUG_2, "CRMd[inbound]", new_input->msg);
 		if(crmd_authorize_message(new_input, curr_client)) {
 			route_message(C_IPC_MESSAGE, new_input);
 		}
-		delete_ha_msg_input(new_input);
+		crm_free(new_input);
+		free_xml(msg);
+
 		new_input = NULL;		
 		msg = NULL;
 

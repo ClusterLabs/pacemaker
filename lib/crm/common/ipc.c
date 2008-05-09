@@ -570,20 +570,7 @@ new_ha_msg_input(xmlNode *orig)
 {
 	ha_msg_input_t *input_copy = NULL;
 	crm_malloc0(input_copy, sizeof(ha_msg_input_t));
-	input_copy->msg = copy_xml(orig);
-	input_copy->xml = get_message_xml(input_copy->msg, F_CRM_DATA);
-	return input_copy;
-}
-
-ha_msg_input_t *
-new_ipc_msg_input(xmlNode *orig) 
-{
-	/* HA_Message *msg = NULL; */
-	ha_msg_input_t *input_copy = NULL;
-	
-	crm_malloc0(input_copy, sizeof(ha_msg_input_t));
-	/* msg = ipcmsg2hamsg(orig); */
-	input_copy->msg = copy_xml(orig);
+	input_copy->msg = orig;
 	input_copy->xml = get_message_xml(input_copy->msg, F_CRM_DATA);
 	return input_copy;
 }

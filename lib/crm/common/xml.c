@@ -3022,7 +3022,8 @@ static xmlNode *apply_transformation(xmlNode *xml, const char *transform)
 }
 
 /* set which validation to use */
-xmlNode *update_validation(xmlNode *xml_blob, gboolean transform, gboolean to_logs) 
+xmlNode *update_validation(
+    xmlNode *xml_blob, gboolean transform, gboolean to_logs) 
 {
     int lpc = 0, match = 0, best = 0;
     static int max = DIMOF(known_schemas);
@@ -3070,7 +3071,7 @@ xmlNode *update_validation(xmlNode *xml_blob, gboolean transform, gboolean to_lo
 		
 	    } else {
 		crm_err("Transformation %s did not produce a valid configuration", known_schemas[lpc].transform);
-		crm_log_xml_debug(upgrade, "transform:bad");
+		crm_log_xml_info(upgrade, "transform:bad");
 		free_xml(upgrade);
 	    }
 	}

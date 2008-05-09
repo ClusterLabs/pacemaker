@@ -35,13 +35,12 @@
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
 #endif
+
 int
 main(int argc, char ** argv)
 {
     int flag;
-    char *buffer = NULL;
     xmlNode *xml = NULL;
-    HA_Message *ha = NULL;
     const char *xml_file = NULL;
     const char *input_file = NULL;
     
@@ -111,33 +110,9 @@ main(int argc, char ** argv)
 	}
     }
 
-    crm_log_xml_info(xml, "read");
-
-    ha = convert_xml_message(xml);
-    crm_log_message_adv(LOG_INFO, "ha", ha);
-
-    xml = convert_ha_message(NULL, ha, "foo");
+    xml = update_validation(xml, TRUE, FALSE);
+    crm_log_xml_info(xml, "fixed");
     
-    crm_log_xml_info(xml, "write");
-    
-    if(input_file != NULL) {
-	FILE *input_strm = fopen(input_file, "w");
-	if(input_strm == NULL) {
-	    cl_perror("Could not open %s for writing", input_file);
-	} else {
-	    buffer = dump_xml_formatted(xml);
-	    if(fprintf(input_strm, "%s\n", buffer) < 0) {
-		cl_perror("Write to %s failed", input_file);
-	    }
-	    fflush(input_strm);
-	    fclose(input_strm);
-	    crm_free(buffer);
-	}
-    }
-
-    if(crm_get_msec("0") < 0) {
-	fprintf(stderr, "error\n");
-    }
     return 0;
 }
 

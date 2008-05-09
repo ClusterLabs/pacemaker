@@ -256,20 +256,16 @@ fsa_dump_queue(int log_level)
 ha_msg_input_t *
 copy_ha_msg_input(ha_msg_input_t *orig) 
 {
-	ha_msg_input_t *input_copy = NULL;
-	crm_malloc0(input_copy, sizeof(ha_msg_input_t));
+    xmlNodePtr data = NULL;
+    
+    if(orig != NULL) {
+	crm_debug_4("Copy msg");
+	data = copy_xml(orig->msg);
 
-	if(orig != NULL) {
-		crm_debug_4("Copy msg");
-		input_copy->msg = copy_xml(orig->msg);
-		if(orig->xml != NULL) {
-			crm_debug_4("Copy xml");
-			input_copy->xml = copy_xml(orig->xml);
-		}
-	} else {
-		crm_debug_3("No message to copy");
-	}
-	return input_copy;
+    } else {
+	crm_debug_3("No message to copy");
+    }
+    return new_ha_msg_input(data);
 }
 
 
@@ -440,7 +436,8 @@ send_request(xmlNode *msg, char **msg_reference)
 	if(was_sent == FALSE) {
 		ha_msg_input_t *fsa_input = new_ha_msg_input(msg);
 		register_fsa_input(C_IPC_MESSAGE, I_ROUTER, fsa_input);
-		delete_ha_msg_input(fsa_input);
+		crm_free(fsa_input);
+		free_xml(msg);
 	}
 	
 	return was_sent;
@@ -1161,10 +1158,9 @@ send_msg_via_ipc(xmlNode *msg, const char *sys)
 			    fsa_action2string(A_LRM_INVOKE),
 			    A_LRM_INVOKE);
 #endif
-		do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE,
-					   fsa_state, I_MESSAGE, fsa_data);
+		do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE, fsa_state, I_MESSAGE, fsa_data);
 
-		delete_ha_msg_input(msg_copy);
+		crm_free(msg_copy);
 		crm_free(fsa_data);
 		
 	} else {

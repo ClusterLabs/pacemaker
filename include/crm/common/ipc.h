@@ -90,7 +90,6 @@ typedef struct ha_msg_input_s
 		
 } ha_msg_input_t;
 
-extern ha_msg_input_t *new_ipc_msg_input(xmlNode *orig);
 extern ha_msg_input_t *new_ha_msg_input(xmlNode *orig);
 extern void delete_ha_msg_input(ha_msg_input_t *orig);
 extern xmlNode *xmlfromIPC(IPC_Channel *ch, int timeout);
