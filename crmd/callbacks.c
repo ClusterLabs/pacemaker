@@ -116,6 +116,7 @@ crmd_ha_msg_filter(xmlNode *msg)
     
     if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
 	crm_debug_2("Ignoring message for the DC [F_SEQ=%s]", seq);
+	free_xml(msg);
 	return;
 	
     } else if(safe_str_eq(sys_from, CRM_SYSTEM_DC)) {
@@ -135,11 +136,13 @@ crmd_ha_msg_filter(xmlNode *msg)
     
     if(new_input == NULL) {
 	crm_log_xml(LOG_MSG, "HA[inbound]", msg);
-	new_input = new_ha_msg_input(msg);
-	route_message(C_HA_MESSAGE, new_input);
+	route_message(C_HA_MESSAGE, msg);
+
+    } else {
+	free_xml(msg);
+	crm_free(new_input);
     }
     
-    crm_free(new_input);
     trigger_fsa(fsa_source);
 }
 
@@ -155,7 +158,7 @@ crmd_ha_msg_callback(HA_Message *hamsg, void* private_data)
 	const char *op   = crm_element_value(msg, F_CRM_TASK);
 	const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
 
-	CRM_CHECK(from != NULL, crm_log_xml_err(msg, "anon"); return);
+	CRM_CHECK(from != NULL, crm_log_xml_err(msg, "anon"); goto bail);
 
 	crm_debug_2("HA[inbound]: %s from %s", op, from);
 
@@ -187,6 +190,7 @@ crmd_ha_msg_callback(HA_Message *hamsg, void* private_data)
 
 	} else {
 	    crmd_ha_msg_filter(msg);
+	    return;
 	}
 
   bail:
@@ -205,7 +209,6 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 {
 	int lpc = 0;
 	xmlNode *msg = NULL;
-	ha_msg_input_t *new_input = NULL;
 	crmd_client_t *curr_client = (crmd_client_t*)user_data;
 	gboolean stay_connected = TRUE;
 	
@@ -223,17 +226,15 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		}
 
 		lpc++;
-		new_input = new_ha_msg_input(msg);
-		
 		crm_debug_2("Processing msg from %s", curr_client->table_key);
-		crm_log_xml(LOG_DEBUG_2, "CRMd[inbound]", new_input->msg);
-		if(crmd_authorize_message(new_input, curr_client)) {
-			route_message(C_IPC_MESSAGE, new_input);
-		}
-		crm_free(new_input);
-		free_xml(msg);
+		crm_log_xml(LOG_DEBUG_2, "CRMd[inbound]", msg);
 
-		new_input = NULL;		
+		if(crmd_authorize_message(msg, curr_client)) {
+			route_message(C_IPC_MESSAGE, msg);
+		} else {
+		    free_xml(msg);
+		}
+
 		msg = NULL;
 
 		if(client->ch_status != IPC_CONNECT) {

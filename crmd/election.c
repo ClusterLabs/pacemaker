@@ -222,6 +222,8 @@ do_election_count_vote(long long action,
 	/* if the membership copy is NULL we REALLY shouldnt be voting
 	 * the question is how we managed to get here.
 	 */
+
+	CRM_CHECK(vote->msg != NULL, crm_err("Bogus data from %s", msg_data->origin); return);
 	CRM_CHECK(crm_peer_cache != NULL, return);
 	CRM_CHECK(vote_from != NULL, vote_from = fsa_our_uname);
 	

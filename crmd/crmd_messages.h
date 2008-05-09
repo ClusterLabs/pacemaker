@@ -41,7 +41,7 @@ extern int register_fsa_input_adv(
 	gboolean prepend, const char *raised_from);
 
 extern void fsa_dump_queue(int log_level);
-extern void route_message(enum crmd_fsa_cause cause, ha_msg_input_t *input);
+extern void route_message(enum crmd_fsa_cause cause, xmlNode *input);
 
 #define crmd_fsa_stall(cur_input) if(cur_input != NULL) {		\
 		register_fsa_input_adv(					\
@@ -100,12 +100,11 @@ extern gboolean add_pending_outgoing_reply(const char *originating_node_name,
 					   const char *sys_to,
 					   const char *sys_from);
 
-extern gboolean crmd_authorize_message(
-	ha_msg_input_t *client_msg, crmd_client_t *curr_client);
+extern gboolean crmd_authorize_message(xmlNode *client_msg, crmd_client_t *curr_client);
 
 extern gboolean send_request(xmlNode *msg, char **msg_reference);
 
-extern enum crmd_fsa_input handle_message(ha_msg_input_t *stored_msg);
+extern enum crmd_fsa_input handle_message(xmlNode *stored_msg);
 
 extern void lrm_op_callback(lrm_op_t* op);
 
