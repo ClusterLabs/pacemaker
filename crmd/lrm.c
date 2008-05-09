@@ -1269,12 +1269,12 @@ do_lrm_invoke(long long action,
 			     * have failed in the first place
 			     */
 			    g_hash_table_remove(pending_ops, op_key);
-
-			    op->op_status = LRM_OP_DONE;
-			    op->rc = EXECRA_OK;
-			    send_direct_ack(from_host, from_sys, op, rsc->id);
 			}
 
+			op->rc = EXECRA_OK;
+			op->op_status = LRM_OP_DONE;
+			send_direct_ack(from_host, from_sys, op, rsc->id);
+			
 			crm_free(op_key);
 			free_lrm_op(op);			
 			
