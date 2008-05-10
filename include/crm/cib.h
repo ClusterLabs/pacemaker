@@ -46,8 +46,6 @@ enum cib_state {
 enum cib_conn_type {
 	cib_command,
 	cib_query,
-	cib_query_synchronous,
-	cib_command_synchronous,
 	cib_no_connection
 };
 

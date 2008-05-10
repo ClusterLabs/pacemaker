@@ -1092,7 +1092,7 @@ main(int argc, char **argv)
 		} else {
 			cib_conn = cib_new();
 			rc = cib_conn->cmds->signon(
-				cib_conn, crm_system_name, cib_command_synchronous);
+				cib_conn, crm_system_name, cib_command);
 			if(rc != cib_ok) {
 				CMD_ERR("Error signing on to the CIB service: %s\n",
 					cib_error2string(rc));
