@@ -46,7 +46,8 @@ TODO
           have_quorum    (true|yes|1|false|no|0)  'false'
           ignore_dtd     (true|yes|1|false|no|0)  #IMPLIED
 
-          generated    CDATA    #IMPLIED        
+          validate-with  CDATA    #IMPLIED        
+          generated      CDATA    #IMPLIED        
           crm-debug-origin CDATA    #IMPLIED>
 
 <!--
