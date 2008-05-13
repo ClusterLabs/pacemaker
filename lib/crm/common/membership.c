@@ -262,7 +262,9 @@ void crm_update_peer_proc(const char *uname, uint32_t flag, const char *status)
 
     CRM_CHECK(uname != NULL, return);
     node = g_hash_table_lookup(crm_peer_cache, uname);	
-    CRM_CHECK(node != NULL, return);
+    CRM_CHECK(node != NULL,
+	      crm_err("Could not set %s.%s to %s", uname, peer2text(flag), status);
+	      return);
 
     if(safe_str_eq(status, ONLINESTATUS)) {
 	if((node->processes & flag) == 0) {
