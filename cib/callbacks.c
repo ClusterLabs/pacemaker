@@ -328,14 +328,6 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 		    } else {
 			cib_client->name = crm_strdup(value);
 		    }
-
-		    if(safe_str_eq(cib_client->name, CRM_SYSTEM_TENGINE)) {
-			/* Cheap hack...
-			 *  The TE is _always_ interested in these
-			 *  Enable now to avoid timing issues
-			 */
-			cib_client->diffs = TRUE;
-		    }
 		}
 
 		CRM_CHECK(cib_client->id != NULL, crm_err("Invalid client: %p", cib_client));
