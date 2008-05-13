@@ -284,8 +284,7 @@ main(int argc, char **argv)
 		int rc = cib_ok;
 		source = "live cib";
 		cib_conn = cib_new();
-		rc = cib_conn->cmds->signon(
-			cib_conn, "ptest", cib_command_synchronous);
+		rc = cib_conn->cmds->signon(cib_conn, "ptest", cib_command);
 
 		if(rc == cib_ok) {
 			crm_info("Reading XML from: live cluster");
