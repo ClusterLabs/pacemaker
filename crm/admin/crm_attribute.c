@@ -197,8 +197,7 @@ main(int argc, char **argv)
 	}
 
 	the_cib = cib_new();
-	rc = the_cib->cmds->signon(
-		the_cib, crm_system_name, cib_command_synchronous);
+	rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 
 	if(rc != cib_ok) {
 		fprintf(stderr, "Error signing on to the CIB service: %s\n",

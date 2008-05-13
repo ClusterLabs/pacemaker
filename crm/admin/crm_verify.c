@@ -179,8 +179,7 @@ main(int argc, char **argv)
 
 	if(USE_LIVE_CIB) {
 		cib_conn = cib_new();
-		rc = cib_conn->cmds->signon(
-			cib_conn, crm_system_name, cib_command_synchronous);
+		rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
 	}
 	
 	

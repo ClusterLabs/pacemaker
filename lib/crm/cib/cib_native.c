@@ -107,16 +107,6 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 		native->command_channel = init_client_ipc_comms_nodispatch(
 			cib_channel_ro);
 		
-	} else if(type == cib_query_synchronous) {
-		cib->state = cib_connected_query;
-		native->command_channel = init_client_ipc_comms_nodispatch(
-			cib_channel_ro_synchronous);
-		
-	} else if(type == cib_command_synchronous) {
-		cib->state = cib_connected_query;
-		native->command_channel = init_client_ipc_comms_nodispatch(
-			cib_channel_rw_synchronous);
-		
 	} else {
 		return cib_not_connected;		
 	}
@@ -138,10 +128,6 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 	    }
 	}
 	
-	if(type == cib_query_synchronous || type == cib_command_synchronous) {
-		goto do_register;
-	}
-
 	if(rc == cib_ok) {
 		crm_debug_4("Connecting callback channel");
 		native->callback_source = init_client_ipc_comms(
@@ -173,7 +159,6 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 	    }
 	}
 	
-  do_register:
 	if(rc == cib_ok) {
 	    CRM_CHECK(native->token != NULL, ;);
 	    hello = cib_create_op(0, native->token, CRM_OP_REGISTER, NULL, NULL, NULL, 0);
@@ -379,6 +364,7 @@ cib_native_perform_op(
 
 		crm_element_value_int(op_reply, F_CIB_CALLID, &reply_id);
 		CRM_CHECK(reply_id > 0,
+			  crm_log_xml(LOG_ERR, "Invalid call id", op_reply);
 			  free_xml(op_reply);
 			  if(sync_timer->ref > 0) {
 			      g_source_remove(sync_timer->ref);
@@ -392,8 +378,7 @@ cib_native_perform_op(
 		} else if(reply_id < msg_id) {
 			crm_debug("Recieved old reply: %d (wanted %d)",
 				  reply_id, msg_id);
-			crm_log_xml(
-				LOG_MSG, "Old reply", op_reply);
+			crm_log_xml(LOG_MSG, "Old reply", op_reply);
 
 		} else if((reply_id - 10000) > msg_id) {
 			/* wrap-around case */

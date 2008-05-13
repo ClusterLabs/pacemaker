@@ -354,7 +354,7 @@ do_work(void)
 		xmlNode *output = NULL;
 		
 		enum cib_errors rc = the_cib->cmds->signon(
-			the_cib, crm_system_name, cib_command_synchronous);
+		    the_cib, crm_system_name, cib_command);
 
 		if(rc != cib_ok) {
 			return -1;
