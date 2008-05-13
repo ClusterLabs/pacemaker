@@ -230,8 +230,7 @@ __attribute__ ((constructor)) static void register_this_component (void) {
     lcr_component_register (&crm_comp_ver0);
 }
 
-/* IMPL */
-int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
+static void crm_plugin_init(struct objdb_iface_ver0 *objdb) 
 {
     int rc = 0;
     struct utsname us;
@@ -250,7 +249,7 @@ int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
 	    OBJECT_PARENT_HANDLE, "pacemaker", strlen ("pacemaker"),
 	    &object_service_handle) != 0) {
 	object_service_handle = 0;
-	ais_info("No configuration suplpied for pacemaker");
+	ais_info("No configuration supplied for pacemaker");
     }
     
     objdb_get_string(
@@ -283,6 +282,12 @@ int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
     local_nodeid = totempg_my_nodeid_get();
     update_member(local_nodeid, 0, 1, 0, local_uname, CRM_NODE_LOST);
     
+}
+
+/* IMPL */
+int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
+{
+    ENTER("");
     LEAVE("");
     return 0;
 }
@@ -359,15 +364,20 @@ static void *crm_wait_dispatch (void *arg)
 int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
 {
     int lpc = 0;
-
-    ENTER("");
+    static gboolean need_init = TRUE;
     
-    pthread_create (&crm_wait_thread, NULL, crm_wait_dispatch, NULL);
-
-    for (; lpc < SIZEOF(crm_children); lpc++) {
-	spawn_child(&(crm_children[lpc]));
+    ENTER("");
+    if(need_init) {
+	need_init = FALSE;
+	crm_plugin_init(objdb);
+    
+	pthread_create (&crm_wait_thread, NULL, crm_wait_dispatch, NULL);
+	
+	for (; lpc < SIZEOF(crm_children); lpc++) {
+	    spawn_child(&(crm_children[lpc]));
+	}
     }
-
+    
     ais_info("CRM: Initialized");
     
     LEAVE("");
