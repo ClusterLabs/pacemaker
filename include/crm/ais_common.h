@@ -19,8 +19,6 @@
 #ifndef CRM_AIS_COMMON__H
 #define CRM_AIS_COMMON__H
 
-#include <crm_internal.h>
-
 #include <glib.h>
 #include <string.h>
 #if SUPPORT_AIS
