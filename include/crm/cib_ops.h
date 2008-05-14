@@ -18,8 +18,6 @@
 #ifndef CIB_OPS__H
 #define CIB_OPS__H
 
-#include <crm_internal.h>
-
 #include <sys/param.h>
 #include <stdio.h>
 #include <sys/types.h>
