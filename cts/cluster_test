@@ -25,9 +25,17 @@ if [ -z $SSH_AUTH_SOCK ]; then
     ssh-add
     rc=$?
     if [ $rc != 0 ]; then
-	printf " -- No identities added. Aborting\n"
-	# todo - guide the creation of a new one
-	exit 1
+	printf " -- No identities added\n"
+	printf "\nThe ability to open key-based 'ssh' connections (as the user 'root') is required to use CTS.\n"
+
+	read -p " - Do you want this program to help you create one? (yN)" auto_fix
+	if [ "x$auto_fix" = "xy" ]; then
+	    ssh-keygen -t dsa
+	    ssh-add
+	else
+	    printf "Please run 'ssh-keygen -t dsa' to create a new key\n"
+	    exit 1
+	fi
     fi
 else
     printf "OK\n"
