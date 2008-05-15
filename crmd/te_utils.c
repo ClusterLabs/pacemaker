@@ -88,6 +88,31 @@ te_connect_stonith(gpointer user_data)
 }
 
 gboolean
+start_global_timer(crm_action_timer_t *timer, int timeout)
+{
+	CRM_ASSERT(timer != NULL);
+	CRM_CHECK(timer > 0, return FALSE);
+	CRM_CHECK(timer->source_id == 0, return FALSE);
+
+	if(timeout <= 0) {
+		crm_err("Tried to start timer with period: %d", timeout);
+
+	} else if(timer->source_id == 0) {
+		crm_debug_2("Starting abort timer: %dms", timeout);
+		timer->timeout = timeout;
+		timer->source_id = Gmain_timeout_add(
+			timeout, global_timer_callback, (void*)timer);
+		CRM_ASSERT(timer->source_id != 0);
+		return TRUE;
+
+	} else {
+		crm_err("Timer is already active with period: %d", timer->timeout);
+	}
+	
+	return FALSE;		
+}
+
+gboolean
 stop_te_timer(crm_action_timer_t *timer)
 {
 	const char *timer_desc = "action timer";
@@ -109,6 +134,40 @@ stop_te_timer(crm_action_timer_t *timer)
 	}
 
 	return TRUE;
+}
+
+gboolean
+te_graph_trigger(gpointer user_data) 
+{
+    int timeout = 0;
+    enum transition_status graph_rc = -1;
+
+    if(transition_graph->complete == FALSE) {
+	graph_rc = run_graph(transition_graph);
+	timeout = transition_graph->transition_timeout;
+	print_graph(LOG_DEBUG_3, transition_graph);
+
+	if(graph_rc == transition_active) {
+		crm_debug_3("Transition not yet complete");
+		stop_te_timer(transition_timer);
+		start_global_timer(transition_timer, timeout);
+		return TRUE;		
+
+	} else if(graph_rc == transition_pending) {
+		crm_debug_3("Transition not yet complete - no actions fired");
+		return TRUE;		
+	}
+	
+	if(graph_rc != transition_complete) {
+		crm_err("Transition failed: %s", transition_status(graph_rc));
+		print_graph(LOG_WARNING, transition_graph);
+	}
+    }
+    
+    transition_graph->complete = TRUE;
+    notify_crmd(transition_graph);
+    
+    return TRUE;	
 }
 
 void
@@ -148,3 +207,4 @@ abort_transition_graph(
 	
 	G_main_set_trigger(transition_trigger);
 }
+

@@ -47,9 +47,10 @@ crmd_SOURCES	= main.c crmd.c 					\
 		fsa.c control.c messages.c ccm.c callbacks.c		\
 		election.c join_client.c join_dc.c subsystems.c 	\
 		cib.c pengine.c tengine.c lrm.c 			\
-		utils.c misc.c
+		utils.c misc.c te_events.c te_actions.c te_utils.c te_callbacks.c
 
-crmd_LDADD	= $(COMMONLIBS) $(CLUSTERLIBS) -llrm \
+crmd_LDADD	= $(COMMONLIBS) $(CLUSTERLIBS) -llrm			\
+		$(top_builddir)/lib/crm/transition/libtransitioner.la	\
 		$(top_builddir)/lib/crm/common/libcrmcluster.la
 
 

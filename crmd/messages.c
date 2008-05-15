@@ -883,35 +883,7 @@ handle_request(xmlNode *stored_msg)
 
 		/*========== DC-Only Actions ==========*/
 	} else if(AM_I_DC) {
-		const char *message = crm_element_value(
-		    stored_msg, "message");
-
-		/* setting "fsa_pe_ref = NULL" makes sure we ignore any
-		 *  PE reply that might be pending or in the queue while
-		 *  we ask the CIB for a more up-to-date copy
-		 */
-		if(safe_str_eq(op, CRM_OP_TEABORT)) {
-			crm_debug("Transition cancelled: %s/%s", op, message);
-			clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
-			if(need_transition(fsa_state)) {
-				schedule_pe();
-
-			} else {	
-				crm_debug("Filtering %s op in state %s",
-					 op, fsa_state2string(fsa_state));
-			}
-			
-		} else if(strcasecmp(op, CRM_OP_TECOMPLETE) == 0) {
-			crm_debug("Transition complete: %s/%s", op, message);
-			clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
- 			if(fsa_state == S_TRANSITION_ENGINE) {
-				next_input = I_TE_SUCCESS;
- 			} else {
-				crm_debug("Filtering %s op in state %s",
-					  op, fsa_state2string(fsa_state));
-			}
-
-		} else if(strcasecmp(op, CRM_OP_JOIN_ANNOUNCE) == 0) {
+		if(strcasecmp(op, CRM_OP_JOIN_ANNOUNCE) == 0) {
 			next_input = I_NODE_JOIN;
 			
 		} else if(strcasecmp(op, CRM_OP_JOIN_REQUEST) == 0) {
@@ -1111,6 +1083,7 @@ send_msg_via_ha(xmlNode *msg)
 
 
 /* msg is deleted by the time this returns */
+extern gboolean process_te_message(xmlNode *msg, xmlNode *xml_data);
 
 gboolean
 send_msg_via_ipc(xmlNode *msg, const char *sys)
@@ -1129,14 +1102,11 @@ send_msg_via_ipc(xmlNode *msg, const char *sys)
 	if (client_channel != NULL) {
 		crm_debug_3("Sending message via channel %s.", sys);
 		send_ok = send_ipc_message(client_channel, msg);
-		
-	} else if(sys != NULL && strcasecmp(sys, CRM_SYSTEM_CIB) == 0) {
-		crm_err("Sub-system (%s) has been incorporated into the CRMd.",
-			sys);
-		crm_err("Change the way we handle this CIB message");
-		crm_log_xml(LOG_ERR, "cib op", msg);
-		send_ok = FALSE;
-		
+
+	} else if(sys != NULL && strcasecmp(sys, CRM_SYSTEM_TENGINE) == 0) {
+	    xmlNode *data = get_message_xml(msg, F_CRM_DATA);		
+	    process_te_message(msg, data);
+	    
 	} else if(sys != NULL && strcasecmp(sys, CRM_SYSTEM_LRMD) == 0) {
 		fsa_data_t *fsa_data = NULL;
 		ha_msg_input_t *msg_copy = new_ha_msg_input(msg);

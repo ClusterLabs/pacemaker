@@ -33,6 +33,7 @@ extern gboolean action_timer_callback(gpointer data);
 extern gboolean te_graph_trigger(gpointer user_data);
 
 extern void tengine_stonith_connection_destroy(gpointer user_data);
+extern void te_update_diff(const char *event, xmlNode *msg);
 
 #if SUPPORT_HEARTBEAT
 extern void tengine_stonith_callback(stonith_ops_t * op);

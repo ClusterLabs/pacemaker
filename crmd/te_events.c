@@ -28,6 +28,7 @@
 #include <heartbeat.h>
 #include <clplumbing/Gmain_timeout.h>
 #include <lrm/lrm_api.h>
+#include <crmd_fsa.h>
 
 char *failed_stop_offset = NULL;
 char *failed_start_offset = NULL;
@@ -276,7 +277,7 @@ update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc)
 			 " rc=%d (update=%s, time=%s)", rsc_id, on_uuid, task, rc, value, now);
 
 		/* don't let notificatios of these updates cause new transitions */
-		call_id = update_attr(te_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
+		call_id = update_attr(fsa_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
 				      on_uuid, NULL,NULL, attr_name, value, FALSE);
 
 		add_cib_op_callback(call_id, FALSE, NULL, cib_failcount_updated);
@@ -285,7 +286,7 @@ update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc)
 		attr_name = crm_concat("last-failure", rsc_id, '-');
 
 		/* don't let notificatios of these updates cause new transitions */
-		call_id = update_attr(te_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
+		call_id = update_attr(fsa_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
 				      on_uuid, NULL,NULL, attr_name, now, FALSE);
 
 		add_cib_op_callback(call_id, FALSE, NULL, cib_failcount_updated);

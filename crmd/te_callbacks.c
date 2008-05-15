@@ -32,7 +32,6 @@
 #include <clplumbing/Gmain_timeout.h>
 
 void te_update_confirm(const char *event, xmlNode *msg);
-void te_update_diff(const char *event, xmlNode *msg);
 xmlNode *need_abort(xmlNode *update);
 void cib_fencing_updated(xmlNode *msg, int call_id, int rc,
 			 xmlNode *output, void *user_data);
@@ -43,30 +42,6 @@ crm_graph_t *transition_graph;
 GTRIGSource *transition_trigger = NULL;
 crm_action_timer_t *transition_timer = NULL;
 
-static gboolean
-start_global_timer(crm_action_timer_t *timer, int timeout)
-{
-	CRM_ASSERT(timer != NULL);
-	CRM_CHECK(timer > 0, return FALSE);
-	CRM_CHECK(timer->source_id == 0, return FALSE);
-
-	if(timeout <= 0) {
-		crm_err("Tried to start timer with period: %d", timeout);
-
-	} else if(timer->source_id == 0) {
-		crm_debug_2("Starting abort timer: %dms", timeout);
-		timer->timeout = timeout;
-		timer->source_id = Gmain_timeout_add(
-			timeout, global_timer_callback, (void*)timer);
-		CRM_ASSERT(timer->source_id != 0);
-		return TRUE;
-
-	} else {
-		crm_err("Timer is already active with period: %d", timer->timeout);
-	}
-	
-	return FALSE;		
-}
 
 void
 te_update_diff(const char *event, xmlNode *msg)
@@ -165,10 +140,8 @@ te_update_diff(const char *event, xmlNode *msg)
 	return;
 }
 
-
-
 gboolean
-process_te_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
+process_te_message(xmlNode *msg, xmlNode *xml_data)
 {
 	xmlNode *xml_obj = NULL;
 	
@@ -184,8 +157,6 @@ process_te_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 	
 	if(op == NULL){
 		/* error */
-	} else if(strcasecmp(op, CRM_OP_HELLO) == 0) {
-		/* ignore */
 
 	} else if(sys_to == NULL || strcasecmp(sys_to, CRM_SYSTEM_TENGINE) != 0) {
 		crm_debug_2("Bad sys-to %s", crm_str(sys_to));
@@ -221,70 +192,6 @@ process_te_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 			  crm_element_value(msg, XML_ATTR_REFERENCE), from);
 		extract_event(xml_obj);
 		
-	} else if(safe_str_eq(type, XML_ATTR_RESPONSE)) {
-		crm_err("Message was a response not a request.  Discarding");
-		return TRUE;
-
-	} else if(strcasecmp(op, CRM_OP_TRANSITION) == 0) {
-		const char *graph_file = crm_element_value(msg, F_CRM_TGRAPH);
- 		const char *graph_input = crm_element_value(msg, F_CRM_TGRAPH_INPUT);
-		CRM_CHECK(graph_file != NULL || xml_data != NULL,
-			  crm_err("No graph provided");
-			  crm_log_xml(LOG_WARNING, "no graph", msg);
-			  return TRUE);
-
-		if(transition_graph->complete == FALSE) {
-			crm_info("Another transition is already active");
-			abort_transition(
-				INFINITY, tg_restart, "Transition Active", NULL);
-
-		}  else {
-			const char *value = NULL;
-			xmlNode *graph_data = xml_data;
-			crm_debug("Processing graph derived from %s", graph_input);
-
-			if(graph_file != NULL) {
-				FILE *graph_fd = fopen(graph_file, "r");
-
-				CRM_CHECK(graph_fd != NULL,
-					  cl_perror("Could not open graph file %s", graph_file);
-					  return TRUE);
-
-				graph_data = file2xml(graph_fd, FALSE);
-
-				unlink(graph_file);
-				fclose(graph_fd);
-			}
-
-			destroy_graph(transition_graph);
-			transition_graph = unpack_graph(graph_data);				
-			start_global_timer(transition_timer,
-					   transition_graph->transition_timeout);
-
-			value = crm_element_value(graph_data, "failed-stop-offset");
-			if(value) {
-			    failed_stop_offset = crm_strdup(value);
-			}
-			
-			value = crm_element_value(graph_data, "failed-start-offset");
-			if(value) {
-			    failed_start_offset = crm_strdup(value);
-			}
-			
-			trigger_graph();
-			print_graph(LOG_DEBUG_2, transition_graph);
-
-			if(graph_data != xml_data) {
-			    free_xml(graph_data);
-			}
-		}
-		
-	} else if(strcasecmp(op, CRM_OP_TE_HALT) == 0) {
-		abort_transition(INFINITY, tg_stop, "Peer Halt", NULL);
-
-	} else if(strcasecmp(op, CRM_OP_TEABORT) == 0) {
-		abort_transition(INFINITY, tg_restart, "Peer Cancelled", NULL);
-
 	} else {
 		crm_err("Unknown command: %s::%s from %s", type, op, sys_from);
 	}
@@ -572,38 +479,5 @@ global_timer_callback(gpointer data)
 	return FALSE;		
 }
 
-gboolean
-te_graph_trigger(gpointer user_data) 
-{
-    int timeout = 0;
-    enum transition_status graph_rc = -1;
-
-    if(transition_graph->complete == FALSE) {
-	graph_rc = run_graph(transition_graph);
-	timeout = transition_graph->transition_timeout;
-	print_graph(LOG_DEBUG_3, transition_graph);
-
-	if(graph_rc == transition_active) {
-		crm_debug_3("Transition not yet complete");
-		stop_te_timer(transition_timer);
-		start_global_timer(transition_timer, timeout);
-		return TRUE;		
-
-	} else if(graph_rc == transition_pending) {
-		crm_debug_3("Transition not yet complete - no actions fired");
-		return TRUE;		
-	}
-	
-	if(graph_rc != transition_complete) {
-		crm_err("Transition failed: %s", transition_status(graph_rc));
-		print_graph(LOG_WARNING, transition_graph);
-	}
-    }
-    
-    transition_graph->complete = TRUE;
-    notify_crmd(transition_graph);
-    
-    return TRUE;	
-}
 
 

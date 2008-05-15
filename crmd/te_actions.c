@@ -29,9 +29,11 @@
 #include <clplumbing/Gmain_timeout.h>
 #include <lrm/lrm_api.h>
 #include <clplumbing/lsb_exitcodes.h>
+#include <crmd_fsa.h>
+#include <crmd_messages.h>
+#include <crm/common/cluster.h>
 
 char *te_uuid = NULL;
-IPC_Channel *crm_ch = NULL;
 
 void send_rsc_command(crm_action_t *action);
 extern crm_action_timer_t *transition_timer;
@@ -85,8 +87,8 @@ send_stonith_update(stonith_ops_t * op)
 	crm_xml_add(node_state, XML_CIB_ATTR_REPLACE,   XML_CIB_TAG_LRM);
 	crm_xml_add(node_state, XML_ATTR_ORIGIN,   __FUNCTION__);
 	
-	rc = te_cib_conn->cmds->update(
-		te_cib_conn, XML_CIB_TAG_STATUS, node_state, NULL,
+	rc = fsa_cib_conn->cmds->update(
+		fsa_cib_conn, XML_CIB_TAG_STATUS, node_state, NULL,
 		cib_quorum_override|cib_scope_local);	
 	
 	if(rc < cib_ok) {
@@ -209,7 +211,7 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	counter = generate_transition_key(
 	    transition_graph->id, action->id, get_target_rc(action), te_uuid);
 	crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
-	ret = send_ipc_message(crm_ch, cmd);
+	ret = send_cluster_message(on_node, crm_proc_crmd, cmd, TRUE);
 	crm_free(counter);
 	free_xml(cmd);
 	
@@ -378,8 +380,8 @@ cib_action_update(crm_action_t *action, int status)
 		  status<0?"new action":XML_ATTR_TIMEOUT,
 		  crm_element_name(action->xml), crm_str(task), rsc_id, target);
 	
-	rc = te_cib_conn->cmds->update(
-		te_cib_conn, XML_CIB_TAG_STATUS, state, NULL, call_options);
+	rc = fsa_cib_conn->cmds->update(
+		fsa_cib_conn, XML_CIB_TAG_STATUS, state, NULL, call_options);
 
 	crm_debug("Updating CIB with %s action %d: %s on %s (call_id=%d)",
 		  op_status2text(status), action->id, task_uuid, target, rc);
@@ -430,16 +432,7 @@ send_rsc_command(crm_action_t *action)
 	cmd = create_request(CRM_OP_INVOKE_LRM, rsc_op, on_node,
 			     CRM_SYSTEM_LRMD, CRM_SYSTEM_TENGINE, NULL);
 	
-#if 1
-	send_ipc_message(crm_ch, cmd);
-#else
-	/* test the TE timer/recovery code */
-	if((action->id % 11) == 0) {
-		crm_err("Faking lost action %d: %s", action->id, task_uuid);
-	} else {
-		send_ipc_message(crm_ch, cmd);
-	}
-#endif
+	send_cluster_message(on_node, crm_proc_lrmd, cmd, TRUE);
 	free_xml(cmd);
 	
 	action->executed = TRUE;
@@ -471,61 +464,57 @@ crm_graph_functions_t te_graph_fns = {
 	te_fence_node
 };
 
-extern GMainLoop*  mainloop;
-
 void
 notify_crmd(crm_graph_t *graph)
 {	
-	xmlNode *cmd = NULL;
 	int log_level = LOG_DEBUG;
-	const char *op = CRM_OP_TEABORT;
 	int pending_callbacks = num_cib_op_callbacks();
 	
-
 	stop_te_timer(transition_timer);
 	
 	if(pending_callbacks != 0) {
-		crm_warn("Delaying completion until all CIB updates complete");
-		return;
+	    transition_graph->complete = FALSE;
+	    crm_warn("Delaying completion until %d CIB updates complete", pending_callbacks);
+	    return;
 	}
 
 	CRM_CHECK(graph->complete, graph->complete = TRUE);
 
 	switch(graph->completion_action) {
 		case tg_stop:
-			op = CRM_OP_TECOMPLETE;
-			log_level = LOG_INFO;
-			break;
+		    log_level = LOG_INFO;
+		    clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
+		    register_fsa_input(C_FSA_INTERNAL, I_TE_SUCCESS, NULL);
+		    break;
 
 		case tg_abort:
 		case tg_restart:
-			op = CRM_OP_TEABORT;
-			break;
+		    clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
+		    if(need_transition(fsa_state)) {
+			/* setting "fsa_pe_ref = NULL" makes sure we ignore any
+			 *  PE reply that might be pending or in the queue while
+			 *  we ask the CIB for a more up-to-date copy
+			 */
+			crm_free(fsa_pe_ref); fsa_pe_ref = NULL;
+			register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
+			
+		    } else {	
+			crm_debug("Filtering %d op in state %s",
+				  graph->completion_action, fsa_state2string(fsa_state));
+		    }
+			
+		    break;
 
 		case tg_shutdown:
-			crm_info("Exiting after transition");
-			if (mainloop != NULL && g_main_is_running(mainloop)) {
-				g_main_quit(mainloop);
-				return;
-			}
-			exit(LSB_EXIT_OK);
+		    crm_info("Exiting after transition");
+		    return;
 	}
 
-	te_log_action(log_level, "Transition %d status: %s - %s",
-		      graph->id, op, crm_str(graph->abort_reason));
+	te_log_action(log_level, "Transition %d status: %d - %s",
+		      graph->id, graph->completion_action, crm_str(graph->abort_reason));
 
 	print_graph(LOG_DEBUG_3, graph);
 	
-	cmd = create_request(
-		op, NULL, NULL, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, NULL);
-
-	if(graph->abort_reason != NULL) {
-		crm_xml_add(cmd, "message", graph->abort_reason);
-	}
-
-	send_ipc_message(crm_ch, cmd);
-	free_xml(cmd);
-
 	graph->abort_reason = NULL;
 	graph->completion_action = tg_restart;	
 

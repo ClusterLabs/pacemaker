@@ -25,9 +25,6 @@
 extern void send_stonith_update(stonith_ops_t * op);
 #endif
 
-extern IPC_Channel *crm_ch;
-extern GMainLoop*  mainloop;
-
 /* tengine */
 extern crm_action_t *match_down_event(
 	int rc, const char *target, const char *filter);
@@ -36,19 +33,18 @@ extern gboolean cib_action_update(crm_action_t *action, int status);
 
 /* utils */
 extern crm_action_t *get_action(int id, gboolean confirmed);
+extern gboolean start_global_timer(crm_action_timer_t *timer, int timeout);
 extern gboolean stop_te_timer(crm_action_timer_t *timer);
 extern const char *get_rsc_state(const char *task, op_status_t status);
 
 /* unpack */
 extern gboolean extract_event(xmlNode *msg);
-extern gboolean process_te_message(
-	xmlNode * msg, xmlNode *xml_data, IPC_Channel *sender);
+extern gboolean process_te_message(xmlNode * msg, xmlNode *xml_data);
 
 extern crm_graph_t *transition_graph;
 extern GTRIGSource *transition_trigger;
 
 extern char *te_uuid;
-extern cib_t *te_cib_conn;
 
 extern void notify_crmd(crm_graph_t *graph);
 

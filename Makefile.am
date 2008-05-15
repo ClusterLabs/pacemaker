@@ -33,7 +33,7 @@ AUTOMAKE_OPTIONS	= foreign
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar
 
-SUBDIRS	= debian build replace include lib cib crmd pengine transitioner crm tools doc cts xml
+SUBDIRS	= debian build replace include lib cib pengine crmd crm tools doc cts xml
 
 tgz:
 	rm -f $(TARFILE)
