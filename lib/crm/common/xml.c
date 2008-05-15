@@ -53,9 +53,10 @@ struct schema_s
 
 struct schema_s known_schemas[] = {
     { 0, "none", NULL, NULL },
-    { 1, "pacemaker-0.6", DTD_DIRECTORY"/crm.dtd", DTD_DIRECTORY"/upgrade.xsl" },
-    { 2, "pacemaker-0.7", DTD_DIRECTORY"/pacemaker-0.7.rng", NULL },
-    { 2, LATEST_SCHEMA_VERSION, DTD_DIRECTORY"/"LATEST_SCHEMA_VERSION".rng", NULL }, /* Just in case I forget */
+    { 1, "pacemaker-0.6", DTD_DIRECTORY"/crm.dtd", NULL },
+    /* { 1, "pacemaker-0.6", DTD_DIRECTORY"/crm.dtd", DTD_DIRECTORY"/upgrade.xsl" }, */
+    /* { 2, "pacemaker-0.7", DTD_DIRECTORY"/pacemaker-0.7.rng", NULL }, */
+    /* { 2, LATEST_SCHEMA_VERSION, DTD_DIRECTORY"/"LATEST_SCHEMA_VERSION".rng", NULL }, /\* Just in case I forget *\/ */
 };
 
 static const char *filter[] = {
@@ -2933,7 +2934,7 @@ static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs)
 	xmlDocSetRootElement(doc, xml);
     }
     
-    crm_info("Validating %p with: %s (type=%d)", xml, crm_str(file), type);
+    crm_info("Validating with: %s (type=%d)", crm_str(file), type);
     switch(type) {
 	case 0:
 	    valid = TRUE;
