@@ -36,7 +36,6 @@
 #include <crmd_callbacks.h>
 
 
-xmlNode *find_xml_in_hamessage(const xmlNode * msg);
 void crmd_ha_connection_destroy(gpointer user_data);
 void crmd_ha_msg_filter(xmlNode *msg);
 
@@ -44,9 +43,6 @@ void crmd_ha_msg_filter(xmlNode *msg);
 extern gboolean check_join_state(
 	enum crmd_fsa_state cur_state, const char *source);
 
-
-/* #define MAX_EMPTY_CALLBACKS 20 */
-/* int empty_callbacks = 0; */
 
 #define trigger_fsa(source) crm_debug_3("Triggering FSA: %s", __FUNCTION__); \
 	G_main_set_trigger(source);
