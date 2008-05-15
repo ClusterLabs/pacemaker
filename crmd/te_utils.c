@@ -28,8 +28,7 @@
 #include <heartbeat.h>
 #include <clplumbing/Gmain_timeout.h>
 #include <lrm/lrm_api.h>
-
-extern cib_t *te_cib_conn;
+#include <crmd_fsa.h>
 
 GCHSource *stonith_src = NULL;
 GTRIGSource *stonith_reconnect = NULL;
@@ -142,6 +141,21 @@ te_graph_trigger(gpointer user_data)
     int timeout = 0;
     enum transition_status graph_rc = -1;
 
+    crm_debug("Invoking the TE graph in state %s", fsa_state2string(fsa_state));
+    switch(fsa_state) {
+	case S_STARTING:
+	case S_PENDING:
+	case S_NOT_DC:
+	case S_HALT:
+	case S_ILLEGAL:
+	case S_STOPPING:
+	case S_TERMINATE:
+	    return TRUE;
+	    break;
+	default:
+	    break;
+    }
+    
     if(transition_graph->complete == FALSE) {
 	graph_rc = run_graph(transition_graph);
 	timeout = transition_graph->transition_timeout;
