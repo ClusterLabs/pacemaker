@@ -116,7 +116,7 @@ class LinuxHAv2(HeartbeatCM):
                 r", exiting\.",
                 r"WARN.*Ignoring HA message.*vote.*not in our membership list",
                 r"pengine.*Attempting recovery of resource",
-                r"tengine.*is taking more than 2x its timeout",
+                r"is taking more than 2x its timeout",
                 r"Confirm not received from",
                 r"Welcome reply not received from",
                 r"Attempting to schedule .* after a stop",
@@ -333,7 +333,7 @@ class LinuxHAv2(HeartbeatCM):
         cmd = self["ExecuteRscOp"] % (app, resource, op, interval)
         (rc, lines) = self.rsh.remote_py(node, "os", "system", cmd)
 
-        self.debug("RscOp '%s' on %s: %d" % (cmd, node, rc))
+        #self.debug("RscOp '%s' on %s: %d" % (cmd, node, rc))
         #for line in lines:
         #    self.debug("RscOp: "+line)
 
@@ -493,18 +493,10 @@ class LinuxHAv2(HeartbeatCM):
                     "State transition S_IDLE",
                     "State transition S_STARTING -> S_PENDING",
                     ], [
-                    "tengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
                     "pengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
                     ], common_ignore, self.fastfail, self)
 
         pengine = Process("pengine", 1, [
-                    "State transition S_IDLE",
-                    ".*crmd .*exited with return code 2.",
-                    "crmd: .*Input I_TERMINATE from do_recover",
-                    "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], common_ignore, self.fastfail, self)
-
-        tengine = Process("tengine", 1, [
                     "State transition S_IDLE",
                     ".*crmd .*exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
@@ -543,17 +535,12 @@ class LinuxHAv2(HeartbeatCM):
                 "ERROR: Client .*crmd exited with return code 2",
                 "ERROR: Respawning client .*crmd" 
                 ])
-            tengine.pats.extend([
-                "ERROR: Client .*crmd exited with return code 2",
-                "ERROR: Respawning client .*crmd" 
-                ])
 
         complist.append(ccm)
         complist.append(cib)
         complist.append(lrmd)
         complist.append(crmd)
         complist.append(pengine)
-        complist.append(tengine)
 
         return complist
 
