@@ -56,6 +56,35 @@ struct crm_subsystem_s *pe_subsystem  = NULL;
 void do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 			   xmlNode *output, void *user_data);
 
+
+static gboolean pe_msg_dispatch(IPC_Channel *client, gpointer user_data) 
+{
+    xmlNode *msg = NULL;
+    gboolean stay_connected = TRUE;
+	
+    while(IPC_ISRCONN(client)) {
+	if(client->ops->is_message_pending(client) == 0) {
+	    break;
+	}
+
+	msg = xmlfromIPC(client, 0);
+	if (msg != NULL) {
+	    route_message(C_IPC_MESSAGE, msg);
+	    free_xml(msg);
+	}
+    }
+
+    if (client->ch_status != IPC_CONNECT) {
+	stay_connected = FALSE;
+	pe_subsystem->ipc = NULL;
+	pe_subsystem->client = NULL;		
+	crm_info("Received HUP from %s:[%d]", pe_subsystem->name, pe_subsystem->pid);
+    }
+
+    G_main_set_trigger(fsa_source);
+    return stay_connected;
+}
+
 /*	 A_PE_START, A_PE_STOP, A_TE_RESTART	*/
 void
 do_pe_control(long long action,
@@ -77,7 +106,17 @@ do_pe_control(long long action,
 		if(cur_state != S_STOPPING) {
 			if(start_subsystem(this_subsys) == FALSE) {
 				register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+			} else {
+			    IPC_Channel *ch = NULL;
+			    sleep(5);
+			    init_client_ipc_comms(CRM_SYSTEM_PENGINE, pe_msg_dispatch, NULL, &ch);
+
+			    if(ch != NULL) {
+				pe_subsystem->ipc = ch;
+				set_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
+			    }
 			}
+
 		} else {
 			crm_info("Ignoring request to start %s while shutting down",
 			       this_subsys->name);
@@ -179,7 +218,11 @@ do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 	cmd = create_request(CRM_OP_PECALC, local_cib, NULL,
 			     CRM_SYSTEM_PENGINE, CRM_SYSTEM_DC, NULL);
 
-	send_request(cmd, &fsa_pe_ref);
+	fsa_pe_ref = crm_element_value_copy(cmd, XML_ATTR_REFERENCE);
+	if(send_ipc_message(pe_subsystem->ipc, cmd) == FALSE) {
+	    crm_err("Could not contact the pengine");
+	}
+	
 	crm_debug("Invoking the PE: ref=%s, seq=%llu, quorate=%d",
 		  fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
 	free_xml(cmd);

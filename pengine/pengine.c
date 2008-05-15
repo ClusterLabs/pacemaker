@@ -59,9 +59,8 @@ series_t series[] = {
 	{ 0, "pe-input",   "pe-input-series-max", 400 },
 };
 
-
 gboolean
-process_pe_message(xmlNode *msg, xmlNode * xml_data, IPC_Channel *sender)
+process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 {
 	gboolean send_via_disk = FALSE;
 	const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);

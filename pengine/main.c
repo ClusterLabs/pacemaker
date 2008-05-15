@@ -42,12 +42,63 @@
 
 #define OPTARGS	"hVc"
 
-GMainLoop*  mainloop = NULL;
+char *ipc_server = NULL;
+GMainLoop *mainloop = NULL;
 
 void usage(const char* cmd, int exit_status);
-int pe_init(void);
 gboolean pengine_shutdown(int nsig, gpointer unused);
-extern gboolean process_pe_message(xmlNode * msg, IPC_Channel *sender);
+extern gboolean process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender);
+
+static gboolean
+pe_msg_callback(IPC_Channel *client, gpointer user_data)
+{
+    xmlNode *msg = NULL;
+    gboolean stay_connected = TRUE;
+	
+    while(IPC_ISRCONN(client)) {
+	if(client->ops->is_message_pending(client) == 0) {
+	    break;
+	}
+
+	msg = xmlfromIPC(client, 0);
+	if (msg != NULL) {
+	    xmlNode *data = get_message_xml(msg, F_CRM_DATA);		
+	    process_pe_message(msg, data, client);
+	    free_xml(msg);
+	}
+    }
+    
+    if (client->ch_status != IPC_CONNECT) {
+	stay_connected = FALSE;
+    }
+
+    return stay_connected;
+}
+
+static void pe_connection_destroy(gpointer user_data)
+{
+    return;
+}
+
+static gboolean
+pe_client_connect(IPC_Channel *client, gpointer user_data)
+{
+    crm_debug_3("Invoked");
+    if (client == NULL) {
+	crm_err("Channel was NULL");
+
+    } else if (client->ch_status == IPC_DISCONNECT) {
+	crm_err("Channel was disconnected");
+
+    } else {
+	client->ops->set_recv_qlen(client, 1024);
+	client->ops->set_send_qlen(client, 1024);
+	G_main_add_IPC_Channel(
+	    G_PRIORITY_LOW, client, FALSE, pe_msg_callback, NULL, pe_connection_destroy);
+    }
+    
+    return TRUE;
+}
 
 int
 main(int argc, char ** argv)
@@ -90,44 +141,30 @@ main(int argc, char ** argv)
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
 
-	/* read local config file */
-	crm_debug_4("do start");
-	return pe_init();
-}
-
-
-int
-pe_init(void)
-{
-	IPC_Channel *crm_ch = NULL;
-
-	crm_debug_4("initialize comms");
-	init_client_ipc_comms(
-		CRM_SYSTEM_CRMD, subsystem_msg_dispatch,
-		(void*)process_pe_message, &crm_ch);
-
-	if(crm_ch != NULL) {
-		crm_debug_4("sending hello message");
-		send_hello_message(
-			crm_ch, "1234", CRM_SYSTEM_PENGINE, "0", "1");
-
-		/* Create the mainloop and run it... */
-		crm_info("Starting %s", crm_system_name);
-
-		mainloop = g_main_new(FALSE);
-		g_main_run(mainloop);
-		return_to_orig_privs();
-
-#if HAVE_LIBXML2
-		xmlCleanupParser();
-#endif
-		
-		crm_info("Exiting %s", crm_system_name);
-		return 0;
+	crm_debug("Init server comms");
+	if(ipc_server == NULL) {
+		ipc_server = crm_strdup(CRM_SYSTEM_PENGINE);
 	}
 
-	crm_err("Could not connect to the CRMd");
-	return 1;
+	if(init_server_ipc_comms(ipc_server, pe_client_connect,
+				 default_ipc_connection_destroy)) {
+	    crm_err("Couldn't start IPC server");
+	    return 1;
+	}
+
+	/* Create the mainloop and run it... */
+	crm_info("Starting %s", crm_system_name);
+	
+	mainloop = g_main_new(FALSE);
+	g_main_run(mainloop);
+	return_to_orig_privs();
+	
+#if HAVE_LIBXML2
+	xmlCleanupParser();
+#endif
+		
+	crm_info("Exiting %s", crm_system_name);
+	return 0;
 }
 
 
@@ -153,7 +190,8 @@ usage(const char* cmd, int exit_status)
 gboolean
 pengine_shutdown(int nsig, gpointer unused)
 {
-	crm_info("Exiting PEngine (SIGTERM)");
-	exit(LSB_EXIT_OK);
+    crm_info("Exiting PEngine (SIGTERM)");
+    crm_free(ipc_server);
+    exit(LSB_EXIT_OK);
 }
 
