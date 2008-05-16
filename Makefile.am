@@ -88,8 +88,8 @@ deb:	tgz
 	rm -rf $(distdir)
 
 install-exec-local:
-if BUILD_AIS_SUPPORT
 	mkdir -p $(DESTDIR)$(LCRSODIR)
+if BUILD_AIS_SUPPORT
 	rm -f $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso $(DESTDIR)$(LCRSODIR)/service_crm.so
 	cp $(DESTDIR)$(libdir)/service_crm.so $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso
 endif
