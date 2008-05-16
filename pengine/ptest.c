@@ -223,6 +223,7 @@ main(int argc, char **argv)
 				break;
 			case 's':
 				show_scores = TRUE;
+				cl_log_enable_stderr(TRUE);
 				scores_log_level = crm_log_level;
 				break;
 			case 'X':
