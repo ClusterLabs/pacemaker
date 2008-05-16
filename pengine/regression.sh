@@ -25,7 +25,6 @@ fi
 create_mode="true"
 echo Generating test outputs for these tests...
 # do_test
-
 echo Done.
 echo ""
 
@@ -282,6 +281,7 @@ do_test bug-1822 "Dont promote partially active groups"
 do_test bug-pm-11 "New resource added to a m/s group"
 do_test bug-pm-12 "Recover only the failed portion of a cloned group"
 do_test bug-n-387749 "Don't shuffle clone instances"
+do_test bug-n-385265 "Don't ignore the failure stickiness of group children - resource_idvscommon should stay stopped"
 
 echo ""
 

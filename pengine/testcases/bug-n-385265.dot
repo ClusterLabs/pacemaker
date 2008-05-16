@@ -1,0 +1,10 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"  ]
+"group_common_stop_0" -> "group_common_stopped_0" [ style = bold]
+"group_common_stop_0" -> "resource_idvscommon_stop_0 ih02" [ style = bold]
+"group_common_stop_0" [ style=bold color="green" fontcolor="orange"  ]
+"group_common_stopped_0" [ style=bold color="green" fontcolor="orange"  ]
+"resource_idvscommon_stop_0 ih02" -> "all_stopped" [ style = bold]
+"resource_idvscommon_stop_0 ih02" -> "group_common_stopped_0" [ style = bold]
+"resource_idvscommon_stop_0 ih02" [ style=bold color="green" fontcolor="black"  ]
+}
