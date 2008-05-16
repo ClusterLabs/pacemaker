@@ -277,6 +277,13 @@ main(int argc, char **argv)
 			fprintf(stderr,"Please specify a node with -U or -u\n");
 			return 1;	
 		}
+		
+		if(char2score(attr_value) <= 0){
+		    if(safe_str_neq(attr_value, "0")) {
+			fprintf(stderr,"%s is an inappropriate value for a failcount.\n", attr_value);
+			return 1;
+		    }
+                }
 	
 		set_name = NULL;
 		attr_name = crm_concat("fail-count", rsc_id, '-');
