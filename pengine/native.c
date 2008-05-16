@@ -670,10 +670,12 @@ colocation_match(
 		node, node_t, rsc_lh->allowed_nodes, lpc,
 		tmp = g_hash_table_lookup(node->details->attrs, attribute);
 		if(do_check && safe_str_eq(tmp, value)) {
+		    if(constraint->score < INFINITY) {
 			crm_debug_2("%s: %s.%s += %d", constraint->id, rsc_lh->id,
 				  node->details->uname, constraint->score);
 			node->weight = merge_weights(
 				constraint->score, node->weight);
+		    }
 
 		} else if(do_check == FALSE || constraint->score >= INFINITY) {
 			crm_debug_2("%s: %s.%s = -INFINITY (%s)", constraint->id, rsc_lh->id,
