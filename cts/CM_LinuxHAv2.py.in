@@ -345,7 +345,7 @@ class LinuxHAv2(HeartbeatCM):
             if self.ShouldBeStatus[node] == self["up"]:
                 rc = self.ResourceOp(rid, "monitor", node)
                 # Strange error codes from remote_py
-                # 65024 == not install
+                # 65024 == not installed
                 # 2048 == 8
                 # 1792 == 7
                 # 0    == 0
