@@ -100,7 +100,7 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	op->runnable = TRUE;
 
 	op = custom_action(rsc, started_key(rsc),
-			   CRMD_ACTION_STARTED, NULL,
+			   RSC_STARTED, NULL,
 			   TRUE/* !group_data->child_starting */, TRUE, data_set);
 	op->pseudo = TRUE;
 	op->runnable = TRUE;
@@ -110,21 +110,21 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	op->runnable = TRUE;
 	
 	op = custom_action(rsc, stopped_key(rsc),
-			   CRMD_ACTION_STOPPED, NULL,
+			   RSC_STOPPED, NULL,
 			   TRUE/* !group_data->child_stopping */, TRUE, data_set);
 	op->pseudo = TRUE;
 	op->runnable = TRUE;
 
 	value = g_hash_table_lookup(rsc->parameters, crm_meta_name("stateful"));
 	if(crm_is_true(value)) {
-	    op = custom_action(rsc, demote_key(rsc), CRMD_ACTION_DEMOTE, NULL, TRUE, TRUE, data_set);
+	    op = custom_action(rsc, demote_key(rsc), RSC_DEMOTE, NULL, TRUE, TRUE, data_set);
 	    op->pseudo = TRUE; op->runnable = TRUE;
-	    op = custom_action(rsc, demoted_key(rsc), CRMD_ACTION_DEMOTED, NULL, TRUE, TRUE, data_set);
+	    op = custom_action(rsc, demoted_key(rsc), RSC_DEMOTED, NULL, TRUE, TRUE, data_set);
 	    op->pseudo = TRUE; op->runnable = TRUE;
 
-	    op = custom_action(rsc, promote_key(rsc), CRMD_ACTION_PROMOTE, NULL, TRUE, TRUE, data_set);
+	    op = custom_action(rsc, promote_key(rsc), RSC_PROMOTE, NULL, TRUE, TRUE, data_set);
 	    op->pseudo = TRUE; op->runnable = TRUE;
-	    op = custom_action(rsc, promoted_key(rsc), CRMD_ACTION_PROMOTED, NULL, TRUE, TRUE, data_set);
+	    op = custom_action(rsc, promoted_key(rsc), RSC_PROMOTED, NULL, TRUE, TRUE, data_set);
 	    op->pseudo = TRUE; op->runnable = TRUE;
 	}
 
@@ -153,11 +153,11 @@ group_update_pseudo_status(resource_t *parent, resource_t *child)
 		if(action->optional) {
 			continue;
 		}
-		if(safe_str_eq(CRMD_ACTION_STOP, action->task) && action->runnable) {
+		if(safe_str_eq(RSC_STOP, action->task) && action->runnable) {
 			group_data->child_stopping = TRUE;
 			crm_debug_3("Based on %s the group is stopping", action->uuid);
 
-		} else if(safe_str_eq(CRMD_ACTION_START, action->task) && action->runnable) {
+		} else if(safe_str_eq(RSC_START, action->task) && action->runnable) {
 			group_data->child_starting = TRUE;
 			crm_debug_3("Based on %s the group is starting", action->uuid);
 		}
@@ -178,20 +178,14 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	value = g_hash_table_lookup(rsc->parameters, crm_meta_name("stateful"));
 	stateful = crm_is_true(value);
 	
-	custom_action_order(
-		rsc, stopped_key(rsc), NULL,
-		rsc, start_key(rsc), NULL,
-		pe_order_optional, data_set);
+	new_rsc_order(rsc, RSC_STOPPED, rsc, RSC_START,
+		      pe_order_optional, data_set);
 
-	custom_action_order(
-		rsc, stop_key(rsc), NULL,
-		rsc, stopped_key(rsc), NULL,
-		pe_order_runnable_left|pe_order_implies_right|pe_order_implies_left, data_set);
+	new_rsc_order(rsc, RSC_STOP, rsc, RSC_STOPPED, 
+		      pe_order_runnable_left|pe_order_implies_right|pe_order_implies_left, data_set);
 
-	custom_action_order(
-		rsc, start_key(rsc), NULL,
-		rsc, started_key(rsc), NULL,
-		pe_order_runnable_left, data_set);
+	new_rsc_order(rsc, RSC_START, rsc, RSC_STARTED,
+		      pe_order_runnable_left, data_set);
 	
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
@@ -213,41 +207,30 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		}
 
 		if(stateful) {
-		    custom_action_order(rsc,  demote_key(rsc), NULL,
-					child_rsc, demote_key(child_rsc), NULL,
-					stop|pe_order_implies_left_printed, data_set);
+		    new_rsc_order(rsc, RSC_DEMOTE, child_rsc, RSC_DEMOTE,
+				  stop|pe_order_implies_left_printed, data_set);
 
-		    custom_action_order(child_rsc, demote_key(child_rsc), NULL,
-					rsc,  demoted_key(rsc), NULL,
-					stopped, data_set);
+		    new_rsc_order(child_rsc, RSC_DEMOTE, rsc, RSC_DEMOTED, stopped, data_set);
 
-		    custom_action_order(child_rsc, promote_key(child_rsc), NULL,
-					rsc, promoted_key(rsc), NULL,
-					started, data_set);
+		    new_rsc_order(child_rsc, RSC_PROMOTE, rsc, RSC_PROMOTED, started, data_set);
 
-		    custom_action_order(rsc, promote_key(rsc), NULL,
-					child_rsc, promote_key(child_rsc), NULL,
-					pe_order_implies_left_printed, data_set);
+		    new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE,
+				  pe_order_implies_left_printed, data_set);
 
 		}
 		
 		order_start_start(rsc, child_rsc, pe_order_implies_left_printed);
 		order_stop_stop(rsc, child_rsc, stop|pe_order_implies_left_printed);
 		
-		custom_action_order(child_rsc, stop_key(child_rsc), NULL,
-				    rsc,  stopped_key(rsc), NULL,
-				    stopped, data_set);
+		new_rsc_order(child_rsc, RSC_STOP, rsc, RSC_STOPPED, stopped, data_set);
 
-		custom_action_order(child_rsc, start_key(child_rsc), NULL,
-				    rsc, started_key(rsc), NULL,
-				    started, data_set);
+		new_rsc_order(child_rsc, RSC_START, rsc, RSC_STARTED, started, data_set);
 		
  		if(group_data->ordered == FALSE) {
 			order_start_start(rsc, child_rsc, start|pe_order_implies_left_printed);
 			if(stateful) {
-			    custom_action_order(rsc, promote_key(rsc), NULL,
-						child_rsc, promote_key(child_rsc), NULL,
-						start|pe_order_implies_left_printed, data_set);
+			    new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE,
+					  start|pe_order_implies_left_printed, data_set);
 			}
 
 		} else if(last_rsc != NULL) {
@@ -257,12 +240,8 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 			order_stop_stop(child_rsc, last_rsc, pe_order_implies_left);
 
 			if(stateful) {
-			    custom_action_order(last_rsc, promote_key(last_rsc), NULL,
-						child_rsc, promote_key(child_rsc), NULL,
-						start, data_set);
-			    custom_action_order(child_rsc,  demote_key(child_rsc), NULL,
-						last_rsc, demote_key(last_rsc), NULL,
-						pe_order_implies_left, data_set);
+			    new_rsc_order(last_rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE, start, data_set);
+			    new_rsc_order(child_rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE, pe_order_implies_left, data_set);
 			}
 
 		} else {
@@ -276,9 +255,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		    
 			order_start_start(rsc, child_rsc, flags);
 			if(stateful) {
-			    custom_action_order(rsc, promote_key(rsc), NULL,
-						child_rsc, promote_key(child_rsc), NULL,
-						flags, data_set);
+			    new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE, flags, data_set);
 			}
 			
 		}
@@ -291,19 +268,13 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		int stop_stopped_flags = pe_order_implies_left;
 	    
 		order_stop_stop(rsc, last_rsc, stop_stop_flags);
-		custom_action_order(last_rsc, stop_key(last_rsc), NULL,
-				    rsc,  stopped_key(rsc), NULL,
-				    stop_stopped_flags, data_set);
+		new_rsc_order(last_rsc, RSC_STOP, rsc,  RSC_STOPPED, stop_stopped_flags, data_set);
 
 		if(stateful) {
-		    custom_action_order(rsc, demote_key(rsc), NULL,
-					last_rsc, demote_key(last_rsc), NULL,
-					stop_stop_flags, data_set);
-		    custom_action_order(last_rsc, demote_key(last_rsc), NULL,
-					rsc, demoted_key(rsc), NULL,
-					stop_stopped_flags, data_set);
+		    new_rsc_order(rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE, stop_stop_flags, data_set);
+		    new_rsc_order(last_rsc, RSC_DEMOTE, rsc, RSC_DEMOTED, stop_stopped_flags, data_set);
 		}
-	}		
+	}
 }
 
 

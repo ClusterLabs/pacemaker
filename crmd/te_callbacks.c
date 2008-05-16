@@ -28,14 +28,14 @@
 
 #include <tengine.h>
 #include <te_callbacks.h>
+#include <crmd_fsa.h>
 
 #include <clplumbing/Gmain_timeout.h>
 
-void te_update_confirm(const char *event, HA_Message *msg);
-void te_update_diff(const char *event, HA_Message *msg);
-crm_data_t *need_abort(crm_data_t *update);
-void cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
-			 crm_data_t *output, void *user_data);
+void te_update_confirm(const char *event, xmlNode *msg);
+xmlNode *need_abort(xmlNode *update);
+void cib_fencing_updated(xmlNode *msg, int call_id, int rc,
+			 xmlNode *output, void *user_data);
 
 extern char *te_uuid;
 gboolean shuttingdown = FALSE;
@@ -43,62 +43,39 @@ crm_graph_t *transition_graph;
 GTRIGSource *transition_trigger = NULL;
 crm_action_timer_t *transition_timer = NULL;
 
-static gboolean
-start_global_timer(crm_action_timer_t *timer, int timeout)
-{
-	CRM_ASSERT(timer != NULL);
-	CRM_CHECK(timer > 0, return FALSE);
-	CRM_CHECK(timer->source_id == 0, return FALSE);
-
-	if(timeout <= 0) {
-		crm_err("Tried to start timer with period: %d", timeout);
-
-	} else if(timer->source_id == 0) {
-		crm_debug_2("Starting abort timer: %dms", timeout);
-		timer->timeout = timeout;
-		timer->source_id = Gmain_timeout_add(
-			timeout, global_timer_callback, (void*)timer);
-		CRM_ASSERT(timer->source_id != 0);
-		return TRUE;
-
-	} else {
-		crm_err("Timer is already active with period: %d", timer->timeout);
-	}
-	
-	return FALSE;		
-}
 
 void
-te_update_diff(const char *event, HA_Message *msg)
+te_update_diff(const char *event, xmlNode *msg)
 {
 	int rc = -1;
 	const char *op = NULL;
-	crm_data_t *diff = NULL;
-	crm_data_t *aborted = NULL;
 	const char *set_name = NULL;
 
-	int diff_add_updates = 0;
-	int diff_add_epoch  = 0;
+	xmlNode *diff = NULL;
+	xmlNode *aborted = NULL;
+
+	int diff_add_updates     = 0;
+	int diff_add_epoch       = 0;
 	int diff_add_admin_epoch = 0;
 
-	int diff_del_updates = 0;
-	int diff_del_epoch  = 0;
+	int diff_del_updates     = 0;
+	int diff_del_epoch       = 0;
 	int diff_del_admin_epoch = 0;
 	
-	if(msg == NULL) {
-		crm_err("NULL update");
-		return;
-	}		
+	CRM_CHECK(msg != NULL, return);
 
-	ha_msg_value_int(msg, F_CIB_RC, &rc);	
-	op = cl_get_string(msg, F_CIB_OPERATION);
-
+	if(fsa_state != S_IDLE
+	   && fsa_state != S_TRANSITION_ENGINE
+	   && fsa_state != S_POLICY_ENGINE) {
+	    return;
+	}
+	
+	crm_element_value_int(msg, F_CIB_RC, &rc);	
 	if(rc < cib_ok) {
-		crm_debug_2("Ignoring failed %s operation: %s",
-			    op, cib_error2string(rc));
-		return;
+	    return;
 	} 	
 
+	op = crm_element_value(msg, F_CIB_OPERATION);
 	diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
 	cib_diff_version_details(
@@ -113,8 +90,8 @@ te_update_diff(const char *event, HA_Message *msg)
 
 	set_name = "diff-added";
 	if(diff != NULL) {
-		crm_data_t *section = NULL;
-		crm_data_t *change_set = find_xml_node(diff, set_name, FALSE);
+		xmlNode *section = NULL;
+		xmlNode *change_set = find_xml_node(diff, set_name, FALSE);
 		change_set = find_xml_node(change_set, XML_TAG_CIB, FALSE);
 
 		if(change_set != NULL) {
@@ -131,9 +108,9 @@ te_update_diff(const char *event, HA_Message *msg)
 	
 	set_name = "diff-removed";
 	if(diff != NULL && aborted == NULL) {
-		crm_data_t *attrs = NULL;
-		crm_data_t *status = NULL;
-		crm_data_t *change_set = find_xml_node(diff, set_name, FALSE);
+		xmlNode *attrs = NULL;
+		xmlNode *status = NULL;
+		xmlNode *change_set = find_xml_node(diff, set_name, FALSE);
 		change_set = find_xml_node(change_set, XML_TAG_CIB, FALSE);
 
 		crm_debug_2("Checking change set: %s", set_name);
@@ -162,31 +139,26 @@ te_update_diff(const char *event, HA_Message *msg)
 			INFINITY, tg_restart, "Non-status change", NULL);
 	}
 	
-	free_xml(diff);
 	return;
 }
 
-
-
 gboolean
-process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
+process_te_message(xmlNode *msg, xmlNode *xml_data)
 {
-	crm_data_t *xml_obj = NULL;
+	xmlNode *xml_obj = NULL;
 	
-	const char *from     = cl_get_string(msg, F_ORIG);
-	const char *sys_to   = cl_get_string(msg, F_CRM_SYS_TO);
-	const char *sys_from = cl_get_string(msg, F_CRM_SYS_FROM);
-	const char *ref      = cl_get_string(msg, XML_ATTR_REFERENCE);
-	const char *op       = cl_get_string(msg, F_CRM_TASK);
-	const char *type     = cl_get_string(msg, F_CRM_MSG_TYPE);
+	const char *from     = crm_element_value(msg, F_ORIG);
+	const char *sys_to   = crm_element_value(msg, F_CRM_SYS_TO);
+	const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
+	const char *ref      = crm_element_value(msg, XML_ATTR_REFERENCE);
+	const char *op       = crm_element_value(msg, F_CRM_TASK);
+	const char *type     = crm_element_value(msg, F_CRM_MSG_TYPE);
 
 	crm_debug_2("Processing %s (%s) message", op, ref);
-	crm_log_message(LOG_DEBUG_3, msg);
+	crm_log_xml(LOG_DEBUG_3, "ipc", msg);
 	
 	if(op == NULL){
 		/* error */
-	} else if(strcasecmp(op, CRM_OP_HELLO) == 0) {
-		/* ignore */
 
 	} else if(sys_to == NULL || strcasecmp(sys_to, CRM_SYSTEM_TENGINE) != 0) {
 		crm_debug_2("Bad sys-to %s", crm_str(sys_to));
@@ -205,87 +177,23 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 #else
 		xml_obj = xml_data;
 		CRM_CHECK(xml_obj != NULL,
-			  crm_log_message_adv(LOG_ERR, "Invalid (N)ACK", msg);
+			  crm_log_xml(LOG_ERR, "Invalid (N)ACK", msg);
 			  return FALSE);
 #endif
 		CRM_CHECK(xml_obj != NULL,
-			  crm_log_message_adv(LOG_ERR, "Invalid (N)ACK", msg);
+			  crm_log_xml(LOG_ERR, "Invalid (N)ACK", msg);
 			  return FALSE);
 		xml_obj = get_object_root(XML_CIB_TAG_STATUS, xml_obj);
 
 		CRM_CHECK(xml_obj != NULL,
-			  crm_log_message_adv(LOG_ERR, "Invalid (N)ACK", msg);
+			  crm_log_xml(LOG_ERR, "Invalid (N)ACK", msg);
 			  return FALSE);
 
-		crm_log_message_adv(LOG_DEBUG_2, "Processing (N)ACK", msg);
+		crm_log_xml(LOG_DEBUG_2, "Processing (N)ACK", msg);
 		crm_info("Processing (N)ACK %s from %s",
-			  cl_get_string(msg, XML_ATTR_REFERENCE), from);
+			  crm_element_value(msg, XML_ATTR_REFERENCE), from);
 		extract_event(xml_obj);
 		
-	} else if(safe_str_eq(type, XML_ATTR_RESPONSE)) {
-		crm_err("Message was a response not a request.  Discarding");
-		return TRUE;
-
-	} else if(strcasecmp(op, CRM_OP_TRANSITION) == 0) {
-		const char *graph_file = cl_get_string(msg, F_CRM_TGRAPH);
- 		const char *graph_input = cl_get_string(msg, F_CRM_TGRAPH_INPUT);
-		CRM_CHECK(graph_file != NULL || xml_data != NULL,
-			  crm_err("No graph provided");
-			  crm_log_message(LOG_WARNING, msg);
-			  return TRUE);
-
-		if(transition_graph->complete == FALSE) {
-			crm_info("Another transition is already active");
-			abort_transition(
-				INFINITY, tg_restart, "Transition Active", NULL);
-
-		}  else {
-			const char *value = NULL;
-			crm_data_t *graph_data = xml_data;
-			crm_info("Processing graph derived from %s", graph_input);
-
-			if(graph_file != NULL) {
-				FILE *graph_fd = fopen(graph_file, "r");
-
-				CRM_CHECK(graph_fd != NULL,
-					  cl_perror("Could not open graph file %s", graph_file);
-					  return TRUE);
-
-				graph_data = file2xml(graph_fd, FALSE);
-
-				unlink(graph_file);
-				fclose(graph_fd);
-			}
-
-			destroy_graph(transition_graph);
-			transition_graph = unpack_graph(graph_data);				
-			start_global_timer(transition_timer,
-					   transition_graph->transition_timeout);
-
-			value = crm_element_value(graph_data, "failed-stop-offset");
-			if(value) {
-			    failed_stop_offset = crm_strdup(value);
-			}
-			
-			value = crm_element_value(graph_data, "failed-start-offset");
-			if(value) {
-			    failed_start_offset = crm_strdup(value);
-			}
-			
-			trigger_graph();
-			print_graph(LOG_DEBUG_2, transition_graph);
-
-			if(graph_data != xml_data) {
-			    free_xml(graph_data);
-			}
-		}
-		
-	} else if(strcasecmp(op, CRM_OP_TE_HALT) == 0) {
-		abort_transition(INFINITY, tg_stop, "Peer Halt", NULL);
-
-	} else if(strcasecmp(op, CRM_OP_TEABORT) == 0) {
-		abort_transition(INFINITY, tg_restart, "Peer Cancelled", NULL);
-
 	} else {
 		crm_err("Unknown command: %s::%s from %s", type, op, sys_from);
 	}
@@ -300,6 +208,7 @@ void
 tengine_stonith_callback(stonith_ops_t * op)
 {
 	const char *allow_fail  = NULL;
+	int target_rc = -1;
 	int stonith_id = -1;
 	int transition_id = -1;
 	char *uuid = NULL;
@@ -320,7 +229,7 @@ tengine_stonith_callback(stonith_ops_t * op)
 	/* filter out old STONITH actions */
 
 	CRM_CHECK(decode_transition_key(
-			  op->private_data, &uuid, &transition_id, &stonith_id),
+		      op->private_data, &uuid, &transition_id, &stonith_id, &target_rc),
 		  crm_err("Invalid event detected");
 		  goto bail;
 		);
@@ -416,20 +325,20 @@ tengine_stonith_dispatch(IPC_Channel *sender, void *user_data)
 #endif
 
 void
-cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
-		    crm_data_t *output, void *user_data)
+cib_fencing_updated(xmlNode *msg, int call_id, int rc,
+		    xmlNode *output, void *user_data)
 {
 	trigger_graph();
 
 	if(rc < cib_ok) {
 		crm_err("CIB update failed: %s", cib_error2string(rc));
-		crm_log_xml_warn(msg, "[Failed Update]");
+		crm_log_xml_warn(msg, "Failed update");
 	}
 }
 
 void
-cib_action_updated(const HA_Message *msg, int call_id, int rc,
-		   crm_data_t *output, void *user_data)
+cib_action_updated(xmlNode *msg, int call_id, int rc,
+		   xmlNode *output, void *user_data)
 {
 	trigger_graph();
 
@@ -439,8 +348,8 @@ cib_action_updated(const HA_Message *msg, int call_id, int rc,
 }
 
 void
-cib_failcount_updated(const HA_Message *msg, int call_id, int rc,
-		   crm_data_t *output, void *user_data)
+cib_failcount_updated(xmlNode *msg, int call_id, int rc,
+		      xmlNode *output, void *user_data)
 {
 	trigger_graph();
 
@@ -572,38 +481,5 @@ global_timer_callback(gpointer data)
 	return FALSE;		
 }
 
-gboolean
-te_graph_trigger(gpointer user_data) 
-{
-    int timeout = 0;
-    enum transition_status graph_rc = -1;
-
-    if(transition_graph->complete == FALSE) {
-	graph_rc = run_graph(transition_graph);
-	timeout = transition_graph->transition_timeout;
-	print_graph(LOG_DEBUG_3, transition_graph);
-
-	if(graph_rc == transition_active) {
-		crm_debug_3("Transition not yet complete");
-		stop_te_timer(transition_timer);
-		start_global_timer(transition_timer, timeout);
-		return TRUE;		
-
-	} else if(graph_rc == transition_pending) {
-		crm_debug_3("Transition not yet complete - no actions fired");
-		return TRUE;		
-	}
-	
-	if(graph_rc != transition_complete) {
-		crm_err("Transition failed: %s", transition_status(graph_rc));
-		print_graph(LOG_WARNING, transition_graph);
-	}
-    }
-    
-    transition_graph->complete = TRUE;
-    notify_crmd(transition_graph);
-    
-    return TRUE;	
-}
 
 

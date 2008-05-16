@@ -435,11 +435,11 @@ clone_update_pseudo_status(
 			crm_debug_3("Skipping unrunnable: %s", action->uuid);
 			continue;
 
-		} else if(safe_str_eq(CRMD_ACTION_STOP, action->task)) {
+		} else if(safe_str_eq(RSC_STOP, action->task)) {
 			crm_debug_2("Stopping due to: %s", action->uuid);
 			*stopping = TRUE;
 
-		} else if(safe_str_eq(CRMD_ACTION_START, action->task)) {
+		} else if(safe_str_eq(RSC_START, action->task)) {
 			if(action->runnable == FALSE) {
 				crm_debug_3("Skipping pseudo-op: %s run=%d, pseudo=%d",
 					    action->uuid, action->runnable, action->pseudo);
@@ -487,7 +487,7 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	start = start_action(rsc, NULL, !child_starting);
 	action_complete = custom_action(
 		rsc, started_key(rsc),
-		CRMD_ACTION_STARTED, NULL, !child_starting, TRUE, data_set);
+		RSC_STARTED, NULL, !child_starting, TRUE, data_set);
 
 	start->pseudo = TRUE;
 	start->runnable = TRUE;
@@ -506,7 +506,7 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	stop = stop_action(rsc, NULL, !child_stopping);
 	action_complete = custom_action(
 		rsc, stopped_key(rsc),
-		CRMD_ACTION_STOPPED, NULL, !child_stopping, TRUE, data_set);
+		RSC_STOPPED, NULL, !child_stopping, TRUE, data_set);
 
 	stop->pseudo = TRUE;
 	stop->runnable = TRUE;
@@ -557,7 +557,7 @@ clone_create_notifications(
 	notify_key = generate_notify_key(
 		rsc->id, "pre", action->task);
 	notify = custom_action(rsc, notify_key,
-			       CRMD_ACTION_NOTIFY, NULL,
+			       RSC_NOTIFY, NULL,
 			       action->optional, TRUE, data_set);
 	
 	add_hash_param(notify->meta, "notify_type", "pre");
@@ -572,7 +572,7 @@ clone_create_notifications(
 	notify_key = generate_notify_key(
 		rsc->id, "confirmed-pre", action->task);
 	notify_complete = custom_action(rsc, notify_key,
-			       CRMD_ACTION_NOTIFIED, NULL,
+			       RSC_NOTIFIED, NULL,
 			       action->optional, TRUE, data_set);
 	add_hash_param(notify_complete->meta, "notify_type", "pre");
 	add_hash_param(notify_complete->meta, "notify_operation", action->task);
@@ -587,16 +587,10 @@ clone_create_notifications(
 	notify_complete->runnable = TRUE;
 
 	/* pre_notify before pre_notify_complete */
-	custom_action_order(
-		rsc, NULL, notify,
-		rsc, NULL, notify_complete,
-		pe_order_optional, data_set);
+	order_actions(notify, notify_complete, pe_order_optional);
 	
 	/* pre_notify_complete before action */
-	custom_action_order(
-		rsc, NULL, notify_complete,
-		rsc, NULL, action,
-		pe_order_optional, data_set);
+	order_actions(notify_complete, action, pe_order_optional);
 
 	action->pre_notify = notify;
 	action->pre_notified = notify_complete;
@@ -605,7 +599,7 @@ clone_create_notifications(
 	notify_key = generate_notify_key
 		(rsc->id, "post", action->task);
 	notify = custom_action(rsc, notify_key,
-			       CRMD_ACTION_NOTIFY, NULL,
+			       RSC_NOTIFY, NULL,
 			       action_complete->optional, TRUE, data_set);
 	add_hash_param(notify->meta, "notify_type", "post");
 	add_hash_param(notify->meta, "notify_operation", action->task);
@@ -616,16 +610,13 @@ clone_create_notifications(
 	}
 
 	/* action_complete before post_notify */
-	custom_action_order(
-		rsc, NULL, action_complete,
-		rsc, NULL, notify, 
-		pe_order_optional, data_set);
+	order_actions(action_complete, notify, pe_order_optional);
 	
 	/* create post_notify_complete */
 	notify_key = generate_notify_key(
 		rsc->id, "confirmed-post", action->task);
 	notify_complete = custom_action(rsc, notify_key,
-			       CRMD_ACTION_NOTIFIED, NULL,
+			       RSC_NOTIFIED, NULL,
 			       action->optional, TRUE, data_set);
 	add_hash_param(notify_complete->meta, "notify_type", "pre");
 	add_hash_param(notify_complete->meta, "notify_operation", action->task);
@@ -646,30 +637,27 @@ clone_create_notifications(
  	notify_complete->runnable = action_complete->runnable;
 
 	/* post_notify before post_notify_complete */
-	custom_action_order(
-		rsc, NULL, notify,
-		rsc, NULL, notify_complete,
-		pe_order_optional, data_set);
+	order_actions(notify, notify_complete, pe_order_optional);
 
 	action->post_notify = notify;
 	action->post_notified = notify_complete;
 
 
-	if(safe_str_eq(action->task, CRMD_ACTION_STOP)) {
+	if(safe_str_eq(action->task, RSC_STOP)) {
 		/* post_notify_complete before start */
 		custom_action_order(
 			rsc, NULL, notify_complete,
 			rsc, start_key(rsc), NULL,
 			pe_order_optional, data_set);
 
-	} else if(safe_str_eq(action->task, CRMD_ACTION_START)) {
+	} else if(safe_str_eq(action->task, RSC_START)) {
 		/* post_notify_complete before promote */
 		custom_action_order(
 			rsc, NULL, notify_complete,
 			rsc, promote_key(rsc), NULL,
 			pe_order_optional, data_set);
 
-	} else if(safe_str_eq(action->task, CRMD_ACTION_DEMOTE)) {
+	} else if(safe_str_eq(action->task, RSC_DEMOTE)) {
 		/* post_notify_complete before promote */
 		custom_action_order(
 			rsc, NULL, notify_complete,
@@ -693,19 +681,15 @@ child_starting_constraints(
 		order_start_start(
 		    rsc, child, pe_order_runnable_left|pe_order_implies_left_printed);
 		
-		custom_action_order(
-			child, start_key(child), NULL,
-			rsc, started_key(rsc), NULL,
-			pe_order_implies_right_printed, data_set);
+		new_rsc_order(child, RSC_START, rsc, RSC_STARTED, 
+			      pe_order_implies_right_printed, data_set);
 	}
 	
 	if(clone_data->ordered) {
 		if(child == NULL) {
-			/* last child start before global started */
-			custom_action_order(
-				last, start_key(last), NULL,
-				rsc, started_key(rsc), NULL,
-				pe_order_runnable_left, data_set);
+		    /* last child start before global started */
+		    new_rsc_order(last, RSC_START, rsc, RSC_STARTED, 
+				  pe_order_runnable_left, data_set);
 
 		} else if(last == NULL) {
 			/* global start before first child start */
@@ -733,19 +717,15 @@ child_stopping_constraints(
 	if(child != NULL) {
 		order_stop_stop(rsc, child, pe_order_shutdown|pe_order_implies_left_printed);
 		
-		custom_action_order(
-			child, stop_key(child), NULL,
-			rsc, stopped_key(rsc), NULL,
-			pe_order_implies_right_printed, data_set);
+		new_rsc_order(child, RSC_STOP, rsc, RSC_STOPPED,
+			      pe_order_implies_right_printed, data_set);
 	}
 	
 	if(clone_data->ordered) {
 		if(last == NULL) {
-			/* first child stop before global stopped */
-			custom_action_order(
-				child, stop_key(child), NULL,
-				rsc, stopped_key(rsc), NULL,
-				pe_order_runnable_left, data_set);
+		    /* first child stop before global stopped */
+		    new_rsc_order(child, RSC_STOP, rsc, RSC_STOPPED,
+				  pe_order_runnable_left, data_set);
 			
 		} else if(child == NULL) {
 			/* global stop before last child stop */
@@ -769,22 +749,13 @@ clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	native_internal_constraints(rsc, data_set);
 	
 	/* global stop before stopped */
-	custom_action_order(
-		rsc, stop_key(rsc), NULL,
-		rsc, stopped_key(rsc), NULL,
-		pe_order_runnable_left, data_set);
+	new_rsc_order(rsc, RSC_STOP, rsc, RSC_STOPPED, pe_order_runnable_left, data_set);
 
 	/* global start before started */
-	custom_action_order(
-		rsc, start_key(rsc), NULL,
-		rsc, started_key(rsc), NULL,
-		pe_order_runnable_left, data_set);
+	new_rsc_order(rsc, RSC_START, rsc, RSC_STARTED, pe_order_runnable_left, data_set);
 	
 	/* global stopped before start */
-	custom_action_order(
-		rsc, stopped_key(rsc), NULL,
-		rsc, start_key(rsc), NULL,
-		pe_order_optional, data_set);
+	new_rsc_order(rsc, RSC_STOPPED, rsc, RSC_START, pe_order_optional, data_set);
 	
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
@@ -1221,8 +1192,8 @@ static void mark_notifications_required(resource_t *rsc, enum action_tasks task,
 	       }
 	       
 	       if(strstr(action->uuid, task_s)) {
-		   if(safe_str_eq(CRMD_ACTION_NOTIFIED, action->task)
-		      || safe_str_eq(CRMD_ACTION_NOTIFY, action->task)) {
+		   if(safe_str_eq(RSC_NOTIFIED, action->task)
+		      || safe_str_eq(RSC_NOTIFY, action->task)) {
 		       crm_debug_3("Marking %s as required", action->uuid);
 		       action->optional = FALSE;
 		   }   
@@ -1397,7 +1368,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 /* 	slist_iter( */
 /* 		action, action_t, rsc->actions, lpc2, */
 
-/* 		if(safe_str_eq(action->task, CRMD_ACTION_NOTIFY)) { */
+/* 		if(safe_str_eq(action->task, RSC_NOTIFY)) { */
 /* 			action->meta_xml = notify_xml; */
 /* 		} */
 /* 		); */

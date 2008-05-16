@@ -33,12 +33,13 @@
 #include <pengine.h>
 #include <allocate.h>
 #include <utils.h>
+#include <crm/pengine/rules.h>
 #include <lib/crm/pengine/utils.h>
 
 gboolean 
-unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
+unpack_constraints(xmlNode * xml_constraints, pe_working_set_t *data_set)
 {
-	crm_data_t *lifetime = NULL;
+	xmlNode *lifetime = NULL;
 	xml_child_iter(
 		xml_constraints, xml_obj, 
 
@@ -52,7 +53,7 @@ unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
 		crm_debug_3("Processing constraint %s %s",
 			    crm_element_name(xml_obj),id);
 
-		lifetime = cl_get_struct(xml_obj, "lifetime");
+		lifetime = first_named_child(xml_obj, "lifetime");
 
 		if(test_ruleset(lifetime, NULL, data_set->now) == FALSE) {
 			crm_info("Constraint %s %s is not active",
@@ -82,36 +83,36 @@ unpack_constraints(crm_data_t * xml_constraints, pe_working_set_t *data_set)
 static const char *
 invert_action(const char *action) 
 {
-	if(safe_str_eq(action, CRMD_ACTION_START)) {
-		return CRMD_ACTION_STOP;
+	if(safe_str_eq(action, RSC_START)) {
+		return RSC_STOP;
 
-	} else if(safe_str_eq(action, CRMD_ACTION_STOP)) {
-		return CRMD_ACTION_START;
+	} else if(safe_str_eq(action, RSC_STOP)) {
+		return RSC_START;
 		
-	} else if(safe_str_eq(action, CRMD_ACTION_PROMOTE)) {
-		return CRMD_ACTION_DEMOTE;
+	} else if(safe_str_eq(action, RSC_PROMOTE)) {
+		return RSC_DEMOTE;
 		
- 	} else if(safe_str_eq(action, CRMD_ACTION_DEMOTE)) {
-		return CRMD_ACTION_PROMOTE;
+ 	} else if(safe_str_eq(action, RSC_DEMOTE)) {
+		return RSC_PROMOTE;
 
-	} else if(safe_str_eq(action, CRMD_ACTION_PROMOTED)) {
-		return CRMD_ACTION_DEMOTED;
+	} else if(safe_str_eq(action, RSC_PROMOTED)) {
+		return RSC_DEMOTED;
 		
-	} else if(safe_str_eq(action, CRMD_ACTION_DEMOTED)) {
-		return CRMD_ACTION_PROMOTED;
+	} else if(safe_str_eq(action, RSC_DEMOTED)) {
+		return RSC_PROMOTED;
 
-	} else if(safe_str_eq(action, CRMD_ACTION_STARTED)) {
-		return CRMD_ACTION_STOPPED;
+	} else if(safe_str_eq(action, RSC_STARTED)) {
+		return RSC_STOPPED;
 		
-	} else if(safe_str_eq(action, CRMD_ACTION_STOPPED)) {
-		return CRMD_ACTION_STARTED;
+	} else if(safe_str_eq(action, RSC_STOPPED)) {
+		return RSC_STARTED;
 	}
 	crm_config_warn("Unknown action: %s", action);
 	return NULL;
 }
 
-gboolean
-unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
+static gboolean
+unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 {
 	int score_i = 0;
 	int order_id = 0;
@@ -149,7 +150,7 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	action = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
 	action_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TOACTION);
 	if(action == NULL) {
-	    action = CRMD_ACTION_START;
+	    action = RSC_START;
 	}
 	if(action_rh == NULL) {
 	    action_rh = action;
@@ -199,17 +200,14 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	} else if(score_i > 0) {
 		crm_debug_2("Upgrade : implies right");
  		cons_weight |= pe_order_implies_right;
-		if(safe_str_eq(action, CRMD_ACTION_START)
-		   || safe_str_eq(action, CRMD_ACTION_PROMOTE)) {
+		if(safe_str_eq(action, RSC_START)
+		   || safe_str_eq(action, RSC_PROMOTE)) {
 			crm_debug_2("Upgrade : runnable");
 			cons_weight |= pe_order_runnable_left;
 		}
 	}
 	
-	order_id = custom_action_order(
-		rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
-		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
-		cons_weight, data_set);
+	order_id = new_rsc_order(rsc_lh, action, rsc_rh, action_rh, cons_weight, data_set);
 
 	crm_debug_2("order-%d (%s): %s_%s %s %s_%s flags=0x%.6x",
 		    order_id, id, rsc_lh->id, action, type, rsc_rh->id, action_rh,
@@ -233,7 +231,7 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	if(score_i < 0) {
 		crm_debug_2("Upgrade : implies left");
  		cons_weight |= pe_order_implies_left;
-		if(safe_str_eq(action_rh, CRMD_ACTION_DEMOTE)) {
+		if(safe_str_eq(action_rh, RSC_DEMOTE)) {
 			crm_debug_2("Upgrade : demote");
 			cons_weight |= pe_order_demote;
 		}
@@ -241,8 +239,8 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 	} else if(score_i > 0) {
 		crm_debug_2("Upgrade : implies right");
  		cons_weight |= pe_order_implies_right;
-		if(safe_str_eq(action, CRMD_ACTION_START)
-		   || safe_str_eq(action, CRMD_ACTION_PROMOTE)) {
+		if(safe_str_eq(action, RSC_START)
+		   || safe_str_eq(action, RSC_PROMOTE)) {
 			crm_debug_2("Upgrade : runnable");
 			cons_weight |= pe_order_runnable_left;
 		}
@@ -254,10 +252,8 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		return TRUE;
 	}
 	
-	order_id = custom_action_order(
-		rsc_rh, generate_op_key(rsc_rh->id, action_rh, 0), NULL,
-		rsc_lh, generate_op_key(rsc_lh->id, action, 0), NULL,
-		cons_weight, data_set);
+	order_id = new_rsc_order(
+	    rsc_rh, action_rh, rsc_lh, action, cons_weight, data_set);
 	crm_debug_2("order-%d (%s): %s_%s %s %s_%s flags=0x%.6x",
 		    order_id, id, rsc_rh->id, action_rh, type, rsc_lh->id, action,
 		    cons_weight);
@@ -266,7 +262,7 @@ unpack_rsc_order(crm_data_t * xml_obj, pe_working_set_t *data_set)
 }
 
 gboolean
-unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
+unpack_rsc_location(xmlNode * xml_obj, pe_working_set_t *data_set)
 {
 	gboolean empty = TRUE;
 	const char *id_lh   = crm_element_value(xml_obj, "rsc");
@@ -343,7 +339,7 @@ get_node_score(const char *rule, const char *score, gboolean raw, node_t *node)
 
 rsc_to_node_t *
 generate_location_rule(
-	resource_t *rsc, crm_data_t *rule_xml, pe_working_set_t *data_set)
+	resource_t *rsc, xmlNode *rule_xml, pe_working_set_t *data_set)
 {	
 	const char *rule_id = NULL;
 	const char *score   = NULL;
@@ -578,6 +574,27 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
 
 /* LHS before RHS */
 int
+new_rsc_order(resource_t *lh_rsc, const char *lh_task, 
+	      resource_t *rh_rsc, const char *rh_task, 
+	      enum pe_ordering type, pe_working_set_t *data_set)
+{
+    char *lh_key = NULL;
+    char *rh_key = NULL;
+
+    CRM_CHECK(lh_rsc != NULL,  return -1);
+    CRM_CHECK(lh_task != NULL, return -1);
+    CRM_CHECK(rh_rsc != NULL,  return -1);
+    CRM_CHECK(rh_task != NULL, return -1);
+    
+    lh_key = generate_op_key(lh_rsc->id, lh_task, 0);
+    rh_key = generate_op_key(rh_rsc->id, rh_task, 0);
+    
+    return custom_action_order(lh_rsc, lh_key, NULL,
+			       rh_rsc, rh_key, NULL, type, data_set);
+}
+
+/* LHS before RHS */
+int
 custom_action_order(
 	resource_t *lh_rsc, char *lh_action_task, action_t *lh_action,
 	resource_t *rh_rsc, char *rh_action_task, action_t *rh_action,
@@ -649,43 +666,435 @@ custom_action_order(
 	return order->id;
 }
 
+static enum pe_ordering get_flags(
+    const char *id, int score, const char *action_1, const char *action_2) {
+    enum pe_ordering flags = pe_order_optional;
+
+    if(score < 0) {
+	crm_debug_2("Upgrade %s: implies left", id);
+	flags |= pe_order_implies_left;
+	if(safe_str_eq(action_2, RSC_DEMOTE)) {
+	    crm_debug_2("Upgrade %s: demote", id);
+	    flags |= pe_order_demote;
+	}
+	
+    } else if(score > 0) {
+	crm_debug_2("Upgrade %s: implies right", id);
+	flags |= pe_order_implies_right;
+	if(safe_str_eq(action_1, RSC_START)
+	   || safe_str_eq(action_1, RSC_PROMOTE)) {
+	    crm_debug_2("Upgrade %s: runnable", id);
+	    flags |= pe_order_runnable_left;
+	}
+    }
+    return flags;
+}
+
+
+static gboolean
+unpack_order_set(xmlNode *set, int score,
+		 action_t **begin, action_t **end,
+		 action_t **inv_begin, action_t **inv_end, const char *symmetrical, pe_working_set_t *data_set) 
+{
+    resource_t *last = NULL;
+    resource_t *resource = NULL;
+
+    int local_score = score;
+    gboolean sequential = FALSE;
+    enum pe_ordering flags = pe_order_optional;
+    
+    char *key = NULL;
+    const char *id = ID(set);
+    const char *action = crm_element_value(set, "action");
+    const char *sequential_s = crm_element_value(set, "sequential");
+    const char *score_s = crm_element_value(set, XML_RULE_ATTR_SCORE);
+
+    char *pseudo_id = crm_concat(id, action, '-');
+    char *end_id    = crm_concat(pseudo_id, "end", '-');
+    char *begin_id  = crm_concat(pseudo_id, "begin", '-');
+
+    *end = get_pseudo_op(end_id, data_set);
+    *begin = get_pseudo_op(begin_id, data_set);
+    
+    if(score_s) {
+	local_score = char2score(score_s);
+    }
+
+    sequential = crm_is_true(sequential_s);
+    flags = get_flags(id, local_score, action, action);
+    
+    xml_child_iter_filter(
+	set, xml_rsc, XML_TAG_RESOURCE_REF,
+
+	resource = pe_find_resource(data_set->resources, ID(xml_rsc));
+
+	key = generate_op_key(resource->id, action, 0);
+	custom_action_order(NULL, NULL, *begin, resource, key, NULL,
+			    flags|pe_order_implies_left_printed, data_set);
+
+	key = generate_op_key(resource->id, action, 0);
+	custom_action_order(resource, key, NULL, NULL, NULL, *end,
+			    flags|pe_order_implies_right_printed, data_set);
+	
+	if(sequential) {
+	    if(last != NULL) {
+		new_rsc_order(last, action, resource, action, flags, data_set);
+	    }
+	    last = resource;
+	}
+
+	);
+
+    if(crm_is_true(symmetrical) == FALSE) {
+	goto done;
+    }
+
+    local_score *= -1;
+    action = invert_action(action);
+    
+    pseudo_id = crm_concat(id, action, '-');
+    end_id    = crm_concat(pseudo_id, "end", '-');
+    begin_id  = crm_concat(pseudo_id, "begin", '-');
+
+    *inv_end = get_pseudo_op(end_id, data_set);
+    *inv_begin = get_pseudo_op(begin_id, data_set);
+
+    flags = get_flags(id, local_score, action, action);
+    
+    xml_child_iter_filter(
+	set, xml_rsc, XML_TAG_RESOURCE_REF,
+
+	resource = pe_find_resource(data_set->resources, ID(xml_rsc));
+
+	key = generate_op_key(resource->id, action, 0);
+	custom_action_order(NULL, NULL, *inv_begin, resource, key, NULL,
+			    flags|pe_order_implies_left_printed, data_set);
+
+	key = generate_op_key(resource->id, action, 0);
+	custom_action_order(resource, key, NULL, NULL, NULL, *inv_end,
+			    flags|pe_order_implies_right_printed, data_set);
+	
+	if(sequential) {
+	    if(last != NULL) {
+		new_rsc_order(resource, action, last, action, flags, data_set);
+	    }
+	    last = resource;
+	}
+
+	);
+
+  done:
+    crm_free(pseudo_id);
+    return TRUE;
+}
+
+static gboolean order_rsc_sets(
+    const char *id, xmlNode *set1, xmlNode *set2, int score, pe_working_set_t *data_set) {
+		
+    resource_t *rsc_1 = NULL;
+    resource_t *rsc_2 = NULL;
+	    
+    const char *action_1 = crm_element_value(set1, "action");
+    const char *action_2 = crm_element_value(set2, "action");
+
+    const char *sequential_1 = crm_element_value(set1, "sequential");
+    const char *sequential_2 = crm_element_value(set2, "sequential");
+
+    enum pe_ordering flags = get_flags(id, score, action_1, action_2);
+	    
+    if(crm_is_true(sequential_1)) {
+	/* get the first one */
+	xml_child_iter_filter(
+	    set1, xml_rsc, XML_TAG_RESOURCE_REF,
+	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+	    break;
+	    );
+    }
+
+    if(crm_is_true(sequential_2)) {
+	/* get the last one */
+	const char *rid = NULL;
+	xml_child_iter_filter(
+	    set2, xml_rsc, XML_TAG_RESOURCE_REF,
+	    rid = ID(xml_rsc);
+	    );
+	rsc_2 = pe_find_resource(data_set->resources, rid);
+    }
+
+    if(rsc_1 != NULL && rsc_2 != NULL) {
+	new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
+
+    } else if(rsc_1 != NULL) {
+	xml_child_iter_filter(
+	    set2, xml_rsc, XML_TAG_RESOURCE_REF,
+	    rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc));
+	    new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
+	    );
+
+    } else if(rsc_2 != NULL) {
+	xml_child_iter_filter(
+	    set1, xml_rsc, XML_TAG_RESOURCE_REF,
+	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+	    new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
+	    );
+
+    } else {
+	xml_child_iter_filter(
+	    set1, xml_rsc, XML_TAG_RESOURCE_REF,
+	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+
+	    xml_child_iter_filter(
+		set2, xml_rsc_2, XML_TAG_RESOURCE_REF,
+		rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc_2));
+		new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
+		);
+	    );
+    }
+    return TRUE;
+}
+
 gboolean
-unpack_rsc_colocation(crm_data_t * xml_obj, pe_working_set_t *data_set)
+unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
 	int score_i = 0;
+	gboolean any_sets = FALSE;
+
+	action_t *set_end = NULL;
+	action_t *set_begin = NULL;
+
+	action_t *set_inv_end = NULL;
+	action_t *set_inv_begin = NULL;
+	
+	xmlNode *last = NULL;
+	action_t *last_end = NULL;
+	action_t *last_begin = NULL;
+	action_t *last_inv_end = NULL;
+	action_t *last_inv_begin = NULL;
+	
 	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
-	const char *id_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
-	const char *id_lh = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
 	const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-	const char *state_lh = crm_element_value(xml_obj, XML_RULE_ATTR_FROMSTATE);
-	const char *state_rh = crm_element_value(xml_obj, XML_RULE_ATTR_TOSTATE);
-	const char *attr = crm_element_value(xml_obj, "node_attribute");
-	const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
+	const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 
-
-	resource_t *rsc_lh = pe_find_resource(data_set->resources, id_lh);
-	resource_t *rsc_rh = pe_find_resource(data_set->resources, id_rh);
- 
-	if(rsc_lh == NULL) {
-		crm_config_err("No resource (con=%s, rsc=%s)", id, id_lh);
-		return FALSE;
-		
-	} else if(rsc_rh == NULL) {
-		crm_config_err("No resource (con=%s, rsc=%s)", id, id_rh);
-		return FALSE;
+	if(invert == NULL) {
+	    invert = "true";
 	}
+    
+	if(score == NULL) {
+	    score = "INFINITY";
+	}
+	
+	score_i = char2score(score);
+
+	xml_child_iter_filter(
+	    xml_obj, set, "resource_set",
+
+	    any_sets = TRUE;
+	    if(unpack_order_set(set, score_i, &set_begin, &set_end,
+				&set_inv_begin, &set_inv_end, invert, data_set) == FALSE) {
+		return FALSE;
+
+	    } else if(last) {
+		const char *set_action = crm_element_value(set, "action");
+		const char *last_action = crm_element_value(last, "action");
+		enum pe_ordering flags = get_flags(id, score_i, last_action, set_action);
+		order_actions(last_end, set_begin, flags);
+
+		if(crm_is_true(invert)) {
+		    set_action = invert_action(set_action);
+		    last_action = invert_action(last_action);
+		    score_i *= -1;
+		    
+		    flags = get_flags(id, score_i, last_action, set_action);
+		    order_actions(last_inv_begin, set_inv_end, flags);
+		}
+		
+	    } else if(/* never called */last && order_rsc_sets(id, last, set, score_i, data_set) == FALSE) {
+		return FALSE;
+
+	    }
+	    last = set;
+	    last_end = set_end;
+	    last_begin = set_begin;
+	    last_inv_end = set_inv_end;
+	    last_inv_begin = set_inv_begin;
+	    );
+
+	if(any_sets == FALSE) {
+	    return unpack_simple_rsc_order(xml_obj, data_set);
+	}
+
+	return TRUE;
+}
+
+static gboolean
+unpack_colocation_set(xmlNode *set, int score, pe_working_set_t *data_set) 
+{
+    resource_t *with = NULL;
+    resource_t *resource = NULL;
+    const char *set_id = ID(set);
+    const char *role = crm_element_value(set, "role");
+    const char *sequential = crm_element_value(set, "sequential");
+    int local_score = score;
+
+    const char *score_s = crm_element_value(set, XML_RULE_ATTR_SCORE);
+    if(score_s) {
+	local_score = char2score(score_s);
+    }
+    
+    if(crm_is_true(sequential) == FALSE) {
+	xml_child_iter_filter(
+	    set, xml_rsc, XML_TAG_RESOURCE_REF,
+	    
+	    resource = pe_find_resource(data_set->resources, ID(xml_rsc));
+	    if(with != NULL) {
+		rsc_colocation_new(set_id, NULL, local_score, resource, with, role, role, data_set);
+	    }
+
+	    with = resource;
+	    );
+    }
+    
+    return TRUE;
+}
+
+	    
+
+static gboolean colocate_rsc_sets(
+    const char *id, xmlNode *set1, xmlNode *set2, int score, pe_working_set_t *data_set)
+{
+    resource_t *rsc_1 = NULL;
+    resource_t *rsc_2 = NULL;
+	    
+    const char *role_1 = crm_element_value(set1, "role");
+    const char *role_2 = crm_element_value(set2, "role");
+
+    const char *sequential_1 = crm_element_value(set1, "sequential");
+    const char *sequential_2 = crm_element_value(set2, "sequential");
+
+    if(crm_is_true(sequential_1)) {
+	/* get the first one */
+	xml_child_iter_filter(
+	    set1, xml_rsc, XML_TAG_RESOURCE_REF,
+	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+	    break;
+	    );
+    }
+
+    if(crm_is_true(sequential_2)) {
+	/* get the last one */
+	const char *rid = NULL;
+	xml_child_iter_filter(
+	    set2, xml_rsc, XML_TAG_RESOURCE_REF,
+	    rid = ID(xml_rsc);
+	    );
+	rsc_2 = pe_find_resource(data_set->resources, rid);
+    }
+
+    if(rsc_1 != NULL && rsc_2 != NULL) {
+	rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+
+    } else if(rsc_1 != NULL) {
+	xml_child_iter_filter(
+	    set2, xml_rsc, XML_TAG_RESOURCE_REF,
+	    rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc));
+	    rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+	    );
+
+    } else if(rsc_2 != NULL) {
+	xml_child_iter_filter(
+	    set1, xml_rsc, XML_TAG_RESOURCE_REF,
+	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+	    rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+	    );
+
+    } else {
+	xml_child_iter_filter(
+	    set1, xml_rsc, XML_TAG_RESOURCE_REF,
+	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+
+	    xml_child_iter_filter(
+		set2, xml_rsc_2, XML_TAG_RESOURCE_REF,
+		rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc_2));
+		rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+		);
+	    );
+    }
+
+    return TRUE;
+}
+
+static gboolean unpack_simple_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
+{
+    int score_i = 0;
+
+    const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+    const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
+    
+    const char *id_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
+    const char *id_lh = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
+    const char *state_lh = crm_element_value(xml_obj, XML_RULE_ATTR_FROMSTATE);
+    const char *state_rh = crm_element_value(xml_obj, XML_RULE_ATTR_TOSTATE);
+    const char *attr = crm_element_value(xml_obj, "node_attribute");
+    
+    
+    resource_t *rsc_lh = pe_find_resource(data_set->resources, id_lh);
+    resource_t *rsc_rh = pe_find_resource(data_set->resources, id_rh);
+    
+    if(rsc_lh == NULL) {
+	crm_config_err("No resource (con=%s, rsc=%s)", id, id_lh);
+	return FALSE;
+	
+    } else if(rsc_rh == NULL) {
+	crm_config_err("No resource (con=%s, rsc=%s)", id, id_rh);
+	return FALSE;
+    }
+
+    if(score) {
+	score_i = char2score(score);
+    }
+    
+    rsc_colocation_new(id, attr, score_i, rsc_lh, rsc_rh, state_lh, state_rh, data_set);
+    
+    if(crm_is_true(symmetrical)) {
+	rsc_colocation_new(id, attr, score_i, rsc_rh, rsc_lh, state_rh, state_lh, data_set);
+    }
+    
+    return TRUE;
+}
+
+gboolean
+unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
+{
+	int score_i = 0;
+	xmlNode *last = NULL;
+	gboolean any_sets = FALSE;
+
+	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
+	const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
 
 	if(score) {
-		score_i = char2score(score);
+	    score_i = char2score(score);
+	}
+	
+	xml_child_iter_filter(
+	    xml_obj, set, "resource_set",
+
+	    any_sets = TRUE;
+	    if(unpack_colocation_set(set, score_i, data_set) == FALSE) {
+		return FALSE;
+
+	    } else if(last && colocate_rsc_sets(id, last, set, score_i, data_set) == FALSE) {
+		return FALSE;
+	    }
+	    last = set;
+	    );
+
+	
+	if(any_sets == FALSE) {
+	    return unpack_simple_colocation(xml_obj, data_set);
 	}
 
-	rsc_colocation_new(
-	    id, attr, score_i, rsc_lh, rsc_rh, state_lh, state_rh, data_set);
-	
-	if(crm_is_true(symmetrical)) {
-		rsc_colocation_new(
-			id, attr, score_i, rsc_rh, rsc_lh, state_rh, state_lh, data_set);
-	}
 	return TRUE;
 }
 

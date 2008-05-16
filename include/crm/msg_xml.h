@@ -43,6 +43,7 @@
 
 #define XML_ATTR_CRM_VERSION		"crm_feature_set"
 #define XML_ATTR_DIGEST			"digest"
+#define XML_ATTR_VALIDATION		"validate-with"
 
 #define XML_ATTR_NUMPEERS		"num_peers"
 #define XML_ATTR_HAVE_QUORUM		"have_quorum"
@@ -127,6 +128,7 @@
 #define XML_TAG_ATTRS			"attributes"
 #define XML_TAG_PARAMS			"parameters"
 
+#define XML_TAG_RESOURCE_REF		"resource_ref"
 #define XML_CIB_TAG_RESOURCE	  	"primitive"
 #define XML_CIB_TAG_GROUP	  	"group"
 #define XML_CIB_TAG_INCARNATION		"clone"
@@ -149,7 +151,8 @@
 #define XML_RSC_ATTR_UNIQUE		"globally_unique"
 #define XML_RSC_ATTR_NOTIFY		"notify"
 #define XML_RSC_ATTR_STICKINESS		"resource_stickiness"
-#define XML_RSC_ATTR_FAIL_STICKINESS	"resource_failure_stickiness"
+#define XML_RSC_ATTR_FAIL_STICKINESS	"migration-threshold"
+#define XML_RSC_ATTR_FAIL_TIMEOUT	"failure-timeout"
 #define XML_RSC_ATTR_MULTIPLE		"multiple_active"
 #define XML_RSC_ATTR_START		"start_prereq"
 #define XML_RSC_ATTR_PRIORITY		"priority"

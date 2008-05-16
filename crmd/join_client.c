@@ -29,8 +29,8 @@
 
 
 int reannounce_count = 0;
-void join_query_callback(const HA_Message *msg, int call_id, int rc,
-			 crm_data_t *output, void *user_data);
+void join_query_callback(xmlNode *msg, int call_id, int rc,
+			 xmlNode *output, void *user_data);
 
 extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t *orig);
 
@@ -43,12 +43,13 @@ do_cl_join_query(long long action,
 	    enum crmd_fsa_input current_input,
 		    fsa_data_t *msg_data)
 {
-	HA_Message *req = create_request(CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
+	xmlNode *req = create_request(CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
 					 CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
 	sleep(1);  /* give the CCM time to propogate to the DC */
 	crm_debug("Querying for a DC");
 	send_msg_via_ha(req);
+	free_xml(req);
 }
 
 
@@ -79,13 +80,14 @@ do_cl_join_announce(long long action,
 
 	if(AM_I_OPERATIONAL) {
 		/* send as a broadcast */
-		HA_Message *req = create_request(
+		xmlNode *req = create_request(
 			CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
 			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
 		crm_debug("Announcing availability");
 		update_dc(NULL, FALSE);
 		send_msg_via_ha(req);
+		free_xml(req);
 	
 	} else {
 		/* Delay announce until we have finished local startup */
@@ -107,8 +109,8 @@ do_cl_join_offer_respond(long long action,
 	    fsa_data_t *msg_data)
 {
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
-	const char *welcome_from = cl_get_string(input->msg, F_CRM_HOST_FROM);
-	const char *join_id = ha_msg_value(input->msg, F_CRM_JOIN_ID);
+	const char *welcome_from = crm_element_value(input->msg, F_CRM_HOST_FROM);
+	const char *join_id = crm_element_value(input->msg, F_CRM_JOIN_ID);
 	
 #if 0
 	if(we are sick) {
@@ -120,7 +122,7 @@ do_cl_join_offer_respond(long long action,
 #endif
 
 	crm_debug_2("Accepting join offer: join-%s",
-		    cl_get_string(input->msg, F_CRM_JOIN_ID));
+		    crm_element_value(input->msg, F_CRM_JOIN_ID));
 	
 	/* we only ever want the last one */
 	if(query_call_id > 0) {
@@ -142,19 +144,19 @@ do_cl_join_offer_respond(long long action,
 	query_call_id = fsa_cib_conn->cmds->query(
 		fsa_cib_conn, NULL, NULL, cib_scope_local);
 	add_cib_op_callback(
-	    query_call_id, FALSE, crm_strdup(join_id), join_query_callback);
+	    fsa_cib_conn, query_call_id, FALSE, crm_strdup(join_id), join_query_callback);
 	crm_debug_2("Registered join query callback: %d", query_call_id);
 
 	register_fsa_action(A_DC_TIMER_STOP);
 }
 
 void
-join_query_callback(const HA_Message *msg, int call_id, int rc,
-		    crm_data_t *output, void *user_data)
+join_query_callback(xmlNode *msg, int call_id, int rc,
+		    xmlNode *output, void *user_data)
 {
-	crm_data_t *local_cib = NULL;
+	xmlNode *local_cib = NULL;
 	char *join_id = user_data;
-	crm_data_t *generation = create_xml_node(
+	xmlNode *generation = create_xml_node(
 		NULL, XML_CIB_TAG_GENERATION_TUPPLE);
 
 	CRM_DEV_ASSERT(join_id != NULL);
@@ -175,7 +177,7 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 	}
 	
 	if(local_cib != NULL) {
-		HA_Message *reply = NULL;
+		xmlNode *reply = NULL;
 		crm_debug("Respond to join offer join-%s", join_id);
 		crm_debug("Acknowledging %s as our DC", fsa_our_dc);
 		copy_in_properties(generation, local_cib);
@@ -184,9 +186,9 @@ join_query_callback(const HA_Message *msg, int call_id, int rc,
 			CRM_OP_JOIN_REQUEST, generation, fsa_our_dc,
 			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
-		ha_msg_add(reply, F_CRM_JOIN_ID, join_id);
-
+		crm_xml_add(reply, F_CRM_JOIN_ID, join_id);
 		send_msg_via_ha(reply);
+		free_xml(reply);
 
 	} else {
 		crm_err("Could not retrieve Generation to attach to our"
@@ -208,14 +210,14 @@ do_cl_join_finalize_respond(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
-	crm_data_t *tmp1      = NULL;
+	xmlNode *tmp1      = NULL;
 	gboolean   was_nack   = TRUE;
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 
 	int join_id = -1;
-	const char *op           = cl_get_string(input->msg,F_CRM_TASK);
-	const char *ack_nack     = cl_get_string(input->msg,CRM_OP_JOIN_ACKNAK);
-	const char *welcome_from = cl_get_string(input->msg,F_CRM_HOST_FROM);
+	const char *op           = crm_element_value(input->msg,F_CRM_TASK);
+	const char *ack_nack     = crm_element_value(input->msg,CRM_OP_JOIN_ACKNAK);
+	const char *welcome_from = crm_element_value(input->msg,F_CRM_HOST_FROM);
 	
 	if(safe_str_neq(op, CRM_OP_JOIN_ACKNAK)) {
 		crm_debug_2("Ignoring op=%s message", op);
@@ -227,7 +229,7 @@ do_cl_join_finalize_respond(long long action,
 		was_nack = FALSE;
 	}
 
-	ha_msg_value_int(input->msg, F_CRM_JOIN_ID, &join_id);
+	crm_element_value_int(input->msg, F_CRM_JOIN_ID, &join_id);
 	
 	if(was_nack) {
 		crm_err("Join join-%d with %s failed.  NACK'd",
@@ -245,22 +247,23 @@ do_cl_join_finalize_respond(long long action,
 
 	/* send our status section to the DC */
 	crm_debug("Confirming join join-%d: %s",
-		  join_id, cl_get_string(input->msg, F_CRM_TASK));
+		  join_id, crm_element_value(input->msg, F_CRM_TASK));
 	crm_debug_2("Discovering local LRM status");
 	tmp1 = do_lrm_query(TRUE);
 	if(tmp1 != NULL) {
-		HA_Message *reply = create_request(
+		xmlNode *reply = create_request(
 			CRM_OP_JOIN_CONFIRM, tmp1, fsa_our_dc,
 			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
-		ha_msg_add_int(reply, F_CRM_JOIN_ID, join_id);
+		crm_xml_add_int(reply, F_CRM_JOIN_ID, join_id);
 		
 		crm_debug("join-%d: Join complete."
 			  "  Sending local LRM status to %s",
 			  join_id, fsa_our_dc);
 		send_msg_via_ha(reply);
+		free_xml(reply);
 		if(AM_I_DC == FALSE) {
- 			register_fsa_input_adv(cause, I_NOT_DC, NULL,
- 					       A_NOTHING, TRUE, __FUNCTION__);
+ 			register_fsa_input_adv(
+			    cause, I_NOT_DC, NULL, A_NOTHING, TRUE, __FUNCTION__);
 		}
 		free_xml(tmp1);
 		

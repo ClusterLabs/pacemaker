@@ -18,14 +18,14 @@
 #ifndef TE_CALLBACKS__H
 #define TE_CALLBACKS__H
 
-extern void cib_fencing_updated(const HA_Message *msg, int call_id, int rc,
-				crm_data_t *output, void *user_data);
+extern void cib_fencing_updated(xmlNode *msg, int call_id, int rc,
+				xmlNode *output, void *user_data);
 
-extern void cib_action_updated(const HA_Message *msg, int call_id, int rc,
-			       crm_data_t *output, void *user_data);
+extern void cib_action_updated(xmlNode *msg, int call_id, int rc,
+			       xmlNode *output, void *user_data);
 
-extern void cib_failcount_updated(const HA_Message *msg, int call_id, int rc,
-			       crm_data_t *output, void *user_data);
+extern void cib_failcount_updated(xmlNode *msg, int call_id, int rc,
+				  xmlNode *output, void *user_data);
 
 extern gboolean global_timer_callback(gpointer data);
 extern gboolean action_timer_callback(gpointer data);
@@ -33,6 +33,7 @@ extern gboolean action_timer_callback(gpointer data);
 extern gboolean te_graph_trigger(gpointer user_data);
 
 extern void tengine_stonith_connection_destroy(gpointer user_data);
+extern void te_update_diff(const char *event, xmlNode *msg);
 
 #if SUPPORT_HEARTBEAT
 extern void tengine_stonith_callback(stonith_ops_t * op);

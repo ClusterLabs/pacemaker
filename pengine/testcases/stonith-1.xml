@@ -17,7 +17,7 @@
            <nvpair id="cib-bootstrap-options-pe-warn-series-max" name="pe-warn-series-max" value="-1"/>
            <nvpair id="cib-bootstrap-options-pe-input-series-max" name="pe-input-series-max" value="30000"/>
            <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="0"/>
-           <nvpair id="cib-bootstrap-options-default-resource-failure-stickiness" name="default-resource-failure-stickiness" value="0"/>
+           <nvpair id="cib-bootstrap-options-default-migration-threshold" name="default-migration-threshold" value="0"/>
            <nvpair id="cib-bootstrap-options-shutdown-escalation" name="shutdown-escalation" value="5min"/>
            <nvpair id="cib-bootstrap-optionsstartup-fencing" name="startup-fencing" value="false"/>
          </attributes>

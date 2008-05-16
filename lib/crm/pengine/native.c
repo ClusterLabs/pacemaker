@@ -170,7 +170,7 @@ native_parameter(
 		unpack_instance_attributes(
 			rsc->xml, XML_TAG_ATTR_SETS,
 			node?node->details->attrs:NULL,
-			local_hash, NULL, data_set->now);
+			local_hash, NULL, FALSE, data_set->now);
 
 		hash = local_hash;
 	}
@@ -333,6 +333,8 @@ native_print(
 
 	if(options & pe_print_html) {
 		status_print("<br/>\n");
+	} else if(options & pe_print_suppres_nl) {
+	    /* nothing */
 	} else if((options & pe_print_printf) || (options & pe_print_ncurses)) {
 		status_print("\n");
 	}

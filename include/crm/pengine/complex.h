@@ -56,7 +56,6 @@ typedef struct resource_object_functions_s
 } resource_object_functions_t;
 
 extern void common_update_score(resource_t *rsc, const char *id, int score);
-extern void common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_set);
 
 extern char *native_parameter(
 	resource_t *rsc, node_t *node, gboolean create, const char *name,
@@ -104,7 +103,7 @@ extern enum rsc_role_e master_resource_state(const resource_t *rsc, gboolean cur
 extern node_t *native_location(resource_t *rsc, GListPtr *list, gboolean current);
 
 extern resource_object_functions_t resource_class_functions[];
-extern gboolean	common_unpack(crm_data_t * xml_obj, resource_t **rsc,
+extern gboolean	common_unpack(xmlNode * xml_obj, resource_t **rsc,
 			      resource_t *parent, pe_working_set_t *data_set);
 
 extern void common_print(resource_t *rsc, const char *pre_text, long options, void *print_data);

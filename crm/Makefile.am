@@ -25,15 +25,8 @@ if BUILD_AIS_SUPPORT
 SUBDIRS			+= ais
 endif
 
-dtddir			= $(HA_NOARCHDATAHBDIR)
 crm_varlibdir		= $(HA_VARLIBDIR)/$(HB_PKG)/crm
 crm_varrundir		= $(HA_VARRUNDIR)/$(HB_PKG)/crm
-
-EXTRA_DIST		= crm-1.0.dtd
-dtd_SCRIPTS		= crm.dtd
-
-crm.dtd: crm-1.0.dtd
-	cp $(top_srcdir)/crm/crm-1.0.dtd crm.dtd
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(crm_varlibdir)

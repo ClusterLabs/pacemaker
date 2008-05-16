@@ -47,6 +47,8 @@ typedef struct ha_has_time_s {
 
 typedef struct ha_time_s 
 {
+		time_t tm_now;
+	
 		int years;
 
 		int months;
