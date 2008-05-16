@@ -262,9 +262,7 @@ do_dc_join_offer_one(long long action,
 	/* this was a genuine join request, cancel any existing
 	 * transition and invoke the PE
 	 */
-	if(need_transition(fsa_state)) {
-		register_fsa_action(A_TE_CANCEL);
-	}
+	start_transition(fsa_state);
 	
 	/* dont waste time by invoking the pe yet; */
 	crm_debug("Waiting on %d outstanding join acks for join-%d",

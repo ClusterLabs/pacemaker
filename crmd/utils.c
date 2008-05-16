@@ -1103,17 +1103,6 @@ create_node_state(
 	return node_state;
 }
 
-gboolean
-need_transition(enum crmd_fsa_state state)
-{
-	if(state == S_POLICY_ENGINE
-	   || state == S_TRANSITION_ENGINE
-	   || state == S_IDLE) {
-		return TRUE;
-	}
-	return FALSE;
-}
-
 extern GHashTable   *ipc_clients;
 
 void

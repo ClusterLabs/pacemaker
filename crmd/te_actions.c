@@ -494,19 +494,13 @@ notify_crmd(crm_graph_t *graph)
 		case tg_abort:
 		case tg_restart:
 		    clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
-		    if(need_transition(fsa_state)) {
-			/* setting "fsa_pe_ref = NULL" makes sure we ignore any
-			 *  PE reply that might be pending or in the queue while
-			 *  we ask the CIB for a more up-to-date copy
-			 */
-			crm_free(fsa_pe_ref); fsa_pe_ref = NULL;
-			register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
-			
-		    } else {	
-			crm_debug("Filtering %d op in state %s",
-				  graph->completion_action, fsa_state2string(fsa_state));
-		    }
-			
+		    start_transition(fsa_state);
+		    
+		    /* setting "fsa_pe_ref = NULL" makes sure we ignore any
+		     *  PE reply that might be pending or in the queue while
+		     *  we ask the CIB for a more up-to-date copy
+		     */
+		    crm_free(fsa_pe_ref); fsa_pe_ref = NULL;
 		    break;
 
 		case tg_shutdown:

@@ -166,17 +166,7 @@ do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 		      xmlNode *output, void *user_data)
 {
 	xmlNode *cmd = NULL;
-	xmlNode *local_cib = NULL;
-	
-#if CRM_DEPRECATED_SINCE_2_0_4
-	if(safe_str_eq(crm_element_name(output), XML_TAG_CIB)) {
-		local_cib = output;
-	} else {
-		local_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
-	}
-#else
-	local_cib = output;
-#endif
+
 	if(call_id != fsa_pe_query) {
 		crm_debug_2("Skipping superceeded CIB query: %d (current=%d)",
 			    call_id, fsa_pe_query);
@@ -187,7 +177,7 @@ do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 		crm_debug("No need to invoke the PE anymore");
 		return;
 
-	} else if(need_transition(fsa_state) == FALSE) {
+	} else if(fsa_state != S_POLICY_ENGINE) {
 		crm_debug("Discarding PE request in state: %s",
 			  fsa_state2string(fsa_state));
 		return;
@@ -204,18 +194,18 @@ do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 	    crm_err("Invoking PE in state: %s", fsa_state2string(fsa_state));
 	}
 
-	CRM_DEV_ASSERT(local_cib != NULL);
-	CRM_DEV_ASSERT(crm_element_value(local_cib, XML_ATTR_DC_UUID) != NULL);
+	CRM_DEV_ASSERT(output != NULL);
+	CRM_DEV_ASSERT(crm_element_value(output, XML_ATTR_DC_UUID) != NULL);
 
-	crm_xml_add_int(local_cib, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
-	crm_xml_add_int(local_cib, XML_ATTR_CCM_TRANSITION, crm_peer_seq);
+	crm_xml_add_int(output, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
+	crm_xml_add_int(output, XML_ATTR_CCM_TRANSITION, crm_peer_seq);
 	
 	if(fsa_pe_ref) {
 		crm_free(fsa_pe_ref);
 		fsa_pe_ref = NULL;
 	}
 
-	cmd = create_request(CRM_OP_PECALC, local_cib, NULL,
+	cmd = create_request(CRM_OP_PECALC, output, NULL,
 			     CRM_SYSTEM_PENGINE, CRM_SYSTEM_DC, NULL);
 
 	fsa_pe_ref = crm_element_value_copy(cmd, XML_ATTR_REFERENCE);

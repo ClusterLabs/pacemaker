@@ -992,7 +992,8 @@ handle_shutdown_request(xmlNode *stored_msg)
 		host_from = fsa_our_uname;
 	}
 	
-	crm_info("Creating shutdown request for %s",host_from);
+	crm_info("Creating shutdown request for %s (state=%s)",
+		 host_from, fsa_state2string(fsa_state));
 
 	crm_log_xml(LOG_MSG, "message", stored_msg);
 
@@ -1001,16 +1002,12 @@ handle_shutdown_request(xmlNode *stored_msg)
 		CRMD_STATE_INACTIVE, FALSE, __FUNCTION__);
 	crm_xml_add_int(node_state, XML_CIB_ATTR_SHUTDOWN,  (int)now);
 	
-	fsa_cib_anon_update(XML_CIB_TAG_STATUS,node_state, cib_quorum_override);
+	fsa_cib_anon_update(XML_CIB_TAG_STATUS, node_state, cib_quorum_override);
 	crm_log_xml_debug_2(node_state, "Shutdown update");
 	free_xml(node_state);
 
 	/* will be picked up by the TE as long as its running */
-	if(need_transition(fsa_state)
-	   && is_set(fsa_input_register, R_TE_CONNECTED) == FALSE) {
-		register_fsa_action(A_TE_CANCEL);
-	}
-
+	start_transition(fsa_state);
 	return I_NULL;
 }
 

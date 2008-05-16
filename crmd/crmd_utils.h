@@ -70,10 +70,26 @@ extern void fsa_dump_actions(long long action, const char *text);
 extern void fsa_dump_inputs(
 	int log_level, const char *text, long long input_register);
 
-extern gboolean need_transition(enum crmd_fsa_state state);
 extern void update_dc(xmlNode *msg, gboolean assert_same);
 extern void erase_node_from_join(const char *node);
 extern void populate_cib_nodes(gboolean with_client_status);
 extern void crm_update_quorum(gboolean bool);
+
+#define start_transition(state) do {					\
+	switch(state) {							\
+	    case S_TRANSITION_ENGINE:					\
+		register_fsa_action(A_TE_CANCEL);			\
+		break;							\
+	    case S_POLICY_ENGINE:					\
+	    case S_IDLE:						\
+		register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);	\
+		break;							\
+	    default:							\
+		crm_debug("NOT starting a new transition in state %s",	\
+			  fsa_state2string(fsa_state));			\
+		break;							\
+	}								\
+    } while(0)
+
 
 #endif
