@@ -25,6 +25,7 @@ extern node_t *node_copy(node_t *this_node) ;
 
 
 /* Binary like operators for lists of nodes */
+extern GListPtr node_list_exclude(GListPtr list1, GListPtr list2);
 extern GListPtr node_list_dup(GListPtr list1, gboolean reset, gboolean filter);
 
 extern GListPtr node_list_and(GListPtr list1, GListPtr list2, gboolean filter);

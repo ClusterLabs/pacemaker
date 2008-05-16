@@ -134,8 +134,43 @@ node_list_eq(GListPtr list1, GListPtr list2, gboolean filter)
 	return TRUE;
 }
 
-/* the intersection of list1 and list2 
- */
+/* any node in list1 or list2 and not in the other gets a score of -INFINITY */
+GListPtr
+node_list_exclude(GListPtr list1, GListPtr list2)
+{
+    node_t *other_node = NULL;
+    GListPtr result = NULL;
+    
+    result = node_list_dup(list1, FALSE, FALSE);
+    
+    slist_iter(
+	node, node_t, result, lpc,
+	
+	other_node = pe_find_node_id(list2, node->details->id);
+	
+	if(other_node == NULL) {
+	    node->weight = -INFINITY;
+	} else {
+	    node->weight = merge_weights(node->weight, other_node->weight);
+	}
+	);
+    
+    slist_iter(
+	node, node_t, list2, lpc,
+	
+	other_node = pe_find_node_id(result, node->details->id);
+	
+	if(other_node == NULL) {
+	    node_t *new_node = node_copy(node);
+	    new_node->weight = -INFINITY;
+	    result = g_list_append(result, new_node);
+	}
+	);
+
+    return result;
+}
+
+/* the intersection of list1 and list2 */
 GListPtr
 node_list_and(GListPtr list1, GListPtr list2, gboolean filter)
 {
