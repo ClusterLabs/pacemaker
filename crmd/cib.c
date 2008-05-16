@@ -60,25 +60,17 @@ revision_check_callback(xmlNode *msg, int call_id, int rc,
 	int cmp = -1;
 	const char *revision = NULL;
 	xmlNode *generation = NULL;
-#if CRM_DEPRECATED_SINCE_2_0_4
-	if(safe_str_eq(crm_element_name(output), XML_TAG_CIB)) {
-		generation = output;
-	} else {
-		generation = find_xml_node(output, XML_TAG_CIB, TRUE);
-	}
-#else
-	generation = output;
-	CRM_DEV_ASSERT(safe_str_eq(crm_element_name(generation), XML_TAG_CIB));
-#endif
 	
 	if(rc != cib_ok) {
 		fsa_data_t *msg_data = NULL;
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 		return;
 	}
+
+	generation = output;
+	CRM_CHECK(safe_str_eq(crm_element_name(generation), XML_TAG_CIB), return);
 	
-	crm_debug_3("Checking our feature revision is allowed: %s",
-		    CIB_FEATURE_SET);
+	crm_debug_3("Checking our feature revision is allowed: %s", CIB_FEATURE_SET);
 
 	revision = crm_element_value(generation, XML_ATTR_CIB_REVISION);
 	cmp = compare_version(revision, CIB_FEATURE_SET);
@@ -211,7 +203,7 @@ do_cib_control(long long action,
 			call_id = fsa_cib_conn->cmds->query(
 				fsa_cib_conn, NULL, NULL, cib_scope_local);
 			
-			add_cib_op_callback(call_id, FALSE, NULL,
+			add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL,
 					    revision_check_callback);
 			cib_retries = 0;
 		}

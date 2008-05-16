@@ -81,7 +81,7 @@ cib_native_new (void)
 	cib->cmds->free       = cib_native_free;
 	cib->cmds->inputfd    = cib_native_inputfd;
 
-	cib->cmds->register_callback = cib_native_register_callback;
+	cib->cmds->register_notification = cib_native_register_notification;
 	cib->cmds->set_connection_dnotify = cib_native_set_connection_dnotify;
 
 	return cib;
@@ -544,10 +544,10 @@ cib_native_rcvmsg(cib_t* cib, int blocking)
 
 	/* do callbacks */
 	type = crm_element_value(msg, F_TYPE);
-	crm_debug_4("Activating %s callbacks...", type);
+	crm_debug("Activating %s callbacks...", type);
 
 	if(safe_str_eq(type, T_CIB)) {
-		cib_native_callback(cib, msg);
+	    cib_native_callback(cib, msg, 0, 0);
 		
 	} else if(safe_str_eq(type, T_CIB_NOTIFY)) {
 		g_list_foreach(cib->notify_list, cib_native_notify, msg);
@@ -635,7 +635,7 @@ int cib_native_set_connection_dnotify(
 }
 
 int
-cib_native_register_callback(cib_t* cib, const char *callback, int enabled) 
+cib_native_register_notification(cib_t* cib, const char *callback, int enabled) 
 {
 	xmlNode *notify_msg = create_xml_node(NULL, "cib-callback");
 	cib_native_opaque_t *native = cib->variant_opaque;

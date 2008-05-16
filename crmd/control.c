@@ -814,7 +814,7 @@ do_read_config(long long action,
 	int call_id = fsa_cib_conn->cmds->query(
  		fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
 
-	add_cib_op_callback(call_id, FALSE, NULL, config_query_callback);
+	add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, config_query_callback);
 	crm_debug_2("Querying the CIB... call %d", call_id);
 }
 
@@ -926,7 +926,7 @@ populate_cib_nodes_ha(gboolean with_client_status)
 	fsa_cib_update(
 		XML_CIB_TAG_NODES, cib_node_list,
 		cib_scope_local|cib_quorum_override, call_id);
-	add_cib_op_callback(call_id, FALSE, NULL, default_cib_update_callback);
+	add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, default_cib_update_callback);
 
 	free_xml(cib_node_list);
 	crm_debug_2("Complete");
@@ -966,7 +966,7 @@ populate_cib_nodes(gboolean with_client_status)
     
     fsa_cib_update(
 	XML_CIB_TAG_NODES, cib_node_list, cib_scope_local|cib_quorum_override, call_id);
-    add_cib_op_callback(call_id, FALSE, NULL, default_cib_update_callback);
+    add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, default_cib_update_callback);
     
     free_xml(cib_node_list);
     crm_debug_2("Complete");

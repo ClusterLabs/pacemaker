@@ -111,7 +111,7 @@ crmdManagedChildDied(
 		     */
 		    rc = fsa_cib_conn->cmds->query(
 			fsa_cib_conn, NULL, NULL, cib_scope_local);
-		    add_cib_op_callback(rc, TRUE, pid, save_cib_contents);
+		    add_cib_op_callback(fsa_cib_conn, rc, TRUE, pid, save_cib_contents);
 		}
 		
 		register_fsa_input_before(C_FSA_INTERNAL, I_ERROR, NULL);

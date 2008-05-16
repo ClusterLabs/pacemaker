@@ -28,6 +28,7 @@
 
 #include <tengine.h>
 #include <te_callbacks.h>
+#include <crmd_fsa.h>
 
 #include <clplumbing/Gmain_timeout.h>
 
@@ -48,32 +49,33 @@ te_update_diff(const char *event, xmlNode *msg)
 {
 	int rc = -1;
 	const char *op = NULL;
-	xmlNode *diff = NULL;
-	xmlNode *aborted = NULL;
 	const char *set_name = NULL;
 
-	int diff_add_updates = 0;
-	int diff_add_epoch  = 0;
+	xmlNode *diff = NULL;
+	xmlNode *aborted = NULL;
+
+	int diff_add_updates     = 0;
+	int diff_add_epoch       = 0;
 	int diff_add_admin_epoch = 0;
 
-	int diff_del_updates = 0;
-	int diff_del_epoch  = 0;
+	int diff_del_updates     = 0;
+	int diff_del_epoch       = 0;
 	int diff_del_admin_epoch = 0;
 	
-	if(msg == NULL) {
-		crm_err("NULL update");
-		return;
-	}		
+	CRM_CHECK(msg != NULL, return);
 
+	if(fsa_state != S_IDLE
+	   && fsa_state != S_TRANSITION_ENGINE
+	   && fsa_state != S_POLICY_ENGINE) {
+	    return;
+	}
+	
 	crm_element_value_int(msg, F_CIB_RC, &rc);	
-	op = crm_element_value(msg, F_CIB_OPERATION);
-
 	if(rc < cib_ok) {
-		crm_debug_2("Ignoring failed %s operation: %s",
-			    op, cib_error2string(rc));
-		return;
+	    return;
 	} 	
 
+	op = crm_element_value(msg, F_CIB_OPERATION);
 	diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
 	cib_diff_version_details(

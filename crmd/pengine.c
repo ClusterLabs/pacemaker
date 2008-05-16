@@ -154,7 +154,7 @@ do_pe_invoke(long long action,
 	fsa_pe_query = fsa_cib_conn->cmds->query(
 		fsa_cib_conn, NULL, NULL, cib_scope_local);
 	if(FALSE == add_cib_op_callback(
-		   fsa_pe_query, TRUE, NULL, do_pe_invoke_callback)) {
+		   fsa_cib_conn, fsa_pe_query, TRUE, NULL, do_pe_invoke_callback)) {
 		crm_err("Cant retrieve the CIB to invoke the %s subsystem with",
 			pe_subsystem->name);
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);

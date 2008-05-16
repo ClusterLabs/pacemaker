@@ -538,7 +538,7 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 		crm_info("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
 	}
 
-	add_cib_op_callback(rc, FALSE, crm_strdup(hash_entry->id), attrd_cib_callback);
+	add_cib_op_callback(cib_conn, rc, FALSE, crm_strdup(hash_entry->id), attrd_cib_callback);
 	
 	return;
 }

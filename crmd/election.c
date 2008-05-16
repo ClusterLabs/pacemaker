@@ -394,7 +394,7 @@ do_dc_takeover(long long action,
 	crm_xml_add(cib, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 	crm_xml_add(cib, XML_ATTR_CIB_REVISION, CIB_FEATURE_SET);
 	fsa_cib_update(XML_TAG_CIB, cib, cib_quorum_override, rc);
-	add_cib_op_callback(rc, FALSE, NULL, feature_update_callback);
+	add_cib_op_callback(fsa_cib_conn, rc, FALSE, NULL, feature_update_callback);
 
 	update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
 		    NULL, NULL, NULL, "dc-version", VERSION"-"HA_HG_VERSION, FALSE);

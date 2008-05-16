@@ -280,7 +280,7 @@ update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc)
 		call_id = update_attr(fsa_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
 				      on_uuid, NULL,NULL, attr_name, value, FALSE);
 
-		add_cib_op_callback(call_id, FALSE, NULL, cib_failcount_updated);
+		add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, cib_failcount_updated);
 		crm_free(attr_name);
 
 		attr_name = crm_concat("last-failure", rsc_id, '-');
@@ -289,7 +289,7 @@ update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc)
 		call_id = update_attr(fsa_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
 				      on_uuid, NULL,NULL, attr_name, now, FALSE);
 
-		add_cib_op_callback(call_id, FALSE, NULL, cib_failcount_updated);
+		add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, cib_failcount_updated);
 		crm_free(attr_name);
 
 		crm_free(now);

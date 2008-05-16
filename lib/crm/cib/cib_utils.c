@@ -772,57 +772,57 @@ cib_create_op(
 }
 
 void
-cib_native_callback(cib_t *cib, xmlNode *msg)
+cib_native_callback(cib_t *cib, xmlNode *msg, int call_id, int rc)
 {
-	int rc = 0;
-	int call_id = 0;
 	xmlNode *output = NULL;
-
 	cib_callback_client_t *blob = NULL;
-
 	cib_callback_client_t local_blob;
 
 	local_blob.callback = NULL;
 	local_blob.user_data = NULL;
 	local_blob.only_success = FALSE;
 
-	crm_element_value_int(msg, F_CIB_CALLID, &call_id);
+	if(msg != NULL) {
+	    crm_element_value_int(msg, F_CIB_RC, &rc);
+	    crm_element_value_int(msg, F_CIB_CALLID, &call_id);
+	    output = get_message_xml(msg, F_CIB_CALLDATA);
+	}
+
 	blob = g_hash_table_lookup(
 		cib_op_callback_table, GINT_TO_POINTER(call_id));
 	
 	if(blob != NULL) {
-		crm_debug_3("Callback found for call %d", call_id);
 		local_blob = *blob;
 		blob = NULL;
 		
 		remove_cib_op_callback(call_id, FALSE);
 
 	} else {
-		crm_debug_3("No callback found for call %d", call_id);
+		crm_debug("No callback found for call %d", call_id);
 		local_blob.callback = NULL;
 	}
 
-	crm_element_value_int(msg, F_CIB_RC, &rc);
+	if(cib == NULL) {
+	    crm_debug("No cib object supplied");
+	}
+	
 	if(rc == cib_diff_resync) {
 	    /* This is an internal value that clients do not and should not care about */
 	    rc = cib_ok;
 	}
 
-	output = get_message_xml(msg, F_CIB_CALLDATA);
-	
 	if(local_blob.callback != NULL
 	   && (rc == cib_ok || local_blob.only_success == FALSE)) {
-		local_blob.callback(
-			msg, call_id, rc, output, local_blob.user_data);
+	    crm_debug("Invoking callback %s for call %d", crm_str(local_blob.id), call_id);
+	    local_blob.callback(msg, call_id, rc, output, local_blob.user_data);
 		
-	} else if(cib->op_callback == NULL && rc != cib_ok) {
-		crm_warn("CIB command failed: %s", cib_error2string(rc));
-		crm_log_xml(LOG_DEBUG, "Failed CIB Update", msg);
+	} else if(cib && cib->op_callback == NULL && rc != cib_ok) {
+	    crm_warn("CIB command failed: %s", cib_error2string(rc));
+	    crm_log_xml(LOG_DEBUG, "Failed CIB Update", msg);
 	}
 	
-	if(cib->op_callback == NULL) {
-		crm_debug_3("No OP callback set, ignoring reply");
-	} else {
+	if(cib && cib->op_callback != NULL) {
+		crm_debug("Invoking global callback for call %d", call_id);
 		cib->op_callback(msg, call_id, rc, output);
 	}
 	crm_debug_4("OP callback activated.");

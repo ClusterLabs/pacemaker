@@ -96,7 +96,7 @@ static int cib_remote_set_connection_dnotify(
 }
 
 static int
-cib_remote_register_callback(cib_t* cib, const char *callback, int enabled) 
+cib_remote_register_notification(cib_t* cib, const char *callback, int enabled) 
 {
     xmlNode *notify_msg = create_xml_node(NULL, "cib-callback");
     cib_remote_opaque_t *private = cib->variant_opaque;
@@ -141,7 +141,7 @@ cib_remote_new (const char *server, const char *user, const char *passwd, int po
     cib->cmds->free       = cib_remote_free;
     cib->cmds->inputfd    = cib_remote_inputfd;
 
-    cib->cmds->register_callback = cib_remote_register_callback;
+    cib->cmds->register_notification = cib_remote_register_notification;
     cib->cmds->set_connection_dnotify = cib_remote_set_connection_dnotify;
 
     return cib;
@@ -180,7 +180,7 @@ gboolean cib_remote_dispatch(int fd, gpointer user_data)
 	crm_debug_4("Activating %s callbacks...", type);
 
 	if(safe_str_eq(type, T_CIB)) {
-		cib_native_callback(cib, msg);
+	    cib_native_callback(cib, msg, 0, 0);
 		
 	} else if(safe_str_eq(type, T_CIB_NOTIFY)) {
 		g_list_foreach(cib->notify_list, cib_native_notify, msg);

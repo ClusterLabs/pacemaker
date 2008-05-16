@@ -59,7 +59,7 @@ static int cib_file_set_connection_dnotify(
 }
 
 
-static int cib_file_register_callback(cib_t* cib, const char *callback, int enabled) 
+static int cib_file_register_notification(cib_t* cib, const char *callback, int enabled) 
 {
     return cib_NOTSUPPORTED;
 }
@@ -87,7 +87,7 @@ cib_file_new (const char *cib_location)
     cib->cmds->free       = cib_file_free;
     cib->cmds->inputfd    = cib_file_inputfd;
 
-    cib->cmds->register_callback = cib_file_register_callback;
+    cib->cmds->register_notification = cib_file_register_notification;
     cib->cmds->set_connection_dnotify = cib_file_set_connection_dnotify;
 
     return cib;

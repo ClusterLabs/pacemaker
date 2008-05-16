@@ -266,9 +266,13 @@ typedef struct cib_api_operations_s
 
 		int (*quit)(cib_t *cib,   int call_options);
 		
-		int (*register_callback)(
+		int (*register_notification)(
 			cib_t* cib, const char *callback, int enabled);
 
+		gboolean (*register_callback)(
+		    cib_t *cib, int call_id, int timeout, gboolean only_success, void *user_data,
+		    const char *callback_name, void (*callback)(xmlNode*, int, int, xmlNode*,void*));
+	
 } cib_api_operations_t;
 
 struct cib_s
@@ -300,13 +304,11 @@ extern cib_t *cib_shadow_new(const char *name);
 
 extern void cib_delete(cib_t *cib);
 
+extern void cib_dump_pending_callbacks(void);
 extern int num_cib_op_callbacks(void);
 extern void remove_cib_op_callback(int call_id, gboolean all_callbacks);
-extern gboolean add_cib_op_callback_timeout(
-    int call_id, int timeout, gboolean only_success, void *user_data,
-    void (*callback)(xmlNode*, int, int, xmlNode*,void*));
 
-#define add_cib_op_callback(id, flag, data, fn) add_cib_op_callback_timeout(id, 0, flag, data, fn)
+#define add_cib_op_callback(cib, id, flag, data, fn) cib->cmds->register_callback(cib, id, 120, flag, data, #fn, fn)
 
 #include <crm/cib_util.h>
 #include <crm/cib_ops.h>

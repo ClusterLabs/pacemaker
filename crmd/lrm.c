@@ -54,6 +54,7 @@ struct recurring_op_s
 };
 
 char *make_stop_id(const char *rsc, int call_id);
+void cib_rsc_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *user_data);
 
 gboolean build_operation_update(
 	xmlNode *rsc_list, lrm_op_t *op, const char *src, int lpc);
@@ -1699,7 +1700,7 @@ copy_lrm_rsc(const lrm_rsc_t *rsc)
 	return rsc_copy;
 }
 
-static void
+void
 cib_rsc_callback(xmlNode *msg, int call_id, int rc,
 		 xmlNode *output, void *user_data)
 {
@@ -1777,15 +1778,10 @@ do_update_resource(lrm_op_t* op)
 	 */
 	fsa_cib_update(XML_CIB_TAG_STATUS, update, cib_quorum_override, rc);
 			
-	if(rc > 0) {
-		/* the return code is a call number, not an error code */
-		crm_debug("Sent resource state update message: %d", rc);
-		add_cib_op_callback(rc, FALSE, NULL, cib_rsc_callback);
-		
-	} else {
-		crm_err("Resource state update failed: %s",
-			cib_error2string(rc));	
-	}
+	/* the return code is a call number, not an error code */
+	crm_debug("Sent resource state update message: %d", rc);
+	fsa_cib_conn->cmds->register_callback(
+	    fsa_cib_conn, rc, 60, FALSE, NULL, "cib_rsc_callback", cib_rsc_callback);
 	
 	free_xml(update);
 }

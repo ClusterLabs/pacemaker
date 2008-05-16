@@ -33,6 +33,7 @@ typedef struct cib_notify_client_s
 typedef struct cib_callback_client_s 
 {
 		void (*callback)(xmlNode*, int, int, xmlNode*, void*);
+		const char *id;
 		void *user_data;
 		gboolean only_success;
 		struct timer_rec_s *timer;
@@ -44,6 +45,7 @@ struct timer_rec_s
 	int call_id;
 	int timeout;
 	guint ref;	
+	cib_t *cib;
 };
 
 typedef enum cib_errors (*cib_op_t)(const char *, int, const char *, xmlNode *,
@@ -62,8 +64,12 @@ extern xmlNode *cib_create_op(
     const char *section, xmlNode *data, int call_options);
 
 extern int get_channel_token(IPC_Channel *ch, char **token);
-void cib_native_callback(cib_t *cib, xmlNode *msg);
+void cib_native_callback(cib_t *cib, xmlNode *msg, int call_id, int rc);
 void cib_native_notify(gpointer data, gpointer user_data);
-int  cib_native_register_callback(cib_t* cib, const char *callback, int enabled);
+int  cib_native_register_notification(cib_t* cib, const char *callback, int enabled);
+gboolean cib_client_register_callback(
+    cib_t *cib, int call_id, int timeout, gboolean only_success, void *user_data,
+    const char *callback_name, void (*callback)(xmlNode*, int, int, xmlNode*,void*));
+
 
 #endif

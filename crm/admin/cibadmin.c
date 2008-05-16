@@ -362,8 +362,9 @@ main(int argc, char **argv)
 		 */
 		request_id = exit_code;
 
-		add_cib_op_callback_timeout(
-		    request_id, message_timeout_ms, FALSE, NULL, cibadmin_op_callback);
+		the_cib->cmds->register_callback(
+		    the_cib, request_id, message_timeout_ms, FALSE, NULL,
+		    "cibadmin_op_callback", cibadmin_op_callback);
 
 		mainloop = g_main_new(FALSE);
 

@@ -57,15 +57,14 @@ gboolean te_init(void);
 
 static void global_cib_callback(const xmlNode *msg, int callid ,int rc, xmlNode *output) 
 {
-#if 1
-    if(transition_graph->complete == FALSE) {
-	int pending_callbacks = num_cib_op_callbacks();
-	if(pending_callbacks == 0) {
+    int pending_callbacks = num_cib_op_callbacks();
+    if(pending_callbacks == 0) {
+	crm_debug("No more pending ops left");
+	if(blocking_on_pending_updates) {
 	    crm_debug("Triggering the TE");
 	    trigger_graph();
 	}
     }
-#endif
 }
 
 
@@ -85,7 +84,8 @@ do_te_control(long long action,
 	
     if(action & A_TE_STOP) {
 	if(transition_graph) {
-	    destroy_graph(transition_graph);			    
+	    destroy_graph(transition_graph);
+	    transition_graph = NULL;
 	}
     }
 

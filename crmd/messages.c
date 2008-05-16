@@ -894,15 +894,15 @@ handle_request(xmlNode *stored_msg)
 			
 		} else if(strcasecmp(op, CRM_OP_SHUTDOWN) == 0) {
 			gboolean dc_match = safe_str_eq(host_from, fsa_our_dc);
-			if(dc_match) {
-				crm_err("We didnt ask to be shut down yet our"
+			if(is_set(fsa_input_register, R_SHUTDOWN)) {
+				crm_info("Shutting ourselves down (DC)");
+				next_input = I_STOP;			
+
+			} else if(dc_match) {
+				crm_err("We didnt ask to be shut down, yet our"
 					" TE is telling us too."
 					" Better get out now!");
 				next_input = I_TERMINATE;
-
-			} else if(is_set(fsa_input_register, R_SHUTDOWN)) {
-				crm_info("Shutting ourselves down (DC)");
-				next_input = I_STOP;			
 
 			} else if(fsa_state != S_STOPPING) {
 				crm_err("Another node is asking us to shutdown"

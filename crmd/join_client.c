@@ -144,7 +144,7 @@ do_cl_join_offer_respond(long long action,
 	query_call_id = fsa_cib_conn->cmds->query(
 		fsa_cib_conn, NULL, NULL, cib_scope_local);
 	add_cib_op_callback(
-	    query_call_id, FALSE, crm_strdup(join_id), join_query_callback);
+	    fsa_cib_conn, query_call_id, FALSE, crm_strdup(join_id), join_query_callback);
 	crm_debug_2("Registered join query callback: %d", query_call_id);
 
 	register_fsa_action(A_DC_TIMER_STOP);

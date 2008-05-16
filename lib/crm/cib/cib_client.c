@@ -312,6 +312,7 @@ cib_new_variant(void)
 	new_cib->cmds->set_op_callback     = cib_client_set_op_callback;
 	new_cib->cmds->add_notify_callback = cib_client_add_notify_callback;
 	new_cib->cmds->del_notify_callback = cib_client_del_notify_callback;
+	new_cib->cmds->register_callback   = cib_client_register_callback;
 	
 	new_cib->cmds->noop    = cib_client_noop;
 	new_cib->cmds->ping    = cib_client_ping;
@@ -402,7 +403,7 @@ int cib_client_add_notify_callback(
 		cib->notify_list = g_list_append(
 			cib->notify_list, new_client);
 
-		cib->cmds->register_callback(cib, event, 1);
+		cib->cmds->register_notification(cib, event, 1);
 		
 		crm_debug_3("Callback added (%d)", g_list_length(cib->notify_list));
 	}
@@ -431,7 +432,7 @@ int cib_client_del_notify_callback(
 	list_item = g_list_find_custom(
 		cib->notify_list, new_client, ciblib_GCompareFunc);
 	
-	cib->cmds->register_callback(cib, event, 0);
+	cib->cmds->register_notification(cib, event, 0);
 
 	if(list_item != NULL) {
 		cib_notify_client_t *list_client = list_item->data;
@@ -465,21 +466,9 @@ gint ciblib_GCompareFunc(gconstpointer a, gconstpointer b)
 static gboolean cib_async_timeout_handler(gpointer data)
 {
     struct timer_rec_s *timer = data;
-    int call_id = timer->call_id;
-    cib_callback_client_t *blob = NULL;
+    crm_debug("Async call %d timed out after %ds", timer->call_id, timer->timeout);
+    cib_native_callback(timer->cib, NULL, timer->call_id, cib_remote_timeout);
 
-    crm_err("Async call %d timed out after %ds", call_id, timer->timeout);
-
-    /* Send an async reply with rc=cib_remote_timeout */
-    blob = g_hash_table_lookup(cib_op_callback_table, GINT_TO_POINTER(call_id));
-
-    if(blob != NULL && blob->callback != NULL) {
-	crm_debug_3("Callback found for call %d", call_id);
-	blob->callback(NULL, call_id, cib_remote_timeout, NULL, blob->user_data);
-    }
-    
-    remove_cib_op_callback(timer->call_id, FALSE);
-    
     /* Always return TRUE, never remove the handler
      * We do that in remove_cib_op_callback()
      */
@@ -487,9 +476,9 @@ static gboolean cib_async_timeout_handler(gpointer data)
 }
 
 gboolean
-add_cib_op_callback_timeout(
-    int call_id, int timeout, gboolean only_success, void *user_data,
-    void (*callback)(xmlNode*, int, int, xmlNode*,void*)) 
+cib_client_register_callback(
+    cib_t *cib, int call_id, int timeout, gboolean only_success, void *user_data,
+    const char *callback_name, void (*callback)(xmlNode*, int, int, xmlNode*,void*)) 
 {
 	cib_callback_client_t *blob = NULL;
 
@@ -500,8 +489,10 @@ add_cib_op_callback_timeout(
 		}
 		return FALSE;
 	}
+
 	
 	crm_malloc0(blob, sizeof(cib_callback_client_t));
+	blob->id = callback_name;
 	blob->only_success = only_success;
 	blob->user_data = user_data;
 	blob->callback = callback;
@@ -512,6 +503,7 @@ add_cib_op_callback_timeout(
 	    crm_malloc0(async_timer, sizeof(struct timer_rec_s));
 	    blob->timer = async_timer;
 
+	    async_timer->cib = cib;
 	    async_timer->call_id = call_id;
 	    async_timer->timeout = timeout*1000;
 	    async_timer->ref = Gmain_timeout_add(
@@ -526,26 +518,42 @@ add_cib_op_callback_timeout(
 void
 remove_cib_op_callback(int call_id, gboolean all_callbacks) 
 {
-	if(all_callbacks) {
-		if(cib_op_callback_table != NULL) {
-			g_hash_table_destroy(cib_op_callback_table);
-		}
-		cib_op_callback_table = g_hash_table_new_full(
-			g_direct_hash, g_direct_equal,
-			NULL, cib_destroy_op_callback);
-	} else {
-		g_hash_table_remove(
-			cib_op_callback_table,
-			GINT_TO_POINTER(call_id));
+    if(all_callbacks) {
+	if(cib_op_callback_table != NULL) {
+	    g_hash_table_destroy(cib_op_callback_table);
 	}
+
+	cib_op_callback_table = g_hash_table_new_full(
+	    g_direct_hash, g_direct_equal,
+	    NULL, cib_destroy_op_callback);
+
+    } else {
+	g_hash_table_remove(cib_op_callback_table, GINT_TO_POINTER(call_id));
+    }
 }
 
 int
 num_cib_op_callbacks(void)
 {
-	if(cib_op_callback_table == NULL) {
-		return 0;
-	}
-	return g_hash_table_size(cib_op_callback_table);
+    if(cib_op_callback_table == NULL) {
+	return 0;
+    }
+    return g_hash_table_size(cib_op_callback_table);
+}
+
+static void cib_dump_pending_op(gpointer key, gpointer value, gpointer user_data) 
+{
+    int call = GPOINTER_TO_INT(key);
+    cib_callback_client_t *blob = value;
+
+    crm_debug("Call %d (%s): pending", call, crm_str(blob->id));
+}
+
+void cib_dump_pending_callbacks(void)
+{
+    if(cib_op_callback_table == NULL) {
+	return;
+    }
+    return g_hash_table_foreach(cib_op_callback_table, cib_dump_pending_op, NULL);
 }
 

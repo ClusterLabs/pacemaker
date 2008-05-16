@@ -98,7 +98,7 @@ send_stonith_update(stonith_ops_t * op)
 		
 	} else {
 		/* delay processing the trigger until the update completes */
-		add_cib_op_callback(rc, FALSE, NULL, cib_fencing_updated);
+	    add_cib_op_callback(fsa_cib_conn, rc, FALSE, NULL, cib_fencing_updated);
 	}
 	
 	free_xml(node_state);
@@ -386,7 +386,7 @@ cib_action_update(crm_action_t *action, int status)
 	crm_debug("Updating CIB with %s action %d: %s on %s (call_id=%d)",
 		  op_status2text(status), action->id, task_uuid, target, rc);
 
-	add_cib_op_callback(rc, FALSE, NULL, cib_action_updated);
+	add_cib_op_callback(fsa_cib_conn, rc, FALSE, NULL, cib_action_updated);
 	free_xml(state);
 
 	action->sent_update = TRUE;
@@ -464,20 +464,24 @@ crm_graph_functions_t te_graph_fns = {
 	te_fence_node
 };
 
+gboolean blocking_on_pending_updates = FALSE;
+
 void
 notify_crmd(crm_graph_t *graph)
 {	
 	int log_level = LOG_DEBUG;
 	int pending_callbacks = num_cib_op_callbacks();
-	
+
 	stop_te_timer(transition_timer);
 	
-	if(pending_callbacks != 0) {
-	    transition_graph->complete = FALSE;
+	if(pending_callbacks > 0) {
+	    cib_dump_pending_callbacks();
+	    blocking_on_pending_updates = TRUE;
 	    crm_warn("Delaying completion until %d CIB updates complete", pending_callbacks);
 	    return;
 	}
 
+	blocking_on_pending_updates = FALSE;
 	CRM_CHECK(graph->complete, graph->complete = TRUE);
 
 	switch(graph->completion_action) {
