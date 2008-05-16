@@ -491,7 +491,7 @@ class LinuxHAv2(HeartbeatCM):
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
 #                    "tengine_stonith_callback: .*result=0",
-                    "State transition S_IDLE",
+                    "State transition .* S_IDLE",
                     "State transition S_STARTING -> S_PENDING",
                     ], [
                     "tengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
