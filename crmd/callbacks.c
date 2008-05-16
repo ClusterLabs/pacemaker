@@ -518,7 +518,6 @@ crmd_ccm_msg_callback(
 	const oc_ev_membership_t *membership = data;
 
 	gboolean update_quorum = FALSE;
-	gboolean trigger_transition = FALSE;
 
 	crm_debug_3("Invoked");
 	CRM_ASSERT(data != NULL);
@@ -553,9 +552,6 @@ crmd_ccm_msg_callback(
 		case OC_EV_MS_PRIMARY_RESTORED:
 			update_cache = TRUE;
 			crm_peer_seq = membership->m_instance;
-			if(AM_I_DC && need_transition(fsa_state)) {
-			    trigger_transition = TRUE;
-			}
 			break;
 		case OC_EV_MS_EVICTED:
 			update_quorum = TRUE;
@@ -573,10 +569,8 @@ crmd_ccm_msg_callback(
 
 	    if(crm_have_quorum == FALSE) {
 		/* did we just loose quorum? */
-		if(fsa_have_quorum && need_transition(fsa_state)) {
-		    crm_info("Quorum lost: triggering transition (%s)",
-			     ccm_event_name(event));
-		    trigger_transition = TRUE;
+		if(fsa_have_quorum) {
+		    crm_info("Quorum lost: %s", ccm_event_name(event));
 		}
 	    }
 	}
