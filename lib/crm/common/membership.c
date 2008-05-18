@@ -124,8 +124,6 @@ void destroy_crm_node(gpointer data)
 
 void crm_peer_init(void)
 {
-    crm_warn("Set these options via openais.conf");
-    
     quorum_stats.votes_max    = 2;
     quorum_stats.votes_active = 0;
     quorum_stats.votes_total  = 0;
