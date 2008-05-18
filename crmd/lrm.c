@@ -615,9 +615,9 @@ build_operation_update(
 
 	if(compare_version("2.1", caller_version) <= 0) {
 	    if(op->t_run || op->t_rcchange || op->exec_time || op->queue_time) {
-		crm_debug("Timing data (%s_%s_%d): last=%lu change=%lu exec=%lu queue=%lu",
-			  op->rsc_id, op->op_type, op->interval,
-			  op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
+		crm_debug_2("Timing data (%s_%s_%d): last=%lu change=%lu exec=%lu queue=%lu",
+			    op->rsc_id, op->op_type, op->interval,
+			    op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
 	
 		crm_xml_add_int(xml_op, "last_run",       op->t_run);
 		crm_xml_add_int(xml_op, "last_rc_change", op->t_rcchange);
