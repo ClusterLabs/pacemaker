@@ -328,8 +328,6 @@ void
 cib_fencing_updated(xmlNode *msg, int call_id, int rc,
 		    xmlNode *output, void *user_data)
 {
-	trigger_graph();
-
 	if(rc < cib_ok) {
 		crm_err("CIB update failed: %s", cib_error2string(rc));
 		crm_log_xml_warn(msg, "Failed update");
@@ -340,8 +338,6 @@ void
 cib_action_updated(xmlNode *msg, int call_id, int rc,
 		   xmlNode *output, void *user_data)
 {
-	trigger_graph();
-
 	if(rc < cib_ok) {
 		crm_err("Update %d FAILED: %s", call_id, cib_error2string(rc));
 	}
@@ -351,8 +347,6 @@ void
 cib_failcount_updated(xmlNode *msg, int call_id, int rc,
 		      xmlNode *output, void *user_data)
 {
-	trigger_graph();
-
 	if(rc < cib_ok) {
 		crm_err("Update %d FAILED: %s", call_id, cib_error2string(rc));
 	}

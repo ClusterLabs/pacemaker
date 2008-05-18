@@ -464,43 +464,35 @@ crm_graph_functions_t te_graph_fns = {
 	te_fence_node
 };
 
-gboolean blocking_on_pending_updates = FALSE;
-
 void
 notify_crmd(crm_graph_t *graph)
-{	
+{
 	int log_level = LOG_DEBUG;
-	int pending_callbacks = num_cib_op_callbacks();
-
-	stop_te_timer(transition_timer);
+	const char *type = "done";
 	
-	if(pending_callbacks > 0) {
-	    cib_dump_pending_callbacks();
-	    blocking_on_pending_updates = TRUE;
-	    crm_warn("Delaying completion until %d CIB updates complete", pending_callbacks);
-	    return;
-	}
-
-	blocking_on_pending_updates = FALSE;
+	crm_debug("Processing transition completion in state %s", fsa_state2string(fsa_state));
+	
+	stop_te_timer(transition_timer);
 	CRM_CHECK(graph->complete, graph->complete = TRUE);
 
 	switch(graph->completion_action) {
 		case tg_stop:
+		    type = "stop";
+		    /* fall through */
+		case tg_done:
 		    log_level = LOG_INFO;
 		    clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
-		    register_fsa_input(C_FSA_INTERNAL, I_TE_SUCCESS, NULL);
+		    if(fsa_state == S_TRANSITION_ENGINE) {
+			register_fsa_input(C_FSA_INTERNAL, I_TE_SUCCESS, NULL);
+		    }
 		    break;
-
-		case tg_abort:
-		case tg_restart:
-		    clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
-		    start_transition(fsa_state);
 		    
-		    /* setting "fsa_pe_ref = NULL" makes sure we ignore any
-		     *  PE reply that might be pending or in the queue while
-		     *  we ask the CIB for a more up-to-date copy
-		     */
-		    crm_free(fsa_pe_ref); fsa_pe_ref = NULL;
+		case tg_restart:
+		    type = "restart";
+		    clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
+		    if(fsa_state == S_TRANSITION_ENGINE) {
+			register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
+		    }
 		    break;
 
 		case tg_shutdown:
@@ -508,12 +500,9 @@ notify_crmd(crm_graph_t *graph)
 		    return;
 	}
 
-	te_log_action(log_level, "Transition %d status: %d - %s",
-		      graph->id, graph->completion_action, crm_str(graph->abort_reason));
+	te_log_action(log_level, "Transition %d status: %s - %s",
+		      graph->id, type, crm_str(graph->abort_reason));
 
-	print_graph(LOG_DEBUG_3, graph);
-	
 	graph->abort_reason = NULL;
-	graph->completion_action = tg_restart;	
-
+	graph->completion_action = tg_done;
 }

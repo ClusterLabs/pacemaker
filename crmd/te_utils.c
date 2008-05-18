@@ -29,6 +29,7 @@
 #include <clplumbing/Gmain_timeout.h>
 #include <lrm/lrm_api.h>
 #include <crmd_fsa.h>
+#include <crmd_messages.h>
 
 GCHSource *stonith_src = NULL;
 GTRIGSource *stonith_reconnect = NULL;
@@ -202,11 +203,16 @@ abort_transition_graph(
 		log_level = LOG_INFO;
 	}
 */
+	do_crm_log(log_level, "%s:%d - Triggered graph processing (complete=%d) : %s",
+		   fn, line, transition_graph->complete, abort_text);
+
+	if(transition_graph && transition_graph->complete) {
+	    register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
+	    return;
+	}
+	
 	update_abort_priority(
 		transition_graph, abort_priority, abort_action, abort_text);
-
-	do_crm_log(log_level, "%s:%d - Triggered graph processing : %s",
-		      fn, line, abort_text);
 
 	if(reason != NULL) {
 		const char *magic = crm_element_value(

@@ -52,19 +52,10 @@
 
 extern crm_graph_functions_t te_graph_fns;
 struct crm_subsystem_s *te_subsystem  = NULL;
-gboolean te_init(void);
 
 
 static void global_cib_callback(const xmlNode *msg, int callid ,int rc, xmlNode *output) 
 {
-    int pending_callbacks = num_cib_op_callbacks();
-    if(pending_callbacks == 0) {
-	crm_debug("No more pending ops left");
-	if(blocking_on_pending_updates) {
-	    crm_debug("Triggering the TE");
-	    trigger_graph();
-	}
-    }
 }
 
 
@@ -197,6 +188,7 @@ do_te_invoke(long long action,
 
 		}
 		crm_debug("Processing graph derived from %s", graph_input);
+		stop_te_timer(transition_timer);
 		
 		graph_data = input->xml;
 		if(graph_file != NULL) {
@@ -234,54 +226,6 @@ do_te_invoke(long long action,
 	}
 
 	free_xml(cmd);
-}
-
-gboolean te_init(void)
-{
-    int dummy = 0;
-    gboolean init_ok = TRUE;
-
-    transition_trigger = G_main_add_TriggerHandler(
-	G_PRIORITY_LOW, te_graph_trigger, NULL, NULL);
-    
-    stonith_reconnect = G_main_add_TriggerHandler(
-	G_PRIORITY_LOW, te_connect_stonith, &dummy, NULL);
-
-    if(init_ok) {
-	crm_debug_4("Setting CIB notification callback");
-	if(cib_ok != fsa_cib_conn->cmds->add_notify_callback(
-	       fsa_cib_conn, T_CIB_DIFF_NOTIFY, te_update_diff)) {
-	    crm_err("Could not set CIB notification callback");
-	    init_ok = FALSE;
-	}
-    }
-
-    if(is_heartbeat_cluster() && init_ok) {
-	G_main_set_trigger(stonith_reconnect);
-    }
-
-    if(init_ok) {
-	cl_uuid_t new_uuid;
-	char uuid_str[UU_UNPARSE_SIZEOF];
-                
-	cl_uuid_generate(&new_uuid);
-	cl_uuid_unparse(&new_uuid, uuid_str);
-	te_uuid = crm_strdup(uuid_str);
-	crm_info("Registering TE UUID: %s", te_uuid);
-	set_graph_functions(&te_graph_fns);
-
-	/* create a blank one */
-	transition_graph = unpack_graph(NULL);
-	transition_graph->complete = TRUE;
-	transition_graph->abort_reason = "DC Takeover";
-	transition_graph->completion_action = tg_restart;
-
-	crm_malloc0(transition_timer, sizeof(crm_action_timer_t));
-	transition_timer->source_id = 0;
-	transition_timer->reason    = timeout_abort;
-	transition_timer->action    = NULL;
-    }
-    return init_ok;
 }
 
 #if 0
