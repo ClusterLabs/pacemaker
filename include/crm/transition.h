@@ -81,8 +81,8 @@ struct te_timer_s
 
 /* order matters here */
 enum transition_action {
+	tg_done,
 	tg_stop,
-	tg_abort,
 	tg_restart,
 	tg_shutdown,
 };

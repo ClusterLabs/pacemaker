@@ -185,6 +185,7 @@ unpack_graph(xmlNode *xml_graph)
 	new_graph->abort_priority = 0;
 	new_graph->network_delay = -1;
 	new_graph->transition_timeout = -1;
+	new_graph->completion_action = tg_done;
 
 	if(xml_graph != NULL) {
 		t_id = crm_element_value(xml_graph, "transition_id");
