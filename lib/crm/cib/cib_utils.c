@@ -798,7 +798,7 @@ cib_native_callback(cib_t *cib, xmlNode *msg, int call_id, int rc)
 		remove_cib_op_callback(call_id, FALSE);
 
 	} else {
-		crm_debug("No callback found for call %d", call_id);
+		crm_debug_2("No callback found for call %d", call_id);
 		local_blob.callback = NULL;
 	}
 
@@ -813,7 +813,7 @@ cib_native_callback(cib_t *cib, xmlNode *msg, int call_id, int rc)
 
 	if(local_blob.callback != NULL
 	   && (rc == cib_ok || local_blob.only_success == FALSE)) {
-	    crm_debug("Invoking callback %s for call %d", crm_str(local_blob.id), call_id);
+	    crm_debug_2("Invoking callback %s for call %d", crm_str(local_blob.id), call_id);
 	    local_blob.callback(msg, call_id, rc, output, local_blob.user_data);
 		
 	} else if(cib && cib->op_callback == NULL && rc != cib_ok) {
@@ -822,7 +822,7 @@ cib_native_callback(cib_t *cib, xmlNode *msg, int call_id, int rc)
 	}
 	
 	if(cib && cib->op_callback != NULL) {
-		crm_debug("Invoking global callback for call %d", call_id);
+		crm_debug_2("Invoking global callback for call %d", call_id);
 		cib->op_callback(msg, call_id, rc, output);
 	}
 	crm_debug_4("OP callback activated.");
