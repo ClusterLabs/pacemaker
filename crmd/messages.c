@@ -739,15 +739,6 @@ handle_message(xmlNode *stored_msg)
 	return next_input;
 }
 
-#define schedule_pe() do {						\
-		next_input = I_PE_CALC;					\
-		if(fsa_pe_ref) {					\
-			crm_debug("Cancelling %s...", fsa_pe_ref);	\
-			crm_free(fsa_pe_ref);				\
-			fsa_pe_ref = NULL;				\
-		}							\
-    } while(0)
-
 enum crmd_fsa_input
 handle_request(xmlNode *stored_msg)
 {
