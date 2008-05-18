@@ -27,6 +27,7 @@
 #include <lib/crm/pengine/variant.h>
 
 extern gint sort_clone_instance(gconstpointer a, gconstpointer b);
+void node_list_update_one(GListPtr list1, node_t *other, int score);
 
 extern void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
@@ -712,7 +713,7 @@ master_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	
 }
 
-static void node_list_update_one(GListPtr list1, node_t *other, int score)
+void node_list_update_one(GListPtr list1, node_t *other, int score)
 {
     node_t *node = NULL;
     
@@ -760,7 +761,6 @@ void master_rsc_colocation_rh(
 	} else if(is_set(rsc_lh->flags, pe_rsc_provisional)) {
 		GListPtr lhs = NULL, rhs = NULL;
 		lhs = rsc_lh->allowed_nodes;
-		
 		slist_iter(
 			child_rsc, resource_t, rsc_rh->children, lpc,
 			node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
@@ -768,9 +768,11 @@ void master_rsc_colocation_rh(
 			crm_debug_3("Processing: %s", child_rsc->id);
 			if(chosen != NULL
 			   && next_role == constraint->role_rh) {
-			    crm_debug_3("Applying: %s %s", child_rsc->id,
-					role2text(next_role));
-			    node_list_update_one(rsc_lh->allowed_nodes, chosen, constraint->score);
+			    crm_debug_3("Applying: %s %s %s %d", child_rsc->id,
+					role2text(next_role), chosen->details->uname, constraint->score);
+			    if(constraint->score < INFINITY) {
+				node_list_update_one(rsc_lh->allowed_nodes, chosen, constraint->score);
+			    }
 			    rhs = g_list_append(rhs, chosen);
 			}
 			);
@@ -778,11 +780,12 @@ void master_rsc_colocation_rh(
 		/* Only do this if its not a master-master colocation
 		 * Doing this unconditionally would prevent the slaves from being started
 		 */
-		if(constraint->score > 0
-		   && (constraint->role_lh != RSC_ROLE_MASTER
-		       || constraint->role_rh != RSC_ROLE_MASTER)) {
-		    rsc_lh->allowed_nodes = node_list_and(lhs, rhs, FALSE);
-		    pe_free_shallow(lhs);
+		if(constraint->role_lh != RSC_ROLE_MASTER
+		   || constraint->role_rh != RSC_ROLE_MASTER) {
+		    if(constraint->score > 0) {
+			rsc_lh->allowed_nodes = node_list_exclude(lhs, rhs);
+			pe_free_shallow(lhs);
+		    }
 		}
 		pe_free_shallow_adv(rhs, FALSE);
 

@@ -1170,8 +1170,10 @@ do_lrm_invoke(long long action,
 
 	} else if(safe_str_eq(operation, CRM_OP_PROBED)
 		  || safe_str_eq(crm_op, CRM_OP_REPROBE)) {
+		int cib_options = cib_inhibit_notify;
 		const char *probed = XML_BOOLEAN_TRUE;
 		if(safe_str_eq(crm_op, CRM_OP_REPROBE)) {
+			cib_options = cib_none;
 			probed = XML_BOOLEAN_FALSE;
 		}
 		

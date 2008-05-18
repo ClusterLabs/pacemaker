@@ -860,7 +860,7 @@ void clone_rsc_colocation_lh(
 				}
 				);
 			
-			rsc_lh->allowed_nodes = node_list_and(lhs, rhs, FALSE);
+			rsc_lh->allowed_nodes = node_list_exclude(lhs, rhs);
 			
 			pe_free_shallow_adv(rhs, FALSE);
 			pe_free_shallow(lhs);
@@ -931,7 +931,7 @@ void clone_rsc_colocation_rh(
 			}
 			);
 
-		rsc_lh->allowed_nodes = node_list_and(lhs, rhs, FALSE);
+		rsc_lh->allowed_nodes = node_list_exclude(lhs, rhs);
 
 		pe_free_shallow_adv(rhs, FALSE);
 		pe_free_shallow(lhs);
