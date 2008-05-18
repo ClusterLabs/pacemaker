@@ -533,7 +533,7 @@ if __name__ == '__main__':
     ListTests = 0
     HaveSeed = 0
     oprofile = None
-    warn_inactive = 1
+    warn_inactive = 0
     StonithType = "ssh"
     StonithParams = None
     StonithParams = "hostlist=dynamic".split('=')
@@ -666,8 +666,8 @@ if __name__ == '__main__':
            skipthis=1
            Seed=args[i+1]
            HaveSeed = 1
-       elif args[i] == "--no-inactive":
-           warn_inactive = 0
+       elif args[i] == "--warn-inactive":
+           warn_inactive = 1
        else:
            NumIter=int(args[i])
      
