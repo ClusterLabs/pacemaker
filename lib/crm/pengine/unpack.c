@@ -1157,14 +1157,10 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		/* fall through */
 	    case EXECRA_NOT_CONFIGURED:
 	    case EXECRA_INVALID_PARAM:
-		crm_err("Hard error: %s failed with rc=%d.", id, actual_rc_i);
-		if(effective_node) {
-		    crm_err("  Preventing %s from re-starting on %s",
-			    rsc->id, effective_node->details->uname);
-		} else {
-		    crm_err("  Preventing %s from re-starting anywhere in the cluster",
-			    rsc->id);
-		}
+		crm_err("Hard error - %s failed with rc=%d: Preventing %s from re-starting %s %s",
+			id, actual_rc_i, rsc->id,
+			effective_node?"on":"anywhere",
+			effective_node?effective_node->details->uname:"in the cluster");
 
 		resource_location(rsc, effective_node, -INFINITY, "hard-error", data_set);
 		if(is_probe) {
