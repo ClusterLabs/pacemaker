@@ -544,7 +544,7 @@ cib_native_rcvmsg(cib_t* cib, int blocking)
 
 	/* do callbacks */
 	type = crm_element_value(msg, F_TYPE);
-	crm_debug("Activating %s callbacks...", type);
+	crm_debug_4("Activating %s callbacks...", type);
 
 	if(safe_str_eq(type, T_CIB)) {
 	    cib_native_callback(cib, msg, 0, 0);
