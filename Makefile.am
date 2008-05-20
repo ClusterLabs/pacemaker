@@ -81,10 +81,12 @@ home:	tgz
 	scp .changes $(TARFILE) vmhost.beekhof.net:Development/obs/home:beekhof/pacemaker-test/
 
 global: clean-generic
-	gtags
+	gtags -q
+
+global-html: global
 	htags -sanhIT
 
-global-www: global
+global-www: global-html
 	rsync -avzxlSD --progress HTML/ root@clusterlabs.org:/var/lib/global/pacemaker
 
 pretty:
@@ -111,7 +113,7 @@ deb:	tgz
 	rm -rf $(distdir)
 
 install-exec-local:
-	mkdir -p $(DESTDIR)$(LCRSODIR)
+	test -d $(DESTDIR)$(LCRSODIR) || mkdir -p $(DESTDIR)$(LCRSODIR) 
 if BUILD_AIS_SUPPORT
 	rm -f $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso $(DESTDIR)$(LCRSODIR)/service_crm.so
 	cp $(DESTDIR)$(libdir)/service_crm.so $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso
