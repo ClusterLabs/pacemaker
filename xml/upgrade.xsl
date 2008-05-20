@@ -503,6 +503,25 @@
     <!-- normalize ordering  -->
     <xsl:choose>
       <xsl:when test="not(contains(@type, 'before'))">
+
+	<xsl:attribute name="first-rsc">
+	  <xsl:value-of select="@to"/>
+	</xsl:attribute>
+	<xsl:attribute name="then-rsc">
+	  <xsl:value-of select="@from"/>
+	</xsl:attribute>
+
+	<xsl:choose>
+	  <xsl:when test="@action">
+	    <xsl:attribute name="then-action">
+	      <xsl:value-of select="@action"/>
+	    </xsl:attribute>
+	  </xsl:when>
+	  <xsl:otherwise>
+	    <xsl:attribute name="then-action">start</xsl:attribute>
+	  </xsl:otherwise>
+	</xsl:choose>
+
 	<xsl:choose>
 	  <xsl:when test="@to_action">
 	    <xsl:attribute name="first-action">
@@ -514,22 +533,12 @@
 	      <xsl:value-of select="@action"/>
 	    </xsl:attribute>
 	  </xsl:when>
+	  <xsl:otherwise>
+	    <xsl:attribute name="first-action">start</xsl:attribute>
+	  </xsl:otherwise>
 	</xsl:choose>
 
-	<xsl:attribute name="first-rsc">
-	  <xsl:value-of select="@to"/>
-	</xsl:attribute>
-	<xsl:attribute name="then-rsc">
-	  <xsl:value-of select="@from"/>
-	</xsl:attribute>
-	<xsl:if test="@action">
-	  <xsl:attribute name="then-action">
-	  <xsl:value-of select="@action"/>
-	  </xsl:attribute>
-	</xsl:if>
-
       </xsl:when>
-
       <xsl:otherwise>
 	<xsl:if test="@action">
 	  <xsl:attribute name="first-action">
