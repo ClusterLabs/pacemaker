@@ -53,10 +53,13 @@ struct schema_s
 
 struct schema_s known_schemas[] = {
     { 0, "none", NULL, NULL },
+#if 1
     { 1, "pacemaker-0.6", DTD_DIRECTORY"/crm.dtd", NULL },
-    /* { 1, "pacemaker-0.6", DTD_DIRECTORY"/crm.dtd", DTD_DIRECTORY"/upgrade.xsl" }, */
-    /* { 2, "pacemaker-0.7", DTD_DIRECTORY"/pacemaker-0.7.rng", NULL }, */
-    /* { 2, LATEST_SCHEMA_VERSION, DTD_DIRECTORY"/"LATEST_SCHEMA_VERSION".rng", NULL }, /\* Just in case I forget *\/ */
+#else
+    { 1, "pacemaker-0.6", DTD_DIRECTORY"/crm.dtd", DTD_DIRECTORY"/upgrade.xsl" },
+    { 2, "pacemaker-0.7", DTD_DIRECTORY"/pacemaker-0.7.rng", NULL },
+    { 2, LATEST_SCHEMA_VERSION, DTD_DIRECTORY"/"LATEST_SCHEMA_VERSION".rng", NULL }, /* Just in case I forget */
+#endif
 };
 
 static const char *filter[] = {
@@ -2471,11 +2474,11 @@ assign_uuid(xmlNode *xml_obj)
 	cl_uuid_generate(&new_uuid);
 	cl_uuid_unparse(&new_uuid, new_uuid_s);
 	
-	crm_warn("Updating object from <%s id=%s/> to <%s id=%s/>",
+	crm_info("Updating object from <%s id=%s/> to <%s id=%s/>",
 		 tag_name, tag_id?tag_id:"__empty__", tag_name, new_uuid_s);
 	
 	crm_xml_add(xml_obj, XML_ATTR_ID, new_uuid_s);
-	crm_log_xml_debug(xml_obj, "Updated object");	
+	crm_log_xml_debug_2(xml_obj, "Updated object");	
 	crm_free(new_uuid_s);
 }
 
