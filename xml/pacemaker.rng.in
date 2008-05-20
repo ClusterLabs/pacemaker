@@ -28,7 +28,9 @@
 	</element>
       </interleave>
     </element>
-    <ref name="element-status"/>
+    <element name="status">
+      <ref name="element-status"/>
+    </element>
   </define>
 
   <define name="attribute-options">
