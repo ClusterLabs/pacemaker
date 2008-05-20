@@ -618,9 +618,6 @@ unpack_operation(
 	if(xml_obj != NULL) {
 		value = crm_element_value(xml_obj, "prereq");
 	}
-	if(value == NULL && safe_str_eq(action->task, CRMD_ACTION_START)) {
-		value = g_hash_table_lookup(action->rsc->meta, "start_prereq");
-	}
 	
 	if(value == NULL && safe_str_neq(action->task, CRMD_ACTION_START)) {
 		/* todo: integrate stop as an option? */
@@ -663,26 +660,7 @@ unpack_operation(
 
 	value = NULL;
 	if(xml_obj != NULL) {
-		value = crm_element_value(xml_obj, "on_fail");
-	}
-	if(value == NULL && safe_str_eq(action->task, CRMD_ACTION_STOP)) {
-		value = g_hash_table_lookup(
-			action->rsc->meta, "on_stopfail");
-		if(value != NULL) {
-#if CRM_DEPRECATED_SINCE_2_0_2
-			crm_config_err("The \"on_stopfail\" attribute used in"
-				      " %s has been deprecated since 2.0.2",
-				      action->rsc->id);
-#else
-			crm_config_err("The \"on_stopfail\" attribute used in"
-				      " %s has been deprecated since 2.0.2"
-				      " and is now disabled", action->rsc->id);
-			value = NULL;
-#endif
-			crm_config_err("Please use specify the \"on_fail\""
-				      " attribute on the \"stop\" operation"
-				      " instead");
-		}
+		value = crm_element_value(xml_obj, XML_OP_ATTR_ON_FAIL);
 	}
 	if(value == NULL) {
 
@@ -790,7 +768,7 @@ unpack_operation(
 		g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
 	}
 
-	field = "start_delay";
+	field = XML_OP_ATTR_START_DELAY;
 	value = g_hash_table_lookup(action->meta, field);
 	if(value != NULL) {
 		value_i = crm_get_msec(value);
@@ -802,7 +780,7 @@ unpack_operation(
 		g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
 	}
 
-	field = "timeout";
+	field = XML_ATTR_TIMEOUT;
 	value = g_hash_table_lookup(action->meta, field);
 	if(value == NULL) {
 		value = pe_pref(
@@ -1286,7 +1264,7 @@ int get_failcount(node_t *node, resource_t *rsc, int *last_failure, pe_working_s
     
     if(value != NULL) {
 	fail_count = char2score(value);
-	crm_info("%s has failed %d on %s",
+	crm_info("%s has failed %d times on %s",
 		 rsc->id, fail_count, node->details->uname);
     }
     crm_free(fail_attr);
