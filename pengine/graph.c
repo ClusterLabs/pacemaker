@@ -464,7 +464,7 @@ action2xml(action_t *action, gboolean as_input)
 		}
 	}
 
-	args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
+	args_xml = create_xml_node(NULL, XML_TAG_ATTRS);
 	crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 
 	g_hash_table_foreach(action->extra, hash2field, args_xml);
@@ -496,6 +496,8 @@ action2xml(action_t *action, gboolean as_input)
 			}
 		}
 	}
+
+	sorted_xml(args_xml, action_xml, FALSE);
 	
 	crm_log_xml_debug_4(action_xml, "dumped action");
 	
