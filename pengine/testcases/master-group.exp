@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
        <pseudo_event id="36" operation="promote" operation_key="grp_ms_sf:1_promote_0">
-         <attributes crm_feature_set="2.1" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="120000" crm_feature_set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -14,7 +14,7 @@
    <synapse id="1">
      <action_set>
        <pseudo_event id="37" operation="promoted" operation_key="grp_ms_sf:1_promoted_0">
-         <attributes crm_feature_set="2.1" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="120000" crm_feature_set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -27,7 +27,7 @@
      <action_set>
        <rsc_op id="1" operation="cancel" operation_key="master_slave_Stateful:1_monitor_5000" on_node="rh44-1" on_node_uuid="782b1222-d1b9-4993-8f0d-b8b67801a2c8">
          <primitive id="master_slave_Stateful:1" long-id="ms-sf:grp_ms_sf:1:master_slave_Stateful:1" class="ocf" provider="heartbeat" type="Stateful"/>
-         <attributes crm_feature_set="2.1" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_id="ms-sf_monitor" CRM_meta_timeout="30000" CRM_meta_name="monitor" CRM_meta_interval="5000" CRM_meta_operation="monitor" CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_id="ms-sf_monitor" CRM_meta_interval="5000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="30000" crm_feature_set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -36,7 +36,7 @@
      <action_set>
        <rsc_op id="28" operation="promote" operation_key="master_slave_Stateful:1_promote_0" on_node="rh44-1" on_node_uuid="782b1222-d1b9-4993-8f0d-b8b67801a2c8">
          <primitive id="master_slave_Stateful:1" long-id="ms-sf:grp_ms_sf:1:master_slave_Stateful:1" class="ocf" provider="heartbeat" type="Stateful"/>
-         <attributes crm_feature_set="2.1" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="120000" crm_feature_set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -52,7 +52,7 @@
      <action_set>
        <rsc_op id="29" operation="monitor" operation_key="master_slave_Stateful:1_monitor_6000" on_node="rh44-1" on_node_uuid="782b1222-d1b9-4993-8f0d-b8b67801a2c8">
          <primitive id="master_slave_Stateful:1" long-id="ms-sf:grp_ms_sf:1:master_slave_Stateful:1" class="ocf" provider="heartbeat" type="Stateful"/>
-         <attributes crm_feature_set="2.1" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_id="ms-sf_monitor_master" CRM_meta_timeout="30000" CRM_meta_op_target_rc="8" CRM_meta_name="monitor" CRM_meta_interval="6000" CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_id="ms-sf_monitor_master" CRM_meta_interval="6000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="30000" crm_feature_set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -64,7 +64,7 @@
    <synapse id="5">
      <action_set>
        <pseudo_event id="42" operation="promote" operation_key="ms-sf_promote_0">
-         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_stateful="true" CRM_meta_timeout="120000" crm_feature_set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -72,7 +72,7 @@
    <synapse id="6" priority="1000000">
      <action_set>
        <pseudo_event id="43" operation="promoted" operation_key="ms-sf_promoted_0">
-         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_timeout="120000" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_stateful="true" CRM_meta_timeout="120000" crm_feature_set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>

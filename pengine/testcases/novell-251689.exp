@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="78" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="0eb1d4b6-bf02-40f0-b9e1-c386ade8fb61">
          <primitive id="sles10" long-id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
-         <attributes crm_feature_set="2.1" CRM_meta_id="xen-op-02" CRM_meta_timeout="60000" CRM_meta_name="stop"/>
+         <attributes CRM_meta_id="xen-op-02" CRM_meta_name="stop" CRM_meta_timeout="60000" crm_feature_set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs/>

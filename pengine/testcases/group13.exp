@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
        <pseudo_event id="7" operation="stop" operation_key="nfs_stop_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+         <attributes CRM_meta_timeout="20000" crm_feature_set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -10,7 +10,7 @@
    <synapse id="1">
      <action_set>
        <pseudo_event id="8" operation="stopped" operation_key="nfs_stopped_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+         <attributes CRM_meta_timeout="20000" crm_feature_set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -26,7 +26,7 @@
      <action_set>
        <rsc_op id="4" operation="stop" operation_key="resource_nfs_stop_0" on_node="jamesltc" on_node_uuid="cd13842c-3f58-4e7d-8126-685259527532">
          <primitive id="resource_nfs" long-id="nfs:resource_nfs" class="lsb" provider="heartbeat" type="nfs"/>
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+         <attributes CRM_meta_timeout="20000" crm_feature_set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
