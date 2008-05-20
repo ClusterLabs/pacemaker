@@ -126,6 +126,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	const char *action_then = NULL;
 	const char *action_first = NULL;
 	
+	const char *type   = crm_element_value(xml_obj, "type");
 	const char *id     = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *score  = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
 	const char *invert = crm_element_value(
@@ -145,16 +146,24 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	}
 
 	id_first     = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST);
-	action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
-
 	id_then     = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
+
+	action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
 	action_then    = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
 
-	if(action_then == NULL) {
-	    action_then = RSC_START;
-	}
 	if(action_first == NULL) {
-	    action_first = action_then;
+	    action_first = RSC_START;
+	}
+	if(action_then == NULL) {
+	    action_then = action_first;
+	}
+
+	if(safe_str_neq(type, "before")) {
+	    /* normalize the input - swap everything over */
+	    const char *tmp = NULL;
+	    crm_err("Inverted");
+	    tmp = id_first; id_first = id_then; id_then = tmp;
+	    tmp = action_first; action_first = action_then; action_then = tmp;
 	}
 
 	if(id_then == NULL || id_first == NULL) {
@@ -162,7 +171,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 			      id, crm_str(id_then), crm_str(id_first));
 		return FALSE;
 	}	
-	
+
 	rsc_then = pe_find_resource(data_set->resources, id_then);
 	rsc_first = pe_find_resource(data_set->resources, id_first);
 
@@ -1021,15 +1030,16 @@ static gboolean unpack_simple_colocation(xmlNode *xml_obj, pe_working_set_t *dat
 {
     int score_i = 0;
 
-    const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
-    const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-    const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
+    const char *id       = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *score    = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
     
-    const char *id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
-    const char *id_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
+    const char *id_lh    = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
+    const char *id_rh    = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
     const char *state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
     const char *state_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE);
-    const char *attr = crm_element_value(xml_obj, "node-attribute");    
+    const char *attr     = crm_element_value(xml_obj, XML_COLOC_ATTR_NODE_ATTR);    
+
+    const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
     
     resource_t *rsc_lh = pe_find_resource(data_set->resources, id_lh);
     resource_t *rsc_rh = pe_find_resource(data_set->resources, id_rh);

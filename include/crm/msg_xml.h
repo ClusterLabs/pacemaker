@@ -222,14 +222,15 @@
 #define XML_CONS_ATTR_SYMMETRICAL	"symmetrical"
 
 #define XML_COLOC_ATTR_SOURCE		"from"      /* "rsc" */
-#define XML_COLOC_ATTR_SOURCE_ROLE	"from_role" /* "rsc_role" */
+#define XML_COLOC_ATTR_SOURCE_ROLE	"from_role" /* "rsc-role" */
 #define XML_COLOC_ATTR_TARGET		"to"        /* "with" */
-#define XML_COLOC_ATTR_TARGET_ROLE	"to_role"   /* "with_rsc_role" */
+#define XML_COLOC_ATTR_TARGET_ROLE	"to_role"   /* "with-rsc-role" */
+#define XML_COLOC_ATTR_NODE_ATTR	"node_attribute"
 
-#define XML_ORDER_ATTR_FIRST		"from"        /* "first_rsc" */
-#define XML_ORDER_ATTR_THEN		"to"          /* "then_rsc" */
-#define XML_ORDER_ATTR_FIRST_ACTION	"from_action" /* "first_action" */
-#define XML_ORDER_ATTR_THEN_ACTION	"to_action"   /* "then_action" */
+#define XML_ORDER_ATTR_FIRST		"from"        /* "first-rsc" */
+#define XML_ORDER_ATTR_THEN		"to"          /* "then-rsc" */
+#define XML_ORDER_ATTR_FIRST_ACTION	"action"      /* "first-action" */
+#define XML_ORDER_ATTR_THEN_ACTION	"to_action"   /* "then-action" */
 
 #define XML_NVPAIR_ATTR_NAME        	"name"
 #define XML_NVPAIR_ATTR_VALUE        	"value"
