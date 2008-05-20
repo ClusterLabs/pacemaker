@@ -2662,7 +2662,7 @@ free_pair(gpointer data, gpointer user_data)
 	crm_free(pair);
 }
 
-static xmlNode *
+xmlNode *
 sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
 {
 	GListPtr sorted = NULL;
