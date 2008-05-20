@@ -15,7 +15,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="15" operation="start" operation_key="192.168.100.183_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86"/>
+         <rsc_op id="15" operation="start" operation_key="r192.168.100.183_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86"/>
        </trigger>
        <trigger>
          <pseudo_event id="17" operation="start" operation_key="group-1_start_0"/>
@@ -24,17 +24,17 @@
    </synapse>
    <synapse id="2">
      <action_set>
-       <rsc_op id="14" operation="monitor" operation_key="192.168.100.182_monitor_5000" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
-         <primitive id="192.168.100.182" long-id="group-1:192.168.100.182" class="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="2.1" 1="192.168.100.182" CRM_meta_id="192.168.100.182-mon" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="5000"/>
+       <rsc_op id="14" operation="monitor" operation_key="r192.168.100.182_monitor_5000" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
+         <primitive id="r192.168.100.182" long-id="group-1:r192.168.100.182" class="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="2.1" 1="192.168.100.182" CRM_meta_id="r192.168.100.182-mon" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="5000"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="3">
      <action_set>
-       <rsc_op id="15" operation="start" operation_key="192.168.100.183_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
-         <primitive id="192.168.100.183" long-id="group-1:192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
+       <rsc_op id="15" operation="start" operation_key="r192.168.100.183_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
+         <primitive id="r192.168.100.183" long-id="group-1:r192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes crm_feature_set="2.1" ip="192.168.100.183" CRM_meta_timeout="10000"/>
        </rsc_op>
      </action_set>
@@ -46,14 +46,14 @@
    </synapse>
    <synapse id="4">
      <action_set>
-       <rsc_op id="16" operation="monitor" operation_key="192.168.100.183_monitor_5000" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
-         <primitive id="192.168.100.183" long-id="group-1:192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="2.1" ip="192.168.100.183" CRM_meta_id="192.168.100.183-mon" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="5000"/>
+       <rsc_op id="16" operation="monitor" operation_key="r192.168.100.183_monitor_5000" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
+         <primitive id="r192.168.100.183" long-id="group-1:r192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes crm_feature_set="2.1" ip="192.168.100.183" CRM_meta_id="r192.168.100.183-mon" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="5000"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="15" operation="start" operation_key="192.168.100.183_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86"/>
+         <rsc_op id="15" operation="start" operation_key="r192.168.100.183_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86"/>
        </trigger>
      </inputs>
    </synapse>
