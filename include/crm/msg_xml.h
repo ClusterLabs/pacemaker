@@ -134,10 +134,7 @@
 #define XML_CIB_TAG_INCARNATION		"clone"
 #define XML_CIB_TAG_MASTER		"master_slave"
 
-#define XML_RSC_ATTR_STOPFAIL	   	"on_stopfail"
 #define XML_RSC_ATTR_RESTART	  	"restart_type"
-#define XML_RSC_ATTR_START_TIMEOUT	"start_timeout"
-#define XML_RSC_ATTR_STOP_TIMEOUT	"stop_timeout"
 #define XML_RSC_ATTR_ORDERED		"ordered"
 #define XML_RSC_ATTR_INTERLEAVE		"interleave"
 #define XML_RSC_ATTR_INCARNATION	"clone"
@@ -154,8 +151,10 @@
 #define XML_RSC_ATTR_FAIL_STICKINESS	"migration-threshold"
 #define XML_RSC_ATTR_FAIL_TIMEOUT	"failure-timeout"
 #define XML_RSC_ATTR_MULTIPLE		"multiple_active"
-#define XML_RSC_ATTR_START		"start_prereq"
 #define XML_RSC_ATTR_PRIORITY		"priority"
+#define XML_OP_ATTR_ON_FAIL		"on_fail"
+#define XML_OP_ATTR_START_DELAY		"start_delay"
+#define XML_OP_ATTR_ALLOW_MIGRATE	"allow_migrate"
 
 #define XML_CIB_TAG_LRM		  	"lrm"
 #define XML_LRM_TAG_RESOURCES     	"lrm_resources"
@@ -210,8 +209,6 @@
 #define XML_RULE_ATTR_ROLE		"role"
 #define XML_RULE_ATTR_RESULT		"result"
 #define XML_RULE_ATTR_BOOLEAN_OP	"boolean_op"
-#define XML_RULE_ATTR_FROMSTATE		"from_role"
-#define XML_RULE_ATTR_TOSTATE		"to_role"
 
 #define XML_TAG_EXPRESSION		"expression"
 #define XML_EXPR_ATTR_ATTRIBUTE		"attribute"
@@ -222,20 +219,20 @@
 #define XML_CONS_TAG_RSC_DEPEND		"rsc_colocation"
 #define XML_CONS_TAG_RSC_ORDER		"rsc_order"
 #define XML_CONS_TAG_RSC_LOCATION	"rsc_location"
-#define XML_CONS_ATTR_FROM		"from"
-#define XML_CONS_ATTR_TO		"to"
-#define XML_CONS_ATTR_ACTION		"action"
-#define XML_CONS_ATTR_TOACTION		"to_action"
 #define XML_CONS_ATTR_SYMMETRICAL	"symmetrical"
 
+#define XML_COLOC_ATTR_SOURCE		"from"      /* "rsc" */
+#define XML_COLOC_ATTR_SOURCE_ROLE	"from_role" /* "rsc_role" */
+#define XML_COLOC_ATTR_TARGET		"to"        /* "with" */
+#define XML_COLOC_ATTR_TARGET_ROLE	"to_role"   /* "with_rsc_role" */
+
+#define XML_ORDER_ATTR_FIRST		"from"        /* "first_rsc" */
+#define XML_ORDER_ATTR_THEN		"to"          /* "then_rsc" */
+#define XML_ORDER_ATTR_FIRST_ACTION	"from_action" /* "first_action" */
+#define XML_ORDER_ATTR_THEN_ACTION	"to_action"   /* "then_action" */
 
 #define XML_NVPAIR_ATTR_NAME        	"name"
 #define XML_NVPAIR_ATTR_VALUE        	"value"
-
-#define XML_STRENGTH_VAL_MUST		"must"
-#define XML_STRENGTH_VAL_SHOULD		"should"
-#define XML_STRENGTH_VAL_SHOULDNOT	"should_not"
-#define XML_STRENGTH_VAL_MUSTNOT	"must_not"
 
 #define XML_NODE_ATTR_STATE		"state"
 
