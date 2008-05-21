@@ -475,37 +475,10 @@ uninitializeCib(void)
 gboolean
 initializeCib(xmlNode *new_cib)
 {
-	gboolean is_valid = TRUE;
-	xmlNode *tmp_node = NULL;
-
 	if(new_cib == NULL) {
 		return FALSE;
 	}
 	
-	xml_validate(new_cib);
-
-	tmp_node = get_object_root(XML_CIB_TAG_NODES, new_cib);
-	if (tmp_node == NULL) { is_valid = FALSE; }
-
-	tmp_node = get_object_root(XML_CIB_TAG_RESOURCES, new_cib);
-	if (tmp_node == NULL) { is_valid = FALSE; }
-
-	tmp_node = get_object_root(XML_CIB_TAG_CONSTRAINTS, new_cib);
-	if (tmp_node == NULL) { is_valid = FALSE; }
-
-	tmp_node = get_object_root(XML_CIB_TAG_CRMCONFIG, new_cib);
-	if (tmp_node == NULL) { is_valid = FALSE; }
-
-	tmp_node = get_object_root(XML_CIB_TAG_STATUS, new_cib);
-	if (is_valid && tmp_node == NULL) {
-		create_xml_node(new_cib, XML_CIB_TAG_STATUS);
-	}
-
-	if(is_valid == FALSE) {
-		crm_warn("CIB Verification failed");
-		return FALSE;
-	}
-
 	update_counters(__FILE__, __PRETTY_FUNCTION__, new_cib);
 	
 	the_cib = new_cib;
