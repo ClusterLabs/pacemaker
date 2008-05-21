@@ -492,6 +492,9 @@ notify_crmd(crm_graph_t *graph)
 		    clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
 		    if(fsa_state == S_TRANSITION_ENGINE) {
 			register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
+
+		    } else if(fsa_state == S_POLICY_ENGINE) {
+			register_fsa_action(A_PE_INVOKE);
 		    }
 		    break;
 

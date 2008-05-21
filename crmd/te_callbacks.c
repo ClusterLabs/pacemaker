@@ -63,15 +63,18 @@ te_update_diff(const char *event, xmlNode *msg)
 	int diff_del_admin_epoch = 0;
 	
 	CRM_CHECK(msg != NULL, return);
-
-	if(fsa_state != S_IDLE
-	   && fsa_state != S_TRANSITION_ENGINE
-	   && fsa_state != S_POLICY_ENGINE) {
-	    return;
-	}
-	
 	crm_element_value_int(msg, F_CIB_RC, &rc);	
-	if(rc < cib_ok) {
+
+	if(transition_graph == NULL) {
+	    return;
+
+	} else if(rc < cib_ok) {
+	    return;
+
+	} else if(transition_graph->complete != TRUE
+		  && fsa_state != S_IDLE
+		  && fsa_state != S_TRANSITION_ENGINE
+		  && fsa_state != S_POLICY_ENGINE) {
 	    return;
 	} 	
 
@@ -83,11 +86,12 @@ te_update_diff(const char *event, xmlNode *msg)
 		&diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates, 
 		&diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
 	
-	crm_debug("Processing diff (%s): %d.%d.%d -> %d.%d.%d", op,
+	crm_debug("Processing diff (%s): %d.%d.%d -> %d.%d.%d (%s)", op,
 		  diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
-		  diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
+		  diff_add_admin_epoch,diff_add_epoch,diff_add_updates,
+		  fsa_state2string(fsa_state));
 	log_cib_diff(LOG_DEBUG_2, diff, op);
-
+	
 	set_name = "diff-added";
 	if(diff != NULL) {
 		xmlNode *section = NULL;
