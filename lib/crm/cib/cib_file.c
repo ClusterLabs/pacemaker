@@ -267,7 +267,6 @@ cib_file_perform_op(
     }
 	
     if(op == NULL) {
-	crm_err("No operation specified");
 	return cib_operation;
     }
 
@@ -288,26 +287,25 @@ cib_file_perform_op(
     			section, NULL, data, TRUE, &changed, in_mem_cib, &result_cib, &output);
     
     if(rc != cib_ok) {
-	crm_err("Call failed: %s", cib_error2string(rc));
-	crm_log_xml(LOG_WARNING, "failed", output);
 	free_xml(result_cib);
 	    
     } else if(query == FALSE) {
 	free_xml(in_mem_cib);
 	in_mem_cib = result_cib;
     }
-	    
+
     if(cib->op_callback != NULL) {
 	cib->op_callback(NULL, cib->call_id, rc, output);
     }
 	
     if(output_data && output) {
-	*output_data = output;
+	*output_data = copy_xml(output);
+    }
 
-    } else {
+    if(query == FALSE) {
 	free_xml(output);
     }
-	
+    
     return rc;
 }
 
