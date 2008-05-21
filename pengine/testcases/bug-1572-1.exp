@@ -710,7 +710,7 @@
      <action_set>
        <rsc_op id="1" operation="monitor" operation_key="IPaddr_147_81_84_133_monitor_25000" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26">
          <primitive id="IPaddr_147_81_84_133" long-id="grp_pgsql_mirror:IPaddr_147_81_84_133" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_disabled="false" CRM_meta_interval="25000" CRM_meta_name="monitor" CRM_meta_role="Started" CRM_meta_start_delay="0" CRM_meta_timeout="25000" crm-feature-set="2.1" ip="147.81.84.133"/>
+         <attributes CRM_meta_enabled="true" CRM_meta_interval="25000" CRM_meta_name="monitor" CRM_meta_role="Started" CRM_meta_start_delay="0" CRM_meta_timeout="25000" crm-feature-set="2.1" ip="147.81.84.133"/>
        </rsc_op>
      </action_set>
      <inputs>
