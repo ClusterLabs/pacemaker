@@ -336,7 +336,7 @@
 <xsl:template match="cib">
   <xsl:element name="{name()}">
     <xsl:apply-templates select="@*"/>
-    <xsl:attribute name="validate-with">relax-ng</xsl:attribute>
+    <xsl:attribute name="validate-with">pacemaker-0.7</xsl:attribute>
     <xsl:apply-templates select="node()" />
   </xsl:element>
 </xsl:template>
