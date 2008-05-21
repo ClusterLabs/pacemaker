@@ -852,50 +852,41 @@ do_lrm_query(gboolean is_replace)
 }
 
 
+/*
+ * Remove the rsc from the CIB
+ *
+ * Avoids refreshing the entire LRM section of this host
+ */
 static void
 delete_rsc_entry(const char *rsc_id) 
 {
-	xmlNode *xml_top = NULL;
-	xmlNode *xml_tmp = NULL;
+	int max = 0;
+	char *rsc_xpath = NULL;
+	static const char *xpath_template = "//"XML_CIB_TAG_STATE"[@uname=\"%s\"]//"XML_LRM_TAG_RESOURCE"[@id=\"%s\"]";
 
-	/*
-	 * Remove the rsc from the CIB
-	 *
-	 * Avoids refreshing the entire LRM section of this host
-	 */
 	CRM_CHECK(rsc_id != NULL, return);
 	
-	xml_top = create_xml_node(NULL, XML_CIB_TAG_STATE);
-	crm_xml_add(xml_top, XML_ATTR_ID, fsa_our_uuid);
-	
-	xml_tmp = create_xml_node(xml_top, XML_CIB_TAG_LRM);
-	crm_xml_add(xml_tmp, XML_ATTR_ID, fsa_our_uuid);
-	
-	xml_tmp = create_xml_node(xml_tmp, XML_LRM_TAG_RESOURCES);
-	
-	xml_tmp = create_xml_node(xml_tmp, XML_LRM_TAG_RESOURCE);
-	crm_xml_add(xml_tmp, XML_ATTR_ID, rsc_id);
+	max = strlen(xpath_template) + strlen(rsc_id) + strlen(fsa_our_uname) + 1;
+	crm_malloc0(rsc_xpath, max);
+	snprintf(rsc_xpath, max, xpath_template, fsa_our_uname, rsc_id);
+	CRM_CHECK(rsc_id != NULL, return);
 
 	crm_debug("sync: Sending delete op for %s", rsc_id);
-	fsa_cib_conn->cmds->delete_absolute(
-	    fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top, cib_quorum_override);
-	
+	fsa_cib_conn->cmds->delete(
+	    fsa_cib_conn, rsc_xpath, NULL, cib_quorum_override|cib_xpath);
 
-/* 	crm_log_xml_err(xml_top, "op:cancel"); */
-
- 	free_xml(xml_top);
+	crm_free(rsc_xpath);
 }
 
+/*
+ * Remove the op from the CIB
+ *
+ * Avoids refreshing the entire LRM section of this host
+ */
 static void
 delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id) 
 {
 	xmlNode *xml_top = NULL;
-	/*
-	 * Remove the op from the CIB
-	 *
-	 * Avoids refreshing the entire LRM section of this host
-	 */
-
 	if(op != NULL) {
 		xml_top = create_xml_node(NULL, XML_LRM_TAG_RSC_OP);
 		crm_xml_add_int(xml_top, XML_LRM_ATTR_CALLID, op->call_id);
@@ -908,28 +899,28 @@ delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id)
 		    fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top, cib_quorum_override);		
 
 	} else if (rsc_id != NULL && key != NULL) {
-		xmlNode *xml_tmp = NULL;
+	    int max = 0;
+	    char *op_xpath = NULL;
+	    if(call_id > 0) {
+		static const char *xpath_template = "//"XML_CIB_TAG_STATE"[@uname=\"%s\"]//"XML_LRM_TAG_RESOURCE"[@id=\"%s\"]/"XML_LRM_TAG_RSC_OP"[@id=\"%s\" and @"XML_LRM_ATTR_CALLID"=\"%s\"]";
 
-		xml_top = create_xml_node(NULL, XML_CIB_TAG_STATE);
-		crm_xml_add(xml_top, XML_ATTR_ID, fsa_our_uuid);
-
-		xml_tmp = create_xml_node(xml_top, XML_CIB_TAG_LRM);
-		crm_xml_add(xml_tmp, XML_ATTR_ID, fsa_our_uuid);
-
-		xml_tmp = create_xml_node(xml_tmp, XML_LRM_TAG_RESOURCES);
-
-		xml_tmp = create_xml_node(xml_tmp, XML_LRM_TAG_RESOURCE);
-		crm_xml_add(xml_tmp, XML_ATTR_ID, rsc_id);
-
-		xml_tmp = create_xml_node(xml_tmp, XML_LRM_TAG_RSC_OP);
-		crm_xml_add(xml_tmp, XML_ATTR_ID, key);
-		if(call_id > 0) {
-			crm_xml_add_int(xml_tmp, XML_LRM_ATTR_CALLID, call_id);
-		}
+		max = strlen(xpath_template) + strlen(rsc_id) + strlen(fsa_our_uname) + strlen(key) + 10;
+		crm_malloc0(op_xpath, max);
+		snprintf(op_xpath, max, xpath_template, fsa_our_uname, rsc_id, key, call_id);
 		
-		crm_debug("sync: Sending delete op for %s (call=%d)", key, call_id);
-		fsa_cib_conn->cmds->delete_absolute(
-		    fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top, cib_quorum_override);
+	    } else {
+		static const char *xpath_template = "//"XML_CIB_TAG_STATE"[@uname=\"%s\"]//"XML_LRM_TAG_RESOURCE"[@id=\"%s\"]/"XML_LRM_TAG_RSC_OP"[@id=\"%s\"]";
+
+		max = strlen(xpath_template) + strlen(rsc_id) + strlen(fsa_our_uname) + strlen(key) + 1;
+		crm_malloc0(op_xpath, max);
+		snprintf(op_xpath, max, xpath_template, fsa_our_uname, rsc_id, key);
+	    }
+	    
+	    crm_debug("sync: Sending delete op for %s (call=%d)", rsc_id, call_id);
+	    fsa_cib_conn->cmds->delete(
+		fsa_cib_conn, op_xpath, NULL, cib_quorum_override|cib_xpath);
+
+	    crm_free(op_xpath);
 		
 	} else {
 		crm_err("Not enough information to delete op entry: rsc=%p key=%p", rsc_id, key);
