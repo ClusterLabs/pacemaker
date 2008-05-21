@@ -667,11 +667,7 @@ cib_process_xpath(
 	goto out;
 
     } else if(safe_str_eq(op, CIB_OP_QUERY)) {
-	if(max == 1) {
-	    *answer = xpathObj->nodesetval->nodeTab[0];
-	    goto out;
-
-	} else {
+	if(max > 1) {
 	    *answer = create_xml_node(NULL, "xpath-query");
 	}
     }
@@ -679,6 +675,11 @@ cib_process_xpath(
     for(lpc = 0; lpc < max; lpc++) {
 	xmlNode *match = xpathObj->nodesetval->nodeTab[lpc];
 	CRM_CHECK(match != NULL, goto out);
+
+	if(match->type == XML_DOCUMENT_NODE) {
+	    match = match->children;
+	}
+
 	CRM_CHECK(match->type == XML_ELEMENT_NODE, continue);
 
 	if(safe_str_eq(op, CIB_OP_DELETE)) {
@@ -694,8 +695,13 @@ cib_process_xpath(
 	    rc = cib_NOTSUPPORTED;		
 
 	} else if(safe_str_eq(op, CIB_OP_QUERY)) {
-	    add_node_copy(*answer, match);
+	    if(*answer) {
+		add_node_copy(*answer, match);
 
+	    } else {
+		*answer = match;
+	    }
+	    
 	} else if(safe_str_eq(op, CIB_OP_REPLACE)) {
 	    if(replace_xml_child(NULL, match, input, FALSE) == FALSE) {
 		crm_debug_2("No matching object to replace");

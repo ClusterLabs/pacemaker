@@ -420,7 +420,8 @@ const char *get_object_path(const char *object_type)
     int lpc = 0;
     int max = DIMOF(known_paths);
     for(; lpc < max; lpc++) {
-	if(safe_str_eq(object_type, known_paths[lpc].name)) {
+	if((object_type == NULL && known_paths[lpc].name == NULL)
+	   || safe_str_eq(object_type, known_paths[lpc].name)) {
 	    return known_paths[lpc].path;
 	}
     }
@@ -452,7 +453,10 @@ get_object_root(const char *object_type, xmlNode *the_root)
 
     } else {
 	result = xpathObj->nodesetval->nodeTab[0];
-	CRM_CHECK(result->type == XML_ELEMENT_NODE, ;);
+	if(result->type == XML_DOCUMENT_NODE) {
+	    result = result->children;
+	}
+	CRM_CHECK(result->type == XML_ELEMENT_NODE, return NULL);
     }
     
     if(xpathObj) {
