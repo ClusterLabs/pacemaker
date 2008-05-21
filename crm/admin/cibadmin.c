@@ -87,7 +87,7 @@ int operation_status = 0;
 cib_t *the_cib = NULL;
 
 gboolean force_flag = FALSE;
-#define OPTARGS	"V?o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:"
+#define OPTARGS	"V?o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:"
 
 
 int
@@ -106,20 +106,35 @@ main(int argc, char **argv)
 	int option_index = 0;
 	static struct option long_options[] = {
 		/* Top-level Options */
+		/* legacy names */
 		{CIB_OP_ERASE,   0, 0, 'E'},
 		{CIB_OP_QUERY,   0, 0, 'Q'},
 		{CIB_OP_CREATE,  0, 0, 'C'},
 		{CIB_OP_REPLACE, 0, 0, 'R'},
 		{CIB_OP_UPDATE,  0, 0, 'U'},
 		{CIB_OP_MODIFY,  0, 0, 'M'},
-		{"patch",	 0, 0, 'P'},
 		{CIB_OP_DELETE,  0, 0, 'D'},
 		{CIB_OP_BUMP,    0, 0, 'B'},
 		{CIB_OP_SYNC,    0, 0, 'S'},
 		{CIB_OP_SLAVE,   0, 0, 'r'},
 		{CIB_OP_MASTER,  0, 0, 'w'},
 		{CIB_OP_ISMASTER,0, 0, 'm'},
-		{"md5-sum",	 0, 0, '5'},
+
+		{"erase",       0, 0, 'E'},
+		{"query",       0, 0, 'Q'},
+		{"create",      0, 0, 'C'},
+		{"replace",     0, 0, 'R'},
+		{"modify",      0, 0, 'M'},
+		{"delete",      0, 0, 'D'},
+		{"bump",        0, 0, 'B'},
+		{"sync",        0, 0, 'S'},
+		{"make-slave",  0, 0, 'r'},
+		{"make-master", 0, 0, 'w'},
+		{"is-master",   0, 0, 'm'},
+		{"patch",	0, 0, 'P'},
+		{"xpath",       1, 0, 'A'},
+
+		{"md5-sum",	0, 0, '5'},
 		
 		{"file-mode",	1, 0, 0},
 
@@ -185,6 +200,11 @@ main(int argc, char **argv)
 				}
 				break;
 				
+			case 'A':
+				dangerous_cmd = TRUE;
+				obj_type = crm_strdup(optarg);
+				command_options |= cib_xpath;
+				break;
 			case 'E':
 				cib_action = CIB_OP_ERASE;
 				dangerous_cmd = TRUE;
@@ -466,40 +486,40 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "Options\n");
 	fprintf(stream, "\t--%s (-%c) <type>\tobject type being operated on\n",
 		"obj_type", 'o');
-	fprintf(stream, "\t\tValid values are: nodes, resources, constraints, crm_config, status\n");
-	fprintf(stream, "\t--%s (-%c)\tturn on debug info."
+	fprintf(stream, "\t\t\t\tValid values are: nodes, resources, constraints, crm_config, status\n");
+	fprintf(stream, "\t--%s (-%c) <pathspec>\tSupply a valid XPath to use instead of an obj_type\n", "xpath", 'A');
+	fprintf(stream, "\t--%s (-%c)\t\tturn on debug info."
 		"  additional instance increase verbosity\n", "verbose", 'V');
-	fprintf(stream, "\t--%s (-%c)\tthis help message\n", "help", '?');
+	fprintf(stream, "\t--%s (-%c)\t\tthis help message\n", "help", '?');
 	fprintf(stream, "\nCommands\n");
-	fprintf(stream, "\t--%s (-%c)\tErase the contents of the whole CIB\n", CIB_OP_ERASE,  'E');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_QUERY,  'Q');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_CREATE, 'C');
+	fprintf(stream, "\t--%s (-%c)\tErase the contents of the whole CIB\n", "erase",  'E');
+	fprintf(stream, "\t--%s (-%c)\t\n", "query",  'Q');
+	fprintf(stream, "\t--%s (-%c)\t\n", "create", 'C');
 	fprintf(stream, "\t--%s (-%c)\tCalculate an XML file's digest."
 		"  Requires either -X, -x or -p\n", "md5-sum", '5');
-	fprintf(stream, "\t--%s (-%c)\tRecursivly replace an object in the CIB\n", CIB_OP_REPLACE,'R');
-	fprintf(stream, "\t--%s (-%c)\tRecursivly update an object in the CIB\n", CIB_OP_UPDATE, 'U');
-	fprintf(stream, "\t--%s (-%c)\tFind the object somewhere in the CIB's XML tree and update is as --"CIB_OP_UPDATE" would\n", CIB_OP_MODIFY, 'M');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_DELETE, 'D');
-	fprintf(stream, "\t\t\tDelete the first object matching the supplied criteria\n");
+	fprintf(stream, "\t--%s (-%c)\tRecursivly replace an object in the CIB\n", "replace",'R');
+	fprintf(stream, "\t--%s (-%c)\tFind the object somewhere in the CIB's XML tree and update it\n", "modify", 'M');
+	fprintf(stream, "\t--%s (-%c)", "delete", 'D');
+	fprintf(stream, "\tDelete the first object matching the supplied criteria\n");
 	fprintf(stream, "\t\t\tEg. <op id=\"rsc1_op1\" name=\"monitor\"/>\n");
 	fprintf(stream, "\t\t\tThe tagname and all attributes must match in order for the element to be deleted\n");
 	
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_BUMP,   'B');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ISMASTER,'m');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_SYNC,   'S');
+	fprintf(stream, "\t--%s (-%c)\t\n", "bump",   'B');
+	fprintf(stream, "\t--%s (-%c)\t\n", "is-master",'m');
+	fprintf(stream, "\t--%s (-%c)\t\n", "sync",   'S');
 	fprintf(stream, "\nXML data\n");
-	fprintf(stream, "\t--%s (-%c) <string>\t\tRetrieve XML from the supplied string\n", F_CRM_DATA, 'X');
+	fprintf(stream, "\t--%s (-%c) <string>\tRetrieve XML from the supplied string\n", "xml-text", 'X');
 	fprintf(stream, "\t--%s (-%c) <filename>\tRetrieve XML from the named file\n", "xml-file", 'x');
 	fprintf(stream, "\t--%s (-%c)\t\t\tRetrieve XML from STDIN\n", "xml-pipe", 'p');
 	fprintf(stream, "\nAdvanced Options\n");
-	fprintf(stream, "\t--%s (-%c)\tsend command to specified host."
+	fprintf(stream, "\t--%s (-%c)\t\t\tsend command to specified host."
 		" Applies to %s and %s commands only\n", "host", 'h',
-		CIB_OP_QUERY, CIB_OP_SYNC);
-	fprintf(stream, "\t--%s (-%c)\tcommand takes effect locally"
+		"query", "sync");
+	fprintf(stream, "\t--%s (-%c)\t\t\tcommand takes effect locally"
 		" on the specified host\n", "local", 'l');
-	fprintf(stream, "\t--%s (-%c)\tcommand will not be broadcast even if"
+	fprintf(stream, "\t--%s (-%c)\t\t\tcommand will not be broadcast even if"
 		" it altered the CIB\n", "no-bcast", 'b');
-	fprintf(stream, "\t--%s (-%c)\twait for call to complete before"
+	fprintf(stream, "\t--%s (-%c)\t\twait for call to complete before"
 		" returning\n", "sync-call", 's');
 
 	fflush(stream);

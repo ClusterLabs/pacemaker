@@ -437,7 +437,6 @@ create_xml_node(xmlNode *parent, const char *name)
 void
 free_xml_from_parent(xmlNode *parent, xmlNode *a_node)
 {
-	CRM_CHECK(parent != NULL, return);
 	CRM_CHECK(a_node != NULL, return);
 
 	xmlUnlinkNode(a_node);

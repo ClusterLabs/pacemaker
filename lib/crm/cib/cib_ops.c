@@ -45,9 +45,14 @@ cib_process_query(
 {
 	xmlNode *obj_root = NULL;
 	enum cib_errors result = cib_ok;
-
+	
 	crm_debug_2("Processing \"%s\" event for section=%s",
 		  op, crm_str(section));
+
+	if(options & cib_xpath) {
+	    return cib_process_xpath(op, options, section, req, input,
+				     existing_cib, result_cib, answer);
+	}
 
 	CRM_CHECK(*answer == NULL, free_xml(*answer));
 	*answer = NULL;
@@ -147,6 +152,12 @@ cib_process_replace(
 	
 	crm_debug_2("Processing \"%s\" event for section=%s",
 		    op, crm_str(section));
+
+	if(options & cib_xpath) {
+	    return cib_process_xpath(op, options, section, req, input,
+				     existing_cib, result_cib, answer);
+	}
+
 	*answer = NULL;
 
 	if (input == NULL) {
@@ -230,6 +241,11 @@ cib_process_delete(
 	xmlNode *obj_root = NULL;
 	crm_debug_2("Processing \"%s\" event", op);
 
+	if(options & cib_xpath) {
+	    return cib_process_xpath(op, options, section, req, input,
+				     existing_cib, result_cib, answer);
+	}
+
 	if(input == NULL) {
 		crm_err("Cannot perform modification with no data");
 		return cib_NOOBJECT;
@@ -254,6 +270,11 @@ cib_process_modify(
 {
 	xmlNode *obj_root = NULL;
 	crm_debug_2("Processing \"%s\" event", op);
+
+	if(options & cib_xpath) {
+	    return cib_process_xpath(op, options, section, req, input,
+				     existing_cib, result_cib, answer);
+	}
 
 	if(input == NULL) {
 		crm_err("Cannot perform modification with no data");
@@ -614,4 +635,83 @@ diff_cib_object(xmlNode *old_cib, xmlNode *new_cib, gboolean suppress)
 		crm_xml_add(dest, name, value);
 	}
 	return diff;
+}
+
+enum cib_errors 
+cib_process_xpath(
+	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
+	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer)
+{
+    int lpc = 0;
+    int max = 0;
+    int rc = cib_ok;
+    xmlXPathObjectPtr xpathObj = NULL;
+    crm_debug_2("Processing \"%s\" event", op);
+
+    if(safe_str_eq(op, CIB_OP_QUERY)) {
+	xpathObj = xpath_search(existing_cib, section);
+    } else {
+	xpathObj = xpath_search(*result_cib, section);
+    }
+    
+    if(xpathObj == NULL || xpathObj->nodesetval == NULL) {
+	goto out;
+    }
+
+    max = xpathObj->nodesetval->nodeNr;
+    if(max < 1 && safe_str_eq(op, CIB_OP_DELETE)) {
+	goto out;
+
+    } else if(max < 1) {
+	rc = cib_NOTEXISTS;
+	goto out;
+
+    } else if(safe_str_eq(op, CIB_OP_QUERY)) {
+	if(max == 1) {
+	    *answer = xpathObj->nodesetval->nodeTab[0];
+	    goto out;
+
+	} else {
+	    *answer = create_xml_node(NULL, "xpath-query");
+	}
+    }
+
+    for(lpc = 0; lpc < max; lpc++) {
+	xmlNode *match = xpathObj->nodesetval->nodeTab[lpc];
+	CRM_CHECK(match != NULL, goto out);
+	CRM_CHECK(match->type == XML_ELEMENT_NODE, continue);
+
+	if(safe_str_eq(op, CIB_OP_DELETE)) {
+	    free_xml_from_parent(NULL, match);
+	    break;
+
+	} else if(safe_str_eq(op, CIB_OP_MODIFY)) {
+	    if(update_xml_child(match, input) == FALSE) {
+		rc = cib_NOTEXISTS;		
+	    }
+	    
+	} else if(safe_str_eq(op, CIB_OP_CREATE)) {
+	    rc = cib_NOTSUPPORTED;		
+
+	} else if(safe_str_eq(op, CIB_OP_QUERY)) {
+	    add_node_copy(*answer, match);
+
+	} else if(safe_str_eq(op, CIB_OP_REPLACE)) {
+	    if(replace_xml_child(NULL, match, input, FALSE) == FALSE) {
+		crm_debug_2("No matching object to replace");
+		rc = cib_NOTEXISTS;
+		
+	    } else {
+		rc = cib_ok;
+		break;
+	    }
+	}
+    }
+	
+  out:
+    if(xpathObj) {
+	xmlXPathFreeObject(xpathObj);
+    }
+	    
+    return rc;
 }
