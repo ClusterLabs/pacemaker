@@ -19,6 +19,8 @@
 #define CIB_UTIL__H
 
 /* Utility functions */
+extern const char *get_object_path(const char *object_type);
+extern const char *get_object_parent(const char *object_type);
 extern xmlNode *get_object_root(const char *object_type,xmlNode *the_root);
 extern xmlNode *create_cib_fragment_adv(
 			xmlNode *update, const char *section, const char *source);

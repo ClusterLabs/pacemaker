@@ -31,6 +31,7 @@
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <libxml/xpath.h>
 
 #include <lib/crm/cib/cib_private.h>
 
@@ -444,46 +445,101 @@ cib_diff_version_details(
 /*
  * The caller should never free the return value
  */
+
+struct config_root_s 
+{
+	const char *name;
+	const char *parent;
+	const char *path;
+};
+
+struct config_root_s known_paths[] = {
+    { NULL,            NULL,                 "/" },
+    { "cib",           NULL,                 "/" },
+    { "configuration", "/cib",               "/cib/configuration" },
+    { "crm_config",    "/cib/configuration", "/cib/configuration/crm_config" }, /* "//crm_config" will also work */
+    { "nodes",         "/cib/configuration", "/cib/configuration/nodes" },
+    { "resources",     "/cib/configuration", "/cib/configuration/resources" },
+    { "constraints",   "/cib/configuration", "/cib/configuration/constraints" },
+    { "status",        "/cib",               "/cib/status" },
+    { "all",           NULL,                 "/" },
+};
+
+const char *get_object_path(const char *object_type)
+{
+    int lpc = 0;
+    int max = DIMOF(known_paths);
+    for(; lpc < max; lpc++) {
+	if(safe_str_eq(object_type, known_paths[lpc].name)) {
+	    return known_paths[lpc].path;
+	}
+    }
+    return NULL;
+}
+
+const char *get_object_parent(const char *object_type)
+{
+    int lpc = 0;
+    int max = DIMOF(known_paths);
+    for(; lpc < max; lpc++) {
+	if(safe_str_eq(object_type, known_paths[lpc].name)) {
+	    return known_paths[lpc].parent;
+	}
+    }
+    return NULL;
+}
+
 xmlNode*
 get_object_root(const char *object_type, xmlNode *the_root)
 {
-	const char *node_stack[2];
-	xmlNode *tmp_node = NULL;
-	
-	if(the_root == NULL) {
-		crm_err("CIB root object was NULL");
-		return NULL;
-	}
-	
-	node_stack[0] = XML_CIB_TAG_CONFIGURATION;
-	node_stack[1] = object_type;
+    xmlDocPtr doc = NULL;
+    xmlNodePtr result = NULL;
+    xmlNodeSetPtr matches = NULL;
+    xmlXPathObjectPtr xpathObj = NULL; 
+    xmlXPathContextPtr xpathCtx = NULL; 
 
-	if(object_type == NULL
-	   || strlen(object_type) == 0
-	   || safe_str_eq(XML_CIB_TAG_SECTION_ALL, object_type)
-	   || safe_str_eq(XML_TAG_CIB, object_type)) {
-		/* get the whole cib */
-		return the_root;
+    const xmlChar *xpathExpr = (const xmlChar *)get_object_path(object_type);
+    if(xpathExpr == NULL) {
+	crm_debug("Object %s is unknown", crm_str(object_type));
+	return NULL;
+    }
 
-	} else if(strcasecmp(object_type, XML_CIB_TAG_STATUS) == 0) {
-		/* these live in a different place */
-		tmp_node = find_xml_node(the_root, XML_CIB_TAG_STATUS, FALSE);
+    CRM_CHECK(the_root != NULL, return NULL);
+    
+    doc = the_root->doc;
+    if(doc == NULL) {
+	doc = xmlNewDoc((const xmlChar *)"1.0");
+	xmlDocSetRootElement(doc, the_root);
+    }
+    
+    xpathCtx = xmlXPathNewContext(doc);
+    CRM_ASSERT(xpathCtx != NULL);
+    
+    /* Evaluate xpath expression */
+    xpathObj = xmlXPathEvalExpression(xpathExpr, xpathCtx);
+    CRM_ASSERT(xpathObj != NULL);
 
-		node_stack[0] = object_type;
-		node_stack[1] = NULL;
+    matches = xpathObj->nodesetval;
+    if(matches == NULL || matches->nodeNr < 1) {
+	crm_debug("Object %s not found", crm_str(object_type));
+	goto out;
 
-	} else {
-	    /* tmp_node = first_named_child(the_root, XML_CIB_TAG_CONFIGURATION); */
-		tmp_node = find_xml_node_nested(the_root, node_stack, 2);
-	}
+    } else if(matches->nodeNr > 1) {
+	crm_err("Too many matches for %s (%s)", crm_str(object_type), xpathExpr);
+	goto out;
+    }
 
-	if (tmp_node == NULL) {
-		crm_debug_2("Section [%s [%s]] not present in %s",
-			    node_stack[0],
-			    node_stack[1]?node_stack[1]:"",
-			    crm_element_name(the_root));
-	}
-	return tmp_node;
+    result = matches->nodeTab[0];
+    CRM_CHECK(result->type == XML_ELEMENT_NODE, goto out);
+
+  out:
+    if(xpathObj) {
+	xmlXPathFreeObject(xpathObj);
+    }
+    if(xpathCtx) {
+	xmlXPathFreeContext(xpathCtx);
+    }
+    return result;
 }
 
 const char *
