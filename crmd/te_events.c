@@ -154,10 +154,9 @@ extract_event(xmlNode *msg)
 		xmlNode *attrs = NULL;
 		xmlNode *resources = NULL;
 
-		const char *ccm_state  = crm_element_value(
-			node_state, XML_CIB_ATTR_INCCM);
-		const char *crmd_state  = crm_element_value(
-			node_state, XML_CIB_ATTR_CRMDSTATE);
+		const char *ha_state = crm_element_value(node_state, XML_CIB_ATTR_HASTATE);
+		const char *ccm_state = crm_element_value(node_state, XML_CIB_ATTR_INCCM);
+		const char *crmd_state = crm_element_value(node_state, XML_CIB_ATTR_CRMDSTATE);
 
 		/* Transient node attribute changes... */
 		event_node = crm_element_value(node_state, XML_ATTR_ID);
@@ -192,6 +191,7 @@ extract_event(xmlNode *msg)
 		 * node state update... possibly from a shutdown we requested
 		 */
 		if(safe_str_eq(ccm_state, XML_BOOLEAN_FALSE)
+		   || safe_str_eq(ha_state, DEADSTATUS)
 		   || safe_str_eq(crmd_state, CRMD_JOINSTATE_DOWN)) {
 			crm_action_t *shutdown = NULL;
 			shutdown = match_down_event(0, event_node, NULL);
