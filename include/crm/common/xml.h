@@ -306,5 +306,6 @@ extern xmlNode *convert_ipc_message(IPC_Message *msg, const char *field);
 extern xmlNode *convert_ha_message(xmlNode *parent, HA_Message *msg, const char *field);
 
 extern HA_Message *convert_xml_message(xmlNode *msg);
+extern xmlNode *sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive);
 
 #endif

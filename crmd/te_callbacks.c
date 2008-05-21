@@ -380,7 +380,7 @@ action_timer_callback(gpointer data)
 		
 	} else if(timer->reason == timeout_action_warn) {
 		print_action(
-			LOG_WARNING,"Action missed its timeout", timer->action);
+			LOG_WARNING,"Action missed its timeout: ", timer->action);
 		
 	} else {
 		/* fail the action */

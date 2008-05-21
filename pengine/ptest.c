@@ -143,6 +143,7 @@ gboolean USE_LIVE_CIB = FALSE;
 int
 main(int argc, char **argv)
 {
+	gboolean process = TRUE;
 	gboolean all_good = TRUE;
 	gboolean show_scores = FALSE;
 	enum transition_status graph_rc = -1;
@@ -158,6 +159,7 @@ main(int argc, char **argv)
 	gboolean optional = FALSE;
 	pe_working_set_t data_set;
 	
+	const char *value = NULL;
 	const char *source = NULL;
 	const char *xml_file = NULL;
 	const char *dot_file = NULL;
@@ -333,9 +335,40 @@ main(int argc, char **argv)
 	
 	crm_notice("Required feature set: %s", feature_set(cib_object));
  	do_id_check(cib_object, NULL, FALSE, FALSE);
-	if(!validate_xml(cib_object, NULL, FALSE)) {
-		crm_crit("%s does not contain a valid configuration", xml_file?xml_file:"<stdin>");
- 		all_good = FALSE;
+
+	value = crm_element_value(cib_object, XML_ATTR_VALIDATION);
+	if(safe_str_neq(value, LATEST_SCHEMA_VERSION)) {
+	    int schema_version = 0;
+	    int max_version = get_schema_version(LATEST_SCHEMA_VERSION);
+	    int min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
+	    
+	    xmlNode *converted = NULL;
+
+	    crm_config_warn("Your current configuration only conforms to %s", value);
+	    crm_config_warn("Please use XXX to upgrade %s", LATEST_SCHEMA_VERSION);
+	    
+	    converted = copy_xml(cib_object);
+	    schema_version = update_validation(&converted, TRUE, FALSE);
+	    
+	    value = crm_element_value(converted, XML_ATTR_VALIDATION);
+	    if(schema_version < min_version) {
+		crm_config_err("Your current configuration could only be upgraded to %s... "
+			       "the minimum requirement is %s.", value, MINIMUM_SCHEMA_VERSION);
+		
+		data_set.graph = create_xml_node(NULL, XML_TAG_GRAPH);
+		crm_xml_add_int(data_set.graph, "transition_id", 0);
+		process = FALSE;
+		free_xml(converted);
+		converted = NULL;
+		
+	    } else if(schema_version < max_version) {
+		crm_config_warn("Your configuration was internally updated to %s... "
+				"which is acceptable but not the most recent", value);
+	    } else {
+		crm_config_warn("Your configuration was internally updated to %s", value);
+	    }
+	    
+	    cib_object = converted;
 	}
 	
 	if(input_file != NULL) {
@@ -361,8 +394,11 @@ main(int argc, char **argv)
 			 a_date, ha_log_date|ha_log_time|ha_log_local);
 	}
 
-	do_calculations(&data_set, cib_object, a_date);
-
+	set_working_set_defaults(&data_set);
+	if(process) {
+	    do_calculations(&data_set, cib_object, a_date);
+	}
+	
 	msg_buffer = dump_xml_formatted(data_set.graph);
 	if(safe_str_eq(graph_file, "-")) {
 		fprintf(stdout, "%s\n", msg_buffer);

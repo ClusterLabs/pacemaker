@@ -1082,8 +1082,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	
 	if(node->details->unclean) {
 		crm_debug_2("Node %s (where %s is running) is unclean."
-			  " Further action depends on the value of %s",
-			  node->details->uname, rsc->id, XML_RSC_ATTR_STOPFAIL);
+			  " Further action depends on the value of the stop's on-fail attribue",
+			  node->details->uname, rsc->id);
 	}
 
 	actual_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);

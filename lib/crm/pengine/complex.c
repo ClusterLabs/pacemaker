@@ -216,7 +216,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	    set_bit((*rsc)->flags, pe_rsc_notify); 
 	}
 	
-	value = g_hash_table_lookup((*rsc)->meta, "is_managed");
+	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MANAGED);
 	if(value != NULL && safe_str_neq("default", value)) {
 	    gboolean bool_value = TRUE;
 	    cl_str_to_boolean(value, &bool_value);
@@ -228,7 +228,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	}
 
 	crm_debug_2("Options for %s", (*rsc)->id);
-	value = g_hash_table_lookup((*rsc)->meta, "globally_unique");
+	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
 	if(value == NULL || crm_is_true(value)) {
 	    set_bit((*rsc)->flags, pe_rsc_unique); 
 	}
@@ -243,7 +243,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 		crm_debug_2("\tDependancy restart handling: ignore");
 	}
 
-	value = g_hash_table_lookup((*rsc)->meta, "multiple_active");
+	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MULTIPLE);
 	if(safe_str_eq(value, "stop_only")) {
 		(*rsc)->recovery_type = recovery_stop_only;
 		crm_debug_2("\tMultiple running resource recovery: stop only");
@@ -257,16 +257,11 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 		crm_debug_2("\tMultiple running resource recovery: stop/start");
 	}
 
-	value = g_hash_table_lookup((*rsc)->meta, "resource_stickiness");
+	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_STICKINESS);
 	if(value != NULL && safe_str_neq("default", value)) {
 		(*rsc)->stickiness = char2score(value);
 	}
 
-	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_STICKINESS);
-	if(value != NULL) {
-		(*rsc)->migration_threshold = char2score(value);
-	}
-	
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_TIMEOUT);
 	if(value != NULL) {
 	    /* call crm_get_msec() and convert back to seconds */

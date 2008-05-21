@@ -115,6 +115,9 @@
 	      <attribute name="description"><text/></attribute>
 	    </optional>
 	    <optional>
+	      <attribute name="start-delay"><text/></attribute>
+	    </optional>
+	    <optional>
 	      <attribute name="timeout"><text/></attribute>
 	    </optional>
 	    <optional>

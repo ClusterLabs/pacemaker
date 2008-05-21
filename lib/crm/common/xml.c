@@ -49,14 +49,20 @@ struct schema_s
 	const char *name;
 	const char *location;
 	const char *transform;
+	int after_transform;
 };
 
 struct schema_s known_schemas[] = {
-    { 0, "none", NULL, NULL },
-    { 1, "pacemaker-0.6", DTD_DIRECTORY"/crm.dtd", NULL },
-    /* { 1, "pacemaker-0.6", DTD_DIRECTORY"/crm.dtd", DTD_DIRECTORY"/upgrade.xsl" }, */
-    /* { 2, "pacemaker-0.7", DTD_DIRECTORY"/pacemaker-0.7.rng", NULL }, */
-    /* { 2, LATEST_SCHEMA_VERSION, DTD_DIRECTORY"/"LATEST_SCHEMA_VERSION".rng", NULL }, /\* Just in case I forget *\/ */
+    { 0, "none", NULL, NULL, 1 },
+#if 0
+    { 1, "pacemaker-0.6", DTD_DIRECTORY"/crm.dtd", NULL, 0 },
+#else
+    { 1, "pacemaker-0.6", DTD_DIRECTORY"/crm.dtd", DTD_DIRECTORY"/upgrade.xsl", 2 },
+    { 2, "pacemaker-0.7", DTD_DIRECTORY"/pacemaker-0.7.rng", NULL, 0 },
+#endif
+#if 0
+    { 2, LATEST_SCHEMA_VERSION, DTD_DIRECTORY"/"LATEST_SCHEMA_VERSION".rng", NULL, 0 }, /* Just in case I forget */
+#endif
 };
 
 static const char *filter[] = {
@@ -2377,15 +2383,29 @@ hash2field(gpointer key, gpointer value, gpointer user_data)
 void
 hash2metafield(gpointer key, gpointer value, gpointer user_data) 
 {
-	char *crm_name = NULL;
+    int lpc = 0;
+    int max = 0;
+    char *crm_name = NULL;
+    
+    if(key == NULL || value == NULL) {
+	return;
+    }
+    
+    crm_name = crm_concat(CRM_META, key, '_');
 
-	if(key == NULL || value == NULL) {
-		return;
+    /* Massage the names so they can be used as shell variables */ 
+    max = strlen(crm_name);
+    for(; lpc < max; lpc++) {
+	switch(crm_name[lpc]) {
+	    case '-':
+		crm_name[lpc] = '_';
+		break;
 	}
-	
-	crm_name = crm_concat(CRM_META, key, '_');
-	hash2field(crm_name, value, user_data);
-	crm_free(crm_name);
+    }
+
+    crm_err("Fixed meta field: %s", crm_name);
+    hash2field(crm_name, value, user_data);
+    crm_free(crm_name);
 }
 
 
@@ -2471,11 +2491,11 @@ assign_uuid(xmlNode *xml_obj)
 	cl_uuid_generate(&new_uuid);
 	cl_uuid_unparse(&new_uuid, new_uuid_s);
 	
-	crm_warn("Updating object from <%s id=%s/> to <%s id=%s/>",
+	crm_info("Updating object from <%s id=%s/> to <%s id=%s/>",
 		 tag_name, tag_id?tag_id:"__empty__", tag_name, new_uuid_s);
 	
 	crm_xml_add(xml_obj, XML_ATTR_ID, new_uuid_s);
-	crm_log_xml_debug(xml_obj, "Updated object");	
+	crm_log_xml_debug_2(xml_obj, "Updated object");	
 	crm_free(new_uuid_s);
 }
 
@@ -2659,7 +2679,7 @@ free_pair(gpointer data, gpointer user_data)
 	crm_free(pair);
 }
 
-static xmlNode *
+xmlNode *
 sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
 {
 	GListPtr sorted = NULL;
@@ -3082,14 +3102,20 @@ int update_validation(
 	
 	if(valid && transform && known_schemas[lpc].transform != NULL) {
 	    xmlNode *upgrade = NULL;
+	    int next = known_schemas[lpc].after_transform;
+	    if(next <= 0) {
+		next = lpc+1;
+	    }
+	    
 	    crm_notice("Upgrading %s-style configuration to %s with %s",
 		       known_schemas[lpc].name, known_schemas[lpc+1].name, known_schemas[lpc].transform);
 	    upgrade = apply_transformation(xml, known_schemas[lpc].transform);
 	    if(upgrade == NULL) {
 		crm_err("Transformation %s failed", known_schemas[lpc].transform);
 		
-	    } else if(validate_with(upgrade, lpc+1, to_logs)) {
+	    } else if(validate_with(upgrade, next, to_logs)) {
 		crm_info("Transformation %s successful", known_schemas[lpc].transform);
+		lpc = next; best = next;
 		free_xml(xml);
 		xml = upgrade;
 		

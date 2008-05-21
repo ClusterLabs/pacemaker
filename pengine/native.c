@@ -207,7 +207,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		crm_debug_2("Making sure %s doesn't get allocated", rsc->id);
 		/* make sure it doesnt come up again */
 		resource_location(
-			rsc, NULL, -INFINITY, "target_role", data_set);
+			rsc, NULL, -INFINITY, XML_RSC_ATTR_TARGET_ROLE, data_set);
 	}
 	
 	if(is_set(rsc->flags, pe_rsc_provisional)
@@ -1912,7 +1912,7 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	start = action_list->data;
 	g_list_free(action_list);
 
-	value = g_hash_table_lookup(rsc->meta, "allow_migrate");
+	value = g_hash_table_lookup(rsc->meta, XML_OP_ATTR_ALLOW_MIGRATE);
 	if(crm_is_true(value)) {
 	    set_bit(rsc->flags, pe_rsc_can_migrate);	
 	}	

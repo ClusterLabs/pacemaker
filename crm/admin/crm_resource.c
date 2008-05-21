@@ -126,11 +126,11 @@ print_cts_constraints(pe_working_set_t *data_set)
 		       printf("Constraint %s %s %s %s %s %s %s\n",
 			      crm_element_name(xml_obj),
 			      cons_string(crm_element_value(xml_obj, XML_ATTR_ID)),
-			      cons_string(crm_element_value(xml_obj, XML_CONS_ATTR_FROM)),
-			      cons_string(crm_element_value(xml_obj, XML_CONS_ATTR_TO)),
+			      cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE)),
+			      cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET)),
 			      cons_string(crm_element_value(xml_obj, XML_RULE_ATTR_SCORE)),
-			      cons_string(crm_element_value(xml_obj, XML_RULE_ATTR_FROMSTATE)),
-			      cons_string(crm_element_value(xml_obj, XML_RULE_ATTR_TOSTATE)));
+			      cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE)),
+			      cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE)));
 		       
 		   } else if(safe_str_eq(XML_CONS_TAG_RSC_LOCATION, crm_element_name(xml_obj))) {
 		       /* unpack_rsc_location(xml_obj, data_set); */

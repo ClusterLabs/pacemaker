@@ -448,7 +448,7 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 	get_meta_attributes(meta_hash, rsc, node, data_set);
 
 	/* update resource preferences that relate to the current node */	    
-	value = g_hash_table_lookup(meta_hash, "resource_stickiness");
+	value = g_hash_table_lookup(meta_hash, XML_RSC_ATTR_STICKINESS);
 	if(value != NULL && safe_str_neq("default", value)) {
 		rsc->stickiness = char2score(value);
 	} else {
@@ -540,7 +540,6 @@ probe_resources(pe_working_set_t *data_set)
 		const char *probed = g_hash_table_lookup(
 			node->details->attrs, CRM_OP_PROBED);
 
-		crm_debug_2("%s probed: %s", node->details->uname, probed);
 		if(node->details->online == FALSE) {
 			continue;
 			

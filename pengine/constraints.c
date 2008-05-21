@@ -116,23 +116,22 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 {
 	int score_i = 0;
 	int order_id = 0;
-	resource_t *rsc_lh = NULL;
-	resource_t *rsc_rh = NULL;
-	gboolean symmetrical_bool = TRUE;
+	resource_t *rsc_then = NULL;
+	resource_t *rsc_first = NULL;
+	gboolean invert_bool = TRUE;
 	enum pe_ordering cons_weight = pe_order_optional;
 
-	const char *id_rh  = NULL;
-	const char *id_lh  = NULL;
-	const char *action = NULL;
-	const char *action_rh = NULL;
+	const char *id_first  = NULL;
+	const char *id_then  = NULL;
+	const char *action_then = NULL;
+	const char *action_first = NULL;
 	
 	const char *id     = crm_element_value(xml_obj, XML_ATTR_ID);
-	const char *type   = crm_element_value(xml_obj, XML_ATTR_TYPE);
 	const char *score  = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-	const char *symmetrical = crm_element_value(
+	const char *invert = crm_element_value(
 		xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 
-	cl_str_to_boolean(symmetrical, &symmetrical_bool);
+	cl_str_to_boolean(invert, &invert_bool);
 	
 	if(xml_obj == NULL) {
 		crm_config_err("No constraint object to process.");
@@ -141,44 +140,37 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	} else if(id == NULL) {
 		crm_config_err("%s constraint must have an id",
 			crm_element_name(xml_obj));
-		return FALSE;
-		
+		return FALSE;		
 	}
 
-	id_lh  = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
-	id_rh  = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
-	action = crm_element_value(xml_obj, XML_CONS_ATTR_ACTION);
-	action_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TOACTION);
-	if(action == NULL) {
-	    action = RSC_START;
+	id_first     = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST);
+	id_then     = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
+
+	action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
+	action_then    = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
+
+	if(action_first == NULL) {
+	    action_first = RSC_START;
 	}
-	if(action_rh == NULL) {
-	    action_rh = action;
+	if(action_then == NULL) {
+	    action_then = action_first;
 	}
 
-	if(safe_str_neq(type, "before")) {
-	    /* normalize the input - swap everything over */
-	    const char *tmp = NULL;
-	    type = "before";
-	    tmp = id_rh; id_rh = id_lh; id_lh = tmp;
-	    tmp = action_rh; action_rh = action; action = tmp;
-	}
-
-	if(id_lh == NULL || id_rh == NULL) {
+	if(id_then == NULL || id_first == NULL) {
 		crm_config_err("Constraint %s needs two sides lh: %s rh: %s",
-			      id, crm_str(id_lh), crm_str(id_rh));
+			      id, crm_str(id_then), crm_str(id_first));
 		return FALSE;
 	}	
-	
-	rsc_lh = pe_find_resource(data_set->resources, id_rh);
-	rsc_rh = pe_find_resource(data_set->resources, id_lh);
 
-	if(rsc_lh == NULL) {
-		crm_config_err("Constraint %s: no resource found for LHS (%s)", id, id_rh);
+	rsc_then = pe_find_resource(data_set->resources, id_then);
+	rsc_first = pe_find_resource(data_set->resources, id_first);
+
+	if(rsc_then == NULL) {
+		crm_config_err("Constraint %s: no resource found for LHS (%s)", id, id_first);
 		return FALSE;
 	
-	} else if(rsc_rh == NULL) {
-		crm_config_err("Constraint %s: no resource found for RHS of (%s)", id, id_lh);
+	} else if(rsc_first == NULL) {
+		crm_config_err("Constraint %s: no resource found for RHS of (%s)", id, id_then);
 		return FALSE;
 	}
 
@@ -188,7 +180,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	
 	score_i = char2score(score);
 	cons_weight = pe_order_optional;
-	if(score_i == 0 && rsc_rh->restart_type == pe_restart_restart) {
+	if(score_i == 0 && rsc_then->restart_type == pe_restart_restart) {
 		crm_debug_2("Upgrade : recovery - implies right");
  		cons_weight |= pe_order_implies_right;
 	}
@@ -200,29 +192,30 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	} else if(score_i > 0) {
 		crm_debug_2("Upgrade : implies right");
  		cons_weight |= pe_order_implies_right;
-		if(safe_str_eq(action, RSC_START)
-		   || safe_str_eq(action, RSC_PROMOTE)) {
+		if(safe_str_eq(action_then, RSC_START)
+		   || safe_str_eq(action_then, RSC_PROMOTE)) {
 			crm_debug_2("Upgrade : runnable");
 			cons_weight |= pe_order_runnable_left;
 		}
 	}
 	
-	order_id = new_rsc_order(rsc_lh, action, rsc_rh, action_rh, cons_weight, data_set);
+	order_id = new_rsc_order(rsc_first, action_first, rsc_then, action_then, cons_weight, data_set);
 
-	crm_debug_2("order-%d (%s): %s_%s %s %s_%s flags=0x%.6x",
-		    order_id, id, rsc_lh->id, action, type, rsc_rh->id, action_rh,
+	crm_err("order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
+		    order_id, id, rsc_first->id, action_first, rsc_then->id, action_then,
 		    cons_weight);
 	
 	
-	if(symmetrical_bool == FALSE) {
+	if(invert_bool == FALSE) {
+	    crm_err("Dont invert %s", id);
 		return TRUE;
 	}
 	
-	action = invert_action(action);
-	action_rh = invert_action(action_rh);
+	action_then = invert_action(action_then);
+	action_first = invert_action(action_first);
 
 	cons_weight = pe_order_optional;
-	if(score_i == 0 && rsc_rh->restart_type == pe_restart_restart) {
+	if(score_i == 0 && rsc_then->restart_type == pe_restart_restart) {
 		crm_debug_2("Upgrade : recovery - implies left");
  		cons_weight |= pe_order_implies_left;
 	}
@@ -231,7 +224,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	if(score_i < 0) {
 		crm_debug_2("Upgrade : implies left");
  		cons_weight |= pe_order_implies_left;
-		if(safe_str_eq(action_rh, RSC_DEMOTE)) {
+		if(safe_str_eq(action_then, RSC_DEMOTE)) {
 			crm_debug_2("Upgrade : demote");
 			cons_weight |= pe_order_demote;
 		}
@@ -239,23 +232,23 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	} else if(score_i > 0) {
 		crm_debug_2("Upgrade : implies right");
  		cons_weight |= pe_order_implies_right;
-		if(safe_str_eq(action, RSC_START)
-		   || safe_str_eq(action, RSC_PROMOTE)) {
+		if(safe_str_eq(action_then, RSC_START)
+		   || safe_str_eq(action_then, RSC_PROMOTE)) {
 			crm_debug_2("Upgrade : runnable");
 			cons_weight |= pe_order_runnable_left;
 		}
 	}
 
-	if(action == NULL || action_rh == NULL) {
+	if(action_then == NULL || action_first == NULL) {
 		crm_config_err("Cannot invert rsc_order constraint %s."
 			       " Please specify the inverse manually.", id);
 		return TRUE;
 	}
 	
 	order_id = new_rsc_order(
-	    rsc_rh, action_rh, rsc_lh, action, cons_weight, data_set);
-	crm_debug_2("order-%d (%s): %s_%s %s %s_%s flags=0x%.6x",
-		    order_id, id, rsc_rh->id, action_rh, type, rsc_lh->id, action,
+	    rsc_then, action_then, rsc_first, action_first, cons_weight, data_set);
+	crm_err("order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
+		    order_id, id, rsc_then->id, action_then, rsc_first->id, action_first,
 		    cons_weight);
 	
 	return TRUE;
@@ -1027,16 +1020,16 @@ static gboolean unpack_simple_colocation(xmlNode *xml_obj, pe_working_set_t *dat
 {
     int score_i = 0;
 
-    const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
-    const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+    const char *id       = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *score    = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+    
+    const char *id_lh    = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
+    const char *id_rh    = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
+    const char *state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
+    const char *state_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE);
+    const char *attr     = crm_element_value(xml_obj, XML_COLOC_ATTR_NODE_ATTR);    
+
     const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
-    
-    const char *id_rh = crm_element_value(xml_obj, XML_CONS_ATTR_TO);
-    const char *id_lh = crm_element_value(xml_obj, XML_CONS_ATTR_FROM);
-    const char *state_lh = crm_element_value(xml_obj, XML_RULE_ATTR_FROMSTATE);
-    const char *state_rh = crm_element_value(xml_obj, XML_RULE_ATTR_TOSTATE);
-    const char *attr = crm_element_value(xml_obj, "node_attribute");
-    
     
     resource_t *rsc_lh = pe_find_resource(data_set->resources, id_lh);
     resource_t *rsc_rh = pe_find_resource(data_set->resources, id_rh);

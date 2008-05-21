@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
        <pseudo_event id="17" operation="start" operation_key="group-1_start_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="10000"/>
+         <attributes CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -10,12 +10,12 @@
    <synapse id="1">
      <action_set>
        <pseudo_event id="18" operation="running" operation_key="group-1_running_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="10000"/>
+         <attributes CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="15" operation="start" operation_key="192.168.100.183_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86"/>
+         <rsc_op id="15" operation="start" operation_key="r192.168.100.183_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86"/>
        </trigger>
        <trigger>
          <pseudo_event id="17" operation="start" operation_key="group-1_start_0"/>
@@ -24,18 +24,18 @@
    </synapse>
    <synapse id="2">
      <action_set>
-       <rsc_op id="14" operation="monitor" operation_key="192.168.100.182_monitor_5000" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
-         <primitive id="192.168.100.182" long-id="group-1:192.168.100.182" class="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="2.1" 1="192.168.100.182" CRM_meta_id="192.168.100.182-mon" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="5000"/>
+       <rsc_op id="14" operation="monitor" operation_key="r192.168.100.182_monitor_5000" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
+         <primitive id="r192.168.100.182" long-id="group-1:r192.168.100.182" class="heartbeat" type="IPaddr"/>
+         <attributes 1="192.168.100.182" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs/>
    </synapse>
    <synapse id="3">
      <action_set>
-       <rsc_op id="15" operation="start" operation_key="192.168.100.183_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
-         <primitive id="192.168.100.183" long-id="group-1:192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="2.1" ip="192.168.100.183" CRM_meta_timeout="10000"/>
+       <rsc_op id="15" operation="start" operation_key="r192.168.100.183_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
+         <primitive id="r192.168.100.183" long-id="group-1:r192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes CRM_meta_timeout="10000" crm-feature-set="2.1" ip="192.168.100.183"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -46,22 +46,22 @@
    </synapse>
    <synapse id="4">
      <action_set>
-       <rsc_op id="16" operation="monitor" operation_key="192.168.100.183_monitor_5000" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
-         <primitive id="192.168.100.183" long-id="group-1:192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="2.1" ip="192.168.100.183" CRM_meta_id="192.168.100.183-mon" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="5000"/>
+       <rsc_op id="16" operation="monitor" operation_key="r192.168.100.183_monitor_5000" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
+         <primitive id="r192.168.100.183" long-id="group-1:r192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
+         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="10000" crm-feature-set="2.1" ip="192.168.100.183"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="15" operation="start" operation_key="192.168.100.183_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86"/>
+         <rsc_op id="15" operation="start" operation_key="r192.168.100.183_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="5">
      <action_set>
        <rsc_op id="23" operation="monitor" operation_key="lsb_dummy_monitor_5000" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088">
-         <primitive id="lsb_dummy" long-id="lsb_dummy" class="lsb" provider="heartbeat" type="/usr/lib64/heartbeat/cts/LSBDummy"/>
-         <attributes crm_feature_set="2.1" CRM_meta_id="ocf_lsb_monitor" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="5000"/>
+         <primitive id="lsb_dummy" long-id="lsb_dummy" class="lsb" type="/usr/lib64/heartbeat/cts/LSBDummy"/>
+         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -70,7 +70,7 @@
      <action_set>
        <rsc_op id="24" operation="start" operation_key="migrator_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
          <primitive id="migrator" long-id="migrator" class="ocf" provider="heartbeat" type="Dummy"/>
-         <attributes crm_feature_set="2.1" allow_migrate="1" CRM_meta_timeout="10000"/>
+         <attributes CRM_meta_timeout="10000" allow_migrate="1" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -82,7 +82,7 @@
    <synapse id="7">
      <action_set>
        <pseudo_event id="25" operation="stop" operation_key="migrator_stop_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="10000"/>
+         <attributes CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -95,7 +95,7 @@
      <action_set>
        <rsc_op id="26" operation="monitor" operation_key="migrator_monitor_10000" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
          <primitive id="migrator" long-id="migrator" class="ocf" provider="heartbeat" type="Dummy"/>
-         <attributes crm_feature_set="2.1" allow_migrate="1" CRM_meta_id="migrator-mon" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="10000"/>
+         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="10000" allow_migrate="1" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -108,7 +108,7 @@
      <action_set>
        <rsc_op id="31" operation="monitor" operation_key="rsc_sles-2_monitor_5000" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088">
          <primitive id="rsc_sles-2" long-id="rsc_sles-2" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="2.1" ip="192.168.100.185" CRM_meta_id="rsc_sles-2-mon" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="5000"/>
+         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="10000" crm-feature-set="2.1" ip="192.168.100.185"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -117,7 +117,7 @@
      <action_set>
        <rsc_op id="32" operation="start" operation_key="rsc_sles-3_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
          <primitive id="rsc_sles-3" long-id="rsc_sles-3" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="2.1" ip="192.168.100.186" CRM_meta_timeout="10000"/>
+         <attributes CRM_meta_timeout="10000" crm-feature-set="2.1" ip="192.168.100.186"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -129,7 +129,7 @@
    <synapse id="11">
      <action_set>
        <pseudo_event id="33" operation="stop" operation_key="rsc_sles-3_stop_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="10000"/>
+         <attributes CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -142,7 +142,7 @@
      <action_set>
        <rsc_op id="34" operation="monitor" operation_key="rsc_sles-3_monitor_5000" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
          <primitive id="rsc_sles-3" long-id="rsc_sles-3" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="2.1" ip="192.168.100.186" CRM_meta_id="rsc_sles-3-mon" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="5000"/>
+         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="10000" crm-feature-set="2.1" ip="192.168.100.186"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -155,7 +155,7 @@
      <action_set>
        <rsc_op id="37" operation="monitor" operation_key="rsc_sles-4_monitor_5000" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
          <primitive id="rsc_sles-4" long-id="rsc_sles-4" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="2.1" ip="192.168.100.187" CRM_meta_id="rsc_sles-4-mon" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="5000"/>
+         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="10000" crm-feature-set="2.1" ip="192.168.100.187"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -164,7 +164,7 @@
      <action_set>
        <rsc_op id="40" operation="start" operation_key="child_DoFencing:2_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
          <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" type="external/vmware"/>
-         <attributes crm_feature_set="2.1" device_host="vmhost" CRM_meta_id="DoFencing-2" CRM_meta_timeout="180000" CRM_meta_name="start" CRM_meta_prereq="nothing" CRM_meta_globally_unique="false" CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
+         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_requires="nothing" CRM_meta_timeout="180000" crm-feature-set="2.1" device_host="vmhost"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -179,7 +179,7 @@
    <synapse id="15">
      <action_set>
        <pseudo_event id="41" operation="stop" operation_key="child_DoFencing:2_stop_0">
-         <attributes crm_feature_set="2.1" CRM_meta_id="DoFencing-3" CRM_meta_timeout="180000" CRM_meta_name="stop" CRM_meta_globally_unique="false" CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
+         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_timeout="180000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -192,7 +192,7 @@
      <action_set>
        <rsc_op id="42" operation="monitor" operation_key="child_DoFencing:2_monitor_60000" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
          <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" type="external/vmware"/>
-         <attributes crm_feature_set="2.1" device_host="vmhost" CRM_meta_id="DoFencing-1" CRM_meta_timeout="300000" CRM_meta_name="monitor" CRM_meta_interval="60000" CRM_meta_prereq="nothing" CRM_meta_globally_unique="false" CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1"/>
+         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_requires="nothing" CRM_meta_timeout="300000" crm-feature-set="2.1" device_host="vmhost"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -204,7 +204,7 @@
    <synapse id="17">
      <action_set>
        <pseudo_event id="45" operation="start" operation_key="DoFencing_start_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="10000" CRM_meta_globally_unique="false" CRM_meta_clone_node_max="1"/>
+         <attributes CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -219,7 +219,7 @@
    <synapse id="18" priority="1000000">
      <action_set>
        <pseudo_event id="46" operation="running" operation_key="DoFencing_running_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="10000" CRM_meta_globally_unique="false" CRM_meta_clone_node_max="1"/>
+         <attributes CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -234,7 +234,7 @@
    <synapse id="19">
      <action_set>
        <pseudo_event id="47" operation="stop" operation_key="DoFencing_stop_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="10000" CRM_meta_globally_unique="false" CRM_meta_clone_node_max="1"/>
+         <attributes CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -242,7 +242,7 @@
    <synapse id="20" priority="1000000">
      <action_set>
        <pseudo_event id="48" operation="stopped" operation_key="DoFencing_stopped_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="10000" CRM_meta_globally_unique="false" CRM_meta_clone_node_max="1"/>
+         <attributes CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -258,7 +258,7 @@
      <action_set>
        <rsc_op id="49" operation="start" operation_key="ocf_msdummy:0_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
          <primitive id="ocf_msdummy:0" long-id="master_rsc_1:ocf_msdummy:0" class="ocf" provider="heartbeat" type="Stateful"/>
-         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_timeout="10000" CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -271,7 +271,7 @@
      <action_set>
        <rsc_op id="50" operation="monitor" operation_key="ocf_msdummy:0_monitor_5000" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
          <primitive id="ocf_msdummy:0" long-id="master_rsc_1:ocf_msdummy:0" class="ocf" provider="heartbeat" type="Stateful"/>
-         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_id="ocf_msdummy_monitor" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="5000" CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_interval="5000" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -284,7 +284,7 @@
      <action_set>
        <rsc_op id="51" operation="start" operation_key="ocf_msdummy:1_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
          <primitive id="ocf_msdummy:1" long-id="master_rsc_1:ocf_msdummy:1" class="ocf" provider="heartbeat" type="Stateful"/>
-         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_timeout="10000" CRM_meta_clone="1" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="1" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -297,7 +297,7 @@
      <action_set>
        <rsc_op id="52" operation="monitor" operation_key="ocf_msdummy:1_monitor_5000" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
          <primitive id="ocf_msdummy:1" long-id="master_rsc_1:ocf_msdummy:1" class="ocf" provider="heartbeat" type="Stateful"/>
-         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_id="ocf_msdummy_monitor" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="5000" CRM_meta_clone="1" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="1" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_interval="5000" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -310,7 +310,7 @@
      <action_set>
        <rsc_op id="53" operation="start" operation_key="ocf_msdummy:2_start_0" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088">
          <primitive id="ocf_msdummy:2" long-id="master_rsc_1:ocf_msdummy:2" class="ocf" provider="heartbeat" type="Stateful"/>
-         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_timeout="10000" CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -325,7 +325,7 @@
    <synapse id="26">
      <action_set>
        <pseudo_event id="55" operation="stop" operation_key="ocf_msdummy:2_stop_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="10000" CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -341,7 +341,7 @@
      <action_set>
        <rsc_op id="56" operation="monitor" operation_key="ocf_msdummy:2_monitor_5000" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088">
          <primitive id="ocf_msdummy:2" long-id="master_rsc_1:ocf_msdummy:2" class="ocf" provider="heartbeat" type="Stateful"/>
-         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_id="ocf_msdummy_monitor" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="5000" CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_interval="5000" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -354,7 +354,7 @@
      <action_set>
        <rsc_op id="57" operation="start" operation_key="ocf_msdummy:3_start_0" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
          <primitive id="ocf_msdummy:3" long-id="master_rsc_1:ocf_msdummy:3" class="ocf" provider="heartbeat" type="Stateful"/>
-         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_timeout="10000" CRM_meta_clone="3" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="3" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -367,7 +367,7 @@
      <action_set>
        <rsc_op id="58" operation="monitor" operation_key="ocf_msdummy:3_monitor_5000" on_node="sles-4" on_node_uuid="ea7d39f4-3b94-4cfa-ba7a-952956daabee">
          <primitive id="ocf_msdummy:3" long-id="master_rsc_1:ocf_msdummy:3" class="ocf" provider="heartbeat" type="Stateful"/>
-         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_id="ocf_msdummy_monitor" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="5000" CRM_meta_clone="3" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="3" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_interval="5000" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -380,7 +380,7 @@
      <action_set>
        <rsc_op id="59" operation="start" operation_key="ocf_msdummy:4_start_0" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
          <primitive id="ocf_msdummy:4" long-id="master_rsc_1:ocf_msdummy:4" class="ocf" provider="heartbeat" type="Stateful"/>
-         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_timeout="10000" CRM_meta_clone="4" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="4" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -393,7 +393,7 @@
      <action_set>
        <rsc_op id="60" operation="monitor" operation_key="ocf_msdummy:4_monitor_5000" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
          <primitive id="ocf_msdummy:4" long-id="master_rsc_1:ocf_msdummy:4" class="ocf" provider="heartbeat" type="Stateful"/>
-         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_id="ocf_msdummy_monitor" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="5000" CRM_meta_clone="4" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="4" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_interval="5000" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -406,7 +406,7 @@
      <action_set>
        <rsc_op id="61" operation="start" operation_key="ocf_msdummy:5_start_0" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088">
          <primitive id="ocf_msdummy:5" long-id="master_rsc_1:ocf_msdummy:5" class="ocf" provider="heartbeat" type="Stateful"/>
-         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_timeout="10000" CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -421,7 +421,7 @@
    <synapse id="33">
      <action_set>
        <pseudo_event id="63" operation="stop" operation_key="ocf_msdummy:5_stop_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="10000" CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -437,7 +437,7 @@
      <action_set>
        <rsc_op id="64" operation="monitor" operation_key="ocf_msdummy:5_monitor_5000" on_node="sles-2" on_node_uuid="02fb99a8-e30e-482f-b3ad-0fb3ce27d088">
          <primitive id="ocf_msdummy:5" long-id="master_rsc_1:ocf_msdummy:5" class="ocf" provider="heartbeat" type="Stateful"/>
-         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_id="ocf_msdummy_monitor" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="5000" CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_interval="5000" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -449,7 +449,7 @@
    <synapse id="35">
      <action_set>
        <pseudo_event id="65" operation="start" operation_key="master_rsc_1_start_0">
-         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_timeout="10000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -464,7 +464,7 @@
    <synapse id="36" priority="1000000">
      <action_set>
        <pseudo_event id="66" operation="running" operation_key="master_rsc_1_running_0">
-         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_timeout="10000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -494,7 +494,7 @@
    <synapse id="37">
      <action_set>
        <pseudo_event id="67" operation="stop" operation_key="master_rsc_1_stop_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="10000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -502,7 +502,7 @@
    <synapse id="38" priority="1000000">
      <action_set>
        <pseudo_event id="68" operation="stopped" operation_key="master_rsc_1_stopped_0">
-         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_timeout="10000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -520,7 +520,7 @@
    <synapse id="39">
      <action_set>
        <pseudo_event id="5" operation="all_stopped" operation_key="all_stopped">
-         <attributes crm_feature_set="2.1"/>
+         <attributes crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -544,7 +544,7 @@
    <synapse id="40">
      <action_set>
        <pseudo_event id="73" operation="stonith_up" operation_key="stonith_up">
-         <attributes crm_feature_set="2.1"/>
+         <attributes crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -556,7 +556,7 @@
    <synapse id="41">
      <action_set>
        <crm_event id="74" operation="stonith" operation_key="stonith" on_node="sles-3" on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec">
-         <attributes crm_feature_set="2.1" CRM_meta_on_node="sles-3" CRM_meta_stonith_action="reboot" CRM_meta_on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec"/>
+         <attributes CRM_meta_on_node="sles-3" CRM_meta_on_node_uuid="2298606a-6a8c-499a-9d25-76242f7006ec" CRM_meta_stonith_action="reboot" crm-feature-set="2.1"/>
        </crm_event>
      </action_set>
      <inputs>

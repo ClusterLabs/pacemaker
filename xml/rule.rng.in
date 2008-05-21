@@ -11,7 +11,7 @@
       <attribute name="id"><data type="ID"/></attribute>
       <choice>
 	<externalRef href="score.rng"/>
-	<attribute name="score_attribute"><text/></attribute>
+	<attribute name="score-attribute"><text/></attribute>
       </choice>
       <optional>
 	<attribute name="boolean-op">

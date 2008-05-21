@@ -464,7 +464,7 @@ action2xml(action_t *action, gboolean as_input)
 		}
 	}
 
-	args_xml = create_xml_node(action_xml, XML_TAG_ATTRS);
+	args_xml = create_xml_node(NULL, XML_TAG_ATTRS);
 	crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 
 	g_hash_table_foreach(action->extra, hash2field, args_xml);
@@ -475,8 +475,8 @@ action2xml(action_t *action, gboolean as_input)
 	g_hash_table_foreach(action->meta, hash2metafield, args_xml);
 	if(action->rsc != NULL) {
 		int lpc = 0;
+		char *value = NULL;
 		const char *key = NULL;
-		const char *value = NULL;
 		const char *meta_list[] = {
 			XML_RSC_ATTR_UNIQUE,
 			XML_RSC_ATTR_INCARNATION,
@@ -487,15 +487,17 @@ action2xml(action_t *action, gboolean as_input)
 		};
 		
 		for(lpc = 0; lpc < DIMOF(meta_list); lpc++) {
-			key = meta_list[lpc];
-			value = g_hash_table_lookup(action->rsc->meta, key);
-			if(value != NULL) {
-				char *crm_name = crm_concat(CRM_META, key, '_');
-				crm_xml_add(args_xml, crm_name, value);
-				crm_free(crm_name);
-			}
+		    key = meta_list[lpc];
+		    value = g_hash_table_lookup(action->rsc->meta, key);
+		    if(value != NULL) {
+			char *key_copy = crm_strdup(key); /* fucking glib */
+			hash2metafield(key_copy, value, args_xml);
+			crm_free(key_copy);
+		    }
 		}
 	}
+
+	sorted_xml(args_xml, action_xml, FALSE);
 	
 	crm_log_xml_debug_4(action_xml, "dumped action");
 	

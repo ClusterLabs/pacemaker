@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="1" operation="stop" operation_key="the-future-of-vaj_stop_0" on_node="hb2" on_node_uuid="86ad895f-1387-461e-a9b5-c52ed9537e13">
          <primitive id="the-future-of-vaj" long-id="the-future-of-vaj" class="ocf" provider="heartbeat" type="Dummy"/>
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+         <attributes CRM_meta_timeout="20000" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -11,7 +11,7 @@
    <synapse id="1">
      <action_set>
        <pseudo_event id="2" operation="all_stopped" operation_key="all_stopped">
-         <attributes crm_feature_set="2.1"/>
+         <attributes crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
