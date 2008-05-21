@@ -3016,7 +3016,7 @@ static xmlNode *apply_transformation(xmlNode *xml, const char *transform)
 
     CRM_CHECK(xml != NULL, return FALSE);
     doc = xml->doc;
-    if(xml->doc == NULL) {
+    if(doc == NULL) {
 	doc = xmlNewDoc((const xmlChar *)"1.0");
 	xmlDocSetRootElement(doc, xml);
     }
