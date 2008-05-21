@@ -35,62 +35,6 @@
 
 #include <lib/crm/cib/cib_private.h>
 
-char *
-cib_pluralSection(const char *a_section)
-{
-	char *a_section_parent = NULL;
-	if (a_section == NULL) {
-		a_section_parent = crm_strdup("all");
-
-	} else if(strcasecmp(a_section, XML_TAG_CIB) == 0) {
-		a_section_parent = crm_strdup("all");
-
-	} else if(strcasecmp(a_section, XML_CIB_TAG_NODE) == 0) {
-		a_section_parent = crm_strdup(XML_CIB_TAG_NODES);
-
-	} else if(strcasecmp(a_section, XML_CIB_TAG_STATE) == 0) {
-		a_section_parent = crm_strdup(XML_CIB_TAG_STATUS);
-
-	} else if(strcasecmp(a_section, XML_CIB_TAG_CONSTRAINT) == 0) {
-		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
-		
-	} else if(strcasecmp(a_section, XML_CONS_TAG_RSC_LOCATION) == 0) {
-		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
-		
-	} else if(strcasecmp(a_section, XML_CONS_TAG_RSC_DEPEND) == 0) {
-		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
-		
-	} else if(strcasecmp(a_section, XML_CONS_TAG_RSC_ORDER) == 0) {
-		a_section_parent = crm_strdup(XML_CIB_TAG_CONSTRAINTS);
-		
-	} else if(strcasecmp(a_section, "resource") == 0) {
-		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
-
-	} else if(strcasecmp(a_section, XML_CIB_TAG_RESOURCE) == 0) {
-		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
-
-	} else if(strcasecmp(a_section, XML_CIB_TAG_GROUP) == 0) {
-		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
-
-	} else if(strcasecmp(a_section, XML_CIB_TAG_INCARNATION) == 0) {
-		a_section_parent = crm_strdup(XML_CIB_TAG_RESOURCES);
-		
-	} else if(strcasecmp(a_section, XML_CIB_TAG_NVPAIR) == 0) {
-		a_section_parent = crm_strdup(XML_CIB_TAG_CRMCONFIG);
-
-	} else if(strcasecmp(a_section, XML_TAG_ATTR_SETS) == 0) {
-		a_section_parent = crm_strdup(XML_CIB_TAG_CRMCONFIG);
-
-	} else {
-		crm_err("Unknown section %s", a_section);
-		a_section_parent = crm_strdup("all");
-	}
-	
-	crm_debug_2("Plural of %s is %s", crm_str(a_section), a_section_parent);
-
-	return a_section_parent;
-}
-
 const char *
 cib_error2string(enum cib_errors return_code)
 {
@@ -575,7 +519,6 @@ create_cib_fragment_adv(
 	xmlNode *cib = NULL;
 	gboolean whole_cib = FALSE;
 	xmlNode *object_root  = NULL;
-	const char *update_name = NULL;
 	char *local_section = NULL;
 
 /* 	crm_debug("Creating a blank fragment: %s", update_section); */
@@ -590,11 +533,9 @@ create_cib_fragment_adv(
 		crm_err("No update to create a fragment for");
 		return NULL;
 		
-	} else if(update_section == NULL) {
-		local_section = cib_pluralSection(update_name);
-		update_section = local_section;
 	}
 
+	CRM_CHECK(update_section != NULL, return NULL);
 	if(safe_str_eq(crm_element_name(update), XML_TAG_CIB)) {
 		whole_cib = TRUE;
 	}

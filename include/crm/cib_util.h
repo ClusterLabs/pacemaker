@@ -24,7 +24,6 @@ extern const char *get_object_parent(const char *object_type);
 extern xmlNode *get_object_root(const char *object_type,xmlNode *the_root);
 extern xmlNode *create_cib_fragment_adv(
 			xmlNode *update, const char *section, const char *source);
-extern char *cib_pluralSection(const char *a_section);
 extern const char *get_crm_option(
 	xmlNode *cib, const char *name, gboolean do_warn);
 
