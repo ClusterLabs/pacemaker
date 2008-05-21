@@ -1149,15 +1149,13 @@ dump_data_element(
 	int has_children = 0;
 	const char *name = NULL;
 
-	if(data == NULL) {
-	    return 0;
-	}
-	
-	CRM_ASSERT(buffer != NULL && *buffer != NULL);
+	CRM_CHECK(data == NULL, return 0);
 
 	name = crm_element_name(data);
 
-	CRM_ASSERT(name != NULL, return 0);
+	CRM_CHECK(name != NULL, return 0);
+	CRM_CHECK(buffer != NULL && *buffer != NULL, return 0);
+
 	crm_debug_5("Dumping %s...", name);
 
 	if(formatted) {
