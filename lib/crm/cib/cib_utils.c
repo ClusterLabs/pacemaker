@@ -31,7 +31,6 @@
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-#include <libxml/xpath.h>
 
 #include <lib/crm/cib/cib_private.h>
 
@@ -443,52 +442,21 @@ const char *get_object_parent(const char *object_type)
 xmlNode*
 get_object_root(const char *object_type, xmlNode *the_root)
 {
-    xmlDocPtr doc = NULL;
-    xmlNodePtr result = NULL;
-    xmlNodeSetPtr matches = NULL;
-    xmlXPathObjectPtr xpathObj = NULL; 
-    xmlXPathContextPtr xpathCtx = NULL; 
-
-    const xmlChar *xpathExpr = (const xmlChar *)get_object_path(object_type);
-    if(xpathExpr == NULL) {
-	crm_debug("Object %s is unknown", crm_str(object_type));
-	return NULL;
-    }
-
-    CRM_CHECK(the_root != NULL, return NULL);
-    
-    doc = the_root->doc;
-    if(doc == NULL) {
-	doc = xmlNewDoc((const xmlChar *)"1.0");
-	xmlDocSetRootElement(doc, the_root);
-    }
-    
-    xpathCtx = xmlXPathNewContext(doc);
-    CRM_ASSERT(xpathCtx != NULL);
-    
-    /* Evaluate xpath expression */
-    xpathObj = xmlXPathEvalExpression(xpathExpr, xpathCtx);
-    CRM_ASSERT(xpathObj != NULL);
-
-    matches = xpathObj->nodesetval;
-    if(matches == NULL || matches->nodeNr < 1) {
+    xmlNode *result = NULL;
+    xmlXPathObjectPtr xpathObj = xpath_search(the_root, get_object_path(object_type));
+    if(xpathObj == NULL || xpathObj->nodesetval == NULL || xpathObj->nodesetval->nodeNr < 1) {
 	crm_debug("Object %s not found", crm_str(object_type));
-	goto out;
+	
+    } else if(xpathObj->nodesetval->nodeNr > 1) {
+	crm_err("Too many matches for %s", crm_str(object_type));
 
-    } else if(matches->nodeNr > 1) {
-	crm_err("Too many matches for %s (%s)", crm_str(object_type), xpathExpr);
-	goto out;
+    } else {
+	result = xpathObj->nodesetval->nodeTab[0];
+	CRM_CHECK(result->type == XML_ELEMENT_NODE, ;);
     }
-
-    result = matches->nodeTab[0];
-    CRM_CHECK(result->type == XML_ELEMENT_NODE, goto out);
-
-  out:
+    
     if(xpathObj) {
 	xmlXPathFreeObject(xpathObj);
-    }
-    if(xpathCtx) {
-	xmlXPathFreeContext(xpathCtx);
     }
     return result;
 }

@@ -29,8 +29,8 @@
 #include <ha_msg.h>
 #include <clplumbing/cl_log.h> 
 
-#define USE_LIBXML 1
 #include <libxml/tree.h> 
+#include <libxml/xpath.h>
 typedef xmlNode crm_data_t;
 
 extern gboolean add_message_xml(
@@ -307,5 +307,6 @@ extern xmlNode *convert_ha_message(xmlNode *parent, HA_Message *msg, const char 
 
 extern HA_Message *convert_xml_message(xmlNode *msg);
 extern xmlNode *sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive);
+extern xmlXPathObjectPtr xpath_search(xmlNode *xml_top, const char *path);
 
 #endif

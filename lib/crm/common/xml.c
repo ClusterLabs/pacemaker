@@ -3137,3 +3137,29 @@ int update_validation(
     return match;
 }
 
+xmlXPathObjectPtr 
+xpath_search(xmlNode *xml_top, const char *path)
+{
+    xmlDocPtr doc = NULL;
+    xmlXPathObjectPtr xpathObj = NULL; 
+    xmlXPathContextPtr xpathCtx = NULL; 
+    const xmlChar *xpathExpr = (const xmlChar *)path;
+
+    CRM_CHECK(xml_top != NULL, return NULL);
+    
+    doc = xml_top->doc;
+    if(doc == NULL) {
+	doc = xmlNewDoc((const xmlChar *)"1.0");
+	xmlDocSetRootElement(doc, xml_top);
+    }
+    
+    xpathCtx = xmlXPathNewContext(doc);
+    CRM_ASSERT(xpathCtx != NULL);
+    
+    xpathObj = xmlXPathEvalExpression(xpathExpr, xpathCtx);
+    CRM_ASSERT(xpathObj != NULL);
+
+    xmlXPathFreeContext(xpathCtx);
+    return xpathObj;
+}
+
