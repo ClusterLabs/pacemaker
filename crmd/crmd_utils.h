@@ -27,8 +27,8 @@ extern void process_client_disconnect(crmd_client_t *curr_client);
 
 #define fsa_cib_update(section, data, options, call_id)			\
 	if(fsa_cib_conn != NULL) {					\
-		call_id = fsa_cib_conn->cmds->update(			\
-			fsa_cib_conn, section, data, NULL, options);	\
+	    call_id = fsa_cib_conn->cmds->modify(			\
+		fsa_cib_conn, section, data, options);			\
 									\
 	} else {							\
 		crm_err("No CIB connection available");			\
@@ -36,8 +36,8 @@ extern void process_client_disconnect(crmd_client_t *curr_client);
 
 #define fsa_cib_anon_update(section, data, options)			\
 	if(fsa_cib_conn != NULL) {					\
-		fsa_cib_conn->cmds->update(				\
-			fsa_cib_conn, section, data, NULL, options);	\
+	    fsa_cib_conn->cmds->modify(					\
+		fsa_cib_conn, section, data, options);			\
 									\
 	} else {							\
 		crm_err("No CIB connection available");			\

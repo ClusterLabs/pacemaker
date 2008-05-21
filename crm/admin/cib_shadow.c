@@ -311,7 +311,7 @@ main(int argc, char **argv)
 	/* commit to the cluster */
 	FILE *shadow_FILE = fopen(shadow_file, "r");
 	xmlNode *input = file2xml(shadow_FILE, FALSE);
-	rc = real_cib->cmds->replace(real_cib, NULL, input, NULL, command_options);
+	rc = real_cib->cmds->replace(real_cib, NULL, input, command_options);
 	if(rc != cib_ok) {
 	    fprintf(stderr, "Could not commit shadow instance '%s' to the CIB: %s\n",
 		    shadow, cib_error2string(rc));

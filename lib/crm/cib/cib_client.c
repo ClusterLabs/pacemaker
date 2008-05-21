@@ -138,62 +138,91 @@ static int cib_client_sync_from(
 		cib, CIB_OP_SYNC, host, section, NULL, NULL, call_options);
 }
 
-static int cib_client_create(cib_t *cib, const char *section, xmlNode *data,
-		      xmlNode **output_data, int call_options) 
+static int cib_client_create(
+    cib_t *cib, const char *section, xmlNode *data, int call_options) 
 {
 	op_common(cib)
-	return cib->cmds->variant_op(cib, CIB_OP_CREATE, NULL, section,
-				     data, output_data, call_options);
+	return cib->cmds->variant_op(
+	    cib, CIB_OP_CREATE, NULL, section, data, NULL, call_options);
 }
 
-static int cib_client_modify(cib_t *cib, const char *section, xmlNode *data,
-	   xmlNode **output_data, int call_options) 
+static int cib_client_modify(
+    cib_t *cib, const char *section, xmlNode *data, int call_options) 
 {
 	op_common(cib)
-	return cib->cmds->variant_op(cib, CIB_OP_MODIFY, NULL, section,
-				     data, output_data, call_options);
+	return cib->cmds->variant_op(
+	    cib, CIB_OP_MODIFY, NULL, section, data, NULL, call_options);
 }
 
-static int cib_client_update(cib_t *cib, const char *section, xmlNode *data,
-		      xmlNode **output_data, int call_options) 
+static int cib_client_update(
+    cib_t *cib, const char *section, xmlNode *data, int call_options) 
 {
 	op_common(cib)
-	return cib->cmds->variant_op(cib, CIB_OP_MODIFY, NULL, section,
-				     data, output_data, call_options);
+	return cib->cmds->variant_op(
+	    cib, CIB_OP_MODIFY, NULL, section, data, NULL, call_options);
 }
 
-static int cib_client_replace(cib_t *cib, const char *section, xmlNode *data,
-	    xmlNode **output_data, int call_options) 
+static int cib_client_replace(
+    cib_t *cib, const char *section, xmlNode *data, int call_options) 
 {
 	op_common(cib)
-	return cib->cmds->variant_op(cib, CIB_OP_REPLACE, NULL, section,
-				     data, output_data, call_options);
+	return cib->cmds->variant_op(
+	    cib, CIB_OP_REPLACE, NULL, section, data, NULL, call_options);
 }
 
-
-static int cib_client_delete(cib_t *cib, const char *section, xmlNode *data,
-	   xmlNode **output_data, int call_options) 
+static int cib_client_xpath_delete(cib_t *cib, const char *section, int call_options) 
 {
 	op_common(cib)
-	return cib->cmds->variant_op(cib, CIB_OP_DELETE, NULL, section,
-				     data, output_data, call_options);
+	return cib->cmds->variant_op(
+	    cib, CIB_OP_XPATH_DELETE, NULL, section, NULL, NULL, call_options);
+}
+
+static int cib_client_xpath_create(
+    cib_t *cib, const char *section, xmlNode *data, int call_options) 
+{
+	op_common(cib)
+	return cib->cmds->variant_op(
+	    cib, CIB_OP_XPATH_CREATE, NULL, section, data, NULL, call_options);
+}
+
+static int cib_client_xpath_modify(
+    cib_t *cib, const char *section, xmlNode *data, int call_options) 
+{
+	op_common(cib)
+	return cib->cmds->variant_op(
+	    cib, CIB_OP_XPATH_MODIFY, NULL, section, data, NULL, call_options);
+}
+
+static int cib_client_xpath_replace(
+    cib_t *cib, const char *section, xmlNode *data, int call_options) 
+{
+	op_common(cib)
+	return cib->cmds->variant_op(
+	    cib, CIB_OP_XPATH_REPLACE, NULL, section, data, NULL, call_options);
+}
+
+static int cib_client_delete(
+    cib_t *cib, const char *section, xmlNode *data, int call_options) 
+{
+	op_common(cib)
+	return cib->cmds->variant_op(
+	    cib, CIB_OP_DELETE, NULL, section, data, NULL, call_options);
 }
 
 static int cib_client_delete_absolute(
-	cib_t *cib, const char *section, xmlNode *data,
-	xmlNode **output_data, int call_options) 
+	cib_t *cib, const char *section, xmlNode *data, int call_options) 
 {
 	op_common(cib)
-	return cib->cmds->variant_op(cib, CIB_OP_DELETE_ALT, NULL, section,
-				     data, output_data, call_options);
+	return cib->cmds->variant_op(
+	    cib, CIB_OP_DELETE_ALT, NULL, section, data, NULL, call_options);
 }
 
 static int cib_client_erase(
 	cib_t *cib, xmlNode **output_data, int call_options)
 {
 	op_common(cib)
-	return cib->cmds->variant_op(cib, CIB_OP_ERASE, NULL, NULL, NULL,
-				     output_data, call_options);
+	return cib->cmds->variant_op(
+	    cib, CIB_OP_ERASE, NULL, NULL, NULL, output_data, call_options);
 }
 
 static int cib_client_quit(cib_t *cib, int call_options)
@@ -337,6 +366,11 @@ cib_new_variant(void)
 	new_cib->cmds->erase   = cib_client_erase;
 	new_cib->cmds->quit    = cib_client_quit;
 
+	new_cib->cmds->xpath_create  = cib_client_xpath_create;
+	new_cib->cmds->xpath_modify  = cib_client_xpath_modify;
+	new_cib->cmds->xpath_replace = cib_client_xpath_replace;
+	new_cib->cmds->xpath_delete  = cib_client_xpath_delete;
+	
 	new_cib->cmds->delete_absolute  = cib_client_delete_absolute;
 	
 	return new_cib;

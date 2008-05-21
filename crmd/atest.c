@@ -29,6 +29,7 @@
 #include <fcntl.h>
 
 #include <crm/crm.h>
+#include <crm/cib.h>
 
 #define OPTARGS	"V?X:I:"
 
@@ -110,7 +111,7 @@ main(int argc, char ** argv)
 	}
     }
 
-    update_validation(&xml, TRUE, FALSE);
+    xml = get_object_root(input_file, xml);
     crm_log_xml_info(xml, "fixed");
     
     return 0;

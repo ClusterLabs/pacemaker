@@ -398,8 +398,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	
 	crm_log_xml_debug(xml_top, "Update");
 	
-	rc = cib->cmds->modify(cib, XML_CIB_TAG_RESOURCES, xml_top, NULL,
-			       cib_options);
+	rc = cib->cmds->modify(cib, XML_CIB_TAG_RESOURCES, xml_top, cib_options);
 
 	free_xml(xml_top);
 	crm_free(local_attr_id);
@@ -445,8 +444,7 @@ delete_resource_attr(
 	
 	crm_log_xml_debug(xml_obj, "Delete");
 	
-	rc = cib->cmds->delete(cib, XML_CIB_TAG_RESOURCES, xml_obj, NULL,
-			       cib_options);
+	rc = cib->cmds->delete(cib, XML_CIB_TAG_RESOURCES, xml_obj, cib_options);
 
 	free_xml(xml_obj);
 	free_xml(xml_match);
@@ -689,8 +687,8 @@ migrate_resource(
 	
 	if(existing_node == NULL) {
 		crm_log_xml_notice(can_run, "Deleting");
-		rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_CONSTRAINTS,
-					    dont_run, NULL, cib_options);
+		rc = cib_conn->cmds->delete(
+		    cib_conn, XML_CIB_TAG_CONSTRAINTS, dont_run, cib_options);
 		if(rc == cib_NOTEXISTS) {
 			rc = cib_ok;
 
@@ -755,8 +753,8 @@ migrate_resource(
 	
 	if(preferred_node == NULL) {
 		crm_log_xml_notice(can_run, "Deleting");
-		rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_CONSTRAINTS,
-					    can_run, NULL, cib_options);
+		rc = cib_conn->cmds->delete(
+		    cib_conn, XML_CIB_TAG_CONSTRAINTS, can_run, cib_options);
 		if(rc == cib_NOTEXISTS) {
 			rc = cib_ok;
 
@@ -806,8 +804,8 @@ migrate_resource(
 
 	if(preferred_node != NULL || existing_node != NULL) {
 		crm_log_xml_notice(fragment, "CLI Update");
-		rc = cib_conn->cmds->update(cib_conn, XML_CIB_TAG_CONSTRAINTS,
-					    fragment, NULL, cib_options);
+		rc = cib_conn->cmds->update(
+		    cib_conn, XML_CIB_TAG_CONSTRAINTS, fragment, cib_options);
 	}
 
   bail:
@@ -1297,8 +1295,8 @@ main(int argc, char **argv)
 		crm_xml_add(msg_data, XML_ATTR_ID, rsc_id);
 		crm_xml_add(msg_data, prop_name, prop_value);
 		
-		rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_RESOURCES,
-					    msg_data, NULL, cib_options);
+		rc = cib_conn->cmds->modify(
+		    cib_conn, XML_CIB_TAG_RESOURCES, msg_data, cib_options);
 		free_xml(msg_data);
 
 	} else if(rsc_cmd == 'g') {
@@ -1357,8 +1355,8 @@ main(int argc, char **argv)
 		msg_data = create_xml_node(NULL, rsc_type);
 		crm_xml_add(msg_data, XML_ATTR_ID, rsc_id);
 
-		rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_RESOURCES,
-					    msg_data, NULL, cib_options);
+		rc = cib_conn->cmds->delete(
+		    cib_conn, XML_CIB_TAG_RESOURCES, msg_data, cib_options);
 		free_xml(msg_data);
 
 	} else {

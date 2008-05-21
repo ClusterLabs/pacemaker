@@ -88,7 +88,7 @@ send_stonith_update(stonith_ops_t * op)
 	crm_xml_add(node_state, XML_ATTR_ORIGIN,   __FUNCTION__);
 	
 	rc = fsa_cib_conn->cmds->update(
-		fsa_cib_conn, XML_CIB_TAG_STATUS, node_state, NULL,
+		fsa_cib_conn, XML_CIB_TAG_STATUS, node_state,
 		cib_quorum_override|cib_scope_local);	
 	
 	if(rc < cib_ok) {
@@ -381,7 +381,7 @@ cib_action_update(crm_action_t *action, int status)
 		  crm_element_name(action->xml), crm_str(task), rsc_id, target);
 	
 	rc = fsa_cib_conn->cmds->update(
-		fsa_cib_conn, XML_CIB_TAG_STATUS, state, NULL, call_options);
+		fsa_cib_conn, XML_CIB_TAG_STATUS, state, call_options);
 
 	crm_debug("Updating CIB with %s action %d: %s on %s (call_id=%d)",
 		  op_status2text(status), action->id, task_uuid, target, rc);

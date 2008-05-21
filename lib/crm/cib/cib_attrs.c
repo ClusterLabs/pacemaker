@@ -330,8 +330,8 @@ update_attr(cib_t *the_cib, int call_options,
 	
 	crm_log_xml_debug_2(xml_top, "update_attr");
 	
-	rc = the_cib->cmds->modify(the_cib, section, xml_top, NULL,
-				   call_options|cib_quorum_override);
+	rc = the_cib->cmds->modify(
+	    the_cib, section, xml_top, call_options|cib_quorum_override);
 
 	if(rc == cib_diff_resync) {
 		/* this is an internal matter - the update succeeded */ 
@@ -479,8 +479,7 @@ delete_attr(cib_t *the_cib, int options,
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 	
 	rc = the_cib->cmds->delete(
-		the_cib, section, xml_obj, NULL,
-		options|cib_quorum_override);
+		the_cib, section, xml_obj, options|cib_quorum_override);
 
 	crm_free(local_attr_id);
 	free_xml(xml_obj);

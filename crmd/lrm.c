@@ -877,8 +877,8 @@ delete_rsc_entry(const char *rsc_id)
 	crm_xml_add(xml_tmp, XML_ATTR_ID, rsc_id);
 
 	crm_debug("sync: Sending delete op for %s", rsc_id);
-	fsa_cib_conn->cmds->delete_absolute(fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top,
-					    NULL, cib_quorum_override);
+	fsa_cib_conn->cmds->delete_absolute(
+	    fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top, cib_quorum_override);
 	
 
 /* 	crm_log_xml_err(xml_top, "op:cancel"); */
@@ -904,8 +904,8 @@ delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id)
 		crm_debug("async: Sending delete op for %s_%s_%d (call=%d)",
 			  op->rsc_id, op->op_type, op->interval, op->call_id);
 
-		fsa_cib_conn->cmds->delete(fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top,
-					   NULL, cib_quorum_override);		
+		fsa_cib_conn->cmds->delete(
+		    fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top, cib_quorum_override);		
 
 	} else if (rsc_id != NULL && key != NULL) {
 		xmlNode *xml_tmp = NULL;
@@ -928,8 +928,8 @@ delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id)
 		}
 		
 		crm_debug("sync: Sending delete op for %s (call=%d)", key, call_id);
-		fsa_cib_conn->cmds->delete_absolute(fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top,
-						    NULL, cib_quorum_override);
+		fsa_cib_conn->cmds->delete_absolute(
+		    fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top, cib_quorum_override);
 		
 	} else {
 		crm_err("Not enough information to delete op entry: rsc=%p key=%p", rsc_id, key);

@@ -155,6 +155,11 @@ enum cib_section {
 #define CIB_OP_NOTIFY	"cib_notify"
 #define CIB_OP_APPLY_DIFF "cib_apply_diff"
 
+#define CIB_OP_XPATH_DELETE	"cib_xpath_delete"
+#define CIB_OP_XPATH_CREATE	"cib_xpath_create"
+#define CIB_OP_XPATH_MODIFY	"cib_xpath_modify"
+#define CIB_OP_XPATH_REPLACE	"cib_xpath_replace"
+
 #define F_CIB_CLIENTID  "cib_clientid"
 #define F_CIB_CALLOPTS  "cib_callopt"
 #define F_CIB_CALLID    "cib_callid"
@@ -227,8 +232,7 @@ typedef struct cib_api_operations_s
 		int (*inputfd)(cib_t* cib);
 
 		int (*noop)(cib_t *cib, int call_options);
-		int (*ping)(
-			cib_t *cib, xmlNode **output_data, int call_options);
+		int (*ping)(cib_t *cib, xmlNode **output_data, int call_options);
 
 		int (*query)(cib_t *cib, const char *section,
 			     xmlNode **output_data, int call_options);
@@ -243,27 +247,24 @@ typedef struct cib_api_operations_s
 		
 		int (*sync)(cib_t *cib, const char *section, int call_options);
 		int (*sync_from)(
-			cib_t *cib, const char *host, const char *section,
-			int call_options);
+			cib_t *cib, const char *host, const char *section, int call_options);
 
 		int (*bump_epoch)(cib_t *cib, int call_options);
 		
-		int (*create)(cib_t *cib, const char *section, xmlNode *data,
-			   xmlNode **output_data, int call_options);
-		int (*modify)(cib_t *cib, const char *section, xmlNode *data,
-			   xmlNode **output_data, int call_options);
-		int (*update)(cib_t *cib, const char *section, xmlNode *data,
-			   xmlNode **output_data, int call_options);
-		int (*replace)(cib_t *cib, const char *section, xmlNode *data,
-			   xmlNode **output_data, int call_options);
-		int (*delete)(cib_t *cib, const char *section, xmlNode *data,
-			   xmlNode **output_data, int call_options);
-		int (*delete_absolute)(
-			cib_t *cib, const char *section, xmlNode *data,
-			xmlNode **output_data, int call_options);
-		int (*erase)(
-			cib_t *cib, xmlNode **output_data, int call_options);
+		int (*create)(cib_t *cib, const char *section, xmlNode *data, int call_options);
+		int (*modify)(cib_t *cib, const char *section, xmlNode *data, int call_options);
+		int (*update)(cib_t *cib, const char *section, xmlNode *data, int call_options);
+		int (*replace)(cib_t *cib, const char *section, xmlNode *data, int call_options);
+		int (*delete)(cib_t *cib, const char *section, xmlNode *data, int call_options);
 
+		int (*xpath_delete)(cib_t *cib, const char *path, int call_options);
+		int (*xpath_create)(cib_t *cib, const char *path, xmlNode *data, int call_options);
+		int (*xpath_modify)(cib_t *cib, const char *path, xmlNode *data, int call_options);
+		int (*xpath_replace)(cib_t *cib, const char *path, xmlNode *data, int call_options);
+	
+		int (*erase)(cib_t *cib, xmlNode **output_data, int call_options);
+		int (*delete_absolute)(cib_t *cib, const char *section, xmlNode *data, int call_options);
+	
 		int (*quit)(cib_t *cib,   int call_options);
 		
 		int (*register_notification)(
