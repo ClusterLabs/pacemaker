@@ -258,11 +258,7 @@
 </xsl:template>
 
 <!-- regular transformations -->
-
-<xsl:template match="primitive|group|clone">
-  <xsl:element name="{name()}">
-    <xsl:apply-templates select="@id"/>
-
+<xsl:template name="resource-common">
     <xsl:if test="contains(name(), 'primitive')">
       <xsl:for-each select="@*"> 
 	<xsl:choose>
@@ -311,46 +307,31 @@
 	<xsl:call-template name="convert-instance-to-meta"/>
       </xsl:element>
     </xsl:element>
+
+</xsl:template>
+
+<xsl:template match="primitive">
+  <xsl:element name="{name()}">
+    <xsl:attribute name="id">
+      <xsl:value-of select="@id"/>
+    </xsl:attribute>
+    <xsl:call-template name="resource-common"/>
+  </xsl:element>
+</xsl:template>
+
+<xsl:template match="group|clone">
+  <xsl:element name="{name()}">
+    <xsl:apply-templates select="@id"/>
+    <xsl:call-template name="resource-common"/>
   </xsl:element>
 </xsl:template>
 
 <xsl:template match="master_slave">
   <xsl:element name="master">
     <xsl:apply-templates select="@id"/>
-
-    <xsl:if test="@description">
-      <xsl:apply-templates select="@description"/>
-    </xsl:if>
-
-    <xsl:apply-templates select="node()"/>
-
-    <xsl:element name="meta_attributes">
-      <xsl:attribute name="id">
-	<xsl:value-of select="name()"/>
-	<xsl:text>-</xsl:text>
-	<xsl:value-of select="@id"/>
-	<xsl:text>.meta</xsl:text>
-      </xsl:attribute>
-      <xsl:element name="attributes">
-	<xsl:for-each select="@*"> 
-	  <xsl:choose>
-	    <xsl:when test="starts-with(name(), 'id')"/>
-	    <xsl:when test="starts-with(name(), 'type')"/>
-	    <xsl:otherwise>
-	      <xsl:call-template name="create-as-attr">
-		<xsl:with-param name="name"><xsl:value-of select="name()"/></xsl:with-param>
-		<xsl:with-param name="value"><xsl:value-of select="."/></xsl:with-param>
-	      </xsl:call-template>
-	    </xsl:otherwise>
-	  </xsl:choose>
-	</xsl:for-each>
-	<xsl:call-template name="convert-instance-to-meta"/>
-      </xsl:element>
-    </xsl:element>
+    <xsl:call-template name="resource-common"/>
   </xsl:element>
 </xsl:template>
-
-
 
 <xsl:template match="cib">
   <xsl:element name="{name()}">
