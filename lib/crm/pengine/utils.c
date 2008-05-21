@@ -752,6 +752,8 @@ unpack_operation(
 			      }
 			);
 
+		g_hash_table_remove(action->meta, "id");
+		
 		unpack_instance_attributes(xml_obj, XML_TAG_META_SETS,
 					   NULL, action->meta, NULL, FALSE, data_set->now);
 		
@@ -765,7 +767,11 @@ unpack_operation(
 		value_i = crm_get_msec(value);
 		CRM_CHECK(value_i >= 0, value_i = 0);
 		value_ms = crm_itoa(value_i);
-		g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
+		if(value_i > 0) {
+		    g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
+		} else {
+		    g_hash_table_remove(action->meta, field);
+		}
 	}
 
 	field = XML_OP_ATTR_START_DELAY;
