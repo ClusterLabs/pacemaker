@@ -199,9 +199,7 @@ main(int argc, char **argv)
 					message_timeout_ms = 30;
 				}
 				break;
-				
 			case 'A':
-				dangerous_cmd = TRUE;
 				obj_type = crm_strdup(optarg);
 				command_options |= cib_xpath;
 				break;
