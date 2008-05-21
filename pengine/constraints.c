@@ -126,7 +126,6 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	const char *action_then = NULL;
 	const char *action_first = NULL;
 	
-	const char *type   = crm_element_value(xml_obj, "type");
 	const char *id     = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *score  = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
 	const char *invert = crm_element_value(
@@ -141,8 +140,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	} else if(id == NULL) {
 		crm_config_err("%s constraint must have an id",
 			crm_element_name(xml_obj));
-		return FALSE;
-		
+		return FALSE;		
 	}
 
 	id_first     = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST);
@@ -156,14 +154,6 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	}
 	if(action_then == NULL) {
 	    action_then = action_first;
-	}
-
-	if(safe_str_neq(type, "before")) {
-	    /* normalize the input - swap everything over */
-	    const char *tmp = NULL;
-	    crm_err("Inverted");
-	    tmp = id_first; id_first = id_then; id_then = tmp;
-	    tmp = action_first; action_first = action_then; action_then = tmp;
 	}
 
 	if(id_then == NULL || id_first == NULL) {

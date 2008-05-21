@@ -54,7 +54,7 @@ struct schema_s
 
 struct schema_s known_schemas[] = {
     { 0, "none", NULL, NULL, 1 },
-#if 1
+#if 0
     { 1, "pacemaker-0.6", DTD_DIRECTORY"/crm.dtd", NULL, 0 },
 #else
     { 1, "pacemaker-0.6", DTD_DIRECTORY"/crm.dtd", DTD_DIRECTORY"/upgrade.xsl", 2 },

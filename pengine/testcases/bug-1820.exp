@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
        <pseudo_event id="13" operation="start" operation_key="gr1_start_0">
-         <attributes CRM_meta_timeout="20000" crm_feature_set="2.1"/>
+         <attributes CRM_meta_timeout="20000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -17,7 +17,7 @@
    <synapse id="1">
      <action_set>
        <pseudo_event id="14" operation="running" operation_key="gr1_running_0">
-         <attributes CRM_meta_timeout="20000" crm_feature_set="2.1"/>
+         <attributes CRM_meta_timeout="20000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -35,7 +35,7 @@
    <synapse id="2">
      <action_set>
        <pseudo_event id="15" operation="stop" operation_key="gr1_stop_0">
-         <attributes CRM_meta_timeout="20000" crm_feature_set="2.1"/>
+         <attributes CRM_meta_timeout="20000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -43,7 +43,7 @@
    <synapse id="3">
      <action_set>
        <pseudo_event id="16" operation="stopped" operation_key="gr1_stopped_0">
-         <attributes CRM_meta_timeout="20000" crm_feature_set="2.1"/>
+         <attributes CRM_meta_timeout="20000" crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -62,7 +62,7 @@
      <action_set>
        <rsc_op id="7" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
          <primitive id="test1" long-id="gr1:test1" class="ocf" provider="heartbeat" type="Xen"/>
-         <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_source_uuid="3f368213-61d5-409a-a30e-1428efe70f63" CRM_meta_migrate_target="world" CRM_meta_timeout="20000" allow_migrate="true" crm_feature_set="2.1" xmfile="/etc/xen/test1"/>
+         <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_source_uuid="3f368213-61d5-409a-a30e-1428efe70f63" CRM_meta_migrate_target="world" CRM_meta_timeout="20000" allow_migrate="true" crm-feature-set="2.1" xmfile="/etc/xen/test1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -78,7 +78,7 @@
      <action_set>
        <rsc_op id="8" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
          <primitive id="test1" long-id="gr1:test1" class="ocf" provider="heartbeat" type="Xen"/>
-         <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_target="world" CRM_meta_name="stop" CRM_meta_timeout="120000" allow_migrate="true" crm_feature_set="2.1" xmfile="/etc/xen/test1"/>
+         <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_target="world" CRM_meta_name="stop" CRM_meta_timeout="120000" allow_migrate="true" crm-feature-set="2.1" xmfile="/etc/xen/test1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -94,7 +94,7 @@
      <action_set>
        <rsc_op id="9" operation="monitor" operation_key="test1_monitor_10000" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
          <primitive id="test1" long-id="gr1:test1" class="ocf" provider="heartbeat" type="Xen"/>
-         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="60000" allow_migrate="true" crm_feature_set="2.1" xmfile="/etc/xen/test1"/>
+         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="60000" allow_migrate="true" crm-feature-set="2.1" xmfile="/etc/xen/test1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -107,7 +107,7 @@
      <action_set>
        <rsc_op id="10" operation="start" operation_key="test2_start_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
          <primitive id="test2" long-id="gr1:test2" class="ocf" provider="heartbeat" type="Xen"/>
-         <attributes CRM_meta_timeout="20000" allow_migrate="true" crm_feature_set="2.1" xmfile="/etc/xen/test2"/>
+         <attributes CRM_meta_timeout="20000" allow_migrate="true" crm-feature-set="2.1" xmfile="/etc/xen/test2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -126,7 +126,7 @@
      <action_set>
        <rsc_op id="11" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
          <primitive id="test2" long-id="gr1:test2" class="ocf" provider="heartbeat" type="Xen"/>
-         <attributes CRM_meta_name="stop" CRM_meta_timeout="120000" crm_feature_set="2.1"/>
+         <attributes CRM_meta_name="stop" CRM_meta_timeout="120000" crm-feature-set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -139,7 +139,7 @@
      <action_set>
        <rsc_op id="12" operation="monitor" operation_key="test2_monitor_10000" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
          <primitive id="test2" long-id="gr1:test2" class="ocf" provider="heartbeat" type="Xen"/>
-         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="60000" allow_migrate="true" crm_feature_set="2.1" xmfile="/etc/xen/test2"/>
+         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="60000" allow_migrate="true" crm-feature-set="2.1" xmfile="/etc/xen/test2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -151,7 +151,7 @@
    <synapse id="10">
      <action_set>
        <pseudo_event id="3" operation="all_stopped" operation_key="all_stopped">
-         <attributes crm_feature_set="2.1"/>
+         <attributes crm-feature-set="2.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -169,7 +169,7 @@
    <synapse id="11">
      <action_set>
        <crm_event id="18" operation="do_shutdown" operation_key="do_shutdown" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
-         <attributes crm_feature_set="2.1"/>
+         <attributes crm-feature-set="2.1"/>
        </crm_event>
      </action_set>
      <inputs>
