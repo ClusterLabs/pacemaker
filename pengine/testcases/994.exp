@@ -56,7 +56,7 @@
      <action_set>
        <rsc_op id="2" operation="monitor" operation_key="postfix_9_monitor_120000" on_node="paul" on_node_uuid="6d3906ef-d88f-4363-afac-609884ddbb90">
          <primitive id="postfix_9" long-id="group_1:postfix_9" class="lsb" provider="heartbeat" type="postfix"/>
-         <attributes CRM_meta_id="postfix_9_mon" CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="2.1"/>
+         <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>

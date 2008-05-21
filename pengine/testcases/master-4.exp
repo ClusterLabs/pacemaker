@@ -84,7 +84,7 @@
      <action_set>
        <rsc_op id="4" operation="cancel" operation_key="ocf_msdummy:0_monitor_5000" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="ocf_msdummy:0" long-id="master_rsc_1:ocf_msdummy:0" class="ocf" provider="heartbeat" type="/usr/lib/heartbeat/cts/OCFMSDummy"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_id="ocf_msdummy_monitor" CRM_meta_interval="5000" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm_feature_set="2.1" logfile="/var/log/cts_ocfdummy.log"/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_interval="5000" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm_feature_set="2.1" logfile="/var/log/cts_ocfdummy.log"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -109,7 +109,7 @@
      <action_set>
        <rsc_op id="90" operation="monitor" operation_key="ocf_msdummy:0_monitor_6000" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="ocf_msdummy:0" long-id="master_rsc_1:ocf_msdummy:0" class="ocf" provider="heartbeat" type="/usr/lib/heartbeat/cts/OCFMSDummy"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_id="ocf_msdummy_master_monitor" CRM_meta_interval="6000" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm_feature_set="2.1" logfile="/var/log/cts_ocfdummy.log"/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_interval="6000" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm_feature_set="2.1" logfile="/var/log/cts_ocfdummy.log"/>
        </rsc_op>
      </action_set>
      <inputs>

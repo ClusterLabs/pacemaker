@@ -186,7 +186,7 @@
      <action_set>
        <rsc_op id="33" operation="stop" operation_key="imagestoreclone:0_stop_0" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8">
          <primitive id="imagestoreclone:0" long-id="imagestorecloneset:imagestoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_id="53992f39-c826-40a5-b317-192ff72fab15" CRM_meta_name="stop" CRM_meta_notify_active_resource="imagestoreclone:1 " CRM_meta_notify_active_uname="node2 " CRM_meta_notify_stop_resource="imagestoreclone:0 " CRM_meta_notify_stop_uname="node1 " CRM_meta_timeout="60000" crm_feature_set="2.1"/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify_active_resource="imagestoreclone:1 " CRM_meta_notify_active_uname="node2 " CRM_meta_notify_stop_resource="imagestoreclone:0 " CRM_meta_notify_stop_uname="node1 " CRM_meta_timeout="60000" crm_feature_set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -318,7 +318,7 @@
      <action_set>
        <rsc_op id="48" operation="stop" operation_key="configstoreclone:0_stop_0" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8">
          <primitive id="configstoreclone:0" long-id="configstorecloneset:configstoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_id="c32d29d2-25a9-4c42-ba55-1d5e087162b1" CRM_meta_name="stop" CRM_meta_notify_active_resource="configstoreclone:1 " CRM_meta_notify_active_uname="node2 " CRM_meta_notify_stop_resource="configstoreclone:0 " CRM_meta_notify_stop_uname="node1 " CRM_meta_timeout="60000" crm_feature_set="2.1"/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify_active_resource="configstoreclone:1 " CRM_meta_notify_active_uname="node2 " CRM_meta_notify_stop_resource="configstoreclone:0 " CRM_meta_notify_stop_uname="node1 " CRM_meta_timeout="60000" crm_feature_set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>

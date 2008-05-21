@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="2" operation="monitor" operation_key="DcIPaddr_monitor_5000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_id="DcIPaddr-1" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="127.0.0.20"/>
+         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="127.0.0.20"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -67,7 +67,7 @@
      <action_set>
        <rsc_op id="1" operation="monitor" operation_key="rsc_c001n08_monitor_5000" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="rsc_c001n08" long-id="rsc_c001n08" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_id="rsc_c001n08-1" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_new_attr="some_value" CRM_meta_timeout="21000" crm_feature_set="2.1" ip="127.0.0.11" new_attr="some_value"/>
+         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_new_attr="some_value" CRM_meta_timeout="21000" crm_feature_set="2.1" ip="127.0.0.11" new_attr="some_value"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -139,7 +139,7 @@
      <action_set>
        <rsc_op id="33" operation="monitor" operation_key="rsc_c001n02_monitor_6000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="rsc_c001n02" long-id="rsc_c001n02" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_id="rsc_c001n02-1" CRM_meta_interval="6000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="127.0.0.12"/>
+         <attributes CRM_meta_interval="6000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
      <inputs/>

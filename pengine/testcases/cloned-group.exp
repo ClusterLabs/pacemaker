@@ -69,7 +69,7 @@
      <action_set>
        <rsc_op id="4" operation="monitor" operation_key="apache2:0_monitor_10000" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="apache2:0" long-id="apache2_clone:grrr:0:apache2:0" class="ocf" provider="heartbeat" type="apache"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_id="apache2_mon" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" configfile="/etc/apache2/apache2.conf" crm_feature_set="2.1" httpd="/usr/sbin/apache2" options="-k start" target_role="started"/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" configfile="/etc/apache2/apache2.conf" crm_feature_set="2.1" httpd="/usr/sbin/apache2" options="-k start" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -114,7 +114,7 @@
      <action_set>
        <rsc_op id="2" operation="monitor" operation_key="mysql-proxy:0_monitor_10000" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="mysql-proxy:0" long-id="apache2_clone:grrr:0:mysql-proxy:0" class="lsb" provider="heartbeat" type="mysql-proxy"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_id="mysql-proxy_mon" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1"/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>

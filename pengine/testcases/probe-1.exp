@@ -12,7 +12,7 @@
      <action_set>
        <rsc_op id="5" operation="start" operation_key="DcIPaddr_start_0" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e">
          <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_id="DcIPaddr-2" CRM_meta_name="start" CRM_meta_timeout="40000" crm_feature_set="2.1" ip="192.168.100.180"/>
+         <attributes CRM_meta_name="start" CRM_meta_timeout="40000" crm_feature_set="2.1" ip="192.168.100.180"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -25,7 +25,7 @@
      <action_set>
        <rsc_op id="6" operation="monitor" operation_key="DcIPaddr_monitor_5000" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e">
          <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_id="DcIPaddr-1" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="192.168.100.180"/>
+         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="192.168.100.180"/>
        </rsc_op>
      </action_set>
      <inputs>

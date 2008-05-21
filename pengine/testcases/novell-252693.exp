@@ -512,7 +512,7 @@
      <action_set>
        <rsc_op id="74" operation="migrate_to" operation_key="sles10_migrate_to_0" on_node="node1" on_node_uuid="3d8227f0-31dd-4801-b0db-987909d4a321">
          <primitive id="sles10" long-id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
-         <attributes CRM_meta_id="xen-op-02" CRM_meta_migrate_source="node1" CRM_meta_migrate_target="node2" CRM_meta_name="stop" CRM_meta_timeout="60000" crm_feature_set="2.1" xmfile="/etc/xen/vm/sles10"/>
+         <attributes CRM_meta_migrate_source="node1" CRM_meta_migrate_target="node2" CRM_meta_name="stop" CRM_meta_timeout="60000" crm_feature_set="2.1" xmfile="/etc/xen/vm/sles10"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -521,7 +521,7 @@
      <action_set>
        <rsc_op id="75" operation="monitor" operation_key="sles10_monitor_10000" on_node="node2" on_node_uuid="997c3f45-7e3f-4c70-8d9a-623ba1678a6e">
          <primitive id="sles10" long-id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
-         <attributes CRM_meta_id="xen-op-01" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_prereq="nothing" CRM_meta_timeout="60000" crm_feature_set="2.1" xmfile="/etc/xen/vm/sles10"/>
+         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_prereq="nothing" CRM_meta_timeout="60000" crm_feature_set="2.1" xmfile="/etc/xen/vm/sles10"/>
        </rsc_op>
      </action_set>
      <inputs>

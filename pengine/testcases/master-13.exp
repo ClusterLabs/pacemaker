@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="2" operation="cancel" operation_key="drbd0:0_monitor_10000" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55">
          <primitive id="drbd0:0" long-id="ms_drbd:drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_id="drbd0_mon_1" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="5000" crm_feature_set="2.1" drbd_resource="r0"/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="5000" crm_feature_set="2.1" drbd_resource="r0"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -28,7 +28,7 @@
      <action_set>
        <rsc_op id="10" operation="monitor" operation_key="drbd0:0_monitor_12000" on_node="frigg" on_node_uuid="5c8d0690-8f6f-44d0-b0f9-604c0576ea55">
          <primitive id="drbd0:0" long-id="ms_drbd:drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_id="drbd0_mon_0" CRM_meta_interval="12000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_stateful="true" CRM_meta_timeout="5000" crm_feature_set="2.1" drbd_resource="r0"/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="12000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_stateful="true" CRM_meta_timeout="5000" crm_feature_set="2.1" drbd_resource="r0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -99,7 +99,7 @@
      <action_set>
        <rsc_op id="1" operation="cancel" operation_key="drbd0:1_monitor_12000" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
          <primitive id="drbd0:1" long-id="ms_drbd:drbd0:1" class="ocf" provider="heartbeat" type="drbd"/>
-         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_id="drbd0_mon_0" CRM_meta_interval="12000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="5000" crm_feature_set="2.1" drbd_resource="r0"/>
+         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="12000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_operation="monitor" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="5000" crm_feature_set="2.1" drbd_resource="r0"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -124,7 +124,7 @@
      <action_set>
        <rsc_op id="15" operation="monitor" operation_key="drbd0:1_monitor_10000" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
          <primitive id="drbd0:1" long-id="ms_drbd:drbd0:1" class="ocf" provider="heartbeat" type="drbd"/>
-         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_id="drbd0_mon_1" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="5000" crm_feature_set="2.1" drbd_resource="r0"/>
+         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="5000" crm_feature_set="2.1" drbd_resource="r0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -407,7 +407,7 @@
      <action_set>
        <rsc_op id="41" operation="monitor" operation_key="IPaddr0_monitor_5000" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717">
          <primitive id="IPaddr0" long-id="group:IPaddr0" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_id="IPaddr0_mon" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="5000" crm_feature_set="2.1" ip="141.89.59.22" netmask="24" nic="bond0"/>
+         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="5000" crm_feature_set="2.1" ip="141.89.59.22" netmask="24" nic="bond0"/>
        </rsc_op>
      </action_set>
      <inputs>

@@ -34,7 +34,7 @@
      <action_set>
        <rsc_op id="15" operation="monitor" operation_key="rsc_hadev1_monitor_5000" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669">
          <primitive id="rsc_hadev1" long-id="rsc_hadev1" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_id="2" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="127.0.0.11"/>
+         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="127.0.0.11"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -65,7 +65,7 @@
      <action_set>
        <rsc_op id="19" operation="monitor" operation_key="rsc_hadev3_monitor_5000" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669">
          <primitive id="rsc_hadev3" long-id="rsc_hadev3" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_id="4" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="127.0.0.13"/>
+         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="127.0.0.13"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -87,7 +87,7 @@
      <action_set>
        <rsc_op id="20" operation="start" operation_key="child_DoFencing:0_start_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <primitive id="child_DoFencing:0" long-id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_id="6" CRM_meta_name="start" CRM_meta_prereq="nothing" CRM_meta_timeout="20000" crm_feature_set="2.1" hostlist="hadev1 hadev2 hadev3 "/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_name="start" CRM_meta_prereq="nothing" CRM_meta_timeout="20000" crm_feature_set="2.1" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -103,7 +103,7 @@
      <action_set>
        <rsc_op id="21" operation="monitor" operation_key="child_DoFencing:0_monitor_5000" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
          <primitive id="child_DoFencing:0" long-id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_id="5" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_prereq="nothing" CRM_meta_timeout="20000" crm_feature_set="2.1" hostlist="hadev1 hadev2 hadev3 "/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_prereq="nothing" CRM_meta_timeout="20000" crm_feature_set="2.1" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -116,7 +116,7 @@
      <action_set>
        <rsc_op id="22" operation="start" operation_key="child_DoFencing:1_start_0" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669">
          <primitive id="child_DoFencing:1" long-id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_id="6" CRM_meta_name="start" CRM_meta_prereq="nothing" CRM_meta_timeout="20000" crm_feature_set="2.1" hostlist="hadev1 hadev2 hadev3 "/>
+         <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_name="start" CRM_meta_prereq="nothing" CRM_meta_timeout="20000" crm_feature_set="2.1" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -132,7 +132,7 @@
      <action_set>
        <rsc_op id="23" operation="monitor" operation_key="child_DoFencing:1_monitor_5000" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669">
          <primitive id="child_DoFencing:1" long-id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_id="5" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_prereq="nothing" CRM_meta_timeout="20000" crm_feature_set="2.1" hostlist="hadev1 hadev2 hadev3 "/>
+         <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_prereq="nothing" CRM_meta_timeout="20000" crm_feature_set="2.1" hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs>

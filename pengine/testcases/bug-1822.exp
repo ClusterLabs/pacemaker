@@ -76,7 +76,7 @@
      <action_set>
        <rsc_op id="20" operation="stop" operation_key="master_slave_Stateful:1_stop_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89">
          <primitive id="master_slave_Stateful:1" long-id="ms-sf:ms-sf_group:1:master_slave_Stateful:1" class="ocf" provider="heartbeat" type="Dummy-statful"/>
-         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_id="stateful_stop" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_on_fail="stop" CRM_meta_timeout="60000" crm_feature_set="2.1"/>
+         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_on_fail="stop" CRM_meta_timeout="60000" crm_feature_set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -105,7 +105,7 @@
      <action_set>
        <rsc_op id="22" operation="stop" operation_key="master_slave_procdctl:1_stop_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89">
          <primitive id="master_slave_procdctl:1" long-id="ms-sf:ms-sf_group:1:master_slave_procdctl:1" class="ocf" provider="heartbeat" type="procdctl"/>
-         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_id="ctl_stop" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_on_fail="stop" CRM_meta_timeout="60000" crm_feature_set="2.1"/>
+         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_on_fail="stop" CRM_meta_timeout="60000" crm_feature_set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>

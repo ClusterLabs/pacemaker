@@ -68,7 +68,7 @@
      <action_set>
        <rsc_op id="12" operation="monitor" operation_key="child_192.168.100.181_monitor_5000" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
          <primitive id="child_192.168.100.181" long-id="group-1:child_192.168.100.181" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_id="child_192.168.100.181-1" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="192.168.100.181"/>
+         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="192.168.100.181"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -113,7 +113,7 @@
      <action_set>
        <rsc_op id="9" operation="monitor" operation_key="child_192.168.100.182_monitor_5000" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
          <primitive id="child_192.168.100.182" long-id="group-1:child_192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_id="child_192.168.100.182-1" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="192.168.100.182"/>
+         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="192.168.100.182"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -161,7 +161,7 @@
      <action_set>
        <rsc_op id="11" operation="monitor" operation_key="child_192.168.100.183_monitor_5000" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
          <primitive id="child_192.168.100.183" long-id="group-1:child_192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_id="child_192.168.100.183-1" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="192.168.100.183"/>
+         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="192.168.100.183"/>
        </rsc_op>
      </action_set>
      <inputs>

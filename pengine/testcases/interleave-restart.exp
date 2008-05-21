@@ -289,7 +289,7 @@
      <action_set>
        <rsc_op id="6" operation="monitor" operation_key="imagestoreclone:0_monitor_20000" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8">
          <primitive id="imagestoreclone:0" long-id="imagestorecloneset:imagestoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_id="2a733fef-c1dc-4965-b999-30e838fb8139" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="2.1" device="/dev/evms/vmsharedclustercontainer/imagestore" directory="/var/lib/xen/images" fstype="ocfs2"/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="2.1" device="/dev/evms/vmsharedclustercontainer/imagestore" directory="/var/lib/xen/images" fstype="ocfs2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -305,7 +305,7 @@
      <action_set>
        <rsc_op id="35" operation="start" operation_key="imagestoreclone:0_start_0" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8">
          <primitive id="imagestoreclone:0" long-id="imagestorecloneset:imagestoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_id="16a46849-0934-4fee-8085-a59b55edd4b4" CRM_meta_name="start" CRM_meta_notify_active_resource="imagestoreclone:0 imagestoreclone:1 " CRM_meta_notify_active_uname="node1 node2 " CRM_meta_notify_start_resource="imagestoreclone:0 " CRM_meta_notify_start_uname="node1 " CRM_meta_notify_stop_resource="imagestoreclone:0 " CRM_meta_notify_stop_uname="node1 " CRM_meta_timeout="60000" crm_feature_set="2.1" device="/dev/evms/vmsharedclustercontainer/imagestore" directory="/var/lib/xen/images" fstype="ocfs2"/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify_active_resource="imagestoreclone:0 imagestoreclone:1 " CRM_meta_notify_active_uname="node1 node2 " CRM_meta_notify_start_resource="imagestoreclone:0 " CRM_meta_notify_start_uname="node1 " CRM_meta_notify_stop_resource="imagestoreclone:0 " CRM_meta_notify_stop_uname="node1 " CRM_meta_timeout="60000" crm_feature_set="2.1" device="/dev/evms/vmsharedclustercontainer/imagestore" directory="/var/lib/xen/images" fstype="ocfs2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -321,7 +321,7 @@
      <action_set>
        <rsc_op id="36" operation="stop" operation_key="imagestoreclone:0_stop_0" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8">
          <primitive id="imagestoreclone:0" long-id="imagestorecloneset:imagestoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_id="53992f39-c826-40a5-b317-192ff72fab15" CRM_meta_name="stop" CRM_meta_notify_active_resource="imagestoreclone:0 imagestoreclone:1 " CRM_meta_notify_active_uname="node1 node2 " CRM_meta_notify_start_resource="imagestoreclone:0 " CRM_meta_notify_start_uname="node1 " CRM_meta_notify_stop_resource="imagestoreclone:0 " CRM_meta_notify_stop_uname="node1 " CRM_meta_timeout="60000" crm_feature_set="2.1"/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify_active_resource="imagestoreclone:0 imagestoreclone:1 " CRM_meta_notify_active_uname="node1 node2 " CRM_meta_notify_start_resource="imagestoreclone:0 " CRM_meta_notify_start_uname="node1 " CRM_meta_notify_stop_resource="imagestoreclone:0 " CRM_meta_notify_stop_uname="node1 " CRM_meta_timeout="60000" crm_feature_set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -591,7 +591,7 @@
      <action_set>
        <rsc_op id="7" operation="monitor" operation_key="configstoreclone:0_monitor_20000" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8">
          <primitive id="configstoreclone:0" long-id="configstorecloneset:configstoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_id="282dfa1b-c7c0-4d30-991f-70d8a5eae38e" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="2.1" device="/dev/evms/vmsharedclustercontainer/configstore" directory="/etc/xen/vm" fstype="ocfs2"/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_timeout="60000" crm_feature_set="2.1" device="/dev/evms/vmsharedclustercontainer/configstore" directory="/etc/xen/vm" fstype="ocfs2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -607,7 +607,7 @@
      <action_set>
        <rsc_op id="51" operation="start" operation_key="configstoreclone:0_start_0" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8">
          <primitive id="configstoreclone:0" long-id="configstorecloneset:configstoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_id="a2147200-7172-4d96-85ea-0ebec68f5fb7" CRM_meta_name="start" CRM_meta_notify_active_resource="configstoreclone:0 configstoreclone:1 " CRM_meta_notify_active_uname="node1 node2 " CRM_meta_notify_start_resource="configstoreclone:0 " CRM_meta_notify_start_uname="node1 " CRM_meta_notify_stop_resource="configstoreclone:0 " CRM_meta_notify_stop_uname="node1 " CRM_meta_timeout="60000" crm_feature_set="2.1" device="/dev/evms/vmsharedclustercontainer/configstore" directory="/etc/xen/vm" fstype="ocfs2"/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify_active_resource="configstoreclone:0 configstoreclone:1 " CRM_meta_notify_active_uname="node1 node2 " CRM_meta_notify_start_resource="configstoreclone:0 " CRM_meta_notify_start_uname="node1 " CRM_meta_notify_stop_resource="configstoreclone:0 " CRM_meta_notify_stop_uname="node1 " CRM_meta_timeout="60000" crm_feature_set="2.1" device="/dev/evms/vmsharedclustercontainer/configstore" directory="/etc/xen/vm" fstype="ocfs2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -623,7 +623,7 @@
      <action_set>
        <rsc_op id="52" operation="stop" operation_key="configstoreclone:0_stop_0" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8">
          <primitive id="configstoreclone:0" long-id="configstorecloneset:configstoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_id="c32d29d2-25a9-4c42-ba55-1d5e087162b1" CRM_meta_name="stop" CRM_meta_notify_active_resource="configstoreclone:0 configstoreclone:1 " CRM_meta_notify_active_uname="node1 node2 " CRM_meta_notify_start_resource="configstoreclone:0 " CRM_meta_notify_start_uname="node1 " CRM_meta_notify_stop_resource="configstoreclone:0 " CRM_meta_notify_stop_uname="node1 " CRM_meta_timeout="60000" crm_feature_set="2.1"/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify_active_resource="configstoreclone:0 configstoreclone:1 " CRM_meta_notify_active_uname="node1 node2 " CRM_meta_notify_start_resource="configstoreclone:0 " CRM_meta_notify_start_uname="node1 " CRM_meta_notify_stop_resource="configstoreclone:0 " CRM_meta_notify_stop_uname="node1 " CRM_meta_timeout="60000" crm_feature_set="2.1"/>
        </rsc_op>
      </action_set>
      <inputs>

@@ -37,7 +37,7 @@
      <action_set>
        <rsc_op id="19" operation="monitor" operation_key="DcIPaddr_monitor_5000" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36">
          <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_id="1" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="127.0.0.10"/>
+         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="127.0.0.10"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -96,7 +96,7 @@
      <action_set>
        <rsc_op id="24" operation="monitor" operation_key="rsc_hadev2_monitor_5000" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36">
          <primitive id="rsc_hadev2" long-id="rsc_hadev2" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_id="2" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="127.0.0.22"/>
+         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="2.1" ip="127.0.0.22"/>
        </rsc_op>
      </action_set>
      <inputs>

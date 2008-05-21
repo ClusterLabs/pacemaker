@@ -25,7 +25,7 @@
      <action_set>
        <rsc_op id="20" operation="monitor" operation_key="extip_1_monitor_30000" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="extip_1" long-id="extip_1" class="ocf" provider="heartbeat" type="IPaddr2"/>
-         <attributes CRM_meta_id="extip_1_mon" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="2.1" ip="85.125.191.221" netmask="28" nic="eth0" target_role="started"/>
+         <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="2.1" ip="85.125.191.221" netmask="28" nic="eth0" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -60,7 +60,7 @@
      <action_set>
        <rsc_op id="22" operation="monitor" operation_key="extip_2_monitor_30000" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="extip_2" long-id="extip_2" class="ocf" provider="heartbeat" type="IPaddr2"/>
-         <attributes CRM_meta_id="extip_2_mon" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="2.1" ip="85.125.191.222" netmask="28" nic="eth0" target_role="started"/>
+         <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="2.1" ip="85.125.191.222" netmask="28" nic="eth0" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -104,7 +104,7 @@
      <action_set>
        <rsc_op id="28" operation="monitor" operation_key="intip_1_master_monitor_30000" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="intip_1_master" long-id="intip_1_master" class="ocf" provider="heartbeat" type="IPaddr2"/>
-         <attributes CRM_meta_id="intip_1_mon" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="2.1" ip="192.168.100.201" netmask="24" nic="eth1" target_role="started"/>
+         <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="2.1" ip="192.168.100.201" netmask="24" nic="eth1" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -139,7 +139,7 @@
      <action_set>
        <rsc_op id="30" operation="monitor" operation_key="intip_2_slave_monitor_30000" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="intip_2_slave" long-id="intip_2_slave" class="ocf" provider="heartbeat" type="IPaddr2"/>
-         <attributes CRM_meta_id="intip_2_mon" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="2.1" ip="192.168.100.202" netmask="24" nic="eth1" target_role="started"/>
+         <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="2.1" ip="192.168.100.202" netmask="24" nic="eth1" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs>
