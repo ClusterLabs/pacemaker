@@ -19,6 +19,24 @@
 	    </element>
 	  </zeroOrMore>
 	</element>
+	<optional>
+	  <element name="rsc_defaults">
+	    <zeroOrMore>
+	      <element name="meta_attributes">
+		<externalRef href="nvset-@DTD_VERSION@.rng"/>
+	      </element>
+	    </zeroOrMore>
+	  </element>
+	</optional>
+	<optional>
+	  <element name="op_defaults">
+	    <zeroOrMore>
+	      <element name="meta_attributes">
+		<externalRef href="nvset-@DTD_VERSION@.rng"/>
+	      </element>
+	    </zeroOrMore>
+	  </element>
+	</optional>
 	<ref name="element-nodes"/>
 	<element name="resources">
 	  <externalRef href="resources-@DTD_VERSION@.rng"/>
