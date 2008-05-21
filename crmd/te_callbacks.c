@@ -172,18 +172,10 @@ process_te_message(xmlNode *msg, xmlNode *xml_data)
 		  && safe_str_eq(sys_from, CRM_SYSTEM_LRMD)
 /* 		  && safe_str_eq(type, XML_ATTR_RESPONSE) */
 		){
-#if CRM_DEPRECATED_SINCE_2_0_4
-		if(safe_str_eq(crm_element_name(xml_data), XML_TAG_CIB)) {
-			xml_obj = xml_data;
-		} else {
-			xml_obj = find_xml_node(xml_data, XML_TAG_CIB, TRUE);
-		}
-#else
 		xml_obj = xml_data;
 		CRM_CHECK(xml_obj != NULL,
 			  crm_log_xml(LOG_ERR, "Invalid (N)ACK", msg);
 			  return FALSE);
-#endif
 		CRM_CHECK(xml_obj != NULL,
 			  crm_log_xml(LOG_ERR, "Invalid (N)ACK", msg);
 			  return FALSE);
