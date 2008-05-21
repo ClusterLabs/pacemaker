@@ -689,6 +689,11 @@ cib_process_xpath(
 	} else if(safe_str_eq(op, CIB_OP_MODIFY)) {
 	    if(update_xml_child(match, input) == FALSE) {
 		rc = cib_NOTEXISTS;		
+	    } else {
+		rc = cib_ok;
+		if((options & cib_multiple) == 0) {
+		    break;
+		}
 	    }
 	    
 	} else if(safe_str_eq(op, CIB_OP_CREATE)) {
@@ -709,7 +714,9 @@ cib_process_xpath(
 		
 	    } else {
 		rc = cib_ok;
-		break;
+		if((options & cib_multiple) == 0) {
+		    break;
+		}
 	    }
 	}
     }

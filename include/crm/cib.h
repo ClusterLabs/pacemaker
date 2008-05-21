@@ -53,6 +53,7 @@ enum cib_call_options {
 	cib_none            = 0x00000000,
 	cib_verbose         = 0x00000001,
 	cib_xpath           = 0x00000002,
+	cib_multiple        = 0x00000004,
 	cib_discard_reply   = 0x00000010,
 	cib_scope_local     = 0x00000100,
 	cib_sync_call       = 0x00001000,
