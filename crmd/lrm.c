@@ -857,18 +857,18 @@ do_lrm_query(gboolean is_replace)
  *
  * Avoids refreshing the entire LRM section of this host
  */
+#define rsc_template "//"XML_CIB_TAG_STATE"[@uname=\"%s\"]//"XML_LRM_TAG_RESOURCE"[@id=\"%s\"]"
 static void
 delete_rsc_entry(const char *rsc_id) 
 {
 	int max = 0;
 	char *rsc_xpath = NULL;
-	static const char *xpath_template = "//"XML_CIB_TAG_STATE"[@uname=\"%s\"]//"XML_LRM_TAG_RESOURCE"[@id=\"%s\"]";
 
 	CRM_CHECK(rsc_id != NULL, return);
 	
-	max = strlen(xpath_template) + strlen(rsc_id) + strlen(fsa_our_uname) + 1;
+	max = strlen(rsc_template) + strlen(rsc_id) + strlen(fsa_our_uname) + 1;
 	crm_malloc0(rsc_xpath, max);
-	snprintf(rsc_xpath, max, xpath_template, fsa_our_uname, rsc_id);
+	snprintf(rsc_xpath, max, rsc_template, fsa_our_uname, rsc_id);
 	CRM_CHECK(rsc_id != NULL, return);
 
 	crm_debug("sync: Sending delete op for %s", rsc_id);
@@ -883,6 +883,10 @@ delete_rsc_entry(const char *rsc_id)
  *
  * Avoids refreshing the entire LRM section of this host
  */
+
+#define op_template "//"XML_CIB_TAG_STATE"[@uname=\"%s\"]//"XML_LRM_TAG_RESOURCE"[@id=\"%s\"]/"XML_LRM_TAG_RSC_OP"[@id=\"%s\"]"
+#define op_call_template "//"XML_CIB_TAG_STATE"[@uname=\"%s\"]//"XML_LRM_TAG_RESOURCE"[@id=\"%s\"]/"XML_LRM_TAG_RSC_OP"[@id=\"%s\" and @"XML_LRM_ATTR_CALLID"=\"%d\"]"
+
 static void
 delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id) 
 {
@@ -902,18 +906,14 @@ delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id)
 	    int max = 0;
 	    char *op_xpath = NULL;
 	    if(call_id > 0) {
-		static const char *xpath_template = "//"XML_CIB_TAG_STATE"[@uname=\"%s\"]//"XML_LRM_TAG_RESOURCE"[@id=\"%s\"]/"XML_LRM_TAG_RSC_OP"[@id=\"%s\" and @"XML_LRM_ATTR_CALLID"=\"%s\"]";
-
-		max = strlen(xpath_template) + strlen(rsc_id) + strlen(fsa_our_uname) + strlen(key) + 10;
+		max = strlen(op_call_template) + strlen(rsc_id) + strlen(fsa_our_uname) + strlen(key) + 10;
 		crm_malloc0(op_xpath, max);
-		snprintf(op_xpath, max, xpath_template, fsa_our_uname, rsc_id, key, call_id);
+		snprintf(op_xpath, max, op_call_template, fsa_our_uname, rsc_id, key, call_id);
 		
 	    } else {
-		static const char *xpath_template = "//"XML_CIB_TAG_STATE"[@uname=\"%s\"]//"XML_LRM_TAG_RESOURCE"[@id=\"%s\"]/"XML_LRM_TAG_RSC_OP"[@id=\"%s\"]";
-
-		max = strlen(xpath_template) + strlen(rsc_id) + strlen(fsa_our_uname) + strlen(key) + 1;
+		max = strlen(op_template) + strlen(rsc_id) + strlen(fsa_our_uname) + strlen(key) + 1;
 		crm_malloc0(op_xpath, max);
-		snprintf(op_xpath, max, xpath_template, fsa_our_uname, rsc_id, key);
+		snprintf(op_xpath, max, op_template, fsa_our_uname, rsc_id, key);
 	    }
 	    
 	    crm_debug("sync: Sending delete op for %s (call=%d)", rsc_id, call_id);
