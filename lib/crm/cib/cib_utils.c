@@ -35,6 +35,32 @@
 
 #include <lib/crm/cib/cib_private.h>
 
+struct config_root_s 
+{
+	const char *name;
+	const char *parent;
+	const char *path;
+};
+
+ /*
+  * "//crm_config" will also work in place of "/cib/configuration/crm_config"
+  * The / prefix means find starting from the root, whereas the // prefix means
+  * find anywhere and risks multiple matches
+  */
+struct config_root_s known_paths[] = {
+    { NULL,            NULL,                 "/" },
+    { "cib",           NULL,                 "/" },
+    { "status",        "/cib",               "/cib/status" },
+    { "configuration", "/cib",               "/cib/configuration" },
+    { "crm_config",    "/cib/configuration", "/cib/configuration/crm_config" },
+    { "nodes",         "/cib/configuration", "/cib/configuration/nodes" },
+    { "resources",     "/cib/configuration", "/cib/configuration/resources" },
+    { "constraints",   "/cib/configuration", "/cib/configuration/constraints" },
+    { "op_defaults",   "/cib/configuration", "/cib/configuration/op_defaults" },
+    { "rsc_defaults",  "/cib/configuration", "/cib/configuration/rsc_defaults" },
+    { "all",            NULL,                "/" },
+};
+
 const char *
 cib_error2string(enum cib_errors return_code)
 {
@@ -389,25 +415,6 @@ cib_diff_version_details(
 /*
  * The caller should never free the return value
  */
-
-struct config_root_s 
-{
-	const char *name;
-	const char *parent;
-	const char *path;
-};
-
-struct config_root_s known_paths[] = {
-    { NULL,            NULL,                 "/" },
-    { "cib",           NULL,                 "/" },
-    { "configuration", "/cib",               "/cib/configuration" },
-    { "crm_config",    "/cib/configuration", "/cib/configuration/crm_config" }, /* "//crm_config" will also work */
-    { "nodes",         "/cib/configuration", "/cib/configuration/nodes" },
-    { "resources",     "/cib/configuration", "/cib/configuration/resources" },
-    { "constraints",   "/cib/configuration", "/cib/configuration/constraints" },
-    { "status",        "/cib",               "/cib/status" },
-    { "all",           NULL,                 "/" },
-};
 
 const char *get_object_path(const char *object_type)
 {
