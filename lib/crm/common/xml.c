@@ -1156,13 +1156,8 @@ dump_data_element(
 	CRM_ASSERT(buffer != NULL && *buffer != NULL);
 
 	name = crm_element_name(data);
-	if(name == NULL && depth == 0) {
-		name = "__fake__";
 
-	} else if(name == NULL) {
-	    return 0;
-	}
-	
+	CRM_ASSERT(name != NULL, return 0);
 	crm_debug_5("Dumping %s...", name);
 
 	if(formatted) {
@@ -3136,6 +3131,7 @@ int update_validation(
     return match;
 }
 
+/* the caller needs to check if the result contains a xmlDocPtr or xmlNodePtr */
 xmlXPathObjectPtr 
 xpath_search(xmlNode *xml_top, const char *path)
 {
