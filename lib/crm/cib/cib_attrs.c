@@ -391,19 +391,10 @@ read_attr(cib_t *the_cib,
 		return rc;
 	}
 
-#if CRM_DEPRECATED_SINCE_2_0_4
-	if(safe_str_eq(crm_element_name(fragment), section)) {
-		xml_obj = fragment;
-	} else {
-		xmlNode *a_node = NULL;
-		a_node = find_xml_node(fragment, XML_TAG_CIB, TRUE);
-		xml_obj = get_object_root(section, a_node);
-	}
-#else
 	xml_obj = fragment;
 	CRM_CHECK(safe_str_eq(crm_element_name(xml_obj), section),
 		  return cib_output_data);
-#endif
+
 	CRM_ASSERT(xml_obj != NULL);
 	crm_log_xml_debug_2(xml_obj, "Result section");
 	
@@ -513,18 +504,9 @@ query_node_uuid(cib_t *the_cib, const char *uname, char **uuid)
 		return rc;
 	}
 
-#if CRM_DEPRECATED_SINCE_2_0_4
-	if(safe_str_eq(crm_element_name(fragment), XML_CIB_TAG_NODES)) {
-		xml_obj = fragment;
-	} else {
-		xml_obj = find_xml_node(fragment, XML_TAG_CIB, TRUE);
-		xml_obj = get_object_root(XML_CIB_TAG_NODES, xml_obj);
-	}
-#else
 	xml_obj = fragment;
 	CRM_CHECK(safe_str_eq(crm_element_name(xml_obj), XML_CIB_TAG_NODES),
 		  return cib_output_data);
-#endif
 	CRM_ASSERT(xml_obj != NULL);
 	crm_log_xml_debug(xml_obj, "Result section");
 
@@ -565,18 +547,9 @@ query_node_uname(cib_t *the_cib, const char *uuid, char **uname)
 		return rc;
 	}
 
-#if CRM_DEPRECATED_SINCE_2_0_4
-	if(safe_str_eq(crm_element_name(fragment), XML_CIB_TAG_NODES)) {
-		xml_obj = fragment;
-	} else {
-		xml_obj = find_xml_node(fragment, XML_TAG_CIB, TRUE);
-		xml_obj = get_object_root(XML_CIB_TAG_NODES, xml_obj);
-	}
-#else
 	xml_obj = fragment;
 	CRM_CHECK(safe_str_eq(crm_element_name(xml_obj), XML_CIB_TAG_NODES),
 		  return cib_output_data);
-#endif
 	CRM_ASSERT(xml_obj != NULL);
 	crm_log_xml_debug_2(xml_obj, "Result section");
 
