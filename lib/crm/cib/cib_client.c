@@ -158,7 +158,7 @@ static int cib_client_update(cib_t *cib, const char *section, xmlNode *data,
 		      xmlNode **output_data, int call_options) 
 {
 	op_common(cib)
-	return cib->cmds->variant_op(cib, CIB_OP_UPDATE, NULL, section,
+	return cib->cmds->variant_op(cib, CIB_OP_MODIFY, NULL, section,
 				     data, output_data, call_options);
 }
 
