@@ -3156,8 +3156,6 @@ xpath_search(xmlNode *xml_top, const char *path)
     CRM_ASSERT(xpathCtx != NULL);
     
     xpathObj = xmlXPathEvalExpression(xpathExpr, xpathCtx);
-    CRM_ASSERT(xpathObj != NULL);
-
     xmlXPathFreeContext(xpathCtx);
     return xpathObj;
 }
