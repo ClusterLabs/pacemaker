@@ -55,9 +55,8 @@
     <attribute name="validate-with">
       <choice>
 	<value>none</value>
-	<value>dtd</value>
-	<value>relax-ng</value>
-	<value>relax-ng-1.0</value>
+	<value>pacemaker-0.6</value>
+	<value>pacemaker-0.7</value>
       </choice>
     </attribute>
     <attribute name="admin-epoch"><data type="nonNegativeInteger"/></attribute>
