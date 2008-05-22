@@ -52,8 +52,8 @@ gboolean cib_is_master = TRUE;
 gboolean cib_is_master = FALSE;
 #endif
 
-gboolean syncd_once = FALSE;
 xmlNode *the_cib = NULL;
+gboolean syncd_once = FALSE;
 extern const char *cib_our_uname;
 enum cib_errors revision_check(xmlNode *cib_update, xmlNode *cib_copy, int flags);
 int get_revision(xmlNode *xml_obj, int cur_revision);
