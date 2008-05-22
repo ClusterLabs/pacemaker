@@ -64,8 +64,6 @@ extern enum cib_errors cib_update_counter(
 
 extern void GHFunc_count_peers(
 	gpointer key, gpointer value, gpointer user_data);
-extern enum cib_errors revision_check(
-	xmlNode *cib_update, xmlNode *cib_copy, int flags);
 
 void initiate_exit(void);
 void terminate_cib(const char *caller);
