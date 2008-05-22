@@ -8,8 +8,8 @@
 <xsl:template name="auto-id">
   <xsl:attribute name="id">
     <xsl:value-of select="name()"/>
-    <xsl:text>.auto-</xsl:text>
-    <xsl:number level="any" from="cib" count="node()"/>
+    <xsl:text>.</xsl:text>
+    <xsl:value-of select="generate-id()"/>
   </xsl:attribute>
 </xsl:template>
 
@@ -333,9 +333,89 @@
   </xsl:element>
 </xsl:template>
 
+<xsl:template name="rename-default"> 
+  <xsl:param name="newvalue"/> 
+  <xsl:param name="oldvalue"/> 
+  <xsl:param name="default"/> 
+  <xsl:choose>
+    <xsl:when test="string-length($newvalue) > 0">
+      <xsl:value-of select="$newvalue"/>
+    </xsl:when>
+    <xsl:when test="string-length($oldvalue) > 0">
+      <xsl:value-of select="$oldvalue"/>
+    </xsl:when>
+    <xsl:when test="string-length($default) > 0">
+      <xsl:value-of select="$default"/>
+    </xsl:when>
+  </xsl:choose>
+</xsl:template> 
+
 <xsl:template match="cib">
   <xsl:element name="{name()}">
-    <xsl:apply-templates select="@*"/>
+
+    <xsl:attribute name="admin-epoch">
+      <xsl:call-template name="rename-default">
+	<xsl:with-param name="newvalue"><xsl:value-of select="@admin-epoch"/></xsl:with-param>
+	<xsl:with-param name="oldvalue"><xsl:value-of select="@admin_epoch"/></xsl:with-param>
+	<xsl:with-param name="default">0</xsl:with-param>
+      </xsl:call-template>
+    </xsl:attribute>
+
+    <xsl:attribute name="epoch">
+      <xsl:call-template name="rename-default">
+	<xsl:with-param name="newvalue"><xsl:value-of select="@epoch"/></xsl:with-param>
+	<xsl:with-param name="default">0</xsl:with-param>
+      </xsl:call-template>
+    </xsl:attribute>
+
+    <xsl:attribute name="num-updates">
+      <xsl:call-template name="rename-default">
+	<xsl:with-param name="newvalue"><xsl:value-of select="@num-updates"/></xsl:with-param>
+	<xsl:with-param name="oldvalue"><xsl:value-of select="@num_updates"/></xsl:with-param>
+	<xsl:with-param name="default">0</xsl:with-param>
+      </xsl:call-template>
+    </xsl:attribute>
+
+    <xsl:attribute name="dc-uuid">
+      <xsl:call-template name="rename-default">
+	<xsl:with-param name="newvalue"><xsl:value-of select="@dc-uuid"/></xsl:with-param>
+	<xsl:with-param name="oldvalue"><xsl:value-of select="@dc_uuid"/></xsl:with-param>
+	<xsl:with-param name="default">0</xsl:with-param>
+      </xsl:call-template>
+    </xsl:attribute>
+
+    <xsl:attribute name="have-quorum">
+      <xsl:call-template name="rename-default">
+	<xsl:with-param name="newvalue"><xsl:value-of select="@have-quorum"/></xsl:with-param>
+	<xsl:with-param name="oldvalue"><xsl:value-of select="@have_quorum"/></xsl:with-param>
+	<xsl:with-param name="default">false</xsl:with-param>
+      </xsl:call-template>
+    </xsl:attribute>
+
+    <xsl:attribute name="crm-feature-set">
+      <xsl:call-template name="rename-default">
+	<xsl:with-param name="newvalue"><xsl:value-of select="@crm-feature-set"/></xsl:with-param>
+	<xsl:with-param name="oldvalue"><xsl:value-of select="@crm_feature_set"/></xsl:with-param>
+	<xsl:with-param name="default">0</xsl:with-param>
+      </xsl:call-template>
+    </xsl:attribute>
+
+    <xsl:attribute name="cib-feature-revision">
+      <xsl:call-template name="rename-default">
+	<xsl:with-param name="newvalue"><xsl:value-of select="@cib-feature-revision"/></xsl:with-param>
+	<xsl:with-param name="oldvalue"><xsl:value-of select="@cib_feature_revision"/></xsl:with-param>
+	<xsl:with-param name="default">0</xsl:with-param>
+      </xsl:call-template>
+    </xsl:attribute>
+
+    <xsl:attribute name="remote-tls-port">
+      <xsl:call-template name="rename-default">
+	<xsl:with-param name="newvalue"><xsl:value-of select="@remote-tls-port"/></xsl:with-param>
+	<xsl:with-param name="oldvalue"><xsl:value-of select="@remote_access_port"/></xsl:with-param>
+	<xsl:with-param name="default">-1</xsl:with-param>
+      </xsl:call-template>
+    </xsl:attribute>
+
     <xsl:attribute name="validate-with">pacemaker-0.7</xsl:attribute>
     <xsl:apply-templates select="node()" />
   </xsl:element>
