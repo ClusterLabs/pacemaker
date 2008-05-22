@@ -626,9 +626,7 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
 	/* establish the correct permissions */
 	fchmod(fileno(file_output_strm), cib_mode);
 	
-	crm_validate_data(xml_node);
 	crm_log_xml_debug_4(xml_node, "Writing out");
-	crm_validate_data(xml_node);
 	
 	now = time(NULL);
 	now_str = ctime(&now);
@@ -637,7 +635,9 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
 	crm_validate_data(xml_node);
 	
 	buffer = dump_xml_formatted(xml_node);
-	CRM_CHECK(buffer != NULL && strlen(buffer) > 0, goto bail);	
+	CRM_CHECK(buffer != NULL && strlen(buffer) > 0,
+		  crm_log_xml_warn(xml_node, "dump:failed");
+		  goto bail);	
 
 	if(compress) {
 #if HAVE_BZLIB_H
@@ -1149,7 +1149,7 @@ dump_data_element(
 	int has_children = 0;
 	const char *name = NULL;
 
-	CRM_CHECK(data == NULL, return 0);
+	CRM_CHECK(data != NULL, return 0);
 
 	name = crm_element_name(data);
 
