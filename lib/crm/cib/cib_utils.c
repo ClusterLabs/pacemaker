@@ -219,7 +219,7 @@ cib_error2string(enum cib_errors return_code)
 			error_msg = "Update was older than existing configuration";
 			break;
 		case cib_dtd_validation:
-			error_msg = "Update does not conform to the DTD in "DTD_DIRECTORY"/crm.dtd";
+			error_msg = "Update does not conform to the configured schema/DTD";
 			break;
 		case cib_invalid_argument:
 			error_msg = "Invalid argument";
@@ -615,7 +615,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	
 	if(rc == cib_ok) {
 	    gboolean dtd_ok;
-	    const char *ignore_dtd;
+	    const char *current_dtd;
 	    
 	    fix_plus_plus_recursive(scratch);
 	    /* crm_log_xml_debug(scratch, "newer"); */
@@ -630,15 +630,11 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
 	    }
 
-	    ignore_dtd = crm_element_value(scratch, "ignore_dtd");
+	    current_dtd = crm_element_value(scratch, "validate-with");
 	    dtd_ok = validate_xml(scratch, NULL, TRUE);
 	    
-	    if(
-#if CRM_DEPRECATED_SINCE_2_0_4
-		ignore_dtd != NULL &&
-#endif
-		crm_is_true(ignore_dtd) == FALSE && dtd_ok == FALSE) {
-		crm_err("Updated CIB does not validate against "DTD_DIRECTORY"/crm.dtd...");
+	    if(dtd_ok == FALSE) {
+		crm_err("Updated CIB does not validate against %s schema/dtd", current_dtd);
 		rc = cib_dtd_validation;
 	    }	    
 	}
@@ -714,23 +710,6 @@ cib_create_op(
 	crm_xml_add_int(op_msg, F_CIB_CALLOPTS, call_options);
 
 	if(data != NULL) {
-#if 0		
-		const char *tag = crm_element_name(data);
-		xmlNode *cib = data;
-		if(safe_str_neq(tag, XML_TAG_CIB)) {
-			cib = find_xml_node(data, XML_TAG_CIB, FALSE);
-			if(cib != NULL) {
-				tag = XML_TAG_CIB;
-			}
-		}
-		if(safe_str_eq(tag, XML_TAG_CIB)) {
-			const char *version = feature_set(cib);
-			crm_xml_add(cib, XML_ATTR_CIB_REVISION, version);
-		} else {
-			crm_info("Skipping feature check for %s tag", tag);
-		}
-#endif
-
 		add_message_xml(op_msg, F_CIB_CALLDATA, data);
 	}
 	
