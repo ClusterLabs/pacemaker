@@ -199,8 +199,6 @@ unpack_graph(xmlNode *xml_graph)
 
 		t_id = crm_element_value(xml_graph, "batch-limit");
 		new_graph->batch_limit = crm_parse_int(t_id, "0");
-
-
 	}
 	
 	xml_child_iter_filter(
