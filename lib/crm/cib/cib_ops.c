@@ -677,6 +677,7 @@ cib_process_xpath(
 	CRM_CHECK(match != NULL, goto out);
 
 	if(match->type == XML_DOCUMENT_NODE) {
+	    /* Will happen if section = '/' */
 	    match = match->children;
 	}
 
