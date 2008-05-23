@@ -94,36 +94,11 @@ cib_prepare_common(xmlNode *root, const char *section)
     return data;
 }
 
-static gboolean
-verify_section(const char *section)
-{
-    if(section == NULL) {
-	return TRUE;
-    } else if(safe_str_eq(section, XML_TAG_CIB)) {
-	return TRUE;
-    } else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
-	return TRUE;
-    } else if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
-	return TRUE;
-    } else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
-	return TRUE;
-    } else if(safe_str_eq(section, XML_CIB_TAG_RESOURCES)) {
-	return TRUE;
-    } else if(safe_str_eq(section, XML_CIB_TAG_CONSTRAINTS)) {
-	return TRUE;
-    }
-    return FALSE;
-}
-
-
 static enum cib_errors
 cib_prepare_none(xmlNode *request, xmlNode **data, const char **section)
 {
     *data = NULL;
     *section = crm_element_value(request, F_CIB_SECTION);
-    if(verify_section(*section) == FALSE) {
-	return cib_bad_section;
-    }
     return cib_ok;
 }
 
@@ -134,20 +109,14 @@ cib_prepare_data(xmlNode *request, xmlNode **data, const char **section)
     *section = crm_element_value(request, F_CIB_SECTION);
     *data = cib_prepare_common(input_fragment, *section);
     /* crm_log_xml_debug(*data, "data"); */
-    if(verify_section(*section) == FALSE) {
-	return cib_bad_section;
-    }
     return cib_ok;
 }
 
 static enum cib_errors
 cib_prepare_sync(xmlNode *request, xmlNode **data, const char **section)
 {
-    *section = crm_element_value(request, F_CIB_SECTION);
     *data = NULL;
-    if(verify_section(*section) == FALSE) {
-	return cib_bad_section;
-    }
+    *section = crm_element_value(request, F_CIB_SECTION);
     return cib_ok;
 }
 
