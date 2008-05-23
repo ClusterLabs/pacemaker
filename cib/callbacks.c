@@ -901,7 +901,7 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 					   
 	if(global_update) {
 	    /* skip */
-	    CRM_CHECK(call_type == 4 || call_type == 11,
+	    CRM_CHECK(call_type == 3 || call_type == 10,
 		      crm_err("Call type: %d", call_type);
 		      crm_log_xml(LOG_ERR, "bad op", request));
 	    crm_debug_2("Skipping update: global replace");
