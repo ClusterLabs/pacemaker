@@ -26,8 +26,7 @@ INCLUDES         = -I$(top_builddir)/include  -I$(top_srcdir)/include     \
 halibdir	 =  $(libdir)/@HB_PKG@
 havarlibdir      =  $(localstatedir)/lib/@HB_PKG@
 
-COMMONLIBS	 =  $(top_builddir)/lib/clplumbing/libplumb.la   \
-		    $(top_builddir)/lib/hbclient/libhbclient.la  \
+COMMONLIBS	 =  -lplumb -lhbclient \
 		    $(GLIBLIB)
 
 lib_LTLIBRARIES = libstonithd.la
