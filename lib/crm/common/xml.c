@@ -3127,14 +3127,17 @@ xpath_search(xmlNode *xml_top, const char *path)
     xmlXPathContextPtr xpathCtx = NULL; 
     const xmlChar *xpathExpr = (const xmlChar *)path;
 
+    CRM_CHECK(path != NULL, return NULL);
     CRM_CHECK(xml_top != NULL, return NULL);
+    CRM_CHECK(strlen(path) > 0, return NULL);
     
     doc = xml_top->doc;
     if(doc == NULL) {
 	doc = xmlNewDoc((const xmlChar *)"1.0");
 	xmlDocSetRootElement(doc, xml_top);
     }
-    
+
+    crm_debug_2("Evaluating: %s", path);
     xpathCtx = xmlXPathNewContext(doc);
     CRM_ASSERT(xpathCtx != NULL);
     
