@@ -1092,8 +1092,6 @@ create_node_state(
 #if CRM_DEPRECATED_SINCE_2_0_3
 		crm_xml_add(node_state, "clear_shutdown",  "true");
 #endif
-/* 		crm_xml_add(node_state, */
-/* 			    XML_CIB_ATTR_REPLACE, XML_TAG_TRANSIENT_NODEATTRS); */
 	}
 	
 		
@@ -1195,4 +1193,20 @@ void update_dc(xmlNode *msg, gboolean assert_same)
 	}
 	
 	crm_free(last_dc);
+}
+
+#define STATUS_PATH_MAX 512
+
+void erase_status_tag(const char *uname, const char *tag) 
+{
+    char xpath[STATUS_PATH_MAX];
+    int cib_opts = cib_scope_local|cib_quorum_override|cib_xpath;
+
+    if(fsa_cib_conn) {
+	xmlNode *update = create_xml_node(NULL, tag);
+	crm_xml_add(update, XML_ATTR_ID, fsa_our_uuid);
+	snprintf(xpath, STATUS_PATH_MAX, "//node_state[uname=\"%s\"]/%s", uname, tag);
+	fsa_cib_conn->cmds->replace(fsa_cib_conn, xpath, update, cib_opts);
+	free_xml(update);
+    }
 }

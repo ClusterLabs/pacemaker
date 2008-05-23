@@ -34,8 +34,6 @@
 
 void te_update_confirm(const char *event, xmlNode *msg);
 xmlNode *need_abort(xmlNode *update);
-void cib_fencing_updated(xmlNode *msg, int call_id, int rc,
-			 xmlNode *output, void *user_data);
 
 extern char *te_uuid;
 gboolean shuttingdown = FALSE;
@@ -324,10 +322,13 @@ void
 cib_fencing_updated(xmlNode *msg, int call_id, int rc,
 		    xmlNode *output, void *user_data)
 {
-	if(rc < cib_ok) {
-		crm_err("CIB update failed: %s", cib_error2string(rc));
-		crm_log_xml_warn(msg, "Failed update");
-	}
+    if(rc < cib_ok) {
+	crm_err("CIB update failed: %s", cib_error2string(rc));
+	crm_log_xml_warn(msg, "Failed update");
+    } else {
+	erase_status_tag(user_data, XML_CIB_TAG_LRM);
+    }
+    crm_free(user_data);
 }
 
 void

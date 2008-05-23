@@ -389,22 +389,24 @@ crmd_client_status_callback(const char * node, const char * client,
 		crm_info("Not the DC");
 
 	} else {
-		crm_debug_3("Got client status callback");
-		update = create_node_state(node, NULL, NULL, status, join,
-					   NULL, clear_shutdown, __FUNCTION__);
-	
-		if(safe_str_eq(status, ONLINESTATUS)){
-		    crm_xml_add(update, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM","XML_TAG_TRANSIENT_NODEATTRS",");
-		}
-		
-		fsa_cib_anon_update(
-		    XML_CIB_TAG_STATUS, update, cib_scope_local|cib_quorum_override);
-		free_xml(update);
+	    crm_debug_3("Got client status callback");
 
-		if(safe_str_eq(status, OFFLINESTATUS)) {
-			erase_node_from_join(node);
-			check_join_state(fsa_state, __FUNCTION__);
-		}
+	    if(fsa_cib_conn != NULL && safe_str_eq(status, ONLINESTATUS)) {
+		erase_status_tag(fsa_our_uname, XML_CIB_TAG_LRM);
+		erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS);
+	    }
+	    
+	    update = create_node_state(
+		node, NULL, NULL, status, join, NULL, clear_shutdown, __FUNCTION__);
+	    
+	    fsa_cib_anon_update(
+		XML_CIB_TAG_STATUS, update, cib_scope_local|cib_quorum_override);
+	    free_xml(update);
+	    
+	    if(safe_str_eq(status, OFFLINESTATUS)) {
+		erase_node_from_join(node);
+		check_join_state(fsa_state, __FUNCTION__);
+	    }
 	}
 	
 	trigger_fsa(fsa_source);

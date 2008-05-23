@@ -557,6 +557,7 @@ do_dc_join_ack(long long action,
 	 * We dont need to notify the TE of these updates, a transition will
 	 *   be started in due time
 	 */
+	erase_status_tag(join_from, XML_CIB_TAG_LRM);
 	fsa_cib_update(XML_CIB_TAG_STATUS, join_ack->xml,
 		       cib_scope_local|cib_quorum_override, call_id);
 	add_cib_op_callback(

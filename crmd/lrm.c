@@ -619,10 +619,10 @@ build_operation_update(
 			    op->rsc_id, op->op_type, op->interval,
 			    op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
 	
-		crm_xml_add_int(xml_op, "last_run",       op->t_run);
-		crm_xml_add_int(xml_op, "last_rc_change", op->t_rcchange);
-		crm_xml_add_int(xml_op, "exec_time",      op->exec_time);
-		crm_xml_add_int(xml_op, "queue_time",     op->queue_time);
+		crm_xml_add_int(xml_op, "last-run",       op->t_run);
+		crm_xml_add_int(xml_op, "last-rc-change", op->t_rcchange);
+		crm_xml_add_int(xml_op, "exec-time",      op->exec_time);
+		crm_xml_add_int(xml_op, "queue-time",     op->queue_time);
 	    }
 	}
 	
@@ -838,10 +838,6 @@ do_lrm_query(gboolean is_replace)
 
 	/* Build a list of active (not always running) resources */
 	build_active_RAs(rsc_list);
-
-	if(is_replace) {
-		crm_xml_add(xml_state, XML_CIB_ATTR_REPLACE, XML_CIB_TAG_LRM);
-	}
 
 	xml_result = create_cib_fragment(xml_state, XML_CIB_TAG_STATUS);
 	free_xml(xml_state);

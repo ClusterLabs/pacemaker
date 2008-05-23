@@ -84,7 +84,6 @@ send_stonith_update(stonith_ops_t * op)
 	crm_xml_add(node_state, XML_CIB_ATTR_CRMDSTATE, OFFLINESTATUS);
 	crm_xml_add(node_state, XML_CIB_ATTR_JOINSTATE, CRMD_JOINSTATE_DOWN);
 	crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE,  CRMD_JOINSTATE_DOWN);
-	crm_xml_add(node_state, XML_CIB_ATTR_REPLACE,   XML_CIB_TAG_LRM);
 	crm_xml_add(node_state, XML_ATTR_ORIGIN,   __FUNCTION__);
 	
 	rc = fsa_cib_conn->cmds->update(
@@ -98,7 +97,7 @@ send_stonith_update(stonith_ops_t * op)
 		
 	} else {
 		/* delay processing the trigger until the update completes */
-	    add_cib_op_callback(fsa_cib_conn, rc, FALSE, NULL, cib_fencing_updated);
+	    add_cib_op_callback(fsa_cib_conn, rc, FALSE, crm_strdup(target), cib_fencing_updated);
 	}
 	
 	free_xml(node_state);
