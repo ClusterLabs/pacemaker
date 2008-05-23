@@ -58,6 +58,14 @@ static void global_cib_callback(const xmlNode *msg, int callid ,int rc, xmlNode 
 {
 }
 
+static crm_graph_t *create_blank_graph(void) 
+{
+    crm_graph_t *a_graph = unpack_graph(NULL);
+    a_graph->complete = TRUE;
+    a_graph->abort_reason = "DC Takeover";
+    a_graph->completion_action = tg_restart;
+    return a_graph;    
+}
 
 /*	 A_TE_START, A_TE_STOP, A_TE_RESTART	*/
 void
@@ -128,11 +136,7 @@ do_te_control(long long action,
 	}
 			
 	/* create a blank one */
-	transition_graph = unpack_graph(NULL);
-	transition_graph->complete = TRUE;
-	transition_graph->abort_reason = "DC Takeover";
-	transition_graph->completion_action = tg_restart;
-			
+	transition_graph = create_blank_graph();
 	crm_malloc0(transition_timer, sizeof(crm_action_timer_t));
 	transition_timer->source_id = 0;
 	transition_timer->reason    = timeout_abort;
@@ -148,8 +152,6 @@ do_te_invoke(long long action,
 	     enum crmd_fsa_input current_input,
 	     fsa_data_t *msg_data)
 {
-	xmlNode *cmd = NULL;
-	
 	if(AM_I_DC == FALSE) {
 		crm_err("Not DC: No need to invoke the TE (anymore): %s",
 			fsa_action2string(action));
@@ -203,9 +205,14 @@ do_te_invoke(long long action,
 		    fclose(graph_fd);
 		}
 
+		CRM_CHECK(graph_data != NULL, crm_log_xml_err(input->msg, "Bad command"); return);
+		
 		destroy_graph(transition_graph);
-		transition_graph = unpack_graph(graph_data);				
-		start_global_timer(transition_timer, transition_graph->transition_timeout);
+		transition_graph = unpack_graph(graph_data);
+		CRM_CHECK(transition_graph != NULL, transition_graph = create_blank_graph(); return);
+		if(transition_graph->transition_timeout > 0) {
+		    start_global_timer(transition_timer, transition_graph->transition_timeout);
+		}
 		
 		value = crm_element_value(graph_data, "failed-stop-offset");
 		if(value) {
@@ -224,8 +231,6 @@ do_te_invoke(long long action,
 		    free_xml(graph_data);
 		}	
 	}
-
-	free_xml(cmd);
 }
 
 #if 0
