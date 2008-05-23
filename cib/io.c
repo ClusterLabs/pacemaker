@@ -303,12 +303,10 @@ retrieveCib(const char *filename, const char *sigfile, gboolean archive_invalid)
 xmlNode*
 readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 {
-	gboolean dtd_ok = TRUE;
-
 	char *filename = NULL, *sigfile = NULL;
 	const char *name = NULL;
 	const char *value = NULL;
-	const char *ignore_dtd = NULL;
+	const char *validation = NULL;
 	const char *use_valgrind = getenv("HA_VALGRIND_ENABLED");
 	
 	xmlNode *root = NULL;
@@ -401,18 +399,22 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 		crm_log_xml_info(root, "[on-disk]");
 	}
 
-	crm_err("Fix this");
-	ignore_dtd = crm_element_value(root, XML_ATTR_VALIDATION);
-	dtd_ok = validate_xml(root, NULL, TRUE);
-	if(dtd_ok == FALSE) {
-	    crm_err("CIB does not validate with %s", ignore_dtd);
+	validation = crm_element_value(root, XML_ATTR_VALIDATION);
+	if(validate_xml(root, validation, TRUE) == FALSE) {
+	    crm_err("CIB does not validate with %s", validation);
 	    cib_status = cib_dtd_validation;
 		
-	} else if(ignore_dtd == NULL) {
-		crm_notice("Enabling DTD validation on"
-			   " the existing (sane) configuration");
-		crm_xml_add(root, "ignore_dtd", XML_BOOLEAN_FALSE);	
-	}	
+	} else if(validation == NULL) {
+	    int version = update_validation(&root, FALSE, FALSE);
+	    if(version > 0) {
+		crm_notice("Enabling %s validation on"
+			   " the existing (sane) configuration",
+			   get_schema_name(version));
+	    } else {
+		crm_err("CIB does not validate with any known DTD or schema");
+		cib_status = cib_dtd_validation;
+	    }
+	}
 
 	crm_free(filename);
 	crm_free(sigfile);
