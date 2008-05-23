@@ -56,6 +56,7 @@
       <choice>
 	<value>none</value>
 	<value>pacemaker-0.6</value>
+	<value>transitional-0.6</value>
 	<value>pacemaker-0.7</value>
       </choice>
     </attribute>
@@ -66,7 +67,10 @@
       <attribute name="num-peers"><data type="integer"/></attribute>
     </optional>
     <optional>
-      <attribute name="remote-access-port"><data type="nonNegativeInteger"/></attribute>
+      <attribute name="remote-tls-port"><data type="nonNegativeInteger"/></attribute>
+    </optional>
+    <optional>
+      <attribute name="remote-clear-port"><data type="nonNegativeInteger"/></attribute>
     </optional>
     <optional>
       <attribute name="have-quorum"><data type="boolean"/></attribute>
