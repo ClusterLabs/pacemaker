@@ -363,7 +363,6 @@ static gboolean cib_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
     switch(wrapper->header.id) {
 	case crm_class_members:
 	case crm_class_notify:
-	    update_counters(__FILE__, __PRETTY_FUNCTION__, the_cib);
 	    break;
 	default:
 	    xml = string2xml(data);

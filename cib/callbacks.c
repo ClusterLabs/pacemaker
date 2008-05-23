@@ -1269,7 +1269,6 @@ cib_client_status_callback(const char * node, const char * client,
 	}
 	
 	crm_update_peer_proc(node, crm_proc_cib, status);
-	set_connected_peers(the_cib);
     }
     return;
 }
@@ -1353,8 +1352,6 @@ cib_ccm_msg_callback(
 	}
 	
 	oc_ev_callback_done(cookie);
-	set_connected_peers(the_cib);
-	
 	return;
 }
 #endif

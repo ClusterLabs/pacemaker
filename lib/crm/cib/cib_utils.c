@@ -269,7 +269,6 @@ cib_compare_generation(xmlNode *left, xmlNode *right)
 		XML_ATTR_GENERATION_ADMIN,
 		XML_ATTR_GENERATION,
 		XML_ATTR_NUMUPDATES,
-		XML_ATTR_NUMPEERS
 	};
 
 	crm_log_xml_debug_3(left, "left");

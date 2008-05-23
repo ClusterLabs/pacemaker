@@ -198,7 +198,6 @@ do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 	CRM_DEV_ASSERT(crm_element_value(output, XML_ATTR_DC_UUID) != NULL);
 
 	crm_xml_add_int(output, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
-	crm_xml_add_int(output, XML_ATTR_CCM_TRANSITION, crm_peer_seq);
 	
 	if(fsa_pe_ref) {
 		crm_free(fsa_pe_ref);

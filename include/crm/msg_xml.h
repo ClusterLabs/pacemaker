@@ -41,16 +41,14 @@
 #define XML_TAG_CIB			"cib"
 #define XML_TAG_FAILED			"failed"
 
-#define XML_ATTR_CRM_VERSION		"crm-feature-set"
+#define XML_ATTR_CRM_VERSION		"crm_feature_set"
 #define XML_ATTR_DIGEST			"digest"
 #define XML_ATTR_VALIDATION		"validate-with"
 
-#define XML_ATTR_NUMPEERS		"num-peers"
 #define XML_ATTR_HAVE_QUORUM		"have-quorum"
-#define XML_ATTR_CCM_TRANSITION		"ccm-transition"
 #define XML_ATTR_GENERATION		"epoch"
-#define XML_ATTR_GENERATION_ADMIN	"admin-epoch"
-#define XML_ATTR_NUMUPDATES		"num-updates"
+#define XML_ATTR_GENERATION_ADMIN	"admin_epoch"
+#define XML_ATTR_NUMUPDATES		"num_updates"
 #define XML_ATTR_TIMEOUT		"timeout"
 #define XML_ATTR_ORIGIN			"crm-debug-origin"
 #define XML_ATTR_TSTAMP			"crm-timestamp"
@@ -67,8 +65,6 @@
 #define XML_ATTR_OP			"op"
 #define XML_ATTR_DC			"is_dc"
 #define XML_ATTR_DC_UUID		"dc-uuid"
-#define XML_ATTR_CIB_REVISION		"cib-feature-revision"
-#define XML_ATTR_CIB_REVISION_MAX	"cib-feature-revision-max"
 
 #define XML_BOOLEAN_TRUE		"true"
 #define XML_BOOLEAN_FALSE		"false"

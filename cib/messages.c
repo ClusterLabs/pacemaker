@@ -459,56 +459,6 @@ update_results(
 	return was_error;
 }
 
-enum cib_errors
-revision_check(xmlNode *cib_update, xmlNode *cib_copy, int flags)
-{
-	int cmp = 0;
-	enum cib_errors rc = cib_ok;
-	char *new_revision = NULL;
-	const char *cur_revision = crm_element_value(
-		cib_copy, XML_ATTR_CIB_REVISION);
-
-	crm_validate_data(cib_update);
-	crm_validate_data(cib_copy);
-	
-	if(crm_element_value(cib_update, XML_ATTR_CIB_REVISION) == NULL) {
-		return cib_ok;
-	}
-
-	new_revision = crm_element_value_copy(cib_update,XML_ATTR_CIB_REVISION);
-	
-	cmp = compare_version(new_revision, CIB_FEATURE_SET);
-	if(cmp > 0) {
-		CRM_DEV_ASSERT(cib_is_master == FALSE);
-		CRM_DEV_ASSERT((flags & cib_scope_local) == 0);
-
-		if(cib_is_master) {
-			crm_err("Update uses an unsupported tag/feature:"
-				" %s vs %s", new_revision,CIB_FEATURE_SET);
-			rc = cib_revision_unsupported;
-
-		} else if(flags & cib_scope_local) {
-			 /* an admin has forced a local change using a tag we
-			  * dont understand... ERROR
-			  */
-			crm_err("Local update uses an unsupported tag/feature:"
-				" %s vs %s", new_revision,CIB_FEATURE_SET);
-			rc = cib_revision_unsupported;
-		}
-
-	} else if(cur_revision == NULL) {
-		crm_info("Updating CIB revision to %s", new_revision);
-		crm_xml_add(cib_copy, XML_ATTR_CIB_REVISION, new_revision);
-
-	} else {
-		/* make sure we end up with the right value in the end */
-		crm_xml_add(cib_update, XML_ATTR_CIB_REVISION, cur_revision);
-	} 
-	
-	crm_free(new_revision);
-	return rc;
-}
-
 #ifndef CIBPIPE
 enum cib_errors
 sync_our_cib(xmlNode *request, gboolean all) 

@@ -72,21 +72,6 @@ revision_check_callback(xmlNode *msg, int call_id, int rc,
 	
 	crm_debug_3("Checking our feature revision is allowed: %s", CIB_FEATURE_SET);
 
-	revision = crm_element_value(generation, XML_ATTR_CIB_REVISION);
-	cmp = compare_version(revision, CIB_FEATURE_SET);
-	
-	if(cmp > 0) {
-		crm_err("This build (%s) does not support the current"
-			" resource configuration", VERSION);
-		crm_err("We can support up to CIB feature set %s (current=%s)",
-			CIB_FEATURE_SET, revision);
-		crm_err("Shutting down the CRM");
-		/* go into a stall state */
-		register_fsa_error_adv(
-			C_FSA_INTERNAL, I_SHUTDOWN, NULL, NULL, __FUNCTION__);
-		return;
-	}
-
 	revision = crm_element_value(generation, XML_ATTR_CRM_VERSION);
 	cmp = compare_version(revision, CRM_FEATURE_SET);
 	

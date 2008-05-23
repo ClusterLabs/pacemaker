@@ -51,11 +51,6 @@ extern xmlNode *readCibXmlFile(
 extern int activateCibBuffer(char *buffer, const char *filename);
 extern int activateCibXml(xmlNode *doc, gboolean to_disk);
 
-extern gboolean update_quorum(xmlNode *xml_obj);
-extern gboolean set_connected_peers(xmlNode *xml_obj);
-extern gboolean update_counters(
-	const char *file, const char *fn, xmlNode *xml_obj);
-
 /* extern xmlNode *server_get_cib_copy(void); */
 
 #endif

@@ -82,16 +82,11 @@ cib_prepare_common(xmlNode *root, const char *section)
     if(section != NULL
        && data != NULL
        && safe_str_eq(crm_element_name(data), XML_TAG_CIB)){
-	int rc = revision_check(data, the_cib, 0/* call_options */);
-	if(rc == cib_ok) {
-	    data = get_object_root(section, data);
-	    if(data != NULL) {
-		crm_debug_3("Extracted %s from CIB", section);
-	    } else {
-		crm_log_xml_debug_4(root, "No Section");
-	    }
+	data = get_object_root(section, data);
+	if(data != NULL) {
+	    crm_debug_3("Extracted %s from CIB", section);
 	} else {
-	    crm_debug_2("Revision check failed");
+	    crm_log_xml_debug_4(root, "No Section");
 	}
     }
 

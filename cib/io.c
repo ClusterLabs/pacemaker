@@ -395,33 +395,24 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	}
 	
 	/* unset these and require the DC/CCM to update as needed */
-	update_counters(__FILE__, __PRETTY_FUNCTION__, root);
 	xml_remove_prop(root, XML_ATTR_DC_UUID);
 
 	if(discard_status) {
 		crm_log_xml_info(root, "[on-disk]");
 	}
-	
-	ignore_dtd = crm_element_value(root, "ignore_dtd");
+
+	crm_err("Fix this");
+	ignore_dtd = crm_element_value(root, XML_ATTR_VALIDATION);
 	dtd_ok = validate_xml(root, NULL, TRUE);
 	if(dtd_ok == FALSE) {
-		crm_err("CIB does not validate");
-		if(ignore_dtd != NULL && crm_is_true(ignore_dtd) == FALSE) {
-			cib_status = cib_dtd_validation;
-		}
+	    crm_err("CIB does not validate with %s", ignore_dtd);
+	    cib_status = cib_dtd_validation;
 		
 	} else if(ignore_dtd == NULL) {
 		crm_notice("Enabling DTD validation on"
 			   " the existing (sane) configuration");
 		crm_xml_add(root, "ignore_dtd", XML_BOOLEAN_FALSE);	
 	}	
-	
-	if(do_id_check(root, NULL, TRUE, FALSE)) {
-		crm_err("%s does not contain a vaild configuration:"
-			" ID check failed",
-			 filename);
-		cib_status = cib_id_check;
-	}
 
 	crm_free(filename);
 	crm_free(sigfile);
@@ -478,8 +469,6 @@ initializeCib(xmlNode *new_cib)
 	if(new_cib == NULL) {
 		return FALSE;
 	}
-	
-	update_counters(__FILE__, __PRETTY_FUNCTION__, new_cib);
 	
 	the_cib = new_cib;
 	initialized = TRUE;
@@ -587,9 +576,7 @@ activateCibXml(xmlNode *new_cib, gboolean to_disk)
 	xmlNode *saved_cib = the_cib;
 
 	crm_debug_2("Activating new CIB");
-	
 	crm_log_xml_debug_4(new_cib, "Attempting to activate CIB");
-	update_counters(__FILE__, __FUNCTION__, new_cib);
 
 	CRM_ASSERT(new_cib != saved_cib);
 	if(saved_cib != NULL) {
@@ -754,47 +741,6 @@ write_cib_contents(gpointer p)
 	/* stand-alone mode */
 	return exit_rc;
 }
-
-gboolean
-set_connected_peers(xmlNode *xml_obj)
-{
-	guint active = 0;
-	int current = 0;
-	char *peers_s = NULL;
-	const char *current_s = NULL;
-	if(xml_obj == NULL) {
-		return FALSE;
-	}
-
-	current_s = crm_element_value(xml_obj, XML_ATTR_NUMPEERS);
-	current = crm_parse_int(current_s, "0");
-	active = crm_active_peers(crm_proc_cib);
-
-	if(current != active) {
-	    crm_malloc0(peers_s, 32);
-	    snprintf(peers_s, 32, "%u", active);
-	    crm_xml_add(xml_obj, XML_ATTR_NUMPEERS, peers_s);
-	    crm_debug("We now have %s (%u) active peers", peers_s, active);
-	    crm_free(peers_s);
-	    return TRUE;
-	}
-	return FALSE;
-}
-
-gboolean
-update_counters(const char *file, const char *fn, xmlNode *xml_obj) 
-{
-	gboolean did_update = FALSE;
-
-	did_update = did_update || set_connected_peers(xml_obj);
-	
-	if(did_update) {
-		do_crm_log(LOG_DEBUG, "Counters updated by %s", fn);
-	}
-	return did_update;
-}
-
-
 
 void GHFunc_count_peers(gpointer key, gpointer value, gpointer user_data)
 {

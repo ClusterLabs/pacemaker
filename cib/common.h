@@ -20,7 +20,6 @@
 
 extern xmlNode *cib_msg_copy(xmlNode *msg, gboolean with_data);
 extern xmlNode *cib_construct_reply(xmlNode *request, xmlNode *output, int rc);
-extern enum cib_errors revision_check(xmlNode *cib_update, xmlNode *cib_copy, int flags);
 extern enum cib_errors cib_get_operation_id(const char *op, int *operation);
 
 extern enum cib_errors cib_perform_op(
@@ -28,9 +27,6 @@ extern enum cib_errors cib_perform_op(
     const char *section, xmlNode *req, xmlNode *input,
     gboolean manage_counters, gboolean *config_changed,
     xmlNode *current_cib, xmlNode **result_cib, xmlNode **output);
-
-extern enum cib_errors cib_update_counter(
-    xmlNode *xml_obj, const char *field, gboolean reset);
 
 extern cib_op_t *cib_op_func(int call_type);
 
