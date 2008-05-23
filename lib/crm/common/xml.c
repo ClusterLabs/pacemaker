@@ -2970,14 +2970,6 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_log
 	validation = crm_element_value(xml_blob, XML_ATTR_VALIDATION);
     }
 
-    if(validation == NULL) {
-	/* Compatibility for 0.6 */
-	const char *value = crm_element_value(xml_blob, "ignore_dtd");
-	if(value != NULL && crm_is_true(value) == FALSE) {
-	    validation = "pacemaker-0.6";
-	}
-    }
-    
     if(validation == NULL || safe_str_eq(validation, "none")) {
 	return TRUE;
     }
