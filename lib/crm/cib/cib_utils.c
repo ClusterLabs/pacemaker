@@ -47,8 +47,8 @@ struct config_root_s
   * find anywhere and risks multiple matches
   */
 struct config_root_s known_paths[] = {
-    { NULL,            NULL,                 "/" },
-    { "cib",           NULL,                 "/" },
+    { NULL,            NULL,                 "/cib" },
+    { "cib",           NULL,                 "/cib" },
     { "status",        "/cib",               "/cib/status" },
     { "configuration", "/cib",               "/cib/configuration" },
     { "crm_config",    "/cib/configuration", "/cib/configuration/crm_config" },
@@ -57,7 +57,7 @@ struct config_root_s known_paths[] = {
     { "constraints",   "/cib/configuration", "/cib/configuration/constraints" },
     { "op_defaults",   "/cib/configuration", "/cib/configuration/op_defaults" },
     { "rsc_defaults",  "/cib/configuration", "/cib/configuration/rsc_defaults" },
-    { "all",            NULL,                "/" },
+    { "all",            NULL,                "/cib" },
 };
 
 const char *
@@ -452,10 +452,7 @@ get_object_root(const char *object_type, xmlNode *the_root)
 
     } else {
 	result = xpathObj->nodesetval->nodeTab[0];
-	if(result->type == XML_DOCUMENT_NODE) {
-	    result = result->children;
-	}
-	CRM_CHECK(result->type == XML_ELEMENT_NODE, return NULL);
+	CRM_CHECK(result->type == XML_ELEMENT_NODE, result = NULL);
     }
     
     if(xpathObj) {
