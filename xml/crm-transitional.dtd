@@ -42,14 +42,10 @@ TODO
           remote_access_port    CDATA   #IMPLIED        
 
           dc-uuid               CDATA   #IMPLIED
-          ccm-transition        CDATA   #IMPLIED
-          cib-feature-revision  CDATA   #IMPLIED
-          crm-feature-set       CDATA   #IMPLIED
-          admin-epoch           CDATA   #IMPLIED
-          num-updates           CDATA   #IMPLIED
-          validate-with         CDATA   #IMPLIED        
-          num-peers             CDATA   #IMPLIED        
           have-quorum    (true|yes|1|false|no|0)  'false'
+
+          validate-with         CDATA   #IMPLIED        
+          remote-tls-port       CDATA   #IMPLIED        
 
           dc_uuid        CDATA             #IMPLIED
           ccm_transition CDATA             #IMPLIED
@@ -854,9 +850,9 @@ The parameters section allows us to detect when a resource's definition has chan
 <!ATTLIST lrm_rsc_op
           id                    CDATA #REQUIRED
           operation             CDATA #REQUIRED
-          op_status             CDATA #REQUIRED
-          rc_code               CDATA #REQUIRED
-          call_id               CDATA #REQUIRED
+          op_status             CDATA #IMPLIED
+          rc_code               CDATA #IMPLIED
+          call_id               CDATA #IMPLIED
           crm_feature_set       CDATA #REQUIRED
           crm-debug-origin      CDATA #IMPLIED
           migrate_from          CDATA #IMPLIED
@@ -871,4 +867,18 @@ The parameters section allows us to detect when a resource's definition has chan
           queue_time            CDATA #IMPLIED
 
           interval              CDATA #REQUIRED
-          transition_magic      CDATA #REQUIRED>
+          transition_magic      CDATA #IMPLIED
+
+          op-status             CDATA #IMPLIED
+          rc-code               CDATA #IMPLIED
+          call-id               CDATA #IMPLIED
+          migrate-from          CDATA #IMPLIED
+          transition-key        CDATA #IMPLIED
+          transition-magic      CDATA #IMPLIED
+          op-digest             CDATA #IMPLIED
+          op-restart-digest     CDATA #IMPLIED
+          op-force-restart      CDATA #IMPLIED
+          last-run              CDATA #IMPLIED
+          last-rc-change        CDATA #IMPLIED
+          exec-time             CDATA #IMPLIED
+          queue-time            CDATA #IMPLIED>
