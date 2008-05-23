@@ -317,7 +317,7 @@ int cib_op_can_run(
 	/* abort */
 	return cib_not_authorized;
     }
-	
+#if 0
     if(rc == cib_ok
        && stand_alone == FALSE
        && global_update == FALSE
@@ -325,6 +325,7 @@ int cib_op_can_run(
        && cib_server_ops[call_type].needs_quorum) {
 	return cib_no_quorum;
     }
+#endif
     return cib_ok;
 }
 
