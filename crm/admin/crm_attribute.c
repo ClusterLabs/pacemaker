@@ -131,6 +131,7 @@ main(int argc, char **argv)
 				break;
 			case 'D':
 				DO_DELETE = TRUE;
+				DO_WRITE = FALSE;
 				break;
 			case 'U':
 				crm_debug_2("Option %c => %s", flag, optarg);
