@@ -356,12 +356,19 @@ static void *crm_wait_dispatch (void *arg)
     return 0;
 }
 
+#include <sys/stat.h>
+
 int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
 {
     int lpc = 0;
 
     ENTER("");
-    
+
+    mkdir(HA_VARRUNDIR, 750);
+    mkdir(HA_VARRUNDIR"/crm", 750);
+    chown(HA_VARRUNDIR"/crm", HA_CCMUID, HA_APIGID);
+    chown(HA_VARRUNDIR, HA_CCMUID, HA_APIGID);
+	
     pthread_create (&crm_wait_thread, NULL, crm_wait_dispatch, NULL);
 
     for (; lpc < SIZEOF(crm_children); lpc++) {
