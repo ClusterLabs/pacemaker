@@ -341,8 +341,6 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	if(root == NULL) {
 	    root = createEmptyCib();
 	    crm_warn("Continuing with an empty configuration.");
-	} else {
-	    crm_xml_add(root, "generated", XML_BOOLEAN_FALSE);	
 	}	
 
 	if(cib_writes_enabled && crm_is_true(use_valgrind)) {
