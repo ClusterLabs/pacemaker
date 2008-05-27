@@ -735,6 +735,7 @@ cib_native_callback(cib_t *cib, xmlNode *msg, int call_id, int rc)
 	cib_callback_client_t *blob = NULL;
 	cib_callback_client_t local_blob;
 
+	local_blob.id = NULL;
 	local_blob.callback = NULL;
 	local_blob.user_data = NULL;
 	local_blob.only_success = FALSE;
