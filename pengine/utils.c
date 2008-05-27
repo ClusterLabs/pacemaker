@@ -392,7 +392,7 @@ order_actions(
 	action_wrapper_t *wrapper = NULL;
 	GListPtr list = NULL;
 	
-	crm_debug_2("Ordering Action %s before %s",
+	crm_debug_3("Ordering Action %s before %s",
 		    lh_action->uuid, rh_action->uuid);
 
 	log_action(LOG_DEBUG_4, "LH (order_actions)", lh_action, FALSE);

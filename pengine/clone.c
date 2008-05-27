@@ -982,7 +982,7 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	crm_debug_2("%s->%s", order->lh_action_task, order->rh_action_task);
+	crm_debug_4("%s->%s", order->lh_action_task, order->rh_action_task);
 	
 	r1 = uber_parent(rsc);
 	r2 = uber_parent(order->rh_rsc);
@@ -1076,7 +1076,7 @@ void clone_rsc_order_rh(
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	crm_debug_2("%s->%s", lh_action->uuid, order->rh_action_task);
+	crm_debug_4("%s->%s", lh_action->uuid, order->rh_action_task);
 	if(safe_str_eq(CRM_OP_PROBED, lh_action->uuid)) {
 	    slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,

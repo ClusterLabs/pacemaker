@@ -380,7 +380,7 @@ void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	crm_debug_2("%s->%s", order->lh_action_task, order->rh_action_task);
+	crm_debug_4("%s->%s", order->lh_action_task, order->rh_action_task);
 
 	if(order->rh_rsc != NULL
 	   && (rsc == order->rh_rsc || rsc == order->rh_rsc->parent)) {
@@ -407,7 +407,7 @@ void group_rsc_order_rh(
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	crm_debug_2("%s->%s", lh_action->uuid, order->rh_action_task);
+	crm_debug_4("%s->%s", lh_action->uuid, order->rh_action_task);
 
 	if(rsc == NULL) {
 		return;

@@ -735,7 +735,7 @@ stage7(pe_working_set_t *data_set)
 		order, order_constraint_t, data_set->ordering_constraints, lpc,
 
 		resource_t *rsc = order->lh_rsc;
-		crm_debug_2("Applying ordering constraint: %d", order->id);
+		crm_debug_3("Applying ordering constraint: %d", order->id);
 		
 		if(rsc != NULL) {
 			crm_debug_4("rsc_action-to-*");

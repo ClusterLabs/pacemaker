@@ -382,7 +382,7 @@ native_resource_state(const resource_t *rsc, gboolean current)
 	if(current) {
 		role = rsc->role;
 	}
-	crm_debug_2("%s state: %s", rsc->id, role2text(role));
+	crm_debug_4("%s state: %s", rsc->id, role2text(role));
 	return role;
 }
 

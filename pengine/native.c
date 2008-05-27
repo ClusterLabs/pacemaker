@@ -787,7 +787,7 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order, pe_worki
 	action_t *lh_action = order->lh_action;
 	resource_t *rh_rsc = order->rh_rsc;
 
-	crm_debug_2("Processing LH of ordering constraint %d", order->id);
+	crm_debug_3("Processing LH of ordering constraint %d", order->id);
 	CRM_ASSERT(lh_rsc != NULL);
 	
 	if(lh_action != NULL) {
