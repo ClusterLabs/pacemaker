@@ -1056,7 +1056,7 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	crm_xml_add(tmp1, XML_ATTR_TYPE, type);
 
 	fsa_cib_anon_update(XML_CIB_TAG_NODES, tmp1,
-			    cib_scope_local|cib_quorum_override);
+			    cib_scope_local|cib_quorum_override|cib_can_create);
 
 	free_xml(tmp1);
 	
@@ -1203,10 +1203,8 @@ void erase_status_tag(const char *uname, const char *tag)
     int cib_opts = cib_scope_local|cib_quorum_override|cib_xpath;
 
     if(fsa_cib_conn) {
-	xmlNode *update = create_xml_node(NULL, tag);
-	crm_xml_add(update, XML_ATTR_ID, fsa_our_uuid);
-	snprintf(xpath, STATUS_PATH_MAX, "//node_state[uname=\"%s\"]/%s", uname, tag);
-	fsa_cib_conn->cmds->replace(fsa_cib_conn, xpath, update, cib_opts);
-	free_xml(update);
+	snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname=\"%s\"]/%s", uname, tag);
+	crm_debug("Replacing %s", xpath);
+	fsa_cib_conn->cmds->delete(fsa_cib_conn, xpath, NULL, cib_opts);
     }
 }
