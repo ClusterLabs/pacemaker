@@ -389,7 +389,7 @@
       <xsl:call-template name="rename-default">
 	<xsl:with-param name="newvalue"><xsl:value-of select="@remote-tls-port"/></xsl:with-param>
 	<xsl:with-param name="oldvalue"><xsl:value-of select="@remote_access_port"/></xsl:with-param>
-	<xsl:with-param name="default">-1</xsl:with-param>
+	<xsl:with-param name="default">0</xsl:with-param>
       </xsl:call-template>
     </xsl:attribute>
 
