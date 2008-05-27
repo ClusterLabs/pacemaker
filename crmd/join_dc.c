@@ -559,7 +559,7 @@ do_dc_join_ack(long long action,
 	 */
 	erase_status_tag(join_from, XML_CIB_TAG_LRM);
 	fsa_cib_update(XML_CIB_TAG_STATUS, join_ack->xml,
-		       cib_scope_local|cib_quorum_override, call_id);
+		       cib_scope_local|cib_quorum_override|cib_can_create, call_id);
 	add_cib_op_callback(
 		fsa_cib_conn, call_id, FALSE, NULL, join_update_complete_callback);
  	crm_debug("join-%d: Registered callback for LRM update %d",

@@ -325,7 +325,7 @@ crmd_ha_status_callback(const char *node, const char *status, void *private)
 
 	if(update != NULL) {
 	    fsa_cib_anon_update(
-		XML_CIB_TAG_STATUS, update, cib_scope_local|cib_quorum_override);
+		XML_CIB_TAG_STATUS, update, cib_scope_local|cib_quorum_override|cib_can_create);
 	    free_xml(update);
 	}
 }
@@ -400,7 +400,7 @@ crmd_client_status_callback(const char * node, const char * client,
 		node, NULL, NULL, status, join, NULL, clear_shutdown, __FUNCTION__);
 	    
 	    fsa_cib_anon_update(
-		XML_CIB_TAG_STATUS, update, cib_scope_local|cib_quorum_override);
+		XML_CIB_TAG_STATUS, update, cib_scope_local|cib_quorum_override|cib_can_create);
 	    free_xml(update);
 	    
 	    if(safe_str_eq(status, OFFLINESTATUS)) {
