@@ -288,15 +288,24 @@ extern const char *get_schema_name(int version);
 	}								\
     } while(0)
 
-#  define free_xml(a_node) do {					\
-	if((a_node) == NULL) {					\
-	} else if ((a_node)->doc != NULL) {			\
-	    xmlFreeDoc((a_node)->doc);				\
-	} else {						\
-	    /* make sure the node is unlinked first */		\
-	    xmlUnlinkNode(a_node);				\
-	    xmlFreeNode(a_node);				\
-	}							\
+#  define free_xml(a_node) do {						\
+	if((a_node) != NULL) {						\
+	    xmlNode *top = NULL;					\
+	    xmlDoc *a_doc = (a_node)->doc;				\
+	    if (a_doc != NULL) {					\
+		top = xmlDocGetRootElement(a_doc);			\
+	    }								\
+	    if(a_doc != NULL && top == (a_node)) {			\
+		xmlFreeDoc(a_doc);					\
+	    } else {							\
+		if(a_doc != NULL) {					\
+		    crm_err("Attempted to free XML from within an xmlDocPtr"); \
+		}							\
+		/* make sure the node is unlinked first */		\
+		xmlUnlinkNode(a_node);					\
+		xmlFreeNode(a_node);					\
+	    }								\
+	}								\
     } while(0)
 
 
