@@ -443,9 +443,16 @@ xmlNode*
 get_object_root(const char *object_type, xmlNode *the_root)
 {
     xmlNode *result = NULL;
-    xmlXPathObjectPtr xpathObj = xpath_search(the_root, get_object_path(object_type));
+    xmlXPathObjectPtr xpathObj = NULL;
+    const char *xpath = get_object_path(object_type);
+
+    if(xpath == NULL) {
+	return the_root; /* or return NULL? */
+    }
+    
+    xpathObj = xpath_search(the_root, xpath);
     if(xpathObj == NULL || xpathObj->nodesetval == NULL || xpathObj->nodesetval->nodeNr < 1) {
-	crm_debug("Object %s not found", crm_str(object_type));
+	crm_debug_2("Object %s not found", crm_str(object_type));
 	
     } else if(xpathObj->nodesetval->nodeNr > 1) {
 	crm_err("Too many matches for %s", crm_str(object_type));
@@ -546,7 +553,6 @@ createEmptyCib(void)
 	status = create_xml_node(cib_root, XML_CIB_TAG_STATUS);
 
 /* 	crm_xml_add(cib_root, "version", "1"); */
-	crm_xml_add(cib_root, "generated", XML_BOOLEAN_TRUE);
 	crm_xml_add(cib_root, XML_ATTR_GENERATION, "0");
 	crm_xml_add(cib_root, XML_ATTR_GENERATION_ADMIN, "0");
 	crm_xml_add(cib_root, XML_ATTR_NUMUPDATES, "0");
