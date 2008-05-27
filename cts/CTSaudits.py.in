@@ -204,6 +204,10 @@ class PrimitiveAudit(ClusterAudit):
                 self.CM.debug("Resource %s not served anywhere (Inactive nodes: %s)" 
                               % (resource.id, repr(self.inactive_nodes)))
 
+        elif self.CM.HasQuorum(None) or not resource.needs_quorum:
+            self.CM.debug("Resource %s not served anywhere (Inactive nodes: %s)" 
+                          % (resource.id, repr(self.inactive_nodes)))
+
         if resource.managed == "0":
             self.CM.log("Resource %s not managed: faking success" % resource.id)
             rc = 1
