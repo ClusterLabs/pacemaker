@@ -1044,7 +1044,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	if(rsc->failure_timeout > 0) {
 	    int last_run = 0;
 
-	    if(crm_element_value_int(xml_op, "last_run", &last_run) == 0) {
+	    if(crm_element_value_int(xml_op, "last-run", &last_run) == 0) {
 /* int last_change = crm_element_value_int(xml_op, "last_rc_change"); */
 		time_t now = get_timet_now(data_set);
 		if(now > (last_run + rsc->failure_timeout)) {
