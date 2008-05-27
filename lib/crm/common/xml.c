@@ -391,8 +391,12 @@ crm_xml_add(xmlNode* node, const char *name, const char *value)
     old_value = crm_element_value(node, name);
 
 #if 1
-    if (old_value != NULL && (value == NULL || value[0] == 0)) {
-	crm_err("Unsetting %s with crm_xml_add()", name);
+    if (old_value != NULL
+	&& old_value[0] != 0
+	&& (value == NULL || value[0] == 0)) {
+	CRM_CHECK_AND_STORE(FALSE,
+			    crm_err("Unsetting %s with crm_xml_add(%s -> %s)",
+				    name, crm_str(old_value), crm_str(value)));
 	xml_remove_prop(node, name);
 	return NULL;
     }
@@ -2308,13 +2312,13 @@ replace_xml_child(xmlNode *parent, xmlNode *child, xmlNode *update, gboolean del
 	
 	if(can_delete && parent != NULL) {
 		crm_log_xml_debug_4(child, "Delete match found...");
-		if(delete_only) {
-		    free_xml(child);
+		if(delete_only || update == NULL) {
+		    free_xml_from_parent(NULL, child);
 		    
 		} else {	
 		    xmlNode *tmp = copy_xml(update);
 		    xmlNode *old = xmlReplaceNode(child, tmp);
-		    free_xml(old);
+		    free_xml_from_parent(NULL, old);
 		}
 		child = NULL;
 		return TRUE;
@@ -2392,7 +2396,6 @@ hash2metafield(gpointer key, gpointer value, gpointer user_data)
 	}
     }
 
-    crm_err("Fixed meta field: %s", crm_name);
     hash2field(crm_name, value, user_data);
     crm_free(crm_name);
 }
@@ -3049,27 +3052,27 @@ int update_validation(
     xmlNode **xml_blob, gboolean transform, gboolean to_logs) 
 {
     xmlNode *xml = NULL;
-    const char *value = NULL;
+    char *value = NULL;
     int lpc = 0, match = -1, best = 0;
 
     CRM_CHECK(xml_blob != NULL, return -1);
     CRM_CHECK(*xml_blob != NULL, return -1);
     
     xml = *xml_blob;
-    value = crm_element_value(xml, XML_ATTR_VALIDATION);
+    value = crm_element_value_copy(xml, XML_ATTR_VALIDATION);
 
     if(value != NULL) {
 	match = get_schema_version(value);
-	lpc = match + 1;
+	lpc = match;
+	if(transform == FALSE) {
+	    lpc++;
+	}
     }
 
     if(match == (max_schemas - 1)) {
 	/* nothing to do */
+	crm_free(value);
 	return match;
-
-    } else if(match == 0) {
-	/* they dont want any */
-	return match;	
     }
     
     for(; lpc < max_schemas; lpc++) {
@@ -3109,12 +3112,13 @@ int update_validation(
     }
     
     if(best > match) {
-	crm_notice("Upgrading from %s to %s validation", value?value:"<none>", known_schemas[best].name);
+	crm_notice("Upgraded from %s to %s validation", value?value:"<none>", known_schemas[best].name);
 	crm_xml_add(xml, XML_ATTR_VALIDATION, known_schemas[best].name);
 	match = best;
     }
 
     *xml_blob = xml;
+    crm_free(value);
     return match;
 }
 
