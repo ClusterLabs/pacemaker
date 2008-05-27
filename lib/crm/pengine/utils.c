@@ -1154,7 +1154,9 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 		sort_return(0);
 	}
 	
-	CRM_CHECK(a_task_id != NULL && b_task_id != NULL, sort_return(0));	
+	CRM_CHECK(a_task_id != NULL && b_task_id != NULL,
+		  crm_err("a: %s, b: %s", crm_str(a_xml_id), crm_str(b_xml_id));
+		  sort_return(0));	
 	a_call_id = crm_parse_int(a_task_id, NULL);
 	b_call_id = crm_parse_int(b_task_id, NULL);
 	
@@ -1203,7 +1205,10 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 		 *   because we query the LRM directly
 		 */
 		
-		CRM_CHECK(a_call_id == -1 || b_call_id == -1, sort_return(0));
+		CRM_CHECK(a_call_id == -1 || b_call_id == -1,
+			  crm_err("a: %s=%d, b: %s=%d",
+				  crm_str(a_xml_id), a_call_id, crm_str(b_xml_id), b_call_id);
+			  sort_return(0));
 		CRM_CHECK(a_call_id >= 0  || b_call_id >= 0, sort_return(0));
 
 		if(b_call_id == -1) {
