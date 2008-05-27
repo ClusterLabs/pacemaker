@@ -59,6 +59,8 @@ static char *cib_send_plaintext(int sock, xmlNode *msg);
 static char *cib_recv_plaintext(int sock);
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
+gnutls_session *create_tls_session(int csock, int type);
+
 gnutls_session *
 create_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT */)
 {
