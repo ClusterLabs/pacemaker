@@ -286,8 +286,29 @@ cib_process_modify(
 	crm_validate_data(input);
 	crm_validate_data(*result_cib);
 
+	if(obj_root == NULL) {
+	    xmlNode *tmp_section = NULL;
+	    const char *path = get_object_parent(section);
+	    if(path == NULL) {
+		return cib_bad_section;		
+	    }
+
+	    tmp_section = create_xml_node(NULL, section);
+	    cib_process_xpath(
+		CIB_OP_CREATE, 0, path, NULL, tmp_section, NULL, result_cib, answer);
+	    free_xml(tmp_section);
+	    
+	    obj_root = get_object_root(section, *result_cib);
+	}
+
+	CRM_CHECK(obj_root != NULL, return cib_unknown);
+	
 	if(update_xml_child(obj_root, input) == FALSE) {
+	    if(options & cib_can_create) {
+		add_node_copy(obj_root, input);
+	    } else {
 		return cib_NOTEXISTS;		
+	    }
 	}
 	
 	return cib_ok;
@@ -654,17 +675,16 @@ cib_process_xpath(
 	xpathObj = xpath_search(*result_cib, section);
     }
     
-    if(xpathObj == NULL || xpathObj->nodesetval == NULL) {
-	goto out;
+    if(xpathObj != NULL && xpathObj->nodesetval != NULL) {
+	max = xpathObj->nodesetval->nodeNr;
     }
 
-    max = xpathObj->nodesetval->nodeNr;
     if(max < 1 && safe_str_eq(op, CIB_OP_DELETE)) {
-	goto out;
+	crm_debug("%s was already removed", section);
 
     } else if(max < 1) {
+	crm_debug("%s: %s does not exist", op, section);
 	rc = cib_NOTEXISTS;
-	goto out;
 
     } else if(safe_str_eq(op, CIB_OP_QUERY)) {
 	if(max > 1) {
@@ -681,7 +701,10 @@ cib_process_xpath(
 	    match = match->children;
 	}
 
-	CRM_CHECK(match->type == XML_ELEMENT_NODE, continue);
+	crm_info("Processing %s op for %s (%s)", op, section, xmlGetNodePath(match));
+	CRM_CHECK(match->type == XML_ELEMENT_NODE,
+		  crm_info("Wrong node type: %d", match->type);
+		  continue);
 
 	if(safe_str_eq(op, CIB_OP_DELETE)) {
 	    free_xml_from_parent(NULL, match);
@@ -698,7 +721,8 @@ cib_process_xpath(
 	    }
 	    
 	} else if(safe_str_eq(op, CIB_OP_CREATE)) {
-	    rc = cib_NOTSUPPORTED;		
+	    add_node_copy(match, input);
+	    break;
 
 	} else if(safe_str_eq(op, CIB_OP_QUERY)) {
 	    if(*answer) {
@@ -709,15 +733,14 @@ cib_process_xpath(
 	    }
 	    
 	} else if(safe_str_eq(op, CIB_OP_REPLACE)) {
-	    if(replace_xml_child(NULL, match, input, FALSE) == FALSE) {
-		crm_debug_2("No matching object to replace");
-		rc = cib_NOTEXISTS;
-		
-	    } else {
-		rc = cib_ok;
-		if((options & cib_multiple) == 0) {
-		    break;
-		}
+	    xmlNode *parent = match->parent;
+	    free_xml_from_parent(NULL, match);
+	    if(input != NULL) {
+		add_node_copy(parent, input);
+	    }
+	    
+	    if((options & cib_multiple) == 0) {
+		break;
 	    }
 	}
     }
