@@ -60,12 +60,12 @@
 	<value>pacemaker-0.7</value>
       </choice>
     </attribute>
-    <attribute name="admin-epoch"><data type="nonNegativeInteger"/></attribute>
-    <attribute name="epoch"><data type="nonNegativeInteger"/></attribute>
-    <attribute name="num-updates"><data type="nonNegativeInteger"/></attribute>
     <optional>
-      <attribute name="num-peers"><data type="integer"/></attribute>
+      <attribute name="crm_feature_set"><text/></attribute>
     </optional>
+    <attribute name="admin_epoch"><data type="nonNegativeInteger"/></attribute>
+    <attribute name="epoch"><data type="nonNegativeInteger"/></attribute>
+    <attribute name="num_updates"><data type="nonNegativeInteger"/></attribute>
     <optional>
       <attribute name="remote-tls-port"><data type="nonNegativeInteger"/></attribute>
     </optional>
@@ -77,12 +77,6 @@
     </optional>
     <optional>
       <attribute name="dc-uuid"><text/></attribute>
-    </optional>
-    <optional>
-      <attribute name="cib-feature-revision"><text/></attribute>
-    </optional>
-    <optional>
-      <attribute name="crm-feature-set"><text/></attribute>
     </optional>
     <optional>
       <attribute name="cib-last-written"><text/></attribute>
