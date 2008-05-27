@@ -106,6 +106,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		was_processing_error = FALSE;
 		was_processing_warning = FALSE;
 
+		set_working_set_defaults(&data_set);
 		graph_file = crm_strdup(WORKING_DIR"/graph.XXXXXX");
 		graph_file = mktemp(graph_file);
 
@@ -119,7 +120,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		    crm_config_warn("Please use XXX to upgrade %s", LATEST_SCHEMA_VERSION);
 		    
 		    converted = copy_xml(xml_data);
-		    schema_version = update_validation(&converted, TRUE, FALSE);
+		    schema_version = update_validation(&converted, TRUE, TRUE);
 
 		    value = crm_element_value(converted, XML_ATTR_VALIDATION);
 		    if(schema_version < min_version) {
@@ -128,9 +129,8 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 
 			data_set.graph = create_xml_node(NULL, XML_TAG_GRAPH);
 			crm_xml_add_int(data_set.graph, "transition_id", 0);
+			crm_xml_add_int(data_set.graph, "cluster-delay", 0);
 			process = FALSE;
-			free_xml(converted);
-			converted = NULL;
 
 		    } else if(schema_version < max_version) {
 			crm_config_warn("Your configuration was internally updated to %s... "
@@ -142,7 +142,6 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		    xml_data = converted;
 		}
 
-		set_working_set_defaults(&data_set);
 		if(process) {
 		    do_calculations(&data_set, xml_data, NULL);
 		}
