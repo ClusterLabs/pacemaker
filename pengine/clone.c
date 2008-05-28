@@ -114,7 +114,7 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 
 	if(node1) {
 	    node_t *match = pe_find_node_id(resource1->allowed_nodes, node1->details->id);
-	    if(match->weight < 0) {
+	    if(match == NULL || match->weight < 0) {
 		do_crm_log(level, "%s: current location is unavailable", resource1->id);
 		node1 = NULL;
 		can1 = FALSE;
@@ -123,7 +123,7 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 
 	if(node2) {
 	    node_t *match = pe_find_node_id(resource2->allowed_nodes, node2->details->id);
-	    if(match->weight < 0) {
+	    if(match == NULL || match->weight < 0) {
 		do_crm_log(level, "%s: current location is unavailable", resource2->id);
 		node2 = NULL;
 		can2 = FALSE;
