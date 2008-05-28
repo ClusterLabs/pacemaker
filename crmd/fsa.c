@@ -415,8 +415,6 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 			/*
 			 * Highest priority actions
 			 */
-		} else if(is_set(fsa_actions, A_CIB_BUMPGEN)) {
-			do_fsa_action(fsa_data, A_CIB_BUMPGEN,		do_cib_invoke);
 		} else if(is_set(fsa_actions, A_MSG_ROUTE)) {
 			do_fsa_action(fsa_data, A_MSG_ROUTE,		do_msg_route);
 		} else if(is_set(fsa_actions, A_RECOVER)) {
@@ -473,10 +471,6 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 			 * Make sure the CIB is always updated before invoking the
 			 * PE, and the PE before the TE
 			 */
-		} else if(is_set(fsa_actions, A_CIB_INVOKE_LOCAL)) {
-			do_fsa_action(fsa_data, A_CIB_INVOKE_LOCAL,	do_cib_invoke);
-		} else if(is_set(fsa_actions, A_CIB_INVOKE)) {
-			do_fsa_action(fsa_data, A_CIB_INVOKE,		do_cib_invoke);
 		} else if(is_set(fsa_actions, A_DC_JOIN_FINALIZE)) {
 			do_fsa_action(fsa_data, A_DC_JOIN_FINALIZE,	do_dc_join_finalize);
 		} else if(is_set(fsa_actions, A_LRM_INVOKE)) {
