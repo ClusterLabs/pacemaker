@@ -277,15 +277,6 @@ do_cl_join_finalize_respond(long long action,
 		  enum crmd_fsa_input current_input,
 		  fsa_data_t *msg_data);
 
-/*	A_CIB_INVOKE	*/
-void
-do_cib_invoke(long long action,
-	      enum crmd_fsa_cause cause,
-	      enum crmd_fsa_state cur_state,
-	      enum crmd_fsa_input cur_input,
-	      fsa_data_t *msg_data);
-
-
 /*	 A_UPDATE_NODESTATUS */
 void
 do_update_node_status(long long action,

@@ -223,7 +223,7 @@ fsa_input2string(enum crmd_fsa_input input)
 			inputAsText = "I_NULL";
 			break;
 		case I_CIB_OP:
-			inputAsText = "I_CIB_OP";
+			inputAsText = "I_CIB_OP (unused)";
 			break;
 		case I_CIB_UPDATE:
 			inputAsText = "I_CIB_UPDATE";
@@ -588,12 +588,6 @@ fsa_action2string(long long action)
 			break;
 		case A_CCM_DISCONNECT:
 			actionAsText = "A_CCM_DISCONNECT";
-			break;
-		case A_CIB_BUMPGEN:
-			actionAsText = "A_CIB_BUMPGEN";
-			break;
-		case A_CIB_INVOKE:
-			actionAsText = "A_CIB_INVOKE";
 			break;
 		case O_CIB_RESTART:
 			actionAsText = "O_CIB_RESTART";
@@ -960,16 +954,6 @@ fsa_dump_actions(long long action, const char *text)
 		do_crm_log(log_level, 
 			   "Action %.16llx (A_CCM_DISCONNECT) %s",
 			  A_CCM_DISCONNECT, text);
-	}
-	if(is_set(action, A_CIB_BUMPGEN)) {
-		do_crm_log(log_level, 
-			   "Action %.16llx (A_CIB_BUMPGEN) %s",
-			  A_CIB_BUMPGEN, text);
-	}
-	if(is_set(action, A_CIB_INVOKE)) {
-		do_crm_log(log_level, 
-			   "Action %.16llx (A_CIB_INVOKE) %s",
-			  A_CIB_INVOKE, text);
 	}
 	if(is_set(action, A_CIB_START)) {
 		do_crm_log(log_level, 
