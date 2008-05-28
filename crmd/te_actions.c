@@ -203,6 +203,18 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	
 	te_log_action(LOG_INFO, "Executing crm-event (%s): %s on %s",
 		      crm_str(id), crm_str(task), on_node);
+
+	if(safe_str_eq(on_node, fsa_our_uname)
+	   && safe_str_eq(task, CRM_OP_SHUTDOWN)) {
+	    /* defer until everything else completes */
+	    te_log_action(LOG_INFO, "crm-event (%s) is a local shutdown", crm_str(id));
+	    graph->completion_action = tg_shutdown;
+	    graph->abort_reason = "local shutdown";
+	    action->confirmed = TRUE;
+	    update_graph(graph, action);
+	    trigger_graph();
+	    return TRUE;
+	}
 	
 	cmd = create_request(task, NULL, on_node, CRM_SYSTEM_CRMD,
 			     CRM_SYSTEM_TENGINE, NULL);
@@ -467,7 +479,8 @@ void
 notify_crmd(crm_graph_t *graph)
 {
 	int log_level = LOG_DEBUG;
-	const char *type = "done";
+	const char *type = "unknown";
+	enum crmd_fsa_input event = I_NULL;
 	
 	crm_debug("Processing transition completion in state %s", fsa_state2string(fsa_state));
 	
@@ -479,18 +492,17 @@ notify_crmd(crm_graph_t *graph)
 		    type = "stop";
 		    /* fall through */
 		case tg_done:
+		    type = "done";
 		    log_level = LOG_INFO;
-		    clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
 		    if(fsa_state == S_TRANSITION_ENGINE) {
-			register_fsa_input(C_FSA_INTERNAL, I_TE_SUCCESS, NULL);
+			event = I_TE_SUCCESS;
 		    }
 		    break;
 		    
 		case tg_restart:
 		    type = "restart";
-		    clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
 		    if(fsa_state == S_TRANSITION_ENGINE) {
-			register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
+			event = I_PE_CALC;
 
 		    } else if(fsa_state == S_POLICY_ENGINE) {
 			register_fsa_action(A_PE_INVOKE);
@@ -498,8 +510,13 @@ notify_crmd(crm_graph_t *graph)
 		    break;
 
 		case tg_shutdown:
-		    crm_info("Exiting after transition");
-		    return;
+		    type = "shutdown";
+		    if(is_set(fsa_input_register, R_SHUTDOWN)) {
+			event = I_STOP;			
+			
+		    } else {
+			event = I_TERMINATE;
+		    }
 	}
 
 	te_log_action(log_level, "Transition %d status: %s - %s",
@@ -507,4 +524,10 @@ notify_crmd(crm_graph_t *graph)
 
 	graph->abort_reason = NULL;
 	graph->completion_action = tg_done;
+	clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
+
+	if(event != I_NULL) {
+	    register_fsa_input(C_FSA_INTERNAL, event, NULL);
+	}
+	
 }
