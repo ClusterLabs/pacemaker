@@ -64,15 +64,18 @@ te_update_diff(const char *event, xmlNode *msg)
 	crm_element_value_int(msg, F_CIB_RC, &rc);	
 
 	if(transition_graph == NULL) {
+	    crm_debug_3("No graph");
 	    return;
 
 	} else if(rc < cib_ok) {
+	    crm_debug_3("Filter rc=%d (%s)", rc, cib_error2string(rc));
 	    return;
 
-	} else if(transition_graph->complete != TRUE
+	} else if(transition_graph->complete == TRUE
 		  && fsa_state != S_IDLE
 		  && fsa_state != S_TRANSITION_ENGINE
 		  && fsa_state != S_POLICY_ENGINE) {
+	    crm_debug_2("Filter state=%s, complete=%d", fsa_state2string(fsa_state), transition_graph->complete);
 	    return;
 	} 	
 
