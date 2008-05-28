@@ -733,11 +733,18 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		native_add_running(rsc, node, data_set);
 
 		if(is_set(rsc->flags, pe_rsc_managed) && rsc->stickiness != 0) {
+		    node_t *match = pe_find_node_id(rsc->allowed_nodes, node->details->id);
+
+		    if(match != NULL || data_set->symmetric_cluster) {
 			resource_location(rsc, node, rsc->stickiness,
 					  "stickiness", data_set);
 			crm_debug_2("Resource %s: preferring current location"
 				    " (node=%s, weight=%d)", rsc->id,
 				    node->details->uname, rsc->stickiness);
+		    } else {
+			crm_debug("Ignoring stickiness for %s: the cluster is asymmetric and node %s is no longer explicitly allowed",
+				  rsc->id, node->details->uname);
+		    }
 		}
 	
 		if(on_fail == action_fail_ignore) {
