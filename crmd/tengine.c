@@ -86,6 +86,13 @@ do_te_control(long long action,
 	    destroy_graph(transition_graph);
 	    transition_graph = NULL;
 	}
+	if(fsa_cib_conn && cib_ok != fsa_cib_conn->cmds->del_notify_callback(
+	       fsa_cib_conn, T_CIB_DIFF_NOTIFY, te_update_diff)) {
+	    crm_err("Could not set CIB notification callback");
+	    init_ok = FALSE;
+	}
+	clear_bit_inplace(fsa_input_register, te_subsystem->flag_connected);
+	crm_debug("Transitioner is now inactive");
     }
 
     if((action & A_TE_START) && cur_state == S_STOPPING) {
@@ -97,7 +104,12 @@ do_te_control(long long action,
     if((action & A_TE_START) == 0) {
 	return;
     }	
-	
+
+    if(is_set(fsa_input_register, te_subsystem->flag_connected)) {
+	crm_debug("Internal TE is already active");
+	return;
+    }
+    
     cl_uuid_generate(&new_uuid);
     cl_uuid_unparse(&new_uuid, uuid_str);
     te_uuid = crm_strdup(uuid_str);
@@ -117,6 +129,11 @@ do_te_control(long long action,
 	   fsa_cib_conn, T_CIB_DIFF_NOTIFY, te_update_diff)) {
 	crm_err("Could not set CIB notification callback");
 	init_ok = FALSE;
+    }
+
+    if(cib_EXISTS != fsa_cib_conn->cmds->add_notify_callback(
+	   fsa_cib_conn, T_CIB_DIFF_NOTIFY, te_update_diff)) {
+	crm_err("Set duplicate CIB notification callback");
     }
 
     if(cib_ok != fsa_cib_conn->cmds->set_op_callback(fsa_cib_conn, global_cib_callback)) {
@@ -141,6 +158,9 @@ do_te_control(long long action,
 	transition_timer->source_id = 0;
 	transition_timer->reason    = timeout_abort;
 	transition_timer->action    = NULL;
+
+	crm_debug("Transitioner is now active");
+	set_bit_inplace(fsa_input_register, te_subsystem->flag_connected);
     }
 }
 
@@ -189,7 +209,6 @@ do_te_invoke(long long action,
 			return;
 
 		}
-		crm_debug("Processing graph derived from %s", graph_input);
 		stop_te_timer(transition_timer);
 		
 		graph_data = input->xml;
@@ -210,6 +229,7 @@ do_te_invoke(long long action,
 		destroy_graph(transition_graph);
 		transition_graph = unpack_graph(graph_data);
 		CRM_CHECK(transition_graph != NULL, transition_graph = create_blank_graph(); return);
+		crm_info("Processing graph %d derived from %s", transition_graph->id, graph_input);
 		if(transition_graph->transition_timeout > 0) {
 		    start_global_timer(transition_timer, transition_graph->transition_timeout);
 		}
