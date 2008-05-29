@@ -90,6 +90,7 @@ static crm_child_t crm_children[] = {
     { 0, crm_proc_cib,  crm_flag_members, 0, TRUE,  "cib",   HA_CCMUID, HA_LIBHBDIR"/cib",  NULL },
     { 0, crm_proc_crmd, crm_flag_members, 0, TRUE,  "crmd",  HA_CCMUID, HA_LIBHBDIR"/crmd", NULL },
     { 0, crm_proc_attrd,crm_flag_none,    0, TRUE,  "attrd", HA_CCMUID, HA_LIBHBDIR"/attrd", NULL },
+    { 0, crm_proc_stonithd,crm_flag_none,    0, TRUE, "stonithd", 0, HA_LIBHBDIR"/stonithd", NULL },
 };
 
 void send_cluster_id(void);
