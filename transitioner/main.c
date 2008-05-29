@@ -147,7 +147,7 @@ te_init(void)
 		}
 	}
 
-	if(is_heartbeat_cluster() && init_ok) {
+	if(init_ok) {
 	    G_main_set_trigger(stonith_reconnect);
 	}
 
@@ -196,11 +196,7 @@ te_init(void)
 	cib_delete(te_cib_conn);
 	te_cib_conn = NULL;
 
-#if SUPPORT_HEARTBEAT
-	if(is_heartbeat_cluster()) {
-	    stonithd_signoff();
-	}
-#endif	
+	stonithd_signoff();
 	crm_free(te_uuid);
 	
 	if(init_ok) {
