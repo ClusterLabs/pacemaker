@@ -30,8 +30,7 @@ commmoddir	= $(halibdir)/modules/comm
 
 COMMONLIBS	= $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(top_builddir)/lib/crm/cib/libcib.la			\
-		  $(GLIBLIB)						\
-		  $(LIBRT) $(GNUTLSLIBS)
+		  $(GLIBLIB) $(LIBRT)
 
 ## binary progs
 halib_PROGRAMS	= cib cibmon
@@ -47,8 +46,6 @@ cib_SOURCES		= io.c primatives.c messages.c cib.c notify.c	\
 
 cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB) $(CLUSTERLIBS)	\
 			$(top_builddir)/lib/crm/common/libcrmcluster.la
-
-cib_LDFLAGS		= $(GNUTLSLIBS)
 
 cibmon_SOURCES		= cibmon.c
 cibmon_LDADD		= $(COMMONLIBS)

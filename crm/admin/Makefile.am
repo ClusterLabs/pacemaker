@@ -28,10 +28,8 @@ COMMONLIBS	= 					\
 		$(top_builddir)/lib/crm/common/libcrmcommon.la		\
 		$(top_builddir)/lib/crm/cib/libcib.la			\
 		-lplumb					  		\
-		$(GLIBLIB)						\
-		$(CURSESLIBS)						\
-		$(CLUSTERLIBS)						\
-		$(LIBRT) $(GNUTLSLIBS)
+		$(GLIBLIB) $(CURSESLIBS) $(LIBRT)			\
+		$(CLUSTERLIBS) 
 
 
 halib_PYTHON		= crm_primitive.py crm_utils.py crm_commands.py
