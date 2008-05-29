@@ -247,8 +247,8 @@ cib_common_callback_worker(xmlNode *op_request, cib_client_t *cib_client,
 	    const char *type = crm_element_value(op_request, F_CIB_NOTIFY_TYPE);;
 	    crm_element_value_int(op_request, F_CIB_NOTIFY_ACTIVATE, &on_off);
 	    
-	    crm_info("Setting %s callbacks for %s: %s",
-		     type, cib_client->name, on_off?"on":"off");
+	    crm_info("Setting %s callbacks for %s (%s): %s",
+		     type, cib_client->name, cib_client->id, on_off?"on":"off");
 	    
 	    if(safe_str_eq(type, T_CIB_POST_NOTIFY)) {
 		cib_client->post_notify = on_off;
