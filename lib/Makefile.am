@@ -30,5 +30,5 @@ MAINTAINERCLEANFILES    = Makefile.in
 #
 
 ## Subdirectories...
-SUBDIRS	= crm fencing
+SUBDIRS	= crm fencing plugins
 
