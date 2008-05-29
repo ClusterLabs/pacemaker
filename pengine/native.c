@@ -177,7 +177,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	}
 
 	set_bit(rsc->flags, pe_rsc_allocating);
-	print_resource(alloc_details, "Allocating: ", rsc, FALSE);
+	print_resource(alloc_details+1, "Allocating: ", rsc, FALSE);
 	dump_node_scores(alloc_details+1, rsc, "Pre-allloc", rsc->allowed_nodes);
 
 	slist_iter(
