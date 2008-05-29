@@ -118,11 +118,11 @@ native_merge_weights(
     GListPtr archive = NULL;
 
     if(is_set(rsc->flags, pe_rsc_merging)) {
-	crm_debug("%s: Breaking dependancy loop", rhs);
+	crm_info("%s: Breaking dependancy loop", rhs);
 	return nodes;
 
-    } else if(is_not_set(rsc->flags, pe_rsc_provisional)
-	      || can_run_any(nodes) == FALSE) {
+    } else if(is_not_set(rsc->flags, pe_rsc_provisional)) {
+	crm_debug_4("%s: not provisional", rsc->id);
 	return nodes;
     }
 
@@ -159,7 +159,7 @@ native_merge_weights(
 node_t *
 native_color(resource_t *rsc, pe_working_set_t *data_set)
 {
-        int alloc_details = scores_log_level+1;
+        int alloc_details = scores_log_level;
 	if(rsc->parent && is_not_set(rsc->parent->flags, pe_rsc_allocating)) {
 		/* never allocate children on their own */
 		crm_debug("Escalating allocation of %s to its parent: %s",
@@ -178,7 +178,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 
 	set_bit(rsc->flags, pe_rsc_allocating);
 	print_resource(alloc_details, "Allocating: ", rsc, FALSE);
-	dump_node_scores(alloc_details, rsc, "Pre-allloc", rsc->allowed_nodes);
+	dump_node_scores(alloc_details+1, rsc, "Pre-allloc", rsc->allowed_nodes);
 
 	slist_iter(
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
@@ -190,7 +190,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint);	
 	    );	
 
-	dump_node_scores(alloc_details, rsc, "Post-coloc", rsc->allowed_nodes);
+	dump_node_scores(alloc_details+1, rsc, "Post-coloc", rsc->allowed_nodes);
 
 	slist_iter(
 	    constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
@@ -200,7 +200,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		constraint->score/INFINITY, TRUE);
 	    );
 	
-	dump_node_scores(alloc_details-1, rsc, __PRETTY_FUNCTION__, rsc->allowed_nodes);
+	dump_node_scores(alloc_details, rsc, __PRETTY_FUNCTION__, rsc->allowed_nodes);
 	
 	print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);
 	if(rsc->next_role == RSC_ROLE_STOPPED) {
@@ -914,7 +914,7 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 	} else if(constraint->role_filter > 0
 		  && constraint->role_filter != rsc->next_role) {
 		crm_debug("Constraint (%s) is not active (role : %s)",
-			    constraint->id, role2text(constraint->role_filter));
+			  constraint->id, role2text(constraint->role_filter));
 		return;
 		
 	} else if(is_active(constraint) == FALSE) {
