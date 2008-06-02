@@ -375,6 +375,9 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 		int score = fail_count * rsc->fail_stickiness;
 		if(is_not_set(rsc->flags, pe_rsc_unique)) {
 		    failed = uber_parent(rsc);
+
+		} else if(rsc->parent && rsc->parent->variant == pe_group) {
+		    failed = rsc->parent;
 		}
 
 		/* detect and prevent score underflows */

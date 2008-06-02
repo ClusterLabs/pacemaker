@@ -506,14 +506,10 @@ void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 
 }
 
-extern void node_list_update(GListPtr list1, GListPtr list2, int factor);
-
 GListPtr
 group_merge_weights(
     resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback) 
 {
-    GListPtr archive = NULL;
-    GListPtr child_nodes = NULL;
     group_variant_data_t *group_data = NULL;
     get_group_variant_data(group_data, rsc);
     
@@ -527,58 +523,9 @@ group_merge_weights(
 
     set_bit(rsc->flags, pe_rsc_merging);
 
-#if 0
-    /* turn this back on once we switch to migration-threshold */
     nodes = group_data->first_child->cmds->merge_weights(
 	group_data->first_child, rhs, nodes, factor, allow_rollback);
     
-#else
-    slist_iter(child, resource_t, rsc->children, lpc,
-
-	       if(allow_rollback) {
-		   archive = node_list_dup(nodes, FALSE, FALSE);
-	       }
-    	       
-	       child_nodes = node_list_dup(child->allowed_nodes, FALSE, FALSE);
-	       slist_iter(
-		   constraint, rsc_colocation_t, child->rsc_cons_lhs, lpc2,
-		   
-		   child_nodes = constraint->rsc_lh->cmds->merge_weights(
-		       constraint->rsc_lh, rhs, child_nodes,
-		       constraint->score/INFINITY, allow_rollback);
-		   );
-
-	       slist_iter(
-		   node, node_t, child_nodes, lpc2,
-		   if(node->weight < 0 && node->weight > -INFINITY) {
-		       /* Once a child's score goes below zero, force the node score to -INFINITY
-			*
-			* This prevents the group from being partially active in scenarios
-			*  where it could be fully active elsewhere
-			*
-			* If we don't do this, then the next child(ren)'s stickiness might bring
-			*  the combined score above 0 again - which confuses the PE into thinking
-			*  the whole group can run there but is pointless since the later children
-			*  are not be able to run if the ones before them can't
-			*/
-		       node->weight = -INFINITY;
-		   }
-		   );
-	       
-	       node_list_update(nodes, child_nodes, factor);
-	       pe_free_shallow_adv(child_nodes, TRUE);
-
-	       if(archive && can_run_any(nodes) == FALSE) {
-		   crm_err("%s: Rolling back scores from %s", rhs, rsc->id);
-		   pe_free_shallow_adv(nodes, TRUE);
-		   nodes = archive;
-		   goto bail;
-	       }
-
-	       pe_free_shallow_adv(archive, TRUE);
-	);
-#endif
-
     slist_iter(
 	constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
 	
@@ -587,7 +534,6 @@ group_merge_weights(
 	    constraint->score/INFINITY, allow_rollback);
 	);
 
-  bail:
     clear_bit(rsc->flags, pe_rsc_merging);
     return nodes;
 }
