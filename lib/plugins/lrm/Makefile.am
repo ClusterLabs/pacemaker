@@ -34,9 +34,8 @@ apigid                          =       @HA_APIGID@
 plugin_LTLIBRARIES = stonith.la
 
 stonith_la_SOURCES = raexecstonith.c
-stonith_la_LDFLAGS = -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version \
-		     -L$(top_builddir)/lib/fencing -lstonithd \
-		     -L$(top_builddir)/lib/stonith -lstonith -llrm
+stonith_la_LDFLAGS = -lpils -export-dynamic -module -avoid-version \
+		     -L$(top_builddir)/lib/fencing -lstonithd -lstonith -llrm
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)$(lrmdir)
