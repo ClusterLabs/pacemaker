@@ -540,13 +540,6 @@ group_node_update_hack(GListPtr list1, GListPtr list2, int factor)
 				    node->weight, other_node->weight);
 			node->weight = merge_weights(
 				factor*other_node->weight, node->weight);
-			if(node->weight < 0) {
-			    /* As above - but specifically to prevent the last child
-			     * from being inactive while the rest of the group runs
-			     * in the old location
-			     */
-			    node->weight = -INFINITY;
-			}
 		}
 		);
 }
@@ -580,7 +573,18 @@ group_merge_weights(
 	       if(allow_rollback) {
 		   archive = node_list_dup(nodes, FALSE, FALSE);
 	       }
-	       
+
+	       slist_iter(
+		   node, node_t, child->allowed_nodes, lpc,
+		   if(node->weight < 0) {
+		       /* As above - but specifically to prevent the last child
+			* from being inactive while the rest of the group runs
+			* in the old location
+			*/
+		       node->weight = -INFINITY;
+		   }
+		   );
+    	       
 	       group_node_update_hack(nodes, child->allowed_nodes, factor);
 	       if(archive && can_run_any(nodes) == FALSE) {
 		   crm_debug("%s: Rolling back scores from %s", rhs, rsc->id);
