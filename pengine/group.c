@@ -506,49 +506,14 @@ void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 
 }
 
-static void
-group_node_update_hack(GListPtr list1, GListPtr list2, int factor)
-{
-	node_t *other_node = NULL;
-
-	slist_iter(
-		node, node_t, list1, lpc,
-
-		if(node == NULL) {
-			continue;
-			
-		} else if(node->weight < 0) {
-		    /* One a child's score goes below zero, force the node score to -INFINITY
-		     *
-		     * This prevents the group from being partially active in scenarios
-		     *  where it could be fully active elsewhere
-		     *
-		     * If we don't do this, then the next child(ren)'s stickiness might bring
-		     *  the combined score above 0 again - which confuses the PE into thinking
-		     *  the whole group can run there but is pointless since the later children
-		     *  are not be able to run if the ones before them can't
-		     */
-		    node->weight = -INFINITY;
-		    continue;
-		}
-
-		other_node = (node_t*)pe_find_node_id(list2, node->details->id);
-
-		if(other_node != NULL) {
-			crm_debug_2("%s: %d + %d",
-				    node->details->uname, 
-				    node->weight, other_node->weight);
-			node->weight = merge_weights(
-				factor*other_node->weight, node->weight);
-		}
-		);
-}
+extern void node_list_update(GListPtr list1, GListPtr list2, int factor);
 
 GListPtr
 group_merge_weights(
     resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback) 
 {
     GListPtr archive = NULL;
+    GListPtr child_nodes = NULL;
     group_variant_data_t *group_data = NULL;
     get_group_variant_data(group_data, rsc);
     
@@ -573,21 +538,38 @@ group_merge_weights(
 	       if(allow_rollback) {
 		   archive = node_list_dup(nodes, FALSE, FALSE);
 	       }
+    	       
+	       child_nodes = node_list_dup(child->allowed_nodes, FALSE, FALSE);
+	       slist_iter(
+		   constraint, rsc_colocation_t, child->rsc_cons_lhs, lpc2,
+		   
+		   child_nodes = constraint->rsc_lh->cmds->merge_weights(
+		       constraint->rsc_lh, rhs, child_nodes,
+		       constraint->score/INFINITY, allow_rollback);
+		   );
 
 	       slist_iter(
-		   node, node_t, child->allowed_nodes, lpc,
-		   if(node->weight < 0) {
-		       /* As above - but specifically to prevent the last child
-			* from being inactive while the rest of the group runs
-			* in the old location
+		   node, node_t, child_nodes, lpc2,
+		   if(node->weight < 0 && node->weight > -INFINITY) {
+		       /* Once a child's score goes below zero, force the node score to -INFINITY
+			*
+			* This prevents the group from being partially active in scenarios
+			*  where it could be fully active elsewhere
+			*
+			* If we don't do this, then the next child(ren)'s stickiness might bring
+			*  the combined score above 0 again - which confuses the PE into thinking
+			*  the whole group can run there but is pointless since the later children
+			*  are not be able to run if the ones before them can't
 			*/
 		       node->weight = -INFINITY;
 		   }
 		   );
-    	       
-	       group_node_update_hack(nodes, child->allowed_nodes, factor);
+	       
+	       node_list_update(nodes, child_nodes, factor);
+	       pe_free_shallow_adv(child_nodes, TRUE);
+
 	       if(archive && can_run_any(nodes) == FALSE) {
-		   crm_debug("%s: Rolling back scores from %s", rhs, rsc->id);
+		   crm_err("%s: Rolling back scores from %s", rhs, rsc->id);
 		   pe_free_shallow_adv(nodes, TRUE);
 		   nodes = archive;
 		   goto bail;
