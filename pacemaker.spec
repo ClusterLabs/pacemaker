@@ -244,7 +244,6 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 %{_prefix}/share/pacemaker
 %{_prefix}/share/heartbeat
 %{_libdir}/heartbeat/*
-%{_libdir}/heartbeat/plugins/RAExec/*
 
 %dir %{_var}/lib/heartbeat
 
