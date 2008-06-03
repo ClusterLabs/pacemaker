@@ -703,7 +703,10 @@ print_status(xmlNode *cib)
 
 	slist_iter(node, node_t, data_set.nodes, lpc2,
 		   const char *node_mode = "OFFLINE";
-		   if(node->details->standby && node->details->online) {
+		   if(node->details->pending) {
+		       node_mode = "(re-)joining cluster";
+
+		   } else if(node->details->standby && node->details->online) {
 		       node_mode = "standby";
 
 		   } else if(node->details->standby) {

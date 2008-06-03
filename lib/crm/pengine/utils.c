@@ -547,6 +547,11 @@ custom_action(resource_t *rsc, char *key, const char *task,
 				action->node->details->unclean = TRUE;
 			}
 			
+		} else if(action->node->details->pending) {
+			action->runnable = FALSE;
+			do_crm_log(warn_level, "Action %s on %s is unrunnable (pending)",
+				 action->uuid, action->node->details->uname);
+
 		} else if(action->needs == rsc_req_nothing) {
 			crm_debug_3("Action %s doesnt require anything",
 				  action->uuid);

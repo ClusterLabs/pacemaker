@@ -316,8 +316,8 @@ crmd_ha_status_callback(const char *node, const char *status, void *private)
 	    crm_update_peer_proc(node, crm_proc_ais, ONLINESTATUS);
 	    if(AM_I_DC) {
 		update = create_node_state(
-			node, ACTIVESTATUS, NULL, NULL, NULL, NULL,
-			FALSE, __FUNCTION__);
+			node, ACTIVESTATUS, NULL, NULL,
+			CRMD_JOINSTATE_PENDING, NULL, FALSE, __FUNCTION__);
 	    }
 	}
 		
@@ -345,8 +345,9 @@ crmd_client_status_callback(const char * node, const char * client,
 	}
 
 	if(safe_str_eq(status, JOINSTATUS)){
-		status = ONLINESTATUS;
  		clear_shutdown = TRUE;
+		status = ONLINESTATUS;
+		join = CRMD_JOINSTATE_PENDING;
 
 	} else if(safe_str_eq(status, LEAVESTATUS)){
 		status = OFFLINESTATUS;
@@ -594,9 +595,12 @@ crmd_ccm_msg_callback(
 void
 crmd_cib_connection_destroy(gpointer user_data)
 {
+    CRM_CHECK(user_data == fsa_cib_conn, ;);
+    
 	crm_debug_3("Invoked");
 	trigger_fsa(fsa_source);
-
+	fsa_cib_conn->state = cib_disconnected;
+	
 	if(is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
 		crm_info("Connection to the CIB terminated...");
 		return;

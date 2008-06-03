@@ -98,7 +98,7 @@ start_global_timer(crm_action_timer_t *timer, int timeout)
 		crm_err("Tried to start timer with period: %d", timeout);
 
 	} else if(timer->source_id == 0) {
-		crm_debug_2("Starting abort timer: %dms", timeout);
+		crm_debug("Starting abort timer: %dms", timeout);
 		timer->timeout = timeout;
 		timer->source_id = Gmain_timeout_add(
 			timeout, global_timer_callback, (void*)timer);
@@ -122,6 +122,7 @@ stop_te_timer(crm_action_timer_t *timer)
 	}
 	if(timer->reason == timeout_abort) {
 		timer_desc = "global timer";
+		crm_debug("Stopping %s", timer_desc);
 	}
 	
 	if(timer->source_id != 0) {
@@ -130,6 +131,7 @@ stop_te_timer(crm_action_timer_t *timer)
 		timer->source_id = 0;
 
 	} else {
+		crm_debug("%s was already stopped", timer_desc);
 		return FALSE;
 	}
 
@@ -164,6 +166,7 @@ te_graph_trigger(gpointer user_data)
 
 	if(graph_rc == transition_active) {
 		crm_debug_3("Transition not yet complete");
+		crm_debug("Restarting TE timer");
 		stop_te_timer(transition_timer);
 		start_global_timer(transition_timer, timeout);
 		return TRUE;		

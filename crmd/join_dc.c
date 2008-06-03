@@ -337,7 +337,7 @@ do_dc_join_filter_offer(long long action,
 	
 	if(ack_nack_bool == FALSE) {
 		/* NACK this client */
-		ack_nack = CRMD_JOINSTATE_DOWN;
+		ack_nack = CRMD_JOINSTATE_NACK;
 		crm_err("join-%d: NACK'ing node %s (ref %s)",
 			join_id, join_from, ref);
 	} else {
