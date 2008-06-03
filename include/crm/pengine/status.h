@@ -96,6 +96,7 @@ struct node_shared_s {
 		const char *uname; 
 		gboolean online;
 		gboolean standby;
+		gboolean pending;
 		gboolean unclean;
 		gboolean shutdown;
 		gboolean expected_up;

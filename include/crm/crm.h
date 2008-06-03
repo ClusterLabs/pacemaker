@@ -168,6 +168,7 @@ extern const char *crm_system_name;
 #define CRMD_JOINSTATE_DOWN	CRMD_STATE_INACTIVE
 #define CRMD_JOINSTATE_PENDING	"pending"
 #define CRMD_JOINSTATE_MEMBER	CRMD_STATE_ACTIVE
+#define CRMD_JOINSTATE_NACK	"banned"
 
 #define CRMD_ACTION_DELETE		"delete"
 #define CRMD_ACTION_CANCEL		"cancel"

@@ -610,6 +610,13 @@ cib_native_dispatch(IPC_Channel *channel, gpointer user_data)
 	return TRUE;
 }
 
+static void
+default_cib_connection_destroy(gpointer user_data)
+{
+    cib_t *cib = user_data;
+    cib->state = cib_disconnected;
+}
+
 int cib_native_set_connection_dnotify(
 	cib_t *cib, void (*dnotify)(gpointer user_data))
 {
@@ -624,8 +631,8 @@ int cib_native_set_connection_dnotify(
 
 	if(dnotify == NULL) {
 		crm_warn("Setting dnotify back to default value");
-		set_IPC_Channel_dnotify(native->callback_source,
-					default_ipc_connection_destroy);
+		set_IPC_Channel_dnotify(
+		    native->callback_source, default_cib_connection_destroy);
 
 	} else {
 		crm_debug_3("Setting dnotify");
@@ -640,10 +647,13 @@ cib_native_register_notification(cib_t* cib, const char *callback, int enabled)
 	xmlNode *notify_msg = create_xml_node(NULL, "cib-callback");
 	cib_native_opaque_t *native = cib->variant_opaque;
 
-	crm_xml_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
-	crm_xml_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
-	crm_xml_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
-	send_ipc_message(native->callback_channel, notify_msg);
+	if(cib->state != cib_disconnected) {
+	    crm_xml_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
+	    crm_xml_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
+	    crm_xml_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
+	    send_ipc_message(native->callback_channel, notify_msg);
+	}
+
 	free_xml(notify_msg);
 	return cib_ok;
 }

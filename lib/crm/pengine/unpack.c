@@ -428,12 +428,35 @@ determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 	if(crm_is_true(ccm_state)
 	   && safe_str_eq(ha_state, ACTIVESTATUS)
 	   && safe_str_eq(crm_state, ONLINESTATUS)) {
+
+	    if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
 		online = TRUE;
-		if(safe_str_neq(join_state, CRMD_JOINSTATE_MEMBER)) {
-			crm_info("Node %s is not ready to run resources",
-				 this_node->details->uname);
-			this_node->details->standby = TRUE;
-		}
+
+	    } else if(safe_str_eq(join_state, CRMD_JOINSTATE_PENDING)) {
+		crm_info("Node %s is not ready to run resources",
+			 this_node->details->uname);
+		this_node->details->standby = TRUE;
+		this_node->details->pending = TRUE;
+		online = TRUE;
+		
+	    } else if(safe_str_eq(join_state, CRMD_JOINSTATE_NACK)) {
+		crm_warn("Node %s is not part of the cluster",
+			 this_node->details->uname);
+		this_node->details->standby = TRUE;
+		this_node->details->pending = TRUE;
+		online = TRUE;
+		
+	    } else {
+		crm_warn("Node %s (%s) is un-expectedly down",
+			 this_node->details->uname, this_node->details->id);
+		crm_info("\tha_state=%s, ccm_state=%s,"
+			 " crm_state=%s, join_state=%s, expected=%s",
+			 crm_str(ha_state), crm_str(ccm_state),
+			 crm_str(crm_state), crm_str(join_state),
+			 crm_str(exp_state));
+		this_node->details->unclean = TRUE;
+		
+	    }
 		
 	} else if(crm_is_true(ccm_state) == FALSE
  		  && safe_str_eq(ha_state, DEADSTATUS)
@@ -523,6 +546,7 @@ determine_online_status(
 	} else if(this_node->details->online) {
 		crm_info("Node %s is %s", this_node->details->uname,
 			 this_node->details->shutdown?"shutting down":
+			 this_node->details->pending?"pending":
 			 this_node->details->standby?"standby":"online");
 
 	} else {
