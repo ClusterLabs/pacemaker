@@ -27,7 +27,7 @@ COMMONLIBS	= 					\
 		$(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		$(top_builddir)/lib/crm/pengine/libpe_rules.la	\
 		$(top_builddir)/lib/crm/cib/libcib.la			\
-		$(top_builddir)/lib/crm/cib/libstonithd.la			\
+		$(top_builddir)/lib/fencing/libstonithd.la		\
 		-lplumb							\
 		$(GLIBLIB) $(LIBRT)
 
