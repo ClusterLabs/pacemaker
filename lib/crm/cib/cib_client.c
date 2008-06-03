@@ -378,8 +378,8 @@ int cib_client_add_notify_callback(
 	GList *list_item = NULL;
 	cib_notify_client_t *new_client = NULL;
 
-	if(cib->variant != cib_native) {
-	    crm_err("Not supported");
+	if(cib->variant != cib_native
+	    && cib->variant != cib_remote) {
 	    return cib_NOTSUPPORTED;
 	}
 	
@@ -396,6 +396,7 @@ int cib_client_add_notify_callback(
 	if(list_item != NULL) {
 		crm_warn("Callback already present");
 		crm_free(new_client);
+		return cib_EXISTS;
 		
 	} else {
 		cib->notify_list = g_list_append(
@@ -416,11 +417,11 @@ int cib_client_del_notify_callback(
 	GList *list_item = NULL;
 	cib_notify_client_t *new_client = NULL;
 
-	if(cib->variant != cib_native) {
-	    crm_err("Not supported");
+	if(cib->variant != cib_native
+	    && cib->variant != cib_remote) {
 	    return cib_NOTSUPPORTED;
 	}
-
+	
 	crm_debug("Removing callback for %s events", event);
 
 	crm_malloc0(new_client, sizeof(cib_notify_client_t));
@@ -449,15 +450,25 @@ int cib_client_del_notify_callback(
 
 gint ciblib_GCompareFunc(gconstpointer a, gconstpointer b)
 {
-	const cib_notify_client_t *a_client = a;
-	const cib_notify_client_t *b_client = b;
-	if(a_client->callback == b_client->callback
-	   && safe_str_neq(a_client->event, b_client->event)) {
-		return 0;
+    int rc = 0;
+    const cib_notify_client_t *a_client = a;
+    const cib_notify_client_t *b_client = b;
+	
+    CRM_CHECK(a_client->event != NULL && b_client->event != NULL, return 0);
+    rc = strcmp(a_client->event, b_client->event);
+    if(rc == 0) {
+	if(a_client->callback == b_client->callback) {
+	    return 0;
 	} else if(((long)a_client->callback) < ((long)b_client->callback)) {
-		return -1;
-	}
+	    crm_err("callbacks for %s are not equal: %p vs. %p",
+		    a_client->event, a_client->callback, b_client->callback);
+	    return -1;
+	} 
+	crm_err("callbacks for %s are not equal: %p vs. %p",
+		a_client->event, a_client->callback, b_client->callback);
 	return 1;
+    }
+    return rc;
 }
 
 
