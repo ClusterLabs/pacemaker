@@ -215,7 +215,7 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	counter = generate_transition_key(
 	    transition_graph->id, action->id, get_target_rc(action), te_uuid);
 	crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
-	ret = send_cluster_message(on_node, crm_proc_crmd, cmd, TRUE);
+	ret = send_cluster_message(on_node, crm_msg_crmd, cmd, TRUE);
 	crm_free(counter);
 	free_xml(cmd);
 	
@@ -436,7 +436,7 @@ send_rsc_command(crm_action_t *action)
 	cmd = create_request(CRM_OP_INVOKE_LRM, rsc_op, on_node,
 			     CRM_SYSTEM_LRMD, CRM_SYSTEM_TENGINE, NULL);
 	
-	send_cluster_message(on_node, crm_proc_lrmd, cmd, TRUE);
+	send_cluster_message(on_node, crm_msg_lrmd, cmd, TRUE);
 	free_xml(cmd);
 	
 	action->executed = TRUE;
