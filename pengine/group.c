@@ -484,7 +484,6 @@ group_merge_weights(
     resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback) 
 {
     GListPtr archive = NULL;
-    GListPtr child_nodes = NULL;
     group_variant_data_t *group_data = NULL;
     get_group_variant_data(group_data, rsc);
     
@@ -510,17 +509,8 @@ group_merge_weights(
 		   archive = node_list_dup(nodes, FALSE, FALSE);
 	       }
     	       
-	       child_nodes = node_list_dup(child->allowed_nodes, FALSE, FALSE);
 	       slist_iter(
-		   constraint, rsc_colocation_t, child->rsc_cons_lhs, lpc2,
-		   
-		   child_nodes = constraint->rsc_lh->cmds->merge_weights(
-		       constraint->rsc_lh, rhs, child_nodes,
-		       constraint->score/INFINITY, allow_rollback);
-		   );
-
-	       slist_iter(
-		   node, node_t, child_nodes, lpc2,
+		   node, node_t, child->allowed_nodes, lpc2,
 		   if(node->weight < 0 && node->weight > -INFINITY) {
 		       /* Once a child's score goes below zero, force the node score to -INFINITY
 			*
@@ -536,8 +526,7 @@ group_merge_weights(
 		   }
 		   );
 	       
-	       node_list_update(nodes, child_nodes, factor);
-	       pe_free_shallow_adv(child_nodes, TRUE);
+	       node_list_update(nodes, child->allowed_nodes, factor);
 
 	       if(archive && can_run_any(nodes) == FALSE) {
 		   crm_err("%s: Rolling back scores from %s", rhs, rsc->id);

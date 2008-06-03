@@ -630,8 +630,8 @@ attrd_trigger_update(attr_hash_entry_t *hash_entry)
 		attrd_perform_update(hash_entry);
 	}
 
-	send_cluster_message(NULL, crm_proc_attrd, msg, FALSE);
-	free_xml(msg);
+	send_cluster_message(NULL, crm_msg_attrd, msg, FALSE);
+	crm_msg_del(msg);
 	
 	return TRUE;
 }

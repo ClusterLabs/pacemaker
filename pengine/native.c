@@ -528,7 +528,7 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		type |= pe_order_implies_right;
 	}
 
-	if(rsc->parent == NULL) {
+	if(rsc->parent == NULL || rsc->parent->variant == pe_group) {
 		type |= pe_order_restart;
 	}
 	
