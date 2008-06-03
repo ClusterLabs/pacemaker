@@ -1,0 +1,13 @@
+digraph "g" {
+"drbd_target_poolA_monitor_0 puma1" -> "probe_complete puma1" [ style = bold]
+"drbd_target_poolA_monitor_0 puma1" [ style=bold color="green" fontcolor="black"  ]
+"drbd_target_poolA_monitor_0 puma3" -> "probe_complete puma3" [ style = bold]
+"drbd_target_poolA_monitor_0 puma3" [ style=bold color="green" fontcolor="black"  ]
+"ebe3fb6e-7778-426e-be58-190ab1ff3dd3:0_monitor_20000 puma3" [ style=bold color="green" fontcolor="black"  ]
+"ebe3fb6e-7778-426e-be58-190ab1ff3dd3:1_monitor_19000 puma1" [ style=bold color="green" fontcolor="black"  ]
+"probe_complete puma1" -> "probe_complete" [ style = bold]
+"probe_complete puma1" [ style=bold color="green" fontcolor="black"  ]
+"probe_complete puma3" -> "probe_complete" [ style = bold]
+"probe_complete puma3" [ style=bold color="green" fontcolor="black"  ]
+"probe_complete" [ style=bold color="green" fontcolor="orange"  ]
+}

@@ -37,8 +37,6 @@ GTRIGSource *stonith_reconnect = NULL;
 gboolean
 te_connect_stonith(gpointer user_data)
 {
-#if SUPPORT_HEARTBEAT
-    if(is_heartbeat_cluster()) {
 	int lpc = 0;
 	int rc = ST_OK;
 	IPC_Channel *fence_ch = NULL;
@@ -82,9 +80,6 @@ te_connect_stonith(gpointer user_data)
 	CRM_ASSERT(stonith_src != NULL);
 	crm_info("Connected");
 	return TRUE;
-    }
-#endif
-    return FALSE;
 }
 
 gboolean

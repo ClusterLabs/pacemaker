@@ -90,6 +90,7 @@ static crm_child_t crm_children[] = {
     { 0, crm_proc_cib,  crm_flag_members, 0, TRUE,  "cib",   HA_CCMUID, HA_LIBHBDIR"/cib",  NULL },
     { 0, crm_proc_crmd, crm_flag_members, 0, TRUE,  "crmd",  HA_CCMUID, HA_LIBHBDIR"/crmd", NULL },
     { 0, crm_proc_attrd,crm_flag_none,    0, TRUE,  "attrd", HA_CCMUID, HA_LIBHBDIR"/attrd", NULL },
+    { 0, crm_proc_stonithd,crm_flag_none,    0, TRUE, "stonithd", 0, HA_LIBHBDIR"/stonithd", NULL },
 };
 
 void send_cluster_id(void);
@@ -363,6 +364,8 @@ static void *crm_wait_dispatch (void *arg)
     return 0;
 }
 
+#include <sys/stat.h>
+
 int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
 {
     int lpc = 0;
@@ -374,6 +377,11 @@ int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
 	crm_plugin_init(objdb);
     
 	pthread_create (&crm_wait_thread, NULL, crm_wait_dispatch, NULL);
+
+    mkdir(HA_VARRUNDIR, 750);
+    mkdir(HA_VARRUNDIR"/crm", 750);
+    chown(HA_VARRUNDIR"/crm", HA_CCMUID, HA_APIGID);
+    chown(HA_VARRUNDIR, HA_CCMUID, HA_APIGID);
 	
 	for (; lpc < SIZEOF(crm_children); lpc++) {
 	    spawn_child(&(crm_children[lpc]));

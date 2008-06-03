@@ -114,7 +114,7 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 
 	if(node1) {
 	    node_t *match = pe_find_node_id(resource1->allowed_nodes, node1->details->id);
-	    if(match->weight < 0) {
+	    if(match == NULL || match->weight < 0) {
 		do_crm_log(level, "%s: current location is unavailable", resource1->id);
 		node1 = NULL;
 		can1 = FALSE;
@@ -123,7 +123,7 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 
 	if(node2) {
 	    node_t *match = pe_find_node_id(resource2->allowed_nodes, node2->details->id);
-	    if(match->weight < 0) {
+	    if(match == NULL || match->weight < 0) {
 		do_crm_log(level, "%s: current location is unavailable", resource2->id);
 		node2 = NULL;
 		can2 = FALSE;
@@ -953,7 +953,7 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	crm_debug_2("%s->%s", order->lh_action_task, order->rh_action_task);
+	crm_debug_4("%s->%s", order->lh_action_task, order->rh_action_task);
 	
 	r1 = uber_parent(rsc);
 	r2 = uber_parent(order->rh_rsc);
@@ -1047,7 +1047,7 @@ void clone_rsc_order_rh(
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	crm_debug_2("%s->%s", lh_action->uuid, order->rh_action_task);
+	crm_debug_4("%s->%s", lh_action->uuid, order->rh_action_task);
 	if(safe_str_eq(CRM_OP_PROBED, lh_action->uuid)) {
 	    slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,

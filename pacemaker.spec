@@ -244,6 +244,7 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 %{_prefix}/share/pacemaker
 %{_prefix}/share/heartbeat
 %{_libdir}/heartbeat/*
+%{_libdir}/heartbeat/plugins/RAExec/*
 
 %dir %{_var}/lib/heartbeat
 
@@ -255,6 +256,7 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 %{_libdir}/libpe_rules.so.*
 %{_libdir}/libpengine.so.*
 %{_libdir}/libtransitioner.so.*
+%{_libdir}/libstonithd.so.*
 %{_sbindir}/cibadmin
 %{_sbindir}/crm_attribute
 %{_sbindir}/crm_diff
@@ -287,6 +289,7 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 %defattr(-,root,root)
 #%doc %{_datadir}/doc/%{name}-%{version}
 %{_includedir}/pacemaker
+%{_includedir}/heartbeat/fencing
 %{_libdir}/*.so
 
 %changelog pacemaker

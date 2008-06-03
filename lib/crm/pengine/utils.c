@@ -445,7 +445,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 
 	if(action == NULL) {
 		if(save_action) {
-			crm_debug_2("Creating%s action %d: %s for %s on %s",
+			crm_debug_4("Creating%s action %d: %s for %s on %s",
 				    optional?"":" manditory", data_set->action_id, key, rsc?rsc->id:"<NULL>",
 				    on_node?on_node->details->uname:"<NULL>");
 		}

@@ -64,21 +64,22 @@ enum crm_ais_msg_types {
     crm_msg_lrmd = 2,
     crm_msg_cib  = 3,
     crm_msg_crmd = 4,
-    crm_msg_te   = 5,
-    crm_msg_pe   = 6,
-    crm_msg_attrd = 7,
+    crm_msg_attrd = 5,
+    crm_msg_stonithd = 6,
+    crm_msg_te   = 7,
+    crm_msg_pe   = 8,
 };
 
 enum crm_proc_flag {
     crm_proc_none    = 0x00000001,
     crm_proc_ais     = 0x00000002,
     crm_proc_lrmd    = 0x00000010,
-    crm_proc_stonith = 0x00000020,
     crm_proc_cib     = 0x00000100,
     crm_proc_crmd    = 0x00000200,
-    crm_proc_pe      = 0x00001000,
-    crm_proc_te      = 0x00002000,
-    crm_proc_attrd   = 0x00010000,
+    crm_proc_attrd   = 0x00001000,
+    crm_proc_stonithd = 0x00002000,
+    crm_proc_pe      = 0x00010000,
+    crm_proc_te      = 0x00020000,
 };
 
 typedef struct crm_peer_node_s 
@@ -243,6 +244,9 @@ static inline const char *msg_type2text(enum crm_ais_msg_types type)
 		case crm_msg_attrd:
 			text = "attrd";
 			break;
+		case crm_msg_stonithd:
+			text = "stonithd";
+			break;
 	}
 	return text;
 }
@@ -275,8 +279,8 @@ static inline const char *peer2text(enum crm_proc_flag proc)
 		case crm_proc_attrd:
 			text = "attrd";
 			break;	
-		case crm_proc_stonith:
-			text = "stonith";
+		case crm_proc_stonithd:
+			text = "stonithd";
 			break;
 	}
 	return text;

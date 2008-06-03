@@ -1,7 +1,6 @@
-#
-# heartbeat library directory: Linux-HA code
-#
-# Copyright (C) 2001 Alan Robertson
+#  File: Makefile.am
+#  Author: Sun Jiang Dong <sunjd@cn.ibm.com>
+#  Copyright (c) 2004 International Business Machines
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,18 +16,21 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in
+MAINTAINERCLEANFILES = Makefile.in
 
+INCLUDES         = -I$(top_builddir)/include  -I$(top_srcdir)/include     \
+                   -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl     \
+		   -I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha    \
+		   -I$(top_builddir)          -I$(top_srcdir)
 
-#
-#	PILS is supposed to be an independent library
-#	Stonith should rely only on PILS
-#
-#	The rest can use clplumbing, and the plugins should be able
-#	to use any of the libraries (nothing can be linked against them)
-#
-#
+halibdir	 =  $(libdir)/@HB_PKG@
+havarlibdir      =  $(localstatedir)/lib/@HB_PKG@
 
-## Subdirectories...
-SUBDIRS	= crm fencing plugins
+COMMONLIBS	 =  -lplumb -lhbclient \
+		    $(GLIBLIB)
 
+lib_LTLIBRARIES = libstonithd.la
+libstonithd_la_SOURCES = stonithd_lib.c stonithd_msg.c
+libstonithd_la_LDFLAGS = $(COMMONLIBS)
+
+AM_CFLAGS = $(INCLUDES)

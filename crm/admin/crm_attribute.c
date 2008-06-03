@@ -132,6 +132,7 @@ main(int argc, char **argv)
 				break;
 			case 'D':
 				DO_DELETE = TRUE;
+				DO_WRITE = FALSE;
 				break;
 			case 'U':
 			case 'N':
@@ -279,7 +280,7 @@ main(int argc, char **argv)
 			return 1;	
 		}
 		
-		if(char2score(attr_value) <= 0){
+		if(DO_WRITE && char2score(attr_value) <= 0) {
 		    if(safe_str_neq(attr_value, "0")) {
 			fprintf(stderr,"%s is an inappropriate value for a failcount.\n", attr_value);
 			return 1;
