@@ -558,7 +558,7 @@ group_merge_weights(
 	       node_list_update(nodes, child->allowed_nodes, factor);
 
 	       if(archive && can_run_any(nodes) == FALSE) {
-		   crm_err("%s: Rolling back scores from %s", rhs, rsc->id);
+		   crm_debug("%s: Rolling back scores from %s", rhs, rsc->id);
 		   pe_free_shallow_adv(nodes, TRUE);
 		   nodes = archive;
 		   goto bail;
