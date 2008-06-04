@@ -1389,6 +1389,7 @@ get_attr_value(const char *input, size_t offset, size_t max)
 				break;
 			case '"':
 				if(input[lpc+1] == '/'
+				   || input[lpc+1] == '>'
 				   || isspace(input[lpc+1])) {
 				    return lpc - offset;
 				}
