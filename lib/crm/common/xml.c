@@ -1385,11 +1385,13 @@ get_attr_value(const char *input, size_t offset, size_t max)
 				if(input[lpc+1] == '"') {
 					/* skip over the next char */ 
 					lpc++;
-					break;
 				}
-				/*fall through*/
+				break;
 			case '"':
-				return lpc - offset;
+				if(input[lpc+1] == '/'
+				   || isspace(input[lpc+1])) {
+				    return lpc - offset;
+				}
 			default:
  				break;
 		}
