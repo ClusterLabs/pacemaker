@@ -1392,7 +1392,10 @@ get_attr_value(const char *input, size_t offset, size_t max)
 				   || input[lpc+1] == '>'
 				   || isspace(input[lpc+1])) {
 				    return lpc - offset;
-				}
+				} /* else
+				   *   An embedded quote - often used in XPath strings
+				   */
+ 				break;
 			default:
  				break;
 		}
