@@ -135,11 +135,13 @@ erase_node_from_join(const char *uname)
 	if(confirmed_nodes != NULL) {
 	    c = g_hash_table_remove(confirmed_nodes, uname);
 	}
-	crm_info("Removed dead node %s from join calculations:"
-		 " welcomed=%d itegrated=%d finalized=%d confirmed=%d",
-		 uname, w, i, f, c);
-}
 
+	if(w || i || f || c) {
+	    crm_info("Removed node %s from join calculations:"
+		     " welcomed=%d itegrated=%d finalized=%d confirmed=%d",
+		     uname, w, i, f, c);
+	}
+}
 
 static void
 join_make_offer(gpointer key, gpointer value, gpointer user_data)
@@ -269,6 +271,25 @@ do_dc_join_offer_one(long long action,
 		  g_hash_table_size(welcomed_nodes), current_join_id);
 }
 
+static int
+compare_int_fields(xmlNode *left, xmlNode *right, const char *field)
+{
+    const char *elem_l = crm_element_value(left, field);
+    const char *elem_r = crm_element_value(right, field);
+
+    int int_elem_l = crm_parse_int(elem_l, "-1");
+    int int_elem_r = crm_parse_int(elem_r, "-1");
+
+    if(int_elem_l < int_elem_r) {
+	return -1;
+	
+    } else if(int_elem_l > int_elem_r) {
+	return 1;
+    }
+	
+    return 0;
+}
+
 /*	 A_DC_JOIN_PROCESS_REQ	*/
 void
 do_dc_join_filter_offer(long long action,
@@ -285,8 +306,8 @@ do_dc_join_filter_offer(long long action,
 	const char *ack_nack = CRMD_JOINSTATE_MEMBER;
 	ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 
-	const char *join_from = crm_element_value(join_ack->msg,F_CRM_HOST_FROM);
-	const char *ref       = crm_element_value(join_ack->msg,XML_ATTR_REFERENCE);
+	const char *join_from = crm_element_value(join_ack->msg, F_CRM_HOST_FROM);
+	const char *ref       = crm_element_value(join_ack->msg, XML_ATTR_REFERENCE);
 	
 	gpointer join_node = g_hash_table_lookup(
 	    crm_peer_cache, join_from);
@@ -297,7 +318,16 @@ do_dc_join_filter_offer(long long action,
 	crm_element_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id);
 
 	if(max_generation_xml != NULL && generation != NULL) {
-		cmp = cib_compare_generation(max_generation_xml, generation);
+	    int lpc = 0;
+	    const char *attributes[] = {
+		XML_ATTR_GENERATION_ADMIN,
+		XML_ATTR_GENERATION,
+		/* XML_ATTR_NUMUPDATES, */
+	    };
+	    
+	    for(lpc = 0; cmp == 0 && lpc < DIMOF(attributes); lpc++) {
+		cmp = compare_int_fields(max_generation_xml, generation, attributes[lpc]);
+	    }
 	}
 	
 	if(join_node == NULL) {
