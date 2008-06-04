@@ -483,7 +483,6 @@ GListPtr
 group_merge_weights(
     resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback) 
 {
-    GListPtr archive = NULL;
     group_variant_data_t *group_data = NULL;
     get_group_variant_data(group_data, rsc);
     
@@ -497,7 +496,7 @@ group_merge_weights(
 
     set_bit(rsc->flags, pe_rsc_merging);
 
-#if 0
+#if 1
     /* turn this back on once we switch to migration-threshold */
     nodes = group_data->first_child->cmds->merge_weights(
 	group_data->first_child, rhs, nodes, factor, allow_rollback);
@@ -547,7 +546,6 @@ group_merge_weights(
 	    constraint->score/INFINITY, allow_rollback);
 	);
 
-  bail:
     clear_bit(rsc->flags, pe_rsc_merging);
     return nodes;
 }
