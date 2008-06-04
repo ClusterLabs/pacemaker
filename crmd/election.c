@@ -194,10 +194,18 @@ do_election_count_vote(long long action,
 	enum crmd_fsa_input election_result = I_NULL;
 	crm_node_t *our_node = NULL, *your_node = NULL;
 	ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
-	const char *op            = crm_element_value(vote->msg, F_CRM_TASK);
-	const char *vote_from     = crm_element_value(vote->msg, F_CRM_HOST_FROM);
-	const char *your_version  = crm_element_value(vote->msg, F_CRM_VERSION);
-	const char *election_owner= crm_element_value(vote->msg, F_CRM_ELECTION_OWNER);
+	const char *op             = NULL;
+	const char *vote_from      = NULL;
+	const char *your_version   = NULL;
+	const char *election_owner = NULL;
+
+	CRM_CHECK(msg_data != NULL, return);
+	CRM_CHECK(vote != NULL, crm_err("Bogus data from %s", msg_data->origin); return);
+	
+	op             = crm_element_value(vote->msg, F_CRM_TASK);
+	vote_from      = crm_element_value(vote->msg, F_CRM_HOST_FROM);
+	your_version   = crm_element_value(vote->msg, F_CRM_VERSION);
+	election_owner = crm_element_value(vote->msg, F_CRM_ELECTION_OWNER);
 	
 	/* if the membership copy is NULL we REALLY shouldnt be voting
 	 * the question is how we managed to get here.
