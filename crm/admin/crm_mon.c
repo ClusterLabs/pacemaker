@@ -694,9 +694,15 @@ print_html_status(crm_data_t *cib, const char *filename, gboolean web_cgi)
 	fprintf(stream, "<ul>\n");
 	slist_iter(node, node_t, data_set.nodes, lpc2,
 		   fprintf(stream, "<li>");
-		   fprintf(stream, "Node: %s (%s): %s",
-			     node->details->uname, node->details->id,
-			     node->details->online?"<font color=\"green\">online</font>\n":"<font color=\"orange\"><b>OFFLINE</b></font>\n");
+		   if(node->details->standby && node->details->online) {
+			fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"orange\">standby</font>\n");
+		   } else if(node->details->standby) {
+			fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"red\">OFFLINE (standby)</font>\n");
+		   } else if(node->details->online) {
+			fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"green\">online</font>\n");
+		   } else {
+			 fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"red\">OFFLINE</font>\n");
+		   }
 		   if(group_by_node) {
 			   fprintf(stream, "<ul>\n");
 			   slist_iter(rsc, resource_t,
