@@ -715,6 +715,7 @@ static void send_ipc_ack(void *conn, int class)
 /* local callbacks */
 void ais_ipc_message_callback(void *conn, void *msg)
 {
+    gboolean transient = TRUE;
     AIS_Message *ais_msg = msg;
     int type = ais_msg->sender.type;
     void *async_conn = openais_conn_partner_get(conn);
@@ -722,30 +723,24 @@ void ais_ipc_message_callback(void *conn, void *msg)
     ais_debug_2("Message from client %p", conn);
     send_ipc_ack(conn, 0);
 
-    
-    ais_info("type: %d local: %d conn: %p host type: %d ais: %d sender pid: %d child pid: %d size: %d",
+    ais_debug_3("type: %d local: %d conn: %p host type: %d ais: %d sender pid: %d child pid: %d size: %d",
 		type, ais_msg->host.local, crm_children[type].conn, ais_msg->host.type, crm_msg_ais,
 		ais_msg->sender.pid, crm_children[type].pid, ((int)SIZEOF(crm_children)));
     
-    /* If any of these checks are true, the order of crm_children
-     *   probably doesn't match that of the crm_ais_msg_types enum
-     *
-     * Either that or its a transient client - which we don't support (yet?)
+    if(type > crm_msg_none && type < SIZEOF(crm_children)) {
+	/* known child process */
+	transient = FALSE;
+    }
+    
+    /* If this check fails, the order of crm_children probably 
+     *   doesn't match that of the crm_ais_msg_types enum
      */
-
-    AIS_CHECK(type > crm_msg_none,
-	      ais_err("Bad type (%d) from sender %d", type, ais_msg->sender.pid);
-	      return);
-
-    AIS_CHECK(type < SIZEOF(crm_children),
-	      ais_err("Bad type (%d) from sender %d", type, ais_msg->sender.pid);
-	      return);
-
-    AIS_CHECK(ais_msg->sender.pid == crm_children[type].pid,
+    AIS_CHECK(transient || ais_msg->sender.pid == crm_children[type].pid,
 	      ais_err("Sender: %d, child[%d]: %d", ais_msg->sender.pid, type, crm_children[type].pid);
 	      return);
     
-    if(type > crm_msg_none
+    if(transient == FALSE
+       && type > crm_msg_none
        && ais_msg->host.local
        && crm_children[type].conn == NULL
        && ais_msg->host.type == crm_msg_ais) {
