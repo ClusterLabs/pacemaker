@@ -390,9 +390,9 @@ gboolean init_ais_connection(
 
     /* 16 := CRM_SERVICE */
     crm_info("Creating connection to our AIS plugin");
-    rc = saServiceConnect (&ais_fd_async, &ais_fd_sync, 16);
+    rc = saServiceConnect (&ais_fd_sync, &ais_fd_async, 16);
     if (rc != SA_AIS_OK) {
-	crm_info("Connection to our AIS plugin failed");
+	crm_info("Connection to our AIS plugin failed: %s (%d)", ais_error2text(rc), rc);
 	return FALSE;
     }
 
