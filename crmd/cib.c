@@ -92,12 +92,19 @@ static void
 do_cib_replaced(const char *event, xmlNode *msg)
 {
     crm_debug("Updating the CIB after a replace: DC=%s", AM_I_DC?"true":"false");
-    if(AM_I_DC) {
-	/* start the join process again so we get everyone's LRM status */
-	populate_cib_nodes(FALSE);
-	do_update_cib_nodes(TRUE, __FUNCTION__);
-	register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+    if(AM_I_DC == FALSE) {
+	return;
+	
+    } else if(fsa_state == S_FINALIZE_JOIN
+	      && is_set(fsa_input_register, R_CIB_ASKED)) {
+	/* no need to restart the join - we asked for this replace op */
+	return;
     }
+    
+    /* start the join process again so we get everyone's LRM status */
+    populate_cib_nodes(FALSE);
+    do_update_cib_nodes(TRUE, __FUNCTION__);
+    register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 }
 
 /*	 A_CIB_STOP, A_CIB_START, A_CIB_RESTART,	*/
