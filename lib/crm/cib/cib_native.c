@@ -422,16 +422,17 @@ cib_native_perform_op(
 		rc = cib_return_code;
 	}	
 
-	if(rc == cib_diff_resync) {
-	    /* This is an internal value that clients do not and should not care about */
-	    rc = cib_ok;
-	}
-	
-	if(rc == cib_ok || rc == cib_not_master || rc == cib_master_timeout) {
-	    crm_log_xml(LOG_MSG, "passed", op_reply);
-
-	} else {
-/* 	} else if(rc == cib_remote_timeout) { */
+	switch(rc) {
+	    case cib_ok:
+	    case cib_diff_resync:
+		/* This is an internal value that clients do not and should not care about */
+		rc = cib_ok;
+		/* fall through */
+	    case cib_not_master:
+	    case cib_master_timeout:
+		crm_log_xml(LOG_MSG, "passed", op_reply);
+		break;
+	    default:
 		crm_err("Call failed: %s", cib_error2string(rc));
 		crm_log_xml(LOG_WARNING, "failed", op_reply);
 	}
