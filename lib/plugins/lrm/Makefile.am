@@ -29,7 +29,6 @@ COMMONLIBS			=	-lplumb   \
 
 lrmdir				=	$(HA_VARLIBDIR)/$(HB_PKG)/$(LRM_DIR)
 plugindir               	= 	$(halibdir)/plugins/RAExec
-apigid                          =       @HA_APIGID@
 
 plugin_LTLIBRARIES = stonith.la
 
@@ -39,5 +38,5 @@ stonith_la_LDFLAGS = -lpils -export-dynamic -module -avoid-version \
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)$(lrmdir)
-	-chgrp $(apigid) $(DESTDIR)/$(lrmdir)
+	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(lrmdir)
 	chmod 770 $(DESTDIR)/$(lrmdir)
