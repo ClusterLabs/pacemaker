@@ -239,6 +239,10 @@ static void crm_plugin_init(struct objdb_iface_ver0 *objdb)
     char *value = NULL;
     unsigned int object_service_handle = 0;
 
+#ifdef AIS_WHITETANK 
+    log_init ("crm");
+#endif
+    
     membership_list = g_hash_table_new_full(
 	g_direct_hash, g_direct_equal, NULL, destroy_ais_node);
 
@@ -374,10 +378,6 @@ int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
     static gboolean need_init = TRUE;
     static int max = SIZEOF(crm_children);
 
-#ifdef AIS_WHITETANK 
-    log_init ("crm");
-#endif
-    
     ENTER("");
     if(need_init) {
 	need_init = FALSE;
