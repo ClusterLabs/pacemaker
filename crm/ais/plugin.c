@@ -43,8 +43,9 @@
 #include <openais/service/swab.h>
 #include <openais/totem/totempg.h>
 #include <openais/service/service.h>
-#include <openais/service/ipc.h>
-
+#ifndef AIS_WHITETANK 
+#  include <openais/service/ipc.h>
+#endif
 #include <openais/lcr/lcr_comp.h>
 
 #include <glib/ghash.h>
@@ -84,13 +85,13 @@ struct crm_identify_msg_s
 } __attribute__((packed));
 
 static crm_child_t crm_children[] = {
-    { 0, crm_proc_none, crm_flag_none,    0, FALSE, "none",  0, NULL, NULL },
-    { 0, crm_proc_ais,  crm_flag_none,    0, FALSE, "ais",   0, NULL, NULL },
-    { 0, crm_proc_lrmd, crm_flag_none,    0, TRUE,  "lrmd",  0, HA_LIBHBDIR"/lrmd",         NULL },
-    { 0, crm_proc_cib,  crm_flag_members, 0, TRUE,  "cib",   HA_CCMUID, HA_LIBHBDIR"/cib",  NULL },
-    { 0, crm_proc_crmd, crm_flag_members, 0, TRUE,  "crmd",  HA_CCMUID, HA_LIBHBDIR"/crmd", NULL },
-    { 0, crm_proc_attrd,crm_flag_none,    0, TRUE,  "attrd", HA_CCMUID, HA_LIBHBDIR"/attrd", NULL },
-    { 0, crm_proc_stonithd,crm_flag_none,    0, TRUE, "stonithd", 0, HA_LIBHBDIR"/stonithd", NULL },
+    { 0, crm_proc_none,     crm_flag_none,    0, FALSE, "none",  0, NULL, NULL },
+    { 0, crm_proc_ais,      crm_flag_none,    0, FALSE, "ais",   0, NULL, NULL },
+    { 0, crm_proc_lrmd,     crm_flag_none,    0, TRUE,  "lrmd",  0,         HA_LIBHBDIR"/lrmd",     NULL },
+    { 0, crm_proc_cib,      crm_flag_members, 0, TRUE,  "cib",   HA_CCMUID, HA_LIBHBDIR"/cib",      NULL },
+    { 0, crm_proc_crmd,     crm_flag_members, 0, TRUE,  "crmd",  HA_CCMUID, HA_LIBHBDIR"/crmd",     NULL },
+    { 0, crm_proc_attrd,    crm_flag_none,    0, TRUE,  "attrd", HA_CCMUID, HA_LIBHBDIR"/attrd",    NULL },
+    { 0, crm_proc_stonithd, crm_flag_none,    0, TRUE,  "stonithd", 0,      HA_LIBHBDIR"/stonithd", NULL },
 };
 
 void send_cluster_id(void);
@@ -370,6 +371,10 @@ int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
 {
     int lpc = 0;
     static gboolean need_init = TRUE;
+
+#ifdef AIS_WHITETANK 
+    log_init ("crm");
+#endif
     
     ENTER("");
     if(need_init) {
@@ -573,11 +578,16 @@ int ais_ipc_client_connect_callback (void *conn)
     void *async_conn = openais_conn_partner_get(conn);
     ENTER("Client=%p", conn);
     ais_debug("Client %p/%p joined", conn, async_conn);
+#ifndef AIS_WHITETANK
+    /* Whitetank hasn't finished setting up the connection at this point
+     * Sending messages now messes up the protocol!
+     */
     if(async_conn) {
 	send_client_msg(async_conn, crm_class_cluster, crm_msg_none, "identify");
     } else {
 	ais_err("No async connection");
     }
+#endif
     LEAVE("");
 
     return (0);
@@ -686,8 +696,12 @@ static void send_ipc_ack(void *conn, int class)
     
     res_overlay->header.size = crm_lib_service[class].response_size;
     res_overlay->header.id = crm_lib_service[class].response_id;
-    res_overlay->header.error = 0;
+    res_overlay->header.error = SA_AIS_OK;
+#ifdef AIS_WHITETANK
+    openais_response_send (conn, res_overlay, res_overlay->header.size);
+#else
     openais_conn_send_response (conn, res_overlay, res_overlay->header.size);
+#endif
 }
 
 
@@ -699,6 +713,7 @@ void ais_ipc_message_callback(void *conn, void *msg)
     void *async_conn = openais_conn_partner_get(conn);
     ENTER("Client=%p", conn);
     ais_debug_2("Message from client %p", conn);
+    send_ipc_ack(conn, 0);
 
     if(type > 0
        && ais_msg->host.local
@@ -726,7 +741,6 @@ void ais_ipc_message_callback(void *conn, void *msg)
     memcpy(ais_msg->sender.uname, local_uname, ais_msg->sender.size);
 
     route_ais_message(msg, TRUE);
-    send_ipc_ack(conn, 0);
     
     LEAVE("");
 }
@@ -780,7 +794,9 @@ int crm_exec_exit_fn (struct objdb_iface_ver0 *objdb)
 
     ais_notice("Shutdown complete");
     LEAVE("");
+#ifndef AIS_WHITETANK
     logsys_flush ();
+#endif
     return 0;
 }
 
@@ -818,12 +834,14 @@ void ais_node_list_query(void *conn, void *msg)
 {
     char *data = ais_generate_membership_data();
     void *async_conn = openais_conn_partner_get(conn);
-    ais_debug_4("members: %s", data);
+
+    /* send the ACK before we send any other messages */
+    send_ipc_ack(conn, 1);
+
     if(async_conn) {
 	send_client_msg(async_conn, crm_class_members, crm_msg_none, data);
     }
     ais_free(data);
-    send_ipc_ack(conn, 1);
 }
 
 void ais_manage_notification(void *conn, void *msg)
@@ -1023,7 +1041,11 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 	    level = LOG_ERR;
 	    ais_debug_3("Delivering locally to %s (size=%d)",
 			crm_children[dest].name, msg->header.size);
+#ifdef AIS_WHITETANK
+	    rc = openais_dispatch_send(conn, msg, msg->header.size);
+#else
 	    rc = openais_conn_send_response(conn, msg, msg->header.size);
+#endif
 	}
 
     } else if(local_origin) {
