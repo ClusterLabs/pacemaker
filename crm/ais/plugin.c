@@ -87,11 +87,11 @@ struct crm_identify_msg_s
 static crm_child_t crm_children[] = {
     { 0, crm_proc_none,     crm_flag_none,    0, 0, FALSE, "none",     0, NULL, NULL },
     { 0, crm_proc_ais,      crm_flag_none,    0, 0, FALSE, "ais",      0, NULL, NULL },
-    { 0, crm_proc_lrmd,     crm_flag_none,    2, 0, TRUE,  "lrmd",     0,         HA_LIBHBDIR"/lrmd",     NULL },
-    { 0, crm_proc_cib,      crm_flag_members, 1, 0, TRUE,  "cib",      HA_CCMUID, HA_LIBHBDIR"/cib",      NULL },
+    { 0, crm_proc_lrmd,     crm_flag_none,    3, 0, TRUE,  "lrmd",     0,         HA_LIBHBDIR"/lrmd",     NULL },
+    { 0, crm_proc_cib,      crm_flag_members, 2, 0, TRUE,  "cib",      HA_CCMUID, HA_LIBHBDIR"/cib",      NULL },
     { 0, crm_proc_crmd,     crm_flag_members, 5, 0, TRUE,  "crmd",     HA_CCMUID, HA_LIBHBDIR"/crmd",     NULL },
     { 0, crm_proc_attrd,    crm_flag_none,    4, 0, TRUE,  "attrd",    HA_CCMUID, HA_LIBHBDIR"/attrd",    NULL },
-    { 0, crm_proc_stonithd, crm_flag_none,    3, 0, TRUE,  "stonithd", 0,         HA_LIBHBDIR"/stonithd", NULL },
+    { 0, crm_proc_stonithd, crm_flag_none,    1, 0, TRUE,  "stonithd", 0,         HA_LIBHBDIR"/stonithd", NULL },
 };
 
 void send_cluster_id(void);
