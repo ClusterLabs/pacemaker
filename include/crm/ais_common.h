@@ -24,9 +24,44 @@
 #include <glib.h>
 #include <string.h>
 #if SUPPORT_AIS
-#  include <openais/ais_util.h>
-#  include <openais/ipc_gen.h>
-#  include <openais/saAis.h>
+#  ifdef AIS_WHITETANK 
+/* cheap hacks for building against the stable series of openais */
+
+#    include <openais/saAis.h>
+
+enum service_types {
+	EVS_SERVICE = 0,
+	CLM_SERVICE = 1,
+	AMF_SERVICE = 2,
+	CKPT_SERVICE = 3,
+	EVT_SERVICE = 4,
+	LCK_SERVICE = 5,
+	MSG_SERVICE = 6,
+	CFG_SERVICE = 7,
+	CPG_SERVICE = 8
+};
+
+typedef struct {
+	int size; __attribute__((aligned(8))) 
+	int id __attribute__((aligned(8)));
+	SaAisErrorT error __attribute__((aligned(8)));
+} mar_res_header_t __attribute__((aligned(8)));
+
+typedef struct {
+	int size __attribute__((aligned(8)));
+	int id __attribute__((aligned(8)));
+} mar_req_header_t __attribute__((aligned(8)));
+
+extern SaAisErrorT saSendReceiveReply (
+    int s, void *requestMessage, int requestLen, void *responseMessage, int responseLen);
+extern SaAisErrorT saRecvRetry (int s, void *msg, size_t len);
+extern SaAisErrorT saServiceConnect (int *responseOut, int *callbackOut, enum service_types service);
+
+#  else
+#    include <openais/ais_util.h>
+#    include <openais/ipc_gen.h>
+#    include <openais/saAis.h>
+#  endif
 #else
 typedef struct {
 	int size __attribute__((aligned(8)));
