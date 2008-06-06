@@ -83,11 +83,6 @@ static int ais_fd_async = -1; /* never send messages via this channel */
 GFDSource *ais_source = NULL;
 GFDSource *ais_source_sync = NULL;
 
-struct res_overlay {
-	mar_res_header_t header __attribute((aligned(8)));
-/* 	char buf[4096]; */
-};
-
 gboolean
 send_ais_text(int class, const char *data,
 	      gboolean local, const char *node, enum crm_ais_msg_types dest)
@@ -180,7 +175,10 @@ send_ais_text(int class, const char *data,
     rc = saSendReceiveReply(ais_fd_sync, ais_msg, ais_msg->header.size,
 			    &header, sizeof (mar_res_header_t));
     if(rc == SA_AIS_OK) {
-	CRM_CHECK(header.error == 0, rc = header.error);
+	CRM_CHECK(header.size == sizeof (mar_res_header_t),
+		  crm_err("Odd message: id=%d, size=%d, error=%d",
+			  header.id, header.size, header.error));
+	CRM_CHECK(header.error == SA_AIS_OK, rc = header.error);
     }
 
     if(rc == SA_AIS_ERR_TRY_AGAIN && retries < 20) {
@@ -253,7 +251,8 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 	goto bail;
 
     } else if(header->size == header_len) {
-	crm_err("Empty message: error=%d", header->error);
+	crm_err("Empty message: id=%d, size=%d, error=%d, header_len=%d",
+		header->id, header->size, header->error, header_len);
 	goto done;
 	
     } else if(header->size == 0 || header->size < header_len) {
