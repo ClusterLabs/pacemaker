@@ -470,6 +470,9 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	if(g_list_length(rsc->running_on) > 1) {
  		if(rsc->recovery_type == recovery_stop_start) {
 			pe_proc_err("Attempting recovery of resource %s", rsc->id);
+			if(rsc->role == RSC_ROLE_MASTER) {
+			    DemoteRsc(rsc, NULL, FALSE, data_set);
+			}
 			StopRsc(rsc, NULL, FALSE, data_set);
 			rsc->role = RSC_ROLE_STOPPED;
 		}
