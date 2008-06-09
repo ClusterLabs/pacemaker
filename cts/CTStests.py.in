@@ -634,11 +634,10 @@ class StonithTest(CTSTest):
         '''StonithTest is applicable unless suppressed by CM.Env["DoStonith"] == FALSE'''
 
         # for v2, stonithd test is a better test to run.
-        if self.CM["Name"] == "linux-ha-v2":
-            return None
-        if self.CM.Env.has_key("DoStonith"):
+        if self.CM["Name"] == "heartbeat":
             return self.CM.Env["DoStonith"]
-        return 1
+        else:
+            return None
 
 #        Register StonithTest as a good test to run
 AllTestClasses.append(StonithTest)
@@ -705,6 +704,12 @@ class StonithdTest(StonithTest):
 
         return 1
         
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+        return [
+#            """stonithd: .*CRIT: command ssh -q -x -n -l root.*/sbin/reboot -nf .* SHELL=/bin/sh at now.* failed"""
+            ]
+
     def is_applicable(self):
 
         if self.CM["Name"] == "crm-ais" or self.CM["Name"] == "linux-ha-v2":
