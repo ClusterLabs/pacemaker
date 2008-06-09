@@ -661,7 +661,7 @@ class CIBAudit(ClusterAudit):
                         for line in diff_lines:
                             if not re.search("<diff/>", line):
                                 passed = 0
-                                self.CM.log("CibDiff[%s-%s]: %s" 
+                                self.CM.debug("CibDiff[%s-%s]: %s" 
                                             % (first_host, a_host, line)) 
                             else:
                                 self.CM.debug("CibDiff[%s-%s] Ignoring: %s" 
