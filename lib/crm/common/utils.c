@@ -1069,7 +1069,7 @@ decode_transition_key(
 	const char *key, char **uuid, int *transition_id, int *action_id, int *target_rc)
 {
 	int res = 0;
-	gboolean done = TRUE;
+	gboolean done = FALSE;
 
 	CRM_CHECK(uuid != NULL, return FALSE);
 	CRM_CHECK(target_rc != NULL, return FALSE);
@@ -1081,15 +1081,18 @@ decode_transition_key(
 	switch(res) {
 	    case 4:
 		/* Post Pacemaker 0.6 */
+		done = TRUE;
 		break;
 	    case 2:
 		/* Until Pacemaker 0.6 */
+		done = TRUE;
 		*target_rc = -1;
 		res = sscanf(key, "%d:%d:%s", transition_id, action_id, *uuid);
 		CRM_CHECK(res == 3, done = FALSE);
 		break;
 	    case 1:
 		/* Prior to Heartbeat 2.0.8 */
+		done = TRUE;
 		*action_id = -1;
 		*target_rc = -1;
 		res = sscanf(key, "%d:%s", transition_id, *uuid);
