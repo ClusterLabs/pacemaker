@@ -553,10 +553,6 @@ createEmptyCib(void)
 	status = create_xml_node(cib_root, XML_CIB_TAG_STATUS);
 
 /* 	crm_xml_add(cib_root, "version", "1"); */
-	crm_xml_add(cib_root, XML_ATTR_GENERATION, "0");
-	crm_xml_add(cib_root, XML_ATTR_GENERATION_ADMIN, "0");
-	crm_xml_add(cib_root, XML_ATTR_NUMUPDATES, "0");
-
 	create_xml_node(config, XML_CIB_TAG_CRMCONFIG);
 	create_xml_node(config, XML_CIB_TAG_NODES);
 	create_xml_node(config, XML_CIB_TAG_RESOURCES);
