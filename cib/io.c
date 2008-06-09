@@ -570,7 +570,7 @@ archive_file(const char *oldname, const char *newname, const char *ext, gboolean
  * on failure.
  */
 int
-activateCibXml(xmlNode *new_cib, gboolean to_disk)
+activateCibXml(xmlNode *new_cib, gboolean to_disk, const char *op)
 {
 	int error_code = cib_ok;
 	xmlNode *saved_cib = the_cib;
@@ -608,7 +608,7 @@ activateCibXml(xmlNode *new_cib, gboolean to_disk)
 		write_cib_contents(the_cib);
 		
 	} else if(cib_writes_enabled && cib_status == cib_ok && to_disk) {
-		crm_debug("Triggering CIB write");
+		crm_debug("Triggering CIB write for %s op", op);
 		G_main_set_trigger(cib_writer);
 	} else {
 	    crm_debug_3("disk: %d, writes: %d", to_disk, cib_writes_enabled);

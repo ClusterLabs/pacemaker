@@ -923,7 +923,7 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	free_xml(result_cib);
 	    
     } else {
-	rc = activateCibXml(result_cib, config_changed);
+	rc = activateCibXml(result_cib, config_changed, op);
 	if(rc != cib_ok) {
 	    crm_warn("Activation failed");
 	}

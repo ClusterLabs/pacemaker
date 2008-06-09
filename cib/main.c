@@ -612,7 +612,7 @@ startCib(const char *filename)
 
 	CRM_ASSERT(cib != NULL);
 	
-	if(activateCibXml(cib, TRUE) == 0) {
+	if(activateCibXml(cib, TRUE, "start") == 0) {
 		int port = 0;
 		const char *port_s = crm_element_value(cib, "remote_access_port");
 		active = TRUE;

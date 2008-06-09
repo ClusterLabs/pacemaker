@@ -49,7 +49,7 @@ extern xmlNode *readCibXml(char *buffer);
 extern xmlNode *readCibXmlFile(
 	const char *dir, const char *file, gboolean discard_status);
 extern int activateCibBuffer(char *buffer, const char *filename);
-extern int activateCibXml(xmlNode *doc, gboolean to_disk);
+extern int activateCibXml(xmlNode *doc, gboolean to_disk, const char *op);
 
 /* extern xmlNode *server_get_cib_copy(void); */
 
