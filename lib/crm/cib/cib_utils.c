@@ -614,6 +614,31 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		crm_err("Global update introduces id collision!");
 	    }
 	}
+
+	if(rc == cib_ok && current_cib && scratch) {
+	    int old = 0;
+	    int new = 0;
+	    crm_element_value_int(scratch, XML_ATTR_GENERATION_ADMIN, &new);
+	    crm_element_value_int(current_cib, XML_ATTR_GENERATION_ADMIN, &old);
+	    
+	    CRM_CHECK(old <= new,
+		      crm_err("%s went backwrads: %d -> %d (Opts: 0x%x)",
+			      XML_ATTR_GENERATION_ADMIN, old, new, call_options);
+		      crm_log_xml_warn(req, "Bad Op");
+		      crm_log_xml_warn(input, "Bad Data");
+		      rc = cib_old_data);
+	    
+	    if(old == new) {
+		crm_element_value_int(scratch, XML_ATTR_GENERATION, &new);
+		crm_element_value_int(current_cib, XML_ATTR_GENERATION, &old);
+		CRM_CHECK(old <= new,
+			  crm_err("%s went backwrads: %d -> %d (Opts: 0x%x)",
+				  XML_ATTR_GENERATION_ADMIN, old, new, call_options);
+			  crm_log_xml_warn(req, "Bad Op");
+			  crm_log_xml_warn(input, "Bad Data");
+			  rc = cib_old_data);
+	    }
+	}
 	
 	if(rc == cib_ok) {
 	    gboolean dtd_ok;
