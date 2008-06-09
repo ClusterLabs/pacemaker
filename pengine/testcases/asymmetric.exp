@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="11" operation="monitor" operation_key="ebe3fb6e-7778-426e-be58-190ab1ff3dd3:0_monitor_20000" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3">
          <primitive id="ebe3fb6e-7778-426e-be58-190ab1ff3dd3:0" long-id="ms_drbd_poolA:ebe3fb6e-7778-426e-be58-190ab1ff3dd3:0" class="ocf" provider="heartbeat" type="drbd"/>
-         <attributes crm_feature_set="3.0" CRM_meta_role="Master" drbdconf="/etc/drbd.poolA" drbd_resource="poolA" CRM_meta_stateful="true" CRM_meta_id="ed238e4a-f523-49f9-889a-d8e81a74ff81" CRM_meta_timeout="10000" CRM_meta_op_target_rc="8" CRM_meta_name="monitor" CRM_meta_interval="20000" CRM_meta_globally_unique="false" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm_feature_set="3.0" drbd_resource="poolA" drbdconf="/etc/drbd.poolA"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -12,7 +12,7 @@
      <action_set>
        <rsc_op id="15" operation="monitor" operation_key="ebe3fb6e-7778-426e-be58-190ab1ff3dd3:1_monitor_19000" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a">
          <primitive id="ebe3fb6e-7778-426e-be58-190ab1ff3dd3:1" long-id="ms_drbd_poolA:ebe3fb6e-7778-426e-be58-190ab1ff3dd3:1" class="ocf" provider="heartbeat" type="drbd"/>
-         <attributes crm_feature_set="3.0" drbdconf="/etc/drbd.poolA" drbd_resource="poolA" CRM_meta_stateful="true" CRM_meta_role="Slave" CRM_meta_id="61a1923e-d346-47cd-958d-505e4abcc879" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="19000" CRM_meta_globally_unique="false" CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1"/>
+         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="19000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_role="Slave" CRM_meta_stateful="true" CRM_meta_timeout="10000" crm_feature_set="3.0" drbd_resource="poolA" drbdconf="/etc/drbd.poolA"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -21,7 +21,7 @@
      <action_set>
        <rsc_op id="4" operation="monitor" operation_key="drbd_target_poolA_monitor_0" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3">
          <primitive id="drbd_target_poolA" long-id="drbd_target_poolA" class="ocf" provider="vpools" type="iscsi_target"/>
-         <attributes crm_feature_set="3.0" target_role="started" ip="192.168.5.1" drbdconf="/etc/drbd.poolA" drbd_resource="poolA" nexus_iqn="iqn.2008-05.fr.longphone:poolA" CRM_meta_timeout="40000" CRM_meta_op_target_rc="7"/>
+         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="40000" crm_feature_set="3.0" drbd_resource="poolA" drbdconf="/etc/drbd.poolA" ip="192.168.5.1" nexus_iqn="iqn.2008-05.fr.longphone:poolA" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -30,7 +30,7 @@
      <action_set>
        <rsc_op id="6" operation="monitor" operation_key="drbd_target_poolA_monitor_0" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a">
          <primitive id="drbd_target_poolA" long-id="drbd_target_poolA" class="ocf" provider="vpools" type="iscsi_target"/>
-         <attributes crm_feature_set="3.0" target_role="started" ip="192.168.5.1" drbdconf="/etc/drbd.poolA" drbd_resource="poolA" nexus_iqn="iqn.2008-05.fr.longphone:poolA" CRM_meta_timeout="40000" CRM_meta_op_target_rc="7"/>
+         <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="40000" crm_feature_set="3.0" drbd_resource="poolA" drbdconf="/etc/drbd.poolA" ip="192.168.5.1" nexus_iqn="iqn.2008-05.fr.longphone:poolA" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -53,7 +53,7 @@
    <synapse id="5" priority="1000000">
      <action_set>
        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3">
-         <attributes crm_feature_set="3.0" CRM_meta_op_no_wait="true"/>
+         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -65,7 +65,7 @@
    <synapse id="6" priority="1000000">
      <action_set>
        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a">
-         <attributes crm_feature_set="3.0" CRM_meta_op_no_wait="true"/>
+         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0"/>
        </rsc_op>
      </action_set>
      <inputs>
