@@ -45,7 +45,7 @@
       <lrm id="node2">
         <lrm_resources>
           <lrm_resource id="rsc3" class="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc3_start_0" operation="migrate_from" interval="0" op_status="4" rc_code="0" call_id="1" op_digest="a4ee04201fa9196ee5ef9928c48f35eb" crm_feature_set="1.0.6" transition_magic="" migrate_from="node1"/>
+            <lrm_rsc_op id="rsc3_start_0" operation="migrate_from" interval="0" op_status="4" rc_code="1" call_id="1" op_digest="a4ee04201fa9196ee5ef9928c48f35eb" crm_feature_set="1.0.6" transition_magic="" migrate_from="node1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
