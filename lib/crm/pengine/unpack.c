@@ -1007,6 +1007,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	      pe_working_set_t *data_set) 
 {    
 	const char *id          = NULL;
+	const char *key        = NULL;
 	const char *task        = NULL;
  	const char *task_id     = NULL;
  	const char *actual_rc   = NULL;
@@ -1020,6 +1021,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	int task_id_i = -1;
 	int task_status_i = -2;
 	int actual_rc_i = 0;
+	int target_rc = -1;
 	
 	action_t *action = NULL;
 	node_t *effective_node = NULL;
@@ -1038,6 +1040,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	task_status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
 	op_digest   = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
 	op_version  = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+	key	    = crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY);
 
 	CRM_CHECK(id != NULL, return FALSE);
 	CRM_CHECK(task != NULL, return FALSE);
@@ -1090,6 +1093,24 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	CRM_CHECK(actual_rc != NULL, return FALSE);	
 	actual_rc_i = crm_parse_int(actual_rc, NULL);
 
+	if(key) {
+	    int dummy = 0;
+	    char *dummy_string = NULL;
+	    decode_transition_key(key, &dummy_string, &dummy, &dummy, &target_rc);
+	    crm_free(dummy_string);
+	}
+	
+	if(task_status_i == LRM_OP_DONE && target_rc >= 0) {
+	    if(target_rc == actual_rc_i) {
+		goto do_status;
+		
+	    } else {
+		task_status_i = LRM_OP_ERROR;
+		crm_info("Remapping %s (rc=%d) on %s to an ERROR (expected %d)",
+			 id, actual_rc_i, node->details->uname, target_rc);
+	    }
+	}
+	
 	if(task_status_i == LRM_OP_NOTSUPPORTED) {
 	    actual_rc_i = EXECRA_UNIMPLEMENT_FEATURE;
 	}
@@ -1178,6 +1199,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		    task_status_i = LRM_OP_ERROR;
 		}
 	}
+
+  do_status:
 	
 	if(task_status_i == LRM_OP_ERROR
 	   || task_status_i == LRM_OP_TIMEOUT
