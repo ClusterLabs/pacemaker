@@ -1029,6 +1029,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	      pe_working_set_t *data_set) 
 {    
 	const char *id          = NULL;
+	const char *key        = NULL;
 	const char *task        = NULL;
 	const char *magic       = NULL;
  	const char *task_id     = NULL;
@@ -1043,14 +1044,14 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	int task_id_i = -1;
 	int task_status_i = -2;
 	int actual_rc_i = 0;
+	int target_rc = -1;
 	
 	action_t *action = NULL;
 	node_t *effective_node = NULL;
 
 	gboolean expired = FALSE;
 	gboolean is_probe = FALSE;
-	gboolean is_stop_action = FALSE;
-
+	
 	CRM_CHECK(rsc    != NULL, return FALSE);
 	CRM_CHECK(node   != NULL, return FALSE);
 	CRM_CHECK(xml_op != NULL, return FALSE);
@@ -1062,6 +1063,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	op_digest   = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
 	op_version  = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
 	magic	    = crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC);
+	key	    = crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY);
 
 	CRM_CHECK(id != NULL, return FALSE);
 	CRM_CHECK(task != NULL, return FALSE);
@@ -1100,10 +1102,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		is_probe = TRUE;
 	}
 	
-	if(safe_str_eq(task, CRMD_ACTION_STOP)) {
-		is_stop_action = TRUE;
-	}
-	
 	if(task_status_i != LRM_OP_PENDING) {
 		task_id_i = crm_parse_int(task_id, "-1");
 
@@ -1126,6 +1124,30 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	CRM_CHECK(actual_rc != NULL, return FALSE);	
 	actual_rc_i = crm_parse_int(actual_rc, NULL);
 
+	if(key) {
+	    int dummy = 0;
+	    char *dummy_string = NULL;
+	    decode_transition_key(key, &dummy_string, &dummy, &dummy, &target_rc);
+	    crm_free(dummy_string);
+	}
+	
+	if(task_status_i == LRM_OP_DONE && target_rc >= 0) {
+	    if(target_rc == actual_rc_i) {
+		task_status_i = LRM_OP_DONE;
+		
+	    } else {
+		task_status_i = LRM_OP_ERROR;
+		crm_info("Remapping %s (rc=%d) on %s to an ERROR (expected %d)",
+			 id, actual_rc_i, node->details->uname, target_rc);
+	    }
+
+	} else if(task_status_i == LRM_OP_ERROR) {
+	    /* let us decide that */
+	    crm_info("Remapping %s (rc=%d, status=%d) on %s to DONE",
+		      id, actual_rc_i, task_status_i, node->details->uname);
+ 	    task_status_i = LRM_OP_DONE;
+	}
+	
 	if(task_status_i == LRM_OP_NOTSUPPORTED) {
 	    actual_rc_i = EXECRA_UNIMPLEMENT_FEATURE;
 	}
@@ -1139,39 +1161,44 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	    goto done;
 	}
 	
+
+	/* we could clean this up significantly except for old LRMs and CRMs that
+	 * didnt include target_rc and liked to remap status
+	 */
 	switch(actual_rc_i) {
 	    case EXECRA_NOT_RUNNING:
-		if(is_probe) {
-			/* treat these like stops */
-			is_stop_action = TRUE;
-		}
-		if(is_stop_action) {
-			task_status_i = LRM_OP_DONE;
- 		} else {
-			task_status_i = LRM_OP_ERROR;
+		if(is_probe || target_rc == actual_rc_i) {
+		    rsc->role = RSC_ROLE_STOPPED;
+		    
+		    /* clear any previous failure actions */
+		    *on_fail = action_fail_ignore;
+		    rsc->next_role = RSC_ROLE_UNKNOWN;
+		    
+		} else if(safe_str_neq(task, CRMD_ACTION_STOP)) {
+		    task_status_i = LRM_OP_ERROR;
 		}
 		break;
 		
 	    case EXECRA_RUNNING_MASTER:
-		if(is_probe
-		   || (rsc->role == RSC_ROLE_MASTER
-		       && safe_str_eq(task, CRMD_ACTION_STATUS))) {
-			task_status_i = LRM_OP_DONE;
+		if(is_probe) {
+		    crm_warn("%s found active %s in master mode on %s",
+			     id, rsc->id, node->details->uname);
 
-		} else {
-			task_status_i = LRM_OP_ERROR;
-			if(rsc->role != RSC_ROLE_MASTER) {
-			    /* this wil happen normally if the PE is invoked after
-			     * a resource is demoted and re-promoted but before the
-			     * 'master' monitor has been re-initiated
-			     *
-			     * The monitor will occur before the promote and appear
-			     * to be an error (the error status is be cleared by a
-			     * successful demote)
-			     */
-			    crm_warn("%s reported %s in master mode on %s",
-				     id, rsc->id, node->details->uname);
-			}
+		} else if(target_rc == actual_rc_i) {
+		    /* nothing to do */
+
+		} else if(target_rc >= 0) {
+		    task_status_i = LRM_OP_ERROR;
+
+		    /* legacy code for pre-0.6.5 operations */
+		} else if(safe_str_neq(task, CRMD_ACTION_STATUS)
+			  || rsc->role != RSC_ROLE_MASTER) {
+		    task_status_i = LRM_OP_ERROR;
+		    if(rsc->role != RSC_ROLE_MASTER) {
+			crm_err("%s reported %s in master mode on %s",
+				id, rsc->id,
+				node->details->uname);
+		    }
 		}
 		rsc->role = RSC_ROLE_MASTER;
 		break;
@@ -1183,7 +1210,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 
 	    case EXECRA_UNIMPLEMENT_FEATURE:
 		if(interval > 0) {
-		    task_status_i = LRM_OP_ERROR;
+		    task_status_i = LRM_OP_NOTSUPPORTED;
 		    break;
 		}
 		/* else: fall through */
@@ -1201,9 +1228,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		resource_location(rsc, effective_node, -INFINITY, "hard-error", data_set);
 		if(is_probe) {
 			/* treat these like stops */
-			is_stop_action = TRUE;
-			task_status_i = LRM_OP_DONE;
-			actual_rc_i = EXECRA_NOT_RUNNING;
+			task = CRMD_ACTION_STOP;
 			
  		} else {
 			task_status_i = LRM_OP_ERROR;
@@ -1211,7 +1236,10 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		break;
 
 	    case EXECRA_OK:
-		if(interval > 0 && rsc->role == RSC_ROLE_MASTER) {
+		/* legacy code for pre-0.6.5 operations */
+		if(target_rc < 0
+		   && interval > 0
+		   && rsc->role == RSC_ROLE_MASTER) {
 		    /* catch status ops that return 0 instead of 8 while they
 		     *   are supposed to be in master mode
 		     */
@@ -1226,7 +1254,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		    task_status_i = LRM_OP_ERROR;
 		}
 	}
-	
+
 	if(task_status_i == LRM_OP_ERROR
 	   || task_status_i == LRM_OP_TIMEOUT
 	   || task_status_i == LRM_OP_NOTSUPPORTED) {
@@ -1258,13 +1286,16 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			crm_debug_3("%s/%s completed on %s",
 				    rsc->id, task, node->details->uname);
 
-			if(is_stop_action) {
+			if(actual_rc_i == EXECRA_NOT_RUNNING) {
+			    /* nothing to do */
+			    
+			} else if(safe_str_eq(task, CRMD_ACTION_STOP)) {
 				rsc->role = RSC_ROLE_STOPPED;
-
+			    
 				/* clear any previous failure actions */
 				*on_fail = action_fail_ignore;
 				rsc->next_role = RSC_ROLE_UNKNOWN;
-				
+
 			} else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
 				rsc->role = RSC_ROLE_MASTER;
 
@@ -1291,21 +1322,12 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 				*on_fail = action->on_fail;
 			}
 
-			if(is_stop_action) {
+			if(safe_str_eq(task, CRMD_ACTION_STOP)) {
 			    resource_location(
 				rsc, node, -INFINITY, "__stop_fail__", data_set);
 			    
-			} else if((data_set->start_failure_fatal
-				   || compare_version("2.0", op_version) > 0)
-				  && safe_str_eq(task, CRMD_ACTION_START)) {
-			    crm_warn("Compatability handling for failed op %s on %s",
-				     id, node->details->uname);
-			    resource_location(
-				rsc, node, -INFINITY, "__legacy_start__", data_set);
-			}
-
-			if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
-				rsc->role = RSC_ROLE_MASTER;
+			} else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
+			    rsc->role = RSC_ROLE_MASTER;
 
 			} else if(safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
 			    /*
@@ -1317,8 +1339,18 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			    rsc->next_role = RSC_ROLE_STOPPED;
 			    rsc->role = RSC_ROLE_SLAVE;
 				
-			} else if(rsc->role < RSC_ROLE_STARTED) {
-				rsc->role = RSC_ROLE_STARTED;
+			} else if((data_set->start_failure_fatal
+				   || compare_version("2.0", op_version) > 0)
+				  && safe_str_eq(task, CRMD_ACTION_START)) {
+			    crm_warn("Compatability handling for failed op %s on %s",
+				     id, node->details->uname);
+			    resource_location(
+				rsc, node, -INFINITY, "__legacy_start__", data_set);
+
+			}
+
+			if(rsc->role < RSC_ROLE_STARTED) {
+			    rsc->role = RSC_ROLE_STARTED;
 			}
 
 			crm_debug_2("Resource %s: role=%s, unclean=%s, on_fail=%s, fail_role=%s",
