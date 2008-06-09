@@ -481,7 +481,7 @@ finalize_sync_callback(xmlNode *msg, int call_id, int rc,
 void
 finalize_join(const char *caller)
 {
-	xmlNode *cib = createEmptyCib();
+	xmlNode *cib = create_xml_node(NULL, XML_TAG_CIB);
 	
 	set_bit_inplace(fsa_input_register, R_HAVE_CIB);
 	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
