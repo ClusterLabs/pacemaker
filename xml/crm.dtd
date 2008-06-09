@@ -1,0 +1,865 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+GLOBAL TODOs:
+
+Versionize DTD so we can validate against a specific version
+
+Background
+ The CIB is described quite well in section 5 of the crm.txt (checked into CVS in the crm directory) so it is not repeated here.
+ Suffice to say that it stores the configuration and runtime data required for cluster-wide resource management in XML format.
+
+CIB: Information Structure
+ The CIB is divided into two main sections: The "static" configuration part and the "dynamic" status.
+
+ The configuration contains - surprisingly - the configuration of the cluster, namely node attributes, resource instance configuration, and the constraints which describe the dependencies between all these.
+ To identify the most recent configuration available in the cluster, this section is time-stamped with the unique timestamp of the last update.
+
+ The status part is dynamically generated / updated by the CRM system and represents the current status of the cluster; which nodes are up, down or crashed, which resources are running where etc.
+
+ Every information carrying object has an "id" tag, which is basically the UUID of it, should we ever need to access it directly.
+ Unless otherwise stated, the id field is a short name consisting simple ascii characters [a-zA-Z0-9_\-]
+ The exception is for resources because the LRM can support only id's of up to 64 characters.
+
+Other Notes
+ The description field in all elements is opaque to the CRM and is for administrative comments.
+
+TODO
+ * Figure out a sane way to version the DTD
+ * Do we need to know about ping nodes...?
+ * The integer comparison type really should be number
+-->
+<!ELEMENT cib (configuration, status)>
+<!ATTLIST cib
+          cib-last-written CDATA        #IMPLIED
+
+          admin_epoch  CDATA        #REQUIRED
+          epoch        CDATA        #REQUIRED
+          num_updates  CDATA        #REQUIRED
+          num_peers    CDATA        #IMPLIED        
+
+          cib_feature_revision  CDATA   #IMPLIED
+          crm_feature_set       CDATA   #IMPLIED
+          remote_access_port    CDATA   #IMPLIED        
+
+          dc_uuid        CDATA             #IMPLIED
+          ccm_transition CDATA             #IMPLIED
+          have_quorum    (true|yes|1|false|no|0)  'false'
+          ignore_dtd     (true|yes|1|false|no|0)  #IMPLIED
+
+          validate-with  CDATA    #IMPLIED        
+          generated      CDATA    #IMPLIED        
+          crm-debug-origin CDATA    #IMPLIED>
+
+<!--
+The CIB's version is a tuple of admin_epoch, epoch and num_updates (in that order).
+
+This is used when applying updates from the master CIB instance.
+
+Additionally, num_peers and have_quorum are used during the election process to determin who has the latest configuration.
+ * num_updates is incremented every time the CIB changes.
+ * epoch is incremented after every DC election.
+ * admin_epoch is exclusivly for the admin to change.
+ * num_peers is the number of CIB instances that we can talk to
+ * have_quorum is derived from the ConsensusClusterMembership layer
+ * dc_uuid stored the UUID of the current DesignatedController
+ * ccm_transition stores the membership instance from the ConsensusClusterMembership layer.
+ * cib_feature_revision is the feature set that this configuration requires
+-->
+<!ELEMENT configuration (crm_config, nodes, resources, constraints)>
+
+<!--
+crm_config
+
+Used to specify cluster-wide options.
+
+The use of multiple cluster_property_set sections and time-based rule expressions allows the the cluster to behave differently (for example) during buisness hours than it does overnight.
+-->
+<!ELEMENT crm_config (cluster_property_set)*>
+
+<!--
+Current crm_config options:
+
+ * transition_idle_timeout (interval, default=60s):
+   If no activity is recorded in this time, the transition is deemed failed as are all sent actions that have not yet been confirmed complete.
+   If any operation initiated has an explicit higher timeout, the higher value applies.
+
+ * symmetric_cluster (boolean, default=TRUE):
+   If true, resources are permitted to run anywhere by default.
+   Otherwise, explicit constraints must be created to specify where they can run.
+
+ * stonith_enabled (boolean, default=FALSE):
+   If true, failed nodes will be fenced.
+
+ * no_quorum_policy (enum, default=stop)
+   * ignore - Pretend we have quorum
+   * freeze - Do not start any resources not currently in our partition.
+     Resources in our partition may be moved to another node within the partition
+     Fencing is disabled
+   * stop - Stop all running resources in our partition
+     Fencing is disabled
+
+ * default_resource_stickiness
+   Do we prefer to run on the existing node or be moved to a "better" one?
+   * 0 : resources will be placed optimally in the system.
+     This may mean they are moved when a "better" or less loaded node becomes available.
+     This option is almost equivalent to auto_failback on except that the resource may be moved to other nodes than the one it was previously active on.
+   * value > 0 : resources will prefer to remain in their current location but may be moved if a more suitable node is available.
+     Higher values indicate a stronger preference for resources to stay where they are.
+   * value < 0 : resources prefer to move away from their current location.
+     Higher absolute values indicate a stronger preference for resources to be moved.
+   * INFINITY : resources will always remain in their current locations until forced off because the node is no longer eligible to run the resource (node shutdown, node standby or configuration change).
+     This option is almost equivalent to auto_failback off except that the resource may be moved to other nodes than the one it was previously active on.
+   * -INFINITY : resources will always move away from their current location.
+
+ * is_managed_default (boolean, default=TRUE)
+   Unless the resource's definition says otherwise,
+   * TRUE : resources will be started, stopped, monitored and moved as necessary/required
+   * FALSE : resources will not started if stopped, stopped if started nor have any recurring actions scheduled.
+
+ * stop_orphan_resources (boolean, default=TRUE (as of release 2.0.6))
+   If a resource is found for which we have no definition for;
+   * TRUE : Stop the resource
+   * FALSE : Ignore the resource
+   This mostly effects the CRM's behavior when a resource is deleted by an admin without it first being stopped.
+
+ * stop_orphan_actions (boolean, default=TRUE)
+   If a recurring action is found for which we have no definition for;
+   * TRUE : Stop the action
+   * FALSE : Ignore the action
+   This mostly effects the CRM's behavior when the interval for a recurring action is changed.
+-->
+<!ELEMENT cluster_property_set (rule*, attributes)>
+<!ATTLIST cluster_property_set
+          id                CDATA        #REQUIRED
+          score             CDATA        #IMPLIED>
+
+<!ELEMENT nodes       (node*)>
+
+<!--
+ * id    : the node's UUID.
+ * uname : the result of uname -n
+ * type  : should either be "normal" or "member" for nodes you with to run resources 
+   "normal" is preferred as of version 2.0.4
+
+Each node can also have additional "instance" attributes.
+These attributes are completely arbitrary and can be used later in constraints.
+In this way it is possible to define groups of nodes to which a constraint can apply.
+
+It is also theoretically possible to have a process on each node which updates these values automatically.
+This would make it possible to have an attribute that represents "connected to SAN subsystem" or perhaps "system_load (low|medium|high)".
+
+Ideally it would be possible to have the CRMd on each node gather some of this information and automatically populate things like architecture and OS/kernel version.
+-->
+<!ELEMENT node (instance_attributes*)>
+<!ATTLIST node
+          id            CDATA         #REQUIRED
+          uname         CDATA         #REQUIRED
+          description   CDATA         #IMPLIED
+          type          (normal|member|ping) #REQUIRED>
+
+<!ELEMENT resources   (primitive|group|clone|master_slave)*>
+
+<!--
+ * class
+   Specifies the location and standard the resource script conforms to
+   * ocf
+     Most OCF RAs started out life as v1 Heartbeat resource agents.
+     These have all been ported to meet the OCF specifications.
+     As an added advantage, in accordance with the OCF spec, they also describe the parameters they take and what their defaults are.
+     It is also easier to configure them as each part of the configuration is passed as its own parameter.
+     In accordance with the OCF spec, each parameter is passed to the RA with an OCF_RESKEY_ prefix.
+     So ip=192.168.1.1 in the CIB would be passed as OCF_RESKEY_ip=192.168.1.1.
+     Located under /usr/lib/ocf/resource.d/heartbeat/.
+   * lsb
+     Most Linux init scripts conform to the LSB specification.
+     The class allows you to use those that do as resource agents controlled by Heartbeat.
+     Located in /etc/init.d/.
+   * heartbeat
+     This class gives you access to the v1 Heartbeat resource agents and allows you to reuse any custom agents you may have written.
+     Located at /etc/heartbeat/resource.d/ or /etc/ha.d/resource.d.
+
+ * type : The name of the ResourceAgent you wish to use.
+
+ * provider
+   The OCF spec allows multiple vendors to supply the same ResourceAgent.
+   To use the OCF resource agents supplied with Heartbeat, you should specify heartbeat here
+
+ * is_managed : Is the ClusterResourceManager in control of this resource.
+   * true : (default) the resource will be started, stopped, monitored and moved as necessary/required
+   * false : the resource will not started if stopped, stopped if started nor have any recurring actions scheduled.
+     The resource may still be referenced in colocation constraints and ordering constraints (though obviously if no actions are performed on it then it will prevent the action on the other resource too)
+
+ * restart_type
+   Used when the other side of an ordering dependency is restarted/moved.
+   * ignore : the default.
+     Don't do anything extra.
+   * restart
+     Use this for example to have a restart of your database also trigger a restart of your web-server.
+   * multiple_active
+     Used when a resource is detected as being active on more than one machine.
+     The default value, stop_start, will stop all instances and start only 1
+   * block : don't do anything, wait for the administrator
+   * stop_only : stop all the active instances
+   * stop_start : start the resource on one node after having stopped all the active instances
+
+ * resource_stickiness
+   See the description of the default_resource_stickiness cluster attribute.
+   resource_stickiness allows you to override the cluster's default for the individual resource.
+
+NOTE: primitive resources may contain at most one "operations" object.
+      The CRM will complain about your configuration if this criteria is not met.
+      Please use crm_verify to ensure your configuration is valid.
+      The DTD is written this way to be order in-sensitive.
+-->
+<!ELEMENT primitive (operations|meta_attributes|instance_attributes)*>
+<!ATTLIST primitive
+          id                CDATA        #REQUIRED
+          description       CDATA        #IMPLIED
+          class             (ocf|lsb|heartbeat|stonith) #REQUIRED
+          type              CDATA        #REQUIRED
+          provider          CDATA        #IMPLIED
+
+          is_managed            CDATA                            #IMPLIED
+          restart_type          (ignore|restart)                 'ignore'
+          multiple_active       (stop_start|stop_only|block)     'stop_start'
+          resource_stickiness   CDATA                             #IMPLIED>
+<!--
+This allows us to specify how long an action can take
+
+ * name : the name of the operation.
+   Supported operations are start, stop, & monitor
+
+ * start_delay : delay the operation after starting the resource
+   By default this value is in milliseconds, however you can also specify a value in seconds like so timeout="5s". Used for the monitor operation.
+
+ * timeout : the maximum period of time before considering the action failed.
+   By default this value is in milliseconds, however you can also specify a value in seconds like so timeout="5s".
+
+ * interval : This currently only applies to monitor operations and specifies how often the LRM should check the resource is active.
+   The same notation for timeout applies.
+
+ * prereq : What conditions need to be met before this action can be run
+   * nothing : This action can be performed at any time
+   * quorum : This action requires the partition to have quorum
+   * fencing : This action requires the partition to have quorum and any fencing operations to have completed before it can be executed
+
+ * on_fail : The action to take if this action ever fails.
+   * nothing : Pretend the action didnt actually fail
+   * block : Take no further action on the resource - wait for the administrator to resolve the issue
+   * restart : Stop the resource and re-allocate it elsewhere
+   * stop : Stop the resource and DO NOT re-allocate it elsewhere
+   * fence : Currently this means fence the node on which the resource is running.
+     Any other resources currently active on the machine will be migrated away before fencing occurs.
+
+Only one entry per supported action+interval is currently permitted.
+Parameters specific to each operation can be passed using the instance_attributes section.
+-->
+<!ELEMENT operations (op*)>
+<!ELEMENT op (meta_attributes|instance_attributes)*>
+<!ATTLIST op
+          id            CDATA         #REQUIRED
+          name          CDATA         #REQUIRED
+          description   CDATA         #IMPLIED
+          interval      CDATA         #IMPLIED
+          timeout       CDATA         #IMPLIED
+          start_delay   CDATA         '0'
+          disabled      (true|yes|1|false|no|0)        'false'
+          role          (Master|Slave|Started|Stopped) 'Started'
+          prereq        (nothing|quorum|fencing)       #IMPLIED
+          on_fail       (ignore|block|stop|restart|fence)     #IMPLIED>
+<!--
+Use this to emulate v1 type Heartbeat groups.
+Defining a resource group is a quick way to make sure that the resources:
+ * are all started on the same node, and
+ * are started and stopped in the correct (sequential) order
+though either or both of these properties can be disabled.
+
+NOTE: Do not create empty groups.  
+      They are temporarily supported because the GUI requires it but will be removed as soon as possible.
+      The DTD is written this way to be order in-sensitive.
+-->
+<!ELEMENT group (meta_attributes|instance_attributes|primitive)*>
+<!ATTLIST group
+          id            CDATA               #REQUIRED
+          description   CDATA               #IMPLIED
+
+          is_managed            CDATA                         #IMPLIED
+          restart_type          (ignore|restart)              'ignore'
+          multiple_active       (stop_start|stop_only|block)  'stop_start'
+          resource_stickiness   CDATA			      #IMPLIED
+
+          ordered               (true|yes|1|false|no|0)       'true'
+          collocated            (true|yes|1|false|no|0)       'true'>
+<!--
+Clones are intended as a mechanism for easily starting a number of resources (such as a web-server) with the same configuration.
+As an added benefit, the number that should be started is an instance parameter and when combined with time-based constraints, allows the administrator to run more instances during peak times and save on resources during idle periods.
+
+ * ordered
+   Start (or stop) each clone only after the operation on the previous clone completed.
+
+ * interleaved
+   If a colocation constraint is created between two clone resources and interleaved is true, then clone N from one resource will be assigned the same location as clone N from the other resource.
+   If the number of runnable clones differs, then the leftovers can be located anywhere.
+Using a cloned group is a much better way of achieving the same result.
+
+ * notify
+   If true, inform peers before and after any clone is stopped or started.
+   If an action failed, you will (currently) not recieve a post-notification.
+   Instead you can next expect to see a pre-notification for a stop.
+   If a stop fails, and you have fencing you will get a post-notification for the stop after the fencing operation has completed.
+   In order to use the notification service ALL decendants of the clone MUST support the notify action.
+   Currently this action is not permitted to fail, though depending on your configuration, can block almost indefinitly.
+   Behaviour in response to a failed action or notificaiton is likely to be improved in future releases.
+
+   See http://linux-ha.org/v2/Concepts/Clones for more information on notify actions
+
+
+NOTE: Clones must contain exactly one primitive or one group resource. 
+      The CRM will complain about your configuration if this criteria is not met.
+      Please use crm_verify to ensure your configuration is valid.
+      The DTD is written this way to be order in-sensitive.
+-->
+
+<!ELEMENT clone (meta_attributes|instance_attributes|primitive|group)*>
+<!ATTLIST clone
+          id            CDATA               #REQUIRED
+          description   CDATA               #IMPLIED
+
+          is_managed            CDATA                         #IMPLIED
+          restart_type          (ignore|restart)              'ignore'
+          multiple_active       (stop_start|stop_only|block)  'stop_start'
+          resource_stickiness   CDATA                         #IMPLIED
+
+          notify                (true|yes|1|false|no|0)       'false'
+          globally_unique       (true|yes|1|false|no|0)       'true'
+          ordered               (true|yes|1|false|no|0)       'false'
+          interleave            (true|yes|1|false|no|0)       'false'>
+<!--
+Master/Slave resources are a superset of Clones in that instances can also be in one of two states.
+The meaning of the states is specific to the resource.
+
+NOTE: master_slave must contain exactly one primitive resource OR one group resource.
+      It may not contain both, nor may it contain neither.
+      The CRM will complain about your configuration if this criteria is not met.
+      Please use crm_verify to ensure your configuration is valid.
+      The DTD is written this way to be order in-sensitive.
+-->
+<!ELEMENT master_slave (meta_attributes|instance_attributes|primitive|group)*>
+<!ATTLIST master_slave
+          id            CDATA       #REQUIRED
+          description   CDATA       #IMPLIED
+
+          is_managed            CDATA                         #IMPLIED
+          restart_type          (ignore|restart)              'ignore'
+          multiple_active       (stop_start|stop_only|block)  'stop_start'
+          resource_stickiness   CDATA                         #IMPLIED
+
+          notify                (true|yes|1|false|no|0)       'false'
+          globally_unique       (true|yes|1|false|no|0)       'true'
+          ordered               (true|yes|1|false|no|0)       'false'
+          interleave            (true|yes|1|false|no|0)       'false'>
+
+<!--
+Most resource options are configured as instance attributes.
+Some of the built-in options can be configured directly on the resource or as an instance attribute.
+The advantage of using instance attributes is the added flexibility that can be achieved through conditional ?<rule/>s (see below).
+
+You can have multiple sets of 'instance attributes', they are first sorted by score and then processed.
+The first to have its ?<rule/> satisfied and define an attribute wins.
+Subsequent values for the attribute will be ignored.
+
+Note that:
+ * instance_attributes sets with id equal to cib-bootstrap-options are treated as if they have a score of INFINITY.
+ * instance_attributes sets with no score implicitly have a score of zero.
+ * instance_attributes sets with no rule implicitly have a rule that evaluates to true.
+
+The addition of conditional <rule/>s to the instance_attributes object allows for an infinite variety of configurations.
+Just some of the possibilities are:
+ * Specify different resource parameters
+   * depending on the node it is allocated to (a resource may need to use eth1 on host1 but eth0 on host2)
+   * depending on the time of day (run 10 web-servers at night an 100 during the day)
+ * Allow nodes to have different attributes depending on the time-of-day
+   * Set resource_stickiness to avoid failback during business hours but allow resources to be moved to a more preferred node on the weekend
+   * Switch a node between a "front-end" processing group during the day to a "back-end" group at night.
+
+Common instance attributes for all resource types:
+ * priority (integer, default=0):
+   dictates the order in which resources will be processed.
+   If there is an insufficient number of nodes to run all resources, the lower priority resources will be stopped to make sure the higher priority resources remain active.
+
+ * is_managed: See previous description.
+
+ * resource_stickiness: See previous description.
+
+ * target_role: (Started|Stopped|Master|Slave|default, default=#default)
+   * #default : Let the cluster decide what to do with the resource
+   * Started : Ignore any specified value of is_managed or is_managed_default and attempt to start the resource
+   * Stopped : Ignore any specified value of is_managed or is_managed_default and attempt to stop the resource
+   * Master : Ignore any specified value of is_managed, is_managed_default or promotion preferences and attempt to put all instances of a cloned resource into Master mode.
+   * Slave : Ignore any specified value of is_managed, is_managed_default or promotion preferences and attempt to put all instances of a cloned resource into Slave mode.
+
+Common instance attributes for clones:
+ * clone_max (integer, default=1):
+   the number of clones to be run
+
+* clone_node_max (integer, default=1):
+  the maximum number of clones to be run on a single node
+
+Common instance attributes for nodes:
+ * standby (boolean, default=FALSE)
+   if TRUE, indicates that resources can not be run on the node
+-->
+<!ELEMENT instance_attributes (rule*, attributes)>
+<!ATTLIST instance_attributes
+          id                CDATA        #REQUIRED
+          score             CDATA        #IMPLIED>
+
+<!ELEMENT meta_attributes (rule*, attributes)>
+<!ATTLIST meta_attributes
+          id                CDATA        #REQUIRED
+          score             CDATA        #IMPLIED>
+
+<!--
+Every constraint entry also has a 'lifetime' attribute, which expresses when this constraint is applicable.
+For example, a constraint may only be valid during certain times of the day, or days of the week.
+Eventually, we would like to be able to support constraints that only last until events such as the next reboot or the next transition.
+-->
+<!ELEMENT constraints (rsc_order|rsc_colocation|rsc_location)*>
+
+<!--
+rsc_ordering constraints express dependencies between the actions on two resources.
+ * from : A resource id
+ * action : What action does this constraint apply to.
+ * type : Should the action on from occur before or after action on to
+ * to : A resource id
+ * symmetrical : If TRUE, create the reverse constraint for the other action also.
+
+Read as:
+     action from type to_action to
+eg. 
+     start rsc1 after promote rsc2
+
+-->
+<!ELEMENT rsc_order (lifetime?)>
+<!ATTLIST rsc_order
+          id        CDATA #REQUIRED
+          from      CDATA #REQUIRED
+          to        CDATA #REQUIRED
+          action    CDATA		'start'
+          to_action CDATA		'start'
+          type      (before|after)	'after'
+          score     CDATA		'INFINITY'
+          symmetrical (true|yes|1|false|no|0)	'true'>
+
+<!--
+
+Specify where a resource should run relative to another resource
+
+Make rsc 'from' run on the same machine as rsc 'to'
+
+If rsc 'to' cannot run anywhere and 'score' is INFINITY, 
+  then rsc 'from' wont be allowed to run anywhere either
+If rsc 'from' cannot run anywhere, then 'to' wont be affected
+
+-->
+<!ELEMENT rsc_colocation (lifetime?)>
+<!ATTLIST rsc_colocation
+          id             CDATA #REQUIRED
+          from           CDATA #REQUIRED
+          from_role      CDATA #IMPLIED
+          to             CDATA #REQUIRED
+          to_role        CDATA #IMPLIED
+          symmetrical    (true|yes|1|false|no|0)	'false'
+          node_attribute CDATA #IMPLIED
+          score          CDATA #REQUIRED>
+
+<!--
+Specify which nodes are eligible for running a given resource.
+
+During processing, all rsc_location for a given rsc are evaluated.
+
+All nodes start out with their base weight (which defaults to zero).
+This can then be modified (up or down) using any number of rsc_location constraints.
+
+Then the highest non-zero available node is determined to place the resource.
+If multiple nodes have the same weighting, the node with the fewest running resources is chosen.
+
+The rsc field is, surprisingly, a resource id.
+-->
+<!ELEMENT rsc_location (lifetime?,rule*)>
+<!ATTLIST rsc_location
+          id          CDATA #REQUIRED
+          description CDATA #IMPLIED
+          rsc         CDATA #REQUIRED
+          node        CDATA #IMPLIED
+          score       CDATA #IMPLIED>
+<!ELEMENT lifetime (rule+)>
+<!ATTLIST lifetime id  CDATA     #REQUIRED>
+
+<!--
+ * boolean_op
+   determines how the results of multiple expressions are combined.
+
+ * role
+   limits this rule to applying to Multi State resources with the named role.
+   Roles include Started, Stopped, Slave, Master though only the last two are considered useful.
+   NOTE: A rule with role="Master" can not determin the initial location of a clone instance.
+   It will only affect which of the active instances will be promoted.
+
+ * score
+   adjusts the preference for running on the matched nodes.
+   NOTE: Nodes that end up with a negative score will never run the resource.
+   Two special values of "score" exist: INFINITY and -INFINITY.
+   Processing of these special values is as follows:
+
+      INFINITY +/- -INFINITY : -INFINITY
+      INFINITY +/-  int      :  INFINITY
+     -INFINITY +/-  int      : -INFINITY
+  
+ * score_attribute 
+   an alternative to the score attribute that provides extra flexibility.
+  Each node matched by the rule has its score adjusted differently, according to its value for the named node attribute.
+  Thus in the example below, if score_attribute="installed_ram" and nodeA would have its preference to run "the resource" increased by 1024 whereas nodeB would have its preference increased only by half as much.
+
+    <nodes>
+      <node id="uuid1" uname="nodeA" type="normal">
+        <instance_attributes id="uuid1:custom_attrs">
+          <attributes>
+            <nvpair id="uuid1:installed_ram" name="installed_ram" value="1024"/>
+            <nvpair id="uuid1:my_other_attr" name="my_other_attr" value="bob"/>
+          </attributes>
+        </instance_attributes>
+      </node>
+      <node id="uuid2" uname="nodeB" type="normal">
+        <instance_attributes id="uuid2:custom_attrs">
+          <attributes>
+            <nvpair id="uuid2:installed_ram" name="installed_ram" value="512"/>
+          </attributes>
+        </instance_attributes>
+      </node>
+    </nodes>
+-->
+<!ELEMENT rule (expression|date_expression|rule)*>
+<!ATTLIST rule
+          id                  CDATA          #REQUIRED
+          role                CDATA          #IMPLIED
+          score               CDATA          #IMPLIED
+          score_attribute     CDATA          #IMPLIED
+          boolean_op          (or|and)      'and'>
+
+<!--
+Returns TRUE or FALSE depending on the properties of the object being tested.
+
+ * type determines how the values being tested.
+   * integer Values are converted to floats before being compared.
+   * version The "version" type is intended to solve the problem of comparing 1.2 and 1.10
+   * string Uses strcmp
+
+Two built-in attributes are node id #id and node uname #uname so that:
+      attribute=#id value=8C05CA5C-C9E3-11D8-BEE6-000A95B71D78 operation=eq, and
+      attribute=#uname value=test1 operation=eq
+would both be valid tests.
+
+An extra built-in attribute called #is_dc will be set to true or false depending on whether the node is operating as the DC for the cluster.
+Valid tests using this test would be of the form:
+
+        attribute=#is_dc operation=eq value=true,  and
+        attribute=#is_dc operation=eq value=false, and
+        attribute=#is_dc operation=ne value=false
+                        (for those liking double negatives :))
+-->
+<!ELEMENT expression EMPTY>
+<!ATTLIST expression
+          id         CDATA                    #REQUIRED
+          attribute  CDATA                    #REQUIRED
+          operation  (lt|gt|lte|gte|eq|ne|defined|not_defined) #REQUIRED
+          value      CDATA                    #IMPLIED
+          type       (number|string|version) 'string'>
+
+<!--
+ * start : A date-time conforming to the ISO8601 specification.
+ * end : A date-time conforming to the ISO8601 specification.
+   A value for end may, for any usage, be omitted and instead inferred using start and duration.
+ * operation
+   * gt : Compares the current date-time with start date.
+     Checks now > start.
+   * lt : Compares the current date-time with end date.
+     Checks end > now
+   * in_range : Compares the current date-time with start and end.
+     Checks now > start and end > now.
+     If either start or end is omitted, then that part of the comparision is not performed.
+   * date_spec : Performs a cron-like comparision between the contents of date_spec and now.
+     If values for start and/or end are included, now must also be within that range.
+     Or in other words, the date_spec operation can also be made to perform an extra in_range check.
+
+NOTE: Because the comparisions (except for date_spec) include the time, the eq, neq, gte and lte operators have not been implemented.
+-->
+<!ELEMENT date_expression (date_spec?,duration?)>
+<!ATTLIST date_expression
+        id         CDATA  #REQUIRED
+        operation  (in_range|date_spec|gt|lt) 'in_range'
+        start      CDATA  #IMPLIED
+        end        CDATA  #IMPLIED>
+
+<!--
+date_spec is used for (surprisingly  ) date_spec operations.
+
+Fields that are not supplied are ignored.
+
+Fields can contain a single number or a single range.
+Eg.
+monthdays="1" (Matches the first day of every month) and hours="09-17" (Matches hours between 9am and 5pm inclusive) are both valid values.
+weekdays="1,2" and weekdays="1-2,5-6" are NOT valid ranges.
+This may change in a future release.
+
+ * seconds : Value range 0-59
+ * minutes : Value range 0-59
+ * hours : Value range 0-23
+ * monthdays : Value range 0-31 (depending on current month and year)
+ * weekdays : Value range 1-7 (1=Monday, 7=Sunday)
+ * yeardays : Value range 1-366 (depending on current year)
+ * months : Value range 1-12
+ * weeks : Value range 1-53 (depending on weekyear)
+ * weekyears : Value range 0...
+  (NOTE: weekyears may differ from Gregorian years.
+  Eg. 2005-001 Ordinal == 2005-01-01 Gregorian == 2004-W53-6 Weekly )
+ * years : Value range 0...
+ * moon : Value range 0..7 - 0 is new, 4 is full moon.
+   Because we can(tm)
+-->
+
+<!ELEMENT date_spec EMPTY>
+<!ATTLIST date_spec
+        id         CDATA  #REQUIRED
+        hours      CDATA  #IMPLIED
+        monthdays  CDATA  #IMPLIED
+        weekdays   CDATA  #IMPLIED
+        yeardays   CDATA  #IMPLIED
+        months     CDATA  #IMPLIED
+        weeks      CDATA  #IMPLIED
+        weekyears  CDATA  #IMPLIED
+        years      CDATA  #IMPLIED
+        moon       CDATA  #IMPLIED>
+
+<!--
+duration is optionally used for calculating a value for end.
+Any field not supplied is assumed to be zero and ignored.
+Negative values might work.
+Eg. months=11 should be equivalent to writing years=1, months=-1 but is not encouraged.
+-->
+<!ELEMENT duration EMPTY>
+<!ATTLIST duration
+        id         CDATA  #REQUIRED
+        hours      CDATA  #IMPLIED
+        monthdays  CDATA  #IMPLIED
+        weekdays   CDATA  #IMPLIED
+        yeardays   CDATA  #IMPLIED
+        months     CDATA  #IMPLIED
+        weeks      CDATA  #IMPLIED
+        years      CDATA  #IMPLIED>
+<!--
+Example 1: True if now is any time in the year 2005.
+
+<rule id="rule1">
+  <date_expression id="date_expr1" start="2005-001" operation="in_range">
+    <duration years="1"/>
+  </date_expression>
+</rule>
+Example 2: Equivalent expression.
+
+<rule id="rule2">
+  <date_expression id="date_expr2" operation="date_spec">
+    <date_spec years="2005"/>
+  </date_expression>
+</rule>
+Example 3: 9am-5pm, Mon-Friday
+
+<rule id="rule3">
+  <date_expression id="date_expr3" operation="date_spec">
+    <date_spec hours="9-16" days="1-5"/>
+  </date_expression>
+</rule>
+Example 4: 9am-5pm, Mon-Friday, or all day saturday
+
+<rule id="rule4" boolean_op="or">
+  <date_expression id="date_expr4-1" operation="date_spec">
+    <date_spec hours="9-16" days="1-5"/>
+  </date_expression>
+  <date_expression id="date_expr4-2" operation="date_spec">
+    <date_spec days="6"/>
+  </date_expression>
+</rule>
+Example 5: 9am-5pm or 9pm-12pm, Mon-Friday
+
+<rule id="rule5" boolean_op="and">
+  <rule id="rule5-nested1" boolean_op="or">
+    <date_expression id="date_expr5-1" operation="date_spec">
+      <date_spec hours="9-16"/>
+    </date_expression>
+    <date_expression id="date_expr5-2" operation="date_spec">
+      <date_spec hours="21-23"/>
+    </date_expression>
+  </rule>
+  <date_expression id="date_expr5-3" operation="date_spec">
+    <date_spec days="1-5"/>
+  </date_expression>
+</rule>
+Example 6: Mondays in March 2005
+
+<rule id="rule6" boolean_op="and">
+  <date_expression id="date_expr6" operation="date_spec" start="2005-03-01" end="2005-04-01">
+    <date_spec weekdays="1"/>
+  </date_expression>
+</rule>
+NOTE: Because no time is specified, 00:00:00 is implied.
+This means that the range includes all of 2005-03-01 but none of 2005-04-01.
+You may wish to write end="2005-03-31T23:59:59" to avoid confusion.
+
+Example 7: Friday the 13th if it is a full moon
+
+<rule id="rule7" boolean_op="and">
+  <date_expression id="date_expr7" operation="date_spec">
+    <date_spec weekdays="5" monthdays="13" moon="4"/>
+  </date_expression>
+</rule>
+-->
+
+<!--
+You don't have to give a value.
+There's a difference between a key not being present and a key not having a value.
+-->
+<!ELEMENT nvpair EMPTY>
+<!ATTLIST nvpair
+          id     CDATA  #REQUIRED
+          name   CDATA  #REQUIRED
+          value  CDATA  #IMPLIED>
+
+<!ELEMENT attributes (nvpair*)>
+
+<!--
+These attributes take effect only if no value has previously been applied as part of the node's definition.
+Additionally, when the node reboots all settings made here are erased.
+
+id must be the UUID of the node.
+-->
+<!ELEMENT transient_attributes (instance_attributes*)>
+<!ATTLIST transient_attributes id CDATA #IMPLIED>
+
+<!--=========== Status - Advanced Use Only ===========-->
+
+<!--
+Details about the status of each node configured.
+
+HERE BE DRAGONS
+
+Never, ever edit this section directly or using cibadmin.
+The consequences of doing so are many and varied but rarely ever good or what you anticipated.
+To discourage this, the status section is no longer even written to disk, and is always discarded at startup.
+
+To avoid duplication of data, state entries only carry references to nodes and resources.
+-->
+<!ELEMENT status (node_state*)>
+
+<!--
+The state of a given node.
+
+This information is updated by the DC based on inputs from sources such as the CCM, status messages from remote LRMs and requests from other nodes.
+ * id       -  is the node's UUID.
+ * uname    - is the result of uname -n for the node.
+ * crmd     - records whether the crmd process is running on the node
+ * in_ccm   - records whether the node is part of our membership partition
+ * join     - is the node's membership status with the current DC.
+ * expected - is the DC's expectation of whether the node is up or not.
+ * shutdown - is set to the time at which the node last asked to be shut down
+
+Ideally, there should be a node_state entry for every entry in the <nodes> list.
+
+-->
+<!ELEMENT node_state (transient_attributes|lrm)*>
+<!ATTLIST node_state
+        id              CDATA                   #REQUIRED
+        uname           CDATA                   #REQUIRED
+        ha              (active|dead)           #IMPLIED
+        crmd            (online|offline)        'offline'
+        join            (pending|member|down)   'down'
+        expected        (pending|member|down)   'down'
+        in_ccm          (true|yes|1|false|no|0) 'false'
+        crm-debug-origin CDATA                  #IMPLIED
+        shutdown        CDATA                   #IMPLIED
+        clear_shutdown  CDATA                   #IMPLIED>
+
+<!--
+Information from the Local Resource Manager of the node.
+It contains a list of all resource's added (but not necessarily still active) on the node.
+-->
+<!ELEMENT lrm (lrm_resources)>
+<!ATTLIST lrm id CDATA #REQUIRED>
+
+<!ELEMENT lrm_resources (lrm_resource*)>
+<!ELEMENT lrm_resource (lrm_rsc_op*)>
+<!ATTLIST lrm_resource
+          id            CDATA #REQUIRED
+          class             (lsb|ocf|heartbeat|stonith) #REQUIRED
+          type              CDATA        #REQUIRED
+          provider          CDATA        #IMPLIED>
+<!--
+lrm_rsc_op (Resource Status)
+
+id: Set to [operation] +"_"+ [operation] +"_"+ [an_interval_in_milliseconds]
+
+operation typically start, stop, or monitor
+
+call_id: Supplied by the LRM, determins the order of in which lrm_rsc_op objects should be processed in order to determin the resource's true state
+
+rc_code is the last return code from the resource
+
+rsc_state is the state of the resource after the action completed and should be used as a guide only.
+
+transition_key contains an identifier and seqence number for the transition.
+
+At startup, the TEngine registers the identifier and starts the sequence at zero.
+It is used to identify the source of resource actions.
+
+transition_magic contains an identifier containing call_id, rc_code, and {{transition_key}}}.
+
+As the name suggests, it is a piece of magic that allows the TE to always identify the action from the stream of xml-diffs it subscribes to from the CIB.
+
+last_run       ::= when did the op run (as age)
+last_rc_change ::= last rc change (as age)
+exec_time      ::= time it took the op to run
+queue_time     ::= time spent in queue
+
+op_status is supplied by the LRM and conforms to this enum:
+
+typedef enum {
+        LRM_OP_PENDING = -1,
+        LRM_OP_DONE,
+        LRM_OP_CANCELLED,
+        LRM_OP_TIMEOUT,
+        LRM_OP_NOTSUPPORTED,
+        LRM_OP_ERROR,
+} op_status_t;
+The parameters section allows us to detect when a resource's definition has changed and the needs to be restarted (so the changes take effect).
+-->
+<!ELEMENT lrm_rsc_op EMPTY>
+<!ATTLIST lrm_rsc_op
+          id                    CDATA #REQUIRED
+          operation             CDATA #REQUIRED
+          op_status             CDATA #REQUIRED
+          rc_code               CDATA #REQUIRED
+          call_id               CDATA #REQUIRED
+          crm_feature_set       CDATA #REQUIRED
+          crm-debug-origin      CDATA #IMPLIED
+          migrate_from          CDATA #IMPLIED
+          transition_key        CDATA #IMPLIED
+          op_digest             CDATA #IMPLIED
+          op_restart_digest     CDATA #IMPLIED
+          op_force_restart      CDATA #IMPLIED
+
+          last_run              CDATA #IMPLIED
+          last_rc_change        CDATA #IMPLIED
+          exec_time             CDATA #IMPLIED
+          queue_time            CDATA #IMPLIED
+
+          interval              CDATA #REQUIRED
+          transition_magic      CDATA #IMPLIED>

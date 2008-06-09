@@ -22,7 +22,7 @@
        <node uname="sapcl03" type="normal" id="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
          <instance_attributes id="nodes-0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
            <attributes>
-             <nvpair name="standby" id="standby-0bfb78a2-fcd2-4f52-8a06-2d17437a6750" value="on"/>
+             <nvpair name="standby" id="standby-0bfb78a2-fcd2-4f52-8a06-2d17437a6750" value="off"/>
            </attributes>
          </instance_attributes>
        </node>
@@ -282,6 +282,7 @@
          <instance_attributes id="status-0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
            <attributes>
              <nvpair id="status-0bfb78a2-fcd2-4f52-8a06-2d17437a6750-probe_complete" name="probe_complete" value="true"/>
+             <nvpair name="standby" id="transient-standby-0bfb78a2-fcd2-4f52-8a06-2d17437a6750" value="on"/>
            </attributes>
          </instance_attributes>
        </transient_attributes>

@@ -216,7 +216,7 @@ crm_node_t *crm_update_peer(
     return node;
 }
 
-crm_node_t *crm_update_ais_node(crm_data_t *member, long long seq)
+crm_node_t *crm_update_ais_node(xmlNode *member, long long seq)
 {
     const char *addr = crm_element_value(member, "addr");
     const char *uname = crm_element_value(member, "uname");
@@ -260,7 +260,9 @@ void crm_update_peer_proc(const char *uname, uint32_t flag, const char *status)
 
     CRM_CHECK(uname != NULL, return);
     node = g_hash_table_lookup(crm_peer_cache, uname);	
-    CRM_CHECK(node != NULL, return);
+    CRM_CHECK(node != NULL,
+	      crm_err("Could not set %s.%s to %s", uname, peer2text(flag), status);
+	      return);
 
     if(safe_str_eq(status, ONLINESTATUS)) {
 	if((node->processes & flag) == 0) {

@@ -56,10 +56,10 @@ GMainLoop *mainloop = NULL;
 void usage(const char *cmd, int exit_status);
 void cib_connection_destroy(gpointer user_data);
 
-void cibmon_pre_notify(const char *event, HA_Message *msg);
-void cibmon_update_confirm(const char *event, HA_Message *msg);
+void cibmon_pre_notify(const char *event, xmlNode *msg);
+void cibmon_update_confirm(const char *event, xmlNode *msg);
 gboolean cibmon_shutdown(int nsig, gpointer unused);
-void cibmon_diff(const char *event, HA_Message *msg);
+void cibmon_diff(const char *event, xmlNode *msg);
 
 cib_t *the_cib = NULL;
 
@@ -296,26 +296,26 @@ int update_depth = 0;
 gboolean last_notify_pre = TRUE;
 
 void
-cibmon_pre_notify(const char *event, HA_Message *msg) 
+cibmon_pre_notify(const char *event, xmlNode *msg) 
 {
 	int rc = -1;
 	const char *op       = NULL;
 	const char *id       = NULL; 
 	const char *type     = NULL;
 
-	crm_data_t *update     = NULL;
-	crm_data_t *pre_update = NULL;
+	xmlNode *update     = NULL;
+	xmlNode *pre_update = NULL;
 
 	if(msg == NULL) {
 		crm_err("NULL update");
 		return;
 	}
 	
-	op       = cl_get_string(msg, F_CIB_OPERATION);
-	id       = cl_get_string(msg, F_CIB_OBJID);
-	type     = cl_get_string(msg, F_CIB_OBJTYPE);
+	op       = crm_element_value(msg, F_CIB_OPERATION);
+	id       = crm_element_value(msg, F_CIB_OBJID);
+	type     = crm_element_value(msg, F_CIB_OBJTYPE);
 
-	ha_msg_value_int(msg, F_CIB_RC, &rc);
+	crm_element_value_int(msg, F_CIB_RC, &rc);
 
 	update_depth++;
 	last_notify_pre = TRUE;
@@ -336,37 +336,34 @@ cibmon_pre_notify(const char *event, HA_Message *msg)
 
 	print_xml_formatted(LOG_DEBUG_3,  UPDATE_PREFIX,
 			    pre_update, "Existing Object");
-
-	free_xml(update);
-	free_xml(pre_update);
 }
 
 
 void
-cibmon_update_confirm(const char *event, HA_Message *msg)
+cibmon_update_confirm(const char *event, xmlNode *msg)
 {
 	int rc = -1;
 	const char *op       = NULL;
 	const char *id       = NULL; 
 	const char *type     = NULL;
 
-	crm_data_t *update = NULL;
-	crm_data_t *output = NULL;
-	crm_data_t *generation = NULL;
+	xmlNode *update = NULL;
+	xmlNode *output = NULL;
+	xmlNode *generation = NULL;
 
 	if(msg == NULL) {
 		crm_err("NULL update");
 		return;
 	}
 	
-	op       = cl_get_string(msg, F_CIB_OPERATION);
-	id       = cl_get_string(msg, F_CIB_OBJID);
-	type     = cl_get_string(msg, F_CIB_OBJTYPE);
+	op       = crm_element_value(msg, F_CIB_OPERATION);
+	id       = crm_element_value(msg, F_CIB_OBJID);
+	type     = crm_element_value(msg, F_CIB_OBJTYPE);
 
 	update_depth--;
 
 	last_notify_pre = FALSE;
-	ha_msg_value_int(msg, F_CIB_RC, &rc);
+	crm_element_value_int(msg, F_CIB_RC, &rc);
 	update = get_message_xml(msg, F_CIB_UPDATE);
 	output = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 	generation = get_message_xml(msg, "cib_generation");
@@ -408,21 +405,17 @@ cibmon_update_confirm(const char *event, HA_Message *msg)
 			rc==cib_ok?LOG_DEBUG:LOG_WARNING, UPDATE_PREFIX,
 			generation, "CIB Generation");
 	}
-
-	free_xml(update);
-	free_xml(output);
-	free_xml(generation);
 }
 
 
 
 void
-cibmon_diff(const char *event, HA_Message *msg)
+cibmon_diff(const char *event, xmlNode *msg)
 {
 	int rc = -1;
 	const char *op = NULL;
-	crm_data_t *diff = NULL;
-	crm_data_t *update = get_message_xml(msg, F_CIB_UPDATE);
+	xmlNode *diff = NULL;
+	xmlNode *update = get_message_xml(msg, F_CIB_UPDATE);
 
 	unsigned int log_level = LOG_INFO;
 	
@@ -431,8 +424,8 @@ cibmon_diff(const char *event, HA_Message *msg)
 		return;
 	}		
 	
-	ha_msg_value_int(msg, F_CIB_RC, &rc);	
-	op = cl_get_string(msg, F_CIB_OPERATION);
+	crm_element_value_int(msg, F_CIB_RC, &rc);	
+	op = crm_element_value(msg, F_CIB_OPERATION);
 	diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
 	if(rc < cib_ok) {
@@ -446,11 +439,8 @@ cibmon_diff(const char *event, HA_Message *msg)
 
 	log_cib_diff(log_level, diff, op);
 	if(update != NULL) {
-		print_xml_formatted(
-			log_level+2, "raw_update", update, NULL);
+		print_xml_formatted(log_level+2, "raw_update", update, NULL);
 	}
-	free_xml(diff);
-	free_xml(update);
 }
 
 gboolean

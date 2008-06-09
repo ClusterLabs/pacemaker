@@ -12,7 +12,7 @@
            <nvpair id="cib-bootstrap-options-is-managed-default" name="is-managed-default" value="true"/>
            <nvpair id="cib-bootstrap-options-stop-orphan-resources" name="stop-orphan-resources" value="true"/>
            <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="stop"/>
-           <nvpair id="cib-bootstrap-options-default-resource-failure-stickiness" name="default-resource-failure-stickiness" value="-100"/>
+           <nvpair id="cib-bootstrap-options-default-migration-threshold" name="default-migration-threshold" value="-100"/>
            <nvpair id="cib-bootstrap-options-probe_complete" name="probe_complete" value="true"/>
            <nvpair id="cib-bootstrap-options-transition-idle-timeout" name="transition-idle-timeout" value="60s"/>
            <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="800"/>

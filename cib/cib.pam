@@ -1,6 +1,6 @@
 # login: auth account password session
-auth       sufficient     pam_securityserver.so
-auth       required       pam_deny.so
-account    required       pam_permit.so
-password   required       pam_deny.so
-session    required       pam_permit.so
+# may require permission to read /etc/shadow 
+auth     include        common-auth
+account  include        common-account
+password include        common-password
+session  include        common-session

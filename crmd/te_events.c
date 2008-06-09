@@ -28,19 +28,20 @@
 #include <heartbeat.h>
 #include <clplumbing/Gmain_timeout.h>
 #include <lrm/lrm_api.h>
+#include <crmd_fsa.h>
 
 char *failed_stop_offset = NULL;
 char *failed_start_offset = NULL;
 
-crm_data_t *need_abort(crm_data_t *update);
-void process_graph_event(crm_data_t *event, const char *event_node);
-int match_graph_event(int action_id, crm_data_t *event, const char *event_node,
+xmlNode *need_abort(xmlNode *update);
+void process_graph_event(xmlNode *event, const char *event_node);
+int match_graph_event(int action_id, xmlNode *event, const char *event_node,
 		      int op_status, int op_rc, int target_rc);
 
-crm_data_t *
-need_abort(crm_data_t *update)
+xmlNode *
+need_abort(xmlNode *update)
 {
-	crm_data_t *section_xml = NULL;
+	xmlNode *section_xml = NULL;
 	const char *section = NULL;
 
 	if(update == NULL) {
@@ -50,8 +51,6 @@ need_abort(crm_data_t *update)
         xml_prop_iter(update, name, value,
                       if(safe_str_eq(name, XML_ATTR_HAVE_QUORUM)) {
 			      goto do_abort; /* possibly not required */
-                      } else if(safe_str_eq(name, XML_ATTR_NUMPEERS)) {
-			      goto do_abort;
                       } else if(safe_str_eq(name, XML_ATTR_GENERATION)) {
 			      goto do_abort;
                       } else if(safe_str_eq(name, XML_ATTR_GENERATION_ADMIN)) {
@@ -94,7 +93,7 @@ static gboolean
 fail_incompletable_actions(crm_graph_t *graph, const char *down_node) 
 {
 	const char *target = NULL;
-	crm_data_t *last_action = NULL;
+	xmlNode *last_action = NULL;
 
 	slist_iter(
 		synapse, synapse_t, graph->synapses, lpc,
@@ -131,9 +130,10 @@ fail_incompletable_actions(crm_graph_t *graph, const char *down_node)
 }
 
 gboolean
-extract_event(crm_data_t *msg)
+extract_event(xmlNode *msg)
 {
 	int shutdown = 0;
+	const char *shutdown_s = NULL;
 	const char *event_node = NULL;
 
 /*
@@ -149,13 +149,12 @@ extract_event(crm_data_t *msg)
 	xml_child_iter_filter(
 		msg, node_state, XML_CIB_TAG_STATE,
 
-		crm_data_t *attrs = NULL;
-		crm_data_t *resources = NULL;
+		xmlNode *attrs = NULL;
+		xmlNode *resources = NULL;
 
-		const char *ccm_state  = crm_element_value(
-			node_state, XML_CIB_ATTR_INCCM);
-		const char *crmd_state  = crm_element_value(
-			node_state, XML_CIB_ATTR_CRMDSTATE);
+		const char *ha_state = crm_element_value(node_state, XML_CIB_ATTR_HASTATE);
+		const char *ccm_state = crm_element_value(node_state, XML_CIB_ATTR_INCCM);
+		const char *crmd_state = crm_element_value(node_state, XML_CIB_ATTR_CRMDSTATE);
 
 		/* Transient node attribute changes... */
 		event_node = crm_element_value(node_state, XML_ATTR_ID);
@@ -190,6 +189,7 @@ extract_event(crm_data_t *msg)
 		 * node state update... possibly from a shutdown we requested
 		 */
 		if(safe_str_eq(ccm_state, XML_BOOLEAN_FALSE)
+		   || safe_str_eq(ha_state, DEADSTATUS)
 		   || safe_str_eq(crmd_state, CRMD_JOINSTATE_DOWN)) {
 			crm_action_t *shutdown = NULL;
 			shutdown = match_down_event(0, event_node, NULL);
@@ -205,9 +205,11 @@ extract_event(crm_data_t *msg)
 			fail_incompletable_actions(transition_graph, event_node);
 		}
 
-		shutdown = 0;
-		ha_msg_value_int(node_state, XML_CIB_ATTR_SHUTDOWN, &shutdown);
-		if(shutdown != 0) {
+		shutdown_s = crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
+		if(shutdown_s) {
+		    shutdown = crm_parse_int(shutdown_s, NULL);
+		}
+		if(shutdown_s && shutdown > 0) {
 			crm_info("Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute for %s", event_node);
 			abort_transition(INFINITY, tg_restart, "Shutdown request", node_state);
 		}
@@ -217,7 +219,7 @@ extract_event(crm_data_t *msg)
 }
 
 static void
-update_failcount(crm_data_t *event, const char *event_node, int rc, int target_rc) 
+update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc) 
 {
 	int interval = 0;
 	char *task = NULL;
@@ -266,16 +268,29 @@ update_failcount(crm_data_t *event, const char *event_node, int rc, int target_r
 
 	if(interval > 0) {
 		int call_id = 0;
+		char *now = crm_itoa(time(NULL));
+		
 		attr_name = crm_concat("fail-count", rsc_id, '-');
-		crm_warn("Updating failcount for %s on %s after failed %s: rc=%d (update=%s)",
-			 rsc_id, on_uuid, task, rc, value);
-
-		call_id = update_attr(te_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
-			    on_uuid, NULL,NULL, attr_name, value, FALSE);
+		crm_warn("Updating failcount for %s on %s after failed %s:"
+			 " rc=%d (update=%s, time=%s)", rsc_id, on_uuid, task, rc, value, now);
 
 		/* don't let notificatios of these updates cause new transitions */
-		add_cib_op_callback(call_id, FALSE, NULL, cib_failcount_updated);
+		call_id = update_attr(fsa_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
+				      on_uuid, NULL,NULL, attr_name, value, FALSE);
+
+		add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, cib_failcount_updated);
 		crm_free(attr_name);
+
+		attr_name = crm_concat("last-failure", rsc_id, '-');
+
+		/* don't let notificatios of these updates cause new transitions */
+		call_id = update_attr(fsa_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
+				      on_uuid, NULL,NULL, attr_name, now, FALSE);
+
+		add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, cib_failcount_updated);
+		crm_free(attr_name);
+
+		crm_free(now);
 	}
 
   bail:
@@ -323,7 +338,7 @@ status_from_rc(crm_action_t *action, int orig_status, int rc, int target_rc)
  *            not allowed to)
  */
 int
-match_graph_event(int action_id, crm_data_t *event, const char *event_node,
+match_graph_event(int action_id, xmlNode *event, const char *event_node,
 		  int op_status, int op_rc, int target_rc)
 {
 	const char *target = NULL;
@@ -486,7 +501,7 @@ match_down_event(int id, const char *target, const char *filter)
 
 
 void
-process_graph_event(crm_data_t *event, const char *event_node)
+process_graph_event(xmlNode *event, const char *event_node)
 {
 	int rc = -1;
 	int status = -1;

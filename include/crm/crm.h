@@ -31,6 +31,12 @@
 #include <mcheck.h>
 #endif
 
+#include <libxml/tree.h> 
+
+#define CRM_FEATURE_SET		"3.0"
+#define MINIMUM_SCHEMA_VERSION	"pacemaker-0.7"
+#define LATEST_SCHEMA_VERSION	"pacemaker-"DTD_VERSION
+
 #define EOS		'\0'
 #define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
 #define	HAURL(url)	HA_URLBASE url
@@ -95,8 +101,6 @@ extern const char *crm_system_name;
 #define CIB_FILENAME	WORKING_DIR"/cib.xml"
 #define CIB_BACKUP	WORKING_DIR"/cib_backup.xml"
 
-#define CRM_FEATURE_SET	"2.1"
-
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1
 #define DOT_ALL_FSA_INPUTS	1
@@ -115,6 +119,7 @@ extern const char *crm_system_name;
 #define CRM_SYSTEM_LRMD		"lrmd"
 #define CRM_SYSTEM_PENGINE	"pengine"
 #define CRM_SYSTEM_TENGINE	"tengine"
+#define CRM_SYSTEM_STONITHD	"stonithd"
 
 /* Valid operations */
 #define CRM_OP_NOOP		"noop"
@@ -163,6 +168,7 @@ extern const char *crm_system_name;
 #define CRMD_JOINSTATE_DOWN	CRMD_STATE_INACTIVE
 #define CRMD_JOINSTATE_PENDING	"pending"
 #define CRMD_JOINSTATE_MEMBER	CRMD_STATE_ACTIVE
+#define CRMD_JOINSTATE_NACK	"banned"
 
 #define CRMD_ACTION_DELETE		"delete"
 #define CRMD_ACTION_CANCEL		"cancel"
@@ -185,6 +191,32 @@ extern const char *crm_system_name;
 #define CRMD_ACTION_NOTIFIED		"notified"
 
 #define CRMD_ACTION_STATUS		"monitor"
+
+/* short names */
+#define RSC_DELETE	CRMD_ACTION_DELETE
+#define RSC_CANCEL	CRMD_ACTION_CANCEL
+
+#define RSC_MIGRATE	CRMD_ACTION_MIGRATE
+#define RSC_MIGRATED	CRMD_ACTION_MIGRATED
+
+#define RSC_START	CRMD_ACTION_START
+#define RSC_STARTED	CRMD_ACTION_STARTED
+
+#define RSC_STOP	CRMD_ACTION_STOP
+#define RSC_STOPPED	CRMD_ACTION_STOPPED
+
+#define RSC_PROMOTE	CRMD_ACTION_PROMOTE
+#define RSC_PROMOTED	CRMD_ACTION_PROMOTED
+#define RSC_DEMOTE	CRMD_ACTION_DEMOTE
+#define RSC_DEMOTED	CRMD_ACTION_DEMOTED
+
+#define RSC_NOTIFY	CRMD_ACTION_NOTIFY
+#define RSC_NOTIFIED	CRMD_ACTION_NOTIFIED
+
+#define RSC_STATUS	CRMD_ACTION_STATUS
+
+
+
 
 typedef GList* GListPtr;
 #define slist_destroy(child_type, child, parent, a)			\
@@ -250,10 +282,6 @@ typedef GList* GListPtr;
 
 extern void crm_log_message_adv(
 	int level, const char *alt_debugfile, const HA_Message *msg);
-
-#define crm_log_message(level, msg) if(crm_log_level >= (level)) {	\
-		crm_log_message_adv(level, NULL, msg);			\
-	}
 
 #define crm_log_xml(level, text, xml)   if(crm_log_level >= (level)) {	\
 		print_xml_formatted(level,  __PRETTY_FUNCTION__, xml, text); \

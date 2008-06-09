@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
        <pseudo_event id="12" operation="stop" operation_key="group_11_stop_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="15000"/>
+         <attributes CRM_meta_timeout="15000" crm_feature_set="3.0"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -10,7 +10,7 @@
    <synapse id="1">
      <action_set>
        <pseudo_event id="13" operation="stopped" operation_key="group_11_stopped_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="15000"/>
+         <attributes CRM_meta_timeout="15000" crm_feature_set="3.0"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -29,7 +29,7 @@
      <action_set>
        <rsc_op id="9" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="xen-b" on_node_uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2">
          <primitive id="IPaddr_192_168_1_102" long-id="group_11:IPaddr_192_168_1_102" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="15000"/>
+         <attributes CRM_meta_timeout="15000" crm_feature_set="3.0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -44,7 +44,7 @@
    <synapse id="3">
      <action_set>
        <pseudo_event id="21" operation="stop" operation_key="apache_6_stop_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="15000"/>
+         <attributes CRM_meta_timeout="15000" crm_feature_set="3.0"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -56,7 +56,7 @@
    <synapse id="4">
      <action_set>
        <pseudo_event id="2" operation="all_stopped" operation_key="all_stopped">
-         <attributes crm_feature_set="2.1"/>
+         <attributes crm_feature_set="3.0"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -71,7 +71,7 @@
    <synapse id="5">
      <action_set>
        <crm_event id="15" operation="do_shutdown" operation_key="do_shutdown" on_node="xen-b" on_node_uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2">
-         <attributes crm_feature_set="2.1" CRM_meta_op_no_wait="true"/>
+         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0"/>
        </crm_event>
      </action_set>
      <inputs>

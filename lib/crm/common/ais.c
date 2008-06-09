@@ -46,6 +46,10 @@ enum crm_ais_msg_types text2msg_type(const char *text)
 		type = crm_msg_pe;
 	} else if(safe_str_eq(text, CRM_SYSTEM_LRMD)) {
 		type = crm_msg_lrmd;
+	} else if(safe_str_eq(text, CRM_SYSTEM_STONITHD)) {
+		type = crm_msg_stonithd;
+	} else if(safe_str_eq(text, "attrd")) {
+		type = crm_msg_attrd;
 	} else {
 		crm_debug_2("Unknown message type: %s", text);
 	}
@@ -82,11 +86,6 @@ int ais_fd_sync = -1;
 static int ais_fd_async = -1; /* never send messages via this channel */
 GFDSource *ais_source = NULL;
 GFDSource *ais_source_sync = NULL;
-
-struct res_overlay {
-	mar_res_header_t header __attribute((aligned(8)));
-/* 	char buf[4096]; */
-};
 
 gboolean
 send_ais_text(int class, const char *data,
@@ -180,7 +179,10 @@ send_ais_text(int class, const char *data,
     rc = saSendReceiveReply(ais_fd_sync, ais_msg, ais_msg->header.size,
 			    &header, sizeof (mar_res_header_t));
     if(rc == SA_AIS_OK) {
-	CRM_CHECK(header.error == 0, rc = header.error);
+	CRM_CHECK(header.size == sizeof (mar_res_header_t),
+		  crm_err("Odd message: id=%d, size=%d, error=%d",
+			  header.id, header.size, header.error));
+	CRM_CHECK(header.error == SA_AIS_OK, rc = header.error);
     }
 
     if(rc == SA_AIS_ERR_TRY_AGAIN && retries < 20) {
@@ -203,7 +205,7 @@ send_ais_text(int class, const char *data,
 }
 
 gboolean
-send_ais_message(crm_data_t *msg, 
+send_ais_message(xmlNode *msg, 
 		 gboolean local, const char *node, enum crm_ais_msg_types dest)
 {
     gboolean rc = TRUE;
@@ -214,10 +216,6 @@ send_ais_message(crm_data_t *msg,
 	return FALSE;
     }
 
-    if(cl_get_string(msg, F_XML_TAGNAME) == NULL) {
-	ha_msg_add(msg, F_XML_TAGNAME, "ais_msg");
-    }
-    
     data = dump_xml_unformatted(msg);
     rc = send_ais_text(0, data, local, node, dest);
     crm_free(data);
@@ -253,7 +251,8 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 	goto bail;
 
     } else if(header->size == header_len) {
-	crm_err("Empty message: error=%d", header->error);
+	crm_err("Empty message: id=%d, size=%d, error=%d, header_len=%d",
+		header->id, header->size, header->error, header_len);
 	goto done;
 	
     } else if(header->size == 0 || header->size < header_len) {
@@ -322,7 +321,7 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
     }
 
     if(msg->header.id == crm_class_members) {
-	crm_data_t *xml = string2xml(data);
+	xmlNode *xml = string2xml(data);
 
 	if(xml != NULL) {
 	    const char *seq_s = crm_element_value(xml, "id");
@@ -409,7 +408,15 @@ gboolean init_ais_connection(
     ais_source_sync = G_main_add_fd(
 	G_PRIORITY_HIGH, ais_fd_sync, FALSE, ais_dispatch, dispatch, destroy);
 #endif
-
+#if AIS_WHITETANK
+    {
+	int pid = getpid();
+	char *pid_s = crm_itoa(pid);
+	send_ais_text(0, pid_s, TRUE, NULL, crm_msg_ais);
+	crm_free(pid_s);
+    }
+#endif
+    
     ais_source = G_main_add_fd(
  	G_PRIORITY_HIGH, ais_fd_async, FALSE, ais_dispatch, dispatch, destroy);
     return TRUE;

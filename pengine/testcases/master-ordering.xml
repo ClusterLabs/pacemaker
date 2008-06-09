@@ -254,10 +254,10 @@
        <rsc_order id="order_drbd_mysql_ip1" from="intip_2_slave" action="start" type="before" to="ms_drbd_mysql" score="100"/>
        <rsc_order id="order_drbd_www_ip0" from="intip_1_master" action="start" type="before" to="ms_drbd_www" score="100"/>
        <rsc_order id="order_drbd_www_ip1" from="intip_2_slave" action="start" type="before" to="ms_drbd_www" score="100"/>
-       <rsc_colocation id="colo_drbd_mysql_ip0" to="intip_1_master" from="drbd_mysql:0" score="100"/>
-       <rsc_colocation id="colo_drbd_mysql_ip1" to="intip_2_slave" from="drbd_mysql:1" score="100"/>
-       <rsc_colocation id="colo_drbd_www_ip0" to="intip_1_master" from="drbd_www:0" score="100"/>
-       <rsc_colocation id="colo_drbd_www_ip1" to="intip_2_slave" from="drbd_www:1" score="100"/>
+       <rsc_colocation id="colo_drbd_mysql_ip0" to="intip_1_master" from="drbd_mysql" from_role="Master" score="100"/>
+       <rsc_colocation id="colo_drbd_mysql_ip1" to="intip_2_slave" from="drbd_mysql" from_role="Slave" score="100"/>
+       <rsc_colocation id="colo_drbd_www_ip0" to="intip_1_master" from="drbd_www" from_role="Master" score="100"/>
+       <rsc_colocation id="colo_drbd_www_ip1" to="intip_2_slave" from="drbd_www" from_role="Slave" score="100"/>
        <rsc_order id="drbd_before_fs_mysql" action="start" from="fs_mysql" type="after" to_action="promote" to="ms_drbd_mysql" score="INFINITY"/>
        <rsc_colocation id="colo_drbd_fs_mysql" to="ms_drbd_mysql" to_role="master" from="fs_mysql" score="INFINITY"/>
        <rsc_order id="drbd_before_ocfs2_www" action="start" from="clone_ocfs2_www" type="after" to_action="promote" to="ms_drbd_www"/>

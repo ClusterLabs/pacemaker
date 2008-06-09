@@ -25,8 +25,8 @@ lib_LTLIBRARIES	= libcib.la
 
 ## SOURCES
 noinst_HEADERS		= cib_private.h
-libcib_la_SOURCES	= cib_client.c cib_native.c cib_attrs.c \
-			cib_version.c
+libcib_la_SOURCES	= cib_ops.c cib_utils.c cib_client.c cib_native.c cib_attrs.c \
+			cib_version.c cib_file.c cib_remote.c
 
 libcib_la_LDFLAGS	= -version-info 1:1:0
 libcib_la_CFLAGS	= -I$(top_builddir)
