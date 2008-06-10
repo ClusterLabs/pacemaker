@@ -1083,13 +1083,24 @@ decode_transition_key(
 		/* Post Pacemaker 0.6 */
 		done = TRUE;
 		break;
+	    case 3:
 	    case 2:
+		/* this can be tricky - the UUID might start with an integer */
+
 		/* Until Pacemaker 0.6 */
 		done = TRUE;
 		*target_rc = -1;
 		res = sscanf(key, "%d:%d:%s", action_id, transition_id, *uuid);
-		CRM_CHECK(res == 3, done = FALSE);
+		if(res == 2) {
+		    *action_id = -1;
+		    res = sscanf(key, "%d:%s", transition_id, *uuid);
+		    CRM_CHECK(res == 2, done = FALSE);
+
+		} else if(res != 3) {
+		    CRM_CHECK(res == 3, done = FALSE);
+		}
 		break;
+		
 	    case 1:
 		/* Prior to Heartbeat 2.0.8 */
 		done = TRUE;
@@ -1098,10 +1109,17 @@ decode_transition_key(
 		res = sscanf(key, "%d:%s", transition_id, *uuid);
 		CRM_CHECK(res == 2, done = FALSE);
 		break;
+	    default:
+		crm_crit("Unhandled sscanf result (%d) for %s", res, key);
+		
 	}
 
+	if(strlen(*uuid) != 36) {
+	    crm_warn("Bad UUID (%s) in sscanf result (%d) for %s", *uuid, res, key);		    
+	}
+	
 	if(done == FALSE) {
-	    crm_err("Cannot decode '%s'", key);
+	    crm_err("Cannot decode '%s' rc=%d", key, res);
 	    
 	    crm_free(*uuid);
 	    *uuid = NULL;
