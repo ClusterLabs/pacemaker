@@ -78,6 +78,7 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 
 	gboolean can1 = TRUE;
 	gboolean can2 = TRUE;
+	gboolean with_scores = TRUE;
 	
 	const resource_t *resource1 = (const resource_t*)a;
 	const resource_t *resource2 = (const resource_t*)b;
@@ -199,13 +200,40 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 		return 1;
 	}
 
-	if(node1->weight < node2->weight) {
-		do_crm_log(level, "%s < %s: node score", resource1->id, resource2->id);
-		return 1;
-
-	} else if(node1->weight > node2->weight) {
-		do_crm_log(level, "%s > %s: node score", resource1->id, resource2->id);
-		return -1;
+	if(with_scores) {
+	    int max = 0;
+	    int lpc = 0;
+	    GListPtr list1 = node_list_dup(resource1->allowed_nodes, FALSE, FALSE);
+	    GListPtr list2 = node_list_dup(resource2->allowed_nodes, FALSE, FALSE);
+	    
+	    list1 = g_list_sort(list1, sort_node_weight);
+	    list2 = g_list_sort(list2, sort_node_weight);
+	    max = g_list_length(list1);
+	    if(max < g_list_length(list2)) {
+		max = g_list_length(list2);
+	    }
+	    
+	    for(;lpc < max; lpc++) {
+		node1 = g_list_nth_data(list1, lpc);
+		node2 = g_list_nth_data(list2, lpc);
+		if(node1 == NULL) {
+		    do_crm_log(level, "%s < %s: node score NULL", resource1->id, resource2->id);
+		    return 1;
+		} else if(node2 == NULL) {
+		    do_crm_log(level, "%s > %s: node score NULL", resource1->id, resource2->id);
+		    return -1;
+		}
+		
+		if(node1->weight < node2->weight) {
+		    do_crm_log(level, "%s < %s: node score", resource1->id, resource2->id);
+		    return 1;
+		    
+		} else if(node1->weight > node2->weight) {
+		    do_crm_log(level, "%s > %s: node score", resource1->id, resource2->id);
+		    return -1;
+		}
+	    }
+	    
 	}
 
 	can1 = did_fail(resource1);
