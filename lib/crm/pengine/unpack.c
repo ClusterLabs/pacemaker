@@ -1106,7 +1106,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 
 	} else if(task_status_i == LRM_OP_ERROR) {
 	    /* let us decide that */
-	    crm_info("Remapping %s (rc=%d, status=%d) on %s to DONE",
+	    crm_debug("Remapping %s (rc=%d, status=%d) on %s to DONE",
 		      id, actual_rc_i, task_status_i, node->details->uname);
  	    task_status_i = LRM_OP_DONE;
 	}
