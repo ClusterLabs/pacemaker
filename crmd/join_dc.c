@@ -322,7 +322,7 @@ do_dc_join_filter_offer(long long action,
 	    const char *attributes[] = {
 		XML_ATTR_GENERATION_ADMIN,
 		XML_ATTR_GENERATION,
-		/* XML_ATTR_NUMUPDATES, */
+		XML_ATTR_NUMUPDATES,
 	    };
 	    
 	    for(lpc = 0; cmp == 0 && lpc < DIMOF(attributes); lpc++) {
