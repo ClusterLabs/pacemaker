@@ -210,7 +210,7 @@ crm_node_t *crm_update_peer(
 	if(node->addr == NULL || crm_str_eq(node->addr, addr, FALSE) == FALSE) {
 	    crm_free(node->addr);
 	    node->addr = crm_strdup(addr);
-	    crm_info("Node %s now has address: %s", node->uname, addr);
+	    crm_debug("Node %s now has address: %s", node->uname, addr);
 	}
     }
     return node;

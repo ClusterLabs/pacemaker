@@ -255,7 +255,7 @@ post_cache_update(int instance)
 	int new_size = crm_active_members();
 	membership_flux_hack = FALSE;
 	if((last_size - new_size) > 1) {
-	    crm_info("We're lost more than two peers (%d -> %d): Potential membership instability",
+	    crm_info("We've lost more than two peers (%d -> %d): Potential membership instability",
 		     last_size, new_size);
 	    membership_flux_hack = TRUE;
 	}

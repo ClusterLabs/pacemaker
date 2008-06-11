@@ -169,7 +169,7 @@ send_ais_text(int class, const char *data,
 
     ais_msg->header.size = sizeof(AIS_Message) + ais_data_len(ais_msg);
 
-    crm_debug("Sending%s message %d to %s.%s (data=%d, total=%d)",
+    crm_debug_3("Sending%s message %d to %s.%s (data=%d, total=%d)",
 		ais_msg->is_compressed?" compressed":"",
 		ais_msg->id, ais_dest(&(ais_msg->host)), msg_type2text(dest),
 		ais_data_len(ais_msg), ais_msg->header.size);
