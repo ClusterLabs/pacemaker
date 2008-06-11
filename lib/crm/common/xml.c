@@ -2641,25 +2641,23 @@ typedef struct name_value_s
 static gint
 sort_pairs(gconstpointer a, gconstpointer b)
 {
+    int rc = 0;
 	const name_value_t *pair_a = a;
 	const name_value_t *pair_b = b;
-	
-	if(a == NULL && b == NULL) {
-		return 0;
-	} else if(a == NULL) {
-		return 1;
-	} else if(b == NULL) {
-		return -1;
-	}
 
-	if(pair_a->name == NULL && pair_b->name == NULL) {
-		return 0;
-	} else if(pair_a->name == NULL) {
-		return 1;
-	} else if(pair_b->name == NULL) {
-		return -1;
+	CRM_ASSERT(a != NULL);
+	CRM_ASSERT(pair_a->name != NULL);
+
+	CRM_ASSERT(b != NULL);
+	CRM_ASSERT(pair_b->name != NULL);
+
+	rc = strcmp(pair_a->name, pair_b->name);
+	if(rc < 0) {
+	    return -1;
+	} else if(rc > 0) {
+	    return 1;
 	}
-	return strcmp(pair_a->name, pair_b->name);
+	return 0;
 }
 
 static void
