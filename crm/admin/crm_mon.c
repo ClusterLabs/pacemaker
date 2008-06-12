@@ -361,7 +361,10 @@ mon_update(const HA_Message *msg, int call_id, int rc,
 		CRM_DEV_ASSERT(safe_str_eq(crm_element_name(cib), XML_TAG_CIB));
 #endif		
 		if(as_html_file || web_cgi) {
-			print_html_status(cib, as_html_file, web_cgi);
+			if (print_html_status(cib, as_html_file, web_cgi) != 0) {
+				fprintf(stderr, "Critical: Unable to output html file\n");
+				exit(2);
+			}
 		} else if (simple_status) {
 			print_simple_status(cib);
 			if (has_warnings) {
@@ -449,7 +452,7 @@ print_simple_status(crm_data_t *cib)
 	}
 
 	slist_iter(node, node_t, data_set.nodes, lpc2,
-		   if(node->details->standby) {
+		   if(node->details->standby && node->details->online) {
 			   nodes_standby++;
 		   } else if(node->details->online) {
 			   nodes_online++;
@@ -709,7 +712,7 @@ print_html_status(crm_data_t *cib, const char *filename, gboolean web_cgi)
 				      node->details->running_rsc, lpc2,
 				      fprintf(stream, "<li>");
 				      rsc->fns->print(rsc, NULL,
-						      pe_print_html, stream);
+						      pe_print_html|pe_print_rsconly, stream);
 				      fprintf(stream, "</li>\n");
 				   );
 			   fprintf(stream, "</ul>\n");
