@@ -238,7 +238,7 @@ int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
     int rc = 0;
     struct utsname us;
     char *value = NULL;
-    unsigned int object_service_handle;
+    unsigned int object_service_handle = 0;
 
 #ifdef AIS_WHITETANK 
     log_init ("crm");
@@ -250,6 +250,7 @@ int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
     setenv("HA_COMPRESSION",  "bz2", 1);
     setenv("HA_cluster_type", "openais", 1);
     
+#if 0
     objdb->object_find_reset (OBJECT_PARENT_HANDLE);
     
     if (objdb->object_find (
@@ -258,6 +259,7 @@ int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
 	object_service_handle = 0;
 	ais_info("No configuration suplpied for pacemaker");
     }
+#endif
     
     objdb_get_string(
 	objdb, object_service_handle, "logfacility", &value, "daemon");
