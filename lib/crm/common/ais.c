@@ -408,7 +408,7 @@ gboolean init_ais_connection(
 		goto retry;
 	    }
 	    crm_err("Retry count exceeded");
-	    break;
+	    return FALSE;
 	default:
 	    return FALSE;
     }
