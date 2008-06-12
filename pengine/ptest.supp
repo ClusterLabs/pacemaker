@@ -1,11 +1,22 @@
 {
    Glib-leak
    Memcheck:Leak
-   fun:*
+   fun:calloc
    fun:g_malloc0
-   obj:/opt/gnome/lib64/libglib-2.0.so.0.1200.4
-   fun:g_slice_alloc
-   fun:g_hash_table_new_full
+   fun:g_allocator_new
+   fun:g_list_append
+   fun:unpack_nodes
+}
+
+{
+   Glib-leak
+   Memcheck:Leak
+   fun:malloc
+   fun:g_malloc
+   fun:g_mem_chunk_new
+   obj:*
+   fun:g_hash_table_insert
+   fun:do_id_check
 }
 
 {
@@ -13,7 +24,7 @@
    Memcheck:Leak
    fun:calloc
    fun:g_malloc0
-   obj:/opt/gnome/lib/libglib-2.0.so.0.1200.4
-   fun:g_slice_alloc
-   fun:g_hash_table_new_full
+   fun:g_allocator_new
+   fun:g_list_prepend
+   fun:unpack_instance_attributes
 }
