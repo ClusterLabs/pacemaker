@@ -248,20 +248,8 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 void
 post_cache_update(int instance) 
 {
-    static int last_size = 0;
     xmlNode *no_op = NULL;
     
-    if(is_openais_cluster()) {
-	int new_size = crm_active_members();
-	membership_flux_hack = FALSE;
-	if((last_size - new_size) > 1) {
-	    crm_info("We've lost more than two peers (%d -> %d): Potential membership instability",
-		     last_size, new_size);
-	    membership_flux_hack = TRUE;
-	}
-	last_size = new_size;
-    }
-
     crm_peer_seq = instance;
     crm_debug("Updated cache after membership event %d.", instance);
 
