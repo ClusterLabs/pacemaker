@@ -67,6 +67,7 @@ int print_html_status(xmlNode *cib, const char *filename, gboolean web_cgi);
 void make_daemon(gboolean daemonize, const char *pidfile);
 gboolean mon_timer_popped(gpointer data);
 void mon_update(xmlNode*, int, int, xmlNode*,void*);
+void clean_up(void);
 
 char *xml_file = NULL;
 char *as_html_file = NULL;
@@ -87,6 +88,32 @@ gboolean has_warnings = FALSE;
 gboolean print_failcount = FALSE;
 gboolean print_operations = FALSE;
 gboolean print_timing = FALSE;
+
+/*
+ * Non-mainloop signal handler.
+ */
+static void
+mon_shutdown_wrapper(int nsig)
+{
+    clean_up();
+    exit(0);
+}
+
+/*
+ * Mainloop signal handler.
+ */
+static gboolean
+mon_shutdown(int nsig, gpointer unused)
+{
+    clean_up();
+    if (mainloop && g_main_is_running(mainloop)) {
+	g_main_quit(mainloop);
+	
+    } else {
+	exit(0);
+    }
+    return FALSE;
+}
 
 #if CURSES_ENABLED
 #  define print_as(fmt...) if(as_console) {	\
@@ -176,6 +203,7 @@ main(int argc, char **argv)
 				print_failcount = TRUE;
 				break;
 			case 'p':
+				crm_free(pid_file);
 				pid_file = crm_strdup(optarg);
 				break;
 			case 'X':
@@ -223,6 +251,10 @@ main(int argc, char **argv)
 	if (argerr) {
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
+
+	/* Set signal callback function. */
+	signal(SIGTERM, mon_shutdown_wrapper);
+	signal(SIGINT, mon_shutdown_wrapper);
 
 	if(as_html_file == NULL && !web_cgi && !simple_status) {
 #if CURSES_ENABLED
@@ -280,7 +312,13 @@ main(int argc, char **argv)
 	}
 
 	mon_timer_popped(NULL);
+
+	G_main_add_SignalHandler(
+		G_PRIORITY_HIGH, SIGTERM, mon_shutdown, NULL, NULL);
+	G_main_add_SignalHandler(
+		G_PRIORITY_HIGH, SIGINT, mon_shutdown, NULL, NULL);
 	g_main_run(mainloop);
+	g_main_destroy(mainloop);
 	return_to_orig_privs();
 	
 	crm_info("Exiting %s", crm_system_name);	
@@ -338,6 +376,7 @@ mon_timer_popped(gpointer data)
 
 		} else if (simple_status || one_shot) {
 			fprintf(stdout, "Critical: Unable to connect to the CIB\n");
+			clean_up();
 			exit(2);
 		} else {
 			failed_connections++;
@@ -375,26 +414,34 @@ mon_update(xmlNode *msg, int call_id, int rc,
 		CRM_DEV_ASSERT(safe_str_eq(crm_element_name(cib), XML_TAG_CIB));
 #endif		
 		if(as_html_file || web_cgi) {
-			print_html_status(cib, as_html_file, web_cgi);
+			if (print_html_status(cib, as_html_file, web_cgi) != 0) {
+				fprintf(stderr, "Critical: Unable to output html file\n");
+				clean_up();
+				exit(2);
+			}
 		} else if (simple_status) {
 			print_simple_status(cib);
 			if (has_warnings) {
+				clean_up();
 				exit(1); 
 			}
 		} else {
 			print_status(cib);
 		}
 		if(one_shot) {
+			clean_up();
 			exit(LSB_EXIT_OK);
 		}
 		
 			
 	} else if(simple_status) {
 	    fprintf(stderr, "Critical: query failed: %s", cib_error2string(rc));
+	    clean_up();
 	    exit(LSB_EXIT_GENERIC);
 
 	} else if(one_shot) {
 	    fprintf(stderr, "Query failed: %s", cib_error2string(rc));
+	    clean_up();
 	    exit(LSB_EXIT_GENERIC);
 
 	} else {
@@ -464,7 +511,7 @@ print_simple_status(xmlNode *cib)
 	}
 
 	slist_iter(node, node_t, data_set.nodes, lpc2,
-		   if(node->details->standby) {
+		   if(node->details->standby && node->details->online) {
 			   nodes_standby++;
 		   } else if(node->details->online) {
 			   nodes_online++;
@@ -901,7 +948,7 @@ print_html_status(xmlNode *cib, const char *filename, gboolean web_cgi)
 				      node->details->running_rsc, lpc2,
 				      fprintf(stream, "<li>");
 				      rsc->fns->print(rsc, NULL,
-						      pe_print_html, stream);
+						      pe_print_html|pe_print_rsconly, stream);
 				      fprintf(stream, "</li>\n");
 				   );
 			   fprintf(stream, "</ul>\n");
@@ -984,6 +1031,7 @@ usage(const char *cmd, int exit_status)
 
 	fflush(stream);
 
+	clean_up();
 	exit(exit_status);
 }
 
@@ -1002,8 +1050,10 @@ make_daemon(gboolean daemonize, const char *pidfile)
 		fprintf(stderr, "%s: could not start daemon\n",
 			crm_system_name);
 		perror("fork");
+		clean_up();
 		exit(LSB_EXIT_GENERIC);
 	} else if (pid > 0) {
+		clean_up();
 		exit(LSB_EXIT_OK);
 	}
 	
@@ -1011,6 +1061,7 @@ make_daemon(gboolean daemonize, const char *pidfile)
 		pid = cl_read_pidfile(pidfile);
 		fprintf(stderr, "%s: already running [pid %ld].\n",
 			crm_system_name, pid);
+		clean_up();
 		exit(LSB_EXIT_OK);
 	}
 	
@@ -1021,4 +1072,31 @@ make_daemon(gboolean daemonize, const char *pidfile)
 	(void)open(devnull, O_RDONLY);		/* Stdin:  fd 0 */
 	(void)open(devnull, O_WRONLY);		/* Stdout: fd 1 */
 	(void)open(devnull, O_WRONLY);		/* Stderr: fd 2 */
+}
+
+/*
+ * De-init ncurses, signoff from the CIB and deallocate memory.
+ */
+void clean_up(void)
+{
+#if CURSES_ENABLED
+    if(as_console) {
+	as_console = FALSE;
+	echo();
+	nocbreak();
+	endwin();
+    }
+#endif
+    
+    if (cib_conn != NULL) {
+	cib_conn->cmds->signoff(cib_conn);
+	cib_delete(cib_conn);
+	cib_conn = NULL;
+    }
+
+    crm_free(as_html_file);
+    crm_free(xml_file);
+    crm_free(pid_file);
+    
+    return;
 }
