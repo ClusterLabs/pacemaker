@@ -373,6 +373,7 @@ gboolean init_ais_connection(
     gboolean (*dispatch)(AIS_Message*,char*,int),
     void (*destroy)(gpointer), char **our_uuid, char **our_uname)
 {
+    int retries = 0;
     int rc = SA_AIS_OK;
     struct utsname name;
 
@@ -390,11 +391,26 @@ gboolean init_ais_connection(
     }
 
     /* 16 := CRM_SERVICE */
+  retry:
     crm_info("Creating connection to our AIS plugin");
     rc = saServiceConnect (&ais_fd_sync, &ais_fd_async, 16);
     if (rc != SA_AIS_OK) {
 	crm_info("Connection to our AIS plugin failed: %s (%d)", ais_error2text(rc), rc);
-	return FALSE;
+    }
+
+    switch(rc) {
+	case SA_AIS_OK:
+	    break;
+	case SA_AIS_ERR_TRY_AGAIN:
+	    if(retries < 30) {
+		sleep(1);
+		retries++;
+		goto retry;
+	    }
+	    crm_err("Retry count exceeded");
+	    break;
+	default:
+	    return FALSE;
     }
 
     if(destroy == NULL) {
