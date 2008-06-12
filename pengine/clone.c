@@ -218,22 +218,27 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 		node2 = g_list_nth_data(list2, lpc);
 		if(node1 == NULL) {
 		    do_crm_log(level, "%s < %s: node score NULL", resource1->id, resource2->id);
+		    pe_free_shallow(list1); pe_free_shallow(list2);
 		    return 1;
 		} else if(node2 == NULL) {
 		    do_crm_log(level, "%s > %s: node score NULL", resource1->id, resource2->id);
+		    pe_free_shallow(list1); pe_free_shallow(list2);
 		    return -1;
 		}
 		
 		if(node1->weight < node2->weight) {
 		    do_crm_log(level, "%s < %s: node score", resource1->id, resource2->id);
+		    pe_free_shallow(list1); pe_free_shallow(list2);
 		    return 1;
 		    
 		} else if(node1->weight > node2->weight) {
 		    do_crm_log(level, "%s > %s: node score", resource1->id, resource2->id);
+		    pe_free_shallow(list1); pe_free_shallow(list2);
 		    return -1;
 		}
 	    }
-	    
+
+	    pe_free_shallow(list1); pe_free_shallow(list2);
 	}
 
 	can1 = did_fail(resource1);
@@ -1262,6 +1267,8 @@ static void mark_notifications_required(resource_t *rsc, enum action_tasks task,
 	mark_notifications_required(child, task, FALSE);
 	);
     
+    crm_free(key_complete);
+    crm_free(key);
 }
 
 void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
