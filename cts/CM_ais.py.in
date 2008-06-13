@@ -141,7 +141,7 @@ class crm_ais(LinuxHAv2):
                         self.debug("Adding partition from %s: %s" %(node, partition))
                         ccm_partitions.append(partition)
                 else:
-                    self.log("bad partition details for %s" %node)
+                    self.log("ERROR: Bad partition details for %s: '%s'" % (node, partition))
 
         return ccm_partitions
 
