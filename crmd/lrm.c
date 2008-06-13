@@ -57,12 +57,12 @@ char *make_stop_id(const char *rsc, int call_id);
 void cib_rsc_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *user_data);
 
 gboolean build_operation_update(
-	xmlNode *rsc_list, lrm_op_t *op, const char *src, int lpc);
+    xmlNode *rsc_list, lrm_op_t *op, const char *src, int lpc, int level);
 
 gboolean build_active_RAs(xmlNode *rsc_list);
 gboolean is_rsc_active(const char *rsc_id);
 
-void do_update_resource(lrm_op_t *op);
+int do_update_resource(lrm_op_t *op);
 gboolean process_lrm_event(lrm_op_t *op);
 
 void do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
@@ -457,7 +457,7 @@ append_restart_list(xmlNode *update, lrm_op_t *op, const char *version)
 
 gboolean
 build_operation_update(
-	xmlNode *xml_rsc, lrm_op_t *op, const char *src, int lpc)
+    xmlNode *xml_rsc, lrm_op_t *op, const char *src, int lpc, int level)
 {
 	char *magic = NULL;
 	const char *task = NULL;
@@ -641,10 +641,12 @@ build_operation_update(
 	filter_action_parameters(args_xml, caller_version);
 	digest = calculate_xml_digest(args_xml, TRUE, FALSE);
 	if(op->interval == 0 && safe_str_neq(task, CRMD_ACTION_STOP)) {
-		crm_debug("Calculated digest %s for %s (%s)\n", 
-			  digest, ID(xml_op),
-			  crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
-		crm_log_xml(LOG_DEBUG,  "digest:source", args_xml);
+	    char *digest_source = dump_xml_unformatted(args_xml);
+	    const char *magic = crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC);
+
+	    do_crm_log(level, "Calculated digest %s for %s (%s). Source: %s\n", 
+		       digest, ID(xml_op), magic, digest_source);
+	    crm_free(digest_source);
 	}
 	
 	crm_xml_add(xml_op, XML_LRM_ATTR_OP_DIGEST, digest);
@@ -782,7 +784,7 @@ build_active_RAs(xmlNode *rsc_list)
 
 			if(max_call_id < op->call_id) {
 				build_operation_update(
-					xml_rsc, op, __FUNCTION__, llpc);
+				    xml_rsc, op, __FUNCTION__, llpc, LOG_DEBUG_2);
 
 			} else if(max_call_id > op->call_id) {
 				crm_err("Bad call_id in list=%d. Previous call_id=%d",
@@ -1051,7 +1053,7 @@ get_lrm_resource(xmlNode *resource, xmlNode *op_msg, gboolean do_create)
 		CRM_CHECK(class != NULL, return NULL);
 		CRM_CHECK(type != NULL, return NULL);
 
-		crm_debug("Adding rsc %s before operation", short_id);
+		crm_debug_2("Adding rsc %s before operation", short_id);
 		strncpy(rid, short_id, 64);
 		rid[63] = 0;
 
@@ -1462,7 +1464,7 @@ send_direct_ack(const char *to_host, const char *to_sys,
 
 	crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 
-	build_operation_update(iter, op, __FUNCTION__, 0);
+	build_operation_update(iter, op, __FUNCTION__, 0, LOG_DEBUG);
 	fragment = create_cib_fragment(update, XML_CIB_TAG_STATUS);
 
 	reply = create_request(CRM_OP_INVOKE_LRM, fragment, to_host,
@@ -1573,7 +1575,7 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 		char *call_id_s = make_stop_id(rsc->id, call_id);
 		struct recurring_op_s *pending = NULL;
 		crm_malloc0(pending, sizeof(struct recurring_op_s));
-		crm_debug("Recording pending op: %d - %s %s", call_id, op_id, call_id_s);
+		crm_debug_2("Recording pending op: %d - %s %s", call_id, op_id, call_id_s);
 		
 		pending->call_id  = call_id;
 		pending->interval = op->interval;
@@ -1700,7 +1702,7 @@ cib_rsc_callback(xmlNode *msg, int call_id, int rc,
 	case cib_ok:
 	case cib_diff_failed:
 	case cib_diff_resync:
-	    crm_debug("Resource update %d complete: rc=%d", call_id, rc);
+	    crm_debug_2("Resource update %d complete: rc=%d", call_id, rc);
 	    break;
 	default:
 	    crm_err("Resource update %d failed: (rc=%d) %s",
@@ -1709,7 +1711,7 @@ cib_rsc_callback(xmlNode *msg, int call_id, int rc,
 }
 
 
-void
+int
 do_update_resource(lrm_op_t* op)
 {
 /*
@@ -1724,7 +1726,7 @@ do_update_resource(lrm_op_t* op)
 	lrm_rsc_t *rsc = NULL;
 	xmlNode *update, *iter;
 	
-	CRM_CHECK(op != NULL, return);
+	CRM_CHECK(op != NULL, return 0);
 
 	update = create_node_state(
 		fsa_our_uname, NULL, NULL, NULL, NULL, NULL, FALSE, __FUNCTION__);
@@ -1749,7 +1751,7 @@ do_update_resource(lrm_op_t* op)
 	
 	lrm_free_rsc(rsc);
 	
-	build_operation_update(iter, op, __FUNCTION__, 0);
+	build_operation_update(iter, op, __FUNCTION__, 0, LOG_DEBUG);
 
 	/* make it an asyncronous call and be done with it
 	 *
@@ -1771,11 +1773,12 @@ do_update_resource(lrm_op_t* op)
 	fsa_cib_update(XML_CIB_TAG_STATUS, update, cib_quorum_override, rc);
 			
 	/* the return code is a call number, not an error code */
-	crm_debug("Sent resource state update message: %d", rc);
+	crm_debug_2("Sent resource state update message: %d", rc);
 	fsa_cib_conn->cmds->register_callback(
 	    fsa_cib_conn, rc, 60, FALSE, NULL, "cib_rsc_callback", cib_rsc_callback);
 	
 	free_xml(update);
+	return rc;
 }
 
 void
@@ -1794,7 +1797,11 @@ process_lrm_event(lrm_op_t *op)
 {
 	char *op_id = NULL;
 	char *op_key = NULL;
+
+	int update_id = 0;
 	int log_level = LOG_ERR;
+	gboolean removed = FALSE;
+	
 	struct recurring_op_s *pending = NULL;
 	CRM_CHECK(op != NULL, return FALSE);
 	CRM_CHECK(op->rsc_id != NULL, return FALSE);
@@ -1831,19 +1838,11 @@ process_lrm_event(lrm_op_t *op)
 		log_level = LOG_INFO;
 	}
 
-	do_crm_log(log_level, "LRM operation %s (call=%d, rc=%d) %s %s",
-		   op_key, op->call_id, op->rc, op_status2text(op->op_status),
-		   op->op_status==LRM_OP_ERROR?execra_code2string(op->rc):"");
-
-	if(op->op_status == LRM_OP_ERROR && op->output != NULL) {
-		crm_info("Result: %s", op->output);
-	}
-	
 	op_id = make_stop_id(op->rsc_id, op->call_id);
 	pending = g_hash_table_lookup(pending_ops, op_id);
 
 	if(op->op_status != LRM_OP_CANCELLED) {
-		do_update_resource(op);
+		update_id = do_update_resource(op);
 		if(op->interval != 0) {
 			goto out;
 		}
@@ -1867,10 +1866,20 @@ process_lrm_event(lrm_op_t *op)
 	}
 
 	if(g_hash_table_remove(pending_ops, op_id)) {
-	    crm_debug("Op %s (call=%d, stop_id=%s): Confirmed", op_key, op->call_id, op_id);
+	    removed = TRUE;
+	    crm_debug_2("Op %s (call=%d, stop-id=%s): Confirmed", op_key, op->call_id, op_id);
 	}
 
   out:
+	do_crm_log(log_level, "LRM operation %s (call=%d, rc=%d, cib-update=%d, stop-id=%s, confirmed=%s) %s %s",
+		   op_key, op->call_id, op->rc, update_id, op_id, removed?"true":"false",
+		   op_status2text(op->op_status),
+		   op->op_status==LRM_OP_ERROR?execra_code2string(op->rc):"");
+
+	if(op->op_status == LRM_OP_ERROR && op->output != NULL) {
+		crm_info("Result: %s", op->output);
+	}
+	
 	crm_free(op_key);
 	crm_free(op_id);
 	return TRUE;

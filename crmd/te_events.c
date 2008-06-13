@@ -311,12 +311,7 @@ status_from_rc(crm_action_t *action, int orig_status, int rc, int target_rc)
 	    }
 
 	} else {
-	    crm_debug_2("Target rc: != %d", rc);
-	    if(status != LRM_OP_ERROR) {
-		crm_info("Re-mapping op status to"
-			 " LRM_OP_ERROR for rc=%d", rc);
-		status = LRM_OP_ERROR;
-	    }
+	    status = LRM_OP_ERROR;
 	}
 	
 	/* 99 is the code we use for direct nack's */

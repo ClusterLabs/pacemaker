@@ -392,12 +392,14 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 		crm_calculate_quorum();
 
 	    } else if(do_ask) {
+		dispatch = NULL;
 		crm_warn("Pausing to allow membership stability (size %d -> %d): %s",
 			 current_size, new_size, reason);
 		ais_membership_timer = Gmain_timeout_add(2*1000, ais_membership_dampen, NULL);
-		crm_log_xml_warn(xml, __PRETTY_FUNCTION__);
+		crm_log_xml_debug(xml, __PRETTY_FUNCTION__);
 
 	    } else {
+		dispatch = NULL;
 		crm_err("Membership is still unstable (size %d -> %d): %s",
 			current_size, new_size, reason);
 	    }

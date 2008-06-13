@@ -145,7 +145,7 @@ main(int argc, char ** argv)
 		G_PRIORITY_LOW, write_cib_contents, "write_cib_contents",
 		NULL, NULL, NULL, cib_diskwrite_complete);
 
-	EnableProcLogging();
+	/* EnableProcLogging(); */
 	set_sigchld_proctrack(G_PRIORITY_HIGH,DEFAULT_MAXDISPATCHTIME);
 
 	crm_peer_init();

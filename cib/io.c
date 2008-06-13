@@ -44,6 +44,8 @@
 
 #include <cibprimatives.h>
 
+#define CIB_WRITE_PARANOIA	0
+
 int archive_file(const char *oldname, const char *newname, const char *ext, gboolean preserve);
 
 const char * local_resource_path[] =
@@ -397,7 +399,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	xml_remove_prop(root, XML_ATTR_DC_UUID);
 
 	if(discard_status) {
-		crm_log_xml_info(root, "[on-disk]");
+		crm_log_xml_debug(root, "[on-disk]");
 	}
 
 	validation = crm_element_value(root, XML_ATTR_VALIDATION);
@@ -613,6 +615,7 @@ activateCibXml(xmlNode *new_cib, gboolean to_disk, const char *op)
 	} else if(cib_writes_enabled && cib_status == cib_ok && to_disk) {
 		crm_debug("Triggering CIB write for %s op", op);
 		G_main_set_trigger(cib_writer);
+
 	} else {
 	    crm_debug_3("disk: %d, writes: %d", to_disk, cib_writes_enabled);
 	}
@@ -644,13 +647,17 @@ write_cib_contents(gpointer p)
 	char *digest = NULL;
 	int exit_rc = LSB_EXIT_OK;
 	xmlNode *cib_status_root = NULL;
-
+	
 	/* we can scribble on "the_cib" here and not affect the parent */
 	const char *epoch = crm_element_value(the_cib, XML_ATTR_GENERATION);
 	const char *updates = crm_element_value(the_cib, XML_ATTR_NUMUPDATES);
 	const char *admin_epoch = crm_element_value(
 		the_cib, XML_ATTR_GENERATION_ADMIN);
 
+	if(crm_log_level > LOG_INFO) {
+	    crm_log_level--;
+	}
+	
 	need_archive = (stat(CIB_FILENAME, &buf) == 0);
 	if (need_archive) {
 	    crm_debug("Archiving current version");	    
@@ -663,11 +670,12 @@ write_cib_contents(gpointer p)
 		goto cleanup;
 	    }
 
+#if CIB_WRITE_PARANOIA
 	    /* These calls leak, but we're in a separate process that will exit
 	     * when the function does... so it's of no consequence
 	     */
 	    CRM_ASSERT(retrieveCib(CIB_FILENAME, CIB_FILENAME".sig", FALSE) != NULL);
-	    
+#endif	    
 	    rc = archive_file(CIB_FILENAME, NULL, "last", FALSE);
 	    if(rc != 0) {
 		crm_err("Could not make backup of the existing CIB: %d", rc);
@@ -681,10 +689,11 @@ write_cib_contents(gpointer p)
 			 rc);
 	    }
 
+#if CIB_WRITE_PARANOIA
 	    CRM_ASSERT(retrieveCib(CIB_FILENAME, CIB_FILENAME".sig", FALSE) != NULL);
 	    CRM_ASSERT(retrieveCib(CIB_FILENAME".last", CIB_FILENAME".sig.last", FALSE) != NULL);
-	    
 	    crm_debug("Verified CIB archive");	    
+#endif    
 	}
 	
 	/* Given that we discard the status section on startup
@@ -695,6 +704,7 @@ write_cib_contents(gpointer p)
 	 *
 	 * So delete the status section before we write it out
 	 */
+	crm_debug("Writing CIB to disk");	    
 	if(p == NULL) {
 	    cib_status_root = find_xml_node(the_cib, XML_CIB_TAG_STATUS, TRUE);
 	    CRM_DEV_ASSERT(cib_status_root != NULL);
@@ -727,10 +737,11 @@ write_cib_contents(gpointer p)
 	}
 
 	CRM_ASSERT(retrieveCib(CIB_FILENAME, CIB_FILENAME".sig", FALSE) != NULL);
+#if CIB_WRITE_PARANOIA
 	if(need_archive) {
 	    CRM_ASSERT(retrieveCib(CIB_FILENAME".last", CIB_FILENAME".sig.last", FALSE) != NULL);
 	}
-
+#endif
 	crm_debug("Wrote and verified CIB");
 
   cleanup:

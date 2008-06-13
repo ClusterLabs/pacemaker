@@ -249,8 +249,9 @@ update_abort_priority(
 	}
 	
 	if(graph->abort_priority < priority) {
+		crm_info("Abort priority upgraded from %d to %d",
+			 graph->abort_priority, priority);
 		graph->abort_priority = priority;
-		crm_info("Abort priority upgraded to %d", priority);
 		if(graph->abort_reason != NULL) {
 			crm_info("'%s' abort superceeded",
 				 graph->abort_reason);

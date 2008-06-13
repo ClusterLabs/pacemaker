@@ -117,7 +117,7 @@ stop_te_timer(crm_action_timer_t *timer)
 	}
 	if(timer->reason == timeout_abort) {
 		timer_desc = "global timer";
-		crm_debug("Stopping %s", timer_desc);
+		crm_debug_2("Stopping %s", timer_desc);
 	}
 	
 	if(timer->source_id != 0) {
@@ -126,7 +126,7 @@ stop_te_timer(crm_action_timer_t *timer)
 		timer->source_id = 0;
 
 	} else {
-		crm_debug("%s was already stopped", timer_desc);
+		crm_debug_2("%s was already stopped", timer_desc);
 		return FALSE;
 	}
 
@@ -139,7 +139,9 @@ te_graph_trigger(gpointer user_data)
     int timeout = 0;
     enum transition_status graph_rc = -1;
 
-    crm_debug("Invoking the TE graph in state %s", fsa_state2string(fsa_state));
+    crm_debug_2("Invoking graph %d in state %s",
+	      transition_graph->id, fsa_state2string(fsa_state));
+
     switch(fsa_state) {
 	case S_STARTING:
 	case S_PENDING:
@@ -161,7 +163,6 @@ te_graph_trigger(gpointer user_data)
 
 	if(graph_rc == transition_active) {
 		crm_debug_3("Transition not yet complete");
-		crm_debug("Restarting TE timer");
 		stop_te_timer(transition_timer);
 		start_global_timer(transition_timer, timeout);
 		return TRUE;		
@@ -177,6 +178,7 @@ te_graph_trigger(gpointer user_data)
 	}
     }
     
+    crm_info("Transition %d is now complete", transition_graph->id);
     transition_graph->complete = TRUE;
     notify_crmd(transition_graph);
     

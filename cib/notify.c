@@ -326,29 +326,6 @@ do_cib_notify(
 	crm_debug_3("Notifying clients");
 	g_hash_table_foreach(client_list, cib_notify_client, update_msg);
 	free_xml(update_msg);
-
-	if(update == NULL) {
-		if(result == cib_ok) {
-			crm_debug_2("Operation %s (on section=%s) completed",
-				    op, crm_str(type));
-			
-		} else {
-			crm_warn("Operation %s (on section=%s) FAILED: (%d) %s",
-				 op, crm_str(type), result,
-				 cib_error2string(result));
-		}
-		
-	} else {
-		if(result == cib_ok) {
-			crm_debug_2("Completed %s of <%s %s%s>",
-				    op, crm_str(type), id?"id=":"", id?id:"");
-			
-		} else {
-			crm_warn("%s of <%s %s%s> FAILED: %s", op,crm_str(type),
-				 id?"id=":"", id?id:"", cib_error2string(result));
-		}
-	}
-
 	crm_debug_3("Notify complete");
 }
 

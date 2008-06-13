@@ -198,7 +198,7 @@ crm_timer_stop(fsa_timer_t *timer)
 		return FALSE;
 		
 	} else if(timer->source_id != 0) {
-		crm_debug("Stopping %s (%s:%dms), src=%d",
+		crm_debug_2("Stopping %s (%s:%dms), src=%d",
 			  timer_desc, fsa_input2string(timer->fsa_input),
 			  timer->period_ms, timer->source_id);
 		Gmain_timeout_remove(timer->source_id);

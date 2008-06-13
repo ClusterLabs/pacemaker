@@ -2983,10 +2983,6 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_log
     
     for(; lpc < max_schemas; lpc++) {
 	if(safe_str_eq(validation, known_schemas[lpc].name)) {
-	    if(to_logs) {
-		crm_info("Validating configuration with %s: %s",
-			 known_schemas[lpc].name, known_schemas[lpc].location);
-	    }
 	    return validate_with(xml_blob, lpc, to_logs);
 	}
     }

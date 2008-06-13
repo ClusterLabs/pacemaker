@@ -78,8 +78,6 @@ register_fsa_error_adv(
 		cause, input, new_data, A_NOTHING, TRUE, raised_from);
 }
 
-static gboolean last_was_vote = FALSE;
-
 int
 register_fsa_input_adv(
 	enum crmd_fsa_cause cause, enum crmd_fsa_input input,
@@ -92,9 +90,9 @@ register_fsa_input_adv(
 	last_data_id++;
 	CRM_CHECK(raised_from != NULL, raised_from = "<unknown>");
 	
-	crm_debug("%s %s FSA input %d (%s) (cause=%s) %s data",
-		  raised_from, prepend?"prepended":"appended",last_data_id, fsa_input2string(input),
-		  fsa_cause2string(cause), data?"with":"without");
+	crm_debug_2("%s %s FSA input %d (%s) (cause=%s) %s data",
+		    raised_from, prepend?"prepended":"appended",last_data_id, fsa_input2string(input),
+		    fsa_cause2string(cause), data?"with":"without");
 	
 	if(input == I_WAIT_FOR_EVENT) {
 		do_fsa_stall = TRUE;
@@ -114,50 +112,10 @@ register_fsa_input_adv(
 			raised_from);
 	}
 
-	if(old_len == 0) {
-		last_was_vote = FALSE;
-	}
-	
 	if(input == I_NULL && with_actions == A_NOTHING /* && data == NULL */){
 		/* no point doing anything */
 		crm_err("Cannot add entry to queue: no input and no action");
 		return 0;
-		
-	} else if(data == NULL) {
-		last_was_vote = FALSE;
-
-#if 0
-	} else if(last_was_vote && cause == C_HA_MESSAGE && input == I_ROUTER) {
-		const char *op = crm_element_value(
-			((ha_msg_input_t*)data)->msg, F_CRM_TASK);
-		if(safe_str_eq(op, CRM_OP_VOTE)) {
-			/* It is always safe to treat N successive votes as
-			 *    a single one
-			 *
-			 * If all the discarded votes are more "loosing" than
-			 *    the first then the result is accurate
-			 *    (win or loose).
-			 *
-			 * If any of the discarded votes are less "loosing" 
-			 *    than the first then we will cast our vote and the
-			 *    eventual winner will vote us down again (which
-			 *    even in the case that N=2, is no worse than if we
-			 *    had not disarded the vote).
-			 */
-			crm_debug_2("Vote compression: %d", old_len);
-			return 0;
-		}
-#endif
-	} else if (cause == C_HA_MESSAGE && input == I_ROUTER) {
-		const char *op = crm_element_value(
-			((ha_msg_input_t*)data)->msg, F_CRM_TASK);
-		if(safe_str_eq(op, CRM_OP_VOTE)) {
-			last_was_vote = TRUE;
-			crm_debug_3("Added vote: %d", old_len);
-		}
-
-	} else {
-		last_was_vote = FALSE;
 	}
 
 	crm_malloc0(fsa_data, sizeof(fsa_data_t));

@@ -1009,6 +1009,7 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
     int rc = 0;
     int level = LOG_WARNING;
     int dest = msg->host.type;
+    const char *reason = "unknown";
 
     ais_debug_3("Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d)",
 		msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
@@ -1062,11 +1063,10 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 	AIS_ASSERT(ais_str_eq(lookup, crm_children[dest].name));
 	
 	if (conn == NULL) {
-	    do_ais_log(level, "No connection to %s", crm_children[dest].name);
+	    reason = "no connection";
 	    
 	} else if (!libais_connection_active(conn)) {
-	    do_ais_log(level, "Connection to %s is no longer active",
-		       crm_children[dest].name);
+	    reason = "connection no longer active";
 	    crm_children[dest].async_conn = NULL;
 	    
 /* 	} else if ((queue->size - 1) == queue->used) { */
@@ -1074,6 +1074,7 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 
 	} else {
 	    level = LOG_ERR;
+	    reason = "ipc delivery failed";
 	    ais_debug_3("Delivering locally to %s (size=%d)",
 			crm_children[dest].name, msg->header.size);
 #ifdef AIS_WHITETANK
@@ -1086,6 +1087,7 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
     } else if(local_origin) {
 	/* forward to other hosts */
 	ais_debug_3("Forwarding to cluster");
+	reason = "cluster delivery failed";
 	rc = send_cluster_msg_raw(msg);    
 
     } else {
@@ -1093,9 +1095,9 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
     }
 
     if(rc != 0) {
-	do_ais_log(level, "Sending message to %s.%s failed (rc=%d)",
-		   ais_dest(&(msg->host)), msg_type2text(dest), rc);
-	log_ais_message(level, msg);
+	do_ais_log(level, "Sending message to %s.%s failed: %s (rc=%d)",
+		   ais_dest(&(msg->host)), msg_type2text(dest), reason, rc);
+	log_ais_message(LOG_DEBUG, msg);
 	return FALSE;
     }
     return TRUE;
