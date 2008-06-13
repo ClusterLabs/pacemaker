@@ -593,7 +593,7 @@ send_peer_reply(
 			&diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates, 
 			&diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
 
-		crm_debug("Sending update diff %d.%d.%d -> %d.%d.%d",
+		crm_debug_2("Sending update diff %d.%d.%d -> %d.%d.%d",
 			    diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
 			    diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
 
@@ -640,7 +640,7 @@ cib_process_request(
 	const char *op         = crm_element_value(request, F_CIB_OPERATION);
 	const char *originator = crm_element_value(request, F_ORIG);
 	const char *host       = crm_element_value(request, F_CIB_HOST);
-	const char *update     = crm_element_value(request, F_CIB_GLOBAL_UPDATE);
+	gboolean global_update = crm_is_true(crm_element_value(request, F_CIB_GLOBAL_UPDATE));
 
 	crm_debug_4("%s Processing msg %s",
 		  cib_our_uname, crm_element_value(request, F_SEQ));
@@ -706,30 +706,41 @@ cib_process_request(
 	    op_reply = cib_construct_reply(request, the_cib, cib_status);
 
 	} else if(process) {
-		cib_num_local++;
-		crm_debug_2("Performing local processing:"
-			    " op=%s origin=%s/%s,%s (update=%s)",
-			    crm_element_value(request, F_CIB_OPERATION), originator,
-			    crm_element_value(request, F_CIB_CLIENTID),
-			    crm_element_value(request, F_CIB_CALLID), update);
+		int level = LOG_INFO;
+		const char *section = crm_element_value(request, F_CIB_SECTION);
 		
+		cib_num_local++;
 		rc = cib_process_command(
 			request, &op_reply, &result_diff, privileged);
 
-		crm_debug_2("Processing complete");
+		if(global_update) {
+		    switch(rc) {
+			case cib_ok:
+			case cib_old_data:
+			case cib_diff_resync:
+			case cib_diff_failed:
+			    level = LOG_DEBUG_2;
+			    break;
+			default:
+			    level = LOG_ERR;
+		    }
 
-		if(rc == cib_diff_resync || rc == cib_diff_failed
-		   || rc == cib_old_data) {
-			crm_warn("%s operation failed: %s",
-				crm_str(op), cib_error2string(rc));
-			
 		} else if(rc != cib_ok) {
-			cib_num_fail++;
-			crm_err("%s operation failed: %s",
-				crm_str(op), cib_error2string(rc));
-			crm_log_xml(LOG_DEBUG, "CIB[output]", op_reply);
-			crm_log_xml(LOG_INFO, "Input message", request);
+		    cib_num_fail++;
+		    level = LOG_ERR;
+
+		} else if(safe_str_eq(op, CIB_OP_QUERY)) {
+		    level = LOG_DEBUG_2;
+
+		} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+		    level = LOG_DEBUG_2;
 		}
+		
+		do_crm_log(level, "Operation complete: op %s for section %s (origin=%s/%s/%s): %s (rc=%d)",
+			   op, section?section:"'all'", originator?originator:"local",
+			   crm_element_value(request, F_CIB_CLIENTID),
+			   crm_element_value(request, F_CIB_CALLID),
+			   cib_error2string(rc), rc);
 
 		if(op_reply == NULL && (needs_reply || local_notify)) {
 			crm_err("Unexpected NULL reply to message");
@@ -838,7 +849,6 @@ cib_process_command(xmlNode *request, xmlNode **reply,
     enum cib_errors rc2 = cib_ok;
 
     int log_level = LOG_DEBUG_3;
-    xmlNode *filtered = NULL;
 	
     const char *op = NULL;
     const char *section = NULL;
@@ -968,17 +978,15 @@ cib_process_command(xmlNode *request, xmlNode **reply,
     } else if(cib_is_master && config_changed) {
 	log_level = LOG_INFO;
     } else if(cib_is_master) {
-	log_level = LOG_DEBUG;
-	log_xml_diff(LOG_DEBUG_2, filtered, "cib:diff:filtered");
+	log_level = LOG_DEBUG_2;
 	    
     } else if(config_changed) {
-	log_level = LOG_DEBUG_2;
-    } else {
 	log_level = LOG_DEBUG_3;
+    } else {
+	log_level = LOG_DEBUG_4;
     }
 	
     log_xml_diff(log_level, *cib_diff, "cib:diff");
-    free_xml(filtered);		
 
   done:
     if((call_options & cib_discard_reply) == 0) {

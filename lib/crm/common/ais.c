@@ -164,7 +164,7 @@ send_ais_text(int class, const char *data,
 	ais_msg->is_compressed = TRUE;
 	ais_msg->compressed_size = len;
 
-	crm_debug("Compression details: %d -> %d",
+	crm_debug_2("Compression details: %d -> %d",
 		  ais_msg->size, ais_data_len(ais_msg));
     } 
 
@@ -237,7 +237,7 @@ gboolean ais_membership_force = FALSE;
 
 static gboolean ais_membership_dampen(gpointer data)
 {
-    crm_debug("Requesting cluster membership after stabilization delay");
+    crm_debug_2("Requesting cluster membership after stabilization delay");
     send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
     ais_membership_force = TRUE;
     ais_membership_timer = 0;
@@ -348,7 +348,7 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 	    const char *reason = "unknown";
 
 	    crm_element_value_int(xml, "id", &seq);
-	    crm_debug("Received membership %d", seq);
+	    crm_debug_2("Received membership %d", seq);
 
 	    xml_child_iter(xml, node,
 			   const char *state = crm_element_value(node, "state");
@@ -359,7 +359,7 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 
 	    if(ais_membership_force) {
 		/* always process */
-		crm_debug("Processing delayed membership change");
+		crm_debug_2("Processing delayed membership change");
 		
 	    } else if(current_size == 0 && new_size == 1) {
 		do_ask = TRUE;

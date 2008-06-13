@@ -2950,7 +2950,7 @@ static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs)
 	xmlDocSetRootElement(doc, xml);
     }
     
-    crm_info("Validating with: %s (type=%d)", crm_str(file), type);
+    crm_debug_2("Validating with: %s (type=%d)", crm_str(file), type);
     switch(type) {
 	case 0:
 	    valid = TRUE;

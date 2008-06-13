@@ -418,13 +418,6 @@ cib_process_diff(
 		    if(options & cib_force_diff) {
 			result = cib_diff_resync;
 		    }
-			
-		} else if((options & cib_force_diff)
-			  && !validate_xml(*result_cib, NULL, FALSE)) {
-
-		    log_level = LOG_NOTICE;
-		    result = cib_diff_resync;
-		    reason = "Failed DTD validation of a global update.";
 		}
 	}
 	

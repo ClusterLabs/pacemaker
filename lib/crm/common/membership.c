@@ -114,7 +114,7 @@ guint crm_active_peers(uint32_t peer)
 void destroy_crm_node(gpointer data)
 {
     crm_node_t *node = data;
-    crm_info("Destroying entry for node %u", node->id);
+    crm_debug_2("Destroying entry for node %u", node->id);
 
     crm_free(node->addr);
     crm_free(node->uname);
