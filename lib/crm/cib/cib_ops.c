@@ -578,7 +578,12 @@ cib_config_changed(xmlNode *old_cib, xmlNode *new_cib, xmlNode **result)
 		    free_xml(status);
 		}
 
-		xml_prop_iter(dest, name, value, config_changes = TRUE);
+		xml_prop_iter(dest, name, value,
+			      if(safe_str_neq(name, XML_ATTR_NUMUPDATES)) {
+				  config_changes = TRUE;
+				  break;
+			      }
+		    );
 		
 		if(xml_has_children(dest)) {
 			config_changes = TRUE;
