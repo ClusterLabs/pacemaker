@@ -1,0 +1,12 @@
+ <transition_graph cluster-delay="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+   <synapse id="0">
+     <action_set>
+       <rsc_op id="7" operation="monitor" operation_key="mysql-bin_monitor_30000" on_node="dktest2sles10" on_node_uuid="1db2544e-c39c-442c-be34-016c812fcf66">
+         <primitive id="mysql-bin" long-id="mysql-bin" class="ocf" provider="heartbeat" type="mysql"/>
+         <attributes crm_feature_set="2.1" socket="/packages/10.0/mysql/var/mysql.sock" binary="/packages/10.0/mysql/bin/mysqld_safe" logfile="/packages/10.0/mysql/var/mysqld.log" config="/packages/10.0/mysql/my.cnf" datadir="/packages/10.0/mysql/var" CRM_meta_id="op-mysql-1" CRM_meta_timeout="20000" CRM_meta_name="monitor" CRM_meta_interval="30000"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+ </transition_graph>
+

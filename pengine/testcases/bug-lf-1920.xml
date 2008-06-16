@@ -1,0 +1,70 @@
+ <cib generated="true" admin_epoch="0" epoch="10" num_updates="2" ignore_dtd="false" num_peers="2" have_quorum="1" cib_feature_revision="2.0" crm_feature_set="2.1" cib-last-written="Wed Jun 11 10:33:18 2008" dc_uuid="1db2544e-c39c-442c-be34-016c812fcf66" ccm_transition="2">
+   <configuration>
+     <crm_config>
+       <cluster_property_set id="cib-bootstrap-options">
+         <attributes>
+           <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="0.6.4-node: 1f49e4d0e8117d31470c91a73656640bb1f8892d"/>
+           <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1213173198"/>
+         </attributes>
+       </cluster_property_set>
+     </crm_config>
+     <nodes>
+       <node id="1db2544e-c39c-442c-be34-016c812fcf66" uname="dktest2sles10" type="normal"/>
+       <node id="c231fc78-1eba-4b49-a003-a1cfef80bfc6" uname="dktest1sles10" type="normal"/>
+     </nodes>
+     <resources>
+       <primitive id="mysql-bin" class="ocf" provider="heartbeat" type="mysql">
+         <instance_attributes id="ia-mysql">
+           <attributes>
+             <nvpair id="ia-mysql-bin-1" name="binary" value="/packages/10.0/mysql/bin/mysqld_safe"/>
+             <nvpair id="ia-mysql-bin-2" name="config" value="/packages/10.0/mysql/my.cnf"/>
+             <nvpair id="ia-mysql-bin-3" name="datadir" value="/packages/10.0/mysql/var"/>
+             <nvpair id="ia-mysql-bin-4" name="datadir" value="/packages/10.0/mysql/var"/>
+             <nvpair id="ia-mysql-bin-5" name="logfile" value="/packages/10.0/mysql/var/mysqld.log"/>
+             <nvpair id="ia-mysql-bin-6" name="socket" value="/packages/10.0/mysql/var/mysql.sock"/>
+           </attributes>
+         </instance_attributes>
+         <operations>
+           <op id="op-mysql-1" name="monitor" interval="30s" timeout="20s"/>
+         </operations>
+       </primitive>
+     </resources>
+     <constraints/>
+   </configuration>
+   <status>
+     <node_state id="1db2544e-c39c-442c-be34-016c812fcf66" uname="dktest2sles10" crmd="online" crm-debug-origin="do_update_resource" shutdown="0" ha="active" in_ccm="true" join="member" expected="member">
+       <transient_attributes id="1db2544e-c39c-442c-be34-016c812fcf66">
+         <instance_attributes id="status-1db2544e-c39c-442c-be34-016c812fcf66">
+           <attributes>
+             <nvpair id="status-1db2544e-c39c-442c-be34-016c812fcf66-pingd10220" name="pingd10220" value="750"/>
+             <nvpair id="status-1db2544e-c39c-442c-be34-016c812fcf66-probe_complete" name="probe_complete" value="true"/>
+           </attributes>
+         </instance_attributes>
+       </transient_attributes>
+       <lrm id="1db2544e-c39c-442c-be34-016c812fcf66">
+         <lrm_resources>
+           <lrm_resource id="mysql-bin" type="mysql" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="mysql-bin_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="4:3:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" transition_magic="0:0;4:3:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" call_id="5" crm_feature_set="2.1" rc_code="0" op_status="0" interval="0" op_digest="693708d1be85bff163c441a522df1ff4"/>
+           </lrm_resource>
+         </lrm_resources>
+       </lrm>
+     </node_state>
+     <node_state id="c231fc78-1eba-4b49-a003-a1cfef80bfc6" uname="dktest1sles10" crmd="online" crm-debug-origin="do_update_resource" shutdown="0" ha="active" in_ccm="true" join="member" expected="member">
+       <transient_attributes id="c231fc78-1eba-4b49-a003-a1cfef80bfc6">
+         <instance_attributes id="status-c231fc78-1eba-4b49-a003-a1cfef80bfc6">
+           <attributes>
+             <nvpair id="status-c231fc78-1eba-4b49-a003-a1cfef80bfc6-pingd10220" name="pingd10220" value="750"/>
+             <nvpair id="status-c231fc78-1eba-4b49-a003-a1cfef80bfc6-probe_complete" name="probe_complete" value="true"/>
+           </attributes>
+         </instance_attributes>
+       </transient_attributes>
+       <lrm id="c231fc78-1eba-4b49-a003-a1cfef80bfc6">
+         <lrm_resources>
+           <lrm_resource id="mysql-bin" type="mysql" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="mysql-bin_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="6:0:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" transition_magic="0:7;6:0:7:9c044a04-e2e2-4ab8-9871-8178a1a4b86a" call_id="2" crm_feature_set="2.1" rc_code="7" op_status="0" interval="0" op_digest="693708d1be85bff163c441a522df1ff4"/>
+           </lrm_resource>
+         </lrm_resources>
+       </lrm>
+     </node_state>
+   </status>
+ </cib>
