@@ -557,16 +557,11 @@ int ais_ipc_client_exit_callback (void *conn)
 
 int ais_ipc_client_connect_callback (void *conn)
 {
-    void *async_conn = openais_conn_partner_get(conn);
     ENTER("Client=%p", conn);
-    ais_debug("Client %p/%p joined", conn, async_conn);
-    if(async_conn) {
-	send_client_msg(async_conn, crm_class_cluster, crm_msg_none, "identify");
-    } else {
-	ais_err("No async connection");
-    }
+    /* OpenAIS hasn't finished setting up the connection at this point
+     * Sending messages now messes up the protocol!
+     */
     LEAVE("");
-
     return (0);
 }
 
@@ -671,9 +666,9 @@ static void send_ipc_ack(void *conn, int class)
 	ais_malloc0(res_overlay, sizeof(struct res_overlay));
     }
     
-    res_overlay->header.size = crm_lib_service[class].response_size;
+    res_overlay->header.error = SA_AIS_OK;
     res_overlay->header.id = crm_lib_service[class].response_id;
-    res_overlay->header.error = 0;
+    res_overlay->header.size = crm_lib_service[class].response_size;
     openais_conn_send_response (conn, res_overlay, res_overlay->header.size);
 }
 
@@ -685,8 +680,12 @@ void ais_ipc_message_callback(void *conn, void *msg)
     int type = ais_msg->sender.type;
     void *async_conn = openais_conn_partner_get(conn);
     ENTER("Client=%p", conn);
-    ais_debug_2("Message from client %p", conn);
-
+    ais_debug_2("Message from client %p/%p sender=%d msg=%d, spid=%d, cpid=%d",
+		conn, async_conn, type, ais_msg->host.type,
+		ais_msg->sender.pid, crm_children[type].pid);
+    
+    send_ipc_ack(conn, 0);
+    
     if(type > 0
        && ais_msg->host.local
        && crm_children[type].conn == NULL
@@ -713,7 +712,6 @@ void ais_ipc_message_callback(void *conn, void *msg)
     memcpy(ais_msg->sender.uname, local_uname, ais_msg->sender.size);
 
     route_ais_message(msg, TRUE);
-    send_ipc_ack(conn, 0);
     
     LEAVE("");
 }

@@ -408,6 +408,12 @@ gboolean init_ais_connection(
     ais_source_sync = G_main_add_fd(
 	G_PRIORITY_HIGH, ais_fd_sync, FALSE, ais_dispatch, dispatch, destroy);
 #endif
+    {
+	int pid = getpid();
+	char *pid_s = crm_itoa(pid);
+	send_ais_text(0, pid_s, TRUE, NULL, crm_msg_ais);
+	crm_free(pid_s);
+    }
 
     ais_source = G_main_add_fd(
  	G_PRIORITY_HIGH, ais_fd_async, FALSE, ais_dispatch, dispatch, destroy);
