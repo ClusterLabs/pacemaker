@@ -67,7 +67,7 @@ class crm_ais(LinuxHAv2):
             "BreakCommCmd2"  : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
 
             "Pat:We_stopped"   : "%s.*openais.*crm_exec_exit_fn: Shutdown complete",
-            "Pat:They_stopped" : "%s crmd:.*Node %s is now: lost",
+            "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost (new)"
             "Pat:All_stopped"  : "%s.*openais.*crm_exec_exit_fn: Shutdown complete",
             "Pat:They_dead"    : "openais:.*Node %s is now: lost",
             

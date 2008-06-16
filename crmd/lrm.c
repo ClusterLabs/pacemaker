@@ -311,7 +311,7 @@ get_rsc_metadata(const char *type, const char *class, const char *provider)
 		goto out;
 	}
 
-	crm_debug("Retreiving metadata for %s", key);
+	crm_debug_2("Retreiving metadata for %s", key);
 	metadata = fsa_lrm_conn->lrm_ops->get_rsc_type_metadata(
 		fsa_lrm_conn, class, type, provider);
 
@@ -423,7 +423,7 @@ append_restart_list(xmlNode *update, lrm_op_t *op, const char *version)
 
 	restart_list = get_rsc_restart_list(rsc, op);
 	if(restart_list == NULL) {
-		crm_debug("Resource %s does not support reloads", op->rsc_id);
+		crm_debug_2("Resource %s does not support reloads", op->rsc_id);
 		return;
 	}
 
@@ -1531,8 +1531,8 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 	}
 	
 	/* now do the op */
-	crm_info("Performing op=%s_%s_%d key=%s)",
-		 rsc->id, operation, op->interval, transition);
+	crm_info("Performing key=%s op=%s_%s_%d )",
+		 transition, rsc->id, operation, op->interval);
 
 	if(fsa_state != S_NOT_DC && fsa_state != S_TRANSITION_ENGINE) {
 		if(safe_str_neq(operation, "fail")
@@ -1871,8 +1871,8 @@ process_lrm_event(lrm_op_t *op)
 	}
 
   out:
-	do_crm_log(log_level, "LRM operation %s (call=%d, rc=%d, cib-update=%d, stop-id=%s, confirmed=%s) %s %s",
-		   op_key, op->call_id, op->rc, update_id, op_id, removed?"true":"false",
+	do_crm_log(log_level, "LRM operation %s (call=%d, rc=%d, cib-update=%d, confirmed=%s) %s %s",
+		   op_key, op->call_id, op->rc, update_id, removed?"true":"false",
 		   op_status2text(op->op_status),
 		   op->op_status==LRM_OP_ERROR?execra_code2string(op->rc):"");
 

@@ -253,13 +253,13 @@ post_cache_update(int instance)
     crm_peer_seq = instance;
     crm_debug("Updated cache after membership event %d.", instance);
 
-    if(AM_I_DC) {
-	populate_cib_nodes(FALSE);
-    }
-    
     g_hash_table_foreach(crm_peer_cache, reap_dead_ccm_nodes, NULL);	
     set_bit_inplace(fsa_input_register, R_CCM_DATA);
-    do_update_cib_nodes(FALSE, __FUNCTION__);
+    
+    if(AM_I_DC) {
+	populate_cib_nodes(FALSE);
+	do_update_cib_nodes(FALSE, __FUNCTION__);
+    }
     
     /* Membership changed, remind everyone we're here.
      * This will aid detection of duplicate DCs
@@ -348,7 +348,7 @@ ccm_node_update_complete(xmlNode *msg, int call_id, int rc,
 	last_peer_update = 0;
 	
 	if(rc == cib_ok) {
-		crm_debug("Node update %d complete", call_id);
+		crm_debug_2("Node update %d complete", call_id);
 
 	} else {
 		crm_err("Node update %d failed", call_id);
@@ -415,7 +415,6 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
 	return;
 	
     } else if(AM_I_DC == FALSE) {
-	crm_info("Non-DCs dont update node status - they get it from the DC");
 	return;
     }
     
@@ -440,7 +439,7 @@ static void cib_quorum_update_complete(
 	fsa_data_t *msg_data = NULL;
 	
 	if(rc == cib_ok) {
-		crm_debug("Quorum update %d complete", call_id);
+		crm_debug_2("Quorum update %d complete", call_id);
 
 	} else {
 		crm_err("Quorum update %d failed", call_id);
