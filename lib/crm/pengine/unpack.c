@@ -1121,6 +1121,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 	switch(actual_rc_i) {
 	    case EXECRA_NOT_RUNNING:
 		if(is_probe || target_rc == actual_rc_i) {
+		    task_status_i = LRM_OP_DONE;
 		    rsc->role = RSC_ROLE_STOPPED;
 		    
 		    /* clear any previous failure actions */
@@ -1134,6 +1135,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		
 	    case EXECRA_RUNNING_MASTER:
 		if(is_probe) {
+		    task_status_i = LRM_OP_DONE;
 		    crm_warn("%s found active %s in master mode on %s",
 			     id, rsc->id, node->details->uname);
 
