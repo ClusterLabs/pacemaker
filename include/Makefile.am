@@ -21,7 +21,7 @@
 
 MAINTAINERCLEANFILES    = Makefile.in ha_version.h config.h.in
 
-EXTRA_DIST = ha_version.h
+EXTRA_DIST = ha_version.h crm_internal.h
 
 headerdir=$(includedir)/@PKG_NAME@
 
@@ -30,7 +30,7 @@ noinst_HEADERS	        = portability.h config.h ha_version.h
 header_HEADERS	        = crm_config.h
  
 
-SUBDIRS                 =  crm
+SUBDIRS                 =  crm fencing
 
 ## The backtick commands are not executed here,
 ## but rather as macro-expansions at use within the rules.

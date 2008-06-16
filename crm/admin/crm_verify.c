@@ -50,15 +50,16 @@ char *cib_save = NULL;
 void usage(const char *cmd, int exit_status);
 extern gboolean stage0(pe_working_set_t *data_set);
 extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
-extern crm_data_t * do_calculations(
-	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
+extern xmlNode * do_calculations(
+	pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now);
 const char *dtd_file = DTD_DIRECTORY"/crm.dtd";
 
 int
 main(int argc, char **argv)
 {
-	crm_data_t *cib_object = NULL;
-	crm_data_t *status = NULL;
+	const char *schema = NULL;
+	xmlNode *cib_object = NULL;
+	xmlNode *status = NULL;
 	int argerr = 0;
 	int flag;
 		
@@ -89,8 +90,9 @@ main(int argc, char **argv)
 		int option_index = 0;
 		static struct option long_options[] = {
 			/* Top-level Options */
-			{F_CRM_DATA,    1, 0, 'X'},
 			{"dtd-file",    1, 0, 'D'},
+			{F_CRM_DATA,    1, 0, 'X'}, /* legacy */
+			{"xml-text",    1, 0, 'X'},
 			{"xml-file",    1, 0, 'x'},
 			{"xml-pipe",    0, 0, 'p'},
 			{"save-xml",    1, 0, 'S'},
@@ -177,8 +179,7 @@ main(int argc, char **argv)
 
 	if(USE_LIVE_CIB) {
 		cib_conn = cib_new();
-		rc = cib_conn->cmds->signon(
-			cib_conn, crm_system_name, cib_command_synchronous);
+		rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
 	}
 	
 	
@@ -251,7 +252,12 @@ main(int argc, char **argv)
 		crm_config_err("ID Check failed");
 	}
 
-	if(validate_with_dtd(cib_object, FALSE, dtd_file) == FALSE) {
+	schema = crm_element_value(cib_object, XML_ATTR_VALIDATION);
+	if(schema == NULL) {
+	    schema = LATEST_SCHEMA_VERSION;
+	}
+	
+	if(validate_xml(cib_object, schema, FALSE) == FALSE) {
 		crm_config_err("CIB did not pass DTD validation");
 	}
 

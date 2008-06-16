@@ -61,10 +61,10 @@ void crmadmin_ipc_connection_destroy(gpointer user_data);
 
 gboolean admin_msg_callback(IPC_Channel * source_data, void *private_data);
 char *pluralSection(const char *a_section);
-crm_data_t *handleCibMod(void);
-int do_find_node_list(crm_data_t *xml_node);
+xmlNode *handleCibMod(void);
+int do_find_node_list(xmlNode *xml_node);
 gboolean admin_message_timeout(gpointer data);
-gboolean is_node_online(crm_data_t *node_state);
+gboolean is_node_online(xmlNode *node_state);
 
 enum debug {
 	debug_none,
@@ -87,7 +87,7 @@ gboolean DO_RESOURCE_LIST = FALSE;
 enum debug DO_DEBUG       = debug_none;
 const char *crmd_operation = NULL;
 
-crm_data_t *msg_options = NULL;
+xmlNode *msg_options = NULL;
 
 const char *standby_on_off = "on";
 const char *admin_verbose = XML_BOOLEAN_FALSE;
@@ -301,7 +301,7 @@ do_work(void)
 {
 	int ret = 1;
 	/* construct the request */
-	crm_data_t *msg_data = NULL;
+	xmlNode *msg_data = NULL;
 	gboolean all_is_good = TRUE;
 	
 	msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
@@ -351,10 +351,10 @@ do_work(void)
 	} else if(DO_NODE_LIST) {
 
 		cib_t *	the_cib = cib_new();
-		crm_data_t *output = NULL;
+		xmlNode *output = NULL;
 		
 		enum cib_errors rc = the_cib->cmds->signon(
-			the_cib, crm_system_name, cib_command_synchronous);
+		    the_cib, crm_system_name, cib_command);
 
 		if(rc != cib_ok) {
 			return -1;
@@ -426,15 +426,15 @@ do_work(void)
 	}
 	
 	{
-		HA_Message *cmd = create_request(
+		xmlNode *cmd = create_request(
 			crmd_operation, msg_data, dest_node, sys_to,
 			crm_system_name, admin_uuid);
 
 		if(this_msg_reference != NULL) {
-			ha_msg_mod(cmd, XML_ATTR_REFERENCE, this_msg_reference);
+			crm_xml_add(cmd, XML_ATTR_REFERENCE, this_msg_reference);
 		}
 		send_ipc_message(crmd_channel, cmd);
-		crm_msg_del(cmd);
+		free_xml(cmd);
 	}
 	
 	return ret;
@@ -485,8 +485,8 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 {
 	int rc = 0;
 	int lpc = 0;
+	xmlNode *xml = NULL;
 	IPC_Message *msg = NULL;
-	ha_msg_input_t *new_input = NULL;
 	gboolean hack_return_good = TRUE;
 	static int received_responses = 0;
 	char *filename = NULL;
@@ -497,11 +497,6 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 
 	while (server->ch_status != IPC_DISCONNECT
 	       && server->ops->is_message_pending(server) == TRUE) {
-		if(new_input != NULL) {
-			delete_ha_msg_input(new_input);
-			new_input = NULL;
-		}
-
 		rc = server->ops->recv(server, &msg);
 		if (rc != IPC_OK) {
 		    cl_perror("Receive failure (%d)", rc);
@@ -515,23 +510,24 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 
 		lpc++;
 		received_responses++;
-		new_input = new_ipc_msg_input(msg);
-		crm_log_message(LOG_MSG, new_input->msg);
+
+		xml = convert_ipc_message(msg, __FUNCTION__);
 		msg->msg_done(msg);
+		crm_log_xml(LOG_MSG, "ipc", xml);
 		
-		if (new_input->xml == NULL) {
+		if (xml == NULL) {
 			crm_info("XML in IPC message was not valid... "
 				 "discarding.");
 			goto cleanup;
 			
 		} else if (validate_crm_message(
-				   new_input->msg, crm_system_name, admin_uuid,
+				   xml, crm_system_name, admin_uuid,
 				   XML_ATTR_RESPONSE) == FALSE) {
 			crm_debug_2("Message was not a CRM response. Discarding.");
 			goto cleanup;
 		}
 
-		result = cl_get_string(new_input->msg, XML_ATTR_RESULT);
+		result = crm_element_value(xml, XML_ATTR_RESULT);
 		if(result == NULL || strcasecmp(result, "ok") == 0) {
 			result = "pass";
 		} else {
@@ -539,22 +535,21 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		}
 		
 		if(DO_HEALTH) {
-			const char *state = crm_element_value(
-				new_input->xml, "crmd_state");
+			xmlNode *data = get_message_xml(xml, F_CRM_DATA);
+			const char *state = crm_element_value(data, "crmd_state");
 
 			printf("Status of %s@%s: %s (%s)\n",
-			       crm_element_value(new_input->xml,XML_PING_ATTR_SYSFROM),
-			       cl_get_string(new_input->msg, F_CRM_HOST_FROM),
+			       crm_element_value(data,XML_PING_ATTR_SYSFROM),
+			       crm_element_value(xml, F_CRM_HOST_FROM),
 			       state,
-			       crm_element_value(new_input->xml,XML_PING_ATTR_STATUS));
+			       crm_element_value(data,XML_PING_ATTR_STATUS));
 			
 			if(BE_SILENT && state != NULL) {
 				fprintf(stderr, "%s\n", state);
 			}
 			
 		} else if(DO_WHOIS_DC) {
-			const char *dc = cl_get_string(
-				new_input->msg, F_CRM_HOST_FROM);
+			const char *dc = crm_element_value(xml, F_CRM_HOST_FROM);
 			
 			printf("Designated Controller is: %s\n", dc);
 			if(BE_SILENT && dc != NULL) {
@@ -565,6 +560,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		if (this_msg_reference != NULL) {
 			/* in testing mode... */
 			/* 31 = "test-_.xml" + an_int_as_string + '\0' */
+			xmlNode *data = get_message_xml(xml, F_CRM_DATA);
 			filename_len = 31 + strlen(this_msg_reference);
 
 			crm_malloc0(filename, filename_len);
@@ -575,16 +571,15 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 					received_responses);
 				
 				filename[filename_len - 1] = '\0';
-				if (0 > write_xml_file(
-					    new_input->xml, filename, FALSE)) {
+				if (0 > write_xml_file(data, filename, FALSE)) {
 					crm_crit("Could not save response to"
 						 " %s", filename);
 				}
 			}
 		}
 	  cleanup:
-		delete_ha_msg_input(new_input);
-		new_input = NULL;
+		free_xml(xml);
+		xml = NULL;		
 	}
 
 	if (server->ch_status == IPC_DISCONNECT) {
@@ -620,7 +615,7 @@ admin_message_timeout(gpointer data)
 
 
 gboolean
-is_node_online(crm_data_t *node_state) 
+is_node_online(xmlNode *node_state) 
 {
 	const char *uname      = crm_element_value(node_state,XML_ATTR_UNAME);
 	const char *join_state = crm_element_value(node_state,XML_CIB_ATTR_JOINSTATE);
@@ -645,10 +640,10 @@ is_node_online(crm_data_t *node_state)
 }
 
 int
-do_find_node_list(crm_data_t *xml_node)
+do_find_node_list(xmlNode *xml_node)
 {
 	int found = 0;
-	crm_data_t *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
+	xmlNode *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
 
 	xml_child_iter_filter(
 		nodes, node, XML_CIB_TAG_NODE,	

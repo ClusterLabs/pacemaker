@@ -35,7 +35,7 @@
 
 #include <crm/cib.h>
 
-#define OPTARGS	"V?X:D:G:I:Lwxd:aSs"
+#define OPTARGS	"V?XD:G:I:Lwx:d:aSs"
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -52,8 +52,8 @@ gboolean use_stdin = FALSE;
 gboolean do_simulation = FALSE;
 gboolean inhibit_exit = FALSE;
 gboolean all_actions = FALSE;
-extern crm_data_t * do_calculations(
-	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
+extern xmlNode * do_calculations(
+	pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now);
 extern void cleanup_calculations(pe_working_set_t *data_set);
 char *use_date = NULL;
 
@@ -129,7 +129,7 @@ create_action_name(action_t *action)
 		action_host = "<none>";
 		action_name = crm_concat(action->uuid, action_host, ' ');
 	}
-	if(safe_str_eq(action->task, CRMD_ACTION_CANCEL)) {
+	if(safe_str_eq(action->task, RSC_CANCEL)) {
 	    char *tmp_action_name = action_name;
 	    action_name = crm_concat("Cancel", tmp_action_name, ' ');
 	    crm_free(tmp_action_name);
@@ -143,6 +143,7 @@ gboolean USE_LIVE_CIB = FALSE;
 int
 main(int argc, char **argv)
 {
+	gboolean process = TRUE;
 	gboolean all_good = TRUE;
 	gboolean show_scores = FALSE;
 	enum transition_status graph_rc = -1;
@@ -150,7 +151,7 @@ main(int argc, char **argv)
 	ha_time_t *a_date = NULL;
 	cib_t *	cib_conn = NULL;
 	
-	crm_data_t * cib_object = NULL;
+	xmlNode * cib_object = NULL;
 	int argerr = 0;
 	int flag;
 		
@@ -158,6 +159,7 @@ main(int argc, char **argv)
 	gboolean optional = FALSE;
 	pe_working_set_t data_set;
 	
+	const char *value = NULL;
 	const char *source = NULL;
 	const char *xml_file = NULL;
 	const char *dot_file = NULL;
@@ -177,9 +179,10 @@ main(int argc, char **argv)
 			{"verbose",     0, 0, 'V'},			
 
 			{"live-check",  0, 0, 'L'},
-			{"xml-stream",  0, 0, 'x'},
 			{"show-scores", 0, 0, 's'},
-			{"xml-file",    1, 0, 'X'},
+			{"xml-text",    0, 0, 'X'},
+			{"xml-file",    1, 0, 'x'},
+			{"xml-pipe",    1, 0, 'p'},
 
 			{"simulate",    0, 0, 'S'},
 			{"save-graph",  1, 0, 'G'},
@@ -218,7 +221,7 @@ main(int argc, char **argv)
 			case 'w':
 				inhibit_exit = TRUE;
 				break;
-			case 'x':
+			case 'X':
 				use_stdin = TRUE;
 				break;
 			case 's':
@@ -226,7 +229,7 @@ main(int argc, char **argv)
 				cl_log_enable_stderr(TRUE);
 				scores_log_level = crm_log_level;
 				break;
-			case 'X':
+			case 'x':
 				xml_file = optarg;
 				break;
 			case 'd':
@@ -284,8 +287,7 @@ main(int argc, char **argv)
 		int rc = cib_ok;
 		source = "live cib";
 		cib_conn = cib_new();
-		rc = cib_conn->cmds->signon(
-			cib_conn, "ptest", cib_command_synchronous);
+		rc = cib_conn->cmds->signon(cib_conn, "ptest", cib_command);
 
 		if(rc == cib_ok) {
 			crm_info("Reading XML from: live cluster");
@@ -333,9 +335,40 @@ main(int argc, char **argv)
 	
 	crm_notice("Required feature set: %s", feature_set(cib_object));
  	do_id_check(cib_object, NULL, FALSE, FALSE);
-	if(!validate_with_dtd(cib_object,FALSE,DTD_DIRECTORY"/crm.dtd")) {
-		crm_crit("%s does not contain a valid configuration", xml_file?xml_file:"<stdin>");
- 		all_good = FALSE;
+
+	value = crm_element_value(cib_object, XML_ATTR_VALIDATION);
+	if(safe_str_neq(value, LATEST_SCHEMA_VERSION)) {
+	    int schema_version = 0;
+	    int max_version = get_schema_version(LATEST_SCHEMA_VERSION);
+	    int min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
+	    
+	    xmlNode *converted = NULL;
+
+	    crm_config_warn("Your current configuration only conforms to %s", value);
+	    crm_config_warn("Please use XXX to upgrade %s", LATEST_SCHEMA_VERSION);
+	    
+	    converted = copy_xml(cib_object);
+	    schema_version = update_validation(&converted, TRUE, FALSE);
+	    
+	    value = crm_element_value(converted, XML_ATTR_VALIDATION);
+	    if(schema_version < min_version) {
+		crm_config_err("Your current configuration could only be upgraded to %s... "
+			       "the minimum requirement is %s.", value, MINIMUM_SCHEMA_VERSION);
+		
+		data_set.graph = create_xml_node(NULL, XML_TAG_GRAPH);
+		crm_xml_add_int(data_set.graph, "transition_id", 0);
+		process = FALSE;
+		free_xml(converted);
+		converted = NULL;
+		
+	    } else if(schema_version < max_version) {
+		crm_config_warn("Your configuration was internally updated to %s... "
+				"which is acceptable but not the most recent", value);
+	    } else {
+		crm_config_warn("Your configuration was internally updated to %s", value);
+	    }
+	    
+	    cib_object = converted;
 	}
 	
 	if(input_file != NULL) {
@@ -361,8 +394,11 @@ main(int argc, char **argv)
 			 a_date, ha_log_date|ha_log_time|ha_log_local);
 	}
 
-	do_calculations(&data_set, cib_object, a_date);
-
+	set_working_set_defaults(&data_set);
+	if(process) {
+	    do_calculations(&data_set, cib_object, a_date);
+	}
+	
 	msg_buffer = dump_xml_formatted(data_set.graph);
 	if(safe_str_eq(graph_file, "-")) {
 		fprintf(stdout, "%s\n", msg_buffer);

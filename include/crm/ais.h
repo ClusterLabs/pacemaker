@@ -22,11 +22,6 @@
 #include <crm/crm.h>
 #include <glib.h>
 #include <string.h>
-#if SUPPORT_AIS
-#include <openais/ais_util.h>
-#include <openais/ipc_gen.h>
-#include <openais/saAis.h>
-#endif
 #include <crm/ais_common.h>
 
 extern enum crm_ais_msg_types text2msg_type(const char *text);
