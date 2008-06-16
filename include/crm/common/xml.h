@@ -29,32 +29,22 @@
 #include <ha_msg.h>
 #include <clplumbing/cl_log.h> 
 
-/* #define USE_LIBXML 1 */
-#if CRM_DEV_BUILD
-#  define XML_PARANOIA_CHECKS 1
-#else
-#  define XML_PARANOIA_CHECKS 0
-#endif
-
-#ifdef USE_LIBXML
-#  include <libxml/tree.h> 
-   typedef xmlNode crm_data_t;
-#else
-   typedef struct ha_msg crm_data_t;
-#endif
+#include <libxml/tree.h> 
+#include <libxml/xpath.h>
+typedef xmlNode crm_data_t;
 
 extern gboolean add_message_xml(
-	HA_Message *msg, const char *field, const crm_data_t *xml);
-extern crm_data_t *get_message_xml(HA_Message *msg, const char *field);
-extern GHashTable *xml2list(crm_data_t *parent);
+	xmlNode *msg, const char *field, xmlNode *xml);
+extern xmlNode *get_message_xml(xmlNode *msg, const char *field);
+extern GHashTable *xml2list(xmlNode *parent);
 #if CRM_DEPRECATED_SINCE_2_0_3
-extern GHashTable *xml2list_202(crm_data_t *parent);
+extern GHashTable *xml2list_202(xmlNode *parent);
 #endif
 extern void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
 extern void hash2field(gpointer key, gpointer value, gpointer user_data);
 extern void hash2metafield(gpointer key, gpointer value, gpointer user_data);
 
-extern gboolean do_id_check(crm_data_t *xml_obj, GHashTable *id_hash,
+extern gboolean do_id_check(xmlNode *xml_obj, GHashTable *id_hash,
 			    gboolean silent_add, gboolean silent_rename);
 
 /*
@@ -66,9 +56,9 @@ extern gboolean do_id_check(crm_data_t *xml_obj, GHashTable *id_hash,
  * Not recursive, does not return anything. 
  *
  */
-extern void copy_in_properties(crm_data_t *target, const crm_data_t *src);
-extern void expand_plus_plus(crm_data_t* target, const char *name, const char *value);
-extern void fix_plus_plus_recursive(crm_data_t* target);
+extern void copy_in_properties(xmlNode *target, xmlNode *src);
+extern void expand_plus_plus(xmlNode* target, const char *name, const char *value);
+extern void fix_plus_plus_recursive(xmlNode* target);
 
 /*
  * Find a child named search_path[i] at level i in the XML fragment where i=0
@@ -79,8 +69,8 @@ extern void fix_plus_plus_recursive(crm_data_t* target);
  * On success, returns the sub-fragment described by search_path.
  * On failure, returns NULL.
  */
-extern crm_data_t *find_xml_node_nested(
-	crm_data_t *root, const char **search_path, int len);
+extern xmlNode *find_xml_node_nested(
+	xmlNode *root, const char **search_path, int len);
 
 
 /*
@@ -96,18 +86,12 @@ extern crm_data_t *find_xml_node_nested(
  * On success, returns the value of attr_name.
  * On failure, returns NULL.
  */
-extern const char *get_xml_attr_nested(crm_data_t *parent,
+extern const char *get_xml_attr_nested(xmlNode *parent,
 				       const char **node_path, int length,
 				       const char *attr_name, gboolean error);
 
-#define free_xml(a_node) do {				\
-		if(a_node != NULL) {			\
-			crm_validate_data(a_node);	\
-			ha_msg_del(a_node);		\
-		}					\
-	} while(0)
 
-void free_xml_from_parent(crm_data_t *parent, crm_data_t *a_node);
+void free_xml_from_parent(xmlNode *parent, xmlNode *a_node);
 #define zap_xml_from_parent(parent, xml_obj) free_xml_from_parent(parent, xml_obj); xml_obj = NULL
 
 
@@ -118,7 +102,7 @@ void free_xml_from_parent(crm_data_t *parent, crm_data_t *a_node);
  * Returns the created node
  *
  */
-extern crm_data_t *create_xml_node(crm_data_t *parent, const char *name);
+extern xmlNode *create_xml_node(xmlNode *parent, const char *name);
 
 /*
  * Make a copy of name and value and use the copied memory to create
@@ -132,40 +116,35 @@ extern crm_data_t *create_xml_node(crm_data_t *parent, const char *name);
  *
  */
 extern const char *crm_xml_add(
-	crm_data_t *node, const char *name, const char *value);
+	xmlNode *node, const char *name, const char *value);
 
 extern const char *crm_xml_add_int(
-	crm_data_t* node, const char *name, int value);
+	xmlNode* node, const char *name, int value);
 
 /*
  * Unlink the node and set its doc pointer to NULL so free_xml()
  * will act appropriately
  */
-extern void unlink_xml_node(crm_data_t *node);
-
-/*
- * Set a timestamp attribute on a_node
- */
-extern void add_xml_tstamp(crm_data_t *a_node);
+extern void unlink_xml_node(xmlNode *node);
 
 /*
  * 
  */
-extern void purge_diff_markers(crm_data_t *a_node);
+extern void purge_diff_markers(xmlNode *a_node);
 
 /*
  * Returns a deep copy of src_node
  *
  */
-extern crm_data_t *copy_xml(const crm_data_t *src_node);
+extern xmlNode *copy_xml(xmlNode *src_node);
 
 /*
  * Add a copy of xml_node to new_parent
  */
-extern crm_data_t *add_node_copy(
-	crm_data_t *new_parent, const crm_data_t *xml_node);
+extern xmlNode *add_node_copy(
+	xmlNode *new_parent, xmlNode *xml_node);
 
-extern int add_node_nocopy(crm_data_t *parent, const char *name, crm_data_t *child);
+extern int add_node_nocopy(xmlNode *parent, const char *name, xmlNode *child);
 
 
 /*
@@ -173,78 +152,82 @@ extern int add_node_nocopy(crm_data_t *parent, const char *name, crm_data_t *chi
  *
  * Whitespace between tags is discarded.
  */
-extern crm_data_t *file2xml(FILE *input, gboolean compressed);
+extern xmlNode *file2xml(FILE *input, gboolean compressed);
 
-extern crm_data_t *stdin2xml(void);
+extern xmlNode *stdin2xml(void);
 
-extern crm_data_t *string2xml(const char *input);
+extern xmlNode *string2xml(const char *input);
 
 extern int write_xml_file(
-	crm_data_t *xml_node, const char *filename, gboolean compress);
+	xmlNode *xml_node, const char *filename, gboolean compress);
 
-extern char *dump_xml_formatted(const crm_data_t *msg);
+extern char *dump_xml_formatted(xmlNode *msg);
 
-extern char *dump_xml_unformatted(const crm_data_t *msg);
+extern char *dump_xml_unformatted(xmlNode *msg);
 
 extern void print_xml_formatted(
 	int log_level, const char *function,
-	const crm_data_t *an_xml_node, const char *text);
+	xmlNode *an_xml_node, const char *text);
 
 /*
  * Diff related Functions
  */ 
-extern crm_data_t *diff_xml_object(
-	crm_data_t *left, crm_data_t *right, gboolean suppress);
+extern xmlNode *diff_xml_object(
+	xmlNode *left, xmlNode *right, gboolean suppress);
 
-extern void log_xml_diff(unsigned int log_level, crm_data_t *diff, const char *function);
+extern void log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function);
 
 extern gboolean apply_xml_diff(
-	crm_data_t *old, crm_data_t *diff, crm_data_t **new);
+	xmlNode *old, xmlNode *diff, xmlNode **new);
 
 
 /*
  * Searching & Modifying
  */
-extern crm_data_t *find_xml_node(
-	crm_data_t *cib, const char * node_path, gboolean must_find);
+extern xmlNode *find_xml_node(
+	xmlNode *cib, const char * node_path, gboolean must_find);
 
-extern crm_data_t *find_entity(
-	crm_data_t *parent, const char *node_name, const char *id);
+extern xmlNode *find_entity(
+	xmlNode *parent, const char *node_name, const char *id);
 
-extern crm_data_t *subtract_xml_object(
-	crm_data_t *left, crm_data_t *right, const char *marker);
+extern xmlNode *subtract_xml_object(
+	xmlNode *left, xmlNode *right, const char *marker);
 
 extern int add_xml_object(
-	crm_data_t *parent, crm_data_t *target, const crm_data_t *update);
+	xmlNode *parent, xmlNode *target, xmlNode *update);
 
-extern void xml_remove_prop(crm_data_t *obj, const char *name);
+extern void xml_remove_prop(xmlNode *obj, const char *name);
 
 extern gboolean replace_xml_child(
-	crm_data_t *parent, crm_data_t *child, crm_data_t *update, gboolean delete_only);
+	xmlNode *parent, xmlNode *child, xmlNode *update, gboolean delete_only);
 
-extern gboolean update_xml_child(crm_data_t *child, crm_data_t *to_update);
+extern gboolean update_xml_child(xmlNode *child, xmlNode *to_update);
 
 extern int find_xml_children(
-	crm_data_t **children, crm_data_t *root,
+	xmlNode **children, xmlNode *root,
 	const char *tag, const char *field, const char *value,
 	gboolean search_matches);
 
 /*
  *
  */
-extern const char *crm_element_value(const crm_data_t *data, const char *name);
-extern char *crm_element_value_copy(const crm_data_t *data, const char *name);
+extern int crm_element_value_int(xmlNode *data, const char *name, int *dest);
+extern const char *crm_element_value(xmlNode *data, const char *name);
+extern char *crm_element_value_copy(xmlNode *data, const char *name);
+extern const char *crm_element_value_const(const xmlNode *data, const char *name);
 
-extern const char *crm_element_name(const crm_data_t *data);
+extern const char *crm_element_name(const xmlNode *data);
 
-extern void xml_validate(const crm_data_t *root);
+extern void xml_validate(const xmlNode *root);
 
-extern gboolean xml_has_children(const crm_data_t *root);	 		
+extern gboolean xml_has_children(const xmlNode *root);	 		
 
-extern char *calculate_xml_digest(crm_data_t *local_cib, gboolean sort, gboolean do_filter);
+extern char *calculate_xml_digest(xmlNode *local_cib, gboolean sort, gboolean do_filter);
 
-extern gboolean validate_with_dtd(
-	crm_data_t *xml_blob, gboolean to_logs, const char *dtd_file);
+extern gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs);
+extern int update_validation(xmlNode **xml_blob, gboolean transform, gboolean to_logs);
+extern int get_schema_version(const char *name);
+extern const char *get_schema_name(int version);
 
 #if XML_PARANOIA_CHECKS
 #  define crm_validate_data(obj) xml_validate(obj)
@@ -252,74 +235,87 @@ extern gboolean validate_with_dtd(
 #  define crm_validate_data(obj) CRM_DEV_ASSERT(obj != NULL)
 #endif
 
-#define xml_child_iter(parent, child, loop_code)			\
+#  define xml_child_iter(parent, child, code) do {			\
 	if(parent != NULL) {						\
-		int __counter = 0;					\
-		crm_data_t *child = NULL;				\
-		crm_validate_data(parent);				\
-		for (__counter = 0; __counter < parent->nfields; __counter++) { \
-			if(parent->types[__counter] != FT_STRUCT	\
-			   && parent->types[__counter] != FT_UNCOMPRESS) { \
-				continue;				\
-			}						\
-			child = (crm_data_t*)parent->values[__counter]; \
-			if(child == NULL) {				\
-				crm_debug_4("Skipping %s == NULL",	\
-					  parent->names[__counter]);	\
-			} else {					\
-				loop_code;				\
+		xmlNode *child = NULL;				\
+		xmlNode *__crm_xml_iter = parent->children;		\
+		while(__crm_xml_iter != NULL) {				\
+			child = __crm_xml_iter;				\
+			__crm_xml_iter = __crm_xml_iter->next;		\
+			if(child) {					\
+			    code;					\
 			}						\
 		}							\
 	} else {							\
 		crm_debug_4("Parent of loop was NULL");			\
-	}
+	}								\
+    } while(0)
 
-#define xml_child_iter_filter(parent, child, filter, loop_code)		\
+#  define xml_child_iter_filter(parent, child, filter, code) do {	\
 	if(parent != NULL) {						\
-		int __counter = 0;					\
-		crm_data_t *child = NULL;				\
-		crm_validate_data(parent);				\
-		for (__counter = 0; __counter < parent->nfields; __counter++) { \
-			if(parent->types[__counter] != FT_STRUCT	\
-			   && parent->types[__counter] != FT_UNCOMPRESS) { \
-				continue;				\
-			}						\
-			child = (crm_data_t*)parent->values[__counter]; \
-			if(child == NULL) {				\
-				crm_debug_4("Skipping %s == NULL",	\
-					  parent->names[__counter]);	\
-			} else if(filter == NULL/*constant condition*/	\
-				  || safe_str_eq(filter, parent->names[__counter])) { \
-				loop_code;				\
-			} else {					\
-				crm_debug_4("Skipping <%s../>",		\
-					  parent->names[__counter]);	\
-			}						\
+	    xmlNode *child = NULL;					\
+	    xmlNode *__crm_xml_iter = parent->children;		\
+	    while(__crm_xml_iter != NULL) {				\
+		child = __crm_xml_iter;					\
+		__crm_xml_iter = __crm_xml_iter->next;			\
+		if(filter == NULL					\
+		   || safe_str_eq(filter, (const char *)child->name)) {	\
+		    code;						\
+		} else {						\
+		    crm_debug_4("Skipping <%s../>", child->name);	\
 		}							\
+	    }								\
 	} else {							\
-		crm_debug_4("Parent of loop was NULL");			\
-	}
+	    crm_debug_4("Parent of loop was NULL");			\
+	}								\
+    } while(0)
 
-#define xml_prop_iter(parent, prop_name, prop_value, code) if(parent != NULL) { \
-		const char *prop_name = NULL;				\
-		const char *prop_value = NULL;				\
-		int __counter = 0;					\
-		crm_validate_data(parent);				\
-		crm_debug_5("Searching %d fields", parent->nfields);	\
-		for (__counter = 0; __counter < parent->nfields; __counter++) { \
-			crm_debug_5("Searching field %d", __counter);	\
-			prop_name = (const char*)parent->names[__counter]; \
-			if(parent->types[__counter] != FT_STRING) {	\
-				continue;				\
-			} else if(prop_name[0] == '_'			\
-				  && prop_name[1] == '_') {		\
-				continue;				\
-			}						\
-			prop_value = (const char*)parent->values[__counter]; \
-			code;						\
+#  define xml_prop_iter(parent, prop_name, prop_value, code) do {	\
+	if(parent != NULL) {						\
+	    xmlAttrPtr prop_iter = parent->properties;			\
+	    const char *prop_name = NULL;				\
+	    const char *prop_value = NULL;				\
+	    while(prop_iter != NULL) {					\
+		prop_name = (const char *)prop_iter->name;		\
+		prop_value = crm_element_value(parent, prop_name);\
+		prop_iter = prop_iter->next;				\
+		if(prop_name) {						\
+		    code;						\
 		}							\
+	    }								\
 	} else {							\
-		crm_debug_4("Parent of loop was NULL");			\
-	}
+	    crm_debug_4("Parent of loop was NULL");			\
+	}								\
+    } while(0)
+
+#  define free_xml(a_node) do {						\
+	if((a_node) != NULL) {						\
+	    xmlNode *top = NULL;					\
+	    xmlDoc *a_doc = (a_node)->doc;				\
+	    if (a_doc != NULL) {					\
+		top = xmlDocGetRootElement(a_doc);			\
+	    }								\
+	    if(a_doc != NULL && top == (a_node)) {			\
+		xmlFreeDoc(a_doc);					\
+	    } else {							\
+		if(a_doc != NULL) {					\
+		    crm_err("Attempted to free XML from within an xmlDocPtr"); \
+		}							\
+		/* make sure the node is unlinked first */		\
+		xmlUnlinkNode(a_node);					\
+		xmlFreeNode(a_node);					\
+	    }								\
+	}								\
+    } while(0)
+
+
+extern xmlNode *first_named_child(xmlNode *parent, const char *name);
+
+extern xmlNode *convert_ipc_message(IPC_Message *msg, const char *field);
+extern xmlNode *convert_ha_message(xmlNode *parent, HA_Message *msg, const char *field);
+
+extern HA_Message *convert_xml_message(xmlNode *msg);
+extern xmlNode *sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive);
+extern xmlXPathObjectPtr xpath_search(xmlNode *xml_top, const char *path);
 
 #endif

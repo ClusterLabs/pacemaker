@@ -41,22 +41,16 @@ attrd_LDADD		=  						\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
 		  $(top_builddir)/lib/crm/common/libcrmcluster.la	\
 		  $(top_builddir)/lib/crm/cib/libcib.la			\
-		  $(GLIBLIB)						\
-		  $(CLUSTERLIBS)					\
-		  $(LIBRT)
+		  $(CLUSTERLIBS) $(GLIBLIB) $(LIBRT)
 
 pingd_SOURCES		= pingd.c
 pingd_LDADD		=  						\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
-		  $(GLIBLIB)						\
-		  $(CLUSTERLIBS)					\
-		  $(LIBRT)
+		  $(GLIBLIB) $(CLUSTERLIBS) $(LIBRT)
 
 attrd_updater_SOURCES	= attrd_updater.c
 attrd_updater_LDADD	=  						\
 		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
-		  $(GLIBLIB)						\
-		  $(CLUSTERLIBS)					\
-		  $(LIBRT)
+		  $(GLIBLIB) $(CLUSTERLIBS) $(LIBRT)
 
 .PHONY: install-exec-hook

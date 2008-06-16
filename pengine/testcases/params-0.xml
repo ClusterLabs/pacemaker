@@ -19,7 +19,7 @@
            </operations>
            <instance_attributes>
              <attributes>
-               <nvpair id="DcIPaddr-1" name="ip" value="127.0.0.10"/>
+               <nvpair id="nv.DcIPaddr-1" name="ip" value="127.0.0.10"/>
              </attributes>
            </instance_attributes>
          </primitive>
@@ -29,7 +29,7 @@
            </operations>
            <instance_attributes>
              <attributes>
-               <nvpair id="rsc_c001n08-1" name="ip" value="127.0.0.11"/>
+               <nvpair id="nv.rsc_c001n08-1" name="ip" value="127.0.0.11"/>
              </attributes>
            </instance_attributes>
          </primitive>
@@ -39,7 +39,7 @@
            </operations>
            <instance_attributes>
              <attributes>
-               <nvpair id="rsc_c001n02-1" name="ip" value="127.0.0.12"/>
+               <nvpair id="nv.rsc_c001n02-1" name="ip" value="127.0.0.12"/>
              </attributes>
            </instance_attributes>
          </primitive>
@@ -49,7 +49,7 @@
            </operations>
            <instance_attributes>
              <attributes>
-               <nvpair id="rsc_c001n03-1" name="ip" value="127.0.0.13"/>
+               <nvpair id="nv.rsc_c001n03-1" name="ip" value="127.0.0.13"/>
              </attributes>
            </instance_attributes>
          </primitive>
@@ -59,7 +59,7 @@
            </operations>
            <instance_attributes>
              <attributes>
-               <nvpair id="rsc_c001n01-1" name="ip" value="127.0.0.14"/>
+               <nvpair id="nv.rsc_c001n01-1" name="ip" value="127.0.0.14"/>
              </attributes>
            </instance_attributes>
          </primitive>

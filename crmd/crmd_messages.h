@@ -41,7 +41,7 @@ extern int register_fsa_input_adv(
 	gboolean prepend, const char *raised_from);
 
 extern void fsa_dump_queue(int log_level);
-extern void route_message(enum crmd_fsa_cause cause, ha_msg_input_t *input);
+extern void route_message(enum crmd_fsa_cause cause, xmlNode *input);
 
 #define crmd_fsa_stall(cur_input) if(cur_input != NULL) {		\
 		register_fsa_input_adv(					\
@@ -77,37 +77,34 @@ gboolean is_message(void);
 gboolean have_wait_message(void);
 
 extern gboolean relay_message(
-	HA_Message *relay_message, gboolean originated_locally);
-
-extern void crmd_ha_msg_callback(HA_Message * msg, void* private_data);
+	xmlNode *relay_message, gboolean originated_locally);
 
 extern gboolean crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data);
 
 extern void process_message(
-	HA_Message *msg, gboolean originated_locally,const char *src_node_name);
+	xmlNode *msg, gboolean originated_locally,const char *src_node_name);
 
-extern gboolean crm_dc_process_message(crm_data_t *whole_message,
-				       crm_data_t *action,
+extern gboolean crm_dc_process_message(xmlNode *whole_message,
+				       xmlNode *action,
 				       const char *host_from,
 				       const char *sys_from,
 				       const char *sys_to,
 				       const char *op,
 				       gboolean dc_mode);
 
-extern gboolean send_msg_via_ha(HA_Message *msg);
-extern gboolean send_msg_via_ipc(HA_Message *msg, const char *sys);
+extern gboolean send_msg_via_ha(xmlNode *msg);
+extern gboolean send_msg_via_ipc(xmlNode *msg, const char *sys);
 
 extern gboolean add_pending_outgoing_reply(const char *originating_node_name,
 					   const char *crm_msg_reference,
 					   const char *sys_to,
 					   const char *sys_from);
 
-extern gboolean crmd_authorize_message(
-	ha_msg_input_t *client_msg, crmd_client_t *curr_client);
+extern gboolean crmd_authorize_message(xmlNode *client_msg, crmd_client_t *curr_client);
 
-extern gboolean send_request(HA_Message *msg, char **msg_reference);
+extern gboolean send_request(xmlNode *msg, char **msg_reference);
 
-extern enum crmd_fsa_input handle_message(ha_msg_input_t *stored_msg);
+extern enum crmd_fsa_input handle_message(xmlNode *stored_msg);
 
 extern void lrm_op_callback(lrm_op_t* op);
 

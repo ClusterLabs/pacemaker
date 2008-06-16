@@ -63,32 +63,20 @@ typedef struct cib_operation_s
 		gboolean	modifies_cib;
 		gboolean	needs_privileges;
 		gboolean	needs_quorum;
-		enum cib_errors (*prepare)(HA_Message *, crm_data_t**, const char **);
-		enum cib_errors (*cleanup)(const char *, crm_data_t**, crm_data_t**);
+		enum cib_errors (*prepare)(xmlNode *, xmlNode**, const char **);
+		enum cib_errors (*cleanup)(const char *, xmlNode**, xmlNode**);
 		enum cib_errors (*fn)(
-			const char *, int, const char *,
-			crm_data_t*, crm_data_t*, crm_data_t**, crm_data_t**);
+			const char *, int, const char *, xmlNode *,
+			xmlNode*, xmlNode*, xmlNode**, xmlNode**);
 } cib_operation_t;
 
-extern cib_operation_t cib_server_ops[];
-
-extern gboolean cib_client_connect_null(
-	IPC_Channel *channel, gpointer user_data);
-extern gboolean cib_client_connect_rw_ro(
-	IPC_Channel *channel, gpointer user_data);
-extern gboolean cib_client_connect_rw_synch(
-	IPC_Channel *channel, gpointer user_data);
-extern gboolean cib_client_connect_ro_synch(
-	IPC_Channel *channel, gpointer user_data);
+extern gboolean cib_client_connect(IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_null_callback (IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_rw_callback   (IPC_Channel *channel, gpointer user_data);
 extern gboolean cib_ro_callback   (IPC_Channel *channel, gpointer user_data);
-extern gboolean cib_rw_synchronous_callback(
-	IPC_Channel *channel, gpointer user_data);
-extern gboolean cib_ro_synchronous_callback(
-	IPC_Channel *channel, gpointer user_data);
 
-extern void cib_peer_callback(HA_Message * msg, void* private_data);
+extern void cib_ha_peer_callback(HA_Message * msg, void* private_data);
+extern void cib_peer_callback(xmlNode * msg, void* private_data);
 extern void cib_client_status_callback(const char * node, const char * client,
 				       const char * status, void * private);
 

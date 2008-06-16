@@ -91,6 +91,8 @@ enum pe_print_options {
 	pe_print_details = 0x0020,
 	pe_print_max_details = 0x0040,
 	pe_print_rsconly = 0x0080,
+	pe_print_ops     = 0x0100,
+	pe_print_suppres_nl = 0x0200,
 };
 
 extern int merge_weights(int w1, int w2);

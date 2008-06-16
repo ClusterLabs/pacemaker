@@ -116,7 +116,7 @@ class LinuxHAv2(HeartbeatCM):
                 r", exiting\.",
                 r"WARN.*Ignoring HA message.*vote.*not in our membership list",
                 r"pengine.*Attempting recovery of resource",
-                r"tengine.*is taking more than 2x its timeout",
+                r"is taking more than 2x its timeout",
                 r"Confirm not received from",
                 r"Welcome reply not received from",
                 r"Attempting to schedule .* after a stop",
@@ -124,7 +124,7 @@ class LinuxHAv2(HeartbeatCM):
                 r"duplicate entries for call_id",
                 r"Search terminated:",
                 r"No need to invoke the TE",
-                r":global_timer_callback",
+                r"global_timer_callback:",
                 r"Faking parameter digest creation",
                 r"Parameters to .* action changed:",
                 r"Parameters to .* changed",
@@ -333,7 +333,7 @@ class LinuxHAv2(HeartbeatCM):
         cmd = self["ExecuteRscOp"] % (app, resource, op, interval)
         (rc, lines) = self.rsh.remote_py(node, "os", "system", cmd)
 
-        self.debug("RscOp '%s' on %s: %d" % (cmd, node, rc))
+        #self.debug("RscOp '%s' on %s: %d" % (cmd, node, rc))
         #for line in lines:
         #    self.debug("RscOp: "+line)
 
@@ -343,24 +343,27 @@ class LinuxHAv2(HeartbeatCM):
         ResourceNodes = []
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == self["up"]:
+                dummy = 0
                 rc = self.ResourceOp(rid, "monitor", node)
                 # Strange error codes from remote_py
-                # 65024 == not install
+                # 65024 == not installed
                 # 2048 == 8
                 # 1792 == 7
                 # 0    == 0
                 if rc == 65024:
-                    self.debug("%s is not installed on %s: %d" % (rid, node, rc))
+                    dummy = 1
+                    #self.debug("%s is not installed on %s: %d" % (rid, node, rc))
 
-                if rc == 0 or rc == 2048 or rc == 8:
+                elif rc == 0 or rc == 2048 or rc == 8:
                     ResourceNodes.append(node)
 
                 elif rc == 7 or rc == 1792:
-                    self.debug("%s is not running on %s: %d" % (rid, node, rc))
+                    dummy = 1
+                    #self.debug("%s is not running on %s: %d" % (rid, node, rc))
 
                 else:
                     # not active on this node?
-                    self.debug("Unknown rc code for %s on %s: %d" % (rid, node, rc))
+                    self.log("Unknown rc code for %s on %s: %d" % (rid, node, rc))
 
         return ResourceNodes
 
@@ -377,7 +380,6 @@ class LinuxHAv2(HeartbeatCM):
         ccm_partitions = []
 
         for node in self.Env["nodes"]:
-            self.debug("Retrieving partition details for %s" %node)
             if self.ShouldBeStatus[node] == self["up"]:
                 partition = self.rsh.readaline(node, self["ParitionCmd"])
 
@@ -494,18 +496,10 @@ class LinuxHAv2(HeartbeatCM):
                     "State transition .* S_IDLE",
                     "State transition S_STARTING -> S_PENDING",
                     ], [
-                    "tengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
                     "pengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
                     ], common_ignore, self.fastfail, self)
 
         pengine = Process("pengine", 1, [
-                    "State transition S_IDLE",
-                    ".*crmd .*exited with return code 2.",
-                    "crmd: .*Input I_TERMINATE from do_recover",
-                    "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], common_ignore, self.fastfail, self)
-
-        tengine = Process("tengine", 1, [
                     "State transition S_IDLE",
                     ".*crmd .*exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
@@ -544,17 +538,12 @@ class LinuxHAv2(HeartbeatCM):
                 "ERROR: Client .*crmd exited with return code 2",
                 "ERROR: Respawning client .*crmd" 
                 ])
-            tengine.pats.extend([
-                "ERROR: Client .*crmd exited with return code 2",
-                "ERROR: Respawning client .*crmd" 
-                ])
 
         complist.append(ccm)
         complist.append(cib)
         complist.append(lrmd)
         complist.append(crmd)
         complist.append(pengine)
-        complist.append(tengine)
 
         return complist
 

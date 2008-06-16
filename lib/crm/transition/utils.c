@@ -224,6 +224,21 @@ print_graph(unsigned int log_level, crm_graph_t *graph)
 		);
 }
 
+static const char *abort2text(enum transition_action abort_action)
+{
+    switch(abort_action) {
+	case tg_done:
+	    return "done";
+	case tg_stop:
+	    return "stop";
+	case tg_restart:
+	    return "restart";
+	case tg_shutdown:
+	    return "shutdown";
+    }
+    return "unknown";
+}
+
 void
 update_abort_priority(
 	crm_graph_t *graph, int priority,
@@ -234,8 +249,9 @@ update_abort_priority(
 	}
 	
 	if(graph->abort_priority < priority) {
+		crm_info("Abort priority upgraded from %d to %d",
+			 graph->abort_priority, priority);
 		graph->abort_priority = priority;
-		crm_info("Abort priority upgraded to %d", priority);
 		if(graph->abort_reason != NULL) {
 			crm_info("'%s' abort superceeded",
 				 graph->abort_reason);
@@ -244,8 +260,8 @@ update_abort_priority(
 	}
 
 	if(graph->completion_action < action) {
-		crm_info("Abort action %d superceeded by %d",
-			 graph->completion_action, action);
+		crm_info("Abort action %s superceeded by %s",
+			 abort2text(graph->completion_action), abort2text(action));
 		graph->completion_action = action;
 	}
 }

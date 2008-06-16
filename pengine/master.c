@@ -44,25 +44,16 @@ child_promoting_constraints(
 		if(clone_data->ordered && last != NULL) {
 			crm_debug_4("Ordered version (last node)");
 			/* last child promote before promoted started */
-			custom_action_order(
-				last, promote_key(last), NULL,
-				rsc, promoted_key(rsc), NULL,
-				type, data_set);
+			new_rsc_order(last, RSC_PROMOTE, rsc, RSC_PROMOTED, type, data_set);
 		}
 		return;
 	}
 
 	/* child promote before global promoted */
-	custom_action_order(
-	    child, promote_key(child), NULL,
-	    rsc, promoted_key(rsc), NULL,
-	    type, data_set);
+	new_rsc_order(child, RSC_PROMOTE, rsc, RSC_PROMOTED, type, data_set);
 	
 	/* global promote before child promote */
-	custom_action_order(
-	    rsc, promote_key(rsc), NULL,
-	    child, promote_key(child), NULL,
-	    type, data_set);
+	new_rsc_order(rsc, RSC_PROMOTE, child, RSC_PROMOTE, type, data_set);
 
 	if(clone_data->ordered) {
 		crm_debug_4("Ordered version");
@@ -73,10 +64,7 @@ child_promoting_constraints(
 		} /* else: child/child relative promote */
 
 		order_start_start(last, child, type);
-		custom_action_order(
-			last, promote_key(last), NULL,
-			child, promote_key(child), NULL,
-			type, data_set);
+		new_rsc_order(last, RSC_PROMOTE, child, RSC_PROMOTE, type, data_set);
 
 	} else {
 		crm_debug_4("Un-ordered version");
@@ -92,41 +80,30 @@ child_demoting_constraints(
 		if(clone_data->ordered && last != NULL) {
 			crm_debug_4("Ordered version (last node)");
 			/* global demote before first child demote */
-			custom_action_order(
-				rsc, demote_key(rsc), NULL,
-				last, demote_key(last), NULL,
-				pe_order_implies_left, data_set);
+			new_rsc_order(rsc, RSC_DEMOTE, last, RSC_DEMOTE,
+				      pe_order_implies_left, data_set);
 		}
 		return;
 	}
 	
 	/* child demote before global demoted */
-	custom_action_order(
-	    child, demote_key(child), NULL,
-	    rsc, demoted_key(rsc), NULL,
-	    pe_order_implies_right_printed, data_set);
+	new_rsc_order(child, RSC_DEMOTE, rsc, RSC_DEMOTED,
+		      pe_order_implies_right_printed, data_set);
 	
 	/* global demote before child demote */
-	custom_action_order(
-	    rsc, demote_key(rsc), NULL,
-	    child, demote_key(child), NULL,
-	    pe_order_implies_left_printed, data_set);
+	new_rsc_order(rsc, RSC_DEMOTE, child, RSC_DEMOTE, 
+		      pe_order_implies_left_printed, data_set);
 	
 	if(clone_data->ordered && last != NULL) {
 		crm_debug_4("Ordered version");
 
 		/* child/child relative demote */
-		custom_action_order(child, demote_key(child), NULL,
-				    last, demote_key(last), NULL,
-				    type, data_set);
+		new_rsc_order(child, RSC_DEMOTE, last, RSC_DEMOTE, type, data_set);
 
 	} else if(clone_data->ordered) {
 		crm_debug_4("Ordered version (1st node)");
 		/* first child stop before global stopped */
-		custom_action_order(
-			child, demote_key(child), NULL,
-			rsc, demoted_key(rsc), NULL,
-			type, data_set);
+		new_rsc_order(child, RSC_DEMOTE, rsc, RSC_DEMOTED, type, data_set);
 
 	} else {
 		crm_debug_4("Un-ordered version");
@@ -156,10 +133,10 @@ master_update_pseudo_status(
 		} else if(action->optional) {
 			continue;
 
-		} else if(safe_str_eq(CRMD_ACTION_DEMOTE, action->task)) {
+		} else if(safe_str_eq(RSC_DEMOTE, action->task)) {
 			*demoting = TRUE;
 
-		} else if(safe_str_eq(CRMD_ACTION_PROMOTE, action->task)) {
+		} else if(safe_str_eq(RSC_PROMOTE, action->task)) {
 			*promoting = TRUE;
 		}
 		);
@@ -645,7 +622,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action = promote_action(rsc, NULL, !any_promoting);
 	action_complete = custom_action(
 		rsc, promoted_key(rsc),
-		CRMD_ACTION_PROMOTED, NULL, !any_promoting, TRUE, data_set);
+		RSC_PROMOTED, NULL, !any_promoting, TRUE, data_set);
 
 	action->pseudo = TRUE;
 	action->runnable = FALSE;
@@ -668,7 +645,7 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action = demote_action(rsc, NULL, !any_demoting);
 	action_complete = custom_action(
 		rsc, demoted_key(rsc),
-		CRMD_ACTION_DEMOTED, NULL, !any_demoting, TRUE, data_set);
+		RSC_DEMOTED, NULL, !any_demoting, TRUE, data_set);
 	action_complete->priority = INFINITY;
 
 	action->pseudo = TRUE;
@@ -698,55 +675,31 @@ master_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	clone_internal_constraints(rsc, data_set);
 	
 	/* global stopped before start */
-	custom_action_order(
-		rsc, stopped_key(rsc), NULL,
-		rsc, start_key(rsc), NULL,
-		pe_order_optional, data_set);
+	new_rsc_order(rsc, RSC_STOPPED, rsc, RSC_START, pe_order_optional, data_set);
 
 	/* global stopped before promote */
-	custom_action_order(
-		rsc, stopped_key(rsc), NULL,
-		rsc, promote_key(rsc), NULL,
-		pe_order_optional, data_set);
+	new_rsc_order(rsc, RSC_STOPPED, rsc, RSC_PROMOTE, pe_order_optional, data_set);
 
 	/* global demoted before start */
-	custom_action_order(
-		rsc, demoted_key(rsc), NULL,
-		rsc, start_key(rsc), NULL,
-		pe_order_optional, data_set);
+	new_rsc_order(rsc, RSC_DEMOTED, rsc, RSC_START, pe_order_optional, data_set);
 
 	/* global started before promote */
-	custom_action_order(
-		rsc, started_key(rsc), NULL,
-		rsc, promote_key(rsc), NULL,
-		pe_order_optional, data_set);
+	new_rsc_order(rsc, RSC_STARTED, rsc, RSC_PROMOTE, pe_order_optional, data_set);
 
 	/* global demoted before stop */
-	custom_action_order(
-		rsc, demoted_key(rsc), NULL,
-		rsc, stop_key(rsc), NULL,
-		pe_order_optional, data_set);
+	new_rsc_order(rsc, RSC_DEMOTED, rsc, RSC_STOP, pe_order_optional, data_set);
 
 	/* global demote before demoted */
-	custom_action_order(
-		rsc, demote_key(rsc), NULL,
-		rsc, demoted_key(rsc), NULL,
-		pe_order_optional, data_set);
+	new_rsc_order(rsc, RSC_DEMOTE, rsc, RSC_DEMOTED, pe_order_optional, data_set);
 
 	/* global demoted before promote */
-	custom_action_order(
-		rsc, demoted_key(rsc), NULL,
-		rsc, promote_key(rsc), NULL,
-		pe_order_optional, data_set);
+	new_rsc_order(rsc, RSC_DEMOTED, rsc, RSC_PROMOTE, pe_order_optional, data_set);
 
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
 
 		/* child demote before promote */
-		custom_action_order(
-			child_rsc, demote_key(child_rsc), NULL,
-			child_rsc, promote_key(child_rsc), NULL,
-			pe_order_optional, data_set);
+		new_rsc_order(child_rsc, RSC_DEMOTE, child_rsc, RSC_PROMOTE, pe_order_optional, data_set);
 		
 		child_promoting_constraints(clone_data, pe_order_optional,
 					    rsc, child_rsc, last_rsc, data_set);

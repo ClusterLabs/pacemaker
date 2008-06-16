@@ -25,9 +25,7 @@
         </instance_attributes>
         <instance_attributes>
 	  <rule id="2">
-	    <date_expression id="2" start="2005-001" operation="gt">
-	      <duration years="1"/>
-	    </date_expression>
+	    <date_expression id="2" start="2005-001" operation="gt"/>
 	  </rule>
           <attributes>
             <nvpair id="server_group" name="server_group" value="group3"/>

@@ -19,13 +19,24 @@
 #ifndef AIS_CRM_UTILS__H
 #define AIS_CRM_UTILS__H
 
+#include <syslog.h>
+#include <openais/service/objdb.h>
+#ifdef AIS_WHITETANK
+#  include <openais/service/print.h>
+#  define openais_conn_partner_get(conn) conn
+extern int openais_response_send (void *conn, void *msg, int mlen);
+extern int openais_dispatch_send (void *conn, void *msg, int mlen);
+static int libais_connection_active (void *conn) { return 1; }
+
+#else
+#  include <openais/service/logsys.h>
+LOGSYS_DECLARE_SUBSYS("crm", LOG_LEVEL_DEBUG);
+
 /* from openais/exec/ipc.h */
 extern int openais_conn_send_response (void *conn, void *msg, int mlen);
 extern int libais_connection_active (void *conn);
+#endif
 
-#include <openais/service/objdb.h>
-#include <openais/service/logsys.h>
-LOGSYS_DECLARE_SUBSYS("crm", LOG_LEVEL_DEBUG);
 
 /* #include "plugin.h" */
 #define 	SIZEOF(a)   (sizeof(a) / sizeof(a[0]))
@@ -36,6 +47,7 @@ typedef struct crm_child_s {
 	int pid;
 	long flag;
 	long flags;
+	int start_seq;
 	int respawn_count;
 	gboolean respawn;
 	const char *name;

@@ -44,7 +44,7 @@ void create_notifications(resource_t *rsc, pe_working_set_t *data_set);
 void Recurring(resource_t *rsc, action_t *start, node_t *node,
 			      pe_working_set_t *data_set);
 void RecurringOp(resource_t *rsc, action_t *start, node_t *node,
-		 crm_data_t *operation, pe_working_set_t *data_set);
+		 xmlNode *operation, pe_working_set_t *data_set);
 void pe_pre_notify(
 	resource_t *rsc, node_t *node, action_t *op, 
 	notify_data_t *n_data, pe_working_set_t *data_set);
@@ -207,7 +207,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		crm_debug_2("Making sure %s doesn't get allocated", rsc->id);
 		/* make sure it doesnt come up again */
 		resource_location(
-			rsc, NULL, -INFINITY, "target_role", data_set);
+			rsc, NULL, -INFINITY, XML_RSC_ATTR_TARGET_ROLE, data_set);
 	}
 	
 	if(is_set(rsc->flags, pe_rsc_provisional)
@@ -270,7 +270,7 @@ static gboolean is_op_dup(
 
 void
 RecurringOp(resource_t *rsc, action_t *start, node_t *node,
-	    crm_data_t *operation, pe_working_set_t *data_set) 
+	    xmlNode *operation, pe_working_set_t *data_set) 
 {
 	char *key = NULL;
 	const char *name = NULL;
@@ -344,11 +344,11 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 			/* its running : cancel it */
 			
 			mon = custom_action(
-				rsc, local_key, CRMD_ACTION_CANCEL, node,
+				rsc, local_key, RSC_CANCEL, node,
 				FALSE, TRUE, data_set);
 
 			crm_free(mon->task);
-			mon->task = crm_strdup(CRMD_ACTION_CANCEL);
+			mon->task = crm_strdup(RSC_CANCEL);
 			add_hash_param(mon->meta, XML_LRM_ATTR_INTERVAL, interval);
 			add_hash_param(mon->meta, XML_LRM_ATTR_TASK, name);
 
@@ -462,7 +462,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	unpack_instance_attributes(
 		rsc->xml, XML_TAG_ATTR_SETS,
 		chosen?chosen->details->attrs:NULL,
-		rsc->parameters, NULL, data_set->now);
+		rsc->parameters, NULL, FALSE, data_set->now);
 
 	crm_debug_2("%s: %s->%s", rsc->id,
 		    role2text(rsc->role), role2text(rsc->next_role));
@@ -535,37 +535,22 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		type |= pe_order_restart;
 	}
 	
-	custom_action_order(rsc, stop_key(rsc), NULL,
-			    rsc, start_key(rsc), NULL,
-			    type, data_set);
+	new_rsc_order(rsc, RSC_STOP, rsc, RSC_START, type, data_set);
 
-	custom_action_order(rsc, demote_key(rsc), NULL,
-			    rsc, stop_key(rsc), NULL,
-			    pe_order_demote_stop, data_set);
+	new_rsc_order(rsc, RSC_DEMOTE, rsc, RSC_STOP,
+		      pe_order_demote_stop, data_set);
 
-	custom_action_order(rsc, start_key(rsc), NULL,
-			    rsc, promote_key(rsc), NULL,
-			    pe_order_runnable_left, data_set);
+	new_rsc_order(rsc, RSC_START, rsc, RSC_PROMOTE,
+		      pe_order_runnable_left, data_set);
 
-	custom_action_order(
-		rsc, delete_key(rsc), NULL, rsc, start_key(rsc), NULL, 
-		pe_order_optional, data_set);	
+	new_rsc_order(rsc, RSC_DELETE, rsc, RSC_START,
+		      pe_order_optional, data_set);	
 
 	if(is_set(rsc->flags, pe_rsc_notify)) {
-		char *key1 = NULL;
-		char *key2 = NULL;
-
-		key1 = generate_op_key(rsc->id, "confirmed-post_notify_start", 0);
-		key2 = generate_op_key(rsc->id, "pre_notify_promote", 0);
-		custom_action_order(
-			rsc, key1, NULL, rsc, key2, NULL, 
-			pe_order_optional, data_set);	
-
-		key1 = generate_op_key(rsc->id, "confirmed-post_notify_demote", 0);
-		key2 = generate_op_key(rsc->id, "pre_notify_stop", 0);
-		custom_action_order(
-			rsc, key1, NULL, rsc, key2, NULL, 
-			pe_order_optional, data_set);	
+		new_rsc_order(rsc, "confirmed-post_notify_start", rsc, "pre_notify_promote", 
+			      pe_order_optional, data_set);	
+		new_rsc_order(rsc, "confirmed-post_notify_demote", rsc, "pre_notify_stop",
+			      pe_order_optional, data_set);	
 	}
 
 	if(is_not_set(rsc->flags, pe_rsc_managed)) {
@@ -820,7 +805,7 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order, pe_worki
 					  NULL, TRUE, TRUE, data_set);
 
 		if(lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_STOPPED
-		   && safe_str_eq(op_type, CRMD_ACTION_STOP)) {
+		   && safe_str_eq(op_type, RSC_STOP)) {
 			lh_action->pseudo = TRUE;
 			lh_action->runnable = TRUE;
 		}
@@ -1492,9 +1477,8 @@ DeleteRsc(resource_t *rsc, node_t *node, gboolean optional, pe_working_set_t *da
 	
 	delete = delete_action(rsc, node, optional);
 	
-	custom_action_order(
-		rsc, stop_key(rsc), NULL, rsc, delete_key(rsc), NULL, 
-		optional?pe_order_implies_right:pe_order_implies_left, data_set);
+	new_rsc_order(rsc, RSC_STOP, rsc, RSC_DELETE, 
+		      optional?pe_order_implies_right:pe_order_implies_left, data_set);
 	
 #if DELETE_THEN_REFRESH
 	refresh = custom_action(
@@ -1545,8 +1529,8 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		return FALSE;
 	}
 
-	key = generate_op_key(rsc->id, CRMD_ACTION_STATUS, 0);
-	probe = custom_action(rsc, key, CRMD_ACTION_STATUS, node,
+	key = generate_op_key(rsc->id, RSC_STATUS, 0);
+	probe = custom_action(rsc, key, RSC_STATUS, node,
 			      FALSE, TRUE, data_set);
 	probe->optional = FALSE;
 	
@@ -1564,9 +1548,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	}
 	
 	crm_debug_2("Probing %s on %s (%s)", rsc->id, node->details->uname, role2text(rsc->role));
-	
-	custom_action_order(rsc, NULL, probe, NULL, NULL, complete,
-			    pe_order_implies_right, data_set);
+	order_actions(probe, complete, pe_order_implies_right);
 
 	return TRUE;
 }
@@ -1594,7 +1576,7 @@ native_start_constraints(
 			       order_actions(all_stopped, action, pe_order_implies_left);
 
 			   } else if(target != NULL
-			      && safe_str_eq(action->task, CRMD_ACTION_START)
+			      && safe_str_eq(action->task, RSC_START)
 			      && NULL == pe_find_node_id(
 				      rsc->known_on, target->details->id)) {
 				   /* if known == NULL, then we dont know if
@@ -1933,7 +1915,7 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	start = action_list->data;
 	g_list_free(action_list);
 
-	value = g_hash_table_lookup(rsc->meta, "allow_migrate");
+	value = g_hash_table_lookup(rsc->meta, XML_OP_ATTR_ALLOW_MIGRATE);
 	if(crm_is_true(value)) {
 	    set_bit(rsc->flags, pe_rsc_can_migrate);	
 	}	
@@ -1996,7 +1978,7 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		
 		crm_free(stop->uuid);
 		crm_free(stop->task);
-		stop->task = crm_strdup(CRMD_ACTION_MIGRATE);
+		stop->task = crm_strdup(RSC_MIGRATE);
 		stop->uuid = generate_op_key(rsc->id, stop->task, 0);
 		add_hash_param(stop->meta, "migrate_source",
 			       stop->node->details->uname);
@@ -2032,7 +2014,7 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 
 		crm_free(start->uuid);
 		crm_free(start->task);
-		start->task = crm_strdup(CRMD_ACTION_MIGRATED);
+		start->task = crm_strdup(RSC_MIGRATED);
 		start->uuid = generate_op_key(rsc->id, start->task, 0);
 		add_hash_param(start->meta, "migrate_source_uuid",
 			       stop->node->details->id);

@@ -58,33 +58,33 @@
      </nodes>
      <resources>
        <group id="group-1">
-         <primitive id="192.168.100.181" class="ocf" type="IPaddr" provider="heartbeat">
+         <primitive id="r192.168.100.181" class="ocf" type="IPaddr" provider="heartbeat">
            <operations>
-             <op id="192.168.100.181-mon" name="monitor" interval="5s"/>
+             <op id="r192.168.100.181-mon" name="monitor" interval="5s"/>
            </operations>
-           <instance_attributes id="192.168.100.181">
+           <instance_attributes id="r192.168.100.181">
              <attributes>
-               <nvpair id="192.168.100.181-ip" name="ip" value="192.168.100.181"/>
+               <nvpair id="r192.168.100.181-ip" name="ip" value="192.168.100.181"/>
              </attributes>
            </instance_attributes>
          </primitive>
-         <primitive id="192.168.100.182" class="heartbeat" type="IPaddr">
+         <primitive id="r192.168.100.182" class="heartbeat" type="IPaddr">
            <operations>
-             <op id="192.168.100.182-mon" name="monitor" interval="5s"/>
+             <op id="r192.168.100.182-mon" name="monitor" interval="5s"/>
            </operations>
-           <instance_attributes id="192.168.100.182">
+           <instance_attributes id="r192.168.100.182">
              <attributes>
-               <nvpair id="192.168.100.182-ip" name="1" value="192.168.100.182"/>
+               <nvpair id="r192.168.100.182-ip" name="1" value="192.168.100.182"/>
              </attributes>
            </instance_attributes>
          </primitive>
-         <primitive id="192.168.100.183" class="ocf" type="IPaddr" provider="heartbeat">
+         <primitive id="r192.168.100.183" class="ocf" type="IPaddr" provider="heartbeat">
            <operations>
-             <op id="192.168.100.183-mon" name="monitor" interval="5s"/>
+             <op id="r192.168.100.183-mon" name="monitor" interval="5s"/>
            </operations>
-           <instance_attributes id="192.168.100.183">
+           <instance_attributes id="r192.168.100.183">
              <attributes>
-               <nvpair id="192.168.100.183-ip" name="ip" value="192.168.100.183"/>
+               <nvpair id="r192.168.100.183-ip" name="ip" value="192.168.100.183"/>
              </attributes>
            </instance_attributes>
          </primitive>
@@ -237,10 +237,10 @@
      <node_state id="dc83915f-5936-4b66-865d-802ac91b5c18" uname="sles-1" crmd="online" crm-debug-origin="post_cache_update" shutdown="0" ha="active" in_ccm="true" join="member" expected="member">
        <lrm id="dc83915f-5936-4b66-865d-802ac91b5c18">
          <lrm_resources>
-           <lrm_resource id="192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="192.168.100.181_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="3:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;3:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="2" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="d284750e2bd4a30721ccaeb78f5582de"/>
-             <lrm_rsc_op id="192.168.100.181_start_0" operation="start" crm-debug-origin="build_active_RAs" transition_key="11:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:0;11:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="28" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="d284750e2bd4a30721ccaeb78f5582de"/>
-             <lrm_rsc_op id="192.168.100.181_monitor_5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="12:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:0;12:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="34" crm_feature_set="2.0" rc_code="0" op_status="0" interval="5000" op_digest="372c7b5f127608290f554698abb22fa6"/>
+           <lrm_resource id="r192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="r192.168.100.181_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="3:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;3:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="2" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="d284750e2bd4a30721ccaeb78f5582de"/>
+             <lrm_rsc_op id="r192.168.100.181_start_0" operation="start" crm-debug-origin="build_active_RAs" transition_key="11:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:0;11:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="28" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="d284750e2bd4a30721ccaeb78f5582de"/>
+             <lrm_rsc_op id="r192.168.100.181_monitor_5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="12:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:0;12:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="34" crm_feature_set="2.0" rc_code="0" op_status="0" interval="5000" op_digest="372c7b5f127608290f554698abb22fa6"/>
            </lrm_resource>
            <lrm_resource id="rsc_sles-2" type="IPaddr" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="rsc_sles-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="9:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;9:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="8" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="dcdbdc304c192f671a390f7df0317954"/>
@@ -248,10 +248,10 @@
            <lrm_resource id="ocf_msdummy:2" type="Stateful" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="19:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;19:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="16" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
            </lrm_resource>
-           <lrm_resource id="192.168.100.182" type="IPaddr" class="heartbeat">
-             <lrm_rsc_op id="192.168.100.182_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="4:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;4:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="3" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="228e5b6a6590df0e8af9a9964014ed59"/>
-             <lrm_rsc_op id="192.168.100.182_start_0" operation="start" crm-debug-origin="build_active_RAs" transition_key="13:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:0;13:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="35" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="228e5b6a6590df0e8af9a9964014ed59"/>
-             <lrm_rsc_op id="192.168.100.182_monitor_5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="14:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:0;14:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="37" crm_feature_set="2.0" rc_code="0" op_status="0" interval="5000" op_digest="69ba9b280a0f25ada1ead264a34aa5ff"/>
+           <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
+             <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="4:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;4:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="3" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="228e5b6a6590df0e8af9a9964014ed59"/>
+             <lrm_rsc_op id="r192.168.100.182_start_0" operation="start" crm-debug-origin="build_active_RAs" transition_key="13:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:0;13:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="35" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="228e5b6a6590df0e8af9a9964014ed59"/>
+             <lrm_rsc_op id="r192.168.100.182_monitor_5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="14:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:0;14:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="37" crm_feature_set="2.0" rc_code="0" op_status="0" interval="5000" op_digest="69ba9b280a0f25ada1ead264a34aa5ff"/>
            </lrm_resource>
            <lrm_resource id="lsb_dummy" type="/usr/share/heartbeat/cts/LSBDummy" class="lsb" provider="heartbeat">
              <lrm_rsc_op id="lsb_dummy_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="6:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;6:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="5" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
@@ -264,10 +264,10 @@
              <lrm_rsc_op id="ocf_msdummy:3_start_0" operation="start" crm-debug-origin="build_active_RAs" transition_key="59:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:0;59:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="30" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
              <lrm_rsc_op id="ocf_msdummy:3_monitor_5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="60:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:0;60:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="33" crm_feature_set="2.0" rc_code="0" op_status="0" interval="5000" op_digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
            </lrm_resource>
-           <lrm_resource id="192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="192.168.100.183_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="5:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;5:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="4" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
-             <lrm_rsc_op id="192.168.100.183_start_0" operation="start" crm-debug-origin="build_active_RAs" transition_key="15:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:0;15:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="38" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
-             <lrm_rsc_op id="192.168.100.183_monitor_5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="16:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:0;16:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="39" crm_feature_set="2.0" rc_code="0" op_status="0" interval="5000" op_digest="d1455c7fe8b66a1fdbde9d508fe66445"/>
+           <lrm_resource id="r192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="r192.168.100.183_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="5:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;5:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="4" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
+             <lrm_rsc_op id="r192.168.100.183_start_0" operation="start" crm-debug-origin="build_active_RAs" transition_key="15:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:0;15:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="38" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
+             <lrm_rsc_op id="r192.168.100.183_monitor_5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="16:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:0;16:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="39" crm_feature_set="2.0" rc_code="0" op_status="0" interval="5000" op_digest="d1455c7fe8b66a1fdbde9d508fe66445"/>
            </lrm_resource>
            <lrm_resource id="rsc_sles-4" type="IPaddr" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="rsc_sles-4_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="11:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;11:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="10" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="72dc6e7b4268eef18359d20e6a65c35e"/>
@@ -336,8 +336,8 @@
      <node_state id="de1d5b97-e25b-49ae-89a3-daff19671aa5" uname="sles-2" ha="active" crm-debug-origin="post_cache_update" crmd="online" shutdown="0" in_ccm="true" join="member" expected="member">
        <lrm id="de1d5b97-e25b-49ae-89a3-daff19671aa5">
          <lrm_resources>
-           <lrm_resource id="192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="192.168.100.181_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="5:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;5:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="2" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="d284750e2bd4a30721ccaeb78f5582de"/>
+           <lrm_resource id="r192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="r192.168.100.181_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="5:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;5:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="2" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="d284750e2bd4a30721ccaeb78f5582de"/>
            </lrm_resource>
            <lrm_resource id="rsc_sles-2" type="IPaddr" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="rsc_sles-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="11:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;11:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="8" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="dcdbdc304c192f671a390f7df0317954"/>
@@ -347,8 +347,8 @@
            <lrm_resource id="ocf_msdummy:2" type="Stateful" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="21:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;21:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="14" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
            </lrm_resource>
-           <lrm_resource id="192.168.100.182" type="IPaddr" class="heartbeat">
-             <lrm_rsc_op id="192.168.100.182_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="6:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;6:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="3" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="228e5b6a6590df0e8af9a9964014ed59"/>
+           <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
+             <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="6:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;6:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="3" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="228e5b6a6590df0e8af9a9964014ed59"/>
            </lrm_resource>
            <lrm_resource id="lsb_dummy" type="/usr/share/heartbeat/cts/LSBDummy" class="lsb" provider="heartbeat">
              <lrm_rsc_op id="lsb_dummy_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="8:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;8:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="5" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
@@ -361,8 +361,8 @@
            <lrm_resource id="ocf_msdummy:3" type="Stateful" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="22:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;22:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="15" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
            </lrm_resource>
-           <lrm_resource id="192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="192.168.100.183_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="7:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;7:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="4" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
+           <lrm_resource id="r192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="r192.168.100.183_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="7:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;7:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="4" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
            </lrm_resource>
            <lrm_resource id="rsc_sles-4" type="IPaddr" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="rsc_sles-4_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="13:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;13:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="10" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="72dc6e7b4268eef18359d20e6a65c35e"/>
@@ -435,8 +435,8 @@
      <node_state id="d38d7afa-de9e-4ef2-b4a0-fd58a7c67700" uname="sles-3" ha="active" crm-debug-origin="post_cache_update" crmd="online" shutdown="0" in_ccm="true" join="member" expected="member">
        <lrm id="d38d7afa-de9e-4ef2-b4a0-fd58a7c67700">
          <lrm_resources>
-           <lrm_resource id="192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="192.168.100.181_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="7:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;7:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="2" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="d284750e2bd4a30721ccaeb78f5582de"/>
+           <lrm_resource id="r192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="r192.168.100.181_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="7:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;7:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="2" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="d284750e2bd4a30721ccaeb78f5582de"/>
            </lrm_resource>
            <lrm_resource id="rsc_sles-2" type="IPaddr" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="rsc_sles-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="13:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;13:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="8" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="dcdbdc304c192f671a390f7df0317954"/>
@@ -444,8 +444,8 @@
            <lrm_resource id="ocf_msdummy:2" type="Stateful" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="23:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;23:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="24" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
            </lrm_resource>
-           <lrm_resource id="192.168.100.182" type="IPaddr" class="heartbeat">
-             <lrm_rsc_op id="192.168.100.182_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="8:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;8:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="3" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="228e5b6a6590df0e8af9a9964014ed59"/>
+           <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
+             <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="8:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;8:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="3" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="228e5b6a6590df0e8af9a9964014ed59"/>
            </lrm_resource>
            <lrm_resource id="lsb_dummy" type="/usr/share/heartbeat/cts/LSBDummy" class="lsb" provider="heartbeat">
              <lrm_rsc_op id="lsb_dummy_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="10:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;10:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="5" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
@@ -458,8 +458,8 @@
            <lrm_resource id="ocf_msdummy:3" type="Stateful" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="24:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;24:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="25" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
            </lrm_resource>
-           <lrm_resource id="192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="192.168.100.183_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="9:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;9:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="4" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
+           <lrm_resource id="r192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="r192.168.100.183_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="9:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;9:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="4" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
            </lrm_resource>
            <lrm_resource id="rsc_sles-4" type="IPaddr" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="rsc_sles-4_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="15:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;15:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="10" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="72dc6e7b4268eef18359d20e6a65c35e"/>
@@ -534,8 +534,8 @@
      <node_state id="6b218012-be71-4249-a8ad-332247f79065" uname="sles-4" ha="active" crm-debug-origin="post_cache_update" crmd="online" shutdown="0" in_ccm="true" join="member" expected="member">
        <lrm id="6b218012-be71-4249-a8ad-332247f79065">
          <lrm_resources>
-           <lrm_resource id="192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="192.168.100.181_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="9:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;9:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="2" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="d284750e2bd4a30721ccaeb78f5582de"/>
+           <lrm_resource id="r192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="r192.168.100.181_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="9:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;9:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="2" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="d284750e2bd4a30721ccaeb78f5582de"/>
            </lrm_resource>
            <lrm_resource id="rsc_sles-2" type="IPaddr" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="rsc_sles-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="15:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;15:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="8" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="dcdbdc304c192f671a390f7df0317954"/>
@@ -545,8 +545,8 @@
              <lrm_rsc_op id="ocf_msdummy:2_start_0" operation="start" crm-debug-origin="build_active_RAs" transition_key="57:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:0;57:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="30" crm_feature_set="2.0" rc_code="0" op_status="0" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
              <lrm_rsc_op id="ocf_msdummy:2_monitor_5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="81:8:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:0;81:8:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="35" crm_feature_set="2.0" rc_code="0" op_status="0" interval="5000" op_digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
            </lrm_resource>
-           <lrm_resource id="192.168.100.182" type="IPaddr" class="heartbeat">
-             <lrm_rsc_op id="192.168.100.182_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="10:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;10:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="3" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="228e5b6a6590df0e8af9a9964014ed59"/>
+           <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
+             <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="10:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;10:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="3" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="228e5b6a6590df0e8af9a9964014ed59"/>
            </lrm_resource>
            <lrm_resource id="lsb_dummy" type="/usr/share/heartbeat/cts/LSBDummy" class="lsb" provider="heartbeat">
              <lrm_rsc_op id="lsb_dummy_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="12:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;12:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="5" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
@@ -557,8 +557,8 @@
            <lrm_resource id="ocf_msdummy:3" type="Stateful" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="ocf_msdummy:3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="26:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;26:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="23" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
            </lrm_resource>
-           <lrm_resource id="192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="192.168.100.183_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="11:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;11:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="4" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
+           <lrm_resource id="r192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="r192.168.100.183_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="11:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;11:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="4" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
            </lrm_resource>
            <lrm_resource id="rsc_sles-4" type="IPaddr" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="rsc_sles-4_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="17:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="4:7;17:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="10" crm_feature_set="2.0" rc_code="7" op_status="4" interval="0" op_digest="72dc6e7b4268eef18359d20e6a65c35e"/>
@@ -637,14 +637,14 @@
            <lrm_resource id="lsb_dummy" type="/usr/share/heartbeat/cts/LSBDummy" class="lsb" provider="heartbeat">
              <lrm_rsc_op id="lsb_dummy_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="37:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:7;37:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="5" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
            </lrm_resource>
-           <lrm_resource id="192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="192.168.100.181_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="34:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:7;34:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="2" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="d284750e2bd4a30721ccaeb78f5582de"/>
+           <lrm_resource id="r192.168.100.181" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="r192.168.100.181_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="34:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:7;34:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="2" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="d284750e2bd4a30721ccaeb78f5582de"/>
            </lrm_resource>
-           <lrm_resource id="192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
-             <lrm_rsc_op id="192.168.100.183_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="36:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:7;36:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="4" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
+           <lrm_resource id="r192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
+             <lrm_rsc_op id="r192.168.100.183_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="36:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:7;36:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="4" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
            </lrm_resource>
-           <lrm_resource id="192.168.100.182" type="IPaddr" class="heartbeat">
-             <lrm_rsc_op id="192.168.100.182_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="35:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:7;35:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="3" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="228e5b6a6590df0e8af9a9964014ed59"/>
+           <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
+             <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="35:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:7;35:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="3" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="228e5b6a6590df0e8af9a9964014ed59"/>
            </lrm_resource>
            <lrm_resource id="rsc_sles-2" type="IPaddr" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="rsc_sles-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition_key="40:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition_magic="0:7;40:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" call_id="8" crm_feature_set="2.0" rc_code="7" op_status="0" interval="0" op_digest="dcdbdc304c192f671a390f7df0317954"/>
