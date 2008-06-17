@@ -283,6 +283,7 @@ do_test bug-pm-11 "New resource added to a m/s group"
 do_test bug-pm-12 "Recover only the failed portion of a cloned group"
 do_test bug-n-387749 "Don't shuffle clone instances"
 do_test bug-n-385265 "Don't ignore the failure stickiness of group children - resource_idvscommon should stay stopped"
+do_test bug-n-385265-2 "Ensure groups are migrated instead of remaining partially active on the current node"
 do_test bug-lf-1920 "Correctly handle probes that find active resources"
 
 echo ""

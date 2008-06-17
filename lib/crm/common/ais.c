@@ -299,7 +299,7 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 		ais_data_len(msg), msg->size, msg->compressed_size);
     
     data = msg->data;
-    if(msg->is_compressed) {
+    if(msg->is_compressed && msg->size > 0) {
 	int rc = BZ_OK;
 	unsigned int new_size = msg->size;
 
