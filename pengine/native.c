@@ -133,7 +133,7 @@ native_merge_weights(
  	archive = node_list_dup(nodes, FALSE, FALSE);
     }
 
-#if 0
+#if 1
     node_list_update(nodes, rsc->allowed_nodes, factor);
 #else
     /* turn this off once we switch to migration-threshold */
