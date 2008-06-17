@@ -401,8 +401,11 @@ mon_update(xmlNode *msg, int call_id, int rc,
 	   xmlNode *output, void*user_data) 
 {
 	const char *prefix = NULL;
+  retry:
 	if(rc == cib_ok) {
 		xmlNode *cib = NULL;
+		const char *value = NULL;
+		
 #if CRM_DEPRECATED_SINCE_2_0_4
 		if( safe_str_eq(crm_element_name(output), XML_TAG_CIB) ) {
 			cib = output;
@@ -413,6 +416,32 @@ mon_update(xmlNode *msg, int call_id, int rc,
 		cib = output;
 		CRM_DEV_ASSERT(safe_str_eq(crm_element_name(cib), XML_TAG_CIB));
 #endif		
+
+		value = crm_element_value(cib, XML_ATTR_VALIDATION);
+		if(safe_str_neq(value, LATEST_SCHEMA_VERSION)) {
+		    int schema_version = 0;
+		    int min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
+		    
+		    xmlNode *converted = NULL;
+		    
+		    converted = copy_xml(cib);
+		    schema_version = update_validation(&converted, TRUE, FALSE);
+		    
+		    value = crm_element_value(converted, XML_ATTR_VALIDATION);
+		    if(schema_version < min_version) {
+			fprintf(stderr, "Your current configuration could only be upgraded to %s... "
+				"the minimum requirement is %s.\n", crm_str(value), MINIMUM_SCHEMA_VERSION);
+			
+			free_xml(converted);
+			converted = NULL;
+			rc = cib_STALE;
+			goto retry;
+			
+		    } else {
+			cib = converted;
+		    }
+		}
+
 		if(as_html_file || web_cgi) {
 			if (print_html_status(cib, as_html_file, web_cgi) != 0) {
 				fprintf(stderr, "Critical: Unable to output html file\n");
@@ -435,12 +464,12 @@ mon_update(xmlNode *msg, int call_id, int rc,
 		
 			
 	} else if(simple_status) {
-	    fprintf(stderr, "Critical: query failed: %s", cib_error2string(rc));
+	    fprintf(stderr, "Critical: query failed: %s\n", cib_error2string(rc));
 	    clean_up();
 	    exit(LSB_EXIT_GENERIC);
 
 	} else if(one_shot) {
-	    fprintf(stderr, "Query failed: %s", cib_error2string(rc));
+	    fprintf(stderr, "Query failed: %s\n", cib_error2string(rc));
 	    clean_up();
 	    exit(LSB_EXIT_GENERIC);
 
