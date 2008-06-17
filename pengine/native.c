@@ -133,7 +133,35 @@ native_merge_weights(
  	archive = node_list_dup(nodes, FALSE, FALSE);
     }
 
+#if 0
     node_list_update(nodes, rsc->allowed_nodes, factor);
+#else
+    /* turn this off once we switch to migration-threshold */
+    {
+	GListPtr tmp = node_list_dup(rsc->allowed_nodes, FALSE, FALSE);
+	
+	slist_iter(
+	    node, node_t, tmp, lpc,
+	    if(node->weight < 0 && node->weight > -INFINITY) {
+		/* Once a dependant's score goes below zero, force the node score to -INFINITY
+		 *
+		 * This prevents the colocation sets from being partially active in scenarios
+		 *  where it could be fully active elsewhere
+		 *
+		 * If we don't do this, then the next resource's stickiness might bring
+		 *  the combined score above 0 again - which confuses the PE into thinking
+		 *  the whole colocation set can run there but is pointless since the later children
+		 *  are not be able to run if the ones before them can't
+		 */
+		node->weight = -INFINITY;
+	    }
+	    );
+	
+	node_list_update(nodes, tmp, factor);
+	pe_free_shallow_adv(tmp, TRUE);
+    }
+#endif
+    
     if(archive && can_run_any(nodes) == FALSE) {
 	crm_debug("%s: Rolling back scores from %s", rhs, rsc->id);
   	pe_free_shallow_adv(nodes, TRUE);
