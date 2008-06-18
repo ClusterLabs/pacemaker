@@ -87,7 +87,7 @@ int operation_status = 0;
 cib_t *the_cib = NULL;
 
 gboolean force_flag = FALSE;
-#define OPTARGS	"V?o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:"
+#define OPTARGS	"V?o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:u"
 
 
 int
@@ -120,6 +120,7 @@ main(int argc, char **argv)
 		{CIB_OP_MASTER,  0, 0, 'w'},
 		{CIB_OP_ISMASTER,0, 0, 'm'},
 
+		{"upgrade",     0, 0, 'u'},
 		{"erase",       0, 0, 'E'},
 		{"query",       0, 0, 'Q'},
 		{"create",      0, 0, 'C'},
@@ -202,6 +203,10 @@ main(int argc, char **argv)
 			case 'A':
 				obj_type = crm_strdup(optarg);
 				command_options |= cib_xpath;
+				break;
+			case 'u':
+				cib_action = CIB_OP_UPGRADE;
+				dangerous_cmd = TRUE;
 				break;
 			case 'E':
 				cib_action = CIB_OP_ERASE;
