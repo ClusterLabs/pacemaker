@@ -64,11 +64,14 @@ find_nvpair_attr(
     crm_malloc0(xpath_string, xpath_max);
     offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", get_object_path(section));
 
-    if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)
-       || safe_str_eq(section, XML_CIB_TAG_OPCONFIG)
-       || safe_str_eq(section, XML_CIB_TAG_RSCCONFIG)) {
+    if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
 	node_uuid = NULL;
 	set_type = XML_CIB_TAG_PROPSET;
+	
+    } else if(safe_str_eq(section, XML_CIB_TAG_OPCONFIG)
+	      || safe_str_eq(section, XML_CIB_TAG_RSCCONFIG)) {
+	node_uuid = NULL;
+	set_type = XML_TAG_META_SETS;
 
     } else if(node_uuid == NULL) {
 	return cib_missing_data;
@@ -142,6 +145,7 @@ update_attr(cib_t *the_cib, int call_options,
 	xmlNode *xml_obj = NULL;
 
 	char *local_attr_id = NULL;
+	char *local_set_name = NULL;
 	
 	CRM_CHECK(section != NULL, return cib_missing);
 	CRM_CHECK(attr_value != NULL, return cib_missing);
@@ -159,56 +163,51 @@ update_attr(cib_t *the_cib, int call_options,
 	/*     return cib_missing; */
 
 	} else {
-	    char *local_set_name = NULL;
-	    gboolean is_crm_config = FALSE;
-	    gboolean is_node_transient = FALSE;
 	    
-	    if(attr_id == NULL && attr_name == NULL) {
-		return cib_missing;
-	    } else if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
-		node_uuid = NULL;
-		is_crm_config = TRUE;
-		tag = XML_CIB_TAG_CRMCONFIG;
-		if(set_name == NULL) {
-		    set_name = CIB_OPTIONS_FIRST;
-		}
-	    } else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
+	    if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
 		tag = XML_CIB_TAG_NODE;
 		if(node_uuid == NULL) {
 		    return cib_missing;
 		}
-		if(set_name == NULL) {
-		    local_set_name = crm_concat(section, node_uuid, '-');
-		    set_name = local_set_name;
-		}
+
 	    } else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
-		is_node_transient = TRUE;
 		tag = XML_TAG_TRANSIENT_NODEATTRS;
-		if(set_name == NULL) {
-		    local_set_name = crm_concat(section, node_uuid, '-');
-		    set_name = local_set_name;
+		if(node_uuid == NULL) {
+		    return cib_missing;
 		}
-	    } else {
-		return cib_bad_section;
-	    }
-	    if(attr_id == NULL) {
-		local_attr_id = crm_concat(set_name, attr_name, '-');
-		attr_id = local_attr_id;
-	    } else if(attr_name == NULL) {
-		attr_name = attr_id;
-	    }
 
-	    CRM_CHECK(attr_id != NULL, crm_free(local_attr_id); return cib_missing);
-	    CRM_CHECK(set_name != NULL, crm_free(local_attr_id); return cib_missing);
-
-	    if(is_node_transient) {
 		xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_STATE);
 		crm_xml_add(xml_obj, XML_ATTR_ID, node_uuid);
 		if(xml_top == NULL) {
 		    xml_top = xml_obj;
 		}
+
+	    } else {
+		tag = section;
+		node_uuid = NULL;
 	    }
-		
+
+	    if(set_name == NULL) {
+		if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
+		    local_set_name = crm_strdup(CIB_OPTIONS_FIRST);
+
+		} else if(node_uuid) {
+		    local_set_name = crm_concat(section, node_uuid, '-');
+
+		} else {
+		    local_set_name = crm_concat(section, "options", '-');
+		}
+		set_name = local_set_name;
+	    }
+
+	    if(attr_id == NULL) {
+		local_attr_id = crm_concat(set_name, attr_name, '-');
+		attr_id = local_attr_id;
+
+	    } else if(attr_name == NULL) {
+		attr_name = attr_id;
+	    }
+	    
 	    crm_debug_2("Creating %s/%s", section, tag);
 	    if(tag != NULL) {
 		xml_obj = create_xml_node(xml_obj, tag);
@@ -219,7 +218,12 @@ update_attr(cib_t *the_cib, int call_options,
 	    }
 	    
 	    if(node_uuid == NULL) {
-		xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_PROPSET);
+		if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
+		    xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_PROPSET);
+		} else {
+		    xml_obj = create_xml_node(xml_obj, XML_TAG_META_SETS);
+		}
+		
 	    } else {
 		xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
 	    }
@@ -230,8 +234,7 @@ update_attr(cib_t *the_cib, int call_options,
 	    }
 	    
 	    xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
-	    crm_free(local_set_name);
-	    crm_log_xml_debug_2(xml_top, "update_attr");
+	    crm_log_xml_info(xml_top, "update_attr");
 	}
 
   do_modify:
@@ -260,6 +263,7 @@ update_attr(cib_t *the_cib, int call_options,
 		crm_log_xml_info(xml_top, "Update");
 	}
 	
+	crm_free(local_set_name);
 	crm_free(local_attr_id);
 	free_xml(xml_top);
 	
