@@ -653,7 +653,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
 	    }
 
-	    current_dtd = crm_element_value(scratch, "validate-with");
+	    current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
 	    dtd_ok = validate_xml(scratch, current_dtd, TRUE);
 	    
 	    if(dtd_ok == FALSE) {
