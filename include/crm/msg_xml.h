@@ -112,6 +112,8 @@
 #define XML_CIB_TAG_NODES         	"nodes"
 #define XML_CIB_TAG_CONSTRAINTS   	"constraints"
 #define XML_CIB_TAG_CRMCONFIG   	"crm_config"
+#define XML_CIB_TAG_OPCONFIG		"op_defaults"
+#define XML_CIB_TAG_RSCCONFIG   	"rsc_defaults"
 
 #define XML_CIB_TAG_STATE         	"node_state"
 #define XML_CIB_TAG_NODE          	"node"

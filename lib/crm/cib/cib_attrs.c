@@ -37,51 +37,6 @@
 #include <crm/cib.h>
 
 
-#define attr_common_setup(section)					\
-	gboolean is_crm_config = FALSE;					\
-	gboolean is_node_transient = FALSE;				\
-	char *local_set_name = NULL;					\
-	if(attr_id == NULL && attr_name == NULL) {			\
-		return cib_missing;					\
-									\
-	} else if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {	\
-		node_uuid = NULL;					\
-		is_crm_config = TRUE;					\
-		tag = XML_CIB_TAG_CRMCONFIG;				\
-		if(set_name == NULL) {					\
-			set_name = CIB_OPTIONS_FIRST;			\
-		}							\
-									\
-	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {		\
-		tag = XML_CIB_TAG_NODE;					\
-		if(node_uuid == NULL) {					\
-			return cib_missing;				\
-		}							\
-		if(set_name == NULL) {					\
-			local_set_name = crm_concat(section, node_uuid, '-'); \
-			set_name = local_set_name;			\
-		}							\
-									\
-	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {		\
-		is_node_transient = TRUE;				\
-		tag = XML_TAG_TRANSIENT_NODEATTRS;			\
-		if(set_name == NULL) {					\
-			local_set_name = crm_concat(section, node_uuid, '-'); \
-			set_name = local_set_name;			\
-		}							\
-									\
-	} else {							\
-		return cib_bad_section;					\
-	}								\
-									\
-	if(attr_id == NULL) {						\
-		local_attr_id = crm_concat(set_name, attr_name, '-');	\
-		attr_id = local_attr_id;				\
-									\
-	} else if(attr_name == NULL) {					\
-		attr_name = attr_id;					\
-	}								\
-
 #define attr_msg(level, fmt, args...) do {	\
 	if(to_console) {			\
 	    printf(fmt"\n", ##args);		\
@@ -90,129 +45,89 @@
 	}					\
 } while(0)
 
-enum cib_errors
-find_attr_details(xmlNode *xml_search, const char *node_uuid,
-		  const char *set_name, const char *attr_id, const char *attr_name,
-		  xmlNode **xml_obj, gboolean to_console)
+extern enum cib_errors
+find_nvpair_attr(
+    cib_t *the_cib, const char *attr, const char *section, const char *node_uuid, const char *set_name,
+    const char *attr_id, const char *attr_name, gboolean to_console, char **value)
 {
-	int matches = 0;
-	xmlNode *nv_children = NULL;
-	xmlNode *set_children = NULL;
-	const char *set_type = XML_TAG_ATTR_SETS;
-	const char *tag = crm_element_name(xml_search);
+    int offset = 0;
+    static int xpath_max = 1024;
+    enum cib_errors rc = cib_ok;
 
-	CRM_CHECK(xml_obj != NULL, return cib_output_ptr);
-	*xml_obj = NULL;
-	
-	CRM_CHECK(xml_search != NULL, return cib_NOTEXISTS);
-	
-	if(node_uuid != NULL || safe_str_eq(tag, XML_CIB_TAG_CRMCONFIG)) {
-		set_type = XML_CIB_TAG_PROPSET;
+    char *xpath_string = NULL;
+    xmlNode *xml_search = NULL;
+    const char *set_type = XML_TAG_ATTR_SETS;
 
-		/* filter by node */
-		matches = find_xml_children(
-			&set_children, xml_search, 
-			NULL, XML_ATTR_ID, node_uuid, FALSE);
-		crm_log_xml_debug_2(set_children, "search by node:");
-		if(matches == 0) {
-			CRM_CHECK(set_children == NULL, crm_err("Memory leak"));
-			attr_msg(LOG_INFO, "No node matching id=%s in %s",
-				 node_uuid, TYPE(xml_search));
-			return cib_NOTEXISTS;
-		}
-	}
+    CRM_ASSERT(value != NULL);
+    *value = NULL;
+    
+    crm_malloc0(xpath_string, xpath_max);
+    offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", get_object_path(section));
 
-	crm_debug_2("Looking for (type=%s, set=%s, id=%s, name=%s) in %s",
-		    set_type, set_name, attr_id, attr_name, tag);
+    if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)
+       || safe_str_eq(section, XML_CIB_TAG_OPCONFIG)
+       || safe_str_eq(section, XML_CIB_TAG_RSCCONFIG)) {
+	node_uuid = NULL;
+	set_type = XML_CIB_TAG_PROPSET;
 
-	/* filter by set name */
-	if(set_name != NULL) {
-		xmlNode *tmp = NULL;
-		matches = find_xml_children(
-			&tmp, set_children?set_children:xml_search, 
-			set_type, XML_ATTR_ID, set_name, FALSE);
-		free_xml(set_children);
-		set_children = tmp;
-		crm_log_xml_debug_2(set_children, "search by set:");
-		if(matches == 0) {
-			attr_msg(LOG_INFO, "No set matching id=%s in %s", set_name, TYPE(xml_search));
-			CRM_CHECK(set_children == NULL, crm_err("Memory leak"));
-			return cib_NOTEXISTS;
-		}
-	}
-
-	matches = 0;
-	if(attr_id == NULL) {
-		matches = find_xml_children(
-			&nv_children, set_children?set_children:xml_search,
-			XML_CIB_TAG_NVPAIR, XML_NVPAIR_ATTR_NAME, attr_name, FALSE);
-		crm_log_xml_debug_2(nv_children, "search by name:");
-
-	} else if(attr_id != NULL) {
-		matches = find_xml_children(
-			&nv_children, set_children?set_children:xml_search,
-			XML_CIB_TAG_NVPAIR, XML_ATTR_ID, attr_id, FALSE);
-		crm_log_xml_debug(nv_children, "search by id:");
-	}
-	
-		
-	if(matches == 1) {
-		xmlNode *single_match = NULL;
-		xml_child_iter(nv_children, child,
-			       single_match = copy_xml(child);
-			       break;
-			);
-		free_xml(nv_children);
-		free_xml(set_children);
-		*xml_obj = single_match;
-		return cib_ok;
-
-	} else if(matches == 0) {
-	    free_xml(set_children);
-	    return cib_NOTEXISTS;
-	}
-
-	attr_msg(LOG_WARNING, "Multiple attributes match name=%s in %s:",
-		 attr_name, TYPE(xml_search));
-	
-	if(set_name != NULL) {
- 	    xml_child_iter(
-		nv_children, child,
-		attr_msg(LOG_INFO, "  Value: %s \t(set=%s, id=%s)", 
-			 crm_element_value(child, XML_NVPAIR_ATTR_VALUE), set_name, ID(child));
-		);
-	    
- 	} else {
-	    free_xml(set_children);
-	    set_children = NULL;
-
-	    find_xml_children(
-		&set_children, xml_search, 
-		set_type, NULL, NULL, FALSE);
-
-	    xml_child_iter(
-		set_children, set,
-		const char *set_id = ID(set);
-
-		free_xml(nv_children);
-		nv_children = NULL;
-
-		find_xml_children(
-		    &nv_children, set,
-		    XML_CIB_TAG_NVPAIR, XML_NVPAIR_ATTR_NAME, attr_name, FALSE);
-
-		xml_child_iter(
-		    nv_children, child,
-		    attr_msg(LOG_INFO, "  Value: %s \t(set=%s, id=%s)",
-			     crm_element_value(child, XML_NVPAIR_ATTR_VALUE),
-			     set_id, ID(child));
-		    );
-		);
- 	}
-	
-	free_xml(nv_children);
-	free_xml(set_children);
+    } else if(node_uuid == NULL) {
 	return cib_missing_data;
+    }
+    
+    if(node_uuid) {
+	const char *node_type = XML_CIB_TAG_NODE;
+	if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+	    set_type = XML_CIB_TAG_STATE;
+	}
+	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id=\"%s\"]", node_type, node_uuid);
+    }
+
+    if(set_name) {
+	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id=\"%s\"]", set_type, set_name);
+    }
+    
+    offset += snprintf(xpath_string + offset, xpath_max - offset, "//nvpair[");
+    if(attr_id) {
+	offset += snprintf(xpath_string + offset, xpath_max - offset, "@id=\"%s\"", attr_id);
+    }
+    
+    if(attr_name) {
+	if(attr_id) {
+	    offset += snprintf(xpath_string + offset, xpath_max - offset, " and ");
+	}
+	offset += snprintf(xpath_string + offset, xpath_max - offset, "@name=\"%s\"", attr_name);
+    }   
+    offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
+    
+    rc = the_cib->cmds->query(
+	the_cib, xpath_string, &xml_search, cib_sync_call|cib_scope_local|cib_xpath);
+	
+    if(rc != cib_ok) {
+	attr_msg(LOG_ERR, "Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
+		 attr_name, section, crm_str(set_name), crm_str(node_uuid), xpath_string,
+		 cib_error2string(rc));
+	return rc;
+    }
+
+    crm_log_xml_debug(xml_search, "Match");
+    if(xml_has_children(xml_search)) {
+	rc = cib_missing_data;
+	attr_msg(LOG_WARNING, "Multiple attributes match name=%s", attr_name);
+	
+	xml_child_iter(xml_search, child,
+		       attr_msg(LOG_INFO, "  Value: %s \t(id=%s)", 
+				crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
+	    );
+
+    } else {
+	const char *tmp = crm_element_value(xml_search, attr);
+	if(tmp) {
+	    *value = crm_strdup(tmp);
+	}
+    }
+
+    free_xml(xml_search);
+    return rc;
 }
 
 
@@ -222,103 +137,104 @@ update_attr(cib_t *the_cib, int call_options,
 	    const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console)
 {
 	const char *tag = NULL;
-	
 	enum cib_errors rc = cib_ok;
 	xmlNode *xml_top = NULL;
 	xmlNode *xml_obj = NULL;
-	xmlNode *xml_search = NULL;
 
 	char *local_attr_id = NULL;
 	
 	CRM_CHECK(section != NULL, return cib_missing);
+	CRM_CHECK(attr_value != NULL, return cib_missing);
 	CRM_CHECK(attr_name != NULL || attr_id != NULL, return cib_missing);
-
-	if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
-		node_uuid = NULL;
-
-	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
-		CRM_CHECK(node_uuid != NULL, return cib_NOTEXISTS);
-		
-	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
-		CRM_CHECK(node_uuid != NULL, return cib_NOTEXISTS);
-	}
 	
-	rc = the_cib->cmds->query(the_cib, section, &xml_search,
-				  cib_sync_call|cib_scope_local);
-	
-	if(rc != cib_ok) {
-		attr_msg(LOG_ERR, "Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
-			attr_name, section, crm_str(set_name), crm_str(node_uuid),
-			cib_error2string(rc));
-		return rc;
-	}
-		
-	rc = find_attr_details(
-	    xml_search, node_uuid, set_name, attr_id, attr_name, &xml_obj, to_console);
-	free_xml(xml_search);
+	rc = find_nvpair_attr(the_cib, XML_ATTR_ID, section, node_uuid, set_name, attr_id, attr_name, FALSE, &local_attr_id);
+	if(rc == cib_ok) {
+	    attr_id = local_attr_id;
+	    goto do_modify;
 
-	if(rc == cib_missing_data) {
+	} else if(rc != cib_NOTEXISTS) {
 	    return rc;
-	}
-	
-	if(xml_obj != NULL) {
-		local_attr_id = crm_strdup(ID(xml_obj));
-		attr_id = local_attr_id;
-	}
-	
-	if(attr_id == NULL || xml_obj == NULL) {
-		attr_common_setup(section);	
-		
-		CRM_CHECK(attr_id != NULL,
-			  crm_free(local_attr_id);
-			  free_xml(xml_obj);
-			  return cib_missing);
-		CRM_CHECK(set_name != NULL,
-			  crm_free(local_attr_id);
-			  free_xml(xml_obj);
-			  return cib_missing);
-		
-		if(attr_value == NULL) {
-			crm_free(local_attr_id);
-			free_xml(xml_obj);
-			return cib_missing_data;
-		}
-		
-		if(is_node_transient) {
-			xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_STATE);
-			crm_xml_add(xml_obj, XML_ATTR_ID, node_uuid);
-			if(xml_top == NULL) {
-				xml_top = xml_obj;
-			}
-		}
-		
-		crm_debug_2("Creating %s/%s", section, tag);
-		if(tag != NULL) {
-			xml_obj = create_xml_node(xml_obj, tag);
-			crm_xml_add(xml_obj, XML_ATTR_ID, node_uuid);
-			if(xml_top == NULL) {
-				xml_top = xml_obj;
-			}
-		}
-		
-		if(node_uuid == NULL) {
-			xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_PROPSET);
-		} else {
-			xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
-		}
-		crm_xml_add(xml_obj, XML_ATTR_ID, set_name);
-		
-		if(xml_top == NULL) {
-			xml_top = xml_obj;
-		}
-		
-		xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
-		crm_free(local_set_name);
+
+	/* } else if(attr_id == NULL) { */
+	/*     return cib_missing; */
+
 	} else {
-		free_xml(xml_obj);
-		xml_obj = NULL;
+	    char *local_set_name = NULL;
+	    gboolean is_crm_config = FALSE;
+	    gboolean is_node_transient = FALSE;
+	    
+	    if(attr_id == NULL && attr_name == NULL) {
+		return cib_missing;
+	    } else if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
+		node_uuid = NULL;
+		is_crm_config = TRUE;
+		tag = XML_CIB_TAG_CRMCONFIG;
+		if(set_name == NULL) {
+		    set_name = CIB_OPTIONS_FIRST;
+		}
+	    } else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
+		tag = XML_CIB_TAG_NODE;
+		if(node_uuid == NULL) {
+		    return cib_missing;
+		}
+		if(set_name == NULL) {
+		    local_set_name = crm_concat(section, node_uuid, '-');
+		    set_name = local_set_name;
+		}
+	    } else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+		is_node_transient = TRUE;
+		tag = XML_TAG_TRANSIENT_NODEATTRS;
+		if(set_name == NULL) {
+		    local_set_name = crm_concat(section, node_uuid, '-');
+		    set_name = local_set_name;
+		}
+	    } else {
+		return cib_bad_section;
+	    }
+	    if(attr_id == NULL) {
+		local_attr_id = crm_concat(set_name, attr_name, '-');
+		attr_id = local_attr_id;
+	    } else if(attr_name == NULL) {
+		attr_name = attr_id;
+	    }
+
+	    CRM_CHECK(attr_id != NULL, crm_free(local_attr_id); return cib_missing);
+	    CRM_CHECK(set_name != NULL, crm_free(local_attr_id); return cib_missing);
+
+	    if(is_node_transient) {
+		xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_STATE);
+		crm_xml_add(xml_obj, XML_ATTR_ID, node_uuid);
+		if(xml_top == NULL) {
+		    xml_top = xml_obj;
+		}
+	    }
+		
+	    crm_debug_2("Creating %s/%s", section, tag);
+	    if(tag != NULL) {
+		xml_obj = create_xml_node(xml_obj, tag);
+		crm_xml_add(xml_obj, XML_ATTR_ID, node_uuid);
+		if(xml_top == NULL) {
+		    xml_top = xml_obj;
+		}
+	    }
+	    
+	    if(node_uuid == NULL) {
+		xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_PROPSET);
+	    } else {
+		xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
+	    }
+	    crm_xml_add(xml_obj, XML_ATTR_ID, set_name);
+	    
+	    if(xml_top == NULL) {
+		xml_top = xml_obj;
+	    }
+	    
+	    xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
+	    crm_free(local_set_name);
+	    crm_log_xml_debug_2(xml_top, "update_attr");
 	}
 
+  do_modify:
 	xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
 	if(xml_top == NULL) {
 		xml_top = xml_obj;
@@ -328,7 +244,6 @@ update_attr(cib_t *the_cib, int call_options,
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 	
-	crm_log_xml_debug_2(xml_top, "update_attr");
 	
 	rc = the_cib->cmds->modify(
 	    the_cib, section, xml_top, call_options|cib_quorum_override);
@@ -358,60 +273,19 @@ read_attr(cib_t *the_cib,
 {
 	enum cib_errors rc = cib_ok;
 
-	xmlNode *xml_obj = NULL;
-	xmlNode *xml_next = NULL;
-	xmlNode *fragment = NULL;
-
+	CRM_ASSERT(attr_value != NULL);
 	CRM_CHECK(section != NULL, return cib_missing);
 	CRM_CHECK(attr_name != NULL || attr_id != NULL, return cib_missing);
 
-	if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
-		node_uuid = NULL;
-
-	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
-		CRM_CHECK(node_uuid != NULL, return cib_NOTEXISTS);
-		
-	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
-		CRM_CHECK(node_uuid != NULL, return cib_NOTEXISTS);
-	}
-	
-	CRM_ASSERT(attr_value != NULL);
 	*attr_value = NULL;
 
-	crm_debug("Searching for attribute %s (section=%s, node=%s, set=%s)",
-		  attr_name, section, crm_str(node_uuid), crm_str(set_name));
-
-	rc = the_cib->cmds->query(
-		the_cib, section, &fragment, cib_sync_call|cib_scope_local);
-
+	rc = find_nvpair_attr(the_cib, XML_NVPAIR_ATTR_VALUE, section, node_uuid, set_name, attr_id, attr_name, to_console, attr_value);
 	if(rc != cib_ok) {
 		attr_msg(LOG_ERR, "Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
 			attr_name, section, crm_str(set_name), crm_str(node_uuid),
 			cib_error2string(rc));
-		return rc;
 	}
-
-	xml_obj = fragment;
-	CRM_CHECK(safe_str_eq(crm_element_name(xml_obj), section),
-		  return cib_output_data);
-
-	CRM_ASSERT(xml_obj != NULL);
-	crm_log_xml_debug_2(xml_obj, "Result section");
-	
-	rc = find_attr_details(
-	    xml_obj, node_uuid, set_name, attr_id, attr_name, &xml_next, to_console);
-	free_xml(fragment);
-
-	if(rc == cib_missing_data) {
-	    return rc;
-	}
-	
-	if(xml_next != NULL) {
-		*attr_value = crm_element_value_copy(
-			xml_next, XML_NVPAIR_ATTR_VALUE);
-	}
-
-	return xml_next == NULL?cib_NOTEXISTS:cib_ok;
+	return rc;
 }
 
 
@@ -422,55 +296,17 @@ delete_attr(cib_t *the_cib, int options,
 {
 	enum cib_errors rc = cib_ok;
 	xmlNode *xml_obj = NULL;
-	xmlNode *xml_search = NULL;
 	char *local_attr_id = NULL;
 
 	CRM_CHECK(section != NULL, return cib_missing);
 	CRM_CHECK(attr_name != NULL || attr_id != NULL, return cib_missing);
 
-	if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
-		node_uuid = NULL;
-
-	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
-		CRM_CHECK(node_uuid != NULL, return cib_NOTEXISTS);
-		
-	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
-		CRM_CHECK(node_uuid != NULL, return cib_NOTEXISTS);
-	}
-	
-	if(attr_id == NULL || attr_value != NULL) {
-		rc = the_cib->cmds->query(the_cib, section, &xml_search,
-					  cib_sync_call|cib_scope_local);
-
-		if(rc != cib_ok) {
-			attr_msg(LOG_ERR, "Query failed for section=%s of the CIB: %s",
-				section, cib_error2string(rc));
-			return rc;
-		}
-		
-		rc = find_attr_details(
-		    xml_search, node_uuid, set_name, attr_id, attr_name, &xml_obj, to_console);
-		free_xml(xml_search);
-
-		if(rc == cib_missing_data) {
-		    return rc;
-		}
-		
-		if(xml_obj != NULL) {
-			if(attr_value != NULL) {
-				const char *current = crm_element_value(xml_obj, XML_NVPAIR_ATTR_VALUE);
-				if(safe_str_neq(attr_value, current)) {
-					return cib_NOTEXISTS;
-				}
-			}
-			local_attr_id = crm_strdup(ID(xml_obj));
-			attr_id = local_attr_id;			
-			xml_obj = NULL;
-		}
-	}
-
 	if(attr_id == NULL) {
-		return cib_NOTEXISTS;
+	    rc = find_nvpair_attr(the_cib, XML_ATTR_ID, section, node_uuid, set_name, attr_id, attr_name, to_console, &local_attr_id);
+	    if(rc != cib_ok) {
+		return rc;
+	    }
+	    attr_id = local_attr_id;
 	}
 	
 	xml_obj = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);
@@ -479,7 +315,14 @@ delete_attr(cib_t *the_cib, int options,
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 	
 	rc = the_cib->cmds->delete(
-		the_cib, section, xml_obj, options|cib_quorum_override);
+	    the_cib, section, xml_obj, options|cib_quorum_override);
+
+	if(rc == cib_ok) {
+	    attr_msg(LOG_DEBUG, "Deleted %s option/attribute: id=%s%s%s%s%s\n",
+		     section, local_attr_id,
+		     set_name?" set=":"", set_name?set_name:"",
+		     attr_name?" name=":"", attr_name?attr_name:"");
+	}
 
 	crm_free(local_attr_id);
 	free_xml(xml_obj);

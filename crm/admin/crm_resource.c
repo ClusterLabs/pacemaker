@@ -262,21 +262,94 @@ dump_resource_attr(
 	return cib_NOTEXISTS;
 }
 
+static int find_resource_attr(
+    xmlNode *cib, const char *attr, resource_t *rsc, const char *set_name,
+    const char *attr_id, const char *attr_name, char **value)
+{
+    int max = 0;
+    int offset = 0;
+    static int xpath_max = 1024;
+    enum cib_errors rc = cib_ok;
+
+    int lpc = 0;
+    xmlXPathObjectPtr xpathObj = NULL;
+    
+    char *xpath_string = NULL;
+
+    CRM_ASSERT(value != NULL);
+    *value = NULL;
+    
+    crm_malloc0(xpath_string, xpath_max);
+    offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", get_object_path("resources"));
+
+    offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id=\"%s\"]", TYPE(rsc->xml), rsc->id);
+    
+    offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s", attr_set_type);
+    if(set_name) {
+	offset += snprintf(xpath_string + offset, xpath_max - offset, "[@id=\"%s\"]", set_name);
+    }
+    
+    offset += snprintf(xpath_string + offset, xpath_max - offset, "//nvpair[");
+    if(attr_id) {
+	offset += snprintf(xpath_string + offset, xpath_max - offset, "@id=\"%s\"", attr_id);
+    }
+    
+    if(attr_name) {
+	if(attr_id) {
+	    offset += snprintf(xpath_string + offset, xpath_max - offset, " and ");
+	}
+	offset += snprintf(xpath_string + offset, xpath_max - offset, "@name=\"%s\"", attr_name);
+    }   
+    offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
+    
+    xpathObj = xpath_search(cib, xpath_string);
+    if(xpathObj != NULL && xpathObj->nodesetval != NULL) {
+	max = xpathObj->nodesetval->nodeNr;
+    }
+
+    if(max < 1) {
+	rc = cib_NOTEXISTS;
+
+    } else if(max == 1) {
+	xmlNode *match = xpathObj->nodesetval->nodeTab[lpc];
+	const char *tmp = crm_element_value(match, attr);
+	if(tmp) {
+	    *value = crm_strdup(tmp);
+	}
+
+    } else {
+	rc = cib_missing_data;
+	fprintf(stderr, "Multiple attributes match name=%s\n", attr_name);
+	for(lpc = 0; lpc < max; lpc++) {
+	    xmlNode *match = xpathObj->nodesetval->nodeTab[lpc];
+	    CRM_CHECK(match != NULL, continue);
+	    CRM_CHECK(match->type == XML_ELEMENT_NODE,
+		      crm_info("Wrong node type: %d", match->type);
+		      continue);
+	    
+	    fprintf(stderr, "  Value: %s \t(id=%s)\n",
+		    crm_element_value(match, XML_NVPAIR_ATTR_VALUE), ID(match));
+	}
+    }
+
+    if(xpathObj) {
+	xmlXPathFreeObject(xpathObj);
+    }
+    return rc;
+}
+
 static int
 set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 		  const char *attr_name, const char *attr_value,
 		  cib_t *cib, pe_working_set_t *data_set)
 {
 	int rc = cib_ok;
-	int matches = 0;
 	
 	char *local_attr_id = NULL;
 	char *local_attr_set = NULL;
 	
 	xmlNode *xml_top = NULL;
 	xmlNode *xml_obj = NULL;
-	xmlNode *nv_children = NULL;
-	xmlNode *set_children = NULL;
 
 	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
@@ -284,114 +357,35 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 		return cib_NOTEXISTS;
 	}
 
-	/* filter by set and type */
-	matches = find_xml_children(
-		&set_children, rsc->xml, 
-		attr_set_type, XML_ATTR_ID, attr_set, FALSE);
-	crm_log_xml_debug(set_children, "search by set:");
+ 	rc = find_resource_attr(
+	    data_set->input, XML_ATTR_ID, rsc, attr_set, attr_id, attr_name, &local_attr_id);
 
-	crm_debug("%d objects matching tag=%s id=%s",
-		  matches, attr_set_type, attr_set?attr_set:"<any>");
-	
-	if(matches == 0) {
-		/* nothing more to search */
-		crm_debug("No objects matching tag=%s id=%s",
-			  attr_set_type, attr_set?attr_set:"<any>");
-		
-	} else if(attr_id == NULL) {
-		matches = find_xml_children(
-			&nv_children, set_children,
-			XML_CIB_TAG_NVPAIR, XML_NVPAIR_ATTR_NAME, attr_name, FALSE);
-		crm_log_xml_debug(nv_children, "search by name:");
+	if(rc == cib_ok) {
+	    return cib_ok;
+
+	} else if(rc != cib_NOTEXISTS) {
+	    return rc;
 
 	} else {
-		matches = find_xml_children(
-			&nv_children, set_children,
-			XML_CIB_TAG_NVPAIR, XML_ATTR_ID, attr_id, FALSE);
-		crm_log_xml_debug(nv_children, "search by id:");
-	}
-	
-	
-	if(matches > 1) {
-		CMD_ERR("Multiple attributes match name=%s for the resource %s:\n",
-			attr_name, rsc->id);
-
-		if(set_children == NULL) {
-			free_xml(set_children);
-			set_children = NULL;
-			find_xml_children(
-				&set_children, rsc->xml, 
-				attr_set_type, NULL, NULL, FALSE);
-			xml_child_iter(
-				set_children, set,
-				free_xml(nv_children);
-				nv_children = NULL;
-				find_xml_children(
-					&nv_children, set,
-					XML_CIB_TAG_NVPAIR, XML_NVPAIR_ATTR_NAME, attr_name, FALSE);
-				xml_child_iter(
-					nv_children, child,
-					fprintf(stderr,"  Set: %s,\tValue: %s,\tID: %s\n",
-						ID(set),
-						crm_element_value(child, XML_NVPAIR_ATTR_VALUE),
-						ID(child));
-					);
-				);
-			
-		} else {
-			xml_child_iter(
-				nv_children, child,
-				fprintf(stderr,"  ID: %s, Value: %s\n", ID(child),
-					crm_element_value(child, XML_NVPAIR_ATTR_VALUE));
-				);
-		}
-		
-		if(BE_QUIET == FALSE) {
-			CMD_ERR("\nThe following text can be suppressed with the -Q option:\n");
-			if(attr_set == NULL) {
-				CMD_ERR("  * To choose an existing entry to change, please supply one of the set names above using the -s option.\n");
-			} else {
-				CMD_ERR("  * To choose an existing entry to change, please supply one of the IDs above using the -i option.\n");			
-			}
-			CMD_ERR("  * To create a new value with a default ID, please supply a different set name using the -s option.\n");
-			
-			CMD_ERR("You can also use --query-xml to display the complete resource definition.\n");
-		}
-		
-		return cib_unknown;
-		
-	} else if(matches == 0) {
-		if(attr_set == NULL) {
-			if(safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
-				local_attr_set = crm_concat(rsc->id, "meta-options", '-');
-			} else {
-				local_attr_set = crm_strdup(rsc->id);
-			}
-			attr_set = local_attr_set;
-		}
-		if(attr_id == NULL) {
-			local_attr_id = crm_concat(attr_set, attr_name, '-');
-			attr_id = local_attr_id;
-		}
-		
-		xml_top = create_xml_node(NULL, crm_element_name(rsc->xml));
-		crm_xml_add(xml_top, XML_ATTR_ID, rsc->id);
-		
-		xml_obj = create_xml_node(xml_top, attr_set_type);
-		crm_xml_add(xml_obj, XML_ATTR_ID, attr_set);
-		
-		xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
-		xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
-
-	} else {
-		if(attr_id == NULL) {
-			/* extract it */
-			xml_child_iter(nv_children, child, attr_id = ID(child));
-		}
-		xml_obj = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);
-		xml_top = xml_obj;
+	    if(attr_set == NULL) {
+		local_attr_set = crm_concat(rsc->id, attr_set_type, '-');
+		attr_set = local_attr_set;
+	    }
+	    if(attr_id == NULL) {
+		local_attr_id = crm_concat(attr_set, attr_name, '-');
+		attr_id = local_attr_id;
+	    }
+	    
+	    xml_top = create_xml_node(NULL, crm_element_name(rsc->xml));
+	    crm_xml_add(xml_top, XML_ATTR_ID, rsc->id);
+	    
+	    xml_obj = create_xml_node(xml_top, attr_set_type);
+	    crm_xml_add(xml_obj, XML_ATTR_ID, attr_set);
+	    
+	    xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
 	}
 		
+	xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
 	crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
@@ -412,7 +406,6 @@ delete_resource_attr(
 	const char *attr_name, cib_t *cib, pe_working_set_t *data_set)
 {
 	xmlNode *xml_obj = NULL;
-	xmlNode *xml_match = NULL;
 
 	int rc = cib_ok;
 	char *local_attr_id = NULL;
@@ -422,19 +415,17 @@ delete_resource_attr(
 		return cib_NOTEXISTS;
 	}
 
- 	rc = find_attr_details(
-	    rsc->xml, NULL, attr_set, attr_id, attr_name, &xml_match, TRUE);
+ 	rc = find_resource_attr(
+	    data_set->input, XML_ATTR_ID, rsc, attr_set, attr_id, attr_name, &local_attr_id);
 
 	if(rc == cib_NOTEXISTS) {
 	    return cib_ok;
-	}
-	
-	if(rc != cib_ok) {
+
+	} else if(rc != cib_ok) {
 	    return rc;
 	}
 	
 	if(attr_id == NULL) {
-		local_attr_id = crm_element_value_copy(xml_match, XML_ATTR_ID);
 		attr_id = local_attr_id;
 	}
 
@@ -446,8 +437,13 @@ delete_resource_attr(
 	
 	rc = cib->cmds->delete(cib, XML_CIB_TAG_RESOURCES, xml_obj, cib_options);
 
+	if(rc == cib_ok) {
+	    printf("Deleted %s option: id=%s%s%s%s%s\n", rsc->id, local_attr_id,
+		   attr_set?" set=":"", attr_set?attr_set:"",
+		   attr_name?" name=":"", attr_name?attr_name:"");
+	}
+
 	free_xml(xml_obj);
-	free_xml(xml_match);
 	crm_free(local_attr_id);
 	return rc;
 }

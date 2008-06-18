@@ -58,10 +58,9 @@ extern enum cib_errors update_attr(
 	const char *section, const char *node_uuid, const char *set_name,
 	const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console);
 
-extern enum cib_errors find_attr_details(
-	xmlNode *xml_search, const char *node_uuid,
-	const char *set_name, const char *attr_id, const char *attr_name,
-	xmlNode **xml_obj, gboolean to_console);
+extern enum cib_errors find_nvpair_attr(
+    cib_t *the_cib, const char *attr, const char *section, const char *node_uuid, const char *set_name,
+    const char *attr_id, const char *attr_name, gboolean to_console, char **value);
 
 extern enum cib_errors read_attr(
 	cib_t *the_cib,

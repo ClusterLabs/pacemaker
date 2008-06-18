@@ -221,7 +221,11 @@ main(int argc, char **argv)
 		crm_info("Detected uname: %s", dest_uname);
 	}
 
-	if(dest_node == NULL && dest_uname != NULL) {
+	if(safe_str_eq(type, "crm_config")
+	   || safe_str_eq(type, "op_defaults")
+	   || safe_str_eq(type, "rsc_defaults")) {
+	    /* dont need a node */
+	} else if(dest_node == NULL && dest_uname != NULL) {
 		rc = query_node_uuid(the_cib, dest_uname, &dest_node);
 		if(rc != cib_ok) {
 			fprintf(stderr,"Could not map uname=%s to a UUID: %s\n",
