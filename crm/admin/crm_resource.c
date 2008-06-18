@@ -1106,6 +1106,10 @@ main(int argc, char **argv)
 		}
 		
 		set_working_set_defaults(&data_set);
+		if(cli_config_update(&cib_xml_copy) == FALSE) {
+		    return cib_STALE;
+		}
+
 		data_set.input = cib_xml_copy;
 		data_set.now = new_ha_date(TRUE);
 

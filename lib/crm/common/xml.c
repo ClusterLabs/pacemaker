@@ -3152,3 +3152,33 @@ xpath_search(xmlNode *xml_top, const char *path)
     return xpathObj;
 }
 
+gboolean
+cli_config_update(xmlNode **xml) 
+{
+    gboolean rc = TRUE;
+    const char *value = crm_element_value(*xml, XML_ATTR_VALIDATION);
+    if(safe_str_neq(value, LATEST_SCHEMA_VERSION)) {
+	int schema_version = 0;
+	int min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
+	
+	xmlNode *converted = NULL;
+	
+	converted = copy_xml(*xml);
+	schema_version = update_validation(&converted, TRUE, FALSE);
+	
+	value = crm_element_value(converted, XML_ATTR_VALIDATION);
+	if(schema_version < min_version) {
+	    fprintf(stderr, "Your current configuration could only be upgraded to %s... "
+		    "the minimum requirement is %s.\n", crm_str(value), MINIMUM_SCHEMA_VERSION);
+	    
+	    free_xml(converted);
+	    converted = NULL;
+	    rc = FALSE;
+	    
+	} else {
+	    free_xml(*xml);
+	    *xml = converted;
+	}
+    }
+    return rc;
+}
