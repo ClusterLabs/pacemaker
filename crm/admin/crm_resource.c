@@ -263,17 +263,14 @@ dump_resource_attr(
 }
 
 static int find_resource_attr(
-    xmlNode *cib, const char *attr, resource_t *rsc, const char *set_type, const char *set_name,
+    cib_t *the_cib, const char *attr, resource_t *rsc, const char *set_type, const char *set_name,
     const char *attr_id, const char *attr_name, char **value)
 {
-    int max = 0;
     int offset = 0;
     static int xpath_max = 1024;
     enum cib_errors rc = cib_ok;
+    xmlNode *xml_search = NULL;
 
-    int lpc = 0;
-    xmlXPathObjectPtr xpathObj = NULL;
-    
     char *xpath_string = NULL;
 
     CRM_ASSERT(value != NULL);
@@ -303,40 +300,32 @@ static int find_resource_attr(
 	offset += snprintf(xpath_string + offset, xpath_max - offset, "@name=\"%s\"", attr_name);
     }   
     offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
-    
-    xpathObj = xpath_search(cib, xpath_string);
-    if(xpathObj != NULL && xpathObj->nodesetval != NULL) {
-	max = xpathObj->nodesetval->nodeNr;
+
+    rc = the_cib->cmds->query(
+	the_cib, xpath_string, &xml_search, cib_sync_call|cib_scope_local|cib_xpath);
+	
+    if(rc != cib_ok) {
+	return rc;
     }
 
-    if(max < 1) {
-	rc = cib_NOTEXISTS;
+    crm_log_xml_debug(xml_search, "Match");
+    if(xml_has_children(xml_search)) {
+	rc = cib_missing_data;
+	printf("Multiple attributes match name=%s\n", attr_name);
+	
+	xml_child_iter(xml_search, child,
+		       printf("  Value: %s \t(id=%s)\n", 
+			      crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
+	    );
 
-    } else if(max == 1) {
-	xmlNode *match = xpathObj->nodesetval->nodeTab[lpc];
-	const char *tmp = crm_element_value(match, attr);
+    } else {
+	const char *tmp = crm_element_value(xml_search, attr);
 	if(tmp) {
 	    *value = crm_strdup(tmp);
 	}
-
-    } else {
-	rc = cib_missing_data;
-	fprintf(stderr, "Multiple attributes match name=%s\n", attr_name);
-	for(lpc = 0; lpc < max; lpc++) {
-	    xmlNode *match = xpathObj->nodesetval->nodeTab[lpc];
-	    CRM_CHECK(match != NULL, continue);
-	    CRM_CHECK(match->type == XML_ELEMENT_NODE,
-		      crm_info("Wrong node type: %d", match->type);
-		      continue);
-	    
-	    fprintf(stderr, "  Value: %s \t(id=%s)\n",
-		    crm_element_value(match, XML_NVPAIR_ATTR_VALUE), ID(match));
-	}
     }
 
-    if(xpathObj) {
-	xmlXPathFreeObject(xpathObj);
-    }
+    free_xml(xml_search);
     return rc;
 }
 
@@ -353,6 +342,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	xmlNode *xml_top = NULL;
 	xmlNode *xml_obj = NULL;
 
+	gboolean use_attributes_tag = FALSE;
 	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
 	if(rsc == NULL) {
@@ -361,21 +351,23 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 
 	if(safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
 	    rc = find_resource_attr(
-		data_set->input, XML_ATTR_ID, rsc, XML_TAG_META_SETS, attr_set, attr_id, attr_name, &local_attr_id);
+		cib, XML_ATTR_ID, rsc, XML_TAG_META_SETS, attr_set, attr_id, attr_name, &local_attr_id);
 	    if(rc == cib_ok) {
 		printf("WARNING: There is already a meta attribute called %s (id=%s)\n", attr_name, local_attr_id);
 	    }
 	}
  	rc = find_resource_attr(
-	    data_set->input, XML_ATTR_ID, rsc, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
+	    cib, XML_ATTR_ID, rsc, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
 
 	if(rc == cib_ok) {
+	    crm_debug("Found a match for name=%s: id=%s", attr_name, local_attr_id);
 	    return cib_ok;
 
 	} else if(rc != cib_NOTEXISTS) {
 	    return rc;
 
 	} else {
+	  retry:
 	    if(attr_set == NULL) {
 		local_attr_set = crm_concat(rsc->id, attr_set_type, '-');
 		attr_set = local_attr_set;
@@ -390,8 +382,10 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	    
 	    xml_obj = create_xml_node(xml_top, attr_set_type);
 	    crm_xml_add(xml_obj, XML_ATTR_ID, attr_set);
-	    
-	    xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
+
+	    if(use_attributes_tag) {
+		xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
+	    }
 	}
 		
 	xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
@@ -402,6 +396,14 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	crm_log_xml_debug(xml_top, "Update");
 	
 	rc = cib->cmds->modify(cib, XML_CIB_TAG_RESOURCES, xml_top, cib_options);
+	if(use_attributes_tag == FALSE
+	   && xml_obj != xml_top
+	   && rc == cib_dtd_validation) {
+	    crm_debug("Falling back to the 0.6 format");
+	    free_xml(xml_top); xml_top = NULL;
+	    use_attributes_tag = TRUE;
+	    goto retry;
+	}
 
 	free_xml(xml_top);
 	crm_free(local_attr_id);
@@ -425,7 +427,7 @@ delete_resource_attr(
 	}
 
  	rc = find_resource_attr(
-	    data_set->input, XML_ATTR_ID, rsc, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
+	    cib, XML_ATTR_ID, rsc, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
 
 	if(rc == cib_NOTEXISTS) {
 	    return cib_ok;
