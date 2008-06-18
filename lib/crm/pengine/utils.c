@@ -26,6 +26,7 @@
 #include <crm/pengine/rules.h>
 #include <utils.h>
 
+extern xmlNode *get_object_root(const char *object_type,xmlNode *the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 void unpack_operation(
@@ -616,14 +617,31 @@ unpack_operation(
 	const char *class = NULL;
 	const char *value = NULL;
 	const char *field = NULL;
-	
+	GHashTable *meta = NULL;
+	xmlNode *defaults = get_object_root(XML_CIB_TAG_OPCONFIG, data_set->input);
+
 	CRM_CHECK(action->rsc != NULL, return);
+
+	unpack_instance_attributes(defaults, XML_TAG_META_SETS, NULL,
+				   action->meta, NULL, FALSE, data_set->now);
+
+	xml_prop_iter(xml_obj, name, value,
+		      if(value != NULL && g_hash_table_lookup(meta, name) == NULL) {
+			  g_hash_table_insert(meta, crm_strdup(name), crm_strdup(value));
+		      }
+	    );
+	
+	unpack_instance_attributes(xml_obj, XML_TAG_META_SETS,
+				   NULL, action->meta, NULL, FALSE, data_set->now);
+	
+	unpack_instance_attributes(xml_obj, XML_TAG_ATTR_SETS,
+				   NULL, action->meta, NULL, FALSE, data_set->now);
+	
+	g_hash_table_remove(action->meta, "id");	
+
 	class = g_hash_table_lookup(action->rsc->meta, "class");
 	
-	if(xml_obj != NULL) {
-		value = crm_element_value(xml_obj, "prereq");
-	}
-	
+	value = g_hash_table_lookup(meta, "prereq");
 	if(value == NULL && safe_str_neq(action->task, CRMD_ACTION_START)) {
 		/* todo: integrate stop as an option? */
 		action->needs = rsc_req_nothing;
@@ -663,10 +681,7 @@ unpack_operation(
 	}
 	crm_debug_3("\tAction %s requires: %s", action->task, value);
 
-	value = NULL;
-	if(xml_obj != NULL) {
-		value = crm_element_value(xml_obj, XML_OP_ATTR_ON_FAIL);
-	}
+	value = g_hash_table_lookup(meta, XML_OP_ATTR_ON_FAIL);
 	if(value == NULL) {
 
 	} else if(safe_str_eq(value, "block")) {
@@ -733,7 +748,7 @@ unpack_operation(
 
 	value = NULL;
 	if(xml_obj != NULL) {
-		value = crm_element_value(xml_obj, "role_after_failure");
+		value = g_hash_table_lookup(meta, "role_after_failure");
 	}
 	if(value != NULL && action->fail_role == RSC_ROLE_UNKNOWN) {
 		action->fail_role = text2role(value);
@@ -747,24 +762,7 @@ unpack_operation(
 		}
 	}
 	crm_debug_3("\t%s failure results in: %s",
-		    action->task, role2text(action->fail_role));
-	
-	if(xml_obj != NULL) {
-		xml_prop_iter(xml_obj, p_name, p_value,
-			      if(p_value != NULL) {
-				      g_hash_table_insert(action->meta, crm_strdup(p_name),
-							  crm_strdup(p_value));
-			      }
-			);
-
-		g_hash_table_remove(action->meta, "id");
-		
-		unpack_instance_attributes(xml_obj, XML_TAG_META_SETS,
-					   NULL, action->meta, NULL, FALSE, data_set->now);
-		
-		unpack_instance_attributes(xml_obj, XML_TAG_ATTR_SETS,
-					   NULL, action->meta, NULL, FALSE, data_set->now);
-	}
+		    action->task, role2text(action->fail_role));	
 
 	field = XML_LRM_ATTR_INTERVAL;
 	value = g_hash_table_lookup(action->meta, field);

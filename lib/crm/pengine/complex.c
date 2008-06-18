@@ -23,6 +23,7 @@
 #include <crm/msg_xml.h>
 #include <clplumbing/cl_misc.h>
 
+extern xmlNode *get_object_root(const char *object_type,xmlNode *the_root);
 void populate_hash(xmlNode *nvpair_list, GHashTable *hash,
 		   const char **attrs, int attrs_length);
 
@@ -101,9 +102,13 @@ get_meta_attributes(GHashTable *meta_hash, resource_t *rsc,
 		    node_t *node, pe_working_set_t *data_set)
 {
 	GHashTable *node_hash = NULL;
+	xmlNode *defaults = get_object_root(XML_CIB_TAG_RSCCONFIG, data_set->input);
 	if(node) {
 		node_hash = node->details->attrs;
 	}
+	
+	unpack_instance_attributes(defaults, XML_TAG_META_SETS, node_hash,
+				   meta_hash, NULL, FALSE, data_set->now);
 	
 	xml_prop_iter(rsc->xml, prop_name, prop_value,
 		      add_hash_param(meta_hash, prop_name, prop_value);
