@@ -97,6 +97,32 @@ cib_process_erase(
 }
 
 enum cib_errors 
+cib_process_upgrade(
+	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
+	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer)
+{
+    int new_version = 0;
+    int current_version = 0;
+
+    const char *value = NULL;
+
+    *answer = NULL;
+    crm_debug_2("Processing \"%s\" event", op);
+    
+    value = crm_element_value_copy(existing_cib, XML_ATTR_VALIDATION);
+    if(value != NULL) {
+	current_version = get_schema_version(value);
+    }
+
+    new_version = update_validation(result_cib, TRUE, TRUE);
+    if(new_version > current_version) {
+	return cib_ok;
+    }
+    
+    return cib_bad_config;
+}
+
+enum cib_errors 
 cib_process_bump(
 	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
 	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer)

@@ -152,11 +152,12 @@ enum cib_section {
 #define CIB_OP_UPDATE	"cib_update"
 #define CIB_OP_MODIFY	"cib_modify"
 #define CIB_OP_DELETE	"cib_delete"
-#define CIB_OP_DELETE_ALT	"cib_delete_alt"
 #define CIB_OP_ERASE	"cib_erase"
 #define CIB_OP_REPLACE	"cib_replace"
 #define CIB_OP_NOTIFY	"cib_notify"
 #define CIB_OP_APPLY_DIFF "cib_apply_diff"
+#define CIB_OP_UPGRADE    "cib_upgrade"
+#define CIB_OP_DELETE_ALT	"cib_delete_alt"
 
 #define F_CIB_CLIENTID  "cib_clientid"
 #define F_CIB_CALLOPTS  "cib_callopt"
@@ -247,6 +248,7 @@ typedef struct cib_api_operations_s
 		int (*sync_from)(
 			cib_t *cib, const char *host, const char *section, int call_options);
 
+		int (*upgrade)(cib_t *cib, int call_options);
 		int (*bump_epoch)(cib_t *cib, int call_options);
 		
 		int (*create)(cib_t *cib, const char *section, xmlNode *data, int call_options);

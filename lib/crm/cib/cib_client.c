@@ -125,6 +125,13 @@ static int cib_client_bump_epoch(cib_t *cib, int call_options)
 		cib, CIB_OP_BUMP, NULL, NULL, NULL, NULL, call_options);
 }
 
+static int cib_client_upgrade(cib_t *cib, int call_options)
+{
+	op_common(cib)
+	return cib->cmds->variant_op(
+		cib, CIB_OP_UPGRADE, NULL, NULL, NULL, NULL, call_options);
+}
+
 static int cib_client_sync(cib_t *cib, const char *section, int call_options)
 {
 	return cib->cmds->sync_from(cib, NULL, section, call_options);
@@ -325,6 +332,7 @@ cib_new_variant(void)
 	new_cib->cmds->set_slave  = cib_client_set_slave;
 	new_cib->cmds->set_slave_all = cib_client_set_slave_all;
 
+	new_cib->cmds->upgrade = cib_client_upgrade;
 	new_cib->cmds->bump_epoch = cib_client_bump_epoch;
 
 	new_cib->cmds->create  = cib_client_create;
