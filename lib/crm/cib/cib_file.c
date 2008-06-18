@@ -291,6 +291,10 @@ cib_file_perform_op(
 	free_xml(result_cib);
 	    
     } else if(query == FALSE) {
+	xmlNode *cib_diff = diff_cib_object(in_mem_cib, result_cib, FALSE);
+	log_xml_diff(LOG_INFO, cib_diff, "cib:diff");
+	
+	free_xml(cib_diff);
 	free_xml(in_mem_cib);
 	in_mem_cib = result_cib;
     }
