@@ -102,24 +102,33 @@
   </xsl:for-each>
 </xsl:template>
 
-<xsl:template match="instance_attributes">
-  <xsl:element name="instance_attributes">
+<xsl:template match="cluster_property_set">
+  <xsl:element name="cluster_property_set">
     <xsl:call-template name="auto-id"/>
-    <xsl:element name="attributes">
       <xsl:for-each select="attributes//nvpair"> 
 	<xsl:element name="nvpair">
 	  <xsl:apply-templates select="@*"/>
 	  <xsl:call-template name="auto-id"/>
 	</xsl:element>
       </xsl:for-each>
-    </xsl:element>
+  </xsl:element>
+</xsl:template>
+
+<xsl:template match="instance_attributes">
+  <xsl:element name="instance_attributes">
+    <xsl:call-template name="auto-id"/>
+      <xsl:for-each select="attributes//nvpair"> 
+	<xsl:element name="nvpair">
+	  <xsl:apply-templates select="@*"/>
+	  <xsl:call-template name="auto-id"/>
+	</xsl:element>
+      </xsl:for-each>
   </xsl:element>
 </xsl:template>
 
 <xsl:template match="meta_attributes">
   <xsl:element name="meta_attributes">
     <xsl:call-template name="auto-id"/>
-    <xsl:element name="attributes">
       <xsl:for-each select="attributes//nvpair">
 	<xsl:element name="nvpair">
 	  <xsl:call-template name="auto-id"/>
@@ -127,7 +136,6 @@
 	  <xsl:attribute name="value"><xsl:value-of select="@value"/></xsl:attribute>
 	</xsl:element>
 	</xsl:for-each>
-    </xsl:element>
   </xsl:element>
 </xsl:template>
 
@@ -288,7 +296,6 @@
 	<xsl:value-of select="@id"/>
 	<xsl:text>.meta</xsl:text>
       </xsl:attribute>
-      <xsl:element name="attributes">
 	<xsl:for-each select="@*"> 
 	  <xsl:choose>
 	    <xsl:when test="starts-with(name(), 'id')"/>
@@ -305,7 +312,6 @@
 	  </xsl:choose>
 	</xsl:for-each>
 	<xsl:call-template name="convert-instance-to-meta"/>
-      </xsl:element>
     </xsl:element>
 
 </xsl:template>
@@ -398,7 +404,7 @@
   </xsl:element>
 </xsl:template>
 
-<xsl:template match="configuration|nodes|crm_config|resources|constraints|operations|attributes|status">
+<xsl:template match="configuration|nodes|crm_config|resources|constraints|operations|status">
   <!-- no ID required -->
   <xsl:element name="{name()}">
     <xsl:apply-templates select="@*"/>

@@ -12,7 +12,6 @@
       <optional>
 	<externalRef href="rule-@DTD_VERSION@.rng"/>
       </optional>
-      <element name="attributes">
 	<zeroOrMore>
 	  <element name="nvpair">
 	    <attribute name="id"><data type="ID"/></attribute>
@@ -22,7 +21,6 @@
 	    </optional>
 	  </element>
 	</zeroOrMore>
-      </element>
       <optional>
 	<externalRef href="score.rng"/>
       </optional>

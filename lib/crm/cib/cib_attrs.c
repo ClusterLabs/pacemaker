@@ -146,6 +146,7 @@ update_attr(cib_t *the_cib, int call_options,
 
 	char *local_attr_id = NULL;
 	char *local_set_name = NULL;
+	gboolean use_attributes_tag = FALSE;
 	
 	CRM_CHECK(section != NULL, return cib_missing);
 	CRM_CHECK(attr_value != NULL, return cib_missing);
@@ -163,7 +164,7 @@ update_attr(cib_t *the_cib, int call_options,
 	/*     return cib_missing; */
 
 	} else {
-	    
+	  retry:	    
 	    if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
 		tag = XML_CIB_TAG_NODE;
 		if(node_uuid == NULL) {
@@ -232,9 +233,10 @@ update_attr(cib_t *the_cib, int call_options,
 	    if(xml_top == NULL) {
 		xml_top = xml_obj;
 	    }
-	    
-	    xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
-	    crm_log_xml_info(xml_top, "update_attr");
+
+	    if(use_attributes_tag) {
+		xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
+	    }
 	}
 
   do_modify:
@@ -247,13 +249,16 @@ update_attr(cib_t *the_cib, int call_options,
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 	
-	
+	crm_log_xml_debug_2(xml_top, "update_attr");
 	rc = the_cib->cmds->modify(
 	    the_cib, section, xml_top, call_options|cib_quorum_override);
 
-	if(rc == cib_diff_resync) {
-		/* this is an internal matter - the update succeeded */ 
-		rc = cib_ok;
+	if(use_attributes_tag == FALSE
+	   && xml_obj != xml_top
+	   && rc == cib_dtd_validation) {
+	    free_xml(xml_top); xml_top = NULL;
+	    use_attributes_tag = TRUE;
+	    goto retry;
 	}
 
 	if(rc < cib_ok) {
