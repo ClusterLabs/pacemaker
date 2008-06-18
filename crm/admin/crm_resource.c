@@ -359,6 +359,13 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 		return cib_NOTEXISTS;
 	}
 
+	if(safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
+	    rc = find_resource_attr(
+		data_set->input, XML_ATTR_ID, rsc, XML_TAG_META_SETS, attr_set, attr_id, attr_name, &local_attr_id);
+	    if(rc == cib_ok) {
+		printf("WARNING: There is already a meta attribute called %s (id=%s)\n", attr_name, local_attr_id);
+	    }
+	}
  	rc = find_resource_attr(
 	    data_set->input, XML_ATTR_ID, rsc, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
 
