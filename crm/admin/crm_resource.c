@@ -263,7 +263,7 @@ dump_resource_attr(
 }
 
 static int find_resource_attr(
-    xmlNode *cib, const char *attr, resource_t *rsc, const char *set_name,
+    xmlNode *cib, const char *attr, resource_t *rsc, const char *set_type, const char *set_name,
     const char *attr_id, const char *attr_name, char **value)
 {
     int max = 0;
@@ -283,10 +283,12 @@ static int find_resource_attr(
     offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", get_object_path("resources"));
 
     offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id=\"%s\"]", TYPE(rsc->xml), rsc->id);
-    
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s", attr_set_type);
-    if(set_name) {
-	offset += snprintf(xpath_string + offset, xpath_max - offset, "[@id=\"%s\"]", set_name);
+
+    if(set_type) {
+	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s", set_type);
+	if(set_name) {
+	    offset += snprintf(xpath_string + offset, xpath_max - offset, "[@id=\"%s\"]", set_name);
+	}
     }
     
     offset += snprintf(xpath_string + offset, xpath_max - offset, "//nvpair[");
@@ -358,7 +360,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	}
 
  	rc = find_resource_attr(
-	    data_set->input, XML_ATTR_ID, rsc, attr_set, attr_id, attr_name, &local_attr_id);
+	    data_set->input, XML_ATTR_ID, rsc, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
 
 	if(rc == cib_ok) {
 	    return cib_ok;
@@ -416,7 +418,7 @@ delete_resource_attr(
 	}
 
  	rc = find_resource_attr(
-	    data_set->input, XML_ATTR_ID, rsc, attr_set, attr_id, attr_name, &local_attr_id);
+	    data_set->input, XML_ATTR_ID, rsc, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
 
 	if(rc == cib_NOTEXISTS) {
 	    return cib_ok;
