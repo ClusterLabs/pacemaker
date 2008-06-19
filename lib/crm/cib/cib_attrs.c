@@ -106,8 +106,8 @@ find_nvpair_attr(
 	the_cib, xpath_string, &xml_search, cib_sync_call|cib_scope_local|cib_xpath);
 	
     if(rc != cib_ok) {
-	attr_msg(LOG_ERR, "Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
-		 attr_name, section, crm_str(set_name), crm_str(node_uuid), xpath_string,
+	attr_msg(LOG_DEBUG, "Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
+		 attr_name, section, crm_str(node_uuid), crm_str(set_name), xpath_string,
 		 cib_error2string(rc));
 	return rc;
     }
@@ -164,7 +164,23 @@ update_attr(cib_t *the_cib, int call_options,
 	/*     return cib_missing; */
 
 	} else {
-	  retry:	    
+	    const char *value = NULL;
+	    xmlNode *cib_top = NULL;
+	    rc = the_cib->cmds->query(
+		the_cib, "/cib", &cib_top, cib_sync_call|cib_scope_local|cib_xpath|cib_no_children);
+
+	    value = crm_element_value(cib_top, "ignore_dtd");
+	    if(value != NULL) {
+		use_attributes_tag = TRUE;
+		
+	    } else {
+		value = crm_element_value(cib_top, XML_ATTR_VALIDATION);
+		if(value && strstr(value, "-0.6")) {
+		    use_attributes_tag = TRUE;
+		}
+	    }
+	    free_xml(cib_top);
+	    
 	    if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
 		tag = XML_CIB_TAG_NODE;
 		if(node_uuid == NULL) {
@@ -252,14 +268,6 @@ update_attr(cib_t *the_cib, int call_options,
 	crm_log_xml_debug_2(xml_top, "update_attr");
 	rc = the_cib->cmds->modify(
 	    the_cib, section, xml_top, call_options|cib_quorum_override);
-
-	if(use_attributes_tag == FALSE
-	   && xml_obj != xml_top
-	   && rc == cib_dtd_validation) {
-	    free_xml(xml_top); xml_top = NULL;
-	    use_attributes_tag = TRUE;
-	    goto retry;
-	}
 
 	if(rc < cib_ok) {
 		attr_msg(LOG_ERR, "Error setting %s=%s (section=%s, set=%s): %s",

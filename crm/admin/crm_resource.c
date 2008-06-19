@@ -367,7 +367,22 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	    return rc;
 
 	} else {
-	  retry:
+	    const char *value = NULL;
+	    xmlNode *cib_top = NULL;
+
+	    rc = cib->cmds->query(cib, "/cib", &cib_top, cib_sync_call|cib_scope_local|cib_xpath|cib_no_children);
+	    value = crm_element_value(cib_top, "ignore_dtd");
+	    if(value != NULL) {
+		use_attributes_tag = TRUE;
+		
+	    } else {
+		value = crm_element_value(cib_top, XML_ATTR_VALIDATION);
+		if(value && strstr(value, "-0.6")) {
+		    use_attributes_tag = TRUE;
+		}
+	    }
+	    free_xml(cib_top);
+
 	    if(attr_set == NULL) {
 		local_attr_set = crm_concat(rsc->id, attr_set_type, '-');
 		attr_set = local_attr_set;
@@ -396,15 +411,6 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	crm_log_xml_debug(xml_top, "Update");
 	
 	rc = cib->cmds->modify(cib, XML_CIB_TAG_RESOURCES, xml_top, cib_options);
-	if(use_attributes_tag == FALSE
-	   && xml_obj != xml_top
-	   && rc == cib_dtd_validation) {
-	    crm_debug("Falling back to the 0.6 format");
-	    free_xml(xml_top); xml_top = NULL;
-	    use_attributes_tag = TRUE;
-	    goto retry;
-	}
-
 	free_xml(xml_top);
 	crm_free(local_attr_id);
 	crm_free(local_attr_set);
