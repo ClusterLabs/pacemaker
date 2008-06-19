@@ -749,7 +749,14 @@ cib_process_xpath(
 	    break;
 
 	} else if(safe_str_eq(op, CIB_OP_QUERY)) {
-	    if(*answer) {
+
+	    if(options & cib_no_children) {
+		const char *tag = TYPE(match);
+		*answer = create_xml_node(NULL, tag);
+		copy_in_properties(*answer, match);
+		break;
+		
+	    } else if(*answer) {
 		add_node_copy(*answer, match);
 
 	    } else {

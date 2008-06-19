@@ -56,6 +56,7 @@ enum cib_call_options {
 	cib_multiple        = 0x00000004,
 	cib_can_create      = 0x00000008,
 	cib_discard_reply   = 0x00000010,
+	cib_no_children     = 0x00000020,
 	cib_scope_local     = 0x00000100,
 	cib_sync_call       = 0x00001000,
 	cib_inhibit_notify  = 0x00010000,
