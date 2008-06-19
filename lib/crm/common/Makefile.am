@@ -25,7 +25,7 @@ INCLUDES       	= -I$(top_builddir)/include  -I$(top_srcdir)/include   \
 ## libraries
 lib_LTLIBRARIES	= libcrmcommon.la libcrmcluster.la
 
-libcrmcluster_la_SOURCES = cluster.c membership.c
+libcrmcluster_la_SOURCES = cluster.c membership.c stack.h
 
 if BUILD_AIS_SUPPORT
 libcrmcluster_la_SOURCES += ais.c

@@ -25,6 +25,7 @@ halibdir	= $(libdir)/@HB_PKG@
 COMMONLIBS	=  							\
 		$(top_builddir)/lib/crm/common/libcrmcommon.la 		\
 		$(top_builddir)/lib/crm/cib/libcib.la	 		\
+		$(top_builddir)/lib/fencing/libstonithd.la	 		\
 		$(CLUSTERLIBS)						\
 		$(GLIBLIB)						\
 		$(LIBRT)
