@@ -725,6 +725,9 @@ cib_process_request(
 			    level = LOG_ERR;
 		    }
 
+		} else if(safe_str_eq(op, CIB_OP_QUERY)) {
+		    level = LOG_DEBUG_2;
+
 		} else if(rc != cib_ok) {
 		    cib_num_fail++;
 		    level = LOG_ERR;
