@@ -79,6 +79,8 @@ void reap_dead_ccm_nodes(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
+extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
+
 void
 check_dead_member(const char *uname, GHashTable *members)
 {
@@ -94,12 +96,14 @@ check_dead_member(const char *uname, GHashTable *members)
 	
 	if(safe_str_eq(fsa_our_uname, uname)) {
 		crm_err("We're not part of the cluster anymore");
-	}
-	
-	if(AM_I_DC == FALSE && safe_str_eq(uname, fsa_our_dc)) {
+
+	} else if(AM_I_DC == FALSE && safe_str_eq(uname, fsa_our_dc)) {
 		crm_warn("Our DC node (%s) left the cluster", uname);
 		register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
-	}
+
+	} else if(fsa_state == S_INTEGRATION || fsa_state == S_FINALIZE_JOIN) {
+	    check_join_state(fsa_state, __FUNCTION__);
+	}    
 }
 
 /*	 A_CCM_CONNECT	*/
