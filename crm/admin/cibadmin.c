@@ -87,7 +87,7 @@ int operation_status = 0;
 cib_t *the_cib = NULL;
 
 gboolean force_flag = FALSE;
-#define OPTARGS	"V?o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:u"
+#define OPTARGS	"V?o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:unc"
 
 
 int
@@ -143,6 +143,8 @@ main(int argc, char **argv)
 		{"force",	0, 0, 'f'},
 		{"local",	0, 0, 'l'},
 		{"sync-call",	0, 0, 's'},
+		{"allow-create",0, 0, 'c'},
+		{"no-children", 0, 0, 'n'},
 		{"no-bcast",	0, 0, 'b'},
 		{"host",	0, 0, 'h'}, /* legacy */
 		{"node",	0, 0, 'N'},
@@ -236,6 +238,12 @@ main(int argc, char **argv)
 				break;
 			case '5':
 				cib_action = "md5-sum";
+				break;
+			case 'c':
+				command_options |= cib_can_create;
+				break;
+			case 'n':
+				command_options |= cib_no_children;
 				break;
 			case 'm':
 				cib_action = CIB_OP_ISMASTER;
