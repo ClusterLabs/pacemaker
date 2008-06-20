@@ -1745,8 +1745,8 @@ parse_xml(const char *input, size_t *offset)
 		    } else {
 			cl_log(LOG_ERR, "%s: Ignoring trailing characters in XML input.", __PRETTY_FUNCTION__);
 		    }
-		    cl_log(LOG_ERR, "%s: Parsed %d characters of a possible %d.  Trailing text was: \'%.40s\'...",
-			   __PRETTY_FUNCTION__, (int)lpc, (int)max, our_input+lpc);
+		    cl_log(LOG_ERR, "%s: Parsed %d characters of a possible %d.  Trailing text was: %c, \'%.40s\'...",
+			   __PRETTY_FUNCTION__, (int)lpc, (int)max, our_input[lpc], our_input+lpc);
 		}
 	}
 	
@@ -2942,7 +2942,16 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_log
 	validation = crm_element_value(xml_blob, XML_ATTR_VALIDATION);
     }
 
-    if(validation == NULL || safe_str_eq(validation, "none")) {
+    if(validation == NULL) {
+	validation = crm_element_value(xml_blob, "ignore-dtd");
+	if(crm_is_true(validation)) {
+	    validation = "none";
+	} else {
+	    validation = "transitional-0.6";
+	}
+    }
+    
+    if(safe_str_eq(validation, "none")) {
 	return TRUE;
     }
     
