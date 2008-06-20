@@ -1901,13 +1901,15 @@ process_lrm_event(lrm_op_t *op)
 	}
 
   out:
-	do_crm_log(log_level, "LRM operation %s (call=%d, rc=%d, cib-update=%d, confirmed=%s) %s %s",
+	do_crm_log(log_level,
+		   "LRM operation %s (call=%d, rc=%d, cib-update=%d, confirmed=%s) %s %s",
 		   op_key, op->call_id, op->rc, update_id, removed?"true":"false",
-		   op_status2text(op->op_status),
-		   op->op_status==LRM_OP_ERROR?execra_code2string(op->rc):"");
+		   op_status2text(op->op_status), execra_code2string(op->rc));
 
-	if(op->op_status == LRM_OP_ERROR && op->output != NULL) {
+	if(op->rc != 0 && op->output != NULL) {
 		crm_info("Result: %s", op->output);
+	} else if(op->output != NULL) {
+		crm_debug("Result: %s", op->output);
 	}
 	
 	crm_free(op_key);
