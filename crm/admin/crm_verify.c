@@ -252,16 +252,55 @@ main(int argc, char **argv)
 		crm_config_err("ID Check failed");
 	}
 
+	
 	schema = crm_element_value(cib_object, XML_ATTR_VALIDATION);
 	if(schema == NULL) {
 	    schema = LATEST_SCHEMA_VERSION;
 	}
-	
-	if(validate_xml(cib_object, schema, FALSE) == FALSE) {
-		crm_config_err("CIB did not pass DTD validation");
-	}
 
-	if(USE_LIVE_CIB) {
+	if(validate_xml(cib_object, NULL, FALSE) == FALSE) {
+		crm_config_err("CIB did not pass DTD/schema validation");
+		free_xml(cib_object);
+		cib_object = NULL;
+
+	} else {
+	    const char *value = crm_element_value(cib_object, XML_ATTR_VALIDATION);
+	    if(safe_str_neq(value, LATEST_SCHEMA_VERSION)) {
+		int schema_version = 0;
+		int max_version = get_schema_version(LATEST_SCHEMA_VERSION);
+		int min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
+		
+		xmlNode *converted = NULL;
+		
+		crm_config_warn("Your current configuration only conforms to the %s syntax", value);
+		crm_config_warn("Please use 'cibadmin --upgrade' to convert to the latest syntax (%s)", LATEST_SCHEMA_VERSION);
+		
+		converted = copy_xml(cib_object);
+		schema_version = update_validation(&converted, TRUE, FALSE);
+		
+		value = crm_element_value(converted, XML_ATTR_VALIDATION);
+		if(schema_version < min_version) {
+		    crm_config_err("Your current configuration could only be upgraded to %s... "
+				   "the minimum requirement is %s.", value, MINIMUM_SCHEMA_VERSION);
+		    crm_config_err("The cluster will NOT be able to use this configuration.");
+		    crm_config_err("Please update the configuration manually to conform to the %s syntax.", LATEST_SCHEMA_VERSION);
+		    free_xml(converted);
+		    converted = NULL;
+		    
+		} else if(schema_version < max_version) {
+		    crm_config_warn("Your configuration was internally updated to %s... "
+				    "which is acceptable but not the most recent", value);
+		} else {
+		    crm_config_warn("Your configuration was internally updated to the latest version (%s)", value);
+		}
+
+		free_xml(cib_object);
+		cib_object = converted;
+	    }
+	}
+	
+	if(cib_object == NULL) {
+	} else if(USE_LIVE_CIB) {
 	    /* we will always have a status section and can do a full simulation */
 	    do_calculations(&data_set, cib_object, NULL);
 
