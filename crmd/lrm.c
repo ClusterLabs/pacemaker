@@ -580,14 +580,7 @@ build_operation_update(
 		crm_free(id);
 	}
 	
-	if(compare_version("1.0.3", caller_version) > 0) {
-		magic = generate_transition_magic_v202(
-			op->user_data, op->op_status);
-
-	} else {
-		magic = generate_transition_magic(
-			op->user_data, op->op_status, op->rc);
-	}
+	magic = generate_transition_magic(op->user_data, op->op_status, op->rc);
 	
 	crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY,   op->user_data);
 	crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC, magic);
@@ -1062,15 +1055,6 @@ get_lrm_resource(xmlNode *resource, xmlNode *op_msg, gboolean do_create)
 		strncpy(rid, short_id, 64);
 		rid[63] = 0;
 
-#if CRM_DEPRECATED_SINCE_2_0_3
-		if(op_msg != NULL) {
-			if(g_hash_table_lookup(
-				   params, XML_ATTR_CRM_VERSION) == NULL) {
-				g_hash_table_destroy(params);
-				params = xml2list_202(op_msg);
-			}
-		}
-#endif
 		if(g_hash_table_size(params) == 0) {
 			crm_log_xml_warn(op_msg, "EmptyParams");
 		}
@@ -1396,13 +1380,6 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 	}
 
 	op->params = xml2list(rsc_op);
-#if CRM_DEPRECATED_SINCE_2_0_3
-	if(g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION) == NULL) {
-		g_hash_table_destroy(op->params);
-		op->params = xml2list_202(rsc_op);
-	}
-#endif
-		
 	if(op->params == NULL) {
 		CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
 	}

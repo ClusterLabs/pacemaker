@@ -2407,43 +2407,6 @@ hash2metafield(gpointer key, gpointer value, gpointer user_data)
 }
 
 
-#if CRM_DEPRECATED_SINCE_2_0_3
-GHashTable *
-xml2list_202(xmlNode *parent)
-{
-	xmlNode *nvpair_list = NULL;
-	GHashTable *nvpair_hash = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
-		g_hash_destroy_str, g_hash_destroy_str);
-
-	CRM_CHECK(parent != NULL, return nvpair_hash);
-
-	nvpair_list = find_xml_node(parent, XML_TAG_ATTRS, FALSE);
-	if(nvpair_list == NULL) {
-		crm_debug("No attributes in %s",
-			  crm_element_name(parent));
-		crm_log_xml_debug_2(
-			parent,"No attributes for resource op");
-	}
-	
-	xml_child_iter_filter(
-		nvpair_list, node_iter, XML_CIB_TAG_NVPAIR,
-		
-		const char *key   = crm_element_value(
-			node_iter, XML_NVPAIR_ATTR_NAME);
-		const char *value = crm_element_value(
-			node_iter, XML_NVPAIR_ATTR_VALUE);
-		
-		crm_debug_2("Added %s=%s", key, value);
-		
-		g_hash_table_insert(
-			nvpair_hash, crm_strdup(key), crm_strdup(value));
-		);
-	
-	return nvpair_hash;
-}
-#endif
-
 GHashTable *
 xml2list(xmlNode *parent)
 {
