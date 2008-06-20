@@ -361,7 +361,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 
 	if(rc == cib_ok) {
 	    crm_debug("Found a match for name=%s: id=%s", attr_name, local_attr_id);
-	    return cib_ok;
+	    attr_id = local_attr_id;
 
 	} else if(rc != cib_NOTEXISTS) {
 	    return rc;
@@ -409,6 +409,10 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	}
 		
 	xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
+	if(xml_top == NULL) {
+	    xml_top = xml_obj;
+	}
+	
 	crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
 	crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
