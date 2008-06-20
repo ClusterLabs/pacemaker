@@ -369,6 +369,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	} else {
 	    const char *value = NULL;
 	    xmlNode *cib_top = NULL;
+	    const char *tag = crm_element_name(rsc->xml);
 
 	    rc = cib->cmds->query(cib, "/cib", &cib_top, cib_sync_call|cib_scope_local|cib_xpath|cib_no_children);
 	    value = crm_element_value(cib_top, "ignore_dtd");
@@ -391,8 +392,12 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 		local_attr_id = crm_concat(attr_set, attr_name, '-');
 		attr_id = local_attr_id;
 	    }
+
+	    if(use_attributes_tag && safe_str_eq(tag, XML_CIB_TAG_MASTER)) {
+		tag = "master_slave"; /* use the old name */
+	    }
 	    
-	    xml_top = create_xml_node(NULL, crm_element_name(rsc->xml));
+	    xml_top = create_xml_node(NULL, tag);
 	    crm_xml_add(xml_top, XML_ATTR_ID, rsc->id);
 	    
 	    xml_obj = create_xml_node(xml_top, attr_set_type);
