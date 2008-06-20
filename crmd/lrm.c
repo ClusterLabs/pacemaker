@@ -40,6 +40,7 @@
 #include <crmd_callbacks.h>
 #include <crmd_lrm.h>
 
+#include <lrm/lrm_api.h>
 #include <lrm/raexec.h>
 
 
@@ -85,6 +86,20 @@ GCHSource *lrm_source = NULL;
 int num_lrm_register_fails = 0;
 int max_lrm_register_fails = 30;
 
+void lrm_connection_destroy(gpointer user_data)
+{
+    if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
+	crm_crit("LRM Connection failed");
+	register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
+	clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
+	
+    } else {
+	crm_info("LRM Connection disconnected");
+    }
+    
+    lrm_source = NULL;
+}
+
 /*	 A_LRM_CONNECT	*/
 void
 do_lrm_control(long long action,
@@ -93,7 +108,10 @@ do_lrm_control(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
-	int ret = HA_OK;
+	if(fsa_lrm_conn == NULL) {
+	    register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+	    return;
+	}
 
 	if(action & A_LRM_DISCONNECT) {
 		if(verify_stopped(cur_state, LOG_INFO) == FALSE) {
@@ -101,25 +119,17 @@ do_lrm_control(long long action,
 		    return;
 		}
 		
-		if(lrm_source) {
-			crm_debug("Removing LRM connection from MainLoop");
-			if(G_main_del_IPC_Channel(lrm_source) == FALSE) {
-				crm_err("Could not remove LRM connection"
-					" from MainLoop");
-			}
-			lrm_source = NULL;			
+		if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
+		    clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
+		    fsa_lrm_conn->lrm_ops->signoff(fsa_lrm_conn);
+		    crm_info("Disconnected from the LRM");
 		}
-		if(fsa_lrm_conn) {
-			fsa_lrm_conn->lrm_ops->signoff(fsa_lrm_conn);
-			crm_info("Disconnected from the LRM");
-			clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
-		}
+
 		/* TODO: Clean up the hashtable */
 	}
 
 	if(action & A_LRM_CONNECT) {
-	
-		ret = HA_OK;
+		int ret = HA_OK;
 		
 		pending_ops = g_hash_table_new_full(
 			g_str_hash, g_str_equal,
@@ -129,11 +139,6 @@ do_lrm_control(long long action,
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
 		
-		if(NULL == fsa_lrm_conn) {
-			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-			ret = HA_FAIL;
-		}
-
 		if(ret == HA_OK) {
 			crm_debug("Connecting to the LRM");
 			ret = fsa_lrm_conn->lrm_ops->signon(
@@ -176,7 +181,7 @@ do_lrm_control(long long action,
 			G_PRIORITY_LOW,
 			fsa_lrm_conn->lrm_ops->ipcchan(fsa_lrm_conn),
 			FALSE, lrm_dispatch, fsa_lrm_conn,
-			default_ipc_connection_destroy);
+			lrm_connection_destroy);
 
 		set_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
 		crm_debug("LRM connection established");
@@ -253,7 +258,7 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
 	    goto bail;
 	}
 
-	if(lrm_source != NULL && fsa_lrm_conn != NULL) {
+	if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
 		lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
 	}
 

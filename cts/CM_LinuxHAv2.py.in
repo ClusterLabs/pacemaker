@@ -481,7 +481,7 @@ class LinuxHAv2(HeartbeatCM):
         lrmd = Process("lrmd", 0, [
                     "State transition S_IDLE",
                     "LRM Connection failed",
-                    "crmd: .*I_ERROR.*lrm_dispatch",
+                    "crmd: .*I_ERROR.*lrm_connection_destroy",
                     "State transition S_STARTING -> S_PENDING",
                     ".*crmd .*exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",

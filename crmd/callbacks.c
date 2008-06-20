@@ -34,7 +34,7 @@
 #include <crmd.h>
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
-
+#include <crmd_lrm.h>
 
 void crmd_ha_connection_destroy(gpointer user_data);
 void crmd_ha_msg_filter(xmlNode *msg);
@@ -260,17 +260,8 @@ lrm_dispatch(IPC_Channel *src_not_used, gpointer user_data)
 	lrm->lrm_ops->rcvmsg(lrm, FALSE);
 
 	if(lrm_channel->ch_status != IPC_CONNECT) {
-		if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
-			crm_crit("LRM Connection failed");
-			register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-			clear_bit_inplace(fsa_input_register, R_LRM_CONNECTED);
-			
-		} else {
-			crm_info("LRM Connection disconnected");
-		}
-
-		lrm_source = NULL;
-		return FALSE;
+	    lrm_connection_destroy(NULL);
+	    return FALSE;
 	}
 	return TRUE;
 }
