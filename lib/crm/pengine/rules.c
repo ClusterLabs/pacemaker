@@ -573,7 +573,6 @@ unpack_attr_set(gpointer data, gpointer user_data)
 {
 	sorted_set_t *pair = data;
 	sorted_set_t *unpack_data = user_data;
-	xmlNode *attributes = NULL;
 	
 	if(test_ruleset(pair->attr_set,
 			unpack_data->node_hash, unpack_data->now) == FALSE) {
@@ -581,8 +580,7 @@ unpack_attr_set(gpointer data, gpointer user_data)
 	}
 	
 	crm_debug_3("Adding attributes from %s", pair->name);
-	attributes = first_named_child(pair->attr_set, XML_TAG_ATTRS);
-	populate_hash(attributes, unpack_data->hash, unpack_data->overwrite);
+	populate_hash(pair->attr_set, unpack_data->hash, unpack_data->overwrite);
 }
 
 static void
