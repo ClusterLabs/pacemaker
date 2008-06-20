@@ -195,7 +195,7 @@ random for the selected number of iterations.
             #logsize = os.stat(self.CM["LogFileName"])[ST_SIZE]
             #self.CM.log("Running test %s (%s) \t[%d : %d]"  
             #            % (test.name, nodechoice, testcount, logsize))
-            self.CM.log(("Running test %s" % test.name).ljust(35) + " (%s)    [%d]" % (nodechoice, testcount))
+            self.CM.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(20) +"["+ ("%d" % testcount).ljust(3) +"]")
             testcount = testcount + 1
             starttime=time.time()
             test.starttime=starttime
@@ -1681,9 +1681,9 @@ class ResourceRecover(CTSTest):
         self.CM.debug("Shooting %s..." % self.rid)
 
         pats = []
-        pats.append("crmd.* Performing op=%s_stop_0" % self.rid)
-        pats.append("crmd.* Performing op=%s_start_0" % self.rid)
-        pats.append("crmd.* LRM operation %s_start_0.*complete" % self.rid)
+        pats.append("crmd:.* Performing .* op=%s_stop_0" % self.rid)
+        pats.append("crmd:.* Performing .* op=%s_start_0" % self.rid)
+        pats.append("crmd:.* LRM operation %s_start_0.*complete" % self.rid)
         pats.append("Updating failcount for %s on .* after .* %s"
                     % (self.rid, self.action))
 
