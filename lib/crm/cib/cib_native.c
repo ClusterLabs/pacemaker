@@ -172,7 +172,9 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 	}
 	
 	if(rc == cib_ok) {
+#if HAVE_MSGFROMIPC_TIMEOUT
 		cib->call_timeout = 30; /* Default to 30s */
+#endif
 		crm_debug("Connection to CIB successful");
 		return cib_ok;
 	}
