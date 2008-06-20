@@ -45,7 +45,7 @@ do_log(long long action,
 	}
 	
 	do_crm_log(log_type,
-		   "[[FSA]] Input %s from %s() received in state (%s)",
+		   "FSA: Input %s from %s() received in state %s",
 		   fsa_input2string(msg_data->fsa_input),
 		   msg_data->origin,
 		   fsa_state2string(cur_state));
