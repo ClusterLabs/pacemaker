@@ -1130,8 +1130,33 @@ do_lrm_invoke(long long action,
 		crm_op = CRM_OP_LRM_REFRESH;
 
 	} else if(safe_str_eq(crm_op, CRM_OP_LRM_FAIL)) {
+#if HAVE_LRM_ASYNC_FAIL
+		lrm_rsc_t *rsc = NULL;
+		xmlNode *xml_rsc = find_xml_node(
+			input->xml, XML_CIB_TAG_RESOURCE, TRUE);
+
+		CRM_CHECK(xml_rsc != NULL, return);
+
+		rsc = get_lrm_resource(xml_rsc, input->xml, create_rsc);
+		if(rsc) {
+		    int rc = HA_OK;
+		    crm_info("Failing resource %s...", rsc->id);
+
+		    rc = fsa_lrm_conn->lrm_ops->fail_rsc(fsa_lrm_conn, rsc->id, 1, "do_lrm_invoke: Async failure");
+		    if(rc != HA_OK) {
+			crm_err("Could not initiate an asynchronous failure for %s (%d)", rsc->id, rc);
+		    }
+
+		    lrm_free_rsc(rsc);
+		    
+		} else {
+		    crm_info("Cannot find/create resource in order to fail it...");
+		    crm_log_xml_warn(input->msg, "bad input");
+		}
+#else
 		crm_info("Failing resource...");
 		operation = "fail";
+#endif
 
 	} else if(input->xml != NULL) {
 		operation = crm_element_value(input->xml, XML_LRM_ATTR_TASK);
