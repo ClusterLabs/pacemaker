@@ -279,7 +279,7 @@ static int find_resource_attr(
     crm_malloc0(xpath_string, xpath_max);
     offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", get_object_path("resources"));
 
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id=\"%s\"]", TYPE(rsc->xml), rsc->id);
+    offset += snprintf(xpath_string + offset, xpath_max - offset, "//*[@id=\"%s\"]", rsc->id);
 
     if(set_type) {
 	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s", set_type);
