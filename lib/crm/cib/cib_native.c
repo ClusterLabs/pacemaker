@@ -433,8 +433,10 @@ cib_native_perform_op(
 		crm_log_xml(LOG_MSG, "passed", op_reply);
 		break;
 	    default:
-		crm_err("Call failed: %s", cib_error2string(rc));
-		crm_log_xml(LOG_WARNING, "failed", op_reply);
+		if(safe_str_neq(op, CIB_OP_QUERY)) {
+		    crm_warn("Call failed: %s", cib_error2string(rc));
+		    crm_log_xml(LOG_DEBUG_2, "failed", op_reply);
+		}
 	}
 	
 	if(output_data == NULL) {
