@@ -403,8 +403,8 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	}
 
 	validation = crm_element_value(root, XML_ATTR_VALIDATION);
-	if(validate_xml(root, validation, TRUE) == FALSE) {
-	    crm_err("CIB does not validate with %s", validation);
+	if(validate_xml(root, NULL, TRUE) == FALSE) {
+	    crm_err("CIB does not validate with %s", crm_str(validation));
 	    cib_status = cib_dtd_validation;
 		
 	} else if(validation == NULL) {
