@@ -71,7 +71,7 @@ class LinuxHAv2(HeartbeatCM):
             "StartCmd"       : "@INITDIR@/heartbeat@INIT_EXT@ start > /dev/null 2>&1",
             "StopCmd"        : "@INITDIR@/heartbeat@INIT_EXT@ stop  > /dev/null 2>&1",
             "ElectionCmd"    : "@sbindir@/crmadmin -E %s",
-            "StatusCmd"      : "@sbindir@/crmadmin -S %s 2>/dev/null",
+            "StatusCmd"      : "@sbindir@/crmadmin -t 60000 -S %s 2>/dev/null",
             "EpocheCmd"      : "@sbindir@/ccm_tool -H -e",
             "QuorumCmd"      : "@sbindir@/ccm_tool -H -q",
             "ParitionCmd"    : "@sbindir@/ccm_tool -H -p",
