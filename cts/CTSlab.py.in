@@ -537,6 +537,7 @@ if __name__ == '__main__':
     StonithType = "ssh"
     StonithParams = None
     StonithParams = "hostlist=dynamic".split('=')
+    node_list = ''
 
     #
     # The values of the rest of the parameters are now properly derived from
