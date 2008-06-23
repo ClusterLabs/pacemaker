@@ -108,8 +108,8 @@ extern char *crm_concat(const char *prefix, const char *suffix, char join);
 extern gboolean decode_op_key(
 	const char *key, char **rsc_id, char **op_type, int *interval);
 
-extern void filter_action_parameters(crm_data_t *param_set, const char *version);
-extern void filter_reload_parameters(crm_data_t *param_set, const char *restart_string);
+extern void filter_action_parameters(xmlNode *param_set, const char *version);
+extern void filter_reload_parameters(xmlNode *param_set, const char *restart_string);
 
 #define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 
@@ -187,5 +187,8 @@ extern gboolean is_set_any(long long action_list, long long action);
 
 extern gboolean is_openais_cluster(void);
 extern gboolean is_heartbeat_cluster(void);
+
+extern xmlNode *cib_recv_remote_msg(void *session);
+extern void cib_send_remote_msg(void *session, xmlNode *msg);
 
 #endif

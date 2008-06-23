@@ -47,7 +47,7 @@ gboolean ccm_age_connect(int *ccm_fd);
 
 int command = 0;
 
-#define OPTARGS	"hVqep"
+#define OPTARGS	"hVqepH"
 
 void usage(const char* cmd, int exit_status);
 char *lookup_host = NULL;
@@ -60,6 +60,8 @@ extern gboolean init_ais_connection(
     gboolean (*dispatch)(AIS_Message*,char*,int),
     void (*destroy)(gpointer), char **our_uuid, char **our_uname);
 #endif
+
+int cluster_type = 0;
 
 int
 main(int argc, char ** argv)
@@ -79,6 +81,12 @@ main(int argc, char ** argv)
 				break;
 			case 'h':		/* Help message */
 				usage(crm_system_name, LSB_EXIT_OK);
+				break;
+			case 'H':
+				cluster_type = 2;
+				break;
+			case 'A':
+				cluster_type = 3;
 				break;
 			case 'p':
 			case 'e':		
@@ -100,7 +108,7 @@ main(int argc, char ** argv)
 	}
 
 #if SUPPORT_AIS
-	if(init_ais_connection(
+	if(cluster_type != 2 && init_ais_connection(
 	       ais_membership_dispatch, ais_membership_destroy, NULL, NULL)) {
 
 	    GMainLoop*  amainloop = NULL;
@@ -114,7 +122,7 @@ main(int argc, char ** argv)
 	} else
 #endif
 #if SUPPORT_HEARTBEAT
-	    if(ccm_age_connect(&ccm_fd)) {
+	    if(cluster_type != 3 && ccm_age_connect(&ccm_fd)) {
 		int rc = 0;
 		int lpc = 0;
 		fd_set rset;	

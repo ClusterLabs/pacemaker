@@ -6,7 +6,7 @@
            <nvpair id="cib-bootstrap-options-symmetric-cluster" name="symmetric-cluster" value="true"/>
            <nvpair id="cib-bootstrap-options-no_quorum-policy" name="no_quorum-policy" value="stop"/>
            <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="0"/>
-           <nvpair id="cib-bootstrap-options-default-resource-failure-stickiness" name="default-resource-failure-stickiness" value="0"/>
+           <nvpair id="cib-bootstrap-options-default-migration-threshold" name="default-migration-threshold" value="0"/>
            <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
            <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="reboot"/>
            <nvpair id="cib-bootstrap-options-stop-orphan-resources" name="stop-orphan-resources" value="true"/>

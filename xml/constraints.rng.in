@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+      <ref name="element-constraints"/>
+  </start>
+
+  <define name="element-constraints">
+      <zeroOrMore>
+	<choice>
+	  <ref name="element-location"/>
+	  <ref name="element-colocation"/>
+	  <ref name="element-order"/>
+	</choice>
+      </zeroOrMore>
+  </define>
+
+  <define name="element-location">
+    <element name="rsc_location">
+      <attribute name="id"><data type="ID"/></attribute>
+      <attribute name="rsc"><data type="IDREF"/></attribute>
+      <choice>
+	<group>
+	  <externalRef href="score.rng"/>
+	  <attribute name="node"><data type="IDREF"/></attribute>
+	</group>
+	<oneOrMore>
+	  <externalRef href="rule-@DTD_VERSION@.rng"/>
+	</oneOrMore>
+      </choice>
+      <optional>
+	<ref name="element-lifetime"/>
+      </optional>
+    </element>
+  </define>
+
+  <define name="element-resource-set">
+    <element name="resource_set">
+      <attribute name="id"><data type="ID"/></attribute>
+      <optional>
+	<attribute name="sequential"><data type="boolean"/></attribute>
+      </optional>
+      <optional>
+	<attribute name="action">
+	  <ref name="attribute-actions"/>
+	</attribute>
+      </optional>
+      <optional>
+	<attribute name="role">
+	  <ref name="attribute-roles"/>
+	</attribute>
+      </optional>
+      <optional>
+	<externalRef href="score.rng"/>
+      </optional>
+      <oneOrMore>
+	<element name="resource_ref">
+	  <attribute name="id"><data type="IDREF"/></attribute>
+	</element>
+      </oneOrMore>
+    </element>
+  </define>
+
+  <define name="element-colocation">
+    <element name="rsc_colocation">
+      <attribute name="id"><data type="ID"/></attribute>
+      <optional>
+	<choice>
+	  <externalRef href="score.rng"/>
+	  <attribute name="score-attribute"><text/></attribute>
+	  <attribute name="score-attribute-mangle"><text/></attribute>
+	</choice>
+      </optional>
+      <optional>
+	<ref name="element-lifetime"/>
+      </optional>
+      <choice>
+	<oneOrMore>
+	  <ref name="element-resource-set"/>
+	</oneOrMore>
+	<group>
+	  <attribute name="rsc"><data type="IDREF"/></attribute>
+	  <attribute name="with-rsc"><data type="IDREF"/></attribute>
+	  <optional>
+	    <attribute name="rsc-role">
+	      <ref name="attribute-roles"/>
+	    </attribute>
+	  </optional>
+	  <optional>
+	    <attribute name="with-rsc-role">
+	      <ref name="attribute-roles"/>
+	    </attribute>
+	  </optional>
+	</group>
+      </choice>
+    </element>
+  </define>
+
+  <define name="element-order">
+    <element name="rsc_order">
+      <attribute name="id"><data type="ID"/></attribute>
+      <optional>
+	<ref name="element-lifetime"/>
+      </optional>
+      <optional>
+	<attribute name="symmetrical"><data type="boolean"/></attribute>
+      </optional>
+      <choice>
+	<oneOrMore>
+	  <ref name="element-resource-set"/>
+	</oneOrMore>
+	<group>
+	  <attribute name="first-rsc"><data type="IDREF"/></attribute>
+	  <attribute name="then-rsc"><data type="IDREF"/></attribute>
+	  <optional>
+	    <externalRef href="score.rng"/>
+	  </optional>
+	  <optional>
+	    <attribute name="first-action">
+	      <ref name="attribute-actions"/>
+	    </attribute>
+	  </optional>
+	  <optional>
+	    <attribute name="then-action">
+	      <ref name="attribute-actions"/>
+	    </attribute>
+	  </optional>
+	</group>
+      </choice>
+    </element>
+  </define>
+ 
+  <define name="attribute-actions">
+    <choice>
+      <value>start</value>
+      <value>promote</value>
+      <value>demote</value>
+      <value>stop</value>
+    </choice>
+  </define>
+      
+  <define name="attribute-roles">
+    <choice>
+      <value>Stopped</value>
+      <value>Started</value>
+      <value>Master</value>
+      <value>Slave</value>
+    </choice>
+  </define>
+
+  <define name="element-lifetime">
+    <element name="lifetime">
+      <oneOrMore>
+	<externalRef href="rule-@DTD_VERSION@.rng"/>
+      </oneOrMore>
+    </element>
+  </define>
+  
+</grammar>

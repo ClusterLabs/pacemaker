@@ -50,41 +50,41 @@
 #	define	NETSNMP_NO_INLINE 1
 #endif
 
-#ifndef HA_HAVE_DAEMON
+#ifndef HAVE_DAEMON
   /* We supply a replacement function, but need a prototype */
 int daemon(int nochdir, int noclose);
-#endif /* HA_HAVE_DAEMON */
+#endif /* HAVE_DAEMON */
 
-#ifndef HA_HAVE_SETENV
+#ifndef HAVE_SETENV
   /* We supply a replacement function, but need a prototype */
 int setenv(const char *name, const char * value, int why);
-#endif /* HA_HAVE_SETENV */
+#endif /* HAVE_SETENV */
 
-#ifndef HA_HAVE_STRERROR
+#ifndef HAVE_STRERROR
   /* We supply a replacement function, but need a prototype */
 char * strerror(int errnum);
-#endif /* HA_HAVE_STRERROR */
+#endif /* HAVE_STRERROR */
 
-#ifndef HA_HAVE_ALPHASORT
+#ifndef HAVE_ALPHASORT
 #  include <dirent.h>
 int
 alphasort(const void *dirent1, const void *dirent2);
-#endif /* HA_HAVE_ALPHASORT */
+#endif /* HAVE_ALPHASORT */
 
-#ifndef HA_HAVE_INET_PTON
+#ifndef HAVE_INET_PTON
   /* We supply a replacement function, but need a prototype */
 int
 inet_pton(int af, const char *src, void *dst);
 
-#endif /* HA_HAVE_INET_PTON */
+#endif /* HAVE_INET_PTON */
 
-#ifndef HA_HAVE_STRNLEN
+#ifndef HAVE_STRNLEN
 	size_t strnlen(const char *s, size_t maxlen);
 #else
 #	define USE_GNU
 #endif
 
-#ifndef HA_HAVE_STRNDUP
+#ifndef HAVE_STRNDUP
 	char *strndup(const char *str, size_t len);
 #else
 #	define USE_GNU

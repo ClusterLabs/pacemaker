@@ -134,14 +134,6 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_colocation id="coloc-1" to="rsc_c001n09" from="DoFencing:child_DoFencing:7" score="INFINITY"/>
-      <rsc_colocation id="coloc-2" to="rsc_c001n08" from="DoFencing:child_DoFencing:6" score="INFINITY"/>
-      <rsc_colocation id="coloc-3" to="rsc_c001n07" from="DoFencing:child_DoFencing:5" score="INFINITY"/>
-      <rsc_colocation id="coloc-4" to="rsc_c001n06" from="DoFencing:child_DoFencing:4" score="INFINITY"/>
-      <rsc_colocation id="coloc-5" to="rsc_c001n05" from="DoFencing:child_DoFencing:3" score="INFINITY"/>
-      <rsc_colocation id="coloc-6" to="rsc_c001n04" from="DoFencing:child_DoFencing:2" score="INFINITY"/>
-      <rsc_colocation id="coloc-7" to="rsc_c001n03" from="DoFencing:child_DoFencing:1" score="INFINITY"/>
-      <rsc_colocation id="coloc-8" to="rsc_c001n02" from="DoFencing:child_DoFencing:0" score="INFINITY"/>
       <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
         <rule id="cant_run_DcIPaddr" score="-INFINITY" boolean_op="and">
           <expression attribute="#is_dc" operation="eq" value="false"/>

@@ -17,7 +17,7 @@
            <nvpair id="cib-bootstrap-options-pe-warn-series-max" name="pe-warn-series-max" value="100"/>
            <nvpair id="cib-bootstrap-options-pe-input-series-max" name="pe-input-series-max" value="100"/>
            <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="100"/>
-           <nvpair id="cib-bootstrap-options-default-resource-failure-stickiness" name="default-resource-failure-stickiness" value="0"/>
+           <nvpair id="cib-bootstrap-options-default-migration-threshold" name="default-migration-threshold" value="0"/>
            <nvpair id="cib-bootstrap-options-shutdown-escalation" name="shutdown-escalation" value="5min"/>
            <nvpair id="cib-bootstrap-optionsstartup-fencing" name="startup-fencing" value="false"/>
            <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1169747681"/>
@@ -63,8 +63,8 @@
      </resources>
      <constraints>
        <rsc_order id="drbd_before_fs" from="fs_1" action="start" to="ms-drbd0" to_action="promote" score="0"/>
-       <rsc_colocation id="fs_on_drbd0" to="ms-drbd0" to_role="master" from="fs_1" score="infinity"/>
-       <rsc_order id="promote_after_demote" from="ms-drbd0" action="pre_notify_promote" to="ms-drbd0" to_action="confirmed-post_notify_demote" score="0"/>
+       <rsc_colocation id="fs_on_drbd0" to="ms-drbd0" to_role="Master" from="fs_1" score="infinity"/>
+       <rsc_order id="promote_after_demote" from="ms-drbd0" action="promote" to="ms-drbd0" to_action="demote" score="0"/>
      </constraints>
    </configuration>
    <status>

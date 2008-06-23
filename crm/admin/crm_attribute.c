@@ -62,7 +62,7 @@ const char *rsc_id     = NULL;
 const char *dest_uname = NULL;
 const char *attr_value = NULL;
 
-#define OPTARGS	"V?GDQU:u:s:n:v:l:t:i:!r:"
+#define OPTARGS	"V?GDQN:U:u:s:n:v:l:t:i:!r:"
 
 int
 main(int argc, char **argv)
@@ -84,8 +84,9 @@ main(int argc, char **argv)
 		{"quiet",       0, 0, 'Q'},
 		{"get-value",   0, 0, 'G'},
 		{"delete-attr", 0, 0, 'D'},
-		{"node-uname",  1, 0, 'U'},
-		{"node-uuid",   1, 0, 'u'},
+		{"node",        1, 0, 'N'},
+		{"node-uname",  1, 0, 'U'}, /* legacy */
+		{"node-uuid",   1, 0, 'u'}, /* legacy */
 		{"set-name",    1, 0, 's'},
 		{"attr-id",     1, 0, 'i'},
 		{"attr-name",   1, 0, 'n'},
@@ -134,6 +135,7 @@ main(int argc, char **argv)
 				DO_WRITE = FALSE;
 				break;
 			case 'U':
+			case 'N':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				dest_uname = optarg;
 				break;
@@ -196,8 +198,7 @@ main(int argc, char **argv)
 	}
 
 	the_cib = cib_new();
-	rc = the_cib->cmds->signon(
-		the_cib, crm_system_name, cib_command_synchronous);
+	rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 
 	if(rc != cib_ok) {
 		fprintf(stderr, "Error signing on to the CIB service: %s\n",
@@ -220,7 +221,11 @@ main(int argc, char **argv)
 		crm_info("Detected uname: %s", dest_uname);
 	}
 
-	if(dest_node == NULL && dest_uname != NULL) {
+	if(safe_str_eq(type, "crm_config")
+	   || safe_str_eq(type, "op_defaults")
+	   || safe_str_eq(type, "rsc_defaults")) {
+	    /* dont need a node */
+	} else if(dest_node == NULL && dest_uname != NULL) {
 		rc = query_node_uuid(the_cib, dest_uname, &dest_node);
 		if(rc != cib_ok) {
 			fprintf(stderr,"Could not map uname=%s to a UUID: %s\n",
@@ -455,10 +460,8 @@ usage(const char *cmd, int exit_status)
 			"lifetime", 'l');
 		exit(exit_status);
 	} else if(safe_str_eq(cmd, "crm_standby")) {
-		fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
-			"UUID of the node to change\n", "node-uuid", 'u');
 		fprintf(stream, "\t--%s (-%c) <node_uname>\t: "
-			"uname of the node to change\n", "node-uname", 'U');
+			"uname of the node to change\n", "node", 'N');
 		fprintf(stream, "\t--%s (-%c) <string>\t: "
 			"How long the preference lasts (reboot|forever)\n"
 			"\t    If a forever value exists, it is ALWAYS used by the CRM\n"
@@ -466,10 +469,8 @@ usage(const char *cmd, int exit_status)
 		exit(exit_status);
 	}
 	
-	fprintf(stream, "\t--%s (-%c) <node_uuid>\t: "
-		"UUID of the node to change\n", "node-uuid", 'u');
 	fprintf(stream, "\t--%s (-%c) <node_uname>\t: "
-		"uname of the node to change\n", "node-uname", 'U');
+		"uname of the node to change\n", "node-uname", 'h');
 
 	if(safe_str_eq(cmd, "crm_failcount")) {
 		fprintf(stream, "\t--%s (-%c) <resource name>\t: "
@@ -484,9 +485,9 @@ usage(const char *cmd, int exit_status)
 			"Which section of the CIB to set the attribute: (%s|%s|%s)\n",
 			"type", 't',
 			XML_CIB_TAG_NODES, XML_CIB_TAG_STATUS, XML_CIB_TAG_CRMCONFIG);
-		fprintf(stream, "\t    -t=%s options: -(U|u) -n [-s]\n", XML_CIB_TAG_NODES);
-		fprintf(stream, "\t    -t=%s options: -(U|u) -n [-s]\n", XML_CIB_TAG_STATUS);
-		fprintf(stream, "\t    -t=%s options: -n [-s]\n", XML_CIB_TAG_CRMCONFIG);
+		fprintf(stream, "\t    -t=%s options: -N -n [-s]\n", XML_CIB_TAG_NODES);
+		fprintf(stream, "\t    -t=%s options: -N -n [-s]\n", XML_CIB_TAG_STATUS);
+		fprintf(stream, "\t    -t=%s options: -N [-s]\n", XML_CIB_TAG_CRMCONFIG);
 	}
 
 	if(safe_str_neq(crm_system_name, "crm_standby")) {

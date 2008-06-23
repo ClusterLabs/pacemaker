@@ -1234,13 +1234,14 @@ new_ha_date(gboolean set_to_now)
 	ha_time_t *now = NULL;
 
 	tzset();
-	tm_now = time(NULL);
 	crm_malloc0(now, sizeof(ha_time_t));
 	crm_malloc0(now->has, sizeof(ha_has_time_t));
 	crm_malloc0(now->offset, sizeof(ha_time_t));
 	crm_malloc0(now->offset->has, sizeof(ha_has_time_t));
 	if(set_to_now) {
-		ha_set_timet_time(now, &tm_now);
+	    tm_now = time(NULL);
+	    now->tm_now = tm_now;
+	    ha_set_timet_time(now, &tm_now);
 	}
 	return now;
 }

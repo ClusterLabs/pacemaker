@@ -142,7 +142,7 @@ class CIB:
         </clone>"""
 
     cib_template ='''
-<cib cib_feature_revision="1" have_quorum="false" ignore_dtd="false">
+<cib cib_feature_revision="1" have_quorum="false" ignore_dtd="false" validate-with="transitional-0.6">
   <configuration>
      <crm_config>  %s 
      </crm_config>
@@ -192,9 +192,9 @@ class CIB:
         ip1=self.NextIP()
         ip2=self.NextIP()
         ip3=self.NextIP()
-        ip1_rsc = self.ipaddr_template % (ip1, ip1, ip1, ip1, ip1, ip1)
-        ip2_rsc = self.hb_ipaddr_template % (ip2, ip2, ip2, ip2, ip2)
-        ip3_rsc = self.ipaddr_template % (ip3, ip3, ip3, ip3, ip3, ip3)
+        ip1_rsc = self.ipaddr_template % ("r"+ip1, ip1, ip1, ip1, ip1, ip1)
+        ip2_rsc = self.hb_ipaddr_template % ("r"+ip2, ip2, ip2, ip2, ip2)
+        ip3_rsc = self.ipaddr_template % ("r"+ip3, ip3, ip3, ip3, ip3, ip3)
         resources += self.resource_group_template % (ip1_rsc, ip2_rsc, ip3_rsc)
 
         # lsb resource

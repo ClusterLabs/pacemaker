@@ -35,7 +35,7 @@ extern gboolean crmd_ha_msg_dispatch(
 extern void crmd_ipc_connection_destroy(gpointer user_data);
  
 extern void crmd_ha_msg_callback(
-	HA_Message * msg, void* private_data);
+	HA_Message *hamsg, void* private_data);
 
 extern gboolean crmd_ipc_msg_callback(
 	IPC_Channel *client, gpointer user_data);
@@ -53,7 +53,7 @@ extern void crmd_ha_status_callback(
 extern void crmd_client_status_callback(
 	const char * node, const char * client, const char * status, void * private);
 
-extern void msg_ccm_join(const HA_Message *msg, void *foo);
+extern void msg_ccm_join(const xmlNode *msg, void *foo);
 
 extern gboolean crmd_client_connect(
 	IPC_Channel *newclient, gpointer user_data);

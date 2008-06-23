@@ -62,9 +62,9 @@ main(int argc, char **argv)
 	gboolean as_cib = FALSE;
 	int argerr = 0;
 	int flag;
-	crm_data_t *object_1 = NULL;
-	crm_data_t *object_2 = NULL;
-	crm_data_t *output = NULL;
+	xmlNode *object_1 = NULL;
+	xmlNode *object_2 = NULL;
+	xmlNode *output = NULL;
 	const char *xml_file_1 = NULL;
 	const char *xml_file_2 = NULL;
 
