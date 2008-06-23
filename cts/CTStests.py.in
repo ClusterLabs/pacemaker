@@ -195,7 +195,7 @@ random for the selected number of iterations.
             #logsize = os.stat(self.CM["LogFileName"])[ST_SIZE]
             #self.CM.log("Running test %s (%s) \t[%d : %d]"  
             #            % (test.name, nodechoice, testcount, logsize))
-            self.CM.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(20) +"["+ ("%d" % testcount).ljust(3) +"]")
+            self.CM.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) +"["+ ("%d" % testcount).rjust(3) +"]")
             testcount = testcount + 1
             starttime=time.time()
             test.starttime=starttime
