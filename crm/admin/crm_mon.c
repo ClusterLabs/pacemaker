@@ -67,7 +67,7 @@ int print_html_status(xmlNode *cib, const char *filename, gboolean web_cgi);
 void make_daemon(gboolean daemonize, const char *pidfile);
 gboolean mon_timer_popped(gpointer data);
 void mon_update(xmlNode*, int, int, xmlNode*,void*);
-void clean_up(void);
+void clean_up(int rc);
 
 char *xml_file = NULL;
 char *as_html_file = NULL;

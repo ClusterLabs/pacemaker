@@ -172,17 +172,6 @@ static int get_target_rc(crm_action_t *action)
 	return 0;
 }
 
-static int get_target_rc(crm_action_t *action) 
-{
-	const char *target_rc_s = g_hash_table_lookup(
-	    action->params, crm_meta_name(XML_ATTR_TE_TARGET_RC));
-
-	if(target_rc_s != NULL) {
-		return crm_parse_int(target_rc_s, "0");
-	}
-	return 0;
-}
-
 static gboolean
 te_crm_command(crm_graph_t *graph, crm_action_t *action)
 {
