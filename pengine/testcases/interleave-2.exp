@@ -811,7 +811,7 @@
    </synapse>
    <synapse id="90">
      <action_set>
-       <rsc_op id="209" operation="start" operation_key="child_CloneSet:0_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
+       <rsc_op id="211" operation="start" operation_key="child_CloneSet:0_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="child_CloneSet:0" long-id="CloneSet:child_CloneSet:0" class="stonith" type="ssh"/>
          <attributes crm_feature_set="2.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " CRM_meta_timeout="20000" CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </rsc_op>
@@ -821,20 +821,20 @@
          <pseudo_event id="18" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <pseudo_event id="225" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="91">
      <action_set>
-       <rsc_op id="210" operation="monitor" operation_key="child_CloneSet:0_monitor_5000" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
+       <rsc_op id="212" operation="monitor" operation_key="child_CloneSet:0_monitor_5000" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="child_CloneSet:0" long-id="CloneSet:child_CloneSet:0" class="stonith" type="ssh"/>
          <attributes crm_feature_set="2.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " CRM_meta_id="11" CRM_meta_timeout="20000" CRM_meta_name="monitor" CRM_meta_interval="5000" CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="209" operation="start" operation_key="child_CloneSet:0_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+         <rsc_op id="211" operation="start" operation_key="child_CloneSet:0_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
        </trigger>
      </inputs>
    </synapse>
@@ -912,7 +912,7 @@
    </synapse>
    <synapse id="100">
      <action_set>
-       <rsc_op id="211" operation="start" operation_key="child_CloneSet:1_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+       <rsc_op id="213" operation="start" operation_key="child_CloneSet:1_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="child_CloneSet:1" long-id="CloneSet:child_CloneSet:1" class="stonith" type="ssh"/>
          <attributes crm_feature_set="2.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " CRM_meta_timeout="20000" CRM_meta_clone="1" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </rsc_op>
@@ -922,20 +922,20 @@
          <pseudo_event id="18" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <pseudo_event id="225" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="101">
      <action_set>
-       <rsc_op id="212" operation="monitor" operation_key="child_CloneSet:1_monitor_5000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+       <rsc_op id="214" operation="monitor" operation_key="child_CloneSet:1_monitor_5000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="child_CloneSet:1" long-id="CloneSet:child_CloneSet:1" class="stonith" type="ssh"/>
          <attributes crm_feature_set="2.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " CRM_meta_id="11" CRM_meta_timeout="20000" CRM_meta_name="monitor" CRM_meta_interval="5000" CRM_meta_clone="1" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="211" operation="start" operation_key="child_CloneSet:1_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+         <rsc_op id="213" operation="start" operation_key="child_CloneSet:1_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
      </inputs>
    </synapse>
@@ -1013,7 +1013,7 @@
    </synapse>
    <synapse id="110">
      <action_set>
-       <rsc_op id="213" operation="start" operation_key="child_CloneSet:2_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+       <rsc_op id="215" operation="start" operation_key="child_CloneSet:2_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="child_CloneSet:2" long-id="CloneSet:child_CloneSet:2" class="stonith" type="ssh"/>
          <attributes crm_feature_set="2.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " CRM_meta_timeout="20000" CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </rsc_op>
@@ -1023,20 +1023,20 @@
          <pseudo_event id="18" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <pseudo_event id="225" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="111">
      <action_set>
-       <rsc_op id="214" operation="monitor" operation_key="child_CloneSet:2_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
+       <rsc_op id="216" operation="monitor" operation_key="child_CloneSet:2_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="child_CloneSet:2" long-id="CloneSet:child_CloneSet:2" class="stonith" type="ssh"/>
          <attributes crm_feature_set="2.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " CRM_meta_id="11" CRM_meta_timeout="20000" CRM_meta_name="monitor" CRM_meta_interval="5000" CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="213" operation="start" operation_key="child_CloneSet:2_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+         <rsc_op id="215" operation="start" operation_key="child_CloneSet:2_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
        </trigger>
      </inputs>
    </synapse>
@@ -1114,7 +1114,7 @@
    </synapse>
    <synapse id="120">
      <action_set>
-       <rsc_op id="215" operation="start" operation_key="child_CloneSet:3_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
+       <rsc_op id="217" operation="start" operation_key="child_CloneSet:3_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="child_CloneSet:3" long-id="CloneSet:child_CloneSet:3" class="stonith" type="ssh"/>
          <attributes crm_feature_set="2.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " CRM_meta_timeout="20000" CRM_meta_clone="3" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </rsc_op>
@@ -1124,20 +1124,20 @@
          <pseudo_event id="18" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <pseudo_event id="225" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="121">
      <action_set>
-       <rsc_op id="216" operation="monitor" operation_key="child_CloneSet:3_monitor_5000" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
+       <rsc_op id="218" operation="monitor" operation_key="child_CloneSet:3_monitor_5000" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="child_CloneSet:3" long-id="CloneSet:child_CloneSet:3" class="stonith" type="ssh"/>
          <attributes crm_feature_set="2.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " CRM_meta_id="11" CRM_meta_timeout="20000" CRM_meta_name="monitor" CRM_meta_interval="5000" CRM_meta_clone="3" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="215" operation="start" operation_key="child_CloneSet:3_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+         <rsc_op id="217" operation="start" operation_key="child_CloneSet:3_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
        </trigger>
      </inputs>
    </synapse>
@@ -1215,7 +1215,7 @@
    </synapse>
    <synapse id="130">
      <action_set>
-       <rsc_op id="217" operation="start" operation_key="child_CloneSet:4_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
+       <rsc_op id="219" operation="start" operation_key="child_CloneSet:4_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
          <primitive id="child_CloneSet:4" long-id="CloneSet:child_CloneSet:4" class="stonith" type="ssh"/>
          <attributes crm_feature_set="2.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " CRM_meta_timeout="20000" CRM_meta_clone="4" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </rsc_op>
@@ -1225,20 +1225,20 @@
          <pseudo_event id="18" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <pseudo_event id="225" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="131">
      <action_set>
-       <rsc_op id="218" operation="monitor" operation_key="child_CloneSet:4_monitor_5000" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
+       <rsc_op id="220" operation="monitor" operation_key="child_CloneSet:4_monitor_5000" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
          <primitive id="child_CloneSet:4" long-id="CloneSet:child_CloneSet:4" class="stonith" type="ssh"/>
          <attributes crm_feature_set="2.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " CRM_meta_id="11" CRM_meta_timeout="20000" CRM_meta_name="monitor" CRM_meta_interval="5000" CRM_meta_clone="4" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="217" operation="start" operation_key="child_CloneSet:4_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+         <rsc_op id="219" operation="start" operation_key="child_CloneSet:4_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
        </trigger>
      </inputs>
    </synapse>
@@ -1316,7 +1316,7 @@
    </synapse>
    <synapse id="140">
      <action_set>
-       <rsc_op id="219" operation="start" operation_key="child_CloneSet:5_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
+       <rsc_op id="221" operation="start" operation_key="child_CloneSet:5_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
          <primitive id="child_CloneSet:5" long-id="CloneSet:child_CloneSet:5" class="stonith" type="ssh"/>
          <attributes crm_feature_set="2.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " CRM_meta_timeout="20000" CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </rsc_op>
@@ -1326,20 +1326,20 @@
          <pseudo_event id="18" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <pseudo_event id="225" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="141">
      <action_set>
-       <rsc_op id="220" operation="monitor" operation_key="child_CloneSet:5_monitor_5000" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
+       <rsc_op id="222" operation="monitor" operation_key="child_CloneSet:5_monitor_5000" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2">
          <primitive id="child_CloneSet:5" long-id="CloneSet:child_CloneSet:5" class="stonith" type="ssh"/>
          <attributes crm_feature_set="2.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " CRM_meta_id="11" CRM_meta_timeout="20000" CRM_meta_name="monitor" CRM_meta_interval="5000" CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="219" operation="start" operation_key="child_CloneSet:5_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+         <rsc_op id="221" operation="start" operation_key="child_CloneSet:5_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
        </trigger>
      </inputs>
    </synapse>
@@ -1417,7 +1417,7 @@
    </synapse>
    <synapse id="150">
      <action_set>
-       <rsc_op id="221" operation="start" operation_key="child_CloneSet:6_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
+       <rsc_op id="223" operation="start" operation_key="child_CloneSet:6_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
          <primitive id="child_CloneSet:6" long-id="CloneSet:child_CloneSet:6" class="stonith" type="ssh"/>
          <attributes crm_feature_set="2.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " CRM_meta_timeout="20000" CRM_meta_clone="6" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </rsc_op>
@@ -1427,20 +1427,20 @@
          <pseudo_event id="18" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <pseudo_event id="225" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="151">
      <action_set>
-       <rsc_op id="222" operation="monitor" operation_key="child_CloneSet:6_monitor_5000" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
+       <rsc_op id="224" operation="monitor" operation_key="child_CloneSet:6_monitor_5000" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
          <primitive id="child_CloneSet:6" long-id="CloneSet:child_CloneSet:6" class="stonith" type="ssh"/>
          <attributes crm_feature_set="2.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " CRM_meta_id="11" CRM_meta_timeout="20000" CRM_meta_name="monitor" CRM_meta_interval="5000" CRM_meta_clone="6" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="221" operation="start" operation_key="child_CloneSet:6_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+         <rsc_op id="223" operation="start" operation_key="child_CloneSet:6_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
        </trigger>
      </inputs>
    </synapse>
@@ -1518,7 +1518,7 @@
    </synapse>
    <synapse id="160">
      <action_set>
-       <rsc_op id="223" operation="start" operation_key="child_CloneSet:7_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+       <rsc_op id="225" operation="start" operation_key="child_CloneSet:7_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="child_CloneSet:7" long-id="CloneSet:child_CloneSet:7" class="stonith" type="ssh"/>
          <attributes crm_feature_set="2.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " CRM_meta_timeout="20000" CRM_meta_clone="7" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </rsc_op>
@@ -1528,26 +1528,26 @@
          <pseudo_event id="18" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <pseudo_event id="225" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="161">
      <action_set>
-       <rsc_op id="224" operation="monitor" operation_key="child_CloneSet:7_monitor_5000" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
+       <rsc_op id="226" operation="monitor" operation_key="child_CloneSet:7_monitor_5000" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="child_CloneSet:7" long-id="CloneSet:child_CloneSet:7" class="stonith" type="ssh"/>
          <attributes crm_feature_set="2.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 " CRM_meta_id="11" CRM_meta_timeout="20000" CRM_meta_name="monitor" CRM_meta_interval="5000" CRM_meta_clone="7" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="223" operation="start" operation_key="child_CloneSet:7_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+         <rsc_op id="225" operation="start" operation_key="child_CloneSet:7_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="162">
      <action_set>
-       <pseudo_event id="225" operation="start" operation_key="CloneSet_start_0">
+       <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0">
          <attributes crm_feature_set="2.1" CRM_meta_timeout="20000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </pseudo_event>
      </action_set>
@@ -1559,37 +1559,37 @@
    </synapse>
    <synapse id="163" priority="1000000">
      <action_set>
-       <pseudo_event id="226" operation="running" operation_key="CloneSet_running_0">
+       <pseudo_event id="228" operation="running" operation_key="CloneSet_running_0">
          <attributes crm_feature_set="2.1" CRM_meta_timeout="20000" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="209" operation="start" operation_key="child_CloneSet:0_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
+         <rsc_op id="211" operation="start" operation_key="child_CloneSet:0_start_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4"/>
        </trigger>
        <trigger>
-         <rsc_op id="211" operation="start" operation_key="child_CloneSet:1_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+         <rsc_op id="213" operation="start" operation_key="child_CloneSet:1_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
        <trigger>
-         <rsc_op id="213" operation="start" operation_key="child_CloneSet:2_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
+         <rsc_op id="215" operation="start" operation_key="child_CloneSet:2_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
        </trigger>
        <trigger>
-         <rsc_op id="215" operation="start" operation_key="child_CloneSet:3_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
+         <rsc_op id="217" operation="start" operation_key="child_CloneSet:3_start_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559"/>
        </trigger>
        <trigger>
-         <rsc_op id="217" operation="start" operation_key="child_CloneSet:4_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
+         <rsc_op id="219" operation="start" operation_key="child_CloneSet:4_start_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5"/>
        </trigger>
        <trigger>
-         <rsc_op id="219" operation="start" operation_key="child_CloneSet:5_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
+         <rsc_op id="221" operation="start" operation_key="child_CloneSet:5_start_0" on_node="c001n06" on_node_uuid="f91e6074-699d-48af-80d6-223132f291e2"/>
        </trigger>
        <trigger>
-         <rsc_op id="221" operation="start" operation_key="child_CloneSet:6_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
+         <rsc_op id="223" operation="start" operation_key="child_CloneSet:6_start_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b"/>
        </trigger>
        <trigger>
-         <rsc_op id="223" operation="start" operation_key="child_CloneSet:7_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
+         <rsc_op id="225" operation="start" operation_key="child_CloneSet:7_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
        </trigger>
        <trigger>
-         <pseudo_event id="225" operation="start" operation_key="CloneSet_start_0"/>
+         <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0"/>
        </trigger>
      </inputs>
    </synapse>

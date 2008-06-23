@@ -520,7 +520,8 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		g_list_free(possible_matches);
 		crm_debug_2("Stopping a stopped resource");
 		crm_free(key);
-		return;
+		goto do_recurring;
+		
 	} else if(rsc->role != RSC_ROLE_STOPPED) {
 	    /* A cheap trick to account for the fact that Master/Slave groups may not be
 	     * completely running when we set their role to Slave
@@ -543,7 +544,8 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		role = next_role;
 	}
 
-	if(rsc->next_role != RSC_ROLE_STOPPED && is_set(rsc->flags, pe_rsc_managed)) {
+  do_recurring:
+	if(rsc->next_role != RSC_ROLE_STOPPED || is_set(rsc->flags, pe_rsc_managed) == FALSE) {
 		start = start_action(rsc, chosen, TRUE);
 		Recurring(rsc, start, chosen, data_set);
 	}
