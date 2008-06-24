@@ -105,17 +105,20 @@
 <xsl:template match="cluster_property_set">
   <xsl:element name="cluster_property_set">
     <xsl:call-template name="auto-id"/>
-      <xsl:for-each select="attributes//nvpair"> 
+    <xsl:apply-templates select="@*"/>
+    <xsl:for-each select="attributes//nvpair"> 
 	<xsl:element name="nvpair">
 	  <xsl:apply-templates select="@*"/>
 	  <xsl:call-template name="auto-id"/>
 	</xsl:element>
-      </xsl:for-each>
+    </xsl:for-each>
+    <xsl:apply-templates select="rule"/>
   </xsl:element>
 </xsl:template>
 
 <xsl:template match="instance_attributes">
   <xsl:element name="instance_attributes">
+    <xsl:apply-templates select="@*"/>
     <xsl:call-template name="auto-id"/>
       <xsl:for-each select="attributes//nvpair"> 
 	<xsl:element name="nvpair">
@@ -123,19 +126,22 @@
 	  <xsl:call-template name="auto-id"/>
 	</xsl:element>
       </xsl:for-each>
+      <xsl:apply-templates select="rule"/>
   </xsl:element>
 </xsl:template>
 
 <xsl:template match="meta_attributes">
   <xsl:element name="meta_attributes">
+    <xsl:apply-templates select="@*"/>
     <xsl:call-template name="auto-id"/>
-      <xsl:for-each select="attributes//nvpair">
+    <xsl:for-each select="attributes//nvpair">
 	<xsl:element name="nvpair">
 	  <xsl:call-template name="auto-id"/>
 	  <xsl:attribute name="name"><xsl:value-of select="translate(@name, '_', '-')"/></xsl:attribute>
 	  <xsl:attribute name="value"><xsl:value-of select="@value"/></xsl:attribute>
 	</xsl:element>
-	</xsl:for-each>
+    </xsl:for-each>
+    <xsl:apply-templates select="rule"/>
   </xsl:element>
 </xsl:template>
 
