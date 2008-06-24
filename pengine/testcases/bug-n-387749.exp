@@ -212,7 +212,11 @@
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </pseudo_event>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="16">
      <action_set>
@@ -268,6 +272,9 @@
        </rsc_op>
      </action_set>
      <inputs>
+       <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
        <trigger>
          <rsc_op id="31" operation="stop" operation_key="resource_nfsserver_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10"/>
        </trigger>
@@ -328,6 +335,9 @@
        </rsc_op>
      </action_set>
      <inputs>
+       <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
        <trigger>
          <pseudo_event id="35" operation="stop" operation_key="group_nfs_stop_0"/>
        </trigger>

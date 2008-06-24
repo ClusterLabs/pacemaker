@@ -88,6 +88,9 @@
        <trigger>
          <pseudo_event id="38" operation="notified" operation_key="configstorecloneset_confirmed-pre_notify_start_0"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="41" operation="stop" operation_key="configstorecloneset_stop_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="7" priority="1000000">
@@ -160,6 +163,18 @@
    </synapse>
    <synapse id="12">
      <action_set>
+       <pseudo_event id="41" operation="stop" operation_key="configstorecloneset_stop_0">
+         <attributes CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="13">
+     <action_set>
        <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete">
          <attributes crm_feature_set="3.0"/>
        </pseudo_event>
@@ -173,7 +188,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="13" priority="1000000">
+   <synapse id="14" priority="1000000">
      <action_set>
        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="x32c48" on_node_uuid="ca93fea5-67c9-473d-9ce0-7ed7fb823872">
          <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0"/>
@@ -185,7 +200,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="14" priority="1000000">
+   <synapse id="15" priority="1000000">
      <action_set>
        <rsc_op id="7" operation="probe_complete" operation_key="probe_complete" on_node="x32c47" on_node_uuid="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410">
          <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0"/>

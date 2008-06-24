@@ -26,6 +26,8 @@
 "configstorecloneset_start_0" -> "configstoreclone:1_start_0 x32c47" [ style = bold]
 "configstorecloneset_start_0" -> "configstorecloneset_running_0" [ style = bold]
 "configstorecloneset_start_0" [ style=bold color="green" fontcolor="orange" ]
+"configstorecloneset_stop_0" -> "configstorecloneset_start_0" [ style = bold]
+"configstorecloneset_stop_0" [ style=bold color="green" fontcolor="orange"  ]
 "probe_complete x32c47" -> "probe_complete" [ style = bold]
 "probe_complete x32c47" [ style=bold color="green" fontcolor="black" ]
 "probe_complete x32c48" -> "probe_complete" [ style = bold]
@@ -33,5 +35,6 @@
 "probe_complete" -> "configstoreclone:0_start_0 x32c48" [ style = bold]
 "probe_complete" -> "configstoreclone:1_start_0 x32c47" [ style = bold]
 "probe_complete" -> "configstorecloneset_start_0" [ style = bold]
+"probe_complete" -> "configstorecloneset_stop_0" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange" ]
 }

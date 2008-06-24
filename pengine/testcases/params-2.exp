@@ -24,7 +24,11 @@
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <pseudo_event id="6" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="3">
      <action_set>
@@ -33,7 +37,11 @@
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <pseudo_event id="6" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="4">
      <action_set>

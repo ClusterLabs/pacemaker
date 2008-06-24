@@ -484,6 +484,9 @@
        <trigger>
          <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="51" operation="stop" operation_key="DoFencing_stop_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="44" priority="1000000">
@@ -509,6 +512,18 @@
    </synapse>
    <synapse id="45">
      <action_set>
+       <pseudo_event id="51" operation="stop" operation_key="DoFencing_stop_0">
+         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_timeout="20000" crm_feature_set="3.0"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="46">
+     <action_set>
        <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="3.0"/>
        </pseudo_event>
@@ -519,7 +534,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="46">
+   <synapse id="47">
      <action_set>
        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
          <attributes crm_feature_set="3.0"/>
@@ -537,7 +552,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="47" priority="1000000">
+   <synapse id="48" priority="1000000">
      <action_set>
        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0"/>
@@ -573,7 +588,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="48" priority="1000000">
+   <synapse id="49" priority="1000000">
      <action_set>
        <rsc_op id="13" operation="probe_complete" operation_key="probe_complete" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0"/>
@@ -609,7 +624,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="49" priority="1000000">
+   <synapse id="50" priority="1000000">
      <action_set>
        <rsc_op id="23" operation="probe_complete" operation_key="probe_complete" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
          <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0"/>
@@ -645,7 +660,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="50">
+   <synapse id="51">
      <action_set>
        <pseudo_event id="53" operation="stonith_up" operation_key="stonith_up">
          <attributes crm_feature_set="3.0"/>
@@ -663,7 +678,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="51">
+   <synapse id="52">
      <action_set>
        <crm_event id="54" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <attributes CRM_meta_on_node="c001n02" CRM_meta_on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" CRM_meta_stonith_action="reboot" crm_feature_set="3.0"/>

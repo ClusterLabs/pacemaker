@@ -115,6 +115,7 @@
 "probe_complete" -> "imagestoreclone:1_start_0 node1" [ style = bold]
 "probe_complete" -> "imagestorecloneset_start_0" [ style = bold]
 "probe_complete" -> "sles10_migrate_from_0 node1" [ style = bold]
+"probe_complete" -> "sles10_migrate_to_0 node2" [ style = bold]
 "probe_complete" -> "stonithclone:1_start_0 node1" [ style = bold]
 "probe_complete" -> "stonithcloneset_start_0" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange"  ]

@@ -316,6 +316,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="58" operation="stop" operation_key="imagestorecloneset_stop_0"/>
        </trigger>
      </inputs>
@@ -516,6 +519,9 @@
        </pseudo_event>
      </action_set>
      <inputs>
+       <trigger>
+         <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
        <trigger>
          <pseudo_event id="61" operation="notified" operation_key="imagestorecloneset_confirmed-pre_notify_stop_0"/>
        </trigger>
@@ -799,7 +805,11 @@
          <attributes CRM_meta_name="stop" CRM_meta_timeout="60000" crm_feature_set="3.0"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="57">
      <action_set>

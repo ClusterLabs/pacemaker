@@ -155,6 +155,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="28" operation="stop" operation_key="rsc2_stop_0"/>
        </trigger>
      </inputs>
@@ -188,6 +191,9 @@
        </pseudo_event>
      </action_set>
      <inputs>
+       <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
        <trigger>
          <pseudo_event id="31" operation="notified" operation_key="rsc2_confirmed-pre_notify_stop_0"/>
        </trigger>

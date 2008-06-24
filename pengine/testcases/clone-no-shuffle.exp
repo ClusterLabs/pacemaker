@@ -21,6 +21,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <rsc_op id="9" operation="demote" operation_key="drbd1:0_demote_0" on_node="dktest2sles10" on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342"/>
        </trigger>
        <trigger>
@@ -222,6 +225,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="22" operation="notified" operation_key="ms-drbd1_confirmed-pre_notify_stop_0"/>
        </trigger>
        <trigger>
@@ -397,7 +403,11 @@
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="29">
      <action_set>

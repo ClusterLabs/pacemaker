@@ -59,7 +59,11 @@
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </pseudo_event>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="5">
      <action_set>
@@ -96,6 +100,9 @@
        </rsc_op>
      </action_set>
      <inputs>
+       <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
        <trigger>
          <rsc_op id="23" operation="stop" operation_key="rsc5_stop_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
@@ -172,6 +179,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="26" operation="stop" operation_key="foo_stop_0"/>
        </trigger>
      </inputs>
@@ -221,7 +231,11 @@
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </pseudo_event>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="16">
      <action_set>
@@ -284,6 +298,9 @@
          <rsc_op id="2" operation="stop" operation_key="rsc7_stop_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
        <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="35" operation="stop" operation_key="bar_stop_0"/>
        </trigger>
      </inputs>
@@ -296,6 +313,9 @@
        </rsc_op>
      </action_set>
      <inputs>
+       <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
        <trigger>
          <rsc_op id="32" operation="stop" operation_key="rsc8_stop_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
@@ -374,6 +394,9 @@
        </rsc_op>
      </action_set>
      <inputs>
+       <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
        <trigger>
          <pseudo_event id="35" operation="stop" operation_key="bar_stop_0"/>
        </trigger>

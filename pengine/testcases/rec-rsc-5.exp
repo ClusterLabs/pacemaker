@@ -7,6 +7,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <crm_event id="11" operation="stonith" operation_key="stonith" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
      </inputs>
@@ -68,6 +71,9 @@
        </pseudo_event>
      </action_set>
      <inputs>
+       <trigger>
+         <pseudo_event id="3" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
        <trigger>
          <crm_event id="11" operation="stonith" operation_key="stonith" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>

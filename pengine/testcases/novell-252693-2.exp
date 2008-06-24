@@ -663,6 +663,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="52" operation="running" operation_key="imagestorecloneset_running_0"/>
        </trigger>
        <trigger>

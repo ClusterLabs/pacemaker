@@ -33,6 +33,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="21" operation="stopped" operation_key="rsc2_stopped_0"/>
        </trigger>
      </inputs>
@@ -86,6 +89,9 @@
        </pseudo_event>
      </action_set>
      <inputs>
+       <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
        <trigger>
          <rsc_op id="23" operation="stop" operation_key="rsc3_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
@@ -149,6 +155,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <rsc_op id="15" operation="stop" operation_key="child_rsc2_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
@@ -195,6 +204,9 @@
        </rsc_op>
      </action_set>
      <inputs>
+       <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
        <trigger>
          <rsc_op id="17" operation="stop" operation_key="child_rsc3_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
@@ -243,6 +255,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="20" operation="stop" operation_key="rsc2_stop_0"/>
        </trigger>
      </inputs>
@@ -282,7 +297,11 @@
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </rsc_op>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="19">
      <action_set>

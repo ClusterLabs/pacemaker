@@ -151,6 +151,9 @@
        <trigger>
          <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="21" operation="stop" operation_key="rsc1_stop_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="14" priority="1000000">
@@ -173,6 +176,18 @@
    </synapse>
    <synapse id="15">
      <action_set>
+       <pseudo_event id="21" operation="stop" operation_key="rsc1_stop_0">
+         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_timeout="20000" crm_feature_set="3.0"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="16">
+     <action_set>
        <pseudo_event id="23" operation="promote" operation_key="rsc1_promote_0">
          <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_stateful="true" CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </pseudo_event>
@@ -186,7 +201,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="16" priority="1000000">
+   <synapse id="17" priority="1000000">
      <action_set>
        <pseudo_event id="24" operation="promoted" operation_key="rsc1_promoted_0">
          <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_stateful="true" CRM_meta_timeout="20000" crm_feature_set="3.0"/>
@@ -198,7 +213,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="17">
+   <synapse id="18">
      <action_set>
        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
          <attributes crm_feature_set="3.0"/>
@@ -216,7 +231,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="18" priority="1000000">
+   <synapse id="19" priority="1000000">
      <action_set>
        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="node0" on_node_uuid="uuid0">
          <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0"/>
@@ -234,7 +249,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="19" priority="1000000">
+   <synapse id="20" priority="1000000">
      <action_set>
        <rsc_op id="7" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
          <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0"/>
@@ -252,7 +267,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="20" priority="1000000">
+   <synapse id="21" priority="1000000">
      <action_set>
        <rsc_op id="11" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="uuid2">
          <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0"/>

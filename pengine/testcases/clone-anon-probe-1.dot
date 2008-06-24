@@ -12,6 +12,8 @@ digraph "g" {
 "ms-drbd0_start_0" -> "drbd0:1_start_0 mysql-01" [ style = bold]
 "ms-drbd0_start_0" -> "ms-drbd0_running_0" [ style = bold]
 "ms-drbd0_start_0" [ style=bold color="green" fontcolor="orange"  ]
+"ms-drbd0_stop_0" -> "ms-drbd0_start_0" [ style = bold]
+"ms-drbd0_stop_0" [ style=bold color="green" fontcolor="orange"  ]
 "probe_complete mysql-01" -> "probe_complete" [ style = bold]
 "probe_complete mysql-01" [ style=bold color="green" fontcolor="black"  ]
 "probe_complete mysql-02" -> "probe_complete" [ style = bold]
@@ -19,5 +21,6 @@ digraph "g" {
 "probe_complete" -> "drbd0:0_start_0 mysql-02" [ style = bold]
 "probe_complete" -> "drbd0:1_start_0 mysql-01" [ style = bold]
 "probe_complete" -> "ms-drbd0_start_0" [ style = bold]
+"probe_complete" -> "ms-drbd0_stop_0" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange"  ]
 }

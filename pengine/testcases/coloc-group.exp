@@ -49,9 +49,48 @@
        <trigger>
          <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="19" operation="stop" operation_key="group1_stop_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="20" operation="stopped" operation_key="group1_stopped_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="5">
+     <action_set>
+       <pseudo_event id="19" operation="stop" operation_key="group1_stop_0">
+         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="6">
+     <action_set>
+       <pseudo_event id="20" operation="stopped" operation_key="group1_stopped_0">
+         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="19" operation="stop" operation_key="group1_stop_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="23" operation="stop" operation_key="rsc2_stop_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="24" operation="stop" operation_key="rsc3_stop_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="26" operation="stop" operation_key="rsc4_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="7">
      <action_set>
        <rsc_op id="9" operation="monitor" operation_key="rsc2_monitor_0" on_node="node2" on_node_uuid="node2">
          <primitive id="rsc2" long-id="group1:rsc2" class="heartbeat" type="apache"/>
@@ -60,7 +99,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="6">
+   <synapse id="8">
      <action_set>
        <rsc_op id="16" operation="start" operation_key="rsc2_start_0" on_node="node2" on_node_uuid="node2">
          <primitive id="rsc2" long-id="group1:rsc2" class="heartbeat" type="apache"/>
@@ -76,7 +115,25 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="7">
+   <synapse id="9">
+     <action_set>
+       <pseudo_event id="23" operation="stop" operation_key="rsc2_stop_0">
+         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="19" operation="stop" operation_key="group1_stop_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="24" operation="stop" operation_key="rsc3_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="10">
      <action_set>
        <rsc_op id="5" operation="monitor" operation_key="rsc3_monitor_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc3" long-id="group1:rsc3" class="heartbeat" type="apache"/>
@@ -85,7 +142,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="8">
+   <synapse id="11">
      <action_set>
        <rsc_op id="13" operation="monitor" operation_key="rsc3_monitor_0" on_node="node3" on_node_uuid="node3">
          <primitive id="rsc3" long-id="group1:rsc3" class="heartbeat" type="apache"/>
@@ -94,7 +151,25 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="9">
+   <synapse id="12">
+     <action_set>
+       <pseudo_event id="24" operation="stop" operation_key="rsc3_stop_0">
+         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="19" operation="stop" operation_key="group1_stop_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="26" operation="stop" operation_key="rsc4_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="13">
      <action_set>
        <rsc_op id="6" operation="monitor" operation_key="rsc4_monitor_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc4" long-id="group1:rsc4" class="heartbeat" type="apache"/>
@@ -103,7 +178,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="10">
+   <synapse id="14">
      <action_set>
        <rsc_op id="10" operation="monitor" operation_key="rsc4_monitor_0" on_node="node2" on_node_uuid="node2">
          <primitive id="rsc4" long-id="group1:rsc4" class="heartbeat" type="apache"/>
@@ -112,7 +187,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="11">
+   <synapse id="15">
      <action_set>
        <rsc_op id="14" operation="monitor" operation_key="rsc4_monitor_0" on_node="node3" on_node_uuid="node3">
          <primitive id="rsc4" long-id="group1:rsc4" class="heartbeat" type="apache"/>
@@ -121,7 +196,40 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="12">
+   <synapse id="16">
+     <action_set>
+       <pseudo_event id="26" operation="stop" operation_key="rsc4_stop_0">
+         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="19" operation="stop" operation_key="group1_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="17">
+     <action_set>
+       <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
+         <attributes crm_feature_set="3.0"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="23" operation="stop" operation_key="rsc2_stop_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="24" operation="stop" operation_key="rsc3_stop_0"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="26" operation="stop" operation_key="rsc4_stop_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="18">
      <action_set>
        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
          <attributes crm_feature_set="3.0"/>
@@ -139,7 +247,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="13" priority="1000000">
+   <synapse id="19" priority="1000000">
      <action_set>
        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="node1">
          <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0"/>
@@ -157,7 +265,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="14" priority="1000000">
+   <synapse id="20" priority="1000000">
      <action_set>
        <rsc_op id="7" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="node2">
          <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0"/>
@@ -175,7 +283,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="15" priority="1000000">
+   <synapse id="21" priority="1000000">
      <action_set>
        <rsc_op id="11" operation="probe_complete" operation_key="probe_complete" on_node="node3" on_node_uuid="node3">
          <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0"/>

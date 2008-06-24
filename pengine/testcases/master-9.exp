@@ -20,6 +20,9 @@
          <pseudo_event id="3" operation="all_stopped" operation_key="all_stopped"/>
        </trigger>
        <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="51" operation="stop" operation_key="DoFencing_stop_0"/>
        </trigger>
      </inputs>
@@ -66,7 +69,11 @@
          <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </pseudo_event>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="7" priority="1000000">
      <action_set>
@@ -201,9 +208,24 @@
        <trigger>
          <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
+       <trigger>
+         <pseudo_event id="59" operation="stop" operation_key="master_rsc_1_stop_0"/>
+       </trigger>
      </inputs>
    </synapse>
    <synapse id="21">
+     <action_set>
+       <pseudo_event id="59" operation="stop" operation_key="master_rsc_1_stop_0">
+         <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_timeout="20000" crm_feature_set="3.0"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="22">
      <action_set>
        <pseudo_event id="3" operation="all_stopped" operation_key="all_stopped">
          <attributes crm_feature_set="3.0"/>
@@ -211,7 +233,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="22">
+   <synapse id="23">
      <action_set>
        <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete">
          <attributes crm_feature_set="3.0"/>
@@ -226,7 +248,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="23" priority="1000000">
+   <synapse id="24" priority="1000000">
      <action_set>
        <rsc_op id="5" operation="probe_complete" operation_key="probe_complete" on_node="va1" on_node_uuid="b8f81462-2d65-42bf-bbb1-70db0ea29e5b">
          <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0"/>
@@ -262,7 +284,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="24" priority="1000000">
+   <synapse id="25" priority="1000000">
      <action_set>
        <rsc_op id="15" operation="probe_complete" operation_key="probe_complete" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0"/>
@@ -295,7 +317,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="25">
+   <synapse id="26">
      <action_set>
        <crm_event id="66" operation="do_shutdown" operation_key="do_shutdown" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
          <attributes crm_feature_set="3.0"/>

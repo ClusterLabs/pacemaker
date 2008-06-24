@@ -86,6 +86,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="9" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <crm_event id="53" operation="stonith" operation_key="stonith" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
      </inputs>
@@ -156,6 +159,9 @@
      </action_set>
      <inputs>
        <trigger>
+         <pseudo_event id="9" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
          <pseudo_event id="50" operation="stop" operation_key="DoFencing_stop_0"/>
        </trigger>
      </inputs>
@@ -211,7 +217,11 @@
          <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </pseudo_event>
      </action_set>
-     <inputs/>
+     <inputs>
+       <trigger>
+         <pseudo_event id="9" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+     </inputs>
    </synapse>
    <synapse id="22" priority="1000000">
      <action_set>
