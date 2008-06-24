@@ -213,17 +213,25 @@ parse_time(char **time_str, ha_time_t *a_time, gboolean with_offset)
 	CRM_CHECK(new_time != NULL, return NULL);
 	CRM_CHECK(new_time->has != NULL, free_ha_date(new_time); return NULL);
 
+	/* reset the time fields */
+	new_time->hours = 0;
+	new_time->minutes = 0;
+	new_time->seconds = 0;
+	
 	crm_debug_4("Get hours...");
+	new_time->has->hours = FALSE;
 	if(parse_int(time_str, 2, 24, &new_time->hours)) {
 		new_time->has->hours = TRUE;
 	}
 
 	crm_debug_4("Get minutes...");
+	new_time->has->minutes = FALSE;
 	if(parse_int(time_str, 2, 60, &new_time->minutes)) {
 		new_time->has->minutes = TRUE;
 	}
 
-	crm_debug_4("Get seconds...");
+	crm_debug_4("Get seconds...");	
+	new_time->has->seconds = FALSE;
 	if(parse_int(time_str, 2, 60, &new_time->seconds)){
 		new_time->has->seconds = TRUE;
 	}
@@ -283,7 +291,9 @@ parse_date(char **date_str)
 	if((*date_str)[0] == 'T' || (*date_str)[2] == ':') {
 	    /* Just a time supplied - Infer current date */
 	    new_time = new_ha_date(TRUE);
+
 	    parse_time(date_str, new_time, TRUE);
+	    normalize_time(new_time);
 	    is_done = TRUE;
 
 	} else {
@@ -1021,8 +1031,10 @@ parse_int(char **str, int field_width, int uppper_bound, int *result)
 		return FALSE;
 	}
 	
-	crm_debug_6("max width: %d, first char: %c", field_width, (*str)[0]);
-	
+	if((*str)[0] == 'T') {
+	    (*str)++;
+	}
+
 	if((*str)[0] == '.' || (*str)[0] == ',') {
 		fraction = TRUE;
 		field_width = -1;
@@ -1055,7 +1067,7 @@ parse_int(char **str, int field_width, int uppper_bound, int *result)
 		*result = 0 - *result;
 	}
 	if(lpc > 0) {
-		crm_debug_5("Found int: %d", *result);
+		crm_debug_5("Found int: %d.  Stopped at str[%d]='%c'", *result, lpc, (*str)[lpc]);
 		return TRUE;
 	}
 	return FALSE;
@@ -1286,3 +1298,4 @@ log_tm_date(int log_level, struct tm *some_tm)
 		      some_tm->tm_isdst,
 		      GMTOFF(some_tm));
 }
+
