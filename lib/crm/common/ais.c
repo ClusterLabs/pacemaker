@@ -400,7 +400,7 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 
 	    } else {
 		dispatch = NULL;
-		crm_err("Membership is still unstable (size %d -> %d): %s",
+		crm_warn("Membership is still unstable (size %d -> %d): %s",
 			current_size, new_size, reason);
 	    }
 	    
