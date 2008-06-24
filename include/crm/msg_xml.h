@@ -56,6 +56,7 @@
 #define XML_ATTR_VERSION		"version"
 #define XML_ATTR_DESC			"description"
 #define XML_ATTR_ID			"id"
+#define XML_ATTR_IDREF			"id-ref"
 #define XML_ATTR_ID_LONG		"long-id"
 #define XML_ATTR_TYPE			"type"
 #define XML_ATTR_FILTER_TYPE		"type-filter"

@@ -7,6 +7,9 @@
   </start>
 
   <define name="element-nvset">
+   <choice>
+   <attribute name="id-ref"><data type="IDREF"/></attribute>
+   <group>
     <attribute name="id"><data type="ID"/></attribute>
     <interleave>
       <optional>
@@ -25,6 +28,8 @@
 	<externalRef href="score.rng"/>
       </optional>
     </interleave>
+   </group>
+   </choice>
   </define>
 
 </grammar>

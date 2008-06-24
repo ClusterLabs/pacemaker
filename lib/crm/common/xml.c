@@ -3154,3 +3154,46 @@ cli_config_update(xmlNode **xml)
     }
     return rc;
 }
+
+xmlNode *expand_idref(xmlNode *input) 
+{
+    const char *tag = NULL;
+    const char *ref = NULL;
+    xmlNode *top = input;
+    xmlNode *result = input;
+
+    while(top->parent != NULL) {
+	top = top->parent;
+    }
+    
+    tag = crm_element_name(result);
+    ref = crm_element_value(result, XML_ATTR_IDREF);
+
+    if(ref != NULL) {
+	char *xpath_string = NULL;
+	int xpath_max = 512, offset = 0;
+	xmlXPathObjectPtr xpathObj = NULL;
+	crm_malloc0(xpath_string, 512);
+	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id=\"%s\"]", tag, ref);
+	
+	xpathObj = xpath_search(top, xpath_string);
+	if(xpathObj == NULL || xpathObj->nodesetval == NULL || xpathObj->nodesetval->nodeNr < 1) {
+	    crm_config_err("Referenced %s 'id=%s' not found", tag, ref);
+	    
+	} else {
+	    CRM_CHECK(xpathObj->nodesetval->nodeNr == 1,
+		      crm_config_err("Too many matches (%d) for referenced %s 'id=%s'",
+				     xpathObj->nodesetval->nodeNr, tag, ref));
+	    
+	    result = xpathObj->nodesetval->nodeTab[0];
+	    CRM_CHECK(result->type == XML_ELEMENT_NODE, result = NULL);
+	}
+	
+	if(xpathObj) {
+	    xmlXPathFreeObject(xpathObj);
+	}
+	crm_free(xpath_string);
+    }
+    return result;
+}
+

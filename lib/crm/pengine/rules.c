@@ -58,8 +58,10 @@ test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
 	gboolean empty = TRUE;
 	gboolean passed = TRUE;
 	gboolean do_and = TRUE;
+	const char *value = NULL;
 
-	const char *value = crm_element_value(rule, "boolean_op");
+	rule = expand_idref(rule);
+	value = crm_element_value(rule, "boolean_op");
 	if(safe_str_eq(value, "or")) {
 		do_and = FALSE;
 		passed = FALSE;
@@ -609,6 +611,8 @@ unpack_instance_attributes(
 		xml_obj, attr_set, set_name,
 
 		pair = NULL;
+		attr_set = expand_idref(attr_set);
+		
 		crm_malloc0(pair, sizeof(sorted_set_t));
 		pair->name     = ID(attr_set);
 		pair->special_name = always_first;

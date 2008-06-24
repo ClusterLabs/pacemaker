@@ -8,6 +8,9 @@
 
   <define name="element-rule">
     <element name="rule">
+     <choice>
+     <attribute name="id-ref"><data type="IDREF"/></attribute>
+     <group>
       <attribute name="id"><data type="ID"/></attribute>
       <choice>
 	<externalRef href="score.rng"/>
@@ -95,6 +98,8 @@
 	  <ref name="element-rule"/>
 	</choice>
       </oneOrMore>
+     </group>
+     </choice>
     </element>
   </define>
 
