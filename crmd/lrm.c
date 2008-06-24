@@ -1575,6 +1575,18 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 			operation, rsc->id, call_id);
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 
+	} else if(op->interval > 0 && op->start_delay > 5 * 60 * 1000) {
+	    char *uuid = NULL;
+	    int dummy = 0, target_rc = 0;
+	    crm_info("Faking confirmation of %s: execution postponed for over 5 minutes", op_id);
+	    
+	    decode_transition_key(op->user_data, &uuid, &dummy, &dummy, &target_rc);
+	    crm_free(uuid);
+
+	    op->rc = target_rc;
+	    op->op_status = LRM_OP_DONE;
+	    send_direct_ack(NULL, NULL, op, rsc->id);
+	    
 	} else {
 		/* record all operations so we can wait
 		 * for them to complete during shutdown
