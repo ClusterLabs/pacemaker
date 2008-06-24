@@ -1547,7 +1547,7 @@
    </synapse>
    <synapse id="162">
      <action_set>
-       <pseudo_event id="225" operation="start" operation_key="CloneSet_start_0">
+       <pseudo_event id="227" operation="start" operation_key="CloneSet_start_0">
          <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </pseudo_event>
      </action_set>
@@ -1559,7 +1559,7 @@
    </synapse>
    <synapse id="163" priority="1000000">
      <action_set>
-       <pseudo_event id="226" operation="running" operation_key="CloneSet_running_0">
+       <pseudo_event id="228" operation="running" operation_key="CloneSet_running_0">
          <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </pseudo_event>
      </action_set>
