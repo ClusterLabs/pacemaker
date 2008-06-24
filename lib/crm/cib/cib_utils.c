@@ -468,32 +468,6 @@ get_object_root(const char *object_type, xmlNode *the_root)
     return result;
 }
 
-const char *
-get_crm_option(xmlNode *cib, const char *name, gboolean do_warn) 
-{
-	const char * value = NULL;
-	xmlNode * a_default = NULL;
-	xmlNode * config = get_object_root(XML_CIB_TAG_CRMCONFIG, cib);
-	
-	if(config != NULL) {
-		a_default = find_entity(config, XML_CIB_TAG_NVPAIR, name);
-	}
-	
-	if(a_default == NULL) {
-		if(do_warn) {
-			crm_warn("Option %s not set", name);
-		}
-		return NULL;
-	}
-	
-	value = crm_element_value(a_default, XML_NVPAIR_ATTR_VALUE);
-	if(safe_str_eq(value, "")) {
-		value = NULL;
-	}
-	
-	return value;
-}
-
 xmlNode*
 create_cib_fragment_adv(
 	xmlNode *update, const char *update_section, const char *source)
