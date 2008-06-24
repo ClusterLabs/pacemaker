@@ -306,7 +306,7 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	const char *interval = NULL;
 	const char *node_uname = NULL;
 
-	int interval_ms = 0;
+	unsigned long long interval_ms = 0;
 	action_t *mon = NULL;
 	gboolean is_optional = TRUE;
 	GListPtr possible_matches = NULL;
@@ -319,16 +319,11 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	}
 
 	interval = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-	interval_ms = crm_get_msec(interval);
+	interval_ms = crm_get_interval(interval);
 	
 	if(interval_ms == 0) {
 	    return;
-		
-	} else if(interval_ms < 0) {
-	    crm_config_warn("%s contains an invalid interval: %s", ID(operation), interval);
-	    return;
 	}
-	
 	
 	value = crm_element_value(operation, "disabled");
 	if(crm_is_true(value)) {
@@ -438,7 +433,7 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 		mon->runnable = FALSE;
 		
 	} else if(mon->optional == FALSE) {
-	    crm_notice(" Start recurring %s (%ds) for %s on %s", mon->task, interval_ms/1000, rsc->id, crm_str(node_uname));
+	    crm_notice(" Start recurring %s (%llus) for %s on %s", mon->task, interval_ms/1000, rsc->id, crm_str(node_uname));
 	}
 	
 	custom_action_order(rsc, start_key(rsc), NULL,

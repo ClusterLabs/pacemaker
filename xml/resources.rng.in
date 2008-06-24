@@ -115,7 +115,10 @@
 	      <attribute name="description"><text/></attribute>
 	    </optional>
 	    <optional>
-	      <attribute name="start-delay"><text/></attribute>
+	      <choice>
+		<attribute name="start-delay"><text/></attribute>
+		<attribute name="interval-origin"><text/></attribute>
+	      </choice>
 	    </optional>
 	    <optional>
 	      <attribute name="timeout"><text/></attribute>

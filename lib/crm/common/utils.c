@@ -53,6 +53,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
+#include <crm/common/iso8601.h>
 
 #ifndef MAXLINE
 #    define MAXLINE 512
@@ -798,7 +799,29 @@ crm_str_to_boolean(const char * s, int * ret)
 #    define	WHITESPACE	" \t\n\r\f"
 #endif
 
-long
+unsigned long long
+crm_get_interval(const char * input)
+{
+    ha_time_t *interval = NULL;
+    char *input_copy = crm_strdup(input);
+    char *input_copy_mutable = input_copy;
+    unsigned long long msec = 0;
+    
+    if(input == NULL) {
+	return 0;
+
+    } else if(input[0] != 'P') {
+	return crm_get_msec(input);
+    }
+    
+    interval = parse_time_duration(&input_copy_mutable);
+    msec = date_in_seconds(interval);
+    free_ha_date(interval);
+    crm_free(input_copy);
+    return msec * 1000;
+}
+
+unsigned long long
 crm_get_msec(const char * input)
 {
 	const char *	cp = input;
