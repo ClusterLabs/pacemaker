@@ -47,31 +47,6 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 		config, XML_CIB_TAG_PROPSET, NULL, config_hash,
 		CIB_OPTIONS_FIRST, FALSE, data_set->now);
 
-#if CRM_DEPRECATED_SINCE_2_0_1
-	xml_child_iter_filter(
-		config, a_child, XML_CIB_TAG_NVPAIR,
-
-		name = crm_element_value(a_child, XML_NVPAIR_ATTR_NAME);
-
-		value = crm_element_value(a_child, XML_NVPAIR_ATTR_VALUE);
-		if(g_hash_table_lookup(config_hash, name) == NULL) {
-			g_hash_table_insert(
-				config_hash,crm_strdup(name),crm_strdup(value));
-		}
-		crm_config_err("Creating <nvpair id=%s name=%s/> directly"
-			      "beneath <crm_config> has been depreciated since"
-			      " 2.0.1", ID(a_child), name);
-		);
-#else
-	xml_child_iter_filter(
-		config, a_child, XML_CIB_TAG_NVPAIR,
-
-		name = crm_element_value(a_child, XML_NVPAIR_ATTR_NAME);
-		crm_config_err("Creating <nvpair id=%s name=%s/> directly"
-			      "beneath <crm_config> has been depreciated since"
-			      " 2.0.1 and is now disabled", ID(a_child), name);
-		);
-#endif
 	verify_pe_options(data_set->config_hash);
 	
 	value = pe_pref(data_set->config_hash, "default-action-timeout");
