@@ -102,7 +102,9 @@ extern ha_time_t        *parse_time_duration(char **duration_str);
 extern ha_time_period_t *parse_time_period  (char **period_str);
 /* ha_time_interval_t *parse_time_interval(char **interval_str); */
 
-int compare_date(ha_time_t *lhs, ha_time_t *rhs);
+unsigned long long int date_in_seconds(ha_time_t *a_date);
+unsigned long long int date_in_seconds_since_epoch(ha_time_t *a_date);
+extern int compare_date(ha_time_t *lhs, ha_time_t *rhs);
 
 extern gboolean parse_int(char **str, int field_width, int uppper_bound, int *result);
 extern gboolean check_for_ordinal(const char *str);

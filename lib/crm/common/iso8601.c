@@ -1299,3 +1299,47 @@ log_tm_date(int log_level, struct tm *some_tm)
 		      GMTOFF(some_tm));
 }
 
+ha_time_t *the_epoch = NULL;
+
+#define update_seconds(date, field, multiplier) do {		\
+	before = in_seconds;					\
+	in_seconds += multiplier * a_date->field;		\
+	if(before > in_seconds) {				\
+	    crm_crit("Date wrap detected: %s", #field);		\
+	    return 0;						\
+	}							\
+    } while(0)
+    
+unsigned long long date_in_seconds(ha_time_t *a_date) 
+{
+    unsigned long long before = 0;
+    unsigned long long in_seconds = 0;
+    normalize_time(a_date);
+
+    update_seconds(a_date, seconds,  1);
+    update_seconds(a_date, minutes,  60);
+    update_seconds(a_date, hours,    60 * 60);
+    update_seconds(a_date, yeardays, 60 * 60 * 24);
+    update_seconds(a_date, years,    60 * 60 * 24 * 365);
+    return in_seconds;
+}
+
+unsigned long long date_in_seconds_since_epoch(ha_time_t *a_date) 
+{
+    ha_time_t *since_epoch = NULL;
+    unsigned long long in_seconds = 0;
+    normalize_time(a_date);
+
+    if(the_epoch == NULL) {
+	char *EPOCH = crm_strdup("1970-01-01");
+	the_epoch = parse_date(&EPOCH);
+	normalize_time(the_epoch);
+	crm_free(EPOCH);
+    }
+
+    since_epoch = subtract_time(a_date, the_epoch, TRUE);
+    in_seconds = date_in_seconds(since_epoch);
+    free_ha_date(since_epoch);
+    return in_seconds;
+}
+
