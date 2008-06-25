@@ -538,6 +538,17 @@ print_simple_status(xmlNode *cib)
 
 extern int get_failcount(node_t *node, resource_t *rsc, int *last_failure, pe_working_set_t *data_set);
 
+static void get_ping_score(node_t *node, pe_working_set_t *data_set) 
+{
+    const char *attr = "pingd";
+    const char *value = NULL;
+    value = g_hash_table_lookup(node->details->attrs, attr);
+    
+    if(value != NULL) {
+	print_as(" %s=%s", attr, value);
+    }
+}
+
 static void print_date(time_t time) 
 {
     int lpc = 0;
@@ -677,7 +688,9 @@ static void print_node_summary(pe_working_set_t *data_set, gboolean operations)
     xml_child_iter_filter(
 	cib_status, node_state, XML_CIB_TAG_STATE,
 	node_t *node = pe_find_node_id(data_set->nodes, ID(node_state));
-	print_as("* Node %s:\n", crm_element_value(node_state, XML_ATTR_UNAME));
+	print_as("* Node %s: ", crm_element_value(node_state, XML_ATTR_UNAME));
+	get_ping_score(node, data_set); 
+	print_as("\n");
 	
 	lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
 	lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
