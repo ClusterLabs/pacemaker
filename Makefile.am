@@ -35,7 +35,7 @@ PRETTY_ARGS		= --braces-on-if-line --braces-on-struct-decl-line --cuddle-do-whil
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar
 
-SUBDIRS	= debian build replace include lib cib pengine crmd crm fencing tools doc cts xml
+SUBDIRS	= debian build $(LIBLTDL_DIR) replace include lib cib pengine crmd crm fencing tools doc cts xml
 
 tgz:
 	rm -f $(TARFILE)
