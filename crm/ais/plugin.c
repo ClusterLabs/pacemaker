@@ -267,7 +267,7 @@ static void crm_plugin_init(struct objdb_iface_ver0 *objdb)
     objdb_get_string(objdb, object_service_handle, "initdead", &value, "20");
     setenv("HA_initdead",  value, 1);
     
-    objdb_get_string(objdb, object_service_handle, "debug", &value, "1");
+    objdb_get_string(objdb, object_service_handle, "debug", &value, "0");
     setenv("HA_debug",  value, 1);
 
     rc = atoi(value);
