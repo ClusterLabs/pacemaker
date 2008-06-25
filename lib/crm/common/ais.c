@@ -372,6 +372,7 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 
 		if(ais_membership_timer == 0) {
 		    reason = "We've lost more than half our peers";
+		    crm_log_xml_debug(xml, __PRETTY_FUNCTION__);
 		    do_ask = TRUE;
 		}		
 	    }
@@ -396,7 +397,6 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 		crm_warn("Pausing to allow membership stability (size %d -> %d): %s",
 			 current_size, new_size, reason);
 		ais_membership_timer = Gmain_timeout_add(2*1000, ais_membership_dampen, NULL);
-		crm_log_xml_debug(xml, __PRETTY_FUNCTION__);
 
 	    } else {
 		dispatch = NULL;
