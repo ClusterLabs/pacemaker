@@ -176,6 +176,7 @@ crm_node_t *crm_update_peer(
 
 	node->addr = NULL;
 	node->state = crm_strdup("unknown");
+	id_changed = TRUE;
 	
 	g_hash_table_insert(crm_peer_cache, node->uname, node);
 	node = g_hash_table_lookup(crm_peer_cache, uname);
@@ -219,15 +220,17 @@ crm_node_t *crm_update_peer(
 	}
     }
 
-    crm_info("Node %s: id=%u%s state=%s%s addr=%s%s votes=%d%s born=%llu proc=%.32x%s",
-	     node->uname,
-	     node->id, id_changed?" (new)":"",
-	     node->state, state_changed?" (new)":"",
-	     node->addr, addr_changed?" (new)":"",
-	     node->votes, votes_changed?" (new)":"",
-	     node->born,
-	     node->processes, procs_changed?" (new)":""
+    if(id_changed || state_changed || addr_changed || votes_changed || procs_changed) {
+	crm_info("Node %s: id=%u%s state=%s%s addr=%s%s votes=%d%s born=%llu proc=%.32x%s",
+		 node->uname,
+		 node->id, id_changed?" (new)":"",
+		 node->state, state_changed?" (new)":"",
+		 node->addr, addr_changed?" (new)":"",
+		 node->votes, votes_changed?" (new)":"",
+		 node->born,
+		 node->processes, procs_changed?" (new)":""
 	);
+    }
     
     return node;
 }
@@ -324,7 +327,7 @@ gboolean crm_calculate_quorum(void)
     }
 
     if(quorum_stats.nodes_total > quorum_stats.nodes_max) {
-	crm_info("Known quorum nodes: %u -> %u",
+	crm_debug("Known quorum nodes: %u -> %u",
 		 quorum_stats.nodes_max, quorum_stats.nodes_total);
 	quorum_stats.nodes_max = quorum_stats.nodes_total;
     }
