@@ -60,7 +60,7 @@ class CIB:
     dummy_resource_template = ''' 
         <primitive id="%s" class="ocf" type="Dummy" provider="heartbeat">
           <operations>
-             <op id="%s-mon" name="monitor" interval="10s"/>
+             <op id="%s-mon" name="monitor" interval="P10S"/>
           </operations>
           <instance_attributes id="%s">
              <attributes>
@@ -104,8 +104,8 @@ class CIB:
           </instance_attributes>
           <primitive id="ocf_msdummy" class="ocf" type="Stateful" provider="heartbeat">
             <operations>
-              <op id="ocf_msdummy_monitor" name="monitor" interval="5s"/>
-              <op id="ocf_msdummy_monitor_master" name="monitor" interval="6s" role="Master"/>
+              <op id="ocf_msdummy_monitor" name="monitor" interval="15s"/>
+              <op id="ocf_msdummy_monitor_master" name="monitor" interval="16s" role="Master"/>
             </operations>
           </primitive>
         </master_slave>'''
