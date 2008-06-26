@@ -295,7 +295,6 @@ process_te_message(HA_Message *msg, crm_data_t *xml_data, IPC_Channel *sender)
 	return TRUE;
 }
 
-#if SUPPORT_HEARTBEAT
 void
 tengine_stonith_callback(stonith_ops_t * op)
 {
@@ -414,7 +413,6 @@ tengine_stonith_dispatch(IPC_Channel *sender, void *user_data)
 	}
 	return TRUE;
 }
-#endif
 
 void
 cib_fencing_updated(const HA_Message *msg, int call_id, int rc,

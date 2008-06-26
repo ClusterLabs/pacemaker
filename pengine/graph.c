@@ -529,14 +529,8 @@ should_dump_action(action_t *action)
 		const char * interval = NULL;
 		interval = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
 
-		/* make sure probes go through */
-		if(safe_str_neq(action->task, CRMD_ACTION_STATUS)) {
-			pe_warn("action %d (%s) was for an unmanaged resource (%s)",
-				action->id, action->uuid, action->rsc->id);
-			return FALSE;
-		}
-		
-		if(interval != NULL && safe_str_neq(interval, "0")) {
+		/* make sure probes and recurring monitors go through */
+		if(safe_str_neq(action->task, CRMD_ACTION_STATUS) && interval == NULL) {
 			pe_warn("action %d (%s) was for an unmanaged resource (%s)",
 				action->id, action->uuid, action->rsc->id);
 			return FALSE;

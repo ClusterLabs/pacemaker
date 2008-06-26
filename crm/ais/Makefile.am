@@ -24,7 +24,7 @@ plugin_LTLIBRARIES	= service_crm.la
 
 #ais_PROGRAMS	= atest
 
-service_crm_la_SOURCES	= utils.c plugin.c
+service_crm_la_SOURCES	= utils.c plugin.c utils.h plugin.h
 service_crm_la_LDFLAGS	= -export-dynamic -module -avoid-version 
 # Extra LDFLAGS: -bundle -bundle_loader /opt/local/sbin/aisexec -bind_at_load
 service_crm_la_LIBADD	= $(GLIBLIB)

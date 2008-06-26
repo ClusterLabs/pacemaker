@@ -20,10 +20,8 @@
 
 #include <crm/transition.h>
 #include <clplumbing/ipc.h>
-#if SUPPORT_HEARTBEAT
-#  include <fencing/stonithd_api.h>
+#include <fencing/stonithd_api.h>
 extern void send_stonith_update(stonith_ops_t * op);
-#endif
 
 extern IPC_Channel *crm_ch;
 extern GMainLoop*  mainloop;
