@@ -262,7 +262,8 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 	clear_bit(rsc->flags, pe_rsc_provisional);
 	
 	slist_iter(candidate, node_t, nodes, lpc, 
-		   if(chosen->weight > 0
+		   if(chosen
+		      && chosen->weight > 0
 		      && candidate->details->unclean == FALSE
 		      && candidate->weight == chosen->weight) {
 			   multiple++;
@@ -276,7 +277,8 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 
 	} else if(can_run_resources(chosen) == FALSE || chosen->weight < 0) {
 		crm_debug("All nodes for resource %s are unavailable"
-			  ", unclean or shutting down", rsc->id);
+			  ", unclean or shutting down (%s: %d, %d)",
+			  rsc->id, chosen->details->uname, can_run_resources(chosen), chosen->weight);
 		rsc->next_role = RSC_ROLE_STOPPED;
 		return FALSE;
 	}
