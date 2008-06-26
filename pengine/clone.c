@@ -332,9 +332,10 @@ color_instance(resource_t *rsc, pe_working_set_t *data_set)
 static void append_parent_colocation(resource_t *rsc, resource_t *child, gboolean all) 
 {
     slist_iter(cons, rsc_colocation_t, rsc->rsc_cons, lpc,
-	       if(all || cons->score < 0) {
+	       if(all || cons->score < 0 || cons->score == INFINITY) {
 		   child->rsc_cons = g_list_append(child->rsc_cons, cons);
 	       }
+	       
 	);
     slist_iter(cons, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
 	       if(all || cons->score < 0) {
