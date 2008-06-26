@@ -54,7 +54,7 @@
    </synapse>
    <synapse id="5">
      <action_set>
-       <rsc_op id="13" operation="start" operation_key="rscB_start_0" on_node="node1" on_node_uuid="uuid1">
+       <rsc_op id="14" operation="start" operation_key="rscB_start_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rscB" long-id="rscB" class="heartbeat" type="apache"/>
          <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
        </rsc_op>

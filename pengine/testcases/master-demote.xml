@@ -199,7 +199,7 @@
        <rsc_colocation id="cyrus_filesys_with_volgroup" from="cyrus_filesys" to="cyrus_volgroup" to_role="started" score="infinity"/>
        <rsc_colocation id="cyrus_syslogd_with_filesys" from="cyrus_syslogd" to="cyrus_filesys" to_role="started" score="infinity"/>
        <rsc_colocation id="cyrus_master_with_syslogd" from="cyrus_master" to="cyrus_syslogd" to_role="started" score="infinity"/>
-       <rsc_colocation id="named_drbd_with_address" from="named_drbd" to="named_address" to_role="started" score="infinity"/>
+       <rsc_colocation id="named_drbd_with_address" from="named_address" to="named_drbd" to_role="started" score="infinity"/>
        <rsc_colocation id="named_volgroup_with_drbd" from="named_volgroup" to="named_drbd" to_role="started" score="infinity"/>
        <rsc_colocation id="named_filesys_with_volgroup" from="named_filesys" to="named_volgroup" to_role="started" score="infinity"/>
        <rsc_colocation id="named_syslogd_with_filesys" from="named_syslogd" to="named_filesys" to_role="started" score="infinity"/>
