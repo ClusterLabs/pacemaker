@@ -228,8 +228,6 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		constraint->score/INFINITY, TRUE);
 	    );
 	
-	dump_node_scores(alloc_details, rsc, __PRETTY_FUNCTION__, rsc->allowed_nodes);
-	
 	print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);
 	if(rsc->next_role == RSC_ROLE_STOPPED) {
 		crm_debug_2("Making sure %s doesn't get allocated", rsc->id);
@@ -237,7 +235,8 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		resource_location(
 			rsc, NULL, -INFINITY, "target_role", data_set);
 	}
-	
+
+	dump_node_scores(alloc_details, rsc, __PRETTY_FUNCTION__, rsc->allowed_nodes);
 	if(is_set(rsc->flags, pe_rsc_provisional)
 	   && native_choose_node(rsc) ) {
 		crm_debug_3("Allocated resource %s to %s",
