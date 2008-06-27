@@ -1,0 +1,273 @@
+ <transition_graph cluster-delay="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+   <synapse id="0">
+     <action_set>
+       <rsc_op id="4" operation="monitor" operation_key="drbd0:0_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
+         <primitive id="drbd0:0" long-id="drbd0:drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
+         <attributes crm_feature_set="2.1" drbd_resource="drbd0" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7" CRM_meta_globally_unique="false" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="2" CRM_meta_master_node_max="2"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="1">
+     <action_set>
+       <rsc_op id="11" operation="start" operation_key="drbd0:0_start_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
+         <primitive id="drbd0:0" long-id="drbd0:drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
+         <attributes crm_feature_set="2.1" drbd_resource="drbd0" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_notify_start_uname="vbox4 " CRM_meta_notify_start_resource="drbd0:0 " CRM_meta_globally_unique="false" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="2" CRM_meta_master_node_max="2"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="13" operation="start" operation_key="drbd0_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="2">
+     <action_set>
+       <rsc_op id="12" operation="monitor" operation_key="drbd0:0_monitor_60000" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
+         <primitive id="drbd0:0" long-id="drbd0:drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
+         <attributes crm_feature_set="2.1" drbd_resource="drbd0" CRM_meta_stateful="true" CRM_meta_id="drbd0-op2" CRM_meta_role="Slave" CRM_meta_timeout="10000" CRM_meta_name="monitor" CRM_meta_interval="60000" CRM_meta_globally_unique="false" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="2" CRM_meta_master_node_max="2"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="11" operation="start" operation_key="drbd0:0_start_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="18" operation="notified" operation_key="drbd0_confirmed-post_notify_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="3" priority="1000000">
+     <action_set>
+       <rsc_op id="65" operation="notify" operation_key="drbd0:0_post_notify_start_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
+         <primitive id="drbd0:0" long-id="drbd0:drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
+         <attributes crm_feature_set="2.1" CRM_meta_notify_operation="start" CRM_meta_timeout="20000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" drbd_resource="drbd0" CRM_meta_stateful="true" CRM_meta_notify_start_uname="vbox4 " CRM_meta_notify_start_resource="drbd0:0 " CRM_meta_globally_unique="false" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="2" CRM_meta_master_node_max="2"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="17" operation="notify" operation_key="drbd0_post_notify_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="4">
+     <action_set>
+       <pseudo_event id="13" operation="start" operation_key="drbd0_start_0">
+         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="2" CRM_meta_master_node_max="2"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="16" operation="notified" operation_key="drbd0_confirmed-pre_notify_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="5" priority="1000000">
+     <action_set>
+       <pseudo_event id="14" operation="running" operation_key="drbd0_running_0">
+         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="2" CRM_meta_master_node_max="2"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="11" operation="start" operation_key="drbd0:0_start_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="13" operation="start" operation_key="drbd0_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="6">
+     <action_set>
+       <pseudo_event id="15" operation="notify" operation_key="drbd0_pre_notify_start_0">
+         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="pre" CRM_meta_notify_operation="start" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="2" CRM_meta_master_node_max="2"/>
+       </pseudo_event>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="7">
+     <action_set>
+       <pseudo_event id="16" operation="notified" operation_key="drbd0_confirmed-pre_notify_start_0">
+         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_notify_type="pre" CRM_meta_notify_operation="start" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="2" CRM_meta_master_node_max="2"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="15" operation="notify" operation_key="drbd0_pre_notify_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="8" priority="1000000">
+     <action_set>
+       <pseudo_event id="17" operation="notify" operation_key="drbd0_post_notify_start_0">
+         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_notify_confirm="yes" CRM_meta_notify_type="post" CRM_meta_notify_operation="start" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="2" CRM_meta_master_node_max="2"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="14" operation="running" operation_key="drbd0_running_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="9" priority="1000000">
+     <action_set>
+       <pseudo_event id="18" operation="notified" operation_key="drbd0_confirmed-post_notify_start_0">
+         <attributes crm_feature_set="2.1" CRM_meta_stateful="true" CRM_meta_timeout="20000" CRM_meta_notify_type="pre" CRM_meta_notify_operation="start" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_master_max="2" CRM_meta_master_node_max="2"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="17" operation="notify" operation_key="drbd0_post_notify_start_0"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="65" operation="notify" operation_key="drbd0:0_post_notify_start_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="10">
+     <action_set>
+       <rsc_op id="5" operation="monitor" operation_key="cman:0_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
+         <primitive id="cman:0" long-id="cman_clone:cman:0" class="lsb" type="cman"/>
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7" CRM_meta_globally_unique="false" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="11">
+     <action_set>
+       <rsc_op id="37" operation="start" operation_key="cman:0_start_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
+         <primitive id="cman:0" long-id="cman_clone:cman:0" class="lsb" type="cman"/>
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000" CRM_meta_globally_unique="false" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="38" operation="start" operation_key="cman_clone_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="12">
+     <action_set>
+       <pseudo_event id="38" operation="start" operation_key="cman_clone_start_0">
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="13" priority="1000000">
+     <action_set>
+       <pseudo_event id="39" operation="running" operation_key="cman_clone_running_0">
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000" CRM_meta_globally_unique="false" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="37" operation="start" operation_key="cman:0_start_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6"/>
+       </trigger>
+       <trigger>
+         <pseudo_event id="38" operation="start" operation_key="cman_clone_start_0"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="14">
+     <action_set>
+       <rsc_op id="6" operation="monitor" operation_key="clvmd:0_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
+         <primitive id="clvmd:0" long-id="clvmd_clone:clvmd:0" class="lsb" type="lxclvmd"/>
+         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7" CRM_meta_globally_unique="false" CRM_meta_clone="0" CRM_meta_clone_max="2"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="15">
+     <action_set>
+       <rsc_op id="7" operation="monitor" operation_key="vmnci36_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
+         <primitive id="vmnci36" long-id="vmnci36" class="ocf" provider="heartbeat" type="vm"/>
+         <attributes crm_feature_set="2.1" target_role="started" vmid="vmnci36" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="16">
+     <action_set>
+       <rsc_op id="8" operation="monitor" operation_key="vmnci37_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
+         <primitive id="vmnci37" long-id="vmnci37" class="ocf" provider="heartbeat" type="vm"/>
+         <attributes crm_feature_set="2.1" target_role="stopped" vmid="vmnci37" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="17">
+     <action_set>
+       <rsc_op id="9" operation="monitor" operation_key="vmnci38_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
+         <primitive id="vmnci38" long-id="vmnci38" class="ocf" provider="heartbeat" type="vm"/>
+         <attributes crm_feature_set="2.1" target_role="stopped" vmid="vmnci38" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="18">
+     <action_set>
+       <rsc_op id="10" operation="monitor" operation_key="vmnci55_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
+         <primitive id="vmnci55" long-id="vmnci55" class="ocf" provider="heartbeat" type="vm"/>
+         <attributes crm_feature_set="2.1" target_role="stopped" vmid="vmnci55" CRM_meta_timeout="20000" CRM_meta_op_target_rc="7"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+   <synapse id="19">
+     <action_set>
+       <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
+         <attributes crm_feature_set="2.1"/>
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6"/>
+       </trigger>
+     </inputs>
+   </synapse>
+   <synapse id="20" priority="1000000">
+     <action_set>
+       <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
+         <attributes crm_feature_set="2.1" CRM_meta_op_no_wait="true"/>
+       </rsc_op>
+     </action_set>
+     <inputs>
+       <trigger>
+         <rsc_op id="4" operation="monitor" operation_key="drbd0:0_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="5" operation="monitor" operation_key="cman:0_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="6" operation="monitor" operation_key="clvmd:0_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="7" operation="monitor" operation_key="vmnci36_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="8" operation="monitor" operation_key="vmnci37_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="9" operation="monitor" operation_key="vmnci38_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6"/>
+       </trigger>
+       <trigger>
+         <rsc_op id="10" operation="monitor" operation_key="vmnci55_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6"/>
+       </trigger>
+     </inputs>
+   </synapse>
+ </transition_graph>
+

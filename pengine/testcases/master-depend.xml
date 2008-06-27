@@ -1,0 +1,185 @@
+ <cib generated="true" admin_epoch="0" ignore_dtd="false" num_peers="1" have_quorum="1" cib_feature_revision="2.0" crm_feature_set="2.1" epoch="165" num_updates="3" cib-last-written="Tue Jun 24 10:33:56 2008" dc_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6" ccm_transition="1">
+   <configuration>
+     <crm_config>
+       <cluster_property_set id="cib-bootstrap-options">
+         <attributes>
+           <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="0.6.4-node: 226d8e35692415c56dbd05258a85905414938ce9"/>
+           <nvpair name="last-lrm-refresh" id="cib-bootstrap-options-last-lrm-refresh" value="1214292810"/>
+         </attributes>
+       </cluster_property_set>
+     </crm_config>
+     <nodes>
+       <node id="fdacfc41-e43c-464b-a80e-b3fd1b22ca00" uname="vbox3" type="normal">
+         <instance_attributes id="nodes-fdacfc41-e43c-464b-a80e-b3fd1b22ca00">
+           <attributes>
+             <nvpair id="standby-fdacfc41-e43c-464b-a80e-b3fd1b22ca00" name="standby" value="off"/>
+           </attributes>
+         </instance_attributes>
+       </node>
+       <node uname="vbox4" type="normal" id="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
+         <instance_attributes id="nodes-a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
+           <attributes>
+             <nvpair name="standby" id="standby-a9a4b0ab-fc17-48ab-9d91-29e398e15cb6" value="off"/>
+           </attributes>
+         </instance_attributes>
+       </node>
+     </nodes>
+     <resources>
+       <master_slave id="drbd0">
+         <meta_attributes id="ma-drbd0">
+           <attributes>
+             <nvpair id="drbd0-clone-max" name="clone_max" value="2"/>
+             <nvpair id="drbd0-clone-node_max" name="clone_node_max" value="1"/>
+             <nvpair id="drbd0-master-max" name="master_max" value="2"/>
+             <nvpair id="drbd0-master-node-max" name="master_node_max" value="2"/>
+             <nvpair id="drbd0-notify" name="notify" value="yes"/>
+             <nvpair id="drbd0-globally-unique" name="globally_unique" value="false"/>
+             <nvpair id="drbd0-target-role" name="target_role" value="started"/>
+             <nvpair id="drbd0-interleave" name="interleave" value="true"/>
+           </attributes>
+         </meta_attributes>
+         <primitive id="drbd0" class="ocf" provider="heartbeat" type="drbd">
+           <instance_attributes id="ia-drbd0">
+             <attributes>
+               <nvpair id="drbd0-drbd-resource" name="drbd_resource" value="drbd0"/>
+             </attributes>
+           </instance_attributes>
+           <operations>
+             <op id="drbd0-op1" name="monitor" interval="59s" timeout="10s" role="Master"/>
+             <op id="drbd0-op2" name="monitor" interval="60s" timeout="10s" role="Slave"/>
+           </operations>
+         </primitive>
+       </master_slave>
+       <clone id="cman_clone" ordered="false" interleave="true" notify="false">
+         <meta_attributes id="cman_clone_meta_attr">
+           <attributes>
+             <nvpair id="cman_globally_unique" name="globally_unique" value="false"/>
+           </attributes>
+         </meta_attributes>
+         <instance_attributes id="7c15d37b-309e-4462-b9be-c385b3aaf5ae">
+           <attributes>
+             <nvpair id="cman_clone_max" name="clone_max" value="2"/>
+             <nvpair id="cman_clone_node_max" name="clone_node_max" value="1"/>
+           </attributes>
+         </instance_attributes>
+         <primitive id="cman" class="lsb" type="cman"/>
+         <meta_attributes id="cman_clone-meta-options">
+           <attributes>
+             <nvpair id="cman_clone-meta-options-target_role" name="target_role" value="started"/>
+           </attributes>
+         </meta_attributes>
+       </clone>
+       <clone id="clvmd_clone" ordered="false" interleave="true" notify="false">
+         <meta_attributes id="clvmd_meta_attr">
+           <attributes>
+             <nvpair name="target_role" id="clvmd_target_role" value="started"/>
+             <nvpair id="clvmd_globally_unique" name="globally_unique" value="false"/>
+           </attributes>
+         </meta_attributes>
+         <instance_attributes id="clvmd_inst_attr">
+           <attributes>
+             <nvpair id="clvmd_clone_max" name="clvmd_clone_max" value="2"/>
+             <nvpair id="clvmd_clone_node_max" name="clvmd_clone_node_max" value="1"/>
+           </attributes>
+         </instance_attributes>
+         <primitive id="clvmd" class="lsb" type="lxclvmd"/>
+       </clone>
+       <primitive class="ocf" provider="heartbeat" type="vm" id="vmnci36">
+         <operations>
+           <op id="vmnci36_op_1" interval="10s" name="monitor" timeout="60s" prereq="nothing"/>
+           <op id="vmnci36_op_2" name="start" timeout="60s" start_delay="0"/>
+           <op id="vmnci36_op_3" name="stop" timeout="300s"/>
+         </operations>
+         <instance_attributes id="vmnci36_inst_attr">
+           <attributes>
+             <nvpair id="vmnci36_vmid" name="vmid" value="vmnci36"/>
+             <nvpair name="target_role" id="vmnci36_target_role" value="started"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive class="ocf" provider="heartbeat" type="vm" id="vmnci37">
+         <operations>
+           <op id="vmnci37_op_1" interval="10s" name="monitor" timeout="60s" prereq="nothing"/>
+           <op id="vmnci37_op_2" name="start" timeout="60s" start_delay="0"/>
+           <op id="vmnci37_op_3" name="stop" timeout="300s"/>
+         </operations>
+         <instance_attributes id="vmnci37_inst_attr">
+           <attributes>
+             <nvpair id="vmnci37_vmid" name="vmid" value="vmnci37"/>
+             <nvpair name="target_role" id="vmnci37_target_role" value="stopped"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive class="ocf" id="vmnci38" provider="heartbeat" type="vm">
+         <operations>
+           <op id="vmnci38_op_1" interval="10s" name="monitor" timeout="60s" prereq="nothing"/>
+           <op id="vmnci38_op_2" name="start" timeout="60s" start_delay="0"/>
+           <op id="vmnci38_op_3" name="stop" timeout="300s"/>
+         </operations>
+         <instance_attributes id="vmnci38_inst_attr">
+           <attributes>
+             <nvpair id="vmnci38_vmid" name="vmid" value="vmnci38"/>
+             <nvpair id="vmnci38_target_role" name="target_role" value="stopped"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+       <primitive class="ocf" provider="heartbeat" type="vm" id="vmnci55">
+         <operations>
+           <op id="vmnci55_op_1" interval="10s" name="monitor" timeout="60s" prereq="nothing"/>
+           <op id="vmnci55_op_2" name="start" timeout="60s" start_delay="0"/>
+           <op id="vmnci55_op_3" name="stop" timeout="300s"/>
+         </operations>
+         <instance_attributes id="vmnci55_inst_attr">
+           <attributes>
+             <nvpair id="vmnci55_vmid" name="vmid" value="vmnci55"/>
+             <nvpair name="target_role" id="vmnci55_target_role" value="stopped"/>
+           </attributes>
+         </instance_attributes>
+       </primitive>
+     </resources>
+     <constraints>
+       <rsc_location id="drbd0_location" rsc="drbd0">
+         <rule id="drbd0_prefered_location" score="1">
+           <expression id="drbd0_prefered_location_expr" attribute="#uname" operation="eq" value="vbox3"/>
+         </rule>
+       </rsc_location>
+       <rsc_order id="drbd_before_clvmd" from="clvmd_clone" action="start" to="drbd0" to_action="promote"/>
+       <!--rsc_order id="drbd_before_vmnci36" from="vmnci36" action="start" to="drbd0" to_action="promote"/-->
+       <rsc_colocation id="clvmd_on_drbd0" to="drbd0" to_role="Master" from="clvmd_clone" score="INFINITY"/>
+       <rsc_order id="cman_before_clvmd" from="clvmd_clone" action="start" to="cman_clone" to_action="start"/>
+       <rsc_colocation id="clvmd_on_cman" to="cman_clone" to_role="Started" from="clvmd_clone" score="INFINITY"/>
+       <rsc_location id="vmnci36_location" rsc="vmnci36">
+         <rule id="vmnci36_prefered_location" score="10">
+           <expression id="vmnci36_prefered_location_expr" attribute="#uname" operation="eq" value="vbox3"/>
+         </rule>
+       </rsc_location>
+       <rsc_order id="clvmd_before_vmnci36" from="vmnci36" action="start" to="clvmd_clone" to_action="start"/>
+       <rsc_colocation id="vmnci36_on_clvmd" to="clvmd_clone" to_role="Started" from="vmnci36" score="INFINITY"/>
+       <rsc_location id="vmnci37_location" rsc="vmnci37">
+         <rule id="vmnci37_prefered_location" score="10">
+           <expression id="vmnci37_prefered_location_expr" attribute="#uname" operation="eq" value="vbox3"/>
+         </rule>
+       </rsc_location>
+       <rsc_location id="vmnci38_location" rsc="vmnci38">
+         <rule id="vmnci38_prefered_location" score="10">
+           <expression id="vmnci38_prefered_location_expr" attribute="#uname" operation="eq" value="vbox3"/>
+         </rule>
+       </rsc_location>
+       <rsc_order id="clvmd_before_vmnci38" from="vmnci38" action="start" to="clvmd_clone" to_action="start"/>
+       <rsc_location id="vmnci55_location" rsc="vmnci55">
+         <rule id="vmnci55_prefered_location" score="10">
+           <expression id="vmnci55_prefered_location_expr" attribute="#uname" operation="eq" value="vbox3"/>
+         </rule>
+       </rsc_location>
+       <rsc_order id="clvmd_before_vmnci55" from="vmnci55" action="start" to="clvmd_clone" to_action="start"/>
+       <rsc_colocation id="vmnci55_on_clvmd" to="clvmd_clone" to_role="Started" from="vmnci55" score="INFINITY"/>
+     </constraints>
+   </configuration>
+   <status>
+     <node_state id="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6" uname="vbox4" crmd="online" crm-debug-origin="do_lrm_query" shutdown="0" ha="active" in_ccm="true" join="member" expected="member">
+       <lrm id="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
+         <lrm_resources/>
+       </lrm>
+     </node_state>
+   </status>
+ </cib>
