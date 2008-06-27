@@ -25,6 +25,7 @@ fi
 create_mode="true"
 echo Generating test outputs for these tests...
 # do_test
+do_test master-depend "Ensure resources that depend on the master don't get allocated until the master does"
 echo Done.
 echo ""
 
