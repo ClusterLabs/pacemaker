@@ -235,6 +235,12 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 		action->timer->reason = timeout_action_warn;
 		te_start_action_timer(action);
 	}
+
+	value = g_hash_table_lookup(action->params, crm_meta_name(XML_OP_ATTR_PENDING));
+	if(crm_is_true(value)) {
+	    /* write a "pending" entry to the CIB, inhibit notification */
+	    cib_action_update(action, LRM_OP_PENDING, EXECRA_STATUS_UNKNOWN);
+	}
 	
 	return TRUE;
 }
@@ -263,7 +269,7 @@ te_rsc_command(crm_graph_t *graph, crm_action_t *action)
 }
 
 gboolean
-cib_action_update(crm_action_t *action, int status)
+cib_action_update(crm_action_t *action, int status, int op_rc)
 {
 	char *op_id  = NULL;
 	char *code   = NULL;
@@ -282,17 +288,20 @@ cib_action_update(crm_action_t *action, int status)
 	const char *rsc_id = NULL;
 	const char *task   = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 	const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-	const char *task_uuid = crm_element_value(
-		action->xml, XML_LRM_ATTR_TASK_KEY);
-	
-	const char *target_uuid = crm_element_value(
-		action->xml, XML_LRM_ATTR_TARGET_UUID);
+	const char *task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+	const char *target_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 
 	int call_options = cib_quorum_override|cib_scope_local;
 
-	crm_warn("%s %d: %s on %s timed out",
-		 crm_element_name(action->xml), action->id, task_uuid, target);
-
+	if(LRM_OP_PENDING) {
+	    call_options |= cib_inhibit_notify; /* We don't want to know about these updates */
+	    crm_debug("%s %d: Recording pending operation %s on %s",
+		     crm_element_name(action->xml), action->id, task_uuid, target);
+	} else {
+	    crm_warn("%s %d: %s on %s timed out",
+		     crm_element_name(action->xml), action->id, task_uuid, target);
+	}
+	
 	action_rsc = find_xml_node(action->xml, XML_CIB_TAG_RESOURCE, TRUE);
 	if(action_rsc == NULL) {
 		return FALSE;
@@ -302,8 +311,6 @@ cib_action_update(crm_action_t *action, int status)
 	CRM_CHECK(rsc_id != NULL,
 		  crm_log_xml_err(action->xml, "Bad:action");
 		  return FALSE);
-	
-	code = crm_itoa(status);
 	
 /*
   update the CIB
@@ -343,15 +350,13 @@ cib_action_update(crm_action_t *action, int status)
 	crm_xml_add(xml_op, XML_ATTR_ID, op_id);
 	crm_free(op_id);
 	
+	crm_xml_add(xml_op, XML_LRM_ATTR_CALLID, "-1");
 	crm_xml_add(xml_op, XML_LRM_ATTR_TASK, task);
 	crm_xml_add(xml_op, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-	crm_xml_add(xml_op, XML_LRM_ATTR_OPSTATUS, code);
-	crm_xml_add(xml_op, XML_LRM_ATTR_CALLID, "-1");
+	crm_xml_add_int(xml_op, XML_LRM_ATTR_OPSTATUS, status);
 	crm_xml_add_int(xml_op, XML_LRM_ATTR_INTERVAL, action->interval);
-	crm_xml_add(xml_op, XML_LRM_ATTR_RC, code);
+	crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op_rc);
 	crm_xml_add(xml_op, XML_ATTR_ORIGIN, __FUNCTION__);
-
-	crm_free(code);
 
 	code = generate_transition_key(
 	    transition_graph->id, action->id, get_target_rc(action), te_uuid);
@@ -359,7 +364,7 @@ cib_action_update(crm_action_t *action, int status)
 	crm_free(code);
 
 	code = generate_transition_magic(
-		crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY), status, status);
+		crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY), status, op_rc);
 	crm_xml_add(xml_op,  XML_ATTR_TRANSITION_MAGIC, code);
 	crm_free(code);
 

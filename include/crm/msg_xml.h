@@ -155,6 +155,7 @@
 #define XML_OP_ATTR_START_DELAY		"start-delay"
 #define XML_OP_ATTR_ALLOW_MIGRATE	"allow-migrate"
 #define XML_OP_ATTR_ORIGIN		"interval-origin"
+#define XML_OP_ATTR_PENDING		"record-pending"
 
 #define XML_CIB_TAG_LRM		  	"lrm"
 #define XML_LRM_TAG_RESOURCES     	"lrm_resources"

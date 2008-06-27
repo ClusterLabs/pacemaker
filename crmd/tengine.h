@@ -27,7 +27,7 @@ extern void send_stonith_update(stonith_ops_t * op);
 extern crm_action_t *match_down_event(
 	int rc, const char *target, const char *filter);
 
-extern gboolean cib_action_update(crm_action_t *action, int status);
+extern gboolean cib_action_update(crm_action_t *action, int status, int op_rc);
 
 /* utils */
 extern crm_action_t *get_action(int id, gboolean confirmed);

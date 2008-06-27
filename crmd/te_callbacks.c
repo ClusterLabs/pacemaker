@@ -378,7 +378,7 @@ action_timer_callback(gpointer data)
 		
 	} else {
 		/* fail the action */
-		cib_action_update(timer->action, LRM_OP_TIMEOUT);
+	    cib_action_update(timer->action, LRM_OP_TIMEOUT, EXECRA_UNKNOWN_ERROR);
 	}
 
 	return FALSE;
@@ -425,7 +425,7 @@ unconfirmed_actions(gboolean send_updates)
 				/* *never* update the CIB with these */
 				continue;
 			}
-			cib_action_update(action, LRM_OP_PENDING);
+			cib_action_update(action, LRM_OP_PENDING, EXECRA_STATUS_UNKNOWN);
 			);
 		);
 	if(unconfirmed > 0) {

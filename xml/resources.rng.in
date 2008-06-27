@@ -127,6 +127,9 @@
 	      <attribute name="enabled"><data type="boolean"/></attribute>
 	    </optional>
 	    <optional>
+	      <attribute name="record-pending"><data type="boolean"/></attribute>
+	    </optional>
+	    <optional>
 	      <attribute name="role">
 		<choice>
 		  <value>Started</value>
