@@ -941,7 +941,6 @@ static void create_cib_node_definition(
     xmlNode *cib_nodes = user_data;
     xmlNode *cib_new_node = NULL;
     
-    crm_notice("Node: %s (uuid: %s)", node->uname, node->uuid);
     cib_new_node = create_xml_node(cib_nodes, XML_CIB_TAG_NODE);
     crm_xml_add(cib_new_node, XML_ATTR_ID,    node->uuid);
     crm_xml_add(cib_new_node, XML_ATTR_UNAME, node->uname);
