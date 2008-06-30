@@ -228,8 +228,8 @@
 #define XML_COLOC_ATTR_TARGET_ROLE	"with-rsc-role"
 #define XML_COLOC_ATTR_NODE_ATTR	"node_attribute"
 
-#define XML_ORDER_ATTR_FIRST		"first-rsc"
-#define XML_ORDER_ATTR_THEN		"then-rsc"
+#define XML_ORDER_ATTR_FIRST		"first"
+#define XML_ORDER_ATTR_THEN		"then"
 #define XML_ORDER_ATTR_FIRST_ACTION	"first-action"
 #define XML_ORDER_ATTR_THEN_ACTION	"then-action"
 

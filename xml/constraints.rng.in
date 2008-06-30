@@ -110,8 +110,8 @@
 	  <ref name="element-resource-set"/>
 	</oneOrMore>
 	<group>
-	  <attribute name="first-rsc"><data type="IDREF"/></attribute>
-	  <attribute name="then-rsc"><data type="IDREF"/></attribute>
+	  <attribute name="first"><data type="IDREF"/></attribute>
+	  <attribute name="then"><data type="IDREF"/></attribute>
 	  <optional>
 	    <externalRef href="score.rng"/>
 	  </optional>

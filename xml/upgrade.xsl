@@ -554,10 +554,10 @@
     <xsl:choose>
       <xsl:when test="not(contains(@type, 'before'))">
 
-	<xsl:attribute name="first-rsc">
+	<xsl:attribute name="first">
 	  <xsl:value-of select="@to"/>
 	</xsl:attribute>
-	<xsl:attribute name="then-rsc">
+	<xsl:attribute name="then">
 	  <xsl:value-of select="@from"/>
 	</xsl:attribute>
 
