@@ -29,7 +29,6 @@
 
 #include <clplumbing/uids.h>
 #include <clplumbing/cl_uuid.h>
-#include <clplumbing/cl_malloc.h>
 #include <clplumbing/Gmain_timeout.h>
 
 #include <crm/crm.h>
