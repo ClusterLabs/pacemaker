@@ -1127,41 +1127,6 @@ int send_cluster_msg_raw(AIS_Message *ais_msg)
     iovec.iov_base = (char *)ais_msg;
     iovec.iov_len = ais_msg->header.size;
 
-#if 0
-    if(ais_msg->is_compressed == FALSE && ais_msg->size > 1024) {
-	char *compressed = NULL;
-	unsigned int len = (ais_msg->size * 1.1) + 600; /* recomended size */
-	
-	ais_debug_2("Creating compressed message");
-	ais_malloc0(compressed, len);
-	
-	rc = BZ2_bzBuffToBuffCompress(
-	    compressed, &len, ais_msg->data, ais_msg->size, 3, 0, 30);
-	
-	if(rc != BZ_OK) {
-	    ais_err("Compression failed: %d", rc);
-	    ais_free(compressed);
-	    goto send;  
-	}
-
-	ais_malloc0(bz2_msg, sizeof(AIS_Message) + len + 1);
-	memcpy(bz2_msg, ais_msg, sizeof(AIS_Message));
-	memcpy(bz2_msg->data, compressed, len);
-	ais_free(compressed);
-
-	bz2_msg->is_compressed = TRUE;
-	bz2_msg->compressed_size = len;
-	bz2_msg->header.size = sizeof(AIS_Message) + ais_data_len(bz2_msg);
-
-	ais_debug("Compression details: %d -> %d",
-		  bz2_msg->size, ais_data_len(bz2_msg));
-
-	iovec.iov_base = (char *)bz2_msg;
-	iovec.iov_len = bz2_msg->header.size;
-    }    
-
-  send:
-#endif
     ais_debug_3("Sending message (size=%u)", (unsigned int)iovec.iov_len);
     rc = totempg_groups_mcast_joined (
 	openais_group_handle, &iovec, 1, TOTEMPG_SAFE);
