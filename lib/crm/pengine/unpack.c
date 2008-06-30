@@ -1188,9 +1188,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, crm_data_t *xml_op,
 		if(is_probe) {
 			/* treat these like stops */
 			task = CRMD_ACTION_STOP;
-			
- 		} else {
-			task_status_i = LRM_OP_ERROR;
+			task_status_i = LRM_OP_DONE;
 		}
 		break;
 
