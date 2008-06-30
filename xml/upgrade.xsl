@@ -595,10 +595,10 @@
 	  <xsl:value-of select="@action"/>
 	  </xsl:attribute>
 	</xsl:if>
-	<xsl:attribute name="first-rsc">
+	<xsl:attribute name="first">
 	  <xsl:value-of select="@from"/>
 	</xsl:attribute>
-	<xsl:attribute name="then-rsc">
+	<xsl:attribute name="then">
 	  <xsl:value-of select="@to"/>
 	</xsl:attribute>
 	<xsl:if test="@to_action">
