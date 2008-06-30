@@ -150,12 +150,8 @@ random for the selected number of iterations.
         BadNews.setwatch()
 
         self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
-
-        for node in self.CM.Env["nodes"]:
-            if node in self.CM.Env["oprofile"]:
-                self.CM.log("Enabling oprofile on %s" % node) 
-                self.CM.rsh.remote_py(node, "os", "system", "opcontrol --init")
-                self.CM.rsh.remote_py(node, "os", "system", "opcontrol --start")
+        self.CM.oprofileStop()
+        self.CM.oprofileStart() 
 
         if not self.CM.Env["DoBSC"]:
             audit = LogAudit(self.CM)
@@ -175,10 +171,7 @@ random for the selected number of iterations.
         if not self.Scenario.SetUp(self.CM):
             return None
 
-        for node in self.CM.Env["nodes"]:
-            if node in self.CM.Env["oprofile"]:
-                self.CM.rsh.remote_py(
-                    node, "os", "system", "opcontrol --save=cts.setup")
+        self.CM.oprofileSave(0) 
 
         testcount=1
         time.sleep(30)
@@ -201,11 +194,7 @@ random for the selected number of iterations.
             test.starttime=starttime
             ret=test(nodechoice)
 
-            for node in self.CM.Env["nodes"]:
-                if node in self.CM.Env["oprofile"]:
-                    self.CM.rsh.remote_py(
-                        node, "os", "system", 
-                        "opcontrol --save=cts.%d" % (testcount-1))
+            self.CM.oprofileSave(testcount-1)
 
             if ret:
                 self.incr("success")
@@ -231,11 +220,8 @@ random for the selected number of iterations.
             self.audit(BadNews, test)
 
         self.Scenario.TearDown(self.CM)
-        
-        for node in self.CM.Env["nodes"]:
-            if node in self.CM.Env["oprofile"]:
-                self.CM.log("Disabling oprofile on %s" % node) 
-                self.CM.rsh.remote_py(node, "os", "system", "opcontrol --shutdown")
+        self.CM.oprofileSave(testcount) 
+        self.CM.oprofileStop()
 
         self.audit(BadNews, None)
 
@@ -618,9 +604,7 @@ class StonithTest(CTSTest):
         self.CM.cluster_stable()
 
         if node in self.CM.Env["oprofile"]:
-            self.CM.log("Enabling oprofile on %s" % node) 
-            self.CM.rsh.remote_py(node, "os", "system", "opcontrol --init")
-            self.CM.rsh.remote_py(node, "os", "system", "opcontrol --start")
+            self.CM.oprofileStart(node) 
 
         # return case processing
         if rc == 0:
