@@ -189,12 +189,13 @@ random for the selected number of iterations.
             #self.CM.log("Running test %s (%s) \t[%d : %d]"  
             #            % (test.name, nodechoice, testcount, logsize))
             self.CM.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) +"["+ ("%d" % testcount).rjust(3) +"]")
-            testcount = testcount + 1
             starttime=time.time()
             test.starttime=starttime
             ret=test(nodechoice)
+            stoptime=time.time()
+            self.CM.oprofileSave(testcount)
 
-            self.CM.oprofileSave(testcount-1)
+            testcount = testcount + 1
 
             if ret:
                 self.incr("success")
@@ -203,7 +204,6 @@ random for the selected number of iterations.
                 self.CM.log("Test %s (%s) \t[FAILED]" %(test.name,nodechoice))
                 # Better get the current info from the cluster...
                 self.CM.statall()
-            stoptime=time.time()
             elapsed_time = stoptime - starttime
             test_time = stoptime - test.starttime
             if not test.has_key("min_time"):
