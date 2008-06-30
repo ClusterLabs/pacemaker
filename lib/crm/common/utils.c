@@ -699,26 +699,6 @@ crm_parse_int(const char *text, const char *default_text)
 }
 
 gboolean
-crm_str_eq(const char *a, const char *b, gboolean use_case) 
-{
-	if(a == NULL || b == NULL) {
-		/* shouldn't be comparing NULLs */
-		CRM_CHECK(a != b, return TRUE);
-		return FALSE;
-
-	} else if(use_case && a[0] != b[0]) {
-		return FALSE;		
-
-	} else if(a == b) {
-		return TRUE;
-
-	} else if(strcasecmp(a, b) == 0) {
-		return TRUE;
-	}
-	return FALSE;
-}
-
-gboolean
 safe_str_neq(const char *a, const char *b)
 {
 	if(a == b) {

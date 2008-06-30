@@ -18,6 +18,7 @@
 
 #include <crm_internal.h>
 #include <crm/common/iso8601.h>
+#include <unistd.h>
 
 #define OPTARGS	"V?d:p:D:WOLn"
 

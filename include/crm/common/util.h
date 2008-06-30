@@ -19,7 +19,6 @@
 #define CRM_COMMON_UTIL__H
 
 #include <signal.h>
-#include <crm/common/xml.h>
 
 #if SUPPORT_HEARTBEAT
 #  include <hb_api.h>
@@ -114,7 +113,25 @@ extern void filter_reload_parameters(xmlNode *param_set, const char *restart_str
 
 #define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 
-extern gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
+static inline gboolean crm_str_eq(const char *a, const char *b, gboolean use_case) 
+{
+    if(a == b) {
+	return TRUE;
+	
+    } else if(a == NULL || b == NULL) {
+	/* shouldn't be comparing NULLs */
+	return FALSE;
+	    
+    } else if(use_case && a[0] != b[0]) {
+	return FALSE;		
+	
+    } else if(strcasecmp(a, b) == 0) {
+	return TRUE;
+    }
+    return FALSE;
+}
+
+
 extern gboolean safe_str_neq(const char *a, const char *b);
 extern int crm_parse_int(const char *text, const char *default_text);
 extern long crm_int_helper(const char *text, char **end_text);

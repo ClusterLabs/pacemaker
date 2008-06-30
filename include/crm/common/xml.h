@@ -26,8 +26,8 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include <crm/crm.h>
 #include <ha_msg.h>
-#include <clplumbing/cl_log.h> 
 
 #include <libxml/tree.h> 
 #include <libxml/xpath.h>
@@ -212,11 +212,32 @@ extern int find_xml_children(
  *
  */
 extern int crm_element_value_int(xmlNode *data, const char *name, int *dest);
-extern const char *crm_element_value(xmlNode *data, const char *name);
 extern char *crm_element_value_copy(xmlNode *data, const char *name);
 extern const char *crm_element_value_const(const xmlNode *data, const char *name);
 
 extern const char *crm_element_name(const xmlNode *data);
+
+static inline const char *
+crm_element_value(xmlNode *data, const char *name)
+{
+    xmlAttr *attr = NULL;
+    
+    if(data == NULL) {
+	crm_err("Couldn't find %s in NULL", name?name:"<null>");
+	return NULL;
+    }
+    if(name == NULL) {
+	crm_err("Couldn't find NULL in %s", crm_element_name(data));
+	return NULL;
+    }
+    
+    attr = xmlHasProp(data, (const xmlChar*)name);
+    if(attr && attr->children) {
+	return (const char*)attr->children->content;
+    }
+    return NULL;
+}
+
 
 extern void xml_validate(const xmlNode *root);
 

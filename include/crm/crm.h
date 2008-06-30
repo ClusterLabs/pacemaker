@@ -64,8 +64,6 @@
 #define fsa_diff_warn_ms     10000
 #define fsa_diff_max_ms      30000
 
-#include <crm/common/util.h>
-
 #define CRM_ASSERT(expr) if((expr) == FALSE) {				\
 	crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
     }
@@ -279,6 +277,8 @@ typedef GList* GListPtr;
 #define crm_debug_4(fmt, args...) do_crm_log(LOG_DEBUG_4, fmt , ##args)
 #define crm_debug_5(fmt, args...) do_crm_log(LOG_DEBUG_5, fmt , ##args)
 #define crm_debug_6(fmt, args...) do_crm_log(LOG_DEBUG_6, fmt , ##args)
+
+#include <crm/common/util.h>
 
 extern void crm_log_message_adv(
 	int level, const char *alt_debugfile, const HA_Message *msg);
