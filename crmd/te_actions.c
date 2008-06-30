@@ -236,12 +236,6 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 		te_start_action_timer(action);
 	}
 
-	value = g_hash_table_lookup(action->params, crm_meta_name(XML_OP_ATTR_PENDING));
-	if(crm_is_true(value)) {
-	    /* write a "pending" entry to the CIB, inhibit notification */
-	    cib_action_update(action, LRM_OP_PENDING, EXECRA_STATUS_UNKNOWN);
-	}
-	
 	return TRUE;
 }
 
@@ -464,6 +458,13 @@ send_rsc_command(crm_action_t *action)
 		}
 		te_start_action_timer(action);
 	}
+
+	value = g_hash_table_lookup(action->params, crm_meta_name(XML_OP_ATTR_PENDING));
+	if(crm_is_true(value)) {
+	    /* write a "pending" entry to the CIB, inhibit notification */
+	    crm_info("Recording pending op %s in the CIB", task_uuid);
+	    cib_action_update(action, LRM_OP_PENDING, EXECRA_STATUS_UNKNOWN);
+	}	
 }
 
 crm_graph_functions_t te_graph_fns = {
