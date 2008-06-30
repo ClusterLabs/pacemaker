@@ -5,6 +5,7 @@
 "probe_complete node2" -> "probe_complete" [ style = bold]
 "probe_complete node2" [ style=bold color="green" fontcolor="black" ]
 "probe_complete" -> "rsc3_migrate_from_0 node2" [ style = bold]
+"probe_complete" -> "rsc3_migrate_to_0 node1" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange" ]
 "rsc3_migrate_from_0 node2" -> "all_stopped" [ style = bold]
 "rsc3_migrate_from_0 node2" [ style=bold color="green" fontcolor="black" ]

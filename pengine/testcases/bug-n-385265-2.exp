@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
        <pseudo_event id="12" operation="start" operation_key="group_common_start_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -17,7 +17,7 @@
    <synapse id="1">
      <action_set>
        <pseudo_event id="13" operation="running" operation_key="group_common_running_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -35,7 +35,7 @@
    <synapse id="2">
      <action_set>
        <pseudo_event id="14" operation="stop" operation_key="group_common_stop_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -43,7 +43,7 @@
    <synapse id="3">
      <action_set>
        <pseudo_event id="15" operation="stopped" operation_key="group_common_stopped_0">
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -62,7 +62,7 @@
      <action_set>
        <rsc_op id="2" operation="stop" operation_key="resource_ip_common_stop_0" on_node="ih02" on_node_uuid="57226bfc-310f-409b-8b3d-49d93498e4b5">
          <primitive id="resource_ip_common" long-id="group_common:resource_ip_common" class="ocf" provider="heartbeat" type="IPaddr2"/>
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -78,7 +78,7 @@
      <action_set>
        <rsc_op id="7" operation="start" operation_key="resource_ip_common_start_0" on_node="ih01" on_node_uuid="9be32c75-0490-4cf9-ae18-c039a94fd327">
          <primitive id="resource_ip_common" long-id="group_common:resource_ip_common" class="ocf" provider="heartbeat" type="IPaddr2"/>
-         <attributes crm_feature_set="2.1" ip="10.116.38.10" CRM_meta_timeout="20000"/>
+         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0" ip="10.116.38.10"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -94,7 +94,7 @@
      <action_set>
        <rsc_op id="8" operation="monitor" operation_key="resource_ip_common_monitor_30000" on_node="ih01" on_node_uuid="9be32c75-0490-4cf9-ae18-c039a94fd327">
          <primitive id="resource_ip_common" long-id="group_common:resource_ip_common" class="ocf" provider="heartbeat" type="IPaddr2"/>
-         <attributes crm_feature_set="2.1" ip="10.116.38.10" CRM_meta_id="common-9af7-4031-8abc-426548ef52c7" CRM_meta_start_delay="30000" CRM_meta_timeout="55000" CRM_meta_name="monitor" CRM_meta_interval="30000"/>
+         <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_start_delay="30000" CRM_meta_timeout="55000" crm_feature_set="3.0" ip="10.116.38.10"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -107,7 +107,7 @@
      <action_set>
        <rsc_op id="9" operation="start" operation_key="resource_idvscommon_start_0" on_node="ih01" on_node_uuid="9be32c75-0490-4cf9-ae18-c039a94fd327">
          <primitive id="resource_idvscommon" long-id="group_common:resource_idvscommon" class="ocf" provider="dfs" type="idvs"/>
-         <attributes crm_feature_set="2.1" site="common" CRM_meta_timeout="20000"/>
+         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0" site="common"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -126,7 +126,7 @@
      <action_set>
        <rsc_op id="10" operation="stop" operation_key="resource_idvscommon_stop_0" on_node="ih02" on_node_uuid="57226bfc-310f-409b-8b3d-49d93498e4b5">
          <primitive id="resource_idvscommon" long-id="group_common:resource_idvscommon" class="ocf" provider="dfs" type="idvs"/>
-         <attributes crm_feature_set="2.1" CRM_meta_timeout="20000"/>
+         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -139,7 +139,7 @@
      <action_set>
        <rsc_op id="11" operation="monitor" operation_key="resource_idvscommon_monitor_30000" on_node="ih01" on_node_uuid="9be32c75-0490-4cf9-ae18-c039a94fd327">
          <primitive id="resource_idvscommon" long-id="group_common:resource_idvscommon" class="ocf" provider="dfs" type="idvs"/>
-         <attributes crm_feature_set="2.1" site="common" CRM_meta_id="common-9af7-4031-8abc-426548ef52c8" CRM_meta_start_delay="120000" CRM_meta_timeout="145000" CRM_meta_name="monitor" CRM_meta_interval="30000"/>
+         <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_start_delay="120000" CRM_meta_timeout="145000" crm_feature_set="3.0" site="common"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -151,7 +151,7 @@
    <synapse id="10">
      <action_set>
        <pseudo_event id="3" operation="all_stopped" operation_key="all_stopped">
-         <attributes crm_feature_set="2.1"/>
+         <attributes crm_feature_set="3.0"/>
        </pseudo_event>
      </action_set>
      <inputs>

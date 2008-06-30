@@ -1,0 +1,271 @@
+#!/bin/bash
+anyAsked=0
+if [ -e ~/.cts ]; then
+    . ~/.cts
+fi
+
+CTS_master=`uname -n`
+CTS_numtests=$1
+
+if [ "x$CTS_node_list" = "x" ]; then
+    anyAsked=1
+    read -p "Please list your cluster nodes (eg. node1 node2 node3): " CTS_node_list
+else
+    printf "Beginning test of cluster: $CTS_node_list\n"
+fi
+
+printf "+ Bootstraping ssh... "
+if [ -z $SSH_AUTH_SOCK ]; then
+    printf "\n + Initializing SSH "
+    agent_tmp=/tmp/.$$.ssh
+    ssh-agent > $agent_tmp
+    . $agent_tmp
+    rm $agent_tmp
+    printf " + Adding identities...\n"
+    ssh-add
+    rc=$?
+    if [ $rc != 0 ]; then
+	printf " -- No identities added\n"
+	printf "\nThe ability to open key-based 'ssh' connections (as the user 'root') is required to use CTS.\n"
+
+	read -p " - Do you want this program to help you create one? (yN)" auto_fix
+	if [ "x$auto_fix" = "xy" ]; then
+	    ssh-keygen -t dsa
+	    ssh-add
+	else
+	    printf "Please run 'ssh-keygen -t dsa' to create a new key\n"
+	    exit 1
+	fi
+    fi
+else
+    printf "OK\n"
+fi
+
+test_ok=1
+printf "+ Testing ssh configuration... "
+for n in $CTS_node_list; do
+    ssh -l root -o PasswordAuthentication=no -o ConnectTimeout=5 $n /bin/true
+    rc=$?
+    if [ $rc != 0 ]; then
+	printf "\n - connection to $n failed"
+	test_ok=0
+    fi
+done
+
+if [ $test_ok = 0 ]; then
+    printf "\n\nThe ability to open key-based 'ssh' connections (as the user 'root') is required to use CTS.\n"
+    printf "  Please install one of your SSH public keys to root's account on all cluster nodes\n"
+
+    # todo - look for identities and guide the installation of one
+
+    exit 1
+fi
+printf "OK\n"
+
+if [ -z $CTS_logfile ]; then
+    anyAsked=1
+    read -p " + Which file should CTS look for logs? (/var/log/messages) " CTS_logfile
+    if [ "x$CTS_logfile" = "x" ]; then
+	CTS_logfile=/var/log/messages
+    fi
+fi
+
+if [ ! -e $CTS_logfile ]; then
+    printf "$CTS_logfile doesn't exist\n"
+    exit 1
+fi
+
+if [ -z $CTS_logfacility ]; then
+    anyAsked=1
+    read -p " + Which log facility does the cluster use? (daemon) " CTS_logfacility
+    if [ "x$CTS_logfacility" = "x" ]; then
+	CTS_logfacility=daemon
+    fi
+fi
+
+logging_ok=1
+syslog_conf=/etc/syslog-ng/syslog-ng.conf
+printf "+ Checking syslog-ng is installed... "
+if [ ! -e $syslog_conf ]; then
+    printf "\n - Syslog-ng not installed on the test master (this machine)"
+    logging_ok=0
+fi
+
+for n in $CTS_node_list; do
+    ssh -l root $n ls $syslog_conf 2>&1 > /dev/null
+    rc=$?
+    if [ $rc != 0 ]; then
+	printf "\n - Syslog-ng not installed on $n"
+	logging_ok=0
+    fi
+done
+
+if [ $logging_ok = 0 ]; then
+    printf "\n\nSyslog-ng is required on all nodes to use CTS and the test master.\n"
+    printf "Please install it and restart CTS\n"
+    exit 1
+fi
+printf "OK\n"
+
+printf "+ Testing centralized logging configuration... "
+unique="`date` $$"
+bad_nodes=""
+some_ok=0
+
+for n in $CTS_node_list; do
+    ssh -l root $n logger -p $CTS_logfacility.info "$unique"
+    rc=$?
+    if [ $rc != 0 ]; then
+	printf "\n - logger command failed on $n"
+	logging_ok=0
+    else
+	grep "$n logger: $unique" $CTS_logfile 2>&1 > /dev/null
+	rc=$?
+	if [ $rc != 0 ]; then
+	    logging_ok=0
+	    bad_nodes="$bad_nodes $n"
+	    
+# look for CTS-AUTO-SETUP-WAS-HERE and abort if found
+	    ssh -l root $n grep CTS-AUTO-SETUP-WAS-HERE $syslog_conf 2>&1 > /dev/null
+	    rc=$?
+	    if [ $rc = 0 ]; then
+		printf "\n -- Previous attempt to auto-configure syslog-ng on $n failed - aborting!"
+		exit 1
+	    else
+		printf "\n - Syslog-ng is not configured correctly on $n"
+	    fi
+
+	else
+	    some_ok=1
+	fi
+    fi
+done
+
+if [ $logging_ok = 0 ]; then
+    if [ $some_ok = 1 ]; then
+	printf "\n\nSome nodes ($bad_nodes) do not have functional logging configurations\n"
+    else
+	printf "\n\nNo nodes have correctly configured logging.\n"
+    fi
+    
+    read -p " - Do you want this program to attempt to fix this? (yN)" auto_fix
+    if [ "x$auto_fix" = "xy" ]; then
+
+	if [ $some_ok = 0 ]; then
+
+	    grep CTS-AUTO-SETUP-WAS-HERE $syslog_conf 2>&1 > /dev/null
+	    rc=$?
+	    if [ $rc = 0 ]; then
+		printf "\n -- Previous attempt to auto-configure syslog-ng on the test master failed - aborting!"
+		exit 1
+	    fi
+
+	    anyAsked=1
+	    read -p " + Please chose a port for the test master to listen on. (91919) " CTS_logport
+	    if [ -z $CTS_logport ]; then
+		CTS_logport=91919
+	    fi
+
+	    printf "# CTS-AUTO-SETUP-WAS-HERE\n" >> $syslog_conf
+	    printf "source s_tcp { tcp(port($CTS_logport) max-connections(99999)); };\n" >> $syslog_conf
+	    printf "filter f_ha  { facility($CTS_logfacility); };\n" >> $syslog_conf
+	    printf "destination ha_local { file($CTS_logfile perm(0644)); };\n" >> $syslog_conf
+	    printf "log { source(src); source(s_tcp); filter(f_ha); destination(ha_local); };\n" >> $syslog_conf
+	    printf "  + Please restart logging on the current machine before restarting CTS\n"
+	else 
+	    if [ -z $CTS_logport ]; then
+		anyAsked=1
+		read -p " + Please confirm the port that the test master to listens on. (91919) " CTS_logport
+		if [ -z $CTS_logport ]; then
+		    CTS_logport=91919
+		fi
+	    fi
+	fi
+
+	for n in $bad_nodes; do
+	    ssh -l root $n -- 'printf "# CTS-AUTO-SETUP-WAS-HERE\n" >> $syslog_conf'
+	    ssh -l root $n -- 'printf "destination ha_tcp { tcp($CTS_master port($CTS_logport));};\n" >> $syslog_conf'
+	    ssh -l root $n -- 'printf "filter f_ha_tcp  { facility($CTS_logfacility); };\n" >> $syslog_conf'
+	    ssh -l root $n -- 'printf "log { source(src); filter(f_ha_tcp); destination(ha_tcp); };\n" >> $syslog_conf'
+	    printf "  + Please restart logging on $n before restarting CTS\n"
+	done
+	
+    else
+	if [ -z $CTS_logport ]; then
+	    CTS_logport=91919
+	fi
+	if [ $some_ok = 0 ]; then
+	    printf "Check that $syslog_conf on this machine has something like:\n"
+	    printf "  source s_tcp { tcp(port($CTS_logport) max-connections(99999)); };\n"
+	    printf "  filter f_ha  { facility($CTS_logfacility); };\n"
+	    printf "  destination ha_local { file($CTS_logfile perm(0644)); };\n"
+	    printf "  log { source(src); source(s_tcp); filter(f_ha); destination(ha_local); };\n"
+	    printf "\n and, \n"
+	fi
+	  
+	printf "Check that $syslog_conf on ($bad_nodes) have something like:\n"
+	printf "  destination ha_tcp { tcp($CTS_master port($CTS_logport));};\n"
+	printf "  filter f_ha_tcp  { facility($CTS_logfacility); };\n"
+	printf "  log { source(src); filter(f_ha_tcp); destination(ha_tcp); };\n"
+	printf "\nRemember to restart syslog-ng before restarting cts\n"
+    fi
+    exit 1
+fi
+printf "OK\n"
+
+if [ 0 = 1 ]; then
+echo SYSLOG_NG_CREATE_CONFIG=\"no\" >> /etc/sysconfig/syslog
+fi
+
+if [ -z $CTS_numtests ]; then
+    read -p "+ How many test iterations should be performed? (500) " CTS_numtests
+    if [ -z $CTS_numtests ]; then
+	CTS_numtests=500
+    fi
+fi
+
+if [ -z $CTS_asked_once ]; then
+    anyAsked=1
+    read -p "+ What type of STONITH agent do you use? (none) " CTS_stonith
+    if [ "x$CTS_stonith" != "x" ]; then
+	read -p "+ Does the STONITH agent require a parameter? (eq. device_host=switch.power.com) " CTS_stonith_args
+    fi
+
+    if [ -z $CTS_adv ]; then
+	read -p "+ (Advanced) Any extra CTS parameters? (none) " CTS_adv
+    fi
+fi
+
+if [ $anyAsked = 1 ]; then
+    read -p "+ Save values to ~/.cts for next time? (yN) " doSave
+fi
+
+if [ "x$doSave" = "xy" ]; then
+    echo "# CTS Test data" > ~/.cts
+    echo CTS_node_list=\"$CTS_node_list\" >> ~/.cts
+    echo CTS_logfile=\"$CTS_logfile\" >> ~/.cts
+    echo CTS_logport=$CTS_logport >> ~/.cts
+    echo CTS_logfacility=$CTS_logfacility >> ~/.cts
+    echo CTS_asked_once=1 >> ~/.cts
+    echo CTS_adv=\"$CTS_adv\" >> ~/.cts
+    echo CTS_stonith=$CTS_stonith >> ~/.cts
+    echo CTS_stonith_args=\"$CTS_stonith_args\" >> ~/.cts
+fi
+
+cts_extra=""
+if [ "x$CTS_stonith" != "x" ]; then
+    cts_extra="$cts_extra --stonith-type $CTS_stonith"
+    if [ "x$CTS_stonith_args" != "x" ]; then
+	cts_extra="$cts_extra --stonith-args \"$CTS_stonith_args\""
+    fi
+else
+    cts_extra="$cts_extra --stonith 0"
+    printf " - Testing a cluster without STONITH is like a blunt pencil... pointless\n"
+fi
+
+printf "\nAll set to go for $CTS_numtests iterations!\n"
+if [ $anyAsked = 0 ]; then
+    printf "+ To use a different configuration, remove ~/.cts and re-run cts (or edit it manually).\n"
+fi
+
+echo python ./CTSlab.py -L $CTS_logfile -crm $CTS_adv $cts_extra $CTS_numtests

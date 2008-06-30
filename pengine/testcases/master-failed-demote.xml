@@ -9,7 +9,7 @@
        <cluster_property_set id="set01">
          <attributes>
            <nvpair id="default-resource-stickiness" name="default-resource-stickiness" value="INFINITY"/>
-           <nvpair id="default-resource-failure-stickiness" name="default-resource-failure-stickiness" value="-INFINITY"/>
+           <nvpair id="default-migration-threshold" name="default-migration-threshold" value="1"/>
            <nvpair id="stonith-enabled" name="stonith-enabled" value="false"/>
            <nvpair id="stonith-action" name="stonith-action" value="reboot"/>
            <nvpair id="cluster-delay" name="cluster-delay" value="180s"/>

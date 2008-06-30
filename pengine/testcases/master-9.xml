@@ -199,10 +199,6 @@
            <expression id="rsc_test02_loc_expr" attribute="#uname" operation="eq" value="test02"/>
          </rule>
        </rsc_location>
-      <rsc_location id="master-node2" rsc="rsc1">
-	<rule id="master-rule-node2" score="100" role="Master">
-	</rule>
-      </rsc_location>
      </constraints>
    </configuration>
    <status>

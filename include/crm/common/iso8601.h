@@ -47,6 +47,8 @@ typedef struct ha_has_time_s {
 
 typedef struct ha_time_s 
 {
+		time_t tm_now;
+	
 		int years;
 
 		int months;
@@ -100,7 +102,9 @@ extern ha_time_t        *parse_time_duration(char **duration_str);
 extern ha_time_period_t *parse_time_period  (char **period_str);
 /* ha_time_interval_t *parse_time_interval(char **interval_str); */
 
-int compare_date(ha_time_t *lhs, ha_time_t *rhs);
+unsigned long long int date_in_seconds(ha_time_t *a_date);
+unsigned long long int date_in_seconds_since_epoch(ha_time_t *a_date);
+extern int compare_date(ha_time_t *lhs, ha_time_t *rhs);
 
 extern gboolean parse_int(char **str, int field_width, int uppper_bound, int *result);
 extern gboolean check_for_ordinal(const char *str);
@@ -110,6 +114,7 @@ extern void ha_set_tm_time(ha_time_t *lhs, struct tm *rhs);
 extern void ha_set_timet_time(ha_time_t *lhs, time_t *rhs);
 extern ha_time_t *add_time(ha_time_t *lhs, ha_time_t *rhs);
 extern ha_time_t *subtract_time(ha_time_t *lhs, ha_time_t *rhs);
+extern ha_time_t *subtract_duration(ha_time_t *time, ha_time_t *duration);
 extern void reset_tm(struct tm *some_tm);
 extern void add_seconds(ha_time_t *a_time, int extra);
 extern void add_minutes(ha_time_t *a_time, int extra);

@@ -106,7 +106,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 };
 
 static gboolean
-check_rsc_parameters(resource_t *rsc, node_t *node, crm_data_t *rsc_entry,
+check_rsc_parameters(resource_t *rsc, node_t *node, xmlNode *rsc_entry,
 		     pe_working_set_t *data_set) 
 {
 	int attr_lpc = 0;
@@ -144,7 +144,7 @@ check_rsc_parameters(resource_t *rsc, node_t *node, crm_data_t *rsc_entry,
 }
 
 static gboolean
-check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op,
+check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 			pe_working_set_t *data_set)
 {
 	char *key = NULL;
@@ -154,8 +154,8 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	gboolean did_change = FALSE;
 	gboolean start_op = FALSE;
 
-	crm_data_t *params_all = NULL;
-	crm_data_t *params_restart = NULL;
+	xmlNode *params_all = NULL;
+	xmlNode *params_restart = NULL;
 	GHashTable *local_rsc_params = NULL;
 	
 	char *digest_all_calc = NULL;
@@ -177,7 +177,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	key = generate_op_key(rsc->id, task, interval);
 
 	if(interval > 0) {
-		crm_data_t *op_match = NULL;
+		xmlNode *op_match = NULL;
 
 		crm_debug_2("Checking parameters for %s", key);
 		op_match = find_rsc_op_entry(rsc, key);
@@ -192,14 +192,14 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 				 key, active_node->details->uname);
 
 			/* cancel_key = generate_op_key( */
-			/* 	rsc->id, CRMD_ACTION_CANCEL, interval); */
+			/* 	rsc->id, RSC_CANCEL, interval); */
 
 			cancel = custom_action(
-				rsc, cancel_key, CRMD_ACTION_CANCEL,
+				rsc, cancel_key, RSC_CANCEL,
 				active_node, FALSE, TRUE, data_set);
 
 			crm_free(cancel->task);
-			cancel->task = crm_strdup(CRMD_ACTION_CANCEL);
+			cancel->task = crm_strdup(RSC_CANCEL);
 			
 			add_hash_param(cancel->meta, XML_LRM_ATTR_TASK,     task);
 			add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID,   call_id);
@@ -228,7 +228,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	
 	unpack_instance_attributes(
 		rsc->xml, XML_TAG_ATTR_SETS, active_node->details->attrs,
-		local_rsc_params, NULL, data_set->now);
+		local_rsc_params, NULL, FALSE, data_set->now);
 	
 	params_all = create_xml_node(NULL, XML_TAG_PARAMS);
 	g_hash_table_foreach(action->extra, hash2field, params_all);
@@ -242,7 +242,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 	digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 	restart_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
 
-	if(crm_str_eq(task, CRMD_ACTION_START, TRUE)) {
+	if(crm_str_eq(task, RSC_START, TRUE)) {
 		start_op = TRUE;
 	}
 	
@@ -304,7 +304,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, crm_data_t *xml_op
 extern gboolean DeleteRsc(resource_t *rsc, node_t *node, gboolean optional, pe_working_set_t *data_set);
 
 static void
-check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_set)
+check_actions_for(xmlNode *rsc_entry, node_t *node, pe_working_set_t *data_set)
 {
 	const char *id = NULL;
 	const char *task = NULL;
@@ -345,7 +345,7 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 	calculate_active_ops(sorted_op_list, &start_index, &stop_index);
 
 	slist_iter(
-		rsc_op, crm_data_t, sorted_op_list, lpc,
+		rsc_op, xmlNode, sorted_op_list, lpc,
 
 		if(start_index < stop_index) {
 			/* stopped */
@@ -362,11 +362,11 @@ check_actions_for(crm_data_t *rsc_entry, node_t *node, pe_working_set_t *data_se
 		interval_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL);
 		interval = crm_parse_int(interval_s, "0");
 		
-		if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+		if(interval == 0 && safe_str_eq(task, RSC_STATUS)) {
 			is_probe = TRUE;
 		}
 		
-		if(is_probe || safe_str_eq(task, CRMD_ACTION_START) || interval > 0) {
+		if(is_probe || safe_str_eq(task, RSC_START) || interval > 0) {
 			check_action_definition(rsc, node, rsc_op, data_set);
 		}
 		);
@@ -380,8 +380,8 @@ check_actions(pe_working_set_t *data_set)
 {
 	const char *id = NULL;
 	node_t *node = NULL;
-	crm_data_t *lrm_rscs = NULL;
-	crm_data_t *status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
+	xmlNode *lrm_rscs = NULL;
+	xmlNode *status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
 
 	xml_child_iter_filter(
 		status, node_state, XML_CIB_TAG_STATE,
@@ -426,6 +426,89 @@ apply_placement_constraints(pe_working_set_t *data_set)
 	
 }
 
+static void
+common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_set) 
+{
+	int fail_count = 0;
+	const char *value = NULL;
+	resource_t *failed = rsc;
+	GHashTable *meta_hash = NULL;
+
+	if(rsc->children) {
+	    slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+		common_apply_stickiness(child_rsc, node, data_set);
+		);
+	    return;
+	}
+
+	meta_hash = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+	get_meta_attributes(meta_hash, rsc, node, data_set);
+
+	/* update resource preferences that relate to the current node */	    
+	value = g_hash_table_lookup(meta_hash, XML_RSC_ATTR_STICKINESS);
+	if(value != NULL && safe_str_neq("default", value)) {
+		rsc->stickiness = char2score(value);
+	} else {
+		rsc->stickiness = data_set->default_resource_stickiness;
+	}
+
+	if(is_set(rsc->flags, pe_rsc_managed)
+	   && rsc->stickiness != 0
+	   && g_list_length(rsc->running_on) == 1) {
+	    node_t *current = pe_find_node_id(rsc->running_on, node->details->id);
+	    node_t *match = pe_find_node_id(rsc->allowed_nodes, node->details->id);
+
+	    if(current == NULL) {
+		
+	    } else if(match != NULL || data_set->symmetric_cluster) {
+		resource_t *sticky_rsc = rsc;
+		if(rsc->parent && rsc->parent->variant == pe_group) {
+		    sticky_rsc = rsc->parent;
+		}
+		
+		resource_location(sticky_rsc, node, rsc->stickiness,
+				  "stickiness", data_set);
+		crm_debug("Resource %s: preferring current location"
+			    " (node=%s, weight=%d)", sticky_rsc->id,
+			    node->details->uname, rsc->stickiness);
+	    } else {
+		crm_debug("Ignoring stickiness for %s: the cluster is asymmetric and node %s is no longer explicitly allowed",
+			  rsc->id, node->details->uname);
+		slist_iter(node, node_t, rsc->allowed_nodes, lpc,
+			   crm_err("%s[%s] = %d", rsc->id, node->details->uname, node->weight));
+	    }
+	}
+	
+	value = g_hash_table_lookup(meta_hash, XML_RSC_ATTR_FAIL_STICKINESS);
+	if(value != NULL && safe_str_neq("default", value)) {
+		rsc->migration_threshold = char2score(value);
+	} else {
+		rsc->migration_threshold = data_set->default_migration_threshold;
+	}
+
+	if(is_not_set(rsc->flags, pe_rsc_unique)) {
+	    failed = uber_parent(rsc);
+	}
+	    
+	fail_count = get_failcount(node, rsc, NULL, data_set);	
+
+	if(fail_count > 0 && rsc->migration_threshold != 0) {
+	    if(rsc->migration_threshold <= fail_count) {
+		resource_location(failed, node, -INFINITY, "__fail_limit__", data_set);
+		crm_warn("Forcing %s away from %s after %d failures (max=%d)",
+			 failed->id, node->details->uname, fail_count, rsc->migration_threshold);
+	    } else {
+		crm_notice("%s can fail %d more times on %s before being forced off",
+			   failed->id, rsc->migration_threshold - fail_count, node->details->uname);
+	    }
+	}
+	
+	g_hash_table_destroy(meta_hash);
+}
+
 static void complex_set_cmds(resource_t *rsc)
 {
     rsc->cmds = &resource_class_alloc_functions[rsc->variant];
@@ -447,7 +530,7 @@ set_alloc_actions(pe_working_set_t *data_set)
 gboolean
 stage0(pe_working_set_t *data_set)
 {
-	crm_data_t * cib_constraints = get_object_root(
+	xmlNode * cib_constraints = get_object_root(
 		XML_CIB_TAG_CONSTRAINTS, data_set->input);
 
 	if(data_set->input == NULL) {
@@ -457,8 +540,8 @@ stage0(pe_working_set_t *data_set)
 	cluster_status(data_set);
 	
 	set_alloc_actions(data_set);
-
 	unpack_constraints(cib_constraints, data_set);
+	
 	return TRUE;
 }
 
@@ -477,7 +560,6 @@ probe_resources(pe_working_set_t *data_set)
 		const char *probed = g_hash_table_lookup(
 			node->details->attrs, CRM_OP_PROBED);
 
-		crm_debug_2("%s probed: %s", node->details->uname, probed);
 		if(node->details->online == FALSE) {
 			continue;
 			
@@ -500,9 +582,7 @@ probe_resources(pe_working_set_t *data_set)
 		add_hash_param(probe_node_complete->meta,
 			       XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
 		
-		custom_action_order(NULL, NULL, probe_node_complete,
-				    NULL, NULL, probe_complete,
-				    pe_order_optional, data_set);
+		order_actions(probe_node_complete, probe_complete, pe_order_optional);
 		
 		slist_iter(
 			rsc, resource_t, data_set->resources, lpc2,
@@ -517,6 +597,11 @@ probe_resources(pe_working_set_t *data_set)
 				custom_action_order(
 					NULL, NULL, probe_complete,
 					rsc, start_key(rsc), NULL,
+					pe_order_optional, data_set);
+
+				custom_action_order(
+					NULL, NULL, probe_complete,
+					rsc, stop_key(rsc), NULL,
 					pe_order_optional, data_set);
 			}
 			);
@@ -551,6 +636,13 @@ stage2(pe_working_set_t *data_set)
 
 	apply_placement_constraints(data_set);
 
+	slist_iter(node, node_t, data_set->nodes, lpc,
+		   slist_iter(
+		       rsc, resource_t, data_set->resources, lpc2,
+		       common_apply_stickiness(rsc, node, data_set);
+		       );
+	    );
+
 	return TRUE;
 }
 
@@ -579,8 +671,6 @@ stage4(pe_working_set_t *data_set)
 	return TRUE;
 }
 
-
-
 gboolean
 stage5(pe_working_set_t *data_set)
 {
@@ -600,6 +690,32 @@ stage5(pe_working_set_t *data_set)
 	return TRUE;
 }
 
+static gboolean is_managed(const resource_t *rsc)
+{
+    if(is_set(rsc->flags, pe_rsc_managed)) {
+	return TRUE;
+    }
+    
+    slist_iter(
+	child_rsc, resource_t, rsc->children, lpc,
+	if(is_managed(child_rsc)) {
+	    return TRUE;
+	}
+	);
+    
+    return FALSE;
+}
+
+static gboolean any_managed_resouces(pe_working_set_t *data_set)
+{
+    slist_iter(
+	rsc, resource_t, data_set->resources, lpc,
+	if(is_managed(rsc)) {
+	    return TRUE;
+	}
+	);
+    return FALSE;
+}
 
 /*
  * Create dependancies for stonith and shutdown operations
@@ -613,16 +729,26 @@ stage6(pe_working_set_t *data_set)
 	gboolean integrity_lost = FALSE;
 	action_t *ready = get_pseudo_op(STONITH_UP, data_set);
 	action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
+	gboolean need_stonith = FALSE;
 	
 	crm_debug_3("Processing fencing and shutdown cases");
+
+	if(data_set->stonith_enabled
+	   && (data_set->have_quorum
+	       || data_set->no_quorum_policy == no_quorum_ignore)) {
+	    need_stonith = TRUE;
+	}
+	
+	if(need_stonith && any_managed_resouces(data_set) == FALSE) {
+	    crm_crit("Delaying fencing operations until there are resources to manage");
+	    need_stonith = FALSE;
+	}
 	
 	slist_iter(
 		node, node_t, data_set->nodes, lpc,
 
 		stonith_op = NULL;
-		if(node->details->unclean && data_set->stonith_enabled
-		   && (data_set->have_quorum
-		       || data_set->no_quorum_policy == no_quorum_ignore)) {
+		if(node->details->unclean && need_stonith) {
 			pe_warn("Scheduling Node %s for STONITH",
 				 node->details->uname);
 
@@ -774,10 +900,8 @@ gboolean
 stage8(pe_working_set_t *data_set)
 {
 	const char *value = NULL;
-	char *transition_id_s = NULL;
 
 	transition_id++;
-	transition_id_s = crm_itoa(transition_id);
 	crm_debug_2("Creating transition graph %d.", transition_id);
 	
 	data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
@@ -797,8 +921,7 @@ stage8(pe_working_set_t *data_set)
 	value = pe_pref(data_set->config_hash, "batch-limit");
 	crm_xml_add(data_set->graph, "batch-limit", value);
 
-	crm_xml_add(data_set->graph, "transition_id", transition_id_s);
-	crm_free(transition_id_s);
+	crm_xml_add_int(data_set->graph, "transition_id", transition_id);
 	
 /* errors...
 	slist_iter(action, action_t, action_list, lpc,

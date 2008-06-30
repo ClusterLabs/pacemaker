@@ -39,17 +39,18 @@
 #include "stack.h"
 
 
-HA_Message *create_common_message(
-	HA_Message *original_request, crm_data_t *xml_response_data);
+xmlNode *create_common_message(
+	xmlNode *original_request, xmlNode *xml_response_data);
 
 
 #if SUPPORT_HEARTBEAT
 ll_cluster_t *heartbeat_cluster = NULL;
 
 gboolean 
-send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboolean force_ordered)
+send_ha_message(ll_cluster_t *hb_conn, xmlNode *xml, const char *node, gboolean force_ordered)
 {
     gboolean all_is_good = TRUE;
+    HA_Message *msg = convert_xml_message(xml);
     
 	if (msg == NULL) {
 		crm_err("cant send NULL message");
@@ -99,7 +100,8 @@ send_ha_message(ll_cluster_t *hb_conn, HA_Message *msg, const char *node, gboole
 		}
 	}
 	
-	crm_log_message_adv(all_is_good?LOG_MSG:LOG_WARNING,"HA[outbound]",msg);
+	crm_log_xml(all_is_good?LOG_MSG:LOG_WARNING, "HA[outbound]", xml);
+	crm_msg_del(msg);
 	return all_is_good;
 }
 
@@ -135,7 +137,7 @@ ha_msg_dispatch(ll_cluster_t *cluster_conn, gpointer user_data)
 gboolean
 register_heartbeat_conn(
     ll_cluster_t *hb_cluster, char **uuid, char **uname,
-    void (*hb_message)(HA_Message * msg, void* private_data),
+    void (*hb_message)(HA_Message *msg, void* private_data),
     void (*hb_destroy)(gpointer user_data))
 {
     const char *const_uuid = NULL;

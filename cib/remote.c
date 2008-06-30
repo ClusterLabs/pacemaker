@@ -39,129 +39,28 @@
 #endif
 
 int init_remote_listener(int port);
-char *cib_recv_remote_msg(void *session);
-void cib_send_remote_msg(void *session, HA_Message *msg);
-
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  define DH_BITS 1024
-const int tls_kx_order[] = {
-	  GNUTLS_KX_ANON_DH,
-	  GNUTLS_KX_DHE_RSA,
-	  GNUTLS_KX_DHE_DSS,
-	  GNUTLS_KX_RSA,
-	0
-};
 gnutls_dh_params dh_params;
-gnutls_anon_server_credentials anon_cred;
-char *cib_send_tls(gnutls_session *session, HA_Message *msg);
-char *cib_recv_tls(gnutls_session *session);
+extern gnutls_anon_server_credentials anon_cred_s;
+static void debug_log(int level, const char *str)
+{
+	fputs (str, stderr);
+}
+extern gnutls_session *create_tls_session(int csock, int type);
+
 #endif
 
 extern int num_clients;
 int authenticate_user(const char* user, const char* passwd);
 gboolean cib_remote_listen(int ssock, gpointer data);
 gboolean cib_remote_msg(int csock, gpointer data);
-char *cib_send_plaintext(int sock, HA_Message *msg);
-char *cib_recv_plaintext(int sock);
 
-extern void cib_process_request(
-	HA_Message *request, gboolean privileged, gboolean force_synchronous,
-	gboolean from_peer, cib_client_t *cib_client);
+extern void cib_common_callback_worker(
+    xmlNode *op_request, cib_client_t *cib_client, gboolean force_synchronous, gboolean privileged);
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
-static void debug_log(int level, const char *str)
-{
-	fputs (str, stderr);
-}
 
-static gnutls_session *
-create_tls_session(int csock)
-{
-	int rc = 0;
-	gnutls_session                 *session;
-	session = (gnutls_session*)gnutls_malloc(sizeof(gnutls_session));
-
-	gnutls_init(session, GNUTLS_SERVER);
-	gnutls_set_default_priority(*session);
- 	gnutls_kx_set_priority (*session, tls_kx_order);
-	gnutls_credentials_set(*session, GNUTLS_CRD_ANON, anon_cred);
-	gnutls_transport_set_ptr(*session,
-				 (gnutls_transport_ptr) GINT_TO_POINTER(csock));
-	do {
-		rc = gnutls_handshake (*session);
-	} while (rc == GNUTLS_E_INTERRUPTED || rc == GNUTLS_E_AGAIN);
-
-	if (rc < 0) {
-		crm_err("Handshake failed: %s", gnutls_strerror(rc));
-		gnutls_deinit(*session);
- 		gnutls_free(session);
-		return NULL;
-	}
-	return session;
-}
-
-char*
-cib_send_tls(gnutls_session *session, HA_Message *msg)
-{
-	char *xml_text = NULL;
-	ha_msg_mod(msg, F_XML_TAGNAME, "cib_result");
-	crm_log_xml(LOG_DEBUG_2, "Result: ", msg);
-	xml_text = dump_xml_unformatted(msg);
-	if(xml_text != NULL) {
-		int len = strlen(xml_text);
-		len++; /* null char */
-		crm_debug_3("Message size: %d", len);
-		gnutls_record_send (*session, xml_text, len);
-	}
-	crm_free(xml_text);
-	return NULL;
-	
-}
-
-char*
-cib_recv_tls(gnutls_session *session)
-{
-	int len = 0;
-	char* buf = NULL;
-	int chunk_size = 512;
-
-	if (session == NULL) {
-		return NULL;
-	}
-
-	crm_malloc0(buf, chunk_size);
-	
-	while(1) {
-		int rc = gnutls_record_recv(*session, buf+len, chunk_size);
-		if (rc == 0) {
-			if(len == 0) {
-				goto bail;
-			}
-			return buf;
-
-		} else if(rc > 0 && rc < chunk_size) {
-			return buf;
-
-		} else if(rc == chunk_size) {
-			len += chunk_size;
-			crm_realloc(buf, len);
-			CRM_ASSERT(buf != NULL);
-		}
-
-		if(rc < 0
-		   && rc != GNUTLS_E_INTERRUPTED
-		   && rc != GNUTLS_E_AGAIN) {
-			cl_perror("Error receiving message: %d", rc);
-			goto bail;
-		}
-	}
-  bail:
-	crm_free(buf);
-	return NULL;
-	
-}
-#endif
 
 #define ERROR_SUFFIX "  Shutting down remote listener"
 int
@@ -183,8 +82,8 @@ init_remote_listener(int port)
 	gnutls_global_set_log_function (debug_log);
 	gnutls_dh_params_init(&dh_params);
 	gnutls_dh_params_generate2(dh_params, DH_BITS);
-	gnutls_anon_allocate_server_credentials (&anon_cred);
-	gnutls_anon_set_server_dh_params (anon_cred, dh_params);
+	gnutls_anon_allocate_server_credentials (&anon_cred_s);
+	gnutls_anon_set_server_dh_params (anon_cred_s, dh_params);
 #else
 	crm_warn("Starting a _plain_text_ listener on port %d.", port);	
 #endif
@@ -252,22 +151,19 @@ check_group_membership(const char* usr, const char* grp)
 	return FALSE;
 }
 
-#define WELCOME "<cib_result cib_op=\"welecome\"/>"
-
 gboolean
 cib_remote_listen(int ssock, gpointer data)
 {
 	int lpc = 0;
 	int csock;
 	unsigned laddr;
-	char *msg = NULL;
 	struct sockaddr_in addr;
 #ifdef HAVE_GNUTLS_GNUTLS_H
 	gnutls_session *session = NULL;
 #endif
 	cib_client_t *new_client = NULL;
 
-	crm_data_t *login = NULL;
+	xmlNode *login = NULL;
 	const char *user = NULL;
 	const char *pass = NULL;
 	const char *tmp = NULL;
@@ -288,7 +184,7 @@ cib_remote_listen(int ssock, gpointer data)
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 	/* create gnutls session for the server socket */
-	session = create_tls_session(csock);
+	session = create_tls_session(csock, GNUTLS_SERVER);
 	if (session == NULL) {
 		crm_err("TLS session creation failed");
 		close(csock);
@@ -299,17 +195,14 @@ cib_remote_listen(int ssock, gpointer data)
 	do {
 		crm_debug_2("Iter: %d", lpc++);
 #ifdef HAVE_GNUTLS_GNUTLS_H
-		msg = cib_recv_remote_msg(session);
+		login = cib_recv_remote_msg(session);
 #else
-		msg = cib_recv_remote_msg(GINT_TO_POINTER(csock));
+		login = cib_recv_remote_msg(GINT_TO_POINTER(csock));
 #endif
 		sleep(1);
 		
-	} while(msg == NULL && lpc < 10);
+	} while(login == NULL && lpc < 10);
 	
-	/* convert to xml */
-	login = string2xml(msg);
-
 	crm_log_xml_info(login, "Login: ");
 	if(login == NULL) {
 		goto bail;
@@ -339,11 +232,13 @@ cib_remote_listen(int ssock, gpointer data)
 		goto bail;
 	}
 
+	
 	/* send ACK */
 	crm_malloc0(new_client, sizeof(cib_client_t));
 	num_clients++;
 	new_client->channel_name = "remote";
-
+	new_client->name = crm_element_value_copy(login, "name");
+	
 	cl_uuid_generate(&client_id);
 	cl_uuid_unparse(&client_id, uuid_str);
 
@@ -353,16 +248,22 @@ cib_remote_listen(int ssock, gpointer data)
 	new_client->callback_id = NULL;
 #ifdef HAVE_GNUTLS_GNUTLS_H
 	new_client->channel = (void*)session;
-	gnutls_record_send (*session, WELCOME, sizeof (WELCOME));
 #else
 	new_client->channel = GINT_TO_POINTER(csock);
-	write(csock, WELCOME, sizeof (WELCOME));
 #endif
 	new_client->source = (void*)G_main_add_fd(
 		G_PRIORITY_HIGH, csock, FALSE, cib_remote_msg, new_client,
 		default_ipc_connection_destroy);
 
 	g_hash_table_insert(client_list, new_client->id, new_client);
+
+	free_xml(login);
+	login = create_xml_node(NULL, "cib_result");
+	crm_xml_add(login, F_CIB_OPERATION, CRM_OP_REGISTER);
+	crm_xml_add(login, F_CIB_CLIENTID,  new_client->id);
+	cib_send_remote_msg(new_client->channel, login);
+	free_xml(login);
+	
 	return TRUE;
 
   bail:
@@ -372,87 +273,78 @@ cib_remote_listen(int ssock, gpointer data)
 	gnutls_free(session);
 #endif
 	close(csock);
+	free_xml(login);
 	return TRUE;
 }
 
 gboolean
 cib_remote_msg(int csock, gpointer data)
 {
-	cl_uuid_t call_id;
-	char call_uuid[UU_UNPARSE_SIZEOF];
 	const char *value = NULL;
-	crm_data_t *command = NULL;
+	xmlNode *command = NULL;
 	cib_client_t *client = data;
-	char* msg = cib_recv_remote_msg(client->channel);
-	if(msg == NULL) {
-		return FALSE;
-	}
-
-	command = string2xml(msg);
+	command = cib_recv_remote_msg(client->channel);
 	if(command == NULL) {
-		crm_info("Could not parse command: %s", msg);
-		goto bail;
+	    crm_info("Could not parse command");
+	    return FALSE;
 	}
 	
-	crm_log_xml(LOG_MSG+1, "Command: ", command);
+	crm_log_xml(LOG_MSG+1, "Raw command: ", command);
 
 	value = crm_element_name(command);
 	if(safe_str_neq(value, "cib_command")) {
 		goto bail;
 	}
 
-	cl_uuid_generate(&call_id);
-	cl_uuid_unparse(&call_id, call_uuid);
-
-	crm_xml_add(command, F_TYPE, T_CIB);
-	crm_xml_add(command, F_CIB_CLIENTID, client->id);
-	crm_xml_add(command, F_CIB_CLIENTNAME, client->name);
-	crm_xml_add(command, F_CIB_CALLID, call_uuid);
-	if(crm_element_value(command, F_CIB_CALLOPTS) == NULL) {
-		crm_xml_add_int(command, F_CIB_CALLOPTS, 0);
+	if(client->name == NULL) {
+	    value = crm_element_value(command, F_CLIENTNAME);
+	    if(value == NULL) {
+		client->name = crm_strdup(client->id);
+	    } else {
+		client->name = crm_strdup(value);
+	    }
 	}
-	
-	crm_log_xml(LOG_MSG, "Fixed Command: ", command);
 
+	if(client->callback_id == NULL) {
+	    value = crm_element_value(command, F_CIB_CALLBACK_TOKEN);
+	    if(value != NULL) {
+		client->callback_id = crm_strdup(value);
+		crm_debug_2("Callback channel for %s is %s",
+			    client->id, client->callback_id);
+		
+	    } else {
+		client->callback_id = crm_strdup(client->id);			
+	    }
+	}
+
+	
 	/* unset dangerous options */
 	xml_remove_prop(command, F_ORIG);
 	xml_remove_prop(command, F_CIB_HOST);
 	xml_remove_prop(command, F_CIB_GLOBAL_UPDATE);
+
+	crm_xml_add(command, F_TYPE, T_CIB);
+	crm_xml_add(command, F_CIB_CLIENTID, client->id);
+	crm_xml_add(command, F_CIB_CLIENTNAME, client->name);
 	
-	value = cl_get_string(command, F_CIB_OPERATION);
-	if(safe_str_eq(value, T_CIB_NOTIFY) ) {
-	    /* Update the notify filters for this client */
-	    int on_off = 0;
-	    ha_msg_value_int(command, F_CIB_NOTIFY_ACTIVATE, &on_off);
-	    value = cl_get_string(command, F_CIB_NOTIFY_TYPE);
-	    
-	    crm_info("Setting %s callbacks for %s: %s",
-		     value, client->name, on_off?"on":"off");
-	    
-	    if(safe_str_eq(value, T_CIB_POST_NOTIFY)) {
-		client->post_notify = on_off;
-		
-	    } else if(safe_str_eq(value, T_CIB_PRE_NOTIFY)) {
-		client->pre_notify = on_off;
-		
-	    } else if(safe_str_eq(value, T_CIB_UPDATE_CONFIRM)) {
-		client->confirmations = on_off;
-		
-	    } else if(safe_str_eq(value, T_CIB_DIFF_NOTIFY)) {
-		client->diffs = on_off;
-		
-	    } else if(safe_str_eq(value, T_CIB_REPLACE_NOTIFY)) {
-		client->replace = on_off;
-		
-	    }
-	    goto bail;
+	if(crm_element_value(command, F_CIB_CALLID) == NULL) {
+	    cl_uuid_t call_id;
+	    char call_uuid[UU_UNPARSE_SIZEOF];
+
+	    /* fix the command */
+	    cl_uuid_generate(&call_id);
+	    cl_uuid_unparse(&call_id, call_uuid);
+	    crm_xml_add(command, F_CIB_CALLID, call_uuid);
 	}
 	
- 	cib_process_request(command, TRUE, TRUE, FALSE, client);
-	
+	if(crm_element_value(command, F_CIB_CALLOPTS) == NULL) {
+		crm_xml_add_int(command, F_CIB_CALLOPTS, 0);
+	}
+
+	crm_log_xml(LOG_MSG, "Remote command: ", command);
+	cib_common_callback_worker(command, client, FALSE, TRUE);
   bail:
 	free_xml(command);
-	crm_free(msg);
 	return TRUE;
 }
 
@@ -480,9 +372,13 @@ construct_pam_passwd(int n, const struct pam_message **msg,
 			case PAM_PROMPT_ECHO_ON:
 				reply[i].resp = passwd;
 				break;
-			default:
-/* 			case PAM_ERROR_MSG: */
-/* 			case PAM_TEXT_INFO: */
+ 			case PAM_ERROR_MSG:
+			    crm_err("PAM error: %s", msg[i]->msg);
+			    break;
+ 			case PAM_TEXT_INFO:
+			    crm_info("PAM info: %s", msg[i]->msg);
+			    break;
+		    default:
 				crm_err("Unhandled message type: %d",
 					msg[i]->msg_style);
 				goto bail;
@@ -533,83 +429,5 @@ authenticate_user(const char* user, const char* passwd)
 	rc = pam_end (handle, rc);
 #endif
 	return pass;
-}
-
-char*
-cib_send_plaintext(int sock, HA_Message *msg)
-{
-	char *xml_text = NULL;
-	ha_msg_mod(msg, F_XML_TAGNAME, "cib_result");
-	crm_log_xml(LOG_DEBUG_2, "Result: ", msg);
-	xml_text = dump_xml_unformatted(msg);
-	if(xml_text != NULL) {
-		int rc = 0;
-		int len = strlen(xml_text);
-		len++; /* null char */
-		crm_debug_3("Message size: %d", len);
-		rc = write (sock, xml_text, len);
-		CRM_CHECK(len == rc,
-			  crm_warn("Wrote %d of %d bytes", rc, len));
-	}
-	crm_free(xml_text);
-	return NULL;
-	
-}
-
-char*
-cib_recv_plaintext(int sock)
-{
-	int len = 0;
-	char* buf = NULL;
-	int chunk_size = 512;
-
-	crm_malloc0(buf, chunk_size);
-	
-	while(1) {
-		int rc = recv(sock, buf+len, chunk_size, 0);
-		if (rc == 0) {
-			if(len == 0) {
-				goto bail;
-			}
-			return buf;
-
-		} else if(rc > 0 && rc < chunk_size) {
-			return buf;
-
-		} else if(rc == chunk_size) {
-			len += chunk_size;
-			crm_realloc(buf, len);
-			CRM_ASSERT(buf != NULL);
-		}
-
-		if(rc < 0 && errno != EINTR) {
-			cl_perror("Error receiving message: %d", rc);
-			goto bail;
-		}
-	}
-  bail:
-	crm_free(buf);
-	return NULL;
-	
-}
-
-void
-cib_send_remote_msg(void *session, HA_Message *msg)
-{
-#ifdef HAVE_GNUTLS_GNUTLS_H
-	cib_send_tls(session, msg);
-#else
-	cib_send_plaintext(GPOINTER_TO_INT(session), msg);
-#endif
-}
-
-char *
-cib_recv_remote_msg(void *session)
-{
-#ifdef HAVE_GNUTLS_GNUTLS_H
-	return cib_recv_tls(session);
-#else
-	return cib_recv_plaintext(GPOINTER_TO_INT(session));
-#endif
 }
 

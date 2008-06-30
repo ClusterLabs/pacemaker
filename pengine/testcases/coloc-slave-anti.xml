@@ -6,7 +6,7 @@
            <nvpair id="symmetric-cluster" name="symmetric-cluster" value="true"/>
            <nvpair id="no-quorum-policy" name="no-quorum-policy" value="stop"/>
            <nvpair id="default-resource-stickiness" name="default-resource-stickiness" value="200"/>
-           <nvpair id="default-resource-failure-stickiness" name="default-resource-failure-stickiness" value="-100"/>
+           <nvpair id="default-migration-threshold" name="default-migration-threshold" value="-100"/>
            <nvpair id="stonith-enabled" name="stonith-enabled" value="true"/>
            <nvpair id="stonith-action" name="stonith-action" value="reboot"/>
            <nvpair id="startup-fencing" name="startup-fencing" value="true"/>
