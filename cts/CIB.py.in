@@ -142,7 +142,7 @@ class CIB:
         </clone>"""
 
     cib_template ='''
-<cib cib_feature_revision="1" have_quorum="false" ignore_dtd="false" validate-with="transitional-0.6">
+<cib cib_feature_revision="1" have_quorum="false" ignore_dtd="false" validate-with="transitional-0.6" remote_access_port="9898">
   <configuration>
      <crm_config>  %s 
      </crm_config>
