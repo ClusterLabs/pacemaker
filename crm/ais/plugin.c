@@ -331,7 +331,7 @@ static void *crm_wait_dispatch (void *arg)
 
 		if(WIFSIGNALED(status)) {
 		    int sig = WTERMSIG(status);
-		    ais_warn("Child process %s terminated with signal %d"
+		    ais_err("Child process %s terminated with signal %d"
 			     " (pid=%d, core=%s)",
 			     crm_children[lpc].name, sig, pid,
 			     WCOREDUMP(status)?"true":"false");
