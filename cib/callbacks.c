@@ -67,7 +67,6 @@ extern void GHFunc_count_peers(
 void initiate_exit(void);
 void terminate_cib(const char *caller);
 gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
-void cib_GHFunc(gpointer key, gpointer value, gpointer user_data);
 gboolean can_write(int flags);
 void send_cib_replace(const xmlNode *sync_request, const char *host);
 void cib_process_request(
@@ -371,15 +370,12 @@ do_local_notify(xmlNode *notify_src, const char *client_id,
 {
 	/* send callback to originating child */
 	cib_client_t *client_obj = NULL;
-	xmlNode *client_reply = NULL;
 	enum cib_errors local_rc = cib_ok;
 
 	crm_debug_2("Performing notification");
-	client_reply = cib_msg_copy(notify_src, TRUE);
 
 	if(client_id != NULL) {
-		client_obj = g_hash_table_lookup(
-			client_list, client_id);
+		client_obj = g_hash_table_lookup(client_list, client_id);
 	} else {
 		crm_debug_2("No client to sent the response to."
 			    "  F_CIB_CLIENTID not set.");
@@ -399,7 +395,7 @@ do_local_notify(xmlNode *notify_src, const char *client_id,
 		if(sync_reply) {
 			client_id = client_obj->id;
 		}
-		local_rc = send_via_callback_channel(client_reply, client_id);
+		local_rc = send_via_callback_channel(notify_src, client_id);
 	} 
 	
 	if(local_rc != cib_ok && client_obj != NULL) {
@@ -407,8 +403,6 @@ do_local_notify(xmlNode *notify_src, const char *client_id,
 			 sync_reply?"":"A-",
 			 client_obj?client_obj->name:"<unknown>", cib_error2string(local_rc));
 	}
-
-	free_xml(client_reply);
 }
 
 static void
@@ -547,17 +541,6 @@ forward_request(xmlNode *request, cib_client_t *cib_client, int call_options)
 	
 	if(call_options & cib_discard_reply) {
 		crm_debug_2("Client not interested in reply");
-		
-	} else if(call_options & cib_sync_call) {
-		/* keep track of the request so we can time it
-		 * out if required
-		 */
-		crm_debug_2("Registering delegated call from %s",
-			    cib_client->id);
-		cib_client->delegated_calls = g_list_append(
-			cib_client->delegated_calls, forward_msg);
-		forward_msg = NULL;
-		
 	} 
 	free_xml(forward_msg);
 }
@@ -1009,7 +992,6 @@ int
 send_via_callback_channel(xmlNode *msg, const char *token) 
 {
 	cib_client_t *hash_client = NULL;
-	GList *list_item = NULL;
 	enum cib_errors rc = cib_ok;
 	
 	crm_debug_3("Delivering msg %p to client %s", msg, token);
@@ -1019,7 +1001,11 @@ send_via_callback_channel(xmlNode *msg, const char *token)
 		if(rc == cib_ok) {
 			rc = cib_missing;
 		}
-		
+
+	} else if(msg == NULL) {
+		crm_err("No message to send");
+		rc = cib_reply_failed;
+	    
 	} else {
 		/* A client that left before we could reply is not really
 		 * _our_ error.  Warn instead.
@@ -1035,36 +1021,9 @@ send_via_callback_channel(xmlNode *msg, const char *token)
 		} else if(hash_client->channel == NULL) {
 			crm_err("Cannot find channel for client %s", token);
 			rc = cib_client_corrupt;
-
-		} else if(hash_client->channel->ops->get_chan_status(
-				  hash_client->channel) == IPC_DISCONNECT) {
-			crm_warn("Client %s has disconnected", token);
-			rc = cib_client_gone;
-			cib_num_timeouts++;
 		}
 	}
 
-	/* this is a more important error so overwriting rc is warrented */
-	if(msg == NULL) {
-		crm_err("No message to send");
-		rc = cib_reply_failed;
-	}
-
-	if(rc == cib_ok) {
-		list_item = g_list_find_custom(
-			hash_client->delegated_calls, msg, cib_GCompareFunc);
-	}
-	
-	if(list_item != NULL) {
-		/* remove it - no need to time it out */
-		xmlNode *orig_msg = list_item->data;
-		crm_debug_3("Removing msg from delegated list");
-		hash_client->delegated_calls = g_list_remove(
-			hash_client->delegated_calls, orig_msg);
-		CRM_DEV_ASSERT(orig_msg != msg);
-		free_xml(orig_msg);
-	}
-	
 	if(rc == cib_ok) {
 	    crm_debug_3("Delivering reply to client %s (%s)",
 			token, hash_client->channel_name);
@@ -1102,68 +1061,6 @@ gint cib_GCompareFunc(gconstpointer a, gconstpointer b)
 		return -1;
 	}
 	return 1;
-}
-
-
-void
-cib_GHFunc(gpointer key, gpointer value, gpointer user_data)
-{
-	int timeout = 0; /* 1 iteration == 10 seconds */
-	xmlNode *msg = NULL;
-	xmlNode *reply = NULL;
-	const char *host_to = NULL;
-	cib_client_t *client = value;
-	GListPtr list = client->delegated_calls;
-
-	while(list != NULL) {
-		
-		msg = list->data;
-		crm_element_value_int(msg, F_CIB_TIMEOUT, &timeout);
-		
-		if(timeout <= 0) {
-			list = list->next;
-			continue;
-
-		} else {
-			int seen = 0;
-			crm_element_value_int(msg, F_CIB_SEENCOUNT, &seen);
-			crm_debug_4("Timeout %d, seen %d", timeout, seen);
-			if(seen < timeout) {
-				crm_debug_4("Updating seen count for msg from client %s",
-					    client->id);
-				seen += 10;
-				crm_xml_add_int(msg, F_CIB_SEENCOUNT, seen);
-				list = list->next;
-				continue;
-			}
-		}
-		
-		cib_num_timeouts++;
-		host_to = crm_element_value(msg, F_CIB_HOST);
-		crm_warn("Sending operation timeout msg to client %s",
-			 client->id);
-		
-		reply = create_xml_node(NULL, "cib-reply");
-		crm_xml_add(reply, F_TYPE, T_CIB);
-		crm_xml_add(reply, F_CIB_OPERATION,
-			   crm_element_value(msg, F_CIB_OPERATION));
-		crm_xml_add(reply, F_CIB_CALLID,
-			   crm_element_value(msg, F_CIB_CALLID));
-		if(host_to == NULL) {
-			crm_xml_add_int(reply, F_CIB_RC, cib_master_timeout);
-		} else {
-			crm_xml_add_int(reply, F_CIB_RC, cib_remote_timeout);
-		}
-		
-		send_ipc_message(client->channel, reply);
-
-		list = list->next;
-		client->delegated_calls = g_list_remove(
-			client->delegated_calls, msg);
-
-		free_xml(msg);
-		free_xml(reply);
-	}
 }
 
 gboolean

@@ -113,11 +113,7 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	/* get_chan_status() causes memory to be allocated that isnt free'd
 	 *   until the message is read (which messes up the memory stats) 
 	 */
-	if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
-		crm_debug_2("Skipping notification to disconnected"
-			    " client %s/%s", client->name, client->id);
-		
-	} else if(client->pre_notify && is_pre) {
+	if(client->pre_notify && is_pre) {
 		if(qlen < (int)(0.4 * max_qlen)) {
 			do_send = TRUE;
 		} else {
@@ -149,9 +145,6 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	}
 
 	if(do_send) {
-		crm_debug_2("Notifying client %s/%s of %s update (queue=%d)",
-			    client->name, client->channel_name, type, qlen);
-
 		if(ipc_client->send_queue->current_qlen >= ipc_client->send_queue->max_qlen) {
 			/* We never want the CIB to exit because our client is slow */
 			crm_crit("%s-notification of client %s/%s failed - queue saturated",
@@ -162,10 +155,6 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 			crm_warn("Notification of client %s/%s failed",
 				 client->name, client->id);
 		}
-		
-	} else {
-		crm_debug_3("Client %s/%s not interested in %s notifications",
-			    client->name, client->channel_name, type);	
 	}
 }
 
