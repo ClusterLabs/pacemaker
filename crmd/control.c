@@ -261,9 +261,9 @@ do_shutdown_req(long long action,
 
 extern char *max_generation_from;
 extern xmlNode *max_generation_xml;
-extern GHashTable *meta_hash;
 extern GHashTable *resources;
 extern GHashTable *voted;
+extern GHashTable *reload_hash;
 
 void log_connected_client(gpointer key, gpointer value, gpointer user_data);
 
@@ -334,8 +334,8 @@ static void free_mem(fsa_data_t *msg_data)
 	if(confirmed_nodes) {
 		g_hash_table_destroy(confirmed_nodes);
 	}
-	if(meta_hash) {
-		g_hash_table_destroy(meta_hash);
+	if(reload_hash) {
+		g_hash_table_destroy(reload_hash);
 	}
 	if(resources) {
 		g_hash_table_destroy(resources);

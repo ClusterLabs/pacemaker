@@ -84,7 +84,7 @@ long long do_state_transition(long long actions,
 			      enum crmd_fsa_state next_state,
 			      fsa_data_t *msg_data);
 
-long long clear_flags(long long actions,
+inline long long clear_flags(long long actions,
 			     enum crmd_fsa_cause cause,
 			     enum crmd_fsa_state cur_state,
 			     enum crmd_fsa_input cur_input);
@@ -739,20 +739,19 @@ do_state_transition(long long actions,
 	return actions;
 }
 
-long long
+inline long long
 clear_flags(long long actions,
 	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
 	    enum crmd_fsa_input cur_input)
 {
-	long long saved_actions = actions;
-	long long startup_actions = A_STARTUP|A_CIB_START|A_LRM_CONNECT|A_CCM_CONNECT|A_HA_CONNECT|A_READCONFIG|A_STARTED|A_CL_JOIN_QUERY;
+	static long long startup_actions = A_STARTUP|A_CIB_START|A_LRM_CONNECT|A_CCM_CONNECT|A_HA_CONNECT|A_READCONFIG|A_STARTED|A_CL_JOIN_QUERY;
 	
-	if(cur_state == S_STOPPING || is_set(fsa_input_register, R_SHUTDOWN)) {
+	if(cur_state == S_STOPPING || ((fsa_input_register & R_SHUTDOWN) == R_SHUTDOWN)) {
 		clear_bit_inplace(actions, startup_actions);
 	}
 
-	fsa_dump_actions(actions ^ saved_actions, "Cleared Actions");
+	/* fsa_dump_actions(actions ^ saved_actions, "Cleared Actions"); */
 	return actions;
 }
 

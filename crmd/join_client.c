@@ -223,7 +223,7 @@ do_cl_join_finalize_respond(long long action,
 		crm_debug_2("Ignoring op=%s message", op);
 		return;
 	}
-	
+
 	/* calculate if it was an ack or a nack */
 	if(crm_is_true(ack_nack)) {
 		was_nack = FALSE;

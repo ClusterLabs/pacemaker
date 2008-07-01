@@ -215,8 +215,7 @@ abort_transition_graph(
 		transition_graph, abort_priority, abort_action, abort_text);
 
 	if(reason != NULL) {
-		const char *magic = crm_element_value(
-			reason, XML_ATTR_TRANSITION_MAGIC);
+		const char *magic = crm_element_value(reason, XML_ATTR_TRANSITION_MAGIC);
 		if(magic) {
 			do_crm_log(log_level, "Caused by update to %s: %s",
 				   ID(reason), magic);

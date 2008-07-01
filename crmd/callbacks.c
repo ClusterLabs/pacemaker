@@ -102,40 +102,36 @@ crmd_ha_connection_destroy(gpointer user_data)
 void
 crmd_ha_msg_filter(xmlNode *msg)
 {
-    ha_msg_input_t new_input;
-    const char *from = crm_element_value(msg, F_ORIG);
-    const char *seq  = crm_element_value(msg, F_SEQ);
-    const char *op   = crm_element_value(msg, F_CRM_TASK);
-    
-    const char *sys_to   = crm_element_value(msg, F_CRM_SYS_TO);
-    const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
+    if(AM_I_DC) {
+	const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
+	if(safe_str_eq(sys_from, CRM_SYSTEM_DC)) {
+	    const char *from = crm_element_value(msg, F_ORIG);
+	    if(safe_str_neq(from, fsa_our_uname)) {
+		const char *op = crm_element_value(msg, F_CRM_TASK);
+		crm_err("Another DC detected: %s (op=%s)", from, op);
 
-    new_input.msg = NULL;
-    
-    if(safe_str_eq(sys_to, CRM_SYSTEM_DC) && AM_I_DC == FALSE) {
-	crm_debug_2("Ignoring message for the DC [F_SEQ=%s]", seq);
-	return;
-	
-    } else if(safe_str_eq(sys_from, CRM_SYSTEM_DC)) {
-	if(AM_I_DC && safe_str_neq(from, fsa_our_uname)) {
-	    crm_err("Another DC detected: %s (op=%s)", from, op);
-	    /* make sure the election happens NOW */
-	    if(fsa_state != S_ELECTION) {
-		new_input.msg = msg;
-		register_fsa_error_adv(
-		    C_FSA_INTERNAL, I_ELECTION, NULL, &new_input, __FUNCTION__);
+		/* make sure the election happens NOW */
+		if(fsa_state != S_ELECTION) {
+		    ha_msg_input_t new_input;
+		    new_input.msg = msg;
+		    register_fsa_error_adv(
+			C_FSA_INTERNAL, I_ELECTION, NULL, &new_input, __FUNCTION__);
+		    goto done;
+		}
 	    }
-	    
-	} else {
-	    crm_debug_2("Processing DC message from %s [F_SEQ=%s]", from, seq);
+	}
+
+    } else {
+	const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
+	if(safe_str_eq(sys_to, CRM_SYSTEM_DC)) {
+	    return;
 	}
     }
     
-    if(new_input.msg == NULL) {
-	crm_log_xml(LOG_MSG, "HA[inbound]", msg);
-	route_message(C_HA_MESSAGE, msg);
-    }
-    
+    /* crm_log_xml(LOG_MSG, "HA[inbound]", msg); */
+    route_message(C_HA_MESSAGE, msg);
+
+  done:
     trigger_fsa(fsa_source);
 }
 

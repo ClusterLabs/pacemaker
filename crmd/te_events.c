@@ -338,7 +338,7 @@ match_graph_event(int action_id, xmlNode *event, const char *event_node,
 {
 	const char *target = NULL;
 	const char *allow_fail = NULL;
-	const char *this_event = ID(event);
+	const char *this_event = NULL;
 	crm_action_t *action = NULL;
 
 	action = get_action(action_id, FALSE);
@@ -393,6 +393,7 @@ match_graph_event(int action_id, xmlNode *event, const char *event_node,
 				 tg_restart, "Event failed", event);
 	}
 
+	this_event = ID(event);
 	target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 	te_log_action(LOG_INFO, "Action %s (%d) confirmed on %s (rc=%d)",
 		      crm_str(this_event), action->id, crm_str(target),
