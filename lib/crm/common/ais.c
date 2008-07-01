@@ -133,7 +133,7 @@ send_ais_text(int class, const char *data,
     
     ais_msg->size = 1 + strlen(data);
 
-    if(ais_msg->size < 5120) {
+    if(ais_msg->size < CRM_BZ2_THRESHOLD) {
   failback:
 	crm_realloc(ais_msg, sizeof(AIS_Message) + ais_msg->size);
 	memcpy(ais_msg->data, data, ais_msg->size);
@@ -144,10 +144,10 @@ send_ais_text(int class, const char *data,
 	unsigned int len = (ais_msg->size * 1.1) + 600; /* recomended size */
 	
 	crm_debug_5("Compressing message payload");
-	crm_malloc0(compressed, len);
+	crm_malloc(compressed, len);
 	
 	rc = BZ2_bzBuffToBuffCompress(
-	    compressed, &len, uncompressed, ais_msg->size, 3, 0, 30);
+	    compressed, &len, uncompressed, ais_msg->size, CRM_BZ2_BLOCKS, 0, CRM_BZ2_WORK);
 
 	crm_free(uncompressed);
 	
@@ -159,6 +159,7 @@ send_ais_text(int class, const char *data,
 
 	crm_realloc(ais_msg, sizeof(AIS_Message) + len + 1);
 	memcpy(ais_msg->data, compressed, len);
+	ais_msg->data[len] = 0;
 	crm_free(compressed);
 
 	ais_msg->is_compressed = TRUE;

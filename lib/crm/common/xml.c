@@ -92,13 +92,13 @@ gboolean drop_comments(const char *input, size_t *offset, size_t max);
 void dump_array(
 	int log_level, const char *message, const char **array, int depth);
 
-int print_spaces(char *buffer, int spaces);
+int print_spaces(char *buffer, int spaces, int max);
 
 int log_data_element(const char *function, const char *prefix, int log_level,
 		     int depth, xmlNode *data, gboolean formatted);
 
 int dump_data_element(
-	int depth, char **buffer, xmlNode *data, gboolean formatted);
+    int depth, char **buffer, int *max, int *offset, xmlNode *data, gboolean formatted);
 
 xmlNode *parse_xml(const char *input, size_t *offset);
 int get_tag_name(const char *input, size_t offset, size_t max);
@@ -783,15 +783,15 @@ convert_xml_child(HA_Message *msg, xmlNode *xml)
     name = (const char *)xml->name;
     buffer = dump_xml_unformatted(xml);
     orig = strlen(buffer);
-    if(orig < 512) {
+    if(orig < CRM_BZ2_THRESHOLD) {
 	ha_msg_add(msg, name, buffer);
 	goto done;
     }
     
     len = (orig * 1.1) + 600; /* recomended size */
     
-    crm_malloc0(compressed, len);
-    rc = BZ2_bzBuffToBuffCompress(compressed, &len, buffer, orig, 3, 0, 30);
+    crm_malloc(compressed, len);
+    rc = BZ2_bzBuffToBuffCompress(compressed, &len, buffer, orig, CRM_BZ2_BLOCKS, 0, CRM_BZ2_WORK);
     
     if(rc != BZ_OK) {
 	crm_err("Compression failed: %d", rc);
@@ -996,54 +996,67 @@ add_message_xml(xmlNode *msg, const char *field, xmlNode *xml)
 char *
 dump_xml_formatted(xmlNode *an_xml_node)
 {
-	char *buffer     = NULL;
-	char *mutable_ptr = NULL;
-	if(an_xml_node == NULL) {
-		return NULL;
-	}
-	crm_malloc0(buffer, 1024*1024);
-	mutable_ptr = buffer;
-	
-	crm_validate_data(an_xml_node);
-	CRM_CHECK(dump_data_element(
-			  0, &mutable_ptr, an_xml_node, TRUE) >= 0,
-		  crm_crit("Could not dump the whole message"));
-	crm_debug_4("Dumped: %s", buffer);
-	return buffer;
+    int max = 1024, len = 0;
+    char *buffer = NULL;
+    if(an_xml_node == NULL) {
+	return NULL;
+    }
+    crm_malloc0(buffer, max);
+    
+    crm_validate_data(an_xml_node);
+    CRM_CHECK(dump_data_element(
+		  0, &buffer, &max, &len, an_xml_node, TRUE) >= 0,
+	      crm_crit("Could not dump the whole message"));
+    crm_debug_4("Dumped: %s", buffer);
+    return buffer;
 }
 	
 char *
 dump_xml_unformatted(xmlNode *an_xml_node)
 {
-	char *buffer     = NULL;
-	char *mutable_ptr = NULL;
-
-  	crm_malloc0(buffer, 1024*1024);
-	mutable_ptr = buffer;
-	
-	crm_validate_data(an_xml_node);
-	CRM_CHECK(dump_data_element(
-			  0, &mutable_ptr, an_xml_node, FALSE) >= 0,
-		  crm_crit("Could not dump the whole message"));
-
-	crm_debug_4("Dumped: %s", buffer);
-	return buffer;
+    int max = 1024, len = 0;
+    char *buffer     = NULL;
+    if(an_xml_node == NULL) {
+	return NULL;
+    }
+    
+    crm_malloc0(buffer, max);
+    crm_validate_data(an_xml_node);
+    CRM_CHECK(dump_data_element(
+		  0, &buffer, &max, &len, an_xml_node, FALSE) >= 0,
+	      crm_crit("Could not dump the whole message"));
+    
+    crm_debug_4("Dumped: %s", buffer);
+    return buffer;
 }
 
-#define update_buffer_head(buffer, len) if(len < 0) {	\
-		(*buffer) = EOS; return -1;		\
-	} else {					\
-		buffer += len;				\
-	}
+#define update_buffer_head_old(buffer, len) if(len < 0) {	\
+	(*buffer) = EOS; return -1;				\
+    } else {							\
+	buffer += len;						\
+    }
+
+#define update_buffer_head(len) do {					\
+	int total = (*offset) + len + 1;				\
+	if(total >= (*max)) { /* too late */				\
+	    (*buffer) = EOS; return -1;					\
+	} else if(((*max) - total) < 256) {				\
+	    (*max) *= 10;						\
+	    crm_realloc(*buffer, (*max));				\
+	}								\
+	(*offset) += len;						\
+    } while(0)
 
 
 int
-print_spaces(char *buffer, int depth) 
+print_spaces(char *buffer, int depth, int max) 
 {
 	int lpc = 0;
 	int spaces = 2*depth;
+	max--;
+	
 	/* <= so that we always print 1 space - prevents problems with syslog */
-	for(lpc = 0; lpc <= spaces; lpc++) {
+	for(lpc = 0; lpc <= spaces && lpc < max; lpc++) {
 		if(sprintf(buffer, "%c", ' ') < 1) {
 			return -1;
 		}
@@ -1088,12 +1101,12 @@ log_data_element(
 	}
 	
 	if(formatted) {
-		printed = print_spaces(buffer, depth);
-		update_buffer_head(buffer, printed);
+		printed = print_spaces(buffer, depth, 100);
+		update_buffer_head_old(buffer, printed);
 	}
 	
 	printed = sprintf(buffer, "<%s", name);
-	update_buffer_head(buffer, printed);
+	update_buffer_head_old(buffer, printed);
 
 	hidden = crm_element_value(data, "hidden");
 	xml_prop_iter(
@@ -1112,7 +1125,7 @@ log_data_element(
 		crm_debug_5("Dumping <%s %s=\"%s\"...",
 			    name, prop_name, prop_value);
 		printed = sprintf(buffer, " %s=\"%s\"", prop_name, prop_value);
-		update_buffer_head(buffer, printed);
+		update_buffer_head_old(buffer, printed);
 		);
 
 	xml_child_iter(
@@ -1124,7 +1137,7 @@ log_data_element(
 		);
 
 	printed = sprintf(buffer, "%s>", has_children==0?"/":"");
-	update_buffer_head(buffer, printed);
+	update_buffer_head_old(buffer, printed);
 	do_crm_log(log_level, "%s: %s%s",
 		   function, prefix?prefix:"", print_buffer);
 	buffer = print_buffer;
@@ -1142,8 +1155,8 @@ log_data_element(
 		);
 
 	if(formatted) {
-		printed = print_spaces(buffer, depth);
-		update_buffer_head(buffer, printed);
+		printed = print_spaces(buffer, depth, 100);
+		update_buffer_head_old(buffer, printed);
 	}
 	do_crm_log(log_level, "%s: %s%s</%s>",
 		   function, prefix?prefix:"", print_buffer, name);
@@ -1152,66 +1165,65 @@ log_data_element(
 	return has_children;
 }
 
-
+#define bhead(buffer, offset) ((*buffer) + (*offset)) 
+#define bremain(max, offset) ((*max) - (*offset)) 
 int
 dump_data_element(
-	int depth, char **buffer,  xmlNode *data, gboolean formatted) 
+    int depth, char **buffer, int *max, int *offset, xmlNode *data, gboolean formatted) 
 {
-	int printed = 0;
-	int child_result = 0;
-	int has_children = 0;
-	const char *name = NULL;
+    int printed = 0;
+    int has_children = 0;
+    const char *name = NULL;
+    
+    CRM_CHECK(data != NULL, return 0);
+    
+    name = crm_element_name(data);
+    
+    CRM_CHECK(name != NULL, return 0);
+    CRM_CHECK(buffer != NULL && *buffer != NULL, return 0);
+    
+    crm_debug_5("Dumping %s...", name);
 
-	CRM_CHECK(data != NULL, return 0);
-
-	name = crm_element_name(data);
-
-	CRM_CHECK(name != NULL, return 0);
-	CRM_CHECK(buffer != NULL && *buffer != NULL, return 0);
-
-	crm_debug_5("Dumping %s...", name);
-
-	if(formatted) {
-		printed = print_spaces(*buffer, depth);
-		update_buffer_head(*buffer, printed);
-	}
-	
-	printed = sprintf(*buffer, "<%s", name);
-	update_buffer_head(*buffer, printed);
-	has_children = xml_has_children(data);
-
-	xml_prop_iter(data, prop_name, prop_value,
-		      crm_debug_5("Dumping <%s %s=\"%s\"...",
-				  name, prop_name, prop_value);
-		      printed = sprintf(*buffer, " %s=\"%s\"", prop_name, prop_value);
-		      update_buffer_head(*buffer, printed);
-		);
-
-	printed = sprintf(*buffer, "%s>%s",
-			  has_children==0?"/":"", formatted?"\n":"");
-	update_buffer_head(*buffer, printed);
-
-	if(has_children == 0) {
-		return 0;
-	}
-	
-	xml_child_iter(
-		data, child, 
-		child_result = dump_data_element(
-			depth+1, buffer, child, formatted);
-
-		if(child_result < 0) { return -1; }
-		);
-
-	if(formatted) {
-		printed = print_spaces(*buffer, depth);
-		update_buffer_head(*buffer, printed);
-	}
-	printed = sprintf(*buffer, "</%s>%s", name, formatted?"\n":"");
-	update_buffer_head(*buffer, printed);
-	crm_debug_5("Dumped %s...", name);
-
-	return has_children;
+    if(formatted) {
+	printed = print_spaces(bhead(buffer, offset), depth, bremain(max, offset));
+	update_buffer_head(printed);
+    }
+    
+    printed = snprintf(bhead(buffer, offset), bremain(max, offset), "<%s", name);
+    update_buffer_head(printed);
+    
+    xml_prop_iter(data, prop_name, prop_value,
+		  crm_debug_5("Dumping <%s %s=\"%s\"...",
+			      name, prop_name, prop_value);
+		  printed = snprintf(bhead(buffer, offset), bremain(max, offset),  " %s=\"%s\"", prop_name, prop_value);
+		  update_buffer_head(printed);
+	);
+    
+    has_children = xml_has_children(data);
+    printed = snprintf(bhead(buffer, offset), bremain(max, offset),  "%s>%s",
+		       has_children==0?"/":"", formatted?"\n":"");
+    update_buffer_head(printed);
+    
+    if(has_children == 0) {
+	return 0;
+    }
+    
+    xml_child_iter(data, child, 
+		   if(dump_data_element(depth+1, buffer, max, offset, child, formatted) < 0) {
+		       return -1;
+		   }
+	);
+    
+    if(formatted) {
+	printed = print_spaces(bhead(buffer, offset), depth, bremain(max, offset));
+	update_buffer_head(printed);
+    }
+    
+    printed = snprintf(bhead(buffer, offset), bremain(max, offset),  "</%s>%s", name, formatted?"\n":"");
+    update_buffer_head(printed);
+    crm_debug_5("Dumped %s...", name);
+    
+    return has_children;
 }
 
 gboolean
@@ -2160,7 +2172,7 @@ subtract_xml_object(xmlNode *left, xmlNode *right, const char *marker)
 			      crm_debug_6("\t%s: %s", crm_str(prop_name),
 					  crm_str(left_value));
 				      
-		      } else if(safe_str_eq(left_value, right_val)) {
+		      } else if(crm_str_eq(left_value, right_val, TRUE)) {
 			      crm_debug_5("\t%s: %s (removed)",
 					  crm_str(prop_name),
 					  crm_str(left_value));
@@ -2775,13 +2787,14 @@ calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
 	CRM_CHECK(buffer != NULL && buffer_len > 0,
 		  free_xml(sorted); return NULL);
 
-	crm_malloc0(digest, (2 * digest_len + 1));
-	crm_malloc0(raw_digest, (digest_len + 1));
+	crm_malloc(digest, (2 * digest_len + 1));
+	crm_malloc(raw_digest, (digest_len + 1));
 	MD5((unsigned char *)buffer, buffer_len, raw_digest);
 	for(i = 0; i < digest_len; i++) {
  		sprintf(digest+(2*i), "%02x", raw_digest[i]);
  	}
-        crm_debug_2("Digest %s: %s\n", digest, buffer);
+	digest[(2*digest_len) + 1] = 0;
+	crm_debug_2("Digest %s: %s\n", digest, buffer);
 	crm_log_xml(LOG_DEBUG_3,  "digest:source", sorted);
 	crm_free(buffer);
 	crm_free(raw_digest);

@@ -20,6 +20,7 @@ class CIB:
         <nvpair id="cib-bootstrap-2" name="stonith-enabled"      value="%d"/>
         <nvpair id="cib-bootstrap-3" name="pe-input-series-max"  value="30000"/>
         <nvpair id="cib-bootstrap-4" name="shutdown-escalation"  value="5min"/>
+        <nvpair id="cib-bootstrap-6" name="batch-limit"          value="30"/>
         <!-- *** For CTS testing only *** _NEVER_ make this the default -->
         <nvpair id="cib-bootstrap-5" name="startup-fencing"      value="false"/>
        </attributes>

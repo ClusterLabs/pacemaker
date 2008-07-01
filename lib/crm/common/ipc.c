@@ -168,9 +168,7 @@ send_ipc_message(IPC_Channel *ipc_client, xmlNode *msg)
 			}
 		}
 	}
-/* 	ipc_client->ops->resume_io(ipc_client); */
-	
-	crm_log_xml(all_is_good?LOG_MSG:LOG_WARNING,"IPC[outbound]",msg);
+	/* crm_log_xml(all_is_good?LOG_MSG:LOG_WARNING,"IPC[outbound]",msg); */
 	
 	return all_is_good;
 }

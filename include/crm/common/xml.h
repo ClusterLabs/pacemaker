@@ -33,6 +33,10 @@
 #include <libxml/xpath.h>
 typedef xmlNode crm_data_t;
 
+#define CRM_BZ2_BLOCKS		4
+#define CRM_BZ2_WORK		20
+#define CRM_BZ2_THRESHOLD	10240
+    
 extern gboolean add_message_xml(
 	xmlNode *msg, const char *field, xmlNode *xml);
 extern xmlNode *get_message_xml(xmlNode *msg, const char *field);
