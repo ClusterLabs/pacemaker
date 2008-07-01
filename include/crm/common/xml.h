@@ -212,14 +212,14 @@ extern int find_xml_children(
 	const char *tag, const char *field, const char *value,
 	gboolean search_matches);
 
-/*
- *
- */
 extern int crm_element_value_int(xmlNode *data, const char *name, int *dest);
 extern char *crm_element_value_copy(xmlNode *data, const char *name);
 extern const char *crm_element_value_const(const xmlNode *data, const char *name);
 
-extern const char *crm_element_name(const xmlNode *data);
+static inline const char *crm_element_name(const xmlNode *data)
+{
+    return (data ? (const char *)data->name : NULL);
+}
 
 static inline const char *
 crm_element_value(xmlNode *data, const char *name)

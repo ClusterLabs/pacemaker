@@ -1270,12 +1270,6 @@ crm_element_value_copy(xmlNode *data, const char *name)
 	return value_copy;
 }
 
-const char *
-crm_element_name(const xmlNode *data)
-{
-    return (data ? (const char *)data->name : NULL);
-}
-
 void
 xml_remove_prop(xmlNode *obj, const char *name)
 {
@@ -2117,13 +2111,10 @@ subtract_xml_object(xmlNode *left, xmlNode *right, const char *marker)
 	int lpc = 0;
 	static int filter_len = DIMOF(filter);
 	
-	crm_log_xml(LOG_DEBUG_5, "left:",  left);
-	crm_log_xml(LOG_DEBUG_5, "right:", right);
-	
 	if(left == NULL) {
 		return NULL;
-
 	}
+
 	id = ID(left);
 	if(right == NULL) {
 		xmlNode *deleted = NULL;
@@ -2137,20 +2128,11 @@ subtract_xml_object(xmlNode *left, xmlNode *right, const char *marker)
 	}
 
 	name = crm_element_name(left);
-
-	/* sanity checks */
 	CRM_CHECK(name != NULL, return NULL);
 
-/* 	these checks are costly haven't caught anything for a while	*/
-/* 	CRM_CHECK(safe_str_eq(crm_element_name(left),			*/
-/* 			      crm_element_name(right)), return NULL);	*/
-/* 	CRM_CHECK(safe_str_eq(id, ID(right)), return NULL);		*/
-	
 	diff = create_xml_node(NULL, name);
 
 	/* changes to name/value pairs */
-	crm_debug_5("Processing <%s id=%s>", crm_str(name), id);
-
 	xml_prop_iter(left, prop_name, left_value,
 		      if(crm_str_eq(prop_name, XML_ATTR_ID, TRUE)) {
 			      continue;
@@ -2167,27 +2149,21 @@ subtract_xml_object(xmlNode *left, xmlNode *right, const char *marker)
 		      
 		      right_val = crm_element_value(right, prop_name);
 		      if(right_val == NULL) {
-			      differences = TRUE;
-			      crm_xml_add(diff, prop_name, left_value);
-			      crm_debug_6("\t%s: %s", crm_str(prop_name),
-					  crm_str(left_value));
+			  /* new */
+			  differences = TRUE;
+			  crm_xml_add(diff, prop_name, left_value);
 				      
-		      } else if(crm_str_eq(left_value, right_val, TRUE)) {
-			      crm_debug_5("\t%s: %s (removed)",
-					  crm_str(prop_name),
-					  crm_str(left_value));
+		      } else if(strcmp(left_value, right_val) == 0) {
+			  /* unchanged */
+
 		      } else {
-			      differences = TRUE;
-			      crm_xml_add(diff, prop_name, left_value);
-			      crm_debug_5("\t%s: %s->%s",
-					  crm_str(prop_name),
-					  crm_str(left_value),
-					  right_val);
+			  /* changed */
+			  differences = TRUE;
+			  crm_xml_add(diff, prop_name, left_value);
 		      }
 		);
 
 	/* changes to child objects */
-	crm_debug_3("Processing children of <%s id=%s>",crm_str(name),id);
 	xml_child_iter(
 		left, left_child,  
 		right_child = find_entity(
@@ -2208,7 +2184,6 @@ subtract_xml_object(xmlNode *left, xmlNode *right, const char *marker)
 			value = crm_element_value(right_child, XML_DIFF_MARKER);
 			if(value != NULL && safe_str_eq(value, "removed:top")) {
 				crm_debug_3("Found the root of the deletion: %s", name);
-				crm_log_xml_debug_3(right_child, "deletion");
 				differences = TRUE;
 				break;
 			}
