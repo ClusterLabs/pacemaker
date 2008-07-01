@@ -51,7 +51,6 @@ void do_cib_notify(
 	int options, const char *op, xmlNode *update,
 	enum cib_errors result, xmlNode *result_data, const char *msg_type);
 
-
 void
 cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 {
@@ -158,6 +157,16 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	}
 }
 
+static void
+need_pre_notify(gpointer key, gpointer value, gpointer user_data)
+{
+    cib_client_t *client = value;
+    if(client->pre_notify) {
+	gboolean *needed = user_data;
+	*needed = TRUE;
+    }
+}
+
 void
 cib_pre_notify(
 	int options, const char *op, xmlNode *existing, xmlNode *update) 
@@ -165,7 +174,14 @@ cib_pre_notify(
 	xmlNode *update_msg = NULL;
 	const char *type = NULL;
 	const char *id = NULL;
+	gboolean needed = FALSE;
 
+	g_hash_table_foreach(client_list, need_pre_notify, &needed);
+	if(needed == FALSE) {
+	    return;
+	}
+
+	/* TODO: consider pre-notification for removal */
 	update_msg = create_xml_node(NULL, "pre-notify");
 
 	if(update != NULL) {
