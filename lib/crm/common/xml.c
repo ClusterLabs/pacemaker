@@ -305,7 +305,8 @@ expand_plus_plus(xmlNode* target, const char *name, const char *value)
 
     const char *old_value = NULL;
     
-    if(value[name_len] != '+'
+    if(value == NULL
+       || value[name_len] != '+'
        || (value[name_len+1] != '+' && value[name_len+1] != '=')) {
 	goto bail;
     }
@@ -2768,7 +2769,7 @@ calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
 	for(i = 0; i < digest_len; i++) {
  		sprintf(digest+(2*i), "%02x", raw_digest[i]);
  	}
-	digest[(2*digest_len) + 1] = 0;
+	digest[(2*digest_len)] = 0;
 	crm_debug_2("Digest %s: %s\n", digest, buffer);
 	crm_log_xml(LOG_DEBUG_3,  "digest:source", sorted);
 	crm_free(buffer);
