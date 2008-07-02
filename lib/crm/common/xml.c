@@ -304,15 +304,17 @@ expand_plus_plus(xmlNode* target, const char *name, const char *value)
     int name_len = strlen(name);
 
     const char *old_value = NULL;
-    
-    if(value == NULL
-       || value[name_len] != '+'
-       || (value[name_len+1] != '+' && value[name_len+1] != '=')) {
+
+    if(value == NULL || name == NULL) {
 	goto bail;
     }
-
+    
+    name_len = strlen(name);
     value_len = strlen(value);
-    if(value_len < (name_len + 2)) {
+
+    if(value_len < (name_len + 2)
+       || value[name_len] != '+'
+       || (value[name_len+1] != '+' && value[name_len+1] != '=')) {
 	goto bail;
     }
 
