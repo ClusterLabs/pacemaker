@@ -639,14 +639,12 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		    tag = "diff-removed";
 		    tmp = find_xml_node(*diff, tag, FALSE);
 		    if(tmp == NULL) {
-			crm_info("create %s", tag);
 			tmp = create_xml_node(*diff, tag);
 		    }
 
 		    tag = XML_TAG_CIB;
 		    top = find_xml_node(tmp, tag, FALSE);
 		    if(top == NULL) {
-			crm_info("create %s", tag);
 			top = create_xml_node(tmp, tag);
 		    }
 		    
@@ -661,14 +659,12 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		    tag = "diff-added";
 		    tmp = find_xml_node(*diff, tag, FALSE);
 		    if(tmp == NULL) {
-			crm_info("create %s", tag);
 			tmp = create_xml_node(*diff, tag);
 		    }
 		    
 		    tag = XML_TAG_CIB;
 		    top = find_xml_node(tmp, tag, FALSE);
 		    if(top == NULL) {
-			crm_info("create %s", tag);
 			top = create_xml_node(tmp, tag);
 		    }
 		    
