@@ -230,6 +230,8 @@ do_dc_join_offer_one(long long action,
 {
 	crm_node_t *member;
 	ha_msg_input_t *welcome = fsa_typed_data(fsa_dt_ha_msg);
+
+	const char *op = NULL;
 	const char *join_to = NULL;
 
 	if(welcome == NULL) {
@@ -239,6 +241,13 @@ do_dc_join_offer_one(long long action,
 	}
 	
 	join_to = crm_element_value(welcome->msg, F_CRM_HOST_FROM);
+	if(join_to == NULL) {
+	    crm_err("Attempt to send welcome message "
+		    "without a host to reply to!");
+	    return;
+	}
+	
+	op = crm_element_value(welcome->msg, F_CRM_TASK);
 	if(join_to != NULL
 	   && (cur_state == S_INTEGRATION || cur_state == S_FINALIZE_JOIN)) {
 		/* note: it _is_ possible that a node will have been
@@ -246,11 +255,11 @@ do_dc_join_offer_one(long long action,
 		 *  however, it will either re-announce itself in due course
 		 *  _or_ we can re-store the original offer on the client.
 		 */
-		crm_debug("Re-offering membership to %s...", join_to);
+		crm_debug("(Re-)offering membership to %s...", join_to);
 	}
 
-	crm_info("join-%d: Processing annouce request from %s in state %s",
-		 current_join_id, join_to, fsa_state2string(cur_state));
+	crm_info("join-%d: Processing %s request from %s in state %s",
+		 current_join_id, op, join_to, fsa_state2string(cur_state));
 
 	/* always offer to the DC (ourselves)
 	 * this ensures the correct value for max_generation_from
