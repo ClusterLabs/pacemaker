@@ -305,7 +305,8 @@ fsa_typed_data_adv(
 		do_crm_log(LOG_ERR, "%s: No FSA data available", caller);
 		
 	} else if(fsa_data->data == NULL) {
-		do_crm_log(LOG_ERR, "%s: No message data available", caller);
+	    do_crm_log(LOG_ERR, "%s: No message data available. Origin: %s",
+		       caller, fsa_data->origin);
 
 	} else if(fsa_data->data_type != a_type) {
 		do_crm_log(LOG_CRIT,  
