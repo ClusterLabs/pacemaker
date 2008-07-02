@@ -337,6 +337,7 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
 {
 	int len = 0;
 	char *key = NULL;
+	char *copy = NULL;
 	const char *value = NULL;
 	const char *provider = NULL;
 
@@ -396,9 +397,14 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
 		value = crm_element_value(param, "unique");
 		if(crm_is_true(value)) {
 		    value = crm_element_value(param, "name");
+		    if(value == NULL) {
+			crm_err("%s: NULL param", key);
+			continue;
+		    }
 		    crm_debug("Attr %s is not reloadable", value);
-		    reload->restart_list = g_list_append(
-			reload->restart_list, crm_strdup(value));
+		    copy = crm_strdup(value);
+		    CRM_CHECK(copy != NULL, continue);
+		    reload->restart_list = g_list_append(reload->restart_list, copy);
 		}
 		);
 	}
@@ -453,6 +459,10 @@ append_restart_list(lrm_rsc_t *rsc, lrm_op_t *op, xmlNode *update, const char *v
 		/* monitors are not reloadable */
 		return;
 
+	} else if(op->params) {
+		crm_info("%s has no parameters", ID(update));
+		return;
+
 	} else if(rsc == NULL) {
 		crm_info("Resource %s no longer in the LRM", op->rsc_id);
 		return;
@@ -475,6 +485,10 @@ append_restart_list(lrm_rsc_t *rsc, lrm_op_t *op, xmlNode *update, const char *v
 	restart = create_xml_node(NULL, XML_TAG_PARAMS);
 	slist_iter(param, const char, restart_list, lpc,
 		   int start = len;
+		   if(param == NULL) {
+		       crm_err("%s/%d: NULL param!", rsc->id, lpc);
+		       continue;
+		   }
 		   value = g_hash_table_lookup(op->params, param);
 		   if(value != NULL) {
 			   non_empty = TRUE;
