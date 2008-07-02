@@ -98,6 +98,7 @@ class crm_ais(LinuxHAv2):
                 r"Faking parameter digest creation",
                 r"Parameters to .* action changed:",
                 r"Parameters to .* changed",
+                r"Child process .* terminated with signal 11",
             ),
         })
 
