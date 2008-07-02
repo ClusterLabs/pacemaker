@@ -821,6 +821,7 @@ enum cib_errors
 cib_process_command(xmlNode *request, xmlNode **reply,
 		    xmlNode **cib_diff, gboolean privileged)
 {
+    gboolean status_op = FALSE;
     gboolean send_r_notify = FALSE;
     xmlNode *output   = NULL;
     xmlNode *input    = NULL;
@@ -878,12 +879,16 @@ cib_process_command(xmlNode *request, xmlNode **reply,
     } else if(cib_op_modifies(call_type) == FALSE) {
 	rc = cib_perform_op(op, call_options, cib_op_func(call_type), TRUE,
 			    section, request, input, FALSE, &config_changed,
-			    current_cib, &result_cib, &output);
+			    current_cib, &result_cib, cib_diff, &output);
 
 	CRM_CHECK(result_cib == NULL, free_xml(result_cib));
 	goto done;
     }	
 
+    if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+	    status_op = TRUE;
+    }
+    
     /* Handle a valid write action */
 
     if((call_options & cib_inhibit_notify) == 0) {
@@ -910,8 +915,7 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	    
 	rc = cib_perform_op(op, call_options, cib_op_func(call_type), FALSE,
 			    section, request, input, manage_counters, &config_changed,
-			    current_cib, &result_cib, &output);
-	*cib_diff = diff_cib_object(current_cib, result_cib, FALSE);
+			    current_cib, &result_cib, cib_diff, &output);
     }
     
     if(rc != cib_ok) {
@@ -923,14 +927,21 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	    crm_warn("Activation failed");
 	}
     }
-	
+
+    if(rc == cib_ok && *cib_diff == NULL) {
+	if(global_update) {
+	    *cib_diff = copy_xml(input);
+	} else {
+	    *cib_diff = diff_cib_object(current_cib, result_cib, FALSE);
+	}
+    }
+    
     if((call_options & cib_inhibit_notify) == 0) {
 	const char *call_id = crm_element_value(request, F_CIB_CALLID);
 	const char *client = crm_element_value(request, F_CIB_CLIENTNAME);
 
 	cib_post_notify(call_options, op, input, rc, the_cib);
-	cib_diff_notify(call_options, client, call_id, op,
-			input, rc, *cib_diff);
+	cib_diff_notify(call_options, client, call_id, op, input, rc, *cib_diff);
     }
 
     if(rc == cib_ok && safe_str_eq(CIB_OP_ERASE, op)) {
@@ -939,14 +950,14 @@ cib_process_command(xmlNode *request, xmlNode **reply,
     } else if(rc == cib_ok && safe_str_eq(CIB_OP_REPLACE, op)) {
 	if(section == NULL) {
 	    send_r_notify = TRUE;
+	    
+	} else if(status_op) {
+	    send_r_notify = TRUE;
 
 	} else if(safe_str_eq(section, XML_TAG_CIB)) {
 	    send_r_notify = TRUE;
 
 	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
-	    send_r_notify = TRUE;
-	    
-	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
 	    send_r_notify = TRUE;
 	}	
     }

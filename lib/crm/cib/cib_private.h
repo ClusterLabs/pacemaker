@@ -57,7 +57,7 @@ enum cib_errors
 cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query,
 	       const char *section, xmlNode *req, xmlNode *input,
 	       gboolean manage_counters, gboolean *config_changed,
-	       xmlNode *current_cib, xmlNode **result_cib, xmlNode **output);
+	       xmlNode *current_cib, xmlNode **result_cib, xmlNode **diff, xmlNode **output);
 
 extern xmlNode *cib_create_op(
     int call_id, const char *token, const char *op, const char *host,

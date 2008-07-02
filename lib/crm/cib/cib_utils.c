@@ -540,7 +540,7 @@ enum cib_errors
 cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query,
 	       const char *section, xmlNode *req, xmlNode *input,
 	       gboolean manage_counters, gboolean *config_changed,
-	       xmlNode *current_cib, xmlNode **result_cib, xmlNode **output)
+	       xmlNode *current_cib, xmlNode **result_cib, xmlNode **diff, xmlNode **output)
 {
     int rc = cib_ok;
     xmlNode *scratch = NULL;
@@ -616,15 +616,70 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	    
 	    fix_plus_plus_recursive(scratch);
 	    /* crm_log_xml_debug(scratch, "newer"); */
-	    *config_changed = cib_config_changed(current_cib, scratch, NULL);
+	    if(manage_counters) {
+		*config_changed = cib_config_changed(current_cib, scratch, diff);
 
 	    /* crm_log_xml_debug(scratch, "newest"); */
-	    
-	    if(manage_counters && *config_changed) {
-		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);
-		cib_update_counter(scratch, XML_ATTR_GENERATION, FALSE);
-	    } else if(manage_counters) {
-		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
+		if(*config_changed) {
+		    cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);
+		    cib_update_counter(scratch, XML_ATTR_GENERATION, FALSE);
+
+		} else {
+		    cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
+		}
+
+		if(diff != NULL && *diff != NULL) {
+		    /* Now fix the diff... */
+
+		    xmlNode *top = NULL;
+		    xmlNode *tmp = NULL;
+		    const char *tag = NULL;
+		    const char *value = NULL;
+
+		    tag = "diff-removed";
+		    tmp = find_xml_node(*diff, tag, FALSE);
+		    if(tmp == NULL) {
+			crm_info("create %s", tag);
+			tmp = create_xml_node(*diff, tag);
+		    }
+
+		    tag = XML_TAG_CIB;
+		    top = find_xml_node(tmp, tag, FALSE);
+		    if(top == NULL) {
+			crm_info("create %s", tag);
+			top = create_xml_node(tmp, tag);
+		    }
+		    
+		    tag = XML_ATTR_GENERATION;
+		    value = crm_element_value(current_cib, tag);
+		    crm_xml_add(top, tag, value);
+
+		    tag = XML_ATTR_NUMUPDATES;
+		    value = crm_element_value(current_cib, tag);
+		    crm_xml_add(top, tag, value);
+		    
+		    tag = "diff-added";
+		    tmp = find_xml_node(*diff, tag, FALSE);
+		    if(tmp == NULL) {
+			crm_info("create %s", tag);
+			tmp = create_xml_node(*diff, tag);
+		    }
+		    
+		    tag = XML_TAG_CIB;
+		    top = find_xml_node(tmp, tag, FALSE);
+		    if(top == NULL) {
+			crm_info("create %s", tag);
+			top = create_xml_node(tmp, tag);
+		    }
+		    
+		    tag = XML_ATTR_GENERATION;
+		    value = crm_element_value(scratch, tag);
+		    crm_xml_add(top, tag, value);
+
+		    tag = XML_ATTR_NUMUPDATES;
+		    value = crm_element_value(scratch, tag);
+		    crm_xml_add(top, tag, value);		    
+		}
 	    }
 
 	    current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
