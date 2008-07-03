@@ -537,6 +537,7 @@ if __name__ == '__main__':
     StonithType = "ssh"
     StonithParams = None
     StonithParams = "hostlist=dynamic".split('=')
+    node_list = ''
 
     #
     # The values of the rest of the parameters are now properly derived from
@@ -659,6 +660,9 @@ if __name__ == '__main__':
        elif args[i] == "--choose":
            skipthis=1
            TestCase = args[i+1]
+       elif args[i] == "--nodes":
+           skipthis=1
+           node_list = args[i+1].split(' ')
        elif args[i] == "--syslog-facility" or args[i] == "--facility":
            skipthis=1
            LogFacility = args[i+1]
@@ -681,7 +685,10 @@ if __name__ == '__main__':
     # for our Copious Spare Time in the future...
     #
     config = CM_hb.HBConfig(HAdir)
-    node_list = config.Parameters["node"]
+    if not node_list:
+        node_list = config.Parameters["node"]
+    else:
+        config.Parameters["node"] = node_list
 
     if DoBSC:
         NumIter = 2

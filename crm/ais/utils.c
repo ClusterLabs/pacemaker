@@ -436,12 +436,15 @@ int send_client_msg(
 /* 	    ais_err("Connection is throttled: %d", queue->size); */
 
     } else {
+#ifndef AIS_WHITETANK
 	rc = openais_conn_send_response (conn, ais_msg, total_size);
+#else
+	rc = openais_dispatch_send (conn, ais_msg, total_size);
+#endif
 	AIS_CHECK(rc == 0,
 		  ais_err("Message not sent (%d): %s", rc, data?data:"<null>"));
     }
 
-    ais_debug_5("Sent %d:%s", class, data);
     ais_free(ais_msg);
     LEAVE("");
     return rc;    

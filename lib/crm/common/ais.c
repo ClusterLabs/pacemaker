@@ -46,6 +46,10 @@ enum crm_ais_msg_types text2msg_type(const char *text)
 		type = crm_msg_pe;
 	} else if(safe_str_eq(text, CRM_SYSTEM_LRMD)) {
 		type = crm_msg_lrmd;
+	} else if(safe_str_eq(text, CRM_SYSTEM_STONITHD)) {
+		type = crm_msg_stonithd;
+	} else if(safe_str_eq(text, "attrd")) {
+		type = crm_msg_attrd;
 	} else {
 		crm_debug_2("Unknown message type: %s", text);
 	}
