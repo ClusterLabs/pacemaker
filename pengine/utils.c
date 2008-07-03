@@ -256,20 +256,10 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 gboolean
 native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 {
-	int multiple = 0;
 	CRM_ASSERT(rsc->variant == pe_native);
 
 	clear_bit(rsc->flags, pe_rsc_provisional);
 	
-	slist_iter(candidate, node_t, nodes, lpc, 
-		   if(chosen
-		      && chosen->weight > 0
-		      && candidate->details->unclean == FALSE
-		      && candidate->weight == chosen->weight) {
-			   multiple++;
-		   }
-		);
-
 	if(chosen == NULL) {
 		crm_debug("Could not allocate a node for %s", rsc->id);
 		rsc->next_role = RSC_ROLE_STOPPED;
@@ -285,19 +275,6 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 
 	if(rsc->next_role == RSC_ROLE_UNKNOWN) {
 		rsc->next_role = RSC_ROLE_STARTED;
-	}
-	
-	if(multiple > 1) {
-		int log_level = LOG_INFO;
-		char *score = score2char(chosen->weight);
-		if(chosen->weight >= INFINITY) {
-			log_level = LOG_WARNING;
-		}
-		
-		do_crm_log(log_level, "%d nodes with equal score (%s) for"
-			   " running %s resources (chose %s):",
-			   multiple, score, rsc->id, chosen->details->uname);
-		crm_free(score);
 	}
 	
 	/* todo: update the old node for each resource to reflect its

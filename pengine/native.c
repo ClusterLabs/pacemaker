@@ -94,19 +94,56 @@ native_choose_node(resource_t *rsc)
 	GListPtr nodes = NULL;
 	node_t *chosen = NULL;
 
+	int lpc = 0;
+	int multiple = 0;
+	int length = g_list_length(rsc->allowed_nodes);
+
 	if(is_not_set(rsc->flags, pe_rsc_provisional)) {
 		return rsc->allocated_to?TRUE:FALSE;
 	}
 	
 	crm_debug_3("Choosing node for %s from %d candidates",
-		    rsc->id, g_list_length(rsc->allowed_nodes));
+		    rsc->id, length);
 
 	if(rsc->allowed_nodes) {
-		rsc->allowed_nodes = g_list_sort(
-			rsc->allowed_nodes, sort_node_weight);
-		nodes = rsc->allowed_nodes;
-		chosen = g_list_nth_data(nodes, 0);
+	    rsc->allowed_nodes = g_list_sort(rsc->allowed_nodes, sort_node_weight);
+	    nodes = rsc->allowed_nodes;
+	    chosen = g_list_nth_data(nodes, 0);
+
+	    if(chosen
+	       && chosen->weight > 0
+	       && can_run_resources(chosen)) {
+		node_t *running = g_list_nth_data(rsc->running_on, 0);
+		if(can_run_resources(running) == FALSE) {
+		    running = NULL;
+		}
+		
+		for(lpc = 1; lpc < length; lpc++) {
+		    node_t *tmp = g_list_nth_data(nodes, lpc);
+		    if(tmp->weight == chosen->weight) {
+			multiple++;
+			if(running && tmp->details == running->details) {
+			    /* prefer the existing node if scores are equal */
+			    chosen = tmp;
+			}
+		    }
+		}
+	    }
 	}
+
+	if(multiple > 1) {
+		int log_level = LOG_INFO;
+		char *score = score2char(chosen->weight);
+		if(chosen->weight >= INFINITY) {
+			log_level = LOG_WARNING;
+		}
+		
+		do_crm_log(log_level, "%d nodes with equal score (%s) for"
+			   " running %s resources.  Chose %s.",
+			   multiple, score, rsc->id, chosen->details->uname);
+		crm_free(score);
+	}
+	
 	
 	return native_assign_node(rsc, nodes, chosen);
 }
