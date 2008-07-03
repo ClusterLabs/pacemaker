@@ -45,19 +45,18 @@ extern GHashTable *client_list;
 int pending_updates = 0;
 
 void cib_notify_client(gpointer key, gpointer value, gpointer user_data);
-void attach_cib_generation(HA_Message *msg, const char *field, crm_data_t *a_cib);
+void attach_cib_generation(xmlNode *msg, const char *field, xmlNode *a_cib);
 
 void do_cib_notify(
-	int options, const char *op, crm_data_t *update,
-	enum cib_errors result, crm_data_t *result_data, const char *msg_type);
-
+	int options, const char *op, xmlNode *update,
+	enum cib_errors result, xmlNode *result_data, const char *msg_type);
 
 void
 cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 {
 
 	IPC_Channel *ipc_client = NULL;
-	HA_Message *update_msg = user_data;
+	xmlNode *update_msg = user_data;
 	cib_client_t *client = value;
 	const char *type = NULL;
 	gboolean is_pre = FALSE;
@@ -73,7 +72,7 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	CRM_DEV_ASSERT(client != NULL);
 	CRM_DEV_ASSERT(update_msg != NULL);
 
-	type = cl_get_string(update_msg, F_SUBTYPE);
+	type = crm_element_value(update_msg, F_SUBTYPE);
 	CRM_DEV_ASSERT(type != NULL);
 
 	if(client == NULL) {
@@ -113,11 +112,7 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	/* get_chan_status() causes memory to be allocated that isnt free'd
 	 *   until the message is read (which messes up the memory stats) 
 	 */
-	if(ipc_client->ops->get_chan_status(ipc_client) != IPC_CONNECT) {
-		crm_debug_2("Skipping notification to disconnected"
-			    " client %s/%s", client->name, client->id);
-		
-	} else if(client->pre_notify && is_pre) {
+	if(client->pre_notify && is_pre) {
 		if(qlen < (int)(0.4 * max_qlen)) {
 			do_send = TRUE;
 		} else {
@@ -149,9 +144,6 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	}
 
 	if(do_send) {
-		crm_debug_2("Notifying client %s/%s of %s update (queue=%d)",
-			    client->name, client->channel_name, type, qlen);
-
 		if(ipc_client->send_queue->current_qlen >= ipc_client->send_queue->max_qlen) {
 			/* We never want the CIB to exit because our client is slow */
 			crm_crit("%s-notification of client %s/%s failed - queue saturated",
@@ -162,42 +154,55 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 			crm_warn("Notification of client %s/%s failed",
 				 client->name, client->id);
 		}
-		
-	} else {
-		crm_debug_3("Client %s/%s not interested in %s notifications",
-			    client->name, client->channel_name, type);	
 	}
+}
+
+static void
+need_pre_notify(gpointer key, gpointer value, gpointer user_data)
+{
+    cib_client_t *client = value;
+    if(client->pre_notify) {
+	gboolean *needed = user_data;
+	*needed = TRUE;
+    }
 }
 
 void
 cib_pre_notify(
-	int options, const char *op, crm_data_t *existing, crm_data_t *update) 
+	int options, const char *op, xmlNode *existing, xmlNode *update) 
 {
-	HA_Message *update_msg = NULL;
+	xmlNode *update_msg = NULL;
 	const char *type = NULL;
 	const char *id = NULL;
+	gboolean needed = FALSE;
 
-	update_msg = ha_msg_new(6);
+	g_hash_table_foreach(client_list, need_pre_notify, &needed);
+	if(needed == FALSE) {
+	    return;
+	}
+
+	/* TODO: consider pre-notification for removal */
+	update_msg = create_xml_node(NULL, "pre-notify");
 
 	if(update != NULL) {
 		id = crm_element_value(update, XML_ATTR_ID);
 	}
 	
-	ha_msg_add(update_msg, F_TYPE, T_CIB_NOTIFY);
-	ha_msg_add(update_msg, F_SUBTYPE, T_CIB_PRE_NOTIFY);
-	ha_msg_add(update_msg, F_CIB_OPERATION, op);
+	crm_xml_add(update_msg, F_TYPE, T_CIB_NOTIFY);
+	crm_xml_add(update_msg, F_SUBTYPE, T_CIB_PRE_NOTIFY);
+	crm_xml_add(update_msg, F_CIB_OPERATION, op);
 
 	if(id != NULL) {
-		ha_msg_add(update_msg, F_CIB_OBJID, id);
+		crm_xml_add(update_msg, F_CIB_OBJID, id);
 	}
 
 	if(update != NULL) {
-		ha_msg_add(update_msg, F_CIB_OBJTYPE, crm_element_name(update));
+		crm_xml_add(update_msg, F_CIB_OBJTYPE, crm_element_name(update));
 	} else if(existing != NULL) {
-		ha_msg_add(update_msg, F_CIB_OBJTYPE, crm_element_name(existing));
+		crm_xml_add(update_msg, F_CIB_OBJTYPE, crm_element_name(existing));
 	}
 
-	type = cl_get_string(update_msg, F_CIB_OBJTYPE);	
+	type = crm_element_value(update_msg, F_CIB_OBJTYPE);	
 	attach_cib_generation(update_msg, "cib_generation", the_cib);
 	
 	if(existing != NULL) {
@@ -218,12 +223,12 @@ cib_pre_notify(
 			    op, type, id?" id=":"", id?id:"");
 	}
 		
-	crm_msg_del(update_msg);
+	free_xml(update_msg);
 }
 
 void
-cib_post_notify(int options, const char *op, crm_data_t *update,
-		enum cib_errors result, crm_data_t *new_obj) 
+cib_post_notify(int options, const char *op, xmlNode *update,
+		enum cib_errors result, xmlNode *new_obj) 
 {
 	do_cib_notify(
 		options, op, update, result, new_obj, T_CIB_UPDATE_CONFIRM);
@@ -232,7 +237,7 @@ cib_post_notify(int options, const char *op, crm_data_t *update,
 void
 cib_diff_notify(
 	int options, const char *client, const char *call_id, const char *op,
-	crm_data_t *update, enum cib_errors result, crm_data_t *diff) 
+	xmlNode *update, enum cib_errors result, xmlNode *diff) 
 {
 	int add_updates = 0;
 	int add_epoch  = 0;
@@ -277,38 +282,38 @@ cib_diff_notify(
 
 void
 do_cib_notify(
-	int options, const char *op, crm_data_t *update,
-	enum cib_errors result, crm_data_t *result_data, const char *msg_type) 
+	int options, const char *op, xmlNode *update,
+	enum cib_errors result, xmlNode *result_data, const char *msg_type) 
 {
-	HA_Message *update_msg = NULL;
+	xmlNode *update_msg = NULL;
 	const char *type = NULL;
 	const char *id = NULL;
 
-	update_msg = ha_msg_new(8);
+	update_msg = create_xml_node(NULL, "notify");
 
 	if(result_data != NULL) {
 		id = crm_element_value(result_data, XML_ATTR_ID);
 	}
 	
-	ha_msg_add(update_msg, F_TYPE, T_CIB_NOTIFY);
-	ha_msg_add(update_msg, F_SUBTYPE, msg_type);
-	ha_msg_add(update_msg, F_CIB_OPERATION, op);
-	ha_msg_add_int(update_msg, F_CIB_RC, result);
+	crm_xml_add(update_msg, F_TYPE, T_CIB_NOTIFY);
+	crm_xml_add(update_msg, F_SUBTYPE, msg_type);
+	crm_xml_add(update_msg, F_CIB_OPERATION, op);
+	crm_xml_add_int(update_msg, F_CIB_RC, result);
 	
 	if(id != NULL) {
-		ha_msg_add(update_msg, F_CIB_OBJID, id);
+		crm_xml_add(update_msg, F_CIB_OBJID, id);
 	}
 
 	if(update != NULL) {
 		crm_debug_4("Setting type to update->name: %s",
 			    crm_element_name(update));
-		ha_msg_add(update_msg, F_CIB_OBJTYPE, crm_element_name(update));
+		crm_xml_add(update_msg, F_CIB_OBJTYPE, crm_element_name(update));
 		type = crm_element_name(update);
 
 	} else if(result_data != NULL) {
 		crm_debug_4("Setting type to new_obj->name: %s",
 			    crm_element_name(result_data));
-		ha_msg_add(update_msg, F_CIB_OBJTYPE, crm_element_name(result_data));
+		crm_xml_add(update_msg, F_CIB_OBJTYPE, crm_element_name(result_data));
 		type = crm_element_name(result_data);
 		
 	} else {
@@ -325,38 +330,15 @@ do_cib_notify(
 
 	crm_debug_3("Notifying clients");
 	g_hash_table_foreach(client_list, cib_notify_client, update_msg);
-	crm_msg_del(update_msg);
-
-	if(update == NULL) {
-		if(result == cib_ok) {
-			crm_debug_2("Operation %s (on section=%s) completed",
-				    op, crm_str(type));
-			
-		} else {
-			crm_warn("Operation %s (on section=%s) FAILED: (%d) %s",
-				 op, crm_str(type), result,
-				 cib_error2string(result));
-		}
-		
-	} else {
-		if(result == cib_ok) {
-			crm_debug_2("Completed %s of <%s %s%s>",
-				    op, crm_str(type), id?"id=":"", id?id:"");
-			
-		} else {
-			crm_warn("%s of <%s %s%s> FAILED: %s", op,crm_str(type),
-				 id?"id=":"", id?id:"", cib_error2string(result));
-		}
-	}
-
+	free_xml(update_msg);
 	crm_debug_3("Notify complete");
 }
 
 
 void
-attach_cib_generation(HA_Message *msg, const char *field, crm_data_t *a_cib) 
+attach_cib_generation(xmlNode *msg, const char *field, xmlNode *a_cib) 
 {
-	crm_data_t *generation = create_xml_node(
+	xmlNode *generation = create_xml_node(
 		NULL, XML_CIB_TAG_GENERATION_TUPPLE);
 
 	if(a_cib != NULL) {
@@ -367,10 +349,10 @@ attach_cib_generation(HA_Message *msg, const char *field, crm_data_t *a_cib)
 }
 
 void
-cib_replace_notify(crm_data_t *update, enum cib_errors result, crm_data_t *diff) 
+cib_replace_notify(xmlNode *update, enum cib_errors result, xmlNode *diff) 
 {
 	const char *origin = NULL;
-	HA_Message *replace_msg = NULL;
+	xmlNode *replace_msg = NULL;
 	
 	int add_updates = 0;
 	int add_epoch  = 0;
@@ -401,15 +383,15 @@ cib_replace_notify(crm_data_t *update, enum cib_errors result, crm_data_t *diff)
 			 crm_str(origin));
 	}
 	
-	replace_msg = ha_msg_new(8);
-	ha_msg_add(replace_msg, F_TYPE, T_CIB_NOTIFY);
-	ha_msg_add(replace_msg, F_SUBTYPE, T_CIB_REPLACE_NOTIFY);
-	ha_msg_add(replace_msg, F_CIB_OPERATION, CIB_OP_REPLACE);
-	ha_msg_add_int(replace_msg, F_CIB_RC, result);
+	replace_msg = create_xml_node(NULL, "notify-replace");
+	crm_xml_add(replace_msg, F_TYPE, T_CIB_NOTIFY);
+	crm_xml_add(replace_msg, F_SUBTYPE, T_CIB_REPLACE_NOTIFY);
+	crm_xml_add(replace_msg, F_CIB_OPERATION, CIB_OP_REPLACE);
+	crm_xml_add_int(replace_msg, F_CIB_RC, result);
 	attach_cib_generation(replace_msg, "cib-replace-generation", update);
 
-	crm_log_message_adv(LOG_DEBUG_2,"CIB Replaced", replace_msg);
+	crm_log_xml(LOG_DEBUG_2,"CIB Replaced", replace_msg);
 	
 	g_hash_table_foreach(client_list, cib_notify_client, replace_msg);
-	crm_msg_del(replace_msg);
+	free_xml(replace_msg);
 }

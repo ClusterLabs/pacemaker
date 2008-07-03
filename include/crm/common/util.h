@@ -19,7 +19,6 @@
 #define CRM_COMMON_UTIL__H
 
 #include <signal.h>
-#include <crm/common/xml.h>
 
 #if SUPPORT_HEARTBEAT
 #  include <hb_api.h>
@@ -75,7 +74,8 @@ extern gboolean crm_is_true(const char * s);
 
 extern int crm_str_to_boolean(const char * s, int * ret);
 
-extern long crm_get_msec(const char * input);
+extern unsigned long long crm_get_msec(const char * input);
+extern unsigned long long crm_get_interval(const char * input);
 
 extern const char *op_status2text(op_status_t status);
 
@@ -108,12 +108,30 @@ extern char *crm_concat(const char *prefix, const char *suffix, char join);
 extern gboolean decode_op_key(
 	const char *key, char **rsc_id, char **op_type, int *interval);
 
-extern void filter_action_parameters(crm_data_t *param_set, const char *version);
-extern void filter_reload_parameters(crm_data_t *param_set, const char *restart_string);
+extern void filter_action_parameters(xmlNode *param_set, const char *version);
+extern void filter_reload_parameters(xmlNode *param_set, const char *restart_string);
 
 #define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 
-extern gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
+static inline gboolean crm_str_eq(const char *a, const char *b, gboolean use_case) 
+{
+    if(a == b) {
+	return TRUE;
+	
+    } else if(a == NULL || b == NULL) {
+	/* shouldn't be comparing NULLs */
+	return FALSE;
+	    
+    } else if(use_case && a[0] != b[0]) {
+	return FALSE;		
+	
+    } else if(strcasecmp(a, b) == 0) {
+	return TRUE;
+    }
+    return FALSE;
+}
+
+
 extern gboolean safe_str_neq(const char *a, const char *b);
 extern int crm_parse_int(const char *text, const char *default_text);
 extern long crm_int_helper(const char *text, char **end_text);
@@ -187,5 +205,8 @@ extern gboolean is_set_any(long long action_list, long long action);
 
 extern gboolean is_openais_cluster(void);
 extern gboolean is_heartbeat_cluster(void);
+
+extern xmlNode *cib_recv_remote_msg(void *session);
+extern void cib_send_remote_msg(void *session, xmlNode *msg);
 
 #endif

@@ -70,7 +70,7 @@ class ExtractTests:
         testlist.sort(sorttestnum)
         self.testlist = testlist
         print "Extracting tests ", self.testlist
-        self.regex=re.compile(" CTS: Running test .*\[([0-9]+)")
+        self.regex=re.compile(" CTS: Running test .*(\[|\s)([0-9]+)")
         self.CTSregex=re.compile(" CTS: ")
 
     def __call__(self):
@@ -83,7 +83,7 @@ class ExtractTests:
                 break
             regexmatchobj=self.regex.search(line)
             if regexmatchobj:
-                curtest= int(regexmatchobj.groups()[0])
+                curtest= int(regexmatchobj.groups()[1])
             if curtest == 0:
                if self.CTSregex.search(line):
                 sys.stdout.write(line)

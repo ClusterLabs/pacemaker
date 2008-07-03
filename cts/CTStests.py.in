@@ -150,12 +150,8 @@ random for the selected number of iterations.
         BadNews.setwatch()
 
         self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
-
-        for node in self.CM.Env["nodes"]:
-            if node in self.CM.Env["oprofile"]:
-                self.CM.log("Enabling oprofile on %s" % node) 
-                self.CM.rsh.remote_py(node, "os", "system", "opcontrol --init")
-                self.CM.rsh.remote_py(node, "os", "system", "opcontrol --start")
+        self.CM.oprofileStop()
+        self.CM.oprofileStart() 
 
         if not self.CM.Env["DoBSC"]:
             audit = LogAudit(self.CM)
@@ -175,10 +171,7 @@ random for the selected number of iterations.
         if not self.Scenario.SetUp(self.CM):
             return None
 
-        for node in self.CM.Env["nodes"]:
-            if node in self.CM.Env["oprofile"]:
-                self.CM.rsh.remote_py(
-                    node, "os", "system", "opcontrol --save=cts.setup")
+        self.CM.oprofileSave(0) 
 
         testcount=1
         time.sleep(30)
@@ -195,19 +188,14 @@ random for the selected number of iterations.
             #logsize = os.stat(self.CM["LogFileName"])[ST_SIZE]
             #self.CM.log("Running test %s (%s) \t[%d : %d]"  
             #            % (test.name, nodechoice, testcount, logsize))
-            self.CM.log("Running test %s (%s) \t[%d]"  
-                        % (test.name, nodechoice, testcount))
-
-            testcount = testcount + 1
+            self.CM.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) +"["+ ("%d" % testcount).rjust(3) +"]")
             starttime=time.time()
             test.starttime=starttime
             ret=test(nodechoice)
+            stoptime=time.time()
+            self.CM.oprofileSave(testcount)
 
-            for node in self.CM.Env["nodes"]:
-                if node in self.CM.Env["oprofile"]:
-                    self.CM.rsh.remote_py(
-                        node, "os", "system", 
-                        "opcontrol --save=cts.%d" % (testcount-1))
+            testcount = testcount + 1
 
             if ret:
                 self.incr("success")
@@ -216,7 +204,6 @@ random for the selected number of iterations.
                 self.CM.log("Test %s (%s) \t[FAILED]" %(test.name,nodechoice))
                 # Better get the current info from the cluster...
                 self.CM.statall()
-            stoptime=time.time()
             elapsed_time = stoptime - starttime
             test_time = stoptime - test.starttime
             if not test.has_key("min_time"):
@@ -233,11 +220,8 @@ random for the selected number of iterations.
             self.audit(BadNews, test)
 
         self.Scenario.TearDown(self.CM)
-        
-        for node in self.CM.Env["nodes"]:
-            if node in self.CM.Env["oprofile"]:
-                self.CM.log("Disabling oprofile on %s" % node) 
-                self.CM.rsh.remote_py(node, "os", "system", "opcontrol --shutdown")
+        self.CM.oprofileSave(testcount) 
+        self.CM.oprofileStop()
 
         self.audit(BadNews, None)
 
@@ -620,9 +604,7 @@ class StonithTest(CTSTest):
         self.CM.cluster_stable()
 
         if node in self.CM.Env["oprofile"]:
-            self.CM.log("Enabling oprofile on %s" % node) 
-            self.CM.rsh.remote_py(node, "os", "system", "opcontrol --init")
-            self.CM.rsh.remote_py(node, "os", "system", "opcontrol --start")
+            self.CM.oprofileStart(node) 
 
         # return case processing
         if rc == 0:
@@ -634,11 +616,10 @@ class StonithTest(CTSTest):
         '''StonithTest is applicable unless suppressed by CM.Env["DoStonith"] == FALSE'''
 
         # for v2, stonithd test is a better test to run.
-        if self.CM["Name"] == "linux-ha-v2":
-            return None
-        if self.CM.Env.has_key("DoStonith"):
+        if self.CM["Name"] == "heartbeat":
             return self.CM.Env["DoStonith"]
-        return 1
+        else:
+            return None
 
 #        Register StonithTest as a good test to run
 AllTestClasses.append(StonithTest)
@@ -705,15 +686,19 @@ class StonithdTest(StonithTest):
 
         return 1
         
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+        return [
+#            """stonithd: .*CRIT: command ssh -q -x -n -l root.*/sbin/reboot -nf .* SHELL=/bin/sh at now.* failed"""
+            ]
+
     def is_applicable(self):
 
-        if not self.CM["Name"] == "linux-ha-v2":
-            return 0
-
-        if self.CM.Env.has_key("DoStonith"):
-            return self.CM.Env["DoStonith"]
-
-        return 1
+        if self.CM["Name"] == "crm-ais" or self.CM["Name"] == "linux-ha-v2":
+            if self.CM.Env.has_key("DoStonith"):
+                return self.CM.Env["DoStonith"]
+            return 1
+        return 0
            
 AllTestClasses.append(StonithdTest)
 
@@ -1680,9 +1665,9 @@ class ResourceRecover(CTSTest):
         self.CM.debug("Shooting %s..." % self.rid)
 
         pats = []
-        pats.append("crmd.* Performing op=%s_stop_0" % self.rid)
-        pats.append("crmd.* Performing op=%s_start_0" % self.rid)
-        pats.append("crmd.* LRM operation %s_start_0.*complete" % self.rid)
+        pats.append("crmd:.* Performing .* op=%s_stop_0" % self.rid)
+        pats.append("crmd:.* Performing .* op=%s_start_0" % self.rid)
+        pats.append("crmd:.* LRM operation %s_start_0.*complete" % self.rid)
         pats.append("Updating failcount for %s on .* after .* %s"
                     % (self.rid, self.action))
 

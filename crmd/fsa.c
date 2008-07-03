@@ -84,14 +84,14 @@ long long do_state_transition(long long actions,
 			      enum crmd_fsa_state next_state,
 			      fsa_data_t *msg_data);
 
-long long clear_flags(long long actions,
+inline long long clear_flags(long long actions,
 			     enum crmd_fsa_cause cause,
 			     enum crmd_fsa_state cur_state,
 			     enum crmd_fsa_input cur_input);
 
 void dump_rsc_info(void);
-void dump_rsc_info_callback(const HA_Message *msg, int call_id, int rc,
-			    crm_data_t *output, void *user_data);
+void dump_rsc_info_callback(const xmlNode *msg, int call_id, int rc,
+			    xmlNode *output, void *user_data);
 
 void ghash_print_node(gpointer key, gpointer value, gpointer user_data);
 
@@ -415,8 +415,6 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 			/*
 			 * Highest priority actions
 			 */
-		} else if(is_set(fsa_actions, A_CIB_BUMPGEN)) {
-			do_fsa_action(fsa_data, A_CIB_BUMPGEN,		do_cib_invoke);
 		} else if(is_set(fsa_actions, A_MSG_ROUTE)) {
 			do_fsa_action(fsa_data, A_MSG_ROUTE,		do_msg_route);
 		} else if(is_set(fsa_actions, A_RECOVER)) {
@@ -462,7 +460,7 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 		} else if(is_set(fsa_actions, A_DC_JOIN_OFFER_ALL)) {
 			do_fsa_action(fsa_data, A_DC_JOIN_OFFER_ALL,	do_dc_join_offer_all);
 		} else if(is_set(fsa_actions, A_DC_JOIN_OFFER_ONE)) {
-			do_fsa_action(fsa_data, A_DC_JOIN_OFFER_ONE,	do_dc_join_offer_all);
+			do_fsa_action(fsa_data, A_DC_JOIN_OFFER_ONE,	do_dc_join_offer_one);
 		} else if(is_set(fsa_actions, A_DC_JOIN_PROCESS_REQ)) {
 			do_fsa_action(fsa_data, A_DC_JOIN_PROCESS_REQ,	do_dc_join_filter_offer);
 		} else if(is_set(fsa_actions, A_DC_JOIN_PROCESS_ACK)) {
@@ -473,10 +471,6 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 			 * Make sure the CIB is always updated before invoking the
 			 * PE, and the PE before the TE
 			 */
-		} else if(is_set(fsa_actions, A_CIB_INVOKE_LOCAL)) {
-			do_fsa_action(fsa_data, A_CIB_INVOKE_LOCAL,	do_cib_invoke);
-		} else if(is_set(fsa_actions, A_CIB_INVOKE)) {
-			do_fsa_action(fsa_data, A_CIB_INVOKE,		do_cib_invoke);
 		} else if(is_set(fsa_actions, A_DC_JOIN_FINALIZE)) {
 			do_fsa_action(fsa_data, A_DC_JOIN_FINALIZE,	do_dc_join_finalize);
 		} else if(is_set(fsa_actions, A_LRM_INVOKE)) {
@@ -544,8 +538,7 @@ void log_fsa_input(fsa_data_t *stored_msg)
 		
 		crm_debug_3("FSA processing XML message from %s",
 			    stored_msg->origin);
-		crm_log_message(LOG_MSG, ha_input->msg);
-		crm_log_xml_debug_3(ha_input->xml, "FSA message data");
+		crm_log_xml(LOG_MSG, "FSA message data", ha_input->xml);
 	}
 }
 
@@ -610,6 +603,11 @@ do_state_transition(long long actions,
 		crm_timer_stop(recheck_timer);
 	}
 
+	if(cur_state == S_FINALIZE_JOIN && next_state == S_POLICY_ENGINE) {
+	    populate_cib_nodes(FALSE);
+	    do_update_cib_nodes(TRUE, __FUNCTION__);
+	}
+	
 	switch(next_state) {
 		case S_PENDING:			
 			fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
@@ -741,20 +739,19 @@ do_state_transition(long long actions,
 	return actions;
 }
 
-long long
+inline long long
 clear_flags(long long actions,
 	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
 	    enum crmd_fsa_input cur_input)
 {
-	long long saved_actions = actions;
-	long long startup_actions = A_STARTUP|A_CIB_START|A_LRM_CONNECT|A_CCM_CONNECT|A_HA_CONNECT|A_READCONFIG|A_STARTED|A_CL_JOIN_QUERY;
+	static long long startup_actions = A_STARTUP|A_CIB_START|A_LRM_CONNECT|A_CCM_CONNECT|A_HA_CONNECT|A_READCONFIG|A_STARTED|A_CL_JOIN_QUERY;
 	
-	if(cur_state == S_STOPPING || is_set(fsa_input_register, R_SHUTDOWN)) {
+	if(cur_state == S_STOPPING || ((fsa_input_register & R_SHUTDOWN) == R_SHUTDOWN)) {
 		clear_bit_inplace(actions, startup_actions);
 	}
 
-	fsa_dump_actions(actions ^ saved_actions, "Cleared Actions");
+	/* fsa_dump_actions(actions ^ saved_actions, "Cleared Actions"); */
 	return actions;
 }
 

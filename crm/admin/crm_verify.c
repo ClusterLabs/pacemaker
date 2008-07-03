@@ -50,15 +50,16 @@ char *cib_save = NULL;
 void usage(const char *cmd, int exit_status);
 extern gboolean stage0(pe_working_set_t *data_set);
 extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
-extern crm_data_t * do_calculations(
-	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
+extern xmlNode * do_calculations(
+	pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now);
 const char *dtd_file = DTD_DIRECTORY"/crm.dtd";
 
 int
 main(int argc, char **argv)
 {
-	crm_data_t *cib_object = NULL;
-	crm_data_t *status = NULL;
+	const char *schema = NULL;
+	xmlNode *cib_object = NULL;
+	xmlNode *status = NULL;
 	int argerr = 0;
 	int flag;
 		
@@ -89,8 +90,9 @@ main(int argc, char **argv)
 		int option_index = 0;
 		static struct option long_options[] = {
 			/* Top-level Options */
-			{F_CRM_DATA,    1, 0, 'X'},
 			{"dtd-file",    1, 0, 'D'},
+			{F_CRM_DATA,    1, 0, 'X'}, /* legacy */
+			{"xml-text",    1, 0, 'X'},
 			{"xml-file",    1, 0, 'x'},
 			{"xml-pipe",    0, 0, 'p'},
 			{"save-xml",    1, 0, 'S'},
@@ -177,8 +179,7 @@ main(int argc, char **argv)
 
 	if(USE_LIVE_CIB) {
 		cib_conn = cib_new();
-		rc = cib_conn->cmds->signon(
-			cib_conn, crm_system_name, cib_command_synchronous);
+		rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
 	}
 	
 	
@@ -251,11 +252,55 @@ main(int argc, char **argv)
 		crm_config_err("ID Check failed");
 	}
 
-	if(validate_with_dtd(cib_object, FALSE, dtd_file) == FALSE) {
-		crm_config_err("CIB did not pass DTD validation");
+	
+	schema = crm_element_value(cib_object, XML_ATTR_VALIDATION);
+	if(schema == NULL) {
+	    schema = LATEST_SCHEMA_VERSION;
 	}
 
-	if(USE_LIVE_CIB) {
+	if(validate_xml(cib_object, NULL, FALSE) == FALSE) {
+		crm_config_err("CIB did not pass DTD/schema validation");
+		free_xml(cib_object);
+		cib_object = NULL;
+
+	} else {
+	    const char *value = crm_element_value(cib_object, XML_ATTR_VALIDATION);
+	    if(safe_str_neq(value, LATEST_SCHEMA_VERSION)) {
+		int schema_version = 0;
+		int max_version = get_schema_version(LATEST_SCHEMA_VERSION);
+		int min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
+		
+		xmlNode *converted = NULL;
+		
+		crm_config_warn("Your current configuration only conforms to the %s syntax", value);
+		crm_config_warn("Please use 'cibadmin --upgrade' to convert to the latest syntax (%s)", LATEST_SCHEMA_VERSION);
+		
+		converted = copy_xml(cib_object);
+		schema_version = update_validation(&converted, TRUE, FALSE);
+		
+		value = crm_element_value(converted, XML_ATTR_VALIDATION);
+		if(schema_version < min_version) {
+		    crm_config_err("Your current configuration could only be upgraded to %s... "
+				   "the minimum requirement is %s.", value, MINIMUM_SCHEMA_VERSION);
+		    crm_config_err("The cluster will NOT be able to use this configuration.");
+		    crm_config_err("Please update the configuration manually to conform to the %s syntax.", LATEST_SCHEMA_VERSION);
+		    free_xml(converted);
+		    converted = NULL;
+		    
+		} else if(schema_version < max_version) {
+		    crm_config_warn("Your configuration was internally updated to %s... "
+				    "which is acceptable but not the most recent", value);
+		} else {
+		    crm_config_warn("Your configuration was internally updated to the latest version (%s)", value);
+		}
+
+		free_xml(cib_object);
+		cib_object = converted;
+	    }
+	}
+	
+	if(cib_object == NULL) {
+	} else if(USE_LIVE_CIB) {
 	    /* we will always have a status section and can do a full simulation */
 	    do_calculations(&data_set, cib_object, NULL);
 

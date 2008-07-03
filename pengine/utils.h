@@ -45,7 +45,7 @@ extern gboolean rsc_colocation_new(
 	pe_working_set_t *data_set);
 
 extern rsc_to_node_t *generate_location_rule(
-	resource_t *rsc, crm_data_t *location_rule, pe_working_set_t *data_set);
+	resource_t *rsc, xmlNode *location_rule, pe_working_set_t *data_set);
 
 extern gint sort_node_weight(gconstpointer a, gconstpointer b);
 

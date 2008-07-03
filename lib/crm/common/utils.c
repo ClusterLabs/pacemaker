@@ -53,6 +53,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
+#include <crm/common/iso8601.h>
 
 #ifndef MAXLINE
 #    define MAXLINE 512
@@ -485,8 +486,7 @@ get_crm_log_level(void)
 }
 
 void
-crm_log_message_adv(int level, const char *prefix, const HA_Message *msg)
-{
+crm_log_message_adv(int level, const char *prefix, const HA_Message *msg) {
 	if((int)crm_log_level >= level) {
 		do_crm_log(level, "#========= %s message start ==========#", prefix?prefix:"");
 		if(level > LOG_DEBUG) {
@@ -699,26 +699,6 @@ crm_parse_int(const char *text, const char *default_text)
 }
 
 gboolean
-crm_str_eq(const char *a, const char *b, gboolean use_case) 
-{
-	if(a == NULL || b == NULL) {
-		/* shouldn't be comparing NULLs */
-		CRM_CHECK(a != b, return TRUE);
-		return FALSE;
-
-	} else if(use_case && a[0] != b[0]) {
-		return FALSE;		
-
-	} else if(a == b) {
-		return TRUE;
-
-	} else if(strcasecmp(a, b) == 0) {
-		return TRUE;
-	}
-	return FALSE;
-}
-
-gboolean
 safe_str_neq(const char *a, const char *b)
 {
 	if(a == b) {
@@ -799,7 +779,29 @@ crm_str_to_boolean(const char * s, int * ret)
 #    define	WHITESPACE	" \t\n\r\f"
 #endif
 
-long
+unsigned long long
+crm_get_interval(const char * input)
+{
+    ha_time_t *interval = NULL;
+    char *input_copy = crm_strdup(input);
+    char *input_copy_mutable = input_copy;
+    unsigned long long msec = 0;
+    
+    if(input == NULL) {
+	return 0;
+
+    } else if(input[0] != 'P') {
+	return crm_get_msec(input);
+    }
+    
+    interval = parse_time_duration(&input_copy_mutable);
+    msec = date_in_seconds(interval);
+    free_ha_date(interval);
+    crm_free(input_copy);
+    return msec * 1000;
+}
+
+unsigned long long
 crm_get_msec(const char * input)
 {
 	const char *	cp = input;
@@ -1132,7 +1134,7 @@ decode_transition_key(
 }
 
 void
-filter_action_parameters(crm_data_t *param_set, const char *version) 
+filter_action_parameters(xmlNode *param_set, const char *version) 
 {
 	char *timeout = NULL;
 	char *interval = NULL;
@@ -1221,10 +1223,7 @@ filter_action_parameters(crm_data_t *param_set, const char *version)
 		      }
 
 		      if(do_delete) {
-			      /* remove it */
 			      xml_remove_prop(param_set, prop_name);
-			      /* unwind the counetr */
-			      __counter--;
 		      }
 		);
 
@@ -1240,7 +1239,7 @@ filter_action_parameters(crm_data_t *param_set, const char *version)
 }
 
 void
-filter_reload_parameters(crm_data_t *param_set, const char *restart_string) 
+filter_reload_parameters(xmlNode *param_set, const char *restart_string) 
 {
 	int len = 0;
 	char *name = NULL;
@@ -1260,12 +1259,9 @@ filter_reload_parameters(crm_data_t *param_set, const char *restart_string)
 		      
 		      match = strstr(restart_string, name);
 		      if(match == NULL) {
-			      /* remove it */
 			      crm_debug_3("%s not found in %s",
 					  prop_name, restart_string);
 			      xml_remove_prop(param_set, prop_name);
-			      /* unwind the counetr */
-			      __counter--;
 		      }
 		      crm_free(name);
 		);

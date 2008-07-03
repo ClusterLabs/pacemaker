@@ -19,6 +19,6 @@ MAINTAINERCLEANFILES	= Makefile.in
 
 headerdir=$(includedir)/@PKG_NAME@/crm
 
-header_HEADERS		= crm.h cib.h msg_xml.h transition.h ais.h ais_common.h
+header_HEADERS		= crm.h cib.h msg_xml.h transition.h ais.h cib_util.h cib_ops.h ais_common.h
 
 SUBDIRS                 = common pengine

@@ -213,17 +213,25 @@ parse_time(char **time_str, ha_time_t *a_time, gboolean with_offset)
 	CRM_CHECK(new_time != NULL, return NULL);
 	CRM_CHECK(new_time->has != NULL, free_ha_date(new_time); return NULL);
 
+	/* reset the time fields */
+	new_time->hours = 0;
+	new_time->minutes = 0;
+	new_time->seconds = 0;
+	
 	crm_debug_4("Get hours...");
+	new_time->has->hours = FALSE;
 	if(parse_int(time_str, 2, 24, &new_time->hours)) {
 		new_time->has->hours = TRUE;
 	}
 
 	crm_debug_4("Get minutes...");
+	new_time->has->minutes = FALSE;
 	if(parse_int(time_str, 2, 60, &new_time->minutes)) {
 		new_time->has->minutes = TRUE;
 	}
 
-	crm_debug_4("Get seconds...");
+	crm_debug_4("Get seconds...");	
+	new_time->has->seconds = FALSE;
 	if(parse_int(time_str, 2, 60, &new_time->seconds)){
 		new_time->has->seconds = TRUE;
 	}
@@ -283,7 +291,9 @@ parse_date(char **date_str)
 	if((*date_str)[0] == 'T' || (*date_str)[2] == ':') {
 	    /* Just a time supplied - Infer current date */
 	    new_time = new_ha_date(TRUE);
+
 	    parse_time(date_str, new_time, TRUE);
+	    normalize_time(new_time);
 	    is_done = TRUE;
 
 	} else {
@@ -462,6 +472,8 @@ parse_time_duration(char **interval_str)
 			case 'D':
 				diff->days = an_int;
 				diff->has->days = TRUE;
+				diff->yeardays = an_int;
+				diff->has->yeardays = TRUE;
 				break;
 			case 'H':
 				diff->hours = an_int;
@@ -558,7 +570,7 @@ parse_time_period(char **period_str)
 	}
 	
 	if(period->start == NULL) {
-		period->start = subtract_time(period->end, period->diff);
+		period->start = subtract_duration(period->end, period->diff);
 		normalize_time(period->start);
 		
 	} else if(period->end == NULL) {
@@ -946,7 +958,6 @@ add_time(ha_time_t *lhs, ha_time_t *rhs)
 	return answer;
 }
 
-
 ha_time_t *
 subtract_time(ha_time_t *lhs, ha_time_t *rhs)
 {
@@ -960,14 +971,55 @@ subtract_time(ha_time_t *lhs, ha_time_t *rhs)
 	normalize_time(rhs);
 	normalize_time(answer);
 
-	sub_years(answer, rhs->years);
-	sub_months(answer, rhs->months);
-	sub_weeks(answer, rhs->weeks);
-	sub_days(answer, rhs->days);
-	sub_hours(answer, rhs->hours);
-	sub_minutes(answer, rhs->minutes);
 	sub_seconds(answer, rhs->seconds);
+	sub_minutes(answer, rhs->minutes);
+	sub_hours(answer, rhs->hours);
 
+	answer->yeardays -= rhs->yeardays;
+	while(answer->yeardays < 0) {
+	    answer->yeardays += is_leap_year(answer->years)?356:355;
+	    answer->years--;
+	}
+	
+	answer->days -= rhs->days;
+	while(answer->days < 0) {
+	    answer->days += days_per_month(answer->months, answer->years);
+	    answer->months--;
+	}
+	
+	answer->months -= rhs->months;
+	while(answer->months < 0) {
+	    answer->months += 12;
+	    /* answer->years--; : done in the yeardays section */
+	}
+	
+	answer->years -= rhs->years;
+
+	return answer;
+}
+
+ha_time_t *
+subtract_duration(ha_time_t *lhs, ha_time_t *rhs)
+{
+	ha_time_t *answer = NULL;
+	CRM_CHECK(lhs != NULL && rhs != NULL, return NULL);
+
+	answer = new_ha_date(FALSE);
+	ha_set_time(answer, lhs, TRUE);	
+
+	normalize_time(lhs);
+	normalize_time(rhs);
+	normalize_time(answer);
+
+	sub_seconds(answer, rhs->seconds);
+	sub_minutes(answer, rhs->minutes);
+	sub_hours(answer, rhs->hours);
+
+	sub_days(answer, rhs->days);
+	sub_weeks(answer, rhs->weeks);
+	sub_months(answer, rhs->months);
+	sub_years(answer, rhs->years);
+	
 	normalize_time(answer);
 	
 	return answer;
@@ -1021,8 +1073,10 @@ parse_int(char **str, int field_width, int uppper_bound, int *result)
 		return FALSE;
 	}
 	
-	crm_debug_6("max width: %d, first char: %c", field_width, (*str)[0]);
-	
+	if((*str)[0] == 'T') {
+	    (*str)++;
+	}
+
 	if((*str)[0] == '.' || (*str)[0] == ',') {
 		fraction = TRUE;
 		field_width = -1;
@@ -1055,7 +1109,7 @@ parse_int(char **str, int field_width, int uppper_bound, int *result)
 		*result = 0 - *result;
 	}
 	if(lpc > 0) {
-		crm_debug_5("Found int: %d", *result);
+		crm_debug_5("Found int: %d.  Stopped at str[%d]='%c'", *result, lpc, (*str)[lpc]);
 		return TRUE;
 	}
 	return FALSE;
@@ -1234,13 +1288,14 @@ new_ha_date(gboolean set_to_now)
 	ha_time_t *now = NULL;
 
 	tzset();
-	tm_now = time(NULL);
 	crm_malloc0(now, sizeof(ha_time_t));
 	crm_malloc0(now->has, sizeof(ha_has_time_t));
 	crm_malloc0(now->offset, sizeof(ha_time_t));
 	crm_malloc0(now->offset->has, sizeof(ha_has_time_t));
 	if(set_to_now) {
-		ha_set_timet_time(now, &tm_now);
+	    tm_now = time(NULL);
+	    now->tm_now = tm_now;
+	    ha_set_timet_time(now, &tm_now);
 	}
 	return now;
 }
@@ -1285,3 +1340,48 @@ log_tm_date(int log_level, struct tm *some_tm)
 		      some_tm->tm_isdst,
 		      GMTOFF(some_tm));
 }
+
+ha_time_t *the_epoch = NULL;
+
+#define update_seconds(date, field, multiplier) do {		\
+	before = in_seconds;					\
+	in_seconds += a_date->field;				\
+	in_seconds *= multiplier;				\
+	if(before > in_seconds) {				\
+	    crm_crit("Date wrap detected: %s", #field);		\
+	    return 0;						\
+	}							\
+    } while(0)
+    
+unsigned long long date_in_seconds(ha_time_t *a_date) 
+{
+    unsigned long long before = 0;
+    unsigned long long in_seconds = 0;
+    /* normalize_time(a_date); */    
+    update_seconds(a_date, years,    365);
+    update_seconds(a_date, yeardays, 24);
+    update_seconds(a_date, hours,    60);
+    update_seconds(a_date, minutes,  60);
+    update_seconds(a_date, seconds,  1);
+    return in_seconds;
+}
+
+unsigned long long date_in_seconds_since_epoch(ha_time_t *a_date) 
+{
+    ha_time_t *since_epoch = NULL;
+    unsigned long long in_seconds = 0;
+    normalize_time(a_date);
+
+    if(the_epoch == NULL) {
+	char *EPOCH = crm_strdup("1970-01-01");
+	the_epoch = parse_date(&EPOCH);
+	normalize_time(the_epoch);
+	crm_free(EPOCH);
+    }
+
+    since_epoch = subtract_time(a_date, the_epoch);
+    in_seconds = date_in_seconds(since_epoch);
+    free_ha_date(since_epoch);
+    return in_seconds;
+}
+

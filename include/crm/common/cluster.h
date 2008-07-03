@@ -42,11 +42,11 @@ extern gboolean crm_cluster_connect(
     );
 
 extern gboolean send_cluster_message(
-    const char *node, enum crm_ais_msg_types service, HA_Message *data, gboolean ordered);
+    const char *node, enum crm_ais_msg_types service, xmlNode *data, gboolean ordered);
 
 extern void destroy_crm_node(gpointer data);
 
-extern crm_node_t *crm_update_ais_node(crm_data_t *member, long long seq);
+extern crm_node_t *crm_update_ais_node(xmlNode *member, long long seq);
 extern void crm_update_peer_proc(
     const char *uname, uint32_t flag, const char *status);
 extern crm_node_t *crm_update_peer(
@@ -78,7 +78,7 @@ extern gboolean send_ais_text(
 extern void empty_uuid_cache(void);
 extern const char *get_uuid(const char *uname);
 extern const char *get_uname(const char *uuid);
-extern void set_uuid(crm_data_t *node, const char *attr, const char *uname);
+extern void set_uuid(xmlNode *node, const char *attr, const char *uname);
 extern void unget_uuid(const char *uname);
 
 enum crm_ais_msg_types text2msg_type(const char *text);

@@ -22,6 +22,7 @@
 "probe_complete c001n08" -> "probe_complete" [ style = bold]
 "probe_complete c001n08" [ style=bold color="green" fontcolor="black" ]
 "probe_complete" -> "DcIPaddr_reload_0 c001n02" [ style = bold]
+"probe_complete" -> "DcIPaddr_stop_0 c001n02" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange" ]
 "rsc_c001n01_monitor_0 c001n02" -> "probe_complete c001n02" [ style = bold]
 "rsc_c001n01_monitor_0 c001n02" [ style=bold color="green" fontcolor="black" ]

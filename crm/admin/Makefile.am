@@ -28,16 +28,14 @@ COMMONLIBS	= 					\
 		$(top_builddir)/lib/crm/common/libcrmcommon.la		\
 		$(top_builddir)/lib/crm/cib/libcib.la			\
 		-lplumb					  		\
-		$(GLIBLIB)						\
-		$(CURSESLIBS)						\
-		$(CLUSTERLIBS)						\
-		$(LIBRT)
+		$(GLIBLIB) $(CURSESLIBS) $(LIBRT)			\
+		$(CLUSTERLIBS) 
 
 
 halib_PYTHON		= crm_primitive.py crm_utils.py crm_commands.py
 sbin_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 \
 			crm_master crm_standby crm_failcount crm_attribute \
-			crm_resource crm_verify crm_uuid 
+			crm_resource crm_verify crm_uuid cib_shadow
 
 sbin_SCRIPTS		= crm_sh
 
@@ -54,7 +52,10 @@ crm_uuid_SOURCES	= crm_uuid.c
 crm_uuid_LDADD		= $(GLIBLIB)
 
 cibadmin_SOURCES	= cibadmin.c
-cibadmin_LDADD		= $(COMMONLIBS)
+cibadmin_LDADD		= $(COMMONLIBS) 
+
+cib_shadow_SOURCES	= cib_shadow.c
+cib_shadow_LDADD	= $(COMMONLIBS) 
 
 ccm_tool_SOURCES	= ccm_epoche.c
 ccm_tool_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
@@ -64,7 +65,7 @@ crm_diff_SOURCES	= xml_diff.c
 crm_diff_LDADD		= $(COMMONLIBS)
 
 crm_mon_SOURCES		= crm_mon.c
-crm_mon_LDADD		= $(COMMONLIBS) \
+crm_mon_LDADD		= $(COMMONLIBS) -llrm \
 			$(top_builddir)/lib/crm/pengine/libpe_status.la
 
 # Arguments could be made that this should live in crm/pengine

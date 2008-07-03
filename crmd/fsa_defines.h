@@ -336,10 +336,8 @@ enum crmd_fsa_input {
 #define	A_CCM_DISCONNECT	0x0000002000000000ULL
 
 /* -- CBI actions -- */
-#define	A_CIB_INVOKE		0x0000010000000000ULL
 #define	A_CIB_START		0x0000020000000000ULL
 #define	A_CIB_STOP		0x0000040000000000ULL
-#define A_CIB_INVOKE_LOCAL	0x0000080000000000ULL
 
 /* -- Transition Engine actions -- */
 	/* Attempt to reach the newly  calculated cluster state.  This is 

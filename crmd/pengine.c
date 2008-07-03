@@ -53,8 +53,37 @@
 #define CLIENT_EXIT_WAIT 30
 
 struct crm_subsystem_s *pe_subsystem  = NULL;
-void do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
-			   crm_data_t *output, void *user_data);
+void do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
+			   xmlNode *output, void *user_data);
+
+
+static gboolean pe_msg_dispatch(IPC_Channel *client, gpointer user_data) 
+{
+    xmlNode *msg = NULL;
+    gboolean stay_connected = TRUE;
+	
+    while(IPC_ISRCONN(client)) {
+	if(client->ops->is_message_pending(client) == 0) {
+	    break;
+	}
+
+	msg = xmlfromIPC(client, 0);
+	if (msg != NULL) {
+	    route_message(C_IPC_MESSAGE, msg);
+	    free_xml(msg);
+	}
+    }
+
+    if (client->ch_status != IPC_CONNECT) {
+	stay_connected = FALSE;
+	pe_subsystem->ipc = NULL;
+	pe_subsystem->client = NULL;		
+	crm_info("Received HUP from %s:[%d]", pe_subsystem->name, pe_subsystem->pid);
+    }
+
+    G_main_set_trigger(fsa_source);
+    return stay_connected;
+}
 
 /*	 A_PE_START, A_PE_STOP, A_TE_RESTART	*/
 void
@@ -77,7 +106,17 @@ do_pe_control(long long action,
 		if(cur_state != S_STOPPING) {
 			if(start_subsystem(this_subsys) == FALSE) {
 				register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+			} else {
+			    IPC_Channel *ch = NULL;
+			    sleep(5);
+			    init_client_ipc_comms(CRM_SYSTEM_PENGINE, pe_msg_dispatch, NULL, &ch);
+
+			    if(ch != NULL) {
+				pe_subsystem->ipc = ch;
+				set_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
+			    }
 			}
+
 		} else {
 			crm_info("Ignoring request to start %s while shutting down",
 			       this_subsys->name);
@@ -115,7 +154,7 @@ do_pe_invoke(long long action,
 	fsa_pe_query = fsa_cib_conn->cmds->query(
 		fsa_cib_conn, NULL, NULL, cib_scope_local);
 	if(FALSE == add_cib_op_callback(
-		   fsa_pe_query, TRUE, NULL, do_pe_invoke_callback)) {
+		   fsa_cib_conn, fsa_pe_query, TRUE, NULL, do_pe_invoke_callback)) {
 		crm_err("Cant retrieve the CIB to invoke the %s subsystem with",
 			pe_subsystem->name);
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
@@ -123,21 +162,11 @@ do_pe_invoke(long long action,
 }
 
 void
-do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
-		      crm_data_t *output, void *user_data)
+do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
+		      xmlNode *output, void *user_data)
 {
-	HA_Message *cmd = NULL;
-	crm_data_t *local_cib = NULL;
-	
-#if CRM_DEPRECATED_SINCE_2_0_4
-	if(safe_str_eq(crm_element_name(output), XML_TAG_CIB)) {
-		local_cib = output;
-	} else {
-		local_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
-	}
-#else
-	local_cib = output;
-#endif
+	xmlNode *cmd = NULL;
+
 	if(call_id != fsa_pe_query) {
 		crm_debug_2("Skipping superceeded CIB query: %d (current=%d)",
 			    call_id, fsa_pe_query);
@@ -148,7 +177,7 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 		crm_debug("No need to invoke the PE anymore");
 		return;
 
-	} else if(need_transition(fsa_state) == FALSE) {
+	} else if(fsa_state != S_POLICY_ENGINE) {
 		crm_debug("Discarding PE request in state: %s",
 			  fsa_state2string(fsa_state));
 		return;
@@ -165,21 +194,25 @@ do_pe_invoke_callback(const HA_Message *msg, int call_id, int rc,
 	    crm_err("Invoking PE in state: %s", fsa_state2string(fsa_state));
 	}
 
-	CRM_DEV_ASSERT(local_cib != NULL);
-	CRM_DEV_ASSERT(crm_element_value(local_cib, XML_ATTR_DC_UUID) != NULL);
+	CRM_DEV_ASSERT(output != NULL);
+	CRM_DEV_ASSERT(crm_element_value(output, XML_ATTR_DC_UUID) != NULL);
 
-	crm_xml_add_int(local_cib, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
-	crm_xml_add_int(local_cib, XML_ATTR_CCM_TRANSITION, crm_peer_seq);
+	crm_xml_add_int(output, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
 	
 	if(fsa_pe_ref) {
 		crm_free(fsa_pe_ref);
 		fsa_pe_ref = NULL;
 	}
 
-	cmd = create_request(CRM_OP_PECALC, local_cib, NULL,
+	cmd = create_request(CRM_OP_PECALC, output, NULL,
 			     CRM_SYSTEM_PENGINE, CRM_SYSTEM_DC, NULL);
 
-	send_request(cmd, &fsa_pe_ref);
+	fsa_pe_ref = crm_element_value_copy(cmd, XML_ATTR_REFERENCE);
+	if(send_ipc_message(pe_subsystem->ipc, cmd) == FALSE) {
+	    crm_err("Could not contact the pengine");
+	}
+	
 	crm_debug("Invoking the PE: ref=%s, seq=%llu, quorate=%d",
 		  fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
+	free_xml(cmd);
 }

@@ -114,7 +114,7 @@ guint crm_active_peers(uint32_t peer)
 void destroy_crm_node(gpointer data)
 {
     crm_node_t *node = data;
-    crm_info("Destroying entry for node %u", node->id);
+    crm_debug_2("Destroying entry for node %u", node->id);
 
     crm_free(node->addr);
     crm_free(node->uname);
@@ -149,6 +149,12 @@ crm_node_t *crm_update_peer(
     unsigned int id, unsigned long long born, int32_t votes, uint32_t children,
     const char *uuid, const char *uname, const char *addr, const char *state) 
 {
+    gboolean id_changed = FALSE;
+    gboolean state_changed = FALSE;
+    gboolean addr_changed = FALSE;
+    gboolean procs_changed = FALSE;
+    gboolean votes_changed = FALSE;
+    
     crm_node_t *node = NULL;
     CRM_CHECK(uname != NULL, return NULL);
     CRM_ASSERT(crm_peer_cache != NULL);
@@ -156,7 +162,7 @@ crm_node_t *crm_update_peer(
     node = g_hash_table_lookup(crm_peer_cache, uname);	
 
     if(node == NULL) {	
-	crm_info("Creating entry for node %s/%u/%llu", uname, id, born);
+	crm_debug("Creating entry for node %s/%u/%llu", uname, id, born);
 	CRM_CHECK(id >= 0, return NULL);
 	CRM_CHECK(uuid != NULL, return NULL);
 
@@ -170,6 +176,7 @@ crm_node_t *crm_update_peer(
 
 	node->addr = NULL;
 	node->state = crm_strdup("unknown");
+	id_changed = TRUE;
 	
 	g_hash_table_insert(crm_peer_cache, node->uname, node);
 	node = g_hash_table_lookup(crm_peer_cache, uname);
@@ -177,27 +184,26 @@ crm_node_t *crm_update_peer(
     }
 
     if(votes > 0 && node->votes != votes) {
+	votes_changed = TRUE;
 	node->votes = votes;
-	crm_info("Node %s now has %d votes", node->uname, votes);
     }
     
     if(id > 0 && id != node->id) {
+	id_changed = TRUE;
 	node->id = id;
-	crm_info("Node %s now has id %u", node->uname, id);
     }
 
     if(children > 0 && children != node->processes) {
-	crm_info("Node %s now has children: %.32x (%u)",
-		 node->uname, children, children);
+	procs_changed = TRUE;
 	node->processes = children;
     }
     
     if(state != NULL) {
 	if(node->state == NULL
 	   || crm_str_eq(node->state, state, FALSE) == FALSE) {
+	    state_changed = TRUE;
 	    crm_free(node->state);
 	    node->state = crm_strdup(state);
-	    crm_info("Node %s is now: %s", node->uname, state);
 	    if(crm_is_member_active(node)) {
 		node->born = born;
 	    } else {
@@ -208,20 +214,33 @@ crm_node_t *crm_update_peer(
 
     if(addr != NULL) {
 	if(node->addr == NULL || crm_str_eq(node->addr, addr, FALSE) == FALSE) {
+	    addr_changed = TRUE;
 	    crm_free(node->addr);
 	    node->addr = crm_strdup(addr);
-	    crm_info("Node %s now has address: %s", node->uname, addr);
 	}
     }
+
+    if(id_changed || state_changed || addr_changed || votes_changed || procs_changed) {
+	crm_info("Node %s: id=%u%s state=%s%s addr=%s%s votes=%d%s born=%llu proc=%.32x%s",
+		 node->uname,
+		 node->id, id_changed?" (new)":"",
+		 node->state, state_changed?" (new)":"",
+		 node->addr, addr_changed?" (new)":"",
+		 node->votes, votes_changed?" (new)":"",
+		 node->born,
+		 node->processes, procs_changed?" (new)":""
+	);
+    }
+    
     return node;
 }
 
-crm_node_t *crm_update_ais_node(crm_data_t *member, long long seq)
+crm_node_t *crm_update_ais_node(xmlNode *member, long long seq)
 {
+    const char *id_s = crm_element_value(member, "id");
     const char *addr = crm_element_value(member, "addr");
     const char *uname = crm_element_value(member, "uname");
     const char *state = crm_element_value(member, "state");
-    const char *id_s = crm_element_value(member, "id");
     const char *votes_s = crm_element_value(member, "votes");
     const char *procs_s = crm_element_value(member, "processes");
 
@@ -260,7 +279,9 @@ void crm_update_peer_proc(const char *uname, uint32_t flag, const char *status)
 
     CRM_CHECK(uname != NULL, return);
     node = g_hash_table_lookup(crm_peer_cache, uname);	
-    CRM_CHECK(node != NULL, return);
+    CRM_CHECK(node != NULL,
+	      crm_err("Could not set %s.%s to %s", uname, peer2text(flag), status);
+	      return);
 
     if(safe_str_eq(status, ONLINESTATUS)) {
 	if((node->processes & flag) == 0) {
@@ -306,7 +327,7 @@ gboolean crm_calculate_quorum(void)
     }
 
     if(quorum_stats.nodes_total > quorum_stats.nodes_max) {
-	crm_info("Known quorum nodes: %u -> %u",
+	crm_debug("Known quorum nodes: %u -> %u",
 		 quorum_stats.nodes_max, quorum_stats.nodes_total);
 	quorum_stats.nodes_max = quorum_stats.nodes_total;
     }

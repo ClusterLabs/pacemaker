@@ -450,10 +450,26 @@ int send_client_msg(
     return rc;    
 }
 
+static char *
+ais_concat(const char *prefix, const char *suffix, char join) 
+{
+	int len = 0;
+	char *new_str = NULL;
+	AIS_ASSERT(prefix != NULL);
+	AIS_ASSERT(suffix != NULL);
+	len = strlen(prefix) + strlen(suffix) + 2;
+
+	ais_malloc0(new_str, (len));
+	sprintf(new_str, "%s%c%s", prefix, join, suffix);
+	new_str[len-1] = 0;
+	return new_str;
+}
+
 int objdb_get_string(
     struct objdb_iface_ver0 *objdb, unsigned int object_service_handle,
     char *key, char **value, const char *fallback)
 {
+    char *env_key = NULL;
     *value = NULL;
     if(object_service_handle > 0) {
 	objdb->object_key_get(
@@ -465,6 +481,15 @@ int objdb_get_string(
 	return 0;
     }
 
+    env_key = ais_concat("HA", key, '_');
+    *value = getenv(env_key);
+    ais_free(env_key);
+
+    if (*value) {
+	ais_info("Found '%s' for option %s", *value, key);
+	return 0;
+    }
+    
     ais_info("Defaulting to '%s' for option %s", fallback, key);
     *value = ais_strdup(fallback);
     return -1;
