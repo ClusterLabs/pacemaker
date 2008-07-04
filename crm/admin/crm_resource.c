@@ -655,7 +655,6 @@ migrate_resource(
 	xmlNode *expr = NULL;
 	xmlNode *constraints = NULL;
 	xmlNode *fragment = NULL;
-	xmlNode *lifetime = NULL;
 	
 	xmlNode *can_run = NULL;
 	xmlNode *dont_run = NULL;
@@ -735,23 +734,6 @@ migrate_resource(
 		}
 		
 		crm_xml_add(dont_run, "rsc", rsc_id);
-
-		if(later_s) {
-			lifetime = create_xml_node(dont_run, "lifetime");
-
-			rule = create_xml_node(lifetime, XML_TAG_RULE);
-			id = crm_concat("cli-standby-lifetime", rsc_id, '-');
-			crm_xml_add(rule, XML_ATTR_ID, id);
-			crm_free(id);
-
-			expr = create_xml_node(rule, "date_expression");
-			id = crm_concat("cli-standby-lifetime-end",rsc_id,'-');
-			crm_xml_add(expr, XML_ATTR_ID, id);
-			crm_free(id);			
-
-			crm_xml_add(expr, "operation", "lt");
-			crm_xml_add(expr, "end", later_s);
-		}
 		
 		rule = create_xml_node(dont_run, XML_TAG_RULE);
 		expr = create_xml_node(rule, XML_TAG_EXPRESSION);
@@ -760,6 +742,7 @@ migrate_resource(
 		crm_free(id);
 		
 		crm_xml_add(rule, XML_RULE_ATTR_SCORE, MINUS_INFINITY_S);
+		crm_xml_add(rule, XML_RULE_ATTR_BOOLEAN_OP, "and");
 		
 		id = crm_concat("cli-standby-expr", rsc_id, '-');
 		crm_xml_add(expr, XML_ATTR_ID, id);
@@ -769,6 +752,16 @@ migrate_resource(
 		crm_xml_add(expr, XML_EXPR_ATTR_OPERATION, "eq");
 		crm_xml_add(expr, XML_EXPR_ATTR_VALUE, existing_node);
 		crm_xml_add(expr, XML_EXPR_ATTR_TYPE, "string");
+
+		if(later_s) {
+		    expr = create_xml_node(rule, "date_expression");
+		    id = crm_concat("cli-standby-lifetime-end",rsc_id,'-');
+		    crm_xml_add(expr, XML_ATTR_ID, id);
+		    crm_free(id);			
+		    
+		    crm_xml_add(expr, "operation", "lt");
+		    crm_xml_add(expr, "end", later_s);
+		}
 		
 		add_node_copy(constraints, dont_run);
 	}
@@ -787,23 +780,6 @@ migrate_resource(
 	} else {
 		crm_xml_add(can_run, "rsc", rsc_id);
 
-		if(later_s) {
-			lifetime = create_xml_node(can_run, "lifetime");
-
-			rule = create_xml_node(lifetime, XML_TAG_RULE);
-			id = crm_concat("cli-prefer-lifetime", rsc_id, '-');
-			crm_xml_add(rule, XML_ATTR_ID, id);
-			crm_free(id);
-
-			expr = create_xml_node(rule, "date_expression");
-			id = crm_concat("cli-prefer-lifetime-end", rsc_id, '-');
-			crm_xml_add(expr, XML_ATTR_ID, id);
-			crm_free(id);			
-
-			crm_xml_add(expr, "operation", "lt");
-			crm_xml_add(expr, "end", later_s);
-		}
-
 		rule = create_xml_node(can_run, XML_TAG_RULE);
 		expr = create_xml_node(rule, XML_TAG_EXPRESSION);
 		id = crm_concat("cli-prefer-rule", rsc_id, '-');
@@ -811,6 +787,7 @@ migrate_resource(
 		crm_free(id);
 
 		crm_xml_add(rule, XML_RULE_ATTR_SCORE, INFINITY_S);
+		crm_xml_add(rule, XML_RULE_ATTR_BOOLEAN_OP, "and");
 	
 		id = crm_concat("cli-prefer-expr", rsc_id, '-');
 		crm_xml_add(expr, XML_ATTR_ID, id);
@@ -820,6 +797,16 @@ migrate_resource(
 		crm_xml_add(expr, XML_EXPR_ATTR_OPERATION, "eq");
 		crm_xml_add(expr, XML_EXPR_ATTR_VALUE, preferred_node);
 		crm_xml_add(expr, XML_EXPR_ATTR_TYPE, "string");
+
+		if(later_s) {
+		    expr = create_xml_node(rule, "date_expression");
+		    id = crm_concat("cli-prefer-lifetime-end", rsc_id, '-');
+		    crm_xml_add(expr, XML_ATTR_ID, id);
+		    crm_free(id);			
+		    
+		    crm_xml_add(expr, "operation", "lt");
+		    crm_xml_add(expr, "end", later_s);
+		}
 		
 		add_node_copy(constraints, can_run);
 	}
