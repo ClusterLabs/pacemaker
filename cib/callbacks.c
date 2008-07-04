@@ -918,6 +918,14 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 			    current_cib, &result_cib, cib_diff, &output);
     }
     
+    if(rc == cib_ok && *cib_diff == NULL) {
+	if(global_update) {
+	    *cib_diff = copy_xml(input);
+	} else {
+	    *cib_diff = diff_cib_object(current_cib, result_cib, FALSE);
+	}
+    }
+    
     if(rc != cib_ok) {
 	free_xml(result_cib);
 	    
@@ -928,14 +936,6 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	}
     }
 
-    if(rc == cib_ok && *cib_diff == NULL) {
-	if(global_update) {
-	    *cib_diff = copy_xml(input);
-	} else {
-	    *cib_diff = diff_cib_object(current_cib, result_cib, FALSE);
-	}
-    }
-    
     if((call_options & cib_inhibit_notify) == 0) {
 	const char *call_id = crm_element_value(request, F_CIB_CALLID);
 	const char *client = crm_element_value(request, F_CIB_CLIENTNAME);
