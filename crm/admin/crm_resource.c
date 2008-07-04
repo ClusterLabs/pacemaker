@@ -826,7 +826,8 @@ migrate_resource(
 }
 
 static int
-list_resource_operations(const char *rsc_id, const char *host_uname, gboolean active, pe_working_set_t *data_set) 
+list_resource_operations(
+    const char *rsc_id, const char *host_uname, gboolean active, pe_working_set_t *data_set) 
 {
     resource_t *rsc = NULL;
     int opts = pe_print_printf|pe_print_rsconly|pe_print_suppres_nl;
@@ -838,9 +839,7 @@ list_resource_operations(const char *rsc_id, const char *host_uname, gboolean ac
 	       int status = crm_parse_int(status_s, "0");
 
 	       rsc = pe_find_resource(data_set->resources, op_rsc);
-	       
 	       rsc->fns->print(rsc, "", opts, stdout);
-		       
 	       
 	       fprintf(stdout, ": %s (node=%s, call=%s, rc=%s",
 		       ID(xml_op),
