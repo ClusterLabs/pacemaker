@@ -608,10 +608,6 @@ activateCibXml(xmlNode *new_cib, gboolean to_disk, const char *op)
 				 " version to revert to");
 		}
 		
-	} else if(per_action_cib && cib_writes_enabled && cib_status == cib_ok) {
-		crm_err("Per-action CIB");
-		write_cib_contents(the_cib);
-		
 	} else if(cib_writes_enabled && cib_status == cib_ok && to_disk) {
 		crm_debug("Triggering CIB write for %s op", op);
 		G_main_set_trigger(cib_writer);

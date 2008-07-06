@@ -63,7 +63,6 @@ extern int init_remote_listener(int port);
 extern gboolean stand_alone;
 
 gboolean cib_shutdown_flag = FALSE;
-gboolean per_action_cib = FALSE;
 enum cib_errors cib_status = cib_ok;
 
 #if SUPPORT_HEARTBEAT
@@ -174,9 +173,6 @@ main(int argc, char ** argv)
 			case '?':		/* Help message */
 				usage(crm_system_name, LSB_EXIT_OK);
 				break;
-			case 'f':
-				per_action_cib = TRUE;
-				break;
 			case 'w':
 				cib_writes_enabled = TRUE;
 				break;
@@ -189,9 +185,6 @@ main(int argc, char ** argv)
 		}
 	}
 
-	crm_info("Retrieval of a per-action CIB: %s",
-		 per_action_cib?"enabled":"disabled");
-	
 	if (optind > argc) {
 		++argerr;
 	}
@@ -623,9 +616,6 @@ startCib(const char *filename)
 		}
 		
 		crm_info("CIB Initialization completed successfully");
-		if(per_action_cib) {
-			uninitializeCib();
-		}
 	}
 	
 	return active;
