@@ -252,6 +252,7 @@ cib_file_perform_op(
     gboolean query = FALSE;
     gboolean changed = FALSE;
     xmlNode *output = NULL;
+    xmlNode *cib_diff = NULL;
     xmlNode *result_cib = NULL;
     cib_op_t *fn = NULL;
     int lpc = 0;
@@ -285,19 +286,18 @@ cib_file_perform_op(
 
     cib->call_id++;
     rc = cib_perform_op(op, call_options, fn, query,
-    			section, NULL, data, TRUE, &changed, in_mem_cib, &result_cib, &output);
+    			section, NULL, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff, &output);
     
     if(rc != cib_ok) {
 	free_xml(result_cib);
 	    
     } else if(query == FALSE) {
-	xmlNode *cib_diff = diff_cib_object(in_mem_cib, result_cib, FALSE);
-	log_xml_diff(LOG_INFO, cib_diff, "cib:diff");
-	
-	free_xml(cib_diff);
+	log_xml_diff(LOG_INFO, cib_diff, "cib:diff");	
 	free_xml(in_mem_cib);
 	in_mem_cib = result_cib;
     }
+
+    free_xml(cib_diff);
 
     if(cib->op_callback != NULL) {
 	cib->op_callback(NULL, cib->call_id, rc, output);

@@ -821,34 +821,30 @@ enum cib_errors
 cib_process_command(xmlNode *request, xmlNode **reply,
 		    xmlNode **cib_diff, gboolean privileged)
 {
-    gboolean send_r_notify = FALSE;
-    xmlNode *output   = NULL;
-    xmlNode *input    = NULL;
-
-    xmlNode *current_cib = NULL;
+    xmlNode *input       = NULL;
+    xmlNode *output      = NULL;
     xmlNode *result_cib  = NULL;
+    xmlNode *current_cib = NULL;
 	
-    int call_type      = 0;
-    int call_options   = 0;
-    enum cib_errors rc = cib_ok;
-    enum cib_errors rc2 = cib_ok;
+    int call_type    = 0;
+    int call_options = 0;
+    int log_level    = LOG_DEBUG_4;
 
-    int log_level = LOG_DEBUG_3;
-	
     const char *op = NULL;
     const char *section = NULL;
+
+    enum cib_errors rc = cib_ok;
+    enum cib_errors rc2 = cib_ok;
+	
+    gboolean send_r_notify = FALSE;
+    gboolean global_update = FALSE;
     gboolean config_changed = FALSE;
-    gboolean global_update = crm_is_true(crm_element_value(request, F_CIB_GLOBAL_UPDATE));
+    gboolean manage_counters = TRUE;
 	
     CRM_ASSERT(cib_status == cib_ok);
 
     *reply = NULL;
     *cib_diff = NULL;
-    if(per_action_cib) {
-	CRM_CHECK(the_cib == NULL, free_xml(the_cib));
-	the_cib = readCibXmlFile(cib_root, "cib.xml", FALSE);
-	CRM_CHECK(the_cib != NULL, return cib_NOOBJECT);
-    }
     current_cib = the_cib;
 	
     /* Start processing the request... */
@@ -860,12 +856,6 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	rc = cib_op_can_run(call_type, call_options, privileged, global_update);
     }
 	
-    /* prevent NUMUPDATES from being incrimented - apply the change as-is */
-    if(global_update) {
-	call_options |= cib_inhibit_bcast;
-	call_options |= cib_force_diff;		
-    }
-
     rc2 = cib_op_prepare(call_type, request, &input, &section);
     if(rc == cib_ok) {
 	rc = rc2;
@@ -878,31 +868,30 @@ cib_process_command(xmlNode *request, xmlNode **reply,
     } else if(cib_op_modifies(call_type) == FALSE) {
 	rc = cib_perform_op(op, call_options, cib_op_func(call_type), TRUE,
 			    section, request, input, FALSE, &config_changed,
-			    current_cib, &result_cib, &output);
+			    current_cib, &result_cib, NULL, &output);
 
 	CRM_CHECK(result_cib == NULL, free_xml(result_cib));
 	goto done;
     }	
 
     /* Handle a valid write action */
+    global_update = crm_is_true(crm_element_value(request, F_CIB_GLOBAL_UPDATE));
+    if(global_update) {
+	manage_counters = FALSE;
+	call_options |= cib_force_diff;		
 
-    if((call_options & cib_inhibit_notify) == 0) {
-	cib_pre_notify(call_options, op,
-		       get_object_root(section, current_cib), input);
+	CRM_CHECK(call_type == 3 || call_type == 10,
+		  crm_err("Call type: %d", call_type);
+		  crm_log_xml(LOG_ERR, "bad op", request));
     }
-
+#ifdef SUPPORT_PRENOTIFY
+    if((call_options & cib_inhibit_notify) == 0) {
+	cib_pre_notify(call_options, op, the_cib, input);
+    }
+#endif
+    
     if(rc == cib_ok) {
-	gboolean manage_counters = TRUE;
-					   
-	if(global_update) {
-	    /* skip */
-	    CRM_CHECK(call_type == 3 || call_type == 10,
-		      crm_err("Call type: %d", call_type);
-		      crm_log_xml(LOG_ERR, "bad op", request));
-	    crm_debug_2("Skipping update: global replace");
-	    manage_counters = FALSE;
-		
-	} else if(call_options & cib_inhibit_bcast) {
+	if(call_options & cib_inhibit_bcast) {
 	    /* skip */
 	    crm_debug_2("Skipping update: inhibit broadcast");
 	    manage_counters = FALSE;
@@ -910,65 +899,67 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	    
 	rc = cib_perform_op(op, call_options, cib_op_func(call_type), FALSE,
 			    section, request, input, manage_counters, &config_changed,
-			    current_cib, &result_cib, &output);
-	*cib_diff = diff_cib_object(current_cib, result_cib, FALSE);
+			    current_cib, &result_cib, cib_diff, &output);
+
+	if(manage_counters == FALSE) {
+	    *cib_diff = diff_cib_object(current_cib, result_cib, FALSE);
+	}
+    }    
+    
+    if(rc == cib_ok) {
+	rc = activateCibXml(result_cib, config_changed, op);
+	
+	if(crm_str_eq(CIB_OP_REPLACE, op, TRUE)) {
+	    if(section == NULL) {
+		send_r_notify = TRUE;
+		
+	    } else if(safe_str_eq(section, XML_TAG_CIB)) {
+		send_r_notify = TRUE;
+		
+	    } else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
+		send_r_notify = TRUE;
+		
+	    } else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+		send_r_notify = TRUE;
+	    }
+
+	} else if(crm_str_eq(CIB_OP_ERASE, op, TRUE)) {
+	    send_r_notify = TRUE;
+	}
+
+    } else {
+	free_xml(result_cib);    
     }
     
-    if(rc != cib_ok) {
-	free_xml(result_cib);
-	    
-    } else {
-	rc = activateCibXml(result_cib, config_changed, op);
-	if(rc != cib_ok) {
-	    crm_warn("Activation failed");
-	}
-    }
-	
     if((call_options & cib_inhibit_notify) == 0) {
 	const char *call_id = crm_element_value(request, F_CIB_CALLID);
 	const char *client = crm_element_value(request, F_CIB_CLIENTNAME);
 
+#ifdef SUPPORT_PRENOTIFY
 	cib_post_notify(call_options, op, input, rc, the_cib);
-	cib_diff_notify(call_options, client, call_id, op,
-			input, rc, *cib_diff);
-    }
-
-    if(rc == cib_ok && safe_str_eq(CIB_OP_ERASE, op)) {
-	    send_r_notify = TRUE;
-
-    } else if(rc == cib_ok && safe_str_eq(CIB_OP_REPLACE, op)) {
-	if(section == NULL) {
-	    send_r_notify = TRUE;
-
-	} else if(safe_str_eq(section, XML_TAG_CIB)) {
-	    send_r_notify = TRUE;
-
-	} else if(safe_str_eq(section, XML_CIB_TAG_NODES)) {
-	    send_r_notify = TRUE;
-	    
-	} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
-	    send_r_notify = TRUE;
-	}	
+#endif
+	cib_diff_notify(call_options, client, call_id, op, input, rc, *cib_diff);
     }
 
     if(send_r_notify) {
 	cib_replace_notify(the_cib, rc, *cib_diff);
     }	
     
-    if(rc == cib_dtd_validation && global_update) {
-	log_level = LOG_WARNING;
-	crm_log_xml_info(input, "cib:global_update");
-    } else if(rc != cib_ok) {
+    if(rc != cib_ok) {
 	log_level = LOG_DEBUG_4;
-    } else if(cib_is_master && config_changed) {
-	log_level = LOG_INFO;
-    } else if(cib_is_master) {
-	log_level = LOG_DEBUG_2;
-	    
+	if(rc == cib_dtd_validation && global_update) {
+	    log_level = LOG_WARNING;
+	    crm_log_xml_info(input, "cib:global_update");
+	}
+	
     } else if(config_changed) {
 	log_level = LOG_DEBUG_3;
-    } else {
-	log_level = LOG_DEBUG_4;
+	if(cib_is_master) {
+	    log_level = LOG_INFO;
+	}
+	
+    } else if(cib_is_master) {
+	log_level = LOG_DEBUG_2;
     }
 	
     log_xml_diff(log_level, *cib_diff, "cib:diff");
@@ -981,9 +972,6 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 
     if(call_type >= 0) {
 	cib_op_cleanup(call_type, op, &input, &output);
-    }
-    if(per_action_cib) {
-	uninitializeCib();
     }
     return rc;
 }

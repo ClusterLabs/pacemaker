@@ -280,7 +280,7 @@ main(int argc, char ** argv)
     } else {
 	rc = cib_perform_op(cib_action, command_options, fn, query,
 			    section, NULL, input, TRUE, &changed,
-			    current_cib, &result_cib, &output);
+			    current_cib, &result_cib, NULL, &output);
     }
 
     if(rc != cib_ok) {
