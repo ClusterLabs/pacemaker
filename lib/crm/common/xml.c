@@ -129,8 +129,6 @@ find_xml_node(xmlNode *root, const char * search_path, gboolean must_find)
 	xml_child_iter_filter(
 		root, a_child, search_path,
 /* 		crm_debug_5("returning node (%s).", crm_element_name(a_child)); */
-		crm_log_xml(LOG_DEBUG_5, "found:", a_child);
-		crm_log_xml(LOG_DEBUG_6, "in:",    root);
 		crm_validate_data(a_child);
 		return a_child;
 		);

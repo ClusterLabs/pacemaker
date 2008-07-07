@@ -206,11 +206,25 @@ abort_transition_graph(
 	do_crm_log(log_level, "%s:%d - Triggered graph processing (complete=%d) : %s",
 		   fn, line, transition_graph->complete, abort_text);
 
+	switch(fsa_state) {
+	    case S_STARTING:
+	    case S_PENDING:
+	    case S_NOT_DC:
+	    case S_HALT:
+	    case S_ILLEGAL:
+	    case S_STOPPING:
+	    case S_TERMINATE:
+		/* swallow these - we'll pick up the changes in due course */
+		return;
+	    default:
+		break;
+	}
+	
 	if(transition_graph && transition_graph->complete) {
 	    register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
 	    return;
 	}
-	
+
 	update_abort_priority(
 		transition_graph, abort_priority, abort_action, abort_text);
 

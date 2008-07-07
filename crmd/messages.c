@@ -715,16 +715,16 @@ handle_request(xmlNode *stored_msg)
 		crm_log_xml(LOG_ERR, "Bad message", stored_msg);
 
 		/*========== common actions ==========*/
-	} else if(strcasecmp(op, CRM_OP_NOOP) == 0) {
+	} else if(strcmp(op, CRM_OP_NOOP) == 0) {
 		crm_debug_2("no-op from %s", crm_str(host_from));
 
-	} else if(strcasecmp(op, CRM_OP_NOVOTE) == 0) {
+	} else if(strcmp(op, CRM_OP_NOVOTE) == 0) {
 	    ha_msg_input_t fsa_input;
 	    fsa_input.msg = stored_msg;
 	    register_fsa_input_adv(C_HA_MESSAGE, I_NULL, &fsa_input,
 				       A_ELECTION_COUNT|A_ELECTION_CHECK, FALSE, __FUNCTION__);
 
-	} else if(strcasecmp(op, CRM_OP_VOTE) == 0) {
+	} else if(strcmp(op, CRM_OP_VOTE) == 0) {
 		/* count the vote and decide what to do after that */
 	    ha_msg_input_t fsa_input;
 	    fsa_input.msg = stored_msg;
@@ -742,13 +742,13 @@ handle_request(xmlNode *stored_msg)
 #endif
 		}
 		
-	} else if(strcasecmp(op, CRM_OP_LOCAL_SHUTDOWN) == 0) {
+	} else if(strcmp(op, CRM_OP_LOCAL_SHUTDOWN) == 0) {
 		
 		crm_shutdown(SIGTERM);
 		/*next_input = I_SHUTDOWN; */
 		next_input = I_NULL;
 			
-	} else if(strcasecmp(op, CRM_OP_PING) == 0) {
+	} else if(strcmp(op, CRM_OP_PING) == 0) {
 		/* eventually do some stuff to figure out
 		 * if we /are/ ok
 		 */
@@ -767,28 +767,28 @@ handle_request(xmlNode *stored_msg)
 		/* probably better to do this via signals on the
 		 * local node
 		 */
-	} else if(strcasecmp(op, CRM_OP_DEBUG_UP) == 0) {
+	} else if(strcmp(op, CRM_OP_DEBUG_UP) == 0) {
 		alter_debug(DEBUG_INC);
 		crm_info("Debug set to %d", get_crm_log_level());
 		
-	} else if(strcasecmp(op, CRM_OP_DEBUG_DOWN) == 0) {
+	} else if(strcmp(op, CRM_OP_DEBUG_DOWN) == 0) {
 		alter_debug(DEBUG_DEC);
 		crm_info("Debug set to %d", get_crm_log_level());
 
-	} else if(strcasecmp(op, CRM_OP_JOIN_OFFER) == 0) {
+	} else if(strcmp(op, CRM_OP_JOIN_OFFER) == 0) {
 		next_input = I_JOIN_OFFER;
 		crm_debug("Raising I_JOIN_OFFER: join-%s",
 			  crm_element_value(stored_msg, F_CRM_JOIN_ID));
 				
-	} else if(strcasecmp(op, CRM_OP_JOIN_ACKNAK) == 0) {
+	} else if(strcmp(op, CRM_OP_JOIN_ACKNAK) == 0) {
 		next_input = I_JOIN_RESULT;
 		crm_debug("Raising I_JOIN_RESULT: join-%s",
 			  crm_element_value(stored_msg, F_CRM_JOIN_ID));
 
-	} else if(strcasecmp(op, CRM_OP_LRM_DELETE) == 0
-		|| strcasecmp(op, CRM_OP_LRM_FAIL) == 0
-		|| strcasecmp(op, CRM_OP_LRM_REFRESH) == 0
-		|| strcasecmp(op, CRM_OP_REPROBE) == 0) {
+	} else if(strcmp(op, CRM_OP_LRM_DELETE) == 0
+		|| strcmp(op, CRM_OP_LRM_FAIL) == 0
+		|| strcmp(op, CRM_OP_LRM_REFRESH) == 0
+		|| strcmp(op, CRM_OP_REPROBE) == 0) {
 		
 		crm_xml_add(stored_msg, F_CRM_SYS_TO, CRM_SYSTEM_LRMD);
 		next_input = I_ROUTER;
@@ -796,7 +796,7 @@ handle_request(xmlNode *stored_msg)
 		/* this functionality should only be enabled
 		 *   if this is a development build
 		 */
-	} else if(CRM_DEV_BUILD && strcasecmp(op, CRM_OP_DIE) == 0/*constant condition*/) {
+	} else if(CRM_DEV_BUILD && strcmp(op, CRM_OP_DIE) == 0/*constant condition*/) {
 		crm_warn("Test-only code: Killing the CRM without mercy");
 		crm_warn("Inhibiting respawns");
 		exit(100);
@@ -807,7 +807,7 @@ handle_request(xmlNode *stored_msg)
 		gboolean dc_match = safe_str_eq(host_from, fsa_our_dc);
 
 		if(dc_match || fsa_our_dc == NULL) {
-			if(strcasecmp(op, CRM_OP_HBEAT) == 0) {
+			if(strcmp(op, CRM_OP_HBEAT) == 0) {
 				crm_debug_3("Received DC heartbeat from %s",
 					  host_from);
 				next_input = I_DC_HEARTBEAT;
@@ -819,7 +819,7 @@ handle_request(xmlNode *stored_msg)
 
 				crm_log_xml(LOG_WARNING, "Ignored Request", stored_msg);
 				
-			} else if(strcasecmp(op, CRM_OP_SHUTDOWN) == 0) {
+			} else if(strcmp(op, CRM_OP_SHUTDOWN) == 0) {
 				next_input = I_STOP;
 				
 			} else {
@@ -833,16 +833,16 @@ handle_request(xmlNode *stored_msg)
 
 		/*========== DC-Only Actions ==========*/
 	} else if(AM_I_DC) {
-		if(strcasecmp(op, CRM_OP_JOIN_ANNOUNCE) == 0) {
+		if(strcmp(op, CRM_OP_JOIN_ANNOUNCE) == 0) {
 			next_input = I_NODE_JOIN;
 			
-		} else if(strcasecmp(op, CRM_OP_JOIN_REQUEST) == 0) {
+		} else if(strcmp(op, CRM_OP_JOIN_REQUEST) == 0) {
 			next_input = I_JOIN_REQUEST;
 			
-		} else if(strcasecmp(op, CRM_OP_JOIN_CONFIRM) == 0) {
+		} else if(strcmp(op, CRM_OP_JOIN_CONFIRM) == 0) {
 			next_input = I_JOIN_RESULT;
 			
-		} else if(strcasecmp(op, CRM_OP_SHUTDOWN) == 0) {
+		} else if(strcmp(op, CRM_OP_SHUTDOWN) == 0) {
 			gboolean dc_match = safe_str_eq(host_from, fsa_our_dc);
 			if(is_set(fsa_input_register, R_SHUTDOWN)) {
 				crm_info("Shutting ourselves down (DC)");
@@ -860,7 +860,7 @@ handle_request(xmlNode *stored_msg)
 				next_input = I_ELECTION;			
 			}
 			
-		} else if(strcasecmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
+		} else if(strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
 			/* a slave wants to shut down */
 			/* create cib fragment and add to message */
 			next_input = handle_shutdown_request(stored_msg);
@@ -889,7 +889,7 @@ handle_response(xmlNode *stored_msg)
 	if(op == NULL) {
 		crm_log_xml(LOG_ERR, "Bad message", stored_msg);
 
- 	} else if(AM_I_DC && strcasecmp(op, CRM_OP_PECALC) == 0) {
+ 	} else if(AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
 
 		crm_debug_2("Processing %s reply %s (fsa=%s)",
 			  sys_from, msg_ref, crm_str(fsa_pe_ref));
@@ -905,10 +905,10 @@ handle_response(xmlNode *stored_msg)
 				  sys_from);
 		}
 		
-	} else if(strcasecmp(op, CRM_OP_VOTE) == 0
-		  || strcasecmp(op, CRM_OP_HBEAT) == 0
-		  || strcasecmp(op, CRM_OP_SHUTDOWN_REQ) == 0
-		  || strcasecmp(op, CRM_OP_SHUTDOWN) == 0) {
+	} else if(strcmp(op, CRM_OP_VOTE) == 0
+		  || strcmp(op, CRM_OP_HBEAT) == 0
+		  || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0
+		  || strcmp(op, CRM_OP_SHUTDOWN) == 0) {
 		crm_debug_2("Ignoring %s from %s in %s",
 			    op, host_from, fsa_state2string(fsa_state));
 		next_input = I_NULL;
@@ -1050,11 +1050,11 @@ send_msg_via_ipc(xmlNode *msg, const char *sys)
 		crm_debug_3("Sending message via channel %s.", sys);
 		send_ok = send_ipc_message(client_channel, msg);
 
-	} else if(sys != NULL && strcasecmp(sys, CRM_SYSTEM_TENGINE) == 0) {
+	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_TENGINE) == 0) {
 	    xmlNode *data = get_message_xml(msg, F_CRM_DATA);		
 	    process_te_message(msg, data);
 	    
-	} else if(sys != NULL && strcasecmp(sys, CRM_SYSTEM_LRMD) == 0) {
+	} else if(sys != NULL && strcmp(sys, CRM_SYSTEM_LRMD) == 0) {
 		fsa_data_t *fsa_data = NULL;
 		ha_msg_input_t *msg_copy = new_ha_msg_input(msg);
 
@@ -1066,9 +1066,7 @@ send_msg_via_ipc(xmlNode *msg, const char *sys)
 		fsa_data->data_type = fsa_dt_ha_msg;
 		
 #ifdef FSA_TRACE
-		crm_debug_2("Invoking action %s (%.16llx)",
-			    fsa_action2string(A_LRM_INVOKE),
-			    A_LRM_INVOKE);
+		crm_debug_2("Invoking action A_LRM_INVOKE (%.16llx)", A_LRM_INVOKE);
 #endif
 		do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE, fsa_state, I_MESSAGE, fsa_data);
 

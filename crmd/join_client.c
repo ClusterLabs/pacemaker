@@ -248,7 +248,6 @@ do_cl_join_finalize_respond(long long action,
 	/* send our status section to the DC */
 	crm_debug("Confirming join join-%d: %s",
 		  join_id, crm_element_value(input->msg, F_CRM_TASK));
-	crm_debug_2("Discovering local LRM status");
 	tmp1 = do_lrm_query(TRUE);
 	if(tmp1 != NULL) {
 		xmlNode *reply = create_request(
@@ -268,7 +267,7 @@ do_cl_join_finalize_respond(long long action,
 		free_xml(tmp1);
 		
 	} else {
-		crm_err("Could send our LRM state to the DC");
+		crm_err("Could not send our LRM state to the DC");
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 	}
 }

@@ -64,28 +64,31 @@
 #define fsa_diff_warn_ms     10000
 #define fsa_diff_max_ms      30000
 
-#define CRM_ASSERT(expr) if((expr) == FALSE) {				\
-	crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
-    }
-
-extern gboolean crm_assert_failed;
-
-#define CRM_DEV_ASSERT(expr)						\
-	crm_assert_failed = FALSE;					\
+#define CRM_ASSERT(expr) do {						\
 	if((expr) == FALSE) {						\
-		crm_assert_failed = TRUE;				\
+	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
+	}								\
+    } while(0)
+
+#define CRM_DEV_ASSERT(expr) do {					\
+	if((expr) == FALSE) {						\
 		crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
-	}
+	}								\
+    } while(0)
 
-#define CRM_CHECK(expr, failure_action) if((expr) == FALSE) {		\
-	crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
-	failure_action;							\
-    }
+#define CRM_CHECK(expr, failure_action) do {				\
+	if((expr) == FALSE) {						\
+	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
+	    failure_action;						\
+	}								\
+    } while(0)
 
-#define CRM_CHECK_AND_STORE(expr, failure_action) if((expr) == FALSE) {	\
-	crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, TRUE, TRUE); \
-	failure_action;							\
-    }
+#define CRM_CHECK_AND_STORE(expr, failure_action) do {			\
+	if((expr) == FALSE) {						\
+	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, TRUE, TRUE); \
+	    failure_action;						\
+	}								\
+    } while(0)
 
 extern const char *crm_system_name;
 

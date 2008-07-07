@@ -151,14 +151,8 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 			       enum crmd_fsa_input cur_input,
 			       fsa_data_t *msg_data)) 
 {
-	int action_log_level = LOG_DEBUG;
 	gboolean do_time_check = TRUE;
-
-	if(is_set(fsa_actions, an_action) == FALSE) {
-		crm_err("Action %s (%.16llx) was not requestsed",
-		    fsa_action2string(an_action), an_action);
-		return;
-	}
+	int action_log_level = LOG_DEBUG;
 	
 	if(an_action & A_MSG_ROUTE) {
 		action_log_level = LOG_DEBUG_2;
@@ -168,31 +162,25 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 	}
 	
 	fsa_actions &= ~an_action;
-	crm_debug_3("Invoking action %s (%.16llx)",
-		    fsa_action2string(an_action), an_action);
 	if(do_time_check) {
 		action_start = time_longclock();
 	}
 
 	do_crm_log(action_log_level,
 		   DOT_PREFIX"\t// %s", fsa_action2string(an_action));
-	function(an_action, fsa_data->fsa_cause, fsa_state,
-			  fsa_data->fsa_input, fsa_data);
-	crm_debug_3("Action complete: %s (%.16llx)",
-		    fsa_action2string(an_action), an_action);
+	function(an_action, fsa_data->fsa_cause, fsa_state, fsa_data->fsa_input, fsa_data);
 
 	if(do_time_check) {
+		const char *action_string = fsa_action2string(an_action);
 		action_stop = time_longclock();
 		action_diff = sub_longclock(action_stop, action_start);
 		action_diff_ms = longclockto_ms(action_diff);
 		if(action_diff_ms > action_diff_max_ms) {
 			crm_err("Action %s took %dms to complete",
-				fsa_action2string(an_action),
-				action_diff_ms);
+				action_string, action_diff_ms);
 		} else if(action_diff_ms > action_diff_warn_ms) {
 			crm_warn("Action %s took %dms to complete",
-				 fsa_action2string(an_action),
-				 action_diff_ms);
+				 action_string, action_diff_ms);
 		}
 	}
 }
@@ -225,10 +213,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 			    g_list_length(fsa_message_queue));
 		
 		fsa_data = get_message();
-		CRM_DEV_ASSERT(fsa_data != NULL);
-		if(crm_assert_failed) {
-			continue;
-		}
+		CRM_CHECK(fsa_data != NULL, continue);
 
 		log_fsa_input(fsa_data);
 		
@@ -247,11 +232,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 				  fsa_cause2string(fsa_data->fsa_cause),
 				  fsa_data->origin);
 		}
-/*
-		if(fsa_actions & A_SHUTDOWN) {
-			crm_log_level = LOG_DEBUG_2;
-		}
-*/	
+
 #ifdef FSA_TRACE
 		if(new_actions != A_NOTHING) {
 			crm_debug_2("Adding FSA actions %.16llx for %s/%s",
@@ -349,10 +330,7 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 	 */
 	while(fsa_actions != A_NOTHING  && do_fsa_stall == FALSE) {
 		msg_queue_helper();
-		CRM_DEV_ASSERT(fsa_data != NULL);
-		if(crm_assert_failed) {
-			return;
-		}
+		CRM_CHECK(fsa_data != NULL, return);
 		
 		/* regular action processing in order of action priority
 		 *
@@ -732,7 +710,7 @@ do_state_transition(long long actions,
 	}
 	
 	if(tmp != actions) {
-		fsa_dump_actions(actions ^ tmp, "New actions");
+		/* fsa_dump_actions(actions ^ tmp, "New actions"); */
 		actions = tmp;
 	}
 

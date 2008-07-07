@@ -66,13 +66,14 @@ cib_prepare_common(xmlNode *root, const char *section)
 
     } else if(safe_str_eq(crm_element_name(root), XML_TAG_FRAGMENT)
 	      || safe_str_eq(crm_element_name(root), F_CIB_CALLDATA)) {
-	data = find_xml_node(root, XML_TAG_CIB, TRUE);
+	data = first_named_child(root, XML_TAG_CIB);
+#if 0
 	if(data != NULL) {
 	    crm_debug_3("Extracted CIB from %s", TYPE(root));
 	} else {
 	    crm_log_xml_debug_4(root, "No CIB");
 	}
-		
+#endif	
     } else {
 	data = root;
     }
@@ -80,16 +81,18 @@ cib_prepare_common(xmlNode *root, const char *section)
     /* grab the section specified for the command */
     if(section != NULL
        && data != NULL
-       && safe_str_eq(crm_element_name(data), XML_TAG_CIB)){
+       && crm_str_eq(crm_element_name(data), XML_TAG_CIB, TRUE)){
 	data = get_object_root(section, data);
+#if 0
 	if(data != NULL) {
 	    crm_debug_3("Extracted %s from CIB", section);
 	} else {
 	    crm_log_xml_debug_4(root, "No Section");
 	}
+#endif	
     }
 
-    crm_log_xml_debug_4(root, "cib:input");
+    /* crm_log_xml_debug_4(root, "cib:input"); */
     return data;
 }
 
@@ -123,7 +126,7 @@ static enum cib_errors
 cib_prepare_diff(xmlNode *request, xmlNode **data, const char **section)
 {
     xmlNode *input_fragment = NULL;
-    const char *update     = crm_element_value(request, F_CIB_GLOBAL_UPDATE);
+    const char *update = crm_element_value(request, F_CIB_GLOBAL_UPDATE);
 
     *data = NULL;
     *section = NULL;

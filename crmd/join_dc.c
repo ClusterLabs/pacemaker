@@ -229,11 +229,19 @@ do_dc_join_offer_one(long long action,
 		     fsa_data_t *msg_data)
 {
 	crm_node_t *member;
-	ha_msg_input_t *welcome = fsa_typed_data(fsa_dt_ha_msg);
+	ha_msg_input_t *welcome = NULL;
 
 	const char *op = NULL;
 	const char *join_to = NULL;
 
+	if(msg_data->data) {
+	    welcome = fsa_typed_data(fsa_dt_ha_msg);
+
+	} else {
+	    crm_info("A new node joined - wait until it contacts us");
+	    return;
+	}
+	
 	if(welcome == NULL) {
 		crm_err("Attempt to send welcome message "
 			"without a message to reply to!");

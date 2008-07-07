@@ -429,6 +429,7 @@ append_digest(lrm_rsc_t *rsc, lrm_op_t *op, xmlNode *update, const char *version
     filter_action_parameters(args_xml, version);
     digest = calculate_xml_digest(args_xml, TRUE, FALSE);
 
+#if 0
     if(level < crm_log_level
        && op->interval == 0
        && crm_str_eq(op->op_type, CRMD_ACTION_START, TRUE)) {
@@ -437,7 +438,7 @@ append_digest(lrm_rsc_t *rsc, lrm_op_t *op, xmlNode *update, const char *version
 		   digest, ID(update), magic, digest_source);
 	crm_free(digest_source);
     }
-    
+#endif
     crm_xml_add(update, XML_LRM_ATTR_OP_DIGEST, digest);
 
     free_xml(args_xml);
@@ -464,31 +465,27 @@ append_restart_list(lrm_rsc_t *rsc, lrm_op_t *op, xmlNode *update, const char *v
 		return;
 
 	} else if(rsc == NULL) {
-		crm_info("Resource %s no longer in the LRM", op->rsc_id);
 		return;
 
-	} else if(safe_str_neq(CRMD_ACTION_START, op->op_type)) {
+	} else if(crm_str_eq(CRMD_ACTION_START, op->op_type, TRUE) == FALSE) {
 		/* only starts are potentially reloadable */
 		return;
 		
 	} else if(compare_version("1.0.8", version) > 0) {
-		crm_debug("Caller version %s does not support reloads", version);
+		/* Caller version does not support reloads */
 		return;
 	}
 
 	restart_list = get_rsc_restart_list(rsc, op);
 	if(restart_list == NULL) {
-		crm_debug_2("Resource %s does not support reloads", op->rsc_id);
+		/* Resource does not support reloads */
 		return;
 	}
 
 	restart = create_xml_node(NULL, XML_TAG_PARAMS);
 	slist_iter(param, const char, restart_list, lpc,
 		   int start = len;
-		   if(param == NULL) {
-		       crm_err("%s/%d: NULL param!", rsc->id, lpc);
-		       continue;
-		   }
+		   CRM_CHECK(param != NULL, continue);
 		   value = g_hash_table_lookup(op->params, param);
 		   if(value != NULL) {
 			   non_empty = TRUE;
@@ -503,12 +500,14 @@ append_restart_list(lrm_rsc_t *rsc, lrm_op_t *op, xmlNode *update, const char *v
 	crm_xml_add(update, XML_LRM_ATTR_OP_RESTART, list);
 	crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
 
+#if 0
 	crm_debug("%s : %s", digest, list);
 	if(non_empty) {
 		crm_log_xml_debug(restart, "restart digest source");
 	}
-	slist_destroy(char, child, restart_list,
-		      crm_free(child));
+#endif
+	
+	slist_destroy(char, child, restart_list, crm_free(child));
 	free_xml(restart);
 	crm_free(digest);
 	crm_free(list);
@@ -525,11 +524,7 @@ build_operation_update(
 	char *local_user_data = NULL;
 	const char *caller_version = NULL;	
 
-	CRM_DEV_ASSERT(op != NULL);
-	if(crm_assert_failed) {
-		return FALSE;
-	}
-
+	CRM_CHECK(op != NULL, return FALSE);
 	crm_debug_2("%s: Updating resouce %s after %s %s op",
 		  src, op->rsc_id, op_status2text(op->op_status), op->op_type);
 
@@ -579,9 +574,8 @@ build_operation_update(
 	} else if(op->op_status == LRM_OP_DONE
 		  && crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
 		task = CRMD_ACTION_START;
-	}
 
-	if(safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
+	} else if(crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
 		const char *n_type = g_hash_table_lookup(
 			op->params, crm_meta_name("notify_type"));
 		const char *n_task = g_hash_table_lookup(
@@ -594,7 +588,9 @@ build_operation_update(
 		op->op_status = LRM_OP_DONE;
 		op->rc = 0;
 		
-	} else {
+	}
+
+	if (op_id == NULL) {
 		op_id = generate_op_key(op->rsc_id, task, op->interval);
 	}
 
@@ -605,11 +601,6 @@ build_operation_update(
 	} else {
 		xml_op = create_xml_node(xml_rsc, XML_LRM_TAG_RSC_OP);
 	}
-	crm_xml_add(xml_op, XML_ATTR_ID, op_id);
-	crm_free(op_id);
-
-	crm_xml_add(xml_op, XML_LRM_ATTR_TASK, task);
-	crm_xml_add(xml_op, XML_ATTR_ORIGIN,   src);
 	
 	if(op->user_data == NULL) {
 		char *id = crm_itoa(op->call_id);
@@ -625,33 +616,17 @@ build_operation_update(
 	
 	magic = generate_transition_magic(op->user_data, op->op_status, op->rc);
 	
-	crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY,   op->user_data);
-	crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC, magic);
-	
-	switch(op->op_status) {
-		case LRM_OP_PENDING:
-			break;
-		case LRM_OP_CANCELLED:
-			crm_err("What to do here");
-			break;
-		case LRM_OP_ERROR:
-		case LRM_OP_TIMEOUT:
-		case LRM_OP_NOTSUPPORTED:
-			crm_debug_2("Resource action %s/%s %s: %d",
-				    op->rsc_id, task,
-				    op_status2text(op->op_status), op->rc);
-			break;
-		case LRM_OP_DONE:
-			break;
-	}
-	
-	crm_xml_add_int(xml_op,  XML_LRM_ATTR_CALLID, op->call_id);
+	crm_xml_add(xml_op, XML_ATTR_ID,		op_id);
+	crm_xml_add(xml_op, XML_LRM_ATTR_TASK,		task);
+	crm_xml_add(xml_op, XML_ATTR_ORIGIN,		src);
+	crm_xml_add(xml_op, XML_ATTR_CRM_VERSION,	caller_version);
+	crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY,	op->user_data);
+	crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC,	magic);
 
-	/* set these on 'xml_rsc' too to make life easy for the PE */
-	crm_xml_add(xml_op, XML_ATTR_CRM_VERSION, caller_version);
-	crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op->rc);
-	crm_xml_add_int(xml_op, XML_LRM_ATTR_OPSTATUS, op->op_status);
-	crm_xml_add_int(xml_op, XML_LRM_ATTR_INTERVAL, op->interval);
+	crm_xml_add_int(xml_op, XML_LRM_ATTR_CALLID,	op->call_id);
+	crm_xml_add_int(xml_op, XML_LRM_ATTR_RC,	op->rc);
+	crm_xml_add_int(xml_op, XML_LRM_ATTR_OPSTATUS,	op->op_status);
+	crm_xml_add_int(xml_op, XML_LRM_ATTR_INTERVAL,	op->interval);
 
 	if(compare_version("2.1", caller_version) <= 0) {
 	    if(op->t_run || op->t_rcchange || op->exec_time || op->queue_time) {
@@ -681,6 +656,7 @@ build_operation_update(
 		op->user_data = NULL;
 	}
 	crm_free(magic);	
+	crm_free(op_id);
 	return TRUE;
 }
 
@@ -1455,10 +1431,7 @@ send_direct_ack(const char *to_host, const char *to_sys,
 	xmlNode *update, *iter;
 	xmlNode *fragment;
 	
-	CRM_DEV_ASSERT(op != NULL);
-	if(crm_assert_failed) {
-		return;
-	}
+	CRM_CHECK(op != NULL, return);
 	if(op->rsc_id == NULL) {
 		CRM_DEV_ASSERT(rsc_id != NULL);
 		op->rsc_id = crm_strdup(rsc_id);
@@ -1646,11 +1619,8 @@ copy_lrm_op(const lrm_op_t *op)
 {
 	lrm_op_t *op_copy = NULL;
 
-	CRM_DEV_ASSERT(op != NULL);
-	if(crm_assert_failed) {
-		return NULL;
-	}
-	CRM_ASSERT(op->rsc_id != NULL);
+	CRM_CHECK(op != NULL, return NULL);
+	CRM_CHECK(op->rsc_id != NULL, return NULL);
 
 	crm_malloc0(op_copy, sizeof(lrm_op_t));
 
