@@ -880,7 +880,7 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	manage_counters = FALSE;
 	call_options |= cib_force_diff;		
 
-	CRM_CHECK(call_type == 3 || call_type == 10,
+	CRM_CHECK(call_type == 3 || call_type == 4,
 		  crm_err("Call type: %d", call_type);
 		  crm_log_xml(LOG_ERR, "bad op", request));
     }
