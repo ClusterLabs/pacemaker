@@ -266,11 +266,13 @@ typedef GList* GListPtr;
 		}							\
 	} while(0)
 
-#define crm_crit(fmt, args...)    do_crm_log(LOG_CRIT,    fmt , ##args)
-#define crm_err(fmt, args...)     do_crm_log(LOG_ERR,     fmt , ##args)
-#define crm_warn(fmt, args...)    do_crm_log(LOG_WARNING, fmt , ##args)
-#define crm_notice(fmt, args...)  do_crm_log(LOG_NOTICE,  fmt , ##args)
-#define crm_info(fmt, args...)    do_crm_log(LOG_INFO,    fmt , ##args)
+#define do_crm_log_always(level, fmt, args...) cl_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
+
+#define crm_crit(fmt, args...)    do_crm_log_always(LOG_CRIT,    fmt , ##args)
+#define crm_err(fmt, args...)     do_crm_log_always(LOG_ERR,     fmt , ##args)
+#define crm_warn(fmt, args...)    do_crm_log_always(LOG_WARNING, fmt , ##args)
+#define crm_notice(fmt, args...)  do_crm_log_always(LOG_NOTICE,  fmt , ##args)
+#define crm_info(fmt, args...)    do_crm_log_always(LOG_INFO,    fmt , ##args)
 #define crm_debug(fmt, args...)   do_crm_log(LOG_DEBUG,   fmt , ##args)
 #define crm_debug_2(fmt, args...) do_crm_log(LOG_DEBUG_2, fmt , ##args)
 #define crm_debug_3(fmt, args...) do_crm_log(LOG_DEBUG_3, fmt , ##args)
