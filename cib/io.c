@@ -577,23 +577,13 @@ archive_file(const char *oldname, const char *newname, const char *ext, gboolean
 int
 activateCibXml(xmlNode *new_cib, gboolean to_disk, const char *op)
 {
-	int error_code = cib_ok;
 	xmlNode *saved_cib = the_cib;
 
-	crm_debug_2("Activating new CIB");
-	crm_log_xml_debug_4(new_cib, "Attempting to activate CIB");
-
 	CRM_ASSERT(new_cib != saved_cib);
-	if(saved_cib != NULL) {
-		crm_validate_data(saved_cib);
-	}
-
 	if(initializeCib(new_cib) == FALSE) {
-		error_code = cib_ACTIVATION;
+		free_xml(new_cib);
 		crm_err("Ignoring invalid or NULL CIB");
-	}
 
-	if(error_code != cib_ok) {
 		if(saved_cib != NULL) {
 			crm_warn("Reverting to last known CIB");
 			if (initializeCib(saved_cib) == FALSE) {
@@ -607,30 +597,16 @@ activateCibXml(xmlNode *new_cib, gboolean to_disk, const char *op)
 			crm_crit("Could not write out new CIB and no saved"
 				 " version to revert to");
 		}
-		
-	} else if(cib_writes_enabled && cib_status == cib_ok && to_disk) {
-		crm_debug("Triggering CIB write for %s op", op);
-		G_main_set_trigger(cib_writer);
+		return cib_ACTIVATION;		
+	} 
 
-	} else {
-	    crm_debug_3("disk: %d, writes: %d", to_disk, cib_writes_enabled);
+	free_xml(saved_cib);
+	if(cib_writes_enabled && cib_status == cib_ok && to_disk) {
+	    crm_debug("Triggering CIB write for %s op", op);
+	    G_main_set_trigger(cib_writer);
 	}
 	
-	if(the_cib != saved_cib && the_cib != new_cib) {
-		CRM_DEV_ASSERT(error_code != cib_ok);
-		CRM_DEV_ASSERT(the_cib == NULL);
-	}
-	
-	if(the_cib != new_cib) {
-		free_xml(new_cib);
-		CRM_DEV_ASSERT(error_code != cib_ok);
-	}
-
-	if(the_cib != saved_cib) {
-		free_xml(saved_cib);
-	}
-	
-	return error_code;
+	return cib_ok;
     
 }
 
