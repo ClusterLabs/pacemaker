@@ -252,9 +252,7 @@ lrm_dispatch(IPC_Channel *src_not_used, gpointer user_data)
 	ll_lrm_t *lrm = (ll_lrm_t*)user_data;
 	IPC_Channel *lrm_channel = lrm->lrm_ops->ipcchan(lrm);
 
-	crm_debug_3("Invoked");
 	lrm->lrm_ops->rcvmsg(lrm, FALSE);
-
 	if(lrm_channel->ch_status != IPC_CONNECT) {
 	    lrm_connection_destroy(NULL);
 	    return FALSE;

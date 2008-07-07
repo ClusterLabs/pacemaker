@@ -57,23 +57,25 @@ extern void crmd_ha_msg_filter(xmlNode * msg);
 static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
 {
     int seq = 0;
+    xmlNode *xml = NULL;
     const char *seq_s = NULL;
-    xmlNode *xml = string2xml(data);
+
+    if(wrapper->header.id == crm_class_notify) {
+	return TRUE;
+    }
+
+    xml = string2xml(data);
     if(xml == NULL) {
 	crm_err("Message received: %d:'%.120s'", wrapper->id, data);
 	return TRUE;
     }
     
-    crm_debug_2("Message received: %d:'%.120s'", wrapper->id, data);
     crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
     crm_xml_add_int(xml, F_SEQ, wrapper->id);
     
     switch(wrapper->header.id) {
-	case crm_class_notify:
-	    break;
 	case crm_class_members:
 	    seq_s = crm_element_value(xml, "seq");
-	    CRM_ASSERT(xml != NULL);
 	    seq = crm_int_helper(seq_s, NULL);
 	    set_bit_inplace(fsa_input_register, R_PEER_DATA);
 
