@@ -351,8 +351,6 @@ static gboolean cib_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 {
     xmlNode *xml = NULL;
 
-    crm_debug_2("Message received: '%.80s'", data);
-    
     switch(wrapper->header.id) {
 	case crm_class_members:
 	case crm_class_notify:
