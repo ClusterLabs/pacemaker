@@ -228,7 +228,7 @@ cib_get_operation_id(const char *op, int *operation)
 
     if(op != NULL) {
 	for (lpc = 1; lpc < max_msg_types; lpc++) {
-	    if (strcmp(op, cib_server_ops[lpc].operation)) {
+	    if (strcmp(op, cib_server_ops[lpc].operation) == 0) {
 		*operation = lpc;
 		return cib_ok;
 	    }
