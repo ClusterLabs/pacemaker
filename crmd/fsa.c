@@ -370,11 +370,11 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 			do_fsa_action(fsa_data, A_PE_START,	do_pe_control);
 
 			/* sub-system restart */
-		} else if(fsa_actions & O_CIB_RESTART) {
+		} else if((fsa_actions & O_CIB_RESTART) == O_CIB_RESTART) {
 			do_fsa_action(fsa_data, O_CIB_RESTART,	do_cib_control);
-		} else if(fsa_actions & O_PE_RESTART) {
+		} else if((fsa_actions & O_PE_RESTART) == O_PE_RESTART) {
 			do_fsa_action(fsa_data, O_PE_RESTART,	do_pe_control);
-		} else if(fsa_actions & O_TE_RESTART) {
+		} else if((fsa_actions & O_TE_RESTART) == O_TE_RESTART) {
 			do_fsa_action(fsa_data, O_TE_RESTART,	do_te_control);
 
 			/* Timers */
