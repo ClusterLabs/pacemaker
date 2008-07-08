@@ -195,8 +195,8 @@ do_election_count_vote(long long action,
 	const char *your_version   = NULL;
 	const char *election_owner = NULL;
 	const char *reason	   = "unknown";
+	static time_t last_election_win = 0;
 	static time_t last_election_loss = 0;
-	enum crmd_fsa_input election_result = I_NULL;
 	crm_node_t *our_node = NULL, *your_node = NULL;
 	ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
 
@@ -312,15 +312,14 @@ do_election_count_vote(long long action,
 		update_dc(NULL, FALSE);
 		
 		crm_timer_stop(election_timeout);
-		crm_debug("Election lost to %s (%d): %s", vote_from, election_id, reason);
+		crm_debug("Election %d lost to %s: %s", election_id, vote_from, reason);
 		if(fsa_input_register & R_THE_DC) {
 			crm_debug_3("Give up the DC to %s", vote_from);
-			election_result = I_RELEASE_DC;
+			register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
 			
 		} else {
 			crm_debug_3("We werent the DC anyway");
-			election_result = I_PENDING;
-			
+			register_fsa_input(C_FSA_INTERNAL, I_PENDING, NULL);
 		}
 
 		crm_xml_add(novote, F_CRM_ELECTION_OWNER, election_owner);
@@ -332,22 +331,38 @@ do_election_count_vote(long long action,
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 
 		last_election_loss = time(NULL);
+		last_election_win = 0;
 
 	} else {
-		int dampen = 2;
+	    static int win_dampen = 1;
+	    static int loss_dampen = 2;
+
+	    if(last_election_loss) {
 		time_t tm_now = time(NULL);
-		if(tm_now - last_election_loss < (time_t)dampen) {
-			crm_debug("Election ignore: We already lost an election less than %ds ago", dampen);
-			return;
+		if(tm_now - last_election_loss < (time_t)loss_dampen) {
+		    crm_info("Election %d ignore: We already lost an election less than %ds ago",
+			      election_id, loss_dampen);
+		    return;
 		}
 		last_election_loss = 0;
-		election_result = I_ELECTION;
-		crm_info("Election won over %s: %s", vote_from, reason);
- 		g_hash_table_destroy(voted);
-		voted = NULL;
+	    }
+
+	    if(last_election_win) {
+		time_t tm_now = time(NULL);
+		if(tm_now - last_election_win < (time_t)win_dampen) {
+		    crm_info("Election %d ignore: We already won an election less than %ds ago",
+			      election_id, win_dampen);
+		    return;
+		}
+	    }
+
+	    last_election_win = time(NULL);
+	    register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+	    crm_info("Election %d won over %s: %s", election_id, vote_from, reason);
+	    g_hash_table_destroy(voted);
+	    voted = NULL;
 	}
 	
-	register_fsa_input(C_FSA_INTERNAL, election_result, NULL);
 }
 
 /*	A_ELECT_TIMER_START, A_ELECTION_TIMEOUT 	*/
