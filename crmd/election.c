@@ -190,34 +190,29 @@ do_election_count_vote(long long action,
 {
 	int election_id = -1;
 	gboolean we_loose = FALSE;
-	static time_t last_election_loss = 0;
-	enum crmd_fsa_input election_result = I_NULL;
-	crm_node_t *our_node = NULL, *your_node = NULL;
-	ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
-	const char *op             = NULL;
+	const char *op             = NULL;	
 	const char *vote_from      = NULL;
 	const char *your_version   = NULL;
 	const char *election_owner = NULL;
+	const char *reason	   = "unknown";
+	static time_t last_election_win = 0;
+	static time_t last_election_loss = 0;
+	crm_node_t *our_node = NULL, *your_node = NULL;
+	ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
 
-	CRM_CHECK(msg_data != NULL, return);
-	CRM_CHECK(vote != NULL, crm_err("Bogus data from %s", msg_data->origin); return);
-	
-	op             = crm_element_value(vote->msg, F_CRM_TASK);
-	vote_from      = crm_element_value(vote->msg, F_CRM_HOST_FROM);
-	your_version   = crm_element_value(vote->msg, F_CRM_VERSION);
-	election_owner = crm_element_value(vote->msg, F_CRM_ELECTION_OWNER);
-	
 	/* if the membership copy is NULL we REALLY shouldnt be voting
 	 * the question is how we managed to get here.
 	 */
-
-	CRM_CHECK(vote->msg != NULL, crm_err("Bogus data from %s", msg_data->origin); return);
+	
+	CRM_CHECK(msg_data != NULL, return);
 	CRM_CHECK(crm_peer_cache != NULL, return);
+	CRM_CHECK(vote != NULL, crm_err("Bogus data from %s", msg_data->origin); return);
+	CRM_CHECK(vote->msg != NULL, crm_err("Bogus data from %s", msg_data->origin); return);
+	
+	vote_from = crm_element_value(vote->msg, F_CRM_HOST_FROM);
 	CRM_CHECK(vote_from != NULL, vote_from = fsa_our_uname);
 	
-	our_node = g_hash_table_lookup(crm_peer_cache, fsa_our_uname);
-	your_node = g_hash_table_lookup(crm_peer_cache, vote_from);
-	
+	your_node = g_hash_table_lookup(crm_peer_cache, vote_from);	
 	if(your_node == NULL) {
 	    crm_debug("Election ignore: The other side doesn't exist in CCM: %s", vote_from);
 	    return;
@@ -230,7 +225,12 @@ do_election_count_vote(long long action,
 			g_hash_destroy_str, g_hash_destroy_str);
  	}
 
+	op             = crm_element_value(vote->msg, F_CRM_TASK);
+	election_owner = crm_element_value(vote->msg, F_CRM_ELECTION_OWNER);
+
 	crm_element_value_int(vote->msg, F_CRM_ELECTION_ID, &election_id);
+	
+	our_node = g_hash_table_lookup(crm_peer_cache, fsa_our_uname);
 	crm_debug("Election %d, owner: %s", election_id, election_owner);
 
 	/* update the list of nodes that have voted */
@@ -265,31 +265,33 @@ do_election_count_vote(long long action,
 	}
 
 	crm_info("Election check: %s from %s", op, vote_from);
+	your_version   = crm_element_value(vote->msg, F_CRM_VERSION);
+
 	if(our_node == NULL || safe_str_neq(our_node->state, CRM_NODE_MEMBER)) {
-		crm_info("Election fail: we don't exist in CCM");
+		reason = "we don't exist in CCM";
 		we_loose = TRUE;
 
 	} else if(compare_version(your_version, CRM_FEATURE_SET) < 0) {
-		crm_info("Election fail: version");
+		reason = "version";
 		we_loose = TRUE;
 		
 	} else if(compare_version(your_version, CRM_FEATURE_SET) > 0) {
-		crm_info("Election pass: version");
+		reason = "version";
 		
 	} else if(is_heartbeat_cluster() && your_node->born < our_node->born) {
-		crm_debug("Election fail: born_on");
+		reason = "born_on";
 		we_loose = TRUE;
 		
 	} else if(is_heartbeat_cluster() && your_node->born > our_node->born) {
-		crm_debug("Election pass: born_on");
+		reason = "born_on";
 
 	} else if(fsa_our_uname == NULL
 		  || strcasecmp(fsa_our_uname, vote_from) > 0) {
-		crm_debug("Election fail: uname");
+		reason = "uname";
 		we_loose = TRUE;
 
 	} else {
-		CRM_CHECK(strcasecmp(fsa_our_uname, vote_from) != 0, ;);
+		CRM_CHECK(strcmp(fsa_our_uname, vote_from) != 0, ;);
 		crm_debug("Them: %s (born=%llu)  Us: %s (born=%llu)",
 			  vote_from, (unsigned long long)your_node->born,
 			  fsa_our_uname, (unsigned long long)our_node->born);
@@ -303,7 +305,6 @@ do_election_count_vote(long long action,
 	}
 
 	if(we_loose) {
-		gboolean vote_sent = FALSE;
 		xmlNode *novote = create_request(
 			CRM_OP_NOVOTE, NULL, vote_from,
 			CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
@@ -311,43 +312,57 @@ do_election_count_vote(long long action,
 		update_dc(NULL, FALSE);
 		
 		crm_timer_stop(election_timeout);
-		crm_debug("Election lost to %s (%d)", vote_from, election_id);
+		crm_debug("Election %d lost to %s: %s", election_id, vote_from, reason);
 		if(fsa_input_register & R_THE_DC) {
 			crm_debug_3("Give up the DC to %s", vote_from);
-			election_result = I_RELEASE_DC;
+			register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
 			
 		} else {
 			crm_debug_3("We werent the DC anyway");
-			election_result = I_PENDING;
-			
+			register_fsa_input(C_FSA_INTERNAL, I_PENDING, NULL);
 		}
 
 		crm_xml_add(novote, F_CRM_ELECTION_OWNER, election_owner);
 		crm_xml_add_int(novote, F_CRM_ELECTION_ID, election_id);
 		
-		vote_sent = send_request(novote, NULL);
-		CRM_DEV_ASSERT(vote_sent);
+		CRM_CHECK(send_request(novote, NULL),;);
 		free_xml(novote);
 
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
 
 		last_election_loss = time(NULL);
+		last_election_win = 0;
 
 	} else {
-		int dampen = 2;
+	    static int win_dampen = 1;
+	    static int loss_dampen = 2;
+
+	    if(last_election_loss) {
 		time_t tm_now = time(NULL);
-		if(tm_now - last_election_loss < (time_t)dampen) {
-			crm_debug("Election ignore: We already lost an election less than %ds ago", dampen);
-			return;
+		if(tm_now - last_election_loss < (time_t)loss_dampen) {
+		    crm_info("Election %d ignore: We already lost an election less than %ds ago",
+			      election_id, loss_dampen);
+		    return;
 		}
 		last_election_loss = 0;
-		election_result = I_ELECTION;
-		crm_info("Election won over %s", vote_from);
- 		g_hash_table_destroy(voted);
-		voted = NULL;
+	    }
+
+	    if(last_election_win) {
+		time_t tm_now = time(NULL);
+		if(tm_now - last_election_win < (time_t)win_dampen) {
+		    crm_info("Election %d ignore: We already won an election less than %ds ago",
+			      election_id, win_dampen);
+		    return;
+		}
+	    }
+
+	    last_election_win = time(NULL);
+	    register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+	    crm_info("Election %d won over %s: %s", election_id, vote_from, reason);
+	    g_hash_table_destroy(voted);
+	    voted = NULL;
 	}
 	
-	register_fsa_input(C_FSA_INTERNAL, election_result, NULL);
 }
 
 /*	A_ELECT_TIMER_START, A_ELECTION_TIMEOUT 	*/

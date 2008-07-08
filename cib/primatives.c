@@ -164,18 +164,13 @@ update_cib_object(xmlNode *parent, xmlNode *update)
 	xmlNode *target = NULL;
 	int result = cib_ok;
 
-	CRM_DEV_ASSERT(update != NULL);
-	if(crm_assert_failed) { return cib_NOOBJECT; }
-
-	CRM_DEV_ASSERT(parent != NULL);
-	if(crm_assert_failed) { return cib_NOPARENT; }
+	CRM_CHECK(update != NULL, return cib_NOOBJECT);
+	CRM_CHECK(parent != NULL, return cib_NOPARENT);
 
 	object_name = crm_element_name(update);
+	CRM_CHECK(object_name != NULL, return cib_NOOBJECT);
+
 	object_id = ID(update);
-
-	CRM_DEV_ASSERT(object_name != NULL);
-	if(crm_assert_failed) { return cib_NOOBJECT; }
-
 	crm_debug_3("Processing: <%s id=%s>",
 		    crm_str(object_name), crm_str(object_id));
 	

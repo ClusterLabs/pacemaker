@@ -32,7 +32,6 @@
 #include <crm/common/xml.h>
 
 extern gboolean initialized;
-extern gboolean per_action_cib;
 extern xmlNode *the_cib;
 extern xmlNode *node_search;
 extern xmlNode *resource_search;

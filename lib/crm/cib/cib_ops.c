@@ -582,7 +582,7 @@ cib_config_changed(xmlNode *old_cib, xmlNode *new_cib, xmlNode **result)
 				   continue;
 			       }
 			       config_changes = TRUE;
-			       break;
+			       goto done;
 		    );
 	}
 
@@ -593,24 +593,26 @@ cib_config_changed(xmlNode *old_cib, xmlNode *new_cib, xmlNode **result)
 	}
 
 	if(dest) {
-		xml_prop_iter(dest, name, value,
-			      if(safe_str_neq(name, XML_ATTR_NUMUPDATES)) {
-				  config_changes = TRUE;
-				  break;
-			      }
-		    );
-
 		xml_child_iter(dest, child,
 			       const char *tag = crm_element_name(child);
 			       if(crm_str_eq(tag, XML_CIB_TAG_STATUS, TRUE)) {
 				   continue;
 			       }
 			       config_changes = TRUE;
-			       break;
+			       goto done;
 		    );
+
+		xml_prop_iter(dest, name, value,
+			      if(crm_str_eq(name, XML_ATTR_NUMUPDATES, TRUE)) {
+				  continue;
+			      }
+			      config_changes = TRUE;
+			      goto done;
+		    );
+
 	}
 
-	
+  done:
 	if(result) {
 		*result = diff;
 	} else {

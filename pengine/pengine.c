@@ -171,7 +171,6 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		filename = generate_series_filename(
 			PE_WORKING_DIR, series[series_id].name, seq, compress);
 		crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
-		crm_free(filename); filename = NULL;
 
 		if(send_ipc_message(sender, reply) == FALSE) {
 			send_via_disk = TRUE;
@@ -185,12 +184,11 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		
 		cleanup_alloc_calculations(&data_set);
 
-		filename = generate_series_filename(
-			PE_WORKING_DIR, series[series_id].name, seq, compress);
-
-		write_xml_file(xml_data, filename, compress);
-		write_last_sequence(PE_WORKING_DIR, series[series_id].name,
-				    seq+1, series_wrap);
+		if(series_wrap != 0) {
+		    write_xml_file(xml_data, filename, compress);
+		    write_last_sequence(PE_WORKING_DIR, series[series_id].name,
+					seq+1, series_wrap);
+		}
 		
 		if(was_processing_error) {
 			crm_err("Transition %d:"

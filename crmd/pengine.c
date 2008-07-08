@@ -108,7 +108,7 @@ do_pe_control(long long action,
 				register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 			} else {
 			    IPC_Channel *ch = NULL;
-			    sleep(5);
+			    sleep(3);
 			    init_client_ipc_comms(CRM_SYSTEM_PENGINE, pe_msg_dispatch, NULL, &ch);
 
 			    if(ch != NULL) {

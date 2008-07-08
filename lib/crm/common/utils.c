@@ -60,7 +60,6 @@
 #endif
 
 static uint ref_counter = 0;
-gboolean crm_assert_failed = FALSE;
 unsigned int crm_log_level = LOG_INFO;
 gboolean crm_config_error = FALSE;
 gboolean crm_config_warning = FALSE;

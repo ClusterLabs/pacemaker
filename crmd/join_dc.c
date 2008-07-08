@@ -229,11 +229,19 @@ do_dc_join_offer_one(long long action,
 		     fsa_data_t *msg_data)
 {
 	crm_node_t *member;
-	ha_msg_input_t *welcome = fsa_typed_data(fsa_dt_ha_msg);
+	ha_msg_input_t *welcome = NULL;
 
 	const char *op = NULL;
 	const char *join_to = NULL;
 
+	if(msg_data->data) {
+	    welcome = fsa_typed_data(fsa_dt_ha_msg);
+
+	} else {
+	    crm_info("A new node joined - wait until it contacts us");
+	    return;
+	}
+	
 	if(welcome == NULL) {
 		crm_err("Attempt to send welcome message "
 			"without a message to reply to!");
@@ -286,8 +294,8 @@ compare_int_fields(xmlNode *left, xmlNode *right, const char *field)
     const char *elem_l = crm_element_value(left, field);
     const char *elem_r = crm_element_value(right, field);
 
-    int int_elem_l = crm_parse_int(elem_l, "-1");
-    int int_elem_r = crm_parse_int(elem_r, "-1");
+    int int_elem_l = crm_int_helper(elem_l, NULL);
+    int int_elem_r = crm_int_helper(elem_r, NULL);
 
     if(int_elem_l < int_elem_r) {
 	return -1;

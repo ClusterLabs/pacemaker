@@ -35,8 +35,10 @@ typedef xmlNode crm_data_t;
 
 #define CRM_BZ2_BLOCKS		4
 #define CRM_BZ2_WORK		20
-#define CRM_BZ2_THRESHOLD	10240
-    
+#define CRM_BZ2_THRESHOLD	512 * 1024
+
+#define XML_PARANOIA_CHECKS 0
+
 extern gboolean add_message_xml(
 	xmlNode *msg, const char *field, xmlNode *xml);
 extern xmlNode *get_message_xml(xmlNode *msg, const char *field);
@@ -120,6 +122,9 @@ extern xmlNode *create_xml_node(xmlNode *parent, const char *name);
  *
  */
 extern const char *crm_xml_add(
+	xmlNode *node, const char *name, const char *value);
+
+extern const char *crm_xml_replace(
 	xmlNode *node, const char *name, const char *value);
 
 extern const char *crm_xml_add_int(
@@ -229,17 +234,17 @@ crm_element_value(xmlNode *data, const char *name)
     if(data == NULL) {
 	crm_err("Couldn't find %s in NULL", name?name:"<null>");
 	return NULL;
-    }
-    if(name == NULL) {
+
+    } else if(name == NULL) {
 	crm_err("Couldn't find NULL in %s", crm_element_name(data));
 	return NULL;
     }
     
     attr = xmlHasProp(data, (const xmlChar*)name);
-    if(attr && attr->children) {
-	return (const char*)attr->children->content;
+    if(attr == NULL || attr->children == NULL) {
+	return NULL;
     }
-    return NULL;
+    return (const char*)attr->children->content;
 }
 
 
@@ -284,10 +289,8 @@ extern const char *get_schema_name(int version);
 		child = __crm_xml_iter;					\
 		__crm_xml_iter = __crm_xml_iter->next;			\
 		if(filter == NULL					\
-		   || safe_str_eq(filter, (const char *)child->name)) {	\
+		   || crm_str_eq(filter, (const char *)child->name, TRUE)) { \
 		    code;						\
-		} else {						\
-		    crm_debug_4("Skipping <%s../>", child->name);	\
 		}							\
 	    }								\
 	} else {							\
