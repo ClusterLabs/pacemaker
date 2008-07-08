@@ -129,8 +129,6 @@ find_xml_node(xmlNode *root, const char * search_path, gboolean must_find)
 	xml_child_iter_filter(
 		root, a_child, search_path,
 /* 		crm_debug_5("returning node (%s).", crm_element_name(a_child)); */
-		crm_log_xml(LOG_DEBUG_5, "found:", a_child);
-		crm_log_xml(LOG_DEBUG_6, "in:",    root);
 		crm_validate_data(a_child);
 		return a_child;
 		);
@@ -299,41 +297,35 @@ void
 expand_plus_plus(xmlNode* target, const char *name, const char *value)
 {
     int offset = 1;
+    int name_len = 0;
     int int_value = 0;
     int value_len = 0;
-    int name_len = strlen(name);
 
     const char *old_value = NULL;
 
     if(value == NULL || name == NULL) {
-	goto bail;
+	return;
     }
     
+    old_value = crm_element_value(target, name);
+
+    if(old_value == NULL) {
+	/* if no previous value, set unexpanded */
+	goto set_unexpanded;
+
+    } else if(strstr(value, name) != value) {
+	goto set_unexpanded;
+    }
+
     name_len = strlen(name);
     value_len = strlen(value);
-
     if(value_len < (name_len + 2)
-       || value[name_len] != '+'
-       || (value[name_len+1] != '+' && value[name_len+1] != '=')) {
-	goto bail;
+	      || value[name_len] != '+'
+	      || (value[name_len+1] != '+' && value[name_len+1] != '=')) {
+	goto set_unexpanded;
     }
 
-    if(strstr(value, name) != value) {
-	goto bail;
-    }
-
-    /* if no previous value, set unexpanded */
-    old_value = crm_element_value(target, name);
-    if(old_value == NULL) {
-	goto bail;
-    }
-    
-    if(safe_str_eq(value, old_value)) {
-	int_value = 0;
-	
-    } else {
-	int_value = char2score(old_value);
-    }
+    int_value = char2score(old_value);
     
     if(value[name_len+1] != '+') {
 	const char *offset_s = value+(name_len+2);
@@ -348,7 +340,11 @@ expand_plus_plus(xmlNode* target, const char *name, const char *value)
     crm_xml_add_int(target, name, int_value);
     return;
 
-  bail:
+  set_unexpanded:
+    if(old_value == value) {
+	/* the old value is already set, nothing to do */
+	return;
+    }
     crm_xml_add(target, name, value);
     return;
 }
@@ -396,29 +392,50 @@ const char *
 crm_xml_add(xmlNode* node, const char *name, const char *value)
 {
     xmlAttr *attr = NULL;
+    CRM_CHECK(node != NULL, return NULL);
+    CRM_CHECK(name != NULL, return NULL);
+
+    if(value == NULL) {
+	return NULL;
+    }
+
+#if XML_PARANOIA_CHECKS
+    {
+	const char *old_value = NULL;
+	old_value = crm_element_value(node, name);
+	
+	/* Could be re-setting the same value */
+	CRM_CHECK_AND_STORE(old_value != value,
+			    crm_err("Cannot reset %s with crm_xml_add(%s)",
+				    name, value);
+			    return value);
+    }
+#endif
+    
+    attr = xmlSetProp(node, (const xmlChar*)name, (const xmlChar*)value);
+    CRM_CHECK(attr && attr->children && attr->children->content, return NULL);
+    return (char *)attr->children->content;
+}
+
+const char *
+crm_xml_replace(xmlNode* node, const char *name, const char *value)
+{
+    xmlAttr *attr = NULL;
     const char *old_value = NULL;
     CRM_CHECK(node != NULL, return NULL);
     CRM_CHECK(name != NULL && name[0] != 0, return NULL);
-    /* CRM_CHECK(value != NULL && value[0] != 0, return NULL); */
-    /* CRM_CHECK(strcasecmp(name, F_XML_TAGNAME) != 0, return NULL); */
+
     old_value = crm_element_value(node, name);
 
-#if 1
-    if (old_value != NULL
-	&& old_value[0] != 0
-	&& (value == NULL || value[0] == 0)) {
-	CRM_CHECK_AND_STORE(FALSE,
-			    crm_err("Unsetting %s with crm_xml_add(%s -> %s)",
-				    name, crm_str(old_value), crm_str(value)));
+    /* Could be re-setting the same value */
+    CRM_CHECK_AND_STORE(old_value != value, return value);
+
+    if (old_value != NULL && value == NULL) {
 	xml_remove_prop(node, name);
 	return NULL;
-    }
-#else
-    CRM_CHECK(value != NULL && value[0] != 0), return NULL);
-#endif
 
-    if(old_value == value) {
-	return value;
+    } else if(value == NULL) {
+	return NULL;
     }
     
     attr = xmlSetProp(node, (const xmlChar*)name, (const xmlChar*)value);

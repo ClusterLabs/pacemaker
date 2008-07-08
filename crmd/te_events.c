@@ -34,7 +34,7 @@ char *failed_stop_offset = NULL;
 char *failed_start_offset = NULL;
 
 xmlNode *need_abort(xmlNode *update);
-void process_graph_event(xmlNode *event, const char *event_node);
+gboolean process_graph_event(xmlNode *event, const char *event_node);
 int match_graph_event(int action_id, xmlNode *event, const char *event_node,
 		      int op_status, int op_rc, int target_rc);
 
@@ -132,10 +132,11 @@ fail_incompletable_actions(crm_graph_t *graph, const char *down_node)
 gboolean
 extract_event(xmlNode *msg)
 {
-	int shutdown = 0;
-	const char *shutdown_s = NULL;
-	const char *event_node = NULL;
-
+    int shutdown = 0;
+    const char *shutdown_s = NULL;
+    const char *event_node = NULL;
+    int have_aborted = 0;
+    
 /*
 [cib fragment]
 ...
@@ -145,80 +146,92 @@ extract_event(xmlNode *msg)
        <lrm_resources>
 	 <rsc_state id="" rsc_id="rsc4" node_id="node1" rsc_state="stopped"/>
 */
-	crm_debug_4("Extracting event from %s", crm_element_name(msg));
-	xml_child_iter_filter(
-		msg, node_state, XML_CIB_TAG_STATE,
+     xml_child_iter_filter(
+	 msg, node_state, XML_CIB_TAG_STATE,
+	 
+	 xmlNode *attrs = NULL;
+	 xmlNode *resources = NULL;
+	 const char *ha_state = NULL;
+	 const char *ccm_state = NULL;
+	 const char *crmd_state = NULL;
+	 
+	 /* Transient node attribute changes... */
+	 event_node = crm_element_value(node_state, XML_ATTR_ID);
+	 crm_debug_2("Processing state update from %s", event_node);
+	 
+	 attrs = find_xml_node(node_state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
+	 if(attrs != NULL) {
+	     have_aborted++;
+	     crm_info("Aborting on "XML_TAG_TRANSIENT_NODEATTRS" changes for %s", event_node);
+	     abort_transition(INFINITY, tg_restart, XML_TAG_TRANSIENT_NODEATTRS, attrs);
+	 }
+	 
+	 resources = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+	 resources = find_xml_node(resources, XML_LRM_TAG_RESOURCES, FALSE);
+	 
+	 /* LRM resource update... */
+	 xml_child_iter(
+	     resources, rsc,  
+	     xml_child_iter(
+		 rsc, rsc_op,  
+		 if(process_graph_event(rsc_op, event_node)) {
+		     /* This is an lrm status refresh...
+		      * The transition (if any) was already cancelled
+		      */
+		     if(transition_graph == NULL || transition_graph->complete) {
+			 crm_info("Detected LRM refresh update: Skipping any remaining resource events");
+			 return TRUE;
 
-		xmlNode *attrs = NULL;
-		xmlNode *resources = NULL;
-
-		const char *ha_state = crm_element_value(node_state, XML_CIB_ATTR_HASTATE);
-		const char *ccm_state = crm_element_value(node_state, XML_CIB_ATTR_INCCM);
-		const char *crmd_state = crm_element_value(node_state, XML_CIB_ATTR_CRMDSTATE);
-
-		/* Transient node attribute changes... */
-		event_node = crm_element_value(node_state, XML_ATTR_ID);
-		crm_debug_2("Processing state update from %s", event_node);
-		crm_log_xml_debug_3(node_state, "Processing");
-
-		attrs = find_xml_node(
-			node_state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
-
-		if(attrs != NULL) {
-			crm_info("Aborting on "XML_TAG_TRANSIENT_NODEATTRS" changes for %s", event_node);
-			abort_transition(INFINITY, tg_restart,
-					 XML_TAG_TRANSIENT_NODEATTRS, attrs);
-		}
-		
-		resources = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
-		resources = find_xml_node(
-			resources, XML_LRM_TAG_RESOURCES, FALSE);
-
-		/* LRM resource update... */
-		xml_child_iter(
-			resources, rsc,  
-			xml_child_iter(
-				rsc, rsc_op,  
-				
-				crm_log_xml_debug_3(rsc_op, "Processing resource update");
-				process_graph_event(rsc_op, event_node);
-				);
-			);
-
-		/*
-		 * node state update... possibly from a shutdown we requested
-		 */
-		if(safe_str_eq(ccm_state, XML_BOOLEAN_FALSE)
-		   || safe_str_eq(ha_state, DEADSTATUS)
-		   || safe_str_eq(crmd_state, CRMD_JOINSTATE_DOWN)) {
-			crm_action_t *shutdown = NULL;
-			shutdown = match_down_event(0, event_node, NULL);
-			
-			if(shutdown != NULL) {
-				update_graph(transition_graph, shutdown);
-				trigger_graph();
-
-			} else {
-				crm_info("Stonith/shutdown of %s not matched", event_node);
-				abort_transition(INFINITY, tg_restart, "Node failure", node_state);
-			}			
-			fail_incompletable_actions(transition_graph, event_node);
-		}
-
-		shutdown_s = crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
-		if(shutdown_s) {
-		    shutdown = crm_parse_int(shutdown_s, NULL);
-		}
-		if(shutdown_s && shutdown > 0) {
-			crm_info("Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute for %s", event_node);
-			abort_transition(INFINITY, tg_restart, "Shutdown request", node_state);
-		}
-		);
-
-	return TRUE;
+		     } else {
+			 crm_err("Detected LRM refresh update: Still in a transition");
+		     }
+		 }
+		 );
+	     );
+#if 0
+	 if(have_aborted && (transition_graph == NULL || transition_graph->complete)) {
+	     /* Any shutdown event would never be expected */
+	     return TRUE;
+	 }
+#endif 
+	 ha_state = crm_element_value(node_state, XML_CIB_ATTR_HASTATE);
+	 ccm_state = crm_element_value(node_state, XML_CIB_ATTR_INCCM);
+	 crmd_state = crm_element_value(node_state, XML_CIB_ATTR_CRMDSTATE);
+	 
+	 /*
+	  * node state update... possibly from a shutdown we requested
+	  */
+	 if(safe_str_eq(ccm_state, XML_BOOLEAN_FALSE)
+	    || safe_str_eq(ha_state, DEADSTATUS)
+	    || safe_str_eq(crmd_state, CRMD_JOINSTATE_DOWN)) {
+	     crm_action_t *shutdown = NULL;
+	     shutdown = match_down_event(0, event_node, NULL);
+	     
+	     if(shutdown != NULL) {
+		 update_graph(transition_graph, shutdown);
+		 trigger_graph();
+		 
+	     } else {
+		 crm_info("Stonith/shutdown of %s not matched", event_node);
+		 abort_transition(INFINITY, tg_restart, "Node failure", node_state);
+	     }			
+	     fail_incompletable_actions(transition_graph, event_node);
+	 }
+	 
+	 shutdown_s = crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
+	 if(shutdown_s) {
+	     shutdown = crm_parse_int(shutdown_s, NULL);
+	 }
+	 if(shutdown_s && shutdown > 0) {
+	     crm_info("Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute for %s", event_node);
+	     abort_transition(INFINITY, tg_restart, "Shutdown request", node_state);
+	 }
+	 );
+    
+    return TRUE;
 }
 
-static void
+static gboolean
 update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc) 
 {
 	int interval = 0;
@@ -231,10 +244,10 @@ update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc)
 
 	if(rc == 99) {
 		/* this is an internal code for "we're busy, try again" */
-		return;
+		return FALSE;
 
 	} else if(rc == target_rc) {
-	    return;
+	    return FALSE;
 	}
 
 	if(failed_stop_offset == NULL) {
@@ -245,7 +258,7 @@ update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc)
 	    failed_start_offset = crm_strdup(INFINITY_S);
 	}
 	
-	CRM_CHECK(on_uuid != NULL, return);
+	CRM_CHECK(on_uuid != NULL, return TRUE);
 
 	CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval),
 		  crm_err("Couldn't parse: %s", ID(event));
@@ -296,6 +309,7 @@ update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc)
   bail:
 	crm_free(rsc_id);
 	crm_free(task);
+	return TRUE;
 }
 
 static int
@@ -496,7 +510,7 @@ match_down_event(int id, const char *target, const char *filter)
 }
 
 
-void
+gboolean
 process_graph_event(xmlNode *event, const char *event_node)
 {
 	int rc = -1;
@@ -507,6 +521,7 @@ process_graph_event(xmlNode *event, const char *event_node)
 	int transition_num = -1;
 	char *update_te_uuid = NULL;
 
+	gboolean stop_early = FALSE;
 	gboolean passed = FALSE;
 	const char *id = NULL;
 	const char *magic = NULL;
@@ -518,7 +533,7 @@ process_graph_event(xmlNode *event, const char *event_node)
 
 	if(magic == NULL) {
 		/* non-change */
-		return;
+		return FALSE;
 	}
 	
 	CRM_CHECK(decode_transition_magic(
@@ -537,15 +552,17 @@ process_graph_event(xmlNode *event, const char *event_node)
 			id, magic);
 		abort_transition(INFINITY, tg_restart,"Unexpected event",event);
 
-	} else if(action < 0 || safe_str_neq(update_te_uuid, te_uuid)) {
+	} else if(action < 0 || crm_str_eq(update_te_uuid, te_uuid, TRUE) == FALSE) {
 		crm_info("Action %s (%s) initiated by a different transitioner",
 			 id, magic);
 		abort_transition(INFINITY, tg_restart,"Foreign event", event);
+		stop_early = TRUE; /* This could be an lrm status refresh */
 		
 	} else if(transition_graph->id != transition_num) {
 		crm_info("Detected action %s from a different transition:"
 			" %d vs. %d", id, transition_num, transition_graph->id);
 		abort_transition(INFINITY, tg_restart,"Old event", event);
+		stop_early = TRUE; /* This could be an lrm status refresh */
 		
 	} else if(transition_graph->complete) {
 		crm_info("Action %s arrived after a completed transition", id);
@@ -561,12 +578,15 @@ process_graph_event(xmlNode *event, const char *event_node)
 		crm_debug_2("Processed update to %s: %s", id, magic);
 	}
 
-	if(passed == FALSE && rc != EXECRA_OK) {
-	    update_failcount(event, event_node, rc, target_rc);
+	if(passed == FALSE) {
+	    if(update_failcount(event, event_node, rc, target_rc)) {
+		/* Turns out this wasn't an lrm status refresh update aferall */
+		stop_early = FALSE;
+	    }
 	}
 
   bail:
 	crm_free(update_te_uuid);
-	return;
+	return stop_early;
 }
 

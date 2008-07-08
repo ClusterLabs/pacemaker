@@ -64,28 +64,31 @@
 #define fsa_diff_warn_ms     10000
 #define fsa_diff_max_ms      30000
 
-#define CRM_ASSERT(expr) if((expr) == FALSE) {				\
-	crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
-    }
-
-extern gboolean crm_assert_failed;
-
-#define CRM_DEV_ASSERT(expr)						\
-	crm_assert_failed = FALSE;					\
+#define CRM_ASSERT(expr) do {						\
 	if((expr) == FALSE) {						\
-		crm_assert_failed = TRUE;				\
+	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
+	}								\
+    } while(0)
+
+#define CRM_DEV_ASSERT(expr) do {					\
+	if((expr) == FALSE) {						\
 		crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
-	}
+	}								\
+    } while(0)
 
-#define CRM_CHECK(expr, failure_action) if((expr) == FALSE) {		\
-	crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
-	failure_action;							\
-    }
+#define CRM_CHECK(expr, failure_action) do {				\
+	if((expr) == FALSE) {						\
+	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
+	    failure_action;						\
+	}								\
+    } while(0)
 
-#define CRM_CHECK_AND_STORE(expr, failure_action) if((expr) == FALSE) {	\
-	crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, TRUE, TRUE); \
-	failure_action;							\
-    }
+#define CRM_CHECK_AND_STORE(expr, failure_action) do {			\
+	if((expr) == FALSE) {						\
+	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, TRUE, TRUE); \
+	    failure_action;						\
+	}								\
+    } while(0)
 
 extern const char *crm_system_name;
 
@@ -266,11 +269,13 @@ typedef GList* GListPtr;
 		}							\
 	} while(0)
 
-#define crm_crit(fmt, args...)    do_crm_log(LOG_CRIT,    fmt , ##args)
-#define crm_err(fmt, args...)     do_crm_log(LOG_ERR,     fmt , ##args)
-#define crm_warn(fmt, args...)    do_crm_log(LOG_WARNING, fmt , ##args)
-#define crm_notice(fmt, args...)  do_crm_log(LOG_NOTICE,  fmt , ##args)
-#define crm_info(fmt, args...)    do_crm_log(LOG_INFO,    fmt , ##args)
+#define do_crm_log_always(level, fmt, args...) cl_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
+
+#define crm_crit(fmt, args...)    do_crm_log_always(LOG_CRIT,    fmt , ##args)
+#define crm_err(fmt, args...)     do_crm_log_always(LOG_ERR,     fmt , ##args)
+#define crm_warn(fmt, args...)    do_crm_log_always(LOG_WARNING, fmt , ##args)
+#define crm_notice(fmt, args...)  do_crm_log_always(LOG_NOTICE,  fmt , ##args)
+#define crm_info(fmt, args...)    do_crm_log_always(LOG_INFO,    fmt , ##args)
 #define crm_debug(fmt, args...)   do_crm_log(LOG_DEBUG,   fmt , ##args)
 #define crm_debug_2(fmt, args...) do_crm_log(LOG_DEBUG_2, fmt , ##args)
 #define crm_debug_3(fmt, args...) do_crm_log(LOG_DEBUG_3, fmt , ##args)

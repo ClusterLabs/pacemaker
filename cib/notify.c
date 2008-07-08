@@ -41,8 +41,8 @@
 #include <notify.h>
 
 
-extern GHashTable *client_list;
 int pending_updates = 0;
+extern GHashTable *client_list;
 
 void cib_notify_client(gpointer key, gpointer value, gpointer user_data);
 void attach_cib_generation(xmlNode *msg, const char *field, xmlNode *a_cib);
@@ -50,6 +50,26 @@ void attach_cib_generation(xmlNode *msg, const char *field, xmlNode *a_cib);
 void do_cib_notify(
 	int options, const char *op, xmlNode *update,
 	enum cib_errors result, xmlNode *result_data, const char *msg_type);
+
+static void
+need_pre_notify(gpointer key, gpointer value, gpointer user_data)
+{
+    cib_client_t *client = value;
+    if(client->pre_notify) {
+	gboolean *needed = user_data;
+	*needed = TRUE;
+    }
+}
+
+static void
+need_post_notify(gpointer key, gpointer value, gpointer user_data)
+{
+    cib_client_t *client = value;
+    if(client->post_notify) {
+	gboolean *needed = user_data;
+	*needed = TRUE;
+    }
+}
 
 void
 cib_notify_client(gpointer key, gpointer value, gpointer user_data)
@@ -157,16 +177,6 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	}
 }
 
-static void
-need_pre_notify(gpointer key, gpointer value, gpointer user_data)
-{
-    cib_client_t *client = value;
-    if(client->pre_notify) {
-	gboolean *needed = user_data;
-	*needed = TRUE;
-    }
-}
-
 void
 cib_pre_notify(
 	int options, const char *op, xmlNode *existing, xmlNode *update) 
@@ -230,6 +240,12 @@ void
 cib_post_notify(int options, const char *op, xmlNode *update,
 		enum cib_errors result, xmlNode *new_obj) 
 {
+	gboolean needed = FALSE;
+	g_hash_table_foreach(client_list, need_post_notify, &needed);
+	if(needed == FALSE) {
+	    return;
+	}
+
 	do_cib_notify(
 		options, op, update, result, new_obj, T_CIB_UPDATE_CONFIRM);
 }
