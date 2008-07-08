@@ -460,8 +460,8 @@ append_restart_list(lrm_rsc_t *rsc, lrm_op_t *op, xmlNode *update, const char *v
 		/* monitors are not reloadable */
 		return;
 
-	} else if(op->params) {
-		crm_info("%s has no parameters", ID(update));
+	} else if(op->params == NULL) {
+		crm_err("%s has no parameters", ID(update));
 		return;
 
 	} else if(rsc == NULL) {
@@ -501,13 +501,12 @@ append_restart_list(lrm_rsc_t *rsc, lrm_op_t *op, xmlNode *update, const char *v
 	crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
 
 #if 0
-	crm_debug("%s : %s", digest, list);
+	crm_debug("%s: %s, %s", rsc->id, digest, list);
 	if(non_empty) {
 		crm_log_xml_debug(restart, "restart digest source");
 	}
 #endif
 	
-	slist_destroy(char, child, restart_list, crm_free(child));
 	free_xml(restart);
 	crm_free(digest);
 	crm_free(list);
