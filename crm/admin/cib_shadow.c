@@ -58,7 +58,7 @@ const char *cib_action = NULL;
 cib_t *real_cib = NULL;
 
 static int force_flag = 0;
-#define OPTARGS	"V?wc:d:r:C:D:"
+#define OPTARGS	"V?wc:d:r:C:D:p:s:"
 
 
 int
@@ -70,11 +70,7 @@ main(int argc, char **argv)
     static int command = '?';
     char *shadow = NULL;
     char *shadow_file = NULL;
-    char *admin_input_xml = NULL;
-    char *admin_input_file = NULL;
     gboolean dangerous_cmd = FALSE;
-    gboolean admin_input_stdin = FALSE;
-    xmlNode *input = NULL;
     struct stat buf;
 	
 #ifdef HAVE_GETOPT_H
@@ -82,11 +78,13 @@ main(int argc, char **argv)
     static struct option long_options[] = {
 	/* Top-level Options */
 	{"create",  required_argument, NULL, 'c'},
-	{"display", required_argument, NULL, 'd'},
+	{"display", required_argument, NULL, 'P'},
 	{"commit",  required_argument, NULL, 'C'},
 	{"delete",  required_argument, NULL, 'D'},
 	{"reset",   required_argument, NULL, 'r'},
 	{"which",   no_argument,       NULL, 'w'},
+	{"diff",    required_argument, NULL, 'd'},
+	{"switch",  required_argument, NULL, 's'},
 
 	{"force",	no_argument, &force_flag, 1},
 	{"xml-text",    required_argument, NULL, 'X'},
@@ -118,6 +116,8 @@ main(int argc, char **argv)
 	switch(flag) {
 	    case 'c':
 	    case 'd':
+	    case 's':
+	    case 'p':
 	    case 'r':
 	    case 'w':
 		command = flag;
@@ -136,17 +136,6 @@ main(int argc, char **argv)
 		break;
 	    case '?':
 		usage(crm_system_name, LSB_EXIT_OK);
-		break;
-	    case 'X':
-		crm_debug_2("Option %c => %s", flag, optarg);
-		admin_input_xml = crm_strdup(optarg);
-		break;
-	    case 'x':
-		crm_debug_2("Option %c => %s", flag, optarg);
-		admin_input_file = crm_strdup(optarg);
-		break;
-	    case 'p':
-		admin_input_stdin = TRUE;
 		break;
 	    case 'f':
 		command_options |= cib_quorum_override;
@@ -211,34 +200,6 @@ main(int argc, char **argv)
 	usage(crm_system_name, LSB_EXIT_GENERIC);
     }
 
-    if(admin_input_file != NULL) {
-	FILE *xml_strm = fopen(admin_input_file, "r");
-	input = file2xml(xml_strm, FALSE);
-	if(input == NULL) {
-	    fprintf(stderr, "Couldn't parse input file: %s\n", admin_input_file);
-	    return 1;
-	}
-	fclose(xml_strm);
-		
-    } else if(admin_input_xml != NULL) {
-	input = string2xml(admin_input_xml);
-	if(input == NULL) {
-	    fprintf(stderr, "Couldn't parse input string: %s\n", admin_input_xml);
-	    return 1;
-	}
-
-    } else if(admin_input_stdin) {
-	input = stdin2xml();
-	if(input == NULL) {
-	    fprintf(stderr, "Couldn't parse input from STDIN.\n");
-	    return 1;
-	}
-    }
-	
-    if(input != NULL) {
-	crm_log_xml_debug(input, "[admin input]");
-    }
-
     shadow_file = get_shadow_file(shadow);
     if(command == 'D') {
 	/* delete the file */
@@ -255,7 +216,7 @@ main(int argc, char **argv)
 	return rc;
     }
 
-    if(command == 'r' || command == 'c' || command == 'C') {
+    if(command == 'd' || command == 'r' || command == 'c' || command == 'C') {
 	real_cib = cib_new_no_shadow();
 	rc = real_cib->cmds->signon(real_cib, crm_system_name, cib_command);
 	if(rc != cib_ok) {
@@ -296,7 +257,8 @@ main(int argc, char **argv)
 	printf("A new shadow instance was created.  To begin using it paste the following into your shell:\n");
 	printf("  CIB_shadow=%s ; export CIB_shadow\n", shadow);
 
-    } else if(command == 'd') {
+    } else if(command == 'P') {
+	/* display the current contents */
 	char *output_s = NULL;
 	FILE *shadow_FILE = fopen(shadow_file, "r");
 	xmlNode *output = file2xml(shadow_FILE, FALSE);
@@ -306,6 +268,28 @@ main(int argc, char **argv)
 	
 	crm_free(output_s);
 	free_xml(output);
+	
+    } else if(command == 'd') {
+	/* diff against cluster */
+	FILE *shadow_FILE = fopen(shadow_file, "r");
+
+	xmlNode *diff = NULL;
+	xmlNode *old_config = NULL;
+	xmlNode *new_config = file2xml(shadow_FILE, FALSE);
+	
+	rc = real_cib->cmds->query(real_cib, NULL, &old_config, command_options);
+	
+	if(rc != cib_ok) {
+	    fprintf(stderr, "Could not query the CIB: %s\n", cib_error2string(rc));
+	    return rc;
+	}
+
+	diff = diff_xml_object(old_config, new_config, FALSE);
+	if(diff != NULL) {
+	    print_xml_diff(stderr, diff);
+	    return 1;
+	}
+	return 0;	
 	
     } else if(command == 'C') {
 	/* commit to the cluster */
@@ -340,12 +324,14 @@ usage(const char *cmd, int exit_status)
     fprintf(stream, "\nCommands\n");
     fprintf(stream, "\t--%s (-%c)\tIndicate the active shadow copy\n", "which  ", 'w');
     fprintf(stream, "\t--%s (-%c) name\tCreate the named shadow copy of the active cluster configuration\n", "create ", 'c');
-    fprintf(stream, "\t--%s (-%c) name\tDisplay the contents of the named shadow copy \n", "display", 'd');
+    fprintf(stream, "\t--%s (-%c) name\tDisplay the contents of the named shadow copy \n", "display", 'P');
+    fprintf(stream, "\t--%s (-%c) name\tDisplay the changes in the named shadow copy \n", "diff", 'd');
     fprintf(stream, "\t--%s (-%c) name\tRecreate the named shadow copy from the active cluster configuration\n", "reset  ",   'r');
     fprintf(stream, "\t--%s (-%c) name\tUpload the contents of the named shadow copy to the cluster\n", "commit ",  'C');
     fprintf(stream, "\t--%s (-%c) name\tDelete the contents of the named shadow copy\n", "delete ",  'D');
     fprintf(stream, "\nAdvanced Options\n");
     fprintf(stream, "\t--%s (-%c)\tForce the action to be performed\n", "force ",  'f');
+    fprintf(stream, "\t--%s (-%c) name\tSwitch to the named shadow copy \n", "switch", 's');
 
     fflush(stream);
 
