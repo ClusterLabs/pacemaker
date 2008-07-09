@@ -1135,7 +1135,7 @@ int send_cluster_msg_raw(AIS_Message *ais_msg)
 	ais_debug_2("Message sent: %.80s", ais_msg->data);
     }
     
-    AIS_CHECK(rc == 0, ais_err("Message not sent (%d)", rc));
+    AIS_CHECK(rc == 0, ais_err("Message not sent (%d): %.120s", rc, ais_msg->data));
 
     ais_free(bz2_msg);
     LEAVE("");
