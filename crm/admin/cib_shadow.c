@@ -181,7 +181,7 @@ main(int argc, char **argv)
 	fflush(stderr);
 	return CIBRES_MISSING_FIELD;
 
-    } else {
+    } else if(command != 's') {
 	const char *local = getenv("CIB_shadow");
 	if(local != NULL && safe_str_neq(local, shadow) && force_flag == FALSE) {
 	    fprintf(stderr, "The supplied shadow instance (%s) is not the same as the active one (%s).\n"
@@ -257,6 +257,11 @@ main(int argc, char **argv)
 	printf("A new shadow instance was created.  To begin using it paste the following into your shell:\n");
 	printf("  CIB_shadow=%s ; export CIB_shadow\n", shadow);
 
+    } else if(command == 's') {
+	printf("To switch to the named shadow instance, paste the following into your shell:\n");
+	printf("  CIB_shadow=%s ; export CIB_shadow\n", shadow);
+	return 0;
+    
     } else if(command == 'P') {
 	/* display the current contents */
 	char *output_s = NULL;
