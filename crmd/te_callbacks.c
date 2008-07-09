@@ -112,7 +112,7 @@ te_update_diff(const char *event, xmlNode *msg)
 	}
 	
 	set_name = "diff-removed";
-	if(diff != NULL && aborted == Null) {
+	if(diff != NULL && aborted == NULL) {
 		xmlNode *attrs = NULL;
 		xmlNode *status = NULL;
 		xmlNode *change_set = find_xml_node(diff, set_name, FALSE);
