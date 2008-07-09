@@ -35,7 +35,7 @@ typedef xmlNode crm_data_t;
 
 #define CRM_BZ2_BLOCKS		4
 #define CRM_BZ2_WORK		20
-#define CRM_BZ2_THRESHOLD	512 * 1024
+#define CRM_BZ2_THRESHOLD	10 * 1024
 
 #define XML_PARANOIA_CHECKS 0
 
@@ -184,6 +184,7 @@ extern void print_xml_formatted(
 extern xmlNode *diff_xml_object(
 	xmlNode *left, xmlNode *right, gboolean suppress);
 
+extern void print_xml_diff(FILE *where, xmlNode *diff);
 extern void log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function);
 
 extern gboolean apply_xml_diff(
