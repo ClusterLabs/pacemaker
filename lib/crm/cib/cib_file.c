@@ -112,7 +112,12 @@ static int load_file_cib(const char *filename)
 	    return cib_not_authorized;   
 	}
 
-	root = file2xml(cib_file, FALSE);
+	if(strstr(filename, ".bz2") != NULL) {
+	    root = file2xml(cib_file, TRUE);
+	    
+	} else {
+	    root = file2xml(cib_file, FALSE);
+	}
 	fclose(cib_file);
 	if(root == NULL) {
 	    return cib_dtd_validation;
@@ -187,7 +192,13 @@ cib_file_signoff(cib_t* cib)
 
     crm_debug("Signing out of the CIB Service");
     
-    rc = write_xml_file(in_mem_cib, private->filename, FALSE);
+    if(strstr(private->filename, ".bz2") != NULL) {
+	rc = write_xml_file(in_mem_cib, private->filename, TRUE);
+	
+    } else {
+	rc = write_xml_file(in_mem_cib, private->filename, FALSE);
+    }
+
     if(rc > 0) {
 	crm_info("Wrote CIB to %s", private->filename);
     } else {
