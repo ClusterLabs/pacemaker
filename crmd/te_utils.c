@@ -222,6 +222,7 @@ abort_transition_graph(
 	
 	if(transition_graph && transition_graph->complete) {
 	    register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
+	    crm_log_xml(log_level, "Cause", reason);
 	    return;
 	}
 

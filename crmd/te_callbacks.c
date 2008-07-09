@@ -112,7 +112,7 @@ te_update_diff(const char *event, xmlNode *msg)
 	}
 	
 	set_name = "diff-removed";
-	if(diff != NULL && aborted == NULL) {
+	if(diff != NULL && aborted == Null) {
 		xmlNode *attrs = NULL;
 		xmlNode *status = NULL;
 		xmlNode *change_set = find_xml_node(diff, set_name, FALSE);
@@ -141,7 +141,7 @@ te_update_diff(const char *event, xmlNode *msg)
 	
 	if(aborted != NULL) {
 		abort_transition(
-			INFINITY, tg_restart, "Non-status change", NULL);
+			INFINITY, tg_restart, "Non-status change", aborted);
 	}
 	
 	return;
