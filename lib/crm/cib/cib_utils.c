@@ -47,17 +47,17 @@ struct config_root_s
   * find anywhere and risks multiple matches
   */
 struct config_root_s known_paths[] = {
-    { NULL,            NULL,                 "/cib" },
-    { "cib",           NULL,                 "/cib" },
-    { "status",        "/cib",               "/cib/status" },
-    { "configuration", "/cib",               "/cib/configuration" },
-    { "crm_config",    "/cib/configuration", "/cib/configuration/crm_config" },
-    { "nodes",         "/cib/configuration", "/cib/configuration/nodes" },
-    { "resources",     "/cib/configuration", "/cib/configuration/resources" },
-    { "constraints",   "/cib/configuration", "/cib/configuration/constraints" },
-    { "op_defaults",   "/cib/configuration", "/cib/configuration/op_defaults" },
-    { "rsc_defaults",  "/cib/configuration", "/cib/configuration/rsc_defaults" },
-    { "all",            NULL,                "/cib" },
+    { NULL,			NULL,                 "/cib" },
+    { XML_TAG_CIB,		NULL,                 "/cib" },
+    { XML_CIB_TAG_STATUS,       "/cib",               "/cib/status" },
+    { XML_CIB_TAG_CONFIGURATION,"/cib",               "/cib/configuration" },
+    { XML_CIB_TAG_CRMCONFIG,    "/cib/configuration", "/cib/configuration/crm_config" },
+    { XML_CIB_TAG_NODES,        "/cib/configuration", "/cib/configuration/nodes" },
+    { XML_CIB_TAG_RESOURCES,    "/cib/configuration", "/cib/configuration/resources" },
+    { XML_CIB_TAG_CONSTRAINTS,  "/cib/configuration", "/cib/configuration/constraints" },
+    { XML_CIB_TAG_OPCONFIG,	"/cib/configuration", "/cib/configuration/op_defaults" },
+    { XML_CIB_TAG_RSCCONFIG,	"/cib/configuration", "/cib/configuration/rsc_defaults" },
+    { XML_CIB_TAG_SECTION_ALL,  NULL,                 "/cib" },
 };
 
 const char *
@@ -645,9 +645,12 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		    
 		    tag = XML_ATTR_GENERATION;
 		    value = crm_element_value(current_cib, tag);
-		    crm_xml_add(cib, tag, value);
 		    crm_xml_add(diff_child, tag, value);
 
+		    if(*config_changed) {
+			crm_xml_add(cib, tag, value);
+		    }
+		    
 		    tag = XML_ATTR_NUMUPDATES;
 		    value = crm_element_value(current_cib, tag);
 		    crm_xml_add(cib, tag, value);
@@ -667,8 +670,10 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		    
 		    tag = XML_ATTR_GENERATION;
 		    value = crm_element_value(scratch, tag);
-		    crm_xml_add(cib, tag, value);
 		    crm_xml_add(diff_child, tag, value);
+		    if(*config_changed) {
+			crm_xml_add(cib, tag, value);
+		    }
 
 		    tag = XML_ATTR_NUMUPDATES;
 		    value = crm_element_value(scratch, tag);
