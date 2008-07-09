@@ -439,7 +439,7 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 		} else if(fsa_actions & A_DC_JOIN_OFFER_ALL) {
 			do_fsa_action(fsa_data, A_DC_JOIN_OFFER_ALL,	do_dc_join_offer_all);
 		} else if(fsa_actions & A_DC_JOIN_OFFER_ONE) {
-			do_fsa_action(fsa_data, A_DC_JOIN_OFFER_ONE,	do_dc_join_offer_one);
+			do_fsa_action(fsa_data, A_DC_JOIN_OFFER_ONE,	do_dc_join_offer_all);
 		} else if(fsa_actions & A_DC_JOIN_PROCESS_REQ) {
 			do_fsa_action(fsa_data, A_DC_JOIN_PROCESS_REQ,	do_dc_join_filter_offer);
 		} else if(fsa_actions & A_DC_JOIN_PROCESS_ACK) {
