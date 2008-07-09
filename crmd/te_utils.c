@@ -197,7 +197,7 @@ abort_transition_graph(
 	int abort_priority, enum transition_action abort_action,
 	const char *abort_text, xmlNode *reason, const char *fn, int line) 
 {
-	int log_level = LOG_DEBUG;
+	int log_level = LOG_INFO;
 /*
 	if(abort_priority >= INFINITY) {
 		log_level = LOG_INFO;
