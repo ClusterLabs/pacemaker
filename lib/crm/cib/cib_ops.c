@@ -346,7 +346,6 @@ cib_process_diff(
 	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer)
 {
 	unsigned int log_level = LOG_DEBUG;
-	const char *value = NULL;
 	const char *reason = NULL;
 	gboolean apply_diff = TRUE;
 	enum cib_errors result = cib_ok;
@@ -370,26 +369,33 @@ cib_process_diff(
 		&diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates, 
 		&diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
 
-	
-	value = crm_element_value(existing_cib, XML_ATTR_GENERATION);
-	this_epoch = atoi(value?value:"0");
-	
-	value = crm_element_value(existing_cib, XML_ATTR_NUMUPDATES);
-	this_updates = atoi(value?value:"0");
-	
-	value = crm_element_value(existing_cib, XML_ATTR_GENERATION_ADMIN);
-	this_admin_epoch = atoi(value?value:"0");
-	
+	crm_element_value_int(existing_cib, XML_ATTR_GENERATION, &this_epoch);
+	crm_element_value_int(existing_cib, XML_ATTR_NUMUPDATES, &this_updates);
+	crm_element_value_int(existing_cib, XML_ATTR_GENERATION_ADMIN, &this_admin_epoch);
+
+	if(this_epoch < 0) { this_epoch = 0; }
+	if(this_updates < 0) { this_updates = 0; }
+	if(this_admin_epoch < 0) { this_admin_epoch = 0; }
+
 	if(diff_del_admin_epoch == diff_add_admin_epoch
 	   && diff_del_epoch == diff_add_epoch
 	   && diff_del_updates == diff_add_updates) {
-		if(diff_add_admin_epoch == -1 && diff_add_epoch == -1 && diff_add_updates == -1) {
+		if(options & cib_force_diff) {
+			apply_diff = FALSE;
+			log_level = LOG_ERR;
+			reason = "+ and - versions in the diff did not change in global update";
+			crm_log_xml_warn(input, "Bad global update");
+			
+		} else if(diff_add_admin_epoch == -1 && diff_add_epoch == -1 && diff_add_updates == -1) {
+			crm_err("Massaging diff versions");
 			diff_add_epoch = this_epoch;
 			diff_add_updates = this_updates + 1;
 			diff_add_admin_epoch = this_admin_epoch;
 			diff_del_epoch = this_epoch;
 			diff_del_updates = this_updates;
 			diff_del_admin_epoch = this_admin_epoch;
+			crm_log_xml_err(input, __FUNCTION__);
+
 		} else {
 			apply_diff = FALSE;
 			log_level = LOG_ERR;
@@ -408,9 +414,8 @@ cib_process_diff(
 		apply_diff = FALSE;
 		log_level = LOG_WARNING;
 		reason = "current \""XML_ATTR_GENERATION_ADMIN"\" is greater than required";
-	}
 
-	if(apply_diff && diff_del_epoch > this_epoch) {
+	} else if(apply_diff && diff_del_epoch > this_epoch) {
 		result = cib_diff_resync;
 		apply_diff = FALSE;
 		log_level = LOG_INFO;
@@ -420,9 +425,8 @@ cib_process_diff(
 		apply_diff = FALSE;
 		log_level = LOG_WARNING;
 		reason = "current \""XML_ATTR_GENERATION"\" is greater than required";
-	}
 
-	if(apply_diff && diff_del_updates > this_updates) {
+	} else if(apply_diff && diff_del_updates > this_updates) {
 		result = cib_diff_resync;
 		apply_diff = FALSE;
 		log_level = LOG_INFO;
@@ -460,9 +464,11 @@ cib_process_diff(
 		}
 		
 	} else if(apply_diff) {
-		crm_debug_2("Diff %d.%d.%d -> %d.%d.%d was applied",
+		crm_debug_2("Diff %d.%d.%d -> %d.%d.%d was applied to %d.%d.%d",
 			    diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
-			    diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
+			    diff_add_admin_epoch,diff_add_epoch,diff_add_updates,
+			    this_admin_epoch,this_epoch,this_updates);
+	    
 	}
 	return result;
 }
