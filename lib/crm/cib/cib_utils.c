@@ -375,22 +375,16 @@ gboolean
 cib_version_details(
 	xmlNode *cib, int *admin_epoch, int *epoch, int *updates)
 {
-	const char *value = NULL;
 	if(cib == NULL) {
-		*admin_epoch = -1;
-		*epoch  = -1;
-		*updates = -1;
-		return FALSE;
+	    *admin_epoch = -1;
+	    *epoch  = -1;
+	    *updates = -1;
+	    return FALSE;
 		
 	} else {
-		value = crm_element_value(cib, XML_ATTR_GENERATION_ADMIN);
-		*admin_epoch = crm_parse_int(value, "-1");
-
-		value  = crm_element_value(cib, XML_ATTR_GENERATION);
-		*epoch = crm_parse_int(value, "-1");
-
-		value = crm_element_value(cib, XML_ATTR_NUMUPDATES);
-		*updates = crm_parse_int(value, "-1");
+	    crm_element_value_int(cib, XML_ATTR_GENERATION, epoch);
+	    crm_element_value_int(cib, XML_ATTR_NUMUPDATES, updates);
+	    crm_element_value_int(cib, XML_ATTR_GENERATION_ADMIN, admin_epoch);
 	}
 	return TRUE;	
 }
@@ -591,22 +585,23 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	    crm_element_value_int(scratch, XML_ATTR_GENERATION_ADMIN, &new);
 	    crm_element_value_int(current_cib, XML_ATTR_GENERATION_ADMIN, &old);
 	    
-	    CRM_CHECK(old <= new,
-		      crm_err("%s went backwrads: %d -> %d (Opts: 0x%x)",
-			      XML_ATTR_GENERATION_ADMIN, old, new, call_options);
-		      crm_log_xml_warn(req, "Bad Op");
-		      crm_log_xml_warn(input, "Bad Data");
-		      rc = cib_old_data);
-	    
-	    if(old == new) {
+	    if(old > new) {
+		crm_err("%s went backwards: %d -> %d (Opts: 0x%x)",
+			XML_ATTR_GENERATION_ADMIN, old, new, call_options);
+		crm_log_xml_warn(req, "Bad Op");
+		crm_log_xml_warn(input, "Bad Data");
+		rc = cib_old_data;
+
+	    } else if(old == new) {
 		crm_element_value_int(scratch, XML_ATTR_GENERATION, &new);
 		crm_element_value_int(current_cib, XML_ATTR_GENERATION, &old);
-		CRM_CHECK(old <= new,
-			  crm_err("%s went backwrads: %d -> %d (Opts: 0x%x)",
-				  XML_ATTR_GENERATION_ADMIN, old, new, call_options);
-			  crm_log_xml_warn(req, "Bad Op");
-			  crm_log_xml_warn(input, "Bad Data");
-			  rc = cib_old_data);
+		if(old > new) {
+		    crm_err("%s went backwards: %d -> %d (Opts: 0x%x)",
+			    XML_ATTR_GENERATION, old, new, call_options);
+		    crm_log_xml_warn(req, "Bad Op");
+		    crm_log_xml_warn(input, "Bad Data");
+		    rc = cib_old_data;
+		}
 	    }
 	}
 	
@@ -631,50 +626,54 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		if(diff != NULL && *diff != NULL) {
 		    /* Now fix the diff... */
 
-		    xmlNode *top = NULL;
-		    xmlNode *tmp = NULL;
+		    xmlNode *cib = NULL;
+		    xmlNode *diff_child = NULL;
 		    const char *tag = NULL;
 		    const char *value = NULL;
 
 		    tag = "diff-removed";
-		    tmp = find_xml_node(*diff, tag, FALSE);
-		    if(tmp == NULL) {
-			tmp = create_xml_node(*diff, tag);
+		    diff_child = find_xml_node(*diff, tag, FALSE);
+		    if(diff_child == NULL) {
+			diff_child = create_xml_node(*diff, tag);
 		    }
 
 		    tag = XML_TAG_CIB;
-		    top = find_xml_node(tmp, tag, FALSE);
-		    if(top == NULL) {
-			top = create_xml_node(tmp, tag);
+		    cib = find_xml_node(diff_child, tag, FALSE);
+		    if(cib == NULL) {
+			cib = create_xml_node(diff_child, tag);
 		    }
 		    
 		    tag = XML_ATTR_GENERATION;
 		    value = crm_element_value(current_cib, tag);
-		    crm_xml_add(top, tag, value);
+		    crm_xml_add(cib, tag, value);
+		    crm_xml_add(diff_child, tag, value);
 
 		    tag = XML_ATTR_NUMUPDATES;
 		    value = crm_element_value(current_cib, tag);
-		    crm_xml_add(top, tag, value);
+		    crm_xml_add(cib, tag, value);
+		    crm_xml_add(diff_child, tag, value);
 		    
 		    tag = "diff-added";
-		    tmp = find_xml_node(*diff, tag, FALSE);
-		    if(tmp == NULL) {
-			tmp = create_xml_node(*diff, tag);
+		    diff_child = find_xml_node(*diff, tag, FALSE);
+		    if(diff_child == NULL) {
+			diff_child = create_xml_node(*diff, tag);
 		    }
 		    
 		    tag = XML_TAG_CIB;
-		    top = find_xml_node(tmp, tag, FALSE);
-		    if(top == NULL) {
-			top = create_xml_node(tmp, tag);
+		    cib = find_xml_node(diff_child, tag, FALSE);
+		    if(cib == NULL) {
+			cib = create_xml_node(diff_child, tag);
 		    }
 		    
 		    tag = XML_ATTR_GENERATION;
 		    value = crm_element_value(scratch, tag);
-		    crm_xml_add(top, tag, value);
+		    crm_xml_add(cib, tag, value);
+		    crm_xml_add(diff_child, tag, value);
 
 		    tag = XML_ATTR_NUMUPDATES;
 		    value = crm_element_value(scratch, tag);
-		    crm_xml_add(top, tag, value);		    
+		    crm_xml_add(cib, tag, value);		    
+		    crm_xml_add(diff_child, tag, value);
 		}
 	    }
 
