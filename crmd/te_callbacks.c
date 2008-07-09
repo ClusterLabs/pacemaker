@@ -50,7 +50,6 @@ te_update_diff(const char *event, xmlNode *msg)
 	const char *set_name = NULL;
 
 	xmlNode *diff = NULL;
-	xmlNode *aborted = NULL;
 
 	int diff_add_updates     = 0;
 	int diff_add_epoch       = 0;
@@ -107,21 +106,26 @@ te_update_diff(const char *event, xmlNode *msg)
 		if(section != NULL) {
 			extract_event(section);
 		}
+
 		crm_debug_2("Checking change set: %s", set_name);
-		aborted = need_abort(change_set);
+		if(need_abort(change_set)) {
+		    return;
+		}
 	}
 	
 	set_name = "diff-removed";
-	if(diff != NULL && aborted == NULL) {
+	if(diff != NULL) {
 		xmlNode *attrs = NULL;
 		xmlNode *status = NULL;
 		xmlNode *change_set = find_xml_node(diff, set_name, FALSE);
 		change_set = find_xml_node(change_set, XML_TAG_CIB, FALSE);
 
 		crm_debug_2("Checking change set: %s", set_name);
-		aborted = need_abort(change_set);		
+		if(need_abort(change_set)) {
+		    return;
+		}
 
-		if(aborted == NULL && change_set != NULL) {
+		if(change_set != NULL) {
 			status = get_object_root(XML_CIB_TAG_STATUS, change_set);
 		
 			xml_child_iter_filter(
@@ -138,13 +142,6 @@ te_update_diff(const char *event, xmlNode *msg)
 				);
 		}
 	}
-	
-	if(aborted != NULL) {
-		abort_transition(
-			INFINITY, tg_restart, "Non-status change", aborted);
-	}
-	
-	return;
 }
 
 gboolean

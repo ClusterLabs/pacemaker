@@ -33,60 +33,41 @@
 char *failed_stop_offset = NULL;
 char *failed_start_offset = NULL;
 
-xmlNode *need_abort(xmlNode *update);
+gboolean need_abort(xmlNode *update);
 gboolean process_graph_event(xmlNode *event, const char *event_node);
 int match_graph_event(int action_id, xmlNode *event, const char *event_node,
 		      int op_status, int op_rc, int target_rc);
 
-xmlNode *
+gboolean
 need_abort(xmlNode *update)
 {
-	xmlNode *section_xml = NULL;
-	const char *section = NULL;
-
-	if(update == NULL) {
-		return NULL;
-	}
-	
-        xml_prop_iter(update, name, value,
-                      if(safe_str_eq(name, XML_ATTR_HAVE_QUORUM)) {
-			      goto do_abort; /* possibly not required */
-                      } else if(safe_str_eq(name, XML_ATTR_GENERATION)) {
-			      goto do_abort;
-                      } else if(safe_str_eq(name, XML_ATTR_GENERATION_ADMIN)) {
-			      goto do_abort;
-		      }
-		      continue;
-	  do_abort:
-		      crm_debug("Aborting on change to %s", name);
-		      crm_log_xml_debug(update, "Abort: CIB Attrs");
-		      return update;
-                );
-
-	section = XML_CIB_TAG_NODES;
-	section_xml = get_object_root(section, update);
-	xml_child_iter(section_xml, child, 
-		       return section_xml;
-		);
-
-	section = XML_CIB_TAG_RESOURCES;
-	section_xml = get_object_root(section, update);
-	xml_child_iter(section_xml, child, 
-		       return section_xml;
-		);
-
-	section = XML_CIB_TAG_CONSTRAINTS;
-	section_xml = get_object_root(section, update);
-	xml_child_iter(section_xml, child, 
-		       return section_xml;
-		);
-
-	section = XML_CIB_TAG_CRMCONFIG;
-	section_xml = get_object_root(section, update);
-	xml_child_iter(section_xml, child, 
-		       return section_xml;
-		);
-	return NULL;
+    xmlNode *xml = NULL;
+    if(update == NULL) {
+	return FALSE;
+    }
+    
+    xml_prop_iter(update, name, value,
+		  if(safe_str_eq(name, XML_ATTR_HAVE_QUORUM)) {
+		      goto do_abort; /* possibly not required */
+		  } else if(safe_str_eq(name, XML_ATTR_GENERATION)) {
+		      goto do_abort;
+		  } else if(safe_str_eq(name, XML_ATTR_GENERATION_ADMIN)) {
+		      goto do_abort;
+		  }
+		  continue;
+      do_abort:
+		  abort_transition(INFINITY, tg_restart, "Non-status change", NULL);
+		  crm_info("Aborting on change to %s", name);
+		  return TRUE;
+	);
+    
+    xml = get_object_root(XML_CIB_TAG_CONFIGURATION, update);
+    if(xml != NULL) {
+	abort_transition(INFINITY, tg_restart, "Non-status change", xml);
+	return TRUE;
+    }
+    
+    return FALSE;
 }
 
 static gboolean
