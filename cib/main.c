@@ -60,10 +60,9 @@
 #endif
 
 extern int init_remote_listener(int port);
+extern gboolean stand_alone;
 
 gboolean cib_shutdown_flag = FALSE;
-gboolean stand_alone = FALSE;
-gboolean per_action_cib = FALSE;
 enum cib_errors cib_status = cib_ok;
 
 #if SUPPORT_HEARTBEAT
@@ -84,7 +83,6 @@ int cib_init(void);
 gboolean cib_shutdown(int nsig, gpointer unused);
 void cib_ha_connection_destroy(gpointer user_data);
 gboolean startCib(const char *filename);
-extern gboolean cib_msg_timeout(gpointer data);
 extern int write_cib_contents(gpointer p);
 
 GTRIGSource *cib_writer = NULL;
@@ -146,7 +144,7 @@ main(int argc, char ** argv)
 		G_PRIORITY_LOW, write_cib_contents, "write_cib_contents",
 		NULL, NULL, NULL, cib_diskwrite_complete);
 
-	EnableProcLogging();
+	/* EnableProcLogging(); */
 	set_sigchld_proctrack(G_PRIORITY_HIGH,DEFAULT_MAXDISPATCHTIME);
 
 	crm_peer_init();
@@ -175,9 +173,6 @@ main(int argc, char ** argv)
 			case '?':		/* Help message */
 				usage(crm_system_name, LSB_EXIT_OK);
 				break;
-			case 'f':
-				per_action_cib = TRUE;
-				break;
 			case 'w':
 				cib_writes_enabled = TRUE;
 				break;
@@ -190,9 +185,6 @@ main(int argc, char ** argv)
 		}
 	}
 
-	crm_info("Retrieval of a per-action CIB: %s",
-		 per_action_cib?"enabled":"disabled");
-	
 	if (optind > argc) {
 		++argerr;
 	}
@@ -357,22 +349,19 @@ gboolean ccm_connect(void)
 #if SUPPORT_AIS	
 static gboolean cib_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
 {
-    crm_data_t *xml = NULL;
+    xmlNode *xml = NULL;
 
-    crm_debug_2("Message received: '%.80s'", data);
-    
     switch(wrapper->header.id) {
 	case crm_class_members:
 	case crm_class_notify:
-	    update_counters(__FILE__, __PRETTY_FUNCTION__, the_cib);
 	    break;
 	default:
 	    xml = string2xml(data);
 	    if(xml == NULL) {
 		goto bail;
 	    }
-	    ha_msg_add(xml, F_ORIG, wrapper->sender.uname);
-	    ha_msg_add_int(xml, F_SEQ, wrapper->id);
+	    crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
+	    crm_xml_add_int(xml, F_SEQ, wrapper->id);
 	    cib_peer_callback(xml, NULL);
 	    break;
     }
@@ -406,7 +395,7 @@ cib_init(void)
 	}
 
 	if(stand_alone == FALSE) {
-	    void *dispatch = cib_peer_callback;
+	    void *dispatch = cib_ha_peer_callback;
 	    void *destroy = cib_ha_connection_destroy;
 	    
 	    if(is_openais_cluster()) {
@@ -465,27 +454,17 @@ cib_init(void)
 
 	channel1 = crm_strdup(cib_channel_callback);
 	was_error = init_server_ipc_comms(
-		channel1, cib_client_connect_null,
+		channel1, cib_client_connect,
 		default_ipc_connection_destroy);
 
 	channel2 = crm_strdup(cib_channel_ro);
 	was_error = was_error || init_server_ipc_comms(
-		channel2, cib_client_connect_rw_ro,
+		channel2, cib_client_connect,
 		default_ipc_connection_destroy);
 
 	channel3 = crm_strdup(cib_channel_rw);
 	was_error = was_error || init_server_ipc_comms(
-		channel3, cib_client_connect_rw_ro,
-		default_ipc_connection_destroy);
-
-	channel4 = crm_strdup(cib_channel_rw_synchronous);
-	was_error = was_error || init_server_ipc_comms(
-		channel4, cib_client_connect_rw_synch,
-		default_ipc_connection_destroy);
-
-	channel5 = crm_strdup(cib_channel_ro_synchronous);
-	was_error = was_error || init_server_ipc_comms(
-		channel5, cib_client_connect_ro_synch,
+		channel3, cib_client_connect,
 		default_ipc_connection_destroy);
 
 	if(stand_alone) {
@@ -499,10 +478,6 @@ cib_init(void)
 		mainloop = g_main_new(FALSE);
 		crm_info("Starting %s mainloop", crm_system_name);
 
-/* 		Gmain_timeout_add(crm_get_msec("10s"), cib_msg_timeout, NULL); */
-/* 		Gmain_timeout_add( */
-/* 			crm_get_msec(cib_stat_interval), cib_stats, NULL);  */
-		
 		g_main_run(mainloop);
 		return_to_orig_privs();
 		return 0;
@@ -513,7 +488,6 @@ cib_init(void)
 		mainloop = g_main_new(FALSE);
 		crm_info("Starting %s mainloop", crm_system_name);
 
-		Gmain_timeout_add(crm_get_msec("10s"), cib_msg_timeout, NULL);
 		Gmain_timeout_add(
 			crm_get_msec(cib_stat_interval), cib_stats, NULL); 
 		
@@ -625,20 +599,21 @@ gboolean
 startCib(const char *filename)
 {
 	gboolean active = FALSE;
-	crm_data_t *cib = readCibXmlFile(cib_root, filename, !preserve_status);
+	xmlNode *cib = readCibXmlFile(cib_root, filename, !preserve_status);
 
 	CRM_ASSERT(cib != NULL);
 	
-	if(activateCibXml(cib, TRUE) == 0) {
+	if(activateCibXml(cib, TRUE, "start") == 0) {
 		int port = 0;
+		const char *port_s = crm_element_value(cib, "remote_access_port");
 		active = TRUE;
-		ha_msg_value_int(cib, "remote_access_port", &port);
-		init_remote_listener(port);
 
-		crm_info("CIB Initialization completed successfully");
-		if(per_action_cib) {
-			uninitializeCib();
+		if(port_s) {
+		    port = crm_parse_int(port_s, NULL);
+		    init_remote_listener(port);
 		}
+		
+		crm_info("CIB Initialization completed successfully");
 	}
 	
 	return active;

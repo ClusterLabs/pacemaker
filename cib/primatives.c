@@ -51,264 +51,13 @@
  */
 
 
-void update_node_state(crm_data_t *existing_node, crm_data_t *update);
-
-/* --- Resource */
 
 int
-addResource(crm_data_t *cib, crm_data_t *anXmlNode)
-{
-	const char *id = ID(anXmlNode);
-	crm_data_t *root;
-	if (id == NULL || strlen(id) < 1) {
-		return CIBRES_MISSING_ID;
-	}
-
-	crm_debug_2("Adding " XML_CIB_TAG_RESOURCE " (%s)...", id);
-
-	root = get_object_root(XML_CIB_TAG_RESOURCES, cib);
-	return add_cib_object(root, anXmlNode);
-}
-
-
-crm_data_t*
-findResource(crm_data_t *cib, const char *id)
-{
-	crm_data_t *root = NULL, *ret = NULL;
-	
-	
-	root = get_object_root(XML_CIB_TAG_RESOURCES, cib);
-	ret = find_entity(root, XML_CIB_TAG_RESOURCE, id);
-
-	return ret;
-}
-
-int
-updateResource(crm_data_t *cib,  crm_data_t *anXmlNode)
-{
-	const char *id = ID(anXmlNode);
-	crm_data_t *root = NULL;
-
-	if (id == NULL || strlen(id) < 1) {
-		return CIBRES_MISSING_ID;
-	}
-	
-	crm_debug_2("Updating " XML_CIB_TAG_RESOURCE " (%s)...", id);
-
-	root = get_object_root(XML_CIB_TAG_RESOURCES, cib);
-	return update_cib_object(root, anXmlNode);
-}
-
-int
-delResource(crm_data_t *cib, crm_data_t *delete_spec)
-{
-	const char *id = ID(delete_spec);
-	crm_data_t *root;
-
-	if(id == NULL || strlen(id) == 0) {
-		return CIBRES_MISSING_ID;
-	} 
-
-	crm_debug_2("Deleting " XML_CIB_TAG_RESOURCE " (%s)...", id);
-
-	root = get_object_root(XML_CIB_TAG_RESOURCES, cib);
-	return delete_cib_object(root, delete_spec);
-}
-
-
-/* --- Constraint */
-
-int
-addConstraint(crm_data_t *cib, crm_data_t *anXmlNode)
-{
-	const char *id = ID(anXmlNode);
-	crm_data_t *root;
-
-	if (id == NULL || strlen(id) < 1) {
-		return CIBRES_MISSING_ID;
-	}
-
-	crm_debug_2("Adding " XML_CIB_TAG_CONSTRAINT " (%s)...", id);
-
-	root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
-	return add_cib_object(root, anXmlNode);
-}
-
-crm_data_t*
-findConstraint(crm_data_t *cib, const char *id)
-{
-	crm_data_t *root = NULL, *ret = NULL;
-	
-	
-	root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
-	ret = find_entity(root, XML_CIB_TAG_CONSTRAINT, id);
-
-	return ret;
-}
-
-
-int
-updateConstraint(crm_data_t *cib, crm_data_t *anXmlNode)
-{
-	const char *id = ID(anXmlNode);
-	crm_data_t *root;
-	
-	if (id == NULL || strlen(id) < 1) {
-		return CIBRES_MISSING_ID;
-	}
-	
-	crm_debug_2("Updating " XML_CIB_TAG_CONSTRAINT " (%s)...", id);
-
-	root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
-	return update_cib_object(root, anXmlNode);
-}
-
-int
-delConstraint(crm_data_t *cib, crm_data_t *delete_spec)
-{
-	const char *id = ID(delete_spec);
-	crm_data_t *root;
-
-	if(id == NULL || strlen(id) == 0) {
-		return CIBRES_MISSING_ID;
-	} 
-	crm_debug_2("Deleting " XML_CIB_TAG_CONSTRAINT " (%s)...", id);
-
-	root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
-	return delete_cib_object(root, delete_spec);
-}
-
-/* --- HaNode */
-
-int
-addHaNode(crm_data_t *cib, crm_data_t *anXmlNode)
-{
-	const char *id = ID(anXmlNode);
-	crm_data_t *root;
-
-	if (id == NULL || strlen(id) < 1) {
-		return CIBRES_MISSING_ID;
-	}
-
-	crm_debug_2("Adding " XML_CIB_TAG_NODE " (%s)...", id);
-
-	root = get_object_root(XML_CIB_TAG_NODES, cib);
-	return add_cib_object(root, anXmlNode);
-}
-
-crm_data_t*
-findHaNode(crm_data_t *cib, const char *id)
-{
-	crm_data_t *root = NULL, *ret = NULL;
-	
-	
-	root = get_object_root(XML_CIB_TAG_NODES, cib);
-	ret = find_entity(root, XML_CIB_TAG_NODE, id);
-
-	return ret;
-}
-
-
-
-int
-updateHaNode(crm_data_t *cib, cibHaNode *anXmlNode)
-{
-	const char *id = ID(anXmlNode);
-	crm_data_t *root;
-
-	if (id == NULL || strlen(id) < 1) {
-		return CIBRES_MISSING_ID;
-	}
-	
-	crm_debug_2("Updating " XML_CIB_TAG_NODE " (%s)...", id);
-
-	root = get_object_root(XML_CIB_TAG_NODES, cib);
-	return update_cib_object(root, anXmlNode);
-}
-
-int
-delHaNode(crm_data_t *cib, crm_data_t *delete_spec)
-{
-	const char *id = ID(delete_spec);
-	crm_data_t *root;
-
-	if(id == NULL || strlen(id) == 0) {
-		return CIBRES_MISSING_ID;
-	} 
-
-	crm_debug_2("Deleting " XML_CIB_TAG_NODE " (%s)...", id);
-
-	root = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
-	return delete_cib_object(root, delete_spec);
-}
-
-/* --- Status */
-
-int
-addStatus(crm_data_t *cib, crm_data_t *anXmlNode)
-{
-	const char *id = ID(anXmlNode);
-	crm_data_t *root;
-
-	if (id == NULL || strlen(id) < 1) {
-		return CIBRES_MISSING_ID;
-	}
-
-	crm_debug_2("Adding " XML_CIB_TAG_NODE " (%s)...", id);
-
-	root = get_object_root(XML_CIB_TAG_STATUS, cib);
-	return add_cib_object(root, anXmlNode);
-}
-
-crm_data_t*
-findStatus(crm_data_t *cib, const char *id)
-{
-	crm_data_t *root = NULL, *ret = NULL;
-
-	root = get_object_root(XML_CIB_TAG_STATUS, cib);
-	ret = find_entity(root, XML_CIB_TAG_STATE, id);
-
-	return ret;
-}
-
-int
-updateStatus(crm_data_t *cib, crm_data_t *anXmlNode)
-{
-	const char *id = ID(anXmlNode);
-	crm_data_t *root;
-
-	if (id == NULL || strlen(id) < 1) {
-		return CIBRES_MISSING_ID;
-	}
-	
-	crm_debug_2("Updating " XML_CIB_TAG_NODE " (%s)...", id);
-
-	root = get_object_root(XML_CIB_TAG_STATUS, cib);
-	return update_cib_object(root, anXmlNode);
-}
-
-int
-delStatus(crm_data_t *cib, crm_data_t *delete_spec)
-{
-	const char *id = ID(delete_spec);
-	crm_data_t *root;
-
-	if(id == NULL || strlen(id) == 0) {
-		return CIBRES_MISSING_ID;
-	} 
-
-	crm_debug_2("Deleting " XML_CIB_TAG_STATE " (%s)...", id);
-
-	root = get_object_root(XML_CIB_TAG_STATUS, cib);
-	return delete_cib_object(root, delete_spec);
-}
-
-int
-delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec)
+delete_cib_object(xmlNode *parent, xmlNode *delete_spec)
 {
 	const char *object_name = NULL;
 	const char *object_id = NULL;
-	crm_data_t *equiv_node = NULL;
+	xmlNode *equiv_node = NULL;
 	int result = cib_ok;
 	
 	if(delete_spec != NULL) {
@@ -363,12 +112,12 @@ delete_cib_object(crm_data_t *parent, crm_data_t *delete_spec)
 }
 
 int
-add_cib_object(crm_data_t *parent, crm_data_t *new_obj)
+add_cib_object(xmlNode *parent, xmlNode *new_obj)
 {
 	enum cib_errors result = cib_ok;
 	const char *object_name = NULL;
 	const char *object_id = NULL;
-	crm_data_t *equiv_node = NULL;
+	xmlNode *equiv_node = NULL;
 	
 	if(new_obj != NULL) {
 		object_name = crm_element_name(new_obj);
@@ -407,26 +156,21 @@ add_cib_object(crm_data_t *parent, crm_data_t *new_obj)
 
 
 int
-update_cib_object(crm_data_t *parent, crm_data_t *update)
+update_cib_object(xmlNode *parent, xmlNode *update)
 {
 	const char *replace = NULL;
 	const char *object_name = NULL;
 	const char *object_id = NULL;
-	crm_data_t *target = NULL;
+	xmlNode *target = NULL;
 	int result = cib_ok;
 
-	CRM_DEV_ASSERT(update != NULL);
-	if(crm_assert_failed) { return cib_NOOBJECT; }
-
-	CRM_DEV_ASSERT(parent != NULL);
-	if(crm_assert_failed) { return cib_NOPARENT; }
+	CRM_CHECK(update != NULL, return cib_NOOBJECT);
+	CRM_CHECK(parent != NULL, return cib_NOPARENT);
 
 	object_name = crm_element_name(update);
+	CRM_CHECK(object_name != NULL, return cib_NOOBJECT);
+
 	object_id = ID(update);
-
-	CRM_DEV_ASSERT(object_name != NULL);
-	if(crm_assert_failed) { return cib_NOOBJECT; }
-
 	crm_debug_3("Processing: <%s id=%s>",
 		    crm_str(object_name), crm_str(object_id));
 	
@@ -447,7 +191,7 @@ update_cib_object(crm_data_t *parent, crm_data_t *update)
 	
 	replace = crm_element_value(update, XML_CIB_ATTR_REPLACE);
 	if(replace != NULL) {
-	    crm_data_t *remove = NULL;
+	    xmlNode *remove = NULL;
 	    int last = 0, lpc = 0, len = 0;
 
 	    len = strlen(replace);

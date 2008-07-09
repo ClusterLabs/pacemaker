@@ -34,7 +34,6 @@
 #include <fcntl.h>
 
 #include <clplumbing/cl_log.h>
-#include <clplumbing/cl_malloc.h>
 #include <clplumbing/cl_uuid.h>
 #include <clplumbing/uids.h>
 #include <clplumbing/lsb_exitcodes.h>
@@ -132,7 +131,7 @@ read_local_hb_uuid(void)
 
 /* 	fprintf(stderr, "Reading %d bytes from: %s\n", UUID_LEN, UUID_FILE); */
 
-	buffer = cl_malloc(50);
+	buffer = malloc(50);
 	read_len = fread(uuid.uuid, 1, UUID_LEN, input);
 	if(read_len != UUID_LEN) {
 		fprintf(stderr, "Expected and read bytes differ: %d vs. %ld\n",
@@ -150,7 +149,7 @@ read_local_hb_uuid(void)
 	}
 
   bail:	
-	cl_free(buffer);
+	free(buffer);
 	fclose(input);
 
 	return rc;

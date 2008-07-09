@@ -28,8 +28,8 @@
 #include <heartbeat.h>
 #include <clplumbing/Gmain_timeout.h>
 #include <lrm/lrm_api.h>
-
-extern cib_t *te_cib_conn;
+#include <crmd_fsa.h>
+#include <crmd_messages.h>
 
 GCHSource *stonith_src = NULL;
 GTRIGSource *stonith_reconnect = NULL;
@@ -83,6 +83,31 @@ te_connect_stonith(gpointer user_data)
 }
 
 gboolean
+start_global_timer(crm_action_timer_t *timer, int timeout)
+{
+	CRM_ASSERT(timer != NULL);
+	CRM_CHECK(timer > 0, return FALSE);
+	CRM_CHECK(timer->source_id == 0, return FALSE);
+
+	if(timeout <= 0) {
+		crm_err("Tried to start timer with period: %d", timeout);
+
+	} else if(timer->source_id == 0) {
+		crm_debug("Starting abort timer: %dms", timeout);
+		timer->timeout = timeout;
+		timer->source_id = Gmain_timeout_add(
+			timeout, global_timer_callback, (void*)timer);
+		CRM_ASSERT(timer->source_id != 0);
+		return TRUE;
+
+	} else {
+		crm_err("Timer is already active with period: %d", timer->timeout);
+	}
+	
+	return FALSE;		
+}
+
+gboolean
 stop_te_timer(crm_action_timer_t *timer)
 {
 	const char *timer_desc = "action timer";
@@ -92,6 +117,7 @@ stop_te_timer(crm_action_timer_t *timer)
 	}
 	if(timer->reason == timeout_abort) {
 		timer_desc = "global timer";
+		crm_debug_2("Stopping %s", timer_desc);
 	}
 	
 	if(timer->source_id != 0) {
@@ -100,10 +126,63 @@ stop_te_timer(crm_action_timer_t *timer)
 		timer->source_id = 0;
 
 	} else {
+		crm_debug_2("%s was already stopped", timer_desc);
 		return FALSE;
 	}
 
 	return TRUE;
+}
+
+gboolean
+te_graph_trigger(gpointer user_data) 
+{
+    int timeout = 0;
+    enum transition_status graph_rc = -1;
+
+    crm_debug_2("Invoking graph %d in state %s",
+	      transition_graph->id, fsa_state2string(fsa_state));
+
+    switch(fsa_state) {
+	case S_STARTING:
+	case S_PENDING:
+	case S_NOT_DC:
+	case S_HALT:
+	case S_ILLEGAL:
+	case S_STOPPING:
+	case S_TERMINATE:
+	    return TRUE;
+	    break;
+	default:
+	    break;
+    }
+    
+    if(transition_graph->complete == FALSE) {
+	graph_rc = run_graph(transition_graph);
+	timeout = transition_graph->transition_timeout;
+	print_graph(LOG_DEBUG_3, transition_graph);
+
+	if(graph_rc == transition_active) {
+		crm_debug_3("Transition not yet complete");
+		stop_te_timer(transition_timer);
+		start_global_timer(transition_timer, timeout);
+		return TRUE;		
+
+	} else if(graph_rc == transition_pending) {
+		crm_debug_3("Transition not yet complete - no actions fired");
+		return TRUE;		
+	}
+	
+	if(graph_rc != transition_complete) {
+		crm_err("Transition failed: %s", transition_status(graph_rc));
+		print_graph(LOG_WARNING, transition_graph);
+	}
+    }
+    
+    crm_info("Transition %d is now complete", transition_graph->id);
+    transition_graph->complete = TRUE;
+    notify_crmd(transition_graph);
+    
+    return TRUE;	
 }
 
 void
@@ -116,23 +195,42 @@ trigger_graph_processing(const char *fn, int line)
 void
 abort_transition_graph(
 	int abort_priority, enum transition_action abort_action,
-	const char *abort_text, crm_data_t *reason, const char *fn, int line) 
+	const char *abort_text, xmlNode *reason, const char *fn, int line) 
 {
-	int log_level = LOG_DEBUG;
+	int log_level = LOG_INFO;
 /*
 	if(abort_priority >= INFINITY) {
 		log_level = LOG_INFO;
 	}
 */
+	do_crm_log(log_level, "%s:%d - Triggered graph processing (complete=%d) : %s",
+		   fn, line, transition_graph->complete, abort_text);
+
+	switch(fsa_state) {
+	    case S_STARTING:
+	    case S_PENDING:
+	    case S_NOT_DC:
+	    case S_HALT:
+	    case S_ILLEGAL:
+	    case S_STOPPING:
+	    case S_TERMINATE:
+		/* swallow these - we'll pick up the changes in due course */
+		return;
+	    default:
+		break;
+	}
+	
+	if(transition_graph && transition_graph->complete) {
+	    register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
+	    crm_log_xml(log_level, "Cause", reason);
+	    return;
+	}
+
 	update_abort_priority(
 		transition_graph, abort_priority, abort_action, abort_text);
 
-	do_crm_log(log_level, "%s:%d - Triggered graph processing : %s",
-		      fn, line, abort_text);
-
 	if(reason != NULL) {
-		const char *magic = crm_element_value(
-			reason, XML_ATTR_TRANSITION_MAGIC);
+		const char *magic = crm_element_value(reason, XML_ATTR_TRANSITION_MAGIC);
 		if(magic) {
 			do_crm_log(log_level, "Caused by update to %s: %s",
 				   ID(reason), magic);
@@ -143,3 +241,4 @@ abort_transition_graph(
 	
 	G_main_set_trigger(transition_trigger);
 }
+

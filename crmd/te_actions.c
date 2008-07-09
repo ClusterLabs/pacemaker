@@ -29,9 +29,11 @@
 #include <clplumbing/Gmain_timeout.h>
 #include <lrm/lrm_api.h>
 #include <clplumbing/lsb_exitcodes.h>
+#include <crmd_fsa.h>
+#include <crmd_messages.h>
+#include <crm/common/cluster.h>
 
 char *te_uuid = NULL;
-IPC_Channel *crm_ch = NULL;
 
 void send_rsc_command(crm_action_t *action);
 extern crm_action_timer_t *transition_timer;
@@ -69,7 +71,7 @@ send_stonith_update(stonith_ops_t * op)
 	const char *uuid   = op->node_uuid;
 	
 	/* zero out the node-status & remove all LRM status info */
-	crm_data_t *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+	xmlNode *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	
 	CRM_CHECK(op->node_name != NULL, return);
 	CRM_CHECK(op->node_uuid != NULL, return);
@@ -81,11 +83,10 @@ send_stonith_update(stonith_ops_t * op)
 	crm_xml_add(node_state, XML_CIB_ATTR_CRMDSTATE, OFFLINESTATUS);
 	crm_xml_add(node_state, XML_CIB_ATTR_JOINSTATE, CRMD_JOINSTATE_DOWN);
 	crm_xml_add(node_state, XML_CIB_ATTR_EXPSTATE,  CRMD_JOINSTATE_DOWN);
-	crm_xml_add(node_state, XML_CIB_ATTR_REPLACE,   XML_CIB_TAG_LRM);
 	crm_xml_add(node_state, XML_ATTR_ORIGIN,   __FUNCTION__);
 	
-	rc = te_cib_conn->cmds->update(
-		te_cib_conn, XML_CIB_TAG_STATUS, node_state, NULL,
+	rc = fsa_cib_conn->cmds->update(
+		fsa_cib_conn, XML_CIB_TAG_STATUS, node_state,
 		cib_quorum_override|cib_scope_local);	
 	
 	if(rc < cib_ok) {
@@ -95,7 +96,7 @@ send_stonith_update(stonith_ops_t * op)
 		
 	} else {
 		/* delay processing the trigger until the update completes */
-		add_cib_op_callback(rc, FALSE, NULL, cib_fencing_updated);
+	    add_cib_op_callback(fsa_cib_conn, rc, FALSE, crm_strdup(target), cib_fencing_updated);
 	}
 	
 	free_xml(node_state);
@@ -176,7 +177,7 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 {
 	char *value = NULL;
 	char *counter = NULL;
-	HA_Message *cmd = NULL;		
+	xmlNode *cmd = NULL;		
 
 	const char *id = NULL;
 	const char *task = NULL;
@@ -195,6 +196,18 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	
 	te_log_action(LOG_INFO, "Executing crm-event (%s): %s on %s",
 		      crm_str(id), crm_str(task), on_node);
+
+	if(safe_str_eq(on_node, fsa_our_uname)
+	   && safe_str_eq(task, CRM_OP_SHUTDOWN)) {
+	    /* defer until everything else completes */
+	    te_log_action(LOG_INFO, "crm-event (%s) is a local shutdown", crm_str(id));
+	    graph->completion_action = tg_shutdown;
+	    graph->abort_reason = "local shutdown";
+	    action->confirmed = TRUE;
+	    update_graph(graph, action);
+	    trigger_graph();
+	    return TRUE;
+	}
 	
 	cmd = create_request(task, NULL, on_node, CRM_SYSTEM_CRMD,
 			     CRM_SYSTEM_TENGINE, NULL);
@@ -202,9 +215,9 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	counter = generate_transition_key(
 	    transition_graph->id, action->id, get_target_rc(action), te_uuid);
 	crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
-	ret = send_ipc_message(crm_ch, cmd);
+	ret = send_cluster_message(on_node, crm_msg_crmd, cmd, TRUE);
 	crm_free(counter);
-	crm_msg_del(cmd);
+	free_xml(cmd);
 	
 	value = g_hash_table_lookup(action->params, crm_meta_name(XML_ATTR_TE_NOWAIT));
 	if(ret == FALSE) {
@@ -222,7 +235,7 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 		action->timer->reason = timeout_action_warn;
 		te_start_action_timer(action);
 	}
-	
+
 	return TRUE;
 }
 
@@ -250,17 +263,17 @@ te_rsc_command(crm_graph_t *graph, crm_action_t *action)
 }
 
 gboolean
-cib_action_update(crm_action_t *action, int status)
+cib_action_update(crm_action_t *action, int status, int op_rc)
 {
 	char *op_id  = NULL;
 	char *code   = NULL;
 	char *digest = NULL;
-	crm_data_t *tmp      = NULL;
-	crm_data_t *params   = NULL;
-	crm_data_t *state    = NULL;
-	crm_data_t *rsc      = NULL;
-	crm_data_t *xml_op   = NULL;
-	crm_data_t *action_rsc = NULL;
+	xmlNode *tmp      = NULL;
+	xmlNode *params   = NULL;
+	xmlNode *state    = NULL;
+	xmlNode *rsc      = NULL;
+	xmlNode *xml_op   = NULL;
+	xmlNode *action_rsc = NULL;
 
 	enum cib_errors rc = cib_ok;
 
@@ -269,17 +282,20 @@ cib_action_update(crm_action_t *action, int status)
 	const char *rsc_id = NULL;
 	const char *task   = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 	const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-	const char *task_uuid = crm_element_value(
-		action->xml, XML_LRM_ATTR_TASK_KEY);
-	
-	const char *target_uuid = crm_element_value(
-		action->xml, XML_LRM_ATTR_TARGET_UUID);
+	const char *task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+	const char *target_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 
 	int call_options = cib_quorum_override|cib_scope_local;
 
-	crm_warn("%s %d: %s on %s timed out",
-		 crm_element_name(action->xml), action->id, task_uuid, target);
-
+	if(LRM_OP_PENDING) {
+	    call_options |= cib_inhibit_notify; /* We don't want to know about these updates */
+	    crm_debug("%s %d: Recording pending operation %s on %s",
+		     crm_element_name(action->xml), action->id, task_uuid, target);
+	} else {
+	    crm_warn("%s %d: %s on %s timed out",
+		     crm_element_name(action->xml), action->id, task_uuid, target);
+	}
+	
 	action_rsc = find_xml_node(action->xml, XML_CIB_TAG_RESOURCE, TRUE);
 	if(action_rsc == NULL) {
 		return FALSE;
@@ -289,8 +305,6 @@ cib_action_update(crm_action_t *action, int status)
 	CRM_CHECK(rsc_id != NULL,
 		  crm_log_xml_err(action->xml, "Bad:action");
 		  return FALSE);
-	
-	code = crm_itoa(status);
 	
 /*
   update the CIB
@@ -330,15 +344,13 @@ cib_action_update(crm_action_t *action, int status)
 	crm_xml_add(xml_op, XML_ATTR_ID, op_id);
 	crm_free(op_id);
 	
+	crm_xml_add(xml_op, XML_LRM_ATTR_CALLID, "-1");
 	crm_xml_add(xml_op, XML_LRM_ATTR_TASK, task);
 	crm_xml_add(xml_op, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-	crm_xml_add(xml_op, XML_LRM_ATTR_OPSTATUS, code);
-	crm_xml_add(xml_op, XML_LRM_ATTR_CALLID, "-1");
+	crm_xml_add_int(xml_op, XML_LRM_ATTR_OPSTATUS, status);
 	crm_xml_add_int(xml_op, XML_LRM_ATTR_INTERVAL, action->interval);
-	crm_xml_add(xml_op, XML_LRM_ATTR_RC, code);
+	crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op_rc);
 	crm_xml_add(xml_op, XML_ATTR_ORIGIN, __FUNCTION__);
-
-	crm_free(code);
 
 	code = generate_transition_key(
 	    transition_graph->id, action->id, get_target_rc(action), te_uuid);
@@ -346,7 +358,7 @@ cib_action_update(crm_action_t *action, int status)
 	crm_free(code);
 
 	code = generate_transition_magic(
-		crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY), status, status);
+		crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY), status, op_rc);
 	crm_xml_add(xml_op,  XML_ATTR_TRANSITION_MAGIC, code);
 	crm_free(code);
 
@@ -371,13 +383,13 @@ cib_action_update(crm_action_t *action, int status)
 		  status<0?"new action":XML_ATTR_TIMEOUT,
 		  crm_element_name(action->xml), crm_str(task), rsc_id, target);
 	
-	rc = te_cib_conn->cmds->update(
-		te_cib_conn, XML_CIB_TAG_STATUS, state, NULL, call_options);
+	rc = fsa_cib_conn->cmds->update(
+		fsa_cib_conn, XML_CIB_TAG_STATUS, state, call_options);
 
 	crm_debug("Updating CIB with %s action %d: %s on %s (call_id=%d)",
 		  op_status2text(status), action->id, task_uuid, target, rc);
 
-	add_cib_op_callback(rc, FALSE, NULL, cib_action_updated);
+	add_cib_op_callback(fsa_cib_conn, rc, FALSE, NULL, cib_action_updated);
 	free_xml(state);
 
 	action->sent_update = TRUE;
@@ -392,8 +404,8 @@ cib_action_update(crm_action_t *action, int status)
 void
 send_rsc_command(crm_action_t *action) 
 {
-	HA_Message *cmd = NULL;
-	crm_data_t *rsc_op  = NULL;
+	xmlNode *cmd = NULL;
+	xmlNode *rsc_op  = NULL;
 	char *counter = NULL;
 
 	const char *task    = NULL;
@@ -423,17 +435,8 @@ send_rsc_command(crm_action_t *action)
 	cmd = create_request(CRM_OP_INVOKE_LRM, rsc_op, on_node,
 			     CRM_SYSTEM_LRMD, CRM_SYSTEM_TENGINE, NULL);
 	
-#if 1
-	send_ipc_message(crm_ch, cmd);
-#else
-	/* test the TE timer/recovery code */
-	if((action->id % 11) == 0) {
-		crm_err("Faking lost action %d: %s", action->id, task_uuid);
-	} else {
-		send_ipc_message(crm_ch, cmd);
-	}
-#endif
-	crm_msg_del(cmd);
+	send_cluster_message(on_node, crm_msg_lrmd, cmd, TRUE);
+	free_xml(cmd);
 	
 	action->executed = TRUE;
 	value = g_hash_table_lookup(action->params, crm_meta_name(XML_ATTR_TE_NOWAIT));
@@ -455,6 +458,13 @@ send_rsc_command(crm_action_t *action)
 		}
 		te_start_action_timer(action);
 	}
+
+	value = g_hash_table_lookup(action->params, crm_meta_name(XML_OP_ATTR_PENDING));
+	if(crm_is_true(value)) {
+	    /* write a "pending" entry to the CIB, inhibit notification */
+	    crm_info("Recording pending op %s in the CIB", task_uuid);
+	    cib_action_update(action, LRM_OP_PENDING, EXECRA_STATUS_UNKNOWN);
+	}	
 }
 
 crm_graph_functions_t te_graph_fns = {
@@ -464,62 +474,59 @@ crm_graph_functions_t te_graph_fns = {
 	te_fence_node
 };
 
-extern GMainLoop*  mainloop;
-
 void
 notify_crmd(crm_graph_t *graph)
-{	
-	HA_Message *cmd = NULL;
+{
 	int log_level = LOG_DEBUG;
-	const char *op = CRM_OP_TEABORT;
-	int pending_callbacks = num_cib_op_callbacks();
+	const char *type = "unknown";
+	enum crmd_fsa_input event = I_NULL;
 	
-
+	crm_debug("Processing transition completion in state %s", fsa_state2string(fsa_state));
+	
 	stop_te_timer(transition_timer);
-	
-	if(pending_callbacks != 0) {
-		crm_warn("Delaying completion until all CIB updates complete");
-		return;
-	}
-
 	CRM_CHECK(graph->complete, graph->complete = TRUE);
 
 	switch(graph->completion_action) {
 		case tg_stop:
-			op = CRM_OP_TECOMPLETE;
-			log_level = LOG_INFO;
-			break;
-
-		case tg_abort:
+		    type = "stop";
+		    /* fall through */
+		case tg_done:
+		    type = "done";
+		    log_level = LOG_INFO;
+		    if(fsa_state == S_TRANSITION_ENGINE) {
+			event = I_TE_SUCCESS;
+		    }
+		    break;
+		    
 		case tg_restart:
-			op = CRM_OP_TEABORT;
-			break;
+		    type = "restart";
+		    if(fsa_state == S_TRANSITION_ENGINE) {
+			event = I_PE_CALC;
+
+		    } else if(fsa_state == S_POLICY_ENGINE) {
+			register_fsa_action(A_PE_INVOKE);
+		    }
+		    break;
 
 		case tg_shutdown:
-			crm_info("Exiting after transition");
-			if (mainloop != NULL && g_main_is_running(mainloop)) {
-				g_main_quit(mainloop);
-				return;
-			}
-			exit(LSB_EXIT_OK);
+		    type = "shutdown";
+		    if(is_set(fsa_input_register, R_SHUTDOWN)) {
+			event = I_STOP;			
+			
+		    } else {
+			event = I_TERMINATE;
+		    }
 	}
 
 	te_log_action(log_level, "Transition %d status: %s - %s",
-		      graph->id, op, crm_str(graph->abort_reason));
-
-	print_graph(LOG_DEBUG_3, graph);
-	
-	cmd = create_request(
-		op, NULL, NULL, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, NULL);
-
-	if(graph->abort_reason != NULL) {
-		ha_msg_add(cmd, "message", graph->abort_reason);
-	}
-
-	send_ipc_message(crm_ch, cmd);
-	crm_msg_del(cmd);
+		      graph->id, type, crm_str(graph->abort_reason));
 
 	graph->abort_reason = NULL;
-	graph->completion_action = tg_restart;	
+	graph->completion_action = tg_done;
+	clear_bit_inplace(fsa_input_register, R_IN_TRANSITION);
 
+	if(event != I_NULL) {
+	    register_fsa_input(C_FSA_INTERNAL, event, NULL);
+	}
+	
 }

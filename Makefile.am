@@ -1,7 +1,7 @@
 #
-# linux-ha: Linux-HA code
+# Pacemaker code
 #
-# Copyright (C) 2002 Alan Robertson
+# Copyright (C) 2004 Andrew Beekhof
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -29,10 +29,12 @@ LAST_RELEASE		= Pacemaker-0.6.5
 AUTOMAKE_OPTIONS	= foreign
 ##ACLOCAL                 = aclocal -I $(auxdir)
 
+PRETTY_ARGS		= --braces-on-if-line --braces-on-struct-decl-line --cuddle-do-while --cuddle-else --leave-preprocessor-space --blank-lines-after-declarations --blank-lines-after-procedures -sc --case-indentation4 --no-space-after-function-call-names --no-blank-lines-after-commas --procnames-start-lines --leave-optional-blank-lines --indent-level4 --line-length100 --break-before-boolean-operator --ignore-newlines --no-space-after-if --no-space-after-for --no-space-after-while --paren-indentation4
+
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar
 
-SUBDIRS	= debian build config replace include lib cib crmd pengine transitioner crm fencing tools doc cts
+SUBDIRS	= debian build $(LIBLTDL_DIR) replace include lib cib pengine crmd crm fencing tools doc cts xml
 
 tgz:
 	rm -f $(TARFILE)
@@ -54,20 +56,42 @@ changes:
 	hg log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v Low: | sort -uf 
 	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
 
+features:
+	printf "$(PACKAGE) ($(VERSION)-1) unstable; urgency=medium\n"
+	printf "  * Update source tarball to revision: `hg id`\n"
+	printf "  * Statistics:\n"
+	printf "      Changesets: `hg out -M --template "{desc|firstline|strip}\n" ../$(STABLE_SERIES) | wc -l`\n"
+	printf "      Diff:           "
+	hg out -M -p ../$(STABLE_SERIES) | diffstat | tail -n 1
+	printf "\n  * Changes added since $(STABLE_SERIES)\n"
+	hg out -M --template "  + {desc|firstline|strip}\n" ../$(STABLE_SERIES) | grep -v Low: | sort -uf 
+	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
+
 obs:	tgz
 	make changes > .changes
 	scp .changes $(TARFILE) vmhost.beekhof.net:Development/obs/server:ha-clustering/pacemaker/
+
+dev:	tgz
+	make features > .changes
+	scp .changes $(TARFILE) vmhost.beekhof.net:Development/obs/server:ha-clustering:UNSTABLE/pacemaker/
 
 home:	tgz
 	make changes > .changes
 	scp .changes $(TARFILE) vmhost.beekhof.net:Development/obs/home:beekhof/pacemaker-test/
 
-global:
-	gtags
+global: clean-generic
+	gtags -q
+
+global-html: global
 	htags -sanhIT
 
-global-www: global
+global-www: global-html
 	rsync -avzxlSD --progress HTML/ root@clusterlabs.org:/var/lib/global/pacemaker
+
+pretty:
+	for file in `find . -name "*.c" | tr '\n' ' '`; do	\
+		gnuindent $(PRETTY_ARGS) $$file;		\
+	done
 
 rpmtgz: tgz
 	echo "Installing $(TARFILE) into /usr/src/packages/SOURCES for rpm"
@@ -88,11 +112,15 @@ deb:	tgz
 	rm -rf $(distdir)
 
 install-exec-local:
-	test -d $(DESTDIR)$(LCRSODIR) || mkdir -p $(DESTDIR)$(LCRSODIR)
+	test -d $(DESTDIR)$(LCRSODIR) || mkdir -p $(DESTDIR)$(LCRSODIR) 
 if BUILD_AIS_SUPPORT
 	rm -f $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso $(DESTDIR)$(LCRSODIR)/service_crm.so
 	cp $(DESTDIR)$(libdir)/service_crm.so $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso
 endif
+
+clean-generic:
+	find . -name ".gres.*" -exec rm \{\} \;
+	find . -name "*~" -exec rm \{\} \;
 
 dist-clean-local:
 	rm -f autoconf automake autoheader $(TARFILE)

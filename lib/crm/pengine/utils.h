@@ -22,7 +22,8 @@
 
 
 extern node_t *node_copy(node_t *this_node) ;
-
+extern time_t get_timet_now(pe_working_set_t *data_set);
+extern int get_failcount(node_t *node, resource_t *rsc, int *last_failure, pe_working_set_t *data_set);
 
 /* Binary like operators for lists of nodes */
 extern GListPtr node_list_exclude(GListPtr list1, GListPtr list2);
@@ -42,7 +43,7 @@ extern void pe_free_shallow(GListPtr alist);
 extern void pe_free_shallow_adv(GListPtr alist, gboolean with_data);
 
 /* For creating the transition graph */
-extern crm_data_t *action2xml(action_t *action, gboolean as_input);
+extern xmlNode *action2xml(action_t *action, gboolean as_input);
 
 /* Printing functions for debug */
 extern void print_node(
@@ -57,7 +58,7 @@ extern void dump_node_scores(int level, resource_t *rsc, const char *comment, GL
 extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);
 extern gint sort_rsc_index(gconstpointer a, gconstpointer b);
 
-extern crm_data_t *find_rsc_op_entry(resource_t *rsc, const char *key);
+extern xmlNode *find_rsc_op_entry(resource_t *rsc, const char *key);
 
 extern action_t *custom_action(
 	resource_t *rsc, char *key, const char *task, node_t *on_node,
@@ -113,7 +114,7 @@ extern GListPtr find_actions_exact(
 	GListPtr input, const char *key, node_t *on_node);
 extern GListPtr find_recurring_actions(GListPtr input, node_t *not_on_node);
 
-extern void set_id(crm_data_t *xml_obj, const char *prefix, int child);
+extern void set_id(xmlNode *xml_obj, const char *prefix, int child);
 extern void pe_free_action(action_t *action);
 
 extern void

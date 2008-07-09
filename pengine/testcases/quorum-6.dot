@@ -3,6 +3,8 @@
 "DoFencing_start_0" -> "DoFencing_running_0" [ style = bold]
 "DoFencing_start_0" -> "child_DoFencing:0_start_0 hadev2" [ style = bold]
 "DoFencing_start_0" [ style=bold color="green" fontcolor="orange" ]
+"DoFencing_stop_0" -> "DoFencing_start_0" [ style = bold]
+"DoFencing_stop_0" [ style=bold color="green" fontcolor="orange"  ]
 "child_DoFencing:0_monitor_0 hadev2" -> "probe_complete hadev2" [ style = bold]
 "child_DoFencing:0_monitor_0 hadev2" [ style=bold color="green" fontcolor="black" ]
 "child_DoFencing:0_monitor_5000 hadev2" [ style=bold color="green" fontcolor="black" ]
@@ -26,6 +28,7 @@
 "probe_complete hadev2" -> "probe_complete" [ style = bold]
 "probe_complete hadev2" [ style=bold color="green" fontcolor="black" ]
 "probe_complete" -> "DoFencing_start_0" [ style = bold]
+"probe_complete" -> "DoFencing_stop_0" [ style = bold]
 "probe_complete" -> "child_DoFencing:0_start_0 hadev2" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange" ]
 }

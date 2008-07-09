@@ -69,7 +69,7 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		 */
 		pe_proc_err("Resource %s::%s:%s appears to be active on %d nodes.",
 			    class, type, rsc->id, g_list_length(rsc->running_on));
-		cl_log(LOG_ERR, "See %s for more information.",
+		cl_log(LOG_WARNING, "See %s for more information.",
 		       HAURL("v2/faq/resource_too_active"));
 		
 		if(rsc->recovery_type == recovery_stop_only) {
@@ -170,7 +170,7 @@ native_parameter(
 		unpack_instance_attributes(
 			rsc->xml, XML_TAG_ATTR_SETS,
 			node?node->details->attrs:NULL,
-			local_hash, NULL, data_set->now);
+			local_hash, NULL, FALSE, data_set->now);
 
 		hash = local_hash;
 	}
@@ -262,11 +262,12 @@ native_print(
 	if((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {
 		const char *desc = NULL;
 		desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
-		status_print("%s%s\t(%s%s%s:%s%s)%s%s",
+		status_print("%s%s\t(%s%s%s:%s%s) %s %s%s",
 			     pre_text?pre_text:"", rsc->id,
 			     class, prov?"::":"", prov?prov:"", 
 			     crm_element_value(rsc->xml, XML_ATTR_TYPE),
 			     is_set(rsc->flags, pe_rsc_orphan)?" ORPHANED":"",
+			     (rsc->variant!=pe_native)?"":role2text(rsc->role),
 			     desc?": ":"", desc?desc:"");
 
 	} else {
@@ -333,6 +334,8 @@ native_print(
 
 	if(options & pe_print_html) {
 		status_print("<br/>\n");
+	} else if(options & pe_print_suppres_nl) {
+	    /* nothing */
 	} else if((options & pe_print_printf) || (options & pe_print_ncurses)) {
 		status_print("\n");
 	}

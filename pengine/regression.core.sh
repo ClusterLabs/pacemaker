@@ -66,7 +66,7 @@ function do_test {
     fi
 
 #    ../admin/crm_verify -X $input
-    ptest -V -X $input -D $dot_output -G $output -S $*
+    ptest -V -x $input -D $dot_output -G $output -S $*
     if [ $? != 0 ]; then
 	echo "	* Failed (PE : rc)";
 	num_failed=`expr $num_failed + 1`
