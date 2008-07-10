@@ -195,11 +195,14 @@ do_election_count_vote(long long action,
 	const char *your_version   = NULL;
 	const char *election_owner = NULL;
 	const char *reason	   = "unknown";
-	static time_t last_election_win = 0;
-	static time_t last_election_loss = 0;
 	crm_node_t *our_node = NULL, *your_node = NULL;
 	ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
 
+	static int win_dampen = 1;  /* in seconds */
+	static int loss_dampen = 2; /* in seconds */
+	static time_t last_election_win = 0;
+	static time_t last_election_loss = 0;
+	
 	/* if the membership copy is NULL we REALLY shouldnt be voting
 	 * the question is how we managed to get here.
 	 */
@@ -334,9 +337,6 @@ do_election_count_vote(long long action,
 		last_election_win = 0;
 
 	} else {
-	    static int win_dampen = 1;
-	    static int loss_dampen = 2;
-
 	    if(last_election_loss) {
 		time_t tm_now = time(NULL);
 		if(tm_now - last_election_loss < (time_t)loss_dampen) {
@@ -356,7 +356,15 @@ do_election_count_vote(long long action,
 		}
 	    }
 
+#if 0
+	    /* Enabling this code can lead to multiple DCs during SimulStart.
+	     * Specifically when a node comes up after our last 'win' vote.
+	     *
+	     * Fixing and enabling this functionality might become important when
+	     * we start running realy big clusters, but for now leave it disabled.
+	     */
 	    last_election_win = time(NULL);
+#endif
 	    register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 	    crm_info("Election %d won over %s: %s", election_id, vote_from, reason);
 	    g_hash_table_destroy(voted);
