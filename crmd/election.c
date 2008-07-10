@@ -281,11 +281,11 @@ do_election_count_vote(long long action,
 	} else if(compare_version(your_version, CRM_FEATURE_SET) > 0) {
 		reason = "version";
 		
-	} else if(is_heartbeat_cluster() && your_node->born < our_node->born) {
+	} else if(your_node->born < our_node->born) {
 		reason = "born_on";
 		we_loose = TRUE;
 		
-	} else if(is_heartbeat_cluster() && your_node->born > our_node->born) {
+	} else if(your_node->born > our_node->born) {
 		reason = "born_on";
 
 	} else if(fsa_our_uname == NULL
