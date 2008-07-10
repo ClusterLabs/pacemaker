@@ -641,39 +641,35 @@ void g_hash_destroy_str(gpointer data)
 long long
 crm_int_helper(const char *text, char **end_text)
 {
-	long long result = -1;
-	char *local_end_text = NULL;
-
-	errno = 0;
-	
-	if(text != NULL) {
-		if(end_text != NULL) {
-		    result = strtoll(text, end_text, 10);
-		} else {
-		    result = strtoll(text, &local_end_text, 10);
-		}
-		
-/* 		CRM_CHECK(errno != EINVAL); */
-		if(errno == EINVAL) {
-			crm_err("Conversion of %s failed", text);
-			result = -1;
-			
-		} else {
-			if(errno == ERANGE) {
-			    crm_err("Conversion of %s was clipped: %lld",
-				    text, (long long)result);
-			} else {
-			    cl_perror("Conversion of %s failed:", text);
-			}
-			
-			if(end_text == NULL && local_end_text[0] != '\0') {
-				crm_err("Characters left over after parsing "
-					"\"%s\": \"%s\"", text, local_end_text);
-			}
-				
-		}
+    long long result = -1;
+    char *local_end_text = NULL;
+    
+    errno = 0;
+    
+    if(text != NULL) {
+	if(end_text != NULL) {
+	    result = strtoll(text, end_text, 10);
+	} else {
+	    result = strtoll(text, &local_end_text, 10);
 	}
-	return result;
+	
+/* 		CRM_CHECK(errno != EINVAL); */
+	if(errno == EINVAL) {
+	    crm_err("Conversion of %s failed", text);
+	    result = -1;
+	    
+	} else if(errno == ERANGE) {
+	    crm_err("Conversion of %s was clipped: %lld", text, result);
+
+	} else if(errno != 0) {
+	    cl_perror("Conversion of %s failed:", text);
+	}
+			
+	if(local_end_text != NULL && local_end_text[0] != '\0') {
+	    crm_err("Characters left over after parsing '%s': '%s'", text, local_end_text);
+	}
+    }
+    return result;
 }
 
 int
