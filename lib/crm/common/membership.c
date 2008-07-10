@@ -146,7 +146,7 @@ void crm_peer_destroy(void)
 }
 
 crm_node_t *crm_update_peer(
-    unsigned int id, unsigned long long born, int32_t votes, uint32_t children,
+    unsigned int id, uint64_t born, uint64_t seen, int32_t votes, uint32_t children,
     const char *uuid, const char *uname, const char *addr, const char *state) 
 {
     gboolean id_changed = FALSE;
@@ -197,6 +197,14 @@ crm_node_t *crm_update_peer(
 	procs_changed = TRUE;
 	node->processes = children;
     }
+
+    if(born != 0) {
+	node->born = born;
+    }
+
+    if(seen != 0) {
+	node->last_seen = seen;
+    }
     
     if(state != NULL) {
 	if(node->state == NULL
@@ -204,11 +212,6 @@ crm_node_t *crm_update_peer(
 	    state_changed = TRUE;
 	    crm_free(node->state);
 	    node->state = crm_strdup(state);
-	    if(crm_is_member_active(node)) {
-		node->born = born;
-	    } else {
-		node->born = -1;
-	    }
 	}
     }
 
@@ -221,13 +224,13 @@ crm_node_t *crm_update_peer(
     }
 
     if(id_changed || state_changed || addr_changed || votes_changed || procs_changed) {
-	crm_info("Node %s: id=%u%s state=%s%s addr=%s%s votes=%d%s born=%llu proc=%.32x%s",
+	crm_info("Node %s: id=%u%s state=%s%s addr=%s%s votes=%d%s born=%llu seen=%llu proc=%.32x%s",
 		 node->uname,
 		 node->id, id_changed?" (new)":"",
 		 node->state, state_changed?" (new)":"",
 		 node->addr, addr_changed?" (new)":"",
 		 node->votes, votes_changed?" (new)":"",
-		 node->born,
+		 node->born, node->last_seen,
 		 node->processes, procs_changed?" (new)":""
 	);
     }
@@ -241,6 +244,8 @@ crm_node_t *crm_update_ais_node(xmlNode *member, long long seq)
     const char *addr = crm_element_value(member, "addr");
     const char *uname = crm_element_value(member, "uname");
     const char *state = crm_element_value(member, "state");
+    const char *born_s = crm_element_value(member, "born");
+    const char *seen_s = crm_element_value(member, "seen");
     const char *votes_s = crm_element_value(member, "votes");
     const char *procs_s = crm_element_value(member, "processes");
 
@@ -248,19 +253,23 @@ crm_node_t *crm_update_ais_node(xmlNode *member, long long seq)
     unsigned int id = crm_int_helper(id_s, NULL);
     unsigned int procs = crm_int_helper(procs_s, NULL);
 
-    return crm_update_peer(id, seq, votes, procs, uname, uname, addr, state);
+    /* TODO: These values will contain garbage if version < 0.7.1 */
+    uint64_t born = crm_int_helper(born_s, NULL);
+    uint64_t seen = crm_int_helper(seen_s, NULL);
+
+    return crm_update_peer(id, born, seen, votes, procs, uname, uname, addr, state);
 }
 
 #if SUPPORT_HEARTBEAT
 crm_node_t *crm_update_ccm_node(
-    const oc_ev_membership_t *oc, int offset, const char *state)
+    const oc_ev_membership_t *oc, int offset, const char *state, uint64_t seq)
 {
     crm_node_t *node = NULL;
     const char *uuid = NULL;
     CRM_CHECK(oc->m_array[offset].node_uname != NULL, return NULL);
     uuid = get_uuid(oc->m_array[offset].node_uname);
     node = crm_update_peer(oc->m_array[offset].node_id,
-			   oc->m_array[offset].node_born_on, -1, 0,
+			   oc->m_array[offset].node_born_on, seq, -1, 0,
 			   uuid, oc->m_array[offset].node_uname, NULL, state);
 
     if(safe_str_eq(CRM_NODE_ACTIVE, state)) {

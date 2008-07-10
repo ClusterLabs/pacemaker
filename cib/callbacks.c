@@ -1119,7 +1119,7 @@ cib_client_status_callback(const char * node, const char * client,
 	if(member == NULL) {
 	    /* Make sure it gets created */
 	    const char *uuid = get_uuid(node);
-	    member = crm_update_peer(0, 0, -1, 0, uuid, node, NULL, NULL);
+	    member = crm_update_peer(0, 0, 0, -1, 0, uuid, node, NULL, NULL);
 	}
 	
 	crm_update_peer_proc(node, crm_proc_cib, status);
@@ -1196,12 +1196,12 @@ cib_ccm_msg_callback(
 
 		for(lpc=0; lpc < membership->m_n_out; lpc++) {
 		    crm_update_ccm_node(
-			membership, lpc+membership->m_out_idx, CRM_NODE_LOST);
+			membership, lpc+membership->m_out_idx, CRM_NODE_LOST, current_instance);
 		}
 		
 		for(lpc=0; lpc < membership->m_n_member; lpc++) {
 		    crm_update_ccm_node(
-			membership, lpc+membership->m_memb_idx,CRM_NODE_ACTIVE);
+			membership, lpc+membership->m_memb_idx,CRM_NODE_ACTIVE, current_instance);
 		}
 	}
 	

@@ -60,8 +60,9 @@ typedef struct crm_child_s {
 
 extern void destroy_ais_node(gpointer data);
 extern void delete_member(uint32_t id, const char *uname);
-extern int update_member(unsigned int id, unsigned long long seq, int32_t votes,
-			 uint32_t procs, const char *uname, const char *state);
+extern int update_member(
+    unsigned int id, uint64_t born, uint64_t seq, int32_t votes,
+    uint32_t procs, const char *uname, const char *state, const char *version);
 
 extern const char *member_uname(uint32_t id);
 extern char *append_member(char *data, crm_node_t *node);

@@ -50,7 +50,7 @@ extern crm_node_t *crm_update_ais_node(xmlNode *member, long long seq);
 extern void crm_update_peer_proc(
     const char *uname, uint32_t flag, const char *status);
 extern crm_node_t *crm_update_peer(
-    unsigned int id, unsigned long long born, int32_t votes, uint32_t children,
+    unsigned int id, uint64_t born, uint64_t seen, int32_t votes, uint32_t children,
     const char *uuid, const char *uname, const char *addr, const char *state);
 
 extern gboolean crm_is_member_active(const crm_node_t *node);
@@ -64,7 +64,7 @@ extern gboolean crm_calculate_quorum(void);
 extern gboolean ccm_have_quorum(oc_ed_t event);
 extern const char *ccm_event_name(oc_ed_t event);
 extern crm_node_t *crm_update_ccm_node(
-    const oc_ev_membership_t *oc, int offset, const char *state);
+    const oc_ev_membership_t *oc, int offset, const char *state, uint64_t seq);
 #endif
 
 #if SUPPORT_AIS

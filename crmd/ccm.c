@@ -316,18 +316,18 @@ do_ccm_update_cache(
 	    
 	/*--*-- Recently Dead Member Nodes --*--*/
 	    for(lpc=0; lpc < oc->m_n_out; lpc++) {
-		crm_update_ccm_node(oc, lpc+oc->m_out_idx, CRM_NODE_LOST);
+		crm_update_ccm_node(oc, lpc+oc->m_out_idx, CRM_NODE_LOST, instance);
 	    }
 	    
 	    /*--*-- All Member Nodes --*--*/
 	    for(lpc=0; lpc < oc->m_n_member; lpc++) {
-		crm_update_ccm_node(oc, lpc+oc->m_memb_idx, CRM_NODE_ACTIVE);
+		crm_update_ccm_node(oc, lpc+oc->m_memb_idx, CRM_NODE_ACTIVE, instance);
 	    }
 	}
 
 	if(event == OC_EV_MS_EVICTED) {
 	    crm_update_peer(
-		0, 0, -1, 0,
+		0, 0, 0, -1, 0,
 		fsa_our_uuid, fsa_our_uname, NULL, CRM_NODE_EVICTED);
 
 	    /* todo: drop back to S_PENDING instead */

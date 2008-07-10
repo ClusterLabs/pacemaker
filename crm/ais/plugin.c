@@ -62,10 +62,11 @@ int local_uname_len = 0;
 unsigned int local_nodeid = 0;
 char *ipc_channel_name = NULL;
 
-unsigned long long membership_seq = 0;
+uint64_t membership_seq = 0;
 pthread_t crm_wait_thread;
 
 gboolean wait_active = TRUE;
+gboolean have_reliable_membership_id = FALSE;
 GHashTable *membership_list = NULL;
 
 #define MAX_RESPAWN		100
@@ -81,7 +82,7 @@ struct crm_identify_msg_s
 	uint32_t		processes;
 	char			uname[256];
 	char			version[256];
-
+	uint64_t		born_on;
 } __attribute__((packed));
 
 static crm_child_t crm_children[] = {
@@ -288,7 +289,7 @@ static void crm_plugin_init(struct objdb_iface_ver0 *objdb)
     ais_info("Local hostname: %s", local_uname);
 
     local_nodeid = totempg_my_nodeid_get();
-    update_member(local_nodeid, 0, 1, 0, local_uname, CRM_NODE_LOST);
+    update_member(local_nodeid, 0, 0, 1, 0, local_uname, CRM_NODE_LOST, NULL);
     
 }
 
@@ -459,8 +460,8 @@ static void ais_mark_unseen_peer_dead(
 	&& ais_str_eq(CRM_NODE_LOST, node->state) == FALSE) {
 	ais_info("Node %s was not seen in the previous transition",
 		 node->uname);
-	*changed += update_member(node->id, membership_seq, node->votes,
-				 node->processes, node->uname, CRM_NODE_LOST);
+	*changed += update_member(node->id, 0, membership_seq, node->votes,
+				  node->processes, node->uname, CRM_NODE_LOST, NULL);
 	ais_info("Node %s marked dead", node->uname);
     }
 }
@@ -515,7 +516,7 @@ void global_confchg_fn (
 	uint32_t nodeid = joined_list[lpc];
 	crm_node_t *node = NULL;
 	changed += update_member(
-	    nodeid, membership_seq, -1, 0, NULL, CRM_NODE_MEMBER);
+	    nodeid, 0, membership_seq, -1, 0, NULL, CRM_NODE_MEMBER, NULL);
 
 	ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
 
@@ -531,7 +532,7 @@ void global_confchg_fn (
 	const char *prefix = "MEMB:";
 	uint32_t nodeid = member_list[lpc];
 	changed += update_member(
-	    nodeid, membership_seq, -1, 0, NULL, CRM_NODE_MEMBER);
+	    nodeid, 0, membership_seq, -1, 0, NULL, CRM_NODE_MEMBER, NULL);
 
 	ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
     }
@@ -540,7 +541,7 @@ void global_confchg_fn (
 	const char *prefix = "LOST:";
 	uint32_t nodeid = left_list[lpc];
 	changed += update_member(
-	    nodeid, membership_seq, -1, 0, NULL, CRM_NODE_LOST);
+	    nodeid, 0, membership_seq, -1, 0, NULL, CRM_NODE_LOST, NULL);
 	ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
     }    
     
@@ -548,6 +549,13 @@ void global_confchg_fn (
 	ais_debug_2("Reaping unseen nodes...");
 	g_hash_table_foreach(
 	    membership_list, ais_mark_unseen_peer_dead, &changed);
+	if(member_list_entries > 1) {
+	    /* Used to set born-on in send_cluster_id())
+	     * We need to wait until we have at least one peer since first
+	     * membership id is based on the one before we stopped and isn't reliable
+	     */
+	    have_reliable_membership_id = TRUE;
+	}
     }
     
     if(changed) {
@@ -671,7 +679,7 @@ void ais_cluster_id_callback (void *message, unsigned int nodeid)
     }
     ais_debug("Node update: %s (%s)", msg->uname, msg->version);
     changed = update_member(
-	nodeid, membership_seq, msg->votes, msg->processes, msg->uname, NULL);
+	nodeid, msg->born_on, membership_seq, msg->votes, msg->processes, msg->uname, NULL, msg->version);
 
     if(changed) {
 	send_member_notification();
@@ -1151,10 +1159,15 @@ void send_cluster_id(void)
     int len = 0;
     struct iovec iovec;
     struct crm_identify_msg_s *msg = NULL;
+    static uint64_t local_born_on = 0;
     
     ENTER("");
     AIS_ASSERT(local_nodeid != 0);
 
+    if(local_born_on == 0 && have_reliable_membership_id) {
+	local_born_on = membership_seq;
+    }
+    
     ais_malloc0(msg, sizeof(struct crm_identify_msg_s));
     msg->header.size = sizeof(struct crm_identify_msg_s);
 
@@ -1172,16 +1185,17 @@ void send_cluster_id(void)
     msg->votes = 1;
     msg->pid = getpid();
     msg->processes = crm_proc_ais;
+    msg->born_on = local_born_on;
 
     for (lpc = 0; lpc < SIZEOF(crm_children); lpc++) {
 	if(crm_children[lpc].pid != 0) {
 	    msg->processes |= crm_children[lpc].flag;
 	}
     }
-
-    ais_debug("Local update: %u", local_nodeid);
+    
+    ais_debug("Local update: id=%u, born=%llu, seq=%llu", local_nodeid, local_born_on, membership_seq);
     update_member(
-	local_nodeid, membership_seq, msg->votes, msg->processes, NULL, NULL);
+	local_nodeid, local_born_on, membership_seq, msg->votes, msg->processes, NULL, NULL, VERSION);
 
     iovec.iov_base = (char *)msg;
     iovec.iov_len = msg->header.size;
