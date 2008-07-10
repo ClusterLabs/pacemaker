@@ -635,34 +635,37 @@ void g_hash_destroy_str(gpointer data)
 }
 
 #include <sys/types.h>
-#include <stdlib.h>
-#include <limits.h>
+/* #include <stdlib.h> */
+/* #include <limits.h> */
 
-long
+long long
 crm_int_helper(const char *text, char **end_text)
 {
-	long atoi_result = -1;
+	long long result = -1;
 	char *local_end_text = NULL;
 
 	errno = 0;
 	
 	if(text != NULL) {
 		if(end_text != NULL) {
-			atoi_result = strtoul(text, end_text, 10);
+		    result = strtoll(text, end_text, 10);
 		} else {
-			atoi_result = strtoul(text, &local_end_text, 10);
+		    result = strtoll(text, &local_end_text, 10);
 		}
 		
 /* 		CRM_CHECK(errno != EINVAL); */
 		if(errno == EINVAL) {
 			crm_err("Conversion of %s failed", text);
-			atoi_result = -1;
+			result = -1;
 			
 		} else {
 			if(errno == ERANGE) {
-				crm_err("Conversion of %s was clipped: %ld",
-					text, atoi_result);
+			    crm_err("Conversion of %s was clipped: %lld",
+				    text, (long long)result);
+			} else {
+			    cl_perror("Conversion of %s failed:", text);
 			}
+			
 			if(end_text == NULL && local_end_text[0] != '\0') {
 				crm_err("Characters left over after parsing "
 					"\"%s\": \"%s\"", text, local_end_text);
@@ -670,7 +673,7 @@ crm_int_helper(const char *text, char **end_text)
 				
 		}
 	}
-	return atoi_result;
+	return result;
 }
 
 int

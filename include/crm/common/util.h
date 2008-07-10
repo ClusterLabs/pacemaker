@@ -134,7 +134,7 @@ static inline gboolean crm_str_eq(const char *a, const char *b, gboolean use_cas
 
 extern gboolean safe_str_neq(const char *a, const char *b);
 extern int crm_parse_int(const char *text, const char *default_text);
-extern long crm_int_helper(const char *text, char **end_text);
+extern long long crm_int_helper(const char *text, char **end_text);
 #define crm_atoi(text, default_text) crm_parse_int(text, default_text)
 
 extern void crm_abort(const char *file, const char *function, int line,
