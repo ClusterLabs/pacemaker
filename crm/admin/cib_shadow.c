@@ -58,7 +58,7 @@ const char *cib_action = NULL;
 cib_t *real_cib = NULL;
 
 static int force_flag = 0;
-#define OPTARGS	"V?wc:d:r:C:D:p:s:"
+#define OPTARGS	"V?wc:dr:C:D:ps:l"
 
 
 int
@@ -78,18 +78,16 @@ main(int argc, char **argv)
     static struct option long_options[] = {
 	/* Top-level Options */
 	{"create",  required_argument, NULL, 'c'},
-	{"display", required_argument, NULL, 'P'},
+	{"display", no_argument,       NULL, 'p'},
 	{"commit",  required_argument, NULL, 'C'},
 	{"delete",  required_argument, NULL, 'D'},
 	{"reset",   required_argument, NULL, 'r'},
 	{"which",   no_argument,       NULL, 'w'},
-	{"diff",    required_argument, NULL, 'd'},
+	{"diff",    no_argument,       NULL, 'd'},
 	{"switch",  required_argument, NULL, 's'},
+	{"locate",  no_argument,       NULL, 'l'},
 
 	{"force",	no_argument, &force_flag, 1},
-	{"xml-text",    required_argument, NULL, 'X'},
-	{"xml-file",    required_argument, NULL, 'x'},
-	{"xml-pipe",    no_argument, NULL, 'p'},
 	{"verbose",     no_argument, NULL, 'V'},
 	{"help",        no_argument, NULL, '?'},
 
@@ -114,12 +112,16 @@ main(int argc, char **argv)
 	    break;
 
 	switch(flag) {
-	    case 'c':
 	    case 'd':
-	    case 's':
+	    case 'l':
 	    case 'p':
-	    case 'r':
 	    case 'w':
+		command = flag;
+		shadow = crm_strdup(getenv("CIB_shadow"));
+		break;
+	    case 'c':
+	    case 's':
+	    case 'r':
 		command = flag;
 		shadow = crm_strdup(optarg);
 		break;
@@ -201,7 +203,10 @@ main(int argc, char **argv)
     }
 
     shadow_file = get_shadow_file(shadow);
-    if(command == 'D') {
+    if(command == 'l') {
+	printf("%s\n", shadow_file);
+	
+    } else if(command == 'D') {
 	/* delete the file */
 	rc = stat(shadow_file, &buf);
 	if(rc == 0) {
@@ -328,9 +333,9 @@ usage(const char *cmd, int exit_status)
     fprintf(stream, "\t--%s (-%c)\tthis help message\n", "help   ", '?');
     fprintf(stream, "\nCommands\n");
     fprintf(stream, "\t--%s (-%c)\tIndicate the active shadow copy\n", "which  ", 'w');
+    fprintf(stream, "\t--%s (-%c)\tDisplay the contents of the shadow copy \n", "display", 'p');
+    fprintf(stream, "\t--%s (-%c)\tDisplay the changes in the shadow copy \n", "diff", 'd');
     fprintf(stream, "\t--%s (-%c) name\tCreate the named shadow copy of the active cluster configuration\n", "create ", 'c');
-    fprintf(stream, "\t--%s (-%c) name\tDisplay the contents of the named shadow copy \n", "display", 'P');
-    fprintf(stream, "\t--%s (-%c) name\tDisplay the changes in the named shadow copy \n", "diff", 'd');
     fprintf(stream, "\t--%s (-%c) name\tRecreate the named shadow copy from the active cluster configuration\n", "reset  ",   'r');
     fprintf(stream, "\t--%s (-%c) name\tUpload the contents of the named shadow copy to the cluster\n", "commit ",  'C');
     fprintf(stream, "\t--%s (-%c) name\tDelete the contents of the named shadow copy\n", "delete ",  'D');
