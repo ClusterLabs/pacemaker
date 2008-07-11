@@ -408,7 +408,8 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	    cib_status = cib_dtd_validation;
 		
 	} else if(validation == NULL) {
-	    int version = update_validation(&root, FALSE, FALSE);
+	    int version = 0;
+	    update_validation(&root, &version, FALSE, FALSE);
 	    if(version > 0) {
 		crm_notice("Enabling %s validation on"
 			   " the existing (sane) configuration",

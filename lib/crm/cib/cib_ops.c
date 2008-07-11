@@ -101,6 +101,7 @@ cib_process_upgrade(
 	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
 	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer)
 {
+    int rc = 0;
     int new_version = 0;
     int current_version = 0;
 
@@ -114,12 +115,12 @@ cib_process_upgrade(
 	current_version = get_schema_version(value);
     }
 
-    new_version = update_validation(result_cib, TRUE, TRUE);
+    rc = update_validation(result_cib, &new_version, TRUE, TRUE);
     if(new_version > current_version) {
 	return cib_ok;
     }
     
-    return cib_bad_config;
+    return rc;
 }
 
 enum cib_errors 

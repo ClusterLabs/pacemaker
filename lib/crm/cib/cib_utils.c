@@ -224,6 +224,9 @@ cib_error2string(enum cib_errors return_code)
 		case cib_invalid_argument:
 			error_msg = "Invalid argument";
 			break;
+		case cib_transform_failed:
+			error_msg = "Schema transform failed";
+			break;
 	}
 			
 	if(error_msg == NULL) {

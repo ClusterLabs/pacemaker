@@ -276,7 +276,7 @@ main(int argc, char **argv)
 		crm_config_warn("Please use 'cibadmin --upgrade' to convert to the latest syntax (%s)", LATEST_SCHEMA_VERSION);
 		
 		converted = copy_xml(cib_object);
-		schema_version = update_validation(&converted, TRUE, FALSE);
+		update_validation(&converted, &schema_version, TRUE, FALSE);
 		
 		value = crm_element_value(converted, XML_ATTR_VALIDATION);
 		if(schema_version < min_version) {

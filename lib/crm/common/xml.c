@@ -3145,16 +3145,19 @@ int get_schema_version(const char *name)
 }
 
 /* set which validation to use */
+#include <crm/cib.h>
 int update_validation(
-    xmlNode **xml_blob, gboolean transform, gboolean to_logs) 
+    xmlNode **xml_blob, int *best, gboolean transform, gboolean to_logs) 
 {
     xmlNode *xml = NULL;
     char *value = NULL;
-    int lpc = 0, match = -1, best = 0;
+    int lpc = 0, match = -1, rc = cib_ok;
 
-    CRM_CHECK(xml_blob != NULL, return -1);
-    CRM_CHECK(*xml_blob != NULL, return -1);
+    CRM_CHECK(best != NULL, return cib_invalid_argument);
+    CRM_CHECK(xml_blob != NULL, return cib_invalid_argument);
+    CRM_CHECK(*xml_blob != NULL, return cib_invalid_argument);
     
+    *best = 0;
     xml = *xml_blob;
     value = crm_element_value_copy(xml, XML_ATTR_VALIDATION);
 
@@ -3169,7 +3172,8 @@ int update_validation(
     if(match == (max_schemas - 1)) {
 	/* nothing to do */
 	crm_free(value);
-	return match;
+	*best = match;
+	return cib_ok;
     }
     
     for(; lpc < max_schemas; lpc++) {
@@ -3178,7 +3182,7 @@ int update_validation(
 	valid = validate_with(xml, lpc, to_logs);
 	
 	if(valid) {
-	    best = lpc;
+	    *best = lpc;
 	}
 	
 	if(valid && transform && known_schemas[lpc].transform != NULL) {
@@ -3193,30 +3197,32 @@ int update_validation(
 	    upgrade = apply_transformation(xml, known_schemas[lpc].transform);
 	    if(upgrade == NULL) {
 		crm_err("Transformation %s failed", known_schemas[lpc].transform);
+		rc = cib_transform_failed;
 		
 	    } else if(validate_with(upgrade, next, to_logs)) {
 		crm_info("Transformation %s successful", known_schemas[lpc].transform);
-		lpc = next; best = next;
+		lpc = next; *best = next;
 		free_xml(xml);
 		xml = upgrade;
+		rc = cib_ok;
 		
 	    } else {
 		crm_err("Transformation %s did not produce a valid configuration", known_schemas[lpc].transform);
 		crm_log_xml_info(upgrade, "transform:bad");
 		free_xml(upgrade);
+		rc = cib_dtd_validation;
 	    }
 	}
     }
     
-    if(best > match) {
-	crm_notice("Upgraded from %s to %s validation", value?value:"<none>", known_schemas[best].name);
-	crm_xml_add(xml, XML_ATTR_VALIDATION, known_schemas[best].name);
-	match = best;
+    if(*best > match) {
+	crm_notice("Upgraded from %s to %s validation", value?value:"<none>", known_schemas[*best].name);
+	crm_xml_add(xml, XML_ATTR_VALIDATION, known_schemas[*best].name);
     }
 
     *xml_blob = xml;
     crm_free(value);
-    return match;
+    return rc;
 }
 
 /* the caller needs to check if the result contains a xmlDocPtr or xmlNodePtr */
@@ -3259,7 +3265,7 @@ cli_config_update(xmlNode **xml)
 	xmlNode *converted = NULL;
 	
 	converted = copy_xml(*xml);
-	schema_version = update_validation(&converted, TRUE, FALSE);
+	update_validation(&converted, &schema_version, TRUE, FALSE);
 	
 	value = crm_element_value(converted, XML_ATTR_VALIDATION);
 	if(schema_version < min_version) {
