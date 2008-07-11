@@ -120,7 +120,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		    crm_config_warn("Please use XXX to upgrade %s", LATEST_SCHEMA_VERSION);
 		    
 		    converted = copy_xml(xml_data);
-		    schema_version = update_validation(&converted, TRUE, TRUE);
+		    update_validation(&converted, &schema_version, TRUE, TRUE);
 
 		    value = crm_element_value(converted, XML_ATTR_VALIDATION);
 		    if(schema_version < min_version) {
