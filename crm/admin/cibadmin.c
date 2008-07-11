@@ -410,8 +410,18 @@ main(int argc, char **argv)
 		fprintf(stderr, "Call failed: %s\n",
 			cib_error2string(exit_code));
 		operation_status = exit_code;
-	}
 
+		if(crm_str_eq(cib_action, CIB_OP_UPGRADE, TRUE)) {
+		    if(exit_code == cib_dtd_validation) {
+			xmlNode *obj = NULL;
+			int version = 0, rc = 0;
+			rc = the_cib->cmds->query(the_cib, NULL, &obj, command_options);
+			if(rc == cib_ok) {
+			    update_validation(&obj, &version, TRUE, FALSE);
+			}
+		    }
+		}
+	}
 
 	if(output != NULL) {
 		char *buffer = dump_xml_formatted(output);
