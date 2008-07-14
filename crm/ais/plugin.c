@@ -204,7 +204,7 @@ static struct openais_service_handler_iface_ver0 crm_service_handler_iface = {
 
 static struct lcr_iface openais_crm_ver0[1] = {
     {
-	.name				= "lha_crm",
+	.name				= "pacemaker",
 	.version			= 0,
 	.versions_replace		= 0,
 	.versions_replace_count		= 0,
