@@ -1108,7 +1108,6 @@ main(int argc, char **argv)
 		set_IPC_Channel_dnotify(src, resource_ipc_connection_destroy);
 	}
 
-	crm_warn("here i am - 3");
 	if(rsc_cmd == 'L') {
 		rc = cib_ok;
 		do_find_resource_list(&data_set, FALSE);
