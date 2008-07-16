@@ -117,7 +117,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		    int min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
 
 		    crm_config_warn("Your current configuration only conforms to %s", value);
-		    crm_config_warn("Please use XXX to upgrade %s", LATEST_SCHEMA_VERSION);
+		    crm_config_warn("Please use 'cibadmin --upgrade' to convert to %s", LATEST_SCHEMA_VERSION);
 		    
 		    converted = copy_xml(xml_data);
 		    update_validation(&converted, &schema_version, TRUE, TRUE);
