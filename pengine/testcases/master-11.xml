@@ -26,13 +26,13 @@
     <resources>
       <primitive id="simple-rsc" class="heartbeat" type="apache"/>
       <master_slave id="rsc1">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair id="rsc1-attr1" name="clone_max" value="2"/>
             <nvpair id="rsc1-attr2" name="clone_node_max" value="1"/>
             <nvpair id="rsc1-attr3" name="master_max" value="1"/>
             <nvpair id="rsc1-attr4" name="master_node_max" value="1"/>
-            <nvpair name="resource_stickiness" value="1"/>
+            <nvpair id="any" name="resource_stickiness" value="1"/>
           </attributes>
         </instance_attributes>
 	<primitive id="child_rsc1" class="heartbeat" type="apache"/>
@@ -50,7 +50,7 @@
   <status>
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
@@ -59,7 +59,7 @@
     </node_state>
     <node_state id="uuid2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>

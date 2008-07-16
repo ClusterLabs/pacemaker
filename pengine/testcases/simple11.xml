@@ -11,16 +11,16 @@
     </nodes>
     <resources>
       <primitive id="rsc1" class="heartbeat" type="apache">
-        <instance_attributes>
+        <instance_attributes id="1">
           <attributes>
-            <nvpair name="priority" value="3.0"/>
+            <nvpair id="3" name="priority" value="3.0"/>
           </attributes>
         </instance_attributes>
       </primitive>
       <primitive id="rsc2" class="heartbeat" type="apache">
-        <instance_attributes>
+        <instance_attributes id="2">
           <attributes>
-            <nvpair name="priority" value="2.0"/>
+            <nvpair id="4" name="priority" value="2.0"/>
           </attributes>
         </instance_attributes>
       </primitive>
@@ -28,15 +28,15 @@
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="can1" score="1">
-	  <expression attribute="#uname" operation="ne" value="darthvader"/>
+	  <expression id="5" attribute="#uname" operation="ne" value="darthvader"/>
 	</rule>
 	<rule id="score1" score="10.0">
-	  <expression attribute="#uname" operation="eq" value="node1"/>
+	  <expression id="6" attribute="#uname" operation="eq" value="node1"/>
 	</rule>
       </rsc_location>
       <rsc_location id="run_rsc2" rsc="rsc2">
 	<rule id="can2" score="1">
-	  <expression attribute="#uname" operation="eq" value="node1"/>
+	  <expression id="7" attribute="#uname" operation="eq" value="node1"/>
 	</rule>
       </rsc_location>
     </constraints>

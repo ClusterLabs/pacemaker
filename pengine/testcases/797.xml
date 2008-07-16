@@ -17,7 +17,7 @@
          <operations>
            <op id="1" name="monitor" interval="5s" timeout="20s"/>
          </operations>
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="1" name="ip" value="127.0.0.10"/>
            </attributes>
@@ -27,7 +27,7 @@
          <operations>
            <op id="2" name="monitor" interval="5s" timeout="20s"/>
          </operations>
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="1" name="ip" value="127.0.0.11"/>
            </attributes>
@@ -37,7 +37,7 @@
          <operations>
            <op id="3" name="monitor" interval="5s" timeout="20s"/>
          </operations>
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="1" name="ip" value="127.0.0.12"/>
            </attributes>
@@ -47,7 +47,7 @@
          <operations>
            <op id="4" name="monitor" interval="5s" timeout="20s"/>
          </operations>
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="1" name="ip" value="127.0.0.13"/>
            </attributes>
@@ -57,18 +57,18 @@
          <operations>
            <op id="5" name="monitor" interval="5s" timeout="20s"/>
          </operations>
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="1" name="ip" value="127.0.0.14"/>
            </attributes>
          </instance_attributes>
        </primitive>
        <clone id="DoFencing">
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="1" name="clone_max" value="4"/>
              <nvpair id="2" name="clone_node_max" value="1"/>
-             <nvpair name="resource_stickiness" value="1"/>
+             <nvpair id="any" name="resource_stickiness" value="1"/>
            </attributes>
          </instance_attributes>
          <primitive id="child_DoFencing" class="stonith" type="ssh">
@@ -76,7 +76,7 @@
              <op id="6" name="monitor" interval="5s" timeout="20s" prereq="nothing"/>
              <op id="7" name="start" timeout="20s" prereq="nothing"/>
            </operations>
-           <instance_attributes>
+           <instance_attributes id="any">
              <attributes>
                <nvpair id="1" name="hostlist" value="c001n08 c001n02 c001n03 c001n01 "/>
              </attributes>
@@ -115,13 +115,13 @@
  <status>
    <node_state uname="c001n02" in_ccm="true" crmd="online" ha="active" expected="down" id="e9bdfde9-01b0-421f-acd8-8a65a53e775f"  join="member" shutdown="1122609026">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-     <lrm>
+     <lrm id="any">
        <lrm_resources>
          <lrm_resource id="rsc_c001n08" class="ocf" provider="heartbeat" type="IPaddr">
            <lrm_rsc_op id="rsc_c001n08_start_0" op_digest="fd54394d262d771b8cb48f31f8df7242" operation="start" interval="0"  transition_key="0:982d639a-546a-48be-ae7d-1e758560d891" crm_feature_set="2.0" transition_magic="0:0;0:982d639a-546a-48be-ae7d-1e758560d891" call_id="69" rc_code="0" op_status="0"/>
@@ -163,13 +163,13 @@
    </node_state>
    <node_state uname="c001n08" crmd="offline" in_ccm="false" ha="active" expected="member" id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"  join="down">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-     <lrm>
+     <lrm id="any">
        <lrm_resources>
          <lrm_resource id="rsc_c001n08" class="ocf" provider="heartbeat" type="IPaddr">
            <lrm_rsc_op id="rsc_c001n08_start_0" op_digest="fd54394d262d771b8cb48f31f8df7242" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="5:30268884-d504-4eba-8c55-71953234e030" crm_feature_set="2.0" transition_magic="0:0;5:30268884-d504-4eba-8c55-71953234e030" call_id="68" rc_code="0" op_status="0"/>
@@ -209,13 +209,13 @@
    </node_state>
    <node_state uname="c001n01" crmd="online" in_ccm="true" ha="active" expected="member" id="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"  join="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-     <lrm>
+     <lrm id="any">
        <lrm_resources>
          <lrm_resource id="rsc_c001n01" class="ocf" provider="heartbeat" type="IPaddr">
            <lrm_rsc_op id="rsc_c001n01_start_0" op_digest="74307acd7ffa84f71fe8a46100cdbbb0" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="10:30268884-d504-4eba-8c55-71953234e030" crm_feature_set="2.0" transition_magic="0:0;10:30268884-d504-4eba-8c55-71953234e030" call_id="2" rc_code="0" op_status="0"/>
@@ -241,13 +241,13 @@
    </node_state>
    <node_state uname="c001n03" crmd="online" in_ccm="true" ha="active" expected="member" id="5d9a8c11-8684-43ea-91.0.6e221530c193"  join="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-     <lrm>
+     <lrm id="any">
        <lrm_resources>
          <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
            <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" op_digest="cd062168f843c5d2a0d53ed7c4789de3" operation="start" interval="0"  transition_key="1:982d639a-546a-48be-ae7d-1e758560d891" crm_feature_set="2.0" transition_magic="0:0;1:982d639a-546a-48be-ae7d-1e758560d891" call_id="72" rc_code="0" op_status="0"/>

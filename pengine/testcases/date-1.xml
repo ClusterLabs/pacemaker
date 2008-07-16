@@ -8,14 +8,14 @@
     </attributes></cluster_property_set></crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair id="server_group" name="server_group" value="group1"/>
           </attributes>
         </instance_attributes>
       </node>
       <node id="uuid2" uname="node2" type="member">
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <rule id="1">
 	    <date_expression id="1" end="2005-001"/>
 	  </rule>
@@ -23,7 +23,7 @@
             <nvpair id="server_group" name="server_group" value="group2"/>
           </attributes>
         </instance_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <rule id="2">
 	    <date_expression id="2" start="2005-001" operation="gt"/>
 	  </rule>
@@ -35,7 +35,7 @@
     </nodes>
     <resources>
       <primitive id="rsc1" class="heartbeat" type="apache">
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <rule id="3">
             <expression id="1" attribute="#uname" operation="eq" value="node1"/>
 	  </rule>
@@ -43,7 +43,7 @@
             <nvpair id="1" name="interface" value="eth1"/>
           </attributes>
         </instance_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <rule id="4">
             <expression id="1" attribute="#uname" operation="eq" value="node2"/>
 	  </rule>
@@ -56,7 +56,7 @@
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="prefer_group3" score="100">
-	  <expression attribute="server_group" operation="eq" value="group3"/>
+	  <expression  id="any" attribute="server_group" operation="eq" value="group3"/>
 	</rule>
       </rsc_location>
     </constraints>

@@ -30,7 +30,7 @@
            <op id="DcIPaddr-1" name="monitor" interval="5s" timeout="20s"/>
            <op id="DcIPaddr-2" name="start" timeout="40s"/>
          </operations>
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="DcIPaddr-1" name="ip" value="192.168.100.180"/>
            </attributes>
@@ -41,7 +41,7 @@
            <operations>
              <op id="ocf_chil192.168.100.181_monitor" name="monitor" interval="5s" timeout="20s"/>
            </operations>
-           <instance_attributes>
+           <instance_attributes id="any">
              <attributes>
                <nvpair id="ocf_192.168.100.181_ip_1" name="ip" value="192.168.100.181"/>
              </attributes>
@@ -51,7 +51,7 @@
            <operations>
              <op id="heartbeat_192.168.100.182_monitor" name="monitor" interval="5s" timeout="20s"/>
            </operations>
-           <instance_attributes>
+           <instance_attributes id="any">
              <attributes>
                <nvpair id="heartbeat_192.168.100.182_ip_1" name="1" value="192.168.100.182"/>
              </attributes>
@@ -61,7 +61,7 @@
            <operations>
              <op id="ocf_192.168.100.183_monitor" name="monitor" interval="5s" timeout="20s"/>
            </operations>
-           <instance_attributes>
+           <instance_attributes id="any">
              <attributes>
                <nvpair id="ocf_192.168.100.183_ip_1" name="ip" value="192.168.100.183"/>
              </attributes>
@@ -78,7 +78,7 @@
            <op id="rsc_c001n08-1" name="monitor" interval="5s" timeout="20s"/>
            <op id="rsc_c001n08-2" name="start" timeout="40s"/>
          </operations>
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="rsc_c001n08-1" name="ip" value="192.168.100.184"/>
            </attributes>
@@ -89,7 +89,7 @@
            <op id="rsc_c001n02-1" name="monitor" interval="5s" timeout="20s"/>
            <op id="rsc_c001n02-2" name="start" timeout="40s"/>
          </operations>
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="rsc_c001n02-1" name="ip" value="192.168.100.185"/>
            </attributes>
@@ -100,7 +100,7 @@
            <op id="rsc_c001n03-1" name="monitor" interval="5s" timeout="20s"/>
            <op id="rsc_c001n03-2" name="start" timeout="40s"/>
          </operations>
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="rsc_c001n03-1" name="ip" value="192.168.100.186"/>
            </attributes>
@@ -111,18 +111,18 @@
            <op id="rsc_c001n01-1" name="monitor" interval="5s" timeout="20s"/>
            <op id="rsc_c001n01-2" name="start" timeout="40s"/>
          </operations>
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="rsc_c001n01-1" name="ip" value="192.168.100.187"/>
            </attributes>
          </instance_attributes>
        </primitive>
        <clone id="DoFencing">
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="DoFencing-1" name="clone_max" value="4"/>
              <nvpair id="DoFencing-2" name="clone_node_max" value="1"/>
-            <nvpair name="resource_stickiness" value="1"/>
+            <nvpair id="any" name="resource_stickiness" value="1"/>
            </attributes>
          </instance_attributes>
          <primitive id="child_DoFencing" class="stonith" type="ssh">
@@ -130,7 +130,7 @@
              <op id="DoFencing-1" name="monitor" interval="20s" timeout="40s" prereq="nothing"/>
              <op id="DoFencing-2" name="start" timeout="20s" prereq="nothing"/>
            </operations>
-           <instance_attributes>
+           <instance_attributes id="any">
              <attributes>
                <nvpair id="child_DoFencing-1" name="hostlist" value="c001n08 c001n02 c001n03 c001n01 "/>
              </attributes>
@@ -138,13 +138,13 @@
          </primitive>
        </clone>
        <master_slave id="master_rsc_1">
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="clone_max_1" name="clone_max" value="8"/>
              <nvpair id="clone_node_max_2" name="clone_node_max" value="2"/>
              <nvpair id="master_max_3" name="master_max" value="4"/>
              <nvpair id="master_node_max_4" name="master_node_max" value="1"/>
-            <nvpair name="resource_stickiness" value="1"/>
+            <nvpair id="any" name="resource_stickiness" value="1"/>
            </attributes>
          </instance_attributes>
          <primitive id="ocf_msdummy" class="ocf" type="/usr/lib/heartbeat/cts/OCFMSDummy" provider="heartbeat">
@@ -152,7 +152,7 @@
              <op id="ocf_msdummy_monitor" name="monitor" interval="5s" timeout="10s"/>
              <op id="ocf_msdummy_monitor_master" name="monitor" interval="6s" timeout="10s" role="Master"/>
            </operations>
-           <instance_attributes>
+           <instance_attributes id="any">
              <attributes>
                <nvpair id="logfile_id_1" name="logfile" value="/var/log/cts_ocfdummy.log"/>
              </attributes>
@@ -197,7 +197,7 @@
           </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc_c001n08" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n08_start_0" op_digest="821601077053d93826e4ac2adef1f61d" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="6:b76c3e2e-f4d3-4800-af76-89ec8931503c" crm_feature_set="2.0" transition_magic="0:0;6:b76c3e2e-f4d3-4800-af76-89ec8931503c" call_id="17" rc_code="0" op_status="0">
@@ -298,7 +298,7 @@
           </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc_c001n08" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n08_monitor_0" op_digest="821601077053d93826e4ac2adef1f61d" interval="0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="2:b76c3e2e-f4d3-4800-af76-89ec8931503c" crm_feature_set="2.0" transition_magic="4:7;2:b76c3e2e-f4d3-4800-af76-89ec8931503c" call_id="7" rc_code="7" op_status="4">
@@ -415,7 +415,7 @@
           </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc_c001n08" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n08_monitor_0" op_digest="821601077053d93826e4ac2adef1f61d" interval="0" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="6:b76c3e2e-f4d3-4800-af76-89ec8931503c" crm_feature_set="2.0" transition_magic="4:7;6:b76c3e2e-f4d3-4800-af76-89ec8931503c" call_id="7" rc_code="7" op_status="4">
@@ -511,7 +511,7 @@
       </lrm>
     </node_state>
     <node_state id="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" uname="c001n01" crmd="online"  shutdown="0" clear_shutdown="true" in_ccm="true" join="member" ha="active" expected="member">
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc_c001n03" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n03_monitor_0" op_digest="4524426499361a7a84b1803848e28d0c" interval="0" operation="monitor"  transition_key="8:b76c3e2e-f4d3-4800-af76-89ec8931503c" crm_feature_set="2.0" transition_magic="4:7;8:b76c3e2e-f4d3-4800-af76-89ec8931503c" call_id="9" rc_code="7" op_status="4">

@@ -17,7 +17,7 @@
           <operations>
             <op id="1" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="1" name="ip" value="10.0.0.10"/>
             </attributes>
@@ -27,7 +27,7 @@
           <operations>
             <op id="2" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="2" name="ip" value="10.0.0.11"/>
             </attributes>
@@ -37,7 +37,7 @@
           <operations>
             <op id="3" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="3" name="ip" value="10.0.0.12"/>
             </attributes>
@@ -47,25 +47,25 @@
           <operations>
             <op id="4" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="4" name="ip" value="10.0.0.13"/>
             </attributes>
           </instance_attributes>
         </primitive>
         <clone id="DoFencing">
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="5" name="clone_max" value="3"/>
               <nvpair id="6" name="clone_node_max" value="1"/>
-              <nvpair name="resource_stickiness" value="1"/>
+              <nvpair id="any" name="resource_stickiness" value="1"/>
             </attributes>
           </instance_attributes>
           <primitive id="child_DoFencing" class="stonith" type="ssh">
             <operations>
               <op id="5" name="monitor" interval="5s" timeout="20s"/>
             </operations>
-            <instance_attributes>
+            <instance_attributes id="any">
               <attributes>
                 <nvpair id="7" name="hostlist" value="hadev1 hadev2 hadev3 "/>
               </attributes>
@@ -99,13 +99,13 @@
   <status>
     <node_state id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" in_ccm="true" join="member"  crmd="online" ha="active" expected="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" op_digest="e6d0cb6a5fe061b101eb79be4a67facf" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:1" crm_feature_set="2.0" transition_magic="0:0;1:some_key" call_id="4" rc_code="0" op_status="0"/>
@@ -124,13 +124,13 @@
     </node_state>
     <node_state id="879e65f8-4b38-4c56-9552-4752ad436669" uname="hadev3" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc_hadev1" class="ocf" provider="heartbeat" type="IPaddr">
             <lrm_rsc_op id="rsc_hadev1_start_0" op_digest="9824747d481af2b77b4610aabd9ba31a" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:1" crm_feature_set="2.0" transition_magic="0:0;1:some_key" call_id="2" rc_code="0" op_status="0"/>
@@ -155,13 +155,13 @@
     </node_state>
     <node_state id="6125a0df-456a-4395-829a-418e9a380d36" uname="hadev1" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources/>
       </lrm>
     </node_state>

@@ -14,7 +14,7 @@
            <operations>
              <op id="datadisk_1_mon" interval="120s" name="monitor" timeout="60s"/>
            </operations>
-           <instance_attributes>
+           <instance_attributes id="any">
              <attributes>
                <nvpair id="datadisk_1_attr_1" name="1" value="r0"/>
              </attributes>
@@ -24,7 +24,7 @@
            <operations>
              <op id="Filesystem_2_mon" interval="120s" name="monitor" timeout="60s"/>
            </operations>
-           <instance_attributes>
+           <instance_attributes id="any">
              <attributes>
                <nvpair id="Filesystem_2_device" name="device" value="/dev/drbd0"/>
                <nvpair id="Filesystem_2_directory" name="directory" value="/home"/>
@@ -36,7 +36,7 @@
            <operations>
              <op id="IPaddr_5_mon" interval="5s" name="monitor" timeout="5s"/>
            </operations>
-           <instance_attributes>
+           <instance_attributes id="any">
              <attributes>
                <nvpair id="IPaddr_5_attr_0" name="ip" value="10.10.10.222"/>
              </attributes>
@@ -56,7 +56,7 @@
    </configuration>
  <status>
    <node_state id="6d3906ef-d88f-4363-afac-609884ddbb90" uname="paul" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
-     <lrm>
+     <lrm id="any">
        <lrm_resources>
          <lrm_resource id="group_1:Filesystem_2" type="Filesystem" class="ocf" provider="heartbeat">
            <lrm_rsc_op id="group_1:Filesystem_2_monitor_0" op_digest="9432f65d5b188b6b7dd1b626b2d1a541" interval="0" operation="monitor"  transition_key="0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" crm_feature_set="2.0" transition_magic="0:7;0:b12c0a28-1ba5-407b-945c-e4d5ea1602dc" call_id="3" rc_code="7" op_status="0">

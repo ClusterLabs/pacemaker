@@ -21,7 +21,7 @@
   <status>
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true"/>
     <node_state id="uuid2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1_stop_0" operation="stop" interval="0" op_status="4" rc_code="1" call_id="1" crm_feature_set="1.0.6" transition_magic=""/>

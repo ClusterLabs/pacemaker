@@ -20,7 +20,7 @@
            <op id="DcIPaddr-1" name="monitor" interval="5s" timeout="20s"/>
            <op id="DcIPaddr-2" name="start" timeout="40s"/>
          </operations>
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="DcIPaddr-1" name="ip" value="192.168.100.180"/>
            </attributes>
@@ -31,7 +31,7 @@
            <operations>
              <op id="child_192.168.100.181-1" name="monitor" interval="5s" timeout="20s"/>
            </operations>
-           <instance_attributes>
+           <instance_attributes id="any">
              <attributes>
                <nvpair id="child_192.168.100.181-1" name="ip" value="192.168.100.181"/>
              </attributes>
@@ -41,7 +41,7 @@
            <operations>
              <op id="child_192.168.100.182-1" name="monitor" interval="5s" timeout="20s"/>
            </operations>
-           <instance_attributes>
+           <instance_attributes id="any">
              <attributes>
                <nvpair id="child_192.168.100.182-1" name="ip" value="192.168.100.182"/>
              </attributes>
@@ -51,7 +51,7 @@
            <operations>
              <op id="child_192.168.100.183-1" name="monitor" interval="5s" timeout="20s"/>
            </operations>
-           <instance_attributes>
+           <instance_attributes id="any">
              <attributes>
                <nvpair id="child_192.168.100.183-1" name="ip" value="192.168.100.183"/>
              </attributes>
@@ -63,7 +63,7 @@
            <op id="rsc_c001n08-1" name="monitor" interval="5s" timeout="20s"/>
            <op id="rsc_c001n08-2" name="start" timeout="40s"/>
          </operations>
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="rsc_c001n08-1" name="ip" value="192.168.100.184"/>
            </attributes>
@@ -74,7 +74,7 @@
            <op id="rsc_c001n02-1" name="monitor" interval="5s" timeout="20s"/>
            <op id="rsc_c001n02-2" name="start" timeout="40s"/>
          </operations>
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="rsc_c001n02-1" name="ip" value="192.168.100.185"/>
            </attributes>
@@ -85,7 +85,7 @@
            <op id="rsc_c001n03-1" name="monitor" interval="5s" timeout="20s"/>
            <op id="rsc_c001n03-2" name="start" timeout="40s"/>
          </operations>
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="rsc_c001n03-1" name="ip" value="192.168.100.186"/>
            </attributes>
@@ -96,14 +96,14 @@
            <op id="rsc_c001n01-1" name="monitor" interval="5s" timeout="20s"/>
            <op id="rsc_c001n01-2" name="start" timeout="40s"/>
          </operations>
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="rsc_c001n01-1" name="ip" value="192.168.100.187"/>
            </attributes>
          </instance_attributes>
        </primitive>
        <clone id="DoFencing">
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="DoFencing-1" name="clone_max" value="4"/>
              <nvpair id="DoFencing-2" name="clone_node_max" value="1"/>
@@ -115,7 +115,7 @@
              <op id="DoFencing-1" name="monitor" interval="20s" timeout="40s" prereq="nothing"/>
              <op id="DoFencing-2" name="start" timeout="20s" prereq="nothing"/>
            </operations>
-           <instance_attributes>
+           <instance_attributes id="any">
              <attributes>
                <nvpair id="child_DoFencing-1" name="hostlist" value="c001n08 c001n02 c001n03 c001n01 "/>
              </attributes>
@@ -153,7 +153,7 @@
    </configuration>
   <status>
     <node_state id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" uname="c001n08" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
-      <lrm>
+      <lrm id="any" >
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" type="ssh" class="stonith">
             <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_0" op_digest="cd062168f843c5d2a0d53ed7c4789de3" interval="0" operation="monitor"  transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" crm_feature_set="2.0" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" call_id="10" rc_code="7" op_status="0">
@@ -231,7 +231,7 @@
       </transient_attributes>
     </node_state>
     <node_state id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
-      <lrm>
+      <lrm id="any" >
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" type="ssh" class="stonith">
             <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_0" op_digest="cd062168f843c5d2a0d53ed7c4789de3" interval="0" operation="monitor"  transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" crm_feature_set="2.0" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" call_id="10" rc_code="7" op_status="0">
@@ -306,7 +306,7 @@
       </transient_attributes>
     </node_state>
     <node_state id="5d9a8c11-8684-43ea-91.0.6e221530c193" uname="c001n03" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
-      <lrm>
+      <lrm id="any" >
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" type="ssh" class="stonith">
             <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_0" op_digest="cd062168f843c5d2a0d53ed7c4789de3" interval="0" operation="monitor"  transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" crm_feature_set="2.0" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" call_id="10" rc_code="7" op_status="0">
@@ -378,7 +378,7 @@
       </transient_attributes>
     </node_state>
     <node_state id="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" uname="c001n01" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
-      <lrm>
+      <lrm id="any" >
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" type="ssh" class="stonith">
             <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_0" op_digest="cd062168f843c5d2a0d53ed7c4789de3" interval="0" operation="monitor"  transition_key="0:13bb4a01-894d-44ea-b31f-9d506abf89a6" crm_feature_set="2.0" transition_magic="0:7;0:13bb4a01-894d-44ea-b31f-9d506abf89a6" call_id="10" rc_code="7" op_status="0">

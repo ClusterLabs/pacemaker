@@ -30,7 +30,7 @@
            </attributes>
          </instance_attributes>
        </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1_monitor_0" operation="monitor" interval="0" op_status="0" rc_code="7" call_id="2" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition_magic=""/>

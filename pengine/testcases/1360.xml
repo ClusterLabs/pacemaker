@@ -8,7 +8,7 @@
      <resources>
        <group id="ClusterAlias">
          <primitive id="VIP" class="ocf" type="VIP-RIP.sh" provider="testing">
-           <instance_attributes>
+           <instance_attributes id="any">
              <attributes>
                <nvpair id="a1d0f45c-bac8-4bcd-9c0f-c8a4025c48af" name="ip" value="172.18.67.3"/>
                <nvpair id="e07e1310-2514-4da8-90d4-5afb7d440f35" name="nic" value="eth0"/>
@@ -18,7 +18,7 @@
          </primitive>
        </group>
        <clone id="dolly">
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="dolly_clone_max" name="clone_max" value="1"/>
              <nvpair id="dolly_clone_max2" name="resource_stickiness" value="0"/>
@@ -26,7 +26,7 @@
            </attributes>
          </instance_attributes>
          <primitive id="dollies" class="ocf" type="clone_server" provider="gn1">
-           <instance_attributes>
+           <instance_attributes id="any">
              <attributes/>
            </instance_attributes>
          </primitive>

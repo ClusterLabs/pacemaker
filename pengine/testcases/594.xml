@@ -18,9 +18,9 @@
           <operations>
             <op id="1" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
-              <nvpair name="ip" value="127.0.0.10"/>
+              <nvpair id="any" name="ip" value="127.0.0.10"/>
             </attributes>
           </instance_attributes>
         </primitive>
@@ -28,9 +28,9 @@
           <operations>
             <op id="1" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
-              <nvpair name="ip" value="127.0.0.21"/>
+              <nvpair id="any" name="ip" value="127.0.0.21"/>
             </attributes>
           </instance_attributes>
         </primitive>
@@ -38,9 +38,9 @@
           <operations>
             <op id="2" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
-              <nvpair name="ip" value="127.0.0.22"/>
+              <nvpair id="any" name="ip" value="127.0.0.22"/>
             </attributes>
           </instance_attributes>
         </primitive>
@@ -48,27 +48,27 @@
           <operations>
             <op id="3" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
-              <nvpair name="ip" value="127.0.0.23"/>
+              <nvpair id="any" name="ip" value="127.0.0.23"/>
             </attributes>
           </instance_attributes>
         </primitive>
         <clone id="DoFencing">
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
-              <nvpair name="clone_max" value="3"/>
-              <nvpair name="clone_node_max" value="1"/>
-              <nvpair name="resource_stickiness" value="1"/>
+              <nvpair id="any" name="clone_max" value="3"/>
+              <nvpair id="any" name="clone_node_max" value="1"/>
+              <nvpair id="any" name="resource_stickiness" value="1"/>
             </attributes>
           </instance_attributes>
           <primitive id="child_DoFencing" class="stonith" type="ssh">
             <operations>
               <op id="4" name="monitor" interval="5s" timeout="20s"/>
             </operations>
-            <instance_attributes>
+            <instance_attributes id="any">
               <attributes>
-                <nvpair name="hostlist" value="hadev3 hadev2 hadev1 "/>
+                <nvpair id="any" name="hostlist" value="hadev3 hadev2 hadev1 "/>
               </attributes>
             </instance_attributes>
           </primitive>
@@ -77,22 +77,22 @@
       <constraints>
         <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
           <rule id="cant_run_DcIPaddr" score="-INFINITY" boolean_op="and">
-            <expression attribute="#is_dc" operation="eq" value="false"/>
+            <expression id="any" attribute="#is_dc" operation="eq" value="false"/>
           </rule>
         </rsc_location>
         <rsc_location id="run_rsc_hadev3" rsc="rsc_hadev3">
           <rule id="pref_run_rsc_hadev3" score="100" boolean_op="and">
-            <expression attribute="#uname" operation="eq" value="hadev3"/>
+            <expression id="any" attribute="#uname" operation="eq" value="hadev3"/>
           </rule>
         </rsc_location>
         <rsc_location id="run_rsc_hadev2" rsc="rsc_hadev2">
           <rule id="pref_run_rsc_hadev2" score="100" boolean_op="and">
-            <expression attribute="#uname" operation="eq" value="hadev2"/>
+            <expression id="any" attribute="#uname" operation="eq" value="hadev2"/>
           </rule>
         </rsc_location>
         <rsc_location id="run_rsc_hadev1" rsc="rsc_hadev1">
           <rule id="pref_run_rsc_hadev1" score="100" boolean_op="and">
-            <expression attribute="#uname" operation="eq" value="hadev1"/>
+            <expression id="any" attribute="#uname" operation="eq" value="hadev1"/>
           </rule>
         </rsc_location>
       </constraints>
@@ -100,13 +100,13 @@
     <status>
       <node_state id="879e65f8-4b38-4c56-9552-4752ad436669" uname="hadev3" in_ccm="false" join="down" crm-debug-origin="ghash_update_cib_node" crmd="offline" ha="active" expected="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-        <lrm>
+        <lrm id="any">
           <lrm_resources>
             <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
               <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" operation="start" interval="0" crm-debug-origin="build_active_RAs" call_id="4" rc_code="0" op_status="0" crm_feature_set="2.0" transition_magic="" op_digest="799f842e4ad91a40749bb44c2f8f91ef"/>
@@ -138,13 +138,13 @@
       </node_state>
       <node_state id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" crmd="online" crm-debug-origin="process_join_ack_msg" in_ccm="true" join="member" ha="active" expected="member" shutdown="1118302974">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-        <lrm>
+        <lrm id="any">
           <lrm_resources>
             <lrm_resource id="rsc_hadev1" class="ocf" provider="heartbeat" type="IPaddr">
               <lrm_rsc_op id="rsc_hadev1_start_0" operation="start" interval="0" crm-debug-origin="build_active_RAs" call_id="3" rc_code="0" op_status="0" crm_feature_set="2.0" transition_magic="" op_digest="ec317f3ef4dde73f68c525047430c3ee"/>
@@ -177,13 +177,13 @@
       </node_state>
       <node_state id="6125a0df-456a-4395-829a-418e9a380d36" uname="hadev1" crmd="online" crm-debug-origin="process_join_ack_msg" in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-        <lrm>
+        <lrm id="any">
           <lrm_resources>
             <lrm_resource id="rsc_hadev1" class="ocf" provider="heartbeat" type="IPaddr">
               <lrm_rsc_op id="rsc_hadev1_start_0" operation="start" interval="0" crm-debug-origin="build_active_RAs" call_id="3" rc_code="0" op_status="0" crm_feature_set="2.0" transition_magic="" op_digest="ec317f3ef4dde73f68c525047430c3ee"/>

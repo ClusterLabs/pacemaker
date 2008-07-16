@@ -7,31 +7,31 @@
     </attributes></cluster_property_set></crm_config>
     <nodes>
       <node id="uuid1" uname="node1" type="member">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
-            <nvpair name="master-child_rsc1:0" value="20"/>
-            <nvpair name="master-child_rsc1:2" value="10"/>
+            <nvpair id="any" name="master-child_rsc1:0" value="20"/>
+            <nvpair id="any" name="master-child_rsc1:2" value="10"/>
           </attributes>
         </instance_attributes>
       </node>
       <node id="uuid2" uname="node2" type="member">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
-            <nvpair name="master-child_rsc1:1" value="10"/>
-            <nvpair name="master-child_rsc1:3" value="20"/>
+            <nvpair id="any" name="master-child_rsc1:1" value="10"/>
+            <nvpair id="any" name="master-child_rsc1:3" value="20"/>
           </attributes>
         </instance_attributes>
       </node>
     </nodes>
     <resources>
       <master_slave id="rsc1" notify="true">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
-            <nvpair name="clone_max" value="5"/>
-            <nvpair name="clone_node_max" value="2"/>
-            <nvpair name="master_max" value="2"/>
-            <nvpair name="master_node_max" value="1"/>
-            <nvpair name="resource_stickiness" value="1"/>
+            <nvpair id="any" name="clone_max" value="5"/>
+            <nvpair id="any" name="clone_node_max" value="2"/>
+            <nvpair id="any" name="master_max" value="2"/>
+            <nvpair id="any" name="master_node_max" value="1"/>
+            <nvpair id="any" name="resource_stickiness" value="1"/>
           </attributes>
         </instance_attributes>
 	<primitive id="child_rsc1" class="heartbeat" type="apache"/>
@@ -48,7 +48,7 @@
   <status>
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
@@ -57,7 +57,7 @@
     </node_state>
     <node_state id="uuid2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>

@@ -172,7 +172,7 @@
              <nvpair id="clone_node_max_2" name="clone_node_max" value="2"/>
              <nvpair id="master_max_3" name="master_max" value="6"/>
              <nvpair id="master_node_max_4" name="master_node_max" value="1"/>
-             <nvpair name="resource_stickiness" value="1"/>
+             <nvpair id="any" name="resource_stickiness" value="1"/>
            </attributes>
          </instance_attributes>
          <primitive id="ocf_msdummy" class="ocf" type="Stateful" provider="heartbeat">

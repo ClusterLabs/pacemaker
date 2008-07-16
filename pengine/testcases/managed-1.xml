@@ -10,9 +10,9 @@
     <nodes>
       <node id="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" uname="c001n09" type="member"/>
       <node id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" type="member">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
-            <nvpair name="standby" value="off"/>
+            <nvpair id="any"  name="standby" value="off"/>
           </attributes>
         </instance_attributes>
       </node>
@@ -28,7 +28,7 @@
         <operations>
           <op id="1" name="monitor" interval="5s" timeout="20s"/>
         </operations>
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair id="1" name="ip" value="127.0.0.10"/>
           </attributes>
@@ -38,7 +38,7 @@
         <operations>
           <op id="1" name="monitor" interval="5s" timeout="20s"/>
         </operations>
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair id="1" name="ip" value="127.0.0.11"/>
           </attributes>
@@ -48,7 +48,7 @@
         <operations>
           <op id="1" name="monitor" interval="5s" timeout="20s"/>
         </operations>
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair id="1" name="ip" value="127.0.0.12"/>
           </attributes>
@@ -58,7 +58,7 @@
         <operations>
           <op id="1" name="monitor" interval="5s" timeout="20s"/>
         </operations>
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair id="1" name="ip" value="127.0.0.13"/>
           </attributes>
@@ -68,7 +68,7 @@
         <operations>
           <op id="1" name="monitor" interval="5s" timeout="20s"/>
         </operations>
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair id="1" name="ip" value="127.0.0.14"/>
           </attributes>
@@ -78,7 +78,7 @@
         <operations>
           <op id="1" name="monitor" interval="5s" timeout="20s"/>
         </operations>
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair id="1" name="ip" value="127.0.0.15"/>
           </attributes>
@@ -88,7 +88,7 @@
         <operations>
           <op id="1" name="monitor" interval="5s" timeout="20s"/>
         </operations>
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair id="1" name="ip" value="127.0.0.16"/>
           </attributes>
@@ -98,7 +98,7 @@
         <operations>
           <op id="1" name="monitor" interval="5s" timeout="20s"/>
         </operations>
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair id="1" name="ip" value="127.0.0.17"/>
           </attributes>
@@ -108,14 +108,14 @@
         <operations>
           <op id="1" name="monitor" interval="5s" timeout="20s"/>
         </operations>
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair id="1" name="ip" value="127.0.0.18"/>
           </attributes>
         </instance_attributes>
       </primitive>
       <clone id="DoFencing" is_managed="0">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair id="1" name="clone_max" value="8"/>
             <nvpair id="2" name="clone_node_max" value="1"/>
@@ -125,7 +125,7 @@
           <operations>
             <op id="1" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="1" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
             </attributes>
@@ -136,47 +136,47 @@
     <constraints>
       <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">
         <rule id="cant_run_DcIPaddr" score="-INFINITY" boolean_op="and">
-          <expression attribute="#is_dc" operation="eq" value="false"/>
+          <expression id="any" attribute="#is_dc" operation="eq" value="false"/>
         </rule>
       </rsc_location>
       <rsc_location id="run_rsc_c001n09" rsc="rsc_c001n09">
         <rule id="pref_run_rsc_c001n09" score="100" boolean_op="and">
-          <expression attribute="#uname" operation="eq" value="c001n09"/>
+          <expression id="any" attribute="#uname" operation="eq" value="c001n09"/>
         </rule>
       </rsc_location>
       <rsc_location id="run_rsc_c001n02" rsc="rsc_c001n02">
         <rule id="pref_run_rsc_c001n02" score="100" boolean_op="and">
-          <expression attribute="#uname" operation="eq" value="c001n02"/>
+          <expression id="any" attribute="#uname" operation="eq" value="c001n02"/>
         </rule>
       </rsc_location>
       <rsc_location id="run_rsc_c001n03" rsc="rsc_c001n03">
         <rule id="pref_run_rsc_c001n03" score="100" boolean_op="and">
-          <expression attribute="#uname" operation="eq" value="c001n03"/>
+          <expression id="any" attribute="#uname" operation="eq" value="c001n03"/>
         </rule>
       </rsc_location>
       <rsc_location id="run_rsc_c001n04" rsc="rsc_c001n04">
         <rule id="pref_run_rsc_c001n04" score="100" boolean_op="and">
-          <expression attribute="#uname" operation="eq" value="c001n04"/>
+          <expression id="any" attribute="#uname" operation="eq" value="c001n04"/>
         </rule>
       </rsc_location>
       <rsc_location id="run_rsc_c001n05" rsc="rsc_c001n05">
         <rule id="pref_run_rsc_c001n05" score="100" boolean_op="and">
-          <expression attribute="#uname" operation="eq" value="c001n05"/>
+          <expression id="any" attribute="#uname" operation="eq" value="c001n05"/>
         </rule>
       </rsc_location>
       <rsc_location id="run_rsc_c001n06" rsc="rsc_c001n06">
         <rule id="pref_run_rsc_c001n06" score="100" boolean_op="and">
-          <expression attribute="#uname" operation="eq" value="c001n06"/>
+          <expression id="any" attribute="#uname" operation="eq" value="c001n06"/>
         </rule>
       </rsc_location>
       <rsc_location id="run_rsc_c001n07" rsc="rsc_c001n07">
         <rule id="pref_run_rsc_c001n07" score="100" boolean_op="and">
-          <expression attribute="#uname" operation="eq" value="c001n07"/>
+          <expression id="any" attribute="#uname" operation="eq" value="c001n07"/>
         </rule>
       </rsc_location>
       <rsc_location id="run_rsc_c001n08" rsc="rsc_c001n08">
         <rule id="pref_run_rsc_c001n08" score="100" boolean_op="and">
-          <expression attribute="#uname" operation="eq" value="c001n08"/>
+          <expression id="any" attribute="#uname" operation="eq" value="c001n08"/>
         </rule>
       </rsc_location>
     </constraints>
@@ -184,13 +184,13 @@
   <status>
     <node_state id="f67904e0-4dfc-4db1-83a2-e930fc1d20f4" uname="c001n09" in_ccm="true" join="member"  crmd="online" ha="active" expected="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc_c001n09" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n09_start_0" op_digest="fd54394d262d771b8cb48f31f8df7242" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:4" crm_feature_set="2.0" transition_magic="0:4:some_key" call_id="3" rc_code="0" op_status="0"/>
@@ -231,13 +231,13 @@
     </node_state>
     <node_state id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n08_start_0" op_digest="2ecad78afc8e17adb89dd475018ab1c0" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:11" crm_feature_set="2.0" transition_magic="0:11:some_key" call_id="21" rc_code="0" op_status="0"/>
@@ -288,13 +288,13 @@
     </node_state>
     <node_state id="5d9a8c11-8684-43ea-91.0.6e221530c193" uname="c001n03" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n08_start_0" op_digest="2ecad78afc8e17adb89dd475018ab1c0" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:10" crm_feature_set="2.0" transition_magic="0:10:some_key" call_id="12" rc_code="0" op_status="0"/>
@@ -351,13 +351,13 @@
     </node_state>
     <node_state id="c2896699-96b8-4dbc-a94e-6c3b9252b559" uname="c001n04" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n08_start_0" op_digest="2ecad78afc8e17adb89dd475018ab1c0" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:4" crm_feature_set="2.0" transition_magic="0:4:some_key" call_id="3" rc_code="0" op_status="0"/>
@@ -399,13 +399,13 @@
     </node_state>
     <node_state id="c13968a2-bcf0-41f6-9133-01e5bbb63cd5" uname="c001n05" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" op_digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:4" crm_feature_set="2.0" transition_magic="0:4:some_key" call_id="3" rc_code="0" op_status="0"/>
@@ -443,13 +443,13 @@
     </node_state>
     <node_state id="f91e6074-699d-48af-80d6-223132f291e2" uname="c001n06" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n08_start_0" op_digest="2ecad78afc8e17adb89dd475018ab1c0" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:0" crm_feature_set="2.0" transition_magic="0:0:some_key" call_id="179" rc_code="0" op_status="0"/>
@@ -529,13 +529,13 @@
     </node_state>
     <node_state id="208d89a6-e052-4e9d-973d-07c9036c506b" uname="c001n07" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:4" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing:child_DoFencing:4_start_0" op_digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:11" crm_feature_set="2.0" transition_magic="0:11:some_key" call_id="2" rc_code="0" op_status="0"/>
@@ -569,13 +569,13 @@
     </node_state>
     <node_state id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" uname="c001n08" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:6" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing:child_DoFencing:6_start_0" op_digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" op_status="0" rc_code="0"  transition_key="0:14" crm_feature_set="2.0" transition_magic="0:14:some_key" call_id="19"/>

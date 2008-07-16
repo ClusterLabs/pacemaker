@@ -36,7 +36,7 @@
   </configuration>
   <status>
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
-      <lrm>
+      <lrm id="any" >
         <lrm_resources>
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1_start_0" operation="start" interval="0" op_status="0" rc_code="0" call_id="1" op_digest="08b7001b97ccdaa1ca23a9f165256bc1" crm_feature_set="1.0.5" transition_magic=""/>

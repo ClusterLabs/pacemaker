@@ -14,7 +14,7 @@
       </nodes>
       <resources>
 	<clone id="DoFencing">
-          <instance_attributes>
+          <instance_attributes id="any" >
             <attributes>
               <nvpair id="1" name="clone_max" value="8"/>
               <nvpair id="2" name="clone_node_max" value="1"/>
@@ -25,7 +25,7 @@
               <op id="1" name="monitor" interval="5s" timeout="20s"/>
               <op id="2" name="start" prereq="nothing" timeout="20s"/>
             </operations>
-            <instance_attributes>
+            <instance_attributes id="any" >
               <attributes>
                 <nvpair id="3" name="hostlist" value="hadev1 hadev2 hadev3 "/>
               </attributes>

@@ -12,11 +12,11 @@
     <resources>
       <primitive id="rsc1" class="heartbeat" type="apache"/>
       <clone id="rsc2">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
-            <nvpair name="clone_max" value="5"/>
-            <nvpair name="clone_node_max" value="2"/>
-            <nvpair name="resource_stickiness" value="1"/>
+            <nvpair id="any" name="clone_max" value="5"/>
+            <nvpair id="any" name="clone_node_max" value="2"/>
+            <nvpair id="any" name="resource_stickiness" value="1"/>
           </attributes>
         </instance_attributes>
 	<primitive id="child_rsc2" class="heartbeat" type="apache"/>
@@ -31,7 +31,7 @@
   <status>
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
@@ -40,7 +40,7 @@
     </node_state>
     <node_state id="uuid2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>

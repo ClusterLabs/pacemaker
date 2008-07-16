@@ -16,7 +16,7 @@
   </configuration>
   <status>
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1_start_0" operation="start" interval="0" op_status="0" rc_code="0" call_id="1" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition_magic=""/>
@@ -25,7 +25,7 @@
       </lrm>
     </node_state>
     <node_state id="uuid2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1_start_0" operation="start" interval="0" op_status="0" rc_code="0" call_id="1" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition_magic=""/>

@@ -17,15 +17,15 @@
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="can1" score="1">
-	  <expression attribute="#uname" operation="ne" value="darthvader"/>
+	  <expression id="1" attribute="#uname" operation="ne" value="darthvader"/>
 	</rule>
 	<rule id="score1" score="10.0">
-	  <expression attribute="#uname" operation="eq" value="node2"/>
+	  <expression id="2" attribute="#uname" operation="eq" value="node2"/>
 	</rule>
       </rsc_location>
       <rsc_location id="run_rsc2" rsc="rsc2">
 	<rule id="can2" score="1">
-	  <expression attribute="#uname" operation="eq" value="node1"/>
+	  <expression id="3" attribute="#uname" operation="eq" value="node1"/>
 	</rule>
       </rsc_location>
     </constraints>

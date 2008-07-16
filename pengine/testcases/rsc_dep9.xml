@@ -12,28 +12,28 @@
     </nodes>
     <resources>
       <primitive id="rsc1" class="heartbeat" type="apache">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair name="priority" value="1.0"/>
           </attributes>
         </instance_attributes>
       </primitive>
       <primitive id="rsc2" class="heartbeat" type="apache">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair name="priority" value="2.0"/>
           </attributes>
         </instance_attributes>
       </primitive>
       <primitive id="rsc3" class="heartbeat" type="apache">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair name="priority" value="1.0"/>
           </attributes>
         </instance_attributes>
       </primitive>
       <primitive id="rsc4" class="heartbeat" type="apache">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair name="priority" value="2.0"/>
           </attributes>
@@ -55,7 +55,7 @@
   </configuration>
   <status>
     <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1_start_0" operation="start" interval="0" op_status="0" rc_code="0" call_id="1"/>
@@ -67,7 +67,7 @@
       </lrm>
     </node_state>
     <node_state id="node2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
         </lrm_resources>
       </lrm>
