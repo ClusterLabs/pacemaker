@@ -199,6 +199,7 @@ cleanup_calculations(pe_working_set_t *data_set)
 
 	CRM_CHECK(data_set->ordering_constraints == NULL, ;);
 	CRM_CHECK(data_set->placement_constraints == NULL, ;);
+	xmlCleanupParser();
 }
 
 
