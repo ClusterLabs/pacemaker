@@ -359,7 +359,6 @@ main(int argc, char **argv)
 			 a_date, ha_log_date|ha_log_time|ha_log_local);
 	}
 
-	set_working_set_defaults(&data_set);
 	if(process) {
 	    do_calculations(&data_set, cib_object, a_date);
 	}
@@ -499,11 +498,6 @@ main(int argc, char **argv)
 
   cleanup:
 	cleanup_alloc_calculations(&data_set);
-	
-
-#if HAVE_LIBXML2
-	xmlCleanupParser();
-#endif
 	
 	/* required for MallocDebug.app */
 	if(inhibit_exit) {
