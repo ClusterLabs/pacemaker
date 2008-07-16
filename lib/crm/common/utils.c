@@ -423,6 +423,35 @@ crm_itoa(int an_int)
 
 extern int LogToLoggingDaemon(int priority, const char * buf, int bstrlen, gboolean use_pri_str);
 
+static void
+crm_glib_handler(const gchar *log_domain, GLogLevelFlags flags, const gchar *message, gpointer user_data)
+{
+	int log_level = LOG_WARNING;
+	GLogLevelFlags msg_level = (flags & G_LOG_LEVEL_MASK);
+
+	switch(msg_level) {
+	    case G_LOG_LEVEL_ERROR:	log_level = LOG_ERR;    break;
+	    case G_LOG_LEVEL_CRITICAL:	log_level = LOG_CRIT;   break;
+	    case G_LOG_LEVEL_MESSAGE:	log_level = LOG_NOTICE; break;
+	    case G_LOG_LEVEL_INFO:	log_level = LOG_INFO;   break;
+	    case G_LOG_LEVEL_DEBUG:	log_level = LOG_DEBUG;  break;
+
+	    case G_LOG_LEVEL_WARNING:
+	    case G_LOG_FLAG_RECURSION:
+	    case G_LOG_FLAG_FATAL:
+	    case G_LOG_LEVEL_MASK:
+		log_level = LOG_WARNING;
+		break;
+	}
+
+	do_crm_log(log_level, "%s: %s", log_domain, message);
+}
+
+GLogFunc glib_log_default;
+void crm_log_deinit(void) {
+    g_log_set_default_handler(glib_log_default, NULL);
+}
+
 gboolean
 crm_log_init(
     const char *entity, int level, gboolean coredir, gboolean to_stderr,
@@ -431,12 +460,7 @@ crm_log_init(
 /* 	const char *test = "Testing log daemon connection"; */
 	/* Redirect messages from glib functions to our handler */
 /*  	cl_malloc_forced_for_glib(); */
-	g_log_set_handler(NULL,
-			  G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
-			  | G_LOG_LEVEL_WARNING  | G_LOG_LEVEL_MESSAGE
-			  | G_LOG_LEVEL_INFO     | G_LOG_LEVEL_DEBUG
-			  | G_LOG_FLAG_RECURSION | G_LOG_FLAG_FATAL,
-			  cl_glib_msg_handler, NULL);
+	glib_log_default = g_log_set_default_handler(crm_glib_handler, NULL);
 
 	/* and for good measure... - this enum is a bit field (!) */
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
