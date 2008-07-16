@@ -165,9 +165,8 @@ main(int argc, char **argv)
 	const char *graph_file = NULL;
 	const char *input_file = NULL;
 	
-	cl_log_set_entity("ptest");
+	crm_log_init("ptest", LOG_CRIT, FALSE, FALSE, 0, NULL);
 	cl_log_set_facility(LOG_USER);
-	set_crm_log_level(LOG_CRIT-1);
 	
 	while (1) {
 #ifdef HAVE_GETOPT_H
@@ -280,8 +279,6 @@ main(int argc, char **argv)
 		usage("ptest", 1);
 	}
   
-	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");	
-
 	if(USE_LIVE_CIB) {
 		int rc = cib_ok;
 		source = "live cib";
@@ -332,10 +329,10 @@ main(int argc, char **argv)
 	    usage("ptest", 1);
 	}
 	
-	crm_notice("Required feature set: %s", feature_set(cib_object));
  	do_id_check(cib_object, NULL, FALSE, FALSE);
 
 	if(cli_config_update(&cib_object) == FALSE) {
+	    free_xml(cib_object);
 	    return cib_STALE;
 	}
 	
