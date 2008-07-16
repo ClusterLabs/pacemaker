@@ -497,9 +497,9 @@ action2xml(action_t *action, gboolean as_input)
 		}
 	}
 
-	sorted_xml(args_xml, action_xml, FALSE);
-	
+	sorted_xml(args_xml, action_xml, FALSE);	
 	crm_log_xml_debug_4(action_xml, "dumped action");
+	free_xml(args_xml);
 	
 	return action_xml;
 }
