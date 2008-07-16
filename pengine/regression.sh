@@ -25,7 +25,6 @@ fi
 create_mode="true"
 echo Generating test outputs for these tests...
 # do_test
-do_test master-depend "Ensure resources that depend on the master don't get allocated until the master does"
 echo Done.
 echo ""
 
@@ -235,6 +234,7 @@ do_test master-group "Promotion of cloned groups"
 do_test bug-lf-1852 "Don't shuffle master/slave instances unnecessarily"
 do_test master-failed-demote "Dont retry failed demote actions"
 do_test master-failed-demote-2 "Dont retry failed demote actions (notify=false)"
+do_test master-depend "Ensure resources that depend on the master don't get allocated until the master does"
 
 echo ""
 do_test managed-0 "Managed (reference)"
