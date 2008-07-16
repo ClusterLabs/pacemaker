@@ -98,7 +98,6 @@ extern int plugin_log_level;
 extern char *local_uname;
 extern int local_uname_len;
 extern unsigned int local_nodeid;
-extern unsigned long long membership_seq;
 extern int in_shutdown;
 
 static inline const char *level2char(int level)
