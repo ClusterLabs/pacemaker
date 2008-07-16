@@ -575,13 +575,6 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 
 	CRM_CHECK(scratch != NULL, return cib_unknown);
 	
-	if(do_id_check(scratch, NULL, TRUE, FALSE)) {
-	    rc = cib_id_check;
-	    if(call_options & cib_force_diff) {
-		crm_err("Global update introduces id collision!");
-	    }
-	}
-
 	if(rc == cib_ok && current_cib && scratch) {
 	    int old = 0;
 	    int new = 0;

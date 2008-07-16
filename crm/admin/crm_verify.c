@@ -248,10 +248,6 @@ main(int argc, char **argv)
 #endif
 
 	crm_notice("Required feature set: %s", feature_set(cib_object));
- 	if(do_id_check(cib_object, NULL, FALSE, FALSE)) {
-		crm_config_err("ID Check failed");
-	}
-
 	
 	schema = crm_element_value(cib_object, XML_ATTR_VALIDATION);
 	if(schema == NULL) {

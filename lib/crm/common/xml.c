@@ -2562,163 +2562,6 @@ xml2list(xmlNode *parent)
 }
 
 
-static void
-assign_uuid(xmlNode *xml_obj) 
-{
-	cl_uuid_t new_uuid;
-	char *new_uuid_s = NULL;
-	const char *tag_name = crm_element_name(xml_obj);
-	const char *tag_id = ID(xml_obj);
-	
-	crm_malloc0(new_uuid_s, 38);
-	cl_uuid_generate(&new_uuid);
-	cl_uuid_unparse(&new_uuid, new_uuid_s);
-	
-	crm_info("Updating object from <%s id=%s/> to <%s id=%s/>",
-		 tag_name, tag_id?tag_id:"__empty__", tag_name, new_uuid_s);
-	
-	crm_xml_add(xml_obj, XML_ATTR_ID, new_uuid_s);
-	crm_log_xml_debug_2(xml_obj, "Updated object");	
-	crm_free(new_uuid_s);
-}
-
-static gboolean
-tag_needs_id(const char *tag_name) 
-{
-	int lpc = 0;
-	const char *allowed_list[] = {
-		XML_TAG_CIB,
-		XML_TAG_FRAGMENT,
-		XML_CIB_TAG_NODES,
-		XML_CIB_TAG_RESOURCES,
-		XML_CIB_TAG_CONSTRAINTS,
-		XML_CIB_TAG_STATUS,
-		XML_LRM_TAG_RESOURCES,
-		XML_CIB_TAG_CRMCONFIG,
-		XML_CIB_TAG_OPCONFIG,
-		XML_CIB_TAG_RSCCONFIG,
-		XML_CIB_TAG_CONFIGURATION,
-		"attributes",
-		"operations",
-		"diff",
-		"diff-added",
-		"diff-removed",
-	};
-	
-	for(lpc = 0; lpc < DIMOF(allowed_list); lpc++) {
-		if(crm_str_eq(tag_name, allowed_list[lpc], TRUE)) {
-			/* this tag is never meant to have an ID */
-			return FALSE;
-		}
-	}
-	return TRUE;
-}
-
-static gboolean
-non_unique_allowed(const char *tag_name) 
-{
-	int lpc = 0;
-	const char *non_unique[] = {
-		XML_LRM_TAG_RESOURCE,
-		XML_LRM_TAG_RSC_OP,
-	};
-
-	for(lpc = 0; lpc < DIMOF(non_unique); lpc++) {
-		if(safe_str_eq(tag_name, non_unique[lpc])) {
-			/* this tag can have a non-unique ID */
-			return TRUE;
-		}
-	}
-	return FALSE;
-}
-
-gboolean
-do_id_check(xmlNode *xml_obj, GHashTable *id_hash,
-	    gboolean silent_add, gboolean silent_rename) 
-{
-	char *lookup_id = NULL;
-	gboolean modified = FALSE;
-
-	char *old_id = NULL;
-	const char *tag_id = NULL;
-	const char *tag_name = NULL;
-	const char *lookup_value = NULL;
-
-	gboolean created_hash = FALSE;
-
-	if(xml_obj == NULL) {
-		return FALSE;
-
-	} else if(id_hash == NULL) {
-		created_hash = TRUE;
-		id_hash = g_hash_table_new_full(
-			g_str_hash, g_str_equal,
-			g_hash_destroy_str, g_hash_destroy_str);
-	}
-
-	xml_child_iter(
-		xml_obj, xml_child, 
-		if(do_id_check(xml_child, id_hash, silent_add, silent_rename)) {
-			modified = TRUE;
-		}
-		);
-
-	tag_id = ID(xml_obj);
-	tag_name = TYPE(xml_obj);
-	
-	if(tag_needs_id(tag_name) == FALSE) {
-		crm_debug_5("%s does not need an ID", tag_name);
-		goto finish_id_check;
-
-	} else if(tag_id != NULL && non_unique_allowed(tag_name)){
-		crm_debug_5("%s does not need top be unique", tag_name);
-		goto finish_id_check;
-	}
-	
-	lookup_id = NULL;
-	if(tag_id != NULL) {
-		lookup_id = crm_concat(tag_name, tag_id, '-');
-		lookup_value = g_hash_table_lookup(id_hash, lookup_id);
-		if(lookup_value == NULL) {
-			g_hash_table_insert(id_hash, lookup_id, crm_strdup(tag_id));
-			goto finish_id_check;
-		}
-		modified |= (!silent_rename);
-		
-	} else {
-		modified |= (!silent_add);
-	}
-
-	if(tag_id != NULL) {
-		old_id = crm_strdup(tag_id);
-	}
-	
-	crm_free(lookup_id);
-	assign_uuid(xml_obj);
-	tag_id = ID(xml_obj);
-	
-	if(modified == FALSE) {
-		/* nothing to report */
-		
-	} else if(old_id != NULL && safe_str_neq(tag_id, old_id)) {
-		crm_err("\"id\" collision detected... Multiple '%s' entries"
-			" with id=\"%s\", assigned id=\"%s\"",
-			tag_name, old_id, tag_id);
-
-	} else if(old_id == NULL && tag_id != NULL) {
-		crm_err("Detected <%s.../> object without an ID. Assigned: %s",
-			tag_name, tag_id);
-	}
-	crm_free(old_id);
-
-  finish_id_check:
-	if(created_hash) {
-		g_hash_table_destroy(id_hash);
-	}
-
-	return modified;
-}
-
 typedef struct name_value_s 
 {
 	const char *name;
@@ -2755,13 +2598,6 @@ dump_pair(gpointer data, gpointer user_data)
 	crm_xml_add(parent, pair->name, pair->value);
 }
 
-static void
-free_pair(gpointer data, gpointer user_data)
-{
-	name_value_t *pair = data;
-	crm_free(pair);
-}
-
 xmlNode *
 sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
 {
@@ -2788,8 +2624,7 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
 
 	sorted = g_list_sort(unsorted, sort_pairs);
 	g_list_foreach(sorted, dump_pair, result);
-	g_list_foreach(sorted, free_pair, NULL);
-	g_list_free(sorted);
+	slist_destroy(name_value_t, child, sorted, crm_free(child));
 
 	if(recursive) {
 	    xml_child_iter(input, child, sorted_xml(child, result, recursive));

@@ -458,13 +458,6 @@ do_work(xmlNode *input, int call_options, xmlNode **output)
 
 	} else if(cib_action != NULL) {
 		crm_debug_4("Passing \"%s\" to variant_op...", cib_action);
-		if(strcasecmp(CIB_OP_APPLY_DIFF, cib_action) != 0 
-		   && input != NULL
-		   && do_id_check(input, NULL, TRUE, FALSE)) {
-			crm_err("ID Check failed.");
-			return cib_id_check;
-		}
-			
 		return the_cib->cmds->variant_op(
 			the_cib, cib_action, host, obj_type,
 			input, output, call_options);

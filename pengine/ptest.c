@@ -164,6 +164,19 @@ main(int argc, char **argv)
 	const char *dot_file = NULL;
 	const char *graph_file = NULL;
 	const char *input_file = NULL;
+
+	/* disable glib's fancy allocators that can't be free'd */ 
+	GMemVTable vtable;
+
+	vtable.malloc = malloc;
+	vtable.realloc = realloc;
+	vtable.free = free;
+	vtable.calloc = calloc;
+	vtable.try_malloc = malloc;	
+	vtable.try_realloc = realloc;
+
+        g_mem_set_vtable(&vtable);
+
 	
 	crm_log_init("ptest", LOG_CRIT, FALSE, FALSE, 0, NULL);
 	cl_log_set_facility(LOG_USER);
@@ -329,8 +342,6 @@ main(int argc, char **argv)
 	    usage("ptest", 1);
 	}
 	
- 	do_id_check(cib_object, NULL, FALSE, FALSE);
-
 	if(cli_config_update(&cib_object) == FALSE) {
 	    free_xml(cib_object);
 	    return cib_STALE;
@@ -498,6 +509,9 @@ main(int argc, char **argv)
 
   cleanup:
 	cleanup_alloc_calculations(&data_set);
+	crm_log_deinit();
+
+	crm_info("Using system malloc: %d", g_mem_is_system_malloc());
 	
 	/* required for MallocDebug.app */
 	if(inhibit_exit) {

@@ -50,9 +50,6 @@ extern void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
 extern void hash2field(gpointer key, gpointer value, gpointer user_data);
 extern void hash2metafield(gpointer key, gpointer value, gpointer user_data);
 
-extern gboolean do_id_check(xmlNode *xml_obj, GHashTable *id_hash,
-			    gboolean silent_add, gboolean silent_rename);
-
 /*
  * Replacement function for xmlCopyPropList which at the very least,
  * doesnt work the way *I* would expect it to.

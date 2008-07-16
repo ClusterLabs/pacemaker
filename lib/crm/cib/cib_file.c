@@ -142,14 +142,6 @@ static int load_file_cib(const char *filename)
 	goto bail;
     }	
     
-    if(do_id_check(root, NULL, TRUE, FALSE)) {
-	crm_err("%s does not contain a vaild configuration:"
-		" ID check failed",
-		filename);
-	rc = cib_id_check;
-	goto bail;
-    }
-    
     in_mem_cib = root;
     return rc;
 
