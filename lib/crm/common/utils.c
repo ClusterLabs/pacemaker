@@ -789,6 +789,7 @@ crm_get_interval(const char * input)
 	return 0;
 
     } else if(input[0] != 'P') {
+	crm_free(input_copy);
 	return crm_get_msec(input);
     }
     
