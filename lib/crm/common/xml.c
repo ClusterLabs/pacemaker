@@ -3016,7 +3016,7 @@ validate_with_relaxng(
     if (rng != NULL) {
 	xmlRelaxNGFree(rng);    
     }
-
+    xmlCleanupParser();
 #endif	
     return valid;
 }
