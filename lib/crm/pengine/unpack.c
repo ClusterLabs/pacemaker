@@ -1002,6 +1002,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	
 	action_t *action = NULL;
 	node_t *effective_node = NULL;
+	resource_t *failed = NULL;
 
 	gboolean expired = FALSE;
 	gboolean is_probe = FALSE;
@@ -1176,12 +1177,17 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		effective_node = node;
 		/* fall through */
 	    case EXECRA_NOT_CONFIGURED:
+		failed = rsc;
+		if(is_not_set(rsc->flags, pe_rsc_unique)) {
+		    failed = uber_parent(failed);
+		}
+		
 		crm_err("Hard error - %s failed with rc=%d: Preventing %s from re-starting %s %s",
-			id, actual_rc_i, rsc->id,
+			id, actual_rc_i, failed->id,
 			effective_node?"on":"anywhere",
 			effective_node?effective_node->details->uname:"in the cluster");
 
-		resource_location(rsc, effective_node, -INFINITY, "hard-error", data_set);
+		resource_location(failed, effective_node, -INFINITY, "hard-error", data_set);
 		if(is_probe) {
 			/* treat these like stops */
 			task = CRMD_ACTION_STOP;

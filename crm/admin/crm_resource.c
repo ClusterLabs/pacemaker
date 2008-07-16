@@ -730,7 +730,7 @@ migrate_resource(
 				" with cibadmin\n", rsc_id, existing_node);
 			CMD_ERR("\tThis will be the case even if %s is"
 				" the last node in the cluster\n", existing_node);
-			CMD_ERR("\tThis messgae can be disabled with -Q\n");
+			CMD_ERR("\tThis message can be disabled with -Q\n");
 		}
 		
 		crm_xml_add(dont_run, "rsc", rsc_id);
@@ -1145,7 +1145,6 @@ main(int argc, char **argv)
 		set_IPC_Channel_dnotify(src, resource_ipc_connection_destroy);
 	}
 
-	crm_warn("here i am - 3");
 	if(rsc_cmd == 'L') {
 		rc = cib_ok;
 		do_find_resource_list(&data_set, FALSE);
