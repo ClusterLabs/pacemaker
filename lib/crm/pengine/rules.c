@@ -489,14 +489,10 @@ test_date_expression(xmlNode *time_expr, ha_time_t *now)
 
 typedef struct sorted_set_s 
 {
+		int score;
 		const char *name;
 		const char *special_name;
-		int score;
 		xmlNode *attr_set;
-		gboolean overwrite;
-		GHashTable *node_hash;
-		GHashTable *hash;
-		ha_time_t *now;		
 } sorted_set_t;
 
 static gint
@@ -570,11 +566,18 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, gboolean overwrite)
 		);
 }
 
+struct unpack_data_s {
+	gboolean overwrite;
+	GHashTable *node_hash;
+	GHashTable *hash;
+	ha_time_t *now;	
+};
+
 static void
 unpack_attr_set(gpointer data, gpointer user_data)
 {
 	sorted_set_t *pair = data;
-	sorted_set_t *unpack_data = user_data;
+	struct unpack_data_s *unpack_data = user_data;
 	
 	if(test_ruleset(pair->attr_set,
 			unpack_data->node_hash, unpack_data->now) == FALSE) {
@@ -585,21 +588,16 @@ unpack_attr_set(gpointer data, gpointer user_data)
 	populate_hash(pair->attr_set, unpack_data->hash, unpack_data->overwrite);
 }
 
-static void
-free_pair(gpointer data, gpointer user_data)
-{
-	sorted_set_t *pair = data;
-	crm_free(pair);
-}
-
 void
 unpack_instance_attributes(
 	xmlNode *xml_obj, const char *set_name, GHashTable *node_hash, 
 	GHashTable *hash, const char *always_first, gboolean overwrite, ha_time_t *now)
 {
 	GListPtr sorted = NULL;
+	GListPtr unsorted = NULL;
 	const char *score = NULL;
 	sorted_set_t *pair = NULL;
+	struct unpack_data_s data;
 	
 	if(xml_obj == NULL) {
 		crm_debug_4("No instance attributes");
@@ -617,23 +615,22 @@ unpack_instance_attributes(
 		pair->name     = ID(attr_set);
 		pair->special_name = always_first;
 		pair->attr_set = attr_set;
+
 		score = crm_element_value(attr_set, XML_RULE_ATTR_SCORE);
 		pair->score = char2score(score);
 
-		sorted = g_list_prepend(sorted, pair);
-
+		unsorted = g_list_append(unsorted, pair);
 		);
 
 	if(pair != NULL) {
-		pair->hash = hash;
-		pair->node_hash = node_hash;
-		pair->now = now;
-		pair->overwrite = overwrite;
+		data.hash = hash;
+		data.node_hash = node_hash;
+		data.now = now;
+		data.overwrite = overwrite;
 	}
 	
-	sorted = g_list_sort(sorted, sort_pairs);
-	g_list_foreach(sorted, unpack_attr_set, pair);
-	g_list_foreach(sorted, free_pair, NULL);
-	g_list_free(sorted);
+	sorted = g_list_sort(unsorted, sort_pairs);
+	g_list_foreach(sorted, unpack_attr_set, &data);
+	slist_destroy(sorted_set_t, child, sorted, crm_free(child));
 }
 
