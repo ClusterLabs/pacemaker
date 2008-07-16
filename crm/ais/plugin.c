@@ -853,7 +853,9 @@ char *ais_generate_membership_data(void)
     struct member_loop_data data;
     size = 14 + 32; /* <nodes id=""> + int */
     ais_malloc0(data.string, size);
-    sprintf(data.string, "<nodes id=\"%llu\">", membership_seq);
+    
+    /* TODO: Make some magic macro that expands to %llu or %lu depending on the arch */
+    sprintf(data.string, "<nodes id=\"%llu\">", (unsigned long long)membership_seq);
     
     g_hash_table_foreach(membership_list, member_loop_fn, &data);
 
@@ -917,7 +919,7 @@ void send_member_notification(void)
 	    }
 	    
 	    ais_info("Sending membership update %llu to %s",
-		     membership_seq, crm_children[lpc].name);
+		     (unsigned long long)membership_seq, crm_children[lpc].name);
 	    
  	    send_client_msg(crm_children[lpc].async_conn,
 			    crm_class_members, crm_msg_none, update);
@@ -1193,7 +1195,8 @@ void send_cluster_id(void)
 	}
     }
     
-    ais_debug("Local update: id=%u, born=%llu, seq=%llu", local_nodeid, local_born_on, membership_seq);
+    ais_debug("Local update: id=%u, born=%llu, seq=%llu",
+	      local_nodeid, (unsigned long long)local_born_on, (unsigned long long)membership_seq);
     update_member(
 	local_nodeid, local_born_on, membership_seq, msg->votes, msg->processes, NULL, NULL, VERSION);
 
