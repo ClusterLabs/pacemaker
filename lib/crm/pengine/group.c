@@ -59,7 +59,7 @@ gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	}
 	
 	/* this is a bit of a hack - but simplifies everything else */
-	xml_self->name = xmlCharStrdup(XML_CIB_TAG_RESOURCE);
+	xmlNodeSetName(xml_self, ((const xmlChar*)XML_CIB_TAG_RESOURCE));
 	if(common_unpack(xml_self, &self, NULL,  data_set)) {
 		group_data->self = self;
 		self->restart_type = pe_restart_restart;

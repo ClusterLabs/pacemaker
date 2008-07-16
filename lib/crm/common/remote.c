@@ -101,7 +101,7 @@ cib_send_tls(gnutls_session *session, xmlNode *msg)
 #if 0
 	const char *name = crm_element_name(msg);
 	if(safe_str_neq(name, "cib_command")) {
-	    msg->name = xmlCharStrdup("cib_result");
+	    xmlNodeSetName(msg, "cib_result");
 	}
 #endif
 	xml_text = dump_xml_unformatted(msg);
@@ -186,7 +186,8 @@ static char*
 cib_send_plaintext(int sock, xmlNode *msg)
 {
 	char *xml_text = NULL;
-	msg->name = xmlCharStrdup("cib_result");
+
+	xmlNodeSetName(msg, "cib_result");
 	xml_text = dump_xml_unformatted(msg);
 	if(xml_text != NULL) {
 		int rc = 0;

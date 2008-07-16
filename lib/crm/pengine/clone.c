@@ -169,7 +169,7 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	
 	xml_self = copy_xml(rsc->xml);
 	/* this is a bit of a hack - but simplifies everything else */
-	xml_self->name = xmlCharStrdup(XML_CIB_TAG_RESOURCE);
+	xmlNodeSetName(xml_self, ((const xmlChar*)XML_CIB_TAG_RESOURCE));
 /* 	set_id(xml_self, "self", -1); */
 	xml_tmp = find_xml_node(xml_obj, "operations", FALSE);
 	if(xml_tmp != NULL) {
