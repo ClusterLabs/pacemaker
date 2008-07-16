@@ -47,7 +47,6 @@ crm_graph_functions_t default_fns = {
 void
 set_default_graph_functions(void) 
 {
-	crm_info("Setting default graph functions");
 	graph_fns = &default_fns;
 }
 
