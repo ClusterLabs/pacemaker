@@ -752,7 +752,7 @@ void ais_ipc_message_callback(void *conn, void *msg)
 	if(crm_children[type].flags & crm_flag_members) {
 	    char *update = ais_generate_membership_data();
 	    ais_info("Sending membership update %llu to %s",
-		     membership_seq, crm_children[type].name);
+		     (unsigned long long)membership_seq, crm_children[type].name);
  	    send_client_msg(async_conn, crm_class_members, crm_msg_none,update);
 	}	
     }
