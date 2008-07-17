@@ -53,7 +53,7 @@
 
 
 /* GMainLoop *mainloop = NULL; */
-#define OPTARGS	"V?i:nrh:cdp:s1wX:oft"
+#define OPTARGS	"V?i:nrh:cdp:s1wX:oftN"
 
 
 void usage(const char *cmd, int exit_status);
@@ -131,9 +131,11 @@ main(int argc, char **argv)
 {
 	int argerr = 0;
 	int flag;
+	gboolean disable_ncurses = FALSE;
 
 #ifdef HAVE_GETOPT_H
 	int option_index = 0;
+	
 	static struct option long_options[] = {
 		/* Top-level Options */
 		{"verbose",        0, 0, 'V'},
@@ -150,6 +152,7 @@ main(int argc, char **argv)
 		{"as-console",     0, 0, 'c'},		
 		{"one-shot",       0, 0, '1'},		
 		{"daemonize",      0, 0, 'd'},		
+		{"disable-ncurses",0, 0, 'N'},		
 		{"pid-file",       0, 0, 'p'},		
 		{"xml-file",       1, 0, 'x'},
 
@@ -231,6 +234,9 @@ main(int argc, char **argv)
 			case '1':
 				one_shot = TRUE;
 				break;
+			case 'N':
+				disable_ncurses = TRUE;
+				break;
 			case '?':
 				usage(crm_system_name, LSB_EXIT_OK);
 				break;
@@ -280,6 +286,10 @@ main(int argc, char **argv)
 	
 	make_daemon(daemonize, pid_file);
 
+	if(disable_ncurses) {
+	    as_console = FALSE;
+	}
+
 #if CURSES_ENABLED
 	if(as_console) {
 		initscr();
@@ -307,6 +317,9 @@ main(int argc, char **argv)
 			fclose(xml_strm);
 		}
 		one_shot = TRUE;
+		if(cli_config_update(&cib_object) == FALSE) {
+		    return FALSE;
+		}
 		mon_update(NULL, 0, cib_ok, cib_object, NULL);
 	}
 
@@ -388,7 +401,16 @@ mon_timer_popped(gpointer data)
 	    blank_screen();
 	    print_as("Querying...\n");
 	}
+
+	output = NULL;
 	rc = cib_conn->cmds->query(cib_conn, NULL, &output, options);
+
+	if(cli_config_update(&output) == FALSE) {
+	    CRM_DEV_ASSERT(cib_conn->cmds->signoff(cib_conn) == cib_ok);
+	    print_as("Query failed: %s", cib_error2string(cib_STALE));
+	    return FALSE;
+	}
+
 	mon_update(NULL, 0, rc, output, NULL);
 	free_xml(output);
 	/* add_cib_op_callback(rc, FALSE, NULL, mon_update); */
@@ -400,25 +422,11 @@ mon_update(xmlNode *msg, int call_id, int rc,
 	   xmlNode *output, void*user_data) 
 {
 	const char *prefix = NULL;
-  retry:
 	if(rc == cib_ok) {
 		xmlNode *cib = NULL;
 		
-#if CRM_DEPRECATED_SINCE_2_0_4
-		if( safe_str_eq(crm_element_name(output), XML_TAG_CIB) ) {
-			cib = output;
-		} else {
-			cib = find_xml_node(output,XML_TAG_CIB,TRUE);
-		}
-#else
 		cib = output;
 		CRM_DEV_ASSERT(safe_str_eq(crm_element_name(cib), XML_TAG_CIB));
-#endif		
-		if(cli_config_update(&cib) == FALSE) {
-		    rc = cib_STALE;
-		    goto retry;
-		}
-
 		if(as_html_file || web_cgi) {
 			if (print_html_status(cib, as_html_file, web_cgi) != 0) {
 				fprintf(stderr, "Critical: Unable to output html file\n");
@@ -1099,6 +1107,7 @@ void clean_up(int rc)
 #endif
     
     if (cib_conn != NULL) {
+	printf("Cleaning up CIB connection: %d\n", cib_conn->state);
 	cib_conn->cmds->signoff(cib_conn);
 	cib_delete(cib_conn);
 	cib_conn = NULL;
