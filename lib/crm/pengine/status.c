@@ -209,9 +209,6 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->input = NULL;
 	data_set->now = NULL;
 	data_set->graph = NULL;
-	if(data_set->failed) {
-	    free_xml(data_set->failed);
-	}
 	data_set->failed = create_xml_node(NULL, "failed-ops");
 	
 	data_set->transition_idle_timeout = NULL;
