@@ -162,7 +162,7 @@ crm_node_t *crm_update_peer(
     node = g_hash_table_lookup(crm_peer_cache, uname);	
 
     if(node == NULL) {	
-	crm_debug("Creating entry for node %s/%u/%llu", uname, id, born);
+	crm_debug("Creating entry for node %s/%u/%llu", uname, id, (unsigned long long)born);
 	CRM_CHECK(id >= 0, return NULL);
 	CRM_CHECK(uuid != NULL, return NULL);
 
