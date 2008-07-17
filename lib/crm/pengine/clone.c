@@ -29,9 +29,10 @@
 void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
 	pe_working_set_t *data_set);
+gboolean create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set);
 
 
-static gboolean
+gboolean
 create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set) 
 {
 	gboolean rc = TRUE;
@@ -44,6 +45,9 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 
 	CRM_CHECK(clone_data->xml_obj_child != NULL, return FALSE);
 
+	if(sub_id < 0) {
+	    sub_id = clone_data->total_clones;
+	}
 	inc_num = crm_itoa(sub_id);
 	inc_max = crm_itoa(clone_data->clone_max);	
 
@@ -58,8 +62,9 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 		goto bail;
 	}
 /* 	child_rsc->globally_unique = rsc->globally_unique; */
-	
-	crm_debug_3("Setting clone attributes for: %s", child_rsc->id);
+
+	clone_data->total_clones += 1;
+	crm_err("Setting clone attributes for: %s", child_rsc->id);
 	rsc->children = g_list_append(rsc->children, child_rsc);
 	
 	add_hash_param(child_rsc->meta, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
