@@ -106,7 +106,6 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		was_processing_error = FALSE;
 		was_processing_warning = FALSE;
 
-		set_working_set_defaults(&data_set);
 		graph_file = crm_strdup(WORKING_DIR"/graph.XXXXXX");
 		graph_file = mktemp(graph_file);
 
@@ -127,6 +126,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 			crm_config_err("Your current configuration could only be upgraded to %s... "
 				       "the minimum requirement is %s.", value, MINIMUM_SCHEMA_VERSION);
 
+			set_working_set_defaults(&data_set);
 			data_set.graph = create_xml_node(NULL, XML_TAG_GRAPH);
 			crm_xml_add_int(data_set.graph, "transition_id", 0);
 			crm_xml_add_int(data_set.graph, "cluster-delay", 0);
