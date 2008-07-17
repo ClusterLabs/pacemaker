@@ -1,30 +1,18 @@
 {
-   Glib-leak
-   Memcheck:Leak
-   fun:calloc
-   fun:g_malloc0
-   fun:g_allocator_new
-   fun:g_list_append
-   fun:unpack_nodes
-}
-
-{
-   Glib-leak
+   Libxml2 Mutex
    Memcheck:Leak
    fun:malloc
-   fun:g_malloc
-   fun:g_mem_chunk_new
-   obj:*
-   fun:g_hash_table_insert
-   fun:do_id_check
+   fun:xmlNewRMutex
+   fun:xmlDictFree
+   fun:xmlHashFree
+   fun:xmlFreeDoc
 }
 
 {
-   Glib-leak
+   GLib global allocator object
    Memcheck:Leak
    fun:calloc
    fun:g_malloc0
-   fun:g_allocator_new
-   fun:g_list_prepend
-   fun:unpack_instance_attributes
+   obj:/usr/lib64/libglib-2.0.so.0.1600.3
+   fun:g_slice_alloc
 }
