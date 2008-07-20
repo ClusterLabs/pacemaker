@@ -129,7 +129,7 @@ def create_cib() :
 		nvpair.setAttribute("id",    "cib-bootstrap-options-"+option_details[0])
 		nvpair.setAttribute("name",  option_details[0])
 		nvpair.setAttribute("value", option_details[1])
-		if option_details[0] == "stonith_enabled" and enable_stonith:
+		if option_details[0] == "stonith-enabled" and enable_stonith:
 			nvpair.setAttribute("value", "true")
 			
 
