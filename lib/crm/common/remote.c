@@ -187,7 +187,7 @@ cib_send_plaintext(int sock, xmlNode *msg)
 {
 	char *xml_text = NULL;
 
-	xmlNodeSetName(msg, "cib_result");
+	xmlNodeSetName(msg, (const xmlChar*)"cib_result");
 	xml_text = dump_xml_unformatted(msg);
 	if(xml_text != NULL) {
 		int rc = 0;
