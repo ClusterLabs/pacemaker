@@ -224,11 +224,14 @@ cib_native_free (cib_t* cib)
 
 	if(cib->state != cib_disconnected) {
 		rc = cib_native_signoff(cib);
-		if(rc == cib_ok) {
-			crm_free(cib->variant_opaque);
-			crm_free(cib->cmds);
-			crm_free(cib);
-		}
+	}
+
+	if(cib->state == cib_disconnected) {
+	    cib_native_opaque_t *native = cib->variant_opaque;
+	    crm_free(native->token);
+	    crm_free(cib->variant_opaque);
+	    crm_free(cib->cmds);
+	    crm_free(cib);
 	}
 	
 	return rc;
@@ -261,7 +264,7 @@ cib_native_inputfd(cib_t* cib)
 }
 
 static gboolean timer_expired = FALSE;
-static struct timer_rec_s *sync_timer = NULL;
+static struct timer_rec_s sync_timer;
 static gboolean cib_timeout_handler(gpointer data)
 {
     struct timer_rec_s *timer = data;
@@ -285,9 +288,6 @@ cib_native_perform_op(
 	xmlNode *op_reply = NULL;
 
  	cib_native_opaque_t *native = cib->variant_opaque;
-	if(sync_timer == NULL) {
-	    crm_malloc0(sync_timer, sizeof(struct timer_rec_s));
-	}
 	
 	if(cib->state == cib_disconnected) {
 		return cib_not_connected;
@@ -344,15 +344,16 @@ cib_native_perform_op(
 	rc = IPC_OK;
 	crm_debug_3("Waiting for a syncronous reply");
 
+	sync_timer.ref = 0;
 	if(cib->call_timeout > 0) {
 	    /* We need this, even with msgfromIPC_timeout(), because we might
 	     * get other/older replies that don't match the active request
 	     */
 	    timer_expired = FALSE;
-	    sync_timer->call_id = cib->call_id;
-	    sync_timer->timeout = cib->call_timeout*1000;
-	    sync_timer->ref = Gmain_timeout_add(
-		sync_timer->timeout, cib_timeout_handler, sync_timer);
+	    sync_timer.call_id = cib->call_id;
+	    sync_timer.timeout = cib->call_timeout*1000;
+	    sync_timer.ref = Gmain_timeout_add(
+		sync_timer.timeout, cib_timeout_handler, &sync_timer);
 	}
 
 	while(timer_expired == FALSE && IPC_ISRCONN(native->command_channel)) {
@@ -368,9 +369,9 @@ cib_native_perform_op(
 		CRM_CHECK(reply_id > 0,
 			  crm_log_xml(LOG_ERR, "Invalid call id", op_reply);
 			  free_xml(op_reply);
-			  if(sync_timer->ref > 0) {
-			      g_source_remove(sync_timer->ref);
-			      sync_timer->ref = 0;
+			  if(sync_timer.ref > 0) {
+			      g_source_remove(sync_timer.ref);
+			      sync_timer.ref = 0;
 			  }
 			  return cib_reply_failed);
 
@@ -396,9 +397,9 @@ cib_native_perform_op(
 		op_reply = NULL;
 	}
 
-	if(sync_timer->ref > 0) {
-	    g_source_remove(sync_timer->ref);
-	    sync_timer->ref = 0;
+	if(sync_timer.ref > 0) {
+	    g_source_remove(sync_timer.ref);
+	    sync_timer.ref = 0;
 	}
 	
 	if(timer_expired) {
