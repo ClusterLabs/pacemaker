@@ -91,7 +91,9 @@ do_election_vote(long long action,
 
 	send_request(vote, NULL);
 	crm_debug("Destroying voted hash");
-	g_hash_table_destroy(voted);
+	if(voted) {
+	    g_hash_table_destroy(voted);	    
+	}
 	free_xml(vote);
 	voted = NULL;
 	
@@ -142,9 +144,12 @@ do_election_check(long long action,
 		       enum crmd_fsa_input current_input,
 		  fsa_data_t *msg_data)
 {
-	int voted_size = g_hash_table_size(voted);
+	int voted_size = 0;
 	int num_members = crm_active_members();
-	
+
+	if(voted) {
+	    voted_size = g_hash_table_size(voted);
+	}
 	/* in the case of #voted > #members, it is better to
 	 *   wait for the timeout and give the cluster time to
 	 *   stabilize
