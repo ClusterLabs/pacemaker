@@ -645,6 +645,7 @@ unpack_find_resource(
 			create_child_clone(clone_parent, -1, data_set);
 			crm_debug("Looking again for %s", alt_rsc_id);
 			rsc = pe_find_resource(data_set->resources, alt_rsc_id);
+			set_bit(rsc->flags, pe_rsc_orphan);
 			CRM_CHECK(rsc != NULL, crm_err("%s stil not found", alt_rsc_id); continue);
 #else
 			rsc = create_fake_resource(alt_rsc_id, rsc_entry, data_set);

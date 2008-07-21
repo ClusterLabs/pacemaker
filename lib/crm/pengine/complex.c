@@ -353,7 +353,7 @@ void common_free(resource_t *rsc)
 	if(rsc->meta != NULL) {
 		g_hash_table_destroy(rsc->meta);
 	}
-	if(is_set(rsc->flags, pe_rsc_orphan)) {
+	if(rsc->parent == NULL && is_set(rsc->flags, pe_rsc_orphan)) {
 		free_xml(rsc->xml);
 	}
 	if(rsc->running_on) {
