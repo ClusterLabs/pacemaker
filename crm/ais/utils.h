@@ -51,7 +51,7 @@ typedef struct crm_child_s {
 	int respawn_count;
 	gboolean respawn;
 	const char *name;
-	int uid;
+	const char *uid;
 	const char *command;
 	void *conn;
 	void *async_conn;

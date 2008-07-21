@@ -28,6 +28,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+#include <pwd.h>
 #include <glib.h>
 #include <bzlib.h>
 
@@ -86,10 +87,23 @@ gboolean spawn_child(crm_child_t *child)
 {
     int rc = 0;
     int lpc = 0;
+    int uid = 0;
+    int gid = 0;
     struct rlimit oflimits;
+    struct passwd *pwentry = NULL;
     const char *devnull = "/dev/null";
     const char *use_valgrind = getenv("HA_VALGRIND_ENABLED");
 
+    if(child->uid) {
+	pwentry = getpwnam(child->uid);
+	AIS_CHECK(pwentry != NULL,
+		  ais_err("Invalid uid (%s) specified for %s", child->uid, child->name);
+		  return TRUE);
+	uid = pwentry->pw_uid;
+	gid = pwentry->pw_gid;
+	free (pwentry);
+    }
+    
     if(child->command == NULL) {
 	ais_info("Nothing to do for child \"%s\"", child->name);
 	return TRUE;
@@ -108,10 +122,14 @@ gboolean spawn_child(crm_child_t *child)
     ais_debug("Executing \"%s (%s)\" (pid %d)",
 	      child->command, child->name, (int) getpid());
 
-    if(child->uid > 0) {
- 	rc = setuid(child->uid);
+    if(child->uid) {
+ 	rc = setuid(uid);
 	if(rc < 0) {
-	    ais_perror("Could not set user to %d", child->uid);
+	    ais_perror("Could not set user to %d (%s)", uid, child->uid);
+	}
+	rc = setgid(gid);
+	if(rc < 0) {
+	    ais_perror("Could not set group to %d", gid);
 	}
     }
     

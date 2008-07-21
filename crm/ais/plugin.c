@@ -86,13 +86,13 @@ struct crm_identify_msg_s
 } __attribute__((packed));
 
 static crm_child_t crm_children[] = {
-    { 0, crm_proc_none,     crm_flag_none,    0, 0, FALSE, "none",     0, NULL, NULL },
-    { 0, crm_proc_ais,      crm_flag_none,    0, 0, FALSE, "ais",      0, NULL, NULL },
-    { 0, crm_proc_lrmd,     crm_flag_none,    3, 0, TRUE,  "lrmd",     0,         HA_LIBHBDIR"/lrmd",     NULL },
-    { 0, crm_proc_cib,      crm_flag_members, 2, 0, TRUE,  "cib",      HA_CCMUID, HA_LIBHBDIR"/cib",      NULL },
-    { 0, crm_proc_crmd,     crm_flag_members, 5, 0, TRUE,  "crmd",     HA_CCMUID, HA_LIBHBDIR"/crmd",     NULL },
-    { 0, crm_proc_attrd,    crm_flag_none,    4, 0, TRUE,  "attrd",    HA_CCMUID, HA_LIBHBDIR"/attrd",    NULL },
-    { 0, crm_proc_stonithd, crm_flag_none,    1, 0, TRUE,  "stonithd", 0,         HA_LIBHBDIR"/stonithd", NULL },
+    { 0, crm_proc_none,     crm_flag_none,    0, 0, FALSE, "none",     NULL,       NULL, NULL },
+    { 0, crm_proc_ais,      crm_flag_none,    0, 0, FALSE, "ais",      NULL,       NULL, NULL },
+    { 0, crm_proc_lrmd,     crm_flag_none,    3, 0, TRUE,  "lrmd",     NULL,       HA_LIBHBDIR"/lrmd",     NULL },
+    { 0, crm_proc_cib,      crm_flag_members, 2, 0, TRUE,  "cib",      HA_CCMUSER, HA_LIBHBDIR"/cib",      NULL },
+    { 0, crm_proc_crmd,     crm_flag_members, 5, 0, TRUE,  "crmd",     HA_CCMUSER, HA_LIBHBDIR"/crmd",     NULL },
+    { 0, crm_proc_attrd,    crm_flag_none,    4, 0, TRUE,  "attrd",    HA_CCMUSER, HA_LIBHBDIR"/attrd",    NULL },
+    { 0, crm_proc_stonithd, crm_flag_none,    1, 0, TRUE,  "stonithd", NULL,       HA_LIBHBDIR"/stonithd", NULL },
 };
 
 void send_cluster_id(void);
@@ -381,15 +381,23 @@ int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
 
     ENTER("");
     if(need_init) {
+	struct passwd *pwentry = NULL;
+
 	need_init = FALSE;
 	crm_plugin_init(objdb);
     
 	pthread_create (&crm_wait_thread, NULL, crm_wait_dispatch, NULL);
 
+	pwentry = getpwnam(HA_CCMUSER);
+	AIS_CHECK(pwentry != NULL,
+		  ais_err("Cluster user %s does not exist", HA_CCMUSER);
+		  return TRUE);
+	
 	mkdir(HA_VARRUNDIR, 750);
 	mkdir(HA_VARRUNDIR"/crm", 750);
-	chown(HA_VARRUNDIR"/crm", HA_CCMUID, HA_APIGID);
-	chown(HA_VARRUNDIR, HA_CCMUID, HA_APIGID);
+	chown(HA_VARRUNDIR"/crm", pwentry->pw_uid, pwentry->pw_gid);
+	chown(HA_VARRUNDIR, pwentry->pw_uid, pwentry->pw_gid);
+	free (pwentry);
 	
 	for (start_seq = 1; start_seq < max; start_seq++) {
 	    /* dont start anything with start_seq < 1 */
