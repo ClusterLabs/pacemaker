@@ -430,12 +430,16 @@ crm_glib_handler(const gchar *log_domain, GLogLevelFlags flags, const gchar *mes
 	GLogLevelFlags msg_level = (flags & G_LOG_LEVEL_MASK);
 
 	switch(msg_level) {
+	    case G_LOG_LEVEL_CRITICAL:
+		/* log and record how we got here */
+		crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, message, TRUE, TRUE);
+		return;
+
 	    case G_LOG_LEVEL_ERROR:	log_level = LOG_ERR;    break;
-	    case G_LOG_LEVEL_CRITICAL:	log_level = LOG_CRIT;   break;
 	    case G_LOG_LEVEL_MESSAGE:	log_level = LOG_NOTICE; break;
 	    case G_LOG_LEVEL_INFO:	log_level = LOG_INFO;   break;
 	    case G_LOG_LEVEL_DEBUG:	log_level = LOG_DEBUG;  break;
-
+		
 	    case G_LOG_LEVEL_WARNING:
 	    case G_LOG_FLAG_RECURSION:
 	    case G_LOG_FLAG_FATAL:
@@ -1304,8 +1308,6 @@ crm_abort(const char *file, const char *function, int line,
 	    return;
 
 	} else if(do_fork) {
-	    do_crm_log(LOG_ERR, "%s: Triggered non-fatal assert at %s:%d : %s",
-		       function, file, line, assert_condition);
 	    pid=fork();
 
 	} else {
@@ -1315,7 +1317,8 @@ crm_abort(const char *file, const char *function, int line,
 	
 	switch(pid) {
 		case -1:
-			crm_err("Cannot fork!");
+			do_crm_log(LOG_CRIT, "%s: Cannot create core for non-fatal assert at %s:%d : %s",
+				   function, file, line, assert_condition);
 			return;
 
 		default:	/* Parent */
