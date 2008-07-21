@@ -64,7 +64,7 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 /* 	child_rsc->globally_unique = rsc->globally_unique; */
 
 	clone_data->total_clones += 1;
-	crm_err("Setting clone attributes for: %s", child_rsc->id);
+	crm_debug_2("Setting clone attributes for: %s", child_rsc->id);
 	rsc->children = g_list_append(rsc->children, child_rsc);
 	
 	add_hash_param(child_rsc->meta, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
@@ -258,6 +258,11 @@ void clone_print(
 	
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
+
+		if(is_set(child_rsc->flags, pe_rsc_orphan)
+		   && child_rsc->fns->active(child_rsc, TRUE) == FALSE) {
+		    continue;
+		}
 		
 		if(options & pe_print_html) {
 			status_print("<li>\n");
