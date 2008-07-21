@@ -187,8 +187,8 @@ main(int argc, char ** argv)
 				    cl_perror("Could not set user to %d", pwentry->pw_uid);
 				    return 100;
 				}
-				
 				cl_log_enable_stderr(1);
+				free (pwentry);				
 				break;
 			case '?':		/* Help message */
 				usage(crm_system_name, LSB_EXIT_OK);
