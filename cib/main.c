@@ -46,6 +46,7 @@
 
 #include <cibio.h>
 #include <callbacks.h>
+#include <pwd.h>
 
 #if HAVE_LIBXML2
 #  include <libxml/parser.h>
@@ -135,7 +136,8 @@ main(int argc, char ** argv)
 		{0, 0, 0, 0}
 	};
 #endif
-	
+
+	struct passwd *pwentry = NULL;	
 	crm_log_init(CRM_SYSTEM_CIB, LOG_INFO, TRUE, TRUE, 0, NULL);
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, cib_shutdown, NULL, NULL);
@@ -168,6 +170,24 @@ main(int argc, char ** argv)
 				stand_alone = TRUE;
 				preserve_status = TRUE;
 				cib_writes_enabled = FALSE;
+
+				pwentry = getpwnam(HA_CCMUSER);
+				CRM_CHECK(pwentry != NULL,
+					  cl_perror("Invalid uid (%s) specified", HA_CCMUSER);
+					  return 100);
+				
+				rc = setgid(pwentry->pw_gid);
+				if(rc < 0) {
+				    cl_perror("Could not set group to %d", pwentry->pw_gid);
+				    return 100;
+				}
+
+				rc = setuid(pwentry->pw_uid);
+				if(rc < 0) {
+				    cl_perror("Could not set user to %d", pwentry->pw_uid);
+				    return 100;
+				}
+				
 				cl_log_enable_stderr(1);
 				break;
 			case '?':		/* Help message */
