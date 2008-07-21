@@ -68,17 +68,19 @@ features:
 	hg out -M --template "  + {desc|firstline|strip}\n" ../$(STABLE_SERIES) | grep -v Low: | sort -uf 
 	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
 
-obs:	tgz
-	make changes > .changes
-	scp .changes $(TARFILE) vmhost.beekhof.net:Development/obs/server:ha-clustering/pacemaker/
+OBS_PREFIX=c001n16.suse.de:Development/obs
 
-dev:	tgz
+stable:	tgz
+	make changes > .changes
+	scp .changes $(TARFILE) $(OBS_PREFIX)/server:ha-clustering/pacemaker/
+
+unstable:	tgz
 	make features > .changes
-	scp .changes $(TARFILE) vmhost.beekhof.net:Development/obs/server:ha-clustering:UNSTABLE/pacemaker/
+	scp .changes $(TARFILE) $(OBS_PREFIX)/server:ha-clustering:UNSTABLE/pacemaker/
 
-home:	tgz
-	make changes > .changes
-	scp .changes $(TARFILE) vmhost.beekhof.net:Development/obs/home:beekhof/pacemaker-test/
+factory:	tgz
+	make features > .changes
+	scp .changes $(TARFILE) $(OBS_PREFIX)/server:ha-clustering:Factory/pacemaker/
 
 global: clean-generic
 	gtags -q
