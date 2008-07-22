@@ -188,7 +188,6 @@ main(int argc, char ** argv)
 				    return 100;
 				}
 				cl_log_enable_stderr(1);
-				free (pwentry);				
 				break;
 			case '?':		/* Help message */
 				usage(crm_system_name, LSB_EXIT_OK);

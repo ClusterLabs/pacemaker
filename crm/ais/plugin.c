@@ -371,6 +371,7 @@ static void *crm_wait_dispatch (void *arg)
 }
 
 #include <sys/stat.h>
+#include <pwd.h>
 
 int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
 {
@@ -397,7 +398,6 @@ int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
 	mkdir(HA_VARRUNDIR"/crm", 750);
 	chown(HA_VARRUNDIR"/crm", pwentry->pw_uid, pwentry->pw_gid);
 	chown(HA_VARRUNDIR, pwentry->pw_uid, pwentry->pw_gid);
-	free (pwentry);
 	
 	for (start_seq = 1; start_seq < max; start_seq++) {
 	    /* dont start anything with start_seq < 1 */

@@ -101,7 +101,6 @@ gboolean spawn_child(crm_child_t *child)
 		  return TRUE);
 	uid = pwentry->pw_uid;
 	gid = pwentry->pw_gid;
-	free (pwentry);
     }
     
     if(child->command == NULL) {
