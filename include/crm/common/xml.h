@@ -316,16 +316,18 @@ extern const char *get_schema_name(int version);
 
 #  define free_xml(a_node) do {						\
 	if((a_node) != NULL) {						\
-	    xmlNode *top = NULL;					\
+	    xmlNode *a_doc_top = NULL;					\
 	    xmlDoc *a_doc = (a_node)->doc;				\
 	    if (a_doc != NULL) {					\
-		top = xmlDocGetRootElement(a_doc);			\
+		a_doc_top = xmlDocGetRootElement(a_doc);		\
 	    }								\
-	    if(a_doc != NULL && top == (a_node)) {			\
+	    if(a_doc != NULL && a_doc_top == (a_node)) {		\
 		xmlFreeDoc(a_doc);					\
+									\
 	    } else {							\
 		if(a_doc != NULL) {					\
-		    crm_err("Attempted to free XML from within an xmlDocPtr"); \
+		    crm_err("Line %d: Attempted to free XML (%s) from within an xmlDocPtr (%s/%p)", \
+			    __LINE__, crm_element_name(a_node), crm_element_name(a_doc_top), a_doc); \
 		}							\
 		/* make sure the node is unlinked first */		\
 		xmlUnlinkNode(a_node);					\
