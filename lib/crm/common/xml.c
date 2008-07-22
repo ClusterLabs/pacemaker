@@ -100,7 +100,6 @@ int log_data_element(const char *function, const char *prefix, int log_level,
 int dump_data_element(
     int depth, char **buffer, int *max, int *offset, const char *prefix, xmlNode *data, gboolean formatted);
 
-xmlNode *parse_xml(const char *input, size_t *offset);
 int get_tag_name(const char *input, size_t offset, size_t max);
 int get_attr_name(const char *input, size_t offset, size_t max);
 int get_attr_value(const char *input, size_t offset, size_t max);
@@ -370,21 +369,8 @@ add_node_copy(xmlNode *parent, xmlNode *src_node)
 int
 add_node_nocopy(xmlNode *parent, const char *name, xmlNode *child)
 {
-
-	int next = 0;
-	crm_validate_data(parent);
-	crm_validate_data(child);	
-
-	if(name == NULL) {
-		name = crm_element_name(child);
-	}
-	if(name == NULL || name[0] == 0) {
-	    crm_err("Cannot add object with no name");
-	    return HA_FAIL;
-	}
-	
-	next = 0;
-	xmlAddChild(parent, child);
+	add_node_copy(parent, child);
+	free_xml(child);
 	return HA_OK;
 }
 
@@ -478,19 +464,45 @@ free_xml_from_parent(xmlNode *parent, xmlNode *a_node)
 }
 
 xmlNode*
-copy_xml(xmlNode *src_node)
+copy_xml(xmlNode *src)
 {
-	return xmlCopyNode(src_node, 1);
+#if 0    
+    xmlNode *top = NULL;
+    if(src->doc == NULL) {
+	return xmlCopyNode(src, 1);
+    }
+
+    top = xmlDocGetRootElement(src->doc);
+    if(top == src) {
+	xmlDoc *copy = xmlCopyDoc(src->doc, 1);
+	return xmlDocGetRootElement(copy);
+    }
+    crm_err("Partial copy %s in %s", crm_element_name(src), crm_element_name(top));
+#endif
+    xmlDoc *doc = xmlNewDoc((const xmlChar*)"1.0");
+    xmlNode *copy = xmlDocCopyNode(src, doc, 1);
+    xmlDocSetRootElement(doc, copy);
+    return copy;
 }
 
 xmlNode*
 string2xml(const char *input)
 {
-	xmlNode *output = parse_xml(input, NULL);
-	if(output != NULL) {
-		crm_validate_data(output);
+	xmlDocPtr output = NULL;
+	xmlParserCtxtPtr ctxt = NULL;
+    
+	/* create a parser context */
+	ctxt = xmlNewParserCtxt();
+	CRM_CHECK(ctxt != NULL, return NULL);
+
+	if(input) {
+	   /* output = xmlParseMemory(input, strlen(input)); */
+	    output = xmlCtxtReadDoc(ctxt, (const xmlChar*)input, NULL, NULL, XML_PARSE_NOBLANKS);
 	}
-	return output;
+
+	xmlFreeParserCtxt(ctxt);
+	CRM_CHECK(output != NULL, return NULL);
+	return xmlDocGetRootElement(output);
 }
 
 xmlNode *
@@ -521,7 +533,6 @@ stdin2xml(void)
 	crm_log_xml_debug_3(xml_obj, "Created fragment");
 	return xml_obj;
 }
-
 
 xmlNode*
 file2xml(FILE *input, gboolean compressed)
@@ -905,8 +916,9 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 		crm_xml_add(parent, name, value);
 		break;
 	    }
-	    
-	    add_node_nocopy(parent, name, xml);
+
+	    add_node_copy(parent, xml);
+	    free_xml(xml);
 	    break;
 
 	case FT_BINARY:
@@ -952,7 +964,8 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 	    }
 
 	    if(xml != NULL) {
-		add_node_nocopy(parent, name, xml);
+		add_node_copy(parent, xml);
+		free_xml(xml);
 	    }
 	    
 	    crm_free(uncompressed);
@@ -1304,538 +1317,6 @@ void
 xml_remove_prop(xmlNode *obj, const char *name)
 {
     xmlUnsetProp(obj, (const xmlChar*)name);
-}
-
-int
-get_tag_name(const char *input, size_t offset, size_t max) 
-{
-	char ch = 0;
-	size_t lpc = offset;
-
-	const char *error = NULL;
-	gboolean do_special = FALSE;
-	
-	for(; error == NULL && lpc < max; lpc++) {
-		ch = input[lpc];
-#if XML_PARSER_DEBUG
-		crm_debug_5("Processing char %c [%d]", ch, (int)lpc);
-#endif
-		switch(ch) {
-			case 0:
-				error = "unexpected EOS";
-				break;
-			case '?':
-				if(lpc == 0) {
-					/* weird xml tag that we dont care about */
-					do_special = TRUE;
-				} else {
-					goto out;
-				}
-				break;
-			case '/':
-			case '>':
-			case '\t':
-			case '\n':
-			case ' ':
-				if(!do_special) {
-					goto out;
-				}
-				break;
-			default:
-				if(do_special) {
-
-				} else if('a' <= ch && ch <= 'z') {
-				} else if('A' <= ch && ch <= 'Z') {
-				} else if(ch == '_') {
-				} else if(ch == '-') {
-				} else {
-					error = "bad character, not in [a-zA-Z_-]";
-				}
- 				break;
-		}
-	}
-	crm_err("Error parsing token near %.15s: %s", input, crm_str(error));
-	return -1;
-  out:
-	CRM_ASSERT(lpc > offset);
-	return lpc - offset;
-}
-
-int
-get_attr_name(const char *input, size_t offset, size_t max) 
-{
-	char ch = 0;
-	size_t lpc = offset;
-	const char *error = NULL;
-	
-	for(; error == NULL && lpc < max; lpc++) {
-		ch = input[lpc];
-#if XML_PARSER_DEBUG
-		crm_debug_5("Processing char %c[%d]", ch, (int)lpc);
-#endif
-
-		switch(ch) {
-			case 0:
-				error = "unexpected EOS";
- 				break;
-			case '\t':
-			case '\n':
-			case ' ':
-				error = "unexpected whitespace";
- 				break;
-			case '=':
-				return lpc - offset;
-			default:
-				if('a' <= ch && ch <= 'z') {
-				} else if('A' <= ch && ch <= 'Z') {
-				} else if('0' <= ch && ch <= '9') {
-				} else if(ch == '_') {
-				} else if(ch == '-') {
-				} else {
-					error = "bad character, not in [a-zA-Z0-9_-]";
-				}
- 				break;
-		}
-	}
-	crm_err("Error parsing token near %.40s: (lpc=%d, ch='%c') %s",
-		input+offset, (int)(lpc-offset), ch, crm_str(error));
-	return -1;
-}
-
-int
-get_attr_value(const char *input, size_t offset, size_t max) 
-{
-	char ch = 0;
-	size_t lpc = offset;
-	const char *error = NULL;
-	
-	for(; error == NULL && lpc < max; lpc++) {
-		ch = input[lpc];
-#if XML_PARSER_DEBUG
-		crm_debug_5("Processing char %c [%d]", ch, (int)lpc);
-#endif
-		
-		switch(ch) {
-			case 0:
-				error = "unexpected EOS";
- 				break;
-			case '\\':
-				if(input[lpc+1] == '"') {
-					/* skip over the next char */ 
-					lpc++;
-				}
-				break;
-			case '"':
-				if(input[lpc+1] == '/'
-				   || input[lpc+1] == '>'
-				   || isspace(input[lpc+1])) {
-				    return lpc - offset;
-				} /* else
-				   *   An embedded quote - often used in XPath strings
-				   */
- 				break;
-			default:
- 				break;
-		}
-	}
-	crm_err("Error parsing token near %.40s: %s", input+offset, crm_str(error));
-	return -1;
-}
-
-int
-is_comment_start(const char *input, size_t offset, size_t max)
-{
-	size_t remaining = max - offset;
-	CRM_CHECK(input != NULL, return 0);
-	CRM_CHECK(offset < max, return 0);
-	input += offset;
-	
-	if(remaining > 4
-	   && input[0] == '<'
-	   && input[1] == '!'
-	   && input[2] == '-'
-	   && input[3] == '-') {
-#if XML_PARSER_DEBUG
-	    crm_debug_6("Found comment start: <!--");
-#endif
-		return 4;
-		
-	} else if(remaining > 2
-	   && input[0] == '<'
-	   && input[1] == '!') {
-#if XML_PARSER_DEBUG
-	    crm_debug_6("Found comment start: <!");
-#endif
-		return 2;
-
-	} else if(remaining > 2
-	   && input[0] == '<'
-	   && input[1] == '?') {
-#if XML_PARSER_DEBUG
-	    crm_debug_6("Found comment start: <?");
-#endif
-		return 2;
-	}
-
-#if XML_PARSER_DEBUG
-	if(remaining > 3) {
-		crm_debug_6("Not comment start: %c%c%c%c", input[0], input[1], input[2], input[3]);
-	} else {
-		crm_debug_6("Not comment start");
-	}
-#endif
-	
-	return 0;
-}
-
-
-int
-is_comment_end(const char *input, size_t offset, size_t max)
-{
-	size_t remaining = max - offset;
-	CRM_CHECK(input != NULL, return 0);
-	input += offset;
-	
-	if(remaining > 2
-	   && input[0] == '-'
-	   && input[1] == '-'
-	   && input[2] == '>') {
-#if XML_PARSER_DEBUG
-	    crm_debug_6("Found comment end: -->");
-#endif
-		return 3;
-		
-	} else if(remaining > 1
-	   && input[0] == '?'
-	   && input[1] == '>') {
-#if XML_PARSER_DEBUG
-	    crm_debug_6("Found comment end: ?>");
-#endif
-		return 2;
-	}
-#if XML_PARSER_DEBUG
-	if(remaining > 2) {
-		crm_debug_6("Not comment end: %c%c%c", input[0], input[1], input[2]);
-	} else {
-		crm_debug_6("Not comment end");
-	}
-#endif
-	return 0;
-}
-
-static gboolean
-drop_whitespace(const char *input, size_t *offset, size_t max)
-{
-	char ch = 0;
-	size_t lpc = *offset;
-	gboolean more = TRUE;
-	const char *our_input = input;
-
-	if(input == NULL) {
-		return FALSE;
-	}
-	while(lpc < max && more) {
-		ch = our_input[lpc];
-#if XML_PARSER_DEBUG
-		crm_debug_6("Processing char %c[%d]", ch, (int)lpc);
-#endif
-		if(isspace(ch)) {
-			lpc++;
-
-		} else {
-			more = FALSE;
-		}
-	}
-
-#if XML_PARSER_DEBUG
-	crm_debug_4("Finished processing whitespace");
-	if(lpc > *offset) {
-		crm_debug_5("Skipped %d whitespace chars", (int)(lpc - *offset));
-	}
-#endif
-	(*offset) = lpc;	
-	return FALSE;
-}
-
-gboolean
-drop_comments(const char *input, size_t *offset, size_t max)
-{
-	gboolean more = TRUE;
-	gboolean in_directive = FALSE;
-	int in_comment = FALSE;
-	size_t lpc = 0;
-	int tag_len = 0;
-	char ch = 0;
-	if(input == NULL) {
-		return FALSE;
-	}
-
-	CRM_ASSERT(offset != NULL);
-	lpc = *offset;
-	while(lpc < max && more) {
-		ch = input[lpc];
-#if XML_PARSER_DEBUG
-		crm_debug_6("Processing char [%d]: %c ", (int)lpc, ch);
-#endif
-		switch(ch) {
-			case 0:
-				if(in_comment == FALSE) {
-					more = FALSE;
-				} else {
-					crm_err("unexpected EOS");
-					crm_warn("Parsing error at or before: %s", input+lpc);
-				}
-				break;
-			case '<':
-				tag_len = is_comment_start(input, lpc, max);
-				if(tag_len > 0) {
-					if(in_comment) {
-						crm_err("Nested XML comments are not supported!");
-						crm_warn("Parsing error at or before: %s", input+lpc);
-					}
-					in_comment = TRUE;
-					lpc+=tag_len;
-					if(tag_len == 2 && input[lpc-1] == '!') {
-						in_directive = TRUE;
-					}
-				} else if(in_comment == FALSE){
-					more = FALSE;
-					
-				} else {
-					lpc++;
-				}
-				break;
-			case '>':
-				lpc++;
-				if(in_directive) {
-					in_directive = FALSE;
-					in_comment = FALSE;
-				}
-				break;
-			case '-':
-			case '?':
-				tag_len = is_comment_end(input, lpc, max);
-				if(tag_len > 0) {
-					lpc+=tag_len;
-					in_comment = FALSE;
-
-				} else {
-					lpc++;
-				}
-				break;
-			case ' ':
-			case '\t':
-			case '\n':
-			case '\r':
-				lpc++;
-				break;
-			default:
-				lpc++;
-				break;
-		}
-	}
-#if XML_PARSER_DEBUG
-	crm_debug_4("Finished processing comments");
-	crm_debug_5("Skipped %d comment chars", (int)(lpc - *offset));
-#endif
-	*offset = lpc;
-	return FALSE;
-}
-
-xmlNode*
-parse_xml(const char *input, size_t *offset)
-{
-	char ch = 0;
-	int len = 0;
-	size_t lpc = 0, max = 0;
-	char *tag_name = NULL;
-	char *attr_name = NULL;
-	char *attr_value = NULL;
-	gboolean more = TRUE;
-	gboolean were_comments = TRUE;
-	const char *error = NULL;
-	const char *our_input = input;
-	xmlNode *new_obj = NULL;
-
-	if(input == NULL) {
-		return NULL;
-	}
-	if(offset != NULL) {
-		our_input = input + (*offset);
-	}
-
-	max = strlen(our_input);
-	were_comments = drop_comments(our_input, &lpc, max);
-	CRM_CHECK(our_input[lpc] == '<', return NULL);
-	lpc++;
-
-	len = get_tag_name(our_input, lpc, max);
-#if XML_PARSER_DEBUG
-	crm_debug_5("Tag length: %d", (int)len);
-#endif
-	CRM_CHECK(len > 0, return NULL);
-
-	crm_malloc0(tag_name, len+1);
-	strncpy(tag_name, our_input + lpc, len+1);
-	tag_name[len] = EOS;
-#if XML_PARSER_DEBUG
-	crm_debug_4("Processing tag %s", tag_name);
-#endif
-	
-	new_obj = xmlNewNode(NULL, (xmlChar*)tag_name);
-	lpc += len;
-
-	for(; more && error == NULL && lpc < max; lpc++) {
-		ch = our_input[lpc];
-#if XML_PARSER_DEBUG
-		crm_debug_5("Processing char %c[%d]", ch, (int)lpc);
-#endif
-		switch(ch) {
-			case 0:
-				error = "unexpected EOS";
-				break;
-			case '/':
-				if(our_input[lpc+1] == '>') {
-					more = FALSE;
-				}
-				break;
-			case '<':
-				if(our_input[lpc+1] == '!') {
-					lpc--; /* allow the '<' to be processed */
-					drop_comments(our_input, &lpc, max);
-					lpc--; /* allow the '<' to be processed */
-					
-				} else if(our_input[lpc+1] != '/') {
-					xmlNode *child = NULL;
-#if XML_PARSER_DEBUG
-					crm_debug_4("Start parsing child at %d...", (int)lpc);
-#endif
-					
-					lpc--;
-					child = parse_xml(our_input, &lpc);
-					if(child == NULL) {
-						error = "error parsing child";
-						break;
-					} 
-					add_node_nocopy(new_obj, NULL, child);
-/* 					ha_msg_addstruct_compress( */
-/* 						new_obj, crm_element_name(child), child); */
-					
-#if XML_PARSER_DEBUG
-					crm_debug_4("Finished parsing child: %s",
-						    crm_element_name(child));
-#endif
-					if(our_input[lpc] == '<') {
-						lpc--; /* allow the '<' to be processed */
-					}
-					
-				} else {
-					lpc += 2; /* </ */
-					len = get_tag_name(our_input, lpc, max);
-					if(len < 0) {
-						error = "couldnt find tag";
-						
-					} else if(strlen(tag_name) == len
-						  && strncmp(our_input+lpc, tag_name, len) == 0) {
-						more = FALSE;
-						lpc += len;
-						if(our_input[lpc] != '>') {
-							error = "clase tag cannot contain attrs";
-						}
-#if XML_PARSER_DEBUG
-						crm_debug_4("Finished parsing ourselves: %s",
-							    crm_element_name(new_obj));
-#endif
-						
-					} else {
-						error = "Mismatching close tag";
-						crm_err("Expected: %s", tag_name);
-					}
-				}
-				break;
-			case '=':
-				lpc++; /* = */
-				/*fall through*/
-			case '"':
-				lpc++; /* " */
-				len = get_attr_value(our_input, lpc, max);
-				if(len < 0) {
-					error = "couldnt find attr_value";
-				} else {
-					crm_malloc0(attr_value, len+1);
-					strncpy(attr_value, our_input+lpc, len+1);
-					attr_value[len] = EOS;
-					lpc += len;
-					
-#if XML_PARSER_DEBUG
-					crm_debug_4("creating nvpair: <%s %s=\"%s\"...",
-						    tag_name, attr_name, attr_value);
-#endif
-					
-					crm_xml_add(new_obj, attr_name, attr_value);
-					crm_free(attr_name);
-					crm_free(attr_value);
-				}
-				break;
-			case '>':
-				while(lpc < max && our_input[lpc+1] != '<') {
-					lpc++;
-				}
-				break;
-			case ' ':
-			case '\t':
-			case '\n':
-			case '\r':
-				break;
-			default:
-				len = get_attr_name(our_input, lpc, max);
-				if(len < 0) {
-					error = "couldnt find attr_name";
-				} else {
-					crm_malloc0(attr_name, len+1);
-					strncpy(attr_name, our_input+lpc, len+1);
-					attr_name[len] = EOS;
-					lpc += len;
-#if XML_PARSER_DEBUG
-					crm_debug_4("found attr name: %s", attr_name);
-#endif
-					lpc--; /* make sure the '=' is seen next time around */
-				}
-				break;
-		}
-	}
-	
-	if(error) {
-		crm_err("Error parsing token: %s", error);
-		crm_err("Error at or before: %.40s", our_input+lpc-3);
-		crm_free(tag_name);
-		free_xml(new_obj);
-		return NULL;
-	}
-	
-	if(offset == NULL) {
-		drop_comments(our_input, &lpc, max);
-		drop_whitespace(our_input, &lpc, max);
-		if(lpc < max) {
-		    if(crm_log_level < LOG_ERR) {
-			fprintf(stderr, "%s: Ignoring trailing characters in XML input.  Supply -V for more details.\n", __PRETTY_FUNCTION__);
-		    } else {
-			cl_log(LOG_ERR, "%s: Ignoring trailing characters in XML input.", __PRETTY_FUNCTION__);
-		    }
-		    cl_log(LOG_ERR, "%s: Parsed %d characters of a possible %d.  Trailing text was: '%d', \'%.40s\'...",
-			   __PRETTY_FUNCTION__, (int)lpc, (int)max, our_input[lpc], our_input+lpc);
-		}
-	}
-	
-#if XML_PARSER_DEBUG
-	crm_debug_4("Finished processing %s tag", tag_name);
-#endif
-	crm_free(tag_name);
-	if(offset != NULL) {
-		(*offset) += lpc;
-	}
-
-	return new_obj;
 }
 
 void
