@@ -145,6 +145,30 @@ void crm_peer_destroy(void)
     }
 }
 
+struct node_search_s {
+	unsigned int id;
+	crm_node_t *match;
+};
+
+static void
+crm_node_match(gpointer key, gpointer value, gpointer user_data) 
+{
+    crm_node_t *node = value;
+    struct node_search_s *search = user_data;
+    if(search->match == NULL && node->id == search->id) {
+	search->match = node;
+    }
+}
+
+crm_node_t *crm_find_node(unsigned int id) {
+    
+    struct node_search_s search;
+    search.id = id;
+    search.match = NULL;
+    g_hash_table_foreach(crm_peer_cache, crm_node_match, &search);
+    return search.match;
+}
+
 crm_node_t *crm_update_peer(
     unsigned int id, uint64_t born, uint64_t seen, int32_t votes, uint32_t children,
     const char *uuid, const char *uname, const char *addr, const char *state) 
