@@ -14,3 +14,6 @@
 
 /* Current pacemaker version */
 #undef PACEMAKER_VERSION
+
+/* "AIS target is the whitetank series" */
+#undef AIS_WHITETANK
