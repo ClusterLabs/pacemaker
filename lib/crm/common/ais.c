@@ -84,7 +84,7 @@ char *get_ais_data(AIS_Message *msg)
 
 #if SUPPORT_AIS
 int ais_fd_sync = -1;
-static int ais_fd_async = -1; /* never send messages via this channel */
+int ais_fd_async = -1; /* never send messages via this channel */
 GFDSource *ais_source = NULL;
 GFDSource *ais_source_sync = NULL;
 
@@ -315,7 +315,6 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 
 	if(rc != BZ_OK) {
 	    crm_err("Decompression failed: %d", rc);
-	    crm_free(uncompressed);
 	    goto badmsg;
 	}
 	
