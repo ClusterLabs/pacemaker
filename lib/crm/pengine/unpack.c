@@ -616,11 +616,14 @@ create_fake_resource(const char *rsc_id, crm_data_t *rsc_entry, pe_working_set_t
 	return rsc;
 }
 
+extern gboolean create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set);
+
 static resource_t *
 unpack_find_resource(
 	pe_working_set_t *data_set, node_t *node, const char *rsc_id, crm_data_t *rsc_entry)
 {
 	resource_t *rsc = NULL;
+	resource_t *clone_parent = NULL;
 	gboolean is_duped_clone = FALSE;
 	char *alt_rsc_id = crm_strdup(rsc_id);
 	
@@ -630,14 +633,24 @@ unpack_find_resource(
 		/* no match */
 		if(rsc == NULL) {
 			crm_debug_2("%s not found: %d", alt_rsc_id, is_duped_clone);
-			if(is_duped_clone) {
-				/* create one */
-				rsc = create_fake_resource(alt_rsc_id, rsc_entry, data_set);
-				crm_info("Making sure orphan %s/%s is stopped on %s",
-					 rsc_id, rsc->id, node->details->uname);
-				resource_location(rsc, NULL, -INFINITY, "__orphan_clone_dont_run__", data_set);
+			if(is_duped_clone == FALSE) {
+			    break;
 			}
+			    
+			/* create one */
+#if 1
+			create_child_clone(clone_parent, -1, data_set);
+			crm_debug("Looking again for %s", alt_rsc_id);
+			rsc = pe_find_resource(data_set->resources, alt_rsc_id);
+			set_bit(rsc->flags, pe_rsc_orphan);
+			CRM_CHECK(rsc != NULL, crm_err("%s stil not found", alt_rsc_id); continue);
+#else
+			rsc = create_fake_resource(alt_rsc_id, rsc_entry, data_set);
+			crm_info("Making sure orphan %s/%s of %s is stopped on %s",
+				 rsc_id, rsc->id, clone_parent->id, node->details->uname);
+			resource_location(rsc, NULL, -INFINITY, "__orphan_clone_dont_run__", data_set);
 			break;
+#endif
 			
 			/* not running anywhere else */
 		} else if(rsc->running_on == NULL) {
@@ -654,6 +667,7 @@ unpack_find_resource(
 			 */
 		} else {
 			crm_debug_3("find another one");
+			clone_parent = rsc->parent;
 			rsc = NULL;
 			is_duped_clone = TRUE;
 			alt_rsc_id = increment_clone(alt_rsc_id);
