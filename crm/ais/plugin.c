@@ -68,6 +68,7 @@ pthread_t crm_wait_thread;
 gboolean wait_active = TRUE;
 gboolean have_reliable_membership_id = FALSE;
 GHashTable *membership_list = NULL;
+GHashTable *membership_notify_list = NULL;
 
 #define MAX_RESPAWN		100
 #define crm_flag_none		0x00000000
@@ -246,7 +247,8 @@ static void crm_plugin_init(struct objdb_iface_ver0 *objdb)
     
     membership_list = g_hash_table_new_full(
 	g_direct_hash, g_direct_equal, NULL, destroy_ais_node);
-
+    membership_notify_list = g_hash_table_new(g_direct_hash, g_direct_equal);
+    
     setenv("HA_COMPRESSION",  "bz2", 1);
     setenv("HA_cluster_type", "openais", 1);
     
@@ -579,6 +581,7 @@ int ais_ipc_client_exit_callback (void *conn)
 {
     int lpc = 0;
     const char *client = NULL;
+    void *async_conn = openais_conn_partner_get(conn);
     
     ENTER("Client=%p", conn);
     for (; lpc < SIZEOF(crm_children); lpc++) {
@@ -589,8 +592,11 @@ int ais_ipc_client_exit_callback (void *conn)
 	    break;
 	}
     }
-    
-    ais_info("Client %p/%s left", conn, client?client:"unknown-transient");
+
+    g_hash_table_remove(membership_notify_list, async_conn);
+
+    ais_info("Client %s (conn=%p, async-conn=%p) left",
+	     client?client:"unknown-transient", conn, async_conn);
     LEAVE("");
 
     return (0);
@@ -759,6 +765,7 @@ void ais_ipc_message_callback(void *conn, void *msg)
 	/* Make sure they have the latest membership */
 	if(crm_children[type].flags & crm_flag_members) {
 	    char *update = ais_generate_membership_data();
+	    g_hash_table_replace(membership_notify_list, async_conn, async_conn);
 	    ais_info("Sending membership update %llu to %s",
 		     (unsigned long long)membership_seq, crm_children[type].name);
  	    send_client_msg(async_conn, crm_class_members, crm_msg_none,update);
@@ -889,50 +896,44 @@ void ais_node_list_query(void *conn, void *msg)
 
 void ais_manage_notification(void *conn, void *msg)
 {
-    int lpc = 0;
     int enable = 0;
     AIS_Message *ais_msg = msg;
     char *data = get_ais_data(ais_msg);
+    void *async_conn = openais_conn_partner_get(conn);
 
     if(ais_str_eq("true", data)) {
 	enable = 1;
     }
     
-    for (; lpc < SIZEOF(crm_children); lpc++) {
-	if(crm_children[lpc].conn == conn) {
-	    ais_info("%s node notifications for %s",
-		     enable?"Enabling":"Disabling", crm_children[lpc].name);
-	    if(enable) {
-		crm_children[lpc].flags |= crm_flag_members;
-	    } else {
-		crm_children[lpc].flags |= crm_flag_members;
-		crm_children[lpc].flags ^= crm_flag_members;
-	    }
-	    break;
-	}
+    ais_info("%s node notifications for child %d (%p)",
+	     enable?"Enabling":"Disabling", ais_msg->sender.pid, async_conn);
+    if(enable) {
+	g_hash_table_replace(membership_notify_list, async_conn, async_conn);
+    } else {
+	g_hash_table_remove(membership_notify_list, async_conn);
     }
     send_ipc_ack(conn, 2);
 }
 
+static gboolean
+ghash_send_update(gpointer key, gpointer value, gpointer data)
+{
+    if(send_client_msg(value, crm_class_members, crm_msg_none, data) != 0) {
+	/* remove it */
+	return TRUE;
+    }
+    return FALSE;
+}
+
 void send_member_notification(void)
 {
-    int lpc = 0;
     char *update = ais_generate_membership_data();
 
-    for (; lpc < SIZEOF(crm_children); lpc++) {
-	if(crm_children[lpc].flags & crm_flag_members) {
+    ais_info("Sending membership update %llu to %d children",
+	     (unsigned long long)membership_seq,
+	     g_hash_table_size(membership_notify_list));
 
-	    if(crm_children[lpc].async_conn == NULL) {
-		continue;
-	    }
-	    
-	    ais_info("Sending membership update %llu to %s",
-		     (unsigned long long)membership_seq, crm_children[lpc].name);
-	    
- 	    send_client_msg(crm_children[lpc].async_conn,
-			    crm_class_members, crm_msg_none, update);
-	}
-    }
+    g_hash_table_foreach_remove(membership_notify_list, ghash_send_update, update);
     ais_free(update);
 }
 
