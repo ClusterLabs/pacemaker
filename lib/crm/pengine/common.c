@@ -40,6 +40,9 @@ check_quorum(const char *value)
 
 	} else if(safe_str_eq(value, "ignore")) {
 		return TRUE;
+
+	} else if(safe_str_eq(value, "suicide")) {
+		return TRUE;
 	}
 	return FALSE;
 }
@@ -58,7 +61,7 @@ check_stonith_action(const char *value)
 
 pe_cluster_option pe_opts[] = {
 	/* name, old-name, validate, default, description */
-	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore", "stop", &check_quorum,
+	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum,
 	  "What to do when the cluster does not have quorum", NULL },
 	{ "symmetric-cluster", "symmetric_cluster", "boolean", NULL, "true", &check_boolean,
 	  "All resources can run anywhere by default", NULL },

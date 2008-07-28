@@ -249,12 +249,15 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 
 #endif
 
+gboolean ever_had_quorum = FALSE;
+
 void
 post_cache_update(int instance) 
 {
     xmlNode *no_op = NULL;
     
     crm_peer_seq = instance;
+    ever_had_quorum |= crm_have_quorum;
     crm_debug("Updated cache after membership event %d.", instance);
 
     g_hash_table_foreach(crm_peer_cache, reap_dead_ccm_nodes, NULL);	

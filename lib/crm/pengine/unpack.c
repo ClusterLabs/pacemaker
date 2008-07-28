@@ -87,12 +87,29 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 	}
 
 	value = pe_pref(data_set->config_hash, "no-quorum-policy");
+
 	if(safe_str_eq(value, "ignore")) {
 		data_set->no_quorum_policy = no_quorum_ignore;
 		
 	} else if(safe_str_eq(value, "freeze")) {
 		data_set->no_quorum_policy = no_quorum_freeze;
 
+	} else if(safe_str_eq(value, "suicide")) {
+	    gboolean do_panic = FALSE;
+	    crm_element_value_int(data_set->input, XML_ATTR_QUORUM_PANIC, &do_panic);
+
+	    if(data_set->stonith_enabled == FALSE){
+		crm_config_err("Setting no-quorum-policy=suicide makes no sense if stonith-enabled=false");
+	    }
+
+	    if(do_panic && data_set->stonith_enabled) {
+		data_set->no_quorum_policy = no_quorum_suicide;
+
+	    } else if(data_set->have_quorum == FALSE && do_panic == FALSE) {
+		crm_notice("Resetting no-quorum-policy to 'stop': The cluster has never had quorum");
+		data_set->no_quorum_policy = no_quorum_stop;
+	    }
+	    
 	} else {
 		data_set->no_quorum_policy = no_quorum_stop;
 	}
@@ -103,6 +120,9 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 			break;
 		case no_quorum_stop:
 			crm_debug("On loss of CCM Quorum: Stop ALL resources");
+			break;
+		case no_quorum_suicide:
+			crm_notice("On loss of CCM Quorum: Fence all remaining nodes");
 			break;
 		case no_quorum_ignore:
 			crm_notice("On loss of CCM Quorum: Ignore");
@@ -320,6 +340,15 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 		
 		crm_debug_3("determining node state");
 		determine_online_status(node_state, this_node, data_set);
+
+		if(data_set->no_quorum_policy == no_quorum_suicide) {
+		    /* Everything else should flow from this automatically
+		     * At least until the PE becomes able to migrate off healthy resources 
+		     */
+		    crm_notice("Marking node %s STONITH: The cluster does not have quorum",
+			       this_node->details->uname);
+		    this_node->details->unclean = TRUE;
+		}
 
 		if(this_node->details->online || data_set->stonith_enabled) {
 			/* offline nodes run no resources...

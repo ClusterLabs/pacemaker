@@ -127,6 +127,7 @@ extern gboolean do_dc_heartbeat(gpointer data);
 #define AM_I_DC is_set(fsa_input_register, R_THE_DC)
 #define AM_I_OPERATIONAL (is_set(fsa_input_register, R_STARTING)==FALSE)
 extern unsigned long long saved_ccm_membership_id;
+extern gboolean ever_had_quorum;
 
 #include <fsa_proto.h>
 #include <crmd_utils.h>

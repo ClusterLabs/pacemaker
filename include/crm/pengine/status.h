@@ -29,7 +29,8 @@ typedef struct resource_s resource_t;
 typedef enum no_quorum_policy_e {
 	no_quorum_freeze,
 	no_quorum_stop,
-	no_quorum_ignore
+	no_quorum_ignore,
+	no_quorum_suicide
 } no_quorum_policy_t;
 
 enum node_type {

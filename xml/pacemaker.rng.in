@@ -81,6 +81,9 @@
     <optional>
       <attribute name="cib-last-written"><text/></attribute>
     </optional>
+    <optional>
+      <attribute name="no-quorum-panic"><data type="boolean"/></attribute>
+    </optional>
   </define>
 
   <define name="element-nodes">

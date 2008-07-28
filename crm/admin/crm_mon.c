@@ -946,6 +946,9 @@ print_html_status(xmlNode *cib, const char *filename, gboolean web_cgi)
 		case no_quorum_ignore:
 			fprintf(stream, "Ignore");
 			break;
+		case no_quorum_suicide:
+			fprintf(stream, "Suicide");
+			break;
 	}
 	fprintf(stream, "\n</td></tr>\n</table>\n");
 

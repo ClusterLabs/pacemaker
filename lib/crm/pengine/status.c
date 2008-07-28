@@ -92,11 +92,11 @@ cluster_status(pe_working_set_t *data_set)
 			data_set->input, XML_ATTR_DC_UUID);
 	}	
 	
- 	unpack_config(config, data_set);
-
 	if(value != NULL) {
 		cl_str_to_boolean(value, &data_set->have_quorum);
 	}
+
+ 	unpack_config(config, data_set);
 	
 	if(data_set->have_quorum == FALSE
 	   && data_set->no_quorum_policy != no_quorum_ignore) {
