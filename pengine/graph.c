@@ -112,14 +112,16 @@ update_action(action_t *action)
 
 		if((local_type & pe_order_complex_right)
 		   && action->optional
-		   && other->action->optional == FALSE) {
+		   && other->action->optional == FALSE
+		   && (local_type ^ pe_order_complex_right) != pe_order_optional) {
 		    local_type |= pe_order_implies_right;
 		    do_crm_log(log_level,"Upgrading complex constraint to implies_right");
 		}
 
 		if((local_type & pe_order_complex_left)
 		   && action->optional == FALSE
-		   && other->action->optional) {
+		   && other->action->optional
+		   && (local_type ^ pe_order_complex_left) != pe_order_optional) {
 		    local_type |= pe_order_implies_left;
 		    do_crm_log(log_level,"Upgrading complex constraint to implies_left");
 		}
