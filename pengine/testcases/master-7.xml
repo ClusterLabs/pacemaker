@@ -32,7 +32,7 @@
        <node uname="c001n08" type="normal" id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <instance_attributes id="nodes-6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
            <attributes>
-             <nvpair id="any" name="standby" id="standby-6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" value="off"/>
+             <nvpair name="standby" id="standby-6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" value="off"/>
            </attributes>
          </instance_attributes>
        </node>
