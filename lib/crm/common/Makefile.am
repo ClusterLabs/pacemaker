@@ -41,7 +41,10 @@ libcrmcluster_la_LDFLAGS = -version-info 1:0:0 $(CLUSTERLIBS)
 #libcrmcommon_la_CFLAGS = -Wno-discard-qual
 
 # Must use non-fatal CFLAGS because glib insists on pretending things are const when they're not
-CFLAGS		= $(NON_FATAL_CFLAGS)
+# s390 needs -fPIC 
+# s390-suse-linux/bin/ld: .libs/ipc.o: relocation R_390_PC32DBL against `__stack_chk_fail@@GLIBC_2.4' can not be used when making a shared object; recompile with -fPIC
+
+CFLAGS		= $(NON_FATAL_CFLAGS) -fPIC
 
 libcrmcommon_la_SOURCES	= ipc.c utils.c xml.c ctrl.c iso8601.c \
 			iso8601_fields.c remote.c
