@@ -512,18 +512,6 @@ get_crm_log_level(void)
 	return crm_log_level;
 }
 
-void
-crm_log_message_adv(int level, const char *prefix, const HA_Message *msg) {
-	if((int)crm_log_level >= level) {
-		do_crm_log(level, "#========= %s message start ==========#", prefix?prefix:"");
-		if(level > LOG_DEBUG) {
-			cl_log_message(LOG_DEBUG, msg);
-		} else {
-			cl_log_message(level, msg);
-		}
-	}
-}
-
 static int
 crm_version_helper(const char *text, char **end_text)
 {

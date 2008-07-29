@@ -285,9 +285,6 @@ typedef GList* GListPtr;
 
 #include <crm/common/util.h>
 
-extern void crm_log_message_adv(
-	int level, const char *alt_debugfile, const HA_Message *msg);
-
 #define crm_log_xml(level, text, xml)   if(crm_log_level >= (level)) {	\
 		print_xml_formatted(level,  __PRETTY_FUNCTION__, xml, text); \
 	}
