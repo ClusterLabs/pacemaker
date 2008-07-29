@@ -453,7 +453,7 @@ char *totempg_ifaces_print (unsigned int nodeid)
     }
 
     for (i = 0; i < iface_count; i++) {
-	sprintf (one_iface, "r(%d) ip(%s) ",
+	sprintf (one_iface, "r(%d) ip(%s), ",
 		 i, totemip_print (&interfaces[i]));
 	strcat (iface_string, one_iface);
     }
