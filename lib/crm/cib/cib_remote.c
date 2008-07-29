@@ -38,19 +38,23 @@
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  undef KEYFILE
 #  include <gnutls/gnutls.h>
-#endif
-
-#include <arpa/inet.h>
-#include <sgtty.h>
-
-#define DH_BITS 1024
 extern gnutls_anon_client_credentials anon_cred_c;
+extern gnutls_session *create_tls_session(int csock, int type);
 
 const int kx_prio[] =
 {
 	GNUTLS_KX_ANON_DH,
 	0
 };
+
+#else
+typedef void gnutls_session;
+#endif
+
+#include <arpa/inet.h>
+#include <sgtty.h>
+
+#define DH_BITS 1024
 
 struct remote_connection_s 
 {
@@ -74,6 +78,7 @@ typedef struct cib_remote_opaque_s
 	
 } cib_remote_opaque_t;
 
+void cib_remote_connection_destroy(gpointer user_data);
 gboolean cib_remote_dispatch(int fd, gpointer user_data);
 int cib_remote_signon(cib_t* cib, const char *name, enum cib_conn_type type);
 int cib_remote_signoff(cib_t* cib);
@@ -147,6 +152,7 @@ cib_remote_new (const char *server, const char *user, const char *passwd, int po
     return cib;
 } 
 
+#ifdef HAVE_GNUTLS_GNUTLS_H
 static int
 cib_tls_close(cib_t *cib)
 {
@@ -155,53 +161,6 @@ cib_tls_close(cib_t *cib)
     gnutls_anon_free_client_credentials (anon_cred_c);
     gnutls_global_deinit();
     return 0;
-}
-
-extern gnutls_session *create_tls_session(int csock, int type);
-static void
-cib_remote_connection_destroy(gpointer user_data)
-{
-    crm_err("Connection destroyed");
-    return;
-}
-
-gboolean cib_remote_dispatch(int fd, gpointer user_data)
-{
-    cib_t *cib = user_data;
-    cib_remote_opaque_t *private = cib->variant_opaque;
-    if(fd == private->callback.socket) {
-	xmlNode *msg = NULL;
-	const char *type = NULL;
-
-	crm_info("Message on callback channel");
-	msg = cib_recv_remote_msg(private->callback.session);
-
-	type = crm_element_value(msg, F_TYPE);
-	crm_debug_4("Activating %s callbacks...", type);
-
-	if(safe_str_eq(type, T_CIB)) {
-	    cib_native_callback(cib, msg, 0, 0);
-		
-	} else if(safe_str_eq(type, T_CIB_NOTIFY)) {
-		g_list_foreach(cib->notify_list, cib_native_notify, msg);
-
-	} else {
-		crm_err("Unknown message type: %s", type);
-	}
-	
-	if(msg != NULL) {
-	    free_xml(msg);
-	    return TRUE;
-	}
-	
-    } else if(fd == private->command.socket) {
-	crm_err("Message on command channel");
-
-    } else {
-	crm_err("Unknown fd");
-    }
-    
-    return FALSE;
 }
 
 static int
@@ -333,6 +292,53 @@ cib_tls_signon(cib_t *cib, struct remote_connection_s *connection)
 
     return rc;
 }
+#endif
+
+void
+cib_remote_connection_destroy(gpointer user_data)
+{
+    crm_err("Connection destroyed");
+    return;
+}
+
+gboolean cib_remote_dispatch(int fd, gpointer user_data)
+{
+    cib_t *cib = user_data;
+    cib_remote_opaque_t *private = cib->variant_opaque;
+    if(fd == private->callback.socket) {
+	xmlNode *msg = NULL;
+	const char *type = NULL;
+
+	crm_info("Message on callback channel");
+	msg = cib_recv_remote_msg(private->callback.session);
+
+	type = crm_element_value(msg, F_TYPE);
+	crm_debug_4("Activating %s callbacks...", type);
+
+	if(safe_str_eq(type, T_CIB)) {
+	    cib_native_callback(cib, msg, 0, 0);
+		
+	} else if(safe_str_eq(type, T_CIB_NOTIFY)) {
+		g_list_foreach(cib->notify_list, cib_native_notify, msg);
+
+	} else {
+		crm_err("Unknown message type: %s", type);
+	}
+	
+	if(msg != NULL) {
+	    free_xml(msg);
+	    return TRUE;
+	}
+	
+    } else if(fd == private->command.socket) {
+	crm_err("Message on command channel");
+
+    } else {
+	crm_err("Unknown fd");
+    }
+    
+    return FALSE;
+}
 
 int
 cib_remote_signon(cib_t* cib, const char *name, enum cib_conn_type type)
@@ -361,6 +367,8 @@ cib_remote_signon(cib_t* cib, const char *name, enum cib_conn_type type)
     if(private->server == NULL || private->user == NULL) {
 	rc = cib_missing;
     }
+    
+#ifdef HAVE_GNUTLS_GNUTLS_H
     if(rc == cib_ok) {
 	rc = cib_tls_signon(cib, &(private->command));
     }
@@ -368,7 +376,10 @@ cib_remote_signon(cib_t* cib, const char *name, enum cib_conn_type type)
     if(rc == cib_ok) {
 	rc = cib_tls_signon(cib, &(private->callback));
     }
-
+#else
+    rc = cib_NOTSUPPORTED;
+#endif
+    
     if(rc == cib_ok) {
 	xmlNode *hello = cib_create_op(0, private->callback.token, CRM_OP_REGISTER, NULL, NULL, NULL, 0);
 	crm_xml_add(hello, F_CIB_CLIENTNAME, name);
@@ -396,7 +407,9 @@ cib_remote_signoff(cib_t* cib)
     /* cib_remote_opaque_t *private = cib->variant_opaque; */
 
     crm_debug("Signing out of the CIB Service");
+#ifdef HAVE_GNUTLS_GNUTLS_H
     cib_tls_close(cib);
+#endif
     
     cib->state = cib_disconnected;
     cib->type  = cib_none;
