@@ -107,22 +107,22 @@ main(int argc, char ** argv)
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
 
+	if(cluster_type != 2) {
 #if SUPPORT_AIS
-	if(cluster_type != 2 && init_ais_connection(
-	       ais_membership_dispatch, ais_membership_destroy, NULL, NULL)) {
+	    if(init_ais_connection(
+		   ais_membership_dispatch, ais_membership_destroy, NULL, NULL)) {
 
-	    GMainLoop*  amainloop = NULL;
-	    crm_info("Requesting the list of configured nodes");
-	    crm_peer_init();
-	    send_ais_text(
-		crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
-	    amainloop = g_main_new(FALSE);
-	    g_main_run(amainloop);
-
-	} else
+		GMainLoop*  amainloop = NULL;
+		crm_info("Requesting the list of configured nodes");
+		crm_peer_init();
+		send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
+		amainloop = g_main_new(FALSE);
+		g_main_run(amainloop);
+	    }
 #endif
+	} else if(cluster_type != 3) {
 #if SUPPORT_HEARTBEAT
-	    if(cluster_type != 3 && ccm_age_connect(&ccm_fd)) {
+	    if(ccm_age_connect(&ccm_fd)) {
 		int rc = 0;
 		int lpc = 0;
 		fd_set rset;	
@@ -145,8 +145,9 @@ main(int argc, char ** argv)
 			}
 			return(1);
 		}
+	    }
+#endif
 	}
-#endif	
 	return(1);    
 }
 
