@@ -18,18 +18,17 @@
 #ifndef CRM__H
 #define CRM__H
 
-#include <config.h>
+#include <heartbeat/hb_config.h>
+#include <crm_config.h>
 #include <stdlib.h>
 #include <glib.h>
+
 #undef MIN
 #undef MAX
-
 #include <string.h>
+
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_malloc.h>
-#ifdef MCHECK
-#include <mcheck.h>
-#endif
 
 #include <libxml/tree.h> 
 
