@@ -55,8 +55,8 @@ static char *cib_send_tls(gnutls_session *session, xmlNode *msg);
 static char *cib_recv_tls(gnutls_session *session);
 #endif
 
-static char *cib_send_plaintext(int sock, xmlNode *msg);
-static char *cib_recv_plaintext(int sock);
+char *cib_recv_plaintext(int sock);
+char *cib_send_plaintext(int sock, xmlNode *msg);
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 gnutls_session *create_tls_session(int csock, int type);
@@ -182,7 +182,7 @@ cib_recv_tls(gnutls_session *session)
 }
 #endif
 
-static char*
+char*
 cib_send_plaintext(int sock, xmlNode *msg)
 {
 	char *xml_text = NULL;
@@ -203,7 +203,7 @@ cib_send_plaintext(int sock, xmlNode *msg)
 	
 }
 
-static char*
+char*
 cib_recv_plaintext(int sock)
 {
 	int last = 0;
