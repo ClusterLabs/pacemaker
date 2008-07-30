@@ -226,10 +226,6 @@ crm_node_t *crm_update_peer(
 	node->born = born;
     }
 
-    if(seen != 0) {
-	node->last_seen = seen;
-    }
-    
     if(state != NULL) {
 	if(node->state == NULL
 	   || crm_str_eq(node->state, state, FALSE) == FALSE) {
@@ -239,6 +235,10 @@ crm_node_t *crm_update_peer(
 	}
     }
 
+    if(seen != 0 && crm_is_member_active(node)) {
+	node->last_seen = seen;
+    }
+    
     if(addr != NULL) {
 	if(node->addr == NULL || crm_str_eq(node->addr, addr, FALSE) == FALSE) {
 	    addr_changed = TRUE;
