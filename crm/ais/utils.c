@@ -113,7 +113,8 @@ gboolean spawn_child(crm_child_t *child)
 
     if(child->pid > 0) {
 	/* parent */
-	ais_info("Forked child %d for process %s", child->pid, child->name);
+	ais_info("Forked child %d for process %s%s", child->pid, child->name,
+		 ais_string_to_boolean(use_valgrind)?" (valgrind enabled)":"");
 	return TRUE;
     }
     
@@ -121,14 +122,17 @@ gboolean spawn_child(crm_child_t *child)
     ais_debug("Executing \"%s (%s)\" (pid %d)",
 	      child->command, child->name, (int) getpid());
 
-    if(child->uid) {
- 	rc = setuid(uid);
-	if(rc < 0) {
-	    ais_perror("Could not set user to %d (%s)", uid, child->uid);
-	}
+    if(gid) {
 	rc = setgid(gid);
 	if(rc < 0) {
 	    ais_perror("Could not set group to %d", gid);
+	}
+    }
+    
+    if(uid) {
+ 	rc = setuid(uid);
+	if(rc < 0) {
+	    ais_perror("Could not set user to %d (%s)", uid, child->uid);
 	}
     }
     
