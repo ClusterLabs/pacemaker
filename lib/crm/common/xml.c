@@ -2553,8 +2553,6 @@ xpath_search(xmlNode *xml_top, const char *path)
     
     doc = getDocPtr(xml_top);
 
-    crm_err("Searching for %s in %s", path, xmlGetNodePath(xml_top));
-
     crm_debug_2("Evaluating: %s", path);
     xpathCtx = xmlXPathNewContext(doc);
     CRM_ASSERT(xpathCtx != NULL);
