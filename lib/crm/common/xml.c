@@ -44,6 +44,8 @@
 #define XML_BUFFER_SIZE	4096
 #define XML_PARSER_DEBUG 0
 
+inline xmlDoc *getDocPtr(xmlNode *node);
+
 struct schema_s 
 {
 	int type;
@@ -348,19 +350,28 @@ expand_plus_plus(xmlNode* target, const char *name, const char *value)
     return;
 }
 
+inline xmlDoc *getDocPtr(xmlNode *node)
+{
+    xmlDoc *doc = NULL;
+    CRM_CHECK(node != NULL, return NULL);
+
+    doc = node->doc;
+    if(doc == NULL) {
+	doc = xmlNewDoc((const xmlChar*)"1.0");
+	xmlDocSetRootElement(doc, node);
+	xmlSetTreeDoc(node, doc);
+    }
+    return doc;
+}
+
 xmlNode*
 add_node_copy(xmlNode *parent, xmlNode *src_node) 
 {
-	const char *name = NULL;
 	xmlNode *child = NULL;
+	xmlDoc *doc = getDocPtr(parent);
 	CRM_CHECK(src_node != NULL, return NULL);
 
-	crm_validate_data(src_node);
-
-	name = crm_element_name(src_node);
-	CRM_CHECK(name != NULL, return NULL);
-
-	child = copy_xml(src_node);
+	child = xmlDocCopyNode(src_node, doc, 1);
 	xmlAddChild(parent, child);
 	return child;
 }
@@ -441,16 +452,24 @@ crm_xml_add_int(xmlNode* node, const char *name, int value)
 xmlNode*
 create_xml_node(xmlNode *parent, const char *name)
 {
-	xmlNode *ret_value = NULL;	
+    xmlDoc *doc = NULL;
+    xmlNode *node = NULL;	
 
-	if (name == NULL || name[0] == 0) {
-		ret_value = NULL;
-	} else if(parent == NULL) {
-		ret_value = xmlNewNode(NULL, (const xmlChar*)name);
-	} else {
-		ret_value = xmlNewChild(parent, NULL, (const xmlChar*)name, NULL);
-	}
-	return ret_value;
+    if (name == NULL || name[0] == 0) {
+	return NULL;
+    }
+    
+    if(parent == NULL) {
+	doc = xmlNewDoc((const xmlChar*)"1.0");
+	node = xmlNewDocRawNode(doc, NULL, (const xmlChar*)name, NULL);
+	xmlDocSetRootElement(doc, node);
+	
+    } else {
+	doc = getDocPtr(parent);
+	node = xmlNewDocRawNode(doc, NULL, (const xmlChar*)name, NULL);
+	xmlAddChild(parent, node);
+    }
+    return node;
 }
 
 void
@@ -459,29 +478,16 @@ free_xml_from_parent(xmlNode *parent, xmlNode *a_node)
 	CRM_CHECK(a_node != NULL, return);
 
 	xmlUnlinkNode(a_node);
-	a_node->doc = NULL;
-	free_xml(a_node);
+	xmlFreeNode(a_node);
 }
 
 xmlNode*
 copy_xml(xmlNode *src)
 {
-#if 0    
-    xmlNode *top = NULL;
-    if(src->doc == NULL) {
-	return xmlCopyNode(src, 1);
-    }
-
-    top = xmlDocGetRootElement(src->doc);
-    if(top == src) {
-	xmlDoc *copy = xmlCopyDoc(src->doc, 1);
-	return xmlDocGetRootElement(copy);
-    }
-    crm_err("Partial copy %s in %s", crm_element_name(src), crm_element_name(top));
-#endif
     xmlDoc *doc = xmlNewDoc((const xmlChar*)"1.0");
     xmlNode *copy = xmlDocCopyNode(src, doc, 1);
     xmlDocSetRootElement(doc, copy);
+    xmlSetTreeDoc(copy, doc);
     return copy;
 }
 
@@ -917,8 +923,7 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 		break;
 	    }
 
-	    add_node_copy(parent, xml);
-	    free_xml(xml);
+	    add_node_nocopy(parent, NULL, xml);
 	    break;
 
 	case FT_BINARY:
@@ -2348,11 +2353,7 @@ static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs)
     
 
     CRM_CHECK(xml != NULL, return FALSE);
-    doc = xml->doc;
-    if(xml->doc == NULL) {
-	doc = xmlNewDoc((const xmlChar *)"1.0");
-	xmlDocSetRootElement(doc, xml);
-    }
+    doc = getDocPtr(xml);
     
     crm_debug_2("Validating with: %s (type=%d)", crm_str(file), type);
     switch(type) {
@@ -2412,11 +2413,7 @@ static xmlNode *apply_transformation(xmlNode *xml, const char *transform)
     xsltStylesheet *xslt = NULL;
 
     CRM_CHECK(xml != NULL, return FALSE);
-    doc = xml->doc;
-    if(doc == NULL) {
-	doc = xmlNewDoc((const xmlChar *)"1.0");
-	xmlDocSetRootElement(doc, xml);
-    }
+    doc = getDocPtr(xml);
 
     xmlLoadExtDtdDefaultValue = 1;
     xmlSubstituteEntitiesDefault(1);
@@ -2554,11 +2551,9 @@ xpath_search(xmlNode *xml_top, const char *path)
     CRM_CHECK(xml_top != NULL, return NULL);
     CRM_CHECK(strlen(path) > 0, return NULL);
     
-    doc = xml_top->doc;
-    if(doc == NULL) {
-	doc = xmlNewDoc((const xmlChar *)"1.0");
-	xmlDocSetRootElement(doc, xml_top);
-    }
+    doc = getDocPtr(xml_top);
+
+    crm_err("Searching for %s in %s", path, xmlGetNodePath(xml_top));
 
     crm_debug_2("Evaluating: %s", path);
     xpathCtx = xmlXPathNewContext(doc);
