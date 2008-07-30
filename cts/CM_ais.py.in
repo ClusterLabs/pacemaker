@@ -56,8 +56,8 @@ class crm_ais(LinuxHAv2):
 
         self.update({
             "Name"           : "crm-ais",
-            "StartCmd"       : "@INITDIR@/ais start > /dev/null 2>&1",
-            "StopCmd"        : "@INITDIR@/ais stop > /dev/null 2>&1",
+            "StartCmd"       : "@INITDIR@/openais start > /dev/null 2>&1",
+            "StopCmd"        : "@INITDIR@/openais stop > /dev/null 2>&1",
             "IsIPAddrRscRunning"   : "",
 
             "UUIDQueryCmd"   : "@sbindir@/crmadmin -N",
