@@ -42,7 +42,8 @@ TODO
           remote_access_port    CDATA   #IMPLIED        
 
           dc-uuid               CDATA   #IMPLIED
-          have-quorum    (true|yes|1|false|no|0)  'false'
+          have-quorum           (true|yes|1|false|no|0)  'false'
+	  no-quorum-panic       (true|yes|1|false|no|0)  'false'	
 
           validate-with         CDATA   #IMPLIED        
           remote-tls-port       CDATA   #IMPLIED        
