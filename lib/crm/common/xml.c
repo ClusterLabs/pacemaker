@@ -456,29 +456,15 @@ create_xml_node(xmlNode *parent, const char *name)
 void
 free_xml_from_parent(xmlNode *parent, xmlNode *a_node)
 {
-	CRM_CHECK(a_node != NULL, return);
-
-	xmlUnlinkNode(a_node);
-	a_node->doc = NULL;
-	free_xml(a_node);
+    CRM_CHECK(a_node != NULL, return);
+    
+    xmlUnlinkNode(a_node);
+    xmlFreeNode(a_node);
 }
 
 xmlNode*
 copy_xml(xmlNode *src)
 {
-#if 0    
-    xmlNode *top = NULL;
-    if(src->doc == NULL) {
-	return xmlCopyNode(src, 1);
-    }
-
-    top = xmlDocGetRootElement(src->doc);
-    if(top == src) {
-	xmlDoc *copy = xmlCopyDoc(src->doc, 1);
-	return xmlDocGetRootElement(copy);
-    }
-    crm_err("Partial copy %s in %s", crm_element_name(src), crm_element_name(top));
-#endif
     xmlDoc *doc = xmlNewDoc((const xmlChar*)"1.0");
     xmlNode *copy = xmlDocCopyNode(src, doc, 1);
     xmlDocSetRootElement(doc, copy);
