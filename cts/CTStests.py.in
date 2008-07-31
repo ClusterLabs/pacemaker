@@ -694,7 +694,7 @@ class StonithdTest(StonithTest):
 
     def is_applicable(self):
 
-        if self.CM["Name"] == "crm-ais" or self.CM["Name"] == "linux-ha-v2":
+        if self.CM["Name"] != "heartbeat":
             if self.CM.Env.has_key("DoStonith"):
                 return self.CM.Env["DoStonith"]
             return 1
@@ -987,7 +987,7 @@ class PartialStart(CTSTest):
 
     def is_applicable(self):
         '''Partial is always applicable'''
-        if self.CM["Name"] == "linux-ha-v2":
+        if self.CM["Name"] != "heartbeat":
           return 1
         else:
           return 0
@@ -1148,7 +1148,7 @@ class StandbyTest2(CTSTest):
         return self.success()
 
     def is_applicable(self):
-        if self.CM["Name"] == "linux-ha-v2":
+        if self.CM["Name"] != "heartbeat":
             return 1
         return 0
 
@@ -1702,7 +1702,7 @@ class ResourceRecover(CTSTest):
     def is_applicable(self):
         '''ResourceRecover is applicable only when there are resources running
          on our cluster and environment is linux-ha-v2'''
-        if self.CM["Name"] == "linux-ha-v2":
+        if self.CM["Name"] != "heartbeat":
             return 1
         return 0
     
@@ -1818,7 +1818,7 @@ class ComponentFail(CTSTest):
         return self.failure("Cluster did not become stable")
 
     def is_applicable(self):
-        if self.CM["Name"] == "linux-ha-v2":
+        if self.CM["Name"] != "heartbeat":
             return 1
         return 0
     
@@ -1931,7 +1931,7 @@ class Split_brainTest2(CTSTest):
         return self.success()
 
     def is_applicable(self):
-        if self.CM["Name"] == "linux-ha-v2":
+        if self.CM["Name"] != "heartbeat":
             return 1
         return 0
 
@@ -2071,7 +2071,7 @@ class MemoryTest(CTSTest):
                  """pengine:.*Handling failed """]
 
     def is_applicable(self):
-        if self.CM["Name"] == "linux-ha-v2":
+        if self.CM["Name"] != "heartbeat":
             return 1
         return 0
 
@@ -2240,7 +2240,7 @@ class NearQuorumPointTest(CTSTest):
         return []
 
     def is_applicable(self):
-        if self.CM["Name"] == "linux-ha-v2":
+        if self.CM["Name"] != "heartbeat":
             return 1
         return 0
 
@@ -2322,7 +2322,7 @@ class BSC_AddResource(CTSTest):
         return 1
 
     def is_applicable(self):
-        if self.CM["Name"] == "linux-ha-v2" and self.CM.Env["DoBSC"]:
+        if self.CM["Name"] != "heartbeat" and self.CM.Env["DoBSC"]:
             return 1
         return None
 
