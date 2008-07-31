@@ -129,6 +129,7 @@ find_nvpair_attr(
 	}
     }
 
+    crm_free(xpath_string);
     free_xml(xml_search);
     return rc;
 }

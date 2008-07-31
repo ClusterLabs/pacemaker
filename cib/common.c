@@ -67,13 +67,7 @@ cib_prepare_common(xmlNode *root, const char *section)
     } else if(safe_str_eq(crm_element_name(root), XML_TAG_FRAGMENT)
 	      || safe_str_eq(crm_element_name(root), F_CIB_CALLDATA)) {
 	data = first_named_child(root, XML_TAG_CIB);
-#if 0
-	if(data != NULL) {
-	    crm_debug_3("Extracted CIB from %s", TYPE(root));
-	} else {
-	    crm_log_xml_debug_4(root, "No CIB");
-	}
-#endif	
+
     } else {
 	data = root;
     }
@@ -83,13 +77,6 @@ cib_prepare_common(xmlNode *root, const char *section)
        && data != NULL
        && crm_str_eq(crm_element_name(data), XML_TAG_CIB, TRUE)){
 	data = get_object_root(section, data);
-#if 0
-	if(data != NULL) {
-	    crm_debug_3("Extracted %s from CIB", section);
-	} else {
-	    crm_log_xml_debug_4(root, "No Section");
-	}
-#endif	
     }
 
     /* crm_log_xml_debug_4(root, "cib:input"); */

@@ -198,21 +198,22 @@ do_te_invoke(long long action,
 		const char *graph_file = crm_element_value(input->msg, F_CRM_TGRAPH);
 		const char *graph_input = crm_element_value(input->msg, F_CRM_TGRAPH_INPUT);
 
-		if(graph_file != NULL && input->xml == NULL) {			
-			register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-			return;
+		if(graph_file == NULL && input->xml == NULL) {			
+		    crm_log_xml_err(input->msg, "Bad command");
+		    register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+		    return;
 		}
 		
 		if(transition_graph->complete == FALSE) {
 			crm_info("Another transition is already active");
 			abort_transition(INFINITY, tg_restart, "Transition Active", NULL);
 			return;
-
 		}
-		stop_te_timer(transition_timer);
 		
+		stop_te_timer(transition_timer);
 		graph_data = input->xml;
-		if(graph_file != NULL) {
+		
+		if(graph_data == NULL && graph_file != NULL) {
 		    FILE *graph_fd = fopen(graph_file, "r");
 		    
 		    CRM_CHECK(graph_fd != NULL,
@@ -224,7 +225,10 @@ do_te_invoke(long long action,
 		    fclose(graph_fd);
 		}
 
-		CRM_CHECK(graph_data != NULL, crm_log_xml_err(input->msg, "Bad command"); return);
+		CRM_CHECK(graph_data != NULL,
+			  crm_err("Input raised by %s is invalid", msg_data->origin);
+			  crm_log_xml_err(input->msg, "Bad command");
+			  return);
 		
 		destroy_graph(transition_graph);
 		transition_graph = unpack_graph(graph_data);

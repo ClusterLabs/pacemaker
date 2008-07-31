@@ -256,6 +256,9 @@
 #define XML_ATTR_LRM_PROBE		"lrm-is-probe"
 #define XML_TAG_TRANSIENT_NODEATTRS	"transient_attributes"
 
+#define XML_TAG_DIFF_ADDED		"diff-added"
+#define XML_TAG_DIFF_REMOVED		"diff-removed"
+
 #include <crm/common/xml.h> 
 
 #define ID(x) crm_element_value(x, XML_ATTR_ID)

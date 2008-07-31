@@ -218,6 +218,7 @@ extern int find_xml_children(
 extern int crm_element_value_int(xmlNode *data, const char *name, int *dest);
 extern char *crm_element_value_copy(xmlNode *data, const char *name);
 extern const char *crm_element_value_const(const xmlNode *data, const char *name);
+extern xmlNode *get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level);
 
 static inline const char *crm_element_name(const xmlNode *data)
 {
