@@ -439,30 +439,13 @@ const char *get_object_parent(const char *object_type)
 xmlNode*
 get_object_root(const char *object_type, xmlNode *the_root)
 {
-    xmlNode *result = NULL;
-    xmlXPathObjectPtr xpathObj = NULL;
     const char *xpath = get_object_path(object_type);
 
     if(xpath == NULL) {
 	return the_root; /* or return NULL? */
     }
-    
-    xpathObj = xpath_search(the_root, xpath);
-    if(xpathObj == NULL || xpathObj->nodesetval == NULL || xpathObj->nodesetval->nodeNr < 1) {
-	crm_debug_2("Object %s not found", crm_str(object_type));
-	
-    } else if(xpathObj->nodesetval->nodeNr > 1) {
-	crm_err("Too many matches for %s", crm_str(object_type));
 
-    } else {
-	result = xpathObj->nodesetval->nodeTab[0];
-	CRM_CHECK(result->type == XML_ELEMENT_NODE, result = NULL);
-    }
-    
-    if(xpathObj) {
-	xmlXPathFreeObject(xpathObj);
-    }
-    return result;
+    return get_xpath_object(xpath, the_root, LOG_ERR);
 }
 
 xmlNode*
