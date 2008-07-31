@@ -491,23 +491,62 @@ copy_xml(xmlNode *src)
     return copy;
 }
 
+
+static void crm_xml_err(void * ctx, const char * msg, ...) G_GNUC_PRINTF(2,3);
+
+static void crm_xml_err(void * ctx, const char * msg, ...)
+{
+    char *buf = NULL;
+    va_list args;
+    va_start(args, msg);
+    vasprintf(&buf, msg, args);
+    crm_err("XML Error: %s", buf);
+    va_end(args);
+    free(buf);
+}
+
 xmlNode*
 string2xml(const char *input)
 {
 	xmlDocPtr output = NULL;
 	xmlParserCtxtPtr ctxt = NULL;
-    
+	xmlErrorPtr last_error = NULL;
+	
+	if(input == NULL) {
+	    crm_err("Can't parse NULL input");
+	    return NULL;
+	}
+	
 	/* create a parser context */
 	ctxt = xmlNewParserCtxt();
 	CRM_CHECK(ctxt != NULL, return NULL);
 
-	if(input) {
-	   /* output = xmlParseMemory(input, strlen(input)); */
-	    output = xmlCtxtReadDoc(ctxt, (const xmlChar*)input, NULL, NULL, XML_PARSE_NOBLANKS);
+	xmlCtxtUseOptions(ctxt, XML_PARSE_NOBLANKS);
+
+	xmlCtxtResetLastError(ctxt);
+	xmlSetGenericErrorFunc(ctxt, crm_xml_err);
+	/* initGenericErrorDefaultFunc(crm_xml_err); */
+	output = xmlCtxtReadDoc(ctxt, (const xmlChar*)input, NULL, NULL, XML_PARSE_NOBLANKS);
+
+	last_error = xmlCtxtGetLastError(ctxt);
+	if(last_error && last_error->code != XML_ERR_OK) {
+	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE);
+	    /*
+	     * http://xmlsoft.org/html/libxml-xmlerror.html#xmlErrorLevel
+	     * http://xmlsoft.org/html/libxml-xmlerror.html#xmlParserErrors
+	     */
+	    crm_err("Parsing failed (domain=%d, level=%d, code=%d): %s",
+		    last_error->domain, last_error->level,
+		    last_error->code, last_error->message);
 	}
 
 	xmlFreeParserCtxt(ctxt);
-	CRM_CHECK(output != NULL, return NULL);
+	
+	if(output == NULL) {
+	    crm_err("Couldn't parse %d chars: %s", strlen(input), input);
+	    return NULL;
+	}
+	
 	return xmlDocGetRootElement(output);
 }
 
@@ -919,8 +958,8 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 	    /* unpack xml string */
 	    xml = string2xml(value);
 	    if(xml == NULL) {
-		crm_xml_add(parent, name, value);
-		break;
+		crm_err("Conversion of field '%s' failed", name);
+		return;
 	    }
 
 	    add_node_nocopy(parent, NULL, xml);
@@ -2610,28 +2649,53 @@ xmlNode *expand_idref(xmlNode *input)
     if(ref != NULL) {
 	char *xpath_string = NULL;
 	int xpath_max = 512, offset = 0;
-	xmlXPathObjectPtr xpathObj = NULL;
-	crm_malloc0(xpath_string, 512);
+	crm_malloc0(xpath_string, xpath_max);
+
 	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id=\"%s\"]", tag, ref);
-	
-	xpathObj = xpath_search(top, xpath_string);
-	if(xpathObj == NULL || xpathObj->nodesetval == NULL || xpathObj->nodesetval->nodeNr < 1) {
-	    crm_config_err("Referenced %s 'id=%s' not found", tag, ref);
-	    
-	} else {
-	    CRM_CHECK(xpathObj->nodesetval->nodeNr == 1,
-		      crm_config_err("Too many matches (%d) for referenced %s 'id=%s'",
-				     xpathObj->nodesetval->nodeNr, tag, ref));
-	    
-	    result = xpathObj->nodesetval->nodeTab[0];
-	    CRM_CHECK(result->type == XML_ELEMENT_NODE, result = NULL);
-	}
-	
-	if(xpathObj) {
-	    xmlXPathFreeObject(xpathObj);
-	}
+	result = get_xpath_object(xpath_string, top, LOG_ERR);
+
 	crm_free(xpath_string);
     }
     return result;
 }
 
+
+xmlNode*
+get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level)
+{
+    xmlNode *result = NULL;
+    xmlXPathObjectPtr xpathObj = NULL;
+
+    if(xpath == NULL) {
+	return xml_obj; /* or return NULL? */
+    }
+    
+    xpathObj = xpath_search(xml_obj, xpath);
+    if(xpathObj == NULL || xpathObj->nodesetval == NULL || xpathObj->nodesetval->nodeNr < 1) {
+	crm_debug_2("Object %s not found", xpath);
+	
+    } else if(xpathObj->nodesetval->nodeNr > 1) {
+	int lpc = 0, max = xpathObj->nodesetval->nodeNr;
+	do_crm_log(error_level, "Too many matches for %s", xpath);
+
+	for(lpc = 0; lpc < max; lpc++) {
+	    xmlNode *match = xpathObj->nodesetval->nodeTab[lpc];
+	    CRM_CHECK(match != NULL, continue);
+	    
+	    if(match->type == XML_DOCUMENT_NODE) {
+		/* Will happen if section = '/' */
+		match = match->children;
+	    }
+	    do_crm_log(error_level, "%s[%d] = %s", xpath, lpc, xmlGetNodePath(match));
+	}
+
+    } else {
+	result = xpathObj->nodesetval->nodeTab[0];
+	CRM_CHECK(result->type == XML_ELEMENT_NODE, result = NULL);
+    }
+    
+    if(xpathObj) {
+	xmlXPathFreeObject(xpathObj);
+    }
+    return result;
+}
