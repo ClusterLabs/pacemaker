@@ -47,9 +47,10 @@ te_update_diff(const char *event, xmlNode *msg)
 {
 	int rc = -1;
 	const char *op = NULL;
-	const char *set_name = NULL;
 
 	xmlNode *diff = NULL;
+	xmlNode *status = NULL;
+	xmlNode *cib_top = NULL;
 
 	int diff_add_updates     = 0;
 	int diff_add_epoch       = 0;
@@ -91,57 +92,42 @@ te_update_diff(const char *event, xmlNode *msg)
 		  diff_add_admin_epoch,diff_add_epoch,diff_add_updates,
 		  fsa_state2string(fsa_state));
 	log_cib_diff(LOG_DEBUG_2, diff, op);
-	
-	set_name = "diff-added";
-	if(diff != NULL) {
-		xmlNode *section = NULL;
-		xmlNode *change_set = find_xml_node(diff, set_name, FALSE);
-		change_set = find_xml_node(change_set, XML_TAG_CIB, FALSE);
 
-		if(change_set != NULL) {
-			crm_debug_2("Checking status changes");
-			section=get_object_root(XML_CIB_TAG_STATUS,change_set);
-		}
-		
-		if(section != NULL) {
-			extract_event(section);
-		}
+	/* Process anything that was added */
+	cib_top = get_xpath_object("//diff/"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB, msg, LOG_ERR);
+	status = first_named_child(cib_top, XML_CIB_TAG_STATUS);
 
-		crm_debug_2("Checking change set: %s", set_name);
-		if(need_abort(change_set)) {
-		    return;
-		}
+	if(status != NULL) {
+	    /* newly completed resource operations */
+	    extract_event(status);
 	}
 	
-	set_name = "diff-removed";
-	if(diff != NULL) {
-		xmlNode *attrs = NULL;
-		xmlNode *status = NULL;
-		xmlNode *change_set = find_xml_node(diff, set_name, FALSE);
-		change_set = find_xml_node(change_set, XML_TAG_CIB, FALSE);
-
-		crm_debug_2("Checking change set: %s", set_name);
-		if(need_abort(change_set)) {
-		    return;
-		}
-
-		if(change_set != NULL) {
-			status = get_object_root(XML_CIB_TAG_STATUS, change_set);
-		
-			xml_child_iter_filter(
-				status, node_state, XML_CIB_TAG_STATE,
-				
-				attrs = find_xml_node(
-					node_state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
-				
-				if(attrs != NULL) {
-					crm_info("Aborting on "XML_TAG_TRANSIENT_NODEATTRS" deletions");
-					abort_transition(INFINITY, tg_restart,
-							 XML_TAG_TRANSIENT_NODEATTRS, attrs);
-				}
-				);
-		}
+	/* configuration changes */
+	if(need_abort(cib_top)) {
+	    return;
 	}
+
+	/* Process anything that was removed */
+	cib_top = get_xpath_object("//diff/"XML_TAG_DIFF_REMOVED"//"XML_TAG_CIB, msg, LOG_ERR);
+
+	/* configuration changes */
+	if(need_abort(cib_top)) {
+	    return;
+	}
+
+	/* node attributes that were removed */
+	status = first_named_child(cib_top, XML_CIB_TAG_STATUS);
+	xml_child_iter_filter(
+	    status, node_state, XML_CIB_TAG_STATE,
+	    
+	    xmlNode *attrs = find_xml_node(node_state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
+	    
+	    if(attrs != NULL) {
+		crm_info("Aborting on "XML_TAG_TRANSIENT_NODEATTRS" deletions");
+		abort_transition(INFINITY, tg_restart,
+				 XML_TAG_TRANSIENT_NODEATTRS, attrs);
+	    }
+	    );
 }
 
 gboolean
