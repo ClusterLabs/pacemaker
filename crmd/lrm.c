@@ -833,7 +833,7 @@ do_lrm_query(gboolean is_replace)
  *
  * Avoids refreshing the entire LRM section of this host
  */
-#define rsc_template "//"XML_CIB_TAG_STATE"[@uname=\"%s\"]//"XML_LRM_TAG_RESOURCE"[@id=\"%s\"]"
+#define rsc_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']"
 static void
 delete_rsc_entry(const char *rsc_id) 
 {
@@ -860,8 +860,8 @@ delete_rsc_entry(const char *rsc_id)
  * Avoids refreshing the entire LRM section of this host
  */
 
-#define op_template "//"XML_CIB_TAG_STATE"[@uname=\"%s\"]//"XML_LRM_TAG_RESOURCE"[@id=\"%s\"]/"XML_LRM_TAG_RSC_OP"[@id=\"%s\"]"
-#define op_call_template "//"XML_CIB_TAG_STATE"[@uname=\"%s\"]//"XML_LRM_TAG_RESOURCE"[@id=\"%s\"]/"XML_LRM_TAG_RSC_OP"[@id=\"%s\" and @"XML_LRM_ATTR_CALLID"=\"%d\"]"
+#define op_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']/"XML_LRM_TAG_RSC_OP"[@id='%s']"
+#define op_call_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']/"XML_LRM_TAG_RSC_OP"[@id='%s' and @"XML_LRM_ATTR_CALLID"='%d']"
 
 static void
 delete_op_entry(lrm_op_t *op, const char *rsc_id, const char *key, int call_id) 
