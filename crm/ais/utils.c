@@ -122,7 +122,7 @@ gboolean spawn_child(crm_child_t *child)
     ais_debug("Executing \"%s (%s)\" (pid %d)",
 	      child->command, child->name, (int) getpid());
 
-    if(gid) {
+    if(0 && gid) {
 	rc = setgid(gid);
 	if(rc < 0) {
 	    ais_perror("Could not set group to %d", gid);
