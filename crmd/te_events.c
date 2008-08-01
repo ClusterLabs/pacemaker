@@ -213,7 +213,7 @@ extract_event(xmlNode *msg)
 }
 
 static gboolean
-update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc) 
+update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc, gboolean force) 
 {
 	int interval = 0;
 	char *task = NULL;
@@ -260,7 +260,7 @@ update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc)
 	    value = XML_NVPAIR_ATTR_VALUE"++";
 	}
 
-	if(interval > 0) {
+	if(interval > 0 || force) {
 		int call_id = 0;
 		char *now = crm_itoa(time(NULL));
 		
@@ -343,7 +343,7 @@ match_graph_event(int action_id, xmlNode *event, const char *event_node,
 	
 	op_status = status_from_rc(action, op_status, op_rc, target_rc);
 	if(op_status != LRM_OP_DONE) {
-	    update_failcount(event, event_node, op_rc, target_rc);
+	    update_failcount(event, event_node, op_rc, target_rc, FALSE);
 	}
 	
 	/* Process OP status */
@@ -560,7 +560,7 @@ process_graph_event(xmlNode *event, const char *event_node)
 	}
 
 	if(passed == FALSE) {
-	    if(update_failcount(event, event_node, rc, target_rc)) {
+	    if(update_failcount(event, event_node, rc, target_rc, transition_num == -1)) {
 		/* Turns out this wasn't an lrm status refresh update aferall */
 		stop_early = FALSE;
 	    }
