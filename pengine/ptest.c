@@ -313,24 +313,12 @@ main(int argc, char **argv)
 		}
 		
 	} else if(xml_file != NULL) {
-		FILE *xml_strm = fopen(xml_file, "r");
-		source = xml_file;
-		if(xml_strm == NULL) {
-			cl_perror("Could not open %s for reading", xml_file);
-			
-		} else {
-			if(strstr(xml_file, ".bz2") != NULL) {
-				cib_object = file2xml(xml_strm, TRUE);
-				
-			} else {
-				cib_object = file2xml(xml_strm, FALSE);
-			}
-			fclose(xml_strm);
-		}
+	    source = xml_file;
+	    cib_object = filename2xml(xml_file);
 		
 	} else if(use_stdin) {
-		source = "stdin";
-		cib_object = stdin2xml();
+	    source = "stdin";
+	    cib_object = filename2xml(NULL);
 	}
 
  	if(cib_object == NULL && source) {

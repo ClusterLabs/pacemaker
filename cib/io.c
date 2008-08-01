@@ -187,7 +187,6 @@ validate_on_disk_cib(const char *filename, xmlNode **on_disk_cib)
 {
 	int s_res = -1;
 	struct stat buf;
-	FILE *cib_file = NULL;
 	gboolean passed = TRUE;
 	xmlNode *root = NULL;
 
@@ -197,15 +196,8 @@ validate_on_disk_cib(const char *filename, xmlNode **on_disk_cib)
 	if (s_res == 0) {
 		char *sigfile = NULL;
 		size_t		fnsize;
-		cib_file = fopen(filename, "r");
-		if(cib_file == NULL) {
-			cl_perror("Couldn't open config file %s for reading", filename);
-			return FALSE;
-		}
-
 		crm_debug_2("Reading cluster configuration from: %s", filename);
-		root = file2xml(cib_file, FALSE);
-		fclose(cib_file);
+		root = filename2xml(filename);
 		
 		fnsize =  strlen(filename) + 5;
 		crm_malloc0(sigfile, fnsize);
@@ -244,7 +236,6 @@ static xmlNode*
 retrieveCib(const char *filename, const char *sigfile, gboolean archive_invalid)
 {
     struct stat buf;
-    FILE *cib_file = NULL;
     xmlNode *root = NULL;
     crm_info("Reading cluster configuration from: %s (digest: %s)",
 	     filename, sigfile);
@@ -254,14 +245,7 @@ retrieveCib(const char *filename, const char *sigfile, gboolean archive_invalid)
 	return NULL;
     }
 
-    cib_file = fopen(filename, "r");
-    if(cib_file == NULL) {
-	cl_perror("Could not open config file %s for reading", filename);
-	
-    } else {
-	root = file2xml(cib_file, FALSE);
-	fclose(cib_file);
-    }
+    root = filename2xml(filename);
     
     if(root == NULL) {
 	crm_err("%s exists but does NOT contain valid XML. ", filename);

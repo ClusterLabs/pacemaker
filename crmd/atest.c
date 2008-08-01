@@ -95,23 +95,8 @@ main(int argc, char ** argv)
 	}
     }
 
-    if(xml_file != NULL) {
-	FILE *xml_strm = fopen(xml_file, "r");
-	if(xml_strm == NULL) {
-	    cl_perror("Could not open %s for reading", xml_file);
-	    
-	} else {
-	    if(strstr(xml_file, ".bz2") != NULL) {
-		xml = file2xml(xml_strm, TRUE);
-		
-	    } else {
-		xml = file2xml(xml_strm, FALSE);
-	    }
-	    fclose(xml_strm);
-	}
-    }
-
-    xml = get_object_root(input_file, xml);
+    xml = filename2xml(xml_file);
+    xml = get_xpath_object(input_file, xml, LOG_ERR);
     crm_log_xml_info(xml, "fixed");
     
     return 0;

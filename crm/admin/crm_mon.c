@@ -306,16 +306,7 @@ main(int argc, char **argv)
 			interval, mon_timer_popped, NULL);
 
 	} else if(xml_file != NULL) {
-		FILE *xml_strm = fopen(xml_file, "r");
-		xmlNode *cib_object = NULL;			
-		if(strstr(xml_file, ".bz2") != NULL) {
-			cib_object = file2xml(xml_strm, TRUE);
-		} else {
-			cib_object = file2xml(xml_strm, FALSE);
-		}
-		if(xml_strm != NULL) {
-			fclose(xml_strm);
-		}
+		xmlNode *cib_object = filename2xml(xml_file);
 		one_shot = TRUE;
 		if(cli_config_update(&cib_object) == FALSE) {
 		    return FALSE;

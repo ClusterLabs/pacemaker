@@ -214,15 +214,7 @@ do_te_invoke(long long action,
 		graph_data = input->xml;
 		
 		if(graph_data == NULL && graph_file != NULL) {
-		    FILE *graph_fd = fopen(graph_file, "r");
-		    
-		    CRM_CHECK(graph_fd != NULL,
-			      cl_perror("Could not open graph file %s", graph_file); return);
-		    
-		    graph_data = file2xml(graph_fd, FALSE);
-		    
-		    unlink(graph_file);
-		    fclose(graph_fd);
+		    graph_data = filename2xml(graph_file);
 		}
 
 		CRM_CHECK(graph_data != NULL,

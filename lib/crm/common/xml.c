@@ -493,21 +493,51 @@ copy_xml(xmlNode *src)
 
 
 static void crm_xml_err(void * ctx, const char * msg, ...) G_GNUC_PRINTF(2,3);
+extern size_t strlcat(char * dest, const char *source, size_t len);
 
 static void crm_xml_err(void * ctx, const char * msg, ...)
 {
-    char *buf = NULL;
+    int len = 0;
     va_list args;
+    char *buf = NULL;
+    static int buffer_len = 0;
+    static char *buffer = NULL;
+    
     va_start(args, msg);
-    vasprintf(&buf, msg, args);
-    crm_err("XML Error: %s", buf);
+    len = vasprintf(&buf, msg, args);
+
+    if(strchr(buf, '\n')) {
+	buf[len - 1] = 0;
+	if(buffer) {
+	    crm_err("XML Error: %s%s", buffer, buf);
+	    free(buffer);
+	} else {
+	    crm_err("XML Error: %s", buf);	    
+	}
+	buffer = NULL;
+	buffer_len = 0;
+	
+    } else if(buffer == NULL) {
+	buffer_len = len;
+	buffer = buf;
+	buf = NULL;
+
+    } else {
+	buffer_len += len;
+	buffer = realloc(buffer, buffer_len);
+	strlcat(buffer, buf, buffer_len);
+    }
+    
     va_end(args);
-    free(buf);
+    if(buf) {
+	free(buf);	
+    }
 }
 
 xmlNode*
 string2xml(const char *input)
 {
+	xmlNode *xml = NULL;
 	xmlDocPtr output = NULL;
 	xmlParserCtxtPtr ctxt = NULL;
 	xmlErrorPtr last_error = NULL;
@@ -521,13 +551,15 @@ string2xml(const char *input)
 	ctxt = xmlNewParserCtxt();
 	CRM_CHECK(ctxt != NULL, return NULL);
 
-	xmlCtxtUseOptions(ctxt, XML_PARSE_NOBLANKS);
+	/* xmlCtxtUseOptions(ctxt, XML_PARSE_NOBLANKS|XML_PARSE_RECOVER); */
 
 	xmlCtxtResetLastError(ctxt);
 	xmlSetGenericErrorFunc(ctxt, crm_xml_err);
 	/* initGenericErrorDefaultFunc(crm_xml_err); */
-	output = xmlCtxtReadDoc(ctxt, (const xmlChar*)input, NULL, NULL, XML_PARSE_NOBLANKS);
-
+	output = xmlCtxtReadDoc(ctxt, (const xmlChar*)input, NULL, NULL, XML_PARSE_NOBLANKS|XML_PARSE_RECOVER);
+	if(output) {
+	    xml = xmlDocGetRootElement(output);
+	}
 	last_error = xmlCtxtGetLastError(ctxt);
 	if(last_error && last_error->code != XML_ERR_OK) {
 	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE);
@@ -538,16 +570,15 @@ string2xml(const char *input)
 	    crm_err("Parsing failed (domain=%d, level=%d, code=%d): %s",
 		    last_error->domain, last_error->level,
 		    last_error->code, last_error->message);
+
+	    crm_err("Couldn't%s parse %d chars: %s", xml?" fully":"", (int)strlen(input), input);
+	    if(xml != NULL) {
+		crm_log_xml_err(xml, "Partial");
+	    }
 	}
 
 	xmlFreeParserCtxt(ctxt);
-	
-	if(output == NULL) {
-	    crm_err("Couldn't parse %d chars: %s", strlen(input), input);
-	    return NULL;
-	}
-	
-	return xmlDocGetRootElement(output);
+	return xml;
 }
 
 xmlNode *
@@ -579,90 +610,117 @@ stdin2xml(void)
 	return xml_obj;
 }
 
-xmlNode*
-file2xml(FILE *input, gboolean compressed)
+static char *
+decompress_file(const char *filename)
 {
-	char *buffer = NULL;
-	gboolean work_done = FALSE;
-	xmlNode *new_obj = NULL;
-	size_t length = 0, read_len = 0;
-
-	if(input == NULL) {
-		/* Use perror here as we likely just called fopen() which return NULL */
-		cl_perror("File open failed, cannot read contents");
-		return NULL;
-	}
-
-	if(compressed) {
+    char *buffer = NULL;
 #if HAVE_BZLIB_H
-		int rc = 0;
-		BZFILE *bz_file = BZ2_bzReadOpen(&rc, input, 0, 0, NULL, 0);
-		if ( rc != BZ_OK ) {
-			BZ2_bzReadClose ( &rc, bz_file);
-			return NULL;
-		}
-		
-		rc = BZ_OK;
-		while ( rc == BZ_OK ) {
-			crm_realloc(buffer, XML_BUFFER_SIZE + length + 1);
-			read_len = BZ2_bzRead (
-				&rc, bz_file, buffer + length, XML_BUFFER_SIZE);
+    int rc = 0;
+    size_t length = 0, read_len = 0;
+    
+    BZFILE *bz_file = NULL;
+    FILE *input = fopen(filename, "r");
 
-			crm_debug_5("Read %ld bytes from file: %d",
-				    (long)read_len, rc);
+    if(input == NULL) {
+	cl_perror("Could not open %s for reading", filename);
+	return NULL;
+    }
+    
+    bz_file = BZ2_bzReadOpen(&rc, input, 0, 0, NULL, 0);
 
-			if ( rc == BZ_OK || rc == BZ_STREAM_END) {
-				length += read_len;
-			}
-		}
-
-		buffer[length] = '\0';
-		read_len = length;
-
-		if ( rc != BZ_STREAM_END ) {
-			crm_err("Couldnt read compressed xml from file");
-			crm_free(buffer);
-			buffer = NULL;
-		}
-
-		BZ2_bzReadClose (&rc, bz_file);
-		if(buffer == NULL) {
-			return NULL;
-		}
-
-		work_done = TRUE;
-#else
-		crm_err("Cannot read compressed files:"
-			" bzlib was not available at compile time");
-#endif
-	}	
+    if ( rc != BZ_OK ) {
+	BZ2_bzReadClose ( &rc, bz_file);
+	return NULL;
+    }
+    
+    rc = BZ_OK;
+    while ( rc == BZ_OK ) {
+	crm_realloc(buffer, XML_BUFFER_SIZE + length + 1);
+	read_len = BZ2_bzRead (
+	    &rc, bz_file, buffer + length, XML_BUFFER_SIZE);
 	
-	if(work_done == FALSE) {
-		int start = 0;
-		start  = ftell(input);
-		fseek(input, 0L, SEEK_END);
-		length = ftell(input);
-		fseek(input, 0L, start);
-		
-		CRM_ASSERT(start == ftell(input));
-		
-		crm_debug_3("Reading %ld bytes from file", (long)length);
-		crm_malloc0(buffer, (length+1));
-		read_len = fread(buffer, 1, length, input);
-	}
-
-	/* see how big the file is */
-	if(read_len != length) {
-		crm_err("Calculated and read bytes differ: %ld vs. %ld",
-			(long)length, (long)read_len);
-	} else if(length > 0) {
-		new_obj = string2xml(buffer);
-	} else {
-		crm_warn("File contained no XML");
-	}
+	crm_debug_5("Read %ld bytes from file: %d",
+		    (long)read_len, rc);
 	
+	if ( rc == BZ_OK || rc == BZ_STREAM_END) {
+	    length += read_len;
+	}
+    }
+    
+    buffer[length] = '\0';
+    read_len = length;
+    
+    if ( rc != BZ_STREAM_END ) {
+	crm_err("Couldnt read compressed xml from file");
 	crm_free(buffer);
-	return new_obj;
+	buffer = NULL;
+    }
+    
+    BZ2_bzReadClose (&rc, bz_file);
+    fclose(input);
+    
+#else
+    crm_err("Cannot read compressed files:"
+	    " bzlib was not available at compile time");
+#endif
+    return buffer;
+}
+
+xmlNode *
+filename2xml(const char *filename)
+{
+    xmlNode *xml = NULL;
+    xmlDocPtr output = NULL;
+    xmlParserCtxtPtr ctxt = NULL;
+    xmlErrorPtr last_error = NULL;
+    static int xml_options = XML_PARSE_NOBLANKS|XML_PARSE_RECOVER;
+    
+    /* create a parser context */
+    ctxt = xmlNewParserCtxt();
+    CRM_CHECK(ctxt != NULL, return NULL);
+    
+    /* xmlCtxtUseOptions(ctxt, XML_PARSE_NOBLANKS|XML_PARSE_RECOVER); */
+    
+    xmlCtxtResetLastError(ctxt);
+    xmlSetGenericErrorFunc(ctxt, crm_xml_err);
+    /* initGenericErrorDefaultFunc(crm_xml_err); */
+
+    if(filename == NULL) {
+	/* STDIN_FILENO == fileno(stdin) */
+	output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL, xml_options);
+
+    } else if(strstr(filename, ".bz2") == NULL) {
+	output = xmlCtxtReadFile(ctxt, filename, NULL, xml_options);
+
+    } else {
+	char *input = decompress_file(filename);
+	output = xmlCtxtReadDoc(ctxt, (const xmlChar*)input, NULL, NULL, xml_options);
+	crm_free(input);
+    }
+
+    if(output) {
+	xml = xmlDocGetRootElement(output);
+    }
+    
+    last_error = xmlCtxtGetLastError(ctxt);
+    if(last_error && last_error->code != XML_ERR_OK) {
+	crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE);
+	/*
+	 * http://xmlsoft.org/html/libxml-xmlerror.html#xmlErrorLevel
+	 * http://xmlsoft.org/html/libxml-xmlerror.html#xmlParserErrors
+	 */
+	crm_err("Parsing failed (domain=%d, level=%d, code=%d): %s",
+		last_error->domain, last_error->level,
+		last_error->code, last_error->message);
+	
+	crm_err("Couldn't%s parse %s", xml?" fully":"", filename);
+	if(xml != NULL) {
+	    crm_log_xml_err(xml, "Partial");
+	}
+    }
+    
+    xmlFreeParserCtxt(ctxt);
+    return xml;
 }
 
 void

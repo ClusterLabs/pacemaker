@@ -270,8 +270,7 @@ main(int argc, char **argv)
     } else if(command == 'P') {
 	/* display the current contents */
 	char *output_s = NULL;
-	FILE *shadow_FILE = fopen(shadow_file, "r");
-	xmlNode *output = file2xml(shadow_FILE, FALSE);
+	xmlNode *output = filename2xml(shadow_file);
 	
 	output_s = dump_xml_formatted(output);
 	printf("%s", output_s);
@@ -281,11 +280,9 @@ main(int argc, char **argv)
 	
     } else if(command == 'd') {
 	/* diff against cluster */
-	FILE *shadow_FILE = fopen(shadow_file, "r");
-
 	xmlNode *diff = NULL;
 	xmlNode *old_config = NULL;
-	xmlNode *new_config = file2xml(shadow_FILE, FALSE);
+	xmlNode *new_config = filename2xml(shadow_file);
 	
 	rc = real_cib->cmds->query(real_cib, NULL, &old_config, command_options);
 	
@@ -303,8 +300,7 @@ main(int argc, char **argv)
 	
     } else if(command == 'C') {
 	/* commit to the cluster */
-	FILE *shadow_FILE = fopen(shadow_file, "r");
-	xmlNode *input = file2xml(shadow_FILE, FALSE);
+	xmlNode *input = filename2xml(shadow_file);
 	rc = real_cib->cmds->replace(real_cib, NULL, input, command_options);
 	if(rc != cib_ok) {
 	    fprintf(stderr, "Could not commit shadow instance '%s' to the CIB: %s\n",

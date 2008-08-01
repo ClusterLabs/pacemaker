@@ -95,6 +95,7 @@ main(int argc, char **argv)
 {
 	int argerr = 0;
 	int flag;
+	const char *source = NULL;
 	char *admin_input_xml = NULL;
 	char *admin_input_file = NULL;
 	gboolean dangerous_cmd = FALSE;
@@ -337,31 +338,24 @@ main(int argc, char **argv)
 	}
 	
 	if(admin_input_file != NULL) {
-		FILE *xml_strm = fopen(admin_input_file, "r");
-		input = file2xml(xml_strm, FALSE);
-		if(input == NULL) {
-			fprintf(stderr, "Couldn't parse input file: %s\n", admin_input_file);
-			return 1;
-		}
-		fclose(xml_strm);
+	    input = filename2xml(admin_input_file);
+	    source = admin_input_file;
 		
 	} else if(admin_input_xml != NULL) {
-		input = string2xml(admin_input_xml);
-		if(input == NULL) {
-			fprintf(stderr, "Couldn't parse input string: %s\n", admin_input_xml);
-			return 1;
-		}
+	    source = "input string";
+	    input = string2xml(admin_input_xml);
 
 	} else if(admin_input_stdin) {
-		input = stdin2xml();
-		if(input == NULL) {
-			fprintf(stderr, "Couldn't parse input from STDIN.\n");
-			return 1;
-		}
+	    source = "STDIN";
+	    input = stdin2xml();
 	}
 	
 	if(input != NULL) {
-		crm_log_xml_debug(input, "[admin input]");
+	    crm_log_xml_debug(input, "[admin input]");
+
+	} else if(source) {
+	    fprintf(stderr, "Couldn't parse input from %s.\n", source);
+	    return 1;
 	}
 
 	if(safe_str_eq(cib_action, "md5-sum")) {

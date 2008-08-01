@@ -203,14 +203,12 @@ main(int argc, char **argv)
 		}
 	
 	} else if(xml_file != NULL) {
-		FILE *xml_strm = fopen(xml_file, "r");
-		cib_object = file2xml(xml_strm, FALSE);
+		cib_object = filename2xml(xml_file);
 		if(cib_object == NULL) {
 			fprintf(stderr,
 				"Couldn't parse input file: %s\n", xml_file);
 			return 1;
 		}
-		fclose(xml_strm);
 		
 	} else if(xml_string != NULL) {
 		cib_object = string2xml(xml_string);

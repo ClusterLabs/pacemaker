@@ -161,52 +161,25 @@ main(int argc, char **argv)
 	}
 
 	if(raw_1) {
-		object_1 = string2xml(xml_file_1);
+	    object_1 = string2xml(xml_file_1);
 
 	} else if(use_stdin) {
-		fprintf(stderr, "Input first XML fragment:");
-		object_1 = stdin2xml();
+	    fprintf(stderr, "Input first XML fragment:");
+	    object_1 = stdin2xml();
 
 	} else if(xml_file_1 != NULL) {
-		FILE *xml_strm = fopen(xml_file_1, "r");
-		if(xml_strm != NULL) {
-			crm_debug("Reading: %s", xml_file_1);
-			if(strstr(xml_file_1, ".bz2") != NULL) {
-				object_1 = file2xml(xml_strm, TRUE);
-				
-			} else {
-				object_1 = file2xml(xml_strm, FALSE);
-			}
-			fclose(xml_strm);
-
-		} else {
-			cl_perror("Couldn't open %s for reading", xml_file_1);
-		}
+	    object_1 = filename2xml(xml_file_1);
 	}
 	
 	if(raw_2) {
-		object_2 = string2xml(xml_file_2);
-
+	    object_2 = string2xml(xml_file_2);
+	    
 	} else if(use_stdin) {
-		fprintf(stderr, "Input second XML fragment:");
-		object_2 = stdin2xml();
+	    fprintf(stderr, "Input second XML fragment:");
+	    object_2 = stdin2xml();
 
 	} else if(xml_file_2 != NULL) {
-		FILE *xml_strm = fopen(xml_file_2, "r");
-		if(xml_strm != NULL) {
-			crm_debug("Reading: %s", xml_file_2);
-			if(strstr(xml_file_2, ".bz2") != NULL) {
-				object_2 = file2xml(xml_strm, TRUE);
-				
-			} else {
-				object_2 = file2xml(xml_strm, FALSE);
-			}
-			fclose(xml_strm);
-
-		} else {
-			cl_perror("Couldn't open %s for reading", xml_file_2);
-		}
-		
+	    object_2 = filename2xml(xml_file_2);
 	}
 	
 	CRM_ASSERT(object_1 != NULL);

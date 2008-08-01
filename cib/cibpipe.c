@@ -219,13 +219,11 @@ main(int argc, char ** argv)
     }
 
     if(input_file != NULL) {
-	FILE *xml_strm = fopen(input_file, "r");
-	input = file2xml(xml_strm, FALSE);
+	input = filename2xml(input_file);
 	if(input == NULL) {
 	    fprintf(stderr, "Couldn't parse input file: %s\n", input_file);
 	    return 1;
 	}
-	fclose(xml_strm);
 	    
     } else if(input_xml != NULL) {
 	input = string2xml(input_xml);

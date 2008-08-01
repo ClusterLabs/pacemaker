@@ -99,26 +99,13 @@ static int load_file_cib(const char *filename)
     int rc = cib_ok;
     struct stat buf;
     xmlNode *root = NULL;
-    FILE *cib_file = NULL;
     gboolean dtd_ok = TRUE;
     const char *ignore_dtd = NULL;
     xmlNode *status = NULL;
     
     rc = stat(filename, &buf);
     if (rc == 0) {
-	cib_file = fopen(filename, "r");
-	if(cib_file == NULL) {
-	    cl_perror("Could not open config file %s for reading", filename);
-	    return cib_not_authorized;   
-	}
-
-	if(strstr(filename, ".bz2") != NULL) {
-	    root = file2xml(cib_file, TRUE);
-	    
-	} else {
-	    root = file2xml(cib_file, FALSE);
-	}
-	fclose(cib_file);
+	root = filename2xml(filename);
 	if(root == NULL) {
 	    return cib_dtd_validation;
 	}

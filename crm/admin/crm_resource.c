@@ -1085,15 +1085,7 @@ main(int argc, char **argv)
 	   || rsc_cmd == 'l') {
 		resource_t *rsc = NULL;
 		if(xml_file != NULL) {
-			FILE *xml_strm = fopen(xml_file, "r");
-			if(strstr(xml_file, ".bz2") != NULL) {
-				cib_xml_copy = file2xml(xml_strm, TRUE);
-			} else {
-				cib_xml_copy = file2xml(xml_strm, FALSE);
-			}
-			if(xml_strm != NULL) {
-				fclose(xml_strm);
-			}
+		    cib_xml_copy = filename2xml(xml_file);
 
 		} else {
 			cib_conn = cib_new();

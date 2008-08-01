@@ -158,7 +158,7 @@ extern int add_node_nocopy(xmlNode *parent, const char *name, xmlNode *child);
  *
  * Whitespace between tags is discarded.
  */
-extern xmlNode *file2xml(FILE *input, gboolean compressed);
+extern xmlNode *filename2xml(const char *filename);
 
 extern xmlNode *stdin2xml(void);
 
