@@ -147,17 +147,21 @@ main(int argc, char ** argv)
 		ipc_server = crm_strdup(CRM_SYSTEM_PENGINE);
 	}
 
-	do {
+	/* find any previous instances and shut them down */
+	old_instance = init_client_ipc_comms_nodispatch(CRM_SYSTEM_PENGINE);
+	while(old_instance != NULL) {
+	    xmlNode *cmd = create_request(
+		CRM_OP_QUIT, NULL, NULL, CRM_SYSTEM_PENGINE, CRM_SYSTEM_PENGINE, NULL);
+
+	    crm_warn("Terminating previous PE instance");
+	    send_ipc_message(old_instance, cmd);
+	    free_xml(cmd);
+
+	    sleep(2);
+
+	    old_instance->ops->destroy(old_instance);
 	    old_instance = init_client_ipc_comms_nodispatch(CRM_SYSTEM_PENGINE);
-	    if(old_instance != NULL) {
-		xmlNode *cmd = create_request(
-		    CRM_OP_QUIT, NULL, NULL, CRM_SYSTEM_PENGINE, CRM_SYSTEM_PENGINE, NULL);
-		crm_warn("Terminating previous PE instance");
-		send_ipc_message(old_instance, cmd);
-		free_xml(cmd);
-	    }
-	    
-	} while(old_instance != NULL);
+	}
 	
 	if(init_server_ipc_comms(ipc_server, pe_client_connect,
 				 default_ipc_connection_destroy)) {
