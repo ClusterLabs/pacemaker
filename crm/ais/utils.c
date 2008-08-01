@@ -113,7 +113,8 @@ gboolean spawn_child(crm_child_t *child)
     AIS_ASSERT(child->pid != -1);
 
     if(env_valgrind == NULL) {
-	
+	use_valgrind = FALSE;
+
     } else if(ais_string_to_boolean(env_valgrind)) {
 	use_valgrind = TRUE;
 
@@ -121,6 +122,11 @@ gboolean spawn_child(crm_child_t *child)
 	use_valgrind = TRUE;	
     }
 
+    if(use_valgrind && strlen(VALGRIND_BIN) == 0) {
+	ais_warn("Cannot enable valgrind for %s:"
+		 " The location of the valgrind binary is unknown", child->name);
+	use_valgrind = FALSE;
+    }
     
     if(child->pid > 0) {
 	/* parent */
