@@ -584,12 +584,13 @@ crmd_authorize_message(xmlNode *client_msg, crmd_client_t *curr_client)
 	} else if (safe_str_eq(CRM_SYSTEM_TENGINE, client_name)) {
 		the_subsystem = te_subsystem;
 	}
-	
+
+	/* TODO: Is this code required anymore?? */
 	if (auth_result == TRUE && the_subsystem != NULL) {
 		/* if we already have one of those clients
 		 * only applies to te, pe etc.  not admin clients
 		 */
-		crm_debug_3("Checking if %s is required/already connected",
+		crm_err("Checking if %s is required/already connected",
 			    client_name);
 
 		table_key = (gpointer)crm_strdup(client_name);

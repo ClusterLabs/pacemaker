@@ -93,35 +93,54 @@ do_pe_control(long long action,
 	      enum crmd_fsa_input current_input,
 	      fsa_data_t *msg_data)
 {
-	struct crm_subsystem_s *this_subsys = pe_subsystem;
+    static GCHSource *pe_source = NULL;
+    struct crm_subsystem_s *this_subsys = pe_subsystem;
 
-	long long stop_actions = A_PE_STOP;
-	long long start_actions = A_PE_START;
-	
-	if(action & stop_actions) {
-		stop_subsystem(this_subsys, FALSE);
+    long long stop_actions = A_PE_STOP;
+    long long start_actions = A_PE_START;
+    
+    if(action & stop_actions) {
+	clear_bit_inplace(fsa_input_register, pe_subsystem->flag_required);
+
+	if(is_heartbeat_cluster()) {
+	    stop_subsystem(this_subsys, FALSE);
+
+	} else {    
+	    if(pe_source) {
+		G_main_del_IPC_Channel(pe_source);
+		pe_source = NULL;
+	    }
+	    pe_subsystem->ipc = NULL;
+	    clear_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
 	}
-
-	if(action & start_actions) {
-		if(cur_state != S_STOPPING) {
-			if(start_subsystem(this_subsys) == FALSE) {
-				register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-			} else {
-			    IPC_Channel *ch = NULL;
-			    sleep(3);
-			    init_client_ipc_comms(CRM_SYSTEM_PENGINE, pe_msg_dispatch, NULL, &ch);
-
-			    if(ch != NULL) {
-				pe_subsystem->ipc = ch;
-				set_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
-			    }
-			}
-
-		} else {
-			crm_info("Ignoring request to start %s while shutting down",
-			       this_subsys->name);
-		}
+    }
+    
+    if(action & start_actions) {
+	if(cur_state != S_STOPPING) {
+	    IPC_Channel *ch = NULL;
+	    
+	    if(is_heartbeat_cluster()) {
+		if(start_subsystem(this_subsys) == FALSE) {
+		    register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+		    return;
+		} 
+		sleep(3);
+	    }
+	    
+	    pe_source = init_client_ipc_comms(CRM_SYSTEM_PENGINE, pe_msg_dispatch, NULL, &ch);
+	    if(ch != NULL) {
+		pe_subsystem->ipc = ch;
+		set_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
+		
+	    } else {
+		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);	    
+	    }
+	    
+	} else {
+	    crm_info("Ignoring request to start %s while shutting down",
+		     this_subsys->name);
 	}
+    }
 }
 
 int fsa_pe_query = 0;
