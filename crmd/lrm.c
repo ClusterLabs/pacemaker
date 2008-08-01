@@ -1122,6 +1122,7 @@ do_lrm_invoke(long long action,
 		    crm_info("Cannot find/create resource in order to fail it...");
 		    crm_log_xml_warn(input->msg, "bad input");
 		}
+		return;
 #else
 		crm_info("Failing resource...");
 		operation = "fail";
