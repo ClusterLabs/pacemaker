@@ -1642,10 +1642,10 @@ class ResourceRecover(CTSTest):
         self.startall = SimulStartLite(cm)
         self.max=30
         self.rid=None
-        self.action = "fail"
 
-        # make sure the interval is greater than 0 so failcount is updated
-        self.interval = 60000
+        # these are the values used for the new LRM API call
+        self.action = "asyncmon"
+        self.interval = 0
 
     def __call__(self, node):
         '''Perform the 'ResourceRecover' test. '''
