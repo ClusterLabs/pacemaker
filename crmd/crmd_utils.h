@@ -22,6 +22,7 @@
 #include <crm/common/xml.h>
 
 #define CLIENT_EXIT_WAIT 30
+#define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 extern void process_client_disconnect(crmd_client_t *curr_client);
 

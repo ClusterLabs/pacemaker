@@ -607,15 +607,12 @@ build_operation_update(
 	}
 	
 	if(op->user_data == NULL) {
-		char *id = crm_itoa(op->call_id);
-
 		crm_debug("Generating fake transition key for:"
 			  " %s_%s_%d %d from %s",
 			  op->rsc_id, op->op_type, op->interval, op->call_id,
 			  op->app_name);
-		local_user_data = generate_transition_key(-1, 0, 0, id);
+		local_user_data = generate_transition_key(-1, op->call_id, 0, FAKE_TE_ID);
 		op->user_data = local_user_data;
-		crm_free(id);
 	}
 	
 	magic = generate_transition_magic(op->user_data, op->op_status, op->rc);
