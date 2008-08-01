@@ -1712,7 +1712,7 @@ class ResourceRecover(CTSTest):
                  """Unknown operation: fail""",
                  """ERROR: sending stonithRA op to stonithd failed.""",
                  """ERROR: process_lrm_event: LRM operation %s_%s_%d""" % (self.rid, self.action, self.interval),
-                 """ERROR: process_graph_event: Action %s_%s_%d initiated outside of a transition""" % (self.rid, self.action, self.interval),
+                 """ERROR: process_graph_event: Action %s_%s_%d .* initiated outside of a transition""" % (self.rid, self.action, self.interval),
                  ]
 
 AllTestClasses.append(ResourceRecover)
@@ -1818,6 +1818,7 @@ class ComponentFail(CTSTest):
         return self.failure("Cluster did not become stable")
 
     def is_applicable(self):
+        return 0
         if self.CM["Name"] != "heartbeat":
             return 1
         return 0
