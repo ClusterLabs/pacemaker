@@ -598,7 +598,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		    cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);
 		    cib_update_counter(scratch, XML_ATTR_GENERATION, FALSE);
 
-		} else {
+		} else if(diff != NULL && *diff != NULL){
 		    cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
 		}
 
