@@ -423,8 +423,13 @@ append_digest(lrm_rsc_t *rsc, lrm_op_t *op, xmlNode *update, const char *version
      *   a restart
      */
     char *digest = NULL;
-    xmlNode *args_xml = create_xml_node(NULL, XML_TAG_PARAMS);
+    xmlNode *args_xml = NULL;
 
+    if(op->params == NULL) {
+	return;
+    }
+    
+    args_xml = create_xml_node(NULL, XML_TAG_PARAMS);
     g_hash_table_foreach(op->params, hash2field, args_xml);
     filter_action_parameters(args_xml, version);
     digest = calculate_xml_digest(args_xml, TRUE, FALSE);
@@ -461,7 +466,7 @@ append_restart_list(lrm_rsc_t *rsc, lrm_op_t *op, xmlNode *update, const char *v
 		return;
 
 	} else if(op->params == NULL) {
-		crm_err("%s has no parameters", ID(update));
+		crm_debug("%s has no parameters", ID(update));
 		return;
 
 	} else if(rsc == NULL) {
