@@ -1818,7 +1818,6 @@ class ComponentFail(CTSTest):
         return self.failure("Cluster did not become stable")
 
     def is_applicable(self):
-        return 0
         if self.CM["Name"] != "heartbeat":
             return 1
         return 0
