@@ -91,8 +91,9 @@ gboolean spawn_child(crm_child_t *child)
     int gid = 0;
     struct rlimit oflimits;
     struct passwd *pwentry = NULL;
+    gboolean use_valgrind = FALSE;
     const char *devnull = "/dev/null";
-    const char *use_valgrind = getenv("HA_VALGRIND_ENABLED");
+    const char *env_valgrind = getenv("HA_VALGRIND_ENABLED");
 
     if(child->uid) {
 	pwentry = getpwnam(child->uid);
@@ -111,10 +112,20 @@ gboolean spawn_child(crm_child_t *child)
     child->pid = fork();
     AIS_ASSERT(child->pid != -1);
 
+    if(env_valgrind == NULL) {
+	
+    } else if(ais_string_to_boolean(env_valgrind)) {
+	use_valgrind = TRUE;
+
+    } else if(strstr(env_valgrind, child->name)) {
+	use_valgrind = TRUE;	
+    }
+
+    
     if(child->pid > 0) {
 	/* parent */
 	ais_info("Forked child %d for process %s%s", child->pid, child->name,
-		 ais_string_to_boolean(use_valgrind)?" (valgrind enabled)":"");
+		 use_valgrind?" (valgrind enabled)":"");
 	return TRUE;
     }
     
@@ -146,7 +157,7 @@ gboolean spawn_child(crm_child_t *child)
     (void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
     (void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
 
-    if(ais_string_to_boolean(use_valgrind)) {
+    if(use_valgrind) {
 	char *opts[] = {
 	    ais_strdup(VALGRIND_BIN),
 	    ais_strdup(child->command),
