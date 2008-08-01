@@ -106,6 +106,7 @@ main(int argc, char ** argv)
 	int flag;
 	int argerr = 0;
 	gboolean allow_cores = TRUE;
+	IPC_Channel *old_instance = NULL;
     
 	crm_log_init(CRM_SYSTEM_PENGINE, LOG_INFO, TRUE, FALSE, 0, NULL);
  	G_main_add_SignalHandler(
@@ -146,6 +147,18 @@ main(int argc, char ** argv)
 		ipc_server = crm_strdup(CRM_SYSTEM_PENGINE);
 	}
 
+	do {
+	    old_instance = init_client_ipc_comms_nodispatch(CRM_SYSTEM_PENGINE);
+	    if(old_instance != NULL) {
+		xmlNode *cmd = create_request(
+		    CRM_OP_QUIT, NULL, NULL, CRM_SYSTEM_PENGINE, CRM_SYSTEM_PENGINE, NULL);
+		crm_warn("Terminating previous PE instance");
+		send_ipc_message(old_instance, cmd);
+		free_xml(cmd);
+	    }
+	    
+	} while(old_instance != NULL);
+	
 	if(init_server_ipc_comms(ipc_server, pe_client_connect,
 				 default_ipc_connection_destroy)) {
 	    crm_err("Couldn't start IPC server");
