@@ -326,7 +326,12 @@ expand_plus_plus(xmlNode* target, const char *name, const char *value)
 	goto set_unexpanded;
     }
 
-    int_value = char2score(old_value);
+    /* if we are expanding ourselves,
+     * then no previous value was set and leave int_value as 0
+     */
+    if(old_value != value) {
+	int_value = char2score(old_value);
+    }
     
     if(value[name_len+1] != '+') {
 	const char *offset_s = value+(name_len+2);
