@@ -342,7 +342,7 @@ static void *crm_wait_dispatch (void *arg)
 
 		} else if (WIFEXITED(status)) {
 		    int rc = WEXITSTATUS(status);
-		    do_ais_log(rc==0?LOG_NOTICE:LOG_ERR"Child process %s exited (pid=%d, rc=%d)",
+		    do_ais_log(rc==0?LOG_NOTICE:LOG_ERR, "Child process %s exited (pid=%d, rc=%d)",
 			       crm_children[lpc].name, pid, rc);
 
 		    if(rc == 100) {
