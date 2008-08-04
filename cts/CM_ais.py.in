@@ -71,6 +71,10 @@ class crm_ais(LinuxHAv2):
             "Pat:All_stopped"  : "%s.*openais.*crm_exec_exit_fn: Shutdown complete",
             "Pat:They_dead"    : "openais:.*Node %s is now: lost",
             
+            "Pat:ChildKilled"  : "%s openais.*Child process %s terminated with signal 9",
+            "Pat:ChildRespawn" : "%s openais.*Respawning failed child process: %s",
+            "Pat:ChildExit"    : "Child process .* exited",
+
             # Bad news Regexes.  Should never occur.
             "BadRegexes"   : (
                 r"ERROR:",
@@ -220,13 +224,9 @@ class crm_ais(LinuxHAv2):
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
-#                    "tengine_stonith_callback: .*result=0",
                     "State transition S_IDLE",
                     "State transition S_STARTING -> S_PENDING",
-                    ], [
-                    "tengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
-                    "pengine: .*ERROR: subsystem_msg_dispatch: The server .* has left us: Shutting down...NOW",
-                    ], common_ignore, 0, self))
+                    ], [], common_ignore, 0, self))
 
         complist.append(Process("pengine", 1, [
                     "State transition S_IDLE",

@@ -342,7 +342,7 @@ static void *crm_wait_dispatch (void *arg)
 
 		} else if (WIFEXITED(status)) {
 		    int rc = WEXITSTATUS(status);
-		    ais_notice("Child process %s exited (pid=%d, rc=%d)",
+		    do_ais_log(rc==0?LOG_NOTICE:LOG_ERR"Child process %s exited (pid=%d, rc=%d)",
 			       crm_children[lpc].name, pid, rc);
 
 		    if(rc == 100) {
@@ -354,13 +354,13 @@ static void *crm_wait_dispatch (void *arg)
 
 		crm_children[lpc].respawn_count += 1;
 		if(crm_children[lpc].respawn_count > MAX_RESPAWN) {
-		    ais_notice("Child respawn count exceeded by %s",
+		    ais_err("Child respawn count exceeded by %s",
 			       crm_children[lpc].name);
 		    crm_children[lpc].respawn = FALSE;
 		}
 		if(crm_children[lpc].respawn) {
-		    ais_info("Respawning failed child process: %s",
-			     crm_children[lpc].name);
+		    ais_notice("Respawning failed child process: %s",
+			       crm_children[lpc].name);
 		    spawn_child(&(crm_children[lpc]));
 		} else {
 		    send_cluster_id();

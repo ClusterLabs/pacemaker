@@ -100,6 +100,9 @@ class LinuxHAv2(HeartbeatCM):
             "Pat:They_dead"    : "node %s.*: is dead",
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
 
+            "Pat:ChildKilled"  : "%s heartbeat.*%s.*killed by signal 9",
+            "Pat:ChildRespawn" : "%s heartbeat.*Respawning client.*%s",
+            "Pat:ChildExit"    : "ERROR: Client .* exited with return code",
             
             # Bad news Regexes.  Should never occur.
             "BadRegexes"   : (

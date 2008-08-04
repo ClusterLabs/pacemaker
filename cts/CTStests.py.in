@@ -1752,7 +1752,11 @@ class ComponentFail(CTSTest):
         self.CM.log("...component %s (dc=%d,boot=%d)" % (chosen.name, node_is_dc,chosen.triggersreboot))
         self.incr(chosen.name)
         
+        self.patterns.append(self.CM["Pat:ChildKilled"] %(node, chosen.name))
+        self.patterns.append(self.CM["Pat:ChildRespawn"] %(node, chosen.name))
         self.patterns.extend(chosen.pats)
+        if node_is_dc:
+          self.patterns.extend(chosen.dc_pats)
 
         # Make sure the node goes down and then comes back up if it should reboot...
         if chosen.triggersreboot:
@@ -1763,28 +1767,23 @@ class ComponentFail(CTSTest):
           self.patterns.append(self.CM["Pat:Local_started"] % node)
 
         # In an ideal world, this next stuff should be in the "chosen" object as a member function
-        if chosen.dc_only:
-          if chosen.triggersreboot:
-            # Sometimes these will be in the log, and sometimes they won't...
-            self.okerrpatterns.append("%s crmd:.*Process %s:.* exited" %(node, chosen.name))
-            self.okerrpatterns.append("%s crmd:.*I_ERROR.*crmdManagedChildDied" %node)
-            self.okerrpatterns.append("%s crmd:.*The %s subsystem terminated unexpectedly" %(node, chosen.name))
-            self.okerrpatterns.append("ERROR: Client .* exited with return code")
-          else:
-            self.patterns.append("%s crmd:.*Process %s:.* exited" %(node, chosen.name))
-            self.patterns.append("%s crmd:.*I_ERROR.*crmdManagedChildDied" %node)
-            self.patterns.append("%s crmd:.*The %s subsystem terminated unexpectedly" %(node, chosen.name))
-        else:
-          if chosen.triggersreboot:
-            # Sometimes this won't be in the log...
-            self.okerrpatterns.append("%s heartbeat.*%s.*killed by signal 9" %(node, chosen.name))
-            self.okerrpatterns.append("%s heartbeat.*Respawning client.*%s" %(node, chosen.name))
-            self.okerrpatterns.append("ERROR: Client .* exited with return code")
-          else:
-            self.patterns.append("%s heartbeat.*%s.*killed by signal 9" %(node, chosen.name))
-            self.patterns.append("%s heartbeat.*Respawning client.*%s" %(node, chosen.name))
-        if node_is_dc:
-          self.patterns.extend(chosen.dc_pats)
+        if self.CM["Name"] == "linux-ha-v2":
+            if chosen.triggersreboot:
+                if chosen.dc_only: 
+                    # Sometimes these will be in the log, and sometimes they won't...
+                    self.okerrpatterns.append("%s crmd:.*Process %s:.* exited" %(node, chosen.name))
+                    self.okerrpatterns.append("%s crmd:.*I_ERROR.*crmdManagedChildDied" %node)
+                    self.okerrpatterns.append("%s crmd:.*The %s subsystem terminated unexpectedly" %(node, chosen.name))
+                    self.okerrpatterns.append("ERROR: Client .* exited with return code")
+                else:
+                    # Sometimes this won't be in the log...
+                    self.okerrpatterns.append(self.CM["Pat:ChildKilled"] %(node, chosen.name))
+                    self.okerrpatterns.append(self.CM["Pat:ChildRespawn"] %(node, chosen.name))
+                    self.okerrpatterns.append(self.CM["Pat:ChildExit"])
+            else:
+                self.patterns.append("%s crmd:.*Process %s:.* exited" %(node, chosen.name))
+                self.patterns.append("%s crmd:.*I_ERROR.*crmdManagedChildDied" %node)
+                self.patterns.append("%s crmd:.*The %s subsystem terminated unexpectedly" %(node, chosen.name))
 
         # supply a copy so self.patterns doesnt end up empty
         tmpPats = []
