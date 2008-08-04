@@ -430,9 +430,7 @@ static void
 common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_set) 
 {
 	int fail_count = 0;
-	const char *value = NULL;
 	resource_t *failed = rsc;
-	GHashTable *meta_hash = NULL;
 
 	if(rsc->children) {
 	    slist_iter(
@@ -440,19 +438,6 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 		common_apply_stickiness(child_rsc, node, data_set);
 		);
 	    return;
-	}
-
-	meta_hash = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
-		g_hash_destroy_str, g_hash_destroy_str);
-	get_meta_attributes(meta_hash, rsc, node, data_set);
-
-	/* update resource preferences that relate to the current node */	    
-	value = g_hash_table_lookup(meta_hash, XML_RSC_ATTR_STICKINESS);
-	if(value != NULL && safe_str_neq("default", value)) {
-		rsc->stickiness = char2score(value);
-	} else {
-		rsc->stickiness = data_set->default_resource_stickiness;
 	}
 
 	if(is_set(rsc->flags, pe_rsc_managed)
@@ -469,32 +454,24 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 		    sticky_rsc = rsc->parent;
 		}
 		
-		resource_location(sticky_rsc, node, rsc->stickiness,
-				  "stickiness", data_set);
+		resource_location(sticky_rsc, node, rsc->stickiness, "stickiness", data_set);
 		crm_debug("Resource %s: preferring current location"
 			    " (node=%s, weight=%d)", sticky_rsc->id,
 			    node->details->uname, rsc->stickiness);
 	    } else {
-		crm_debug("Ignoring stickiness for %s: the cluster is asymmetric and node %s is no longer explicitly allowed",
+		crm_debug("Ignoring stickiness for %s: the cluster is asymmetric"
+			  " and node %s is not explicitly allowed",
 			  rsc->id, node->details->uname);
 		slist_iter(node, node_t, rsc->allowed_nodes, lpc,
 			   crm_err("%s[%s] = %d", rsc->id, node->details->uname, node->weight));
 	    }
 	}
 	
-	value = g_hash_table_lookup(meta_hash, XML_RSC_ATTR_FAIL_STICKINESS);
-	if(value != NULL && safe_str_neq("default", value)) {
-		rsc->migration_threshold = char2score(value);
-	} else {
-		rsc->migration_threshold = data_set->default_migration_threshold;
-	}
-
 	if(is_not_set(rsc->flags, pe_rsc_unique)) {
 	    failed = uber_parent(rsc);
 	}
 	    
-	fail_count = get_failcount(node, rsc, NULL, data_set);	
-
+	fail_count = get_failcount(node, rsc, NULL, data_set);
 	if(fail_count > 0 && rsc->migration_threshold != 0) {
 	    if(rsc->migration_threshold <= fail_count) {
 		resource_location(failed, node, -INFINITY, "__fail_limit__", data_set);
@@ -505,8 +482,6 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 			   failed->id, rsc->migration_threshold - fail_count, node->details->uname);
 	    }
 	}
-	
-	g_hash_table_destroy(meta_hash);
 }
 
 static void complex_set_cmds(resource_t *rsc)

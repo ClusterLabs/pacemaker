@@ -267,6 +267,11 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 		(*rsc)->stickiness = char2score(value);
 	}
 
+	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_STICKINESS);
+	if(value != NULL && safe_str_neq("default", value)) {
+		(*rsc)->migration_threshold = char2score(value);
+	}
+	
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_TIMEOUT);
 	if(value != NULL) {
 	    /* call crm_get_msec() and convert back to seconds */
