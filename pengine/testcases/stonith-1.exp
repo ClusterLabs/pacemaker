@@ -26,7 +26,9 @@
      <action_set>
        <rsc_op id="14" operation="monitor" operation_key="r192.168.100.182_monitor_5000" on_node="sles-1" on_node_uuid="1186dc9a-324d-425a-966e-d757e693dc86">
          <primitive id="r192.168.100.182" long-id="group-1:r192.168.100.182" class="heartbeat" type="IPaddr"/>
-         <attributes 1="192.168.100.182" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="10000" crm_feature_set="3.0"/>
+         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_timeout="10000" crm_feature_set="3.0">
+           <param name="1" value="192.168.100.182"/>
+         </attributes>
        </rsc_op>
      </action_set>
      <inputs/>

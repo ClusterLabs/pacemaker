@@ -45,7 +45,7 @@ class CIB:
           </operations>
           <instance_attributes id="%s">
             <attributes>
-              <nvpair id="%s-ip" name="arg1" value="%s/32"/>
+              <nvpair id="%s-ip" name="1" value="%s/32"/>
             </attributes>
           </instance_attributes>
         </primitive> '''

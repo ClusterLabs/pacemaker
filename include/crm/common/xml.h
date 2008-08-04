@@ -49,6 +49,7 @@ extern GHashTable *xml2list_202(xmlNode *parent);
 extern void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
 extern void hash2field(gpointer key, gpointer value, gpointer user_data);
 extern void hash2metafield(gpointer key, gpointer value, gpointer user_data);
+extern void hash2smartfield(gpointer key, gpointer value, gpointer user_data);
 
 /*
  * Replacement function for xmlCopyPropList which at the very least,

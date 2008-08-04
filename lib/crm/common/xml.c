@@ -44,7 +44,7 @@
 #define XML_BUFFER_SIZE	4096
 #define XML_PARSER_DEBUG 0
 
-inline xmlDoc *getDocPtr(xmlNode *node);
+xmlDoc *getDocPtr(xmlNode *node);
 
 struct schema_s 
 {
@@ -355,7 +355,7 @@ expand_plus_plus(xmlNode* target, const char *name, const char *value)
     return;
 }
 
-inline xmlDoc *getDocPtr(xmlNode *node)
+xmlDoc *getDocPtr(xmlNode *node)
 {
     xmlDoc *doc = NULL;
     CRM_CHECK(node != NULL, return NULL);
@@ -2074,6 +2074,28 @@ hash2nvpair(gpointer key, gpointer value, gpointer user_data)
 }
 
 void
+hash2smartfield(gpointer key, gpointer value, gpointer user_data) 
+{
+	const char *name    = key;
+	const char *s_value = value;
+
+	xmlNode *xml_node  = user_data;
+
+	if(isdigit(name[0])) {
+	    xmlNode *tmp = create_xml_node(xml_node, XML_TAG_PARAM);
+	    crm_xml_add(tmp, XML_NVPAIR_ATTR_NAME, name);
+	    crm_xml_add(tmp, XML_NVPAIR_ATTR_VALUE, s_value);
+	    
+	} else if(crm_element_value(xml_node, name) == NULL) {
+		crm_xml_add(xml_node, name, s_value);
+		crm_debug_3("dumped: %s=%s", name, s_value);
+
+	} else {
+		crm_debug_2("duplicate: %s=%s", name, s_value);
+	}
+}
+
+void
 hash2field(gpointer key, gpointer value, gpointer user_data) 
 {
 	const char *name    = key;
@@ -2084,6 +2106,7 @@ hash2field(gpointer key, gpointer value, gpointer user_data)
 	if(crm_element_value(xml_node, name) == NULL) {
 		crm_xml_add(xml_node, name, s_value);
 		crm_debug_3("dumped: %s=%s", name, s_value);
+
 	} else {
 		crm_debug_2("duplicate: %s=%s", name, s_value);
 	}
@@ -2145,6 +2168,17 @@ xml2list(xmlNode *parent)
 		g_hash_table_insert(
 			nvpair_hash, crm_strdup(key), crm_strdup(value));
 		);
+
+	xml_child_iter_filter(
+	    nvpair_list, child, XML_TAG_PARAM,
+
+	    const char *key = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
+	    const char *value = crm_element_value(child, XML_NVPAIR_ATTR_VALUE);
+	    crm_err("Added %s=%s", key, value);
+	    if(key != NULL && value != NULL) {
+		g_hash_table_insert(nvpair_hash, crm_strdup(key), crm_strdup(value));		
+	    }
+	    );
 	
 	return nvpair_hash;
 }

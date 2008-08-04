@@ -469,7 +469,7 @@ action2xml(action_t *action, gboolean as_input)
 
 	g_hash_table_foreach(action->extra, hash2field, args_xml);
 	if(action->rsc != NULL && safe_str_neq(action->task, RSC_STOP)) {
-		g_hash_table_foreach(action->rsc->parameters, hash2field, args_xml);
+		g_hash_table_foreach(action->rsc->parameters, hash2smartfield, args_xml);
 	}
 
 	g_hash_table_foreach(action->meta, hash2metafield, args_xml);
