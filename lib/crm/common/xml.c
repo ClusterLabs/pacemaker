@@ -2735,6 +2735,10 @@ xmlNode *expand_idref(xmlNode *input)
     const char *ref = NULL;
     xmlNode *result = input;
 
+    if(result == NULL) {
+	return NULL;
+    }
+    
     tag = crm_element_name(result);
     ref = crm_element_value(result, XML_ATTR_IDREF);
 
