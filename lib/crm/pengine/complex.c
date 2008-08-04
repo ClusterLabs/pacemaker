@@ -133,6 +133,7 @@ gboolean
 common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	      resource_t *parent, pe_working_set_t *data_set)
 {
+	xmlNode *ops = NULL;
 	const char *value = NULL;
 	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
 
@@ -148,14 +149,12 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 		
 	}
 	crm_malloc0(*rsc, sizeof(resource_t));
-	
-	if(*rsc == NULL) {
-		return FALSE;
-	}
+	ops = find_xml_node(xml_obj, "operations", FALSE);
 	
 	(*rsc)->xml  = xml_obj;
 	(*rsc)->parent  = parent;
-	(*rsc)->ops_xml = find_xml_node(xml_obj, "operations", FALSE);
+	(*rsc)->ops_xml = expand_idref(ops);
+
 	(*rsc)->variant = get_resource_type(crm_element_name(xml_obj));
 	if((*rsc)->variant == pe_unknown) {
 		pe_err("Unknown resource type: %s", crm_element_name(xml_obj));

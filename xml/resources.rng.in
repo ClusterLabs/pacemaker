@@ -106,6 +106,12 @@
   <define name="element-operations">
     <optional>
       <element name="operations">
+	<optional>
+	  <attribute name="id"><data type="ID"/></attribute>
+	</optional>
+	<optional>
+	  <attribute name="id-ref"><data type="IDREF"/></attribute>
+	</optional>
 	<zeroOrMore>
 	  <element name="op">
 	    <attribute name="id"><data type="ID"/></attribute>
