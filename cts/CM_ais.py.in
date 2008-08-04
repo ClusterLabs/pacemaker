@@ -198,12 +198,12 @@ class crm_ais(LinuxHAv2):
 
         complist.append(Process("cib", 0, [
                     "State transition S_IDLE",
-                    "Respawning client .*crmd",
-                    "Respawning client .*attrd",
+                    "Respawning .* crmd",
+                    "Respawning .* attrd",
                     "Lost connection to the CIB service",
                     "Connection to the CIB terminated...",
-                    "Client .*crmd exited with return code 2.",
-                    "Client .*attrd exited with return code 2.",
+                    "Child process crmd exited .* rc=2",
+                    "Child process attrd exited .* rc=2",
                     "State transition S_STARTING -> S_PENDING",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
@@ -213,10 +213,10 @@ class crm_ais(LinuxHAv2):
         complist.append(Process("lrmd", 0, [
                     "State transition S_IDLE",
                     "LRM Connection failed",
-                    "Respawning client .*crmd",
-                    "crmd: .*I_ERROR.*lrm_dispatch",
+                    "Respawning .* crmd",
+                    "crmd: .*I_ERROR.*lrm_connection_destroy",
                     "State transition S_STARTING -> S_PENDING",
-                    "Client .*crmd exited with return code 2.",
+                    "Child process crmd exited .* rc=2",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
                     ], [], common_ignore, 0, self))
@@ -230,8 +230,8 @@ class crm_ais(LinuxHAv2):
 
         complist.append(Process("pengine", 1, [
                     "State transition S_IDLE",
-                    "Respawning client .*crmd",
-                    "Client .*crmd exited with return code 2.",
+                    "Respawning .* crmd",
+                    "Child process crmd exited .* rc=2",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
                     ], [], common_ignore, 0, self))
