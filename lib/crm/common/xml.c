@@ -2733,13 +2733,8 @@ xmlNode *expand_idref(xmlNode *input)
 {
     const char *tag = NULL;
     const char *ref = NULL;
-    xmlNode *top = input;
     xmlNode *result = input;
 
-    while(top->parent != NULL) {
-	top = top->parent;
-    }
-    
     tag = crm_element_name(result);
     ref = crm_element_value(result, XML_ATTR_IDREF);
 
@@ -2748,8 +2743,8 @@ xmlNode *expand_idref(xmlNode *input)
 	int xpath_max = 512, offset = 0;
 	crm_malloc0(xpath_string, xpath_max);
 
-	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id=\"%s\"]", tag, ref);
-	result = get_xpath_object(xpath_string, top, LOG_ERR);
+	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id='%s']", tag, ref);
+	result = get_xpath_object(xpath_string, input, LOG_ERR);
 
 	crm_free(xpath_string);
     }
