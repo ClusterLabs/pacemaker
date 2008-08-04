@@ -2174,7 +2174,7 @@ xml2list(xmlNode *parent)
 
 	    const char *key = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
 	    const char *value = crm_element_value(child, XML_NVPAIR_ATTR_VALUE);
-	    crm_err("Added %s=%s", key, value);
+	    crm_debug_4("Added %s=%s", key, value);
 	    if(key != NULL && value != NULL) {
 		g_hash_table_insert(nvpair_hash, crm_strdup(key), crm_strdup(value));		
 	    }
