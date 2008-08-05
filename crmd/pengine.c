@@ -57,15 +57,33 @@ void do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 			   xmlNode *output, void *user_data);
 
 
-static gboolean pe_msg_dispatch(IPC_Channel *client, gpointer user_data) 
+static void
+pe_connection_destroy(gpointer user_data)
+{
+    clear_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
+    if(is_set(fsa_input_register, pe_subsystem->flag_required)) {
+	crm_crit("Connection to the Policy Engine failed");
+	register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+
+    } else {
+	crm_info("Connection to the Policy Engine released");
+    }
+    
+    pe_subsystem->ipc = NULL;
+    pe_subsystem->client = NULL;
+
+    G_main_set_trigger(fsa_source);
+    return;
+}
+
+static gboolean
+pe_msg_dispatch(IPC_Channel *client, gpointer user_data) 
 {
     xmlNode *msg = NULL;
     gboolean stay_connected = TRUE;
 	
-    while(IPC_ISRCONN(client)) {
-	if(client->ops->is_message_pending(client) == 0) {
-	    break;
-	}
+    while(IPC_ISRCONN(client)
+	  && client->ops->is_message_pending(client)) {
 
 	msg = xmlfromIPC(client, 0);
 	if (msg != NULL) {
@@ -73,12 +91,11 @@ static gboolean pe_msg_dispatch(IPC_Channel *client, gpointer user_data)
 	    free_xml(msg);
 	}
     }
-
+    
     if (client->ch_status != IPC_CONNECT) {
+	crm_info("Received HUP from %s:[%d]", pe_subsystem->name, pe_subsystem->pid);	
+	pe_connection_destroy(NULL);
 	stay_connected = FALSE;
-	pe_subsystem->ipc = NULL;
-	pe_subsystem->client = NULL;		
-	crm_info("Received HUP from %s:[%d]", pe_subsystem->name, pe_subsystem->pid);
     }
 
     G_main_set_trigger(fsa_source);
@@ -110,31 +127,40 @@ do_pe_control(long long action,
 		G_main_del_IPC_Channel(pe_source);
 		pe_source = NULL;
 	    }
-	    pe_subsystem->ipc = NULL;
+	    
+	    if(pe_subsystem->ipc) {
+		pe_subsystem->ipc->ops->destroy(pe_subsystem->ipc);
+		pe_subsystem->ipc = NULL;
+	    }
 	    clear_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
 	}
     }
     
     if(action & start_actions) {
 	if(cur_state != S_STOPPING) {
-	    IPC_Channel *ch = NULL;
-	    
-	    if(is_heartbeat_cluster()) {
+	    if(is_openais_cluster()) {
+		set_bit_inplace(fsa_input_register, pe_subsystem->flag_required);		
+
+	    } else if(is_heartbeat_cluster()) {
 		if(start_subsystem(this_subsys) == FALSE) {
 		    register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 		    return;
 		} 
-		sleep(3);
+		sleep(3);		
 	    }
-	    
-	    pe_source = init_client_ipc_comms(CRM_SYSTEM_PENGINE, pe_msg_dispatch, NULL, &ch);
-	    if(ch != NULL) {
-		pe_subsystem->ipc = ch;
-		set_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
-		
-	    } else {
+
+	    pe_subsystem->ipc = init_client_ipc_comms_nodispatch(CRM_SYSTEM_PENGINE);
+	    if(pe_subsystem->ipc == NULL) {
+		crm_warn("Setup of client connection failed,"
+			 " not adding channel to mainloop");
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);	    
+		return;
 	    }
+
+	    set_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
+	    pe_source = G_main_add_IPC_Channel(
+		G_PRIORITY_HIGH, pe_subsystem->ipc, FALSE, pe_msg_dispatch, NULL, 
+		pe_connection_destroy);
 	    
 	} else {
 	    crm_info("Ignoring request to start %s while shutting down",
@@ -233,6 +259,7 @@ do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 	fsa_pe_ref = crm_element_value_copy(cmd, XML_ATTR_REFERENCE);
 	if(send_ipc_message(pe_subsystem->ipc, cmd) == FALSE) {
 	    crm_err("Could not contact the pengine");
+	    register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
 	}
 	
 	crm_debug("Invoking the PE: ref=%s, seq=%llu, quorate=%d",
