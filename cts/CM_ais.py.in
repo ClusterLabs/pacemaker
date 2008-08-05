@@ -186,6 +186,7 @@ class crm_ais(LinuxHAv2):
                     "cib_native_msgready: Message pending on command channel",
                     "crmd:.*do_exit: Performing A_EXIT_1 - forcefully exiting the CRMd",
                     "verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
+                    "ERROR: stonithd_op_result_ready: not signed on",
             ]
 
         stonith_ignore = [
@@ -224,11 +225,13 @@ class crm_ais(LinuxHAv2):
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
-                    "State transition S_IDLE",
+# Only if the node wasn't the DC:  "State transition S_IDLE",
+                    "State transition .* -> S_IDLE",
                     "State transition S_STARTING -> S_PENDING",
                     ], [], common_ignore, 0, self))
 
-        complist.append(Process("pengine", 1, [
+        complist.append(Process("pengine", 0, [
+                    ], [
                     "State transition S_IDLE",
                     "Respawning .* crmd",
                     "Child process crmd exited .* rc=2",
@@ -236,11 +239,11 @@ class crm_ais(LinuxHAv2):
                     "crmd: .*Input I_ERROR from pe_connection_destroy",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], common_ignore, 0, self))
+                    ], common_ignore, 0, self))
 
         if self.Env["DoFencing"] == 1 :
             complist.append(Process("stonithd", 0, [], [
-                        "tengine_stonith_connection_destroy: Fencing daemon has left us",
+                        "tengine_stonith_connection_destroy: Fencing daemon connection failed",
                         "Attempting connection to fencing daemon",
                         "te_connect_stonith: Connected",
                         ], stonith_ignore, 0, self))
