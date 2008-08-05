@@ -34,6 +34,45 @@
 GCHSource *stonith_src = NULL;
 GTRIGSource *stonith_reconnect = NULL;
 
+static void
+tengine_stonith_connection_destroy(gpointer user_data)
+{
+    if(stonith_src == NULL) {
+	crm_info("Fencing daemon disconnected");
+
+    } else {
+	crm_crit("Fencing daemon connection failed");	
+	G_main_set_trigger(stonith_reconnect);
+    }
+
+    /* cbchan will be garbage at this point, arrange for it to be reset */
+    set_stonithd_input_IPC_channel_NULL(); 
+    stonith_src = NULL;
+    return;
+}
+
+static gboolean
+tengine_stonith_dispatch(IPC_Channel *sender, void *user_data)
+{
+    while(stonithd_op_result_ready()) {
+	if (sender->ch_status != IPC_CONNECT) {
+	    /* The message which was pending for us is that
+	     * the IPC status is now IPC_DISCONNECT */
+	    break;
+	}
+	
+	if(ST_FAIL == stonithd_receive_ops_result(FALSE)) {
+	    crm_err("stonithd_receive_ops_result() failed");
+	}
+    }
+    
+    if (sender->ch_status != IPC_CONNECT) {
+	tengine_stonith_connection_destroy(NULL);
+	return FALSE;
+    }
+    return TRUE;
+}
+
 gboolean
 te_connect_stonith(gpointer user_data)
 {

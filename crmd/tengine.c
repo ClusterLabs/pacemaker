@@ -86,30 +86,38 @@ do_te_control(long long action,
 	    destroy_graph(transition_graph);
 	    transition_graph = NULL;
 	}
+
 	if(fsa_cib_conn && cib_ok != fsa_cib_conn->cmds->del_notify_callback(
 	       fsa_cib_conn, T_CIB_DIFF_NOTIFY, te_update_diff)) {
 	    crm_err("Could not set CIB notification callback");
 	    init_ok = FALSE;
 	}
+
 	clear_bit_inplace(fsa_input_register, te_subsystem->flag_connected);
-	crm_debug("Transitioner is now inactive");
+	crm_info("Transitioner is now inactive");
+	
+	if(stonith_src) {
+	    GCHSource *source = stonith_src;
+	    crm_info("Disconnecting STONITH...");
+	    stonith_src = NULL; /* so that we don't try to reconnect */
+	    G_main_del_IPC_Channel(source);
+	    stonithd_signoff();	    
+	}
     }
 
-    if((action & A_TE_START) && cur_state == S_STOPPING) {
+    if((action & A_TE_START) == 0) {
+	return;
+
+    } else if(is_set(fsa_input_register, te_subsystem->flag_connected)) {
+	crm_debug("The transitioner is already active");
+	return;
+
+    } else if((action & A_TE_START) && cur_state == S_STOPPING) {
 	crm_info("Ignoring request to start %s while shutting down",
 		 te_subsystem->name);
 	return;
-    }
-	
-    if((action & A_TE_START) == 0) {
-	return;
     }	
 
-    if(is_set(fsa_input_register, te_subsystem->flag_connected)) {
-	crm_debug("Internal TE is already active");
-	return;
-    }
-    
     cl_uuid_generate(&new_uuid);
     cl_uuid_unparse(&new_uuid, uuid_str);
     te_uuid = crm_strdup(uuid_str);
@@ -141,11 +149,9 @@ do_te_control(long long action,
 	init_ok = FALSE;
     }
     
-    if(is_heartbeat_cluster() && init_ok) {
-	G_main_set_trigger(stonith_reconnect);
-    }
-		    
     if(init_ok) {
+	G_main_set_trigger(stonith_reconnect);
+
 	set_graph_functions(&te_graph_fns);
 
 	if(transition_graph) {
