@@ -203,7 +203,7 @@ class crm_ais(LinuxHAv2):
                     "Lost connection to the CIB service",
                     "Connection to the CIB terminated...",
                     "Child process crmd exited .* rc=2",
-                    "Child process attrd exited .* rc=2",
+                    "Child process attrd exited .* rc=1",
                     "State transition S_STARTING -> S_PENDING",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
@@ -232,6 +232,8 @@ class crm_ais(LinuxHAv2):
                     "State transition S_IDLE",
                     "Respawning .* crmd",
                     "Child process crmd exited .* rc=2",
+                    "crmd: .*pe_connection_destroy: Connection to the Policy Engine failed",
+                    "crmd: .*Input I_ERROR from pe_connection_destroy",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
                     ], [], common_ignore, 0, self))
