@@ -275,7 +275,11 @@ do_election_count_vote(long long action,
 	crm_info("Election check: %s from %s", op, vote_from);
 	your_version   = crm_element_value(vote->msg, F_CRM_VERSION);
 
-	if(our_node == NULL || safe_str_neq(our_node->state, CRM_NODE_MEMBER)) {
+	if(cur_state != S_STARTING) {
+		reason = "still starting";
+		we_loose = TRUE;
+	
+	} else if(our_node == NULL || safe_str_neq(our_node->state, CRM_NODE_MEMBER)) {
 		reason = "we don't exist in CCM";
 		we_loose = TRUE;
 
@@ -325,7 +329,7 @@ do_election_count_vote(long long action,
 			crm_debug_3("Give up the DC to %s", vote_from);
 			register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
 			
-		} else {
+		} else if(cur_state != S_STARTING) {
 			crm_debug_3("We werent the DC anyway");
 			register_fsa_input(C_FSA_INTERNAL, I_PENDING, NULL);
 		}
