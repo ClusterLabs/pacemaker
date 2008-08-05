@@ -529,14 +529,14 @@ cib_native_rcvmsg(cib_t* cib, int blocking)
 	} else if (cib_native_msgready(cib) == FALSE) {
 		crm_debug("Waiting for message from CIB service...");
 		if(native->callback_channel == NULL) {
-			return 0;
+			return -1;
 			
 		} else if(native->callback_channel->ch_status != IPC_CONNECT) {
-			return 0;
+			return -2;
 			
 		} else if(native->command_channel
 			  && native->command_channel->ch_status != IPC_CONNECT){
-			return 0;
+			return -3;
 		}
 		native->callback_channel->ops->waitin(native->callback_channel);
 	}
@@ -570,50 +570,44 @@ cib_native_rcvmsg(cib_t* cib, int blocking)
 gboolean
 cib_native_dispatch(IPC_Channel *channel, gpointer user_data)
 {
-	int lpc = 0;
-	cib_t *cib = user_data;
-	cib_native_opaque_t *native = NULL;
+    cib_t *cib = user_data;
+    cib_native_opaque_t *native = NULL;
+    gboolean stay_connected = TRUE;
+    
+    CRM_CHECK(cib != NULL, return FALSE);
+    
+    native = cib->variant_opaque;
+    CRM_CHECK(native->callback_channel == channel, return FALSE);
+    
+    while(cib_native_msgready(cib)) {
+	/* invoke the callbacks but dont block */
+	int rc = cib_native_rcvmsg(cib, 0);
+	if( rc < 0) {
+	    crm_err("Message acquisition failed: %d", rc);
+	    break;
 
-	crm_debug_3("Received callback");
-
-	if(user_data == NULL){
-		crm_err("user_data field must contain the CIB struct");
-		return FALSE;
+	} else if(rc == 0) {
+	    break;
 	}
+    }
+    
+    if(native->callback_channel
+       && native->callback_channel->ch_status != IPC_CONNECT) {
+	crm_crit("Lost connection to the CIB service [%d/callback].",
+		 channel->farside_pid);
+	native->callback_source = NULL;
+	stay_connected = FALSE;
+    }
+    
+    if(native->command_channel
+       && native->command_channel->ch_status != IPC_CONNECT) {
+	crm_crit("Lost connection to the CIB service [%d/command].",
+		 channel->farside_pid);
+	native->callback_source = NULL;
+	stay_connected = FALSE;
+    }
 
-	native = cib->variant_opaque;
-	
-	while(cib_native_msgready(cib)) {
- 		lpc++; 
-		/* invoke the callbacks but dont block */
-		if(cib_native_rcvmsg(cib, 0) < 1) {
-			break;
-		}
-	}
-
-	crm_debug_3("%d CIB messages dispatched", lpc);
-
-	if(native->callback_channel
-	   && native->callback_channel->ch_status != IPC_CONNECT) {
-		crm_crit("Lost connection to the CIB service [%d/callback].",
-			channel->farside_pid);
-
-		if(native->callback_source != NULL) {
-		    G_main_del_IPC_Channel(native->callback_source);
-		    native->callback_source = NULL;
-		}
-
-		return FALSE;
-
-	} else if(native->command_channel
-		  && native->command_channel->ch_status != IPC_CONNECT) {
-		crm_crit("Lost connection to the CIB service [%d/command].",
-			channel->farside_pid);
-
-		return FALSE;
-	}
-
-	return TRUE;
+    return stay_connected;
 }
 
 static void
