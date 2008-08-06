@@ -1133,43 +1133,66 @@ add_message_xml(xmlNode *msg, const char *field, xmlNode *xml)
     return TRUE;
 }
 
+static char *
+dump_xml(xmlNode *an_xml_node, gboolean formatted)
+{
+    int len = 0;
+    char *buffer = NULL;
+    xmlNode *top = NULL;
+    xmlChar *xml_buffer = NULL;
+    xmlDoc *doc = getDocPtr(an_xml_node);
+
+    if(an_xml_node == NULL) {
+	return NULL;
+    }
+
+    top = xmlDocGetRootElement(doc);
+    if(top != an_xml_node) {
+	doc = xmlNewDoc((const xmlChar*)"1.0");
+	xmlDocSetRootElement(doc, an_xml_node);
+    }
+    
+    xmlDocDumpFormatMemory(doc, &xml_buffer, &len, formatted);
+
+    if(len > 0) {
+	buffer = crm_strdup((char *)xml_buffer);
+	xmlFree(xml_buffer);
+
+    } else {
+	/* fallback to our custom function */
+	int max = 1024;
+	crm_err("Failed to unparse (%s) child %s - falling back to custom implementation",
+		formatted?"formatted":"unformatted",
+		xmlGetNodePath(an_xml_node));
+	crm_malloc0(buffer, max);
+	
+	crm_validate_data(an_xml_node);
+	CRM_CHECK(dump_data_element(
+		      0, &buffer, &max, &len, NULL, an_xml_node, formatted) >= 0,
+		  crm_crit("Could not dump the whole message"));
+    }
+
+    if(top != an_xml_node) {
+	top = xmlNewDocRawNode(doc, NULL, (const xmlChar*)"dummy", NULL);
+	xmlDocSetRootElement(doc, top);
+	free_xml(top);
+    }
+    
+    return buffer;    
+}
+
 char *
 dump_xml_formatted(xmlNode *an_xml_node)
 {
-    int max = 1024, len = 0;
-    char *buffer = NULL;
-    if(an_xml_node == NULL) {
-	return NULL;
-    }
-    crm_malloc0(buffer, max);
-    
-    crm_validate_data(an_xml_node);
-    CRM_CHECK(dump_data_element(
-		  0, &buffer, &max, &len, NULL, an_xml_node, TRUE) >= 0,
-	      crm_crit("Could not dump the whole message"));
-    crm_debug_4("Dumped: %s", buffer);
-    return buffer;
+    return dump_xml(an_xml_node, TRUE);
 }
-	
+
 char *
 dump_xml_unformatted(xmlNode *an_xml_node)
 {
-    int max = 1024, len = 0;
-    char *buffer     = NULL;
-    if(an_xml_node == NULL) {
-	return NULL;
-    }
-    
-    crm_malloc0(buffer, max);
-    crm_validate_data(an_xml_node);
-    CRM_CHECK(dump_data_element(
-		  0, &buffer, &max, &len, NULL, an_xml_node, FALSE) >= 0,
-	      crm_crit("Could not dump the whole message"));
-    
-    crm_debug_4("Dumped: %s", buffer);
-    return buffer;
+    return dump_xml(an_xml_node, FALSE);
 }
-
+    
 #define update_buffer_head_old(buffer, len) if(len < 0) {	\
 	(*buffer) = EOS; return -1;				\
     } else {							\
@@ -2786,7 +2809,14 @@ get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level)
 	}
 
     } else {
-	result = xpathObj->nodesetval->nodeTab[0];
+	xmlNode *match = xpathObj->nodesetval->nodeTab[0];
+	CRM_CHECK(match != NULL, continue);
+	
+	if(match->type == XML_DOCUMENT_NODE) {
+	    /* Will happen if section = '/' */
+	    match = match->children;
+	}
+	result = match;
 	CRM_CHECK(result->type == XML_ELEMENT_NODE, result = NULL);
     }
     
