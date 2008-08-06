@@ -1749,7 +1749,7 @@ class ComponentFail(CTSTest):
         while chosen.dc_only == 1 and node_is_dc == 0:
             chosen = self.CM.Env.RandomGen.choice(self.complist)
 
-        self.CM.log("...component %s (dc=%d,boot=%d)" % (chosen.name, node_is_dc,chosen.triggersreboot))
+        self.CM.debug("...component %s (dc=%d,boot=%d)" % (chosen.name, node_is_dc,chosen.triggersreboot))
         self.incr(chosen.name)
         
         self.patterns.append(self.CM["Pat:ChildKilled"] %(node, chosen.name))
