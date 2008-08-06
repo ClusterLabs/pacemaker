@@ -44,7 +44,7 @@ main(int argc, char ** argv)
     xmlNode *top = NULL;
     xmlNode *xml = NULL;
     const char *xml_file = NULL;
-    const char *input_file = NULL;
+    const char *xpath = NULL;
     
     crm_log_init("atest", LOG_DEBUG, FALSE, TRUE, argc, argv);
     while (1) {
@@ -85,7 +85,7 @@ main(int argc, char ** argv)
 		xml_file = optarg;
 		break;
 	    case 'I':
-		input_file = optarg;
+		xpath = optarg;
 		break;
 	    case '?':
 		/* usage("ptest", 0); */
@@ -98,13 +98,17 @@ main(int argc, char ** argv)
 
     top = filename2xml(xml_file);
     validate_xml(top, NULL, FALSE);
-    xml = get_xpath_object(input_file, top, LOG_ERR);
-    /* crm_log_xml_info(xml, "fixed"); */
-    {
+
+    if(xpath) {
+	xml = get_xpath_object(xpath, top, LOG_ERR);	
+    }
+    
+    if(xml) {
 	char *buf = dump_xml_formatted(xml);
 	printf("%s\n", buf);
 	crm_free(buf);
     }
+
     free_xml(top);
     return 0;
 }
