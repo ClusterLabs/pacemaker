@@ -1140,6 +1140,7 @@ dump_xml(xmlNode *an_xml_node, gboolean formatted)
     char *buffer = NULL;
     xmlNode *top = NULL;
     xmlChar *xml_buffer = NULL;
+    xmlNode *parent = NULL;
     xmlDoc *doc = getDocPtr(an_xml_node);
 
     if(an_xml_node == NULL) {
@@ -1148,6 +1149,7 @@ dump_xml(xmlNode *an_xml_node, gboolean formatted)
 
     top = xmlDocGetRootElement(doc);
     if(top != an_xml_node) {
+	parent = an_xml_node->parent;
 	doc = xmlNewDoc((const xmlChar*)"1.0");
 	xmlDocSetRootElement(doc, an_xml_node);
     }
@@ -1157,25 +1159,13 @@ dump_xml(xmlNode *an_xml_node, gboolean formatted)
     if(len > 0) {
 	buffer = crm_strdup((char *)xml_buffer);
 	xmlFree(xml_buffer);
-
-    } else {
-	/* fallback to our custom function */
-	int max = 1024;
-	crm_err("Failed to unparse (%s) child %s - falling back to custom implementation",
-		formatted?"formatted":"unformatted",
-		xmlGetNodePath(an_xml_node));
-	crm_malloc0(buffer, max);
-	
-	crm_validate_data(an_xml_node);
-	CRM_CHECK(dump_data_element(
-		      0, &buffer, &max, &len, NULL, an_xml_node, formatted) >= 0,
-		  crm_crit("Could not dump the whole message"));
     }
 
-    if(top != an_xml_node) {
-	top = xmlNewDocRawNode(doc, NULL, (const xmlChar*)"dummy", NULL);
-	xmlDocSetRootElement(doc, top);
-	free_xml(top);
+    if(parent) {
+	xmlUnlinkNode(an_xml_node);
+	xmlSetTreeDoc(an_xml_node, parent->doc);
+	xmlAddChild(parent, an_xml_node);	
+	xmlFreeDoc(doc);
     }
     
     return buffer;    
@@ -2790,6 +2780,35 @@ xmlNode *expand_idref(xmlNode *input)
     return result;
 }
 
+xmlNode*
+get_xpath_object_relative(const char *xpath, xmlNode *xml_obj, int error_level)
+{
+    xmlNode *top = NULL;
+    xmlNode *result = NULL;
+    xmlNode *parent = NULL;
+    xmlDoc *doc = getDocPtr(xml_obj);
+
+    if(xml_obj == NULL) {
+	return NULL;
+    }
+
+    top = xmlDocGetRootElement(doc);
+    if(top != xml_obj) {
+	parent = xml_obj->parent;
+	doc = xmlNewDoc((const xmlChar*)"1.0");
+	xmlDocSetRootElement(doc, xml_obj);
+    }
+    
+    result = get_xpath_object(xpath, xml_obj, error_level);
+
+    if(parent) {
+	xmlUnlinkNode(xml_obj);
+	xmlSetTreeDoc(xml_obj, parent->doc);
+	xmlAddChild(parent, xml_obj);	
+	xmlFreeDoc(doc);
+    }
+    return result;
+}
 
 xmlNode*
 get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level)
