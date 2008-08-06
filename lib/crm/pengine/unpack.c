@@ -745,7 +745,7 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		}
 
 		native_add_running(rsc, node, data_set);
-
+#if 0
 		if(is_set(rsc->flags, pe_rsc_managed) && rsc->stickiness != 0) {
 		    node_t *match = pe_find_node_id(rsc->allowed_nodes, node->details->id);
 
@@ -765,7 +765,7 @@ process_rsc_state(resource_t *rsc, node_t *node,
 				  rsc->id, node->details->uname);
 		    }
 		}
-	
+#endif
 		if(on_fail == action_fail_ignore) {
 			/* nothing to do */
 		} else if(node->details->unclean) {
@@ -1000,11 +1000,6 @@ unpack_lrm_resources(node_t *node, crm_data_t * lrm_rsc_list, pe_working_set_t *
 
 	crm_debug_3("Unpacking resources on %s", node->details->uname);
 
-	slist_iter(
-	    rsc, resource_t, data_set->resources, lpc,
-	    common_apply_stickiness(rsc, node, data_set);
-	    );
-	
 	xml_child_iter_filter(
 		lrm_rsc_list, rsc_entry, XML_LRM_TAG_RESOURCE,
 		unpack_lrm_rsc_state(node, rsc_entry, data_set);

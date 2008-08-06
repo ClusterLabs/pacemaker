@@ -354,6 +354,33 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 		rsc->stickiness = data_set->default_resource_stickiness;
 	}
 
+	if(is_set(rsc->flags, pe_rsc_managed)
+	   && rsc->stickiness != 0
+	   && g_list_length(rsc->running_on) == 1) {
+	    node_t *current = pe_find_node_id(rsc->running_on, node->details->id);
+	    node_t *match = pe_find_node_id(rsc->allowed_nodes, node->details->id);
+
+	    if(current == NULL) {
+		
+	    } else if(match != NULL || data_set->symmetric_cluster) {
+		resource_t *sticky_rsc = rsc;
+		if(rsc->parent && rsc->parent->variant == pe_group) {
+		    sticky_rsc = rsc->parent;
+		}
+		
+		resource_location(sticky_rsc, node, rsc->stickiness, "stickiness", data_set);
+		crm_debug("Resource %s: preferring current location"
+			    " (node=%s, weight=%d)", sticky_rsc->id,
+			    node->details->uname, rsc->stickiness);
+	    } else {
+		crm_debug("Ignoring stickiness for %s: the cluster is asymmetric"
+			  " and node %s is not explicitly allowed",
+			  rsc->id, node->details->uname);
+		slist_iter(node, node_t, rsc->allowed_nodes, lpc,
+			   crm_err("%s[%s] = %d", rsc->id, node->details->uname, node->weight));
+	    }
+	}
+	
 	value = g_hash_table_lookup(meta_hash, XML_RSC_ATTR_FAIL_STICKINESS);
 	if(value != NULL && safe_str_neq("default", value)) {
 		rsc->fail_stickiness = char2score(value);

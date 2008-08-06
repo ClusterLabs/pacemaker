@@ -551,6 +551,13 @@ stage2(pe_working_set_t *data_set)
 
 	apply_placement_constraints(data_set);
 
+	slist_iter(node, node_t, data_set->nodes, lpc,
+		   slist_iter(
+		       rsc, resource_t, data_set->resources, lpc2,
+		       common_apply_stickiness(rsc, node, data_set);
+		       );
+	    );
+	
 	return TRUE;
 }
 
