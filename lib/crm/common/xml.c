@@ -2306,6 +2306,7 @@ calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
 	unsigned char *raw_digest = NULL;
 	xmlNode *sorted = NULL;
 	char *buffer = NULL;
+	char *buffer_top = NULL;
 	size_t buffer_len = 0;
 
 	if(sort || do_filter) {
@@ -2317,9 +2318,20 @@ calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
 	if(do_filter) {
 	    filter_xml(sorted, filter, DIMOF(filter), TRUE);
 	}
-	
-	buffer = dump_xml_formatted(sorted);
-	buffer_len = strlen(buffer);
+
+	buffer_top = dump_xml_unformatted(sorted);
+	if(buffer_top) {
+
+	    /* strip off the xml header */
+	    buffer = strchr(buffer_top, '\n');
+
+	    if(buffer) {
+		*buffer = ' ';
+	    } else {
+		buffer = buffer_top;
+	    }
+	    buffer_len = strlen(buffer);
+	}
 	
 	CRM_CHECK(buffer != NULL && buffer_len > 0,
 		  free_xml(sorted); return NULL);
@@ -2333,7 +2345,7 @@ calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
 	digest[(2*digest_len)] = 0;
 	crm_debug_2("Digest %s: %s\n", digest, buffer);
 	crm_log_xml(LOG_DEBUG_3,  "digest:source", sorted);
-	crm_free(buffer);
+	crm_free(buffer_top);
 	crm_free(raw_digest);
 	free_xml(sorted);
 	return digest;
