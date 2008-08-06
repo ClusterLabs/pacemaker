@@ -41,6 +41,7 @@ int
 main(int argc, char ** argv)
 {
     int flag;
+    xmlNode *top = NULL;
     xmlNode *xml = NULL;
     const char *xml_file = NULL;
     const char *input_file = NULL;
@@ -95,10 +96,16 @@ main(int argc, char ** argv)
 	}
     }
 
-    xml = filename2xml(xml_file);
-    xml = get_xpath_object(input_file, xml, LOG_ERR);
-    crm_log_xml_info(xml, "fixed");
-    
+    top = filename2xml(xml_file);
+    validate_xml(top, NULL, FALSE);
+    xml = get_xpath_object(input_file, top, LOG_ERR);
+    /* crm_log_xml_info(xml, "fixed"); */
+    {
+	char *buf = dump_xml_formatted(xml);
+	printf("%s\n", buf);
+	crm_free(buf);
+    }
+    free_xml(top);
     return 0;
 }
 
