@@ -230,10 +230,10 @@ def cib_resource(doc,user_res_id,index, rsc):
 					try :
 						int(param)
 						#netmask bits
-						params[1] = param
+						params[2] = param
 					except ValueError:
 						#nic
-						params[2] = param
+						params[1] = param
 			for i in range(0,len(params)) :
 				if params[i] == None :
 					continue
