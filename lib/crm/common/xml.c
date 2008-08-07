@@ -1138,36 +1138,25 @@ dump_xml(xmlNode *an_xml_node, gboolean formatted)
 {
     int len = 0;
     char *buffer = NULL;
-    xmlNode *top = NULL;
-    xmlChar *xml_buffer = NULL;
-    xmlNode *parent = NULL;
+    xmlBuffer *xml_buffer = NULL;
     xmlDoc *doc = getDocPtr(an_xml_node);
 
-    if(an_xml_node == NULL) {
-	return NULL;
-    }
+    /* doc will only be NULL if an_xml_node is */
+    CRM_CHECK(doc != NULL, return NULL);
 
-    top = xmlDocGetRootElement(doc);
-    if(top != an_xml_node) {
-	parent = an_xml_node->parent;
-	doc = xmlNewDoc((const xmlChar*)"1.0");
-	xmlDocSetRootElement(doc, an_xml_node);
-    }
+    xml_buffer = xmlBufferCreate();
+    CRM_ASSERT(xml_buffer != NULL);
     
-    xmlDocDumpFormatMemory(doc, &xml_buffer, &len, formatted);
+    len = xmlNodeDump(xml_buffer, doc, an_xml_node, 0, formatted);
 
     if(len > 0) {
-	buffer = crm_strdup((char *)xml_buffer);
-	xmlFree(xml_buffer);
+	buffer = crm_strdup((char *)xml_buffer->content);
+	
+    } else {
+	crm_err("Conversion failed");
     }
 
-    if(parent) {
-	xmlUnlinkNode(an_xml_node);
-	xmlSetTreeDoc(an_xml_node, parent->doc);
-	xmlAddChild(parent, an_xml_node);	
-	xmlFreeDoc(doc);
-    }
-    
+    xmlBufferFree(xml_buffer);
     return buffer;    
 }
 
