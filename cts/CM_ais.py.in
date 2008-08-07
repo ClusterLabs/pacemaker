@@ -113,6 +113,7 @@ class crm_ais(LinuxHAv2):
         if 1:
             return [ 
                 "crmadmin:",
+                "async_notify: strange, client not found",
                 "ERROR: Message hist queue is filling up"
                 ]
         return []
