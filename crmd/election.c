@@ -275,7 +275,7 @@ do_election_count_vote(long long action,
 	crm_info("Election check: %s from %s", op, vote_from);
 	your_version   = crm_element_value(vote->msg, F_CRM_VERSION);
 
-	if(cur_state != S_STARTING) {
+	if(cur_state == S_STARTING) {
 		reason = "still starting";
 		we_loose = TRUE;
 	
