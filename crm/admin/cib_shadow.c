@@ -57,6 +57,11 @@ const char *cib_action = NULL;
 
 cib_t *real_cib = NULL;
 
+int dump_data_element(
+    int depth, char **buffer, int *max, int *offset, const char *prefix, xmlNode *data, gboolean formatted);
+
+void print_xml_diff(FILE *where, xmlNode *diff);
+
 static int force_flag = 0;
 #define OPTARGS	"V?wc:dr:C:D:ps:l"
 
@@ -343,3 +348,140 @@ usage(const char *cmd, int exit_status)
 
     exit(exit_status);
 }
+
+#define bhead(buffer, offset) ((*buffer) + (*offset)) 
+#define bremain(max, offset) ((*max) - (*offset)) 
+#define update_buffer_head(len) do {					\
+	int total = (*offset) + len + 1;				\
+	if(total >= (*max)) { /* too late */				\
+	    (*buffer) = EOS; return -1;					\
+	} else if(((*max) - total) < 256) {				\
+	    (*max) *= 10;						\
+	    crm_realloc(*buffer, (*max));				\
+	}								\
+	(*offset) += len;						\
+    } while(0)
+
+extern int print_spaces(char *buffer, int depth, int max);
+
+int
+dump_data_element(
+    int depth, char **buffer, int *max, int *offset, const char *prefix, xmlNode *data, gboolean formatted) 
+{
+    int printed = 0;
+    int has_children = 0;
+    const char *name = NULL;
+    
+    CRM_CHECK(data != NULL, return 0);
+    
+    name = crm_element_name(data);
+    
+    CRM_CHECK(name != NULL, return 0);
+    CRM_CHECK(buffer != NULL && *buffer != NULL, return 0);
+    
+    crm_debug_5("Dumping %s...", name);
+
+    if(prefix) {
+	printed = snprintf(bhead(buffer, offset), bremain(max, offset), "%s", prefix);
+	update_buffer_head(printed);
+    }
+
+    if(formatted) {
+	printed = print_spaces(bhead(buffer, offset), depth, bremain(max, offset));
+	update_buffer_head(printed);
+    }
+    
+    printed = snprintf(bhead(buffer, offset), bremain(max, offset), "<%s", name);
+    update_buffer_head(printed);
+    
+    xml_prop_iter(data, prop_name, prop_value,
+		  crm_debug_5("Dumping <%s %s=\"%s\"...",
+			      name, prop_name, prop_value);
+		  printed = snprintf(bhead(buffer, offset), bremain(max, offset),  " %s=\"%s\"", prop_name, prop_value);
+		  update_buffer_head(printed);
+	);
+    
+    has_children = xml_has_children(data);
+    printed = snprintf(bhead(buffer, offset), bremain(max, offset),  "%s>%s",
+		       has_children==0?"/":"", formatted?"\n":"");
+    update_buffer_head(printed);
+    
+    if(has_children == 0) {
+	return 0;
+    }
+    
+    xml_child_iter(data, child, 
+		   if(dump_data_element(depth+1, buffer, max, offset, prefix, child, formatted) < 0) {
+		       return -1;
+		   }
+	);
+    
+    if(prefix) {
+	printed = snprintf(bhead(buffer, offset), bremain(max, offset), "%s", prefix);
+	update_buffer_head(printed);
+    }
+
+    if(formatted) {
+	printed = print_spaces(bhead(buffer, offset), depth, bremain(max, offset));
+	update_buffer_head(printed);
+    }
+    
+    printed = snprintf(bhead(buffer, offset), bremain(max, offset),  "</%s>%s", name, formatted?"\n":"");
+    update_buffer_head(printed);
+    crm_debug_5("Dumped %s...", name);
+    
+    return has_children;
+}
+
+void
+print_xml_diff(FILE *where, xmlNode *diff)
+{
+	char *buffer = NULL;
+	int max = 1024, len = 0;
+	gboolean is_first = TRUE;
+	xmlNode *added = find_xml_node(diff, "diff-added", FALSE);
+	xmlNode *removed = find_xml_node(diff, "diff-removed", FALSE);
+
+	is_first = TRUE;
+	xml_child_iter(
+		removed, child, 
+
+		len = 0;
+		max = 1024;
+		crm_free(buffer);
+		crm_malloc0(buffer, max);
+
+		if(is_first) {
+		    is_first = FALSE;
+		} else {
+		    fprintf(where, " --- \n");
+		}
+
+		CRM_CHECK(dump_data_element(
+			      0, &buffer, &max, &len, "-", child, TRUE) >= 0,
+			  continue);
+		fprintf(where, "%s", buffer);
+		);
+
+	is_first = TRUE;
+	xml_child_iter(
+		added, child, 
+
+		len = 0;
+		max = 1024;
+		crm_free(buffer);
+		crm_malloc0(buffer, max);
+
+		if(is_first) {
+		    is_first = FALSE;
+		} else {
+		    fprintf(where, " +++ \n");
+		}
+
+		CRM_CHECK(dump_data_element(
+			      0, &buffer, &max, &len, "+", child, TRUE) >= 0,
+			  continue);
+		fprintf(where, "%s", buffer);
+		);
+}
+

@@ -64,37 +64,6 @@ extern void copy_in_properties(xmlNode *target, xmlNode *src);
 extern void expand_plus_plus(xmlNode* target, const char *name, const char *value);
 extern void fix_plus_plus_recursive(xmlNode* target);
 
-/*
- * Find a child named search_path[i] at level i in the XML fragment where i=0
- * is an immediate child of <i>root</i>.
- *
- * Terminate with success if i == len, or search_path[i] == NULL.
- *
- * On success, returns the sub-fragment described by search_path.
- * On failure, returns NULL.
- */
-extern xmlNode *find_xml_node_nested(
-	xmlNode *root, const char **search_path, int len);
-
-
-/*
- * Find a child named search_path[i] at level i in the XML fragment where i=0
- * is an immediate child of <i>root</i>.
- *
- * Once the last child specified by node_path is found, find the value
- * of attr_name.
- *
- * If <i>error<i> is set to TRUE, then it is an error for the attribute not
- * to be found and the function will log accordingly.
- *
- * On success, returns the value of attr_name.
- * On failure, returns NULL.
- */
-extern const char *get_xml_attr_nested(xmlNode *parent,
-				       const char **node_path, int length,
-				       const char *attr_name, gboolean error);
-
-
 void free_xml_from_parent(xmlNode *parent, xmlNode *a_node);
 #define zap_xml_from_parent(parent, xml_obj) free_xml_from_parent(parent, xml_obj); xml_obj = NULL
 
