@@ -2506,30 +2506,26 @@ xmlNode *expand_idref(xmlNode *input)
 xmlNode*
 get_xpath_object_relative(const char *xpath, xmlNode *xml_obj, int error_level)
 {
-    xmlNode *top = NULL;
+    int len = 0;
     xmlNode *result = NULL;
-    xmlNode *parent = NULL;
-    xmlDoc *doc = getDocPtr(xml_obj);
-
-    if(xml_obj == NULL) {
+    char *xpath_full = NULL;
+    const char *xpath_prefix = NULL;
+    
+    if(xml_obj == NULL || xpath == NULL) {
 	return NULL;
     }
 
-    top = xmlDocGetRootElement(doc);
-    if(top != xml_obj) {
-	parent = xml_obj->parent;
-	doc = xmlNewDoc((const xmlChar*)"1.0");
-	xmlDocSetRootElement(doc, xml_obj);
-    }
-    
+    xpath_prefix = (const char *)xmlGetNodePath(xml_obj);
+    len += strlen(xpath_prefix);
+    len += strlen(xpath);
+
+    xpath_full = crm_strdup(xpath_prefix);
+    crm_realloc(xpath_full, len+1);
+    strncat(xpath_full, xpath, len);
+
     result = get_xpath_object(xpath, xml_obj, error_level);
 
-    if(parent) {
-	xmlUnlinkNode(xml_obj);
-	xmlSetTreeDoc(xml_obj, parent->doc);
-	xmlAddChild(parent, xml_obj);	
-	xmlFreeDoc(doc);
-    }
+    crm_free(xpath_full);
     return result;
 }
 
@@ -2545,7 +2541,7 @@ get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level)
     
     xpathObj = xpath_search(xml_obj, xpath);
     if(xpathObj == NULL || xpathObj->nodesetval == NULL || xpathObj->nodesetval->nodeNr < 1) {
-	crm_debug_2("Object %s not found", xpath);
+	do_crm_log(error_level, "No match for %s", xpath);
 	
     } else if(xpathObj->nodesetval->nodeNr > 1) {
 	int lpc = 0, max = xpathObj->nodesetval->nodeNr;
@@ -2561,6 +2557,7 @@ get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level)
 	    }
 	    do_crm_log(error_level, "%s[%d] = %s", xpath, lpc, xmlGetNodePath(match));
 	}
+	crm_log_xml(error_level, "Bad Input", xml_obj);
 
     } else {
 	xmlNode *match = xpathObj->nodesetval->nodeTab[0];
