@@ -94,7 +94,7 @@ te_update_diff(const char *event, xmlNode *msg)
 	log_cib_diff(LOG_DEBUG_2, diff, op);
 
 	/* Process anything that was added */
-	cib_top = get_xpath_object("//diff/"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB, msg, LOG_ERR);
+	cib_top = get_xpath_object_relative("//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB, diff, LOG_ERR);
 	status = first_named_child(cib_top, XML_CIB_TAG_STATUS);
 
 	if(status != NULL) {
@@ -108,7 +108,7 @@ te_update_diff(const char *event, xmlNode *msg)
 	}
 
 	/* Process anything that was removed */
-	cib_top = get_xpath_object("//diff/"XML_TAG_DIFF_REMOVED"//"XML_TAG_CIB, msg, LOG_ERR);
+	cib_top = get_xpath_object_relative("//"XML_TAG_DIFF_REMOVED"//"XML_TAG_CIB, diff, LOG_DEBUG);
 
 	/* configuration changes */
 	if(need_abort(cib_top)) {
