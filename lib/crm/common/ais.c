@@ -341,13 +341,14 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 	    gboolean do_ask = FALSE;
 	    gboolean do_process = TRUE;
 	    
-	    int seq = 0;
+	    long long seq = 0;
 	    int new_size = 0;
 	    int current_size = crm_active_members();
 
 	    const char *reason = "unknown";
+	    const char *value = crm_element_value(xml, "id");
+	    seq = crm_int_helper(value, NULL);
 
-	    crm_element_value_int(xml, "id", &seq);
 	    crm_debug_2("Received membership %d", seq);
 
 	    xml_child_iter(xml, node,
@@ -378,20 +379,25 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 	    }
 	    
 	    if(do_process) {
-		crm_info("Processing membership %d", seq);
+		static long long last = 0;
+		/* if there is a timer running - let it run
+		 * there is no harm in getting an extra membership message
+		 */
 
+		/* Skip resends */
+		if(last < seq) {
+		    crm_info("Processing membership %d", seq);
+		}
+		    
 /*		crm_log_xml_debug(xml, __PRETTY_FUNCTION__); */
 		if(ais_membership_force) {
 		    ais_membership_force = FALSE;
 		}
-
-		/* if there is a timer running - let it run
-		 * there is no harm in getting an extra membership message
-		 */
 		
 		xml_child_iter(xml, node, crm_update_ais_node(node, seq));
 		crm_calculate_quorum();
-
+		last = seq;
+		
 	    } else if(do_ask) {
 		dispatch = NULL;
 		crm_warn("Pausing to allow membership stability (size %d -> %d): %s",
