@@ -1084,7 +1084,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 /* Got an I_JOIN_OFFER */
 	{
 		/* S_IDLE		==> */	A_WARN|A_CL_JOIN_REQUEST,
-		/* S_ELECTION		==> */	A_WARN,
+		/* S_ELECTION		==> */	A_WARN|A_ELECTION_VOTE,
 		/* S_INTEGRATION	==> */	A_CL_JOIN_REQUEST,
 		/* S_FINALIZE_JOIN	==> */	A_CL_JOIN_REQUEST,
 		/* S_NOT_DC		==> */	A_CL_JOIN_REQUEST|A_DC_TIMER_STOP,
