@@ -906,7 +906,7 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	const char *call_id = crm_element_value(request, F_CIB_CALLID);
 	const char *client = crm_element_value(request, F_CIB_CLIENTNAME);
 
-#ifdef SUPPORT_PRENOTIFY
+#ifdef SUPPORT_POSTNOTIFY
 	cib_post_notify(call_options, op, input, rc, the_cib);
 #endif
 	cib_diff_notify(call_options, client, call_id, op, input, rc, *cib_diff);
