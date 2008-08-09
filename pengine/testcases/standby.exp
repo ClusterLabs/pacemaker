@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
  <transition_graph cluster-delay="5min" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
    <synapse id="0">
      <action_set>
