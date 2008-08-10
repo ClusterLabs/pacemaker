@@ -1018,8 +1018,14 @@ dump_xml(xmlNode *an_xml_node, gboolean formatted)
     len = xmlNodeDump(xml_buffer, doc, an_xml_node, 0, formatted);
 
     if(len > 0) {
+#if 1
+	/* for compatability with the old result which is used for digests */
+	len += 3;
+	crm_malloc0(buffer, len);
+	snprintf(buffer, len, " %s\n", (char *)xml_buffer->content);
+#else
 	buffer = crm_strdup((char *)xml_buffer->content);
-	
+#endif	
     } else {
 	crm_err("Conversion failed");
     }
@@ -2019,7 +2025,6 @@ calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
 	unsigned char *raw_digest = NULL;
 	xmlNode *sorted = NULL;
 	char *buffer = NULL;
-	char *buffer_top = NULL;
 	size_t buffer_len = 0;
 
 	if(sort || do_filter) {
@@ -2032,22 +2037,10 @@ calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
 	    filter_xml(sorted, filter, DIMOF(filter), TRUE);
 	}
 
-	buffer_top = dump_xml_unformatted(sorted);
-	if(buffer_top) {
-
-	    /* strip off the xml header */
-	    buffer = strchr(buffer_top, '\n');
-
-	    if(buffer) {
-		*buffer = ' ';
-	    } else {
-		buffer = buffer_top;
-	    }
-	    buffer_len = strlen(buffer);
-	}
+	buffer = dump_xml_unformatted(sorted);
+	buffer_len = strlen(buffer);
 	
-	CRM_CHECK(buffer != NULL && buffer_len > 0,
-		  free_xml(sorted); return NULL);
+	CRM_CHECK(buffer != NULL && buffer_len > 0, free_xml(sorted); return NULL);
 
 	crm_malloc(digest, (2 * digest_len + 1));
 	crm_malloc(raw_digest, (digest_len + 1));
@@ -2058,7 +2051,7 @@ calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
 	digest[(2*digest_len)] = 0;
 	crm_debug_2("Digest %s: %s\n", digest, buffer);
 	crm_log_xml(LOG_DEBUG_3,  "digest:source", sorted);
-	crm_free(buffer_top);
+	crm_free(buffer);
 	crm_free(raw_digest);
 	free_xml(sorted);
 	return digest;
