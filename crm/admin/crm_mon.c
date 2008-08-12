@@ -437,6 +437,7 @@ void
 wait_for_refresh(int offset, const char *prefix, int msec) 
 {
 	int lpc = msec / 1000;
+	struct timespec sleept = {1 , 0};
 
 	if(as_console == FALSE) {
 		timer_id = Gmain_timeout_add(msec, mon_timer_popped, NULL);
@@ -457,7 +458,9 @@ wait_for_refresh(int offset, const char *prefix, int msec)
 			timer_id = Gmain_timeout_add(
 				1000, mon_timer_popped, NULL);
 		} else {
-			sleep(1);
+			if (nanosleep(&sleept, NULL) != 0) {
+				return;
+			}
 		}
 	}
 }
