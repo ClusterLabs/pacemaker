@@ -46,7 +46,9 @@ extern gboolean send_cluster_message(
 
 extern void destroy_crm_node(gpointer data);
 
-extern crm_node_t *crm_find_node(unsigned int id);
+#define crm_find_node(id) crm_find_peer(id, NULL)
+extern crm_node_t *crm_find_peer(unsigned int id, const char *uname);
+
 extern crm_node_t *crm_update_ais_node(xmlNode *member, long long seq);
 extern void crm_update_peer_proc(
     const char *uname, uint32_t flag, const char *status);

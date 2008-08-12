@@ -469,11 +469,9 @@ static void ais_mark_unseen_peer_dead(
     crm_node_t *node = value;
     if(node->last_seen != membership_seq
 	&& ais_str_eq(CRM_NODE_LOST, node->state) == FALSE) {
-	ais_info("Node %s was not seen in the previous transition",
-		 node->uname);
+	ais_info("Node %s was not seen in the previous transition", node->uname);
 	*changed += update_member(node->id, 0, membership_seq, node->votes,
 				  node->processes, node->uname, CRM_NODE_LOST, NULL);
-	ais_info("Node %s marked dead", node->uname);
     }
 }
 
@@ -555,18 +553,21 @@ void global_confchg_fn (
 	    nodeid, 0, membership_seq, -1, 0, NULL, CRM_NODE_LOST, NULL);
 	ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
     }    
+
+    if(changed && joined_list_entries == 0 && left_list_entries == 0) {
+	crm_err("Something strange happened: %d", changed);
+	changed = 0;
+    }
     
-    if(do_update) {
-	ais_debug_2("Reaping unseen nodes...");
-	g_hash_table_foreach(
-	    membership_list, ais_mark_unseen_peer_dead, &changed);
-	if(member_list_entries > 1) {
-	    /* Used to set born-on in send_cluster_id())
-	     * We need to wait until we have at least one peer since first
-	     * membership id is based on the one before we stopped and isn't reliable
-	     */
-	    have_reliable_membership_id = TRUE;
-	}
+    ais_debug_2("Reaping unseen nodes...");
+    g_hash_table_foreach(membership_list, ais_mark_unseen_peer_dead, &changed);
+
+    if(member_list_entries > 1) {
+	/* Used to set born-on in send_cluster_id())
+	 * We need to wait until we have at least one peer since first
+	 * membership id is based on the one before we stopped and isn't reliable
+	 */
+	have_reliable_membership_id = TRUE;
     }
     
     if(changed) {

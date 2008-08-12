@@ -248,6 +248,8 @@ int update_member(unsigned int id, uint64_t born, uint64_t seq, int32_t votes,
     if(born != 0) {
 	changed = TRUE;
 	node->born = born;
+	ais_info("%p Node %u (%s) born on: %llu",
+		 node, id, uname, (unsigned long long)born);
     }
 
     if(version != NULL) {
@@ -315,38 +317,48 @@ const char *member_uname(uint32_t id)
      return node->uname;
 }
 
-#define MEMBER_FORMAT "<node id=\"%u\" uname=\"%s\" state=\"%s\" born=\"%llu\" seen=\"%llu\" votes=\"%d\" processes=\"%u\" addr=\"%s\" version=\"%s\"/>"
-
 char *append_member(char *data, crm_node_t *node)
 {
     int size = 1; /* nul */
     int offset = 0;
+    static int fixed_len = 4 + 8 + 7 + 6 + 6 + 7 + 11;
 
-    if(node->uname == NULL) {
-	return data;
-    }
-    
     if(data) {
 	size = strlen(data);
     }
     offset = size;
 
-    size += strlen(MEMBER_FORMAT);
+    size += fixed_len;
     size += 32; /* node->id */
     size += 100; /* node->seq, node->born */
-    size += strlen(node->uname);
     size += strlen(node->state);
-    data = realloc(data, size);
+    if(node->uname) {
+	size += (7 + strlen(node->uname));
+    }
     if(node->addr) {
-	size += strlen(node->addr);
+	size += (6 + strlen(node->addr));
     }
     if(node->version) {
-	size += strlen(node->version);
+	size += (9 + strlen(node->version));
     }
+    data = realloc(data, size);
 
-    sprintf(data+offset, MEMBER_FORMAT,
-	    node->id, node->uname, node->state, node->born, node->last_seen,
-	    node->votes, node->processes, node->addr?node->addr:"", node->version?node->version:"0");
+    offset += snprintf(data + offset, size - offset, "<node id=\"%u\" ", node->id);
+    if(node->uname) {
+	offset += snprintf(data + offset, size - offset, "uname=\"%s\" ", node->uname);
+    }
+    offset += snprintf(data + offset, size - offset, "state=\"%s\" ", node->state);
+    offset += snprintf(data + offset, size - offset, "born=\"%llu\" ", node->born);
+    offset += snprintf(data + offset, size - offset, "seen=\"%llu\" ", node->last_seen);
+    offset += snprintf(data + offset, size - offset, "votes=\"%d\" ", node->votes);
+    offset += snprintf(data + offset, size - offset, "processes=\"%u\" ", node->processes);
+    if(node->addr) {
+	offset += snprintf(data + offset, size - offset, "addr=\"%s\" ", node->addr);
+    }
+    if(node->version) {
+	offset += snprintf(data + offset, size - offset, "version=\"%s\" ", node->version);
+    }
+    offset += snprintf(data + offset, size - offset, "/>");
 
     return data;
 }

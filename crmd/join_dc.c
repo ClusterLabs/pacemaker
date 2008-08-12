@@ -254,6 +254,13 @@ do_dc_join_offer_one(long long action,
 		    "without a host to reply to!");
 	    return;
 	}
+
+	member = crm_find_peer(0, join_to);
+	if(member == NULL || crm_is_member_active(member) == FALSE) {
+	    crm_err("Attempt to send welcome message "
+		    "to a node not part of our partition!");
+	    return;
+	}
 	
 	op = crm_element_value(welcome->msg, F_CRM_TASK);
 	if(join_to != NULL
@@ -269,14 +276,13 @@ do_dc_join_offer_one(long long action,
 	crm_info("join-%d: Processing %s request from %s in state %s",
 		 current_join_id, op, join_to, fsa_state2string(cur_state));
 
+	join_make_offer(NULL, member, NULL);
+	
 	/* always offer to the DC (ourselves)
 	 * this ensures the correct value for max_generation_from
 	 */
-	member = g_hash_table_lookup(crm_peer_cache, fsa_our_uname);
-	join_make_offer(NULL, member, NULL);
-	
-	member = g_hash_table_lookup(crm_peer_cache, join_to);
-	join_make_offer(NULL, member, NULL);
+	member = crm_find_peer(0, fsa_our_uname);
+	join_make_offer(NULL, member, NULL);	
 	
 	/* this was a genuine join request, cancel any existing
 	 * transition and invoke the PE
@@ -326,8 +332,7 @@ do_dc_join_filter_offer(long long action,
 	const char *join_from = crm_element_value(join_ack->msg, F_CRM_HOST_FROM);
 	const char *ref       = crm_element_value(join_ack->msg, XML_ATTR_REFERENCE);
 	
-	gpointer join_node = g_hash_table_lookup(
-	    crm_peer_cache, join_from);
+	crm_node_t *join_node = crm_find_peer(0, join_from);
 
 	crm_debug("Processing req from %s", join_from);
 	
@@ -347,7 +352,7 @@ do_dc_join_filter_offer(long long action,
 	    }
 	}
 	
-	if(join_node == NULL) {
+	if(join_node == NULL || crm_is_member_active(join_node) == FALSE) {
 		crm_err("Node %s is not a member", join_from);
 		ack_nack_bool = FALSE;
 		

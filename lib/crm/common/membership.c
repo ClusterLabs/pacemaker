@@ -40,6 +40,7 @@ struct quorum_count_s
 	guint nodes_total;
 };
 
+GHashTable *crm_peer_id_cache = NULL;
 GHashTable *crm_peer_cache = NULL;
 unsigned long long crm_peer_seq = 0;
 unsigned long long crm_max_peers = 0;
@@ -135,6 +136,11 @@ void crm_peer_init(void)
 	crm_peer_cache = g_hash_table_new_full(
 	    g_str_hash, g_str_equal, NULL, destroy_crm_node);
     }
+
+    if(crm_peer_id_cache == NULL) {
+	crm_peer_id_cache = g_hash_table_new_full(
+	    g_direct_hash, g_direct_equal, NULL, NULL);
+    }
 }
 
 void crm_peer_destroy(void)
@@ -143,30 +149,40 @@ void crm_peer_destroy(void)
 	g_hash_table_destroy(crm_peer_cache);
 	crm_peer_cache = NULL;
     }
-}
-
-struct node_search_s {
-	unsigned int id;
-	crm_node_t *match;
-};
-
-static void
-crm_node_match(gpointer key, gpointer value, gpointer user_data) 
-{
-    crm_node_t *node = value;
-    struct node_search_s *search = user_data;
-    if(search->match == NULL && node->id == search->id) {
-	search->match = node;
+    
+    if(crm_peer_id_cache != NULL) {
+	g_hash_table_destroy(crm_peer_id_cache);
+	crm_peer_id_cache = NULL;
     }
 }
 
-crm_node_t *crm_find_node(unsigned int id) {
+static crm_node_t *crm_new_peer(unsigned int id, const char *uname)
+{
+    crm_node_t *node = NULL;
+    CRM_CHECK(uname != NULL || id > 0, return NULL);
+
+    crm_debug("Creating entry for node %s/%u", uname, id);
     
-    struct node_search_s search;
-    search.id = id;
-    search.match = NULL;
-    g_hash_table_foreach(crm_peer_cache, crm_node_match, &search);
-    return search.match;
+    crm_malloc0(node, sizeof(crm_node_t));
+    node->state = crm_strdup("unknown");
+
+    return node;
+}
+
+crm_node_t *crm_find_peer(unsigned int id, const char *uname)
+{
+    crm_node_t *node = NULL;
+    if(uname != NULL) {
+	node = g_hash_table_lookup(crm_peer_cache, uname);
+    }
+    if(node == NULL && id > 0) {
+	node = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(id));
+	if(node && uname) {
+	    CRM_ASSERT(node->uname == NULL);
+	    crm_new_peer(id, uname);
+	}
+    }
+    return node;
 }
 
 crm_node_t *crm_update_peer(
@@ -174,47 +190,63 @@ crm_node_t *crm_update_peer(
     const char *uuid, const char *uname, const char *addr, const char *state) 
 {
     gboolean id_changed = FALSE;
+    gboolean uname_changed = FALSE;
     gboolean state_changed = FALSE;
     gboolean addr_changed = FALSE;
     gboolean procs_changed = FALSE;
     gboolean votes_changed = FALSE;
     
     crm_node_t *node = NULL;
-    CRM_CHECK(uname != NULL, return NULL);
+    CRM_CHECK(uname != NULL || id > 0, return NULL);
     CRM_ASSERT(crm_peer_cache != NULL);
-
-    node = g_hash_table_lookup(crm_peer_cache, uname);	
-
-    if(node == NULL) {	
-	crm_debug("Creating entry for node %s/%u/%llu", uname, id, (unsigned long long)born);
-	CRM_CHECK(id >= 0, return NULL);
-	CRM_CHECK(uuid != NULL, return NULL);
-
-	crm_malloc0(node, sizeof(crm_node_t));
-	node->id = id;
-	node->born = 0;
-	node->processes = 0;
-	node->uuid = crm_strdup(uuid);
-	node->uname = crm_strdup(uname);
-	node->votes = votes;
-
-	node->addr = NULL;
-	node->state = crm_strdup("unknown");
-	id_changed = TRUE;
-	
-	g_hash_table_insert(crm_peer_cache, node->uname, node);
+    CRM_ASSERT(crm_peer_id_cache != NULL);
+    
+    if(uname != NULL) {
 	node = g_hash_table_lookup(crm_peer_cache, uname);
-	CRM_ASSERT(node != NULL);
+    }
+
+    if(node == NULL && id > 0) {
+	node = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(id));
+    }
+    
+    if(node == NULL) {
+	node = crm_new_peer(id, uname);
+
+	/* do it now so we don't get '(new)' everywhere */
+	node->votes = votes;
+	node->processes = children;
+	if(addr) {
+	    node->addr = crm_strdup(addr);
+	}
     }
 
     if(votes > 0 && node->votes != votes) {
 	votes_changed = TRUE;
 	node->votes = votes;
     }
+
+    if(uname != NULL && node->uname == NULL) {
+	uname_changed = TRUE;
+	node->uname = crm_strdup(uname);
+	crm_info("Node %u is now known as %s", id, uname);	
+	g_hash_table_insert(crm_peer_cache, node->uname, node);
+    }
     
+    if(node->uuid == NULL) {
+	if(uuid != NULL) {
+	    node->uuid = crm_strdup(uuid);
+	    
+	} else if(node->uname != NULL && is_openais_cluster()) {
+	    node->uuid = crm_strdup(node->uname);
+	}
+    }
+
     if(id > 0 && id != node->id) {
 	id_changed = TRUE;
+	g_hash_table_remove(crm_peer_id_cache, GUINT_TO_POINTER(node->id));
+	g_hash_table_insert(crm_peer_id_cache, GUINT_TO_POINTER(id), node);
 	node->id = id;
+	crm_info("Node %s now has id: %u", crm_str(uname), id);	
     }
 
     if(children > 0 && children != node->processes) {
@@ -226,13 +258,10 @@ crm_node_t *crm_update_peer(
 	node->born = born;
     }
 
-    if(state != NULL) {
-	if(node->state == NULL
-	   || crm_str_eq(node->state, state, FALSE) == FALSE) {
-	    state_changed = TRUE;
-	    crm_free(node->state);
-	    node->state = crm_strdup(state);
-	}
+    if(state != NULL && safe_str_neq(node->state, state)) {
+	state_changed = TRUE;
+	crm_free(node->state);
+	node->state = crm_strdup(state);
     }
 
     if(seen != 0 && crm_is_member_active(node)) {
@@ -247,9 +276,9 @@ crm_node_t *crm_update_peer(
 	}
     }
 
-    if(id_changed || state_changed || addr_changed || votes_changed || procs_changed) {
-	crm_info("Node %s: id=%u%s state=%s%s addr=%s%s votes=%d%s born=%llu seen=%llu proc=%.32x%s",
-		 node->uname,
+    if(id_changed || uname_changed || state_changed || addr_changed || votes_changed || procs_changed) {
+	crm_info("%sNode %s: id=%u%s state=%s%s addr=%s%s votes=%d%s born=%llu seen=%llu proc=%.32x%s",
+		 uname_changed?"New ":"", node->uname,
 		 node->id, id_changed?" (new)":"",
 		 node->state, state_changed?" (new)":"",
 		 node->addr, addr_changed?" (new)":"",

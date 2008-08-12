@@ -68,7 +68,7 @@ revision_check_callback(xmlNode *msg, int call_id, int rc,
 	}
 
 	generation = output;
-	CRM_CHECK(safe_str_eq(crm_element_name(generation), XML_TAG_CIB), return);
+	CRM_CHECK(safe_str_eq(crm_element_name(generation), XML_TAG_CIB), crm_log_xml_err(output, __FUNCTION__); return);
 	
 	crm_debug_3("Checking our feature revision is allowed: %s", CIB_FEATURE_SET);
 

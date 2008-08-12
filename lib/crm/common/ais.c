@@ -294,6 +294,14 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 	cl_perror("Receiving message body failed: (%d) %s", rc, ais_error2text(rc));
 	goto bail;
     }
+
+    if(msg->header.id != crm_class_members) {
+        crm_node_t *node = crm_find_peer(msg->sender.id, msg->sender.uname);
+	if(node == NULL) {
+	    crm_info("Creating node entry: %u/%s", msg->sender.id, msg->sender.uname);
+	    crm_update_peer(msg->sender.id, 0,0,0,0, msg->sender.uname, NULL, NULL, NULL);
+	}
+    }
     
     crm_debug_3("Got new%s message (size=%d, %d, %d)",
 		msg->is_compressed?" compressed":"",
@@ -341,7 +349,7 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 	    gboolean do_ask = FALSE;
 	    gboolean do_process = TRUE;
 	    
-	    long long seq = 0;
+	    unsigned long long seq = 0;
 	    int new_size = 0;
 	    int current_size = crm_active_members();
 
@@ -349,7 +357,7 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 	    const char *value = crm_element_value(xml, "id");
 	    seq = crm_int_helper(value, NULL);
 
-	    crm_debug_2("Received membership %d", seq);
+	    crm_debug_2("Received membership %llu", seq);
 
 	    xml_child_iter(xml, node,
 			   const char *state = crm_element_value(node, "state");
@@ -386,7 +394,7 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 
 		/* Skip resends */
 		if(last < seq) {
-		    crm_info("Processing membership %d", seq);
+		    crm_info("Processing membership %llu", seq);
 		}
 		    
 /*		crm_log_xml_debug(xml, __PRETTY_FUNCTION__); */
@@ -402,7 +410,15 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 		dispatch = NULL;
 		crm_warn("Pausing to allow membership stability (size %d -> %d): %s",
 			 current_size, new_size, reason);
-		ais_membership_timer = Gmain_timeout_add(2*1000, ais_membership_dampen, NULL);
+		ais_membership_timer = Gmain_timeout_add(4*1000, ais_membership_dampen, NULL);
+
+		/* process node additions */
+		xml_child_iter(xml, node,
+			       const char *state = crm_element_value(node, "state");
+			       if(crm_str_eq(state, CRM_NODE_MEMBER, FALSE)) {
+				   crm_update_ais_node(node, seq);
+			       }
+		    );
 
 	    } else {
 		dispatch = NULL;
