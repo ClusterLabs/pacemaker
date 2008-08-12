@@ -16,7 +16,7 @@
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="can1" score="1">
-	  <expression attribute="#id" operation="not_defined"/>
+	  <expression id="any" attribute="#id" operation="not_defined"/>
 	</rule>
       </rsc_location>
     </constraints>

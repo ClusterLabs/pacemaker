@@ -13,13 +13,13 @@
     </nodes>
     <resources>
       <master_slave id="rsc1">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair id="rsc1-attr1" name="clone_max" value="5"/>
             <nvpair id="rsc1-attr2" name="clone_node_max" value="2"/>
             <nvpair id="rsc1-attr3" name="master_max" value="2"/>
             <nvpair id="rsc1-attr4" name="master_node_max" value="1"/>
-            <nvpair name="resource_stickiness" value="1"/>
+            <nvpair id="any" name="resource_stickiness" value="1"/>
           </attributes>
         </instance_attributes>
 	<primitive id="child_rsc1" class="heartbeat" type="apache"/>
@@ -28,10 +28,10 @@
     <constraints>
       <rsc_location id="rsc1_master" rsc="rsc1">
 	<rule id="pref_rsc1_master-1" score="100" role="Master">
-          <expression attribute="#uname" operation="eq" value="node2"/>
+          <expression id="any" attribute="#uname" operation="eq" value="node2"/>
         </rule>
 	<rule id="pref_rsc1_master-2" score="-INFINITY" role="Master">
-          <expression attribute="#uname" operation="eq" value="node1"/>
+          <expression id="any" attribute="#uname" operation="eq" value="node1"/>
         </rule>
       </rsc_location>
     </constraints>
@@ -39,7 +39,7 @@
   <status>
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
@@ -48,7 +48,7 @@
     </node_state>
     <node_state id="uuid2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>

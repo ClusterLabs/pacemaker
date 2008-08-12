@@ -17,7 +17,7 @@
            <nvpair id="cib-bootstrap-options-pe-warn-series-max" name="pe-warn-series-max" value="-1"/>
            <nvpair id="cib-bootstrap-options-pe-input-series-max" name="pe-input-series-max" value="-1"/>
            <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="0"/>
-           <nvpair id="cib-bootstrap-options-default-resource-failure-stickiness" name="default-resource-failure-stickiness" value="0"/>
+           <nvpair id="cib-bootstrap-options-default-migration-threshold" name="default-migration-threshold" value="0"/>
            <nvpair id="cib-bootstrap-options-shutdown-escalation" name="shutdown-escalation" value="5min"/>
            <nvpair id="cib-bootstrap-optionsstartup-fencing" name="startup-fencing" value="false"/>
          </attributes>
@@ -172,7 +172,7 @@
              <nvpair id="clone_node_max_2" name="clone_node_max" value="2"/>
              <nvpair id="master_max_3" name="master_max" value="6"/>
              <nvpair id="master_node_max_4" name="master_node_max" value="1"/>
-             <nvpair name="resource_stickiness" value="1"/>
+             <nvpair id="any" name="resource_stickiness" value="1"/>
            </attributes>
          </instance_attributes>
          <primitive id="ocf_msdummy" class="ocf" type="Stateful" provider="heartbeat">

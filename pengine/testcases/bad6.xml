@@ -17,7 +17,7 @@
   </configuration>
   <status>
     <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc1"/>
         </lrm_resources>

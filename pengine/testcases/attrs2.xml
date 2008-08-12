@@ -16,8 +16,8 @@
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="can1" score="1">
-	  <expression attribute="#id" operation="lt" value="uuid3"/>
-	  <expression attribute="#uname" operation="gt" value="node1"/>
+	  <expression id="any" attribute="#id" operation="lt" value="uuid3"/>
+	  <expression id="any" attribute="#uname" operation="gt" value="node1"/>
 	</rule>
       </rsc_location>
     </constraints>

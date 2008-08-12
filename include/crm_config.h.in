@@ -1,1 +1,19 @@
-/* empty file */
+/* Pacemaker configuration */
+
+/* Location for the Pacemaker Relax-NG Schema */
+#undef DTD_DIRECTORY
+
+/* Current version of the Pacemaker Relax-NG Schema */
+#undef DTD_VERSION
+
+/* Support the OpenAIS messaging and membership layer */
+#undef SUPPORT_AIS
+
+/* Support the Heartbeat messaging and membership layer */
+#undef SUPPORT_HEARTBEAT
+
+/* Current pacemaker version */
+#undef PACEMAKER_VERSION
+
+/* "AIS target is the whitetank series" */
+#undef AIS_WHITETANK

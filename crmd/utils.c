@@ -198,7 +198,7 @@ crm_timer_stop(fsa_timer_t *timer)
 		return FALSE;
 		
 	} else if(timer->source_id != 0) {
-		crm_debug("Stopping %s (%s:%dms), src=%d",
+		crm_debug_2("Stopping %s (%s:%dms), src=%d",
 			  timer_desc, fsa_input2string(timer->fsa_input),
 			  timer->period_ms, timer->source_id);
 		Gmain_timeout_remove(timer->source_id);
@@ -223,7 +223,7 @@ fsa_input2string(enum crmd_fsa_input input)
 			inputAsText = "I_NULL";
 			break;
 		case I_CIB_OP:
-			inputAsText = "I_CIB_OP";
+			inputAsText = "I_CIB_OP (unused)";
 			break;
 		case I_CIB_UPDATE:
 			inputAsText = "I_CIB_UPDATE";
@@ -588,12 +588,6 @@ fsa_action2string(long long action)
 			break;
 		case A_CCM_DISCONNECT:
 			actionAsText = "A_CCM_DISCONNECT";
-			break;
-		case A_CIB_BUMPGEN:
-			actionAsText = "A_CIB_BUMPGEN";
-			break;
-		case A_CIB_INVOKE:
-			actionAsText = "A_CIB_INVOKE";
 			break;
 		case O_CIB_RESTART:
 			actionAsText = "O_CIB_RESTART";
@@ -961,16 +955,6 @@ fsa_dump_actions(long long action, const char *text)
 			   "Action %.16llx (A_CCM_DISCONNECT) %s",
 			  A_CCM_DISCONNECT, text);
 	}
-	if(is_set(action, A_CIB_BUMPGEN)) {
-		do_crm_log(log_level, 
-			   "Action %.16llx (A_CIB_BUMPGEN) %s",
-			  A_CIB_BUMPGEN, text);
-	}
-	if(is_set(action, A_CIB_INVOKE)) {
-		do_crm_log(log_level, 
-			   "Action %.16llx (A_CIB_INVOKE) %s",
-			  A_CIB_INVOKE, text);
-	}
 	if(is_set(action, A_CIB_START)) {
 		do_crm_log(log_level, 
 			   "Action %.16llx (A_CIB_START) %s",
@@ -1047,7 +1031,7 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	 *   join process (with itself).  We can include a special case
 	 *   later if desired.
 	 */
-	crm_data_t *tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
+	xmlNode *tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
 
 	crm_debug_3("Creating node entry for %s", uname);
 	set_uuid(tmp1, XML_ATTR_UUID, uname);
@@ -1056,19 +1040,19 @@ create_node_entry(const char *uuid, const char *uname, const char *type)
 	crm_xml_add(tmp1, XML_ATTR_TYPE, type);
 
 	fsa_cib_anon_update(XML_CIB_TAG_NODES, tmp1,
-			    cib_scope_local|cib_quorum_override);
+			    cib_scope_local|cib_quorum_override|cib_can_create);
 
 	free_xml(tmp1);
 	
 }
 
-crm_data_t*
+xmlNode*
 create_node_state(
 	const char *uname, const char *ha_state, const char *ccm_state,
 	const char *crmd_state, const char *join_state, const char *exp_state,
 	gboolean clear_shutdown, const char *src)
 {
-	crm_data_t *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+	xmlNode *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
 	crm_debug_2("%s Creating node state entry for %s", src, uname);
 	set_uuid(node_state, XML_ATTR_UUID, uname);
@@ -1092,8 +1076,6 @@ create_node_state(
 #if CRM_DEPRECATED_SINCE_2_0_3
 		crm_xml_add(node_state, "clear_shutdown",  "true");
 #endif
-/* 		crm_xml_add(node_state, */
-/* 			    XML_CIB_ATTR_REPLACE, XML_TAG_TRANSIENT_NODEATTRS); */
 	}
 	
 		
@@ -1101,17 +1083,6 @@ create_node_state(
 	crm_log_xml_debug_3(node_state, "created");
 
 	return node_state;
-}
-
-gboolean
-need_transition(enum crmd_fsa_state state)
-{
-	if(state == S_POLICY_ENGINE
-	   || state == S_TRANSITION_ENGINE
-	   || state == S_IDLE) {
-		return TRUE;
-	}
-	return FALSE;
 }
 
 extern GHashTable   *ipc_clients;
@@ -1161,15 +1132,15 @@ process_client_disconnect(crmd_client_t *curr_client)
 	}
 }
 
-void update_dc(HA_Message *msg, gboolean assert_same)
+void update_dc(xmlNode *msg, gboolean assert_same)
 {
 	char *last_dc = fsa_our_dc;
 	const char *dc_version = NULL;
 	const char *welcome_from = NULL;
 
 	if(msg != NULL) {
-		dc_version = cl_get_string(msg, F_CRM_VERSION);
-		welcome_from = cl_get_string(msg, F_CRM_HOST_FROM);
+		dc_version = crm_element_value(msg, F_CRM_VERSION);
+		welcome_from = crm_element_value(msg, F_CRM_HOST_FROM);
 		
 		CRM_CHECK(dc_version != NULL, return);
 		CRM_CHECK(welcome_from != NULL, return);
@@ -1206,4 +1177,18 @@ void update_dc(HA_Message *msg, gboolean assert_same)
 	}
 	
 	crm_free(last_dc);
+}
+
+#define STATUS_PATH_MAX 512
+
+void erase_status_tag(const char *uname, const char *tag) 
+{
+    char xpath[STATUS_PATH_MAX];
+    int cib_opts = cib_scope_local|cib_quorum_override|cib_xpath;
+
+    if(fsa_cib_conn) {
+	snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", uname, tag);
+	crm_debug("Erasing %s", xpath);
+	fsa_cib_conn->cmds->delete(fsa_cib_conn, xpath, NULL, cib_opts);
+    }
 }

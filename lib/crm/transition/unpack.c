@@ -31,10 +31,10 @@
 #include <clplumbing/Gmain_timeout.h>
 
 static crm_action_t*
-unpack_action(synapse_t *parent, crm_data_t *xml_action) 
+unpack_action(synapse_t *parent, xmlNode *xml_action) 
 {
 	crm_action_t   *action = NULL;
-	crm_data_t *action_copy = NULL;
+	xmlNode *action_copy = NULL;
 	const char *value = crm_element_value(xml_action, XML_ATTR_ID);
 
 	if(value == NULL) {
@@ -90,7 +90,7 @@ unpack_action(synapse_t *parent, crm_data_t *xml_action)
 }
 
 static synapse_t *
-unpack_synapse(crm_graph_t *new_graph, crm_data_t *xml_synapse) 
+unpack_synapse(crm_graph_t *new_graph, xmlNode *xml_synapse) 
 {
 	const char *value = NULL;
 	synapse_t *new_synapse = NULL;
@@ -163,7 +163,7 @@ unpack_synapse(crm_graph_t *new_graph, crm_data_t *xml_synapse)
 }
 
 crm_graph_t *
-unpack_graph(crm_data_t *xml_graph)
+unpack_graph(xmlNode *xml_graph)
 {
 /*
 <transition_graph>
@@ -185,6 +185,7 @@ unpack_graph(crm_data_t *xml_graph)
 	new_graph->abort_priority = 0;
 	new_graph->network_delay = -1;
 	new_graph->transition_timeout = -1;
+	new_graph->completion_action = tg_done;
 
 	if(xml_graph != NULL) {
 		t_id = crm_element_value(xml_graph, "transition_id");
@@ -198,8 +199,6 @@ unpack_graph(crm_data_t *xml_graph)
 
 		t_id = crm_element_value(xml_graph, "batch-limit");
 		new_graph->batch_limit = crm_parse_int(t_id, "0");
-
-
 	}
 	
 	xml_child_iter_filter(

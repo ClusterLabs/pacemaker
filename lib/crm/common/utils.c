@@ -53,13 +53,13 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
+#include <crm/common/iso8601.h>
 
 #ifndef MAXLINE
 #    define MAXLINE 512
 #endif
 
 static uint ref_counter = 0;
-gboolean crm_assert_failed = FALSE;
 unsigned int crm_log_level = LOG_INFO;
 gboolean crm_config_error = FALSE;
 gboolean crm_config_warning = FALSE;
@@ -423,6 +423,39 @@ crm_itoa(int an_int)
 
 extern int LogToLoggingDaemon(int priority, const char * buf, int bstrlen, gboolean use_pri_str);
 
+static void
+crm_glib_handler(const gchar *log_domain, GLogLevelFlags flags, const gchar *message, gpointer user_data)
+{
+	int log_level = LOG_WARNING;
+	GLogLevelFlags msg_level = (flags & G_LOG_LEVEL_MASK);
+
+	switch(msg_level) {
+	    case G_LOG_LEVEL_CRITICAL:
+		/* log and record how we got here */
+		crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, message, TRUE, TRUE);
+		return;
+
+	    case G_LOG_LEVEL_ERROR:	log_level = LOG_ERR;    break;
+	    case G_LOG_LEVEL_MESSAGE:	log_level = LOG_NOTICE; break;
+	    case G_LOG_LEVEL_INFO:	log_level = LOG_INFO;   break;
+	    case G_LOG_LEVEL_DEBUG:	log_level = LOG_DEBUG;  break;
+		
+	    case G_LOG_LEVEL_WARNING:
+	    case G_LOG_FLAG_RECURSION:
+	    case G_LOG_FLAG_FATAL:
+	    case G_LOG_LEVEL_MASK:
+		log_level = LOG_WARNING;
+		break;
+	}
+
+	do_crm_log(log_level, "%s: %s", log_domain, message);
+}
+
+GLogFunc glib_log_default;
+void crm_log_deinit(void) {
+    g_log_set_default_handler(glib_log_default, NULL);
+}
+
 gboolean
 crm_log_init(
     const char *entity, int level, gboolean coredir, gboolean to_stderr,
@@ -431,12 +464,7 @@ crm_log_init(
 /* 	const char *test = "Testing log daemon connection"; */
 	/* Redirect messages from glib functions to our handler */
 /*  	cl_malloc_forced_for_glib(); */
-	g_log_set_handler(NULL,
-			  G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
-			  | G_LOG_LEVEL_WARNING  | G_LOG_LEVEL_MESSAGE
-			  | G_LOG_LEVEL_INFO     | G_LOG_LEVEL_DEBUG
-			  | G_LOG_FLAG_RECURSION | G_LOG_FLAG_FATAL,
-			  cl_glib_msg_handler, NULL);
+	glib_log_default = g_log_set_default_handler(crm_glib_handler, NULL);
 
 	/* and for good measure... - this enum is a bit field (!) */
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
@@ -482,19 +510,6 @@ unsigned int
 get_crm_log_level(void)
 {
 	return crm_log_level;
-}
-
-void
-crm_log_message_adv(int level, const char *prefix, const HA_Message *msg)
-{
-	if((int)crm_log_level >= level) {
-		do_crm_log(level, "#========= %s message start ==========#", prefix?prefix:"");
-		if(level > LOG_DEBUG) {
-			cl_log_message(LOG_DEBUG, msg);
-		} else {
-			cl_log_message(level, msg);
-		}
-	}
 }
 
 static int
@@ -636,42 +651,41 @@ void g_hash_destroy_str(gpointer data)
 }
 
 #include <sys/types.h>
-#include <stdlib.h>
-#include <limits.h>
+/* #include <stdlib.h> */
+/* #include <limits.h> */
 
-long
+long long
 crm_int_helper(const char *text, char **end_text)
 {
-	long atoi_result = -1;
-	char *local_end_text = NULL;
-
-	errno = 0;
-	
-	if(text != NULL) {
-		if(end_text != NULL) {
-			atoi_result = strtoul(text, end_text, 10);
-		} else {
-			atoi_result = strtoul(text, &local_end_text, 10);
-		}
-		
-/* 		CRM_CHECK(errno != EINVAL); */
-		if(errno == EINVAL) {
-			crm_err("Conversion of %s failed", text);
-			atoi_result = -1;
-			
-		} else {
-			if(errno == ERANGE) {
-				crm_err("Conversion of %s was clipped: %ld",
-					text, atoi_result);
-			}
-			if(end_text == NULL && local_end_text[0] != '\0') {
-				crm_err("Characters left over after parsing "
-					"\"%s\": \"%s\"", text, local_end_text);
-			}
-				
-		}
+    long long result = -1;
+    char *local_end_text = NULL;
+    
+    errno = 0;
+    
+    if(text != NULL) {
+	if(end_text != NULL) {
+	    result = strtoll(text, end_text, 10);
+	} else {
+	    result = strtoll(text, &local_end_text, 10);
 	}
-	return atoi_result;
+	
+/* 		CRM_CHECK(errno != EINVAL); */
+	if(errno == EINVAL) {
+	    crm_err("Conversion of %s failed", text);
+	    result = -1;
+	    
+	} else if(errno == ERANGE) {
+	    crm_err("Conversion of %s was clipped: %lld", text, result);
+
+	} else if(errno != 0) {
+	    cl_perror("Conversion of %s failed:", text);
+	}
+			
+	if(local_end_text != NULL && local_end_text[0] != '\0') {
+	    crm_err("Characters left over after parsing '%s': '%s'", text, local_end_text);
+	}
+    }
+    return result;
 }
 
 int
@@ -696,26 +710,6 @@ crm_parse_int(const char *text, const char *default_text)
 	}
 
 	return -1;
-}
-
-gboolean
-crm_str_eq(const char *a, const char *b, gboolean use_case) 
-{
-	if(a == NULL || b == NULL) {
-		/* shouldn't be comparing NULLs */
-		CRM_CHECK(a != b, return TRUE);
-		return FALSE;
-
-	} else if(use_case && a[0] != b[0]) {
-		return FALSE;		
-
-	} else if(a == b) {
-		return TRUE;
-
-	} else if(strcasecmp(a, b) == 0) {
-		return TRUE;
-	}
-	return FALSE;
 }
 
 gboolean
@@ -799,7 +793,30 @@ crm_str_to_boolean(const char * s, int * ret)
 #    define	WHITESPACE	" \t\n\r\f"
 #endif
 
-long
+unsigned long long
+crm_get_interval(const char * input)
+{
+    ha_time_t *interval = NULL;
+    char *input_copy = crm_strdup(input);
+    char *input_copy_mutable = input_copy;
+    unsigned long long msec = 0;
+    
+    if(input == NULL) {
+	return 0;
+
+    } else if(input[0] != 'P') {
+	crm_free(input_copy);
+	return crm_get_msec(input);
+    }
+    
+    interval = parse_time_duration(&input_copy_mutable);
+    msec = date_in_seconds(interval);
+    free_ha_date(interval);
+    crm_free(input_copy);
+    return msec * 1000;
+}
+
+unsigned long long
 crm_get_msec(const char * input)
 {
 	const char *	cp = input;
@@ -1132,7 +1149,7 @@ decode_transition_key(
 }
 
 void
-filter_action_parameters(crm_data_t *param_set, const char *version) 
+filter_action_parameters(xmlNode *param_set, const char *version) 
 {
 	char *timeout = NULL;
 	char *interval = NULL;
@@ -1221,10 +1238,7 @@ filter_action_parameters(crm_data_t *param_set, const char *version)
 		      }
 
 		      if(do_delete) {
-			      /* remove it */
 			      xml_remove_prop(param_set, prop_name);
-			      /* unwind the counetr */
-			      __counter--;
 		      }
 		);
 
@@ -1240,7 +1254,7 @@ filter_action_parameters(crm_data_t *param_set, const char *version)
 }
 
 void
-filter_reload_parameters(crm_data_t *param_set, const char *restart_string) 
+filter_reload_parameters(xmlNode *param_set, const char *restart_string) 
 {
 	int len = 0;
 	char *name = NULL;
@@ -1260,12 +1274,9 @@ filter_reload_parameters(crm_data_t *param_set, const char *restart_string)
 		      
 		      match = strstr(restart_string, name);
 		      if(match == NULL) {
-			      /* remove it */
 			      crm_debug_3("%s not found in %s",
 					  prop_name, restart_string);
 			      xml_remove_prop(param_set, prop_name);
-			      /* unwind the counetr */
-			      __counter--;
 		      }
 		      crm_free(name);
 		);
@@ -1285,8 +1296,6 @@ crm_abort(const char *file, const char *function, int line,
 	    return;
 
 	} else if(do_fork) {
-	    do_crm_log(LOG_ERR, "%s: Triggered non-fatal assert at %s:%d : %s",
-		       function, file, line, assert_condition);
 	    pid=fork();
 
 	} else {
@@ -1296,7 +1305,8 @@ crm_abort(const char *file, const char *function, int line,
 	
 	switch(pid) {
 		case -1:
-			crm_err("Cannot fork!");
+			do_crm_log(LOG_CRIT, "%s: Cannot create core for non-fatal assert at %s:%d : %s",
+				   function, file, line, assert_condition);
 			return;
 
 		default:	/* Parent */

@@ -651,20 +651,20 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 
 /* Got an I_CIB_OP */
 	{
-		/* S_IDLE		==> */	A_CIB_INVOKE,
-		/* S_ELECTION		==> */	A_CIB_INVOKE,
-		/* S_INTEGRATION	==> */	A_CIB_INVOKE, 
-		/* S_FINALIZE_JOIN	==> */	A_CIB_INVOKE, 
-		/* S_NOT_DC		==> */	A_CIB_INVOKE,
-		/* S_POLICY_ENGINE	==> */	A_CIB_INVOKE,
-		/* S_RECOVERY		==> */	A_CIB_INVOKE,
-		/* S_RELEASE_DC		==> */	A_CIB_INVOKE,
-		/* S_STARTING		==> */	A_CIB_INVOKE,
-		/* S_PENDING		==> */	A_CIB_INVOKE,
-		/* S_STOPPING		==> */	A_CIB_INVOKE,
-		/* S_TERMINATE		==> */	A_CIB_INVOKE,
-		/* S_TRANSITION_ENGINE	==> */	A_CIB_INVOKE,
-		/* S_HALT		==> */	A_WARN,
+		/* S_IDLE		==> */	A_ERROR,
+		/* S_ELECTION		==> */	A_ERROR,
+		/* S_INTEGRATION	==> */	A_ERROR, 
+		/* S_FINALIZE_JOIN	==> */	A_ERROR, 
+		/* S_NOT_DC		==> */	A_ERROR,
+		/* S_POLICY_ENGINE	==> */	A_ERROR,
+		/* S_RECOVERY		==> */	A_ERROR,
+		/* S_RELEASE_DC		==> */	A_ERROR,
+		/* S_STARTING		==> */	A_ERROR,
+		/* S_PENDING		==> */	A_ERROR,
+		/* S_STOPPING		==> */	A_ERROR,
+		/* S_TERMINATE		==> */	A_ERROR,
+		/* S_TRANSITION_ENGINE	==> */	A_ERROR,
+		/* S_HALT		==> */	A_ERROR,
 	},
 
 /* Got an I_CIB_UPDATE */
@@ -1084,7 +1084,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 /* Got an I_JOIN_OFFER */
 	{
 		/* S_IDLE		==> */	A_WARN|A_CL_JOIN_REQUEST,
-		/* S_ELECTION		==> */	A_WARN,
+		/* S_ELECTION		==> */	A_WARN|A_ELECTION_VOTE,
 		/* S_INTEGRATION	==> */	A_CL_JOIN_REQUEST,
 		/* S_FINALIZE_JOIN	==> */	A_CL_JOIN_REQUEST,
 		/* S_NOT_DC		==> */	A_CL_JOIN_REQUEST|A_DC_TIMER_STOP,

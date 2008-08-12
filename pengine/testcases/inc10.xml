@@ -59,7 +59,7 @@
            <attributes>
              <nvpair id="nvpair-02" name="clone_node_max" value="1"/>
              <nvpair id="nvpair-03" name="target_role" value="started"/>
-            <nvpair name="resource_stickiness" value="1"/>
+            <nvpair id="any" name="resource_stickiness" value="1"/>
            </attributes>
          </instance_attributes>
          <primitive id="ocfs2" class="ocf" type="Filesystem" provider="heartbeat">

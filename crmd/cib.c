@@ -54,46 +54,23 @@ int cib_retries = 0;
 
 
 static void
-revision_check_callback(const HA_Message *msg, int call_id, int rc,
-			crm_data_t *output, void *user_data)
+revision_check_callback(xmlNode *msg, int call_id, int rc,
+			xmlNode *output, void *user_data)
 {
 	int cmp = -1;
 	const char *revision = NULL;
-	crm_data_t *generation = NULL;
-#if CRM_DEPRECATED_SINCE_2_0_4
-	if(safe_str_eq(crm_element_name(output), XML_TAG_CIB)) {
-		generation = output;
-	} else {
-		generation = find_xml_node(output, XML_TAG_CIB, TRUE);
-	}
-#else
-	generation = output;
-	CRM_DEV_ASSERT(safe_str_eq(crm_element_name(generation), XML_TAG_CIB));
-#endif
+	xmlNode *generation = NULL;
 	
 	if(rc != cib_ok) {
 		fsa_data_t *msg_data = NULL;
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 		return;
 	}
-	
-	crm_debug_3("Checking our feature revision is allowed: %s",
-		    CIB_FEATURE_SET);
 
-	revision = crm_element_value(generation, XML_ATTR_CIB_REVISION);
-	cmp = compare_version(revision, CIB_FEATURE_SET);
+	generation = output;
+	CRM_CHECK(safe_str_eq(crm_element_name(generation), XML_TAG_CIB), crm_log_xml_err(output, __FUNCTION__); return);
 	
-	if(cmp > 0) {
-		crm_err("This build (%s) does not support the current"
-			" resource configuration", VERSION);
-		crm_err("We can support up to CIB feature set %s (current=%s)",
-			CIB_FEATURE_SET, revision);
-		crm_err("Shutting down the CRM");
-		/* go into a stall state */
-		register_fsa_error_adv(
-			C_FSA_INTERNAL, I_SHUTDOWN, NULL, NULL, __FUNCTION__);
-		return;
-	}
+	crm_debug_3("Checking our feature revision is allowed: %s", CIB_FEATURE_SET);
 
 	revision = crm_element_value(generation, XML_ATTR_CRM_VERSION);
 	cmp = compare_version(revision, CRM_FEATURE_SET);
@@ -112,15 +89,22 @@ revision_check_callback(const HA_Message *msg, int call_id, int rc,
 }
 
 static void
-do_cib_replaced(const char *event, HA_Message *msg)
+do_cib_replaced(const char *event, xmlNode *msg)
 {
-	crm_debug("Updating the CIB after a replace");
- 	populate_cib_nodes(FALSE);
-	do_update_cib_nodes(AM_I_DC, __FUNCTION__);
-	if(AM_I_DC) {
-		/* start the join process again so we get everyone's LRM status */
-		register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
-	}
+    crm_debug("Updating the CIB after a replace: DC=%s", AM_I_DC?"true":"false");
+    if(AM_I_DC == FALSE) {
+	return;
+	
+    } else if(fsa_state == S_FINALIZE_JOIN
+	      && is_set(fsa_input_register, R_CIB_ASKED)) {
+	/* no need to restart the join - we asked for this replace op */
+	return;
+    }
+    
+    /* start the join process again so we get everyone's LRM status */
+    populate_cib_nodes(FALSE);
+    do_update_cib_nodes(TRUE, __FUNCTION__);
+    register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 }
 
 /*	 A_CIB_STOP, A_CIB_START, A_CIB_RESTART,	*/
@@ -211,101 +195,10 @@ do_cib_control(long long action,
 			call_id = fsa_cib_conn->cmds->query(
 				fsa_cib_conn, NULL, NULL, cib_scope_local);
 			
-			add_cib_op_callback(call_id, FALSE, NULL,
+			add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL,
 					    revision_check_callback);
 			cib_retries = 0;
 		}
-	}
-}
-
-/*	 A_CIB_INVOKE, A_CIB_BUMPGEN, A_UPDATE_NODESTATUS	*/
-void
-do_cib_invoke(long long action,
-	      enum crmd_fsa_cause cause,
-	      enum crmd_fsa_state cur_state,
-	      enum crmd_fsa_input current_input,
-	      fsa_data_t *msg_data)
-{
-	HA_Message *answer = NULL;
-	ha_msg_input_t *cib_msg = fsa_typed_data(fsa_dt_ha_msg);
-	const char *sys_from = cl_get_string(cib_msg->msg, F_CRM_SYS_FROM);
-
-	if(fsa_cib_conn->state == cib_disconnected) {
-		if(cur_state != S_STOPPING) {
-			crm_err("CIB is disconnected");
-			crm_log_message_adv(LOG_WARNING, "CIB Input", cib_msg->msg);
-			return;
-		}
-		crm_info("CIB is disconnected");
-		crm_log_message_adv(LOG_DEBUG, "CIB Input", cib_msg->msg);
-		return;
-		
-	}
-	
-	if(action & A_CIB_INVOKE) {
-		if(safe_str_eq(sys_from, CRM_SYSTEM_CRMD)) {
-			action = A_CIB_INVOKE_LOCAL;
-		} else if(safe_str_eq(sys_from, CRM_SYSTEM_DC)) {
-			action = A_CIB_INVOKE_LOCAL;
-		}
-	}
-	
-
-	if(action & A_CIB_INVOKE || action & A_CIB_INVOKE_LOCAL) {
-		int call_options = 0;
-		enum cib_errors rc  = cib_ok;
-		crm_data_t *cib_frag  = NULL;
-		
-		const char *section  = NULL;
-		const char *op   = cl_get_string(cib_msg->msg, F_CRM_TASK);
-
-		section  = cl_get_string(cib_msg->msg, F_CIB_SECTION);
-		
-		ha_msg_value_int(cib_msg->msg, F_CIB_CALLOPTS, &call_options);
-
-		crm_log_message(LOG_MSG, cib_msg->msg);
-		crm_log_xml_debug_3(cib_msg->xml, "[CIB update]");
-		if(op == NULL) {
-			crm_err("Invalid CIB Message");
-			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-			return;
-		}
-
-		cib_frag = NULL;
-		rc = fsa_cib_conn->cmds->variant_op(
-			fsa_cib_conn, op, NULL, section,
-			cib_msg->xml, &cib_frag, call_options);
-
-		if(rc < cib_ok || (action & A_CIB_INVOKE)) {
-			answer = create_reply(cib_msg->msg, cib_frag);
-			ha_msg_add(answer,XML_ATTR_RESULT,cib_error2string(rc));
-		}
-		
-		if(action & A_CIB_INVOKE) {
-			if(relay_message(answer, TRUE) == FALSE) {
-				crm_err("Confused what to do with cib result");
-				crm_log_message(LOG_ERR, answer);
-				crm_msg_del(answer);
-				register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-				return;
-			}
-
-		} else if(rc < cib_ok) {
-			ha_msg_input_t *input = NULL;
-			crm_err("Internal CRM/CIB command from %s() failed: %s",
-				msg_data->origin, cib_error2string(rc));
-			crm_log_message_adv(LOG_WARNING, "CIB Input", cib_msg->msg);
-			crm_log_message_adv(LOG_WARNING, "CIB Reply", answer);
-			
-			input = new_ha_msg_input(answer);
-			register_fsa_input(C_FSA_INTERNAL, I_ERROR, input);
-			crm_msg_del(answer);
-			delete_ha_msg_input(input);
-		}
-
-	} else {
-		crm_err("Unexpected action %s in %s",
-			fsa_action2string(action), __FUNCTION__);
 	}
 }
 

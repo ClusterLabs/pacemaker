@@ -84,14 +84,14 @@ long long do_state_transition(long long actions,
 			      enum crmd_fsa_state next_state,
 			      fsa_data_t *msg_data);
 
-long long clear_flags(long long actions,
+inline long long clear_flags(long long actions,
 			     enum crmd_fsa_cause cause,
 			     enum crmd_fsa_state cur_state,
 			     enum crmd_fsa_input cur_input);
 
 void dump_rsc_info(void);
-void dump_rsc_info_callback(const HA_Message *msg, int call_id, int rc,
-			    crm_data_t *output, void *user_data);
+void dump_rsc_info_callback(const xmlNode *msg, int call_id, int rc,
+			    xmlNode *output, void *user_data);
 
 void ghash_print_node(gpointer key, gpointer value, gpointer user_data);
 
@@ -151,14 +151,12 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 			       enum crmd_fsa_input cur_input,
 			       fsa_data_t *msg_data)) 
 {
-	int action_log_level = LOG_DEBUG;
 	gboolean do_time_check = TRUE;
-
-	if(is_set(fsa_actions, an_action) == FALSE) {
-		crm_err("Action %s (%.16llx) was not requestsed",
-		    fsa_action2string(an_action), an_action);
-		return;
-	}
+	int action_log_level = LOG_DEBUG;
+	
+	/* The calls to fsa_action2string() is expensive,
+	 * only make it if we will use the result
+	 */
 	
 	if(an_action & A_MSG_ROUTE) {
 		action_log_level = LOG_DEBUG_2;
@@ -168,18 +166,12 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 	}
 	
 	fsa_actions &= ~an_action;
-	crm_debug_3("Invoking action %s (%.16llx)",
-		    fsa_action2string(an_action), an_action);
 	if(do_time_check) {
 		action_start = time_longclock();
 	}
 
-	do_crm_log(action_log_level,
-		   DOT_PREFIX"\t// %s", fsa_action2string(an_action));
-	function(an_action, fsa_data->fsa_cause, fsa_state,
-			  fsa_data->fsa_input, fsa_data);
-	crm_debug_3("Action complete: %s (%.16llx)",
-		    fsa_action2string(an_action), an_action);
+	do_crm_log(action_log_level, DOT_PREFIX"\t// %s", fsa_action2string(an_action));
+	function(an_action, fsa_data->fsa_cause, fsa_state, fsa_data->fsa_input, fsa_data);
 
 	if(do_time_check) {
 		action_stop = time_longclock();
@@ -187,12 +179,10 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 		action_diff_ms = longclockto_ms(action_diff);
 		if(action_diff_ms > action_diff_max_ms) {
 			crm_err("Action %s took %dms to complete",
-				fsa_action2string(an_action),
-				action_diff_ms);
+				fsa_action2string(an_action), action_diff_ms);
 		} else if(action_diff_ms > action_diff_warn_ms) {
 			crm_warn("Action %s took %dms to complete",
-				 fsa_action2string(an_action),
-				 action_diff_ms);
+				 fsa_action2string(an_action), action_diff_ms);
 		}
 	}
 }
@@ -225,10 +215,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 			    g_list_length(fsa_message_queue));
 		
 		fsa_data = get_message();
-		CRM_DEV_ASSERT(fsa_data != NULL);
-		if(crm_assert_failed) {
-			continue;
-		}
+		CRM_CHECK(fsa_data != NULL, continue);
 
 		log_fsa_input(fsa_data);
 		
@@ -247,11 +234,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 				  fsa_cause2string(fsa_data->fsa_cause),
 				  fsa_data->origin);
 		}
-/*
-		if(fsa_actions & A_SHUTDOWN) {
-			crm_log_level = LOG_DEBUG_2;
-		}
-*/	
+
 #ifdef FSA_TRACE
 		if(new_actions != A_NOTHING) {
 			crm_debug_2("Adding FSA actions %.16llx for %s/%s",
@@ -347,125 +330,119 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 	 * Process actions in order of priority but do only one
 	 * action at a time to avoid complicating the ordering.
 	 */
+	CRM_CHECK(fsa_data != NULL, return);
 	while(fsa_actions != A_NOTHING  && do_fsa_stall == FALSE) {
-		msg_queue_helper();
-		CRM_DEV_ASSERT(fsa_data != NULL);
-		if(crm_assert_failed) {
-			return;
-		}
 		
 		/* regular action processing in order of action priority
 		 *
 		 * Make sure all actions that connect to required systems
 		 * are performed first
 		 */
-		if(is_set(fsa_actions, A_ERROR)) {
+		if(fsa_actions & A_ERROR) {
 			do_fsa_action(fsa_data, A_ERROR, do_log);
-		} else if(is_set(fsa_actions, A_WARN)) {
+		} else if(fsa_actions & A_WARN) {
 			do_fsa_action(fsa_data, A_WARN,  do_log);
-		} else if(is_set(fsa_actions, A_LOG)) {
+		} else if(fsa_actions & A_LOG) {
 			do_fsa_action(fsa_data, A_LOG,   do_log);
 		
 			/* get out of here NOW! before anything worse happens */
-		} else if(is_set(fsa_actions, A_EXIT_1)) {
+		} else if(fsa_actions & A_EXIT_1) {
 			do_fsa_action(fsa_data, A_EXIT_1,	do_exit);
 
 			/* essential start tasks */
-		} else if(is_set(fsa_actions, A_STARTUP)) {
+		} else if(fsa_actions & A_STARTUP) {
 			do_fsa_action(fsa_data, A_STARTUP,	do_startup);
-		} else if(is_set(fsa_actions, A_CIB_START)) {
+		} else if(fsa_actions & A_CIB_START) {
 			do_fsa_action(fsa_data, A_CIB_START,	do_cib_control);
-		} else if(is_set(fsa_actions, A_HA_CONNECT)) {
+		} else if(fsa_actions & A_HA_CONNECT) {
 			do_fsa_action(fsa_data, A_HA_CONNECT,	do_ha_control);
-		} else if(is_set(fsa_actions, A_READCONFIG)) {
+		} else if(fsa_actions & A_READCONFIG) {
 			do_fsa_action(fsa_data, A_READCONFIG,	do_read_config);
 
 			/* sub-system start/connect */
-		} else if(is_set(fsa_actions, A_LRM_CONNECT)) {
+		} else if(fsa_actions & A_LRM_CONNECT) {
 			do_fsa_action(fsa_data, A_LRM_CONNECT,	do_lrm_control);
-		} else if(is_set(fsa_actions, A_CCM_CONNECT)) {
+		} else if(fsa_actions & A_CCM_CONNECT) {
 			do_fsa_action(fsa_data, A_CCM_CONNECT,	do_ccm_control);
-		} else if(is_set(fsa_actions, A_TE_START)) {
+		} else if(fsa_actions & A_TE_START) {
 			do_fsa_action(fsa_data, A_TE_START,	do_te_control);
-		} else if(is_set(fsa_actions, A_PE_START)) {
+		} else if(fsa_actions & A_PE_START) {
 			do_fsa_action(fsa_data, A_PE_START,	do_pe_control);
 
 			/* sub-system restart */
-		} else if(is_set(fsa_actions, O_CIB_RESTART)) {
+		} else if((fsa_actions & O_CIB_RESTART) == O_CIB_RESTART) {
 			do_fsa_action(fsa_data, O_CIB_RESTART,	do_cib_control);
-		} else if(is_set(fsa_actions, O_PE_RESTART)) {
+		} else if((fsa_actions & O_PE_RESTART) == O_PE_RESTART) {
 			do_fsa_action(fsa_data, O_PE_RESTART,	do_pe_control);
-		} else if(is_set(fsa_actions, O_TE_RESTART)) {
+		} else if((fsa_actions & O_TE_RESTART) == O_TE_RESTART) {
 			do_fsa_action(fsa_data, O_TE_RESTART,	do_te_control);
 
 			/* Timers */
-/* 		else if(is_set(fsa_actions, O_DC_TIMER_RESTART)) {
+/* 		else if(fsa_actions & O_DC_TIMER_RESTART) {
 		do_fsa_action(fsa_data, O_DC_TIMER_RESTART,	     do_timer_control) */;
-		} else if(is_set(fsa_actions, A_DC_TIMER_STOP)) {
+		} else if(fsa_actions & A_DC_TIMER_STOP) {
 			do_fsa_action(fsa_data, A_DC_TIMER_STOP,	do_timer_control);
-		} else if(is_set(fsa_actions, A_INTEGRATE_TIMER_STOP)) {
+		} else if(fsa_actions & A_INTEGRATE_TIMER_STOP) {
 			do_fsa_action(fsa_data, A_INTEGRATE_TIMER_STOP,	do_timer_control);
-		} else if(is_set(fsa_actions, A_INTEGRATE_TIMER_START)) {
+		} else if(fsa_actions & A_INTEGRATE_TIMER_START) {
 			do_fsa_action(fsa_data, A_INTEGRATE_TIMER_START,do_timer_control);
-		} else if(is_set(fsa_actions, A_FINALIZE_TIMER_STOP)) {
+		} else if(fsa_actions & A_FINALIZE_TIMER_STOP) {
 			do_fsa_action(fsa_data, A_FINALIZE_TIMER_STOP,	do_timer_control);
-		} else if(is_set(fsa_actions, A_FINALIZE_TIMER_START)) {
+		} else if(fsa_actions & A_FINALIZE_TIMER_START) {
 			do_fsa_action(fsa_data, A_FINALIZE_TIMER_START,	do_timer_control);
 
 			/*
 			 * Highest priority actions
 			 */
-		} else if(is_set(fsa_actions, A_CIB_BUMPGEN)) {
-			do_fsa_action(fsa_data, A_CIB_BUMPGEN,		do_cib_invoke);
-		} else if(is_set(fsa_actions, A_MSG_ROUTE)) {
+		} else if(fsa_actions & A_MSG_ROUTE) {
 			do_fsa_action(fsa_data, A_MSG_ROUTE,		do_msg_route);
-		} else if(is_set(fsa_actions, A_RECOVER)) {
+		} else if(fsa_actions & A_RECOVER) {
 			do_fsa_action(fsa_data, A_RECOVER,		do_recover);
-		} else if(is_set(fsa_actions, A_CL_JOIN_RESULT)) {
+		} else if(fsa_actions & A_CL_JOIN_RESULT) {
 			do_fsa_action(fsa_data, A_CL_JOIN_RESULT,	do_cl_join_finalize_respond);
-		} else if(is_set(fsa_actions, A_CL_JOIN_REQUEST)) {
+		} else if(fsa_actions & A_CL_JOIN_REQUEST) {
 			do_fsa_action(fsa_data, A_CL_JOIN_REQUEST,	do_cl_join_offer_respond);
-		} else if(is_set(fsa_actions, A_SHUTDOWN_REQ)) {
+		} else if(fsa_actions & A_SHUTDOWN_REQ) {
 			do_fsa_action(fsa_data, A_SHUTDOWN_REQ,		do_shutdown_req);
-		} else if(is_set(fsa_actions, A_ELECTION_VOTE)) {
+		} else if(fsa_actions & A_ELECTION_VOTE) {
 			do_fsa_action(fsa_data, A_ELECTION_VOTE,	do_election_vote);
-		} else if(is_set(fsa_actions, A_ELECTION_COUNT)) {
+		} else if(fsa_actions & A_ELECTION_COUNT) {
 			do_fsa_action(fsa_data, A_ELECTION_COUNT,	do_election_count_vote);
-		} else if(is_set(fsa_actions, A_LRM_EVENT)) {
+		} else if(fsa_actions & A_LRM_EVENT) {
 			do_fsa_action(fsa_data, A_LRM_EVENT,		do_lrm_event);
 
 			/*
 			 * High priority actions
 			 */
-		} else if(is_set(fsa_actions, A_STARTED)) {
+		} else if(fsa_actions & A_STARTED) {
 			do_fsa_action(fsa_data, A_STARTED,		do_started);
-		} else if(is_set(fsa_actions, A_CL_JOIN_QUERY)) {
+		} else if(fsa_actions & A_CL_JOIN_QUERY) {
 			do_fsa_action(fsa_data, A_CL_JOIN_QUERY,	do_cl_join_query);
-		} else if(is_set(fsa_actions, A_DC_TIMER_START)) {
+		} else if(fsa_actions & A_DC_TIMER_START) {
 			do_fsa_action(fsa_data, A_DC_TIMER_START,	do_timer_control);
 
 			/*
 			 * Medium priority actions
 			 */
-		} else if(is_set(fsa_actions, A_DC_TAKEOVER)) {
+		} else if(fsa_actions & A_DC_TAKEOVER) {
 			do_fsa_action(fsa_data, A_DC_TAKEOVER,		do_dc_takeover);
-		} else if(is_set(fsa_actions, A_DC_RELEASE)) {
+		} else if(fsa_actions & A_DC_RELEASE) {
 			do_fsa_action(fsa_data, A_DC_RELEASE,		do_dc_release);
-		} else if(is_set(fsa_actions, A_ELECTION_CHECK)) {
+		} else if(fsa_actions & A_ELECTION_CHECK) {
 			do_fsa_action(fsa_data, A_ELECTION_CHECK,	do_election_check);
-		} else if(is_set(fsa_actions, A_ELECTION_START)) {
+		} else if(fsa_actions & A_ELECTION_START) {
 			do_fsa_action(fsa_data, A_ELECTION_START,	do_election_vote);
-		} else if(is_set(fsa_actions, A_TE_HALT)) {
+		} else if(fsa_actions & A_TE_HALT) {
 			do_fsa_action(fsa_data, A_TE_HALT,		do_te_invoke);
-		} else if(is_set(fsa_actions, A_TE_CANCEL)) {
+		} else if(fsa_actions & A_TE_CANCEL) {
 			do_fsa_action(fsa_data, A_TE_CANCEL,		do_te_invoke);
-		} else if(is_set(fsa_actions, A_DC_JOIN_OFFER_ALL)) {
+		} else if(fsa_actions & A_DC_JOIN_OFFER_ALL) {
 			do_fsa_action(fsa_data, A_DC_JOIN_OFFER_ALL,	do_dc_join_offer_all);
-		} else if(is_set(fsa_actions, A_DC_JOIN_OFFER_ONE)) {
+		} else if(fsa_actions & A_DC_JOIN_OFFER_ONE) {
 			do_fsa_action(fsa_data, A_DC_JOIN_OFFER_ONE,	do_dc_join_offer_all);
-		} else if(is_set(fsa_actions, A_DC_JOIN_PROCESS_REQ)) {
+		} else if(fsa_actions & A_DC_JOIN_PROCESS_REQ) {
 			do_fsa_action(fsa_data, A_DC_JOIN_PROCESS_REQ,	do_dc_join_filter_offer);
-		} else if(is_set(fsa_actions, A_DC_JOIN_PROCESS_ACK)) {
+		} else if(fsa_actions & A_DC_JOIN_PROCESS_ACK) {
 			do_fsa_action(fsa_data, A_DC_JOIN_PROCESS_ACK,	do_dc_join_ack);
 
 			/*
@@ -473,43 +450,39 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 			 * Make sure the CIB is always updated before invoking the
 			 * PE, and the PE before the TE
 			 */
-		} else if(is_set(fsa_actions, A_CIB_INVOKE_LOCAL)) {
-			do_fsa_action(fsa_data, A_CIB_INVOKE_LOCAL,	do_cib_invoke);
-		} else if(is_set(fsa_actions, A_CIB_INVOKE)) {
-			do_fsa_action(fsa_data, A_CIB_INVOKE,		do_cib_invoke);
-		} else if(is_set(fsa_actions, A_DC_JOIN_FINALIZE)) {
+		} else if(fsa_actions & A_DC_JOIN_FINALIZE) {
 			do_fsa_action(fsa_data, A_DC_JOIN_FINALIZE,	do_dc_join_finalize);
-		} else if(is_set(fsa_actions, A_LRM_INVOKE)) {
+		} else if(fsa_actions & A_LRM_INVOKE) {
 			do_fsa_action(fsa_data, A_LRM_INVOKE,		do_lrm_invoke);
-		} else if(is_set(fsa_actions, A_PE_INVOKE)) {
+		} else if(fsa_actions & A_PE_INVOKE) {
 			do_fsa_action(fsa_data, A_PE_INVOKE,		do_pe_invoke);
-		} else if(is_set(fsa_actions, A_TE_INVOKE)) {
+		} else if(fsa_actions & A_TE_INVOKE) {
 			do_fsa_action(fsa_data, A_TE_INVOKE,		do_te_invoke);
-		} else if(is_set(fsa_actions, A_CL_JOIN_ANNOUNCE)) {
+		} else if(fsa_actions & A_CL_JOIN_ANNOUNCE) {
 			do_fsa_action(fsa_data, A_CL_JOIN_ANNOUNCE,	do_cl_join_announce);
 
 			/* sub-system stop */
-		} else if(is_set(fsa_actions, A_DC_RELEASED)) {
+		} else if(fsa_actions & A_DC_RELEASED) {
 			do_fsa_action(fsa_data, A_DC_RELEASED,		do_dc_release);
-		} else if(is_set(fsa_actions, A_PE_STOP)) {
+		} else if(fsa_actions & A_PE_STOP) {
 			do_fsa_action(fsa_data, A_PE_STOP,		do_pe_control);
-		} else if(is_set(fsa_actions, A_TE_STOP)) {
+		} else if(fsa_actions & A_TE_STOP) {
 			do_fsa_action(fsa_data, A_TE_STOP,		do_te_control);
-		} else if(is_set(fsa_actions, A_SHUTDOWN)) {
+		} else if(fsa_actions & A_SHUTDOWN) {
 			do_fsa_action(fsa_data, A_SHUTDOWN,		do_shutdown);
-		} else if(is_set(fsa_actions, A_LRM_DISCONNECT)) {
+		} else if(fsa_actions & A_LRM_DISCONNECT) {
 			do_fsa_action(fsa_data, A_LRM_DISCONNECT,	do_lrm_control);
-		} else if(is_set(fsa_actions, A_CCM_DISCONNECT)) {
+		} else if(fsa_actions & A_CCM_DISCONNECT) {
 			do_fsa_action(fsa_data, A_CCM_DISCONNECT,	do_ccm_control);
-		} else if(is_set(fsa_actions, A_HA_DISCONNECT)) {
+		} else if(fsa_actions & A_HA_DISCONNECT) {
 			do_fsa_action(fsa_data, A_HA_DISCONNECT,	do_ha_control);
-		} else if(is_set(fsa_actions, A_CIB_STOP)) {
+		} else if(fsa_actions & A_CIB_STOP) {
 			do_fsa_action(fsa_data, A_CIB_STOP,		do_cib_control);
-		} else if(is_set(fsa_actions, A_STOP)) {
+		} else if(fsa_actions & A_STOP) {
 			do_fsa_action(fsa_data, A_STOP,			do_stop);
 
 			/* exit gracefully */
-		} else if(is_set(fsa_actions, A_EXIT_0)) {
+		} else if(fsa_actions & A_EXIT_0) {
 			do_fsa_action(fsa_data, A_EXIT_0,	do_exit);
 
 			/* Error checking and reporting */
@@ -544,8 +517,7 @@ void log_fsa_input(fsa_data_t *stored_msg)
 		
 		crm_debug_3("FSA processing XML message from %s",
 			    stored_msg->origin);
-		crm_log_message(LOG_MSG, ha_input->msg);
-		crm_log_xml_debug_3(ha_input->xml, "FSA message data");
+		crm_log_xml(LOG_MSG, "FSA message data", ha_input->xml);
 	}
 }
 
@@ -584,7 +556,7 @@ do_state_transition(long long actions,
 /* 		crm_timer_start(election_timeout); */
 	}
 #if 0
-	if(is_set(fsa_input_register, R_SHUTDOWN)){
+	if((fsa_input_register & R_SHUTDOWN)){
 		set_bit_inplace(tmp, A_DC_TIMER_STOP);
 	}
 #endif
@@ -610,6 +582,11 @@ do_state_transition(long long actions,
 		crm_timer_stop(recheck_timer);
 	}
 
+	if(cur_state == S_FINALIZE_JOIN && next_state == S_POLICY_ENGINE) {
+	    populate_cib_nodes(FALSE);
+	    do_update_cib_nodes(TRUE, __FUNCTION__);
+	}
+	
 	switch(next_state) {
 		case S_PENDING:			
 			fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
@@ -734,27 +711,26 @@ do_state_transition(long long actions,
 	}
 	
 	if(tmp != actions) {
-		fsa_dump_actions(actions ^ tmp, "New actions");
+		/* fsa_dump_actions(actions ^ tmp, "New actions"); */
 		actions = tmp;
 	}
 
 	return actions;
 }
 
-long long
+inline long long
 clear_flags(long long actions,
 	    enum crmd_fsa_cause cause,
 	    enum crmd_fsa_state cur_state,
 	    enum crmd_fsa_input cur_input)
 {
-	long long saved_actions = actions;
-	long long startup_actions = A_STARTUP|A_CIB_START|A_LRM_CONNECT|A_CCM_CONNECT|A_HA_CONNECT|A_READCONFIG|A_STARTED|A_CL_JOIN_QUERY;
+	static long long startup_actions = A_STARTUP|A_CIB_START|A_LRM_CONNECT|A_CCM_CONNECT|A_HA_CONNECT|A_READCONFIG|A_STARTED|A_CL_JOIN_QUERY;
 	
-	if(cur_state == S_STOPPING || is_set(fsa_input_register, R_SHUTDOWN)) {
+	if(cur_state == S_STOPPING || ((fsa_input_register & R_SHUTDOWN) == R_SHUTDOWN)) {
 		clear_bit_inplace(actions, startup_actions);
 	}
 
-	fsa_dump_actions(actions ^ saved_actions, "Cleared Actions");
+	/* fsa_dump_actions(actions ^ saved_actions, "Cleared Actions"); */
 	return actions;
 }
 

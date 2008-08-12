@@ -23,7 +23,8 @@
 #include <crm/msg_xml.h>
 #include <clplumbing/cl_misc.h>
 
-void populate_hash(crm_data_t *nvpair_list, GHashTable *hash,
+extern xmlNode *get_object_root(const char *object_type,xmlNode *the_root);
+void populate_hash(xmlNode *nvpair_list, GHashTable *hash,
 		   const char **attrs, int attrs_length);
 
 resource_object_functions_t resource_class_functions[] = {
@@ -101,22 +102,26 @@ get_meta_attributes(GHashTable *meta_hash, resource_t *rsc,
 		    node_t *node, pe_working_set_t *data_set)
 {
 	GHashTable *node_hash = NULL;
+	xmlNode *defaults = get_object_root(XML_CIB_TAG_RSCCONFIG, data_set->input);
 	if(node) {
 		node_hash = node->details->attrs;
 	}
+	
+	unpack_instance_attributes(defaults, XML_TAG_META_SETS, node_hash,
+				   meta_hash, NULL, FALSE, data_set->now);
 	
 	xml_prop_iter(rsc->xml, prop_name, prop_value,
 		      add_hash_param(meta_hash, prop_name, prop_value);
 		);
 
 	unpack_instance_attributes(rsc->xml, XML_TAG_META_SETS, node_hash,
-				   meta_hash, NULL, data_set->now);
+				   meta_hash, NULL, FALSE, data_set->now);
 
 	/* populate from the regular attributes until the GUI can create
 	 * meta attributes
 	 */
 	unpack_instance_attributes(rsc->xml, XML_TAG_ATTR_SETS, node_hash,
-				   meta_hash, NULL, data_set->now);
+				   meta_hash, NULL, FALSE, data_set->now);
 
 	/* set anything else based on the parent */
 	if(rsc->parent != NULL) {
@@ -125,9 +130,10 @@ get_meta_attributes(GHashTable *meta_hash, resource_t *rsc,
 }
 
 gboolean	
-common_unpack(crm_data_t * xml_obj, resource_t **rsc,
+common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	      resource_t *parent, pe_working_set_t *data_set)
 {
+	xmlNode *ops = NULL;
 	const char *value = NULL;
 	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
 
@@ -143,14 +149,12 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		
 	}
 	crm_malloc0(*rsc, sizeof(resource_t));
-	
-	if(*rsc == NULL) {
-		return FALSE;
-	}
+	ops = find_xml_node(xml_obj, "operations", FALSE);
 	
 	(*rsc)->xml  = xml_obj;
 	(*rsc)->parent  = parent;
-	(*rsc)->ops_xml = find_xml_node(xml_obj, "operations", FALSE);
+	(*rsc)->ops_xml = expand_idref(ops);
+
 	(*rsc)->variant = get_resource_type(crm_element_name(xml_obj));
 	if((*rsc)->variant == pe_unknown) {
 		pe_err("Unknown resource type: %s", crm_element_name(xml_obj));
@@ -204,7 +208,8 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 
 	(*rsc)->recovery_type      = recovery_stop_start;
 	(*rsc)->stickiness         = data_set->default_resource_stickiness;
-	(*rsc)->fail_stickiness    = data_set->default_resource_fail_stickiness;
+	(*rsc)->migration_threshold    = data_set->default_migration_threshold;
+	(*rsc)->failure_timeout    = data_set->default_failure_timeout;
 
 	value = g_hash_table_lookup((*rsc)->meta, XML_CIB_ATTR_PRIORITY);
 	(*rsc)->priority	   = crm_parse_int(value, "0"); 
@@ -215,7 +220,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	    set_bit((*rsc)->flags, pe_rsc_notify); 
 	}
 	
-	value = g_hash_table_lookup((*rsc)->meta, "is_managed");
+	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MANAGED);
 	if(value != NULL && safe_str_neq("default", value)) {
 	    gboolean bool_value = TRUE;
 	    cl_str_to_boolean(value, &bool_value);
@@ -227,7 +232,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 	}
 
 	crm_debug_2("Options for %s", (*rsc)->id);
-	value = g_hash_table_lookup((*rsc)->meta, "globally_unique");
+	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
 	if(value == NULL || crm_is_true(value)) {
 	    set_bit((*rsc)->flags, pe_rsc_unique); 
 	}
@@ -242,7 +247,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		crm_debug_2("\tDependancy restart handling: ignore");
 	}
 
-	value = g_hash_table_lookup((*rsc)->meta, "multiple_active");
+	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MULTIPLE);
 	if(safe_str_eq(value, "stop_only")) {
 		(*rsc)->recovery_type = recovery_stop_only;
 		crm_debug_2("\tMultiple running resource recovery: stop only");
@@ -256,18 +261,27 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 		crm_debug_2("\tMultiple running resource recovery: stop/start");
 	}
 
-	value = g_hash_table_lookup((*rsc)->meta, "resource_stickiness");
+	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_STICKINESS);
 	if(value != NULL && safe_str_neq("default", value)) {
 		(*rsc)->stickiness = char2score(value);
 	}
 
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_STICKINESS);
+	if(value != NULL && safe_str_neq("default", value)) {
+		(*rsc)->migration_threshold = char2score(value);
+	}
+	
+	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_TIMEOUT);
 	if(value != NULL) {
-		(*rsc)->fail_stickiness = char2score(value);
+	    /* call crm_get_msec() and convert back to seconds */
+	    (*rsc)->failure_timeout = (crm_get_msec(value) / 1000);
 	}
 	
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_TARGET_ROLE);
-	if(value != NULL && safe_str_neq("default", value)) {
+	if(data_set->stop_everything) {
+	    (*rsc)->next_role = RSC_ROLE_STOPPED;
+
+	} else if(value != NULL && safe_str_neq("default", value)) {
 		(*rsc)->next_role = text2role(value);
 		if((*rsc)->next_role == RSC_ROLE_UNKNOWN) {
 			crm_config_err("%s: Unknown value for "
@@ -275,6 +289,7 @@ common_unpack(crm_data_t * xml_obj, resource_t **rsc,
 				       (*rsc)->id, value);
 		}
 	}
+	
 
 	crm_debug_2("\tDesired next state: %s",
 		    (*rsc)->next_role!=RSC_ROLE_UNKNOWN?role2text((*rsc)->next_role):"default");
@@ -323,97 +338,6 @@ resource_t *uber_parent(resource_t *rsc)
 		parent = parent->parent;
 	}
 	return parent;
-}
-
-void
-common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_set) 
-{
-	int fail_count = 0;
-	char *fail_attr = NULL;
-	const char *value = NULL;
-	GHashTable *meta_hash = NULL;
-
-	if(rsc->children) {
-	    slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		common_apply_stickiness(child_rsc, node, data_set);
-		);
-	    return;
-	}
-	
-	meta_hash = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
-		g_hash_destroy_str, g_hash_destroy_str);
-	get_meta_attributes(meta_hash, rsc, node, data_set);
-
-	/* update resource preferences that relate to the current node */	    
-	value = g_hash_table_lookup(meta_hash, "resource_stickiness");
-	if(value != NULL && safe_str_neq("default", value)) {
-		rsc->stickiness = char2score(value);
-	} else {
-		rsc->stickiness = data_set->default_resource_stickiness;
-	}
-
-	if(is_set(rsc->flags, pe_rsc_managed)
-	   && rsc->stickiness != 0
-	   && g_list_length(rsc->running_on) == 1) {
-	    node_t *current = pe_find_node_id(rsc->running_on, node->details->id);
-	    node_t *match = pe_find_node_id(rsc->allowed_nodes, node->details->id);
-
-	    if(current == NULL) {
-		
-	    } else if(match != NULL || data_set->symmetric_cluster) {
-		resource_t *sticky_rsc = rsc;
-		if(rsc->parent && rsc->parent->variant == pe_group) {
-		    sticky_rsc = rsc->parent;
-		}
-		
-		resource_location(sticky_rsc, node, rsc->stickiness, "stickiness", data_set);
-		crm_debug("Resource %s: preferring current location"
-			    " (node=%s, weight=%d)", sticky_rsc->id,
-			    node->details->uname, rsc->stickiness);
-	    } else {
-		crm_debug("Ignoring stickiness for %s: the cluster is asymmetric"
-			  " and node %s is not explicitly allowed",
-			  rsc->id, node->details->uname);
-		slist_iter(node, node_t, rsc->allowed_nodes, lpc,
-			   crm_err("%s[%s] = %d", rsc->id, node->details->uname, node->weight));
-	    }
-	}
-	
-	value = g_hash_table_lookup(meta_hash, XML_RSC_ATTR_FAIL_STICKINESS);
-	if(value != NULL && safe_str_neq("default", value)) {
-		rsc->fail_stickiness = char2score(value);
-	} else {
-		rsc->fail_stickiness = data_set->default_resource_fail_stickiness;
-	}
-
-	/* process failure stickiness */
-	fail_attr = crm_concat("fail-count", rsc->id, '-');
-	value = g_hash_table_lookup(node->details->attrs, fail_attr);
-	if(value != NULL) {
-		crm_debug("%s: %s", fail_attr, value);
-		fail_count = char2score(value);
-	}
-	crm_free(fail_attr);
-	
-	if(fail_count > 0 && rsc->fail_stickiness != 0) {
-		resource_t *failed = rsc;
-		int score = fail_count * rsc->fail_stickiness;
-		if(is_not_set(rsc->flags, pe_rsc_unique)) {
-		    failed = uber_parent(rsc);
-		}
-
-		/* detect and prevent score underflows */
-		if(rsc->fail_stickiness < 0 && (score > 0 || score < -INFINITY)) {
-		    score = -INFINITY;
-		}
-
-		resource_location(failed, node, score, "fail_stickiness", data_set);
-		crm_info("Setting failure stickiness for %s on %s: %d",
-			  failed->id, node->details->uname, score);
-	}
-	g_hash_table_destroy(meta_hash);
 }
 
 void common_free(resource_t *rsc)

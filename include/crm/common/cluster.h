@@ -42,15 +42,18 @@ extern gboolean crm_cluster_connect(
     );
 
 extern gboolean send_cluster_message(
-    const char *node, enum crm_ais_msg_types service, HA_Message *data, gboolean ordered);
+    const char *node, enum crm_ais_msg_types service, xmlNode *data, gboolean ordered);
 
 extern void destroy_crm_node(gpointer data);
 
-extern crm_node_t *crm_update_ais_node(crm_data_t *member, long long seq);
+#define crm_find_node(id) crm_find_peer(id, NULL)
+extern crm_node_t *crm_find_peer(unsigned int id, const char *uname);
+
+extern crm_node_t *crm_update_ais_node(xmlNode *member, long long seq);
 extern void crm_update_peer_proc(
     const char *uname, uint32_t flag, const char *status);
 extern crm_node_t *crm_update_peer(
-    unsigned int id, unsigned long long born, int32_t votes, uint32_t children,
+    unsigned int id, uint64_t born, uint64_t seen, int32_t votes, uint32_t children,
     const char *uuid, const char *uname, const char *addr, const char *state);
 
 extern gboolean crm_is_member_active(const crm_node_t *node);
@@ -64,7 +67,7 @@ extern gboolean crm_calculate_quorum(void);
 extern gboolean ccm_have_quorum(oc_ed_t event);
 extern const char *ccm_event_name(oc_ed_t event);
 extern crm_node_t *crm_update_ccm_node(
-    const oc_ev_membership_t *oc, int offset, const char *state);
+    const oc_ev_membership_t *oc, int offset, const char *state, uint64_t seq);
 #endif
 
 #if SUPPORT_AIS
@@ -78,7 +81,7 @@ extern gboolean send_ais_text(
 extern void empty_uuid_cache(void);
 extern const char *get_uuid(const char *uname);
 extern const char *get_uname(const char *uuid);
-extern void set_uuid(crm_data_t *node, const char *attr, const char *uname);
+extern void set_uuid(xmlNode *node, const char *attr, const char *uname);
 extern void unget_uuid(const char *uname);
 
 enum crm_ais_msg_types text2msg_type(const char *text);

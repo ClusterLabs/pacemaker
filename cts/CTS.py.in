@@ -813,6 +813,44 @@ class ClusterManager(UserDict):
     
     def Components(self):
         raise ValueError("Abstract Class member (Components)")
+
+    def oprofileStart(self, node=None):
+        if not node:
+            for n in self.Env["oprofile"]:
+                self.oprofileStart(n)
+
+        elif node in self.Env["oprofile"]:
+            self.debug("Enabling oprofile on %s" % node) 
+            self.rsh.remote_py(node, "os", "system", "opcontrol --init")
+            self.rsh.remote_py(node, "os", "system", "opcontrol --setup --no-vmlinux --separate=lib --callgraph=10 --image=all")
+            self.rsh.remote_py(node, "os", "system", "opcontrol --start")
+            self.rsh.remote_py(node, "os", "system", "opcontrol --reset")
+
+    def oprofileSave(self, test, node=None):
+        if not node:
+            for n in self.Env["oprofile"]:
+                self.oprofileSave(test, n)
+
+        elif node in self.Env["oprofile"]:
+            self.rsh.remote_py(node, "os", "system", "opcontrol --dump")
+            self.rsh.remote_py(node, "os", "system", "opcontrol --save=cts.%d" % test)
+            # Read back with: opreport -l session:cts.0 image:/usr/lib/heartbeat/c*
+            if None:
+                self.rsh.remote_py(node, "os", "system", "opcontrol --reset")
+            else:
+                self.oprofileStop(node)
+                self.oprofileStart(node)
+
+    def oprofileStop(self, node=None):
+        if not node:
+            for n in self.Env["oprofile"]:
+                self.oprofileStop(n)
+
+        elif node in self.Env["oprofile"]:
+            self.debug("Stopping oprofile on %s" % node) 
+            self.rsh.remote_py(node, "os", "system", "opcontrol --reset")
+            self.rsh.remote_py(node, "os", "system", "opcontrol --shutdown 2>&1 > /dev/null")
+
     
 class Resource:
     '''

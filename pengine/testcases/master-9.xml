@@ -135,7 +135,7 @@
            <attributes>
              <nvpair id="DoFencing-1" name="clone_max" value="4"/>
              <nvpair id="DoFencing-2" name="clone_node_max" value="1"/>
-            <nvpair name="resource_stickiness" value="1"/>
+            <nvpair id="any" name="resource_stickiness" value="1"/>
            </attributes>
          </instance_attributes>
          <primitive id="child_DoFencing" class="stonith" type="ssh">
@@ -157,7 +157,7 @@
              <nvpair id="clone_node_max_2" name="clone_node_max" value="2"/>
              <nvpair id="master_max_3" name="master_max" value="4"/>
              <nvpair id="master_node_max_4" name="master_node_max" value="1"/>
-            <nvpair name="resource_stickiness" value="1"/>
+            <nvpair id="any" name="resource_stickiness" value="1"/>
            </attributes>
          </instance_attributes>
          <primitive id="ocf_msdummy" class="ocf" type="/usr/lib64/heartbeat/cts/OCFMSDummy" provider="heartbeat">
@@ -199,10 +199,6 @@
            <expression id="rsc_test02_loc_expr" attribute="#uname" operation="eq" value="test02"/>
          </rule>
        </rsc_location>
-      <rsc_location id="master-node2" rsc="rsc1">
-	<rule id="master-rule-node2" score="100" role="Master">
-	</rule>
-      </rsc_location>
      </constraints>
    </configuration>
    <status>

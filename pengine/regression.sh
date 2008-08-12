@@ -18,7 +18,7 @@
  #
 if [ -x /usr/bin/valgrind ]; then
     export G_SLICE=always-malloc
-    VALGRIND_CMD="valgrind -q --show-reachable=yes --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=./ptest.supp"
+    VALGRIND_CMD="valgrind -q --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=./ptest.supp"
 fi
 
 . regression.core.sh

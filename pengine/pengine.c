@@ -34,8 +34,8 @@
 #include <lib/crm/pengine/utils.h>
 #include <utils.h>
 
-crm_data_t * do_calculations(
-	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
+xmlNode * do_calculations(
+	pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now);
 
 #define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
 
@@ -59,14 +59,13 @@ series_t series[] = {
 	{ 0, "pe-input",   "pe-input-series-max", 400 },
 };
 
-
 gboolean
-process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
+process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 {
 	gboolean send_via_disk = FALSE;
-	const char *sys_to = cl_get_string(msg, F_CRM_SYS_TO);
-	const char *op = cl_get_string(msg, F_CRM_TASK);
-	const char *ref = cl_get_string(msg, XML_ATTR_REFERENCE);
+	const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
+	const char *op = crm_element_value(msg, F_CRM_TASK);
+	const char *ref = crm_element_value(msg, XML_ATTR_REFERENCE);
 
 	crm_debug_3("Processing %s op (ref=%s)...", op, ref);
 	
@@ -76,7 +75,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	} else if(strcasecmp(op, CRM_OP_HELLO) == 0) {
 		/* ignore */
 		
-	} else if(safe_str_eq(cl_get_string(msg, F_CRM_MSG_TYPE),
+	} else if(safe_str_eq(crm_element_value(msg, F_CRM_MSG_TYPE),
 			      XML_ATTR_RESPONSE)) {
 		/* ignore */
 		
@@ -92,8 +91,9 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		char *graph_file = NULL;
 		const char *value = NULL;
 		pe_working_set_t data_set;
-		crm_data_t *log_input  = copy_xml(xml_data);
-		HA_Message *reply = NULL;
+		xmlNode *converted = NULL;
+		xmlNode *reply = NULL;
+		gboolean process = TRUE;
 #if HAVE_BZLIB_H
 		gboolean compress = TRUE;
 #else
@@ -109,8 +109,43 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		graph_file = crm_strdup(WORKING_DIR"/graph.XXXXXX");
 		graph_file = mktemp(graph_file);
 
-		do_calculations(&data_set, xml_data, NULL);
+		value = crm_element_value(xml_data, XML_ATTR_VALIDATION);
+		if(safe_str_neq(value, LATEST_SCHEMA_VERSION)) {
+		    int schema_version = 0;
+		    int max_version = get_schema_version(LATEST_SCHEMA_VERSION);
+		    int min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
 
+		    crm_config_warn("Your current configuration only conforms to %s", value);
+		    crm_config_warn("Please use 'cibadmin --upgrade' to convert to %s", LATEST_SCHEMA_VERSION);
+		    
+		    converted = copy_xml(xml_data);
+		    update_validation(&converted, &schema_version, TRUE, TRUE);
+
+		    value = crm_element_value(converted, XML_ATTR_VALIDATION);
+		    if(schema_version < min_version) {
+			crm_config_err("Your current configuration could only be upgraded to %s... "
+				       "the minimum requirement is %s.", value, MINIMUM_SCHEMA_VERSION);
+
+			set_working_set_defaults(&data_set);
+			data_set.graph = create_xml_node(NULL, XML_TAG_GRAPH);
+			crm_xml_add_int(data_set.graph, "transition_id", 0);
+			crm_xml_add_int(data_set.graph, "cluster-delay", 0);
+			process = FALSE;
+
+		    } else if(schema_version < max_version) {
+			crm_config_warn("Your configuration was internally updated to %s... "
+					"which is acceptable but not the most recent", value);
+		    } else {
+			crm_config_warn("Your configuration was internally updated to %s", value);
+		    }
+
+		    xml_data = converted;
+		}
+
+		if(process) {
+		    do_calculations(&data_set, xml_data, NULL);
+		}
+		
 		series_id = get_series();
 		series_wrap = series[series_id].wrap;
 		value = pe_pref(data_set.config_hash, series[series_id].param);
@@ -135,8 +170,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 		filename = generate_series_filename(
 			PE_WORKING_DIR, series[series_id].name, seq, compress);
-		ha_msg_add(reply, F_CRM_TGRAPH_INPUT, filename);
-		crm_free(filename); filename = NULL;
+		crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
 
 		if(send_ipc_message(sender, reply) == FALSE) {
 			send_via_disk = TRUE;
@@ -146,16 +180,15 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 				crm_err("TE graph could not be written to disk");
 			}
 		}
-		crm_msg_del(reply);
+		free_xml(reply);
 		
 		cleanup_alloc_calculations(&data_set);
 
-		filename = generate_series_filename(
-			PE_WORKING_DIR, series[series_id].name, seq, compress);
-
-		write_xml_file(log_input, filename, compress);
-		write_last_sequence(PE_WORKING_DIR, series[series_id].name,
-				    seq+1, series_wrap);
+		if(series_wrap != 0) {
+		    write_xml_file(xml_data, filename, compress);
+		    write_last_sequence(PE_WORKING_DIR, series[series_id].name,
+					seq+1, series_wrap);
+		}
 		
 		if(was_processing_error) {
 			crm_err("Transition %d:"
@@ -185,18 +218,18 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 		if(send_via_disk) {
 			reply = create_reply(msg, NULL);
-			ha_msg_add(reply, F_CRM_TGRAPH, graph_file);
-			ha_msg_add(reply, F_CRM_TGRAPH_INPUT, filename);
+			crm_xml_add(reply, F_CRM_TGRAPH, graph_file);
+			crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
 			CRM_ASSERT(reply != NULL);
 			if(send_ipc_message(sender, reply) == FALSE) {
 				crm_err("Answer could not be sent");
 			}
+			free_xml(reply);
 		}
-		
+
+		free_xml(converted);
 		crm_free(graph_file);
-		free_xml(log_input);
 		crm_free(filename);
-		crm_msg_del(reply);
 		
 	} else if(strcasecmp(op, CRM_OP_QUIT) == 0) {
 		crm_warn("Received quit message, terminating");
@@ -213,8 +246,8 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	crm_err("Exiting: stage %d", stage);				\
 	exit(1);
 
-crm_data_t *
-do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now)
+xmlNode *
+do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 {
 	int rsc_log_level = LOG_NOTICE;
 /*	pe_debug_on(); */

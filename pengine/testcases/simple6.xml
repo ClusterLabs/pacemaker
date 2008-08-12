@@ -11,16 +11,16 @@
     </nodes>
     <resources>
       <primitive id="rsc1" class="heartbeat" type="apache">
-        <instance_attributes>
+        <instance_attributes id="1" >
           <attributes>
-            <nvpair name="priority" value="1.0"/>
+            <nvpair  id="3" name="priority" value="1.0"/>
           </attributes>
         </instance_attributes>
       </primitive>
       <primitive id="rsc2" class="heartbeat" type="apache">
-        <instance_attributes>
+        <instance_attributes id="2" >
           <attributes>
-            <nvpair name="priority" value="2.0"/>
+            <nvpair  id="4" name="priority" value="2.0"/>
           </attributes>
         </instance_attributes>
       </primitive>
@@ -31,7 +31,7 @@
   </configuration>
   <status>
     <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
-      <lrm>
+      <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="rsc1" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1_start_0" operation="start" interval="0" op_status="0" rc_code="0" call_id="1" op_digest="9d52bf4c88392688f8b12775fdbb957a" crm_feature_set="1.0.5" transition_magic=""/>

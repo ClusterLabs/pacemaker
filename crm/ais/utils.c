@@ -28,6 +28,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+#include <pwd.h>
 #include <glib.h>
 #include <bzlib.h>
 
@@ -86,10 +87,23 @@ gboolean spawn_child(crm_child_t *child)
 {
     int rc = 0;
     int lpc = 0;
+    int uid = 0;
+    int gid = 0;
     struct rlimit oflimits;
+    struct passwd *pwentry = NULL;
+    gboolean use_valgrind = FALSE;
     const char *devnull = "/dev/null";
-    const char *use_valgrind = getenv("HA_VALGRIND_ENABLED");
+    const char *env_valgrind = getenv("HA_VALGRIND_ENABLED");
 
+    if(child->uid) {
+	pwentry = getpwnam(child->uid);
+	AIS_CHECK(pwentry != NULL,
+		  ais_err("Invalid uid (%s) specified for %s", child->uid, child->name);
+		  return TRUE);
+	uid = pwentry->pw_uid;
+	gid = pwentry->pw_gid;
+    }
+    
     if(child->command == NULL) {
 	ais_info("Nothing to do for child \"%s\"", child->name);
 	return TRUE;
@@ -98,9 +112,26 @@ gboolean spawn_child(crm_child_t *child)
     child->pid = fork();
     AIS_ASSERT(child->pid != -1);
 
+    if(env_valgrind == NULL) {
+	use_valgrind = FALSE;
+
+    } else if(ais_string_to_boolean(env_valgrind)) {
+	use_valgrind = TRUE;
+
+    } else if(strstr(env_valgrind, child->name)) {
+	use_valgrind = TRUE;	
+    }
+
+    if(use_valgrind && strlen(VALGRIND_BIN) == 0) {
+	ais_warn("Cannot enable valgrind for %s:"
+		 " The location of the valgrind binary is unknown", child->name);
+	use_valgrind = FALSE;
+    }
+    
     if(child->pid > 0) {
 	/* parent */
-	ais_info("Forked child %d for process %s", child->pid, child->name);
+	ais_info("Forked child %d for process %s%s", child->pid, child->name,
+		 use_valgrind?" (valgrind enabled)":"");
 	return TRUE;
     }
     
@@ -108,10 +139,17 @@ gboolean spawn_child(crm_child_t *child)
     ais_debug("Executing \"%s (%s)\" (pid %d)",
 	      child->command, child->name, (int) getpid());
 
-    if(child->uid > 0) {
- 	rc = setuid(child->uid);
+    if(0 && gid) {
+	rc = setgid(gid);
 	if(rc < 0) {
-	    ais_perror("Could not set user to %d", child->uid);
+	    ais_perror("Could not set group to %d", gid);
+	}
+    }
+    
+    if(uid) {
+ 	rc = setuid(uid);
+	if(rc < 0) {
+	    ais_perror("Could not set user to %d (%s)", uid, child->uid);
 	}
     }
     
@@ -125,7 +163,7 @@ gboolean spawn_child(crm_child_t *child)
     (void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
     (void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
 
-    if(ais_string_to_boolean(use_valgrind)) {
+    if(use_valgrind) {
 	char *opts[] = {
 	    ais_strdup(VALGRIND_BIN),
 	    ais_strdup(child->command),
@@ -184,8 +222,8 @@ void destroy_ais_node(gpointer data)
     ais_free(node);
 }
 
-int update_member(unsigned int id, unsigned long long seq, int32_t votes,
-		  uint32_t procs, const char *uname, const char *state) 
+int update_member(unsigned int id, uint64_t born, uint64_t seq, int32_t votes,
+		  uint32_t procs, const char *uname, const char *state, const char *version) 
 {
     int changed = 0;
     crm_node_t *node = NULL;
@@ -205,6 +243,18 @@ int update_member(unsigned int id, unsigned long long seq, int32_t votes,
 
     if(seq != 0) {
 	node->last_seen = seq;
+    }
+
+    if(born != 0) {
+	changed = TRUE;
+	node->born = born;
+	ais_info("%p Node %u (%s) born on: %llu",
+		 node, id, uname, (unsigned long long)born);
+    }
+
+    if(version != NULL) {
+	ais_free(node->version);
+	node->version = ais_strdup(version);
     }
     
     if(uname != NULL) {
@@ -267,34 +317,48 @@ const char *member_uname(uint32_t id)
      return node->uname;
 }
 
-#define MEMBER_FORMAT "<node id=\"%u\" uname=\"%s\" state=\"%s\" seq=\"%llu\" votes=\"%d\" processes=\"%u\" addr=\"%s\"/>"
-
 char *append_member(char *data, crm_node_t *node)
 {
     int size = 1; /* nul */
     int offset = 0;
+    static int fixed_len = 4 + 8 + 7 + 6 + 6 + 7 + 11;
 
-    if(node->uname == NULL) {
-	return data;
-    }
-    
     if(data) {
 	size = strlen(data);
     }
     offset = size;
 
-    size += strlen(MEMBER_FORMAT);
+    size += fixed_len;
     size += 32; /* node->id */
-    size += strlen(node->uname);
+    size += 100; /* node->seq, node->born */
     size += strlen(node->state);
-    data = realloc(data, size);
-    if(node->addr) {
-	size += strlen(node->addr);
+    if(node->uname) {
+	size += (7 + strlen(node->uname));
     }
+    if(node->addr) {
+	size += (6 + strlen(node->addr));
+    }
+    if(node->version) {
+	size += (9 + strlen(node->version));
+    }
+    data = realloc(data, size);
 
-    sprintf(data+offset, MEMBER_FORMAT,
-	    node->id, node->uname, node->state, membership_seq,
-	    node->votes, node->processes, node->addr?node->addr:"");
+    offset += snprintf(data + offset, size - offset, "<node id=\"%u\" ", node->id);
+    if(node->uname) {
+	offset += snprintf(data + offset, size - offset, "uname=\"%s\" ", node->uname);
+    }
+    offset += snprintf(data + offset, size - offset, "state=\"%s\" ", node->state);
+    offset += snprintf(data + offset, size - offset, "born=\"%llu\" ", node->born);
+    offset += snprintf(data + offset, size - offset, "seen=\"%llu\" ", node->last_seen);
+    offset += snprintf(data + offset, size - offset, "votes=\"%d\" ", node->votes);
+    offset += snprintf(data + offset, size - offset, "processes=\"%u\" ", node->processes);
+    if(node->addr) {
+	offset += snprintf(data + offset, size - offset, "addr=\"%s\" ", node->addr);
+    }
+    if(node->version) {
+	offset += snprintf(data + offset, size - offset, "version=\"%s\" ", node->version);
+    }
+    offset += snprintf(data + offset, size - offset, "/>");
 
     return data;
 }
@@ -450,10 +514,26 @@ int send_client_msg(
     return rc;    
 }
 
+static char *
+ais_concat(const char *prefix, const char *suffix, char join) 
+{
+	int len = 0;
+	char *new_str = NULL;
+	AIS_ASSERT(prefix != NULL);
+	AIS_ASSERT(suffix != NULL);
+	len = strlen(prefix) + strlen(suffix) + 2;
+
+	ais_malloc0(new_str, (len));
+	sprintf(new_str, "%s%c%s", prefix, join, suffix);
+	new_str[len-1] = 0;
+	return new_str;
+}
+
 int objdb_get_string(
     struct objdb_iface_ver0 *objdb, unsigned int object_service_handle,
     char *key, char **value, const char *fallback)
 {
+    char *env_key = NULL;
     *value = NULL;
     if(object_service_handle > 0) {
 	objdb->object_key_get(
@@ -465,6 +545,15 @@ int objdb_get_string(
 	return 0;
     }
 
+    env_key = ais_concat("HA", key, '_');
+    *value = getenv(env_key);
+    ais_free(env_key);
+
+    if (*value) {
+	ais_info("Found '%s' for option %s", *value, key);
+	return 0;
+    }
+    
     ais_info("Defaulting to '%s' for option %s", fallback, key);
     *value = ais_strdup(fallback);
     return -1;

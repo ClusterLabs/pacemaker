@@ -15,7 +15,7 @@
          <operations>
            <op id="1" name="monitor" interval="5s" timeout="20s"/>
          </operations>
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="1" name="ip" value="127.0.0.10"/>
            </attributes>
@@ -25,14 +25,14 @@
          <operations>
            <op id="1" name="monitor" interval="5s" timeout="20s"/>
          </operations>
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="1" name="ip" value="127.0.0.11"/>
            </attributes>
          </instance_attributes>
        </primitive>
        <clone id="DoFencing" notify="true" notify_confirm="true">
-         <instance_attributes>
+         <instance_attributes id="any">
            <attributes>
              <nvpair id="1" name="clone_max" value="1"/>
              <nvpair id="2" name="clone_node_max" value="1"/>
@@ -43,7 +43,7 @@
              <op id="1" name="monitor" interval="5s" timeout="20s" prereq="nothing"/>
              <op id="2" name="start" timeout="20s" prereq="nothing"/>
            </operations>
-           <instance_attributes>
+           <instance_attributes id="any">
              <attributes>
                <nvpair id="1" name="hostlist" value="c001n08 "/>
              </attributes>
@@ -66,7 +66,7 @@
    </configuration>
  <status>
    <node_state id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" uname="c001n08" in_ccm="true" join="member"  crmd="online" ha="active" expected="member">
-     <lrm>
+     <lrm id="any">
        <lrm_resources>
          <lrm_resource id="DoFencing:child_DoFencing:0" class="heartbeat" type="apache">
            <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" op_digest="790fa7a8dbea1c0a44f644a7b40f76a9" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:2422658a-ee60-43e6-a836-ae3116923ae8" crm_feature_set="1.0.6" transition_magic="0:0:2422658a-ee60-43e6-a836-ae3116923ae8" call_id="2" rc_code="0" op_status="0" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
@@ -78,7 +78,7 @@
      </lrm>
    </node_state>
    <node_state id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
-     <lrm>
+     <lrm id="any">
        <lrm_resources/>
      </lrm>
    </node_state>

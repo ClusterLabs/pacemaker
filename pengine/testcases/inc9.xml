@@ -11,11 +11,11 @@
     </nodes>
     <resources>
       <clone id="rsc1" globally_unique="false">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
-            <nvpair name="clone_max" value="5"/>
-            <nvpair name="clone_node_max" value="2"/>
-            <nvpair name="resource_stickiness" value="1"/>
+            <nvpair id="any" name="clone_max" value="5"/>
+            <nvpair id="any" name="clone_node_max" value="2"/>
+            <nvpair id="any" name="resource_stickiness" value="1"/>
           </attributes>
         </instance_attributes>
 	<primitive id="child_rsc1" class="heartbeat" type="apache"/>
@@ -26,13 +26,13 @@
   <status>
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc1:child_rsc1:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1:child_rsc1:0_start_0" operation="start" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op_status="0" rc_code="0" call_id="1" crm_feature_set="1.0.6" transition_magic=""/>
@@ -48,13 +48,13 @@
     </node_state>
     <node_state id="uuid2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc1:child_rsc1:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1:child_rsc1:0_start_0" operation="start" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op_status="0" rc_code="0" call_id="1" crm_feature_set="1.0.6" transition_magic=""/>

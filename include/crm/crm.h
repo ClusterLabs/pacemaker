@@ -18,18 +18,23 @@
 #ifndef CRM__H
 #define CRM__H
 
-#include <config.h>
+#include <heartbeat/hb_config.h>
+#include <crm_config.h>
 #include <stdlib.h>
 #include <glib.h>
+
 #undef MIN
 #undef MAX
-
 #include <string.h>
+
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_malloc.h>
-#ifdef MCHECK
-#include <mcheck.h>
-#endif
+
+#include <libxml/tree.h> 
+
+#define CRM_FEATURE_SET		"3.0"
+#define MINIMUM_SCHEMA_VERSION	"pacemaker-0.7"
+#define LATEST_SCHEMA_VERSION	"pacemaker-"DTD_VERSION
 
 #define EOS		'\0'
 #define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
@@ -58,30 +63,31 @@
 #define fsa_diff_warn_ms     10000
 #define fsa_diff_max_ms      30000
 
-#include <crm/common/util.h>
-
-#define CRM_ASSERT(expr) if((expr) == FALSE) {				\
-	crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
-    }
-
-extern gboolean crm_assert_failed;
-
-#define CRM_DEV_ASSERT(expr)						\
-	crm_assert_failed = FALSE;					\
+#define CRM_ASSERT(expr) do {						\
 	if((expr) == FALSE) {						\
-		crm_assert_failed = TRUE;				\
+	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
+	}								\
+    } while(0)
+
+#define CRM_DEV_ASSERT(expr) do {					\
+	if((expr) == FALSE) {						\
 		crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
-	}
+	}								\
+    } while(0)
 
-#define CRM_CHECK(expr, failure_action) if((expr) == FALSE) {		\
-	crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
-	failure_action;							\
-    }
+#define CRM_CHECK(expr, failure_action) do {				\
+	if((expr) == FALSE) {						\
+	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
+	    failure_action;						\
+	}								\
+    } while(0)
 
-#define CRM_CHECK_AND_STORE(expr, failure_action) if((expr) == FALSE) {	\
-	crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, TRUE, TRUE); \
-	failure_action;							\
-    }
+#define CRM_CHECK_AND_STORE(expr, failure_action) do {			\
+	if((expr) == FALSE) {						\
+	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, TRUE, TRUE); \
+	    failure_action;						\
+	}								\
+    } while(0)
 
 extern const char *crm_system_name;
 
@@ -94,8 +100,6 @@ extern const char *crm_system_name;
 #define MAX_IPC_FAIL	5
 #define CIB_FILENAME	WORKING_DIR"/cib.xml"
 #define CIB_BACKUP	WORKING_DIR"/cib_backup.xml"
-
-#define CRM_FEATURE_SET	"2.1"
 
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1
@@ -164,6 +168,7 @@ extern const char *crm_system_name;
 #define CRMD_JOINSTATE_DOWN	CRMD_STATE_INACTIVE
 #define CRMD_JOINSTATE_PENDING	"pending"
 #define CRMD_JOINSTATE_MEMBER	CRMD_STATE_ACTIVE
+#define CRMD_JOINSTATE_NACK	"banned"
 
 #define CRMD_ACTION_DELETE		"delete"
 #define CRMD_ACTION_CANCEL		"cancel"
@@ -186,6 +191,32 @@ extern const char *crm_system_name;
 #define CRMD_ACTION_NOTIFIED		"notified"
 
 #define CRMD_ACTION_STATUS		"monitor"
+
+/* short names */
+#define RSC_DELETE	CRMD_ACTION_DELETE
+#define RSC_CANCEL	CRMD_ACTION_CANCEL
+
+#define RSC_MIGRATE	CRMD_ACTION_MIGRATE
+#define RSC_MIGRATED	CRMD_ACTION_MIGRATED
+
+#define RSC_START	CRMD_ACTION_START
+#define RSC_STARTED	CRMD_ACTION_STARTED
+
+#define RSC_STOP	CRMD_ACTION_STOP
+#define RSC_STOPPED	CRMD_ACTION_STOPPED
+
+#define RSC_PROMOTE	CRMD_ACTION_PROMOTE
+#define RSC_PROMOTED	CRMD_ACTION_PROMOTED
+#define RSC_DEMOTE	CRMD_ACTION_DEMOTE
+#define RSC_DEMOTED	CRMD_ACTION_DEMOTED
+
+#define RSC_NOTIFY	CRMD_ACTION_NOTIFY
+#define RSC_NOTIFIED	CRMD_ACTION_NOTIFIED
+
+#define RSC_STATUS	CRMD_ACTION_STATUS
+
+
+
 
 typedef GList* GListPtr;
 #define slist_destroy(child_type, child, parent, a)			\
@@ -237,11 +268,13 @@ typedef GList* GListPtr;
 		}							\
 	} while(0)
 
-#define crm_crit(fmt, args...)    do_crm_log(LOG_CRIT,    fmt , ##args)
-#define crm_err(fmt, args...)     do_crm_log(LOG_ERR,     fmt , ##args)
-#define crm_warn(fmt, args...)    do_crm_log(LOG_WARNING, fmt , ##args)
-#define crm_notice(fmt, args...)  do_crm_log(LOG_NOTICE,  fmt , ##args)
-#define crm_info(fmt, args...)    do_crm_log(LOG_INFO,    fmt , ##args)
+#define do_crm_log_always(level, fmt, args...) cl_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
+
+#define crm_crit(fmt, args...)    do_crm_log_always(LOG_CRIT,    fmt , ##args)
+#define crm_err(fmt, args...)     do_crm_log_always(LOG_ERR,     fmt , ##args)
+#define crm_warn(fmt, args...)    do_crm_log_always(LOG_WARNING, fmt , ##args)
+#define crm_notice(fmt, args...)  do_crm_log_always(LOG_NOTICE,  fmt , ##args)
+#define crm_info(fmt, args...)    do_crm_log_always(LOG_INFO,    fmt , ##args)
 #define crm_debug(fmt, args...)   do_crm_log(LOG_DEBUG,   fmt , ##args)
 #define crm_debug_2(fmt, args...) do_crm_log(LOG_DEBUG_2, fmt , ##args)
 #define crm_debug_3(fmt, args...) do_crm_log(LOG_DEBUG_3, fmt , ##args)
@@ -249,12 +282,7 @@ typedef GList* GListPtr;
 #define crm_debug_5(fmt, args...) do_crm_log(LOG_DEBUG_5, fmt , ##args)
 #define crm_debug_6(fmt, args...) do_crm_log(LOG_DEBUG_6, fmt , ##args)
 
-extern void crm_log_message_adv(
-	int level, const char *alt_debugfile, const HA_Message *msg);
-
-#define crm_log_message(level, msg) if(crm_log_level >= (level)) {	\
-		crm_log_message_adv(level, NULL, msg);			\
-	}
+#include <crm/common/util.h>
 
 #define crm_log_xml(level, text, xml)   if(crm_log_level >= (level)) {	\
 		print_xml_formatted(level,  __PRETTY_FUNCTION__, xml, text); \
@@ -272,53 +300,30 @@ extern void crm_log_message_adv(
 
 #define crm_str(x)    (const char*)(x?x:"<null>")
 
-#if CRM_DEV_BUILD
-#    define crm_malloc0(malloc_obj, length) do {			\
-		if(malloc_obj) {					\
-			crm_err("Potential memory leak:"		\
-				" %s at %s:%d not NULL before alloc.",	\
-				#malloc_obj, __FILE__, __LINE__);	\
-		}							\
-		malloc_obj = cl_malloc(length);				\
-		if(malloc_obj == NULL) {				\
-		    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
-		    CRM_ASSERT(malloc_obj != NULL);			\
-		}							\
-		memset(malloc_obj, 0, length);				\
-	} while(0)
-/* it's not a memory leak to already have an object to realloc, that's
- * the usual case, however if it does have a value, it must have been
- * allocated by the same allocator!
- */ 
-#    define crm_realloc(realloc_obj, length) do {			\
-		if (realloc_obj != NULL) {				\
-			CRM_ASSERT(cl_is_allocated(realloc_obj) == 1);	\
-		}							\
-		realloc_obj = cl_realloc(realloc_obj, length);		\
-		CRM_ASSERT(realloc_obj != NULL);			\
-	} while(0)
-#    define crm_free(free_obj) if(free_obj) {			\
-		CRM_ASSERT(cl_is_allocated(free_obj) == 1);	\
-		cl_free(free_obj);				\
-		free_obj=NULL;					\
-	}
-#else
-#    define crm_malloc0(malloc_obj, length) do {			\
-		malloc_obj = cl_malloc(length);				\
-		if(malloc_obj == NULL) {				\
-		    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
-		    CRM_ASSERT(malloc_obj != NULL);			\
-		}							\
-		memset(malloc_obj, 0, length);				\
-	} while(0)
-#    define crm_realloc(realloc_obj, length) do {			\
-		realloc_obj = cl_realloc(realloc_obj, length);		\
-		CRM_ASSERT(realloc_obj != NULL);			\
-	} while(0)
-	
-#    define crm_free(free_obj) if(free_obj) { cl_free(free_obj); free_obj=NULL; }
-#endif
+#define crm_malloc0(malloc_obj, length) do {				\
+	malloc_obj = cl_malloc(length);					\
+	if(malloc_obj == NULL) {					\
+	    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
+	    CRM_ASSERT(malloc_obj != NULL);				\
+	}								\
+	memset(malloc_obj, 0, length);					\
+    } while(0)
 
-#define crm_msg_del(msg) if(msg != NULL) { ha_msg_del(msg); msg = NULL; }
+#define crm_malloc(malloc_obj, length) do {				\
+	malloc_obj = cl_malloc(length);					\
+	if(malloc_obj == NULL) {					\
+	    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
+	    CRM_ASSERT(malloc_obj != NULL);				\
+	}								\
+    } while(0)
+
+#define crm_realloc(realloc_obj, length) do {				\
+	realloc_obj = cl_realloc(realloc_obj, length);			\
+	CRM_ASSERT(realloc_obj != NULL);				\
+    } while(0)
+	
+#define crm_free(free_obj) do { if(free_obj) { cl_free(free_obj); free_obj=NULL; } } while(0)
+#define crm_msg_del(msg) do { if(msg != NULL) { ha_msg_del(msg); msg = NULL; } } while(0)
+
 #define crm_strdup(str) crm_strdup_fn(str, __FILE__, __PRETTY_FUNCTION__, __LINE__)
 #endif

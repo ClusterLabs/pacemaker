@@ -124,13 +124,10 @@ extern GHashTable *crmd_peer_state;
 extern void do_update_cib_nodes(gboolean overwrite, const char *caller);
 extern gboolean do_dc_heartbeat(gpointer data);
 
-gboolean add_cib_op_callback(
-	int call_id, gboolean only_success, void *user_data,
-	void (*callback)(const HA_Message*, int, int, crm_data_t*,void*));
-
 #define AM_I_DC is_set(fsa_input_register, R_THE_DC)
 #define AM_I_OPERATIONAL (is_set(fsa_input_register, R_STARTING)==FALSE)
 extern unsigned long long saved_ccm_membership_id;
+extern gboolean ever_had_quorum;
 
 #include <fsa_proto.h>
 #include <crmd_utils.h>

@@ -12,7 +12,7 @@
     </nodes>
     <resources>
       <clone id="rsc1" notify="1">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair id="1" name="clone_max" value="2"/>
             <nvpair id="2" name="clone_node_max" value="2"/>
@@ -21,7 +21,7 @@
 	<primitive id="child_rsc1" class="heartbeat" type="apache"/>
       </clone>
       <clone id="rsc2" notify="1">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
             <nvpair id="3" name="clone_max" value="2"/>
             <nvpair id="4" name="clone_node_max" value="2"/>
@@ -40,7 +40,7 @@
   </configuration>
   <status>
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="rsc1:child_rsc1:0" class="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1:child_rsc1:0_start_0" operation="start" interval="0" op_status="0" crm_feature_set="1.0.6" transition_magic="" rc_code="0" call_id="1" op_digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>

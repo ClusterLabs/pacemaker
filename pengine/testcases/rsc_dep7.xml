@@ -12,23 +12,23 @@
     </nodes>
     <resources>
       <primitive id="rsc1" class="heartbeat" type="apache">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
-            <nvpair name="priority" value="1.0"/>
+            <nvpair  id="any" name="priority" value="1.0"/>
           </attributes>
         </instance_attributes>
       </primitive>
       <primitive id="rsc2" class="heartbeat" type="apache">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
-            <nvpair name="priority" value="2.0"/>
+            <nvpair  id="any" name="priority" value="2.0"/>
           </attributes>
         </instance_attributes>
       </primitive>
       <primitive id="rsc3" class="heartbeat" type="apache">
-        <instance_attributes>
+        <instance_attributes id="any">
           <attributes>
-            <nvpair name="priority" value="3.0"/>
+            <nvpair id="any"  name="priority" value="3.0"/>
           </attributes>
         </instance_attributes>
       </primitive>

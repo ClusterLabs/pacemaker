@@ -40,6 +40,9 @@ check_quorum(const char *value)
 
 	} else if(safe_str_eq(value, "ignore")) {
 		return TRUE;
+
+	} else if(safe_str_eq(value, "suicide")) {
+		return TRUE;
 	}
 	return FALSE;
 }
@@ -58,7 +61,7 @@ check_stonith_action(const char *value)
 
 pe_cluster_option pe_opts[] = {
 	/* name, old-name, validate, default, description */
-	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore", "stop", &check_quorum,
+	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum,
 	  "What to do when the cluster does not have quorum", NULL },
 	{ "symmetric-cluster", "symmetric_cluster", "boolean", NULL, "true", &check_boolean,
 	  "All resources can run anywhere by default", NULL },
@@ -66,8 +69,9 @@ pe_cluster_option pe_opts[] = {
 	  "Failed nodes are STONITH'd", NULL },
 	{ "stonith-action", "stonith_action", "enum", "reboot, poweroff", "reboot", &check_stonith_action,
 	  "Action to send to STONITH device", NULL },
+	{ "default-failure-timeout", NULL, "time", NULL, "0", &check_timer, "Time in seconds after which a failure expires", "Set to zero to disable" },
 	{ "default-resource-stickiness", "default_resource_stickiness", "integer", NULL, "0", &check_number, "", NULL },
-	{ "default-resource-failure-stickiness", "default_resource_failure_stickiness", "integer", NULL, "0", &check_number, "", NULL },
+	{ "default-migration-threshold", NULL, "integer", NULL, "0", &check_number, "Maximum times a resource can fail before it is moved.  Zero means no limit.", NULL },
 	{ "is-managed-default", "is_managed_default", "boolean", NULL, "true", &check_boolean,
 	  "Should the cluster start/stop resources as required", NULL },
 	{ "cluster-delay", "transition_idle_timeout", "time", NULL, "60s", &check_time,
@@ -76,6 +80,8 @@ pe_cluster_option pe_opts[] = {
 	{ "batch-limit", NULL, "integer", NULL, "30", &check_number,
 	  "The number of jobs that the TE is allowed to execute in parallel",
 	  "The \"correct\" value will depend on the speed and load of your network and cluster nodes." },
+	{ "stop-all-resources", NULL, "boolean", NULL, "false", &check_boolean,
+	  "Should the cluster stop all active resources", NULL },
 	{ "default-action-timeout", "default_action_timeout", "time", NULL, "20s", &check_time,
 	  "How long to wait for actions to complete", NULL },
 	{ "stop-orphan-resources", "stop_orphan_resources", "boolean", NULL, "true", &check_boolean,

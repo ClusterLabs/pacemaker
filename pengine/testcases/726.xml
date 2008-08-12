@@ -18,7 +18,7 @@
           <operations>
             <op id="1" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="1" name="ip" value="127.0.0.10"/>
             </attributes>
@@ -28,7 +28,7 @@
           <operations>
             <op id="2" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="1" name="ip" value="127.0.0.11"/>
             </attributes>
@@ -38,7 +38,7 @@
           <operations>
             <op id="3" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="1" name="ip" value="127.0.0.12"/>
             </attributes>
@@ -48,7 +48,7 @@
           <operations>
             <op id="4" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="1" name="ip" value="127.0.0.13"/>
             </attributes>
@@ -58,18 +58,18 @@
           <operations>
             <op id="5" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="1" name="ip" value="127.0.0.14"/>
             </attributes>
           </instance_attributes>
         </primitive>
         <clone id="DoFencing">
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="1" name="clone_max" value="4"/>
               <nvpair id="2" name="clone_node_max" value="1"/>
-              <nvpair name="resource_stickiness" value="1"/>
+              <nvpair id="any" name="resource_stickiness" value="1"/>
             </attributes>
           </instance_attributes>
           <primitive id="child_DoFencing" class="stonith" type="ssh">
@@ -77,7 +77,7 @@
               <op id="6" name="monitor" interval="5s" timeout="20s" prereq="nothing"/>
               <op id="7" name="start" timeout="20s" prereq="nothing"/>
             </operations>
-            <instance_attributes>
+            <instance_attributes id="any">
               <attributes>
                 <nvpair id="1" name="hostlist" value="sgi2 ibm1 test02 test03 "/>
               </attributes>
@@ -116,13 +116,13 @@
   <status>
     <node_state id="f9c593eb-ca0d-4ab3-ba88-fde12c02334a" uname="test03" in_ccm="true" join="member"  crmd="online" ha="active" expected="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" op_digest="08c815ac958ff8151d72300fda3a6c0e" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:0" crm_feature_set="2.0" transition_magic="0:0;0:some_key" call_id="2" rc_code="0" op_status="0"/>
@@ -130,21 +130,15 @@
           </lrm_resource>
           <lrm_resource id="rsc_ibm1" class="ocf" provider="heartbeat" type="IPaddr">
             <lrm_rsc_op id="rsc_ibm1_start_0" op_digest="d8eeae5f6724dfcab8f57ef54367eb0a" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:1" crm_feature_set="2.0" transition_magic="0:0;1:some_key" call_id="7" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_ibm1_monitor_5000" op_digest="7515405113757a8bc37db755be497fca" interval="5000" operation="monitor" op_status="-1" rc_code="-1"  transition_key="-1:1" crm_feature_set="2.0" transition_magic="-1:-1;1:some_key" call_id="-1">
-	      
-            </lrm_rsc_op>
+            <lrm_rsc_op id="rsc_ibm1_monitor_5000" op_digest="7515405113757a8bc37db755be497fca" interval="5000" operation="monitor" op_status="-1" rc_code="-1"  transition_key="-1:1" crm_feature_set="2.0" transition_magic="-1:-1;1:some_key" call_id="-1"/>
           </lrm_resource>
           <lrm_resource id="rsc_test03" class="ocf" provider="heartbeat" type="IPaddr">
             <lrm_rsc_op id="rsc_test03_start_0" op_digest="74307acd7ffa84f71fe8a46100cdbbb0" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:1" crm_feature_set="2.0" transition_magic="0:0;1:some_key" call_id="8" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="rsc_test03_monitor_5000" op_digest="fc615675937160e95e360e325cd67d82" interval="5000" operation="monitor" op_status="-1" rc_code="-1"  transition_key="-1:1" crm_feature_set="2.0" transition_magic="-1:-1;1:some_key" call_id="-1">
-	      
-            </lrm_rsc_op>
+            <lrm_rsc_op id="rsc_test03_monitor_5000" op_digest="fc615675937160e95e360e325cd67d82" interval="5000" operation="monitor" op_status="-1" rc_code="-1"  transition_key="-1:1" crm_feature_set="2.0" transition_magic="-1:-1;1:some_key" call_id="-1"/>
           </lrm_resource>
           <lrm_resource id="DcIPaddr" provider="heartbeat" class="ocf" type="IPaddr">
             <lrm_rsc_op id="DcIPaddr_start_0" op_digest="21ccbd2b8e65014ca7b36a2070642a2e" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:1" crm_feature_set="2.0" transition_magic="0:0;1:some_key" call_id="6" rc_code="0" op_status="0"/>
-            <lrm_rsc_op id="DcIPaddr_monitor_5000" op_digest="517d7b3575d97d408fbe19f3cfcc69fe" interval="5000" operation="monitor" op_status="-1" rc_code="-1"  transition_key="-1:1" crm_feature_set="2.0" transition_magic="-1:-1;1:some_key" call_id="-1">
-	      
-            </lrm_rsc_op>
+            <lrm_rsc_op id="DcIPaddr_monitor_5000" op_digest="517d7b3575d97d408fbe19f3cfcc69fe" interval="5000" operation="monitor" op_status="-1" rc_code="-1"  transition_key="-1:1" crm_feature_set="2.0" transition_magic="-1:-1;1:some_key" call_id="-1"/>
           </lrm_resource>
           <lrm_resource id="DoFencing:child_DoFencing:1" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing:child_DoFencing:1_start_0" op_digest="08c815ac958ff8151d72300fda3a6c0e" operation="start" interval="0" op_status="-1" rc_code="-1"  transition_key="-1:1" crm_feature_set="2.0" transition_magic="-1:-1;1:some_key" call_id="-1"/>
@@ -154,13 +148,13 @@
     </node_state>
     <node_state id="f75e684a-be1e-4036-89e5-a14f8dcdc947" uname="test02" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources>
           <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
             <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" op_digest="08c815ac958ff8151d72300fda3a6c0e" operation="start" interval="0" op_status="-1" rc_code="-1"  transition_key="-1:1" crm_feature_set="2.0" transition_magic="-1:-1;1:some_key" call_id="-1"/>
@@ -170,25 +164,25 @@
     </node_state>
     <node_state id="619e8a37-147a-4782-ac11-46afad7c32b8" uname="sgi2" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources/>
       </lrm>
     </node_state>
     <node_state id="d0d76dd9-7a01-4c12-bbec-98aa2a669638" uname="ibm1" crmd="online"  in_ccm="true" join="member" ha="active" expected="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-      <lrm>
+      <lrm id="any">
         <lrm_resources/>
       </lrm>
     </node_state>

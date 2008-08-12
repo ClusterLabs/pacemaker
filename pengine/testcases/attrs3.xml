@@ -16,8 +16,8 @@
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="can1" score="1" boolean_op="or">
-	  <expression attribute="#id" operation="ne" value="uuid1"/>
-	  <expression attribute="#uname" operation="ne" value="node2"/>
+	  <expression id="any" attribute="#id" operation="ne" value="uuid1"/>
+	  <expression id="any" attribute="#uname" operation="ne" value="node2"/>
 	</rule>
       </rsc_location>
     </constraints>

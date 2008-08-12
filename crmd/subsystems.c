@@ -59,7 +59,7 @@ crmdManagedChildRegistered(ProcTrack* p)
 #define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
 
 static void
-save_cib_contents(const HA_Message *msg, int call_id, int rc, crm_data_t *output, void *user_data) 
+save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output, void *user_data) 
 {
     char *pid = user_data;
     
@@ -111,7 +111,7 @@ crmdManagedChildDied(
 		     */
 		    rc = fsa_cib_conn->cmds->query(
 			fsa_cib_conn, NULL, NULL, cib_scope_local);
-		    add_cib_op_callback(rc, TRUE, pid, save_cib_contents);
+		    add_cib_op_callback(fsa_cib_conn, rc, TRUE, pid, save_cib_contents);
 		}
 		
 		register_fsa_input_before(C_FSA_INTERNAL, I_ERROR, NULL);
@@ -184,8 +184,7 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	unsigned int	j;
 	struct rlimit	oflimits;
 	const char 	*devnull = "/dev/null";
-	const char    *use_valgrind = getenv("HA_VALGRIND_ENABLED");
-
+	
 	crm_info("Starting sub-system \"%s\"", the_subsystem->name);
 	set_bit_inplace(fsa_input_register, the_subsystem->flag_required);
 
@@ -248,13 +247,7 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	(void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
 	(void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
 
-	if(crm_is_true(use_valgrind)) {
-		char *opts[] = { crm_strdup(VALGRIND_BIN),
-				 crm_strdup(the_subsystem->command),
-				 NULL
-		};
-		(void)execvp(VALGRIND_BIN, opts);
-	} else {
+	{
 		char *opts[] = { crm_strdup(the_subsystem->command), NULL };
 		(void)execvp(the_subsystem->command, opts);
 	}

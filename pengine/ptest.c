@@ -35,7 +35,7 @@
 
 #include <crm/cib.h>
 
-#define OPTARGS	"V?X:D:G:I:Lwxd:aSs"
+#define OPTARGS	"V?XD:G:I:Lwx:d:aSs"
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -52,8 +52,8 @@ gboolean use_stdin = FALSE;
 gboolean do_simulation = FALSE;
 gboolean inhibit_exit = FALSE;
 gboolean all_actions = FALSE;
-extern crm_data_t * do_calculations(
-	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
+extern xmlNode * do_calculations(
+	pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now);
 extern void cleanup_calculations(pe_working_set_t *data_set);
 char *use_date = NULL;
 
@@ -129,7 +129,7 @@ create_action_name(action_t *action)
 		action_host = "<none>";
 		action_name = crm_concat(action->uuid, action_host, ' ');
 	}
-	if(safe_str_eq(action->task, CRMD_ACTION_CANCEL)) {
+	if(safe_str_eq(action->task, RSC_CANCEL)) {
 	    char *tmp_action_name = action_name;
 	    action_name = crm_concat("Cancel", tmp_action_name, ' ');
 	    crm_free(tmp_action_name);
@@ -143,6 +143,7 @@ gboolean USE_LIVE_CIB = FALSE;
 int
 main(int argc, char **argv)
 {
+	gboolean process = TRUE;
 	gboolean all_good = TRUE;
 	gboolean show_scores = FALSE;
 	enum transition_status graph_rc = -1;
@@ -150,7 +151,7 @@ main(int argc, char **argv)
 	ha_time_t *a_date = NULL;
 	cib_t *	cib_conn = NULL;
 	
-	crm_data_t * cib_object = NULL;
+	xmlNode * cib_object = NULL;
 	int argerr = 0;
 	int flag;
 		
@@ -163,10 +164,22 @@ main(int argc, char **argv)
 	const char *dot_file = NULL;
 	const char *graph_file = NULL;
 	const char *input_file = NULL;
+
+	/* disable glib's fancy allocators that can't be free'd */ 
+	GMemVTable vtable;
+
+	vtable.malloc = malloc;
+	vtable.realloc = realloc;
+	vtable.free = free;
+	vtable.calloc = calloc;
+	vtable.try_malloc = malloc;	
+	vtable.try_realloc = realloc;
+
+        g_mem_set_vtable(&vtable);
+
 	
-	cl_log_set_entity("ptest");
+	crm_log_init("ptest", LOG_CRIT, FALSE, FALSE, 0, NULL);
 	cl_log_set_facility(LOG_USER);
-	set_crm_log_level(LOG_CRIT-1);
 	
 	while (1) {
 #ifdef HAVE_GETOPT_H
@@ -177,9 +190,10 @@ main(int argc, char **argv)
 			{"verbose",     0, 0, 'V'},			
 
 			{"live-check",  0, 0, 'L'},
-			{"xml-stream",  0, 0, 'x'},
 			{"show-scores", 0, 0, 's'},
-			{"xml-file",    1, 0, 'X'},
+			{"xml-text",    0, 0, 'X'},
+			{"xml-file",    1, 0, 'x'},
+			{"xml-pipe",    1, 0, 'p'},
 
 			{"simulate",    0, 0, 'S'},
 			{"save-graph",  1, 0, 'G'},
@@ -218,7 +232,7 @@ main(int argc, char **argv)
 			case 'w':
 				inhibit_exit = TRUE;
 				break;
-			case 'x':
+			case 'X':
 				use_stdin = TRUE;
 				break;
 			case 's':
@@ -226,7 +240,7 @@ main(int argc, char **argv)
 				cl_log_enable_stderr(TRUE);
 				scores_log_level = crm_log_level;
 				break;
-			case 'X':
+			case 'x':
 				xml_file = optarg;
 				break;
 			case 'd':
@@ -278,14 +292,11 @@ main(int argc, char **argv)
 		usage("ptest", 1);
 	}
   
-	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");	
-
 	if(USE_LIVE_CIB) {
 		int rc = cib_ok;
 		source = "live cib";
 		cib_conn = cib_new();
-		rc = cib_conn->cmds->signon(
-			cib_conn, "ptest", cib_command_synchronous);
+		rc = cib_conn->cmds->signon(cib_conn, "ptest", cib_command);
 
 		if(rc == cib_ok) {
 			crm_info("Reading XML from: live cluster");
@@ -302,24 +313,12 @@ main(int argc, char **argv)
 		}
 		
 	} else if(xml_file != NULL) {
-		FILE *xml_strm = fopen(xml_file, "r");
-		source = xml_file;
-		if(xml_strm == NULL) {
-			cl_perror("Could not open %s for reading", xml_file);
-			
-		} else {
-			if(strstr(xml_file, ".bz2") != NULL) {
-				cib_object = file2xml(xml_strm, TRUE);
-				
-			} else {
-				cib_object = file2xml(xml_strm, FALSE);
-			}
-			fclose(xml_strm);
-		}
+	    source = xml_file;
+	    cib_object = filename2xml(xml_file);
 		
 	} else if(use_stdin) {
-		source = "stdin";
-		cib_object = stdin2xml();
+	    source = "stdin";
+	    cib_object = filename2xml(NULL);
 	}
 
  	if(cib_object == NULL && source) {
@@ -331,11 +330,9 @@ main(int argc, char **argv)
 	    usage("ptest", 1);
 	}
 	
-	crm_notice("Required feature set: %s", feature_set(cib_object));
- 	do_id_check(cib_object, NULL, FALSE, FALSE);
-	if(!validate_with_dtd(cib_object,FALSE,DTD_DIRECTORY"/crm.dtd")) {
-		crm_crit("%s does not contain a valid configuration", xml_file?xml_file:"<stdin>");
- 		all_good = FALSE;
+	if(cli_config_update(&cib_object) == FALSE) {
+	    free_xml(cib_object);
+	    return cib_STALE;
 	}
 	
 	if(input_file != NULL) {
@@ -361,8 +358,10 @@ main(int argc, char **argv)
 			 a_date, ha_log_date|ha_log_time|ha_log_local);
 	}
 
-	do_calculations(&data_set, cib_object, a_date);
-
+	if(process) {
+	    do_calculations(&data_set, cib_object, a_date);
+	}
+	
 	msg_buffer = dump_xml_formatted(data_set.graph);
 	if(safe_str_eq(graph_file, "-")) {
 		fprintf(stdout, "%s\n", msg_buffer);
@@ -498,11 +497,9 @@ main(int argc, char **argv)
 
   cleanup:
 	cleanup_alloc_calculations(&data_set);
-	
+	crm_log_deinit();
 
-#if HAVE_LIBXML2
-	xmlCleanupParser();
-#endif
+	crm_info("Using system malloc: %d", g_mem_is_system_malloc());
 	
 	/* required for MallocDebug.app */
 	if(inhibit_exit) {

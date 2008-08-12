@@ -41,7 +41,7 @@ typedef struct clone_variant_data_s {
 		gboolean applied_master_prefs;
 		gboolean merged_master_weights;
 
-		crm_data_t *xml_obj_child;
+		xmlNode *xml_obj_child;
 		
 		gboolean notify_confirm;		
 		

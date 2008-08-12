@@ -20,7 +20,7 @@ class CIB:
         <nvpair id="cib-bootstrap-2" name="stonith-enabled"      value="%d"/>
         <nvpair id="cib-bootstrap-3" name="pe-input-series-max"  value="30000"/>
         <nvpair id="cib-bootstrap-4" name="shutdown-escalation"  value="5min"/>
-        <!-- *** For CTS testing only *** _NEVER_ make this the default -->
+        <nvpair id="cib-bootstrap-6" name="batch-limit"          value="10"/>
         <nvpair id="cib-bootstrap-5" name="startup-fencing"      value="false"/>
        </attributes>
     </cluster_property_set>'''
@@ -60,7 +60,7 @@ class CIB:
     dummy_resource_template = ''' 
         <primitive id="%s" class="ocf" type="Dummy" provider="heartbeat">
           <operations>
-             <op id="%s-mon" name="monitor" interval="10s"/>
+             <op id="%s-mon" name="monitor" interval="P10S"/>
           </operations>
           <instance_attributes id="%s">
              <attributes>
@@ -104,8 +104,8 @@ class CIB:
           </instance_attributes>
           <primitive id="ocf_msdummy" class="ocf" type="Stateful" provider="heartbeat">
             <operations>
-              <op id="ocf_msdummy_monitor" name="monitor" interval="5s"/>
-              <op id="ocf_msdummy_monitor_master" name="monitor" interval="6s" role="Master"/>
+              <op id="ocf_msdummy_monitor" name="monitor" interval="15s"/>
+              <op id="ocf_msdummy_monitor_master" name="monitor" interval="16s" role="Master"/>
             </operations>
           </primitive>
         </master_slave>'''
@@ -123,7 +123,6 @@ class CIB:
         <clone id="DoFencing" globally_unique="false">
           <meta_attributes id="fencing">
             <attributes>
-              <!-- Make start failures fatal for fencing resources -->
               <nvpair id="DoFencing-1" name="resource_failure_stickiness" value="-1"/>
             </attributes>
           </meta_attributes>
@@ -142,7 +141,7 @@ class CIB:
         </clone>"""
 
     cib_template ='''
-<cib cib_feature_revision="1" have_quorum="false" ignore_dtd="false">
+<cib cib_feature_revision="1" have_quorum="false" ignore_dtd="false" validate-with="transitional-0.6" remote_access_port="9898">
   <configuration>
      <crm_config>  %s 
      </crm_config>
@@ -192,9 +191,9 @@ class CIB:
         ip1=self.NextIP()
         ip2=self.NextIP()
         ip3=self.NextIP()
-        ip1_rsc = self.ipaddr_template % (ip1, ip1, ip1, ip1, ip1, ip1)
-        ip2_rsc = self.hb_ipaddr_template % (ip2, ip2, ip2, ip2, ip2)
-        ip3_rsc = self.ipaddr_template % (ip3, ip3, ip3, ip3, ip3, ip3)
+        ip1_rsc = self.ipaddr_template % ("r"+ip1, ip1, ip1, ip1, ip1, ip1)
+        ip2_rsc = self.hb_ipaddr_template % ("r"+ip2, ip2, ip2, ip2, ip2)
+        ip3_rsc = self.ipaddr_template % ("r"+ip3, ip3, ip3, ip3, ip3, ip3)
         resources += self.resource_group_template % (ip1_rsc, ip2_rsc, ip3_rsc)
 
         # lsb resource

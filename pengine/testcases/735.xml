@@ -11,7 +11,7 @@
         <node id="6125a0df-456a-4395-829a-418e9a380d36" uname="hadev1" type="member"/>
         <node id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" type="member"/>
         <node id="879e65f8-4b38-4c56-9552-4752ad436669" uname="hadev3" type="member">
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="standby" name="standby" value="off"/>
             </attributes>
@@ -23,7 +23,7 @@
           <operations>
             <op id="1" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="1" name="ip" value="127.0.0.10"/>
             </attributes>
@@ -33,7 +33,7 @@
           <operations>
             <op id="2" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="2" name="ip" value="127.0.0.11"/>
             </attributes>
@@ -43,7 +43,7 @@
           <operations>
             <op id="3" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="3" name="ip" value="127.0.0.12"/>
             </attributes>
@@ -53,14 +53,14 @@
           <operations>
             <op id="4" name="monitor" interval="5s" timeout="20s"/>
           </operations>
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="4" name="ip" value="127.0.0.13"/>
             </attributes>
           </instance_attributes>
         </primitive>
         <clone id="DoFencing">
-          <instance_attributes>
+          <instance_attributes id="any">
             <attributes>
               <nvpair id="5" name="clone_max" value="3"/>
               <nvpair id="6" name="clone_node_max" value="1"/>
@@ -71,7 +71,7 @@
               <op id="5" name="monitor" interval="5s" timeout="20s" prereq="nothing"/>
               <op id="6" name="start" timeout="20s" prereq="nothing"/>
             </operations>
-            <instance_attributes>
+            <instance_attributes id="any">
               <attributes>
                 <nvpair id="7" name="hostlist" value="hadev1 hadev2 hadev3 "/>
               </attributes>
@@ -105,26 +105,22 @@
     <status>
       <node_state uname="hadev1" in_ccm="false" crmd="offline" ha="active" expected="down" id="6125a0df-456a-4395-829a-418e9a380d36" join="down" >
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-        <lrm>
+        <lrm id="any">
           <lrm_resources>
             <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
               <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" op_digest="e6d0cb6a5fe061b101eb79be4a67facf" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:1" crm_feature_set="2.0" transition_magic="0:0;1:some_key" call_id="2" rc_code="0" op_status="0"/>
-              <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_5000" op_digest="e6d0cb6a5fe061b101eb79be4a67facf" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="0:1" crm_feature_set="2.0" transition_magic="0:0;1:some_key" call_id="4" rc_code="0" op_status="0">
-	      
-            </lrm_rsc_op>
+              <lrm_rsc_op id="DoFencing:child_DoFencing:0_monitor_5000" op_digest="e6d0cb6a5fe061b101eb79be4a67facf" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="0:1" crm_feature_set="2.0" transition_magic="0:0;1:some_key" call_id="4" rc_code="0" op_status="0"/>
               <lrm_rsc_op id="DoFencing:child_DoFencing:0_stop_0" operation="stop" interval="0"  transition_key="0:8" crm_feature_set="2.0" transition_magic="0:0;8:some_key" call_id="23" rc_code="0" op_status="0"/>
             </lrm_resource>
             <lrm_resource id="rsc_hadev1" class="ocf" provider="heartbeat" type="IPaddr">
               <lrm_rsc_op id="rsc_hadev1_start_0" op_digest="fd54394d262d771b8cb48f31f8df7242" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:1" crm_feature_set="2.0" transition_magic="0:0;1:some_key" call_id="3" rc_code="0" op_status="0"/>
-              <lrm_rsc_op id="rsc_hadev1_monitor_5000" op_digest="fd54394d262d771b8cb48f31f8df7242" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="0:1" crm_feature_set="2.0" transition_magic="0:0;1:some_key" call_id="5" rc_code="0" op_status="0">
-	      
-            </lrm_rsc_op>
+              <lrm_rsc_op id="rsc_hadev1_monitor_5000" op_digest="fd54394d262d771b8cb48f31f8df7242" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="0:1" crm_feature_set="2.0" transition_magic="0:0;1:some_key" call_id="5" rc_code="0" op_status="0"/>
               <lrm_rsc_op id="rsc_hadev1_stop_0" operation="stop" interval="0"  transition_key="0:8" crm_feature_set="2.0" transition_magic="0:0;8:some_key" call_id="21" rc_code="0" op_status="0"/>
             </lrm_resource>
             <lrm_resource id="rsc_hadev3" class="ocf" provider="heartbeat" type="IPaddr">
@@ -136,13 +132,13 @@
       </node_state>
       <node_state uname="hadev2" crmd="online" in_ccm="true" ha="active" expected="member" id="190b75b6-5585-42d9-8cde-eb6041843ae3"  join="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-        <lrm>
+        <lrm id="any">
           <lrm_resources>
             <lrm_resource id="DoFencing:child_DoFencing:0" class="stonith" type="ssh">
               <lrm_rsc_op id="DoFencing:child_DoFencing:0_start_0" op_digest="e6d0cb6a5fe061b101eb79be4a67facf" operation="start" interval="0"  transition_key="-1:9" crm_feature_set="2.0" transition_magic="-1:-1;9:some_key" call_id="12" rc_code="-1" op_status="-1"/>
@@ -150,9 +146,7 @@
             </lrm_resource>
             <lrm_resource id="rsc_hadev2" class="ocf" provider="heartbeat" type="IPaddr">
               <lrm_rsc_op id="rsc_hadev2_start_0" op_digest="d8eeae5f6724dfcab8f57ef54367eb0a" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:1" crm_feature_set="2.0" transition_magic="0:0;1:some_key" call_id="2" rc_code="0" op_status="0"/>
-              <lrm_rsc_op id="rsc_hadev2_monitor_5000" op_digest="7515405113757a8bc37db755be497fca" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="0:1" crm_feature_set="2.0" transition_magic="0:0;1:some_key" call_id="7" rc_code="0" op_status="0">
-	      
-            </lrm_rsc_op>
+              <lrm_rsc_op id="rsc_hadev2_monitor_5000" op_digest="7515405113757a8bc37db755be497fca" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="0:1" crm_feature_set="2.0" transition_magic="0:0;1:some_key" call_id="7" rc_code="0" op_status="0"/>
             </lrm_resource>
             <lrm_resource id="DoFencing:child_DoFencing:1" class="stonith" type="ssh">
               <lrm_rsc_op id="DoFencing:child_DoFencing:1_start_0" op_digest="e6d0cb6a5fe061b101eb79be4a67facf" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:2" crm_feature_set="2.0" transition_magic="0:0;2:some_key" call_id="38" rc_code="0" op_status="0"/>
@@ -165,15 +159,11 @@
             <lrm_resource id="DoFencing:child_DoFencing:2" class="stonith" type="ssh">
               <lrm_rsc_op id="DoFencing:child_DoFencing:2_start_0" op_digest="e6d0cb6a5fe061b101eb79be4a67facf" operation="start" interval="0"  transition_key="0:7" crm_feature_set="2.0" transition_magic="0:0;7:some_key" call_id="54" rc_code="0" op_status="0"/>
               <lrm_rsc_op id="DoFencing:child_DoFencing:2_stop_0" operation="stop" interval="0"  transition_key="0:8" crm_feature_set="2.0" transition_magic="0:0;8:some_key" call_id="63" rc_code="0" op_status="0"/>
-              <lrm_rsc_op id="DoFencing:child_DoFencing:2_monitor_5000" op_digest="e6d0cb6a5fe061b101eb79be4a67facf" interval="5000" operation="monitor" op_status="0" rc_code="0"  transition_key="0:7" crm_feature_set="2.0" transition_magic="0:0;7:some_key" call_id="55">
-	      
-            </lrm_rsc_op>
+              <lrm_rsc_op id="DoFencing:child_DoFencing:2_monitor_5000" op_digest="e6d0cb6a5fe061b101eb79be4a67facf" interval="5000" operation="monitor" op_status="0" rc_code="0"  transition_key="0:7" crm_feature_set="2.0" transition_magic="0:0;7:some_key" call_id="55"/>
             </lrm_resource>
             <lrm_resource id="DcIPaddr" provider="heartbeat" class="ocf" type="IPaddr">
               <lrm_rsc_op id="DcIPaddr_start_0" op_digest="21ccbd2b8e65014ca7b36a2070642a2e" operation="start" interval="0" crm-debug-origin="build_active_RAs" transition_key="0:0" crm_feature_set="2.0" transition_magic="0:0;0:some_key" call_id="18" rc_code="0" op_status="0"/>
-              <lrm_rsc_op id="DcIPaddr_monitor_5000" op_digest="517d7b3575d97d408fbe19f3cfcc69fe" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="0:0" crm_feature_set="2.0" transition_magic="0:0;0:some_key" call_id="19" rc_code="0" op_status="0">
-	      
-            </lrm_rsc_op>
+              <lrm_rsc_op id="DcIPaddr_monitor_5000" op_digest="517d7b3575d97d408fbe19f3cfcc69fe" interval="5000" operation="monitor" crm-debug-origin="build_active_RAs" transition_key="0:0" crm_feature_set="2.0" transition_magic="0:0;0:some_key" call_id="19" rc_code="0" op_status="0"/>
             </lrm_resource>
             <lrm_resource id="rsc_hadev1" class="ocf" provider="heartbeat" type="IPaddr">
               <lrm_rsc_op id="rsc_hadev1_start_0" op_digest="fd54394d262d771b8cb48f31f8df7242" operation="start" interval="0" op_status="-1" rc_code="-1"  transition_key="-1:9" crm_feature_set="2.0" transition_magic="-1:-1;9:some_key" call_id="-1"/>
@@ -183,26 +173,22 @@
       </node_state>
       <node_state uname="hadev3" crmd="online" in_ccm="true" ha="active" expected="member" id="879e65f8-4b38-4c56-9552-4752ad436669"  join="member">
       <transient_attributes>
-        <instance_attributes>
+        <instance_attributes id="any">
 	  <attributes>
 	    <nvpair id="probed" name="probe_complete" value="true"/>
 	  </attributes>
         </instance_attributes>
       </transient_attributes>
-        <lrm>
+        <lrm id="any">
           <lrm_resources>
             <lrm_resource id="rsc_hadev3" class="ocf" provider="heartbeat" type="IPaddr">
               <lrm_rsc_op id="rsc_hadev3_start_0" op_digest="6e0f48b04277dfed400d2ffce5b5ae51" operation="start" interval="0" op_status="0" rc_code="0"  transition_key="0:7" crm_feature_set="2.0" transition_magic="0:0;7:some_key" call_id="2"/>
-              <lrm_rsc_op id="rsc_hadev3_monitor_5000" op_digest="6e0f48b04277dfed400d2ffce5b5ae51" interval="5000" operation="monitor" op_status="0" rc_code="0"  transition_key="0:7" crm_feature_set="2.0" transition_magic="0:0;7:some_key" call_id="5">
-	      
-            </lrm_rsc_op>
+              <lrm_rsc_op id="rsc_hadev3_monitor_5000" op_digest="6e0f48b04277dfed400d2ffce5b5ae51" interval="5000" operation="monitor" op_status="0" rc_code="0"  transition_key="0:7" crm_feature_set="2.0" transition_magic="0:0;7:some_key" call_id="5"/>
               <lrm_rsc_op id="rsc_hadev3_stop_0" operation="stop" interval="0"  transition_key="0:9" crm_feature_set="2.0" transition_magic="0:0;9:some_key" call_id="10" rc_code="0" op_status="0"/>
             </lrm_resource>
             <lrm_resource id="DoFencing:child_DoFencing:1" class="stonith" type="ssh">
               <lrm_rsc_op id="DoFencing:child_DoFencing:1_start_0" op_digest="e6d0cb6a5fe061b101eb79be4a67facf" operation="start" interval="0" op_status="0" rc_code="0"  transition_key="0:7" crm_feature_set="2.0" transition_magic="0:0;7:some_key" call_id="3"/>
-              <lrm_rsc_op id="DoFencing:child_DoFencing:1_monitor_5000" op_digest="e6d0cb6a5fe061b101eb79be4a67facf" interval="5000" operation="monitor" op_status="0" rc_code="0"  transition_key="0:7" crm_feature_set="2.0" transition_magic="0:0;7:some_key" call_id="4">
-	      
-            </lrm_rsc_op>
+              <lrm_rsc_op id="DoFencing:child_DoFencing:1_monitor_5000" op_digest="e6d0cb6a5fe061b101eb79be4a67facf" interval="5000" operation="monitor" op_status="0" rc_code="0"  transition_key="0:7" crm_feature_set="2.0" transition_magic="0:0;7:some_key" call_id="4"/>
               <lrm_rsc_op id="DoFencing:child_DoFencing:1_stop_0" operation="stop" interval="0"  transition_key="0:9" crm_feature_set="2.0" transition_magic="0:0;9:some_key" call_id="12" rc_code="0" op_status="0"/>
             </lrm_resource>
             <lrm_resource id="rsc_hadev1" class="ocf" provider="heartbeat" type="IPaddr">

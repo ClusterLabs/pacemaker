@@ -26,10 +26,11 @@
 #include <crm/pengine/rules.h>
 #include <utils.h>
 
+extern xmlNode *get_object_root(const char *object_type,xmlNode *the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 void unpack_operation(
-	action_t *action, crm_data_t *xml_obj, pe_working_set_t* data_set);
+	action_t *action, xmlNode *xml_obj, pe_working_set_t* data_set);
 
 void
 pe_free_shallow(GListPtr alist)
@@ -520,7 +521,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			unpack_instance_attributes(
 				action->op_entry, XML_TAG_ATTR_SETS,
 				action->node->details->attrs,
-				action->extra, NULL, data_set->now);
+				action->extra, NULL, FALSE, data_set->now);
 		}
 
 		if(action->pseudo) {
@@ -548,6 +549,11 @@ custom_action(resource_t *rsc, char *key, const char *task,
 				action->node->details->unclean = TRUE;
 			}
 			
+		} else if(action->node->details->pending) {
+			action->runnable = FALSE;
+			do_crm_log(warn_level, "Action %s on %s is unrunnable (pending)",
+				 action->uuid, action->node->details->uname);
+
 		} else if(action->needs == rsc_req_nothing) {
 			crm_debug_3("Action %s doesnt require anything",
 				  action->uuid);
@@ -604,25 +610,39 @@ custom_action(resource_t *rsc, char *key, const char *task,
 
 void
 unpack_operation(
-	action_t *action, crm_data_t *xml_obj, pe_working_set_t* data_set)
+	action_t *action, xmlNode *xml_obj, pe_working_set_t* data_set)
 {
 	int value_i = 0;
-	int start_delay = 0;
+	unsigned long long interval = 0;
+	unsigned long long start_delay = 0;
 	char *value_ms = NULL;
 	const char *class = NULL;
 	const char *value = NULL;
 	const char *field = NULL;
-	
+	xmlNode *defaults = get_object_root(XML_CIB_TAG_OPCONFIG, data_set->input);
+
 	CRM_CHECK(action->rsc != NULL, return);
+
+	unpack_instance_attributes(defaults, XML_TAG_META_SETS, NULL,
+				   action->meta, NULL, FALSE, data_set->now);
+
+	xml_prop_iter(xml_obj, name, value,
+		      if(value != NULL && g_hash_table_lookup(action->meta, name) == NULL) {
+			  g_hash_table_insert(action->meta, crm_strdup(name), crm_strdup(value));
+		      }
+	    );
+	
+	unpack_instance_attributes(xml_obj, XML_TAG_META_SETS,
+				   NULL, action->meta, NULL, FALSE, data_set->now);
+	
+	unpack_instance_attributes(xml_obj, XML_TAG_ATTR_SETS,
+				   NULL, action->meta, NULL, FALSE, data_set->now);
+	
+	g_hash_table_remove(action->meta, "id");	
+
 	class = g_hash_table_lookup(action->rsc->meta, "class");
 	
-	if(xml_obj != NULL) {
-		value = crm_element_value(xml_obj, "prereq");
-	}
-	if(value == NULL && safe_str_eq(action->task, CRMD_ACTION_START)) {
-		value = g_hash_table_lookup(action->rsc->meta, "start_prereq");
-	}
-	
+	value = g_hash_table_lookup(action->meta, "prereq");
 	if(value == NULL && safe_str_neq(action->task, CRMD_ACTION_START)) {
 		/* todo: integrate stop as an option? */
 		action->needs = rsc_req_nothing;
@@ -662,29 +682,7 @@ unpack_operation(
 	}
 	crm_debug_3("\tAction %s requires: %s", action->task, value);
 
-	value = NULL;
-	if(xml_obj != NULL) {
-		value = crm_element_value(xml_obj, "on_fail");
-	}
-	if(value == NULL && safe_str_eq(action->task, CRMD_ACTION_STOP)) {
-		value = g_hash_table_lookup(
-			action->rsc->meta, "on_stopfail");
-		if(value != NULL) {
-#if CRM_DEPRECATED_SINCE_2_0_2
-			crm_config_err("The \"on_stopfail\" attribute used in"
-				      " %s has been deprecated since 2.0.2",
-				      action->rsc->id);
-#else
-			crm_config_err("The \"on_stopfail\" attribute used in"
-				      " %s has been deprecated since 2.0.2"
-				      " and is now disabled", action->rsc->id);
-			value = NULL;
-#endif
-			crm_config_err("Please use specify the \"on_fail\""
-				      " attribute on the \"stop\" operation"
-				      " instead");
-		}
-	}
+	value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
 	if(value == NULL) {
 
 	} else if(safe_str_eq(value, "block")) {
@@ -751,7 +749,7 @@ unpack_operation(
 
 	value = NULL;
 	if(xml_obj != NULL) {
-		value = crm_element_value(xml_obj, "role_after_failure");
+		value = g_hash_table_lookup(action->meta, "role_after_failure");
 	}
 	if(value != NULL && action->fail_role == RSC_ROLE_UNKNOWN) {
 		action->fail_role = text2role(value);
@@ -765,33 +763,22 @@ unpack_operation(
 		}
 	}
 	crm_debug_3("\t%s failure results in: %s",
-		    action->task, role2text(action->fail_role));
-	
-	if(xml_obj != NULL) {
-		xml_prop_iter(xml_obj, p_name, p_value,
-			      if(p_value != NULL) {
-				      g_hash_table_insert(action->meta, crm_strdup(p_name),
-							  crm_strdup(p_value));
-			      }
-			);
-
-		unpack_instance_attributes(xml_obj, XML_TAG_META_SETS,
-					   NULL, action->meta, NULL, data_set->now);
-		
-		unpack_instance_attributes(xml_obj, XML_TAG_ATTR_SETS,
-					   NULL, action->meta, NULL, data_set->now);
-	}
+		    action->task, role2text(action->fail_role));	
 
 	field = XML_LRM_ATTR_INTERVAL;
 	value = g_hash_table_lookup(action->meta, field);
 	if(value != NULL) {
-		value_i = crm_get_msec(value);
-		CRM_CHECK(value_i >= 0, value_i = 0);
-		value_ms = crm_itoa(value_i);
-		g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
+		interval = crm_get_interval(value);
+		if(interval > 0) {
+		    value_ms = crm_itoa(interval);
+		    g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
+
+		} else {
+		    g_hash_table_remove(action->meta, field);
+		}
 	}
 
-	field = "start_delay";
+	field = XML_OP_ATTR_START_DELAY;
 	value = g_hash_table_lookup(action->meta, field);
 	if(value != NULL) {
 		value_i = crm_get_msec(value);
@@ -801,9 +788,45 @@ unpack_operation(
 		start_delay = value_i;
 		value_ms = crm_itoa(value_i);
 		g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
-	}
 
-	field = "timeout";
+	} else if(interval > 0 && g_hash_table_lookup(action->meta, XML_OP_ATTR_ORIGIN)) {
+	    char *date_str = NULL;
+	    char *date_str_mutable = NULL;
+	    ha_time_t *origin = NULL;
+	    value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ORIGIN);
+	    date_str = crm_strdup(value);
+	    date_str_mutable = date_str;
+	    origin = parse_date(&date_str_mutable);
+	    crm_free(date_str);
+
+	    if(origin == NULL) {
+		crm_config_err("Operation %s contained an invalid "XML_OP_ATTR_ORIGIN": %s",
+			       ID(xml_obj), value);
+
+	    } else {
+		ha_time_t *delay = NULL;
+		int rc = compare_date(origin, data_set->now);
+		unsigned long long delay_s = 0;
+
+		while(rc < 0) {
+		    add_seconds(origin, interval/1000);
+		    rc = compare_date(origin, data_set->now);
+		}
+
+		delay = subtract_time(origin, data_set->now);
+		delay_s = date_in_seconds(delay);
+		/* log_date(LOG_DEBUG_5, "delay", delay, ha_log_date|ha_log_time|ha_log_local); */
+
+		crm_info("Calculated a start delay of %llus for %s", delay_s, ID(xml_obj));
+		g_hash_table_replace(action->meta, crm_strdup(XML_OP_ATTR_START_DELAY), crm_itoa(delay_s * 1000));
+		start_delay = delay_s * 1000;
+		free_ha_date(origin);
+		free_ha_date(delay);
+	    }
+	}
+	
+
+	field = XML_ATTR_TIMEOUT;
 	value = g_hash_table_lookup(action->meta, field);
 	if(value == NULL) {
 		value = pe_pref(
@@ -818,7 +841,7 @@ unpack_operation(
 	g_hash_table_replace(action->meta, crm_strdup(field), value_ms);
 }
 
-crm_data_t *
+xmlNode *
 find_rsc_op_entry(resource_t *rsc, const char *key) 
 {
 	int number = 0;
@@ -826,7 +849,7 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 	const char *value = NULL;
 	const char *interval = NULL;
 	char *match_key = NULL;
-	crm_data_t *op = NULL;
+	xmlNode *op = NULL;
 	
 	xml_child_iter_filter(
 		rsc->ops_xml, operation, "op",
@@ -839,7 +862,7 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 			continue;
 		}
 
-		number = crm_get_msec(interval);
+		number = crm_get_interval(interval);
 		if(number < 0) {
 		    continue;
 		}
@@ -1034,7 +1057,7 @@ find_actions_exact(GListPtr input, const char *key, node_t *on_node)
 }
 
 void
-set_id(crm_data_t * xml_obj, const char *prefix, int child) 
+set_id(xmlNode * xml_obj, const char *prefix, int child) 
 {
 	int id_len = 0;
 	gboolean use_prefix = TRUE;
@@ -1135,14 +1158,17 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 {
 	char *a_uuid = NULL;
 	char *b_uuid = NULL;
- 	const char *a_task_id = cl_get_string(a, XML_LRM_ATTR_CALLID);
- 	const char *b_task_id = cl_get_string(b, XML_LRM_ATTR_CALLID);
+	const xmlNode *xml_a = a;
+	const xmlNode *xml_b = b;
+	
+ 	const char *a_xml_id = crm_element_value_const(xml_a, XML_ATTR_ID);
+ 	const char *b_xml_id = crm_element_value_const(xml_b, XML_ATTR_ID);
 
-	const char *a_key = cl_get_string(a, XML_ATTR_TRANSITION_MAGIC);
- 	const char *b_key = cl_get_string(b, XML_ATTR_TRANSITION_MAGIC);
+ 	const char *a_task_id = crm_element_value_const(xml_a, XML_LRM_ATTR_CALLID);
+ 	const char *b_task_id = crm_element_value_const(xml_b, XML_LRM_ATTR_CALLID);
 
-	const char *a_xml_id = ID(a);
-	const char *b_xml_id = ID(b);
+	const char *a_key = crm_element_value_const(xml_a, XML_ATTR_TRANSITION_MAGIC);
+ 	const char *b_key = crm_element_value_const(xml_b, XML_ATTR_TRANSITION_MAGIC);
 
 	int dummy = -1;
 	
@@ -1168,7 +1194,9 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 		sort_return(0);
 	}
 	
-	CRM_CHECK(a_task_id != NULL && b_task_id != NULL, sort_return(0));	
+	CRM_CHECK(a_task_id != NULL && b_task_id != NULL,
+		  crm_err("a: %s, b: %s", crm_str(a_xml_id), crm_str(b_xml_id));
+		  sort_return(0));	
 	a_call_id = crm_parse_int(a_task_id, NULL);
 	b_call_id = crm_parse_int(b_task_id, NULL);
 	
@@ -1180,17 +1208,17 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
 	} else if(a_call_id >= 0 && a_call_id < b_call_id) {
 		crm_debug_4("%s (%d) < %s (%d) : call id",
-			    ID(a), a_call_id, ID(b), b_call_id);
+			    a_xml_id, a_call_id, b_xml_id, b_call_id);
 		sort_return(-1);
 
 	} else if(b_call_id >= 0 && a_call_id > b_call_id) {
 		crm_debug_4("%s (%d) > %s (%d) : call id",
-			    ID(a), a_call_id, ID(b), b_call_id);
+			    a_xml_id, a_call_id, b_xml_id, b_call_id);
 		sort_return(1);
 	}
 
 	crm_debug_5("%s (%d) == %s (%d) : continuing",
-		    ID(a), a_call_id, ID(b), b_call_id);
+		    a_xml_id, a_call_id, b_xml_id, b_call_id);
 	
 	/* now process pending ops */
 	CRM_CHECK(a_key != NULL && b_key != NULL, sort_return(0));
@@ -1217,34 +1245,98 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 		 *   because we query the LRM directly
 		 */
 		
-		CRM_CHECK(a_call_id == -1 || b_call_id == -1, sort_return(0));
+		CRM_CHECK(a_call_id == -1 || b_call_id == -1,
+			  crm_err("a: %s=%d, b: %s=%d",
+				  crm_str(a_xml_id), a_call_id, crm_str(b_xml_id), b_call_id);
+			  sort_return(0));
 		CRM_CHECK(a_call_id >= 0  || b_call_id >= 0, sort_return(0));
 
 		if(b_call_id == -1) {
 			crm_debug_2("%s (%d) < %s (%d) : transition + call id",
-				    ID(a), a_call_id, ID(b), b_call_id);
+				    a_xml_id, a_call_id, b_xml_id, b_call_id);
 			sort_return(-1);
 		}
 
 		if(a_call_id == -1) {
 			crm_debug_2("%s (%d) > %s (%d) : transition + call id",
-				    ID(a), a_call_id, ID(b), b_call_id);
+				    a_xml_id, a_call_id, b_xml_id, b_call_id);
 			sort_return(1);
 		}
 		
 	} else if((a_id >= 0 && a_id < b_id) || b_id == -1) {
 		crm_debug_3("%s (%d) < %s (%d) : transition",
-			    ID(a), a_id, ID(b), b_id);
+			    a_xml_id, a_id, b_xml_id, b_id);
 		sort_return(-1);
 
 	} else if((b_id >= 0 && a_id > b_id) || a_id == -1) {
 		crm_debug_3("%s (%d) > %s (%d) : transition",
-			    ID(a), a_id, ID(b), b_id);
+			    a_xml_id, a_id, b_xml_id, b_id);
 		sort_return(1);
 	}
 
 	/* we should never end up here */
 	crm_err("%s (%d:%d:%s) ?? %s (%d:%d:%s) : default",
-		ID(a), a_call_id, a_id, a_uuid, ID(b), b_call_id, b_id, b_uuid);
+		a_xml_id, a_call_id, a_id, a_uuid, b_xml_id, b_call_id, b_id, b_uuid);
 	CRM_CHECK(FALSE, sort_return(0)); 
+}
+
+time_t get_timet_now(pe_working_set_t *data_set) 
+{
+    time_t now = 0;
+    if(data_set && data_set->now) {
+	now = data_set->now->tm_now;
+    }
+    
+    if(now == 0) {
+	/* eventually we should convert data_set->now into time_tm
+	 * for now, its only triggered by PE regression tests
+	 */
+	now = time(NULL);
+	crm_crit("Defaulting to 'now'");
+	if(data_set && data_set->now) {
+	    data_set->now->tm_now = now;
+	}
+    }
+    return now;
+}
+
+
+int get_failcount(node_t *node, resource_t *rsc, int *last_failure, pe_working_set_t *data_set) 
+{
+    int last = 0;
+    int fail_count = 0;
+    resource_t *failed = rsc;
+    char *fail_attr = crm_concat("fail-count", rsc->id, '-');
+    const char *value = g_hash_table_lookup(node->details->attrs, fail_attr);
+
+    if(is_not_set(rsc->flags, pe_rsc_unique)) {
+	failed = uber_parent(rsc);
+    }
+    
+    if(value != NULL) {
+	fail_count = char2score(value);
+	crm_info("%s has failed %d times on %s",
+		 rsc->id, fail_count, node->details->uname);
+    }
+    crm_free(fail_attr);
+    
+    fail_attr = crm_concat("last-failure", rsc->id, '-');
+    value = g_hash_table_lookup(node->details->attrs, fail_attr);
+    if(value != NULL && rsc->failure_timeout) {
+	last = crm_parse_int(value, NULL);
+	if(last_failure) {
+	    *last_failure = last;
+	}
+	if(last > 0) {
+	    time_t now = get_timet_now(data_set);		
+	    if(now > (last + rsc->failure_timeout)) {
+		crm_notice("Failcount for %s on %s has expired (limit was %ds)",
+			   failed->id, node->details->uname, rsc->failure_timeout);
+		fail_count = 0;
+	    }
+	}
+    }
+    
+    crm_free(fail_attr);
+    return fail_count;
 }

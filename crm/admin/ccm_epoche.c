@@ -47,7 +47,7 @@ gboolean ccm_age_connect(int *ccm_fd);
 
 int command = 0;
 
-#define OPTARGS	"hVqep"
+#define OPTARGS	"hVqepH"
 
 void usage(const char* cmd, int exit_status);
 char *lookup_host = NULL;
@@ -60,6 +60,8 @@ extern gboolean init_ais_connection(
     gboolean (*dispatch)(AIS_Message*,char*,int),
     void (*destroy)(gpointer), char **our_uuid, char **our_uname);
 #endif
+
+int cluster_type = 0;
 
 int
 main(int argc, char ** argv)
@@ -80,6 +82,12 @@ main(int argc, char ** argv)
 			case 'h':		/* Help message */
 				usage(crm_system_name, LSB_EXIT_OK);
 				break;
+			case 'H':
+				cluster_type = 2;
+				break;
+			case 'A':
+				cluster_type = 3;
+				break;
 			case 'p':
 			case 'e':		
 			case 'q':		
@@ -99,20 +107,20 @@ main(int argc, char ** argv)
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
 
+	if(cluster_type != 2) {
 #if SUPPORT_AIS
-	if(init_ais_connection(
-	       ais_membership_dispatch, ais_membership_destroy, NULL, NULL)) {
+	    if(init_ais_connection(
+		   ais_membership_dispatch, ais_membership_destroy, NULL, NULL)) {
 
-	    GMainLoop*  amainloop = NULL;
-	    crm_info("Requesting the list of configured nodes");
-	    crm_peer_init();
-	    send_ais_text(
-		crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
-	    amainloop = g_main_new(FALSE);
-	    g_main_run(amainloop);
-
-	} else
+		GMainLoop*  amainloop = NULL;
+		crm_info("Requesting the list of configured nodes");
+		crm_peer_init();
+		send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
+		amainloop = g_main_new(FALSE);
+		g_main_run(amainloop);
+	    }
 #endif
+	} else if(cluster_type != 3) {
 #if SUPPORT_HEARTBEAT
 	    if(ccm_age_connect(&ccm_fd)) {
 		int rc = 0;
@@ -137,8 +145,9 @@ main(int argc, char ** argv)
 			}
 			return(1);
 		}
+	    }
+#endif
 	}
-#endif	
 	return(1);    
 }
 
