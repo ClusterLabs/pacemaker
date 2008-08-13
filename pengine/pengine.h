@@ -167,6 +167,7 @@ extern int new_rsc_order(resource_t *lh_rsc, const char *lh_task,
 extern void graph_element_from_action(
 	action_t *action, pe_working_set_t *data_set);
 
+extern gboolean show_scores;
 extern int scores_log_level;
 extern const char* transition_idle_timeout;
 

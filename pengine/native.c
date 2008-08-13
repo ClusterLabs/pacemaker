@@ -224,7 +224,7 @@ native_merge_weights(
 node_t *
 native_color(resource_t *rsc, pe_working_set_t *data_set)
 {
-        int alloc_details = scores_log_level;
+        int alloc_details = scores_log_level+1;
 	if(rsc->parent && is_not_set(rsc->parent->flags, pe_rsc_allocating)) {
 		/* never allocate children on their own */
 		crm_debug("Escalating allocation of %s to its parent: %s",
@@ -242,8 +242,8 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	}
 
 	set_bit(rsc->flags, pe_rsc_allocating);
-	print_resource(alloc_details+1, "Allocating: ", rsc, FALSE);
-	dump_node_scores(alloc_details+1, rsc, "Pre-allloc", rsc->allowed_nodes);
+	print_resource(alloc_details, "Allocating: ", rsc, FALSE);
+	dump_node_scores(alloc_details, rsc, "Pre-allloc", rsc->allowed_nodes);
 
 	slist_iter(
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
@@ -255,7 +255,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint);	
 	    );	
 
-	dump_node_scores(alloc_details+1, rsc, "Post-coloc", rsc->allowed_nodes);
+	dump_node_scores(alloc_details, rsc, "Post-coloc", rsc->allowed_nodes);
 
 	slist_iter(
 	    constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
@@ -273,7 +273,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 			rsc, NULL, -INFINITY, XML_RSC_ATTR_TARGET_ROLE, data_set);
 	}
 
-	dump_node_scores(alloc_details, rsc, __PRETTY_FUNCTION__, rsc->allowed_nodes);
+	dump_node_scores(show_scores?0:scores_log_level, rsc, __PRETTY_FUNCTION__, rsc->allowed_nodes);
 	if(is_set(rsc->flags, pe_rsc_provisional)
 	   && native_choose_node(rsc) ) {
 		crm_debug_3("Allocated resource %s to %s",

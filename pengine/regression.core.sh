@@ -52,6 +52,8 @@ function do_test {
     dot_output=$io_dir/${base}.pe.dot
     dot_expected=$io_dir/${base}.dot
     dot_png=$io_dir/${base}.png
+    scores=$io_dir/${base}.scores
+    score_output=$io_dir/${base}.pe.scores
 
     if [ ! -f $input ]; then
 	echo "Test $name	($base)...	Error (PE : input)";
@@ -66,7 +68,7 @@ function do_test {
     fi
 
 #    ../admin/crm_verify -X $input
-    ptest -x $input -D $dot_output -G $output -S $*
+    ptest -x $input -D $dot_output -G $output -S -s $* > $score_output
     if [ $? != 0 ]; then
 	echo "	* Failed (PE : rc)";
 	num_failed=`expr $num_failed + 1`
@@ -98,9 +100,17 @@ function do_test {
 	mv -f $dot_output.sort $dot_output
     fi
 
+    if [ ! -s $score_output ]; then
+	echo "	Error (PE : no scores)";
+	num_failed=`expr $num_failed + 1`
+	rm $output
+	return;
+    fi
+
     if [ "$create_mode" = "true" ]; then
 	cp "$output" "$expected"
 	cp "$dot_output" "$dot_expected"
+	cp "$score_output" "$scores"
 	echo "	Created expected output (PE)" 
     fi
 
@@ -126,37 +136,18 @@ function do_test {
 	rm $output
     fi
     
-    if [ "$test_te" = "true" ]; then
-	../tengine/ttest -X $output 2> $te_output
-	
-#    if [ "$create_mode" = "true" ]; then
-	if [ "$create_mode" = "true" -a ! -f $te_expected ]; then
-	    cp "$te_output" "$te_expected"
-	fi
-	
-	if [ -f $te_expected ]; then
-	    diff $diff_opts -q $te_expected $te_output >/dev/null
-	    rc=$?
-	fi
-	
-	if [ "$create_mode" = "true" ]; then
-	    echo "Test $name	($base)...	Created expected output (PE)" 
-	elif [ ! -f $te_expected ]; then
-	    echo "==== Raw results for TE test ($base) ====" >> $failed
-	    cat $te_output 2>/dev/null >> $failed
-	elif [ "$rc" = 0 ]; then
-	    :
-	elif [ "$rc" = 1 ]; then
-	    echo "Test $name	($base)...	* Failed (TE)";
-	    diff $diff_opts $te_expected $te_output 2>/dev/null >> $failed
-	    diff $diff_opts $te_expected $te_output
-	else 
-	    echo "Test $name	($base)...	Error TE (diff: $rc)";
-	    echo "==== Raw results for test ($base) TE ====" >> $failed
-	    cat $te_output 2>/dev/null >> $failed
-	fi
+    diff $diff_opts $scores $score_output >/dev/null
+    rc=$?
+    if [ $rc != 0 ]; then
+	echo "	* Failed (PE : scores)";
+	diff $diff_opts $scores $score_output 2>/dev/null >> $failed
+	echo "" >> $failed
+	num_failed=`expr $num_failed + 1`
+    else 
+	rm $score_output
     fi
-    rm -f $output $te_output
+
+    rm -f $output
 }
 
 function test_results {

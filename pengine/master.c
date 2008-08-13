@@ -553,8 +553,14 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 		crm_debug_2("Processing %s", child_rsc->id);
 
 		chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
-		do_crm_log(scores_log_level, "%s promotion score on %s: %d",
-			   child_rsc->id, chosen?chosen->details->uname:"none", child_rsc->sort_index);
+		if(show_scores) {
+		    fprintf(stdout, "%s promotion score on %s: %d\n",
+			    child_rsc->id, chosen?chosen->details->uname:"none", child_rsc->sort_index);
+		    
+		} else {
+		    do_crm_log(scores_log_level, "%s promotion score on %s: %d",
+			       child_rsc->id, chosen?chosen->details->uname:"none", child_rsc->sort_index);
+		}
 		chosen = NULL; /* nuke 'chosen' so that we don't promote more than the
 				* required number of instances
 				*/

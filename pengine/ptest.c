@@ -145,7 +145,6 @@ main(int argc, char **argv)
 {
 	gboolean process = TRUE;
 	gboolean all_good = TRUE;
-	gboolean show_scores = FALSE;
 	enum transition_status graph_rc = -1;
 	crm_graph_t *transition = NULL;
 	ha_time_t *a_date = NULL;
@@ -237,8 +236,6 @@ main(int argc, char **argv)
 				break;
 			case 's':
 				show_scores = TRUE;
-				cl_log_enable_stderr(TRUE);
-				scores_log_level = crm_log_level;
 				break;
 			case 'x':
 				xml_file = optarg;
@@ -258,9 +255,6 @@ main(int argc, char **argv)
 			case 'V':
 				cl_log_enable_stderr(TRUE);
 				alter_debug(DEBUG_INC);
-				if(show_scores) {
-				    scores_log_level = crm_log_level;
-				}
 				break;
 			case 'L':
 				USE_LIVE_CIB = TRUE;
@@ -359,6 +353,9 @@ main(int argc, char **argv)
 	}
 
 	if(process) {
+	    if(show_scores) {
+		fprintf(stdout, "Allocation scores:\n");
+	    }
 	    do_calculations(&data_set, cib_object, a_date);
 	}
 	
@@ -371,7 +368,7 @@ main(int argc, char **argv)
 		if(graph_strm == NULL) {
 			cl_perror("Could not open %s for writing", graph_file);
 		} else {
-			if(fprintf(graph_strm, "%s\n", msg_buffer) < 0) {
+			if(fprintf(graph_strm, "%s\n\n", msg_buffer) < 0) {
 				cl_perror("Write to %s failed", graph_file);
 			}
 			fflush(graph_strm);

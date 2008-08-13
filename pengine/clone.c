@@ -374,7 +374,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		constraint->score/INFINITY, TRUE);
 	    );
 	
-	dump_node_scores(scores_log_level, rsc, __FUNCTION__, rsc->allowed_nodes);
+	dump_node_scores(show_scores?0:scores_log_level, rsc, __FUNCTION__, rsc->allowed_nodes);
 	
 	/* count now tracks the number of clones currently allocated */
 	slist_iter(node, node_t, rsc->allowed_nodes, lpc,

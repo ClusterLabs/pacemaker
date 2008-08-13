@@ -39,6 +39,7 @@ xmlNode * do_calculations(
 
 #define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
 
+gboolean show_scores = FALSE;
 int scores_log_level = LOG_DEBUG_2;
 extern int transition_id;
 
