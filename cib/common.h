@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "../lib/crm/cib/cib_private.h"
+#include "../lib/cib/cib_private.h"
 
 extern xmlNode *cib_msg_copy(xmlNode *msg, gboolean with_data);
 extern xmlNode *cib_construct_reply(xmlNode *request, xmlNode *output, int rc);

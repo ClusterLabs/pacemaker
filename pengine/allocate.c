@@ -33,7 +33,7 @@
 #include <pengine.h>
 #include <allocate.h>
 #include <utils.h>
-#include <lib/crm/pengine/utils.h>
+#include <lib/pengine/utils.h>
 
 void set_alloc_actions(pe_working_set_t *data_set);
 void migrate_reload_madness(pe_working_set_t *data_set);

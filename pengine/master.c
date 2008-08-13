@@ -20,11 +20,11 @@
 
 #include <crm/msg_xml.h>
 #include <allocate.h>
-#include <lib/crm/pengine/utils.h>
+#include <lib/pengine/utils.h>
 #include <utils.h>
 
 #define VARIANT_CLONE 1
-#include <lib/crm/pengine/variant.h>
+#include <lib/pengine/variant.h>
 
 extern gint sort_clone_instance(gconstpointer a, gconstpointer b);
 void node_list_update_one(GListPtr list1, node_t *other, int score);

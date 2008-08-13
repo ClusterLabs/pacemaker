@@ -20,7 +20,7 @@
 
 #include <pengine.h>
 #include <crm/pengine/rules.h>
-#include <lib/crm/pengine/utils.h>
+#include <lib/pengine/utils.h>
 #include <crm/msg_xml.h>
 #include <allocate.h>
 #include <utils.h>
@@ -28,7 +28,7 @@
 #define DELETE_THEN_REFRESH 1 /* The crmd will remove the resource from the CIB itself, making this redundant */
 
 #define VARIANT_NATIVE 1
-#include <lib/crm/pengine/variant.h>
+#include <lib/pengine/variant.h>
 
 gboolean at_stack_bottom(resource_t *rsc);
 

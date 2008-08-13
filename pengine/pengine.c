@@ -31,7 +31,7 @@
 #include <crm/pengine/status.h>
 #include <pengine.h>
 #include <allocate.h>
-#include <lib/crm/pengine/utils.h>
+#include <lib/pengine/utils.h>
 #include <utils.h>
 
 xmlNode * do_calculations(

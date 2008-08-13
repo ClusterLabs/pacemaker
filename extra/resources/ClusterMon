@@ -1,0 +1,267 @@
+#!/bin/sh
+#
+#
+#	ClusterMon OCF RA. Does nothing but wait a few seconds, can be
+#	configured to fail occassionally.
+#
+# Copyright (c) 2004 SUSE LINUX AG, Lars Marowsky-Brée
+#                    All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of version 2 of the GNU General Public License as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it would be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# Further, this software is distributed without any warranty that it is
+# free of the rightful claim of any third person regarding infringement
+# or the like.  Any license provided herein, whether implied or
+# otherwise, applies only to this software file.  Patent licenses, if
+# any, provided herein do not apply to combinations of this program with
+# other software, or any other product whatsoever.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
+#
+# OCF instance parameters:
+#	OCF_RESKEY_user
+#	OCF_RESKEY_pidfile
+#	OCF_RESKEY_update
+#	OCF_RESKEY_extra_options
+#	OCF_RESKEY_htmlfile
+
+#######################################################################
+# Initialization:
+
+. ${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs
+
+#######################################################################
+
+meta_data() {
+	cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="ClusterMon">
+<version>1.0</version>
+
+<longdesc lang="en">
+This is a ClusterMon Resource Agent.
+It outputs current cluster status to the html.
+</longdesc>
+<shortdesc lang="en">ClusterMon resource agent</shortdesc>
+
+<parameters>
+
+<parameter name="user" unique="0">
+<longdesc lang="en">
+The user we want to run crm_mon as
+</longdesc>
+<shortdesc lang="en">The user we want to run crm_mon as</shortdesc>
+<content type="string" default="root" />
+</parameter>
+
+<parameter name="update" unique="0">
+<longdesc lang="en">
+How frequently should we update the cluster status
+</longdesc>
+<shortdesc lang="en">Update interval</shortdesc>
+<content type="integer" default="15" />
+</parameter>
+
+<parameter name="extra_options" unique="0">
+<longdesc lang="en">
+Additional options to pass to crm_mon.  Eg. -n -r
+</longdesc>
+<shortdesc lang="en">Extra options</shortdesc>
+<content type="string" default="" />
+</parameter>
+
+<parameter name="pidfile" unique="1">
+<longdesc lang="en">
+PID file location to ensure only one instance is running
+</longdesc>
+<shortdesc lang="en">PID file</shortdesc>
+<content type="string" default="/tmp/ClusterMon_${OCF_RESOURCE_INSTANCE}.pid" />
+</parameter>
+
+<parameter name="htmlfile" unique="1" required="1">
+<longdesc lang="en">
+Location to write HTML output to.
+</longdesc>
+<shortdesc lang="en">HTML output</shortdesc>
+<content type="string" default="/tmp/ClusterMon_${OCF_RESOURCE_INSTANCE}.html" />
+</parameter>
+</parameters>
+
+<actions>
+<action name="start"   timeout="90" />
+<action name="stop"    timeout="100" />
+<action name="monitor" depth="0"  timeout="20" interval="10" start-delay="1m" />
+<action name="meta-data"  timeout="5" />
+<action name="validate-all"  timeout="30" />
+</actions>
+</resource-agent>
+END
+}
+
+#######################################################################
+
+ClusterMon_usage() {
+	cat <<END
+usage: $0 {start|stop|monitor|validate-all|meta-data}
+
+Expects to have a fully populated OCF RA-compliant environment set.
+END
+}
+
+ClusterMon_exit() {
+	if [ $1 != 0 ]; then
+		exit $OCF_ERR_GENERIC
+	else
+		exit $OCF_SUCCESS
+	fi
+}
+
+ClusterMon_start() {
+    cmd_prefix=""
+    cmd_suffix=""
+    if [ ! -z $OCF_RESKEY_user ]; then
+	su - $OCF_RESKEY_user -c "${HA_SBIN_DIR}/crm_mon -p $OCF_RESKEY_pidfile -d -i $OCF_RESKEY_update $OCF_RESKEY_extra_options -h $OCF_RESKEY_htmlfile"
+    else
+	${HA_SBIN_DIR}/crm_mon -p $OCF_RESKEY_pidfile -d -i $OCF_RESKEY_update $OCF_RESKEY_extra_options -h $OCF_RESKEY_htmlfile
+    fi
+    ClusterMon_exit $?
+}
+
+ClusterMon_stop() {
+    if [ -f $OCF_RESKEY_pidfile ]; then
+	pid=`cat $OCF_RESKEY_pidfile`
+    fi
+    if [ ! -z $pid ]; then
+	kill -9 $pid
+	rc=$?
+	if [ $rc = 0 ]; then
+	    rm $OCF_RESKEY_pidfile
+	fi
+	ClusterMon_exit $rc
+    fi
+    ClusterMon_exit 0
+}
+
+ClusterMon_monitor() {
+    if [ -f $OCF_RESKEY_pidfile ]; then
+	pid=`cat $OCF_RESKEY_pidfile`
+    fi
+    if [ ! -z $pid ]; then
+	kill -0 $pid
+	if [ $? = 0 ]; then
+	    exit $OCF_SUCCESS
+	fi
+    fi
+    exit $OCF_NOT_RUNNING
+}
+
+CheckOptions() {
+while getopts Vi:nrh:cdp: OPTION
+do
+    case $OPTION in
+    V|n|r|c|d);;
+    i)	ocf_log warn "You should not have specified the -i option, since OCF_RESKEY_update is set already!";;
+    h)	ocf_log warn "You should not have specified the -h option, since OCF_RESKEY_htmlfile is set already!";;
+    p)	ocf_log warn "You should not have specified the -p option, since OCF_RESKEY_pidfile is set already!";;
+    *)  return $OCF_ERR_ARGS;;
+    esac
+done		
+
+if [ $? -ne 0 ]; then
+    return $OCF_ERR_ARGS
+fi
+
+# We should have eaten all options at this stage
+shift $(($OPTIND -1))
+if [ $# -gt 0 ]; then
+    false
+else
+    true
+fi
+}
+
+ClusterMon_validate() {
+# Existence of the user
+    if [ ! -z $OCF_RESKEY_user ]; then
+	getent passwd "$OCF_RESKEY_user" >/dev/null
+	if [ $? -eq 0 ]; then
+	    : Yes, user exists. We can further check his permission on crm_mon if necessary
+	else
+	    ocf_log err "The user $OCF_RESKEY_user does not exist!"
+	    exit $OCF_ERR_ARGS
+	fi
+    fi
+
+# Pidfile better be an absolute path
+    case $OCF_RESKEY_pidfile in
+	/*) ;;
+	*) ocf_log warn "You should have pidfile($OCF_RESKEY_pidfile) of absolute path!" ;;
+    esac
+
+# Check the update interval
+    if ocf_is_decimal "$OCF_RESKEY_update" && [ $OCF_RESKEY_update -gt 0 ]; then
+	:
+    else
+	ocf_log err "Invalid update interval $OCF_RESKEY_update. It should be positive integer!"
+	exit $OCF_ERR_ARGS
+    fi
+
+    if CheckOptions $OCF_RESKEY_extra_options; then
+	:
+    else
+	ocf_log err "Invalid options $OCF_RESKEY_extra_options!"
+	exit $OCF_ERR_ARGS
+    fi
+
+# Htmlfile better be an absolute path
+    case $OCF_RESKEY_htmlfile in
+	/*) ;;
+	*) ocf_log warn "You should have htmlfile($OCF_RESKEY_htmlfile) of absolute path!" ;;
+    esac
+
+     
+    echo "Validate OK"
+    return $OCF_SUCCESS
+}
+
+if [ $# -ne 1 ]; then
+    ClusterMon_usage
+    exit $OCF_ERR_ARGS
+fi
+
+: ${OCF_RESKEY_update:="15000"}
+: ${OCF_RESKEY_pidfile:="/tmp/ClusterMon_${OCF_RESOURCE_INSTANCE}.pid"}
+: ${OCF_RESKEY_htmlfile:="/tmp/ClusterMon_${OCF_RESOURCE_INSTANCE}.html"}
+
+OCF_RESKEY_update=`expr $OCF_RESKEY_update / 1000`
+
+case $__OCF_ACTION in
+meta-data)	meta_data
+		exit $OCF_SUCCESS
+		;;
+start)		ClusterMon_start
+		;;
+stop)		ClusterMon_stop
+		;;
+monitor)	ClusterMon_monitor
+		;;
+validate-all)	ClusterMon_validate
+		;;
+usage|help)	ClusterMon_usage
+		exit $OCF_SUCCESS
+		;;
+*)		ClusterMon_usage
+		exit $OCF_ERR_UNIMPLEMENTED
+		;;
+esac
+
+exit $?

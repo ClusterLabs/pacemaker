@@ -20,7 +20,7 @@
 #include <crm/msg_xml.h>
 #include <allocate.h>
 #include <utils.h>
-#include <lib/crm/pengine/utils.h>
+#include <lib/pengine/utils.h>
 
 void
 print_rsc_to_node(const char *pre_text, rsc_to_node_t *cons, gboolean details)

@@ -45,7 +45,7 @@
 
 #include <crm/cib.h>
 #include <crm/pengine/status.h>
-#include <lib/crm/pengine/unpack.h>
+#include <lib/pengine/unpack.h>
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>

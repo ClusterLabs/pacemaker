@@ -32,7 +32,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
-#include <lib/crm/cib/cib_private.h>
+#include <lib/cib/cib_private.h>
 
 struct config_root_s 
 {

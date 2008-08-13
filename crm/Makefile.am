@@ -19,11 +19,7 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 ## Subdirectories
 SUBDIRS			=  admin
-DIST_SUBDIRS		=  admin ais
-
-if BUILD_AIS_SUPPORT
-SUBDIRS			+= ais
-endif
+DIST_SUBDIRS		=  admin
 
 crm_varlibdir		= $(HA_VARLIBDIR)/$(HB_PKG)/crm
 crm_varrundir		= $(HA_VARRUNDIR)/$(HB_PKG)/crm

@@ -42,7 +42,7 @@
 #endif
 #include <glib.h>
 #include <pengine.h>
-#include <lib/crm/pengine/utils.h>
+#include <lib/pengine/utils.h>
 #include <allocate.h>
 #if HAVE_LIBXML2
 #  include <libxml/parser.h>

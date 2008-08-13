@@ -21,10 +21,10 @@
 #include <crm/msg_xml.h>
 #include <allocate.h>
 #include <utils.h>
-#include <lib/crm/pengine/utils.h>
+#include <lib/pengine/utils.h>
 
 #define VARIANT_CLONE 1
-#include <lib/crm/pengine/variant.h>
+#include <lib/pengine/variant.h>
 
 gint sort_clone_instance(gconstpointer a, gconstpointer b);
 

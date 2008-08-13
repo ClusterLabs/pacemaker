@@ -1,0 +1,156 @@
+#!/bin/sh
+#
+#
+#	Dummy OCF RA. Does nothing but wait a few seconds, can be
+#	configured to fail occassionally.
+#
+# Copyright (c) 2004 SUSE LINUX AG, Lars Marowsky-Brée
+#                    All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of version 2 of the GNU General Public License as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it would be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# Further, this software is distributed without any warranty that it is
+# free of the rightful claim of any third person regarding infringement
+# or the like.  Any license provided herein, whether implied or
+# otherwise, applies only to this software file.  Patent licenses, if
+# any, provided herein do not apply to combinations of this program with
+# other software, or any other product whatsoever.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
+#
+
+#######################################################################
+# Initialization:
+
+. ${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs
+
+#######################################################################
+
+meta_data() {
+	cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="controld" version="0.9">
+<version>1.0</version>
+
+<longdesc lang="en">
+This Resource Agent can control the two controld services needed by ocfs2.
+It assumes that dlm_controld and ocfs2_controld are both in your default PATH.
+In most cases, it should be run as an anonymous clone.
+</longdesc>
+<shortdesc lang="en">DLM Agent for OCFS2</shortdesc>
+
+<parameters>
+
+<parameter name="daemon" unique="1">
+<longdesc lang="en">
+The daemon to control. Allowed values are: dlm, ocfs2
+</longdesc>
+<shortdesc lang="en">The daemon to start</shortdesc>
+<content type="string" default="dlm" />
+</parameter>
+
+<parameter name="args" unique="1">
+<longdesc lang="en">
+Any additional options to start the controld service with
+</longdesc>
+<shortdesc lang="en">DLM Options</shortdesc>
+<content type="string" default="" />
+</parameter>
+
+</parameters>
+
+<actions>
+<action name="start"        timeout="90" />
+<action name="stop"         timeout="100" />
+<action name="monitor"      timeout="20" interval="10" depth="0" start-delay="0" />
+<action name="meta-data"    timeout="5" />
+<action name="validate-all"   timeout="30" />
+</actions>
+</resource-agent>
+END
+}
+
+#######################################################################
+
+controld_usage() {
+	cat <<END
+usage: $0 {start|stop|monitor|migrate_to|migrate_from|validate-all|meta-data}
+
+Expects to have a fully populated OCF RA-compliant environment set.
+END
+}
+
+controld_start() {
+    controld_monitor; rc=$?
+
+    case $rc in
+      0) return $OCF_SUCCESS;;
+      1) ${OCF_RESKEY_daemon}_controld $OCF_RESKEY_args;;
+      *) return $OCF_ERR_GENERIC;;
+    esac
+
+    sleep 1
+    controld_monitor
+}
+
+controld_stop() {
+    controld_monitor; rc=$?
+
+    case $rc in
+      $OCF_NOT_RUNNING) return $OCF_SUCCESS;;
+    esac
+
+    killall -KILL ${OCF_RESKEY_daemon}_controld; rc=$?
+
+    case $rc in
+      0) return $OCF_SUCCESS;;
+      *) return $OCF_ERR_GENERIC;;
+    esac
+}
+
+controld_monitor() {
+    killall -0 ${OCF_RESKEY_daemon}_controld; rc=$?
+
+    case $rc in
+      0) return $OCF_SUCCESS;;
+      1) return $OCF_NOT_RUNNING;;
+      *) return $OCF_ERR_GENERIC;;
+    esac
+}
+
+controld_validate() {
+    check_binary ${OCF_RESKEY_daemon}_controld
+    return $OCF_SUCCESS
+}
+
+: ${OCF_RESKEY_daemon=dlm}
+: ${OCF_RESKEY_args=""}
+
+case $__OCF_ACTION in
+meta-data)	meta_data
+		exit $OCF_SUCCESS
+		;;
+start)		controld_start;;
+stop)		controld_stop;;
+monitor)	controld_monitor;;
+validate-all)	controld_validate;;
+usage|help)	controld_usage
+		exit $OCF_SUCCESS
+		;;
+*)		controld_usage
+		exit $OCF_ERR_UNIMPLEMENTED
+		;;
+esac
+rc=$?
+ocf_log debug "${OCF_RESOURCE_INSTANCE} $__OCF_ACTION : $rc"
+exit $rc
+

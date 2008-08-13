@@ -1,7 +1,7 @@
+# Makefile.am for OCF RAs
 #
-# heartbeat library directory: Linux-HA code
-#
-# Copyright (C) 2001 Alan Robertson
+# Author: Andrew Beekhof
+# Copyright (C) 2008 Andrew Beekhof
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,24 +17,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in
+MAINTAINERCLEANFILES = Makefile.in
+EXTRA_DIST		= $(ocf_SCRIPTS)
 
+ocfdir		    = @OCF_RA_DIR@/pacemaker
 
-#
-#	PILS is supposed to be an independent library
-#	Stonith should rely only on PILS
-#
-#	The rest can use clplumbing, and the plugins should be able
-#	to use any of the libraries (nothing can be linked against them)
-#
-#
-
-## Subdirectories...
-SUBDIRS	= common pengine transition cib fencing plugins ais
-DIST_SUBDIRS =  $(SUBDIRS) ais
-
-if BUILD_AIS_SUPPORT
-SUBDIRS			+= ais
-endif
-
+ocf_SCRIPTS	     =  ClusterMon 	\
+			Dummy		\
+			Stateful	\
+			SysInfo		\
+			controld
 

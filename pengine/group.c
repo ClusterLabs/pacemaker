@@ -19,14 +19,14 @@
 #include <crm_internal.h>
 
 #include <pengine.h>
-#include <lib/crm/pengine/utils.h>
+#include <lib/pengine/utils.h>
 #include <crm/msg_xml.h>
 #include <clplumbing/cl_misc.h>
 #include <allocate.h>
 #include <utils.h>
 
 #define VARIANT_GROUP 1
-#include <lib/crm/pengine/variant.h>
+#include <lib/pengine/variant.h>
 
 node_t *
 group_color(resource_t *rsc, pe_working_set_t *data_set)

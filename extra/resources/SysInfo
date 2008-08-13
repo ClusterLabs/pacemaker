@@ -1,0 +1,361 @@
+#!/bin/sh
+#
+#
+#	SysInfo OCF Resource Agent
+#	It records (in the CIB) various attributes of a node
+#
+# Copyright (c) 2004 SUSE LINUX AG, Lars Marowsky-Brée
+#                    All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of version 2 of the GNU General Public License as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it would be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# Further, this software is distributed without any warranty that it is
+# free of the rightful claim of any third person regarding infringement
+# or the like.  Any license provided herein, whether implied or
+# otherwise, applies only to this software file.  Patent licenses, if
+# any, provided herein do not apply to combinations of this program with
+# other software, or any other product whatsoever.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
+#
+#######################################################################
+# Initialization:
+
+. ${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs
+
+#######################################################################
+
+meta_data() {
+	cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="SysInfo">
+<version>1.0</version>
+
+<longdesc lang="en">
+This is a SysInfo Resource Agent.
+It records (in the CIB) various attributes of a node
+Sample Linux output:
+   arch:   i686
+   os:     Linux-2.4.26-gentoo-r14
+   free_swap:      1999
+   cpu_info:       Intel(R) Celeron(R) CPU 2.40GHz
+   cpu_speed:      4771.02
+   cpu_cores:      1
+   cpu_load:       0.00
+   ram_total:      513
+   ram_free:       117
+   root_free:      2.4
+
+Sample Darwin output:
+   arch:   i386
+   os:     Darwin-8.6.2
+   cpu_info:       Intel Core Duo
+   cpu_speed:      2.16
+   cpu_cores:      2
+   cpu_load:       0.18
+   ram_total:      2016
+   ram_free:       787
+   root_free:      13
+
+Units:
+   free_swap: Mb
+   ram_*:     Mb
+   root_free: Gb
+   cpu_speed (Linux): bogomips
+   cpu_speed (Darwin): Ghz
+
+</longdesc>
+<shortdesc lang="en">SysInfo resource agent</shortdesc>
+
+<parameters>
+
+<parameter name="pidfile" unique="0">
+<longdesc lang="en">PID file</longdesc>
+<shortdesc lang="en">PID file</shortdesc>
+<content type="string" default="$OCF_RESKEY_pidfile" />
+</parameter>
+
+<parameter name="delay" unique="0">
+<longdesc lang="en">Interval to allow values to stabilize</longdesc>
+<shortdesc lang="en">Dampening Delay</shortdesc>
+<content type="string" default="0s" />
+</parameter>
+
+</parameters>
+<actions>
+<action name="start"   timeout="90" />
+<action name="stop"    timeout="100" />
+<action name="monitor" timeout="20s" interval="60s"/>
+<action name="meta-data"  timeout="5" />
+<action name="validate-all"  timeout="30" />
+</actions>
+</resource-agent>
+END
+}
+
+#######################################################################
+
+UpdateStat() {
+    name=$1; shift
+    value="$*"
+    echo -e "$name:\t$value"
+    ${HA_SBIN_DIR}/attrd_updater ${OCF_RESKEY_delay} -S status -n $name -v "$value"
+}
+
+SysInfoStats() {
+
+    UpdateStat arch "`uname -m`"
+    UpdateStat os "`uname -s`-`uname -r`"
+
+    case `uname -s` in
+	"Darwin")
+	    mem=`top -l 1 | grep Mem: | awk '{print $10}'`
+	    mem_used=`top -l 1 | grep Mem: | awk '{print $8}'`
+	    mem=`SysInfo_mem_units $mem`
+	    mem_used=`SysInfo_mem_units $mem_used`
+	    mem_total=`expr $mem_used + $mem`
+	    cpu_type=`system_profiler SPHardwareDataType | grep "CPU Type:"`
+	    cpu_type=${cpu_type/*: /}
+	    cpu_speed=`system_profiler SPHardwareDataType | grep "CPU Speed:" | awk '{print $3}'`
+	    cpu_cores=`system_profiler SPHardwareDataType | grep "Number Of"`
+	    cpu_cores=${cpu_cores/*: /}
+	;;
+	"Linux")
+	    if [ -f /proc/cpuinfo ]; then
+		cpu_type=`grep "model name" /proc/cpuinfo | head -n 1`
+		cpu_type=${cpu_type/*: /}
+		cpu_speed=`grep "bogomips" /proc/cpuinfo | head -n 1`
+		cpu_speed=${cpu_speed/*: /}
+		cpu_cores=`grep "^processor" /proc/cpuinfo | wc -l`
+	    fi
+
+	    if [ -f /proc/meminfo ]; then
+	        # meminfo results are in kB
+		mem=`grep "SwapFree" /proc/meminfo | awk '{print $2"k"}'`
+		if [ ! -z $mem ]; then
+		    UpdateStat free_swap `SysInfo_mem_units $mem`
+		fi
+		mem=`grep "Inactive" /proc/meminfo | awk '{print $2"k"}'`
+		mem_total=`grep "MemTotal" /proc/meminfo | awk '{print $2"k"}'`
+	    else
+		mem=`top -n 1 | grep Mem: | awk '{print $7}'`
+	    fi
+	    ;;
+	*)
+    esac
+
+    if [ x != x"$cpu_type" ]; then
+	UpdateStat cpu_info "$cpu_type"
+    fi
+
+    if [ x != x"$cpu_speed" ]; then
+	UpdateStat cpu_speed "$cpu_speed"
+    fi
+
+    if [ x != x"$cpu_cores" ]; then
+	UpdateStat cpu_cores "$cpu_cores"
+    fi
+
+    loads=`uptime`
+    load15=`echo ${loads} | awk '{print $10}'`
+    UpdateStat cpu_load $load15
+
+    if [ ! -z "$mem" ]; then
+        # Massage the memory values
+ 	UpdateStat ram_total `SysInfo_mem_units $mem_total`
+	UpdateStat ram_free `SysInfo_mem_units $mem`
+    fi
+
+    # Portability notes:
+    #   o df:   -h flag not available on Solaris 8.  (OK on 9, 10, ...) #FIXME#
+    #   o tail: explicit "-n" not available in Solaris; instead simplify
+    #	  'tail -n <c>' to the equivalent 'tail -<c>'.
+    disk=`df -h / | tail -1 | awk '{print $4}'`
+    if [ x != x"$disk" ]; then
+        UpdateStat root_free `SysInfo_hdd_units $disk`
+    fi
+}
+
+SysInfo_mem_units() {
+    mem=$1
+
+    if [ -z $1 ]; then 
+	return
+    fi
+
+    memlen=`expr ${#mem} - 1`
+    memlen_alt=`expr ${#mem} - 2`    
+    if [ ${mem:$memlen:1} = "G" ]; then
+	mem="${mem:0:$memlen}"
+	if [ $mem != ${mem/./} ]; then
+	    mem_before=${mem/.*/}
+	    mem_after=${mem/*./}
+	    mem=$[mem_before*1024]
+	    if [ ${#mem_after} = 0 ]; then
+		:
+	    elif [ ${#mem_after} = 1 ]; then
+		mem=$[mem+100*$mem_after]
+	    elif [ ${#mem_after} = 2 ]; then
+		mem=$[mem+10*$mem_after]
+	    elif [ ${#mem_after} = 3 ]; then
+		mem=$[mem+$mem_after]
+	    else 
+		mem_after=${mem_after:0:3}
+		mem=$[mem+$mem_after]
+	    fi
+	fi
+    elif [ ${mem:$memlen:1} = "M" ]; then
+	mem=${mem/.*/}
+	mem="${mem:0:$memlen}"
+    elif [ ${mem:$memlen:1} = "k" ]; then
+	mem="${mem:0:$memlen}"
+	mem=${mem/.*/}
+	mem=`expr $mem / 1024`
+    elif [ ${mem:$memlen_alt:2} = "kB" ]; then
+	mem="${mem:0:$memlen_alt}"
+	mem=${mem/.*/}
+	mem=`expr $mem / 1024`
+    elif [ ${mem:$memlen_alt:2} = "Mb" ]; then
+	mem="${mem:0:$memlen_alt}"
+	mem=${mem/.*/}
+    elif [ ${mem:$memlen_alt:2} = "MB" ]; then
+	mem="${mem:0:$memlen_alt}"
+	mem=${mem/.*/}
+    fi
+
+    # Round to the next multiple of 50
+    memlen=`expr ${#mem} - 2`
+    mem_round="${mem:$memlen:2}"
+    if [ x$mem_round = x ]; then 
+	:
+    elif [ $mem_round = "00" ]; then 
+	:
+    elif [ $mem_round -lt "50" ]; then 
+	mem=$[mem+50]
+	mem=$[mem-$mem_round]
+
+    else 
+	mem=$[mem+100]
+	mem=$[mem-$mem_round]
+    fi
+    echo $mem    
+}
+
+SysInfo_hdd_units() {
+    disk=$1
+    disklen=`expr ${#disk} - 1`
+    disklen_alt=`expr ${#disk} - 2`
+    if [ ${disk:$disklen:1} = "G" ]; then
+	disk="${disk:0:$disklen}"
+    elif [ ${disk:$disklen:1} = "M" ]; then
+	disk="${disk:0:$disklen}"
+	disk=${disk/.*/}
+	disk=`expr $disk / 1024`
+    elif [ ${disk:$disklen:1} = "k" ]; then
+	disk="${disk:0:$disklen}"
+	disk=${disk/.*/}
+	disk=`expr $disk / 1048576`
+    elif [ ${disk:$disklen_alt:2} = "kB" ]; then
+	disk="${disk:0:$disklen_alt}"
+	disk=${disk/.*/}
+	disk=`expr $disk / 1048576`
+    elif [ ${disk:$disklen_alt:2} = "Mb" ]; then
+	disk="${disk:0:$disklen_alt}"
+	disk=${disk/.*/}
+	disk=`expr $disk / 1024`
+    elif [ ${disk:$disklen_alt:2} = "MB" ]; then
+	disk="${disk:0:$disklen_alt}"
+	disk=${disk/.*/}
+	disk=`expr $disk / 1024`
+    fi
+    echo $disk    
+}
+
+SysInfo_usage() {
+	cat <<END
+usage: $0 {start|stop|monitor|validate-all|meta-data}
+
+Expects to have a fully populated OCF RA-compliant environment set.
+END
+}
+
+SysInfo_start() {
+    echo $OCF_RESKEY_clone > $OCF_RESKEY_pidfile
+    SysInfoStats
+    exit $OCF_SUCCESS
+}
+
+SysInfo_stop() {
+    rm $OCF_RESKEY_pidfile
+    exit $OCF_SUCCESS
+}
+
+SysInfo_monitor() {
+    if [ -f $OCF_RESKEY_pidfile ]; then
+	clone=`cat $OCF_RESKEY_pidfile`
+    fi
+
+    if [ x$clone = x ]; then
+	rm $OCF_RESKEY_pidfile
+	exit $OCF_NOT_RUNNING
+
+    elif [ $clone = $OCF_RESKEY_clone ]; then
+	SysInfoStats
+	exit $OCF_SUCCESS
+
+    elif [ x$OCF_RESKEY_CRM_meta_globally_unique = xtrue  
+	    -o x$OCF_RESKEY_CRM_meta_globally_unique = xTrue
+	    -o x$OCF_RESKEY_CRM_meta_globally_unique = xyes
+	    -o x$OCF_RESKEY_CRM_meta_globally_unique = xYes
+	]; then
+	SysInfoStats
+	exit $OCF_SUCCESS
+    fi
+    exit $OCF_NOT_RUNNING
+}
+
+SysInfo_validate() {
+    return $OCF_SUCCESS
+}
+
+if [ $# -ne 1 ]; then
+    SysInfo_usage
+    exit $OCF_ERR_ARGS
+fi
+
+: ${OCF_RESKEY_pidfile:="$HA_RSCTMP/SysInfo-${OCF_RESOURCE_INSTANCE}"}
+: ${OCF_RESKEY_clone:="0"}
+if [ x != x${OCF_RESKEY_delay} ]; then
+    OCF_RESKEY_delay="-d ${OCF_RESKEY_delay}"
+fi
+
+case $__OCF_ACTION in
+meta-data)	meta_data
+		exit $OCF_SUCCESS
+		;;
+start)		SysInfo_start
+		;;
+stop)		SysInfo_stop
+		;;
+monitor)	SysInfo_monitor
+		;;
+validate-all)	SysInfo_validate
+		;;
+usage|help)	SysInfo_usage
+		exit $OCF_SUCCESS
+		;;
+*)		SysInfo_usage
+		exit $OCF_ERR_UNIMPLEMENTED
+		;;
+esac
+
+exit $?

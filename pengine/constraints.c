@@ -34,7 +34,7 @@
 #include <allocate.h>
 #include <utils.h>
 #include <crm/pengine/rules.h>
-#include <lib/crm/pengine/utils.h>
+#include <lib/pengine/utils.h>
 
 gboolean 
 unpack_constraints(xmlNode * xml_constraints, pe_working_set_t *data_set)

@@ -28,7 +28,7 @@
 #include <glib.h>
 
 #include <allocate.h>
-#include <lib/crm/pengine/utils.h>
+#include <lib/pengine/utils.h>
 #include <utils.h>
 
 gboolean update_action(action_t *action);
