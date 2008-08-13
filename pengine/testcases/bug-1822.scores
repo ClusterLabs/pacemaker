@@ -1,0 +1,37 @@
+Allocation scores:
+clone_color: ms-sf allocation score on process1a: 0
+clone_color: ms-sf allocation score on process2b: 0
+clone_color: ms-sf_group:0 allocation score on process1a: 0
+clone_color: ms-sf_group:0 allocation score on process2b: 1
+clone_color: master_slave_Stateful:0 allocation score on process1a: 0
+clone_color: master_slave_Stateful:0 allocation score on process2b: 1
+clone_color: master_slave_procdctl:0 allocation score on process1a: -1000000
+clone_color: master_slave_procdctl:0 allocation score on process2b: -1000000
+clone_color: ms-sf_group:1 allocation score on process1a: 2
+clone_color: ms-sf_group:1 allocation score on process2b: 0
+clone_color: master_slave_Stateful:1 allocation score on process1a: 2
+clone_color: master_slave_Stateful:1 allocation score on process2b: 0
+clone_color: master_slave_procdctl:1 allocation score on process1a: 2
+clone_color: master_slave_procdctl:1 allocation score on process2b: -1000000
+group_color: ms-sf_group:0 allocation score on process1a: -1000000
+group_color: ms-sf_group:0 allocation score on process2b: 1
+group_color: master_slave_Stateful:0 allocation score on process1a: -1000000
+group_color: master_slave_Stateful:0 allocation score on process2b: 1
+group_color: master_slave_procdctl:0 allocation score on process1a: -1000000
+group_color: master_slave_procdctl:0 allocation score on process2b: -1000000
+native_color: master_slave_Stateful:0 allocation score on process1a: -1000000
+native_color: master_slave_Stateful:0 allocation score on process2b: 1
+native_color: master_slave_procdctl:0 allocation score on process1a: -1000000
+native_color: master_slave_procdctl:0 allocation score on process2b: -1000000
+group_color: ms-sf_group:1 allocation score on process1a: -1000000
+group_color: ms-sf_group:1 allocation score on process2b: -1000000
+group_color: master_slave_Stateful:1 allocation score on process1a: -1000000
+group_color: master_slave_Stateful:1 allocation score on process2b: -1000000
+group_color: master_slave_procdctl:1 allocation score on process1a: -1000000
+group_color: master_slave_procdctl:1 allocation score on process2b: -1000000
+native_color: master_slave_Stateful:1 allocation score on process1a: -1000000
+native_color: master_slave_Stateful:1 allocation score on process2b: -1000000
+native_color: master_slave_procdctl:1 allocation score on process1a: -1000000
+native_color: master_slave_procdctl:1 allocation score on process2b: -1000000
+ms-sf_group:0 promotion score on process2b: 49
+ms-sf_group:1 promotion score on none: 0

@@ -1,0 +1,10 @@
+Allocation scores:
+group_color: group_1 allocation score on paul: 0
+group_color: datadisk_1 allocation score on paul: 0
+group_color: Filesystem_2 allocation score on paul: 0
+group_color: IPaddr_5 allocation score on paul: 0
+group_color: postfix_9 allocation score on paul: 0
+native_color: datadisk_1 allocation score on paul: 0
+native_color: Filesystem_2 allocation score on paul: 0
+native_color: IPaddr_5 allocation score on paul: 0
+native_color: postfix_9 allocation score on paul: 0

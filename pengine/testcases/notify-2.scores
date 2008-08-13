@@ -1,0 +1,6 @@
+Allocation scores:
+clone_color: rsc1 allocation score on node1: 10
+clone_color: child_rsc1:0 allocation score on node1: 11
+clone_color: child_rsc1:1 allocation score on node1: 10
+native_color: child_rsc1:0 allocation score on node1: 11
+native_color: child_rsc1:1 allocation score on node1: 10

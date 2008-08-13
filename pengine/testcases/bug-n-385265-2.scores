@@ -1,0 +1,11 @@
+Allocation scores:
+group_color: group_common allocation score on ih01: 0
+group_color: group_common allocation score on ih02: 10
+group_color: resource_ip_common allocation score on ih01: 0
+group_color: resource_ip_common allocation score on ih02: 10
+group_color: resource_idvscommon allocation score on ih01: 0
+group_color: resource_idvscommon allocation score on ih02: -1000000
+native_color: resource_ip_common allocation score on ih01: 0
+native_color: resource_ip_common allocation score on ih02: -1000000
+native_color: resource_idvscommon allocation score on ih01: 0
+native_color: resource_idvscommon allocation score on ih02: -1000000

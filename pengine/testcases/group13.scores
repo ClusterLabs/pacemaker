@@ -1,0 +1,7 @@
+Allocation scores:
+group_color: nfs allocation score on jamesltc: 0
+group_color: resource_nfs allocation score on jamesltc: 0
+group_color: fs allocation score on jamesltc: 0
+group_color: resource_fs allocation score on jamesltc: -1000000
+native_color: resource_fs allocation score on jamesltc: -1000000
+native_color: resource_nfs allocation score on jamesltc: -1000000

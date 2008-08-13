@@ -1,0 +1,21 @@
+Allocation scores:
+native_color: DcIPaddr allocation score on c001n08: -1000000
+native_color: DcIPaddr allocation score on c001n02: 0
+native_color: DcIPaddr allocation score on c001n03: -1000000
+native_color: DcIPaddr allocation score on c001n01: -1000000
+native_color: rsc_c001n08 allocation score on c001n08: 100
+native_color: rsc_c001n08 allocation score on c001n02: 0
+native_color: rsc_c001n08 allocation score on c001n03: 0
+native_color: rsc_c001n08 allocation score on c001n01: 0
+native_color: rsc_c001n02 allocation score on c001n08: 0
+native_color: rsc_c001n02 allocation score on c001n02: 100
+native_color: rsc_c001n02 allocation score on c001n03: 0
+native_color: rsc_c001n02 allocation score on c001n01: 0
+native_color: rsc_c001n03 allocation score on c001n08: 0
+native_color: rsc_c001n03 allocation score on c001n02: 0
+native_color: rsc_c001n03 allocation score on c001n03: 100
+native_color: rsc_c001n03 allocation score on c001n01: 0
+native_color: rsc_c001n01 allocation score on c001n08: 0
+native_color: rsc_c001n01 allocation score on c001n02: 0
+native_color: rsc_c001n01 allocation score on c001n03: 0
+native_color: rsc_c001n01 allocation score on c001n01: 100

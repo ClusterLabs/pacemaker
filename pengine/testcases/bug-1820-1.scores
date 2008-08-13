@@ -1,0 +1,11 @@
+Allocation scores:
+native_color: p1 allocation score on star: 1000000
+native_color: p1 allocation score on world: 2000
+group_color: test1 allocation score on star: 1000000
+group_color: test1 allocation score on world: 1000
+group_color: test2 allocation score on star: 0
+group_color: test2 allocation score on world: 0
+native_color: test1 allocation score on star: -1000000
+native_color: test1 allocation score on world: 1000
+native_color: test2 allocation score on star: -1000000
+native_color: test2 allocation score on world: 0

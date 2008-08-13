@@ -1,0 +1,13 @@
+Allocation scores:
+group_color: ClusterAlias allocation score on ssgtest1a: 0
+group_color: ClusterAlias allocation score on ssgtest1b: 0
+group_color: VIP allocation score on ssgtest1a: 1000000
+group_color: VIP allocation score on ssgtest1b: 0
+native_color: VIP allocation score on ssgtest1a: 1000000
+native_color: VIP allocation score on ssgtest1b: 0
+clone_color: dolly allocation score on ssgtest1a: 0
+clone_color: dolly allocation score on ssgtest1b: 1000000
+clone_color: dollies:0 allocation score on ssgtest1a: 0
+clone_color: dollies:0 allocation score on ssgtest1b: 1000000
+native_color: dollies:0 allocation score on ssgtest1a: 0
+native_color: dollies:0 allocation score on ssgtest1b: 1000000

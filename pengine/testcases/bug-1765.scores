@@ -1,0 +1,29 @@
+Allocation scores:
+clone_color: ms-drbd0 allocation score on sles236: 0
+clone_color: ms-drbd0 allocation score on sles238: 0
+clone_color: drbd0:0 allocation score on sles236: 76
+clone_color: drbd0:0 allocation score on sles238: 75
+clone_color: drbd0:1 allocation score on sles236: 0
+clone_color: drbd0:1 allocation score on sles238: 0
+clone_color: ms-drbd1 allocation score on sles236: 0
+clone_color: ms-drbd1 allocation score on sles238: 0
+clone_color: drbd1:0 allocation score on sles236: 76
+clone_color: drbd1:0 allocation score on sles238: 0
+clone_color: drbd1:1 allocation score on sles236: 10
+clone_color: drbd1:1 allocation score on sles238: 76
+native_color: drbd1:1 allocation score on sles236: 10
+native_color: drbd1:1 allocation score on sles238: 76
+native_color: drbd1:0 allocation score on sles236: 76
+native_color: drbd1:0 allocation score on sles238: -1000000
+drbd1:0 promotion score on sles236: 75
+drbd1:1 promotion score on sles238: 75
+native_color: drbd0:0 allocation score on sles236: 76
+native_color: drbd0:0 allocation score on sles238: 75
+drbd1:0 promotion score on sles236: 1000000
+drbd1:1 promotion score on sles238: -1000000
+native_color: drbd0:1 allocation score on sles236: -1000000
+native_color: drbd0:1 allocation score on sles238: 0
+drbd0:0 promotion score on sles236: 1000000
+drbd0:1 promotion score on sles238: -1000000
+drbd1:0 promotion score on sles236: 1000000
+drbd1:1 promotion score on sles238: -1000000
