@@ -555,7 +555,7 @@ void global_confchg_fn (
     }    
 
     if(changed && joined_list_entries == 0 && left_list_entries == 0) {
-	crm_err("Something strange happened: %d", changed);
+	ais_err("Something strange happened: %d", changed);
 	changed = 0;
     }
     
