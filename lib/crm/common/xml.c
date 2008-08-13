@@ -2508,7 +2508,7 @@ get_xpath_object_relative(const char *xpath, xmlNode *xml_obj, int error_level)
     crm_realloc(xpath_full, len+1);
     strncat(xpath_full, xpath, len);
 
-    result = get_xpath_object(xpath, xml_obj, error_level);
+    result = get_xpath_object(xpath_full, xml_obj, error_level);
 
     crm_free(xpath_full);
     return result;
