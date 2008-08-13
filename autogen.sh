@@ -63,14 +63,6 @@ testProgram()
   return 1
 }
 
-srcdir=`dirname $0`
-CONFIG=$srcdir/configure
-if
-  [ X$srcdir = "X" ]
-then
-  srcdir=.
-fi
-
 case "$*" in
   --help)	IsHelp=yes;;
   -?)		IsHelp=yes; set -- --help;;
@@ -90,9 +82,6 @@ set -e
 #
 trap 'echo ""; echo "$0 exiting due to error (sorry!)." >&2' 0
 fi
-
-HERE=`pwd`
-cd $srcdir
 
 RC=0
 
@@ -213,16 +202,6 @@ case $IsHelp in
   yes)	$CONFIG "$@"; trap '' 0; exit 0;;
 esac
 
-if
-  [ $# -lt 1 ]
-then
-  cat <<-!
-	Running $CONFIG with no arguments.
-	If you wish to pass any arguments to $CONFIG please
-	       specify them on the $0 command line.
-	!
-fi
-
 oneline() {
   read x; echo "$x"
 }
@@ -275,12 +254,5 @@ $autoconf
 test -f libtool.m4 || touch libtool.m4 
 test -f ltdl.m4 || touch ltdl.m4
 
-cd $HERE
-
-echo $CONFIG "$@"
-$CONFIG "$@"
-
-echo "Now type 'gmake' to compile the system, noting that"
-echo "'gmake' is often available as 'make'."
-echo 
+echo Now run ./configure
 trap '' 0
