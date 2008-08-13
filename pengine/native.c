@@ -274,7 +274,22 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	}
 
 	dump_node_scores(alloc_details, rsc, __PRETTY_FUNCTION__, rsc->allowed_nodes);
-	if(is_set(rsc->flags, pe_rsc_provisional)
+	if(is_not_set(rsc->flags, pe_rsc_managed)) {
+	    const char *reason = NULL;
+	    node_t *assign_to = NULL;
+	    if(rsc->running_on == NULL) {
+		reason = "inactive";
+	    } else if(is_set(rsc->flags, pe_rsc_failed)) {
+		reason = "failed";		
+	    } else {
+		assign_to = rsc->running_on->data;
+		reason = "active";
+	    }
+	    crm_info("Unmanaged resource %s allocated to %s: %s", rsc->id,
+		     assign_to?assign_to->details->uname:"'nowhere'", reason);
+	    native_assign_node(rsc, NULL, assign_to);
+
+	} else if(is_set(rsc->flags, pe_rsc_provisional)
 	   && native_choose_node(rsc) ) {
 		crm_debug_3("Allocated resource %s to %s",
 			    rsc->id, rsc->allocated_to->details->uname);
