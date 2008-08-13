@@ -158,7 +158,7 @@ crmd_ha_msg_callback(HA_Message *hamsg, void* private_data)
 		goto bail;
 	}
 	
-	from_node = crm_find_peer(0, from);
+	from_node = crm_get_peer(0, from);
 	if(from_node == NULL || crm_is_member_active(from_node) == FALSE) {
 		if(safe_str_eq(op, CRM_OP_VOTE)) {
 			level = LOG_WARNING;
@@ -276,7 +276,7 @@ crmd_ha_status_callback(const char *node, const char *status, void *private)
 	crm_notice("Status update: Node %s now has status [%s] (DC=%s)",
 		   node, status, AM_I_DC?"true":"false");
 
-	member = crm_find_peer(0, node);
+	member = crm_get_peer(0, node);
 	if(member == NULL || crm_is_member_active(member) == FALSE) {
 	    /* Make sure it is created so crm_update_peer_proc() succeeds */
 	    const char *uuid = get_uuid(node);
@@ -350,7 +350,7 @@ crmd_client_status_callback(const char * node, const char * client,
 	    unget_uuid(node);
 	}
 
-	member = crm_find_peer(0, node);
+	member = crm_get_peer(0, node);
 	if(member == NULL || crm_is_member_active(member) == FALSE) {
 	    /* Make sure it is created so crm_update_peer_proc() succeeds */
 	    const char *uuid = get_uuid(node);

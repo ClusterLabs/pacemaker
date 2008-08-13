@@ -221,7 +221,7 @@ do_election_count_vote(long long action,
 	vote_from = crm_element_value(vote->msg, F_CRM_HOST_FROM);
 	CRM_CHECK(vote_from != NULL, vote_from = fsa_our_uname);
 	
-	your_node = crm_find_peer(0, vote_from);
+	your_node = crm_get_peer(0, vote_from);
 	if(your_node == NULL || crm_is_member_active(your_node) == FALSE) {
 	    crm_debug("Election ignore: The other side doesn't exist in CCM: %s", vote_from);
 	    return;
@@ -239,7 +239,7 @@ do_election_count_vote(long long action,
 
 	crm_element_value_int(vote->msg, F_CRM_ELECTION_ID, &election_id);
 	
-	our_node = crm_find_peer(0, fsa_our_uname);
+	our_node = crm_get_peer(0, fsa_our_uname);
 	CRM_ASSERT(our_node != NULL && crm_is_member_active(our_node));
 	crm_debug("Election %d, owner: %s", election_id, election_owner);
 

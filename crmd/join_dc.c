@@ -255,7 +255,7 @@ do_dc_join_offer_one(long long action,
 	    return;
 	}
 
-	member = crm_find_peer(0, join_to);
+	member = crm_get_peer(0, join_to);
 	if(member == NULL || crm_is_member_active(member) == FALSE) {
 	    crm_err("Attempt to send welcome message "
 		    "to a node not part of our partition!");
@@ -281,7 +281,7 @@ do_dc_join_offer_one(long long action,
 	/* always offer to the DC (ourselves)
 	 * this ensures the correct value for max_generation_from
 	 */
-	member = crm_find_peer(0, fsa_our_uname);
+	member = crm_get_peer(0, fsa_our_uname);
 	join_make_offer(NULL, member, NULL);	
 	
 	/* this was a genuine join request, cancel any existing
@@ -332,7 +332,7 @@ do_dc_join_filter_offer(long long action,
 	const char *join_from = crm_element_value(join_ack->msg, F_CRM_HOST_FROM);
 	const char *ref       = crm_element_value(join_ack->msg, XML_ATTR_REFERENCE);
 	
-	crm_node_t *join_node = crm_find_peer(0, join_from);
+	crm_node_t *join_node = crm_get_peer(0, join_from);
 
 	crm_debug("Processing req from %s", join_from);
 	

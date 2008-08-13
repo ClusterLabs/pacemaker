@@ -169,7 +169,7 @@ static crm_node_t *crm_new_peer(unsigned int id, const char *uname)
     return node;
 }
 
-crm_node_t *crm_find_peer(unsigned int id, const char *uname)
+crm_node_t *crm_get_peer(unsigned int id, const char *uname)
 {
     crm_node_t *node = NULL;
     if(uname != NULL) {

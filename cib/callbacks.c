@@ -1077,7 +1077,7 @@ cib_peer_callback(xmlNode * msg, void* private_data)
 	goto bail;
     }
 
-    node = crm_find_peer(0, originator);
+    node = crm_get_peer(0, originator);
     if(node == NULL || crm_is_member_active(node) == FALSE) {
 	reason = "not in our membership";
 	goto bail;
@@ -1115,7 +1115,7 @@ cib_client_status_callback(const char * node, const char * client,
 	    status = OFFLINESTATUS;
 	}
 
-	member = crm_find_peer(0, node);
+	member = crm_get_peer(0, node);
 	if(member == NULL) {
 	    /* Make sure it gets created */
 	    const char *uuid = get_uuid(node);
