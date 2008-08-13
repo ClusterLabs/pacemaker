@@ -135,6 +135,7 @@ class CIB:
             <instance_attributes id="fencing-child">
               <attributes>
                 <nvpair id="child_DoFencing-1" name="%s" value="%s"/>
+                <nvpair id="child_DoFencing-2" name="livedangerously" value="yes"/>
               </attributes>
             </instance_attributes>
           </primitive>
