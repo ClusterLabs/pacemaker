@@ -1,7 +1,7 @@
 #
-# doc: Linux-HA heartbeat code
+# doc: Pacemaker code
 #
-# Copyright (C) 2001 Michael Moerz
+# Copyright (C) 2008 Andrew Beekhof
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,33 +21,11 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 docdir 			= $(datadir)/doc/pacakges/@HB_PKG@-@VERSION@
 
-htmlfiles		= HardwareGuide.html	\
-			GettingStarted.html	\
-			Requirements.html	\
-			faqntips.html		\
-			heartbeat_api.html	\
-			rsync.html
-
-txtfiles                = $(htmlfiles:.html=.txt)
-
-CLEANFILES              = ChangeLog $(txtfiles)
-
-SPECSRC 		= $(top_builddir)/pacemaker.spec
-
-OTHER_DOCS              = AUTHORS COPYING COPYING.LGPL ChangeLog \
-                                README authkeys ha.cf startstop haresources \
-				DirectoryMap.txt apphbd.cf logd.cf
-
-#doc_DATA		= $(OTHER_DOCS) $(txtfiles) $(htmlfiles) 
+OTHER_DOCS              = AUTHORS COPYING COPYING.LGPL README 
 
 man_MANS		= cibadmin.8 crm_resource.8
 
 EXTRA_DIST = $(man_MANS)
-
-ChangeLog: $(SPECSRC)
-	rm -fr ChangeLog
-	sed -e '1,/^%changelog/d' -e '/^%/,$$d' < $(SPECSRC) > $@
-
 
 %.txt: %.html
 	if [ "X$(HTML2TXT)" = "X" ]; then echo "Lynx or w3m or user-defined HTML2TXT required to convert $< to $@" >$@ ; else $(HTML2TXT) -dump $< >$@ ; fi
