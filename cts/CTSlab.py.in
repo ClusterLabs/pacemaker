@@ -71,10 +71,10 @@ class Stonithd(ResetMechanism):
         self.sttype = sttype
         self.nodes = nodes
 
-        self.query_cmd_pat   = '@libdir@/heartbeat/stonithdtest/apitest 0 %s 20000 0'
-        self.reset_cmd_pat   = '@libdir@/heartbeat/stonithdtest/apitest 1 %s 20000 0'
-        self.poweron_cmd_pat = '@libdir@/heartbeat/stonithdtest/apitest 2 %s 20000 0'
-        self.poweroff_cmd_pat= '@libdir@/heartbeat/stonithdtest/apitest 3 %s 20000 0'
+        self.query_cmd_pat   = '@libdir@/heartbeat/stonithdtest/apitest 0 %s 60000 0'
+        self.reset_cmd_pat   = '@libdir@/heartbeat/stonithdtest/apitest 1 %s 60000 0'
+        self.poweron_cmd_pat = '@libdir@/heartbeat/stonithdtest/apitest 2 %s 60000 0'
+        self.poweroff_cmd_pat= '@libdir@/heartbeat/stonithdtest/apitest 3 %s 60000 0'
 
         self.lrmd_add_pat    = '@libdir@/heartbeat/lrmadmin -A %s stonith ' + sttype + ' NULL hostlist=%s'
         self.lrmd_start_pat  = '@libdir@/heartbeat/lrmadmin -E %s start 0 0 EVERYTIME'
@@ -534,7 +534,7 @@ if __name__ == '__main__':
     HaveSeed = 0
     oprofile = None
     warn_inactive = 0
-    StonithType = "ssh"
+    StonithType = "external/ssh"
     StonithParams = None
     StonithParams = "hostlist=dynamic".split('=')
     node_list = ''
