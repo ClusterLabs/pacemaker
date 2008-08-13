@@ -18,7 +18,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-EXTRA_DIST              = bootstrap ConfigureMe README.in libltdl.tar
+EXTRA_DIST              = autogen.sh ConfigureMe README.in libltdl.tar
 
 RPM			= @RPM@
 RPMFLAGS		= -ba
