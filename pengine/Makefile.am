@@ -25,8 +25,8 @@ halibdir	= $(libdir)/@HB_PKG@
 pe_varlibdir	= $(HA_VARLIBDIR)/$(HB_PKG)/pengine
 
 COMMONLIBS	= 					\
-		$(top_builddir)/lib/crm/common/libcrmcommon.la		\
-		$(top_builddir)/lib/crm/pengine/libpe_status.la		\
+		$(top_builddir)/lib/common/libcrmcommon.la		\
+		$(top_builddir)/lib/pengine/libpe_status.la		\
 		libpengine.la						\
 		$(GLIBLIB) $(CURSESLIBS) $(LIBRT)			\
 		$(CLUSTERLIBS) 
@@ -48,14 +48,14 @@ libpengine_la_SOURCES	= pengine.c allocate.c utils.c constraints.c \
 			native.c group.c clone.c master.c graph.c
 
 pengine_SOURCES	= main.c
-pengine_LDADD	= $(COMMONLIBS)	$(top_builddir)/lib/crm/cib/libcib.la
+pengine_LDADD	= $(COMMONLIBS)	$(top_builddir)/lib/cib/libcib.la
 # libcib for get_object_root()
 #		$(top_builddir)/lib/hbclient/libhbclient.la
 
 ptest_SOURCES	= ptest.c 
 ptest_LDADD	= $(COMMONLIBS)						\
-		$(top_builddir)/lib/crm/cib/libcib.la			\
-		$(top_builddir)/lib/crm/transition/libtransitioner.la
+		$(top_builddir)/lib/cib/libcib.la			\
+		$(top_builddir)/lib/transition/libtransitioner.la
 
 clean-generic:
 	rm -f *.log *.debug *~ .gres.* testcases/.gres.*

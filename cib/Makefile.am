@@ -28,8 +28,8 @@ hadir		= $(sysconfdir)/ha.d
 halibdir	= $(libdir)/@HB_PKG@
 commmoddir	= $(halibdir)/modules/comm
 
-COMMONLIBS	= $(top_builddir)/lib/crm/common/libcrmcommon.la	\
-		  $(top_builddir)/lib/crm/cib/libcib.la			\
+COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
+		  $(top_builddir)/lib/cib/libcib.la			\
 		  $(GLIBLIB) $(LIBRT)
 
 ## binary progs
@@ -45,7 +45,7 @@ cib_SOURCES		= io.c primatives.c messages.c cib.c notify.c	\
 			callbacks.c main.c remote.c common.c
 
 cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB) $(CLUSTERLIBS)	\
-			$(top_builddir)/lib/crm/common/libcrmcluster.la
+			$(top_builddir)/lib/common/libcrmcluster.la
 
 cibmon_SOURCES		= cibmon.c
 cibmon_LDADD		= $(COMMONLIBS)

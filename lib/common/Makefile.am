@@ -35,7 +35,7 @@ if BUILD_HEARTBEAT_SUPPORT
 libcrmcluster_la_SOURCES += heartbeat.c
 endif
 libcrmcluster_la_LDFLAGS = -version-info 1:0:0
-libcrmcluster_la_LIBADD = $(top_builddir)/lib/crm/common/libcrmcommon.la $(CLUSTERLIBS) 
+libcrmcluster_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon.la $(CLUSTERLIBS) 
 
 # Must use non-fatal CFLAGS because glib insists on pretending things are const  
 # when they're not and thus we need the crm_element_value_const() hack

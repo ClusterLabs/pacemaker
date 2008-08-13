@@ -29,17 +29,6 @@ service_crm_la_LDFLAGS	= -export-dynamic -module -avoid-version
 # Extra LDFLAGS: -bundle -bundle_loader /opt/local/sbin/aisexec -bind_at_load
 service_crm_la_LIBADD	= $(GLIBLIB)
 
-COMMONLIBS	= $(CRM_DEBUG_LIBS)					\
-		$(top_builddir)/lib/clplumbing/libplumb.la		\
-		$(top_builddir)/lib/crm/common/libcrmcommon.la		\
-		$(GLIBLIB)						\
-		$(CURSESLIBS)						\
-		$(CLUSTERLIBS)						\
-		$(LIBRT)
-
-#atest_SOURCES	= test.c
-#atest_LDADD	= $(COMMONLIBS)
-
 #CFLAGS that cant be used here: -ansi -Wcast-qual -Wwrite-strings
 CFLAGS			= $(NON_FATAL_CFLAGS:-Wwrite-strings=)
 

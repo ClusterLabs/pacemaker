@@ -25,8 +25,8 @@ INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 halibdir	= $(libdir)/@HB_PKG@
 
 COMMONLIBS	= 					\
-		$(top_builddir)/lib/crm/common/libcrmcommon.la		\
-		$(top_builddir)/lib/crm/cib/libcib.la			\
+		$(top_builddir)/lib/common/libcrmcommon.la		\
+		$(top_builddir)/lib/cib/libcib.la			\
 		-lplumb					  		\
 		$(GLIBLIB) $(CURSESLIBS) $(LIBRT)			\
 		$(CLUSTERLIBS) 
@@ -46,7 +46,7 @@ noinst_HEADERS		=
 
 crmadmin_SOURCES	= crmadmin.c
 crmadmin_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
-			$(top_builddir)/lib/crm/pengine/libpe_status.la
+			$(top_builddir)/lib/pengine/libpe_status.la
 
 crm_uuid_SOURCES	= crm_uuid.c
 crm_uuid_LDADD		= $(GLIBLIB)
@@ -59,19 +59,19 @@ cib_shadow_LDADD	= $(COMMONLIBS)
 
 ccm_tool_SOURCES	= ccm_epoche.c
 ccm_tool_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
-			$(top_builddir)/lib/crm/common/libcrmcluster.la
+			$(top_builddir)/lib/common/libcrmcluster.la
 
 crm_diff_SOURCES	= xml_diff.c
 crm_diff_LDADD		= $(COMMONLIBS)
 
 crm_mon_SOURCES		= crm_mon.c
 crm_mon_LDADD		= $(COMMONLIBS) -llrm \
-			$(top_builddir)/lib/crm/pengine/libpe_status.la
+			$(top_builddir)/lib/pengine/libpe_status.la
 
 # Arguments could be made that this should live in crm/pengine
 crm_verify_SOURCES	= crm_verify.c
 crm_verify_LDADD	= $(COMMONLIBS) \
-			$(top_builddir)/lib/crm/pengine/libpe_status.la \
+			$(top_builddir)/lib/pengine/libpe_status.la \
 			$(top_builddir)/pengine/libpengine.la
 
 crm_master_SOURCES	= crm_attribute.c
@@ -88,8 +88,8 @@ crm_failcount_LDADD	= $(COMMONLIBS)
 
 crm_resource_SOURCES	= crm_resource.c
 crm_resource_LDADD	= $(COMMONLIBS) \
-			$(top_builddir)/lib/crm/pengine/libpe_rules.la \
-			$(top_builddir)/lib/crm/pengine/libpe_status.la
+			$(top_builddir)/lib/pengine/libpe_rules.la \
+			$(top_builddir)/lib/pengine/libpe_status.la
 
 iso8601_SOURCES		= test.iso8601.c
 iso8601_LDADD		= $(COMMONLIBS) 
