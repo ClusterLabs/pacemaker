@@ -70,9 +70,12 @@ static char *get_shadow_prompt(const char *name)
 {
     int len = 16;
     char *prompt = NULL;
+    CRM_ASSERT(name != NULL);
+    
     len += strlen(name);
     crm_malloc0(prompt, len);
-    snprintf(prompt, len, "cib_shadow[%s]: ", name);
+    
+    snprintf(prompt, len, "shadow[%s]: ", name);
     return prompt;
 }
 
@@ -88,10 +91,10 @@ static void shadow_setup(char *name, gboolean do_switch)
 	/* nothing to do */
 	goto done;
 	
-    } else if(batch_flag && shell != NULL) {
+    } else if(batch_flag == FALSE && shell != NULL) {
 	setenv("PS1", new_prompt, 1);
 	setenv("CIB_shadow", name, 1);
-	printf("Type Ctrl-D to exit the cib_shadow shell\n");
+	printf("Type Ctrl-D to exit the crm_shadow shell\n");
 	
 	execv(shell, NULL);
 	
@@ -112,7 +115,7 @@ static void shadow_teardown(char *name)
     const char *prompt = getenv("PS1");
     char *our_prompt = get_shadow_prompt(name);
     if(safe_str_eq(our_prompt, prompt)) {
-	printf("Type Ctrl-D to exit the cib_shadow shell\n");
+	printf("Type Ctrl-D to exit the crm_shadow shell\n");
 	
     } else {
 	printf("Please remember to unset the CIB_shadow variable by pasting the following into your shell:\n");
@@ -156,7 +159,7 @@ main(int argc, char **argv)
     };
 #endif
 
-    crm_log_init("cib_shadow", LOG_CRIT, FALSE, FALSE, argc, argv);
+    crm_log_init("crm_shadow", LOG_CRIT, FALSE, FALSE, argc, argv);
 	
     if(argc < 2) {
 	usage(crm_system_name, LSB_EXIT_EINVAL);

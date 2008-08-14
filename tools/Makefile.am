@@ -32,7 +32,7 @@ halib_PYTHON		= crm_primitive.py crm_utils.py crm_commands.py
 
 sbin_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 	\
 			crm_master crm_standby crm_failcount crm_attribute 	\
-			crm_resource crm_verify crm_uuid cib_shadow attrd_updater
+			crm_resource crm_verify crm_uuid crm_shadow attrd_updater
 
 sbin_SCRIPTS		= crm_sh
 
@@ -67,8 +67,8 @@ crm_uuid_LDADD		= $(GLIBLIB)
 cibadmin_SOURCES	= cibadmin.c
 cibadmin_LDADD		= $(COMMONLIBS) 
 
-cib_shadow_SOURCES	= cib_shadow.c
-cib_shadow_LDADD	= $(COMMONLIBS) 
+crm_shadow_SOURCES	= cib_shadow.c
+crm_shadow_LDADD	= $(COMMONLIBS) 
 
 ccm_tool_SOURCES	= ccm_epoche.c
 ccm_tool_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
