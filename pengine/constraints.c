@@ -703,9 +703,17 @@ unpack_order_set(xmlNode *set, int score,
     const char *sequential_s = crm_element_value(set, "sequential");
     const char *score_s = crm_element_value(set, XML_RULE_ATTR_SCORE);
 
-    char *pseudo_id = crm_concat(id, action, '-');
-    char *end_id    = crm_concat(pseudo_id, "end", '-');
-    char *begin_id  = crm_concat(pseudo_id, "begin", '-');
+    char *pseudo_id = NULL;
+    char *end_id    = NULL;
+    char *begin_id  = NULL;
+
+    if(action == NULL) {
+	action = RSC_START;
+    }
+    
+    pseudo_id = crm_concat(id, action, '-');
+    end_id    = crm_concat(pseudo_id, "end", '-');
+    begin_id  = crm_concat(pseudo_id, "begin", '-');
 
     *end = get_pseudo_op(end_id, data_set);
     *begin = get_pseudo_op(begin_id, data_set);
