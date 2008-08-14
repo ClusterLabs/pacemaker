@@ -419,7 +419,7 @@ main(int argc, char **argv)
 
 	if(output != NULL) {
 		char *buffer = dump_xml_formatted(output);
-		fprintf(stdout, "%s", crm_str(buffer));
+		fprintf(stdout, "%s\n", crm_str(buffer));
 		crm_free(buffer);
 	}
 
