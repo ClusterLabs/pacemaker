@@ -943,12 +943,13 @@ unpack_colocation_set(xmlNode *set, int score, pe_working_set_t *data_set)
 	local_score = char2score(score_s);
     }
     
-    if(crm_is_true(sequential) == FALSE) {
+    if(crm_is_true(sequential)) {
 	xml_child_iter_filter(
 	    set, xml_rsc, XML_TAG_RESOURCE_REF,
 	    
 	    resource = pe_find_resource(data_set->resources, ID(xml_rsc));
 	    if(with != NULL) {
+		crm_debug_2("Colocating %s with %s", resource->id, with->id);
 		rsc_colocation_new(set_id, NULL, local_score, resource, with, role, role, data_set);
 	    }
 
