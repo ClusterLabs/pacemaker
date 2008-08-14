@@ -151,7 +151,7 @@ cib_file_signon(cib_t* cib, const char *name, enum cib_conn_type type)
     }
     
     if(rc == cib_ok) {
-	fprintf(stderr, "%s: Opened connection to local file '%s'\n", name, private->filename);
+	crm_debug("%s: Opened connection to local file '%s'", name, private->filename);
 	cib->state = cib_connected_command;
 	cib->type  = cib_command;
 
