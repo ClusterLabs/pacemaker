@@ -106,10 +106,11 @@ controld_start() {
       *) return $OCF_ERR_GENERIC;;
     esac
 
-    if [ ${OCF_RESKEY_daemon} = "dlm" ]; then
+    if [ ${OCF_RESKEY_daemon} = "dlm_controld" ]; then
         if [ ! -e $OCF_RESKEY_configdir ]; then
     	    modprobe configfs
     	    if [ ! -e $OCF_RESKEY_configdir ]; then
+               ocf_log err "$OCF_RESKEY_configdir not available"
        	       return $OCF_NOT_INSTALLED
 	    fi
 	fi
@@ -122,12 +123,24 @@ controld_start() {
     	if [ ! -e $OCF_RESKEY_configdir/dlm ]; then
            modprobe dlm
     	   if [ ! -e $OCF_RESKEY_configdir/dlm ]; then
+              ocf_log err "$OCF_RESKEY_configdir/dlm not available"
        	      return $OCF_NOT_INSTALLED
 	   fi
     	fi
+    elif [ ${OCF_RESKEY_daemon} = "ocfs2_controld.pcmk" ]; then
+    	if [ ! -e $OCF_RESKEY_configdir ]; then
+           ocf_log err "$OCF_RESKEY_configdir not available"
+       	   return $OCF_NOT_INSTALLED
+	fi
+
+    	if [ ! -e $OCF_RESKEY_configdir/cluster ]; then
+           ocf_log err "$OCF_RESKEY_configdir/cluster not available"
+       	   return $OCF_NOT_INSTALLED
+    	fi
+    
     fi
 
-    ${OCF_RESKEY_daemon}_controld $OCF_RESKEY_args
+    ${OCF_RESKEY_daemon} $OCF_RESKEY_args
 
     sleep 1
     controld_monitor
@@ -140,7 +153,7 @@ controld_stop() {
       $OCF_NOT_RUNNING) return $OCF_SUCCESS;;
     esac
 
-    killall -KILL ${OCF_RESKEY_daemon}_controld; rc=$?
+    killall -KILL ${OCF_RESKEY_daemon}; rc=$?
 
     case $rc in
       0) return $OCF_SUCCESS;;
@@ -149,7 +162,7 @@ controld_stop() {
 }
 
 controld_monitor() {
-    killall -0 ${OCF_RESKEY_daemon}_controld; rc=$?
+    killall -0 ${OCF_RESKEY_daemon}; rc=$?
 
     case $rc in
       0) return $OCF_SUCCESS;;
@@ -159,7 +172,7 @@ controld_monitor() {
 }
 
 controld_validate() {
-    check_binary ${OCF_RESKEY_daemon}_controld
+    check_binary ${OCF_RESKEY_daemon}
     return $OCF_SUCCESS
 }
 
@@ -167,13 +180,19 @@ controld_validate() {
 : ${OCF_RESKEY_args=""}
 : ${OCF_RESKEY_configdir=/sys/kernel/config}
 
+case ${OCF_RESKEY_daemon} in
+     dlm) OCF_RESKEY_daemon=dlm_controld;;
+     ocfs*) OCF_RESKEY_daemon=ocfs2_controld.pcmk;;
+     *) return $OCF_ERR_CONFIGURED;;
+esac
+
 case $__OCF_ACTION in
 meta-data)	meta_data
 		exit $OCF_SUCCESS
 		;;
-start)		controld_start;;
+start)		controld_validate; controld_start;;
 stop)		controld_stop;;
-monitor)	controld_monitor;;
+monitor)	controld_validate; controld_monitor;;
 validate-all)	controld_validate;;
 usage|help)	controld_usage
 		exit $OCF_SUCCESS
