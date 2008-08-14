@@ -80,25 +80,26 @@ find_nvpair_attr(
     if(node_uuid) {
 	const char *node_type = XML_CIB_TAG_NODE;
 	if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
-	    set_type = XML_CIB_TAG_STATE;
+	    node_type = XML_CIB_TAG_STATE;
+	    set_type = XML_TAG_TRANSIENT_NODEATTRS;
 	}
-	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id=\"%s\"]", node_type, node_uuid);
+	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id='%s']", node_type, node_uuid);
     }
 
     if(set_name) {
-	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id=\"%s\"]", set_type, set_name);
+	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id='%s']", set_type, set_name);
     }
     
     offset += snprintf(xpath_string + offset, xpath_max - offset, "//nvpair[");
     if(attr_id) {
-	offset += snprintf(xpath_string + offset, xpath_max - offset, "@id=\"%s\"", attr_id);
+	offset += snprintf(xpath_string + offset, xpath_max - offset, "@id='%s'", attr_id);
     }
     
     if(attr_name) {
 	if(attr_id) {
 	    offset += snprintf(xpath_string + offset, xpath_max - offset, " and ");
 	}
-	offset += snprintf(xpath_string + offset, xpath_max - offset, "@name=\"%s\"", attr_name);
+	offset += snprintf(xpath_string + offset, xpath_max - offset, "@name='%s'", attr_name);
     }   
     offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
     
