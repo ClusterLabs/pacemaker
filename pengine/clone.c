@@ -988,6 +988,11 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 	get_clone_variant_data(clone_data, rsc);
 
 	crm_debug_4("%s->%s", order->lh_action_task, order->rh_action_task);
+	if(order->rh_rsc == NULL) {
+	    convert_non_atomic_task(rsc, order, FALSE);
+	    native_rsc_order_lh(rsc, order, data_set);
+	    return;
+	}
 	
 	r1 = uber_parent(rsc);
 	r2 = uber_parent(order->rh_rsc);
@@ -996,7 +1001,7 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 		native_rsc_order_lh(rsc, order, data_set);
 		return;
 	}
-
+	
 	if(order->rh_rsc->variant == pe_clone
 	    || order->rh_rsc->variant == pe_master) {
 	    clone_variant_data_t *clone_data_rh = NULL;
