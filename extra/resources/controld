@@ -66,6 +66,14 @@ Any additional options to start the controld service with
 <content type="string" default="" />
 </parameter>
 
+<parameter name="configdir" unique="1">
+<longdesc lang="en">
+The location where configfs is or should be mounted
+</longdesc>
+<shortdesc lang="en">Location of configfs</shortdesc>
+<content type="string" default="/sys/kernel/config" />
+</parameter>
+
 </parameters>
 
 <actions>
@@ -93,10 +101,33 @@ controld_start() {
     controld_monitor; rc=$?
 
     case $rc in
-      0) return $OCF_SUCCESS;;
-      1) ${OCF_RESKEY_daemon}_controld $OCF_RESKEY_args;;
+      $OCF_SUCCESS)     return $OCF_SUCCESS;;
+      $OCF_NOT_RUNNING) ;;
       *) return $OCF_ERR_GENERIC;;
     esac
+
+    if [ ${OCF_RESKEY_daemon} = "dlm" ]; then
+        if [ ! -e $OCF_RESKEY_configdir ]; then
+    	    modprobe configfs
+    	    if [ ! -e $OCF_RESKEY_configdir ]; then
+       	       return $OCF_NOT_INSTALLED
+	    fi
+	fi
+
+    	mount | grep "type configfs" > /dev/null
+    	if [ $? != 0 ]; then
+	   mount -t configfs none $OCF_RESKEY_configdir    
+    	fi
+
+    	if [ ! -e $OCF_RESKEY_configdir/dlm ]; then
+           modprobe dlm
+    	   if [ ! -e $OCF_RESKEY_configdir/dlm ]; then
+       	      return $OCF_NOT_INSTALLED
+	   fi
+    	fi
+    fi
+
+    ${OCF_RESKEY_daemon}_controld $OCF_RESKEY_args
 
     sleep 1
     controld_monitor
@@ -134,6 +165,7 @@ controld_validate() {
 
 : ${OCF_RESKEY_daemon=dlm}
 : ${OCF_RESKEY_args=""}
+: ${OCF_RESKEY_configdir=/sys/kernel/config}
 
 case $__OCF_ACTION in
 meta-data)	meta_data
