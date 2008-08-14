@@ -610,6 +610,7 @@ static void print_rsc_history(pe_working_set_t *data_set, node_t *node, xmlNode 
     
     slist_iter(xml_op, xmlNode, sorted_op_list, lpc,
 	       const char *value = NULL;
+	       const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
 	       const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
 	       const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
 	       const char *interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
@@ -632,11 +633,11 @@ static void print_rsc_history(pe_working_set_t *data_set, node_t *node, xmlNode 
 		   if(rsc == NULL) {
 		       print_as("Orphan resource: %s", rsc_id);
 		   } else {
-		       print_rsc_summary(data_set, node, rsc, TRUE);		       
+		       print_rsc_summary(data_set, node, rsc, TRUE);
 		   }
 	       }
 	       
-	       print_as("    + %s:", task);
+	       print_as("    + (%s) %s:", call, task);
 	       if(safe_str_neq(interval, "0")) {
 		   print_as(" interval=%sms", interval);
 	       }
@@ -694,6 +695,10 @@ static void print_node_summary(pe_working_set_t *data_set, gboolean operations)
     xml_child_iter_filter(
 	cib_status, node_state, XML_CIB_TAG_STATE,
 	node_t *node = pe_find_node_id(data_set->nodes, ID(node_state));
+	if(node == NULL || node->details->online == FALSE){
+	    continue;
+	}
+	
 	print_as("* Node %s: ", crm_element_value(node_state, XML_ATTR_UNAME));
 	get_ping_score(node, data_set); 
 	print_as("\n");
