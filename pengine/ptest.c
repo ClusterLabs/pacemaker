@@ -496,8 +496,6 @@ main(int argc, char **argv)
 	cleanup_alloc_calculations(&data_set);
 	crm_log_deinit();
 
-	crm_info("Using system malloc: %d", g_mem_is_system_malloc());
-	
 	/* required for MallocDebug.app */
 	if(inhibit_exit) {
 		GMainLoop*  mainloop = g_main_new(FALSE);
