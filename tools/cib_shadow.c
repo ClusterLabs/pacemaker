@@ -63,8 +63,63 @@ int dump_data_element(
 void print_xml_diff(FILE *where, xmlNode *diff);
 
 static int force_flag = 0;
-#define OPTARGS	"V?wc:dr:C:D:ps:l"
+static int batch_flag = 0;
+#define OPTARGS	"V?bwc:dr:C:D:ps:l"
 
+static char *get_shadow_prompt(const char *name)
+{
+    int len = 16;
+    char *prompt = NULL;
+    len += strlen(name);
+    crm_malloc0(prompt, len);
+    snprintf(prompt, len, "cib_shadow[%s]: ", name);
+    return prompt;
+}
+
+
+static void shadow_setup(char *name, gboolean do_switch)
+{
+    const char *prompt = getenv("PS1");
+    const char *shell = getenv("SHELL");
+    char *new_prompt = get_shadow_prompt(name);
+    printf("Setting up shadow instance\n");
+
+    if(safe_str_eq(new_prompt, prompt)) {
+	/* nothing to do */
+	goto done;
+	
+    } else if(batch_flag && shell != NULL) {
+	setenv("PS1", new_prompt, 1);
+	setenv("CIB_shadow", name, 1);
+	printf("Type Ctrl-D to exit the cib_shadow shell\n");
+	
+	execv(shell, NULL);
+	
+    } else if (do_switch) {
+	printf("To switch to the named shadow instance, paste the following into your shell:\n");
+
+    } else {
+	printf("A new shadow instance was created.  To begin using it paste the following into your shell:\n");
+    }
+    printf("  CIB_shadow=%s ; export CIB_shadow\n", name);
+
+  done:
+    crm_free(new_prompt);
+}
+
+static void shadow_teardown(char *name)
+{
+    const char *prompt = getenv("PS1");
+    char *our_prompt = get_shadow_prompt(name);
+    if(safe_str_eq(our_prompt, prompt)) {
+	printf("Type Ctrl-D to exit the cib_shadow shell\n");
+	
+    } else {
+	printf("Please remember to unset the CIB_shadow variable by pasting the following into your shell:\n");
+	printf("  unset CIB_shadow\n");
+    }
+    crm_free(our_prompt);
+}
 
 int
 main(int argc, char **argv)
@@ -93,6 +148,7 @@ main(int argc, char **argv)
 	{"locate",  no_argument,       NULL, 'l'},
 
 	{"force",	no_argument, &force_flag, 1},
+	{"batch",       no_argument, &batch_flag, 'b'},
 	{"verbose",     no_argument, NULL, 'V'},
 	{"help",        no_argument, NULL, '?'},
 
@@ -146,6 +202,8 @@ main(int argc, char **argv)
 		break;
 	    case 'f':
 		command_options |= cib_quorum_override;
+		break;
+	    case 'b':
 		break;
 	    default:
 		printf("Argument code 0%o (%c)"
@@ -221,8 +279,8 @@ main(int argc, char **argv)
 		return rc;
 	    }
 	}
-	printf("Please remember to unset the CIB_shadow variable by pasting the following into your shell:\n");
-	printf("  unset CIB_shadow\n");
+
+	shadow_teardown(shadow);
 	return rc;
     }
 
@@ -243,6 +301,7 @@ main(int argc, char **argv)
 
     if(command == 'c') {
 	xmlNode *output = NULL;
+
 	/* create a shadow instance based on the current cluster config */
 	if (rc == 0 && force_flag == FALSE) {
 	    fprintf(stderr, "A shadow instance '%s' already exists.\n"
@@ -263,13 +322,10 @@ main(int argc, char **argv)
 		    shadow, strerror(errno));
 	    return rc;
 	}
-
-	printf("A new shadow instance was created.  To begin using it paste the following into your shell:\n");
-	printf("  CIB_shadow=%s ; export CIB_shadow\n", shadow);
-
+	shadow_setup(shadow, FALSE);
+	
     } else if(command == 's') {
-	printf("To switch to the named shadow instance, paste the following into your shell:\n");
-	printf("  CIB_shadow=%s ; export CIB_shadow\n", shadow);
+	shadow_setup(shadow, TRUE);
 	return 0;
     
     } else if(command == 'P') {
@@ -312,8 +368,7 @@ main(int argc, char **argv)
 		    shadow, cib_error2string(rc));
 	    return rc;
 	}	
-	printf("Please remember to unset the CIB_shadow variable by pasting the following into your shell:\n");
-	printf("  unset CIB_shadow\n");
+	shadow_teardown(shadow);
     }
 
     return rc;
