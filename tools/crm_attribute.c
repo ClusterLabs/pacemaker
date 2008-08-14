@@ -470,7 +470,7 @@ usage(const char *cmd, int exit_status)
 	}
 	
 	fprintf(stream, "\t--%s (-%c) <node_uname>\t: "
-		"uname of the node to change\n", "node-uname", 'h');
+		"uname of the node to change\n", "node", 'N');
 
 	if(safe_str_eq(cmd, "crm_failcount")) {
 		fprintf(stream, "\t--%s (-%c) <resource name>\t: "
