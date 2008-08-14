@@ -629,7 +629,11 @@ static void print_rsc_history(pe_working_set_t *data_set, node_t *node, xmlNode 
 	       
 	       if(print_name) {
 		   print_name = FALSE;
-		   print_rsc_summary(data_set, node, rsc, TRUE);
+		   if(rsc == NULL) {
+		       print_as("Orphan resource: %s", rsc_id);
+		   } else {
+		       print_rsc_summary(data_set, node, rsc, TRUE);		       
+		   }
 	       }
 	       
 	       print_as("    + %s:", task);
