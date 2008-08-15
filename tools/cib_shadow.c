@@ -75,7 +75,7 @@ static char *get_shadow_prompt(const char *name)
     len += strlen(name);
     crm_malloc0(prompt, len);
     
-    snprintf(prompt, len, "shadow[%s]: ", name);
+    snprintf(prompt, len, "shadow[%s] # ", name);
     return prompt;
 }
 
@@ -114,8 +114,9 @@ static void shadow_teardown(char *name)
 {
     const char *prompt = getenv("PS1");
     char *our_prompt = get_shadow_prompt(name);
-    if(safe_str_eq(our_prompt, prompt)) {
-	printf("Type Ctrl-D to exit the crm_shadow shell\n");
+    
+    if(prompt != NULL && strstr(prompt, our_prompt)) {
+	printf("Now type Ctrl-D to exit the crm_shadow shell\n");
 	
     } else {
 	printf("Please remember to unset the CIB_shadow variable by pasting the following into your shell:\n");
