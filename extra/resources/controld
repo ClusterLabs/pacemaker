@@ -42,25 +42,17 @@ meta_data() {
 <version>1.0</version>
 
 <longdesc lang="en">
-This Resource Agent can control the two controld services needed by ocfs2.
-It assumes that dlm_controld and ocfs2_controld are both in your default PATH.
+This Resource Agent can control the dlm_controld services needed by ocfs2.
+It assumes that dlm_controld is in your default PATH.
 In most cases, it should be run as an anonymous clone.
 </longdesc>
 <shortdesc lang="en">DLM Agent for OCFS2</shortdesc>
 
 <parameters>
 
-<parameter name="daemon" unique="1">
-<longdesc lang="en">
-The daemon to control. Allowed values are: dlm, ocfs2
-</longdesc>
-<shortdesc lang="en">The daemon to start</shortdesc>
-<content type="string" default="dlm" />
-</parameter>
-
 <parameter name="args" unique="1">
 <longdesc lang="en">
-Any additional options to start the controld service with
+Any additional options to start the dlm_controld service with
 </longdesc>
 <shortdesc lang="en">DLM Options</shortdesc>
 <content type="string" default="" />
@@ -106,7 +98,6 @@ controld_start() {
       *) return $OCF_ERR_GENERIC;;
     esac
 
-    if [ ${OCF_RESKEY_daemon} = "dlm_controld" ]; then
         if [ ! -e $OCF_RESKEY_configdir ]; then
     	    modprobe configfs
     	    if [ ! -e $OCF_RESKEY_configdir ]; then
@@ -127,18 +118,6 @@ controld_start() {
        	      return $OCF_NOT_INSTALLED
 	   fi
     	fi
-    elif [ ${OCF_RESKEY_daemon} = "ocfs2_controld.pcmk" ]; then
-    	if [ ! -e $OCF_RESKEY_configdir ]; then
-           ocf_log err "$OCF_RESKEY_configdir not available"
-       	   return $OCF_NOT_INSTALLED
-	fi
-
-    	if [ ! -e $OCF_RESKEY_configdir/cluster ]; then
-           ocf_log err "$OCF_RESKEY_configdir/cluster not available"
-       	   return $OCF_NOT_INSTALLED
-    	fi
-    
-    fi
 
     ${OCF_RESKEY_daemon} $OCF_RESKEY_args
 
@@ -176,15 +155,9 @@ controld_validate() {
     return $OCF_SUCCESS
 }
 
-: ${OCF_RESKEY_daemon=dlm}
+: ${OCF_RESKEY_daemon=dlm_controld}
 : ${OCF_RESKEY_args=""}
 : ${OCF_RESKEY_configdir=/sys/kernel/config}
-
-case ${OCF_RESKEY_daemon} in
-     dlm) OCF_RESKEY_daemon=dlm_controld;;
-     ocfs*) OCF_RESKEY_daemon=ocfs2_controld.pcmk;;
-     *) return $OCF_ERR_CONFIGURED;;
-esac
 
 case $__OCF_ACTION in
 meta-data)	meta_data
