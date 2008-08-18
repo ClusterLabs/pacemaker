@@ -55,7 +55,7 @@ In most cases, it should be run as an anonymous clone.
 Any additional options to start the dlm_controld service with
 </longdesc>
 <shortdesc lang="en">DLM Options</shortdesc>
-<content type="string" default="" />
+<content type="string" default="-q 0" />
 </parameter>
 
 <parameter name="configdir" unique="1">
@@ -156,7 +156,7 @@ controld_validate() {
 }
 
 : ${OCF_RESKEY_daemon=dlm_controld}
-: ${OCF_RESKEY_args=""}
+: ${OCF_RESKEY_args=-q 0}
 : ${OCF_RESKEY_configdir=/sys/kernel/config}
 
 case $__OCF_ACTION in
