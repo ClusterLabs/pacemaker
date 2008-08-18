@@ -115,14 +115,14 @@ deb:	tgz
 	rm -rf $(distdir)
 
 install-exec-local:
-	$(mkinstalldirs) $(DESTDIR)/$(crm_varlibdir)
-	-chown $(HA_CCMUSER) $(DESTDIR)/$(crm_varlibdir)
-	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(crm_varlibdir)
-	-chmod 750 $(DESTDIR)/$(crm_varlibdir)
-	$(mkinstalldirs) $(DESTDIR)/$(crm_varrundir)
-	-chown $(HA_CCMUSER) $(DESTDIR)/$(crm_varrundir)
-	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(crm_varrundir)
-	-chmod 750 $(DESTDIR)/$(crm_varrundir)
+	$(mkinstalldirs) $(DESTDIR)/$(HA_VARLIBDIR)/$(HB_PKG)/crm
+	-chown $(HA_CCMUSER) $(DESTDIR)/$(HA_VARLIBDIR)/$(HB_PKG)/crm
+	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(HA_VARLIBDIR)/$(HB_PKG)/crm
+	-chmod 750 $(DESTDIR)/$(HA_VARLIBDIR)/$(HB_PKG)/crm
+	$(mkinstalldirs) $(DESTDIR)/$(HA_VARRUNDIR)/$(HB_PKG)/crm
+	-chown $(HA_CCMUSER) $(DESTDIR)/$(HA_VARRUNDIR)/$(HB_PKG)/crm
+	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(HA_VARRUNDIR)/$(HB_PKG)/crm
+	-chmod 750 $(DESTDIR)/$(HA_VARRUNDIR)/$(HB_PKG)/crm
 	-test -d $(DESTDIR)$(LCRSODIR) || mkdir -p $(DESTDIR)$(LCRSODIR) 
 if BUILD_AIS_SUPPORT
 	rm -f $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso $(DESTDIR)$(LCRSODIR)/service_crm.so
