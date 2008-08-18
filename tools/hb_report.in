@@ -30,12 +30,31 @@ echo "$PROGDIR" | grep -qs '^/' || {
 		PROGDIR=$HA_NOARCHBIN
 }
 
+# the default syslog facility is not (yet) exported by heartbeat
+# to shell scripts
+#
+DEFAULT_HA_LOGFACILITY="daemon"
+export DEFAULT_HA_LOGFACILITY
 LOGD_CF=`findlogdcf @sysconfdir@ $HA_DIR`
 export LOGD_CF
 
 : ${SSH_OPTS="-T"}
 LOG_PATTERNS="CRIT: ERROR:"
-PEINPUTS_PATT="peng.*PEngine Input stored"
+# PEINPUTS_PATT="peng.*PEngine Input stored"
+
+# the goods
+ANALYSIS_F=analysis.txt
+DESCRIPTION_F=description.txt
+HALOG_F=ha-log.txt
+BT_F=backtraces.txt
+SYSINFO_F=sysinfo.txt
+SYSSTATS_F=sysstats.txt
+export ANALYSIS_F DESCRIPTION_F HALOG_F BT_F SYSINFO_F SYSSTATS_F
+CRM_MON_F=crm_mon.txt
+CCMTOOL_F=ccm_tool.txt
+CRM_VERIFY_F=crm_verify.txt
+CIB_F=cib.xml
+export CRM_MON_F CCMTOOL_F CRM_VERIFY_F CIB_F
 
 #
 # the instance where user runs hb_report is the master
@@ -45,29 +64,23 @@ if [ x"$1" = x__slave ]; then
 	SLAVE=1
 fi
 
-#
-# if this is the master, allow ha.cf and logd.cf in the current dir
-# (because often the master is the log host)
-#
-if [ "$SLAVE" = "" ]; then
-	[ -f ha.cf ] && HA_CF=ha.cf
-	[ -f logd.cf ] && LOGD_CF=logd.cf
-fi
-
 usage() {
 	cat<<EOF
-usage: hb_report -f {time|"cts:"testnum} [-t time] [-u user] [-l file] [-p patt]
-       [-L patt] [-e prog] [-SDC] dest
+usage: hb_report -f {time|"cts:"testnum} [-t time] [-u user] [-l file]
+       [-E files] [-p patt] [-L patt] [-e prog] [-MSDC] dest
 
 	-f time: time to start from or a CTS test number
 	-t time: time to finish at (dflt: now)
 	-u user: ssh user to access other nodes (dflt: empty, hacluster, root)
 	-l file: log file
+	-E file: extra logs to collect; this option is additive
+	         (dflt: /var/log/messages)
 	-p patt: regular expression to match variables to be removed;
 	         this option is additive (dflt: "passw.*")
 	-L patt: regular expression to match in log files for analysis;
 	         this option is additive (dflt: $LOG_PATTERNS)
 	-e prog: your favourite editor
+	-M     : don't collect extra logs (/var/log/messages)
 	-D     : don't invoke editor to write description
 	-C     : remove the destination directory
 	-S     : single node operation; don't try to start report
@@ -85,6 +98,9 @@ EOF
 	  preferred
 	. we try to figure where is the logfile; if we can't, please
 	  clue us in
+	. we collect only one logfile and /var/log/messages; if you
+	  have more than one logfile, then use '-E' option to supply
+	  as many as you want ('-M' empties the list)
 
 	Examples
 
@@ -100,6 +116,9 @@ EOF
 	  have more sensitive information, please supply additional
 	  patterns yourself. The logs and the crm_mon, ccm_tool, and
 	  crm_verify output are *not* sanitized.
+	  Additional system logs (/var/log/messages) are collected in
+	  order to have a more complete report. If you don't want that
+	  specify -M.
 	  IT IS YOUR RESPONSIBILITY TO PROTECT THE DATA FROM EXPOSURE!
 EOF
 	exit
@@ -118,6 +137,10 @@ setvarsanddefaults() {
 	UNIQUE_MSG="Mark:HB_REPORT:$now"
 	SANITIZE="passw.*"
 	REMOVE_DEST=""
+	# logs to collect in addition
+	# NB: they all have to be in syslog format
+	#
+	EXTRA_LOGS="/var/log/messages"
 	# used only by the master
 	NO_SSH=""
 	SSH_USER=""
@@ -137,7 +160,7 @@ chktime() {
 	[ "$1" ] || fatal "bad time specification: $2"
 }
 msgcleanup() {
-	fatal "destination directory $DESTDIR exists, please cleanup"
+	fatal "destination directory $DESTDIR exists on $1, please cleanup"
 }
 nodistdirectory() {
 	fatal "could not create the destination directory $DESTDIR"
@@ -162,9 +185,17 @@ logmarks() {
 		fi
 	done
 }
+#
+# first try syslog files, if none found then use the
+# logfile/debugfile settings
+#
 findlog() {
+	logf=""
 	if [ "$HA_LOGFACILITY" ]; then
-		findmsg $UNIQUE_MSG | awk '{print $1}'
+		logf=`findmsg $UNIQUE_MSG | awk '{print $1}'`
+	fi
+	if [ -f "$logf" ]; then
+		echo $logf
 	else
 		echo ${HA_DEBUGFILE:-$HA_LOGFILE}
 	fi
@@ -198,14 +229,14 @@ cts_findlogseg() {
 	logf=$1
 	testnum=$2
 
-	FROM_LINE=`grep -n "Running test.*\[$testnum\]" $logf | sed 's/:.*//'`
+	FROM_LINE=`grep -n "Running test.*\[$testnum\]" $logf | tail -1 | sed 's/:.*//'`
 	if [ -z "$FROM_LINE" ]; then
 		warning "couldn't find line for CTS test $testnum; corrupt log file?"
 		return
 	else
 		FROM_TIME=`linetime $logf $FROM_LINE`
 	fi
-	TO_LINE=`grep -n "Running test.*\[$((testnum+1))\]" $logf | sed 's/:.*//'`
+	TO_LINE=`grep -n "Running test.*\[$(($testnum+1))\]" $logf | tail -1 | sed 's/:.*//'`
 	[ "$TO_LINE" ] ||
 		TO_LINE=`wc -l < $logf`
 	TO_TIME=`linetime $logf $TO_LINE`
@@ -224,6 +255,7 @@ MASTER_IS_HOSTLOG=$MASTER_IS_HOSTLOG
 DESTDIR=$DESTDIR
 UNIQUE_MSG=$UNIQUE_MSG
 SANITIZE="$SANITIZE"
+EXTRA_LOGS="$EXTRA_LOGS"
 REMOVE_DEST="$REMOVE_DEST"
 EOF
 }
@@ -275,20 +307,8 @@ getbacktraces() {
 		getbt $flist > $3
 }
 getpeinputs() {
-	if [ "$HA_LOGFACILITY" ]; then
-		n=`basename $3`
-		patt=" $n $PEINPUTS_PATT"
-	else
-		patt="$PEINPUTS_PATT"
-	fi
 	flist=$(
-	if [ -f $3/ha-log ]; then
-		grep "$patt" $3/ha-log | awk '{print $NF}'
-	elif [ -f $3/../ha-log ]; then # central log
-		grep "$patt" $3/../ha-log | awk '{print $NF}'
-	else
-		find_files $HA_VARLIB/pengine $1 $2
-	fi | sed "s,$HA_VARLIB/,,g"
+		find_files $HA_VARLIB/pengine $1 $2 | sed "s,$HA_VARLIB/,,g"
 	)
 	[ "$flist" ] &&
 		(cd $HA_VARLIB && tar cf - $flist) | (cd $3 && tar xf -)
@@ -308,18 +328,26 @@ sys_info() {
 	crm_info
 	echo "Platform: `uname`"
 	echo "Kernel release: `uname -r`"
-	echo "Architecture: `arch`"
+	echo "Architecture: `uname -m`"
 	[ `uname` = Linux ] &&
 		echo "Distribution: `distro`"
 }
 sys_stats() {
 	set -x
+	uname -n
 	uptime
 	ps axf
 	ps auxw
 	top -b -n 1
+	ifconfig
 	netstat -i
 	arp -an
+	test -d /proc && {
+		cat /proc/cpuinfo
+		test -f /proc/scsi/scsi && cat /proc/scsi/scsi
+	}
+	mount
+	df
 	set +x
 }
 
@@ -327,7 +355,7 @@ sys_stats() {
 # replace sensitive info with '****'
 #
 sanitize() {
-	for f in $1/ha.cf $1/cib.xml $1/pengine/*; do
+	for f in $1/ha.cf $1/$CIB_F $1/pengine/*; do
 		[ -f "$f" ] && sanitize_one $f
 	done
 }
@@ -351,25 +379,27 @@ consolidate() {
 #
 checkcrmvfy() {
 	for n in `getnodes`; do
-		if [ -s $1/$n/crm_verify.txt ]; then
+		if [ -s $1/$n/$CRM_VERIFY_F ]; then
 			echo "WARN: crm_verify reported warnings at $n:"
-			cat $1/$n/crm_verify.txt
+			cat $1/$n/$CRM_VERIFY_F
 		fi
 	done
 }
 checkbacktraces() {
 	for n in `getnodes`; do
-		[ -s $1/$n/backtraces.txt ] && {
+		[ -s $1/$n/$BT_F ] && {
 			echo "WARN: coredumps found at $n:"
 			egrep 'Core was generated|Program terminated' \
-					$1/$n/backtraces.txt |
+					$1/$n/$BT_F |
 				sed 's/^/	/'
 		}
 	done
 }
 checklogs() {
-	logs=`find $1 -name ha-log`
+	logs=$(find $1 -name $HALOG_F;
+		for l in $EXTRA_LOGS; do find $1/* -name `basename $l`; done)
 	[ "$logs" ] || return
+	trap '[ -z "$patfiles" ] || rmtempfile "$patfiles"]' 0
 	pattfile=`maketempfile` ||
 		fatal "cannot create temporary files"
 	for p in $LOG_PATTERNS; do
@@ -380,7 +410,8 @@ checklogs() {
 	for n in `getnodes`; do
 		cat $logs | grep -f $pattfile
 	done
-	rm -f $pattfile
+	rmtempfile $patfiles
+	trap "" 0
 }
 
 #
@@ -409,13 +440,13 @@ diffcheck() {
 		return 1
 	}
 	case `basename $1` in
-	ccm_tool.txt)
+	$CCMTOOL_F)
 		txtdiff $1 $2;; # worddiff?
-	cib.xml)
+	$CIB_F)
 		cibdiff $1 $2;;
 	ha.cf)
 		txtdiff $1 $2;; # confdiff?
-	crm_mon.txt|sysinfo.txt)
+	$CRM_MON_F|$SYSINFO_F)
 		txtdiff $1 $2;;
 	esac
 }
@@ -425,7 +456,7 @@ analyze_one() {
 	for n in `getnodes`; do
 		if [ "$node0" ]; then
 			diffcheck $1/$node0/$2 $1/$n/$2
-			rc=$((rc+$?))
+			rc=$(($rc+$?))
 		else
 			node0=$n
 		fi
@@ -433,13 +464,13 @@ analyze_one() {
 	return $rc
 }
 analyze() {
-	flist="ccm_tool.txt cib.xml crm_mon.txt ha.cf logd.cf sysinfo.txt"
+	flist="hostcache $CCMTOOL_F $CIB_F $CRM_MON_F ha.cf logd.cf $SYSINFO_F"
 	for f in $flist; do
 		perl -e "printf \"Diff $f... \""
 		ls $1/*/$f >/dev/null 2>&1 || continue
 		if analyze_one $1 $f; then
 			echo "OK"
-			[ "$f" != cib.xml ] &&
+			[ "$f" != $CIB_F ] &&
 				consolidate $1 $f
 		else
 			echo "varies"
@@ -479,14 +510,14 @@ Detailed description:
 
 EOF
 
-	if [ -f $DESTDIR/sysinfo.txt ]; then
+	if [ -f $DESTDIR/$SYSINFO_F ]; then
 		echo "Common system info found:"
-		cat $DESTDIR/sysinfo.txt
+		cat $DESTDIR/$SYSINFO_F
 	else
 		for n in `getnodes`; do
-			if [ -f $DESTDIR/$n/sysinfo.txt ]; then
+			if [ -f $DESTDIR/$n/$SYSINFO_F ]; then
 				echo "System info $n:"
-				sed 's/^/	/' $DESTDIR/$n/sysinfo.txt
+				sed 's/^/	/' $DESTDIR/$n/$SYSINFO_F
 			fi
 		done
 	fi
@@ -540,7 +571,7 @@ getlogvars
 if [ "$SLAVE" = "" ]; then
 	setvarsanddefaults
 	userargs="$@"
-	while getopts f:t:l:u:p:L:e:SDCh o; do
+	while getopts f:t:l:u:p:L:e:E:MSDCh o; do
 		case "$o" in
 			h) usage;;
 			f)
@@ -563,10 +594,12 @@ if [ "$SLAVE" = "" ]; then
 			S) NO_SSH=1;;
 			D) NO_DESCRIPTION=1;;
 			C) REMOVE_DEST=1;;
+			M) EXTRA_LOGS="";;
+			E) EXTRA_LOGS="$EXTRA_LOGS $OPTARG";;
 			[?]) usage short;;
 		esac
 	done
-	shift $((OPTIND-1))
+	shift $(($OPTIND-1))
 	[ $# -ne 1 ] && usage short
 	DESTDIR=`echo $1 | sed 's,/*$,,'`
 	chkdirname $DESTDIR
@@ -593,12 +626,12 @@ if [ "$SLAVE" = "" ]; then
 		fi
 	fi
 # final check: don't run if the destination directory exists
-	[ -d $DESTDIR ] && msgcleanup
+	[ -d $DESTDIR ] && msgcleanup "local node"
 	[ "$ssh_good" ] &&
 		for node in `getnodes`; do
 			[ "$node" = "$WE" ] && continue
 			ssh $ssh_opts $node "test -d $DESTDIR" &&
-				msgcleanup
+				msgcleanup $node
 		done
 fi
 
@@ -655,16 +688,22 @@ if [ -f "$HA_LOG" ]; then
 		warning "a log found; but we cannot slice it"
 		warning "please install the perl Date::Parse module"
 	else
-		if [ "$CTS" ]; then
-			cts_findlogseg $HA_LOG $CTS
+		getstampproc=`find_getstampproc < $HA_LOG`
+		if [ "$getstampproc" ]; then
+			export getstampproc # used by linetime
+			if [ "$CTS" ]; then
+				cts_findlogseg $HA_LOG $CTS
+			else
+				findlogseg $HA_LOG $FROM_TIME $TO_TIME
+			fi
+			dumplog $HA_LOG $FROM_LINE $TO_LINE |
+			if [ "$THIS_IS_NODE" ]; then
+				cat > $DESTDIR/$WE/$HALOG_F
+			else
+				cat > $DESTDIR/$HALOG_F # we are log server, probably
+			fi
 		else
-			findlogseg $HA_LOG $FROM_TIME $TO_TIME
-		fi
-		dumplog $HA_LOG $FROM_LINE $TO_LINE |
-		if [ "$THIS_IS_NODE" ]; then
-			cat > $DESTDIR/$WE/ha-log
-		else
-			cat > $DESTDIR/ha-log # we are log server, probably
+			warning "could not figure out the log format of $HA_LOG"
 		fi
 	fi
 else
@@ -692,11 +731,24 @@ fi
 if [ "$THIS_IS_NODE" ]; then
 	getconfig $DESTDIR/$WE
 	getpeinputs $FROM_TIME $TO_TIME $DESTDIR/$WE
-	getbacktraces $FROM_TIME $TO_TIME $DESTDIR/$WE/backtraces.txt
+	getbacktraces $FROM_TIME $TO_TIME $DESTDIR/$WE/$BT_F
 	touch_DC_if_dc $DESTDIR/$WE
 	sanitize $DESTDIR/$WE
-	sys_info > $DESTDIR/$WE/sysinfo.txt
-	sys_stats > $DESTDIR/$WE/sysstats.txt 2>&1
+	sys_info > $DESTDIR/$WE/$SYSINFO_F
+	sys_stats > $DESTDIR/$WE/$SYSSTATS_F 2>&1
+
+	for l in $EXTRA_LOGS; do
+		[ "$NO_str2time" ] && break
+		[ "$l" = "$HA_LOG" -o ! -f "$l" ] && continue
+		getstampproc=`find_getstampproc < $l`
+		if [ "$getstampproc" ]; then
+			export getstampproc # used by linetime
+			findlogseg $l $FROM_TIME $TO_TIME
+			dumplog $l $FROM_LINE $TO_LINE > $DESTDIR/$WE/`basename $l`
+		else
+			warning "could not figure out the log format of $l"
+		fi
+	done
 fi
 
 #
@@ -709,12 +761,12 @@ if [ "$SLAVE" ]; then
 	(cd $DESTDIR && tar cf - $WE)
 else
 	wait $SLAVEPIDS
-	analyze $DESTDIR > $DESTDIR/analysis.txt
-	mktemplate > $DESTDIR/description.txt
+	analyze $DESTDIR > $DESTDIR/$ANALYSIS_F
+	mktemplate > $DESTDIR/$DESCRIPTION_F
 	[ "$NO_DESCRIPTION" ] || {
 		echo press enter to edit the problem description...
 		read junk
-		edittemplate $DESTDIR/description.txt
+		edittemplate $DESTDIR/$DESCRIPTION_F
 	}
 	cd $DESTDIR/..
 	tar czf $DESTDIR.tar.gz `basename $DESTDIR`
