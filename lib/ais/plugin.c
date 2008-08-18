@@ -768,8 +768,8 @@ void ais_ipc_message_callback(void *conn, void *msg)
 	if(crm_children[type].flags & crm_flag_members) {
 	    char *update = ais_generate_membership_data();
 	    g_hash_table_replace(membership_notify_list, async_conn, async_conn);
-	    ais_info("Sending membership update %llu to %s",
-		     (unsigned long long)membership_seq, crm_children[type].name);
+	    ais_info("Sending membership update "U64T" to %s",
+		     membership_seq, crm_children[type].name);
  	    send_client_msg(async_conn, crm_class_members, crm_msg_none,update);
 	}	
     }
@@ -871,8 +871,7 @@ char *ais_generate_membership_data(void)
     size = 14 + 32; /* <nodes id=""> + int */
     ais_malloc0(data.string, size);
     
-    /* TODO: Make some magic macro that expands to %llu or %lu depending on the arch */
-    sprintf(data.string, "<nodes id=\"%llu\">", (unsigned long long)membership_seq);
+    sprintf(data.string, "<nodes id=\""U64T"\">", membership_seq);
     
     g_hash_table_foreach(membership_list, member_loop_fn, &data);
 
@@ -931,8 +930,8 @@ void send_member_notification(void)
 {
     char *update = ais_generate_membership_data();
 
-    ais_info("Sending membership update %llu to %d children",
-	     (unsigned long long)membership_seq,
+    ais_info("Sending membership update "U64T" to %d children",
+	     membership_seq,
 	     g_hash_table_size(membership_notify_list));
 
     g_hash_table_foreach_remove(membership_notify_list, ghash_send_update, update);
@@ -1206,8 +1205,8 @@ void send_cluster_id(void)
 	}
     }
     
-    ais_debug("Local update: id=%u, born=%llu, seq=%llu",
-	      local_nodeid, (unsigned long long)local_born_on, (unsigned long long)membership_seq);
+    ais_debug("Local update: id=%u, born="U64T", seq="U64T"",
+	      local_nodeid, local_born_on, membership_seq);
     update_member(
 	local_nodeid, local_born_on, membership_seq, msg->votes, msg->processes, NULL, NULL, VERSION);
 

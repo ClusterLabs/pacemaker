@@ -277,7 +277,7 @@ crm_node_t *crm_update_peer(
     }
 
     if(id_changed || uname_changed || state_changed || addr_changed || votes_changed || procs_changed) {
-	crm_info("%sNode %s: id=%u%s state=%s%s addr=%s%s votes=%d%s born=%llu seen=%llu proc=%.32x%s",
+	crm_info("%sNode %s: id=%u%s state=%s%s addr=%s%s votes=%d%s born="U64T" seen="U64T" proc=%.32x%s",
 		 uname_changed?"New ":"", node->uname,
 		 node->id, id_changed?" (new)":"",
 		 node->state, state_changed?" (new)":"",

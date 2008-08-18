@@ -232,7 +232,7 @@ int update_member(unsigned int id, uint64_t born, uint64_t seq, int32_t votes,
 
     if(node == NULL) {	
 	ais_malloc0(node, sizeof(crm_node_t));
-	ais_info("Creating entry for node %u born on %llu", id, seq);
+	ais_info("Creating entry for node %u born on "U64T"", id, seq);
 	node->id = id;
 	node->addr = NULL;
 	node->state = ais_strdup("unknown");
@@ -248,8 +248,7 @@ int update_member(unsigned int id, uint64_t born, uint64_t seq, int32_t votes,
     if(born != 0) {
 	changed = TRUE;
 	node->born = born;
-	ais_info("%p Node %u (%s) born on: %llu",
-		 node, id, uname, (unsigned long long)born);
+	ais_info("%p Node %u (%s) born on: "U64T, node, id, uname, born);
     }
 
     if(version != NULL) {
@@ -348,8 +347,8 @@ char *append_member(char *data, crm_node_t *node)
 	offset += snprintf(data + offset, size - offset, "uname=\"%s\" ", node->uname);
     }
     offset += snprintf(data + offset, size - offset, "state=\"%s\" ", node->state);
-    offset += snprintf(data + offset, size - offset, "born=\"%llu\" ", node->born);
-    offset += snprintf(data + offset, size - offset, "seen=\"%llu\" ", node->last_seen);
+    offset += snprintf(data + offset, size - offset, "born=\""U64T"\" ", node->born);
+    offset += snprintf(data + offset, size - offset, "seen=\""U64T"\" ", node->last_seen);
     offset += snprintf(data + offset, size - offset, "votes=\"%d\" ", node->votes);
     offset += snprintf(data + offset, size - offset, "processes=\"%u\" ", node->processes);
     if(node->addr) {

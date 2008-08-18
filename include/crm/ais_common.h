@@ -119,9 +119,9 @@ enum crm_proc_flag {
 
 typedef struct crm_peer_node_s 
 {
-	unsigned int id;
-	unsigned long long born;
-	unsigned long long last_seen;
+	uint32_t id;
+	uint64_t born;
+	uint64_t last_seen;
 
 	int32_t votes;
 	uint32_t processes;
