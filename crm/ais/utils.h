@@ -41,7 +41,7 @@ extern int libais_connection_active (void *conn);
 /* #include "plugin.h" */
 #define 	SIZEOF(a)   (sizeof(a) / sizeof(a[0]))
 #define CRM_MESSAGE_IPC_ACK 1
-#define CRM_SERVICE         16
+#define CRM_SERVICE         9
 
 typedef struct crm_child_s {
 	int pid;
