@@ -24,7 +24,7 @@ RPM			= @RPM@
 RPMFLAGS		= -ba
 TARFILE			= pacemaker.tar.gz
 AM_TAR			= tar
-LAST_RELEASE		= Pacemaker-0.7.0
+LAST_RELEASE		= 007c3a1c50f5
 STABLE_SERIES		= unstable-0.7
 
 AUTOMAKE_OPTIONS	= foreign
@@ -75,11 +75,11 @@ stable:	tgz
 	scp .changes $(TARFILE) $(OBS_PREFIX)/server:ha-clustering/pacemaker/
 
 unstable:	tgz
-	make features > .changes
+	make changes > .changes
 	scp .changes $(TARFILE) $(OBS_PREFIX)/server:ha-clustering:UNSTABLE/pacemaker/
 
 factory:	tgz
-	make features > .changes
+	make changes > .changes
 	scp .changes $(TARFILE) $(OBS_PREFIX)/server:ha-clustering:Factory/pacemaker/
 
 global: clean-generic
