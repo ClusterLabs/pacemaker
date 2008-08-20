@@ -73,6 +73,10 @@ typedef struct {
 } mar_res_header_t __attribute__((aligned(8)));
 #endif
 
+#define CRM_SERVICE             9
+#define CRM_MESSAGE_IPC_ACK     1
+#define CRM_MESSAGE_NODEID_RESP 2
+
 #define MAX_NAME	256
 #define AIS_IPC_NAME  "ais-crm-ipc"
 
@@ -90,6 +94,7 @@ enum crm_ais_msg_class {
     crm_class_cluster = 0,
     crm_class_members = 1,
     crm_class_notify  = 2,
+    crm_class_nodeid  = 3,
 };
 
 /* order here matters - its used to index into the crm_children array */
@@ -158,6 +163,12 @@ struct crm_ais_msg_s
 	/* 584 bytes */
 	char			data[0];
 	
+} __attribute__((packed));
+
+struct crm_ais_nodeid_resp_s
+{
+	mar_res_header_t	header __attribute__((aligned(8)));
+	uint32_t		id;	
 } __attribute__((packed));
 
 #if SUPPORT_AIS

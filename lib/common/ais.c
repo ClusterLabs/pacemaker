@@ -88,6 +88,45 @@ int ais_fd_async = -1; /* never send messages via this channel */
 GFDSource *ais_source = NULL;
 GFDSource *ais_source_sync = NULL;
 
+int32_t get_ais_nodeid(void)
+{
+    int retries = 0;
+    int rc = SA_AIS_OK;
+    mar_res_header_t header;
+    struct crm_ais_nodeid_resp_s answer;
+
+    header.id = crm_class_nodeid;
+    header.size = sizeof(mar_res_header_t);
+
+  retry:
+    errno = 0;
+    rc = saSendReceiveReply(ais_fd_sync, &header, header.size, &answer, sizeof (struct crm_ais_nodeid_resp_s));
+    if(rc == SA_AIS_OK) {
+	CRM_CHECK(answer.header.size == sizeof (struct crm_ais_nodeid_resp_s),
+		  crm_err("Odd message: id=%d, size=%d, error=%d",
+			  answer.header.id, answer.header.size, answer.header.error));
+	CRM_CHECK(answer.header.id == CRM_MESSAGE_NODEID_RESP, crm_err("Bad response id"));
+    }
+
+    if(rc == SA_AIS_ERR_TRY_AGAIN && retries < 20) {
+	retries++;
+	crm_info("Peer overloaded: Re-sending message (Attempt %d of 20)", retries);
+	mssleep(retries * 100); /* Proportional back off */
+	goto retry;
+    }
+
+    if(rc != SA_AIS_OK) {    
+	crm_err("Sending nodeid request: FAILED (rc=%d): %s", rc, ais_error2text(rc));
+	return 0;
+	
+    } else if(answer.header.error != SA_AIS_OK) {
+	crm_err("Bad response from peer: (rc=%d): %s", rc, ais_error2text(rc));
+	return 0;
+    }
+
+    return answer.id;
+}
+
 gboolean
 send_ais_text(int class, const char *data,
 	      gboolean local, const char *node, enum crm_ais_msg_types dest)
@@ -184,6 +223,7 @@ send_ais_text(int class, const char *data,
 	CRM_CHECK(header.size == sizeof (mar_res_header_t),
 		  crm_err("Odd message: id=%d, size=%d, error=%d",
 			  header.id, header.size, header.error));
+	CRM_CHECK(header.id == CRM_MESSAGE_IPC_ACK, crm_err("Bad response id"));
 	CRM_CHECK(header.error == SA_AIS_OK, rc = header.error);
     }
 
@@ -485,12 +525,11 @@ gboolean init_ais_connection(
 	*our_uuid = crm_strdup(name.nodename);
     }
 
-    /* 16 := CRM_SERVICE */
   retry:
     crm_info("Creating connection to our AIS plugin");
-    rc = saServiceConnect (&ais_fd_sync, &ais_fd_async, 16);
+    rc = saServiceConnect (&ais_fd_sync, &ais_fd_async, CRM_SERVICE);
     if (rc != SA_AIS_OK) {
-	crm_info("Connection to our AIS plugin failed: %s (%d)", ais_error2text(rc), rc);
+	crm_info("Connection to our AIS plugin (%d) failed: %s (%d)", CRM_SERVICE, ais_error2text(rc), rc);
     }
 
     switch(rc) {

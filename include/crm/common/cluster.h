@@ -25,6 +25,10 @@
 #include <crm/common/msg.h>
 #include <crm/ais_common.h>
 
+#if SUPPORT_HEARTBEAT
+#  include <heartbeat/hb_api.h>
+#endif
+
 extern gboolean crm_have_quorum;
 extern GHashTable *crm_peer_cache;
 extern unsigned long long crm_peer_seq;
@@ -75,6 +79,7 @@ extern GFDSource *ais_source;
 extern gboolean send_ais_text(
     int class, const char *data, gboolean local,
     const char *node, enum crm_ais_msg_types dest);
+extern int32_t get_ais_nodeid(void);
 #endif
 
 extern void empty_uuid_cache(void);

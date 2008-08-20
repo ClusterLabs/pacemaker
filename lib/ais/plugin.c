@@ -59,7 +59,7 @@
 int plugin_log_level = LOG_DEBUG;
 char *local_uname = NULL;
 int local_uname_len = 0;
-unsigned int local_nodeid = 0;
+uint32_t local_nodeid = 0;
 char *ipc_channel_name = NULL;
 
 uint64_t membership_seq = 0;
@@ -125,6 +125,7 @@ void ais_ipc_message_callback(void *conn, void *msg);
 void ais_quorum_query(void *conn, void *msg);
 void ais_node_list_query(void *conn, void *msg);
 void ais_manage_notification(void *conn, void *msg);
+void ais_our_nodeid(void *conn, void *msg);
 
 void ais_cluster_id_swab(void *msg);
 void ais_cluster_id_callback(void *message, unsigned int nodeid);
@@ -147,6 +148,12 @@ static struct openais_lib_handler crm_lib_service[] =
 	.lib_handler_fn		= ais_manage_notification,
 	.response_size		= sizeof (mar_res_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
+	.flow_control		= OPENAIS_FLOW_CONTROL_NOT_REQUIRED
+    },
+    { /* 3 */
+	.lib_handler_fn		= ais_our_nodeid,
+	.response_size		= sizeof (struct crm_ais_nodeid_resp_s),
+	.response_id		= CRM_MESSAGE_NODEID_RESP,
 	.flow_control		= OPENAIS_FLOW_CONTROL_NOT_REQUIRED
     },
 };
@@ -174,7 +181,7 @@ static void crm_exec_dump_fn(void)
  * Exports the interface for the service
  */
 struct openais_service_handler crm_service_handler = {
-    .name			= "LHA Cluster Manager",
+    .name			= "Pacemaker Cluster Manager",
     .id				= CRM_SERVICE,
     .private_data_size		= 0,
     .flow_control		= OPENAIS_FLOW_CONTROL_NOT_REQUIRED, 
@@ -290,6 +297,7 @@ static void crm_plugin_init(struct objdb_iface_ver0 *objdb)
     local_uname_len = strlen(local_uname);
 
     ais_info("Local hostname: %s", local_uname);
+    ais_info("Service: %d", CRM_SERVICE);
 
     local_nodeid = totempg_my_nodeid_get();
     update_member(local_nodeid, 0, 0, 1, 0, local_uname, CRM_NODE_LOST, NULL);
@@ -914,6 +922,23 @@ void ais_manage_notification(void *conn, void *msg)
 	g_hash_table_remove(membership_notify_list, async_conn);
     }
     send_ipc_ack(conn, 2);
+}
+
+void ais_our_nodeid(void *conn, void *msg)
+{
+    struct crm_ais_nodeid_resp_s resp;
+    ais_info("Sending local nodeid: %d", local_nodeid);
+    
+    resp.header.size = crm_lib_service[crm_class_nodeid].response_size;
+    resp.header.id = crm_lib_service[crm_class_nodeid].response_id;
+    resp.header.error = SA_AIS_OK;
+    resp.id = local_nodeid;
+    
+#ifdef AIS_WHITETANK
+    openais_response_send (conn, &resp, resp.header.size);
+#else
+    openais_conn_send_response (conn, &resp, resp.header.size);
+#endif
 }
 
 static gboolean
