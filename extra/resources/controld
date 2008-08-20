@@ -155,7 +155,7 @@ controld_validate() {
     return $OCF_SUCCESS
 }
 
-: ${OCF_RESKEY_daemon=dlm_controld}
+: ${OCF_RESKEY_daemon=dlm_controld.pcmk}
 : ${OCF_RESKEY_args=-q 0}
 : ${OCF_RESKEY_configdir=/sys/kernel/config}
 

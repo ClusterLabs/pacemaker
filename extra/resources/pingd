@@ -1,0 +1,260 @@
+#!/bin/sh
+#
+#
+#	pingd OCF Resource Agent
+#	Records (in the CIB) the current number of ping nodes a 
+#	   cluster node can connect to.
+#
+# Copyright (c) 2006 Andrew Beekhof
+#                    All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of version 2 of the GNU General Public License as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it would be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# Further, this software is distributed without any warranty that it is
+# free of the rightful claim of any third person regarding infringement
+# or the like.  Any license provided herein, whether implied or
+# otherwise, applies only to this software file.  Patent licenses, if
+# any, provided herein do not apply to combinations of this program with
+# other software, or any other product whatsoever.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
+#
+#######################################################################
+# Initialization:
+
+. ${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs
+
+#######################################################################
+
+meta_data() {
+	cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="pingd">
+<version>1.0</version>
+
+<longdesc lang="en">
+This is a pingd Resource Agent.
+It records (in the CIB) the current number of ping nodes a node can connect to.
+</longdesc>
+<shortdesc lang="en">pingd resource agent</shortdesc>
+
+<parameters>
+
+<parameter name="pidfile" unique="0">
+<longdesc lang="en">PID file</longdesc>
+<shortdesc lang="en">PID file</shortdesc>
+<content type="string" default="$HA_RSCTMP/pingd-${OCF_RESOURCE_INSTANCE}" />
+</parameter>
+
+
+<parameter name="user" unique="0">
+<longdesc lang="en">
+The user we want to run pingd as
+</longdesc>
+<shortdesc lang="en">The user we want to run pingd as</shortdesc>
+<content type="string" default="root" />
+</parameter>
+
+<parameter name="dampen" unique="0">
+<longdesc lang="en">
+The time to wait (dampening) further changes occur
+</longdesc>
+<shortdesc lang="en">Dampening interval</shortdesc>
+<content type="integer" default="1s"/>
+</parameter>
+
+<parameter name="set" unique="0">
+<longdesc lang="en">
+The name of the instance_attributes set to place the value in.  Rarely needs to be specified.
+</longdesc>
+<shortdesc lang="en">Set name</shortdesc>
+<content type="integer" default=""/>
+</parameter>
+
+<parameter name="name" unique="0">
+<longdesc lang="en">
+The name of the attributes to set.  This is the name to be used in the constraints.
+</longdesc>
+<shortdesc lang="en">Attribute name</shortdesc>
+<content type="integer" default="${OCF_RESOURCE_INSTANCE}"/>
+</parameter>
+
+<parameter name="section" unique="0">
+<longdesc lang="en">
+The section place the value in.  Rarely needs to be specified.
+</longdesc>
+<shortdesc lang="en">Section name</shortdesc>
+<content type="integer" default=""/>
+</parameter>
+
+<parameter name="multiplier" unique="0">
+<longdesc lang="en">
+The number by which to multiply the number of connected ping nodes by
+</longdesc>
+<shortdesc lang="en">Value multiplier</shortdesc>
+<content type="integer" default=""/>
+</parameter>
+
+<parameter name="host_list" unique="0">
+<longdesc lang="en">
+The list of ping nodes to count.  Defaults to all configured ping nodes.  Rarely needs to be specified.
+</longdesc>
+<shortdesc lang="en">Host list</shortdesc>
+<content type="integer" default=""/>
+</parameter>
+
+</parameters>
+
+<actions>
+<action name="start"   timeout="90" />
+<action name="stop"    timeout="100" />
+<action name="monitor" depth="0"  timeout="20" interval="10" start-delay="1m" />
+<action name="meta-data"  timeout="5" />
+<action name="validate-all"  timeout="30" />
+</actions>
+</resource-agent>
+END
+}
+
+#######################################################################
+
+pingd_usage() {
+	cat <<END
+usage: $0 {start|stop|monitor|validate-all|meta-data}
+
+Expects to have a fully populated OCF RA-compliant environment set.
+END
+}
+
+pingd_start() {
+    extras=""
+    if [ ! -z "$OCF_RESKEY_multiplier" ]; then
+	extras="$extras -m $OCF_RESKEY_multiplier"
+    fi
+    if [ ! -z "$OCF_RESKEY_set" ]; then
+	extras="$extras -s $OCF_RESKEY_set"
+    fi
+    if [ ! -z "$OCF_RESKEY_section" ]; then
+	extras="$extras -S $OCF_RESKEY_section"
+    fi
+    for a_host in $OCF_RESKEY_host_list; do
+	extras="$extras -h $a_host"
+    done
+    pingd_cmd="${HA_BIN}/pingd -D -p $OCF_RESKEY_pidfile -a $OCF_RESKEY_name -d $OCF_RESKEY_dampen $extras"
+
+    if [ ! -z $OCF_RESKEY_user ]; then
+	sudo -u $OCF_RESKEY_user $pingd_cmd
+    else
+	$pingd_cmd
+    fi
+
+    rc=$?
+    if [ $rc = 0 ]; then
+	exit $OCF_SUCCESS
+    fi
+    
+    ocf_log err "Could not run $pingd_cmd : rc=$rc"
+    exit $OCF_ERR_GENERIC
+}
+
+pingd_stop() {
+    if [ -f $OCF_RESKEY_pidfile ]; then
+	pid=`cat $OCF_RESKEY_pidfile`
+    fi
+    if [ ! -z $pid ]; then
+	kill -9 $pid
+	rc=$?
+
+	if [ $rc = 0 -o $rc = 1 ]; then
+	    rm $OCF_RESKEY_pidfile
+	    exit $OCF_SUCCESS
+	fi
+
+	ocf_log err "Unexpected result from kill -9 $pid: $rc"
+	exit $OCF_ERR_GENERIC
+    fi
+    exit $OCF_SUCCESS
+}
+
+pingd_monitor() {
+    if [ -f $OCF_RESKEY_pidfile ]; then
+	pid=`cat $OCF_RESKEY_pidfile`
+    fi
+    if [ ! -z $pid ]; then
+	kill -0 $pid
+	if [ $? = 0 ]; then
+	    exit $OCF_SUCCESS
+	fi
+    fi
+    exit $OCF_NOT_RUNNING
+}
+
+pingd_validate() {
+# Existence of the user
+    if [ ! -z $OCF_RESKEY_user ]; then
+	getent passwd "$OCF_RESKEY_user" >/dev/null
+	if [ $? -eq 0 ]; then
+	    : Yes, user exists. We can further check his permission on crm_mon if necessary
+	else
+	    ocf_log err "The user $OCF_RESKEY_user does not exist!"
+	    exit $OCF_ERR_ARGS
+	fi
+    fi
+
+# Pidfile better be an absolute path
+    case $OCF_RESKEY_pidfile in
+	/*) ;;
+	*) ocf_log warn "You should have pidfile($OCF_RESKEY_pidfile) of absolute path!" ;;
+    esac
+
+# Check the update interval
+    if ocf_is_decimal "$OCF_RESKEY_update" && [ $OCF_RESKEY_update -gt 0 ]; then
+	:
+    else
+	ocf_log err "Invalid update interval $OCF_RESKEY_update. It should be positive integer!"
+	exit $OCF_ERR_ARGS
+    fi
+
+    echo "Validate OK"
+    return $OCF_SUCCESS
+}
+
+if [ $# -ne 1 ]; then
+    pingd_usage
+    exit $OCF_ERR_ARGS
+fi
+
+: ${OCF_RESKEY_pidfile:="$HA_RSCTMP/pingd-${OCF_RESOURCE_INSTANCE}"}
+: ${OCF_RESKEY_name:="pingd"}
+: ${OCF_RESKEY_dampen:="1s"}
+
+case $__OCF_ACTION in
+meta-data)	meta_data
+		exit $OCF_SUCCESS
+		;;
+start)		pingd_start
+		;;
+stop)		pingd_stop
+		;;
+monitor)	pingd_monitor
+		;;
+validate-all)	pingd_validate
+		;;
+usage|help)	pingd_usage
+		exit $OCF_SUCCESS
+		;;
+*)		pingd_usage
+		exit $OCF_ERR_UNIMPLEMENTED
+		;;
+esac
+
+exit $?

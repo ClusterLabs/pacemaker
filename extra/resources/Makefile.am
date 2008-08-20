@@ -26,5 +26,6 @@ ocf_SCRIPTS	     =  ClusterMon 	\
 			Dummy		\
 			Stateful	\
 			SysInfo		\
+			pingd		\
 			controld
 
