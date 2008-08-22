@@ -538,7 +538,6 @@ void global_confchg_fn (
     g_hash_table_foreach(
 	    membership_list, ais_mark_unseen_peer_dead, &changed);
     
-    ais_info("%d nodes changed", changed);
     if(changed) {
 	ais_debug("%d nodes changed", changed);
 	send_member_notification();
