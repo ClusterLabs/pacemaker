@@ -171,7 +171,7 @@ static void crm_exec_dump_fn(void)
  * Exports the interface for the service
  */
 struct openais_service_handler crm_service_handler = {
-    .name			= "LHA Cluster Manager",
+    .name			= "Pacemaker Cluster Manager",
     .id				= CRM_SERVICE,
     .private_data_size		= 0,
     .flow_control		= OPENAIS_FLOW_CONTROL_NOT_REQUIRED, 
@@ -289,7 +289,7 @@ int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
     ais_info("Local hostname: %s", local_uname);
 
     local_nodeid = totempg_my_nodeid_get();
-    update_member(local_nodeid, 0, 1, 0, local_uname, CRM_NODE_LOST);
+    update_member(local_nodeid, 0, 1, 0, local_uname, CRM_NODE_MEMBER);
     
     LEAVE("");
     return 0;
@@ -534,12 +534,11 @@ void global_confchg_fn (
 	ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
     }    
     
-    if(do_update) {
-	ais_debug_2("Reaping unseen nodes...");
-	g_hash_table_foreach(
+    ais_info("Reaping unseen nodes...");
+    g_hash_table_foreach(
 	    membership_list, ais_mark_unseen_peer_dead, &changed);
-    }
     
+    ais_info("%d nodes changed", changed);
     if(changed) {
 	ais_debug("%d nodes changed", changed);
 	send_member_notification();
@@ -833,6 +832,7 @@ char *ais_generate_membership_data(void)
 {
     int size = 0;
     struct member_loop_data data;
+    ENTER("");
     size = 14 + 32; /* <nodes id=""> + int */
     ais_malloc0(data.string, size);
     sprintf(data.string, "<nodes id=\"%llu\">", membership_seq);
@@ -842,6 +842,7 @@ char *ais_generate_membership_data(void)
     size = strlen(data.string);
     data.string = realloc(data.string, size + 9) ;/* 9 = </nodes> + nul */
     sprintf(data.string + size, "</nodes>");
+    LEAVE("");
     return data.string;
 }
 
@@ -849,6 +850,7 @@ void ais_node_list_query(void *conn, void *msg)
 {
     char *data = ais_generate_membership_data();
     void *async_conn = openais_conn_partner_get(conn);
+    ENTER("");
 
     /* send the ACK before we send any other messages */
     send_ipc_ack(conn, 1);
@@ -857,6 +859,7 @@ void ais_node_list_query(void *conn, void *msg)
 	send_client_msg(async_conn, crm_class_members, crm_msg_none, data);
     }
     ais_free(data);
+    LEAVE("");
 }
 
 void ais_manage_notification(void *conn, void *msg)
@@ -890,7 +893,8 @@ void send_member_notification(void)
 {
     int lpc = 0;
     char *update = ais_generate_membership_data();
-
+    ENTER("");
+    
     for (; lpc < SIZEOF(crm_children); lpc++) {
 	if(crm_children[lpc].flags & crm_flag_members) {
 
@@ -906,6 +910,7 @@ void send_member_notification(void)
 	}
     }
     ais_free(update);
+    LEAVE("");
 }
 
 static gboolean check_message_sanity(AIS_Message *msg, char *data) 
@@ -914,6 +919,8 @@ static gboolean check_message_sanity(AIS_Message *msg, char *data)
     gboolean repaired = FALSE;
     int dest = msg->host.type;
     int tmp_size = msg->header.size - sizeof(AIS_Message);
+
+    ENTER("");
 
     if(sane && msg->header.size == 0) {
 	ais_warn("Message with no size");
@@ -980,7 +987,7 @@ static gboolean check_message_sanity(AIS_Message *msg, char *data)
 		    msg->sender.pid, msg->is_compressed, ais_data_len(msg),
 		    msg->header.size);
     }
-    
+    LEAVE("");
     return sane;
 }
 
