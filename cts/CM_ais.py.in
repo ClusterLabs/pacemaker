@@ -66,11 +66,15 @@ class crm_ais(LinuxHAv2):
             "ParitionCmd"    : "@sbindir@/ccm_tool -p",
             "BreakCommCmd2"  : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
 
-            "Pat:We_stopped"   : "%s.*openais.*lha_crm was unlinked",
+            "Pat:We_stopped"   : "%s.*openais.*crm_exec_exit_fn: Shutdown complete",
             "Pat:They_stopped" : "%s crmd:.*Node %s is now: lost",
-            "Pat:All_stopped"  : "%s.*openais.*lha_crm was unlinked",
+            "Pat:All_stopped"  : "%s.*openais.*crm_exec_exit_fn: Shutdown complete",
             "Pat:They_dead"    : "openais:.*Node %s is now: lost",
             
+            "Pat:ChildKilled"  : "%s openais.*Child process %s terminated with signal 9",
+            "Pat:ChildRespawn" : "%s openais.*Respawning failed child process: %s",
+            "Pat:ChildExit"    : "Child process .* exited",
+
             # Bad news Regexes.  Should never occur.
             "BadRegexes"   : (
                 r"ERROR:",
@@ -98,6 +102,7 @@ class crm_ais(LinuxHAv2):
                 r"Faking parameter digest creation",
                 r"Parameters to .* action changed:",
                 r"Parameters to .* changed",
+                r"Child process .* terminated with signal 11",
             ),
         })
 
@@ -141,7 +146,7 @@ class crm_ais(LinuxHAv2):
                         self.debug("Adding partition from %s: %s" %(node, partition))
                         ccm_partitions.append(partition)
                 else:
-                    self.log("bad partition details for %s" %node)
+                    self.log("ERROR: Bad partition details for %s: '%s'" % (node, partition))
 
         return ccm_partitions
 
