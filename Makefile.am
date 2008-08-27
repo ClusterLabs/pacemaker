@@ -32,7 +32,7 @@ AUTOMAKE_OPTIONS	= foreign
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar
 
-SUBDIRS	= debian build config replace include lib cib crmd pengine transitioner crm fencing tools doc cts contrib
+SUBDIRS	= debian build $(LIBLTDL_DIR) config replace include lib cib crmd pengine transitioner crm fencing tools doc cts contrib
 
 tgz:
 	rm -f $(TARFILE)
@@ -54,13 +54,11 @@ changes:
 	hg log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v Low: | sort -uf 
 	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
 
-obs:	tgz
-	make changes > .changes
-	scp .changes $(TARFILE) vmhost.beekhof.net:Development/obs/server:ha-clustering/pacemaker/
+OBS_PREFIX=c001n16.suse.de:Development/obs/server:ha-clustering
 
-home:	tgz
+stable:		tgz
 	make changes > .changes
-	scp .changes $(TARFILE) vmhost.beekhof.net:Development/obs/home:beekhof/pacemaker-test/
+	scp .changes $(TARFILE) $(OBS_PREFIX)/pacemaker/
 
 global:
 	gtags
@@ -90,7 +88,7 @@ deb:	tgz
 install-exec-local:
 	test -d $(DESTDIR)$(LCRSODIR) || mkdir -p $(DESTDIR)$(LCRSODIR)
 if BUILD_AIS_SUPPORT
-	rm -f $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso $(DESTDIR)$(LCRSODIR)/service_crm.so
+	-rm -f $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso $(DESTDIR)$(LCRSODIR)/pacemaker.so
 	cp $(DESTDIR)$(libdir)/service_crm.so $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso
 endif
 
