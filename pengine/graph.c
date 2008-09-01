@@ -533,8 +533,8 @@ should_dump_action(action_t *action)
 
 		/* make sure probes and recurring monitors go through */
 		if(safe_str_neq(action->task, CRMD_ACTION_STATUS) && interval == NULL) {
-			pe_warn("action %d (%s) was for an unmanaged resource (%s)",
-				action->id, action->uuid, action->rsc->id);
+		    do_crm_log(log_filter, "action %d (%s) was for an unmanaged resource (%s)",
+			       action->id, action->uuid, action->rsc->id);
 			return FALSE;
 		}
 	}

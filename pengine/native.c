@@ -1306,8 +1306,8 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 	crm_debug_2("Executing: %s (role=%s)", rsc->id, role2text(rsc->next_role));
 
 	if(current == NULL && next == NULL) {
-	    crm_notice("Leave resource %s\t(%s)",
-		       rsc->id, role2text(rsc->role));
+	    crm_notice("Leave resource %s\t(%s%s)",
+		       rsc->id, role2text(rsc->role), is_not_set(rsc->flags, pe_rsc_managed)?" unmanaged":"");
 	    return;
 
 	} else if(next == NULL) {
@@ -1331,8 +1331,9 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 	if(rsc->role == rsc->next_role) {
 	    start = start_action(rsc, next, TRUE);
 	    if(start->optional) {
-		crm_notice("Leave resource %s\t(%s %s)",
-			   rsc->id, role2text(rsc->role), next->details->uname);
+		crm_notice("Leave resource %s\t(%s %s%s)",
+			   rsc->id, role2text(rsc->role), next->details->uname,
+			   is_not_set(rsc->flags, pe_rsc_managed)?" unmanaged":"");
 
 	    } else if(safe_str_eq(current->details->id, next->details->id)) {
 		if(is_set(rsc->flags, pe_rsc_failed)) {
